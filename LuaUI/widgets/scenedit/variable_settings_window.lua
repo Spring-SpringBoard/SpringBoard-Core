@@ -126,7 +126,13 @@ function VariableSettingsWindow:Populate()
             
         btnEditVariable.OnClick = {
             function() 
-                local newWin = MakeVariableWindow(variable)
+                local newWin = self:MakeVariableWindow(variable)
+                table.insert(newWin.OnConfirm,
+                    function()
+                        newWin:UpdateModel(variable)
+                    end
+                )
+                newWin:UpdatePanel(variable)
                 if self.x + self.width + newWin.width > self.parent.width then
                     newWin.x = self.x - newWin.width
                 else
@@ -136,10 +142,21 @@ function VariableSettingsWindow:Populate()
 
                 self.disableChildrenHitTest = true
                 table.insert(newWin.OnDispose, 
-                function() 
-                    self.disableChildrenHitTest = false
-                end)
+                    function() 
+                        self.disableChildrenHitTest = false
+                        self:Populate()
+                    end
+                )
             end
         }
     end
+end
+
+function VariableSettingsWindow:MakeVariableWindow(variable)
+    local variableWindow = VariableWindow:New {
+        parent = self.parent,
+        variable = variable,
+        model = self.model,
+    }
+    return variableWindow
 end

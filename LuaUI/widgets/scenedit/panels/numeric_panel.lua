@@ -40,7 +40,7 @@ end
 
 function NumericPanel:UpdateModel(numeric)
     numeric.value = tonumber(self.edValue.text) or 0
-    numeric.relation = self.
+--    numeric.relation = self.
 end
 
 function NumericPanel:UpdatePanel(numeric)

@@ -702,16 +702,17 @@ local function MakeActionWindow(trigger, triggerWindow)
                                 SelectType(btnPredefinedType)
                             end
                         }
-                        btnPredefinedType.OnSelectUnitType = 
-                        function(unitTypeId)
-                            btnPredefinedType.unitTypeId = unitTypeId
-                            btnPredefinedType.caption = 
-                            "Type id=" .. unitTypeId
-                            btnPredefinedType:Invalidate()
-                            if not cbPredefinedType.checked then 
-                                cbPredefinedType:Toggle()
+                        btnPredefinedType.OnSelectUnitType = { 
+                            function(unitTypeId)
+                                btnPredefinedType.unitTypeId = unitTypeId
+                                btnPredefinedType.caption = 
+                                "Type id=" .. unitTypeId
+                                btnPredefinedType:Invalidate()
+                                if not cbPredefinedType.checked then 
+                                    cbPredefinedType:Toggle()
+                                end
                             end
-                        end
+                        }
                         --SPECIAL TYPE, i.e TRIGGER
                         local stackTypePanel = MakeComponentPanel(actionPanel)
                         local cbSpecialType = Checkbox:New {
@@ -823,15 +824,6 @@ function MakeTriggerWindow(trigger)
     return triggerWindow
 end
 
-function MakeVariableWindow(variable)
-    local variableWindow = VariableWindow:New {
-        parent = screen0,
-        variable = variable,
-        model = model,
-    }
-    return variableWindow
-end
-
 local function Save()
     model:Save("mission.lua")
 end
@@ -862,6 +854,8 @@ function widget:Initialize()
     VFS.Include(SCENEDIT_DIR .. "panels/team_panel.lua")
     VFS.Include(SCENEDIT_DIR .. "panels/type_panel.lua")
     VFS.Include(SCENEDIT_DIR .. "panels/numeric_panel.lua")
+    
+    VFS.Include(SCENEDIT_DIR .. "util.lua")
 
     model = Model:New()
 
@@ -1039,7 +1033,7 @@ function widget:Initialize()
                             selUnitDef = unitImages.items[itemIdx].id
                         elseif State.mouse == "selType" then
                             selUnitDef = unitImages.items[itemIdx].id
-                            btnSelectType.OnSelectUnitType(selUnitDef)
+                            CallListeners(btnSelectType.OnSelectUnitType, selUnitDef)
                             State.mouse = "none"
                         end
                     end
@@ -1164,7 +1158,8 @@ function widget:Initialize()
         },
     }
     eb = testWindow.children[1]
-    echo(eb.x, eb.y, eb.width, eb.height)
+    eb.OnClick = { function() echo(eb.x, eb.y, eb.width, eb.height) end }
+    
     --    Spring.AssignMouseCursor('cursor-y', 'cursor-y');
     --    Spring.AssignMouseCursor('cursor-x-y-1', 'cursor-x-y-1');
     --    Spring.AssignMouseCursor('cursor-x-y-2', 'cursor-x-y-2');
@@ -1295,7 +1290,7 @@ function widget:MousePress(x, y, button)
         if button == 1 then
             local result, unitId = Spring.TraceScreenRay(x, y)
             if result == "unit"  then
-                btnSelectUnit.OnSelectUnit(unitId)
+                CallListeners(btnSelectUnit.OnSelectUnit, unitId)
             end
         elseif button == 3 then
             State.mouse = "none"
@@ -1306,7 +1301,7 @@ function widget:MousePress(x, y, button)
             if result == "ground"  then
                 checkAreaIntersections(coords[1], coords[3])
                 if selected ~= nil then
-                    btnSelectArea.OnSelectArea(selected)
+                    CallListeners(btnSelectArea.OnSelectArea, selected)
                 end
             end
         elseif button == 3 then

@@ -36,14 +36,16 @@ function AreaPanel:Initialize()
             SelectArea(self.btnPredefinedArea)
         end
     }
-    self.btnPredefinedArea.OnSelectArea = function(areaId) 
-        self.btnPredefinedArea.areaId = areaId
-        self.btnPredefinedArea.caption = "Area id=" .. areaId
-        self.btnPredefinedArea:Invalidate()
-        if not self.cbPredefinedArea.checked then 
-            self.cbPredefinedArea:Toggle()
+    self.btnPredefinedArea.OnSelectArea = {
+        function(areaId) 
+            self.btnPredefinedArea.areaId = areaId
+            self.btnPredefinedArea.caption = "Area id=" .. areaId
+            self.btnPredefinedArea:Invalidate()
+            if not self.cbPredefinedArea.checked then 
+                self.cbPredefinedArea:Toggle()
+            end
         end
-    end
+    }
 
     -- VARIABLE AREA
     self.cbVariableArea, self.cmbVariableArea = MakeVariableChoice(3, self.parent)
@@ -67,7 +69,7 @@ function AreaPanel:UpdatePanel(field)
         if not self.cbPredefinedArea.checked then
             self.cbPredefinedArea:Toggle()
         end
-        self.btnPredefinedArea.OnSelectArea(field.id)
+        CallListeners(self.btnPredefinedArea.OnSelectArea, field.id)
     elseif field.type == "variable" then
         if not self.cbVariableArea.checked then
             self.cbVariableArea:Toggle()

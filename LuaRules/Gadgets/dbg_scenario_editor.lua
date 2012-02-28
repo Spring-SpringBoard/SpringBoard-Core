@@ -83,7 +83,7 @@ function gadget:RecvLuaMsg(msg, playerID)
         GG.Delay.DelayCall(Spring.DestroyUnit, {par1, false, true})
     elseif op == "moveUnit" then
         GG.Delay.DelayCall(Spring.SetUnitPosition, {tonumber(par1), par2, par3, par4})
-        -- TODO: this is wrong and shouldn't be needed; but it is due to a glitch
+        -- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
         GG.Delay.DelayCall(Spring.GiveOrderToUnit, {tonumber(par1), CMD.STOP, {}, {}})
     end
 end

@@ -215,13 +215,14 @@ function DrawEditBox(obj)
     local h = obj.height
     local bt = obj.borderThickness
 
+    local txt = obj.text
     if obj.focused then
-      local txt = string.sub(obj.text, 1, obj.cursor - 1) .. "|" .. 
-        string.sub(obj.text, obj.cursor, #obj.text)
-      obj.font:Print(txt, x + bt, y+h*0.5, obj.align, obj.valign)
-    else
-      obj.font:Print(obj.text, x + bt, y+h*0.5, obj.align, obj.valign)
+      txt = string.sub(txt, 1, obj.cursor - 1) .. "|" .. 
+        string.sub(txt, obj.cursor, #txt)
     end
+    txt = obj.font:WrapText(txt, w, h, #txt)
+    Spring.Echo(txt)
+    obj.font:DrawInBox(txt, x + bt, y, w, h, obj.align, obj.valign)
   end
 end
 

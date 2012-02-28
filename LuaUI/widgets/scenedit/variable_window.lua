@@ -27,7 +27,6 @@ function VariableWindow:New(obj)
         x = 1,
         bottom = 1,
         height = B_HEIGHT,
-        OnClick={function() obj:Dispose() end}
     }
     local btnCancel = Chili.Button:New {
         caption='Close',
@@ -60,11 +59,78 @@ function VariableWindow:New(obj)
     }
 
     obj = inherited.New(self, obj)
+    MakeConfirmButton(obj, btnOk)
     obj:Populate()
     return obj
 end
 
-function VariableWindow:UpdateVariable()
+function VariableWindow:UpdateModel(variable)
+    variable.name = self.edValue.text
+
+    local typeId = self._cmbType.selected
+    variable.type = typeId
+    variable.unitId = nil
+    variable.teamId = nil
+    variable.areaId = nil
+    variable.value = nil
+    if typeId == 1 then
+        local btnInitialUnit = self._variablePanel.children[1].children[2]
+        variable.unitId = btnInitialUnit.unitId
+    end
+    if typeId == 2 then
+        local cmbInitialTeams = self._variablePanel.children[1].children[2]
+        variable.teamId = cmbInitialTeams.playerTeamIds[cmbInitialTeams.selected]
+    end
+    if typeId == 3 then
+        local btnInitialArea = self._variablePanel.children[1].children[2]
+        variable.areaId = btnInitialArea.areaId
+    end
+    if typeId == 4 or typeId == 5 then
+        local edInitialValue = self._variablePanel.children[1].children[2]
+        if typeId == 4 then
+            variable.value = edInitialValue.text
+        elseif typeId == 5 then
+            variable.value = tonumber(edInitialValue.text)
+        end
+    end
+    if typeId == 6 then
+        local cbInitialValue = self._variablePanel.children[1].children[2]
+        variab.value = cbInitialValue.checked
+    end
+end
+
+function VariableWindow:UpdatePanel(variable)
+    self.edValue.text = variable.name
+
+    local typeId = variable.type
+    self._cmbType:Select(variable.type)
+    if typeId == 1 then
+        local btnInitialUnit = self._variablePanel.children[1].children[2]
+        if variable.unitId then
+            CallListeners(btnInitialUnit.OnSelectUnit, variable.unitId)
+        end
+    end
+    if typeId == 2 then
+        local cmbInitialTeams = self._variablePanel.children[1].children[2]
+        cmbInitialTeams:Select(variable.teamId)
+    end
+    if typeId == 3 then
+        local btnInitialArea = self._variablePanel.children[1].children[2]
+        if variable.areaId then
+            CallListeners(btnInitialArea.OnSelectArea, variable.areaId)
+        end
+    end
+    if typeId == 4 or typeId == 5 then
+        local edInitialValue = self._variablePanel.children[1].children[2]
+        edInitialValue.text = tostring(variable.value)
+    end
+    if typeId == 6 then
+        local cbInitialValue = self._variablePanel.children[1].children[2]
+        if cbInitialValue.checked ~= variable.value then
+            cbInitialValue:Toggle()
+        end
+    end
+    
 end
 
 function VariableWindow:Populate()
@@ -77,7 +143,7 @@ function VariableWindow:Populate()
         x = 1,
         parent = stackNamePanel,
     }
-    local edValue = Chili.EditBox:New {
+    self.edValue = Chili.EditBox:New {
         text = self.variable.name,
         right = 1,
         width = 100,
@@ -145,12 +211,13 @@ function VariableWindow:Populate()
                                 SelectUnit(btnInitialUnit)
                             end
                         }
-                        btnInitialUnit.OnSelectUnit = 
-                        function(unitId)
-                            btnInitialUnit.unitId = unitId
-                            btnInitialUnit.caption = "Unit id=" .. unitId
-                            btnInitialUnit:Invalidate()
-                        end
+                        btnInitialUnit.OnSelectUnit = {
+                            function(unitId)
+                                btnInitialUnit.unitId = unitId
+                                btnInitialUnit.caption = "Unit id=" .. unitId
+                                btnInitialUnit:Invalidate()
+                            end
+                        }
                     end
                     if typeId == 2 then
                         local stackTeamPanel = MakeComponentPanel(variablePanel)

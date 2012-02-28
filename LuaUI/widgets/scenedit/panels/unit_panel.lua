@@ -37,14 +37,16 @@ function UnitPanel:Initialize()
             SelectUnit(self.btnPredefinedUnit)
         end
     }
-    self.btnPredefinedUnit.OnSelectUnit = function(unitId)
-        self.btnPredefinedUnit.unitId = unitId
-        self.btnPredefinedUnit.caption = "Unit id=" .. unitId
-        self.btnPredefinedUnit:Invalidate()
-        if not self.cbPredefinedUnit.checked then 
-            self.cbPredefinedUnit:Toggle()
+    self.btnPredefinedUnit.OnSelectUnit = {
+        function(unitId)
+            self.btnPredefinedUnit.unitId = unitId
+            self.btnPredefinedUnit.caption = "Unit id=" .. unitId
+            self.btnPredefinedUnit:Invalidate()
+            if not self.cbPredefinedUnit.checked then 
+                self.cbPredefinedUnit:Toggle()
+            end
         end
-    end
+    }
     --SPECIAL UNIT, i.e TRIGGER
     local stackUnitPanel = MakeComponentPanel(self.parent)
     self.cbSpecialUnit = Chili.Checkbox:New {
@@ -99,7 +101,7 @@ function UnitPanel:UpdatePanel(field)
         if not self.cbPredefinedUnit.checked then
             self.cbPredefinedUnit:Toggle()
         end
-        self.btnPredefinedUnit.OnSelectUnit(field.id)
+        CallListeners(self.btnPredefinedUnit.OnSelectUnit, field.id)
     elseif field.type == "special" then
         if not self.cbSpecialUnit.checked then
             self.cbSpecialUnit:Toggle()
