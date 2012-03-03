@@ -203,6 +203,12 @@ function DrawButton(obj)
   end
 end
 
+function DrawCursor(x, y, h)
+	gl.Color({1, 1, 1, 1})
+	gl.Vertex(x, y)
+	gl.Vertex(x, y + h)
+end
+
 function DrawEditBox(obj)
   gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawBackground, obj, obj.state)
   gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawBorder, obj.x, obj.y, obj.width, obj.height, 1, obj.borderColor1, obj.borderColor1)
@@ -216,13 +222,22 @@ function DrawEditBox(obj)
     local bt = obj.borderThickness
 
     local txt = obj.text
-    if obj.focused then
-      txt = string.sub(txt, 1, obj.cursor - 1) .. "|" .. 
-        string.sub(txt, obj.cursor, #txt)
-    end
-    txt = obj.font:WrapText(txt, w, h, #txt)
-    Spring.Echo(txt)
+	local newTxt = ""
+	for i = 1, #txt do
+		local tmp = string.sub(txt, 1, i)
+		if obj.font:GetTextWidth(tmp) <= w then
+			newTxt = tmp
+		else
+			break
+		end
+	end	
+	txt = newTxt
     obj.font:DrawInBox(txt, x + bt, y, w, h, obj.align, obj.valign)
+	if obj.focused then
+	  local cursorTxt = string.sub(txt, 1, obj.cursor - 1)
+	  local cursorX = obj.font:GetTextWidth(cursorTxt) + 1
+	  gl.BeginEnd(GL.LINE_STRIP, DrawCursor, x + cursorX, y, h)
+    end
   end
 end
 

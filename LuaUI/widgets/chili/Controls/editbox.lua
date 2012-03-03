@@ -84,8 +84,20 @@ function EditBox:DrawControl()
   --// gets overriden by the skin/theme
 end
 
-function EditBox:MouseDown(...)
-  inherited.MouseDown(self, ...)
+function EditBox:MouseDown(x, y, ...)
+  local found = false
+  for i = 1, #self.text do
+	local tmp = string.sub(self.text, 1, i)
+	if self.font:GetTextWidth(tmp) > x then
+	  self.cursor = i
+	  found = true
+	  break
+	end
+  end
+  if not found then
+    self.cursor = #self.text + 1
+  end
+  inherited.MouseDown(self, x, y, ...)
   self:Invalidate()
   return self
 end
@@ -96,10 +108,16 @@ function EditBox:MouseUp(...)
   return self
 end
 
-function EditBox:KeyPress(key, ...)
+function EditBox:KeyPress(key, mods, isRepeat, label, unicode)
   local cp = self.cursor
-  local txt = self.text
-  if key == KEYSYMS.BACKSPACE then
+  local txt = self.text  
+  local char = nil
+  if pcall(string.char, unicode) then
+    char = string.char(unicode)
+  end
+  if key == KEYSYMS.RETURN then
+    return false
+  elseif key == KEYSYMS.BACKSPACE then
     if #txt > 0 and cp > 1 then
       self.cursor = cp - 1
       self.text =string.sub(txt, 1, cp - 2) .. string.sub(txt, cp, #txt)
@@ -124,8 +142,8 @@ function EditBox:KeyPress(key, ...)
     self.cursor = 1
   elseif key == KEYSYMS.END then
     self.cursor = #txt + 1
-  elseif (key >= 33 and key <= 64) or (key >= 97 and key <= 122) then
-    self.text = string.sub(txt, 1, cp - 1) .. string.char(key) .. 
+  elseif char then
+    self.text = string.sub(txt, 1, cp - 1) .. char .. 
       string.sub(txt, cp, #txt)
     self.cursor = cp + 1
   else
