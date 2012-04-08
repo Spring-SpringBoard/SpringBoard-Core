@@ -1,7 +1,5 @@
-local Chili
-Chili = WG.Chili
-local C_HEIGHT = 16
-local B_HEIGHT = 26
+local Chili = WG.Chili
+local model = SCEN_EDIT.model
 
 AreaPanel = {
 }
@@ -27,7 +25,7 @@ function AreaPanel:Initialize()
         caption = '...',
         right = 1,
         width = 100,
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         parent = stackAreaPanel,
         areaId = nil,
     }
@@ -58,7 +56,7 @@ function AreaPanel:UpdateModel(field)
     if self.cbPredefinedArea.checked then
         field.type = "predefined"
         field.id = self.btnPredefinedArea.areaId
-    elseif self.cbVariableArea.checked then
+    elseif self.cbVariableArea and self.cbVariableArea.checked then
         field.type = "variable"
         field.id = self.cmbVariableArea.variableIds[self.cmbVariableArea.selected]
     end

@@ -5,12 +5,84 @@ Model = {
     variableTypes = {"unit", "player", "area", "string", "number", "boolean"},
     _triggerIdCount = 0,
     _variableIdCount = 0,
+	C_HEIGHT = 16,
+	B_HEIGHT = 26,
+	eventTypes = {
+		{
+			humanName = "Game started",
+			name = "GAME_START",
+		}, 
+		{
+			humanName = "Game ends",
+			name = "GAME_END",
+		}, 
+		{
+			humanName = "Player died",
+			name = "PLAYER_DIE",
+		}, 
+		{
+			humanName = "Unit created",
+			name = "UNIT_CREATE",
+		},
+		{
+			humanName = "Unit damaged",
+			name = "UNIT_DAMAGE",
+		},
+		{
+			humanName = "Unit destroyed",
+			name = "UNIT_DESTROY",
+		},
+		{
+			humanName = "Unit finished",
+			name = "UNIT_FINISH",
+		},
+		{
+			humanName = "Unit enters area",
+			name = "UNIT_ENTER_AREA",
+		},
+		{
+			humanName = "Unit leaves area",
+			name = "UNIT_LEAVE_AREA",
+		},
+	},
+	actionTypes = {
+		{
+			humanName = "Spawn unit", 
+			name = "SPAWN_UNIT",
+		},
+		{
+			humanName = "Issue order", 
+			name = "ISSUE_ORDER",
+		},
+		{
+			humanName = "Destroy unit", 
+			name = "DESTROY_UNIT",
+		},
+		{
+			humanName = "Move unit", 
+			name = "MOVE_UNIT",
+		},
+		{
+			humanName = "Transfer unit", 
+			name = "TRANSFER_UNIT",
+		},
+		{
+			humanName = "Enable trigger", 
+			name = "ENABLE_TRIGGER",
+		},
+		{
+			humanName = "Disable trigger",
+			name = "DISABLE_TRIGGER",
+		},
+	},
 }
 
 function Model:New(o)
     o = o or {}
     setmetatable(o, self)
-    self.__index = self
+    self.__index = self	
+	self.eventTypes = CreateNameMapping(self.eventTypes)
+	self.actionTypes = CreateNameMapping(self.actionTypes)
     return o
 end
 
@@ -26,6 +98,11 @@ end
 function Model:MoveUnit(unitId, x, y, z)
     Spring.SendLuaRulesMsg("scenedit|moveUnit|" .. unitId .. "|" .. 
         x .. "|" .. y .. "|" .. z .. "|")
+end
+
+function Model:AdjustHeightMap(x, z, height)
+	Spring.SendLuaRulesMsg("scenedit|terr_inc|" .. x.. "|" .. 
+        z .. "|" .. height)
 end
 
 --clears all units, areas, triggers, etc.

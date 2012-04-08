@@ -1,7 +1,5 @@
-local Chili
-Chili = WG.Chili
-local C_HEIGHT = 16
-local B_HEIGHT = 26
+local Chili = WG.Chili
+local model = SCEN_EDIT.model
 local numericRelTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
 
 NumericPanel = {
@@ -19,8 +17,8 @@ function NumericPanel:Initialize()
     self.cmbRelType = ComboBox:New {
         right = 1,
         width = 100,
-        height = B_HEIGHT,
-        parent = relTypePanel,
+        height = model.B_HEIGHT,
+        parent = self.relTypePanel,
         items = numericRelTypes,
     }
     local stackValuePanel = MakeComponentPanel(self.parent)
@@ -40,9 +38,10 @@ end
 
 function NumericPanel:UpdateModel(numeric)
     numeric.value = tonumber(self.edValue.text) or 0
---    numeric.relation = self.
+	numeric.relTypeId = self.cmbRelType.selected
 end
 
 function NumericPanel:UpdatePanel(numeric)
     self.edValue.text = tostring(numeric.value)
+	self.cmbRelType:Select(numeric.relTypeId)
 end

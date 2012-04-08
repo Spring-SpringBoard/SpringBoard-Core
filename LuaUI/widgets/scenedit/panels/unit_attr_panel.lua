@@ -1,7 +1,5 @@
-local Chili
-Chili = WG.Chili
-local C_HEIGHT = 16
-local B_HEIGHT = 26
+local Chili = WG.Chili
+local model = SCEN_EDIT.model
 
 local unitAttrTypes = {"HP", "HP%", "Type", "Team"}
 local setRelTypes = {"is", "is not"}
@@ -28,7 +26,7 @@ function UnitAttrPanel:Initialize()
     self.cmbAttrType = ComboBox:New {
         right = 1,
         width = 100,
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         parent = stackAttrPanel,
         items = unitAttrTypes,
         selected = 0,
@@ -79,12 +77,13 @@ function UnitAttrPanel:Initialize()
                 if numeric then
                     self.stackAttrOptions.numericPanel = NumericPanel:New {
                         parent = self.stackAttrOptions,
+						relTypePanel = relTypePanel,
                     }
                 elseif set then
                     local cmbRelType = ComboBox:New {
                         right = 1,
                         width = 100,
-                        height = B_HEIGHT,
+                        height = model.B_HEIGHT,
                         parent = relTypePanel,
                         items = setRelTypes,
                     }
@@ -112,10 +111,10 @@ function UnitAttrPanel:UpdateModel(attr)
     local teamAttr = false
     local typeAttr = false
 
-    if attr.id == 1 or field.id == 2 then
+    if attr.id == 1 or attr.id == 2 then
         numeric = true
     end
-    if attr.id == 3 or field.id == 4 then
+    if attr.id == 3 or attr.id == 4 then
         set = true
     end
 
@@ -139,7 +138,7 @@ function UnitAttrPanel:UpdateModel(attr)
     end
     if numeric then
         attr.numeric = {}
-        self.stackAttrOptions.typePanel:UpdateModel(attr.numeric)
+        self.stackAttrOptions.numericPanel:UpdateModel(attr.numeric)
     end
 end
 
@@ -177,6 +176,6 @@ function UnitAttrPanel:UpdatePanel(attr)
         self.stackAttrOptions.typePanel:UpdatePanel(attr.type)
     end
     if numeric then
-        self.stackAttrOptions.typePanel:UpdatePanel(attr.numeric)
+        self.stackAttrOptions.numericPanel:UpdatePanel(attr.numeric)
     end
 end

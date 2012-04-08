@@ -1,7 +1,5 @@
-local Chili
-Chili = WG.Chili
-local C_HEIGHT = 16
-local B_HEIGHT = 26
+local Chili = WG.Chili
+local model = SCEN_EDIT.model
 
 TeamPanel = {
 }
@@ -27,7 +25,7 @@ function TeamPanel:Initialize()
     self.cmbPredefinedTeam = ComboBox:New {
         right = 1,
         width = 100,
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         parent = stackTeamPanel,
         items = playerNames,
         playerTeamIds = playerTeamIds,

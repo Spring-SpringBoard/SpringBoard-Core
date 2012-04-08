@@ -1,7 +1,5 @@
-local Chili
-Chili = WG.Chili
-local C_HEIGHT = 16
-local B_HEIGHT = 26
+local Chili = WG.Chili
+local model = SCEN_EDIT.model
 
 UnitPanel = {
 }
@@ -28,7 +26,7 @@ function UnitPanel:Initialize()
         caption = '...',
         right = 1,
         width = 100,
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         parent = stackUnitPanel,
         unitId = nil,
     }
@@ -59,7 +57,7 @@ function UnitPanel:Initialize()
     self.cmbSpecialUnit = ComboBox:New {
         right = 1,
         width = 100,
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         parent = stackUnitPanel,
         items = { "Trigger unit" },
     }

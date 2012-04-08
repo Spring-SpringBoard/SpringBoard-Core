@@ -7,7 +7,7 @@ function widget:GetInfo()
     author    = "gajop",
     date      = "in the future",
     license   = "GPL-v2",
-    layer     = 0,
+    layer     = 1001,
     enabled   = false,
   }
 end
@@ -44,24 +44,24 @@ local btnSelectType = nil
 
 local area_x = 500
 local area_z = 500
-local end_x = nil
-local end_y = nil
+local end_x
+local end_y
 local model
-local selected = nil
-local selectedUnit = nil
+local selected
+local selectedUnit
 local updateFrame = 0
 
-local drag_diff_x = nil
-local drag_diff_z = nil
+local drag_diff_x
+local drag_diff_z
 
-local selUnitDef = nil
+local selUnitDef
+local unitDraw_x, unitDraw_y, unitDraw_z
 
 local State = {mouse="none"}
 local unitImages
 
-local eventTypes = {"Game starts", "Game ends", "Player died", "Unit created", "Unit damaged", "Unit destroyed", "Unit finished", "Unit enters area", "Unit leaves area"}
 local conditionTypes = {"Unit in area", "Unit attribute", "And conditions", "Or conditions", "Not condition", "Trigger enabled"}
-local actionTypes = {"Spawn unit", "Issue order", "Destroy unit", "Move unit", "Transfer unit", "Enable trigger", "Disable trigger"}
+SCEN_EDIT = {}
 
 local function DrawCircle()
     gl.Color(0, 255, 0, 0.2)
@@ -175,7 +175,7 @@ function MakeVariableChoice(variableType, panel)
         local cmbVariable = ComboBox:New {
             right = 1,
             width = 100,
-            height = B_HEIGHT,
+            height = model.B_HEIGHT,
             parent = stackPanel,
             items = variableNames,
             variableIds = variableIds,
@@ -195,10 +195,10 @@ function MakeVariableChoice(variableType, panel)
     end
 end
 
-local function MakeSeparator(panel)
+function MakeSeparator(panel)
     local lblSeparator = Label:New {
         parent = panel,
-        height = B_HEIGHT + 10,
+        height = model.B_HEIGHT + 10,
         caption = "===================================",
         align = 'center',
     }
@@ -209,7 +209,7 @@ function MakeComponentPanel(parentPanel)
     local componentPanel = StackPanel:New {
         parent = parentPanel,
         width = "100%",
-        height = B_HEIGHT + 8,
+        height = model.B_HEIGHT + 8,
         orientation = "horizontal",
         padding = {0, 0, 0, 0},
         itemMarging = {0, 0, 0, 0},
@@ -221,106 +221,40 @@ end
 function GetTeams()
     local playerNames = {}
     local playerTeamIds = {}
-    local playerIds = Spring.GetTeamList()
-    for i = 1, #playerIds do
-        local id, _, _, name = Spring.GetAIInfo(playerIds[i])
+    local teamIds = Spring.GetTeamList()
+	local players = Spring.GetPlayerRoster()
+    for i = 1, #teamIds do
+        local id, _, _, name = Spring.GetAIInfo(teamIds[i])
         if id ~= nil then
-            table.insert(playerTeamIds, playerIds[i])
-            table.insert(playerNames, "Team " .. playerIds[i] .. ": " .. name)
-        end
+            table.insert(playerTeamIds, teamIds[i])
+            table.insert(playerNames, "Team " .. teamIds[i] .. ": " .. name)
+        else
+		    table.insert(playerTeamIds, teamIds[i])
+			table.insert(playerNames, "Team " .. teamIds[i])
+		end
     end
     return playerNames, playerTeamIds
 end
 
-local function AddEvent(trigger, triggerWindow, eventTypeId)
-    local event = { eventTypeId = eventTypeId }
-    table.insert(trigger.events, event)
-    triggerWindow:Populate()
-end
-
-local function EditEvent(trigger, triggerWindow, eventTypeId, event)
-    event.eventTypeId = eventTypeId
-    triggerWindow:Populate()
-end
-
-function MakeEventWindow(trigger, triggerWindow)
-    triggerWindow.disableChildrenHitTest = true
-    local btnOk = Button:New {
-        caption = "OK",
-        height = B_HEIGHT,
-        width = "40%",
-        x = "5%",
-        y = "20%",
-    }
-    local btnCancel = Button:New {
-        caption = "Cancel",
-        height = B_HEIGHT,
-        width = "40%",
-        x = "55%",
-        y = "20%",
-    }
-    local cmbEventTypes = ComboBox:New {
-        items = eventTypes,
-        height = B_HEIGHT,
-        width = "40%",
-        y = "60%",
-        x = '30%',
-    }
-    local newEventWindow = Window:New {
- 		parent = screen0,
- 		caption = "New event for - " .. trigger.name,
-        resizable = false,
-        clientWidth = 300,
-        clientHeight = 100,
-        x = 500,
-        y = 300,
-        children = {
-            cmbEventTypes,
-            btnOk,
-            btnCancel
-        }
-    }
-    btnCancel.OnClick = {
-    function() 
-        triggerWindow.disableChildrenHitTest = false
-        newEventWindow:Dispose()
-    end}
-    return newEventWindow, btnOk, cmbEventTypes
-end
-
 function MakeAddEventWindow(trigger, triggerWindow)
-    newEventWindow, btnOk, cmbEventTypes = MakeEventWindow(trigger, triggerWindow)
-    local tw = triggerWindow
-    newEventWindow.x = tw.x
-    newEventWindow.y = tw.y + tw.height + 5
-    if tw.parent.height <= newEventWindow.y + newEventWindow.height then
-        newEventWindow.y = tw.y - newEventWindow.height
-    end
-    btnOk.OnClick = {
-    function() 
-        AddEvent(trigger, triggerWindow, cmbEventTypes.selected)
-        triggerWindow.disableChildrenHitTest = false
-        newEventWindow:Dispose()
-    end}
+    local newEventWindow = EventWindow:New {
+ 		parent = screen0,
+ 		model = model,
+		trigger = trigger,
+		triggerWindow = triggerWindow,
+		mode = 'add',
+    }
 end
 
 function MakeEditEventWindow(trigger, triggerWindow, event)
-    newEventWindow, btnOk, cmbEventTypes = MakeEventWindow(trigger, triggerWindow)
-    local tw = triggerWindow
-    if tw.x + tw.width + newEventWindow.width > tw.parent.width then
-        newEventWindow.x = tw.x - newEventWindow.width
-    else
-        newEventWindow.x = tw.x + tw.width
-    end
-    newEventWindow.y = tw.y
-    newEventWindow.caption = "Edit event for trigger " .. trigger.name
-    cmbEventTypes:Select(event.eventTypeId)
-    btnOk.OnClick = {
-    function() 
-        EditEvent(trigger, triggerWindow, cmbEventTypes.selected, event)
-        triggerWindow.disableChildrenHitTest = false
-        newEventWindow:Dispose()
-    end}
+    local newEventWindow = EventWindow:New {
+ 		parent = screen0,
+ 		model = model,
+		trigger = trigger,
+		triggerWindow = triggerWindow,
+		mode = 'edit',
+		event = event,
+    }
 end
 
 function MakeRemoveEventWindow(trigger, triggerWindow, event, idx)
@@ -384,14 +318,14 @@ local function MakeConditionWindow(trigger, triggerWindow)
     triggerWindow.disableChildrenHitTest = true
     local btnOk = Button:New {
         caption = "OK",
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
     }
     local btnCancel = Button:New {
         caption = "Cancel",
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "7%",
@@ -407,7 +341,7 @@ local function MakeConditionWindow(trigger, triggerWindow)
     }
     local cmbConditionTypes = ComboBox:New {
         items = conditionTypes,
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         width = "60%",
         y = "20%",
         x = '20%',
@@ -518,13 +452,14 @@ function MakeAddConditionWindow(trigger, triggerWindow)
         newConditionWindow.y = tw.y - newConditionWindow.height
     end
     btnOk.OnClick = {
-    function()
-        local condition = { typeId = cmbConditionTypes.selected }
-        UpdateCondition(condition, cmbConditionTypes, conditionPanel)
-        AddCondition(trigger, triggerWindow, condition)
-        triggerWindow.disableChildrenHitTest = false
-        newConditionWindow:Dispose()
-    end}
+		function()
+			local condition = { typeId = cmbConditionTypes.selected }
+			UpdateCondition(condition, cmbConditionTypes, conditionPanel)
+			AddCondition(trigger, triggerWindow, condition)
+			triggerWindow.disableChildrenHitTest = false
+			newConditionWindow:Dispose()
+		end
+	}
 end
 
 function MakeEditConditionWindow(trigger, triggerWindow, condition)
@@ -577,12 +512,13 @@ function MakeEditConditionWindow(trigger, triggerWindow, condition)
     newConditionWindow.y = tw.y
     newConditionWindow.caption = "Edit condition for trigger " .. trigger.name
     btnOk.OnClick = {
-    function() 
-        UpdateCondition(condition, cmbConditionTypes, conditionPanel)
-        EditCondition(trigger, triggerWindow)
-        triggerWindow.disableChildrenHitTest = false
-        newConditionWindow:Dispose()
-    end}
+		function() 
+			UpdateCondition(condition, cmbConditionTypes, conditionPanel)
+			EditCondition(trigger, triggerWindow)
+			triggerWindow.disableChildrenHitTest = false
+			newConditionWindow:Dispose()
+		end
+	}
 end
 
 function MakeRemoveConditionWindow(trigger, triggerWindow, condition, idx)
@@ -590,224 +526,35 @@ function MakeRemoveConditionWindow(trigger, triggerWindow, condition, idx)
     triggerWindow:Populate()
 end
 
-local function AddAction(trigger, triggerWindow, actionTypeId)
-    local action = { actionTypeId = actionTypeId }
-    table.insert(trigger.actions, action)
-    triggerWindow:Populate()
-end
-
-local function EditAction(trigger, triggerWindow, actionTypeId, action)
-    action.actionTypeId = actionTypeId
-    triggerWindow:Populate()
-end
-
-local function MakeActionWindow(trigger, triggerWindow)
-    triggerWindow.disableChildrenHitTest = true
-    local btnOk = Button:New {
-        caption = "OK",
-        height = B_HEIGHT,
-        width = "40%",
-        x = "5%",
-        y = "7%",
-    }
-    local btnCancel = Button:New {
-        caption = "Cancel",
-        height = B_HEIGHT,
-        width = "40%",
-        x = "55%",
-        y = "7%",
-    }
-    local actionPanel = StackPanel:New {
-        itemMargin = {0, 0, 0, 0},
-        x = 1,
-        y = 1,
-        right = 1,
-        autosize = true,
-        resizeItems = false,
-        padding = {0, 0, 0, 0}
-    }
-    local cmbActionTypes = ComboBox:New {
-        items = actionTypes,
-        height = B_HEIGHT,
-        width = "60%",
-        y = "20%",
-        x = '20%',
-        OnSelectItem = {
-            function(obj, itemIdx, selected)
-                if selected and itemIdx > 0 then
-                    actionPanel:ClearChildren()
-                    local actId = itemIdx
-                    local unitAct = false
-                    local triggerAct = false
-                    local typeAct = false
-                    local orderAct = false
-                    local areaAct = false
-
-                    if actId == 1 then
-                        typeAct = true
-                    end
-                    if actId == 2 or actId == 3 or actId == 4 or actId == 5 then
-                        unitAct = true
-                    end
-                    if actId == 1 or actId == 4 then
-                        areaAct = true
-                    end
-                    if actId == 2 then
-                        orderAct = true
-                    end
-                    if actId == 6 or actId == 7 then
-                        triggerAct = true
-                    end
-
-                    if unitAct then
-                        actionPanel.unitPanel = UnitPanel:New {
-                            parent = actionPanel,
-                            model = model,
-                        }
-                        MakeSeparator(actionPanel)
-                    end
-                    if areaAct then
-                        actionPanel.areaPanel = AreaPanel:New {
-                            parent = actionPanel,
-                        }
-                        MakeSeparator(actionPanel)
-                    end
-                    if triggerAct then
-                        actionPanel.triggerPanel = TriggerPanel:New {
-                            parent = actionPanel,
-                            model = model,
-                        }
-                    end
-                    if typeAct then
-                        MakeSeparator(actionPanel)
-                        local stackTypePanel = 
-                        MakeComponentPanel(actionPanel)
-                        local cbPredefinedType = Checkbox:New {
-                            caption = "Predefined type: ",
-                            right = 100 + 10,
-                            x = 1,
-                            checked = false,
-                            parent = stackTypePanel,
-                        }
-                        local btnPredefinedType = Button:New {
-                            caption = '...',
-                            right = 1,
-                            width = 100,
-                            height = B_HEIGHT,
-                            parent = stackTypePanel,
-                            unitTypeId = nil,
-                        }
-                        btnPredefinedType.OnClick = {
-                            function() 
-                                SelectType(btnPredefinedType)
-                            end
-                        }
-                        btnPredefinedType.OnSelectUnitType = { 
-                            function(unitTypeId)
-                                btnPredefinedType.unitTypeId = unitTypeId
-                                btnPredefinedType.caption = 
-                                "Type id=" .. unitTypeId
-                                btnPredefinedType:Invalidate()
-                                if not cbPredefinedType.checked then 
-                                    cbPredefinedType:Toggle()
-                                end
-                            end
-                        }
-                        --SPECIAL TYPE, i.e TRIGGER
-                        local stackTypePanel = MakeComponentPanel(actionPanel)
-                        local cbSpecialType = Checkbox:New {
-                            caption = "Special type: ",
-                            right = 100 + 10,
-                            x = 1,
-                            checked = true,
-                            parent = stackTypePanel,
-                        }
-                        local cmbSpecialType = ComboBox:New {
-                            right = 1,
-                            width = 100,
-                            height = B_HEIGHT,
-                            parent = stackTypePanel,
-                            items = { "Trigger unit type" },
-                            OnSelectItem = {
-                                function(obj, itemIdx, selected)
-                                    if selected and itemIdx > 0 then
-                                        if not cbSpecialType.checked then
-                                            cbSpecialType:Toggle()
-                                        end
-                                    end
-                                end
-                            },
-                        }
-                        MakeRadioButtonGroup({cbSpecialType, cbPredefinedType})
-                    end
-                end
-            end
-        }
-    }
-    local newActionWindow = Window:New {
+function MakeAddEventWindow(trigger, triggerWindow)
+    local newEventWindow = EventWindow:New {
  		parent = screen0,
- 		caption = "New action for - " .. trigger.name,
-        resizable = false,
-        clientWidth = 300,
-        clientHeight = 300,
-        x = 500,
-        y = 300,
-        children = {
-            cmbActionTypes,
-            btnOk,
-            btnCancel,
-            ScrollPanel:New {
-                x = 1,
-                y = cmbActionTypes.y + cmbActionTypes.height + 80,
-                bottom = 1,
-                right = 5,
-                children = {
-                    actionPanel,
-                },
-            },
-        }
+ 		model = model,
+		trigger = trigger,
+		triggerWindow = triggerWindow,
+		mode = 'add',
     }
-    btnCancel.OnClick = {
-    function() 
-        triggerWindow.disableChildrenHitTest = false
-        newActionWindow:Dispose()
-    end}
-    return newActionWindow, btnOk, cmbActionTypes
 end
 
 function MakeAddActionWindow(trigger, triggerWindow)
-    newActionWindow, btnOk, cmbActionTypes = MakeActionWindow(trigger, triggerWindow)
-    local tw = triggerWindow
-    newActionWindow.x = tw.x
-    newActionWindow.y = tw.y + tw.height + 5
-    if tw.parent.height <= newActionWindow.y + newActionWindow.height then
-        newActionWindow.y = tw.y - newActionWindow.height
-    end
-    btnOk.OnClick = {
-    function() 
-        AddAction(trigger, triggerWindow, cmbActionTypes.selected)
-        triggerWindow.disableChildrenHitTest = false
-        newActionWindow:Dispose()
-    end}
+    local newActionWindow = ActionWindow:New {
+ 		parent = screen0,
+ 		model = model,
+		trigger = trigger,
+		triggerWindow = triggerWindow,
+		mode = 'add',
+    }
 end
 
 function MakeEditActionWindow(trigger, triggerWindow, action)
-    newActionWindow, btnOk, cmbActionTypes = MakeActionWindow(trigger, triggerWindow)
-    cmbActionTypes:Select(action.actionTypeId)
-    local tw = triggerWindow
-    if tw.x + tw.width + newActionWindow.width > tw.parent.width then
-        newActionWindow.x = tw.x - newActionWindow.width
-    else
-        newActionWindow.x = tw.x + tw.width
-    end
-    newActionWindow.y = tw.y
-    newActionWindow.caption = "Edit action for trigger " .. trigger.name
-    btnOk.OnClick = {
-    function() 
-        EditAction(trigger, triggerWindow, cmbActionTypes.selected, action)
-        triggerWindow.disableChildrenHitTest = false
-        newActionWindow:Dispose()
-    end}
+    local newActionWindow = ActionWindow:New {
+ 		parent = screen0,
+ 		model = model,
+		trigger = trigger,
+		triggerWindow = triggerWindow,
+		mode = 'edit',
+		action = action,
+    }
 end
 
 function MakeRemoveActionWindow(trigger, triggerWindow, action, idx)
@@ -832,91 +579,15 @@ local function Load()
     model:Load("mission.lua")
 end
 
-function widget:Initialize()
-    local devMode = Spring.GetGameRulesParam('devmode') == 1
-    if not WG.Chili or not devMode then
-        widgetHandler:RemoveWidget(widget)
-        return
-    end
-
-    VFS.Include(SCENEDIT_DIR .. "unitdefsview.lua")
-    VFS.Include(SCENEDIT_DIR .. "combobox.lua")
-    VFS.Include(SCENEDIT_DIR .. "model.lua")
-    VFS.Include(SCENEDIT_DIR .. "triggers_window.lua")
-    VFS.Include(SCENEDIT_DIR .. "trigger_window.lua")
-    VFS.Include(SCENEDIT_DIR .. "variable_settings_window.lua")
-    VFS.Include(SCENEDIT_DIR .. "variable_window.lua")
-
-    VFS.Include(SCENEDIT_DIR .. "panels/unit_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/area_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/unit_attr_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/trigger_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/team_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/type_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/numeric_panel.lua")
-    
-    VFS.Include(SCENEDIT_DIR .. "util.lua")
-
-    model = Model:New()
-
-    reloadGadgets() --uncomment for development
-
-    -- setup Chili
-    Chili = WG.Chili
-    Checkbox = Chili.Checkbox
-    Button = Chili.Button
-    Label = Chili.Label
-    EditBox = Chili.EditBox
-    Window = Chili.Window
-    ScrollPanel = Chili.ScrollPanel
-    StackPanel = Chili.StackPanel
-    Grid = Chili.Grid
-    TextBox = Chili.TextBox
-    Image = Chili.Image
-    TreeView = Chili.TreeView
-    Trackbar = Chili.Trackbar
-    screen0 = Chili.Screen0
-
-    local btnTriggers = Button:New {
-        caption = '',
-        height = B_HEIGHT + 20,
-        width = B_HEIGHT + 20,
-        children = {
-            Image:New { 
-                tooltip = "Trigger settings", 
-                file=SCENEDIT_IMG_DIR .. "applications-system.png", 
-                height = B_HEIGHT - 2, 
-                width = B_HEIGHT - 2,
-            },
-        },
-    }
-    local btnVariableSettings = Button:New {
-        height = B_HEIGHT + 20,
-        width = B_HEIGHT + 20,
-        caption = '',
-        children = {
-            Image:New { 
-                tooltip = "Variable settings", 
-                file=SCENEDIT_IMG_DIR .. "format-text-bold.png", 
-                height = B_HEIGHT - 2, 
-                width = B_HEIGHT - 2, 
-                margin = {0, 0, 0, 0},
-            },
-        },
-    }
-
-
-    toolboxWindow = Window:New {
-        x = 500,
-        y = 500,
-        width = 300,
-        height = 100,
-        parent = screen0,
-        caption = "Scenario Toolbox",
-        resizable = false,
-        children = {
-            StackPanel:New {
-                name='stack_main',
+local function CreateTerrainEditor()
+	local terrainEditor = Window:New {
+		parent = screen0,
+		x = 300,
+		y = 400,
+		width = 300,	
+		height = 100,		
+		children = {
+			StackPanel:New {
                 orientation = 'horizontal',
                 width = '100%',
                 height = '100%',
@@ -924,126 +595,62 @@ function widget:Initialize()
                 itemPadding = {0,10,10,10},
                 itemMargin = {0,0,0,0},
                 resizeItems = false,
+				children = {
+					Button:New {
+						caption = "Up",
+						tooltip = "Increase terrain",
+						width = model.B_HEIGHT + 20,
+						height = model.B_HEIGHT + 20,
+						OnClick = {
+							function()
+								State.mouse = "terr_inc"
+							end
+						},
+					},
+					Button:New {
+						caption = "Down",
+						tooltip = "Decrease terrain",
+						width = model.B_HEIGHT + 20,
+						height = model.B_HEIGHT + 20,
+						OnClick = {
+							function()
+								State.mouse = "terr_dec"
+							end
+						},
+					},
+				},
+			},
+		}
+	}
+end
 
-                children = {
-                    Button:New {
-                        height = B_HEIGHT + 20,
-                        width = B_HEIGHT + 20,
-                        caption = '',
-                        OnClick = {AddRectButton},
-                        children = {
-                            Image:New { 
-                                tooltip = "Add a rectangle area", 
-                                file=SCENEDIT_IMG_DIR .. "view-fullscreen.png", 
-                                height = B_HEIGHT - 2, 
-                                width = B_HEIGHT - 2, 
-                                margin = {0, 0, 0, 0},
-                            },
-                        },
-                    },
-                    Button:New {
-                        height = B_HEIGHT + 20,
-                        width = B_HEIGHT + 20,
-                        caption = '',
-                        OnClick = {Save},
-                        children = {
-                            Image:New { 
-                                tooltip = "Save mission", 
-                                file=SCENEDIT_IMG_DIR .. "document-save.png", 
-                                height = B_HEIGHT - 2, 
-                                width = B_HEIGHT - 2, 
-                                margin = {0, 0, 0, 0},
-                            },
-                        },
-                    },
-                    Button:New {
-                        height = B_HEIGHT + 20,
-                        width = B_HEIGHT + 20,
-                        caption = '',
-                        OnClick = {Load},
-                        children = {
-                            Image:New { 
-                                tooltip = "Load mission", 
-                                file=SCENEDIT_IMG_DIR .. "document-open.png", 
-                                height = B_HEIGHT - 2, 
-                                width = B_HEIGHT - 2, 
-                                margin = {0, 0, 0, 0},
-                            },
-                        },
-                    },
-                    Chili.LayoutPanel:New {
-                        height = btnTriggers.height,
-                        width = btnTriggers.width,
-                        children = {btnTriggers},
-                        padding = {0, 0, 0, 0},
-                        margin = {0, 0, 0, 0},
-                        itemMargin = {0, 0, 0, 0},
-                        itemPadding = {0, 0, 0, 0},
-                    },
-                    Chili.LayoutPanel:New {
-                        height = btnVariableSettings.height,
-                        width = btnVariableSettings.width,
-                        children = {btnVariableSettings},
-                        padding = {0, 0, 0, 0},
-                        margin = {0, 0, 0, 0},
-                        itemMargin = {0, 0, 0, 0},
-                        itemPadding = {0, 0, 0, 0},
-                    },
-                 }
-            }
-        }
-    }
-    btnTriggers.OnClick = {
-        function () 
-            btnTriggers._toggle = TriggersWindow:New {
-                parent = screen0,
-                model = model, 
-            }
-            btnTriggers.parent.disableChildrenHitTest = true
-            table.insert(btnTriggers._toggle.OnDispose, 
-            function() 
-                btnTriggers.parent.disableChildrenHitTest = false
-            end)
-        end
-    }
-
-    btnVariableSettings.OnClick = {
-        function()
-            btnVariableSettings._toggle = VariableSettingsWindow:New {
-                parent = screen0,
-                model = model, 
-            }
-            btnVariableSettings.parent.disableChildrenHitTest = true
-            table.insert(btnVariableSettings._toggle.OnDispose, 
-            function() 
-                btnVariableSettings.parent.disableChildrenHitTest = false
-            end)
-        end
-    }
-    unitImages =
-        UnitDefsView:New {
-            name='units',
-            x = 0,
-            right = 20,
-            OnSelectItem = {
-                function(obj,itemIdx,selected)
-                    if selected and itemIdx > 0 then
-                        if State.mouse == "none" then
-                            State.mouse = 'addUnit'
-                            selUnitDef = unitImages.items[itemIdx].id
-                        elseif State.mouse == "selType" then
-                            selUnitDef = unitImages.items[itemIdx].id
-                            CallListeners(btnSelectType.OnSelectUnitType, selUnitDef)
-                            State.mouse = "none"
-                        end
-                    end
-                end,
-            },
-        }
+local function CreateUnitDefsView()
+	if unitImages then
+		return
+	end
+    unitImages = UnitDefsView:New {
+		name='units',
+		x = 0,
+		right = 20,
+		OnSelectItem = {
+			function(obj,itemIdx,selected)
+				if selected and itemIdx > 0 then
+					if State.mouse == "selType" then
+						selUnitDef = unitImages.items[itemIdx].id
+						CallListeners(btnSelectType.OnSelectUnitType, selUnitDef)
+						State.mouse = "none"
+					else
+						State.mouse = 'addUnit'
+						selUnitDef = unitImages.items[itemIdx].id
+					end
+				end
+			end,
+		},
+	}
     local playerNames, playerTeamIds = GetTeams()
     local teamsCmb = ComboBox:New {
         bottom = 1,
-        height = B_HEIGHT,
+        height = model.B_HEIGHT,
         items = playerNames,
         playerTeamIds = playerTeamIds,
         x = 100,
@@ -1052,11 +659,11 @@ function widget:Initialize()
     teamsCmb.OnSelectItem = {
         function (obj, itemIdx, selected) 
             if selected then
-                unitImages:SelectTeamId(playerTeamIds[itemIdx])
+                unitImages:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
             end
         end
     }
-    teamsCmb:SelectItem(1)
+	unitImages:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
 
     unitsWindow = Window:New {
         parent = screen0,
@@ -1071,7 +678,7 @@ function widget:Initialize()
                 y = 15,
                 x = 1,
                 right = 1,
-                bottom = C_HEIGHT * 4,
+                bottom = model.C_HEIGHT * 4,
                 --horizontalScrollBar = false,
                 children = {
                     unitImages
@@ -1084,7 +691,7 @@ function widget:Initialize()
                 caption = "Type:",
             },
             ComboBox:New {
-                height = B_HEIGHT,
+                height = model.B_HEIGHT,
                 x = 50,
                 bottom = 1 + C_HEIGHT * 2,
                 items = {
@@ -1107,7 +714,7 @@ function widget:Initialize()
             },
             ComboBox:New {
                 bottom = 1 + C_HEIGHT * 2,
-                height = B_HEIGHT,
+                height = model.B_HEIGHT,
                 items = {
                     "Ground", "Air", "Water", "All",
                 },
@@ -1130,6 +737,254 @@ function widget:Initialize()
             teamsCmb,
         }
     }
+end
+
+local function StartMission()
+	local x = table.show(model.triggers)
+	PassToGadget("start", x)	
+end
+
+function widget:Initialize()
+    local devMode = Spring.GetGameRulesParam('devmode') == 1
+    if not WG.Chili or not devMode then
+        widgetHandler:RemoveWidget(widget)
+        return
+    end
+	
+	VFS.Include(SCENEDIT_DIR .. "util.lua")
+	VFS.Include(SCENEDIT_DIR .. "model.lua")
+	model = Model:New()
+	SCEN_EDIT.model = model
+    VFS.Include(SCENEDIT_DIR .. "unitdefsview.lua")
+    VFS.Include(SCENEDIT_DIR .. "combobox.lua")    
+    VFS.Include(SCENEDIT_DIR .. "triggers_window.lua")
+    VFS.Include(SCENEDIT_DIR .. "trigger_window.lua")
+    VFS.Include(SCENEDIT_DIR .. "variable_settings_window.lua")
+    VFS.Include(SCENEDIT_DIR .. "variable_window.lua")
+	
+    VFS.Include(SCENEDIT_DIR .. "panels/unit_panel.lua")
+    VFS.Include(SCENEDIT_DIR .. "panels/area_panel.lua")
+    VFS.Include(SCENEDIT_DIR .. "panels/unit_attr_panel.lua")
+    VFS.Include(SCENEDIT_DIR .. "panels/trigger_panel.lua")
+    VFS.Include(SCENEDIT_DIR .. "panels/team_panel.lua")
+    VFS.Include(SCENEDIT_DIR .. "panels/type_panel.lua")
+    VFS.Include(SCENEDIT_DIR .. "panels/numeric_panel.lua")      
+
+	VFS.Include(SCENEDIT_DIR .. "event_window.lua")
+	VFS.Include(SCENEDIT_DIR .. "action_window.lua")
+	
+    reloadGadgets() --uncomment for development
+
+    -- setup Chili
+    Chili = WG.Chili
+    Checkbox = Chili.Checkbox
+    Button = Chili.Button
+    Label = Chili.Label
+    EditBox = Chili.EditBox
+    Window = Chili.Window
+    ScrollPanel = Chili.ScrollPanel
+    StackPanel = Chili.StackPanel
+    Grid = Chili.Grid
+    TextBox = Chili.TextBox
+    Image = Chili.Image
+    TreeView = Chili.TreeView
+    Trackbar = Chili.Trackbar
+    screen0 = Chili.Screen0
+
+    local btnTriggers = Button:New {
+        caption = '',
+        height = model.B_HEIGHT + 20,
+        width = model.B_HEIGHT + 20,
+        children = {
+            Image:New { 
+                tooltip = "Trigger settings", 
+                file=SCENEDIT_IMG_DIR .. "applications-system.png", 
+                height = model.B_HEIGHT - 2, 
+                width = model.B_HEIGHT - 2,
+            },
+        },
+    }
+    local btnVariableSettings = Button:New {
+        height = model.B_HEIGHT + 20,
+        width = model.B_HEIGHT + 20,
+        caption = '',
+        children = {
+            Image:New { 
+                tooltip = "Variable settings", 
+                file=SCENEDIT_IMG_DIR .. "format-text-bold.png", 
+                height = model.B_HEIGHT - 2, 
+                width = model.B_HEIGHT - 2, 
+                margin = {0, 0, 0, 0},
+            },
+        },
+    }
+
+
+    toolboxWindow = Window:New {
+        x = 500,
+        y = 500,
+        width = 500,
+        height = 100,
+        parent = screen0,
+        caption = "Scenario Toolbox",
+        resizable = false,
+        children = {
+            StackPanel:New {
+                name='stack_main',
+                orientation = 'horizontal',
+                width = '100%',
+                height = '100%',
+                padding = {0,0,0,0},
+                itemPadding = {0,10,10,10},
+                itemMargin = {0,0,0,0},
+                resizeItems = false,
+
+                children = {
+                    Button:New {
+                        height = model.B_HEIGHT + 20,
+                        width = model.B_HEIGHT + 20,
+                        caption = '',
+                        OnClick = {AddRectButton},
+                        children = {
+                            Image:New { 
+                                tooltip = "Add a rectangle area", 
+                                file=SCENEDIT_IMG_DIR .. "view-fullscreen.png", 
+                                height = model.B_HEIGHT - 2, 
+                                width = model.B_HEIGHT - 2, 
+                                margin = {0, 0, 0, 0},
+                            },
+                        },
+                    },
+                    Button:New {
+                        height = model.B_HEIGHT + 20,
+                        width = model.B_HEIGHT + 20,
+                        caption = '',
+                        OnClick = {Save},
+                        children = {
+                            Image:New { 
+                                tooltip = "Save mission", 
+                                file=SCENEDIT_IMG_DIR .. "document-save.png", 
+                                height = model.B_HEIGHT - 2, 
+                                width = model.B_HEIGHT - 2, 
+                                margin = {0, 0, 0, 0},
+                            },
+                        },
+                    },
+                    Button:New {
+                        height = model.B_HEIGHT + 20,
+                        width = model.B_HEIGHT + 20,
+                        caption = '',
+                        OnClick = {Load},
+                        children = {
+                            Image:New { 
+                                tooltip = "Load mission", 
+                                file = SCENEDIT_IMG_DIR .. "document-open.png", 
+                                height = model.B_HEIGHT - 2, 
+                                width = model.B_HEIGHT - 2, 
+                                margin = {0, 0, 0, 0},
+                            },
+                        },
+                    },
+                    Chili.LayoutPanel:New {
+                        height = btnTriggers.height,
+                        width = btnTriggers.width,
+                        children = {btnTriggers},
+                        padding = {0, 0, 0, 0},
+                        margin = {0, 0, 0, 0},
+                        itemMargin = {0, 0, 0, 0},
+                        itemPadding = {0, 0, 0, 0},
+                    },
+                    Chili.LayoutPanel:New {
+                        height = btnVariableSettings.height,
+                        width = btnVariableSettings.width,
+                        children = {btnVariableSettings},
+                        padding = {0, 0, 0, 0},
+                        margin = {0, 0, 0, 0},
+                        itemMargin = {0, 0, 0, 0},
+                        itemPadding = {0, 0, 0, 0},
+                    },
+					Button:New {
+						height = model.B_HEIGHT + 20,
+						width = model.B_HEIGHT + 20,
+						caption = '',
+						OnClick = {
+							function()
+								CreateUnitDefsView()
+							end
+						},
+						children = {
+							Image:New {
+								tooltip = "Open unit panel",
+								file = SCENEDIT_IMG_DIR .. "face-monkey.png",
+								height = model.B_HEIGHT - 2,
+								width = model.B_HEIGHT - 2,
+								margin = {0, 0, 0, 0},
+							},
+						},
+					},
+					Button:New {
+						height = model.B_HEIGHT + 20,
+						width = model.B_HEIGHT + 20,
+						caption = '',
+						OnClick = {
+							function()
+								StartMission()
+							end
+						},
+						children = {
+							Image:New {
+								tooltip = "Start mission",
+								file = SCENEDIT_IMG_DIR .. "media-playback-start.png",
+								height = model.B_HEIGHT - 2,
+								width = model.B_HEIGHT - 2,
+								margin = {0, 0, 0, 0},
+							},
+						},
+					},
+					Button:New {
+						height = model.B_HEIGHT + 20,
+						width = model.B_HEIGHT + 20,
+						caption = "T-Edit",
+						tooltip = "Terrain toolbox",
+						OnClick = {
+							function()
+								CreateTerrainEditor()
+							end
+						}
+					},
+                 }
+            }
+        }
+    }
+    btnTriggers.OnClick = {
+        function () 
+            btnTriggers._toggle = TriggersWindow:New {
+                parent = screen0,
+                model = model, 
+            }
+            btnTriggers.parent.disableChildrenHitTest = true
+            table.insert(btnTriggers._toggle.OnDispose, 
+				function() 
+					btnTriggers.parent.disableChildrenHitTest = false
+				end
+			)
+        end
+    }
+
+    btnVariableSettings.OnClick = {
+        function()
+            btnVariableSettings._toggle = VariableSettingsWindow:New {
+                parent = screen0,
+                model = model, 
+            }
+            btnVariableSettings.parent.disableChildrenHitTest = true
+            table.insert(btnVariableSettings._toggle.OnDispose, 
+            function() 
+                btnVariableSettings.parent.disableChildrenHitTest = false
+            end)
+        end
+    }
+	--[[
     local testWindow = Window:New {
         parent = screen0,
         caption = "Test",
@@ -1144,7 +999,7 @@ function widget:Initialize()
                 width = 100,
                 x = 0,
                 y = 30,
-                height = B_HEIGHT,
+                height = model.B_HEIGHT,
                 OnMouseDown = { function() echo("clicked") end },
             },
             EditBox:New {
@@ -1152,14 +1007,14 @@ function widget:Initialize()
                 width = 100,
                 x = 150,
                 y = 30,
-                height = B_HEIGHT,
+                height = model.B_HEIGHT,
                 OnMouseDown = { function() echo("clicked") end },
             },
         },
     }
     eb = testWindow.children[1]
     eb.OnClick = { function() echo(eb.x, eb.y, eb.width, eb.height) end }
-    
+    --]]
     --    Spring.AssignMouseCursor('cursor-y', 'cursor-y');
     --    Spring.AssignMouseCursor('cursor-x-y-1', 'cursor-x-y-1');
     --    Spring.AssignMouseCursor('cursor-x-y-2', 'cursor-x-y-2');
@@ -1179,8 +1034,48 @@ function reloadGadgets()
     end
 end
 
+local function DrawUnits()	
+	if State.mouse == "addUnit" then
+		x, y = Spring.GetMouseState()
+		local result, coords = Spring.TraceScreenRay(x, y)
+        if result == "ground" then
+			unitDraw_x = coords[1]
+			unitDraw_y = coords[2]
+			unitDraw_z = coords[3]
+			if unitDraw_x ~= nil and unitDraw_y ~= nil and unitDraw_z ~= nil then
+				gl.PushMatrix()
+				gl.Translate(unitDraw_x, unitDraw_y, unitDraw_z)
+				gl.UnitShape(selUnitDef, unitImages.teamId)
+				gl.PopMatrix()			
+			end
+		end
+	end
+end
+
+local function DrawModifier()
+	x, y = Spring.GetMouseState()
+	local result, coords = Spring.TraceScreenRay(x, y)
+	if result == "ground" then
+		local x, z = coords[1], coords[3]
+		local startX, startZ = x - 20, z - 20
+		local endX, endZ = x + 20, z + 20
+		gl.PushMatrix()
+		if State.mouse == "terr_inc" then			
+			gl.Color(0, 255, 0, 0.3)
+		elseif State.mouse == "terr_dec" then
+			gl.Color(255, 0, 0, 0.3)			
+		end
+		DrawRect(startX, startZ, endX, endZ) 
+		gl.PopMatrix()
+	end
+end
+
 function widget:DrawWorld()
     DrawRects()
+	DrawUnits()
+	if State.mouse == "terr_inc" or State.mouse == "terr_dec" then
+		DrawModifier()
+	end
 end
 
 function checkResizeIntersections(x, z)
@@ -1307,16 +1202,34 @@ function widget:MousePress(x, y, button)
         elseif button == 3 then
             State.mouse = "none"
         end
-    end
+    elseif State.mouse == "terr_inc" then
+		if button == 1 then
+			local result, coords = Spring.TraceScreenRay(x, y)
+			if result == "ground"  then
+				model:AdjustHeightMap(coords[1], coords[3], 200)
+			end
+		elseif button == 3 then
+			State.mouse = "none"
+		end
+	elseif State.mouse == "terr_dec" then
+		if button == 1 then
+			local result, coords = Spring.TraceScreenRay(x, y)
+			if result == "ground"  then
+				model:AdjustHeightMap(coords[1], coords[3], -200)
+			end
+		elseif button == 3 then
+			State.mouse = "none"
+		end
+	end
 end
 
 function widget:MouseMove(x, y, dx, dy, button)
     if State.mouse == "addRectEnd" then
         local result, coords = Spring.TraceScreenRay(x, y)
         if result == "ground" then
-        end_x = coords[1]
-    end_z = coords[3]
-end
+			end_x = coords[1]
+			end_z = coords[3]
+		end
     elseif State.mouse == "none" then
         if selected ~= nil then
             State.mouse = "drag"
@@ -1371,7 +1284,7 @@ end
                 area[4] = coords[3] + drag_diff_z 
             end
         end
-    end
+	end
 end
 
 function widget:MouseRelease(x, y, button)
@@ -1416,7 +1329,10 @@ function widget:MouseRelease(x, y, button)
             rect[2], rect[4] = rect[4], rect[2]
         end
         State.mouse = "none"
-    end
+    elseif State.mouse == "addUnit" then
+		echo("mouse release")
+		return true
+	end
 end
 
 function widget:KeyPress(key, mods, isRepeat, label, unicode)

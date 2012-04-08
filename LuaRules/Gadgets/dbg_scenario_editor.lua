@@ -11,6 +11,10 @@ function gadget:GetInfo()
   }
 end
 
+
+VFS.Include("savetable.lua")
+
+
 local function tobool(val)
   local t = type(val)
   if (t == 'nil') then
@@ -73,7 +77,6 @@ function gadget:RecvLuaMsg(msg, playerID)
     local par4 = data[6]
     local par5 = data[7]
 
---    echo(op)
     if op == 'addUnit' then
         if tonumber(par1) ~= nil then
             par1 = tonumber(par1)
@@ -85,7 +88,25 @@ function gadget:RecvLuaMsg(msg, playerID)
         GG.Delay.DelayCall(Spring.SetUnitPosition, {tonumber(par1), par2, par3, par4})
         -- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
         GG.Delay.DelayCall(Spring.GiveOrderToUnit, {tonumber(par1), CMD.STOP, {}, {}})
-    end
+    elseif op == "terr_inc" then
+		if tonumber(par3) > 0 then
+			GG.Delay.DelayCall(Spring.AddGrass, {par1, par2})
+		else
+			GG.Delay.DelayCall(Spring.RemoveGrass, {par1, par2})
+		end
+		GG.Delay.DelayCall(Spring.AdjustHeightMap, {tonumber(par1), tonumber(par2), tonumber(par3)})
+	else
+		if #op >= #"table" and op:sub(1, #"table") == "table" then
+			local tbl = loadstring(op:sub(#"table" + 1))()
+			local data = loadstring(tbl.data)()
+			local tag = tbl.tag
+			
+			if tag == "start" then	
+				table.echo(data)
+				echo("starting mission")
+			end
+		end
+	end
 end
 
 function gadget:Initialize()
