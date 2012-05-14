@@ -85,8 +85,12 @@ function ComboBox:MouseDown(...)
   local sy = self.y
   while screen0.parent ~= nil do
       screen0 = screen0.parent
-      sx = sx + screen0.x
-      sy = sy + screen0.y 
+	  if screen0.classname == "scrollpanel" then
+		sx = sx - screen0.scrollPosX
+		sy = sy - screen0.scrollPosY
+	  end
+	  sx = sx + screen0.x
+	  sy = sy + screen0.y	  
   end
   sy = sy + self.height + 10
   sx = sx + 10

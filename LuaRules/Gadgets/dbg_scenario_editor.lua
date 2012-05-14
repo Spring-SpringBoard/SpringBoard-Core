@@ -13,6 +13,7 @@ end
 
 
 VFS.Include("savetable.lua")
+local SCEN_EDIT_DIR ="LuaRules/gadgets/scen_edit/"
 
 
 local function tobool(val)
@@ -37,6 +38,7 @@ local echo = Spring.Echo
 
 if (gadgetHandler:IsSyncedCode()) then
 
+SCEN_EDIT = {}
 CMD_RESIZE_X = 30521
 
 local myCustomDesc = {
@@ -103,17 +105,27 @@ function gadget:RecvLuaMsg(msg, playerID)
 			
 			if tag == "start" then	
 				table.echo(data)
-				echo("starting mission")
+				echo("loading mission")
+				SCEN_EDIT.rtModel:LoadMission(data)
+				echo("loaded")
 			end
 		end
 	end
 end
 
 function gadget:Initialize()
---    Spring.CreateUnit("armfav", 1000, 30, 1600, 0, 0)
     gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
     Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
+	
+	VFS.Include(SCEN_EDIT_DIR .. "area_model.lua")
+	VFS.Include(SCEN_EDIT_DIR .. "runtime_model.lua")
+	rtModel = RuntimeModel:New()
+	SCEN_EDIT.rtModel = rtModel
+end
+
+function gadget:GameFrame(frameNum)
+	SCEN_EDIT.rtModel:GameFrame(frameNum)
 end
 
 else --unsynced

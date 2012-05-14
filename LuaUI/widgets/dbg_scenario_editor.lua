@@ -154,12 +154,14 @@ end
 function MakeVariableChoice(variableType, panel)
     local variableNames = {}
     local variableIds = {}
-    for i = 1, #model.variables do
-        local variable = model.variables[i]
-        if variable.type == variableType then
-            table.insert(variableNames, variable.name)
-            table.insert(variableIds, variable.id)
-        end
+	local variablesOfType = model.variables[variableType]
+	if not variablesOfType then
+		return nil, nil
+	end
+    for i = 1, variablesOfType do
+        local variable = variablesOfType[i]
+		table.insert(variableNames, variable.name)
+		table.insert(variableIds, variable.id)
     end
 
     if #variableIds > 0 then
@@ -444,6 +446,25 @@ local function MakeConditionWindow(trigger, triggerWindow)
 end
 
 function MakeAddConditionWindow(trigger, triggerWindow)
+    local newActionWindow = ConditionWindow:New {
+ 		parent = screen0,
+		trigger = trigger,
+		triggerWindow = triggerWindow,
+		mode = 'add',
+    }
+end
+
+function MakeEditConditionWindow(trigger, triggerWindow, condition)
+    local newActionWindow = ConditionWindow:New {
+ 		parent = screen0,	
+		trigger = trigger,
+		triggerWindow = triggerWindow,
+		mode = 'edit',
+		condition = condition,
+    }
+end
+--[[
+function MakeAddConditionWindow(trigger, triggerWindow)
     newConditionWindow, btnOk, cmbConditionTypes, conditionPanel = MakeConditionWindow(trigger, triggerWindow)
     local tw = triggerWindow
     newConditionWindow.x = tw.x
@@ -520,7 +541,7 @@ function MakeEditConditionWindow(trigger, triggerWindow, condition)
 		end
 	}
 end
-
+--]]
 function MakeRemoveConditionWindow(trigger, triggerWindow, condition, idx)
     table.remove(trigger.conditions, idx)
     triggerWindow:Populate()
@@ -539,7 +560,6 @@ end
 function MakeAddActionWindow(trigger, triggerWindow)
     local newActionWindow = ActionWindow:New {
  		parent = screen0,
- 		model = model,
 		trigger = trigger,
 		triggerWindow = triggerWindow,
 		mode = 'add',
@@ -549,7 +569,6 @@ end
 function MakeEditActionWindow(trigger, triggerWindow, action)
     local newActionWindow = ActionWindow:New {
  		parent = screen0,
- 		model = model,
 		trigger = trigger,
 		triggerWindow = triggerWindow,
 		mode = 'edit',
@@ -740,7 +759,7 @@ local function CreateUnitDefsView()
 end
 
 local function StartMission()
-	local x = table.show(model.triggers)
+	local x = table.show(model:GetMetaData())	
 	PassToGadget("start", x)	
 end
 
@@ -752,6 +771,7 @@ function widget:Initialize()
     end
 	
 	VFS.Include(SCENEDIT_DIR .. "util.lua")
+	VFS.Include(SCENEDIT_DIR .. "core_types.lua")
 	VFS.Include(SCENEDIT_DIR .. "model.lua")
 	model = Model:New()
 	SCEN_EDIT.model = model
@@ -763,15 +783,21 @@ function widget:Initialize()
     VFS.Include(SCENEDIT_DIR .. "variable_window.lua")
 	
     VFS.Include(SCENEDIT_DIR .. "panels/unit_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/area_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/unit_attr_panel.lua")
+    VFS.Include(SCENEDIT_DIR .. "panels/area_panel.lua")    
     VFS.Include(SCENEDIT_DIR .. "panels/trigger_panel.lua")
     VFS.Include(SCENEDIT_DIR .. "panels/team_panel.lua")
     VFS.Include(SCENEDIT_DIR .. "panels/type_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/numeric_panel.lua")      
+    VFS.Include(SCENEDIT_DIR .. "panels/number_panel.lua")
+	VFS.Include(SCENEDIT_DIR .. "panels/string_panel.lua")
+	VFS.Include(SCENEDIT_DIR .. "panels/bool_panel.lua")
+	VFS.Include(SCENEDIT_DIR .. "panels/order_panel.lua")
+	VFS.Include(SCENEDIT_DIR .. "panels/numeric_comparison_panel.lua")
+	VFS.Include(SCENEDIT_DIR .. "panels/identity_comparison_panel.lua")
 
 	VFS.Include(SCENEDIT_DIR .. "event_window.lua")
 	VFS.Include(SCENEDIT_DIR .. "action_window.lua")
+	VFS.Include(SCENEDIT_DIR .. "condition_window.lua")
+	VFS.Include(SCENEDIT_DIR .. "custom_window.lua")
 	
     reloadGadgets() --uncomment for development
 

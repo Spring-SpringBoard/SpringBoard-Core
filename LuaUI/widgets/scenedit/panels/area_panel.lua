@@ -13,6 +13,7 @@ function AreaPanel:New(obj)
 end
 
 function AreaPanel:Initialize()
+	local radioGroup = {}
     local stackAreaPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedArea = Chili.Checkbox:New {
         caption = "Predefined area: ",
@@ -21,6 +22,7 @@ function AreaPanel:Initialize()
         checked = false,
         parent = stackAreaPanel,
     }
+	table.insert(radioGroup, self.cbPredefinedArea)
     self.btnPredefinedArea = Chili.Button:New {
         caption = '...',
         right = 1,
@@ -44,40 +46,81 @@ function AreaPanel:Initialize()
             end
         end
     }
+	--SPECIAL AREA, i.e TRIGGER
+    local stackAreaPanel = MakeComponentPanel(self.parent)
+    self.cbSpecialArea = Chili.Checkbox:New {
+        caption = "Special area: ",
+        right = 100 + 10,
+        x = 1,
+        checked = true,
+        parent = stackAreaPanel,
+    }
+	table.insert(radioGroup, self.cbSpecialArea)
+    self.cmbSpecialArea = ComboBox:New {
+        right = 1,
+        width = 100,
+        height = model.B_HEIGHT,
+        parent = stackAreaPanel,
+        items = { "Trigger area" },
+    }
+    self.cmbSpecialArea.OnSelectItem = {
+        function(obj, itemIdx, selected)
+            if selected and itemIdx > 0 then
+                if not self.cbSpecialArea.checked then
+                    self.cbSpecialArea:Toggle()
+                end
+            end
+        end
+    }
 
-    -- VARIABLE AREA
-    self.cbVariableArea, self.cmbVariableArea = MakeVariableChoice(3, self.parent)
-    if self.cbVariableArea then
-        MakeRadioButtonGroup({self.cbPredefinedArea, self.cbVariableArea})
+   --VARIABLE
+    self.cbVariable, self.cmbVariable = MakeVariableChoice("area", self.parent)
+    if self.cbVariable then
+		table.insert(radioGroup, self.cbVariable)
     end
+	
+	--EXPRESSION
+	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("area", self.parent)
+	if self.cbExpression then
+		table.insert(radioGroup, self.cbExpression)
+	end
+	MakeRadioButtonGroup(radioGroup)
 end
 
 function AreaPanel:UpdateModel(field)
     if self.cbPredefinedArea.checked then
-        field.type = "predefined"
+        field.type = "pred"
         field.id = self.btnPredefinedArea.areaId
-    elseif self.cbVariableArea and self.cbVariableArea.checked then
-        field.type = "variable"
-        field.id = self.cmbVariableArea.variableIds[self.cmbVariableArea.selected]
+    elseif self.cbVariable and self.cbVariable.checked then
+        field.type = "var"
+        field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
+    elseif self.cbExpression and self.cbExpression.checked then
+        field.type = "expr"
+        field.expr = self.btnExpression.data
     end
 end
 
 function AreaPanel:UpdatePanel(field)
-    if field.type == "predefined" then
+    if field.type == "pred" then
         if not self.cbPredefinedArea.checked then
             self.cbPredefinedArea:Toggle()
         end
         CallListeners(self.btnPredefinedArea.OnSelectArea, field.id)
-    elseif field.type == "variable" then
-        if not self.cbVariableArea.checked then
-            self.cbVariableArea:Toggle()
+    elseif field.type == "var" then
+        if not self.cbVariable.checked then
+            self.cbVariable:Toggle()
         end
-        for i = 1, #self.cmbVariableArea.variableIds do
-            local variableId = self.cmbVariableArea.variableIds[i]
+        for i = 1, #self.cmbVariable.variableIds do
+            local variableId = self.cmbVariable.variableIds[i]
             if variableId == field.id then
-                self.cmbVariableArea:Select(i)
+                self.cmbVariable:Select(i)
                 break
             end
         end
+    elseif field.type == "expr" then
+        if not self.cbExpression.checked then
+            self.cbExpression:Toggle()
+        end
+        self.btnExpression.data = field.expr
     end
 end

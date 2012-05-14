@@ -2,7 +2,6 @@ local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
-local conditionTypes = {"Unit in area", "Unit attribute", "And conditions", "Or conditions", "Not condition", "Trigger enabled"}
 local model = SCEN_EDIT.model
 
 TriggerWindow = Chili.Window:Inherit {
@@ -145,7 +144,7 @@ function TriggerWindow:Populate()
     for i = 1, #self.trigger.conditions do
         local condition = self.trigger.conditions[i]
         local stackEventPanel = Chili.StackPanel:New {
-            parent =self._triggerPanel,
+            parent = self._triggerPanel,
             width = "100%",
             height = B_HEIGHT + 8,
             orientation = "horizontal",
@@ -154,7 +153,7 @@ function TriggerWindow:Populate()
             resizeItems = false,
         }
         local btnEditCondition = Chili.Button:New {
-            caption = conditionTypes[condition.typeId],
+            caption = model.conditionTypes[condition.conditionTypeName].humanName,
             right = B_HEIGHT + 10,
             x = 1,
             height = B_HEIGHT,

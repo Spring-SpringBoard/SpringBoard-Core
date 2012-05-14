@@ -2,7 +2,7 @@ Model = {
     areas = {}, 
     triggers = {},
     variables = {},
-    variableTypes = {"unit", "player", "area", "string", "number", "boolean"},
+    variableTypes = {"unit", "unitType", "team", "player", "area", "string", "number", "bool"},
     _triggerIdCount = 0,
     _variableIdCount = 0,
 	C_HEIGHT = 16,
@@ -45,44 +45,49 @@ Model = {
 			name = "UNIT_LEAVE_AREA",
 		},
 	},
-	actionTypes = {
-		{
-			humanName = "Spawn unit", 
-			name = "SPAWN_UNIT",
-		},
-		{
-			humanName = "Issue order", 
-			name = "ISSUE_ORDER",
-		},
-		{
-			humanName = "Destroy unit", 
-			name = "DESTROY_UNIT",
-		},
-		{
-			humanName = "Move unit", 
-			name = "MOVE_UNIT",
-		},
-		{
-			humanName = "Transfer unit", 
-			name = "TRANSFER_UNIT",
-		},
-		{
-			humanName = "Enable trigger", 
-			name = "ENABLE_TRIGGER",
-		},
-		{
-			humanName = "Disable trigger",
-			name = "DISABLE_TRIGGER",
-		},
-	},
 }
 
 function Model:New(o)
     o = o or {}
     setmetatable(o, self)
-    self.__index = self	
+    self.__index = self		
 	self.eventTypes = CreateNameMapping(self.eventTypes)
-	self.actionTypes = CreateNameMapping(self.actionTypes)
+	local actionTypes = SCEN_EDIT.coreActions()
+	for i = 1, #actionTypes do
+		local actionType = actionTypes[i]
+		actionType.input = SCEN_EDIT.parseData(actionType.input)
+	end
+	self.actionTypes = CreateNameMapping(actionTypes)
+	
+	local conditionTypes = SCEN_EDIT.coreConditions() 
+	for i = 1, #conditionTypes do
+		local conditionType = conditionTypes[i]
+		conditionType.input = SCEN_EDIT.parseData(conditionType.input)
+	end
+	self.conditionTypes = CreateNameMapping(conditionTypes)
+	self.conditionTypesByInput = SCEN_EDIT.GroupByField(conditionTypes, "input")
+	self.conditionTypesByOutput = SCEN_EDIT.GroupByField(conditionTypes, "output")
+	
+	table.echo(conditionTypes)
+	local coreTypes = SCEN_EDIT.coreTypes()
+	-- fill missing
+	for i = 1, #coreTypes do
+		local coreType = coreTypes[i]
+		if self.conditionTypesByInput[coreType] then
+			self.conditionTypesByInput[coreType] = CreateNameMapping(self.conditionTypesByInput[coreType])
+		end
+		if self.conditionTypesByOutput[coreType] then
+			self.conditionTypesByOutput[coreType] = CreateNameMapping(self.conditionTypesByOutput[coreType])
+		end
+	end
+	
+	local orderTypes = SCEN_EDIT.coreOrders()
+	for i = 1, #orderTypes do
+		local orderType = orderTypes[i]
+		orderType.input = SCEN_EDIT.parseData(orderType.input)
+	end
+	self.orderTypes = CreateNameMapping(orderTypes)
+	
     return o
 end
 
@@ -118,12 +123,10 @@ function Model:Clear()
 end
 
 function Model:Save(fileName)
-    local mission = {}
-    mission.triggers = {}
-    table.insert(mission.triggers, {})
-    mission.triggers[1].logic = {}
-
-    local units = {}
+	local mission = {}
+	mission.meta = self:GetMetaData()
+	mission.units = {}
+	
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unit = {}
@@ -133,8 +136,15 @@ function Model:Save(fileName)
         unit.x, _, unit.y = Spring.GetUnitPosition(unitId)
         unit.player = Spring.GetUnitTeam(unitId)
 
-        table.insert(units, unit)
+        table.insert(mission.units, unit)
     end
+	
+--[[    local mission = {}
+    mission.triggers = {}
+    table.insert(mission.triggers, {})
+    mission.triggers[1].logic = {}
+
+    
 
     -- add unit spawn
     local gameStart = {}
@@ -163,7 +173,7 @@ function Model:Save(fileName)
         saveArea.height = area[4] - area[2]
         table.insert(mission.regions[1].areas, saveArea) 
     end
-
+--]]
     -- write to file
     table.save(mission, fileName)
 end
@@ -174,13 +184,14 @@ function Model:Load(fileName)
     --load file
     local f, err = loadfile(fileName)
     local mission = f()
-
-    --load units
-    local units = mission.triggers[1].logic[2].args.units
+	self:SetMetaData(mission.meta)
+	--load units
+    local units = mission.units
     for i, unit in pairs(units) do
         self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player)
     end
-
+	
+--[[    
     if mission.regions ~= nil then
         local areas = mission.regions[1].areas
         for i, area in pairs(areas) do
@@ -190,6 +201,23 @@ function Model:Load(fileName)
             end
         end
     end
+	--]]
+end
+
+--returns a table that holds triggers, areas and other non-engine content
+function Model:GetMetaData()
+	return {
+		areas = self.areas,
+		triggers = self.triggers,
+		variables = self.variables,
+	}
+end
+
+--sets triggers, areas, etc.
+function Model:SetMetaData(meta)
+	self.areas = meta.areas
+	self.triggers = meta.triggers
+	self.variables = meta.variables
 end
 
 function Model:NewTrigger()
@@ -220,11 +248,15 @@ function Model:NewVariable()
     self._variableIdCount = self._variableIdCount + 1
     local variable = {
         id = self._variableIdCount,
-        type = 1,
-        value = "some text",
+        type = "number",
+        value = 0,
         name = "variable" .. self._variableIdCount,
     }
-    table.insert(self.variables, variable)
+	if self.variables[variable.type] then
+		table.insert(self.variables[variable.type], variable)
+	else
+		self.variables[variable.type] = {variable}
+	end
     return variable
 end
 

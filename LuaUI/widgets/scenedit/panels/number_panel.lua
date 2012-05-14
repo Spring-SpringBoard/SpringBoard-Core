@@ -1,10 +1,10 @@
 local Chili = WG.Chili
 local model = SCEN_EDIT.model
 
-TeamPanel = {
+NumberPanel = {
 }
 
-function TeamPanel:New(obj)
+function NumberPanel:New(obj)
     obj = obj or {}
     setmetatable(obj, self)
     self.__index = self
@@ -12,45 +12,42 @@ function TeamPanel:New(obj)
     return obj
 end
 
-function TeamPanel:Initialize()
+function NumberPanel:Initialize()
 	local radioGroup = {}
-    local stackTeamPanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedTeam = Chili.Checkbox:New {
-        caption = "Predefined team: ",
+    local stackValuePanel = MakeComponentPanel(self.parent)
+	self.cbPredefinedValue = Chili.Checkbox:New {
+        caption = "Predefined value: ",
         right = 100 + 10,
         x = 1,
         checked = true,
-        parent = stackTeamPanel,
-    }
-	table.insert(radioGroup, self.cbPredefinedTeam)
-    local playerNames, playerTeamIds = GetTeams()
-    self.cmbPredefinedTeam = ComboBox:New {
+        parent = stackValuePanel,
+    }	
+	table.insert(radioGroup, self.cbPredefinedValue)
+    self.edValue = Chili.EditBox:New {
+        text = "0",
         right = 1,
         width = 100,
-        height = model.B_HEIGHT,
-        parent = stackTeamPanel,
-        items = playerNames,
-        playerTeamIds = playerTeamIds,
+        parent = stackValuePanel,
     }
 	
-   --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice("team", self.parent)
+	--VARIABLE
+    self.cbVariable, self.cmbVariable = MakeVariableChoice("number", self.parent)
     if self.cbVariable then
 		table.insert(radioGroup, self.cbVariable)
     end
 	
 	--EXPRESSION
-	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("team", self.parent)
+	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("number", self.parent)
 	if self.cbExpression then
 		table.insert(radioGroup, self.cbExpression)
 	end
 	MakeRadioButtonGroup(radioGroup)
 end
 
-function TeamPanel:UpdateModel(field)
-    if self.cbPredefinedTeam.checked then
+function NumberPanel:UpdateModel(field)
+	if self.cbPredefinedValue.checked then
         field.type = "pred"
-        field.id = self.cmbPredefinedTeam.selected
+        field.value = tonumber(self.edValue.text) or 0
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
         field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
@@ -60,12 +57,12 @@ function TeamPanel:UpdateModel(field)
     end
 end
 
-function TeamPanel:UpdatePanel(field)
-    if field.type == "pred" then
-        if not self.cbPredefinedTeam.checked then
-            self.cbPredefinedTeam:Toggle()
+function NumberPanel:UpdatePanel(field)  
+	if field.type == "pred" then
+        if not self.cbPredefinedValue.checked then
+            self.cbPredefinedValue:Toggle()
         end
-        self.cmbPredefinedTeam:Select(field.id)
+        self.edValue.text = tostring(field.value)
     elseif field.type == "var" then
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()
