@@ -137,8 +137,8 @@ end
 function ConditionWindow:UpdatePanel()
 	local cndName = self.condition.conditionTypeName
 	local condition = self.validConditionTypes[cndName]
-	for i = 1, #condition.data do
-		local data = condition.data[i]
+	for i = 1, #condition.input do
+		local data = condition.input[i]
 		local subPanelName = data.name
 		local subPanel = self.conditionPanel[subPanelName]
 		if subPanel then
@@ -150,8 +150,8 @@ end
 function ConditionWindow:UpdateModel()
 	local cndName = self.condition.conditionTypeName
 	local condition = self.validConditionTypes[cndName]
-	for i = 1, #condition.data do
-		local data = condition.data[i]
+	for i = 1, #condition.input do
+		local data = condition.input[i]
 		local subPanelName = data.name
 		local subPanel = self.conditionPanel[subPanelName]
 		if subPanel then

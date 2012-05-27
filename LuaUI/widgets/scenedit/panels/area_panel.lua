@@ -91,6 +91,9 @@ function AreaPanel:UpdateModel(field)
     if self.cbPredefinedArea.checked then
         field.type = "pred"
         field.id = self.btnPredefinedArea.areaId
+	elseif self.cbSpecialArea.checked then
+		field.type = "spec"
+		field.name = self.cmbSpecialArea.items[self.cmbSpecialArea.selected]
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
         field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
@@ -106,6 +109,11 @@ function AreaPanel:UpdatePanel(field)
             self.cbPredefinedArea:Toggle()
         end
         CallListeners(self.btnPredefinedArea.OnSelectArea, field.id)
+	elseif field.type == "spec" then
+        if not self.cbSpecialArea.checked then
+            self.cbSpecialArea:Toggle()
+        end
+        self.cmbSpecialArea:Select(1) --TODO:fix it				
     elseif field.type == "var" then
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()

@@ -5,8 +5,11 @@ Model = {
     variableTypes = {"unit", "unitType", "team", "player", "area", "string", "number", "bool"},
     _triggerIdCount = 0,
     _variableIdCount = 0,
+	_lua_rules_pre = "scen_edit",
 	C_HEIGHT = 16,
 	B_HEIGHT = 26,
+	numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"}, -- maybe use more user friendly signs
+	identityComparisonTypes = {"is", "is not"}, -- maybe use more user friendly signs
 	eventTypes = {
 		{
 			humanName = "Game started",
@@ -92,22 +95,27 @@ function Model:New(o)
 end
 
 function Model:AddUnit(unitDef, x, y, z, playerId)
-    Spring.SendLuaRulesMsg("scenedit|addUnit|" .. unitDef .. "|" .. 
+    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|addUnit|" .. unitDef .. "|" .. 
         x .. "|" .. y .. "|" .. z .. "|" .. playerId)
 end
 
 function Model:RemoveUnit(unitId)
-    Spring.SendLuaRulesMsg("scenedit|removeUnit|" .. unitId)
+    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|removeUnit|" .. unitId)
 end
 
 function Model:MoveUnit(unitId, x, y, z)
-    Spring.SendLuaRulesMsg("scenedit|moveUnit|" .. unitId .. "|" .. 
+    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|moveUnit|" .. unitId .. "|" .. 
         x .. "|" .. y .. "|" .. z .. "|")
 end
 
-function Model:AdjustHeightMap(x, z, height)
-	Spring.SendLuaRulesMsg("scenedit|terr_inc|" .. x.. "|" .. 
-        z .. "|" .. height)
+function Model:AdjustHeightMap(x1, z1, x2, z2, height)
+	Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|terr_inc|" .. x1.. "|" .. 
+        z1 .. "|" .. x2 .. "|" .. z2 .. "|" .. height)
+end
+
+function Model:RevertHeightMap(x1, z1, x2, z2)
+	Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|terr_rev|" .. x1.. "|" .. 
+        z1 .. "|" .. x2 .. "|" .. z2 .. "|")
 end
 
 --clears all units, areas, triggers, etc.

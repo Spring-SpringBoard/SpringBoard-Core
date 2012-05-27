@@ -152,8 +152,9 @@ function TriggerWindow:Populate()
             itemMarging = {0, 0, 0, 0},
             resizeItems = false,
         }
+		local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
         local btnEditCondition = Chili.Button:New {
-            caption = model.conditionTypes[condition.conditionTypeName].humanName,
+            caption = conditionHumanName,
             right = B_HEIGHT + 10,
             x = 1,
             height = B_HEIGHT,
@@ -196,8 +197,9 @@ function TriggerWindow:Populate()
             itemMarging = {0, 0, 0, 0},
             resizeItems = false,
         }
+		local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
         local btnEditAction = Chili.Button:New {
-            caption = model.actionTypes[action.actionTypeName].humanName,
+            caption = actionHumanName,
             right = B_HEIGHT + 10,
             x = 1,
             height = B_HEIGHT,

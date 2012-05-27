@@ -1,6 +1,5 @@
 local Chili = WG.Chili
 local model = SCEN_EDIT.model
-local identityComparisonTypes = {"is", "is not"} -- maybe use more user friendly signs
 
 IdentityComparisonPanel = {
 }
@@ -20,7 +19,7 @@ function IdentityComparisonPanel:Initialize()
         width = 100,
         height = model.B_HEIGHT,
         parent = stackIdentityComparisonPanel,
-        items = identityComparisonTypes,
+        items = SCEN_EDIT.model.identityComparisonTypes,
     }
 end
 

@@ -65,9 +65,7 @@ local function explode(div,str)
 end
 
 function gadget:RecvLuaMsg(msg, playerID)
-	--echo (msg)
-	pre = "scenedit"
-	--if (msg:find(pre,1,true)) then Spring.Echo ("its a loveNtrolls message") end
+	pre = "scen_edit"
 	local data = explode( '|', msg)
 	
 	if data[1] ~= pre then return end
@@ -91,12 +89,9 @@ function gadget:RecvLuaMsg(msg, playerID)
         -- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
         GG.Delay.DelayCall(Spring.GiveOrderToUnit, {tonumber(par1), CMD.STOP, {}, {}})
     elseif op == "terr_inc" then
-		if tonumber(par3) > 0 then
-			GG.Delay.DelayCall(Spring.AddGrass, {par1, par2})
-		else
-			GG.Delay.DelayCall(Spring.RemoveGrass, {par1, par2})
-		end
-		GG.Delay.DelayCall(Spring.AdjustHeightMap, {tonumber(par1), tonumber(par2), tonumber(par3)})
+		GG.Delay.DelayCall(Spring.AdjustHeightMap, {par1, par2, par3, par4, tonumber(par5)})
+	elseif op == "terr_rev" then
+		GG.Delay.DelayCall(Spring.RevertHeightMap, {par1, par2, par3, par4, 1})
 	else
 		if #op >= #"table" and op:sub(1, #"table") == "table" then
 			local tbl = loadstring(op:sub(#"table" + 1))()
@@ -119,7 +114,9 @@ function gadget:Initialize()
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
 	
 	VFS.Include(SCEN_EDIT_DIR .. "area_model.lua")
+	VFS.Include(SCEN_EDIT_DIR .. "field_resolver.lua")
 	VFS.Include(SCEN_EDIT_DIR .. "runtime_model.lua")
+	
 	rtModel = RuntimeModel:New()
 	SCEN_EDIT.rtModel = rtModel
 end

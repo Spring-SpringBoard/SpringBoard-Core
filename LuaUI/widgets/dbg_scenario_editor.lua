@@ -151,52 +151,6 @@ function MakeRadioButtonGroup(checkBoxes)
     end
 end
 
-function MakeVariableChoice(variableType, panel)
-    local variableNames = {}
-    local variableIds = {}
-	local variablesOfType = model.variables[variableType]
-	if not variablesOfType then
-		return nil, nil
-	end
-    for i = 1, variablesOfType do
-        local variable = variablesOfType[i]
-		table.insert(variableNames, variable.name)
-		table.insert(variableIds, variable.id)
-    end
-
-    if #variableIds > 0 then
-        local stackPanel = MakeComponentPanel(panel)
-        local cbVariable = Chili.Checkbox:New {
-            caption = "Variable: ",
-            right = 100 + 10,
-            x = 1,
-            checked = false,
-            parent = stackPanel,
-        }
-        
-        local cmbVariable = ComboBox:New {
-            right = 1,
-            width = 100,
-            height = model.B_HEIGHT,
-            parent = stackPanel,
-            items = variableNames,
-            variableIds = variableIds,
-        }
-        cmbVariable.OnSelectItem = {
-            function(obj, itemIdx, selected)
-                if selected and itemIdx > 0 then
-                    if not cbVariable.checked then
-                        cbVariable:Toggle()
-                    end
-                end
-            end
-        }
-        return cbVariable, cmbVariable
-    else
-        return nil, nil
-    end
-end
-
 function MakeSeparator(panel)
     local lblSeparator = Label:New {
         parent = panel,
@@ -760,7 +714,7 @@ end
 
 local function StartMission()
 	local x = table.show(model:GetMetaData())	
-	PassToGadget("start", x)	
+	PassToGadget(model._lua_rules_pre, "start", x)	
 end
 
 function widget:Initialize()
@@ -769,14 +723,16 @@ function widget:Initialize()
         widgetHandler:RemoveWidget(widget)
         return
     end
+	reloadGadgets() --uncomment for development
 	
+	VFS.Include(SCENEDIT_DIR .. "combobox.lua")
 	VFS.Include(SCENEDIT_DIR .. "util.lua")
 	VFS.Include(SCENEDIT_DIR .. "core_types.lua")
 	VFS.Include(SCENEDIT_DIR .. "model.lua")
 	model = Model:New()
+	model:RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ)
 	SCEN_EDIT.model = model
-    VFS.Include(SCENEDIT_DIR .. "unitdefsview.lua")
-    VFS.Include(SCENEDIT_DIR .. "combobox.lua")    
+    VFS.Include(SCENEDIT_DIR .. "unitdefsview.lua")    
     VFS.Include(SCENEDIT_DIR .. "triggers_window.lua")
     VFS.Include(SCENEDIT_DIR .. "trigger_window.lua")
     VFS.Include(SCENEDIT_DIR .. "variable_settings_window.lua")
@@ -798,9 +754,7 @@ function widget:Initialize()
 	VFS.Include(SCENEDIT_DIR .. "action_window.lua")
 	VFS.Include(SCENEDIT_DIR .. "condition_window.lua")
 	VFS.Include(SCENEDIT_DIR .. "custom_window.lua")
-	
-    reloadGadgets() --uncomment for development
-
+	  
     -- setup Chili
     Chili = WG.Chili
     Checkbox = Chili.Checkbox
@@ -1232,7 +1186,7 @@ function widget:MousePress(x, y, button)
 		if button == 1 then
 			local result, coords = Spring.TraceScreenRay(x, y)
 			if result == "ground"  then
-				model:AdjustHeightMap(coords[1], coords[3], 200)
+				model:AdjustHeightMap(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, 20)
 			end
 		elseif button == 3 then
 			State.mouse = "none"
@@ -1241,7 +1195,7 @@ function widget:MousePress(x, y, button)
 		if button == 1 then
 			local result, coords = Spring.TraceScreenRay(x, y)
 			if result == "ground"  then
-				model:AdjustHeightMap(coords[1], coords[3], -200)
+				model:AdjustHeightMap(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, -20)
 			end
 		elseif button == 3 then
 			State.mouse = "none"

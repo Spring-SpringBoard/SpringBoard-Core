@@ -1,6 +1,5 @@
 local Chili = WG.Chili
 local model = SCEN_EDIT.model
-local numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
 
 NumericComparisonPanel = {
 }
@@ -20,7 +19,7 @@ function NumericComparisonPanel:Initialize()
         width = 100,
         height = model.B_HEIGHT,
         parent = stackNumericComparisonPanel,
-        items = numericComparisonTypes,
+        items = model.numericComparisonTypes,
     }
 end
 

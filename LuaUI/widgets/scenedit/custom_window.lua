@@ -57,8 +57,8 @@ function CustomWindow:New(obj)
 				obj.conditionPanel:ClearChildren()
 				local cndName = obj.cmbCustomTypes.conditionTypes[itemIdx]
 				local condition = obj.customTypes[cndName]
-				for i = 1, #condition.data do
-					local data = condition.data[i]					
+				for i = 1, #condition.input do
+					local data = condition.input[i]					
 					local subPanelName = data.name
 					local subPanel = SCEN_EDIT.createNewPanel(data.type, obj.conditionPanel)
 					if subPanel then
@@ -132,8 +132,8 @@ end
 function CustomWindow:UpdatePanel()
 	local cndName = self.condition.conditionTypeName
 	local condition = self.customTypes[cndName]
-	for i = 1, #condition.data do
-		local data = condition.data[i]
+	for i = 1, #condition.input do
+		local data = condition.input[i]
 		local subPanelName = data.name
 		local subPanel = self.conditionPanel[subPanelName]
 		if subPanel then
@@ -145,8 +145,8 @@ end
 function CustomWindow:UpdateModel()
 	local cndName = self.condition.conditionTypeName
 	local condition = self.customTypes[cndName]
-	for i = 1, #condition.data do
-		local data = condition.data[i]
+	for i = 1, #condition.input do
+		local data = condition.input[i]
 		local subPanelName = data.name
 		local subPanel = self.conditionPanel[subPanelName]
 		if subPanel then

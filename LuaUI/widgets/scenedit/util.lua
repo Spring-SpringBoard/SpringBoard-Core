@@ -81,6 +81,53 @@ function SCEN_EDIT.AddExpression(dataType, parent)
 	return nil, nil
 end
 
+
+function MakeVariableChoice(variableType, panel)
+    local variableNames = {}
+    local variableIds = {}
+	local variablesOfType = SCEN_EDIT.model.variables[variableType]
+	if not variablesOfType then
+		return nil, nil
+	end
+    for i = 1, variablesOfType do
+        local variable = variablesOfType[i]
+		table.insert(variableNames, variable.name)
+		table.insert(variableIds, variable.id)
+    end
+
+    if #variableIds > 0 then
+        local stackPanel = MakeComponentPanel(panel)
+        local cbVariable = Chili.Checkbox:New {
+            caption = "Variable: ",
+            right = 100 + 10,
+            x = 1,
+            checked = false,
+            parent = stackPanel,
+        }
+        
+        local cmbVariable = ComboBox:New {
+            right = 1,
+            width = 100,
+            height = SCEN_EDIT.model.B_HEIGHT,
+            parent = stackPanel,
+            items = variableNames,
+            variableIds = variableIds,
+        }
+        cmbVariable.OnSelectItem = {
+            function(obj, itemIdx, selected)
+                if selected and itemIdx > 0 then
+                    if not cbVariable.checked then
+                        cbVariable:Toggle()
+                    end
+                end
+            end
+        }
+        return cbVariable, cmbVariable
+    else
+        return nil, nil
+    end
+end
+
 function GetField(origArray, field)
 	local newArray = {}
 	for k, v in pairs(origArray) do
@@ -97,8 +144,47 @@ function GetIndex(table, value)
 	end
 end
 
-function PassToGadget(tag, data)
+function PassToGadget(prefix, tag, data)
 	newTable = { tag = tag, data = data }
-	local msg = "scenedit|table" .. table.show(newTable)	
+	local msg = prefix .. "|table" .. table.show(newTable)	
 	Spring.SendLuaRulesMsg(msg)
+end
+
+function SCEN_EDIT.humanExpression(data, exprType)
+	if exprType == "condition" then
+		if data.conditionTypeName:find("compare_") then
+			local firstExpr = SCEN_EDIT.humanExpression(data.first, "value")
+			local relation
+			if data.conditionTypeName == "compare_number" then
+				relation = SCEN_EDIT.humanExpression(data.relation, "identity_comparison")
+			else
+				relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison")
+			end
+			local secondExpr = SCEN_EDIT.humanExpression(data.second, "value")
+			local condHumanName = SCEN_EDIT.model.conditionTypes[data.conditionTypeName].humanName
+			return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
+		end
+	elseif exprType == "action" then
+		local action = SCEN_EDIT.model.actionTypes[data.actionTypeName]		
+		local humanName = action.humanName .. " ("
+		for i = 1, #action.input do
+			local input = action.input[i]			
+			humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value") .. " "
+		end
+		return humanName .. ")"
+	elseif exprType == "value" then 
+		if data.type == "pred" then
+			return "ID: " .. tostring(data.id)
+		elseif data.type == "spec" then
+			return data.name
+		elseif data.type == "expr" then
+			-- TODO
+		end
+		return "nothing"
+	elseif exprType == "numeric_comparison" then
+		return SCEN_EDIT.model.numericComparisonTypes[data.cmpTypeId]
+	elseif exprType == "identity_comparison" then
+		return SCEN_EDIT.model.identityComparisonTypes[data.cmpTypeId]
+	end
+	return data.humanName
 end
