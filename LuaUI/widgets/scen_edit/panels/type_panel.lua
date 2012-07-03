@@ -38,16 +38,17 @@ function TypePanel:Initialize()
             SelectType(self.btnPredefinedType)
         end
     }
-    self.btnPredefinedType.OnSelectUnitType = 
-    function(unitTypeId)
-        self.btnPredefinedType.unitTypeId = unitTypeId
-        self.btnPredefinedType.caption = "Type id=" .. unitTypeId
-        self.btnPredefinedType:Invalidate()
-        if not self.cbPredefinedType.checked then 
-            self.cbPredefinedType:Toggle()
-        end
-    end
-
+    self.btnPredefinedType.OnSelectUnitType = {
+		function(unitTypeId)
+			self.btnPredefinedType.unitTypeId = unitTypeId
+			self.btnPredefinedType.caption = "Type id=" .. unitTypeId
+			self.btnPredefinedType:Invalidate()
+			if not self.cbPredefinedType.checked then 
+				self.cbPredefinedType:Toggle()
+			end
+		end
+	}
+	
     --SPECIAL TYPE, i.e TRIGGER
     local stackTypePanel = MakeComponentPanel(self.parent)
     self.cbSpecialType = Chili.Checkbox:New {
@@ -109,7 +110,7 @@ function TypePanel:UpdatePanel(field)
         if not self.cbPredefinedType.checked then
             self.cbPredefinedType:Toggle()
         end
-        self.btnPredefinedType.OnSelectUnitType(field.id)
+        self.btnPredefinedType.OnSelectUnitType[1](field.id)
 	elseif field.type == "spec" then
         if not self.cbSpecialType.checked then
             self.cbSpecialType:Toggle()

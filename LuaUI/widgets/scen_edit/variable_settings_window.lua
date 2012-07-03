@@ -2,6 +2,7 @@ local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
+local model = SCEN_EDIT.model
 
 VariableSettingsWindow = Chili.Window:Inherit {
     classname = "window",
@@ -10,7 +11,6 @@ VariableSettingsWindow = Chili.Window:Inherit {
     minimumSize = {150,200},
     x = 500,
     y = 300,
-    model = nil, --required
     _variables = nil,
 }
 
@@ -24,7 +24,10 @@ function VariableSettingsWindow:New(obj)
         x = 1,
         bottom = 1,
         height = B_HEIGHT,
-        OnClick={function() obj:AddVariable() end}
+        OnClick={ 
+			function() 				
+				obj:AddVariable()
+			end}
     }
     local btnClose = Chili.Button:New {
         caption='Close',
@@ -33,7 +36,7 @@ function VariableSettingsWindow:New(obj)
         bottom = 1,
         height = B_HEIGHT,
     }
-    obj._variables = Chili.StackPanel:New {
+    obj.variablesPanel = Chili.StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -48,7 +51,7 @@ function VariableSettingsWindow:New(obj)
             right = 5,
             bottom = C_HEIGHT * 2,
             children = { 
-                obj._variables
+                obj.variablesPanel
             },
         },
         btnAddVariable,
@@ -65,30 +68,31 @@ function VariableSettingsWindow:New(obj)
 end
 
 function VariableSettingsWindow:AddVariable()
-    local newVariable = self.model:NewVariable()
+    local newVariable = model:NewVariable("number")
     self:Populate()
-    for i = 1, #self._variables.children do
-        local panel = self._variables.children[i]
+    for i = 1, #self.variablesPanel.children do
+        local panel = self.variablesPanel.children[i]
         if panel.variableId == newVariable.id then
             local btnEdit = panel.children[1]
             btnEdit:CallListeners(btnEdit.OnClick)
-            return
+            break
         end
     end
 end
 
 function VariableSettingsWindow:MakeRemoveVariableWindow(variableId)
-    self.model:RemoveVariable(variableId)
+    model:RemoveVariable(variableId)
     self:Populate()
 end
 
 function VariableSettingsWindow:Populate()
-    self._variables:ClearChildren()
-    for i = 1, #self.model.variables do
-        local variable = self.model.variables[i]
-        local stackVariablePanel = Chili.StackPanel:New {
+    self.variablesPanel:ClearChildren()
+	local variables = model:ListVariables();
+    for i = 1, #variables do
+        local variable = variables[i]
+        local variableStackPanel = Chili.StackPanel:New {
             variableId = variable.id,
-            parent = self._variables,
+            parent = self.variablesPanel,
             width = "100%",
             height = B_HEIGHT + 8,
             orientation = "horizontal",
@@ -102,14 +106,14 @@ function VariableSettingsWindow:Populate()
             x = 1,
             height = B_HEIGHT,
             _toggle = nil,
-            parent = stackVariablePanel,
+            parent = variableStackPanel,
         }
         local btnRemoveVariable = Chili.Button:New {
             caption = "",
             right = 1,
             width = B_HEIGHT,
             height = B_HEIGHT,
-            parent = stackVariablePanel,
+            parent = variableStackPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Chili.Image:New { 
@@ -156,7 +160,6 @@ function VariableSettingsWindow:MakeVariableWindow(variable)
     local variableWindow = VariableWindow:New {
         parent = self.parent,
         variable = variable,
-        model = self.model,
     }
     return variableWindow
 end

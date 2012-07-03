@@ -20,6 +20,20 @@ local inherited = this.inherited
 
 function TriggerWindow:New(obj)
     obj.caption = obj.trigger.name
+	local stackTriggerPanel = MakeComponentPanel(nil)
+	stackTriggerPanel.y = 10
+	local lblTriggerName = Chili.Label:New {
+		caption = "Trigger name: ",
+		right = 100 + 10,
+		x = 1,
+		parent = stackTriggerPanel,
+	}
+	local edTriggerName = Chili.EditBox:New {
+		text = obj.trigger.name,
+		right = 1,
+		width = 100,
+		parent = stackTriggerPanel,
+	}
     obj._triggerPanel = Chili.StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -58,9 +72,10 @@ function TriggerWindow:New(obj)
         height = B_HEIGHT,
     }
     obj.children = {
+		stackTriggerPanel,
         Chili.ScrollPanel:New {
             x = 1,
-            y = 15,
+            y = 15 + B_HEIGHT,
             right = 5,
             bottom = B_HEIGHT * 2,
             children = {
@@ -77,7 +92,8 @@ function TriggerWindow:New(obj)
     obj:Populate()
     btnClose.OnClick = {
         function() 
-            obj:Dispose() 
+			obj.trigger.name = edTriggerName.text
+            obj:Dispose() 			
         end
     }
 

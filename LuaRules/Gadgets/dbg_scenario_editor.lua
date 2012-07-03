@@ -13,7 +13,9 @@ end
 
 
 VFS.Include("savetable.lua")
-local SCEN_EDIT_DIR ="LuaRules/gadgets/scen_edit/"
+local SCEN_EDIT_DIR = "LuaRules/gadgets/scen_edit/"
+local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
+local SCEN_EDIT_LUAUI_DIR = "LuaUI/widgets/scen_edit/"
 
 
 local function tobool(val)
@@ -64,6 +66,17 @@ local function explode(div,str)
   return arr
 end
 
+function WidgetCallback(f, params, msgId)
+	local result = {f(unpack(params))}	
+	SendToUnsynced("toWidget", table.show{
+		tag = "msg",
+		data = {
+			result = result,
+			msgId = msgId,
+		},
+	})	
+end
+
 function gadget:RecvLuaMsg(msg, playerID)
 	pre = "scen_edit"
 	local data = explode( '|', msg)
@@ -76,14 +89,31 @@ function gadget:RecvLuaMsg(msg, playerID)
     local par3 = data[5]
     local par4 = data[6]
     local par5 = data[7]
+	local par6 = data[8]
+	local par7 = data[8]
 
     if op == 'addUnit' then
         if tonumber(par1) ~= nil then
             par1 = tonumber(par1)
         end
-        GG.Delay.DelayCall(Spring.CreateUnit, {par1, par2, par3, par4, 0, tonumber(par5)})
+		if data[#data - 1] == "callback" then
+			GG.Delay.DelayCall(WidgetCallback, {Spring.CreateUnit, {par1, par2, par3, par4, 0, tonumber(par5)}, tonumber(data[#data])})
+		else
+			GG.Delay.DelayCall(Spring.CreateUnit, {par1, par2, par3, par4, 0, tonumber(par5)})
+		end
+	elseif op == 'addFeature' then
+        if tonumber(par1) ~= nil then
+            par1 = tonumber(par1)
+        end
+		if data[#data - 1] == "callback" then
+			GG.Delay.DelayCall(WidgetCallback, {Spring.CreateFeature, {par1, par2, par3, par4, 0, tonumber(par5)}, tonumber(data[#data])})
+		else
+			GG.Delay.DelayCall(Spring.CreateFeature, {par1, par2, par3, par4, 0, tonumber(par5)})
+		end
     elseif op == "removeUnit" then -- remove a unit (no death animation)
         GG.Delay.DelayCall(Spring.DestroyUnit, {par1, false, true})
+	elseif op == "removeFeature" then
+		GG.Delay.DelayCall(Spring.DestroyFeature, {tonumber(par1)})
     elseif op == "moveUnit" then
         GG.Delay.DelayCall(Spring.SetUnitPosition, {tonumber(par1), par2, par3, par4})
         -- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
@@ -100,9 +130,13 @@ function gadget:RecvLuaMsg(msg, playerID)
 			
 			if tag == "start" then	
 				table.echo(data)
-				echo("loading mission")
 				SCEN_EDIT.rtModel:LoadMission(data)
-				echo("loaded")
+				
+				SendToUnsynced("toWidget", table.show{
+					tag = "initialized",
+					data = "OK",
+				})
+				SCEN_EDIT.rtModel:GameStart()
 			end
 		end
 	end
@@ -113,12 +147,18 @@ function gadget:Initialize()
     Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
 	
+	VFS.Include(SCEN_EDIT_COMMON_DIR .. "class.lua")
+	VFS.Include(SCEN_EDIT_COMMON_DIR .. "display_util.lua")
+	SCEN_EDIT.displayUtil = DisplayUtil(false)
 	VFS.Include(SCEN_EDIT_DIR .. "area_model.lua")
 	VFS.Include(SCEN_EDIT_DIR .. "field_resolver.lua")
 	VFS.Include(SCEN_EDIT_DIR .. "runtime_model.lua")
+	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "util.lua")
+	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "core_types.lua")
+	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "model.lua")
 	
-	rtModel = RuntimeModel:New()
-	SCEN_EDIT.rtModel = rtModel
+	rtModel = RuntimeModel()
+	SCEN_EDIT.rtModel = rtModel	
 end
 
 function gadget:GameFrame(frameNum)
@@ -127,7 +167,14 @@ end
 
 else --unsynced
 
+local function UnsyncedToWidget(_, data)
+	if Script.LuaUI('RecieveGadgetMessage') then
+		Script.LuaUI.RecieveGadgetMessage(data)
+	end
+end
+
 function gadget:Initialize()
+	gadgetHandler:AddSyncAction('toWidget', UnsyncedToWidget)
 end
 
 function gadget:Shutdown()

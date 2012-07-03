@@ -222,19 +222,38 @@ function DrawEditBox(obj)
     local bt = obj.borderThickness
 
     local txt = obj.text
-	local newTxt = ""
-	for i = 1, #txt do
-		local tmp = string.sub(txt, 1, i)
+	local startPos = 1 + obj.offset
+	local newTxt = ""		
+	for i = startPos, #txt do
+		local tmp = string.sub(txt, startPos, i)
 		if obj.font:GetTextWidth(tmp) <= w then
 			newTxt = tmp
 		else
 			break
 		end
-	end	
+	end
+	if obj.cursor <= obj.offset then		
+		obj.offset = obj.cursor - 1
+	elseif obj.cursor > obj.offset + #newTxt + 1 then		
+		obj.offset = obj.cursor - #newTxt
+	end
+	if #newTxt == 0 and #txt ~= 0 then
+		obj.offset = obj.offset - 1
+	end
+	local startPos = 1 + obj.offset
+	local newTxt = ""		
+	for i = startPos, #txt do
+		local tmp = string.sub(txt, startPos, i)
+		if obj.font:GetTextWidth(tmp) <= w then
+			newTxt = tmp
+		else
+			break
+		end
+	end
 	txt = newTxt
     obj.font:DrawInBox(txt, x + bt, y, w, h, obj.align, obj.valign)
 	if obj.focused then
-	  local cursorTxt = string.sub(txt, 1, obj.cursor - 1)
+	  local cursorTxt = string.sub(txt, 1, obj.cursor - 1 - obj.offset)
 	  local cursorX = obj.font:GetTextWidth(cursorTxt) + 1
 	  gl.BeginEnd(GL.LINE_STRIP, DrawCursor, x + cursorX, y, h)
     end

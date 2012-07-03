@@ -13,6 +13,7 @@ EditBox = Control:Inherit{
   valign   = "center",
   text  = "no text",
   cursor = 1,
+  offset = 0,
 }
 
 local this = EditBox
@@ -111,16 +112,12 @@ end
 function EditBox:KeyPress(key, mods, isRepeat, label, unicode)
   local cp = self.cursor
   local txt = self.text  
-  local char = nil
-  if pcall(string.char, unicode) then
-    char = string.char(unicode)
-  end
   if key == KEYSYMS.RETURN then
     return false
   elseif key == KEYSYMS.BACKSPACE then
     if #txt > 0 and cp > 1 then
       self.cursor = cp - 1
-      self.text =string.sub(txt, 1, cp - 2) .. string.sub(txt, cp, #txt)
+      self.text = string.sub(txt, 1, cp - 2) .. string.sub(txt, cp, #txt)
     end      
   elseif key == KEYSYMS.DELETE then
     if #txt > 0 and cp <= #txt then
@@ -142,12 +139,23 @@ function EditBox:KeyPress(key, mods, isRepeat, label, unicode)
     self.cursor = 1
   elseif key == KEYSYMS.END then
     self.cursor = #txt + 1
-  elseif char then
-    self.text = string.sub(txt, 1, cp - 1) .. char .. 
-      string.sub(txt, cp, #txt)
-    self.cursor = cp + 1
   else
-    return false
+    local char = nil
+    local success, char = pcall(string.char, unicode)   
+	if success then
+		success = not char:find("%c")
+	end
+    if not success then
+      char = nil
+    end
+	if char then
+		self.text = string.sub(txt, 1, cp - 1) .. char .. 
+		  string.sub(txt, cp, #txt)
+		self.cursor = cp + 1
+		Spring.Echo("Not fail: " .. tostring(char))
+	else
+		return false
+	end
   end
   self:UpdateLayout()
   self:Invalidate()

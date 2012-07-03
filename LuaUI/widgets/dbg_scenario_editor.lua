@@ -33,7 +33,8 @@ local C_HEIGHT = 16
 local B_HEIGHT = 24
 --------------------------
 
-local SCENEDIT_DIR = LUAUI_DIRNAME .. "widgets/scenedit/"
+local SCENEDIT_DIR = LUAUI_DIRNAME .. "widgets/scen_edit/"
+local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 local echo = Spring.Echo
@@ -172,24 +173,6 @@ function MakeComponentPanel(parentPanel)
         resizeItems = false,
     }
     return componentPanel
-end
-
-function GetTeams()
-    local playerNames = {}
-    local playerTeamIds = {}
-    local teamIds = Spring.GetTeamList()
-	local players = Spring.GetPlayerRoster()
-    for i = 1, #teamIds do
-        local id, _, _, name = Spring.GetAIInfo(teamIds[i])
-        if id ~= nil then
-            table.insert(playerTeamIds, teamIds[i])
-            table.insert(playerNames, "Team " .. teamIds[i] .. ": " .. name)
-        else
-		    table.insert(playerTeamIds, teamIds[i])
-			table.insert(playerNames, "Team " .. teamIds[i])
-		end
-    end
-    return playerNames, playerTeamIds
 end
 
 function MakeAddEventWindow(trigger, triggerWindow)
@@ -549,7 +532,10 @@ local function Save()
 end
 
 local function Load()
-    model:Load("mission.lua")
+    success, msg = pcall(Model.Load, model, "mission.lua")
+	if not success then
+		Spring.Echo("Error loading model : " .. msg)
+	end
 end
 
 local function CreateTerrainEditor()
@@ -712,9 +698,122 @@ local function CreateUnitDefsView()
     }
 end
 
+local function CreateFeatureDefsView()
+	if unitImages then
+		return
+	end
+    featureImages = FeatureDefsView:New {
+		name='features',
+		x = 0,
+		right = 20,
+		OnSelectItem = {
+			function(obj,itemIdx,selected)
+				if selected and itemIdx > 0 then
+					if State.mouse == "selectFeatureType" then
+						selFeatureDef = featureImages.items[itemIdx].id
+						CallListeners(btnSelectType.OnSelectUnitType, selFeatureDef)
+						State.mouse = "none"
+					else
+						State.mouse = 'addFeature'
+						selFeatureDef = featureImages.items[itemIdx].id
+					end
+				end
+			end,
+		},
+	}
+    local playerNames, playerTeamIds = GetTeams()
+    local teamsCmb = ComboBox:New {
+        bottom = 1,
+        height = model.B_HEIGHT,
+        items = playerNames,
+        playerTeamIds = playerTeamIds,
+        x = 100,
+        width=120,
+    }
+    teamsCmb.OnSelectItem = {
+        function (obj, itemIdx, selected) 
+            if selected then
+                featureImages:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
+            end
+        end
+    }
+	featureImages:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
+
+    featuresWindow = Window:New {
+        parent = screen0,
+        caption = "Feature Editor",
+        width = 325,
+        height = 400,
+        resizable = false,
+        x = 1400,
+        y = 500,
+        children = {
+            ScrollPanel:New {
+                y = 15,
+                x = 1,
+                right = 1,
+                bottom = model.C_HEIGHT * 4,
+                --horizontalScrollBar = false,
+                children = {
+                    featureImages
+                },
+            },
+            Label:New {
+                x = 1,
+                width = 50,
+                bottom = 8 + C_HEIGHT * 2,
+                caption = "Type:",
+            },
+            ComboBox:New {
+                height = model.B_HEIGHT,
+                x = 50,
+                bottom = 1 + C_HEIGHT * 2,
+                items = {
+                    "Wreckage", "Other", "All",
+                },
+                width = 80,
+                OnSelectItem = {
+                    function (obj, itemIdx, selected) 
+                        if selected then
+                            featureImages:SelectFeatureTypesId(itemIdx)
+                        end
+                    end
+                },
+            },
+            Label:New {
+                caption = "Player:",
+                x = 40,
+                bottom = 8,
+                width = 50,
+            },
+            teamsCmb,
+        }
+    }
+end
+
 local function StartMission()
 	local x = table.show(model:GetMetaData())	
 	PassToGadget(model._lua_rules_pre, "start", x)	
+end 
+
+function RecieveGadgetMessage(input)
+	local tbl = loadstring(input)()
+	local data = tbl.data
+	local tag = tbl.tag
+
+	if tag == "display" then
+		SCEN_EDIT.displayUtil:displayText(data.text, data.coords, data.color)
+	elseif tag == "msg" then
+		model:InvokeCallback(data.msgId, data.result)
+	end
+end
+
+function widget:UnitCreated(unitID, unitDefID, teamID, builderID)
+	model:AddedUnit(unitID)
+end
+
+function widget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
+	model:RemovedUnit(unitID)
 end
 
 function widget:Initialize()
@@ -723,16 +822,20 @@ function widget:Initialize()
         widgetHandler:RemoveWidget(widget)
         return
     end
-	reloadGadgets() --uncomment for development
-	
+	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
+	reloadGadgets() --uncomment for development	
+	VFS.Include(SCEN_EDIT_COMMON_DIR .. "class.lua")
+	VFS.Include(SCEN_EDIT_COMMON_DIR .. "display_util.lua")
+	SCEN_EDIT.displayUtil = DisplayUtil(true)
 	VFS.Include(SCENEDIT_DIR .. "combobox.lua")
 	VFS.Include(SCENEDIT_DIR .. "util.lua")
 	VFS.Include(SCENEDIT_DIR .. "core_types.lua")
 	VFS.Include(SCENEDIT_DIR .. "model.lua")
-	model = Model:New()
+	model = Model()
 	model:RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ)
 	SCEN_EDIT.model = model
     VFS.Include(SCENEDIT_DIR .. "unitdefsview.lua")    
+	VFS.Include(SCENEDIT_DIR .. "feature_defs_view.lua")    
     VFS.Include(SCENEDIT_DIR .. "triggers_window.lua")
     VFS.Include(SCENEDIT_DIR .. "trigger_window.lua")
     VFS.Include(SCENEDIT_DIR .. "variable_settings_window.lua")
@@ -749,6 +852,7 @@ function widget:Initialize()
 	VFS.Include(SCENEDIT_DIR .. "panels/order_panel.lua")
 	VFS.Include(SCENEDIT_DIR .. "panels/numeric_comparison_panel.lua")
 	VFS.Include(SCENEDIT_DIR .. "panels/identity_comparison_panel.lua")
+	VFS.Include(SCENEDIT_DIR .. "panels/generic_array_panel.lua")
 
 	VFS.Include(SCENEDIT_DIR .. "event_window.lua")
 	VFS.Include(SCENEDIT_DIR .. "action_window.lua")
@@ -908,6 +1012,25 @@ function widget:Initialize()
 						caption = '',
 						OnClick = {
 							function()
+								CreateFeatureDefsView()
+							end
+						},
+						children = {
+							Image:New {
+								tooltip = "Open feature panel",
+								file = SCENEDIT_IMG_DIR .. "face-monkey.png",
+								height = model.B_HEIGHT - 2,
+								width = model.B_HEIGHT - 2,
+								margin = {0, 0, 0, 0},
+							},
+						},
+					},
+					Button:New {
+						height = model.B_HEIGHT + 20,
+						width = model.B_HEIGHT + 20,
+						caption = '',
+						OnClick = {
+							function()
 								StartMission()
 							end
 						},
@@ -959,9 +1082,10 @@ function widget:Initialize()
             }
             btnVariableSettings.parent.disableChildrenHitTest = true
             table.insert(btnVariableSettings._toggle.OnDispose, 
-            function() 
-                btnVariableSettings.parent.disableChildrenHitTest = false
-            end)
+				function() 
+					btnVariableSettings.parent.disableChildrenHitTest = false
+				end
+			)
         end
     }
 	--[[
@@ -999,7 +1123,6 @@ function widget:Initialize()
     --    Spring.AssignMouseCursor('cursor-x-y-1', 'cursor-x-y-1');
     --    Spring.AssignMouseCursor('cursor-x-y-2', 'cursor-x-y-2');
     --    Spring.AssignMouseCursor('cursor-x', 'cursor-x');
-
 end
 
 function reloadGadgets()
@@ -1026,6 +1149,20 @@ local function DrawUnits()
 				gl.PushMatrix()
 				gl.Translate(unitDraw_x, unitDraw_y, unitDraw_z)
 				gl.UnitShape(selUnitDef, unitImages.teamId)
+				gl.PopMatrix()			
+			end
+		end
+	elseif State.mouse == "addFeature" then
+		x, y = Spring.GetMouseState()
+		local result, coords = Spring.TraceScreenRay(x, y)
+        if result == "ground" then
+			featureDraw_x = coords[1]
+			featureDraw_y = coords[2]
+			featureDraw_z = coords[3]
+			if featureDraw_x ~= nil and featureDraw_y ~= nil and featureDraw_z ~= nil then
+				gl.PushMatrix()
+				gl.Translate(featureDraw_x, featureDraw_y, featureDraw_z)
+				gl.FeatureShape(selFeatureDef, featureImages.teamId)
 				gl.PopMatrix()			
 			end
 		end
@@ -1056,6 +1193,7 @@ function widget:DrawWorld()
 	if State.mouse == "terr_inc" or State.mouse == "terr_dec" then
 		DrawModifier()
 	end
+	SCEN_EDIT.displayUtil:Draw()
 end
 
 function checkResizeIntersections(x, z)
@@ -1161,11 +1299,21 @@ function widget:MousePress(x, y, button)
             State.mouse = "none"
             unitImages:SelectItem(0)
         end
+    elseif State.mouse == "addFeature" then
+        if button == 1 then
+            local result, coords = Spring.TraceScreenRay(x, y)
+            if result == "ground" then
+                model:AddFeature(selFeatureDef, coords[1], coords[2], coords[3], featureImages.teamId)
+            end
+        elseif button == 3 then
+            State.mouse = "none"
+            featureImages:SelectItem(0)
+        end
     elseif State.mouse == "selUnit" then
         if button == 1 then
             local result, unitId = Spring.TraceScreenRay(x, y)
             if result == "unit"  then
-                CallListeners(btnSelectUnit.OnSelectUnit, unitId)
+                CallListeners(btnSelectUnit.OnSelectUnit, model:GetModelUnitId(unitId))
             end
         elseif button == 3 then
             State.mouse = "none"
@@ -1246,7 +1394,7 @@ function widget:MouseMove(x, y, dx, dy, button)
             for i = 1, #selectedUnits do
                 local unitId = selectedUnits[i]
                 local unitX, unitY, unitZ = Spring.GetUnitPosition(unitId)
-                Model:MoveUnit(unitId, unitX + deltaX, unitY, unitZ + deltaZ)
+                model:MoveUnit(unitId, unitX + deltaX, unitY, unitZ + deltaZ)
             end
         end
     elseif State.mouse == 'resize' then
@@ -1339,4 +1487,5 @@ end
 
 function widget:GameFrame(frameNum)
     updateFrame = updateFrame + 1
+	SCEN_EDIT.displayUtil:OnFrame()
 end

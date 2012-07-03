@@ -1,51 +1,55 @@
-RuntimeModel = {
-	areaModels = {},	
-	model = {},
-	eventTriggers = {
-		UNIT_ENTER_AREA = {},
-		UNIT_LEAVE_AREA = {},
-	},
-	lastFrameUnitIds = {},	
-}
+RuntimeModel = class()
 
-function RuntimeModel:New(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self	
+function RuntimeModel:__init()
+	self.areaModels = {}	
+	self.lastFrameUnitIds = {}
 	self.fieldResolver = FieldResolver:New {
 		model = self.model,
 	}
-    return o
 end
 
-function RuntimeModel:LoadMission(model)
+function RuntimeModel:LoadMission(meta)
 	self.lastFrameUnitIds = Spring.GetAllUnits()
-	self.areaModels = None
+	self.areaModels = {}
 
-	self.model = model	
-	self.fieldResolver.model = model
-	for i = 1, #model.areas do
-		local area = model.areas[i]
-		local areaModel = AreaModel:New({
-			area = area,
-		})
+	self.model = Model()
+	self.model:SetMetaData(meta)
+	
+	self.fieldResolver.model = self.model
+	for i = 1, #self.model.areas do
+		local area = self.model.areas[i]
+		local areaModel = AreaModel(i, area)
 		areaModel:Populate(self.lastFrameUnitIds)
-		table.insert(self.areaModels, areaModel)
+		table.insert(self.areaModels, areaModel)		
 	end
 	
-	for i = 1, #model.triggers do
-		local trigger = model.triggers[i]
-		for j = 1, #trigger.events do
-			local event = trigger.events[j]
-			if event.eventTypeName == "UNIT_ENTER_AREA" or event.eventTypeName == "UNIT_LEAVE_AREA" then
+	self.eventTriggers = {}
+	for i = 1, #self.model.triggers do
+		local trigger = self.model.triggers[i]
+		if trigger.enabled then
+			for j = 1, #trigger.events do
+				local event = trigger.events[j]
+				if not self.eventTriggers[event.eventTypeName] then
+					self.eventTriggers[event.eventTypeName] = {}
+				end
 				table.insert(self.eventTriggers[event.eventTypeName], trigger)
 			end
 		end
 	end	
 end
 
+function RuntimeModel:GameStart()
+	if self.eventTriggers["GAME_START"] then
+		for k = 1, #self.eventTriggers["GAME_START"] do
+			local params = { }
+			local trigger = self.eventTriggers["GAME_START"][k]				
+			self:ConditionStep(trigger, params)
+		end
+	end
+end
+
 function RuntimeModel:GameFrame(frameNum)
-	local newUnitIds = Spring.GetAllUnits()
+	local newUnitIds = Spring.GetAllUnits()	
 	local unitIds = {}
 	--update area-unit models
 	for i = 1, #newUnitIds do
@@ -61,35 +65,43 @@ function RuntimeModel:GameFrame(frameNum)
 		if found then
 			table.insert(unitIds, newId)
 		end
-	end
+	end	
 	--check for any enter/leave area events
-	for i = 1, #self.areaModels do
+	for i = 1, #self.areaModels do		
 		local areaModel = self.areaModels[i]
 		local results = areaModel:Populate(unitIds)
-		for j = 1, #results.entered do
-			local enteredUnitId = results.entered[j]
-			for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
-				local params = { triggerUnitId = enteredUnitId }
-				local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]
-				self:ConditionStep(trigger, params)
+		local area = areaModel.area
+		if self.eventTriggers["UNIT_ENTER_AREA"] then
+			for j = 1, #results.entered do
+				local enteredUnitId = results.entered[j]
+				for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
+					local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
+					local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]				
+					self:ConditionStep(trigger, params)
+				end
 			end
 		end
-		for j = 1, #results.left do
-			local leftUnitId = results.left[j]
-			for k = 1, #self.eventTriggers["UNIT_LEAVE_AREA"] do
-				local params = { triggerUnitId = enteredUnitId }
-				local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]
-				self:ConditionStep(trigger, params)
+		if self.eventTriggers["UNIT_LEAVE_AREA"] then
+			for j = 1, #results.left do
+				local leftUnitId = results.left[j]
+				for k = 1, #self.eventTriggers["UNIT_LEAVE_AREA"] do
+					local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
+					local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]				
+					self:ConditionStep(trigger, params)
+				end
 			end
 		end
 		areaModel:Populate(newUnitIds)
-	end
+	end	
 	self.lastFrameUnitIds = newUnitIds
 end
 
 function RuntimeModel:ConditionStep(trigger, params)
+	if not trigger.enabled then
+		return
+	end
 	self.fieldResolver.params = params
-	local cndSatisfied = self:ComputeTriggerConditions(trigger)
+	local cndSatisfied = self:ComputeTriggerConditions(trigger, params)
 	if cndSatisfied then
 		self:ActionStep(trigger, params)
 	end
@@ -98,50 +110,54 @@ end
 function RuntimeModel:ActionStep(trigger, params)
 	for i = 1, #trigger.actions do
 		local action = trigger.actions[i]
-		if action.actionTypeName == "SPAWN_UNIT" then
-			local areaId = self.fieldResolver:Resolve(action.area, "area")
-			local unitTypeId = self.fieldResolver:Resolve(action.unitType, "unitType")	
-			local teamId = self.fieldResolver:Resolve(action.team, "team")
-					
-			if areaId ~= nil and unitTypeId ~= nil and teamId ~= nil then
-				local area = self.model.areas[areaId]
-				local x = (area[1] + area[3]) / 2
-				local y = 0
-				local z = (area[2] + area[4]) / 2
-				--TODO: add player information
-				GG.Delay.DelayCall(Spring.CreateUnit, {unitTypeId, x, y, z, 0, teamId})
+		local actionType = self.model.actionTypes[action.actionTypeName]
+		local resolvedInputs = {}
+		local fail = false
+		for i = 1, #actionType.input do
+			local input = actionType.input[i]	
+			local resolvedInput = self.fieldResolver:Resolve(action[input.name], input.type)			
+			if resolvedInput == nil then
+				fail = true
+				local stringRepresentation = table.show(action)
+				SCEN_EDIT.Error(input.name .. " cannot be resolved for action : " .. stringRepresentation)
 			end
-		elseif action.actionTypeName == "DESTROY_UNIT" then
-			local unitId = self.fieldResolver:Resolve(action.unit, "unit")			
-			
-			if unitId ~= nil then
-				GG.Delay.DelayCall(Spring.DestroyUnit, {unitId, false, true})
-			end
-		elseif action.actionTypeName == "MOVE_UNIT" then
-			local areaId = self.fieldResolver:Resolve(action.area, "area")		
-			local unitId = self.fieldResolver:Resolve(action.unit, "unit")					
-			
-			if unitId ~= nil and areaId ~= nil then
-				local area = self.model.areas[areaId]
-				local x = (area[1] + area[3]) / 2
-				local y = 0
-				local z = (area[2] + area[4]) / 2
-				GG.Delay.DelayCall(Spring.SetUnitPosition, {unitId, x, y, z})
-				-- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
-				GG.Delay.DelayCall(Spring.GiveOrderToUnit, {tonumber(unitId), CMD.STOP, {}, {}})
-			end
-		elseif action.actionTypeName == "TRANSFER_UNIT" then
-			local unitId = self.fieldResolver:Resolve(action.unit, "unit")	
-			local teamId = self.fieldResolver:Resolve(action.team, "team")
-			
-			if unitId ~= nil and teamId~= nil then
-				GG.Delay.DelayCall(Spring.TransferUnit, {unitId, teamId, false})
+			resolvedInputs[input.name] = resolvedInput
+		end
+		if not fail then
+			if not actionType.execute then
+				SCEN_EDIT.Error("There is no function execute for action type: " .. actionType.name)
+			else				
+				actionType.execute(resolvedInputs)
 			end
 		end
 	end
 end
 
-function RuntimeModel:ComputeTriggerConditions(trigger)
---TODO: add code
+function RuntimeModel:ComputeTriggerConditions(trigger, params)
+	for i = 1, #trigger.conditions do
+		local condition = trigger.conditions[i]
+		local conditionType = self.model.conditionTypes[condition.conditionTypeName]
+		local resolvedInputs = {}
+		local fail = false
+		for i = 1, #conditionType.input do
+			local input = conditionType.input[i]	
+			local resolvedInput = self.fieldResolver:Resolve(condition[input.name], input.type)			
+			if resolvedInput == nil then
+				fail = true
+				local stringRepresentation = table.show(condition)
+				Spring.Echo(input.name .. " cannot be resolved for condition : " .. stringRepresentation)
+			end
+			resolvedInputs[input.name] = resolvedInput
+		end
+		if not fail then
+			if not conditionType.execute then
+				Spring.Echo("There is no function execute for condition type: " .. conditionType.name)
+			else
+				if not conditionType.execute(resolvedInputs) then
+					return false
+				end
+			end
+		end
+	end
 	return true
 end

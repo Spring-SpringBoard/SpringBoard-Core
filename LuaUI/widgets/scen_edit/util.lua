@@ -1,4 +1,7 @@
-local Chili = WG.Chili
+local Chili = nil
+if WG ~= nil then
+	Chili= WG.Chili
+end
 
 function CallListeners(listeners, ...)
     for i = 1, #listeners do
@@ -83,13 +86,13 @@ end
 
 
 function MakeVariableChoice(variableType, panel)
-    local variableNames = {}
-    local variableIds = {}
 	local variablesOfType = SCEN_EDIT.model.variables[variableType]
 	if not variablesOfType then
 		return nil, nil
 	end
-    for i = 1, variablesOfType do
+	local variableNames = {}
+    local variableIds = {}
+    for i = 1, #variablesOfType do
         local variable = variablesOfType[i]
 		table.insert(variableNames, variable.name)
 		table.insert(variableIds, variable.id)
@@ -187,4 +190,32 @@ function SCEN_EDIT.humanExpression(data, exprType)
 		return SCEN_EDIT.model.identityComparisonTypes[data.cmpTypeId]
 	end
 	return data.humanName
+end
+
+
+function GetTeams()
+    local playerNames = {}
+    local playerTeamIds = {}
+	local playerColors = {}
+	
+    local teamIds = Spring.GetTeamList()
+	local players = Spring.GetPlayerRoster()
+	
+    for i = 1, #teamIds do
+        local id, _, _, name = Spring.GetAIInfo(teamIds[i])
+		table.insert(playerTeamIds, teamIds[i])
+		local teamName = "Team " .. teamIds[i]
+        if id ~= nil then
+            teamName = teamName .. ": " .. name
+		end
+		table.insert(playerNames, teamName)
+		local r, g, b, a = Spring.GetTeamColor(teamIds[i])
+		local color = { r = r, g = g, b = b, a = a }
+		table.insert(playerColors, color)
+    end
+    return playerNames, playerTeamIds, playerColors
+end
+
+function SCEN_EDIT.Error(msg)
+	Spring.Echo(msg)
 end

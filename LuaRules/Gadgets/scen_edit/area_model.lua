@@ -1,18 +1,15 @@
-AreaModel = {
-	area = {},
-	unitsInArea = {},
-}
+AreaModel = class()
 
-function AreaModel:New(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self	
-    return o
+function AreaModel:__init(id, area)
+	self.id = id
+	self.area = area
+	self.unitsInArea = {}	
 end
 
 function AreaModel:UnitInArea(unitId)
-	local x, y, z = Spring.GetUnitPosition(unitId)	
-	return x >= self.area[1] and x < self.area[3] and z >= self.area[2] and z < self.area[4]
+	local x, y, z = Spring.GetUnitPosition(unitId)
+	local res = x >= self.area[1] and x < self.area[3] and z >= self.area[2] and z < self.area[4]	
+	return res
 end
 
 function AreaModel:UpdateUnit(unitId)
@@ -22,11 +19,15 @@ function AreaModel:UpdateUnit(unitId)
 			return 'none'
 		else
 			self.unitsInArea[unitId] = true
+			local area = self.area
+			--Spring.Echo("E", unitId, self.id, area[1], area[2], area[3], area[4])
 			return 'enter'
 		end		
 	else
 		if self.unitsInArea[unitId] then
 			self.unitsInArea[unitId] = nil
+			local area = self.area
+			--Spring.Echo("L", unitId, self.id, area[1], area[2], area[3], area[4])
 			return 'leave'
 		else
 			return 'none'

@@ -1,16 +1,18 @@
-Model = {
-    areas = {}, 
-    triggers = {},
-    variables = {},
-    variableTypes = {"unit", "unitType", "team", "player", "area", "string", "number", "bool"},
-    _triggerIdCount = 0,
-    _variableIdCount = 0,
-	_lua_rules_pre = "scen_edit",
-	C_HEIGHT = 16,
-	B_HEIGHT = 26,
-	numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"}, -- maybe use more user friendly signs
-	identityComparisonTypes = {"is", "is not"}, -- maybe use more user friendly signs
-	eventTypes = {
+Model = class()
+
+function Model:__init()
+    self.areas = {}
+    self.triggers = {}
+    self.variables = {}
+	self.teams = {}    
+    self._triggerIdCount = 0
+    self._variableIdCount = 0
+	self._lua_rules_pre = "scen_edit"
+	self.C_HEIGHT = 16
+	self.B_HEIGHT = 26
+	self.numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
+	self.identityComparisonTypes = {"is", "is not"} -- maybe use more user friendly signs
+	self.eventTypes = {
 		{
 			humanName = "Game started",
 			name = "GAME_START",
@@ -47,13 +49,8 @@ Model = {
 			humanName = "Unit leaves area",
 			name = "UNIT_LEAVE_AREA",
 		},
-	},
-}
-
-function Model:New(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self		
+	}
+	
 	self.eventTypes = CreateNameMapping(self.eventTypes)
 	local actionTypes = SCEN_EDIT.coreActions()
 	for i = 1, #actionTypes do
@@ -71,7 +68,6 @@ function Model:New(o)
 	self.conditionTypesByInput = SCEN_EDIT.GroupByField(conditionTypes, "input")
 	self.conditionTypesByOutput = SCEN_EDIT.GroupByField(conditionTypes, "output")
 	
-	table.echo(conditionTypes)
 	local coreTypes = SCEN_EDIT.coreTypes()
 	-- fill missing
 	for i = 1, #coreTypes do
@@ -91,16 +87,83 @@ function Model:New(o)
 	end
 	self.orderTypes = CreateNameMapping(orderTypes)
 	
-    return o
+	--add variables for core types
+	self.variableTypes = {"unit", "unitType", "team", "player", "area", "string", "number", "bool"}	
+	--add array type
+	--local arrayTypes = {}
+	for i = 1, #self.variableTypes do
+		local variableType = self.variableTypes[i]
+		local arrayType = variableType .. "_array"
+		table.insert(self.variableTypes, arrayType)
+	end
+	
+	self.s2mUnitIdMapping = {}
+	self.m2sUnitIdMapping = {}
+	self._unitIdCounter = 0
+	
+	self.callbacks = {}
+	self.callbackIdCount = 0
 end
 
-function Model:AddUnit(unitDef, x, y, z, playerId)
-    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|addUnit|" .. unitDef .. "|" .. 
-        x .. "|" .. y .. "|" .. z .. "|" .. playerId)
+function Model:GetSpringUnitId(modelId)
+	return self.m2sUnitIdMapping[modelId]
+end
+
+function Model:GetModelUnitId(springUnitId)
+	return self.s2mUnitIdMapping[springUnitId]
+end
+
+function Model:AddedUnit(unitId)
+	self._unitIdCounter = self._unitIdCounter + 1
+	if not self.s2mUnitIdMapping[unitId] then
+		self.s2mUnitIdMapping[unitId] = self._unitIdCounter
+	end
+	if not self.m2sUnitIdMapping[self._unitIdCounter] then
+		self.m2sUnitIdMapping[self._unitIdCounter] = unitId
+	end
+end
+
+function Model:RemovedUnit(unitId)
+	if self.s2mUnitIdMapping[unitId] then
+		self.m2sUnitIdMapping[self.s2mUnitIdMapping[unitId]] = nil
+	end
+	self.s2mUnitIdMapping[unitId] = nil
+end
+
+function Model:InvokeCallback(callbackId, params)
+	self.callbacks[callbackId](unpack(params))
+end
+
+function Model:RemoveCallback(callbackId)
+	self.callbacks[callbackId] = nil
+end
+
+function Model:GenerateCallbackId(callback)
+	self.callbackIdCount = self.callbackIdCount + 1
+	self.callbacks[self.callbackIdCount] = callback
+	return self.callbackIdCount
+end
+
+function Model:AddUnit(unitDef, x, y, z, playerId, callback)
+	local message = self._lua_rules_pre .. "|addUnit|" .. unitDef .. "|" .. 
+        x .. "|" .. y .. "|" .. z .. "|" .. playerId
+	if callback then
+		message = message .. "|callback|" .. self:GenerateCallbackId(callback)
+	end
+    Spring.SendLuaRulesMsg(message)
 end
 
 function Model:RemoveUnit(unitId)
     Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|removeUnit|" .. unitId)
+end
+
+function Model:AddFeature(featureDef, x, y, z, playerId)
+    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|addFeature|" .. featureDef .. "|" .. 
+        x .. "|" .. y .. "|" .. z .. "|" .. playerId)
+end
+
+function Model:RemoveFeature(unitId)
+    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|removeFeature|" .. unitId)
 end
 
 function Model:MoveUnit(unitId, x, y, z)
@@ -123,16 +186,27 @@ function Model:Clear()
     self.areas = {}
     self.triggers = {}
     self.variables = {}
+	self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unitId = allUnits[i]
-        Model:RemoveUnit(unitId)
+        self:RemoveUnit(unitId)
     end
+	local allFeatures = Spring.GetAllFeatures()
+	for i = 1, #allFeatures do
+		local featureId = allFeatures[i]
+		self:RemoveFeature(featureId)
+	end
+	self._unitIdCounter = 0
+	self.m2sUnitIdMapping = {}
+	self.s2mUnitIdMapping = {}
 end
 
 function Model:Save(fileName)
 	local mission = {}
 	mission.meta = self:GetMetaData()
+	mission.meta.m2sUnitIdMapping = {}
+	mission.meta.s2mUnitIdMapping = {}
 	mission.units = {}
 	
     local allUnits = Spring.GetAllUnits()
@@ -143,6 +217,7 @@ function Model:Save(fileName)
         unit.unitDefName = UnitDefs[unitDefId].name
         unit.x, _, unit.y = Spring.GetUnitPosition(unitId)
         unit.player = Spring.GetUnitTeam(unitId)
+		unit.id = self.s2mUnitIdMapping[unitId]
 
         table.insert(mission.units, unit)
     end
@@ -188,17 +263,31 @@ end
 
 function Model:Load(fileName)
     self:Clear()
-
+	
     --load file
     local f, err = loadfile(fileName)
     local mission = f()
 	self:SetMetaData(mission.meta)
+	self.m2sUnitIdMapping = {}
+	self.s2mUnitIdMapping = {}
 	--load units
     local units = mission.units
+	self._unitIdCounter = 0
     for i, unit in pairs(units) do
-        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player)
+        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player,
+			function (unitId)				
+				if self.s2mUnitIdMapping[unitId] then
+					self.m2sUnitIdMapping[self.s2mUnitIdMapping[unitId]] = nil
+				end				
+				self.s2mUnitIdMapping[unitId] = unit.id
+				self.m2sUnitIdMapping[unit.id] = unitId
+			end
+		)
+		if unit.id > self._unitIdCounter then
+			self._unitIdCounter = unit.id
+		end
     end
-	
+	self:GenerateTeams()
 --[[    
     if mission.regions ~= nil then
         local areas = mission.regions[1].areas
@@ -218,6 +307,9 @@ function Model:GetMetaData()
 		areas = self.areas,
 		triggers = self.triggers,
 		variables = self.variables,
+		teams = self.teams,
+		s2mUnitIdMapping = self.s2mUnitIdMapping,
+		m2sUnitIdMapping = self.m2sUnitIdMapping,
 	}
 end
 
@@ -225,7 +317,22 @@ end
 function Model:SetMetaData(meta)
 	self.areas = meta.areas
 	self.triggers = meta.triggers
+	for i = 1, #self.triggers do
+		local trigger = self.triggers[i]
+		if self._triggerIdCount < trigger.id then
+			self._triggerIdCount = trigger.id
+		end
+	end
 	self.variables = meta.variables
+		for i = 1, #self.variables do
+		local variable = self.variables[i]
+		if self._variableIdCount < variable.id then
+			self._variableIdCount = variable.id
+		end
+	end
+	self.teams = meta.teams or {}
+	self.s2mUnitIdMapping = meta.s2mUnitIdMapping or {}
+	self.m2sUnitIdMapping = meta.m2sUnitIdMapping or {}
 end
 
 function Model:NewTrigger()
@@ -236,6 +343,7 @@ function Model:NewTrigger()
         events = {},
         conditions = {},
         actions = {},
+		enabled = true,
     }
     table.insert(self.triggers, trigger)
     return trigger
@@ -252,12 +360,12 @@ function Model:RemoveTrigger(triggerId)
     return false
 end
 
-function Model:NewVariable()
+function Model:NewVariable(variableType)
     self._variableIdCount = self._variableIdCount + 1
     local variable = {
         id = self._variableIdCount,
-        type = "number",
-        value = 0,
+        type = variableType,        
+		value = {},
         name = "variable" .. self._variableIdCount,
     }
 	if self.variables[variable.type] then
@@ -269,12 +377,45 @@ function Model:NewVariable()
 end
 
 function Model:RemoveVariable(variableId)
-    for i = 1, #self.variables do
-        local tr = self.variables[i]
-        if tr.id == variableId then
-            table.remove(self.variables, i)
-            return true
-        end
+    for k, v in pairs(self.variables) do
+        for i = 1, #v do
+			local variable = v[i]
+			if variable.id == variableId then
+				table.remove(self.variables[k], i)
+				return true
+			end
+		end
     end
     return false
+end
+
+function Model:ListVariables()
+	local allVars = {}
+	for k, v in pairs(self.variables) do
+		for i = 1, #v do
+			local variable = v[i]
+			table.insert(allVars, variable)
+		end
+	end
+	return allVars
+end
+
+function Model:GetVariablesOfType(type)
+	return self.variables[type]
+end
+
+--should be called from the widget upon creating a new model
+function Model:GenerateTeams() 
+	local names, ids, colors = GetTeams()
+	for i = 1, #ids do
+		local id = ids[i]
+		local name = names[i]
+		local color = colors[i]
+		
+		self.teams[id] = {
+			name = name,
+			id = id,
+			color = color,
+		}
+	end
 end

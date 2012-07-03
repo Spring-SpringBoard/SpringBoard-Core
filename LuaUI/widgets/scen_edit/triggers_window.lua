@@ -5,6 +5,7 @@ if WG.Chili then
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
+local model = SCEN_EDIT.model
 
 TriggersWindow = Chili.Window:Inherit {
     caption = "Trigger window",
@@ -12,7 +13,6 @@ TriggersWindow = Chili.Window:Inherit {
     minimumSize = {300,200},
     x = 500,
     y = 300,
-    model = nil, --required
     _triggers = nil,
 }
 
@@ -67,7 +67,7 @@ function TriggersWindow:New(obj)
 end
 
 function TriggersWindow:AddTrigger()
-    local newTrigger = self.model:NewTrigger()
+    local newTrigger = model:NewTrigger()
     self:Populate()
     for i = 1, #self._triggers.children do
         local panel = self._triggers.children[i]
@@ -80,14 +80,14 @@ function TriggersWindow:AddTrigger()
 end
 
 function TriggersWindow:MakeRemoveTriggerWindow(triggerId)
-    self.model:RemoveTrigger(triggerId)
+    model:RemoveTrigger(triggerId)
     self:Populate()
 end
 
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
-    for i = 1, #self.model.triggers do
-        local trigger = self.model.triggers[i]
+    for i = 1, #model.triggers do		
+        local trigger = model.triggers[i]
         local stackTriggerPanel = Chili.StackPanel:New {
             triggerId = trigger.id,
             parent = self._triggers,
@@ -138,9 +138,11 @@ function TriggersWindow:Populate()
 
                 self.disableChildrenHitTest = true
                 table.insert(newWin.OnDispose, 
-                function() 
-                    self.disableChildrenHitTest = false
-                end)
+					function() 
+						btnEditTrigger:SetCaption(trigger.name)
+						self.disableChildrenHitTest = false
+					end
+				)
             end
         }
     end

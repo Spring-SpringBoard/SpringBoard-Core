@@ -38,6 +38,7 @@ end
 
 function TriggerPanel:UpdateModel(field)
     field.id = self.cmbTrigger.triggerIds[self.cmbTrigger.selected]
+	field.type = "pred"
 end
 
 function TriggerPanel:UpdatePanel(field)
