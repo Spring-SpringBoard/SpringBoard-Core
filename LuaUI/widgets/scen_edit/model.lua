@@ -1,12 +1,10 @@
-Model = class()
+Model = LCS.class{}
+local SCEN_EDIT_DIR = "LuaRules/gadgets/scen_edit/"
+local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
+local SCEN_EDIT_LUAUI_DIR = "LuaUI/widgets/scen_edit/"
 
-function Model:__init()
-    self.areas = {}
-    self.triggers = {}
-    self.variables = {}
+function Model:init()
 	self.teams = {}    
-    self._triggerIdCount = 0
-    self._variableIdCount = 0
 	self._lua_rules_pre = "scen_edit"
 	self.C_HEIGHT = 16
 	self.B_HEIGHT = 26
@@ -72,11 +70,11 @@ function Model:__init()
 	-- fill missing
 	for i = 1, #coreTypes do
 		local coreType = coreTypes[i]
-		if self.conditionTypesByInput[coreType] then
-			self.conditionTypesByInput[coreType] = CreateNameMapping(self.conditionTypesByInput[coreType])
+		if self.conditionTypesByInput[coreType.name] then
+			self.conditionTypesByInput[coreType.name] = CreateNameMapping(self.conditionTypesByInput[coreType.name])
 		end
-		if self.conditionTypesByOutput[coreType] then
-			self.conditionTypesByOutput[coreType] = CreateNameMapping(self.conditionTypesByOutput[coreType])
+		if self.conditionTypesByOutput[coreType.name] then
+			self.conditionTypesByOutput[coreType.name] = CreateNameMapping(self.conditionTypesByOutput[coreType.name])
 		end
 	end
 	
@@ -97,37 +95,23 @@ function Model:__init()
 		table.insert(self.variableTypes, arrayType)
 	end
 	
-	self.s2mUnitIdMapping = {}
-	self.m2sUnitIdMapping = {}
-	self._unitIdCounter = 0
-	
 	self.callbacks = {}
 	self.callbackIdCount = 0
-end
 
-function Model:GetSpringUnitId(modelId)
-	return self.m2sUnitIdMapping[modelId]
-end
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager.lua")
+    self.areaManager = AreaManager()
 
-function Model:GetModelUnitId(springUnitId)
-	return self.s2mUnitIdMapping[springUnitId]
-end
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager.lua")
+    self.unitManager = UnitManager()
 
-function Model:AddedUnit(unitId)
-	self._unitIdCounter = self._unitIdCounter + 1
-	if not self.s2mUnitIdMapping[unitId] then
-		self.s2mUnitIdMapping[unitId] = self._unitIdCounter
-	end
-	if not self.m2sUnitIdMapping[self._unitIdCounter] then
-		self.m2sUnitIdMapping[self._unitIdCounter] = unitId
-	end
-end
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager.lua")
+    self.featureManager = FeatureManager()
 
-function Model:RemovedUnit(unitId)
-	if self.s2mUnitIdMapping[unitId] then
-		self.m2sUnitIdMapping[self.s2mUnitIdMapping[unitId]] = nil
-	end
-	self.s2mUnitIdMapping[unitId] = nil
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager.lua")
+    self.variableManager = VariableManager()
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager.lua")
+    self.triggerManager = TriggerManager()
 end
 
 function Model:InvokeCallback(callbackId, params)
@@ -144,19 +128,6 @@ function Model:GenerateCallbackId(callback)
 	return self.callbackIdCount
 end
 
-function Model:AddUnit(unitDef, x, y, z, playerId, callback)
-	local message = self._lua_rules_pre .. "|addUnit|" .. unitDef .. "|" .. 
-        x .. "|" .. y .. "|" .. z .. "|" .. playerId
-	if callback then
-		message = message .. "|callback|" .. self:GenerateCallbackId(callback)
-	end
-    Spring.SendLuaRulesMsg(message)
-end
-
-function Model:RemoveUnit(unitId)
-    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|removeUnit|" .. unitId)
-end
-
 function Model:AddFeature(featureDef, x, y, z, playerId)
     Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|addFeature|" .. featureDef .. "|" .. 
         x .. "|" .. y .. "|" .. z .. "|" .. playerId)
@@ -164,11 +135,6 @@ end
 
 function Model:RemoveFeature(unitId)
     Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|removeFeature|" .. unitId)
-end
-
-function Model:MoveUnit(unitId, x, y, z)
-    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|moveUnit|" .. unitId .. "|" .. 
-        x .. "|" .. y .. "|" .. z .. "|")
 end
 
 function Model:AdjustHeightMap(x1, z1, x2, z2, height)
@@ -183,23 +149,26 @@ end
 
 --clears all units, areas, triggers, etc.
 function Model:Clear()
-    self.areas = {}
-    self.triggers = {}
-    self.variables = {}
+    self.areaManager:clear()
+    self.variableManager:clear()
+    self.triggerManager:clear()
 	self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unitId = allUnits[i]
-        self:RemoveUnit(unitId)
+        Spring.DestroyUnit(unitId, false, true)
+--        self.unitManager:removeUnit(unitId)
     end
 	local allFeatures = Spring.GetAllFeatures()
 	for i = 1, #allFeatures do
 		local featureId = allFeatures[i]
-		self:RemoveFeature(featureId)
+        Spring.DestroyFeature(featureId, false, true)
+--		self.featureManager:RemoveFeature(featureId)
 	end
 	self._unitIdCounter = 0
 	self.m2sUnitIdMapping = {}
 	self.s2mUnitIdMapping = {}
+    SCEN_EDIT.commandManager:clearUndoRedoStack()
 end
 
 function Model:Save(fileName)
@@ -217,7 +186,7 @@ function Model:Save(fileName)
         unit.unitDefName = UnitDefs[unitDefId].name
         unit.x, _, unit.y = Spring.GetUnitPosition(unitId)
         unit.player = Spring.GetUnitTeam(unitId)
-		unit.id = self.s2mUnitIdMapping[unitId]
+		unit.id = self.unitManager:getModelUnitId(unitId)
 
         table.insert(mission.units, unit)
     end
@@ -261,80 +230,52 @@ function Model:Save(fileName)
     table.save(mission, fileName)
 end
 
-function Model:Load(fileName)
+function Model:Load(modelString)
     self:Clear()
 	
     --load file
-    local f, err = loadfile(fileName)
-    local mission = f()
+    local mission = loadstring(modelString)()
 	self:SetMetaData(mission.meta)
-	self.m2sUnitIdMapping = {}
-	self.s2mUnitIdMapping = {}
 	--load units
     local units = mission.units
 	self._unitIdCounter = 0
     for i, unit in pairs(units) do
-        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player,
-			function (unitId)				
-				if self.s2mUnitIdMapping[unitId] then
-					self.m2sUnitIdMapping[self.s2mUnitIdMapping[unitId]] = nil
-				end				
-				self.s2mUnitIdMapping[unitId] = unit.id
-				self.m2sUnitIdMapping[unit.id] = unitId
-			end
-		)
-		if unit.id > self._unitIdCounter then
-			self._unitIdCounter = unit.id
-		end
+        local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
+        SCEN_EDIT.model.unitManager:setUnitModelId(unitId, unit.id)
+--        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player,
+--			function (unitId)				
+--				if self.s2mUnitIdMapping[unitId] then
+--					self.m2sUnitIdMapping[self.s2mUnitIdMapping[unitId]] = nil
+--				end				
+--				self.s2mUnitIdMapping[unitId] = unit.id
+--				self.m2sUnitIdMapping[unit.id] = unitId
+--			end
+--		)
+--		if unit.id > self._unitIdCounter then
+--			self._unitIdCounter = unit.id
+--		end--]]
     end
 	self:GenerateTeams()
---[[    
-    if mission.regions ~= nil then
-        local areas = mission.regions[1].areas
-        for i, area in pairs(areas) do
-            if area.category == "rectangle" then
-                table.insert(areas, {area.x, area.y, area.x + area.width, 
-                    area.y + area.height})
-            end
-        end
-    end
-	--]]
 end
 
 --returns a table that holds triggers, areas and other non-engine content
 function Model:GetMetaData()
 	return {
-		areas = self.areas,
-		triggers = self.triggers,
-		variables = self.variables,
+		areas = self.areaManager:serialize(),
+		triggers = self.triggerManager:serialize(),
+		variables = self.variableManager:serialize(),
 		teams = self.teams,
-		s2mUnitIdMapping = self.s2mUnitIdMapping,
-		m2sUnitIdMapping = self.m2sUnitIdMapping,
 	}
 end
 
 --sets triggers, areas, etc.
 function Model:SetMetaData(meta)
-	self.areas = meta.areas
-	self.triggers = meta.triggers
-	for i = 1, #self.triggers do
-		local trigger = self.triggers[i]
-		if self._triggerIdCount < trigger.id then
-			self._triggerIdCount = trigger.id
-		end
-	end
-	self.variables = meta.variables
-		for i = 1, #self.variables do
-		local variable = self.variables[i]
-		if self._variableIdCount < variable.id then
-			self._variableIdCount = variable.id
-		end
-	end
+	self.areaManager:load(meta.areas)
+    self.triggerManager:load(meta.triggers)
+    self.variableManager:load(meta.variables)
 	self.teams = meta.teams or {}
-	self.s2mUnitIdMapping = meta.s2mUnitIdMapping or {}
-	self.m2sUnitIdMapping = meta.m2sUnitIdMapping or {}
 end
-
+--[[
 function Model:NewTrigger()
     self._triggerIdCount = self._triggerIdCount + 1
     local trigger = { 
@@ -403,7 +344,7 @@ end
 function Model:GetVariablesOfType(type)
 	return self.variables[type]
 end
-
+--]]
 --should be called from the widget upon creating a new model
 function Model:GenerateTeams() 
 	local names, ids, colors = GetTeams()

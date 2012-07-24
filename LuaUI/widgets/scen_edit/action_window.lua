@@ -59,6 +59,9 @@ function ActionWindow:New(obj)
 				for i = 1, #action.input do
 					local input = action.input[i]
 					local subPanelName = input.name
+                    if input.humanName then
+                        
+                    end
 					local subPanel = SCEN_EDIT.createNewPanel(input.type, obj.actionPanel)
 					if subPanel then
 						obj.actionPanel[subPanelName] = subPanel

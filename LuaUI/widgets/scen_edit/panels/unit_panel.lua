@@ -26,8 +26,8 @@ function UnitPanel:Initialize()
 	table.insert(radioGroup, self.cbPredefinedUnit)
     self.btnPredefinedUnit = Chili.Button:New {
         caption = '...',
-        right = 1,
-        width = 100,
+        right = 40,
+        width = 60,
         height = model.B_HEIGHT,
         parent = stackUnitPanel,
         unitId = nil,
@@ -40,12 +40,29 @@ function UnitPanel:Initialize()
     self.btnPredefinedUnit.OnSelectUnit = {
         function(unitId)
             self.btnPredefinedUnit.unitId = unitId
-            self.btnPredefinedUnit.caption = "Unit id=" .. unitId
+            self.btnPredefinedUnit.caption = "Id=" .. unitId
             self.btnPredefinedUnit:Invalidate()
             if not self.cbPredefinedUnit.checked then 
                 self.cbPredefinedUnit:Toggle()
             end
         end
+    }
+    self.btnPredefinedUnitZoom = Chili.Button:New {
+        caption = "?",
+        right = 1,
+        width = 35,
+        height = model.B_HEIGHT,
+        parent = stackUnitPanel,
+        OnClick = {
+            function()
+                if self.btnPredefinedUnit.unitId ~= nil then
+                    local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.btnPredefinedUnit.unitId)
+                    local x, y, z = Spring.GetUnitPosition(unitId)
+                    Spring.SelectUnitArray({unitId})
+                    Spring.SetCameraTarget(x, y, z)
+                end
+            end
+        }
     }
     --SPECIAL UNIT, i.e TRIGGER
     local stackUnitPanel = MakeComponentPanel(self.parent)

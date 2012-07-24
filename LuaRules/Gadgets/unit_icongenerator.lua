@@ -896,7 +896,7 @@ end
     local result;
     local left,bottom = 0,0;
     local width,height = 0,0;
-
+--Spring.Echo("HERE 1")
     if (not cfg.empty) then
       repeat
         myGLClear();
@@ -920,6 +920,7 @@ end
       myGLClear();
     end;
 
+--Spring.Echo("HERE 2")
     --// take screenshot
     gl.ActiveFBO(final_fbo, true, function()
       local scale = cfg.scale;
@@ -950,6 +951,7 @@ end
         (left+width)/(renderX), (bottom+height)/(renderY));
       gl.Blending(false);
       gl.Texture(false);
+--Spring.Echo("HERE 3")
 
       local outfile = (outdir) .."/".. (UnitDefs[udid].name);
 	  if VFS.FileExists(outfile .. imageExt, VFS.RAW) then
@@ -1039,12 +1041,19 @@ local schemes,resolutions,ratios = {},{},{}
       return false;
     end
 
-
+--[[
+    Spring.Echo(words[1])
+    local unitDef = words[1]
+    local def = UnitDefs[UnitDefNames[unitDef].id]
+    for k, v in pairs(def) do
+        Spring.Echo(k, v)
+    end
+--]]
     --//note: we have a LIFO stack
     for _,res in pairs(resolutions) do
       for _,_scheme in pairs(schemes) do
         for _ratio_name,_ratio in pairs(ratios) do
-		  Spring.Echo("THIS IS A TEST 1")
+	--	  Spring.Echo("THIS IS A TEST 1")
           AddJob( FreeResources );
 --Spring.Echo("THIS IS A TEST 2")
           AddJob( WaitForSyncedJobs );

@@ -13,8 +13,8 @@ FeatureDefsView = Chili.LayoutPanel:Inherit {
   autoArrangeV = false,
   centerItems  = false,
 
-  iconX     = 32,
-  iconY     = 32,
+  iconX     = 64,
+  iconY     = 64,
 
   itemMargin    = {1, 1, 1, 1},
 
@@ -64,8 +64,17 @@ function FeatureDefsView:PopulateFeatureDefsView()
 			correctType = isWreck == (featureTypeId == 1)
 		end
         if correctType then
-            --unitImagePath = "unitpics/" .. featureDef.buildpicname
-			unitImagePath = defaultPicture
+            unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
+            local fileExists = VFS.FileExists(unitImagePath)
+            if not fileExists then
+                local defName = featureDef.name:gsub("_heap", ""):gsub("_dead", "")
+                local unitDef = UnitDefNames[defName]
+                if unitDef ~= nil then
+                    unitImagePath = SCEN_EDIT.getUnitDefBuildPic(unitDef)
+                else
+                    unitImagePath = ""
+                end
+            end
 			local name = featureDef.humanName or featureDef.tooltip or featureDef.name
             self:AddImage(name, featureDef.id, unitImagePath)
         end

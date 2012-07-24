@@ -14,18 +14,21 @@ function RuntimeModel:LoadMission(meta)
 
 	self.model = Model()
 	self.model:SetMetaData(meta)
+    --FIXME: should just get the meta data from the unit model
+    self.model.unitManager = SCEN_EDIT.model.unitManager
 	
 	self.fieldResolver.model = self.model
-	for i = 1, #self.model.areas do
-		local area = self.model.areas[i]
-		local areaModel = AreaModel(i, area)
+    local areas = self.model.areaManager:getAllAreas()
+	for id, area in pairs(areas) do
+		local areaModel = AreaModel(id, area)
 		areaModel:Populate(self.lastFrameUnitIds)
 		table.insert(self.areaModels, areaModel)		
 	end
 	
 	self.eventTriggers = {}
-	for i = 1, #self.model.triggers do
-		local trigger = self.model.triggers[i]
+    local triggers = self.model.triggerManager:getAllTriggers()
+	for i = 1, #triggers do
+		local trigger = triggers[i]
 		if trigger.enabled then
 			for j = 1, #trigger.events do
 				local event = trigger.events[j]
@@ -39,6 +42,8 @@ function RuntimeModel:LoadMission(meta)
 end
 
 function RuntimeModel:GameStart()
+    Spring.Echo("GAME START")
+	Spring.Echo(#self.eventTriggers["GAME_START"])
 	if self.eventTriggers["GAME_START"] then
 		for k = 1, #self.eventTriggers["GAME_START"] do
 			local params = { }
@@ -73,7 +78,7 @@ function RuntimeModel:GameFrame(frameNum)
 		local area = areaModel.area
 		if self.eventTriggers["UNIT_ENTER_AREA"] then
 			for j = 1, #results.entered do
-				local enteredUnitId = results.entered[j]
+				local enteredUnitId = self.model.unitManager:getModelUnitId(results.entered[j])
 				for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
 					local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
 					local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]				

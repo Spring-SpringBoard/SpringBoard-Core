@@ -26,8 +26,8 @@ function ComboBox:New(obj)
           caption = obj.items[1],
           width = '100%',
           height = '100%',
-          itemMargin    = {0, 0, 0, 0},
-          itemPadding    = {0, 0, 0, 0},
+          itemMargin = {0, 0, 0, 0},
+          itemPadding = {0, 0, 0, 0},
         }
     }
   end
@@ -120,14 +120,21 @@ function ComboBox:MouseDown(...)
       estimatedWidth = 20 + largestStr * 10
       estimatedWidth = math.min(estimatedWidth, 500)
       estimatedWidth = math.max(estimatedWidth, self.width)
+
+      local height = 200      
+      if sy + height > screen0.height then
+          y = sy - height - 40
+      else
+          y = sy
+      end
       dropDownWindow = Chili.Window:New {
           parent = screen0,
           clientWidth = estimatedWidth,
-          clientHeight = 200,
+          clientHeight = height,
           resizable = false,
           draggable = false,
           x = sx,
-          y = sy,
+          y = y,
           backgroundColor = {0.8,0.8,0.8,0.9},
             children = {
                 Chili.ScrollPanel:New {

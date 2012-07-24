@@ -1,16 +1,55 @@
 function SCEN_EDIT.coreTypes()
 	return {
-		"unit",
-		"unitType",
-		"team",
-		"area",
-		"order",
-		"trigger",
-		"bool",
-		"string",
-		"number",
-		"numericComparison",
-		"identityComparison",
+        {
+            humanName = "Unit",
+            name = "unit",
+        },
+        {
+            humanName = "Unit type",
+            name = "unitType",
+        },
+        {
+            humanName = "Team",
+            name = "team",
+        },
+        {
+            humanName = "Area",
+    		name = "area",
+        },
+        {
+		    humanName = "Order",
+            name = "order",
+        },
+        {
+            humanName = "Trigger",
+            name = "trigger",
+            canBeVariable = false,
+            canCompare = false,
+        },
+        {
+            humanName = "Bool",
+            name = "bool",
+        },
+        {
+		    humanName = "String",
+            name = "string",
+        },
+        {
+		    name = "Number",
+            humanName = "number",
+        },
+        {
+            humanName = "Numeric comparison",
+            name = "numericComparison",
+            canBeVariable = false,
+            canCompare = false,
+        },
+        {
+            humanName = "Identity comparison",
+            name = "identityComparison",
+            canBeVariable = false,
+            canCompare = false,
+        },
 	}
 end
 
@@ -89,7 +128,6 @@ function SCEN_EDIT.coreActions()
 			name = "ISSUE_ORDER",
 			input = { "unit", "order" },
 			execute = function (input)
-				table.echo(input)
 				local orderTypeName = input.order.orderTypeName
 				local newInput = {
 					unit = input.unit,
@@ -106,7 +144,7 @@ function SCEN_EDIT.coreActions()
 				local unit = input.unit				
 				local x, y, z = Spring.GetUnitPosition(unit)
 				
-				local color = SCEN_EDIT.rtModel.model.teams[Spring.GetUnitTeam(unit)].color				
+				local color = SCEN_EDIT.rtModel.model.teams[Spring.GetUnitTeam(unit)].color
 				Spring.DestroyUnit(unit, false, true)
 				SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
 			end
@@ -153,6 +191,24 @@ function SCEN_EDIT.coreActions()
 				trigger.enabled = false
 			end
 		},
+        {
+            humanName = "Test result",
+            name = "TEST_RESULT",
+            input = { 
+                {
+                    type = "number",
+                    name = "name",
+                    humanName = "Test number:",
+                },
+                {
+                    type = "bool",
+                    name = "result",
+                    humanName = "Success:",
+                },
+            },
+            execute = function (input)
+            end
+        },
 		--TODO.. variables, yeah..
 		{
 			humanName = "Assign variable",
@@ -175,14 +231,12 @@ function SCEN_EDIT.coreOrders()
 			name = "MOVE_AREA",
 			input = { "area" },
 			execute = function(input)
-				table.echo(input)
 				local unit = input.unit
 				local area = input.params.area
 				local x = (area[1] + area[3]) / 2
 				local y = 0
 				local z = (area[2] + area[4]) / 2
 				
-				Spring.Echo(unit)
 				Spring.GiveOrderToUnit(unit, CMD.MOVE, { x, y, z }, {})
 			end,
 		},
@@ -197,6 +251,106 @@ function SCEN_EDIT.coreOrders()
 				},
 			},
 			execute = function(input)
+				local unit = input.unit
+				local target = input.params.target
+				
+				Spring.GiveOrderToUnit(unit, CMD.ATTACK, { target }, {})
+			end,
+		},
+        {
+			humanName = "Cancel current order",
+			name = "CANCEL_ORDER",
+            input = {},
+			execute = function(input)
+				local unit = input.unit
+				
+				Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {})
+			end,
+        },
+        {
+			humanName = "Wait with current order",
+			name = "WAIT_ORDER",
+            input = {},
+			execute = function(input)
+				local unit = input.unit
+				
+				Spring.GiveOrderToUnit(unit, CMD.WAIT, {}, {})
+			end,
+        },
+        {
+			humanName = "Patrol to area",
+			name = "PATROL_AREA",
+			input = { "area" },
+			execute = function(input)
+				local unit = input.unit
+				local area = input.params.area
+				local x = (area[1] + area[3]) / 2
+				local y = 0
+				local z = (area[2] + area[4]) / 2
+				
+				Spring.GiveOrderToUnit(unit, CMD.PATROL, { x, y, z }, {})
+			end,
+        },
+        {
+			humanName = "Fight to area",
+			name = "FIGHT_AREA",
+			input = { "area" },
+			execute = function(input)
+				local unit = input.unit
+				local area = input.params.area
+				local x = (area[1] + area[3]) / 2
+				local y = 0
+				local z = (area[2] + area[4]) / 2
+				
+				Spring.GiveOrderToUnit(unit, CMD.FIGHT, { x, y, z }, {})
+			end,
+        },
+		{
+			humanName = "Guard unit",
+			name = "GUARD_UNIT",
+			input = {				
+				{
+					name = "target",
+					type = "unit",
+					humanName = "Target unit",
+				},
+			},
+			execute = function(input)
+				local unit = input.unit
+				local target = input.params.target
+				
+				Spring.GiveOrderToUnit(unit, CMD.GUARD, { target }, {})
+			end,
+		},
+		{
+			humanName = "Repair unit",
+			name = "REPAIR_UNIT",
+			input = {				
+				{
+					name = "target",
+					type = "unit",
+					humanName = "Target unit",
+				},
+			},
+			execute = function(input)
+				local unit = input.unit
+				local target = input.params.target
+				
+				Spring.GiveOrderToUnit(unit, CMD.REPAIR, { target }, {})
+			end,
+		},
+		{
+			humanName = "Repair area",
+			name = "REPAIR_AREA",
+			input = { type = "area" },
+			execute = function(input)
+				local unit = input.unit
+				local area = input.params.area
+				local x = (area[1] + area[3]) / 2
+				local y = 0
+				local z = (area[2] + area[4]) / 2
+				
+				Spring.GiveOrderToUnit(unit, CMD.REPAIR, { x, y, z }, {})
 			end,
 		},
 	}
@@ -205,23 +359,29 @@ end
 function SCEN_EDIT.coreConditions()
 	local conditions = {}
 	local coreTypes = SCEN_EDIT.coreTypes()
-	local blackList = { numericComparison = true, identityComparison = true, trigger = true, order = true }
-	for i = 1, #coreTypes do
-		local coreType = coreTypes[i]		
-		if not blackList[coreType] then
+    local complexTypes = SCEN_EDIT.complexTypes()
+    local allTypes = coreTypes
+    for i = 1, #complexTypes do
+        local complexType = complexTypes[i]
+        table.insert(allTypes, complexType)
+    end
+
+	for i = 1, #allTypes do
+		local type = allTypes[i]		
+		if type.canCompare == nil or type.canCompare == true then
 			local relType
-			if coreType == "number" then
+			if type.name == "number" then
 				relType = "numericComparison"
 			else
 				relType = "identityComparison"
 			end
 			local compareCond = {
-				humanName = "Compare " .. coreType,
-				name = "compare_" .. coreType,
+				humanName = "Compare " .. type.name,
+				name = "compare_" .. type.name,
 				input = {
 					{
 						name = "first",
-						type = coreType,
+						type = type.name,
 					},
 					{
 						name = "relation",
@@ -229,7 +389,7 @@ function SCEN_EDIT.coreConditions()
 					},
 					{
 						name = "second",
-						type = coreType,
+						type = type.name,
 					},
 				},
 				execute = function(input) 
@@ -238,7 +398,7 @@ function SCEN_EDIT.coreConditions()
 					local relation = input.relation
 					if relation == "is" or relation == "is not" then
 						local isSame = false
-						if coreType ~= "area" then
+						if type.name ~= "area" then
 							isSame = first == second
 						else
 							isSame = first[1] == second[1] and first[2] == second[2] and
@@ -259,14 +419,14 @@ function SCEN_EDIT.coreConditions()
 	end
 	
 	local arrayTypes = {}
-	for i = 1, #coreTypes do
-		local coreType = coreTypes[i]
-		local arrayType = coreType .. "_array"
+	for i = 1, #allTypes do
+		local type = allTypes[i]
+		local arrayType = type.name .. "_array"
 		local itemFromArray = {
-			humanName = coreType .. " in array at position",
+			humanName = type.name .. " in array at position",
 			name = arrayType .. "_indexing",
 			input = { arrayType, "number" },
-			output = coreType,			
+			output = type.name,			
 		}
 		table.insert(conditions, itemFromArray)
 	end
@@ -300,6 +460,16 @@ function SCEN_EDIT.coreTransforms()
 			output = "number",			
 		},
 	}
+end
+
+function SCEN_EDIT.complexTypes()
+    return {
+        {
+            humanName = "Point",
+            name = "point",
+            input = { "number", "number"},
+        }
+    }
 end
 
 function SCEN_EDIT.createNewPanel(input, parent)

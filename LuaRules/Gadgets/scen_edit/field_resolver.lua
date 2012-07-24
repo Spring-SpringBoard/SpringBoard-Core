@@ -22,7 +22,7 @@ function FieldResolver:Resolve(field, type)
 		elseif field.type == "var" then
 		end
 		if unitId ~= nil then
-			return SCEN_EDIT.rtModel.model:GetSpringUnitId(unitId)
+			return SCEN_EDIT.rtModel.model.unitManager:getSpringUnitId(unitId)
 		end
 	elseif type == "unitType" then		
 		if field.type == "pred" then
@@ -42,19 +42,19 @@ function FieldResolver:Resolve(field, type)
 	elseif type == "area" then
 		if field.type == "pred" then
 			local areaId = tonumber(field.id)
-			return self.model.areas[areaId]			
+            return self.model.areaManager:getArea(areaId)
 		elseif field.type == "spec" then
 			if field.name == "Trigger area" then
 				local areaId = tonumber(self.params.triggerAreaId)
 				if areaId then
-					return self.model.areas[areaId]
+					return self.model.areaManager:getArea(areaId)
 				end
 			end
 		end
 	elseif type == "trigger" then
 		if field.type == "pred" then
 			local triggerId = tonumber(field.id)
-			return self.model.triggers[triggerId]
+			return self.model.triggerManager:getTrigger(triggerId)
 		end
 	elseif type == "order" then
 		local orderType = SCEN_EDIT.rtModel.model.orderTypes[field.orderTypeName]

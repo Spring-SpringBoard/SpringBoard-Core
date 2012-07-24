@@ -43,16 +43,9 @@ end
 
 function DisplayUtil:displayText(text, coords, color)
 	if self.isWidget then
-		self:AddText( text, coords, color, 300)
+		self:AddText(text, coords, color, 300)
 	else
-		data = { 
-			text = text,
-			coords = coords,
-			color = color,
-		}
-		SendToUnsynced("toWidget", table.show({
-			tag = "display",
-			data = data
-		}))
+        local cmd = WidgetDisplayTextCommand(text, coords, color)
+        SCEN_EDIT.commandManager:execute(cmd, true)
 	end
 end

@@ -91,8 +91,17 @@ function gadget:RecvLuaMsg(msg, playerID)
     local par5 = data[7]
 	local par6 = data[8]
 	local par7 = data[8]
-
-    if op == 'addUnit' then
+    
+    if op == 'sync' then
+        Spring.Echo("Synced message!")
+        local msgTable = loadstring(string.sub(msg, #(pre .. "|sync|") + 1))()
+        local msg = Message(msgTable.tag, msgTable.data)
+        table.echo(msg)
+        if msg.tag == 'command' then
+            local cmd = SCEN_EDIT.resolveCommand(msg.data)
+            GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
+        end
+    elseif op == 'addUnit' then
         if tonumber(par1) ~= nil then
             par1 = tonumber(par1)
         end
@@ -148,6 +157,9 @@ function gadget:Initialize()
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
 	
 	VFS.Include(SCEN_EDIT_COMMON_DIR .. "class.lua")
+    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_COMMON_DIR .. "lcs/LCS.lua"))
+    LCS = LCS()
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "observable.lua")
 	VFS.Include(SCEN_EDIT_COMMON_DIR .. "display_util.lua")
 	SCEN_EDIT.displayUtil = DisplayUtil(false)
 	VFS.Include(SCEN_EDIT_DIR .. "area_model.lua")
@@ -155,14 +167,68 @@ function gadget:Initialize()
 	VFS.Include(SCEN_EDIT_DIR .. "runtime_model.lua")
 	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "util.lua")
 	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "core_types.lua")
+
 	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "model.lua")
-	
+    SCEN_EDIT.model = Model()
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager_listener.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager_listener_gadget.lua")
+    local areaManagerListener = AreaManagerListenerGadget()
+    SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager_listener.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager_listener_gadget.lua")
+    local unitManagerListener = UnitManagerListenerGadget()
+    SCEN_EDIT.model.unitManager:addListener(unitManagerListener)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager_listener.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager_listener_gadget.lua")
+    local featureManagerListener = FeatureManagerListenerGadget()
+    SCEN_EDIT.model.featureManager:addListener(featureManagerListener)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener_gadget.lua")
+    local variableManagerListener = VariableManagerListenerGadget()
+    SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener_gadget.lua")
+    local triggerManagerListener = TriggerManagerListenerGadget()
+    SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message_manager.lua")
+    SCEN_EDIT.messageManager = MessageManager()
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "command/command_manager.lua")
+    SCEN_EDIT.commandManager = CommandManager()
+    SCEN_EDIT.commandManager:loadClasses()
+
 	rtModel = RuntimeModel()
 	SCEN_EDIT.rtModel = rtModel	
 end
 
 function gadget:GameFrame(frameNum)
 	SCEN_EDIT.rtModel:GameFrame(frameNum)
+end
+
+function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
+	SCEN_EDIT.model.unitManager:addUnit(unitID)
+    Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+end
+
+function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
+	SCEN_EDIT.model.unitManager:removeUnit(unitID)
+end
+
+function gadget:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defaultPriority)
+--    Spring.Echo(attackerID, targetID)
+--    return true, 1
+    return false, 1000
+end
+
+function gadget:AllowWeaponTargetCheck(attackerID, attackerWeaponNum, attackerWeaponDefID)
+    return true
 end
 
 else --unsynced
@@ -179,4 +245,5 @@ end
 
 function gadget:Shutdown()
 end
+
 end

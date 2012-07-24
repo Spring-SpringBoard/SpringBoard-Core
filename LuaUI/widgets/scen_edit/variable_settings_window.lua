@@ -2,7 +2,6 @@ local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
-local model = SCEN_EDIT.model
 
 VariableSettingsWindow = Chili.Window:Inherit {
     classname = "window",
@@ -11,7 +10,6 @@ VariableSettingsWindow = Chili.Window:Inherit {
     minimumSize = {150,200},
     x = 500,
     y = 300,
-    _variables = nil,
 }
 
 local this = VariableSettingsWindow
@@ -64,11 +62,22 @@ function VariableSettingsWindow:New(obj)
     }
     obj = inherited.New(self, obj)
     obj:Populate()
+    local variableManagerListener = VariableManagerListenerWidget(obj)
+    SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
     return obj
 end
 
 function VariableSettingsWindow:AddVariable()
-    local newVariable = model:NewVariable("number")
+    local variable = {
+        type = "number",
+		value = {},
+        name = "new variable",
+    }
+    success, msg = pcall(VariableSettingsWindow.MakeVariableWindow, self, variable, false)
+    if not success then
+        Spring.Echo(msg)
+    end
+--[[    local newVariable = model:NewVariable("number")
     self:Populate()
     for i = 1, #self.variablesPanel.children do
         local panel = self.variablesPanel.children[i]
@@ -77,17 +86,17 @@ function VariableSettingsWindow:AddVariable()
             btnEdit:CallListeners(btnEdit.OnClick)
             break
         end
-    end
+    end-]]
 end
 
 function VariableSettingsWindow:MakeRemoveVariableWindow(variableId)
-    model:RemoveVariable(variableId)
-    self:Populate()
+    local cmd = RemoveVariableCommand(variableId)
+    SCEN_EDIT.commandManager:execute(cmd)
 end
 
 function VariableSettingsWindow:Populate()
     self.variablesPanel:ClearChildren()
-	local variables = model:ListVariables();
+	local variables = SCEN_EDIT.model.variableManager:getAllVariables() 
     for i = 1, #variables do
         local variable = variables[i]
         local variableStackPanel = Chili.StackPanel:New {
@@ -130,36 +139,42 @@ function VariableSettingsWindow:Populate()
             
         btnEditVariable.OnClick = {
             function() 
-                local newWin = self:MakeVariableWindow(variable)
-                table.insert(newWin.OnConfirm,
-                    function()
-                        newWin:UpdateModel(variable)
-                    end
-                )
-                newWin:UpdatePanel(variable)
-                if self.x + self.width + newWin.width > self.parent.width then
-                    newWin.x = self.x - newWin.width
-                else
-                    newWin.x = self.x + self.width
-                end
-                newWin.y = self.y
-
-                self.disableChildrenHitTest = true
-                table.insert(newWin.OnDispose, 
-                    function() 
-                        self.disableChildrenHitTest = false
-                        self:Populate()
-                    end
-                )
+                local newWin = self:MakeVariableWindow(variable, true)
             end
         }
     end
 end
 
-function VariableSettingsWindow:MakeVariableWindow(variable)
-    local variableWindow = VariableWindow:New {
+function VariableSettingsWindow:MakeVariableWindow(variable, edit)
+    local newWin = VariableWindow:New {
         parent = self.parent,
         variable = variable,
     }
-    return variableWindow
+    table.insert(newWin.OnConfirm,
+        function()
+            newWin:UpdateModel(variable)
+            local cmd = nil
+            if edit then
+                cmd = UpdateVariableCommand(variable)
+            else
+                cmd = AddVariableCommand(variable)
+            end
+            SCEN_EDIT.commandManager:execute(cmd)
+        end
+    )
+    newWin:UpdatePanel(variable)
+    if self.x + self.width + newWin.width > self.parent.width then
+        newWin.x = self.x - newWin.width
+    else
+        newWin.x = self.x + self.width
+    end
+    newWin.y = self.y
+
+    self.disableChildrenHitTest = true
+    table.insert(newWin.OnDispose, 
+        function() 
+            self.disableChildrenHitTest = false
+        end
+    )
+    return newWin
 end

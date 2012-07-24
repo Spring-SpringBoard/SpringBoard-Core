@@ -1,11 +1,7 @@
-local Chili
-if WG.Chili then
-    Chili = WG.Chili
-
+local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
-local model = SCEN_EDIT.model
 
 TriggersWindow = Chili.Window:Inherit {
     caption = "Trigger window",
@@ -63,11 +59,21 @@ function TriggersWindow:New(obj)
     }
     obj = inherited.New(self, obj)
     obj:Populate()
+    local triggerManagerListener = TriggerManagerListenerWidget(obj)
+    SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
     return obj
 end
 
 function TriggersWindow:AddTrigger()
-    local newTrigger = model:NewTrigger()
+    local trigger = { 
+        name = "New trigger",
+        events = {},
+        conditions = {},
+        actions = {},
+		enabled = true,
+    }
+    self:MakeTriggerWindow(trigger, false)
+--[[    local newTrigger = model:NewTrigger()
     self:Populate()
     for i = 1, #self._triggers.children do
         local panel = self._triggers.children[i]
@@ -76,18 +82,19 @@ function TriggersWindow:AddTrigger()
             btnEdit:CallListeners(btnEdit.OnClick)
             return
         end
-    end
+    end--]]
 end
 
 function TriggersWindow:MakeRemoveTriggerWindow(triggerId)
-    model:RemoveTrigger(triggerId)
-    self:Populate()
+    local cmd = RemoveTriggerCommand(triggerId)
+    SCEN_EDIT.commandManager:execute(cmd)
 end
 
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
-    for i = 1, #model.triggers do		
-        local trigger = model.triggers[i]
+    local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
+    for i = 1, #triggers  do		
+        local trigger = triggers[i]
         local stackTriggerPanel = Chili.StackPanel:New {
             triggerId = trigger.id,
             parent = self._triggers,
@@ -128,24 +135,37 @@ function TriggersWindow:Populate()
             
         btnEditTrigger.OnClick = {
             function() 
-                local newWin = MakeTriggerWindow(trigger)
-                if self.x + self.width + newWin.width > self.parent.width then
-                    newWin.x = self.x - newWin.width
-                else
-                    newWin.x = self.x + self.width
-                end
-                newWin.y = self.y
-
-                self.disableChildrenHitTest = true
-                table.insert(newWin.OnDispose, 
-					function() 
-						btnEditTrigger:SetCaption(trigger.name)
-						self.disableChildrenHitTest = false
-					end
-				)
+                local newWin = self:MakeTriggerWindow(trigger, true)
             end
         }
     end
 end
 
+function TriggersWindow:MakeTriggerWindow(trigger, edit) 
+    local triggerWindow = TriggerWindow:New {
+ 		parent = self.parent,
+        trigger = trigger,
+    }
+    if self.x + self.width + triggerWindow.width > self.parent.width then
+        triggerWindow.x = self.x - triggerWindow.width
+    else
+        triggerWindow.x = self.x + self.width
+    end
+    triggerWindow.y = self.y
+
+    self.disableChildrenHitTest = true
+    table.insert(triggerWindow.OnDispose, 
+        function()
+--            btnEditTrigger:SetCaption(trigger.name)
+            self.disableChildrenHitTest = false
+            local cmd = nil
+            if edit then
+                cmd = UpdateTriggerCommand(trigger)
+            else
+                cmd = AddTriggerCommand(triggerWindow.trigger)
+            end
+            SCEN_EDIT.commandManager:execute(cmd)
+        end
+    )
+    return triggerWindow
 end

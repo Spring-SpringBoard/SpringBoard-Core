@@ -2,7 +2,6 @@ local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
-local model = SCEN_EDIT.model
 
 TriggerWindow = Chili.Window:Inherit {
     classname = "window",
@@ -124,7 +123,7 @@ function TriggerWindow:Populate()
             resizeItems = false,
         }
         local btnEditEvent = Chili.Button:New {
-            caption = model.eventTypes[event.eventTypeName].humanName,
+            caption = SCEN_EDIT.model.eventTypes[event.eventTypeName].humanName,
             right = B_HEIGHT + 10,
             x = 1,
             height = B_HEIGHT,

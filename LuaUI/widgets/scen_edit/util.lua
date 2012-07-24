@@ -86,7 +86,7 @@ end
 
 
 function MakeVariableChoice(variableType, panel)
-	local variablesOfType = SCEN_EDIT.model.variables[variableType]
+    local variablesOfType = SCEN_EDIT.model.variableManager:getVariablesOfType(variableType)
 	if not variablesOfType then
 		return nil, nil
 	end
@@ -168,10 +168,10 @@ function SCEN_EDIT.humanExpression(data, exprType)
 			return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
 		end
 	elseif exprType == "action" then
-		local action = SCEN_EDIT.model.actionTypes[data.actionTypeName]		
+		local action = SCEN_EDIT.model.actionTypes[data.actionTypeName]
 		local humanName = action.humanName .. " ("
 		for i = 1, #action.input do
-			local input = action.input[i]			
+			local input = action.input[i]
 			humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value") .. " "
 		end
 		return humanName .. ")"
@@ -182,7 +182,15 @@ function SCEN_EDIT.humanExpression(data, exprType)
 			return data.name
 		elseif data.type == "expr" then
 			-- TODO
-		end
+        elseif data.orderTypeName then
+            local orderType = SCEN_EDIT.model.orderTypes[data.orderTypeName]
+            local humanName = orderType.humanName
+            for i = 1, #orderType.input do
+                local input = orderType.input[i]
+                humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value") .. " "
+            end
+            return humanName
+        end
 		return "nothing"
 	elseif exprType == "numeric_comparison" then
 		return SCEN_EDIT.model.numericComparisonTypes[data.cmpTypeId]
@@ -192,6 +200,9 @@ function SCEN_EDIT.humanExpression(data, exprType)
 	return data.humanName
 end
 
+function GenerateTeamColor()
+    return 1, 1, 1, 1 --yeah, ain't it great
+end
 
 function GetTeams()
     local playerNames = {}
@@ -199,7 +210,6 @@ function GetTeams()
 	local playerColors = {}
 	
     local teamIds = Spring.GetTeamList()
-	local players = Spring.GetPlayerRoster()
 	
     for i = 1, #teamIds do
         local id, _, _, name = Spring.GetAIInfo(teamIds[i])
@@ -209,7 +219,7 @@ function GetTeams()
             teamName = teamName .. ": " .. name
 		end
 		table.insert(playerNames, teamName)
-		local r, g, b, a = Spring.GetTeamColor(teamIds[i])
+		local r, g, b, a = GenerateTeamColor()--Spring.GetTeamColor(teamIds[i])
 		local color = { r = r, g = g, b = b, a = a }
 		table.insert(playerColors, color)
     end
@@ -218,4 +228,30 @@ end
 
 function SCEN_EDIT.Error(msg)
 	Spring.Echo(msg)
+end
+
+function SCEN_EDIT.SetClassName(class, className)
+    class.className = className
+    if SCEN_EDIT.commandManager:getCommandType(className) == nil then
+        SCEN_EDIT.commandManager:addCommandType(className, class)
+    end
+end
+
+function SCEN_EDIT.resolveCommand(cmdTable)
+    Spring.Echo(cmdTable.className)
+    local cmd = WidgetAddAreaCommand()
+    cmd = "return " .. cmdTable.className
+    env = getfenv(1)
+    local cmd = env[cmdTable.className]()
+--    local cmd = loadstring("return " .. cmdTable.className)()
+--    local cmd = _G[cmdTable.className]()
+    for k, v in pairs(cmdTable) do
+        cmd[k] = v
+    end
+    if cmd.className == "CompoundCommand" then
+        for i = 1, #cmd.commands do
+            cmd.commands[i] = SCEN_EDIT.resolveCommand(cmd.commands[i])
+        end
+    end
+    return cmd
 end

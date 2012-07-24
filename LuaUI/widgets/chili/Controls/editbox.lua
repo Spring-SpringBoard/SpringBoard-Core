@@ -152,7 +152,6 @@ function EditBox:KeyPress(key, mods, isRepeat, label, unicode)
 		self.text = string.sub(txt, 1, cp - 1) .. char .. 
 		  string.sub(txt, cp, #txt)
 		self.cursor = cp + 1
-		Spring.Echo("Not fail: " .. tostring(char))
 	else
 		return false
 	end

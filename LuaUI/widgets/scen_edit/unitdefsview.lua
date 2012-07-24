@@ -13,8 +13,8 @@ UnitDefsView = Chili.LayoutPanel:Inherit {
   autoArrangeV = false,
   centerItems  = false,
 
-  iconX     = 32,
-  iconY     = 32,
+  iconX     = 64,
+  iconY     = 64,
 
   itemMargin    = {1, 1, 1, 1},
 
@@ -39,6 +39,15 @@ function UnitDefsView:New(obj)
   return obj
 end
 
+function SCEN_EDIT.getUnitDefBuildPic(unitDef)
+    unitImagePath = "unitpics/" .. unitDef.buildpicname
+    local fileExists = VFS.FileExists(unitImagePath)
+    if not fileExists then
+        unitImagePath = "buildicons/_1to1_128x128/" .. unitDef.name .. ".png"
+    end
+    return unitImagePath
+end
+
 --//=============================================================================
 function UnitDefsView:PopulateUnitDefsView()
     self:Clear()
@@ -56,7 +65,7 @@ function UnitDefsView:PopulateUnitDefsView()
             unitTerrainId == 3 and (unitDef.canHover or unitDef.floater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
             unitTerrainId == 4
         if correctType and correctTerrain then
-            unitImagePath = "unitpics/" .. unitDef.buildpicname
+            local unitImagePath = SCEN_EDIT.getUnitDefBuildPic(unitDef)
             self:AddImage(unitDef.humanName, unitDef.id, unitImagePath)
         end
     end

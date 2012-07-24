@@ -82,12 +82,12 @@ function VariableWindow:UpdateModel(variable)
     variable.value = {}
 	self.variablePanel[variable.type]:UpdateModel(self.variable.value)
 	
-	if typeChanged then
+--[[	if typeChanged then
 		model:RemoveVariable(variable.id)
 		newVariable = model:NewVariable(variable.type)
 		newVariable.value = variable.value
 		newVariable.name = variable.name
-	end
+	end--]]
 end
 
 function VariableWindow:Populate()

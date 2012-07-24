@@ -49,7 +49,6 @@ local end_x
 local end_y
 local model
 local selected
-local selectedUnit
 local updateFrame = 0
 
 local drag_diff_x
@@ -58,7 +57,6 @@ local drag_diff_z
 local selUnitDef
 local unitDraw_x, unitDraw_y, unitDraw_z
 
-local State = {mouse="none"}
 local unitImages
 
 local conditionTypes = {"Unit in area", "Unit attribute", "And conditions", "Or conditions", "Not condition", "Trigger enabled"}
@@ -76,60 +74,21 @@ local function DrawCircle()
     end
 end
 
-local function DrawRect(x1, z1, x2, z2)
-    if x1 < x2 then
-        _x1 = x1
-        _x2 = x2
-    else
-        _x1 = x2
-        _x2 = x1
-    end
-    if z1 < z2 then
-        _z1 = z1
-        _z2 = z2
-    else
-        _z1 = z2
-        _z2 = z1 
-    end
-    gl.DrawGroundQuad(_x1, _z1, _x2, _z2)
-end
-
-local function DrawRects()
-    gl.Color(0, 255, 0, 0.2)
-    x, y = gl.GetViewSizes()
-    for i, rect in pairs(model.areas) do
-        if selected ~= i then
-            gl.DrawGroundQuad(rect[1], rect[2], rect[3], rect[4])
-        end
-    end
-    if State.mouse == "addRectEnd" and end_x ~= nil and end_z ~= nil then
-        DrawRect(area_x, area_z, end_x, end_z)
-    end
-    if selected ~= nil then
-        gl.Color(0, 127, 127, 0.2)
-        rect = model.areas[selected]
-        DrawRect(rect[1], rect[2], rect[3], rect[4])
-    end
-end
 
 local function AddRectButton()
-    State.mouse = "addRect"
-    selected = nil
+    SCEN_EDIT.stateManager:SetState(AddRectState())
 end
 
 function SelectArea(returnButton)
-    State.mouse = "selArea"
-    btnSelectArea = returnButton
+    SCEN_EDIT.stateManager:SetState(SelectAreaState(returnButton))
 end
 
 function SelectUnit(returnButton)
-    State.mouse = "selUnit"
-    btnSelectUnit = returnButton
+    SCEN_EDIT.stateManager:SetState(SelectUnitState(returnButton))
 end
 
 function SelectType(returnButton)
-    State.mouse = "selType"
-    btnSelectType = returnButton
+    SCEN_EDIT.stateManager:SetState(SelectUnitType(returnButton))
 end
 
 function MakeRadioButtonGroup(checkBoxes)
@@ -518,24 +477,25 @@ function MakeRemoveActionWindow(trigger, triggerWindow, action, idx)
     triggerWindow:Populate()
 end
 
-function MakeTriggerWindow(trigger) 
-    local triggerWindow = TriggerWindow:New {
- 		parent = screen0,
-        trigger = trigger,
-        model = model,
-    }
-    return triggerWindow
-end
-
 local function Save()
-    model:Save("mission.lua")
+    err,msg = pcall(Model.Save, SCEN_EDIT.model, "scenario.lua")
+    if not err then 
+        Spring.Echo(msg)
+    end--    model:Save("scenario.lua")
 end
 
 local function Load()
-    success, msg = pcall(Model.Load, model, "mission.lua")
+    --local f, err = loadfile(fileName)
+    local fileName = "scenario.lua"
+    local f = assert(io.open(fileName, "r"))
+    local t = f:read("*all")
+    f:close()
+    cmd = LoadCommand(t)
+    SCEN_EDIT.commandManager:execute(cmd)
+--[[    success, msg = pcall(Model.Load, model, "scenario.lua")
 	if not success then
 		Spring.Echo("Error loading model : " .. msg)
-	end
+	end-]]
 end
 
 local function CreateTerrainEditor()
@@ -594,13 +554,14 @@ local function CreateUnitDefsView()
 		OnSelectItem = {
 			function(obj,itemIdx,selected)
 				if selected and itemIdx > 0 then
-					if State.mouse == "selType" then
+                    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+					if currentState:is_A(SelectUnitTypeState) then
 						selUnitDef = unitImages.items[itemIdx].id
-						CallListeners(btnSelectType.OnSelectUnitType, selUnitDef)
-						State.mouse = "none"
+						CallListeners(currentState.btnSelectType.OnSelectUnitType, selUnitDef)
+                        SCEN_EDIT.stateManager:SetState(DefaultState())
 					else
-						State.mouse = 'addUnit'
 						selUnitDef = unitImages.items[itemIdx].id
+                        SCEN_EDIT.stateManager:SetState(AddUnitState(selUnitDef, unitImages.teamId, unitImages))
 					end
 				end
 			end,
@@ -619,6 +580,10 @@ local function CreateUnitDefsView()
         function (obj, itemIdx, selected) 
             if selected then
                 unitImages:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                if currentState:is_A(AddUnitState) then
+                    currentState.teamId = unitImages.teamId
+                end
             end
         end
     }
@@ -627,7 +592,7 @@ local function CreateUnitDefsView()
     unitsWindow = Window:New {
         parent = screen0,
         caption = "Unit Editor",
-        width = 325,
+        width = 487,
         height = 400,
         resizable = false,
         x = 1400,
@@ -699,7 +664,7 @@ local function CreateUnitDefsView()
 end
 
 local function CreateFeatureDefsView()
-	if unitImages then
+	if featureImages then
 		return
 	end
     featureImages = FeatureDefsView:New {
@@ -709,14 +674,19 @@ local function CreateFeatureDefsView()
 		OnSelectItem = {
 			function(obj,itemIdx,selected)
 				if selected and itemIdx > 0 then
-					if State.mouse == "selectFeatureType" then
+                    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+					if currentState:is_A(SelectFeatureTypeState) then
 						selFeatureDef = featureImages.items[itemIdx].id
-						CallListeners(btnSelectType.OnSelectUnitType, selFeatureDef)
-						State.mouse = "none"
+						CallListeners(currentState.btnSelectType.OnSelectFeatureType, selFeatureDef)
+                        SCEN_EDIT.stateManager:SetState(DefaultState())
 					else
-						State.mouse = 'addFeature'
 						selFeatureDef = featureImages.items[itemIdx].id
+                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, featureImages.teamId, featureImages))
 					end
+                    Spring.Echo(selFeatureDef)
+                    local feature = FeatureDefs[selFeatureDef]
+                    table.echo(feature)
+                    Spring.Echo(feature.drawType)
 				end
 			end,
 		},
@@ -734,6 +704,10 @@ local function CreateFeatureDefsView()
         function (obj, itemIdx, selected) 
             if selected then
                 featureImages:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                if currentState:is_A(AddFeatureState) then
+                    currentState.teamId = featureImages.teamId
+                end
             end
         end
     }
@@ -742,7 +716,7 @@ local function CreateFeatureDefsView()
     featuresWindow = Window:New {
         parent = screen0,
         caption = "Feature Editor",
-        width = 325,
+        width = 487,
         height = 400,
         resizable = false,
         x = 1400,
@@ -791,13 +765,37 @@ local function CreateFeatureDefsView()
     }
 end
 
-local function StartMission()
-	local x = table.show(model:GetMetaData())	
-	PassToGadget(model._lua_rules_pre, "start", x)	
-end 
+local function explode(div,str)
+  if (div=='') then return false end
+  local pos,arr = 0,{}
+  -- for each divider found
+  for st,sp in function() return string.find(str,div,pos,true) end do
+    table.insert(arr,string.sub(str,pos,st-1)) -- Attach chars left of current divider
+    pos = sp + 1 -- Jump past current divider
+  end
+  table.insert(arr,string.sub(str,pos)) -- Attach chars right of last divider
+  return arr
+end
 
-function RecieveGadgetMessage(input)
-	local tbl = loadstring(input)()
+function RecieveGadgetMessage(msg)
+	pre = "scen_edit"
+	local data = explode( '|', msg)
+    if data[1] ~= pre then return end
+    local op = data[2]
+
+    Spring.Echo(msg)
+    if op == 'sync' then
+        Spring.Echo("Widget synced!")
+        local msgTable = loadstring(string.sub(msg, #(pre .. "|sync|") + 1))()
+        local msg = Message(msgTable.tag, msgTable.data)
+        table.echo(msg)
+        if msg.tag == 'command' then
+            local cmd = SCEN_EDIT.resolveCommand(msg.data)
+            SCEN_EDIT.commandManager:execute(cmd, true)
+        end
+        return
+    end
+	local tbl = loadstring(msg)()
 	local data = tbl.data
 	local tag = tbl.tag
 
@@ -806,14 +804,6 @@ function RecieveGadgetMessage(input)
 	elseif tag == "msg" then
 		model:InvokeCallback(data.msgId, data.result)
 	end
-end
-
-function widget:UnitCreated(unitID, unitDefID, teamID, builderID)
-	model:AddedUnit(unitID)
-end
-
-function widget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
-	model:RemovedUnit(unitID)
 end
 
 function widget:Initialize()
@@ -825,6 +815,10 @@ function widget:Initialize()
 	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
 	reloadGadgets() --uncomment for development	
 	VFS.Include(SCEN_EDIT_COMMON_DIR .. "class.lua")
+    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_COMMON_DIR .. "lcs/LCS.lua"))
+    LCS = LCS()
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "observable.lua")
+
 	VFS.Include(SCEN_EDIT_COMMON_DIR .. "display_util.lua")
 	SCEN_EDIT.displayUtil = DisplayUtil(true)
 	VFS.Include(SCENEDIT_DIR .. "combobox.lua")
@@ -834,6 +828,49 @@ function widget:Initialize()
 	model = Model()
 	model:RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ)
 	SCEN_EDIT.model = model
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager.lua")
+    SCEN_EDIT.model.areaManager = AreaManager()
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager.lua")
+    SCEN_EDIT.model.unitManager = UnitManager(true)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager.lua")
+    SCEN_EDIT.model.featureManager = FeatureManager(true)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager.lua")
+    SCEN_EDIT.model.variableManager = VariableManager(true)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener_widget.lua")
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager.lua")
+    SCEN_EDIT.model.triggerManager = TriggerManager(true)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener_widget.lua")
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "view/clipboard.lua")
+    SCEN_EDIT.clipboard = Clipboard()
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "command/command_manager.lua")
+    SCEN_EDIT.commandManager = CommandManager()
+    SCEN_EDIT.commandManager.widget = true
+    SCEN_EDIT.commandManager:loadClasses()
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "state/state_manager.lua")
+    SCEN_EDIT.stateManager = StateManager()
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "view/view.lua")
+    SCEN_EDIT.view = View()
+    local viewAreaManagerListener = ViewAreaManagerListener()
+    SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
+
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message.lua")
+    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message_manager.lua")
+    SCEN_EDIT.messageManager = MessageManager()
+    SCEN_EDIT.messageManager.widget = true
+
     VFS.Include(SCENEDIT_DIR .. "unitdefsview.lua")    
 	VFS.Include(SCENEDIT_DIR .. "feature_defs_view.lua")    
     VFS.Include(SCENEDIT_DIR .. "triggers_window.lua")
@@ -1031,7 +1068,8 @@ function widget:Initialize()
 						caption = '',
 						OnClick = {
 							function()
-								StartMission()
+                                local cmd = StartCommand()
+                                SCEN_EDIT.commandManager:execute(cmd)
 							end
 						},
 						children = {
@@ -1067,8 +1105,10 @@ function widget:Initialize()
             }
             btnTriggers.parent.disableChildrenHitTest = true
             table.insert(btnTriggers._toggle.OnDispose, 
-				function() 
-					btnTriggers.parent.disableChildrenHitTest = false
+				function()
+                    if btnTriggers and btnTriggers.parent then
+                        btnTriggers.parent.disableChildrenHitTest = false
+                    end
 				end
 			)
         end
@@ -1082,8 +1122,10 @@ function widget:Initialize()
             }
             btnVariableSettings.parent.disableChildrenHitTest = true
             table.insert(btnVariableSettings._toggle.OnDispose, 
-				function() 
-					btnVariableSettings.parent.disableChildrenHitTest = false
+				function()
+                    if btnVariableSettings and btnVariableSettings.parent then
+                        btnVariableSettings.parent.disableChildrenHitTest = false
+                    end
 				end
 			)
         end
@@ -1137,355 +1179,46 @@ function reloadGadgets()
     end
 end
 
-local function DrawUnits()	
-	if State.mouse == "addUnit" then
-		x, y = Spring.GetMouseState()
-		local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-			unitDraw_x = coords[1]
-			unitDraw_y = coords[2]
-			unitDraw_z = coords[3]
-			if unitDraw_x ~= nil and unitDraw_y ~= nil and unitDraw_z ~= nil then
-				gl.PushMatrix()
-				gl.Translate(unitDraw_x, unitDraw_y, unitDraw_z)
-				gl.UnitShape(selUnitDef, unitImages.teamId)
-				gl.PopMatrix()			
-			end
-		end
-	elseif State.mouse == "addFeature" then
-		x, y = Spring.GetMouseState()
-		local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-			featureDraw_x = coords[1]
-			featureDraw_y = coords[2]
-			featureDraw_z = coords[3]
-			if featureDraw_x ~= nil and featureDraw_y ~= nil and featureDraw_z ~= nil then
-				gl.PushMatrix()
-				gl.Translate(featureDraw_x, featureDraw_y, featureDraw_z)
-				gl.FeatureShape(selFeatureDef, featureImages.teamId)
-				gl.PopMatrix()			
-			end
-		end
-	end
-end
-
 local function DrawModifier()
-	x, y = Spring.GetMouseState()
-	local result, coords = Spring.TraceScreenRay(x, y)
-	if result == "ground" then
-		local x, z = coords[1], coords[3]
-		local startX, startZ = x - 20, z - 20
-		local endX, endZ = x + 20, z + 20
-		gl.PushMatrix()
-		if State.mouse == "terr_inc" then			
-			gl.Color(0, 255, 0, 0.3)
-		elseif State.mouse == "terr_dec" then
-			gl.Color(255, 0, 0, 0.3)			
-		end
-		DrawRect(startX, startZ, endX, endZ) 
-		gl.PopMatrix()
-	end
 end
 
 function widget:DrawWorld()
-    DrawRects()
-	DrawUnits()
-	if State.mouse == "terr_inc" or State.mouse == "terr_dec" then
-		DrawModifier()
-	end
+    SCEN_EDIT.stateManager:DrawWorld()
+    SCEN_EDIT.view:draw()
 	SCEN_EDIT.displayUtil:Draw()
 end
 
-function checkResizeIntersections(x, z)
-    if selected == nil then
-        return false
-    end
-    local rect = model.areas[selected]
-    local accurancy = 20
-    if math.abs(x - rect[1]) < accurancy then
-        State.resx = -1
-        if z > rect[2] + accurancy and z < rect[4] - accurancy then
-            State.resz = 0
-        elseif math.abs(rect[2] - z) < accurancy then
-            drag_diff_z = rect[2] - z
-            State.resz = -1
-        elseif math.abs(rect[4] - z) < accurancy then
-            drag_diff_z = rect[4] - z
-            State.resz = 1
-        end
-        drag_diff_x = rect[1] - x
-        State.mouse = 'resize'
-    elseif math.abs(x - rect[3]) < accurancy then
-        State.resx = 1
-        if z > rect[2] + accurancy and z < rect[4] - accurancy then
-            State.resz = 0
-        elseif math.abs(rect[2] - z) < accurancy then
-            drag_diff_z = rect[2] - z
-            State.resz = -1
-        elseif math.abs(rect[4] - z) < accurancy then
-            drag_diff_z = rect[4] - z
-            State.resz = 1
-        end
-        drag_diff_x = rect[3] - x
-        State.mouse = 'resize'
-    elseif math.abs(z - rect[2]) < accurancy then
-        State.resx = 0
-        State.resz = -1
-        drag_diff_z = rect[2] - z
-        State.mouse = 'resize'
-    elseif math.abs(z - rect[4]) < accurancy then
-        State.resx = 0
-        State.resz = 1
-        drag_diff_z = rect[4] - z
-        State.mouse = 'resize'
-    end
-end
-
 function checkAreaIntersections(x, z)
-    for i = #model.areas, 1, -1 do
-        local rect = model.areas[i]
+    local areas = SCEN_EDIT.model.areaManager:getAllAreas()
+    for i = #areas, 1, -1 do
+        local rect = areas[i]
         if x >= rect[1] and x < rect[3] and z >= rect[2] and z < rect[4] then
-            State.mouse = 'none'
+            SCEN_EDIT.view.areaViews[i].selected = true
             selected = i
-            drag_diff_x = rect[1] - x
-            drag_diff_z = rect[2] - z
-            return
+            dragDiffX = rect[1] - x
+            dragDiffZ = rect[2] - z
+            return selected, dragDiffX, dragDiffZ
         end
     end
 end
 
 function widget:MousePress(x, y, button)
-    if State.mouse == "none" and button == 1 then
-        local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-            if selected ~= nil then
-                checkResizeIntersections(coords[1], coords[3])
-                if State.mouse == 'resize' then
-                    return true
-                end
-            end
-            selected = nil
-            checkAreaIntersections(coords[1], coords[3])
-            if selected ~= nil then
-                Spring.SelectUnitArray({}, false)
-                return true
-            end
-        elseif result == "unit" and #Spring.GetSelectedUnits() ~= 0 then
-            selected = nil
-            selectedUnit = coords --coords = unit id
-            --drag_diff_x = coords[1]
-            --drag_diff_y = coords[3]
-            return true
-        end
-    elseif State.mouse == "addRect" then
-        if button == 1 then
-            local result, coords = Spring.TraceScreenRay(x, y)
-            if result == "ground" then
-                area_x = coords[1]
-                area_z = coords[3]
-                State.mouse = "addRectEnd"
-                return true
-            end
-        elseif button == 3 then
-            State.mouse = "none"
-        end
-    elseif State.mouse == "addUnit" then
-        if button == 1 then
-            local result, coords = Spring.TraceScreenRay(x, y)
-            if result == "ground" then
-                model:AddUnit(selUnitDef, coords[1], coords[2], coords[3], unitImages.teamId)
-            end
-        elseif button == 3 then
-            State.mouse = "none"
-            unitImages:SelectItem(0)
-        end
-    elseif State.mouse == "addFeature" then
-        if button == 1 then
-            local result, coords = Spring.TraceScreenRay(x, y)
-            if result == "ground" then
-                model:AddFeature(selFeatureDef, coords[1], coords[2], coords[3], featureImages.teamId)
-            end
-        elseif button == 3 then
-            State.mouse = "none"
-            featureImages:SelectItem(0)
-        end
-    elseif State.mouse == "selUnit" then
-        if button == 1 then
-            local result, unitId = Spring.TraceScreenRay(x, y)
-            if result == "unit"  then
-                CallListeners(btnSelectUnit.OnSelectUnit, model:GetModelUnitId(unitId))
-            end
-        elseif button == 3 then
-            State.mouse = "none"
-        end
-    elseif State.mouse == "selArea" then
-        if button == 1 then
-            local result, coords = Spring.TraceScreenRay(x, y)
-            if result == "ground"  then
-                checkAreaIntersections(coords[1], coords[3])
-                if selected ~= nil then
-                    CallListeners(btnSelectArea.OnSelectArea, selected)
-                end
-            end
-        elseif button == 3 then
-            State.mouse = "none"
-        end
-    elseif State.mouse == "terr_inc" then
-		if button == 1 then
-			local result, coords = Spring.TraceScreenRay(x, y)
-			if result == "ground"  then
-				model:AdjustHeightMap(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, 20)
-			end
-		elseif button == 3 then
-			State.mouse = "none"
-		end
-	elseif State.mouse == "terr_dec" then
-		if button == 1 then
-			local result, coords = Spring.TraceScreenRay(x, y)
-			if result == "ground"  then
-				model:AdjustHeightMap(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, -20)
-			end
-		elseif button == 3 then
-			State.mouse = "none"
-		end
-	end
+    return SCEN_EDIT.stateManager:MousePress(x, y, button)
 end
 
 function widget:MouseMove(x, y, dx, dy, button)
-    if State.mouse == "addRectEnd" then
-        local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-			end_x = coords[1]
-			end_z = coords[3]
-		end
-    elseif State.mouse == "none" then
-        if selected ~= nil then
-            State.mouse = "drag"
-        elseif selected == nil and #Spring.GetSelectedUnits() ~= 0 then
-            State.mouse = "dragUnit"
-        end
-    elseif State.mouse == "drag" then
-        local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-            local area = model.areas[selected]
-            local width = area[3] - area[1]
-            local height = area[4] - area[2]
-            area[1] = coords[1] + drag_diff_x 
-            area[2] = coords[3] + drag_diff_z
-            area[3] = area[1] + width
-            area[4] = area[2] + height
-        end
-    elseif State.mouse == "dragUnit" then
-        local selectedUnits = Spring.GetSelectedUnits()
-        if updateFrame > #selectedUnits / 2 then 
-            updateFrame = 0
-        else 
-            return
-        end
-        local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-            local unitX, unitY, unitZ = Spring.GetUnitPosition(selectedUnit)
-            if unitX == nil then --unit died probably
-                State.mouse = "none"
-                return false
-            end
-            local deltaX = coords[1] - unitX 
-            local deltaZ = coords[3] - unitZ 
-            for i = 1, #selectedUnits do
-                local unitId = selectedUnits[i]
-                local unitX, unitY, unitZ = Spring.GetUnitPosition(unitId)
-                model:MoveUnit(unitId, unitX + deltaX, unitY, unitZ + deltaZ)
-            end
-        end
-    elseif State.mouse == 'resize' then
-        local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-            local area = model.areas[selected]
-            if State.resx == -1 then
-                area[1] = coords[1] + drag_diff_x 
-            elseif State.resx == 1 then
-                area[3] = coords[1] + drag_diff_x 
-            end
-            if State.resz == -1 then
-                area[2] = coords[3] + drag_diff_z 
-            elseif State.resz == 1 then
-                area[4] = coords[3] + drag_diff_z 
-            end
-        end
-	end
+    return SCEN_EDIT.stateManager:MouseMove(x, y, button)
 end
 
 function widget:MouseRelease(x, y, button)
-    if State.mouse == "addRectEnd" then
-        State.mouse = "none"
-        if button ~= 1 then
-            end_x = nil
-            end_y = nil
-            return
-        end
-        local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-            end_x = coords[1]
-            end_z = coords[3]
-        end
-        if end_x == nil or end_z == nil then
-            return
-        end
-        if area_x < end_x then
-            x1, x2 = area_x, end_x
-        else
-            x1, x2 = end_x, area_x
-        end
-        if area_z < end_z then
-            z1, z2 = area_z, end_z
-        else
-            z1, z2 = end_z, area_z
-        end
-        table.insert(model.areas, {x1, z1, x2, z2})
-        end_x = nil
-        end_y = nil
-    elseif State.mouse == "drag" then
-        State.mouse = "none"
-    elseif State.mouse == "dragUnit" then
-        State.mouse = "none"
-    elseif State.mouse == 'resize' then
-        local rect = model.areas[selected]
-        if rect[1] > rect[3] then
-            rect[1], rect[3] = rect[3], rect[1]
-        end
-        if rect[2] > rect[4] then
-            rect[2], rect[4] = rect[4], rect[2]
-        end
-        State.mouse = "none"
-    elseif State.mouse == "addUnit" then
-		echo("mouse release")
-		return true
-	end
+    return SCEN_EDIT.stateManager:MouseRelease(x, y, button)
 end
 
 function widget:KeyPress(key, mods, isRepeat, label, unicode)
-    if State.mouse == "none" and selected ~= nil then
-        if key == KEYSYMS.DELETE then
-            table.remove(model.areas, selected)
-            selected = nil
-            return true
-        end
-    elseif State.mouse == "none" and selected == nil then
-        if key == KEYSYMS.DELETE then
-            local selectedUnits = Spring.GetSelectedUnits()
-            for i = 1, #selectedUnits do
-                local unitId = selectedUnits[i]
-                model:RemoveUnit(unitId)
-            end
-            if #selectedUnits > 0 then
-                return true
-            end
-        end
-    end
-    return false
+    return SCEN_EDIT.stateManager:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function widget:GameFrame(frameNum)
-    updateFrame = updateFrame + 1
+    SCEN_EDIT.stateManager:GameFrame(frameNum)
 	SCEN_EDIT.displayUtil:OnFrame()
 end

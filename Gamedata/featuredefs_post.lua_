@@ -1,0 +1,25 @@
+UnitDefs = DEFS.unitDefs
+--create a "death animation unit" for every feature
+for name, fd in pairs(FeatureDefs) do
+--   Spring.Echo ("feature: " .. ud.name or "nil")
+   local u = {}
+   for key,value in pairs(fd) do
+      u[key]=value
+   end
+--   u.filename = "xxx"
+   u.name = "feature_" .. name
+   u.objectname = fd.object
+   u.maxDamage = 1
+   u.hideDamage = true
+   u.levelGround= false
+   u.script = "shatter.lua"
+   if VFS.FileExists(u.objectname) then
+       UnitDefs[u.name] = u
+   else
+       UnitDefs[u.name] = u
+   --[[    Spring.Echo("no file for: " .. u.name .. " " .. u.objectname)
+       for k, v in pairs(u) do
+           Spring.Echo(k, v)
+       end---]]
+   end
+end
