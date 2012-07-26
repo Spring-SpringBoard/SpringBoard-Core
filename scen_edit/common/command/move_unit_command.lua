@@ -1,5 +1,5 @@
 MoveUnitCommand = AbstractCommand:extends{}
-SCEN_EDIT.SetClassName(MoveUnitCommand, "MoveUnitCommand")
+MoveUnitCommand.className = "MoveUnitCommand"
 
 function MoveUnitCommand:init(modelUnitId, newX, newY, newZ)
     self.className = "MoveUnitCommand"

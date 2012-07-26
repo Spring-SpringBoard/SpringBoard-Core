@@ -68,6 +68,10 @@ function FieldResolver:Resolve(field, type)
 			order.input[input.name] = resolvedInput
 		end
 		return order
+    elseif type == "string" then
+        if field.type == "pred" then
+            return field.string
+        end
 	elseif type == "numericComparison" then
 		return self.model.numericComparisonTypes[field.cmpTypeId]
 	elseif type == "identityComparison" then

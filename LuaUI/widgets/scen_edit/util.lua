@@ -238,7 +238,7 @@ function SCEN_EDIT.SetClassName(class, className)
 end
 
 function SCEN_EDIT.resolveCommand(cmdTable)
-    Spring.Echo(cmdTable.className)
+--    Spring.Echo(cmdTable.className)
     local cmd = WidgetAddAreaCommand()
     cmd = "return " .. cmdTable.className
     env = getfenv(1)

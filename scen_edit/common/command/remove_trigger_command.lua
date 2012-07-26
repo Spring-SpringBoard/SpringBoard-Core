@@ -1,5 +1,5 @@
 RemoveTriggerCommand = LCS.class{}
-SCEN_EDIT.SetClassName(RemoveTriggerCommand, "RemoveTriggerCommand")
+RemoveTriggerCommand.className = "RemoveTriggerCommand"
 
 function RemoveTriggerCommand:init(triggerId)
     self.className = "RemoveTriggerCommand"

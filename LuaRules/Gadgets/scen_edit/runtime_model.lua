@@ -1,6 +1,6 @@
-RuntimeModel = class()
+RuntimeModel = LCS.class{}
 
-function RuntimeModel:__init()
+function RuntimeModel:init()
 	self.areaModels = {}	
 	self.lastFrameUnitIds = {}
 	self.fieldResolver = FieldResolver:New {
@@ -42,8 +42,6 @@ function RuntimeModel:LoadMission(meta)
 end
 
 function RuntimeModel:GameStart()
-    Spring.Echo("GAME START")
-	Spring.Echo(#self.eventTriggers["GAME_START"])
 	if self.eventTriggers["GAME_START"] then
 		for k = 1, #self.eventTriggers["GAME_START"] do
 			local params = { }

@@ -9,7 +9,7 @@ function DragAreaState:init(areaId, startDiffX, startDiffZ)
 end
 
 function DragAreaState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y)
+    local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
         local x1, z1, x2, z2 = unpack(area)

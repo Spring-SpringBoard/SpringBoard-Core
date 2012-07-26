@@ -4,7 +4,6 @@ local SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_COMMON_DIR .. "command/"
 CommandManager = LCS.class{maxUndoSize = 100, maxRedoSize = 100}
 
 function CommandManager:init(maxUndoSize, maxRedoSize)
-    self.commandNameMapping = {}
     self.maxUndoSize = maxUndoSize
     self.maxRedoSize = maxRedoSize
     self.undoList = {}
@@ -23,24 +22,15 @@ function CommandManager:loadClasses()
     end
 end
 
-function CommandManager:getCommandType(commandName)
-    return self.commandNameMapping[commandName]
-end
-
-function CommandManager:addCommandType(commandName, commandType)
-    Spring.Echo("Add comand name")
-    self.commandNameMapping[commandName] = commandType
-end
-
 function CommandManager:execute(cmd, widget)
     assert(cmd, "Command is nil")
     if self.widget then
         if not widget then
             assert(cmd.className, "Command instance lacks className")
             local msg = Message("command", cmd)
-            Spring.Echo('msg')
+--            Spring.Echo('msg')
             SCEN_EDIT.messageManager:sendMessage(msg)
-            Spring.Echo('send')
+--            Spring.Echo('send')
         else
             cmd:execute()
         end
@@ -48,10 +38,10 @@ function CommandManager:execute(cmd, widget)
         if not widget then
             cmd:execute()
             if not cmd.unexecute then
-                Spring.Echo("not undoable")
+--                Spring.Echo("not undoable")
                 return
             end
-            Spring.Echo("undoable")
+--            Spring.Echo("undoable")
             table.insert(self.undoList, cmd)
             if #self.undoList > self.maxUndoSize then
                 table.remove(self.undoList, 1)
@@ -74,7 +64,7 @@ function CommandManager:undo()
     if #self.undoList < 1 then
         return
     end
-    Spring.Echo("Undo")
+--    Spring.Echo("Undo")
     local cmd = table.remove(self.undoList, #self.undoList)
     cmd:unexecute()
     table.insert(self.redoList, cmd)
@@ -92,7 +82,7 @@ function CommandManager:redo()
     if #self.redoList < 1 then
         return
     end
-    Spring.Echo("Redo")
+--    Spring.Echo("Redo")
     local cmd = table.remove(self.redoList, #self.redoList)
     cmd:execute()
     table.insert(self.undoList, cmd)

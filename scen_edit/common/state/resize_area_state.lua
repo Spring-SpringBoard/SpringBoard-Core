@@ -8,7 +8,7 @@ function ResizeAreaState:init(areaId, resx, resz)
 end
 
 function ResizeAreaState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y)
+    local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
         if self.resx == -1 then

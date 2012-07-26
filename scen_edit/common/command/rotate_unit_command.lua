@@ -1,5 +1,5 @@
 RotateUnitCommand = AbstractCommand:extends{}
-SCEN_EDIT.SetClassName(RotateUnitCommand, "RotateUnitCommand")
+RotateUnitCommand.className = "RotateUnitCommand"
 
 function RotateUnitCommand:init(modelUnitId, angle)
     self.className = "RotateUnitCommand"

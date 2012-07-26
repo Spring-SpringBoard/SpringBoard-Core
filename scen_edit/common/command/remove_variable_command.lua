@@ -1,5 +1,5 @@
 RemoveVariableCommand = LCS.class{}
-SCEN_EDIT.SetClassName(RemoveVariableCommand, "RemoveVariableCommand")
+RemoveVariableCommand.className = "RemoveVariableCommand"
 
 function RemoveVariableCommand:init(variableId)
     self.className = "RemoveVariableCommand"

@@ -1,5 +1,5 @@
 SaveCommand = AbstractCommand:extends{}
-SCEN_EDIT.SetClassName(SaveCommand, "SaveCommand")
+SaveCommand.className = "SaveCommand"
 
 function SaveCommand:init(modelString)
     self.className = "SaveCommand"

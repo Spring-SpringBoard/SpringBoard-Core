@@ -62,7 +62,7 @@ function DefaultState:MousePress(x, y, button)
                 end
             end
             if self.selected then
-                SCEN_EDIT.view.areaViews[self.selected].selected = nil
+                SCEN_EDIT.view.areaViews[self.selected].selected = false
             end
             self.selected, self.dragDiffX, self.dragDiffZ = checkAreaIntersections(coords[1], coords[3])
             if self.selected ~= nil then
@@ -73,19 +73,22 @@ function DefaultState:MousePress(x, y, button)
             if ctrl and #Spring.GetSelectedUnits() ~= 0 then
                 return true
             end
-        elseif result == "unit" and #Spring.GetSelectedUnits() ~= 0 then
+        elseif result == "unit" then
             if self.selected then
-                SCEN_EDIT.view.areaViews[self.selected] = false
+                Spring.Echo("deselect")
+                SCEN_EDIT.view.areaViews[self.selected].selected = false
                 self.selected = nil
             end
-            self.selectedUnit = coords --coords = unit id
-            local previouslySelectedUnits = Spring.GetSelectedUnits()
-            for _, unitId in pairs(previouslySelectedUnits) do
-                if unitId == self.selectedUnit then
-                    return true
+            if #Spring.GetSelectedUnits() ~= 0 then
+                self.selectedUnit = coords --coords = unit id
+                local previouslySelectedUnits = Spring.GetSelectedUnits()
+                for _, unitId in pairs(previouslySelectedUnits) do
+                    if unitId == self.selectedUnit then
+                        return true
+                    end
                 end
+                return false
             end
-            return false
         end
     end
 end
@@ -128,28 +131,25 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         end
     elseif key == KEYSYMS.Z and mods.ctrl then
         if #SCEN_EDIT.commandManager.undoList > 0 then
-            Spring.Echo("to undo")
+        --    Spring.Echo("to undo")
         end
         SCEN_EDIT.commandManager:undo()
         return true
     elseif key == KEYSYMS.Y and mods.ctrl then
         if #SCEN_EDIT.commandManager.redoList > 0 then
-            Spring.Echo("to redo")
+        --    Spring.Echo("to redo")
         end
         SCEN_EDIT.commandManager:redo()
         return true
     elseif key == KEYSYMS.C and mods.ctrl then
-        Spring.Echo("Copy")
         local selectedUnits = Spring.GetSelectedUnits()
         SCEN_EDIT.clipboard:copyUnits(selectedUnits)
         return true
     elseif key == KEYSYMS.X and mods.ctrl then
-        Spring.Echo("Cut")
         local selectedUnits = Spring.GetSelectedUnits()
         SCEN_EDIT.clipboard:cutUnits(selectedUnits)
         return true
     elseif key == KEYSYMS.V and mods.ctrl then
-        Spring.Echo("Paste")
         x, y = Spring.GetMouseState()
         local result, coords = Spring.TraceScreenRay(x, y)
         if result == "ground" then

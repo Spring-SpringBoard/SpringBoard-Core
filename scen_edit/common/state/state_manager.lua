@@ -19,7 +19,7 @@ end
 
 function StateManager:SetState(state)
     self.currentState = state
-    Spring.Echo("set state")
+--    Spring.Echo("set state")
 end
 
 function StateManager:MousePress(x, y, button)

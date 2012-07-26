@@ -42,7 +42,7 @@ function ConditionWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-	obj.validConditionTypes = model.conditionTypesByOutput["bool"]	
+	obj.validConditionTypes = model.conditionTypesByOutput["bool"]
     obj.cmbConditionTypes = ComboBox:New {
         items = GetField(obj.validConditionTypes, "humanName"),
 		conditionTypes = GetField(obj.validConditionTypes, "name"),

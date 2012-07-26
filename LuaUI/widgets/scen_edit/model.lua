@@ -68,6 +68,13 @@ function Model:init()
 	
 	local coreTypes = SCEN_EDIT.coreTypes()
 	-- fill missing
+    for k, v in pairs(self.conditionTypesByInput) do
+        self.conditionTypesByInput[k] = CreateNameMapping(v)
+    end
+    for k, v in pairs(self.conditionTypesByOutput) do
+        self.conditionTypesByOutput[k] = CreateNameMapping(v)
+    end
+    --[[
 	for i = 1, #coreTypes do
 		local coreType = coreTypes[i]
 		if self.conditionTypesByInput[coreType.name] then
@@ -77,7 +84,7 @@ function Model:init()
 			self.conditionTypesByOutput[coreType.name] = CreateNameMapping(self.conditionTypesByOutput[coreType.name])
 		end
 	end
-	
+	--]]
 	local orderTypes = SCEN_EDIT.coreOrders()
 	for i = 1, #orderTypes do
 		local orderType = orderTypes[i]
@@ -187,6 +194,8 @@ function Model:Save(fileName)
         unit.x, _, unit.y = Spring.GetUnitPosition(unitId)
         unit.player = Spring.GetUnitTeam(unitId)
 		unit.id = self.unitManager:getModelUnitId(unitId)
+        local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
+        unit.angle = math.atan2(dirX, dirZ) * 180 / math.pi
 
         table.insert(mission.units, unit)
     end
@@ -241,6 +250,7 @@ function Model:Load(modelString)
 	self._unitIdCounter = 0
     for i, unit in pairs(units) do
         local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
+        Spring.SetUnitRotation(unitId, 0, -unit.angle * math.pi / 180, 0)
         SCEN_EDIT.model.unitManager:setUnitModelId(unitId, unit.id)
 --        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player,
 --			function (unitId)				

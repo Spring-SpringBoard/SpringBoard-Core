@@ -35,8 +35,8 @@ function SCEN_EDIT.coreTypes()
             name = "string",
         },
         {
-		    name = "Number",
-            humanName = "number",
+            humanName = "Number",
+		    name = "number",
         },
         {
             humanName = "Numeric comparison",
@@ -136,6 +136,17 @@ function SCEN_EDIT.coreActions()
 				SCEN_EDIT.rtModel.model.orderTypes[orderTypeName].execute(newInput)
 			end
 		},
+        {
+			humanName = "Unit say", 
+			name = "UNIT_SAY",
+			input = { "unit", "string" },
+			execute = function (input)
+				local unit = input.unit
+                local text = input.string
+                
+                SCEN_EDIT.displayUtil:unitSay(unit, text)
+			end
+        },
 		{
 			humanName = "Remove unit", 
 			name = "REMOVE_UNIT",
@@ -437,28 +448,34 @@ function SCEN_EDIT.coreTransforms()
 	return {
 		{
 			humanName = "Unit type",
-			name = "unitType",
+			name = "UNIT_TYPE",
 			input = { "unit" },
 			output = "unitType",			
 		},
 		{
 			humanName = "Unit team",
-			name = "unitTeam",
+			name = "UNIT_TEAM",
 			input = { "unit" },
 			output = "team",			
 		},
 		{
 			humanName = "Unit HP",
-			name = "unitHp",
+			name = "UNIT_HP",
 			input = { "unit" },
 			output = "number",			
 		},
 		{
 			humanName = "Unit HP%",
-			name = "unitHP%",
+			name = "UNIT_HP_PERCENT",
 			input = { "unit" },
 			output = "number",			
 		},
+        {
+            humanName = "Units in Area",
+            name = "UNITS_IN_AREA",
+            input = { "area" },
+            output = "unit_array",
+        },
 	}
 end
 

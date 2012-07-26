@@ -683,10 +683,7 @@ local function CreateFeatureDefsView()
 						selFeatureDef = featureImages.items[itemIdx].id
                         SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, featureImages.teamId, featureImages))
 					end
-                    Spring.Echo(selFeatureDef)
                     local feature = FeatureDefs[selFeatureDef]
-                    table.echo(feature)
-                    Spring.Echo(feature.drawType)
 				end
 			end,
 		},
@@ -755,6 +752,50 @@ local function CreateFeatureDefsView()
                 },
             },
             Label:New {
+                x = 140,
+                width = 50,
+                bottom = 8 + C_HEIGHT * 2,
+                caption = "Wreck:",
+            },
+            ComboBox:New {
+                height = model.B_HEIGHT,
+                x = 190,
+                bottom = 1 + C_HEIGHT * 2,
+                items = {
+                    "Units", "Buildings", "All",
+                },
+                width = 80,
+                OnSelectItem = {
+                    function (obj, itemIdx, selected) 
+                        if selected then
+                            featureImages:SelectUnitTypesId(itemIdx)
+                        end
+                    end
+                },
+            },
+            Label:New {
+                caption = "Terrain:",
+                x = 270,
+                bottom = 8 + C_HEIGHT * 2,
+                width = 50,
+            },
+            ComboBox:New {
+                bottom = 1 + C_HEIGHT * 2,
+                height = model.B_HEIGHT,
+                items = {
+                    "Ground", "Air", "Water", "All",
+                },
+                x = 330,
+                width=80,
+                OnSelectItem = {
+                    function (obj, itemIdx, selected) 
+                        if selected then
+                            featureImages:SelectTerrainId(itemIdx)
+                        end
+                    end
+                },
+            },
+            Label:New {
                 caption = "Player:",
                 x = 40,
                 bottom = 8,
@@ -783,12 +824,12 @@ function RecieveGadgetMessage(msg)
     if data[1] ~= pre then return end
     local op = data[2]
 
-    Spring.Echo(msg)
+--    Spring.Echo(msg)
     if op == 'sync' then
-        Spring.Echo("Widget synced!")
+--        Spring.Echo("Widget synced!")
         local msgTable = loadstring(string.sub(msg, #(pre .. "|sync|") + 1))()
         local msg = Message(msgTable.tag, msgTable.data)
-        table.echo(msg)
+--        table.echo(msg)
         if msg.tag == 'command' then
             local cmd = SCEN_EDIT.resolveCommand(msg.data)
             SCEN_EDIT.commandManager:execute(cmd, true)
@@ -799,9 +840,7 @@ function RecieveGadgetMessage(msg)
 	local data = tbl.data
 	local tag = tbl.tag
 
-	if tag == "display" then
-		SCEN_EDIT.displayUtil:displayText(data.text, data.coords, data.color)
-	elseif tag == "msg" then
+    if tag == "msg" then
 		model:InvokeCallback(data.msgId, data.result)
 	end
 end
@@ -1068,6 +1107,7 @@ function widget:Initialize()
 						caption = '',
 						OnClick = {
 							function()
+--                                Spring.Restart("tb.txt2", "")
                                 local cmd = StartCommand()
                                 SCEN_EDIT.commandManager:execute(cmd)
 							end
@@ -1179,9 +1219,6 @@ function reloadGadgets()
     end
 end
 
-local function DrawModifier()
-end
-
 function widget:DrawWorld()
     SCEN_EDIT.stateManager:DrawWorld()
     SCEN_EDIT.view:draw()
@@ -1190,16 +1227,16 @@ end
 
 function checkAreaIntersections(x, z)
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
-    for i = #areas, 1, -1 do
-        local rect = areas[i]
-        if x >= rect[1] and x < rect[3] and z >= rect[2] and z < rect[4] then
-            SCEN_EDIT.view.areaViews[i].selected = true
-            selected = i
-            dragDiffX = rect[1] - x
-            dragDiffZ = rect[2] - z
-            return selected, dragDiffX, dragDiffZ
+    local selected, dragDiffX, dragDiffZ
+    for id, area in pairs(areas) do
+        if x >= area[1] and x < area[3] and z >= area[2] and z < area[4] then
+            SCEN_EDIT.view.areaViews[id].selected = true
+            selected = id
+            dragDiffX = area[1] - x
+            dragDiffZ = area[2] - z
         end
     end
+    return selected, dragDiffX, dragDiffZ
 end
 
 function widget:MousePress(x, y, button)

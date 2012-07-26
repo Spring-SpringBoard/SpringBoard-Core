@@ -93,10 +93,10 @@ function gadget:RecvLuaMsg(msg, playerID)
 	local par7 = data[8]
     
     if op == 'sync' then
-        Spring.Echo("Synced message!")
+--        Spring.Echo("Synced message!")
         local msgTable = loadstring(string.sub(msg, #(pre .. "|sync|") + 1))()
         local msg = Message(msgTable.tag, msgTable.data)
-        table.echo(msg)
+--        table.echo(msg)
         if msg.tag == 'command' then
             local cmd = SCEN_EDIT.resolveCommand(msg.data)
             GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})

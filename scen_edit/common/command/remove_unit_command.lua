@@ -1,5 +1,5 @@
 RemoveUnitCommand = LCS.class{}
-SCEN_EDIT.SetClassName(RemoveUnitCommand, "RemoveUnitCommand")
+RemoveUnitCommand.className = "RemoveUnitCommand"
 
 function RemoveUnitCommand:init(modelUnitId)
     self.className = "RemoveUnitCommand"

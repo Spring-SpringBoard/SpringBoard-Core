@@ -8,11 +8,67 @@ GenericArrayPanel = class()
 function GenericArrayPanel:__init(parent, type)
 	self.parent = parent
 	self.type = type
-    self:Initialize()
+    self.atomicType = type:gsub("_array", "")
+    self.elements = {}
+    self.subPanels = {}
+
+    succ, msg = pcall(GenericArrayPanel.Initialize, self)
+    if not succ then
+        Spring.Echo(msg)
+    end
+end
+
+function GenericArrayPanel:AddElement()
+    self.subPanels:AddChild(Chili.Button:New {
+        caption='Thingy!',
+--        width='40%',
+--        x = 1,
+--        bottom = 1,
+        height = B_HEIGHT,
+        OnClick={
+            function() 
+                mode = 'add'
+                local screen0 = Chili.Screen0
+                Spring.Echo(screen0.classname)
+                Spring.Echo(self.parent.parent.parent.classname)
+				local newActionWindow = CustomWindow:New {
+					parent = screen0,
+					mode = mode,
+					dataType = self.atomicType,
+					parentWindow = self.parent.parent.parent,
+					parentObj = {},--btnExpressions.data,
+--					condition = btnExpressions.data[1], --nil if mode ~= 'edit'
+--					cbExpressions = cbExpressions,
+				}
+            end
+        }
+    })
 end
 
 function GenericArrayPanel:Initialize()
+    Spring.Echo(self.atomicType)
 	local radioGroup = {}
+--    self.subPanels =  MakeComponentPanel(self.parent)--[[
+    self.subPanels = Chili.StackPanel:New {
+        itemMargin = {0, 0, 0, 0},
+        x = 1,
+        y = 1,
+        right = 1,
+        autosize = true,
+        resizeItems = false,
+        parent = self.parent,
+    }--]]
+
+    local addPanel = MakeComponentPanel(self.parent)
+    local btnAddElement = Chili.Button:New {
+        caption='Add',
+        width='40%',
+        x = 1,
+        bottom = 1,
+        height = B_HEIGHT,
+        parent = addPanel,
+        OnClick={function() self:AddElement() end}
+    }
 	
 	--VARIABLE
     self.cbVariable, self.cmbVariable = MakeVariableChoice(self.type, self.parent)

@@ -42,6 +42,7 @@ function CustomWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
+    Spring.Echo(2)
 	obj.customTypes = model.conditionTypesByOutput[obj.dataType]
     obj.cmbCustomTypes = ComboBox:New {
         items = GetField(obj.customTypes, "humanName"),
@@ -51,6 +52,7 @@ function CustomWindow:New(obj)
         y = "20%",
         x = '20%',
     }
+    Spring.Echo(3)
 	obj.cmbCustomTypes.OnSelectItem = {
 		function(object, itemIdx, selected)
 			if selected and itemIdx > 0 then
@@ -69,6 +71,7 @@ function CustomWindow:New(obj)
 			end
 		end
 	}
+    Spring.Echo(4)
     obj.children = {
 		obj.cmbCustomTypes,
 		obj.btnOk,
@@ -91,6 +94,7 @@ function CustomWindow:New(obj)
 		end
 	}
 	
+    Spring.Echo(5)
 	obj.btnOk.OnClick = {
 		function()			
 			if obj.mode == 'edit' then
@@ -106,6 +110,8 @@ function CustomWindow:New(obj)
 	}	
 	obj.cmbCustomTypes:Select(0)
 	obj.cmbCustomTypes:Select(1)
+
+    Spring.Echo(6)
 	if obj.mode == 'add' then
 		obj.caption = "New expression of type " .. obj.dataType
 		local tw = obj.parentWindow
@@ -126,6 +132,8 @@ function CustomWindow:New(obj)
 		end
 		obj.y = tw.y
 	end	
+
+    Spring.Echo(7)
     return obj
 end
 
@@ -160,7 +168,7 @@ end
 function CustomWindow:EditCondition()
     self.condition.conditionTypeName = self.cmbCustomTypes.conditionTypes[self.cmbCustomTypes.selected]	
 	self:UpdateModel()
-	if not self.cbExpressions.checked then
+	if self.cbExpressions and not self.cbExpressions.checked then
 		self.cbExpressions:Toggle()
 	end    
 end
@@ -169,7 +177,7 @@ function CustomWindow:AddCondition()
     self.condition = { conditionTypeName = self.cmbCustomTypes.conditionTypes[self.cmbCustomTypes.selected] }
 	self:UpdateModel()
     table.insert(self.parentObj, self.condition)	
-    if not self.cbExpressions.checked then
+    if self.cbExpressions and not self.cbExpressions.checked then
 		self.cbExpressions:Toggle()
 	end
 end

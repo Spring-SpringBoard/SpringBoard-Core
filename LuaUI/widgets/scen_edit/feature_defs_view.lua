@@ -24,6 +24,8 @@ FeatureDefsView = Chili.LayoutPanel:Inherit {
 
   items = {},
   featureTypeId = 1,
+  unitTerrainId = 1,
+  unitTypesId = 1,
   teamId = 1,
 }
 
@@ -50,25 +52,44 @@ function FeatureDefsView:PopulateFeatureDefsView()
 	end
     for id, featureDef in pairs(FeatureDefs) do
 		local correctType = false
+        local correctUnit = true
+        local unitDef = nil
 		if featureTypeId == 3 then
 			correctType = true
 		else
 			local isWreck = false
 			if featureDef.tooltip and type(featureDef.tooltip) == "string" then
-				local nameLowercase = featureDef.name:lower()
-				local tooltipLowercase = featureDef.tooltip:lower()
-				if nameLowercase:find("heap") or nameLowercase:find("dead") or tooltipLowercase:find("wreck") or tooltipLowercase:find("heap") then
-					isWreck = true
-				end
+                local defName = featureDef.name:gsub("_heap", ""):gsub("_dead", "")
+                unitDef = UnitDefNames[defName]
+                if unitDef then
+                    isWreck = true
+                end
 			end
 			correctType = isWreck == (featureTypeId == 1)
+            if correctType and isWreck then
+                correctUnit = false
+                local unitTerrainId = self.unitTerrainId
+                local unitTypesId = self.unitTypesId
+                local correctUnitType = false
+                correctUnitType = unitTypesId == 2 and unitDef.isBuilding or
+                unitTypesId == 1 and not unitDef.isBuilding or
+                unitTypesId == 3
+
+                -- BEAUTIFUL, MARVEL AT IT'S GLORY FOR IT ILLUMINATES US ALL
+                correctTerrain = unitTerrainId == 1 and (not unitDef.canFly and
+                not unitDef.floater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
+                unitTerrainId == 2 and unitDef.canFly or
+                unitTerrainId == 3 and (unitDef.canHover or unitDef.floater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
+                unitTerrainId == 4
+                if correctUnitType and correctTerrain then
+                    correctUnit = true
+                end
+            end
 		end
-        if correctType then
+        if correctType and correctUnit then
             unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
             local fileExists = VFS.FileExists(unitImagePath)
             if not fileExists then
-                local defName = featureDef.name:gsub("_heap", ""):gsub("_dead", "")
-                local unitDef = UnitDefNames[defName]
                 if unitDef ~= nil then
                     unitImagePath = SCEN_EDIT.getUnitDefBuildPic(unitDef)
                 else
@@ -149,6 +170,16 @@ end
 function FeatureDefsView:Clear()
     self.children = {}
     self.items = {}
+end
+
+function FeatureDefsView:SelectTerrainId(unitTerrainId)
+    self.unitTerrainId = unitTerrainId
+    self:PopulateFeatureDefsView()
+end
+
+function FeatureDefsView:SelectUnitTypesId(unitTypesId)
+    self.unitTypesId = unitTypesId
+    self:PopulateFeatureDefsView()
 end
 
 --//=============================================================================

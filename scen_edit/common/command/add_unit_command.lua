@@ -1,5 +1,5 @@
 AddUnitCommand = UndoableCommand:extends{}
-SCEN_EDIT.SetClassName(AddUnitCommand, "AddUnitCommand")
+AddUnitCommand.className = "AddUnitCommand"
 
 function AddUnitCommand:init(unitTypeId, x, y, z, unitTeamId, angle)
     self.className = "AddUnitCommand"

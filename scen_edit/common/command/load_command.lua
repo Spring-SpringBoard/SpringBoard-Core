@@ -1,5 +1,5 @@
 LoadCommand = AbstractCommand:extends{}
-SCEN_EDIT.SetClassName(LoadCommand, "LoadCommand")
+LoadCommand.className = "LoadCommand"
 
 function LoadCommand:init(modelString)
     self.className = "LoadCommand"

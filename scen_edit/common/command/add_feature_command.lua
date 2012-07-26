@@ -1,5 +1,5 @@
 AddFeatureCommand = UndoableCommand:extends{}
-SCEN_EDIT.SetClassName(AddFeatureCommand, "AddFeatureCommand")
+AddFeatureCommand.className = "AddFeatureCommand"
 
 function AddFeatureCommand:init(featureTypeId, x, y, z, featureTeamId, angle)
     self.className = "AddFeatureCommand"
@@ -12,9 +12,17 @@ end
 function AddFeatureCommand:execute()
     self.featureId = Spring.CreateFeature(self.featureTypeId, self.x, self.y, self.z, 0, self.featureTeamId)
     Spring.SetFeatureDirection(self.featureId, 0, self.angle, 0)
-    local prop = math.tan(self.angle)
+    local prop = math.tan(self.angle / 180 * math.pi)
     local z = math.sqrt(1 / (prop * prop + 1))
     local x = prop * z
+    self.angle = math.abs(self.angle % 360)
+    if self.angle >= 90 and self.angle < 180 then
+        x = -x
+        z = -z
+    elseif self.angle >= 180 and self.angle < 270 then
+        x = -x
+        z = -z
+    end
 --[[    x^2 + y^2 = 1
     x = prop * y
     prop ^2 * y^2  + y^2 = 1
