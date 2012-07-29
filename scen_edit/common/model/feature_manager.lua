@@ -2,15 +2,14 @@ FeatureManager = Observable:extends{}
 
 function FeatureManager:init(widget)
     self:super('init')
-    self:populate()
-    self.widget = widget
-end
-
-function FeatureManager:populate()
 	self.s2mFeatureIdMapping = {}
 	self.m2sFeatureIdMapping = {}
 	self.featureIdCounter = 0
+    self.widget = widget
+    self:populate()
+end
 
+function FeatureManager:populate()
     if not self.widget then
         local allFeatures = Spring.GetAllFeatures()
         for i = 1, #allFeatures do
@@ -44,6 +43,9 @@ function FeatureManager:addFeature(featureId, modelId)
 end
 
 function FeatureManager:removeFeature(featureId)
+    if featureId == nil then
+        return
+    end
     local modelId = self.s2mFeatureIdMapping[featureId]
 	if self.s2mFeatureIdMapping[featureId] then
 		self.m2sFeatureIdMapping[modelId] = nil
@@ -70,5 +72,39 @@ function FeatureManager:setFeatureModelId(featureId, modelId)
     if self.s2mFeatureIdMapping[featureId] then
         self:removeFeature(featureId)
     end
+    if self.m2sFeatureIdMapping[modelId] then
+        self:removeFeatureByModelId(modelId)
+    end
     self:addFeature(featureId, modelId)
+end
+
+function FeatureManager:serialize()
+    local retVal = {}
+    for _, feature in pairs(self.features) do
+        table.insert(retVal, 
+            {
+                feature = feature,
+            }
+        )
+    end
+    return retVal
+end
+
+function FeatureManager:load(data)
+    self:clear()
+    self.featureIdCount = 0
+    for _, kv in pairs(data) do
+        id = kv.id
+        feature = kv.feature
+        self:addFeature(feature)
+    end
+end
+
+function FeatureManager:clear()
+    for featureId, _ in pairs(self.s2mFeatureIdMapping) do
+        self:removeFeature(featureId)
+    end
+	self.s2mFeatureIdMapping = {}
+	self.m2sFeatureIdMapping = {}
+	self.featureIdCounter = 0
 end

@@ -1,4 +1,4 @@
-RemoveUnitCommand = LCS.class{}
+RemoveUnitCommand = UndoableCommand:extends{}
 RemoveUnitCommand.className = "RemoveUnitCommand"
 
 function RemoveUnitCommand:init(modelUnitId)

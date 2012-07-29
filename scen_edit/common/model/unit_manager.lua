@@ -2,15 +2,14 @@ UnitManager = Observable:extends{}
 
 function UnitManager:init(widget)
     self:super('init')
-    self:populate()
-    self.widget = widget
-end
-
-function UnitManager:populate()
 	self.s2mUnitIdMapping = {}
 	self.m2sUnitIdMapping = {}
 	self.unitIdCounter = 0
+    self.widget = widget
+    self:populate()
+end
 
+function UnitManager:populate()
     if not self.widget then
         local allUnits = Spring.GetAllUnits()
         for i = 1, #allUnits do
@@ -44,6 +43,9 @@ function UnitManager:addUnit(unitId, modelId)
 end
 
 function UnitManager:removeUnit(unitId)
+    if unitId == nil then
+        return
+    end
     local modelId = self.s2mUnitIdMapping[unitId]
 	if self.s2mUnitIdMapping[unitId] then
 		self.m2sUnitIdMapping[modelId] = nil
@@ -70,6 +72,9 @@ function UnitManager:setUnitModelId(unitId, modelId)
     if self.s2mUnitIdMapping[unitId] then
         self:removeUnit(unitId)
     end
+    if self.m2sUnitIdMapping[modelId] then
+        self:removeUnitByModelId(modelId)
+    end
     self:addUnit(unitId, modelId)
 end
 
@@ -78,12 +83,16 @@ function UnitManager:getUnit(triggerId)
 end
 
 function UnitManager:getAllUnits()
-    return self.triggers
+    local allUnits = {}
+    for id, _ in pairs(self.m2sUnitIdMapping) do
+        table.insert(allUnits, id)
+    end
+    return allUnits
 end
 
 function UnitManager:serialize()
     local retVal = {}
-    for _, unit in pairs(self.units) do
+    for _, unit in pairs(self:allUnits()) do
         table.insert(retVal, 
             {
                 unit = unit,
@@ -104,7 +113,10 @@ function UnitManager:load(data)
 end
 
 function UnitManager:clear()
-    for unitId, _ in pairs(self.units) do
+    for unitId, _ in pairs(self.s2mUnitIdMapping) do
         self:removeUnit(unitId)
     end
+	self.s2mUnitIdMapping = {}
+	self.m2sUnitIdMapping = {}
+	self.unitIdCounter = 0
 end

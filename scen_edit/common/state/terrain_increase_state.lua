@@ -1,19 +1,15 @@
 TerrainIncreaseState = AbstractState:extends{}
 
-function TerrainIncreaseState:__init()
-end
-
-function TerrainIncreaseState:enterState()
-end
-
-function TerrainIncreaseState:leaveState()
+function TerrainIncreaseState:init()
 end
 
 function TerrainIncreaseState:MousePress(x, y, button)
     if button == 1 then
-        local result, coords = Spring.TraceScreenRay(x, y)
+        local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
-            SCEN_EDIT.model:AdjustHeightMap(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, 20)
+            local cmd = TerrainIncreaseCommand(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, 20)
+            SCEN_EDIT.commandManager:execute(cmd)
+            return true
         end
     elseif button == 3 then
         SCEN_EDIT.stateManager:SetState(DefaultState())
@@ -31,7 +27,7 @@ end
 
 function TerrainIncreaseState:DrawWorld()
 	x, y = Spring.GetMouseState()
-	local result, coords = Spring.TraceScreenRay(x, y)
+	local result, coords = Spring.TraceScreenRay(x, y, true)
 	if result == "ground" then
 		local x, z = coords[1], coords[3]
 		local startX, startZ = x - 20, z - 20
@@ -39,7 +35,7 @@ function TerrainIncreaseState:DrawWorld()
 		gl.PushMatrix()
         currentState = SCEN_EDIT.stateManager:GetCurrentState()
         gl.Color(0, 255, 0, 0.3)
-		DrawRect(startX, startZ, endX, endZ) 
+		SCEN_EDIT.view:drawRect(startX, startZ, endX, endZ) 
 		gl.PopMatrix()
 	end
 end

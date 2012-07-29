@@ -1,5 +1,4 @@
 local Chili = WG.Chili
-local model = SCEN_EDIT.model
 
 TriggerPanel = {
 }
@@ -22,14 +21,14 @@ function TriggerPanel:Initialize()
     }
     local triggerNames = {}
     local triggerIds = {}
-    for i = 1, #model.triggers do
-        table.insert(triggerNames, model.triggers[i].name)
-        table.insert(triggerIds, model.triggers[i].id)
+    for id, trigger in pairs(SCEN_EDIT.model.triggerManager:getAllTriggers()) do
+        table.insert(triggerNames, trigger.name)
+        table.insert(triggerIds, trigger.id)
     end
     self.cmbTrigger = ComboBox:New {
         right = 1,
         width = 100,
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.model.B_HEIGHT,
         parent = stackTriggerPanel,
         items = triggerNames,
         triggerIds = triggerIds,

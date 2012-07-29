@@ -1,4 +1,4 @@
-RedoCommand = LCS.class{}
+RedoCommand = AbstractCommand:extends{}
 
 function RedoCommand:init()
     self.className = "RedoCommand"

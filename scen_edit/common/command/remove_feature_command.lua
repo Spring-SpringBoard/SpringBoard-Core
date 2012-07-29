@@ -1,10 +1,10 @@
-AbstractCommand = LCS.class{}
+RemoveFeatureCommand = UndoableCommand:extends{}
 
-function AbstractCommand:init()
+function RemoveFeatureCommand:init()
 end
 
-function AbstractCommand:execute()
+function RemoveFeatureCommand:execute()
 end
 
-function AbstractCommand:unexecute()
+function RemoveFeatureCommand:unexecute()
 end

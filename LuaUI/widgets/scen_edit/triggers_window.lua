@@ -61,6 +61,11 @@ function TriggersWindow:New(obj)
     obj:Populate()
     local triggerManagerListener = TriggerManagerListenerWidget(obj)
     SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
+    obj.OnDispose = {
+        function()
+            SCEN_EDIT.model.triggerManager:removeListener(triggerManagerListener)
+        end
+    }
     return obj
 end
 
@@ -93,8 +98,7 @@ end
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
     local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
-    for i = 1, #triggers  do		
-        local trigger = triggers[i]
+    for id, trigger in pairs(triggers)  do		
         local stackTriggerPanel = Chili.StackPanel:New {
             triggerId = trigger.id,
             parent = self._triggers,

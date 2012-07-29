@@ -17,6 +17,9 @@ function TriggerManager:addTrigger(trigger)
 end
 
 function TriggerManager:removeTrigger(triggerId)
+    if triggerId == nil then
+        return
+    end
     if self.triggers[triggerId] then
         self.triggers[triggerId] = nil
         self:callListeners("onTriggerRemoved", triggerId)
@@ -40,23 +43,18 @@ function TriggerManager:getAllTriggers()
 end
 
 function TriggerManager:serialize()
-    local retVal = {}
+    return SCEN_EDIT.deepcopy(self.triggers)
+--[[    local retVal = {}
     for _, trigger in pairs(self.triggers) do
-        table.insert(retVal, 
-            {
-                trigger = trigger,
-            }
-        )
+        retVal[trigger.id] = trigger
     end
-    return retVal
+    return retVal--]]
 end
 
 function TriggerManager:load(data)
     self:clear()
     self.triggerIdCount = 0
-    for _, kv in pairs(data) do
-        id = kv.id
-        trigger = kv.trigger
+    for id, trigger in pairs(data) do
         self:addTrigger(trigger)
     end
 end
@@ -65,4 +63,6 @@ function TriggerManager:clear()
     for triggerId, _ in pairs(self.triggers) do
         self:removeTrigger(triggerId)
     end
+    self.triggerIdCount = 0
+    self.triggers = {}
 end

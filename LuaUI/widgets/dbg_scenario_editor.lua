@@ -522,7 +522,7 @@ local function CreateTerrainEditor()
 						height = model.B_HEIGHT + 20,
 						OnClick = {
 							function()
-								State.mouse = "terr_inc"
+                                SCEN_EDIT.stateManager:SetState(TerrainIncreaseState())
 							end
 						},
 					},
@@ -533,7 +533,7 @@ local function CreateTerrainEditor()
 						height = model.B_HEIGHT + 20,
 						OnClick = {
 							function()
-								State.mouse = "terr_dec"
+                                SCEN_EDIT.stateManager:SetState(TerrainDecreaseState())
 							end
 						},
 					},
@@ -983,7 +983,7 @@ function widget:Initialize()
     toolboxWindow = Window:New {
         x = 500,
         y = 500,
-        width = 500,
+        width = 600,
         height = 100,
         parent = screen0,
         caption = "Scenario Toolbox",
@@ -1100,16 +1100,19 @@ function widget:Initialize()
 								margin = {0, 0, 0, 0},
 							},
 						},
-					},
+					},--[[
 					Button:New {
 						height = model.B_HEIGHT + 20,
 						width = model.B_HEIGHT + 20,
 						caption = '',
 						OnClick = {
 							function()
+                                Spring.StopSoundStream()
+--                                Spring.PlaySoundStream("sounds/environment.ogg")
+--                                Spring.PlaySoundFile("sounds/environment.ogg")
 --                                Spring.Restart("tb.txt2", "")
-                                local cmd = StartCommand()
-                                SCEN_EDIT.commandManager:execute(cmd)
+--                                local cmd = StartCommand()
+--                                SCEN_EDIT.commandManager:execute(cmd)
 							end
 						},
 						children = {
@@ -1121,7 +1124,7 @@ function widget:Initialize()
 								margin = {0, 0, 0, 0},
 							},
 						},
-					},
+					},--]]
 					Button:New {
 						height = model.B_HEIGHT + 20,
 						width = model.B_HEIGHT + 20,
@@ -1170,6 +1173,7 @@ function widget:Initialize()
 			)
         end
     }
+
 	--[[
     local testWindow = Window:New {
         parent = screen0,

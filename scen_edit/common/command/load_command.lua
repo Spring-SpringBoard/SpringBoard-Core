@@ -7,5 +7,6 @@ function LoadCommand:init(modelString)
 end
 
 function LoadCommand:execute()
-    SCEN_EDIT.model:Load(self.modelString)
+    local mission = loadstring(self.modelString)()
+    SCEN_EDIT.model:Load(mission)
 end

@@ -159,6 +159,7 @@ function Model:Clear()
     self.areaManager:clear()
     self.variableManager:clear()
     self.triggerManager:clear()
+    self.featureManager:clear()
 	self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
@@ -172,17 +173,14 @@ function Model:Clear()
         Spring.DestroyFeature(featureId, false, true)
 --		self.featureManager:RemoveFeature(featureId)
 	end
-	self._unitIdCounter = 0
-	self.m2sUnitIdMapping = {}
-	self.s2mUnitIdMapping = {}
     SCEN_EDIT.commandManager:clearUndoRedoStack()
 end
 
-function Model:Save(fileName)
-	local mission = {}
+function Model:Serialize()
+    local mission = {}
 	mission.meta = self:GetMetaData()
-	mission.meta.m2sUnitIdMapping = {}
-	mission.meta.s2mUnitIdMapping = {}
+	mission.meta.m2sUnitIdMapping = nil
+	mission.meta.s2mUnitIdMapping = nil
 	mission.units = {}
 	
     local allUnits = Spring.GetAllUnits()
@@ -199,7 +197,29 @@ function Model:Save(fileName)
 
         table.insert(mission.units, unit)
     end
-	
+
+    mission.features = {}
+
+    local allFeatures = Spring.GetAllFeatures()
+    for i = 1, #allFeatures do
+        local feature = {}
+        local featureId = allFeatures[i]
+        local featureDefId = Spring.GetFeatureDefID(featureId)
+        feature.featureDefName = FeatureDefs[featureDefId].name
+        feature.x, _, feature.y = Spring.GetFeaturePosition(featureId)
+        feature.player = Spring.GetFeatureTeam(featureId)
+        feature.id = self.featureManager:getModelFeatureId(featureId)
+        local dirX, dirY, dirZ = Spring.GetFeatureDirection(featureId)
+        feature.angle = math.atan2(dirX, dirZ) * 180 / math.pi
+
+        table.insert(mission.features, feature)
+    end
+    return mission
+end
+
+function Model:Save(fileName)
+    local mission = self:Serialize()
+    table.save(mission, fileName)
 --[[    local mission = {}
     mission.triggers = {}
     table.insert(mission.triggers, {})
@@ -236,14 +256,12 @@ function Model:Save(fileName)
     end
 --]]
     -- write to file
-    table.save(mission, fileName)
 end
 
-function Model:Load(modelString)
+function Model:Load(mission)
     self:Clear()
 	
     --load file
-    local mission = loadstring(modelString)()
 	self:SetMetaData(mission.meta)
 	--load units
     local units = mission.units
@@ -251,7 +269,7 @@ function Model:Load(modelString)
     for i, unit in pairs(units) do
         local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
         Spring.SetUnitRotation(unitId, 0, -unit.angle * math.pi / 180, 0)
-        SCEN_EDIT.model.unitManager:setUnitModelId(unitId, unit.id)
+        self.unitManager:setUnitModelId(unitId, unit.id)
 --        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player,
 --			function (unitId)				
 --				if self.s2mUnitIdMapping[unitId] then
@@ -264,6 +282,23 @@ function Model:Load(modelString)
 --		if unit.id > self._unitIdCounter then
 --			self._unitIdCounter = unit.id
 --		end--]]
+    end
+    local features = mission.features
+    for i, feature in pairs(features) do
+        local featureId = Spring.CreateFeature(feature.featureDefName, feature.x, 0, feature.y, feature.player)
+        local prop = math.tan(feature.angle / 180 * math.pi)
+        local z = math.sqrt(1 / (prop * prop + 1))
+        local x = prop * z
+        feature.angle = math.abs(feature.angle % 360)
+        if feature.angle >= 90 and feature.angle < 180 then
+            x = -x
+            z = -z
+        elseif feature.angle >= 180 and feature.angle < 270 then
+            x = -x
+            z = -z
+        end
+        Spring.SetFeatureDirection(featureId, x, 0, z)
+        SCEN_EDIT.model.featureManager:setFeatureModelId(featureId, feature.id)
     end
 	self:GenerateTeams()
 end

@@ -18,25 +18,28 @@ function DisplayUtil:AddText(text, coords, color, time)
 end
 
 local function GetTipDimensions(unitID, str, height, invert)
-local Chili = WG.Chili
-local screen0 = Chili.Screen0
+    local Chili = WG.Chili
+    local screen0 = Chili.Screen0
 	local textHeight, _, numLines = gl.GetTextHeight(str)
 	textHeight = textHeight*fontSize*numLines
-	local textWidth = gl.GetTextWidth(str)*fontSize
+	local textWidth = gl.GetTextWidth(str)*fontSize + 4
 
-	local ux, uy, uz = Spring.GetUnitBasePosition(unitID)
-	uy = uy + height
-	local x,y,z = Spring.WorldToScreenCoords(ux, uy, uz)
-	if not invert then
-		y = screen0.height - y
-	end
+    local x, y, z = -1, -1, -1
+    if Spring.IsUnitInView(unitID) and height ~= nil then
+        local ux, uy, uz = Spring.GetUnitBasePosition(unitID)
+        uy = uy + height
+        x,y,z = Spring.WorldToScreenCoords(ux, uy, uz)
+        if not invert then
+            y = screen0.height - y
+        end
+    end
 	
 	return textWidth, textHeight, x, y, height
 end
 
 function DisplayUtil:AddUnitSay(text, unitId, time)
-local Chili = WG.Chili
-local screen0 = Chili.Screen0
+    local Chili = WG.Chili
+    local screen0 = Chili.Screen0
 	local height = Spring.GetUnitHeight(unitId)
 	
 	local textWidth, textHeight, x, y = GetTipDimensions(unitId, text, height)
@@ -65,6 +68,10 @@ local screen0 = Chili.Screen0
 			color  = {0,0,0,1},
 		},
 	}
+    if x == -1 and y == -1 and z == -1 and not img.hidden then
+        screen0:RemoveChild(img)
+        img.hidden = true
+    end
     table.insert(self.unitSays, {
         text = text,
         unitId = unitId,
@@ -75,6 +82,15 @@ local screen0 = Chili.Screen0
 end
 
 function DisplayUtil:OnFrame()
+    if self.follow then
+        if not Spring.ValidUnitID or Spring.GetUnitIsDead(self.follow) then
+            self.follow = nil
+        elseif Spring.IsUnitVisible(self.follow) then
+            local x, y, z = Spring.GetUnitPosition(self.follow)
+            Spring.SetCameraTarget(x, y, z)
+        end
+    end
+
 	local toDelete = {}
 
 	for i = 1, #self.texts do		
@@ -85,7 +101,7 @@ function DisplayUtil:OnFrame()
 		end
 	end    
 	
-	for i = 1, #toDelete do
+	for i = #toDelete, 1, -1 do
 		table.remove(self.texts, toDelete[i])
 	end
 
@@ -98,9 +114,12 @@ function DisplayUtil:OnFrame()
 		end
 	end    
 	
-	for i = 1, #toDelete do
-        self.unitSays[toDelete[i]].img:Dispose()
-		table.remove(self.unitSays, toDelete[i])
+	for i = #toDelete, 1, -1 do
+        local del = toDelete[i]
+        if self.unitSays[del].img then
+            self.unitSays[del].img:Dispose()
+        end
+        table.remove(self.unitSays, i)
 	end
 
     local Chili = WG.Chili
@@ -116,9 +135,6 @@ function DisplayUtil:OnFrame()
 				img.hidden = false
 			end
 			
-			--img.x = x - (textWidth+8)/2
-			--img.y = y - textHeight - 4 - fontSize
-			--img:Invalidate()
 			
 			img:SetPos(x - (textWidth+8)/2, y - textHeight - 4 - fontSize)
 		elseif not unitSay.img.hidden then
@@ -157,6 +173,24 @@ function DisplayUtil:unitSay(unit, text)
         self:AddUnitSay(text, unit, 300)
     else
         local cmd = WidgetUnitSayCommand(unit, text)
+        SCEN_EDIT.commandManager:execute(cmd, true)
+    end
+end
+
+function DisplayUtil:followUnit(unit)
+    if self.isWidget then
+        self.follow = unit
+    else
+        local cmd = WidgetFollowUnitCommand(unit)
+        SCEN_EDIT.commandManager:execute(cmd, true)
+    end
+end
+
+function DisplayUtil:playSound(soundPath)
+    if self.isWidget then
+        Spring.PlaySoundStream(soundPath)
+    else
+        local cmd = WidgetPlaySoundCommand(soundPath)
         SCEN_EDIT.commandManager:execute(cmd, true)
     end
 end

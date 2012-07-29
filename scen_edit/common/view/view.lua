@@ -13,6 +13,8 @@ function View:init()
         end
     end
     self.areaViews = {}
+    self.runtimeView = RuntimeView()
+    self.displayDevelop = true
 end
 
 function View:drawRect(x1, z1, x2, z2)
@@ -56,5 +58,7 @@ function View:drawRects()
 end
 
 function View:draw()
-    self:drawRects()
+    if self.displayDevelop then
+        self:drawRects()
+    end
 end

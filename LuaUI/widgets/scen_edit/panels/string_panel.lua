@@ -47,7 +47,7 @@ end
 function StringPanel:UpdateModel(field)
 	if self.cbPredefinedString.checked then
         field.type = "pred"
-        field.string = self.edString.text
+        field.id = self.edString.text
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
         field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
@@ -62,7 +62,7 @@ function StringPanel:UpdatePanel(field)
         if not self.cbPredefinedString.checked then
             self.cbPredefinedString:Toggle()
         end
-        self.edString.text = field.string
+        self.edString.text = field.id
     elseif field.type == "var" then
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()

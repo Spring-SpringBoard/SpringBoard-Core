@@ -119,7 +119,7 @@ function SCEN_EDIT.coreActions()
 				local y = Spring.GetGroundHeight(x, z)												
 				Spring.CreateUnit(unitType, x, y, z, 0, team.id)
 				
-				local color = SCEN_EDIT.rtModel.model.teams[team.id].color
+				local color = SCEN_EDIT.model.teams[team.id].color
 				SCEN_EDIT.displayUtil:displayText("Spawned", {x, y, z}, color )
 			end
 		},
@@ -133,7 +133,23 @@ function SCEN_EDIT.coreActions()
 					unit = input.unit,
 					params = input.order.input,
 				}
-				SCEN_EDIT.rtModel.model.orderTypes[orderTypeName].execute(newInput)
+				SCEN_EDIT.model.orderTypes[orderTypeName].execute(newInput)
+			end
+		},
+		{
+			humanName = "Issue order to units", 
+			name = "ISSUE_ORDER_TO_UNITS",
+			input = { "unit_array", "order" },
+			execute = function (input)
+                for i = 1, #input.unit_array do
+                    local unit = input.unit_array[i]
+                    local orderTypeName = input.order.orderTypeName
+                    local newInput = {
+                        unit = unit,
+                        params = input.order.input,
+                    }
+                    SCEN_EDIT.model.orderTypes[orderTypeName].execute(newInput)
+                end
 			end
 		},
         {
@@ -155,7 +171,7 @@ function SCEN_EDIT.coreActions()
 				local unit = input.unit				
 				local x, y, z = Spring.GetUnitPosition(unit)
 				
-				local color = SCEN_EDIT.rtModel.model.teams[Spring.GetUnitTeam(unit)].color
+				local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
 				Spring.DestroyUnit(unit, false, true)
 				SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
 			end
@@ -200,6 +216,22 @@ function SCEN_EDIT.coreActions()
 			execute = function (input)
 				local trigger = input.trigger
 				trigger.enabled = false
+			end
+		},
+		{
+			humanName = "Camera follow unit",
+			name = "CAMERA_FOLLOW_UNIT",
+			input = { "unit" },
+			execute = function (input)
+				SCEN_EDIT.displayUtil:followUnit(input.unit)
+			end
+		},
+		{
+			humanName = "Play sound",
+			name = "PLAY_SOUND_FILE",
+			input = { "string" },
+			execute = function (input)
+				SCEN_EDIT.displayUtil:playSound(input.string)
 			end
 		},
         {
@@ -378,21 +410,21 @@ function SCEN_EDIT.coreConditions()
     end
 
 	for i = 1, #allTypes do
-		local type = allTypes[i]		
-		if type.canCompare == nil or type.canCompare == true then
+		local basicType = allTypes[i]		
+		if basicType.canCompare == nil or basicType.canCompare == true then
 			local relType
-			if type.name == "number" then
+			if basicType.name == "number" then
 				relType = "numericComparison"
 			else
 				relType = "identityComparison"
 			end
 			local compareCond = {
-				humanName = "Compare " .. type.name,
-				name = "compare_" .. type.name,
+				humanName = "Compare " .. basicType.name,
+				name = "compare_" .. basicType.name,
 				input = {
 					{
 						name = "first",
-						type = type.name,
+						type = basicType.name,
 					},
 					{
 						name = "relation",
@@ -400,7 +432,7 @@ function SCEN_EDIT.coreConditions()
 					},
 					{
 						name = "second",
-						type = type.name,
+						type = basicType.name,
 					},
 				},
 				execute = function(input) 
@@ -409,7 +441,7 @@ function SCEN_EDIT.coreConditions()
 					local relation = input.relation
 					if relation == "is" or relation == "is not" then
 						local isSame = false
-						if type.name ~= "area" then
+						if basicType.name ~= "area" then
 							isSame = first == second
 						else
 							isSame = first[1] == second[1] and first[2] == second[2] and
@@ -450,32 +482,84 @@ function SCEN_EDIT.coreTransforms()
 			humanName = "Unit type",
 			name = "UNIT_TYPE",
 			input = { "unit" },
-			output = "unitType",			
+			output = "unitType",
+            execute = function(input)
+                return Spring.GetUnitDefID(input.unit)
+            end,
 		},
 		{
 			humanName = "Unit team",
 			name = "UNIT_TEAM",
 			input = { "unit" },
 			output = "team",			
+            execute = function(input)
+                return Spring.GetUnitTeam(input.unit)
+            end,
 		},
 		{
 			humanName = "Unit HP",
 			name = "UNIT_HP",
 			input = { "unit" },
 			output = "number",			
+            execute = function(input)
+                return Spring.GetUnitHealth(input.unit)
+            end,
 		},
 		{
 			humanName = "Unit HP%",
 			name = "UNIT_HP_PERCENT",
 			input = { "unit" },
 			output = "number",			
+            execute = function(input)
+                local hp, maxHp Spring.GetUnitHealth(input.unit)
+                return hp / maxHp
+            end,
 		},
         {
             humanName = "Units in Area",
             name = "UNITS_IN_AREA",
             input = { "area" },
             output = "unit_array",
+            execute = function(input)
+                return Spring.GetUnitsInRectangle(unpack(input.area))
+            end,
         },
+        {
+            humanName = "Trigger disabled",
+            name = "TRIGGER_DISABLED",
+            input = { "trigger" },
+            output = "bool",
+            execute = function(input)
+                return not input.trigger.enabled
+            end,
+        },
+        {
+            humanName = "Trigger enabled",
+            name = "TRIGGER_ENABLED",
+            input = { "trigger" },
+            output = "bool",
+            execute = function(input)
+                return input.trigger.enabled
+            end,
+        },
+        {
+            humanName = "Or",
+            name = "OR_CONDITIONS",
+            input = { "bool_array" },
+            output = "bool",
+            execute = function(input)
+                return true
+            end,
+        },
+        {
+            humanName = "And",
+            name = "AND_CONDITIONS",
+            input = { "bool_array" },
+            output = "bool",
+            execute = function(input)
+                return false
+            end,
+        }
 	}
 end
 
@@ -550,4 +634,13 @@ function SCEN_EDIT.complexExpressions()
 	}
 	table.insert(expressions, average)
 	return expressions
+end
+
+function SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
+    if resolvedInput == nil then
+        local stringRepresentation = table.show(expr)
+--        SCEN_EDIT.Error(input.name .. " cannot be resolved for : " .. stringRepresentation)
+        return true
+    end
+    return false
 end

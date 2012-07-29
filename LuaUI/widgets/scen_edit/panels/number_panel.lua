@@ -47,7 +47,7 @@ end
 function NumberPanel:UpdateModel(field)
 	if self.cbPredefinedValue.checked then
         field.type = "pred"
-        field.value = tonumber(self.edValue.text) or 0
+        field.id = tonumber(self.edValue.text) or 0
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
         field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
@@ -62,7 +62,7 @@ function NumberPanel:UpdatePanel(field)
         if not self.cbPredefinedValue.checked then
             self.cbPredefinedValue:Toggle()
         end
-        self.edValue.text = tostring(field.value)
+        self.edValue.text = tostring(field.id)
     elseif field.type == "var" then
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()

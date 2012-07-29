@@ -1,7 +1,7 @@
 local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
 local SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_COMMON_DIR .. "command/"
 
-CommandManager = LCS.class{maxUndoSize = 100, maxRedoSize = 100}
+CommandManager = LCS.class{maxUndoSize = 1000, maxRedoSize = 1000}
 
 function CommandManager:init(maxUndoSize, maxRedoSize)
     self.maxUndoSize = maxUndoSize

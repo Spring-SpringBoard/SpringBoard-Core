@@ -172,12 +172,15 @@ function SCEN_EDIT.humanExpression(data, exprType)
 		local humanName = action.humanName .. " ("
 		for i = 1, #action.input do
 			local input = action.input[i]
-			humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value") .. " "
+			humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value")
+            if i ~= #action.input then
+                humanName = humanName .. ", "
+            end
 		end
 		return humanName .. ")"
 	elseif exprType == "value" then 
 		if data.type == "pred" then
-			return "ID: " .. tostring(data.id)
+			return tostring(data.id)
 		elseif data.type == "spec" then
 			return data.name
 		elseif data.type == "expr" then
@@ -246,12 +249,31 @@ function SCEN_EDIT.resolveCommand(cmdTable)
 --    local cmd = loadstring("return " .. cmdTable.className)()
 --    local cmd = _G[cmdTable.className]()
     for k, v in pairs(cmdTable) do
-        cmd[k] = v
-    end
+        if type(v) == "table" and v.className ~= nil then
+            cmd[k] = SCEN_EDIT.resolveCommand(v)
+        else
+            cmd[k] = v
+        end
+    end--[[
     if cmd.className == "CompoundCommand" then
         for i = 1, #cmd.commands do
             cmd.commands[i] = SCEN_EDIT.resolveCommand(cmd.commands[i])
         end
-    end
+    end--]]
     return cmd
 end
+
+function SCEN_EDIT.deepcopy(t)
+    if type(t) ~= 'table' then return t end
+    local mt = getmetatable(t)
+    local res = {}
+    for k,v in pairs(t) do
+        if type(v) == 'table' then
+            v = SCEN_EDIT.deepcopy(v)
+        end
+        res[k] = v
+    end
+    setmetatable(res,mt)
+    return res
+end
+

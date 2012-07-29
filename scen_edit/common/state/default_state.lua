@@ -5,7 +5,6 @@ function DefaultState:checkResizeIntersections(x, z)
         return false
     end
     local rect = SCEN_EDIT.model.areaManager:getArea(self.selected)
-    Spring.Echo(self.selected)
     local accurancy = 20
     local toResize = false
     local resx, resz = 0, 0
@@ -59,6 +58,39 @@ function DefaultState:MousePress(x, y, button)
                 if toResize then
                     SCEN_EDIT.stateManager:SetState(ResizeAreaState(self.selected, resx, resz))
                     return true
+                else
+                    local currentFrame = Spring.GetGameFrame()
+                    if currentFrame - self.areaSelectTime < 5 then
+                        Spring.Echo("double click")
+                        local trigger = {
+                            name = "Enter area " .. self.selected,
+                            enabled = true,
+                            actions = {},
+                            events = {
+                                {
+                                    eventTypeName = "UNIT_ENTER_AREA",
+                                },
+                            },
+                            conditions = {
+                                {
+                                    conditionTypeName = "compare_area",
+                                    first = {
+                                        id = self.selected,
+                                        type = "pred",
+                                    },
+                                    relation = {
+                                        cmpTypeId = 1,
+                                    },
+                                    second = {
+                                        name = "Trigger area",
+                                        type = "spec",
+                                    },
+                                },
+                            },
+                        }
+                        local cmd = AddTriggerCommand(trigger)
+                        SCEN_EDIT.commandManager:execute(cmd)
+                    end
                 end
             end
             if self.selected then
@@ -66,6 +98,7 @@ function DefaultState:MousePress(x, y, button)
             end
             self.selected, self.dragDiffX, self.dragDiffZ = checkAreaIntersections(coords[1], coords[3])
             if self.selected ~= nil then
+                self.areaSelectTime = Spring.GetGameFrame()
                 Spring.SelectUnitArray({}, false)
                 return true
             end

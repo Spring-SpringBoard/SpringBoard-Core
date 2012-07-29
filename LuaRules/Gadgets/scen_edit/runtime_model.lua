@@ -3,22 +3,14 @@ RuntimeModel = LCS.class{}
 function RuntimeModel:init()
 	self.areaModels = {}	
 	self.lastFrameUnitIds = {}
-	self.fieldResolver = FieldResolver:New {
-		model = self.model,
-	}
+	self.fieldResolver = FieldResolver()
 end
 
-function RuntimeModel:LoadMission(meta)
+function RuntimeModel:LoadMission()
 	self.lastFrameUnitIds = Spring.GetAllUnits()
 	self.areaModels = {}
-
-	self.model = Model()
-	self.model:SetMetaData(meta)
-    --FIXME: should just get the meta data from the unit model
-    self.model.unitManager = SCEN_EDIT.model.unitManager
 	
-	self.fieldResolver.model = self.model
-    local areas = self.model.areaManager:getAllAreas()
+    local areas = SCEN_EDIT.model.areaManager:getAllAreas()
 	for id, area in pairs(areas) do
 		local areaModel = AreaModel(id, area)
 		areaModel:Populate(self.lastFrameUnitIds)
@@ -26,22 +18,20 @@ function RuntimeModel:LoadMission(meta)
 	end
 	
 	self.eventTriggers = {}
-    local triggers = self.model.triggerManager:getAllTriggers()
-	for i = 1, #triggers do
-		local trigger = triggers[i]
-		if trigger.enabled then
-			for j = 1, #trigger.events do
-				local event = trigger.events[j]
-				if not self.eventTriggers[event.eventTypeName] then
-					self.eventTriggers[event.eventTypeName] = {}
-				end
-				table.insert(self.eventTriggers[event.eventTypeName], trigger)
-			end
-		end
+    local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
+	for id, trigger in pairs(triggers) do
+        for j = 1, #trigger.events do
+            local event = trigger.events[j]
+            if not self.eventTriggers[event.eventTypeName] then
+                self.eventTriggers[event.eventTypeName] = {}
+            end
+            table.insert(self.eventTriggers[event.eventTypeName], trigger)
+        end
 	end	
 end
 
 function RuntimeModel:GameStart()
+    self.hasStarted = true
 	if self.eventTriggers["GAME_START"] then
 		for k = 1, #self.eventTriggers["GAME_START"] do
 			local params = { }
@@ -51,7 +41,28 @@ function RuntimeModel:GameStart()
 	end
 end
 
+function RuntimeModel:GameStop()
+    self.hasStarted = false
+end
+
+function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attackerDefId, attackerTeamId)
+    if not self.hasStarted then
+        return
+    end
+	if self.eventTriggers["UNIT_DESTROY"] then
+        local destroyedUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+		for k = 1, #self.eventTriggers["UNIT_DESTROY"] do
+			local params = { triggerUnitId = destroyedUnitId }
+			local trigger = self.eventTriggers["UNIT_DESTROY"][k]				
+			self:ConditionStep(trigger, params)
+		end
+	end
+end
+
 function RuntimeModel:GameFrame(frameNum)
+    if not self.hasStarted then
+        return
+    end
 	local newUnitIds = Spring.GetAllUnits()	
 	local unitIds = {}
 	--update area-unit models
@@ -76,7 +87,7 @@ function RuntimeModel:GameFrame(frameNum)
 		local area = areaModel.area
 		if self.eventTriggers["UNIT_ENTER_AREA"] then
 			for j = 1, #results.entered do
-				local enteredUnitId = self.model.unitManager:getModelUnitId(results.entered[j])
+				local enteredUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(results.entered[j])
 				for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
 					local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
 					local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]				
@@ -113,17 +124,13 @@ end
 function RuntimeModel:ActionStep(trigger, params)
 	for i = 1, #trigger.actions do
 		local action = trigger.actions[i]
-		local actionType = self.model.actionTypes[action.actionTypeName]
+		local actionType = SCEN_EDIT.model.actionTypes[action.actionTypeName]
 		local resolvedInputs = {}
 		local fail = false
 		for i = 1, #actionType.input do
 			local input = actionType.input[i]	
-			local resolvedInput = self.fieldResolver:Resolve(action[input.name], input.type)			
-			if resolvedInput == nil then
-				fail = true
-				local stringRepresentation = table.show(action)
-				SCEN_EDIT.Error(input.name .. " cannot be resolved for action : " .. stringRepresentation)
-			end
+			local resolvedInput = self.fieldResolver:Resolve(action[input.name], input.type)
+            fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, action)
 			resolvedInputs[input.name] = resolvedInput
 		end
 		if not fail then
@@ -136,20 +143,31 @@ function RuntimeModel:ActionStep(trigger, params)
 	end
 end
 
+function RuntimeModel:ExecuteTriggerActions(triggerId)
+    if self.hasStarted then
+        local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+        self:ActionStep(trigger, {})
+    end
+end
+
+function RuntimeModel:ExecuteTrigger(triggerId)
+    if self.hasStarted then
+        local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+        self:ConditionStep(trigger, {})
+    end
+end
+
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
 	for i = 1, #trigger.conditions do
 		local condition = trigger.conditions[i]
-		local conditionType = self.model.conditionTypes[condition.conditionTypeName]
+		local conditionType = SCEN_EDIT.model.conditionTypes[condition.conditionTypeName]
 		local resolvedInputs = {}
 		local fail = false
 		for i = 1, #conditionType.input do
 			local input = conditionType.input[i]	
-			local resolvedInput = self.fieldResolver:Resolve(condition[input.name], input.type)			
-			if resolvedInput == nil then
-				fail = true
-				local stringRepresentation = table.show(condition)
-				Spring.Echo(input.name .. " cannot be resolved for condition : " .. stringRepresentation)
-			end
+			local resolvedInput = self.fieldResolver:Resolve(condition[input.name], input.type)
+
+            fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, condition)
 			resolvedInputs[input.name] = resolvedInput
 		end
 		if not fail then
@@ -160,7 +178,9 @@ function RuntimeModel:ComputeTriggerConditions(trigger, params)
 					return false
 				end
 			end
-		end
+        else
+            return false
+        end
 	end
 	return true
 end

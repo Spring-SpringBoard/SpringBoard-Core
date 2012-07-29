@@ -1,4 +1,4 @@
-RemoveAreaCommand = LCS.class{}
+RemoveAreaCommand = UndoableCommand:extends{}
 RemoveAreaCommand.className = "RemoveAreaCommand"
 
 function RemoveAreaCommand:init(areaId)

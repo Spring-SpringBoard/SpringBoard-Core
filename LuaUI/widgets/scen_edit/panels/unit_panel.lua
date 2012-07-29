@@ -57,9 +57,11 @@ function UnitPanel:Initialize()
             function()
                 if self.btnPredefinedUnit.unitId ~= nil then
                     local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.btnPredefinedUnit.unitId)
-                    local x, y, z = Spring.GetUnitPosition(unitId)
-                    Spring.SelectUnitArray({unitId})
-                    Spring.SetCameraTarget(x, y, z)
+                    if unitId ~= nil and Spring.ValidUnitID(unitId) then
+                        local x, y, z = Spring.GetUnitPosition(unitId)
+                        Spring.SelectUnitArray({unitId})
+                        Spring.SetCameraTarget(x, y, z)
+                    end
                 end
             end
         }

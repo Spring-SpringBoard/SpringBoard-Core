@@ -8,3 +8,6 @@ end
 
 function TriggerManagerListener:onTriggerRemoved(triggerId)
 end
+
+function TriggerManagerListener:onTriggerUpdated(triggerId)
+end

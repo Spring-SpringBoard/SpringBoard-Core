@@ -9,7 +9,14 @@ function Observable:addListener(listener)
 end
 
 function Observable:removeListener(listener)
-    table.remove(self.listeners, listener)
+    for k, v in pairs(self.listeners) do
+        if v == listener then
+            table.remove(self.listeners, k)
+            Spring.Echo("removed")
+        end
+    end
+
+    --table.remove(self.listeners, listener)
 end
 
 function Observable:callListeners(func, ...)

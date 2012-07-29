@@ -1,4 +1,4 @@
-UndoCommand = LCS.class{}
+UndoCommand = AbstractCommand:extends{}
 
 function UndoCommand:init()
     self.className = "UndoCommand"

@@ -1,4 +1,4 @@
-RemoveVariableCommand = LCS.class{}
+RemoveVariableCommand = UndoableCommand:extends{}
 RemoveVariableCommand.className = "RemoveVariableCommand"
 
 function RemoveVariableCommand:init(variableId)

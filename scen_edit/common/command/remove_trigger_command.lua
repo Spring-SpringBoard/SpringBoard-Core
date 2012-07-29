@@ -1,4 +1,4 @@
-RemoveTriggerCommand = LCS.class{}
+RemoveTriggerCommand = UndoableCommand:extends{}
 RemoveTriggerCommand.className = "RemoveTriggerCommand"
 
 function RemoveTriggerCommand:init(triggerId)

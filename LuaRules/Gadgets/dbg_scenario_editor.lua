@@ -218,6 +218,7 @@ function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
 end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
+    SCEN_EDIT.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
 	SCEN_EDIT.model.unitManager:removeUnit(unitID)
 end
 

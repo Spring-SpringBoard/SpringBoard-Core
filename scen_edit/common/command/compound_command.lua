@@ -1,4 +1,4 @@
-CompoundCommand = LCS.class{}
+CompoundCommand = UndoableCommand:extends{}
 
 function CompoundCommand:init(commands)
     self.className = "CompoundCommand"

@@ -1,16 +1,28 @@
-FieldResolver = {
-	params = {},
-	model = {},
-}
+FieldResolver = LCS.class{}
 
-function FieldResolver:New(o)
-    o = o or {}
-    setmetatable(o, self)
-    self.__index = self	
-    return o
+function FieldResolver:init(params)
+    self.params = params
 end
 
-function FieldResolver:Resolve(field, type)	
+function FieldResolver:Resolve(field, type)
+    if field.type == "expr" then
+        local conditionTypeName = field.expr[1].conditionTypeName
+        local conditionType = SCEN_EDIT.model.conditionTypes[conditionTypeName]
+        local inputs = conditionType.input
+        local resolvedInputs = {}
+        local fail = false
+        for i = 1, #inputs do
+            local input = inputs[i]
+            local resolvedInput = self:Resolve(field.expr[1][input.name], input.type)
+            fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, field)
+            resolvedInputs[input.name] = resolvedInput
+        end
+        if not fail then
+            return conditionType.execute(resolvedInputs)
+        else
+            return nil
+        end
+    end
 	if type == "unit" then
 		local unitId = nil
 		if field.type == "pred" then
@@ -22,7 +34,10 @@ function FieldResolver:Resolve(field, type)
 		elseif field.type == "var" then
 		end
 		if unitId ~= nil then
-			return SCEN_EDIT.rtModel.model.unitManager:getSpringUnitId(unitId)
+			local springId = SCEN_EDIT.model.unitManager:getSpringUnitId(unitId)
+            if Spring.ValidUnitID(springId) then
+                return springId
+            end
 		end
 	elseif type == "unitType" then		
 		if field.type == "pred" then
@@ -37,27 +52,27 @@ function FieldResolver:Resolve(field, type)
 		end
 	elseif type == "team" then
 		if field.type == "pred" then
-			return SCEN_EDIT.rtModel.model.teams[field.id]
+			return SCEN_EDIT.model.teams[field.id].id
 		end
 	elseif type == "area" then
 		if field.type == "pred" then
 			local areaId = tonumber(field.id)
-            return self.model.areaManager:getArea(areaId)
+            return SCEN_EDIT.model.areaManager:getArea(areaId)
 		elseif field.type == "spec" then
 			if field.name == "Trigger area" then
 				local areaId = tonumber(self.params.triggerAreaId)
 				if areaId then
-					return self.model.areaManager:getArea(areaId)
+					return SCEN_EDIT.model.areaManager:getArea(areaId)
 				end
 			end
 		end
 	elseif type == "trigger" then
 		if field.type == "pred" then
 			local triggerId = tonumber(field.id)
-			return self.model.triggerManager:getTrigger(triggerId)
+			return SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
 		end
 	elseif type == "order" then
-		local orderType = SCEN_EDIT.rtModel.model.orderTypes[field.orderTypeName]
+		local orderType = SCEN_EDIT.model.orderTypes[field.orderTypeName]
 		local order = {
 			orderTypeName = field.orderTypeName,
 			input = {}
@@ -70,11 +85,13 @@ function FieldResolver:Resolve(field, type)
 		return order
     elseif type == "string" then
         if field.type == "pred" then
-            return field.string
+            return field.id
         end
 	elseif type == "numericComparison" then
-		return self.model.numericComparisonTypes[field.cmpTypeId]
+		return SCEN_EDIT.model.numericComparisonTypes[field.cmpTypeId]
 	elseif type == "identityComparison" then
-		return self.model.identityComparisonTypes[field.cmpTypeId]
-	end
+		return SCEN_EDIT.model.identityComparisonTypes[field.cmpTypeId]
+    elseif type:find("_array") then
+        local atomicType = type:sub(type:find("_array"))
+    end
 end

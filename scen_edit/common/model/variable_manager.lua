@@ -17,6 +17,9 @@ function VariableManager:addVariable(variable)
 end
 
 function VariableManager:removeVariable(variableId)
+    if variableId == nil then
+        return
+    end
     if self.variables[variableId] then
         self.variables[variableId] = nil
         self:callListeners("onVariableRemoved", variableId)
@@ -75,4 +78,6 @@ function VariableManager:clear()
     for variableId, _ in pairs(self.variables) do
         self:removeVariable(variableId)
     end
+    self.variableIdCount = 0
+    self.variables = {}
 end
