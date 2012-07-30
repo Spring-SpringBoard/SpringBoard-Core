@@ -103,17 +103,22 @@ function DefaultState:MousePress(x, y, button)
                 return true
             end
             local _, ctrl = Spring.GetModKeyState()
-            if ctrl and #Spring.GetSelectedUnits() ~= 0 then
+            if ctrl and #Spring.GetSelectedUnits() ~= 0 or self.selectedFeature then
                 return true
             end
         elseif result == "unit" then
+            local unitId = coords
+            local result, coords = Spring.TraceScreenRay(x, y, true)
+            local x, y, z = Spring.GetUnitPosition(unitId)
+            self.dragDiffX, self.dragDiffZ =  x - coords[1], z - coords[3]
+
             if self.selected then
                 Spring.Echo("deselect")
                 SCEN_EDIT.view.areaViews[self.selected].selected = false
                 self.selected = nil
             end
             if #Spring.GetSelectedUnits() ~= 0 then
-                self.selectedUnit = coords --coords = unit id
+                self.selectedUnit = unitId
                 local previouslySelectedUnits = Spring.GetSelectedUnits()
                 for _, unitId in pairs(previouslySelectedUnits) do
                     if unitId == self.selectedUnit then
@@ -122,6 +127,20 @@ function DefaultState:MousePress(x, y, button)
                 end
                 return false
             end
+        elseif result == "feature" then
+            local featureId = coords
+            local result, coords = Spring.TraceScreenRay(x, y, true)
+            local x, y, z = Spring.GetFeaturePosition(featureId)
+            self.dragDiffX, self.dragDiffZ = x - coords[1], z - coords[3]
+
+            self.selectedFeature = featureId
+            if self.selected then
+                self.selected = nil
+            end
+            if self.selectedUnit then
+                self.selectedUnit = nil
+            end
+            return true
         end
     end
 end
@@ -134,7 +153,15 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
         if ctrl then
             SCEN_EDIT.stateManager:SetState(RotateUnitState())
         elseif self.selected == nil then
-            SCEN_EDIT.stateManager:SetState(DragUnitState(self.selectedUnit))
+            SCEN_EDIT.stateManager:SetState(DragUnitState(self.selectedUnit, self.dragDiffX, self.dragDiffZ))
+        end
+    elseif self.selectedFeature then
+        local _, ctrl = Spring.GetModKeyState()
+        if ctrl then
+            Spring.Echo("rotate state")
+            SCEN_EDIT.stateManager:SetState(RotateFeatureState(self.selectedFeature))
+        else
+            SCEN_EDIT.stateManager:SetState(DragFeatureState(self.selectedFeature, self.dragDiffX, self.dragDiffZ))
         end
     end
 end

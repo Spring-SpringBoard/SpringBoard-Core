@@ -188,7 +188,7 @@ end
 
 function DisplayUtil:playSound(soundPath)
     if self.isWidget then
-        Spring.PlaySoundStream(soundPath)
+        Spring.PlaySoundFile(soundPath)
     else
         local cmd = WidgetPlaySoundCommand(soundPath)
         SCEN_EDIT.commandManager:execute(cmd, true)

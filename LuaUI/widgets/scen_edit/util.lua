@@ -207,7 +207,7 @@ function GenerateTeamColor()
     return 1, 1, 1, 1 --yeah, ain't it great
 end
 
-function GetTeams()
+function GetTeams(widget)
     local playerNames = {}
     local playerTeamIds = {}
 	local playerColors = {}
@@ -222,7 +222,11 @@ function GetTeams()
             teamName = teamName .. ": " .. name
 		end
 		table.insert(playerNames, teamName)
+
 		local r, g, b, a = GenerateTeamColor()--Spring.GetTeamColor(teamIds[i])
+        if widget then
+            r, g, b, a = Spring.GetTeamColor(teamIds[i])
+        end
 		local color = { r = r, g = g, b = b, a = a }
 		table.insert(playerColors, color)
     end
@@ -241,15 +245,13 @@ function SCEN_EDIT.SetClassName(class, className)
 end
 
 function SCEN_EDIT.resolveCommand(cmdTable)
---    Spring.Echo(cmdTable.className)
-    local cmd = WidgetAddAreaCommand()
-    cmd = "return " .. cmdTable.className
-    env = getfenv(1)
-    local cmd = env[cmdTable.className]()
---    local cmd = loadstring("return " .. cmdTable.className)()
---    local cmd = _G[cmdTable.className]()
+    local cmd = {}
+    if cmdTable.className then
+        local env = getfenv(1)
+        cmd = env[cmdTable.className]()
+    end
     for k, v in pairs(cmdTable) do
-        if type(v) == "table" and v.className ~= nil then
+        if type(v) == "table" then
             cmd[k] = SCEN_EDIT.resolveCommand(v)
         else
             cmd[k] = v

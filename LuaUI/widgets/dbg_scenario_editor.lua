@@ -537,6 +537,17 @@ local function CreateTerrainEditor()
 							end
 						},
 					},
+					Button:New {
+						caption = "Texture",
+						tooltip = "Change texture",
+						width = model.B_HEIGHT + 20,
+						height = model.B_HEIGHT + 20,
+						OnClick = {
+							function()
+                                SCEN_EDIT.stateManager:SetState(TerrainChangeTextureState())
+							end
+						},
+					},
 				},
 			},
 		}
@@ -1132,6 +1143,10 @@ function widget:Initialize()
 						tooltip = "Terrain toolbox",
 						OnClick = {
 							function()
+                                --local success, msg = pcall(FileDialog)
+                                --if not success then
+                                 --   Spring.Echo(msg)
+                                --end
 								CreateTerrainEditor()
 							end
 						}
@@ -1209,6 +1224,14 @@ function widget:Initialize()
     --    Spring.AssignMouseCursor('cursor-x-y-1', 'cursor-x-y-1');
     --    Spring.AssignMouseCursor('cursor-x-y-2', 'cursor-x-y-2');
     --    Spring.AssignMouseCursor('cursor-x', 'cursor-x');
+    SCEN_EDIT.model:GenerateTeams(widget) 
+    local commands = {}
+    for id, team in pairs(SCEN_EDIT.model.teams) do
+        local cmd = SetTeamColorCommand(id, team.color)
+        table.insert(commands, cmd)
+    end
+    local cmd = CompoundCommand(commands)
+    SCEN_EDIT.commandManager:execute(cmd)
 end
 
 function reloadGadgets()

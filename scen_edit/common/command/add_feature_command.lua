@@ -11,7 +11,6 @@ end
 
 function AddFeatureCommand:execute()
     self.featureId = Spring.CreateFeature(self.featureTypeId, self.x, self.y, self.z, 0, self.featureTeamId)
-    Spring.SetFeatureDirection(self.featureId, 0, self.angle, 0)
     local prop = math.tan(self.angle / 180 * math.pi)
     local z = math.sqrt(1 / (prop * prop + 1))
     local x = prop * z

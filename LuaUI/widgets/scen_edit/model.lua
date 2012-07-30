@@ -119,6 +119,7 @@ function Model:init()
 
     VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager.lua")
     self.triggerManager = TriggerManager()
+	self:GenerateTeams()
 end
 
 function Model:InvokeCallback(callbackId, params)
@@ -160,7 +161,7 @@ function Model:Clear()
     self.variableManager:clear()
     self.triggerManager:clear()
     self.featureManager:clear()
-	self.teams = {}
+	--self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unitId = allUnits[i]
@@ -300,7 +301,6 @@ function Model:Load(mission)
         Spring.SetFeatureDirection(featureId, x, 0, z)
         SCEN_EDIT.model.featureManager:setFeatureModelId(featureId, feature.id)
     end
-	self:GenerateTeams()
 end
 
 --returns a table that holds triggers, areas and other non-engine content
@@ -318,7 +318,7 @@ function Model:SetMetaData(meta)
 	self.areaManager:load(meta.areas)
     self.triggerManager:load(meta.triggers)
     self.variableManager:load(meta.variables)
-	self.teams = meta.teams or {}
+	--self.teams = meta.teams or {}
 end
 --[[
 function Model:NewTrigger()
@@ -391,8 +391,8 @@ function Model:GetVariablesOfType(type)
 end
 --]]
 --should be called from the widget upon creating a new model
-function Model:GenerateTeams() 
-	local names, ids, colors = GetTeams()
+function Model:GenerateTeams(widget)
+	local names, ids, colors = GetTeams(widget)
 	for i = 1, #ids do
 		local id = ids[i]
 		local name = names[i]

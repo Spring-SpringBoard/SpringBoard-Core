@@ -134,6 +134,9 @@ function SCEN_EDIT.coreActions()
 					params = input.order.input,
 				}
 				SCEN_EDIT.model.orderTypes[orderTypeName].execute(newInput)
+				local x, y, z = Spring.GetUnitPosition(input.unit)
+				local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(input.unit)].color
+				SCEN_EDIT.displayUtil:displayText("Issued order", {x, y, z}, color )
 			end
 		},
 		{
@@ -639,7 +642,7 @@ end
 function SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
     if resolvedInput == nil then
         local stringRepresentation = table.show(expr)
---        SCEN_EDIT.Error(input.name .. " cannot be resolved for : " .. stringRepresentation)
+        SCEN_EDIT.Error(input.name .. " cannot be resolved for : " .. stringRepresentation)
         return true
     end
     return false

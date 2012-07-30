@@ -1,27 +1,29 @@
 DragUnitState = AbstractState:extends{}
 
-function DragUnitState:init(unitIdUnit)
-    self.unitIdUnit = unitIdUnit
+function DragUnitState:init(unitId, startDiffX, startDiffZ)
+    self.unitId = unitId
     self.dx = 0
     self.dz = 0
+    self.startDiffX = startDiffX
+    self.startDiffZ = startDiffZ
     self.unitGhostViews = {}
 end
 
 function DragUnitState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
-        if not Spring.ValidUnitID(self.unitIdUnit) or Spring.GetUnitIsDead(self.unitIdUnit) then
+        if not Spring.ValidUnitID(self.unitId) or Spring.GetUnitIsDead(self.unitId) then
             SCEN_EDIT.stateManager:SetState(DefaultState())
             return false
         end
-        local unitX, unitY, unitZ = Spring.GetUnitPosition(self.unitIdUnit)
-        self.dx = coords[1] - unitX 
-        self.dz = coords[3] - unitZ
-        local unitIdUnits = Spring.GetSelectedUnits()
+        local unitX, unitY, unitZ = Spring.GetUnitPosition(self.unitId)
+        self.dx = coords[1] - unitX + self.startDiffX
+        self.dz = coords[3] - unitZ + self.startDiffZ
+        local unitIds = Spring.GetSelectedUnits()
         self.unitGhostViews = {}
     
-        for i = 1, #unitIdUnits do
-            local unitId = unitIdUnits[i]
+        for i = 1, #unitIds do
+            local unitId = unitIds[i]
             local unitX, unitY, unitZ = Spring.GetUnitPosition(unitId)
             local y = Spring.GetGroundHeight(unitX + self.dx, unitZ + self.dz)
             local position = { unitX + self.dx, y, unitZ + self.dz}
@@ -32,9 +34,9 @@ end
 
 function DragUnitState:MouseRelease(x, y, button)
     local commands = {}
-    local unitIdUnits = Spring.GetSelectedUnits()
-    for i = 1, #unitIdUnits do
-        local unitId = unitIdUnits[i]
+    local unitIds = Spring.GetSelectedUnits()
+    for i = 1, #unitIds do
+        local unitId = unitIds[i]
         local unitX, unitY, unitZ = Spring.GetUnitPosition(unitId)
 
         local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
