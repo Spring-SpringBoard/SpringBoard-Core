@@ -11,7 +11,7 @@ function RotateUnitState:MouseMove(x, y, dx, dy, button)
     if result == "ground" then
         self.newPosX = coords[1]
         self.newPosZ = coords[3]
-        local unitIds = Spring.GetSelectedUnits()
+        local selType, unitIds = SCEN_EDIT.view.selectionManager:GetSelection()
         self.unitGhostViews = {}
     
         for i = 1, #unitIds do

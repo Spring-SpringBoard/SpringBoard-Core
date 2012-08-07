@@ -1,14 +1,24 @@
 TerrainChangeTextureState = AbstractState:extends{}
 
 function TerrainChangeTextureState:init()
+    self.size = 100
+end
+
+function TerrainChangeTextureState:SetTexture(x, y, textureName)
+    local succ = Spring.SetMapSquareTexture(x - self.size / 2, y - self.size / 2, textureName)
+--    local succ = Spring.SetMapSquareTexture(0, 0, "")--textureName)
+    Spring.Echo(succ)
 end
 
 function TerrainChangeTextureState:MousePress(x, y, button)
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
-            local cmd = TerrainChangeTextureCommand(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, 1)
-            SCEN_EDIT.commandManager:execute(cmd)
+            local textureName = SCEN_EDIT.view.textureManager:GetRandomTexture()
+            Spring.Echo(textureName)
+            self:SetTexture(coords[1], coords[3], textureName) 
+          --  local cmd = TerrainChangeTextureCommand(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, 1)
+          --  SCEN_EDIT.commandManager:execute(cmd)
             return true
         end
     elseif button == 3 then

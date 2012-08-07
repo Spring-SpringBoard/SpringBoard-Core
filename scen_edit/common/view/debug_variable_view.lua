@@ -14,8 +14,7 @@ end
 function DebugVariableView:Populate()
     self.parent:ClearChildren()
     local variables = SCEN_EDIT.model.variableManager:getAllVariables()
-    for i = 1, #variables  do		
-        local variable = variables[i]
+    for id, variable in pairs(variables) do
         local variablePanel = MakeComponentPanel(self.parent)
         local maxChars = 15
         local lblVariableName = Chili.Label:New {
@@ -23,33 +22,13 @@ function DebugVariableView:Populate()
             width = 100,
             x = 1,
             parent = variablePanel,
+            align = 'left',
         }
-        local btnExecuteVariable = Chili.Button:New {
-            caption = "Execute",
-            right = B_HEIGHT + 120,
-            width = 100,
---            x = 110,
-            height = B_HEIGHT,
+        local lblVariableValue = Chili.Label:New {
+            caption = SCEN_EDIT.humanExpression(variable.value, "value", variable.type),
+            x = 120,
+            right = 5,
             parent = variablePanel,
-            OnClick = {
-                function()
-                    local cmd = ExecuteVariableCommand(variable.id)
-                    SCEN_EDIT.commandManager:execute(cmd)
-                end
-            },
-        }
-        local btnExecuteVariableActions = Chili.Button:New {
-            caption = "Execute actions",
-            right = 1,
-            width = 120,
-            height = B_HEIGHT,
-            parent = variablePanel,
-            OnClick = {
-                function() 
-                    local cmd = ExecuteVariableActionsCommand(variable.id)
-                    SCEN_EDIT.commandManager:execute(cmd)
-                end
-            },
         }
     end
 end
@@ -66,3 +45,6 @@ function DebugVariableView:onVariableRemoved(variableId)
     self:Populate()
 end
 
+function DebugVariableView:onVariableUpdated(variableId)
+    self:Populate()
+end

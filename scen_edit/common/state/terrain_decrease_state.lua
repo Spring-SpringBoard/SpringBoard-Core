@@ -1,34 +1,36 @@
 TerrainDecreaseState = AbstractState:extends{}
 
-function TerrainDecreaseState:__init()
+function TerrainDecreaseState:init()
 end
 
-function TerrainDecreaseState:enterState()
-end
-
-function TerrainDecreaseState:leaveState()
+function TerrainDecreaseState:AlterTerrain(x, z, amount)
+    local currentFrame = Spring.GetGameFrame()
+    if not self.lastChangeFrame or currentFrame - self.lastChangeFrame < 10 then
+        self.lastChangeFrame = currentFrame
+        local cmd = TerrainIncreaseCommand(x - 20, z - 20, x + 20, z + 20, amount)
+        SCEN_EDIT.commandManager:execute(cmd)
+        return true
+    end
 end
 
 function TerrainDecreaseState:MousePress(x, y, button)
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
-            local cmd = TerrainIncreaseCommand(coords[1] - 20, coords[3] - 20, coords[1] + 20, coords[3] + 20, -20)
-            SCEN_EDIT.commandManager:execute(cmd)
-            return true
+            self:AlterTerrain(coords[1], coords[3], -20)
         end
+        return true
     elseif button == 3 then
         SCEN_EDIT.stateManager:SetState(DefaultState())
     end
 end
 
 function TerrainDecreaseState:MouseMove(x, y, dx, dy, button)
-end
-
-function TerrainDecreaseState:MouseRelease(x, y, button)
-end
-
-function TerrainDecreaseState:KeyPress(key, mods, isRepeat, label, unicode)
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground"  then
+        self:AlterTerrain(coords[1], coords[3], -2)
+        return true
+    end
 end
 
 function TerrainDecreaseState:DrawWorld()

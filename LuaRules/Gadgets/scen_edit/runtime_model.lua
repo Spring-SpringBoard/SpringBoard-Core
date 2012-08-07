@@ -4,11 +4,13 @@ function RuntimeModel:init()
 	self.areaModels = {}	
 	self.lastFrameUnitIds = {}
 	self.fieldResolver = FieldResolver()
+    self.repeatCalls = {}
 end
 
 function RuntimeModel:LoadMission()
 	self.lastFrameUnitIds = Spring.GetAllUnits()
 	self.areaModels = {}
+    self.repeatCalls = {}
 	
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
 	for id, area in pairs(areas) do
@@ -43,6 +45,21 @@ end
 
 function RuntimeModel:GameStop()
     self.hasStarted = false
+end
+
+
+function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
+    if not self.hasStarted then
+        return
+    end
+	if self.eventTriggers["UNIT_CREATE"] then
+        local createdUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+		for k = 1, #self.eventTriggers["UNIT_CREATE"] do
+			local params = { triggerUnitId = createdUnitId }
+			local trigger = self.eventTriggers["UNIT_CREATE"][k]				
+			self:ConditionStep(trigger, params)
+		end
+	end
 end
 
 function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attackerDefId, attackerTeamId)
@@ -89,9 +106,11 @@ function RuntimeModel:GameFrame(frameNum)
 			for j = 1, #results.entered do
 				local enteredUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(results.entered[j])
 				for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
-					local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
-					local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]				
-					self:ConditionStep(trigger, params)
+					local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]
+                    if trigger.enabled then
+                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
+                        self:ConditionStep(trigger, params)
+                    end
 				end
 			end
 		end
@@ -99,15 +118,28 @@ function RuntimeModel:GameFrame(frameNum)
 			for j = 1, #results.left do
 				local leftUnitId = results.left[j]
 				for k = 1, #self.eventTriggers["UNIT_LEAVE_AREA"] do
-					local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
-					local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]				
-					self:ConditionStep(trigger, params)
+					local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]
+                    if trigger.enabled then
+                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
+                        self:ConditionStep(trigger, params)
+                    end
 				end
 			end
 		end
 		areaModel:Populate(newUnitIds)
 	end	
 	self.lastFrameUnitIds = newUnitIds
+
+    local newCalls = {}
+    for _, call in pairs(self.repeatCalls) do
+        local exprType = call.exprType
+        local resolvedInputs = call.resolvedInputs
+        local result = exprType.execute(resolvedInputs)
+        if result then
+            table.insert(newCalls, call)
+        end
+    end
+    self.repeatCalls = newCalls
 end
 
 function RuntimeModel:ConditionStep(trigger, params)
@@ -125,21 +157,7 @@ function RuntimeModel:ActionStep(trigger, params)
 	for i = 1, #trigger.actions do
 		local action = trigger.actions[i]
 		local actionType = SCEN_EDIT.model.actionTypes[action.actionTypeName]
-		local resolvedInputs = {}
-		local fail = false
-		for i = 1, #actionType.input do
-			local input = actionType.input[i]	
-			local resolvedInput = self.fieldResolver:Resolve(action[input.name], input.type)
-            fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, action)
-			resolvedInputs[input.name] = resolvedInput
-		end
-		if not fail then
-			if not actionType.execute then
-				SCEN_EDIT.Error("There is no function execute for action type: " .. actionType.name)
-			else				
-				actionType.execute(resolvedInputs)
-			end
-		end
+        self.fieldResolver:CallExpression(action, actionType)
 	end
 end
 
@@ -161,24 +179,8 @@ function RuntimeModel:ComputeTriggerConditions(trigger, params)
 	for i = 1, #trigger.conditions do
 		local condition = trigger.conditions[i]
 		local conditionType = SCEN_EDIT.model.conditionTypes[condition.conditionTypeName]
-		local resolvedInputs = {}
-		local fail = false
-		for i = 1, #conditionType.input do
-			local input = conditionType.input[i]	
-			local resolvedInput = self.fieldResolver:Resolve(condition[input.name], input.type)
-
-            fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, condition)
-			resolvedInputs[input.name] = resolvedInput
-		end
-		if not fail then
-			if not conditionType.execute then
-				Spring.Echo("There is no function execute for condition type: " .. conditionType.name)
-			else
-				if not conditionType.execute(resolvedInputs) then
-					return false
-				end
-			end
-        else
+        local result = self.fieldResolver:CallExpression(condition, conditionType)
+        if not result then
             return false
         end
 	end

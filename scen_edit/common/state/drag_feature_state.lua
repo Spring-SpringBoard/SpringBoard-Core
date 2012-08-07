@@ -45,7 +45,6 @@ function DragFeatureState:MouseRelease(x, y, button)
     end
     local compoundCommand = CompoundCommand(commands)
     SCEN_EDIT.commandManager:execute(compoundCommand)
-
     SCEN_EDIT.stateManager:SetState(DefaultState())
 end
 

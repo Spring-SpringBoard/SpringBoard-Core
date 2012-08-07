@@ -42,7 +42,7 @@ function CustomWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-	obj.customTypes = model.conditionTypesByOutput[obj.dataType]
+	obj.customTypes = SortByName(model.conditionTypesByOutput[obj.dataType], "humanName")
     obj.cmbCustomTypes = ComboBox:New {
         items = GetField(obj.customTypes, "humanName"),
 		conditionTypes = GetField(obj.customTypes, "name"),
@@ -55,8 +55,8 @@ function CustomWindow:New(obj)
 		function(object, itemIdx, selected)
 			if selected and itemIdx > 0 then
 				obj.conditionPanel:ClearChildren()
-				local cndName = obj.cmbCustomTypes.conditionTypes[itemIdx]
-				local condition = obj.customTypes[cndName]
+--				local cndName = obj.cmbCustomTypes.conditionTypes[itemIdx]
+				local condition = obj.customTypes[itemIdx]
 				for i = 1, #condition.input do
 					local data = condition.input[i]					
 					local subPanelName = data.name
@@ -133,7 +133,8 @@ end
 
 function CustomWindow:UpdatePanel()
 	local cndName = self.condition.conditionTypeName
-	local condition = self.customTypes[cndName]
+    local index = GetIndex(self.cmbCustomTypes.conditionTypes, cndName)
+	local condition = self.customTypes[index]
 	for i = 1, #condition.input do
 		local data = condition.input[i]
 		local subPanelName = data.name
@@ -146,7 +147,8 @@ end
 
 function CustomWindow:UpdateModel()
 	local cndName = self.condition.conditionTypeName
-	local condition = self.customTypes[cndName]
+    local index = GetIndex(self.cmbCustomTypes.conditionTypes, cndName)
+	local condition = self.customTypes[index]
 	for i = 1, #condition.input do
 		local data = condition.input[i]
 		local subPanelName = data.name

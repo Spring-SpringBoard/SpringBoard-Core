@@ -1,28 +1,23 @@
 DefaultState = AbstractState:extends{}
 
+function DefaultState:init()
+    self.areaSelectTime = Spring.GetGameFrame()
+end
+
 function DefaultState:checkResizeIntersections(x, z)
-    if self.selected == nil then
+    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+    if selType ~= "areas" and #items ~= 1 then
         return false
     end
-    local rect = SCEN_EDIT.model.areaManager:getArea(self.selected)
+    local selected = items[1]
+    local rect = SCEN_EDIT.model.areaManager:getArea(selected)
     local accurancy = 20
     local toResize = false
     local resx, resz = 0, 0
     if math.abs(x - rect[1]) < accurancy then
         resx = -1
-        if z > rect[2] + accurancy and z < rect[4] - accurancy then
-            resz = 0
-        elseif math.abs(rect[2] - z) < accurancy then
-            drag_diff_z = rect[2] - z
-            resz = -1
-        elseif math.abs(rect[4] - z) < accurancy then
-            drag_diff_z = rect[4] - z
-            resz = 1
-        end
         drag_diff_x = rect[1] - x
         toResize = true
-    elseif math.abs(x - rect[3]) < accurancy then
-        resx = 1
         if z > rect[2] + accurancy and z < rect[4] - accurancy then
             resz = 0
         elseif math.abs(rect[2] - z) < accurancy then
@@ -31,39 +26,63 @@ function DefaultState:checkResizeIntersections(x, z)
         elseif math.abs(rect[4] - z) < accurancy then
             drag_diff_z = rect[4] - z
             resz = 1
+        else
+            toResize = false
         end
+    elseif math.abs(x - rect[3]) < accurancy then
+        resx = 1
         drag_diff_x = rect[3] - x
         toResize = true
+        if z > rect[2] + accurancy and z < rect[4] - accurancy then
+            resz = 0
+        elseif math.abs(rect[2] - z) < accurancy then
+            drag_diff_z = rect[2] - z
+            resz = -1
+        elseif math.abs(rect[4] - z) < accurancy then
+            drag_diff_z = rect[4] - z
+            resz = 1
+        else
+            toResize = false
+        end
     elseif math.abs(z - rect[2]) < accurancy then
         resx = 0
         resz = -1
         drag_diff_z = rect[2] - z
-        toResize = true
+        if x > rect[1] + accurancy and x > rect[3] + accurancy then
+            toResize = true
+        else
+            toResize = false
+        end
     elseif math.abs(z - rect[4]) < accurancy then
         resx = 0
         resz = 1
         drag_diff_z = rect[4] - z
-        toResize = true
+        if x > rect[1] + accurancy and x > rect[3] + accurancy then
+            toResize = true
+        else
+            toResize = false
+        end
     end
     return toResize, resx, resz
 end
 
 function DefaultState:MousePress(x, y, button)
+    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" then
-            if self.selected ~= nil then
+        if result == "ground" and SCEN_EDIT.view.displayDevelop then
+            if SCEN_EDIT.view.selectionManager:GetSelection() == "areas" then
                 toResize, resx, resz = self:checkResizeIntersections(coords[1], coords[3])
-                Spring.Echo(toResize, resx, resz)
                 if toResize then
-                    SCEN_EDIT.stateManager:SetState(ResizeAreaState(self.selected, resx, resz))
+                    local _, resizeAreas = SCEN_EDIT.view.selectionManager:GetSelection()
+                    local resizeArea = resizeAreas[1]
+                    SCEN_EDIT.stateManager:SetState(ResizeAreaState(resizeArea, resx, resz))
                     return true
                 else
                     local currentFrame = Spring.GetGameFrame()
-                    if currentFrame - self.areaSelectTime < 5 then
-                        Spring.Echo("double click")
+                    if self.areaSelectTime and currentFrame - self.areaSelectTime < 5 then
                         local trigger = {
-                            name = "Enter area " .. self.selected,
+                            name = "Enter area " .. self.dragArea,
                             enabled = true,
                             actions = {},
                             events = {
@@ -93,18 +112,19 @@ function DefaultState:MousePress(x, y, button)
                     end
                 end
             end
-            if self.selected then
-                SCEN_EDIT.view.areaViews[self.selected].selected = false
-            end
-            self.selected, self.dragDiffX, self.dragDiffZ = checkAreaIntersections(coords[1], coords[3])
-            if self.selected ~= nil then
-                self.areaSelectTime = Spring.GetGameFrame()
-                Spring.SelectUnitArray({}, false)
-                return true
-            end
             local _, ctrl = Spring.GetModKeyState()
-            if ctrl and #Spring.GetSelectedUnits() ~= 0 or self.selectedFeature then
+            if ctrl and (selType == "units" or selType == "features") then
                 return true
+            else
+                selected, self.dragDiffX, self.dragDiffZ = checkAreaIntersections(coords[1], coords[3])
+                if selected then
+                    self.dragArea = selected
+                    SCEN_EDIT.view.selectionManager:SelectAreas({selected})
+                    self.areaSelectTime = Spring.GetGameFrame()
+                    return true
+                else
+                    SCEN_EDIT.view.selectionManager:ClearSelection()
+                end
             end
         elseif result == "unit" then
             local unitId = coords
@@ -112,20 +132,14 @@ function DefaultState:MousePress(x, y, button)
             local x, y, z = Spring.GetUnitPosition(unitId)
             self.dragDiffX, self.dragDiffZ =  x - coords[1], z - coords[3]
 
-            if self.selected then
-                Spring.Echo("deselect")
-                SCEN_EDIT.view.areaViews[self.selected].selected = false
-                self.selected = nil
-            end
-            if #Spring.GetSelectedUnits() ~= 0 then
-                self.selectedUnit = unitId
-                local previouslySelectedUnits = Spring.GetSelectedUnits()
-                for _, unitId in pairs(previouslySelectedUnits) do
-                    if unitId == self.selectedUnit then
+            local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+            if selType == "units" then
+                for _, oldUnitId in pairs(items) do
+                    if oldUnitId == unitId then
+                        self.dragUnit = unitId
                         return true
                     end
                 end
-                return false
             end
         elseif result == "feature" then
             local featureId = coords
@@ -133,61 +147,66 @@ function DefaultState:MousePress(x, y, button)
             local x, y, z = Spring.GetFeaturePosition(featureId)
             self.dragDiffX, self.dragDiffZ = x - coords[1], z - coords[3]
 
-            self.selectedFeature = featureId
-            if self.selected then
-                self.selected = nil
-            end
-            if self.selectedUnit then
-                self.selectedUnit = nil
-            end
+            self.dragFeature = featureId
+            SCEN_EDIT.view.selectionManager:SelectFeatures({featureId})
             return true
         end
     end
 end
 
 function DefaultState:MouseMove(x, y, dx, dy, button)
-    if self.selected ~= nil then
-        SCEN_EDIT.stateManager:SetState(DragAreaState(self.selected, self.dragDiffX, self.dragDiffZ))
-    elseif #Spring.GetSelectedUnits() ~= 0 then
+    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+    if selType == "areas" and SCEN_EDIT.view.displayDevelop then
+        SCEN_EDIT.stateManager:SetState(DragAreaState(self.dragArea, self.dragDiffX, self.dragDiffZ))
+    elseif selType == "units" then
         local _, ctrl = Spring.GetModKeyState()
         if ctrl then
             SCEN_EDIT.stateManager:SetState(RotateUnitState())
-        elseif self.selected == nil then
-            SCEN_EDIT.stateManager:SetState(DragUnitState(self.selectedUnit, self.dragDiffX, self.dragDiffZ))
+        else
+            SCEN_EDIT.stateManager:SetState(DragUnitState(self.dragUnit, self.dragDiffX, self.dragDiffZ))
         end
-    elseif self.selectedFeature then
+    elseif selType == "features" then
         local _, ctrl = Spring.GetModKeyState()
         if ctrl then
-            Spring.Echo("rotate state")
-            SCEN_EDIT.stateManager:SetState(RotateFeatureState(self.selectedFeature))
+            SCEN_EDIT.stateManager:SetState(RotateFeatureState(items[1]))
         else
-            SCEN_EDIT.stateManager:SetState(DragFeatureState(self.selectedFeature, self.dragDiffX, self.dragDiffZ))
+            SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeature, self.dragDiffX, self.dragDiffZ))
         end
     end
 end
 
 function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
+    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
     if key == KEYSYMS.DELETE then
-        if self.selected ~= nil then
+        if selType == "areas" then
+            local commands = {}
+            for _, areaId in pairs(items) do
+                table.insert(commands, RemoveAreaCommand(areaId))
+            end
             --SCEN_EDIT.view.areaViews[self.selected] = nil
-            local cmd = RemoveAreaCommand(self.selected)
+            local cmd = CompoundCommand(commands)
             SCEN_EDIT.commandManager:execute(cmd)
-            self.selected = nil
             return true
-        elseif self.selected == nil then
-            local selectedUnits = Spring.GetSelectedUnits()
+        elseif selType == "units" then
             local removeUnitCommands = {}
-            for i = 1, #selectedUnits do
-                local unitId = selectedUnits[i]
+            for _, unitId in pairs(items) do
                 local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
                 local cmd = RemoveUnitCommand(modelUnitId)
                 table.insert(removeUnitCommands, cmd)
             end
             local cmd = CompoundCommand(removeUnitCommands)
             SCEN_EDIT.commandManager:execute(cmd)
-            if #selectedUnits > 0 then
-                return true
+            return true
+        elseif selType == "features" then
+            local commands = {}
+            for _, featureId in pairs(items) do
+                local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
+                local cmd = RemoveFeatureCommand(modelFeatureId)
+                table.insert(commands, cmd)
             end
+            local cmd = CompoundCommand(commands)
+            SCEN_EDIT.commandManager:execute(cmd)
+            return true
         end
     elseif key == KEYSYMS.Z and mods.ctrl then
         if #SCEN_EDIT.commandManager.undoList > 0 then
@@ -202,20 +221,31 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         SCEN_EDIT.commandManager:redo()
         return true
     elseif key == KEYSYMS.C and mods.ctrl then
-        local selectedUnits = Spring.GetSelectedUnits()
-        SCEN_EDIT.clipboard:copyUnits(selectedUnits)
-        return true
+        if selType == "units" then
+            SCEN_EDIT.clipboard:CopyUnits(items)
+            return true
+        elseif selType == "features" then
+            SCEN_EDIT.clipboard:CopyFeatures(items)
+            return true
+        end
     elseif key == KEYSYMS.X and mods.ctrl then
-        local selectedUnits = Spring.GetSelectedUnits()
-        SCEN_EDIT.clipboard:cutUnits(selectedUnits)
-        return true
+        if selType == "units" then
+            SCEN_EDIT.clipboard:CutUnits(items)
+            return true
+        elseif selType == "features" then
+            SCEN_EDIT.clipboard:CutFeatures(items)
+            return true
+        end
     elseif key == KEYSYMS.V and mods.ctrl then
         x, y = Spring.GetMouseState()
-        local result, coords = Spring.TraceScreenRay(x, y)
+        local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
-            SCEN_EDIT.clipboard:pasteUnits(coords)
+            SCEN_EDIT.clipboard:Paste(coords)
+            return true
         end
-        return true
     end
     return false
+end
+
+function DefaultState:DrawWorldPreUnit()
 end

@@ -18,6 +18,9 @@ end
 function AbstractState:MouseRelease(x, y, button)
 end
 
+function AbstractState:MouseWheel(up, value)
+end
+
 function AbstractState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
@@ -25,4 +28,7 @@ function AbstractState:GameFrame(frameNum)
 end
 
 function AbstractState:DrawWorld()
+end
+
+function AbstractState:DrawWorldPreUnit()
 end

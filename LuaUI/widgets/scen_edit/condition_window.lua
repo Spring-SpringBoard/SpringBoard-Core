@@ -42,7 +42,7 @@ function ConditionWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-	obj.validConditionTypes = model.conditionTypesByOutput["bool"]
+	obj.validConditionTypes = SortByName(model.conditionTypesByOutput["bool"], "humanName")
     obj.cmbConditionTypes = ComboBox:New {
         items = GetField(obj.validConditionTypes, "humanName"),
 		conditionTypes = GetField(obj.validConditionTypes, "name"),
@@ -55,8 +55,8 @@ function ConditionWindow:New(obj)
 		function(object, itemIdx, selected)
 			if selected and itemIdx > 0 then
 				obj.conditionPanel:ClearChildren()
-				local cndName = obj.cmbConditionTypes.conditionTypes[itemIdx]
-				local condition = obj.validConditionTypes[cndName]
+--				local cndName = obj.cmbConditionTypes.conditionTypes[itemIdx]
+				local condition = obj.validConditionTypes[itemIdx]
 				for i = 1, #condition.input do
 					local input = condition.input[i]
 					local subPanelName = input.name
@@ -136,7 +136,8 @@ end
 
 function ConditionWindow:UpdatePanel()
 	local cndName = self.condition.conditionTypeName
-	local condition = self.validConditionTypes[cndName]
+    local index = GetIndex(self.cmbConditionTypes.conditionTypes, cndName)
+	local condition = self.validConditionTypes[index]
 	for i = 1, #condition.input do
 		local data = condition.input[i]
 		local subPanelName = data.name
@@ -149,7 +150,8 @@ end
 
 function ConditionWindow:UpdateModel()
 	local cndName = self.condition.conditionTypeName
-	local condition = self.validConditionTypes[cndName]
+    local index = GetIndex(self.cmbConditionTypes.conditionTypes, cndName)
+	local condition = self.validConditionTypes[index]
 	for i = 1, #condition.input do
 		local data = condition.input[i]
 		local subPanelName = data.name

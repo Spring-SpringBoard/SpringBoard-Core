@@ -37,25 +37,7 @@ local SCENEDIT_DIR = LUAUI_DIRNAME .. "widgets/scen_edit/"
 local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
-local echo = Spring.Echo
-
-local btnSelectUnit = nil
-local btnSelectArea = nil
-local btnSelectType = nil
-
-local area_x = 500
-local area_z = 500
-local end_x
-local end_y
 local model
-local selected
-local updateFrame = 0
-
-local drag_diff_x
-local drag_diff_z
-
-local selUnitDef
-local unitDraw_x, unitDraw_y, unitDraw_z
 
 local unitImages
 
@@ -88,7 +70,7 @@ function SelectUnit(returnButton)
 end
 
 function SelectType(returnButton)
-    SCEN_EDIT.stateManager:SetState(SelectUnitType(returnButton))
+    SCEN_EDIT.stateManager:SetState(SelectUnitTypeState(returnButton))
 end
 
 function MakeRadioButtonGroup(checkBoxes)
@@ -160,49 +142,6 @@ function MakeRemoveEventWindow(trigger, triggerWindow, event, idx)
     triggerWindow:Populate()
 end
 
-local function UpdateCondition(condition, cmbConditionTypes, conditionPanel)
-    local condId = cmbConditionTypes.selected
-    condition.typeId = condId 
-    local unitCond = false
-    local areaCond = false
-    local condCond = false
-    local unitAttr = false
-    local triggerCond = false
-    if condId == 1 or condId == 2 then
-        unitCond = true
-    end
-    if condId == 1 then
-        areaCond = true
-    end
-    if condId == 2 then
-        unitAttr = true
-    end
-    if condId == 3 or condId == 4 or condId == 5 then
-        condCond = true
-    end
-    if condId == 6 then
-        triggerCond = true
-    end
-
-    if unitCond then
-        condition.unit = {}
-        conditionPanel.unitPanel:UpdateModel(condition.unit)
-    end
-    if areaCond then
-        condition.area = {}
-        conditionPanel.areaPanel:UpdateModel(condition.area)
-    end
-
-    if unitAttr then
-        condition.attr = {}
-        conditionPanel.unitAttrPanel:UpdateModel(condition.attr)
-    end
-    if triggerCond then
-        condition.trigger = {}
-        conditionPanel.triggerPanel:UpdateModel(condition.trigger)
-    end
-end
-
 local function AddCondition(trigger, triggerWindow, condition)
     table.insert(trigger.conditions, condition)
     triggerWindow:Populate()
@@ -210,135 +149,6 @@ end
 
 local function EditCondition(trigger, triggerWindow)
     triggerWindow:Populate()
-end
-
-local function MakeConditionWindow(trigger, triggerWindow)
-    triggerWindow.disableChildrenHitTest = true
-    local btnOk = Button:New {
-        caption = "OK",
-        height = model.B_HEIGHT,
-        width = "40%",
-        x = "5%",
-        y = "7%",
-    }
-    local btnCancel = Button:New {
-        caption = "Cancel",
-        height = model.B_HEIGHT,
-        width = "40%",
-        x = "55%",
-        y = "7%",
-    }
-    local conditionPanel = StackPanel:New {
-        itemMargin = {0, 0, 0, 0},
-        x = 1,
-        y = 1,
-        right = 1,
-        autosize = true,
-        resizeItems = false,
-        padding = {0, 0, 0, 0}
-    }
-    local cmbConditionTypes = ComboBox:New {
-        items = conditionTypes,
-        height = model.B_HEIGHT,
-        width = "60%",
-        y = "20%",
-        x = '20%',
-        OnSelectItem = {
-            function(obj, itemIdx, selected)
-                if selected and itemIdx > 0 then
-                    conditionPanel:ClearChildren()
-                    local condId = itemIdx
-                    local unitCond = false
-                    local areaCond = false
-                    local condCond = false
-                    local unitAttr = false
-                    local triggerCond = false
-                    if condId == 1 or condId == 2 then
-                        unitCond = true
-                    end
-                    if condId == 1 then
-                        areaCond = true
-                    end
-                    if condId == 2 then
-                        unitAttr = true
-                    end
-                    if condId == 3 or condId == 4 or condId == 5 then
-                        condCond = true
-                    end
-                    if condId == 6 then
-                        triggerCond = true
-                    end
-
-                    if unitCond then
-                        conditionPanel.unitPanel = UnitPanel:New {
-                            parent = conditionPanel,
-                            model = model,
-                        }
-                        MakeSeparator(conditionPanel)
-                    end
-
-                    if areaCond then
-                        conditionPanel.areaPanel = AreaPanel:New {
-                            parent = conditionPanel,
-                        }
-                        MakeSeparator(conditionPanel)
-                    end
-                    if unitAttr then
-                        conditionPanel.unitAttrPanel = UnitAttrPanel:New {
-                            parent = conditionPanel,
-                        }
-                        MakeSeparator(conditionPanel)
-                    end
-                    if condCond then
-                        local conditionsPanel = StackPanel:New {
-                            itemMargin = {0, 0, 0, 0},
-                            x = 1,
-                            y = 1,
-                            right = 1,
-                            autosize = true,
-                            resizeItems = false,
-                            padding = {0, 0, 0, 0}
-                        }
-                    end
-                    if triggerCond then
-                        conditionPanel.triggerPanel = TriggerPanel:New {
-                            parent = conditionPanel,
-                            model = model,
-                        }
-                    end
-                end
-            end
-        },
-    }
-    local newConditionWindow = Window:New {
- 		parent = screen0,
- 		caption = "New condition for - " .. trigger.name,
-        resizable = false,
-        clientWidth = 300,
-        clientHeight = 300,
-        x = 500,
-        y = 300,
-        children = {
-            cmbConditionTypes,
-            btnOk,
-            btnCancel,
-            ScrollPanel:New {
-                x = 1,
-                y = cmbConditionTypes.y + cmbConditionTypes.height + 80,
-                bottom = 1,
-                right = 5,
-                children = {
-                    conditionPanel,
-                },
-            },
-        }
-    }
-    btnCancel.OnClick = {
-    function() 
-        triggerWindow.disableChildrenHitTest = false
-        newConditionWindow:Dispose()
-    end}
-    return newConditionWindow, btnOk, cmbConditionTypes, conditionPanel
 end
 
 function MakeAddConditionWindow(trigger, triggerWindow)
@@ -359,85 +169,7 @@ function MakeEditConditionWindow(trigger, triggerWindow, condition)
 		condition = condition,
     }
 end
---[[
-function MakeAddConditionWindow(trigger, triggerWindow)
-    newConditionWindow, btnOk, cmbConditionTypes, conditionPanel = MakeConditionWindow(trigger, triggerWindow)
-    local tw = triggerWindow
-    newConditionWindow.x = tw.x
-    newConditionWindow.y = tw.y + tw.height + 5
-    if tw.parent.height <= newConditionWindow.y + newConditionWindow.height then
-        newConditionWindow.y = tw.y - newConditionWindow.height
-    end
-    btnOk.OnClick = {
-		function()
-			local condition = { typeId = cmbConditionTypes.selected }
-			UpdateCondition(condition, cmbConditionTypes, conditionPanel)
-			AddCondition(trigger, triggerWindow, condition)
-			triggerWindow.disableChildrenHitTest = false
-			newConditionWindow:Dispose()
-		end
-	}
-end
 
-function MakeEditConditionWindow(trigger, triggerWindow, condition)
-    newConditionWindow, btnOk, cmbConditionTypes, conditionPanel = MakeConditionWindow(trigger, triggerWindow)
-
-    table.print(condition)
-    cmbConditionTypes:Select(condition.typeId)
-    local condId = condition.typeId
-    local unitCond = false
-    local areaCond = false
-    local condCond = false
-    local unitAttr = false
-    local triggerCond = false
-    if condId == 1 or condId == 2 then
-        unitCond = true
-    end
-    if condId == 1 then
-        areaCond = true
-    end
-    if condId == 2 then
-        unitAttr = true
-    end
-    if condId == 3 or condId == 4 or condId == 5 then
-        condCond = true
-    end
-    if condId == 6 then
-        triggerCond = true
-    end
-
-    if unitCond then
-        conditionPanel.unitPanel:UpdatePanel(condition.unit)
-    end
-    if areaCond then
-        conditionPanel.areaPanel:UpdatePanel(condition.area)
-    end
-    if unitAttr then
-        conditionPanel.unitAttrPanel:UpdatePanel(condition.attr)
-    end
-    if triggerCond then
-        conditionPanel.triggerPanel:UpdatePanel(condition.trigger)
-    end
-
-
-    local tw = triggerWindow
-    if tw.x + tw.width + newConditionWindow.width > tw.parent.width then
-        newConditionWindow.x = tw.x - newConditionWindow.width
-    else
-        newConditionWindow.x = tw.x + tw.width
-    end
-    newConditionWindow.y = tw.y
-    newConditionWindow.caption = "Edit condition for trigger " .. trigger.name
-    btnOk.OnClick = {
-		function() 
-			UpdateCondition(condition, cmbConditionTypes, conditionPanel)
-			EditCondition(trigger, triggerWindow)
-			triggerWindow.disableChildrenHitTest = false
-			newConditionWindow:Dispose()
-		end
-	}
-end
---]]
 function MakeRemoveConditionWindow(trigger, triggerWindow, condition, idx)
     table.remove(trigger.conditions, idx)
     triggerWindow:Populate()
@@ -492,10 +224,6 @@ local function Load()
     f:close()
     cmd = LoadCommand(t)
     SCEN_EDIT.commandManager:execute(cmd)
---[[    success, msg = pcall(Model.Load, model, "scenario.lua")
-	if not success then
-		Spring.Echo("Error loading model : " .. msg)
-	end-]]
 end
 
 local function CreateTerrainEditor()
@@ -516,24 +244,13 @@ local function CreateTerrainEditor()
                 resizeItems = false,
 				children = {
 					Button:New {
-						caption = "Up",
-						tooltip = "Increase terrain",
-						width = model.B_HEIGHT + 20,
+						caption = "Height",
+						tooltip = "Modify heightmap",
+						width = 120, --model.B_HEIGHT + 20,
 						height = model.B_HEIGHT + 20,
 						OnClick = {
 							function()
                                 SCEN_EDIT.stateManager:SetState(TerrainIncreaseState())
-							end
-						},
-					},
-					Button:New {
-						caption = "Down",
-						tooltip = "Decrease terrain",
-						width = model.B_HEIGHT + 20,
-						height = model.B_HEIGHT + 20,
-						OnClick = {
-							function()
-                                SCEN_EDIT.stateManager:SetState(TerrainDecreaseState())
 							end
 						},
 					},
@@ -567,11 +284,11 @@ local function CreateUnitDefsView()
 				if selected and itemIdx > 0 then
                     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
 					if currentState:is_A(SelectUnitTypeState) then
-						selUnitDef = unitImages.items[itemIdx].id
-						CallListeners(currentState.btnSelectType.OnSelectUnitType, selUnitDef)
-                        SCEN_EDIT.stateManager:SetState(DefaultState())
+						local selUnitDef = unitImages.items[itemIdx].id
+                        currentState:SelectUnitType(selUnitDef)
+                        unitImages:SelectItem(0)
 					else
-						selUnitDef = unitImages.items[itemIdx].id
+						local selUnitDef = unitImages.items[itemIdx].id
                         SCEN_EDIT.stateManager:SetState(AddUnitState(selUnitDef, unitImages.teamId, unitImages))
 					end
 				end
@@ -876,7 +593,6 @@ function widget:Initialize()
 	VFS.Include(SCENEDIT_DIR .. "core_types.lua")
 	VFS.Include(SCENEDIT_DIR .. "model.lua")
 	model = Model()
-	model:RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ)
 	SCEN_EDIT.model = model
 
     VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager.lua")
@@ -992,8 +708,8 @@ function widget:Initialize()
 
 
     toolboxWindow = Window:New {
-        x = 500,
-        y = 500,
+        x = 1300,
+        y = 100,
         width = 600,
         height = 100,
         parent = screen0,
@@ -1045,7 +761,14 @@ function widget:Initialize()
                         height = model.B_HEIGHT + 20,
                         width = model.B_HEIGHT + 20,
                         caption = '',
-                        OnClick = {Load},
+                        OnClick = {
+                            function() 
+                                success, msg = pcall(Load)
+                                if not success then
+                                    Spring.Echo(msg)
+                                end
+                            end
+                        },
                         children = {
                             Image:New { 
                                 tooltip = "Load mission", 
@@ -1248,8 +971,13 @@ end
 
 function widget:DrawWorld()
     SCEN_EDIT.stateManager:DrawWorld()
-    SCEN_EDIT.view:draw()
+    SCEN_EDIT.view:DrawWorld()
 	SCEN_EDIT.displayUtil:Draw()
+end
+
+function widget:DrawWorldPreUnit()
+    SCEN_EDIT.stateManager:DrawWorldPreUnit()
+    SCEN_EDIT.view:DrawWorldPreUnit()
 end
 
 function checkAreaIntersections(x, z)
@@ -1257,7 +985,6 @@ function checkAreaIntersections(x, z)
     local selected, dragDiffX, dragDiffZ
     for id, area in pairs(areas) do
         if x >= area[1] and x < area[3] and z >= area[2] and z < area[4] then
-            SCEN_EDIT.view.areaViews[id].selected = true
             selected = id
             dragDiffX = area[1] - x
             dragDiffZ = area[2] - z
@@ -1278,6 +1005,10 @@ function widget:MouseRelease(x, y, button)
     return SCEN_EDIT.stateManager:MouseRelease(x, y, button)
 end
 
+function widget:MouseWheel(up, value)
+    return SCEN_EDIT.stateManager:MouseWheel(up, value)
+end
+
 function widget:KeyPress(key, mods, isRepeat, label, unicode)
     return SCEN_EDIT.stateManager:KeyPress(key, mods, isRepeat, label, unicode)
 end
@@ -1285,4 +1016,5 @@ end
 function widget:GameFrame(frameNum)
     SCEN_EDIT.stateManager:GameFrame(frameNum)
 	SCEN_EDIT.displayUtil:OnFrame()
+    SCEN_EDIT.view:GameFrame(frameNum)
 end

@@ -4,12 +4,6 @@ function SelectUnitTypeState:init(btnSelectUnitType)
     self.btnSelectUnitType = btnSelectUnitType
 end
 
-function SelectUnitTypeState:enterState()
-end
-
-function SelectUnitTypeState:leaveState()
-end
-
 function SelectUnitTypeState:MousePress(x, y, button)
     if button == 1 then
         local result, unitId = Spring.TraceScreenRay(x, y)
@@ -17,6 +11,11 @@ function SelectUnitTypeState:MousePress(x, y, button)
             CallListeners(self.btnSelectUnitType.OnSelectUnitType, SCEN_EDIT.model:GetModelUnitId(unitId))
         end
     elseif button == 3 then
-        SCEN_EDIT.unitManager:SetState(DefaultState())
+        SCEN_EDIT.stateManager:SetState(DefaultState())
     end
+end
+
+function SelectUnitTypeState:SelectUnitType(unitTypeId)
+    CallListeners(self.btnSelectUnitType.OnSelectUnitType, unitTypeId)
+    SCEN_EDIT.stateManager:SetState(DefaultState())
 end

@@ -29,7 +29,6 @@ function AreaManager:setArea(areaId, value)
 end
 
 function AreaManager:getArea(areaId)
-    assert(self.areas[areaId])
     return self.areas[areaId]
 end
 

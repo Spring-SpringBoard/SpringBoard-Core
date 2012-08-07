@@ -17,11 +17,19 @@ function DebugTriggerView:Populate()
     for id, trigger in pairs(triggers)  do		
         local triggerPanel = MakeComponentPanel(self.parent)
         local maxChars = 15
-        local lblTriggerName = Chili.Label:New {
+        local cbTriggerName = Chili.Checkbox:New {
             caption = trigger.name:sub(1, maxChars),
-            width = 100,
+            width = 110,
             x = 1,
             parent = triggerPanel,
+            checked = trigger.enabled,
+            OnChange = {
+                function(cbToggled, checked)
+                    trigger.enabled = checked
+                    local cmd = UpdateTriggerCommand(trigger)
+                    SCEN_EDIT.commandManager:execute(cmd)
+                end
+            },
         }
         local btnExecuteTrigger = Chili.Button:New {
             caption = "Execute",
@@ -65,3 +73,7 @@ function DebugTriggerView:onTriggerRemoved(triggerId)
     self:Populate()
 end
 
+function DebugTriggerView:onTriggerUpdated(triggerId)
+    Spring.Echo("update")
+    self:Populate()
+end

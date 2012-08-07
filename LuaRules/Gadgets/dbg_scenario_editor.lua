@@ -77,6 +77,9 @@ function WidgetCallback(f, params, msgId)
 	})	
 end
 
+local msgParts = {}
+local msgPartsSize = 0
+
 function gadget:RecvLuaMsg(msg, playerID)
 	pre = "scen_edit"
 	local data = explode( '|', msg)
@@ -94,12 +97,36 @@ function gadget:RecvLuaMsg(msg, playerID)
     
     if op == 'sync' then
 --        Spring.Echo("Synced message!")
-        local msgTable = loadstring(string.sub(msg, #(pre .. "|sync|") + 1))()
+        local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
+        compress = false
+        if compress then
+            msgParsed = VFS.ZlibDecompress(msgParsed)
+        end
+        local msgTable = loadstring(msgParsed)()
         local msg = Message(msgTable.tag, msgTable.data)
 --        table.echo(msg)
         if msg.tag == 'command' then
             local cmd = SCEN_EDIT.resolveCommand(msg.data)
             GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
+        end
+    elseif op == 'startMsgPart' then
+        Spring.Echo("Start receiving multi part msg")
+        msgPartsSize = tonumber(par1)
+    elseif op == "msgPart" then
+        local index = tonumber(par1)
+        local value = string.sub(msg, #(pre .. "|msgPart|" .. par1 .. "|") + 1)
+        msgParts[index] = value
+        Spring.Echo("Recieved part: " .. tostring(index) .. "/" .. tostring(msgPartsSize))
+        if #msgParts == msgPartsSize then
+            Spring.Echo("Recieved all parts")
+            local fullMessage = ""
+            for _, part in pairs(msgParts) do
+                fullMessage = fullMessage .. part
+            end
+            msgPartsSize = 0
+            msgParts = {}
+
+            self:RecvLuaMsg(fullMessage, playerID)
         end
     elseif op == 'addUnit' then
         if tonumber(par1) ~= nil then
@@ -214,7 +241,10 @@ end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
 	SCEN_EDIT.model.unitManager:addUnit(unitID)
-    Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+    SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
+    if not SCEN_EDIT.rtModel.hasStarted then
+        Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+    end
 end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
@@ -222,16 +252,24 @@ function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDef
 	SCEN_EDIT.model.unitManager:removeUnit(unitID)
 end
 
+function gadget:FeatureCreated(featureID, allyTeam)
+	SCEN_EDIT.model.featureManager:addFeature(featureID)
+end
+
+function gadget:FeatureDestroyed(featureID, allyTeam)
+	SCEN_EDIT.model.featureManager:removeFeature(featureID)
+end
+--[[
 function gadget:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defaultPriority)
 --    Spring.Echo(attackerID, targetID)
 --    return true, 1
-    return false, 1000
+--    return false, 1000
 end
 
 function gadget:AllowWeaponTargetCheck(attackerID, attackerWeaponNum, attackerWeaponDefID)
-    return true
+--    return true
 end
-
+--]]
 else --unsynced
 
 local function UnsyncedToWidget(_, data)
@@ -242,6 +280,7 @@ end
 
 function gadget:Initialize()
 	gadgetHandler:AddSyncAction('toWidget', UnsyncedToWidget)
+--    Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
 end
 
 function gadget:Shutdown()

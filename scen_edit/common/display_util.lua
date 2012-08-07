@@ -85,7 +85,7 @@ function DisplayUtil:OnFrame()
     if self.follow then
         if not Spring.ValidUnitID or Spring.GetUnitIsDead(self.follow) then
             self.follow = nil
-        elseif Spring.IsUnitVisible(self.follow) then
+        else--if Spring.IsUnitVisible(self.follow) then
             local x, y, z = Spring.GetUnitPosition(self.follow)
             Spring.SetCameraTarget(x, y, z)
         end
@@ -145,6 +145,9 @@ function DisplayUtil:OnFrame()
 end
 
 function DisplayUtil:Draw()
+    if not SCEN_EDIT.view.displayDevelop then
+        return
+    end
 	for i = 1, #self.texts do	
 		local text = self.texts[i]
 		gl.PushMatrix()
@@ -153,10 +156,6 @@ function DisplayUtil:Draw()
 		gl.Text(text.text, 0, 300 - text.time, 12)
 		gl.PopMatrix()
 	end
-    for i = 1, #self.unitSays do
-
-        --local coords = {Spring.GetUnitPosition(unit)}
-    end
 end
 
 function DisplayUtil:displayText(text, coords, color)

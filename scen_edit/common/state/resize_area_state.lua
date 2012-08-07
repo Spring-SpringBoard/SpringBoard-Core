@@ -5,6 +5,7 @@ function ResizeAreaState:init(areaId, resx, resz)
     self.resx, self.resz = resx, resz
     local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
     self.x1, self.z1, self.x2, self.z2 = unpack(area)
+    self.areaView = AreaView(self.areaId)
 end
 
 function ResizeAreaState:MouseMove(x, y, dx, dy, button)
@@ -38,9 +39,5 @@ function ResizeAreaState:MouseRelease(x, y, button)
 end
 
 function ResizeAreaState:DrawWorld()
-    gl.PushMatrix()
-    gl.Color(0.1, 1, 0.1, 0.4)
-
-    SCEN_EDIT.view:drawRect(self.x1, self.z1, self.x2, self.z2)
-    gl.PopMatrix()
+    self.areaView:_Draw(self.x1, self.z1, self.x2, self.z2)
 end

@@ -53,6 +53,33 @@ function SCEN_EDIT.coreTypes()
 	}
 end
 
+local function definitions()
+    return {
+        name = {
+            mandatory = true,
+            type = "string",
+        },
+        type = {
+            mandatory = true,
+            type = "string",
+        },
+        humanName = {
+            mandatory = true,
+            type = "string",
+        },
+        raw = {
+            mandatory = false,
+            type = "bool",
+            default = false,
+        },
+        allowNil = {
+            mandatory = false,
+            type = "bool",
+            default = false,
+        },
+    }
+end
+
 function SCEN_EDIT.parseData(data)
 	local newData = {}
 	-- verify unnamed objects
@@ -117,9 +144,9 @@ function SCEN_EDIT.coreActions()
 				local x = (area[1] + area[3]) / 2				
 				local z = (area[2] + area[4]) / 2
 				local y = Spring.GetGroundHeight(x, z)												
-				Spring.CreateUnit(unitType, x, y, z, 0, team.id)
+				Spring.CreateUnit(unitType, x, y, z, 0, team)
 				
-				local color = SCEN_EDIT.model.teams[team.id].color
+				local color = SCEN_EDIT.model.teams[team].color
 				SCEN_EDIT.displayUtil:displayText("Spawned", {x, y, z}, color )
 			end
 		},
@@ -133,10 +160,29 @@ function SCEN_EDIT.coreActions()
 					unit = input.unit,
 					params = input.order.input,
 				}
+                
+				Spring.GiveOrderToUnit(input.unit, CMD.STOP, {}, {})
 				SCEN_EDIT.model.orderTypes[orderTypeName].execute(newInput)
 				local x, y, z = Spring.GetUnitPosition(input.unit)
 				local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(input.unit)].color
 				SCEN_EDIT.displayUtil:displayText("Issued order", {x, y, z}, color )
+			end
+		},
+		{
+			humanName = "Add order", 
+			name = "ADD_ORDER",
+			input = { "unit", "order" },
+			execute = function (input)
+				local orderTypeName = input.order.orderTypeName
+				local newInput = {
+					unit = input.unit,
+					params = input.order.input,
+				}
+                
+				SCEN_EDIT.model.orderTypes[orderTypeName].execute(newInput)
+				local x, y, z = Spring.GetUnitPosition(input.unit)
+				local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(input.unit)].color
+				SCEN_EDIT.displayUtil:displayText("Added order", {x, y, z}, color )
 			end
 		},
 		{
@@ -187,8 +233,8 @@ function SCEN_EDIT.coreActions()
 				local unit = input.unit
 				local area = input.area
 				local x = (area[1] + area[3]) / 2
-				local y = 0
 				local z = (area[2] + area[4]) / 2
+				local y = Spring.GetGroundHeight(x, z)
 				Spring.SetUnitPosition(unit, x, y, z)
 				Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {})
 			end
@@ -209,7 +255,7 @@ function SCEN_EDIT.coreActions()
 			input = { "trigger" },
 			execute = function (input)
 				local trigger = input.trigger
-				trigger.enabled = true
+                SCEN_EDIT.model.triggerManager:enableTrigger(trigger.id)
 			end
 		},
 		{
@@ -218,7 +264,34 @@ function SCEN_EDIT.coreActions()
 			input = { "trigger" },
 			execute = function (input)
 				local trigger = input.trigger
-				trigger.enabled = false
+                SCEN_EDIT.model.triggerManager:disableTrigger(trigger.id)
+			end
+		},
+		{
+			humanName = "Hello world",
+			name = "HELLO_WORLD",
+			input = {},
+			execute = function (input)
+                Spring.Echo("Hello world")
+			end
+		},
+		{
+			humanName = "Execute trigger after n seconds",
+			name = "EXECUTE_TRIGGER_AFTER_TIME",
+			input = { "trigger", "number" },
+            doRepeat = true,
+			execute = function (input)
+				local trigger = input.trigger
+                if not input.converted then
+                    input.converted = true
+                    input.number = input.number * 30
+                end
+                if input.number > 0 then
+                    input.number = input.number - 1
+                    return true
+                else
+                    SCEN_EDIT.rtModel:ExecuteTrigger(trigger.id)
+                end
 			end
 		},
 		{
@@ -262,10 +335,20 @@ function SCEN_EDIT.coreActions()
 			input = { 
 				{
 					name = "variable",
-					variable = "true",
+					rawVariable = "true",
 					type = "unit",
 				},
-			}
+                {
+                    name = "unit",
+                    type = "unit"
+                },
+			},
+            execute = function(input)
+                local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
+                local newValue = SCEN_EDIT.deepcopy(input.variable)
+                newValue.value.id = unitModelId
+                SCEN_EDIT.model.variableManager:setVariable(variable.id, newValue)
+            end,
 		},
 	}
 end
@@ -280,10 +363,10 @@ function SCEN_EDIT.coreOrders()
 				local unit = input.unit
 				local area = input.params.area
 				local x = (area[1] + area[3]) / 2
-				local y = 0
 				local z = (area[2] + area[4]) / 2
-				
-				Spring.GiveOrderToUnit(unit, CMD.MOVE, { x, y, z }, {})
+				local y = Spring.GetGroundHeight(x, z)
+
+				Spring.GiveOrderToUnit(unit, CMD.MOVE, { x, y, z }, {"shift"})
 			end,
 		},
 		{
@@ -300,7 +383,7 @@ function SCEN_EDIT.coreOrders()
 				local unit = input.unit
 				local target = input.params.target
 				
-				Spring.GiveOrderToUnit(unit, CMD.ATTACK, { target }, {})
+				Spring.GiveOrderToUnit(unit, CMD.ATTACK, { target }, {"shift"})
 			end,
 		},
         {
@@ -310,7 +393,7 @@ function SCEN_EDIT.coreOrders()
 			execute = function(input)
 				local unit = input.unit
 				
-				Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {})
+				Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {"shift"})
 			end,
         },
         {
@@ -320,7 +403,7 @@ function SCEN_EDIT.coreOrders()
 			execute = function(input)
 				local unit = input.unit
 				
-				Spring.GiveOrderToUnit(unit, CMD.WAIT, {}, {})
+				Spring.GiveOrderToUnit(unit, CMD.WAIT, {}, {"shift"})
 			end,
         },
         {
@@ -331,10 +414,11 @@ function SCEN_EDIT.coreOrders()
 				local unit = input.unit
 				local area = input.params.area
 				local x = (area[1] + area[3]) / 2
-				local y = 0
 				local z = (area[2] + area[4]) / 2
-				
-				Spring.GiveOrderToUnit(unit, CMD.PATROL, { x, y, z }, {})
+				local y = Spring.GetGroundHeight(x, z)
+			
+                Spring.Echo("Patrol " .. tostring(unit) .. " ", x, y, z)
+				Spring.GiveOrderToUnit(unit, CMD.PATROL, { x, y, z }, {"shift"})
 			end,
         },
         {
@@ -345,10 +429,10 @@ function SCEN_EDIT.coreOrders()
 				local unit = input.unit
 				local area = input.params.area
 				local x = (area[1] + area[3]) / 2
-				local y = 0
 				local z = (area[2] + area[4]) / 2
+				local y = Spring.GetGroundHeight(x, z)
 				
-				Spring.GiveOrderToUnit(unit, CMD.FIGHT, { x, y, z }, {})
+				Spring.GiveOrderToUnit(unit, CMD.FIGHT, { x, y, z }, {"shift"})
 			end,
         },
 		{
@@ -365,7 +449,7 @@ function SCEN_EDIT.coreOrders()
 				local unit = input.unit
 				local target = input.params.target
 				
-				Spring.GiveOrderToUnit(unit, CMD.GUARD, { target }, {})
+				Spring.GiveOrderToUnit(unit, CMD.GUARD, { target }, {"shift"})
 			end,
 		},
 		{
@@ -382,7 +466,7 @@ function SCEN_EDIT.coreOrders()
 				local unit = input.unit
 				local target = input.params.target
 				
-				Spring.GiveOrderToUnit(unit, CMD.REPAIR, { target }, {})
+				Spring.GiveOrderToUnit(unit, CMD.REPAIR, { target }, {"shift"})
 			end,
 		},
 		{
@@ -393,10 +477,10 @@ function SCEN_EDIT.coreOrders()
 				local unit = input.unit
 				local area = input.params.area
 				local x = (area[1] + area[3]) / 2
-				local y = 0
 				local z = (area[2] + area[4]) / 2
+				local y = Spring.GetGroundHeight(x, z)
 				
-				Spring.GiveOrderToUnit(unit, CMD.REPAIR, { x, y, z }, {})
+				Spring.GiveOrderToUnit(unit, CMD.REPAIR, { x, y, z }, {"shift"})
 			end,
 		},
 	}
@@ -428,6 +512,7 @@ function SCEN_EDIT.coreConditions()
 					{
 						name = "first",
 						type = basicType.name,
+                        allowNil = true,
 					},
 					{
 						name = "relation",
@@ -436,6 +521,7 @@ function SCEN_EDIT.coreConditions()
 					{
 						name = "second",
 						type = basicType.name,
+                        allowNil = true,
 					},
 				},
 				execute = function(input) 
@@ -444,12 +530,15 @@ function SCEN_EDIT.coreConditions()
 					local relation = input.relation
 					if relation == "is" or relation == "is not" then
 						local isSame = false
-						if basicType.name ~= "area" then
-							isSame = first == second
-						else
-							isSame = first[1] == second[1] and first[2] == second[2] and
-								first[3] == second[3] and first[4] == second[4]
-						end
+                        -- note: we want nil to be ~= to nil
+                        if first ~= nil and second ~= nil then
+                            if basicType.name ~= "area" then
+                                isSame = first == second
+                            else
+                                isSame = first[1] == second[1] and first[2] == second[2] and
+                                first[3] == second[3] and first[4] == second[4]
+                            end
+                        end
 						return isSame == (relation == "is")
 					end
 				end,
@@ -469,7 +558,7 @@ function SCEN_EDIT.coreConditions()
 		local type = allTypes[i]
 		local arrayType = type.name .. "_array"
 		local itemFromArray = {
-			humanName = type.name .. " in array at position",
+			humanName = type.humanName .. " in array at position",
 			name = arrayType .. "_indexing",
 			input = { arrayType, "number" },
 			output = type.name,			
@@ -497,6 +586,21 @@ function SCEN_EDIT.coreTransforms()
 			output = "team",			
             execute = function(input)
                 return Spring.GetUnitTeam(input.unit)
+            end,
+		},
+		{
+			humanName = "Unit alive",
+			name = "UNIT_ALIVE",
+			input = { 
+                {
+                    name = "unit",
+                    type = "unit",
+                    allowNil = true,
+                },
+            },
+			output = "bool",
+            execute = function(input)
+                return not (not input.unit or Spring.GetUnitIsDead(input.unit))
             end,
 		},
 		{
@@ -528,6 +632,21 @@ function SCEN_EDIT.coreTransforms()
             end,
         },
         {
+            humanName = "Unit is in Area",
+            name = "UNIT_IS_IN_AREA",
+            input = { "area", "unit" },
+            output = "bool",
+            execute = function(input)
+                local units = Spring.GetUnitsInRectangle(unpack(input.area))
+                for _, id in pairs(units) do
+                    if id == input.unit then
+                        return true
+                    end
+                end
+                return false
+            end,
+        },
+        {
             humanName = "Trigger disabled",
             name = "TRIGGER_DISABLED",
             input = { "trigger" },
@@ -543,6 +662,15 @@ function SCEN_EDIT.coreTransforms()
             output = "bool",
             execute = function(input)
                 return input.trigger.enabled
+            end,
+        },
+        {
+            humanName = "Not",
+            name = "NOT_CONDITION",
+            input = { "bool" },
+            output = "bool",
+            execute = function(input)
+                return not input.bool
             end,
         },
         {

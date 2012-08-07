@@ -92,10 +92,9 @@ function MakeVariableChoice(variableType, panel)
 	end
 	local variableNames = {}
     local variableIds = {}
-    for i = 1, #variablesOfType do
-        local variable = variablesOfType[i]
+    for id, variable in pairs(variablesOfType) do
 		table.insert(variableNames, variable.name)
-		table.insert(variableIds, variable.id)
+		table.insert(variableIds, id)
     end
 
     if #variableIds > 0 then
@@ -147,13 +146,28 @@ function GetIndex(table, value)
 	end
 end
 
+function SortByName(t, name)
+    local i = 1
+    local sortedTable = {}
+    for k, v in pairs(t) do
+        sortedTable[i] = v
+        i = i + 1
+    end
+    table.sort(sortedTable,
+        function(a, b)
+            return a[name] < b[name]
+        end
+    )
+    return sortedTable
+end
+
 function PassToGadget(prefix, tag, data)
 	newTable = { tag = tag, data = data }
 	local msg = prefix .. "|table" .. table.show(newTable)	
 	Spring.SendLuaRulesMsg(msg)
 end
 
-function SCEN_EDIT.humanExpression(data, exprType)
+function SCEN_EDIT.humanExpression(data, exprType, dataType)
 	if exprType == "condition" then
 		if data.conditionTypeName:find("compare_") then
 			local firstExpr = SCEN_EDIT.humanExpression(data.first, "value")
@@ -180,7 +194,30 @@ function SCEN_EDIT.humanExpression(data, exprType)
 		return humanName .. ")"
 	elseif exprType == "value" then 
 		if data.type == "pred" then
-			return tostring(data.id)
+            if dataType == "unitType" then
+                local unitDef = UnitDefs[data.id]
+                if unitDef then
+                    return tostring(unitDef.name)
+                else
+                    return tostring(data.id)
+                end
+            elseif dataType == "unit" then
+                local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(data.id)
+                if Spring.ValidUnitID(unitId) then
+                    local unitDef = UnitDefs[Spring.GetUnitDefID(unitId)]
+                    if unitDef then
+                        return tostring(unitDef.name)
+                    else
+                        return tostring(data.id)
+                    end
+                else
+                    return tostring(data.id)
+                end
+            elseif dataType == "trigger" or dataType == "variable" then
+                return data.name
+            else
+    			return tostring(data.id)
+            end
 		elseif data.type == "spec" then
 			return data.name
 		elseif data.type == "expr" then
@@ -279,3 +316,7 @@ function SCEN_EDIT.deepcopy(t)
     return res
 end
 
+function SCEN_EDIT.GiveOrderToUnit(unitId, orderType, params)
+    Spring.GiveOrderToUnit(unit, CMD.INSERT,
+        { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
+end

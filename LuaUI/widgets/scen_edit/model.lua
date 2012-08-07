@@ -101,9 +101,6 @@ function Model:init()
 		local arrayType = variableType .. "_array"
 		table.insert(self.variableTypes, arrayType)
 	end
-	
-	self.callbacks = {}
-	self.callbackIdCount = 0
 
     VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager.lua")
     self.areaManager = AreaManager()
@@ -120,39 +117,6 @@ function Model:init()
     VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager.lua")
     self.triggerManager = TriggerManager()
 	self:GenerateTeams()
-end
-
-function Model:InvokeCallback(callbackId, params)
-	self.callbacks[callbackId](unpack(params))
-end
-
-function Model:RemoveCallback(callbackId)
-	self.callbacks[callbackId] = nil
-end
-
-function Model:GenerateCallbackId(callback)
-	self.callbackIdCount = self.callbackIdCount + 1
-	self.callbacks[self.callbackIdCount] = callback
-	return self.callbackIdCount
-end
-
-function Model:AddFeature(featureDef, x, y, z, playerId)
-    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|addFeature|" .. featureDef .. "|" .. 
-        x .. "|" .. y .. "|" .. z .. "|" .. playerId)
-end
-
-function Model:RemoveFeature(unitId)
-    Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|removeFeature|" .. unitId)
-end
-
-function Model:AdjustHeightMap(x1, z1, x2, z2, height)
-	Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|terr_inc|" .. x1.. "|" .. 
-        z1 .. "|" .. x2 .. "|" .. z2 .. "|" .. height)
-end
-
-function Model:RevertHeightMap(x1, z1, x2, z2)
-	Spring.SendLuaRulesMsg(self._lua_rules_pre .. "|terr_rev|" .. x1.. "|" .. 
-        z1 .. "|" .. x2 .. "|" .. z2 .. "|")
 end
 
 --clears all units, areas, triggers, etc.
@@ -262,8 +226,6 @@ end
 function Model:Load(mission)
     self:Clear()
 	
-    --load file
-	self:SetMetaData(mission.meta)
 	--load units
     local units = mission.units
 	self._unitIdCounter = 0
@@ -301,6 +263,9 @@ function Model:Load(mission)
         Spring.SetFeatureDirection(featureId, x, 0, z)
         SCEN_EDIT.model.featureManager:setFeatureModelId(featureId, feature.id)
     end
+
+    --load file
+	self:SetMetaData(mission.meta)
 end
 
 --returns a table that holds triggers, areas and other non-engine content
@@ -320,77 +285,7 @@ function Model:SetMetaData(meta)
     self.variableManager:load(meta.variables)
 	--self.teams = meta.teams or {}
 end
---[[
-function Model:NewTrigger()
-    self._triggerIdCount = self._triggerIdCount + 1
-    local trigger = { 
-        id = self._triggerIdCount,
-        name = "Trigger " .. self._triggerIdCount,
-        events = {},
-        conditions = {},
-        actions = {},
-		enabled = true,
-    }
-    table.insert(self.triggers, trigger)
-    return trigger
-end
 
-function Model:RemoveTrigger(triggerId)
-    for i = 1, #self.triggers do
-        local tr = self.triggers[i]
-        if tr.id == triggerId then
-            table.remove(self.triggers, i)
-            return true
-        end
-    end
-    return false
-end
-
-function Model:NewVariable(variableType)
-    self._variableIdCount = self._variableIdCount + 1
-    local variable = {
-        id = self._variableIdCount,
-        type = variableType,        
-		value = {},
-        name = "variable" .. self._variableIdCount,
-    }
-	if self.variables[variable.type] then
-		table.insert(self.variables[variable.type], variable)
-	else
-		self.variables[variable.type] = {variable}
-	end
-    return variable
-end
-
-function Model:RemoveVariable(variableId)
-    for k, v in pairs(self.variables) do
-        for i = 1, #v do
-			local variable = v[i]
-			if variable.id == variableId then
-				table.remove(self.variables[k], i)
-				return true
-			end
-		end
-    end
-    return false
-end
-
-function Model:ListVariables()
-	local allVars = {}
-	for k, v in pairs(self.variables) do
-		for i = 1, #v do
-			local variable = v[i]
-			table.insert(allVars, variable)
-		end
-	end
-	return allVars
-end
-
-function Model:GetVariablesOfType(type)
-	return self.variables[type]
-end
---]]
---should be called from the widget upon creating a new model
 function Model:GenerateTeams(widget)
 	local names, ids, colors = GetTeams(widget)
 	for i = 1, #ids do

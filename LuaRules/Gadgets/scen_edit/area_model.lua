@@ -1,6 +1,6 @@
-AreaModel = class()
+AreaModel = LCS.class{}
 
-function AreaModel:__init(id, area)
+function AreaModel:init(id, area)
 	self.id = id
 	self.area = area
 	self.unitsInArea = {}	

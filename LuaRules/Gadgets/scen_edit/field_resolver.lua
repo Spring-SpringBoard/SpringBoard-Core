@@ -4,23 +4,41 @@ function FieldResolver:init(params)
     self.params = params
 end
 
-function FieldResolver:Resolve(field, type)
+function FieldResolver:CallExpression(expr, exprType)
+    local resolvedInputs = {}
+    local fail = false
+    for i = 1, #exprType.input do
+        local input = exprType.input[i]	
+        local resolvedInput = self:Resolve(expr[input.name], input.type, input.rawVariable)
+        if not input.allowNil then
+            fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
+        end
+        resolvedInputs[input.name] = resolvedInput
+    end
+    if not fail then
+        if not exprType.execute then
+            SCEN_EDIT.Error("There is no function \"execute\" for expression: " .. exprType.name)
+        else
+            local result = exprType.execute(resolvedInputs)
+            if exprType.doRepeat and result then
+                table.insert(SCEN_EDIT.rtModel.repeatCalls, {exprType = exprType, resolvedInputs = resolvedInputs})
+            end
+            return result
+        end
+    end
+end
+
+function FieldResolver:Resolve(field, type, rawVariable)
     if field.type == "expr" then
         local conditionTypeName = field.expr[1].conditionTypeName
         local conditionType = SCEN_EDIT.model.conditionTypes[conditionTypeName]
-        local inputs = conditionType.input
-        local resolvedInputs = {}
-        local fail = false
-        for i = 1, #inputs do
-            local input = inputs[i]
-            local resolvedInput = self:Resolve(field.expr[1][input.name], input.type)
-            fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, field)
-            resolvedInputs[input.name] = resolvedInput
-        end
-        if not fail then
-            return conditionType.execute(resolvedInputs)
+        return self:CallExpression(field.expr[1], conditionType)
+    elseif field.type == "var" then
+        local variable = SCEN_EDIT.model.variableManager:getVariable(field.id)
+        if not rawVariable then
+            return self:Resolve(variable.value, variable.type)
         else
-            return nil
+            return variable
         end
     end
 	if type == "unit" then
@@ -84,6 +102,10 @@ function FieldResolver:Resolve(field, type)
 		end
 		return order
     elseif type == "string" then
+        if field.type == "pred" then
+            return field.id
+        end
+    elseif type == "number" then
         if field.type == "pred" then
             return field.id
         end

@@ -48,7 +48,15 @@ function RuntimeView:init()
             end
         }
     }
-    self.debugView = Chili.StackPanel:New {
+    self.dvv = Chili.StackPanel:New {
+        itemMargin = {0, 0, 0, 0},
+        x = 1,
+        y = 1,
+        right = 1,
+        autosize = true,
+        resizeItems = false,
+    }
+    self.dtv = Chili.StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -86,19 +94,37 @@ function RuntimeView:init()
     self.runtimeViewWindow = Chili.Window:New {
         parent = screen0,
         caption = "Runtime Window",
-        x = 500,
+        x = 1300,
         y = 300,
-        minimumSize = {400, 400},
-        width = 400,
-        height = 400,
+        minimumSize = {450, 400},
+        width = 500,
+        height = 600,
         children = {
-            Chili.ScrollPanel:New {
-                x = 1,
+            Chili.StackPanel:New {
                 y = 15,
-                right = 5,
+                x = 1,
+                right = 1,
                 bottom = B_HEIGHT * 2 + 10,
-                children = { 
-                    self.debugView,
+                itemMargin = {0, 0, 0, 0},
+                children = {
+                    Chili.ScrollPanel:New {
+                        x = 1,
+                        y = 1,
+                        height = "50%",
+                        right = 1,
+                        children = { 
+                            self.dvv,
+                        },
+                    },
+                    Chili.ScrollPanel:New {
+                        x = 1,
+                        y = "50%",
+                        right = 1,
+                        bottom = 1,
+                        children = { 
+                            self.dtv,
+                        },
+                    },
                 },
             },
             Chili.StackPanel:New {
@@ -123,12 +149,6 @@ function RuntimeView:init()
 end
 
 function RuntimeView:Populate()
-    if self.currentView then
-        self.currentView:Dispose()
-    end
-    if self.mode == "trigger" then
-        self.currentView = DebugTriggerView(self.debugView)
-    elseif self.mode == "variable" then
-        self.currentView = DebugVariableView(self.debugView)
-    end
+    DebugTriggerView(self.dtv)
+    DebugVariableView(self.dvv)
 end

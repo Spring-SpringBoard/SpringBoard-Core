@@ -5,10 +5,15 @@ function MessageManager:init()
     self.messageIdCount = 0
     self.callbacks = {}
     self.widget = false
+    self.compress = false
 end
 
 function MessageManager:__encodeToString(message)
-    return table.show(message:serialize())
+    local msg = table.show(message:serialize())
+    if self.widget and self.compress then
+        msg = VFS.ZlibCompress(msg)
+    end
+    return msg
 end
 
 function MessageManager:sendMessage(message, callback)
@@ -23,7 +28,26 @@ function MessageManager:sendMessage(message, callback)
 
     local fullMessage = self.prefix .. "|" .. messageType .. "|" .. self:__encodeToString(message)
     if self.widget then
-        Spring.SendLuaRulesMsg(fullMessage)
+        local size = #fullMessage
+        local maxMsg = 50000
+        if size < maxMsg then
+            Spring.SendLuaRulesMsg(fullMessage)
+        else
+            local current = 1
+            local msgPartIdx = 1
+            local parts = math.floor(size / maxMsg + 1)
+            Spring.Echo("send multi part msg: ".. tostring(parts))
+            Spring.SendLuaRulesMsg(self.prefix .. "|" .. "startMsgPart" .. "|" .. parts)
+            while current < size do
+                local endIndex = math.min(current + maxMsg, size)
+                local part = fullMessage:sub(current, endIndex)
+                current = current + maxMsg
+                local msg = self.prefix .. "|" .. "msgPart" .. "|" .. msgPartIdx .. "|" .. part
+                Spring.SendLuaRulesMsg(msg)
+
+                msgPartIdx = msgPartIdx + 1
+            end
+        end
     else
         SendToUnsynced("toWidget", fullMessage)
     end
