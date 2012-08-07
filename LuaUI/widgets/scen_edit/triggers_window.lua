@@ -97,7 +97,7 @@ end
 
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
-    local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
+    local triggers = SortByName(SCEN_EDIT.model.triggerManager:getAllTriggers(), "name")
     for id, trigger in pairs(triggers)  do		
         local stackTriggerPanel = Chili.StackPanel:New {
             triggerId = trigger.id,
@@ -111,11 +111,38 @@ function TriggersWindow:Populate()
         }
         local btnEditTrigger = Chili.Button:New {
             caption = trigger.name,
-            right = B_HEIGHT + 10,
+            right = 2 * (B_HEIGHT + 10),
             x = 1,
             height = B_HEIGHT,
             _toggle = nil,
             parent = stackTriggerPanel,
+        }
+        local btnCloneTrigger = Chili.Button:New {
+            caption = "",
+            right = B_HEIGHT + 10,
+            width = B_HEIGHT,
+            height = B_HEIGHT,
+            parent = stackTriggerPanel,
+            padding = {0, 0, 0, 0},
+            children = {
+                Chili.Image:New { 
+                    tooltip = "Clone trigger", 
+                    file=SCENEDIT_IMG_DIR .. "clone.png", 
+                    height = B_HEIGHT, 
+                    width = B_HEIGHT,
+                    padding = {0, 0, 0, 0},
+                    margin = {0, 0, 0, 0},
+                },
+            },
+            OnClick = {
+                function() 
+                    local newTrigger = SCEN_EDIT.deepcopy(trigger)
+                    newTrigger.id = nil
+                    newTrigger.name = newTrigger.name .. " copy"
+                    local cmd = AddTriggerCommand(newTrigger)
+                    SCEN_EDIT.commandManager:execute(cmd)
+                end
+            },
         }
         local btnRemoveTrigger = Chili.Button:New {
             caption = "",

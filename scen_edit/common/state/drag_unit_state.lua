@@ -19,7 +19,7 @@ function DragUnitState:MouseMove(x, y, dx, dy, button)
         local unitX, unitY, unitZ = Spring.GetUnitPosition(self.unitId)
         self.dx = coords[1] - unitX + self.startDiffX
         self.dz = coords[3] - unitZ + self.startDiffZ
-        local unitIds = Spring.GetSelectedUnits()
+        local selType, unitIds = SCEN_EDIT.view.selectionManager:GetSelection()
         self.unitGhostViews = {}
     
         for i = 1, #unitIds do
@@ -34,7 +34,7 @@ end
 
 function DragUnitState:MouseRelease(x, y, button)
     local commands = {}
-    local unitIds = Spring.GetSelectedUnits()
+    local selType, unitIds = SCEN_EDIT.view.selectionManager:GetSelection()
     for i = 1, #unitIds do
         local unitId = unitIds[i]
         local unitX, unitY, unitZ = Spring.GetUnitPosition(unitId)

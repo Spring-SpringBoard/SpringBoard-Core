@@ -21,14 +21,12 @@ function RotateFeatureState:init(featureId)
         local dx = self.newPosX - featureX
         local dz = self.newPosZ - featureZ
 
-        Spring.Echo(oldAngle)
         local len = math.sqrt(dx * dx + dz * dz)
         local newAngle = 0
         if len > 0 then
             local angle = { dx / len, dz / len}
             newAngle = math.atan2(angle[1], angle[2]) / math.pi * 180
         end
-        Spring.Echo(newAngle)
         self.initialRots[featureId] = self.initialRots[featureId] - newAngle
     end
 end

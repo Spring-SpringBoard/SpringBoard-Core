@@ -1,5 +1,6 @@
 local Chili = WG.Chili
 local model = SCEN_EDIT.model
+local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 UnitPanel = {
 }
@@ -48,11 +49,22 @@ function UnitPanel:Initialize()
         end
     }
     self.btnPredefinedUnitZoom = Chili.Button:New {
-        caption = "?",
+        caption = "",
         right = 1,
-        width = 35,
+        width = model.B_HEIGHT,
         height = model.B_HEIGHT,
         parent = stackUnitPanel,
+        padding = {0, 0, 0, 0},
+        children = {
+            Chili.Image:New { 
+                tooltip = "Select unit", 
+                file=SCENEDIT_IMG_DIR .. "search.png", 
+                height = model.B_HEIGHT, 
+                width = model.B_HEIGHT,
+                padding = {0, 0, 0, 0},
+                margin = {0, 0, 0, 0},
+            },
+        },
         OnClick = {
             function()
                 if self.btnPredefinedUnit.unitId ~= nil then

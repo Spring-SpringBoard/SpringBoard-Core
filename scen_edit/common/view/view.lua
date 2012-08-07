@@ -14,7 +14,9 @@ function View:init()
     end
     self.areaViews = {}
     self.runtimeView = RuntimeView()
+    self.selectionManager = SelectionManager()
     self.displayDevelop = true
+    self.textureManager = TextureManager()
 end
 
 function View:drawRect(x1, z1, x2, z2)
@@ -37,7 +39,6 @@ end
 
 function View:drawRects()
     gl.PushMatrix()
-    gl.Color(0, 1, 0, 0.2)
 --    x, y = gl.GetViewSizes()
     for _, areaView in pairs(self.areaViews) do
         areaView:Draw()
@@ -57,8 +58,35 @@ function View:drawRects()
     gl.PopMatrix()
 end
 
-function View:draw()
+function View:DrawWorld()
+    self.textureManager:DrawWorld()
+end
+
+function View:DrawWorldPreUnit()
     if self.displayDevelop then
         self:drawRects()
     end
+    local selType, items = self.selectionManager:GetSelection()
+    if selType == "features" then
+        for _, featureId in pairs(items) do
+            if Spring.ValidFeatureID(featureId) then
+                local bx, _, bz = Spring.GetFeaturePosition(featureId)
+                local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
+                local x1, z1 = bx + featureDef.minx - 5, bz + featureDef.minz + 5
+                local x2, z2 = bx + featureDef.maxx - 5, bz + featureDef.maxz + 5
+                gl.BeginEnd(GL.LINE_STRIP, function()
+                    gl.Color(0, 1, 0, 1)
+                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
+                    gl.Vertex(x2, Spring.GetGroundHeight(x2, z1), z1)
+                    gl.Vertex(x2, Spring.GetGroundHeight(x2, z2), z2)
+                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z2), z2)
+                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
+                end)
+            end
+        end
+    end
+end
+
+function View:GameFrame(frameNum)
+    self.selectionManager:GameFrame(frameNum)
 end

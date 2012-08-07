@@ -41,7 +41,7 @@ function gadget:RecvLuaMsg(msg, playerID)
 	if not Spring.IsCheatingEnabled() then return end
 	
 	local ceg_msg_prefix = "*"
-	local ceg_msg = (msg:find(ceg_msg_prefix,1,true))
+    local ceg_msg = msg:sub(1, #ceg_msg_prefix) == ceg_msg_prefix
 	
 	if ceg_msg then
 		msg = msg:sub(2)

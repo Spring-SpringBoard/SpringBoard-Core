@@ -10,7 +10,7 @@ function AddFeatureCommand:init(featureTypeId, x, y, z, featureTeamId, angle)
 end
 
 function AddFeatureCommand:execute()
-    self.featureId = Spring.CreateFeature(self.featureTypeId, self.x, self.y, self.z, 0, self.featureTeamId)
+    local featureId = Spring.CreateFeature(self.featureTypeId, self.x, self.y, self.z, 0, self.featureTeamId)
     local prop = math.tan(self.angle / 180 * math.pi)
     local z = math.sqrt(1 / (prop * prop + 1))
     local x = prop * z
@@ -31,19 +31,23 @@ function AddFeatureCommand:execute()
 
     x * y
     x / (x^2 + y^2)
-    y / (x^2 + y^2)--]]
-    Spring.SetFeatureDirection(self.featureId, x, 0, z)
-    --[[
+    y / (x^2 + y^2)
+    
     local featureId = Spring.CreateFeature(self.featureTypeId, self.x, self.y, self.z, 0, self.featureTeamId)
-    if self.modelFeatureId == nil then
-        self.modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
-    else
-        SCEN_EDIT.model.featureManager:setFeatureModelId(featureId, self.modelFeatureId)
-    end--]]
+    --]]
+    if featureId then
+        Spring.SetFeatureDirection(featureId, x, 0, z)
+        if self.modelFeatureId == nil then
+            self.modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
+        else
+            SCEN_EDIT.model.featureManager:setFeatureModelId(featureId, self.modelFeatureId)
+        end
+    end
 end
 
 function AddFeatureCommand:unexecute()
-    --[[local featureId = SCEN_EDIT.model.featureManager:getSpringFeatureId(self.modelFeatureId)
-    Spring.DestroyFeature(featureId, false, true)--]]
-    Spring.DestroyFeature(self.featureId, false, true)--]]
+    if self.modelFeatureId then
+        local featureId = SCEN_EDIT.model.featureManager:getSpringFeatureId(self.modelFeatureId)
+        Spring.DestroyFeature(featureId, false, true)
+    end
 end

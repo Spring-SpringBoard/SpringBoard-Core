@@ -10,7 +10,7 @@ function TriggerManager:addTrigger(trigger)
     if trigger.id == nil then
         trigger.id = self.triggerIdCount + 1
     end
-    self.triggerIdCount = trigger.id
+    self.triggerIdCount = math.max(trigger.id, self.triggerIdCount)
     self.triggers[trigger.id] = trigger
     self:callListeners("onTriggerAdded", trigger.id)
     return trigger.id
@@ -34,6 +34,20 @@ function TriggerManager:setTrigger(triggerId, value)
     self:callListeners("onTriggerUpdated", triggerId)
 end
 
+function TriggerManager:disableTrigger(triggerId)
+    if self.triggers[triggerId].enabled then
+        self.triggers[triggerId].enabled = false
+        self:callListeners("onTriggerUpdated", triggerId)
+    end
+end
+
+function TriggerManager:enableTrigger(triggerId)
+    if not self.triggers[triggerId].enabled then
+        self.triggers[triggerId].enabled = true
+        self:callListeners("onTriggerUpdated", triggerId)
+    end
+end
+
 function TriggerManager:getTrigger(triggerId)
     return self.triggers[triggerId]
 end
@@ -53,7 +67,6 @@ end
 
 function TriggerManager:load(data)
     self:clear()
-    self.triggerIdCount = 0
     for id, trigger in pairs(data) do
         self:addTrigger(trigger)
     end
@@ -64,5 +77,4 @@ function TriggerManager:clear()
         self:removeTrigger(triggerId)
     end
     self.triggerIdCount = 0
-    self.triggers = {}
 end

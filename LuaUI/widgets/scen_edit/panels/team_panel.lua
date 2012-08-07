@@ -23,14 +23,13 @@ function TeamPanel:Initialize()
         parent = stackTeamPanel,
     }
 	table.insert(radioGroup, self.cbPredefinedTeam)
-    local playerNames, playerTeamIds = GetTeams()
     self.cmbPredefinedTeam = ComboBox:New {
         right = 1,
         width = 100,
         height = model.B_HEIGHT,
         parent = stackTeamPanel,
-        items = playerNames,
-        playerTeamIds = playerTeamIds,
+        items = GetField(SCEN_EDIT.model.teams, "name"),
+		playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
     }
 	
    --VARIABLE
@@ -50,7 +49,7 @@ end
 function TeamPanel:UpdateModel(field)
     if self.cbPredefinedTeam.checked then
         field.type = "pred"
-        field.id = self.cmbPredefinedTeam.selected
+        field.id = self.cmbPredefinedTeam.playerTeamIds[self.cmbPredefinedTeam.selected]
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
         field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
@@ -65,7 +64,7 @@ function TeamPanel:UpdatePanel(field)
         if not self.cbPredefinedTeam.checked then
             self.cbPredefinedTeam:Toggle()
         end
-        self.cmbPredefinedTeam:Select(field.id)
+        self.cmbPredefinedTeam:Select(GetIndex(self.cmbPredefinedTeam.playerTeamIds, field.id))
     elseif field.type == "var" then
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()

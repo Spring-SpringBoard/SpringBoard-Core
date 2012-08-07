@@ -1,5 +1,6 @@
 local Chili = WG.Chili
 local model = SCEN_EDIT.model
+local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 AreaPanel = {
 }
@@ -25,8 +26,8 @@ function AreaPanel:Initialize()
 	table.insert(radioGroup, self.cbPredefinedArea)
     self.btnPredefinedArea = Chili.Button:New {
         caption = '...',
-        right = 1,
-        width = 100,
+        right = 40,
+        width = 60,
         height = model.B_HEIGHT,
         parent = stackAreaPanel,
         areaId = nil,
@@ -46,6 +47,38 @@ function AreaPanel:Initialize()
             end
         end
     }
+    self.btnPredefinedAreaZoom = Chili.Button:New {
+        caption = "",
+        right = 1,
+        width = model.B_HEIGHT,
+        height = model.B_HEIGHT,
+        parent = stackAreaPanel,
+        padding = {0, 0, 0, 0},
+        children = {
+            Chili.Image:New { 
+                tooltip = "Select area", 
+                file=SCENEDIT_IMG_DIR .. "search.png", 
+                height = model.B_HEIGHT, 
+                width = model.B_HEIGHT,
+                padding = {0, 0, 0, 0},
+                margin = {0, 0, 0, 0},
+            },
+        },
+        OnClick = {
+            function()
+                if self.btnPredefinedArea.areaId ~= nil then
+                    local area = SCEN_EDIT.model.areaManager:getArea(self.btnPredefinedArea.areaId)
+                    if area ~= nil then
+                        local x = (area[1] + area[3]) / 2
+                        local z = (area[2] + area[4]) / 2
+                        local y = Spring.GetGroundHeight(x, z)
+                        Spring.SetCameraTarget(x, y, z)
+                    end
+                end
+            end
+        }
+    }
+
 	--SPECIAL AREA, i.e TRIGGER
     local stackAreaPanel = MakeComponentPanel(self.parent)
     self.cbSpecialArea = Chili.Checkbox:New {

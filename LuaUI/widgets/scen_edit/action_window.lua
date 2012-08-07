@@ -42,9 +42,10 @@ function ActionWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
+    obj.validActions = SortByName(model.actionTypes, "humanName")
     obj.cmbActionTypes = ComboBox:New {
-        items = GetField(model.actionTypes, "humanName"),
-		actionTypes = GetField(model.actionTypes, "name"),
+        items = GetField(obj.validActions, "humanName"),
+		actionTypes = GetField(obj.validActions, "name"),
         height = model.B_HEIGHT,
         width = "60%",
         y = "20%",
@@ -55,7 +56,7 @@ function ActionWindow:New(obj)
 			if selected and itemIdx > 0 then
 				obj.actionPanel:ClearChildren()
 				local actName = obj.cmbActionTypes.actionTypes[itemIdx]
-				local action = model.actionTypes[actName]
+				local action = obj.validActions[itemIdx]
 				for i = 1, #action.input do
 					local input = action.input[i]
 					local subPanelName = input.name
@@ -71,7 +72,7 @@ function ActionWindow:New(obj)
 			end
 		end
 	}
-	
+
     obj.children = {
 		obj.cmbActionTypes,
 		obj.btnOk,
@@ -138,7 +139,8 @@ end
 
 function ActionWindow:UpdatePanel()
 	local actName = self.action.actionTypeName
-	local action = model.actionTypes[actName]
+    local index = GetIndex(self.cmbActionTypes.actionTypes, actName)
+	local action = self.validActions[index]
 	for i = 1, #action.input do
 		local input = action.input[i]
 		local subPanelName = input.name
@@ -151,7 +153,8 @@ end
 
 function ActionWindow:UpdateModel()
 	local actName = self.action.actionTypeName
-	local action = model.actionTypes[actName]
+    local index = GetIndex(self.cmbActionTypes.actionTypes, actName)
+	local action = self.validActions[index]
 	for i = 1, #action.input do
 		local input = action.input[i]
 		local subPanelName = input.name
