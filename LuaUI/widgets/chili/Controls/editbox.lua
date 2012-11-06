@@ -11,7 +11,7 @@ EditBox = Control:Inherit{
 
   align    = "left",
   valign   = "center",
-  text  = "no text",
+  text  = "",
   cursor = 1,
   offset = 0,
 }

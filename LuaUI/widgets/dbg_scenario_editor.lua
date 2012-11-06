@@ -209,20 +209,23 @@ function MakeRemoveActionWindow(trigger, triggerWindow, action, idx)
     triggerWindow:Populate()
 end
 
-local function Save()
-    err,msg = pcall(Model.Save, SCEN_EDIT.model, "scenario.lua")
+local function Save(path)
+	--path = path:gsub("\\", "/")
+	--path = "./" .. path 
+    err,msg = pcall(Model.Save, SCEN_EDIT.model, path)
     if not err then 
         Spring.Echo(msg)
     end--    model:Save("scenario.lua")
 end
 
-local function Load()
+local function Load(path)
     --local f, err = loadfile(fileName)
-    local fileName = "scenario.lua"
-    local f = assert(io.open(fileName, "r"))
-    local t = f:read("*all")
-    f:close()
-    cmd = LoadCommand(t)
+    --local fileName = "scenario.lua"
+    --local f = assert(io.open(path, "r"))	
+    --local t = f:read("*all")
+    --f:close()
+	local data = VFS.LoadFile(path, "r")
+    cmd = LoadCommand(data)
     SCEN_EDIT.commandManager:execute(cmd)
 end
 
@@ -746,7 +749,17 @@ function widget:Initialize()
                         height = model.B_HEIGHT + 20,
                         width = model.B_HEIGHT + 20,
                         caption = '',
-                        OnClick = {Save},
+                        OnClick = {
+							function() 
+								sfd = SaveFileDialog()
+								sfd:setConfirmDialogCallback(function(path)
+									success, msg = pcall(Save, path)
+									if not success then
+										Spring.Echo(msg)
+									end
+								end)
+							end
+						},
                         children = {
                             Image:New { 
                                 tooltip = "Save mission", 
@@ -762,11 +775,14 @@ function widget:Initialize()
                         width = model.B_HEIGHT + 20,
                         caption = '',
                         OnClick = {
-                            function() 
-                                success, msg = pcall(Load)
-                                if not success then
-                                    Spring.Echo(msg)
-                                end
+                            function()
+								ofd = OpenFileDialog()
+								ofd:setConfirmDialogCallback(function(path)
+									success, msg = pcall(Load, path)
+									if not success then
+										Spring.Echo(msg)
+									end
+								end)
                             end
                         },
                         children = {
@@ -866,11 +882,11 @@ function widget:Initialize()
 						tooltip = "Terrain toolbox",
 						OnClick = {
 							function()
-                                --local success, msg = pcall(FileDialog)
-                                --if not success then
-                                 --   Spring.Echo(msg)
-                                --end
-								CreateTerrainEditor()
+                                local success, msg = pcall(OpenFileDialog)
+                                if not success then
+                                    Spring.Echo(msg)
+                                end
+								--CreateTerrainEditor()
 							end
 						}
 					},
