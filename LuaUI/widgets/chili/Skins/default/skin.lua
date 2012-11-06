@@ -501,6 +501,7 @@ skin.checkbox = {
 skin.imagelistview = {
   imageFolder      = "folder.png",
   imageFolderUp    = "folder_up.png",
+  imageFile        = "file.png",
 
   DrawItemBackground = DrawItemBkGnd,
 }

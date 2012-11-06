@@ -222,9 +222,9 @@ function table.save(t, filename, header)
     error("Error while saving.")
     return
   end
-  local file = io.open(filename, 'w')
+  local file, errMsg = io.open(filename, 'w')
   if (not file) then
-    error("Error writing to "..filename..".\nFile not saved.")
+    error(errMsg .. "\nFile not saved.")	
     return
   end
   if (header) then
