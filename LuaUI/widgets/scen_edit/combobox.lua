@@ -42,6 +42,9 @@ function ComboBox:New(obj)
 end
 
 function ComboBox:Select(item)
+  if #self.children == 0 then
+    return
+  end
   if (type(item)=="number") then
     self.selected = item
     self.children[1].caption = self.items[item]
