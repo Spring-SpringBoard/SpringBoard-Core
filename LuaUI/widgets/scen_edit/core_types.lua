@@ -132,6 +132,41 @@ function SCEN_EDIT.parseData(data)
 end
 
 function SCEN_EDIT.coreActions()
+	local variableAssignments = {}
+    allTypes = SCEN_EDIT.coreTypes()
+	for i = 1, #allTypes do
+		local type = allTypes[i]
+		
+		local variableAssignment = {
+			humanName = "Assign " .. type.humanName .. " variable",
+			name = type.name .. "_VARIABLE_ASSIGN",
+			input = { 
+				{
+					name = "variable",
+					rawVariable = "true",
+					type = type.name,
+				},
+                {
+                    name = type.name,
+                    type = type.name,
+                },
+			},
+	--		output = type.name,
+			execute = function(input)
+                local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
+                local newValue = SCEN_EDIT.deepcopy(input.variable)
+                newValue.value.id = unitModelId
+                SCEN_EDIT.model.variableManager:setVariable(variable.id, newValue)
+				
+				--local array = input[arrayType]
+				--local index = input.number
+				--return array[index]
+			end,
+		}
+
+		table.insert(variableAssignments, variableAssignment)
+	end
+
 	return {
 		{
 			humanName = "Spawn unit", 
@@ -328,6 +363,8 @@ function SCEN_EDIT.coreActions()
             execute = function (input)
             end
         },
+        unpack(variableAssignments),
+        --[[
 		--TODO.. variables, yeah..
 		{
 			humanName = "Assign variable",
@@ -349,7 +386,7 @@ function SCEN_EDIT.coreActions()
                 newValue.value.id = unitModelId
                 SCEN_EDIT.model.variableManager:setVariable(variable.id, newValue)
             end,
-		},
+		},--]]
 	}
 end
 
@@ -557,11 +594,17 @@ function SCEN_EDIT.coreConditions()
 	for i = 1, #allTypes do
 		local type = allTypes[i]
 		local arrayType = type.name .. "_array"
+		
 		local itemFromArray = {
 			humanName = type.humanName .. " in array at position",
-			name = arrayType .. "_indexing",
+			name = arrayType .. "_INDEXING",
 			input = { arrayType, "number" },
-			output = type.name,			
+			output = type.name,
+			execute = function(input)
+				local array = input[arrayType]
+				local index = input.number
+				return array[index]
+			end,
 		}
 		table.insert(conditions, itemFromArray)
 	end
@@ -690,7 +733,7 @@ function SCEN_EDIT.coreTransforms()
             execute = function(input)
                 return false
             end,
-        }
+        },		
 	}
 end
 
@@ -761,7 +804,7 @@ function SCEN_EDIT.complexExpressions()
 		inputClass = "complex",
 		basicExpression = "number",
 		output = "number",
-		text = "Average",	
+		text = "Average",
 	}
 	table.insert(expressions, average)
 	return expressions
