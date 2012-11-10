@@ -33,6 +33,9 @@ function RuntimeModel:LoadMission()
 end
 
 function RuntimeModel:GameStart()
+	--TODO: assign initial variable values
+	--END
+
     self.hasStarted = true
 	if self.eventTriggers["GAME_START"] then
 		for k = 1, #self.eventTriggers["GAME_START"] do
