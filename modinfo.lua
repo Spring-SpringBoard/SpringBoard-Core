@@ -5,7 +5,7 @@
 local modinfo = {
 	name			= "ToolBox",
 	shortName		= "TB",
-	version			= "v0.2",
+	version			= "v0.1",
 	game			= "ToolBox",
 	shortGame		= "TB",
 	mutator			= "Official",
