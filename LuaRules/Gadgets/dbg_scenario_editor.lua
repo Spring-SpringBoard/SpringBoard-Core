@@ -261,8 +261,6 @@ function gadget:Initialize()
         local featureDefId = Spring.GetFeatureDefID(featureId)
         local featureTeamId = Spring.GetFeatureTeam(featureId)
 		AddedFeature(featureId, featureTeamId)
-
-        table.insert(mission.features, feature)
     end
 end
 
