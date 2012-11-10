@@ -6,48 +6,65 @@ local SCEN_EDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 RuntimeView = LCS.class{}
 
-function RuntimeView:init()
-    self.mode = "trigger"
-    local btnPlay = Chili.Button:New {
-        caption='',
-        height = B_HEIGHT + 20,
-        width = B_HEIGHT + 20,
-        children = {
+function RuntimeView:UpdateStartStopButton()
+    self.btnStartStop:ClearChildren()
+    if not self.started then
+        self.btnStartStop:AddChild(
             Chili.Image:New {
                 tooltip = "Start mission",
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
                 height = B_HEIGHT - 2,
                 width = B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
-            },
-        },
-        OnClick = {
-            function() 
-                local cmd = StartCommand()
-                SCEN_EDIT.commandManager:execute(cmd)
-            end
-        }
-    }
-    local btnStop = Chili.Button:New {
-        caption='',
-        height = B_HEIGHT + 20,
-        width = B_HEIGHT + 20,
-        children = {
+            }
+        )
+    else
+        self.btnStartStop:AddChild(
             Chili.Image:New {
                 tooltip = "Stop mission",
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
                 height = B_HEIGHT - 2,
                 width = B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
-            },
-        },
+            }
+        )
+    end
+end
+
+function RuntimeView:GameStarted()
+    self.started = true
+    self:UpdateStartStopButton()
+end
+
+function RuntimeView:GameStopped()
+    self.started = false
+    self:UpdateStartStopButton()
+end
+
+function RuntimeView:init()
+    self.mode = "trigger"
+    self.started = false --check instead of assuming
+    self.btnStartStop = Chili.Button:New {
+        caption='',
+        height = B_HEIGHT + 20,
+        width = B_HEIGHT + 20,
         OnClick = {
             function() 
-                local cmd = StopCommand()
-                SCEN_EDIT.commandManager:execute(cmd)
+                if not self.started then
+                    local cmd = StartCommand()
+                    SCEN_EDIT.commandManager:execute(cmd)
+                    self:GameStarted()
+                else
+                    local cmd = StopCommand()
+                    SCEN_EDIT.commandManager:execute(cmd)
+                    self:GameStopped()
+                end
             end
         }
     }
+    Spring.Echo("created button")
+    self:UpdateStartStopButton()
+    Spring.Echo("updated button")
     self.dvv = Chili.StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -137,8 +154,7 @@ function RuntimeView:init()
                 itemMargin = {0,0,0,0},
                 resizeItems = false,
                 children = {
-                    btnPlay,
-                    btnStop,
+                    self.btnStartStop,
                     self.cbType,
                     btnToggleShowDevelop,
                 },
