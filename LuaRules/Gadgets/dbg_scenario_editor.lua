@@ -178,6 +178,18 @@ function gadget:RecvLuaMsg(msg, playerID)
 	end
 end
 
+local function AddedUnit(unitID, unitDefID, teamID, builderID)
+	SCEN_EDIT.model.unitManager:addUnit(unitID)
+    SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
+    if not SCEN_EDIT.rtModel.hasStarted then
+        Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+    end
+end
+
+local function AddedFeature(featureID, allyTeam)
+	SCEN_EDIT.model.featureManager:addFeature(featureID)
+end
+
 function gadget:Initialize()
     gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
     Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
@@ -233,6 +245,25 @@ function gadget:Initialize()
 
 	rtModel = RuntimeModel()
 	SCEN_EDIT.rtModel = rtModel	
+	
+	
+	local allUnits = Spring.GetAllUnits()
+    for i = 1, #allUnits do
+        local unitId = allUnits[i]
+		local unitDefId = Spring.GetUnitDefID(unitId)
+		local unitTeamId = Spring.GetUnitTeam(unitId)
+        AddedUnit(unitId, unitDefId, unitTeamId)
+    end
+	local allFeatures = Spring.GetAllFeatures()
+	for i = 1, #allFeatures do
+        local feature = {}
+        local featureId = allFeatures[i]
+        local featureDefId = Spring.GetFeatureDefID(featureId)
+        local featureTeamId = Spring.GetFeatureTeam(featureId)
+		AddedFeature(featureId, featureTeamId)
+
+        table.insert(mission.features, feature)
+    end
 end
 
 function gadget:GameFrame(frameNum)
@@ -240,11 +271,7 @@ function gadget:GameFrame(frameNum)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
-	SCEN_EDIT.model.unitManager:addUnit(unitID)
-    SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
-    if not SCEN_EDIT.rtModel.hasStarted then
-        Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
-    end
+	AddedUnit(unitID, unitDefID, teamID, builderID)
 end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
@@ -253,7 +280,7 @@ function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDef
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
-	SCEN_EDIT.model.featureManager:addFeature(featureID)
+	AddedFeature(featureID, allyteam)
 end
 
 function gadget:FeatureDestroyed(featureID, allyTeam)
