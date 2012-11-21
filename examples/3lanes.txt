@@ -28,6 +28,8 @@
 		teamdeathmode=none;
 		deathmode=killall;
 		mo_nowrecks=1;
+
+        scenario_file = games/ToolBox.sdd/examples/3lanes.lua;
 	}
 	NumRestrictions=0;
 	[RESTRICT]

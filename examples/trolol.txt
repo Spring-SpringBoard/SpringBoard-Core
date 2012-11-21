@@ -27,6 +27,8 @@
 		minspeed=0.3;
 		teamdeathmode=none;
 		deathmode=killall;
+
+        scenario_file = games/ToolBox.sdd/examples/trolol.lua;
 	}
 	NumRestrictions=0;
 	[RESTRICT]
