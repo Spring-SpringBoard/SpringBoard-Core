@@ -262,6 +262,14 @@ function gadget:Initialize()
         local featureTeamId = Spring.GetFeatureTeam(featureId)
 		AddedFeature(featureId, featureTeamId)
     end
+
+
+    local modOpts = Spring.GetModOptions()
+    local scenarioFile = modOpts.scenario_file
+    if scenarioFile then
+--        SCEN_EDIT.rtModel:LoadMission(scenarioFile)
+    end
+
 end
 
 function gadget:GameFrame(frameNum)
