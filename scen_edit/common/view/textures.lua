@@ -9,7 +9,7 @@ end
 
 function TextureManager:GetRandomTexture()
     for i, v in pairs(self.textures) do
-        Spring.Echo(i)
+--        Spring.Echo(i)
         if i ~= "grass" then
             return v
         end
@@ -18,13 +18,13 @@ end
 
 function TextureManager:LoadAllTextures()
     local files = VFS.DirList(SCEN_EDIT_TEXTURE_DIR)
-    Spring.Echo(#files)
+--    Spring.Echo(#files)
     for _, file in pairs(files) do
         if file:find(".png") then
             table.insert(self._toLoad, file)
         end
     end
-    Spring.Echo(#self._toLoad)
+--    Spring.Echo(#self._toLoad)
 end
 
 local function drawTextureOnSquare()
@@ -32,13 +32,13 @@ local function drawTextureOnSquare()
 end
 
 function TextureManager:LoadTexture(file)
-    Spring.Echo(file)
+--    Spring.Echo(file)
     if not self.textures[file] then
         local i, j = file:find(".*/")
         textureName = file:sub(j + 1)
         i, j = textureName:find(".png")
         textureName = textureName:sub(1, i - 1)
-        Spring.Echo(textureName)
+--        Spring.Echo(textureName)
 
         local SQUARE_SIZE = 256 --hmm
         local cur = gl.CreateTexture(SQUARE_SIZE, SQUARE_SIZE, {
@@ -48,17 +48,17 @@ function TextureManager:LoadTexture(file)
         })
         local texture = gl.Texture(file, textureName)
         gl.RenderToTexture(cur, drawTextureOnSquare)--, x-sx*SQUARE_SIZE,z-sz*SQUARE_SIZE, BLOCK_SIZE, dx, dz, tex.tile)
-        Spring.Echo(cur)
+--        Spring.Echo(cur)
 
 
-        Spring.Echo(file, texture)
+--        Spring.Echo(file, texture)
         self.textures[textureName] = cur
     end
 end
 
 function TextureManager:DrawWorld()
     if #self._toLoad > 0 then
-    Spring.Echo("to load ", #self._toLoad)
+--    Spring.Echo("to load ", #self._toLoad)
         for _, textureName in pairs(self._toLoad) do
             self:LoadTexture(textureName)
         end

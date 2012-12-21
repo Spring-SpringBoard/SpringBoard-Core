@@ -18,7 +18,7 @@ local inherited = this.inherited
 function TriggersWindow:New(obj)
     local btnAddTrigger = Chili.Button:New {
         caption='Add trigger',
-        width='40%',
+        width=120,
         x = 1,
         bottom = 1,
         height = B_HEIGHT,
@@ -26,8 +26,8 @@ function TriggersWindow:New(obj)
     }
     local btnClose = Chili.Button:New {
         caption='Close',
-        width='40%',
-        x = '50%',
+        width=100,
+        x = 130,
         bottom = 1,
         height = B_HEIGHT,
     }

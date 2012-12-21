@@ -267,7 +267,11 @@ function gadget:Initialize()
     local modOpts = Spring.GetModOptions()
     local scenarioFile = modOpts.scenario_file
     if scenarioFile then
---        SCEN_EDIT.rtModel:LoadMission(scenarioFile)
+        Spring.Echo("Loading mission...")
+
+	--    local data = VFS.LoadFile(scenarioFile, "r")
+    --    SCEN_EDIT.model:Load(data)
+--        SCEN_EDIT.rtModel:LoadMission(data)
     end
 
 end

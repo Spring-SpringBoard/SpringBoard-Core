@@ -7,7 +7,7 @@ TriggerWindow = Chili.Window:Inherit {
     classname = "window",
     clientWidth = 600,
     clientHeight = 250,
-    minimumSize = {300,200},
+    minimumSize = {500,200},
     x = 500,
     y = 300,
     trigger = nil, --required
@@ -44,29 +44,29 @@ function TriggerWindow:New(obj)
     }
     local btnAddEvent = Chili.Button:New {
         caption='Add event',
-        width='20%',
+        width=110,
         x = 1,
         bottom = 1,
         height = B_HEIGHT,
     }
     local btnAddCondition = Chili.Button:New {
         caption='Add condition',
-        width='20%',
-        x = '25%',
+        width=120,
+        x = 120,
         bottom = 1,
         height = B_HEIGHT,
     }
     local btnAddAction = Chili.Button:New {
         caption='Add action',
-        width='20%',
-        x = '50%',
+        width=110,
+        x = 250,
         bottom = 1,
         height = B_HEIGHT,
     }
     local btnClose = Chili.Button:New {
         caption='Close',
-        width='20%',
-        x = '80%',
+        width=100,
+        x = 370,
         bottom = 1,
         height = B_HEIGHT,
     }
