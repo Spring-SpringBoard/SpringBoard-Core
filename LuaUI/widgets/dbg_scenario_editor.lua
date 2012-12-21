@@ -8,7 +8,7 @@ function widget:GetInfo()
     date      = "in the future",
     license   = "GPL-v2",
     layer     = 1001,
-    enabled   = false,
+    enabled   = true,
   }
 end
 
@@ -882,11 +882,11 @@ function widget:Initialize()
 						tooltip = "Terrain toolbox",
 						OnClick = {
 							function()
-                                local success, msg = pcall(OpenFileDialog)
+                                --local success, msg = pcall(OpenFileDialog)
                                 if not success then
                                     Spring.Echo(msg)
                                 end
-								--CreateTerrainEditor()
+								CreateTerrainEditor()
 							end
 						}
 					},

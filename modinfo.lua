@@ -13,15 +13,14 @@ local modinfo = {
 	modtype			= 1,
 	depend = {
 		"Spring Cursors",
+        "Spring Features 1.0",
 		-- enter your mod here!
-        -- "Zero-K v0.9.8.12",
-        --"Zero-K v0.9.9.2",
 --        "XTA 9.715 beta",
         --"xta:latest",
         --"s44v153_marketgarden.sdz"
-        "Spring Features 1.0",
-        "BAR.sdd",
- --       "BAR-svn.sdd",
+--        "Balanced Annihilation V7.72",
+--        "BAR.sdd",
+        "BAR-svn.sdd",
   --     "ba763.sdd",
 --        "es0.536.sdz",
         --"Evolution RTS - test-209"
