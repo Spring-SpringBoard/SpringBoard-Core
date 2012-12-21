@@ -584,7 +584,6 @@ function widget:Initialize()
     end
 	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
 	reloadGadgets() --uncomment for development	
-	VFS.Include(SCEN_EDIT_COMMON_DIR .. "class.lua")
     LCS = loadstring(VFS.LoadFile(SCEN_EDIT_COMMON_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
     VFS.Include(SCEN_EDIT_COMMON_DIR .. "observable.lua")

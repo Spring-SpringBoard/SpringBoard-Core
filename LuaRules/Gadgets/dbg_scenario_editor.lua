@@ -195,7 +195,6 @@ function gadget:Initialize()
     Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
 	
-	VFS.Include(SCEN_EDIT_COMMON_DIR .. "class.lua")
     LCS = loadstring(VFS.LoadFile(SCEN_EDIT_COMMON_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
     VFS.Include(SCEN_EDIT_COMMON_DIR .. "observable.lua")

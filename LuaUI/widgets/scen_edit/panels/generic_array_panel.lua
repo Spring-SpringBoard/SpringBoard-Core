@@ -3,9 +3,9 @@ Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 
-GenericArrayPanel = class()
+GenericArrayPanel = LCS.class{}
 
-function GenericArrayPanel:__init(parent, type)
+function GenericArrayPanel:init(parent, type)
 	self.parent = parent
 	self.type = type
     self.atomicType = type:gsub("_array", "")
