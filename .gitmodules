@@ -1,6 +1,3 @@
-[submodule "scen_edit/common/lcs"]
-	path = scen_edit/common/lcs
-	url = https://github.com/Yonaba/Lua-Class-System.git
 [submodule "libs/chiliui"]
 	path = libs/chiliui
 	url = git@github.com:gajop/chiliui.git
