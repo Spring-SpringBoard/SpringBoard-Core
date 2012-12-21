@@ -1,0 +1,11 @@
+Toolbox
+=======
+
+UNOFFICIAL Toolbox source
+Spring engine based in-game tools useful to developers
+
+Installing:
+git clone --recursive https://github.com/gajop/Toolbox.git 
+(--recursive call will pick up submodules)
+
+Editing modinfo.lua is necessary to run a concrete mod
