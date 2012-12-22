@@ -246,21 +246,26 @@ function gadget:Initialize()
 		AddedFeature(featureId, featureTeamId)
     end
 
-
-    local modOpts = Spring.GetModOptions()
-    local scenarioFile = modOpts.scenario_file
-    if scenarioFile then
-        Spring.Echo("Loading mission...")
-
-	--    local data = VFS.LoadFile(scenarioFile, "r")
-    --    SCEN_EDIT.model:Load(data)
---        SCEN_EDIT.rtModel:LoadMission(data)
-    end
-
+    SCEN_EDIT.loadFrame = Spring.GetGameFrame() + 1
 end
 
 function gadget:GameFrame(frameNum)
 	SCEN_EDIT.rtModel:GameFrame(frameNum)
+    if SCEN_EDIT.loadFrame == frameNum then
+        local modOpts = Spring.GetModOptions()
+        local scenarioFile = modOpts.scenario_file
+        if scenarioFile then
+            local data = VFS.LoadFile(scenarioFile)
+            local mission = loadstring(data)()
+            SCEN_EDIT.model:Load(mission)
+            SCEN_EDIT.rtModel:LoadMission(mission)
+
+            if not modOpts.dev_mode then
+                SCEN_EDIT.rtModel:GameStart()
+            end
+        end
+    end
+
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)

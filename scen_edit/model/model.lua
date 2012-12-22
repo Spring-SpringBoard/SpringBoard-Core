@@ -216,7 +216,6 @@ end
 function Model:Load(mission)
     self:Clear()
 	
-    Spring.Echo(mission)
 	--load units
     local units = mission.units
 	self._unitIdCounter = 0

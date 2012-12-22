@@ -554,6 +554,7 @@ function RecieveGadgetMessage(msg)
 end
 
 function widget:Initialize()
+	reloadGadgets() --uncomment for development	
     local devMode = Spring.GetGameRulesParam('devmode') == 1
     if not WG.Chili or not devMode then
         widgetHandler:RemoveWidget(widget)
@@ -561,7 +562,6 @@ function widget:Initialize()
     end
     VFS.Include("scen_edit/exports.lua")
 	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
-	reloadGadgets() --uncomment for development	
     LCS = loadstring(VFS.LoadFile(SCEN_EDIT_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
 	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
@@ -896,6 +896,23 @@ function widget:Initialize()
     end
     local cmd = CompoundCommand(commands)
     SCEN_EDIT.commandManager:execute(cmd)
+
+
+    local modOpts = Spring.GetModOptions()
+    local scenarioFile = modOpts.scenario_file
+    if scenarioFile then
+        Spring.Echo("Loading mission... " .. scenarioFile)
+
+        local files = VFS.DirList("games")
+        for i = 1, #files do
+            local file = files[i]
+            Spring.Echo(file)
+        end
+--	    local data = VFS.LoadFile(scenarioFile)
+  --      Spring.Echo(data)
+    --    SCEN_EDIT.model:Load(data)
+--        SCEN_EDIT.rtModel:LoadMission(data)
+    end
 end
 
 function reloadGadgets()
