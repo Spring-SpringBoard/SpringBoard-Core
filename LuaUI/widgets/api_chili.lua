@@ -1,1 +1,1 @@
-../../../chiliui/api_chili.lua
+../../libs/chiliui/api_chili.lua
