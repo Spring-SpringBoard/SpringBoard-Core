@@ -9,3 +9,15 @@ git clone --recursive https://github.com/gajop/Toolbox.git
 (--recursive call will pick up submodules)
 
 Editing modinfo.lua is necessary to run a concrete mod
+
+Example files can be found in the examples/ dir
+
+Running examples (Linux):
+#cd into Toolbox.sdd dir
+spring $PWD/examples/$example_name.txt
+
+#Running a game
+spring $PWD/examples/trolol.txt
+
+#Running a game in dev mode:
+spring $PWD/examples/trolol-dev.txt

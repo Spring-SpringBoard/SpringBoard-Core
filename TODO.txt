@@ -1,0 +1,7 @@
+Add lasso select for features.
+    - allow same-time selection of features and units?
+Merge multiple heightmap commands (during single click) into single command for better undo/redo.
+    - gadget <-> widget 'command' state per player?
+Add texture map
+Add map saving/loading (all)
+Fix file save/load dialogs (needs default file images & proper list dir function)
