@@ -58,14 +58,16 @@ function SelectionManager:GameFrame(frameNum)
     local unitIds = Spring.GetSelectedUnits()
     if #unitIds > 0 then
         self:SelectUnits(unitIds)
-    end
-    local newSelectedFeatures = {}
-    for _, featureId in pairs(self.selectedFeatures) do
-        if Spring.ValidFeatureID(featureId) then
-            table.insert(newSelectedFeatures, featureId)
+    else
+        self.selectedUnits = {}
+        local newSelectedFeatures = {}
+        for _, featureId in pairs(self.selectedFeatures) do
+            if Spring.ValidFeatureID(featureId) then
+                table.insert(newSelectedFeatures, featureId)
+            end
         end
+        self.selectedFeatures = newSelectedFeatures
     end
-    self.selectedFeatures = newSelectedFeatures
     --[[
     if #unitIds ~= #self.selectedUnits then
         self:ClearSelection()

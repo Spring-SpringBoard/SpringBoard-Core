@@ -319,13 +319,13 @@ local function CreateUnitDefsView()
             Label:New {
                 x = 1,
                 width = 50,
-                bottom = 8 + C_HEIGHT * 2,
+                bottom = 8 + model.C_HEIGHT * 2,
                 caption = "Type:",
             },
             ComboBox:New {
                 height = model.B_HEIGHT,
                 x = 50,
-                bottom = 1 + C_HEIGHT * 2,
+                bottom = 1 + model.C_HEIGHT * 2,
                 items = {
                     "Units", "Buildings", "All",
                 },
@@ -341,11 +341,11 @@ local function CreateUnitDefsView()
             Label:New {
                 caption = "Terrain:",
                 x = 140,
-                bottom = 8 + C_HEIGHT * 2,
+                bottom = 8 + model.C_HEIGHT * 2,
                 width = 50,
             },
             ComboBox:New {
-                bottom = 1 + C_HEIGHT * 2,
+                bottom = 1 + model.C_HEIGHT * 2,
                 height = model.B_HEIGHT,
                 items = {
                     "Ground", "Air", "Water", "All",
@@ -440,13 +440,13 @@ local function CreateFeatureDefsView()
             Label:New {
                 x = 1,
                 width = 50,
-                bottom = 8 + C_HEIGHT * 2,
+                bottom = 8 + model.C_HEIGHT * 2,
                 caption = "Type:",
             },
             ComboBox:New {
                 height = model.B_HEIGHT,
                 x = 50,
-                bottom = 1 + C_HEIGHT * 2,
+                bottom = 1 + model.C_HEIGHT * 2,
                 items = {
                     "Wreckage", "Other", "All",
                 },
@@ -462,13 +462,13 @@ local function CreateFeatureDefsView()
             Label:New {
                 x = 140,
                 width = 50,
-                bottom = 8 + C_HEIGHT * 2,
+                bottom = 8 + model.C_HEIGHT * 2,
                 caption = "Wreck:",
             },
             ComboBox:New {
                 height = model.B_HEIGHT,
                 x = 190,
-                bottom = 1 + C_HEIGHT * 2,
+                bottom = 1 + model.C_HEIGHT * 2,
                 items = {
                     "Units", "Buildings", "All",
                 },
@@ -484,11 +484,11 @@ local function CreateFeatureDefsView()
             Label:New {
                 caption = "Terrain:",
                 x = 270,
-                bottom = 8 + C_HEIGHT * 2,
+                bottom = 8 + model.C_HEIGHT * 2,
                 width = 50,
             },
             ComboBox:New {
-                bottom = 1 + C_HEIGHT * 2,
+                bottom = 1 + model.C_HEIGHT * 2,
                 height = model.B_HEIGHT,
                 items = {
                     "Ground", "Air", "Water", "All",
