@@ -8,7 +8,6 @@ end
 
 function TerrainIncreaseState:AlterTerrain(x, z, amount)
     local currentFrame = Spring.GetGameFrame()
-    Spring.Echo(amount)
     if not self.lastChangeFrame or currentFrame - self.lastChangeFrame >= 0 then
         self.lastChangeFrame = currentFrame
         local cmd = TerrainIncreaseCommand(x - self.size, z - self.size, x + self.size, z + self.size, amount)
