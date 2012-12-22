@@ -36,6 +36,7 @@ end
 function View:drawRects()
     gl.PushMatrix()
 --    x, y = gl.GetViewSizes()
+--    Spring.Echo(#self.areaViews)
     for _, areaView in pairs(self.areaViews) do
         areaView:Draw()
     end

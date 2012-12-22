@@ -28,7 +28,7 @@
 		teamdeathmode=none;
 		deathmode=killall;
 
-        scenario_file = games/ToolBox.sdd/examples/trolol.lua;
+        scenario_file = examples/trolol.lua;
 	}
 	NumRestrictions=0;
 	[RESTRICT]

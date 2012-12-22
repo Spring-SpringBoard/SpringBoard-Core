@@ -6,8 +6,8 @@
 	MyPlayerName=Player;
 
 	ModHash=2797885632;
-	MapHash=3014077611;
-	Mapname=pemsterland_2v2v2v2;
+	MapHash=723340648;
+	Mapname=Greener_Fields;
 	GameType=ToolBox v0.1;
     GameStartDelay=0;
 
@@ -27,9 +27,9 @@
 		minspeed=0.3;
 		teamdeathmode=none;
 		deathmode=killall;
-		mo_nowrecks=1;
 
-        scenario_file = examples/3lanes.lua;
+        scenario_file = examples/trolol.lua;
+        dev_mode = true;
 	}
 	NumRestrictions=0;
 	[RESTRICT]
