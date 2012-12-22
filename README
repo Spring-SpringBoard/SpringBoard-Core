@@ -16,8 +16,8 @@ Running examples (Linux):
 #cd into Toolbox.sdd dir
 spring $PWD/examples/$example_name.txt
 
-#Running a game
+#Running a game (needs BAR in modinfo.lua):
 spring $PWD/examples/trolol.txt
 
-#Running a game in dev mode:
+#Running a game in dev mode (needs BAR in modinfo.lua):
 spring $PWD/examples/trolol-dev.txt
