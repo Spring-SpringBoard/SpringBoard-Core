@@ -1,6 +1,28 @@
-local Chili = nil
-if WG ~= nil then
-	Chili= WG.Chili
+SCEN_EDIT.classes = {}
+-- include this dir
+SCEN_EDIT.classes[SCEN_EDIT_DIR .. "util.lua"] = true
+
+--non recursive file include
+function SCEN_EDIT.IncludeDir(dirPath)
+    local files = VFS.DirList(dirPath)
+    local context = Script.GetName()
+    for i = 1, #files do
+        local file = files[i]
+        -- don't load files ending in _gadget.lua in LuaUI nor _widget.lua in LuaRules
+        if file:sub(-string.len(".lua")) == ".lua" and 
+            (context ~= "LuaRules" or file:sub(-string.len("_widget.lua")) ~= "_widget.lua") and
+            (context ~= "LuaUI" or file:sub(-string.len("_gadget.lua")) ~= "_gadget.lua") then
+
+            SCEN_EDIT.Include(file)
+        end
+    end
+end
+
+function SCEN_EDIT.Include(path)
+    if not SCEN_EDIT.classes[path] then
+        VFS.Include(path)
+        SCEN_EDIT.classes[path] = true
+    end
 end
 
 function CallListeners(listeners, ...)

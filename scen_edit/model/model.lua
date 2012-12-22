@@ -1,7 +1,5 @@
 Model = LCS.class{}
-local SCEN_EDIT_DIR = "LuaRules/gadgets/scen_edit/"
-local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
-local SCEN_EDIT_LUAUI_DIR = "LuaUI/widgets/scen_edit/"
+SCEN_EDIT_MODEL_DIR = SCEN_EDIT_DIR .. "model/"
 
 function Model:init()
 	self.teams = {}    
@@ -48,6 +46,7 @@ function Model:init()
 			name = "UNIT_LEAVE_AREA",
 		},
 	}
+    SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_DIR)
 	
 	self.eventTypes = CreateNameMapping(self.eventTypes)
 	local actionTypes = SCEN_EDIT.coreActions()
@@ -102,19 +101,10 @@ function Model:init()
 		table.insert(self.variableTypes, arrayType)
 	end
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager.lua")
     self.areaManager = AreaManager()
-
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager.lua")
     self.unitManager = UnitManager()
-
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager.lua")
     self.featureManager = FeatureManager()
-
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager.lua")
     self.variableManager = VariableManager()
-
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager.lua")
     self.triggerManager = TriggerManager()
 	self:GenerateTeams()
 end

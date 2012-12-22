@@ -1,6 +1,9 @@
+SCEN_EDIT_MODEL_RUNTIME_DIR = SCEN_EDIT_MODEL_DIR .. "runtime_model/"
+
 RuntimeModel = LCS.class{}
 
 function RuntimeModel:init()
+    SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_RUNTIME_DIR)
 	self.areaModels = {}	
 	self.lastFrameUnitIds = {}
 	self.fieldResolver = FieldResolver()

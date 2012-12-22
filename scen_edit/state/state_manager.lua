@@ -1,15 +1,10 @@
-local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
-local SCEN_EDIT_STATE_DIR = SCEN_EDIT_COMMON_DIR .. "state/"
+SCEN_EDIT_STATE_DIR = SCEN_EDIT_DIR .. "state/"
 
 StateManager = LCS.class{}
 
 function StateManager:init()
-    VFS.Include(SCEN_EDIT_STATE_DIR .. 'abstract_state.lua')
-    local files = VFS.DirList(SCEN_EDIT_STATE_DIR)
-    for i = 1, #files do
-        local file = files[i]
-        VFS.Include(file)
-    end
+    SCEN_EDIT.Include(SCEN_EDIT_STATE_DIR .. 'abstract_state.lua')
+    SCEN_EDIT.IncludeDir(SCEN_EDIT_STATE_DIR)
     self:SetState(DefaultState())
 end
 
