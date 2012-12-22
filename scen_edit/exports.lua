@@ -2,6 +2,9 @@ SCEN_EDIT_DIR = "scen_edit/"
 SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 LUAUI_DIR = "LuaUI/"
 SCEN_EDIT_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
+local modOpts = Spring.GetModOptions()
+scenarioFile = modOpts.scenario_file
+devMode = modOpts.dev_mode
 
 if WG and WG.Chili then
     -- setup Chili

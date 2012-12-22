@@ -553,59 +553,7 @@ function RecieveGadgetMessage(msg)
 	end
 end
 
-function widget:Initialize()
-	reloadGadgets() --uncomment for development	
-    local devMode = Spring.GetGameRulesParam('devmode') == 1
-    if not WG.Chili or not devMode then
-        widgetHandler:RemoveWidget(widget)
-        return
-    end
-    VFS.Include("scen_edit/exports.lua")
-	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
-    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_DIR .. "lcs/LCS.lua"))
-    LCS = LCS()
-	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
-
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
-	SCEN_EDIT.displayUtil = DisplayUtil(true)
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
-	model = Model()
-	SCEN_EDIT.model = model
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/area_manager.lua")
-    SCEN_EDIT.model.areaManager = AreaManager()
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/unit_manager.lua")
-    SCEN_EDIT.model.unitManager = UnitManager(true)
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/feature_manager.lua")
-    SCEN_EDIT.model.featureManager = FeatureManager(true)
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/variable_manager.lua")
-    SCEN_EDIT.model.variableManager = VariableManager(true)
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/trigger_manager.lua")
-    SCEN_EDIT.model.triggerManager = TriggerManager(true)
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
-    SCEN_EDIT.commandManager = CommandManager()
-    SCEN_EDIT.commandManager.widget = true
-    SCEN_EDIT.commandManager:loadClasses()
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "state/state_manager.lua")
-    SCEN_EDIT.stateManager = StateManager()
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "view/view.lua")
-    SCEN_EDIT.view = View()
-    local viewAreaManagerListener = ViewAreaManagerListener()
-    SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
-    SCEN_EDIT.messageManager = MessageManager()
-    SCEN_EDIT.messageManager.widget = true
-
+function LoadGUI()
     local btnTriggers = Button:New {
         caption = '',
         height = model.B_HEIGHT + 20,
@@ -852,37 +800,53 @@ function widget:Initialize()
 			)
         end
     }
+end
 
-	--[[
-    local testWindow = Window:New {
-        parent = screen0,
-        caption = "Test",
-        width = 325,
-        height = 100,
-        resizable = false,
-        x = 800,
-        y = 500,
-        children = {
-            EditBox:New {
-                text = "text",
-                width = 100,
-                x = 0,
-                y = 30,
-                height = model.B_HEIGHT,
-                OnMouseDown = { function() echo("clicked") end },
-            },
-            EditBox:New {
-                text = "text",
-                width = 100,
-                x = 150,
-                y = 30,
-                height = model.B_HEIGHT,
-                OnMouseDown = { function() echo("clicked") end },
-            },
-        },
-    }
-    eb = testWindow.children[1]
-    eb.OnClick = { function() echo(eb.x, eb.y, eb.width, eb.height) end }
+function widget:Initialize()
+	reloadGadgets() --uncomment for development	
+    if not WG.Chili then
+        widgetHandler:RemoveWidget(widget)
+        return
+    end
+    VFS.Include("scen_edit/exports.lua")
+	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
+    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_DIR .. "lcs/LCS.lua"))
+    LCS = LCS()
+	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
+
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
+	SCEN_EDIT.displayUtil = DisplayUtil(true)
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
+	model = Model()
+	SCEN_EDIT.model = model
+
+    SCEN_EDIT.model.areaManager = AreaManager()
+    SCEN_EDIT.model.unitManager = UnitManager(true)
+    SCEN_EDIT.model.featureManager = FeatureManager(true)
+    SCEN_EDIT.model.variableManager = VariableManager(true)
+    SCEN_EDIT.model.triggerManager = TriggerManager(true)
+
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
+    SCEN_EDIT.commandManager = CommandManager()
+    SCEN_EDIT.commandManager.widget = true
+
+    if devMode then
+        SCEN_EDIT.Include(SCEN_EDIT_DIR .. "state/state_manager.lua")
+        SCEN_EDIT.stateManager = StateManager()
+
+        SCEN_EDIT.Include(SCEN_EDIT_DIR .. "view/view.lua")
+        SCEN_EDIT.view = View()
+        local viewAreaManagerListener = ViewAreaManagerListener()
+        SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
+    end
+
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
+    SCEN_EDIT.messageManager = MessageManager()
+    SCEN_EDIT.messageManager.widget = true
+
+
     --]]
     --    Spring.AssignMouseCursor('cursor-y', 'cursor-y');
     --    Spring.AssignMouseCursor('cursor-x-y-1', 'cursor-x-y-1');
@@ -898,20 +862,8 @@ function widget:Initialize()
     SCEN_EDIT.commandManager:execute(cmd)
 
 
-    local modOpts = Spring.GetModOptions()
-    local scenarioFile = modOpts.scenario_file
-    if scenarioFile then
-        Spring.Echo("Loading mission... " .. scenarioFile)
-
-        local files = VFS.DirList("games")
-        for i = 1, #files do
-            local file = files[i]
-            Spring.Echo(file)
-        end
---	    local data = VFS.LoadFile(scenarioFile)
-  --      Spring.Echo(data)
-    --    SCEN_EDIT.model:Load(data)
---        SCEN_EDIT.rtModel:LoadMission(data)
+    if devMode then
+        LoadGUI()
     end
 end
 
