@@ -201,7 +201,8 @@ local function Load(path)
     --local f = assert(io.open(path, "r"))	
     --local t = f:read("*all")
     --f:close()
-	local data = VFS.LoadFile(path, "r")
+    Spring.Echo("Loading" .. path .. "...")
+    local data = VFS.LoadFile(path)
     cmd = LoadCommand(data)
     SCEN_EDIT.commandManager:execute(cmd)
 end
@@ -803,7 +804,7 @@ function LoadGUI()
 end
 
 function widget:Initialize()
-	reloadGadgets() --uncomment for development	
+	--reloadGadgets() --uncomment for development	
     if not WG.Chili then
         widgetHandler:RemoveWidget(widget)
         return
@@ -831,15 +832,14 @@ function widget:Initialize()
     SCEN_EDIT.commandManager = CommandManager()
     SCEN_EDIT.commandManager.widget = true
 
-    if devMode then
-        SCEN_EDIT.Include(SCEN_EDIT_DIR .. "state/state_manager.lua")
-        SCEN_EDIT.stateManager = StateManager()
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "state/state_manager.lua")
+    SCEN_EDIT.stateManager = StateManager()
 
-        SCEN_EDIT.Include(SCEN_EDIT_DIR .. "view/view.lua")
-        SCEN_EDIT.view = View()
-        local viewAreaManagerListener = ViewAreaManagerListener()
-        SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
-    end
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "view/view.lua")
+    SCEN_EDIT.view = View()
+    
+    local viewAreaManagerListener = ViewAreaManagerListener()
+    SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")

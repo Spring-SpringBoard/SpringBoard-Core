@@ -74,6 +74,5 @@ function DebugTriggerView:onTriggerRemoved(triggerId)
 end
 
 function DebugTriggerView:onTriggerUpdated(triggerId)
-    Spring.Echo("update")
     self:Populate()
 end

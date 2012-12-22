@@ -9,7 +9,9 @@ function View:init()
     SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_PANELS_DIR)
     SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
-    self.runtimeView = RuntimeView()
+    if devMode then
+        self.runtimeView = RuntimeView()
+    end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
     self.textureManager = TextureManager()

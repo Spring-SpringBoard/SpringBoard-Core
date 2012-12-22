@@ -23,8 +23,10 @@ FilePanel = Chili.LayoutPanel:Inherit{
   items = {},
   extFilters = {},
   currentExtFilter = 0, -- no filter by default
-
+  imageFile = SCEN_EDIT_IMG_DIR .. "file.png",
   dir = '',
+
+  columns = 5,
 }
 
 local this = FilePanel
@@ -102,7 +104,7 @@ end
 
 --//=============================================================================
 
-function FilePanel:_AddFile(name,imagefile)
+function FilePanel:_AddFile(name,imageFile)
   self:AddChild( Chili.LayoutPanel:New{
     width  = self.iconX+10,
     height = self.iconY+20,
@@ -117,7 +119,7 @@ function FilePanel:_AddFile(name,imagefile)
         width  = self.iconX,
         height = self.iconY,
         passive = true,
-        file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imagefile,
+        file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imageFile,
       },
       Chili.Label:New{
         width = self.iconX+10,
