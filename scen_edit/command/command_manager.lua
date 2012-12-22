@@ -1,5 +1,4 @@
-local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
-local SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_COMMON_DIR .. "command/"
+SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 
 CommandManager = LCS.class{maxUndoSize = 1000, maxRedoSize = 1000}
 
@@ -11,15 +10,9 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
 end
 
 function CommandManager:loadClasses()
-    VFS.Include(SCEN_EDIT_COMMAND_DIR .. 'abstract_command.lua')
-    VFS.Include(SCEN_EDIT_COMMAND_DIR .. 'undoable_command.lua')
-    local files = VFS.DirList(SCEN_EDIT_COMMAND_DIR)
-    for i = 1, #files do
-        local file = files[i]
-        if not file:find("abstract_command.lua") and not file:find("undoable_command.lua") then
-            VFS.Include(file)
-        end
-    end
+    SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'abstract_command.lua')
+    SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'undoable_command.lua')
+    SCEN_EDIT.IncludeDir(SCEN_EDIT_COMMAND_DIR)
 end
 
 function CommandManager:execute(cmd, widget)

@@ -15,30 +15,7 @@ end
 include("keysym.h.lua")
 VFS.Include("savetable.lua")
 
-local Chili
-local Checkbox
-local Button
-local Label
-local EditBox
-local Window
-local ScrollPanel
-local StackPanel
-local Grid
-local TextBox
-local Image
-local TreeView
-local Trackbar
-local screen0
-local C_HEIGHT = 16
-local B_HEIGHT = 24
---------------------------
-
-local SCENEDIT_DIR = LUAUI_DIRNAME .. "widgets/scen_edit/"
-local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
-
 local model
-
 local unitImages
 
 local conditionTypes = {"Unit in area", "Unit attribute", "And conditions", "Or conditions", "Not condition", "Trigger enabled"}
@@ -582,103 +559,52 @@ function widget:Initialize()
         widgetHandler:RemoveWidget(widget)
         return
     end
+    VFS.Include("scen_edit/exports.lua")
 	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
 	reloadGadgets() --uncomment for development	
-    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_COMMON_DIR .. "lcs/LCS.lua"))
+    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "observable.lua")
+	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
 
-	VFS.Include(SCEN_EDIT_COMMON_DIR .. "display_util.lua")
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
 	SCEN_EDIT.displayUtil = DisplayUtil(true)
-	VFS.Include(SCENEDIT_DIR .. "combobox.lua")
-	VFS.Include(SCENEDIT_DIR .. "util.lua")
-	VFS.Include(SCENEDIT_DIR .. "core_types.lua")
-	VFS.Include(SCENEDIT_DIR .. "model.lua")
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
 	model = Model()
 	SCEN_EDIT.model = model
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/area_manager.lua")
     SCEN_EDIT.model.areaManager = AreaManager()
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/unit_manager.lua")
     SCEN_EDIT.model.unitManager = UnitManager(true)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/feature_manager.lua")
     SCEN_EDIT.model.featureManager = FeatureManager(true)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/variable_manager.lua")
     SCEN_EDIT.model.variableManager = VariableManager(true)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener_widget.lua")
-
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/trigger_manager.lua")
     SCEN_EDIT.model.triggerManager = TriggerManager(true)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener_widget.lua")
-
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "view/clipboard.lua")
-    SCEN_EDIT.clipboard = Clipboard()
-
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "command/command_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
     SCEN_EDIT.commandManager = CommandManager()
     SCEN_EDIT.commandManager.widget = true
     SCEN_EDIT.commandManager:loadClasses()
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "state/state_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "state/state_manager.lua")
     SCEN_EDIT.stateManager = StateManager()
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "view/view.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "view/view.lua")
     SCEN_EDIT.view = View()
     local viewAreaManagerListener = ViewAreaManagerListener()
     SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
     SCEN_EDIT.messageManager = MessageManager()
     SCEN_EDIT.messageManager.widget = true
-
-    VFS.Include(SCENEDIT_DIR .. "unitdefsview.lua")    
-	VFS.Include(SCENEDIT_DIR .. "feature_defs_view.lua")    
-    VFS.Include(SCENEDIT_DIR .. "triggers_window.lua")
-    VFS.Include(SCENEDIT_DIR .. "trigger_window.lua")
-    VFS.Include(SCENEDIT_DIR .. "variable_settings_window.lua")
-    VFS.Include(SCENEDIT_DIR .. "variable_window.lua")
-	
-    VFS.Include(SCENEDIT_DIR .. "panels/unit_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/area_panel.lua")    
-    VFS.Include(SCENEDIT_DIR .. "panels/trigger_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/team_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/type_panel.lua")
-    VFS.Include(SCENEDIT_DIR .. "panels/number_panel.lua")
-	VFS.Include(SCENEDIT_DIR .. "panels/string_panel.lua")
-	VFS.Include(SCENEDIT_DIR .. "panels/bool_panel.lua")
-	VFS.Include(SCENEDIT_DIR .. "panels/order_panel.lua")
-	VFS.Include(SCENEDIT_DIR .. "panels/numeric_comparison_panel.lua")
-	VFS.Include(SCENEDIT_DIR .. "panels/identity_comparison_panel.lua")
-	VFS.Include(SCENEDIT_DIR .. "panels/generic_array_panel.lua")
-
-	VFS.Include(SCENEDIT_DIR .. "event_window.lua")
-	VFS.Include(SCENEDIT_DIR .. "action_window.lua")
-	VFS.Include(SCENEDIT_DIR .. "condition_window.lua")
-	VFS.Include(SCENEDIT_DIR .. "custom_window.lua")
-	  
-    -- setup Chili
-    Chili = WG.Chili
-    Checkbox = Chili.Checkbox
-    Button = Chili.Button
-    Label = Chili.Label
-    EditBox = Chili.EditBox
-    Window = Chili.Window
-    ScrollPanel = Chili.ScrollPanel
-    StackPanel = Chili.StackPanel
-    Grid = Chili.Grid
-    TextBox = Chili.TextBox
-    Image = Chili.Image
-    TreeView = Chili.TreeView
-    Trackbar = Chili.Trackbar
-    screen0 = Chili.Screen0
 
     local btnTriggers = Button:New {
         caption = '',
@@ -687,7 +613,7 @@ function widget:Initialize()
         children = {
             Image:New { 
                 tooltip = "Trigger settings", 
-                file=SCENEDIT_IMG_DIR .. "applications-system.png", 
+                file=SCEN_EDIT_IMG_DIR .. "applications-system.png", 
                 height = model.B_HEIGHT - 2, 
                 width = model.B_HEIGHT - 2,
             },
@@ -700,7 +626,7 @@ function widget:Initialize()
         children = {
             Image:New { 
                 tooltip = "Variable settings", 
-                file=SCENEDIT_IMG_DIR .. "format-text-bold.png", 
+                file=SCEN_EDIT_IMG_DIR .. "format-text-bold.png", 
                 height = model.B_HEIGHT - 2, 
                 width = model.B_HEIGHT - 2, 
                 margin = {0, 0, 0, 0},
@@ -737,7 +663,7 @@ function widget:Initialize()
                         children = {
                             Image:New { 
                                 tooltip = "Add a rectangle area", 
-                                file=SCENEDIT_IMG_DIR .. "view-fullscreen.png", 
+                                file=SCEN_EDIT_IMG_DIR .. "view-fullscreen.png", 
                                 height = model.B_HEIGHT - 2, 
                                 width = model.B_HEIGHT - 2, 
                                 margin = {0, 0, 0, 0},
@@ -762,7 +688,7 @@ function widget:Initialize()
                         children = {
                             Image:New { 
                                 tooltip = "Save mission", 
-                                file=SCENEDIT_IMG_DIR .. "document-save.png", 
+                                file=SCEN_EDIT_IMG_DIR .. "document-save.png", 
                                 height = model.B_HEIGHT - 2, 
                                 width = model.B_HEIGHT - 2, 
                                 margin = {0, 0, 0, 0},
@@ -787,7 +713,7 @@ function widget:Initialize()
                         children = {
                             Image:New { 
                                 tooltip = "Load mission", 
-                                file = SCENEDIT_IMG_DIR .. "document-open.png", 
+                                file = SCEN_EDIT_IMG_DIR .. "document-open.png", 
                                 height = model.B_HEIGHT - 2, 
                                 width = model.B_HEIGHT - 2, 
                                 margin = {0, 0, 0, 0},
@@ -824,7 +750,7 @@ function widget:Initialize()
 						children = {
 							Image:New {
 								tooltip = "Open unit panel",
-								file = SCENEDIT_IMG_DIR .. "face-monkey.png",
+								file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
 								height = model.B_HEIGHT - 2,
 								width = model.B_HEIGHT - 2,
 								margin = {0, 0, 0, 0},
@@ -843,7 +769,7 @@ function widget:Initialize()
 						children = {
 							Image:New {
 								tooltip = "Open feature panel",
-								file = SCENEDIT_IMG_DIR .. "face-monkey.png",
+								file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
 								height = model.B_HEIGHT - 2,
 								width = model.B_HEIGHT - 2,
 								margin = {0, 0, 0, 0},
@@ -867,7 +793,7 @@ function widget:Initialize()
 						children = {
 							Image:New {
 								tooltip = "Start mission",
-								file = SCENEDIT_IMG_DIR .. "media-playback-start.png",
+								file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
 								height = model.B_HEIGHT - 2,
 								width = model.B_HEIGHT - 2,
 								margin = {0, 0, 0, 0},

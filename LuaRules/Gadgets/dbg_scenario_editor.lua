@@ -13,10 +13,6 @@ end
 
 
 VFS.Include("savetable.lua")
-local SCEN_EDIT_DIR = "LuaRules/gadgets/scen_edit/"
-local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
-local SCEN_EDIT_LUAUI_DIR = "LuaUI/widgets/scen_edit/"
-
 
 local function tobool(val)
   local t = type(val)
@@ -191,54 +187,42 @@ local function AddedFeature(featureID, allyTeam)
 end
 
 function gadget:Initialize()
+    VFS.Include("scen_edit/exports.lua")
     gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
     Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
 	
-    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_COMMON_DIR .. "lcs/LCS.lua"))
+    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "observable.lua")
-	VFS.Include(SCEN_EDIT_COMMON_DIR .. "display_util.lua")
+	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
 	SCEN_EDIT.displayUtil = DisplayUtil(false)
-	VFS.Include(SCEN_EDIT_DIR .. "area_model.lua")
-	VFS.Include(SCEN_EDIT_DIR .. "field_resolver.lua")
-	VFS.Include(SCEN_EDIT_DIR .. "runtime_model.lua")
-	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "util.lua")
-	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "core_types.lua")
 
-	VFS.Include(SCEN_EDIT_LUAUI_DIR .. "model.lua")
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
     SCEN_EDIT.model = Model()
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/runtime_model/runtime_model.lua")
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager_listener.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/area_manager_listener_gadget.lua")
     local areaManagerListener = AreaManagerListenerGadget()
     SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager_listener.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/unit_manager_listener_gadget.lua")
     local unitManagerListener = UnitManagerListenerGadget()
     SCEN_EDIT.model.unitManager:addListener(unitManagerListener)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager_listener.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/feature_manager_listener_gadget.lua")
     local featureManagerListener = FeatureManagerListenerGadget()
     SCEN_EDIT.model.featureManager:addListener(featureManagerListener)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/variable_manager_listener_gadget.lua")
     local variableManagerListener = VariableManagerListenerGadget()
     SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "model/trigger_manager_listener_gadget.lua")
     local triggerManagerListener = TriggerManagerListenerGadget()
     SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message.lua")
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "message/message_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
     SCEN_EDIT.messageManager = MessageManager()
 
-    VFS.Include(SCEN_EDIT_COMMON_DIR .. "command/command_manager.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
     SCEN_EDIT.commandManager = CommandManager()
     SCEN_EDIT.commandManager:loadClasses()
 

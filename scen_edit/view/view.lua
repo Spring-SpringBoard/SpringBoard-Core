@@ -1,17 +1,13 @@
-local SCEN_EDIT_COMMON_DIR = "scen_edit/common/"
-local SCEN_EDIT_VIEW_DIR = SCEN_EDIT_COMMON_DIR .. "view/"
+SCEN_EDIT_VIEW_DIR = SCEN_EDIT_DIR .. "view/"
+SCEN_EDIT_VIEW_PANELS_DIR = SCEN_EDIT_VIEW_DIR .. "panels/"
 
 View = LCS.class{}
 
 function View:init()
-    VFS.Include(SCEN_EDIT_VIEW_DIR .. "view_area_manager_listener.lua")
-    local files = VFS.DirList(SCEN_EDIT_VIEW_DIR)
-    for i = 1, #files do
-        local file = files[i]
-        if not file:find("view_area_manager_listener.lua") then
-            VFS.Include(file)
-        end
-    end
+    SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "view_area_manager_listener.lua")
+    SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_DIR)
+    SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_PANELS_DIR)
+    SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
     self.runtimeView = RuntimeView()
     self.selectionManager = SelectionManager()
