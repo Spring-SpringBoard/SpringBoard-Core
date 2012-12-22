@@ -7,9 +7,6 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.maxRedoSize = maxRedoSize
     self.undoList = {}
     self.redoList = {}
-end
-
-function CommandManager:loadClasses()
     SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'abstract_command.lua')
     SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'undoable_command.lua')
     SCEN_EDIT.IncludeDir(SCEN_EDIT_COMMAND_DIR)

@@ -30,8 +30,6 @@ end
 
 --include('LuaRules/Gadgets/api_delay.lua')
 
-local devMode = tobool(Spring.GetModOptions().devmode)
-
 local echo = Spring.Echo
 
 if (gadgetHandler:IsSyncedCode()) then
@@ -47,8 +45,6 @@ local myCustomDesc = {
     tooltip = "resizes x",
     cursor  = "resize-x",
 }
-
-Spring.SetGameRulesParam('devmode', 1)
 
 local function explode(div,str)
   if (div=='') then return false end
@@ -91,87 +87,45 @@ function gadget:RecvLuaMsg(msg, playerID)
 	local par6 = data[8]
 	local par7 = data[8]
     
-    if op == 'sync' then
---        Spring.Echo("Synced message!")
-        local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
-        compress = false
-        if compress then
-            msgParsed = VFS.ZlibDecompress(msgParsed)
-        end
-        local msgTable = loadstring(msgParsed)()
-        local msg = Message(msgTable.tag, msgTable.data)
---        table.echo(msg)
-        if msg.tag == 'command' then
-            local cmd = SCEN_EDIT.resolveCommand(msg.data)
-            GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
-        end
-    elseif op == 'startMsgPart' then
-        Spring.Echo("Start receiving multi part msg")
-        msgPartsSize = tonumber(par1)
-    elseif op == "msgPart" then
-        local index = tonumber(par1)
-        local value = string.sub(msg, #(pre .. "|msgPart|" .. par1 .. "|") + 1)
-        msgParts[index] = value
-        Spring.Echo("Recieved part: " .. tostring(index) .. "/" .. tostring(msgPartsSize))
-        if #msgParts == msgPartsSize then
-            Spring.Echo("Recieved all parts")
-            local fullMessage = ""
-            for _, part in pairs(msgParts) do
-                fullMessage = fullMessage .. part
-            end
-            msgPartsSize = 0
-            msgParts = {}
+    --TODO: figure proper msg name :)
+    if op == 'game' then
 
-            self:RecvLuaMsg(fullMessage, playerID)
+    elseif devMode then
+        if op == 'sync' then
+            --        Spring.Echo("Synced message!")
+            local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
+            compress = false
+            if compress then
+                msgParsed = VFS.ZlibDecompress(msgParsed)
+            end
+            local msgTable = loadstring(msgParsed)()
+            local msg = Message(msgTable.tag, msgTable.data)
+            --        table.echo(msg)
+            if msg.tag == 'command' then
+                local cmd = SCEN_EDIT.resolveCommand(msg.data)
+                GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
+            end
+        elseif op == 'startMsgPart' then
+            Spring.Echo("Start receiving multi part msg")
+            msgPartsSize = tonumber(par1)
+        elseif op == "msgPart" then
+            local index = tonumber(par1)
+            local value = string.sub(msg, #(pre .. "|msgPart|" .. par1 .. "|") + 1)
+            msgParts[index] = value
+            Spring.Echo("Recieved part: " .. tostring(index) .. "/" .. tostring(msgPartsSize))
+            if #msgParts == msgPartsSize then
+                Spring.Echo("Recieved all parts")
+                local fullMessage = ""
+                for _, part in pairs(msgParts) do
+                    fullMessage = fullMessage .. part
+                end
+                msgPartsSize = 0
+                msgParts = {}
+
+                self:RecvLuaMsg(fullMessage, playerID)
+            end
         end
-    elseif op == 'addUnit' then
-        if tonumber(par1) ~= nil then
-            par1 = tonumber(par1)
-        end
-		if data[#data - 1] == "callback" then
-			GG.Delay.DelayCall(WidgetCallback, {Spring.CreateUnit, {par1, par2, par3, par4, 0, tonumber(par5)}, tonumber(data[#data])})
-		else
-			GG.Delay.DelayCall(Spring.CreateUnit, {par1, par2, par3, par4, 0, tonumber(par5)})
-		end
-	elseif op == 'addFeature' then
-        if tonumber(par1) ~= nil then
-            par1 = tonumber(par1)
-        end
-		if data[#data - 1] == "callback" then
-			GG.Delay.DelayCall(WidgetCallback, {Spring.CreateFeature, {par1, par2, par3, par4, 0, tonumber(par5)}, tonumber(data[#data])})
-		else
-			GG.Delay.DelayCall(Spring.CreateFeature, {par1, par2, par3, par4, 0, tonumber(par5)})
-		end
-    elseif op == "removeUnit" then -- remove a unit (no death animation)
-        GG.Delay.DelayCall(Spring.DestroyUnit, {par1, false, true})
-	elseif op == "removeFeature" then
-		GG.Delay.DelayCall(Spring.DestroyFeature, {tonumber(par1)})
-    elseif op == "moveUnit" then
-        GG.Delay.DelayCall(Spring.SetUnitPosition, {tonumber(par1), par2, par3, par4})
-        -- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
-        GG.Delay.DelayCall(Spring.GiveOrderToUnit, {tonumber(par1), CMD.STOP, {}, {}})
-    elseif op == "terr_inc" then
-		GG.Delay.DelayCall(Spring.AdjustHeightMap, {par1, par2, par3, par4, tonumber(par5)})
-	elseif op == "terr_rev" then
-		GG.Delay.DelayCall(Spring.RevertHeightMap, {par1, par2, par3, par4, 1})
-	else
-		if #op >= #"table" and op:sub(1, #"table") == "table" then
-			local tbl = loadstring(op:sub(#"table" + 1))()
-			local data = loadstring(tbl.data)()
-			local tag = tbl.tag
-			
-			if tag == "start" then	
-				table.echo(data)
-				SCEN_EDIT.rtModel:LoadMission(data)
-				
-				SendToUnsynced("toWidget", table.show{
-					tag = "initialized",
-					data = "OK",
-				})
-				SCEN_EDIT.rtModel:GameStart()
-			end
-		end
-	end
+    end
 end
 
 local function AddedUnit(unitID, unitDefID, teamID, builderID)
@@ -203,20 +157,22 @@ function gadget:Initialize()
     SCEN_EDIT.model = Model()
 	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/runtime_model/runtime_model.lua")
 
-    local areaManagerListener = AreaManagerListenerGadget()
-    SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
+    if devMode then
+        local areaManagerListener = AreaManagerListenerGadget()
+        SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
 
-    local unitManagerListener = UnitManagerListenerGadget()
-    SCEN_EDIT.model.unitManager:addListener(unitManagerListener)
+        local unitManagerListener = UnitManagerListenerGadget()
+        SCEN_EDIT.model.unitManager:addListener(unitManagerListener)
 
-    local featureManagerListener = FeatureManagerListenerGadget()
-    SCEN_EDIT.model.featureManager:addListener(featureManagerListener)
+        local featureManagerListener = FeatureManagerListenerGadget()
+        SCEN_EDIT.model.featureManager:addListener(featureManagerListener)
 
-    local variableManagerListener = VariableManagerListenerGadget()
-    SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
+        local variableManagerListener = VariableManagerListenerGadget()
+        SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
 
-    local triggerManagerListener = TriggerManagerListenerGadget()
-    SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
+        local triggerManagerListener = TriggerManagerListenerGadget()
+        SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
+    end
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
@@ -224,7 +180,6 @@ function gadget:Initialize()
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
     SCEN_EDIT.commandManager = CommandManager()
-    SCEN_EDIT.commandManager:loadClasses()
 
 	rtModel = RuntimeModel()
 	SCEN_EDIT.rtModel = rtModel	
@@ -252,15 +207,13 @@ end
 function gadget:GameFrame(frameNum)
 	SCEN_EDIT.rtModel:GameFrame(frameNum)
     if SCEN_EDIT.loadFrame == frameNum then
-        local modOpts = Spring.GetModOptions()
-        local scenarioFile = modOpts.scenario_file
         if scenarioFile then
             local data = VFS.LoadFile(scenarioFile)
             local mission = loadstring(data)()
             SCEN_EDIT.model:Load(mission)
             SCEN_EDIT.rtModel:LoadMission(mission)
 
-            if not modOpts.dev_mode then
+            if not devMode then
                 SCEN_EDIT.rtModel:GameStart()
             end
         end
