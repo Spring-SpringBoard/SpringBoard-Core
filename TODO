@@ -2,11 +2,11 @@ Alpha milestone(release for content developers): high priority goals
 Beta milestone(release for the public): medium priority goals
 
 High priority:
-    1. Add map saving/loading:
+    1. Map saving/loading:
         -height map
         -texture map
         -??
-    2. Add texture map manipulation
+    2. Texture map manipulation
     3. Cleanup core_types.lua:
         - seperate loading mechanism from metadata
         - Provide a way to load user metadata
@@ -15,20 +15,26 @@ High priority:
     5. Pack entire mission into a single .sdz
 
 Medium priority:
-    1. Display a list of executed commands (and the person who executed them) for better cooperative work
-    2. Add tool for adding multiple features at the same time
-        - allow adding of features of the same featuredef
-        - allow adding of features of the same 'style' (f.e mountain/plain fauna)
-    3. Allow widget/gadget blacklisting
+    1. Optimize unitdef/featuredef views:
+        - update scrollpanel to not load images not currently displayed
+    2. Display a list of executed commands (and the person who executed them) for better cooperative work
+    3. Adding multiple features at the same time
+        - adding features of the same featuredef
+        - adding features of a similar 'style' (f.e mountain or plain fauna)
+    4. Widget/gadget blacklisting
+    5. More/better heightmap editing tools
+        - add terrain in blocks
+        - smooth terrain
 
 Low priority:
-    1. Add lasso select for features.
+    1. Scenario editor widget enable/disable (need to query the gadget for data)
+    2. Lasso select for features.
         - allow same-time selection of features and units?
-    2. Create mission input-output variables (used for campaigns f.e)
-    3. Allow custom variable types
-    4. Allow custom GUI integrated into scenario editor
-    5. Allow map resizing
-    6. Add a zero-k mission editor format import tool
-    7. Allow saving of only map data (no scenario/trigger data)
-    8. UnitDef/FeatureDef editor
-    9. UunitDef/FeatureDef importer
+    3. Mission input-output variables (used for campaigns f.e)
+    4. Custom variable types
+    5. Custom GUI integrated into scenario editor
+    6. Map resizing
+    7. Zero-k mission editor format import tool
+    8. Saving of only map data (no scenario/trigger data)
+    9. UnitDef/FeatureDef editor
+    10. UnitDef/FeatureDef file importer
