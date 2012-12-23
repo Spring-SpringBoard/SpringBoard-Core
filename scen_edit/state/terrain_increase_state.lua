@@ -17,16 +17,20 @@ function TerrainIncreaseState:AlterTerrain(x, z, amount)
 end
 
 function TerrainIncreaseState:MousePress(x, y, button)
-    if button == 1 or button == 3 then
+    local _, _, _, shift = Spring.GetModKeyState()
+    if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
             local amount = self.strength
-            if button == 3 then
-                amount = -amount
+            if shift then
+                amount = -amount                
             end
             self:AlterTerrain(coords[1], coords[3], amount)
         end
         return true
+    end
+    if button == 3 then
+        SCEN_EDIT.stateManager:SetState(DefaultState())
     end
 end
 
@@ -51,11 +55,12 @@ end
 
 function TerrainIncreaseState:GameFrame(frameNum)
 	local x, y, button1, _, button3 = Spring.GetMouseState()
-    if button1 or button3 then
+    local _, _, _, shift = Spring.GetModKeyState()
+    if button1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
             local amount = self.strength
-            if button3 then
+            if shift then
                 amount = -amount
             end
             self:AlterTerrain(coords[1], coords[3], amount)
