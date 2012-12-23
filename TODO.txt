@@ -1,14 +1,34 @@
+Alpha milestone: Current high and medium priority goals
+
 High priority:
-    1. Add texture map
-    2. Add map saving/loading (all)
+    1. Add texture map manipulation
+    2. Add map saving/loading:
+        -height map
+        -texture map
+        -??
 
 Medium priority:
     1. Merge multiple heightmap commands (during single click) into single command for better undo/redo.
         - gadget <-> widget 'command' state per player?
+    2. Cleanup core_types.lua:
+        - seperate loading mechanism from metadata
+        - Provide a way to load user metadata
+    3. Pack entire mission into a single .sdz
 
 Low priority:
     1. Add lasso select for features.
         - allow same-time selection of features and units?
-    2. Add multiple features at the same time
-        - add features of the same featuredef
-        - add features of the same 'style' (mountain/plain fauna)
+    2. Add tool for adding multiple features at the same time
+        - allow adding of features of the same featuredef
+        - allow adding of features of the same 'style' (f.e mountain/plain fauna)
+    3. Display a list of executed commands (and the person who executed them) for better cooperative work
+    4. Allow widget/gadget blacklisting
+    5. Allow map resizing
+    6. Add a zero-k mission editor format import tool
+    7. Create mission input-output variables (used for campaigns f.e)
+    8. Allow custom variable types
+    9. Allow custom GUI integrated into scenario editor
+    10. Partial map saving
+    11. Edit unit data
+    12. Create new units/features
+    13. Import units/features into mod from files
