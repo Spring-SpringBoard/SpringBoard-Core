@@ -39,6 +39,9 @@ local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.ico','.gif','.psd','.ti
 --//=============================================================================
 
 function FilePanel:New(obj)
+  if not obj.dir then
+      obj.dir = FilePanel.lastDir
+  end
   obj = inherited.New(self,obj)
   obj:SetDir(obj.dir)
   return obj
@@ -134,8 +137,8 @@ end
 
 
 function FilePanel:ScanDir()
-  local files = VFS.DirList(self.dir)
-  local dirs  = VFS.SubDirs(self.dir)
+  local files = VFS.DirList(self.dir, "*", VFS.RAW_ONLY)
+  local dirs  = VFS.SubDirs(self.dir, "*", VFS.RAW_ONLY)
   local imageFiles = {}
   for i=1,#files do
     local f = files[i]
@@ -190,6 +193,7 @@ end
 function FilePanel:SetDir(directory)
   self:DeselectAll()
   self.dir = directory
+  FilePanel.lastDir = self.dir
   self:ScanDir()
 
   if (self.parent) then

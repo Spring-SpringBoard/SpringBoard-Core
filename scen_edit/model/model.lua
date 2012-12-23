@@ -175,42 +175,6 @@ end
 function Model:Save(fileName)
     local mission = self:Serialize()
     table.save(mission, fileName)
---[[    local mission = {}
-    mission.triggers = {}
-    table.insert(mission.triggers, {})
-    mission.triggers[1].logic = {}
-
-    
-
-    -- add unit spawn
-    local gameStart = {}
-    gameStart.logicType = "GameStartedCondition"
-    gameStart.args = {}
-    gameStart.name = "Game Starts"
-    table.insert(mission.triggers[1].logic, gameStart)
-
-    local createUnits = {}
-    createUnits.logicType = "CreateUnitsAction"
-    createUnits.args = {}
-    createUnits.args.units = units
-    createUnits.name = "Create Units"
-    table.insert(mission.triggers[1].logic, createUnits)
-
-    -- save regions
-    mission.regions = {}
-    table.insert(mission.regions, {})
-    mission.regions[1].areas = {}
-    for i, area in pairs(self.areas) do
-        local saveArea = {}
-        saveArea.category = "rectangle"
-        saveArea.x = area[1]
-        saveArea.y = area[2]
-        saveArea.width = area[3] - area[1]
-        saveArea.height = area[4] - area[2]
-        table.insert(mission.regions[1].areas, saveArea) 
-    end
---]]
-    -- write to file
 end
 
 function Model:Load(mission)

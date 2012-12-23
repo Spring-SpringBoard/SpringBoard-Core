@@ -201,7 +201,6 @@ local function Load(path)
     --local f = assert(io.open(path, "r"))	
     --local t = f:read("*all")
     --f:close()
-    Spring.Echo("Loading" .. path .. "...")
     local data = VFS.LoadFile(path)
     cmd = LoadCommand(data)
     SCEN_EDIT.commandManager:execute(cmd)
@@ -625,7 +624,8 @@ function LoadGUI()
                         caption = '',
                         OnClick = {
 							function() 
-								sfd = SaveFileDialog()
+                                local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
+								sfd = SaveFileDialog(dir)
 								sfd:setConfirmDialogCallback(function(path)
 									success, msg = pcall(Save, path)
 									if not success then
@@ -650,7 +650,8 @@ function LoadGUI()
                         caption = '',
                         OnClick = {
                             function()
-								ofd = OpenFileDialog()
+                                local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
+								ofd = OpenFileDialog(dir)
 								ofd:setConfirmDialogCallback(function(path)
 									success, msg = pcall(Load, path)
 									if not success then
