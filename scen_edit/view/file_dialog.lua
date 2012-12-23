@@ -2,8 +2,26 @@ local Chili = WG.Chili
 
 FileDialog = Observable:extends{}
 
+local function ExtractFileName(filepath)
+  filepath = filepath:gsub("\\", "/")
+  local lastChar = filepath:sub(-1)
+  if (lastChar == "/") then
+    filepath = filepath:sub(1,-2)
+  end
+  local pos,b,e,match,init,n = 1,1,1,1,0,0
+  repeat
+    pos,init,n = b,init+1,n+1
+    b,init,match = filepath:find("/",init,true)
+  until (not b)
+  if (n==1) then
+    return filepath
+  else
+    return filepath:sub(pos+1)
+  end
+end
+
 function FileDialog:init(dir)
-    self.dir = dir or ''
+    self.dir = dir or nil
 	self.confirmDialogCallback = nil
   --[[  self.panel = Chili.LayoutPanel:New {
         autosize = true,
@@ -45,6 +63,23 @@ function FileDialog:init(dir)
 		x = "22%",
 		caption = "Cancel",
 	}
+    self.filePanel = FilePanel:New {
+        x = 10,
+        y = 10,
+        width = "100%",
+        height = "100%",	        
+        dir = self.dir,
+        multiselect = false,
+    }
+    self.filePanel.OnSelectItem = {
+        function (obj, itemIdx, selected) 
+            if selected and itemIdx > self.filePanel._dirsNum+1 then
+                local fullPath = tostring(obj.items[itemIdx])
+                local fileName = ExtractFileName(fullPath)
+                self.fileEditBox:SetText(fileName)
+            end
+        end
+    }				
 	
     self.window = Chili.Window:New {
         x = 500,
@@ -59,21 +94,7 @@ function FileDialog:init(dir)
                 y = 10,
 				bottom = 80,
                 children = {
-					FilePanel:New {
-					    x = 10,
-                        y = 10,
-						width = "100%",
-						height = "100%",	        
-						dir = self.dir,
-						multiselect = false,
-						OnSelectItem = {
-							function (obj, itemIdx, selected) 
-								if selected then
-									self.fileEditBox:SetText(tostring(obj.items[itemIdx]))
-								end
-							end
-						},						
-					}
+                    self.filePanel,
                 },
 			},
 			Chili.StackPanel:New {
@@ -117,7 +138,7 @@ function FileDialog:setConfirmDialogCallback(func)
 end
 
 function FileDialog:getSelectedFilePath()
-	local path = self.fileEditBox.text
+	local path = self.filePanel.dir .. self.fileEditBox.text
 	return path
 end
 

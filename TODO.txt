@@ -1,6 +1,14 @@
-Add lasso select for features.
-    - allow same-time selection of features and units?
-Merge multiple heightmap commands (during single click) into single command for better undo/redo.
-    - gadget <-> widget 'command' state per player?
-Add texture map
-Add map saving/loading (all)
+High priority:
+    1. Add texture map
+    2. Add map saving/loading (all)
+
+Medium priority:
+    1. Merge multiple heightmap commands (during single click) into single command for better undo/redo.
+        - gadget <-> widget 'command' state per player?
+
+Low priority:
+    1. Add lasso select for features.
+        - allow same-time selection of features and units?
+    2. Add multiple features at the same time
+        - add features of the same featuredef
+        - add features of the same 'style' (mountain/plain fauna)
