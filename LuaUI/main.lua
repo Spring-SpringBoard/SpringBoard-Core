@@ -1,3 +1,4 @@
+VFS.Include("libs/loadlibs.lua",nil, VFS.BASE)
 local allModOptions = Spring.GetModOptions()
 function Spring.GetModOption(s,bool,default)
   if (bool) then

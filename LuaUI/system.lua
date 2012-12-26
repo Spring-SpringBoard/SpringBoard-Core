@@ -9,8 +9,9 @@
 --  Licensed under the terms of the GNU GPL, v2 or later.
 --
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
+VFS.Include("libs/loadlibs.lua")
 if (System == nil) then
 
   System = {
@@ -79,7 +80,6 @@ if (System == nil) then
     loadfile       = loadfile,
     loadlib        = loadlib,
     loadstring     = loadstring,
-    require        = require,
 
     getmetatable   = getmetatable,
     setmetatable   = setmetatable,
@@ -87,6 +87,9 @@ if (System == nil) then
     rawequal       = rawequal,
     rawget         = rawget,
     rawset         = rawset,
+
+    require = require,
+    module = module,
 
     getfenv        = getfenv,
     setfenv        = setfenv,
