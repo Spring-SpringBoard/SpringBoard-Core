@@ -141,7 +141,10 @@ local function AddedFeature(featureID, allyTeam)
 end
 
 function gadget:Initialize()
+    Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     VFS.Include("scen_edit/exports.lua")
+
+    vstruct = require("vstruct")
     gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
     Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
@@ -258,7 +261,6 @@ end
 
 function gadget:Initialize()
 	gadgetHandler:AddSyncAction('toWidget', UnsyncedToWidget)
---    Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
 end
 
 function gadget:Shutdown()

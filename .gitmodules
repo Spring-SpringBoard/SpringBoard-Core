@@ -4,3 +4,6 @@
 [submodule "libs/lcs"]
 	path = libs/lcs
 	url = git@github.com:gajop/Lua-Class-System.git
+[submodule "libs/vstruct"]
+	path = libs/vstruct
+	url = git@github.com:gajop/vstruct.git

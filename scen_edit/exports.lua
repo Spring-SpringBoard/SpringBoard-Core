@@ -1,5 +1,6 @@
 --dir names
 SCEN_EDIT_DIR = "scen_edit/"
+LIBS_DIR = "libs/"
 SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 LUAUI_DIR = "LuaUI/"
 SCEN_EDIT_IMG_DIR = LUAUI_DIR .. "images/scenedit/"

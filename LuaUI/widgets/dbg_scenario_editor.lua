@@ -211,7 +211,7 @@ local function CreateTerrainEditor()
 		parent = screen0,
 		x = 300,
 		y = 400,
-		width = 300,	
+		width = 400,	
 		height = 100,		
 		children = {
 			StackPanel:New {
@@ -245,6 +245,79 @@ local function CreateTerrainEditor()
 							end
 						},
 					},
+                    Button:New {
+                        caption = "S",
+						width = model.B_HEIGHT + 20,
+						height = model.B_HEIGHT + 20,
+                        OnClick = {
+                            function()
+                                local fileName = "heightmap.test"
+                                local file = assert(io.open(fileName, "wb"))
+                                Spring.Echo("HEIGHTMAP SAVE")
+                                for x = 0, Game.mapSizeX, Game.squareSize do
+                                    local lastChanged = false
+                                    for z = 0, Game.mapSizeZ, Game.squareSize do
+                                        local groundHeight = Spring.GetGroundHeight(x, z)
+                                        local origGroundHeight = Spring.GetGroundOrigHeight(x, z)
+                                        local deltaHeight = groundHeight - origGroundHeight
+                                        if deltaHeight ~= 0 then
+                                            Spring.Echo(x, z)
+                                            if lastChanged then
+                                                Spring.Echo(deltaHeight)
+                                                local str = vstruct.pack("1*f4", { deltaHeight })
+                                                local val = unpack(vstruct.unpack("1*f4", str))
+                                                if val ~= deltaHeight then
+                                                    Spring.Echo("DIFFERENT", val, deltaHeight)
+                                                end
+                                                file:write(str)
+                                            else
+                                                Spring.Echo(x, z, deltaHeight)
+                                                local str = vstruct.pack("3*f4", { x, z, deltaHeight })
+                                                file:write(str)
+                                                local x1, z1, deltaHeight1 = unpack(vstruct.unpack("3*f4", str))
+                                                if x1 ~= x or z1 ~= z or deltaHeight1 ~= deltaHeight then
+                                                    Spring.Echo("DIFFERENT", x1, x, z1, z, deltaHeight1, deltaHeight)
+                                                end
+                                                lastChanged = true
+                                            end
+                                        else
+                                            if lastChanged then
+                                                Spring.Echo(0)
+                                                local str = vstruct.pack("1*f4", {0})
+                                                file:write(str)
+                                                lastChanged = false
+                                            end
+                                        end
+                                    end
+                                end
+                                Spring.Echo("HEIGHTMAP SAVE DONE")
+                                assert(file:close())
+                            end
+                        },
+                    },
+                    Button:New {
+                        caption = "L",
+						width = model.B_HEIGHT + 20,
+						height = model.B_HEIGHT + 20,
+                        OnClick = {
+                            function()
+                                local fileName = "heightmap.test"
+                                local file = assert(io.open(fileName, "rb"))
+                                local data = file:read("*a")--[[{}
+                                while true do
+                                    local d = file:read("*n")
+                                    if d == nil then
+                                        break
+                                    end
+                                    data[#data+1] = d
+                                end--]]
+                                assert(file:close())
+
+                                loadMap = LoadMap(data)
+                                SCEN_EDIT.commandManager:execute(loadMap)
+                            end
+                        },
+                    },
 				},
 			},
 		}
@@ -803,17 +876,18 @@ function LoadGUI()
         end
     }
 end
-
 function widget:Initialize()
-	--reloadGadgets() --uncomment for development	
+	reloadGadgets() --uncomment for development	
     if not WG.Chili then
         widgetHandler:RemoveWidget(widget)
         return
     end
     VFS.Include("scen_edit/exports.lua")
 	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
-    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_DIR .. "lcs/LCS.lua"))
+    LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
+    
+    vstruct = require("vstruct")
 	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
 
