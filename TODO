@@ -2,39 +2,47 @@ Alpha milestone(release for content developers): high priority goals
 Beta milestone(release for the public): medium priority goals
 
 High priority:
-    1. Map saving/loading:
+    - Map saving/loading:
         -height map
         -texture map
         -??
-    2. Texture map manipulation
-    3. Cleanup core_types.lua:
+    - Texture map manipulation
+    - Cleanup core_types.lua:
         - seperate loading mechanism from metadata
         - Provide a way to load user metadata
-    4. Merge multiple heightmap commands (during single click) into single command for better undo/redo.
+    - Merge multiple heightmap commands (during single click) into single command for better undo/red-
         - gadget <-> widget 'incommand' state per player?
-    5. Pack entire mission into a single .sdz
+    - Pack entire mission into a single .sdz
 
 Medium priority:
-    1. Optimize unitdef/featuredef views:
+    - Optimize unitdef/featuredef views:
         - update scrollpanel to not load images not currently displayed
-    2. Display a list of executed commands (and the person who executed them) for better cooperative work
-    3. Adding multiple features at the same time
+    - Display a list of executed commands (and the person who executed them) for better cooperative work
+    - Adding multiple features at the same time
         - adding features of the same featuredef
         - adding features of a similar 'style' (f.e mountain or plain fauna)
-    4. Widget/gadget blacklisting
-    5. More/better heightmap editing tools
+    - Edit players(teams)
+        - add/remove teams
+        - set team colors
+        - set maximum/minimum teams
+    - Edit alliances
+    - Widget/gadget blacklisting
+    - More/better heightmap editing tools
         - add terrain in blocks
         - smooth terrain
+    - Test game as spectator/player
+
 
 Low priority:
-    1. Scenario editor widget enable/disable (need to query the gadget for data)
-    2. Lasso select for features.
+    - Scenario editor widget enable/disable (need to query the gadget for data)
+    - Lasso select for features:
         - allow same-time selection of features and units?
-    3. Mission input-output variables (used for campaigns f.e)
-    4. Custom variable types
-    5. Custom GUI integrated into scenario editor
-    6. Map resizing
-    7. Zero-k mission editor format import tool
-    8. Saving of only map data (no scenario/trigger data)
-    9. UnitDef/FeatureDef editor
-    10. UnitDef/FeatureDef file importer
+    - Mission input-output variables (used for campaigns f.e)
+    - Custom variable types
+    - Custom GUI integrated into scenario editor
+    - Map resizing
+    - Zero-k mission editor format import tool
+    - Saving of only map data (no scenario/trigger data)
+    - UnitDef/FeatureDef editor
+    - UnitDef/FeatureDef file importer
+    - Use AI bots within the game
