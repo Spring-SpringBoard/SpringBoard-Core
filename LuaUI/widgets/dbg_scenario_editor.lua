@@ -251,9 +251,45 @@ local function CreateTerrainEditor()
 						height = model.B_HEIGHT + 20,
                         OnClick = {
                             function()
+                                Spring.Echo("HEIGHTMAP SAVE")
                                 local fileName = "heightmap.test"
                                 local file = assert(io.open(fileName, "wb"))
-                                Spring.Echo("HEIGHTMAP SAVE")
+                                local data = {}
+                                local totalChanged = 0
+
+                                local bufferSize = 1000
+                                local bufferFlush = function()
+                                    if #data == 0 then
+                                        return
+                                    end
+                                    --Spring.Echo("Packing...")
+                                    local str = VFS.PackF32(data)
+                                    --Spring.Echo("Unpacking...")
+                                    local newData = VFS.UnpackF32(str, 1, #str / 4)
+                                    --Spring.Echo(#data, #newData)
+                                    if #data ~= #newData then
+                                        --Spring.Echo("Different size!: ", #data, #newData)
+                                    end
+                                    local diffCount = 0
+                                    for i = 1, math.min(#data, #newData) do
+                                        if data[i] ~= newData[i] then
+                                            diffCount = diffCount + 1
+                                            --Spring.Echo("DIFF:", data[i], newData[i])
+                                        end
+                                        if diffCount > 100 then
+                                            break
+                                        end
+                                    end
+                                    file:write(str)
+                                end
+                                local addData = function(chunk)
+                                    data[#data + 1] = chunk                                
+                                    totalChanged = totalChanged + 1
+                                    if #data >= bufferSize then
+                                        bufferFlush()
+                                        data = {}
+                                    end
+                                end
                                 for x = 0, Game.mapSizeX, Game.squareSize do
                                     local lastChanged = false
                                     for z = 0, Game.mapSizeZ, Game.squareSize do
@@ -261,35 +297,37 @@ local function CreateTerrainEditor()
                                         local origGroundHeight = Spring.GetGroundOrigHeight(x, z)
                                         local deltaHeight = groundHeight - origGroundHeight
                                         if deltaHeight ~= 0 then
-                                            Spring.Echo(x, z)
+                                            --Spring.Echo(x, z)
                                             if lastChanged then
-                                                Spring.Echo(deltaHeight)
-                                                local str = vstruct.pack("1*f4", { deltaHeight })
-                                                local val = unpack(vstruct.unpack("1*f4", str))
-                                                if val ~= deltaHeight then
-                                                    Spring.Echo("DIFFERENT", val, deltaHeight)
+                                                --Spring.Echo(deltaHeight)
+                                                if deltaHeight ~= deltaHeight then
+                                                    --Spring.Echo(x, z)
                                                 end
-                                                file:write(str)
+                                                addData(deltaHeight)
                                             else
-                                                Spring.Echo(x, z, deltaHeight)
-                                                local str = vstruct.pack("3*f4", { x, z, deltaHeight })
-                                                file:write(str)
-                                                local x1, z1, deltaHeight1 = unpack(vstruct.unpack("3*f4", str))
-                                                if x1 ~= x or z1 ~= z or deltaHeight1 ~= deltaHeight then
-                                                    Spring.Echo("DIFFERENT", x1, x, z1, z, deltaHeight1, deltaHeight)
+                                                --Spring.Echo(x, z, deltaHeight)
+                                                if deltaHeight ~= deltaHeight or x ~= x or z ~= z then
+                                                    --Spring.Echo(x, z, deltaHeight)
                                                 end
+                                                addData(x)
+                                                addData(z)
+                                                addData(deltaHeight)
                                                 lastChanged = true
                                             end
                                         else
                                             if lastChanged then
-                                                Spring.Echo(0)
-                                                local str = vstruct.pack("1*f4", {0})
-                                                file:write(str)
+                                                --Spring.Echo(0)
+                                                addData(0)
                                                 lastChanged = false
                                             end
                                         end
                                     end
                                 end
+                                bufferFlush()
+                                if totalChanged == 0 then
+                                    Spring.Echo("Heightmap unchanged")
+                                end
+                                Spring.Echo("Floats: " .. totalChanged)
                                 Spring.Echo("HEIGHTMAP SAVE DONE")
                                 assert(file:close())
                             end
