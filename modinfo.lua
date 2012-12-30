@@ -19,8 +19,8 @@ local modinfo = {
         --"xta:latest",
         --"s44v153_marketgarden.sdz"
 --        "Balanced Annihilation V7.72",
---        "BAR.sdd",
-        "BAR-svn.sdd",
+        "BAR.sdd",
+--        "BAR-svn.sdd",
   --     "ba763.sdd",
 --        "es0.536.sdz",
         --"Evolution RTS - test-209"
