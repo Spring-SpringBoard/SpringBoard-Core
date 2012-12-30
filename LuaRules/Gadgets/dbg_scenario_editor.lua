@@ -148,7 +148,7 @@ function gadget:Initialize()
     Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
     Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
 	
-    LCS = loadstring(VFS.LoadFile(SCEN_EDIT_DIR .. "lcs/LCS.lua"))
+    LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
 	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
@@ -209,6 +209,7 @@ end
 function gadget:GameFrame(frameNum)
 	SCEN_EDIT.rtModel:GameFrame(frameNum)
     if SCEN_EDIT.loadFrame == frameNum then
+		Spring.Echo(scenarioFile)
         if scenarioFile then
             local data = VFS.LoadFile(scenarioFile)
             local mission = loadstring(data)()
