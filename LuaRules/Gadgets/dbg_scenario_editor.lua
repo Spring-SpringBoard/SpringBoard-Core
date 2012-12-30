@@ -94,8 +94,7 @@ function gadget:RecvLuaMsg(msg, playerID)
         if op == 'sync' then
             --        Spring.Echo("Synced message!")
             local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
-            compress = false
-            if compress then
+            if SCEN_EDIT.messageManager.compress then
                 msgParsed = VFS.ZlibDecompress(msgParsed)
             end
             local msgTable = loadstring(msgParsed)()

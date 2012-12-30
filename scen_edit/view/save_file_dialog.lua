@@ -10,5 +10,10 @@ end
 function SaveFileDialog:confirmDialog()
 	local fileName = self:getSelectedFilePath()
     local saveCommand = SaveCommand(fileName)
-    SCEN_EDIT.commandManager:execute(saveCommand, true)
+    success, errMsg = pcall(function()
+        SCEN_EDIT.commandManager:execute(saveCommand, true)
+    end)
+    if not success then
+        Spring.Echo(errMsg)
+    end
 end
