@@ -5,13 +5,15 @@ function MessageManager:init()
     self.messageIdCount = 0
     self.callbacks = {}
     self.widget = false
-    self.compress = false
+    self.compress = true
 end
 
 function MessageManager:__encodeToString(message)
     local msg = table.show(message:serialize())
     if self.widget and self.compress then
-        msg = VFS.ZlibCompress(msg)
+        local newMsg = VFS.ZlibCompress(msg)
+        assert(VFS.ZlibDecompress(newMsg) == msg)
+        msg = newMsg
     end
     return msg
 end

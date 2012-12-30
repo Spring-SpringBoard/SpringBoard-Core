@@ -6,41 +6,6 @@ local SCEN_EDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 RuntimeView = LCS.class{}
 
-function RuntimeView:UpdateStartStopButton()
-    self.btnStartStop:ClearChildren()
-    if not self.started then
-        self.btnStartStop:AddChild(
-            Chili.Image:New {
-                tooltip = "Start mission",
-                file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
-                height = B_HEIGHT - 2,
-                width = B_HEIGHT - 2,
-                margin = {0, 0, 0, 0},
-            }
-        )
-    else
-        self.btnStartStop:AddChild(
-            Chili.Image:New {
-                tooltip = "Stop mission",
-                file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
-                height = B_HEIGHT - 2,
-                width = B_HEIGHT - 2,
-                margin = {0, 0, 0, 0},
-            }
-        )
-    end
-end
-
-function RuntimeView:GameStarted()
-    self.started = true
-    self:UpdateStartStopButton()
-end
-
-function RuntimeView:GameStopped()
-    self.started = false
-    self:UpdateStartStopButton()
-end
-
 function RuntimeView:init()
     self.mode = "trigger"
     self.started = false --check instead of assuming
@@ -62,9 +27,7 @@ function RuntimeView:init()
             end
         }
     }
-    Spring.Echo("created button")
     self:UpdateStartStopButton()
-    Spring.Echo("updated button")
     self.dvv = Chili.StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -80,23 +43,6 @@ function RuntimeView:init()
         right = 1,
         autosize = true,
         resizeItems = false,
-    }
-    self.cbType = ComboBox:New {
-        items = { "trigger", "variable" },
-        width = 80,
-        height = B_HEIGHT + 20,
-        OnSelectItem = {
-            function(obj, itemIdx, selected)
-                if selected and itemIdx > 0 then
-                    if itemIdx == 1 then 
-                        self.mode = "trigger"
-                    else 
-                        self.mode = "variable"
-                    end
-                    self:Populate()
-                end
-            end
-        },
     }
     local btnToggleShowDevelop = Chili.Button:New {
         caption='Toggle Display',
@@ -155,7 +101,6 @@ function RuntimeView:init()
                 resizeItems = false,
                 children = {
                     self.btnStartStop,
-                    self.cbType,
                     btnToggleShowDevelop,
                 },
             },
@@ -167,4 +112,39 @@ end
 function RuntimeView:Populate()
     DebugTriggerView(self.dtv)
     DebugVariableView(self.dvv)
+end
+
+function RuntimeView:UpdateStartStopButton()
+    self.btnStartStop:ClearChildren()
+    if not self.started then
+        self.btnStartStop:AddChild(
+            Chili.Image:New {
+                tooltip = "Start mission",
+                file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
+                height = B_HEIGHT - 2,
+                width = B_HEIGHT - 2,
+                margin = {0, 0, 0, 0},
+            }
+        )
+    else
+        self.btnStartStop:AddChild(
+            Chili.Image:New {
+                tooltip = "Stop mission",
+                file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
+                height = B_HEIGHT - 2,
+                width = B_HEIGHT - 2,
+                margin = {0, 0, 0, 0},
+            }
+        )
+    end
+end
+
+function RuntimeView:GameStarted()
+    self.started = true
+    self:UpdateStartStopButton()
+end
+
+function RuntimeView:GameStopped()
+    self.started = false
+    self:UpdateStartStopButton()
 end

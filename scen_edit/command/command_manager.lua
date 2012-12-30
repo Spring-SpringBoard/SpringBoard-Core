@@ -16,7 +16,7 @@ function CommandManager:execute(cmd, widget)
     assert(cmd, "Command is nil")
     if self.widget then
         if not widget then
-            assert(cmd.className, "Command instance lacks className")
+            assert(cmd.className, "Command instance lacks className value")
             local msg = Message("command", cmd)
 --            Spring.Echo('msg')
             SCEN_EDIT.messageManager:sendMessage(msg)
@@ -38,7 +38,7 @@ function CommandManager:execute(cmd, widget)
             end
             self.redoList = {}
         else
-            assert(cmd.className, "Command instance lacks className")
+            assert(cmd.className, "Command instance lacks className value")
             local msg = Message("command", cmd)
             SCEN_EDIT.messageManager:sendMessage(msg)
         end

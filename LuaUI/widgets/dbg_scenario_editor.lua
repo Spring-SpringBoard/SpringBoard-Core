@@ -202,6 +202,7 @@ local function Load(path)
     --local t = f:read("*all")
     --f:close()
     local data = VFS.LoadFile(path)
+    Spring.Echo(#data)
     cmd = LoadCommand(data)
     SCEN_EDIT.commandManager:execute(cmd)
 end
