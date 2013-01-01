@@ -9,7 +9,12 @@ SCEN_EDIT_EXAMPLE_DIR_RAW_FS = "games/ToolBox.sdd/examples/"
 --mod opts
 local modOpts = Spring.GetModOptions()
 scenarioFile = modOpts.scenario_file
-devMode = modOpts.dev_mode
+devMode = not modOpts.play_mode
+if devMode then
+    Spring.Echo("Scenario Editor mode: dev")
+else
+    Spring.Echo("Scenario Editor mode: play")
+end
 
 --chili export
 if WG and WG.Chili then

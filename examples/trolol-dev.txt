@@ -29,7 +29,6 @@
 		deathmode=killall;
 
         scenario_file = examples/trolol.lua;
-        dev_mode = true;
 	}
 	NumRestrictions=0;
 	[RESTRICT]

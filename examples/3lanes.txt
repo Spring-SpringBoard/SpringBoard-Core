@@ -30,6 +30,7 @@
 		mo_nowrecks=1;
 
         scenario_file = examples/3lanes.lua;
+        play_mode = true;
 	}
 	NumRestrictions=0;
 	[RESTRICT]
