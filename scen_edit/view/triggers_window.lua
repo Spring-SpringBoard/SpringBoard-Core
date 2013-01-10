@@ -99,27 +99,19 @@ function TriggersWindow:Populate()
     self._triggers:ClearChildren()
     local triggers = SortByName(SCEN_EDIT.model.triggerManager:getAllTriggers(), "name")
     for id, trigger in pairs(triggers)  do		
-        local stackTriggerPanel = Chili.StackPanel:New {
-            triggerId = trigger.id,
-            parent = self._triggers,
-            width = "100%",
-            height = B_HEIGHT + 8,
-            orientation = "horizontal",
-            padding = {0, 0, 0, 0},
-            itemMarging = {0, 0, 0, 0},
-            resizeItems = false,
-        }
+        local stackTriggerPanel = MakeComponentPanel(self._triggers)
+		stackTriggerPanel.triggerId = trigger.id
         local btnEditTrigger = Chili.Button:New {
             caption = trigger.name,
-            right = 2 * (B_HEIGHT + 10),
-            x = 1,
+            x = 1, 
+			right = B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
             height = B_HEIGHT,
             _toggle = nil,
             parent = stackTriggerPanel,
         }
         local btnCloneTrigger = Chili.Button:New {
             caption = "",
-            right = B_HEIGHT + 10,
+            right = B_HEIGHT + 8,
             width = B_HEIGHT,
             height = B_HEIGHT,
             parent = stackTriggerPanel,

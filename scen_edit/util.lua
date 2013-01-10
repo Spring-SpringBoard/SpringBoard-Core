@@ -2,6 +2,20 @@ SCEN_EDIT.classes = {}
 -- include this dir
 SCEN_EDIT.classes[SCEN_EDIT_DIR .. "util.lua"] = true
 
+function MakeComponentPanel(parentPanel)
+    local componentPanel = Chili.Control:New {
+        parent = parentPanel,
+        width = "100%",
+        height = SCEN_EDIT.model.B_HEIGHT + 8,
+        orientation = "horizontal",
+        padding = {0, 0, 0, 0},
+        itemMarging = {0, 0, 0, 0},
+		margin = { 0, 0, 0, 0},
+        resizeItems = false,
+    }
+    return componentPanel
+end
+
 --non recursive file include
 function SCEN_EDIT.IncludeDir(dirPath)
     local files = VFS.DirList(dirPath)
@@ -78,7 +92,7 @@ function SCEN_EDIT.AddExpression(dataType, parent)
         }
 		local btnExpressions = Chili.Button:New {
 			caption = 'Expression',
-			right = 1,
+            right = 1,
 			width = 100,
 			height = SCEN_EDIT.model.B_HEIGHT,
 			parent = stackPanel,
@@ -130,7 +144,7 @@ function MakeVariableChoice(variableType, panel)
         }
         
         local cmbVariable = ComboBox:New {
-            right = 1,
+            right = 1,		
             width = 100,
             height = SCEN_EDIT.model.B_HEIGHT,
             parent = stackPanel,

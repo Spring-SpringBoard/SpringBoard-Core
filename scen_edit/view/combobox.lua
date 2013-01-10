@@ -71,7 +71,7 @@ function ComboBox:AddSelfListeners()
     table.insert(parent.OnDblClick, function()  self:Close() end)
     table.insert(parent.OnMouseDown, function() self:Close() end)
     table.insert(parent.OnMouseUp, function() self:Close() end)
-    table.insert(parent.OnMouseMove, function() self:Close() end)
+    --table.insert(parent.OnMouseMove, function() self:Close() end)
     table.insert(parent.OnMouseWheel, function() self:Close() end)
     parent = parent.parent
   end
@@ -79,7 +79,7 @@ end
 
 function ComboBox:MouseDown(...)
   self._down = true
-  self.state = 'pressed'
+  self.state.pressed = true
 
   local screen0 = self
   --local sx, sy = self:LocalToScreen(self.x, self.y)
@@ -172,7 +172,7 @@ end
 function ComboBox:MouseUp(...)
   if (self._down) then
     self._down = false
-    self.state = 'normal'
+    self.state.pressed = false
     inherited.MouseUp(self, ...)
     self:Invalidate()
     return self

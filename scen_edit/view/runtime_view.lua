@@ -71,19 +71,15 @@ function RuntimeView:init()
                 itemMargin = {0, 0, 0, 0},
                 children = {
                     Chili.ScrollPanel:New {
-                        x = 1,
-                        y = 1,
-                        height = "50%",
-                        right = 1,
+		    	width = "100%",
+                        height = "100%",
                         children = { 
                             self.dvv,
                         },
                     },
                     Chili.ScrollPanel:New {
-                        x = 1,
-                        y = "50%",
-                        right = 1,
-                        bottom = 1,
+		    	width = "100%",
+			height = "100%",
                         children = { 
                             self.dtv,
                         },
