@@ -1,5 +1,3 @@
-local Chili
-Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 
@@ -17,7 +15,7 @@ end
 function TypePanel:Initialize()
 	local radioGroup = {}
     local stackTypePanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedType = Chili.Checkbox:New {
+    self.cbPredefinedType = Checkbox:New {
         caption = "Predefined type: ",
         right = 100 + 10,
         x = 1,
@@ -25,7 +23,7 @@ function TypePanel:Initialize()
         parent = stackTypePanel,
     }
 	table.insert(radioGroup, self.cbPredefinedType)
-    self.btnPredefinedType = Chili.Button:New {
+    self.btnPredefinedType = Button:New {
         caption = '...',
         right = 1,
         width = 100,
@@ -51,7 +49,7 @@ function TypePanel:Initialize()
 	
     --SPECIAL TYPE, i.e TRIGGER
     local stackTypePanel = MakeComponentPanel(self.parent)
-    self.cbSpecialType = Chili.Checkbox:New {
+    self.cbSpecialType = Checkbox:New {
         caption = "Special type: ",
         right = 100 + 10,
         x = 1,

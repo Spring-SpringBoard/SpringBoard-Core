@@ -1,4 +1,3 @@
-local Chili = WG.Chili
 local model = SCEN_EDIT.model
 
 TeamPanel = {
@@ -15,7 +14,7 @@ end
 function TeamPanel:Initialize()
 	local radioGroup = {}
     local stackTeamPanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedTeam = Chili.Checkbox:New {
+    self.cbPredefinedTeam = Checkbox:New {
         caption = "Predefined team: ",
         right = 100 + 10,
         x = 1,

@@ -1,4 +1,3 @@
-local Chili = WG.Chili
 
 TriggerPanel = {
 }
@@ -13,7 +12,7 @@ end
 
 function TriggerPanel:Initialize()
     local stackTriggerPanel = MakeComponentPanel(self.parent)
-    local lblAttrType = Chili.Label:New {
+    local lblAttrType = Label:New {
         caption = "Trigger:",
         right = 100 + 10,
         x = 1,

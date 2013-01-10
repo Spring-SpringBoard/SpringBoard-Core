@@ -1,6 +1,4 @@
-local Chili = WG.Chili
 local model = SCEN_EDIT.model
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 UnitPanel = {
 }
@@ -17,7 +15,7 @@ function UnitPanel:Initialize()
 	local radioGroup = {}
     --PREDEFINED
     local stackUnitPanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedUnit = Chili.Checkbox:New {
+    self.cbPredefinedUnit = Checkbox:New {
         caption = "Predefined unit: ",
         right = 100 + 10,
         x = 1,
@@ -25,7 +23,7 @@ function UnitPanel:Initialize()
         parent = stackUnitPanel,
     }
 	table.insert(radioGroup, self.cbPredefinedUnit)
-    self.btnPredefinedUnit = Chili.Button:New {
+    self.btnPredefinedUnit = Button:New {
         caption = '...',
         right = 40,
         width = 60,
@@ -48,7 +46,7 @@ function UnitPanel:Initialize()
             end
         end
     }
-    self.btnPredefinedUnitZoom = Chili.Button:New {
+    self.btnPredefinedUnitZoom = Button:New {
         caption = "",
         right = 1,
         width = model.B_HEIGHT,
@@ -56,9 +54,9 @@ function UnitPanel:Initialize()
         parent = stackUnitPanel,
         padding = {0, 0, 0, 0},
         children = {
-            Chili.Image:New { 
+            Image:New { 
                 tooltip = "Select unit", 
-                file=SCENEDIT_IMG_DIR .. "search.png", 
+                file=SCEN_EDIT_IMG_DIR .. "search.png", 
                 height = model.B_HEIGHT, 
                 width = model.B_HEIGHT,
                 padding = {0, 0, 0, 0},
@@ -80,7 +78,7 @@ function UnitPanel:Initialize()
     }
     --SPECIAL UNIT, i.e TRIGGER
     local stackUnitPanel = MakeComponentPanel(self.parent)
-    self.cbSpecialUnit = Chili.Checkbox:New {
+    self.cbSpecialUnit = Checkbox:New {
         caption = "Special unit: ",
         right = 100 + 10,
         x = 1,

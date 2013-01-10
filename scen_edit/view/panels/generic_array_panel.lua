@@ -1,5 +1,3 @@
-local Chili
-Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 
@@ -19,7 +17,7 @@ function GenericArrayPanel:init(parent, type)
 end
 
 function GenericArrayPanel:AddElement()
-    self.subPanels:AddChild(Chili.Button:New {
+    self.subPanels:AddChild(Button:New {
         caption='Thingy!',
 --        width='40%',
 --        x = 1,
@@ -28,7 +26,6 @@ function GenericArrayPanel:AddElement()
         OnClick={
             function() 
                 mode = 'add'
-                local screen0 = Chili.Screen0
                 Spring.Echo(screen0.classname)
                 Spring.Echo(self.parent.parent.parent.classname)
 				local newActionWindow = CustomWindow:New {
@@ -49,7 +46,7 @@ function GenericArrayPanel:Initialize()
     Spring.Echo(self.atomicType)
 	local radioGroup = {}
 --    self.subPanels =  MakeComponentPanel(self.parent)--[[
-    self.subPanels = Chili.StackPanel:New {
+    self.subPanels = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -60,7 +57,7 @@ function GenericArrayPanel:Initialize()
     }--]]
 
     local addPanel = MakeComponentPanel(self.parent)
-    local btnAddElement = Chili.Button:New {
+    local btnAddElement = Button:New {
         caption='Add',
         width='40%',
         x = 1,
