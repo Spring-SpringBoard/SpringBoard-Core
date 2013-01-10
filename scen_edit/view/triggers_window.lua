@@ -1,9 +1,8 @@
-local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
-TriggersWindow = Chili.Window:Inherit {
+TriggersWindow = Window:Inherit {
     caption = "Trigger window",
     classname = "window",
     minimumSize = {300,200},
@@ -16,7 +15,7 @@ local this = TriggersWindow
 local inherited = this.inherited
 
 function TriggersWindow:New(obj)
-    local btnAddTrigger = Chili.Button:New {
+    local btnAddTrigger = Button:New {
         caption='Add trigger',
         width=120,
         x = 1,
@@ -24,14 +23,14 @@ function TriggersWindow:New(obj)
         height = B_HEIGHT,
         OnClick={function() obj:AddTrigger() end}
     }
-    local btnClose = Chili.Button:New {
+    local btnClose = Button:New {
         caption='Close',
         width=100,
         x = 130,
         bottom = 1,
         height = B_HEIGHT,
     }
-    obj._triggers = Chili.StackPanel:New {
+    obj._triggers = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -40,7 +39,7 @@ function TriggersWindow:New(obj)
         resizeItems = false,
     }
     obj.children = {
-        Chili.ScrollPanel:New {
+        ScrollPanel:New {
             x = 1,
             y = 15,
             right = 5,
@@ -101,7 +100,7 @@ function TriggersWindow:Populate()
     for id, trigger in pairs(triggers)  do		
         local stackTriggerPanel = MakeComponentPanel(self._triggers)
 		stackTriggerPanel.triggerId = trigger.id
-        local btnEditTrigger = Chili.Button:New {
+        local btnEditTrigger = Button:New {
             caption = trigger.name,
             x = 1, 
 			right = B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
@@ -109,7 +108,7 @@ function TriggersWindow:Populate()
             _toggle = nil,
             parent = stackTriggerPanel,
         }
-        local btnCloneTrigger = Chili.Button:New {
+        local btnCloneTrigger = Button:New {
             caption = "",
             right = B_HEIGHT + 8,
             width = B_HEIGHT,
@@ -117,7 +116,7 @@ function TriggersWindow:Populate()
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Chili.Image:New { 
+                Image:New { 
                     tooltip = "Clone trigger", 
                     file=SCENEDIT_IMG_DIR .. "clone.png", 
                     height = B_HEIGHT, 
@@ -136,7 +135,7 @@ function TriggersWindow:Populate()
                 end
             },
         }
-        local btnRemoveTrigger = Chili.Button:New {
+        local btnRemoveTrigger = Button:New {
             caption = "",
             right = 1,
             width = B_HEIGHT,
@@ -144,7 +143,7 @@ function TriggersWindow:Populate()
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Chili.Image:New { 
+                Image:New { 
                     tooltip = "Remove trigger", 
                     file=SCENEDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 

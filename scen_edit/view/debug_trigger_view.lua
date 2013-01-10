@@ -1,5 +1,3 @@
-local Chili = WG.Chili
-local screen0 = Chili.Screen0
 local C_HEIGHT = 16
 local B_HEIGHT = 24
 
@@ -17,7 +15,7 @@ function DebugTriggerView:Populate()
     for id, trigger in pairs(triggers)  do		
         local triggerPanel = MakeComponentPanel(self.parent)
         local maxChars = 15
-        local cbTriggerName = Chili.Checkbox:New {
+        local cbTriggerName = Checkbox:New {
             caption = trigger.name:sub(1, maxChars),
             width = 110,
 			x = 1,
@@ -31,7 +29,7 @@ function DebugTriggerView:Populate()
                 end
             },
         }
-        local btnExecuteTrigger = Chili.Button:New {
+        local btnExecuteTrigger = Button:New {
             caption = "Execute",
 			right = B_HEIGHT + 120,
             width = 100,
@@ -45,7 +43,7 @@ function DebugTriggerView:Populate()
                 end
             },
         }
-        local btnExecuteTriggerActions = Chili.Button:New {
+        local btnExecuteTriggerActions = Button:New {
             caption = "Execute actions",
 			right = 1,
             width = 120,

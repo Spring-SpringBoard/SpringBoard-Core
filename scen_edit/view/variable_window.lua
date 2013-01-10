@@ -1,10 +1,9 @@
-local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 local model = SCEN_EDIT.model
 
-VariableWindow = Chili.Window:Inherit {
+VariableWindow = Window:Inherit {
     classname = "window",
     clientWidth = 300,
     clientHeight = 250,
@@ -21,14 +20,14 @@ local this = VariableWindow
 local inherited = this.inherited
 
 function VariableWindow:New(obj)
-    local btnOk = Chili.Button:New {
+    local btnOk = Button:New {
         caption='OK',
         width='40%',
         x = 1,
         bottom = 1,
         height = B_HEIGHT,
     }
-    local btnCancel = Chili.Button:New {
+    local btnCancel = Button:New {
         caption='Close',
         width='40%',
         x = '50%',
@@ -36,7 +35,7 @@ function VariableWindow:New(obj)
         height = B_HEIGHT,
         OnClick={function() obj:Dispose() end}
     }
-    obj._properties = Chili.StackPanel:New {
+    obj._properties = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -45,7 +44,7 @@ function VariableWindow:New(obj)
         resizeItems = false,
     }
     obj.children = {
-        Chili.ScrollPanel:New {
+        ScrollPanel:New {
             x = 1,
             y = 15,
             right = 5,
@@ -94,13 +93,13 @@ function VariableWindow:Populate()
     self._properties:ClearChildren()
 
     local stackNamePanel = MakeComponentPanel(self._properties)
-    local lblName = Chili.Label:New {
+    local lblName = Label:New {
         caption = "Name:",
         right = 100 + 10,
         x = 1,
         parent = stackNamePanel,
     }
-    self.edValue = Chili.EditBox:New {
+    self.edValue = EditBox:New {
         text = self.variable.name,
         right = 1,
         width = 100,
@@ -109,13 +108,13 @@ function VariableWindow:Populate()
     }
 
     local stackTypePanel = MakeComponentPanel(self._properties)
-    local lblType = Chili.Label:New {
+    local lblType = Label:New {
         caption = "Type:",
         right = 100 + 10,
         x = 1,
         parent = stackTypePanel,
     }
-    self.variablePanel = Chili.StackPanel:New {
+    self.variablePanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         y = 20,
         x = 1,
@@ -124,7 +123,7 @@ function VariableWindow:Populate()
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    local sp = Chili.ScrollPanel:New {
+    local sp = ScrollPanel:New {
         x = 1,
         y = 90,
         bottom = 2 * C_HEIGHT,

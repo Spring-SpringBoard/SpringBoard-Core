@@ -1,9 +1,8 @@
-local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
-VariableSettingsWindow = Chili.Window:Inherit {
+VariableSettingsWindow = Window:Inherit {
     classname = "window",
     clientWidth = 300,
     clientHeight = 250,
@@ -16,7 +15,7 @@ local this = VariableSettingsWindow
 local inherited = this.inherited
 
 function VariableSettingsWindow:New(obj)
-    local btnAddVariable = Chili.Button:New {
+    local btnAddVariable = Button:New {
         caption='Add variable',
         width='40%',
         x = 1,
@@ -27,14 +26,14 @@ function VariableSettingsWindow:New(obj)
 				obj:AddVariable()
 			end}
     }
-    local btnClose = Chili.Button:New {
+    local btnClose = Button:New {
         caption='Close',
         width='40%',
         x = '50%',
         bottom = 1,
         height = B_HEIGHT,
     }
-    obj.variablesPanel = Chili.StackPanel:New {
+    obj.variablesPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -43,7 +42,7 @@ function VariableSettingsWindow:New(obj)
         resizeItems = false,
     }
     obj.children = {
-        Chili.ScrollPanel:New {
+        ScrollPanel:New {
             x = 1,
             y = 15,
             right = 5,
@@ -99,17 +98,9 @@ function VariableSettingsWindow:Populate()
 	local variables = SCEN_EDIT.model.variableManager:getAllVariables() 
     for i = 1, #variables do
         local variable = variables[i]
-        local variableStackPanel = Chili.StackPanel:New {
-            variableId = variable.id,
-            parent = self.variablesPanel,
-            width = "100%",
-            height = B_HEIGHT + 8,
-            orientation = "horizontal",
-            padding = {0, 0, 0, 0},
-            itemMarging = {0, 0, 0, 0},
-            resizeItems = false,
-        }
-        local btnEditVariable = Chili.Button:New {
+        local variableStackPanel = MakeComponentPanel(self.variablesPanel)
+        variableStackPanel.variableId = variable.id
+        local btnEditVariable = Button:New {
             caption = variable.name,
             right = B_HEIGHT + 10,
             x = 1,
@@ -117,7 +108,7 @@ function VariableSettingsWindow:Populate()
             _toggle = nil,
             parent = variableStackPanel,
         }
-        local btnRemoveVariable = Chili.Button:New {
+        local btnRemoveVariable = Button:New {
             caption = "",
             right = 1,
             width = B_HEIGHT,
@@ -125,7 +116,7 @@ function VariableSettingsWindow:Populate()
             parent = variableStackPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Chili.Image:New { 
+                Image:New { 
                     tooltip = "Remove variable", 
                     file=SCENEDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 

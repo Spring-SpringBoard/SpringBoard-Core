@@ -1,5 +1,3 @@
-local Chili = WG.Chili
-
 FileDialog = Observable:extends{}
 
 local function ExtractFileName(filepath)
@@ -23,7 +21,7 @@ end
 function FileDialog:init(dir)
     self.dir = dir or nil
 	self.confirmDialogCallback = nil
-  --[[  self.panel = Chili.LayoutPanel:New {
+  --[[  self.panel = LayoutPanel:New {
         autosize = true,
 
         autoArrangeH = false,
@@ -41,14 +39,14 @@ function FileDialog:init(dir)
         items = {},
     }-]]
 	local buttonPanel = MakeComponentPanel()
-	self.fileEditBox = Chili.EditBox:New {
+	self.fileEditBox = EditBox:New {
 		width = "40%",
 		x = "30%",
 		y = 1,
 		height = "100%",
 	}
 	
-	local okButton = Chili.Button:New {
+	local okButton = Button:New {
 		height = SCEN_EDIT.model.B_HEIGHT,
 		bottom = 5,
 		width = "20%",
@@ -56,7 +54,7 @@ function FileDialog:init(dir)
 		caption = "OK",
 	}
 	
-	local cancelButton = Chili.Button:New {
+	local cancelButton = Button:New {
 		height = SCEN_EDIT.model.B_HEIGHT,
 		bottom = 5,
 		width = "20%",
@@ -81,15 +79,15 @@ function FileDialog:init(dir)
         end
     }				
 	
-    self.window = Chili.Window:New {
+    self.window = Window:New {
         x = 500,
         y = 200,
         width = 600,
         height = 600,
-        parent = Chili.Screen0,
+        parent = Screen0,
         caption = "File dialog",
         children = {
-            Chili.ScrollPanel:New {
+            ScrollPanel:New {
                 width = "100%",
                 y = 10,
 				bottom = 80,
@@ -97,7 +95,7 @@ function FileDialog:init(dir)
                     self.filePanel,
                 },
 			},
-			Chili.StackPanel:New {
+			StackPanel:New {
 				x = 1,
 				width = "100%",
 				height = SCEN_EDIT.model.B_HEIGHT,
@@ -107,7 +105,7 @@ function FileDialog:init(dir)
 				resizeItems = false,
 				orientation = "horizontal",
 				children = {				
-					Chili.Label:New {
+					Label:New {
 						width = "5%",
 						x = 1,
 						caption = "File name: ",

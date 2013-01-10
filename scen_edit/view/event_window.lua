@@ -1,8 +1,7 @@
-local Chili = WG.Chili
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 local model = SCEN_EDIT.model
 
-EventWindow = Chili.Window:Inherit {
+EventWindow = Window:Inherit {
     classname = "window",	
 	resizable = false,
 	clientWidth = 300,
@@ -19,14 +18,14 @@ local inherited = this.inherited
 
 function EventWindow:New(obj)
 	obj.triggerWindow.disableChildrenHitTest = true	
-    obj.btnOk = Chili.Button:New {
+    obj.btnOk = Button:New {
         caption = "OK",
         height = model.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "20%",
     }
-    obj.btnCancel = Chili.Button:New {
+    obj.btnCancel = Button:New {
         caption = "Cancel",
         height = model.B_HEIGHT,
         width = "40%",

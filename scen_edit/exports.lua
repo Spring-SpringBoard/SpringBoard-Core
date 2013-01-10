@@ -21,11 +21,13 @@ if WG and WG.Chili then
     -- setup Chili
     Chili = WG.Chili
     Checkbox = Chili.Checkbox
+    Control = Chili.Control
     Button = Chili.Button
     Label = Chili.Label
     EditBox = Chili.EditBox
     Window = Chili.Window
     ScrollPanel = Chili.ScrollPanel
+    LayoutPanel = Chili.LayoutPanel
     StackPanel = Chili.StackPanel
     Grid = Chili.Grid
     TextBox = Chili.TextBox

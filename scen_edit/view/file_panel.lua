@@ -1,7 +1,5 @@
 --//=============================================================================
-local Chili = WG.Chili
-
-FilePanel = Chili.LayoutPanel:Inherit{
+FilePanel = LayoutPanel:Inherit{
   -- so, this should be changed here as well
   -- (see unitdefsview.lua)
   classname = "imagelistview",
@@ -108,7 +106,7 @@ end
 --//=============================================================================
 
 function FilePanel:_AddFile(name,imageFile)
-  self:AddChild( Chili.LayoutPanel:New{
+  self:AddChild( LayoutPanel:New{
     width  = self.iconX+10,
     height = self.iconY+20,
     padding = {0,0,0,0},
@@ -118,13 +116,13 @@ function FilePanel:_AddFile(name,imageFile)
     columns = 1,
 
     children = {
-      Chili.Image:New{
+      Image:New{
         width  = self.iconX,
         height = self.iconY,
         passive = true,
         file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imageFile,
       },
-      Chili.Label:New{
+      Label:New{
         width = self.iconX+10,
         height = 20,
         align = 'center',

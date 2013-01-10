@@ -1,9 +1,8 @@
-local Chili = WG.Chili
 local C_HEIGHT = 16
 local B_HEIGHT = 26
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
-TriggerWindow = Chili.Window:Inherit {
+TriggerWindow = Window:Inherit {
     classname = "window",
     clientWidth = 600,
     clientHeight = 250,
@@ -21,19 +20,19 @@ function TriggerWindow:New(obj)
     obj.caption = obj.trigger.name
 	local stackTriggerPanel = MakeComponentPanel(nil)
 	stackTriggerPanel.y = 10
-	local lblTriggerName = Chili.Label:New {
+	local lblTriggerName = Label:New {
 		caption = "Trigger name: ",
 		right = 100 + 10,
 		x = 1,
 		parent = stackTriggerPanel,
 	}
-	local edTriggerName = Chili.EditBox:New {
+	local edTriggerName = EditBox:New {
 		text = obj.trigger.name,
 		right = 1,
 		width = 100,
 		parent = stackTriggerPanel,
 	}
-    obj._triggerPanel = Chili.StackPanel:New {
+    obj._triggerPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -42,28 +41,28 @@ function TriggerWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    local btnAddEvent = Chili.Button:New {
+    local btnAddEvent = Button:New {
         caption='Add event',
         width=110,
         x = 1,
         bottom = 1,
         height = B_HEIGHT,
     }
-    local btnAddCondition = Chili.Button:New {
+    local btnAddCondition = Button:New {
         caption='Add condition',
         width=120,
         x = 120,
         bottom = 1,
         height = B_HEIGHT,
     }
-    local btnAddAction = Chili.Button:New {
+    local btnAddAction = Button:New {
         caption='Add action',
         width=110,
         x = 250,
         bottom = 1,
         height = B_HEIGHT,
     }
-    local btnClose = Chili.Button:New {
+    local btnClose = Button:New {
         caption='Close',
         width=100,
         x = 370,
@@ -72,7 +71,7 @@ function TriggerWindow:New(obj)
     }
     obj.children = {
 		stackTriggerPanel,
-        Chili.ScrollPanel:New {
+        ScrollPanel:New {
             x = 1,
             y = 15 + B_HEIGHT,
             right = 5,
@@ -104,7 +103,7 @@ end
 
 function TriggerWindow:Populate()
     self._triggerPanel:ClearChildren()
-    local eventLabel = Chili.Label:New {
+    local eventLabel = Label:New {
         caption = "- Events -",
         height = C_HEIGHT,
         align = 'center',
@@ -113,7 +112,7 @@ function TriggerWindow:Populate()
     for i = 1, #self.trigger.events do
         local event = self.trigger.events[i]
         local stackEventPanel = MakeComponentPanel(self._triggerPanel)
-        local btnEditEvent = Chili.Button:New {
+        local btnEditEvent = Button:New {
             caption = SCEN_EDIT.model.eventTypes[event.eventTypeName].humanName,
             right = B_HEIGHT + 10,
             x = 1,
@@ -121,7 +120,7 @@ function TriggerWindow:Populate()
             parent = stackEventPanel,
             OnClick = {function() MakeEditEventWindow(self.trigger, self, event) end}
         }
-        local btnRemoveEvent = Chili.Button:New {
+        local btnRemoveEvent = Button:New {
             caption = "",
 			right = 1,
             width = B_HEIGHT,
@@ -129,7 +128,7 @@ function TriggerWindow:Populate()
             parent = stackEventPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Chili.Image:New { 
+                Image:New { 
                     tooltip = "Remove event", 
                     file=SCENEDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 
@@ -140,7 +139,7 @@ function TriggerWindow:Populate()
             OnClick = {function() MakeRemoveEventWindow(self.trigger, self, event, i) end}
         }
     end
-    local conditionLabel = Chili.Label:New {
+    local conditionLabel = Label:New {
         caption = "- Conditions -",
         height = C_HEIGHT,
         align = 'center',
@@ -151,7 +150,7 @@ function TriggerWindow:Populate()
         local condition = self.trigger.conditions[i]
         local stackEventPanel = MakeComponentPanel(self._triggerPanel)
 		local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
-        local btnEditCondition = Chili.Button:New {
+        local btnEditCondition = Button:New {
             caption = conditionHumanName,
             right = B_HEIGHT + 10,
             x = 1,
@@ -159,7 +158,7 @@ function TriggerWindow:Populate()
             parent = stackEventPanel,
             OnClick = {function() MakeEditConditionWindow(self.trigger, self, condition) end}
         }
-        local btnRemoveCondition = Chili.Button:New {
+        local btnRemoveCondition = Button:New {
             caption = "",
 			right = 1,
             width = B_HEIGHT,
@@ -167,7 +166,7 @@ function TriggerWindow:Populate()
             parent = stackEventPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Chili.Image:New { 
+                Image:New { 
                     tooltip = "Remove condition", 
                     file=SCENEDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 
@@ -178,7 +177,7 @@ function TriggerWindow:Populate()
             OnClick = {function() MakeRemoveConditionWindow(self.trigger, self, condition, i) end}
         }
     end
-    local actionLabel = Chili.Label:New {
+    local actionLabel = Label:New {
         caption = "- Actions -",
         height = C_HEIGHT,
         align = 'center',
@@ -188,7 +187,7 @@ function TriggerWindow:Populate()
         local action = self.trigger.actions[i]
         local stackActionPanel = MakeComponentPanel(self._triggerPanel)
 		local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
-        local btnEditAction = Chili.Button:New {
+        local btnEditAction = Button:New {
             caption = actionHumanName,
             right = B_HEIGHT + 10,
             x = 1,
@@ -196,7 +195,7 @@ function TriggerWindow:Populate()
             parent = stackActionPanel,
             OnClick = {function() MakeEditActionWindow(self.trigger, self, action) end}
         }
-        local btnRemoveAction = Chili.Button:New {
+        local btnRemoveAction = Button:New {
             caption = "",
             right = 1,
             width = B_HEIGHT,
@@ -204,7 +203,7 @@ function TriggerWindow:Populate()
             parent = stackActionPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Chili.Image:New { 
+                Image:New { 
                     tooltip = "Remove action", 
                     file= SCENEDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 

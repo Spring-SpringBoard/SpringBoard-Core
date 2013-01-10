@@ -18,8 +18,6 @@ function DisplayUtil:AddText(text, coords, color, time)
 end
 
 local function GetTipDimensions(unitID, str, height, invert)
-    local Chili = WG.Chili
-    local screen0 = Chili.Screen0
 	local textHeight, _, numLines = gl.GetTextHeight(str)
 	textHeight = textHeight*fontSize*numLines
 	local textWidth = gl.GetTextWidth(str)*fontSize + 4
@@ -38,13 +36,11 @@ local function GetTipDimensions(unitID, str, height, invert)
 end
 
 function DisplayUtil:AddUnitSay(text, unitId, time)
-    local Chili = WG.Chili
-    local screen0 = Chili.Screen0
 	local height = Spring.GetUnitHeight(unitId)
 	
 	local textWidth, textHeight, x, y = GetTipDimensions(unitId, text, height)
 
-	local img = Chili.Image:New {
+	local img = Image:New {
 		width = textWidth + 4,
 		height = textHeight + 4 + fontSize,
 		x = x - (textWidth+8)/2,
@@ -53,7 +49,7 @@ function DisplayUtil:AddUnitSay(text, unitId, time)
 		file = "LuaUI/images/scenedit/speechbubble.png",
 		parent = screen0,
 	}
-	local textBox = Chili.TextBox:New {
+	local textBox = TextBox:New {
 		parent  = img,
 		text    = text,
 		height	= textHeight,
@@ -121,9 +117,7 @@ function DisplayUtil:OnFrame()
         end
         table.remove(self.unitSays, i)
 	end
-
-    local Chili = WG.Chili
-    local screen0 = Chili.Screen0
+    
 	-- chili code
 	for _, unitSay in pairs(self.unitSays) do
 		if Spring.IsUnitInView(unitSay.unitId) then
