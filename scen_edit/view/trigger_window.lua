@@ -1,6 +1,5 @@
 local C_HEIGHT = 16
 local B_HEIGHT = 26
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 TriggerWindow = Window:Inherit {
     classname = "window",
@@ -130,7 +129,7 @@ function TriggerWindow:Populate()
             children = {
                 Image:New { 
                     tooltip = "Remove event", 
-                    file=SCENEDIT_IMG_DIR .. "list-remove.png", 
+                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 
                     width = B_HEIGHT, 
                     margin = {0, 0, 0, 0},
@@ -168,7 +167,7 @@ function TriggerWindow:Populate()
             children = {
                 Image:New { 
                     tooltip = "Remove condition", 
-                    file=SCENEDIT_IMG_DIR .. "list-remove.png", 
+                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 
                     width = B_HEIGHT, 
                     margin = {0, 0, 0, 0},
@@ -205,7 +204,7 @@ function TriggerWindow:Populate()
             children = {
                 Image:New { 
                     tooltip = "Remove action", 
-                    file= SCENEDIT_IMG_DIR .. "list-remove.png", 
+                    file= SCEN_EDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 
                     width = B_HEIGHT, 
                     margin = {0, 0, 0, 0},

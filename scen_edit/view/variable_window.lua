@@ -1,6 +1,5 @@
 local C_HEIGHT = 16
 local B_HEIGHT = 26
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 local model = SCEN_EDIT.model
 
 VariableWindow = Window:Inherit {

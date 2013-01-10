@@ -1,4 +1,3 @@
-local Chili = WG.Chili
 local model = SCEN_EDIT.model
 
 OrderPanel = {
@@ -23,7 +22,7 @@ function OrderPanel:Initialize()
         x = '20%',
 		parent = stackPanel,
     }
-	self.orderPanel = Chili.StackPanel:New {
+	self.orderPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -43,7 +42,7 @@ function OrderPanel:Initialize()
 					local input = order.input[i]
 					local subPanelName = input.name					
 					if input.humanName then
-						Chili.Label:New {
+						Label:New {
 							parent = self.orderPanel,
 							caption = input.humanName,
 							x = 1,

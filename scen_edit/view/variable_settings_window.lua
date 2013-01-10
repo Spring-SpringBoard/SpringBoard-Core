@@ -1,6 +1,5 @@
 local C_HEIGHT = 16
 local B_HEIGHT = 26
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 VariableSettingsWindow = Window:Inherit {
     classname = "window",
@@ -118,7 +117,7 @@ function VariableSettingsWindow:Populate()
             children = {
                 Image:New { 
                     tooltip = "Remove variable", 
-                    file=SCENEDIT_IMG_DIR .. "list-remove.png", 
+                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 
                     width = B_HEIGHT,
                     padding = {0, 0, 0, 0},

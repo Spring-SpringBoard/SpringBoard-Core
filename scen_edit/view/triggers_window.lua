@@ -1,6 +1,5 @@
 local C_HEIGHT = 16
 local B_HEIGHT = 26
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 TriggersWindow = Window:Inherit {
     caption = "Trigger window",
@@ -118,7 +117,7 @@ function TriggersWindow:Populate()
             children = {
                 Image:New { 
                     tooltip = "Clone trigger", 
-                    file=SCENEDIT_IMG_DIR .. "clone.png", 
+                    file=SCEN_EDIT_IMG_DIR .. "clone.png", 
                     height = B_HEIGHT, 
                     width = B_HEIGHT,
                     padding = {0, 0, 0, 0},
@@ -145,7 +144,7 @@ function TriggersWindow:Populate()
             children = {
                 Image:New { 
                     tooltip = "Remove trigger", 
-                    file=SCENEDIT_IMG_DIR .. "list-remove.png", 
+                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
                     height = B_HEIGHT, 
                     width = B_HEIGHT,
                     padding = {0, 0, 0, 0},

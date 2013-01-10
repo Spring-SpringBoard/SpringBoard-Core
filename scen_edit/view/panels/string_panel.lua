@@ -1,4 +1,3 @@
-local Chili = WG.Chili
 local model = SCEN_EDIT.model
 
 StringPanel = {
@@ -15,7 +14,7 @@ end
 function StringPanel:Initialize()
 	local radioGroup = {}
     local stackStringPanel = MakeComponentPanel(self.parent)
-	self.cbPredefinedString = Chili.Checkbox:New {
+	self.cbPredefinedString = Checkbox:New {
         caption = "Predefined string: ",
         right = 100 + 10,
         x = 1,
@@ -23,7 +22,7 @@ function StringPanel:Initialize()
         parent = stackStringPanel,
     }	
 	table.insert(radioGroup, self.cbPredefinedString)
-    self.edString = Chili.EditBox:New {
+    self.edString = EditBox:New {
         text = "text",
         right = 1,
         width = 100,

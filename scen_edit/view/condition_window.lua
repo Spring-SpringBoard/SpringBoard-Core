@@ -1,4 +1,3 @@
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 local model = SCEN_EDIT.model
 
 ConditionWindow = Window:Inherit {

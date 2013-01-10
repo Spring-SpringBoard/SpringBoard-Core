@@ -1,4 +1,3 @@
-local Chili = WG.Chili
 local model = SCEN_EDIT.model
 
 BoolPanel = {
@@ -15,7 +14,7 @@ end
 function BoolPanel:Initialize()
 	local radioGroup = {}
     local stackBoolPanel = MakeComponentPanel(self.parent)
-	self.cbPredefincbBool = Chili.Checkbox:New {
+	self.cbPredefincbBool = Checkbox:New {
         caption = "Predefined bool: ",
         right = 100 + 10,
         x = 1,
@@ -23,7 +22,7 @@ function BoolPanel:Initialize()
         parent = stackBoolPanel,
     }	
 	table.insert(radioGroup, self.cbPredefincbBool)
-    self.cbBool = Chili.Checkbox:New {
+    self.cbBool = Checkbox:New {
 		caption = "Value",
         checked = true,
         right = 1,

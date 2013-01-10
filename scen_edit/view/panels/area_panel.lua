@@ -1,6 +1,4 @@
-local Chili = WG.Chili
 local model = SCEN_EDIT.model
-local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 
 AreaPanel = {
 }
@@ -16,7 +14,7 @@ end
 function AreaPanel:Initialize()
 	local radioGroup = {}
     local stackAreaPanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedArea = Chili.Checkbox:New {
+    self.cbPredefinedArea = Checkbox:New {
         caption = "Predefined area: ",
         right = 100 + 10,
         x = 1,
@@ -24,7 +22,7 @@ function AreaPanel:Initialize()
         parent = stackAreaPanel,
     }
 	table.insert(radioGroup, self.cbPredefinedArea)
-    self.btnPredefinedArea = Chili.Button:New {
+    self.btnPredefinedArea = Button:New {
         caption = '...',
         right = 40,
         width = 60,
@@ -47,7 +45,7 @@ function AreaPanel:Initialize()
             end
         end
     }
-    self.btnPredefinedAreaZoom = Chili.Button:New {
+    self.btnPredefinedAreaZoom = Button:New {
         caption = "",
         right = 1,
         width = model.B_HEIGHT,
@@ -55,9 +53,9 @@ function AreaPanel:Initialize()
         parent = stackAreaPanel,
         padding = {0, 0, 0, 0},
         children = {
-            Chili.Image:New { 
+            Image:New { 
                 tooltip = "Select area", 
-                file=SCENEDIT_IMG_DIR .. "search.png", 
+                file=SCEN_EDIT_IMG_DIR .. "search.png", 
                 height = model.B_HEIGHT, 
                 width = model.B_HEIGHT,
                 padding = {0, 0, 0, 0},
@@ -81,7 +79,7 @@ function AreaPanel:Initialize()
 
 	--SPECIAL AREA, i.e TRIGGER
     local stackAreaPanel = MakeComponentPanel(self.parent)
-    self.cbSpecialArea = Chili.Checkbox:New {
+    self.cbSpecialArea = Checkbox:New {
         caption = "Special area: ",
         right = 100 + 10,
         x = 1,
