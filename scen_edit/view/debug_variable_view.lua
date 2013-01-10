@@ -1,5 +1,3 @@
-local Chili = WG.Chili
-local screen0 = Chili.Screen0
 local C_HEIGHT = 16
 local B_HEIGHT = 24
 
@@ -17,14 +15,14 @@ function DebugVariableView:Populate()
     for id, variable in pairs(variables) do
         local variablePanel = MakeComponentPanel(self.parent)
         local maxChars = 15
-        local lblVariableName = Chili.Label:New {
+        local lblVariableName = Label:New {
             caption = variable.name:sub(1, maxChars),
             width = 100,
             x = 1,
             parent = variablePanel,
             align = 'left',
         }
-        local lblVariableValue = Chili.Label:New {
+        local lblVariableValue = Label:New {
             caption = SCEN_EDIT.humanExpression(variable.value, "value", variable.type),
             x = 120,
             right = 5,

@@ -1,8 +1,7 @@
-local Chili = WG.Chili
 local SCENEDIT_IMG_DIR = LUAUI_DIRNAME .. "images/scenedit/"
 local model = SCEN_EDIT.model
 
-ConditionWindow = Chili.Window:Inherit {
+ConditionWindow = Window:Inherit {
     classname = "window",	
 	resizable = false,
 	clientWidth = 300,
@@ -19,21 +18,21 @@ local inherited = this.inherited
 
 function ConditionWindow:New(obj)
 	obj.triggerWindow.disableChildrenHitTest = true	
-    obj.btnOk = Chili.Button:New {
+    obj.btnOk = Button:New {
         caption = "OK",
         height = model.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
     }
-    obj.btnCancel = Chili.Button:New {
+    obj.btnCancel = Button:New {
         caption = "Cancel",
         height = model.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "7%",
     }	
-	obj.conditionPanel = Chili.StackPanel:New {
+	obj.conditionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -74,7 +73,7 @@ function ConditionWindow:New(obj)
 		obj.cmbConditionTypes,
 		obj.btnOk,
 		obj.btnCancel,
-		Chili.ScrollPanel:New {
+		ScrollPanel:New {
 			x = 1,
 			y = obj.cmbConditionTypes.y + obj.cmbConditionTypes.height + 80,
 			bottom = 1,

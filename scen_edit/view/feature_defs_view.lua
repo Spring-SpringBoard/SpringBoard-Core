@@ -1,9 +1,5 @@
 --//=============================================================================
-local Chili
-if WG.Chili then
-    Chili = WG.Chili
-
-FeatureDefsView = Chili.LayoutPanel:Inherit {
+FeatureDefsView = LayoutPanel:Inherit {
   --TODO: figure out how to use DrawItemBackground with correct class name, in this case "FeatureDefsView"
   classname = "imagelistview", 
 
@@ -140,7 +136,7 @@ end
 
 function FeatureDefsView:AddImage(name, id, imagefile)
   table.insert(self.items, {name=name, id=id})
-  self:AddChild(Chili.LayoutPanel:New{
+  self:AddChild(LayoutPanel:New{
     width  = self.iconX+10,
     height = self.iconY+20,
     padding = {0,0,0,0},
@@ -150,13 +146,13 @@ function FeatureDefsView:AddImage(name, id, imagefile)
     columns = 1,
 
     children = {
-      Chili.Image:New {
+      Image:New {
         width  = self.iconX,
         height = self.iconY,
         passive = true,
         file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imagefile,
       },
-      Chili.Label:New {
+      Label:New {
         width = self.iconX+10,
         height = 20,
         align = 'center',
@@ -214,8 +210,6 @@ function FeatureDefsView:MouseDblClick(x,y)
 
   self:CallListeners(self.OnDblClickItem, self.items[itemIdx], itemIdx)
   return self
-end
-
 end
 
 --//=============================================================================

@@ -3,7 +3,7 @@ SCEN_EDIT.classes = {}
 SCEN_EDIT.classes[SCEN_EDIT_DIR .. "util.lua"] = true
 
 function MakeComponentPanel(parentPanel)
-    local componentPanel = Chili.Control:New {
+    local componentPanel = Control:New {
         parent = parentPanel,
         width = "100%",
         height = SCEN_EDIT.model.B_HEIGHT + 8,
@@ -83,14 +83,14 @@ function SCEN_EDIT.AddExpression(dataType, parent)
 	local viableExpressions = SCEN_EDIT.model.conditionTypesByOutput[dataType]
 	if viableExpressions then
 		local stackPanel = MakeComponentPanel(parent)
-		local cbExpressions = Chili.Checkbox:New {
+		local cbExpressions = Checkbox:New {
             caption = "Expression: ",
             right = 100 + 10,
             x = 1,
             checked = false,
             parent = stackPanel,
         }
-		local btnExpressions = Chili.Button:New {
+		local btnExpressions = Button:New {
 			caption = 'Expression',
             right = 1,
 			width = 100,
@@ -135,7 +135,7 @@ function MakeVariableChoice(variableType, panel)
 
     if #variableIds > 0 then
         local stackPanel = MakeComponentPanel(panel)
-        local cbVariable = Chili.Checkbox:New {
+        local cbVariable = Checkbox:New {
             caption = "Variable: ",
             right = 100 + 10,
             x = 1,

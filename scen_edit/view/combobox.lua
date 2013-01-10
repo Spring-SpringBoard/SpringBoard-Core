@@ -1,8 +1,5 @@
 --//=============================================================================
-local Chili
-Chili = WG.Chili
-	
-ComboBox = Chili.StackPanel:Inherit {
+ComboBox = StackPanel:Inherit {
   classname = "combobox",
   defaultWidth  = 70,
   defaultHeight = 20,
@@ -22,7 +19,7 @@ local inherited = this.inherited
 function ComboBox:New(obj)
   if #obj.items > 0 then
     obj.children = { 
-      Chili.Button:New {
+      Button:New {
           caption = obj.items[1],
           width = '100%',
           height = '100%',
@@ -109,7 +106,7 @@ function ComboBox:MouseDown(...)
       for i = 1, #self.items do
           largestStr = math.max(largestStr, #self.items[i])
           table.insert(labels, 
-            Chili.Button:New {
+            Button:New {
                 caption = self.items[i],
                 width = '100%',
                 height = labelHeight,
@@ -130,7 +127,7 @@ function ComboBox:MouseDown(...)
       else
           y = sy
       end
-      dropDownWindow = Chili.Window:New {
+      dropDownWindow = Window:New {
           parent = screen0,
           clientWidth = estimatedWidth,
           clientHeight = height,
@@ -140,14 +137,14 @@ function ComboBox:MouseDown(...)
           y = y,
           backgroundColor = {0.8,0.8,0.8,0.9},
             children = {
-                Chili.ScrollPanel:New {
+                ScrollPanel:New {
                     x = 0,
                     y = 0,
                     right = 0,
                     bottom = 0,
                     horizontalScrollBar = false,
                     children = {
-                        Chili.StackPanel:New {
+                        StackPanel:New {
                             orientation = 'horizontal',
                             width = '100%',
                             height = labelHeight * #labels,
