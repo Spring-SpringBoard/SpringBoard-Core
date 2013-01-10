@@ -106,7 +106,7 @@ function Model:init()
     self.featureManager = FeatureManager()
     self.variableManager = VariableManager()
     self.triggerManager = TriggerManager()
-	self:GenerateTeams()
+    self:GenerateTeams()
 end
 
 --clears all units, areas, triggers, etc.

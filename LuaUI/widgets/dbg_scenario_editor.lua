@@ -80,19 +80,6 @@ function MakeSeparator(panel)
     return lblSeparator
 end
 
-function MakeComponentPanel(parentPanel)
-    local componentPanel = StackPanel:New {
-        parent = parentPanel,
-        width = "100%",
-        height = model.B_HEIGHT + 8,
-        orientation = "horizontal",
-        padding = {0, 0, 0, 0},
-        itemMarging = {0, 0, 0, 0},
-        resizeItems = false,
-    }
-    return componentPanel
-end
-
 function MakeAddEventWindow(trigger, triggerWindow)
     local newEventWindow = EventWindow:New {
  		parent = screen0,

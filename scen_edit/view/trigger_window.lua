@@ -112,16 +112,7 @@ function TriggerWindow:Populate()
     }
     for i = 1, #self.trigger.events do
         local event = self.trigger.events[i]
-        local stackEventPanel = Chili.StackPanel:New {
-            parent = self._triggerPanel,
-            width = "100%",
-            height = B_HEIGHT + 8,
-            orientation = "horizontal",
-            padding = {0, 0, 0, 0},
-            margin = {0, 0, 0, 0},
-            itemMarging = {0, 0, 0, 0},
-            resizeItems = false,
-        }
+        local stackEventPanel = MakeComponentPanel(self._triggerPanel)
         local btnEditEvent = Chili.Button:New {
             caption = SCEN_EDIT.model.eventTypes[event.eventTypeName].humanName,
             right = B_HEIGHT + 10,
@@ -132,7 +123,7 @@ function TriggerWindow:Populate()
         }
         local btnRemoveEvent = Chili.Button:New {
             caption = "",
-            right = 1,
+			right = 1,
             width = B_HEIGHT,
             height = B_HEIGHT,
             parent = stackEventPanel,
@@ -158,15 +149,7 @@ function TriggerWindow:Populate()
     }
     for i = 1, #self.trigger.conditions do
         local condition = self.trigger.conditions[i]
-        local stackEventPanel = Chili.StackPanel:New {
-            parent = self._triggerPanel,
-            width = "100%",
-            height = B_HEIGHT + 8,
-            orientation = "horizontal",
-            padding = {0, 0, 0, 0},
-            itemMarging = {0, 0, 0, 0},
-            resizeItems = false,
-        }
+        local stackEventPanel = MakeComponentPanel(self._triggerPanel)
 		local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
         local btnEditCondition = Chili.Button:New {
             caption = conditionHumanName,
@@ -178,7 +161,7 @@ function TriggerWindow:Populate()
         }
         local btnRemoveCondition = Chili.Button:New {
             caption = "",
-            right = 1,
+			right = 1,
             width = B_HEIGHT,
             height = B_HEIGHT,
             parent = stackEventPanel,
@@ -203,15 +186,7 @@ function TriggerWindow:Populate()
     }
     for i = 1, #self.trigger.actions do
         local action = self.trigger.actions[i]
-        local stackActionPanel = Chili.StackPanel:New {
-            parent = self._triggerPanel,
-            width = "100%",
-            height = B_HEIGHT + 8,
-            orientation = "horizontal",
-            padding = {0, 0, 0, 0},
-            itemMarging = {0, 0, 0, 0},
-            resizeItems = false,
-        }
+        local stackActionPanel = MakeComponentPanel(self._triggerPanel)
 		local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
         local btnEditAction = Chili.Button:New {
             caption = actionHumanName,

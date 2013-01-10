@@ -20,7 +20,7 @@ function DebugTriggerView:Populate()
         local cbTriggerName = Chili.Checkbox:New {
             caption = trigger.name:sub(1, maxChars),
             width = 110,
-            x = 1,
+			x = 1,
             parent = triggerPanel,
             checked = trigger.enabled,
             OnChange = {
@@ -33,7 +33,7 @@ function DebugTriggerView:Populate()
         }
         local btnExecuteTrigger = Chili.Button:New {
             caption = "Execute",
-            right = B_HEIGHT + 120,
+			right = B_HEIGHT + 120,
             width = 100,
 --            x = 110,
             height = B_HEIGHT,
@@ -47,7 +47,7 @@ function DebugTriggerView:Populate()
         }
         local btnExecuteTriggerActions = Chili.Button:New {
             caption = "Execute actions",
-            right = 1,
+			right = 1,
             width = 120,
             height = B_HEIGHT,
             parent = triggerPanel,
