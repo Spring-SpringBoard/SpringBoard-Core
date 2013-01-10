@@ -21,23 +21,6 @@ end
 function FileDialog:init(dir)
     self.dir = dir or nil
 	self.confirmDialogCallback = nil
-  --[[  self.panel = LayoutPanel:New {
-        autosize = true,
-
-        autoArrangeH = false,
-        autoArrangeV = false,
-        centerItems  = false,
-
-        iconX     = 64,
-        iconY     = 64,
-
-        itemMargin    = {1, 1, 1, 1},
-
-        selectable  = true,
-        multiSelect = true,
-
-        items = {},
-    }-]]
 	local buttonPanel = MakeComponentPanel()
 	self.fileEditBox = EditBox:New {
 		width = "40%",
@@ -84,7 +67,7 @@ function FileDialog:init(dir)
         y = 200,
         width = 600,
         height = 600,
-        parent = Screen0,
+        parent = screen0,
         caption = "File dialog",
         children = {
             ScrollPanel:New {
