@@ -151,7 +151,7 @@ function MakeVariableChoice(variableType, panel)
             items = variableNames,
             variableIds = variableIds,
         }
-        cmbVariable.OnSelectItem = {
+        cmbVariable.OnSelect = {
             function(obj, itemIdx, selected)
                 if selected and itemIdx > 0 then
                     if not cbVariable.checked then

@@ -49,7 +49,7 @@ function ActionWindow:New(obj)
         y = "20%",
         x = '20%',
     }
-	obj.cmbActionTypes.OnSelectItem = {
+	obj.cmbActionTypes.OnSelect = {
 		function(object, itemIdx, selected)
 			if selected and itemIdx > 0 then
 				obj.actionPanel:ClearChildren()

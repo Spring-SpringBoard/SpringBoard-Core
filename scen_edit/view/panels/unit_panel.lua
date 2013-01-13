@@ -93,7 +93,7 @@ function UnitPanel:Initialize()
         parent = stackUnitPanel,
         items = { "Trigger unit" },
     }
-    self.cmbSpecialUnit.OnSelectItem = {
+    self.cmbSpecialUnit.OnSelect = {
         function(obj, itemIdx, selected)
             if selected and itemIdx > 0 then
                 if not self.cbSpecialUnit.checked then

@@ -49,7 +49,7 @@ function ConditionWindow:New(obj)
         y = "20%",
         x = '20%',
     }
-	obj.cmbConditionTypes.OnSelectItem = {
+	obj.cmbConditionTypes.OnSelect = {
 		function(object, itemIdx, selected)
 			if selected and itemIdx > 0 then
 				obj.conditionPanel:ClearChildren()

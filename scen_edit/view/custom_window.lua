@@ -49,7 +49,7 @@ function CustomWindow:New(obj)
         y = "20%",
         x = '20%',
     }
-	obj.cmbCustomTypes.OnSelectItem = {
+	obj.cmbCustomTypes.OnSelect = {
 		function(object, itemIdx, selected)
 			if selected and itemIdx > 0 then
 				obj.conditionPanel:ClearChildren()

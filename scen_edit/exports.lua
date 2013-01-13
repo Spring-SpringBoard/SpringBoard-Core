@@ -22,6 +22,7 @@ if WG and WG.Chili then
     Chili = WG.Chili
     Checkbox = Chili.Checkbox
     Control = Chili.Control
+    ComboBox = Chili.ComboBox
     Button = Chili.Button
     Label = Chili.Label
     EditBox = Chili.EditBox

@@ -63,7 +63,7 @@ function TypePanel:Initialize()
         height = B_HEIGHT,
         parent = stackTypePanel,
         items = { "Trigger unit type" },
-        OnSelectItem = {
+        OnSelect = {
             function(obj, itemIdx, selected)
                 if selected and itemIdx > 0 then
                     if not self.cbSpecialType.checked then

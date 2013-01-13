@@ -138,7 +138,7 @@ function VariableWindow:Populate()
         height = B_HEIGHT,
         items = model.variableTypes,
         parent = stackTypePanel,
-        OnSelectItem = {
+        OnSelect = {
             function(object, itemIdx, selected)	
                 if selected and itemIdx > 0 then
 					self.variablePanel:ClearChildren()
