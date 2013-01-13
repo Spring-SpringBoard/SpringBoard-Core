@@ -383,7 +383,7 @@ local function CreateUnitDefsView()
         x = 100,
         width=120,
     }
-    teamsCmb.OnSelectItem = {
+    teamsCmb.OnSelect = {
         function (obj, itemIdx, selected) 
             if selected then
                 unitImages:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
@@ -429,7 +429,7 @@ local function CreateUnitDefsView()
                     "Units", "Buildings", "All",
                 },
                 width = 80,
-                OnSelectItem = {
+                OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
                             unitImages:SelectUnitTypesId(itemIdx)
@@ -451,7 +451,7 @@ local function CreateUnitDefsView()
                 },
                 x = 200,
                 width=80,
-                OnSelectItem = {
+                OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
                             unitImages:SelectTerrainId(itemIdx)
@@ -504,7 +504,7 @@ local function CreateFeatureDefsView()
         x = 100,
         width=120,
     }
-    teamsCmb.OnSelectItem = {
+    teamsCmb.OnSelect = {
         function (obj, itemIdx, selected) 
             if selected then
                 featureImages:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
@@ -550,7 +550,7 @@ local function CreateFeatureDefsView()
                     "Wreckage", "Other", "All",
                 },
                 width = 80,
-                OnSelectItem = {
+                OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
                             featureImages:SelectFeatureTypesId(itemIdx)
@@ -572,7 +572,7 @@ local function CreateFeatureDefsView()
                     "Units", "Buildings", "All",
                 },
                 width = 80,
-                OnSelectItem = {
+                OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
                             featureImages:SelectUnitTypesId(itemIdx)
@@ -594,7 +594,7 @@ local function CreateFeatureDefsView()
                 },
                 x = 330,
                 width=80,
-                OnSelectItem = {
+                OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
                             featureImages:SelectTerrainId(itemIdx)

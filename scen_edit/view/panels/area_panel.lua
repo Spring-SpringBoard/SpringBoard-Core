@@ -94,7 +94,7 @@ function AreaPanel:Initialize()
         parent = stackAreaPanel,
         items = { "Trigger area" },
     }
-    self.cmbSpecialArea.OnSelectItem = {
+    self.cmbSpecialArea.OnSelect = {
         function(obj, itemIdx, selected)
             if selected and itemIdx > 0 then
                 if not self.cbSpecialArea.checked then

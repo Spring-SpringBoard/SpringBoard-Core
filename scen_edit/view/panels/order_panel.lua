@@ -32,7 +32,7 @@ function OrderPanel:Initialize()
         padding = {0, 0, 0, 0},	
 		parent = self.parent,
     }
-	self.cmbOrderTypes.OnSelectItem = {
+	self.cmbOrderTypes.OnSelect = {
 		function(object, itemIdx, selected)
 			if selected and itemIdx > 0 then
 				self.orderPanel:ClearChildren()
