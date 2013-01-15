@@ -14,7 +14,7 @@ end
 function AddRectState:MousePress(x, y, button)
     if button == 1 then
         if not self.addSecondPoint then
-            local result, coords = Spring.TraceScreenRay(x, y)
+            local result, coords = Spring.TraceScreenRay(x, y, true)
             if result == "ground" then
                 self.startX = coords[1]
                 self.startZ = coords[3]
@@ -31,7 +31,7 @@ end
 
 function AddRectState:MouseMove(x, y, dx, dy, button)
     if self.addSecondPoint then
-        local result, coords = Spring.TraceScreenRay(x, y)
+        local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
 			self.endX = coords[1]
 			self.endZ = coords[3]
@@ -46,7 +46,7 @@ function AddRectState:MouseRelease(x, y, button)
             self.endZ = nil
             return
         end
-        local result, coords = Spring.TraceScreenRay(x, y)
+        local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
             self.endX = coords[1]
             self.endZ = coords[3]
