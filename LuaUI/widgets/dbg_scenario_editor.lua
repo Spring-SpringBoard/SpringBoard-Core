@@ -474,6 +474,13 @@ local function CreateFeatureDefsView()
 	if featureImages then
 		return
 	end
+    local ebAmount = EditBox:New {
+        text = "1",
+        x = 310,
+        bottom = 8,
+        width = 50,
+    }
+
     featureImages = FeatureDefsView:New {
 		name='features',
 		x = 0,
@@ -488,7 +495,7 @@ local function CreateFeatureDefsView()
                         SCEN_EDIT.stateManager:SetState(DefaultState())
 					else
 						selFeatureDef = featureImages.items[itemIdx].id
-                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, featureImages.teamId, featureImages))
+                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, featureImages.teamId, featureImages, tonumber(ebAmount.text) or 1))
 					end
                     local feature = FeatureDefs[selFeatureDef]
 				end
@@ -609,6 +616,13 @@ local function CreateFeatureDefsView()
                 width = 50,
             },
             teamsCmb,
+            Label:New {
+                caption = "Amount:",
+                x = 250, 
+                bottom = 8,
+                width = 50,
+            },
+            ebAmount,
         }
     }
 end
