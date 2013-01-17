@@ -479,14 +479,6 @@ local function CreateFeatureDefsView()
         x = 310,
         bottom = 8,
         width = 50,
-        OnKeyPress = {
-            function(obj, ...)
-                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                if currentState:is_A(AddFeatureState) then
-                    currentState.amount = tonumber(obj.text) or 1
-                end
-            end
-        }
     }
 
     featureImages = FeatureDefsView:New {
