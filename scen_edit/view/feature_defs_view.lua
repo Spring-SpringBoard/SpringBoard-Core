@@ -83,7 +83,8 @@ function FeatureDefsView:PopulateFeatureDefsView()
             end
 		end
         if correctType and correctUnit then
-            unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
+            --unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
+            unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
             local fileExists = VFS.FileExists(unitImagePath)
             if not fileExists then
                 if unitDef ~= nil then

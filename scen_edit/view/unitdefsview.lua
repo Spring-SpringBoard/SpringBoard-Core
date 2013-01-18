@@ -120,7 +120,7 @@ function UnitDefsView:AddImage(name, id, imagefile)
         width  = self.iconX,
         height = self.iconY,
         passive = true,
-        file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imagefile,
+        file = "#" .. tostring(id), --':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imagefile,
       },
       Label:New {
         width = self.iconX+10,
