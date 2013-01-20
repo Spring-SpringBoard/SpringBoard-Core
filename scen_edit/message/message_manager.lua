@@ -11,8 +11,8 @@ end
 function MessageManager:__encodeToString(message)
     local msg = table.show(message:serialize())
     if self.widget and self.compress then
-        local newMsg = VFS.ZlibCompress(msg)
-        assert(VFS.ZlibDecompress(newMsg) == msg)
+        local newMsg = SCEN_EDIT.ZlibCompress(msg)
+        assert(SCEN_EDIT.ZlibDecompress(newMsg) == msg)
         msg = newMsg
     end
     return msg
@@ -31,20 +31,20 @@ function MessageManager:sendMessage(message, callback)
     local fullMessage = self.prefix .. "|" .. messageType .. "|" .. self:__encodeToString(message)
     if self.widget then
         local size = #fullMessage
-        local maxMsg = 50000
-        if size < maxMsg then
+        local maxMsgSize = 50000
+        if size < maxMsgSize then
             Spring.SendLuaRulesMsg(fullMessage)
         else
             local current = 1
             local msgPartIdx = 1
-            local parts = math.floor(size / maxMsg + 1)
+            local parts = math.floor(size / maxMsgSize + 1)
             Spring.Echo("send multi part msg: ".. tostring(parts))
             Spring.SendLuaRulesMsg(self.prefix .. "|" .. "startMsgPart" .. "|" .. parts)
             while current < size do
-                local endIndex = math.min(current + maxMsg, size)
+                local endIndex = math.min(current + maxMsgSize, size)
                 local part = fullMessage:sub(current, endIndex)
-                current = current + maxMsg
-                local msg = self.prefix .. "|" .. "msgPart" .. "|" .. msgPartIdx .. "|" .. part
+                current = current + maxMsgSize + 1
+                local msg = self.prefix .. "|" .. "msgPart" .. "|" .. tostring(msgPartIdx) .. "|" .. part
                 Spring.SendLuaRulesMsg(msg)
 
                 msgPartIdx = msgPartIdx + 1
