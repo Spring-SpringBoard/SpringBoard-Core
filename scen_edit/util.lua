@@ -39,6 +39,27 @@ function SCEN_EDIT.Include(path)
     end
 end
 
+function SCEN_EDIT.ZlibCompress(str)
+    return tostring(#str) .. "|" .. VFS.ZlibCompress(str)
+end
+
+function SCEN_EDIT.ZlibDecompress(str)
+    local compressedSize = 0
+    local strStart = 0
+    for i = 1, #str do
+        local substr = str:sub(1, i)
+        if str:sub(i,i) == '|' then
+            compressedSize = tonumber(str:sub(1, i - 1))
+            strStart = i + 1
+            break
+        end
+    end
+    if compressedSize == 0 then
+        error("string is not of valid format")
+    end
+    return VFS.ZlibDecompress(str:sub(strStart, #str), compressedSize)
+end
+
 function CallListeners(listeners, ...)
     for i = 1, #listeners do
         local listener = listeners[i]

@@ -74,32 +74,25 @@ local msgPartsSize = 0
 
 function gadget:RecvLuaMsg(msg, playerID)
 	pre = "scen_edit"
-	local data = explode( '|', msg)
+	if #msg < #pre or msg:sub(1, #pre) ~= "scen_edit" then
+        return
+    end
 	
-	if data[1] ~= pre then return end
-    
+    local data = explode( '|', msg)
     local op = data[2]
     local par1 = data[3]
-    local par2 = data[4]
-    local par3 = data[5]
-    local par4 = data[6]
-    local par5 = data[7]
-	local par6 = data[8]
-	local par7 = data[8]
     
     --TODO: figure proper msg name :)
     if op == 'game' then
 
     elseif devMode then
         if op == 'sync' then
-            --        Spring.Echo("Synced message!")
-            local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
+            local msgParsed = msg:sub(#(pre .. "|" .. op .. "|") + 1)
             if SCEN_EDIT.messageManager.compress then
-                msgParsed = VFS.ZlibDecompress(msgParsed)
+                msgParsed = SCEN_EDIT.ZlibDecompress(msgParsed)
             end
             local msgTable = loadstring(msgParsed)()
             local msg = Message(msgTable.tag, msgTable.data)
-            --        table.echo(msg)
             if msg.tag == 'command' then
                 local cmd = SCEN_EDIT.resolveCommand(msg.data)
                 GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
@@ -109,7 +102,7 @@ function gadget:RecvLuaMsg(msg, playerID)
             msgPartsSize = tonumber(par1)
         elseif op == "msgPart" then
             local index = tonumber(par1)
-            local value = string.sub(msg, #(pre .. "|msgPart|" .. par1 .. "|") + 1)
+            local value = msg:sub(#(pre .. "|" .. op .. "|" .. par1 .. "|") + 1)
             msgParts[index] = value
             Spring.Echo("Recieved part: " .. tostring(index) .. "/" .. tostring(msgPartsSize))
             if #msgParts == msgPartsSize then
