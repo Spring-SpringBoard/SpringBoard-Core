@@ -36,7 +36,7 @@ function SelectionManager:SelectUnits(unitIds)
     Spring.SelectUnitArray(self.selectedUnits)
 end
 
-function SelectionManager:SelectFeatures(featureIds)
+function SelectionManager:SelectFeatures(featureIds)    
     assert(type(featureIds) == "table" and #featureIds > 0)
     self:ClearSelection()
 

@@ -46,6 +46,7 @@ function RuntimeView:init()
         caption='Toggle Display',
         width= 80,
         height = B_HEIGHT + 20,
+        tooltip = "Toggle displaying of debugging symbols",
         OnClick = {
             function() 
                 SCEN_EDIT.view.displayDevelop = not SCEN_EDIT.view.displayDevelop
@@ -69,15 +70,15 @@ function RuntimeView:init()
                 itemMargin = {0, 0, 0, 0},
                 children = {
                     ScrollPanel:New {
-		    	width = "100%",
+                        width = "100%",
                         height = "100%",
                         children = { 
                             self.dvv,
                         },
                     },
                     ScrollPanel:New {
-		    	width = "100%",
-			height = "100%",
+                        width = "100%",
+                        height = "100%",
                         children = { 
                             self.dtv,
                         },
@@ -109,11 +110,11 @@ function RuntimeView:Populate()
 end
 
 function RuntimeView:UpdateStartStopButton()
-    self.btnStartStop:ClearChildren()
+    self.btnStartStop:ClearChildren()	
     if not self.started then
+		self.btnStartStop.tooltip = "Start scenario"
         self.btnStartStop:AddChild(
-            Image:New {
-                tooltip = "Start mission",
+            Image:New {                
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
                 height = B_HEIGHT - 2,
                 width = B_HEIGHT - 2,
@@ -121,9 +122,9 @@ function RuntimeView:UpdateStartStopButton()
             }
         )
     else
-        self.btnStartStop:AddChild(
-            Image:New {
-                tooltip = "Stop mission",
+		self.btnStartStop.tooltip = "Stop scenario"
+        self.btnStartStop:AddChild(		
+            Image:New {                
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
                 height = B_HEIGHT - 2,
                 width = B_HEIGHT - 2,

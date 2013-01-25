@@ -63,6 +63,12 @@ function StateManager:GameFrame(frameNum)
     end)
 end
 
+function StateManager:DrawScreen()
+    return self:_SafeCall(function() 
+        return self.currentState:DrawScreen()
+    end)
+end
+
 function StateManager:DrawWorld()
     return self:_SafeCall(function() 
         return self.currentState:DrawWorld()
