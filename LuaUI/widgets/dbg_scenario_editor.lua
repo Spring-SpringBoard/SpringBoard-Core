@@ -679,9 +679,9 @@ function LoadGUI()
         caption = '',
         height = model.B_HEIGHT + 20,
         width = model.B_HEIGHT + 20,
+		tooltip = "Trigger settings",
         children = {
-            Image:New { 
-                tooltip = "Trigger settings", 
+            Image:New {                 
                 file=SCEN_EDIT_IMG_DIR .. "applications-system.png", 
                 height = model.B_HEIGHT - 2, 
                 width = model.B_HEIGHT - 2,
@@ -692,9 +692,9 @@ function LoadGUI()
         height = model.B_HEIGHT + 20,
         width = model.B_HEIGHT + 20,
         caption = '',
+		tooltip = "Variable settings",
         children = {
-            Image:New { 
-                tooltip = "Variable settings", 
+            Image:New {                 
                 file=SCEN_EDIT_IMG_DIR .. "format-text-bold.png", 
                 height = model.B_HEIGHT - 2, 
                 width = model.B_HEIGHT - 2, 
@@ -729,9 +729,9 @@ function LoadGUI()
                         width = model.B_HEIGHT + 20,
                         caption = '',
                         OnClick = {AddRectButton},
+						tooltip = "Add a rectangle area", 
                         children = {
-                            Image:New { 
-                                tooltip = "Add a rectangle area", 
+                            Image:New {                                 
                                 file=SCEN_EDIT_IMG_DIR .. "view-fullscreen.png", 
                                 height = model.B_HEIGHT - 2, 
                                 width = model.B_HEIGHT - 2, 
@@ -743,6 +743,7 @@ function LoadGUI()
                         height = model.B_HEIGHT + 20,
                         width = model.B_HEIGHT + 20,
                         caption = '',
+						tooltip = "Save scenario", 
                         OnClick = {
 							function() 
                                 local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
@@ -757,7 +758,6 @@ function LoadGUI()
 						},
                         children = {
                             Image:New { 
-                                tooltip = "Save mission", 
                                 file=SCEN_EDIT_IMG_DIR .. "document-save.png", 
                                 height = model.B_HEIGHT - 2, 
                                 width = model.B_HEIGHT - 2, 
@@ -769,6 +769,7 @@ function LoadGUI()
                         height = model.B_HEIGHT + 20,
                         width = model.B_HEIGHT + 20,
                         caption = '',
+						tooltip = "Load scenario", 
                         OnClick = {
                             function()
                                 local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
@@ -783,7 +784,6 @@ function LoadGUI()
                         },
                         children = {
                             Image:New { 
-                                tooltip = "Load mission", 
                                 file = SCEN_EDIT_IMG_DIR .. "document-open.png", 
                                 height = model.B_HEIGHT - 2, 
                                 width = model.B_HEIGHT - 2, 
@@ -813,14 +813,14 @@ function LoadGUI()
 						height = model.B_HEIGHT + 20,
 						width = model.B_HEIGHT + 20,
 						caption = '',
+						tooltip = "Unit type panel",
 						OnClick = {
 							function()
 								CreateUnitDefsView()
 							end
 						},
 						children = {
-							Image:New {
-								tooltip = "Open unit panel",
+							Image:New {								
 								file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
 								height = model.B_HEIGHT - 2,
 								width = model.B_HEIGHT - 2,
@@ -832,14 +832,14 @@ function LoadGUI()
 						height = model.B_HEIGHT + 20,
 						width = model.B_HEIGHT + 20,
 						caption = '',
+						tooltip = "Feature type panel",
 						OnClick = {
 							function()
 								CreateFeatureDefsView()
 							end
 						},
 						children = {
-							Image:New {
-								tooltip = "Open feature panel",
+							Image:New {								
 								file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
 								height = model.B_HEIGHT - 2,
 								width = model.B_HEIGHT - 2,
@@ -1000,6 +1000,10 @@ function reloadGadgets()
     if not wasEnabled then
         Spring.SendCommands("cheat")
     end
+end
+
+function widget:DrawScreen()
+    SCEN_EDIT.stateManager:DrawScreen()
 end
 
 function widget:DrawWorld()

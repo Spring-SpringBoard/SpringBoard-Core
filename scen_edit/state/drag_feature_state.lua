@@ -19,7 +19,7 @@ function DragFeatureState:MouseMove(x, y, dx, dy, button)
         local featureX, featureY, featureZ = Spring.GetFeaturePosition(self.featureId)
         self.dx = coords[1] + self.startDiffX - featureX
         self.dz = coords[3] + self.startDiffZ - featureZ
-        local featureIds = {self.featureId} --Spring.GetSelectedFeatures()
+        local _, featureIds = SCEN_EDIT.view.selectionManager:GetSelection()
         self.featureGhostViews = {}
     
         for i = 1, #featureIds do
@@ -34,7 +34,7 @@ end
 
 function DragFeatureState:MouseRelease(x, y, button)
     local commands = {}
-    local featureIds = {self.featureId}--Spring.GetSelectedFeatures()
+    local _, featureIds = SCEN_EDIT.view.selectionManager:GetSelection()
     for i = 1, #featureIds do
         local featureId = featureIds[i]
         local featureX, featureY, featureZ = Spring.GetFeaturePosition(featureId)

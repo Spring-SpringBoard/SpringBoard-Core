@@ -70,74 +70,82 @@ function DefaultState:MousePress(x, y, button)
     local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y)
-        if result == "ground" and SCEN_EDIT.view.displayDevelop then
-            if SCEN_EDIT.view.selectionManager:GetSelection() == "areas" then
-                toResize, resx, resz = self:checkResizeIntersections(coords[1], coords[3])
-                if toResize then
-                    local _, resizeAreas = SCEN_EDIT.view.selectionManager:GetSelection()
-                    local resizeArea = resizeAreas[1]
-                    SCEN_EDIT.stateManager:SetState(ResizeAreaState(resizeArea, resx, resz))
+        if result == "ground" then
+            Spring.Echo(selType)
+            if SCEN_EDIT.view.displayDevelop then
+                if selType == "areas" then
+                    toResize, resx, resz = self:checkResizeIntersections(coords[1], coords[3])
+                    if toResize then
+                        local _, resizeAreas = SCEN_EDIT.view.selectionManager:GetSelection()
+                        local resizeArea = resizeAreas[1]
+                        SCEN_EDIT.stateManager:SetState(ResizeAreaState(resizeArea, resx, resz))
+                        return true
+                    else
+                        local currentFrame = Spring.GetGameFrame()
+                        --check if double click on area to create the default area trigger
+                        if self.areaSelectTime and currentFrame - self.areaSelectTime < 5 then
+                            local trigger = {
+                                name = "Enter area " .. self.dragArea,
+                                enabled = true,
+                                actions = {},
+                                events = {
+                                    {
+                                        eventTypeName = "UNIT_ENTER_AREA",
+                                    },
+                                },
+                                conditions = {
+                                    {
+                                        conditionTypeName = "compare_area",
+                                        first = {
+                                            id = self.selected,
+                                            type = "pred",
+                                        },
+                                        relation = {
+                                            cmpTypeId = 1,
+                                        },
+                                        second = {
+                                            name = "Trigger area",
+                                            type = "spec",
+                                        },
+                                    },
+                                },
+                            }
+                            local cmd = AddTriggerCommand(trigger)
+                            SCEN_EDIT.commandManager:execute(cmd)
+                        end
+                    end
+                end
+                local _, ctrl = Spring.GetModKeyState()
+                if ctrl and (selType == "units" or selType == "features") then
                     return true
                 else
-                    local currentFrame = Spring.GetGameFrame()
-                    if self.areaSelectTime and currentFrame - self.areaSelectTime < 5 then
-                        local trigger = {
-                            name = "Enter area " .. self.dragArea,
-                            enabled = true,
-                            actions = {},
-                            events = {
-                                {
-                                    eventTypeName = "UNIT_ENTER_AREA",
-                                },
-                            },
-                            conditions = {
-                                {
-                                    conditionTypeName = "compare_area",
-                                    first = {
-                                        id = self.selected,
-                                        type = "pred",
-                                    },
-                                    relation = {
-                                        cmpTypeId = 1,
-                                    },
-                                    second = {
-                                        name = "Trigger area",
-                                        type = "spec",
-                                    },
-                                },
-                            },
-                        }
-                        local cmd = AddTriggerCommand(trigger)
-                        SCEN_EDIT.commandManager:execute(cmd)
+                    selected, self.dragDiffX, self.dragDiffZ = checkAreaIntersections(coords[1], coords[3])
+                    if selected then
+                        self.dragArea = selected
+                        SCEN_EDIT.view.selectionManager:SelectAreas({selected})
+                        self.areaSelectTime = Spring.GetGameFrame()
+                        return true
+                    else
+                        SCEN_EDIT.view.selectionManager:ClearSelection()
                     end
                 end
             end
-            local _, ctrl = Spring.GetModKeyState()
-            if ctrl and (selType == "units" or selType == "features") then
-                return true
-            else
-                selected, self.dragDiffX, self.dragDiffZ = checkAreaIntersections(coords[1], coords[3])
-                if selected then
-                    self.dragArea = selected
-                    SCEN_EDIT.view.selectionManager:SelectAreas({selected})
-                    self.areaSelectTime = Spring.GetGameFrame()
-                    return true
-                else
-                    SCEN_EDIT.view.selectionManager:ClearSelection()
-                end
-            end
+            Spring.Echo("!")
+            return true
         elseif result == "unit" then
             local unitId = coords
             local result, coords = Spring.TraceScreenRay(x, y, true)
-            local x, y, z = Spring.GetUnitPosition(unitId)
-            self.dragDiffX, self.dragDiffZ =  x - coords[1], z - coords[3]
+            if coords then
+                local x, y, z = Spring.GetUnitPosition(unitId)
+                self.dragDiffX, self.dragDiffZ =  x - coords[1], z - coords[3]
 
-            local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
-            if selType == "units" then
-                for _, oldUnitId in pairs(items) do
-                    if oldUnitId == unitId then
-                        self.dragUnit = unitId
-                        return true
+                local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+                if selType == "units" then
+                    for _, oldUnitId in pairs(items) do
+                        if oldUnitId == unitId then
+                            self.dragUnit = unitId
+                            return true
+                        end
                     end
                 end
             end
@@ -146,10 +154,15 @@ function DefaultState:MousePress(x, y, button)
             local result, coords = Spring.TraceScreenRay(x, y, true)
             local x, y, z = Spring.GetFeaturePosition(featureId)
             self.dragDiffX, self.dragDiffZ = x - coords[1], z - coords[3]
-
-            self.dragFeature = featureId
-            SCEN_EDIT.view.selectionManager:SelectFeatures({featureId})
-            return true
+            if selType == "features" then                
+                for _, oldFeatureId in pairs(items) do
+                    if oldFeatureId == featureId then
+                        self.dragFeature = featureId
+                        return true
+                    end
+                end
+            end
+            SCEN_EDIT.view.selectionManager:SelectFeatures({featureId})            
         end
     end
 end
@@ -172,6 +185,8 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
         else
             SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeature, self.dragDiffX, self.dragDiffZ))
         end
+    else
+        SCEN_EDIT.stateManager:SetState(RectangleSelectState(x, y))
     end
 end
 
