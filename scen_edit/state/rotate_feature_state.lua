@@ -10,7 +10,7 @@ function RotateFeatureState:init(featureId)
     self.newPosX = coords[1]
     self.newPosZ = coords[3]
     self.initialRots = {}
-    local featureIds = {self.featureId} --Spring.GetSelectedFeatures()
+    local _, featureIds = SCEN_EDIT.view.selectionManager:GetSelection()
     for i = 1, #featureIds do
         local featureId = featureIds[i]
         local featureX, featureY, featureZ = Spring.GetFeaturePosition(featureId)
@@ -36,7 +36,7 @@ function RotateFeatureState:MouseMove(x, y, dx, dy, button)
     if result == "ground" then
         self.newPosX = coords[1]
         self.newPosZ = coords[3]
-        local featureIds = {self.featureId} --Spring.GetSelectedFeatures()
+        local _, featureIds = SCEN_EDIT.view.selectionManager:GetSelection()
         self.featureGhostViews = {}
     
         for i = 1, #featureIds do
