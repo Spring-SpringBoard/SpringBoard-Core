@@ -71,8 +71,10 @@ function View:DrawWorldPreUnit()
             if Spring.ValidFeatureID(featureId) then
                 local bx, _, bz = Spring.GetFeaturePosition(featureId)
                 local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
-                local x1, z1 = bx + featureDef.minx - 5, bz + featureDef.minz + 5
-                local x2, z2 = bx + featureDef.maxx - 5, bz + featureDef.maxz + 5
+                local minx, maxx = featureDef.minx or -10, featureDef.maxx or 10
+                local minz, maxz = featureDef.minz or -10, featureDef.maxz or 10
+                local x1, z1 = bx + minx - 5, bz + minz + 5
+                local x2, z2 = bx + maxx - 5, bz + maxz + 5
                 gl.BeginEnd(GL.LINE_STRIP, function()
                     gl.Color(0, 1, 0, 1)
                     gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)

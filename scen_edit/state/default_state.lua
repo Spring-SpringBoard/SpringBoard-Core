@@ -71,7 +71,6 @@ function DefaultState:MousePress(x, y, button)
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y)
         if result == "ground" then
-            Spring.Echo(selType)
             if SCEN_EDIT.view.displayDevelop then
                 if selType == "areas" then
                     toResize, resx, resz = self:checkResizeIntersections(coords[1], coords[3])
@@ -130,7 +129,6 @@ function DefaultState:MousePress(x, y, button)
                     end
                 end
             end
-            Spring.Echo("!")
             return true
         elseif result == "unit" then
             local unitId = coords
@@ -224,15 +222,9 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             return true
         end
     elseif key == KEYSYMS.Z and mods.ctrl then
-        if #SCEN_EDIT.commandManager.undoList > 0 then
-        --    Spring.Echo("to undo")
-        end
         SCEN_EDIT.commandManager:undo()
         return true
     elseif key == KEYSYMS.Y and mods.ctrl then
-        if #SCEN_EDIT.commandManager.redoList > 0 then
-        --    Spring.Echo("to redo")
-        end
         SCEN_EDIT.commandManager:redo()
         return true
     elseif key == KEYSYMS.C and mods.ctrl then

@@ -6,7 +6,6 @@ function FeatureManager:init(widget)
 	self.m2sFeatureIdMapping = {}
 	self.featureIdCounter = 0
     self.widget = widget
-    self:populate()
 end
 
 function FeatureManager:populate()
@@ -37,7 +36,6 @@ function FeatureManager:addFeature(featureId, modelId)
 	if not self.m2sFeatureIdMapping[modelId] then
 		self.m2sFeatureIdMapping[modelId] = featureId
 	end
-
     self:callListeners("onFeatureAdded", featureId, modelId)
     return modelId 
 end

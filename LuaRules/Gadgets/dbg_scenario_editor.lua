@@ -152,6 +152,16 @@ function gadget:Initialize()
     SCEN_EDIT.model = Model()
 	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/runtime_model/runtime_model.lua")
 
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
+    SCEN_EDIT.messageManager = MessageManager()
+
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
+    SCEN_EDIT.commandManager = CommandManager()
+
+	rtModel = RuntimeModel()
+	SCEN_EDIT.rtModel = rtModel	
+	
     if devMode then
         local areaManagerListener = AreaManagerListenerGadget()
         SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
@@ -168,40 +178,17 @@ function gadget:Initialize()
         local triggerManagerListener = TriggerManagerListenerGadget()
         SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
     end
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
-    SCEN_EDIT.messageManager = MessageManager()
-
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
-    SCEN_EDIT.commandManager = CommandManager()
-
-	rtModel = RuntimeModel()
-	SCEN_EDIT.rtModel = rtModel	
-	
-	
-	local allUnits = Spring.GetAllUnits()
-    for i = 1, #allUnits do
-        local unitId = allUnits[i]
-		local unitDefId = Spring.GetUnitDefID(unitId)
-		local unitTeamId = Spring.GetUnitTeam(unitId)
-        AddedUnit(unitId, unitDefId, unitTeamId)
-    end
-	local allFeatures = Spring.GetAllFeatures()
-	for i = 1, #allFeatures do
-        local feature = {}
-        local featureId = allFeatures[i]
-        local featureDefId = Spring.GetFeatureDefID(featureId)
-        local featureTeamId = Spring.GetFeatureTeam(featureId)
-		AddedFeature(featureId, featureTeamId)
-    end
-
+    --populate the managers now that the listeners are set
     SCEN_EDIT.loadFrame = Spring.GetGameFrame() + 1
 end
 
 function gadget:GameFrame(frameNum)
 	SCEN_EDIT.rtModel:GameFrame(frameNum)
+
+    --wait a bit before populating everything (so luaui is loaded)
     if SCEN_EDIT.loadFrame == frameNum then
+        SCEN_EDIT.model.unitManager:populate()
+        SCEN_EDIT.model.featureManager:populate()
 		Spring.Echo(scenarioFile)
         if scenarioFile then
             local data = VFS.LoadFile(scenarioFile)

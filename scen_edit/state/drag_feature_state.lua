@@ -40,7 +40,8 @@ function DragFeatureState:MouseRelease(x, y, button)
         local featureX, featureY, featureZ = Spring.GetFeaturePosition(featureId)
 
         local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
-        local moveCommand = MoveFeatureCommand(modelFeatureId, featureX + self.dx, featureY, featureZ + self.dz)
+        local y = Spring.GetGroundHeight(featureX + self.dx, featureZ + self.dz)
+        local moveCommand = MoveFeatureCommand(modelFeatureId, featureX + self.dx, y, featureZ + self.dz)
         table.insert(commands, moveCommand)
     end
     local compoundCommand = CompoundCommand(commands)
