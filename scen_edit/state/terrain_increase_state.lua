@@ -4,6 +4,7 @@ function TerrainIncreaseState:init(toDecrease)
     self.size = 100
     self.strength = 1
     self.toDecrease = toDecrease
+    self.startedChanging = false
 end
 
 function TerrainIncreaseState:AlterTerrain(x, z, amount)
@@ -16,6 +17,22 @@ function TerrainIncreaseState:AlterTerrain(x, z, amount)
     end
 end
 
+function TerrainIncreaseState:startChanging()
+    if not self.startedChanging then
+        local cmd = SetMultipleCommandModeCommand(true)
+        SCEN_EDIT.commandManager:execute(cmd)
+        self.startedChanging = true
+    end
+end
+
+function TerrainIncreaseState:stopChanging()
+    if self.startedChanging then
+        local cmd = SetMultipleCommandModeCommand(false)
+        SCEN_EDIT.commandManager:execute(cmd)
+        self.startedChanging = false
+    end
+end
+
 function TerrainIncreaseState:MousePress(x, y, button)
     local _, _, _, shift = Spring.GetModKeyState()
     if button == 1 then
@@ -25,12 +42,20 @@ function TerrainIncreaseState:MousePress(x, y, button)
             if shift then
                 amount = -amount                
             end
+            self:startChanging()
             self:AlterTerrain(coords[1], coords[3], amount)
         end
         return true
     end
     if button == 3 then
+        self:stopChanging()
         SCEN_EDIT.stateManager:SetState(DefaultState())
+    end
+end
+
+function TerrainIncreaseState:MouseRelease(x, y, button)
+    if button == 1 then
+        self:stopChanging()
     end
 end
 
