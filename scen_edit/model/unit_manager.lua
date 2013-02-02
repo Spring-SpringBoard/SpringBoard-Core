@@ -6,7 +6,6 @@ function UnitManager:init(widget)
 	self.m2sUnitIdMapping = {}
 	self.unitIdCounter = 0
     self.widget = widget
-    self:populate()
 end
 
 function UnitManager:populate()

@@ -42,7 +42,6 @@ function RectangleSelectState:MouseRelease(x, y, button)
         if z1 > z2 then
             z1, z2 = z2, z1
         end
-        Spring.Echo(x1, z1, x2, z2)
         local unitIds = Spring.GetUnitsInRectangle(x1, z1, x2, z2)
         local featureIds = Spring.GetFeaturesInRectangle(x1, z1, x2, z2)
         if #unitIds > 0 then

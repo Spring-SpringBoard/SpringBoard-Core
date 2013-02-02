@@ -37,10 +37,6 @@ end
 function CommandManager:execute(cmd, widget)
     assert(cmd, "Command is nil")
     if self.widget then
-    table.insert(self.redoList, cmd)
-    if #self.redoList > self.maxRedoSize then
-        table.remove(self.redoList, 1)
-    end
         if not widget then
             assert(cmd.className, "Command instance lacks className value")
             local msg = Message("command", cmd)
