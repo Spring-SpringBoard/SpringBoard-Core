@@ -56,17 +56,16 @@ function AddUnitState:DrawWorld()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         local dirX, dirY, dirZ = Spring.GetCameraDirection()
---        Spring.Echo(dirX, dirY, dirZ)
         local drawX, drawY, drawZ = unpack(coords)
 
         gl.PushMatrix()
-        gl.Color(1, 1, 1, 0.2)
         if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
             gl.Translate(self.x, self.y, self.z)
             gl.Rotate(self.angle, 0, 1, 0)
         else
             gl.Translate(drawX, drawY, drawZ)
         end
+        gl.Color(1, 1, 1, 0.8)
         gl.UnitShape(self.unitDef, self.teamId)
         gl.PopMatrix()			
     end

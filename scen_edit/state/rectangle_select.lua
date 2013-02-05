@@ -32,22 +32,24 @@ end
 
 function RectangleSelectState:MouseRelease(x, y, button)
     if self.endScreenX and self.endScreenZ then
-        local result, coords = Spring.TraceScreenRay(self.startScreenX, self.startScreenZ, true)
-        local x1, _, z1 = unpack(coords)
-        local result, coords = Spring.TraceScreenRay(self.endScreenX, self.endScreenZ, true)
-        local x2, _, z2 = unpack(coords)
-        if x1 > x2 then
-            x1, x2 = x2, x1
-        end
-        if z1 > z2 then
-            z1, z2 = z2, z1
-        end
-        local unitIds = Spring.GetUnitsInRectangle(x1, z1, x2, z2)
-        local featureIds = Spring.GetFeaturesInRectangle(x1, z1, x2, z2)
-        if #unitIds > 0 then
-            SCEN_EDIT.view.selectionManager:SelectUnits(unitIds)
-        elseif #featureIds > 0 then
-            SCEN_EDIT.view.selectionManager:SelectFeatures(featureIds)
+        local result1, coords1 = Spring.TraceScreenRay(self.startScreenX, self.startScreenZ, true)
+        local result2, coords2 = Spring.TraceScreenRay(self.endScreenX, self.endScreenZ, true)
+        if result1 == "ground" and result2 == "ground" then
+            local x1, _, z1 = unpack(coords1)
+            local x2, _, z2 = unpack(coords2)
+            if x1 > x2 then
+                x1, x2 = x2, x1
+            end
+            if z1 > z2 then
+                z1, z2 = z2, z1
+            end
+            local unitIds = Spring.GetUnitsInRectangle(x1, z1, x2, z2)
+            local featureIds = Spring.GetFeaturesInRectangle(x1, z1, x2, z2)
+            if #unitIds > 0 then
+                SCEN_EDIT.view.selectionManager:SelectUnits(unitIds)
+            elseif #featureIds > 0 then
+                SCEN_EDIT.view.selectionManager:SelectFeatures(featureIds)
+            end
         end
     end
     SCEN_EDIT.stateManager:SetState(DefaultState())

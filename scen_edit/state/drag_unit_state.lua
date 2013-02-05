@@ -52,7 +52,6 @@ end
 function DragUnitState:DrawWorld()
     for unitId, pos in pairs(self.unitGhostViews) do
         gl.PushMatrix()
-        gl.Color(0.1, 1, 0.1, 0.4)
         local unitType = Spring.GetUnitDefID(unitId)
         local unitTeamId = Spring.GetUnitTeam(unitId)
         gl.Translate(pos[1], pos[2], pos[3])
@@ -64,8 +63,9 @@ function DragUnitState:DrawWorld()
             gl.Rotate(180 / math.pi * angleY, 0, 1, 0)
         end
 
-        gl.UnitRaw(unitId, true)
---        gl.UnitShape(unitType, unitTeamId)
+        gl.Color(0.1, 1, 0.1, 0.8)
+--        gl.UnitRaw(unitId, true)
+        gl.UnitShape(unitType, unitTeamId)
         gl.PopMatrix()
     end
 end
