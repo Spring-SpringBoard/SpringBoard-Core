@@ -996,7 +996,7 @@ function reloadGadgets()
         Spring.SendCommands("cheat")
     end
     Spring.SendCommands("luarules reload")
-    Spring.SendCommands("globallos 1")
+    Spring.SendCommands("globallos")
     if not wasEnabled then
         Spring.SendCommands("cheat")
     end
