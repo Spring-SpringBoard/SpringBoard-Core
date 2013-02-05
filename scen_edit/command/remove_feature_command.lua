@@ -4,10 +4,15 @@ RemoveFeatureCommand.className = "RemoveFeatureCommand"
 function RemoveFeatureCommand:init(modelFeatureId)
     self.className = "RemoveFeatureCommand"
     self.modelFeatureId = modelFeatureId
+    self.nothingHappened = false
 end
 
 function RemoveFeatureCommand:execute()
     local featureId = SCEN_EDIT.model.featureManager:getSpringFeatureId(self.modelFeatureId)
+    if featureId == nil or Spring.GetUnitIsDead(featureId) or Spring.ValidUnitID(featureId) then
+        self.nothingHappened = true
+        return
+    end
     self.featureTypeId = Spring.GetFeatureDefID(featureId)
     self.x, self.y, self.z = Spring.GetFeaturePosition(featureId)
     self.teamId = Spring.GetFeatureTeam(featureId)
@@ -18,6 +23,9 @@ function RemoveFeatureCommand:execute()
 end
 
 function RemoveFeatureCommand:unexecute()
+    if self.nothingHappened then
+        return
+    end
     local featureId = Spring.CreateFeature(self.featureTypeId, self.x, self.y, self.z, 0, self.featureTeamId)
     local prop = math.tan(self.angle / 180 * math.pi)
     local z = math.sqrt(1 / (prop * prop + 1))

@@ -90,13 +90,14 @@ function AddFeatureState:DrawWorld()
                 z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             end
             gl.PushMatrix()
-            gl.Color(1, 1, 1, 0.2)
 
             gl.Translate(x, y, z)
             if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
                 gl.Rotate(self.angle, 0, 1, 0)
             end
 
+            gl.Texture(1, "%-" .. drawFeature .. ":1")
+            gl.Color(1, 1, 1, 0.8)
             gl.FeatureShape(drawFeature, self.teamId)
             gl.PopMatrix()
         end
