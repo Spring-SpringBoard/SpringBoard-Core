@@ -11,7 +11,7 @@ function TerrainIncreaseState:AlterTerrain(x, z, amount)
     local currentFrame = Spring.GetGameFrame()
     if not self.lastChangeFrame or currentFrame - self.lastChangeFrame >= 0 then
         self.lastChangeFrame = currentFrame
-        local cmd = TerrainIncreaseCommand(x - self.size, z - self.size, x + self.size, z + self.size, amount)
+        local cmd = TerrainIncreaseCommand(x, z, self.size, amount)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
     end
@@ -104,12 +104,10 @@ function TerrainIncreaseState:DrawWorld()
 	local result, coords = Spring.TraceScreenRay(x, y, true)
 	if result == "ground" then
 		local x, z = coords[1], coords[3]
-		local startX, startZ = x - self.size, z - self.size
-		local endX, endZ = x + self.size, z + self.size
 		gl.PushMatrix()
         currentState = SCEN_EDIT.stateManager:GetCurrentState()
         gl.Color(0, 255, 0, 0.3)
-		SCEN_EDIT.view:drawRect(startX, startZ, endX, endZ) 
+        gl.Utilities.DrawGroundCircle(x, z, self.size)
 		gl.PopMatrix()
 	end
 end
