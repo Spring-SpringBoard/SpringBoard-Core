@@ -43,10 +43,10 @@ function AreaView:_Draw(x1, z1, x2, z2)
         local bt = 4
         gl.Color(1, 1, 1, 0.7)
         --Instead of actually drawing lines, we're drawing really small quads!
-        gl.DrawGroundQuad(x1-bt, z1, x1+bt, z2)
-        gl.DrawGroundQuad(x2-bt, z1, x2+bt, z2)
-        gl.DrawGroundQuad(x1, z1-bt, x2, z1+bt)
-        gl.DrawGroundQuad(x1, z2-bt, x2, z2+bt)
+        gl.Utilities.DrawGroundRectangle(x1-bt, z1-bt, x1, z2+bt)
+        gl.Utilities.DrawGroundRectangle(x2, z1-bt, x2+bt, z2+bt)
+        gl.Utilities.DrawGroundRectangle(x1, z1-bt, x2, z1)
+        gl.Utilities.DrawGroundRectangle(x1, z2, x2, z2+bt)
         --gl.BeginEnd(GL.TRIANGLE_STRIP, DrawBorder, x1 - 3, z1 - 3, x2 - x1, z2 - z1, 3)
     gl.PopMatrix()
 
@@ -56,7 +56,7 @@ function AreaView:_Draw(x1, z1, x2, z2)
         else
             gl.Color(0, 1, 0, 0.2)
         end
-        gl.DrawGroundQuad(x1, z1, x2, z2)
+        gl.Utilities.DrawGroundRectangle(x1,z1,x2,z2)
     gl.PopMatrix()
 
     gl.PushMatrix()
