@@ -1,9 +1,9 @@
 TerrainIncreaseCommand = UndoableCommand:extends{}
 TerrainIncreaseCommand.className = "TerrainIncreaseCommand"
 
-function TerrainIncreaseCommand:init(x1, z1, x2, z2, delta)
+function TerrainIncreaseCommand:init(x, z, size, delta)
     self.className = "TerrainIncreaseCommand"
-    self.x1, self.z1, self.x2, self.z2 = x1, z1, x2, z2
+    self.x, self.z, self.size = x, z, size
     self.delta = delta
 end
 
@@ -35,28 +35,78 @@ local function getGauss(matrix)
     return value / totalGauss
 end
 --]]
+local multiplierMap = {}
+local currentlyGenerated = 0
+local function getMultiplier(value)
+    multiplier = multiplierMap[value]
+    if multiplier == nil then
+        multiplier = math.sqrt(value)
+        multiplierMap[value] = multiplier
+    end
+    return multiplier
+end
+
+local function generateMap(size, delta)
+    local map = {}
+    local maxDist = size/2 * delta
+    center = size/2
+    local parts = size / Game.squareSize
+    local scale = math.abs(10 / maxDist)
+    for x = 0, size, Game.squareSize do
+        for z = 0, size, Game.squareSize do
+            local dx = x - center
+            local dz = z - center
+            local dist = getMultiplier(dx * dx + dz * dz)
+            local total = (-dist * delta + maxDist) * scale
+            if total * delta < 0 then
+                total = 0
+            end
+            map[x + z * parts] = total
+        end
+    end
+    return map
+end
+
+local maps = {}
+local function getMap(size, delta)
+    local map = nil
+
+    local mapsBySize = maps[size]
+    if mapsBySize then
+        map = mapsBySize[delta]
+    end
+    if not map then
+        map = generateMap(size, delta)
+        if not mapsBySize then
+            mapsBySize = {}
+            maps[size] = mapsBySize
+        end
+        mapsBySize[delta] = map
+    end
+    return map
+end
 
 function TerrainIncreaseCommand:GetHeightMapFunc(isUndo)
     return function()
-        local centerX = (self.x1 + self.x2) / 2
-        local centerZ = (self.z1 + self.z2) / 2
-        local dx = self.x2 - self.x1
-        local dz = self.z2 - self.z1
---        local maxDist = math.sqrt(dx * dx / 4 + dz * dz / 4) * self.delta
-        local maxDist = math.min(dx / 2, dz / 2) * self.delta
-        local scale = math.abs(10 / maxDist)
-        if isUndo then
-            scale = -scale
-        end
-        for x = self.x1, self.x2, Game.squareSize do
-            for z = self.z1, self.z2, Game.squareSize do
-                local dx = x - centerX
-                local dz = z - centerZ
-                local dist = math.sqrt(dx * dx + dz * dz)
-                local total = (-dist * self.delta + maxDist)
-                if total * self.delta >= 0 then
-                    total = total * scale
-                    Spring.AddHeightMap(x, z, total)
+        local map = getMap(self.size, self.delta)
+        local centerX = self.x
+        local centerZ = self.z
+        local size = self.size
+        local parts = size / Game.squareSize
+        local dx = centerX - size/2
+        local dz = centerZ - size/2
+        if not isUndo then
+            for x = 0, size, Game.squareSize do
+                for z = 0, size, Game.squareSize do
+                    local total = map[x + z * parts] 
+                    Spring.AddHeightMap(x + dx, z + dz, total)
+                end
+            end
+        else
+            for x = 0, size, Game.squareSize do
+                for z = 0, size, Game.squareSize do
+                    local total = map[x + z * parts] 
+                    Spring.AddHeightMap(x + dx, z + dz, -total)
                 end
             end
         end
