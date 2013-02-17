@@ -6,14 +6,17 @@ function SaveFileDialog:init(dir)
     self:super("init", dir)
 end
 
+function SaveFileDialog:save(path)
+    if self.confirmDialogCallback then 
+        self.confirmDialogCallback(path)
+    end
+end
 
 function SaveFileDialog:confirmDialog()
-	local fileName = self:getSelectedFilePath()
-    local saveCommand = SaveCommand(fileName)
-    success, errMsg = pcall(function()
-        SCEN_EDIT.commandManager:execute(saveCommand, true)
-    end)
-    if not success then
-        Spring.Echo(errMsg)
+	local filePath = self:getSelectedFilePath()
+    --TODO: create a dialog which prompts the user if they want to delete the existing file
+    if (VFS.FileExists(filePath)) then
+        os.remove(filePath)
     end
+    self:save(filePath)
 end

@@ -133,7 +133,7 @@ local function AddedFeature(featureID, allyTeam)
 end
 
 function gadget:Initialize()
-    Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
+    --Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     VFS.Include("scen_edit/exports.lua")
 
     vstruct = require("vstruct")
@@ -189,7 +189,6 @@ function gadget:GameFrame(frameNum)
     if SCEN_EDIT.loadFrame == frameNum then
         SCEN_EDIT.model.unitManager:populate()
         SCEN_EDIT.model.featureManager:populate()
-		Spring.Echo(scenarioFile)
         if scenarioFile then
             local data = VFS.LoadFile(scenarioFile)
             local mission = loadstring(data)()
