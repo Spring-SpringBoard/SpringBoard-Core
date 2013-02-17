@@ -173,181 +173,11 @@ function MakeRemoveActionWindow(trigger, triggerWindow, action, idx)
     triggerWindow:Populate()
 end
 
-local function Save(path)
-	--path = path:gsub("\\", "/")
-	--path = "./" .. path 
-    err,msg = pcall(Model.Save, SCEN_EDIT.model, path)
-    if not err then 
-        Spring.Echo(msg)
-    end--    model:Save("scenario.lua")
-end
-
-local function Load(path)
-    --local f, err = loadfile(fileName)
-    --local fileName = "scenario.lua"
-    --local f = assert(io.open(path, "r"))	
-    --local t = f:read("*all")
-    --f:close()
-    local data = VFS.LoadFile(path)
-    Spring.Echo(#data)
-    cmd = LoadCommand(data)
-    SCEN_EDIT.commandManager:execute(cmd)
-end
-
 local function CreateTerrainEditor()
-	local terrainEditor = Window:New {
-		parent = screen0,
-		x = 300,
-		y = 400,
-		width = 400,	
-		height = 100,		
-		children = {
-			StackPanel:New {
-                orientation = 'horizontal',
-                width = '100%',
-                height = '100%',
-                padding = {0,0,0,0},
-                itemPadding = {0,10,10,10},
-                itemMargin = {0,0,0,0},
-                resizeItems = false,
-				children = {
-					Button:New {
-						caption = "Height",
-						tooltip = "Modify heightmap",
-						width = 120, --model.B_HEIGHT + 20,
-						height = model.B_HEIGHT + 20,
-						OnClick = {
-							function()
-                                SCEN_EDIT.stateManager:SetState(TerrainIncreaseState())
-							end
-						},
-					},
-					Button:New {
-						caption = "Texture",
-						tooltip = "Change texture",
-						width = model.B_HEIGHT + 20,
-						height = model.B_HEIGHT + 20,
-						OnClick = {
-							function()
-                                SCEN_EDIT.stateManager:SetState(TerrainChangeTextureState())
-							end
-						},
-					},
-                    Button:New {
-                        caption = "S",
-						width = model.B_HEIGHT + 20,
-						height = model.B_HEIGHT + 20,
-                        OnClick = {
-                            function()
-                                Spring.Echo("HEIGHTMAP SAVE")
-                                local fileName = "heightmap.test"
-                                local file = assert(io.open(fileName, "wb"))
-                                local data = {}
-                                local totalChanged = 0
-
-                                local bufferSize = 1000
-                                local bufferFlush = function()
-                                    if #data == 0 then
-                                        return
-                                    end
-                                    --Spring.Echo("Packing...")
-                                    local str = VFS.PackF32(data)
-                                    --Spring.Echo("Unpacking...")
-                                    local newData = VFS.UnpackF32(str, 1, #str / 4)
-                                    --Spring.Echo(#data, #newData)
-                                    if #data ~= #newData then
-                                        --Spring.Echo("Different size!: ", #data, #newData)
-                                    end
-                                    local diffCount = 0
-                                    for i = 1, math.min(#data, #newData) do
-                                        if data[i] ~= newData[i] then
-                                            diffCount = diffCount + 1
-                                            --Spring.Echo("DIFF:", data[i], newData[i])
-                                        end
-                                        if diffCount > 100 then
-                                            break
-                                        end
-                                    end
-                                    file:write(str)
-                                end
-                                local addData = function(chunk)
-                                    data[#data + 1] = chunk                                
-                                    totalChanged = totalChanged + 1
-                                    if #data >= bufferSize then
-                                        bufferFlush()
-                                        data = {}
-                                    end
-                                end
-                                for x = 0, Game.mapSizeX, Game.squareSize do
-                                    local lastChanged = false
-                                    for z = 0, Game.mapSizeZ, Game.squareSize do
-                                        local groundHeight = Spring.GetGroundHeight(x, z)
-                                        local origGroundHeight = Spring.GetGroundOrigHeight(x, z)
-                                        local deltaHeight = groundHeight - origGroundHeight
-                                        if deltaHeight ~= 0 then
-                                            --Spring.Echo(x, z)
-                                            if lastChanged then
-                                                --Spring.Echo(deltaHeight)
-                                                if deltaHeight ~= deltaHeight then
-                                                    --Spring.Echo(x, z)
-                                                end
-                                                addData(deltaHeight)
-                                            else
-                                                --Spring.Echo(x, z, deltaHeight)
-                                                if deltaHeight ~= deltaHeight or x ~= x or z ~= z then
-                                                    --Spring.Echo(x, z, deltaHeight)
-                                                end
-                                                addData(x)
-                                                addData(z)
-                                                addData(deltaHeight)
-                                                lastChanged = true
-                                            end
-                                        else
-                                            if lastChanged then
-                                                --Spring.Echo(0)
-                                                addData(0)
-                                                lastChanged = false
-                                            end
-                                        end
-                                    end
-                                end
-                                bufferFlush()
-                                if totalChanged == 0 then
-                                    Spring.Echo("Heightmap unchanged")
-                                end
-                                Spring.Echo("Floats: " .. totalChanged)
-                                Spring.Echo("HEIGHTMAP SAVE DONE")
-                                assert(file:close())
-                            end
-                        },
-                    },
-                    Button:New {
-                        caption = "L",
-						width = model.B_HEIGHT + 20,
-						height = model.B_HEIGHT + 20,
-                        OnClick = {
-                            function()
-                                local fileName = "heightmap.test"
-                                local file = assert(io.open(fileName, "rb"))
-                                local data = file:read("*a")--[[{}
-                                while true do
-                                    local d = file:read("*n")
-                                    if d == nil then
-                                        break
-                                    end
-                                    data[#data+1] = d
-                                end--]]
-                                assert(file:close())
-
-                                loadMap = LoadMap(data)
-                                SCEN_EDIT.commandManager:execute(loadMap)
-                            end
-                        },
-                    },
-				},
-			},
-		}
-	}
+    succ, msg = pcall(TerrainEditorView)
+    if not succ then
+        Spring.Echo(msg)
+    end
 end
 
 local function CreateUnitDefsView()
@@ -705,9 +535,9 @@ function LoadGUI()
 
 
     toolboxWindow = Window:New {
-        x = 1300,
+        x = 1000,
         y = 100,
-        width = 600,
+        width = 700,
         height = 100,
         parent = screen0,
         caption = "Scenario Toolbox",
@@ -749,11 +579,14 @@ function LoadGUI()
                                 local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
 								sfd = SaveFileDialog(dir)
 								sfd:setConfirmDialogCallback(function(path)
-									success, msg = pcall(Save, path)
-									if not success then
-										Spring.Echo(msg)
-									end
-								end)
+                                    local saveCommand = SaveCommand(path)
+                                    success, errMsg = pcall(function()
+                                        SCEN_EDIT.commandManager:execute(saveCommand, true)
+                                    end)
+                                    if not success then
+                                        Spring.Echo(errMsg)
+                                    end
+                                end)
 							end
 						},
                         children = {
@@ -774,11 +607,15 @@ function LoadGUI()
                             function()
                                 local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
 								ofd = OpenFileDialog(dir)
-								ofd:setConfirmDialogCallback(function(path)
-									success, msg = pcall(Load, path)
-									if not success then
-										Spring.Echo(msg)
-									end
+                                ofd:setConfirmDialogCallback(function(path)
+                                    VFS.MapArchive(path)
+                                    local data = VFS.LoadFile("model.lua", VFS.ZIP)
+                                    cmd = LoadCommand(data)
+                                    SCEN_EDIT.commandManager:execute(cmd)
+                                    
+                                    local data = VFS.LoadFile("heightmap.data", VFS.ZIP)
+                                    loadMap = LoadMap(data)
+                                    SCEN_EDIT.commandManager:execute(loadMap)
 								end)
                             end
                         },
@@ -878,14 +715,23 @@ function LoadGUI()
 						tooltip = "Terrain toolbox",
 						OnClick = {
 							function()
-                                --local success, msg = pcall(OpenFileDialog)
-                                if not success then
-                                    Spring.Echo(msg)
-                                end
 								CreateTerrainEditor()
 							end
 						}
 					},
+                    Button:New {
+                        height = model.B_HEIGHT + 20,
+						width = model.B_HEIGHT + 20,
+						caption = "Compress",
+						tooltip = "Compress folder",
+						OnClick = {
+							function()
+                                --VFS.CompressFolder("games/ToolBox.sdd/examples/3lanes")
+                                VFS.CompressFolder("games/ToolBox.sdd/examples/3lanes", "zip", "games/ToolBox.sdd/examples/3lanes.sdz", true, VFS.RAW)
+                               -- VFS.CompressFolder("games/ToolBox.sdd/examples/3lanes")
+							end
+						}
+                    },
                  }
             }
         }
@@ -1007,6 +853,12 @@ function widget:DrawScreen()
 end
 
 function widget:DrawWorld()
+    --has to be initialized here since it creates textures
+    if not SCEN_EDIT.model.tm then
+        SCEN_EDIT.model.tm = TextureManager()
+        SCEN_EDIT.model.tm:generateMapTextures()
+    end
+
     SCEN_EDIT.stateManager:DrawWorld()
     SCEN_EDIT.view:DrawWorld()
 	SCEN_EDIT.displayUtil:Draw()
