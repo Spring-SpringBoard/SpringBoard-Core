@@ -2,7 +2,7 @@ TerrainChangeTextureState = AbstractState:extends{}
 SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
 
 --FIXME: remove this default pen
-local penTexture = "bitmaps/spacer.bmp"
+local penTexture = "bitmaps/detailtex.bmp"
 
 local BIG_TEX_SIZE = 128*8 --bigTexSize      = (SQUARE_SIZE * bigSquareSize);
 local mapTexSQ = gl.CreateTexture(BIG_TEX_SIZE,BIG_TEX_SIZE, {
@@ -86,7 +86,7 @@ void main(void)
 }
 ]]
 local shaderTemplate = {
-    fragment = string.format(shaderFragStr,penBlenders["BlendNormal"]),
+    fragment = string.format(shaderFragStr,penBlenders["BlendRAW"]),
     uniformInt = {
         mapTex = 0,
         penTex = 1,
@@ -105,11 +105,11 @@ function TerrainChangeTextureState:drawPen(pointsXZ, x, z, penTexture)
 
     gl.Texture(1, penTexture)
     gl.Texture(2, self.paintTexture)
-    ptX,ptZ = 2, 2
+    ptX,ptZ = math.pi, math.pi
 
     if penShader then gl.UseShader(penShader) end
 
-    local textures = SCEN_EDIT.model.tm:getMapTextures(x, z, x + self.size, z + self.size)
+    local textures = SCEN_EDIT.model.tm:getMapTextures(x, z, x + 2*self.size, z + 2*self.size)
     for _, v in pairs(textures) do
         --Spring.Echo("Painting pen at ", x,z,pointsXZ[1],pointsXZ[2],(x+pointsXZ[1])/BIG_TEX_SIZE,"ID: ", tostring(tex))
         --Spring.Echo("Painting pen at ",(x)/BIG_TEX_SIZE, (z)/BIG_TEX_SIZE,"ID: ", tostring(tex))
@@ -184,7 +184,7 @@ function TerrainChangeTextureState:drawPen(pointsXZ, x, z, penTexture)
         rT = tex
 
         local errors = gl.GetShaderLog(penShader)
-        if errors then
+        if errors ~= "" then
             Spring.Echo(errors)
         end
     end
@@ -229,7 +229,7 @@ function TerrainChangeTextureState:SetTexture(x, z, textureName)
     if sqTex and Spring.SetMapSquareTexture(x, z, sqTex) then
         Spring.Echo("Texture set ok")
     end--]]
-    local mapPoints = {x,z,x,z+self.size, x+self.size,z+self.size, x+self.size,z}
+    local mapPoints = {x,z,x,z+2*self.size, x+2*self.size,z+2*self.size, x+2*self.size,z}
     tx = self:drawPen(mapPoints, x, z, penTexture)
 end
 
@@ -239,7 +239,7 @@ function TerrainChangeTextureState:MousePress(x, y, button)
         if result == "ground"  then
 --            local textureName = SCEN_EDIT.view.textureManager:GetRandomTexture()
             self.delayCall = function ()
-                local x, z = coords[1] - self.size/2, coords[3] - self.size / 2
+                local x, z = coords[1] - self.size, coords[3] - self.size
                 self:SetTexture(x, z, textureName) 
             end
             return true
@@ -253,7 +253,7 @@ function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground"  then
         self.delayCall = function ()
-            local x, z = coords[1] - self.size/2, coords[3] - self.size / 2
+            local x, z = coords[1] - self.size, coords[3] - self.size
             self:SetTexture(x, z, textureName) 
         end
     end
@@ -281,7 +281,7 @@ end
 
 function TerrainChangeTextureState:DrawPen(x, z)
 
-    local mapPoints = {x,z,x,z+self.size, x+self.size,z+self.size, x+self.size,z}
+    local mapPoints = {x,z,x,z+2*self.size, x+2*self.size,z+2*self.size, x+2*self.size,z}
     gl.DepthTest(false)
     if penTexture and type(penTexture)=="string" then
         local color = { 1, 1, 1, 1 } --colorBars.color

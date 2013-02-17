@@ -719,19 +719,6 @@ function LoadGUI()
 							end
 						}
 					},
-                    Button:New {
-                        height = model.B_HEIGHT + 20,
-						width = model.B_HEIGHT + 20,
-						caption = "Compress",
-						tooltip = "Compress folder",
-						OnClick = {
-							function()
-                                --VFS.CompressFolder("games/ToolBox.sdd/examples/3lanes")
-                                VFS.CompressFolder("games/ToolBox.sdd/examples/3lanes", "zip", "games/ToolBox.sdd/examples/3lanes.sdz", true, VFS.RAW)
-                               -- VFS.CompressFolder("games/ToolBox.sdd/examples/3lanes")
-							end
-						}
-                    },
                  }
             }
         }
