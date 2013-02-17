@@ -4,12 +4,9 @@ Beta milestone(release for the public): medium priority goals
 High priority:
     - Map saving/loading:
         -texture map
-        -??
-    - Texture map manipulation
     - Cleanup core_types.lua:
         - seperate loading mechanism from metadata
         - Provide a way to load and manage user metadata
-    - Pack entire mission into a single .sdz
 
 Medium priority:
     - Display a list of executed commands (and the person who executed them) for better cooperative work
