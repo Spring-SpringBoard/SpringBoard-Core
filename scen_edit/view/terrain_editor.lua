@@ -50,12 +50,15 @@ function TerrainEditorView:init()
     }
     textureImages.OnSelectItem = {
         function(obj, itemIdx, selected)
+            Spring.Echo(itemIdx, selected)
             if selected and itemIdx > 0 then
                 local item = textureImages.items[itemIdx]
                 self.paintTexture = item
                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
                 if currentState:is_A(TerrainChangeTextureState) then
                     currentState.paintTexture = item
+                else
+                    SCEN_EDIT.stateManager:SetState(TerrainChangeTextureState(self.paintTexture))
                 end
             end
         end
