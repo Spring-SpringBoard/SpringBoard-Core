@@ -58,7 +58,7 @@ function View:drawRects()
 end
 
 function View:DrawWorld()
-    self.textureManager:DrawWorld()
+    --self.textureManager:DrawWorld()
 end
 
 function View:DrawWorldPreUnit()

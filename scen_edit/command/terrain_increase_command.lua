@@ -48,12 +48,12 @@ end
 
 local function generateMap(size, delta)
     local map = {}
-    local maxDist = size/2 * delta
-    center = size/2
-    local parts = size / Game.squareSize
+    local maxDist = size * delta
+    center = size
+    local parts = 2*size / Game.squareSize
     local scale = math.abs(10 / maxDist)
-    for x = 0, size, Game.squareSize do
-        for z = 0, size, Game.squareSize do
+    for x = 0, 2*size, Game.squareSize do
+        for z = 0, 2*size, Game.squareSize do
             local dx = x - center
             local dz = z - center
             local dist = getMultiplier(dx * dx + dz * dz)
@@ -92,19 +92,19 @@ function TerrainIncreaseCommand:GetHeightMapFunc(isUndo)
         local centerX = self.x
         local centerZ = self.z
         local size = self.size
-        local parts = size / Game.squareSize
-        local dx = centerX - size/2
-        local dz = centerZ - size/2
+        local parts = 2*size / Game.squareSize
+        local dx = centerX - size
+        local dz = centerZ - size
         if not isUndo then
-            for x = 0, size, Game.squareSize do
-                for z = 0, size, Game.squareSize do
+            for x = 0, 2*size, Game.squareSize do
+                for z = 0, 2*size, Game.squareSize do
                     local total = map[x + z * parts] 
                     Spring.AddHeightMap(x + dx, z + dz, total)
                 end
             end
         else
-            for x = 0, size, Game.squareSize do
-                for z = 0, size, Game.squareSize do
+            for x = 0, 2*size, Game.squareSize do
+                for z = 0, 2*size, Game.squareSize do
                     local total = map[x + z * parts] 
                     Spring.AddHeightMap(x + dx, z + dz, -total)
                 end

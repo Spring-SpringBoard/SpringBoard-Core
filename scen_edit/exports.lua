@@ -33,6 +33,7 @@ if WG and WG.Chili then
     Grid = Chili.Grid
     TextBox = Chili.TextBox
     Image = Chili.Image
+    ImageListView = Chili.ImageListView
     TreeView = Chili.TreeView
     Trackbar = Chili.Trackbar
     screen0 = Chili.Screen0
