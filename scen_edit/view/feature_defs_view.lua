@@ -1,216 +1,164 @@
---//=============================================================================
-FeatureDefsView = LayoutPanel:Inherit {
-  --TODO: figure out how to use DrawItemBackground with correct class name, in this case "FeatureDefsView"
-  classname = "imagelistview", 
+FeatureDefsView = LCS.class{}
 
-  autosize = true,
-
-  autoArrangeH = false,
-  autoArrangeV = false,
-  centerItems  = false,
-
-  iconX     = 64,
-  iconY     = 64,
-
-  itemMargin    = {1, 1, 1, 1},
-
-  selectable  = true,
-  multiSelect = false,
-  columns = 5,
-
-  items = {},
-  featureTypeId = 1,
-  unitTerrainId = 1,
-  unitTypesId = 1,
-  teamId = 1,
-}
-
-local this = FeatureDefsView 
-local inherited = this.inherited
-
---//=============================================================================
-
-function FeatureDefsView:New(obj)
-  obj = inherited.New(self, obj)
-  obj:PopulateFeatureDefsView()
-  return obj
-end
-
---//=============================================================================
-function FeatureDefsView:PopulateFeatureDefsView()
-    self:Clear()
-    local featureTypeId = self.featureTypeId
-	--TODO create a default picture for features
-	local defaultPicture = nil
-	for id, unitDef in pairs(UnitDefs) do
-		defaultPicture = "unitpics/" .. unitDef.buildpicname
-		break
-	end
-    for id, featureDef in pairs(FeatureDefs) do
-		local correctType = false
-        local correctUnit = true
-        local unitDef = nil
-		if featureTypeId == 3 then
-			correctType = true
-		else
-			local isWreck = false
-			if featureDef.tooltip and type(featureDef.tooltip) == "string" then
-                local defName = featureDef.name:gsub("_heap", ""):gsub("_dead", "")
-                unitDef = UnitDefNames[defName]
-                if unitDef then
-                    isWreck = true
-                end
-			end
-			correctType = isWreck == (featureTypeId == 1)
-            if correctType and isWreck then
-                correctUnit = false
-                local unitTerrainId = self.unitTerrainId
-                local unitTypesId = self.unitTypesId
-                local correctUnitType = false
-                correctUnitType = unitTypesId == 2 and unitDef.isBuilding or
-                unitTypesId == 1 and not unitDef.isBuilding or
-                unitTypesId == 3
-
-                -- BEAUTIFUL, MARVEL AT IT'S GLORY FOR IT ILLUMINATES US ALL
-                correctTerrain = unitTerrainId == 1 and (not unitDef.canFly and
-                not unitDef.floater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
-                unitTerrainId == 2 and unitDef.canFly or
-                unitTerrainId == 3 and (unitDef.canHover or unitDef.floater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
-                unitTerrainId == 4
-                if correctUnitType and correctTerrain then
-                    correctUnit = true
+function FeatureDefsView:init()
+    local ebAmount = EditBox:New {
+        text = "1",
+        x = 310,
+        bottom = 8,
+        width = 50,
+        OnKeyPress = {
+            function(obj, ...)
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                if currentState:is_A(AddFeatureState) then
+                    currentState.amount = tonumber(obj.text) or 1
                 end
             end
-		end
-        if correctType and correctUnit then
-            --unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
-            unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
-            local fileExists = VFS.FileExists(unitImagePath)
-            if not fileExists then
-                if unitDef ~= nil then
-                    unitImagePath = SCEN_EDIT.getUnitDefBuildPic(unitDef)
-                else
-                    unitImagePath = ""
+        }
+    }
+
+    self.featureDefsPanel = FeatureDefsPanel:New {
+		name='features',
+		x = 0,
+		right = 20,
+		OnSelectItem = {
+			function(obj,itemIdx,selected)
+				if selected and itemIdx > 0 then
+                    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+					if currentState:is_A(SelectFeatureTypeState) then
+						selFeatureDef = self.featureDefsPanel.items[itemIdx].id
+						CallListeners(currentState.btnSelectType.OnSelectFeatureType, selFeatureDef)
+                        SCEN_EDIT.stateManager:SetState(DefaultState())
+					else
+						selFeatureDef = self.featureDefsPanel.items[itemIdx].id
+                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, self.featureDefsPanel.teamId, self.featureDefsPanel, tonumber(ebAmount.text) or 1))
+					end
+                    local feature = FeatureDefs[selFeatureDef]
+				end
+			end,
+		},
+	}
+    local playerNames, playerTeamIds = GetTeams()
+    local teamsCmb = ComboBox:New {
+        bottom = 1,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        items = playerNames,
+        playerTeamIds = playerTeamIds,
+        x = 100,
+        width=120,
+    }
+    teamsCmb.OnSelect = {
+        function (obj, itemIdx, selected) 
+            if selected then
+                self.featureDefsPanel:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                if currentState:is_A(AddFeatureState) then
+                    currentState.teamId = self.featureDefsPanel.teamId
                 end
             end
-			local name = featureDef.humanName or featureDef.tooltip or featureDef.name
-            self:AddImage(name, featureDef.id, unitImagePath)
         end
-    end
-    self.rows = #self.items / self.columns + 1
-	self:SelectItem(0)
+    }
+
+	self.featureDefsPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
+
+    self.featuresWindow = Window:New {
+        parent = screen0,
+        caption = "Feature Editor",
+        width = 487,
+        height = 400,
+        resizable = false,
+        x = 1400,
+        y = 500,
+        children = {
+            ScrollPanel:New {
+                y = 15,
+                x = 1,
+                right = 1,
+                bottom = SCEN_EDIT.conf.C_HEIGHT * 4,
+                --horizontalScrollBar = false,
+                children = {
+                    self.featureDefsPanel
+                },
+            },
+            Label:New {
+                x = 1,
+                width = 50,
+                bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
+                caption = "Type:",
+            },
+            ComboBox:New {
+                height = SCEN_EDIT.conf.B_HEIGHT,
+                x = 50,
+                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
+                items = {
+                    "Wreckage", "Other", "All",
+                },
+                width = 80,
+                OnSelect = {
+                    function (obj, itemIdx, selected) 
+                        if selected then
+                            self.featureDefsPanel:SelectFeatureTypesId(itemIdx)
+                        end
+                    end
+                },
+            },
+            Label:New {
+                x = 140,
+                width = 50,
+                bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
+                caption = "Wreck:",
+            },
+            ComboBox:New {
+                height = SCEN_EDIT.conf.B_HEIGHT,
+                x = 190,
+                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
+                items = {
+                    "Units", "Buildings", "All",
+                },
+                width = 80,
+                OnSelect = {
+                    function (obj, itemIdx, selected) 
+                        if selected then
+                            self.featureDefsPanel:SelectUnitTypesId(itemIdx)
+                        end
+                    end
+                },
+            },
+            Label:New {
+                caption = "Terrain:",
+                x = 270,
+                bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
+                width = 50,
+            },
+            ComboBox:New {
+                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
+                height = SCEN_EDIT.conf.B_HEIGHT,
+                items = {
+                    "Ground", "Air", "Water", "All",
+                },
+                x = 330,
+                width=80,
+                OnSelect = {
+                    function (obj, itemIdx, selected) 
+                        if selected then
+                            self.featureDefsPanel:SelectTerrainId(itemIdx)
+                        end
+                    end
+                },
+            },
+            Label:New {
+                caption = "Player:",
+                x = 40,
+                bottom = 8,
+                width = 50,
+            },
+            teamsCmb,
+            Label:New {
+                caption = "Amount:",
+                x = 250, 
+                bottom = 8,
+                width = 50,
+            },
+            ebAmount,
+        }
+    }
 end
-
-function FeatureDefsView:SelectTerrainId(unitTerrainId)
-    self.unitTerrainId = unitTerrainId
-    self:PopulateFeatureDefsView()
-end
-
-function FeatureDefsView:SelectFeatureTypesId(featureTypeId)
-    self.featureTypeId = featureTypeId
-    self:PopulateFeatureDefsView()
-end
-
-function FeatureDefsView:SelectTeamId(teamId)
-    self.teamId = teamId
-end
-
-local function ExtractFileName(filepath)
-  filepath = filepath:gsub("\\", "/")
-  local lastChar = filepath:sub(-1)
-  if (lastChar == "/") then
-    filepath = filepath:sub(1,-2)
-  end
-  local pos,b,e,match,init,n = 1,1,1,1,0,0
-  repeat
-    pos,init,n = b,init+1,n+1
-    b,init,match = filepath:find("/",init,true)
-  until (not b)
-  if (n==1) then
-    return filepath
-  else
-    return filepath:sub(pos+1)
-  end
-end
-
---//=============================================================================
-
-function FeatureDefsView:AddImage(name, id, imagefile)
-  table.insert(self.items, {name=name, id=id})
-  self:AddChild(LayoutPanel:New{
-    width  = self.iconX+10,
-    height = self.iconY+20,
-    padding = {0,0,0,0},
-    itemPadding = {0,0,0,0},
-    itemMargin = {0,0,0,0},
-    rows = 2,
-    columns = 1,
-
-    children = {
-      Image:New {
-        width  = self.iconX,
-        height = self.iconY,
-        passive = true,
-        file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imagefile,
-      },
-      Label:New {
-        width = self.iconX+10,
-        height = 20,
-        align = 'center',
-        autosize = false,
-        caption = name,
-      },
-    },
-  })
-end
-
-function FeatureDefsView:Clear()
-    self.children = {}
-    self.items = {}
-end
-
-function FeatureDefsView:SelectTerrainId(unitTerrainId)
-    self.unitTerrainId = unitTerrainId
-    self:PopulateFeatureDefsView()
-end
-
-function FeatureDefsView:SelectUnitTypesId(unitTypesId)
-    self.unitTypesId = unitTypesId
-    self:PopulateFeatureDefsView()
-end
-
---//=============================================================================
-
-function FeatureDefsView:DrawItemBkGnd(index)
-  local cell = self._cells[index]
-  local itemPadding = self.itemPadding
-
-  if (self.selectedItems[index]) then
-    self:DrawItemBackground(cell[1] - itemPadding[1],cell[2] - itemPadding[2],cell[3] + itemPadding[1] + itemPadding[3],cell[4] + itemPadding[2] + itemPadding[4],"selected")
-  else
-    self:DrawItemBackground(cell[1] - itemPadding[1],cell[2] - itemPadding[2],cell[3] + itemPadding[1] + itemPadding[3],cell[4] + itemPadding[2] + itemPadding[4],"normal")
-  end
-end
-
---//=============================================================================
-
-function FeatureDefsView:HitTest(x,y)
-  local cx,cy = self:LocalToClient(x,y)
-  local obj = inherited.HitTest(self,cx,cy)
-  if (obj) then return obj end
-  local itemIdx = self:GetItemIndexAt(cx,cy)
-  return (itemIdx>=0) and self
-end
-
-
-function FeatureDefsView:MouseDblClick(x,y)
-  local cx,cy = self:LocalToClient(x,y)
-  local itemIdx = self:GetItemIndexAt(cx,cy)
-
-  if (itemIdx<0) then return end
-
-  self:CallListeners(self.OnDblClickItem, self.items[itemIdx], itemIdx)
-  return self
-end
-
---//=============================================================================

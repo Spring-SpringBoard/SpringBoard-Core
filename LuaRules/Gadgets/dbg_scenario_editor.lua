@@ -84,7 +84,8 @@ function gadget:RecvLuaMsg(msg, playerID)
     
     --TODO: figure proper msg name :)
     if op == 'game' then
-
+    elseif op == 'meta' then
+        Spring.Echo("Send meta data signal")
     elseif devMode then
         if op == 'sync' then
             local msgParsed = msg:sub(#(pre .. "|" .. op .. "|") + 1)
@@ -136,10 +137,9 @@ function gadget:Initialize()
     --Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     VFS.Include("scen_edit/exports.lua")
 
-    vstruct = require("vstruct")
-    gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
-    Spring.AssignMouseCursor("resize-x", "cursor-x", true, true)
-    Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resize-x", {1,1,1,0.5}, false)
+--    gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
+--    Spring.AssignMouseCursor("resizegrip", "resizegrip", true, true)
+--    Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resizegrip", {1,1,1,0.5}, false)
 	
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
@@ -147,6 +147,17 @@ function gadget:Initialize()
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
 	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
 	SCEN_EDIT.displayUtil = DisplayUtil(false)
+
+    --FIXME: shouldn't be here
+	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "conf/conf.lua")
+    SCEN_EDIT.conf = Conf()
+
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "meta/meta_model.lua")
+	SCEN_EDIT.metaModel = MetaModel()
+    
+    --TODO: relocate this
+    metaModelLoader = MetaModelLoader()
+    metaModelLoader:Load()
 
 	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
     SCEN_EDIT.model = Model()

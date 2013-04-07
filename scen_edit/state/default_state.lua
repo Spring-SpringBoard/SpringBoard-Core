@@ -2,6 +2,7 @@ DefaultState = AbstractState:extends{}
 
 function DefaultState:init()
     self.areaSelectTime = Spring.GetGameFrame()
+    SCEN_EDIT.SetMouseCursor()
 end
 
 function DefaultState:checkResizeIntersections(x, z)
@@ -48,7 +49,7 @@ function DefaultState:checkResizeIntersections(x, z)
         resx = 0
         resz = -1
         drag_diff_z = rect[2] - z
-        if x > rect[1] + accurancy and x > rect[3] + accurancy then
+        if x > rect[1] + accurancy and x < rect[3] + accurancy then
             toResize = true
         else
             toResize = false
@@ -57,7 +58,7 @@ function DefaultState:checkResizeIntersections(x, z)
         resx = 0
         resz = 1
         drag_diff_z = rect[4] - z
-        if x > rect[1] + accurancy and x > rect[3] + accurancy then
+        if x > rect[1] + accurancy and x < rect[3] + accurancy then
             toResize = true
         else
             toResize = false
@@ -82,7 +83,7 @@ function DefaultState:MousePress(x, y, button)
                     else
                         local currentFrame = Spring.GetGameFrame()
                         --check if double click on area to create the default area trigger
-                        if self.areaSelectTime and currentFrame - self.areaSelectTime < 5 then
+                        if self.dragArea and self.areaSelectTime and currentFrame - self.areaSelectTime < 5 then
                             local trigger = {
                                 name = "Enter area " .. self.dragArea,
                                 enabled = true,
@@ -118,7 +119,7 @@ function DefaultState:MousePress(x, y, button)
                 if ctrl and (selType == "units" or selType == "features") then
                     return true
                 else
-                    selected, self.dragDiffX, self.dragDiffZ = checkAreaIntersections(coords[1], coords[3])
+                    selected, self.dragDiffX, self.dragDiffZ = SCEN_EDIT.checkAreaIntersections(coords[1], coords[3])
                     if selected then
                         self.dragArea = selected
                         SCEN_EDIT.view.selectionManager:SelectAreas({selected})

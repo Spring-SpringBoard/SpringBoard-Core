@@ -6,7 +6,7 @@ function MakeComponentPanel(parentPanel)
     local componentPanel = Control:New {
         parent = parentPanel,
         width = "100%",
-        height = SCEN_EDIT.model.B_HEIGHT + 8,
+        height = SCEN_EDIT.conf.B_HEIGHT + 8,
         orientation = "horizontal",
         padding = {0, 0, 0, 0},
         itemMarging = {0, 0, 0, 0},
@@ -67,7 +67,7 @@ function CallListeners(listeners, ...)
     end
 end
 
-function MakeConfirmButton(dialog, btnConfirm)
+function SCEN_EDIT.MakeConfirmButton(dialog, btnConfirm)
     dialog.OnConfirm = {}
     btnConfirm.OnClick = {
         function()
@@ -77,7 +77,58 @@ function MakeConfirmButton(dialog, btnConfirm)
     }
 end
 
-function CreateNameMapping(origArray)
+function SCEN_EDIT.MakeRadioButtonGroup(checkBoxes)
+    for i = 1, #checkBoxes do
+        local checkBox = checkBoxes[i]
+        table.insert(checkBox.OnChange,
+            function(cbToggled, checked)
+                if checked then
+                    for j = 1, #checkBoxes do
+                        if i ~= j then
+                            local cb = checkBoxes[j]
+                            if cb.checked then
+                                cb:Toggle()
+                            end
+                        end
+                    end
+                end
+            end
+        )
+    end
+end
+
+function SCEN_EDIT.checkAreaIntersections(x, z)
+    local areas = SCEN_EDIT.model.areaManager:getAllAreas()
+    local selected, dragDiffX, dragDiffZ
+    for id, area in pairs(areas) do
+        if x >= area[1] and x < area[3] and z >= area[2] and z < area[4] then
+            selected = id
+            dragDiffX = area[1] - x
+            dragDiffZ = area[2] - z
+        end
+    end
+    return selected, dragDiffX, dragDiffZ
+end
+
+function SCEN_EDIT.SetMouseCursor(name)
+    SCEN_EDIT.cursor = name
+    if SCEN_EDIT.cursor then
+        Spring.SetMouseCursor(SCEN_EDIT.cursor)
+    end
+end
+
+function SCEN_EDIT.MakeSeparator(panel)
+    local lblSeparator = Label:New {
+        parent = panel,
+        height = SCEN_EDIT.conf.B_HEIGHT + 10,
+        caption = "===================================",
+        align = 'center',
+    }
+    return lblSeparator
+end
+
+
+function SCEN_EDIT.CreateNameMapping(origArray)
 	local newArray = {}
 	for i = 1, #origArray do
 		local item = origArray[i]
@@ -101,7 +152,7 @@ function SCEN_EDIT.GroupByField(origArray, field)
 end
 
 function SCEN_EDIT.AddExpression(dataType, parent)
-	local viableExpressions = SCEN_EDIT.model.conditionTypesByOutput[dataType]
+	local viableExpressions = SCEN_EDIT.metaModel.functionTypesByOutput[dataType]
 	if viableExpressions then
 		local stackPanel = MakeComponentPanel(parent)
 		local cbExpressions = Checkbox:New {
@@ -115,7 +166,7 @@ function SCEN_EDIT.AddExpression(dataType, parent)
 			caption = 'Expression',
             right = 1,
 			width = 100,
-			height = SCEN_EDIT.model.B_HEIGHT,
+			height = SCEN_EDIT.conf.B_HEIGHT,
 			parent = stackPanel,
 			data = {},
 		}
@@ -167,7 +218,7 @@ function MakeVariableChoice(variableType, panel)
         local cmbVariable = ComboBox:New {
             right = 1,		
             width = 100,
-            height = SCEN_EDIT.model.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackPanel,
             items = variableNames,
             variableIds = variableIds,
@@ -235,11 +286,11 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
 				relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison")
 			end
 			local secondExpr = SCEN_EDIT.humanExpression(data.second, "value")
-			local condHumanName = SCEN_EDIT.model.conditionTypes[data.conditionTypeName].humanName
+			local condHumanName = SCEN_EDIT.metaModel.functionTypes[data.conditionTypeName].humanName
 			return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
 		end
 	elseif exprType == "action" then
-		local action = SCEN_EDIT.model.actionTypes[data.actionTypeName]
+		local action = SCEN_EDIT.metaModel.actionTypes[data.actionTypeName]
 		local humanName = action.humanName .. " ("
 		for i = 1, #action.input do
 			local input = action.input[i]
@@ -280,7 +331,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
 		elseif data.type == "expr" then
 			-- TODO
         elseif data.orderTypeName then
-            local orderType = SCEN_EDIT.model.orderTypes[data.orderTypeName]
+            local orderType = SCEN_EDIT.metaModel.orderTypes[data.orderTypeName]
             local humanName = orderType.humanName
             for i = 1, #orderType.input do
                 local input = orderType.input[i]
@@ -290,9 +341,9 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
         end
 		return "nothing"
 	elseif exprType == "numeric_comparison" then
-		return SCEN_EDIT.model.numericComparisonTypes[data.cmpTypeId]
+		return SCEN_EDIT.metaModel.numericComparisonTypes[data.cmpTypeId]
 	elseif exprType == "identity_comparison" then
-		return SCEN_EDIT.model.identityComparisonTypes[data.cmpTypeId]
+		return SCEN_EDIT.metaModel.identityComparisonTypes[data.cmpTypeId]
 	end
 	return data.humanName
 end
@@ -376,4 +427,55 @@ end
 function SCEN_EDIT.GiveOrderToUnit(unitId, orderType, params)
     Spring.GiveOrderToUnit(unit, CMD.INSERT,
         { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
+end
+
+function SCEN_EDIT.createNewPanel(input, parent)
+	if input == "unit" then
+		return UnitPanel:New {
+			parent = parent,
+		}
+	elseif input == "area" then
+		return AreaPanel:New {
+			parent = parent,
+		}
+	elseif input == "trigger" then					
+		return TriggerPanel:New {
+			parent = parent,
+		}
+	elseif input == "unitType" then
+		return UnitTypePanel:New {
+			parent = parent,
+		}
+	elseif input == "team" then
+		return TeamPanel:New {
+			parent = parent,
+		}
+	elseif input == "number" then
+		return NumberPanel:New {
+			parent = parent,
+		}
+	elseif input == "string" then
+		return StringPanel:New {
+			parent = parent,
+		}
+	elseif input == "bool" then
+		return BoolPanel:New {
+			parent = parent,
+		}
+	elseif input == "numericComparison" then
+		return NumericComparisonPanel:New {
+			parent = parent,
+		}
+	elseif input == "order" then
+		return OrderPanel:New {
+			parent = parent,
+		}
+	elseif input == "identityComparison" then
+		return IdentityComparisonPanel:New {
+			parent = parent,
+		}
+	elseif input:find("_array") then
+		return GenericArrayPanel(parent, input)
+	end
+	Spring.Echo("No panel for this input: " .. tostring(input))
 end

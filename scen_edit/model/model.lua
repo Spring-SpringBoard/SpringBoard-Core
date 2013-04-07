@@ -2,104 +2,10 @@ Model = LCS.class{}
 SCEN_EDIT_MODEL_DIR = SCEN_EDIT_DIR .. "model/"
 
 function Model:init()
-	self.teams = {}    
-	self._lua_rules_pre = "scen_edit"
-	self.C_HEIGHT = 16
-	self.B_HEIGHT = 26
-	self.numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
-	self.identityComparisonTypes = {"is", "is not"} -- maybe use more user friendly signs
-	self.eventTypes = {
-		{
-			humanName = "Game started",
-			name = "GAME_START",
-		}, 
-		{
-			humanName = "Game ends",
-			name = "GAME_END",
-		}, 
-		{
-			humanName = "Player died",
-			name = "PLAYER_DIE",
-		}, 
-		{
-			humanName = "Unit created",
-			name = "UNIT_CREATE",
-		},
-		{
-			humanName = "Unit damaged",
-			name = "UNIT_DAMAGE",
-		},
-		{
-			humanName = "Unit destroyed",
-			name = "UNIT_DESTROY",
-		},
-		{
-			humanName = "Unit finished",
-			name = "UNIT_FINISH",
-		},
-		{
-			humanName = "Unit enters area",
-			name = "UNIT_ENTER_AREA",
-		},
-		{
-			humanName = "Unit leaves area",
-			name = "UNIT_LEAVE_AREA",
-		},
-	}
     SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_DIR)
 	
-	self.eventTypes = CreateNameMapping(self.eventTypes)
-	local actionTypes = SCEN_EDIT.coreActions()
-	for i = 1, #actionTypes do
-		local actionType = actionTypes[i]
-		actionType.input = SCEN_EDIT.parseData(actionType.input)
-	end
-	self.actionTypes = CreateNameMapping(actionTypes)
-	
-	local conditionTypes = SCEN_EDIT.coreConditions() 
-	for i = 1, #conditionTypes do
-		local conditionType = conditionTypes[i]
-		conditionType.input = SCEN_EDIT.parseData(conditionType.input)
-	end
-	self.conditionTypes = CreateNameMapping(conditionTypes)
-	self.conditionTypesByInput = SCEN_EDIT.GroupByField(conditionTypes, "input")
-	self.conditionTypesByOutput = SCEN_EDIT.GroupByField(conditionTypes, "output")
-	
-	local coreTypes = SCEN_EDIT.coreTypes()
-	-- fill missing
-    for k, v in pairs(self.conditionTypesByInput) do
-        self.conditionTypesByInput[k] = CreateNameMapping(v)
-    end
-    for k, v in pairs(self.conditionTypesByOutput) do
-        self.conditionTypesByOutput[k] = CreateNameMapping(v)
-    end
-    --[[
-	for i = 1, #coreTypes do
-		local coreType = coreTypes[i]
-		if self.conditionTypesByInput[coreType.name] then
-			self.conditionTypesByInput[coreType.name] = CreateNameMapping(self.conditionTypesByInput[coreType.name])
-		end
-		if self.conditionTypesByOutput[coreType.name] then
-			self.conditionTypesByOutput[coreType.name] = CreateNameMapping(self.conditionTypesByOutput[coreType.name])
-		end
-	end
-	--]]
-	local orderTypes = SCEN_EDIT.coreOrders()
-	for i = 1, #orderTypes do
-		local orderType = orderTypes[i]
-		orderType.input = SCEN_EDIT.parseData(orderType.input)
-	end
-	self.orderTypes = CreateNameMapping(orderTypes)
-	
-	--add variables for core types
-	self.variableTypes = {"unit", "unitType", "team", "player", "area", "string", "number", "bool"}	
-	--add array type
-	--local arrayTypes = {}
-	for i = 1, #self.variableTypes do
-		local variableType = self.variableTypes[i]
-		local arrayType = variableType .. "_array"
-		table.insert(self.variableTypes, arrayType)
-	end
+    self.teams = {}    
+	self._lua_rules_pre = "scen_edit"
 
     self.areaManager = AreaManager()
     self.unitManager = UnitManager()

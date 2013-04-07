@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 StringPanel = {
 }
 
@@ -40,7 +38,7 @@ function StringPanel:Initialize()
 	if self.cbExpression then
 		table.insert(radioGroup, self.cbExpression)
 	end
-	MakeRadioButtonGroup(radioGroup)
+	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function StringPanel:UpdateModel(field)

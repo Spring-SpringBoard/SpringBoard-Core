@@ -1,4 +1,3 @@
-
 TriggerPanel = {
 }
 
@@ -27,7 +26,7 @@ function TriggerPanel:Initialize()
     self.cmbTrigger = ComboBox:New {
         right = 1,
         width = 100,
-        height = SCEN_EDIT.model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackTriggerPanel,
         items = triggerNames,
         triggerIds = triggerIds,

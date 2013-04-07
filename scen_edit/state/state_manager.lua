@@ -70,6 +70,10 @@ function StateManager:DrawScreen()
 end
 
 function StateManager:DrawWorld()
+    --FIXME: hack needed to properly draw the cursor each frame
+    if SCEN_EDIT.cursor then
+        Spring.SetMouseCursor(SCEN_EDIT.cursor)
+    end
     return self:_SafeCall(function() 
         return self.currentState:DrawWorld()
     end)

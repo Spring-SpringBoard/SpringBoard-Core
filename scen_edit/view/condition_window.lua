@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 ConditionWindow = Window:Inherit {
     classname = "window",	
 	resizable = false,
@@ -19,14 +17,14 @@ function ConditionWindow:New(obj)
 	obj.triggerWindow.disableChildrenHitTest = true	
     obj.btnOk = Button:New {
         caption = "OK",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
     }
     obj.btnCancel = Button:New {
         caption = "Cancel",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "7%",
@@ -40,11 +38,11 @@ function ConditionWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-	obj.validConditionTypes = SortByName(model.conditionTypesByOutput["bool"], "humanName")
+	obj.validConditionTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput["bool"], "humanName")
     obj.cmbConditionTypes = ComboBox:New {
         items = GetField(obj.validConditionTypes, "humanName"),
 		conditionTypes = GetField(obj.validConditionTypes, "name"),
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "60%",
         y = "20%",
         x = '20%',
@@ -61,7 +59,7 @@ function ConditionWindow:New(obj)
 					local subPanel = SCEN_EDIT.createNewPanel(input.type, obj.conditionPanel)
 					if subPanel then
 						obj.conditionPanel[subPanelName] = subPanel
-						MakeSeparator(obj.conditionPanel)
+						SCEN_EDIT.MakeSeparator(obj.conditionPanel)
 					end
 				end
 			end

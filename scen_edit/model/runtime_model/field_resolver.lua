@@ -31,7 +31,7 @@ end
 function FieldResolver:Resolve(field, type, rawVariable)
     if field.type == "expr" then
         local conditionTypeName = field.expr[1].conditionTypeName
-        local conditionType = SCEN_EDIT.model.conditionTypes[conditionTypeName]
+        local conditionType = SCEN_EDIT.metaModel.functionTypes[conditionTypeName]
         return self:CallExpression(field.expr[1], conditionType)
     elseif field.type == "var" then
         local variable = SCEN_EDIT.model.variableManager:getVariable(field.id)
@@ -90,7 +90,7 @@ function FieldResolver:Resolve(field, type, rawVariable)
 			return SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
 		end
 	elseif type == "order" then
-		local orderType = SCEN_EDIT.model.orderTypes[field.orderTypeName]
+		local orderType = SCEN_EDIT.metaModel.orderTypes[field.orderTypeName]
 		local order = {
 			orderTypeName = field.orderTypeName,
 			input = {}
@@ -110,9 +110,9 @@ function FieldResolver:Resolve(field, type, rawVariable)
             return field.id
         end
 	elseif type == "numericComparison" then
-		return SCEN_EDIT.model.numericComparisonTypes[field.cmpTypeId]
+		return SCEN_EDIT.metaModel.numericComparisonTypes[field.cmpTypeId]
 	elseif type == "identityComparison" then
-		return SCEN_EDIT.model.identityComparisonTypes[field.cmpTypeId]
+		return SCEN_EDIT.metaModel.identityComparisonTypes[field.cmpTypeId]
     elseif type:find("_array") then
         local atomicType = type:sub(type:find("_array"))
     end

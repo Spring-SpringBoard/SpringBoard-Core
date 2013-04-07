@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 BoolPanel = {
 }
 
@@ -41,7 +39,7 @@ function BoolPanel:Initialize()
 	if self.cbExpression then
 		table.insert(radioGroup, self.cbExpression)
 	end
-	MakeRadioButtonGroup(radioGroup)
+	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function BoolPanel:UpdateModel(field)

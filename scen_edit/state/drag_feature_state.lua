@@ -1,4 +1,5 @@
 DragFeatureState = AbstractState:extends{}
+Spring.AssignMouseCursor('drag', 'drag', false)
 
 function DragFeatureState:init(featureId, startDiffX, startDiffZ)
     self.featureId = featureId
@@ -7,6 +8,7 @@ function DragFeatureState:init(featureId, startDiffX, startDiffZ)
     self.dx = 0
     self.dz = 0
     self.featureGhostViews = {}
+    SCEN_EDIT.SetMouseCursor("drag")
 end
 
 function DragFeatureState:MouseMove(x, y, dx, dy, button)

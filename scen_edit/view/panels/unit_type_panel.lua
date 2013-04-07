@@ -1,10 +1,7 @@
-local C_HEIGHT = 16
-local B_HEIGHT = 26
-
-TypePanel = {
+UnitTypePanel = {
 }
 
-function TypePanel:New(obj)
+function UnitTypePanel:New(obj)
     obj = obj or {}
     setmetatable(obj, self)
     self.__index = self
@@ -12,28 +9,29 @@ function TypePanel:New(obj)
     return obj
 end
 
-function TypePanel:Initialize()
+function UnitTypePanel:Initialize()
 	local radioGroup = {}
-    local stackTypePanel = MakeComponentPanel(self.parent)
+    local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbPredefinedType = Checkbox:New {
         caption = "Predefined type: ",
         right = 100 + 10,
         x = 1,
         checked = false,
-        parent = stackTypePanel,
+        parent = stackUnitTypePanel,
     }
 	table.insert(radioGroup, self.cbPredefinedType)
     self.btnPredefinedType = Button:New {
         caption = '...',
         right = 1,
         width = 100,
-        height = B_HEIGHT,
-        parent = stackTypePanel,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        parent = stackUnitTypePanel,
         unitTypeId = nil,
     }
     self.btnPredefinedType.OnClick = {
         function() 
-            SelectType(self.btnPredefinedType)
+            SCEN_EDIT.stateManager:SetState(SelectUnitTypeState(self.btnPredefinedType))
+            --SCEN_EDIT.SelectType(self.btnPredefinedType)
         end
     }
     self.btnPredefinedType.OnSelectUnitType = {
@@ -48,20 +46,20 @@ function TypePanel:Initialize()
 	}
 	
     --SPECIAL TYPE, i.e TRIGGER
-    local stackTypePanel = MakeComponentPanel(self.parent)
+    local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbSpecialType = Checkbox:New {
         caption = "Special type: ",
         right = 100 + 10,
         x = 1,
         checked = true,
-        parent = stackTypePanel,
+        parent = stackUnitTypePanel,
     }
 	table.insert(radioGroup, self.cbSpecialType)
     self.cmbSpecialType = ComboBox:New {
         right = 1,
         width = 100,
-        height = B_HEIGHT,
-        parent = stackTypePanel,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        parent = stackUnitTypePanel,
         items = { "Trigger unit type" },
         OnSelect = {
             function(obj, itemIdx, selected)
@@ -84,10 +82,10 @@ function TypePanel:Initialize()
 	if self.cbExpression then
 		table.insert(radioGroup, self.cbExpression)
 	end
-	MakeRadioButtonGroup(radioGroup)
+	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
-function TypePanel:UpdateModel(field)
+function UnitTypePanel:UpdateModel(field)
     if self.cbPredefinedType.checked then
         field.type = "pred"
         field.id = self.btnPredefinedType.unitTypeId
@@ -103,7 +101,7 @@ function TypePanel:UpdateModel(field)
     end
 end
 
-function TypePanel:UpdatePanel(field)
+function UnitTypePanel:UpdatePanel(field)
     if field.type == "pred" then
         if not self.cbPredefinedType.checked then
             self.cbPredefinedType:Toggle()

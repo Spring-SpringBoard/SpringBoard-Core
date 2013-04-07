@@ -162,7 +162,7 @@ end
 function RuntimeModel:ActionStep(trigger, params)
 	for i = 1, #trigger.actions do
 		local action = trigger.actions[i]
-		local actionType = SCEN_EDIT.model.actionTypes[action.actionTypeName]
+		local actionType = SCEN_EDIT.metaModel.actionTypes[action.actionTypeName]
         self.fieldResolver:CallExpression(action, actionType)
 	end
 end
@@ -184,7 +184,7 @@ end
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
 	for i = 1, #trigger.conditions do
 		local condition = trigger.conditions[i]
-		local conditionType = SCEN_EDIT.model.conditionTypes[condition.conditionTypeName]
+		local conditionType = SCEN_EDIT.metaModel.functionTypes[condition.conditionTypeName]
         local result = self.fieldResolver:CallExpression(condition, conditionType)
         if not result then
             return false

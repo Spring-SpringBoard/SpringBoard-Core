@@ -1,6 +1,6 @@
 --//=============================================================================
 
-UnitDefsView = LayoutPanel:Inherit {
+UnitDefsPanel = LayoutPanel:Inherit {
   --TODO: figure out how to use DrawItemBackground with correct class name, in this case "unitdefsview"
   classname = "imagelistview", 
 
@@ -25,14 +25,14 @@ UnitDefsView = LayoutPanel:Inherit {
   teamId = 1,
 }
 
-local this = UnitDefsView 
+local this = UnitDefsPanel 
 local inherited = this.inherited
 
 --//=============================================================================
 
-function UnitDefsView:New(obj)
+function UnitDefsPanel:New(obj)
   obj = inherited.New(self, obj)
-  obj:PopulateUnitDefsView()
+  obj:PopulateUnitDefsPanel()
   return obj
 end
 
@@ -46,7 +46,7 @@ function SCEN_EDIT.getUnitDefBuildPic(unitDef)
 end
 
 --//=============================================================================
-function UnitDefsView:PopulateUnitDefsView()
+function UnitDefsPanel:PopulateUnitDefsPanel()
     self:Clear()
     local unitTerrainId = self.unitTerrainId
     local unitTypesId = self.unitTypesId
@@ -70,17 +70,17 @@ function UnitDefsView:PopulateUnitDefsView()
 	self:SelectItem(0)
 end
 
-function UnitDefsView:SelectTerrainId(unitTerrainId)
+function UnitDefsPanel:SelectTerrainId(unitTerrainId)
     self.unitTerrainId = unitTerrainId
-    self:PopulateUnitDefsView()
+    self:PopulateUnitDefsPanel()
 end
 
-function UnitDefsView:SelectUnitTypesId(unitTypesId)
+function UnitDefsPanel:SelectUnitTypesId(unitTypesId)
     self.unitTypesId = unitTypesId
-    self:PopulateUnitDefsView()
+    self:PopulateUnitDefsPanel()
 end
 
-function UnitDefsView:SelectTeamId(teamId)
+function UnitDefsPanel:SelectTeamId(teamId)
     self.teamId = teamId
 end
 
@@ -104,7 +104,7 @@ end
 
 --//=============================================================================
 
-function UnitDefsView:AddImage(name, id, imagefile)
+function UnitDefsPanel:AddImage(name, id, imagefile)
   table.insert(self.items, {name=name, id=id})
   self:AddChild(LayoutPanel:New{
     width  = self.iconX+10,
@@ -133,14 +133,14 @@ function UnitDefsView:AddImage(name, id, imagefile)
   })
 end
 
-function UnitDefsView:Clear()
+function UnitDefsPanel:Clear()
     self.children = {}
     self.items = {}
 end
 
 --//=============================================================================
 
-function UnitDefsView:DrawItemBkGnd(index)
+function UnitDefsPanel:DrawItemBkGnd(index)
   local cell = self._cells[index]
   local itemPadding = self.itemPadding
 
@@ -153,7 +153,7 @@ end
 
 --//=============================================================================
 
-function UnitDefsView:HitTest(x,y)
+function UnitDefsPanel:HitTest(x,y)
   local cx,cy = self:LocalToClient(x,y)
   local obj = inherited.HitTest(self,cx,cy)
   if (obj) then return obj end
@@ -162,7 +162,7 @@ function UnitDefsView:HitTest(x,y)
 end
 
 
-function UnitDefsView:MouseDblClick(x,y)
+function UnitDefsPanel:MouseDblClick(x,y)
   local cx,cy = self:LocalToClient(x,y)
   local itemIdx = self:GetItemIndexAt(cx,cy)
 
