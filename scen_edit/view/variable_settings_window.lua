@@ -1,6 +1,3 @@
-local C_HEIGHT = 16
-local B_HEIGHT = 26
-
 VariableSettingsWindow = Window:Inherit {
     classname = "window",
     clientWidth = 300,
@@ -19,7 +16,7 @@ function VariableSettingsWindow:New(obj)
         width='40%',
         x = 1,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={ 
 			function() 				
 				obj:AddVariable()
@@ -30,7 +27,7 @@ function VariableSettingsWindow:New(obj)
         width='40%',
         x = '50%',
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     obj.variablesPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -45,7 +42,7 @@ function VariableSettingsWindow:New(obj)
             x = 1,
             y = 15,
             right = 5,
-            bottom = C_HEIGHT * 2,
+            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
             children = { 
                 obj.variablesPanel
             },
@@ -75,7 +72,7 @@ function VariableSettingsWindow:AddVariable()
     if not success then
         Spring.Echo(msg)
     end
---[[    local newVariable = model:NewVariable("number")
+--[[    local newVariable = SCEN_EDIT.model:NewVariable("number")
     self:Populate()
     for i = 1, #self.variablesPanel.children do
         local panel = self.variablesPanel.children[i]
@@ -94,32 +91,32 @@ end
 
 function VariableSettingsWindow:Populate()
     self.variablesPanel:ClearChildren()
-	local variables = SCEN_EDIT.model.variableManager:getAllVariables() 
+	local variables = SCEN_EDIT.model.variableManager:getAllVariables()
     for i = 1, #variables do
         local variable = variables[i]
         local variableStackPanel = MakeComponentPanel(self.variablesPanel)
         variableStackPanel.variableId = variable.id
         local btnEditVariable = Button:New {
             caption = variable.name,
-            right = B_HEIGHT + 10,
+            right = SCEN_EDIT.conf.B_HEIGHT + 10,
             x = 1,
-            height = B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             _toggle = nil,
             parent = variableStackPanel,
         }
         local btnRemoveVariable = Button:New {
             caption = "",
             right = 1,
-            width = B_HEIGHT,
-            height = B_HEIGHT,
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = variableStackPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
                     tooltip = "Remove variable", 
                     file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = B_HEIGHT, 
-                    width = B_HEIGHT,
+                    height = SCEN_EDIT.conf.B_HEIGHT, 
+                    width = SCEN_EDIT.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
                 },

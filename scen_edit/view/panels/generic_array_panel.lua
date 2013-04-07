@@ -1,6 +1,3 @@
-local C_HEIGHT = 16
-local B_HEIGHT = 26
-
 GenericArrayPanel = LCS.class{}
 
 function GenericArrayPanel:init(parent, type)
@@ -22,7 +19,7 @@ function GenericArrayPanel:AddElement()
 --        width='40%',
 --        x = 1,
 --        bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={
             function() 
                 mode = 'add'
@@ -62,7 +59,7 @@ function GenericArrayPanel:Initialize()
         width='40%',
         x = 1,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = addPanel,
         OnClick={function() self:AddElement() end}
     }
@@ -77,7 +74,7 @@ function GenericArrayPanel:Initialize()
 	if self.cbExpression then
 		table.insert(radioGroup, self.cbExpression)
 	end
-	MakeRadioButtonGroup(radioGroup)
+	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function GenericArrayPanel:UpdateModel(field)

@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 AreaPanel = {
 }
 
@@ -26,13 +24,13 @@ function AreaPanel:Initialize()
         caption = '...',
         right = 40,
         width = 60,
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackAreaPanel,
         areaId = nil,
     }
     self.btnPredefinedArea.OnClick = {
         function()
-            SelectArea(self.btnPredefinedArea)
+            SCEN_EDIT.stateManager:SetState(SelectAreaState(self.btnPredefinedArea))
         end
     }
     self.btnPredefinedArea.OnSelectArea = {
@@ -48,16 +46,16 @@ function AreaPanel:Initialize()
     self.btnPredefinedAreaZoom = Button:New {
         caption = "",
         right = 1,
-        width = model.B_HEIGHT,
-        height = model.B_HEIGHT,
+        width = SCEN_EDIT.conf.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackAreaPanel,
         padding = {0, 0, 0, 0},
         children = {
             Image:New { 
                 tooltip = "Select area", 
                 file=SCEN_EDIT_IMG_DIR .. "search.png", 
-                height = model.B_HEIGHT, 
-                width = model.B_HEIGHT,
+                height = SCEN_EDIT.conf.B_HEIGHT, 
+                width = SCEN_EDIT.conf.B_HEIGHT,
                 padding = {0, 0, 0, 0},
                 margin = {0, 0, 0, 0},
             },
@@ -90,7 +88,7 @@ function AreaPanel:Initialize()
     self.cmbSpecialArea = ComboBox:New {
         right = 1,
         width = 100,
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackAreaPanel,
         items = { "Trigger area" },
     }
@@ -115,7 +113,7 @@ function AreaPanel:Initialize()
 	if self.cbExpression then
 		table.insert(radioGroup, self.cbExpression)
 	end
-	MakeRadioButtonGroup(radioGroup)
+	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function AreaPanel:UpdateModel(field)

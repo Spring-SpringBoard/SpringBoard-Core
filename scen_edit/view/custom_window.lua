@@ -61,7 +61,7 @@ function CustomWindow:New(obj)
 					local subPanel = SCEN_EDIT.createNewPanel(data.type, obj.conditionPanel)
 					if subPanel then
 						obj.conditionPanel[subPanelName] = subPanel
-						MakeSeparator(obj.conditionPanel)
+						SCEN_EDIT.MakeSeparator(obj.conditionPanel)
 					end
 				end
 			end

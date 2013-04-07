@@ -30,7 +30,7 @@ function FileDialog:init(dir)
 	}
 	
 	local okButton = Button:New {
-		height = SCEN_EDIT.model.B_HEIGHT,
+		height = SCEN_EDIT.conf.B_HEIGHT,
 		bottom = 5,
 		width = "20%",
 		x = "10",
@@ -38,7 +38,7 @@ function FileDialog:init(dir)
 	}
 	
 	local cancelButton = Button:New {
-		height = SCEN_EDIT.model.B_HEIGHT,
+		height = SCEN_EDIT.conf.B_HEIGHT,
 		bottom = 5,
 		width = "20%",
 		x = "22%",
@@ -81,8 +81,8 @@ function FileDialog:init(dir)
 			StackPanel:New {
 				x = 1,
 				width = "100%",
-				height = SCEN_EDIT.model.B_HEIGHT,
-				bottom = SCEN_EDIT.model.B_HEIGHT + 5 + 5,
+				height = SCEN_EDIT.conf.B_HEIGHT,
+				bottom = SCEN_EDIT.conf.B_HEIGHT + 5 + 5,
 				padding = {0, 0, 0, 0},
 				itemMarging = {0, 0, 0, 0},
 				resizeItems = false,

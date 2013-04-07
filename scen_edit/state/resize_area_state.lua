@@ -1,8 +1,22 @@
 ResizeAreaState = AbstractState:extends{}
+Spring.AssignMouseCursor('resize-x', 'resize-x', false)
+Spring.AssignMouseCursor('resize-y', 'resize-y', false)
+Spring.AssignMouseCursor('resize-x-y-0', 'resize-x-y-0', false)
+Spring.AssignMouseCursor('resize-x-y-1', 'resize-x-y-1', false)
 
 function ResizeAreaState:init(areaId, resx, resz)
     self.areaId = areaId
     self.resx, self.resz = resx, resz
+
+    if self.resx ~= 0 and self.resz == 0 then
+        SCEN_EDIT.SetMouseCursor("resize-x")
+    elseif self.resx == 0 and self.resz ~= 0 then
+        SCEN_EDIT.SetMouseCursor("resize-y")
+    elseif self.resx * self.resz < 0 then
+        SCEN_EDIT.SetMouseCursor("resize-x-y-0")
+    else
+        SCEN_EDIT.SetMouseCursor("resize-x-y-1")
+    end
     local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
     self.x1, self.z1, self.x2, self.z2 = unpack(area)
     self.areaView = AreaView(self.areaId)

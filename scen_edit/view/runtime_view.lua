@@ -4,8 +4,8 @@ function RuntimeView:init()
     self.started = false --FIXME: check instead of assuming
     self.btnStartStop = Button:New {
         caption='',
-        height = SCEN_EDIT.model.B_HEIGHT + 20,
-        width = SCEN_EDIT.model.B_HEIGHT + 20,
+        height = SCEN_EDIT.conf.B_HEIGHT + 20,
+        width = SCEN_EDIT.conf.B_HEIGHT + 20,
         OnClick = {
             function() 
                 if not self.started then
@@ -40,7 +40,7 @@ function RuntimeView:init()
     local btnToggleShowDevelop = Button:New {
         caption='Toggle Display',
         width= 80,
-        height = SCEN_EDIT.model.B_HEIGHT + 20,
+        height = SCEN_EDIT.conf.B_HEIGHT + 20,
         tooltip = "Toggle displaying of debugging symbols",
         OnClick = {
             function() 
@@ -61,7 +61,7 @@ function RuntimeView:init()
                 y = 15,
                 x = 1,
                 right = 1,
-                bottom = SCEN_EDIT.model.B_HEIGHT * 2 + 10,
+                bottom = SCEN_EDIT.conf.B_HEIGHT * 2 + 10,
                 itemMargin = {0, 0, 0, 0},
                 children = {
                     ScrollPanel:New {
@@ -84,7 +84,7 @@ function RuntimeView:init()
                 orientation = 'horizontal',
                 width = '100%',
                 bottom = 1,
-                height = SCEN_EDIT.model.B_HEIGHT * 3,
+                height = SCEN_EDIT.conf.B_HEIGHT * 3,
                 padding = {0,0,0,0},
                 itemPadding = {0,10,10,10},
                 itemMargin = {0,0,0,0},
@@ -111,8 +111,8 @@ function RuntimeView:UpdateStartStopButton()
         self.btnStartStop:AddChild(
             Image:New {                
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
-                height = SCEN_EDIT.model.B_HEIGHT - 2,
-                width = SCEN_EDIT.model.B_HEIGHT - 2,
+                height = SCEN_EDIT.conf.B_HEIGHT - 2,
+                width = SCEN_EDIT.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
             }
         )
@@ -121,8 +121,8 @@ function RuntimeView:UpdateStartStopButton()
         self.btnStartStop:AddChild(		
             Image:New {                
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
-                height = SCEN_EDIT.model.B_HEIGHT - 2,
-                width = SCEN_EDIT.model.B_HEIGHT - 2,
+                height = SCEN_EDIT.conf.B_HEIGHT - 2,
+                width = SCEN_EDIT.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
             }
         )

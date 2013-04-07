@@ -6,13 +6,13 @@ function TerrainEditorView:init()
     local btnModifyHeightMap = Button:New {
         caption = "",
         tooltip = "Modify heightmap",
-        width = SCEN_EDIT.model.B_HEIGHT + 20,
-        height = SCEN_EDIT.model.B_HEIGHT + 20,
+        width = SCEN_EDIT.conf.B_HEIGHT + 20,
+        height = SCEN_EDIT.conf.B_HEIGHT + 20,
         children = {
             Image:New {                                 
                 file=SCEN_EDIT_IMG_DIR .. "terrain_height.png", 
-                height = SCEN_EDIT.model.B_HEIGHT - 2, 
-                width = SCEN_EDIT.model.B_HEIGHT - 2, 
+                height = SCEN_EDIT.conf.B_HEIGHT - 2, 
+                width = SCEN_EDIT.conf.B_HEIGHT - 2, 
                 margin = {0, 0, 0, 0},
             },
         },
@@ -26,13 +26,13 @@ function TerrainEditorView:init()
     local btnModifyTextureMap = Button:New {
         caption = "",
         tooltip = "Change texture",
-        width = SCEN_EDIT.model.B_HEIGHT + 20,
-        height = SCEN_EDIT.model.B_HEIGHT + 20,
+        width = SCEN_EDIT.conf.B_HEIGHT + 20,
+        height = SCEN_EDIT.conf.B_HEIGHT + 20,
         children = {
             Image:New {                                 
                 file=SCEN_EDIT_IMG_DIR .. "terrain_texture.png", 
-                height = SCEN_EDIT.model.B_HEIGHT - 2, 
-                width = SCEN_EDIT.model.B_HEIGHT - 2, 
+                height = SCEN_EDIT.conf.B_HEIGHT - 2, 
+                width = SCEN_EDIT.conf.B_HEIGHT - 2, 
                 margin = {0, 0, 0, 0},
             },
         },
@@ -74,7 +74,7 @@ function TerrainEditorView:init()
 			StackPanel:New {
                 orientation = 'horizontal',
                 width = '100%',
-                height = SCEN_EDIT.model.B_HEIGHT + 40,
+                height = SCEN_EDIT.conf.B_HEIGHT + 40,
                 padding = {0,0,0,0},
                 itemPadding = {0,10,10,10},
                 itemMargin = {0,0,0,0},
@@ -86,7 +86,7 @@ function TerrainEditorView:init()
 			},
             ScrollPanel:New {
                 width = '100%',
-                y = SCEN_EDIT.model.B_HEIGHT + 40,
+                y = SCEN_EDIT.conf.B_HEIGHT + 40,
                 bottom = 1,
                 children = { 
                     textureImages,

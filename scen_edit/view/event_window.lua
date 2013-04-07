@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 EventWindow = Window:Inherit {
     classname = "window",	
 	resizable = false,
@@ -19,22 +17,22 @@ function EventWindow:New(obj)
 	obj.triggerWindow.disableChildrenHitTest = true	
     obj.btnOk = Button:New {
         caption = "OK",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "20%",
     }
     obj.btnCancel = Button:New {
         caption = "Cancel",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "20%",
     }
     obj.cmbEventTypes = ComboBox:New {
-        items = GetField(obj.model.eventTypes, "humanName"),
-		eventTypes = GetField(obj.model.eventTypes, "name"),
-        height = model.B_HEIGHT,
+        items = GetField(SCEN_EDIT.metaModel.eventTypes, "humanName"),
+		eventTypes = GetField(SCEN_EDIT.metaModel.eventTypes, "name"),
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         y = "60%",
         x = '30%',

@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 NumericComparisonPanel = {
 }
 
@@ -16,9 +14,9 @@ function NumericComparisonPanel:Initialize()
     self.cmbCmpType = ComboBox:New {
         right = 1,
         width = 100,
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackNumericComparisonPanel,
-        items = model.numericComparisonTypes,
+        items = SCEN_EDIT.metaModel.numericComparisonTypes,
     }
 end
 

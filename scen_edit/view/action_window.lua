@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 ActionWindow = Window:Inherit {
     classname = "window",	
 	resizable = false,
@@ -19,14 +17,14 @@ function ActionWindow:New(obj)
 	obj.triggerWindow.disableChildrenHitTest = true	
     obj.btnOk = Button:New {
         caption = "OK",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
     }
     obj.btnCancel = Button:New {
         caption = "Cancel",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "7%",
@@ -40,11 +38,11 @@ function ActionWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    obj.validActions = SortByName(model.actionTypes, "humanName")
+    obj.validActions = SortByName(SCEN_EDIT.metaModel.actionTypes, "humanName")
     obj.cmbActionTypes = ComboBox:New {
         items = GetField(obj.validActions, "humanName"),
 		actionTypes = GetField(obj.validActions, "name"),
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "60%",
         y = "20%",
         x = '20%',
@@ -64,7 +62,7 @@ function ActionWindow:New(obj)
 					local subPanel = SCEN_EDIT.createNewPanel(input.type, obj.actionPanel)
 					if subPanel then
 						obj.actionPanel[subPanelName] = subPanel
-						MakeSeparator(obj.actionPanel)
+						SCEN_EDIT.MakeSeparator(obj.actionPanel)
 					end
 				end
 			end

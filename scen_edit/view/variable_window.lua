@@ -1,7 +1,3 @@
-local C_HEIGHT = 16
-local B_HEIGHT = 26
-local model = SCEN_EDIT.model
-
 VariableWindow = Window:Inherit {
     classname = "window",
     clientWidth = 300,
@@ -24,14 +20,14 @@ function VariableWindow:New(obj)
         width='40%',
         x = 1,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     local btnCancel = Button:New {
         caption='Close',
         width='40%',
         x = '50%',
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={function() obj:Dispose() end}
     }
     obj._properties = StackPanel:New {
@@ -57,7 +53,7 @@ function VariableWindow:New(obj)
     }
 
     obj = inherited.New(self, obj)
-    MakeConfirmButton(obj, btnOk)
+    SCEN_EDIT.MakeConfirmButton(obj, btnOk)
     obj:Populate()
     return obj
 end
@@ -81,8 +77,8 @@ function VariableWindow:UpdateModel(variable)
 	self.variablePanel[variable.type]:UpdateModel(self.variable.value)
 	
 --[[	if typeChanged then
-		model:RemoveVariable(variable.id)
-		newVariable = model:NewVariable(variable.type)
+		SCEN_EDIT.model:RemoveVariable(variable.id)
+		newVariable = SCEN_EDIT.model:NewVariable(variable.type)
 		newVariable.value = variable.value
 		newVariable.name = variable.name
 	end--]]
@@ -102,7 +98,7 @@ function VariableWindow:Populate()
         text = self.variable.name,
         right = 1,
         width = 100,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackNamePanel,
     }
 
@@ -125,7 +121,7 @@ function VariableWindow:Populate()
     local sp = ScrollPanel:New {
         x = 1,
         y = 90,
-        bottom = 2 * C_HEIGHT,
+        bottom = 2 * SCEN_EDIT.conf.C_HEIGHT,
         right = 5,
         parent = self,
         children = {
@@ -135,8 +131,8 @@ function VariableWindow:Populate()
     self.cmbType = ComboBox:New {
         right = 1,
         width = 100,
-        height = B_HEIGHT,
-        items = model.variableTypes,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        items = SCEN_EDIT.metaModel.variableTypes,
         parent = stackTypePanel,
         OnSelect = {
             function(object, itemIdx, selected)	
@@ -144,16 +140,16 @@ function VariableWindow:Populate()
 					self.variablePanel:ClearChildren()
 			
                     local typeId = itemIdx
-					local inputType = model.variableTypes[typeId] 
+					local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
                     local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel)
 					if subPanel then
 						self.variablePanel[inputType] = subPanel
-						MakeSeparator(self.variablePanel)
+						SCEN_EDIT.MakeSeparator(self.variablePanel)
 					end
                 end
             end
         },
     }
 	self.cmbType:Select(-1)
-    self.cmbType:Select(GetIndex(model.variableTypes, self.variable.type))
+    self.cmbType:Select(GetIndex(SCEN_EDIT.metaModel.variableTypes, self.variable.type))
 end

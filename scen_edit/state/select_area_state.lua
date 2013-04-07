@@ -14,7 +14,7 @@ function SelectAreaState:MousePress(x, y, button)
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y)
         if result == "ground"  then
-            local selected = checkAreaIntersections(coords[1], coords[3])
+            local selected = SCEN_EDIT.checkAreaIntersections(coords[1], coords[3])
             if selected ~= nil then
                 CallListeners(self.btnSelectArea.OnSelectArea, selected)
                 SCEN_EDIT.stateManager:SetState(DefaultState())

@@ -1,5 +1,3 @@
-local model = SCEN_EDIT.model
-
 TeamPanel = {
 }
 
@@ -25,7 +23,7 @@ function TeamPanel:Initialize()
     self.cmbPredefinedTeam = ComboBox:New {
         right = 1,
         width = 100,
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackTeamPanel,
         items = GetField(SCEN_EDIT.model.teams, "name"),
 		playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
@@ -42,7 +40,7 @@ function TeamPanel:Initialize()
 	if self.cbExpression then
 		table.insert(radioGroup, self.cbExpression)
 	end
-	MakeRadioButtonGroup(radioGroup)
+	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function TeamPanel:UpdateModel(field)

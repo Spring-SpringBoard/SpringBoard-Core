@@ -1,6 +1,3 @@
-local C_HEIGHT = 16
-local B_HEIGHT = 26
-
 TriggerWindow = Window:Inherit {
     classname = "window",
     clientWidth = 600,
@@ -45,36 +42,36 @@ function TriggerWindow:New(obj)
         width=110,
         x = 1,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     local btnAddCondition = Button:New {
         caption='Add condition',
         width=120,
         x = 120,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     local btnAddAction = Button:New {
         caption='Add action',
         width=110,
         x = 250,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     local btnClose = Button:New {
         caption='Close',
         width=100,
         x = 370,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     obj.children = {
 		stackTriggerPanel,
         ScrollPanel:New {
             x = 1,
-            y = 15 + B_HEIGHT,
+            y = 15 + SCEN_EDIT.conf.B_HEIGHT,
             right = 5,
-            bottom = B_HEIGHT * 2,
+            bottom = SCEN_EDIT.conf.B_HEIGHT * 2,
             children = {
                 obj._triggerPanel,
             },
@@ -94,9 +91,9 @@ function TriggerWindow:New(obj)
         end
     }
 
-    btnAddEvent.OnClick={function() MakeAddEventWindow(obj.trigger, obj) end}
-    btnAddCondition.OnClick={function() MakeAddConditionWindow(obj.trigger, obj) end}
-    btnAddAction.OnClick={function() MakeAddActionWindow(obj.trigger, obj) end}
+    btnAddEvent.OnClick={function() obj:MakeAddEventWindow() end}
+    btnAddCondition.OnClick={function() obj:MakeAddConditionWindow() end}
+    btnAddAction.OnClick={function() obj:MakeAddActionWindow() end}
     return obj
 end
 
@@ -104,7 +101,7 @@ function TriggerWindow:Populate()
     self._triggerPanel:ClearChildren()
     local eventLabel = Label:New {
         caption = "- Events -",
-        height = C_HEIGHT,
+        height = SCEN_EDIT.conf.C_HEIGHT,
         align = 'center',
         parent = self._triggerPanel,
     }
@@ -112,35 +109,35 @@ function TriggerWindow:Populate()
         local event = self.trigger.events[i]
         local stackEventPanel = MakeComponentPanel(self._triggerPanel)
         local btnEditEvent = Button:New {
-            caption = SCEN_EDIT.model.eventTypes[event.eventTypeName].humanName,
-            right = B_HEIGHT + 10,
+            caption = SCEN_EDIT.metaModel.eventTypes[event.eventTypeName].humanName,
+            right = SCEN_EDIT.conf.B_HEIGHT + 10,
             x = 1,
-            height = B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
-            OnClick = {function() MakeEditEventWindow(self.trigger, self, event) end}
+            OnClick = {function() self:MakeEditEventWindow(event) end}
         }
         local btnRemoveEvent = Button:New {
             caption = "",
 			right = 1,
-            width = B_HEIGHT,
-            height = B_HEIGHT,
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
                     tooltip = "Remove event", 
                     file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = B_HEIGHT, 
-                    width = B_HEIGHT, 
+                    height = SCEN_EDIT.conf.B_HEIGHT, 
+                    width = SCEN_EDIT.conf.B_HEIGHT, 
                     margin = {0, 0, 0, 0},
                 },
             },
-            OnClick = {function() MakeRemoveEventWindow(self.trigger, self, event, i) end}
+            OnClick = {function() self:MakeRemoveEventWindow(event, i) end}
         }
     end
     local conditionLabel = Label:New {
         caption = "- Conditions -",
-        height = C_HEIGHT,
+        height = SCEN_EDIT.conf.C_HEIGHT,
         align = 'center',
         vlign = 'center',
         parent = self._triggerPanel,
@@ -151,34 +148,34 @@ function TriggerWindow:Populate()
 		local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
         local btnEditCondition = Button:New {
             caption = conditionHumanName,
-            right = B_HEIGHT + 10,
+            right = SCEN_EDIT.conf.B_HEIGHT + 10,
             x = 1,
-            height = B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
-            OnClick = {function() MakeEditConditionWindow(self.trigger, self, condition) end}
+            OnClick = {function() self:MakeEditConditionWindow(condition) end}
         }
         local btnRemoveCondition = Button:New {
             caption = "",
 			right = 1,
-            width = B_HEIGHT,
-            height = B_HEIGHT,
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
                     tooltip = "Remove condition", 
                     file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = B_HEIGHT, 
-                    width = B_HEIGHT, 
+                    height = SCEN_EDIT.conf.B_HEIGHT, 
+                    width = SCEN_EDIT.conf.B_HEIGHT, 
                     margin = {0, 0, 0, 0},
                 },
             },
-            OnClick = {function() MakeRemoveConditionWindow(self.trigger, self, condition, i) end}
+            OnClick = {function() self:MakeRemoveConditionWindow(condition, i) end}
         }
     end
     local actionLabel = Label:New {
         caption = "- Actions -",
-        height = C_HEIGHT,
+        height = SCEN_EDIT.conf.C_HEIGHT,
         align = 'center',
         parent = self._triggerPanel,
     }
@@ -188,30 +185,102 @@ function TriggerWindow:Populate()
 		local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
         local btnEditAction = Button:New {
             caption = actionHumanName,
-            right = B_HEIGHT + 10,
+            right = SCEN_EDIT.conf.B_HEIGHT + 10,
             x = 1,
-            height = B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
-            OnClick = {function() MakeEditActionWindow(self.trigger, self, action) end}
+            OnClick = {function() self:MakeEditActionWindow(action) end}
         }
         local btnRemoveAction = Button:New {
             caption = "",
             right = 1,
-            width = B_HEIGHT,
-            height = B_HEIGHT,
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
                     tooltip = "Remove action", 
                     file= SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = B_HEIGHT, 
-                    width = B_HEIGHT, 
+                    height = SCEN_EDIT.conf.B_HEIGHT, 
+                    width = SCEN_EDIT.conf.B_HEIGHT, 
                     margin = {0, 0, 0, 0},
                 },
             },
-            OnClick = {function() MakeRemoveActionWindow(self.trigger, self, action, i) end},
+            OnClick = {function() self:MakeRemoveActionWindow(action, i) end},
         }
     end
+end
+
+function TriggerWindow:MakeAddConditionWindow()
+    local newActionWindow = ConditionWindow:New {
+ 		parent = screen0,
+		trigger = self.trigger,
+		triggerWindow = self,
+		mode = 'add',
+    }
+end
+
+function TriggerWindow:MakeEditConditionWindow(condition)
+    local newActionWindow = ConditionWindow:New {
+ 		parent = screen0,	
+		trigger = self.trigger,
+		triggerWindow = self,
+		mode = 'edit',
+		condition = condition,
+    }
+end
+
+function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
+    table.remove(self.trigger.conditions, idx)
+    self:Populate()
+end
+
+function TriggerWindow:MakeAddEventWindow()
+    local newEventWindow = EventWindow:New {
+ 		parent = screen0,
+		trigger = self.trigger,
+		triggerWindow = self,
+		mode = 'add',
+    }
+end
+
+function TriggerWindow:MakeEditEventWindow(event)
+    local newEventWindow = EventWindow:New {
+ 		parent = screen0,
+		trigger = self.trigger,
+		triggerWindow = self,
+		mode = 'edit',
+		event = event,
+    }
+end
+
+function TriggerWindow:MakeRemoveEventWindow(event, idx)
+    table.remove(self.trigger.events, idx)
+    self:Populate()
+end
+
+function TriggerWindow:MakeAddActionWindow()
+    local newActionWindow = ActionWindow:New {
+        parent = screen0,
+        trigger = self.trigger,
+        triggerWindow = self,
+        mode = 'add',
+    }
+end
+
+function TriggerWindow:MakeEditActionWindow(action)
+    local newActionWindow = ActionWindow:New {
+        parent = screen0,
+        trigger = self.trigger,
+        triggerWindow = self,
+        mode = 'edit',
+        action = action,
+    }
+end
+
+function TriggerWindow:MakeRemoveActionWindow(action, idx)
+    table.remove(self.trigger.actions, idx)
+    self:Populate()
 end
 
