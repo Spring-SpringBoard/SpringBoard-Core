@@ -59,6 +59,12 @@ local function MakeWindow(unitID)
 	children[#children+1] = Label:New{ caption = '', }
 	
 	
+	children[#children+1] = Label:New{ caption = 'All', }
+	children[#children+1] = MakeButton( "<<", "boxxy|col|<|x", "narrower" )
+	children[#children+1] = MakeButton( "<", "boxxy|col|<", "narrower" )
+	children[#children+1] = MakeButton( ">", "boxxy|col|>", "wider" )
+	children[#children+1] = MakeButton( ">>", "boxxy|col|>|x", "wider" )
+	
 	children[#children+1] = Label:New{ caption = 'X', }
 	children[#children+1] = MakeButton( "<<", "boxxy|col|4|x", "narrower" )
 	children[#children+1] = MakeButton( "<", "boxxy|col|4", "narrower" )
@@ -114,6 +120,13 @@ local function MakeWindow(unitID)
 	
 	children[#children+1] = MakeButton( "Vol Test", "boxxy|col|0", "toggle volume test" )
 	
+	children[#children+1] = Button:New{
+		caption = 'ShowVol',
+		x=0,y=0,
+		OnClick = { function(self)
+			Spring.SendCommands('debugcolvol')
+		end },
+	}
 	
 	
 	--stack1 = StackPanel:New{
@@ -144,9 +157,11 @@ local function MakeWindow(unitID)
 		x = scrW/3,  
 		y = scrH/3,
 		width='20%',
+		minWidth=200,
+		minHeight=300,
 		parent = screen0,
 		dockable = true,
-		autosize = true,
+		--autosize = true,
 		children = {
 			scroll1
 		},
