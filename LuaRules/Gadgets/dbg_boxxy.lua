@@ -17,6 +17,78 @@ if (gadgetHandler:IsSyncedCode()) then
 
 local euID = nil
 --local boxxy = nil
+
+
+-- Helper Functions
+-- [[
+local function table_to_string(data, indent)
+    local str = ""
+
+    if(indent == nil) then
+        indent = 0
+    end
+	local indenter = "    "
+    -- Check the type
+    if(type(data) == "string") then
+        str = str .. (indenter):rep(indent) .. data .. "\n"
+    elseif(type(data) == "number") then
+        str = str .. (indenter):rep(indent) .. data .. "\n"
+    elseif(type(data) == "boolean") then
+        if(data == true) then
+            str = str .. "true"
+        else
+            str = str .. "false"
+        end
+    elseif(type(data) == "table") then
+        local i, v
+        for i, v in pairs(data) do
+            -- Check for a table in a table
+            if(type(v) == "table") then
+                str = str .. (indenter):rep(indent) .. i .. ":\n"
+                str = str .. table_to_string(v, indent + 2)
+            else
+                str = str .. (indenter):rep(indent) .. i .. ": " .. table_to_string(v, 0)
+            end
+        end
+	elseif(type(data) == "function") then
+		str = str .. (indenter):rep(indent) .. 'function' .. "\n"
+    else
+        echo(1, "Error: unknown data type: %s", type(data))
+    end
+
+    return str
+end
+--]]
+
+
+local function printhitbox (box)
+if (box) then
+	local scaleX = box[1] or "nil"	local scaleY = box[2] or "nil"	local scaleZ = box[3] or "nil"
+	local offsetX =box[4] or "nil"	local offsetY =box[5] or "nil"	local offsetZ =box[6] or "nil"
+	local volumeTest = box[8] or "nil"
+	local volumeType = "nil"
+	if box[7] == 0 or box[7] == 4 then
+		volumeType = "ellipsoid"
+	elseif box[7] == 1 then
+		if box[9] == 0 then
+			volumeType = "CylX"
+		elseif box[9] == 1 then
+			volumeType = "CylY"
+		else
+			volumeType = "CylZ"
+		end
+	elseif box[7] == 2 then
+		volumeType = "box"
+	end
+	
+	--Spring.Echo ("collision: ");Spring.Echo (table_to_string(box))
+	
+	Spring.Echo ("collisionVolumeScales		= '" .. scaleX .. " " .. scaleY .. " " .. scaleZ .. "',")
+	Spring.Echo ("collisionVolumeOffsets	= '" .. offsetX .. " " .. offsetY .. " " .. offsetZ .. "',")
+	Spring.Echo ("collisionVolumeTest	    = " .. volumeTest .. ",")
+	Spring.Echo ("collisionVolumeType	    = '" .. volumeType .. "',")
+ end
+end
   
 function gadget:RecvLuaMsg(msg, playerID)
 	local pre = "boxxy"
@@ -56,6 +128,18 @@ function gadget:RecvLuaMsg(msg, playerID)
 		if (key=="D") then boxxy[4]=boxxy[4]+d end
 		if (key=="Q") then boxxy[5]=boxxy[5]-d end
 		if (key=="E") then boxxy[5]=boxxy[5]+d end
+		
+		if (key==">") then
+			boxxy[1]=boxxy[1]+d
+			boxxy[2]=boxxy[2]+d
+			boxxy[3]=boxxy[3]+d
+		end
+		if (key=="<") then
+			boxxy[1]=boxxy[1]-d
+			boxxy[2]=boxxy[2]-d
+			boxxy[3]=boxxy[3]-d
+		end
+		
 
 		if (key=="1") then 
 			if boxxy[7] == 0 then
@@ -91,9 +175,9 @@ function gadget:RecvLuaMsg(msg, playerID)
 		end	
 		if (key=="0") then
 			if boxxy[8] == 1 then boxxy[8] = 0 else boxxy[8] = 1 end
-		end		
+		end
+		--Spring.Echo ( 'Sending:: ', unpack(boxxy))
 		Spring.SetUnitCollisionVolumeData  (euID, unpack(boxxy))
-		--for i,v in pairs(boxxy) do Spring.Echo (i,v) end
 		printhitbox (boxxy)
 	end
 --Spring.Echo ("RecvLuaMsg: " .. msg .. " from " .. playerID)
@@ -101,39 +185,6 @@ function gadget:RecvLuaMsg(msg, playerID)
 end
 
 
-function printhitbox (box)
-if (box) then
-	local scaleX = box[1] or "nil"	local scaleY = box[2] or "nil"	local scaleZ = box[3] or "nil"
-	local offsetX =box[4] or "nil"	local offsetY =box[5] or "nil"	local offsetZ =box[6] or "nil"
-	local volumeTest = box[8] or "nil"
-	local volumeType = "nil"
-	if box[7] == 0 or box[7] == 4 then
-		volumeType = "ellipsoid"
-	elseif box[7] == 1 then
-		if box[9] == 0 then
-			volumeType = "CylX"
-		elseif box[9] == 1 then
-			volumeType = "CylY"
-		else
-			volumeType = "CylZ"
-		end
-	elseif box[7] == 2 then
-		volumeType = "box"
-	end
-	
-	Spring.Echo ("collisionVolumeScales		= [[" .. scaleX .. " " .. scaleY .. " " .. scaleZ .. "]],")
-	Spring.Echo ("collisionVolumeOffsets	= [[" .. offsetX .. " " .. offsetY .. " " .. offsetZ .. "]],")
-	Spring.Echo ("collisionVolumeTest	    = " .. volumeTest .. ",")
-	Spring.Echo ("collisionVolumeType	    = [[" .. volumeType .. "]],")
- end
- --[[
- ( number unitID )
- -> number scaleX, number scaleY, number scaleZ,
- number offsetX, number offsetY, number offsetZ,
- number volumeType, number testType, number primaryAxis, boolean disabled
- ]]--
-
-end
 
 function gadget:Initialize()
 	--Spring.Echo ("BOXXY HERE U MAD?")
