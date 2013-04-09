@@ -19,7 +19,7 @@ local modinfo = {
 		-- enter your mod here!
 --        "XTA 9.715 beta", --works        
 --        "Balanced Annihilation V7.72", -- works
-        "Balanced Annihilation Reloaded test-892", -- works
+--        "Balanced Annihilation Reloaded test-892", -- works
 --        "BattleTech: Legacy 0.1.r471", --works
 --        "BrickCraft epenis16 11Jan2012", --works
 --        "Conflict Terra ver1.02", -- works with slight bugs
