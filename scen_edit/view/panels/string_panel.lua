@@ -10,39 +10,39 @@ function StringPanel:New(obj)
 end
 
 function StringPanel:Initialize()
-	local radioGroup = {}
+    local radioGroup = {}
     local stackStringPanel = MakeComponentPanel(self.parent)
-	self.cbPredefinedString = Checkbox:New {
+    self.cbPredefinedString = Checkbox:New {
         caption = "Predefined string: ",
         right = 100 + 10,
         x = 1,
         checked = true,
         parent = stackStringPanel,
-    }	
-	table.insert(radioGroup, self.cbPredefinedString)
+    }    
+    table.insert(radioGroup, self.cbPredefinedString)
     self.edString = EditBox:New {
         text = "text",
         right = 1,
         width = 100,
         parent = stackStringPanel,
     }
-	
-	--VARIABLE
+    
+    --VARIABLE
     self.cbVariable, self.cmbVariable = MakeVariableChoice("string", self.parent)
     if self.cbVariable then
-		table.insert(radioGroup, self.cbVariable)
+        table.insert(radioGroup, self.cbVariable)
     end
-	
-	--EXPRESSION
-	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("string", self.parent)
-	if self.cbExpression then
-		table.insert(radioGroup, self.cbExpression)
-	end
-	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
+    
+    --EXPRESSION
+    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("string", self.parent)
+    if self.cbExpression then
+        table.insert(radioGroup, self.cbExpression)
+    end
+    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function StringPanel:UpdateModel(field)
-	if self.cbPredefinedString.checked then
+    if self.cbPredefinedString.checked then
         field.type = "pred"
         field.id = self.edString.text
     elseif self.cbVariable and self.cbVariable.checked then
@@ -55,7 +55,7 @@ function StringPanel:UpdateModel(field)
 end
 
 function StringPanel:UpdatePanel(field)  
-	if field.type == "pred" then
+    if field.type == "pred" then
         if not self.cbPredefinedString.checked then
             self.cbPredefinedString:Toggle()
         end

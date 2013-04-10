@@ -10,7 +10,7 @@ function NumericComparisonPanel:New(obj)
 end
 
 function NumericComparisonPanel:Initialize()
-	local stackNumericComparisonPanel = MakeComponentPanel(self.parent)
+    local stackNumericComparisonPanel = MakeComponentPanel(self.parent)
     self.cmbCmpType = ComboBox:New {
         right = 1,
         width = 100,
@@ -21,9 +21,9 @@ function NumericComparisonPanel:Initialize()
 end
 
 function NumericComparisonPanel:UpdateModel(comparison)
-	comparison.cmpTypeId = self.cmbCmpType.selected
+    comparison.cmpTypeId = self.cmbCmpType.selected
 end
 
 function NumericComparisonPanel:UpdatePanel(comparison)
-	self.cmbCmpType:Select(comparison.cmpTypeId)
+    self.cmbCmpType:Select(comparison.cmpTypeId)
 end

@@ -73,7 +73,7 @@ function TriggersWindow:AddTrigger()
         events = {},
         conditions = {},
         actions = {},
-		enabled = true,
+        enabled = true,
     }
     self:MakeTriggerWindow(trigger, false)
 --[[    local newTrigger = model:NewTrigger()
@@ -96,13 +96,13 @@ end
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
     local triggers = SortByName(SCEN_EDIT.model.triggerManager:getAllTriggers(), "name")
-    for id, trigger in pairs(triggers)  do		
+    for id, trigger in pairs(triggers)  do        
         local stackTriggerPanel = MakeComponentPanel(self._triggers)
-		stackTriggerPanel.triggerId = trigger.id
+        stackTriggerPanel.triggerId = trigger.id
         local btnEditTrigger = Button:New {
             caption = trigger.name,
             x = 1, 
-			right = B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
+            right = B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
             height = B_HEIGHT,
             _toggle = nil,
             parent = stackTriggerPanel,
@@ -164,7 +164,7 @@ end
 
 function TriggersWindow:MakeTriggerWindow(trigger, edit) 
     local triggerWindow = TriggerWindow:New {
- 		parent = self.parent,
+         parent = self.parent,
         trigger = trigger,
     }
     if self.x + self.width + triggerWindow.width > self.parent.width then

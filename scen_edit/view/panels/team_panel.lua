@@ -10,7 +10,7 @@ function TeamPanel:New(obj)
 end
 
 function TeamPanel:Initialize()
-	local radioGroup = {}
+    local radioGroup = {}
     local stackTeamPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedTeam = Checkbox:New {
         caption = "Predefined team: ",
@@ -19,28 +19,28 @@ function TeamPanel:Initialize()
         checked = true,
         parent = stackTeamPanel,
     }
-	table.insert(radioGroup, self.cbPredefinedTeam)
+    table.insert(radioGroup, self.cbPredefinedTeam)
     self.cmbPredefinedTeam = ComboBox:New {
         right = 1,
         width = 100,
         height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackTeamPanel,
         items = GetField(SCEN_EDIT.model.teams, "name"),
-		playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
+        playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
     }
-	
+    
    --VARIABLE
     self.cbVariable, self.cmbVariable = MakeVariableChoice("team", self.parent)
     if self.cbVariable then
-		table.insert(radioGroup, self.cbVariable)
+        table.insert(radioGroup, self.cbVariable)
     end
-	
-	--EXPRESSION
-	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("team", self.parent)
-	if self.cbExpression then
-		table.insert(radioGroup, self.cbExpression)
-	end
-	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
+    
+    --EXPRESSION
+    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("team", self.parent)
+    if self.cbExpression then
+        table.insert(radioGroup, self.cbExpression)
+    end
+    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function TeamPanel:UpdateModel(field)

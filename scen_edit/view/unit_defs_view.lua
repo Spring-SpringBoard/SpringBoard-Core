@@ -2,25 +2,25 @@ UnitDefsView = LCS.class{}
 
 function UnitDefsView:init()
     self.unitDefPanel = UnitDefsPanel:New {
-		name='units',
-		x = 0,
-		right = 20,
-		OnSelectItem = {
-			function(obj,itemIdx,selected)
-				if selected and itemIdx > 0 then
+        name='units',
+        x = 0,
+        right = 20,
+        OnSelectItem = {
+            function(obj,itemIdx,selected)
+                if selected and itemIdx > 0 then
                     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-					if currentState:is_A(SelectUnitTypeState) then
-						local selUnitDef = self.unitDefPanel.items[itemIdx].id
+                    if currentState:is_A(SelectUnitTypeState) then
+                        local selUnitDef = self.unitDefPanel.items[itemIdx].id
                         currentState:SelectUnitType(selUnitDef)
                         self.unitDefPanel:SelectItem(0)
-					else
-						local selUnitDef = self.unitDefPanel.items[itemIdx].id
+                    else
+                        local selUnitDef = self.unitDefPanel.items[itemIdx].id
                         SCEN_EDIT.stateManager:SetState(AddUnitState(selUnitDef, self.unitDefPanel.teamId, self.unitDefPanel))
-					end
-				end
-			end,
-		},
-	}
+                    end
+                end
+            end,
+        },
+    }
     local playerNames, playerTeamIds = GetTeams()
     local teamsCmb = ComboBox:New {
         bottom = 1,
@@ -41,7 +41,7 @@ function UnitDefsView:init()
             end
         end
     }
-	self.unitDefPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
+    self.unitDefPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
 
     self.unitsWindow = Window:New {
         parent = screen0,

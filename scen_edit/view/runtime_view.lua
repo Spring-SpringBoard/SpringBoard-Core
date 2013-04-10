@@ -105,9 +105,9 @@ function RuntimeView:Populate()
 end
 
 function RuntimeView:UpdateStartStopButton()
-    self.btnStartStop:ClearChildren()	
+    self.btnStartStop:ClearChildren()    
     if not self.started then
-		self.btnStartStop.tooltip = "Start scenario"
+        self.btnStartStop.tooltip = "Start scenario"
         self.btnStartStop:AddChild(
             Image:New {                
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
@@ -117,8 +117,8 @@ function RuntimeView:UpdateStartStopButton()
             }
         )
     else
-		self.btnStartStop.tooltip = "Stop scenario"
-        self.btnStartStop:AddChild(		
+        self.btnStartStop.tooltip = "Stop scenario"
+        self.btnStartStop:AddChild(        
             Image:New {                
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
                 height = SCEN_EDIT.conf.B_HEIGHT - 2,

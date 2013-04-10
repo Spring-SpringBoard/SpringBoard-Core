@@ -43,8 +43,8 @@ local function explode(div,str)
 end
 
 function RecieveGadgetMessage(msg)
-	pre = "scen_edit"
-	local data = explode( '|', msg)
+    pre = "scen_edit"
+    local data = explode( '|', msg)
     if data[1] ~= pre then return end
     local op = data[2]
 
@@ -60,44 +60,44 @@ function RecieveGadgetMessage(msg)
         end
         return
     end
-	local tbl = loadstring(msg)()
-	local data = tbl.data
-	local tag = tbl.tag
+    local tbl = loadstring(msg)()
+    local data = tbl.data
+    local tag = tbl.tag
 
     if tag == "msg" then
-		model:InvokeCallback(data.msgId, data.result)
-	end
+        model:InvokeCallback(data.msgId, data.result)
+    end
 end
 
 function widget:Initialize()
-	reloadGadgets() --uncomment for development	
+    reloadGadgets() --uncomment for development    
     if not WG.Chili then
         widgetHandler:RemoveWidget(widget)
         return
     end
     VFS.Include("scen_edit/exports.lua")
-	widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
+    widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
     
-	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
+    VFS.Include(SCEN_EDIT_DIR .. "util.lua")
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
 
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
-	SCEN_EDIT.displayUtil = DisplayUtil(true)
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
+    SCEN_EDIT.displayUtil = DisplayUtil(true)
 
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "conf/conf.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "conf/conf.lua")
     SCEN_EDIT.conf = Conf()
-	
+    
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "meta/meta_model.lua")
-	SCEN_EDIT.metaModel = MetaModel()
+    SCEN_EDIT.metaModel = MetaModel()
     
     --TODO: relocate this
     metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
-	SCEN_EDIT.model = Model()
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
+    SCEN_EDIT.model = Model()
 
     SCEN_EDIT.model.areaManager = AreaManager()
     SCEN_EDIT.model.unitManager = UnitManager(true)
@@ -170,7 +170,7 @@ function widget:DrawWorld()
 
     SCEN_EDIT.stateManager:DrawWorld()
     SCEN_EDIT.view:DrawWorld()
-	SCEN_EDIT.displayUtil:Draw()
+    SCEN_EDIT.displayUtil:Draw()
 end
 
 function widget:DrawWorldPreUnit()
@@ -200,6 +200,6 @@ end
 
 function widget:GameFrame(frameNum)
     SCEN_EDIT.stateManager:GameFrame(frameNum)
-	SCEN_EDIT.displayUtil:OnFrame()
+    SCEN_EDIT.displayUtil:OnFrame()
     SCEN_EDIT.view:GameFrame(frameNum)
 end

@@ -67,6 +67,6 @@ function AddUnitState:DrawWorld()
         end
         gl.Color(1, 1, 1, 0.8)
         gl.UnitShape(self.unitDef, self.teamId)
-        gl.PopMatrix()			
+        gl.PopMatrix()            
     end
 end

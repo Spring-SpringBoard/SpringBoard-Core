@@ -64,14 +64,14 @@ function TerrainEditorView:init()
         end
     }
 
-	self.terrainEditorWindow = Window:New {
-		parent = screen0,
-		x = 300,
-		y = 400,
-		width = 400,	
-		height = 400,		
-		children = {
-			StackPanel:New {
+    self.terrainEditorWindow = Window:New {
+        parent = screen0,
+        x = 300,
+        y = 400,
+        width = 400,    
+        height = 400,        
+        children = {
+            StackPanel:New {
                 orientation = 'horizontal',
                 width = '100%',
                 height = SCEN_EDIT.conf.B_HEIGHT + 40,
@@ -79,11 +79,11 @@ function TerrainEditorView:init()
                 itemPadding = {0,10,10,10},
                 itemMargin = {0,0,0,0},
                 resizeItems = false,
-				children = {
+                children = {
                     btnModifyHeightMap,
                     btnModifyTextureMap,
-				},
-			},
+                },
+            },
             ScrollPanel:New {
                 width = '100%',
                 y = SCEN_EDIT.conf.B_HEIGHT + 40,
@@ -92,6 +92,6 @@ function TerrainEditorView:init()
                     textureImages,
                 }
             },
-		}
-	}
+        }
+    }
 end

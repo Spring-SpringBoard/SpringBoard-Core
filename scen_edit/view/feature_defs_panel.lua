@@ -40,28 +40,28 @@ end
 function FeatureDefsPanel:PopulateFeatureDefsPanel()
     self:Clear()
     local featureTypeId = self.featureTypeId
-	--TODO create a default picture for features
-	local defaultPicture = nil
-	for id, unitDef in pairs(UnitDefs) do
-		defaultPicture = "unitpics/" .. unitDef.buildpicname
-		break
-	end
+    --TODO create a default picture for features
+    local defaultPicture = nil
+    for id, unitDef in pairs(UnitDefs) do
+        defaultPicture = "unitpics/" .. unitDef.buildpicname
+        break
+    end
     for id, featureDef in pairs(FeatureDefs) do
-		local correctType = false
+        local correctType = false
         local correctUnit = true
         local unitDef = nil
-		if featureTypeId == 3 then
-			correctType = true
-		else
-			local isWreck = false
-			if featureDef.tooltip and type(featureDef.tooltip) == "string" then
+        if featureTypeId == 3 then
+            correctType = true
+        else
+            local isWreck = false
+            if featureDef.tooltip and type(featureDef.tooltip) == "string" then
                 local defName = featureDef.name:gsub("_heap", ""):gsub("_dead", "")
                 unitDef = UnitDefNames[defName]
                 if unitDef then
                     isWreck = true
                 end
-			end
-			correctType = isWreck == (featureTypeId == 1)
+            end
+            correctType = isWreck == (featureTypeId == 1)
             if correctType and isWreck then
                 correctUnit = false
                 local unitTerrainId = self.unitTerrainId
@@ -81,7 +81,7 @@ function FeatureDefsPanel:PopulateFeatureDefsPanel()
                     correctUnit = true
                 end
             end
-		end
+        end
         if correctType and correctUnit then
             --unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
             unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
@@ -93,12 +93,12 @@ function FeatureDefsPanel:PopulateFeatureDefsPanel()
                     unitImagePath = ""
                 end
             end
-			local name = featureDef.humanName or featureDef.tooltip or featureDef.name
+            local name = featureDef.humanName or featureDef.tooltip or featureDef.name
             self:AddImage(name, featureDef.id, unitImagePath)
         end
     end
     self.rows = #self.items / self.columns + 1
-	self:SelectItem(0)
+    self:SelectItem(0)
 end
 
 function FeatureDefsPanel:SelectTerrainId(unitTerrainId)

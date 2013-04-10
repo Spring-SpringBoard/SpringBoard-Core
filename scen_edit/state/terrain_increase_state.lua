@@ -79,7 +79,7 @@ function TerrainIncreaseState:MouseWheel(up, value)
 end
 
 function TerrainIncreaseState:GameFrame(frameNum)
-	local x, y, button1, _, button3 = Spring.GetMouseState()
+    local x, y, button1, _, button3 = Spring.GetMouseState()
     local _, _, _, shift = Spring.GetModKeyState()
     if button1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
@@ -100,14 +100,14 @@ function TerrainIncreaseState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function TerrainIncreaseState:DrawWorld()
-	x, y = Spring.GetMouseState()
-	local result, coords = Spring.TraceScreenRay(x, y, true)
-	if result == "ground" then
-		local x, z = coords[1], coords[3]
-		gl.PushMatrix()
+    x, y = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground" then
+        local x, z = coords[1], coords[3]
+        gl.PushMatrix()
         currentState = SCEN_EDIT.stateManager:GetCurrentState()
         gl.Color(0, 255, 0, 0.3)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
-		gl.PopMatrix()
-	end
+        gl.PopMatrix()
+    end
 end

@@ -5,7 +5,7 @@ function MainWindow:init()
         caption = '',
         height = SCEN_EDIT.conf.B_HEIGHT + 20,
         width = SCEN_EDIT.conf.B_HEIGHT + 20,
-		tooltip = "Trigger settings",
+        tooltip = "Trigger settings",
         children = {
             Image:New {                 
                 file=SCEN_EDIT_IMG_DIR .. "applications-system.png", 
@@ -18,7 +18,7 @@ function MainWindow:init()
         height = SCEN_EDIT.conf.B_HEIGHT + 20,
         width = SCEN_EDIT.conf.B_HEIGHT + 20,
         caption = '',
-		tooltip = "Variable settings",
+        tooltip = "Variable settings",
         children = {
             Image:New {                 
                 file=SCEN_EDIT_IMG_DIR .. "format-text-bold.png", 
@@ -58,7 +58,7 @@ function MainWindow:init()
                                 SCEN_EDIT.stateManager:SetState(AddRectState())
                             end
                         },
-						tooltip = "Add a rectangle area", 
+                        tooltip = "Add a rectangle area", 
                         children = {
                             Image:New {                                 
                                 file=SCEN_EDIT_IMG_DIR .. "view-fullscreen.png", 
@@ -72,12 +72,12 @@ function MainWindow:init()
                         height = SCEN_EDIT.conf.B_HEIGHT + 20,
                         width = SCEN_EDIT.conf.B_HEIGHT + 20,
                         caption = '',
-						tooltip = "Save scenario", 
+                        tooltip = "Save scenario", 
                         OnClick = {
-							function() 
+                            function() 
                                 local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
-								sfd = SaveFileDialog(dir)
-								sfd:setConfirmDialogCallback(function(path)
+                                sfd = SaveFileDialog(dir)
+                                sfd:setConfirmDialogCallback(function(path)
                                     local saveCommand = SaveCommand(path)
                                     success, errMsg = pcall(function()
                                         SCEN_EDIT.commandManager:execute(saveCommand, true)
@@ -86,8 +86,8 @@ function MainWindow:init()
                                         Spring.Echo(errMsg)
                                     end
                                 end)
-							end
-						},
+                            end
+                        },
                         children = {
                             Image:New { 
                                 file=SCEN_EDIT_IMG_DIR .. "document-save.png", 
@@ -101,11 +101,11 @@ function MainWindow:init()
                         height = SCEN_EDIT.conf.B_HEIGHT + 20,
                         width = SCEN_EDIT.conf.B_HEIGHT + 20,
                         caption = '',
-						tooltip = "Load scenario", 
+                        tooltip = "Load scenario", 
                         OnClick = {
                             function()
                                 local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
-								ofd = OpenFileDialog(dir)
+                                ofd = OpenFileDialog(dir)
                                 ofd:setConfirmDialogCallback(
                                 function(path)
                                     VFS.MapArchive(path)
@@ -146,84 +146,84 @@ function MainWindow:init()
                         itemMargin = {0, 0, 0, 0},
                         itemPadding = {0, 0, 0, 0},
                     },
-					Button:New {
-						height = SCEN_EDIT.conf.B_HEIGHT + 20,
-						width = SCEN_EDIT.conf.B_HEIGHT + 20,
-						caption = '',
-						tooltip = "Unit type panel",
-						OnClick = {
-							function()
+                    Button:New {
+                        height = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        width = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        caption = '',
+                        tooltip = "Unit type panel",
+                        OnClick = {
+                            function()
                                 self.unitDefsView = UnitDefsView()
-							end
-						},
-						children = {
-							Image:New {								
-								file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
-								height = SCEN_EDIT.conf.B_HEIGHT - 2,
-								width = SCEN_EDIT.conf.B_HEIGHT - 2,
-								margin = {0, 0, 0, 0},
-							},
-						},
-					},
-					Button:New {
-						height = SCEN_EDIT.conf.B_HEIGHT + 20,
-						width = SCEN_EDIT.conf.B_HEIGHT + 20,
-						caption = '',
-						tooltip = "Feature type panel",
-						OnClick = {
-							function()
+                            end
+                        },
+                        children = {
+                            Image:New {                                
+                                file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
+                                height = SCEN_EDIT.conf.B_HEIGHT - 2,
+                                width = SCEN_EDIT.conf.B_HEIGHT - 2,
+                                margin = {0, 0, 0, 0},
+                            },
+                        },
+                    },
+                    Button:New {
+                        height = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        width = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        caption = '',
+                        tooltip = "Feature type panel",
+                        OnClick = {
+                            function()
                                 self.featureDefsView = FeatureDefsView()
-							end
-						},
-						children = {
-							Image:New {								
-								file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
-								height = SCEN_EDIT.conf.B_HEIGHT - 2,
-								width = SCEN_EDIT.conf.B_HEIGHT - 2,
-								margin = {0, 0, 0, 0},
-							},
-						},
-					},--[[
-					Button:New {
-						height = SCEN_EDIT.conf.B_HEIGHT + 20,
-						width = SCEN_EDIT.conf.B_HEIGHT + 20,
-						caption = '',
-						OnClick = {
-							function()
+                            end
+                        },
+                        children = {
+                            Image:New {                                
+                                file = SCEN_EDIT_IMG_DIR .. "face-monkey.png",
+                                height = SCEN_EDIT.conf.B_HEIGHT - 2,
+                                width = SCEN_EDIT.conf.B_HEIGHT - 2,
+                                margin = {0, 0, 0, 0},
+                            },
+                        },
+                    },--[[
+                    Button:New {
+                        height = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        width = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        caption = '',
+                        OnClick = {
+                            function()
                                 Spring.StopSoundStream()
 --                                Spring.PlaySoundStream("sounds/environment.ogg")
 --                                Spring.PlaySoundFile("sounds/environment.ogg")
 --                                Spring.Restart("tb.txt2", "")
 --                                local cmd = StartCommand()
 --                                SCEN_EDIT.commandManager:execute(cmd)
-							end
-						},
-						children = {
-							Image:New {
-								tooltip = "Start mission",
-								file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
-								height = SCEN_EDIT.conf.B_HEIGHT - 2,
-								width = SCEN_EDIT.conf.B_HEIGHT - 2,
-								margin = {0, 0, 0, 0},
-							},
-						},
-					},--]]
-					Button:New {
-						height = SCEN_EDIT.conf.B_HEIGHT + 20,
-						width = SCEN_EDIT.conf.B_HEIGHT + 20,
-						caption = "T-Edit",
-						tooltip = "Terrain toolbox",
-						OnClick = {
-							function()
+                            end
+                        },
+                        children = {
+                            Image:New {
+                                tooltip = "Start mission",
+                                file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
+                                height = SCEN_EDIT.conf.B_HEIGHT - 2,
+                                width = SCEN_EDIT.conf.B_HEIGHT - 2,
+                                margin = {0, 0, 0, 0},
+                            },
+                        },
+                    },--]]
+                    Button:New {
+                        height = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        width = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        caption = "T-Edit",
+                        tooltip = "Terrain toolbox",
+                        OnClick = {
+                            function()
                                 Spring.Echo("Spring is awesome")
                                 Spring.Echo("Proleće je super")
                                 Spring.Echo("Пролеће је супер")
                                 Spring.Echo("春天很好")
                                 Spring.Echo("春はすごい")
                                 self.terrainEditorView = TerrainEditorView()
-							end
-						}
-					},
+                            end
+                        }
+                    },
                  }
             }
         }
@@ -236,12 +236,12 @@ function MainWindow:init()
             }
             btnTriggers.parent.disableChildrenHitTest = true
             table.insert(btnTriggers._toggle.OnDispose, 
-				function()
+                function()
                     if btnTriggers and btnTriggers.parent then
                         btnTriggers.parent.disableChildrenHitTest = false
                     end
-				end
-			)
+                end
+            )
         end
     }
 
@@ -253,12 +253,12 @@ function MainWindow:init()
             }
             btnVariableSettings.parent.disableChildrenHitTest = true
             table.insert(btnVariableSettings._toggle.OnDispose, 
-				function()
+                function()
                     if btnVariableSettings and btnVariableSettings.parent then
                         btnVariableSettings.parent.disableChildrenHitTest = false
                     end
-				end
-			)
+                end
+            )
         end
     }
 end

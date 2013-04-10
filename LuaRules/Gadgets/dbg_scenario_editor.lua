@@ -59,25 +59,25 @@ local function explode(div,str)
 end
 
 function WidgetCallback(f, params, msgId)
-	local result = {f(unpack(params))}	
-	SendToUnsynced("toWidget", table.show{
-		tag = "msg",
-		data = {
-			result = result,
-			msgId = msgId,
-		},
-	})	
+    local result = {f(unpack(params))}    
+    SendToUnsynced("toWidget", table.show{
+        tag = "msg",
+        data = {
+            result = result,
+            msgId = msgId,
+        },
+    })    
 end
 
 local msgParts = {}
 local msgPartsSize = 0
 
 function gadget:RecvLuaMsg(msg, playerID)
-	pre = "scen_edit"
-	if #msg < #pre or msg:sub(1, #pre) ~= "scen_edit" then
+    pre = "scen_edit"
+    if #msg < #pre or msg:sub(1, #pre) ~= "scen_edit" then
         return
     end
-	
+    
     local data = explode( '|', msg)
     local op = data[2]
     local par1 = data[3]
@@ -122,7 +122,7 @@ function gadget:RecvLuaMsg(msg, playerID)
 end
 
 local function AddedUnit(unitID, unitDefID, teamID, builderID)
-	SCEN_EDIT.model.unitManager:addUnit(unitID)
+    SCEN_EDIT.model.unitManager:addUnit(unitID)
     SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
     if not SCEN_EDIT.rtModel.hasStarted then
         Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
@@ -130,7 +130,7 @@ local function AddedUnit(unitID, unitDefID, teamID, builderID)
 end
 
 local function AddedFeature(featureID, allyTeam)
-	SCEN_EDIT.model.featureManager:addFeature(featureID)
+    SCEN_EDIT.model.featureManager:addFeature(featureID)
 end
 
 function gadget:Initialize()
@@ -140,28 +140,28 @@ function gadget:Initialize()
 --    gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
 --    Spring.AssignMouseCursor("resizegrip", "resizegrip", true, true)
 --    Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resizegrip", {1,1,1,0.5}, false)
-	
+    
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
-	VFS.Include(SCEN_EDIT_DIR .. "util.lua")
+    VFS.Include(SCEN_EDIT_DIR .. "util.lua")
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
-	SCEN_EDIT.displayUtil = DisplayUtil(false)
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
+    SCEN_EDIT.displayUtil = DisplayUtil(false)
 
     --FIXME: shouldn't be here
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "conf/conf.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "conf/conf.lua")
     SCEN_EDIT.conf = Conf()
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "meta/meta_model.lua")
-	SCEN_EDIT.metaModel = MetaModel()
+    SCEN_EDIT.metaModel = MetaModel()
     
     --TODO: relocate this
     metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")
     SCEN_EDIT.model = Model()
-	SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/runtime_model/runtime_model.lua")
+    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/runtime_model/runtime_model.lua")
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message.lua")
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "message/message_manager.lua")
@@ -170,9 +170,9 @@ function gadget:Initialize()
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "command/command_manager.lua")
     SCEN_EDIT.commandManager = CommandManager()
 
-	rtModel = RuntimeModel()
-	SCEN_EDIT.rtModel = rtModel	
-	
+    rtModel = RuntimeModel()
+    SCEN_EDIT.rtModel = rtModel    
+    
     if devMode then
         local areaManagerListener = AreaManagerListenerGadget()
         SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
@@ -194,7 +194,7 @@ function gadget:Initialize()
 end
 
 function gadget:GameFrame(frameNum)
-	SCEN_EDIT.rtModel:GameFrame(frameNum)
+    SCEN_EDIT.rtModel:GameFrame(frameNum)
 
     --wait a bit before populating everything (so luaui is loaded)
     if SCEN_EDIT.loadFrame == frameNum then
@@ -215,20 +215,20 @@ function gadget:GameFrame(frameNum)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
-	AddedUnit(unitID, unitDefID, teamID, builderID)
+    AddedUnit(unitID, unitDefID, teamID, builderID)
 end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
     SCEN_EDIT.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
-	SCEN_EDIT.model.unitManager:removeUnit(unitID)
+    SCEN_EDIT.model.unitManager:removeUnit(unitID)
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
-	AddedFeature(featureID, allyteam)
+    AddedFeature(featureID, allyteam)
 end
 
 function gadget:FeatureDestroyed(featureID, allyTeam)
-	SCEN_EDIT.model.featureManager:removeFeature(featureID)
+    SCEN_EDIT.model.featureManager:removeFeature(featureID)
 end
 --[[
 function gadget:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defaultPriority)
@@ -244,13 +244,13 @@ end
 else --unsynced
 
 local function UnsyncedToWidget(_, data)
-	if Script.LuaUI('RecieveGadgetMessage') then
-		Script.LuaUI.RecieveGadgetMessage(data)
-	end
+    if Script.LuaUI('RecieveGadgetMessage') then
+        Script.LuaUI.RecieveGadgetMessage(data)
+    end
 end
 
 function gadget:Initialize()
-	gadgetHandler:AddSyncAction('toWidget', UnsyncedToWidget)
+    gadgetHandler:AddSyncAction('toWidget', UnsyncedToWidget)
 end
 
 function gadget:Shutdown()

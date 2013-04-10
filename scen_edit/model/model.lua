@@ -3,9 +3,9 @@ SCEN_EDIT_MODEL_DIR = SCEN_EDIT_DIR .. "model/"
 
 function Model:init()
     SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_DIR)
-	
+    
     self.teams = {}    
-	self._lua_rules_pre = "scen_edit"
+    self._lua_rules_pre = "scen_edit"
 
     self.areaManager = AreaManager()
     self.unitManager = UnitManager()
@@ -21,29 +21,29 @@ function Model:Clear()
     self.variableManager:clear()
     self.triggerManager:clear()
     self.featureManager:clear()
-	--self.teams = {}
+    --self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unitId = allUnits[i]
         Spring.DestroyUnit(unitId, false, true)
 --        self.unitManager:removeUnit(unitId)
     end
-	local allFeatures = Spring.GetAllFeatures()
-	for i = 1, #allFeatures do
-		local featureId = allFeatures[i]
+    local allFeatures = Spring.GetAllFeatures()
+    for i = 1, #allFeatures do
+        local featureId = allFeatures[i]
         Spring.DestroyFeature(featureId, false, true)
---		self.featureManager:RemoveFeature(featureId)
-	end
+--        self.featureManager:RemoveFeature(featureId)
+    end
     SCEN_EDIT.commandManager:clearUndoRedoStack()
 end
 
 function Model:Serialize()
     local mission = {}
-	mission.meta = self:GetMetaData()
-	mission.meta.m2sUnitIdMapping = nil
-	mission.meta.s2mUnitIdMapping = nil
-	mission.units = {}
-	
+    mission.meta = self:GetMetaData()
+    mission.meta.m2sUnitIdMapping = nil
+    mission.meta.s2mUnitIdMapping = nil
+    mission.units = {}
+    
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unit = {}
@@ -52,7 +52,7 @@ function Model:Serialize()
         unit.unitDefName = UnitDefs[unitDefId].name
         unit.x, _, unit.y = Spring.GetUnitPosition(unitId)
         unit.player = Spring.GetUnitTeam(unitId)
-		unit.id = self.unitManager:getModelUnitId(unitId)
+        unit.id = self.unitManager:getModelUnitId(unitId)
         local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
         unit.angle = math.atan2(dirX, dirZ) * 180 / math.pi
 
@@ -85,26 +85,26 @@ end
 
 function Model:Load(mission)
     self:Clear()
-	
-	--load units
+    
+    --load units
     local units = mission.units
-	self._unitIdCounter = 0
+    self._unitIdCounter = 0
     for i, unit in pairs(units) do
         local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
         Spring.SetUnitRotation(unitId, 0, -unit.angle * math.pi / 180, 0)
         self.unitManager:setUnitModelId(unitId, unit.id)
 --        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player,
---			function (unitId)				
---				if self.s2mUnitIdMapping[unitId] then
---					self.m2sUnitIdMapping[self.s2mUnitIdMapping[unitId]] = nil
---				end				
---				self.s2mUnitIdMapping[unitId] = unit.id
---				self.m2sUnitIdMapping[unit.id] = unitId
---			end
---		)
---		if unit.id > self._unitIdCounter then
---			self._unitIdCounter = unit.id
---		end--]]
+--            function (unitId)                
+--                if self.s2mUnitIdMapping[unitId] then
+--                    self.m2sUnitIdMapping[self.s2mUnitIdMapping[unitId]] = nil
+--                end                
+--                self.s2mUnitIdMapping[unitId] = unit.id
+--                self.m2sUnitIdMapping[unit.id] = unitId
+--            end
+--        )
+--        if unit.id > self._unitIdCounter then
+--            self._unitIdCounter = unit.id
+--        end--]]
     end
     local features = mission.features
     for i, feature in pairs(features) do
@@ -125,38 +125,38 @@ function Model:Load(mission)
     end
 
     --load file
-	self:SetMetaData(mission.meta)
+    self:SetMetaData(mission.meta)
 end
 
 --returns a table that holds triggers, areas and other non-engine content
 function Model:GetMetaData()
-	return {
-		areas = self.areaManager:serialize(),
-		triggers = self.triggerManager:serialize(),
-		variables = self.variableManager:serialize(),
-		teams = self.teams,
-	}
+    return {
+        areas = self.areaManager:serialize(),
+        triggers = self.triggerManager:serialize(),
+        variables = self.variableManager:serialize(),
+        teams = self.teams,
+    }
 end
 
 --sets triggers, areas, etc.
 function Model:SetMetaData(meta)
-	self.areaManager:load(meta.areas)
+    self.areaManager:load(meta.areas)
     self.triggerManager:load(meta.triggers)
     self.variableManager:load(meta.variables)
-	--self.teams = meta.teams or {}
+    --self.teams = meta.teams or {}
 end
 
 function Model:GenerateTeams(widget)
-	local names, ids, colors = GetTeams(widget)
-	for i = 1, #ids do
-		local id = ids[i]
-		local name = names[i]
-		local color = colors[i]
-		
-		self.teams[id] = {
-			name = name,
-			id = id,
-			color = color,
-		}
-	end
+    local names, ids, colors = GetTeams(widget)
+    for i = 1, #ids do
+        local id = ids[i]
+        local name = names[i]
+        local color = colors[i]
+        
+        self.teams[id] = {
+            name = name,
+            id = id,
+            color = color,
+        }
+    end
 end

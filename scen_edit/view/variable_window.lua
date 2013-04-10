@@ -60,28 +60,28 @@ end
 
 function VariableWindow:UpdatePanel(variable)
     self.edValue.text = variable.name
-	self.variable = variable
-	local varType = variable.type
-	self.variablePanel[varType]:UpdatePanel(variable.value)   
+    self.variable = variable
+    local varType = variable.type
+    self.variablePanel[varType]:UpdatePanel(variable.value)   
 end
 
 function VariableWindow:UpdateModel(variable)
     variable.name = self.edValue.text
-	local newVariableType = self.cmbType.items[self.cmbType.selected]
-	local typeChanged = false
-	if variable.type ~= newVarType then
-		typeChanged = true
-	end
-	variable.type = newVariableType
+    local newVariableType = self.cmbType.items[self.cmbType.selected]
+    local typeChanged = false
+    if variable.type ~= newVarType then
+        typeChanged = true
+    end
+    variable.type = newVariableType
     variable.value = {}
-	self.variablePanel[variable.type]:UpdateModel(self.variable.value)
-	
---[[	if typeChanged then
-		SCEN_EDIT.model:RemoveVariable(variable.id)
-		newVariable = SCEN_EDIT.model:NewVariable(variable.type)
-		newVariable.value = variable.value
-		newVariable.name = variable.name
-	end--]]
+    self.variablePanel[variable.type]:UpdateModel(self.variable.value)
+    
+--[[    if typeChanged then
+        SCEN_EDIT.model:RemoveVariable(variable.id)
+        newVariable = SCEN_EDIT.model:NewVariable(variable.type)
+        newVariable.value = variable.value
+        newVariable.name = variable.name
+    end--]]
 end
 
 function VariableWindow:Populate()
@@ -135,21 +135,21 @@ function VariableWindow:Populate()
         items = SCEN_EDIT.metaModel.variableTypes,
         parent = stackTypePanel,
         OnSelect = {
-            function(object, itemIdx, selected)	
+            function(object, itemIdx, selected)    
                 if selected and itemIdx > 0 then
-					self.variablePanel:ClearChildren()
-			
+                    self.variablePanel:ClearChildren()
+            
                     local typeId = itemIdx
-					local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
+                    local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
                     local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel)
-					if subPanel then
-						self.variablePanel[inputType] = subPanel
-						SCEN_EDIT.MakeSeparator(self.variablePanel)
-					end
+                    if subPanel then
+                        self.variablePanel[inputType] = subPanel
+                        SCEN_EDIT.MakeSeparator(self.variablePanel)
+                    end
                 end
             end
         },
     }
-	self.cmbType:Select(-1)
+    self.cmbType:Select(-1)
     self.cmbType:Select(GetIndex(SCEN_EDIT.metaModel.variableTypes, self.variable.type))
 end

@@ -59,7 +59,7 @@ local penBlenders = {
     ["BlendRAW"] = [[penColor;]], --//TODO make custom shaders for specular textures
 }
 
-local shaderFragStr = [[					
+local shaderFragStr = [[                    
 
 uniform sampler2D mapTex;
 uniform sampler2D penTex;
@@ -322,14 +322,14 @@ function TerrainChangeTextureState:DrawPen(x, z)
 end
 
 function TerrainChangeTextureState:DrawWorld()
-	x, y = Spring.GetMouseState()
-	local result, coords = Spring.TraceScreenRay(x, y, true)
-	if result == "ground" then
-		local x, z = coords[1], coords[3]
-		gl.PushMatrix()
+    x, y = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground" then
+        local x, z = coords[1], coords[3]
+        gl.PushMatrix()
 --        self:DrawPen(x, z)
---		SCEN_EDIT.view:drawRect(startX, startZ, endX, endZ) 
-		if self.delayCall then
+--        SCEN_EDIT.view:drawRect(startX, startZ, endX, endZ) 
+        if self.delayCall then
             self.delayCall()
             self.delayCall = nil
         end
@@ -337,8 +337,8 @@ function TerrainChangeTextureState:DrawWorld()
         gl.PushMatrix()
         gl.Color(0, 1, 0, 0.3)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
-		local startX, startZ = x - 20, z - 20
-		local endX, endZ = x + 20, z + 20
-		gl.PopMatrix()
-	end
+        local startX, startZ = x - 20, z - 20
+        local endX, endZ = x + 20, z + 20
+        gl.PopMatrix()
+    end
 end
