@@ -2,9 +2,9 @@ UnitManager = Observable:extends{}
 
 function UnitManager:init(widget)
     self:super('init')
-	self.s2mUnitIdMapping = {}
-	self.m2sUnitIdMapping = {}
-	self.unitIdCounter = 0
+    self.s2mUnitIdMapping = {}
+    self.m2sUnitIdMapping = {}
+    self.unitIdCounter = 0
     self.widget = widget
 end
 
@@ -30,12 +30,12 @@ function UnitManager:addUnit(unitId, modelId)
         self.unitIdCounter = self.unitIdCounter + 1
         modelId = self.unitIdCounter
     end
-	if not self.s2mUnitIdMapping[unitId] then
-		self.s2mUnitIdMapping[unitId] = modelId 
-	end
-	if not self.m2sUnitIdMapping[modelId] then
-		self.m2sUnitIdMapping[modelId] = unitId
-	end
+    if not self.s2mUnitIdMapping[unitId] then
+        self.s2mUnitIdMapping[unitId] = modelId 
+    end
+    if not self.m2sUnitIdMapping[modelId] then
+        self.m2sUnitIdMapping[modelId] = unitId
+    end
 
     self:callListeners("onUnitAdded", unitId, modelId)
     return modelId 
@@ -46,10 +46,10 @@ function UnitManager:removeUnit(unitId)
         return
     end
     local modelId = self.s2mUnitIdMapping[unitId]
-	if self.s2mUnitIdMapping[unitId] then
-		self.m2sUnitIdMapping[modelId] = nil
-	end
-	self.s2mUnitIdMapping[unitId] = nil
+    if self.s2mUnitIdMapping[unitId] then
+        self.m2sUnitIdMapping[modelId] = nil
+    end
+    self.s2mUnitIdMapping[unitId] = nil
 
     self:callListeners("onUnitRemoved", unitId, modelId)
 end
@@ -60,11 +60,11 @@ function UnitManager:removeUnitByModelId(modelId)
 end
 
 function UnitManager:getSpringUnitId(modelUnitId)
-	return self.m2sUnitIdMapping[modelUnitId]
+    return self.m2sUnitIdMapping[modelUnitId]
 end
 
 function UnitManager:getModelUnitId(springUnitId)
-	return self.s2mUnitIdMapping[springUnitId]
+    return self.s2mUnitIdMapping[springUnitId]
 end
 
 function UnitManager:setUnitModelId(unitId, modelId)
@@ -115,7 +115,7 @@ function UnitManager:clear()
     for unitId, _ in pairs(self.s2mUnitIdMapping) do
         self:removeUnit(unitId)
     end
-	self.s2mUnitIdMapping = {}
-	self.m2sUnitIdMapping = {}
-	self.unitIdCounter = 0
+    self.s2mUnitIdMapping = {}
+    self.m2sUnitIdMapping = {}
+    self.unitIdCounter = 0
 end

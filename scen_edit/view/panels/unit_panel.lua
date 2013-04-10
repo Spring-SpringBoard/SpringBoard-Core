@@ -10,7 +10,7 @@ function UnitPanel:New(obj)
 end
 
 function UnitPanel:Initialize()
-	local radioGroup = {}
+    local radioGroup = {}
     --PREDEFINED
     local stackUnitPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedUnit = Checkbox:New {
@@ -20,7 +20,7 @@ function UnitPanel:Initialize()
         checked = false,
         parent = stackUnitPanel,
     }
-	table.insert(radioGroup, self.cbPredefinedUnit)
+    table.insert(radioGroup, self.cbPredefinedUnit)
     self.btnPredefinedUnit = Button:New {
         caption = '...',
         right = 40,
@@ -83,7 +83,7 @@ function UnitPanel:Initialize()
         checked = true,
         parent = stackUnitPanel,
     }
-	table.insert(radioGroup, self.cbSpecialUnit)
+    table.insert(radioGroup, self.cbSpecialUnit)
     self.cmbSpecialUnit = ComboBox:New {
         right = 1,
         width = 100,
@@ -104,15 +104,15 @@ function UnitPanel:Initialize()
     --VARIABLE
     self.cbVariable, self.cmbVariable = MakeVariableChoice("unit", self.parent)
     if self.cbVariable then
-		table.insert(radioGroup, self.cbVariable)
+        table.insert(radioGroup, self.cbVariable)
     end
-	
-	--EXPRESSION
-	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("unit", self.parent)
-	if self.cbExpression then
-		table.insert(radioGroup, self.cbExpression)
-	end
-	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
+    
+    --EXPRESSION
+    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("unit", self.parent)
+    if self.cbExpression then
+        table.insert(radioGroup, self.cbExpression)
+    end
+    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function UnitPanel:UpdateModel(field)

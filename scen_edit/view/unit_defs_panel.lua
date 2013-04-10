@@ -67,7 +67,7 @@ function UnitDefsPanel:PopulateUnitDefsPanel()
         end
     end
     self.rows = #self.items / self.columns + 1
-	self:SelectItem(0)
+    self:SelectItem(0)
 end
 
 function UnitDefsPanel:SelectTerrainId(unitTerrainId)

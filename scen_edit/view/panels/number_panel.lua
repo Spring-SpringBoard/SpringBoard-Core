@@ -10,39 +10,39 @@ function NumberPanel:New(obj)
 end
 
 function NumberPanel:Initialize()
-	local radioGroup = {}
+    local radioGroup = {}
     local stackValuePanel = MakeComponentPanel(self.parent)
-	self.cbPredefinedValue = Checkbox:New {
+    self.cbPredefinedValue = Checkbox:New {
         caption = "Predefined value: ",
         right = 100 + 10,
         x = 1,
         checked = true,
         parent = stackValuePanel,
-    }	
-	table.insert(radioGroup, self.cbPredefinedValue)
+    }    
+    table.insert(radioGroup, self.cbPredefinedValue)
     self.edValue = EditBox:New {
         text = "0",
         right = 1,
         width = 100,
         parent = stackValuePanel,
     }
-	
-	--VARIABLE
+    
+    --VARIABLE
     self.cbVariable, self.cmbVariable = MakeVariableChoice("number", self.parent)
     if self.cbVariable then
-		table.insert(radioGroup, self.cbVariable)
+        table.insert(radioGroup, self.cbVariable)
     end
-	
-	--EXPRESSION
-	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("number", self.parent)
-	if self.cbExpression then
-		table.insert(radioGroup, self.cbExpression)
-	end
-	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
+    
+    --EXPRESSION
+    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("number", self.parent)
+    if self.cbExpression then
+        table.insert(radioGroup, self.cbExpression)
+    end
+    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function NumberPanel:UpdateModel(field)
-	if self.cbPredefinedValue.checked then
+    if self.cbPredefinedValue.checked then
         field.type = "pred"
         field.id = tonumber(self.edValue.text) or 0
     elseif self.cbVariable and self.cbVariable.checked then
@@ -55,7 +55,7 @@ function NumberPanel:UpdateModel(field)
 end
 
 function NumberPanel:UpdatePanel(field)  
-	if field.type == "pred" then
+    if field.type == "pred" then
         if not self.cbPredefinedValue.checked then
             self.cbPredefinedValue:Toggle()
         end

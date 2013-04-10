@@ -1,5 +1,5 @@
 function SCEN_EDIT.coreTypes()
-	return {
+    return {
         {
             humanName = "Unit",
             name = "unit",
@@ -14,10 +14,10 @@ function SCEN_EDIT.coreTypes()
         },
         {
             humanName = "Area",
-    		name = "area",
+            name = "area",
         },
         {
-		    humanName = "Order",
+            humanName = "Order",
             name = "order",
         },
         {
@@ -31,12 +31,12 @@ function SCEN_EDIT.coreTypes()
             name = "bool",
         },
         {
-		    humanName = "String",
+            humanName = "String",
             name = "string",
         },
         {
             humanName = "Number",
-		    name = "number",
+            name = "number",
         },
         {
             humanName = "Numeric comparison",
@@ -50,7 +50,7 @@ function SCEN_EDIT.coreTypes()
             canBeVariable = false,
             canCompare = false,
         },
-	}
+    }
 end
 
 local function definitions()
@@ -81,54 +81,54 @@ local function definitions()
 end
 
 function SCEN_EDIT.parseData(data)
-	local newData = {}
-	-- verify unnamed objects
-	for i = 1, #data do
-		local d = data[i]		
-		if type(d) == "string" then
-			d = {
-				name = d,
-				type = d,
-			}
-		end			
-		if type(d) == "table" then
-			local continue = true --lua has no continue and i don't want deep nesting
-			if continue and not d.type then
-				Spring.Echo("Error, missing type of data " .. d.type)
-				continue = false
-			end
-			if continue and d.name == nil then
-				d.name = d.type				
-			end
-			if continue then
-				for j = 1, #newData do
-					local d2 = newData[j]
-					if d.name == d2.name then
-						Spring.Echo("Error, name field is duplicate")
-						continue = false
-					end
-				end
-			end
-			if continue	then
-				table.insert(newData, d)
-			end			
-		else
-			Spring.Echo("Unexpected data " .. d .. " of type " .. type(d))
-		end		
-	end
+    local newData = {}
+    -- verify unnamed objects
+    for i = 1, #data do
+        local d = data[i]        
+        if type(d) == "string" then
+            d = {
+                name = d,
+                type = d,
+            }
+        end            
+        if type(d) == "table" then
+            local continue = true --lua has no continue and i don't want deep nesting
+            if continue and not d.type then
+                Spring.Echo("Error, missing type of data " .. d.type)
+                continue = false
+            end
+            if continue and d.name == nil then
+                d.name = d.type                
+            end
+            if continue then
+                for j = 1, #newData do
+                    local d2 = newData[j]
+                    if d.name == d2.name then
+                        Spring.Echo("Error, name field is duplicate")
+                        continue = false
+                    end
+                end
+            end
+            if continue    then
+                table.insert(newData, d)
+            end            
+        else
+            Spring.Echo("Unexpected data " .. d .. " of type " .. type(d))
+        end        
+    end
 
-	-- verify named objects
-	local finalData = {}
-	local dataNames = {}
-	for i = 1, #newData do
-		local d = newData[i]
-		if dataNames[d.name] then
-			Spring.Echo("Data of name " .. d.name .. " already exists ")
-		else
-			table.insert(finalData, d)
-		end
-	end
-	return finalData
+    -- verify named objects
+    local finalData = {}
+    local dataNames = {}
+    for i = 1, #newData do
+        local d = newData[i]
+        if dataNames[d.name] then
+            Spring.Echo("Data of name " .. d.name .. " already exists ")
+        else
+            table.insert(finalData, d)
+        end
+    end
+    return finalData
 end
 
 function SCEN_EDIT.complexTypes()

@@ -33,9 +33,9 @@ function AddRectState:MouseMove(x, y, dx, dy, button)
     if self.addSecondPoint then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
-			self.endX = coords[1]
-			self.endZ = coords[3]
-		end
+            self.endX = coords[1]
+            self.endZ = coords[3]
+        end
     end
 end
 

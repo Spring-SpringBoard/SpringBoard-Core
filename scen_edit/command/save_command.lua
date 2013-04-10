@@ -102,7 +102,7 @@ local modinfo = {
     name = "Air Force Command r4",
     description = "Mission Mutator",
     modtype = "1",
-    shortname =	 "Air Force Command",
+    shortname =     "Air Force Command",
     depend = {
         "Zero-K v1.0.7.2"
     },

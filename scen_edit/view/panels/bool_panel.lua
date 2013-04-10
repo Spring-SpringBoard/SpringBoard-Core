@@ -10,40 +10,40 @@ function BoolPanel:New(obj)
 end
 
 function BoolPanel:Initialize()
-	local radioGroup = {}
+    local radioGroup = {}
     local stackBoolPanel = MakeComponentPanel(self.parent)
-	self.cbPredefincbBool = Checkbox:New {
+    self.cbPredefincbBool = Checkbox:New {
         caption = "Predefined bool: ",
         right = 100 + 10,
         x = 1,
         checked = true,
         parent = stackBoolPanel,
-    }	
-	table.insert(radioGroup, self.cbPredefincbBool)
+    }    
+    table.insert(radioGroup, self.cbPredefincbBool)
     self.cbBool = Checkbox:New {
-		caption = "Value",
+        caption = "Value",
         checked = true,
         right = 1,
         width = 100,
         parent = stackBoolPanel,
     }
-	
-	--VARIABLE
+    
+    --VARIABLE
     self.cbVariable, self.cmbVariable = MakeVariableChoice("bool", self.parent)
     if self.cbVariable then
-		table.insert(radioGroup, self.cbVariable)
+        table.insert(radioGroup, self.cbVariable)
     end
-	
-	--EXPRESSION
-	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("bool", self.parent)
-	if self.cbExpression then
-		table.insert(radioGroup, self.cbExpression)
-	end
-	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
+    
+    --EXPRESSION
+    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("bool", self.parent)
+    if self.cbExpression then
+        table.insert(radioGroup, self.cbExpression)
+    end
+    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function BoolPanel:UpdateModel(field)
-	if self.cbPredefincbBool.checked then
+    if self.cbPredefincbBool.checked then
         field.type = "pred"
         field.bool = self.cbBool.checked
     elseif self.cbVariable and self.cbVariable.checked then
@@ -56,11 +56,11 @@ function BoolPanel:UpdateModel(field)
 end
 
 function BoolPanel:UpdatePanel(field)  
-	if field.type == "pred" then
+    if field.type == "pred" then
         if not self.cbPredefincbBool.checked then
             self.cbPredefincbBool:Toggle()
         end
-		if field.bool ~= self.cbBool.checked then
+        if field.bool ~= self.cbBool.checked then
             self.cbBool:Toggle()
         end
     elseif field.type == "var" then

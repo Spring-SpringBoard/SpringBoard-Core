@@ -18,9 +18,9 @@ function VariableSettingsWindow:New(obj)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={ 
-			function() 				
-				obj:AddVariable()
-			end}
+            function()                 
+                obj:AddVariable()
+            end}
     }
     local btnClose = Button:New {
         caption='Close',
@@ -65,7 +65,7 @@ end
 function VariableSettingsWindow:AddVariable()
     local variable = {
         type = "number",
-		value = {},
+        value = {},
         name = "new variable",
     }
     success, msg = pcall(VariableSettingsWindow.MakeVariableWindow, self, variable, false)
@@ -91,7 +91,7 @@ end
 
 function VariableSettingsWindow:Populate()
     self.variablesPanel:ClearChildren()
-	local variables = SCEN_EDIT.model.variableManager:getAllVariables()
+    local variables = SCEN_EDIT.model.variableManager:getAllVariables()
     for i = 1, #variables do
         local variable = variables[i]
         local variableStackPanel = MakeComponentPanel(self.variablesPanel)

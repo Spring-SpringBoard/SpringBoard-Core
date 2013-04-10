@@ -34,16 +34,16 @@ function TerrainDecreaseState:MouseMove(x, y, dx, dy, button)
 end
 
 function TerrainDecreaseState:DrawWorld()
-	x, y = Spring.GetMouseState()
-	local result, coords = Spring.TraceScreenRay(x, y, true)
-	if result == "ground" then
-		local x, z = coords[1], coords[3]
-		local startX, startZ = x - 20, z - 20
-		local endX, endZ = x + 20, z + 20
-		gl.PushMatrix()
+    x, y = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground" then
+        local x, z = coords[1], coords[3]
+        local startX, startZ = x - 20, z - 20
+        local endX, endZ = x + 20, z + 20
+        gl.PushMatrix()
         currentState = SCEN_EDIT.stateManager:GetCurrentState()
-        gl.Color(255, 0, 0, 0.3)			
+        gl.Color(255, 0, 0, 0.3)            
         SCEN_EDIT.view:drawRect(startX, startZ, endX, endZ) 
-		gl.PopMatrix()
-	end
+        gl.PopMatrix()
+    end
 end

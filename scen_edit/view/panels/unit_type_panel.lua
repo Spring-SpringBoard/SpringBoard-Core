@@ -10,7 +10,7 @@ function UnitTypePanel:New(obj)
 end
 
 function UnitTypePanel:Initialize()
-	local radioGroup = {}
+    local radioGroup = {}
     local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbPredefinedType = Checkbox:New {
         caption = "Predefined type: ",
@@ -19,7 +19,7 @@ function UnitTypePanel:Initialize()
         checked = false,
         parent = stackUnitTypePanel,
     }
-	table.insert(radioGroup, self.cbPredefinedType)
+    table.insert(radioGroup, self.cbPredefinedType)
     self.btnPredefinedType = Button:New {
         caption = '...',
         right = 1,
@@ -35,16 +35,16 @@ function UnitTypePanel:Initialize()
         end
     }
     self.btnPredefinedType.OnSelectUnitType = {
-		function(unitTypeId)
-			self.btnPredefinedType.unitTypeId = unitTypeId
-			self.btnPredefinedType.caption = "Type id=" .. unitTypeId
-			self.btnPredefinedType:Invalidate()
-			if not self.cbPredefinedType.checked then 
-				self.cbPredefinedType:Toggle()
-			end
-		end
-	}
-	
+        function(unitTypeId)
+            self.btnPredefinedType.unitTypeId = unitTypeId
+            self.btnPredefinedType.caption = "Type id=" .. unitTypeId
+            self.btnPredefinedType:Invalidate()
+            if not self.cbPredefinedType.checked then 
+                self.cbPredefinedType:Toggle()
+            end
+        end
+    }
+    
     --SPECIAL TYPE, i.e TRIGGER
     local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbSpecialType = Checkbox:New {
@@ -54,7 +54,7 @@ function UnitTypePanel:Initialize()
         checked = true,
         parent = stackUnitTypePanel,
     }
-	table.insert(radioGroup, self.cbSpecialType)
+    table.insert(radioGroup, self.cbSpecialType)
     self.cmbSpecialType = ComboBox:New {
         right = 1,
         width = 100,
@@ -71,18 +71,18 @@ function UnitTypePanel:Initialize()
             end
         },
     }
-	
-	--VARIABLE
+    
+    --VARIABLE
     self.cbVariable, self.cmbVariable = MakeVariableChoice("unitType", self.parent)
     if self.cbVariable then
-		table.insert(radioGroup, self.cbVariable)
+        table.insert(radioGroup, self.cbVariable)
     end
-	
-	self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("unitType", self.parent)
-	if self.cbExpression then
-		table.insert(radioGroup, self.cbExpression)
-	end
-	SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
+    
+    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("unitType", self.parent)
+    if self.cbExpression then
+        table.insert(radioGroup, self.cbExpression)
+    end
+    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function UnitTypePanel:UpdateModel(field)
@@ -90,8 +90,8 @@ function UnitTypePanel:UpdateModel(field)
         field.type = "pred"
         field.id = self.btnPredefinedType.unitTypeId
     elseif self.cbSpecialType.checked then
-		field.type = "spec"
-		field.name = self.cmbSpecialType.items[self.cmbSpecialType.selected]
+        field.type = "spec"
+        field.name = self.cmbSpecialType.items[self.cmbSpecialType.selected]
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
         field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
@@ -107,11 +107,11 @@ function UnitTypePanel:UpdatePanel(field)
             self.cbPredefinedType:Toggle()
         end
         self.btnPredefinedType.OnSelectUnitType[1](field.id)
-	elseif field.type == "spec" then
+    elseif field.type == "spec" then
         if not self.cbSpecialType.checked then
             self.cbSpecialType:Toggle()
         end
-        self.cmbSpecialType:Select(1) --TODO:fix it		
+        self.cmbSpecialType:Select(1) --TODO:fix it        
     elseif field.type == "var" then
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()

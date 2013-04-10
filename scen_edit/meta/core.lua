@@ -19,7 +19,7 @@ return {
                         type = type.name,
                     },
                 },
-                --		output = type.name,
+                --        output = type.name,
                 execute = function(input)
                     local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
                     local newValue = SCEN_EDIT.deepcopy(input.variable)
@@ -44,9 +44,9 @@ return {
                     local unitType = input.unitType
                     local area = input.area
                     local team = input.team
-                    local x = (area[1] + area[3]) / 2				
+                    local x = (area[1] + area[3]) / 2                
                     local z = (area[2] + area[4]) / 2
-                    local y = Spring.GetGroundHeight(x, z)												
+                    local y = Spring.GetGroundHeight(x, z)                                                
                     Spring.CreateUnit(unitType, x, y, z, 0, team)
 
                     local color = SCEN_EDIT.model.teams[team].color
@@ -120,7 +120,7 @@ return {
                 name = "REMOVE_UNIT",
                 input = { "unit" },
                 execute = function (input)
-                    local unit = input.unit				
+                    local unit = input.unit                
                     local x, y, z = Spring.GetUnitPosition(unit)
 
                     local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
@@ -269,7 +269,7 @@ return {
         end
 
         for i = 1, #allTypes do
-            local basicType = allTypes[i]		
+            local basicType = allTypes[i]        
             if basicType.canCompare == nil or basicType.canCompare == true then
                 local relType
                 if basicType.name == "number" then
@@ -333,7 +333,7 @@ return {
                 humanName = "Unit team",
                 name = "UNIT_TEAM",
                 input = { "unit" },
-                output = "team",			
+                output = "team",            
                 execute = function(input)
                     return Spring.GetUnitTeam(input.unit)
                 end,
@@ -357,7 +357,7 @@ return {
                 humanName = "Unit HP",
                 name = "UNIT_HP",
                 input = { "unit" },
-                output = "number",			
+                output = "number",            
                 execute = function(input)
                     return Spring.GetUnitHealth(input.unit)
                 end,
@@ -366,7 +366,7 @@ return {
                 humanName = "Unit HP%",
                 name = "UNIT_HP_PERCENT",
                 input = { "unit" },
-                output = "number",			
+                output = "number",            
                 execute = function(input)
                     local hp, maxHp Spring.GetUnitHealth(input.unit)
                     return hp / maxHp
@@ -440,7 +440,7 @@ return {
                 execute = function(input)
                     return false
                 end,
-            },		
+            },        
         }
         for i = 1, #coreTransforms do
             local coreTransform = coreTransforms[i]
@@ -486,7 +486,7 @@ return {
             {
                 humanName = "Attack unit",
                 name = "ATTACK_UNIT",
-                input = {				
+                input = {                
                     {
                         name = "target",
                         type = "unit",
@@ -552,7 +552,7 @@ return {
             {
                 humanName = "Guard unit",
                 name = "GUARD_UNIT",
-                input = {				
+                input = {                
                     {
                         name = "target",
                         type = "unit",
@@ -569,7 +569,7 @@ return {
             {
                 humanName = "Repair unit",
                 name = "REPAIR_UNIT",
-                input = {				
+                input = {                
                     {
                         name = "target",
                         type = "unit",

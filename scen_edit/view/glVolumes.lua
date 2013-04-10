@@ -13,7 +13,7 @@
 --------------------------------------------------------------------------------
 
 if (not gl) then
-	return
+    return
 end
 
 gl.Utilities = gl.Utilities or {}

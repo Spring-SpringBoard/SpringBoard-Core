@@ -12,13 +12,13 @@ end
 function DebugTriggerView:Populate()
     self.parent:ClearChildren()
     local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
-    for id, trigger in pairs(triggers)  do		
+    for id, trigger in pairs(triggers)  do        
         local triggerPanel = MakeComponentPanel(self.parent)
         local maxChars = 15
         local cbTriggerName = Checkbox:New {
             caption = trigger.name:sub(1, maxChars),
             width = 110,
-			x = 1,
+            x = 1,
             parent = triggerPanel,
             checked = trigger.enabled,
             OnChange = {
@@ -31,7 +31,7 @@ function DebugTriggerView:Populate()
         }
         local btnExecuteTrigger = Button:New {
             caption = "Execute",
-			right = B_HEIGHT + 120,
+            right = B_HEIGHT + 120,
             width = 100,
 --            x = 110,
             height = B_HEIGHT,
@@ -45,7 +45,7 @@ function DebugTriggerView:Populate()
         }
         local btnExecuteTriggerActions = Button:New {
             caption = "Execute actions",
-			right = 1,
+            right = 1,
             width = 120,
             height = B_HEIGHT,
             parent = triggerPanel,

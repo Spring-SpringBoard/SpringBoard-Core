@@ -14,20 +14,20 @@ local inherited = this.inherited
 
 function TriggerWindow:New(obj)
     obj.caption = obj.trigger.name
-	local stackTriggerPanel = MakeComponentPanel(nil)
-	stackTriggerPanel.y = 10
-	local lblTriggerName = Label:New {
-		caption = "Trigger name: ",
-		right = 100 + 10,
-		x = 1,
-		parent = stackTriggerPanel,
-	}
-	local edTriggerName = EditBox:New {
-		text = obj.trigger.name,
-		right = 1,
-		width = 100,
-		parent = stackTriggerPanel,
-	}
+    local stackTriggerPanel = MakeComponentPanel(nil)
+    stackTriggerPanel.y = 10
+    local lblTriggerName = Label:New {
+        caption = "Trigger name: ",
+        right = 100 + 10,
+        x = 1,
+        parent = stackTriggerPanel,
+    }
+    local edTriggerName = EditBox:New {
+        text = obj.trigger.name,
+        right = 1,
+        width = 100,
+        parent = stackTriggerPanel,
+    }
     obj._triggerPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -66,7 +66,7 @@ function TriggerWindow:New(obj)
         height = SCEN_EDIT.conf.B_HEIGHT,
     }
     obj.children = {
-		stackTriggerPanel,
+        stackTriggerPanel,
         ScrollPanel:New {
             x = 1,
             y = 15 + SCEN_EDIT.conf.B_HEIGHT,
@@ -86,8 +86,8 @@ function TriggerWindow:New(obj)
     obj:Populate()
     btnClose.OnClick = {
         function() 
-			obj.trigger.name = edTriggerName.text
-            obj:Dispose() 			
+            obj.trigger.name = edTriggerName.text
+            obj:Dispose()             
         end
     }
 
@@ -118,7 +118,7 @@ function TriggerWindow:Populate()
         }
         local btnRemoveEvent = Button:New {
             caption = "",
-			right = 1,
+            right = 1,
             width = SCEN_EDIT.conf.B_HEIGHT,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
@@ -145,7 +145,7 @@ function TriggerWindow:Populate()
     for i = 1, #self.trigger.conditions do
         local condition = self.trigger.conditions[i]
         local stackEventPanel = MakeComponentPanel(self._triggerPanel)
-		local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
+        local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
         local btnEditCondition = Button:New {
             caption = conditionHumanName,
             right = SCEN_EDIT.conf.B_HEIGHT + 10,
@@ -156,7 +156,7 @@ function TriggerWindow:Populate()
         }
         local btnRemoveCondition = Button:New {
             caption = "",
-			right = 1,
+            right = 1,
             width = SCEN_EDIT.conf.B_HEIGHT,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
@@ -182,7 +182,7 @@ function TriggerWindow:Populate()
     for i = 1, #self.trigger.actions do
         local action = self.trigger.actions[i]
         local stackActionPanel = MakeComponentPanel(self._triggerPanel)
-		local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
+        local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
         local btnEditAction = Button:New {
             caption = actionHumanName,
             right = SCEN_EDIT.conf.B_HEIGHT + 10,
@@ -214,20 +214,20 @@ end
 
 function TriggerWindow:MakeAddConditionWindow()
     local newActionWindow = ConditionWindow:New {
- 		parent = screen0,
-		trigger = self.trigger,
-		triggerWindow = self,
-		mode = 'add',
+         parent = screen0,
+        trigger = self.trigger,
+        triggerWindow = self,
+        mode = 'add',
     }
 end
 
 function TriggerWindow:MakeEditConditionWindow(condition)
     local newActionWindow = ConditionWindow:New {
- 		parent = screen0,	
-		trigger = self.trigger,
-		triggerWindow = self,
-		mode = 'edit',
-		condition = condition,
+         parent = screen0,    
+        trigger = self.trigger,
+        triggerWindow = self,
+        mode = 'edit',
+        condition = condition,
     }
 end
 
@@ -238,20 +238,20 @@ end
 
 function TriggerWindow:MakeAddEventWindow()
     local newEventWindow = EventWindow:New {
- 		parent = screen0,
-		trigger = self.trigger,
-		triggerWindow = self,
-		mode = 'add',
+         parent = screen0,
+        trigger = self.trigger,
+        triggerWindow = self,
+        mode = 'add',
     }
 end
 
 function TriggerWindow:MakeEditEventWindow(event)
     local newEventWindow = EventWindow:New {
- 		parent = screen0,
-		trigger = self.trigger,
-		triggerWindow = self,
-		mode = 'edit',
-		event = event,
+         parent = screen0,
+        trigger = self.trigger,
+        triggerWindow = self,
+        mode = 'edit',
+        event = event,
     }
 end
 

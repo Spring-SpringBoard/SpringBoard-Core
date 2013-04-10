@@ -17,26 +17,26 @@ function FeatureDefsView:init()
     }
 
     self.featureDefsPanel = FeatureDefsPanel:New {
-		name='features',
-		x = 0,
-		right = 20,
-		OnSelectItem = {
-			function(obj,itemIdx,selected)
-				if selected and itemIdx > 0 then
+        name='features',
+        x = 0,
+        right = 20,
+        OnSelectItem = {
+            function(obj,itemIdx,selected)
+                if selected and itemIdx > 0 then
                     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-					if currentState:is_A(SelectFeatureTypeState) then
-						selFeatureDef = self.featureDefsPanel.items[itemIdx].id
-						CallListeners(currentState.btnSelectType.OnSelectFeatureType, selFeatureDef)
+                    if currentState:is_A(SelectFeatureTypeState) then
+                        selFeatureDef = self.featureDefsPanel.items[itemIdx].id
+                        CallListeners(currentState.btnSelectType.OnSelectFeatureType, selFeatureDef)
                         SCEN_EDIT.stateManager:SetState(DefaultState())
-					else
-						selFeatureDef = self.featureDefsPanel.items[itemIdx].id
+                    else
+                        selFeatureDef = self.featureDefsPanel.items[itemIdx].id
                         SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, self.featureDefsPanel.teamId, self.featureDefsPanel, tonumber(ebAmount.text) or 1))
-					end
+                    end
                     local feature = FeatureDefs[selFeatureDef]
-				end
-			end,
-		},
-	}
+                end
+            end,
+        },
+    }
     local playerNames, playerTeamIds = GetTeams()
     local teamsCmb = ComboBox:New {
         bottom = 1,
@@ -58,7 +58,7 @@ function FeatureDefsView:init()
         end
     }
 
-	self.featureDefsPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
+    self.featureDefsPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
 
     self.featuresWindow = Window:New {
         parent = screen0,

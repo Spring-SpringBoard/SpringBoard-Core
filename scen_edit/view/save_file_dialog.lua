@@ -13,7 +13,7 @@ function SaveFileDialog:save(path)
 end
 
 function SaveFileDialog:confirmDialog()
-	local filePath = self:getSelectedFilePath()
+    local filePath = self:getSelectedFilePath()
     --TODO: create a dialog which prompts the user if they want to delete the existing file
     if (VFS.FileExists(filePath)) then
         os.remove(filePath)
