@@ -162,6 +162,7 @@ function widget:DrawScreen()
 end
 
 function widget:DrawWorld()
+    SCEN_EDIT.executeDelayed()
     --has to be initialized here since it creates textures
     if not SCEN_EDIT.model.tm then
         SCEN_EDIT.model.tm = TextureManager()

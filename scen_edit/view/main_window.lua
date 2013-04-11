@@ -32,7 +32,7 @@ function MainWindow:init()
     self.toolboxWindow = Window:New {
         x = 1000,
         y = 100,
-        width = 700,
+        width = 800,
         height = 100,
         parent = screen0,
         caption = "Scenario Toolbox",
@@ -49,6 +49,20 @@ function MainWindow:init()
                 resizeItems = false,
 
                 children = {
+                    Button:New {
+                        height = SCEN_EDIT.conf.B_HEIGHT + 20,
+                        width = SCEN_EDIT.conf.B_HEIGHT + 220,
+                        caption = 'EXPORT-IMG(hello carp)',
+                        OnClick = {
+                            function()
+                                SCEN_EDIT.delayGL(function()
+                                    local command = SaveImagesCommand("./")
+                                    SCEN_EDIT.commandManager:execute(command, true)
+                                end
+                                )
+                            end
+                        },
+                    },
                     Button:New {
                         height = SCEN_EDIT.conf.B_HEIGHT + 20,
                         width = SCEN_EDIT.conf.B_HEIGHT + 20,
@@ -215,11 +229,13 @@ function MainWindow:init()
                         tooltip = "Terrain toolbox",
                         OnClick = {
                             function()
+                                --[[
+                                code used to test utf-8; ye it shouldn't be here, but /lazy
                                 Spring.Echo("Spring is awesome")
                                 Spring.Echo("Proleće je super")
                                 Spring.Echo("Пролеће је супер")
                                 Spring.Echo("春天很好")
-                                Spring.Echo("春はすごい")
+                                Spring.Echo("春はすごい")--]]
                                 self.terrainEditorView = TerrainEditorView()
                             end
                         }
