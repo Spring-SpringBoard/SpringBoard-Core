@@ -479,3 +479,19 @@ function SCEN_EDIT.createNewPanel(input, parent)
     end
     Spring.Echo("No panel for this input: " .. tostring(input))
 end
+
+SCEN_EDIT.delayedGL = {}
+function SCEN_EDIT.delayGL(func, params)
+    table.insert(SCEN_EDIT.delayedGL, {func, params or {}})
+end
+
+function SCEN_EDIT.executeDelayed()
+    for i = 1, #SCEN_EDIT.delayedGL do
+        call = SCEN_EDIT.delayedGL[i]
+        success, msg = pcall(call[1], unpack(call[2]))
+        if not success then
+            Spring.Echo(msg)
+        end
+    end
+    SCEN_EDIT.delayedGL = {}
+end
