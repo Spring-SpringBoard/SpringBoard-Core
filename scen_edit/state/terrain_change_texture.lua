@@ -193,9 +193,10 @@ function TerrainChangeTextureState:drawPen(pointsXZ, x, z, penTexture)
     return rT
 end
 
-function TerrainChangeTextureState:init(paintTexture)
+function TerrainChangeTextureState:init(paintTexture, textureImages)
     self.size = 100
     self.paintTexture = paintTexture
+	self.textureImages = textureImages
     Spring.Echo(self.paintTexture)
 end
 
@@ -246,6 +247,7 @@ function TerrainChangeTextureState:MousePress(x, y, button)
         end
     elseif button == 3 then
         SCEN_EDIT.stateManager:SetState(DefaultState())
+		self.textureImages:Select(0)
     end
 end
 
