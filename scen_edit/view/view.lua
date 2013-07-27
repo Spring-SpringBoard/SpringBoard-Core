@@ -15,7 +15,8 @@ function View:init()
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
     self.textureManager = TextureManager()
-    self.mainWindow = MainWindow()
+    --self.mainWindow = MainWindow()
+	self.tabbedWindow = TabbedWindow()
 end
 
 function View:drawRect(x1, z1, x2, z2)
