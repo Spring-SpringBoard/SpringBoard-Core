@@ -36,5 +36,7 @@ if WG and WG.Chili then
     ImageListView = Chili.ImageListView
     TreeView = Chili.TreeView
     Trackbar = Chili.Trackbar
+	TabBar = Chili.TabBar
+	TabPanel = Chili.TabPanel
     screen0 = Chili.Screen0
 end
