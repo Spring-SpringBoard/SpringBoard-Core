@@ -70,7 +70,7 @@ function RecieveGadgetMessage(msg)
 end
 
 function widget:Initialize()
-    --reloadGadgets() --uncomment for development    
+    reloadGadgets() --uncomment for development    
     if not WG.Chili then
         widgetHandler:RemoveWidget(widget)
         return
