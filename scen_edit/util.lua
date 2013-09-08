@@ -348,11 +348,11 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
     return data.humanName
 end
 
-function GenerateTeamColor()
+function SCEN_EDIT.GenerateTeamColor()
     return 1, 1, 1, 1 --yeah, ain't it great
 end
 
-function GetTeams(widget)
+function SCEN_EDIT.GetTeams(widget)
     local playerNames = {}
     local playerTeamIds = {}
     local playerColors = {}
@@ -362,13 +362,13 @@ function GetTeams(widget)
     for i = 1, #teamIds do
         local id, _, _, name = Spring.GetAIInfo(teamIds[i])
         table.insert(playerTeamIds, teamIds[i])
-        local teamName = "Team " .. teamIds[i]
+        local teamName = tostring(teamIds[i])
         if id ~= nil then
             teamName = teamName .. ": " .. name
         end
         table.insert(playerNames, teamName)
 
-        local r, g, b, a = GenerateTeamColor()--Spring.GetTeamColor(teamIds[i])
+        local r, g, b, a = SCEN_EDIT.GenerateTeamColor()--Spring.GetTeamColor(teamIds[i])
         if widget then
             r, g, b, a = Spring.GetTeamColor(teamIds[i])
         end

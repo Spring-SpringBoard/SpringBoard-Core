@@ -1,11 +1,13 @@
 AddUnitState = AbstractState:extends{}
 
-function AddUnitState:init(unitDef, teamId, unitImages)
+function AddUnitState:init(unitDef, teamId, unitImages, amount)
     self.unitDef = unitDef
     self.teamId = teamId
     self.unitImages = unitImages
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
+	self.amount = amount
+    self.randomSeed = os.clock()
 end
 
 function AddUnitState:enterState()
@@ -22,8 +24,8 @@ function AddUnitState:MousePress(x, y, button)
             return true
         end
     elseif button == 3 then
-        SCEN_EDIT.stateManager:SetState(DefaultState())
-        self.unitImages:SelectItem(0)
+		self.unitImages:SelectItem(0)
+        SCEN_EDIT.stateManager:SetState(DefaultState())        
     end
 end
 
@@ -41,10 +43,24 @@ function AddUnitState:MouseMove(x, y, dx, dy, button)
 end
 
 function AddUnitState:MouseRelease(x, y, button)
-    local cmd = AddUnitCommand(self.unitDef, self.x, self.y, self.z, self.teamId, self.angle)
-    SCEN_EDIT.commandManager:execute(cmd)
+    local commands = {}
+    math.randomseed(self.randomSeed)
+    for i = 1, self.amount do
+        local x, y, z = self.x, self.y, self.z
+        if i ~= 1 then
+            x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
+            z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
+        end
+        local cmd = AddUnitCommand(self.unitDef, x, y, z, self.teamId, self.angle)
+        commands[#commands + 1] = cmd
+    end
+
+    local compoundCommand = CompoundCommand(commands)
+    
+    SCEN_EDIT.commandManager:execute(compoundCommand)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
+	self.randomSeed = os.clock()
     return true
 end
 
@@ -55,18 +71,29 @@ function AddUnitState:DrawWorld()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
-        local dirX, dirY, dirZ = Spring.GetCameraDirection()
-        local drawX, drawY, drawZ = unpack(coords)
+        
+		local baseX, baseY, baseZ = unpack(coords)
+		math.randomseed(self.randomSeed)
+		
+		for i = 1, self.amount do
+            local x, y, z = baseX, baseY, baseZ
+            if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
+                x, y, z = self.x, self.y, self.z
+            end
+            if i ~= 1 then
+                x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
+                z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
+            end
+            gl.PushMatrix()
 
-        gl.PushMatrix()
-        if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
-            gl.Translate(self.x, self.y, self.z)
-            gl.Rotate(self.angle, 0, 1, 0)
-        else
-            gl.Translate(drawX, drawY, drawZ)
+            gl.Translate(x, y, z)
+            if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
+                gl.Rotate(self.angle, 0, 1, 0)
+            end
+
+            gl.Color(1, 1, 1, 0.8)
+			gl.UnitShape(self.unitDef, self.teamId)
+			gl.PopMatrix()
         end
-        gl.Color(1, 1, 1, 0.8)
-        gl.UnitShape(self.unitDef, self.teamId)
-        gl.PopMatrix()            
     end
 end

@@ -135,6 +135,7 @@ end
 
 
 function FilePanel:ScanDir()
+	Spring.Echo(self.dir)
   local files = VFS.DirList(self.dir, "*", VFS.RAW_ONLY)
   local dirs  = VFS.SubDirs(self.dir, "*", VFS.RAW_ONLY)
   local imageFiles = {}

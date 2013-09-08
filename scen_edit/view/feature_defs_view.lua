@@ -3,7 +3,7 @@ FeatureDefsView = LCS.class{}
 function FeatureDefsView:init()
     local ebAmount = EditBox:New {
         text = "1",
-        x = 310,
+        x = 190 + 5,
         bottom = 8,
         width = 50,
         OnKeyPress = {
@@ -37,14 +37,14 @@ function FeatureDefsView:init()
             end,
         },
     }
-    local playerNames, playerTeamIds = GetTeams()
+    local playerNames, playerTeamIds = SCEN_EDIT.GetTeams()
     local teamsCmb = ComboBox:New {
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         items = playerNames,
         playerTeamIds = playerTeamIds,
-        x = 100,
-        width=120,
+        x = 40,
+        width = 90,
     }
     teamsCmb.OnSelect = {
         function (obj, itemIdx, selected) 
@@ -60,6 +60,19 @@ function FeatureDefsView:init()
 
     self.featureDefsPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
 
+	local btnClose = Button:New {
+		caption = "Close",
+		bottom = 1,
+		x = 340,
+		width = 90,
+		height = SCEN_EDIT.conf.B_HEIGHT,
+		OnClick = { 
+			function() 
+				self.featuresWindow:Dispose() 
+			end 
+		}
+	}
+	
     self.featuresWindow = Window:New {
         parent = screen0,
         caption = "Feature Editor",
@@ -81,18 +94,17 @@ function FeatureDefsView:init()
             },
             Label:New {
                 x = 1,
-                width = 50,
                 bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
                 caption = "Type:",
             },
             ComboBox:New {
                 height = SCEN_EDIT.conf.B_HEIGHT,
-                x = 50,
+                x = 40,
                 bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
                 items = {
                     "Wreckage", "Other", "All",
                 },
-                width = 80,
+                width = 90,
                 OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
@@ -103,7 +115,6 @@ function FeatureDefsView:init()
             },
             Label:New {
                 x = 140,
-                width = 50,
                 bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
                 caption = "Wreck:",
             },
@@ -114,7 +125,7 @@ function FeatureDefsView:init()
                 items = {
                     "Units", "Buildings", "All",
                 },
-                width = 80,
+                width = 90,
                 OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
@@ -125,9 +136,8 @@ function FeatureDefsView:init()
             },
             Label:New {
                 caption = "Terrain:",
-                x = 270,
+                x = 290,
                 bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                width = 50,
             },
             ComboBox:New {
                 bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
@@ -135,8 +145,8 @@ function FeatureDefsView:init()
                 items = {
                     "Ground", "Air", "Water", "All",
                 },
-                x = 330,
-                width=80,
+                x = 340,
+                width = 90,
                 OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
@@ -146,19 +156,18 @@ function FeatureDefsView:init()
                 },
             },
             Label:New {
-                caption = "Player:",
-                x = 40,
+                caption = "Team:",
+                x = 1,
                 bottom = 8,
-                width = 50,
             },
             teamsCmb,
             Label:New {
                 caption = "Amount:",
-                x = 250, 
+                x = 140, 
                 bottom = 8,
-                width = 50,
             },
             ebAmount,
+			btnClose,
         }
     }
 end

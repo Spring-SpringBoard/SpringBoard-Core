@@ -12,6 +12,7 @@ function Model:init()
     self.featureManager = FeatureManager()
     self.variableManager = VariableManager()
     self.triggerManager = TriggerManager()
+	self.scenarioInfo = ScenarioInfo()
     self:GenerateTeams()
 end
 
@@ -21,6 +22,7 @@ function Model:Clear()
     self.variableManager:clear()
     self.triggerManager:clear()
     self.featureManager:clear()
+	self.scenarioInfo:clear()
     --self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
@@ -135,6 +137,7 @@ function Model:GetMetaData()
         triggers = self.triggerManager:serialize(),
         variables = self.variableManager:serialize(),
         teams = self.teams,
+		info = self.scenarioInfo:serialize(),
     }
 end
 
@@ -143,11 +146,12 @@ function Model:SetMetaData(meta)
     self.areaManager:load(meta.areas)
     self.triggerManager:load(meta.triggers)
     self.variableManager:load(meta.variables)
+	self.scenarioInfo:load(meta.info)
     --self.teams = meta.teams or {}
 end
 
 function Model:GenerateTeams(widget)
-    local names, ids, colors = GetTeams(widget)
+    local names, ids, colors = SCEN_EDIT.GetTeams(widget)
     for i = 1, #ids do
         local id = ids[i]
         local name = names[i]

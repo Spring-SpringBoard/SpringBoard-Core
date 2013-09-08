@@ -2,8 +2,12 @@ SaveCommand = AbstractCommand:extends{}
 SaveCommand.className = "SaveCommand"
 
 function SaveCommand:init(path)
-    self.className = "SaveCommand"
+    self.className = "SaveCommand"	
     self.path = path
+	--add extension if it doesn't exist
+	if string.sub(self.path,-string.len(SCEN_EDIT_FILE_EXT)) ~= SCEN_EDIT_FILE_EXT then
+		self.path = self.path .. SCEN_EDIT_FILE_EXT
+	end
 end
 
 local function HeightMapSave(path)
@@ -96,27 +100,50 @@ local function ModelSave(path)
 end
 
 local function GenerateModInfo()
-    local modInfo = 
+    local modInfoTxt = 
 [[
 local modinfo = {
-    name = "Air Force Command r4",
-    description = "Mission Mutator",
-    modtype = "1",
-    shortname =     "Air Force Command",
+    name = "__NAME__",
+	shortName = "__SHORTNAME__",
+	version	= "__VERSION__",
+	game = "__GAME__", --what
+	shortGame = "__SHORTGAME__", --what    
+	mutator = "Official", --what    
+	description = "__DESCRIPTION__",
+	modtype = "1", --what
     depend = {
-        "Zero-K v1.0.7.2"
-    },
+        "ToolBox v0.2" --FIXME: hardcoded version
+    }
 }      
 return modinfo]]
-    return modInfo
+	local scenarioInfo = SCEN_EDIT.model.scenarioInfo
+	Spring.Echo(scenarioInfo.name)
+	modInfoTxt = modInfoTxt:gsub("__NAME__", scenarioInfo.name)
+						   :gsub("__SHORTNAME__", scenarioInfo.name)
+						   :gsub("__VERSION__", scenarioInfo.version)
+						   :gsub("__GAME__", scenarioInfo.name)
+						   :gsub("__SHORTGAME__", scenarioInfo.name)
+						   :gsub("__DESCRIPTION__", scenarioInfo.description)				
+    return modInfoTxt
+end
+
+local function ModInfoSave(path)
+	local modInfoTxt = GenerateModInfo()
+	local file = assert(io.open(path, "w"))
+	file:write(modInfoTxt)
+	file:close()
 end
 
 function SaveCommand:execute()
+	if VFS.FileExists(self.path) then
+		Spring.Echo("file exists... removing")
+		os.remove(self.path)
+	end	
     assert(not VFS.FileExists(self.path), "File already exists")
    
     Spring.Echo("creating dir...")
     --create a temporary directory
-    local tempDirBaseName = "_scen_edit_tmp_"
+    local tempDirBaseName = "temp/_scen_edit_tmp_"
     local tempDirName = nil
     local indx = 1
     repeat
@@ -127,12 +154,14 @@ function SaveCommand:execute()
     Spring.Echo("saving files...")
     --save into a temporary directory
     ModelSave(tempDirName .. "/model.lua")
-    HeightMapSave(tempDirName .. "/heightmap.data")
+	ModInfoSave(tempDirName .. "/modinfo.lua")
+    HeightMapSave(tempDirName .. "/heightmap.data")	
 
     Spring.Echo("compressing folder...")
     --create an archive from the directory
     VFS.CompressFolder(tempDirName, "zip", self.path)
-
     --remove the temporary directory
+	--FIXME: doesn't work on windows...
     os.remove(tempDirName)
+	Spring.Echo("finish")
 end

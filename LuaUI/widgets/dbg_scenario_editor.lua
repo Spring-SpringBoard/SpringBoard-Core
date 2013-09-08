@@ -75,6 +75,7 @@ function widget:Initialize()
         widgetHandler:RemoveWidget(widget)
         return
     end
+	
     VFS.Include("scen_edit/exports.lua")
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))

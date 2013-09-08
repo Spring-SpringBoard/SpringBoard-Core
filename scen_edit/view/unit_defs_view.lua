@@ -1,6 +1,20 @@
 UnitDefsView = LCS.class{}
 
 function UnitDefsView:init()
+    local ebAmount = EditBox:New {
+        text = "1",
+        x = 190 + 5,
+        bottom = 8,
+        width = 50,
+        OnKeyPress = {
+            function(obj, ...)
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                if currentState:is_A(AddUnitState) then
+                    currentState.amount = tonumber(obj.text) or 1
+                end
+            end
+        }
+    }
     self.unitDefPanel = UnitDefsPanel:New {
         name='units',
         x = 0,
@@ -15,20 +29,20 @@ function UnitDefsView:init()
                         self.unitDefPanel:SelectItem(0)
                     else
                         local selUnitDef = self.unitDefPanel.items[itemIdx].id
-                        SCEN_EDIT.stateManager:SetState(AddUnitState(selUnitDef, self.unitDefPanel.teamId, self.unitDefPanel))
+                        SCEN_EDIT.stateManager:SetState(AddUnitState(selUnitDef, self.unitDefPanel.teamId, self.unitDefPanel, tonumber(ebAmount.text) or 1))
                     end
                 end
             end,
         },
     }
-    local playerNames, playerTeamIds = GetTeams()
+    local playerNames, playerTeamIds = SCEN_EDIT.GetTeams()
     local teamsCmb = ComboBox:New {
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         items = playerNames,
         playerTeamIds = playerTeamIds,
-        x = 100,
-        width=120,
+        x = 40,
+        width = 90,
     }
     teamsCmb.OnSelect = {
         function (obj, itemIdx, selected) 
@@ -42,7 +56,20 @@ function UnitDefsView:init()
         end
     }
     self.unitDefPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
-
+	
+	local btnClose = Button:New {
+		caption = "Close",
+		bottom = 1,
+		x = 340,
+		width = 90,
+		height = SCEN_EDIT.conf.B_HEIGHT,
+		OnClick = { 
+			function() 
+				self.unitsWindow:Dispose() 
+			end 
+		}
+	}
+	
     self.unitsWindow = Window:New {
         parent = screen0,
         caption = "Unit Editor",
@@ -64,18 +91,17 @@ function UnitDefsView:init()
             },
             Label:New {
                 x = 1,
-                width = 50,
                 bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
                 caption = "Type:",
             },
             ComboBox:New {
                 height = SCEN_EDIT.conf.B_HEIGHT,
-                x = 50,
+                x = 40,
                 bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
                 items = {
                     "Units", "Buildings", "All",
                 },
-                width = 80,
+                width = 90,
                 OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
@@ -88,16 +114,15 @@ function UnitDefsView:init()
                 caption = "Terrain:",
                 x = 140,
                 bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                width = 50,
             },
             ComboBox:New {
-                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                height = SCEN_EDIT.conf.B_HEIGHT,
+				height = SCEN_EDIT.conf.B_HEIGHT,
+				x = 190,
+                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,                
                 items = {
                     "Ground", "Air", "Water", "All",
-                },
-                x = 200,
-                width=80,
+                },                
+                width = 90,
                 OnSelect = {
                     function (obj, itemIdx, selected) 
                         if selected then
@@ -107,12 +132,18 @@ function UnitDefsView:init()
                 },
             },
             Label:New {
-                caption = "Player:",
-                x = 40,
+                caption = "Team:",
+                x = 1,
                 bottom = 8,
-                width = 50,
             },
             teamsCmb,
+			Label:New {
+                caption = "Amount:",
+                x = 140, 
+                bottom = 8,
+            },
+			ebAmount,
+			btnClose,
         }
     }
 end
