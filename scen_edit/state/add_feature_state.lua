@@ -25,7 +25,7 @@ function AddFeatureState:MousePress(x, y, button)
         end
         return true
     elseif button == 3 then
-        featureImages:SelectItem(0)
+        self.featureImages:SelectItem(0)
         SCEN_EDIT.stateManager:SetState(DefaultState())
     end
 end

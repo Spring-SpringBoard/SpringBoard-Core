@@ -3,7 +3,7 @@ SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "file_dialog.lua")
 SaveFileDialog = FileDialog:extends{}
 
 function SaveFileDialog:init(dir)
-    self:super("init", dir)
+    self:super("init", dir, "Save file")
 end
 
 function SaveFileDialog:save(path)

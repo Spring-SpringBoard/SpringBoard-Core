@@ -4,7 +4,12 @@ LIBS_DIR = "libs/"
 SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 LUAUI_DIR = "LuaUI/"
 SCEN_EDIT_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
-SCEN_EDIT_EXAMPLE_DIR_RAW_FS = "games/ToolBox.sdd/examples/"
+--FIXME: don't assume path, find it programatically
+TOOLBOX_DIR = "games/ToolBox.sdd/"
+SCEN_EDIT_EXAMPLE_DIR_RAW_FS = TOOLBOX_DIR .. "examples/"
+
+--properties
+SCEN_EDIT_FILE_EXT = ".sea"
 
 --mod opts
 local modOpts = Spring.GetModOptions()

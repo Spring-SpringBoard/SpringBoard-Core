@@ -18,14 +18,15 @@ local function ExtractFileName(filepath)
   end
 end
 
-function FileDialog:init(dir)
+function FileDialog:init(dir, caption)
     self.dir = dir or nil
+	self.caption = caption or "File dialog"
     self.confirmDialogCallback = nil
     local buttonPanel = MakeComponentPanel()
     self.fileEditBox = EditBox:New {
-        width = "40%",
-        x = "30%",
         y = 1,
+		x = 75,
+		right = 0,
         height = "100%",
     }
     
@@ -33,7 +34,7 @@ function FileDialog:init(dir)
         height = SCEN_EDIT.conf.B_HEIGHT,
         bottom = 5,
         width = "20%",
-        x = "10",
+        right = "22%",
         caption = "OK",
     }
     
@@ -41,7 +42,7 @@ function FileDialog:init(dir)
         height = SCEN_EDIT.conf.B_HEIGHT,
         bottom = 5,
         width = "20%",
-        x = "22%",
+		right = 10,
         caption = "Cancel",
     }
     self.filePanel = FilePanel:New {
@@ -68,7 +69,7 @@ function FileDialog:init(dir)
         width = 600,
         height = 600,
         parent = screen0,
-        caption = "File dialog",
+        caption = self.caption,
         children = {
             ScrollPanel:New {
                 width = "100%",
@@ -78,20 +79,20 @@ function FileDialog:init(dir)
                     self.filePanel,
                 },
             },
-            StackPanel:New {
+            Control:New {
                 x = 1,
                 width = "100%",
                 height = SCEN_EDIT.conf.B_HEIGHT,
-                bottom = SCEN_EDIT.conf.B_HEIGHT + 5 + 5,
+                bottom = SCEN_EDIT.conf.B_HEIGHT + 20,
                 padding = {0, 0, 0, 0},
-                itemMarging = {0, 0, 0, 0},
-                resizeItems = false,
-                orientation = "horizontal",
                 children = {                
                     Label:New {
-                        width = "5%",
-                        x = 1,
+						x = 1,
+						y = 4,
+						valign = "center",						
+                        width = 65,
                         caption = "File name: ",
+						align = "left",
                     },                
                     self.fileEditBox,
                 },

@@ -1,6 +1,3 @@
-local C_HEIGHT = 16
-local B_HEIGHT = 26
-
 TriggersWindow = Window:Inherit {
     caption = "Trigger window",
     classname = "window",
@@ -19,7 +16,7 @@ function TriggersWindow:New(obj)
         width=120,
         x = 1,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={function() obj:AddTrigger() end}
     }
     local btnClose = Button:New {
@@ -27,7 +24,7 @@ function TriggersWindow:New(obj)
         width=100,
         x = 130,
         bottom = 1,
-        height = B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     obj._triggers = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -42,7 +39,7 @@ function TriggersWindow:New(obj)
             x = 1,
             y = 15,
             right = 5,
-            bottom = C_HEIGHT * 2,
+            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
             children = { 
                 obj._triggers
             },
@@ -102,24 +99,24 @@ function TriggersWindow:Populate()
         local btnEditTrigger = Button:New {
             caption = trigger.name,
             x = 1, 
-            right = B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
-            height = B_HEIGHT,
+            right = SCEN_EDIT.conf.B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
+            height = SCEN_EDIT.conf.B_HEIGHT,
             _toggle = nil,
             parent = stackTriggerPanel,
         }
         local btnCloneTrigger = Button:New {
             caption = "",
-            right = B_HEIGHT + 8,
-            width = B_HEIGHT,
-            height = B_HEIGHT,
+            right = SCEN_EDIT.conf.B_HEIGHT + 8,
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
                     tooltip = "Clone trigger", 
                     file=SCEN_EDIT_IMG_DIR .. "clone.png", 
-                    height = B_HEIGHT, 
-                    width = B_HEIGHT,
+                    height = SCEN_EDIT.conf.B_HEIGHT, 
+                    width = SCEN_EDIT.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
                 },
@@ -137,16 +134,16 @@ function TriggersWindow:Populate()
         local btnRemoveTrigger = Button:New {
             caption = "",
             right = 1,
-            width = B_HEIGHT,
-            height = B_HEIGHT,
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
                     tooltip = "Remove trigger", 
                     file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = B_HEIGHT, 
-                    width = B_HEIGHT,
+                    height = SCEN_EDIT.conf.B_HEIGHT, 
+                    width = SCEN_EDIT.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
                 },

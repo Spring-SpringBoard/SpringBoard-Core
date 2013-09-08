@@ -9,11 +9,11 @@ function View:init()
     SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_DIR)
     SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_PANELS_DIR)
 	SCEN_EDIT.Include(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR .. "abstract_main_window_panel.lua")
-	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR)
+	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR)	
     SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
     if devMode then
-        --self.runtimeView = RuntimeView()
+        self.runtimeView = RuntimeView()
     end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
