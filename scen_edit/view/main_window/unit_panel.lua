@@ -1,6 +1,6 @@
-UnitPanel = AbstractMainWindowPanel:extends{}
+UnitFeaturePanel = AbstractMainWindowPanel:extends{}
 
-function UnitPanel:init()
+function UnitFeaturePanel:init()
 	self:super("init")
 	self.control:AddChild(Button:New {
 			height = 80,
