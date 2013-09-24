@@ -3,7 +3,7 @@ TabbedWindow = LCS.class{}
 function TabbedWindow:init()
 
 	local generalPanel = GeneralPanel()
-	local unitPanel = UnitPanel()
+	local unitFeaturePanel = UnitFeaturePanel()
 	local terrainPanel = TerrainPanel()
 	local triggerPanel = TriggerPanel()
 
@@ -25,7 +25,7 @@ function TabbedWindow:init()
 				padding = {0, 0, 0, 0},
 				tabs = {
 					{ name = "general", children = {generalPanel:getControl()} },
-					{ name = "unit", children = {unitPanel:getControl()} },
+					{ name = "unit", children = {unitFeaturePanel:getControl()} },
 					{ name = "terrain", children = {terrainPanel:getControl()} },
 					{ name = "trigger", children = {triggerPanel:getControl()} },
 				},

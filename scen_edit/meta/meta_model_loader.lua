@@ -4,6 +4,22 @@ function MetaModelLoader:init()
     self.metaModelFiles = SCEN_EDIT.conf:getMetaModelFiles()
 end
 
+function MetaModelLoader:AttemptToLoadFile(metaModelFile)
+	local success, data = pcall(function() return VFS.LoadFile(metaModelFile) end)
+	if not success then
+		Spring.Echo("Failed to load file " .. metaModelFile .. ": " .. data)
+		return nil
+	end
+	
+	local success, data = pcall(function() return assert(loadstring(data))() end)
+	if not success then
+		Spring.Echo("Failed to load file " .. metaModelFile .. ": " .. data)
+		return nil
+	end
+	
+	return data
+end
+
 function MetaModelLoader:Load()
     local metaTypes = {"functions", "actions", "orders", "events"}
     local metaModels = {}
@@ -15,29 +31,30 @@ function MetaModelLoader:Load()
         for _, metaType in pairs(metaTypes) do
             metaModel[metaType] = {}
         end
+		
+        local data = self:AttemptToLoadFile(metaModelFile)
 
-        local data = VFS.LoadFile('scen_edit/meta/' .. metaModelFile)
-        data = loadstring(data)()
-
-        for _, metaType in pairs(metaTypes) do
-            if data[metaType] then
-                --Spring.Echo("Loading " .. metaType)
-                local values = {}
-                if type(data[metaType]) == "table" then
-                    values = data[metaType]
-                elseif type(data[metaType]) == "function" then
-                    setfenv(data[metaType], getfenv())
-                    values = data[metaType]()
-                else
-                    Spring.Echo(type(data[metaModel]))
-                end
-                for i = 1, #values do
-                    local value = values[i]
-                    table.insert(metaModel[metaType], value)
-                end
-            end
-        end
-        table.insert(metaModels, metaModel)
+		if data ~= nil then
+			for _, metaType in pairs(metaTypes) do
+				if data[metaType] then
+					--Spring.Echo("Loading " .. metaType)
+					local values = {}
+					if type(data[metaType]) == "table" then
+						values = data[metaType]
+					elseif type(data[metaType]) == "function" then
+						setfenv(data[metaType], getfenv())
+						values = data[metaType]()
+					else
+						Spring.Echo(type(data[metaModel]))
+					end
+					for i = 1, #values do
+						local value = values[i]
+						table.insert(metaModel[metaType], value)
+					end
+				end
+			end
+			table.insert(metaModels, metaModel)
+		end
     end
 
     -- merge meta models

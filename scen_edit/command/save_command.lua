@@ -106,13 +106,13 @@ local modinfo = {
     name = "__NAME__",
 	shortName = "__SHORTNAME__",
 	version	= "__VERSION__",
-	game = "__GAME__", --what
-	shortGame = "__SHORTGAME__", --what    
-	mutator = "Official", --what    
+	game = "__GAME__", --what is this?
+	shortGame = "__SHORTGAME__", --what is this?
+	mutator = "Official", --what is this? 
 	description = "__DESCRIPTION__",
-	modtype = "1", --what
+	modtype = "1", 
     depend = {
-        "ToolBox v0.2" --FIXME: hardcoded version
+        "__GAME_NAME__ __GAME_VERSION__",
     }
 }      
 return modinfo]]
@@ -123,8 +123,109 @@ return modinfo]]
 						   :gsub("__VERSION__", scenarioInfo.version)
 						   :gsub("__GAME__", scenarioInfo.name)
 						   :gsub("__SHORTGAME__", scenarioInfo.name)
-						   :gsub("__DESCRIPTION__", scenarioInfo.description)				
+						   :gsub("__DESCRIPTION__", scenarioInfo.description)
+						   :gsub("__GAME_NAME__", Game.gameName)
+						   :gsub("__GAME_VERSION__", Game.gameVersion)
+
     return modInfoTxt
+end
+
+local function GenerateScriptTxt()
+	local scriptTxt = 
+[[
+[GAME]
+{
+	MapName=Fields_Of_Isis;
+	StartMetal=1000;
+	StartEnergy=1000;
+	StartposType=3;
+	GameMode=0;
+	GameType=Tutorial - Running Start r184;
+	LimitDGun=0;
+	DiminishingMMs=0;
+	GhostedBuildings=1;
+	HostIP=127.0.0.1;
+	HostPort=8452;
+	IsHost=1;
+	MyPlayerNum=0;
+	MyPlayerName=Player;
+	NumPlayers=1;
+	NumTeams=3;
+	NumUsers=3;
+	NumRestrictions=0;
+	MaxSpeed=20;
+	MinSpeed=0.1;
+	[MODOPTIONS]
+	{
+
+	}
+	[PLAYER0]
+	{
+		Name=Player;
+		Spectator=0;
+		Team=0;
+	}
+	[AI1]
+	{
+		Name=Hostiles;
+		ShortName=NullAI;
+		Team=1;
+		IsFromDemo=0;
+		Host=0;
+		[Options] {}
+	}
+	[AI2]
+	{
+		Name=Allies;
+		ShortName=NullAI;
+		Team=2;
+		IsFromDemo=0;
+		Host=0;
+		[Options] {}
+	}
+	[TEAM0]
+	{
+		TeamLeader=0;
+		AllyTeam=0;
+		RGBColor=0 0 1;
+		Side=Robots;
+		Handicap=0;
+		StartPosX=0;
+		StartPosZ=0;
+	}
+	[TEAM1]
+	{
+		TeamLeader=0;
+		AllyTeam=1;
+		RGBColor=1 0 0;
+		Side=Robots;
+		Handicap=0;
+		StartPosX=0;
+		StartPosZ=0;
+	}
+	[TEAM2]
+	{
+		TeamLeader=0;
+		AllyTeam=0;
+		RGBColor=0.03560131 0.3231432 0.001214108;
+		Side=Robots;
+		Handicap=0;
+		StartPosX=0;
+		StartPosZ=0;
+	}
+	[ALLYTEAM0]
+	{
+		NumAllies=0;
+	}
+	[ALLYTEAM1]
+	{
+		NumAllies=0;
+	}
+}
+
+]]
+
+	return scriptTxt
 end
 
 local function ModInfoSave(path)
