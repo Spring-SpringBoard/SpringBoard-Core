@@ -1,19 +1,18 @@
--- ToolBox - A package of tools for game and map developers
--- Authors: CarRepairer, FLOZi, knorke
--- Thanks: jK (Chili), Tobi (LUS)
+-- ScenarioEditor - Core module for the Scenario Editor
+-- Authors: gajop
 
 local modinfo = {
-	name			= "ToolBox",
-	shortName		= "TB",
-	version			= "v0.1",
-	game			= "ToolBox",
-	shortGame		= "TB",
+	name			= "Scenario Editor Core",
+	shortName		= "SEC",
+	version			= "0.1",
+	game			= "Scenario Editor Core",
+	shortGame		= "SEC",
 	mutator			= "Official",
-	description		= "Useful tools for game development",
-	modtype			= 1,
+	description		= "Core module of the Scenario Editor",
+	modtype			= 0,
 	depend = {
-		"Spring Cursors",
-        "Spring Features 1.0",
+        "Spring Cursors",
+--        "Spring Features 1.0",
 
         -- mods here :
 		-- enter your mod here!
