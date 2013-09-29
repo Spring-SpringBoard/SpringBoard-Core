@@ -130,7 +130,7 @@ function SCEN_EDIT.parseData(data)
     end
     return finalData
 end
-
+--[[
 function SCEN_EDIT.complexTypes()
     return {
         {
@@ -140,6 +140,7 @@ function SCEN_EDIT.complexTypes()
         }
     }
 end
+--]]
 
 function SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
     if resolvedInput == nil then

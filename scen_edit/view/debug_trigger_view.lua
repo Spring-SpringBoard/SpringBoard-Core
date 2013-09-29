@@ -14,10 +14,14 @@ function DebugTriggerView:Populate()
     local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
     for id, trigger in pairs(triggers)  do        
         local triggerPanel = MakeComponentPanel(self.parent)
-        local maxChars = 15
+        local maxChars = 8
+		shortName = trigger.name:sub(1, maxChars)
+		if #trigger.name > 8 then
+			shortName = shortName .. "..."
+		end
         local cbTriggerName = Checkbox:New {
-            caption = trigger.name:sub(1, maxChars),
-            width = 110,
+            caption = shortName,
+            width = 80,
             x = 1,
             parent = triggerPanel,
             checked = trigger.enabled,
@@ -30,10 +34,9 @@ function DebugTriggerView:Populate()
             },
         }
         local btnExecuteTrigger = Button:New {
-            caption = "Execute",
-            right = B_HEIGHT + 120,
-            width = 100,
---            x = 110,
+            caption = "Run",
+            right = 90,
+            width = 60,
             height = B_HEIGHT,
             parent = triggerPanel,
             OnClick = {
@@ -44,9 +47,9 @@ function DebugTriggerView:Populate()
             },
         }
         local btnExecuteTriggerActions = Button:New {
-            caption = "Execute actions",
+            caption = "Run actions",
             right = 1,
-            width = 120,
+            width = 80,
             height = B_HEIGHT,
             parent = triggerPanel,
             OnClick = {

@@ -261,12 +261,7 @@ return {
     functions = function()
         local functions = {}
         local coreTypes = SCEN_EDIT.coreTypes()
-        local complexTypes = SCEN_EDIT.complexTypes()
         local allTypes = coreTypes
-        for i = 1, #complexTypes do
-            local complexType = complexTypes[i]
-            table.insert(allTypes, complexType)
-        end
 
         for i = 1, #allTypes do
             local basicType = allTypes[i]        

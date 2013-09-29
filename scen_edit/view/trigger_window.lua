@@ -18,13 +18,12 @@ function TriggerWindow:New(obj)
     stackTriggerPanel.y = 10
     local lblTriggerName = Label:New {
         caption = "Trigger name: ",
-        right = 100 + 10,
         x = 1,
         parent = stackTriggerPanel,
     }
     local edTriggerName = EditBox:New {
         text = obj.trigger.name,
-        right = 1,
+        x = 100,
         width = 100,
         parent = stackTriggerPanel,
     }
@@ -58,12 +57,27 @@ function TriggerWindow:New(obj)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
     }
-    local btnClose = Button:New {
-        caption='Close',
+	local btnOk = Button:New {
+        caption='OK',
         width=100,
         x = 370,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+		OnClick = {
+			function() 
+				obj.trigger.name = edTriggerName.text
+				obj.save = true
+				obj:Dispose()
+			end
+		}
+    }
+    local btnCancel = Button:New {
+        caption='Cancel',
+        width=100,
+        x = 480,
+        bottom = 1,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        OnClick={function() obj:Dispose() end}
     }
     obj.children = {
         stackTriggerPanel,
@@ -79,17 +93,12 @@ function TriggerWindow:New(obj)
         btnAddEvent,
         btnAddCondition,
         btnAddAction,
-        btnClose,
+        btnOk,
+        btnCancel,
     }
 
     obj = inherited.New(self, obj)
     obj:Populate()
-    btnClose.OnClick = {
-        function() 
-            obj.trigger.name = edTriggerName.text
-            obj:Dispose()             
-        end
-    }
 
     btnAddEvent.OnClick={function() obj:MakeAddEventWindow() end}
     btnAddCondition.OnClick={function() obj:MakeAddConditionWindow() end}

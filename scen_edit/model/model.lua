@@ -91,10 +91,15 @@ function Model:Load(mission)
     --load units
     local units = mission.units
     self._unitIdCounter = 0
-    for i, unit in pairs(units) do
+    for i, unit in pairs(units) do		
         local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
-        Spring.SetUnitRotation(unitId, 0, -unit.angle * math.pi / 180, 0)
-        self.unitManager:setUnitModelId(unitId, unit.id)
+		if unitId ~= nil then			
+			Spring.SetUnitRotation(unitId, 0, -unit.angle * math.pi / 180, 0)
+			self.unitManager:setUnitModelId(unitId, unit.id)
+		else
+			Spring.Echo("Failed to create the following unit: ")
+			table.echo(unit)
+		end
 --        self:AddUnit(unit.unitDefName, unit.x, 0, unit.y, unit.player,
 --            function (unitId)                
 --                if self.s2mUnitIdMapping[unitId] then
