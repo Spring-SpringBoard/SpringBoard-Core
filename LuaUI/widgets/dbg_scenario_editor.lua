@@ -16,19 +16,6 @@ include("keysym.h.lua")
 VFS.Include("savetable.lua")
 
 SCEN_EDIT = {}
---[[
-local function DrawCircle()
-    gl.Color(0, 255, 0, 0.2)
-    local x, y = gl.GetViewSizes()
-    gl.LineWidth(200)
-    local parts = 1
-    local radius = 200
-    local multiplier = radius / parts 
-    for i=0, parts do
-        gl.DrawGroundCircle(area_x + 500, 50, area_z + 500, radius - i * multiplier, 20)
-    end
-end
-]]--
 
 local function explode(div,str)
   if (div=='') then return false end
@@ -70,7 +57,16 @@ function RecieveGadgetMessage(msg)
 end
 
 function widget:Initialize()
+    wasEnabled = Spring.IsCheatingEnabled()
+    if not wasEnabled then
+        Spring.SendCommands("cheat")
+    end
     --reloadGadgets() --uncomment for development	
+    Spring.SendCommands("globallos")
+    if not wasEnabled then
+        Spring.SendCommands("cheat")
+    end
+    
     VFS.Include("scen_edit/exports.lua")
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
@@ -142,15 +138,7 @@ function widget:Initialize()
 end
 
 function reloadGadgets()
-    wasEnabled = Spring.IsCheatingEnabled()
-    if not wasEnabled then
-        Spring.SendCommands("cheat")
-    end
     Spring.SendCommands("luarules reload")
-    Spring.SendCommands("globallos")
-    if not wasEnabled then
-        Spring.SendCommands("cheat")
-    end
 end
 
 function widget:DrawScreen()

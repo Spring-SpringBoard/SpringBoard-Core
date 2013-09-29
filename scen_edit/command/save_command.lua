@@ -11,7 +11,6 @@ function SaveCommand:init(path)
 end
 
 local function HeightMapSave(path)
-    Spring.Echo("HEIGHTMAP SAVE")
     local file = assert(io.open(path, "wb"))
     local data = {}
     local totalChanged = 0
@@ -84,15 +83,13 @@ local function HeightMapSave(path)
     end
     bufferFlush()
     if totalChanged == 0 then
-        Spring.Echo("Heightmap unchanged")
+        --Spring.Echo("Heightmap unchanged")
     end
-    Spring.Echo("Floats: " .. totalChanged)
-    Spring.Echo("HEIGHTMAP SAVE DONE")
+    --Spring.Echo("Heightmap data: " .. totalChanged)
     assert(file:close())
 end
 
 local function ModelSave(path)
-    Spring.Echo("calling model save...")
     success, msg = pcall(Model.Save, SCEN_EDIT.model, path)
     if not success then 
         Spring.Echo(msg)
@@ -117,7 +114,6 @@ local modinfo = {
 }      
 return modinfo]]
 	local scenarioInfo = SCEN_EDIT.model.scenarioInfo
-	Spring.Echo(scenarioInfo.name)
 	modInfoTxt = modInfoTxt:gsub("__NAME__", scenarioInfo.name)
 						   :gsub("__SHORTNAME__", scenarioInfo.name)
 						   :gsub("__VERSION__", scenarioInfo.version)
@@ -237,13 +233,11 @@ end
 
 function SaveCommand:execute()
 	if VFS.FileExists(self.path) then
-		--Spring.Echo("File exists, trying to remove...")
-		--os.remove(self.path)
-		Spring.Echo("Cannot overwrite old file, appending number to new")
+		Spring.Echo("File exists, trying to remove...")
+		os.remove(self.path)
 	end	
     assert(not VFS.FileExists(self.path), "File already exists")
    
-    Spring.Echo("creating dir...")
     --create a temporary directory
     local tempDirBaseName = "temp/_scen_edit_tmp_"
     local tempDirName = nil
@@ -253,17 +247,16 @@ function SaveCommand:execute()
     until not VFS.FileExists(tempDirName)
     Spring.CreateDir(tempDirName)
 
-    Spring.Echo("saving files...")
+    --Spring.Echo("saving files...")
     --save into a temporary directory
     ModelSave(tempDirName .. "/model.lua")
 	ModInfoSave(tempDirName .. "/modinfo.lua")
     HeightMapSave(tempDirName .. "/heightmap.data")	
 
-    Spring.Echo("compressing folder...")
+    --Spring.Echo("compressing folder...")
     --create an archive from the directory
     VFS.CompressFolder(tempDirName, "zip", self.path)
     --remove the temporary directory
 	--FIXME: doesn't work on windows...
     os.remove(tempDirName)
-	Spring.Echo("finish")
 end

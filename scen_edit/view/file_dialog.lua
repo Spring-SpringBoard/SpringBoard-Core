@@ -55,7 +55,8 @@ function FileDialog:init(dir, caption)
     }
     self.filePanel.OnSelectItem = {
         function (obj, itemIdx, selected) 
-            if selected and itemIdx > self.filePanel._dirsNum+1 then
+			--FIXME: loading from complex paths is broken, uncomment this when they get fixed    
+            if selected then -- and itemIdx > self.filePanel._dirsNum+1 then
                 local fullPath = tostring(obj.items[itemIdx])
                 local fileName = ExtractFileName(fullPath)
                 self.fileEditBox:SetText(fileName)
