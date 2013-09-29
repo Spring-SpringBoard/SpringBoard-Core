@@ -70,12 +70,7 @@ function RecieveGadgetMessage(msg)
 end
 
 function widget:Initialize()
-    reloadGadgets() --uncomment for development    
-    if not WG.Chili then
-        widgetHandler:RemoveWidget(widget)
-        return
-    end
-	
+    --reloadGadgets() --uncomment for development	
     VFS.Include("scen_edit/exports.lua")
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
