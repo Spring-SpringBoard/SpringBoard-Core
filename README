@@ -2,22 +2,10 @@ Scenario Editor
 ===============
 
 OFFICIAL Scenario Editor core source
-Spring engine based in-game tools useful to developers
+Spring Scenario Editor Core module
 
 Installing:
-git clone --recursive https://github.com/gajop/Toolbox.git 
+git clone --recursive https://github.com/gajop/Scenario-Editor-Core.git
 (--recursive call will pick up submodules)
 
-Editing modinfo.lua is necessary to run a concrete mod
-
-Example files can be found in the examples/ dir
-
-Running examples (Linux):
-#cd into Toolbox.sdd dir
-spring $PWD/examples/$example_name.txt
-
-#Running a game (needs BAR in modinfo.lua):
-spring $PWD/examples/trolol.txt
-
-#Running a game in dev mode (needs BAR in modinfo.lua):
-spring $PWD/examples/trolol-dev.txt
+You should also get the game-specific module!
