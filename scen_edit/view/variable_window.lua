@@ -23,7 +23,7 @@ function VariableWindow:New(obj)
         height = SCEN_EDIT.conf.B_HEIGHT,
     }
     local btnCancel = Button:New {
-        caption='Close',
+        caption='Cancel',
         width='40%',
         x = '50%',
         bottom = 1,

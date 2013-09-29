@@ -237,8 +237,9 @@ end
 
 function SaveCommand:execute()
 	if VFS.FileExists(self.path) then
-		Spring.Echo("file exists... removing")
-		os.remove(self.path)
+		--Spring.Echo("File exists, trying to remove...")
+		--os.remove(self.path)
+		Spring.Echo("Cannot overwrite old file, appending number to new")
 	end	
     assert(not VFS.FileExists(self.path), "File already exists")
    

@@ -176,6 +176,9 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
         function()
 --            btnEditTrigger:SetCaption(trigger.name)
             self.disableChildrenHitTest = false
+			if not triggerWindow.save then
+				return
+			end
             local cmd = nil
             if edit then
                 cmd = UpdateTriggerCommand(trigger)

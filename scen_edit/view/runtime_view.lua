@@ -38,7 +38,7 @@ function RuntimeView:init()
         resizeItems = false,
     }
     local btnToggleShowDevelop = Button:New {
-        caption='Toggle Display',
+        caption='Show Display',
         width= 80,
         height = SCEN_EDIT.conf.B_HEIGHT + 20,
         tooltip = "Toggle displaying of debugging symbols",
@@ -51,11 +51,11 @@ function RuntimeView:init()
     self.runtimeViewWindow = Window:New {
         parent = screen0,
         caption = "Runtime Window",
-        x = 1300,
-        y = 300,
-        minimumSize = {450, 400},
-        width = 500,
-        height = 600,
+        right = 0,
+        y = 350,
+		resizable = false,
+        width = 300,
+        height = 300,
         children = {
             StackPanel:New {
                 y = 15,
@@ -109,7 +109,8 @@ function RuntimeView:UpdateStartStopButton()
     if not self.started then
         self.btnStartStop.tooltip = "Start scenario"
         self.btnStartStop:AddChild(
-            Image:New {                
+            Image:New { 
+				tooltip = "Start scenario",
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
                 height = SCEN_EDIT.conf.B_HEIGHT - 2,
                 width = SCEN_EDIT.conf.B_HEIGHT - 2,

@@ -51,9 +51,13 @@ function GeneralPanel:init()
 					ofd = OpenFileDialog(dir)
 					ofd:setConfirmDialogCallback(
 						function(path)
-							Spring.Echo("123")
+							Spring.Echo("Loading archive: " .. path .. " ...")
+							if not VFS.FileExists(path, VFS.RAW) then
+								Spring.Echo("Archive doesn't exist: " .. path)
+								return
+							end
 							VFS.MapArchive(path)
-							Spring.Echo("1234")
+							Spring.Echo("Loaded archive.")
 							local data = VFS.LoadFile("model.lua", VFS.ZIP)
 							cmd = LoadCommand(data)
 							SCEN_EDIT.commandManager:execute(cmd)
@@ -93,7 +97,7 @@ function GeneralPanel:init()
 			},
 			children = {
 				Image:New { 
-					file = SCEN_EDIT_IMG_DIR .. "document-open.png", 
+					file = SCEN_EDIT_IMG_DIR .. "info.png", 
 					height = 40, 
 					width = 40,
 					margin = {0, 0, 0, 0},

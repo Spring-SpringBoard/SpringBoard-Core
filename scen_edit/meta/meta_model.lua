@@ -57,7 +57,7 @@ end
 
 function MetaModel:LoadVariableTypes()
     --add variables for core types
-    self.variableTypes = {"unit", "unitType", "team", "player", "area", "string", "number", "bool"}    
+    self.variableTypes = {"unit", "unitType", "team", "area", "string", "number", "bool"}
     for i = 1, #self.variableTypes do
         local variableType = self.variableTypes[i]
         local arrayType = variableType .. "_array"
