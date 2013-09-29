@@ -19,8 +19,7 @@ FilePanel = LayoutPanel:Inherit{
   multiSelect = true,
 
   items = {},
-  extFilters = {},
-  currentExtFilter = 0, -- no filter by default
+  extFilters = {'.sdz'},
   imageFile = SCEN_EDIT_IMG_DIR .. "file.png",
   dir = '',
 
@@ -32,7 +31,6 @@ local inherited = this.inherited
 
 --//=============================================================================
 
-local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.ico','.gif','.psd','.tif'} --'.psp'
 
 --//=============================================================================
 
@@ -135,14 +133,13 @@ end
 
 
 function FilePanel:ScanDir()
-	Spring.Echo(self.dir)
   local files = VFS.DirList(self.dir, "*", VFS.RAW_ONLY)
   local dirs  = VFS.SubDirs(self.dir, "*", VFS.RAW_ONLY)
   local imageFiles = {}
   for i=1,#files do
     local f = files[i]
     local ext = (f:GetExt() or ""):lower()
-    if (true or table.ifind(extFilters[currentExtFilter],ext))then
+    if (table.ifind(self.extFilters,ext))then
       imageFiles[#imageFiles+1]=f
     end
   end
@@ -152,11 +149,13 @@ function FilePanel:ScanDir()
 
   local n    = 1
   local items = self.items
-  items[n] = '..'
-  n = n+1
+  --FIXME: loading from complex paths is broken, uncomment this when they get fixed    
+  --items[n] = '..'
+  --n = n+1
 
   for i=1,#dirs do
-    items[n],n=dirs[i],n+1
+    --FIXME: loading from complex paths is broken, uncomment this when they get fixed    
+    --items[n],n=dirs[i],n+1
   end
   for i=1,#imageFiles do
     items[n],n=imageFiles[i],n+1
@@ -174,11 +173,13 @@ function FilePanel:ScanDir()
     end
 
     --// add ".."
-    self:_AddFile('..',self.imageFolderUp)
+	--FIXME: loading from complex paths is broken, uncomment this when they get fixed    
+    --self:_AddFile('..',self.imageFolderUp)
 
     --// add dirs at top
     for i=1,#dirs do
-      self:_AddFile(ExtractFileName(dirs[i]),self.imageFolder)
+	  --FIXME: loading from complex paths is broken, uncomment this when they get fixed    
+      --self:_AddFile(ExtractFileName(dirs[i]),self.imageFolder)
     end
 
     --// add files
