@@ -81,8 +81,8 @@ function MetaModelLoader:Load()
             name = "GAME_END",
         }, 
         {
-            humanName = "Player died",
-            name = "PLAYER_DIE",
+            humanName = "Team died",
+            name = "TEAM_DIE",
         }, 
         {
             humanName = "Unit created",

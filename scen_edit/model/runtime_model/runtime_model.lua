@@ -43,16 +43,35 @@ function RuntimeModel:GameStart()
     if self.eventTriggers["GAME_START"] then
         for k = 1, #self.eventTriggers["GAME_START"] do
             local params = { }
-            local trigger = self.eventTriggers["GAME_START"][k]                
+            local trigger = self.eventTriggers["GAME_START"][k]
             self:ConditionStep(trigger, params)
         end
     end
 end
 
 function RuntimeModel:GameStop()
+    if self.eventTriggers["GAME_END"] then
+        for k = 1, #self.eventTriggers["GAME_END"] do
+            local params = { }
+            local trigger = self.eventTriggers["GAME_END"][k]
+            self:ConditionStep(trigger, params)
+        end
+    end
     self.hasStarted = false
 end
 
+function RuntimeModel:TeamDied(teamId)
+    if not self.hasStarted then
+        return
+    end
+    if self.eventTriggers["TEAM_DIE"] then
+        for k = 1, #self.eventTriggers["TEAM_DIE"] do
+            local params = { triggerTeamId = teamId }
+            local trigger = self.eventTriggers["TEAM_DIE"][k]
+            self:ConditionStep(trigger, params)
+        end
+    end
+end
 
 function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
     if not self.hasStarted then
@@ -68,6 +87,19 @@ function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
     end
 end
 
+function RuntimeModel:UnitDamaged(unitId)
+    if not self.hasStarted then
+        return
+    end
+    if self.eventTriggers["UNIT_DAMAGE"] then
+        for k = 1, #self.eventTriggers["UNIT_DAMAGE"] do
+            local params = { triggerUnitId = unitId }
+            local trigger = self.eventTriggers["UNIT_DAMAGE"][k]
+            self:ConditionStep(trigger, params)
+        end
+    end
+end
+
 function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attackerDefId, attackerTeamId)
     if not self.hasStarted then
         return
@@ -76,7 +108,20 @@ function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attac
         local destroyedUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
         for k = 1, #self.eventTriggers["UNIT_DESTROY"] do
             local params = { triggerUnitId = destroyedUnitId }
-            local trigger = self.eventTriggers["UNIT_DESTROY"][k]                
+            local trigger = self.eventTriggers["UNIT_DESTROY"][k]
+            self:ConditionStep(trigger, params)
+        end
+    end
+end
+
+function RuntimeModel:UnitFinished(unitId)
+    if not self.hasStarted then
+        return
+    end
+    if self.eventTriggers["UNIT_FINISH"] then
+        for k = 1, #self.eventTriggers["UNIT_FINISH"] do
+            local params = { triggerUnitId = unitId }
+            local trigger = self.eventTriggers["UNIT_FINISH"][k]
             self:ConditionStep(trigger, params)
         end
     end
