@@ -214,13 +214,25 @@ function gadget:GameFrame(frameNum)
 
 end
 
+function gadget:TeamDied(teamID)
+	SCEN_EDIT.rtModel:TeamDied(teamID)
+end
+
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
     AddedUnit(unitID, unitDefID, teamID, builderID)
+end
+
+function gadget:UnitDamaged(unitID, unitDefID, unitTeam, damage, paralyzer, weaponDefID, projectileID, attackerID, attackerDefID, attackerTeam)
+	SCEN_EDIT.rtModel:UnitDamaged(unitID)
 end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
     SCEN_EDIT.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
     SCEN_EDIT.model.unitManager:removeUnit(unitID)
+end
+
+function gadget:UnitFinished(unitID, unitDefID, teamID)
+    SCEN_EDIT.rtModel:UnitFinished(unitID)
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
