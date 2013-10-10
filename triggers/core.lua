@@ -424,7 +424,13 @@ return {
                 input = { "bool_array" },
                 output = "bool",
                 execute = function(input)
-                    return true
+					for i = 1, #input.bool_array do
+						local bool = input.bool_array[i]
+						if bool then
+							return true
+						end
+					end
+                    return false
                 end,
             },
             {
@@ -433,7 +439,13 @@ return {
                 input = { "bool_array" },
                 output = "bool",
                 execute = function(input)
-                    return false
+                    for i = 1, #input.bool_array do
+						local bool = input.bool_array[i]
+						if not bool then
+							return false
+						end
+					end
+                    return #input.bool_array > 0
                 end,
             },        
         }
