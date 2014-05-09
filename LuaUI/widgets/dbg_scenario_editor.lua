@@ -61,7 +61,7 @@ function widget:Initialize()
     if not wasEnabled then
         Spring.SendCommands("cheat")
     end
-    --reloadGadgets() --uncomment for development	
+    reloadGadgets() --uncomment for development	
     Spring.SendCommands("globallos")
     if not wasEnabled then
         Spring.SendCommands("cheat")
@@ -85,7 +85,7 @@ function widget:Initialize()
     SCEN_EDIT.metaModel = MetaModel()
     
     --TODO: relocate this
-    metaModelLoader = MetaModelLoader()
+    local metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "model/model.lua")

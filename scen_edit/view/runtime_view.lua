@@ -52,7 +52,7 @@ function RuntimeView:init()
         parent = screen0,
         caption = "Runtime Window",
         right = 0,
-        y = 350,
+        y = 370,
 		resizable = false,
         width = 300,
         height = 300,
