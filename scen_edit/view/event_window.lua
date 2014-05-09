@@ -8,6 +8,7 @@ EventWindow = Window:Inherit {
     trigger = nil, --required
     triggerWindow = nil, --required
     mode = nil, --'add' or 'edit'
+	drawcontrolv2 = true,	
 }
 
 local this = EventWindow 
