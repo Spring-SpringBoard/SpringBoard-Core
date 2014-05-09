@@ -67,8 +67,9 @@ function RotateFeatureState:MouseRelease(x, y, button)
 end
 
 function RotateFeatureState:DrawWorld()
-    for featureId, angle in pairs(self.featureGhostViews) do        
+    for featureId, angle in pairs(self.featureGhostViews) do
         gl.PushMatrix()
+		gl.Color(1, 1, 1, 0.5)
         local featureDefId = Spring.GetFeatureDefID(featureId)
         local featureTeamId = Spring.GetFeatureTeam(featureId)
         local featureX, featureY, featureZ = Spring.GetFeaturePosition(featureId)
