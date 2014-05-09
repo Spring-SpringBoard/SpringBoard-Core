@@ -98,7 +98,92 @@ function TabbedWindow:init()
 						x = 0,
 					},
 				},
-			}
+			},
+			Button:New {
+				x = 130,
+				bottom = 10,
+				height = 40,
+				width = 40,
+				caption = '',
+				tooltip = "Copy", 
+				OnClick = {
+					function() 
+					    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+						if selType == "units" then
+							SCEN_EDIT.clipboard:CopyUnits(items)
+							return true
+						elseif selType == "features" then
+							SCEN_EDIT.clipboard:CopyFeatures(items)
+							return true
+						end
+					end
+				},
+				children = {
+					Image:New { 
+						file=SCEN_EDIT_IMG_DIR .. "copy.png", 
+						height = 20, 
+						width = 20,
+						margin = {0, 0, 0, 0},
+						x = 0,
+					},
+				},
+			},
+			Button:New {
+				x = 170,
+				bottom = 10,
+				height = 40,
+				width = 40,
+				caption = '',
+				tooltip = "Cut", 
+				OnClick = {
+					function() 
+					    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+						if selType == "units" then
+							SCEN_EDIT.clipboard:CutUnits(items)
+							return true
+						elseif selType == "features" then
+							SCEN_EDIT.clipboard:CutFeatures(items)
+							return true
+						end
+					end
+				},
+				children = {
+					Image:New { 
+						file=SCEN_EDIT_IMG_DIR .. "cut.png", 
+						height = 20, 
+						width = 20,
+						margin = {0, 0, 0, 0},
+						x = 0,
+					},
+				},
+			},
+			Button:New {
+				x = 210,
+				bottom = 10,
+				height = 40,
+				width = 40,
+				caption = '',
+				tooltip = "Paste", 
+				OnClick = {
+					function() 
+						local x, y = Spring.GetMouseState()
+						local result, coords = Spring.TraceScreenRay(x, y, true)
+						if result == "ground" then
+							SCEN_EDIT.clipboard:Paste(coords)
+							return true
+						end
+					end
+				},
+				children = {
+					Image:New { 
+						file=SCEN_EDIT_IMG_DIR .. "paste.png", 
+						height = 20, 
+						width = 20,
+						margin = {0, 0, 0, 0},
+						x = 0,
+					},
+				},
+			},			
 		}
 	}
 end

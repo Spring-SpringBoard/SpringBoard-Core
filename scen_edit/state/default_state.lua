@@ -245,7 +245,7 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             return true
         end
     elseif key == KEYSYMS.V and mods.ctrl then
-        x, y = Spring.GetMouseState()
+        local x, y = Spring.GetMouseState()
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
             SCEN_EDIT.clipboard:Paste(coords)
