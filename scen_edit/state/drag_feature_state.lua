@@ -54,6 +54,7 @@ end
 function DragFeatureState:DrawWorld()
     for featureId, pos in pairs(self.featureGhostViews) do
         gl.PushMatrix()
+		gl.Color(1, 1, 1, 0.5)
         local featureDefId = Spring.GetFeatureDefID(featureId)
         local featureTeamId = Spring.GetFeatureTeam(featureId)
         gl.Translate(pos[1], pos[2], pos[3])
