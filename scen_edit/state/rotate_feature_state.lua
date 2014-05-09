@@ -69,8 +69,6 @@ end
 function RotateFeatureState:DrawWorld()
     for featureId, angle in pairs(self.featureGhostViews) do        
         gl.PushMatrix()
-        gl.Blending(false)
-        gl.Color(1, 1, 1, 1)
         local featureDefId = Spring.GetFeatureDefID(featureId)
         local featureTeamId = Spring.GetFeatureTeam(featureId)
         local featureX, featureY, featureZ = Spring.GetFeaturePosition(featureId)
@@ -78,8 +76,7 @@ function RotateFeatureState:DrawWorld()
 
         gl.Rotate(angle, 0, 1, 0)
 
-        gl.Texture("#-" .. featureDefId .. ":0")
---       gl.FeatureRaw(featureId, true)
+        gl.Texture(1, "%-" .. featureDefId .. ":1")
         gl.FeatureShape(featureDefId, featureTeamId)
         gl.PopMatrix()
     end

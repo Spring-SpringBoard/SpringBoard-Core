@@ -54,7 +54,7 @@ end
 function DragFeatureState:DrawWorld()
     for featureId, pos in pairs(self.featureGhostViews) do
         gl.PushMatrix()
-        local featureType = Spring.GetFeatureDefID(featureId)
+        local featureDefId = Spring.GetFeatureDefID(featureId)
         local featureTeamId = Spring.GetFeatureTeam(featureId)
         gl.Translate(pos[1], pos[2], pos[3])
 
@@ -65,10 +65,8 @@ function DragFeatureState:DrawWorld()
             gl.Rotate(180 / math.pi * angleY, 0, 1, 0)
         end
 
-        gl.Texture(1, "%-" .. featureType .. ":1")
-        gl.Color(0.1, 1, 0.1, 0.8)
---        gl.FeatureRaw(featureId, true)
-        gl.FeatureShape(featureType, featureTeamId)
+        gl.Texture(1, "%-" .. featureDefId .. ":1")
+        gl.FeatureShape(featureDefId, featureTeamId)
         gl.PopMatrix()
     end
 end
