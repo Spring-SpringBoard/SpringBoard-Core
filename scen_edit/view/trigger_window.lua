@@ -6,6 +6,7 @@ TriggerWindow = Window:Inherit {
     x = 500,
     y = 300,
     trigger = nil, --required
+	drawcontrolv2 = true,
     _triggerPanel = nil,
 }
 

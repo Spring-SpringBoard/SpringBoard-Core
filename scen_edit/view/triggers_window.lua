@@ -4,6 +4,7 @@ TriggersWindow = Window:Inherit {
     minimumSize = {300,200},
     x = 500,
     y = 300,
+	drawcontrolv2 = true,
     _triggers = nil,
 }
 

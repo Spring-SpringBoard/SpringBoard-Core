@@ -10,6 +10,7 @@ CustomWindow = Window:Inherit {
     parentWindow = nil, --required
     mode = nil, --'add' or 'edit'
     dataType = nil,
+	drawcontrolv2 = true,
 }
 
 local this = CustomWindow 

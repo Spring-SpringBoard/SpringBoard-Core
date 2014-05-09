@@ -22,7 +22,8 @@ FilePanel = LayoutPanel:Inherit{
   extFilters = {'.sdz'},
   imageFile = SCEN_EDIT_IMG_DIR .. "file.png",
   dir = '',
-
+  drawcontrolv2 = true,
+  
   columns = 5,
 }
 

@@ -23,6 +23,7 @@ FeatureDefsPanel = LayoutPanel:Inherit {
   unitTerrainId = 1,
   unitTypesId = 1,
   teamId = 1,
+  drawcontrolv2 = true,
 }
 
 local this = FeatureDefsPanel 
