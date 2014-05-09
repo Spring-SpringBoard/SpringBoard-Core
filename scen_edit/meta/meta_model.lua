@@ -7,17 +7,17 @@ function MetaModel:init()
     self.numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
     self.identityComparisonTypes = {"is", "is not"} -- maybe use more user friendly signs
 
-    self:LoadVariableTypes()
+    self:SetVariableTypes()
     --TODO: add array type
     --local arrayTypes = {}
 end
 
-function MetaModel:LoadEventTypes(eventTypes)
+function MetaModel:SetEventTypes(eventTypes)
     self.eventTypes = eventTypes
     self.eventTypes = SCEN_EDIT.CreateNameMapping(self.eventTypes)
 end
 
-function MetaModel:LoadFunctionTypes(functionTypes)
+function MetaModel:SetFunctionTypes(functionTypes)
     for i = 1, #functionTypes do
         local functionType = functionTypes[i]
         functionType.input = SCEN_EDIT.parseData(functionType.input)
@@ -47,7 +47,7 @@ function MetaModel:LoadFunctionTypes(functionTypes)
     --]]
 end
 
-function MetaModel:LoadActionTypes(actionTypes)
+function MetaModel:SetActionTypes(actionTypes)
     for i = 1, #actionTypes do
         local actionType = actionTypes[i]
         actionType.input = SCEN_EDIT.parseData(actionType.input)
@@ -55,7 +55,7 @@ function MetaModel:LoadActionTypes(actionTypes)
     self.actionTypes = SCEN_EDIT.CreateNameMapping(actionTypes)
 end
 
-function MetaModel:LoadVariableTypes()
+function MetaModel:SetVariableTypes()
     --add variables for core types
     self.variableTypes = {"unit", "unitType", "team", "area", "string", "number", "bool"}
     for i = 1, #self.variableTypes do
@@ -66,7 +66,7 @@ function MetaModel:LoadVariableTypes()
 end
 
 --TODO: abstract order types out of the meta model
-function MetaModel:LoadOrderTypes(orderTypes)
+function MetaModel:SetOrderTypes(orderTypes)
     for i = 1, #orderTypes do
         local orderType = orderTypes[i]
         orderType.input = SCEN_EDIT.parseData(orderType.input)
