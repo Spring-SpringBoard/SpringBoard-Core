@@ -97,7 +97,7 @@ function DefaultState:MousePress(x, y, button)
                                     {
                                         conditionTypeName = "compare_area",
                                         first = {
-                                            id = self.selected,
+                                            id = self.dragArea,
                                             type = "pred",
                                         },
                                         relation = {
