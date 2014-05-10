@@ -4,7 +4,7 @@
 local modinfo = {
 	name			= "Scenario Editor Core",
 	shortName		= "SEC",
-	version			= "0.2",
+	version			= "0.2+",
 	game			= "Scenario Editor Core",
 	shortGame		= "SEC",
 	mutator			= "Official",
@@ -12,7 +12,7 @@ local modinfo = {
 	modtype			= 0,
 	depend = {
         "Spring Cursors",
-        "Spring Features 1.1",
+        "Spring Features 1.0",
 
         -- mods here :
 		-- enter your mod here!
