@@ -1,3 +1,4 @@
+
 SCEN_EDIT_VIEW_DIR = SCEN_EDIT_DIR .. "view/"
 SCEN_EDIT_VIEW_PANELS_DIR = SCEN_EDIT_VIEW_DIR .. "panels/"
 SCEN_EDIT_VIEW_MAIN_WINDOW_DIR = SCEN_EDIT_VIEW_DIR .. "main_window/"
@@ -70,27 +71,7 @@ function View:DrawWorldPreUnit()
     if self.displayDevelop then
         self:drawRects()
     end
-    local selType, items = self.selectionManager:GetSelection()
-    if selType == "features" then
-        for _, featureId in pairs(items) do
-            if Spring.ValidFeatureID(featureId) then
-                local bx, _, bz = Spring.GetFeaturePosition(featureId)
-                local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
-                local minx, maxx = featureDef.minx or -10, featureDef.maxx or 10
-                local minz, maxz = featureDef.minz or -10, featureDef.maxz or 10
-                local x1, z1 = bx + minx - 5, bz + minz + 5
-                local x2, z2 = bx + maxx - 5, bz + maxz + 5
-                gl.BeginEnd(GL.LINE_STRIP, function()
-                    gl.Color(0, 1, 0, 1)
-                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
-                    gl.Vertex(x2, Spring.GetGroundHeight(x2, z1), z1)
-                    gl.Vertex(x2, Spring.GetGroundHeight(x2, z2), z2)
-                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z2), z2)
-                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
-                end)
-            end
-        end
-    end
+    self.selectionManager:DrawWorldPreUnit()
 end
 
 function View:GameFrame(frameNum)
