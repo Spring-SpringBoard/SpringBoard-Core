@@ -4,8 +4,11 @@ Scenario Editor
 OFFICIAL Scenario Editor core source
 Spring Scenario Editor Core module
 
-Installing:
-git clone --recursive https://github.com/gajop/Scenario-Editor-Core.git
+Installing (in your Spring games folder):
+git clone --recursive https://github.com/gajop/Scenario-Editor-Core.git Scenario-Editor-Core.sdd
 (--recursive call will pick up submodules)
 
-You should also get the game-specific module!
+You should also get the game-specific module! Examples:
+https://github.com/gajop/Scenario-Editor-BA
+https://github.com/gajop/Scenario-Editor-ZK
+https://github.com/gajop/Scenario-Editor-EVO
