@@ -41,7 +41,7 @@ function CustomWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    obj.customTypes = SortByName(model.conditionTypesByOutput[obj.dataType], "humanName")
+    obj.customTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput[obj.dataType], "humanName")
     obj.cmbCustomTypes = ComboBox:New {
         items = GetField(obj.customTypes, "humanName"),
         conditionTypes = GetField(obj.customTypes, "name"),
