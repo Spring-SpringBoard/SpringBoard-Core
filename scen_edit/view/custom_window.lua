@@ -1,22 +1,23 @@
-local model = SCEN_EDIT.model
+CustomWindow = LCS.class{}
 
-CustomWindow = LCS.class {}
-
-function CustomWindow:init(parentWindow, mode, dataType)
+function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, cbExpressions)
     self.mode = mode
     self.parentWindow = parentWindow
     self.dataType = dataType
+    self.parentObj = parentObj
+    self.condition = condition
+    self.cbExpressions = cbExpressions
 
     self.btnOk = Button:New {
         caption = "OK",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.model.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
     }
     self.btnCancel = Button:New {
         caption = "Cancel",
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.model.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "7%",
@@ -34,7 +35,7 @@ function CustomWindow:init(parentWindow, mode, dataType)
     self.cmbCustomTypes = ComboBox:New {
         items = GetField(self.customTypes, "humanName"),
         conditionTypes = GetField(self.customTypes, "name"),
-        height = model.B_HEIGHT,
+        height = SCEN_EDIT.model.B_HEIGHT,
         width = "60%",
         y = "20%",
         x = '20%',
@@ -63,6 +64,7 @@ function CustomWindow:init(parentWindow, mode, dataType)
         clientHeight = 300,
         x = 500,
         y = 300,
+        parent = screen0,
         children = {
             self.cmbCustomTypes,
             self.btnOk,
@@ -104,10 +106,10 @@ function CustomWindow:init(parentWindow, mode, dataType)
     self.cmbCustomTypes:Select(0)
     self.cmbCustomTypes:Select(1)
 
+    local tw = self.parentWindow
+    local sw = self.window
     if self.mode == 'add' then
         self.window.caption = "New expression of type " .. self.dataType
-        local tw = self.parentWindow
-        local sw = self.window
         sw.x = tw.x
         sw.y = tw.y + tw.height + 5
         if tw.parent.height <= sw.y + sw.height then
@@ -117,14 +119,12 @@ function CustomWindow:init(parentWindow, mode, dataType)
         self.cmbCustomTypes:Select(GetIndex(self.cmbCustomTypes.conditionTypes, self.condition.conditionTypeName))
         self:UpdatePanel()
         self.window.caption = "Edit expression of type " .. self.dataType
-        local tw = self.parentWindow
-        local sw = self.window
-        if tw.x + tw.width + self.width > tw.parent.width then
-            self.x = tw.x - self.width
+        if tw.x + tw.width + sw.width > screen0.width then
+            sw.x = tw.x - sw.width
         else
-            self.x = tw.x + tw.width
+            sw.x = tw.x + tw.width
         end
-        self.y = tw.y
+        sw.y = tw.y
     end    
 end
 

@@ -1,15 +1,7 @@
-IdentityComparisonPanel = {
-}
+IdentityComparisonPanel = LCS.class{}
 
-function IdentityComparisonPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function IdentityComparisonPanel:Initialize()
+function IdentityComparisonPanel:init(parent)
+    self.parent = parent
     local stackIdentityComparisonPanel = MakeComponentPanel(self.parent)
     self.cmbCmpType = ComboBox:New {
         right = 1,

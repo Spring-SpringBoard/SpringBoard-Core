@@ -1,15 +1,7 @@
-NumericComparisonPanel = {
-}
+NumericComparisonPanel = LCS.class{}
 
-function NumericComparisonPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function NumericComparisonPanel:Initialize()
+function NumericComparisonPanel:init(parent)
+    self.parent = parent
     local stackNumericComparisonPanel = MakeComponentPanel(self.parent)
     self.cmbCmpType = ComboBox:New {
         right = 1,

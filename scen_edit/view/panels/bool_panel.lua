@@ -1,15 +1,7 @@
-BoolPanel = {
-}
+BoolPanel = LCS.class{}
 
-function BoolPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function BoolPanel:Initialize()
+function BoolPanel:init(parent)
+    self.parent = parent
     local radioGroup = {}
     local stackBoolPanel = MakeComponentPanel(self.parent)
     self.cbPredefincbBool = Checkbox:New {

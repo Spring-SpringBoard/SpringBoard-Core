@@ -1,15 +1,7 @@
-StringPanel = {
-}
+StringPanel = LCS.class{}
 
-function StringPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function StringPanel:Initialize()
+function StringPanel:init(parent)
+    self.parent = parent
     local radioGroup = {}
     local stackStringPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedString = Checkbox:New {

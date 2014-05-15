@@ -2,7 +2,7 @@ VariableSettingsWindow = LCS.class{}
 
 function VariableSettingsWindow:init()
     local btnAddVariable = Button:New {
-        caption='Add variable',
+        caption='+ Variable',
         width='40%',
         x = 1,
         bottom = 1,

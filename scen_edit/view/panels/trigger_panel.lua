@@ -1,15 +1,7 @@
-TriggerPanel = {
-}
+TriggerPanel = LCS.class{}
 
-function TriggerPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function TriggerPanel:Initialize()
+function TriggerPanel:init(parent)
+    self.parent = parent
     local stackTriggerPanel = MakeComponentPanel(self.parent)
     local lblAttrType = Label:New {
         caption = "Trigger:",
