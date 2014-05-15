@@ -1,36 +1,27 @@
-EventWindow = Window:Inherit {
-    classname = "window",    
-    resizable = false,
-    clientWidth = 300,
-    clientHeight = 100,
-    x = 500,
-    y = 300,
-    trigger = nil, --required
-    triggerWindow = nil, --required
-    mode = nil, --'add' or 'edit'
-	drawcontrolv2 = true,	
-}
+EventWindow = LCS.class{}
 
-local this = EventWindow 
-local inherited = this.inherited
+function EventWindow:init(trigger, triggerWindow, mode, event)
+    self.trigger = trigger
+    self.triggerWindow = triggerWindow
+    self.mode = mode
+    self.event = event
 
-function EventWindow:New(obj)
-    obj.triggerWindow.disableChildrenHitTest = true    
-    obj.btnOk = Button:New {
+    self.triggerWindow.window.disableChildrenHitTest = true    
+    self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "20%",
     }
-    obj.btnCancel = Button:New {
+    self.btnCancel = Button:New {
         caption = "Cancel",
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "20%",
     }
-    obj.cmbEventTypes = ComboBox:New {
+    self.cmbEventTypes = ComboBox:New {
         items = GetField(SCEN_EDIT.metaModel.eventTypes, "humanName"),
         eventTypes = GetField(SCEN_EDIT.metaModel.eventTypes, "name"),
         height = SCEN_EDIT.conf.B_HEIGHT,
@@ -38,56 +29,61 @@ function EventWindow:New(obj)
         y = "60%",
         x = '30%',
     }
-    obj.children = {
-        obj.cmbEventTypes,
-        obj.btnOk,
-        obj.btnCancel,
-    }
-    
-    obj = inherited.New(self, obj)
 
-    obj.btnCancel.OnClick = {
+    self.window = Window:New {
+        resizable = false,
+        clientWidth = 300,
+        clientHeight = 100,
+        x = 500,
+        y = 300,
+        parent = screen0,
+        children = {
+            self.cmbEventTypes,
+            self.btnOk,
+            self.btnCancel,
+        }
+    }
+
+    self.btnCancel.OnClick = {
         function() 
-            obj.triggerWindow.disableChildrenHitTest = false
-            obj:Dispose()
+            self.triggerWindow.window.disableChildrenHitTest = false
+            self.window:Dispose()
         end
     }
     
-    obj.btnOk.OnClick = {
+    self.btnOk.OnClick = {
         function()            
-            if obj.mode == 'edit' then
-                obj:EditEvent()
-                obj.triggerWindow.disableChildrenHitTest = false
-                obj:Dispose()
-            elseif obj.mode == 'add' then
-                obj:AddEvent()
-                obj.triggerWindow.disableChildrenHitTest = false
-                obj:Dispose()
+            if self.mode == 'edit' then
+                self:EditEvent()
+                self.triggerWindow.window.disableChildrenHitTest = false
+                self.window:Dispose()
+            elseif self.mode == 'add' then
+                self:AddEvent()
+                self.triggerWindow.window.disableChildrenHitTest = false
+                self.window:Dispose()
             end
         end
     }
     
-    if obj.mode == 'add' then
-        obj.caption = "New event for - " .. obj.trigger.name
-        local tw = obj.triggerWindow
-        obj.x = tw.x
-        obj.y = tw.y + tw.height + 5
-        if tw.parent.height <= obj.y + obj.height then
-            obj.y = tw.y - obj.height
+    local tw = self.triggerWindow.window
+    local sw = self.window
+    if self.mode == 'add' then
+        sw.caption = "New event for - " .. self.trigger.name
+        sw.x = tw.x
+        sw.y = tw.y + tw.height + 5
+        if tw.parent.height <= sw.y + sw.height then
+            sw.y = tw.y - sw.height
         end
-    elseif obj.mode == 'edit' then
-        obj.cmbEventTypes:Select(GetIndex(obj.cmbEventTypes.eventTypes, obj.event.eventTypeName))
-        obj.caption = "Edit event for trigger " .. obj.trigger.name
-        local tw = obj.triggerWindow
-        if tw.x + tw.width + obj.width > tw.parent.width then
-            obj.x = tw.x - obj.width
+    elseif self.mode == 'edit' then
+        self.cmbEventTypes:Select(GetIndex(self.cmbEventTypes.eventTypes, self.event.eventTypeName))
+        sw.caption = "Edit event for trigger " .. self.trigger.name
+        if tw.x + tw.width + sw.width > tw.parent.width then
+            sw.x = tw.x - sw.width
         else
-            obj.x = tw.x + tw.width
+            sw.x = tw.x + tw.width
         end
-        obj.y = tw.y
+        sw.y = tw.y
     end
-    
-    return obj
 end
 
 function EventWindow:EditEvent()

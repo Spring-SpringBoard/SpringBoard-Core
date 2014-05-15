@@ -1,16 +1,6 @@
-VariableSettingsWindow = Window:Inherit {
-    classname = "window",
-    clientWidth = 300,
-    clientHeight = 250,
-    minimumSize = {150,200},
-    x = 500,
-    y = 300,
-}
+VariableSettingsWindow = LCS.class{}
 
-local this = VariableSettingsWindow
-local inherited = this.inherited
-
-function VariableSettingsWindow:New(obj)
+function VariableSettingsWindow:init()
     local btnAddVariable = Button:New {
         caption='Add variable',
         width='40%',
@@ -19,7 +9,7 @@ function VariableSettingsWindow:New(obj)
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={ 
             function()                 
-                obj:AddVariable()
+                self:AddVariable()
             end}
     }
     local btnClose = Button:New {
@@ -29,7 +19,7 @@ function VariableSettingsWindow:New(obj)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
     }
-    obj.variablesPanel = StackPanel:New {
+    self.variablesPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -37,29 +27,36 @@ function VariableSettingsWindow:New(obj)
         autosize = true,
         resizeItems = false,
     }
-    obj.children = {
-        ScrollPanel:New {
-            x = 1,
-            y = 15,
-            right = 5,
-            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
-            children = { 
-                obj.variablesPanel
+    self.window = Window:New {
+        width = 300,
+        height = 250,
+        minimumSize = {150,200},
+        x = 500,
+        y = 300,
+        parent = screen0,
+        children = {
+            ScrollPanel:New {
+                x = 1,
+                y = 15,
+                right = 5,
+                bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+                children = { 
+                    self.variablesPanel
+                },
             },
-        },
-        btnAddVariable,
-        btnClose,
+            btnAddVariable,
+            btnClose,
+        }
     }
+
     btnClose.OnClick={
         function() 
-            obj:Dispose() 
+            self.window:Dispose() 
         end
     }
-    obj = inherited.New(self, obj)
-    obj:Populate()
-    local variableManagerListener = VariableManagerListenerWidget(obj)
+    self:Populate()
+    local variableManagerListener = VariableManagerListenerWidget(self)
     SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
-    return obj
 end
 
 function VariableSettingsWindow:AddVariable()
@@ -68,7 +65,11 @@ function VariableSettingsWindow:AddVariable()
         value = {},
         name = "new variable",
     }
-    success, msg = pcall(VariableSettingsWindow.MakeVariableWindow, self, variable, false)
+    success, msg = pcall(
+        function()
+            self:MakeVariableWindow(variable, false)
+        end
+    )
     if not success then
         Spring.Echo(msg)
     end
@@ -133,11 +134,8 @@ function VariableSettingsWindow:Populate()
 end
 
 function VariableSettingsWindow:MakeVariableWindow(variable, edit)
-    local newWin = VariableWindow:New {
-        parent = self.parent,
-        variable = variable,
-    }
-    table.insert(newWin.OnConfirm,
+    local newWin = VariableWindow(variable)
+    table.insert(newWin.window.OnConfirm,
         function()
             newWin:UpdateModel(variable)
             local cmd = nil
@@ -150,17 +148,18 @@ function VariableSettingsWindow:MakeVariableWindow(variable, edit)
         end
     )
     newWin:UpdatePanel(variable)
-    if self.x + self.width + newWin.width > self.parent.width then
-        newWin.x = self.x - newWin.width
+    local sw = self.window
+    local nw = newWin.window
+    if sw.x + sw.width + nw.width > screen0.width then
+        nw.x = sw.x - nw.width
     else
-        newWin.x = self.x + self.width
+        nw.x = sw.x + sw.width
     end
-    newWin.y = self.y
-
-    self.disableChildrenHitTest = true
-    table.insert(newWin.OnDispose, 
+    nw.y = sw.y
+    sw.disableChildrenHitTest = true
+    table.insert(nw.OnDispose, 
         function() 
-            self.disableChildrenHitTest = false
+            sw.disableChildrenHitTest = false
         end
     )
     return newWin

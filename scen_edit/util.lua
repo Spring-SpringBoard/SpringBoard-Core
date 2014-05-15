@@ -176,15 +176,7 @@ function SCEN_EDIT.AddExpression(dataType, parent)
                 if #btnExpressions.data > 0 then
                     mode = 'edit'
                 end
-                local newActionWindow = CustomWindow:New {
-                    parent = screen0,
-                    mode = mode,
-                    dataType = dataType,
-                    parentWindow = parent.parent.parent,
-                    parentObj = btnExpressions.data,
-                    condition = btnExpressions.data[1], --nil if mode ~= 'edit'
-                    cbExpressions = cbExpressions,
-                }
+                local newActionWindow = CustomWindow(parentWindow, mode, dataTye)
             end
         }
         return cbExpressions, btnExpressions
