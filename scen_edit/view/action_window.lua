@@ -1,36 +1,27 @@
-ActionWindow = Window:Inherit {
-    classname = "window",    
-    resizable = false,
-    clientWidth = 300,
-    clientHeight = 300,
-    x = 500,
-    y = 300,
-    trigger = nil, --required
-    triggerWindow = nil, --required
-    mode = nil, --'add' or 'edit'
-	drawcontrolv2 = true,	
-}
+ActionWindow = LCS.class{}
 
-local this = ActionWindow 
-local inherited = this.inherited
+function ActionWindow:init(trigger, triggerWindow, mode, action)
+    self.trigger = trigger
+    self.triggerWindow = triggerWindow
+    self.mode = mode
+    self.action = action
 
-function ActionWindow:New(obj)
-    obj.triggerWindow.disableChildrenHitTest = true    
-    obj.btnOk = Button:New {
+    self.triggerWindow.window.disableChildrenHitTest = true    
+    self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
     }
-    obj.btnCancel = Button:New {
+    self.btnCancel = Button:New {
         caption = "Cancel",
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "7%",
     }    
-    obj.actionPanel = StackPanel:New {
+    self.actionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -39,99 +30,104 @@ function ActionWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    obj.validActions = SortByName(SCEN_EDIT.metaModel.actionTypes, "humanName")
-    obj.cmbActionTypes = ComboBox:New {
-        items = GetField(obj.validActions, "humanName"),
-        actionTypes = GetField(obj.validActions, "name"),
+    self.validActions = SortByName(SCEN_EDIT.metaModel.actionTypes, "humanName")
+    self.cmbActionTypes = ComboBox:New {
+        items = GetField(self.validActions, "humanName"),
+        actionTypes = GetField(self.validActions, "name"),
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "60%",
         y = "20%",
         x = '20%',
     }
-    obj.cmbActionTypes.OnSelect = {
+    self.cmbActionTypes.OnSelect = {
         function(object, itemIdx, selected)
             if selected and itemIdx > 0 then
-                obj.actionPanel:ClearChildren()
-                local actName = obj.cmbActionTypes.actionTypes[itemIdx]
-                local action = obj.validActions[itemIdx]
+                self.actionPanel:ClearChildren()
+                local actName = self.cmbActionTypes.actionTypes[itemIdx]
+                local action = self.validActions[itemIdx]
                 for i = 1, #action.input do
                     local input = action.input[i]
                     local subPanelName = input.name
                     if input.humanName then
                         
                     end
-                    local subPanel = SCEN_EDIT.createNewPanel(input.type, obj.actionPanel)
+                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.actionPanel)
                     if subPanel then
-                        obj.actionPanel[subPanelName] = subPanel
-                        SCEN_EDIT.MakeSeparator(obj.actionPanel)
+                        self.actionPanel[subPanelName] = subPanel
+                        SCEN_EDIT.MakeSeparator(self.actionPanel)
                     end
                 end
             end
         end
     }
 
-    obj.children = {
-        obj.cmbActionTypes,
-        obj.btnOk,
-        obj.btnCancel,
-        ScrollPanel:New {
-            x = 1,
-            y = obj.cmbActionTypes.y + obj.cmbActionTypes.height + 80,
-            bottom = 1,
-            right = 5,
-            children = {
-                obj.actionPanel,
+    self.window =  Window:New {
+        resizable = false,
+        clientWidth = 300,
+        clientHeight = 300,
+        x = 500,
+        y = 300,
+        parent = screen0,
+        children = {
+            self.cmbActionTypes,
+            self.btnOk,
+            self.btnCancel,
+            ScrollPanel:New {
+                x = 1,
+                y = self.cmbActionTypes.y + self.cmbActionTypes.height + 80,
+                bottom = 1,
+                right = 5,
+                children = {
+                    self.actionPanel,
+                },
             },
-        },
+        }
     }
     
-    obj = inherited.New(self, obj)
-
-    obj.btnCancel.OnClick = {
+    self.btnCancel.OnClick = {
         function() 
-            obj.triggerWindow.disableChildrenHitTest = false
-            obj:Dispose()
+            self.triggerWindow.window.disableChildrenHitTest = false
+            self.window:Dispose()
         end
     }
     
-    obj.btnOk.OnClick = {
+    self.btnOk.OnClick = {
         function()            
-            if obj.mode == 'edit' then
-                obj:EditAction()
-                obj.triggerWindow.disableChildrenHitTest = false
-                obj:Dispose()
-            elseif obj.mode == 'add' then
-                obj:AddAction()
-                obj.triggerWindow.disableChildrenHitTest = false
-                obj:Dispose()
+            if self.mode == 'edit' then
+                self:EditAction()
+                self.triggerWindow.window.disableChildrenHitTest = false
+                self.window:Dispose()
+            elseif self.mode == 'add' then
+                self:AddAction()
+                self.triggerWindow.window.disableChildrenHitTest = false
+                self.window:Dispose()
             end
         end
     }
     
-    obj.cmbActionTypes:Select(0)
-    obj.cmbActionTypes:Select(1)
-    if obj.mode == 'add' then
-        obj.caption = "New action for - " .. obj.trigger.name
-        local tw = obj.triggerWindow
-        obj.x = tw.x
-        obj.y = tw.y + tw.height + 5
-        if tw.parent.height <= obj.y + obj.height then
-            obj.y = tw.y - obj.height
+    self.cmbActionTypes:Select(0)
+    self.cmbActionTypes:Select(1)
+
+    local tw = self.triggerWindow.window
+    local sw = self.window
+    if self.mode == 'add' then
+        self.window.caption = "New action for - " .. self.trigger.name
+        sw.x = tw.x
+        sw.y = tw.y + tw.height + 5
+        if tw.parent.height <= sw.y + sw.height then
+            sw.y = tw.y - sw.height
         end
-    elseif obj.mode == 'edit' then
-        obj.cmbActionTypes:Select(GetIndex(obj.cmbActionTypes.actionTypes, obj.action.actionTypeName))
-        obj:UpdatePanel()
-        obj.caption = "Edit action for trigger " .. obj.trigger.name
-        local tw = obj.triggerWindow
-        if tw.x + tw.width + obj.width > tw.parent.width then
-            obj.x = tw.x - obj.width
+    elseif self.mode == 'edit' then
+        self.cmbActionTypes:Select(GetIndex(self.cmbActionTypes.actionTypes, self.action.actionTypeName))
+        self:UpdatePanel()
+        self.window.caption = "Edit action for trigger " .. self.trigger.name
+        if tw.x + tw.width + sw.width > tw.parent.width then
+            sw.x = tw.x - sw.width
         else
-            obj.x = tw.x + tw.width
+            sw.x = tw.x + tw.width
         end
-        obj.y = tw.y
+        sw.y = tw.y
     end    
-    
-    return obj
 end
 
 function ActionWindow:UpdatePanel()

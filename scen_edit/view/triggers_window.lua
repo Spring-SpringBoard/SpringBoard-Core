@@ -1,24 +1,13 @@
-TriggersWindow = Window:Inherit {
-    caption = "Trigger window",
-    classname = "window",
-    minimumSize = {300,200},
-    x = 500,
-    y = 300,
-	drawcontrolv2 = true,
-    _triggers = nil,
-}
+TriggersWindow = LCS.class{}
 
-local this = TriggersWindow 
-local inherited = this.inherited
-
-function TriggersWindow:New(obj)
+function TriggersWindow:init()
     local btnAddTrigger = Button:New {
-        caption='Add trigger',
+        caption='+ Trigger',
         width=120,
         x = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick={function() obj:AddTrigger() end}
+        OnClick={function() self:AddTrigger() end}
     }
     local btnClose = Button:New {
         caption='Close',
@@ -27,7 +16,7 @@ function TriggersWindow:New(obj)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
     }
-    obj._triggers = StackPanel:New {
+    self._triggers = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -35,34 +24,41 @@ function TriggersWindow:New(obj)
         autosize = true,
         resizeItems = false,
     }
-    obj.children = {
-        ScrollPanel:New {
-            x = 1,
-            y = 15,
-            right = 5,
-            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
-            children = { 
-                obj._triggers
+
+    self.window = Window:New {
+        caption = "Trigger",
+        minimumSize = {300,200},
+        x = 500,
+        y = 300,
+        parent = screen0,
+        children = {
+            ScrollPanel:New {
+                x = 1,
+                y = 15,
+                right = 5,
+                bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+                children = { 
+                    self._triggers
+                },
             },
-        },
-        btnAddTrigger,
-        btnClose,
+            btnAddTrigger,
+            btnClose,
+        }
     }
+
     btnClose.OnClick={
         function() 
-            obj:Dispose() 
+            self.window:Dispose() 
         end
     }
-    obj = inherited.New(self, obj)
-    obj:Populate()
-    local triggerManagerListener = TriggerManagerListenerWidget(obj)
+    self:Populate()
+    local triggerManagerListener = TriggerManagerListenerWidget(self)
     SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
-    obj.OnDispose = {
+    self.window.OnDispose = {
         function()
             SCEN_EDIT.model.triggerManager:removeListener(triggerManagerListener)
         end
     }
-    return obj
 end
 
 function TriggersWindow:AddTrigger()
@@ -161,22 +157,22 @@ function TriggersWindow:Populate()
 end
 
 function TriggersWindow:MakeTriggerWindow(trigger, edit) 
-    local triggerWindow = TriggerWindow:New {
-         parent = self.parent,
-        trigger = trigger,
-    }
-    if self.x + self.width + triggerWindow.width > self.parent.width then
-        triggerWindow.x = self.x - triggerWindow.width
-    else
-        triggerWindow.x = self.x + self.width
-    end
-    triggerWindow.y = self.y
+    local triggerWindow = TriggerWindow(trigger)
 
-    self.disableChildrenHitTest = true
-    table.insert(triggerWindow.OnDispose, 
+    local sw = self.window
+    local tw = triggerWindow.window
+    if sw.x + sw.width + tw.width > sw.parent.width then
+        tw.x = sw.x - tw.width
+    else
+        tw.x = sw.x + sw.width
+    end
+    tw.y = sw.y
+
+    sw.disableChildrenHitTest = true
+    table.insert(tw.OnDispose, 
         function()
 --            btnEditTrigger:SetCaption(trigger.name)
-            self.disableChildrenHitTest = false
+            sw.disableChildrenHitTest = false
 			if not triggerWindow.save then
 				return
 			end

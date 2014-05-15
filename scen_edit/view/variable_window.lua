@@ -1,20 +1,8 @@
-VariableWindow = Window:Inherit {
-    classname = "window",
-    clientWidth = 300,
-    clientHeight = 250,
-    minimumSize = {150,200},
-    x = 500,
-    y = 300,
-    variable = nil, --required
-    _properties = nil,
-    _cmbType = nil,
-    _variablePanel = nil,
-}
+VariableWindow = LCS.class{}
 
-local this = VariableWindow
-local inherited = this.inherited
+function VariableWindow:init(variable)
+    self.variable = variable
 
-function VariableWindow:New(obj)
     local btnOk = Button:New {
         caption='OK',
         width='40%',
@@ -28,9 +16,9 @@ function VariableWindow:New(obj)
         x = '50%',
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick={function() obj:Dispose() end}
+        OnClick={function() self.window:Dispose() end}
     }
-    obj._properties = StackPanel:New {
+    self._properties = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -38,24 +26,34 @@ function VariableWindow:New(obj)
         autosize = true,
         resizeItems = false,
     }
-    obj.children = {
-        ScrollPanel:New {
-            x = 1,
-            y = 15,
-            right = 5,
-            height = 80,
-            children = { 
-                obj._properties,
+
+    self._cmbType = nil
+    self._variablePanel = nil
+
+    self.window = Window:New {
+        width = 300,
+        height = 250,
+        minimumSize = {150,200},
+        x = 500,
+        y = 300,
+        parent = screen0,
+        children = {
+            ScrollPanel:New {
+                x = 1,
+                y = 15,
+                right = 5,
+                height = 80,
+                children = { 
+                    self._properties,
+                },
             },
-        },
-        btnOk,
-        btnCancel,
+            btnOk,
+            btnCancel,
+        }
     }
 
-    obj = inherited.New(self, obj)
-    SCEN_EDIT.MakeConfirmButton(obj, btnOk)
-    obj:Populate()
-    return obj
+    SCEN_EDIT.MakeConfirmButton(self.window, btnOk)
+    self:Populate()
 end
 
 function VariableWindow:UpdatePanel(variable)
@@ -123,7 +121,7 @@ function VariableWindow:Populate()
         y = 90,
         bottom = 2 * SCEN_EDIT.conf.C_HEIGHT,
         right = 5,
-        parent = self,
+        parent = self.window,
         children = {
             self.variablePanel,
         },

@@ -90,12 +90,9 @@ function TriggerPanel:init()
 	)
 	btnTriggers.OnClick = {
         function () 
-            btnTriggers._toggle = TriggersWindow:New {
-                parent = screen0,
-                model = SCEN_EDIT.model, 
-            }
+            btnTriggers._toggle = TriggersWindow()
             btnTriggers.parent.disableChildrenHitTest = true
-            table.insert(btnTriggers._toggle.OnDispose, 
+            table.insert(btnTriggers._toggle.window.OnDispose, 
                 function()
                     if btnTriggers and btnTriggers.parent then
                         btnTriggers.parent.disableChildrenHitTest = false
@@ -107,12 +104,9 @@ function TriggerPanel:init()
 
     btnVariableSettings.OnClick = {
         function()
-            btnVariableSettings._toggle = VariableSettingsWindow:New {
-                parent = screen0,
-                model = SCEN_EDIT.model, 
-            }
+            btnVariableSettings._toggle = VariableSettingsWindow()
             btnVariableSettings.parent.disableChildrenHitTest = true
-            table.insert(btnVariableSettings._toggle.OnDispose, 
+            table.insert(btnVariableSettings._toggle.window.OnDispose, 
                 function()
                     if btnVariableSettings and btnVariableSettings.parent then
                         btnVariableSettings.parent.disableChildrenHitTest = false
