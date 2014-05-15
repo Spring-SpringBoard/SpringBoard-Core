@@ -1,38 +1,27 @@
 local model = SCEN_EDIT.model
 
-CustomWindow = Window:Inherit {
-    classname = "window",    
-    resizable = false,
-    clientWidth = 300,
-    clientHeight = 300,
-    x = 500,
-    y = 300,
-    parentWindow = nil, --required
-    mode = nil, --'add' or 'edit'
-    dataType = nil,
-	drawcontrolv2 = true,
-}
+CustomWindow = LCS.class {}
 
-local this = CustomWindow 
-local inherited = this.inherited
+function CustomWindow:init(parentWindow, mode, dataType)
+    self.mode = mode
+    self.parentWindow = parentWindow
+    self.dataType = dataType
 
-function CustomWindow:New(obj)
-    obj.parentWindow.disableChildrenHitTest = true    
-    obj.btnOk = Button:New {
+    self.btnOk = Button:New {
         caption = "OK",
         height = model.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
     }
-    obj.btnCancel = Button:New {
+    self.btnCancel = Button:New {
         caption = "Cancel",
         height = model.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = "7%",
     }    
-    obj.conditionPanel = StackPanel:New {
+    self.conditionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -41,93 +30,102 @@ function CustomWindow:New(obj)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    obj.customTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput[obj.dataType], "humanName")
-    obj.cmbCustomTypes = ComboBox:New {
-        items = GetField(obj.customTypes, "humanName"),
-        conditionTypes = GetField(obj.customTypes, "name"),
+    self.customTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType], "humanName")
+    self.cmbCustomTypes = ComboBox:New {
+        items = GetField(self.customTypes, "humanName"),
+        conditionTypes = GetField(self.customTypes, "name"),
         height = model.B_HEIGHT,
         width = "60%",
         y = "20%",
         x = '20%',
     }
-    obj.cmbCustomTypes.OnSelect = {
+    self.cmbCustomTypes.OnSelect = {
         function(object, itemIdx, selected)
             if selected and itemIdx > 0 then
-                obj.conditionPanel:ClearChildren()
---                local cndName = obj.cmbCustomTypes.conditionTypes[itemIdx]
-                local condition = obj.customTypes[itemIdx]
+                self.conditionPanel:ClearChildren()
+--                local cndName = self.cmbCustomTypes.conditionTypes[itemIdx]
+                local condition = self.customTypes[itemIdx]
                 for i = 1, #condition.input do
                     local data = condition.input[i]                    
                     local subPanelName = data.name
-                    local subPanel = SCEN_EDIT.createNewPanel(data.type, obj.conditionPanel)
+                    local subPanel = SCEN_EDIT.createNewPanel(data.type, self.conditionPanel)
                     if subPanel then
-                        obj.conditionPanel[subPanelName] = subPanel
-                        SCEN_EDIT.MakeSeparator(obj.conditionPanel)
+                        self.conditionPanel[subPanelName] = subPanel
+                        SCEN_EDIT.MakeSeparator(self.conditionPanel)
                     end
                 end
             end
         end
     }
-    obj.children = {
-        obj.cmbCustomTypes,
-        obj.btnOk,
-        obj.btnCancel,
-        ScrollPanel:New {
-            x = 1,
-            y = obj.cmbCustomTypes.y + obj.cmbCustomTypes.height + 80,
-            bottom = 1,
-            right = 5,
-            children = {
-                obj.conditionPanel,
+    self.window = Window:New {
+        resizable = false,
+        clientWidth = 300,
+        clientHeight = 300,
+        x = 500,
+        y = 300,
+        children = {
+            self.cmbCustomTypes,
+            self.btnOk,
+            self.btnCancel,
+            ScrollPanel:New {
+                x = 1,
+                y = self.cmbCustomTypes.y + self.cmbCustomTypes.height + 80,
+                bottom = 1,
+                right = 5,
+                children = {
+                    self.conditionPanel,
+                },
             },
-        },
-    }    
-    obj = inherited.New(self, obj)
-    obj.btnCancel.OnClick = {
+        }
+    }
+
+    self.parentWindow.disableChildrenHitTest = true    
+
+    self.btnCancel.OnClick = {
         function() 
-            obj.parentWindow.disableChildrenHitTest = false
-            obj:Dispose()
+            self.parentWindow.disableChildrenHitTest = false
+            self.window:Dispose()
         end
     }
     
-    obj.btnOk.OnClick = {
+    self.btnOk.OnClick = {
         function()            
-            if obj.mode == 'edit' then
-                obj:EditCondition()
-                obj.parentWindow.disableChildrenHitTest = false
-                obj:Dispose()
-            elseif obj.mode == 'add' then
-                obj:AddCondition()
-                obj.parentWindow.disableChildrenHitTest = false
-                obj:Dispose()
+            if self.mode == 'edit' then
+                self:EditCondition()
+                self.parentWindow.disableChildrenHitTest = false
+                self.window:Dispose()
+            elseif self.mode == 'add' then
+                self:AddCondition()
+                self.parentWindow.disableChildrenHitTest = false
+                self.window:Dispose()
             end
         end
     }    
-    obj.cmbCustomTypes:Select(0)
-    obj.cmbCustomTypes:Select(1)
+    self.cmbCustomTypes:Select(0)
+    self.cmbCustomTypes:Select(1)
 
-    if obj.mode == 'add' then
-        obj.caption = "New expression of type " .. obj.dataType
-        local tw = obj.parentWindow
-        obj.x = tw.x
-        obj.y = tw.y + tw.height + 5
-        if tw.parent.height <= obj.y + obj.height then
-            obj.y = tw.y - obj.height
+    if self.mode == 'add' then
+        self.window.caption = "New expression of type " .. self.dataType
+        local tw = self.parentWindow
+        local sw = self.window
+        sw.x = tw.x
+        sw.y = tw.y + tw.height + 5
+        if tw.parent.height <= sw.y + sw.height then
+            sw.y = tw.y - sw.height
         end
-    elseif obj.mode == 'edit' then
-        obj.cmbCustomTypes:Select(GetIndex(obj.cmbCustomTypes.conditionTypes, obj.condition.conditionTypeName))
-        obj:UpdatePanel()
-        obj.caption = "Edit expression of type " .. obj.dataType
-        local tw = obj.parentWindow
-        if tw.x + tw.width + obj.width > tw.parent.width then
-            obj.x = tw.x - obj.width
+    elseif self.mode == 'edit' then
+        self.cmbCustomTypes:Select(GetIndex(self.cmbCustomTypes.conditionTypes, self.condition.conditionTypeName))
+        self:UpdatePanel()
+        self.window.caption = "Edit expression of type " .. self.dataType
+        local tw = self.parentWindow
+        local sw = self.window
+        if tw.x + tw.width + self.width > tw.parent.width then
+            self.x = tw.x - self.width
         else
-            obj.x = tw.x + tw.width
+            self.x = tw.x + tw.width
         end
-        obj.y = tw.y
+        self.y = tw.y
     end    
-
-    return obj
 end
 
 function CustomWindow:UpdatePanel()
