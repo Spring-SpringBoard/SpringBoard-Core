@@ -1,15 +1,7 @@
-NumberPanel = {
-}
+NumberPanel = LCS.class{}
 
-function NumberPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function NumberPanel:Initialize()
+function NumberPanel:init(parent)
+    self.parent = parent
     local radioGroup = {}
     local stackValuePanel = MakeComponentPanel(self.parent)
     self.cbPredefinedValue = Checkbox:New {

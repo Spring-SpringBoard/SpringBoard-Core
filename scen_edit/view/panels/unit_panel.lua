@@ -1,15 +1,7 @@
-UnitPanel = {
-}
+UnitPanel = LCS.class{}
 
-function UnitPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function UnitPanel:Initialize()
+function UnitPanel:init(parent)
+    self.parent = parent
     local radioGroup = {}
     --PREDEFINED
     local stackUnitPanel = MakeComponentPanel(self.parent)

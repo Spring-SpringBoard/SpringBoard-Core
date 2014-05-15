@@ -1,15 +1,7 @@
-UnitTypePanel = {
-}
+UnitTypePanel = LCS.class{}
 
-function UnitTypePanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function UnitTypePanel:Initialize()
+function UnitTypePanel:init(parent)
+    self.parent = parent
     local radioGroup = {}
     local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbPredefinedType = Checkbox:New {

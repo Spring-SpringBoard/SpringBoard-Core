@@ -1,15 +1,7 @@
-TeamPanel = {
-}
+TeamPanel = LCS.class{}
 
-function TeamPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function TeamPanel:Initialize()
+function TeamPanel:init(parent)
+    self.parent = parent
     local radioGroup = {}
     local stackTeamPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedTeam = Checkbox:New {

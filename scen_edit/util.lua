@@ -175,7 +175,7 @@ function SCEN_EDIT.AddExpression(dataType, parent)
                 if #btnExpressions.data > 0 then
                     mode = 'edit'
                 end
-                CustomWindow(parentWindow, mode, dataTye)
+                CustomWindow(parent.parent.parent, mode, dataType, btnExpressions.data, btnExpressions.data[1], cbExpressions)
             end
         }
         return cbExpressions, btnExpressions
@@ -431,49 +431,27 @@ end
 
 function SCEN_EDIT.createNewPanel(input, parent)
     if input == "unit" then
-        return UnitPanel:New {
-            parent = parent,
-        }
+        return UnitPanel(parent)
     elseif input == "area" then
-        return AreaPanel:New {
-            parent = parent,
-        }
+        return AreaPanel(parent)
     elseif input == "trigger" then                    
-        return TriggerPanel:New {
-            parent = parent,
-        }
+        return TriggerPanel(parent)
     elseif input == "unitType" then
-        return UnitTypePanel:New {
-            parent = parent,
-        }
+        return UnitTypePanel(parent)
     elseif input == "team" then
-        return TeamPanel:New {
-            parent = parent,
-        }
+        return TeamPanel(parent)
     elseif input == "number" then
-        return NumberPanel:New {
-            parent = parent,
-        }
+        return NumberPanel(parent)
     elseif input == "string" then
-        return StringPanel:New {
-            parent = parent,
-        }
+        return StringPanel(parent)
     elseif input == "bool" then
-        return BoolPanel:New {
-            parent = parent,
-        }
+        return BoolPanel(parent)
     elseif input == "numericComparison" then
-        return NumericComparisonPanel:New {
-            parent = parent,
-        }
+        return NumericComparisonPanel(parent)
     elseif input == "order" then
-        return OrderPanel:New {
-            parent = parent,
-        }
+        return OrderPanel(parent)
     elseif input == "identityComparison" then
-        return IdentityComparisonPanel:New {
-            parent = parent,
-        }
+        return IdentityComparisonPanel(parent)
     elseif input:find("_array") then
         return GenericArrayPanel(parent, input)
     end

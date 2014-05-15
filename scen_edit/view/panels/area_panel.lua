@@ -1,15 +1,7 @@
-AreaPanel = {
-}
+AreaPanel = LCS.class{}
 
-function AreaPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function AreaPanel:Initialize()
+function AreaPanel:init(parent)
+    self.parent = parent
     local radioGroup = {}
     local stackAreaPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedArea = Checkbox:New {

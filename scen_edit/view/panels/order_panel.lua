@@ -1,15 +1,7 @@
-OrderPanel = {
-}
+OrderPanel = LCS.class{}
 
-function OrderPanel:New(obj)
-    obj = obj or {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj:Initialize()
-    return obj
-end
-
-function OrderPanel:Initialize()
+function OrderPanel:init(parent)
+    self.parent = parent
     local stackPanel = MakeComponentPanel(self.parent)    
     self.cmbOrderTypes = ComboBox:New {
         items = GetField(SCEN_EDIT.metaModel.orderTypes, "humanName"),
