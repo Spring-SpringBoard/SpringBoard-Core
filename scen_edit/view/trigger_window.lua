@@ -1,34 +1,23 @@
-TriggerWindow = Window:Inherit {
-    classname = "window",
-    clientWidth = 600,
-    clientHeight = 250,
-    minimumSize = {500,200},
-    x = 500,
-    y = 300,
-    trigger = nil, --required
-	drawcontrolv2 = true,
-    _triggerPanel = nil,
-}
+TriggerWindow = LCS.class{}
 
-local this = TriggerWindow 
-local inherited = this.inherited
+function TriggerWindow:init(trigger)
+    self.trigger = trigger
+    self._triggerPanel = nil
 
-function TriggerWindow:New(obj)
-    obj.caption = obj.trigger.name
     local stackTriggerPanel = MakeComponentPanel(nil)
     stackTriggerPanel.y = 10
     local lblTriggerName = Label:New {
-        caption = "Trigger name: ",
+        caption = "Name: ",
         x = 1,
         parent = stackTriggerPanel,
     }
     local edTriggerName = EditBox:New {
-        text = obj.trigger.name,
+        text = self.trigger.name,
         x = 100,
         width = 100,
         parent = stackTriggerPanel,
     }
-    obj._triggerPanel = StackPanel:New {
+    self._triggerPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
         y = 1,
@@ -38,21 +27,21 @@ function TriggerWindow:New(obj)
         padding = {0, 0, 0, 0}
     }
     local btnAddEvent = Button:New {
-        caption='Add event',
+        caption='+ Event',
         width=110,
         x = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
     }
     local btnAddCondition = Button:New {
-        caption='Add condition',
+        caption='+ Condition',
         width=120,
         x = 120,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
     }
     local btnAddAction = Button:New {
-        caption='Add action',
+        caption='+ Action',
         width=110,
         x = 250,
         bottom = 1,
@@ -66,9 +55,9 @@ function TriggerWindow:New(obj)
         height = SCEN_EDIT.conf.B_HEIGHT,
 		OnClick = {
 			function() 
-				obj.trigger.name = edTriggerName.text
-				obj.save = true
-				obj:Dispose()
+				self.trigger.name = edTriggerName.text
+				self.save = true
+				self.window:Dispose()
 			end
 		}
     }
@@ -78,33 +67,41 @@ function TriggerWindow:New(obj)
         x = 480,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick={function() obj:Dispose() end}
+        OnClick={function() self.window:Dispose() end}
     }
-    obj.children = {
-        stackTriggerPanel,
-        ScrollPanel:New {
-            x = 1,
-            y = 15 + SCEN_EDIT.conf.B_HEIGHT,
-            right = 5,
-            bottom = SCEN_EDIT.conf.B_HEIGHT * 2,
-            children = {
-                obj._triggerPanel,
+
+    self.window = Window:New {
+        clientWidth = 600,
+        clientHeight = 250,
+        minimumSize = {500,200},
+        x = 500,
+        y = 300,
+        caption = self.trigger.name,
+        parent = screen0,
+        children = {
+            stackTriggerPanel,
+            ScrollPanel:New {
+                x = 1,
+                y = 15 + SCEN_EDIT.conf.B_HEIGHT,
+                right = 5,
+                bottom = SCEN_EDIT.conf.B_HEIGHT * 2,
+                children = {
+                    self._triggerPanel,
+                },
             },
-        },
-        btnAddEvent,
-        btnAddCondition,
-        btnAddAction,
-        btnOk,
-        btnCancel,
+            btnAddEvent,
+            btnAddCondition,
+            btnAddAction,
+            btnOk,
+            btnCancel,
+        }
     }
 
-    obj = inherited.New(self, obj)
-    obj:Populate()
+    self:Populate()
 
-    btnAddEvent.OnClick={function() obj:MakeAddEventWindow() end}
-    btnAddCondition.OnClick={function() obj:MakeAddConditionWindow() end}
-    btnAddAction.OnClick={function() obj:MakeAddActionWindow() end}
-    return obj
+    btnAddEvent.OnClick={function() self:MakeAddEventWindow() end}
+    btnAddCondition.OnClick={function() self:MakeAddConditionWindow() end}
+    btnAddAction.OnClick={function() self:MakeAddActionWindow() end}
 end
 
 function TriggerWindow:Populate()
@@ -223,22 +220,11 @@ function TriggerWindow:Populate()
 end
 
 function TriggerWindow:MakeAddConditionWindow()
-    local newActionWindow = ConditionWindow:New {
-         parent = screen0,
-        trigger = self.trigger,
-        triggerWindow = self,
-        mode = 'add',
-    }
+    return ConditionWindow(self.trigger, self, 'add')
 end
 
 function TriggerWindow:MakeEditConditionWindow(condition)
-    local newActionWindow = ConditionWindow:New {
-         parent = screen0,    
-        trigger = self.trigger,
-        triggerWindow = self,
-        mode = 'edit',
-        condition = condition,
-    }
+    return ConditionWindow(self.trigger, self, 'edit', condition)
 end
 
 function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
@@ -247,22 +233,11 @@ function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
 end
 
 function TriggerWindow:MakeAddEventWindow()
-    local newEventWindow = EventWindow:New {
-         parent = screen0,
-        trigger = self.trigger,
-        triggerWindow = self,
-        mode = 'add',
-    }
+    return EventWindow(self.trigger, self, 'add')
 end
 
 function TriggerWindow:MakeEditEventWindow(event)
-    local newEventWindow = EventWindow:New {
-         parent = screen0,
-        trigger = self.trigger,
-        triggerWindow = self,
-        mode = 'edit',
-        event = event,
-    }
+    return EventWindow(self.trigger, self, 'edit', event)
 end
 
 function TriggerWindow:MakeRemoveEventWindow(event, idx)
@@ -271,22 +246,11 @@ function TriggerWindow:MakeRemoveEventWindow(event, idx)
 end
 
 function TriggerWindow:MakeAddActionWindow()
-    local newActionWindow = ActionWindow:New {
-        parent = screen0,
-        trigger = self.trigger,
-        triggerWindow = self,
-        mode = 'add',
-    }
+    return ActionWindow(self.trigger, self, 'add')
 end
 
 function TriggerWindow:MakeEditActionWindow(action)
-    local newActionWindow = ActionWindow:New {
-        parent = screen0,
-        trigger = self.trigger,
-        triggerWindow = self,
-        mode = 'edit',
-        action = action,
-    }
+    return ActionWindow(self.trigger, self, 'edit', action)
 end
 
 function TriggerWindow:MakeRemoveActionWindow(action, idx)
