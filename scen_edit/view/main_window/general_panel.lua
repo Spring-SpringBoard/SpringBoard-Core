@@ -56,7 +56,13 @@ function GeneralPanel:init()
 								Spring.Echo("Archive doesn't exist: " .. path)
 								return
 							end
+
+							if SCEN_EDIT.loadedArchive ~= nil then
+								VFS.UnmapArchive(SCEN_EDIT.loadedArchive)
+							end
+
 							VFS.MapArchive(path)
+							SCEN_EDIT.loadedArchive = path
 							Spring.Echo("Loaded archive.")
 							local data = VFS.LoadFile("model.lua", VFS.ZIP)
 							cmd = LoadCommand(data)
