@@ -31,6 +31,7 @@ if WG and WG.Chili then
     ComboBox = Chili.ComboBox
     Button = Chili.Button
     Label = Chili.Label
+    Line = Chili.Line
     EditBox = Chili.EditBox
     Window = Chili.Window
     ScrollPanel = Chili.ScrollPanel

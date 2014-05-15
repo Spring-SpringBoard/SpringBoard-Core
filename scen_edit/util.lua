@@ -118,11 +118,10 @@ function SCEN_EDIT.SetMouseCursor(name)
 end
 
 function SCEN_EDIT.MakeSeparator(panel)
-    local lblSeparator = Label:New {
+    local lblSeparator = Line:New {
         parent = panel,
         height = SCEN_EDIT.conf.B_HEIGHT + 10,
-        caption = "===================================",
-        align = 'center',
+        width = "100%",
     }
     return lblSeparator
 end
@@ -176,7 +175,7 @@ function SCEN_EDIT.AddExpression(dataType, parent)
                 if #btnExpressions.data > 0 then
                     mode = 'edit'
                 end
-                local newActionWindow = CustomWindow(parentWindow, mode, dataTye)
+                CustomWindow(parentWindow, mode, dataTye)
             end
         }
         return cbExpressions, btnExpressions
