@@ -177,7 +177,7 @@ function SCEN_EDIT.AddExpression(dataType, parent)
                     mode = 'edit'
                 end
                 local newActionWindow = CustomWindow:New {
-                    parent = parent.parent.parent.parent,
+                    parent = screen0,
                     mode = mode,
                     dataType = dataType,
                     parentWindow = parent.parent.parent,
@@ -275,7 +275,7 @@ function PassToGadget(prefix, tag, data)
     Spring.SendLuaRulesMsg(msg)
 end
 
-function SCEN_EDIT.humanExpression(data, exprType, dataType)
+function SCEN_EDIT.humanExpression(data, exprType, dataType)	
     if exprType == "condition" then
         if data.conditionTypeName:find("compare_") then
             local firstExpr = SCEN_EDIT.humanExpression(data.first, "value")
@@ -329,7 +329,16 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
         elseif data.type == "spec" then
             return data.name
         elseif data.type == "expr" then
-            -- TODO
+			local expr = data.expr[1]
+			local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
+			
+			local paramsStr = ""
+			for k, v in pairs(expr) do
+				if k ~= "conditionTypeName" then
+					paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k) .. " " 
+				end
+			end
+            return exprHumanName .. " (" .. paramsStr .. ")"		
         elseif data.orderTypeName then
             local orderType = SCEN_EDIT.metaModel.orderTypes[data.orderTypeName]
             local humanName = orderType.humanName
@@ -344,7 +353,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
         return SCEN_EDIT.metaModel.numericComparisonTypes[data.cmpTypeId]
     elseif exprType == "identity_comparison" then
         return SCEN_EDIT.metaModel.identityComparisonTypes[data.cmpTypeId]
-    end
+	end	
     return data.humanName
 end
 
