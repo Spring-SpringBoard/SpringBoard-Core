@@ -14,7 +14,10 @@ function GenericArrayPanel:init(parent, type)
 end
 
 function GenericArrayPanel:AddElement()
-    self.subPanels:AddChild(Button:New {
+	local subPanel = SCEN_EDIT.createNewPanel(self.atomicType, self.subPanels)
+	SCEN_EDIT.MakeSeparator(self.subPanels)
+   --[[ 
+   self.subPanels:AddChild(Button:New {
         caption='Thingy!',
 --        width='40%',
 --        x = 1,
@@ -37,6 +40,7 @@ function GenericArrayPanel:AddElement()
             end
         }
     })
+	--]]
 end
 
 function GenericArrayPanel:Initialize()
