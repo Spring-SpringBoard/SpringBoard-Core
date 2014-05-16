@@ -22,6 +22,16 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
         x = "55%",
         y = 20,
     }    
+    self.customTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType], "humanName")
+    self.cmbCustomTypes = ComboBox:New {
+        items = GetField(self.customTypes, "humanName"),
+        conditionTypes = GetField(self.customTypes, "name"),
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        width = "60%",
+        y = self.btnOk.y + self.btnOk.height + 10,
+        x = "20%",
+    }
+
     self.conditionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -30,15 +40,6 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
         autosize = true,
         resizeItems = false,
         padding = {0, 0, 0, 0}
-    }
-    self.customTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType], "humanName")
-    self.cmbCustomTypes = ComboBox:New {
-        items = GetField(self.customTypes, "humanName"),
-        conditionTypes = GetField(self.customTypes, "name"),
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = "60%",
-        y = self.btnOk.y + self.btnOk.height + 10,
-        x = (self.btnOk.x + self.btnCancel.x) / 2,
     }
     self.cmbCustomTypes.OnSelect = {
         function(object, itemIdx, selected)
@@ -71,7 +72,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             self.btnCancel,
             ScrollPanel:New {
                 x = 1,
-                y = self.cmbCustomTypes.y + self.cmbCustomTypes.height + 80,
+                y = self.cmbCustomTypes.y + self.cmbCustomTypes.height + 10,
                 bottom = 1,
                 right = 5,
                 children = {
