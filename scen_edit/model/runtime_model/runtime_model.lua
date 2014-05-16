@@ -16,8 +16,8 @@ function RuntimeModel:LoadMission()
     self.repeatCalls = {}
     
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
-    for id, area in pairs(areas) do
-        local areaModel = AreaModel(id, area)
+    for id, _ in pairs(areas) do
+        local areaModel = AreaModel(id)
         areaModel:Populate(self.lastFrameUnitIds)
         table.insert(self.areaModels, areaModel)        
     end
