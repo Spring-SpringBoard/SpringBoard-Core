@@ -9,6 +9,7 @@ function VariableWindow:init(variable)
         x = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
     }
     local btnCancel = Button:New {
         caption='Cancel',
@@ -16,6 +17,7 @@ function VariableWindow:init(variable)
         x = '50%',
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
         OnClick={function() self.window:Dispose() end}
     }
     self._properties = StackPanel:New {

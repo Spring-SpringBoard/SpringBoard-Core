@@ -92,10 +92,12 @@ function TriggerPanel:init()
         function () 
             btnTriggers._toggle = TriggersWindow()
             btnTriggers.parent.disableChildrenHitTest = true
+            btnTriggers.parent:Invalidate()
             table.insert(btnTriggers._toggle.window.OnDispose, 
                 function()
                     if btnTriggers and btnTriggers.parent then
                         btnTriggers.parent.disableChildrenHitTest = false
+                        btnTriggers.parent:Invalidate()
                     end
                 end
             )
@@ -106,10 +108,12 @@ function TriggerPanel:init()
         function()
             btnVariableSettings._toggle = VariableSettingsWindow()
             btnVariableSettings.parent.disableChildrenHitTest = true
+            btnVariableSettings.parent:Invalidate()
             table.insert(btnVariableSettings._toggle.window.OnDispose, 
                 function()
                     if btnVariableSettings and btnVariableSettings.parent then
                         btnVariableSettings.parent.disableChildrenHitTest = false
+                        btnVariableSettings.parent:Invalidate()
                     end
                 end
             )

@@ -32,6 +32,7 @@ function TriggerWindow:init(trigger)
         x = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
     }
     local btnAddCondition = Button:New {
         caption='+ Condition',
@@ -39,6 +40,7 @@ function TriggerWindow:init(trigger)
         x = 120,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
     }
     local btnAddAction = Button:New {
         caption='+ Action',
@@ -46,6 +48,7 @@ function TriggerWindow:init(trigger)
         x = 250,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
     }
 	local btnOk = Button:New {
         caption='OK',
@@ -53,6 +56,7 @@ function TriggerWindow:init(trigger)
         x = 370,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
 		OnClick = {
 			function() 
 				self.trigger.name = edTriggerName.text
@@ -67,6 +71,7 @@ function TriggerWindow:init(trigger)
         x = 480,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
         OnClick={function() self.window:Dispose() end}
     }
 

@@ -7,12 +7,14 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
     self.action = action
 
     self.triggerWindow.window.disableChildrenHitTest = true    
+    self.triggerWindow.window:Invalidate()
     self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "7%",
+        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
     }
     self.btnCancel = Button:New {
         caption = "Cancel",
@@ -20,6 +22,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
         width = "40%",
         x = "55%",
         y = "7%",
+        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
     }    
     self.actionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -87,6 +90,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
     self.btnCancel.OnClick = {
         function() 
             self.triggerWindow.window.disableChildrenHitTest = false
+            self.triggerWindow.window:Invalidate()
             self.window:Dispose()
         end
     }
@@ -96,10 +100,12 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
             if self.mode == 'edit' then
                 self:EditAction()
                 self.triggerWindow.window.disableChildrenHitTest = false
+                self.triggerWindow.window:Invalidate()
                 self.window:Dispose()
             elseif self.mode == 'add' then
                 self:AddAction()
                 self.triggerWindow.window.disableChildrenHitTest = false
+                self.triggerWindow.window:Invalidate()
                 self.window:Dispose()
             end
         end

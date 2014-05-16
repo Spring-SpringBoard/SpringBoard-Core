@@ -7,6 +7,7 @@ function VariableSettingsWindow:init()
         x = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
         OnClick={ 
             function()                 
                 self:AddVariable()
@@ -157,9 +158,11 @@ function VariableSettingsWindow:MakeVariableWindow(variable, edit)
     end
     nw.y = sw.y
     sw.disableChildrenHitTest = true
+    sw:Invalidate()
     table.insert(nw.OnDispose, 
         function() 
             sw.disableChildrenHitTest = false
+            sw:Invalidate()
         end
     )
     return newWin
