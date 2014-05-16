@@ -28,7 +28,7 @@ function AreaPanel:init(parent)
     self.btnPredefinedArea.OnSelectArea = {
         function(areaId) 
             self.btnPredefinedArea.areaId = areaId
-            self.btnPredefinedArea.caption = "Area id=" .. areaId
+            self.btnPredefinedArea.caption = "Id=" .. areaId
             self.btnPredefinedArea:Invalidate()
             if not self.cbPredefinedArea.checked then 
                 self.cbPredefinedArea:Toggle()

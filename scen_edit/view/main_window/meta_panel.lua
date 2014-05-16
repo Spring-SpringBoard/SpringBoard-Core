@@ -1,6 +1,6 @@
-TriggerPanel = AbstractMainWindowPanel:extends{}
+MetaPanel = AbstractMainWindowPanel:extends{}
 
-function TriggerPanel:init()
+function MetaPanel:init()
 	self:super("init")
     local btnTriggers = Button:New {
         caption = '',

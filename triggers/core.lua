@@ -5,34 +5,37 @@ return {
         for i = 1, #allTypes do
             local type = allTypes[i]
 
-            local variableAssignment = {
-                humanName = "Assign " .. type.humanName .. " variable",
-                name = type.name .. "_VARIABLE_ASSIGN",
-                input = { 
-                    {
-                        name = "variable",
-                        rawVariable = "true",
-                        type = type.name,
+            if type.canBeVariable ~= false then
+                local variableAssignment = {
+                    humanName = "Assign " .. type.humanName,
+                    name = type.name .. "_VARIABLE_ASSIGN",
+                    tags = {"Assign"},
+                    input = { 
+                        {
+                            name = "variable",
+                            rawVariable = "true",
+                            type = type.name,
+                        },
+                        {
+                            name = type.name,
+                            type = type.name,
+                        },
                     },
-                    {
-                        name = type.name,
-                        type = type.name,
-                    },
-                },
-                --        output = type.name,
-                execute = function(input)
-                    local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
-                    local newValue = SCEN_EDIT.deepcopy(input.variable)
-                    newValue.value.id = unitModelId
-                    SCEN_EDIT.model.variableManager:setVariable(variable.id, newValue)
+                    --        output = type.name,
+                    execute = function(input)
+                        local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
+                        local newValue = SCEN_EDIT.deepcopy(input.variable)
+                        newValue.value.id = unitModelId
+                        SCEN_EDIT.model.variableManager:setVariable(variable.id, newValue)
 
-                    --local array = input[arrayType]
-                    --local index = input.number
-                    --return array[index]
-                end,
-            }
+                        --local array = input[arrayType]
+                        --local index = input.number
+                        --return array[index]
+                    end,
+                }
 
-            table.insert(variableAssignments, variableAssignment)
+                table.insert(variableAssignments, variableAssignment)
+            end
         end
 
         return {
@@ -40,6 +43,7 @@ return {
                 humanName = "Spawn unit", 
                 name = "SPAWN_UNIT",
                 input = { "unitType", "team", "area" },
+                tags = {"Unit"},
                 execute = function (input)
                     local unitType = input.unitType
                     local area = input.area
@@ -57,6 +61,7 @@ return {
                 humanName = "Issue order", 
                 name = "ISSUE_ORDER",
                 input = { "unit", "order" },
+                tags = {"Order"},
                 execute = function (input)
                     local orderTypeName = input.order.orderTypeName
                     local newInput = {
@@ -75,6 +80,7 @@ return {
                 humanName = "Add order", 
                 name = "ADD_ORDER",
                 input = { "unit", "order" },
+                tags = {"Order"},
                 execute = function (input)
                     local orderTypeName = input.order.orderTypeName
                     local newInput = {
@@ -92,6 +98,7 @@ return {
                 humanName = "Issue order to units", 
                 name = "ISSUE_ORDER_TO_UNITS",
                 input = { "unit_array", "order" },
+                tags = {"Order"},
                 execute = function (input)
                     for i = 1, #input.unit_array do
                         local unit = input.unit_array[i]
@@ -119,6 +126,7 @@ return {
                 humanName = "Remove unit", 
                 name = "REMOVE_UNIT",
                 input = { "unit" },
+                tags = {"Unit"},
                 execute = function (input)
                     local unit = input.unit                
                     local x, y, z = Spring.GetUnitPosition(unit)
@@ -132,6 +140,7 @@ return {
                 humanName = "Move unit", 
                 name = "MOVE_UNIT",
                 input = { "unit", "area" },
+                tags = {"Unit"},
                 execute = function (input)
                     local unit = input.unit
                     local area = input.area
@@ -146,6 +155,7 @@ return {
                 humanName = "Transfer unit", 
                 name = "TRANSFER_UNIT",
                 input = { "unit", "team" },
+                tags = {"Unit"},
                 execute = function (input)
                     local unit = input.unit
                     local team = input.team
@@ -156,6 +166,7 @@ return {
                 humanName = "Enable trigger", 
                 name = "ENABLE_TRIGGER",
                 input = { "trigger" },
+                tags = {"Trigger"},
                 execute = function (input)
                     local trigger = input.trigger
                     SCEN_EDIT.model.triggerManager:enableTrigger(trigger.id)
@@ -165,6 +176,7 @@ return {
                 humanName = "Disable trigger",
                 name = "DISABLE_TRIGGER",
                 input = { "trigger" },
+                tags = {"Trigger"},
                 execute = function (input)
                     local trigger = input.trigger
                     SCEN_EDIT.model.triggerManager:disableTrigger(trigger.id)
@@ -275,6 +287,7 @@ return {
                 local compareCond = {
                     humanName = "Compare " .. basicType.name,
                     name = "compare_" .. basicType.name,
+                    tags = {"Compare"},
                     input = {
                         {
                             name = "first",
@@ -320,6 +333,7 @@ return {
                 name = "UNIT_TYPE",
                 input = { "unit" },
                 output = "unitType",
+                tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetUnitDefID(input.unit)
                 end,
@@ -329,6 +343,7 @@ return {
                 name = "UNIT_TEAM",
                 input = { "unit" },
                 output = "team",            
+                tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetUnitTeam(input.unit)
                 end,
@@ -344,6 +359,7 @@ return {
                     },
                 },
                 output = "bool",
+                tags = {"Unit"},
                 execute = function(input)
                     return not (not input.unit or Spring.GetUnitIsDead(input.unit))
                 end,
@@ -353,6 +369,7 @@ return {
                 name = "UNIT_HP",
                 input = { "unit" },
                 output = "number",            
+                tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetUnitHealth(input.unit)
                 end,
@@ -362,6 +379,7 @@ return {
                 name = "UNIT_HP_PERCENT",
                 input = { "unit" },
                 output = "number",            
+                tags = {"Unit"},
                 execute = function(input)
                     local hp, maxHp Spring.GetUnitHealth(input.unit)
                     return hp / maxHp
@@ -395,6 +413,7 @@ return {
                 humanName = "Trigger disabled",
                 name = "TRIGGER_DISABLED",
                 input = { "trigger" },
+                tags = {"Trigger"},
                 output = "bool",
                 execute = function(input)
                     return not input.trigger.enabled
@@ -405,6 +424,7 @@ return {
                 name = "TRIGGER_ENABLED",
                 input = { "trigger" },
                 output = "bool",
+                tags = {"Trigger"},
                 execute = function(input)
                     return input.trigger.enabled
                 end,
@@ -414,6 +434,7 @@ return {
                 name = "NOT_CONDITION",
                 input = { "bool" },
                 output = "bool",
+                tags = {"Logical"},
                 execute = function(input)
                     return not input.bool
                 end,
@@ -423,6 +444,7 @@ return {
                 name = "OR_CONDITIONS",
                 input = { "bool_array" },
                 output = "bool",
+                tags = {"Logical"},
                 execute = function(input)
 					for i = 1, #input.bool_array do
 						local bool = input.bool_array[i]
@@ -438,6 +460,7 @@ return {
                 name = "AND_CONDITIONS",
                 input = { "bool_array" },
                 output = "bool",
+                tags = {"Logical"},
                 execute = function(input)
                     for i = 1, #input.bool_array do
 						local bool = input.bool_array[i]
@@ -464,6 +487,7 @@ return {
                 name = arrayType .. "_INDEXING",
                 input = { arrayType, "number" },
                 output = type.name,
+                tags = {"Array"},
                 execute = function(input)
                     local array = input[arrayType]
                     local index = input.number
