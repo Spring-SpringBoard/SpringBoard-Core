@@ -229,6 +229,14 @@ function MakeVariableChoice(variableType, panel)
     end
 end
 
+function GetKeys(tbl)
+    local keys = {}
+    for k, _ in pairs(tbl) do
+        table.insert(keys, k)
+    end
+    return keys
+end
+
 function GetField(origArray, field)
     local newArray = {}
     for k, v in pairs(origArray) do
@@ -266,20 +274,19 @@ function PassToGadget(prefix, tag, data)
     Spring.SendLuaRulesMsg(msg)
 end
 
-function SCEN_EDIT.humanExpression(data, exprType, dataType)	
-    if exprType == "condition" then
-        if data.conditionTypeName:find("compare_") then
-            local firstExpr = SCEN_EDIT.humanExpression(data.first, "value")
-            local relation
-            if data.conditionTypeName == "compare_number" then
-                relation = SCEN_EDIT.humanExpression(data.relation, "identity_comparison")
-            else
-                relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison")
-            end
-            local secondExpr = SCEN_EDIT.humanExpression(data.second, "value")
-            local condHumanName = SCEN_EDIT.metaModel.functionTypes[data.conditionTypeName].humanName
-            return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
+function SCEN_EDIT.humanExpression(data, exprType, dataType)
+    if exprType == "condition" and data.conditionTypeName:find("compare_") then
+        Spring.Echo("condition")
+        local firstExpr = SCEN_EDIT.humanExpression(data.first, "value")
+        local relation
+        if data.conditionTypeName == "compare_number" then
+            relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison")
+        else
+            relation = SCEN_EDIT.humanExpression(data.relation, "identity_comparison")
         end
+        local secondExpr = SCEN_EDIT.humanExpression(data.second, "value")
+        local condHumanName = SCEN_EDIT.metaModel.functionTypes[data.conditionTypeName].humanName
+        return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
     elseif exprType == "action" then
         local action = SCEN_EDIT.metaModel.actionTypes[data.actionTypeName]
         local humanName = action.humanName .. " ("
@@ -291,6 +298,22 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
             end
         end
         return humanName .. ")"
+    elseif (exprType == "value" and data.type == "expr") or exprType == "condition" then
+        local expr = nil
+        if data.expr then
+            expr = data.expr[1]
+        else
+            expr = data
+        end
+        local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
+        
+        local paramsStr = ""
+        for k, v in pairs(expr) do
+            if k ~= "conditionTypeName" then
+                paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k) .. " " 
+            end
+        end
+        return exprHumanName .. " (" .. paramsStr .. ")"		
     elseif exprType == "value" then 
         if data.type == "pred" then
             if dataType == "unitType" then
@@ -319,17 +342,6 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
             end
         elseif data.type == "spec" then
             return data.name
-        elseif data.type == "expr" then
-			local expr = data.expr[1]
-			local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
-			
-			local paramsStr = ""
-			for k, v in pairs(expr) do
-				if k ~= "conditionTypeName" then
-					paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k) .. " " 
-				end
-			end
-            return exprHumanName .. " (" .. paramsStr .. ")"		
         elseif data.orderTypeName then
             local orderType = SCEN_EDIT.metaModel.orderTypes[data.orderTypeName]
             local humanName = orderType.humanName
@@ -434,7 +446,7 @@ function SCEN_EDIT.createNewPanel(input, parent)
         return UnitPanel(parent)
     elseif input == "area" then
         return AreaPanel(parent)
-    elseif input == "trigger" then                    
+    elseif input == "trigger" then
         return TriggerPanel(parent)
     elseif input == "unitType" then
         return UnitTypePanel(parent)
