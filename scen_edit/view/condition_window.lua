@@ -34,14 +34,60 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
         padding = {0, 0, 0, 0}
     }
     self.validConditionTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput["bool"], "humanName")
+    -- group by tags
+    if #self.validConditionTypes > 10 then
+        self.tagGroups = {}
+        for _, func in pairs(self.validConditionTypes) do
+            if func.tags ~= nil then
+                for _, tag in pairs(func.tags) do
+                    if self.tagGroups[tag] == nil then
+                        self.tagGroups[tag] = {}
+                    end
+                    table.insert(self.tagGroups[tag], func)
+                end
+            else
+                if self.tagGroups["Other"] == nil then
+                    self.tagGroups["Other"] = {}
+                end
+                table.insert(self.tagGroups["Other"], func)
+            end
+        end
+        self.cmbTagGroups = ComboBox:New {
+            items = GetKeys(self.tagGroups),
+            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = "40%",
+            y = "20%",
+            x = 10,
+        }
+        self.cmbTagGroups.OnSelect = {
+            function(object, itemIdx, selected)
+                if selected and itemIdx > 0 then
+                    self.validConditionTypes = self.tagGroups[self.cmbTagGroups.items[itemIdx]]
+                    self.cmbConditionTypes.items = GetField(self.validConditionTypes, "humanName")
+                    self.cmbConditionTypes.conditionTypes = GetField(self.validConditionTypes, "name")
+                    self.cmbConditionTypes:Invalidate()
+                    self.cmbConditionTypes:Select(0)
+                    self.cmbConditionTypes:Select(1)
+                end
+            end
+        }
+    end
+
+    local cmbConditionTypesX = "20%"
+    local cmbConditionTypesWidth = "60%"
+    if self.cmbTagGroups ~= nil then
+        cmbConditionTypesWidth = "40%"
+        cmbConditionTypesX = "55%"
+    end
     self.cmbConditionTypes = ComboBox:New {
         items = GetField(self.validConditionTypes, "humanName"),
         conditionTypes = GetField(self.validConditionTypes, "name"),
         height = SCEN_EDIT.conf.B_HEIGHT,
-        width = "60%",
+        width = cmbConditionTypesWidth,
         y = "20%",
-        x = '20%',
+        x = cmbConditionTypesX,
     }
+
     self.cmbConditionTypes.OnSelect = {
         function(object, itemIdx, selected)
             if selected and itemIdx > 0 then
@@ -84,6 +130,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
                     self.conditionPanel,
                 },
             },
+            self.cmbTagGroups,
         }
     }
     
@@ -110,6 +157,11 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
             end
         end
     }
+
+    if self.cmbTagGroups ~= nil then
+        self.cmbTagGroups:Select(0)
+        self.cmbTagGroups:Select(1)
+    end
     
     self.cmbConditionTypes:Select(0)
     self.cmbConditionTypes:Select(1)
@@ -124,6 +176,11 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
             sw.y = tw.y - sw.height
         end
     elseif self.mode == 'edit' then
+        local cndTags = SCEN_EDIT.metaModel.functionTypesByOutput["bool"][self.condition.conditionTypeName].tags
+        if cndTags ~= nil then
+            local primaryTag = cndTags[1]
+            self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
+        end
         self.cmbConditionTypes:Select(GetIndex(self.cmbConditionTypes.conditionTypes, self.condition.conditionTypeName))
         self:UpdatePanel()
         sw.caption = "Edit condition for trigger " .. self.trigger.name

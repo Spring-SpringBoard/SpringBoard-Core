@@ -14,6 +14,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
         width = "40%",
         x = 10,
         y = 20,
+        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
     }
     self.btnCancel = Button:New {
         caption = "Cancel",
@@ -21,15 +22,62 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
         width = "40%",
         x = "55%",
         y = 20,
-    }    
+        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
+    }
+
     self.customTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType], "humanName")
+    -- group by tags
+    if #self.customTypes > 10 then
+        self.tagGroups = {}
+        for _, func in pairs(self.customTypes) do
+            if func.tags ~= nil then
+                for _, tag in pairs(func.tags) do
+                    if self.tagGroups[tag] == nil then
+                        self.tagGroups[tag] = {}
+                    end
+                    table.insert(self.tagGroups[tag], func)
+                end
+            else
+                if self.tagGroups["Other"] == nil then
+                    self.tagGroups["Other"] = {}
+                end
+                table.insert(self.tagGroups["Other"], func)
+            end
+        end
+        self.cmbTagGroups = ComboBox:New {
+            items = GetKeys(self.tagGroups),
+            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = "40%",
+            y = self.btnOk.y + self.btnOk.height + 10,
+            x = 10,
+        }
+        self.cmbTagGroups.OnSelect = {
+            function(object, itemIdx, selected)
+                if selected and itemIdx > 0 then
+                    self.customTypes = self.tagGroups[self.cmbTagGroups.items[itemIdx]]
+                    self.cmbCustomTypes.items = GetField(self.customTypes, "humanName")
+                    self.cmbCustomTypes.conditionTypes = GetField(self.customTypes, "name")
+                    self.cmbCustomTypes:Invalidate()
+                    self.cmbCustomTypes:Select(0)
+                    self.cmbCustomTypes:Select(1)
+                end
+            end
+        }
+    end
+
+    local cmbCustomTypesX = "20%"
+    local cmbCustomTypesWidth = "60%"
+    if self.cmbTagGroups ~= nil then
+        cmbCustomTypesWidth = "40%"
+        cmbCustomTypesX = "55%"
+    end
     self.cmbCustomTypes = ComboBox:New {
         items = GetField(self.customTypes, "humanName"),
         conditionTypes = GetField(self.customTypes, "name"),
         height = SCEN_EDIT.conf.B_HEIGHT,
-        width = "60%",
+        width = cmbCustomTypesWidth,
         y = self.btnOk.y + self.btnOk.height + 10,
-        x = "20%",
+        x = cmbCustomTypesX,
     }
 
     self.conditionPanel = StackPanel:New {
@@ -79,6 +127,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
                     self.conditionPanel,
                 },
             },
+            self.cmbTagGroups
         }
     }
 
@@ -108,23 +157,40 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             end
         end
     }    
+
+    if self.cmbTagGroups ~= nil then
+        self.cmbTagGroups:Select(0)
+        self.cmbTagGroups:Select(1)
+    end
+
     self.cmbCustomTypes:Select(0)
     self.cmbCustomTypes:Select(1)
 
     local tw = self.parentWindow
     local sw = self.window
     if self.mode == 'add' then
-        self.window.caption = "New expression of type " .. self.dataType
+        sw.caption = "New expression of type " .. self.dataType
         sw.x = tw.x
         sw.y = tw.y + tw.height + 5
         if tw.parent.height <= sw.y + sw.height then
-            sw.y = tw.y - sw.height
+            if tw.x + tw.width + sw.width > tw.parent.width then
+                sw.x = tw.x - sw.width
+            else
+                sw.x = tw.x + tw.width
+            end
+            sw.y = tw.y
         end
     elseif self.mode == 'edit' then
+        local cndTags = SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType][self.condition.conditionTypeName].tags
+        if cndTags ~= nil then
+            local primaryTag = cndTags[1]
+            self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
+        end
+
         self.cmbCustomTypes:Select(GetIndex(self.cmbCustomTypes.conditionTypes, self.condition.conditionTypeName))
         self:UpdatePanel()
         self.window.caption = "Edit expression of type " .. self.dataType
-        if tw.x + tw.width + sw.width > screen0.width then
+        if tw.x + tw.width + sw.width > tw.parent.width then
             sw.x = tw.x - sw.width
         else
             sw.x = tw.x + tw.width

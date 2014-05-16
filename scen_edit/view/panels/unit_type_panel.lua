@@ -29,7 +29,7 @@ function UnitTypePanel:init(parent)
     self.btnPredefinedType.OnSelectUnitType = {
         function(unitTypeId)
             self.btnPredefinedType.unitTypeId = unitTypeId
-            self.btnPredefinedType.caption = "Type id=" .. unitTypeId
+            self.btnPredefinedType.caption = "Id=" .. unitTypeId
             self.btnPredefinedType:Invalidate()
             if not self.cbPredefinedType.checked then 
                 self.cbPredefinedType:Toggle()

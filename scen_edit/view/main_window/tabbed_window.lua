@@ -5,7 +5,7 @@ function TabbedWindow:init()
 	local generalPanel = GeneralPanel()
 	local unitFeaturePanel = UnitFeaturePanel()
 	local terrainPanel = TerrainPanel()
-	local triggerPanel = TriggerPanel()
+	local metaPanel = MetaPanel()
 
 	self.window = Window:New {
 		right = 0,
@@ -24,10 +24,10 @@ function TabbedWindow:init()
 				bottom = 20,
 				padding = {0, 0, 0, 0},
 				tabs = {
-					{ name = "general", children = {generalPanel:getControl()} },
-					{ name = "unit", children = {unitFeaturePanel:getControl()} },
-					{ name = "terrain", children = {terrainPanel:getControl()} },
-					{ name = "trigger", children = {triggerPanel:getControl()} },
+					{ name = "General", children = {generalPanel:getControl()} },
+					{ name = "Unit", children = {unitFeaturePanel:getControl()} },
+					{ name = "Terrain", children = {terrainPanel:getControl()} },
+					{ name = "Trigger", children = {metaPanel:getControl()} },
 				},
 			},
 			Button:New {
