@@ -10,17 +10,17 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
 
     self.btnOk = Button:New {
         caption = "OK",
-        height = SCEN_EDIT.model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
-        x = "5%",
-        y = "7%",
+        x = 10,
+        y = 20,
     }
     self.btnCancel = Button:New {
         caption = "Cancel",
-        height = SCEN_EDIT.model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
-        y = "7%",
+        y = 20,
     }    
     self.conditionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -35,10 +35,10 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
     self.cmbCustomTypes = ComboBox:New {
         items = GetField(self.customTypes, "humanName"),
         conditionTypes = GetField(self.customTypes, "name"),
-        height = SCEN_EDIT.model.B_HEIGHT,
+        height = SCEN_EDIT.conf.B_HEIGHT,
         width = "60%",
-        y = "20%",
-        x = '20%',
+        y = self.btnOk.y + self.btnOk.height + 10,
+        x = (self.btnOk.x + self.btnCancel.x) / 2,
     }
     self.cmbCustomTypes.OnSelect = {
         function(object, itemIdx, selected)
@@ -60,8 +60,8 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
     }
     self.window = Window:New {
         resizable = false,
-        clientWidth = 300,
-        clientHeight = 300,
+        width = 350,
+        height = 400,
         x = 500,
         y = 300,
         parent = screen0,
@@ -82,10 +82,12 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
     }
 
     self.parentWindow.disableChildrenHitTest = true    
+    self.parentWindow:Invalidate()
 
     self.btnCancel.OnClick = {
         function() 
             self.parentWindow.disableChildrenHitTest = false
+            self.parentWindow:Invalidate()
             self.window:Dispose()
         end
     }
@@ -95,10 +97,12 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             if self.mode == 'edit' then
                 self:EditCondition()
                 self.parentWindow.disableChildrenHitTest = false
+                self.parentWindow:Invalidate()
                 self.window:Dispose()
             elseif self.mode == 'add' then
                 self:AddCondition()
                 self.parentWindow.disableChildrenHitTest = false
+                self.parentWindow:Invalidate()
                 self.window:Dispose()
             end
         end

@@ -7,12 +7,14 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
     self.event = event
 
     self.triggerWindow.window.disableChildrenHitTest = true    
+    self.triggerWindow.window:Invalidate()
     self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
         y = "20%",
+        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
     }
     self.btnCancel = Button:New {
         caption = "Cancel",
@@ -20,6 +22,7 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
         width = "40%",
         x = "55%",
         y = "20%",
+        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
     }
     self.cmbEventTypes = ComboBox:New {
         items = GetField(SCEN_EDIT.metaModel.eventTypes, "humanName"),
@@ -47,6 +50,7 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
     self.btnCancel.OnClick = {
         function() 
             self.triggerWindow.window.disableChildrenHitTest = false
+            self.triggerWindow.window:Invalidate()
             self.window:Dispose()
         end
     }
@@ -56,10 +60,12 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
             if self.mode == 'edit' then
                 self:EditEvent()
                 self.triggerWindow.window.disableChildrenHitTest = false
+                self.triggerWindow.window:Invalidate()
                 self.window:Dispose()
             elseif self.mode == 'add' then
                 self:AddEvent()
                 self.triggerWindow.window.disableChildrenHitTest = false
+                self.triggerWindow.window:Invalidate()
                 self.window:Dispose()
             end
         end

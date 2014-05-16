@@ -7,7 +7,8 @@ function TriggersWindow:init()
         x = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick={function() self:AddTrigger() end}
+        OnClick={function() self:AddTrigger() end},
+        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
     }
     local btnClose = Button:New {
         caption='Close',
@@ -169,10 +170,11 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
     tw.y = sw.y
 
     sw.disableChildrenHitTest = true
+    sw:Invalidate()
     table.insert(tw.OnDispose, 
         function()
---            btnEditTrigger:SetCaption(trigger.name)
             sw.disableChildrenHitTest = false
+            sw:Invalidate()
 			if not triggerWindow.save then
 				return
 			end
