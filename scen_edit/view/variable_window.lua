@@ -33,22 +33,14 @@ function VariableWindow:init(variable)
     self._variablePanel = nil
 
     self.window = Window:New {
-        width = 300,
-        height = 250,
+        width = 340,
+        height = 450,
         minimumSize = {150,200},
         x = 500,
         y = 300,
         parent = screen0,
         children = {
-            ScrollPanel:New {
-                x = 1,
-                y = 15,
-                right = 5,
-                height = 80,
-                children = { 
-                    self._properties,
-                },
-            },
+            self._properties,
             btnOk,
             btnCancel,
         }
