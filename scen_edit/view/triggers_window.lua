@@ -19,9 +19,7 @@ function TriggersWindow:init()
     }
     self._triggers = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
-        x = 1,
-        y = 1,
-        right = 1,
+        width = "100%",
         autosize = true,
         resizeItems = false,
     }
@@ -34,9 +32,8 @@ function TriggersWindow:init()
         parent = screen0,
         children = {
             ScrollPanel:New {
-                x = 1,
                 y = 15,
-                right = 5,
+                width = "100%",
                 bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
                 children = { 
                     self._triggers

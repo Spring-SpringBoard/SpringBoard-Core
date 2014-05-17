@@ -114,6 +114,14 @@ function FieldResolver:Resolve(field, type, rawVariable)
     elseif type == "identityComparison" then
         return SCEN_EDIT.metaModel.identityComparisonTypes[field.cmpTypeId]
     elseif type:find("_array") then
-        local atomicType = type:sub(type:find("_array"))
+        local atomicType = type:sub(1, type:find("_array") - 1)
+        if field.type == "pred" then
+            local values = {}
+            for _, element in pairs(field.id) do
+                local value = self:Resolve(element, atomicType)
+                table.insert(values, value)
+            end
+            return values
+        end
     end
 end
