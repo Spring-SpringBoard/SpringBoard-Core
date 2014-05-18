@@ -7,16 +7,16 @@ High priority:
     - Cleanup core_types.lua:
         - seperate loading mechanism from metadata
         - Provide a way to load and manage user metadata
-
-Medium priority:
-    - Display a list of executed commands (and the person who executed them) for better cooperative work
-    - Adding multiple features at the same time
-        - adding features of a similar 'style' (f.e mountain or plain fauna)
     - Edit players(teams)
         - add/remove teams
         - set team colors
         - set maximum/minimum teams
     - Edit alliances
+
+Medium priority:
+    - Display a list of executed commands (and the person who executed them) for better cooperative work
+    - Adding multiple features at the same time
+        - adding features of a similar 'style' (f.e mountain or plain fauna)
     - Widget/gadget blacklisting
     - More/better heightmap editing tools
         - add terrain in blocks
