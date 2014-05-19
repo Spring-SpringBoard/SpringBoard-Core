@@ -4,8 +4,10 @@ function RuntimeView:init()
     self.started = false --FIXME: check instead of assuming
     self.btnStartStop = Button:New {
         caption='',
-        height = SCEN_EDIT.conf.B_HEIGHT + 20,
-        width = SCEN_EDIT.conf.B_HEIGHT + 20,
+        y = 1,
+        x = 1,
+        height = 45,
+        width = 45,
         OnClick = {
             function() 
                 if not self.started then
@@ -37,14 +39,21 @@ function RuntimeView:init()
         autosize = true,
         resizeItems = false,
     }
-    local btnToggleShowDevelop = Button:New {
-        caption='Show Display',
-        width= 80,
+    self.btnToggleShowDevelop = Button:New {
+        caption='Hide dev view',
+        x = 55,
+        y = 1,
+        width= 110,
         height = SCEN_EDIT.conf.B_HEIGHT + 20,
         tooltip = "Toggle displaying of debugging symbols",
         OnClick = {
             function() 
                 SCEN_EDIT.view.displayDevelop = not SCEN_EDIT.view.displayDevelop
+                if SCEN_EDIT.view.displayDevelop then
+                    self.btnToggleShowDevelop.caption = 'Hide dev view'
+                else
+                    self.btnToggleShowDevelop.caption = 'Show dev view'
+                end
             end
         }
     }
@@ -57,11 +66,24 @@ function RuntimeView:init()
         width = 300,
         height = 300,
         children = {
+            Control:New {
+                orientation = 'horizontal',
+                width = '100%',
+                y = 10,
+                height = SCEN_EDIT.conf.B_HEIGHT * 2,
+                padding = {0,0,0,0},
+                itemPadding = {0,10,10,10},
+                itemMargin = {0,0,0,0},
+                children = {
+                    self.btnStartStop,
+                    self.btnToggleShowDevelop,
+                },
+            },
             StackPanel:New {
-                y = 15,
+                y = SCEN_EDIT.conf.B_HEIGHT * 2 + 10,
                 x = 1,
                 right = 1,
-                bottom = SCEN_EDIT.conf.B_HEIGHT * 2 + 10,
+                bottom = 1,
                 itemMargin = {0, 0, 0, 0},
                 children = {
                     ScrollPanel:New {
@@ -78,20 +100,6 @@ function RuntimeView:init()
                             self.dtv,
                         },
                     },
-                },
-            },
-            StackPanel:New {
-                orientation = 'horizontal',
-                width = '100%',
-                bottom = 1,
-                height = SCEN_EDIT.conf.B_HEIGHT * 3,
-                padding = {0,0,0,0},
-                itemPadding = {0,10,10,10},
-                itemMargin = {0,0,0,0},
-                resizeItems = false,
-                children = {
-                    self.btnStartStop,
-                    btnToggleShowDevelop,
                 },
             },
         }
