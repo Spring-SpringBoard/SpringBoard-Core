@@ -6,11 +6,12 @@ function TabbedWindow:init()
 	local unitFeaturePanel = UnitFeaturePanel()
 	local terrainPanel = TerrainPanel()
 	local metaPanel = MetaPanel()
+    local alliancePanel = AlliancePanel()
 
 	self.window = Window:New {
 		right = 0,
 		y = 150,
-		width = 300,
+		width = 375,
 		height = 220,
 		parent = screen0,
 		caption = "Scenario Toolbox v2",
@@ -28,6 +29,7 @@ function TabbedWindow:init()
 					{ name = "Unit", children = {unitFeaturePanel:getControl()} },
 					{ name = "Terrain", children = {terrainPanel:getControl()} },
 					{ name = "Trigger", children = {metaPanel:getControl()} },
+                    { name = "Alliance", children = {alliancePanel:getControl()} },
 				},
 			},
 			Button:New {

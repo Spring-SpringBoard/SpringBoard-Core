@@ -141,7 +141,7 @@ function Model:GetMetaData()
         areas = self.areaManager:serialize(),
         triggers = self.triggerManager:serialize(),
         variables = self.variableManager:serialize(),
-        teams = self.teams,
+        teams = self:SerializeTeams(),
 		info = self.scenarioInfo:serialize(),
     }
 end
@@ -155,17 +155,41 @@ function Model:SetMetaData(meta)
     --self.teams = meta.teams or {}
 end
 
+function Model:SerializeTeams()
+    local teams = SCEN_EDIT.deepcopy(self.teams)
+    for _, team in pairs(teams) do
+        team.allies = {}
+        for _, team2 in pairs(teams) do
+            if Spring.AreTeamsAllied(team.id, team2.id) then
+                table.insert(team.allies, team2.id)
+            end
+        end
+    end
+    return teams
+end
+
+function Model:LoadTeams(teams)
+    self.teams = teams
+    for _, team in pairs(self.teams) do
+        -- TODO: only change those alliances that are needed
+        for _, team2 in pairs(self.teams) do
+            if Spring.SetAlly then
+                Spring.SetAlly(team.allyTeam, team2.allyTeam, false)
+            end
+        end
+        for _, team2 in pairs(team.allies) do
+            if Spring.SetAlly then
+                Spring.SetAlly(team.allyTeam, team2.allyTeam, true)
+            end
+        end
+        team.allies = nil
+    end
+end
+
 function Model:GenerateTeams(widget)
-    local names, ids, colors = SCEN_EDIT.GetTeams(widget)
-    for i = 1, #ids do
-        local id = ids[i]
-        local name = names[i]
-        local color = colors[i]
-        
-        self.teams[id] = {
-            name = name,
-            id = id,
-            color = color,
-        }
+    local teams = SCEN_EDIT.GetTeams(widget)
+    self.teams = {}
+    for _, team in pairs(teams) do
+        self.teams[team.id] = team
     end
 end

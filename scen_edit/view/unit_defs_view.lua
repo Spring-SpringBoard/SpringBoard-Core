@@ -35,12 +35,11 @@ function UnitDefsView:init()
             end,
         },
     }
-    local playerNames, playerTeamIds = SCEN_EDIT.GetTeams()
     local teamsCmb = ComboBox:New {
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        items = playerNames,
-        playerTeamIds = playerTeamIds,
+        items = GetField(SCEN_EDIT.model.teams, "name"),
+        playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
         x = 40,
         width = 90,
     }

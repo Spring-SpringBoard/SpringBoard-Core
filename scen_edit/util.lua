@@ -365,29 +365,29 @@ function SCEN_EDIT.GenerateTeamColor()
 end
 
 function SCEN_EDIT.GetTeams(widget)
-    local playerNames = {}
-    local playerTeamIds = {}
-    local playerColors = {}
+    local teams = {}
     
-    local teamIds = Spring.GetTeamList()
-    
-    for i = 1, #teamIds do
-        local id, _, _, name = Spring.GetAIInfo(teamIds[i])
-        table.insert(playerTeamIds, teamIds[i])
-        local teamName = tostring(teamIds[i])
-        if id ~= nil then
-            teamName = teamName .. ": " .. name
-        end
-        table.insert(playerNames, teamName)
+    for _, teamId in pairs(Spring.GetTeamList()) do
+        local team = { id = teamId }
+        table.insert(teams, team)
 
-        local r, g, b, a = SCEN_EDIT.GenerateTeamColor()--Spring.GetTeamColor(teamIds[i])
-        if widget then
-            r, g, b, a = Spring.GetTeamColor(teamIds[i])
+        team.name = tostring(team.id)
+
+        local aiID, _, _, name = Spring.GetAIInfo(team.id)
+        if aiID ~= nil then
+            team.name = team.name .. ": " .. name
         end
-        local color = { r = r, g = g, b = b, a = a }
-        table.insert(playerColors, color)
+
+        local r, g, b, a = SCEN_EDIT.GenerateTeamColor()--Spring.GetTeamColor(teamId)
+        if widget then
+            r, g, b, a = Spring.GetTeamColor(team.id)
+        end
+        team.color = { r = r, g = g, b = b, a = a }
+
+        local _, _, _, _, _, allyTeam = Spring.GetTeamInfo(team.id)
+        team.allyTeam = allyTeam
     end
-    return playerNames, playerTeamIds, playerColors
+    return teams 
 end
 
 function SCEN_EDIT.Error(msg)
@@ -484,4 +484,11 @@ function SCEN_EDIT.executeDelayed()
         end
     end
     SCEN_EDIT.delayedGL = {}
+end
+
+function SCEN_EDIT.glToFontColor(color)
+    return "\255" ..
+        string.char(math.ceil(255 * color.r)) .. 
+        string.char(math.ceil(255 * color.g)) .. 
+        string.char(math.ceil(255 * color.b))
 end
