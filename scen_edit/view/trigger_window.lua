@@ -76,8 +76,8 @@ function TriggerWindow:init(trigger)
     }
 
     self.window = Window:New {
-        clientWidth = 600,
-        clientHeight = 250,
+        width = 600,
+        height = 250,
         minimumSize = {500,200},
         x = 500,
         y = 300,
