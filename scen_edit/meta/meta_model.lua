@@ -23,10 +23,18 @@ function MetaModel:SetFunctionTypes(functionTypes)
         functionType.input = SCEN_EDIT.parseData(functionType.input)
     end
     self.functionTypes = SCEN_EDIT.CreateNameMapping(functionTypes)
-    self.functionTypesByInput = SCEN_EDIT.GroupByField(functionTypes, "input")
+    self.functionTypesByInput = {}
+    for _, functionDef in pairs(self.functionTypes) do
+        for _, input in pairs(functionDef.input) do
+            if self.functionTypesByInput[input.name] then
+                table.insert(self.functionTypesByInput[input.name], v)
+            else
+                self.functionTypesByInput[input.name] = {functionDef}
+            end
+        end
+    end
     self.functionTypesByOutput = SCEN_EDIT.GroupByField(functionTypes, "output")
     
-    local coreTypes = SCEN_EDIT.coreTypes()
     -- fill missing
     for k, v in pairs(self.functionTypesByInput) do
         self.functionTypesByInput[k] = SCEN_EDIT.CreateNameMapping(v)
@@ -35,6 +43,7 @@ function MetaModel:SetFunctionTypes(functionTypes)
         self.functionTypesByOutput[k] = SCEN_EDIT.CreateNameMapping(v)
     end
     --[[
+    local coreTypes = SCEN_EDIT.coreTypes()
     for i = 1, #coreTypes do
         local coreType = coreTypes[i]
         if self.functionTypesByInput[coreType.name] then
