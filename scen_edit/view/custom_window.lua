@@ -94,11 +94,11 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             if selected and itemIdx > 0 then
                 self.conditionPanel:ClearChildren()
 --                local cndName = self.cmbCustomTypes.conditionTypes[itemIdx]
-                local condition = self.customTypes[itemIdx]
-                for i = 1, #condition.input do
-                    local data = condition.input[i]                    
-                    local subPanelName = data.name
-                    local subPanel = SCEN_EDIT.createNewPanel(data.type, self.conditionPanel)
+                local exprType = self.customTypes[itemIdx]
+                for i = 1, #exprType.input do
+                    local dataType = exprType.input[i]                    
+                    local subPanelName = dataType.name
+                    local subPanel = SCEN_EDIT.createNewPanel(dataType.type, self.conditionPanel)
                     if subPanel then
                         self.conditionPanel[subPanelName] = subPanel
                         SCEN_EDIT.MakeSeparator(self.conditionPanel)
@@ -182,7 +182,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
         end
     elseif self.mode == 'edit' then
         local cndTags = SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType][self.condition.conditionTypeName].tags
-        if cndTags ~= nil then
+        if cndTags ~= nil and self.cmbTagGroups ~= nil then
             local primaryTag = cndTags[1]
             self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
         end
@@ -202,10 +202,10 @@ end
 function CustomWindow:UpdatePanel()
     local cndName = self.condition.conditionTypeName
     local index = GetIndex(self.cmbCustomTypes.conditionTypes, cndName)
-    local condition = self.customTypes[index]
-    for i = 1, #condition.input do
-        local data = condition.input[i]
-        local subPanelName = data.name
+    local exprType = self.customTypes[index]
+    for i = 1, #exprType.input do
+        local dataType = exprType.input[i]
+        local subPanelName = dataType.name
         local subPanel = self.conditionPanel[subPanelName]
         if subPanel then
             subPanel:UpdatePanel(self.condition[subPanelName])
@@ -216,17 +216,16 @@ end
 function CustomWindow:UpdateModel()
     local cndName = self.condition.conditionTypeName
     local index = GetIndex(self.cmbCustomTypes.conditionTypes, cndName)
-    local condition = self.customTypes[index]
-    for i = 1, #condition.input do
-        local data = condition.input[i]
-        local subPanelName = data.name
+    local exprType = self.customTypes[index]
+    for i = 1, #exprType.input do
+        local dataType = exprType.input[i]
+        local subPanelName = dataType.name
         local subPanel = self.conditionPanel[subPanelName]
         if subPanel then
             self.condition[subPanelName] = {}
             self.conditionPanel[subPanelName]:UpdateModel(self.condition[subPanelName])
         end
     end
-
 end
 
 function CustomWindow:EditCondition()
