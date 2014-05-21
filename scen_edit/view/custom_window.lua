@@ -3,6 +3,9 @@ CustomWindow = LCS.class{}
 function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, cbExpressions)
     self.mode = mode
     self.parentWindow = parentWindow
+    while self.parentWindow.classname ~= "window" do
+        self.parentWindow = self.parentWindow.parent
+    end
     self.dataType = dataType
     self.parentObj = parentObj
     self.condition = condition
@@ -107,6 +110,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             end
         end
     }
+
     self.window = Window:New {
         resizable = false,
         width = 350,
@@ -130,6 +134,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             self.cmbTagGroups
         }
     }
+    Spring.Echo(self.window)
 
     self.parentWindow.disableChildrenHitTest = true    
     self.parentWindow:Invalidate()
@@ -166,8 +171,8 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
     self.cmbCustomTypes:Select(0)
     self.cmbCustomTypes:Select(1)
 
-    local tw = self.parentWindow
     local sw = self.window
+    local tw = self.parentWindow
     if self.mode == 'add' then
         sw.caption = "New expression of type " .. self.dataType
         sw.x = tw.x
