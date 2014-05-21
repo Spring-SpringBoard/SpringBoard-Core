@@ -274,17 +274,24 @@ function PassToGadget(prefix, tag, data)
     Spring.SendLuaRulesMsg(msg)
 end
 
-function SCEN_EDIT.humanExpression(data, exprType, dataType)
+SCEN_EDIT.humanExpressionMaxLevel = 2
+function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
+    if level == nil then
+        level = 1
+    end
+    if SCEN_EDIT.humanExpressionMaxLevel < level then
+        return "..."
+    end
     if exprType == "condition" and data.conditionTypeName:find("compare_") then
         Spring.Echo("condition")
-        local firstExpr = SCEN_EDIT.humanExpression(data.first, "value")
+        local firstExpr = SCEN_EDIT.humanExpression(data.first, "value", nil, level + 1)
         local relation
         if data.conditionTypeName == "compare_number" then
-            relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison")
+            relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison", nil, level + 1)
         else
-            relation = SCEN_EDIT.humanExpression(data.relation, "identity_comparison")
+            relation = SCEN_EDIT.humanExpression(data.relation, "identity_comparison", nil, level + 1)
         end
-        local secondExpr = SCEN_EDIT.humanExpression(data.second, "value")
+        local secondExpr = SCEN_EDIT.humanExpression(data.second, "value", nil, level + 1)
         local condHumanName = SCEN_EDIT.metaModel.functionTypes[data.conditionTypeName].humanName
         return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
     elseif exprType == "action" then
@@ -292,7 +299,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
         local humanName = action.humanName .. " ("
         for i = 1, #action.input do
             local input = action.input[i]
-            humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value")
+            humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value", nil, level + 1)
             if i ~= #action.input then
                 humanName = humanName .. ", "
             end
@@ -310,7 +317,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
         local paramsStr = ""
         for k, v in pairs(expr) do
             if k ~= "conditionTypeName" then
-                paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k) .. " " 
+                paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k, level + 1) .. " " 
             end
         end
         return exprHumanName .. " (" .. paramsStr .. ")"		
@@ -347,7 +354,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType)
             local humanName = orderType.humanName
             for i = 1, #orderType.input do
                 local input = orderType.input[i]
-                humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value") .. " "
+                humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value", nil, level + 1) .. " "
             end
             return humanName
         end

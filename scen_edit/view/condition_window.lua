@@ -93,9 +93,9 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
             if selected and itemIdx > 0 then
                 self.conditionPanel:ClearChildren()
 --                local cndName = obj.cmbConditionTypes.conditionTypes[itemIdx]
-                local condition = self.validConditionTypes[itemIdx]
-                for i = 1, #condition.input do
-                    local input = condition.input[i]
+                local conditionType = self.validConditionTypes[itemIdx]
+                for i = 1, #conditionType.input do
+                    local input = conditionType.input[i]
                     local subPanelName = input.name
                     local subPanel = SCEN_EDIT.createNewPanel(input.type, self.conditionPanel)
                     if subPanel then
@@ -177,7 +177,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
         end
     elseif self.mode == 'edit' then
         local cndTags = SCEN_EDIT.metaModel.functionTypesByOutput["bool"][self.condition.conditionTypeName].tags
-        if cndTags ~= nil then
+        if cndTags ~= nil and self.cmbTagGroups ~= nil then
             local primaryTag = cndTags[1]
             self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
         end
@@ -196,9 +196,9 @@ end
 function ConditionWindow:UpdatePanel()
     local cndName = self.condition.conditionTypeName
     local index = GetIndex(self.cmbConditionTypes.conditionTypes, cndName)
-    local condition = self.validConditionTypes[index]
-    for i = 1, #condition.input do
-        local data = condition.input[i]
+    local conditionType = self.validConditionTypes[index]
+    for i = 1, #conditionType.input do
+        local data = conditionType.input[i]
         local subPanelName = data.name
         local subPanel = self.conditionPanel[subPanelName]
         if subPanel then
@@ -210,9 +210,9 @@ end
 function ConditionWindow:UpdateModel()
     local cndName = self.condition.conditionTypeName
     local index = GetIndex(self.cmbConditionTypes.conditionTypes, cndName)
-    local condition = self.validConditionTypes[index]
-    for i = 1, #condition.input do
-        local data = condition.input[i]
+    local conditionType = self.validConditionTypes[index]
+    for i = 1, #conditionType.input do
+        local data = conditionType.input[i]
         local subPanelName = data.name
         local subPanel = self.conditionPanel[subPanelName]
         if subPanel then

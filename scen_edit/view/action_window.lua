@@ -92,9 +92,9 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
             if selected and itemIdx > 0 then
                 self.actionPanel:ClearChildren()
                 local actName = self.cmbActionTypes.actionTypes[itemIdx]
-                local action = self.validActions[itemIdx]
-                for i = 1, #action.input do
-                    local input = action.input[i]
+                local actionType = self.validActions[itemIdx]
+                for i = 1, #actionType.input do
+                    local input = actionType.input[i]
                     local subPanelName = input.name
                     if input.humanName then
                         
@@ -175,7 +175,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
         end
     elseif self.mode == 'edit' then
         local cndTags = SCEN_EDIT.metaModel.actionTypes[self.action.actionTypeName].tags
-        if cndTags ~= nil then
+        if cndTags ~= nil and self.cmbTagGroups ~= nil then
             local primaryTag = cndTags[1]
             self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
         end
@@ -194,9 +194,9 @@ end
 function ActionWindow:UpdatePanel()
     local actName = self.action.actionTypeName
     local index = GetIndex(self.cmbActionTypes.actionTypes, actName)
-    local action = self.validActions[index]
-    for i = 1, #action.input do
-        local input = action.input[i]
+    local actionType = self.validActions[index]
+    for i = 1, #actionType.input do
+        local input = actionType.input[i]
         local subPanelName = input.name
         local subPanel = self.actionPanel[subPanelName]
         if subPanel then
@@ -208,9 +208,9 @@ end
 function ActionWindow:UpdateModel()
     local actName = self.action.actionTypeName
     local index = GetIndex(self.cmbActionTypes.actionTypes, actName)
-    local action = self.validActions[index]
-    for i = 1, #action.input do
-        local input = action.input[i]
+    local actionType = self.validActions[index]
+    for i = 1, #actionType.input do
+        local input = actionType.input[i]
         local subPanelName = input.name
         local subPanel = self.actionPanel[subPanelName]
         if subPanel then

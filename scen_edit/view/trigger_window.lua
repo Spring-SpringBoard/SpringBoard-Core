@@ -3,6 +3,8 @@ TriggerWindow = LCS.class{}
 function TriggerWindow:init(trigger)
     self.trigger = trigger
     self._triggerPanel = nil
+    self.openedConditionNodes = {}
+    self.openedActionNodes = {}
 
     local stackTriggerPanel = MakeComponentPanel(nil)
     stackTriggerPanel.y = 10
@@ -77,8 +79,8 @@ function TriggerWindow:init(trigger)
 
     self.window = Window:New {
         width = 600,
-        height = 250,
-        minimumSize = {500,200},
+        height = 450,
+        minimumSize = {500,300},
         x = 500,
         y = 300,
         caption = self.trigger.name,
@@ -156,14 +158,31 @@ function TriggerWindow:Populate()
     }
     for i = 1, #self.trigger.conditions do
         local condition = self.trigger.conditions[i]
-        local stackEventPanel = MakeComponentPanel(self._triggerPanel)
+        local stackPanel = MakeComponentPanel(self._triggerPanel)
         local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
+
+        local btnOpenSubNodes = Button:New {
+            caption = '+',
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
+            x = 1,
+            height = SCEN_EDIT.conf.B_HEIGHT,
+            parent = stackPanel,
+            backgroundColor = {0, 0, 0, 0},
+            OnClick = {function() 
+                self.openedConditionNodes[i] = not self.openedConditionNodes[i]
+                self:Populate() 
+            end}
+        }
+        if self.openedConditionNodes[i] then
+            btnOpenSubNodes:SetCaption('-')
+        end
         local btnEditCondition = Button:New {
             caption = conditionHumanName,
             right = SCEN_EDIT.conf.B_HEIGHT + 10,
-            x = 1,
+            x = SCEN_EDIT.conf.B_HEIGHT + 5,
             height = SCEN_EDIT.conf.B_HEIGHT,
-            parent = stackEventPanel,
+            parent = stackPanel,
             OnClick = {function() self:MakeEditConditionWindow(condition) end}
         }
         local btnRemoveCondition = Button:New {
@@ -171,7 +190,7 @@ function TriggerWindow:Populate()
             right = 1,
             width = SCEN_EDIT.conf.B_HEIGHT,
             height = SCEN_EDIT.conf.B_HEIGHT,
-            parent = stackEventPanel,
+            parent = stackPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
@@ -184,6 +203,10 @@ function TriggerWindow:Populate()
             },
             OnClick = {function() self:MakeRemoveConditionWindow(condition, i) end}
         }
+        local openedNodes = self.openedConditionNodes[i]
+        if openedNodes then
+            self:PopulateExpressions(condition, SCEN_EDIT.metaModel.functionTypes[condition.conditionTypeName], 2)
+        end
     end
     local actionLabel = Label:New {
         caption = "- Actions -",
@@ -195,10 +218,26 @@ function TriggerWindow:Populate()
         local action = self.trigger.actions[i]
         local stackActionPanel = MakeComponentPanel(self._triggerPanel)
         local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
+        local btnOpenSubNodes = Button:New {
+            caption = '+',
+            width = SCEN_EDIT.conf.B_HEIGHT,
+            height = SCEN_EDIT.conf.B_HEIGHT,
+            x = 1,
+            height = SCEN_EDIT.conf.B_HEIGHT,
+            parent = stackActionPanel,
+            backgroundColor = {0, 0, 0, 0},
+            OnClick = {function() 
+                self.openedActionNodes[i] = not self.openedActionNodes[i]
+                self:Populate()
+            end}
+        }
+        if self.openedActionNodes[i] then
+            btnOpenSubNodes:SetCaption('-')
+        end
         local btnEditAction = Button:New {
             caption = actionHumanName,
             right = SCEN_EDIT.conf.B_HEIGHT + 10,
-            x = 1,
+            x = SCEN_EDIT.conf.B_HEIGHT + 5,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
             OnClick = {function() self:MakeEditActionWindow(action) end}
@@ -221,6 +260,41 @@ function TriggerWindow:Populate()
             },
             OnClick = {function() self:MakeRemoveActionWindow(action, i) end},
         }
+        local openedNodes = self.openedActionNodes[i]
+        if openedNodes then
+            self:PopulateExpressions(action, SCEN_EDIT.metaModel.actionTypes[action.actionTypeName], 2)
+        end
+    end
+end
+
+function TriggerWindow:PopulateExpressions(root, rootType, level)
+    for i, input in pairs(rootType.input) do
+        local stackPanel = MakeComponentPanel(self._triggerPanel)
+        
+        local param = root[input.name]
+        local paramName = param.name or param.id
+        if param.type == 'var' then
+            paramName = SCEN_EDIT.model.variableManager:getVariable(param.id).name
+        elseif param.type == "expr" then
+            local expr = param.expr[1]
+            paramName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
+        elseif type(paramName) == 'table' then
+            paramName = "{...}"
+        end
+        local lblParam = Label:New {
+            caption = input.name .. ": " .. (paramName or "nil"),
+            x = (level - 1) * 50,
+            right = 1,
+            parent = stackPanel,
+        }
+
+        if param.type == "expr" then
+            local expr = param.expr[1]
+            local exprType = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName]
+
+            self:PopulateExpressions(expr, exprType, level + 1)
+        end
+        
     end
 end
 
@@ -234,6 +308,7 @@ end
 
 function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
     table.remove(self.trigger.conditions, idx)
+    self.openedConditionNodes = {}
     self:Populate()
 end
 
@@ -260,6 +335,7 @@ end
 
 function TriggerWindow:MakeRemoveActionWindow(action, idx)
     table.remove(self.trigger.actions, idx)
+    self.openedActionNodes = {}
     self:Populate()
 end
 
