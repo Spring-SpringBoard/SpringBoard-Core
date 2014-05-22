@@ -9,7 +9,7 @@ local modinfo = {
 	shortGame		= "SEC",
 	mutator			= "Official",
 	description		= "Core module of the Scenario Editor",
-	modtype			= 0,
+	modtype			= 1,
 	depend = {
         "Spring Cursors",
         "Spring Features 1.0",
