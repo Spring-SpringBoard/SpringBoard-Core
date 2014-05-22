@@ -383,6 +383,7 @@ function SCEN_EDIT.GetTeams(widget)
         local aiID, _, _, name = Spring.GetAIInfo(team.id)
         if aiID ~= nil then
             team.name = team.name .. ": " .. name
+            team.ai = true -- TODO: maybe get the exact AI as well?
         end
 
         local r, g, b, a = SCEN_EDIT.GenerateTeamColor()--Spring.GetTeamColor(teamId)
