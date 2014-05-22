@@ -26,6 +26,7 @@ function MetaModelLoader:Load()
 
     -- load files
     for _, metaModelFile in pairs(self.metaModelFiles) do
+        Spring.Echo("Using file: " .. metaModelFile)
         local metaModel = {}
 
         for _, metaType in pairs(metaTypes) do
