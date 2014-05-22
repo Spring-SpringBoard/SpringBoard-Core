@@ -21,11 +21,11 @@ function AlliancePanel:init()
 			},
         },
     }
-    local btnVariableSettings = Button:New {
+    local btnPlayers = Button:New {
         height = 80,
         width = 80,
         caption = '',
-        tooltip = "Variable settings",
+        tooltip = "Player settings",
         children = {
             Image:New {                 
                 file=SCEN_EDIT_IMG_DIR .. "format-text-bold.png", 
@@ -35,8 +35,9 @@ function AlliancePanel:init()
 				x = 10,
             },
 			Label:New {
-				caption = "Variables",
+				caption = "Players",
 				y = 40,
+                x = 6,
 			},
         },
     }
@@ -79,9 +80,9 @@ function AlliancePanel:init()
 		}
 	)
 	self.control:AddChild(Chili.LayoutPanel:New {
-			height = btnVariableSettings.height,
-			width = btnVariableSettings.width,
-			children = {btnVariableSettings},
+			height = btnPlayers.height,
+			width = btnPlayers.width,
+			children = {btnPlayers},
 			padding = {0, 0, 0, 0},
 			margin = {0, 0, 0, 0},
 			itemMargin = {0, 0, 0, 0},
@@ -104,16 +105,16 @@ function AlliancePanel:init()
         end
     }
 
-    btnVariableSettings.OnClick = {
+    btnPlayers.OnClick = {
         function()
-            btnVariableSettings._toggle = VariableSettingsWindow()
-            btnVariableSettings.parent.disableChildrenHitTest = true
-            btnVariableSettings.parent:Invalidate()
-            table.insert(btnVariableSettings._toggle.window.OnDispose, 
+            btnPlayers._toggle = PlayersWindow()
+            btnPlayers.parent.disableChildrenHitTest = true
+            btnPlayers.parent:Invalidate()
+            table.insert(btnPlayers._toggle.window.OnDispose, 
                 function()
-                    if btnVariableSettings and btnVariableSettings.parent then
-                        btnVariableSettings.parent.disableChildrenHitTest = false
-                        btnVariableSettings.parent:Invalidate()
+                    if btnPlayers and btnPlayers.parent then
+                        btnPlayers.parent.disableChildrenHitTest = false
+                        btnPlayers.parent:Invalidate()
                     end
                 end
             )

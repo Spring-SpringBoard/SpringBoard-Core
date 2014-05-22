@@ -82,16 +82,16 @@ function DiplomacyWindow:init(trigger)
 
     self.btnClose = Button:New {
         caption='Close',
-        width='40%',
-        x = '50%',
+        width = 100,
+        right = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick = { function() self.window:Dispose() end }
     }
     self.window = Window:New {
-        width = 400,
-        height = 450,
-        minimumSize = {300,350},
+        width = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teams * 30)),
+        height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teams * 30)),
+        minimumSize = {300,300},
         parent = screen0,
         caption = "Diplomacy",
         x = 500,
