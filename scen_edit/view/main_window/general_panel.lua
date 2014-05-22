@@ -57,7 +57,7 @@ function GeneralPanel:init()
 								return
 							end
 
-							if SCEN_EDIT.loadedArchive ~= nil then
+							if VFS.UnmapArchive and SCEN_EDIT.loadedArchive ~= nil then
 								VFS.UnmapArchive(SCEN_EDIT.loadedArchive)
 							end
 
