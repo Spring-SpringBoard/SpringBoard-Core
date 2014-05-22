@@ -36,6 +36,10 @@ function Model:Clear()
         Spring.DestroyFeature(featureId, false, true)
 --        self.featureManager:RemoveFeature(featureId)
     end
+    for _, projectileId in pairs(Spring.GetProjectilesInRectangle(0, 0, Game.mapSizeX,  Game.mapSizeZ)) do
+        Spring.SetProjectilePosition(projectileId, math.huge, math.huge, math.huge)
+        Spring.SetProjectileCollision(projectileId)
+    end
     SCEN_EDIT.commandManager:clearUndoRedoStack()
 end
 
