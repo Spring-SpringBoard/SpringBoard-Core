@@ -99,6 +99,11 @@ function TriggersWindow:Populate()
             _toggle = nil,
             parent = stackTriggerPanel,
         }
+        btnEditTrigger.OnClick = {
+            function()
+                local newWin = self:MakeTriggerWindow(trigger, true)
+            end
+        }
         local btnCloneTrigger = Button:New {
             caption = "",
             right = SCEN_EDIT.conf.B_HEIGHT + 8,
@@ -145,17 +150,12 @@ function TriggersWindow:Populate()
             },
             OnClick = {function() self:MakeRemoveTriggerWindow(trigger.id) end},
         }
-            
-        btnEditTrigger.OnClick = {
-            function() 
-                local newWin = self:MakeTriggerWindow(trigger, true)
-            end
-        }
     end
 end
 
 function TriggersWindow:MakeTriggerWindow(trigger, edit) 
-    local triggerWindow = TriggerWindow(trigger)
+    local triggerCopy = SCEN_EDIT.deepcopy(trigger)
+    local triggerWindow = TriggerWindow(triggerCopy)
 
     local sw = self.window
     local tw = triggerWindow.window
@@ -177,7 +177,7 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
 			end
             local cmd = nil
             if edit then
-                cmd = UpdateTriggerCommand(trigger)
+                cmd = UpdateTriggerCommand(triggerCopy)
             else
                 cmd = AddTriggerCommand(triggerWindow.trigger)
             end
