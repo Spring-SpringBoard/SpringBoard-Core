@@ -14,37 +14,9 @@ end
 
 VFS.Include("savetable.lua")
 
-local function tobool(val)
-  local t = type(val)
-  if (t == 'nil') then
-    return false
-  elseif (t == 'boolean') then
-    return val
-  elseif (t == 'number') then
-    return (val ~= 0)
-  elseif (t == 'string') then
-    return ((val ~= '0') and (val ~= 'false'))
-  end
-  return false
-end
-
---include('LuaRules/Gadgets/api_delay.lua')
-
-local echo = Spring.Echo
-
 if (gadgetHandler:IsSyncedCode()) then
 
 SCEN_EDIT = {}
-CMD_RESIZE_X = 30521
-
-local myCustomDesc = {
-    name    = "resize-x",
-    action  = "resize-x",
-    id      = CMD_RESIZE_X,
-    type    = CMDTYPE.ICON_MAP, -- or whatever is suitable
-    tooltip = "resizes x",
-    cursor  = "resize-x",
-}
 
 local function explode(div,str)
   if (div=='') then return false end
@@ -121,26 +93,10 @@ function gadget:RecvLuaMsg(msg, playerID)
     end
 end
 
-local function AddedUnit(unitID, unitDefID, teamID, builderID)
-    SCEN_EDIT.model.unitManager:addUnit(unitID)
-    SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
-    if not SCEN_EDIT.rtModel.hasStarted then
-        Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
-    end
-end
-
-local function AddedFeature(featureID, allyTeam)
-    SCEN_EDIT.model.featureManager:addFeature(featureID)
-end
-
 function gadget:Initialize()
     --Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     VFS.Include("scen_edit/exports.lua")
 
---    gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
---    Spring.AssignMouseCursor("resizegrip", "resizegrip", true, true)
---    Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resizegrip", {1,1,1,0.5}, false)
-    
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
     VFS.Include(SCEN_EDIT_DIR .. "util.lua")
@@ -219,7 +175,11 @@ function gadget:TeamDied(teamID)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
-    AddedUnit(unitID, unitDefID, teamID, builderID)
+    SCEN_EDIT.model.unitManager:addUnit(unitID)
+    SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
+    if not SCEN_EDIT.rtModel.hasStarted then
+        Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+    end
 end
 
 function gadget:UnitDamaged(unitID, unitDefID, unitTeam, damage, paralyzer, weaponDefID, projectileID, attackerID, attackerDefID, attackerTeam)
@@ -236,7 +196,7 @@ function gadget:UnitFinished(unitID, unitDefID, teamID)
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
-    AddedFeature(featureID, allyteam)
+    SCEN_EDIT.model.featureManager:addFeature(featureID)
 end
 
 function gadget:FeatureDestroyed(featureID, allyTeam)
@@ -263,9 +223,6 @@ end
 
 function gadget:Initialize()
     gadgetHandler:AddSyncAction('toWidget', UnsyncedToWidget)
-end
-
-function gadget:Shutdown()
 end
 
 end
