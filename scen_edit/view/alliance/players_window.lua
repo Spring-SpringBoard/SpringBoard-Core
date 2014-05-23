@@ -87,7 +87,9 @@ function PlayersWindow:Populate()
         local stackTeamPanel = MakeComponentPanel(self.teamsPanel)
         local fontColor = SCEN_EDIT.glToFontColor(team.color)
         local aiPrefix = "(Player) "
-        if team.ai then
+        if team.gaia then
+            aiPrefix = "(Gaia)"
+        elseif team.ai then
             aiPrefix = "(AI) "
         end
         local lblTeam = Label:New {
@@ -96,42 +98,44 @@ function PlayersWindow:Populate()
             width = 150,
             parent = stackTeamPanel,
         }
-        local btnEditTeam = Button:New {
-            caption = 'Edit',
-            x = 190,
-            width = 80,
-            parent = stackTeamPanel,
-            OnClick = {
-                function() 
-                    local playerWindow = PlayerWindow(team)
-                    table.insert(playerWindow.window.OnDispose, function() self:Populate() end)
-                    playerWindow.window.x = self.window.x + self.window.width
-                    playerWindow.window.y = self.window.y
-                end
-            },
-        }
-        local btnRemoveTeam = Button:New {
-            caption = "",
-            x = 280,
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
-            parent = stackTeamPanel,
-            padding = {0, 0, 0, 0},
-            children = {
-                Image:New { 
-                    tooltip = "Remove team", 
-                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = SCEN_EDIT.conf.B_HEIGHT, 
-                    width = SCEN_EDIT.conf.B_HEIGHT, 
-                    margin = {0, 0, 0, 0},
+        if not team.gaia then
+            local btnEditTeam = Button:New {
+                caption = 'Edit',
+                x = 190,
+                width = 80,
+                parent = stackTeamPanel,
+                OnClick = {
+                    function() 
+                        local playerWindow = PlayerWindow(team)
+                        table.insert(playerWindow.window.OnDispose, function() self:Populate() end)
+                        playerWindow.window.x = self.window.x + self.window.width
+                        playerWindow.window.y = self.window.y
+                    end
                 },
-            },
-            OnClick = {
-                function() 
-                    SCEN_EDIT.model.teams[team.id] = nil
-                    self:Populate()
-                end
             }
-        }
+            local btnRemoveTeam = Button:New {
+                caption = "",
+                x = 280,
+                width = SCEN_EDIT.conf.B_HEIGHT,
+                height = SCEN_EDIT.conf.B_HEIGHT,
+                parent = stackTeamPanel,
+                padding = {0, 0, 0, 0},
+                children = {
+                    Image:New { 
+                        tooltip = "Remove team", 
+                        file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
+                        height = SCEN_EDIT.conf.B_HEIGHT, 
+                        width = SCEN_EDIT.conf.B_HEIGHT, 
+                        margin = {0, 0, 0, 0},
+                    },
+                },
+                OnClick = {
+                    function() 
+                        SCEN_EDIT.model.teams[team.id] = nil
+                        self:Populate()
+                    end
+                }
+            }
+        end
     end
 end

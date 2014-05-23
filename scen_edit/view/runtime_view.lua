@@ -63,7 +63,7 @@ function RuntimeView:init()
         right = 0,
         y = 370,
 		resizable = false,
-        width = 300,
+        width = 375,
         height = 300,
         children = {
             Control:New {
