@@ -11,6 +11,17 @@ function DragUnitState:init(unitId, startDiffX, startDiffZ)
     SCEN_EDIT.SetMouseCursor("drag")
 end
 
+function DragUnitState:GameFrame(frameNum)
+    local selType, unitIds = SCEN_EDIT.view.selectionManager:GetSelection()
+    for i = 1, #unitIds do
+        local unitId = unitIds[i]
+        if not Spring.ValidUnitID(unitId) or Spring.GetUnitIsDead(unitId) then
+            SCEN_EDIT.stateManager:SetState(DefaultState())
+            return false
+        end
+    end
+end
+
 function DragUnitState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
