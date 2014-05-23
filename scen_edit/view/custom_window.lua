@@ -104,7 +104,9 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
                     local subPanel = SCEN_EDIT.createNewPanel(dataType.type, self.conditionPanel)
                     if subPanel then
                         self.conditionPanel[subPanelName] = subPanel
-                        SCEN_EDIT.MakeSeparator(self.conditionPanel)
+                        if i ~= #exprType.input then
+                            SCEN_EDIT.MakeSeparator(self.conditionPanel)
+                        end
                     end
                 end
             end
@@ -134,8 +136,6 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             self.cmbTagGroups
         }
     }
-    Spring.Echo(self.window)
-
     self.parentWindow.disableChildrenHitTest = true    
     self.parentWindow:Invalidate()
 

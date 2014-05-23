@@ -283,7 +283,6 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         return "..."
     end
     if exprType == "condition" and data.conditionTypeName:find("compare_") then
-        Spring.Echo("condition")
         local firstExpr = SCEN_EDIT.humanExpression(data.first, "value", nil, level + 1)
         local relation
         if data.conditionTypeName == "compare_number" then

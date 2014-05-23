@@ -42,7 +42,9 @@ function OrderPanel:init(parent)
                     local subPanel = SCEN_EDIT.createNewPanel(input.type, self.orderPanel)
                     if subPanel then
                         self.orderPanel[subPanelName] = subPanel
-                        SCEN_EDIT.MakeSeparator(self.orderPanel)
+                        if i ~= #order.input then
+                            SCEN_EDIT.MakeSeparator(self.orderPanel)
+                        end
                     end
                 end
             end
