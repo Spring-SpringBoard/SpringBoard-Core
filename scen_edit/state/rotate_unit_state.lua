@@ -6,6 +6,17 @@ function RotateUnitState:init()
     self.newPosZ = 0
 end
 
+function RotateUnitState:GameFrame(frameNum)
+    local selType, unitIds = SCEN_EDIT.view.selectionManager:GetSelection()
+    for i = 1, #unitIds do
+        local unitId = unitIds[i]
+        if not Spring.ValidUnitID(unitId) or Spring.GetUnitIsDead(unitId) then
+            SCEN_EDIT.stateManager:SetState(DefaultState())
+            return false
+        end
+    end
+end
+
 function RotateUnitState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
