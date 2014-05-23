@@ -131,97 +131,127 @@ local function GenerateScriptTxt()
 [[
 [GAME]
 {
-	MapName=Fields_Of_Isis;
-	StartMetal=1000;
-	StartEnergy=1000;
-	StartposType=3;
+	MapName=__MAP_NAME__
 	GameMode=0;
-	GameType=Tutorial - Running Start r184;
-	LimitDGun=0;
-	DiminishingMMs=0;
-	GhostedBuildings=1;
+	GameType=__GAME_TYPE__;
+
+
+	NumTeams=__NUM_TEAMS__;
+	NumUsers=__NUM_USERS__;
+
 	HostIP=127.0.0.1;
 	HostPort=8452;
 	IsHost=1;
+	NumPlayers=1;
+
+	StartMetal=1000;
+	StartEnergy=1000;
+
+	StartposType=3;
+	LimitDGun=0;
+	DiminishingMMs=0;
+	GhostedBuildings=1;
 	MyPlayerNum=0;
 	MyPlayerName=Player;
-	NumPlayers=1;
-	NumTeams=3;
-	NumUsers=3;
 	NumRestrictions=0;
 	MaxSpeed=20;
 	MinSpeed=0.1;
 	[MODOPTIONS]
 	{
-
+        dev = __DEV__;
 	}
-	[PLAYER0]
-	{
-		Name=Player;
-		Spectator=0;
-		Team=0;
-	}
-	[AI1]
-	{
-		Name=Hostiles;
-		ShortName=NullAI;
-		Team=1;
-		IsFromDemo=0;
-		Host=0;
-		[Options] {}
-	}
-	[AI2]
-	{
-		Name=Allies;
-		ShortName=NullAI;
-		Team=2;
-		IsFromDemo=0;
-		Host=0;
-		[Options] {}
-	}
-	[TEAM0]
-	{
-		TeamLeader=0;
-		AllyTeam=0;
-		RGBColor=0 0 1;
-		Side=Robots;
-		Handicap=0;
-		StartPosX=0;
-		StartPosZ=0;
-	}
-	[TEAM1]
-	{
-		TeamLeader=0;
-		AllyTeam=1;
-		RGBColor=1 0 0;
-		Side=Robots;
-		Handicap=0;
-		StartPosX=0;
-		StartPosZ=0;
-	}
-	[TEAM2]
-	{
-		TeamLeader=0;
-		AllyTeam=0;
-		RGBColor=0.03560131 0.3231432 0.001214108;
-		Side=Robots;
-		Handicap=0;
-		StartPosX=0;
-		StartPosZ=0;
-	}
-	[ALLYTEAM0]
-	{
-		NumAllies=0;
-	}
-	[ALLYTEAM1]
-	{
-		NumAllies=0;
-	}
-}
 
 ]]
 
+    local scenarioInfo = SCEN_EDIT.model.scenarioInfo
+    scriptTxt = scriptTxt:gsub("__MAP_NAME__", Game.mapName)
+                         :gsub("__GAME_TYPE__", scenarioInfo.name .. " " .. scenarioInfo.version)
+                         :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teams))
+                         :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teams))
+                         :gsub("__DEV__", tostring((not not dev)))
+
+    local numAIs = 0
+    local numPlayers = 0
+    for _, team in pairs(SCEN_EDIT.model.teams) do
+        if not team.gaia then
+            local teamTxt = [[
+    [__TEAM_ID__]
+    {
+        AllyTeam=__ALLY_TEAM__;
+        Side=__TEAM_SIDE__;
+        RGBColor=__RGB_COLOR__;
+
+        TeamLeader=0;
+        Handicap=0;
+        StartPosX=0;
+        StartPosZ=0;
+    }
+]]
+            teamTxt = teamTxt:gsub("__TEAM_ID__", "TEAM" .. team.id)
+                             :gsub("__ALLY_TEAM__", team.allyTeam)
+                             :gsub("__TEAM_SIDE__", team.side)
+                             :gsub("__RGB_COLOR__", team.color.r .. " " .. team.color.g .. " " .. team.color.b)
+            scriptTxt = scriptTxt .. teamTxt
+            if team.ai then
+                local aiTxt = [[
+    [__AI_ID__]
+    {
+		Name=__NAME__;
+		ShortName=__SHORT_NAME__;
+		Team=__TEAM__;
+		IsFromDemo=0;
+		Host=0;
+		[Options] {}
+    }
+]]
+                numAIs = numAIs + 1
+                aiTxt = aiTxt:gsub("__AI_ID__", "AI" .. numAIs)
+                             :gsub("__NAME__", team.name)
+                             :gsub("__SHORT_NAME__", "NullAI") -- TODO: support other AIs as well
+                             :gsub("__TEAM__", team.id)
+                scriptTxt = scriptTxt .. aiTxt
+            else
+                local playerTxt = [[
+    [__PLAYER_ID__]
+    {
+        Name=__NAME__;
+        Spectator=0;
+        Team=__TEAM__;
+    }
+]]
+                numPlayers = numPlayers + 1
+                playerTxt = playerTxt:gsub("__PLAYER_ID__", "PLAYER" .. numPlayers)
+                             :gsub("__NAME__", team.name)
+                             :gsub("__TEAM__", team.id)
+                
+                scriptTxt = scriptTxt .. playerTxt
+            end
+        end
+    end
+
+    for _, allyTeamId in pairs(Spring.GetAllyTeamList()) do
+        local allyTeamTxt = [[
+    [__ALLYTEAM_ID__]
+    {
+        NumAllies=0;
+    }
+]]
+        allyTeamTxt = allyTeamTxt:gsub("__ALLYTEAM_ID__", "ALLYTEAM" .. allyTeamId)
+        allyTeamInfo = Spring.GetAllyTeamInfo(allyTeamId)
+        if allyTeamInfo.numallies then -- this should filter out the gaia ally team
+            scriptTxt = scriptTxt .. allyTeamTxt
+        end
+    end
+
+    scriptTxt = scriptTxt .. "\n}"
 	return scriptTxt
+end
+
+local function ScriptTxtSave(path, dev)
+	local scriptTxt = GenerateScriptTxt(dev)
+	local file = assert(io.open(path, "w"))
+	file:write(scriptTxt)
+	file:close()
 end
 
 local function ModInfoSave(path)
@@ -252,6 +282,8 @@ function SaveCommand:execute()
     ModelSave(tempDirName .. "/model.lua")
 	ModInfoSave(tempDirName .. "/modinfo.lua")
     HeightMapSave(tempDirName .. "/heightmap.data")	
+    ScriptTxtSave(tempDirName .. "/script.txt")
+    ScriptTxtSave(tempDirName .. "/script-dev.txt", true)
 
     --Spring.Echo("compressing folder...")
     --create an archive from the directory

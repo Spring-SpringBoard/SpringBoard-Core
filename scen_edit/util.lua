@@ -374,6 +374,7 @@ end
 function SCEN_EDIT.GetTeams(widget)
     local teams = {}
     
+    local gaiaTeamId = Spring.GetGaiaTeamID()
     for _, teamId in pairs(Spring.GetTeamList()) do
         local team = { id = teamId }
         table.insert(teams, team)
@@ -392,8 +393,14 @@ function SCEN_EDIT.GetTeams(widget)
         end
         team.color = { r = r, g = g, b = b, a = a }
 
-        local _, _, _, _, _, allyTeam = Spring.GetTeamInfo(team.id)
+        local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(team.id)
         team.allyTeam = allyTeam
+        team.side = side
+        
+        team.gaia = gaiaTeamId == team.id
+        if team.gaia then
+            team.ai = true
+        end
     end
     return teams 
 end
