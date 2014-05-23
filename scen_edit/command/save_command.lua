@@ -126,7 +126,11 @@ return modinfo]]
     return modInfoTxt
 end
 
-local function GenerateScriptTxt()
+local function GenerateScriptTxt(dev)
+    local playMode = 1
+    if dev then
+        playMode = 0
+    end
 	local scriptTxt = 
 [[
 [GAME]
@@ -159,7 +163,7 @@ local function GenerateScriptTxt()
 	[MODOPTIONS]
 	{
         play_mode = __DEV__;
-        deathmode = none;
+        deathmode = neverend;
         has_scenario_file = true;
 	}
 
@@ -170,7 +174,7 @@ local function GenerateScriptTxt()
                          :gsub("__GAME_TYPE__", scenarioInfo.name .. " " .. scenarioInfo.version)
                          :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teams))
                          :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teams))
-                         :gsub("__DEV__", tostring((not dev)))
+                         :gsub("__DEV__", tostring(palyMode))
 
     local numAIs = 0
     local numPlayers = 0
@@ -303,6 +307,8 @@ function SaveCommand:execute()
     HeightMapSave(tempDirName .. "/heightmap.data")	
     ScriptTxtSave(tempDirName .. "/script.txt")
     ScriptTxtSave(tempDirName .. "/script-dev.txt", true)
+    ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script.txt")
+    ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script-DEV.txt", true)
 
     --Spring.Echo("compressing folder...")
     --create an archive from the directory
