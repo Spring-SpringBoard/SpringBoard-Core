@@ -131,7 +131,7 @@ local function GenerateScriptTxt()
 [[
 [GAME]
 {
-	MapName=__MAP_NAME__
+	MapName=__MAP_NAME__;
 	GameMode=0;
 	GameType=__GAME_TYPE__;
 
@@ -151,14 +151,16 @@ local function GenerateScriptTxt()
 	LimitDGun=0;
 	DiminishingMMs=0;
 	GhostedBuildings=1;
-	MyPlayerNum=0;
+	MyPlayerNum=1;
 	MyPlayerName=Player;
 	NumRestrictions=0;
 	MaxSpeed=20;
 	MinSpeed=0.1;
 	[MODOPTIONS]
 	{
-        dev = __DEV__;
+        play_mode = __DEV__;
+        deathmode = none;
+        has_scenario_file = true;
 	}
 
 ]]
@@ -168,7 +170,7 @@ local function GenerateScriptTxt()
                          :gsub("__GAME_TYPE__", scenarioInfo.name .. " " .. scenarioInfo.version)
                          :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teams))
                          :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teams))
-                         :gsub("__DEV__", tostring((not not dev)))
+                         :gsub("__DEV__", tostring((not dev)))
 
     local numAIs = 0
     local numPlayers = 0
@@ -181,7 +183,7 @@ local function GenerateScriptTxt()
         Side=__TEAM_SIDE__;
         RGBColor=__RGB_COLOR__;
 
-        TeamLeader=0;
+        TeamLeader=1;
         Handicap=0;
         StartPosX=0;
         StartPosZ=0;
@@ -200,7 +202,7 @@ local function GenerateScriptTxt()
 		ShortName=__SHORT_NAME__;
 		Team=__TEAM__;
 		IsFromDemo=0;
-		Host=0;
+		Host=1;
 		[Options] {}
     }
 ]]
@@ -227,6 +229,23 @@ local function GenerateScriptTxt()
                 scriptTxt = scriptTxt .. playerTxt
             end
         end
+    end
+
+    if numPlayers == 0 then
+        local playerTxt = [[
+    [__PLAYER_ID__]
+    {
+        Name=__NAME__;
+        Spectator=1;
+        Team=__TEAM__;
+    }
+]]
+        numPlayers = numPlayers + 1
+        playerTxt = playerTxt:gsub("__PLAYER_ID__", "PLAYER" .. numPlayers)
+                             :gsub("__NAME__", "Player")
+                             :gsub("__TEAM__", 1)
+
+        scriptTxt = scriptTxt .. playerTxt
     end
 
     for _, allyTeamId in pairs(Spring.GetAllyTeamList()) do

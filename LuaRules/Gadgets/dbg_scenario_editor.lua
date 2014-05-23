@@ -156,15 +156,16 @@ function gadget:GameFrame(frameNum)
     if SCEN_EDIT.loadFrame == frameNum then
         SCEN_EDIT.model.unitManager:populate()
         SCEN_EDIT.model.featureManager:populate()
-        if scenarioFile then
-            local data = VFS.LoadFile(scenarioFile)
-            local mission = loadstring(data)()
-            SCEN_EDIT.model:Load(mission)
-            SCEN_EDIT.rtModel:LoadMission(mission)
+        if hasScenarioFile then
+            local heightmap = VFS.LoadFile("heightmap.data", VFS.MOD)
+            LoadMap(heightmap):execute()
 
-            if not devMode then
-                SCEN_EDIT.rtModel:GameStart()
-            end
+            local modelData = VFS.LoadFile("model.lua", VFS.MOD)
+            LoadCommand(modelData):execute()
+        end
+
+        if not devMode then
+            StartCommand():execute()
         end
     end
 
