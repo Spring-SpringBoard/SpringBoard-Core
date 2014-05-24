@@ -101,8 +101,6 @@ function ScenarioInfoView:init()
 end
 
 function ScenarioInfoView:confirm()
-	SCEN_EDIT.model.scenarioInfo.name = self.ebName.text
-	SCEN_EDIT.model.scenarioInfo.description = self.ebDescription.text
-	SCEN_EDIT.model.scenarioInfo.version = self.ebVersion.text
-	SCEN_EDIT.model.scenarioInfo.author = self.ebAuthor.text
+    local cmd = SetScenarioInfoCommand(self.ebName.text, self.ebDescription.text, self.ebVersion.text, self.ebAuthor.text)
+    SCEN_EDIT.commandManager:execute(cmd)
 end
