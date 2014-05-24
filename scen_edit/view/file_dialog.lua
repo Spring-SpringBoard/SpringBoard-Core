@@ -52,6 +52,7 @@ function FileDialog:init(dir, caption)
         height = "100%",            
         dir = self.dir,
         multiselect = false,
+        OnDblClickItem = { function() self:confirmDialog(); self.window:Dispose() end },
     }
     self.filePanel.OnSelectItem = {
         function (obj, itemIdx, selected) 
