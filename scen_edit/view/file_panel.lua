@@ -278,7 +278,8 @@ function FilePanel:MouseDblClick(x,y)
     return self
   end
 
-  if (itemIdx<=self._dirsNum+1) then
+  --FIXME: loading from complex paths is broken, change this when they get fixed    
+  if false and (itemIdx<=self._dirsNum+1) then
     self:SetDir(self._dirList[itemIdx-1])
     return self
   else

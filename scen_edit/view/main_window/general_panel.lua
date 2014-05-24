@@ -13,13 +13,10 @@ function GeneralPanel:init()
 					sfd = SaveFileDialog(dir)
 					sfd:setConfirmDialogCallback(
 						function(path)
+							Spring.Echo("Saving archive: " .. path .. " ...")
 							local saveCommand = SaveCommand(path)
-							success, errMsg = pcall(function()
-								SCEN_EDIT.commandManager:execute(saveCommand, true)
-							end)
-							if not success then
-								Spring.Echo(errMsg)
-							end
+                            SCEN_EDIT.commandManager:execute(saveCommand, true)
+							Spring.Echo("Saved archive.")
 						end
 					)
 				end
@@ -63,7 +60,6 @@ function GeneralPanel:init()
 
 							VFS.MapArchive(path)
 							SCEN_EDIT.loadedArchive = path
-							Spring.Echo("Loaded archive.")
 							local data = VFS.LoadFile("model.lua", VFS.ZIP)
 							cmd = LoadCommand(data)
 							SCEN_EDIT.commandManager:execute(cmd)
@@ -71,6 +67,7 @@ function GeneralPanel:init()
 							local data = VFS.LoadFile("heightmap.data", VFS.ZIP)
 							loadMap = LoadMap(data)
 							SCEN_EDIT.commandManager:execute(loadMap)
+							Spring.Echo("Loaded archive.")
 						end
 					)
 				end
