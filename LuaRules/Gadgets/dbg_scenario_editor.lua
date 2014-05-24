@@ -144,6 +144,9 @@ function gadget:Initialize()
 
         local triggerManagerListener = TriggerManagerListenerGadget()
         SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
+
+        local scenarioInfoListener = ScenarioInfoListenerGadget()
+        SCEN_EDIT.model.scenarioInfo:addListener(scenarioInfoListener)
     end
     --populate the managers now that the listeners are set
     SCEN_EDIT.loadFrame = Spring.GetGameFrame() + 1
