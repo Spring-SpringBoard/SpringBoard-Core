@@ -112,11 +112,6 @@ function widget:Initialize()
     SCEN_EDIT.messageManager.widget = true
 
 
-    --]]
-    --    Spring.AssignMouseCursor('cursor-y', 'cursor-y');
-    --    Spring.AssignMouseCursor('cursor-x-y-1', 'cursor-x-y-1');
-    --    Spring.AssignMouseCursor('cursor-x-y-2', 'cursor-x-y-2');
-    --    Spring.AssignMouseCursor('cursor-x', 'cursor-x');
     SCEN_EDIT.model:GenerateTeams(widget) 
     local commands = {}
     for id, team in pairs(SCEN_EDIT.model.teams) do
@@ -125,9 +120,6 @@ function widget:Initialize()
     end
     local cmd = CompoundCommand(commands)
     SCEN_EDIT.commandManager:execute(cmd)
-
---    gadgetHandler:RegisterCMDID(CMD_RESIZE_X)
---    Spring.SetCustomCommandDrawData(CMD_RESIZE_X, "resizegrip", {1,1,1,0.5}, false)
 
     if devMode then
         SCEN_EDIT.view = View()
