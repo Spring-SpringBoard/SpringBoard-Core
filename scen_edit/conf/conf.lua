@@ -10,14 +10,50 @@ function Conf:init()
 	self:initializeListOfMetaModelFiles()
 end
 
+function Conf:LoadMetaModelFile(metaModelFile)
+    local success, data = pcall(function() return VFS.LoadFile(metaModelFile) end)
+    if not success then
+        Spring.Echo("Failed to load file " .. metaModelFile .. ": " .. data)
+        return nil
+    end
+    return data
+end
+	
 function Conf:initializeListOfMetaModelFiles()
+    self.metaModelFiles = {}
+
 	local files = VFS.DirList("triggers")
 	for i = 1, #files do
 		local file = files[i]
-		self.metaModelFiles[#self.metaModelFiles + 1] = file
+        local data = self:LoadMetaModelFile(file)
+        if data ~= nil then
+            self.metaModelFiles[#self.metaModelFiles + 1] = {
+                name = file,
+                data = data,
+            }
+        end
 	end
+
+    if SCEN_EDIT.model ~= nil then
+        files = VFS.DirList(SCEN_EDIT.model:GetProjectDir() .. "/triggers/", "*", VFS.RAW)
+        for i = 1, #files do
+            local file = files[i]
+            local data = self:LoadMetaModelFile(file)
+            if data ~= nil then
+                self.metaModelFiles[#self.metaModelFiles + 1] = {
+                    name = file,
+                    data = data,
+                }
+            end
+        end
+    end
 end
 
-function Conf:getMetaModelFiles()
+function Conf:GetMetaModelFiles()
+	self:initializeListOfMetaModelFiles()
     return self.metaModelFiles
+end
+
+function Conf:SetMetaModelFiles(metaModelFiles)
+    self.metaModelFiles = metaModelFiles
 end

@@ -23,7 +23,7 @@ function LoadMap:execute()
         local segmentNum = 0
         local totalSegments = math.ceil(#self.deltaMap / bufferSize)
         local dataSize = #self.deltaMap / floatSize
-        Spring.Echo("Segments : " .. totalSegments .. " Floats: " .. dataSize)
+        --Spring.Echo("Segments : " .. totalSegments .. " Floats: " .. dataSize)
 
         local fetchSegment = function()
             if segmentNum >= totalSegments then
