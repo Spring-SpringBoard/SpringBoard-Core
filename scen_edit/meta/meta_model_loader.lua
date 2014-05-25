@@ -29,7 +29,7 @@ function MetaModelLoader:Load()
 
 		if data ~= nil then
 			for _, metaType in pairs(metaTypes) do
-				if data[metaType] then
+				if data[metaType] ~= nil then
 					--Spring.Echo("Loading " .. metaType)
 					local values = {}
 					if type(data[metaType]) == "table" then
@@ -38,11 +38,16 @@ function MetaModelLoader:Load()
 						setfenv(data[metaType], getfenv())
 						values = data[metaType]()
 					else
-						Spring.Echo(type(data[metaModel]))
+						Spring.Echo("Unexeptected data type when parsing meta model file", type(data[metaModel]))
 					end
-					for i = 1, #values do
-						local value = values[i]
-						table.insert(metaModel[metaType], value)
+					for _, value in pairs(values) do
+                        if type(value) == "table" then
+--                            if metaType == "functions" and value.output == nil or type(value.output) ~= "table" or #value.output == 0 then
+--                                Spring.Echo("Error parsing " .. metaModelFile.name .. ", expected output 
+                            table.insert(metaModel[metaType], value)
+                        else
+                            Spring.Echo("Error parsing " .. metaModelFile.name .. ", expected table for " .. metaType .. ", but got " .. type(value) .. ", for element: " .. tostring(value))
+                        end
 					end
 				end
 			end
