@@ -71,15 +71,15 @@ function gadget:RecvLuaMsg(msg, playerID)
                 GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
             end
         elseif op == 'startMsgPart' then
-            Spring.Echo("Start receiving multi part msg")
+            --Spring.Echo("Start receiving multi part msg")
             msgPartsSize = tonumber(par1)
         elseif op == "msgPart" then
             local index = tonumber(par1)
             local value = msg:sub(#(pre .. "|" .. op .. "|" .. par1 .. "|") + 1)
             msgParts[index] = value
-            Spring.Echo("Recieved part: " .. tostring(index) .. "/" .. tostring(msgPartsSize))
+            --Spring.Echo("Recieved part: " .. tostring(index) .. "/" .. tostring(msgPartsSize))
             if #msgParts == msgPartsSize then
-                Spring.Echo("Recieved all parts")
+                --Spring.Echo("Recieved all parts")
                 local fullMessage = ""
                 for _, part in pairs(msgParts) do
                     fullMessage = fullMessage .. part

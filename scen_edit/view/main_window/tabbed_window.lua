@@ -88,7 +88,7 @@ function TabbedWindow:init()
 				OnClick = {
 					function() 
 						local reloadMetaModelCommand = ReloadMetaModelCommand()
-						SCEN_EDIT.commandManager:execute(reloadMetaModelCommand)
+						SCEN_EDIT.commandManager:execute(reloadMetaModelCommand, true)
 					end
 				},
 				children = {

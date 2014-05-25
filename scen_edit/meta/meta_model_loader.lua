@@ -1,19 +1,10 @@
 MetaModelLoader = LCS.class{}
 
-function MetaModelLoader:init()
-    self.metaModelFiles = SCEN_EDIT.conf:getMetaModelFiles()
-end
-
 function MetaModelLoader:AttemptToLoadFile(metaModelFile)
-	local success, data = pcall(function() return VFS.LoadFile(metaModelFile) end)
-	if not success then
-		Spring.Echo("Failed to load file " .. metaModelFile .. ": " .. data)
-		return nil
-	end
-	
+    local data = metaModelFile.data
 	local success, data = pcall(function() return assert(loadstring(data))() end)
 	if not success then
-		Spring.Echo("Failed to load file " .. metaModelFile .. ": " .. data)
+		Spring.Echo("Failed to parse file " .. metaModelFile .. ": " .. metaModelFile.data)
 		return nil
 	end
 	
@@ -21,12 +12,13 @@ function MetaModelLoader:AttemptToLoadFile(metaModelFile)
 end
 
 function MetaModelLoader:Load()
+    local metaModelFiles = SCEN_EDIT.conf:GetMetaModelFiles()
     local metaTypes = {"functions", "actions", "orders", "events"}
     local metaModels = {}
 
     -- load files
-    for _, metaModelFile in pairs(self.metaModelFiles) do
-        Spring.Echo("Using file: " .. metaModelFile)
+    for _, metaModelFile in pairs(metaModelFiles) do
+        Spring.Echo("Using file: " .. metaModelFile.name)
         local metaModel = {}
 
         for _, metaType in pairs(metaTypes) do

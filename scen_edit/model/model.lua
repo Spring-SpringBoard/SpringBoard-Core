@@ -197,3 +197,37 @@ function Model:GenerateTeams(widget)
         self.teams[team.id] = team
     end
 end
+
+function Model:GetProjectDir()
+    if self.projectDir == nil then
+        --create a temporary directory
+        local projectDirBase = "projects/project-"
+        local projectDir = nil
+        local indx = 1
+        repeat
+            projectDir = projectDirBase .. tostring(indx)
+            indx = indx + 1
+        until not VFS.FileExists(projectDir, VFS.RAW_ONLY) and (#VFS.SubDirs(projectDir, "*", VFS.RAW_ONLY) + #VFS.DirList(projectDir, "*", VFS.RAW_ONLY) == 0)
+
+        Spring.CreateDir(projectDir)
+        Spring.CreateDir(projectDir .. "/triggers")
+
+        local myCustomTriggersLua = [[
+return {
+    actions = {
+        -- My custom actions go here
+    },
+    conditions = {
+        -- My custom conditions go here
+    },
+}
+
+]]
+        local file = assert(io.open(projectDir .. "/triggers/my_custom_triggers.lua", "w"))
+        file:write(myCustomTriggersLua)
+        file:close()
+        self.projectDir = projectDir
+    end
+
+    return self.projectDir
+end

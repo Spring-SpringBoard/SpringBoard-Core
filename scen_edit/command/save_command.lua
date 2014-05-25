@@ -290,30 +290,22 @@ function SaveCommand:execute()
 		os.remove(self.path)
 	end	
     assert(not VFS.FileExists(self.path), "File already exists")
-   
-    --create a temporary directory
-    local tempDirBaseName = "temp/_scen_edit_tmp_"
-    local tempDirName = nil
-    local indx = 1
-    repeat
-        tempDirName = tempDirBaseName .. tostring(indx)
-    until not VFS.FileExists(tempDirName)
-    Spring.CreateDir(tempDirName)
-
+  
+    local projectDir = SCEN_EDIT.model:GetProjectDir()
     --Spring.Echo("saving files...")
     --save into a temporary directory
-    ModelSave(tempDirName .. "/model.lua")
-	ModInfoSave(tempDirName .. "/modinfo.lua")
-    HeightMapSave(tempDirName .. "/heightmap.data")	
-    ScriptTxtSave(tempDirName .. "/script.txt")
-    ScriptTxtSave(tempDirName .. "/script-dev.txt", true)
+    ModelSave(projectDir .. "/model.lua")
+	ModInfoSave(projectDir .. "/modinfo.lua")
+    HeightMapSave(projectDir .. "/heightmap.data")	
+    ScriptTxtSave(projectDir .. "/script.txt")
+    ScriptTxtSave(projectDir .. "/script-dev.txt", true)
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script.txt")
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script-DEV.txt", true)
 
     --Spring.Echo("compressing folder...")
     --create an archive from the directory
-    VFS.CompressFolder(tempDirName, "zip", self.path)
+    VFS.CompressFolder(projectDir, "zip", self.path)
     --remove the temporary directory
 	--FIXME: doesn't work on windows...
-    os.remove(tempDirName)
+    -- os.remove(projectDir)
 end

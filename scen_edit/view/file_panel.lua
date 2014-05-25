@@ -135,7 +135,7 @@ end
 
 function FilePanel:ScanDir()
   local files = VFS.DirList(self.dir, "*", VFS.RAW_ONLY)
-  local dirs  = VFS.SubDirs(self.dir, "*", VFS.RAW_ONLY)
+  local dirs  = VFS.SubDirs("", "*", VFS.RAW_ONLY)
   local imageFiles = {}
   for i=1,#files do
     local f = files[i]
