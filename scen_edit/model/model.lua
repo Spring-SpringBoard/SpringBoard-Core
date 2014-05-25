@@ -23,7 +23,7 @@ function Model:Clear()
     self.triggerManager:clear()
     self.featureManager:clear()
 	self.scenarioInfo:clear()
-    --self.teams = {}
+    self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unitId = allUnits[i]
@@ -156,7 +156,7 @@ function Model:SetMetaData(meta)
     self.triggerManager:load(meta.triggers)
     self.variableManager:load(meta.variables)
 	self.scenarioInfo:load(meta.info)
-    --self.teams = meta.teams or {}
+    self:LoadTeams(meta.teams)
 end
 
 function Model:SerializeTeams()
@@ -181,11 +181,12 @@ function Model:LoadTeams(teams)
                 Spring.SetAlly(team.allyTeam, team2.allyTeam, false)
             end
         end
-        for _, team2 in pairs(team.allies) do
+        for _, allyTeam2 in pairs(team.allies) do
             if Spring.SetAlly then
-                Spring.SetAlly(team.allyTeam, team2.allyTeam, true)
+                Spring.SetAlly(team.allyTeam, allyTeam2, true)
             end
         end
+        Spring.SetTeamColor(team.id, team.color.r, team.color.g, team.color.b)
         team.allies = nil
     end
 end
