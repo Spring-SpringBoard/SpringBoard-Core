@@ -9,13 +9,13 @@ function StateManager:init()
 end
 
 function StateManager:_SafeCall(func)
-    succ, msg = pcall(func)
-    if succ then
-        return msg
-    else
-        Spring.Echo(msg)
+    succ, result = xpcall(func, function()
+        Spring.Echo(debug.traceback())
         Spring.Echo("Error in current state, switching to default state")
         self:SetState(DefaultState())
+    end)
+    if succ then 
+        return result
     end
 end
 

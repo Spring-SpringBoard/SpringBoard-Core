@@ -73,7 +73,7 @@ function DefaultState:MousePress(x, y, button)
         local result, coords = Spring.TraceScreenRay(x, y)
         if result == "ground" then
             if SCEN_EDIT.view.displayDevelop then
-                if selType == "areas" then
+                if selType == "areas" and #items ~= 0 then
                     toResize, resx, resz = self:checkResizeIntersections(coords[1], coords[3])
                     if toResize then
                         local _, resizeAreas = SCEN_EDIT.view.selectionManager:GetSelection()

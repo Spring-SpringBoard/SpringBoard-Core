@@ -16,8 +16,9 @@ function TerrainPanel:init()
 				x = 10,
             },
 			Label:New {
-				caption = "Heightmap",
+				caption = "Terrain",
 				y = 40,
+                x = 6,
 			},
         },
         OnClick = {
