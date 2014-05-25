@@ -18,9 +18,12 @@ function MetaModel:SetEventTypes(eventTypes)
 end
 
 function MetaModel:SetFunctionTypes(functionTypes)
-    for i = 1, #functionTypes do
-        local functionType = functionTypes[i]
-        functionType.input = SCEN_EDIT.parseData(functionType.input)
+    for _, functionType in pairs(functionTypes) do
+        if functionType.input ~= nil then
+            functionType.input = SCEN_EDIT.parseData(functionType.input)
+        else
+            functionType.input = {}
+        end
     end
     self.functionTypes = SCEN_EDIT.CreateNameMapping(functionTypes)
     self.functionTypesByInput = {}
@@ -57,9 +60,13 @@ function MetaModel:SetFunctionTypes(functionTypes)
 end
 
 function MetaModel:SetActionTypes(actionTypes)
-    for i = 1, #actionTypes do
-        local actionType = actionTypes[i]
-        actionType.input = SCEN_EDIT.parseData(actionType.input)
+    table.echo(actionTypes)
+    for _, actionType in pairs(actionTypes) do
+        if actionType.input ~= nil then
+            actionType.input = SCEN_EDIT.parseData(actionType.input)
+        else
+            actionType.input = {}
+        end
     end
     self.actionTypes = SCEN_EDIT.CreateNameMapping(actionTypes)
 end

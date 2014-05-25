@@ -217,7 +217,7 @@ return {
     actions = {
         -- My custom actions go here
     },
-    conditions = {
+    functions = {
         -- My custom conditions go here
     },
 }
