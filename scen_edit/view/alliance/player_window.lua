@@ -48,7 +48,7 @@ function PlayerWindow:init(team)
         right = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick = { function() team.name = self.ebName.text; self.window:Dispose() end }
+        OnClick = { function() self.window:Dispose() end }
     }
     self.window = Window:New {
         width = 400,
@@ -68,11 +68,13 @@ function PlayerWindow:init(team)
         },
         OnDispose = { 
             function()
+                team.name = self.ebName.text
                 local clbColor = self.clbColor.color
                 team.color.r = clbColor[1]
                 team.color.g = clbColor[2]
                 team.color.b = clbColor[3]
                 team.color.a = clbColor[4]
+                Spring.SetTeamColor(team.id, team.color.r, team.color.g, team.color.b)
             end
         },
     }

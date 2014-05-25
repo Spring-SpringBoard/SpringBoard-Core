@@ -41,34 +41,6 @@ function AlliancePanel:init()
 			},
         },
     }
-
-	self.control:AddChild(
-		Button:New {
-			height = 80,
-			width = 80,
-			caption = '',
-			OnClick = {
-				function()
-					SCEN_EDIT.stateManager:SetState(AddRectState())
-				end
-			},
-			tooltip = "Add a rectangle area", 
-			children = {
-				Image:New {                                 
-					file=SCEN_EDIT_IMG_DIR .. "view-fullscreen.png", 
-					height = 40, 
-					width = 40,
-					margin = {0, 0, 0, 0},
-					x = 10,
-				},
-				Label:New {
-					caption = "Area",
-					y = 40,
-					x = 14,
-				},
-			},
-		}
-	)
 	self.control:AddChild(Chili.LayoutPanel:New {
 			height = btnDiplomacy.height,
 			width = btnDiplomacy.width,

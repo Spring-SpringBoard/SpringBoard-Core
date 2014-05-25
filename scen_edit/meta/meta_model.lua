@@ -60,7 +60,6 @@ function MetaModel:SetFunctionTypes(functionTypes)
 end
 
 function MetaModel:SetActionTypes(actionTypes)
-    table.echo(actionTypes)
     for _, actionType in pairs(actionTypes) do
         if actionType.input ~= nil then
             actionType.input = SCEN_EDIT.parseData(actionType.input)
