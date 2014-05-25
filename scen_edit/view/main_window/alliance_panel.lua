@@ -6,18 +6,18 @@ function AlliancePanel:init()
         caption = '',
         height = 80,
         width = 80,
-        tooltip = "Diplomacy settings",
+        tooltip = "Alliance settings",
         children = {
             Image:New {                 
-                file=SCEN_EDIT_IMG_DIR .. "applications-system.png", 
+                file=SCEN_EDIT_IMG_DIR .. "alliance.png", 
 				height = 40, 
 				width = 40,
 				x = 10,
             },
 			Label:New {
-				caption = "Diplomacy",
+				caption = "Alliances",
 				y = 40,
-				x = 5,
+				x = 2,
 			},
         },
     }
@@ -28,7 +28,7 @@ function AlliancePanel:init()
         tooltip = "Player settings",
         children = {
             Image:New {                 
-                file=SCEN_EDIT_IMG_DIR .. "format-text-bold.png", 
+                file=SCEN_EDIT_IMG_DIR .. "players.png", 
 				height = 40, 
 				width = 40,
                 margin = {0, 0, 0, 0},

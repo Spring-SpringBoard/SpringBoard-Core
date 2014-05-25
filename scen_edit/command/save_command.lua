@@ -221,13 +221,18 @@ local function GenerateScriptTxt(dev)
     [__PLAYER_ID__]
     {
         Name=__NAME__;
-        Spectator=0;
+        Spectator=__SPECTATOR__;
         Team=__TEAM__;
     }
 ]]
+                local spectator = 0
+                if dev then
+                    spectator = 1
+                end
                 numPlayers = numPlayers + 1
                 playerTxt = playerTxt:gsub("__PLAYER_ID__", "PLAYER" .. numPlayers)
                              :gsub("__NAME__", team.name)
+                             :gsub("__SPECTATOR__", spectator)
                              :gsub("__TEAM__", team.id)
                 
                 scriptTxt = scriptTxt .. playerTxt

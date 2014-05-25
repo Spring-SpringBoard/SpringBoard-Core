@@ -42,6 +42,7 @@ function PlayersWindow:init()
                     name = tostring(id) .. ": New team",
                     color = { r=math.random(), g=math.random(), b=math.random(), a=1},
                     allyTeam = 1,
+                    side = Spring.GetSideData(1),
                 }
                 self:Populate()
             end

@@ -1,9 +1,12 @@
 SelectionManager = LCS.class{}
 
+local AreaListener = AreaManagerListener:extends{}
 function SelectionManager:init()
     self.selectedUnits = {}
     self.selectedFeatures = {}
     self.selectedAreas = {}
+    self.areaListener = AreaListener(self)
+    SCEN_EDIT.model.areaManager:addListener(self.areaListener)
 end
 
 function SelectionManager:GetSelection()
@@ -101,3 +104,18 @@ function SelectionManager:DrawWorldPreUnit()
         end
     end
 end
+
+function AreaListener:init(selectionManager)
+    self.selectionManager = selectionManager
+end
+
+function AreaListener:onAreaRemoved(areaId)
+    if #self.selectionManager.selectedAreas ~= 0 then
+        for i, selAreaId in pairs(self.selectionManager.selectedAreas) do
+            if selAreaId == areaId then
+                table.remove(self.selectionManager.selectedAreas, i)
+            end
+        end
+    end
+end
+
