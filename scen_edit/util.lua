@@ -324,22 +324,24 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         if data.type == "pred" then
             if dataType == "unitType" then
                 local unitDef = UnitDefs[data.id]
+                local dataIdStr = "(id=" .. tostring(data.id) .. ")"
                 if unitDef then
-                    return tostring(unitDef.name)
+                    return tostring(unitDef.name) .. " " .. dataIdStr
                 else
-                    return tostring(data.id)
+                    return dataIdStr
                 end
             elseif dataType == "unit" then
                 local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(data.id)
+                local dataIdStr = "(id=" .. tostring(data.id) .. ")"
                 if Spring.ValidUnitID(unitId) then
                     local unitDef = UnitDefs[Spring.GetUnitDefID(unitId)]
                     if unitDef then
-                        return tostring(unitDef.name)
+                        return tostring(unitDef.name) .. " " .. dataIdStr
                     else
-                        return tostring(data.id)
+                        return dataIdStr
                     end
                 else
-                    return tostring(data.id)
+                    return dataIdStr
                 end
             elseif dataType == "trigger" or dataType == "variable" then
                 return data.name

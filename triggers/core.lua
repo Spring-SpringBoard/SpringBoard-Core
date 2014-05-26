@@ -21,12 +21,11 @@ return {
                             type = type.name,
                         },
                     },
-                    --        output = type.name,
                     execute = function(input)
-                        local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
+                        --local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
                         local newValue = SCEN_EDIT.deepcopy(input.variable)
-                        newValue.value.id = unitModelId
-                        SCEN_EDIT.model.variableManager:setVariable(variable.id, newValue)
+                        newValue.value.id = input[type.name]
+                        SCEN_EDIT.model.variableManager:setVariable(input.variable.id, newValue)
 
                         --local array = input[arrayType]
                         --local index = input.number
@@ -320,6 +319,23 @@ return {
                                 end
                             end
                             return isSame == (relation == "is")
+                        else
+                            -- FIXME: slow, ugly..
+                            if relation == "==" then
+                                return first == second
+                            elseif relation == "~=" then
+                                return first ~= second
+                            elseif relation == ">" then
+                                return first > second
+                            elseif relation == "<" then
+                                return first < second
+                            elseif relation == ">=" then
+                                return first >= second
+                            elseif relation == "<=" then
+                                return first <= second
+                            else
+                                Spring.Echo("unexpected comparison", relation)
+                            end
                         end
                     end,
                     output = "bool",
@@ -482,19 +498,32 @@ return {
             local type = allTypes[i]
             local arrayType = type.name .. "_array"
 
-            local itemFromArray = {
-                humanName = type.humanName .. " in array at position",
-                name = arrayType .. "_INDEXING",
-                input = { arrayType, "number" },
-                output = type.name,
-                tags = {"Array"},
-                execute = function(input)
-                    local array = input[arrayType]
-                    local index = input.number
-                    return array[index]
-                end,
-            }
-            table.insert(functions, itemFromArray)
+            if type.canBeVariable ~= false then
+                local itemFromArray = {
+                    humanName = type.humanName .. " in array at position",
+                    name = arrayType .. "_INDEXING",
+                    input = { arrayType, "number" },
+                    output = type.name,
+                    tags = {"Array"},
+                    execute = function(input)
+                        local array = input[arrayType]
+                        local index = input.number
+                        return array[index]
+                    end,
+                }
+                local countArray = {
+                    humanName = "Element count in " .. type.humanName .. " array",
+                    name = arrayType .. "_COUNT",
+                    input = { arrayType },
+                    output = "number",
+                    tags = {"Array"},
+                    execute = function(input)
+                        return #input[arrayType]
+                    end,
+                }
+                table.insert(functions, itemFromArray)
+                table.insert(functions, countArray)
+            end
         end
         return functions
     end,
