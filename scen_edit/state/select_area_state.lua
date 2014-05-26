@@ -1,5 +1,4 @@
 SelectAreaState = AbstractState:extends{}
-Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectAreaState:init(btnSelectArea)
     self.btnSelectArea = btnSelectArea

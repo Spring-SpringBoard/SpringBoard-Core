@@ -1,5 +1,4 @@
 DragUnitState = AbstractState:extends{}
-Spring.AssignMouseCursor('drag', 'drag', false)
 
 function DragUnitState:init(unitId, startDiffX, startDiffZ)
     self.unitId = unitId

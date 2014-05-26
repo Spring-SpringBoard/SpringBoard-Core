@@ -1,5 +1,4 @@
 SelectFeatureTypeState = AbstractState:extends{}
-Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectFeatureTypeState:init(btnSelectFeatureType)
     self.btnSelectFeatureType = btnSelectFeatureType

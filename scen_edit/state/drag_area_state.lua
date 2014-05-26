@@ -1,5 +1,4 @@
 DragAreaState = AbstractState:extends{}
-Spring.AssignMouseCursor('drag', 'drag', false)
 
 function DragAreaState:init(areaId, startDiffX, startDiffZ)
     self.areaId = areaId

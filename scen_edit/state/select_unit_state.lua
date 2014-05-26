@@ -1,5 +1,4 @@
 SelectUnitState = AbstractState:extends{}
-Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectUnitState:init(btnSelectUnit)
     self.btnSelectUnit = btnSelectUnit

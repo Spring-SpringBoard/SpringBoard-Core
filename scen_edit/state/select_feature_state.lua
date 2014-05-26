@@ -1,7 +1,7 @@
 SelectFeatureState = AbstractState:extends{}
-Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectFeatureState:init()
+    SCEN_EDIT.SetMouseCursor("search")
 end
 
 function SelectFeatureState:enterState()
