@@ -1,7 +1,9 @@
 SelectFeatureTypeState = AbstractState:extends{}
+Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectFeatureTypeState:init(btnSelectFeatureType)
     self.btnSelectFeatureType = btnSelectFeatureType
+    SCEN_EDIT.SetMouseCursor("search")
 end
 
 function SelectFeatureTypeState:enterState()

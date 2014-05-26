@@ -1,7 +1,9 @@
 SelectUnitState = AbstractState:extends{}
+Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectUnitState:init(btnSelectUnit)
     self.btnSelectUnit = btnSelectUnit
+    SCEN_EDIT.SetMouseCursor("search")
 end
 
 function SelectUnitState:MousePress(x, y, button)

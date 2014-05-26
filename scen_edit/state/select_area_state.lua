@@ -1,13 +1,9 @@
 SelectAreaState = AbstractState:extends{}
+Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectAreaState:init(btnSelectArea)
     self.btnSelectArea = btnSelectArea
-end
-
-function SelectAreaState:enterState()
-end
-
-function SelectAreaState:leaveState()
+    SCEN_EDIT.SetMouseCursor("search")
 end
 
 function SelectAreaState:MousePress(x, y, button)
@@ -23,13 +19,4 @@ function SelectAreaState:MousePress(x, y, button)
     elseif button == 3 then
         SCEN_EDIT.stateManager:SetState(DefaultState())
     end
-end
-
-function SelectAreaState:MouseMove(x, y, dx, dy, button)
-end
-
-function SelectAreaState:MouseRelease(x, y, button)
-end
-
-function SelectAreaState:KeyPress(key, mods, isRepeat, label, unicode)
 end
