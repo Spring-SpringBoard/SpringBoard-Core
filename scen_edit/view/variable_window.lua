@@ -20,17 +20,65 @@ function VariableWindow:init(variable)
         backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
         OnClick={function() self.window:Dispose() end}
     }
-    self._properties = StackPanel:New {
-        itemMargin = {0, 0, 0, 0},
+
+    local lblName = Label:New {
+        caption = "Name:",
+        width = 50,
         x = 1,
-        y = 1,
+        y = 15,
+    }
+    self.edValue = EditBox:New {
+        text = self.variable.name,
+        x = 60,
+        width = 100,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        y = 10
+    }
+
+    local lblType = Label:New {
+        caption = "Type:",
+        width = 50,
+        x = 1,
+        y = 50,
+    }
+
+
+    self.variablePanel = StackPanel:New {
+        itemMargin = {0, 0, 0, 0},
+        y = 20,
+        x = 1,
         right = 1,
         autosize = true,
         resizeItems = false,
+        padding = {0, 0, 0, 0}
     }
 
-    self._cmbType = nil
-    self._variablePanel = nil
+    self.cmbType = ComboBox:New {
+        x = 60,
+        width = 100,
+        y = 50,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        items = SCEN_EDIT.metaModel.variableTypes,
+        parent = stackTypePanel,
+        OnSelect = {
+            function(object, itemIdx, selected)    
+                if selected and itemIdx > 0 then
+                    self.variablePanel:ClearChildren()
+            
+                    local typeId = itemIdx
+                    local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
+                    local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel)
+                    if subPanel then
+                        self.variablePanel[inputType] = subPanel
+                        SCEN_EDIT.MakeSeparator(self.variablePanel)
+                    end
+                end
+            end
+        },
+    }
+
+    self.cmbType:Select(-1)
+    self.cmbType:Select(GetIndex(SCEN_EDIT.metaModel.variableTypes, self.variable.type))
 
     self.window = Window:New {
         width = 340,
@@ -40,14 +88,26 @@ function VariableWindow:init(variable)
         y = 300,
         parent = screen0,
         children = {
-            self._properties,
+            ScrollPanel:New {
+                x = 1,
+                y = 90,
+                bottom = 2 * SCEN_EDIT.conf.C_HEIGHT,
+                right = 5,
+                parent = self.window,
+                children = {
+                    self.variablePanel,
+                },
+            },
             btnOk,
             btnCancel,
+            lblName,
+            self.edValue,
+            lblType,
+            self.cmbType,
         }
     }
 
     SCEN_EDIT.MakeConfirmButton(self.window, btnOk)
-    self:Populate()
 end
 
 function VariableWindow:UpdatePanel(variable)
@@ -74,74 +134,4 @@ function VariableWindow:UpdateModel(variable)
         newVariable.value = variable.value
         newVariable.name = variable.name
     end--]]
-end
-
-function VariableWindow:Populate()
-    self._properties:ClearChildren()
-
-    local stackNamePanel = MakeComponentPanel(self._properties)
-    local lblName = Label:New {
-        caption = "Name:",
-        right = 100 + 10,
-        x = 1,
-        parent = stackNamePanel,
-    }
-    self.edValue = EditBox:New {
-        text = self.variable.name,
-        right = 1,
-        width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        parent = stackNamePanel,
-    }
-
-    local stackTypePanel = MakeComponentPanel(self._properties)
-    local lblType = Label:New {
-        caption = "Type:",
-        right = 100 + 10,
-        x = 1,
-        parent = stackTypePanel,
-    }
-    self.variablePanel = StackPanel:New {
-        itemMargin = {0, 0, 0, 0},
-        y = 20,
-        x = 1,
-        right = 1,
-        autosize = true,
-        resizeItems = false,
-        padding = {0, 0, 0, 0}
-    }
-    local sp = ScrollPanel:New {
-        x = 1,
-        y = 90,
-        bottom = 2 * SCEN_EDIT.conf.C_HEIGHT,
-        right = 5,
-        parent = self.window,
-        children = {
-            self.variablePanel,
-        },
-    }
-    self.cmbType = ComboBox:New {
-        right = 1,
-        width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        items = SCEN_EDIT.metaModel.variableTypes,
-        parent = stackTypePanel,
-        OnSelect = {
-            function(object, itemIdx, selected)    
-                if selected and itemIdx > 0 then
-                    self.variablePanel:ClearChildren()
-            
-                    local typeId = itemIdx
-                    local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
-                    local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel)
-                    if subPanel then
-                        self.variablePanel[inputType] = subPanel
-                        SCEN_EDIT.MakeSeparator(self.variablePanel)
-                    end
-                end
-            end
-        },
-    }
-    self.cmbType:Select(-1)
-    self.cmbType:Select(GetIndex(SCEN_EDIT.metaModel.variableTypes, self.variable.type))
 end
