@@ -1,4 +1,5 @@
 SelectFeatureState = AbstractState:extends{}
+Spring.AssignMouseCursor('search', 'search', false)
 
 function SelectFeatureState:init()
 end

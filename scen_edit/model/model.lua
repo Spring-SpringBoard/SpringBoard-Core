@@ -175,14 +175,14 @@ end
 function Model:LoadTeams(teams)
     self.teams = teams
     for _, team in pairs(self.teams) do
-        -- TODO: only change those alliances that are needed
-        for _, team2 in pairs(self.teams) do
-            if Spring.SetAlly then
-                Spring.SetAlly(team.allyTeam, team2.allyTeam, false)
+        if Spring.SetAlly then
+            -- TODO: only change those alliances that are needed
+            for _, team2 in pairs(self.teams) do
+                if team.id ~= team2.id then
+                    Spring.SetAlly(team.allyTeam, team2.allyTeam, false)
+                end
             end
-        end
-        for _, allyTeam2 in pairs(team.allies) do
-            if Spring.SetAlly then
+            for _, allyTeam2 in pairs(team.allies) do
                 Spring.SetAlly(team.allyTeam, allyTeam2, true)
             end
         end
