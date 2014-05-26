@@ -1,23 +1,22 @@
-TerrainChangeHeightRectState = AbstractState:extends{}
+TerrainSmoothState = AbstractState:extends{}
 
-function TerrainChangeHeightRectState:init(toDecrease)
+function TerrainSmoothState:init()
     self.size = 100
-    self.strength = 5
-    self.toDecrease = toDecrease
+    self.strength = 1
     self.startedChanging = false
 end
 
-function TerrainChangeHeightRectState:AlterTerrain(x1, z1, x2, z2, amount)
+function TerrainSmoothState:AlterTerrain(x, z, amount)
     local currentFrame = Spring.GetGameFrame()
     if not self.lastChangeFrame or currentFrame - self.lastChangeFrame >= 0 then
         self.lastChangeFrame = currentFrame
-        local cmd = TerrainChangeHeightRectCommand(x1, z1, x2, z2, amount)
+        local cmd = TerrainSmoothCommand(x, z, self.size, amount)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
     end
 end
 
-function TerrainChangeHeightRectState:startChanging()
+function TerrainSmoothState:startChanging()
     if not self.startedChanging then
         local cmd = SetMultipleCommandModeCommand(true)
         SCEN_EDIT.commandManager:execute(cmd)
@@ -25,7 +24,7 @@ function TerrainChangeHeightRectState:startChanging()
     end
 end
 
-function TerrainChangeHeightRectState:stopChanging()
+function TerrainSmoothState:stopChanging()
     if self.startedChanging then
         local cmd = SetMultipleCommandModeCommand(false)
         SCEN_EDIT.commandManager:execute(cmd)
@@ -33,7 +32,7 @@ function TerrainChangeHeightRectState:stopChanging()
     end
 end
 
-function TerrainChangeHeightRectState:MousePress(x, y, button)
+function TerrainSmoothState:MousePress(x, y, button)
     local _, _, _, shift = Spring.GetModKeyState()
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
@@ -43,7 +42,7 @@ function TerrainChangeHeightRectState:MousePress(x, y, button)
                 amount = -amount                
             end
             self:startChanging()
-            self:AlterTerrain(coords[1] - self.size/2, coords[3] - self.size/2, coords[1] + self.size/2, coords[3] + self.size/2, amount)
+            self:AlterTerrain(coords[1], coords[3], amount)
         end
         return true
     end
@@ -53,18 +52,18 @@ function TerrainChangeHeightRectState:MousePress(x, y, button)
     end
 end
 
-function TerrainChangeHeightRectState:MouseRelease(x, y, button)
+function TerrainSmoothState:MouseRelease(x, y, button)
     if button == 1 then
         self:stopChanging()
     end
 end
 
-function TerrainChangeHeightRectState:MouseMove(x, y, dx, dy, button)
+function TerrainSmoothState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     return true
 end
 
-function TerrainChangeHeightRectState:MouseWheel(up, value)
+function TerrainSmoothState:MouseWheel(up, value)
     local _, ctrl = Spring.GetModKeyState()
     if ctrl then
         if up then
@@ -78,7 +77,7 @@ function TerrainChangeHeightRectState:MouseWheel(up, value)
     end
 end
 
-function TerrainChangeHeightRectState:GameFrame(frameNum)
+function TerrainSmoothState:GameFrame(frameNum)
     local x, y, button1, _, button3 = Spring.GetMouseState()
     local _, _, _, shift = Spring.GetModKeyState()
     if button1 then
@@ -88,12 +87,12 @@ function TerrainChangeHeightRectState:GameFrame(frameNum)
             if shift then
                 amount = -amount
             end
-            self:AlterTerrain(coords[1] - self.size/2, coords[3] - self.size/2, coords[1] + self.size/2, coords[3] + self.size/2, amount)
+            self:AlterTerrain(coords[1], coords[3], amount)
         end
     end
 end
 
-function TerrainChangeHeightRectState:KeyPress(key, mods, isRepeat, label, unicode)
+function TerrainSmoothState:KeyPress(key, mods, isRepeat, label, unicode)
     if self.startedChanging then
         return
     end
@@ -101,12 +100,12 @@ function TerrainChangeHeightRectState:KeyPress(key, mods, isRepeat, label, unico
         SCEN_EDIT.stateManager:SetState(DefaultState())
     elseif key == 49 then -- 1
         SCEN_EDIT.stateManager:SetState(TerrainIncreaseState())
-    elseif key == 51 then -- 3
-        SCEN_EDIT.stateManager:SetState(TerrainSmoothState())
+    elseif key == 50 then -- 2
+        SCEN_EDIT.stateManager:SetState(TerrainChangeHeightRectState())
     end
 end
 
-function TerrainChangeHeightRectState:DrawWorld()
+function TerrainSmoothState:DrawWorld()
     x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
@@ -114,7 +113,7 @@ function TerrainChangeHeightRectState:DrawWorld()
         gl.PushMatrix()
         currentState = SCEN_EDIT.stateManager:GetCurrentState()
         gl.Color(0, 255, 0, 0.3)
-        gl.Utilities.DrawGroundRectangle(x - self.size/2, z - self.size/2, x + self.size/2, z + self.size/2)
+        gl.Utilities.DrawGroundCircle(x, z, self.size)
         gl.PopMatrix()
     end
 end
