@@ -100,9 +100,13 @@ function TerrainChangeHeightRectState:KeyPress(key, mods, isRepeat, label, unico
     if key == 27 then --KEYSYMS.ESC then
         SCEN_EDIT.stateManager:SetState(DefaultState())
     elseif key == 49 then -- 1
-        SCEN_EDIT.stateManager:SetState(TerrainIncreaseState())
+        local newState = TerrainIncreaseState()
+        --newState.size = self.size
+        SCEN_EDIT.stateManager:SetState(newState)
     elseif key == 51 then -- 3
-        SCEN_EDIT.stateManager:SetState(TerrainSmoothState())
+        local newState = TerrainSmoothState()
+        --newState.size = self.size
+        SCEN_EDIT.stateManager:SetState(newState)
     end
 end
 
