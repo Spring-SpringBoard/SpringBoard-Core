@@ -110,9 +110,14 @@ function SCEN_EDIT.checkAreaIntersections(x, z)
     return selected, dragDiffX, dragDiffZ
 end
 
+SCEN_EDIT.assignedCursors = {}
 function SCEN_EDIT.SetMouseCursor(name)
     SCEN_EDIT.cursor = name
-    if SCEN_EDIT.cursor then
+    if SCEN_EDIT.cursor ~= nil then
+        if SCEN_EDIT.assignedCursors[name] == nil then
+            Spring.AssignMouseCursor(name, name, false)
+            SCEN_EDIT.assignedCursors[name] = true
+        end
         Spring.SetMouseCursor(SCEN_EDIT.cursor)
     end
 end

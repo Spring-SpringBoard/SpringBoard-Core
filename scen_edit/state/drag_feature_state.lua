@@ -1,5 +1,4 @@
 DragFeatureState = AbstractState:extends{}
-Spring.AssignMouseCursor('drag', 'drag', false)
 
 function DragFeatureState:init(featureId, startDiffX, startDiffZ)
     self.featureId = featureId

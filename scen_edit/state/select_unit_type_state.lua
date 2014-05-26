@@ -2,6 +2,7 @@ SelectUnitTypeState = AbstractState:extends{}
 
 function SelectUnitTypeState:init(btnSelectUnitType)
     self.btnSelectUnitType = btnSelectUnitType
+    SCEN_EDIT.SetMouseCursor("search")
 end
 
 function SelectUnitTypeState:MousePress(x, y, button)
