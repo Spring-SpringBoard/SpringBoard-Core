@@ -1,8 +1,10 @@
-TeamPanel = LCS.class{}
+TeamPanel = AbstractTypePanel:extends{}
 
-function TeamPanel:init(parent)
-    self.parent = parent
-    local radioGroup = {}
+function TeamPanel:init(parent, sources)
+    self:super('init', 'team', parent, sources)
+end
+
+function TeamPanel:MakePredefinedOpt()
     local stackTeamPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedTeam = Checkbox:New {
         caption = "Predefined team: ",
@@ -11,7 +13,7 @@ function TeamPanel:init(parent)
         checked = true,
         parent = stackTeamPanel,
     }
-    table.insert(radioGroup, self.cbPredefinedTeam)
+    table.insert(self.radioGroup, self.cbPredefinedTeam)
     self.cmbPredefinedTeam = ComboBox:New {
         right = 1,
         width = 100,
@@ -20,23 +22,10 @@ function TeamPanel:init(parent)
         items = GetField(SCEN_EDIT.model.teams, "name"),
         playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
     }
-    
-   --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice("team", self.parent)
-    if self.cbVariable then
-        table.insert(radioGroup, self.cbVariable)
-    end
-    
-    --EXPRESSION
-    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("team", self.parent)
-    if self.cbExpression then
-        table.insert(radioGroup, self.cbExpression)
-    end
-    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function TeamPanel:UpdateModel(field)
-    if self.cbPredefinedTeam.checked then
+    if self.cbPredefinedTeam and self.cbPredefinedTeam.checked then
         field.type = "pred"
         field.id = self.cmbPredefinedTeam.playerTeamIds[self.cmbPredefinedTeam.selected]
     elseif self.cbVariable and self.cbVariable.checked then

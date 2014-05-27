@@ -1,8 +1,10 @@
-StringPanel = LCS.class{}
+StringPanel = AbstractTypePanel:extends{}
 
 function StringPanel:init(parent)
-    self.parent = parent
-    local radioGroup = {}
+    self:super('init', 'string', parent, sources)
+end
+
+function StringPanel:MakePredefinedOpt()
     local stackStringPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedString = Checkbox:New {
         caption = "Predefined string: ",
@@ -11,30 +13,17 @@ function StringPanel:init(parent)
         checked = true,
         parent = stackStringPanel,
     }    
-    table.insert(radioGroup, self.cbPredefinedString)
+    table.insert(self.radioGroup, self.cbPredefinedString)
     self.edString = EditBox:New {
         text = "text",
         right = 1,
         width = 100,
         parent = stackStringPanel,
     }
-    
-    --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice("string", self.parent)
-    if self.cbVariable then
-        table.insert(radioGroup, self.cbVariable)
-    end
-    
-    --EXPRESSION
-    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("string", self.parent)
-    if self.cbExpression then
-        table.insert(radioGroup, self.cbExpression)
-    end
-    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function StringPanel:UpdateModel(field)
-    if self.cbPredefinedString.checked then
+    if self.cbPredefinedString and self.cbPredefinedString.checked then
         field.type = "pred"
         field.id = self.edString.text
     elseif self.cbVariable and self.cbVariable.checked then

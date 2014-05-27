@@ -99,7 +99,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
                     if input.humanName then
                         
                     end
-                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.actionPanel)
+                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.actionPanel, input.sources)
                     if subPanel then
                         self.actionPanel[subPanelName] = subPanel
                         SCEN_EDIT.MakeSeparator(self.actionPanel)
@@ -170,9 +170,9 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
         self.window.caption = "New action for - " .. self.trigger.name
         sw.x = tw.x
         sw.y = tw.y + tw.height + 5
-        if tw.parent.height <= sw.y + sw.height then
-            sw.y = tw.y - sw.height
-        end
+        --if tw.parent.height <= sw.y + sw.height then
+        --    sw.y = tw.y - sw.height
+        --end
     elseif self.mode == 'edit' then
         local cndTags = SCEN_EDIT.metaModel.actionTypes[self.action.actionTypeName].tags
         if cndTags ~= nil and self.cmbTagGroups ~= nil then
@@ -182,11 +182,11 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
         self.cmbActionTypes:Select(GetIndex(self.cmbActionTypes.actionTypes, self.action.actionTypeName))
         self:UpdatePanel()
         self.window.caption = "Edit action for trigger " .. self.trigger.name
-        if tw.x + tw.width + sw.width > tw.parent.width then
-            sw.x = tw.x - sw.width
-        else
+        --if tw.x + tw.width + sw.width > tw.parent.width then
+        --    sw.x = tw.x - sw.width
+        --else
             sw.x = tw.x + tw.width
-        end
+        --end
         sw.y = tw.y
     end    
 end

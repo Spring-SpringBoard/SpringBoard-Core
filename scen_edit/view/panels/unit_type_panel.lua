@@ -1,8 +1,10 @@
-UnitTypePanel = LCS.class{}
+UnitTypePanel = AbstractTypePanel:extends{}
 
-function UnitTypePanel:init(parent)
-    self.parent = parent
-    local radioGroup = {}
+function UnitTypePanel:init(parent, sources)
+    self:super('init', 'unitType', parent, sources)
+end
+
+function UnitTypePanel:MakePredefinedOpt()
     local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbPredefinedType = Checkbox:New {
         caption = "Predefined type: ",
@@ -11,7 +13,7 @@ function UnitTypePanel:init(parent)
         checked = false,
         parent = stackUnitTypePanel,
     }
-    table.insert(radioGroup, self.cbPredefinedType)
+    table.insert(self.radioGroup, self.cbPredefinedType)
     self.btnPredefinedType = Button:New {
         caption = '...',
         right = 1,
@@ -36,7 +38,9 @@ function UnitTypePanel:init(parent)
             end
         end
     }
-    
+end
+
+function UnitTypePanel:MakeSpecialOpt()
     --SPECIAL TYPE, i.e TRIGGER
     local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbSpecialType = Checkbox:New {
@@ -46,7 +50,7 @@ function UnitTypePanel:init(parent)
         checked = true,
         parent = stackUnitTypePanel,
     }
-    table.insert(radioGroup, self.cbSpecialType)
+    table.insert(self.radioGroup, self.cbSpecialType)
     self.cmbSpecialType = ComboBox:New {
         right = 1,
         width = 100,
@@ -63,25 +67,13 @@ function UnitTypePanel:init(parent)
             end
         },
     }
-    
-    --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice("unitType", self.parent)
-    if self.cbVariable then
-        table.insert(radioGroup, self.cbVariable)
-    end
-    
-    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("unitType", self.parent)
-    if self.cbExpression then
-        table.insert(radioGroup, self.cbExpression)
-    end
-    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function UnitTypePanel:UpdateModel(field)
-    if self.cbPredefinedType.checked then
+    if self.cbPredefinedType and self.cbPredefinedType.checked then
         field.type = "pred"
         field.id = self.btnPredefinedType.unitTypeId
-    elseif self.cbSpecialType.checked then
+    elseif self.cbSpecialType and self.cbSpecialType.checked then
         field.type = "spec"
         field.name = self.cmbSpecialType.items[self.cmbSpecialType.selected]
     elseif self.cbVariable and self.cbVariable.checked then

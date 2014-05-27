@@ -67,7 +67,7 @@ function VariableWindow:init(variable)
             
                     local typeId = itemIdx
                     local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
-                    local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel)
+                    local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel, "pred")
                     if subPanel then
                         self.variablePanel[inputType] = subPanel
                         SCEN_EDIT.MakeSeparator(self.variablePanel)

@@ -97,7 +97,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
                 for i = 1, #conditionType.input do
                     local input = conditionType.input[i]
                     local subPanelName = input.name
-                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.conditionPanel)
+                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.conditionPanel, input.sources)
                     if subPanel then
                         self.conditionPanel[subPanelName] = subPanel
                         SCEN_EDIT.MakeSeparator(self.conditionPanel)
@@ -172,9 +172,9 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
         sw.caption = "New condition for - " .. self.trigger.name
         sw.x = tw.x
         sw.y = tw.y + tw.height + 5
-        if tw.parent.height <= sw.y + sw.height then
-            sw.y = tw.y - sw.height
-        end
+        --if tw.parent.height <= sw.y + sw.height then
+        --    sw.y = tw.y - sw.height
+        --end
     elseif self.mode == 'edit' then
         local cndTags = SCEN_EDIT.metaModel.functionTypesByOutput["bool"][self.condition.conditionTypeName].tags
         if cndTags ~= nil and self.cmbTagGroups ~= nil then
@@ -184,11 +184,11 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
         self.cmbConditionTypes:Select(GetIndex(self.cmbConditionTypes.conditionTypes, self.condition.conditionTypeName))
         self:UpdatePanel()
         sw.caption = "Edit condition for trigger " .. self.trigger.name
-        if tw.x + tw.width + sw.width > tw.parent.width then
-            sw.x = tw.x - sw.width
-        else
+        --if tw.x + tw.width + sw.width > tw.parent.width then
+        --    sw.x = tw.x - sw.width
+        --else
             sw.x = tw.x + tw.width
-        end
+        --end
         sw.y = tw.y
     end    
 end

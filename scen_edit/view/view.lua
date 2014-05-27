@@ -9,6 +9,7 @@ View = LCS.class{}
 function View:init()
     SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "view_area_manager_listener.lua")
     SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_DIR)
+    SCEN_EDIT.Include(SCEN_EDIT_VIEW_PANELS_DIR .. "abstract_type_panel.lua")
     SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_PANELS_DIR)
 	SCEN_EDIT.Include(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR .. "abstract_main_window_panel.lua")
 	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR)

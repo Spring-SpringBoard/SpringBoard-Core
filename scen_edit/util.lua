@@ -279,7 +279,7 @@ function PassToGadget(prefix, tag, data)
     Spring.SendLuaRulesMsg(msg)
 end
 
-SCEN_EDIT.humanExpressionMaxLevel = 2
+SCEN_EDIT.humanExpressionMaxLevel = 3
 function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
     if level == nil then
         level = 1
@@ -319,9 +319,14 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
         
         local paramsStr = ""
+        local first = true
         for k, v in pairs(expr) do
             if k ~= "conditionTypeName" then
-                paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k, level + 1) .. " " 
+                if not first then
+                    paramsStr = paramsStr .. ", "
+                end
+                first = false
+                paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k, level + 1)
             end
         end
         return exprHumanName .. " (" .. paramsStr .. ")"		
@@ -348,13 +353,15 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
                 else
                     return dataIdStr
                 end
-            elseif dataType == "trigger" or dataType == "variable" then
+            elseif dataType == "trigger" then
                 return data.name
             else
                 return tostring(data.id)
             end
         elseif data.type == "spec" then
             return data.name
+        elseif data.type == "var" then
+            return SCEN_EDIT.model.variableManager:getVariable(data.id).name
         elseif data.orderTypeName then
             local orderType = SCEN_EDIT.metaModel.orderTypes[data.orderTypeName]
             local humanName = orderType.humanName
@@ -462,31 +469,31 @@ function SCEN_EDIT.GiveOrderToUnit(unitId, orderType, params)
         { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
 end
 
-function SCEN_EDIT.createNewPanel(input, parent)
+function SCEN_EDIT.createNewPanel(input, ...)
     if input == "unit" then
-        return UnitPanel(parent)
+        return UnitPanel(...)
     elseif input == "area" then
-        return AreaPanel(parent)
+        return AreaPanel(...)
     elseif input == "trigger" then
-        return TriggerPanel(parent)
+        return TriggerPanel(...)
     elseif input == "unitType" then
-        return UnitTypePanel(parent)
+        return UnitTypePanel(...)
     elseif input == "team" then
-        return TeamPanel(parent)
+        return TeamPanel(...)
     elseif input == "number" then
-        return NumberPanel(parent)
+        return NumberPanel(...)
     elseif input == "string" then
-        return StringPanel(parent)
+        return StringPanel(...)
     elseif input == "bool" then
-        return BoolPanel(parent)
+        return BoolPanel(...)
     elseif input == "numericComparison" then
-        return NumericComparisonPanel(parent)
+        return NumericComparisonPanel(...)
     elseif input == "order" then
-        return OrderPanel(parent)
+        return OrderPanel(...)
     elseif input == "identityComparison" then
-        return IdentityComparisonPanel(parent)
+        return IdentityComparisonPanel(...)
     elseif input:find("_array") then
-        return GenericArrayPanel(parent, input)
+        return GenericArrayPanel(input, ...)
     end
     Spring.Echo("No panel for this input: " .. tostring(input))
 end
