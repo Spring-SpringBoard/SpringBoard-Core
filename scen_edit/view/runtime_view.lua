@@ -62,7 +62,7 @@ function RuntimeView:init()
         caption = "Runtime Window",
         right = 0,
         y = 370,
-		resizable = false,
+		resizable = true,
         width = 375,
         height = 300,
         children = {

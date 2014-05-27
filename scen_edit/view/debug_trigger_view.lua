@@ -14,14 +14,14 @@ function DebugTriggerView:Populate()
     local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
     for id, trigger in pairs(triggers)  do        
         local triggerPanel = MakeComponentPanel(self.parent)
-        local maxChars = 8
+        local maxChars = 18
 		shortName = trigger.name:sub(1, maxChars)
-		if #trigger.name > 8 then
+		if #trigger.name > maxChars then
 			shortName = shortName .. "..."
 		end
         local cbTriggerName = Checkbox:New {
             caption = shortName,
-            width = 80,
+            width = 150,
             x = 1,
             parent = triggerPanel,
             checked = trigger.enabled,
