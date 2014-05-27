@@ -367,7 +367,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
             local humanName = orderType.humanName
             for i = 1, #orderType.input do
                 local input = orderType.input[i]
-                humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value", nil, level + 1) .. " "
+                humanName = humanName .. " " .. SCEN_EDIT.humanExpression(data[input.name], "value", nil, level + 1)
             end
             return humanName
         end

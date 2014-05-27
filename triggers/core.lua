@@ -14,6 +14,7 @@ return {
                         {
                             name = "variable",
                             rawVariable = "true",
+                            sources = "variable",
                             type = type.name,
                         },
                         {
