@@ -1,8 +1,10 @@
-NumberPanel = LCS.class{}
+NumberPanel = AbstractTypePanel:extends{}
 
-function NumberPanel:init(parent)
-    self.parent = parent
-    local radioGroup = {}
+function NumberPanel:init(parent, sources)
+    self:super('init', 'number', parent, sources)
+end
+
+function NumberPanel:MakePredefinedOpt()
     local stackValuePanel = MakeComponentPanel(self.parent)
     self.cbPredefinedValue = Checkbox:New {
         caption = "Predefined value: ",
@@ -11,30 +13,17 @@ function NumberPanel:init(parent)
         checked = true,
         parent = stackValuePanel,
     }    
-    table.insert(radioGroup, self.cbPredefinedValue)
+    table.insert(self.radioGroup, self.cbPredefinedValue)
     self.edValue = EditBox:New {
         text = "0",
         right = 1,
         width = 100,
         parent = stackValuePanel,
     }
-    
-    --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice("number", self.parent)
-    if self.cbVariable then
-        table.insert(radioGroup, self.cbVariable)
-    end
-    
-    --EXPRESSION
-    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("number", self.parent)
-    if self.cbExpression then
-        table.insert(radioGroup, self.cbExpression)
-    end
-    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function NumberPanel:UpdateModel(field)
-    if self.cbPredefinedValue.checked then
+    if self.cbPredefinedValue and self.cbPredefinedValue.checked then
         field.type = "pred"
         field.id = tonumber(self.edValue.text) or 0
     elseif self.cbVariable and self.cbVariable.checked then

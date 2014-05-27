@@ -1,7 +1,10 @@
-IdentityComparisonPanel = LCS.class{}
+IdentityComparisonPanel = AbstractTypePanel:extends{}
 
 function IdentityComparisonPanel:init(parent)
-    self.parent = parent
+    self:super('init', 'identity_comparison', parent, "pred")
+end
+
+function IdentityComparisonPanel:MakePredefinedOpt()
     local stackIdentityComparisonPanel = MakeComponentPanel(self.parent)
     self.cmbCmpType = ComboBox:New {
         right = 1,

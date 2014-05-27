@@ -1,8 +1,10 @@
-BoolPanel = LCS.class{}
+BoolPanel = AbstractTypePanel:extends{}
 
-function BoolPanel:init(parent)
-    self.parent = parent
-    local radioGroup = {}
+function BoolPanel:init(parent, sources)
+    self:super('init', 'bool', parent, sources)
+end
+
+function BoolPanel:MakePredefinedOpt()
     local stackBoolPanel = MakeComponentPanel(self.parent)
     self.cbPredefincbBool = Checkbox:New {
         caption = "Predefined bool: ",
@@ -11,7 +13,7 @@ function BoolPanel:init(parent)
         checked = true,
         parent = stackBoolPanel,
     }    
-    table.insert(radioGroup, self.cbPredefincbBool)
+    table.insert(self.radioGroup, self.cbPredefincbBool)
     self.cbBool = Checkbox:New {
         caption = "Value",
         checked = true,
@@ -19,23 +21,10 @@ function BoolPanel:init(parent)
         width = 100,
         parent = stackBoolPanel,
     }
-    
-    --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice("bool", self.parent)
-    if self.cbVariable then
-        table.insert(radioGroup, self.cbVariable)
-    end
-    
-    --EXPRESSION
-    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("bool", self.parent)
-    if self.cbExpression then
-        table.insert(radioGroup, self.cbExpression)
-    end
-    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function BoolPanel:UpdateModel(field)
-    if self.cbPredefincbBool.checked then
+    if self.cbPredefinedBool and self.cbPredefincbBool.checked then
         field.type = "pred"
         field.bool = self.cbBool.checked
     elseif self.cbVariable and self.cbVariable.checked then

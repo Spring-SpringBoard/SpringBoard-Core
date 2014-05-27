@@ -101,7 +101,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
                 for i = 1, #exprType.input do
                     local dataType = exprType.input[i]                    
                     local subPanelName = dataType.name
-                    local subPanel = SCEN_EDIT.createNewPanel(dataType.type, self.conditionPanel)
+                    local subPanel = SCEN_EDIT.createNewPanel(dataType.type, self.conditionPanel, dataType.sources)
                     if subPanel then
                         self.conditionPanel[subPanelName] = subPanel
                         if i ~= #exprType.input then
@@ -178,11 +178,11 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
         sw.x = tw.x
         sw.y = tw.y + tw.height + 5
         if tw.parent.height <= sw.y + sw.height then
-            if tw.x + tw.width + sw.width > tw.parent.width then
-                sw.x = tw.x - sw.width
-            else
+--            if tw.x + tw.width + sw.width > tw.parent.width then
+--                sw.x = tw.x - sw.width
+--            else
                 sw.x = tw.x + tw.width
-            end
+--            end
             sw.y = tw.y
         end
     elseif self.mode == 'edit' then
@@ -195,11 +195,11 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
         self.cmbCustomTypes:Select(GetIndex(self.cmbCustomTypes.conditionTypes, self.condition.conditionTypeName))
         self:UpdatePanel()
         self.window.caption = "Edit expression of type " .. self.dataType
-        if tw.x + tw.width + sw.width > tw.parent.width then
-            sw.x = tw.x - sw.width
-        else
+--        if tw.x + tw.width + sw.width > tw.parent.width then
+--            sw.x = tw.x - sw.width
+--        else
             sw.x = tw.x + tw.width
-        end
+--        end
         sw.y = tw.y
     end    
 end

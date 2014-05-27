@@ -281,6 +281,13 @@ function TriggerWindow:PopulateExpressions(root, rootType, level)
         elseif type(paramName) == 'table' then
             paramName = "{...}"
         end
+        if input.name == "relation" then
+            if root.conditionTypeName == "compare_number" then
+                paramName = SCEN_EDIT.metaModel.numericComparisonTypes[root.relation.cmpTypeId]
+            else
+                paramName = SCEN_EDIT.metaModel.identityComparisonTypes[root.relation.cmpTypeId]
+            end
+        end
         local lblParam = Label:New {
             caption = input.name .. ": " .. (paramName or "nil"),
             x = (level - 1) * 50,

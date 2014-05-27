@@ -1,17 +1,6 @@
-GenericArrayPanel = LCS.class{}
+GenericArrayPanel = AbstractTypePanel:extends{}
 
-function GenericArrayPanel:init(parent, type)
-    self.parent = parent
-    self.type = type
-    self.atomicType = type:gsub("_array", "")
-    self.elements = {}
-    self.subPanels = {}
-
-    self:Initialize()
-end
-
-function GenericArrayPanel:Initialize()
-    local radioGroup = {}
+function GenericArrayPanel:init(type, parent, sources)
     self.subPanels = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -19,9 +8,15 @@ function GenericArrayPanel:Initialize()
         right = 1,
         autosize = true,
         resizeItems = false,
-        parent = self.parent,
+        parent = parent,
     }
+    self:super('init', type, parent, sources)
+    self.type = type
+    self.atomicType = type:gsub("_array", "")
+    self.elements = {}
+end
 
+function GenericArrayPanel:MakePredefinedOpt()
     local addPanel = MakeComponentPanel(self.parent)
 
     self.cbPredefinedArray = Checkbox:New {
@@ -31,7 +26,7 @@ function GenericArrayPanel:Initialize()
         checked = false,
         parent = addPanel,
     }
-    table.insert(radioGroup, self.cbPredefinedArray)
+    table.insert(self.radioGroup, self.cbPredefinedArray)
     self.btnAddElement = Button:New {
         caption = '+',
         right = 40,
@@ -47,18 +42,6 @@ function GenericArrayPanel:Initialize()
             end
         }
     }
-    
-    --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice(self.type, self.parent)
-    if self.cbVariable then
-        table.insert(radioGroup, self.cbVariable)
-    end
-    
-    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression(self.type, self.parent)
-    if self.cbExpression then
-        table.insert(radioGroup, self.cbExpression)
-    end
-    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function GenericArrayPanel:AddElement()
@@ -68,7 +51,7 @@ function GenericArrayPanel:AddElement()
 end
 
 function GenericArrayPanel:UpdateModel(field)
-    if self.cbPredefinedArray.checked then
+    if self.cbPredefinedArray and self.cbPredefinedArray.checked then
         field.type = "pred"
         field.id = {}
         for _, subPanel in pairs(self.elements) do

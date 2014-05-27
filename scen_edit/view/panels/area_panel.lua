@@ -1,8 +1,10 @@
-AreaPanel = LCS.class{}
+AreaPanel = AbstractTypePanel:extends{}
 
-function AreaPanel:init(parent)
-    self.parent = parent
-    local radioGroup = {}
+function AreaPanel:init(parent, sources)
+    self:super('init', 'area', parent, sources)
+end
+
+function AreaPanel:MakePredefinedOpt()
     local stackAreaPanel = MakeComponentPanel(self.parent)
     self.cbPredefinedArea = Checkbox:New {
         caption = "Predefined area: ",
@@ -11,7 +13,7 @@ function AreaPanel:init(parent)
         checked = false,
         parent = stackAreaPanel,
     }
-    table.insert(radioGroup, self.cbPredefinedArea)
+    table.insert(self.radioGroup, self.cbPredefinedArea)
     self.btnPredefinedArea = Button:New {
         caption = '...',
         right = 40,
@@ -66,7 +68,10 @@ function AreaPanel:init(parent)
             end
         }
     }
+end
 
+
+function AreaPanel:MakeSpecialOpt()
     --SPECIAL AREA, i.e TRIGGER
     local stackAreaPanel = MakeComponentPanel(self.parent)
     self.cbSpecialArea = Checkbox:New {
@@ -76,7 +81,7 @@ function AreaPanel:init(parent)
         checked = true,
         parent = stackAreaPanel,
     }
-    table.insert(radioGroup, self.cbSpecialArea)
+    table.insert(self.radioGroup, self.cbSpecialArea)
     self.cmbSpecialArea = ComboBox:New {
         right = 1,
         width = 100,
@@ -93,26 +98,13 @@ function AreaPanel:init(parent)
             end
         end
     }
-
-   --VARIABLE
-    self.cbVariable, self.cmbVariable = MakeVariableChoice("area", self.parent)
-    if self.cbVariable then
-        table.insert(radioGroup, self.cbVariable)
-    end
-    
-    --EXPRESSION
-    self.cbExpression, self.btnExpression = SCEN_EDIT.AddExpression("area", self.parent)
-    if self.cbExpression then
-        table.insert(radioGroup, self.cbExpression)
-    end
-    SCEN_EDIT.MakeRadioButtonGroup(radioGroup)
 end
 
 function AreaPanel:UpdateModel(field)
-    if self.cbPredefinedArea.checked then
+    if self.cbPredefinedArea and self.cbPredefinedArea.checked then
         field.type = "pred"
         field.id = self.btnPredefinedArea.areaId
-    elseif self.cbSpecialArea.checked then
+    elseif self.cbSpecialArea and self.cbSpecialArea.checked then
         field.type = "spec"
         field.name = self.cmbSpecialArea.items[self.cmbSpecialArea.selected]
     elseif self.cbVariable and self.cbVariable.checked then

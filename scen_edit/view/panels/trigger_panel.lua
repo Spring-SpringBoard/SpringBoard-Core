@@ -1,7 +1,10 @@
-TriggerPanel = LCS.class{}
+TriggerPanel = AbstractTypePanel:extends{}
 
 function TriggerPanel:init(parent)
-    self.parent = parent
+    self:super('init', 'trigger', parent, sources)
+end
+
+function TriggerPanel:MakePredefinedOpt()
     local stackTriggerPanel = MakeComponentPanel(self.parent)
     local lblAttrType = Label:New {
         caption = "Trigger:",

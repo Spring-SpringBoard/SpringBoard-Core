@@ -1,7 +1,10 @@
-NumericComparisonPanel = LCS.class{}
+NumericComparisonPanel = AbstractTypePanel:extends{}
 
 function NumericComparisonPanel:init(parent)
-    self.parent = parent
+    self:super('init', 'numeric_comparison', parent, "pred")
+end
+
+function NumericComparisonPanel:MakePredefinedOpt(parent)
     local stackNumericComparisonPanel = MakeComponentPanel(self.parent)
     self.cmbCmpType = ComboBox:New {
         right = 1,
