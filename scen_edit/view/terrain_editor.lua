@@ -24,21 +24,44 @@ function TerrainEditorView:init()
 			end
         end
     }
+    local btnClose = Button:New {
+        caption='Close',
+        width=100,
+        right = 1,
+        bottom = 1,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        OnClick = { 
+            function() 
+                self.window:Dispose() 
+				SCEN_EDIT.stateManager:SetState(DefaultState())
+            end 
+        },
+    }
+    local lblNote = Label:New {
+        caption="\255\255\0\0Saving textures is currenlty not implemented!\b",
+        x = 1,
+        bottom = 5,
+    }
 
-    self.terrainEditorWindow = Window:New {
+    self.window = Window:New {
         parent = screen0,
         x = 300,
         y = 400,
-        width = 400,    
-        height = 400,        
+        width = 440,    
+        height = 400,
+        caption = 'Texture editor',
         children = {
             ScrollPanel:New {
                 width = '100%',
                 height = "100%",
+                y = 15,
+                bottom = 40,
                 children = { 
                     textureImages,
                 }
             },
+            btnClose,
+            lblNote,
         }
     }
 end

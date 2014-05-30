@@ -21,7 +21,7 @@ function View:init()
     end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
-    self.textureManager = TextureManager()
+    --self.textureManager = TextureManager()
     --self.mainWindow = MainWindow()
 	self.tabbedWindow = TabbedWindow()
 end
