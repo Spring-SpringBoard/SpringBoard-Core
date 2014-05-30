@@ -134,7 +134,8 @@ function DefaultState:MousePress(x, y, button)
         elseif result == "unit" then
             local unitId = coords
             local result, coords = Spring.TraceScreenRay(x, y, true)
-            if coords then
+            -- it's possible that there is no ground behind (if object is near the map edge)
+            if coords ~= nil then
                 local x, y, z = Spring.GetUnitPosition(unitId)
                 self.dragDiffX, self.dragDiffZ =  x - coords[1], z - coords[3]
 
@@ -151,13 +152,16 @@ function DefaultState:MousePress(x, y, button)
         elseif result == "feature" then
             local featureId = coords
             local result, coords = Spring.TraceScreenRay(x, y, true)
-            local x, y, z = Spring.GetFeaturePosition(featureId)
-            self.dragDiffX, self.dragDiffZ = x - coords[1], z - coords[3]
-            if selType == "features" then                
-                for _, oldFeatureId in pairs(items) do
-                    if oldFeatureId == featureId then
-                        self.dragFeature = featureId
-                        return true
+            -- it's possible that there is no ground behind (if object is near the map edge)
+            if coords ~= nil then
+                local x, y, z = Spring.GetFeaturePosition(featureId)
+                self.dragDiffX, self.dragDiffZ = x - coords[1], z - coords[3]
+                if selType == "features" then                
+                    for _, oldFeatureId in pairs(items) do
+                        if oldFeatureId == featureId then
+                            self.dragFeature = featureId
+                            return true
+                        end
                     end
                 end
             end
