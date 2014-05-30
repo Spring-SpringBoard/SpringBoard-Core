@@ -96,6 +96,7 @@ local shaderTemplate = {
 
 penShader = gl.CreateShader(shaderTemplate)
 function TerrainChangeTextureState:ApplyPen(pointsXZ, x, z, penTexture)
+
     local rT
     local texSizeX = BIG_TEX_SIZE
     local texSizeY = BIG_TEX_SIZE
@@ -163,7 +164,10 @@ function TerrainChangeTextureState:init(paintTexture, textureImages)
     self.size = 100
     self.paintTexture = paintTexture
 	self.textureImages = textureImages
-    Spring.Echo(self.paintTexture)
+
+    if SCEN_EDIT.model.tm == nil then
+        SCEN_EDIT.model.tm = TextureManager()
+    end
 end
 
 function TerrainChangeTextureState:SetTexture(x, z, textureName)
@@ -275,7 +279,7 @@ function TerrainChangeTextureState:DrawWorld()
         gl.PushMatrix()
         gl.Color(0, 1, 0, 0.3)
         self:DrawPen(x-self.size, z-self.size)
-        --gl.Utilities.DrawGroundCircle(x, z, self.size)
+        gl.Utilities.DrawGroundCircle(x, z, self.size)
         gl.PopMatrix()
     end
 end

@@ -16,6 +16,7 @@ function TriggersWindow:init()
         x = 130,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
+        OnClick = { function() self.window:Dispose() end },
     }
     self._triggers = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -44,11 +45,6 @@ function TriggersWindow:init()
         }
     }
 
-    btnClose.OnClick={
-        function() 
-            self.window:Dispose() 
-        end
-    }
     self:Populate()
     local triggerManagerListener = TriggerManagerListenerWidget(self)
     SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
