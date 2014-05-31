@@ -78,11 +78,11 @@ function AlliancePanel:init()
     btnPlayers.OnClick = {
         function()
             btnPlayers._toggle = PlayersWindow()
-            SCEN_EDIT.SetControlEnabled(btnPlayers.parent, true) 
+            SCEN_EDIT.SetControlEnabled(btnPlayers.parent, false) 
             table.insert(btnPlayers._toggle.window.OnDispose, 
                 function()
                     if btnPlayers and btnPlayers.parent then
-                        SCEN_EDIT.SetControlEnabled(btnPlayers.parent, false) 
+                        SCEN_EDIT.SetControlEnabled(btnPlayers.parent, true) 
                     end
                 end
             )
