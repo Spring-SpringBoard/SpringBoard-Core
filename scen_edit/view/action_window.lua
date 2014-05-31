@@ -6,8 +6,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
     self.mode = mode
     self.action = action
 
-    self.triggerWindow.window.disableChildrenHitTest = true    
-    self.triggerWindow.window:Invalidate()
+    SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, false)
     self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
@@ -102,7 +101,9 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
                     local subPanel = SCEN_EDIT.createNewPanel(input.type, self.actionPanel, input.sources)
                     if subPanel then
                         self.actionPanel[subPanelName] = subPanel
-                        SCEN_EDIT.MakeSeparator(self.actionPanel)
+                        if i ~= #actionType.input then
+                            SCEN_EDIT.MakeSeparator(self.actionPanel)
+                        end
                     end
                 end
             end
@@ -111,8 +112,8 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
 
     self.window =  Window:New {
         resizable = false,
-        clientWidth = 300,
-        clientHeight = 300,
+        width = 300,
+        height = 400,
         x = 500,
         y = 300,
         parent = screen0,
@@ -135,24 +136,28 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
     
     self.btnCancel.OnClick = {
         function() 
-            self.triggerWindow.window.disableChildrenHitTest = false
-            self.triggerWindow.window:Invalidate()
+            SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
             self.window:Dispose()
         end
     }
     
     self.btnOk.OnClick = {
         function()            
+            local success, subPanels = false, nil
             if self.mode == 'edit' then
-                self:EditAction()
-                self.triggerWindow.window.disableChildrenHitTest = false
-                self.triggerWindow.window:Invalidate()
-                self.window:Dispose()
+                success, subPanels = self:EditAction()
             elseif self.mode == 'add' then
-                self:AddAction()
-                self.triggerWindow.window.disableChildrenHitTest = false
-                self.triggerWindow.window:Invalidate()
+                success, subPanels = self:AddAction()
+            end
+            if success then
+                SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
                 self.window:Dispose()
+            else
+                if subPanels ~= nil and #subPanels > 0 then
+                    for _, subPanel in pairs(subPanels) do
+                        SCEN_EDIT.HintControl(subPanel)
+                    end
+                end
             end
         end
     }
@@ -209,28 +214,46 @@ function ActionWindow:UpdateModel()
     local actName = self.action.actionTypeName
     local index = GetIndex(self.cmbActionTypes.actionTypes, actName)
     local actionType = self.validActions[index]
+
+    local success = true
+    local errorSubPanels = {}
     for i = 1, #actionType.input do
         local input = actionType.input[i]
         local subPanelName = input.name
         local subPanel = self.actionPanel[subPanelName]
         if subPanel then
             self.action[subPanelName] = {}
-            self.actionPanel[subPanelName]:UpdateModel(self.action[subPanelName])
+            if not self.actionPanel[subPanelName]:UpdateModel(self.action[subPanelName]) then
+                success = false
+                table.insert(errorSubPanels, subPanel.parent)
+            end
         end
     end
+    return success, errorSubPanels
 end
 
 function ActionWindow:EditAction()
+    local _action = SCEN_EDIT.deepcopy(self.action)
     self.action.actionTypeName = self.cmbActionTypes.actionTypes[self.cmbActionTypes.selected]    
-    self:UpdateModel()
+    local success, subPanels = self:UpdateModel()
+    if not success then
+        self.action = _action
+        return false, subPanels
+    end
     self.triggerWindow:Populate()
+    return true
 end
 
 function ActionWindow:AddAction()
     self.action = { actionTypeName = self.cmbActionTypes.actionTypes[self.cmbActionTypes.selected] }
-    self:UpdateModel()
+    local success, subPanels = self:UpdateModel()
+    if not success then
+        self.action = nil
+        return false, subPanels
+    end
     table.insert(self.trigger.actions, self.action)    
     self.triggerWindow:Populate()
+    return true
 end
 
 

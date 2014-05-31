@@ -6,8 +6,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
     self.mode = mode
     self.condition = condition
 
-    self.triggerWindow.window.disableChildrenHitTest = true    
-    self.triggerWindow.window:Invalidate()
+    SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, false) 
     self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
@@ -100,7 +99,9 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
                     local subPanel = SCEN_EDIT.createNewPanel(input.type, self.conditionPanel, input.sources)
                     if subPanel then
                         self.conditionPanel[subPanelName] = subPanel
-                        SCEN_EDIT.MakeSeparator(self.conditionPanel)
+                        if i ~= #conditionType.input then
+                            SCEN_EDIT.MakeSeparator(self.conditionPanel)
+                        end
                     end
                 end
             end
@@ -109,8 +110,8 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
     
     self.window = Window:New {
         resizable = false,
-        clientWidth = 300,
-        clientHeight = 300,
+        width = 300,
+        height = 400,
         x = 500,
         y = 300,
         trigger = nil, --required
@@ -136,24 +137,28 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
     
     self.btnCancel.OnClick = {
         function() 
-            self.triggerWindow.window.disableChildrenHitTest = false
-            self.triggerWindow.window:Invalidate()
+            SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true) 
             self.window:Dispose()
         end
     }
     
     self.btnOk.OnClick = {
         function()            
+            local success, subPanels = false, nil
             if self.mode == 'edit' then
-                self:EditCondition()
-                self.triggerWindow.window.disableChildrenHitTest = false
-                self.triggerWindow.window:Invalidate()
-                self.window:Dispose()
+                success, subPanels = self:EditCondition()
             elseif self.mode == 'add' then
-                self:AddCondition()
-                self.triggerWindow.window.disableChildrenHitTest = false
-                self.triggerWindow.window:Invalidate()
+                success, subPanels = self:AddCondition()
+            end
+            if success then
+                SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true) 
                 self.window:Dispose()
+            else
+                if subPanels ~= nil and #subPanels > 0 then
+                    for _, subPanel in pairs(subPanels) do
+                        SCEN_EDIT.HintControl(subPanel)
+                    end
+                end
             end
         end
     }
@@ -211,26 +216,44 @@ function ConditionWindow:UpdateModel()
     local cndName = self.condition.conditionTypeName
     local index = GetIndex(self.cmbConditionTypes.conditionTypes, cndName)
     local conditionType = self.validConditionTypes[index]
+
+    local success = true
+    local errorSubPanels = {}
     for i = 1, #conditionType.input do
         local data = conditionType.input[i]
         local subPanelName = data.name
         local subPanel = self.conditionPanel[subPanelName]
         if subPanel then
             self.condition[subPanelName] = {}
-            self.conditionPanel[subPanelName]:UpdateModel(self.condition[subPanelName])
+            if not self.conditionPanel[subPanelName]:UpdateModel(self.condition[subPanelName]) then
+                success = false
+                table.insert(errorSubPanels, subPanel.parent)
+            end
         end
     end
+    return success, errorSubPanels
 end
 
 function ConditionWindow:EditCondition()
+    local _condition = SCEN_EDIT.deepcopy(self.condition)
     self.condition.conditionTypeName = self.cmbConditionTypes.conditionTypes[self.cmbConditionTypes.selected]    
-    self:UpdateModel()
+    local success, subPanels = self:UpdateModel()
+    if not success then
+        self.condition = _condition
+        return false, subPanels
+    end
     self.triggerWindow:Populate()
+    return true
 end
 
 function ConditionWindow:AddCondition()
     self.condition = { conditionTypeName = self.cmbConditionTypes.conditionTypes[self.cmbConditionTypes.selected] }
-    self:UpdateModel()
+    local success, subPanels = self:UpdateModel()
+    if not success then
+        self.condition = nil
+        return false, subPanels
+    end
     table.insert(self.trigger.conditions, self.condition)    
     self.triggerWindow:Populate()
+    return true
 end

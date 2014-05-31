@@ -2,7 +2,16 @@ AbstractTypePanel = LCS.class.abstract{}
 
 function AbstractTypePanel:init(dataType, parent, sources)
     self.dataType = dataType
-    self.parent = parent
+    self.parent = StackPanel:New {
+        itemMargin = {0, 0, 0, 0},
+        x = 1,
+        y = 1,
+        right = 1,
+        autosize = true,
+        resizeItems = false,
+        padding = {0, 0, 0, 0},
+        parent = parent,
+    }
     sources = sources or {"pred", "spec", "variable", "expression"}
     if type(sources) == "string" then
         sources = {sources}
@@ -53,8 +62,38 @@ end
 
 -- abstract
 function AbstractTypePanel:UpdateModel(field)
+    if self.cbVariable and self.cbVariable.checked then
+        field.type = "var"
+        field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
+        return true
+    elseif self.cbExpression and self.cbExpression.checked and self.btnExpression.data ~= nil  and #self.btnExpression.data ~= 0 then
+        field.type = "expr"
+        field.expr = self.btnExpression.data
+        return true
+    end
+    return false
 end
 
 -- abstract
 function AbstractTypePanel:UpdatePanel(field)
+    if field.type == "var" then
+        if not self.cbVariable.checked then
+            self.cbVariable:Toggle()
+        end
+        for i = 1, #self.cmbVariable.variableIds do
+            local variableId = self.cmbVariable.variableIds[i]
+            if variableId == field.id then
+                self.cmbVariable:Select(i)
+                break
+            end
+        end
+        return true
+    elseif field.type == "expr" then
+        if not self.cbExpression.checked then
+            self.cbExpression:Toggle()
+        end
+        self.btnExpression.data = field.expr
+        return true
+    end
+    return false
 end

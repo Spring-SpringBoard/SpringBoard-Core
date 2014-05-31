@@ -136,29 +136,32 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             self.cmbTagGroups
         }
     }
-    self.parentWindow.disableChildrenHitTest = true    
-    self.parentWindow:Invalidate()
+    SCEN_EDIT.SetControlEnabled(self.parentWindow, false)
 
     self.btnCancel.OnClick = {
         function() 
-            self.parentWindow.disableChildrenHitTest = false
-            self.parentWindow:Invalidate()
+            SCEN_EDIT.SetControlEnabled(self.parentWindow, true) 
             self.window:Dispose()
         end
     }
     
     self.btnOk.OnClick = {
         function()            
+            local success, subPanels = false, nil
             if self.mode == 'edit' then
-                self:EditCondition()
-                self.parentWindow.disableChildrenHitTest = false
-                self.parentWindow:Invalidate()
-                self.window:Dispose()
+                success, subPanels = self:EditCondition()
             elseif self.mode == 'add' then
-                self:AddCondition()
-                self.parentWindow.disableChildrenHitTest = false
-                self.parentWindow:Invalidate()
+                success, subPanels = self:AddCondition()
+            end
+            if success then
+                SCEN_EDIT.SetControlEnabled(self.parentWindow, true)
                 self.window:Dispose()
+            else
+                if subPanels ~= nil and #subPanels > 0 then
+                    for _, subPanel in pairs(subPanels) do
+                        SCEN_EDIT.HintControl(subPanel)
+                    end
+                end
             end
         end
     }    
@@ -222,32 +225,50 @@ function CustomWindow:UpdateModel()
     local cndName = self.condition.conditionTypeName
     local index = GetIndex(self.cmbCustomTypes.conditionTypes, cndName)
     local exprType = self.customTypes[index]
+
+    local success = true
+    local errorSubPanels = {}
     for i = 1, #exprType.input do
         local dataType = exprType.input[i]
         local subPanelName = dataType.name
         local subPanel = self.conditionPanel[subPanelName]
         if subPanel then
             self.condition[subPanelName] = {}
-            self.conditionPanel[subPanelName]:UpdateModel(self.condition[subPanelName])
+            if not self.conditionPanel[subPanelName]:UpdateModel(self.condition[subPanelName]) then
+                success = false
+                table.insert(errorSubPanels, subPanel.parent)
+            end
         end
     end
+    return success, errorSubPanels
 end
 
 function CustomWindow:EditCondition()
+    local _condition = SCEN_EDIT.deepcopy(self.condition)
     self.condition.conditionTypeName = self.cmbCustomTypes.conditionTypes[self.cmbCustomTypes.selected]    
-    self:UpdateModel()
+    local success, subPanels = self:UpdateModel()
+    if not success then
+        self.condition = _condition
+        return false, subPanels
+    end
     if self.cbExpressions and not self.cbExpressions.checked then
         self.cbExpressions:Toggle()
-    end    
+    end
+    return true
 end
 
 function CustomWindow:AddCondition()
     self.condition = { conditionTypeName = self.cmbCustomTypes.conditionTypes[self.cmbCustomTypes.selected] }
-    self:UpdateModel()
+    local success, subPanels = self:UpdateModel()
+    if not success then
+        self.condition = nil
+        return false, subPanels
+    end
     table.insert(self.parentObj, self.condition)    
     if self.cbExpressions and not self.cbExpressions.checked then
         self.cbExpressions:Toggle()
     end
+    return true
 end
 
 

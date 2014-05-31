@@ -31,6 +31,7 @@ end
 function TriggerPanel:UpdateModel(field)
     field.id = self.cmbTrigger.triggerIds[self.cmbTrigger.selected]
     field.type = "pred"
+    return true
 end
 
 function TriggerPanel:UpdatePanel(field)
@@ -38,7 +39,8 @@ function TriggerPanel:UpdatePanel(field)
         local triggerId = self.cmbTrigger.triggerIds[i]
         if triggerId == field.id then
             self.cmbTrigger:Select(i)
-            break
+            return true
         end
     end
+    return false
 end

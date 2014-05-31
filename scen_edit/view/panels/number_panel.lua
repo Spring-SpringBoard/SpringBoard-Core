@@ -23,16 +23,12 @@ function NumberPanel:MakePredefinedOpt()
 end
 
 function NumberPanel:UpdateModel(field)
-    if self.cbPredefinedValue and self.cbPredefinedValue.checked then
+    if self.cbPredefinedValue and self.cbPredefinedValue.checked and tonumber(self.edValue.text) ~= nil then
         field.type = "pred"
-        field.id = tonumber(self.edValue.text) or 0
-    elseif self.cbVariable and self.cbVariable.checked then
-        field.type = "var"
-        field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
-    elseif self.cbExpression and self.cbExpression.checked then
-        field.type = "expr"
-        field.expr = self.btnExpression.data
+        field.id = tonumber(self.edValue.text)
+        return true
     end
+    return self:super('UpdateModel', field)
 end
 
 function NumberPanel:UpdatePanel(field)  
@@ -41,21 +37,7 @@ function NumberPanel:UpdatePanel(field)
             self.cbPredefinedValue:Toggle()
         end
         self.edValue.text = tostring(field.id)
-    elseif field.type == "var" then
-        if not self.cbVariable.checked then
-            self.cbVariable:Toggle()
-        end
-        for i = 1, #self.cmbVariable.variableIds do
-            local variableId = self.cmbVariable.variableIds[i]
-            if variableId == field.id then
-                self.cmbVariable:Select(i)
-                break
-            end
-        end
-    elseif field.type == "expr" then
-        if not self.cbExpression.checked then
-            self.cbExpression:Toggle()
-        end
-        self.btnExpression.data = field.expr
+        return true
     end
+    return self:super('UpdatePanel', field)
 end

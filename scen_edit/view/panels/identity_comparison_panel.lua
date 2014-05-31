@@ -17,8 +17,10 @@ end
 
 function IdentityComparisonPanel:UpdateModel(comparison)
     comparison.cmpTypeId = self.cmbCmpType.selected
+    return true
 end
 
 function IdentityComparisonPanel:UpdatePanel(comparison)
     self.cmbCmpType:Select(comparison.cmpTypeId)
+    return true
 end

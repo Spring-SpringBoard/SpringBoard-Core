@@ -17,8 +17,10 @@ end
 
 function NumericComparisonPanel:UpdateModel(comparison)
     comparison.cmpTypeId = self.cmbCmpType.selected
+    return true
 end
 
 function NumericComparisonPanel:UpdatePanel(comparison)
     self.cmbCmpType:Select(comparison.cmpTypeId)
+    return true
 end

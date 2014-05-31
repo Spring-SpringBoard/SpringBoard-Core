@@ -65,10 +65,12 @@ function OrderPanel:UpdateModel(field)
         local subPanel = self.orderPanel[subPanelName]
         if subPanel then
             field[subPanelName] = {}
-            self.orderPanel[subPanelName]:UpdateModel(field[subPanelName])
+            if not self.orderPanel[subPanelName]:UpdateModel(field[subPanelName]) then
+                return false
+            end
         end
     end
-
+    return true
 end
 
 function OrderPanel:UpdatePanel(field)
@@ -83,4 +85,5 @@ function OrderPanel:UpdatePanel(field)
             subPanel:UpdatePanel(field[subPanelName])
         end
     end
+    return true
 end
