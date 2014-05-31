@@ -157,12 +157,10 @@ function VariableSettingsWindow:MakeVariableWindow(variable, edit)
         nw.x = sw.x + sw.width
     end
     nw.y = sw.y
-    sw.disableChildrenHitTest = true
-    sw:Invalidate()
+    SCEN_EDIT.SetControlEnabled(sw, false)
     table.insert(nw.OnDispose, 
         function() 
-            sw.disableChildrenHitTest = false
-            sw:Invalidate()
+            SCEN_EDIT.SetControlEnabled(sw, true)
         end
     )
     return newWin

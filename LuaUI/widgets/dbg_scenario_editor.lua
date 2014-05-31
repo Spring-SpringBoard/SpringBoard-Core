@@ -138,7 +138,7 @@ function widget:DrawScreen()
 end
 
 function widget:DrawWorld()
-    SCEN_EDIT.executeDelayed()
+    SCEN_EDIT.executeDelayedGL()
 
     SCEN_EDIT.stateManager:DrawWorld()
     SCEN_EDIT.view:DrawWorld()
@@ -174,4 +174,8 @@ function widget:GameFrame(frameNum)
     SCEN_EDIT.stateManager:GameFrame(frameNum)
     SCEN_EDIT.displayUtil:OnFrame()
     SCEN_EDIT.view:GameFrame(frameNum)
+end
+
+function widget:Update()
+    SCEN_EDIT.executeDelayed()
 end

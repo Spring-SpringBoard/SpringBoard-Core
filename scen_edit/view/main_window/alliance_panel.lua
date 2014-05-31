@@ -64,13 +64,11 @@ function AlliancePanel:init()
 	btnDiplomacy.OnClick = {
         function() 
             btnDiplomacy._toggle = DiplomacyWindow()
-            btnDiplomacy.parent.disableChildrenHitTest = true
-            btnDiplomacy.parent:Invalidate()
+            SCEN_EDIT.SetControlEnabled(btnDiplomacy.parent, false) 
             table.insert(btnDiplomacy._toggle.window.OnDispose, 
                 function()
                     if btnDiplomacy and btnDiplomacy.parent then
-                        btnDiplomacy.parent.disableChildrenHitTest = false
-                        btnDiplomacy.parent:Invalidate()
+                        SCEN_EDIT.SetControlEnabled(btnDiplomacy.parent, true) 
                     end
                 end
             )
@@ -80,13 +78,11 @@ function AlliancePanel:init()
     btnPlayers.OnClick = {
         function()
             btnPlayers._toggle = PlayersWindow()
-            btnPlayers.parent.disableChildrenHitTest = true
-            btnPlayers.parent:Invalidate()
+            SCEN_EDIT.SetControlEnabled(btnPlayers.parent, true) 
             table.insert(btnPlayers._toggle.window.OnDispose, 
                 function()
                     if btnPlayers and btnPlayers.parent then
-                        btnPlayers.parent.disableChildrenHitTest = false
-                        btnPlayers.parent:Invalidate()
+                        SCEN_EDIT.SetControlEnabled(btnPlayers.parent, false) 
                     end
                 end
             )

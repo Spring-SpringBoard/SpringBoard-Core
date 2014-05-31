@@ -28,8 +28,8 @@ function TriggersWindow:init()
     self.window = Window:New {
         caption = "Trigger",
         minimumSize = {300,200},
-        x = 500,
-        y = 300,
+        x = 100,
+        y = 180,
         parent = screen0,
         children = {
             ScrollPanel:New {
@@ -162,12 +162,10 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
     end
     tw.y = sw.y
 
-    sw.disableChildrenHitTest = true
-    sw:Invalidate()
+    SCEN_EDIT.SetControlEnabled(sw, false)
     table.insert(tw.OnDispose, 
         function()
-            sw.disableChildrenHitTest = false
-            sw:Invalidate()
+            SCEN_EDIT.SetControlEnabled(sw, true)
 			if not triggerWindow.save then
 				return
 			end

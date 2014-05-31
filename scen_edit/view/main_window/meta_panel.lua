@@ -91,13 +91,11 @@ function MetaPanel:init()
 	btnTriggers.OnClick = {
         function () 
             btnTriggers._toggle = TriggersWindow()
-            btnTriggers.parent.disableChildrenHitTest = true
-            btnTriggers.parent:Invalidate()
+            SCEN_EDIT.SetControlEnabled(btnTriggers.parent, false) 
             table.insert(btnTriggers._toggle.window.OnDispose, 
                 function()
                     if btnTriggers and btnTriggers.parent then
-                        btnTriggers.parent.disableChildrenHitTest = false
-                        btnTriggers.parent:Invalidate()
+                        SCEN_EDIT.SetControlEnabled(btnTriggers.parent, true) 
                     end
                 end
             )
@@ -107,13 +105,11 @@ function MetaPanel:init()
     btnVariableSettings.OnClick = {
         function()
             btnVariableSettings._toggle = VariableSettingsWindow()
-            btnVariableSettings.parent.disableChildrenHitTest = true
-            btnVariableSettings.parent:Invalidate()
+            SCEN_EDIT.SetControlEnabled(btnVariableSettings.parent, false) 
             table.insert(btnVariableSettings._toggle.window.OnDispose, 
                 function()
                     if btnVariableSettings and btnVariableSettings.parent then
-                        btnVariableSettings.parent.disableChildrenHitTest = false
-                        btnVariableSettings.parent:Invalidate()
+                        SCEN_EDIT.SetControlEnabled(btnVariableSettings.parent, true) 
                     end
                 end
             )

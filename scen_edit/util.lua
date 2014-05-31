@@ -418,6 +418,68 @@ function SCEN_EDIT.GetTeams(widget)
     return teams 
 end
 
+local function filterControls(ctrl)
+    if ctrl.classname == "button" or ctrl.classname == "combobox" or ctrl.classname == "editbox" or ctrl.classname == "checkbox" or ctrl.classname == "label" or ctrl.classname == "editbox" then
+        return {ctrl}
+    end
+    local childRets = {}
+    for _, childCtrl in pairs(ctrl.childrenByName) do
+        childRet = filterControls(childCtrl)
+        if childRet ~= nil and type(childRet) == "table" then
+            for _, v in pairs(childRet) do
+                table.insert(childRets, v)
+            end
+        end
+    end
+    return childRets
+end
+
+local function hintCtrlFunction(ctrl, startTime, timeout, color)
+    local deltaTime = os.clock() - startTime
+    local newColor = SCEN_EDIT.deepcopy(color)
+    newColor[4] = 0.2 + math.abs(math.sin(deltaTime * 6) / 3.14)
+    
+    if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
+        ctrl.font.color = newColor
+    else
+        ctrl.backgroundColor = newColor
+    end
+    ctrl:Invalidate()
+    SCEN_EDIT.delay(
+        function()
+            if os.clock() - startTime < timeout then
+                hintCtrlFunction(ctrl, startTime, timeout, color)
+            else
+                if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
+                    ctrl.font.color = ctrl._originalColor
+                else
+                    ctrl.backgroundColor = ctrl._originalColor
+                end
+                ctrl._originalColor = nil
+                ctrl:Invalidate()
+            end
+        end
+    )
+end
+
+
+function SCEN_EDIT.HintControl(control, color, timeout)
+    timeout = timeout or 1
+    color = color or {1, 0, 0, 1}
+    local childControls = filterControls(control)
+    local startTime = os.clock()
+    for _, childControl in pairs(childControls) do
+        if childControl._originalColor == nil then
+            if childControl.classname == "label" or childControl.classname == "checkbox" or childControl.classname == "editbox" then
+                childControl._originalColor = SCEN_EDIT.deepcopy(childControl.font.color)
+            else
+                childControl._originalColor = SCEN_EDIT.deepcopy(childControl.backgroundColor)
+            end
+            hintCtrlFunction(childControl, startTime, timeout, color)
+        end
+    end
+end
+
 function SCEN_EDIT.Error(msg)
     Spring.Echo(msg)
 end
@@ -503,15 +565,31 @@ function SCEN_EDIT.delayGL(func, params)
     table.insert(SCEN_EDIT.delayedGL, {func, params or {}})
 end
 
-function SCEN_EDIT.executeDelayed()
-    for i = 1, #SCEN_EDIT.delayedGL do
-        call = SCEN_EDIT.delayedGL[i]
+function SCEN_EDIT.executeDelayedGL()
+    local delayedGL = SCEN_EDIT.delayedGL
+    SCEN_EDIT.delayedGL = {}
+    for i, call in pairs(delayedGL) do
         success, msg = pcall(call[1], unpack(call[2]))
         if not success then
             Spring.Echo(msg)
         end
     end
-    SCEN_EDIT.delayedGL = {}
+end
+
+SCEN_EDIT.delayed = {}
+function SCEN_EDIT.delay(func, params)
+    table.insert(SCEN_EDIT.delayed, {func, params or {}})
+end
+
+function SCEN_EDIT.executeDelayed()
+    local delayed = SCEN_EDIT.delayed
+    SCEN_EDIT.delayed = {}
+    for i, call in pairs(delayed) do
+        success, msg = pcall(call[1], unpack(call[2]))
+        if not success then
+            Spring.Echo(msg)
+        end
+    end
 end
 
 function SCEN_EDIT.glToFontColor(color)
@@ -519,4 +597,12 @@ function SCEN_EDIT.glToFontColor(color)
         string.char(math.ceil(255 * color.r)) .. 
         string.char(math.ceil(255 * color.g)) .. 
         string.char(math.ceil(255 * color.b))
+end
+
+function SCEN_EDIT.SetControlEnabled(control, enabled)
+    control.disableChildrenHitTest = not enabled
+    control:Invalidate()
+    for _, childCtrl in pairs(control.childrenByName) do
+        SCEN_EDIT.SetControlEnabled(childCtrl, enabled)
+    end
 end

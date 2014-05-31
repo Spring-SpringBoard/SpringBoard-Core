@@ -6,8 +6,7 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
     self.mode = mode
     self.event = event
 
-    self.triggerWindow.window.disableChildrenHitTest = true    
-    self.triggerWindow.window:Invalidate()
+    SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, false)
     self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
@@ -49,8 +48,7 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
 
     self.btnCancel.OnClick = {
         function() 
-            self.triggerWindow.window.disableChildrenHitTest = false
-            self.triggerWindow.window:Invalidate()
+            SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
             self.window:Dispose()
         end
     }
@@ -59,13 +57,11 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
         function()            
             if self.mode == 'edit' then
                 self:EditEvent()
-                self.triggerWindow.window.disableChildrenHitTest = false
-                self.triggerWindow.window:Invalidate()
+                SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
                 self.window:Dispose()
             elseif self.mode == 'add' then
                 self:AddEvent()
-                self.triggerWindow.window.disableChildrenHitTest = false
-                self.triggerWindow.window:Invalidate()
+                SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
                 self.window:Dispose()
             end
         end

@@ -100,19 +100,16 @@ function UnitPanel:MakeSpecialOpt()
 end
 
 function UnitPanel:UpdateModel(field)
-    if self.cbPredefinedUnit and self.cbPredefinedUnit.checked then
+    if self.cbPredefinedUnit and self.cbPredefinedUnit.checked and self.btnPredefinedUnit.unitId ~= nil then
         field.type = "pred"
         field.id = self.btnPredefinedUnit.unitId
+        return true
     elseif self.cbSpecialUnit and self.cbSpecialUnit.checked then
         field.type = "spec"
         field.name = self.cmbSpecialUnit.items[self.cmbSpecialUnit.selected]
-    elseif self.cbVariable and self.cbVariable.checked then
-        field.type = "var"
-        field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
-    elseif self.cbExpression and self.cbExpression.checked then
-        field.type = "expr"
-        field.expr = self.btnExpression.data
+        return true
     end
+    return self:super('UpdateModel', field)
 end
 
 function UnitPanel:UpdatePanel(field)
@@ -121,26 +118,13 @@ function UnitPanel:UpdatePanel(field)
             self.cbPredefinedUnit:Toggle()
         end
         CallListeners(self.btnPredefinedUnit.OnSelectUnit, field.id)
+        return true
     elseif field.type == "spec" then
         if not self.cbSpecialUnit.checked then
             self.cbSpecialUnit:Toggle()
         end
         self.cmbSpecialUnit:Select(1) --TODO:fix it
-    elseif field.type == "var" then
-        if not self.cbVariable.checked then
-            self.cbVariable:Toggle()
-        end
-        for i = 1, #self.cmbVariable.variableIds do
-            local variableId = self.cmbVariable.variableIds[i]
-            if variableId == field.id then
-                self.cmbVariable:Select(i)
-                break
-            end
-        end
-    elseif field.type == "expr" then
-        if not self.cbExpression.checked then
-            self.cbExpression:Toggle()
-        end
-        self.btnExpression.data = field.expr
+        return true
     end
+    return self:super('UpdatePanel', field)
 end
