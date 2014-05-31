@@ -1,6 +1,6 @@
 StringPanel = AbstractTypePanel:extends{}
 
-function StringPanel:init(parent)
+function StringPanel:init(parent, sources)
     self:super('init', 'string', parent, sources)
 end
 
