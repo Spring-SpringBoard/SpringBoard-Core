@@ -9,7 +9,7 @@ return {
                 local variableAssignment = {
                     humanName = "Assign " .. type.humanName,
                     name = type.name .. "_VARIABLE_ASSIGN",
-                    tags = {"Assign"},
+                    tags = {"Variable"},
                     input = { 
                         {
                             name = "variable",

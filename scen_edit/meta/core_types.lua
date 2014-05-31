@@ -19,6 +19,7 @@ function SCEN_EDIT.coreTypes()
         {
             humanName = "Order",
             name = "order",
+            canBeVariable = false,
         },
         {
             humanName = "Trigger",
