@@ -248,7 +248,7 @@ function CustomWindow:EditCondition()
     self.condition.conditionTypeName = self.cmbCustomTypes.conditionTypes[self.cmbCustomTypes.selected]    
     local success, subPanels = self:UpdateModel()
     if not success then
-        self.condition = _condition
+        SetTableValues(self.condition, _condition)
         return false, subPanels
     end
     if self.cbExpressions and not self.cbExpressions.checked then

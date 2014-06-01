@@ -79,7 +79,7 @@ function TriggerWindow:init(trigger)
 
     self.window = Window:New {
         width = 610,
-        height = 450,
+        height = 350,
         minimumSize = {500,300},
         x = 500,
         y = 300,

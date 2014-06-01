@@ -237,7 +237,7 @@ function ActionWindow:EditAction()
     self.action.actionTypeName = self.cmbActionTypes.actionTypes[self.cmbActionTypes.selected]    
     local success, subPanels = self:UpdateModel()
     if not success then
-        self.action = _action
+        SetTableValues(self.action, _action)
         return false, subPanels
     end
     self.triggerWindow:Populate()
