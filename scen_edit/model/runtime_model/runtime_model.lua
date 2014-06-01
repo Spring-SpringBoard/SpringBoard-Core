@@ -8,31 +8,95 @@ function RuntimeModel:init()
     self.lastFrameUnitIds = {}
     self.fieldResolver = FieldResolver()
     self.repeatCalls = {}
+    SCEN_EDIT.model.areaManager:addListener(self)
+    SCEN_EDIT.model.triggerManager:addListener(self)
 end
 
 function RuntimeModel:LoadMission()
     self.lastFrameUnitIds = Spring.GetAllUnits()
     self.areaModels = {}
     self.repeatCalls = {}
-    
+   
+    self.startListening = true
+
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
     for id, _ in pairs(areas) do
-        local areaModel = AreaModel(id)
-        areaModel:Populate(self.lastFrameUnitIds)
-        table.insert(self.areaModels, areaModel)        
+        self:onAreaAdded(id)
     end
     
     self.eventTriggers = {}
     local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
-    for id, trigger in pairs(triggers) do
-        for j = 1, #trigger.events do
-            local event = trigger.events[j]
-            if not self.eventTriggers[event.eventTypeName] then
-                self.eventTriggers[event.eventTypeName] = {}
-            end
-            table.insert(self.eventTriggers[event.eventTypeName], trigger)
-        end
+    for _, trigger in pairs(triggers) do
+        self:onTriggerAdded(trigger.id)
     end    
+end
+
+function RuntimeModel:onTriggerAdded(triggerId)
+    if not self.startListening then
+        return
+    end
+    local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+    for _, event in pairs(trigger.events) do
+        if not self.eventTriggers[event.eventTypeName] then
+            self.eventTriggers[event.eventTypeName] = {}
+        end
+        table.insert(self.eventTriggers[event.eventTypeName], trigger)
+    end
+end
+
+function RuntimeModel:onTriggerRemoved(triggerId)
+    if not self.startListening then
+        return
+    end
+    for _, eventList in pairs(self.eventTriggers) do
+        repeat 
+            local found = false
+            for i, iterTrigger in pairs(eventList) do
+                if iterTrigger.id == triggerId then
+                    table.remove(eventList, i)
+                    found = true
+                    break
+                end
+            end
+        until not found
+    end
+end
+
+function RuntimeModel:onTriggerUpdated(triggerId)
+    if not self.startListening then
+        return
+    end
+    self:onTriggerRemoved(triggerId)
+    self:onTriggerAdded(triggerId)
+end
+
+function RuntimeModel:onAreaAdded(areaId)
+    if not self.startListening then
+        return
+    end
+    local areaModel = AreaModel(areaId)
+    areaModel:Populate(self.lastFrameUnitIds)
+    table.insert(self.areaModels, areaModel)
+end
+
+function RuntimeModel:onAreaRemoved(areaId)
+    if not self.startListening then
+        return
+    end
+    for i, areaModel in pairs(self.areaModels) do
+        if areaModel.id == areaId then
+            table.remove(self.areaModels, i)
+            break
+        end
+    end
+end
+
+function RuntimeModel:onAreaChange(areaId)
+    if not self.startListening then
+        return
+    end
+    self:onAreaRemoved(areaId)
+    self:onAreaAdded(areaId)
 end
 
 function RuntimeModel:GameStart()
@@ -58,6 +122,7 @@ function RuntimeModel:GameStop()
         end
     end
     self.hasStarted = false
+    self.startListening = false
 end
 
 function RuntimeModel:TeamDied(teamId)

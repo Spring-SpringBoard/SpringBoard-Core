@@ -94,8 +94,7 @@ end
 function VariableSettingsWindow:Populate()
     self.variablesPanel:ClearChildren()
     local variables = SCEN_EDIT.model.variableManager:getAllVariables()
-    for i = 1, #variables do
-        local variable = variables[i]
+    for _, variable in pairs(variables) do
         local variableStackPanel = MakeComponentPanel(self.variablesPanel)
         variableStackPanel.variableId = variable.id
         local btnEditVariable = Button:New {
