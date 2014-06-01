@@ -11,17 +11,8 @@ end
 
 function AddFeatureCommand:execute()
     local featureId = Spring.CreateFeature(self.featureTypeId, self.x, self.y, self.z, 0, self.featureTeamId)
-    local prop = math.tan(self.angle / 180 * math.pi)
-    local z = math.sqrt(1 / (prop * prop + 1))
-    local x = prop * z
-    self.angle = math.abs(self.angle % 360)
-    if self.angle >= 90 and self.angle < 180 then
-        x = -x
-        z = -z
-    elseif self.angle >= 180 and self.angle < 270 then
-        x = -x
-        z = -z
-    end
+    local x = math.sin(math.rad(self.angle))
+    local z = math.cos(math.rad(self.angle))
 --[[    x^2 + y^2 = 1
     x = prop * y
     prop ^2 * y^2  + y^2 = 1
