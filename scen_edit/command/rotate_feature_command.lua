@@ -11,17 +11,8 @@ function RotateFeatureCommand:execute()
     local featureId = SCEN_EDIT.model.featureManager:getSpringFeatureId(self.modelFeatureId)
     self.oldX, self.oldY, self.oldZ = Spring.GetFeatureDirection(featureId)
 
-    local prop = math.tan(self.angle / 180 * math.pi)
-    local z = math.sqrt(1 / (prop * prop + 1))
-    local x = prop * z
-    self.angle = math.abs(self.angle % 360)
-    if self.angle >= 90 and self.angle < 180 then
-        x = -x
-        z = -z
-    elseif self.angle >= 180 and self.angle < 270 then
-        x = -x
-        z = -z
-    end
+    local x = math.sin(math.rad(self.angle))
+    local z = math.cos(math.rad(self.angle))
     Spring.SetFeatureDirection(featureId, x, 0, z)
 end
 

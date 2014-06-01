@@ -9,13 +9,14 @@ end
 
 function RotateUnitCommand:execute()
     local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.modelUnitId)
+    self.oldX, self.oldY, self.oldZ = Spring.GetUnitDirection(unitId)
 
-    local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
-    self.oldAngle = math.atan2(dirX, dirZ) * 180 / math.pi
-    Spring.SetUnitRotation(unitId, 0, -self.angle * math.pi / 180, 0)
+    local x = math.sin(math.rad(self.angle))
+    local z = math.cos(math.rad(self.angle))
+    Spring.SetUnitDirection(unitId, x, 0, z)
 end
 
 function RotateUnitCommand:unexecute()
     local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.modelUnitId)
-    Spring.SetUnitRotation(unitId, 0, -self.oldAngle * math.pi / 180, 0)
+    Spring.SetUnitDirection(unitId, self.oldX, self.oldY, self.oldZ)
 end

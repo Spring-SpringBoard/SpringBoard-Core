@@ -98,7 +98,9 @@ function Model:Load(mission)
     for i, unit in pairs(units) do		
         local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
 		if unitId ~= nil then			
-			Spring.SetUnitRotation(unitId, 0, -unit.angle * math.pi / 180, 0)
+            local x = math.sin(math.rad(unit.angle))
+            local z = math.cos(math.rad(unit.angle))
+            Spring.SetUnitDirection(unitId, x, 0, z)
 			self.unitManager:setUnitModelId(unitId, unit.id)
 		else
 			Spring.Echo("Failed to create the following unit: ")
@@ -120,17 +122,8 @@ function Model:Load(mission)
     local features = mission.features
     for i, feature in pairs(features) do
         local featureId = Spring.CreateFeature(feature.featureDefName, feature.x, 0, feature.y, feature.player)
-        local prop = math.tan(feature.angle / 180 * math.pi)
-        local z = math.sqrt(1 / (prop * prop + 1))
-        local x = prop * z
-        feature.angle = math.abs(feature.angle % 360)
-        if feature.angle >= 90 and feature.angle < 180 then
-            x = -x
-            z = -z
-        elseif feature.angle >= 180 and feature.angle < 270 then
-            x = -x
-            z = -z
-        end
+        local x = math.sin(math.rad(feature.angle))
+        local z = math.cos(math.rad(feature.angle))
         Spring.SetFeatureDirection(featureId, x, 0, z)
         SCEN_EDIT.model.featureManager:setFeatureModelId(featureId, feature.id)
     end

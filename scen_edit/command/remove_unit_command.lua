@@ -11,13 +11,12 @@ function RemoveUnitCommand:execute()
     self.x, self.y, self.z = Spring.GetUnitPosition(unitId)
     self.unitTypeId = Spring.GetUnitDefID(unitId)
     self.unitTeamId = Spring.GetUnitTeam(unitId)
-    local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
-    self.angle = math.atan2(dirX, dirZ) * 180 / math.pi
+    self.oldDirX, self.oldDirY, self.oldDirZ = Spring.GetUnitDirection(unitId)
     Spring.DestroyUnit(unitId, false, true)
 end
 
 function RemoveUnitCommand:unexecute()
     local unitId = Spring.CreateUnit(self.unitTypeId, self.x, self.y, self.z, 0, self.unitTeamId)
-    Spring.SetUnitRotation(unitId, 0, -self.angle * math.pi / 180, 0)
+    Spring.SetUnitDirection(unitId, self.oldDirX, self.oldDirY, self.oldDirZ)
     SCEN_EDIT.model.unitManager:setUnitModelId(unitId, self.modelUnitId)
 end
