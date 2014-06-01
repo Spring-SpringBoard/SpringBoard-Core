@@ -239,7 +239,7 @@ function ConditionWindow:EditCondition()
     self.condition.conditionTypeName = self.cmbConditionTypes.conditionTypes[self.cmbConditionTypes.selected]    
     local success, subPanels = self:UpdateModel()
     if not success then
-        self.condition = _condition
+        SetTableValues(self.condition, _condition)
         return false, subPanels
     end
     self.triggerWindow:Populate()

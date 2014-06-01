@@ -258,6 +258,16 @@ function GetIndex(table, value)
     end
 end
 
+-- basically does origTable = newTableValues but instead uses the old table reference
+function SetTableValues(origTable, newTable)
+    for k in pairs(origTable) do
+        origTable[k] = nil
+    end
+    for k in pairs(newTable) do
+        origTable[k] = newTable[k]
+    end
+end
+
 function SortByName(t, name)
     local i = 1
     local sortedTable = {}
