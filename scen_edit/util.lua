@@ -616,3 +616,7 @@ function SCEN_EDIT.SetControlEnabled(control, enabled)
         SCEN_EDIT.SetControlEnabled(childCtrl, enabled)
     end
 end
+
+function SCEN_EDIT.DirExists(path, ...)
+    return (#VFS.SubDirs(path, "*", ...) + #VFS.DirList(path, "*", ...)) ~= 0
+end

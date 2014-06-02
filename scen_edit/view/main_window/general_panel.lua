@@ -48,26 +48,8 @@ function GeneralPanel:init()
 					ofd = OpenFileDialog(dir)
 					ofd:setConfirmDialogCallback(
 						function(path)
-							Spring.Echo("Loading archive: " .. path .. " ...")
-							if not VFS.FileExists(path, VFS.RAW) then
-								Spring.Echo("Archive doesn't exist: " .. path)
-								return
-							end
-
-							if VFS.UnmapArchive and SCEN_EDIT.loadedArchive ~= nil then
-								VFS.UnmapArchive(SCEN_EDIT.loadedArchive)
-							end
-
-							VFS.MapArchive(path)
-							SCEN_EDIT.loadedArchive = path
-							local data = VFS.LoadFile("model.lua", VFS.ZIP)
-							cmd = LoadCommand(data)
-							SCEN_EDIT.commandManager:execute(cmd)
-
-							local data = VFS.LoadFile("heightmap.data", VFS.ZIP)
-							loadMap = LoadMap(data)
-							SCEN_EDIT.commandManager:execute(loadMap)
-							Spring.Echo("Loaded archive.")
+                            local cmd = LoadCommandWidget(path, true)
+                            SCEN_EDIT.commandManager:execute(cmd, true)
 						end
 					)
 				end

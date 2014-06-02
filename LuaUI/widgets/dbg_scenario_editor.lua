@@ -130,50 +130,75 @@ function widget:Initialize()
 end
 
 function reloadGadgets()
-    Spring.SendCommands("luarules reload")
+    --Spring.SendCommands("luarules reload")
 end
 
 function widget:DrawScreen()
-    SCEN_EDIT.stateManager:DrawScreen()
+    if SCEN_EDIT.view ~= nil then
+        SCEN_EDIT.stateManager:DrawScreen()
+    end
 end
 
 function widget:DrawWorld()
     SCEN_EDIT.executeDelayedGL()
 
-    SCEN_EDIT.stateManager:DrawWorld()
-    SCEN_EDIT.view:DrawWorld()
+    if SCEN_EDIT.view ~= nil then
+        SCEN_EDIT.stateManager:DrawWorld()
+        SCEN_EDIT.view:DrawWorld()
+    end
     SCEN_EDIT.displayUtil:Draw()
 end
 
 function widget:DrawWorldPreUnit()
-    SCEN_EDIT.stateManager:DrawWorldPreUnit()
-    SCEN_EDIT.view:DrawWorldPreUnit()
+    if SCEN_EDIT.view ~= nil then
+        SCEN_EDIT.stateManager:DrawWorldPreUnit()
+        SCEN_EDIT.view:DrawWorldPreUnit()
+    end
 end
 
 function widget:MousePress(x, y, button)
-    return SCEN_EDIT.stateManager:MousePress(x, y, button)
+    if SCEN_EDIT.view ~= nil then
+        return SCEN_EDIT.stateManager:MousePress(x, y, button)
+    end
 end
 
 function widget:MouseMove(x, y, dx, dy, button)
-    return SCEN_EDIT.stateManager:MouseMove(x, y, button)
+    if SCEN_EDIT.view ~= nil then
+        return SCEN_EDIT.stateManager:MouseMove(x, y, button)
+    end
 end
 
 function widget:MouseRelease(x, y, button)
-    return SCEN_EDIT.stateManager:MouseRelease(x, y, button)
+    if SCEN_EDIT.view ~= nil then
+        return SCEN_EDIT.stateManager:MouseRelease(x, y, button)
+    end
 end
 
 function widget:MouseWheel(up, value)
-    return SCEN_EDIT.stateManager:MouseWheel(up, value)
+    if SCEN_EDIT.view ~= nil then
+        return SCEN_EDIT.stateManager:MouseWheel(up, value)
+    end
 end
 
 function widget:KeyPress(key, mods, isRepeat, label, unicode)
-    return SCEN_EDIT.stateManager:KeyPress(key, mods, isRepeat, label, unicode)
+    if SCEN_EDIT.view ~= nil then
+        return SCEN_EDIT.stateManager:KeyPress(key, mods, isRepeat, label, unicode)
+    end
 end
 
 function widget:GameFrame(frameNum)
-    SCEN_EDIT.stateManager:GameFrame(frameNum)
+    if SCEN_EDIT.view ~= nil then
+        SCEN_EDIT.stateManager:GameFrame(frameNum)
+        SCEN_EDIT.view:GameFrame(frameNum)
+    end
     SCEN_EDIT.displayUtil:OnFrame()
-    SCEN_EDIT.view:GameFrame(frameNum)
+
+    if devMode and Spring.GetModOptions().project_dir ~= nil and not self.loaded then
+        SCEN_EDIT.model.projectDir = Spring.GetModOptions().project_dir
+        local cmd = LoadCommandWidget(SCEN_EDIT.model.projectDir, false)
+        SCEN_EDIT.commandManager:execute(cmd, true)
+        self.loaded = true
+    end
 end
 
 function widget:Update()

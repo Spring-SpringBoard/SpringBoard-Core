@@ -162,19 +162,33 @@ local function GenerateScriptTxt(dev)
 	MinSpeed=0.1;
 	[MODOPTIONS]
 	{
-        play_mode = __DEV__;
+        play_mode = __PLAY_MODE__;
         deathmode = neverend;
-        has_scenario_file = true;
+        has_scenario_file = __HAS_SCENARIO_FILE__;
+        __PROJECT_DIR__
 	}
 
 ]]
 
     local scenarioInfo = SCEN_EDIT.model.scenarioInfo
+    local gameType = nil
+    local projectDir = ""
+    if not dev then
+        gameType = scenarioInfo.name .. " " .. scenarioInfo.version
+    else
+        gameType = Game.gameName .. " " .. Game.gameVersion
+        if SCEN_EDIT.model.projectDir then
+            projectDir = "project_dir = " .. SCEN_EDIT.model.projectDir .. ";"
+        end
+    end
+
     scriptTxt = scriptTxt:gsub("__MAP_NAME__", Game.mapName)
-                         :gsub("__GAME_TYPE__", scenarioInfo.name .. " " .. scenarioInfo.version)
+                         :gsub("__GAME_TYPE__", gameType)
                          :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teams))
                          :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teams))
-                         :gsub("__DEV__", tostring(palyMode))
+                         :gsub("__PLAY_MODE__", tostring(playMode))
+                         :gsub("__HAS_SCENARIO_FILE__", tostring(playMode))
+                         :gsub("__PROJECT_DIR__", tostring(projectDir))
 
     local numAIs = 0
     local numPlayers = 0
@@ -303,14 +317,11 @@ function SaveCommand:execute()
 	ModInfoSave(projectDir .. "/modinfo.lua")
     HeightMapSave(projectDir .. "/heightmap.data")	
     ScriptTxtSave(projectDir .. "/script.txt")
-    ScriptTxtSave(projectDir .. "/script-dev.txt", true)
+    --ScriptTxtSave(projectDir .. "/script-dev.txt", true)
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script.txt")
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script-DEV.txt", true)
 
     --Spring.Echo("compressing folder...")
     --create an archive from the directory
     VFS.CompressFolder(projectDir, "zip", self.path)
-    --remove the temporary directory
-	--FIXME: doesn't work on windows...
-    -- os.remove(projectDir)
 end
