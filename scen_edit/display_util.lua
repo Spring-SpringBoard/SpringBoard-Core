@@ -139,7 +139,7 @@ function DisplayUtil:OnFrame()
 end
 
 function DisplayUtil:Draw()
-    if not SCEN_EDIT.view.displayDevelop then
+    if SCEN_EDIT.view == nil or not SCEN_EDIT.view.displayDevelop then
         return
     end
     for i = 1, #self.texts do    

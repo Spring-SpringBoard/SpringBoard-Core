@@ -17,9 +17,10 @@ function AreaManager:addArea(area, areaId)
 end
 
 function AreaManager:removeArea(areaId)
-    assert(self.areas[areaId])
-    self.areas[areaId] = nil
-    self:callListeners("onAreaRemoved", areaId)
+    if self.areas[areaId] ~= nil then
+        self.areas[areaId] = nil
+        self:callListeners("onAreaRemoved", areaId)
+    end
 end
 
 function AreaManager:setArea(areaId, value)

@@ -45,6 +45,7 @@ end
 
 function Model:Serialize()
     local mission = {}
+    mission.projectDir = self.projectDir
     mission.meta = self:GetMetaData()
     mission.meta.m2sUnitIdMapping = nil
     mission.meta.s2mUnitIdMapping = nil
@@ -130,6 +131,10 @@ function Model:Load(mission)
 
     --load file
     self:SetMetaData(mission.meta)
+    if mission.projectDir ~= nil then
+        Spring.Echo(mission.projectDir)
+        self.projectDir = mission.projectDir
+    end
 end
 
 --returns a table that holds triggers, areas and other non-engine content
@@ -194,6 +199,10 @@ end
 
 function Model:GetProjectDir()
     if self.projectDir == nil then
+        self.projectDir = Spring.GetModOptions().projectDir
+    end
+
+    if self.projectDir == nil then
         --create a temporary directory
         local projectDirBase = "projects/project-"
         local projectDir = nil
@@ -201,7 +210,7 @@ function Model:GetProjectDir()
         repeat
             projectDir = projectDirBase .. tostring(indx)
             indx = indx + 1
-        until not VFS.FileExists(projectDir, VFS.RAW_ONLY) and (#VFS.SubDirs(projectDir, "*", VFS.RAW_ONLY) + #VFS.DirList(projectDir, "*", VFS.RAW_ONLY) == 0)
+        until not VFS.FileExists(projectDir, VFS.RAW_ONLY) and not SCEN_EDIT.DirExists(projectDir)
 
         Spring.CreateDir(projectDir)
         Spring.CreateDir(projectDir .. "/triggers")
@@ -212,7 +221,7 @@ return {
         -- My custom actions go here
     },
     functions = {
-        -- My custom conditions go here
+        -- My custom functions go here
     },
 }
 
