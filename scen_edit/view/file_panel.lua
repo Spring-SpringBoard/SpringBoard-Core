@@ -273,7 +273,8 @@ function FilePanel:MouseDblClick(x,y)
 
   if (itemIdx<0) then return end
 
-  if (itemIdx==1) then
+  --FIXME: loading from complex paths is broken, change this when they get fixed    
+  if false and (itemIdx==1) then
     self:SetDir(GetParentDir(self.dir))
     return self
   end
