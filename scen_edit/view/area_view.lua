@@ -66,7 +66,7 @@ function AreaView:_Draw(x1, z1, x2, z2)
         local w = gl.GetTextWidth(txt) * fontSize
         local h = gl.GetTextHeight(txt) * fontSize
         local cx = (x1 + x2 - w) / 2
-        local cz = (z1 + z2 - h) / 2
+        local cz = (z1 + z2 + h) / 2
         local y = Spring.GetGroundHeight(cx, cz)
         gl.Translate(cx, cz, -y)
         gl.Color(1, 1, 1, 1)    
