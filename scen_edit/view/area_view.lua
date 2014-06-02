@@ -61,7 +61,7 @@ function AreaView:_Draw(x1, z1, x2, z2)
 
     gl.PushMatrix()
         gl.Rotate(90, 1, 0, 0)
-        local fontSize = 12
+        local fontSize = 58
         local txt = tostring(self.areaId)
         local w = gl.GetTextWidth(txt) * fontSize
         local h = gl.GetTextHeight(txt) * fontSize
