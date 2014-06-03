@@ -1,9 +1,9 @@
 ReloadMetaModelCommand = AbstractCommand:extends{}
 
 -- sends meta model files from widget to gadget
-function ReloadMetaModelCommand:init()
+function ReloadMetaModelCommand:init(metaModelFiles)
     self.className = "ReloadMetaModelCommand"
-    self.metaModelFiles = SCEN_EDIT.conf:GetMetaModelFiles()
+    self.metaModelFiles = metaModelFiles
 end
 
 function ReloadMetaModelCommand:execute()

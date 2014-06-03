@@ -87,7 +87,9 @@ function TabbedWindow:init()
 				tooltip = "Reload meta model", 
 				OnClick = {
 					function() 
-						local reloadMetaModelCommand = ReloadMetaModelCommand()
+                        SCEN_EDIT.conf:initializeListOfMetaModelFiles()
+						local reloadMetaModelCommand = ReloadMetaModelCommand(SCEN_EDIT.conf:GetMetaModelFiles())
+						SCEN_EDIT.commandManager:execute(reloadMetaModelCommand)
 						SCEN_EDIT.commandManager:execute(reloadMetaModelCommand, true)
 					end
 				},

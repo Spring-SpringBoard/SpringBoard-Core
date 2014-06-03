@@ -51,7 +51,6 @@ function Conf:initializeListOfMetaModelFiles()
 end
 
 function Conf:GetMetaModelFiles()
-	self:initializeListOfMetaModelFiles()
     return self.metaModelFiles
 end
 

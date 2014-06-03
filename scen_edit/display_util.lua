@@ -178,12 +178,3 @@ function DisplayUtil:followUnit(unit)
         SCEN_EDIT.commandManager:execute(cmd, true)
     end
 end
-
-function DisplayUtil:playSound(soundPath)
-    if self.isWidget then
-        Spring.PlaySoundFile(soundPath)
-    else
-        local cmd = WidgetPlaySoundCommand(soundPath)
-        SCEN_EDIT.commandManager:execute(cmd, true)
-    end
-end
