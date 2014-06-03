@@ -40,8 +40,131 @@ return {
 
         return {
             {
-                humanName = "Spawn unit", 
-                name = "SPAWN_UNIT",
+                humanName = "Enable trigger", 
+                name = "ENABLE_TRIGGER",
+                input = { "trigger" },
+                tags = {"Trigger"},
+                execute = function (input)
+                    local trigger = input.trigger
+                    SCEN_EDIT.model.triggerManager:enableTrigger(trigger.id)
+                end
+            },
+            {
+                humanName = "Disable trigger",
+                name = "DISABLE_TRIGGER",
+                input = { "trigger" },
+                tags = {"Trigger"},
+                execute = function (input)
+                    local trigger = input.trigger
+                    SCEN_EDIT.model.triggerManager:disableTrigger(trigger.id)
+                end
+            },
+
+            {
+                humanName = "Kill team", 
+                name = "KILL_TEAM",
+                input = "team",
+                tags = {"Game"},
+                execute = function (input)
+                    Spring.KillTeam(input.team)
+                end
+            },
+            {
+                humanName = "Win game", 
+                name = "WIN_GAME",
+                input = "team_array",
+                tags = {"Game"},
+                execute = function (input)
+                    local allyTeamsMap = {}
+                    for _, team in pairs(input.team_array) do
+                        local _, _, _, _, _, allyTeam = Spring.GetTeamInfo(team)
+                        allyTeamsMap[allyTeam] = true
+                    end
+                    local allyTeams = {}
+                    for allyTeam, _ in pairs(allyTeamsMap) do
+                        table.insert(allyTeams, allyTeam)
+                    end
+                    Spring.GameOver(allyTeams)
+                end
+            },
+            {
+                humanName = "Lose game", 
+                name = "LOSE_GAME",
+                tags = {"Game"},
+                execute = function (input)
+                    Spring.GameOver()
+                end
+            },
+            {
+                humanName = "Add resources", 
+                name = "ADD_TEAM_RESOURCES",
+                input = {"team", "string", "number"},
+                tags = {"Resources"},
+                execute = function (input)
+                    Spring.AddTeamResources(input.team, input.string, input.number)
+                end
+            },
+            {
+                humanName = "Remove resources", 
+                name = "REMOVE_TEAM_RESOURCES",
+                input = {"team", "string", "number"},
+                tags = {"Resources"},
+                execute = function (input)
+                    Spring.UseTeamResources(input.team, input.string, input.number)
+                end
+            },
+            {
+                humanName = "Set team resources", 
+                name = "SET_TEAM_RESOURCES",
+                input = {"team", "string", "number"},
+                tags = {"Resources"},
+                execute = function (input)
+                    Spring.SetTeamResources(input.team, input.string, input.number)
+                end
+            },
+            {
+                humanName = "Make allied", 
+                name = "MAKE_ALLIED",
+                input = { 
+                    {
+                        name = "team1", 
+                        type = "team",
+                    },
+                    {
+                        name = "team2", 
+                        type = "team",
+                    },
+                },
+                tags = {"Alliance"},
+                execute = function (input)
+                    local _, _, _, _, _, allyTeam1 = Spring.GetTeamInfo(input.team1)
+                    local _, _, _, _, _, allyTeam2 = Spring.GetTeamInfo(input.team2)
+                    Spring.SetAlly(allyTeam1, allyTeam2, true)
+                end
+            },
+            {
+                humanName = "Make enemies", 
+                name = "MAKE_ENEMIES",
+                input = { 
+                    {
+                        name = "team1", 
+                        type = "team",
+                    },
+                    {
+                        name = "team2", 
+                        type = "team",
+                    },
+                },
+                tags = {"Alliance"},
+                execute = function (input)
+                    local _, _, _, _, _, allyTeam1 = Spring.GetTeamInfo(input.team1)
+                    local _, _, _, _, _, allyTeam2 = Spring.GetTeamInfo(input.team2)
+                    Spring.SetAlly(allyTeam1, allyTeam2, false)
+                end
+            },
+            {
+                humanName = "Create unit", 
+                name = "CREATE_UNIT",
                 input = { "unitType", "team", "area" },
                 tags = {"Unit"},
                 execute = function (input)
@@ -51,12 +174,206 @@ return {
                     local x = (area[1] + area[3]) / 2                
                     local z = (area[2] + area[4]) / 2
                     local y = Spring.GetGroundHeight(x, z)                                                
-                    Spring.CreateUnit(unitType, x, y, z, 0, team)
+                    local id = Spring.CreateUnit(unitType, x, y, z, 0, team)
 
                     local color = SCEN_EDIT.model.teams[team].color
                     SCEN_EDIT.displayUtil:displayText("Spawned", {x, y, z}, color )
                 end
             },
+            {
+                humanName = "Remove unit", 
+                name = "REMOVE_UNIT",
+                input = { "unit" },
+                tags = {"Unit"},
+                execute = function (input)
+                    local unit = input.unit                
+                    local x, y, z = Spring.GetUnitPosition(unit)
+
+                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
+                    Spring.DestroyUnit(unit, false, true)
+                    SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
+                end
+            },
+            {
+                humanName = "Destroy unit", 
+                name = "DESTROY_UNIT",
+                input = { "unit" },
+                tags = {"Unit"},
+                execute = function (input)
+                    local unit = input.unit                
+                    local x, y, z = Spring.GetUnitPosition(unit)
+
+                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
+                    Spring.DestroyUnit(unit, false, false)
+                    SCEN_EDIT.displayUtil:displayText("Destroyed", {x, y, z}, color)
+                end
+            },
+            {
+                humanName = "Self destruct unit", 
+                name = "SELFD_UNIT",
+                input = { "unit" },
+                tags = {"Unit"},
+                execute = function (input)
+                    local unit = input.unit                
+                    local x, y, z = Spring.GetUnitPosition(unit)
+
+                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
+                    Spring.DestroyUnit(unit, true, false)
+                    SCEN_EDIT.displayUtil:displayText("Self Destruct", {x, y, z}, color)
+                end
+            },
+            {
+                humanName = "Transfer unit", 
+                name = "TRANSFER_UNIT",
+                input = { "unit", "team" },
+                tags = {"Unit"},
+                execute = function (input)
+                    local unit = input.unit
+                    local team = input.team
+                    Spring.TransferUnit(unit, team, false)
+                end
+            },
+            {
+                humanName = "Set unit health", 
+                name = "SET_UNIT_HEALTH",
+                input = { "unit", "number" },
+                tags = {"Unit"},
+                execute = function (input)
+                    Spring.SetUnitHealth(input.unit, input.number)
+                end
+            },
+            {
+                humanName = "Set unit max health", 
+                name = "SET_UNIT_MAX_HEALTH",
+                input = { "unit", "number" },
+                tags = {"Unit"},
+                execute = function (input)
+                    Spring.SetUnitMaxHealth(input.unit, input.number)
+                end
+            },
+            {
+                humanName = "Damage unit", 
+                name = "DAMAGE_UNIT",
+                input = { "unit", "number" },
+                tags = {"Unit"},
+                execute = function (input)
+                    Spring.AddUnitDamage(input.unit, input.number)
+                end
+            },
+            {
+                humanName = "Set unit stockpile", 
+                name = "SET_UNIT_STOCKPILE",
+                input = { "unit", "number" },
+                tags = {"Unit"},
+                execute = function (input)
+                    Spring.SetUnitStockpile(input.unit, input.number)
+                end
+            },
+            {
+                humanName = "Set unit target", 
+                name = "SET_UNIT_TARGET",
+                input = { 
+                    {
+                        name="unit",
+                        type="unit", 
+                    },
+                    {
+                        name="target",
+                        type="unit", 
+                    },
+                },
+                tags = {"Unit"},
+                execute = function (input)                
+                    Spring.SetUnitTarget(input.unit, input.target)
+                end
+            },
+            {
+                humanName = "Send message", 
+                name = "SEND_MESSAGE",
+                input = "string",
+                tags = {"Message"},
+                execute = function (input)
+                    Spring.SetMessage(input.string)
+                end
+            },
+            {
+                humanName = "Send message to team", 
+                name = "SEND_MESSAGE_TEAM",
+                input = { "string",  "team" },
+                tags = {"Message"},
+                execute = function (input)
+                    Spring.SetMessageToTeam(input.team, input.string)
+                end
+            },
+            {
+                humanName = "Send message to spectators", 
+                name = "SEND_MESSAGE_SPECTATORS",
+                input = "string",
+                tags = {"Message"},
+                execute = function (input)
+                    Spring.SetMessageToSpectators(input.string)
+                end
+            },
+            {
+                humanName = "Add Marker", 
+                name = "MARKER_ADD_POINT",
+                input = {"area", "stirng"},
+                tags = {"Marker"},
+                execute = function (input)
+                    local area = input.area
+                    local x = (area[1] + area[3]) / 2                
+                    local z = (area[2] + area[4]) / 2
+                    Spring.MarkerAddPoint(x, 0, z, input.string)
+                end
+            },
+            {
+                humanName = "Play sound",
+                name = "PLAY_SOUND_FILE",
+                input = { "string" },
+                tags = {"Sound"},
+                execute = function (input)
+                    Spring.PlaySoundFile(input.string)
+                end
+            },
+            {
+                humanName = "Select unit",
+                name = "SELECT_UNIT",
+                input = "unit",
+                tags = {"Selection"},
+                execute = function (input)
+                    Spring.SelectUnitArray({input.unit})
+                end
+            },
+            {
+                humanName = "Select units",
+                name = "SELECT_UNIT_ARRAY",
+                input = "unit_array",
+                tags = {"Selection"},
+                execute = function (input)
+                    Spring.SelectUnitArray(input.unit_array)
+                end
+            },
+            {
+                humanName = "Camera follow unit",
+                name = "CAMERA_FOLLOW_UNIT",
+                input = { "unit" },
+                tags = { "Camera"},
+                execute = function (input)
+                    SCEN_EDIT.displayUtil:followUnit(input.unit)
+                end
+            },
+            {
+                humanName = "Camera target",
+                name = "SET_CAMERA_TARGET",
+                input = { "area" },
+                tags = { "Camera"},
+                execute = function (input)
+                    local x = (area[1] + area[3]) / 2                
+                    local z = (area[2] + area[4]) / 2
+                    Spring.SetCameraTarget(x, 0, z)
+                end
+            },
+
             {
                 humanName = "Issue order", 
                 name = "ISSUE_ORDER",
@@ -109,138 +426,6 @@ return {
                         }
                         SCEN_EDIT.metaModel.orderTypes[orderTypeName].execute(newInput)
                     end
-                end
-            },
-            {
-                humanName = "Unit say", 
-                name = "UNIT_SAY",
-                input = { "unit", "string" },
-                execute = function (input)
-                    local unit = input.unit
-                    local text = input.string
-
-                    SCEN_EDIT.displayUtil:unitSay(unit, text)
-                end
-            },
-            {
-                humanName = "Remove unit", 
-                name = "REMOVE_UNIT",
-                input = { "unit" },
-                tags = {"Unit"},
-                execute = function (input)
-                    local unit = input.unit                
-                    local x, y, z = Spring.GetUnitPosition(unit)
-
-                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
-                    Spring.DestroyUnit(unit, false, true)
-                    SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
-                end
-            },
-            {
-                humanName = "Move unit", 
-                name = "MOVE_UNIT",
-                input = { "unit", "area" },
-                tags = {"Unit"},
-                execute = function (input)
-                    local unit = input.unit
-                    local area = input.area
-                    local x = (area[1] + area[3]) / 2
-                    local z = (area[2] + area[4]) / 2
-                    local y = Spring.GetGroundHeight(x, z)
-                    Spring.SetUnitPosition(unit, x, y, z)
-                    Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {})
-                end
-            },
-            {
-                humanName = "Transfer unit", 
-                name = "TRANSFER_UNIT",
-                input = { "unit", "team" },
-                tags = {"Unit"},
-                execute = function (input)
-                    local unit = input.unit
-                    local team = input.team
-                    Spring.TransferUnit(unit, team, false)
-                end
-            },
-            {
-                humanName = "Enable trigger", 
-                name = "ENABLE_TRIGGER",
-                input = { "trigger" },
-                tags = {"Trigger"},
-                execute = function (input)
-                    local trigger = input.trigger
-                    SCEN_EDIT.model.triggerManager:enableTrigger(trigger.id)
-                end
-            },
-            {
-                humanName = "Disable trigger",
-                name = "DISABLE_TRIGGER",
-                input = { "trigger" },
-                tags = {"Trigger"},
-                execute = function (input)
-                    local trigger = input.trigger
-                    SCEN_EDIT.model.triggerManager:disableTrigger(trigger.id)
-                end
-            },
-            {
-                humanName = "Hello world",
-                name = "HELLO_WORLD",
-                input = {},
-                execute = function (input)
-                    Spring.Echo("Hello world")
-                end
-            },
-            {
-                humanName = "Execute trigger after n seconds",
-                name = "EXECUTE_TRIGGER_AFTER_TIME",
-                input = { "trigger", "number" },
-                doRepeat = true,
-                execute = function (input)
-                    local trigger = input.trigger
-                    if not input.converted then
-                        input.converted = true
-                        input.number = input.number * 30
-                    end
-                    if input.number > 0 then
-                        input.number = input.number - 1
-                        return true
-                    else
-                        SCEN_EDIT.rtModel:ExecuteTrigger(trigger.id)
-                    end
-                end
-            },
-            {
-                humanName = "Camera follow unit",
-                name = "CAMERA_FOLLOW_UNIT",
-                input = { "unit" },
-                execute = function (input)
-                    SCEN_EDIT.displayUtil:followUnit(input.unit)
-                end
-            },
-            {
-                humanName = "Play sound",
-                name = "PLAY_SOUND_FILE",
-                input = { "string" },
-                execute = function (input)
-                    SCEN_EDIT.displayUtil:playSound(input.string)
-                end
-            },
-            {
-                humanName = "Test result",
-                name = "TEST_RESULT",
-                input = { 
-                    {
-                        type = "number",
-                        name = "name",
-                        humanName = "Test number:",
-                    },
-                    {
-                        type = "bool",
-                        name = "result",
-                        humanName = "Success:",
-                    },
-                },
-                execute = function (input)
                 end
             },
             unpack(variableAssignments),
@@ -346,23 +531,176 @@ return {
         end
         local coreTransforms = {
             {
-                humanName = "Unit type",
-                name = "UNIT_TYPE",
-                input = { "unit" },
-                output = "unitType",
-                tags = {"Unit"},
+                humanName = "God mode enabled",
+                name = "GOD_MODE_ENABLED",
+                output = "bool",
+                tags = { "Game State" },
                 execute = function(input)
-                    return Spring.GetUnitDefID(input.unit)
+                    return Spring.IsGodModeEnabled()
+                end
+            },
+            {
+                humanName = "Cheating enabled",
+                name = "CHEATING_ENABLED",
+                output = "bool",
+                tags = { "Game State" },
+                execute = function(input)
+                    return Spring.IsCheatingEnabled()
+                end
+            },
+            {
+                humanName = "Helper AIs enabled",
+                name = "HELPER_AIS_ENABLED",
+                output = "bool",
+                tags = { "Game State" },
+                execute = function(input)
+                    return Spring.AreHelperAIsEnabled()
+                end
+            },
+            {
+                humanName = "Fixed allies",
+                name = "FIXED_ALLIES",
+                output = "bool",
+                tags = { "Game State" },
+                execute = function(input)
+                    return Spring.FixedAllies()
+                end
+            },
+            {
+                humanName = "Game over",
+                name = "GAME_OVER",
+                output = "bool",
+                tags = { "Game State" },
+                execute = function(input)
+                    return Spring.IsGameOver()
+                end
+            },
+
+            {
+                humanName = "Game speed",
+                name = "GAME_SPEED",
+                output = "number",
+                tags = { "Time" },
+                execute = function(input)
+                    return Spring.GetGameSpeed()
+                end
+            },
+            {
+                humanName = "Game frame",
+                name = "GAME_FRAME",
+                output = "number",
+                tags = { "Time" },
+                execute = function(input)
+                    return Spring.GetGameFrame()
+                end
+            },
+            {
+                humanName = "Game seconds",
+                name = "GAME_SECONDS",
+                output = "number",
+                tags = { "Time" },
+                execute = function(input)
+                    return Spring.GetGameSeconds()
+                end
+            },
+            {
+                humanName = "Random",
+                name = "INTEGER_RANDOM",
+                input = {
+                    {
+                        name = "min", 
+                        humanName = "Min",
+                        type = "number",
+                    },
+                    {
+                        name = "max", 
+                        humanName = "Max",
+                        type = "number",
+                    },
+                },
+                output = "number",
+                execute = function(input)
+                    return math.random(input.min, input.max)
+                end
+            },
+            {
+                humanName = "Team alliance",
+                name = "TEAMS_ALLIED",
+                input = {
+                    {
+                        name = "team1", 
+                        humanName = "Team 1",
+                        type = "team",
+                    },
+                    {
+                        name = "team2", 
+                        humanName = "Team 2",
+                        type = "team",
+                    },
+                },
+                output = "bool",
+                tags = {"Team"},
+                execute = function(input)
+                    return Spring.AreTeamsAllied(input.team1, input.team2)
+                end
+            },
+            {
+                humanName = "All units",
+                name = "ALL_UNITS",
+                output = "unit_array",
+                tags = {"Units"},
+                execute = function()
+                    return Spring.GetAllUnits()
+                end
+            },
+            {
+                humanName = "Team units",
+                name = "TEAM_UNITS",
+                input = "team",
+                output = "unit_array",
+                tags = {"Units"},
+                execute = function(input)
+                    return Spring.GetTeamUnits(input.team)
+                end
+            },
+            {
+                humanName = "Team units by type",
+                name = "TEAM_UNITS_BY_TYPE",
+                input = { "team", "unitType" },
+                output = "unit_array",
+                tags = {"Units"},
+                execute = function(input)
+                    return Spring.GetTeamUnitsByDefs(input.team, input.unitType)
+                end
+            },
+            {
+                humanName = "Units in Area",
+                name = "UNITS_IN_AREA",
+                input = "area",
+                output = "unit_array",
+                tags = {"Units"},
+                execute = function(input)
+                    return Spring.GetUnitsInRectangle(unpack(input.area))
                 end,
             },
             {
-                humanName = "Unit team",
-                name = "UNIT_TEAM",
-                input = { "unit" },
-                output = "team",            
+                humanName = "Unit's nearest ally",
+                name = "UNIT_NEAREST_ALLY",
+                input = "unit",
+                output = "unit",
                 tags = {"Unit"},
                 execute = function(input)
-                    return Spring.GetUnitTeam(input.unit)
+                    return Spring.GetUnitNearestAlly(input.unit)
+                end,
+            },
+            {
+                humanName = "Unit's nearest enemy",
+                name = "UNIT_NEAREST_ENEMY",
+                input = "unit",
+                output = "unit",
+                tags = {"Unit"},
+                execute = function(input)
+                    return Spring.GetUnitNearestEnemy(input.unit)
                 end,
             },
             {
@@ -382,9 +720,29 @@ return {
                 end,
             },
             {
-                humanName = "Unit HP",
-                name = "UNIT_HP",
-                input = { "unit" },
+                humanName = "Unit type",
+                name = "UNIT_TYPE",
+                input = "unit",
+                output = "unitType",
+                tags = {"Unit"},
+                execute = function(input)
+                    return Spring.GetUnitDefID(input.unit)
+                end,
+            },
+            {
+                humanName = "Unit team",
+                name = "UNIT_TEAM",
+                input = "unit",
+                output = "team",            
+                tags = {"Unit"},
+                execute = function(input)
+                    return Spring.GetUnitTeam(input.unit)
+                end,
+            },
+            {
+                humanName = "Unit Health",
+                name = "UNIT_HEALTH",
+                input = "unit",
                 output = "number",            
                 tags = {"Unit"},
                 execute = function(input)
@@ -392,25 +750,59 @@ return {
                 end,
             },
             {
-                humanName = "Unit HP%",
-                name = "UNIT_HP_PERCENT",
-                input = { "unit" },
+                humanName = "Unit Health %",
+                name = "UNIT_HEALTH_PERCENT",
+                input = "unit",
                 output = "number",            
                 tags = {"Unit"},
                 execute = function(input)
-                    local hp, maxHp Spring.GetUnitHealth(input.unit)
+                    local hp, maxHp = Spring.GetUnitHealth(input.unit)
                     return hp / maxHp
                 end,
             },
             {
-                humanName = "Units in Area",
-                name = "UNITS_IN_AREA",
-                input = { "area" },
-                output = "unit_array",
+                humanName = "Unit stunned",
+                name = "UNIT_STUNNED",
+                input = "unit",
+                output = "bool",
+                tags = {"Unit"},
                 execute = function(input)
-                    return Spring.GetUnitsInRectangle(unpack(input.area))
+                    local _, isStunned = Spring.GetUnitIsStunned(input.unit)
+                    return isStunned
                 end,
             },
+            {
+                humanName = "Unit experience",
+                name = "UNIT_EXPERIENCE",
+                input = "unit",
+                output = "number",
+                tags = {"Unit"},
+                execute = function(input)
+                    return Spring.GetUnitExperience(input.unit)
+                end,
+            },
+            {
+                humanName = "Unit being built by",
+                name = "UNIT_BEING_BUILT",
+                input = "unit",
+                output = "unit",
+                tags = {"Unit"},
+                execute = function(input)
+                    return Spring.GetUnitIsBuilding(input.unit)
+                end,
+            },
+            {
+                humanName = "Unit's last attacker",
+                name = "UNIT_LAST_ATTACKER",
+                input = "unit",
+                output = "unit",
+                tags = {"Unit"},
+                execute = function(input)
+                    return Spring.GetUnitLastAttacker(input.unit)
+                end,
+            },
+
+
             {
                 humanName = "Unit is in Area",
                 name = "UNIT_IS_IN_AREA",
