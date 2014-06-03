@@ -84,8 +84,10 @@ end
 function SCEN_EDIT.parseData(data)
     local newData = {}
     -- verify unnamed objects
-    for i = 1, #data do
-        local d = data[i]        
+    if type(data) == "string" then
+        data = {data}
+    end
+    for _, d in pairs(data) do
         if type(d) == "string" then
             d = {
                 name = d,
@@ -102,8 +104,7 @@ function SCEN_EDIT.parseData(data)
                 d.name = d.type                
             end
             if continue then
-                for j = 1, #newData do
-                    local d2 = newData[j]
+                for _, d2 in pairs(newData) do
                     if d.name == d2.name then
                         Spring.Echo("Error, name field is duplicate")
                         continue = false
@@ -114,7 +115,7 @@ function SCEN_EDIT.parseData(data)
                 table.insert(newData, d)
             end            
         else
-            Spring.Echo("Unexpected data " .. d .. " of type " .. type(d))
+            Spring.Echo("Unexpected data " .. tostring(d) .. " of type " .. type(d))
         end        
     end
 

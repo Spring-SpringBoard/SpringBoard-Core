@@ -4,7 +4,8 @@ function MetaModelLoader:AttemptToLoadFile(metaModelFile)
     local data = metaModelFile.data
 	local success, data = pcall(function() return assert(loadstring(data))() end)
 	if not success then
-		Spring.Echo("Failed to parse file " .. metaModelFile .. ": " .. metaModelFile.data)
+		Spring.Echo("Failed to parse file " .. metaModelFile.name .. ": ")
+        Spring.Echo(loadstring(metaModelFile.data))
 		return nil
 	end
 	

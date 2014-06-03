@@ -1,15 +1,14 @@
 FieldResolver = LCS.class{}
 
-function FieldResolver:init(params)
-    self.params = params
+function FieldResolver:init()
 end
 
-function FieldResolver:CallExpression(expr, exprType)
+function FieldResolver:CallExpression(expr, exprType, params)
     local resolvedInputs = {}
     local fail = false
     for i = 1, #exprType.input do
         local input = exprType.input[i]    
-        local resolvedInput = self:Resolve(expr[input.name], input.type, input.rawVariable)
+        local resolvedInput = self:Resolve(expr[input.name], input.type, input.rawVariable, params)
         if not input.allowNil then
             fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
         end
@@ -28,15 +27,15 @@ function FieldResolver:CallExpression(expr, exprType)
     end
 end
 
-function FieldResolver:Resolve(field, type, rawVariable)
+function FieldResolver:Resolve(field, type, rawVariable, params)
     if field.type == "expr" then
         local conditionTypeName = field.expr[1].conditionTypeName
         local conditionType = SCEN_EDIT.metaModel.functionTypes[conditionTypeName]
-        return self:CallExpression(field.expr[1], conditionType)
+        return self:CallExpression(field.expr[1], conditionType, params)
     elseif field.type == "var" then
         local variable = SCEN_EDIT.model.variableManager:getVariable(field.id)
         if not rawVariable then
-            return self:Resolve(variable.value, variable.type)
+            return self:Resolve(variable.value, variable.type, nil, params)
         else
             return variable
         end
@@ -47,7 +46,7 @@ function FieldResolver:Resolve(field, type, rawVariable)
             unitId = tonumber(field.id)
         elseif field.type == "spec" then
             if field.name == "Trigger unit" then
-                unitId = tonumber(self.params.triggerUnitId)
+                unitId = tonumber(params.triggerUnitId)
             end
         elseif field.type == "var" then
         end
@@ -62,7 +61,7 @@ function FieldResolver:Resolve(field, type, rawVariable)
             return tonumber(field.id)
         elseif field.type == "spec" then
             if field.name == "Trigger unit type" then
-                local triggerUnitId = tonumber(self.params.triggerUnitId)
+                local triggerUnitId = tonumber(params.triggerUnitId)
                 if triggerUnitId then
                     return Spring.GetUnitDefID(triggerUnitId)                        
                 end
@@ -78,7 +77,7 @@ function FieldResolver:Resolve(field, type, rawVariable)
             return SCEN_EDIT.model.areaManager:getArea(areaId)
         elseif field.type == "spec" then
             if field.name == "Trigger area" then
-                local areaId = tonumber(self.params.triggerAreaId)
+                local areaId = tonumber(params.triggerAreaId)
                 if areaId then
                     return SCEN_EDIT.model.areaManager:getArea(areaId)
                 end
@@ -97,7 +96,7 @@ function FieldResolver:Resolve(field, type, rawVariable)
         }
         for i = 1, #orderType.input do
             local input = orderType.input[i]    
-            local resolvedInput = self:Resolve(field[input.name], input.type)
+            local resolvedInput = self:Resolve(field[input.name], input.type, nil, params)
             order.input[input.name] = resolvedInput
         end
         return order
@@ -118,7 +117,7 @@ function FieldResolver:Resolve(field, type, rawVariable)
         if field.type == "pred" then
             local values = {}
             for _, element in pairs(field.id) do
-                local value = self:Resolve(element, atomicType)
+                local value = self:Resolve(element, atomicType, nil, params)
                 table.insert(values, value)
             end
             return values
