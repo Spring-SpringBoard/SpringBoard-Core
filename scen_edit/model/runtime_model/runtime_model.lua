@@ -262,7 +262,6 @@ function RuntimeModel:ConditionStep(trigger, params)
     if not trigger.enabled then
         return
     end
-    self.fieldResolver.params = params
     local cndSatisfied = self:ComputeTriggerConditions(trigger, params)
     if cndSatisfied then
         self:ActionStep(trigger, params)
@@ -270,10 +269,9 @@ function RuntimeModel:ConditionStep(trigger, params)
 end
 
 function RuntimeModel:ActionStep(trigger, params)
-    for i = 1, #trigger.actions do
-        local action = trigger.actions[i]
+    for _, action in pairs(trigger.actions) do
         local actionType = SCEN_EDIT.metaModel.actionTypes[action.actionTypeName]
-        self.fieldResolver:CallExpression(action, actionType)
+        self.fieldResolver:CallExpression(action, actionType, params)
     end
 end
 
@@ -292,10 +290,9 @@ function RuntimeModel:ExecuteTrigger(triggerId)
 end
 
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
-    for i = 1, #trigger.conditions do
-        local condition = trigger.conditions[i]
+    for _, condition in pairs(trigger.conditions) do
         local conditionType = SCEN_EDIT.metaModel.functionTypes[condition.conditionTypeName]
-        local result = self.fieldResolver:CallExpression(condition, conditionType)
+        local result = self.fieldResolver:CallExpression(condition, conditionType, params)
         if not result then
             return false
         end
