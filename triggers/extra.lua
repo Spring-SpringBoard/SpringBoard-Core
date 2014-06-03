@@ -1,97 +1,51 @@
 return {
     functions = {
+    },
+    actions = {
         {
-            name = "GOD_MODE_ENABLED",
-            humanName = "God mode enabled",
-            output = "bool",
-            tags = { "Game State" },
-            execute = function(input)
-                return Spring.IsGodModeEnabled()
-            end
-        },
-        {
-            name = "CHEATING_ENABLED",
-            humanName = "Cheating enabled",
-            output = "bool",
-            tags = { "Game State" },
-            execute = function(input)
-                return Spring.IsCheatingEnabled()
-            end
-        },
-        {
-            name = "HELPER_AIS_ENABLED",
-            humanName = "Helper AIs enabled",
-            output = "bool",
-            tags = { "Game State" },
-            execute = function(input)
-                return Spring.AreHelperAIsEnabled()
-            end
-        },
-        {
-            name = "FIXED_ALLIES",
-            humanName = "Fixed allies",
-            output = "bool",
-            tags = { "Game State" },
-            execute = function(input)
-                return Spring.FixedAllies()
-            end
-        },
-        {
-            name = "GAME_OVER",
-            humanName = "Game over",
-            output = "bool",
-            tags = { "Game State" },
-            execute = function(input)
-                return Spring.IsGameOver()
-            end
-        },
+            humanName = "Unit say", 
+            name = "UNIT_SAY",
+            input = { "unit", "string" },
+            execute = function (input)
+                local unit = input.unit
+                local text = input.string
 
-        {
-            name = "GAME_SPEED",
-            humanName = "Game speed",
-            output = "number",
-            tags = { "Time" },
-            execute = function(input)
-                return Spring.GetGameSpeed()
+                SCEN_EDIT.displayUtil:unitSay(unit, text)
             end
         },
         {
-            name = "GAME_FRAME",
-            humanName = "Game frame",
-            output = "number",
-            tags = { "Time" },
-            execute = function(input)
-                return Spring.GetGameFrame()
+            humanName = "Move unit", 
+            name = "MOVE_UNIT",
+            input = { "unit", "area" },
+            tags = {"Unit"},
+            execute = function (input)
+                local unit = input.unit
+                local area = input.area
+                local x = (area[1] + area[3]) / 2
+                local z = (area[2] + area[4]) / 2
+                local y = Spring.GetGroundHeight(x, z)
+                Spring.SetUnitPosition(unit, x, y, z)
+                Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {})
             end
         },
         {
-            name = "GAME_SECONDS",
-            humanName = "Game seconds",
-            output = "number",
-            tags = { "Time" },
-            execute = function(input)
-                return Spring.GetGameSeconds()
+            humanName = "Execute trigger after n seconds",
+            name = "EXECUTE_TRIGGER_AFTER_TIME",
+            input = { "trigger", "number" },
+            doRepeat = true,
+            execute = function (input)
+                local trigger = input.trigger
+                if not input.converted then
+                    input.converted = true
+                    input.number = input.number * 30
+                end
+                if input.number > 0 then
+                    input.number = input.number - 1
+                    return true
+                else
+                    SCEN_EDIT.rtModel:ExecuteTrigger(trigger.id)
+                end
             end
         },
-        {
-            name = "INTEGER_RANDOM",
-            humanName = "Random",
-            input = {
-                {
-                    name = "min", 
-                    humanName = "Min",
-                    type = "number",
-                },
-                {
-                    name = "max", 
-                    humanName = "Max",
-                    type = "number",
-                },
-            },
-            output = "number",
-            execute = function(input)
-                return math.random(input.min, input.max)
-            end
-        },
-    }
+    },
 }
