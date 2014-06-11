@@ -291,6 +291,8 @@ end
 
 SCEN_EDIT.humanExpressionMaxLevel = 3
 function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
+    local success, data = pcall(function()
+
     if level == nil then
         level = 1
     end
@@ -388,6 +390,12 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         return SCEN_EDIT.metaModel.identityComparisonTypes[data.cmpTypeId]
 	end	
     return data.humanName
+    end)
+    if success then
+        return data
+    else
+        return "Err."
+    end
 end
 
 function SCEN_EDIT.GenerateTeamColor()
@@ -564,6 +572,8 @@ function SCEN_EDIT.createNewPanel(input, ...)
         return OrderPanel(...)
     elseif input == "identityComparison" then
         return IdentityComparisonPanel(...)
+    elseif input == "position" then
+        return PositionPanel(...)
     elseif input:find("_array") then
         return GenericArrayPanel(input, ...)
     end

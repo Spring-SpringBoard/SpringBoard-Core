@@ -165,14 +165,13 @@ return {
             {
                 humanName = "Create unit", 
                 name = "CREATE_UNIT",
-                input = { "unitType", "team", "area" },
+                input = { "unitType", "team", "position" },
                 tags = {"Unit"},
                 execute = function (input)
                     local unitType = input.unitType
-                    local area = input.area
                     local team = input.team
-                    local x = (area[1] + area[3]) / 2                
-                    local z = (area[2] + area[4]) / 2
+                    local x = input.position.x
+                    local z = input.position.z
                     local y = Spring.GetGroundHeight(x, z)                                                
                     local id = Spring.CreateUnit(unitType, x, y, z, 0, team)
 
@@ -288,6 +287,19 @@ return {
                 end
             },
             {
+                humanName = "Move unit", 
+                name = "MOVE_UNIT",
+                input = { "unit", "position" },
+                tags = {"Unit"},
+                execute = function (input)
+                    local unit = input.unit
+                    local position = input.position
+                    local x, y, z = position.x, position.y, position.z
+                    Spring.SetUnitPosition(unit, x, y, z)
+                    Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {})
+                end
+            },
+            {
                 humanName = "Send message", 
                 name = "SEND_MESSAGE",
                 input = "string",
@@ -317,13 +329,14 @@ return {
             {
                 humanName = "Add Marker", 
                 name = "MARKER_ADD_POINT",
-                input = {"area", "stirng"},
+                input = {"position", "stirng"},
                 tags = {"Marker"},
                 execute = function (input)
-                    local area = input.area
-                    local x = (area[1] + area[3]) / 2                
-                    local z = (area[2] + area[4]) / 2
-                    Spring.MarkerAddPoint(x, 0, z, input.string)
+                    local position = input.position
+                    local x = position.x
+                    local y = position.y
+                    local z = position.z
+                    Spring.MarkerAddPoint(x, y, z, input.string)
                 end
             },
             {
@@ -365,12 +378,14 @@ return {
             {
                 humanName = "Camera target",
                 name = "SET_CAMERA_TARGET",
-                input = { "area" },
+                input = { "position" },
                 tags = { "Camera"},
                 execute = function (input)
-                    local x = (area[1] + area[3]) / 2                
-                    local z = (area[2] + area[4]) / 2
-                    Spring.SetCameraTarget(x, 0, z)
+                    local position = input.position
+                    local x = position.x
+                    local y = position.y
+                    local z = position.z
+                    Spring.SetCameraTarget(x, y, z)
                 end
             },
 
@@ -804,6 +819,19 @@ return {
 
 
             {
+                humanName = "Center of Area",
+                name = "CENTER_OF_AREA",
+                input = "area",
+                output = "position",
+                execute = function(input)
+                    local area = input.area
+                    local x = (area[1] + area[3]) / 2
+                    local z = (area[2] + area[4]) / 2
+                    local y = Spring.GetGroundHeight(x, z)
+                    return {x=x, y=y, z=z}
+                end
+            },
+            {
                 humanName = "Unit is in Area",
                 name = "UNIT_IS_IN_AREA",
                 input = { "area", "unit" },
@@ -923,15 +951,13 @@ return {
     orders = function()
         return {
             {
-                humanName = "Move to area",
-                name = "MOVE_AREA",
-                input = { "area" },
+                humanName = "Move to position",
+                name = "MOVE_POSITION",
+                input = { "position" },
                 execute = function(input)
                     local unit = input.unit
-                    local area = input.params.area
-                    local x = (area[1] + area[3]) / 2
-                    local z = (area[2] + area[4]) / 2
-                    local y = Spring.GetGroundHeight(x, z)
+                    local position = input.params.position
+                    local x, y, z = position.x, position.y, position.z
 
                     Spring.GiveOrderToUnit(unit, CMD.MOVE, { x, y, z }, {"shift"})
                 end,
@@ -974,30 +1000,26 @@ return {
                 end,
             },
             {
-                humanName = "Patrol to area",
-                name = "PATROL_AREA",
-                input = { "area" },
+                humanName = "Patrol to position",
+                name = "PATROL_POSITION",
+                input = { "position" },
                 execute = function(input)
                     local unit = input.unit
-                    local area = input.params.area
-                    local x = (area[1] + area[3]) / 2
-                    local z = (area[2] + area[4]) / 2
-                    local y = Spring.GetGroundHeight(x, z)
+                    local position = input.params.position
+                    local x, y, z = position.x, position.y, position.z
 
                     Spring.Echo("Patrol " .. tostring(unit) .. " ", x, y, z)
                     Spring.GiveOrderToUnit(unit, CMD.PATROL, { x, y, z }, {"shift"})
                 end,
             },
             {
-                humanName = "Fight to area",
-                name = "FIGHT_AREA",
-                input = { "area" },
+                humanName = "Fight to position",
+                name = "FIGHT_POSITION",
+                input = { "position" },
                 execute = function(input)
                     local unit = input.unit
-                    local area = input.params.area
-                    local x = (area[1] + area[3]) / 2
-                    local z = (area[2] + area[4]) / 2
-                    local y = Spring.GetGroundHeight(x, z)
+                    local position = input.params.position
+                    local x, y, z = position.x, position.y, position.z
 
                     Spring.GiveOrderToUnit(unit, CMD.FIGHT, { x, y, z }, {"shift"})
                 end,
@@ -1037,15 +1059,13 @@ return {
                 end,
             },
             {
-                humanName = "Repair area",
-                name = "REPAIR_AREA",
-                input = { type = "area" },
+                humanName = "Repair position",
+                name = "REPAIR_POSITION",
+                input = { type = "position" },
                 execute = function(input)
                     local unit = input.unit
-                    local area = input.params.area
-                    local x = (area[1] + area[3]) / 2
-                    local z = (area[2] + area[4]) / 2
-                    local y = Spring.GetGroundHeight(x, z)
+                    local position = input.params.position
+                    local x, y, z = position.x, position.y, position.z
 
                     Spring.GiveOrderToUnit(unit, CMD.REPAIR, { x, y, z }, {"shift"})
                 end,

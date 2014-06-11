@@ -51,6 +51,10 @@ function SCEN_EDIT.coreTypes()
             canBeVariable = false,
             canCompare = false,
         },
+        {
+            humanName = "Position",
+            name = "position",
+        },
     }
 end
 

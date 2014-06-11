@@ -6,8 +6,7 @@ end
 function FieldResolver:CallExpression(expr, exprType, params)
     local resolvedInputs = {}
     local fail = false
-    for i = 1, #exprType.input do
-        local input = exprType.input[i]    
+    for _, input in pairs(exprType.input) do
         local resolvedInput = self:Resolve(expr[input.name], input.type, input.rawVariable, params)
         if not input.allowNil then
             fail = fail or SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
@@ -105,6 +104,10 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             return field.id
         end
     elseif type == "number" then
+        if field.type == "pred" then
+            return field.id
+        end
+    elseif type == "position" then
         if field.type == "pred" then
             return field.id
         end
