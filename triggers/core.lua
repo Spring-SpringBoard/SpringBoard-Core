@@ -35,6 +35,50 @@ return {
                 }
 
                 table.insert(variableAssignments, variableAssignment)
+
+                local arrayType = type.name .. "_array"
+                local addToArray = {
+                    humanName = "Add to " .. arrayType,
+                    name = "ADD_TO" .. arrayType,
+                    tags = {"Variable"},
+                    input = { 
+                        {
+                            name = "variable",
+                            rawVariable = "true",
+                            sources = "variable",
+                            type = arrayType,
+                        },
+                        {
+                            name = type.name,
+                            type = type.name,
+                        },
+                    },
+                    execute = function(input)
+                        table.insert(input.variable, input[type.name])
+                    end,
+                }
+                table.insert(variableAssignments, addToArray)
+                local removeFromArray = {
+                    humanName = "Remove from " .. arrayType,
+                    name = arrayType .. "_REMOVE",
+                    tags = {"Variable"},
+                    input = { 
+                        {
+                            name = "array",
+                            rawVariable = "true",
+                            sources = "variable",
+                            type = arrayType,
+                        },
+                        {
+                            name = "index",
+                            type = "number",
+                        },
+                    },
+                    execute = function(input)
+                        table.remove(input.array, input.index)
+                    end,
+                }
+                table.insert(variableAssignments, removeFromArray)
             end
         end
 
@@ -932,6 +976,7 @@ return {
                         return array[index]
                     end,
                 }
+                table.insert(functions, itemFromArray)
                 local countArray = {
                     humanName = "Element count in " .. type.humanName .. " array",
                     name = arrayType .. "_COUNT",
@@ -942,7 +987,6 @@ return {
                         return #input[arrayType]
                     end,
                 }
-                table.insert(functions, itemFromArray)
                 table.insert(functions, countArray)
             end
         end
