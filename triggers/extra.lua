@@ -14,21 +14,6 @@ return {
             end
         },
         {
-            humanName = "Move unit", 
-            name = "MOVE_UNIT",
-            input = { "unit", "area" },
-            tags = {"Unit"},
-            execute = function (input)
-                local unit = input.unit
-                local area = input.area
-                local x = (area[1] + area[3]) / 2
-                local z = (area[2] + area[4]) / 2
-                local y = Spring.GetGroundHeight(x, z)
-                Spring.SetUnitPosition(unit, x, y, z)
-                Spring.GiveOrderToUnit(unit, CMD.STOP, {}, {})
-            end
-        },
-        {
             humanName = "Execute trigger after n seconds",
             name = "EXECUTE_TRIGGER_AFTER_TIME",
             input = { "trigger", "number" },

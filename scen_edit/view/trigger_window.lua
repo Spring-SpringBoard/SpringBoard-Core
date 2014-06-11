@@ -271,7 +271,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level)
     for i, input in pairs(rootType.input) do
         local stackPanel = MakeComponentPanel(self._triggerPanel)
         
-        local param = root[input.name]
+        local param = root[input.name] or {}
         local paramName = param.name or param.id
         if param.type == 'var' then
             paramName = SCEN_EDIT.model.variableManager:getVariable(param.id).name
