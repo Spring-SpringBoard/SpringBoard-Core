@@ -202,35 +202,5 @@ function Model:GetProjectDir()
         self.projectDir = Spring.GetModOptions().projectDir
     end
 
-    if self.projectDir == nil then
-        --create a temporary directory
-        local projectDirBase = "projects/project-"
-        local projectDir = nil
-        local indx = 1
-        repeat
-            projectDir = projectDirBase .. tostring(indx)
-            indx = indx + 1
-        until not VFS.FileExists(projectDir, VFS.RAW_ONLY) and not SCEN_EDIT.DirExists(projectDir)
-
-        Spring.CreateDir(projectDir)
-        Spring.CreateDir(projectDir .. "/triggers")
-
-        local myCustomTriggersLua = [[
-return {
-    actions = {
-        -- My custom actions go here
-    },
-    functions = {
-        -- My custom functions go here
-    },
-}
-
-]]
-        local file = assert(io.open(projectDir .. "/triggers/my_custom_triggers.lua", "w"))
-        file:write(myCustomTriggersLua)
-        file:close()
-        self.projectDir = projectDir
-    end
-
     return self.projectDir
 end

@@ -93,7 +93,7 @@ function DiplomacyWindow:init(trigger)
         height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teams * 30)),
         minimumSize = {300,300},
         parent = screen0,
-        caption = "Diplomacy",
+        caption = "Alliances",
         x = 500,
         y = 200,
         children = {

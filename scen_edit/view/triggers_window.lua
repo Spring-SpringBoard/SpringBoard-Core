@@ -9,6 +9,7 @@ function TriggersWindow:init()
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={function() self:AddTrigger() end},
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+		tooltip = "Add trigger",
     }
     local btnClose = Button:New {
         caption='Close',
@@ -94,6 +95,7 @@ function TriggersWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             _toggle = nil,
             parent = stackTriggerPanel,
+			tooltip = "Edit trigger",
         }
         btnEditTrigger.OnClick = {
             function()
@@ -107,6 +109,7 @@ function TriggersWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
+			tooltip = "Clone trigger",
             children = {
                 Image:New { 
                     tooltip = "Clone trigger", 
@@ -134,6 +137,7 @@ function TriggersWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
+			tooltip = "Remove trigger",
             children = {
                 Image:New { 
                     tooltip = "Remove trigger", 

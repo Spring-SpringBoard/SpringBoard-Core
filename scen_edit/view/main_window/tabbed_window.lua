@@ -12,7 +12,7 @@ function TabbedWindow:init()
 		right = 0,
 		y = 150,
 		width = 375,
-		height = 220,
+		height = 130 + SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT,
 		parent = screen0,
 		caption = "Scenario Toolbox v2",
 		resizable = false,
@@ -27,7 +27,7 @@ function TabbedWindow:init()
 				tabs = {
 					{ name = "General", children = {generalPanel:getControl()} },
 					{ name = "Unit", children = {unitFeaturePanel:getControl()} },
-					{ name = "Terrain", children = {terrainPanel:getControl()} },
+					{ name = "Map", children = {terrainPanel:getControl()} },
 					{ name = "Trigger", children = {metaPanel:getControl()} },
                     { name = "Alliance", children = {alliancePanel:getControl()} },
 				},

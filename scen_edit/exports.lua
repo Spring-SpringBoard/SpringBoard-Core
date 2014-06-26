@@ -7,7 +7,7 @@ SCEN_EDIT_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
 --FIXME: don't assume path, find it programatically
 --FIXME: not used now
 SCENARIO_EDITOR_DIR = "games/ToolBox.sdd/"
-SCEN_EDIT_EXAMPLE_DIR_RAW_FS = "" -- SCENARIO_EDITOR_DIR .. "examples/"
+SCEN_EDIT_EXAMPLE_DIR_RAW_FS = "projects/" -- SCENARIO_EDITOR_DIR .. "examples/"
 
 --properties
 SCEN_EDIT_FILE_EXT = ".sdz"

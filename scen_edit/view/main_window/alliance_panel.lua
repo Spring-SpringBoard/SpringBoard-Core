@@ -2,45 +2,20 @@ AlliancePanel = AbstractMainWindowPanel:extends{}
 
 function AlliancePanel:init()
 	self:super("init")
-    local btnDiplomacy = Button:New {
-        caption = '',
-        height = 80,
-        width = 80,
+    local btnDiplomacy = TabbedPanelButton({
         tooltip = "Alliance settings",
         children = {
-            Image:New {                 
-                file=SCEN_EDIT_IMG_DIR .. "alliance.png", 
-				height = 40, 
-				width = 40,
-				x = 10,
-            },
-			Label:New {
-				caption = "Alliances",
-				y = 40,
-				x = 2,
-			},
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "alliance.png" }),
+			TabbedPanelLabel({ caption = "Alliances" }),
         },
-    }
-    local btnPlayers = Button:New {
-        height = 80,
-        width = 80,
-        caption = '',
+    })
+    local btnPlayers = TabbedPanelButton({
         tooltip = "Player settings",
         children = {
-            Image:New {                 
-                file=SCEN_EDIT_IMG_DIR .. "players.png", 
-				height = 40, 
-				width = 40,
-                margin = {0, 0, 0, 0},
-				x = 10,
-            },
-			Label:New {
-				caption = "Players",
-				y = 40,
-                x = 6,
-			},
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "players.png" }),
+			TabbedPanelLabel({ caption = "Players"}),
         },
-    }
+    })
 	self.control:AddChild(Chili.LayoutPanel:New {
 			height = btnDiplomacy.height,
 			width = btnDiplomacy.width,
