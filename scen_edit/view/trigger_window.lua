@@ -35,6 +35,7 @@ function TriggerWindow:init(trigger)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+		tooltip = "Add event",
     }
     local btnAddCondition = Button:New {
         caption='+ Condition',
@@ -43,6 +44,7 @@ function TriggerWindow:init(trigger)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+		tooltip = "Add condition",
     }
     local btnAddAction = Button:New {
         caption='+ Action',
@@ -51,6 +53,7 @@ function TriggerWindow:init(trigger)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+		tooltip = "Add action",
     }
 	local btnOk = Button:New {
         caption='OK',
@@ -128,7 +131,8 @@ function TriggerWindow:Populate()
             x = 1,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
-            OnClick = {function() self:MakeEditEventWindow(event) end}
+			tooltip = "Edit event",
+            OnClick = {function() self:MakeEditEventWindow(event) end},			
         }
         local btnRemoveEvent = Button:New {
             caption = "",
@@ -146,6 +150,7 @@ function TriggerWindow:Populate()
                     margin = {0, 0, 0, 0},
                 },
             },
+			tooltip = "Remove event",
             OnClick = {function() self:MakeRemoveEventWindow(event, i) end}
         }
     end
@@ -183,6 +188,7 @@ function TriggerWindow:Populate()
             x = SCEN_EDIT.conf.B_HEIGHT + 5,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackPanel,
+			tooltip = "Edit condition",
             OnClick = {function() self:MakeEditConditionWindow(condition) end}
         }
         local btnRemoveCondition = Button:New {
@@ -192,6 +198,7 @@ function TriggerWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackPanel,
             padding = {0, 0, 0, 0},
+			tooltip = "Remove condition",
             children = {
                 Image:New { 
                     tooltip = "Remove condition", 
@@ -240,6 +247,7 @@ function TriggerWindow:Populate()
             x = SCEN_EDIT.conf.B_HEIGHT + 5,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
+			tooltip = "Edit action",
             OnClick = {function() self:MakeEditActionWindow(action) end}
         }
         local btnRemoveAction = Button:New {
@@ -249,6 +257,7 @@ function TriggerWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
             padding = {0, 0, 0, 0},
+			tooltip = "Remove action",
             children = {
                 Image:New { 
                     tooltip = "Remove action", 

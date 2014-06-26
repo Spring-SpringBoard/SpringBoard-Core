@@ -19,10 +19,13 @@ FilePanel = LayoutPanel:Inherit{
   multiSelect = true,
 
   items = {},
-  extFilters = {'.sdz'},
+  extFilters = nil,
   imageFile = SCEN_EDIT_IMG_DIR .. "file.png",
   dir = '',
   drawcontrolv2 = true,
+  
+  showFiles = true,
+  showDirs = true,
   
   columns = 5,
 }
@@ -135,14 +138,18 @@ end
 
 function FilePanel:ScanDir()
   local files = VFS.DirList(self.dir, "*", VFS.RAW_ONLY)
-  local dirs  = VFS.SubDirs("", "*", VFS.RAW_ONLY)
+  local dirs  = VFS.SubDirs(self.dir, "*", VFS.RAW_ONLY)
   local imageFiles = {}
   for i=1,#files do
     local f = files[i]
     local ext = (f:GetExt() or ""):lower()
-    if (table.ifind(self.extFilters,ext))then
-      imageFiles[#imageFiles+1]=f
-    end
+	if self.extFilters ~= nil then
+		if table.ifind(self.extFilters,ext) then
+		  imageFiles[#imageFiles+1]=f
+		end
+	else
+		imageFiles[#imageFiles+1]=f
+	end
   end
 
   self._dirsNum = #dirs
@@ -150,13 +157,15 @@ function FilePanel:ScanDir()
 
   local n    = 1
   local items = self.items
-  --FIXME: loading from complex paths is broken, uncomment this when they get fixed    
-  --items[n] = '..'
-  --n = n+1
+  if self.showDirs then
+	items[n] = '..'
+	n = n+1
+  end
 
-  for i=1,#dirs do
-    --FIXME: loading from complex paths is broken, uncomment this when they get fixed    
-    --items[n],n=dirs[i],n+1
+  if self.showDirs then
+	  for i=1,#dirs do		
+		items[n],n=dirs[i],n+1
+	  end
   end
   for i=1,#imageFiles do
     items[n],n=imageFiles[i],n+1
@@ -174,14 +183,16 @@ function FilePanel:ScanDir()
     end
 
     --// add ".."
-	--FIXME: loading from complex paths is broken, uncomment this when they get fixed    
-    --self:_AddFile('..',self.imageFolderUp)
+	if self.showDirs then 
+      self:_AddFile('..',self.imageFolderUp)
+	end
 
     --// add dirs at top
-    for i=1,#dirs do
-	  --FIXME: loading from complex paths is broken, uncomment this when they get fixed    
-      --self:_AddFile(ExtractFileName(dirs[i]),self.imageFolder)
-    end
+	if self.showDirs then
+		for i=1,#dirs do
+		  self:_AddFile(ExtractFileName(dirs[i]),self.imageFolder)
+		end
+	end
 
     --// add files
     for i=1,#imageFiles do
@@ -273,19 +284,21 @@ function FilePanel:MouseDblClick(x,y)
 
   if (itemIdx<0) then return end
 
-  --FIXME: loading from complex paths is broken, change this when they get fixed    
-  if false and (itemIdx==1) then
-    self:SetDir(GetParentDir(self.dir))
-    return self
+  if self.showDirs then  
+	  if itemIdx==1 then
+		self:SetDir(GetParentDir(self.dir))
+		return self
+	  end
   end
 
-  --FIXME: loading from complex paths is broken, change this when they get fixed    
-  if false and (itemIdx<=self._dirsNum+1) then
-    self:SetDir(self._dirList[itemIdx-1])
-    return self
-  else
-    self:CallListeners(self.OnDblClickItem, self.items[itemIdx], itemIdx)
-    return self
+  if self.showDirs then
+	  if itemIdx <= self._dirsNum+1 then
+		self:SetDir(self._dirList[itemIdx-1])
+		return self
+	  else
+		self:CallListeners(self.OnDblClickItem, self.items[itemIdx], itemIdx)
+		return self
+	  end
   end
 end
 

@@ -2,72 +2,35 @@ MetaPanel = AbstractMainWindowPanel:extends{}
 
 function MetaPanel:init()
 	self:super("init")
-    local btnTriggers = Button:New {
-        caption = '',
-        height = 80,
-        width = 80,
+    local btnTriggers = TabbedPanelButton({
         tooltip = "Trigger settings",
         children = {
-            Image:New {                 
-                file=SCEN_EDIT_IMG_DIR .. "applications-system.png", 
-				height = 40, 
-				width = 40,
-				x = 10,
-            },
-			Label:New {
-				caption = "Triggers",
-				y = 40,
-				x = 5,
-			},
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "applications-system.png" }),
+			TabbedPanelLabel({ caption = "Triggers" }),
         },
-    }
-    local btnVariableSettings = Button:New {
-        height = 80,
-        width = 80,
-        caption = '',
+    })
+    local btnVariableSettings = TabbedPanelButton({
         tooltip = "Variable settings",
         children = {
-            Image:New {                 
-                file=SCEN_EDIT_IMG_DIR .. "format-text-bold.png", 
-				height = 40, 
-				width = 40,
-                margin = {0, 0, 0, 0},
-				x = 10,
-            },
-			Label:New {
-				caption = "Variables",
-				y = 40,
-			},
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "format-text-bold.png" }),
+			TabbedPanelLabel({ caption = "Variables" }),
         },
-    }
+    })
 
 	self.control:AddChild(
-		Button:New {
-			height = 80,
-			width = 80,
-			caption = '',
+		TabbedPanelButton({
+			tooltip = "Add a rectangle area", 
 			OnClick = {
 				function()
 					SCEN_EDIT.stateManager:SetState(AddRectState())
 				end
-			},
-			tooltip = "Add a rectangle area", 
+			},			
 			children = {
-				Image:New {                                 
-					file=SCEN_EDIT_IMG_DIR .. "view-fullscreen.png", 
-					height = 40, 
-					width = 40,
-					margin = {0, 0, 0, 0},
-					x = 10,
-				},
-				Label:New {
-					caption = "Area",
-					y = 40,
-					x = 14,
-				},
+				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "view-fullscreen.png" }),
+				TabbedPanelLabel({ caption = "Area" }),
 			},
-		}
-	)
+		})
+	)	
 	self.control:AddChild(Chili.LayoutPanel:New {
 			height = btnTriggers.height,
 			width = btnTriggers.width,
