@@ -1,19 +1,23 @@
 UnitDefsView = LCS.class{}
 
 function UnitDefsView:init()
-    local ebAmount = EditBox:New {
+    local updateAmount = function(obj, ...)
+        local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+        if currentState:is_A(AddUnitState) then
+            currentState.amount = self:GetAmount()
+        end
+    end
+    self.ebAmount = EditBox:New {
         text = "1",
         x = 190 + 5,
         bottom = 8,
         width = 50,
+        OnTextInput = {
+            updateAmount
+        },
         OnKeyPress = {
-            function(obj, ...)
-                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                if currentState:is_A(AddUnitState) then
-                    currentState.amount = tonumber(obj.text) or 1
-                end
-            end
-        }
+            updateAmount
+        },
     }
     self.unitDefPanel = UnitDefsPanel:New {
         name='units',
@@ -29,7 +33,7 @@ function UnitDefsView:init()
                         self.unitDefPanel:SelectItem(0)
                     else
                         local selUnitDef = self.unitDefPanel.items[itemIdx].id
-                        SCEN_EDIT.stateManager:SetState(AddUnitState(selUnitDef, self.unitDefPanel.teamId, self.unitDefPanel, tonumber(ebAmount.text) or 1))
+                        SCEN_EDIT.stateManager:SetState(AddUnitState(selUnitDef, self.unitDefPanel.teamId, self.unitDefPanel, self:GetAmount()))
                     end
                 end
             end,
@@ -141,8 +145,15 @@ function UnitDefsView:init()
                 x = 140, 
                 bottom = 8,
             },
-			ebAmount,
+			self.ebAmount,
 			btnClose,
         }
     }
+end
+
+function UnitDefsView:GetAmount()
+    return math.min(
+        200,
+        math.max(1, tonumber(self.ebAmount.text) or 1)
+    )
 end

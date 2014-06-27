@@ -1,4 +1,4 @@
-TerrainChangeTextureState = AbstractState:extends{}
+TerrainChangeTextureState = AbstractEditingState:extends{}
 SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
 
 --FIXME: remove this default pen
@@ -205,6 +205,9 @@ function TerrainChangeTextureState:MouseRelease(x, y, button)
 end
 
 function TerrainChangeTextureState:KeyPress(key, mods, isRepeat, label, unicode)
+    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
+        return true
+    end
 end
 
 function TerrainChangeTextureState:MouseWheel(up, value)

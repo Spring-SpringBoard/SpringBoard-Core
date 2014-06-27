@@ -5,29 +5,6 @@ function AreaView:init(areaId)
     self.selected = false
 end
 
-function DrawBorder(x, y, w, h, bt)
---  gl.Color((state=='pressed' and obj.borderColor2) or obj.borderColor1)
-  gl.Vertex(x,     y+h)
-  gl.Vertex(x+bt,  y+h-bt)
-  gl.Vertex(x,     y)
-  gl.Vertex(x+bt,  y)
-  gl.Vertex(x+bt,  y)
-  gl.Vertex(x+bt,  y+bt)
-  gl.Vertex(x+w,   y)
-  gl.Vertex(x+w-bt,y+bt)
-
---  gl.Color((state=='pressed' and obj.borderColor1) or obj.borderColor2)
-  gl.Vertex(x+w-bt,y+bt)
-  gl.Vertex(x+w,   y)
-  gl.Vertex(x+w-bt,y+h)
-  gl.Vertex(x+w,   y+h)
-  gl.Vertex(x+w-bt,y+h-bt)
-  gl.Vertex(x+w-bt,y+h)
-  gl.Vertex(x+bt,  y+h-bt)
-  gl.Vertex(x+bt,  y+h)
-  gl.Vertex(x,     y+h)
-end
-
 function AreaView:_Draw(x1, z1, x2, z2)
     if x1 > x2 then
         x1, x2 = x2, x1
@@ -47,7 +24,6 @@ function AreaView:_Draw(x1, z1, x2, z2)
         gl.Utilities.DrawGroundRectangle(x2, z1-bt, x2+bt, z2+bt)
         gl.Utilities.DrawGroundRectangle(x1, z1-bt, x2, z1)
         gl.Utilities.DrawGroundRectangle(x1, z2, x2, z2+bt)
-        --gl.BeginEnd(GL.TRIANGLE_STRIP, DrawBorder, x1 - 3, z1 - 3, x2 - x1, z2 - z1, 3)
     gl.PopMatrix()
 
     gl.PushMatrix()

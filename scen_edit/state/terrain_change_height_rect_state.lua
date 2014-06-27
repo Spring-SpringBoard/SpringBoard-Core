@@ -1,4 +1,4 @@
-TerrainChangeHeightRectState = AbstractState:extends{}
+TerrainChangeHeightRectState = AbstractEditingState:extends{}
 
 function TerrainChangeHeightRectState:init(toDecrease)
     self.size = 100
@@ -97,6 +97,9 @@ function TerrainChangeHeightRectState:KeyPress(key, mods, isRepeat, label, unico
     if self.startedChanging then
         return
     end
+    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
+        return true
+    end
     if key == 27 then --KEYSYMS.ESC then
         SCEN_EDIT.stateManager:SetState(DefaultState())
     elseif key == 49 then -- 1
@@ -117,8 +120,10 @@ function TerrainChangeHeightRectState:DrawWorld()
         local x, z = coords[1], coords[3]
         gl.PushMatrix()
         currentState = SCEN_EDIT.stateManager:GetCurrentState()
-        gl.Color(0, 255, 0, 0.3)
+        gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundRectangle(x - self.size/2, z - self.size/2, x + self.size/2, z + self.size/2)
+        gl.Color(0, 0, 1, 0.4)
+        gl.Utilities.DrawGroundRectangle(x - self.size/2 * 0.95, z - self.size/2 * 0.95, x + self.size/2 * 0.95, z + self.size/2 * 0.95)
         gl.PopMatrix()
     end
 end

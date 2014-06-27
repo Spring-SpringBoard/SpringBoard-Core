@@ -1,4 +1,4 @@
-TerrainSmoothState = AbstractState:extends{}
+TerrainSmoothState = AbstractEditingState:extends{}
 
 function TerrainSmoothState:init()
     self.size = 100
@@ -96,6 +96,9 @@ function TerrainSmoothState:KeyPress(key, mods, isRepeat, label, unicode)
     if self.startedChanging then
         return
     end
+    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
+        return true
+    end
     if key == 27 then --KEYSYMS.ESC then
         SCEN_EDIT.stateManager:SetState(DefaultState())
     elseif key == 49 then -- 1
@@ -105,7 +108,7 @@ function TerrainSmoothState:KeyPress(key, mods, isRepeat, label, unicode)
     elseif key == 50 then -- 2
         local newState = TerrainChangeHeightRectState()
         --newState.size = self.size
-        SCEN_EDIT.stateManager:SetState()
+        SCEN_EDIT.stateManager:SetState(newState)
     end
 end
 
@@ -116,8 +119,10 @@ function TerrainSmoothState:DrawWorld()
         local x, z = coords[1], coords[3]
         gl.PushMatrix()
         currentState = SCEN_EDIT.stateManager:GetCurrentState()
-        gl.Color(0, 255, 0, 0.3)
+        gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
+        gl.Color(0, 0, 1, 0.4)
+        gl.Utilities.DrawGroundCircle(x, z, self.size * 0.95)
         gl.PopMatrix()
     end
 end
