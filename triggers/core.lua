@@ -349,7 +349,7 @@ return {
                 input = "string",
                 tags = {"Message"},
                 execute = function (input)
-                    Spring.SetMessage(input.string)
+                    Spring.SendMessage(input.string)
                 end
             },
             {
@@ -358,7 +358,7 @@ return {
                 input = { "string",  "team" },
                 tags = {"Message"},
                 execute = function (input)
-                    Spring.SetMessageToTeam(input.team, input.string)
+                    Spring.SendMessageToTeam(input.team, input.string)
                 end
             },
             {
@@ -367,7 +367,7 @@ return {
                 input = "string",
                 tags = {"Message"},
                 execute = function (input)
-                    Spring.SetMessageToSpectators(input.string)
+                    Spring.SendMessageToSpectators(input.string)
                 end
             },
             {
