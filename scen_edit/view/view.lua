@@ -3,6 +3,7 @@ SCEN_EDIT_VIEW_DIR = SCEN_EDIT_DIR .. "view/"
 SCEN_EDIT_VIEW_PANELS_DIR = SCEN_EDIT_VIEW_DIR .. "panels/"
 SCEN_EDIT_VIEW_MAIN_WINDOW_DIR = SCEN_EDIT_VIEW_DIR .. "main_window/"
 SCEN_EDIT_VIEW_ALLIANCE_DIR = SCEN_EDIT_VIEW_DIR .. "alliance/"
+SCEN_EDIT_VIEW_ACTIONS_DIR = SCEN_EDIT_VIEW_DIR .. "actions/"
 
 View = LCS.class{}
 
@@ -14,6 +15,8 @@ function View:init()
 	SCEN_EDIT.Include(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR .. "abstract_main_window_panel.lua")
 	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR)
 	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_ALLIANCE_DIR)
+	SCEN_EDIT.Include(SCEN_EDIT_VIEW_ACTIONS_DIR .. "abstract_action.lua")
+	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_ACTIONS_DIR)
     SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
     if devMode then
