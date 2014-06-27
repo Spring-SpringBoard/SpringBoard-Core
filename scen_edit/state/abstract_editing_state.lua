@@ -10,9 +10,18 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     end
     if key == KEYSYMS.Z and mods.ctrl then
         SCEN_EDIT.commandManager:undo()
-        return true
     elseif key == KEYSYMS.Y and mods.ctrl then
         SCEN_EDIT.commandManager:redo()
-        return true
+    elseif key == KEYSYMS.S and mods.ctrl and not mods.shift then
+        SaveAction():execute()
+    elseif key == KEYSYMS.S and mods.ctrl and mods.shift then
+        SaveAsAction():execute()
+    elseif key == KEYSYMS.O and mods.ctrl then
+        LoadAction():execute()
+    elseif key == KEYSYMS.E and mods.ctrl then
+        ExportAction():execute()
+    else
+        return false
     end
+    return true
 end

@@ -8,7 +8,7 @@ end
 
 function OpenProjectDialog:confirmDialog()
     local path = self:getSelectedFilePath()
-    local exists = VFS.FileExists(path, VFS.RAW_ONLY)    
+    local exists = VFS.FileExists(path, VFS.RAW_ONLY) or SCEN_EDIT.DirExists(path, VFS.RAW_ONLY)
     if exists then
         if self.confirmDialogCallback then 
             self.confirmDialogCallback(path)
