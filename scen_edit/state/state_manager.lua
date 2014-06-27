@@ -4,6 +4,7 @@ StateManager = LCS.class{}
 
 function StateManager:init()
     SCEN_EDIT.Include(SCEN_EDIT_STATE_DIR .. 'abstract_state.lua')
+    SCEN_EDIT.Include(SCEN_EDIT_STATE_DIR .. 'abstract_editing_state.lua')
     SCEN_EDIT.IncludeDir(SCEN_EDIT_STATE_DIR)
     self:SetState(DefaultState())
 end

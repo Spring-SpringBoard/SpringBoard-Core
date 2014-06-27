@@ -36,8 +36,7 @@ function Conf:initializeListOfMetaModelFiles()
         end
 	end
 
-    if SCEN_EDIT.model ~= nil then
-        Spring.Echo(SCEN_EDIT.model:GetProjectDir())
+    if SCEN_EDIT.model ~= nil and SCEN_EDIT.model:GetProjectDir() ~= nil then
         files = VFS.DirList(SCEN_EDIT.model:GetProjectDir() .. "/triggers/", "*", VFS.RAW)
         for i = 1, #files do
             local file = files[i]

@@ -1,4 +1,4 @@
-AddUnitState = AbstractState:extends{}
+AddUnitState = AbstractEditingState:extends{}
 
 function AddUnitState:init(unitDef, teamId, unitImages, amount)
     self.unitDef = unitDef
@@ -65,6 +65,9 @@ function AddUnitState:MouseRelease(x, y, button)
 end
 
 function AddUnitState:KeyPress(key, mods, isRepeat, label, unicode)
+    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
+        return true
+    end
 end
 
 function AddUnitState:DrawWorld()

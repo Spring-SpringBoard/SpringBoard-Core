@@ -38,7 +38,7 @@ function TabbedWindow:init()
 				height = 40,
 				width = 40,
 				caption = '',
-				tooltip = "Undo", 
+				tooltip = "Undo (Ctrl+Z)", 
 				OnClick = {
 					function() 
 						local undoCommand = UndoCommand()
@@ -61,7 +61,7 @@ function TabbedWindow:init()
 				height = 40,
 				width = 40,
 				caption = '',
-				tooltip = "Redo", 
+				tooltip = "Redo (Ctrl+R)", 
 				OnClick = {
 					function() 
 						local redoCommand = RedoCommand()
@@ -109,7 +109,7 @@ function TabbedWindow:init()
 				height = 40,
 				width = 40,
 				caption = '',
-				tooltip = "Copy", 
+				tooltip = "Copy (Ctrl+C)", 
 				OnClick = {
 					function() 
 					    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
@@ -138,7 +138,7 @@ function TabbedWindow:init()
 				height = 40,
 				width = 40,
 				caption = '',
-				tooltip = "Cut", 
+				tooltip = "Cut (Ctrl+X)", 
 				OnClick = {
 					function() 
 					    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
@@ -167,7 +167,7 @@ function TabbedWindow:init()
 				height = 40,
 				width = 40,
 				caption = '',
-				tooltip = "Paste", 
+				tooltip = "Paste (Ctrl+V)", 
 				OnClick = {
 					function() 
 						local x, y = Spring.GetMouseState()

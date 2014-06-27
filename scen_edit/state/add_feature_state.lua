@@ -1,4 +1,4 @@
-AddFeatureState = AbstractState:extends{}
+AddFeatureState = AbstractEditingState:extends{}
 
 function AddFeatureState:init(featureDef, teamId, featureImages, amount)
     self.featureDef = featureDef
@@ -66,6 +66,9 @@ function AddFeatureState:MouseRelease(x, y, button)
 end
 
 function AddFeatureState:KeyPress(key, mods, isRepeat, label, unicode)
+    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
+        return true
+    end
 end
 
 function AddFeatureState:DrawWorld()

@@ -1,19 +1,23 @@
 FeatureDefsView = LCS.class{}
 
 function FeatureDefsView:init()
-    local ebAmount = EditBox:New {
+    local updateAmount = function(obj, ...)
+        local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+        if currentState:is_A(AddFeatureState) then
+            currentState.amount = self:GetAmount()
+        end
+    end
+    self.ebAmount = EditBox:New {
         text = "1",
         x = 190 + 5,
         bottom = 8,
         width = 50,
+        OnTextInput = {
+            updateAmount
+        },
         OnKeyPress = {
-            function(obj, ...)
-                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                if currentState:is_A(AddFeatureState) then
-                    currentState.amount = tonumber(obj.text) or 1
-                end
-            end
-        }
+            updateAmount
+        },
     }
 
     self.featureDefsPanel = FeatureDefsPanel:New {
@@ -30,7 +34,7 @@ function FeatureDefsView:init()
                         SCEN_EDIT.stateManager:SetState(DefaultState())
                     else
                         selFeatureDef = self.featureDefsPanel.items[itemIdx].id
-                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, self.featureDefsPanel.teamId, self.featureDefsPanel, tonumber(ebAmount.text) or 1))
+                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, self.featureDefsPanel.teamId, self.featureDefsPanel, self:GetAmount()))
                     end
                     local feature = FeatureDefs[selFeatureDef]
                 end
@@ -165,8 +169,15 @@ function FeatureDefsView:init()
                 x = 140, 
                 bottom = 8,
             },
-            ebAmount,
+            self.ebAmount,
 			btnClose,
         }
     }
+end
+
+function FeatureDefsView:GetAmount()
+    return math.min(
+        200,
+        math.max(1, tonumber(self.ebAmount.text) or 1)
+    )
 end

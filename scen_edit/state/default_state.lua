@@ -1,4 +1,4 @@
-DefaultState = AbstractState:extends{}
+DefaultState = AbstractEditingState:extends{}
 
 function DefaultState:init()
     self.areaSelectTime = Spring.GetGameFrame()
@@ -129,8 +129,8 @@ function DefaultState:MousePress(x, y, button)
                         SCEN_EDIT.view.selectionManager:ClearSelection()
                     end
                 end
+                return true
             end
-            return true
         elseif result == "unit" then
             local unitId = coords
             local result, coords = Spring.TraceScreenRay(x, y, true)
@@ -194,6 +194,9 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
 end
 
 function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
+    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
+        return true
+    end
     local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
     if key == KEYSYMS.DELETE then
         if selType == "areas" then
@@ -226,12 +229,6 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             SCEN_EDIT.commandManager:execute(cmd)
             return true
         end
-    elseif key == KEYSYMS.Z and mods.ctrl then
-        SCEN_EDIT.commandManager:undo()
-        return true
-    elseif key == KEYSYMS.Y and mods.ctrl then
-        SCEN_EDIT.commandManager:redo()
-        return true
     elseif key == KEYSYMS.C and mods.ctrl then
         if selType == "units" then
             SCEN_EDIT.clipboard:CopyUnits(items)
