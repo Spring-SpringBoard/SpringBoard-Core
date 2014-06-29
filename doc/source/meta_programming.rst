@@ -1,3 +1,5 @@
+.. _meta_programming:
+
 Meta programming
 ================
 

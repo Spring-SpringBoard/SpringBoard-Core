@@ -11,7 +11,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   getting_started
    gui_programming
+   faq
+
    meta_programming
 
 
