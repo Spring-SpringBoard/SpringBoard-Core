@@ -8,6 +8,7 @@ function RuntimeView:init()
         x = 1,
         height = 45,
         width = 45,
+        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
         OnClick = {
             function() 
                 if not self.started then
@@ -141,9 +142,19 @@ end
 function RuntimeView:GameStarted()
     self.started = true
     self:UpdateStartStopButton()
+    self.btnStartStop.backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR
+    self.btnStartStop.Update = function(self, ...)
+        Chili.Button.Update(self, ...)
+        self.backgroundColor = SCEN_EDIT.deepcopy(SCEN_EDIT.conf.BTN_CANCEL_COLOR)
+        self.backgroundColor[4] = 0.5 + math.abs(2 * math.sin(os.clock())) / math.pi
+        self:Invalidate()
+        self:RequestUpdate()
+    end
 end
 
 function RuntimeView:GameStopped()
     self.started = false
     self:UpdateStartStopButton()
+    self.btnStartStop.backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR
+    self.btnStartStop.Update = Chili.Button.Update
 end
