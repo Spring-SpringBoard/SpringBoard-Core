@@ -62,7 +62,7 @@ function RuntimeView:init()
         parent = screen0,
         caption = "Runtime Window",
         x = screen0.width - 375,
-        y = 370,
+        y = 350,
 		resizable = true,
         width = 375,
         height = 300,
