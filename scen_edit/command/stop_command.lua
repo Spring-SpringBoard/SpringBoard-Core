@@ -18,5 +18,6 @@ function StopCommand:execute()
         SCEN_EDIT.model.oldModel.meta = meta
 
         SCEN_EDIT.model:Load(SCEN_EDIT.model.oldModel)
+        SCEN_EDIT.model.oldHeightMap:Load()
     end
 end
