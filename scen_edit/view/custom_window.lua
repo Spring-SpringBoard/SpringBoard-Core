@@ -1,6 +1,6 @@
 CustomWindow = LCS.class{}
 
-function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, cbExpressions)
+function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, cbExpressions, btnExpressions)
     self.mode = mode
     self.parentWindow = parentWindow
     while self.parentWindow.classname ~= "window" do
@@ -10,6 +10,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
     self.parentObj = parentObj
     self.condition = condition
     self.cbExpressions = cbExpressions
+    self.btnExpressions = btnExpressions
 
     self.btnOk = Button:New {
         caption = "OK",
@@ -154,6 +155,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
                 success, subPanels = self:AddCondition()
             end
             if success then
+                self.btnExpressions.tooltip = SCEN_EDIT.humanExpression(self.btnExpressions.data[1], "condition")
                 SCEN_EDIT.SetControlEnabled(self.parentWindow, true)
                 self.window:Dispose()
             else
