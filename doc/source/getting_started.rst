@@ -35,8 +35,7 @@ _______
 Once you start the Scenario Editor you should see something similar to Figure 3.
 In the top right part of the UI you should see the *Scenario Toolbox*, or just *Toolbox* for short. You will use this component to do complete most operations within the editor.
 
-.. figure:: toolbox.png
-   :scale: 70%
+.. figure:: toolbox.jpg
    :align: center
 
    Figure 3. Initial screen
