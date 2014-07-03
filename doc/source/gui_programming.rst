@@ -33,7 +33,7 @@ To do just that using the in-game editor, do the following:
 
 4. Add another condition where you will compare numbers. Compare "50", using the relation ">", and select expression as the second number. In the new window, select Unit Health% of "Trigger Unit".
 
-.. image:: unit_health%.jpg
+.. image:: unit_health_percent.jpg
    :scale: 70%
    :align: center
 
