@@ -4,7 +4,7 @@
 local modinfo = {
 	name			= "Scenario Editor Core",
 	shortName		= "SEC",
-	version			= "0.2+",
+	version			= "0.3",
 	game			= "Scenario Editor Core",
 	shortGame		= "SEC",
 	mutator			= "Official",
