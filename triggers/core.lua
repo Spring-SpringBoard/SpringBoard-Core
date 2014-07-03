@@ -373,7 +373,7 @@ return {
             {
                 humanName = "Add Marker", 
                 name = "MARKER_ADD_POINT",
-                input = {"position", "stirng"},
+                input = {"position", "string"},
                 tags = {"Marker"},
                 execute = function (input)
                     local position = input.position
@@ -589,6 +589,27 @@ return {
             end
         end
         local coreTransforms = {
+	     {
+                humanName = "Get team resources", 
+                name = "Get_TEAM_RESOURCES",
+		output = "number",
+                input = {"team", "string"},		
+                tags = {"Resources"},
+                execute = function (input)
+                    return Spring.GetTeamResources(input.team, input.string)
+                end
+            },
+	    {
+                humanName = "Get team resource income", 
+                name = "Get_TEAM_RESOURCE_INCOME",
+		output = "number",
+                input = {"team", "string"},		
+                tags = {"Resources"},
+                execute = function (input)
+                    local _, _, _, income = Spring.GetTeamResources(input.team, input.string)
+		    return income
+                end
+            },
             {
                 humanName = "God mode enabled",
                 name = "GOD_MODE_ENABLED",

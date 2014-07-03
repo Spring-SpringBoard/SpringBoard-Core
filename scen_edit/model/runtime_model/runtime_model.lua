@@ -142,10 +142,10 @@ function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
     if not self.hasStarted then
         return
     end
+    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_CREATE"] then
-        local createdUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
         for k = 1, #self.eventTriggers["UNIT_CREATE"] do
-            local params = { triggerUnitId = createdUnitId }
+            local params = { triggerUnitId = modelUnitId }
             local trigger = self.eventTriggers["UNIT_CREATE"][k]                
             self:ConditionStep(trigger, params)
         end
@@ -156,9 +156,10 @@ function RuntimeModel:UnitDamaged(unitId)
     if not self.hasStarted then
         return
     end
+    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_DAMAGE"] then
         for k = 1, #self.eventTriggers["UNIT_DAMAGE"] do
-            local params = { triggerUnitId = unitId }
+            local params = { triggerUnitId = modelUnitId }
             local trigger = self.eventTriggers["UNIT_DAMAGE"][k]
             self:ConditionStep(trigger, params)
         end
@@ -169,10 +170,10 @@ function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attac
     if not self.hasStarted then
         return
     end
+    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_DESTROY"] then
-        local destroyedUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
         for k = 1, #self.eventTriggers["UNIT_DESTROY"] do
-            local params = { triggerUnitId = destroyedUnitId }
+            local params = { triggerUnitId = modelUnitId }
             local trigger = self.eventTriggers["UNIT_DESTROY"][k]
             self:ConditionStep(trigger, params)
         end
@@ -183,9 +184,10 @@ function RuntimeModel:UnitFinished(unitId)
     if not self.hasStarted then
         return
     end
+    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_FINISH"] then
         for k = 1, #self.eventTriggers["UNIT_FINISH"] do
-            local params = { triggerUnitId = unitId }
+            local params = { triggerUnitId = modelUnitId }
             local trigger = self.eventTriggers["UNIT_FINISH"][k]
             self:ConditionStep(trigger, params)
         end
