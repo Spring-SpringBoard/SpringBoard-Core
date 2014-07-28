@@ -69,6 +69,13 @@ end
 
 function DefaultState:MousePress(x, y, button)
     local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+    if Spring.GetPressedKeys() == KEYSYMS.SPACE and button == 1 then
+        local result, unitId = Spring.TraceScreenRay(x, y)
+        if result == "unit" then
+            UnitPropertyWindow(unitId)
+            return true
+        end
+    end
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y)
         if result == "ground" then
@@ -197,6 +204,7 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
     if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
         return true
     end
+    local mouseX, mouseY, mouseLeft, mouseMiddle, mouseRight = Spring.GetMouseState()
     local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
     if key == KEYSYMS.DELETE then
         if selType == "areas" then
@@ -246,13 +254,17 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             return true
         end
     elseif key == KEYSYMS.V and mods.ctrl then
-        local x, y = Spring.GetMouseState()
-        local result, coords = Spring.TraceScreenRay(x, y, true)
+        local result, coords = Spring.TraceScreenRay(mouseX, mouseY, true)
         if result == "ground" then
             SCEN_EDIT.clipboard:Paste(coords)
             return true
         end
-    end
+    elseif key == KEYSYMS.SPACE and mouseLeft then
+        local result, unitId = Spring.TraceScreenRay(mouseX, mouseY)
+        if result == "unit" then
+            UnitPropertyWindow(unitId)
+        end
+    end 
     return false
 end
 

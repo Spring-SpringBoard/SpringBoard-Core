@@ -59,11 +59,21 @@ function FeatureManager:removeFeatureByModelId(modelId)
 end
 
 function FeatureManager:getSpringFeatureId(modelFeatureId)
-    return self.m2sFeatureIdMapping[modelFeatureId]
+    local featureId = self.m2sFeatureIdMapping[modelFeatureId]
+    if featureId ~= nil then
+        return featureId
+    else
+        return modelFeatureId
+    end
 end
 
 function FeatureManager:getModelFeatureId(springFeatureId)
-    return self.s2mFeatureIdMapping[springFeatureId]
+    local featureId = self.s2mFeatureIdMapping[springFeatureId]
+    if featureId ~= nil then
+        return featureId
+    else
+        return springFeatureId
+    end
 end
 
 function FeatureManager:setFeatureModelId(featureId, modelId)

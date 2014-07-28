@@ -151,25 +151,27 @@ function gadget:Initialize()
     --populate the managers now that the listeners are set
     SCEN_EDIT.loadFrame = Spring.GetGameFrame() + 1
 end
+function gadget:GamePreload()
+    SCEN_EDIT.model.unitManager:populate()
+    SCEN_EDIT.model.featureManager:populate()
+    if hasScenarioFile then
+        local heightmap = VFS.LoadFile("heightmap.data", VFS.MOD)
+        LoadMap(heightmap):execute()
+
+        local modelData = VFS.LoadFile("model.lua", VFS.MOD)
+        LoadCommand(modelData):execute()
+    end
+
+    if not devMode then
+        StartCommand():execute()
+    end
+end
 
 function gadget:GameFrame(frameNum)
     SCEN_EDIT.rtModel:GameFrame(frameNum)
 
     --wait a bit before populating everything (so luaui is loaded)
     if SCEN_EDIT.loadFrame == frameNum then
-        SCEN_EDIT.model.unitManager:populate()
-        SCEN_EDIT.model.featureManager:populate()
-        if hasScenarioFile then
-            local heightmap = VFS.LoadFile("heightmap.data", VFS.MOD)
-            LoadMap(heightmap):execute()
-
-            local modelData = VFS.LoadFile("model.lua", VFS.MOD)
-            LoadCommand(modelData):execute()
-        end
-
-        if not devMode then
-            StartCommand():execute()
-        end
     end
 
 end

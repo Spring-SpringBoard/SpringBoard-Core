@@ -307,4 +307,5 @@ function SaveCommand:execute()
 	ModInfoSave(projectDir .. "/modinfo.lua")
     HeightMapSave(projectDir .. "/heightmap.data")	
     ScriptTxtSave(projectDir .. "/script.txt")
+    ScriptTxtSave(projectDir .. "/script-dev.txt", true)
 end
