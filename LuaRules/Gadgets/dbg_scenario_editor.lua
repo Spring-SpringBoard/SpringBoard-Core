@@ -183,6 +183,9 @@ end
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
     SCEN_EDIT.model.unitManager:addUnit(unitID)
     SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
+    if Game.gameShortName == "SE MCL" and (unitDefID == 9 or unitDefID == 49) then
+        return
+    end
     if not SCEN_EDIT.rtModel.hasStarted then
         Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
     end
