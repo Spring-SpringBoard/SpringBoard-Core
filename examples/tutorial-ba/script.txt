@@ -1,0 +1,82 @@
+[GAME]
+{
+	MapName=Icy Run v2;
+	GameMode=0;
+	GameType=BA-tutorial 1;
+
+
+	NumTeams=2;
+	NumUsers=2;
+
+	HostIP=127.0.0.1;
+	HostPort=8452;
+	IsHost=1;
+	NumPlayers=1;
+
+	StartMetal=1000;
+	StartEnergy=1000;
+
+	StartposType=3;
+	LimitDGun=0;
+	DiminishingMMs=0;
+	GhostedBuildings=1;
+	MyPlayerNum=1;
+	MyPlayerName=Player;
+	NumRestrictions=0;
+	MaxSpeed=20;
+	MinSpeed=0.1;
+	[MODOPTIONS]
+	{
+        play_mode = 1;
+        deathmode = neverend;
+        has_scenario_file = 1;
+        
+	}
+
+    [TEAM1]
+    {
+        AllyTeam=1;
+        Side=arm;
+        RGBColor=0.40254238247871 0.91525423526764 0.39830508828163;
+
+        TeamLeader=1;
+        Handicap=0;
+        StartPosX=0;
+        StartPosZ=0;
+    }
+    [PLAYER1]
+    {
+        Name=Player;
+        Spectator=0;
+        Team=1;
+    }
+    [TEAM0]
+    {
+        AllyTeam=0;
+        Side=arm;
+        RGBColor=1 0 0;
+
+        TeamLeader=1;
+        Handicap=0;
+        StartPosX=0;
+        StartPosZ=0;
+    }
+    [AI1]
+    {
+		Name=0: NullAI;
+		ShortName=NullAI;
+		Team=0;
+		IsFromDemo=0;
+		Host=1;
+		[Options] {}
+    }
+    [ALLYTEAM0]
+    {
+        NumAllies=0;
+    }
+    [ALLYTEAM1]
+    {
+        NumAllies=0;
+    }
+
+}
