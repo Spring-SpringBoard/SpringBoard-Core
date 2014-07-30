@@ -1,0 +1,2 @@
+Before loading the examples put them in the projects' directory (which should be located in Spring's DATA_DIR).
+They should then be loaded via the "Open Project (Ctrl-O)" action inside the game - but make sure you are using the correct map.
