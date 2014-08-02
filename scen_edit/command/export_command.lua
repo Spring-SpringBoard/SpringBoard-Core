@@ -62,7 +62,7 @@ local function GenerateScriptTxt(dev)
     else
         gameType = Game.gameName .. " " .. Game.gameVersion
         if SCEN_EDIT.model.projectDir then
-            projectDir = "project_dir = " .. SCEN_EDIT.model.projectDir .. ";"
+            projectDir = "project_dir = " .. SCEN_EDIT.projectDir .. ";"
         end
     end
 
@@ -187,7 +187,7 @@ function ExportCommand:execute()
 	end	
     assert(not VFS.FileExists(self.path), "File already exists")
   
-    local projectDir = SCEN_EDIT.model:GetProjectDir()
+    local projectDir = SCEN_EDIT.projectDir
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script.txt")
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script-DEV.txt", true)
 

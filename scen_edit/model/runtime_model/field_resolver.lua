@@ -6,6 +6,7 @@ end
 function FieldResolver:CallExpression(expr, exprType, params)
     local resolvedInputs = {}
     local fail = false
+    Spring.Echo(exprType)
     for _, input in pairs(exprType.input) do
         local resolvedInput = self:Resolve(expr[input.name], input.type, input.rawVariable, params)
         if not input.allowNil then

@@ -174,7 +174,7 @@ local function GenerateScriptTxt(dev)
     else
         gameType = Game.gameName .. " " .. Game.gameVersion
         if SCEN_EDIT.model.projectDir then
-            projectDir = "project_dir = " .. SCEN_EDIT.model.projectDir .. ";"
+            projectDir = "project_dir = " .. SCEN_EDIT.projectDir .. ";"
         end
     end
 

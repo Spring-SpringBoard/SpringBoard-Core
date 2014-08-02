@@ -1,7 +1,7 @@
 ExportAction = AbstractAction:extends{}
 
 function ExportAction:execute()
-    if SCEN_EDIT.model:GetProjectDir() ~= nil then
+    if SCEN_EDIT.projectDir ~= nil then
         local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
         sfd = ExportFileDialog(dir)
         sfd:setConfirmDialogCallback(

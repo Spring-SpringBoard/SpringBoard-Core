@@ -80,6 +80,26 @@ function View:DrawWorldPreUnit()
     self.selectionManager:DrawWorldPreUnit()
 end
 
+function View:DrawScreen()
+    gl.PushMatrix()
+        local w, h = Spring.GetScreenGeometry()
+        local y = 10
+        local text = "Project not saved"
+
+        local fontSize = 20
+        if self.font == nil then
+            local fontName = "FreeSansBold.otf"
+            self.font = gl.LoadFont(fontName, fontSize)
+        end
+        local x = w - 200
+        if SCEN_EDIT.projectDir ~= nil then
+            text = "Project:" .. SCEN_EDIT.projectDir
+        end
+        local x = w - self.font:GetTextWidth(text) * fontSize - 10
+        self.font:Print(text, x, y)
+    gl.PopMatrix()
+end
+
 function View:GameFrame(frameNum)
     self.selectionManager:GameFrame(frameNum)
 end

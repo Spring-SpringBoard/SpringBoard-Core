@@ -12,6 +12,12 @@ function LoadCommandWidget:execute()
     local isZip = self.isZip
     local modelData, heightMapdata = nil, nil
 
+    if not isZip then
+        SCEN_EDIT.projectDir = self.path
+        Spring.Echo("set widget project dir:", SCEN_EDIT.projectDir)
+        SCEN_EDIT.commandManager:execute(WidgetSetProjectDirCommand(SCEN_EDIT.projectDir), true)
+    end
+
     if isZip then
         Spring.Echo("Loading archive: " .. path .. " ...")
 
@@ -38,14 +44,10 @@ function LoadCommandWidget:execute()
 
         modelData = VFS.LoadFile(path .. "/" .. "model.lua", VFS.RAW)
         heightmapData = VFS.LoadFile(path .. "/" .. "heightmap.data", VFS.RAW)
-
     end
+    
+    local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData) }
+    SCEN_EDIT.commandManager:execute(CompoundCommand(cmds))
 
-    local loadModelCmd = LoadCommand(modelData)
-    local loadMapCmd = LoadMap(heightmapData)
-
-    SCEN_EDIT.commandManager:execute(loadModelCmd)
-    SCEN_EDIT.commandManager:execute(loadMapCmd)
-
-    Spring.Echo("Loaded archive.")
+    Spring.Echo("Load complete.")
 end

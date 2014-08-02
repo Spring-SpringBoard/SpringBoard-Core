@@ -14,13 +14,15 @@ SCEN_EDIT_FILE_EXT = ".sdz"
 
 --mod opts
 local modOpts = Spring.GetModOptions()
+
+SCEN_EDIT.projectDir = modOpts.projectDir
 devMode = (tonumber(modOpts.play_mode) or 0) == 0
-hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 if devMode then
     Spring.Echo("Scenario Editor mode: dev")
 else
     Spring.Echo("Scenario Editor mode: play")
 end
+hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 
 --chili export
 if WG and WG.Chili then
