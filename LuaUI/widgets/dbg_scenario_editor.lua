@@ -130,12 +130,13 @@ function widget:Initialize()
 end
 
 function reloadGadgets()
-    --Spring.SendCommands("luarules reload")
+    Spring.SendCommands("luarules reload")
 end
 
 function widget:DrawScreen()
     if SCEN_EDIT.view ~= nil then
         SCEN_EDIT.stateManager:DrawScreen()
+        SCEN_EDIT.view:DrawScreen()
     end
 end
 

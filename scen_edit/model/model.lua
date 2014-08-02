@@ -45,7 +45,6 @@ end
 
 function Model:Serialize()
     local mission = {}
-    mission.projectDir = self.projectDir
     mission.meta = self:GetMetaData()
     mission.meta.m2sUnitIdMapping = nil
     mission.meta.s2mUnitIdMapping = nil
@@ -131,10 +130,6 @@ function Model:Load(mission)
 
     --load file
     self:SetMetaData(mission.meta)
-    if mission.projectDir ~= nil then
-        Spring.Echo(mission.projectDir)
-        self.projectDir = mission.projectDir
-    end
 end
 
 --returns a table that holds triggers, areas and other non-engine content
@@ -195,12 +190,4 @@ function Model:GenerateTeams(widget)
     for _, team in pairs(teams) do
         self.teams[team.id] = team
     end
-end
-
-function Model:GetProjectDir()
-    if self.projectDir == nil then
-        self.projectDir = Spring.GetModOptions().projectDir
-    end
-
-    return self.projectDir
 end

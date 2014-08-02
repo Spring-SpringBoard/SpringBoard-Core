@@ -7,5 +7,5 @@ function SetProjectDirCommand:init(projectDir)
 end
 
 function SetProjectDirCommand:execute()
-	SCEN_EDIT.model.projectDir = self.projectDir    
+	SCEN_EDIT.projectDir = self.projectDir    
 end
