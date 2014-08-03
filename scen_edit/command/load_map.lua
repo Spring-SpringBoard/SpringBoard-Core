@@ -59,9 +59,10 @@ function LoadMap:execute()
                     local deltaHeight = chunk
                     --Spring.Echo(x, z)
                     --Spring.Echo(deltaHeight)
+                    z = z + Game.squareSize
+
                     Spring.AddHeightMap(x, z, deltaHeight)
 
-                    z = z + Game.squareSize
                     if z >= Game.mapSizeZ then
                         z = 0
                         x = x + Game.squareSize
