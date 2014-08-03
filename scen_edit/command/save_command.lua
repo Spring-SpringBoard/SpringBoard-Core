@@ -54,15 +54,9 @@ local function HeightMapSave(path)
                 --Spring.Echo(x, z)
                 if lastChanged then
                     --Spring.Echo(deltaHeight)
-                    if deltaHeight ~= deltaHeight then
-                        --Spring.Echo(x, z)
-                    end
                     addData(deltaHeight)
                 else
                     --Spring.Echo(x, z, deltaHeight)
-                    if deltaHeight ~= deltaHeight or x ~= x or z ~= z then
-                        --Spring.Echo(x, z, deltaHeight)
-                    end
                     addData(x)
                     addData(z)
                     addData(deltaHeight)
