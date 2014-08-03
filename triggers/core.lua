@@ -1073,7 +1073,6 @@ return {
                     local position = input.params.position
                     local x, y, z = position.x, position.y, position.z
 
-                    Spring.Echo("Patrol " .. tostring(unit) .. " ", x, y, z)
                     Spring.GiveOrderToUnit(unit, CMD.PATROL, { x, y, z }, {"shift"})
                 end,
             },
