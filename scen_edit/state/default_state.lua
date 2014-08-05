@@ -204,6 +204,8 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
     if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
         return true
     end
+
+    local gameSeconds = Spring.GetGameSeconds()
     local mouseX, mouseY, mouseLeft, mouseMiddle, mouseRight = Spring.GetMouseState()
     local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
     if key == KEYSYMS.DELETE then
@@ -259,9 +261,10 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             SCEN_EDIT.clipboard:Paste(coords)
             return true
         end
-    elseif key == KEYSYMS.SPACE and mouseLeft then
+    elseif key == KEYSYMS.SPACE and mouseLeft and (self.gameSeconds == nil or self.gameSeconds + 1 < gameSeconds) then
         local result, unitId = Spring.TraceScreenRay(mouseX, mouseY)
         if result == "unit" then
+            self.gameSeconds = gameSeconds
             UnitPropertyWindow(unitId)
         end
     end 
