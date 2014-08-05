@@ -1,14 +1,14 @@
 local modinfo = {
-    name = "BA-tutorial",
-	shortName = "BA-tutorial",
+    name = "UnnamedPlayer's Scenario",
+	shortName = "UnnamedPlayer's Scenario",
 	version	= "1",
-	game = "BA-tutorial", --what is this?
-	shortGame = "BA-tutorial", --what is this?
+	game = "UnnamedPlayer's Scenario", --what is this?
+	shortGame = "UnnamedPlayer's Scenario", --what is this?
 	mutator = "Official", --what is this? 
-	description = "Balanced Annihilation Tutorial Mission",
+	description = "",
 	modtype = "1", 
     depend = {
-        "Scenario Editor BA 0.2+",
+        "Scenario Editor BA git",
     }
 }      
 return modinfo

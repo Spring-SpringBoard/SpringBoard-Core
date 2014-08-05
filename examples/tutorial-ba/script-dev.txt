@@ -27,7 +27,7 @@
 	MinSpeed=0.1;
 	[MODOPTIONS]
 	{
-        play_mode = 1;
+        play_mode = 0;
         deathmode = neverend;
         has_scenario_file = 0;
         project_dir = projects/tutorial-ba;
@@ -47,7 +47,7 @@
     [PLAYER1]
     {
         Name=Player;
-        Spectator=0;
+        Spectator=1;
         Team=1;
     }
     [TEAM0]
