@@ -68,7 +68,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         end
     elseif type == "team" then
         if field.type == "pred" then
-            return SCEN_EDIT.model.teams[field.id].id
+            return SCEN_EDIT.model.teamManager:getTeam(field.id).id
         end
     elseif type == "area" then
         if field.type == "pred" then

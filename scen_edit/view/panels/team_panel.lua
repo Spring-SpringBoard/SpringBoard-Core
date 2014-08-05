@@ -19,8 +19,8 @@ function TeamPanel:MakePredefinedOpt()
         width = 100,
         height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackTeamPanel,
-        items = GetField(SCEN_EDIT.model.teams, "name"),
-        playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
+        items = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name"),
+        playerTeamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id"),
     }
 end
 

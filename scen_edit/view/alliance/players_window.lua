@@ -9,6 +9,7 @@ function PlayersWindow:init()
         autosize = true,
         resizeItems = false,
     }
+    SCEN_EDIT.model.teamManager:addListener(self)
     self:Populate()
 
     self.btnClose = Button:New {
@@ -27,31 +28,19 @@ function PlayersWindow:init()
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick={
             function()
-                -- find new free id
-                local teamIds = GetField(SCEN_EDIT.model.teams, "id")
-                table.sort(teamIds)
-                local id = 0
-                for _, teamId in pairs(teamIds) do
-                    if id ~= teamId then
-                        break
-                    end
-                    id = id + 1
-                end                
-                SCEN_EDIT.model.teams[id] = {
-                    id = id,
-                    name = tostring(id) .. ": New team",
-                    color = { r=math.random(), g=math.random(), b=math.random(), a=1},
-                    allyTeam = 1,
-                    side = Spring.GetSideData(1),
-                }
-                self:Populate()
+                local name = "New team: " .. tostring(#SCEN_EDIT.model.teamManager:getAllTeams())
+                local color = { r=math.random(), g=math.random(), b=math.random(), a=1}
+                local allyTeam = 1
+                local side = Spring.GetSideData(1)
+                local cmd = AddTeamCommand(name, color, allyTeam, side)
+                SCEN_EDIT.commandManager:execute(cmd)
             end
         },
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
     }
     self.window = Window:New {
         width = 370,
-        height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teams * 30)),
+        height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teamManager:getAllTeams() * 30)),
         minimumSize = {300,300},
         parent = screen0,
         caption = "Players",
@@ -84,7 +73,7 @@ function PlayersWindow:Populate()
         parent = titlesPanel,
     }
     --teams
-    for i, team in pairs(SCEN_EDIT.model.teams) do
+    for _, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
         local stackTeamPanel = MakeComponentPanel(self.teamsPanel)
         local fontColor = SCEN_EDIT.glToFontColor(team.color)
         local aiPrefix = "(Player) "
@@ -108,7 +97,6 @@ function PlayersWindow:Populate()
                 OnClick = {
                     function() 
                         local playerWindow = PlayerWindow(team)
-                        table.insert(playerWindow.window.OnDispose, function() self:Populate() end)
                         playerWindow.window.x = self.window.x + self.window.width
                         playerWindow.window.y = self.window.y
                     end
@@ -132,11 +120,23 @@ function PlayersWindow:Populate()
                 },
                 OnClick = {
                     function() 
-                        SCEN_EDIT.model.teams[team.id] = nil
-                        self:Populate()
+                        local cmd = RemoveTeamCommand(team.id)
+                        SCEN_EDIT.commandManager:execute(cmd)
                     end
                 }
             }
         end
     end
+end
+
+function PlayersWindow:onTeamAdded(teamId)
+    self:Populate()
+end
+
+function PlayersWindow:onTeamRemoved(teamId)
+    self:Populate()
+end
+
+function PlayersWindow:onTeamChange(teamId, team)
+    self:Populate()
 end

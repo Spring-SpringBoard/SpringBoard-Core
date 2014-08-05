@@ -8,10 +8,10 @@ function SetTeamColorCommand:init(teamId, color)
 end
 
 function SetTeamColorCommand:execute()
-    self.oldColor = SCEN_EDIT.model.teams[self.teamId].color
-    SCEN_EDIT.model.teams[self.teamId].color = self.color
+    self.oldColor = SCEN_EDIT.model.teamManager:getTeam(self.teamId).color
+    SCEN_EDIT.model.teamManager:getTeam(self.teamId).color = self.color
 end
 
 function SetTeamColorCommand:unexecute()
-    SCEN_EDIT.model.teams[self.teamId].color = self.oldColor
+    SCEN_EDIT.model.teamManager:getTeam(self.teamId).color = self.oldColor
 end

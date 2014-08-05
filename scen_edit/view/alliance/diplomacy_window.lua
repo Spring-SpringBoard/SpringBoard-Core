@@ -17,18 +17,20 @@ function DiplomacyWindow:init(trigger)
         width = 150,
         parent = titlesPanel,
     }
-    for i, team in pairs(SCEN_EDIT.model.teams) do
+    local i = 1
+    for id, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do        
         local fontColor = SCEN_EDIT.glToFontColor(team.color)
         local lblTeam = Label:New {
-            caption = fontColor .. team.id .. "\b",
+            caption = fontColor .. id .. "\b",
             x = 160 + i * 40,
             width = 30,
             parent = titlesPanel,
         }
+        i = i + 1
     end
 
     --teams
-    for i, team in pairs(SCEN_EDIT.model.teams) do
+    for _, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
         local stackTeamPanel = MakeComponentPanel(self.teamsPanel)
         local fontColor = SCEN_EDIT.glToFontColor(team.color)
         local lblTeam = Label:New {
@@ -37,8 +39,8 @@ function DiplomacyWindow:init(trigger)
             width = 150,
             parent = stackTeamPanel,
         }
-        for j, team2 in pairs(SCEN_EDIT.model.teams) do
-            if i ~= j then
+        for _, team2 in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
+            if team1.id ~= team2.id then
                 self.cbSpecialUnit = Checkbox:New {
                     caption = '',
                     x = 160 + j * 40,
@@ -89,8 +91,8 @@ function DiplomacyWindow:init(trigger)
         OnClick = { function() self.window:Dispose() end }
     }
     self.window = Window:New {
-        width = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teams * 30)),
-        height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teams * 30)),
+        width = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teamManager:getAllTeams() * 30)),
+        height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teamManager:getAllTeams() * 30)),
         minimumSize = {300,300},
         parent = screen0,
         caption = "Alliances",

@@ -4,7 +4,6 @@ SCEN_EDIT_MODEL_DIR = SCEN_EDIT_DIR .. "model/"
 function Model:init()
     SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_DIR)
     
-    self.teams = {}    
     self._lua_rules_pre = "scen_edit"
 
     self.areaManager = AreaManager()
@@ -12,8 +11,9 @@ function Model:init()
     self.featureManager = FeatureManager()
     self.variableManager = VariableManager()
     self.triggerManager = TriggerManager()
-	self.scenarioInfo = ScenarioInfo()
-    self:GenerateTeams()
+    self.teamManager = TeamManager()
+    self.teamManager:generateTeams()
+    self.scenarioInfo = ScenarioInfo()
 end
 
 --clears all units, areas, triggers, etc.
@@ -21,9 +21,9 @@ function Model:Clear()
     self.areaManager:clear()
     self.variableManager:clear()
     self.triggerManager:clear()
+    self.teamManager:clear()
     self.featureManager:clear()
 	self.scenarioInfo:clear()
-    self.teams = {}
     local allUnits = Spring.GetAllUnits()
     for i = 1, #allUnits do
         local unitId = allUnits[i]
@@ -138,7 +138,7 @@ function Model:GetMetaData()
         areas = self.areaManager:serialize(),
         triggers = self.triggerManager:serialize(),
         variables = self.variableManager:serialize(),
-        teams = self:SerializeTeams(),
+        teams = self.teamManager:serialize(),
 		info = self.scenarioInfo:serialize(),
     }
 end
@@ -148,46 +148,6 @@ function Model:SetMetaData(meta)
     self.areaManager:load(meta.areas)
     self.triggerManager:load(meta.triggers)
     self.variableManager:load(meta.variables)
+    self.teamManager:load(meta.teams)
 	self.scenarioInfo:load(meta.info)
-    self:LoadTeams(meta.teams)
-end
-
-function Model:SerializeTeams()
-    local teams = SCEN_EDIT.deepcopy(self.teams)
-    for _, team in pairs(teams) do
-        team.allies = {}
-        for _, team2 in pairs(teams) do
-            if Spring.AreTeamsAllied(team.id, team2.id) then
-                table.insert(team.allies, team2.id)
-            end
-        end
-    end
-    return teams
-end
-
-function Model:LoadTeams(teams)
-    self.teams = teams
-    for _, team in pairs(self.teams) do
-        if Spring.SetAlly then
-            -- TODO: only change those alliances that are needed
-            for _, team2 in pairs(self.teams) do
-                if team.id ~= team2.id then
-                    Spring.SetAlly(team.allyTeam, team2.allyTeam, false)
-                end
-            end
-            for _, allyTeam2 in pairs(team.allies) do
-                Spring.SetAlly(team.allyTeam, allyTeam2, true)
-            end
-        end
-        Spring.SetTeamColor(team.id, team.color.r, team.color.g, team.color.b)
-        team.allies = nil
-    end
-end
-
-function Model:GenerateTeams(widget)
-    local teams = SCEN_EDIT.GetTeams(widget)
-    self.teams = {}
-    for _, team in pairs(teams) do
-        self.teams[team.id] = team
-    end
 end

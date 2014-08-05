@@ -44,8 +44,8 @@ function FeatureDefsView:init()
     local teamsCmb = ComboBox:New {
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        items = GetField(SCEN_EDIT.model.teams, "name"),
-        playerTeamIds = GetField(SCEN_EDIT.model.teams, "id"),
+        items = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name"),
+        playerTeamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id"),
         x = 40,
         width = 90,
     }

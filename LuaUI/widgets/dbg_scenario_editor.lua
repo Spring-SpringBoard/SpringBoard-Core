@@ -61,13 +61,16 @@ function widget:Initialize()
     if not wasEnabled then
         Spring.SendCommands("cheat")
     end
-    reloadGadgets() --uncomment for development	
-    Spring.SendCommands("globallos")
-    if not wasEnabled then
-        Spring.SendCommands("cheat")
-    end
     
     VFS.Include("scen_edit/exports.lua")
+    if devMode then
+        reloadGadgets() --uncomment for development	
+        Spring.SendCommands("globallos")
+        if not wasEnabled then
+            Spring.SendCommands("cheat")
+        end
+    end
+
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
@@ -112,9 +115,9 @@ function widget:Initialize()
     SCEN_EDIT.messageManager.widget = true
 
 
-    SCEN_EDIT.model:GenerateTeams(widget) 
+    SCEN_EDIT.model.teamManager:generateTeams(widget) 
     local commands = {}
-    for id, team in pairs(SCEN_EDIT.model.teams) do
+    for id, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
         local cmd = SetTeamColorCommand(id, team.color)
         table.insert(commands, cmd)
     end
