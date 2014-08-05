@@ -68,15 +68,15 @@ local function GenerateScriptTxt(dev)
 
     scriptTxt = scriptTxt:gsub("__MAP_NAME__", Game.mapName)
                          :gsub("__GAME_TYPE__", gameType)
-                         :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teams))
-                         :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teams))
+                         :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
+                         :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
                          :gsub("__PLAY_MODE__", tostring(playMode))
                          :gsub("__HAS_SCENARIO_FILE__", tostring(playMode))
                          :gsub("__PROJECT_DIR__", tostring(projectDir))
 
     local numAIs = 0
     local numPlayers = 0
-    for _, team in pairs(SCEN_EDIT.model.teams) do
+    for _, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
         if not team.gaia then
             local teamTxt = [[
     [__TEAM_ID__]

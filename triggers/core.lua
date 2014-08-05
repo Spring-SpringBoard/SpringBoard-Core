@@ -219,7 +219,7 @@ return {
                     local y = Spring.GetGroundHeight(x, z)                                                
                     local id = Spring.CreateUnit(unitType, x, y, z, 0, team)
 
-                    local color = SCEN_EDIT.model.teams[team].color
+                    local color = SCEN_EDIT.model.teamManager:getTeam(team).color
                     SCEN_EDIT.displayUtil:displayText("Spawned", {x, y, z}, color )
                 end
             },
@@ -232,7 +232,7 @@ return {
                     local unit = input.unit                
                     local x, y, z = Spring.GetUnitPosition(unit)
 
-                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
+                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
                     Spring.DestroyUnit(unit, false, true)
                     SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
                 end
@@ -246,7 +246,7 @@ return {
                     local unit = input.unit                
                     local x, y, z = Spring.GetUnitPosition(unit)
 
-                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
+                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
                     Spring.DestroyUnit(unit, false, false)
                     SCEN_EDIT.displayUtil:displayText("Destroyed", {x, y, z}, color)
                 end
@@ -260,7 +260,7 @@ return {
                     local unit = input.unit                
                     local x, y, z = Spring.GetUnitPosition(unit)
 
-                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(unit)].color
+                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
                     Spring.DestroyUnit(unit, true, false)
                     SCEN_EDIT.displayUtil:displayText("Self Destruct", {x, y, z}, color)
                 end
@@ -448,7 +448,7 @@ return {
                     Spring.GiveOrderToUnit(input.unit, CMD.STOP, {}, {})
                     SCEN_EDIT.metaModel.orderTypes[orderTypeName].execute(newInput)
                     local x, y, z = Spring.GetUnitPosition(input.unit)
-                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(input.unit)].color
+                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(input.unit)).color
                     SCEN_EDIT.displayUtil:displayText("Issued order", {x, y, z}, color )
                 end
             },
@@ -466,7 +466,7 @@ return {
 
                     SCEN_EDIT.metaModel.orderTypes[orderTypeName].execute(newInput)
                     local x, y, z = Spring.GetUnitPosition(input.unit)
-                    local color = SCEN_EDIT.model.teams[Spring.GetUnitTeam(input.unit)].color
+                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(input.unit)).color
                     SCEN_EDIT.displayUtil:displayText("Added order", {x, y, z}, color )
                 end
             },

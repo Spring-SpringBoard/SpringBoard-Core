@@ -145,6 +145,9 @@ function gadget:Initialize()
         local triggerManagerListener = TriggerManagerListenerGadget()
         SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
 
+        local teamManagerListener = TeamManagerListenerGadget()
+        SCEN_EDIT.model.teamManager:addListener(teamManagerListener)
+
         local scenarioInfoListener = ScenarioInfoListenerGadget()
         SCEN_EDIT.model.scenarioInfo:addListener(scenarioInfoListener)
     end

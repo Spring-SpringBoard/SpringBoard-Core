@@ -25,7 +25,6 @@ function PlayerWindow:init(team)
         width = 70,
         checked = not not team.ai,
         caption = "AI",
-        OnChange = { function(cbToggled, checked) team.ai = checked end },
     }
 
     self.lblColor = Label:New {
@@ -68,13 +67,16 @@ function PlayerWindow:init(team)
         },
         OnDispose = { 
             function()
-                team.name = self.ebName.text
+                local newTeam = SCEN_EDIT.deepcopy(team)
+                newTeam.name = self.ebName.text
                 local clbColor = self.clbColor.color
-                team.color.r = clbColor[1]
-                team.color.g = clbColor[2]
-                team.color.b = clbColor[3]
-                team.color.a = clbColor[4]
-                Spring.SetTeamColor(team.id, team.color.r, team.color.g, team.color.b)
+                newTeam.color.r = clbColor[1]
+                newTeam.color.g = clbColor[2]
+                newTeam.color.b = clbColor[3]
+                newTeam.color.a = clbColor[4]
+                newTeam.ai = self.cbAI.checked
+                local cmd = UpdateTeamCommand(newTeam)
+                SCEN_EDIT.commandManager:execute(cmd)
             end
         },
     }
