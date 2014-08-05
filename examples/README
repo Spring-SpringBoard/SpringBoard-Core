@@ -1,2 +1,11 @@
-Before loading the examples put them in the projects' directory (which should be located in Spring's DATA_DIR).
-They should then be loaded via the "Open Project (Ctrl-O)" action inside the game - but make sure you are using the correct map.
+To load the examples you must first put them in the projects directory which
+resides in your DATADIR (e.g. ~/.config/spring/games/projects/ on linux).
+
+The projects can then be loaded by opening them via the "Open Project
+(Ctrl-O)" action inside the game while using the correct map, or using the
+startup scripts provided with the examples.
+
+The startup scripts can be loaded by passing them as argument when running
+spring, e.g. spring $PWD/script.txt or spring $PWD/script-dev.txt. The
+script.txt will start the scenario in play mode, while script-dev.txt will
+start it in a development mode.
