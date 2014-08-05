@@ -58,7 +58,7 @@ function gadget:RecvLuaMsg(msg, playerID)
     if op == 'game' then
     elseif op == 'meta' then
         Spring.Echo("Send meta data signal")
-    elseif devMode then
+    else
         if op == 'sync' then
             local msgParsed = msg:sub(#(pre .. "|" .. op .. "|") + 1)
             if SCEN_EDIT.messageManager.compress then
@@ -68,7 +68,11 @@ function gadget:RecvLuaMsg(msg, playerID)
             local msg = Message(msgTable.tag, msgTable.data)
             if msg.tag == 'command' then
                 local cmd = SCEN_EDIT.resolveCommand(msg.data)
-                GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
+                if devMode or SCEN_EDIT.projectDir ~= nil then
+                    GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
+                else
+                    Spring.Echo("Command ignored: ", cmd.className)
+                end
             end
         elseif op == 'startMsgPart' then
             --Spring.Echo("Start receiving multi part msg")

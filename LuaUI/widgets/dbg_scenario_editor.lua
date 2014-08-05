@@ -197,9 +197,9 @@ function widget:GameFrame(frameNum)
     end
     SCEN_EDIT.displayUtil:OnFrame()
 
-    if devMode and Spring.GetModOptions().project_dir ~= nil and not self.loaded then
-        SCEN_EDIT.model.projectDir = Spring.GetModOptions().project_dir
-        local cmd = LoadCommandWidget(SCEN_EDIT.model.projectDir, false)
+    if not hasScenarioFile and SCEN_EDIT.projectDir ~= nil and not self.loaded then
+        Spring.Echo("Load project")
+        local cmd = LoadCommandWidget(SCEN_EDIT.projectDir, false)
         SCEN_EDIT.commandManager:execute(cmd, true)
         self.loaded = true
     end

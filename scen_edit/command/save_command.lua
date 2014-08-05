@@ -161,15 +161,10 @@ local function GenerateScriptTxt(dev)
 ]]
 
     local scenarioInfo = SCEN_EDIT.model.scenarioInfo
-    local gameType = nil
     local projectDir = ""
-    if not dev then
-        gameType = scenarioInfo.name .. " " .. scenarioInfo.version
-    else
-        gameType = Game.gameName .. " " .. Game.gameVersion
-        if SCEN_EDIT.model.projectDir then
-            projectDir = "project_dir = " .. SCEN_EDIT.projectDir .. ";"
-        end
+    local gameType = Game.gameName .. " " .. Game.gameVersion
+    if SCEN_EDIT.projectDir then
+        projectDir = "project_dir = " .. SCEN_EDIT.projectDir .. ";"
     end
 
     scriptTxt = scriptTxt:gsub("__MAP_NAME__", Game.mapName)
@@ -177,7 +172,7 @@ local function GenerateScriptTxt(dev)
                          :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
                          :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
                          :gsub("__PLAY_MODE__", tostring(playMode))
-                         :gsub("__HAS_SCENARIO_FILE__", tostring(playMode))
+                         :gsub("__HAS_SCENARIO_FILE__", 0)
                          :gsub("__PROJECT_DIR__", tostring(projectDir))
 
     local numAIs = 0

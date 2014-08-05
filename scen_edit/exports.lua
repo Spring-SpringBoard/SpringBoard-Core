@@ -15,7 +15,7 @@ SCEN_EDIT_FILE_EXT = ".sdz"
 --mod opts
 local modOpts = Spring.GetModOptions()
 
-SCEN_EDIT.projectDir = modOpts.projectDir
+SCEN_EDIT.projectDir = modOpts.project_dir
 devMode = (tonumber(modOpts.play_mode) or 0) == 0
 if devMode then
     Spring.Echo("Scenario Editor mode: dev")
