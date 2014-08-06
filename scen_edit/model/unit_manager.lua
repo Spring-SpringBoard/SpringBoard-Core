@@ -99,29 +99,57 @@ function UnitManager:getAllUnits()
     return allUnits
 end
 
+function UnitManager:serializeUnit(unitId)
+    local unit = {}
+
+    local unitDefId = Spring.GetUnitDefID(unitId)
+    unit.unitDefName = UnitDefs[unitDefId].name
+    unit.x, _, unit.y = Spring.GetUnitPosition(unitId)
+    unit.player = Spring.GetUnitTeam(unitId)
+    unit.id = self:getModelUnitId(unitId)
+    local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
+    unit.angle = math.atan2(dirX, dirZ) * 180 / math.pi
+
+    return unit
+end
+
 function UnitManager:serialize()
     local retVal = {}
-    for _, unit in pairs(self:allUnits()) do
-        table.insert(retVal, 
-            {
-                unit = unit,
-            }
-        )
+    for _, unitId in pairs(Spring.GetAllUnits()) do
+        local unit = self:serializeUnit(unitId)
+        table.insert(retVal, unit)
     end
     return retVal
 end
 
-function UnitManager:load(data)
+function UnitManager:loadUnit(unit)
+    local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
+    if unitId ~= nil then			
+        local x = math.sin(math.rad(unit.angle))
+        local z = math.cos(math.rad(unit.angle))
+        Spring.SetUnitDirection(unitId, x, 0, z)
+        self:setUnitModelId(unitId, unit.id)
+    else
+        Spring.Echo("Failed to create the following unit: ")
+        table.echo(unit)
+    end
+end
+
+function UnitManager:load(units)
     self:clear()
-    self.unitIdCount = 0
-    for _, kv in pairs(data) do
-        id = kv.id
-        unit = kv.unit
-        self:addUnit(unit)
+
+    self.unitIdCounter = 0
+    for _, unit in pairs(units) do
+        self:loadUnit(unit)
     end
 end
 
 function UnitManager:clear()
+    for _, unitId in pairs(Spring.GetAllUnits()) do
+        Spring.DestroyUnit(unitId, false, true)
+        --self:removeUnit(unitId)
+    end
+
     for unitId, _ in pairs(self.s2mUnitIdMapping) do
         self:removeUnit(unitId)
     end

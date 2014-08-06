@@ -86,33 +86,57 @@ function FeatureManager:setFeatureModelId(featureId, modelId)
     self:addFeature(featureId, modelId)
 end
 
-function FeatureManager:serialize()
-    local retVal = {}
-    for _, feature in pairs(self.features) do
-        table.insert(retVal, 
-            {
-                feature = feature,
-            }
-        )
-    end
-    return retVal
+function FeatureManager:serializeFeature(featureId)
+    local feature = {}
+
+    local featureDefId = Spring.GetFeatureDefID(featureId)
+    feature.featureDefName = FeatureDefs[featureDefId].name
+    feature.x, _, feature.y = Spring.GetFeaturePosition(featureId)
+    feature.player = Spring.GetFeatureTeam(featureId)
+    feature.id = self.featureManager:getModelFeatureId(featureId)
+    local dirX, dirY, dirZ = Spring.GetFeatureDirection(featureId)
+    feature.angle = math.atan2(dirX, dirZ) * 180 / math.pi
+
+    return feature
 end
 
-function FeatureManager:load(data)
+
+function FeatureManager:serialize()
+    local features = {}
+    for _, featureId in pairs(Spring.GetAllFeatures()) do
+        local feature = self:serializeFeature(featureId)
+        table.insert(features, feature)
+    end
+    return features
+end
+
+function FeatureManager:loadFeature(feature)
+    local featureId = Spring.CreateFeature(feature.featureDefName, feature.x, 0, feature.y, feature.player)
+    local x = math.sin(math.rad(feature.angle))
+    local z = math.cos(math.rad(feature.angle))
+    Spring.SetFeatureDirection(featureId, x, 0, z)
+    self:setFeatureModelId(featureId, feature.id)
+end
+
+function FeatureManager:load(features)
     self:clear()
-    self.featureIdCount = 0
-    for _, kv in pairs(data) do
-        id = kv.id
-        feature = kv.feature
-        self:addFeature(feature)
+
+    for _, feature in pairs(features) do
+        self:loadFeature(feature)
     end
 end
 
 function FeatureManager:clear()
+    for _, featureId in pairs(Spring.GetAllFeatures()) do
+        Spring.DestroyFeature(featureId, false, true)
+--        self:removeFeature(featureId)
+    end
+
     for featureId, _ in pairs(self.s2mFeatureIdMapping) do
         self:removeFeature(featureId)
     end
     self.s2mFeatureIdMapping = {}
     self.m2sFeatureIdMapping = {}
     self.featureIdCounter = 0
+
 end
