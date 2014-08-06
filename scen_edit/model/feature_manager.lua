@@ -91,9 +91,9 @@ function FeatureManager:serializeFeature(featureId)
 
     local featureDefId = Spring.GetFeatureDefID(featureId)
     feature.featureDefName = FeatureDefs[featureDefId].name
-    feature.x, _, feature.y = Spring.GetFeaturePosition(featureId)
-    feature.player = Spring.GetFeatureTeam(featureId)
-    feature.id = self.featureManager:getModelFeatureId(featureId)
+    feature.x, feature.y, feature.z = Spring.GetFeaturePosition(featureId)
+    feature.teamId = Spring.GetFeatureTeam(featureId)
+    feature.id = self:getModelFeatureId(featureId)
     local dirX, dirY, dirZ = Spring.GetFeatureDirection(featureId)
     feature.angle = math.atan2(dirX, dirZ) * 180 / math.pi
 
@@ -111,7 +111,7 @@ function FeatureManager:serialize()
 end
 
 function FeatureManager:loadFeature(feature)
-    local featureId = Spring.CreateFeature(feature.featureDefName, feature.x, 0, feature.y, feature.player)
+    local featureId = Spring.CreateFeature(feature.featureDefName, feature.x, feature.y, feature.z, feature.teamId)
     local x = math.sin(math.rad(feature.angle))
     local z = math.cos(math.rad(feature.angle))
     Spring.SetFeatureDirection(featureId, x, 0, z)
