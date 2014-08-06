@@ -12,23 +12,9 @@ end
 
 function Clipboard:CopyUnits(unitIds)
     self:Clear()
-    for i = 1, #unitIds do
-        local unitId = unitIds[i]
-        local x, y, z = Spring.GetUnitPosition(unitId)
-        local unitTypeId = Spring.GetUnitDefID(unitId)
-        local unitTeamId = Spring.GetUnitTeam(unitId)
-        local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
-        local angle = math.atan2(dirX, dirZ) * 180 / math.pi
-        table.insert(self.units,
-            {
-                x = x,
-                y = y,
-                z = z,
-                unitTypeId = unitTypeId,
-                unitTeamId = unitTeamId,
-                angle = angle,
-            }
-        )
+    for _, unitId in pairs(unitIds) do
+        local unit = SCEN_EDIT.model.unitManager:serializeUnit(unitId)
+        table.insert(self.units, unit)
     end
 end
 
@@ -49,8 +35,8 @@ end
 function Clipboard:_PasteUnits(coords)
     local addUnitCommands = {}
     local avgX, avgZ = 0, 0
-    for i = 1, #self.units do
-        local unit = self.units[i]
+    for _, unit in pairs(self.units) do
+        table.echo(unit)
         avgX = avgX + unit.x
         avgZ = avgZ + unit.z
     end
@@ -58,13 +44,11 @@ function Clipboard:_PasteUnits(coords)
     avgZ = avgZ / #self.units
     local dx = coords[1] - avgX
     local dz = coords[3] - avgZ
-    for i = 1, #self.units do
-        local unit = self.units[i]
+    for _, unit in pairs(self.units) do
         local x, y, z = unit.x, unit.y, unit.z
-        local unitTypeId = unit.unitTypeId
-        local unitTeamId = unit.unitTeamId
-        local angle = unit.angle
-        local cmd = AddUnitCommand(unitTypeId, x + dx, y, z + dz, unitTeamId, angle)
+        unit.x = unit.x + dx
+        unit.z = unit.z + dz
+        local cmd = AddUnitCommand(unit)
         table.insert(addUnitCommands, cmd)
     end
     local cmd = CompoundCommand(addUnitCommands)

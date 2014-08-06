@@ -99,16 +99,33 @@ function UnitManager:getAllUnits()
     return allUnits
 end
 
+function UnitManager:serializeUnitProperties(unitId, unit)
+    unit.id = self:getModelUnitId(unitId)
+    local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
+    unit.angle = math.atan2(dirX, dirZ) * 180 / math.pi
+    
+    unit.health = Spring.GetUnitHealth(unitId)
+    _, unit.maxhealth = Spring.GetUnitHealth(unitId)
+    if unit.maxhealth == UnitDefs[Spring.GetUnitDefID(unitId)].health then
+        if unit.health == unit.maxhealth then
+            unit.health = nil
+        end
+        unit.maxhealth = nil
+    end
+    unit.tooltip = Spring.GetUnitTooltip(unitId)
+    unit.stockpile = Spring.GetUnitStockpile(unitId)
+    unit.experience = Spring.GetUnitExperience(unitId)
+    unit.fuel = Spring.GetUnitFuel(unitId)
+end
+
 function UnitManager:serializeUnit(unitId)
     local unit = {}
 
     local unitDefId = Spring.GetUnitDefID(unitId)
     unit.unitDefName = UnitDefs[unitDefId].name
-    unit.x, _, unit.y = Spring.GetUnitPosition(unitId)
-    unit.player = Spring.GetUnitTeam(unitId)
-    unit.id = self:getModelUnitId(unitId)
-    local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
-    unit.angle = math.atan2(dirX, dirZ) * 180 / math.pi
+    unit.x, unit.y, unit.z = Spring.GetUnitPosition(unitId)
+    unit.teamId = Spring.GetUnitTeam(unitId)
+    self:serializeUnitProperties(unitId, unit)
 
     return unit
 end
@@ -122,17 +139,41 @@ function UnitManager:serialize()
     return retVal
 end
 
+function UnitManager:setUnitProperties(unitId, unit)
+    local x = math.sin(math.rad(unit.angle))
+    local z = math.cos(math.rad(unit.angle))
+    Spring.SetUnitDirection(unitId, x, 0, z)
+    if unit.maxhealth ~= nil then
+        Spring.SetUnitMaxHealth(unitId, unit.maxhealth)
+    end
+    if unit.health ~= nil then
+        Spring.SetUnitHealth(unitId, unit.health)
+    end
+    if unit.tooltip ~= nil then
+        Spring.SetUnitTooltip(unitId, unit.tooltip)
+    end
+    if unit.stockpile ~= nil then
+        Spring.SetUnitStockpile(unitId, unit.stockpile)
+    end
+    if unit.experience ~= nil then
+        Spring.SetUnitExperience(unitId, unit.experience)
+    end
+    if unit.fuel ~= nil then
+        Spring.SetUnitFuel(unitId, unit.fuel)
+    end
+end
+
 function UnitManager:loadUnit(unit)
-    local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, 0, unit.y, 0, unit.player)
-    if unitId ~= nil then			
-        local x = math.sin(math.rad(unit.angle))
-        local z = math.cos(math.rad(unit.angle))
-        Spring.SetUnitDirection(unitId, x, 0, z)
-        self:setUnitModelId(unitId, unit.id)
-    else
+    local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId)
+    if unitId == nil then
         Spring.Echo("Failed to create the following unit: ")
         table.echo(unit)
+        return
     end
+    self:setUnitProperties(unitId, unit)
+    self:setUnitModelId(unitId, unit.id)
+
+    return unitId
 end
 
 function UnitManager:load(units)
