@@ -36,7 +36,6 @@ function Clipboard:_PasteUnits(coords)
     local addUnitCommands = {}
     local avgX, avgZ = 0, 0
     for _, unit in pairs(self.units) do
-        table.echo(unit)
         avgX = avgX + unit.x
         avgZ = avgZ + unit.z
     end
