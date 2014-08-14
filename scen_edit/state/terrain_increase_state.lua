@@ -1,4 +1,4 @@
-TerrainIncreaseState = AbstractEditingState:extends{}
+TerrainIncreaseState = AbstractHeightmapEditingState:extends{}
 
 function TerrainIncreaseState:init(toDecrease)
     self.size = 100
@@ -90,26 +90,6 @@ function TerrainIncreaseState:GameFrame(frameNum)
             end
             self:AlterTerrain(coords[1], coords[3], amount)
         end
-    end
-end
-
-function TerrainIncreaseState:KeyPress(key, mods, isRepeat, label, unicode)
-    if self.startedChanging then
-        return
-    end
-    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
-        return true
-    end
-    if key == 27 then --KEYSYMS.ESC then
-        SCEN_EDIT.stateManager:SetState(DefaultState())
-    elseif key == 50 then -- 2
-        local newState = TerrainChangeHeightRectState()
-        --newState.size = self.size
-        SCEN_EDIT.stateManager:SetState(newState)
-    elseif key == 51 then -- 3
-        local newState = TerrainSmoothState()
-        newState.size = self.size
-        SCEN_EDIT.stateManager:SetState(newState)
     end
 end
 

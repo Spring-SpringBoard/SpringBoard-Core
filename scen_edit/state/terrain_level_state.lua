@@ -1,22 +1,22 @@
-TerrainSmoothState = AbstractHeightmapEditingState:extends{}
+TerrainLevelState = AbstractHeightmapEditingState:extends{}
 
-function TerrainSmoothState:init()
+function TerrainLevelState:init()
     self.size = 100
-    self.sigma = 1
+    self.strength = 1
     self.startedChanging = false
 end
 
-function TerrainSmoothState:AlterTerrain(x, z)
+function TerrainLevelState:AlterTerrain(x, z)
     local currentFrame = Spring.GetGameFrame()
     if not self.lastChangeFrame or currentFrame - self.lastChangeFrame >= 0 then
         self.lastChangeFrame = currentFrame
-        local cmd = TerrainSmoothCommand(x, z, self.size, self.sigma)
+        local cmd = TerrainLevelCommand(x, z, self.size, self.height)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
     end
 end
 
-function TerrainSmoothState:startChanging()
+function TerrainLevelState:startChanging()
     if not self.startedChanging then
         local cmd = SetMultipleCommandModeCommand(true)
         SCEN_EDIT.commandManager:execute(cmd)
@@ -24,7 +24,7 @@ function TerrainSmoothState:startChanging()
     end
 end
 
-function TerrainSmoothState:stopChanging()
+function TerrainLevelState:stopChanging()
     if self.startedChanging then
         local cmd = SetMultipleCommandModeCommand(false)
         SCEN_EDIT.commandManager:execute(cmd)
@@ -32,12 +32,13 @@ function TerrainSmoothState:stopChanging()
     end
 end
 
-function TerrainSmoothState:MousePress(x, y, button)
+function TerrainLevelState:MousePress(x, y, button)
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
+            self.height = coords[2]
             self:startChanging()
-            self:AlterTerrain(coords[1], coords[3])
+            self:AlterTerrain(coords[1], coords[3], amount)
         end
         return true
     end
@@ -47,18 +48,18 @@ function TerrainSmoothState:MousePress(x, y, button)
     end
 end
 
-function TerrainSmoothState:MouseRelease(x, y, button)
+function TerrainLevelState:MouseRelease(x, y, button)
     if button == 1 then
         self:stopChanging()
     end
 end
 
-function TerrainSmoothState:MouseMove(x, y, dx, dy, button)
+function TerrainLevelState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     return true
 end
 
-function TerrainSmoothState:MouseWheel(up, value)
+function TerrainLevelState:MouseWheel(up, value)
     local _, ctrl = Spring.GetModKeyState()
     if ctrl then
         if up then
@@ -72,7 +73,7 @@ function TerrainSmoothState:MouseWheel(up, value)
     end
 end
 
-function TerrainSmoothState:GameFrame(frameNum)
+function TerrainLevelState:GameFrame(frameNum)
     local x, y, button1, _, button3 = Spring.GetMouseState()
     if button1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
@@ -82,7 +83,7 @@ function TerrainSmoothState:GameFrame(frameNum)
     end
 end
 
-function TerrainSmoothState:DrawWorld()
+function TerrainLevelState:DrawWorld()
     x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
