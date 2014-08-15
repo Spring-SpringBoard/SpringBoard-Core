@@ -24,9 +24,10 @@ Ctrl-E        Export
 ===============  =======================
 Hotkey           Action
 ===============  =======================
-1                Circle tool
-2                Rectangle tool
-3                Level tool
+1                Increase mode
+2                Smooth mode
+3                Level mode
+4                Rectangle (crisp) increase mode
 Mouse1           Use tool (inc. terrain)
 Shift+Mouse1     Decrease terrain 
 Ctrl+Mouse up    Increase size
