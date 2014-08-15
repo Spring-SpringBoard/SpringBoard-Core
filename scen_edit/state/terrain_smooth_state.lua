@@ -8,6 +8,7 @@ end
 
 function TerrainSmoothState:AlterTerrain(x, z)
     local currentFrame = Spring.GetGameFrame()
+    self.sigma = math.max(math.min(self.size / 200, 1.5), 0.35)
     if not self.lastChangeFrame or currentFrame - self.lastChangeFrame >= 0 then
         self.lastChangeFrame = currentFrame
         local cmd = TerrainSmoothCommand(x, z, self.size, self.sigma)
