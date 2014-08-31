@@ -146,10 +146,10 @@ function UnitPropertyWindow:init(unitId)
     }
 
     SCEN_EDIT.MakeConfirmButton(self.window, btnOk)
-    table.insert(self.window.OnConfirm, function()        
+    table.insert(self.window.OnConfirm, function()
         local cmds = {
-            SetUnitPropertyCommand(self.modelUnitId, "health", tonumber(self.edHealth.text)),
             SetUnitPropertyCommand(self.modelUnitId, "maxhealth", tonumber(self.edMaxHealth.text)),
+            SetUnitPropertyCommand(self.modelUnitId, "health", tonumber(self.edHealth.text)),
             SetUnitPropertyCommand(self.modelUnitId, "tooltip", self.edTooltip.text),
         }
         if self.edStockpile ~= nil then
