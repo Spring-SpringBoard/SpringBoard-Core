@@ -551,3 +551,27 @@ end
 function SCEN_EDIT.DirExists(path, ...)
     return (#VFS.SubDirs(path, "*", ...) + #VFS.DirList(path, "*", ...)) ~= 0
 end
+
+local warningsIssued = {}
+
+function SCEN_EDIT.MinVersion(versionNumber, feature)
+    if Script.IsEngineMinVersion == nil or not Script.IsEngineMinVersion(versionNumber) then
+        if warningsIssued[feature] == nil then
+            Spring.Echo(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
+            warningsIssued[feature] = true
+        end
+        return false
+    end
+    return true
+end
+
+function SCEN_EDIT.FunctionExists(fun, feature)
+    if fun ~= nil then
+        if warningsIssued[feature] == nil then
+            Spring.Echo(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
+            warningsIssued[feature] = true
+        end
+        return false
+    end
+    return true
+end

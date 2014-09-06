@@ -140,6 +140,15 @@ function DefaultState:MousePress(x, y, button)
             end
         elseif result == "unit" then
             local unitId = coords
+
+            local unitTeamId = Spring.GetUnitTeam(unitId)
+            if Spring.GetMyTeamID() ~= unitTeamId or Spring.GetSpectatingState() then
+                if SCEN_EDIT.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
+                    local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), unitTeamId)
+                    SCEN_EDIT.commandManager:execute(cmd)
+                end
+            end
+
             local result, coords = Spring.TraceScreenRay(x, y, true)
             -- it's possible that there is no ground behind (if object is near the map edge)
             if coords ~= nil then
