@@ -87,10 +87,6 @@ function UnitManager:setUnitModelId(unitId, modelId)
     self:addUnit(unitId, modelId)
 end
 
-function UnitManager:getUnit(triggerId)
-    return self.triggers[triggerId]
-end
-
 function UnitManager:getAllUnits()
     local allUnits = {}
     for id, _ in pairs(self.m2sUnitIdMapping) do
