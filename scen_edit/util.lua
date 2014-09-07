@@ -575,3 +575,11 @@ function SCEN_EDIT.FunctionExists(fun, feature)
     end
     return true
 end
+
+function boolToNumber(bool)
+    if bool then
+        return 1
+    else
+        return 0
+    end
+end
