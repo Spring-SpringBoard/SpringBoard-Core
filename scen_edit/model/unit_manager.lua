@@ -115,6 +115,20 @@ function UnitManager:serializeUnitProperties(unitId, unit)
     unit.states = Spring.GetUnitStates(unitId)
 end
 
+function UnitManager:serializeUnitCommands(unitId, unit)
+    unit.commands = Spring.GetUnitCommands(unitId)
+    for _, command in pairs(unit.commands) do
+        command.name = CMD[command.id]
+        command.options = nil
+        command.tag = nil
+        command.id = nil
+        -- serialized unit commands use the model unit id
+        if isUnitCommand(command) then
+            command.params[1] = self:getModelUnitId(command.params[1])
+        end
+    end
+end
+
 function UnitManager:serializeUnit(unitId)
     local unit = {}
 
@@ -122,7 +136,9 @@ function UnitManager:serializeUnit(unitId)
     unit.unitDefName = UnitDefs[unitDefId].name
     unit.x, unit.y, unit.z = Spring.GetUnitPosition(unitId)
     unit.teamId = Spring.GetUnitTeam(unitId)
+
     self:serializeUnitProperties(unitId, unit)
+    self:serializeUnitCommands(unitId, unit)
 
     return unit
 end
@@ -196,6 +212,32 @@ function UnitManager:setUnitProperties(unitId, unit)
     end
 end
 
+function isUnitCommand(command)
+    if command.params ~= nil and #command.params ~= 1 then
+        return false
+    end
+    local unitCommands = { "DEATHWAIT", "ATTACK", "GUARD", "REPAIR", "LOAD_UNITS", "UNLOAD_UNITS", "RECLAIM", "RESSURECT", "CAPTURE", "LOOPBACKATTACK" }
+    for _, unitCommand in pairs(unitCommands) do
+        if command.name == unitCommand then
+            return true
+        end
+    end
+    return false
+end
+
+function UnitManager:setUnitCommands(unitId, commands)
+    for _, command in pairs(commands) do
+        local params
+        -- unit commands need to get the real unit ID
+        if isUnitCommand(command) then
+            params = { self:getSpringUnitId(command.params[1]) }
+        else
+            params = command.params
+        end
+        Spring.GiveOrderToUnit(unitId, CMD[command.name], params, {"shift"})
+    end
+end
+
 function UnitManager:loadUnit(unit)
     local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId)
     if unitId == nil then
@@ -205,7 +247,9 @@ function UnitManager:loadUnit(unit)
     end
     self:setUnitProperties(unitId, unit)
     self:setUnitModelId(unitId, unit.id)
-
+    if unit.commands ~= nil then
+        self:setUnitCommands(unitId, unit.commands)
+    end
     return unitId
 end
 
@@ -213,8 +257,17 @@ function UnitManager:load(units)
     self:clear()
 
     self.unitIdCounter = 0
+    -- load the units without the commands
+    local unitCommands = {} 
     for _, unit in pairs(units) do
-        self:loadUnit(unit)
+        local commands = unit.commands
+        unit.commands = nil
+        local unitId = self:loadUnit(unit)
+        unitCommands[unitId] = commands
+    end
+    -- load the commands
+    for unitId, commands in pairs(unitCommands) do
+        self:setUnitCommands(unitId, commands)
     end
 end
 
