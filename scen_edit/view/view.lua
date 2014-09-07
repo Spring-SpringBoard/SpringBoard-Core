@@ -83,20 +83,35 @@ end
 function View:DrawScreen()
     gl.PushMatrix()
         local w, h = Spring.GetScreenGeometry()
-        local y = 10
-        local text = "Project not saved"
-
         local fontSize = 20
         if self.font == nil then
             local fontName = "FreeSansBold.otf"
             self.font = gl.LoadFont(fontName, fontSize)
         end
+
+        local y = 10
+        local text
         local x = w - 200
         if SCEN_EDIT.projectDir ~= nil then
             text = "Project:" .. SCEN_EDIT.projectDir
+        else
+            text = "Project not saved"
         end
         local x = w - self.font:GetTextWidth(text) * fontSize - 10
-        self.font:Print(text, x, y)
+        self.font:Print(text, x, y, 20, 'o')
+
+        y = 40
+        if Spring.GetSpectatingState() then
+            text = "Spectator"
+        else
+            local teamId = Spring.GetMyTeamID()
+            local team = SCEN_EDIT.model.teamManager:getTeam(teamId)
+            local c = team.color
+
+            text = SCEN_EDIT.glToFontColor(team.color) .. "Team " .. tostring(teamId) .. "\b"
+        end        
+        x = w - self.font:GetTextWidth(text) * fontSize - 10
+        self.font:Print(text, x, y, 20, 'o')
     gl.PopMatrix()
 end
 
