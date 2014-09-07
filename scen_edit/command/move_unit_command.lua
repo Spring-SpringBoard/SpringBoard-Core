@@ -20,9 +20,6 @@ function MoveUnitCommand:execute()
     local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
 
     Spring.SetUnitPosition(unitId, self.newX, self.newY, self.newZ)
-    -- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
-    Spring.GiveOrderToUnit(unitId, CMD.STOP, {}, {})
-    --SCEN_EDIT.model:MoveUnit(unitId, self.newX, self.newY, self.newZ)
     -- FIXME: hack needed to set proper unit direction for buildings
     Spring.SetUnitDirection(unitId, dirX, dirY, dirZ)
 end
@@ -32,9 +29,6 @@ function MoveUnitCommand:unexecute()
     --FIXME: hack needed to set proper unit direction for buildings
     local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
     Spring.SetUnitPosition(unitId, self.oldX, self.oldY, self.oldZ)
-    -- TODO: this is wrong and shouldn't be needed; but it seems that a glitch is causing units to create a move order to their previous position
-    Spring.GiveOrderToUnit(unitId, CMD.STOP, {}, {})
---    SCEN_EDIT.model:MoveUnit(unitId, self.oldX, self.oldY, self.oldZ)
     -- FIXME: hack needed to set proper unit direction for buildings
     Spring.SetUnitDirection(unitId, dirX, dirY, dirZ)
 end
