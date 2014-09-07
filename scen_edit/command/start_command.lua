@@ -17,7 +17,13 @@ function StartCommand:execute()
         local allUnits = Spring.GetAllUnits()
         for i = 1, #allUnits do
             local unitId = allUnits[i]
-            Spring.GiveOrderToUnit(unitId, CMD.FIRE_STATE, { 2 }, {})
+            --[[Spring.GiveOrderToUnit(unitId, CMD.FIRE_STATE, { 2 }, {})
+            Spring.MoveCtrl.Disable(unitId)
+            SCEN_EDIT.delay(function()
+                Spring.GiveOrderToUnit(unitId, CMD.WAIT, {}, {})
+                Spring.GiveOrderToUnit(unitId, CMD.WAIT, {}, {})
+            end)]]--
+            Spring.SetUnitHealth(unitId, { paralyze = 0 })
         end
         SCEN_EDIT.rtModel:GameStart()
     end
