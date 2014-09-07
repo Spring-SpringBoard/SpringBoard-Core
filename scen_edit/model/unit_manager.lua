@@ -116,6 +116,7 @@ function UnitManager:serializeUnitProperties(unitId, unit)
     unit.stockpile = Spring.GetUnitStockpile(unitId)
     unit.experience = Spring.GetUnitExperience(unitId)
     unit.fuel = Spring.GetUnitFuel(unitId)
+    unit.states = Spring.GetUnitStates(unitId)
 end
 
 function UnitManager:serializeUnit(unitId)
@@ -160,6 +161,42 @@ function UnitManager:setUnitProperties(unitId, unit)
     end
     if unit.fuel ~= nil then
         Spring.SetUnitFuel(unitId, unit.fuel)
+    end
+    if unit.states ~= nil then
+        local s = unit.states
+        if s.cloak ~= nil then
+            Spring.GiveOrderToUnit(unitId, CMD.INSERT,
+                { 0, CMD.CLOAK, 0, boolToNumber(s.cloak)},
+                {"alt"}
+            );
+        end
+        if s.firestate ~= nil then
+            Spring.GiveOrderToUnit(unitId, CMD.INSERT,
+                { 0, CMD.FIRE_STATE, 0, s.firestate},
+                {"alt"}
+            );
+        end
+        if s.movestate ~= nil then
+            Spring.GiveOrderToUnit(unitId, CMD.INSERT,
+                { 0, CMD.MOVE_STATE, 0, s.movestate},
+                {"alt"}
+            );
+        end
+        -- setting the active state doesn't work currently
+        --[[
+        if s.active ~= nil then
+            Spring.GiveOrderToUnit(unitId, CMD.INSERT,
+                { 0, CMD.IDLEMODE, 0, boolToNumber(s.active)},
+                {"alt"}
+            );
+        end
+        --]]
+        if s["repeat"] ~= nil then
+            Spring.GiveOrderToUnit(unitId, CMD.INSERT,
+                { 0, CMD.REPEAT, 0, boolToNumber(s["repeat"])},
+                {"alt"}
+            );
+        end
     end
 end
 
