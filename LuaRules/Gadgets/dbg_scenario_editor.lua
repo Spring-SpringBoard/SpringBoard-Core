@@ -175,6 +175,7 @@ function gadget:GamePreload()
 end
 
 function gadget:GameFrame(frameNum)
+    SCEN_EDIT.executeDelayed()
     SCEN_EDIT.rtModel:GameFrame(frameNum)
 
     --wait a bit before populating everything (so luaui is loaded)
@@ -194,7 +195,11 @@ function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
         return
     end
     if not SCEN_EDIT.rtModel.hasStarted then
-        Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+        --Spring.MoveCtrl.Enable(unitID)
+        --Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+        SCEN_EDIT.delay(function()
+            Spring.SetUnitHealth(unitID, { paralyze = math.pow(2, 32) })
+        end)
     end
 end
 
@@ -218,6 +223,7 @@ end
 function gadget:FeatureDestroyed(featureID, allyTeam)
     SCEN_EDIT.model.featureManager:removeFeature(featureID)
 end
+
 --[[
 function gadget:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defaultPriority)
 --    Spring.Echo(attackerID, targetID)
