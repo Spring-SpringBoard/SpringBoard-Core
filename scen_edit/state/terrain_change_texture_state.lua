@@ -3,98 +3,106 @@ SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
 
 --FIXME: remove this default pen
 local penTexture = "bitmaps/detailtex.bmp"
-
 local BIG_TEX_SIZE = 128*8 --bigTexSize      = (SQUARE_SIZE * bigSquareSize);
-local mapTexSQ = gl.CreateTexture(BIG_TEX_SIZE,BIG_TEX_SIZE, {
-    border = false,
-    min_filter = GL.NEAREST,
-    mag_filter = GL.NEAREST,
-    wrap_s = GL.CLAMP_TO_EDGE,
-    wrap_t = GL.CLAMP_TO_EDGE,
-    fbo = true, 
-})
+local mapTexSQ, penShader
 
-local penBlenders = {
-    --'from'
-    --// 2010 Kevin Bjorke http://www.botzilla.com
-    --// Uses Processing & the GLGraphics library
-    ["BlendNormal"] = [[mix(penColor,mapColor,penColor.a);]],
+function getPenShader()
+    if penShader == nil then
+        mapTexSQ = gl.CreateTexture(BIG_TEX_SIZE,BIG_TEX_SIZE, {
+            border = false,
+            min_filter = GL.NEAREST,
+            mag_filter = GL.NEAREST,
+            wrap_s = GL.CLAMP_TO_EDGE,
+            wrap_t = GL.CLAMP_TO_EDGE,
+            fbo = true, 
+        })
 
-    ["BlendAdd"] = [[mix((mapColor+penColor),mapColor,penColor.a);]],
+        local penBlenders = {
+            --'from'
+            --// 2010 Kevin Bjorke http://www.botzilla.com
+            --// Uses Processing & the GLGraphics library
+            ["BlendNormal"] = [[mix(penColor,mapColor,penColor.a);]],
 
-    ["BlendColorBurn"] = [[mix(1.0-(1.0-mapColor)/penColor,mapColor,penColor.a);]],
+            ["BlendAdd"] = [[mix((mapColor+penColor),mapColor,penColor.a);]],
 
-    ["BlendColorDodge"] = [[mix(mapColor/(1.0-penColor),mapColor,penColor.a);]],
+            ["BlendColorBurn"] = [[mix(1.0-(1.0-mapColor)/penColor,mapColor,penColor.a);]],
 
-    ["BlendColor"] = [[mix(sqrt(dot(mapColor.rgb,mapColor.rgb)) * normalize(penColor),mapColor,penColor.a);]],
+            ["BlendColorDodge"] = [[mix(mapColor/(1.0-penColor),mapColor,penColor.a);]],
 
-    ["BlendDarken"] = [[mix(min(mapColor,penColor),mapColor,penColor.a);]],
+            ["BlendColor"] = [[mix(sqrt(dot(mapColor.rgb,mapColor.rgb)) * normalize(penColor),mapColor,penColor.a);]],
 
-    ["BlendDifference"] = [[mix(abs(penColor-mapColor),mapColor,penColor.a);]],
+            ["BlendDarken"] = [[mix(min(mapColor,penColor),mapColor,penColor.a);]],
 
-    ["BlendExclusion"] = [[mix(penColor+mapColor-(2.0*penColor*mapColor),mapColor,penColor.a);]],
+            ["BlendDifference"] = [[mix(abs(penColor-mapColor),mapColor,penColor.a);]],
 
-    ["BlendHardLight"] = [[mix(lerp(2.0 * mapColor * penColor,1.0 - 2.0*(1.0-penColor)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),penColor)- 0.45)))),mapColor,penColor.a);]],
+            ["BlendExclusion"] = [[mix(penColor+mapColor-(2.0*penColor*mapColor),mapColor,penColor.a);]],
 
-    ["BlendInverseDifference"] = [[mix(1.0-abs(mapColor-penColor),mapColor,penColor.a);]],
+            ["BlendHardLight"] = [[mix(lerp(2.0 * mapColor * penColor,1.0 - 2.0*(1.0-penColor)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),penColor)- 0.45)))),mapColor,penColor.a);]],
 
-    ["BlendLighten"] = [[mix(max(penColor,mapColor),mapColor,penColor.a);]],
+            ["BlendInverseDifference"] = [[mix(1.0-abs(mapColor-penColor),mapColor,penColor.a);]],
 
-    ["BlendLuminance"] = [[mix(dot(penColor,vec4(0.25,0.65,0.1,0.0))*normalize(mapColor),mapColor,penColor.a);]],
+            ["BlendLighten"] = [[mix(max(penColor,mapColor),mapColor,penColor.a);]],
 
-    ["BlendMultiply"] = [[mix(penColor*mapColor,mapColor,penColor.a);]],
+            ["BlendLuminance"] = [[mix(dot(penColor,vec4(0.25,0.65,0.1,0.0))*normalize(mapColor),mapColor,penColor.a);]],
 
-    ["BlendOverlay"] = [[mix(lerp(2.0 * mapColor * penColor,1.0 - 2.0*(1.0-penColor)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),mapColor)- 0.45)))),mapColor,penColor.a);]],
+            ["BlendMultiply"] = [[mix(penColor*mapColor,mapColor,penColor.a);]],
 
-    ["BlendPremultiplied"] = [[vec4(penColor.rgb + (1.0-penColor.a)*mapColor.rgb, (penColor.a+mapColor.a));]],
+            ["BlendOverlay"] = [[mix(lerp(2.0 * mapColor * penColor,1.0 - 2.0*(1.0-penColor)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),mapColor)- 0.45)))),mapColor,penColor.a);]],
 
-    ["BlendScreen"] = [[mix(1.0-(1.0-mapColor)*(1.0-penColor),mapColor,penColor.a);]],
+            ["BlendPremultiplied"] = [[vec4(penColor.rgb + (1.0-penColor.a)*mapColor.rgb, (penColor.a+mapColor.a));]],
 
-    ["BlendSoftLight"] = [[mix(2.0*mapColor*penColor+mapColor*mapColor-2.0*mapColor*mapColor*penColor,mapColor,penColor.a);]],
+            ["BlendScreen"] = [[mix(1.0-(1.0-mapColor)*(1.0-penColor),mapColor,penColor.a);]],
 
-    ["BlendSubtract"] = [[mix(mapColor-penColor,mapColor,penColor.a);]],
+            ["BlendSoftLight"] = [[mix(2.0*mapColor*penColor+mapColor*mapColor-2.0*mapColor*mapColor*penColor,mapColor,penColor.a);]],
 
-    ["BlendUnmultiplied"] = [[mix(penColor,mapColor,penColor.a);]],
+            ["BlendSubtract"] = [[mix(mapColor-penColor,mapColor,penColor.a);]],
 
-    ["BlendRAW"] = [[penColor;]], --//TODO make custom shaders for specular textures
-}
+            ["BlendUnmultiplied"] = [[mix(penColor,mapColor,penColor.a);]],
 
-local shaderFragStr = [[                    
+            ["BlendRAW"] = [[penColor;]], --//TODO make custom shaders for specular textures
+        }
 
-uniform sampler2D mapTex;
-uniform sampler2D penTex;
-uniform sampler2D paintTex;
+        local shaderFragStr = [[                    
 
-vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
-    return vec4(penColor.rgb * alpha + mapColor.rgb * (1.0 - alpha), 1.0);
-}
+        uniform sampler2D mapTex;
+        uniform sampler2D penTex;
+        uniform sampler2D paintTex;
 
-void main(void)
-{
-    vec4 mapColor = texture2D(mapTex,gl_TexCoord[0].st);
-    vec4 penColor = texture2D(penTex,gl_TexCoord[1].st);
-    vec4 texColor = texture2D(paintTex,gl_TexCoord[2].st);
-    
-    penColor = (gl_Color*penColor*texColor);
-    vec4 color = %s  //mix(penColor,mapColor,penColor.a);
+        vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
+            return vec4(penColor.rgb * alpha + mapColor.rgb * (1.0 - alpha), 1.0);
+        }
 
-    vec2 delta = vec2(0.5, 0.5) - gl_TexCoord[1].xy;
-    float distance = sqrt(delta.x * delta.x + delta.y * delta.y);    
-    color.a -= 2 * distance;
+        void main(void)
+        {
+            vec4 mapColor = texture2D(mapTex,gl_TexCoord[0].st);
+            vec4 penColor = texture2D(penTex,gl_TexCoord[1].st);
+            vec4 texColor = texture2D(paintTex,gl_TexCoord[2].st);
+            
+            penColor = (gl_Color*penColor*texColor);
+            vec4 color = %s  //mix(penColor,mapColor,penColor.a);
 
-    gl_FragColor = color;
-}
-]]
-local shaderTemplate = {
-    fragment = string.format(shaderFragStr,penBlenders["BlendRAW"]),
-    uniformInt = {
-        mapTex = 0,
-        penTex = 1,
-        paintTex = 2,
-    },
-}
+            vec2 delta = vec2(0.5, 0.5) - gl_TexCoord[1].xy;
+            float distance = sqrt(delta.x * delta.x + delta.y * delta.y);    
+            color.a -= 2 * distance;
 
-penShader = gl.CreateShader(shaderTemplate)
+            gl_FragColor = color;
+        }
+        ]]
+        local shaderTemplate = {
+            fragment = string.format(shaderFragStr,penBlenders["BlendRAW"]),
+            uniformInt = {
+                mapTex = 0,
+                penTex = 1,
+                paintTex = 2,
+            },
+        }
+
+        penShader = gl.CreateShader(shaderTemplate)
+    end
+
+    return penShader
+end
+
 function TerrainChangeTextureState:ApplyPen(pointsXZ, x, z, penTexture)
 
     local rT
@@ -105,7 +113,7 @@ function TerrainChangeTextureState:ApplyPen(pointsXZ, x, z, penTexture)
     gl.Texture(2, self.paintTexture)
     ptX,ptZ = math.pi, math.pi
 
-    if penShader then gl.UseShader(penShader) end
+    if getPenShader() then gl.UseShader(getPenShader()) end
 
     local textures = SCEN_EDIT.model.tm:getMapTextures(x, z, x + 2*self.size, z + 2*self.size)
     for _, v in pairs(textures) do
@@ -150,7 +158,7 @@ function TerrainChangeTextureState:ApplyPen(pointsXZ, x, z, penTexture)
         gl.Texture(0, false)
         rT = tex
 
-        local errors = gl.GetShaderLog(penShader)
+        local errors = gl.GetShaderLog(getPenShader())
         if errors ~= "" then
             Spring.Echo(errors)
         end
@@ -225,7 +233,7 @@ function TerrainChangeTextureState:MouseWheel(up, value)
 end
 
 function TerrainChangeTextureState:DrawPen(x, z)
-    if penShader then gl.UseShader(penShader) end
+    if getPenShader() then gl.UseShader(getPenShader()) end
 
     local mapPoints = {x,z,x,z+2*self.size, x+2*self.size,z+2*self.size, x+2*self.size,z}
     gl.DepthTest(false)
@@ -264,7 +272,7 @@ function TerrainChangeTextureState:DrawPen(x, z)
         gl.Texture(0,false)
         gl.Texture(1,false)
         gl.Texture(2,false)
-        local errors = gl.GetShaderLog(penShader)
+        local errors = gl.GetShaderLog(getPenShader())
         if errors ~= "" then
             Spring.Echo(errors)
         end
