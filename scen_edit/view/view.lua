@@ -27,6 +27,60 @@ function View:init()
     --self.textureManager = TextureManager()
     --self.mainWindow = MainWindow()
 	self.tabbedWindow = TabbedWindow()
+
+    local teams = SCEN_EDIT.model.teamManager:getAllTeams()
+    local teamsTxt = {}
+    for _, team in pairs(teams) do
+        table.insert(teamsTxt, SCEN_EDIT.glToFontColor(team.color) .. "Team " .. team.name .. "\b")
+    end
+    table.insert(teamsTxt, "Spectator")
+    self.cmbTeamSelector = ComboBox:New {
+        parent = screen0,
+        right = 5,
+        y = 5,
+        width = 200,
+        height = 40,
+        items = teamsTxt,
+        font = { size = 16 },
+        teamIds = GetKeys(teams),
+    }
+    self.cmbTeamSelector.OnSelect = {
+        function(_, itemIdx)
+            if itemIdx < #teamsTxt then
+                local teamId = self.cmbTeamSelector.teamIds[itemIdx]
+                if Spring.GetMyTeamID() ~= teamId or Spring.GetSpectatingState() then
+                    if SCEN_EDIT.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
+                        local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), teamId)
+                        SCEN_EDIT.commandManager:execute(cmd)
+                    end
+                end
+            else
+                if not Spring.GetSpectatingState() then
+                    Spring.SendCommands("spectator")
+                end
+            end
+        end
+    }
+end
+
+function View:Update()
+    local selectedTeamId = self.cmbTeamSelector.teamIds[self.cmbTeamSelector.selected]
+    if not Spring.GetSpectatingState() and Spring.GetMyTeamID() ~= selectedTeamId then
+        local OnSelect = self.cmbTeamSelector.OnSelect
+        self.cmbTeamSelector.OnSelect = nil
+        for i, teamId in pairs(self.cmbTeamSelector.teamIds) do
+            if teamId == Spring.GetMyTeamID() then
+                self.cmbTeamSelector:Select(i)
+                break
+            end
+        end
+        self.cmbTeamSelector.OnSelect = OnSelect
+    elseif Spring.GetSpectatingState() and selectedTeamId ~= nil then
+        local OnSelect = self.cmbTeamSelector.OnSelect
+        self.cmbTeamSelector.OnSelect = nil
+        self.cmbTeamSelector:Select(#self.cmbTeamSelector.items)
+        self.cmbTeamSelector.OnSelect = OnSelect
+    end
 end
 
 function View:drawRect(x1, z1, x2, z2)
@@ -98,19 +152,6 @@ function View:DrawScreen()
             text = "Project not saved"
         end
         local x = w - self.font:GetTextWidth(text) * fontSize - 10
-        self.font:Print(text, x, y, 20, 'o')
-
-        y = 40
-        if Spring.GetSpectatingState() then
-            text = "Spectator"
-        else
-            local teamId = Spring.GetMyTeamID()
-            local team = SCEN_EDIT.model.teamManager:getTeam(teamId)
-            local c = team.color
-
-            text = SCEN_EDIT.glToFontColor(team.color) .. "Team " .. tostring(teamId) .. "\b"
-        end        
-        x = w - self.font:GetTextWidth(text) * fontSize - 10
         self.font:Print(text, x, y, 20, 'o')
     gl.PopMatrix()
 end
