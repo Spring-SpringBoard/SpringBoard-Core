@@ -17,20 +17,20 @@ end
 function RectangleSelectState:MousePress(x, y, button)
 end
 
-function RectangleSelectState:MouseMove(x, y, dx, dy, button)
-    self.endScreenX = x
-    self.endScreenZ = y
-    --[[if self.addSecondPoint then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground" then
-            self.endX = coords[1]
-            self.endZ = coords[3]
-        end
-    end--]]
---    return true
+function RectangleSelectState:Update()
+	local x, y, pressed = Spring.GetMouseState()
+    self:_MouseMove(x, y)
+    if not pressed then
+        self:_MouseRelease(x, y, button)
+    end
 end
 
-function RectangleSelectState:MouseRelease(x, y, button)
+function RectangleSelectState:_MouseMove(x, y)
+    self.endScreenX = x
+    self.endScreenZ = y
+end
+
+function RectangleSelectState:_MouseRelease(x, y, button)
     if self.endScreenX and self.endScreenZ then
         local result1, coords1 = Spring.TraceScreenRay(self.startScreenX, self.startScreenZ, true)
         local result2, coords2 = Spring.TraceScreenRay(self.endScreenX, self.endScreenZ, true)

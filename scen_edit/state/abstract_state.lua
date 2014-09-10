@@ -27,6 +27,9 @@ end
 function AbstractState:GameFrame(frameNum)
 end
 
+function AbstractState:Update()
+end
+
 function AbstractState:DrawScreen()
 end
 
