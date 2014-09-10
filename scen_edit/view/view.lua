@@ -61,6 +61,20 @@ function View:init()
             end
         end
     }
+
+    SCEN_EDIT.lockTeam = false
+    self.cbLockTeam = Checkbox:New {
+        parent = screen0,
+        x = self.cmbTeamSelector.x + 10,
+        width = 90,
+        y = 45,
+        height = 20,
+        caption = "Lock team",
+        checked = false,
+        OnChange = { function(_, value) 
+            SCEN_EDIT.lockTeam = value
+        end}
+    }
 end
 
 function View:Update()

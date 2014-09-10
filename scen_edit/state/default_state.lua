@@ -141,11 +141,13 @@ function DefaultState:MousePress(x, y, button)
         elseif result == "unit" then
             local unitId = coords
 
-            local unitTeamId = Spring.GetUnitTeam(unitId)
-            if Spring.GetMyTeamID() ~= unitTeamId or Spring.GetSpectatingState() then
-                if SCEN_EDIT.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
-                    local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), unitTeamId)
-                    SCEN_EDIT.commandManager:execute(cmd)
+            if not SCEN_EDIT.lockTeam then
+                local unitTeamId = Spring.GetUnitTeam(unitId)
+                if Spring.GetMyTeamID() ~= unitTeamId or Spring.GetSpectatingState() then
+                    if SCEN_EDIT.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
+                        local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), unitTeamId)
+                        SCEN_EDIT.commandManager:execute(cmd)
+                    end
                 end
             end
 
