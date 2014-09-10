@@ -132,11 +132,10 @@ function DefaultState:MousePress(x, y, button)
                         SCEN_EDIT.view.selectionManager:SelectAreas({selected})
                         self.areaSelectTime = Spring.GetGameFrame()
                         return true
-                    else
-                        SCEN_EDIT.view.selectionManager:ClearSelection()
                     end
                 end
-                return true
+                SCEN_EDIT.stateManager:SetState(RectangleSelectState(x, y))
+                return
             end
         elseif result == "unit" then
             local unitId = coords
@@ -206,8 +205,6 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
         else
             SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeature, self.dragDiffX, self.dragDiffZ))
         end
-    else
-        SCEN_EDIT.stateManager:SetState(RectangleSelectState(x, y))
     end
 end
 
