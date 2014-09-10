@@ -134,6 +134,9 @@ function DefaultState:MousePress(x, y, button)
                         return true
                     end
                 end
+                if selType ~= "units" then
+                    SCEN_EDIT.view.selectionManager:ClearSelection()
+                end
                 SCEN_EDIT.stateManager:SetState(RectangleSelectState(x, y))
                 return
             end
