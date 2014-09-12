@@ -10,7 +10,7 @@ end
 function LoadCommandWidget:execute()
     local path = self.path
     local isZip = self.isZip
-    local modelData, heightMapdata = nil, nil
+    local modelData, heightMapdata, texturePath
 
     if not isZip then
         SCEN_EDIT.projectDir = self.path
@@ -34,6 +34,7 @@ function LoadCommandWidget:execute()
         SCEN_EDIT.loadedArchive = path
         modelData = VFS.LoadFile("model.lua", VFS.ZIP)
         heightmapData = VFS.LoadFile("heightmap.data", VFS.ZIP)
+        texturePath = "texturemap/texture.png"
     else
         Spring.Echo("Loading project: " .. path .. " ...")
 
@@ -44,10 +45,12 @@ function LoadCommandWidget:execute()
 
         modelData = VFS.LoadFile(path .. "/" .. "model.lua", VFS.RAW)
         heightmapData = VFS.LoadFile(path .. "/" .. "heightmap.data", VFS.RAW)
+        texturePath = path .. "/" .. "texturemap/texture.png"
     end
     
-    local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData) }
+    local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
     SCEN_EDIT.commandManager:execute(CompoundCommand(cmds))
+    SCEN_EDIT.commandManager:execute(LoadTextureCommand(texturePath), true)
 
     Spring.Echo("Load complete.")
 end

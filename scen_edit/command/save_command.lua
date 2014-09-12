@@ -290,11 +290,22 @@ end
 
 function SaveCommand:execute()
     local projectDir = self.path
-	
-	-- save files
+
+    -- save files
     ModelSave(projectDir .. "/model.lua")
-	ModInfoSave(projectDir .. "/modinfo.lua")
+    Spring.Echo("saved model")
+    ModInfoSave(projectDir .. "/modinfo.lua")
+    Spring.Echo("saved modinfo")
     HeightMapSave(projectDir .. "/heightmap.data")	
+    Spring.Echo("saved heightmap")
     ScriptTxtSave(projectDir .. "/script.txt")
     ScriptTxtSave(projectDir .. "/script-dev.txt", true)
+    Spring.Echo("saved scripts")
+
+    if SCEN_EDIT.textureManager ~= nil then
+        local texturemapDir = projectDir .. "/texturemap"
+        Spring.CreateDir(texturemapDir)
+        local cmd = SaveImagesCommand(texturemapDir)
+        cmd:execute()
+    end
 end
