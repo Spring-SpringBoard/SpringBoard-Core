@@ -115,7 +115,7 @@ function TerrainChangeTextureState:ApplyPen(pointsXZ, x, z, penTexture)
 
     if getPenShader() then gl.UseShader(getPenShader()) end
 
-    local textures = SCEN_EDIT.model.tm:getMapTextures(x, z, x + 2*self.size, z + 2*self.size)
+    local textures = SCEN_EDIT.textureManager:getMapTextures(x, z, x + 2*self.size, z + 2*self.size)
     for _, v in pairs(textures) do
         local mapTexSQ, coords = v[1], v[2]
         local x, z = coords[1], coords[2]
@@ -173,8 +173,8 @@ function TerrainChangeTextureState:init(paintTexture, textureImages)
     self.paintTexture = paintTexture
 	self.textureImages = textureImages
 
-    if SCEN_EDIT.model.tm == nil then
-        SCEN_EDIT.model.tm = TextureManager()
+    if SCEN_EDIT.textureManager == nil then
+        SCEN_EDIT.textureManager = TextureManager()
     end
 end
 

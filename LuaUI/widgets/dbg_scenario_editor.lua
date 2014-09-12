@@ -206,5 +206,9 @@ function widget:GameFrame(frameNum)
 end
 
 function widget:Update()
+    if SCEN_EDIT.view ~= nil then
+        SCEN_EDIT.stateManager:Update()
+        SCEN_EDIT.view:Update()
+    end
     SCEN_EDIT.executeDelayed()
 end
