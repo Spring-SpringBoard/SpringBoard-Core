@@ -118,7 +118,12 @@ end
 function UnitManager:serializeUnitCommands(unitId, unit)
     unit.commands = Spring.GetUnitCommands(unitId)
     for _, command in pairs(unit.commands) do
-        command.name = CMD[command.id]
+        if command.id > 0 then
+            command.name = CMD[command.id]
+        else
+            command.name = "BUILD_COMMAND"
+            command.buildUnitDef = UnitDefs[math.abs(command.id)].name
+        end
         command.options = nil
         command.tag = nil
         command.id = nil
@@ -234,7 +239,11 @@ function UnitManager:setUnitCommands(unitId, commands)
         else
             params = command.params
         end
-        Spring.GiveOrderToUnit(unitId, CMD[command.name], params, {"shift"})
+        if command.name ~= "BUILD_COMMAND" then
+            Spring.GiveOrderToUnit(unitId, CMD[command.name], params, {"shift"})
+        else
+            Spring.GiveOrderToUnit(unitId, -UnitDefNames[command.buildUnitDef].id, params, {"shift"})
+        end
     end
 end
 
