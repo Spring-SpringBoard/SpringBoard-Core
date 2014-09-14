@@ -2,16 +2,10 @@ Alpha milestone(release for content developers): high priority goals
 Beta milestone(release for the public): medium priority goals
 
 High priority:
-    - Map saving/loading:
-        -texture map
     - Cleanup core_types.lua:
         - seperate loading mechanism from metadata
-        - Provide a way to load and manage user metadata
     - Edit players(teams)
-        - add/remove teams
-        - set team colors
         - set maximum/minimum teams
-    - Edit alliances
 
 Medium priority:
     - Display a list of executed commands (and the person who executed them) for better cooperative work
@@ -20,8 +14,6 @@ Medium priority:
     - Widget/gadget blacklisting
     - More/better heightmap editing tools
         - add terrain in blocks
-        - smooth terrain
-    - Better spectator/player switching when testing the game
 
 
 Low priority:
