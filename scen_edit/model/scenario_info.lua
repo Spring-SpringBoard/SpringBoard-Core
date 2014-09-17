@@ -35,8 +35,5 @@ end
 
 function ScenarioInfo:load(data)
     self:clear()
-    self.name = data.name
-	self.description = data.description
-	self.version = data.version
-	self.author = data.author
+    self:Set(data.name,	data.description, data.version,	data.author)
 end
