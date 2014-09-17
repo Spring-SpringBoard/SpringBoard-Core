@@ -38,7 +38,7 @@ function TerrainEditorView:init()
         },
     }
     local lblNote = Label:New {
-        caption="\255\255\0\0Saving textures is currenlty not implemented!\b",
+        caption="\255\255\255\0Saving textures is currently slow.\b",
         x = 1,
         bottom = 5,
     }
