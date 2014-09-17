@@ -307,5 +307,8 @@ function SaveCommand:execute()
         Spring.CreateDir(texturemapDir)
         local cmd = SaveImagesCommand(texturemapDir)
         cmd:execute()
+        Spring.Echo("saved texturemap")
     end
+
+    SCEN_EDIT.projectLoaded = true
 end
