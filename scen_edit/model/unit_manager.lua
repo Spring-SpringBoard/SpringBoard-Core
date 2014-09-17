@@ -117,19 +117,21 @@ end
 
 function UnitManager:serializeUnitCommands(unitId, unit)
     unit.commands = Spring.GetUnitCommands(unitId)
-    for _, command in pairs(unit.commands) do
-        if command.id > 0 then
-            command.name = CMD[command.id]
-        else
-            command.name = "BUILD_COMMAND"
-            command.buildUnitDef = UnitDefs[math.abs(command.id)].name
-        end
-        command.options = nil
-        command.tag = nil
-        command.id = nil
-        -- serialized unit commands use the model unit id
-        if isUnitCommand(command) then
-            command.params[1] = self:getModelUnitId(command.params[1])
+    if unit.commands ~= nil then
+        for _, command in pairs(unit.commands) do
+            if command.id > 0 then
+                command.name = CMD[command.id]
+            else
+                command.name = "BUILD_COMMAND"
+                command.buildUnitDef = UnitDefs[math.abs(command.id)].name
+            end
+            command.options = nil
+            command.tag = nil
+            command.id = nil
+            -- serialized unit commands use the model unit id
+            if isUnitCommand(command) then
+                command.params[1] = self:getModelUnitId(command.params[1])
+            end
         end
     end
 end
