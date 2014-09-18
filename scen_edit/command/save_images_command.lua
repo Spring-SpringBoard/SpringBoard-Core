@@ -9,7 +9,11 @@ end
 function SaveImagesCommand:execute()
     SCEN_EDIT.delayGL(function()
         local texturePath = self.path .. "/texture.png"
-  
+ 
+        if VFS.FileExists(texturePath, VFS.RAW) then
+            Spring.Echo("removing the existing texture")
+            os.remove(texturePath)
+        end
         --[[
         local heightmapPath = self.path .. "/heightmap.png"
         Spring.Echo("Saving the heightmap to ", heightmapPath)
