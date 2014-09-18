@@ -14,7 +14,6 @@ function LoadMap:execute()
         --Spring.Echo("HEIGHTMAP LOAD")
         local x = 0
         local z = 0
-        local lastChanged = false
         if #self.deltaMap == 0 then
             return
         end
@@ -46,10 +45,8 @@ function LoadMap:execute()
             end
             return chunk
         end
+        local lastChanged = false
         for chunk in getData do
-            if z == 0 then
-                lastChanged = false
-            end
             ----Spring.Echo(chunk, i)
             if lastChanged then
                 if chunk == 0 then
@@ -57,16 +54,16 @@ function LoadMap:execute()
                     lastChanged = false
                 else
                     local deltaHeight = chunk
-                    --Spring.Echo(x, z)
-                    --Spring.Echo(deltaHeight)
-                    z = z + Game.squareSize
 
-                    Spring.AddHeightMap(x, z, deltaHeight)
+                    z = z + Game.squareSize
 
                     if z >= Game.mapSizeZ then
                         z = 0
                         x = x + Game.squareSize
+                        lastChanged = false
                     end
+
+                    Spring.AddHeightMap(x, z, deltaHeight)
                 end
             else
                 x, z, deltaHeight = chunk, getData(), getData()
