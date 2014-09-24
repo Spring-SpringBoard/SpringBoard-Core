@@ -353,6 +353,16 @@ function SCEN_EDIT.GetTeams(widget)
         if team.gaia then
             team.ai = true
         end
+		
+		if not widget then
+			local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
+			team.metal = metal
+			team.metalMax = metalMax
+			
+			local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
+			team.energy = energy
+			team.energyMax = energyMax
+		end
     end
     return teams 
 end

@@ -38,6 +38,13 @@ function TeamManager:getAllTeams()
     return self.teams
 end
 
+function TeamManager:setTeamResources(teamId, metal, metalMax, energy, energyMax)
+	Spring.SetTeamResource(teamId, "m", metal)
+	Spring.SetTeamResource(teamId, "ms", metalMax)
+	Spring.SetTeamResource(teamId, "e", energy)	
+	Spring.SetTeamResource(teamId, "es", energyMax)	
+end
+
 function TeamManager:serialize()
     local retVal = {}
     local teams = SCEN_EDIT.deepcopy(self.teams)
@@ -79,6 +86,11 @@ function TeamManager:load(data)
         team.allies = nil
 
         self:addTeam(team, id)
+		if team.metal ~= nil and team.metalMax ~= nil and team.energy ~= nil and team.energyMax ~= nil then
+			SCEN_EDIT.delay(function()
+				self:setTeamResources(id, team.metal, team.metalMax, team.energy, team.energyMax)
+			end)
+		end
     end
 end
 
