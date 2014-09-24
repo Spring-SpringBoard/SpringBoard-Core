@@ -9,11 +9,11 @@ function AlliancePanel:init()
 			TabbedPanelLabel({ caption = "Alliances" }),
         },
     })
-    local btnPlayers = TabbedPanelButton({
-        tooltip = "Player settings",
+    local btnTeams = TabbedPanelButton({
+        tooltip = "Team settings",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "players.png" }),
-			TabbedPanelLabel({ caption = "Players"}),
+			TabbedPanelLabel({ caption = "Teams"}),
         },
     })
 	self.control:AddChild(Chili.LayoutPanel:New {
@@ -27,9 +27,9 @@ function AlliancePanel:init()
 		}
 	)
 	self.control:AddChild(Chili.LayoutPanel:New {
-			height = btnPlayers.height,
-			width = btnPlayers.width,
-			children = {btnPlayers},
+			height = btnTeams.height,
+			width = btnTeams.width,
+			children = {btnTeams},
 			padding = {0, 0, 0, 0},
 			margin = {0, 0, 0, 0},
 			itemMargin = {0, 0, 0, 0},
@@ -50,14 +50,14 @@ function AlliancePanel:init()
         end
     }
 
-    btnPlayers.OnClick = {
+    btnTeams.OnClick = {
         function()
-            btnPlayers._toggle = PlayersWindow()
-            SCEN_EDIT.SetControlEnabled(btnPlayers.parent, false) 
-            table.insert(btnPlayers._toggle.window.OnDispose, 
+            btnTeams._toggle = PlayersWindow()
+            SCEN_EDIT.SetControlEnabled(btnTeams.parent, false) 
+            table.insert(btnTeams._toggle.window.OnDispose, 
                 function()
-                    if btnPlayers and btnPlayers.parent then
-                        SCEN_EDIT.SetControlEnabled(btnPlayers.parent, true) 
+                    if btnTeams and btnTeams.parent then
+                        SCEN_EDIT.SetControlEnabled(btnTeams.parent, true) 
                     end
                 end
             )

@@ -29,7 +29,7 @@ function TabbedWindow:init()
 					{ name = "Unit", children = {unitFeaturePanel:getControl()} },
 					{ name = "Map", children = {terrainPanel:getControl()} },
 					{ name = "Trigger", children = {metaPanel:getControl()} },
-                    { name = "Alliance", children = {alliancePanel:getControl()} },
+                    { name = "Team", children = {alliancePanel:getControl()} },
 				},
 			},
 			Button:New {
