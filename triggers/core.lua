@@ -796,7 +796,7 @@ return {
                 output = "bool",
                 tags = {"Unit"},
                 execute = function(input)
-                    return not (not input.unit or Spring.GetUnitIsDead(input.unit))
+                    return input.unit and not Spring.GetUnitIsDead(input.unit)
                 end,
             },
             {
