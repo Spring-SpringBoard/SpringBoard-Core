@@ -250,11 +250,13 @@ function UnitManager:setUnitCommands(unitId, commands)
 end
 
 function UnitManager:loadUnit(unit)
-    local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId)
+    local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId, false, true, unit.id)
     if unitId == nil then
-        Spring.Echo("Failed to create the following unit: ")
-        table.echo(unit)
+        Spring.Log("scened", LOG.ERROR, "Failed to create the following unit: " .. table.show(unit))
         return
+    end
+    if unit.id ~= nil and unit.id ~= unitId then
+        Spring.Log("scened", LOG.ERROR, "Created unit has different id: " .. tostring(unit.id) .. ", " .. tostring(unitId))
     end
     self:setUnitProperties(unitId, unit)
     self:setUnitModelId(unitId, unit.id)
@@ -274,7 +276,9 @@ function UnitManager:load(units)
         local commands = unit.commands
         unit.commands = nil
         local unitId = self:loadUnit(unit)
-        unitCommands[unitId] = commands
+        if unitId then
+            unitCommands[unitId] = commands
+        end
     end
     -- load the commands
     for unitId, commands in pairs(unitCommands) do
