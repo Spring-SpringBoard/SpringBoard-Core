@@ -31,11 +31,7 @@ local tf
 --------------------------------------------------------------------------------
 -- Chili's location
 
-local function GetDirectory(filepath)
-	return filepath and filepath:gsub("(.*/)(.*)", "%1")
-end
-
-CHILI_DIRNAME = "libs/chiliui/chili/"
+CHILI_DIRNAME = "libs/chiliui/luaui/chili/chili/"
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
