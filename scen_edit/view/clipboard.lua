@@ -10,10 +10,12 @@ function Clipboard:Clear()
     self.features = {}
 end
 
+-- copy will remove the unit IDs 
 function Clipboard:CopyUnits(unitIds)
     self:Clear()
     for _, unitId in pairs(unitIds) do
         local unit = SCEN_EDIT.model.unitManager:serializeUnit(unitId)
+        unit.id = nil
         table.insert(self.units, unit)
     end
 end
