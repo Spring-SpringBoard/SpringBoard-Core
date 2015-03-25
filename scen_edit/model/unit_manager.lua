@@ -119,7 +119,7 @@ function UnitManager:serializeUnitProperties(unitId, unit)
     unit.blocking = Spring.GetUnitBlocking(unitId)
     unit.states = Spring.GetUnitStates(unitId)
     -- FIXME: why do we need the second param?
-    unit.losState = {Spring.GetUnitLosState(unitId, 0)} -- los, radar and typed
+    unit.losState = Spring.GetUnitLosState(unitId, 0) -- los, radar and typed
 end
 
 function UnitManager:serializeUnitCommands(unitId, unit)
