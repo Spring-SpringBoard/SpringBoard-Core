@@ -66,7 +66,6 @@ function TriggerManager:serialize()
 end
 
 function TriggerManager:load(data)
-    self:clear()
     for id, trigger in pairs(data) do
         self:addTrigger(trigger)
     end

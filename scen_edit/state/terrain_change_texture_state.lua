@@ -79,7 +79,7 @@ function getPenShader()
             vec4 texColor = texture2D(paintTex,gl_TexCoord[2].st);
             
             penColor = (gl_Color*penColor*texColor);
-            vec4 color = %s  //mix(penColor,mapColor,penColor.a);
+            vec4 color = mix(penColor,mapColor,penColor.a);
 
             vec2 delta = vec2(0.5, 0.5) - gl_TexCoord[1].xy;
             float distance = sqrt(delta.x * delta.x + delta.y * delta.y);    

@@ -112,18 +112,30 @@ function UnitManager:serializeUnitProperties(unitId, unit)
     unit.stockpile = Spring.GetUnitStockpile(unitId)
     unit.experience = Spring.GetUnitExperience(unitId)
     unit.fuel = Spring.GetUnitFuel(unitId)
+    unit.neutral = Spring.GetUnitNeutral(unitId)
+    -- TODO: this isn't available
+    -- unit.alwaysVisible = Spring.GetAlwaysVisible(unitId)
+    -- FIXME: This returns multiple values, save them too?
+    unit.blocking = Spring.GetUnitBlocking(unitId)
     unit.states = Spring.GetUnitStates(unitId)
+    -- FIXME: why do we need the second param?
+    unit.losState = {Spring.GetUnitLosState(unitId, 0)} -- los, radar and typed
 end
 
 function UnitManager:serializeUnitCommands(unitId, unit)
     unit.commands = Spring.GetUnitCommands(unitId)
     if unit.commands ~= nil then
         for _, command in pairs(unit.commands) do
-            if command.id > 0 then
+            if command.id >= 0 then
                 command.name = CMD[command.id]
             else
                 command.name = "BUILD_COMMAND"
-                command.buildUnitDef = UnitDefs[math.abs(command.id)].name
+                local buildUnitDef = UnitDefs[math.abs(command.id)]
+                if buildUnitDef ~= nil then
+                    command.buildUnitDef = buildUnitDef.name
+                else
+                    Spring.Log("scened", LOG.ERROR, "No such unit def: (" .. math.abs(command.id) ..  ") for build command: " .. tostring(command.id))
+                end
             end
             command.options = nil
             command.tag = nil
@@ -180,6 +192,18 @@ function UnitManager:setUnitProperties(unitId, unit)
     end
     if unit.fuel ~= nil then
         Spring.SetUnitFuel(unitId, unit.fuel)
+    end
+    if unit.neutral ~= nil then
+        Spring.SetUnitNeutral(unitId, unit.neutral)
+    end
+    if unit.alwaysVisible ~= nil then
+        Spring.SetUnitAlwaysVisible(unitId, unit.alwaysVisible)
+    end
+    if unit.blocking ~= nil then
+        Spring.SetUnitBlocking(unitId, unit.blocking)
+    end
+    if unit.losState ~= nil then
+        Spring.SetUnitLosState(unitId, 0, unit.losState)
     end
     if unit.states ~= nil then
         local s = unit.states
@@ -267,8 +291,6 @@ function UnitManager:loadUnit(unit)
 end
 
 function UnitManager:load(units)
-    self:clear()
-
     self.unitIdCounter = 0
     -- load the units without the commands
     local unitCommands = {} 

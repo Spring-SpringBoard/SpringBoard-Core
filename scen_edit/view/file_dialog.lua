@@ -18,10 +18,11 @@ local function ExtractFileName(filepath)
   end
 end
 
-function FileDialog:init(dir, caption)
+function FileDialog:init(dir, caption, fileTypes)
     self.dir = dir or nil
 	self.caption = caption or "File dialog"
     self.confirmDialogCallback = nil
+    self.fileTypes = fileTypes
     local buttonPanel = MakeComponentPanel()
     self.fileEditBox = EditBox:New {
         y = 1,
@@ -49,7 +50,7 @@ function FileDialog:init(dir, caption)
         x = 10,
         y = 10,
         width = "100%",
-        height = "100%",            
+        height = "100%",
         dir = self.dir,
         multiselect = false,
         OnDblClickItem = { function() self:confirmDialog(); self.window:Dispose() end },
@@ -63,7 +64,7 @@ function FileDialog:init(dir, caption)
                 self.fileEditBox:SetText(fileName)
             end
         end
-    }                
+    }
     
     self.window = Window:New {
         x = 500,
@@ -76,7 +77,7 @@ function FileDialog:init(dir, caption)
             ScrollPanel:New {
                 width = "100%",
                 y = 10,
-                bottom = 80,
+                bottom = 90 + SCEN_EDIT.conf.B_HEIGHT + 10,
                 children = {
                     self.filePanel,
                 },
@@ -100,9 +101,38 @@ function FileDialog:init(dir, caption)
                 },
             },
             okButton,
-            cancelButton,            
+            cancelButton,
         },
     }
+    if self.fileTypes then
+        self.cmbFileTypes = ComboBox:New {
+            items = self.fileTypes,
+            width = 100,
+            height = SCEN_EDIT.conf.B_HEIGHT + 10,
+            x = 75,
+            right = 0,
+        }
+        local ctrl = Control:New {
+            x = 1,
+            width = "100%",
+            height = SCEN_EDIT.conf.B_HEIGHT + 10,
+            bottom = 2 * SCEN_EDIT.conf.B_HEIGHT + 30,
+            padding = {0, 0, 0, 0},
+            children = {
+                Label:New {
+                    x = 1,
+                    y = 4,
+                    valign = "center",
+                    width = 65,
+                    caption = "File type: ",
+                    align = "left",
+                },
+                self.cmbFileTypes,
+            },
+        }
+        self.window:AddChild(ctrl)
+    end
+    
     okButton.OnClick = {
         function()
             self:confirmDialog()
@@ -124,6 +154,13 @@ end
 function FileDialog:getSelectedFilePath()
     local path = self.filePanel.dir .. self.fileEditBox.text
     return path
+end
+
+function FileDialog:getSelectedFileType()
+    if self.cmbFileTypes == nil then
+        return nil
+    end
+    return self.cmbFileTypes.items[self.cmbFileTypes.selected]
 end
 
 function FileDialog:confirmDialog()

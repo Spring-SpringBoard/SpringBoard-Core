@@ -115,12 +115,12 @@ function FeatureManager:loadFeature(feature)
     local x = math.sin(math.rad(feature.angle))
     local z = math.cos(math.rad(feature.angle))
     Spring.SetFeatureDirection(featureId, x, 0, z)
-    self:setFeatureModelId(featureId, feature.id)
+    if feature.id ~= nil then
+        self:setFeatureModelId(featureId, feature.id)
+    end
 end
 
 function FeatureManager:load(features)
-    self:clear()
-
     for _, feature in pairs(features) do
         self:loadFeature(feature)
     end

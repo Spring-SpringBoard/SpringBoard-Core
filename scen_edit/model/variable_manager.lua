@@ -55,17 +55,14 @@ end
 function VariableManager:serialize()
     local retVal = {}
     for _, variable in pairs(self.variables) do
-        table.insert(retVal, 
-            {
-                variable = variable,
-            }
-        )
+        table.insert(retVal, {
+            variable = variable,
+        })
     end
     return retVal
 end
 
 function VariableManager:load(data)
-    self:clear()
     self.variableIdCount = 0
     for _, kv in pairs(data) do
         id = kv.id

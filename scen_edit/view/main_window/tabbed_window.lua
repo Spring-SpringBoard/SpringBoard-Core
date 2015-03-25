@@ -11,7 +11,7 @@ function TabbedWindow:init()
 	self.window = Window:New {
 		right = 0,
 		y = 150,
-		width = 375,
+		width = 440,
 		height = 130 + SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT,
 		parent = screen0,
 		caption = "Scenario Toolbox v2",

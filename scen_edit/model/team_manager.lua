@@ -55,18 +55,15 @@ function TeamManager:serialize()
                 table.insert(team.allies, team2.id)
             end
         end
-        table.insert(retVal, 
-            {
-                team = team,
-                id = id,
-            }
-        )
+        table.insert(retVal, {
+            team = team,
+            id = id,
+        })
     end
     return retVal
 end
 
 function TeamManager:load(data)
-    self:clear()
     for _, kv in pairs(data) do
         local id = kv.id
         local team = kv.team
