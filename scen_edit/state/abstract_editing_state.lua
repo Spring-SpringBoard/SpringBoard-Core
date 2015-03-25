@@ -8,6 +8,7 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     if button1 or button2 or button3 then
         return false
     end
+    -- TODO: make this configurable
     if key == KEYSYMS.Z and mods.ctrl then
         SCEN_EDIT.commandManager:undo()
     elseif key == KEYSYMS.Y and mods.ctrl then
@@ -20,6 +21,8 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
         LoadAction():execute()
     elseif key == KEYSYMS.E and mods.ctrl then
         ExportAction():execute()
+    elseif key == KEYSYMS.I and mods.ctrl then
+        ImportAction():execute()
     else
         return false
     end

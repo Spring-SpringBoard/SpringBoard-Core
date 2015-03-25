@@ -34,6 +34,5 @@ function ScenarioInfo:serialize()
 end
 
 function ScenarioInfo:load(data)
-    self:clear()
     self:Set(data.name,	data.description, data.version,	data.author)
 end

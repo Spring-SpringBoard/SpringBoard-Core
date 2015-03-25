@@ -55,7 +55,7 @@ function GeneralPanel:init()
 		})
 	)
 	self.control:AddChild(TabbedPanelButton({
-			tooltip = "Export to archive (Ctrl-E)", 
+			tooltip = "Export to (Ctrl-E)...", 
 			OnClick = {
 				function()
                     ExportAction():execute()
@@ -64,6 +64,19 @@ function GeneralPanel:init()
 			children = {
 				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-save.png" }),
 				TabbedPanelLabel({ caption = "Export" }),
+			},
+		})
+	)
+    self.control:AddChild(TabbedPanelButton({
+			tooltip = "Import from (Ctrl-I)...", 
+			OnClick = {
+				function()
+                    ImportAction():execute()
+				end
+			},
+			children = {
+				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-open.png" }),
+				TabbedPanelLabel({ caption = "Import" }),
 			},
 		})
 	)

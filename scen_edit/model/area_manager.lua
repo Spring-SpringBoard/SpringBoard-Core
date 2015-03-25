@@ -40,18 +40,15 @@ end
 function AreaManager:serialize()
     local retVal = {}
     for id, area in pairs(self.areas) do
-        table.insert(retVal, 
-            {
-                area = area,
-                id = id,
-            }
-        )
+        table.insert(retVal, {
+            area = area,
+            id = id,
+        })
     end
     return retVal
 end
 
 function AreaManager:load(data)
-    self:clear()
     self.areaIdCount = 0
     for _, kv in pairs(data) do
         id = kv.id

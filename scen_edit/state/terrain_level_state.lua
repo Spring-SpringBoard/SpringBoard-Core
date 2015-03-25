@@ -67,7 +67,7 @@ function TerrainLevelState:MouseWheel(up, value)
         else
             self.size = self.size - self.size * 0.2 - 2
         end
-        self.size = math.min(1000, self.size)
+        self.size = math.min(10000, self.size)
         self.size = math.max(20, self.size)
         return true
     end
