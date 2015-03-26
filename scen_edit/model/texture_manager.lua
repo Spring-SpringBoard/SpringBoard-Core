@@ -5,45 +5,34 @@ function TextureManager:init()
     self.TEXTURE_SIZE = 1024
 
     self.mapFBOTextures = {}
+    self.oldMapFBOTextures = {}
     
     SCEN_EDIT.delayGL(function()
         self:generateMapTextures()
     end)
 end
 
-function TextureManager:generateMapTextures()
-    local oldMapTexture = gl.CreateTexture(self.TEXTURE_SIZE,self.TEXTURE_SIZE, {
+function TextureManager:createMapTexture(notFBO)
+    return gl.CreateTexture(self.TEXTURE_SIZE, self.TEXTURE_SIZE, {
         border = false,
---         min_filter = GL.NEAREST,
---         mag_filter = GL.NEAREST,
         min_filter = GL.LINEAR,
         mag_filter = GL.LINEAR,
         wrap_s = GL.CLAMP_TO_EDGE,
         wrap_t = GL.CLAMP_TO_EDGE,
-        fbo = false,
+        fbo = not notFBO,
     })
+end
+
+function TextureManager:generateMapTextures()
+    local oldMapTexture = self:createMapTexture(true)
 
     for i = 0, math.floor(Game.mapSizeX / self.TEXTURE_SIZE) do
         self.mapFBOTextures[i] = {}
         for j = 0, math.floor(Game.mapSizeZ / self.TEXTURE_SIZE) do
-            local mapTexture = gl.CreateTexture(
-            self.TEXTURE_SIZE, self.TEXTURE_SIZE, {
-                border = false,
---                 min_filter = GL.NEAREST,
---                 mag_filter = GL.NEAREST,
-                min_filter = GL.LINEAR,
-                mag_filter = GL.LINEAR,
-                wrap_s = GL.CLAMP_TO_EDGE,
-                wrap_t = GL.CLAMP_TO_EDGE,
-                fbo = true,
-            })
+            local mapTexture = self:createMapTexture()
 
             Spring.GetMapSquareTexture(i, j, 0, oldMapTexture)
-            gl.RenderToTexture(mapTexture,
-            function()
-                gl.Texture(oldMapTexture)
-                gl.TexRect(-1,-1, 1, 1,0, 0, 1, 1)
-            end)
+            self:Blit(oldMapTexture, mapTexture)
 
             self.mapFBOTextures[i][j] = mapTexture
             Spring.SetMapSquareTexture(i, j, mapTexture)
@@ -64,12 +53,51 @@ function TextureManager:getMapTexture(x, z)
     return self.mapFBOTextures[i][j]
 end
 
+function TextureManager:getOldMapTexture(i, j)
+    if self.oldMapFBOTextures[i] == nil then
+        self.oldMapFBOTextures[i] = {}
+    end
+    if self.oldMapFBOTextures[i][j] == nil then
+        -- doesn't exist so we create it
+        local oldTexture = self:createMapTexture()
+
+        local mapTexture = self.mapFBOTextures[i][j]
+
+        self:Blit(mapTexture, oldTexture)
+        self.oldMapFBOTextures[i][j] = oldTexture
+    end
+
+    return self.oldMapFBOTextures[i][j]
+end
+
 function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     local textures = {}
-    for i = math.max(0, math.floor(startX / self.TEXTURE_SIZE)), math.min(math.floor(Game.mapSizeX / self.TEXTURE_SIZE), math.floor(endX / self.TEXTURE_SIZE)) do
-        for j = math.max(0, math.floor(startZ / self.TEXTURE_SIZE)), math.min(math.floor(Game.mapSizeZ / self.TEXTURE_SIZE), math.floor(endZ / self.TEXTURE_SIZE)) do
-            textures[#textures + 1] = { self.mapFBOTextures[i][j], { startX - i * self.TEXTURE_SIZE, startZ - j * self.TEXTURE_SIZE } }
+    local textureSize = self.TEXTURE_SIZE
+    
+    
+    local x1 = math.max(0, math.floor(startX / textureSize))
+    local x2 = math.min(math.floor(Game.mapSizeX / textureSize), 
+                        math.floor(endX / textureSize))
+    local z1 = math.max(0, math.floor(startZ / textureSize))
+    local z2 = math.min(math.floor(Game.mapSizeZ / textureSize), 
+                        math.floor(endZ / textureSize))
+    for i = x1, x2 do
+        for j = z1, z2 do
+            table.insert(textures, { 
+                self.mapFBOTextures[i][j], self:getOldMapTexture(i, j),
+                { startX - i * textureSize, startZ - j * textureSize } 
+            })
         end
     end
+--     Spring.Echo(startX, startZ, endX, endZ, textureSize)
+--     table.echo(textures)
     return textures
+end
+
+function TextureManager:Blit(tex1, tex2)
+    gl.Texture(tex1)
+    gl.RenderToTexture(tex2, function()
+        gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
+    end)
+    gl.Texture(false)
 end
