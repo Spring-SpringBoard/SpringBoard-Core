@@ -14,8 +14,10 @@ end
 function TextureManager:generateMapTextures()
     local oldMapTexture = gl.CreateTexture(self.TEXTURE_SIZE,self.TEXTURE_SIZE, {
         border = false,
-        min_filter = GL.NEAREST,
-        mag_filter = GL.NEAREST,
+--         min_filter = GL.NEAREST,
+--         mag_filter = GL.NEAREST,
+        min_filter = GL.LINEAR,
+        mag_filter = GL.LINEAR,
         wrap_s = GL.CLAMP_TO_EDGE,
         wrap_t = GL.CLAMP_TO_EDGE,
         fbo = false,
@@ -27,8 +29,10 @@ function TextureManager:generateMapTextures()
             local mapTexture = gl.CreateTexture(
             self.TEXTURE_SIZE, self.TEXTURE_SIZE, {
                 border = false,
-                min_filter = GL.NEAREST,
-                mag_filter = GL.NEAREST,
+--                 min_filter = GL.NEAREST,
+--                 mag_filter = GL.NEAREST,
+                min_filter = GL.LINEAR,
+                mag_filter = GL.LINEAR,
                 wrap_s = GL.CLAMP_TO_EDGE,
                 wrap_t = GL.CLAMP_TO_EDGE,
                 fbo = true,
