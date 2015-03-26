@@ -2,7 +2,7 @@ TerrainChangeTextureState = AbstractEditingState:extends{}
 SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
 
 --FIXME: remove this default pen
-local penTexture = "bitmaps/detailtex.bmp"
+local penTexture = "bitmaps/detailtex2.bmp"
 
 function TerrainChangeTextureState:startChanging()
     if not self.startedChanging then
@@ -26,6 +26,7 @@ function TerrainChangeTextureState:init(terrainEditorView)
     self.size           = self.terrainEditorView.fields["size"].value
     self.texScale       = self.terrainEditorView.fields["texScale"].value
     self.detailTexScale = self.terrainEditorView.fields["detailTexScale"].value
+    self.mode           = self.terrainEditorView.fields["mode"].value
 
     if SCEN_EDIT.textureManager == nil then
         SCEN_EDIT.textureManager = TextureManager()
@@ -54,6 +55,7 @@ function TerrainChangeTextureState:MousePress(x, y, button)
                 paintTexture = self.paintTexture,
                 texScale = self.texScale,
                 detailTexScale = self.detailTexScale,
+                mode = self.mode,
             }
             local command = TerrainChangeTextureCommand(opts)
             self:SendCommand(command)
@@ -78,6 +80,7 @@ function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
             paintTexture = self.paintTexture,
             texScale = self.texScale,
             detailTexScale = self.detailTexScale,
+            mode = self.mode
         }
         local command = TerrainChangeTextureCommand(opts)
         self:SendCommand(command)
@@ -103,7 +106,7 @@ function TerrainChangeTextureState:MouseWheel(up, value)
         else
             size = self.size - self.size * 0.2 - 2
         end
-        self.terrainEditorView:SetField("size", size)
+        self.terrainEditorView:SetNumericField("size", size)
         return true
     end
 end

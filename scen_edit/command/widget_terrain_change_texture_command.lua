@@ -17,9 +17,11 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     tx = self:ApplyPen(opts)
 end
 
-
-function getPenShader()
-    if penShader == nil then
+function getPenShader(mode)
+    if shaders == nil then
+        shaders = {}
+    end
+    if shaders[mode] == nil then
         mapTexSQ = gl.CreateTexture(BIG_TEX_SIZE,BIG_TEX_SIZE, {
             border = false,
             min_filter = GL.LINEAR,
@@ -103,13 +105,14 @@ function getPenShader()
             alpha = clamp(alpha, 0, 1);
 
             color = %s; // mix(color, mapColor, color.a);
-            color.a = alpha;
+            color = mix(color, mapColor, alpha);
 
             gl_FragColor = color;
+            gl_FragColor.a = 1;
         }
         ]]
         local shaderTemplate = {
-            fragment = string.format(shaderFragStr,penBlenders["BlendUnmultiplied"]),
+            fragment = string.format(shaderFragStr,penBlenders[mode]),
             uniformInt = {
                 mapTex = 0,
                 penTex = 1,
@@ -117,14 +120,15 @@ function getPenShader()
             },
         }
 
-        penShader = gl.CreateShader(shaderTemplate)
+        local penShader = gl.CreateShader(shaderTemplate)
         local errors = gl.GetShaderLog(penShader)
         if errors ~= "" then
             Spring.Echo(errors)
         end
+        shaders[mode] = penShader
     end
 
-    return penShader
+    return shaders[mode]
 end
 
 function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
@@ -135,16 +139,17 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     -- TODO: make this a parameter
     local texScaleX, texScaleZ = opts.texScale, opts.texScale
     local detailTexScaleX, detailTexScaleZ = opts.detailTexScale, opts.detailTexScale
+    local shader = getPenShader(opts.mode)
 
     local rT
     local texSize = BIG_TEX_SIZE
 
     local prefix = ""
     
-    local x1ID = gl.GetUniformLocation(getPenShader(), "x1");
-    local x2ID = gl.GetUniformLocation(getPenShader(), "x2");
-    local z1ID = gl.GetUniformLocation(getPenShader(), "z1");
-    local z2ID = gl.GetUniformLocation(getPenShader(), "z2");
+    local x1ID = gl.GetUniformLocation(shader, "x1");
+    local x2ID = gl.GetUniformLocation(shader, "x2");
+    local z1ID = gl.GetUniformLocation(shader, "z1");
+    local z2ID = gl.GetUniformLocation(shader, "z2");
 
     if tmp == nil then
         tmp = SCEN_EDIT.textureManager:createMapTexture()
@@ -157,7 +162,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
         -- copy to old texture
         SCEN_EDIT.textureManager:Blit(mapTexture, tmp)
 
-        gl.UseShader(getPenShader())
+        gl.UseShader(shader)
         gl.RenderToTexture(mapTexture,
         function()
             gl.Texture(0, tmp)
@@ -229,7 +234,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
         gl.Texture(2, false)
         rT = tex
 
-        local errors = gl.GetShaderLog(getPenShader())
+        local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
             Spring.Echo(errors)
         end
