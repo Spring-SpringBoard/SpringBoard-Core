@@ -6,7 +6,8 @@ function TextureManager:init()
 
     self.mapFBOTextures = {}
     self.oldMapFBOTextures = {}
-    
+    self.stack = {}
+
     SCEN_EDIT.delayGL(function()
         self:generateMapTextures()
     end)

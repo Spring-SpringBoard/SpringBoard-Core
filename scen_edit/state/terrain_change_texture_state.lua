@@ -216,6 +216,7 @@ function TerrainChangeTextureState:MousePress(x, y, button)
             return true
         end
     elseif button == 3 then
+        self:stopChanging()
         SCEN_EDIT.stateManager:SetState(DefaultState())
 		self.textureImages:Select(0)
     end

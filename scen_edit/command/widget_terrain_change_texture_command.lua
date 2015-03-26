@@ -1,33 +1,18 @@
-WidgetTerrainChangeTextureCommand = UndoableCommand:extends{}
+WidgetTerrainChangeTextureCommand = AbstractCommand:extends{}
 WidgetTerrainChangeTextureCommand.className = "WidgetTerrainChangeTextureCommand"
 
 local BIG_TEX_SIZE = 1024
-function WidgetTerrainChangeTextureCommand:init(x, z, size, textureName, paintTexture, undo)
+function WidgetTerrainChangeTextureCommand:init(x, z, size, textureName, paintTexture)
     self.className = "WidgetTerrainChangeTextureCommand"
     self.x, self.z, self.size = x, z, size
     self.textureName = textureName
     self.paintTexture = paintTexture
-    self.undo = undo
 end
 
 function WidgetTerrainChangeTextureCommand:execute()
     SCEN_EDIT.delayGL(function()
-        if self.undo then
-            self:unexecute()
-            return
-        end
         self:SetTexture(self.x, self.z, self.size, self.textureName, self.paintTexture)
     end)
-end
-
-function WidgetTerrainChangeTextureCommand:unexecute()
-    local textures = SCEN_EDIT.textureManager:getMapTextures(self.x, self.z, 
-        self.x + 2 * self.size, self.z + 2 * self.size)
-    for _, v in pairs(textures) do
-        local mapTexture, oldTexture, coords = v[1], v[2], v[3]
-        SCEN_EDIT.textureManager:Blit(oldTexture, mapTexture)
-    end
-
 end
 
 function WidgetTerrainChangeTextureCommand:SetTexture(x, z, size, penTexture, paintTexture)
@@ -96,7 +81,6 @@ function getPenShader()
         uniform sampler2D mapTex;
         uniform sampler2D penTex;
         uniform sampler2D paintTex;
-        uniform float multiplier;
         
         uniform float x1, x2, z1, z2;
 
@@ -121,9 +105,6 @@ function getPenShader()
             alpha = clamp(alpha, 0, 1);
 
             color = mix(color, mapColor, alpha);
-            if (multiplier < 0) {
-                color = mix(color,mapColor,(1 - color.a));
-            }
 
             gl_FragColor = color;
         }
@@ -160,8 +141,6 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(x, z, size, penTexture, pain
     local texSize = BIG_TEX_SIZE
 
     local prefix = ""
-
-    local multiplier = gl.GetUniformLocation(getPenShader(), "multiplier");
     
     local x1ID = gl.GetUniformLocation(getPenShader(), "x1");
     local x2ID = gl.GetUniformLocation(getPenShader(), "x2");
@@ -180,11 +159,6 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(x, z, size, penTexture, pain
         gl.UseShader(getPenShader())
         gl.RenderToTexture(mapTexture,
         function()
-            if self.undo then
-                gl.Uniform(multiplier, -1)
-            else
-                gl.Uniform(multiplier, 1)
-            end
             gl.Texture(0, tmp)
             gl.Texture(1, prefix .. penTexture)
             gl.Texture(2, prefix .. paintTexture)
@@ -252,4 +226,35 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(x, z, size, penTexture, pain
     end
 
     return rT
+end
+
+WidgetUndoTerrainChangeTextureCommand = AbstractCommand:extends{}
+WidgetUndoTerrainChangeTextureCommand.className = "WidgetUndoTerrainChangeTextureCommand"
+
+function WidgetUndoTerrainChangeTextureCommand:execute()
+    SCEN_EDIT.delayGL(function()
+        local stack = SCEN_EDIT.textureManager.stack
+        SCEN_EDIT.textureManager.oldMapFBOTextures = stack[#stack]
+
+        for i, v in pairs(SCEN_EDIT.textureManager.oldMapFBOTextures) do
+            for j, oldTexture in pairs(v) do
+                local mapTexture = SCEN_EDIT.textureManager.mapFBOTextures[i][j]
+                SCEN_EDIT.textureManager:Blit(oldTexture, mapTexture)
+            end
+        end
+
+        SCEN_EDIT.textureManager.oldMapFBOTextures = {}
+        stack[#stack] = nil
+    end)
+end
+
+WidgetTerrainChangeTexturePushStackCommand = AbstractCommand:extends{}
+WidgetTerrainChangeTexturePushStackCommand.className = "WidgetTerrainChangeTexturePushStackCommand"
+
+function WidgetTerrainChangeTexturePushStackCommand:execute()
+    SCEN_EDIT.delayGL(function()
+        local stack = SCEN_EDIT.textureManager.stack
+        table.insert(stack, SCEN_EDIT.textureManager.oldMapFBOTextures)
+        SCEN_EDIT.textureManager.oldMapFBOTextures = {}
+    end)
 end
