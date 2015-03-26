@@ -75,7 +75,34 @@ function TerrainEditorView:init()
         maxValue = 1, 
         title = "Detail texture scale:"
     })
-    self:UpdateField("size")
+    self:AddChoiceProperty({
+        name = "mode", 
+        items = {
+            "BlendNormal",
+            "BlendDarken",
+            "BlendAdd",
+            "BlendColorBurn",
+            "BlendColorDodge",
+            "BlendColor",
+            "BlendDifference",
+            "BlendExclusion",
+            "BlendHardLight",
+            "BlendInverseDifference",
+            "BlendLighten",
+            "BlendLuminance",
+            "BlendMultiply",
+            "BlendOverlay",
+            "BlendPremultiplied",
+            "BlendScreen",
+            "BlendSoftLight",
+            "BlendSubtract",
+            "BlendUnmultiplied",
+            "BlendRAW"
+        },
+        title = "Mode:"
+    })
+    self:UpdateNumericField("size")
+    self:UpdateChoiceField("mode")
 
     self.window = Window:New {
         parent = screen0,
@@ -105,9 +132,29 @@ function TerrainEditorView:Select(indx)
     self.textureImages:Select(indx)
 end
 
-function TerrainEditorView:UpdateField(name)
+function TerrainEditorView:UpdateChoiceField(name)
     local field = self.fields[name]
-    
+--[[
+    field.comboBox.text = tostring(field.value)
+    field.editBox:Invalidate()
+    ]]
+    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    if currentState:is_A(TerrainChangeTextureState) then
+        currentState[field.name] = field.value
+    end
+end
+
+function TerrainEditorView:SetChoiceField(name, value)
+    local field = self.fields[name]
+    if value ~= nil and value ~= field.value then
+        field.value = value
+        self:UpdateChoiceField(field.name)
+    end
+end
+
+function TerrainEditorView:UpdateNumericField(name)
+    local field = self.fields[name]
+
     field.editBox.text = tostring(field.value)
     field.editBox:Invalidate()
     field.trackbar.value = field.value
@@ -118,15 +165,52 @@ function TerrainEditorView:UpdateField(name)
     end
 end
 
-function TerrainEditorView:SetField(name, value)
+function TerrainEditorView:SetNumericField(name, value)
     local field = self.fields[name]
     value = tonumber(value)
     if value ~= nil and value ~= field.value then
         value = math.min(field.maxValue, value)
         value = math.max(field.minValue, value)
         field.value = value
-        self:UpdateField(field.name)
+        self:UpdateNumericField(field.name)
     end
+end
+
+function TerrainEditorView:AddChoiceProperty(field)
+    self.fields[field.name] = field
+
+    field.label = Label:New {
+        caption = field.title,
+        x = 1,
+        y = 1,
+    }
+    field.comboBox = ComboBox:New {
+        x = 170,
+        y = 1,
+        width = 150,
+        height = 40,
+        items = field.items,
+    }
+    field.comboBox.OnSelect = {
+        function(obj, indx)
+            local value = field.comboBox.items[indx]
+            self:SetChoiceField(field.name, value)
+        end
+    }
+    field.value = field.items[1]
+
+    local ctrl = Control:New {
+        x = 0,
+        y = 0,
+        width = 300,
+        height = 20,
+        padding = {0, 0, 0, 0},
+        children = {
+            field.label,
+            field.comboBox,
+        }
+    }
+    self.stackPanel:AddChild(ctrl)
 end
 
 function TerrainEditorView:AddNumericProperty(field)
@@ -144,12 +228,12 @@ function TerrainEditorView:AddNumericProperty(field)
         width = 120,
         OnTextInput = {
             function() 
-                self:SetField(field.name, field.editBox.text)
+                self:SetNumericField(field.name, field.editBox.text)
             end
         },
         OnKeyPress = {
             function() 
-                self:SetField(field.name, field.editBox.text)
+                self:SetNumericField(field.name, field.editBox.text)
             end
         },
     }
@@ -163,7 +247,7 @@ function TerrainEditorView:AddNumericProperty(field)
     }
     field.trackbar.OnChange = {
         function(obj, value)
-            self:SetField(field.name, value)
+            self:SetNumericField(field.name, value)
         end
     }
 
