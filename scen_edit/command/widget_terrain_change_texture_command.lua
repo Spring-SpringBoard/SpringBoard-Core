@@ -2,21 +2,19 @@ WidgetTerrainChangeTextureCommand = AbstractCommand:extends{}
 WidgetTerrainChangeTextureCommand.className = "WidgetTerrainChangeTextureCommand"
 
 local BIG_TEX_SIZE = 1024
-function WidgetTerrainChangeTextureCommand:init(x, z, size, textureName, paintTexture)
+function WidgetTerrainChangeTextureCommand:init(opts)
     self.className = "WidgetTerrainChangeTextureCommand"
-    self.x, self.z, self.size = x, z, size
-    self.textureName = textureName
-    self.paintTexture = paintTexture
+    self.opts = opts
 end
 
 function WidgetTerrainChangeTextureCommand:execute()
     SCEN_EDIT.delayGL(function()
-        self:SetTexture(self.x, self.z, self.size, self.textureName, self.paintTexture)
+        self:SetTexture(self.opts)
     end)
 end
 
-function WidgetTerrainChangeTextureCommand:SetTexture(x, z, size, penTexture, paintTexture)
-    tx = self:ApplyPen(x, z, size, penTexture, paintTexture)
+function WidgetTerrainChangeTextureCommand:SetTexture(opts)
+    tx = self:ApplyPen(opts)
 end
 
 
@@ -35,45 +33,45 @@ function getPenShader()
             --'from'
             --// 2010 Kevin Bjorke http://www.botzilla.com
             --// Uses Processing & the GLGraphics library
-            ["BlendNormal"] = [[mix(penColor,mapColor,penColor.a);]],
+            ["BlendNormal"] = [[mix(color,mapColor,color.a);]],
 
-            ["BlendAdd"] = [[mix((mapColor+penColor),mapColor,penColor.a);]],
+            ["BlendAdd"] = [[mix((mapColor+color),mapColor,color.a);]],
 
-            ["BlendColorBurn"] = [[mix(1.0-(1.0-mapColor)/penColor,mapColor,penColor.a);]],
+            ["BlendColorBurn"] = [[mix(1.0-(1.0-mapColor)/color,mapColor,color.a);]],
 
-            ["BlendColorDodge"] = [[mix(mapColor/(1.0-penColor),mapColor,penColor.a);]],
+            ["BlendColorDodge"] = [[mix(mapColor/(1.0-color),mapColor,color.a);]],
 
-            ["BlendColor"] = [[mix(sqrt(dot(mapColor.rgb,mapColor.rgb)) * normalize(penColor),mapColor,penColor.a);]],
+            ["BlendColor"] = [[mix(sqrt(dot(mapColor.rgb,mapColor.rgb)) * normalize(color),mapColor,color.a);]],
 
-            ["BlendDarken"] = [[mix(min(mapColor,penColor),mapColor,penColor.a);]],
+            ["BlendDarken"] = [[mix(min(mapColor,color),mapColor,color.a);]],
 
-            ["BlendDifference"] = [[mix(abs(penColor-mapColor),mapColor,penColor.a);]],
+            ["BlendDifference"] = [[mix(abs(color-mapColor),mapColor,color.a);]],
 
-            ["BlendExclusion"] = [[mix(penColor+mapColor-(2.0*penColor*mapColor),mapColor,penColor.a);]],
+            ["BlendExclusion"] = [[mix(color+mapColor-(2.0*color*mapColor),mapColor,color.a);]],
 
-            ["BlendHardLight"] = [[mix(lerp(2.0 * mapColor * penColor,1.0 - 2.0*(1.0-penColor)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),penColor)- 0.45)))),mapColor,penColor.a);]],
+            ["BlendHardLight"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),color)- 0.45)))),mapColor,color.a);]],
 
-            ["BlendInverseDifference"] = [[mix(1.0-abs(mapColor-penColor),mapColor,penColor.a);]],
+            ["BlendInverseDifference"] = [[mix(1.0-abs(mapColor-color),mapColor,color.a);]],
 
-            ["BlendLighten"] = [[mix(max(penColor,mapColor),mapColor,penColor.a);]],
+            ["BlendLighten"] = [[mix(max(color,mapColor),mapColor,color.a);]],
 
-            ["BlendLuminance"] = [[mix(dot(penColor,vec4(0.25,0.65,0.1,0.0))*normalize(mapColor),mapColor,penColor.a);]],
+            ["BlendLuminance"] = [[mix(dot(color,vec4(0.25,0.65,0.1,0.0))*normalize(mapColor),mapColor,color.a);]],
 
-            ["BlendMultiply"] = [[mix(penColor*mapColor,mapColor,penColor.a);]],
+            ["BlendMultiply"] = [[mix(color*mapColor,mapColor,color.a);]],
 
-            ["BlendOverlay"] = [[mix(lerp(2.0 * mapColor * penColor,1.0 - 2.0*(1.0-penColor)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),mapColor)- 0.45)))),mapColor,penColor.a);]],
+            ["BlendOverlay"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),mapColor)- 0.45)))),mapColor,color.a);]],
 
-            ["BlendPremultiplied"] = [[vec4(penColor.rgb + (1.0-penColor.a)*mapColor.rgb, (penColor.a+mapColor.a));]],
+            ["BlendPremultiplied"] = [[vec4(color.rgb + (1.0-color.a)*mapColor.rgb, (color.a+mapColor.a));]],
 
-            ["BlendScreen"] = [[mix(1.0-(1.0-mapColor)*(1.0-penColor),mapColor,penColor.a);]],
+            ["BlendScreen"] = [[mix(1.0-(1.0-mapColor)*(1.0-color),mapColor,color.a);]],
 
-            ["BlendSoftLight"] = [[mix(2.0*mapColor*penColor+mapColor*mapColor-2.0*mapColor*mapColor*penColor,mapColor,penColor.a);]],
+            ["BlendSoftLight"] = [[mix(2.0*mapColor*color+mapColor*mapColor-2.0*mapColor*mapColor*color,mapColor,color.a);]],
 
-            ["BlendSubtract"] = [[mix(mapColor-penColor,mapColor,penColor.a);]],
+            ["BlendSubtract"] = [[mix(mapColor-color,mapColor,color.a);]],
 
-            ["BlendUnmultiplied"] = [[mix(penColor,mapColor,penColor.a);]],
+            ["BlendUnmultiplied"] = [[mix(color,mapColor,color.a);]],
 
-            ["BlendRAW"] = [[penColor;]], --//TODO make custom shaders for specular textures
+            ["BlendRAW"] = [[color;]], --//TODO make custom shaders for specular textures
         }
 
         local shaderFragStr = [[                    
@@ -101,16 +99,17 @@ function getPenShader()
             vec2 center = size / 2;
             vec2 delta = (gl_TexCoord[0].xy - vec2(x1, z1) - center) / size;
             float distance = sqrt(delta.x * delta.x + delta.y * delta.y);
-            float alpha = color.a * (1 - 2 * distance);
+            float alpha = 1 - 2 * distance;
             alpha = clamp(alpha, 0, 1);
 
-            color = mix(color, mapColor, alpha);
+            color = %s; // mix(color, mapColor, color.a);
+            color.a = alpha;
 
             gl_FragColor = color;
         }
         ]]
         local shaderTemplate = {
-            fragment = string.format(shaderFragStr,penBlenders["BlendRAW"]),
+            fragment = string.format(shaderFragStr,penBlenders["BlendUnmultiplied"]),
             uniformInt = {
                 mapTex = 0,
                 penTex = 1,
@@ -128,15 +127,15 @@ function getPenShader()
     return penShader
 end
 
-function getOldTexture()
-    local texSize = BIG_TEX_SIZE
-    if oldTexture == nil then
-        oldTexture = SCEN_EDIT.textureManager:createMapTexture()
-    end
-    return oldTexture
-end
+function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
+    local x, z = opts.x, opts.z
+    local size = opts.size
+    local penTexture = opts.penTexture
+    local paintTexture = opts.paintTexture
+    -- TODO: make this a parameter
+    local texScaleX, texScaleZ = opts.texScale, opts.texScale
+    local detailTexScaleX, detailTexScaleZ = opts.detailTexScale, opts.detailTexScale
 
-function WidgetTerrainChangeTextureCommand:ApplyPen(x, z, size, penTexture, paintTexture)    
     local rT
     local texSize = BIG_TEX_SIZE
 
@@ -147,7 +146,9 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(x, z, size, penTexture, pain
     local z1ID = gl.GetUniformLocation(getPenShader(), "z1");
     local z2ID = gl.GetUniformLocation(getPenShader(), "z2");
 
-    local tmp = getOldTexture()
+    if tmp == nil then
+        tmp = SCEN_EDIT.textureManager:createMapTexture()
+    end
     local textures = SCEN_EDIT.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
     for _, v in pairs(textures) do
         local mapTexture, oldTexture, coords = v[1], v[2], v[3]
@@ -162,11 +163,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(x, z, size, penTexture, pain
             gl.Texture(0, tmp)
             gl.Texture(1, prefix .. penTexture)
             gl.Texture(2, prefix .. paintTexture)
-            
-            -- TODO: make this a parameter
-            local texScaleX, texScaleZ = 3, 3
-            local detailTexScaleX, detailTexScaleZ = math.pi, math.pi
-            
+
             local coords = {
                 dx,            dz,
                 dx,            dz + 2 * size,
@@ -178,37 +175,51 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(x, z, size, penTexture, pain
                 vCoord[i] = coords[i] / texSize * 2 - 1
             end
 
-            local tCoord = {} -- texture coords
-            for i = 1, #vCoord do
-                tCoord[i] = coords[i] / texSize
+            -- map coordinates
+            local mCoord = {}
+            for i = 1, #coords do
+                mCoord[i] = coords[i] / texSize
             end
-            
-            gl.Uniform(x1ID, tCoord[1])
-            gl.Uniform(x2ID, tCoord[5])
-            gl.Uniform(z1ID, tCoord[2])
-            gl.Uniform(z2ID, tCoord[4])
+
+            -- texture coords
+            local tCoord = {
+                x,            z,
+                x,            z + 2 * size,
+                x + 2 * size, z + 2 * size,
+                x + 2 * size, z
+            }
+            for i = 1, #tCoord, 2 do
+                tCoord[i] = tCoord[i] / texSize * texScaleX
+                tCoord[i+1] = tCoord[i+1] / texSize * texScaleZ
+            end
+
+
+            gl.Uniform(x1ID, mCoord[1])
+            gl.Uniform(x2ID, mCoord[5])
+            gl.Uniform(z1ID, mCoord[2])
+            gl.Uniform(z2ID, mCoord[4])
 
             --GL.QUADS
             -- TODO: move all this to a vertex shader?
             gl.BeginEnd(GL.QUADS, function()
-                gl.MultiTexCoord(0, tCoord[1], tCoord[2])
+                gl.MultiTexCoord(0, mCoord[1], mCoord[2])
                 gl.MultiTexCoord(1, tCoord[1] * detailTexScaleX, tCoord[2] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[1] * texScaleX, tCoord[2] * texScaleZ)
+                gl.MultiTexCoord(2, tCoord[1], tCoord[2] )
                 gl.Vertex(vCoord[1], vCoord[2])
 
-                gl.MultiTexCoord(0, tCoord[3], tCoord[4])
+                gl.MultiTexCoord(0, mCoord[3], mCoord[4])
                 gl.MultiTexCoord(1, tCoord[3] * detailTexScaleX, tCoord[4] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[3] * texScaleX, tCoord[4] * texScaleZ)
+                gl.MultiTexCoord(2, tCoord[3], tCoord[4] )
                 gl.Vertex(vCoord[3], vCoord[4])
 
-                gl.MultiTexCoord(0, tCoord[5], tCoord[6])
+                gl.MultiTexCoord(0, mCoord[5], mCoord[6])
                 gl.MultiTexCoord(1, tCoord[5] * detailTexScaleX, tCoord[6] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[5] * texScaleX, tCoord[6] * texScaleZ)
+                gl.MultiTexCoord(2, tCoord[5], tCoord[6] )
                 gl.Vertex(vCoord[5], vCoord[6]) 
 
-                gl.MultiTexCoord(0, tCoord[7], tCoord[8])
+                gl.MultiTexCoord(0, mCoord[7], mCoord[8])
                 gl.MultiTexCoord(1, tCoord[7] * detailTexScaleX, tCoord[8] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[7] * texScaleX, tCoord[8] * texScaleZ)
+                gl.MultiTexCoord(2, tCoord[7], tCoord[8] )
                 gl.Vertex(vCoord[7], vCoord[8])
             end)
         end)

@@ -1,23 +1,19 @@
 TerrainChangeTextureCommand = UndoableCommand:extends{}
 TerrainChangeTextureCommand.className = "TerrainChangeTextureCommand"
 
-function TerrainChangeTextureCommand:init(x, z, size, textureName, paintTexture)
+function TerrainChangeTextureCommand:init(opts)
     self.className = "TerrainChangeTextureCommand"
-    self.x, self.z, self.size = x, z, size
-    self.textureName = textureName
-    self.paintTexture = paintTexture
+    self.opts = opts
     self.mergeCommand = "TerrainChangeTextureMergedCommand"
 end
 
 function TerrainChangeTextureCommand:execute()
-    self.x, self.z, self.size = math.floor(self.x), math.floor(self.z), math.floor(self.size)
-    local cmd = WidgetTerrainChangeTextureCommand(self.x, self.z, self.size, self.textureName, self.paintTexture)
+    local cmd = WidgetTerrainChangeTextureCommand(self.opts)
     SCEN_EDIT.commandManager:execute(cmd, true)
 end
 
 function TerrainChangeTextureCommand:unexecute()
-    local cmd = WidgetTerrainChangeTextureCommand(self.x, self.z, self.size, self.textureName, self.paintTexture)
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    -- handled by the merged command
 end
 
 TerrainChangeTextureMergedCommand = CompoundCommand:extends{}
