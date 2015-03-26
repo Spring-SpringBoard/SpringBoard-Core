@@ -26,7 +26,17 @@ end
 
 function CommandManager:leaveMultipleCommandMode()
     assert(self.multipleCommandMode, "Trying to leave multiple command mode while not in it")
-    cmd = CompoundCommand(self.multipleCommandStack)
+    if self.multipleCommandStack[1].mergeCommand then
+        -- there is a special command for merging
+        local env = getfenv(1)
+        cmd = env[self.multipleCommandStack[1].mergeCommand](self.multipleCommandStack)
+        
+        if cmd.onMerge then
+            cmd:onMerge()
+        end
+    else
+        cmd = CompoundCommand(self.multipleCommandStack)
+    end
     self.multipleCommandStack = {}
     self:undoListAdd(cmd)
     self.multipleCommandMode = false
