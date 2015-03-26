@@ -1,12 +1,12 @@
 TerrainPanel = AbstractMainWindowPanel:extends{}
 
 function TerrainPanel:init()
-	self:super("init")
-	local btnModifyHeightMap = TabbedPanelButton({
+    self:super("init")
+    local btnModifyHeightMap = TabbedPanelButton({
         tooltip = "Modify heightmap",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-			TabbedPanelLabel({ caption = "Terrain" }),
+            TabbedPanelLabel({ caption = "Terrain" }),
         },
         OnClick = {
             function()
@@ -14,15 +14,15 @@ function TerrainPanel:init()
             end
         },
     })
-	self.control:AddChild(btnModifyHeightMap)
-	
+    self.control:AddChild(btnModifyHeightMap)
+
     self.paintTexture = SCEN_EDIT_IMG_DIR .. "brush_textures/grass.png"
-    
+
     local btnModifyTextureMap = TabbedPanelButton({
         tooltip = "Change texture",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
-			TabbedPanelLabel({ caption = "Texture" }),
+            TabbedPanelLabel({ caption = "Texture" }),
         },
         OnClick = {
             function()
@@ -30,5 +30,5 @@ function TerrainPanel:init()
             end
         },
     })
-	self.control:AddChild(btnModifyTextureMap)
+    self.control:AddChild(btnModifyTextureMap)
 end

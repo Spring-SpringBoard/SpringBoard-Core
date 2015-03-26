@@ -76,14 +76,15 @@ function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     local textureSize = self.TEXTURE_SIZE
     
     
-    local x1 = math.max(0, math.floor(startX / textureSize))
-    local x2 = math.min(math.floor(Game.mapSizeX / textureSize), 
+    local i1 = math.max(0, math.floor(startX / textureSize))
+    local i2 = math.min(math.floor(Game.mapSizeX / textureSize), 
                         math.floor(endX / textureSize))
-    local z1 = math.max(0, math.floor(startZ / textureSize))
-    local z2 = math.min(math.floor(Game.mapSizeZ / textureSize), 
+    local j1 = math.max(0, math.floor(startZ / textureSize))
+    local j2 = math.min(math.floor(Game.mapSizeZ / textureSize), 
                         math.floor(endZ / textureSize))
-    for i = x1, x2 do
-        for j = z1, z2 do
+
+    for i = i1, i2 do
+        for j = j1, j2 do
             table.insert(textures, { 
                 self.mapFBOTextures[i][j], self:getOldMapTexture(i, j),
                 { startX - i * textureSize, startZ - j * textureSize } 
