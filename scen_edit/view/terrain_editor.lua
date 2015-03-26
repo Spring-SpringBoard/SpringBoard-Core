@@ -131,6 +131,13 @@ function TerrainEditorView:init()
         maxValue = 1, 
         title = "Detail texture scale:"
     })
+    self:AddNumericProperty({
+        name = "blendFactor", 
+        value = 1, 
+        minValue = 0.0, 
+        maxValue = 1, 
+        title = "Blend factor (Normal mode):"
+    })
     self:AddChoiceProperty({
         name = "mode", 
         items = {
@@ -208,7 +215,7 @@ function TerrainEditorView:AddChoiceProperty(field)
         y = 10,
     }
     field.comboBox = ComboBox:New {
-        x = 160,
+        x = 180,
         y = 0,
         width = 150,
         height = 30,
@@ -283,7 +290,7 @@ function TerrainEditorView:AddNumericProperty(field)
     }
     field.editBox = EditBox:New {
         text = v,
-        x = 170,
+        x = 190,
         y = 1,
         width = 120,
         OnTextInput = {
@@ -298,7 +305,7 @@ function TerrainEditorView:AddNumericProperty(field)
         },
     }
     field.trackbar = Trackbar:New {
-        x = 320,
+        x = 340,
         y = 1,
         value = field.value,
         min = field.minValue,
