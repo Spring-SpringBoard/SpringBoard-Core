@@ -35,7 +35,9 @@ function getPenShader(mode)
             --'from'
             --// 2010 Kevin Bjorke http://www.botzilla.com
             --// Uses Processing & the GLGraphics library
-            ["Normal"] = [[mix(color,mapColor,color.a);]],
+            --["Normal"] = [[mix(color,mapColor,color.a);]],
+
+            ["Normal"] = [[mix(min(color, (max(color,mapColor+blendFactor)-blendFactor)-blendFactor)+blendFactor,mapColor,color.a);]],
 
             ["Add"] = [[mix((mapColor+color),mapColor,color.a);]],
 
@@ -79,6 +81,7 @@ function getPenShader(mode)
         uniform sampler2D paintTex;
         
         uniform float x1, x2, z1, z2;
+        uniform float blendFactor;
 
         vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
             return vec4(penColor.rgb * alpha + mapColor.rgb * (1.0 - alpha), 1.0);
@@ -89,11 +92,13 @@ function getPenShader(mode)
             vec4 mapColor = texture2D(mapTex, gl_TexCoord[0].st);
             vec4 penColor = texture2D(penTex, gl_TexCoord[1].st);
             vec4 texColor = texture2D(paintTex, gl_TexCoord[2].st);
-            
+
             vec4 color = (gl_Color * texColor * penColor);
 
-            color = %s; // mix(color, mapColor, color.a);
+            // mode goes here
+            color = %s; 
             
+
             // calculate alpha (smaller the further away it is)
             vec2 size = vec2(x2 - x1, z2 - z1);
             vec2 center = size / 2;
@@ -136,6 +141,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local texScaleX, texScaleZ = opts.texScale, opts.texScale
     local detailTexScaleX, detailTexScaleZ = opts.detailTexScale, opts.detailTexScale
     local shader = getPenShader(opts.mode)
+    local blendFactor = (1 - opts.blendFactor) / 2
 
     local rT
     local texSize = BIG_TEX_SIZE
@@ -146,6 +152,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local x2ID = gl.GetUniformLocation(shader, "x2");
     local z1ID = gl.GetUniformLocation(shader, "z1");
     local z2ID = gl.GetUniformLocation(shader, "z2");
+    local blendFactorID = gl.GetUniformLocation(shader, "blendFactor");
 
     if tmp == nil then
         tmp = SCEN_EDIT.textureManager:createMapTexture()
@@ -199,6 +206,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
             gl.Uniform(x2ID, mCoord[5])
             gl.Uniform(z1ID, mCoord[2])
             gl.Uniform(z2ID, mCoord[4])
+            gl.Uniform(blendFactorID, blendFactor)
 
             --GL.QUADS
             -- TODO: move all this to a vertex shader?
