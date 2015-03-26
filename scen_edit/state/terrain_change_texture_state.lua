@@ -22,7 +22,8 @@ end
 
 function TerrainChangeTextureState:init(terrainEditorView)
     self.terrainEditorView = terrainEditorView
-    self.paintTexture = self.terrainEditorView.paintTexture
+    self.paintTexture   = self.terrainEditorView.paintTexture
+    self.penTexture     = self.terrainEditorView.penTexture
     self.size           = self.terrainEditorView.fields["size"].value
     self.texScale       = self.terrainEditorView.fields["texScale"].value
     self.detailTexScale = self.terrainEditorView.fields["detailTexScale"].value
@@ -51,7 +52,7 @@ function TerrainChangeTextureState:MousePress(x, y, button)
                 x = x,
                 z = z,
                 size = self.size,
-                penTexture = penTexture,
+                penTexture = self.penTexture,
                 paintTexture = self.paintTexture,
                 texScale = self.texScale,
                 detailTexScale = self.detailTexScale,
@@ -76,7 +77,7 @@ function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
             x = x,
             z = z,
             size = self.size,
-            penTexture = penTexture,
+            penTexture = self.penTexture,
             paintTexture = self.paintTexture,
             texScale = self.texScale,
             detailTexScale = self.detailTexScale,
