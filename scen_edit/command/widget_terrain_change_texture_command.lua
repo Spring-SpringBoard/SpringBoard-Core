@@ -35,45 +35,41 @@ function getPenShader(mode)
             --'from'
             --// 2010 Kevin Bjorke http://www.botzilla.com
             --// Uses Processing & the GLGraphics library
-            ["BlendNormal"] = [[mix(color,mapColor,color.a);]],
+            ["Normal"] = [[mix(color,mapColor,color.a);]],
 
-            ["BlendAdd"] = [[mix((mapColor+color),mapColor,color.a);]],
+            ["Add"] = [[mix((mapColor+color),mapColor,color.a);]],
 
-            ["BlendColorBurn"] = [[mix(1.0-(1.0-mapColor)/color,mapColor,color.a);]],
+            ["ColorBurn"] = [[mix(1.0-(1.0-mapColor)/color,mapColor,color.a);]],
 
-            ["BlendColorDodge"] = [[mix(mapColor/(1.0-color),mapColor,color.a);]],
+            ["ColorDodge"] = [[mix(mapColor/(1.0-color),mapColor,color.a);]],
 
-            ["BlendColor"] = [[mix(sqrt(dot(mapColor.rgb,mapColor.rgb)) * normalize(color),mapColor,color.a);]],
+            ["Color"] = [[mix(sqrt(dot(mapColor.rgb,mapColor.rgb)) * normalize(color),mapColor,color.a);]],
 
-            ["BlendDarken"] = [[mix(min(mapColor,color),mapColor,color.a);]],
+            ["Darken"] = [[mix(min(mapColor,color),mapColor,color.a);]],
 
-            ["BlendDifference"] = [[mix(abs(color-mapColor),mapColor,color.a);]],
+            ["Difference"] = [[mix(abs(color-mapColor),mapColor,color.a);]],
 
-            ["BlendExclusion"] = [[mix(color+mapColor-(2.0*color*mapColor),mapColor,color.a);]],
+            ["Exclusion"] = [[mix(color+mapColor-(2.0*color*mapColor),mapColor,color.a);]],
 
-            ["BlendHardLight"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),color)- 0.45)))),mapColor,color.a);]],
+            ["HardLight"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),color)- 0.45)))),mapColor,color.a);]],
 
-            ["BlendInverseDifference"] = [[mix(1.0-abs(mapColor-color),mapColor,color.a);]],
+            ["InverseDifference"] = [[mix(1.0-abs(mapColor-color),mapColor,color.a);]],
 
-            ["BlendLighten"] = [[mix(max(color,mapColor),mapColor,color.a);]],
+            ["Lighten"] = [[mix(max(color,mapColor),mapColor,color.a);]],
 
-            ["BlendLuminance"] = [[mix(dot(color,vec4(0.25,0.65,0.1,0.0))*normalize(mapColor),mapColor,color.a);]],
+            ["Luminance"] = [[mix(dot(color,vec4(0.25,0.65,0.1,0.0))*normalize(mapColor),mapColor,color.a);]],
 
-            ["BlendMultiply"] = [[mix(color*mapColor,mapColor,color.a);]],
+            ["Multiply"] = [[mix(color*mapColor,mapColor,color.a);]],
 
-            ["BlendOverlay"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),mapColor)- 0.45)))),mapColor,color.a);]],
+            ["Overlay"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),mapColor)- 0.45)))),mapColor,color.a);]],
 
-            ["BlendPremultiplied"] = [[vec4(color.rgb + (1.0-color.a)*mapColor.rgb, (color.a+mapColor.a));]],
+            ["Premultiplied"] = [[vec4(color.rgb + (1.0-color.a)*mapColor.rgb, (color.a+mapColor.a));]],
 
-            ["BlendScreen"] = [[mix(1.0-(1.0-mapColor)*(1.0-color),mapColor,color.a);]],
+            ["Screen"] = [[mix(1.0-(1.0-mapColor)*(1.0-color),mapColor,color.a);]],
 
-            ["BlendSoftLight"] = [[mix(2.0*mapColor*color+mapColor*mapColor-2.0*mapColor*mapColor*color,mapColor,color.a);]],
-
-            ["BlendSubtract"] = [[mix(mapColor-color,mapColor,color.a);]],
-
-            ["BlendUnmultiplied"] = [[mix(color,mapColor,color.a);]],
-
-            ["BlendRAW"] = [[color;]], --//TODO make custom shaders for specular textures
+            ["SoftLight"] = [[mix(2.0*mapColor*color+mapColor*mapColor-2.0*mapColor*mapColor*color,mapColor,color.a);]],
+            ["Subtract"] = [[mix(mapColor-color,mapColor,color.a);]],
+            --//Pako's TODO make custom shaders for specular textures
         }
 
         local shaderFragStr = [[                    
@@ -96,6 +92,8 @@ function getPenShader(mode)
             
             vec4 color = (gl_Color * texColor * penColor);
 
+            color = %s; // mix(color, mapColor, color.a);
+            
             // calculate alpha (smaller the further away it is)
             vec2 size = vec2(x2 - x1, z2 - z1);
             vec2 center = size / 2;
@@ -103,12 +101,10 @@ function getPenShader(mode)
             float distance = sqrt(delta.x * delta.x + delta.y * delta.y);
             float alpha = 1 - 2 * distance;
             alpha = clamp(alpha, 0, 1);
-
-            color = %s; // mix(color, mapColor, color.a);
             color = mix(color, mapColor, alpha);
 
             gl_FragColor = color;
-            gl_FragColor.a = 1;
+            gl_FragColor.a = 1; // there are issues if this is less than 1
         }
         ]]
         local shaderTemplate = {

@@ -2,12 +2,12 @@ TerrainEditorView = LCS.class{}
 
 function TerrainEditorView:init()
     self.fields = {}
-    
+
     self.textureImages = ImageListView:New {
-        dir = SCEN_EDIT_IMG_DIR .. "brush_textures/",
+        dir = SCEN_EDIT_IMG_DIR .. "brush_textures/tiles/",
         width = "100%",
         height = "100%",
-		multiSelect = false,
+        multiSelect = false,
     }
     self.textureImages.OnSelectItem = {
         function(obj, itemIdx, selected)
@@ -21,21 +21,78 @@ function TerrainEditorView:init()
                     SCEN_EDIT.stateManager:SetState(TerrainChangeTextureState(self))
                 end
             end
-			if not selected then
-				SCEN_EDIT.stateManager:SetState(DefaultState())
-			end
+            if not selected then
+                SCEN_EDIT.stateManager:SetState(DefaultState())
+            end
         end
     }
+
+    self.penTexture = SCEN_EDIT_IMG_DIR .. "brush_textures/detail/detailtex.bmp"
+    self.detailTextureImages = ImageListView:New {
+        dir = SCEN_EDIT_IMG_DIR .. "brush_textures/detail/",
+        width = "100%",
+        height = "100%",
+        multiSelect = false,
+    }
+    self.detailTextureImages.OnSelectItem = {
+        function(obj, itemIdx, selected)
+            if selected and itemIdx > 0 then
+                local item = self.detailTextureImages.items[itemIdx]
+                self.penTexture = item
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                if currentState:is_A(TerrainChangeTextureState) then
+                    currentState.penTexture = item
+                end
+            end
+        end
+    }
+
+    self.tabPanel = Chili.TabPanel:New {
+        x = 0, 
+        right = 0,
+        y = 20, 
+        bottom = 350,
+        padding = {0, 0, 0, 0},
+        tabs = { {
+                name = "Brush",
+                children = {
+                    ScrollPanel:New {
+                        x = 1,
+                        right = 1,
+                        y = 15,
+                        bottom = 0,
+                        children = { 
+                            self.textureImages,
+                        }
+                    },
+                },
+            }, {
+                name = "Detail", 
+                children = { 
+                    ScrollPanel:New {
+                        x = 1,
+                        right = 1,
+                        y = 15,
+                        bottom = 0,
+                        children = { 
+                            self.detailTextureImages 
+                        },
+                    },
+                },
+            }
+        },
+    }
+
     local btnClose = Button:New {
-        caption='Close',
-        width=100,
+        caption = 'Close',
+        width = 100,
         right = 1,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick = { 
             function() 
                 self.window:Dispose() 
-				SCEN_EDIT.stateManager:SetState(DefaultState())
+                SCEN_EDIT.stateManager:SetState(DefaultState())
             end 
         },
     }
@@ -44,7 +101,6 @@ function TerrainEditorView:init()
         x = 1,
         bottom = 5,
     }
-    
 
     self.stackPanel = StackPanel:New {
         y = 330,
@@ -53,7 +109,7 @@ function TerrainEditorView:init()
         right = 0,
         centerItems = false,
     }
-    
+
     self:AddNumericProperty({
         name = "size", 
         value = 100, 
@@ -78,26 +134,24 @@ function TerrainEditorView:init()
     self:AddChoiceProperty({
         name = "mode", 
         items = {
-            "BlendNormal",
-            "BlendDarken",
-            "BlendAdd",
-            "BlendColorBurn",
-            "BlendColorDodge",
-            "BlendColor",
-            "BlendDifference",
-            "BlendExclusion",
-            "BlendHardLight",
-            "BlendInverseDifference",
-            "BlendLighten",
-            "BlendLuminance",
-            "BlendMultiply",
-            "BlendOverlay",
-            "BlendPremultiplied",
-            "BlendScreen",
-            "BlendSoftLight",
-            "BlendSubtract",
-            "BlendUnmultiplied",
-            "BlendRAW"
+            "Normal",
+            "Darken",
+            "Lighten",
+            "SoftLight",
+            "HardLight",
+            "Luminance",
+            "Multiply",
+            "Premultiplied",
+            "Overlay",
+            "Screen",
+            "Add",
+            "Subtract",
+            "Difference",
+            "InverseDifference",
+            "Exclusion",
+            "Color",
+            "ColorBurn",
+            "ColorDodge",
         },
         title = "Mode:"
     })
@@ -111,16 +165,9 @@ function TerrainEditorView:init()
         width = 520,
         height = 700,
         caption = 'Texture editor',
+        resizable = false,
         children = {
-            ScrollPanel:New {
-                width = '100%',
-                height = "100%",
-                y = 15,
-                bottom = 340,
-                children = { 
-                    self.textureImages,
-                }
-            },
+            self.tabPanel,
             self.stackPanel,
             btnClose,
             lblNote,
@@ -152,43 +199,19 @@ function TerrainEditorView:SetChoiceField(name, value)
     end
 end
 
-function TerrainEditorView:UpdateNumericField(name)
-    local field = self.fields[name]
-
-    field.editBox.text = tostring(field.value)
-    field.editBox:Invalidate()
-    field.trackbar.value = field.value
-    field.trackbar:Invalidate()
-    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-    if currentState:is_A(TerrainChangeTextureState) then
-        currentState[field.name] = field.value
-    end
-end
-
-function TerrainEditorView:SetNumericField(name, value)
-    local field = self.fields[name]
-    value = tonumber(value)
-    if value ~= nil and value ~= field.value then
-        value = math.min(field.maxValue, value)
-        value = math.max(field.minValue, value)
-        field.value = value
-        self:UpdateNumericField(field.name)
-    end
-end
-
 function TerrainEditorView:AddChoiceProperty(field)
     self.fields[field.name] = field
 
     field.label = Label:New {
         caption = field.title,
         x = 1,
-        y = 1,
+        y = 10,
     }
     field.comboBox = ComboBox:New {
-        x = 170,
-        y = 1,
+        x = 160,
+        y = 0,
         width = 150,
-        height = 40,
+        height = 30,
         items = field.items,
     }
     field.comboBox.OnSelect = {
@@ -213,8 +236,45 @@ function TerrainEditorView:AddChoiceProperty(field)
     self.stackPanel:AddChild(ctrl)
 end
 
+function TerrainEditorView:UpdateNumericField(name, source)
+    local field = self.fields[name]
+
+    -- hackzor
+    if source ~= field.editBox then
+        local v = tostring(field.value)
+        v = v:sub(1, math.min(#v, 6))
+        field.editBox:SetText(v)
+    end
+    if source ~= field.trackbar then
+        field.trackbar:SetValue(field.value)
+    end
+    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    if currentState:is_A(TerrainChangeTextureState) then
+        currentState[field.name] = field.value
+    end
+end
+
+function TerrainEditorView:SetNumericField(name, value, source)
+    local field = self.fields[name]
+    if field.inUpdate then
+        return
+    end
+    
+    field.inUpdate = true
+    value = tonumber(value)
+    if value ~= nil and value ~= field.value then
+        value = math.min(field.maxValue, value)
+        value = math.max(field.minValue, value)
+        field.value = value
+        self:UpdateNumericField(field.name, source)
+    end
+    field.inUpdate = nil
+end
+
 function TerrainEditorView:AddNumericProperty(field)
     self.fields[field.name] = field
+    local v = tostring(field.value)
+    v = v:sub(1, math.min(#v, 6))
 
     field.label = Label:New {
         caption = field.title,
@@ -222,18 +282,18 @@ function TerrainEditorView:AddNumericProperty(field)
         y = 1,
     }
     field.editBox = EditBox:New {
-        text = tostring(field.value),
+        text = v,
         x = 170,
         y = 1,
         width = 120,
         OnTextInput = {
             function() 
-                self:SetNumericField(field.name, field.editBox.text)
+                self:SetNumericField(field.name, field.editBox.text, field.editBox)
             end
         },
         OnKeyPress = {
             function() 
-                self:SetNumericField(field.name, field.editBox.text)
+                self:SetNumericField(field.name, field.editBox.text, field.editBox)
             end
         },
     }
@@ -247,7 +307,7 @@ function TerrainEditorView:AddNumericProperty(field)
     }
     field.trackbar.OnChange = {
         function(obj, value)
-            self:SetNumericField(field.name, value)
+            self:SetNumericField(field.name, value, obj)
         end
     }
 
