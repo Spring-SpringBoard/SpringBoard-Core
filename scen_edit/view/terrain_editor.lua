@@ -115,28 +115,40 @@ function TerrainEditorView:init()
         value = 100, 
         minValue = 10, 
         maxValue = 1000, 
-        title = "Size:"
+        title = "Size:",
+        tooltip = "Size of the paint brush",
     })
     self:AddNumericProperty({
         name = "texScale", 
         value = 2, 
         minValue = 0.2, 
         maxValue = 8, 
-        title = "Texture scale:"
+        title = "Texture scale:",
+        tooltip = "Texture sampling rate (larger number means higher frequency)",
     })
     self:AddNumericProperty({
         name = "detailTexScale", 
         value = 0.2, 
         minValue = 0.01, 
         maxValue = 1, 
-        title = "Detail texture scale:"
+        title = "Detail texture scale:",
+        tooltip = "Detail texture sampling rate (larger number means higher frequency)",
     })
     self:AddNumericProperty({
         name = "blendFactor", 
         value = 1, 
         minValue = 0.0, 
         maxValue = 1, 
-        title = "Blend factor (Normal mode):"
+        title = "Blend factor:",
+        tooltip = "Proportion of texture to be applied",
+    })
+    self:AddNumericProperty({
+        name = "falloffFactor", 
+        value = 0.3, 
+        minValue = 0.0, 
+        maxValue = 1, 
+        title = "Falloff factor:",
+        tooltip = "Texture painting fade out (1 means crisp)",
     })
     self:AddChoiceProperty({
         name = "mode", 
@@ -287,6 +299,7 @@ function TerrainEditorView:AddNumericProperty(field)
         caption = field.title,
         x = 1,
         y = 1,
+        tooltip = field.tooltip,
     }
     field.editBox = EditBox:New {
         text = v,
