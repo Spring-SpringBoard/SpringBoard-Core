@@ -27,6 +27,7 @@ function View:init()
     --self.textureManager = TextureManager()
     --self.mainWindow = MainWindow()
 	self.tabbedWindow = TabbedWindow()
+    self.commandWindow = CommandWindow()
 
     local teams = SCEN_EDIT.model.teamManager:getAllTeams()
     local teamsTxt = {}

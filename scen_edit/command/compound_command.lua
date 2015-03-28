@@ -18,3 +18,7 @@ function CompoundCommand:unexecute()
         command:unexecute()
     end
 end
+
+function CompoundCommand:display()
+    return self.commands[1]:display()
+end
