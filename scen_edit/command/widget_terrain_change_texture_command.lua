@@ -148,7 +148,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local blendFactor = (1 - opts.blendFactor) / 2
     local falloffFactor = opts.falloffFactor
     
-    local fs = 2.3
+    local fs = 2
     x = x - size * (fs - falloffFactor * fs)
     z = z - size * (fs - falloffFactor * fs)
     size = size * (fs + 1 - falloffFactor * fs)

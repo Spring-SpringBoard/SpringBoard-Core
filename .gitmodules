@@ -4,3 +4,6 @@
 [submodule "libs/lcs"]
 	path = libs/lcs
 	url = git://github.com/gajop/Lua-Class-System.git
+[submodule "LuaUI/images/scenedit/resources"]
+	path = LuaUI/images/scenedit/resources
+	url = git@github.com:gajop/Scenario-Editor-Resources.git
