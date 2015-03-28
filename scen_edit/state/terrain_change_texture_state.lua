@@ -1,9 +1,6 @@
 TerrainChangeTextureState = AbstractEditingState:extends{}
 SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
 
---FIXME: remove this default pen
-local penTexture = "bitmaps/detailtex2.bmp"
-
 function TerrainChangeTextureState:startChanging()
     if not self.startedChanging then
         local cmd = SetMultipleCommandModeCommand(true)

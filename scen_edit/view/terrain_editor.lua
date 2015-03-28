@@ -4,7 +4,7 @@ function TerrainEditorView:init()
     self.fields = {}
 
     self.textureImages = ImageListView:New {
-        dir = SCEN_EDIT_IMG_DIR .. "brush_textures/tiles/",
+        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_textures/",
         width = "100%",
         height = "100%",
         multiSelect = false,
@@ -27,9 +27,9 @@ function TerrainEditorView:init()
         end
     }
 
-    self.penTexture = SCEN_EDIT_IMG_DIR .. "brush_textures/detail/detailtex.bmp"
+    self.penTexture = SCEN_EDIT_IMG_DIR .. "resources/brush_textures/detail/detailtex.bmp"
     self.detailTextureImages = ImageListView:New {
-        dir = SCEN_EDIT_IMG_DIR .. "brush_textures/detail/",
+        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_textures/detail/",
         width = "100%",
         height = "100%",
         multiSelect = false,
