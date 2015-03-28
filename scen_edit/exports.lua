@@ -32,6 +32,7 @@ if WG and WG.Chili then
     Checkbox = Chili.Checkbox
     Control = Chili.Control
     ComboBox = Chili.ComboBox
+    Colorbars = Chili.Colorbars
     Button = Chili.Button
     Label = Chili.Label
     Line = Chili.Line

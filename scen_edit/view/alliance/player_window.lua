@@ -106,7 +106,7 @@ function PlayerWindow:init(team)
         width = 50,
         caption = "Color:",
     }
-    self.clbColor = Chili.Colorbars:New {
+    self.clbColor = Colorbars:New {
         x = 65,
         y = 4 * SCEN_EDIT.conf.B_HEIGHT + 55,
         height = 60,
