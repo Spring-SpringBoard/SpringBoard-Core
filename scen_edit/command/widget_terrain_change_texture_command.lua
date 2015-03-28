@@ -81,6 +81,7 @@ function getPenShader(mode)
         uniform float x1, x2, z1, z2;
         uniform float blendFactor;
         uniform float falloffFactor;
+        uniform vec4 diffuseColor;
 
         vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
             return vec4(penColor.rgb * alpha + mapColor.rgb * (1.0 - alpha), 1.0);
@@ -92,7 +93,7 @@ function getPenShader(mode)
             vec4 penColor = texture2D(penTex, gl_TexCoord[1].st);
             vec4 texColor = texture2D(paintTex, gl_TexCoord[2].st);
 
-            vec4 color = (gl_Color * texColor * penColor);
+            vec4 color = (diffuseColor * texColor * penColor);
 
             // mode goes here
             color = %s; 
@@ -147,7 +148,8 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local shader = getPenShader(opts.mode)
     local blendFactor = (1 - opts.blendFactor) / 2
     local falloffFactor = opts.falloffFactor
-    
+    local diffuseColor = opts.diffuseColor
+
     local fs = 2
     x = x - size * (fs - falloffFactor * fs)
     z = z - size * (fs - falloffFactor * fs)
@@ -164,6 +166,8 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local z2ID = gl.GetUniformLocation(shader, "z2");
     local blendFactorID = gl.GetUniformLocation(shader, "blendFactor");
     local falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor");
+    local diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor");
+
 
     if tmp == nil then
         tmp = SCEN_EDIT.textureManager:createMapTexture()
@@ -219,6 +223,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
             gl.Uniform(z2ID, mCoord[4])
             gl.Uniform(blendFactorID, blendFactor)
             gl.Uniform(falloffFactorID, falloffFactor)
+            gl.Uniform(diffuseColorID, unpack(diffuseColor))
 
             --GL.QUADS
             -- TODO: move all this to a vertex shader?

@@ -103,11 +103,15 @@ function TerrainEditorView:init()
     }
 
     self.stackPanel = StackPanel:New {
-        y = 330,
+        height = 350,
         bottom = 30,
         x = 0,
         right = 0,
         centerItems = false,
+        itemPadding = {0,0,0,0},
+        padding = {0,0,0,0},
+        margin = {0,0,0,0},
+        itemMargin = {0,0,0,0},
     }
 
     self:AddNumericProperty({
@@ -174,8 +178,14 @@ function TerrainEditorView:init()
         },
         title = "Mode:"
     })
+    self:AddColorbarsProperty({
+        name = "diffuseColor",
+        title = "Color: ",
+        value = {1,1,1,1},
+    })
     self:UpdateNumericField("size")
     self:UpdateChoiceField("mode")
+    self:UpdateColorbarsField("diffuseColor")
 
     self.window = Window:New {
         parent = screen0,
@@ -341,6 +351,67 @@ function TerrainEditorView:AddNumericProperty(field)
             field.label,
             field.editBox,
             field.trackbar,
+        }
+    }
+    self.stackPanel:AddChild(ctrl)
+end
+
+function TerrainEditorView:UpdateColorbarsField(name, source)
+    local field = self.fields[name]
+
+    if source ~= field.colorbars then
+        field.colorbars:SetColor(field.value)
+    end
+    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    if currentState:is_A(TerrainChangeTextureState) then
+        currentState[field.name] = field.value
+    end
+end
+
+function TerrainEditorView:SetColorbarsField(name, value, source)
+    local field = self.fields[name]
+    if field.inUpdate then
+        return
+    end
+    field.inUpdate = true
+
+    if value ~= field.value then
+        field.value = value
+        self:UpdateColorbarsField(field.name, source)
+    end
+    field.inUpdate = nil
+end
+
+function TerrainEditorView:AddColorbarsProperty(field)
+    self.fields[field.name] = field
+
+    field.label = Label:New {
+        caption = field.title,
+        x = 1,
+        y = 1,
+        tooltip = field.tooltip,
+    }
+    field.colorbars = Colorbars:New {
+        color = field.value,
+        x = 190,
+        y = 1,
+        width = 245,
+        height = 40,
+        OnChange = {
+            function(obj, value)
+                self:SetColorbarsField(field.name, value, obj)
+            end
+        },
+    }
+    local ctrl = Control:New {
+        x = 0,
+        y = 0,
+        width = 300,
+        height = 40,
+        padding = {0, 0, 0, 0},
+        children = {
+            field.label,
+            field.colorbars,
         }
     }
     self.stackPanel:AddChild(ctrl)
