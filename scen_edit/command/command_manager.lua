@@ -40,6 +40,13 @@ function CommandManager:leaveMultipleCommandMode()
     self.multipleCommandStack = {}
     self:undoListAdd(cmd)
     self.multipleCommandMode = false
+    self:notify(cmd)
+end
+
+function CommandManager:notify(cmd)
+    -- send display to the widget
+    local display = cmd:display()
+    self:execute(WidgetCommandExecuted(display), true)
 end
 
 --widget specifies whether the command should be executed in LuaUI(true) or LuaRules(false)
@@ -62,6 +69,7 @@ function CommandManager:execute(cmd, widget)
                     table.insert(self.multipleCommandStack, cmd)
                 else
                     self:undoListAdd(cmd)
+                    self:notify(cmd)
                 end
             end
         else
@@ -100,6 +108,7 @@ function CommandManager:undo()
     local cmd = table.remove(self.undoList, #self.undoList)
     cmd:unexecute()
     self:redoListAdd(cmd)
+    self:execute(WidgetCommandUndo(), true)
 end
 
 function CommandManager:redo()
@@ -114,10 +123,12 @@ function CommandManager:redo()
     end
     local cmd = table.remove(self.redoList, #self.redoList)
     cmd:execute()
+    self:notify(cmd)
     table.insert(self.undoList, cmd)
 end
 
 function CommandManager:clearUndoRedoStack()
     self.undoList = {}
     self.redoList = {}
+    self:execute(WidgetCommandClearUndoStack())
 end
