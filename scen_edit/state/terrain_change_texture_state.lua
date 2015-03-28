@@ -29,6 +29,8 @@ function TerrainChangeTextureState:init(terrainEditorView)
     self.detailTexScale = self.terrainEditorView.fields["detailTexScale"].value
     self.mode           = self.terrainEditorView.fields["mode"].value
     self.blendFactor    = self.terrainEditorView.fields["blendFactor"].value
+    self.falloffFactor  = self.terrainEditorView.fields["falloffFactor"].value
+
 
     if SCEN_EDIT.textureManager == nil then
         SCEN_EDIT.textureManager = TextureManager()
@@ -59,6 +61,7 @@ function TerrainChangeTextureState:MousePress(x, y, button)
                 detailTexScale = self.detailTexScale,
                 mode = self.mode,
                 blendFactor = self.blendFactor,
+                falloffFactor = self.falloffFactor,
             }
             local command = TerrainChangeTextureCommand(opts)
             self:SendCommand(command)
@@ -85,6 +88,7 @@ function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
             detailTexScale = self.detailTexScale,
             mode = self.mode,
             blendFactor = self.blendFactor,
+            falloffFactor = self.falloffFactor,
         }
         local command = TerrainChangeTextureCommand(opts)
         self:SendCommand(command)

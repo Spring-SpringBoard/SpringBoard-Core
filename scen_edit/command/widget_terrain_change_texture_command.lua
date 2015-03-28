@@ -35,9 +35,7 @@ function getPenShader(mode)
             --'from'
             --// 2010 Kevin Bjorke http://www.botzilla.com
             --// Uses Processing & the GLGraphics library
-            --["Normal"] = [[mix(color,mapColor,color.a);]],
-
-            ["Normal"] = [[mix(min(color, (max(color,mapColor+blendFactor)-blendFactor)-blendFactor)+blendFactor,mapColor,color.a);]],
+            ["Normal"] = [[mix(color,mapColor,color.a);]],
 
             ["Add"] = [[mix((mapColor+color),mapColor,color.a);]],
 
@@ -82,6 +80,7 @@ function getPenShader(mode)
         
         uniform float x1, x2, z1, z2;
         uniform float blendFactor;
+        uniform float falloffFactor;
 
         vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
             return vec4(penColor.rgb * alpha + mapColor.rgb * (1.0 - alpha), 1.0);
@@ -98,8 +97,9 @@ function getPenShader(mode)
             // mode goes here
             color = %s; 
             
+            color = mix(min(color, (max(color,mapColor+blendFactor)-blendFactor)-blendFactor)+blendFactor,mapColor,color.a);
 
-            // calculate alpha (smaller the further away it is)
+            // calculate alpha (smaller the further away it is), used to draw circles
             vec2 size = vec2(x2 - x1, z2 - z1);
             vec2 center = size / 2;
             vec2 delta = (gl_TexCoord[0].xy - vec2(x1, z1) - center) / size;
@@ -107,6 +107,10 @@ function getPenShader(mode)
             float alpha = 1 - 2 * distance;
             alpha = clamp(alpha, 0, 1);
             color = mix(color, mapColor, alpha);
+            
+            // falloff crispness (use previously calculated alpha to make for a smooth falloff blending
+            float falloffAlpha = 1 - min(1.0f, alpha + falloffFactor);
+            color = mix(min(color, (max(color,mapColor+falloffAlpha)-falloffAlpha)-falloffAlpha)+falloffAlpha,mapColor,color.a);
 
             gl_FragColor = color;
             gl_FragColor.a = 1; // there are issues if this is less than 1
@@ -142,6 +146,12 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local detailTexScaleX, detailTexScaleZ = opts.detailTexScale, opts.detailTexScale
     local shader = getPenShader(opts.mode)
     local blendFactor = (1 - opts.blendFactor) / 2
+    local falloffFactor = opts.falloffFactor
+    
+    local fs = 2.3
+    x = x - size * (fs - falloffFactor * fs)
+    z = z - size * (fs - falloffFactor * fs)
+    size = size * (fs + 1 - falloffFactor * fs)
 
     local rT
     local texSize = BIG_TEX_SIZE
@@ -153,6 +163,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local z1ID = gl.GetUniformLocation(shader, "z1");
     local z2ID = gl.GetUniformLocation(shader, "z2");
     local blendFactorID = gl.GetUniformLocation(shader, "blendFactor");
+    local falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor");
 
     if tmp == nil then
         tmp = SCEN_EDIT.textureManager:createMapTexture()
@@ -207,6 +218,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
             gl.Uniform(z1ID, mCoord[2])
             gl.Uniform(z2ID, mCoord[4])
             gl.Uniform(blendFactorID, blendFactor)
+            gl.Uniform(falloffFactorID, falloffFactor)
 
             --GL.QUADS
             -- TODO: move all this to a vertex shader?
