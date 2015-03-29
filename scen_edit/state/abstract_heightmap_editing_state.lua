@@ -14,7 +14,7 @@ function AbstractHeightmapEditingState:leaveState()
 end
 
 function AbstractHeightmapEditingState:MouseWheel(up, value)
-    if self:super("MouseWheel", up, value) then
+    if AbstractMapEditingState.MouseWheel(self, up, value) then
         self.heightmapEditorView:SetNumericField("size", self.size)
         return true
     end
