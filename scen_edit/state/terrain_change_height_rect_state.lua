@@ -9,8 +9,8 @@ function TerrainChangeHeightRectState:init(toDecrease)
     self.maxSize = 1000
 end
 
-function TerrainChangeHeightRectState:AlterTerrain(x, z, amount)
-    if self:super("AlterTerrain", x, z, amount) then
+function TerrainChangeHeightRectState:Apply(x, z, amount)
+    if self:super("Apply", x, z, amount) then
         local x1, z1= x - self.size / 2, z - self.size / 2
         local x2, z2 = x + self.size / 2, z + self.size / 2
         local cmd = TerrainChangeHeightRectCommand(x1, z1, x2, z2, amount)
@@ -25,7 +25,6 @@ function TerrainChangeHeightRectState:DrawWorld()
     if result == "ground" then
         local x, z = coords[1], coords[3]
         gl.PushMatrix()
-        currentState = SCEN_EDIT.stateManager:GetCurrentState()
         gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundRectangle(x - self.size/2, z - self.size/2, x + self.size/2, z + self.size/2)
         gl.Color(0, 0, 1, 0.4)
