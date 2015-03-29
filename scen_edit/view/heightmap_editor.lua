@@ -31,7 +31,7 @@ function HeightmapEditorView:init()
         tooltip = "Increase or decrease (1)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Addition" }),
+            TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
             function()
@@ -73,7 +73,7 @@ function HeightmapEditorView:init()
         tooltip = "Square add the terrain (4)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Square add" }),
+            TabbedPanelLabel({ caption = "Square" }),
         },
         OnClick = {
             function()
@@ -87,7 +87,7 @@ function HeightmapEditorView:init()
         tooltip = "Modify the terrain by choosing one of the special shapes below (5)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Add shape" }),
+            TabbedPanelLabel({ caption = "Shape" }),
         },
         OnClick = {
             function()
