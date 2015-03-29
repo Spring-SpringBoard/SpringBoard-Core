@@ -174,7 +174,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     end
     local textures = SCEN_EDIT.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
     for _, v in pairs(textures) do
-        local mapTexture, oldTexture, coords = v[1], v[2], v[3]
+        local mapTexture, _, coords = v[1], v[2], v[3]
         local dx, dz = coords[1], coords[2]
 
         -- copy to old texture

@@ -11,7 +11,8 @@ function TerrainEditorView:init()
     }
     self.textureImages.OnSelectItem = {
         function(obj, itemIdx, selected)
-            if selected and itemIdx > 0 then
+            -- FIXME: shouldn't be using ._dirsNum probably
+            if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
                 local item = self.textureImages.items[itemIdx]
                 self.paintTexture = item
                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
@@ -36,7 +37,8 @@ function TerrainEditorView:init()
     }
     self.detailTextureImages.OnSelectItem = {
         function(obj, itemIdx, selected)
-            if selected and itemIdx > 0 then
+            -- FIXME: shouldn't be using ._dirsNum probably
+            if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
                 local item = self.detailTextureImages.items[itemIdx]
                 self.penTexture = item
                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
