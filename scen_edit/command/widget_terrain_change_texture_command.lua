@@ -22,15 +22,6 @@ function getPenShader(mode)
         shaders = {}
     end
     if shaders[mode] == nil then
-        mapTexSQ = gl.CreateTexture(BIG_TEX_SIZE,BIG_TEX_SIZE, {
-            border = false,
-            min_filter = GL.LINEAR,
-            mag_filter = GL.LINEAR,
-            wrap_s = GL.CLAMP_TO_EDGE,
-            wrap_t = GL.CLAMP_TO_EDGE,
-            fbo = true, 
-        })
-
         local penBlenders = {
             --'from'
             --// 2010 Kevin Bjorke http://www.botzilla.com
@@ -180,9 +171,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local falloffFactorID = uniforms.falloffFactorID
     local diffuseColorID = uniforms.diffuseColorID
 
-    if tmp == nil then
-        tmp = SCEN_EDIT.textureManager:createMapTexture()
-    end
+    local tmp = SCEN_EDIT.textureManager:GetTMP()
     local textures = SCEN_EDIT.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
     for _, v in pairs(textures) do
         local mapTexture, _, coords = v[1], v[2], v[3]

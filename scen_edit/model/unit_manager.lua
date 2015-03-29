@@ -123,7 +123,8 @@ function UnitManager:serializeUnitProperties(unitId, unit)
 end
 
 function UnitManager:serializeUnitCommands(unitId, unit)
-    unit.commands = Spring.GetUnitCommands(unitId)
+    -- math.huge needed here to work around jk's attempt at optimization (otherwise we get errors)
+    unit.commands = Spring.GetUnitCommands(unitId, -1)
     if unit.commands ~= nil then
         for _, command in pairs(unit.commands) do
             if command.id >= 0 then
