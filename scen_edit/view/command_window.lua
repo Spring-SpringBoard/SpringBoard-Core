@@ -4,50 +4,54 @@ function CommandWindow:init()
     self.commandsPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 0,
-        y = 0,
+        y = 20,
         width = "100%",
         height = "100%",
         autosize = true,
         resizeItems = false,
         centerItems = false,
     }
+    self.list = List()
+    self.list.CompareItems = function(obj, id1, id2)
+        return id1 - id2
+    end
     self.CommandWindowWindow = Window:New {
         parent = screen0,
-        caption = "Command Window",
+        caption = "Command stack",
         x = screen0.width - 375,
         y = 550,
-		resizable = true,
+        resizable = true,
         width = 375,
         height = 300,
         children = {
-            ScrollPanel:New {
-                y = 20,
-                width = "100%",
-                bottom = 10,
-                children = { 
-                    self.commandsPanel,
-                },
-                verticalSmartScroll = true,
-            },
+            self.list.ctrl,
         }
     }
+    self.count = 0
 end
 
 function CommandWindow:PushCommand(display)
+    self.count = self.count + 1
+    local id = self.count
     local lblVariableName = Label:New {
         caption = display,
-        width = 100,
-        x = 1,
-        parent = self.commandsPanel,
-        align = 'left',
+        y = 0,
+        height= 45,
+        x = 0,
+        width = 350,
+        align = 'center',
+        id = id,
+        valign = 'center',
     }
+    self.list:AddRow({lblVariableName}, id)
 end
 
 function CommandWindow:PopCommand()
-    self.commandsPanel:RemoveChild(self.commandsPanel.children[#self.commandsPanel.children])
-    self.commandsPanel:Invalidate()
+    self.list:RemoveRow(self.count)
+    self.count = self.count - 1
 end
 
 function CommandWindow:ClearCommands()
-    self.commandsPanel:ClearChildren()
+    self.list:Clear()
+    self.count = 0
 end
