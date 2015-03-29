@@ -205,7 +205,8 @@ function TerrainEditorView:init()
             self.stackPanel,
             btnClose,
             lblNote,
-        }
+        },
+        OnDispose = { function() SCEN_EDIT.terrainEditorView = nil end },
     }
 end
 

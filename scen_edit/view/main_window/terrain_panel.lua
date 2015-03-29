@@ -10,13 +10,14 @@ function TerrainPanel:init()
         },
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(TerrainIncreaseState())
+                if SCEN_EDIT.heightmapEditorView == nil then
+                    self.heightmapEditorView = HeightmapEditorView()
+                    SCEN_EDIT.heightmapEditorView = self.heightmapEditorView
+                end
             end
         },
     })
     self.control:AddChild(btnModifyHeightMap)
-
-    self.paintTexture = SCEN_EDIT_IMG_DIR .. "brush_textures/grass.png"
 
     local btnModifyTextureMap = TabbedPanelButton({
         tooltip = "Change texture",
@@ -26,7 +27,10 @@ function TerrainPanel:init()
         },
         OnClick = {
             function()
-                self.terrainEditorView = TerrainEditorView()
+                if SCEN_EDIT.terrainEditorView == nil then
+                    self.terrainEditorView = TerrainEditorView()
+                    SCEN_EDIT.terrainEditorView = self.terrainEditorView
+                end
             end
         },
     })

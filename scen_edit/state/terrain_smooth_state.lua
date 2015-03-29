@@ -1,16 +1,15 @@
 TerrainSmoothState = AbstractHeightmapEditingState:extends{}
 
-function TerrainSmoothState:init()
-    self.size = 100
+function TerrainSmoothState:init(heightmapEditorView)
+    self:super("init", heightmapEditorView)
     self.sigma = 1
-    self.startedChanging = false
-    self.minSize = 20
-    self.maxSize = 200
+--     self.minSize = 20
+--     self.maxSize = 200
 end
 
 function TerrainSmoothState:Apply(x, z)
     if self:super("Apply", x, z, amount) then
-        self.sigma = math.max(math.min(self.size / 200, 1.5), 0.35)
+        self.sigma = math.max(math.min(self.size / self.maxSize, 1.5), 0.35)
         local cmd = TerrainSmoothCommand(x, z, self.size, self.sigma)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
@@ -25,7 +24,7 @@ function TerrainSmoothState:DrawWorld()
         gl.PushMatrix()
         gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
-        gl.Color(0, 0, 1, 0.4)
+        gl.Color(0, 1, 0, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size * 0.95)
         gl.PopMatrix()
     end
