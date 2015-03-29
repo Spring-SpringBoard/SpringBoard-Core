@@ -16,6 +16,16 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.multipleCommandMode = false
 end
 
+function CommandManager:_SafeCall(func)
+    succ, result = xpcall(func, function(err)
+        Spring.Log("scened", LOG.ERROR, "Error executing command.")
+        Spring.Log("scened", LOG.ERROR, debug.traceback(err))
+    end)
+    if succ then 
+        return result
+    end
+end
+
 --entering this mode will add all future commands executed in the .multipleCommandStack (no command will go to the undoList)
 --leaving this mode will group all the executed commands in one CompoundCommand and put it on the undoList
 --undo/redo is disabled during this mode
@@ -30,9 +40,11 @@ function CommandManager:leaveMultipleCommandMode()
         -- there is a special command for merging
         local env = getfenv(1)
         cmd = env[self.multipleCommandStack[1].mergeCommand](self.multipleCommandStack)
-        
+
         if cmd.onMerge then
-            cmd:onMerge()
+            self:_SafeCall(function()
+                cmd:onMerge()
+            end)
         end
     else
         cmd = CompoundCommand(self.multipleCommandStack)
@@ -59,11 +71,15 @@ function CommandManager:execute(cmd, widget)
             local msg = Message("command", cmd)
             SCEN_EDIT.messageManager:sendMessage(msg)
         else
-            cmd:execute()
+            self:_SafeCall(function() 
+                cmd:execute()
+            end)
         end
     else
         if not widget then
-            cmd:execute()
+            self:_SafeCall(function()
+                cmd:execute()
+            end)
             if cmd.unexecute then
                 if self.multipleCommandMode then
                     table.insert(self.multipleCommandStack, cmd)
@@ -106,9 +122,11 @@ function CommandManager:undo()
         return
     end
     local cmd = table.remove(self.undoList, #self.undoList)
-    cmd:unexecute()
-    self:redoListAdd(cmd)
-    self:execute(WidgetCommandUndo(), true)
+    self:_SafeCall(function() 
+        cmd:unexecute()
+        self:redoListAdd(cmd)
+        self:execute(WidgetCommandUndo(), true)
+    end)
 end
 
 function CommandManager:redo()
@@ -122,13 +140,17 @@ function CommandManager:redo()
         return
     end
     local cmd = table.remove(self.redoList, #self.redoList)
-    cmd:execute()
-    self:notify(cmd)
-    table.insert(self.undoList, cmd)
+    self:_SafeCall(function() 
+        cmd:execute()
+        self:notify(cmd)
+        table.insert(self.undoList, cmd)
+    end)
 end
 
 function CommandManager:clearUndoRedoStack()
     self.undoList = {}
     self.redoList = {}
-    self:execute(WidgetCommandClearUndoStack())
+    self:_SafeCall(function() 
+        self:execute(WidgetCommandClearUndoStack(), true)
+    end)
 end
