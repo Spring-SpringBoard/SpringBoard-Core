@@ -13,8 +13,8 @@ function TerrainChangeTextureState:init(terrainEditorView)
     self.falloffFactor  = self.terrainEditorView.fields["falloffFactor"].value
     self.diffuseColor   = self.terrainEditorView.fields["diffuseColor"].value
 
-    self.minSize = self.terrainEditorView.fields["size"].minValue
-    self.maxSize = self.terrainEditorView.fields["size"].maxValue
+    self.minSize        = self.terrainEditorView.fields["size"].minValue
+    self.maxSize        = self.terrainEditorView.fields["size"].maxValue
 
     if SCEN_EDIT.textureManager == nil then
         SCEN_EDIT.textureManager = TextureManager()

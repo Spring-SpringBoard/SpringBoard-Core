@@ -1,18 +1,16 @@
 TerrainIncreaseState = AbstractHeightmapEditingState:extends{}
 
-function TerrainIncreaseState:init(toDecrease)
-    self.size = 100
-    self.strength = 1
-    self.toDecrease = toDecrease
-    self.startedChanging = false
-    self.minSize = 20
-    self.maxSize = 1000
-end
-
 function TerrainIncreaseState:Apply(x, z, amount)
     if self:super("Apply", x, z, amount) then
         local cmd = TerrainIncreaseCommand(x, z, self.size, amount)
         SCEN_EDIT.commandManager:execute(cmd)
+        return true
+    end
+end
+
+function TerrainIncreaseState:MouseWheel(up, value)
+    if self:super("MouseWheel", up, value) then
+        self.heightmapEditorView:SetNumericField("size", self.size)
         return true
     end
 end

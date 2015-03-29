@@ -1,12 +1,13 @@
-TerrainIncreaseCommand = UndoableCommand:extends{}
-TerrainIncreaseCommand.className = "TerrainIncreaseCommand"
+TerrainShapeModifyCommand = UndoableCommand:extends{}
+TerrainShapeModifyCommand.className = "TerrainShapeModifyCommand"
 
-function TerrainIncreaseCommand:init(x, z, size, delta)
-    self.className = "TerrainIncreaseCommand"
+function TerrainShapeModifyCommand:init(x, z, size, delta, res)
+    self.className = "TerrainShapeModifyCommand"
     self.x, self.z, self.size = x, z, size
     self.delta = delta
+    self.res = res
 end
-
+--[[
 local multiplierMap = {}
 local currentlyGenerated = 0
 local function getMultiplier(value)
@@ -21,7 +22,7 @@ end
 local function generateMap(size, delta)
     local map = {}
     local maxDist = size * delta
-    local center = size
+    center = size
     local parts = 2*size / Game.squareSize + 1
     local scale = math.abs(10 / maxDist)
     for x = 0, 2*size, Game.squareSize do
@@ -48,45 +49,65 @@ local function getMap(size, delta)
         mapsBySize = {}
         maps[size] = mapsBySize
     end
-    map = mapsBySize[delta]
+
+    local map = mapsBySize[delta]
     if not map then
         map = generateMap(size, delta)
         mapsBySize[delta] = map
     end
     return map
-end
+end]]
 
-function TerrainIncreaseCommand:GetHeightMapFunc(isUndo)
+function TerrainShapeModifyCommand:GetHeightMapFunc(isUndo)
     return function()
-        local map = getMap(self.size, self.delta)
+--         local map = getMap(self.size, self.delta)
         local centerX = self.x
         local centerZ = self.z
         local size = self.size
         local parts = 2*size / Game.squareSize + 1
         local startX = centerX - size
         local startZ = centerZ - size
+
+        local greyscale = SCEN_EDIT.greyscale
+        local res = greyscale.res
+        local sizeX = greyscale.sizeX
+        local sizeZ = greyscale.sizeZ
+        
+        local scaleX = sizeX / (2*size)
+        local scaleZ = sizeZ / (2*size)
+        
         if not isUndo then
             for x = 0, 2*size, Game.squareSize do
                 for z = 0, 2*size, Game.squareSize do
-                    local total = map[x + z * parts]
-                    Spring.AddHeightMap(x + startX, z + startZ, total)
+                    local rx = math.min(sizeX-1, math.max(0, math.floor(scaleX * x)))
+                    local rz = math.min(sizeZ-1, math.max(0, math.floor(scaleZ * z)))
+                    local indx = rx * sizeX + rz
+                    --Spring.Echo(indx)
+                    local diff = res[indx] * self.delta
+                    --local diff = map[x + z * parts]
+                    Spring.AddHeightMap(x + startX, z + startZ, diff)
                 end
             end
         else
             for x = 0, 2*size, Game.squareSize do
                 for z = 0, 2*size, Game.squareSize do
-                    local total = map[x + z * parts] 
-                    Spring.AddHeightMap(x + startX, z + startZ, -total)
+                    local rx = math.min(sizeX-1, math.max(0, math.floor(scaleX * x)))
+                    local rz = math.min(sizeZ-1, math.max(0, math.floor(scaleZ * z)))
+                    local indx = rx * sizeX + rz
+                    --Spring.Echo(indx)
+                    local diff = res[indx] * self.delta
+                    --local diff = map[x + z * parts]
+                    Spring.AddHeightMap(x + startX, z + startZ, -diff)
                 end
             end
         end
     end
 end
 
-function TerrainIncreaseCommand:execute()
+function TerrainShapeModifyCommand:execute()
     Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))
 end
 
-function TerrainIncreaseCommand:unexecute()
+function TerrainShapeModifyCommand:unexecute()
     Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
 end

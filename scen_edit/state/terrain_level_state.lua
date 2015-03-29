@@ -1,13 +1,5 @@
 TerrainLevelState = AbstractHeightmapEditingState:extends{}
 
-function TerrainLevelState:init()
-    self.size = 100
-    self.strength = 1
-    self.startedChanging = false
-    self.minSize = 20
-    self.maxSize = 1000
-end
-
 function TerrainLevelState:Apply(x, z)
     if self:super("Apply", x, z, amount) then
         local cmd = TerrainLevelCommand(x, z, self.size, self.height)
@@ -24,7 +16,7 @@ function TerrainLevelState:DrawWorld()
         gl.PushMatrix()
         gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
-        gl.Color(0, 0, 1, 0.4)
+        gl.Color(1, 0, 0, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size * 0.95)
         gl.PopMatrix()
     end
