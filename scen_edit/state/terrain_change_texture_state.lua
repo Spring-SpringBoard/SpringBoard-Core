@@ -53,13 +53,6 @@ function TerrainChangeTextureState:MouseWheel(up, value)
     end
 end
 
--- use mouse move instead of update
-function TerrainChangeTextureState:MouseMove()
-    self:super("Update")
-end
-function TerrainChangeTextureState:Update()
-end
-
 function TerrainChangeTextureState:DrawWorld()
     x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
