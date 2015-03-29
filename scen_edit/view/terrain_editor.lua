@@ -32,7 +32,7 @@ function TerrainEditorView:init()
     }
 
     self.detailTextureImages = ImageListView:New {
-        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_textures/detail/",
+        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/detail/",
         width = "100%",
         height = "100%",
         multiSelect = false,
