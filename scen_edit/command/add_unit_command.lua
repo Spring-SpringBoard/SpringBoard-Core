@@ -42,3 +42,8 @@ function AddUnitCommand:unexecute()
         Spring.DestroyUnit(unitId, false, true)
     end
 end
+
+function AddUnitCommand:display()
+    local unitDefName = self.unitTypeId or self.unit.unitDefName
+    return "Added unit: " .. tostring(unitDefName)
+end

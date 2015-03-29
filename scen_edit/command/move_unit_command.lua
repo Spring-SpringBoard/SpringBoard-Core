@@ -32,3 +32,7 @@ function MoveUnitCommand:unexecute()
     -- FIXME: hack needed to set proper unit direction for buildings
     Spring.SetUnitDirection(unitId, dirX, dirY, dirZ)
 end
+
+function MoveUnitCommand:display()
+    return "Moved unit: " .. tostring(UnitDefs[Spring.GetUnitDefID(SCEN_EDIT.model.unitManager:getSpringUnitId(self.modelUnitId))].name)
+end
