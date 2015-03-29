@@ -25,7 +25,8 @@ function TextureManager:createMapTexture(notFBO)
 end
 
 function TextureManager:generateMapTextures()
-    local oldMapTexture = self:createMapTexture(true)
+    self.tmp = self:createMapTexture()
+    local oldMapTexture = self:createMapTexture(false)
 
     for i = 0, math.floor(Game.mapSizeX / self.TEXTURE_SIZE) do
         self.mapFBOTextures[i] = {}
@@ -39,6 +40,10 @@ function TextureManager:generateMapTextures()
             Spring.SetMapSquareTexture(i, j, mapTexture)
         end
     end
+end
+
+function TextureManager:GetTMP()
+    return self.tmp
 end
 
 function TextureManager:resetMapTexures()
@@ -74,8 +79,7 @@ end
 function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     local textures = {}
     local textureSize = self.TEXTURE_SIZE
-    
-    
+
     local i1 = math.max(0, math.floor(startX / textureSize))
     local i2 = math.min(math.floor(Game.mapSizeX / textureSize), 
                         math.floor(endX / textureSize))
@@ -91,8 +95,7 @@ function TextureManager:getMapTextures(startX, startZ, endX, endZ)
             })
         end
     end
---     Spring.Echo(startX, startZ, endX, endZ, textureSize)
---     table.echo(textures)
+
     return textures
 end
 
