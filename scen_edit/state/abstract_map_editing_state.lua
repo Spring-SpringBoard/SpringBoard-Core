@@ -26,12 +26,12 @@ function AbstractMapEditingState:Apply(x, z, strength)
 end
 
 function AbstractMapEditingState:MousePress(x, y, button)
-    local _, _, _, shift = Spring.GetModKeyState()
-    if button == 1 then
+    Spring.Echo(button)
+    if button == 1 or button == 3 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
             local strength = self.strength
-            if shift then
+            if button == 3 then
                 strength = -strength
             end
             self:startChanging()
@@ -39,15 +39,10 @@ function AbstractMapEditingState:MousePress(x, y, button)
             return true
         end
     end
-    if button == 3 then
-        self:stopChanging()
-        SCEN_EDIT.stateManager:SetState(DefaultState())
-        return true
-    end
 end
 
 function AbstractMapEditingState:MouseRelease(x, y, button)
-    if button == 1 then
+    if button == 1 or button == 3 then
         self:stopChanging()
     end
 end
@@ -58,8 +53,8 @@ function AbstractMapEditingState:MouseMove(x, y, dx, dy, button)
 end
 
 function AbstractMapEditingState:MouseWheel(up, value)
-    local _, ctrl = Spring.GetModKeyState()
-    if ctrl then
+    local _, _, _, shift = Spring.GetModKeyState()
+    if shift then
         if up then
             self.size = self.size + self.size * 0.2 + 2
         else
@@ -77,11 +72,11 @@ function AbstractMapEditingState:Update()
     end
     local x, y, button1, _, button3 = Spring.GetMouseState()
     local _, _, _, shift = Spring.GetModKeyState()
-    if button1 then
+    if button1 or button3 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
             local strength = self.strength
-            if shift then
+            if button3 then
                 strength = -strength
             end
             self:Apply(coords[1], coords[3], strength)
