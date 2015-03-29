@@ -5,8 +5,8 @@ function TerrainShapeModifyState:init(heightmapEditorView)
     self.paintTexture   = self.heightmapEditorView.paintTexture
 end
 
-function TerrainShapeModifyState:Apply(x, z, amount)
-    if self:super("Apply", x, z, amount) then
+function TerrainShapeModifyState:Apply(x, z, strength)
+    if self:super("Apply", x, z, strength) then
         SCEN_EDIT.delayGL(function()
             if self.createdPaint == nil or self.createdPaint ~= self.paintTexture then
                 local shapeSize = 256
@@ -31,14 +31,14 @@ function TerrainShapeModifyState:Apply(x, z, amount)
                     res = gl.ReadPixels(0, 0, w, h)
                 end)
                 gl.Texture(false)
-                
+
                 local greyscale = {}
                 for i, row in pairs(res) do
                     for j, point in pairs(row) do
                         greyscale[(i-1) * #res + (j-1)] = (point[1] + point[2] + point[3]) / 3 * point[4]
                     end
                 end
-                
+
                 greyscale = {
                     res = greyscale,
                     sizeX = #res,
@@ -50,7 +50,7 @@ function TerrainShapeModifyState:Apply(x, z, amount)
                 SCEN_EDIT.commandManager:execute(cmd)
             end
 
-            local cmd = TerrainShapeModifyCommand(x, z, self.size, amount)
+            local cmd = TerrainShapeModifyCommand(x, z, self.size, strength * 5)
             SCEN_EDIT.commandManager:execute(cmd)
         end)
         return true

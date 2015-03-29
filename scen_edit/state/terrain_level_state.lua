@@ -1,7 +1,7 @@
 TerrainLevelState = AbstractHeightmapEditingState:extends{}
 
 function TerrainLevelState:Apply(x, z)
-    if self:super("Apply", x, z, amount) then
+    if self:super("Apply", x, z) then
         local cmd = TerrainLevelCommand(x, z, self.size, self.height)
         SCEN_EDIT.commandManager:execute(cmd)
         return true

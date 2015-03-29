@@ -17,7 +17,7 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     return true
 end
 
-function AbstractMapEditingState:Apply(x, z, amount)
+function AbstractMapEditingState:Apply(x, z, strength)
     local now = os.clock()
     if not self.lastTime or now - self.lastTime >= 0.01 then
         self.lastTime = now
@@ -30,12 +30,12 @@ function AbstractMapEditingState:MousePress(x, y, button)
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
-            local amount = self.strength
+            local strength = self.strength
             if shift then
-                amount = -amount
+                strength = -strength
             end
             self:startChanging()
-            self:Apply(coords[1], coords[3], amount)
+            self:Apply(coords[1], coords[3], strength)
             return true
         end
     end
@@ -80,11 +80,11 @@ function AbstractMapEditingState:Update()
     if button1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
-            local amount = self.strength
+            local strength = self.strength
             if shift then
-                amount = -amount
+                strength = -strength
             end
-            self:Apply(coords[1], coords[3], amount)
+            self:Apply(coords[1], coords[3], strength)
         end
     end
 end
