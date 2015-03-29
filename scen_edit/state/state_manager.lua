@@ -25,6 +25,11 @@ function StateManager:GetCurrentState()
 end
 
 function StateManager:SetState(state)
+    if self.currentState ~= nil then
+        local oldState = self.currentState
+        self.currentState = nil
+        oldState:leaveState()
+    end
     self.currentState = state
     self.currentState:enterState()
 end

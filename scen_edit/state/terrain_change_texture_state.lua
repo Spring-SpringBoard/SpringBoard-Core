@@ -1,21 +1,5 @@
-TerrainChangeTextureState = AbstractEditingState:extends{}
+TerrainChangeTextureState = AbstractMapEditingState:extends{}
 SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
-
-function TerrainChangeTextureState:startChanging()
-    if not self.startedChanging then
-        local cmd = SetMultipleCommandModeCommand(true)
-        SCEN_EDIT.commandManager:execute(cmd)
-        self.startedChanging = true
-    end
-end
-
-function TerrainChangeTextureState:stopChanging()
-    if self.startedChanging then
-        local cmd = SetMultipleCommandModeCommand(false)
-        SCEN_EDIT.commandManager:execute(cmd)
-        self.startedChanging = false
-    end
-end
 
 function TerrainChangeTextureState:init(terrainEditorView)
     self.terrainEditorView = terrainEditorView
@@ -29,19 +13,20 @@ function TerrainChangeTextureState:init(terrainEditorView)
     self.falloffFactor  = self.terrainEditorView.fields["falloffFactor"].value
     self.diffuseColor   = self.terrainEditorView.fields["diffuseColor"].value
 
+    self.minSize = self.terrainEditorView.fields["size"].minValue
+    self.maxSize = self.terrainEditorView.fields["size"].maxValue
+
     if SCEN_EDIT.textureManager == nil then
         SCEN_EDIT.textureManager = TextureManager()
     end
 end
 
-function TerrainChangeTextureState:SendCommand(x, z)
-    local now = os.clock()
-    if not self.lastTime or now - self.lastTime >= 0.01 then
-        self.lastTime = now
+function TerrainChangeTextureState:Apply(x, z)
+    if self:super("Apply", x, z) then
 
         local opts = {
-            x = x,
-            z = z,
+            x = x - self.size,
+            z = z - self.size,
             size = self.size,
             penTexture = self.penTexture,
             paintTexture = self.paintTexture,
@@ -57,52 +42,22 @@ function TerrainChangeTextureState:SendCommand(x, z)
     end
 end
 
-function TerrainChangeTextureState:MousePress(x, y, button)
-    if button == 1 then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground"  then
-            self:startChanging()
-            local x, z = coords[1] - self.size, coords[3] - self.size
-            self:SendCommand(x, z)
-            return true
-        end
-    elseif button == 3 then
-        self:stopChanging()
-        SCEN_EDIT.stateManager:SetState(DefaultState())
-        self.terrainEditorView:Select(0)
-    end
-end
-
-function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground"  then
-        local x, z = coords[1] - self.size, coords[3] - self.size
-        self:SendCommand(x, z)
-    end
-end
-
-function TerrainChangeTextureState:MouseRelease(x, y, button)
-    self:stopChanging()
-end
-
-function TerrainChangeTextureState:KeyPress(key, mods, isRepeat, label, unicode)
-    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
-        return true
-    end
+function TerrainChangeTextureState:leaveState()
+    self.terrainEditorView:Select(0)
 end
 
 function TerrainChangeTextureState:MouseWheel(up, value)
-    local _, ctrl = Spring.GetModKeyState()
-    if ctrl then
-        local size
-        if up then
-            size = self.size + self.size * 0.2 + 2
-        else
-            size = self.size - self.size * 0.2 - 2
-        end
+    if self:super("MouseWheel", up, value) then
         self.terrainEditorView:SetNumericField("size", size)
         return true
     end
+end
+
+-- use mouse move instead of update
+function TerrainChangeTextureState:MouseMove()
+    self:super("Update")
+end
+function TerrainChangeTextureState:Update()
 end
 
 function TerrainChangeTextureState:DrawWorld()

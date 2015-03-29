@@ -8,8 +8,8 @@ function TerrainLevelState:init()
     self.maxSize = 1000
 end
 
-function TerrainLevelState:AlterTerrain(x, z)
-    if self:super("AlterTerrain", x, z, amount) then
+function TerrainLevelState:Apply(x, z)
+    if self:super("Apply", x, z, amount) then
         local cmd = TerrainLevelCommand(x, z, self.size, self.height)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
@@ -22,7 +22,6 @@ function TerrainLevelState:DrawWorld()
     if result == "ground" then
         local x, z = coords[1], coords[3]
         gl.PushMatrix()
-        currentState = SCEN_EDIT.stateManager:GetCurrentState()
         gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
         gl.Color(0, 0, 1, 0.4)
@@ -32,11 +31,9 @@ function TerrainLevelState:DrawWorld()
 end
 
 function TerrainLevelState:MousePress(x, y, button)
-    if self:super("MousePress", x, y, button) then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground"  then
-            self.height = coords[2]
-        end
-        return true
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground"  then
+        self.height = coords[2]
     end
+    return self:super("MousePress", x, y, button)
 end

@@ -9,8 +9,8 @@ function TerrainIncreaseState:init(toDecrease)
     self.maxSize = 1000
 end
 
-function TerrainIncreaseState:AlterTerrain(x, z, amount)
-    if self:super("AlterTerrain", x, z, amount) then
+function TerrainIncreaseState:Apply(x, z, amount)
+    if self:super("Apply", x, z, amount) then
         local cmd = TerrainIncreaseCommand(x, z, self.size, amount)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
@@ -23,7 +23,6 @@ function TerrainIncreaseState:DrawWorld()
     if result == "ground" then
         local x, z = coords[1], coords[3]
         gl.PushMatrix()
-        currentState = SCEN_EDIT.stateManager:GetCurrentState()
         gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
         gl.Color(0, 0, 1, 0.4)
