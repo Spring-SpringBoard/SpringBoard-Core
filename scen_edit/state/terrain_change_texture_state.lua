@@ -34,48 +34,11 @@ function TerrainChangeTextureState:init(terrainEditorView)
     end
 end
 
-function TerrainChangeTextureState:SendCommand(cmd)
-    local currentFrame = Spring.GetGameFrame()
-    if not self.lastChangeFrame or currentFrame - self.lastChangeFrame >= 0 then
-        self.lastChangeFrame = currentFrame
-        SCEN_EDIT.commandManager:execute(cmd)
-    end
-end
+function TerrainChangeTextureState:SendCommand(x, z)
+    local now = os.clock()
+    if not self.lastTime or now - self.lastTime >= 0.01 then
+        self.lastTime = now
 
-function TerrainChangeTextureState:MousePress(x, y, button)
-    if button == 1 then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground"  then
-            self:startChanging()
-            local x, z = coords[1] - self.size, coords[3] - self.size
-            local opts = {
-                x = x,
-                z = z,
-                size = self.size,
-                penTexture = self.penTexture,
-                paintTexture = self.paintTexture,
-                texScale = self.texScale,
-                detailTexScale = self.detailTexScale,
-                mode = self.mode,
-                blendFactor = self.blendFactor,
-                falloffFactor = self.falloffFactor,
-                diffuseColor = self.diffuseColor,
-            }
-            local command = TerrainChangeTextureCommand(opts)
-            self:SendCommand(command)
-            return true
-        end
-    elseif button == 3 then
-        self:stopChanging()
-        SCEN_EDIT.stateManager:SetState(DefaultState())
-        self.terrainEditorView:Select(0)
-    end
-end
-
-function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground"  then
-        local x, z = coords[1] - self.size, coords[3] - self.size
         local opts = {
             x = x,
             z = z,
@@ -90,7 +53,31 @@ function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
             diffuseColor = self.diffuseColor,
         }
         local command = TerrainChangeTextureCommand(opts)
-        self:SendCommand(command)
+        SCEN_EDIT.commandManager:execute(command)
+    end
+end
+
+function TerrainChangeTextureState:MousePress(x, y, button)
+    if button == 1 then
+        local result, coords = Spring.TraceScreenRay(x, y, true)
+        if result == "ground"  then
+            self:startChanging()
+            local x, z = coords[1] - self.size, coords[3] - self.size
+            self:SendCommand(x, z)
+            return true
+        end
+    elseif button == 3 then
+        self:stopChanging()
+        SCEN_EDIT.stateManager:SetState(DefaultState())
+        self.terrainEditorView:Select(0)
+    end
+end
+
+function TerrainChangeTextureState:MouseMove(x, y, dx, dy, button)
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground"  then
+        local x, z = coords[1] - self.size, coords[3] - self.size
+        self:SendCommand(x, z)
     end
 end
 

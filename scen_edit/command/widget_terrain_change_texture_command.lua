@@ -126,12 +126,25 @@ function getPenShader(mode)
             },
         }
 
-        local penShader = gl.CreateShader(shaderTemplate)
-        local errors = gl.GetShaderLog(penShader)
+        local shader = gl.CreateShader(shaderTemplate)
+        local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
             Spring.Echo(errors)
+        else
+            local shaderObj = {
+                shader = shader,
+                uniforms = {
+                    x1ID = gl.GetUniformLocation(shader, "x1"),
+                    x2ID = gl.GetUniformLocation(shader, "x2"),
+                    z1ID = gl.GetUniformLocation(shader, "z1"),
+                    z2ID = gl.GetUniformLocation(shader, "z2"),
+                    blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                    falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
+                    diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
+                },
+            }
+            shaders[mode] = shaderObj
         end
-        shaders[mode] = penShader
     end
 
     return shaders[mode]
@@ -142,32 +155,30 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local size = opts.size
     local penTexture = opts.penTexture
     local paintTexture = opts.paintTexture
-    -- TODO: make this a parameter
     local texScaleX, texScaleZ = opts.texScale, opts.texScale
     local detailTexScaleX, detailTexScaleZ = opts.detailTexScale, opts.detailTexScale
-    local shader = getPenShader(opts.mode)
     local blendFactor = (1 - opts.blendFactor) / 2
     local falloffFactor = opts.falloffFactor
     local diffuseColor = opts.diffuseColor
 
+    -- change size depending on falloff (larger size if falloff factor is small)
     local fs = 2
     x = x - size * (fs - falloffFactor * fs)
     z = z - size * (fs - falloffFactor * fs)
     size = size * (fs + 1 - falloffFactor * fs)
 
-    local rT
     local texSize = BIG_TEX_SIZE
 
-    local prefix = ""
-    
-    local x1ID = gl.GetUniformLocation(shader, "x1");
-    local x2ID = gl.GetUniformLocation(shader, "x2");
-    local z1ID = gl.GetUniformLocation(shader, "z1");
-    local z2ID = gl.GetUniformLocation(shader, "z2");
-    local blendFactorID = gl.GetUniformLocation(shader, "blendFactor");
-    local falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor");
-    local diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor");
-
+    local shaderObj = getPenShader(opts.mode)
+    local shader = shaderObj.shader
+    local uniforms = shaderObj.uniforms
+    local x1ID = uniforms.x1ID
+    local x2ID = uniforms.x2ID
+    local z1ID = uniforms.z1ID
+    local z2ID = uniforms.z2ID
+    local blendFactorID = uniforms.blendFactorID
+    local falloffFactorID = uniforms.falloffFactorID
+    local diffuseColorID = uniforms.diffuseColorID
 
     if tmp == nil then
         tmp = SCEN_EDIT.textureManager:createMapTexture()
@@ -184,8 +195,8 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
         gl.RenderToTexture(mapTexture,
         function()
             gl.Texture(0, tmp)
-            gl.Texture(1, prefix .. penTexture)
-            gl.Texture(2, prefix .. paintTexture)
+            gl.Texture(1, penTexture)
+            gl.Texture(2, paintTexture)
 
             local coords = {
                 dx,            dz,
@@ -215,7 +226,6 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
                 tCoord[i] = tCoord[i] / texSize * texScaleX
                 tCoord[i+1] = tCoord[i+1] / texSize * texScaleZ
             end
-
 
             gl.Uniform(x1ID, mCoord[1])
             gl.Uniform(x2ID, mCoord[5])
@@ -253,16 +263,14 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
         gl.Texture(0, false)
         gl.Texture(1, false)
         gl.Texture(2, false)
-        rT = tex
 
         local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
-            Spring.Echo(errors)
+            Spring.Log("scened", LOG.ERROR, "Shader error!")
+            Spring.Log("scened", LOG.ERROR, errors)
         end
         gl.UseShader(0)
     end
-
-    return rT
 end
 
 WidgetUndoTerrainChangeTextureCommand = AbstractCommand:extends{}
