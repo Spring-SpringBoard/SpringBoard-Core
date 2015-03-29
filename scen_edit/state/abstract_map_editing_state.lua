@@ -1,6 +1,7 @@
 AbstractMapEditingState = AbstractEditingState:extends{}
 
 function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
+    -- disable keybindings while changing stuff
     if self.startedChanging then
         return false
     end
@@ -71,6 +72,9 @@ function AbstractMapEditingState:MouseWheel(up, value)
 end
 
 function AbstractMapEditingState:Update()
+    if not self.startedChanging then
+        return
+    end
     local x, y, button1, _, button3 = Spring.GetMouseState()
     local _, _, _, shift = Spring.GetModKeyState()
     if button1 then
