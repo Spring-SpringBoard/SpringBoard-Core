@@ -5,91 +5,17 @@ function TerrainChangeHeightRectState:init(toDecrease)
     self.strength = 5
     self.toDecrease = toDecrease
     self.startedChanging = false
+    self.minSize = 20
+    self.maxSize = 1000
 end
 
-function TerrainChangeHeightRectState:AlterTerrain(x1, z1, x2, z2, amount)
-    local currentFrame = Spring.GetGameFrame()
-    if not self.lastChangeFrame or currentFrame - self.lastChangeFrame >= 0 then
-        self.lastChangeFrame = currentFrame
+function TerrainChangeHeightRectState:AlterTerrain(x, z, amount)
+    if self:super("AlterTerrain", x, z, amount) then
+        local x1, z1= x - self.size / 2, z - self.size / 2
+        local x2, z2 = x + self.size / 2, z + self.size / 2
         local cmd = TerrainChangeHeightRectCommand(x1, z1, x2, z2, amount)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
-    end
-end
-
-function TerrainChangeHeightRectState:startChanging()
-    if not self.startedChanging then
-        local cmd = SetMultipleCommandModeCommand(true)
-        SCEN_EDIT.commandManager:execute(cmd)
-        self.startedChanging = true
-    end
-end
-
-function TerrainChangeHeightRectState:stopChanging()
-    if self.startedChanging then
-        local cmd = SetMultipleCommandModeCommand(false)
-        SCEN_EDIT.commandManager:execute(cmd)
-        self.startedChanging = false
-    end
-end
-
-function TerrainChangeHeightRectState:MousePress(x, y, button)
-    local _, _, _, shift = Spring.GetModKeyState()
-    if button == 1 then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground"  then
-            local amount = self.strength
-            if shift then
-                amount = -amount                
-            end
-            self:startChanging()
-            self:AlterTerrain(coords[1] - self.size/2, coords[3] - self.size/2, coords[1] + self.size/2, coords[3] + self.size/2, amount)
-        end
-        return true
-    end
-    if button == 3 then
-        self:stopChanging()
-        SCEN_EDIT.stateManager:SetState(DefaultState())
-    end
-end
-
-function TerrainChangeHeightRectState:MouseRelease(x, y, button)
-    if button == 1 then
-        self:stopChanging()
-    end
-end
-
-function TerrainChangeHeightRectState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    return true
-end
-
-function TerrainChangeHeightRectState:MouseWheel(up, value)
-    local _, ctrl = Spring.GetModKeyState()
-    if ctrl then
-        if up then
-            self.size = self.size + self.size * 0.2 + 2
-        else
-            self.size = self.size - self.size * 0.2 - 2
-        end
-        self.size = math.min(1000, self.size)
-        self.size = math.max(20, self.size)
-        return true
-    end
-end
-
-function TerrainChangeHeightRectState:GameFrame(frameNum)
-    local x, y, button1, _, button3 = Spring.GetMouseState()
-    local _, _, _, shift = Spring.GetModKeyState()
-    if button1 then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground" then
-            local amount = self.strength
-            if shift then
-                amount = -amount
-            end
-            self:AlterTerrain(coords[1] - self.size/2, coords[3] - self.size/2, coords[1] + self.size/2, coords[3] + self.size/2, amount)
-        end
     end
 end
 

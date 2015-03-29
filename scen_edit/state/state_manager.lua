@@ -26,6 +26,7 @@ end
 
 function StateManager:SetState(state)
     self.currentState = state
+    self.currentState:enterState()
 end
 
 function StateManager:MousePress(x, y, button)
