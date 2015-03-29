@@ -35,12 +35,13 @@ function AbstractMapEditingState:MousePress(x, y, button)
             end
             self:startChanging()
             self:Apply(coords[1], coords[3], amount)
+            return true
         end
-        return true
     end
     if button == 3 then
         self:stopChanging()
         SCEN_EDIT.stateManager:SetState(DefaultState())
+        return true
     end
 end
 
