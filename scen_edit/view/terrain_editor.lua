@@ -28,7 +28,6 @@ function TerrainEditorView:init()
         end
     }
 
-    self.penTexture = SCEN_EDIT_IMG_DIR .. "resources/brush_textures/detail/detailtex.bmp"
     self.detailTextureImages = ImageListView:New {
         dir = SCEN_EDIT_IMG_DIR .. "resources/brush_textures/detail/",
         width = "100%",
@@ -48,6 +47,7 @@ function TerrainEditorView:init()
             end
         end
     }
+    self.detailTextureImages:Select("detailtex.bmp")
 
     self.tabPanel = Chili.TabPanel:New {
         x = 0, 
