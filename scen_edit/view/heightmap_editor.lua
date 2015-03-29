@@ -142,9 +142,9 @@ function HeightmapEditorView:init()
     })
     self:AddNumericProperty({
         name = "strength", 
-        value = 5,
-        minValue = 0.5,
-        maxValue = 50,
+        value = 1,
+        minValue = 0.1,
+        maxValue = 10,
         title = "Strength:",
         tooltip = "Strength of the height map tool",
     })
@@ -213,63 +213,6 @@ function HeightmapEditorView:Select(indx)
     self.heightmapBrushes:Select(indx)
 end
 
-function HeightmapEditorView:UpdateChoiceField(name)
-    local field = self.fields[name]
---[[
-    field.comboBox.text = tostring(field.value)
-    field.editBox:Invalidate()
-    ]]
-    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-    if currentState:is_A(TerrainIncreaseState) then
-        currentState[field.name] = field.value
-    end
-end
-
-function HeightmapEditorView:SetChoiceField(name, value)
-    local field = self.fields[name]
-    if value ~= nil and value ~= field.value then
-        field.value = value
-        self:UpdateChoiceField(field.name)
-    end
-end
-
-function HeightmapEditorView:AddChoiceProperty(field)
-    self.fields[field.name] = field
-
-    field.label = Label:New {
-        caption = field.title,
-        x = 1,
-        y = 10,
-    }
-    field.comboBox = ComboBox:New {
-        x = 180,
-        y = 0,
-        width = 150,
-        height = 30,
-        items = field.items,
-    }
-    field.comboBox.OnSelect = {
-        function(obj, indx)
-            local value = field.comboBox.items[indx]
-            self:SetChoiceField(field.name, value)
-        end
-    }
-    field.value = field.items[1]
-
-    local ctrl = Control:New {
-        x = 0,
-        y = 0,
-        width = 300,
-        height = 20,
-        padding = {0, 0, 0, 0},
-        children = {
-            field.label,
-            field.comboBox,
-        }
-    }
-    self.stackPanel:AddChild(ctrl)
-end
-
 function HeightmapEditorView:UpdateNumericField(name, source)
     local field = self.fields[name]
 
@@ -283,7 +226,7 @@ function HeightmapEditorView:UpdateNumericField(name, source)
         field.trackbar:SetValue(field.value)
     end
     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-    if currentState:is_A(TerrainIncreaseState) then
+    if currentState:is_A(AbstractHeightmapEditingState) then
         currentState[field.name] = field.value
     end
 end

@@ -1,10 +1,10 @@
 TerrainChangeHeightRectState = AbstractHeightmapEditingState:extends{}
 
-function TerrainChangeHeightRectState:Apply(x, z, amount)
-    if self:super("Apply", x, z, amount) then
+function TerrainChangeHeightRectState:Apply(x, z, strength)
+    if self:super("Apply", x, z, strength) then
         local x1, z1= x - self.size, z - self.size
         local x2, z2 = x + self.size, z + self.size
-        local cmd = TerrainChangeHeightRectCommand(x1, z1, x2, z2, amount)
+        local cmd = TerrainChangeHeightRectCommand(x1, z1, x2, z2, strength)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
     end

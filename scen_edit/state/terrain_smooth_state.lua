@@ -3,13 +3,11 @@ TerrainSmoothState = AbstractHeightmapEditingState:extends{}
 function TerrainSmoothState:init(heightmapEditorView)
     self:super("init", heightmapEditorView)
     self.sigma = 1
---     self.minSize = 20
---     self.maxSize = 200
 end
 
-function TerrainSmoothState:Apply(x, z)
-    if self:super("Apply", x, z, amount) then
-        self.sigma = math.max(math.min(self.size / self.maxSize, 1.5), 0.35)
+function TerrainSmoothState:Apply(x, z, strength)
+    if self:super("Apply", x, z, strength) then
+        self.sigma = math.max(math.min(self.size / self.maxSize * strength, 1.5), 0.35)
         local cmd = TerrainSmoothCommand(x, z, self.size, self.sigma)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
