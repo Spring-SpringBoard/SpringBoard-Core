@@ -9,6 +9,7 @@ function TerrainEditorView:init()
         height = "100%",
         multiSelect = false,
     }
+    -- FIXME: implement a button for entering the mode instead of image selection
     self.textureImages.OnSelectItem = {
         function(obj, itemIdx, selected)
             -- FIXME: shouldn't be using ._dirsNum probably
@@ -22,9 +23,11 @@ function TerrainEditorView:init()
                     SCEN_EDIT.stateManager:SetState(TerrainChangeTextureState(self))
                 end
             end
-            if not selected then
-                SCEN_EDIT.stateManager:SetState(DefaultState())
-            end
+            -- FIXME: disallow deselection
+--             if not selected then
+--                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+--                 SCEN_EDIT.stateManager:SetState(DefaultState())
+--             end
         end
     }
 
