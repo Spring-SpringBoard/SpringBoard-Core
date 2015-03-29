@@ -48,7 +48,7 @@ end
 
 function TerrainChangeTextureState:MouseWheel(up, value)
     if self:super("MouseWheel", up, value) then
-        self.terrainEditorView:SetNumericField("size", size)
+        self.terrainEditorView:SetNumericField("size", self.size)
         return true
     end
 end
