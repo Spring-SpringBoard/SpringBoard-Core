@@ -114,7 +114,7 @@ function HeightmapEditorView:init()
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick = { 
             function() 
-                self.window:Dispose() 
+                self.window:Hide()
                 SCEN_EDIT.stateManager:SetState(DefaultState())
             end 
         },

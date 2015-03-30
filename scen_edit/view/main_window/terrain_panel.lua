@@ -14,6 +14,9 @@ function TerrainPanel:init()
                     self.heightmapEditorView = HeightmapEditorView()
                     SCEN_EDIT.heightmapEditorView = self.heightmapEditorView
                 end
+                if SCEN_EDIT.heightmapEditorView.window.hidden then
+                    SCEN_EDIT.heightmapEditorView.window:Show()
+                end
             end
         },
     })
@@ -30,6 +33,9 @@ function TerrainPanel:init()
                 if SCEN_EDIT.terrainEditorView == nil then
                     self.terrainEditorView = TerrainEditorView()
                     SCEN_EDIT.terrainEditorView = self.terrainEditorView
+                end
+                if SCEN_EDIT.terrainEditorView.window.hidden then
+                    SCEN_EDIT.terrainEditorView.window:Show()
                 end
             end
         },
