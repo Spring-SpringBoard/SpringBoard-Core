@@ -26,7 +26,6 @@ function AbstractMapEditingState:Apply(x, z, strength)
 end
 
 function AbstractMapEditingState:MousePress(x, y, button)
-    Spring.Echo(button)
     if button == 1 or button == 3 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
