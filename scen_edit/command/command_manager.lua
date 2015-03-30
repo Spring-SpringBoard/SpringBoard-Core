@@ -1,6 +1,6 @@
 SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 
-CommandManager = LCS.class{maxUndoSize = 1000, maxRedoSize = 1000}
+CommandManager = LCS.class{maxUndoSize = 30, maxRedoSize = 30}
 
 function CommandManager:init(maxUndoSize, maxRedoSize)
     self.maxUndoSize = maxUndoSize
@@ -18,8 +18,12 @@ end
 
 function CommandManager:_SafeCall(func)
     succ, result = xpcall(func, function(err)
---         Spring.Log("scened", LOG.ERROR, "Error executing command. ")
---         Spring.Log("scened", LOG.ERROR, debug.traceback(err))
+        Spring.Log("scened", LOG.ERROR, "Error executing command. ")
+        if debug then
+            Spring.Log("scened", LOG.ERROR, debug.traceback(err))
+        else
+            Spring.Log("scened", LOG.ERROR, err)
+        end
     end)
     if succ then 
         return result
@@ -79,15 +83,15 @@ function CommandManager:execute(cmd, widget)
         if not widget then
             self:_SafeCall(function()
                 cmd:execute()
-            end)
-            if cmd.unexecute then
-                if self.multipleCommandMode then
-                    table.insert(self.multipleCommandStack, cmd)
-                else
-                    self:undoListAdd(cmd)
-                    self:notify(cmd)
+                if cmd.unexecute and not cmd.blockUndo then
+                    if self.multipleCommandMode then
+                        table.insert(self.multipleCommandStack, cmd)
+                    else
+                        self:undoListAdd(cmd)
+                        self:notify(cmd)
+                    end
                 end
-            end
+            end)
         else
             assert(cmd.className, "Command instance lacks className value")
             local msg = Message("command", cmd)
@@ -96,18 +100,34 @@ function CommandManager:execute(cmd, widget)
     end
 end
 
+function CommandManager:clearUndoStack()
+    if #self.undoList > 0 then
+        self.undoList = {}
+        self:execute(WidgetCommandClearUndoStack(), true)
+    end
+end
+
+function CommandManager:clearRedoStack()
+    if #self.redoList > 0 then
+        self.redoList = {}
+        self:execute(WidgetCommandClearRedoStack(), true)
+    end
+end
+
 function CommandManager:undoListAdd(cmd)
     table.insert(self.undoList, cmd)
     if #self.undoList > self.maxUndoSize then
         table.remove(self.undoList, 1)
+        self:execute(WidgetCommandRemoveFirstUndo(), true)
     end
-    self.redoList = {}
+    self:clearRedoStack()
 end
 
 function CommandManager:redoListAdd(cmd)
     table.insert(self.redoList, cmd)
     if #self.redoList > self.maxRedoSize then
         table.remove(self.redoList, 1)
+        self:execute(WidgetCommandRemoveFirstRedo(), true)
     end
 end
 
@@ -142,15 +162,12 @@ function CommandManager:redo()
     local cmd = table.remove(self.redoList, #self.redoList)
     self:_SafeCall(function() 
         cmd:execute()
-        self:notify(cmd)
+        self:execute(WidgetCommandRedo(), true)
         table.insert(self.undoList, cmd)
     end)
 end
 
 function CommandManager:clearUndoRedoStack()
-    self.undoList = {}
-    self.redoList = {}
-    self:_SafeCall(function() 
-        self:execute(WidgetCommandClearUndoStack(), true)
-    end)
+    self:clearUndoStack()
+    self:clearRedoStack()
 end

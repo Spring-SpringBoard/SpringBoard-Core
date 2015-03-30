@@ -8,8 +8,12 @@ end
 function TerrainShapeModifyState:Apply(x, z, strength)
     if self:super("Apply", x, z, strength) then
         SCEN_EDIT.delayGL(function()
-            if self.createdPaint == nil or self.createdPaint ~= self.paintTexture then
-                local shapeSize = 256
+            local shapeSize = 256
+            local shapeName = ':r' .. tostring(shapeSize) .. "," .. tostring(shapeSize) .. ':' .. self.paintTexture
+            if SCEN_EDIT.terrainManager == nil then
+                SCEN_EDIT.terrainManager = TerrainManager()
+            end
+            if SCEN_EDIT.terrainManager:getShape(shapeName) == nil then
                 local tex = gl.CreateTexture(shapeSize, shapeSize, {
                     border = false,
                     min_filter = GL.LINEAR,
@@ -18,14 +22,13 @@ function TerrainShapeModifyState:Apply(x, z, strength)
                     wrap_t = GL.CLAMP_TO_EDGE,
                     fbo = true,
                 })
-                
-                imgPath = ':r' .. tostring(shapeSize) .. "," .. tostring(shapeSize) .. ':' .. self.paintTexture
+
                 self.createdPaint = self.paintTexture
 
                 local texInfo = gl.TextureInfo(tex)
                 local w, h = texInfo.xsize, texInfo.ysize
                 local res
-                gl.Texture(imgPath)
+                gl.Texture(shapeName)
                 gl.RenderToTexture(tex, function()
                     gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
                     res = gl.ReadPixels(0, 0, w, h)
@@ -43,14 +46,16 @@ function TerrainShapeModifyState:Apply(x, z, strength)
                     res = greyscale,
                     sizeX = #res,
                     sizeZ = #res[1],
+                    name = shapeName,
                 }
 
+                SCEN_EDIT.terrainManager:addShape(shapeName, greyscale)
                 --table.echo(greyscale)
                 local cmd = SetHeightmapBrushCommand(greyscale)
                 SCEN_EDIT.commandManager:execute(cmd)
             end
 
-            local cmd = TerrainShapeModifyCommand(x, z, self.size, strength * 5)
+            local cmd = TerrainShapeModifyCommand(x, z, self.size, strength * 5, shapeName)
             SCEN_EDIT.commandManager:execute(cmd)
         end)
         return true
