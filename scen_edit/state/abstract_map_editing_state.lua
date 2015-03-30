@@ -30,7 +30,7 @@ function AbstractMapEditingState:MousePress(x, y, button)
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
             local strength = self.strength
-            if button == 3 then
+            if button == 3 and strength ~= nil then
                 strength = -strength
             end
             self:startChanging()
@@ -75,7 +75,7 @@ function AbstractMapEditingState:Update()
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
             local strength = self.strength
-            if button3 then
+            if button3 and strength ~= nil then
                 strength = -strength
             end
             self:Apply(coords[1], coords[3], strength)
