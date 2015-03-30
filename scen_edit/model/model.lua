@@ -53,7 +53,7 @@ end
 
 function Model:Load(mission)
     self:Clear()
-    
+
     self.unitManager:load(mission.units)
     self.featureManager:load(mission.features)
 

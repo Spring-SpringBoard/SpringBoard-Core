@@ -122,6 +122,7 @@ function widget:Initialize()
         table.insert(commands, cmd)
     end
     local cmd = CompoundCommand(commands)
+    cmd.blockUndo = true
     SCEN_EDIT.commandManager:execute(cmd)
 
     if devMode then

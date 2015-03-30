@@ -49,7 +49,9 @@ function LoadCommandWidget:execute()
     end
     
     local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
-    SCEN_EDIT.commandManager:execute(CompoundCommand(cmds))
+    local cmd = CompoundCommand(cmds)
+    cmd.blockUndo = true
+    SCEN_EDIT.commandManager:execute(cmd)
     SCEN_EDIT.commandManager:execute(LoadTextureCommand(texturePath), true)
 
     Spring.Echo("Load complete.")
