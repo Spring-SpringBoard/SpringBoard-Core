@@ -1,9 +1,9 @@
 [submodule "libs/chiliui"]
 	path = libs/chiliui
-	url = git://github.com/gajop/chiliui.git
+	url = https://github.com/gajop/chiliui.git
 [submodule "libs/lcs"]
 	path = libs/lcs
-	url = git://github.com/gajop/Lua-Class-System.git
+	url = https://github.com/gajop/Lua-Class-System.git
 [submodule "LuaUI/images/scenedit/resources"]
 	path = LuaUI/images/scenedit/resources
-	url = git@github.com:gajop/Scenario-Editor-Resources.git
+	url = https://github.com/gajop/Scenario-Editor-Resources.git
