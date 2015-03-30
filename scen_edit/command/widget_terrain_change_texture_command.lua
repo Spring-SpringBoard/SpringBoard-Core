@@ -72,6 +72,7 @@ function getPenShader(mode)
         uniform float x1, x2, z1, z2;
         uniform float blendFactor;
         uniform float falloffFactor;
+        uniform float featureFactor;
         uniform vec4 diffuseColor;
 
         vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
@@ -88,8 +89,14 @@ function getPenShader(mode)
 
             // mode goes here
             color = %s; 
-            
-            color = mix(min(color, (max(color,mapColor+blendFactor)-blendFactor)-blendFactor)+blendFactor,mapColor,color.a);
+
+            // extract texture features
+            featureFactor = (1 - featureFactor) / 2;
+            color = mix(min(color, (max(color,mapColor+featureFactor)-featureFactor)-featureFactor)+featureFactor,mapColor,color.a);
+
+            // apply only a percentage part of the texture
+            //blendFactor = blendFactor * blendFactor;
+            color = mix(color, mapColor, blendFactor);
 
             // calculate alpha (smaller the further away it is), used to draw circles
             vec2 size = vec2(x2 - x1, z2 - z1);
@@ -131,6 +138,7 @@ function getPenShader(mode)
                     z2ID = gl.GetUniformLocation(shader, "z2"),
                     blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
                     falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
+                    featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
                     diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
                 },
             }
@@ -148,7 +156,8 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local paintTexture = opts.paintTexture
     local texScaleX, texScaleZ = opts.texScale, opts.texScale
     local detailTexScaleX, detailTexScaleZ = opts.detailTexScale, opts.detailTexScale
-    local blendFactor = (1 - opts.blendFactor) / 2
+    local blendFactor = opts.blendFactor
+    local featureFactor = opts.featureFactor
     local falloffFactor = opts.falloffFactor
     local diffuseColor = opts.diffuseColor
 
@@ -169,6 +178,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local z2ID = uniforms.z2ID
     local blendFactorID = uniforms.blendFactorID
     local falloffFactorID = uniforms.falloffFactorID
+    local featureFactorID = uniforms.featureFactorID
     local diffuseColorID = uniforms.diffuseColorID
 
     local tmp = SCEN_EDIT.textureManager:GetTMP()
@@ -222,6 +232,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
             gl.Uniform(z2ID, mCoord[4])
             gl.Uniform(blendFactorID, blendFactor)
             gl.Uniform(falloffFactorID, falloffFactor)
+            gl.Uniform(featureFactorID, featureFactor)
             gl.Uniform(diffuseColorID, unpack(diffuseColor))
 
             --GL.QUADS

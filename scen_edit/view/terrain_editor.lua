@@ -123,7 +123,7 @@ function TerrainEditorView:init()
         name = "size", 
         value = 100, 
         minValue = 10, 
-        maxValue = 1000, 
+        maxValue = 5000, 
         title = "Size:",
         tooltip = "Size of the paint brush",
     })
@@ -158,6 +158,14 @@ function TerrainEditorView:init()
         maxValue = 1, 
         title = "Falloff factor:",
         tooltip = "Texture painting fade out (1 means crisp)",
+    })
+    self:AddNumericProperty({
+        name = "featureFactor", 
+        value = 1, 
+        minValue = 0.0, 
+        maxValue = 1, 
+        title = "Feature factor:",
+        tooltip = "Feature filtering (1 means no filter filtering)",
     })
     self:AddChoiceProperty({
         name = "mode", 
