@@ -105,9 +105,18 @@ function TerrainShapeModifyCommand:GetHeightMapFunc(isUndo)
 end
 
 function TerrainShapeModifyCommand:execute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))
+    -- set it only once
+    if self.canExecute == nil then
+        -- check if shape is available
+        self.canExecute = SCEN_EDIT.greyscale ~= nil
+    end
+    if self.canExecute then
+        Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))
+    end
 end
 
 function TerrainShapeModifyCommand:unexecute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
+    if self.canExecute then
+        Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
+    end
 end
