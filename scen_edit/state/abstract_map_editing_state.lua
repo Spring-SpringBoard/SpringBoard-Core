@@ -19,7 +19,7 @@ end
 
 function AbstractMapEditingState:Apply(x, z, strength)
     local now = os.clock()
-    if not self.lastTime or now - self.lastTime >= 0.01 then
+    if not self.lastTime or now - self.lastTime >= 0.05 then
         self.lastTime = now
         return true
     end
