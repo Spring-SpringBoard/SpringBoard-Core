@@ -1,11 +1,11 @@
 TerrainShapeModifyCommand = UndoableCommand:extends{}
 TerrainShapeModifyCommand.className = "TerrainShapeModifyCommand"
 
-function TerrainShapeModifyCommand:init(x, z, size, delta, res)
+function TerrainShapeModifyCommand:init(x, z, size, delta, shapeName)
     self.className = "TerrainShapeModifyCommand"
     self.x, self.z, self.size = x, z, size
     self.delta = delta
-    self.res = res
+    self.shapeName = shapeName
 end
 --[[
 local multiplierMap = {}
@@ -68,7 +68,7 @@ function TerrainShapeModifyCommand:GetHeightMapFunc(isUndo)
         local startX = centerX - size
         local startZ = centerZ - size
 
-        local greyscale = SCEN_EDIT.greyscale
+        local greyscale = SCEN_EDIT.terrainManager:getShape(self.shapeName)
         local res = greyscale.res
         local sizeX = greyscale.sizeX
         local sizeZ = greyscale.sizeZ
@@ -108,7 +108,7 @@ function TerrainShapeModifyCommand:execute()
     -- set it only once
     if self.canExecute == nil then
         -- check if shape is available
-        self.canExecute = SCEN_EDIT.greyscale ~= nil
+        self.canExecute = SCEN_EDIT.terrainManager ~= nil and SCEN_EDIT.terrainManager:getShape(self.shapeName) ~= nil
     end
     if self.canExecute then
         Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))

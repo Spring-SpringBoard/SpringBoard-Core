@@ -8,5 +8,8 @@ function SetHeightmapBrushCommand:init(greyscale)
 end
 
 function SetHeightmapBrushCommand:execute()
-    SCEN_EDIT.greyscale = self.greyscale
+    if SCEN_EDIT.terrainManager == nil then
+        SCEN_EDIT.terrainManager = TerrainManager()
+    end
+    SCEN_EDIT.terrainManager:addShape(self.greyscale.name, self.greyscale)
 end
