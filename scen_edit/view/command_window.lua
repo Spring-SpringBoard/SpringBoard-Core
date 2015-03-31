@@ -4,7 +4,7 @@ function CommandWindow:init()
     self.commandsPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 0,
-        y = 20,
+        y = 30,
         right = 0,
         bottom = 0,
         autosize = false,

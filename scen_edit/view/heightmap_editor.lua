@@ -144,7 +144,7 @@ function HeightmapEditorView:init()
         name = "strength", 
         value = 1,
         minValue = 0.1,
-        maxValue = 10,
+        maxValue = 100,
         title = "Strength:",
         tooltip = "Strength of the height map tool",
     })

@@ -7,17 +7,6 @@ function TerrainIncreaseCommand:init(x, z, size, delta)
     self.delta = delta
 end
 
-local multiplierMap = {}
-local currentlyGenerated = 0
-local function getMultiplier(value)
-    multiplier = multiplierMap[value]
-    if multiplier == nil then
-        multiplier = math.sqrt(value)
-        multiplierMap[value] = multiplier
-    end
-    return multiplier
-end
-
 local function generateMap(size, delta)
     local map = {}
     local maxDist = size * delta
@@ -28,12 +17,12 @@ local function generateMap(size, delta)
         for z = 0, 2*size, Game.squareSize do
             local dx = x - center
             local dz = z - center
-            local dist = getMultiplier(dx * dx + dz * dz)
+            local dist = math.sqrt(dx * dx + dz * dz)
             local total = (-dist * delta + maxDist) * scale
             if total * delta < 0 then
                 total = 0
             end
-            map[x + z * parts] = total
+            map[x + z * parts] = total * delta
         end
     end
     return map

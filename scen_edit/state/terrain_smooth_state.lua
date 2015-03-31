@@ -7,7 +7,7 @@ end
 
 function TerrainSmoothState:Apply(x, z, strength)
     if self:super("Apply", x, z, strength) then
-        self.sigma = math.max(math.min(self.size / self.maxSize * strength, 1.5), 0.35)
+        self.sigma = math.max(math.min(math.sqrt(math.sqrt(strength)) / 2, 1.5), 0.20)
         local cmd = TerrainSmoothCommand(x, z, self.size, self.sigma)
         SCEN_EDIT.commandManager:execute(cmd)
         return true

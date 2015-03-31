@@ -2,8 +2,10 @@ List = LCS.class{}
 
 function List:init()
     self.panel = ScrollPanel:New {
-        width = "100%",
-        height = "100%",
+        x = 0,
+        y = 0,
+        bottom = 0,
+        right = 0,
         borderColor = {0,0,0,0},
         horizontalScrollbar = false,
     }
