@@ -48,12 +48,10 @@ end
 function TerrainIncreaseCommand:GetHeightMapFunc(isUndo)
     return function()
         local map = getMap(self.size, self.delta)
-        local centerX = self.x
-        local centerZ = self.z
         local size = self.size
         local parts = 2*size / Game.squareSize + 1
-        local startX = centerX - size
-        local startZ = centerZ - size
+        local startX = self.x - size
+        local startZ = self.z - size
         if not isUndo then
             for x = 0, 2*size, Game.squareSize do
                 for z = 0, 2*size, Game.squareSize do
