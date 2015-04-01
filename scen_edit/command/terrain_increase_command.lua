@@ -22,7 +22,7 @@ local function generateMap(size, delta)
             if total * delta < 0 then
                 total = 0
             end
-            map[x + z * parts] = total * delta
+            map[x + z * parts] = total * math.abs(delta)
         end
     end
     return map

@@ -8,6 +8,14 @@ function TerrainLevelState:Apply(x, z)
     end
 end
 
+function TerrainLevelState:MousePress(x, y, button)
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground"  then
+        self.height = coords[2]
+    end
+    return self:super("MousePress", x, y, button)
+end
+
 function TerrainLevelState:DrawWorld()
     x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
@@ -20,12 +28,4 @@ function TerrainLevelState:DrawWorld()
         gl.Utilities.DrawGroundCircle(x, z, self.size * 0.95)
         gl.PopMatrix()
     end
-end
-
-function TerrainLevelState:MousePress(x, y, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground"  then
-        self.height = coords[2]
-    end
-    return self:super("MousePress", x, y, button)
 end
