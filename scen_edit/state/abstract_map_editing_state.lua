@@ -18,11 +18,7 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function AbstractMapEditingState:Apply(x, z, strength)
-    local now = os.clock()
-    if not self.lastTime or now - self.lastTime >= 0.05 then
-        self.lastTime = now
-        return true
-    end
+    return true
 end
 
 function AbstractMapEditingState:MousePress(x, y, button)
@@ -72,6 +68,11 @@ end
 function AbstractMapEditingState:Update()
     if not self.startedChanging then
         return
+    end
+    local now = os.clock()
+    if not self.lastTime or now - self.lastTime >= 0.05 then
+        self.lastTime = now
+        return true
     end
     local x, y, button1, _, button3 = Spring.GetMouseState()
     local _, _, _, shift = Spring.GetModKeyState()
