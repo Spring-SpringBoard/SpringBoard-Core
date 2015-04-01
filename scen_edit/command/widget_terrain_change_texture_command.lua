@@ -88,7 +88,7 @@ function getPenShader(mode)
             vec4 color = (diffuseColor * texColor * penColor);
 
             // mode goes here
-            color = %s; 
+            color = %s;
 
             // extract texture features
             featureFactor = (1 - featureFactor) / 2;
@@ -160,6 +160,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local featureFactor = opts.featureFactor
     local falloffFactor = opts.falloffFactor
     local diffuseColor = opts.diffuseColor
+    local texOffsetX, texOffsetY = opts.texOffsetX, opts.texOffsetY
 
     -- change size depending on falloff (larger size if falloff factor is small)
     local fs = 2
@@ -203,7 +204,8 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
                 dx + 2 * size, dz + 2 * size,
                 dx + 2 * size, dz
             }
-            local vCoord = {} -- vertex coords
+            -- vertex coords
+            local vCoord = {}
             for i = 1, #coords do
                 vCoord[i] = coords[i] / texSize * 2 - 1
             end
@@ -222,8 +224,8 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
                 x + 2 * size, z
             }
             for i = 1, #tCoord, 2 do
-                tCoord[i] = tCoord[i] / texSize * texScaleX
-                tCoord[i+1] = tCoord[i+1] / texSize * texScaleZ
+                tCoord[i] = (tCoord[i] / texSize + texOffsetX) * texScaleX
+                tCoord[i+1] = (tCoord[i+1] / texSize + texOffsetY) * texScaleZ
             end
 
             gl.Uniform(x1ID, mCoord[1])
