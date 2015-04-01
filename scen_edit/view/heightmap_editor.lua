@@ -8,6 +8,8 @@ function HeightmapEditorView:init()
         width = "100%",
         height = "100%",
         multiSelect = false,
+        iconX = 48,
+        iconY = 48,
     }
     -- FIXME: implement a button for entering the mode instead of image selection
     self.heightmapBrushes.OnSelectItem = {
@@ -24,7 +26,7 @@ function HeightmapEditorView:init()
         end
     }
     self.heightmapBrushes:Select("peak3.png")
-    
+
     self.btnAddState = TabbedPanelButton({
         x = 10,
         y = 10,
@@ -100,16 +102,16 @@ function HeightmapEditorView:init()
         x = 0, 
         right = 0,
         bottom = 30, 
-        y = 180,
+        y = "35%",
         children = { 
             self.heightmapBrushes,
         }
     }
-    
+
     local btnClose = Button:New {
         caption = 'Close',
         width = 100,
-        right = 1,
+        right = 15,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick = { 
@@ -121,9 +123,9 @@ function HeightmapEditorView:init()
     }
 
     self.stackPanel = StackPanel:New {
-        height = 100,
+        height = 90,
         y = 100,
-        x = 0,
+        x = 10,
         right = 0,
         centerItems = false,
         itemPadding = {0,0,0,0},
@@ -152,21 +154,31 @@ function HeightmapEditorView:init()
 
     self.window = Window:New {
         parent = screen0,
-        x = 600,
-        y = 200,
-        width = 520,
-        height = 550,
+        x = 150,
+        y = 210,
+        width = 410,
+        height = 600,
         caption = 'Heightmap editor',
-        resizable = false,
+        resizable = true,
         children = {
             self.imgPanel,
-            self.stackPanel,
+            ScrollPanel:New {
+                x = 0,
+                y = 0,
+                bottom = "66%",
+                right = 0,
+                borderColor = {0,0,0,0},
+                horizontalScrollbar = false,
+                children = { 
+                    self.btnAddState,
+                    self.btnSmoothState,
+                    self.btnLevelState,
+                    self.btnChangeHeightRectState,
+                    self.btnAddShapeState,
+                    self.stackPanel 
+                },
+            },
             btnClose,
-            self.btnAddState,
-            self.btnSmoothState,
-            self.btnLevelState,
-            self.btnChangeHeightRectState,
-            self.btnAddShapeState,
         },
         OnDispose = { function() SCEN_EDIT.heightmapEditorView = nil end },
     }
@@ -261,9 +273,9 @@ function HeightmapEditorView:AddNumericProperty(field)
     }
     field.editBox = EditBox:New {
         text = v,
-        x = 190,
+        x = 140,
         y = 1,
-        width = 120,
+        width = 80,
         OnTextInput = {
             function() 
                 self:SetNumericField(field.name, field.editBox.text, field.editBox)
@@ -276,7 +288,7 @@ function HeightmapEditorView:AddNumericProperty(field)
         },
     }
     field.trackbar = Trackbar:New {
-        x = 340,
+        x = 250,
         y = 1,
         value = field.value,
         min = field.minValue,
@@ -292,7 +304,7 @@ function HeightmapEditorView:AddNumericProperty(field)
     local ctrl = Control:New {
         x = 0,
         y = 0,
-        width = 300,
+        width = 400,
         height = 20,
         padding = {0, 0, 0, 0},
         children = {

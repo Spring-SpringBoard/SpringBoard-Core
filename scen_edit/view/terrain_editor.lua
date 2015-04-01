@@ -8,6 +8,8 @@ function TerrainEditorView:init()
         width = "100%",
         height = "100%",
         multiSelect = false,
+        iconX = 48,
+        iconY = 48,
     }
     -- FIXME: implement a button for entering the mode instead of image selection
     self.textureImages.OnSelectItem = {
@@ -36,6 +38,8 @@ function TerrainEditorView:init()
         width = "100%",
         height = "100%",
         multiSelect = false,
+        iconX = 48,
+        iconY = 48,
     }
     self.detailTextureImages.OnSelectItem = {
         function(obj, itemIdx, selected)
@@ -56,7 +60,7 @@ function TerrainEditorView:init()
         x = 0, 
         right = 0,
         y = 20, 
-        bottom = 350,
+        height = "49%",
         padding = {0, 0, 0, 0},
         tabs = { {
                 name = "Brush",
@@ -91,7 +95,7 @@ function TerrainEditorView:init()
     local btnClose = Button:New {
         caption = 'Close',
         width = 100,
-        right = 1,
+        right = 15,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         OnClick = { 
@@ -108,8 +112,8 @@ function TerrainEditorView:init()
     }
 
     self.stackPanel = StackPanel:New {
-        height = 350,
-        bottom = 30,
+        y = 0,
+        height = 400,
         x = 0,
         right = 0,
         centerItems = false,
@@ -134,6 +138,22 @@ function TerrainEditorView:init()
         maxValue = 8, 
         title = "Texture scale:",
         tooltip = "Texture sampling rate (larger number means higher frequency)",
+    })
+    self:AddNumericProperty({
+        name = "texOffsetX", 
+        value = 0, 
+        minValue = -1024, 
+        maxValue = 1024, 
+        title = "Texture offset X:",
+        tooltip = "Texture offset X",
+    })
+    self:AddNumericProperty({
+        name = "texOffsetY", 
+        value = 0, 
+        minValue = -1024, 
+        maxValue = 1024, 
+        title = "Texture offset Y:",
+        tooltip = "Texture offset Y",
     })
     self:AddNumericProperty({
         name = "detailTexScale", 
@@ -202,15 +222,23 @@ function TerrainEditorView:init()
 
     self.window = Window:New {
         parent = screen0,
-        x = 300,
-        y = 100,
-        width = 520,
-        height = 700,
+        x = 50,
+        y = 200,
+        width = 410,
+        height = 600,
         caption = 'Texture editor',
-        resizable = false,
+        resizable = true,
         children = {
             self.tabPanel,
-            self.stackPanel,
+            ScrollPanel:New {
+                x = 0,
+                y = "50%",
+                bottom = 30,
+                right = 0,
+                borderColor = {0,0,0,0},
+                horizontalScrollbar = false,
+                children = { self.stackPanel },
+            },
             btnClose,
             lblNote,
         },
@@ -251,7 +279,7 @@ function TerrainEditorView:AddChoiceProperty(field)
         y = 10,
     }
     field.comboBox = ComboBox:New {
-        x = 180,
+        x = 130,
         y = 0,
         width = 150,
         height = 30,
@@ -327,9 +355,9 @@ function TerrainEditorView:AddNumericProperty(field)
     }
     field.editBox = EditBox:New {
         text = v,
-        x = 190,
+        x = 140,
         y = 1,
-        width = 120,
+        width = 80,
         OnTextInput = {
             function() 
                 self:SetNumericField(field.name, field.editBox.text, field.editBox)
@@ -342,7 +370,7 @@ function TerrainEditorView:AddNumericProperty(field)
         },
     }
     field.trackbar = Trackbar:New {
-        x = 340,
+        x = 250,
         y = 1,
         value = field.value,
         min = field.minValue,
@@ -358,7 +386,7 @@ function TerrainEditorView:AddNumericProperty(field)
     local ctrl = Control:New {
         x = 0,
         y = 0,
-        width = 300,
+        width = 400,
         height = 20,
         padding = {0, 0, 0, 0},
         children = {
@@ -407,9 +435,9 @@ function TerrainEditorView:AddColorbarsProperty(field)
     }
     field.colorbars = Colorbars:New {
         color = field.value,
-        x = 190,
+        x = 130,
         y = 1,
-        width = 245,
+        width = 225,
         height = 40,
         OnChange = {
             function(obj, value)
