@@ -8,13 +8,6 @@ function TerrainIncreaseState:Apply(x, z, strength)
     end
 end
 
-function TerrainIncreaseState:MouseWheel(up, value)
-    if self:super("MouseWheel", up, value) then
-        self.heightmapEditorView:SetNumericField("size", self.size)
-        return true
-    end
-end
-
 function TerrainIncreaseState:DrawWorld()
     x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
