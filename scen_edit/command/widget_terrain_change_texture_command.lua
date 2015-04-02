@@ -296,6 +296,7 @@ function WidgetUndoTerrainChangeTextureCommand:execute()
                 local mapTexture = mapTextureObj.texture
                 SCEN_EDIT.textureManager:Blit(oldTextureObj.texture, mapTexture)
                 mapTextureObj.dirty = oldTextureObj.dirty
+                gl.DeleteTexture(oldTextureObj.texture)
             end
         end
 
