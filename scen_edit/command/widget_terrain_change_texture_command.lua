@@ -90,6 +90,10 @@ function getPenShader(mode)
             // mode goes here
             color = %s;
 
+            //alpha *= 20;
+            //alpha = floor(alpha) / 20;
+            //color.rgb = color.rgb * alpha;
+
             // extract texture features
             featureFactor = (1 - featureFactor) / 2;
             color = mix(min(color, (max(color,mapColor+featureFactor)-featureFactor)-featureFactor)+featureFactor,mapColor,color.a);
@@ -185,8 +189,11 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local tmp = SCEN_EDIT.textureManager:GetTMP()
     local textures = SCEN_EDIT.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
     for _, v in pairs(textures) do
-        local mapTexture, _, coords = v[1], v[2], v[3]
+        local mapTextureObj, _, coords = v[1], v[2], v[3]
         local dx, dz = coords[1], coords[2]
+
+        local mapTexture = mapTextureObj.texture
+        mapTextureObj.dirty = true
 
         -- copy to old texture
         SCEN_EDIT.textureManager:Blit(mapTexture, tmp)
@@ -284,9 +291,11 @@ function WidgetUndoTerrainChangeTextureCommand:execute()
         SCEN_EDIT.textureManager.oldMapFBOTextures = stack[#stack]
 
         for i, v in pairs(SCEN_EDIT.textureManager.oldMapFBOTextures) do
-            for j, oldTexture in pairs(v) do
-                local mapTexture = SCEN_EDIT.textureManager.mapFBOTextures[i][j]
-                SCEN_EDIT.textureManager:Blit(oldTexture, mapTexture)
+            for j, oldTextureObj in pairs(v) do
+                local mapTextureObj = SCEN_EDIT.textureManager.mapFBOTextures[i][j]
+                local mapTexture = mapTextureObj.texture
+                SCEN_EDIT.textureManager:Blit(oldTextureObj.texture, mapTexture)
+                mapTextureObj.dirty = oldTextureObj.dirty
             end
         end
 

@@ -105,11 +105,6 @@ function TerrainEditorView:init()
             end 
         },
     }
-    local lblNote = Label:New {
-        caption="\255\255\255\0Saving textures is currently slow.\b",
-        x = 1,
-        bottom = 5,
-    }
 
     self.stackPanel = StackPanel:New {
         y = 0,
@@ -240,7 +235,6 @@ function TerrainEditorView:init()
                 children = { self.stackPanel },
             },
             btnClose,
-            lblNote,
         },
         OnDispose = { function() SCEN_EDIT.terrainEditorView = nil end },
     }

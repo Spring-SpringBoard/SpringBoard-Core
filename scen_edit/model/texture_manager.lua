@@ -36,11 +36,21 @@ function TextureManager:generateMapTextures()
             Spring.GetMapSquareTexture(i, j, 0, oldMapTexture)
             self:Blit(oldMapTexture, mapTexture)
 
-            self.mapFBOTextures[i][j] = mapTexture
+            self.mapFBOTextures[i][j] = {
+                texture = mapTexture,
+                dirty = false,
+            }
             Spring.SetMapSquareTexture(i, j, mapTexture)
         end
     end
+--     self.specularTexture = self:createMapTexture()
+--     local x = Spring.GetMapSpecularTexture(self.specularTexture)
+--     Spring.Echo("Map specular texture:", x, self.specularTexture)
 end
+
+-- function TextureManager:GetMapSpecularTexture()
+--     return self.specularTexture
+-- end
 
 function TextureManager:GetTMP()
     return self.tmp
@@ -67,10 +77,14 @@ function TextureManager:getOldMapTexture(i, j)
         -- doesn't exist so we create it
         local oldTexture = self:createMapTexture()
 
-        local mapTexture = self.mapFBOTextures[i][j]
+        local mapTexture = self.mapFBOTextures[i][j].texture
 
         self:Blit(mapTexture, oldTexture)
-        self.oldMapFBOTextures[i][j] = oldTexture
+        local oldTextureObj = {
+            texture = oldTexture,
+            dirty = mapTexture.dirty,
+        }
+        self.oldMapFBOTextures[i][j] = oldTextureObj
     end
 
     return self.oldMapFBOTextures[i][j]
