@@ -15,22 +15,29 @@ function ExportMapsCommand:execute()
         local heightmapPath = self.path .. "/heightmap.png"
         Spring.Echo("Saving the heightmap to " .. heightmapPath .. "...")
 
-        heightmapTexture = gl.CreateTexture(Game.mapSizeX / 4, Game.mapSizeZ / 4, {
+        if VFS.FileExists(heightmapPath, VFS.RAW) then
+            Spring.Echo("removing the existing heightmap")
+            os.remove(heightmapPath)
+        end
+
+        local texInfo = gl.TextureInfo("$heightmap")
+        heightmapTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
             border = false,
-            min_filter = GL.NEAREST,
-            mag_filter = GL.NEAREST,
+            min_filter = GL.LINEAR,
+            mag_filter = GL.LINEAR,
             wrap_s = GL.CLAMP_TO_EDGE,
             wrap_t = GL.CLAMP_TO_EDGE,
             fbo = true,
         })
+
         gl.Texture("$heightmap")
         gl.RenderToTexture(heightmapTexture,
         function()
-            gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
+            gl.TexRect(-1,-1, 1, 1)
         end)
         gl.Texture(false)
 
-        gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, Game.mapSizeX / 4, Game.mapSizeZ / 4, heightmapPath)
+        gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath)
 
         if SCEN_EDIT.textureManager == nil then
             SCEN_EDIT.textureManager = TextureManager()
@@ -75,6 +82,8 @@ function ExportMapsCommand:execute()
             end
         end
         -- Either blitting isn't working, or FBOs aren't properly mapped to textures...?
-         gl.RenderToTexture(totalMapTexture, gl.SaveImage, 0, 0, Game.mapSizeX, Game.mapSizeZ, texturePath)
+        gl.RenderToTexture(totalMapTexture, gl.SaveImage, 0, 0, Game.mapSizeX, Game.mapSizeZ, texturePath)
+        -- FIXME: probably not needed -.-
+        gl.Flush()
     end)
 end
