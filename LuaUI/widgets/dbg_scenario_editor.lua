@@ -56,7 +56,17 @@ function RecieveGadgetMessage(msg)
     end
 end
 
+local function dumpConfig()
+    Spring.Log("scened", LOG.NOTICE, "Dump of relevant engine config:")
+    local confs = {"HeightMapTexture", "LinkIncomingMaxPacketRate", "LinkIncomingMaxWaitingPackets", "LinkIncomingPeakBandwidth", "LinkIncomingSustainedBandwidth", "LinkOutgoingBandwidth"}
+    for _, conf in ipairs(confs) do
+        Spring.Log("scened", LOG.NOTICE, conf .. " = " .. Spring.GetConfigString(conf, ""))
+    end
+end
+
 function widget:Initialize()
+    dumpConfig()
+    
     wasEnabled = Spring.IsCheatingEnabled()
     if not wasEnabled then
         Spring.SendCommands("cheat")
