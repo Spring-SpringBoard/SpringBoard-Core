@@ -54,7 +54,7 @@ function TerrainEditorView:init()
             end
         end
     }
-    self.detailTextureImages:Select("detailtex.bmp")
+    self.detailTextureImages:Select("spacer.bmp")
 
     self.tabPanel = Chili.TabPanel:New {
         x = 0, 
@@ -123,6 +123,30 @@ function TerrainEditorView:init()
         itemMargin = {0,0,0,0},
     }
 
+    self:AddChoiceProperty({
+        name = "mode",
+        items = {
+            "Normal",
+            "Darken",
+            "Lighten",
+            "SoftLight",
+            "HardLight",
+            "Luminance",
+            "Multiply",
+            "Premultiplied",
+            "Overlay",
+            "Screen",
+            "Add",
+            "Subtract",
+            "Difference",
+            "InverseDifference",
+            "Exclusion",
+            "Color",
+            "ColorBurn",
+            "ColorDodge",
+        },
+        title = "Mode:"
+    })
     self:AddNumericProperty({
         name = "size", 
         value = 100, 
@@ -186,30 +210,6 @@ function TerrainEditorView:init()
         maxValue = 1, 
         title = "Feature factor:",
         tooltip = "Feature filtering (1 means no filter filtering)",
-    })
-    self:AddChoiceProperty({
-        name = "mode", 
-        items = {
-            "Normal",
-            "Darken",
-            "Lighten",
-            "SoftLight",
-            "HardLight",
-            "Luminance",
-            "Multiply",
-            "Premultiplied",
-            "Overlay",
-            "Screen",
-            "Add",
-            "Subtract",
-            "Difference",
-            "InverseDifference",
-            "Exclusion",
-            "Color",
-            "ColorBurn",
-            "ColorDodge",
-        },
-        title = "Mode:"
     })
     self:AddColorbarsProperty({
         name = "diffuseColor",
