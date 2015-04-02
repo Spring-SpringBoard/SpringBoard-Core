@@ -38,7 +38,7 @@ function TerrainShapeModifyState:Apply(x, z, strength)
                 local greyscale = {}
                 for i, row in pairs(res) do
                     for j, point in pairs(row) do
-                        greyscale[(i-1) * #res + (j-1)] = (point[1] + point[2] + point[3]) / 3 * point[4]
+                        greyscale[(i-1) + (j-1) * #res] = (point[1] + point[2] + point[3]) / 3 * point[4]
                     end
                 end
 
