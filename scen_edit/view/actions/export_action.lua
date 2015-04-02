@@ -3,7 +3,7 @@ ExportAction = AbstractAction:extends{}
 function ExportAction:execute()
     if SCEN_EDIT.projectDir ~= nil then
         local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
-        local fileTypes = {"Scenario archive", "Feature placer"}
+        local fileTypes = {"Scenario archive", "Feature placer", "Map textures"}
         sfd = ExportFileDialog(dir, fileTypes)
         sfd:setConfirmDialogCallback(
             function(path, fileType)
@@ -15,6 +15,11 @@ function ExportAction:execute()
                 elseif fileType == fileTypes[2] then
                     Spring.Log("scened", LOG.NOTICE, "Exporting to featureplacer format...")
                     local exportCommand = ExportFeaturePlacerCommand(path)
+                    SCEN_EDIT.commandManager:execute(exportCommand, true)
+                    Spring.Log("scened", LOG.NOTICE, "Export complete.")
+                elseif fileType == fileTypes[3] then
+                    Spring.Log("scened", LOG.NOTICE, "Exporting map textures...")
+                    local exportCommand = ExportMapsCommand(path)
                     SCEN_EDIT.commandManager:execute(exportCommand, true)
                     Spring.Log("scened", LOG.NOTICE, "Export complete.")
                 else
