@@ -198,8 +198,7 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
         local mapTextureObj = v[1]
-        gl.BlitFBO(mapTextureObj.fbo, 0, 0, texSize, texSize,
-                   tmps[i].fbo, 0, 0, texSize, texSize)
+        SCEN_EDIT.model.textureManager:Blit(mapTextureObj, tmps[i])
     end
 
     gl.UseShader(shader)
