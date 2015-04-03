@@ -7,57 +7,12 @@ end
 
 function TerrainShapeModifyState:Apply(x, z, strength)
     if self:super("Apply", x, z, strength) then
-        SCEN_EDIT.delayGL(function()
-            local shapeSize = 256
-            local shapeName = ':r' .. tostring(shapeSize) .. "," .. tostring(shapeSize) .. ':' .. self.paintTexture
-            if SCEN_EDIT.terrainManager == nil then
-                SCEN_EDIT.terrainManager = TerrainManager()
-            end
-            if SCEN_EDIT.terrainManager:getShape(shapeName) == nil then
-                local tex = gl.CreateTexture(shapeSize, shapeSize, {
-                    border = false,
-                    min_filter = GL.LINEAR,
-                    mag_filter = GL.LINEAR,
-                    wrap_s = GL.CLAMP_TO_EDGE,
-                    wrap_t = GL.CLAMP_TO_EDGE,
-                    fbo = true,
-                })
+        if SCEN_EDIT.model.terrainManager:getShape(self.paintTexture) == nil then
+            SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
+        end
 
-                self.createdPaint = self.paintTexture
-
-                local texInfo = gl.TextureInfo(tex)
-                local w, h = texInfo.xsize, texInfo.ysize
-                local res
-                gl.Texture(shapeName)
-                gl.RenderToTexture(tex, function()
-                    gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
-                    res = gl.ReadPixels(0, 0, w, h)
-                end)
-                gl.Texture(false)
-
-                local greyscale = {}
-                for i, row in pairs(res) do
-                    for j, point in pairs(row) do
-                        greyscale[(i-1) + (j-1) * #res] = (point[1] + point[2] + point[3]) / 3 * point[4]
-                    end
-                end
-
-                greyscale = {
-                    res = greyscale,
-                    sizeX = #res,
-                    sizeZ = #res[1],
-                    name = shapeName,
-                }
-
-                SCEN_EDIT.terrainManager:addShape(shapeName, greyscale)
-                --table.echo(greyscale)
-                local cmd = SetHeightmapBrushCommand(greyscale)
-                SCEN_EDIT.commandManager:execute(cmd)
-            end
-
-            local cmd = TerrainShapeModifyCommand(x, z, self.size, strength * 5, shapeName)
-            SCEN_EDIT.commandManager:execute(cmd)
-        end)
+        local cmd = TerrainShapeModifyCommand(x, z, self.size, strength * 5, self.paintTexture)
+        SCEN_EDIT.commandManager:execute(cmd)
         return true
     end
 end

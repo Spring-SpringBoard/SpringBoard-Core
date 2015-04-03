@@ -9,7 +9,7 @@ function TerrainShapeModifyCommand:init(x, z, size, delta, shapeName)
 end
 
 local function generateMap(size, delta, shapeName)
-    local greyscale = SCEN_EDIT.terrainManager:getShape(shapeName)
+    local greyscale = SCEN_EDIT.model.terrainManager:getShape(shapeName)
     local sizeX, sizeZ = greyscale.sizeX, greyscale.sizeZ
     local map = { sizeX = sizeX, sizeZ = sizeZ }
     local res = greyscale.res
@@ -114,7 +114,7 @@ function TerrainShapeModifyCommand:execute()
     -- set it only once
     if self.canExecute == nil then
         -- check if shape is available
-        self.canExecute = SCEN_EDIT.terrainManager ~= nil and SCEN_EDIT.terrainManager:getShape(self.shapeName) ~= nil
+        self.canExecute = SCEN_EDIT.model.terrainManager:getShape(self.shapeName) ~= nil
     end
     if self.canExecute then
         Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))

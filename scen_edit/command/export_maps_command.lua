@@ -62,10 +62,10 @@ function ExportMapsCommand:execute()
         local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
         local sizeZ = math.floor(Game.mapSizeZ / texSize)
+        local mapFBO
         for i = 0, sizeX do
             for j = 0, sizeZ do
                 local mapTextureObj = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
-                -- only write those textures that have changed since last save
 
                 local mapTexture = mapTextureObj.texture
                 mapFBO = gl.CreateFBO({

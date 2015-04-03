@@ -18,6 +18,7 @@ function HeightmapEditorView:init()
             if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
                 local item = self.heightmapBrushes.items[itemIdx]
                 self.paintTexture = item
+                SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
                 if currentState:is_A(TerrainShapeModifyState) then
                     currentState.paintTexture = item

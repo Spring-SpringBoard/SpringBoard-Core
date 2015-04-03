@@ -14,6 +14,7 @@ function Model:init()
     self.teamManager = TeamManager()
     self.teamManager:generateTeams()
     self.scenarioInfo = ScenarioInfo()
+    self.terrainManager = TerrainManager()
     if Script.GetName() == "LuaUI" then
         self.textureManager = TextureManager()
     end

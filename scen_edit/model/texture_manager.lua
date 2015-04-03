@@ -127,3 +127,11 @@ function TextureManager:Blit(tex1, tex2)
     end)
     gl.Texture(false)
 end
+
+function TextureManager:CacheTexture(texture)
+    SCEN_EDIT.delayGL(function()
+        -- lazy, let Spring cache in our stead
+        gl.Texture(texture)
+        gl.Texture(false)
+    end)
+end
