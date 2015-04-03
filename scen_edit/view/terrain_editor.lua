@@ -19,6 +19,7 @@ function TerrainEditorView:init()
                 local item = self.textureImages.items[itemIdx]
                 self.paintTexture = item
                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.paintTexture))
                 if currentState:is_A(TerrainChangeTextureState) then
                     currentState.paintTexture = item
                 else
@@ -47,6 +48,7 @@ function TerrainEditorView:init()
             if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
                 local item = self.detailTextureImages.items[itemIdx]
                 self.penTexture = item
+                SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.penTexture))
                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
                 if currentState:is_A(TerrainChangeTextureState) then
                     currentState.penTexture = item
