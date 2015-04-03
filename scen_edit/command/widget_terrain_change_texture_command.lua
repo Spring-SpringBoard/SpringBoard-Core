@@ -256,7 +256,6 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
         gl.Uniform(uniforms.z1ID, mCoord[2])
         gl.Uniform(uniforms.z2ID, mCoord[4])
 
-        -- passing size separately as it can be different from the input opts
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord, opts.detailTexScale)
     end
     -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
