@@ -21,7 +21,6 @@ function TextureManager:createMapObj()
         mag_filter = GL.LINEAR,
         wrap_s = GL.CLAMP_TO_EDGE,
         wrap_t = GL.CLAMP_TO_EDGE,
-        format = 0x83F1,
     })
     return { texture = texture, fbo = gl.CreateFBO({color0 = texture}) }
 end
@@ -32,15 +31,10 @@ function TextureManager:generateMapTextures()
         for j = 0, math.floor(Game.mapSizeZ / self.TEXTURE_SIZE) do
             local obj = self:createMapObj()
             Spring.GetMapSquareTexture(i, j, 0, obj.texture)
+            obj.dirty = false
+            self.mapFBOTextures[i][j] = obj
 
-            local new = self:createMapObj()
-            gl.BlitFBO(obj.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE,
-                       new.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE)
-
-            new.dirty = false
-            self.mapFBOTextures[i][j] = new
-
-            Spring.SetMapSquareTexture(i, j, new.texture)
+            Spring.SetMapSquareTexture(i, j, obj.texture)
         end
     end
 --     self.specularTexture = self:createMapTexture()
@@ -86,8 +80,8 @@ function TextureManager:getOldMapTexture(i, j)
         local oldTextureObj = self:createMapObj()
         local mapTextureObj = self.mapFBOTextures[i][j]
 
-        self:Blit(mapTextureObj, oldTextureObj)
-
+        gl.BlitFBO(mapTextureObj.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE,
+                   oldTextureObj.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE)
         oldTextureObj.dirty = mapTextureObj.dirty
         self.oldMapFBOTextures[i][j] = oldTextureObj
     end
@@ -118,12 +112,10 @@ function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     return textures
 end
 
-function TextureManager:Blit(obj1, obj2)
-    gl.BlitFBO(obj1.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE,
-               obj2.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE)
+-- function TextureManager:Blit(tex1, tex2)
 --     gl.Texture(tex1)
 --     gl.RenderToTexture(tex2, function()
 --         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
 --     end)
 --     gl.Texture(false)
-end
+-- end
