@@ -170,47 +170,11 @@ local function DrawQuads(mCoord, tCoord, vCoord, detailTexScale)
     gl.Vertex(vCoord[7], vCoord[8])
 end
 
-local function ApplyTexture(oldTexture, opts, uniforms, x, z, dx, dz, size)
+local function ApplyTexture(oldTexture, mCoord, tCoord, vCoord, detailTexScale)
     gl.Texture(0, oldTexture)
 
-    local texSize = 1024
-    local coords = {
-        dx,            dz,
-        dx,            dz + 2 * size,
-        dx + 2 * size, dz + 2 * size,
-        dx + 2 * size, dz
-    }
-    -- vertex coords
-    local vCoord = {}
-    for i = 1, #coords do
-        vCoord[i] = coords[i] / texSize * 2 - 1
-    end
-
-    -- map coordinates
-    local mCoord = {}
-    for i = 1, #coords do
-        mCoord[i] = coords[i] / texSize
-    end
-
-    -- texture coords
-    local tCoord = {
-        x,            z,
-        x,            z + 2 * size,
-        x + 2 * size, z + 2 * size,
-        x + 2 * size, z
-    }
-    for i = 1, #tCoord, 2 do
-        tCoord[i] = (tCoord[i] / texSize + opts.texOffsetX) * opts.texScale
-        tCoord[i+1] = (tCoord[i+1] / texSize + opts.texOffsetY) * opts.texScale
-    end
-
-    gl.Uniform(uniforms.x1ID, mCoord[1])
-    gl.Uniform(uniforms.x2ID, mCoord[5])
-    gl.Uniform(uniforms.z1ID, mCoord[2])
-    gl.Uniform(uniforms.z2ID, mCoord[4])
-
     -- TODO: move all this to a vertex shader?
-    gl.BeginEnd(GL.QUADS, DrawQuads, mCoord, tCoord, vCoord, opts.detailTexScale)
+    gl.BeginEnd(GL.QUADS, DrawQuads, mCoord, tCoord, vCoord, detailTexScale)
 end
 
 function WidgetTerrainChangeTextureCommand:SetTexture(opts)
@@ -249,6 +213,7 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
 
+    local texSize = 1024
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local dx, dz = coords[1], coords[2]
@@ -256,8 +221,43 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
         local mapTexture = mapTextureObj.texture
         mapTextureObj.dirty = true
 
+        local coords = {
+            dx,            dz,
+            dx,            dz + 2 * size,
+            dx + 2 * size, dz + 2 * size,
+            dx + 2 * size, dz
+        }
+        -- vertex coords
+        local vCoord = {}
+        for i = 1, #coords do
+            vCoord[i] = coords[i] / texSize * 2 - 1
+        end
+
+        -- map coordinates
+        local mCoord = {}
+        for i = 1, #coords do
+            mCoord[i] = coords[i] / texSize
+        end
+
+        -- texture coords
+        local tCoord = {
+            x,            z,
+            x,            z + 2 * size,
+            x + 2 * size, z + 2 * size,
+            x + 2 * size, z
+        }
+        for i = 1, #tCoord, 2 do
+            tCoord[i] = (tCoord[i] / texSize + opts.texOffsetX) * opts.texScale
+            tCoord[i+1] = (tCoord[i+1] / texSize + opts.texOffsetY) * opts.texScale
+        end
+
+        gl.Uniform(uniforms.x1ID, mCoord[1])
+        gl.Uniform(uniforms.x2ID, mCoord[5])
+        gl.Uniform(uniforms.z1ID, mCoord[2])
+        gl.Uniform(uniforms.z2ID, mCoord[4])
+
         -- passing size separately as it can be different from the input opts
-        gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], opts, uniforms, x, z, dx, dz, size)
+        gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord, opts.detailTexScale)
     end
     -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
