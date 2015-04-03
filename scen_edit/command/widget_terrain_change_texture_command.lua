@@ -1,7 +1,6 @@
 WidgetTerrainChangeTextureCommand = AbstractCommand:extends{}
 WidgetTerrainChangeTextureCommand.className = "WidgetTerrainChangeTextureCommand"
 
-local BIG_TEX_SIZE = 1024
 function WidgetTerrainChangeTextureCommand:init(opts)
     self.className = "WidgetTerrainChangeTextureCommand"
     self.opts = opts
@@ -172,7 +171,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     z = z - size * (fs - falloffFactor * fs)
     size = size * (fs + 1 - falloffFactor * fs)
 
-    local texSize = BIG_TEX_SIZE
+    local texSize = 1024
 
     local shaderObj = getPenShader(opts.mode)
     local shader = shaderObj.shader
@@ -186,24 +185,32 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local featureFactorID = uniforms.featureFactorID
     local diffuseColorID = uniforms.diffuseColorID
 
-    local tmp = SCEN_EDIT.model.textureManager:GetTMP()
     local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
-    for _, v in pairs(textures) do
+
+    -- copy to old texture
+    local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
+    for i, v in pairs(textures) do
+        local mapTextureObj, _, coords = v[1], v[2], v[3]
+        local mapTexture = mapTextureObj.texture
+
+        local tmp = tmps[i]
+        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
+    end
+
+    gl.UseShader(shader)
+    gl.Texture(1, penTexture)
+    gl.Texture(2, paintTexture)
+    for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local dx, dz = coords[1], coords[2]
 
         local mapTexture = mapTextureObj.texture
         mapTextureObj.dirty = true
 
-        -- copy to old texture
-        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
-
-        gl.UseShader(shader)
         gl.RenderToTexture(mapTexture,
         function()
+            local tmp = tmps[i]
             gl.Texture(0, tmp)
-            gl.Texture(1, penTexture)
-            gl.Texture(2, paintTexture)
 
             local coords = {
                 dx,            dz,
@@ -268,18 +275,18 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
                 gl.Vertex(vCoord[7], vCoord[8])
             end)
         end)
-
-        gl.Texture(0, false)
-        gl.Texture(1, false)
-        gl.Texture(2, false)
-
-        local errors = gl.GetShaderLog(shader)
-        if errors ~= "" then
-            Spring.Log("scened", LOG.ERROR, "Shader error!")
-            Spring.Log("scened", LOG.ERROR, errors)
-        end
-        gl.UseShader(0)
     end
+    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it once here
+    gl.Texture(0, false)
+    gl.Texture(1, false)
+    gl.Texture(2, false)
+
+    local errors = gl.GetShaderLog(shader)
+    if errors ~= "" then
+        Spring.Log("scened", LOG.ERROR, "Shader error!")
+        Spring.Log("scened", LOG.ERROR, errors)
+    end
+    gl.UseShader(0)
 end
 
 WidgetUndoTerrainChangeTextureCommand = AbstractCommand:extends{}
