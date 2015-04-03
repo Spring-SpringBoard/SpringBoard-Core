@@ -7,6 +7,7 @@ function TextureManager:init()
     self.mapFBOTextures = {}
     self.oldMapFBOTextures = {}
     self.stack = {}
+    self.tmps = {}
 
     SCEN_EDIT.delayGL(function()
         self:generateMapTextures()
@@ -25,7 +26,6 @@ function TextureManager:createMapTexture(notFBO)
 end
 
 function TextureManager:generateMapTextures()
-    self.tmp = self:createMapTexture()
     local oldMapTexture = self:createMapTexture(false)
 
     for i = 0, math.floor(Game.mapSizeX / self.TEXTURE_SIZE) do
@@ -52,8 +52,15 @@ end
 --     return self.specularTexture
 -- end
 
-function TextureManager:GetTMP()
-    return self.tmp
+function TextureManager:GetTMPs(num)
+    for i = #self.tmps + 1, num do
+        table.insert(self.tmps, self:createMapTexture())
+    end
+    local tmps = {}
+    for i = 1, num do
+        table.insert(tmps, self.tmps[i])
+    end
+    return tmps
 end
 
 function TextureManager:resetMapTexures()
