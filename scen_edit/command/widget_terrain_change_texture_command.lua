@@ -12,10 +12,6 @@ function WidgetTerrainChangeTextureCommand:execute()
     end)
 end
 
-function WidgetTerrainChangeTextureCommand:SetTexture(opts)
-    tx = self:ApplyPen(opts)
-end
-
 function getPenShader(mode)
     if shaders == nil then
         shaders = {}
@@ -152,38 +148,84 @@ function getPenShader(mode)
     return shaders[mode]
 end
 
-function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
+local function DrawQuads(mCoord, tCoord, vCoord, detailTexScale)
+    gl.MultiTexCoord(0, mCoord[1], mCoord[2])
+    gl.MultiTexCoord(1, tCoord[1] * detailTexScale, tCoord[2] * detailTexScale)
+    gl.MultiTexCoord(2, tCoord[1], tCoord[2] )
+    gl.Vertex(vCoord[1], vCoord[2])
+
+    gl.MultiTexCoord(0, mCoord[3], mCoord[4])
+    gl.MultiTexCoord(1, tCoord[3] * detailTexScale, tCoord[4] * detailTexScale)
+    gl.MultiTexCoord(2, tCoord[3], tCoord[4] )
+    gl.Vertex(vCoord[3], vCoord[4])
+
+    gl.MultiTexCoord(0, mCoord[5], mCoord[6])
+    gl.MultiTexCoord(1, tCoord[5] * detailTexScale, tCoord[6] * detailTexScale)
+    gl.MultiTexCoord(2, tCoord[5], tCoord[6] )
+    gl.Vertex(vCoord[5], vCoord[6])
+
+    gl.MultiTexCoord(0, mCoord[7], mCoord[8])
+    gl.MultiTexCoord(1, tCoord[7] * detailTexScale, tCoord[8] * detailTexScale)
+    gl.MultiTexCoord(2, tCoord[7], tCoord[8] )
+    gl.Vertex(vCoord[7], vCoord[8])
+end
+
+local function ApplyTexture(oldTexture, opts, uniforms, x, z, dx, dz, size)
+    gl.Texture(0, oldTexture)
+
+    local texSize = 1024
+    local coords = {
+        dx,            dz,
+        dx,            dz + 2 * size,
+        dx + 2 * size, dz + 2 * size,
+        dx + 2 * size, dz
+    }
+    -- vertex coords
+    local vCoord = {}
+    for i = 1, #coords do
+        vCoord[i] = coords[i] / texSize * 2 - 1
+    end
+
+    -- map coordinates
+    local mCoord = {}
+    for i = 1, #coords do
+        mCoord[i] = coords[i] / texSize
+    end
+
+    -- texture coords
+    local tCoord = {
+        x,            z,
+        x,            z + 2 * size,
+        x + 2 * size, z + 2 * size,
+        x + 2 * size, z
+    }
+    for i = 1, #tCoord, 2 do
+        tCoord[i] = (tCoord[i] / texSize + opts.texOffsetX) * opts.texScale
+        tCoord[i+1] = (tCoord[i+1] / texSize + opts.texOffsetY) * opts.texScale
+    end
+
+    gl.Uniform(uniforms.x1ID, mCoord[1])
+    gl.Uniform(uniforms.x2ID, mCoord[5])
+    gl.Uniform(uniforms.z1ID, mCoord[2])
+    gl.Uniform(uniforms.z2ID, mCoord[4])
+
+    -- TODO: move all this to a vertex shader?
+    gl.BeginEnd(GL.QUADS, DrawQuads, mCoord, tCoord, vCoord, opts.detailTexScale)
+end
+
+function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     local x, z = opts.x, opts.z
     local size = opts.size
-    local penTexture = opts.penTexture
-    local paintTexture = opts.paintTexture
-    local texScaleX, texScaleZ = opts.texScale, opts.texScale
-    local detailTexScaleX, detailTexScaleZ = opts.detailTexScale, opts.detailTexScale
-    local blendFactor = opts.blendFactor
-    local featureFactor = opts.featureFactor
-    local falloffFactor = opts.falloffFactor
-    local diffuseColor = opts.diffuseColor
-    local texOffsetX, texOffsetY = opts.texOffsetX, opts.texOffsetY
 
     -- change size depending on falloff (larger size if falloff factor is small)
     local fs = 2
-    x = x - size * (fs - falloffFactor * fs)
-    z = z - size * (fs - falloffFactor * fs)
-    size = size * (fs + 1 - falloffFactor * fs)
-
-    local texSize = 1024
+    x = x - size * (fs - opts.falloffFactor * fs)
+    z = z - size * (fs - opts.falloffFactor * fs)
+    size = size * (fs + 1 - opts.falloffFactor * fs)
 
     local shaderObj = getPenShader(opts.mode)
     local shader = shaderObj.shader
     local uniforms = shaderObj.uniforms
-    local x1ID = uniforms.x1ID
-    local x2ID = uniforms.x2ID
-    local z1ID = uniforms.z1ID
-    local z2ID = uniforms.z2ID
-    local blendFactorID = uniforms.blendFactorID
-    local falloffFactorID = uniforms.falloffFactorID
-    local featureFactorID = uniforms.featureFactorID
-    local diffuseColorID = uniforms.diffuseColorID
 
     local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
 
@@ -198,8 +240,15 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     end
 
     gl.UseShader(shader)
-    gl.Texture(1, penTexture)
-    gl.Texture(2, paintTexture)
+
+    gl.Texture(1, opts.penTexture)
+    gl.Texture(2, opts.paintTexture)
+
+    gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+    gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
+    gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
+    gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
+
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local dx, dz = coords[1], coords[2]
@@ -207,76 +256,10 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
         local mapTexture = mapTextureObj.texture
         mapTextureObj.dirty = true
 
-        gl.RenderToTexture(mapTexture,
-        function()
-            local tmp = tmps[i]
-            gl.Texture(0, tmp)
-
-            local coords = {
-                dx,            dz,
-                dx,            dz + 2 * size,
-                dx + 2 * size, dz + 2 * size,
-                dx + 2 * size, dz
-            }
-            -- vertex coords
-            local vCoord = {}
-            for i = 1, #coords do
-                vCoord[i] = coords[i] / texSize * 2 - 1
-            end
-
-            -- map coordinates
-            local mCoord = {}
-            for i = 1, #coords do
-                mCoord[i] = coords[i] / texSize
-            end
-
-            -- texture coords
-            local tCoord = {
-                x,            z,
-                x,            z + 2 * size,
-                x + 2 * size, z + 2 * size,
-                x + 2 * size, z
-            }
-            for i = 1, #tCoord, 2 do
-                tCoord[i] = (tCoord[i] / texSize + texOffsetX) * texScaleX
-                tCoord[i+1] = (tCoord[i+1] / texSize + texOffsetY) * texScaleZ
-            end
-
-            gl.Uniform(x1ID, mCoord[1])
-            gl.Uniform(x2ID, mCoord[5])
-            gl.Uniform(z1ID, mCoord[2])
-            gl.Uniform(z2ID, mCoord[4])
-            gl.Uniform(blendFactorID, blendFactor)
-            gl.Uniform(falloffFactorID, falloffFactor)
-            gl.Uniform(featureFactorID, featureFactor)
-            gl.Uniform(diffuseColorID, unpack(diffuseColor))
-
-            --GL.QUADS
-            -- TODO: move all this to a vertex shader?
-            gl.BeginEnd(GL.QUADS, function()
-                gl.MultiTexCoord(0, mCoord[1], mCoord[2])
-                gl.MultiTexCoord(1, tCoord[1] * detailTexScaleX, tCoord[2] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[1], tCoord[2] )
-                gl.Vertex(vCoord[1], vCoord[2])
-
-                gl.MultiTexCoord(0, mCoord[3], mCoord[4])
-                gl.MultiTexCoord(1, tCoord[3] * detailTexScaleX, tCoord[4] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[3], tCoord[4] )
-                gl.Vertex(vCoord[3], vCoord[4])
-
-                gl.MultiTexCoord(0, mCoord[5], mCoord[6])
-                gl.MultiTexCoord(1, tCoord[5] * detailTexScaleX, tCoord[6] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[5], tCoord[6] )
-                gl.Vertex(vCoord[5], vCoord[6]) 
-
-                gl.MultiTexCoord(0, mCoord[7], mCoord[8])
-                gl.MultiTexCoord(1, tCoord[7] * detailTexScaleX, tCoord[8] * detailTexScaleZ)
-                gl.MultiTexCoord(2, tCoord[7], tCoord[8] )
-                gl.Vertex(vCoord[7], vCoord[8])
-            end)
-        end)
+        -- passing size separately as it can be different from the input opts
+        gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], opts, uniforms, x, z, dx, dz, size)
     end
-    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it once here
+    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
     gl.Texture(1, false)
     gl.Texture(2, false)
