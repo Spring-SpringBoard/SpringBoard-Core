@@ -14,27 +14,33 @@ function TextureManager:init()
     end)
 end
 
-function TextureManager:createMapObj()
-    local texture = gl.CreateTexture(self.TEXTURE_SIZE, self.TEXTURE_SIZE, {
+function TextureManager:createMapTexture(notFBO)
+    return gl.CreateTexture(self.TEXTURE_SIZE, self.TEXTURE_SIZE, {
         border = false,
         min_filter = GL.LINEAR,
         mag_filter = GL.LINEAR,
         wrap_s = GL.CLAMP_TO_EDGE,
         wrap_t = GL.CLAMP_TO_EDGE,
+        fbo = not notFBO,
     })
-    return { texture = texture, fbo = gl.CreateFBO({color0 = texture}) }
 end
 
 function TextureManager:generateMapTextures()
+    local oldMapTexture = self:createMapTexture(false)
+
     for i = 0, math.floor(Game.mapSizeX / self.TEXTURE_SIZE) do
         self.mapFBOTextures[i] = {}
         for j = 0, math.floor(Game.mapSizeZ / self.TEXTURE_SIZE) do
-            local obj = self:createMapObj()
-            Spring.GetMapSquareTexture(i, j, 0, obj.texture)
-            obj.dirty = false
-            self.mapFBOTextures[i][j] = obj
+            local mapTexture = self:createMapTexture()
 
-            Spring.SetMapSquareTexture(i, j, obj.texture)
+            Spring.GetMapSquareTexture(i, j, 0, oldMapTexture)
+            self:Blit(oldMapTexture, mapTexture)
+
+            self.mapFBOTextures[i][j] = {
+                texture = mapTexture,
+                dirty = false,
+            }
+            Spring.SetMapSquareTexture(i, j, mapTexture)
         end
     end
 --     self.specularTexture = self:createMapTexture()
@@ -48,8 +54,7 @@ end
 
 function TextureManager:GetTMPs(num)
     for i = #self.tmps + 1, num do
-        local texture = self:createMapObj()
-        table.insert(self.tmps, texture)
+        table.insert(self.tmps, self:createMapTexture())
     end
     local tmps = {}
     for i = 1, num do
@@ -77,12 +82,15 @@ function TextureManager:getOldMapTexture(i, j)
     end
     if self.oldMapFBOTextures[i][j] == nil then
         -- doesn't exist so we create it
-        local oldTextureObj = self:createMapObj()
-        local mapTextureObj = self.mapFBOTextures[i][j]
+        local oldTexture = self:createMapTexture()
 
-        gl.BlitFBO(mapTextureObj.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE,
-                   oldTextureObj.fbo, 0, 0, self.TEXTURE_SIZE, self.TEXTURE_SIZE)
-        oldTextureObj.dirty = mapTextureObj.dirty
+        local mapTexture = self.mapFBOTextures[i][j].texture
+
+        self:Blit(mapTexture, oldTexture)
+        local oldTextureObj = {
+            texture = oldTexture,
+            dirty = mapTexture.dirty,
+        }
         self.oldMapFBOTextures[i][j] = oldTextureObj
     end
 
@@ -112,10 +120,10 @@ function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     return textures
 end
 
--- function TextureManager:Blit(tex1, tex2)
---     gl.Texture(tex1)
---     gl.RenderToTexture(tex2, function()
---         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
---     end)
---     gl.Texture(false)
--- end
+function TextureManager:Blit(tex1, tex2)
+    gl.Texture(tex1)
+    gl.RenderToTexture(tex2, function()
+        gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
+    end)
+    gl.Texture(false)
+end

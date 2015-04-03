@@ -14,7 +14,6 @@ function Model:init()
     self.teamManager = TeamManager()
     self.teamManager:generateTeams()
     self.scenarioInfo = ScenarioInfo()
-    -- TODO: need to check if card supports GLSL and disable some stuff
     if Script.GetName() == "LuaUI" then
         self.textureManager = TextureManager()
     end

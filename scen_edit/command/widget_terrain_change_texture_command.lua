@@ -193,13 +193,14 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
 
     local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
 
-    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
     -- copy to old texture
     local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
-        local mapTextureObj = v[1]
-        gl.BlitFBO(mapTextureObj.fbo, 0, 0, texSize, texSize,
-                   tmps[i].fbo, 0, 0, texSize, texSize)
+        local mapTextureObj, _, coords = v[1], v[2], v[3]
+        local mapTexture = mapTextureObj.texture
+
+        local tmp = tmps[i]
+        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
     end
 
     gl.UseShader(shader)
@@ -212,9 +213,12 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
 
+    local texSize = 1024
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local dx, dz = coords[1], coords[2]
+
+        local mapTexture = mapTextureObj.texture
         mapTextureObj.dirty = true
 
         local coords = {
@@ -247,7 +251,7 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
         gl.Uniform(uniforms.z1ID, mCoord[2])
         gl.Uniform(uniforms.z2ID, mCoord[4])
 
-        gl.ActiveFBO(mapTextureObj.fbo, ApplyTexture, tmps[i].texture, mCoord, tCoord, vCoord, opts.detailTexScale)
+        gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord, opts.detailTexScale)
     end
     -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
