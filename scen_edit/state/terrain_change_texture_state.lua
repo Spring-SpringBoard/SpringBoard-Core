@@ -18,10 +18,6 @@ function TerrainChangeTextureState:init(terrainEditorView)
 
     self.minSize        = self.terrainEditorView.fields["size"].minValue
     self.maxSize        = self.terrainEditorView.fields["size"].maxValue
-
-    if SCEN_EDIT.textureManager == nil then
-        SCEN_EDIT.textureManager = TextureManager()
-    end
 end
 
 function TerrainChangeTextureState:Apply(x, z)

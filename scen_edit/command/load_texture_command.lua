@@ -9,15 +9,9 @@ end
 function LoadTextureCommand:execute()
     if not VFS.FileExists(self.texturePath) then
         Spring.Echo("Missing texture file: " .. tostring(self.texturePath))
-        if SCEN_EDIT.textureManager ~= nil then
-            SCEN_EDIT.textureManager = TextureManager()
-        end
         return
     end
 
-    if SCEN_EDIT.textureManager == nil then
-        SCEN_EDIT.textureManager = TextureManager()
-    end
     Spring.Echo("Loading textures..")
     SCEN_EDIT.delayGL(function()
         totalMapTexture = gl.CreateTexture(Game.mapSizeX, Game.mapSizeZ, {
@@ -38,12 +32,12 @@ function LoadTextureCommand:execute()
         end)
 
 
-        local texSize = SCEN_EDIT.textureManager.TEXTURE_SIZE 
+        local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE 
         local sizeX = math.floor(Game.mapSizeX / texSize)
         local sizeZ = math.floor(Game.mapSizeZ / texSize)
         for i = 0, sizeX do
             for j = 0, sizeZ do
-                mapTexture = SCEN_EDIT.textureManager.mapFBOTextures[i][j]
+                mapTexture = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
                 mapFBO = gl.CreateFBO({
                     color0 = mapTexture
                 })           

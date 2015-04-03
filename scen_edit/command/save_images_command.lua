@@ -8,18 +8,14 @@ end
 
 function SaveImagesCommand:execute()
     SCEN_EDIT.delayGL(function()
-        if SCEN_EDIT.textureManager == nil then
-            return
-        end
-
-        local texSize = SCEN_EDIT.textureManager.TEXTURE_SIZE 
+        local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
         local sizeZ = math.floor(Game.mapSizeZ / texSize)
 
         -- We're saving the map in parts
         for i = 0, sizeX do
             for j = 0, sizeZ do
-                local mapTextureObj = SCEN_EDIT.textureManager.mapFBOTextures[i][j]
+                local mapTextureObj = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
                 -- only write those textures that have changed since last save
                 if mapTextureObj.dirty then
                     local mapTexture = mapTextureObj.texture
@@ -31,7 +27,7 @@ function SaveImagesCommand:execute()
                     mapTextureObj.dirty = false
 
                     -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things
-                    for _, s in pairs(SCEN_EDIT.textureManager.stack) do
+                    for _, s in pairs(SCEN_EDIT.model.textureManager.stack) do
                         -- we only do this for the corresponding textures
                         if s[i] and s[i][j] then
                             Spring.Log("scened", LOG.DEBUG, "Making subtexture dirty", i, j)

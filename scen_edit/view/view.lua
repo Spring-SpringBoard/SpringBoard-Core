@@ -24,8 +24,6 @@ function View:init()
     end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
-    --self.textureManager = TextureManager()
-    --self.mainWindow = MainWindow()
 	self.tabbedWindow = TabbedWindow()
     self.commandWindow = CommandWindow()
 
@@ -139,7 +137,6 @@ function View:drawRects()
 end
 
 function View:DrawWorld()
-    --self.textureManager:DrawWorld()
 end
 
 function View:DrawWorldPreUnit()
