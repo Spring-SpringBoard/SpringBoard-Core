@@ -3,7 +3,7 @@ SaveCommand.className = "SaveCommand"
 
 function SaveCommand:init(path)
     self.className = "SaveCommand"
-	self.path = path
+    self.path = path
 end
 
 local function HeightMapSave(path)
@@ -37,7 +37,7 @@ local function HeightMapSave(path)
         file:write(str)
     end
     local addData = function(chunk)
-        data[#data + 1] = chunk                                
+        data[#data + 1] = chunk
         totalChanged = totalChanged + 1
         if #data >= bufferSize then
             bufferFlush()
@@ -302,7 +302,7 @@ function SaveCommand:execute()
     ScriptTxtSave(projectDir .. "/script-dev.txt", true)
     Spring.Echo("saved scripts")
 
-    if SCEN_EDIT.textureManager ~= nil then
+    if #SCEN_EDIT.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = projectDir .. "/texturemap"
         Spring.CreateDir(texturemapDir)
         local cmd = SaveImagesCommand(texturemapDir)

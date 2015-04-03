@@ -39,11 +39,6 @@ function ExportMapsCommand:execute()
 
         gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath)
 
-        if SCEN_EDIT.textureManager == nil then
-            SCEN_EDIT.textureManager = TextureManager()
-            SCEN_EDIT.textureManager:generateMapTextures()
-        end
-
         -- diffuse
         local texturePath = self.path .. "/texture.png"
  
@@ -64,12 +59,12 @@ function ExportMapsCommand:execute()
         local totalMapFBO = gl.CreateFBO({
             color0 = totalMapTexture
         })
-        local texSize = SCEN_EDIT.textureManager.TEXTURE_SIZE 
+        local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
         local sizeZ = math.floor(Game.mapSizeZ / texSize)
         for i = 0, sizeX do
             for j = 0, sizeZ do
-                local mapTextureObj = SCEN_EDIT.textureManager.mapFBOTextures[i][j]
+                local mapTextureObj = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
                 -- only write those textures that have changed since last save
 
                 local mapTexture = mapTextureObj.texture

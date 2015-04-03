@@ -186,8 +186,8 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
     local featureFactorID = uniforms.featureFactorID
     local diffuseColorID = uniforms.diffuseColorID
 
-    local tmp = SCEN_EDIT.textureManager:GetTMP()
-    local textures = SCEN_EDIT.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
+    local tmp = SCEN_EDIT.model.textureManager:GetTMP()
+    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + 2 * size, z + 2 * size)
     for _, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local dx, dz = coords[1], coords[2]
@@ -196,7 +196,7 @@ function WidgetTerrainChangeTextureCommand:ApplyPen(opts)
         mapTextureObj.dirty = true
 
         -- copy to old texture
-        SCEN_EDIT.textureManager:Blit(mapTexture, tmp)
+        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
 
         gl.UseShader(shader)
         gl.RenderToTexture(mapTexture,
@@ -287,20 +287,20 @@ WidgetUndoTerrainChangeTextureCommand.className = "WidgetUndoTerrainChangeTextur
 
 function WidgetUndoTerrainChangeTextureCommand:execute()
     SCEN_EDIT.delayGL(function()
-        local stack = SCEN_EDIT.textureManager.stack
-        SCEN_EDIT.textureManager.oldMapFBOTextures = stack[#stack]
+        local stack = SCEN_EDIT.model.textureManager.stack
+        SCEN_EDIT.model.textureManager.oldMapFBOTextures = stack[#stack]
 
-        for i, v in pairs(SCEN_EDIT.textureManager.oldMapFBOTextures) do
+        for i, v in pairs(SCEN_EDIT.model.textureManager.oldMapFBOTextures) do
             for j, oldTextureObj in pairs(v) do
-                local mapTextureObj = SCEN_EDIT.textureManager.mapFBOTextures[i][j]
+                local mapTextureObj = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
                 local mapTexture = mapTextureObj.texture
-                SCEN_EDIT.textureManager:Blit(oldTextureObj.texture, mapTexture)
+                SCEN_EDIT.model.textureManager:Blit(oldTextureObj.texture, mapTexture)
                 mapTextureObj.dirty = oldTextureObj.dirty
                 gl.DeleteTexture(oldTextureObj.texture)
             end
         end
 
-        SCEN_EDIT.textureManager.oldMapFBOTextures = {}
+        SCEN_EDIT.model.textureManager.oldMapFBOTextures = {}
         stack[#stack] = nil
     end)
 end
@@ -310,8 +310,8 @@ WidgetTerrainChangeTexturePushStackCommand.className = "WidgetTerrainChangeTextu
 
 function WidgetTerrainChangeTexturePushStackCommand:execute()
     SCEN_EDIT.delayGL(function()
-        local stack = SCEN_EDIT.textureManager.stack
-        table.insert(stack, SCEN_EDIT.textureManager.oldMapFBOTextures)
-        SCEN_EDIT.textureManager.oldMapFBOTextures = {}
+        local stack = SCEN_EDIT.model.textureManager.stack
+        table.insert(stack, SCEN_EDIT.model.textureManager.oldMapFBOTextures)
+        SCEN_EDIT.model.textureManager.oldMapFBOTextures = {}
     end)
 end
