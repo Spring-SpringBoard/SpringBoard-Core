@@ -227,15 +227,10 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
             dx + 2 * size, dz + 2 * size,
             dx + 2 * size, dz
         }
-        -- vertex coords
-        local vCoord = {}
+        local vCoord = {} -- vertex coords
+        local mCoord = {} -- map coordinates
         for i = 1, #coords do
             vCoord[i] = coords[i] / texSize * 2 - 1
-        end
-
-        -- map coordinates
-        local mCoord = {}
-        for i = 1, #coords do
             mCoord[i] = coords[i] / texSize
         end
 
