@@ -11,7 +11,7 @@ function TerrainShapeModifyState:Apply(x, z, strength)
             SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
         end
 
-        local cmd = TerrainShapeModifyCommand(x, z, self.size, strength * 5, self.paintTexture)
+        local cmd = TerrainShapeModifyCommand(x, z, self.size, strength, self.paintTexture)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
     end

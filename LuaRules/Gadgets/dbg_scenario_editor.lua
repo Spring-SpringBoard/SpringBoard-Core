@@ -49,11 +49,11 @@ function gadget:RecvLuaMsg(msg, playerID)
     if #msg < #pre or msg:sub(1, #pre) ~= "scen_edit" then
         return
     end
-    
+
     local data = explode( '|', msg)
     local op = data[2]
     local par1 = data[3]
-    
+
     --TODO: figure proper msg name :)
     if op == 'game' then
     elseif op == 'meta' then

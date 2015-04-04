@@ -95,7 +95,7 @@ function TerrainShapeModifyCommand:GetHeightMapFunc(isUndo)
         if not isUndo then
             for x = 0, 2*size, Game.squareSize do
                 for z = 0, 2*size, Game.squareSize do
-                     local total = map[x + z * parts]
+                    local total = map[x + z * parts]
                     Spring.AddHeightMap(x + startX, z + startZ, total)
                 end
             end
