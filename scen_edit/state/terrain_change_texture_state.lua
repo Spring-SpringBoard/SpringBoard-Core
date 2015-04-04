@@ -13,11 +13,14 @@ function TerrainChangeTextureState:init(terrainEditorView)
     self.falloffFactor  = self.terrainEditorView.fields["falloffFactor"].value
     self.featureFactor  = self.terrainEditorView.fields["featureFactor"].value
     self.diffuseColor   = self.terrainEditorView.fields["diffuseColor"].value
-    self.texOffsetX    = self.terrainEditorView.fields["texOffsetX"].value
-    self.texOffsetY    = self.terrainEditorView.fields["texOffsetY"].value
+    self.texOffsetX     = self.terrainEditorView.fields["texOffsetX"].value
+    self.texOffsetY     = self.terrainEditorView.fields["texOffsetY"].value
 
     self.minSize        = self.terrainEditorView.fields["size"].minValue
     self.maxSize        = self.terrainEditorView.fields["size"].maxValue
+
+    self.updateDelay    = 0.2
+    self.applyDelay     = 0.02
 end
 
 function TerrainChangeTextureState:Apply(x, z)

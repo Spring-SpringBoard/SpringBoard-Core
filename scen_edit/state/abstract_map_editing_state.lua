@@ -18,6 +18,15 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function AbstractMapEditingState:Apply(x, z, strength)
+    if self.applyDelay ~= nil then
+        local now = os.clock()
+        if not self.lastTime or now - self.lastTime >= self.applyDelay then
+            self.lastTime = now
+            return true
+        else
+            return false
+        end
+    end
     return true
 end
 
@@ -46,7 +55,12 @@ end
 function AbstractMapEditingState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground"  then
+        local strength = self.strength
+        if button == 3 and strength ~= nil then
+            strength = -strength
+        end
         self.x, self.z = coords[1], coords[3]
+        self:Apply(self.x, self.z, strength)
     end
     return true
 end
@@ -69,10 +83,13 @@ function AbstractMapEditingState:Update()
     if not self.startedChanging then
         return
     end
-    local now = os.clock()
-    if not self.lastTime or now - self.lastTime >= 0.05 then
-        self.lastTime = now
-        return true
+    if self.updateDelay then
+        local now = os.clock()
+        if not self.lastUpdateTime or now - self.lastUpdateTime >= self.updateDelay then
+            self.lastUpdateTime = now
+        else
+            return false
+        end
     end
     local x, y, button1, _, button3 = Spring.GetMouseState()
     local _, _, _, shift = Spring.GetModKeyState()
