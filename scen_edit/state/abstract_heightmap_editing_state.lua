@@ -7,6 +7,7 @@ function AbstractHeightmapEditingState:init(heightmapEditorView)
     self.strength            = self.heightmapEditorView.fields["strength"].value
     self.minSize             = self.heightmapEditorView.fields["size"].minValue
     self.maxSize             = self.heightmapEditorView.fields["size"].maxValue
+    self.applyDelay          = 0.03
 end
 
 function AbstractHeightmapEditingState:leaveState()
