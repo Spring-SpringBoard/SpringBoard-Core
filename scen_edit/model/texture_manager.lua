@@ -9,6 +9,10 @@ function TextureManager:init()
     self.stack = {}
     self.tmps = {}
 
+    self.cachedTextures = {}
+    self.cachedTexturesMapping = {}
+    self.maxCache = 20
+
     SCEN_EDIT.delayGL(function()
         self:generateMapTextures()
     end)
@@ -128,10 +132,35 @@ function TextureManager:Blit(tex1, tex2)
     gl.Texture(false)
 end
 
-function TextureManager:CacheTexture(texture)
+function TextureManager:CacheTexture(name)
     SCEN_EDIT.delayGL(function()
-        -- lazy, let Spring cache in our stead
-        gl.Texture(texture)
-        gl.Texture(false)
+        if self.cachedTexturesMapping[name] ~= nil then
+            return
+        end
+        -- maximum number of textures exceeded
+        if #self.cachedTextures > self.maxCache then
+            local obj = self.cachedTextures[1]
+            gl.DeleteTexture(obj.texture)
+            self.cachedTexturesMapping[obj.name] = nil
+            table.remove(self.cachedTextures, 1)
+        end
+
+        local texInfo = gl.TextureInfo(name)
+        local texture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+            fbo = true,
+        })
+        self:Blit(name, texture)
+        local obj = { texture = texture, name = name }
+        self.cachedTexturesMapping[name] = obj
+        table.insert(self.cachedTextures, obj)
     end)
+end
+
+function TextureManager:GetTexture(name)
+    local cachedTex = self.cachedTexturesMapping[name]
+    if cachedTex ~= nil then
+        return cachedTex.texture
+    else
+        return name
+    end
 end
