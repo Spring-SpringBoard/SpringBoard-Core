@@ -26,7 +26,7 @@ function HeightmapEditorView:init()
             end
         end
     }
-    self.heightmapBrushes:Select("peak3.png")
+    self.heightmapBrushes:Select("circle.png")
 
     self.btnAddState = TabbedPanelButton({
         x = 10,
@@ -38,7 +38,7 @@ function HeightmapEditorView:init()
         },
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(TerrainIncreaseState(self))
+                SCEN_EDIT.stateManager:SetState(TerrainShapeModifyState(self))
             end
         },
     })
@@ -70,34 +70,49 @@ function HeightmapEditorView:init()
             end
         },
     })
-    self.btnChangeHeightRectState = TabbedPanelButton({
+
+    self.btnSetState = TabbedPanelButton({
         x = 220,
         y = 10,
-        tooltip = "Square add the terrain (4)",
+        tooltip = "Set the terrain (4)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Square" }),
+            TabbedPanelLabel({ caption = "Set" }),
         },
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(TerrainChangeHeightRectState(self))
+                SCEN_EDIT.stateManager:SetState(TerrainSetState(self))
             end
         },
     })
-    self.btnAddShapeState = TabbedPanelButton({
-        x = 290,
-        y = 10,
-        tooltip = "Modify the terrain by choosing one of the special shapes below (5)",
-        children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Shape" }),
-        },
-        OnClick = {
-            function()
-                SCEN_EDIT.stateManager:SetState(TerrainShapeModifyState(self))
-            end
-        },
-    })
+--     self.btnChangeHeightRectState = TabbedPanelButton({
+--         x = 220,
+--         y = 10,
+--         tooltip = "Square add the terrain (4)",
+--         children = {
+--             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+--             TabbedPanelLabel({ caption = "Square" }),
+--         },
+--         OnClick = {
+--             function()
+--                 SCEN_EDIT.stateManager:SetState(TerrainChangeHeightRectState(self))
+--             end
+--         },
+--     })
+--     self.btnAddShapeState = TabbedPanelButton({
+--         x = 290,
+--         y = 10,
+--         tooltip = "Modify the terrain by choosing one of the special shapes below (5)",
+--         children = {
+--             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+--             TabbedPanelLabel({ caption = "Shape" }),
+--         },
+--         OnClick = {
+--             function()
+--                 SCEN_EDIT.stateManager:SetState(TerrainShapeModifyState(self))
+--             end
+--         },
+--     })
 
     self.imgPanel = ScrollPanel:New {
         x = 0, 
@@ -145,9 +160,9 @@ function HeightmapEditorView:init()
     })
     self:AddNumericProperty({
         name = "strength", 
-        value = 1,
+        value = 10,
         minValue = 0.1,
-        maxValue = 100,
+        maxValue = 1000,
         title = "Strength:",
         tooltip = "Strength of the height map tool",
     })
@@ -174,8 +189,9 @@ function HeightmapEditorView:init()
                     self.btnAddState,
                     self.btnSmoothState,
                     self.btnLevelState,
-                    self.btnChangeHeightRectState,
-                    self.btnAddShapeState,
+                    self.btnSetState,
+--                     self.btnChangeHeightRectState,
+--                     self.btnAddShapeState,
                     self.stackPanel 
                 },
             },
@@ -183,6 +199,7 @@ function HeightmapEditorView:init()
         },
         OnDispose = { function() SCEN_EDIT.heightmapEditorView = nil end },
     }
+    self.heightmapBrushes:Hide()
 end
 
 function HeightmapEditorView:StoppedEditing()
@@ -194,28 +211,39 @@ function HeightmapEditorView:StoppedEditing()
 
     self.btnLevelState.state.pressed = false
     self.btnLevelState:Invalidate()
+    
+    self.btnSetState.state.pressed = false
+    self.btnSetState:Invalidate()
 
-    self.btnChangeHeightRectState.state.pressed = false
-    self.btnChangeHeightRectState:Invalidate()
-
-    self.btnAddShapeState.state.pressed = false
-    self.btnAddShapeState:Invalidate()
+    if self.heightmapBrushes.visible then
+        self.heightmapBrushes:Hide()
+    end
+--     self.btnChangeHeightRectState.state.pressed = false
+--     self.btnChangeHeightRectState:Invalidate()
+-- 
+--     self.btnAddShapeState.state.pressed = false
+--     self.btnAddShapeState:Invalidate()
 end
 
 function HeightmapEditorView:StartedEditing()
     SCEN_EDIT.delay(function()
         local currentState = SCEN_EDIT.stateManager:GetCurrentState()
         local btn
-        if currentState:is_A(TerrainIncreaseState) then
+        if currentState:is_A(TerrainShapeModifyState) then
             btn = self.btnAddState
-        elseif currentState:is_A(TerrainChangeHeightRectState) then
-            btn = self.btnChangeHeightRectState
+            if self.heightmapBrushes.hidden then
+                self.heightmapBrushes:Show()
+            end
+--         elseif currentState:is_A(TerrainChangeHeightRectState) then
+--             btn = self.btnChangeHeightRectState
         elseif currentState:is_A(TerrainSmoothState) then
             btn = self.btnSmoothState
         elseif currentState:is_A(TerrainLevelState) then
             btn = self.btnLevelState
-        elseif currentState:is_A(TerrainShapeModifyState) then
-            btn = self.btnAddShapeState
+        elseif currentState:is_A(TerrainSetState) then
+            btn = self.btnSetState
+--         elseif currentState:is_A(TerrainShapeModifyState) then
+--             btn = self.btnAddShapeState
         end
         btn.state.pressed = true
         btn:Invalidate()
@@ -249,7 +277,7 @@ function HeightmapEditorView:SetNumericField(name, value, source)
     if field.inUpdate then
         return
     end
-    
+
     field.inUpdate = true
     value = tonumber(value)
     if value ~= nil and value ~= field.value then

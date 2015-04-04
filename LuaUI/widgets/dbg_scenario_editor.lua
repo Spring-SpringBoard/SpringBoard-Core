@@ -38,7 +38,8 @@ function RecieveGadgetMessage(msg)
 --    Spring.Echo(msg)
     if op == 'sync' then
 --        Spring.Echo("Widget synced!")
-        local msgTable = loadstring(string.sub(msg, #(pre .. "|sync|") + 1))()
+        local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
+        local msgTable = loadstring(msgParsed)()
         local msg = Message(msgTable.tag, msgTable.data)
 --        table.echo(msg)
         if msg.tag == 'command' then
@@ -66,12 +67,12 @@ end
 
 function widget:Initialize()
     dumpConfig()
-    
+
     wasEnabled = Spring.IsCheatingEnabled()
     if not wasEnabled then
         Spring.SendCommands("cheat")
     end
-    
+
     VFS.Include("scen_edit/exports.lua")
     if devMode then
         reloadGadgets() --uncomment for development	

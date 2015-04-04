@@ -18,10 +18,16 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function AbstractMapEditingState:Apply(x, z, strength)
-    if self.applyDelay ~= nil then
-        local now = os.clock()
-        if not self.lastTime or now - self.lastTime >= self.applyDelay then
+    local now = os.clock()
+    if not self.lastTime then
+        self.lastTime = now
+        return true
+    end
+    local delay = math.max(self.applyDelay or 0, self._initialDelay or 0)
+    if delay ~= 0 then
+        if now - self.lastTime >= delay then
             self.lastTime = now
+            self._initialDelay = 0
             return true
         else
             return false
@@ -112,6 +118,7 @@ end
 
 function AbstractMapEditingState:startChanging()
     if not self.startedChanging then
+        self._initialDelay = self.initialDelay
         local cmd = SetMultipleCommandModeCommand(true)
         SCEN_EDIT.commandManager:execute(cmd)
         self.startedChanging = true
@@ -123,5 +130,6 @@ function AbstractMapEditingState:stopChanging()
         local cmd = SetMultipleCommandModeCommand(false)
         SCEN_EDIT.commandManager:execute(cmd)
         self.startedChanging = false
+        self.lastTime = nil
     end
 end
