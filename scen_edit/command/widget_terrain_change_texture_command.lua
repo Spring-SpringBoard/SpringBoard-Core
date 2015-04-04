@@ -205,8 +205,8 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
 
     gl.UseShader(shader)
 
-    gl.Texture(1, opts.penTexture)
-    gl.Texture(2, opts.paintTexture)
+    gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.penTexture))
+    gl.Texture(2, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture))
 
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
