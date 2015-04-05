@@ -20,10 +20,11 @@ function SaveImagesCommand:execute()
                 if mapTextureObj.dirty then
                     local mapTexture = mapTextureObj.texture
 
-
                     local mapTexturePath = self.path .. "/texture-" .. tostring(i) .. "-" .. tostring(j) .. ".png"
+                    -- remove existing texture)
+                    os.remove(mapTexturePath)
                     Spring.Log("scened", LOG.DEBUG, "Saving subtexture", i, j, mapTexturePath)
-                    gl.RenderToTexture(mapTexture, gl.SaveImage, 0, 0, texSize, texSize, mapTexturePath)
+                    gl.RenderToTexture(mapTexture, gl.SaveImage, 0, 0, texSize, texSize, mapTexturePath, {yflip=true})
                     mapTextureObj.dirty = false
 
                     -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things
