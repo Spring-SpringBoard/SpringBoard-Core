@@ -5,8 +5,6 @@ function AbstractHeightmapEditingState:init(heightmapEditorView)
     self.heightmapEditorView = heightmapEditorView
     self.size                = self.heightmapEditorView.fields["size"].value
     self.strength            = self.heightmapEditorView.fields["strength"].value
-    self.minSize             = self.heightmapEditorView.fields["size"].minValue
-    self.maxSize             = self.heightmapEditorView.fields["size"].maxValue
     self.applyDelay          = 0.03
     self.initialDelay        = 0.3
 end
@@ -23,8 +21,6 @@ function AbstractHeightmapEditingState:MouseWheel(up, value)
 end
 
 function AbstractHeightmapEditingState:enterState()
-    self.size = math.min(self.maxSize, self.size)
-    self.size = math.max(self.minSize, self.size)
     self.heightmapEditorView:SetNumericField("size", self.size)
     self.heightmapEditorView:StartedEditing()
 end

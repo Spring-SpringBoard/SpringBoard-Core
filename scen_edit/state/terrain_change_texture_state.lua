@@ -6,6 +6,7 @@ function TerrainChangeTextureState:init(terrainEditorView)
     self.paintTexture   = self.terrainEditorView.paintTexture
     self.penTexture     = self.terrainEditorView.penTexture
     self.size           = self.terrainEditorView.fields["size"].value
+    self.rotation       = self.terrainEditorView.fields["rotation"].value
     self.texScale       = self.terrainEditorView.fields["texScale"].value
     self.detailTexScale = self.terrainEditorView.fields["detailTexScale"].value
     self.mode           = self.terrainEditorView.fields["mode"].value
@@ -15,9 +16,6 @@ function TerrainChangeTextureState:init(terrainEditorView)
     self.diffuseColor   = self.terrainEditorView.fields["diffuseColor"].value
     self.texOffsetX     = self.terrainEditorView.fields["texOffsetX"].value
     self.texOffsetY     = self.terrainEditorView.fields["texOffsetY"].value
-
-    self.minSize        = self.terrainEditorView.fields["size"].minValue
-    self.maxSize        = self.terrainEditorView.fields["size"].maxValue
 
     self.updateDelay    = 0.2
     self.applyDelay     = 0.02
@@ -30,6 +28,7 @@ function TerrainChangeTextureState:Apply(x, z)
             x = x - self.size,
             z = z - self.size,
             size = self.size,
+            rotation = self.rotation,
             penTexture = self.penTexture,
             paintTexture = self.paintTexture,
             texScale = self.texScale,
@@ -55,6 +54,17 @@ function TerrainChangeTextureState:MouseWheel(up, value)
     if self:super("MouseWheel", up, value) then
         self.terrainEditorView:SetNumericField("size", self.size)
         return true
+    else
+        local alt, _, _, _ = Spring.GetModKeyState()
+        if alt then
+            if up then
+                self.rotation = self.rotation + 5
+            else
+                self.rotation = self.rotation - 5
+            end
+            self.terrainEditorView:SetNumericField("rotation", self.rotation)
+            return true
+        end
     end
 end
 

@@ -79,8 +79,6 @@ function AbstractMapEditingState:MouseWheel(up, value)
         else
             self.size = self.size - self.size * 0.2 - 2
         end
-        self.size = math.min(self.maxSize, self.size)
-        self.size = math.max(self.minSize, self.size)
         return true
     end
 end
