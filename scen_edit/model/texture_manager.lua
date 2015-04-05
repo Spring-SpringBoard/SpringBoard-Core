@@ -30,6 +30,7 @@ function TextureManager:createMapTexture(notFBO)
 end
 
 function TextureManager:generateMapTextures()
+    Spring.Log("scened", LOG.DEBUG, "Generating textures...")
     local oldMapTexture = self:createMapTexture(false)
 
     for i = 0, math.floor(Game.mapSizeX / self.TEXTURE_SIZE) do
@@ -67,12 +68,14 @@ function TextureManager:GetTMPs(num)
     return tmps
 end
 
-function TextureManager:resetMapTexures()
+function TextureManager:resetMapTextures()
     for i, v in pairs(self.mapFBOTextures) do
-        for j, _ in pairs(v) do
+        for j, textureObj in pairs(v) do
+            gl.DeleteTexture(textureObj.texture)
             Spring.SetMapSquareTexture(i, j, "")
         end
     end
+    self.mapFBOTextures = {}
 end
 
 function TextureManager:getMapTexture(x, z)

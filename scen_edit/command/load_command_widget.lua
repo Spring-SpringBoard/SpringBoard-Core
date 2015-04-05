@@ -34,7 +34,7 @@ function LoadCommandWidget:execute()
         SCEN_EDIT.loadedArchive = path
         modelData = VFS.LoadFile("model.lua", VFS.ZIP)
         heightmapData = VFS.LoadFile("heightmap.data", VFS.ZIP)
-        texturePath = "texturemap/texture.png"
+        texturePath = "texturemap/"
     else
         Spring.Echo("Loading project: " .. path .. " ...")
 
@@ -45,7 +45,7 @@ function LoadCommandWidget:execute()
 
         modelData = VFS.LoadFile(path .. "/" .. "model.lua", VFS.RAW)
         heightmapData = VFS.LoadFile(path .. "/" .. "heightmap.data", VFS.RAW)
-        texturePath = path .. "/" .. "texturemap/texture.png"
+        texturePath = path .. "/" .. "texturemap/"
     end
     
     local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
