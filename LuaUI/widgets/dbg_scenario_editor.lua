@@ -180,7 +180,7 @@ end
 
 function widget:MouseMove(x, y, dx, dy, button)
     if SCEN_EDIT.view ~= nil then
-        return SCEN_EDIT.stateManager:MouseMove(x, y, button)
+        return SCEN_EDIT.stateManager:MouseMove(x, y, dx, dy, button)
     end
 end
 

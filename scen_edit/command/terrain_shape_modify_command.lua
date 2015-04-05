@@ -1,14 +1,20 @@
 TerrainShapeModifyCommand = UndoableCommand:extends{}
 TerrainShapeModifyCommand.className = "TerrainShapeModifyCommand"
 
-function TerrainShapeModifyCommand:init(x, z, size, delta, shapeName)
+function TerrainShapeModifyCommand:init(x, z, size, delta, shapeName, rotation)
     self.className = "TerrainShapeModifyCommand"
     self.x, self.z, self.size = x, z, size
     self.delta = delta
     self.shapeName = shapeName
+    self.rotation = rotation
 end
 
-local function generateMap(size, delta, shapeName)
+local function rotate(x, y, angle)
+    return x * math.cos(angle) - y * math.sin(angle),
+           x * math.sin(angle) + y * math.cos(angle)
+end
+
+local function generateMap(size, delta, shapeName, rotation)
     local greyscale = SCEN_EDIT.model.terrainManager:getShape(shapeName)
     local sizeX, sizeZ = greyscale.sizeX, greyscale.sizeZ
     local map = { sizeX = sizeX, sizeZ = sizeZ }
@@ -46,12 +52,16 @@ local function generateMap(size, delta, shapeName)
         return value
     end
 
+    local angle = rotation * math.pi / 180
     for x = 0, 2*size, Game.squareSize do
         for z = 0, 2*size, Game.squareSize do
+            local rx, rz = x - size, z - size
+            rx, rz = rotate(rx, rz, angle)
+            rx, rz = rx + size, rz + size
             local diff
-            local indx = getIndex(x, z)
+            local indx = getIndex(rx, rz)
             if indx > sizeX + 1 and indx < sizeX * (sizeX - 1) - 1 then
-                diff = interpolate(x, z)
+                diff = interpolate(rx, rz)
             else
                 diff = res[indx]
             end
@@ -62,7 +72,8 @@ local function generateMap(size, delta, shapeName)
 end
 
 local maps = {}
-local function getMap(size, delta, shapeName)
+--  FIXME: ugly, rework
+local function getMap(size, delta, shapeName, rotation)
     local map = nil
 
     local mapsByShape = maps[shapeName]
@@ -76,18 +87,24 @@ local function getMap(size, delta, shapeName)
         mapsBySize = {}
         mapsByShape[size] = mapsBySize
     end
+    
+    local mapsByRotation = mapsBySize[size]
+    if not mapsByRotation then
+        mapsByRotation = {}
+        mapsBySize[rotation] = mapsByRotation
+    end
 
-    local map = mapsBySize[delta]
+    local map = mapsByRotation[delta]
     if not map then
-        map = generateMap(size, delta, shapeName)
-        mapsBySize[delta] = map
+        map = generateMap(size, delta, shapeName, rotation)
+        mapsByRotation[delta] = map
     end
     return map
 end
 
 function TerrainShapeModifyCommand:GetHeightMapFunc(isUndo)
     return function()
-        local map = getMap(self.size, self.delta, self.shapeName)
+        local map = getMap(self.size, self.delta, self.shapeName, self.rotation)
         local size = self.size
         local parts = 2*size / Game.squareSize + 1
         local startX = self.x - size

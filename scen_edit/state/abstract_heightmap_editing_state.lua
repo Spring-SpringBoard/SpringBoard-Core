@@ -1,28 +1,20 @@
 SCEN_EDIT.Include("scen_edit/state/abstract_map_editing_state.lua")
 AbstractHeightmapEditingState = AbstractMapEditingState:extends{}
 
-function AbstractHeightmapEditingState:init(heightmapEditorView)
-    self.heightmapEditorView = heightmapEditorView
-    self.size                = self.heightmapEditorView.fields["size"].value
-    self.strength            = self.heightmapEditorView.fields["strength"].value
+function AbstractHeightmapEditingState:init(editorView)
+    AbstractMapEditingState.init(self, editorView)
+    self.strength            = self.editorView.fields["strength"].value
     self.applyDelay          = 0.03
     self.initialDelay        = 0.3
 end
 
 function AbstractHeightmapEditingState:leaveState()
-    self.heightmapEditorView:StoppedEditing()
-end
-
-function AbstractHeightmapEditingState:MouseWheel(up, value)
-    if AbstractMapEditingState.MouseWheel(self, up, value) then
-        self.heightmapEditorView:SetNumericField("size", self.size)
-        return true
-    end
+    self.editorView:StoppedEditing()
 end
 
 function AbstractHeightmapEditingState:enterState()
-    self.heightmapEditorView:SetNumericField("size", self.size)
-    self.heightmapEditorView:StartedEditing()
+    self.editorView:SetNumericField("size", self.size)
+    self.editorView:StartedEditing()
 end
 
 function AbstractHeightmapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
@@ -31,34 +23,34 @@ function AbstractHeightmapEditingState:KeyPress(key, mods, isRepeat, label, unic
         return true
     end
     if key == 49 then -- 1
-        local newState = TerrainShapeModifyState(self.heightmapEditorView)
+        local newState = TerrainShapeModifyState(self.editorView)
         if self.size then
             newState.size = self.size
         end
         SCEN_EDIT.stateManager:SetState(newState)
     elseif key == 50 then -- 2
-        local newState = TerrainSmoothState(self.heightmapEditorView)
+        local newState = TerrainSmoothState(self.editorView)
         if self.size then
             newState.size = self.size
         end
         SCEN_EDIT.stateManager:SetState(newState)
     elseif key == 51 then -- 3
-        local newState = TerrainLevelState(self.heightmapEditorView)
+        local newState = TerrainLevelState(self.editorView)
         if self.size then
             newState.size = self.size
         end
         SCEN_EDIT.stateManager:SetState(newState)
     elseif key == 52 then -- 4
-        local newState = TerrainSetState(self.heightmapEditorView)
+        local newState = TerrainSetState(self.editorView)
         if self.size then
             newState.size = self.size
         end
         SCEN_EDIT.stateManager:SetState(newState)
 --     elseif key == 52 then -- 4
---         local newState = TerrainChangeHeightRectState(self.heightmapEditorView)
+--         local newState = TerrainChangeHeightRectState(self.editorView)
 --         SCEN_EDIT.stateManager:SetState(newState)
 --     elseif key == 53 then -- 5
---         local newState = TerrainShapeModifyState(self.heightmapEditorView)
+--         local newState = TerrainShapeModifyState(self.editorView)
 --         SCEN_EDIT.stateManager:SetState(newState)
     else
         return false

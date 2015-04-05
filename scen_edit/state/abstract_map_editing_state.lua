@@ -1,5 +1,12 @@
 AbstractMapEditingState = AbstractEditingState:extends{}
 
+function AbstractMapEditingState:init(editorView)
+    self.editorView          = editorView
+    -- common fields
+    self.size                = self.editorView.fields["size"].value
+    self.rotation            = self.editorView.fields["rotation"].value
+end
+
 function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     -- disable keybindings while changing stuff
     if self.startedChanging then
@@ -72,13 +79,22 @@ function AbstractMapEditingState:MouseMove(x, y, dx, dy, button)
 end
 
 function AbstractMapEditingState:MouseWheel(up, value)
-    local _, _, _, shift = Spring.GetModKeyState()
+    local alt, _, _, shift = Spring.GetModKeyState()
     if shift then
         if up then
             self.size = self.size + self.size * 0.2 + 2
         else
             self.size = self.size - self.size * 0.2 - 2
         end
+        self.editorView:SetNumericField("size", self.size)
+        return true
+    elseif alt then
+        if up then
+            self.rotation = self.rotation + 5
+        else
+            self.rotation = self.rotation - 5
+        end
+        self.editorView:SetNumericField("rotation", self.rotation)
         return true
     end
 end
