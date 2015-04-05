@@ -159,6 +159,14 @@ function HeightmapEditorView:init()
         tooltip = "Size of the height brush",
     })
     self:AddNumericProperty({
+        name = "rotation",
+        value = 0,
+        minValue = 0,
+        maxValue = 360,
+        title = "Shape rotation:",
+        tooltip = "Rotation of the shape",
+    })
+    self:AddNumericProperty({
         name = "strength", 
         value = 10,
         minValue = 0.1,

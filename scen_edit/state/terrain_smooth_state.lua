@@ -1,7 +1,7 @@
 TerrainSmoothState = AbstractHeightmapEditingState:extends{}
 
-function TerrainSmoothState:init(heightmapEditorView)
-    self:super("init", heightmapEditorView)
+function TerrainSmoothState:init(editorView)
+    self:super("init", editorView)
     self.sigma = 1
 end
 

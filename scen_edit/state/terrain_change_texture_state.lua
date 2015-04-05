@@ -1,21 +1,19 @@
 TerrainChangeTextureState = AbstractMapEditingState:extends{}
 SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
 
-function TerrainChangeTextureState:init(terrainEditorView)
-    self.terrainEditorView = terrainEditorView
-    self.paintTexture   = self.terrainEditorView.paintTexture
-    self.penTexture     = self.terrainEditorView.penTexture
-    self.size           = self.terrainEditorView.fields["size"].value
-    self.rotation       = self.terrainEditorView.fields["rotation"].value
-    self.texScale       = self.terrainEditorView.fields["texScale"].value
-    self.detailTexScale = self.terrainEditorView.fields["detailTexScale"].value
-    self.mode           = self.terrainEditorView.fields["mode"].value
-    self.blendFactor    = self.terrainEditorView.fields["blendFactor"].value
-    self.falloffFactor  = self.terrainEditorView.fields["falloffFactor"].value
-    self.featureFactor  = self.terrainEditorView.fields["featureFactor"].value
-    self.diffuseColor   = self.terrainEditorView.fields["diffuseColor"].value
-    self.texOffsetX     = self.terrainEditorView.fields["texOffsetX"].value
-    self.texOffsetY     = self.terrainEditorView.fields["texOffsetY"].value
+function TerrainChangeTextureState:init(editorView)
+    AbstractMapEditingState.init(self, editorView)
+    self.paintTexture   = self.editorView.paintTexture
+    self.penTexture     = self.editorView.penTexture
+    self.texScale       = self.editorView.fields["texScale"].value
+    self.detailTexScale = self.editorView.fields["detailTexScale"].value
+    self.mode           = self.editorView.fields["mode"].value
+    self.blendFactor    = self.editorView.fields["blendFactor"].value
+    self.falloffFactor  = self.editorView.fields["falloffFactor"].value
+    self.featureFactor  = self.editorView.fields["featureFactor"].value
+    self.diffuseColor   = self.editorView.fields["diffuseColor"].value
+    self.texOffsetX     = self.editorView.fields["texOffsetX"].value
+    self.texOffsetY     = self.editorView.fields["texOffsetY"].value
 
     self.updateDelay    = 0.2
     self.applyDelay     = 0.02
@@ -47,25 +45,7 @@ function TerrainChangeTextureState:Apply(x, z)
 end
 
 function TerrainChangeTextureState:leaveState()
-    self.terrainEditorView:Select(0)
-end
-
-function TerrainChangeTextureState:MouseWheel(up, value)
-    if self:super("MouseWheel", up, value) then
-        self.terrainEditorView:SetNumericField("size", self.size)
-        return true
-    else
-        local alt, _, _, _ = Spring.GetModKeyState()
-        if alt then
-            if up then
-                self.rotation = self.rotation + 5
-            else
-                self.rotation = self.rotation - 5
-            end
-            self.terrainEditorView:SetNumericField("rotation", self.rotation)
-            return true
-        end
-    end
+    self.editorView:Select(0)
 end
 
 function TerrainChangeTextureState:DrawWorld()

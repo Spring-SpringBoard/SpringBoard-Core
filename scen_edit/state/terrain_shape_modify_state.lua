@@ -1,8 +1,8 @@
 TerrainShapeModifyState = AbstractHeightmapEditingState:extends{}
 
-function TerrainShapeModifyState:init(heightmapEditorView)
-    self:super("init", heightmapEditorView)
-    self.paintTexture   = self.heightmapEditorView.paintTexture
+function TerrainShapeModifyState:init(editorView)
+    self:super("init", editorView)
+    self.paintTexture = self.editorView.paintTexture
 end
 
 function TerrainShapeModifyState:Apply(x, z, strength)
@@ -11,7 +11,7 @@ function TerrainShapeModifyState:Apply(x, z, strength)
             SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
         end
 
-        local cmd = TerrainShapeModifyCommand(x, z, self.size, strength, self.paintTexture)
+        local cmd = TerrainShapeModifyCommand(x, z, self.size, strength, self.paintTexture, self.rotation)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
     end

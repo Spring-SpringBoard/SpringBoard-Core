@@ -2,7 +2,7 @@ TerrainIncreaseState = AbstractHeightmapEditingState:extends{}
 
 function TerrainIncreaseState:Apply(x, z, strength)
     if self:super("Apply", x, z, strength) then
-        local cmd = TerrainIncreaseCommand(x, z, self.size, strength)
+        local cmd = TerrainIncreaseCommand(x, z, self.size, strength, self.rotation)
         SCEN_EDIT.commandManager:execute(cmd)
         return true
     end
