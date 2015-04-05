@@ -148,6 +148,11 @@ function getPenShader(mode)
     return shaders[mode]
 end
 
+local function rotate(x, y, angle)
+    return x * math.cos(angle) - y * math.sin(angle),
+           x * math.sin(angle) + y * math.cos(angle)
+end
+
 local function DrawQuads(mCoord, tCoord, vCoord, detailTexScale)
     gl.MultiTexCoord(0, mCoord[1], mCoord[2])
     gl.MultiTexCoord(1, tCoord[1] * detailTexScale, tCoord[2] * detailTexScale)
@@ -241,9 +246,22 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
             x + 2 * size, z + 2 * size,
             x + 2 * size, z
         }
+
         for i = 1, #tCoord, 2 do
             tCoord[i] = (tCoord[i] / texSize + opts.texOffsetX) * opts.texScale
             tCoord[i+1] = (tCoord[i+1] / texSize + opts.texOffsetY) * opts.texScale
+        end
+
+        -- rotate center
+        local tdx = tCoord[5] - tCoord[1]
+        local tdz = tCoord[4] - tCoord[2]
+        local angle = opts.rotation * math.pi / 180
+        for i = 1, #tCoord, 2 do
+            tCoord[i]   = tCoord[i] - tdx
+            tCoord[i+1] = tCoord[i + 1] - tdz
+            tCoord[i], tCoord[i+1] = rotate(tCoord[i], tCoord[i+1], angle)
+            tCoord[i]   = tCoord[i] + tdx
+            tCoord[i+1] = tCoord[i + 1] + tdz
         end
 
         gl.Uniform(uniforms.x1ID, mCoord[1])
