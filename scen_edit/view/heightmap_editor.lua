@@ -1,7 +1,8 @@
-HeightmapEditorView = LCS.class{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
+HeightmapEditorView = MapEditorView:extends{}
 
 function HeightmapEditorView:init()
-    self.fields = {}
+    self:super("init")
 
     self.heightmapBrushes = ImageListView:New {
         dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/height",
@@ -124,7 +125,7 @@ function HeightmapEditorView:init()
         }
     }
 
-    local btnClose = Button:New {
+    self.btnClose = Button:New {
         caption = 'Close',
         width = 100,
         right = 15,
@@ -203,7 +204,7 @@ function HeightmapEditorView:init()
                     self.stackPanel 
                 },
             },
-            btnClose,
+            self.btnClose,
         },
         OnDispose = { function() SCEN_EDIT.heightmapEditorView = nil end },
     }
@@ -262,93 +263,6 @@ function HeightmapEditorView:Select(indx)
     self.heightmapBrushes:Select(indx)
 end
 
-function HeightmapEditorView:UpdateNumericField(name, source)
-    local field = self.fields[name]
-
-    -- hackzor
-    if source ~= field.editBox then
-        local v = tostring(field.value)
-        v = v:sub(1, math.min(#v, 6))
-        field.editBox:SetText(v)
-    end
-    if source ~= field.trackbar then
-        field.trackbar:SetValue(field.value)
-    end
-    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-    if currentState:is_A(AbstractHeightmapEditingState) then
-        currentState[field.name] = field.value
-    end
-end
-
-function HeightmapEditorView:SetNumericField(name, value, source)
-    local field = self.fields[name]
-    if field.inUpdate then
-        return
-    end
-
-    field.inUpdate = true
-    value = tonumber(value)
-    if value ~= nil and value ~= field.value then
-        value = math.min(field.maxValue, value)
-        value = math.max(field.minValue, value)
-        field.value = value
-        self:UpdateNumericField(field.name, source)
-    end
-    field.inUpdate = nil
-end
-
-function HeightmapEditorView:AddNumericProperty(field)
-    self.fields[field.name] = field
-    local v = tostring(field.value)
-    v = v:sub(1, math.min(#v, 6))
-
-    field.label = Label:New {
-        caption = field.title,
-        x = 1,
-        y = 1,
-        tooltip = field.tooltip,
-    }
-    field.editBox = EditBox:New {
-        text = v,
-        x = 140,
-        y = 1,
-        width = 80,
-        OnTextInput = {
-            function() 
-                self:SetNumericField(field.name, field.editBox.text, field.editBox)
-            end
-        },
-        OnKeyPress = {
-            function() 
-                self:SetNumericField(field.name, field.editBox.text, field.editBox)
-            end
-        },
-    }
-    field.trackbar = Trackbar:New {
-        x = 250,
-        y = 1,
-        value = field.value,
-        min = field.minValue,
-        max = field.maxValue,
-        step = 0.01,
-    }
-    field.trackbar.OnChange = {
-        function(obj, value)
-            self:SetNumericField(field.name, value, obj)
-        end
-    }
-
-    local ctrl = Control:New {
-        x = 0,
-        y = 0,
-        width = 400,
-        height = 20,
-        padding = {0, 0, 0, 0},
-        children = {
-            field.label,
-            field.editBox,
-            field.trackbar,
-        }
-    }
-    self.stackPanel:AddChild(ctrl)
+function HeightmapEditorView:IsValidTest(state)
+    return state:is_A(AbstractHeightmapEditingState)
 end
