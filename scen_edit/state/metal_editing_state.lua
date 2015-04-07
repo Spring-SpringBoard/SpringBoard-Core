@@ -1,0 +1,37 @@
+MetalEditingState = AbstractMapEditingState:extends{}
+SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
+
+function MetalEditingState:init(editorView)
+    AbstractMapEditingState.init(self, editorView)
+
+    self.updateDelay    = 0.2
+    self.applyDelay     = 0.02
+end
+
+function MetalEditingState:Apply(x, z)
+    if self:super("Apply", x, z) then
+
+        local _, _, addMode, _, _ = Spring.GetMouseState()
+        local opts = {
+            x = x - self.size,
+            z = z - self.size,
+            size = self.size,
+            addMode = addMode,
+        }
+        local command = TerrainMetalCommand(opts)
+        SCEN_EDIT.commandManager:execute(command)
+    end
+end
+
+function MetalEditingState:DrawWorld()
+    x, y = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground" then
+        local x, z = coords[1], coords[3]
+        gl.PushMatrix()
+        gl.Color(0, 1, 0, 0.3)
+        --gl.DepthTest(true)
+        gl.Utilities.DrawGroundCircle(x, z, self.size)
+        gl.PopMatrix()
+    end
+end
