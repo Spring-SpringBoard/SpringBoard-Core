@@ -116,11 +116,11 @@ function HeightmapEditorView:init()
 --     })
 
     self.imgPanel = ScrollPanel:New {
-        x = 0, 
+        x = 0,
         right = 0,
-        bottom = 30, 
+        bottom = 30,
         y = "35%",
-        children = { 
+        children = {
             self.heightmapBrushes,
         }
     }
@@ -131,8 +131,8 @@ function HeightmapEditorView:init()
         right = 15,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick = { 
-            function() 
+        OnClick = {
+            function()
                 self.window:Hide()
                 SCEN_EDIT.stateManager:SetState(DefaultState())
             end 
@@ -168,7 +168,7 @@ function HeightmapEditorView:init()
         tooltip = "Rotation of the shape",
     })
     self:AddNumericProperty({
-        name = "strength", 
+        name = "strength",
         value = 10,
         minValue = 0.1,
         maxValue = 1000,
@@ -220,7 +220,7 @@ function HeightmapEditorView:StoppedEditing()
 
     self.btnLevelState.state.pressed = false
     self.btnLevelState:Invalidate()
-    
+
     self.btnSetState.state.pressed = false
     self.btnSetState:Invalidate()
 
