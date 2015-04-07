@@ -41,4 +41,24 @@ function TerrainPanel:init()
         },
     })
     self.control:AddChild(btnModifyTextureMap)
+
+    local btnModifyTextureMap = TabbedPanelButton({
+        tooltip = "Change grass map",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelLabel({ caption = "Grass" }),
+        },
+        OnClick = {
+            function()
+                if SCEN_EDIT.grassEditorView == nil then
+                    self.grassEditorView = GrassEditorView()
+                    SCEN_EDIT.grassEditorView = self.grassEditorView
+                end
+                if SCEN_EDIT.grassEditorView.window.hidden then
+                    SCEN_EDIT.grassEditorView.window:Show()
+                end
+            end
+        },
+    })
+    self.control:AddChild(btnModifyTextureMap)
 end

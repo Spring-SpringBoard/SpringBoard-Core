@@ -21,7 +21,7 @@ function ExportMapsCommand:execute()
         end
 
         local texInfo = gl.TextureInfo("$heightmap")
-        heightmapTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+        local heightmapTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
             border = false,
             min_filter = GL.LINEAR,
             mag_filter = GL.LINEAR,
@@ -38,6 +38,36 @@ function ExportMapsCommand:execute()
         gl.Texture(false)
 
         gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath)
+        gl.DeleteTexture(heightmapTexture)
+
+        -- grass
+        local grassPath = self.path .. "/grass.png"
+        Spring.Echo("Saving the grass to " .. grassPath .. "...")
+
+        if VFS.FileExists(grassPath, VFS.RAW) then
+            Spring.Echo("removing the existing grass")
+            os.remove(grassPath)
+        end
+
+        local texInfo = gl.TextureInfo("$grass")
+        local grassTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+            border = false,
+            min_filter = GL.LINEAR,
+            mag_filter = GL.LINEAR,
+            wrap_s = GL.CLAMP_TO_EDGE,
+            wrap_t = GL.CLAMP_TO_EDGE,
+            fbo = true,
+        })
+
+        gl.Texture("$grass")
+        gl.RenderToTexture(grassTexture,
+        function()
+            gl.TexRect(-1,-1, 1, 1)
+        end)
+        gl.Texture(false)
+
+        gl.RenderToTexture(grassTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, grassPath)
+        gl.DeleteTexture(grassTexture)
 
         -- diffuse
         local texturePath = self.path .. "/texture.png"
@@ -74,10 +104,12 @@ function ExportMapsCommand:execute()
                 gl.BlitFBO(
                     mapFBO, 0, 0, texSize, texSize,
                     totalMapFBO, i * texSize, (sizeZ - j) * texSize, (i + 1) * texSize, (sizeZ - j - 1) * texSize)
+                gl.DeleteFBO(mapFBO)
             end
         end
         -- Either blitting isn't working, or FBOs aren't properly mapped to textures...?
         gl.RenderToTexture(totalMapTexture, gl.SaveImage, 0, 0, Game.mapSizeX, Game.mapSizeZ, texturePath)
+        gl.DeleteTexture(totalMapTexture)
         -- FIXME: probably not needed -.-
         gl.Flush()
     end)

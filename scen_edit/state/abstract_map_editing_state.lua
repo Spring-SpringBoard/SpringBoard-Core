@@ -4,7 +4,9 @@ function AbstractMapEditingState:init(editorView)
     self.editorView          = editorView
     -- common fields
     self.size                = self.editorView.fields["size"].value
-    self.rotation            = self.editorView.fields["rotation"].value
+    if self.editorView.fields["rotation"] then
+        self.rotation        = self.editorView.fields["rotation"].value
+    end
 end
 
 function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
@@ -88,7 +90,7 @@ function AbstractMapEditingState:MouseWheel(up, value)
         end
         self.editorView:SetNumericField("size", self.size)
         return true
-    elseif alt then
+    elseif alt and self.rotation ~= nil then
         if up then
             self.rotation = self.rotation + 5
         else
