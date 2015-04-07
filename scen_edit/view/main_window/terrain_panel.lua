@@ -42,7 +42,7 @@ function TerrainPanel:init()
     })
     self.control:AddChild(btnModifyTextureMap)
 
-    local btnModifyTextureMap = TabbedPanelButton({
+    local btnModifyGrass = TabbedPanelButton({
         tooltip = "Change grass map",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
@@ -60,5 +60,25 @@ function TerrainPanel:init()
             end
         },
     })
-    self.control:AddChild(btnModifyTextureMap)
+    self.control:AddChild(btnModifyGrass)
+    
+    local btnModifyMetal = TabbedPanelButton({
+        tooltip = "Change metal map",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelLabel({ caption = "Metal" }),
+        },
+        OnClick = {
+            function()
+                if SCEN_EDIT.metalEditorView == nil then
+                    self.metalEditorView = MetalEditorView()
+                    SCEN_EDIT.metalEditorView = self.metalEditorView
+                end
+                if SCEN_EDIT.metalEditorView.window.hidden then
+                    SCEN_EDIT.metalEditorView.window:Show()
+                end
+            end
+        },
+    })
+    self.control:AddChild(btnModifyMetal)
 end
