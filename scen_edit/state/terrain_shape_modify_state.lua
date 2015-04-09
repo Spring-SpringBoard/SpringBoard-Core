@@ -25,7 +25,7 @@ function TerrainShapeModifyState:DrawWorld()
         gl.PushMatrix()
         gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundRectangle(x - self.size, z - self.size, x + self.size, z + self.size)
-        gl.Color(0, 0.5, 0.5, 0.4)
+        gl.Color(0, 0, 1, 0.4)
         gl.Utilities.DrawGroundRectangle(x - self.size * 0.95, z - self.size * 0.95, x + self.size * 0.95, z + self.size * 0.95)
         gl.PopMatrix()
     end

@@ -16,7 +16,7 @@ function TerrainSetState:DrawWorld()
         gl.PushMatrix()
         gl.Color(1, 1, 1, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
-        gl.Color(1, 0, 0, 0.4)
+        gl.Color(0, 0.5, 0.5, 0.4)
         gl.Utilities.DrawGroundCircle(x, z, self.size * 0.95)
         gl.PopMatrix()
     end
