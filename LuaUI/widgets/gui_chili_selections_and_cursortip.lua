@@ -2242,7 +2242,7 @@ end
 --callins
 
 function widget:Update(dt)
-	if widgetHandler:InTweakMode() then
+	if widgetHandler.InTweakMode and widgetHandler:InTweakMode() then
 		tweakShow = true
 		Show(real_window_corner)
 	elseif tweakShow then
