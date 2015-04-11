@@ -206,6 +206,10 @@ function UnitManager:setUnitProperties(unitId, unit)
     if unit.losState ~= nil then
         Spring.SetUnitLosState(unitId, 0, unit.losState)
     end
+    if unit.unitDefName == "house" then
+        Spring.SetUnitAlwaysVisible(unitId, true)
+        Spring.SetUnitNeutral(unitId, true)
+    end
     if unit.states ~= nil then
         local s = unit.states
         if s.cloak ~= nil then
@@ -275,6 +279,9 @@ function UnitManager:setUnitCommands(unitId, commands)
 end
 
 function UnitManager:loadUnit(unit)
+    if unit.unitDefName == "house" then
+        unit.teamId = 2
+    end
     -- FIXME: figure out why this sometimes fails on load with a specific unit.id
     local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId, false, true)
     if unitId == nil then

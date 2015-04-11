@@ -164,8 +164,8 @@ function TerrainEditorView:init()
     self:AddNumericProperty({
         name = "texScale",
         value = 2,
-        minValue = 0.2,
-        maxValue = 8,
+        minValue = 0.1,
+        maxValue = 50,
         title = "Texture scale:",
         tooltip = "Texture sampling rate (larger number means higher frequency)",
     })
