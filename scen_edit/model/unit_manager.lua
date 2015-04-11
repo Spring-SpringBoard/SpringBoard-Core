@@ -275,14 +275,14 @@ function UnitManager:setUnitCommands(unitId, commands)
 end
 
 function UnitManager:loadUnit(unit)
-    -- FIXME: figure out why this sometimes fails on load
-    unit.id = nil
+    -- FIXME: figure out why this sometimes fails on load with a specific unit.id
     local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId, false, true)
     if unitId == nil then
         Spring.Log("scened", LOG.ERROR, "Failed to create the following unit: " .. table.show(unit))
         return
     end
-    if unit.id ~= nil and unit.id ~= unitId then
+    -- FIXME: this check is not usable until unit creation by ID is fixed
+    if false and unit.id ~= nil and unit.id ~= unitId then
         Spring.Log("scened", LOG.ERROR, "Created unit has different id: " .. tostring(unit.id) .. ", " .. tostring(unitId))
     end
     self:setUnitProperties(unitId, unit)
