@@ -389,7 +389,7 @@ return {
                 input = { "string" },
                 tags = {"Sound"},
                 execute = function (input)
-                    Spring.PlaySoundFile(input.string)
+                    Spring.PlaySoundStream(input.string)
                 end
             },
             {

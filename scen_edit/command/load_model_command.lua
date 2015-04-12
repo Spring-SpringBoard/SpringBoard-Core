@@ -8,9 +8,18 @@ end
 
 function LoadModelCommand:execute()
     SCEN_EDIT.model:Clear()
-    -- wait a bit
-    GG.Delay.DelayCall(function()
-        local mission = loadstring(self.modelString)()
-        SCEN_EDIT.model:Load(mission)
-    end, {}, 2)
+    -- wait a bit if it's already loaded, but start immediately otherwise
+    if Spring.GetGameFrame() ~= nil then 
+        GG.Delay.DelayCall(function()
+            self:Load()
+        end, {}, 2)
+    else
+        self:Load()
+    end
+end
+
+function LoadModelCommand:Load()
+    Spring.Log("Scened", LOG.NOTICE, "Loading model...")
+    local mission = loadstring(self.modelString)()
+    SCEN_EDIT.model:Load(mission)
 end

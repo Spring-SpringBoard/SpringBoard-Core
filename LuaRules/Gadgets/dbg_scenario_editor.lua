@@ -163,6 +163,7 @@ function Load()
     SCEN_EDIT.model.unitManager:populate()
     SCEN_EDIT.model.featureManager:populate()
     if hasScenarioFile then
+        Spring.Log("Scened", LOG.NOTICE, "Loading the scenario file...")
         local heightmapData = VFS.LoadFile("heightmap.data", VFS.MOD)
         local modelData = VFS.LoadFile("model.lua", VFS.MOD)
         local texturePath = "texturemap/texture.png"
@@ -178,7 +179,7 @@ function Load()
 end
 
 function gadget:GamePreload()
-    --Load()
+    Load()
 end
 
 function gadget:GameFrame(frameNum)
@@ -186,10 +187,13 @@ function gadget:GameFrame(frameNum)
     SCEN_EDIT.rtModel:GameFrame(frameNum)
 
     --wait a bit before populating everything (so luaui is loaded)
-    if SCEN_EDIT.loadFrame == frameNum then
-        Load()
-    end
+--     if SCEN_EDIT.loadFrame == frameNum then
+--         Load()
+--     end
+end
 
+function gadget:Update()
+    --SCEN_EDIT.executeDelayed()
 end
 
 function gadget:TeamDied(teamID)

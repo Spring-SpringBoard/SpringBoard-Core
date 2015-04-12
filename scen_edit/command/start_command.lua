@@ -5,6 +5,7 @@ function StartCommand:init()
 end
 
 function StartCommand:execute()
+    Spring.Log("Scened", LOG.NOTICE, "Start command")
     if not SCEN_EDIT.rtModel.hasStarted then
         local oldModel = SCEN_EDIT.model:Serialize()
         SCEN_EDIT.model.oldModel = oldModel
