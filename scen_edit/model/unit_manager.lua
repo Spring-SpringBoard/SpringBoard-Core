@@ -123,7 +123,7 @@ function UnitManager:serializeUnitProperties(unitId, unit)
 end
 
 function UnitManager:serializeUnitCommands(unitId, unit)
-    -- math.huge needed here to work around jk's attempt at optimization (otherwise we get errors)
+    -- -1 needed here to work around jk's attempt at optimization (otherwise we get errors)
     unit.commands = Spring.GetUnitCommands(unitId, -1)
     if unit.commands ~= nil then
         for _, command in pairs(unit.commands) do
@@ -279,6 +279,9 @@ function UnitManager:setUnitCommands(unitId, commands)
 end
 
 function UnitManager:loadUnit(unit)
+    if self.m2sUnitIdMapping[unit.id] then
+        return
+    end
     if unit.unitDefName == "house" then
         unit.teamId = 2
     end
