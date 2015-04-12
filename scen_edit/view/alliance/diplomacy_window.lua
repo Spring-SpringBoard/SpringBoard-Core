@@ -39,8 +39,9 @@ function DiplomacyWindow:init(trigger)
             width = 150,
             parent = stackTeamPanel,
         }
+        local j = 1
         for _, team2 in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
-            if team1.id ~= team2.id then
+            if team.id ~= team2.id then
                 self.cbSpecialUnit = Checkbox:New {
                     caption = '',
                     x = 160 + j * 40,
@@ -56,6 +57,7 @@ function DiplomacyWindow:init(trigger)
                     }
                 }
             end
+            j = j + 1
         end
         --[[
         local cmbAlliance = ComboBox:New {
