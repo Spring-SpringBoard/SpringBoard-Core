@@ -68,25 +68,29 @@ end
 function widget:Initialize()
     dumpConfig()
 
-    wasEnabled = Spring.IsCheatingEnabled()
-    if not wasEnabled then
-        Spring.SendCommands("cheat")
-    end
-
     VFS.Include("scen_edit/exports.lua")
-    if devMode then
-        reloadGadgets() --uncomment for development	
-        Spring.SendCommands("globallos")
-        if not wasEnabled then
-            Spring.SendCommands("cheat")
-        end
-    end
 
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
-    
+
     VFS.Include(SCEN_EDIT_DIR .. "util.lua")
+
+    local wasEnabled = Spring.IsCheatingEnabled()
+    if not wasEnabled then
+        Spring.SendCommands("cheat")
+    end
+
+    -- FIXME: globallos needs to be enabled for terrain loading to be visible
+    Spring.SendCommands("globallos")
+    if devMode then
+        reloadGadgets() --uncomment for development
+    end
+
+    if not wasEnabled then
+        Spring.SendCommands("cheat")
+    end
+
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "observable.lua")
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "display_util.lua")
@@ -202,19 +206,21 @@ function widget:KeyPress(key, mods, isRepeat, label, unicode)
     end
 end
 
+function widget:GamePreload()
+    if not hasScenarioFile and SCEN_EDIT.projectDir ~= nil and not SCEN_EDIT.projectLoaded then
+        Spring.Log("Scened", LOG.NOTICE, "Loading project (from widget)")
+        local cmd = LoadCommandWidget(SCEN_EDIT.projectDir, false)
+        SCEN_EDIT.commandManager:execute(cmd, true)
+        SCEN_EDIT.projectLoaded = true
+    end
+end
+
 function widget:GameFrame(frameNum)
     if SCEN_EDIT.view ~= nil then
         SCEN_EDIT.stateManager:GameFrame(frameNum)
         SCEN_EDIT.view:GameFrame(frameNum)
     end
     SCEN_EDIT.displayUtil:OnFrame()
-
-    if not hasScenarioFile and SCEN_EDIT.projectDir ~= nil and not SCEN_EDIT.projectLoaded then
-        Spring.Echo("Load project")
-        local cmd = LoadCommandWidget(SCEN_EDIT.projectDir, false)
-        SCEN_EDIT.commandManager:execute(cmd, true)
-        SCEN_EDIT.projectLoaded = true
-    end
 end
 
 function widget:Update()

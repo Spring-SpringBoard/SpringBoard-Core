@@ -40,7 +40,7 @@ local function GenerateScriptTxt(dev)
 	DiminishingMMs=0;
 	GhostedBuildings=1;
 	MyPlayerNum=1;
-	MyPlayerName=Player;
+	MyPlayerName=__MY_PLAYER_NAME__;
 	NumRestrictions=0;
 	MaxSpeed=20;
 	MinSpeed=0.1;
@@ -53,6 +53,8 @@ local function GenerateScriptTxt(dev)
 	}
 
 ]]
+
+    local isMyPlayerNameSet = false
 
     local scenarioInfo = SCEN_EDIT.model.scenarioInfo
     local gameType = nil
@@ -132,7 +134,10 @@ local function GenerateScriptTxt(dev)
                              :gsub("__NAME__", team.name)
                              :gsub("__SPECTATOR__", spectator)
                              :gsub("__TEAM__", team.id)
-                
+                if not isMyPlayerNameSet then
+                    scriptTxt = scriptTxt:gsub("__MY_PLAYER_NAME__", team.name)
+                    isMyPlayerNameSet = true
+                end
                 scriptTxt = scriptTxt .. playerTxt
             end
         end
@@ -153,6 +158,7 @@ local function GenerateScriptTxt(dev)
                              :gsub("__TEAM__", 1)
 
         scriptTxt = scriptTxt .. playerTxt
+        scriptTxt = scriptTxt:gsub("__MY_PLAYER_NAME__", "Player")
     end
 
     for _, allyTeamId in pairs(Spring.GetAllyTeamList()) do
