@@ -9,7 +9,7 @@ end
 function LoadModelCommand:execute()
     SCEN_EDIT.model:Clear()
     -- wait a bit if it's already loaded, but start immediately otherwise
-    if Spring.GetGameFrame() ~= nil then 
+    if Spring.GetGameFrame() ~= nil and Spring.GetGameFrame() > 30 then 
         GG.Delay.DelayCall(function()
             self:Load()
         end, {}, 2)
