@@ -47,8 +47,11 @@ function LoadCommandWidget:execute()
         heightmapData = VFS.LoadFile(path .. "/" .. "heightmap.data", VFS.RAW)
         texturePath = path .. "/" .. "texturemap/"
     end
-    
+
     local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
+    if not hasScenarioFile and not devMode then
+        table.insert(cmds, StartCommand())
+    end
     local cmd = CompoundCommand(cmds)
     cmd.blockUndo = true
     SCEN_EDIT.commandManager:execute(cmd)

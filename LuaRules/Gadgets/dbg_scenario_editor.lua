@@ -171,10 +171,10 @@ function Load()
         local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
         SCEN_EDIT.commandManager:execute(CompoundCommand(cmds))
         SCEN_EDIT.commandManager:execute(LoadTextureCommand(texturePath), true)
-    end
 
-    if not devMode then
-        StartCommand():execute()
+        if not devMode then
+            StartCommand():execute()
+        end
     end
 end
 
@@ -207,6 +207,10 @@ function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
         return
     end
     if not SCEN_EDIT.rtModel.hasStarted then
+        -- FIXME: hack to prevent units being frozen if startCommand is executed in the same frame
+        if not devMode then
+            return
+        end
         --Spring.MoveCtrl.Enable(unitID)
         --Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
         SCEN_EDIT.delay(function()

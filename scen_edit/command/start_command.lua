@@ -6,6 +6,8 @@ end
 
 function StartCommand:execute()
     Spring.Log("Scened", LOG.NOTICE, "Start command")
+        Spring.Echo("STARTCOMMAND", SCEN_EDIT.rtModel.hasStarted)
+
     if not SCEN_EDIT.rtModel.hasStarted then
         local oldModel = SCEN_EDIT.model:Serialize()
         SCEN_EDIT.model.oldModel = oldModel
@@ -28,4 +30,5 @@ function StartCommand:execute()
         end
         SCEN_EDIT.rtModel:GameStart()
     end
+    Spring.Echo("STARTCOMMAND", SCEN_EDIT.rtModel.hasStarted)
 end
