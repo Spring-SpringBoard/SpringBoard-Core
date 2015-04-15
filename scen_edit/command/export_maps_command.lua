@@ -8,11 +8,32 @@ end
 
 function ExportMapsCommand:execute()
     SCEN_EDIT.delayGL(function()
+    
+            local heightmapScaleShader = [[
+                uniform sampler2D heightmapTex;
+                uniform float maxPos, maxNeg;
+                void main() {
+                    gl_FragColor = texture2D(heightmapTex, gl_TexCoord[0].st);
+                    gl_FragColor.rgb = (gl_FragColor.rgb - maxNeg) / (maxPos - maxNeg);
+                }
+            ]]
+
+            local shader = gl.CreateShader({ fragment = heightmapScaleShader, uniformInt = {heightmapTexID = 0 }})
+            local errors = gl.GetShaderLog(shader)
+            if errors ~= "" then
+                Spring.Echo(errors)
+            end
+            local heightmapTexID = gl.GetUniformLocation(shader, "heightmapTex")
+            local maxPosID       = gl.GetUniformLocation(shader, "maxPos")
+            local maxNegID       = gl.GetUniformLocation(shader, "maxNeg")
+    
+    
         -- create dir just to be sure
         Spring.CreateDir(self.path)
 
         -- heightmap
         local heightmapPath = self.path .. "/heightmap.png"
+
         Spring.Echo("Saving the heightmap to " .. heightmapPath .. "...")
 
         if VFS.FileExists(heightmapPath, VFS.RAW) then
@@ -23,19 +44,41 @@ function ExportMapsCommand:execute()
         local texInfo = gl.TextureInfo("$heightmap")
         local heightmapTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
             border = false,
-            min_filter = GL.LINEAR,
-            mag_filter = GL.LINEAR,
+            min_filter = GL.NEAREST,
+            mag_filter = GL.NEAREST,
             wrap_s = GL.CLAMP_TO_EDGE,
             wrap_t = GL.CLAMP_TO_EDGE,
             fbo = true,
         })
 
-        gl.Texture("$heightmap")
+        -- not used, seem incorrect
+        local minHeight, maxHeight = Spring.GetGroundExtremes()
+        Spring.Echo(maxHeight, minHeight)
+
+        local maxH, minH = -math.huge, math.huge
+        for x = 0, Game.mapSizeX, Game.squareSize do
+            for z = 0, Game.mapSizeZ, Game.squareSize do
+                local groundHeight = Spring.GetGroundHeight(x, z)
+                if groundHeight > maxH then
+                    maxH = groundHeight
+                end
+                if groundHeight < minH then
+                    minH = groundHeight
+                end
+            end
+        end
+        Spring.Echo(minH, maxH)
+
+        gl.UseShader(shader)
+        gl.Uniform(maxPosID, maxH)
+        gl.Uniform(maxNegID, minH)
+        gl.Texture(0, "$heightmap")
         gl.RenderToTexture(heightmapTexture,
         function()
             gl.TexRect(-1,-1, 1, 1)
         end)
-        gl.Texture(false)
+        gl.Texture(0, false)
+        gl.UseShader(0)
 
         gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath)
         gl.DeleteTexture(heightmapTexture)
