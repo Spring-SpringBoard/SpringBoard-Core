@@ -4,6 +4,11 @@ TerrainShapeModifyCommand.className = "TerrainShapeModifyCommand"
 function TerrainShapeModifyCommand:init(x, z, size, delta, shapeName, rotation)
     self.className = "TerrainShapeModifyCommand"
     self.x, self.z, self.size = x, z, size
+    if self.x ~= nil and self.z ~= nil and self.size then
+        self.x = math.floor(self.x)
+        self.z = math.floor(self.z)
+        self.size = math.floor(self.size)
+    end
     self.delta = delta
     self.shapeName = shapeName
     self.rotation = rotation
@@ -109,19 +114,27 @@ function TerrainShapeModifyCommand:GetHeightMapFunc(isUndo)
         local parts = 2*size / Game.squareSize + 1
         local startX = self.x - size
         local startZ = self.z - size
-        if not isUndo then
-            for x = 0, 2*size, Game.squareSize do
-                for z = 0, 2*size, Game.squareSize do
-                    local total = map[x + z * parts]
-                    Spring.AddHeightMap(x + startX, z + startZ, total)
-                end
-            end
-        else
-            for x = 0, 2*size, Game.squareSize do
-                for z = 0, 2*size, Game.squareSize do
-                    local total = map[x + z * parts] 
-                    Spring.AddHeightMap(x + startX, z + startZ, -total)
-                end
+
+        local offsetX = 0
+        if startX < 0 then
+            -- result of a % b is always a non-negative number
+            offsetX = -startX + startX % Game.squareSize
+        end
+        local offsetZ = 0
+        if startZ < 0 then
+            -- result of a % b is always a non-negative number
+            offsetZ = -startZ + startZ % Game.squareSize
+        end
+
+        local multiplier = 1
+        if isUndo then
+            multiplier = -multiplier
+        end
+
+        for x = offsetX, 2*size, Game.squareSize do
+            for z = offsetZ, 2*size, Game.squareSize do
+                Spring.AddHeightMap(x + startX, z + startZ, 
+                    map[x + z * parts] * multiplier)
             end
         end
     end
