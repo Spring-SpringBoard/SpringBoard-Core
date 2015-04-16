@@ -6,28 +6,38 @@ function ExportMapsCommand:init(path)
     self.path = path
 end
 
+local shaderObj
+function ExportMapsCommand:GetShaderObj()
+    local heightmapScaleShader = [[
+        uniform sampler2D heightmapTex;
+        uniform float groundMin, groundMax;
+        void main() {
+            gl_FragColor = texture2D(heightmapTex, gl_TexCoord[0].st);
+            gl_FragColor.rgb = (gl_FragColor.rgb - groundMin) / (groundMax - groundMin);
+        }
+    ]]
+
+    local shader = gl.CreateShader({ 
+        fragment = heightmapScaleShader, 
+        uniformInt = {heightmapTexID = 0 },
+    })
+    local errors = gl.GetShaderLog(shader)
+    if errors ~= "" then
+        Spring.Echo(errors)
+    end
+    shaderObj = {
+        shader = shader,
+        uniforms = {
+            heightmapTexID = gl.GetUniformLocation(shader, "heightmapTex"),
+            groundMaxID    = gl.GetUniformLocation(shader, "groundMax"),
+            groundMinID    = gl.GetUniformLocation(shader, "groundMin"),
+        }
+    }
+    return shaderObj
+end
+
 function ExportMapsCommand:execute()
     SCEN_EDIT.delayGL(function()
-    
-            local heightmapScaleShader = [[
-                uniform sampler2D heightmapTex;
-                uniform float maxPos, maxNeg;
-                void main() {
-                    gl_FragColor = texture2D(heightmapTex, gl_TexCoord[0].st);
-                    gl_FragColor.rgb = (gl_FragColor.rgb - maxNeg) / (maxPos - maxNeg);
-                }
-            ]]
-
-            local shader = gl.CreateShader({ fragment = heightmapScaleShader, uniformInt = {heightmapTexID = 0 }})
-            local errors = gl.GetShaderLog(shader)
-            if errors ~= "" then
-                Spring.Echo(errors)
-            end
-            local heightmapTexID = gl.GetUniformLocation(shader, "heightmapTex")
-            local maxPosID       = gl.GetUniformLocation(shader, "maxPos")
-            local maxNegID       = gl.GetUniformLocation(shader, "maxNeg")
-    
-    
         -- create dir just to be sure
         Spring.CreateDir(self.path)
 
@@ -42,7 +52,9 @@ function ExportMapsCommand:execute()
         end
 
         local texInfo = gl.TextureInfo("$heightmap")
+        local GL_LUMINANCE32F_ARB = 0x8818
         local heightmapTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+            format = GL_LUMINANCE32F_ARB,
             border = false,
             min_filter = GL.NEAREST,
             mag_filter = GL.NEAREST,
@@ -69,9 +81,10 @@ function ExportMapsCommand:execute()
         end
         Spring.Echo(minH, maxH)
 
-        gl.UseShader(shader)
-        gl.Uniform(maxPosID, maxH)
-        gl.Uniform(maxNegID, minH)
+        local shaderObj = self:GetShaderObj()
+        gl.UseShader(shaderObj.shader)
+        gl.Uniform(shaderObj.uniforms.groundMaxID, maxH)
+        gl.Uniform(shaderObj.uniforms.groundMinID, minH)
         gl.Texture(0, "$heightmap")
         gl.RenderToTexture(heightmapTexture,
         function()
@@ -80,7 +93,7 @@ function ExportMapsCommand:execute()
         gl.Texture(0, false)
         gl.UseShader(0)
 
-        gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath)
+        gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath, {grayscale16bit = true})
         gl.DeleteTexture(heightmapTexture)
 
         -- grass
