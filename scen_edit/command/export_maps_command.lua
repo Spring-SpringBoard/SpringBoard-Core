@@ -17,8 +17,8 @@ function ExportMapsCommand:GetShaderObj()
         }
     ]]
 
-    local shader = gl.CreateShader({ 
-        fragment = heightmapScaleShader, 
+    local shader = gl.CreateShader({
+        fragment = heightmapScaleShader,
         uniformInt = {heightmapTexID = 0 },
     })
     local errors = gl.GetShaderLog(shader)
