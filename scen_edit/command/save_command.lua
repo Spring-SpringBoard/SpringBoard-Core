@@ -44,31 +44,9 @@ local function HeightMapSave(path)
             data = {}
         end
     end
-    for x = 0, Game.mapSizeX, Game.squareSize do
-        local lastChanged = false
-        for z = 0, Game.mapSizeZ, Game.squareSize do
-            local groundHeight = Spring.GetGroundHeight(x, z)
-            local origGroundHeight = Spring.GetGroundOrigHeight(x, z)
-            local deltaHeight = groundHeight - origGroundHeight
-            if deltaHeight ~= 0 then
-                --Spring.Echo(x, z)
-                if lastChanged then
-                    --Spring.Echo(deltaHeight)
-                    addData(deltaHeight)
-                else
-                    --Spring.Echo(x, z, deltaHeight)
-                    addData(x)
-                    addData(z)
-                    addData(deltaHeight)
-                    lastChanged = true
-                end
-            else
-                if lastChanged then
-                    --Spring.Echo(0)
-                    addData(0)
-                    lastChanged = false
-                end
-            end
+    for x = 0, Game.mapSizeX-1, Game.squareSize do
+        for z = 0, Game.mapSizeZ-1, Game.squareSize do
+            addData(Spring.GetGroundHeight(x, z) - Spring.GetGroundOrigHeight(x, z))
         end
     end
     bufferFlush()
