@@ -121,6 +121,10 @@ function UnitManager:serializeUnitProperties(unitId, unit)
     unit.states = Spring.GetUnitStates(unitId)
     -- FIXME: why do we need the second param?
     unit.losState = Spring.GetUnitLosState(unitId, 0) -- los, radar and typed
+    unit.rules = {}
+    for rule, value in pairs(Spring.GetUnitRulesParams(unitId)) do
+        unit.rules[rule] = value
+    end
 end
 
 function UnitManager:serializeUnitCommands(unitId, unit)
@@ -210,6 +214,15 @@ function UnitManager:setUnitProperties(unitId, unit)
     if unit.unitDefName == "house" then
         Spring.SetUnitAlwaysVisible(unitId, true)
         Spring.SetUnitNeutral(unitId, true)
+    end
+    if unit.rules ~= nil then
+        for _, foo in pairs(unit.rules) do
+            if type(foo) == "table" then
+                for rule, value in pairs(foo) do
+                    Spring.SetUnitRulesParam(unitId, rule, value)
+                end
+            end
+        end
     end
     if unit.states ~= nil then
         local s = unit.states

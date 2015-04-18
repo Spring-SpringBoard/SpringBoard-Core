@@ -29,6 +29,9 @@ function SetUnitPropertyCommand:execute()
     elseif self.key == "fuel" then
         self.oldFuel = Spring.GetUnitFuel(unitId)
         Spring.SetUnitFuel(unitId, self.value)
+    elseif self.key == "rule" then
+        self.oldRule = Spring.GetUnitRulesParam(unitId, self.value[1])
+        Spring.SetUnitRulesParam(unitId, self.value[1], self.value[2])
     end
 end
 
