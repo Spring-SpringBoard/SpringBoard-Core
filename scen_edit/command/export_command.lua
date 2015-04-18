@@ -31,6 +31,7 @@ local function GenerateScriptTxt(dev)
 	HostPort=8452;
 	IsHost=1;
 	NumPlayers=1;
+    GameStartDelay=0;
 
 	StartMetal=1000;
 	StartEnergy=1000;
