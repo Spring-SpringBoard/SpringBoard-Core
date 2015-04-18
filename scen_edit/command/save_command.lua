@@ -11,7 +11,7 @@ local function HeightMapSave(path)
     local data = {}
     local totalChanged = 0
 
-    local bufferSize = 1000
+    local bufferSize = 100000
     local bufferFlush = function()
         if #data == 0 then
             return
@@ -44,9 +44,9 @@ local function HeightMapSave(path)
             data = {}
         end
     end
-    for x = 0, Game.mapSizeX-1, Game.squareSize do
-        for z = 0, Game.mapSizeZ-1, Game.squareSize do
-            addData(Spring.GetGroundHeight(x, z) - Spring.GetGroundOrigHeight(x, z))
+    for x = 0, Game.mapSizeX, Game.squareSize do
+        for z = 0, Game.mapSizeZ, Game.squareSize do
+            addData(Spring.GetGroundHeight(x, z))
         end
     end
     bufferFlush()
@@ -115,6 +115,7 @@ local function GenerateScriptTxt(dev)
 	HostPort=8452;
 	IsHost=1;
 	NumPlayers=1;
+    GameStartDelay=0;
 
 	StartMetal=1000;
 	StartEnergy=1000;

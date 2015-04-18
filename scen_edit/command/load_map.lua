@@ -15,7 +15,7 @@ function LoadMap:execute()
         if #self.deltaMap == 0 then
             return
         end
-        local bufferSize = 1000 * floatSize
+        local bufferSize = 100000 * floatSize
 
         local segmentNum = 0
         local totalSegments = math.ceil(#self.deltaMap / bufferSize)
@@ -43,9 +43,12 @@ function LoadMap:execute()
             end
             return chunk
         end
-        for x = 0, Game.mapSizeX-1, Game.squareSize do
-            for z = 0, Game.mapSizeZ-1, Game.squareSize do
-                Spring.AddHeightMap(x, z, getData())
+        for x = 0, Game.mapSizeX, Game.squareSize do
+            for z = 0, Game.mapSizeZ, Game.squareSize do
+                local v = getData()
+
+                Spring.SetHeightMap(x, z, v)
+
             end
         end
         --Spring.Echo("HEIGHTMAP LOAD DONE")
