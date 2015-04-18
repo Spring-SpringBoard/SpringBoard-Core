@@ -12,8 +12,6 @@ function LoadMap:execute()
     Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     Spring.SetHeightMapFunc(function()
         --Spring.Echo("HEIGHTMAP LOAD")
-        local x = 0
-        local z = 0
         if #self.deltaMap == 0 then
             return
         end
@@ -45,31 +43,9 @@ function LoadMap:execute()
             end
             return chunk
         end
-        local lastChanged = false
-        for chunk in getData do
-            ----Spring.Echo(chunk, i)
-            if lastChanged then
-                if chunk == 0 then
-                    --Spring.Echo(0)
-                    lastChanged = false
-                else
-                    local deltaHeight = chunk
-
-                    z = z + Game.squareSize
-
-                    if z >= Game.mapSizeZ then
-                        z = 0
-                        x = x + Game.squareSize
-                        lastChanged = false
-                    end
-
-                    Spring.AddHeightMap(x, z, deltaHeight)
-                end
-            else
-                x, z, deltaHeight = chunk, getData(), getData()
-                lastChanged = true
-                Spring.AddHeightMap(x, z, deltaHeight)
-                --Spring.Echo(x, z, deltaHeight)
+        for x = 0, Game.mapSizeX-1, Game.squareSize do
+            for z = 0, Game.mapSizeZ-1, Game.squareSize do
+                Spring.AddHeightMap(x, z, getData())
             end
         end
         --Spring.Echo("HEIGHTMAP LOAD DONE")
