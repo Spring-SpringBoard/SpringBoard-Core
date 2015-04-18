@@ -116,7 +116,8 @@ function UnitManager:serializeUnitProperties(unitId, unit)
     -- TODO: this isn't available
     -- unit.alwaysVisible = Spring.GetAlwaysVisible(unitId)
     -- FIXME: This returns multiple values, save them too?
-    unit.blocking = Spring.GetUnitBlocking(unitId)
+    -- FIXME: There are some issues with this.. ignore saving for now
+    --unit.blocking = Spring.GetUnitBlocking(unitId)
     unit.states = Spring.GetUnitStates(unitId)
     -- FIXME: why do we need the second param?
     unit.losState = Spring.GetUnitLosState(unitId, 0) -- los, radar and typed
