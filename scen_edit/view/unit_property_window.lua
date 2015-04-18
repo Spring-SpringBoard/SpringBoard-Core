@@ -131,6 +131,30 @@ function UnitPropertyWindow:init(unitId)
         }
     end
 
+    self.rules = {}
+    self.ruleEditBoxes = {}
+    for _, foo in pairs(Spring.GetUnitRulesParams(self.unitId)) do
+        if type(foo) == "table" then
+            for rule, value in pairs(foo) do
+                self.rules[rule] = value
+                local stackPanel = MakeComponentPanel(mainPanel)
+                local lblRule = Label:New {
+                    caption = rule .. ":",
+                    width = 100,
+                    x = 1,
+                    parent = stackPanel,
+                }
+                self.ruleEditBoxes[rule] = EditBox:New {
+                    text = tostring(value),
+                    x = 110,
+                    width = 100,
+                    height = SCEN_EDIT.conf.B_HEIGHT,
+                    parent = stackPanel,
+                }
+            end
+        end
+    end
+
     self.window = Window:New {
         width = 340,
         height = 450,
@@ -160,6 +184,14 @@ function UnitPropertyWindow:init(unitId)
         end
         if self.edFuel ~= nil then
             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "fuel", tonumber(self.edFuel.text)))
+        end
+        
+        for rule, value in pairs(self.rules) do
+            local v = self.ruleEditBoxes[rule].text
+            if type(value) == "number" then
+                v = tonumber(v)
+            end
+            table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "rule", {rule, v}))
         end
 
         local compoundCommand = CompoundCommand(cmds)

@@ -28,4 +28,20 @@ function UnitFeaturePanel:init()
 			},
 		})
 	)
+    self.control:AddChild(TabbedPanelButton({
+			tooltip = "Edit selected unit property",
+			OnClick = {
+				function()
+                    local selType, units = SCEN_EDIT.view.selectionManager:GetSelection()
+                    if selType == "units" and #units > 0 then
+                        UnitPropertyWindow(units[1])
+                    end
+				end
+			},
+			children = {
+				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "feature.png" }),
+				TabbedPanelLabel({ caption = "Property edit" }),
+			},
+		})
+	)
 end
