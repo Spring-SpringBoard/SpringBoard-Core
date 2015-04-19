@@ -8,18 +8,20 @@ function RuntimeModel:init()
     self.lastFrameUnitIds = {}
     self.fieldResolver = FieldResolver()
     self.repeatCalls = {}
+    self.trackedUnitIDs = {}
     SCEN_EDIT.model.areaManager:addListener(self)
     SCEN_EDIT.model.triggerManager:addListener(self)
 end
 
-function RuntimeModel:GetAllUnits()
-    local units = {}
-    for _, unitId in ipairs(Spring.GetAllUnits()) do
-        if not UnitDefs[Spring.GetUnitDefID(unitId)].customParams.wall and not UnitDefs[Spring.GetUnitDefID(unitId)].customParams.effect then
-            table.insert(units, unitId)
-        end
+function RuntimeModel:CanTrackUnit(unitDefId)
+    local customParams = UnitDefs[unitDefId].customParams
+    if not customParams.wall and not customParams.effect then
+        return true
     end
-    return units
+end
+
+function RuntimeModel:GetAllUnits()
+    return self.trackedUnitIDs
 end
 
 function RuntimeModel:LoadMission()
@@ -149,6 +151,9 @@ function RuntimeModel:TeamDied(teamId)
 end
 
 function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
+    if self:CanTrackUnit(unitDefId) then
+        self.trackedUnitIDs[unitId] = unitId
+    end
     if not self.hasStarted then
         return
     end
@@ -177,6 +182,7 @@ function RuntimeModel:UnitDamaged(unitId)
 end
 
 function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attackerDefId, attackerTeamId)
+    self.trackedUnitIDs[unitId] = nil
     if not self.hasStarted then
         return
     end
@@ -211,11 +217,9 @@ function RuntimeModel:GameFrame(frameNum)
     local newUnitIds = self:GetAllUnits()
     local unitIds = {}
     --update area-unit models
-    for i = 1, #newUnitIds do
-        local newId = newUnitIds[i]
+    for _, newId in pairs(newUnitIds) do
         local found = false
-        for j = 1, #self.lastFrameUnitIds do
-            local oldId = self.lastFrameUnitIds[j]
+        for _, oldId in pairs(self.lastFrameUnitIds) do
             if newId == oldId then
                 found = true
                 break
@@ -224,9 +228,9 @@ function RuntimeModel:GameFrame(frameNum)
         if found then
             table.insert(unitIds, newId)
         end
-    end    
+    end
     --check for any enter/leave area events
-    for i = 1, #self.areaModels do        
+    for i = 1, #self.areaModels do
         local areaModel = self.areaModels[i]
         local results = areaModel:Populate(unitIds)
         local area = areaModel.area
