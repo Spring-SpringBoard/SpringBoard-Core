@@ -20,7 +20,7 @@ function AreaModel:UpdateUnit(unitId)
         else
             self.unitsInArea[unitId] = true
             return 'enter'
-        end        
+        end
     else
         if self.unitsInArea[unitId] then
             self.unitsInArea[unitId] = nil
