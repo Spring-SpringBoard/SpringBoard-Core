@@ -4,7 +4,7 @@ RuntimeModel = LCS.class{}
 
 function RuntimeModel:init()
     SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_RUNTIME_DIR)
-    self.areaModels = {}    
+    self.areaModels = {}
     self.lastFrameUnitIds = {}
     self.fieldResolver = FieldResolver()
     self.repeatCalls = {}
@@ -12,23 +12,33 @@ function RuntimeModel:init()
     SCEN_EDIT.model.triggerManager:addListener(self)
 end
 
+function RuntimeModel:GetAllUnits()
+    local units = {}
+    for _, unitId in ipairs(Spring.GetAllUnits()) do
+        if not UnitDefs[Spring.GetUnitDefID(unitId)].customParams.wall and not UnitDefs[Spring.GetUnitDefID(unitId)].customParams.effect then
+            table.insert(units, unitId)
+        end
+    end
+    return units
+end
+
 function RuntimeModel:LoadMission()
-    self.lastFrameUnitIds = Spring.GetAllUnits()
+    self.lastFrameUnitIds = self:GetAllUnits()
     self.areaModels = {}
     self.repeatCalls = {}
-   
+
     self.startListening = true
 
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
     for id, _ in pairs(areas) do
         self:onAreaAdded(id)
     end
-    
+
     self.eventTriggers = {}
     local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
     for _, trigger in pairs(triggers) do
         self:onTriggerAdded(trigger.id)
-    end    
+    end
 end
 
 function RuntimeModel:onTriggerAdded(triggerId)
@@ -198,7 +208,7 @@ function RuntimeModel:GameFrame(frameNum)
     if not self.hasStarted then
         return
     end
-    local newUnitIds = Spring.GetAllUnits()    
+    local newUnitIds = self:GetAllUnits()
     local unitIds = {}
     --update area-unit models
     for i = 1, #newUnitIds do
