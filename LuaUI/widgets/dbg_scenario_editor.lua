@@ -229,4 +229,5 @@ function widget:Update()
         SCEN_EDIT.view:Update()
     end
     SCEN_EDIT.executeDelayed()
+    SCEN_EDIT.displayUtil:Update()
 end
