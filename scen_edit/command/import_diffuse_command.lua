@@ -35,6 +35,7 @@ function ImportDiffuseCommand:execute()
         for i = 0, sizeX do
             for j = 0, sizeZ do
                 local mapTexture = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
+                mapTexture.dirty = true
                 gl.RenderToTexture(mapTexture.texture, function()
                     gl.TexRect(-1,-1, 1, 1,
                         i/sizeX, j/sizeZ, (i+1) / sizeX, (j+1) /sizeZ)

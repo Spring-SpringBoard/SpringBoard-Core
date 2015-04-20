@@ -48,7 +48,7 @@ function LoadCommandWidget:execute()
         texturePath = path .. "/" .. "texturemap/"
     end
 
-    local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
+    local cmds = { LoadMap(heightmapData), LoadModelCommand(modelData)}
     if not hasScenarioFile and not devMode then
         table.insert(cmds, StartCommand())
     end
