@@ -15,7 +15,9 @@ end
 
 function RuntimeModel:CanTrackUnit(unitDefId)
     local customParams = UnitDefs[unitDefId].customParams
-    if not customParams.wall and not customParams.effect then
+    if customParams.wall or customParams.effect then
+        return false
+    else
         return true
     end
 end
@@ -210,57 +212,54 @@ function RuntimeModel:UnitFinished(unitId)
     end
 end
 
+local checkRate = 10
 function RuntimeModel:GameFrame(frameNum)
     if not self.hasStarted then
         return
     end
-    local newUnitIds = self:GetAllUnits()
-    local unitIds = {}
-    --update area-unit models
-    for _, newId in pairs(newUnitIds) do
-        local found = false
-        for _, oldId in pairs(self.lastFrameUnitIds) do
-            if newId == oldId then
-                found = true
-                break
+    
+    if Spring.GetGameFrame() % 10 == 0 then
+        local newUnitIds = self:GetAllUnits()
+        local unitIds = {}
+        --update area-unit models
+        for _, newId in pairs(newUnitIds) do
+            if self.lastFrameUnitIds[newId] then
+                table.insert(unitIds, newId)
             end
         end
-        if found then
-            table.insert(unitIds, newId)
+        --check for any enter/leave area events
+        for i = 1, #self.areaModels do
+            local areaModel = self.areaModels[i]
+            local results = areaModel:Populate(unitIds)
+            local area = areaModel.area
+            if self.eventTriggers["UNIT_ENTER_AREA"] then
+                for j = 1, #results.entered do
+                    local enteredUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(results.entered[j])
+                    for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
+                        local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]
+                        if trigger.enabled then
+                            local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
+                            self:ConditionStep(trigger, params)
+                        end
+                    end
+                end
+            end
+            if self.eventTriggers["UNIT_LEAVE_AREA"] then
+                for j = 1, #results.left do
+                    local leftUnitId = results.left[j]
+                    for k = 1, #self.eventTriggers["UNIT_LEAVE_AREA"] do
+                        local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]
+                        if trigger.enabled then
+                            local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
+                            self:ConditionStep(trigger, params)
+                        end
+                    end
+                end
+            end
+            areaModel:Populate(newUnitIds)
         end
+        self.lastFrameUnitIds = newUnitIds
     end
-    --check for any enter/leave area events
-    for i = 1, #self.areaModels do
-        local areaModel = self.areaModels[i]
-        local results = areaModel:Populate(unitIds)
-        local area = areaModel.area
-        if self.eventTriggers["UNIT_ENTER_AREA"] then
-            for j = 1, #results.entered do
-                local enteredUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(results.entered[j])
-                for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
-                    local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]
-                    if trigger.enabled then
-                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
-                        self:ConditionStep(trigger, params)
-                    end
-                end
-            end
-        end
-        if self.eventTriggers["UNIT_LEAVE_AREA"] then
-            for j = 1, #results.left do
-                local leftUnitId = results.left[j]
-                for k = 1, #self.eventTriggers["UNIT_LEAVE_AREA"] do
-                    local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]
-                    if trigger.enabled then
-                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
-                        self:ConditionStep(trigger, params)
-                    end
-                end
-            end
-        end
-        areaModel:Populate(newUnitIds)
-    end    
-    self.lastFrameUnitIds = newUnitIds
 
     local newCalls = {}
     for _, call in pairs(self.repeatCalls) do
