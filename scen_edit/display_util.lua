@@ -77,16 +77,18 @@ function DisplayUtil:AddUnitSay(text, unitId, time)
     })
 end
 
-function DisplayUtil:OnFrame()
+function DisplayUtil:Update()
     if self.follow then
         if not Spring.ValidUnitID or Spring.GetUnitIsDead(self.follow) then
             self.follow = nil
         else--if Spring.IsUnitVisible(self.follow) then
-            local x, y, z = Spring.GetUnitPosition(self.follow)
+            local x, y, z = Spring.GetUnitViewPosition(self.follow)
             Spring.SetCameraTarget(x, y, z)
         end
     end
+end
 
+function DisplayUtil:OnFrame()
     local toDelete = {}
 
     for i = 1, #self.texts do        
