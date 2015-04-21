@@ -84,6 +84,7 @@ function DisplayUtil:Update()
         else--if Spring.IsUnitVisible(self.follow) then
             local x, y, z = Spring.GetUnitViewPosition(self.follow)
             Spring.SetCameraTarget(x, y, z)
+            Spring.SelectUnitArray({self.follow})
         end
     end
 end
