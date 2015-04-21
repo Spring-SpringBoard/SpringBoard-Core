@@ -12,7 +12,7 @@ function LoadMap:execute()
     Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     Spring.SetHeightMapFunc(function()
         --Spring.Echo("HEIGHTMAP LOAD")
-        if #self.deltaMap == 0 then
+        if self.deltaMap == nil or #self.deltaMap == 0 then
             return
         end
         local bufferSize = 100000 * floatSize

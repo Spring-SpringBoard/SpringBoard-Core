@@ -9,14 +9,15 @@ end
 function LoadTextureCommand:execute()
     SCEN_EDIT.delayGL(function()
         local tm = SCEN_EDIT.model.textureManager
-        tm:resetMapTextures()
-        tm:generateMapTextures()
 
         local files = VFS.DirList(self.texturePath)
-        if #files == 0 then
+        if #files == 0 and true then
             Spring.Echo("Missing texture file: " .. tostring(self.texturePath))
             return
         end
+
+        tm:resetMapTextures()
+        tm:generateMapTextures()
 
         local textures = {}
         for _, file in pairs(files) do
