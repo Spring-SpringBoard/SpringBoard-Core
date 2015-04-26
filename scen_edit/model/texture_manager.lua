@@ -29,6 +29,7 @@ function TextureManager:createMapTexture(notFBO)
     })
 end
 
+-- There are issues when generating void map textures
 function TextureManager:generateMapTextures()
     Spring.Log("scened", LOG.DEBUG, "Generating textures...")
     local oldMapTexture = self:createMapTexture(false)
