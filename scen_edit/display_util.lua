@@ -79,7 +79,7 @@ end
 
 function DisplayUtil:Update()
     if self.follow then
-        if not Spring.ValidUnitID or Spring.GetUnitIsDead(self.follow) then
+        if not Spring.ValidUnitID(self.follow) or Spring.GetUnitIsDead(self.follow) or self.follow == nil then
             self.follow = nil
         else--if Spring.IsUnitVisible(self.follow) then
             local x, y, z = Spring.GetUnitViewPosition(self.follow)
