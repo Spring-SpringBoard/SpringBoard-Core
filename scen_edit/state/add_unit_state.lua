@@ -8,6 +8,8 @@ function AddUnitState:init(unitDef, teamId, unitImages, amount)
     self.angle = 0
 	self.amount = amount
     self.randomSeed = os.clock()
+    self.mapGrid = MapGrid(100, 100)
+    self.mapGrid.separatorSize = 2
 end
 
 function AddUnitState:enterState()
@@ -21,6 +23,8 @@ function AddUnitState:MousePress(x, y, button)
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
             self.x, self.y, self.z = unpack(coords)
+            self.x, self.z = self.mapGrid:GetGridPosition(self.x, self.z)
+            self.y = Spring.GetGroundHeight(self.x, self.z)
             return true
         end
     elseif button == 3 then
@@ -73,9 +77,18 @@ end
 function AddUnitState:DrawWorld()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
+
+    local dim = Spring.GetUnitDefDimensions(self.unitDef)
+    local unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
+    local unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)
     if result == "ground" then
-        
+
 		local baseX, baseY, baseZ = unpack(coords)
+        self.mapGrid.rows    = Game.mapSizeX / unitSizeX
+        self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
+        self.mapGrid:Draw(baseX, baseZ)
+        baseX, baseZ = self.mapGrid:GetGridPosition(baseX, baseZ)
+        baseY = Spring.GetGroundHeight(baseX, baseZ)
 		math.randomseed(self.randomSeed)
 		
 		for i = 1, self.amount do
