@@ -103,7 +103,26 @@ return {
                     SCEN_EDIT.model.triggerManager:disableTrigger(trigger.id)
                 end
             },
-
+            {
+                humanName = "Save checkpoint",
+                name = "SAVE_CHECKPOINT",
+                tags = {"Other"},
+                execute = function (input)
+                    SCEN_EDIT.savedModel = SCEN_EDIT.model:Serialize()
+                end
+            },
+            {
+                humanName = "Load checkpoint",
+                name = "LOAD_CHECKPOINT",
+                tags = {"Other"},
+                execute = function (input)
+                    if SCEN_EDIT.savedModel ~= nil then
+                        SCEN_EDIT.model:Load(SCEN_EDIT.savedModel)
+                    else
+                        Spring.Log("Scened", LOG.ERROR, "There's no checkpoint to load from")
+                    end
+                end
+            },
             {
                 humanName = "Kill team", 
                 name = "KILL_TEAM",
