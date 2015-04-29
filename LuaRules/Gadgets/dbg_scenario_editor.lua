@@ -64,7 +64,14 @@ function gadget:RecvLuaMsg(msg, playerID)
             if SCEN_EDIT.messageManager.compress then
                 msgParsed = SCEN_EDIT.ZlibDecompress(msgParsed)
             end
-            local msgTable = loadstring(msgParsed)()
+            local success, msgTable = pcall(function() 
+                return assert(loadstring(msgParsed))() 
+            end)
+            if not success then
+                Spring.Echo("Failed to load command (size: " .. #msgParsed .. ": ")
+                Spring.Echo(msgTable)
+                return
+            end
             local msg = Message(msgTable.tag, msgTable.data)
             if msg.tag == 'command' then
                 local cmd = SCEN_EDIT.resolveCommand(msg.data)
