@@ -14,7 +14,7 @@ function TextureManager:init()
     self.maxCache = 20
 
     SCEN_EDIT.delayGL(function()
---        self:generateMapTextures()
+        self:generateMapTextures()
     end)
 end
 
