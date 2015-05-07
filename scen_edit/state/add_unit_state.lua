@@ -6,7 +6,7 @@ function AddUnitState:init(unitDef, teamId, unitImages, amount)
     self.unitImages = unitImages
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
-	self.amount = amount
+    self.amount = amount
     self.randomSeed = os.clock()
     self.mapGrid = MapGrid(100, 100)
     self.mapGrid.separatorSize = 2
@@ -28,7 +28,7 @@ function AddUnitState:MousePress(x, y, button)
             return true
         end
     elseif button == 3 then
-		self.unitImages:SelectItem(0)
+        self.unitImages:SelectItem(0)
         SCEN_EDIT.stateManager:SetState(DefaultState())        
     end
 end
@@ -64,7 +64,7 @@ function AddUnitState:MouseRelease(x, y, button)
     SCEN_EDIT.commandManager:execute(compoundCommand)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
-	self.randomSeed = os.clock()
+    self.randomSeed = os.clock()
     return true
 end
 
@@ -78,21 +78,26 @@ function AddUnitState:DrawWorld()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
 
-    local dim = Spring.GetUnitDefDimensions(self.unitDef)
-    local unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
-    local unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)
+    local unitSizeX = UnitDefs[self.unitDef].footprintX
+    local unitSizeZ = UnitDefs[self.unitDef].footprintZ
+    if unitSizeX == nil or unitSizeZ == nil then
+        local dim = Spring.GetUnitDefDimensions(self.unitDef)
+        unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
+        unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)
+    end
     if result == "ground" then
 
-		local baseX, baseY, baseZ = unpack(coords)
+        local baseX, baseY, baseZ = unpack(coords)
         self.mapGrid.rows    = Game.mapSizeX / unitSizeX
         self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
-        self.mapGrid:Draw(baseX, baseZ)
-        baseX, baseZ = self.mapGrid:GetGridPosition(baseX, baseZ)
-        baseY = Spring.GetGroundHeight(baseX, baseZ)
-		math.randomseed(self.randomSeed)
-		
-		for i = 1, self.amount do
-            local x, y, z = baseX, baseY, baseZ
+        local gridX, gridZ = self.mapGrid:GetGridPosition(baseX, baseZ)
+        local gridY = Spring.GetGroundHeight(gridX, gridZ)
+        local blocking = Spring.TestBuildOrder(self.unitDef, gridX, gridY, gridZ, 0)
+        self.mapGrid:Draw(baseX, baseZ, blocking)
+        math.randomseed(self.randomSeed)
+        
+        for i = 1, self.amount do
+            local x, y, z = gridX, gridY, gridZ
             if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
                 x, y, z = self.x, self.y, self.z
             end
@@ -108,8 +113,8 @@ function AddUnitState:DrawWorld()
             end
 
             gl.Color(1, 1, 1, 0.8)
-			gl.UnitShape(self.unitDef, self.teamId)
-			gl.PopMatrix()
+            gl.UnitShape(self.unitDef, self.teamId)
+            gl.PopMatrix()
         end
     end
 end
