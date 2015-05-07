@@ -43,7 +43,7 @@ function MapGrid:initShader()
     end
 end
 
-function MapGrid:Draw(x, z)
+function MapGrid:Draw(x, z, blocking)
     gl.PushMatrix()
         if not self.shaderObj then
             self:initShader()
@@ -65,13 +65,40 @@ function MapGrid:Draw(x, z)
         for j = 1, self.columns-1 do
             gl.Utilities.DrawGroundRectangle(0, columnPart * j - self.separatorSize/2, Game.mapSizeX, columnPart * j + self.separatorSize/2)
         end
+        
+        -- footprint 1
+        gl.Color(1, 1, 1, 0.3)
+        local totalRows = Game.mapSizeX / 8
+        local totalColumns = Game.mapSizeZ / 8
+        local totalRowsPart = Game.mapSizeX / totalRows
+        local totalColumnsPart = Game.mapSizeZ / totalColumns
+        for i = 1, totalRows -1 do
+            gl.Utilities.DrawGroundRectangle(totalRowsPart * i - self.separatorSize/4, 0, totalRowsPart * i + self.separatorSize/4, Game.mapSizeZ)
+        end
+        for j = 1, totalColumns -1 do
+            gl.Utilities.DrawGroundRectangle(0, totalColumnsPart * j - self.separatorSize/4, Game.mapSizeX, totalColumnsPart * j + self.separatorSize/4)
+        end
+        local gridX, gridZ = self:GetGridPosition(x, z)
+        if blocking == 2 then
+            gl.Color(0, 0.2, 0.6, 0.5)
+        elseif blocking == 1 then
+            gl.Color(0.6, 0.6, 0, 0.5)
+        else
+            gl.Color(0.6, 0, 0, 0.5)
+        end
+        gl.Utilities.DrawGroundRectangle(gridX - rowPart / 2, gridZ - columnPart / 2, gridX + rowPart / 2, gridZ + columnPart / 2)
         gl.UseShader(0)
     gl.PopMatrix()
 end
 
 function MapGrid:GetGridPosition(x, y)
+    local totalRows = Game.mapSizeX / 8
+    local totalColumns = Game.mapSizeZ / 8
+    local totalRowsPart = Game.mapSizeX / totalRows
+    local totalColumnsPart = Game.mapSizeZ / totalColumns
+    
     local rowPart = Game.mapSizeX / self.rows
     local columnPart = Game.mapSizeZ / self.columns
-    return rowPart * math.floor(x / rowPart) + rowPart/2, 
-           columnPart * math.floor(y / columnPart) + columnPart/2
+    return totalRowsPart * math.floor(x / totalRowsPart) + totalRowsPart/2, 
+           totalColumnsPart * math.floor(y / totalColumnsPart) + totalColumnsPart/2
 end
