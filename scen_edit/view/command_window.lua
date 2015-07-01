@@ -18,7 +18,7 @@ function CommandWindow:init()
     self.CommandWindowWindow = Window:New {
         parent = screen0,
         caption = "Command stack",
-        x = screen0.width - 375,
+        right = 0,
         y = 550,
         resizable = true,
         width = 375,

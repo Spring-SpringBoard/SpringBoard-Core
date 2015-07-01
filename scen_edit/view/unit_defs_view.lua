@@ -79,7 +79,7 @@ function UnitDefsView:init()
         width = 487,
         height = 400,
         resizable = false,
-        x = 1400,
+        right = 10,
         y = 500,
         children = {
             ScrollPanel:New {
