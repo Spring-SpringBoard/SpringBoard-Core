@@ -61,7 +61,7 @@ function RuntimeView:init()
     self.runtimeViewWindow = Window:New {
         parent = screen0,
         caption = "Runtime Window",
-        x = screen0.width - 375,
+        right = 0,
         y = 350,
 		resizable = true,
         width = 375,
