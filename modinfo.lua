@@ -12,7 +12,7 @@ local modinfo = {
 	modtype			= 0,
 	depend = {
         "Spring Cursors",
-        "Spring Features v1.1",
+        "Spring Features v1.5",
 
         -- mods here :
 		-- enter your mod here!
