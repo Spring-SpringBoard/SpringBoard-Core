@@ -1,62 +1,152 @@
 MapEditorView = LCS.class{}
 
+local VALUE_POS = 180
 function MapEditorView:init(opts)
     self.fields = {}
+	self.fieldOrder = {}
 
---     self.btnClose = Button:New {
---         caption = 'Close',
---         width = 100,
---         right = 15,
---         bottom = 1,
---         height = SCEN_EDIT.conf.B_HEIGHT,
---         OnClick = { 
---             function() 
---                 self.window:Hide() 
---                 SCEN_EDIT.stateManager:SetState(DefaultState())
---             end 
---         },
---     }
--- 
---     self.stackPanel = StackPanel:New {
---         y = 0,
---         height = 400,
---         x = 0,
---         right = 0,
---         centerItems = false,
---         itemPadding = {0,0,0,0},
---         padding = {0,0,0,0},
---         margin = {0,0,0,0},
---         itemMargin = {0,0,0,0},
---     }
--- 
---     self.window = Window:New {
---         parent = screen0,
---         x = opts.x,
---         y = opts.y,
---         width = opts.width,
---         height = opts.height,
---         caption = opts.caption,
---         resizable = true,
---         children = {
---             self.tabPanel,
---             ScrollPanel:New {
---                 x = 0,
---                 y = "50%",
---                 bottom = 30,
---                 right = 0,
---                 borderColor = {0,0,0,0},
---                 horizontalScrollbar = false,
---                 children = { self.stackPanel },
---             },
---             btnClose,
---         },
---     }
+	self.btnClose = Button:New {
+        caption = 'Close',
+        width = 100,
+        right = 15,
+        bottom = 1,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        OnClick = {
+            function()
+                self.window:Hide()
+                SCEN_EDIT.stateManager:SetState(DefaultState())
+            end 
+        },
+    }
+	
+    self.stackPanel = StackPanel:New {
+        y = 0,
+        x = 0,
+		right = 0,
+		
+		centerItems = false,
+		
+		-- autosize = true, -- FIXME: autosize is not working. If enabled (and height disabled) it will cause controls not to render any changes.
+		-- debug = true,
+		resizeItems = true, -- FIXME: This is also temporarily enabled because of the bug above
+		
+        itemPadding = {0,10,0,0},
+        padding = {0,0,0,0},
+        margin = {0,0,0,0},
+        itemMargin = {5,0,0,0},
+    }
+	self.stackPanel:DisableRealign()
 end
 
--- needs to be implemented
+-- Override 
+
 function MapEditorView:IsValidTest(state)
     return false
 end
+
+-- NOTICE: Invoke :Finalize at the end of init
+
+--
+function MapEditorView:Finalize(children)
+	table.insert(children, self.btnClose)
+	
+	self.window = Control:New {
+--         parent = screen0,
+--         x = 10,
+--         y = 100,
+--         width = 550,
+--         height = 800,
+		x = 0,
+		y = 0,
+		bottom = 0,
+		right = 0,
+        caption = '',
+        children = children,
+    }
+	
+	self.stackPanel:EnableRealign()
+	self:_MEGA_HACK()
+	
+	SCEN_EDIT.view:SetMainPanel(self.window)
+end
+
+function MapEditorView:_MEGA_HACK()
+	-- FIXME: Mega hack to manually resize the stackPanel since autosize is broken
+	SCEN_EDIT.delay(function()
+	SCEN_EDIT.delay(function()
+	self.stackPanel.resizeItems = false
+	local h = 0
+	for _, c in pairs(self.stackPanel.children) do
+		if type(c) == "table" then
+			c:UpdateLayout()
+			h = h + c.height + self.stackPanel.itemPadding[2]
+		end
+	end
+	self.stackPanel:Resize(nil, h)
+	end)
+	end)
+end
+
+-- Don't use this directly because ordering would be messed up.
+function MapEditorView:_SetFieldVisible(name, visible)
+	if not self.fields[name] then
+		Spring.Log("Scened", LOG.ERROR, "Trying to set visibility on an invalid field: " .. tostring(name))
+		return
+	end
+	
+	if visible == nil then
+		return
+	end
+	
+	local ctrl = self.fields[name].ctrl
+	-- HACK: use Add/Remove instead of Show/Hide to have proper ordering
+	--if ctrl.visible ~= visible then
+	if ctrl._visible ~= visible then
+		if visible then
+			self.stackPanel:AddChild(ctrl)
+			ctrl._visible = true
+			--ctrl:Show()
+		else
+			self.stackPanel:RemoveChild(ctrl)
+			ctrl._visible = false
+			--ctrl:Hide()
+		end
+	end
+end
+
+function MapEditorView:SetInvisibleFields(...)
+	self.stackPanel:DisableRealign()
+	
+	local fields = {...}
+	for i = #self.fieldOrder, 1, -1 do
+		local name = self.fieldOrder[i]
+		self:_SetFieldVisible(name, false)
+	end
+	
+	self.stackPanel.resizeItems = true
+	
+	for i = 1, #self.fieldOrder do
+		local name = self.fieldOrder[i]
+		if not table.ifind(fields, name) then
+			self:_SetFieldVisible(name, true)
+		end
+	end
+
+	self.stackPanel:EnableRealign()
+	self:_MEGA_HACK()
+end
+
+function MapEditorView:_AddControl(name, children)
+	local ctrl = Control:New {
+        autosize = true,
+        padding = {0, 0, 0, 0},
+        children = children
+    }
+	self.stackPanel:AddChild(ctrl)
+	table.insert(self.fieldOrder, name)
+	return ctrl
+end
+
 --[[
 function MapEditorView:Select(indx)
     self.textureImages:Select(indx)
@@ -89,34 +179,76 @@ function MapEditorView:AddChoiceProperty(field)
         caption = field.title,
         x = 1,
         y = 10,
+		autosize = true,
     }
+	local ids, captions = field.items, field.captions
+	if captions == nil then
+		captions = field.items
+	end
     field.comboBox = ComboBox:New {
-        x = 130,
+        x = VALUE_POS - 5,
         y = 0,
         width = 150,
         height = 30,
-        items = field.items,
+        items = captions,
+		ids = ids,
     }
     field.comboBox.OnSelect = {
         function(obj, indx)
-            local value = field.comboBox.items[indx]
+            local value = field.comboBox.ids[indx]
             self:SetChoiceField(field.name, value)
         end
     }
     field.value = field.items[1]
 
-    local ctrl = Control:New {
-        x = 0,
+    field.ctrl = self:_AddControl(field.name, {
+		field.label,
+		field.comboBox,
+	})
+	return field
+end
+
+function MapEditorView:UpdateBooleanField(name)
+    local field = self.fields[name]
+--[[
+    field.checkBox.text = tostring(field.value)
+    field.editBox:Invalidate()
+    ]]
+    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    if self:IsValidTest(currentState) then
+        currentState[field.name] = field.value
+    end
+end
+
+function MapEditorView:SetBooleanField(name, value)
+    local field = self.fields[name]
+    if value ~= nil and value ~= field.value then
+        field.value = value
+        self:UpdateBooleanField(field.name)
+    end
+end
+
+function MapEditorView:AddBooleanProperty(field)
+    self.fields[field.name] = field
+
+    field.checkBox = Checkbox:New {
+		caption = field.title,
+        x = 1,
         y = 0,
-        width = 300,
+        width = VALUE_POS + 10,
         height = 20,
-        padding = {0, 0, 0, 0},
-        children = {
-            field.label,
-            field.comboBox,
-        }
+        checked = field.value,
     }
-    self.stackPanel:AddChild(ctrl)
+    field.checkBox.OnChange = {
+        function(obj, checked)
+            self:SetBooleanField(field.name, checked)
+        end
+    }
+
+    field.ctrl = self:_AddControl(field.name, {
+		field.checkBox,
+	})
+	return field
 end
 
 function MapEditorView:UpdateNumericField(name, source)
@@ -163,13 +295,15 @@ function MapEditorView:AddNumericProperty(field)
         caption = field.title,
         x = 1,
         y = 1,
+		autosize = true,
         tooltip = field.tooltip,
     }
     field.editBox = EditBox:New {
         text = v,
-        x = 140,
+        x = VALUE_POS,
         y = 1,
-        width = 80,
+        width = 100,
+		height = 20,
         OnTextInput = {
             function() 
                 self:SetNumericField(field.name, field.editBox.text, field.editBox)
@@ -182,12 +316,14 @@ function MapEditorView:AddNumericProperty(field)
         },
     }
     field.trackbar = Trackbar:New {
-        x = 250,
+        x = VALUE_POS + 130,
         y = 1,
         value = field.value,
         min = field.minValue,
         max = field.maxValue,
-        step = 0.01,
+        step = field.step or 0.01,
+		width = 95,
+		height = 20,
     }
     field.trackbar.OnChange = {
         function(obj, value)
@@ -195,19 +331,12 @@ function MapEditorView:AddNumericProperty(field)
         end
     }
 
-    local ctrl = Control:New {
-        x = 0,
-        y = 0,
-        width = 400,
-        height = 20,
-        padding = {0, 0, 0, 0},
-        children = {
-            field.label,
-            field.editBox,
-            field.trackbar,
-        }
-    }
-    self.stackPanel:AddChild(ctrl)
+    field.ctrl = self:_AddControl(field.name, {
+		field.label,
+		field.editBox,
+		field.trackbar,
+	})
+	return field
 end
 
 function MapEditorView:UpdateColorbarsField(name, source)
@@ -247,26 +376,19 @@ function MapEditorView:AddColorbarsProperty(field)
     }
     field.colorbars = Colorbars:New {
         color = field.value,
-        x = 130,
+        x = VALUE_POS,
         y = 1,
         width = 225,
-        height = 40,
+        height = 60,
         OnChange = {
             function(obj, value)
                 self:SetColorbarsField(field.name, value, obj)
             end
         },
     }
-    local ctrl = Control:New {
-        x = 0,
-        y = 0,
-        width = 300,
-        height = 40,
-        padding = {0, 0, 0, 0},
-        children = {
-            field.label,
-            field.colorbars,
-        }
-    }
-    self.stackPanel:AddChild(ctrl)
+    field.ctrl = self:_AddControl(field.name, {
+		field.label,
+		field.colorbars,
+	})
+	return field
 end

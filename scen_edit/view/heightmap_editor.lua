@@ -5,12 +5,10 @@ function HeightmapEditorView:init()
     self:super("init")
 
     self.heightmapBrushes = ImageListView:New {
+        padding = {0, 0, 0, 0},
         dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/height",
         width = "100%",
         height = "100%",
-        multiSelect = false,
-        iconX = 48,
-        iconY = 48,
     }
     -- FIXME: implement a button for entering the mode instead of image selection
     self.heightmapBrushes.OnSelectItem = {
@@ -27,11 +25,10 @@ function HeightmapEditorView:init()
             end
         end
     }
-    self.heightmapBrushes:Select("circle.png")
 
     self.btnAddState = TabbedPanelButton({
-        x = 10,
-        y = 10,
+        x = 0,
+        y = 0,
         tooltip = "Increase or decrease (1)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
@@ -44,8 +41,8 @@ function HeightmapEditorView:init()
         },
     })
     self.btnSmoothState = TabbedPanelButton({
-        x = 80,
-        y = 10,
+        x = 70,
+        y = 0,
         tooltip = "Smooth the terrain (2)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
@@ -58,8 +55,8 @@ function HeightmapEditorView:init()
         },
     })
     self.btnLevelState = TabbedPanelButton({
-        x = 150,
-        y = 10,
+        x = 140,
+        y = 0,
         tooltip = "Level the terrain (3)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
@@ -73,8 +70,8 @@ function HeightmapEditorView:init()
     })
 
     self.btnSetState = TabbedPanelButton({
-        x = 220,
-        y = 10,
+        x = 210,
+        y = 0,
         tooltip = "Set the terrain (4)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
@@ -115,42 +112,6 @@ function HeightmapEditorView:init()
 --         },
 --     })
 
-    self.imgPanel = ScrollPanel:New {
-        x = 0,
-        right = 0,
-        bottom = 30,
-        y = "35%",
-        children = {
-            self.heightmapBrushes,
-        }
-    }
-
-    self.btnClose = Button:New {
-        caption = 'Close',
-        width = 100,
-        right = 15,
-        bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick = {
-            function()
-                self.window:Hide()
-                SCEN_EDIT.stateManager:SetState(DefaultState())
-            end 
-        },
-    }
-
-    self.stackPanel = StackPanel:New {
-        height = 90,
-        y = 100,
-        x = 10,
-        right = 0,
-        centerItems = false,
-        itemPadding = {0,0,0,0},
-        padding = {0,0,0,0},
-        margin = {0,0,0,0},
-        itemMargin = {0,0,0,0},
-    }
-
     self:AddNumericProperty({
         name = "size", 
         value = 100, 
@@ -177,38 +138,34 @@ function HeightmapEditorView:init()
     })
     self:UpdateNumericField("size")
 
-    self.window = Window:New {
-        parent = screen0,
-        x = 150,
-        y = 210,
-        width = 410,
-        height = 600,
-        caption = 'Heightmap editor',
-        resizable = true,
-        children = {
-            self.imgPanel,
-            ScrollPanel:New {
-                x = 0,
-                y = 0,
-                bottom = "66%",
-                right = 0,
-                borderColor = {0,0,0,0},
-                horizontalScrollbar = false,
-                children = { 
-                    self.btnAddState,
-                    self.btnSmoothState,
-                    self.btnLevelState,
-                    self.btnSetState,
---                     self.btnChangeHeightRectState,
---                     self.btnAddShapeState,
-                    self.stackPanel 
-                },
-            },
-            self.btnClose,
-        },
-        OnDispose = { function() SCEN_EDIT.heightmapEditorView = nil end },
-    }
-    self.heightmapBrushes:Hide()
+    local children = {
+		self.btnAddState,
+		self.btnSmoothState,
+		self.btnLevelState,
+		self.btnSetState,
+		ScrollPanel:New {
+			x = 0, 
+			right = 0,
+			y = 70, 
+			height = "35%",
+			children = { 
+				self.heightmapBrushes,
+			}
+		},
+		ScrollPanel:New {
+			x = 0,
+			y = "45%",
+			bottom = 30,
+			right = 0,
+			borderColor = {0,0,0,0},
+			horizontalScrollbar = false,
+			children = { self.stackPanel },
+		},
+	}
+
+	self:Finalize(children)
+	self.heightmapBrushes:Hide()
+	self.heightmapBrushes:Select("circle.png")
 end
 
 function HeightmapEditorView:StoppedEditing()
