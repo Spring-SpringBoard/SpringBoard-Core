@@ -124,6 +124,36 @@ function ExportMapsCommand:execute()
 
         gl.RenderToTexture(grassTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, grassPath)
         gl.DeleteTexture(grassTexture)
+		
+		-- specular
+		for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+			local texPath = self.path .. "/" .. texType .. ".png"
+			Spring.Echo("Saving the " .. texType .. " to " .. texPath .. "...")
+
+			if VFS.FileExists(texPath, VFS.RAW) then
+				Spring.Echo("removing the existing texture")
+				os.remove(texPath)
+			end
+			local texInfo = gl.TextureInfo(shadingTex)
+			local shadingTex2 = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+				border = false,
+				min_filter = GL.LINEAR,
+				mag_filter = GL.LINEAR,
+				wrap_s = GL.CLAMP_TO_EDGE,
+				wrap_t = GL.CLAMP_TO_EDGE,
+				fbo = true,
+			})
+
+			gl.Texture(shadingTex)
+			gl.RenderToTexture(shadingTex2,
+			function()
+				gl.TexRect(-1,-1, 1, 1)
+			end)
+			gl.Texture(false)
+
+			gl.RenderToTexture(shadingTex2, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath)
+			gl.DeleteTexture(shadingTex2)
+		end
 
         -- diffuse
         local texturePath = self.path .. "/texture.png"

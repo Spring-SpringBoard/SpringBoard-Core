@@ -6,15 +6,13 @@ function TerrainShapeModifyState:init(editorView)
 end
 
 function TerrainShapeModifyState:Apply(x, z, strength)
-    if self:super("Apply", x, z, strength) then
-        if SCEN_EDIT.model.terrainManager:getShape(self.paintTexture) == nil then
-            SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
-        end
+	if SCEN_EDIT.model.terrainManager:getShape(self.paintTexture) == nil then
+		SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
+	end
 
-        local cmd = TerrainShapeModifyCommand(x, z, self.size, strength, self.paintTexture, self.rotation)
-        SCEN_EDIT.commandManager:execute(cmd)
-        return true
-    end
+	local cmd = TerrainShapeModifyCommand(x, z, self.size, strength, self.paintTexture, self.rotation)
+	SCEN_EDIT.commandManager:execute(cmd)
+	return true
 end
 
 function TerrainShapeModifyState:DrawWorld()

@@ -1,6 +1,7 @@
 AbstractEditingState = AbstractState:extends{}
 
-function AbstractEditingState:init()
+function AbstractEditingState:init(editorView)
+	self.editorView = editorView
 end
 
 function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
@@ -23,6 +24,8 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
         ExportAction():execute()
     elseif key == KEYSYMS.I and mods.ctrl then
         ImportAction():execute()
+	elseif key == 27 then -- KEYSYMS.ESC
+        SCEN_EDIT.stateManager:SetState(DefaultState())
     else
         return false
     end

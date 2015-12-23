@@ -20,5 +20,7 @@ function WidgetCacheTextureCommand:init(texture)
 end
 
 function WidgetCacheTextureCommand:execute()
-    SCEN_EDIT.model.textureManager:CacheTexture(self.texture)
+	for _, tex in pairs(self.texture) do
+		SCEN_EDIT.model.textureManager:CacheTexture(tex)
+	end
 end

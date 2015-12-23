@@ -1,7 +1,7 @@
 AbstractMapEditingState = AbstractEditingState:extends{}
 
 function AbstractMapEditingState:init(editorView)
-    self.editorView          = editorView
+	AbstractEditingState.init(self, editorView)
     -- common fields
     self.size                = self.editorView.fields["size"].value
     if self.editorView.fields["rotation"] then
@@ -18,16 +18,19 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     if AbstractEditingState.KeyPress(self, key, mods, isRepeat, label, unicode) then
         return true
     end
-    if key == 27 then -- KEYSYMS.ESC
-        SCEN_EDIT.stateManager:SetState(DefaultState())
-    else
-        return false
-    end
-    return true
+	
+	return false
+--     if key == 27 then -- KEYSYMS.ESC
+--         SCEN_EDIT.stateManager:SetState(DefaultState())
+--     else
+--         return false
+--     end
+--     return true
 end
 
-function AbstractMapEditingState:Apply(x, z, strength)
-    local now = os.clock()
+
+function AbstractMapEditingState:CanApply()
+	local now = os.clock()
     if not self.lastTime then
         self.lastTime = now
         return true
@@ -45,17 +48,19 @@ function AbstractMapEditingState:Apply(x, z, strength)
     return true
 end
 
+function AbstractMapEditingState:_Apply(...)
+    if self:CanApply() then
+		self:Apply(...)
+	end
+end
+
 function AbstractMapEditingState:MousePress(x, y, button)
     if button == 1 or button == 3 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground"  then
-            local strength = self.strength
-            if button == 3 and strength ~= nil then
-                strength = -strength
-            end
             self:startChanging()
             self.x, self.z = coords[1], coords[3]
-            self:Apply(self.x, self.z, strength)
+            self:_Apply(self:GetApplyParams(self.x, self.z, button))
             return true
         end
     end
@@ -70,12 +75,8 @@ end
 function AbstractMapEditingState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground"  then
-        local strength = self.strength
-        if button == 3 and strength ~= nil then
-            strength = -strength
-        end
         self.x, self.z = coords[1], coords[3]
-        self:Apply(self.x, self.z, strength)
+        self:_Apply(self:GetApplyParams(self.x, self.z, button))
     end
     return true
 end
@@ -119,16 +120,18 @@ function AbstractMapEditingState:Update()
     if button1 or button3 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
-            local strength = self.strength
-            if button3 and strength ~= nil then
-                strength = -strength
-            end
             local x, z = coords[1], coords[3]
             local tolerance = 200
             if math.abs(x - self.x) > tolerance or math.abs(z - self.z) > tolerance then
                 self.x, self.z = x, z
             end
-            self:Apply(self.x, self.z, strength)
+			local button
+			if button1 then
+				button = 1
+			elseif button3 then
+				button = 3
+			end
+            self:_Apply(self:GetApplyParams(self.x, self.z, button))
         end
     end
 end
@@ -149,4 +152,13 @@ function AbstractMapEditingState:stopChanging()
         self.startedChanging = false
         self.lastTime = nil
     end
+end
+
+-- To implement custom states, override the following methods
+
+function AbstractMapEditingState:GetApplyParams(x, z, button)
+	return x, z
+end
+
+function AbstractMapEditingState:Apply(...)
 end

@@ -66,6 +66,9 @@ end
 
 function WidgetCommandRemoveFirstUndo:execute()
     SCEN_EDIT.view.commandWindow:RemoveFirstUndo()
+	SCEN_EDIT.delayGL(function()
+		SCEN_EDIT.model.textureManager:RemoveFirst()
+	end)
 end
 
 -- removed first redo

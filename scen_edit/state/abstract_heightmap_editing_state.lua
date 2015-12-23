@@ -57,3 +57,11 @@ function AbstractHeightmapEditingState:KeyPress(key, mods, isRepeat, label, unic
     end
     return false
 end
+
+function AbstractHeightmapEditingState:GetApplyParams(x, z, button)
+	local strength = self.strength
+	if button == 3 and strength ~= nil then
+		strength = -strength
+	end
+	return x, z, strength
+end

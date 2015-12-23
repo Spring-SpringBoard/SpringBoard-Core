@@ -29,6 +29,7 @@ function ImportHeightmapCommand:execute()
         local w, h = texInfo.xsize, texInfo.ysize
         local res
 
+		gl.Blending("disable")
         gl.RenderToTexture(heightmapTexture, function()
             gl.Texture(self.heightmapImagePath)
             gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
