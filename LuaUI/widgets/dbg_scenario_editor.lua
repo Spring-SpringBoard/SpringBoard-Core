@@ -227,6 +227,7 @@ function widget:Initialize()
     SCEN_EDIT.commandManager:execute(cmd)
 
     if devMode then
+        Spring.SendCommands('forcestart')
         SCEN_EDIT.view = View()
 
         local viewAreaManagerListener = ViewAreaManagerListener()
