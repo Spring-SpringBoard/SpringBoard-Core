@@ -62,7 +62,7 @@ function TerrainSettingsView:init()
 					local texInfo = gl.TextureInfo(item)
 					gl.DeleteTexture(item)
 					gl.Texture(item)
-					Spring.SetMapShadingTexture("detail", item)
+					Spring.SetMapShadingTexture("$detail", item)
 				end)
 			end
 
