@@ -60,27 +60,19 @@ function UnitDefsView:init()
     }
     self.unitDefPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
 	
-	local btnClose = Button:New {
-		caption = "Close",
-		bottom = 1,
-		x = 340,
-		width = 90,
-		height = SCEN_EDIT.conf.B_HEIGHT,
-		OnClick = { 
-			function() 
-				self.unitsWindow:Dispose() 
-			end 
-		}
-	}
-	
-    self.unitsWindow = Window:New {
-        parent = screen0,
-        caption = "Unit Editor",
-        width = 487,
-        height = 400,
-        resizable = false,
-        right = 10,
-        y = 500,
+    self.window = Control:New {
+--         parent = screen0,
+--         caption = "Unit Editor",
+--         width = 487,
+--         height = 400,
+--         resizable = false,
+--         right = 10,
+--         y = 500,
+		x = 0,
+		y = 0,
+		bottom = 0,
+		width = "100%",
+        caption = '',
         children = {
             ScrollPanel:New {
                 y = 15,
@@ -149,6 +141,7 @@ function UnitDefsView:init()
 			btnClose,
         }
     }
+	SCEN_EDIT.view:SetMainPanel(self.window)
 end
 
 function UnitDefsView:GetAmount()

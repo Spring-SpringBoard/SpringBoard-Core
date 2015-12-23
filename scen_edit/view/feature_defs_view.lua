@@ -1,24 +1,9 @@
-FeatureDefsView = LCS.class{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
+
+FeatureDefsView = MapEditorView:extends{}
 
 function FeatureDefsView:init()
-    local updateAmount = function(obj, ...)
-        local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-        if currentState:is_A(AddFeatureState) then
-            currentState.amount = self:GetAmount()
-        end
-    end
-    self.ebAmount = EditBox:New {
-        text = "1",
-        x = 190 + 5,
-        bottom = 8,
-        width = 50,
-        OnTextInput = {
-            updateAmount
-        },
-        OnKeyPress = {
-            updateAmount
-        },
-    }
+	self:super("init")
 
     self.featureDefsPanel = FeatureDefsPanel:New {
         name='features',
@@ -34,150 +19,127 @@ function FeatureDefsView:init()
                         SCEN_EDIT.stateManager:SetState(DefaultState())
                     else
                         selFeatureDef = self.featureDefsPanel.items[itemIdx].id
-                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, self.featureDefsPanel.teamId, self.featureDefsPanel, self:GetAmount()))
+                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, self.featureDefsPanel, self))
                     end
                     local feature = FeatureDefs[selFeatureDef]
                 end
             end,
         },
     }
-    local teamsCmb = ComboBox:New {
-        bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        items = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name"),
-        playerTeamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id"),
-        x = 40,
-        width = 90,
-    }
-    teamsCmb.OnSelect = {
-        function (obj, itemIdx, selected) 
-            if selected then
-                self.featureDefsPanel:SelectTeamId(teamsCmb.playerTeamIds[itemIdx])
-                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                if currentState:is_A(AddFeatureState) then
-                    currentState.teamId = self.featureDefsPanel.teamId
-                end
-            end
-        end
-    }
-
-    self.featureDefsPanel:SelectTeamId(teamsCmb.playerTeamIds[teamsCmb.selected])
-
-	local btnClose = Button:New {
-		caption = "Close",
-		bottom = 1,
-		x = 340,
-		width = 90,
-		height = SCEN_EDIT.conf.B_HEIGHT,
-		OnClick = { 
-			function() 
-				self.featuresWindow:Dispose() 
-			end 
-		}
-	}
 	
-    self.featuresWindow = Window:New {
-        parent = screen0,
-        caption = "Feature Editor",
-        width = 487,
-        height = 400,
-        resizable = false,
-        right = 10,
-        y = 500,
-        children = {
-            ScrollPanel:New {
-                y = 15,
-                x = 1,
-                right = 1,
-                bottom = SCEN_EDIT.conf.C_HEIGHT * 4,
-                --horizontalScrollBar = false,
-                children = {
-                    self.featureDefsPanel
-                },
-            },
-            Label:New {
-                x = 1,
-                bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                caption = "Type:",
-            },
-            ComboBox:New {
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                x = 40,
-                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                items = {
-                    "Wreckage", "Other", "All",
-                },
-                width = 90,
-                OnSelect = {
-                    function (obj, itemIdx, selected) 
-                        if selected then
-                            self.featureDefsPanel:SelectFeatureTypesId(itemIdx)
-                        end
-                    end
-                },
-            },
-            Label:New {
-                x = 140,
-                bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                caption = "Wreck:",
-            },
-            ComboBox:New {
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                x = 190,
-                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                items = {
-                    "Units", "Buildings", "All",
-                },
-                width = 90,
-                OnSelect = {
-                    function (obj, itemIdx, selected) 
-                        if selected then
-                            self.featureDefsPanel:SelectUnitTypesId(itemIdx)
-                        end
-                    end
-                },
-            },
-            Label:New {
-                caption = "Terrain:",
-                x = 290,
-                bottom = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
-            },
-            ComboBox:New {
-                bottom = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                items = {
-                    "Ground", "Air", "Water", "All",
-                },
-                x = 340,
-                width = 90,
-                OnSelect = {
-                    function (obj, itemIdx, selected) 
-                        if selected then
-                            self.featureDefsPanel:SelectTerrainId(itemIdx)
-                        end
-                    end
-                },
-            },
-            Label:New {
-                caption = "Team:",
-                x = 1,
-                bottom = 8,
-            },
-            teamsCmb,
-            Label:New {
-                caption = "Amount:",
-                x = 140, 
-                bottom = 8,
-            },
-            self.ebAmount,
-			btnClose,
-        }
+	local children = {
+		ScrollPanel:New {
+			x = 1,
+			right = 1,
+			y = SCEN_EDIT.conf.C_HEIGHT * 4,
+			height = "30%",
+			--horizontalScrollBar = false,
+			children = {
+				self.featureDefsPanel
+			},
+		},
+		Label:New {
+			x = 1,
+			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
+			caption = "Type:",
+		},
+		ComboBox:New {
+			height = SCEN_EDIT.conf.B_HEIGHT,
+			x = 40,
+			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
+			items = {
+				"Wreckage", "Other", "All",
+			},
+			width = 90,
+			OnSelect = {
+				function (obj, itemIdx, selected) 
+					if selected then
+						self.featureDefsPanel:SelectFeatureTypesId(itemIdx)
+					end
+				end
+			},
+		},
+		Label:New {
+			x = 140,
+			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
+			caption = "Wreck:",
+		},
+		ComboBox:New {
+			height = SCEN_EDIT.conf.B_HEIGHT,
+			x = 190,
+			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
+			items = {
+				"Units", "Buildings", "All",
+			},
+			width = 90,
+			OnSelect = {
+				function (obj, itemIdx, selected) 
+					if selected then
+						self.featureDefsPanel:SelectUnitTypesId(itemIdx)
+					end
+				end
+			},
+		},
+		Label:New {
+			caption = "Terrain:",
+			x = 290,
+			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 2,
+		},
+		ComboBox:New {
+			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 2,
+			height = SCEN_EDIT.conf.B_HEIGHT,
+			items = {
+				"Ground", "Air", "Water", "All",
+			},
+			x = 340,
+			width = 90,
+			OnSelect = {
+				function (obj, itemIdx, selected) 
+					if selected then
+						self.featureDefsPanel:SelectTerrainId(itemIdx)
+					end
+				end
+			},
+		},
     }
+	
+	self:AddNumericProperty({
+        name = "amount", 
+        title = "Amount:",
+        tooltip = "Amount",
+		value = 1,
+        minValue = 1,
+        maxValue = 100,
+		step = 1,
+    })
+	
+	local teamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id")
+	for i = 1, #teamIds do
+		teamIds[i] = tostring(teamIds[i])
+	end
+	local teamCaptions = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name")
+	self:AddChoiceProperty({
+	    name = "team",
+        items = teamIds,
+		captions = teamCaptions,
+        title = "Team: ",
+    })
+	self:UpdateChoiceField("team")
+
+	table.insert(children, 
+		ScrollPanel:New {
+			x = 0,
+			y = "45%",
+			bottom = 30,
+			right = 0,
+			borderColor = {0,0,0,0},
+			horizontalScrollbar = false,
+			children = { self.stackPanel },
+		}
+	)
+	self:Finalize(children)
 end
 
-function FeatureDefsView:GetAmount()
-    return math.min(
-        200,
-        math.max(1, tonumber(self.ebAmount.text) or 1)
-    )
+function FeatureDefsView:IsValidTest(state)
+    return state:is_A(AddFeatureState)
 end
