@@ -7,3 +7,9 @@
 [submodule "LuaUI/images/scenedit/resources"]
 	path = LuaUI/images/scenedit/resources
 	url = https://github.com/gajop/Scenario-Editor-Resources.git
+[submodule "libs/chonsole"]
+	path = libs/chonsole
+	url = https://github.com/gajop/chonsole.git
+[submodule "libs/i18n"]
+	path = libs/i18n
+	url = https://github.com/gajop/i18n.git
