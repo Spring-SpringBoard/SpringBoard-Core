@@ -1,13 +1,15 @@
 AddFeatureState = AbstractEditingState:extends{}
 
-function AddFeatureState:init(featureDef, teamId, featureImages, amount)
+function AddFeatureState:init(featureDef, featureImages, editorView)
+	AbstractEditingState.init(self, editorView)
     self.featureDef = featureDef
-    self.teamId = teamId
     self.featureImages = featureImages
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
-    self.amount = amount
     self.randomSeed = os.clock()
+	
+	self.amount  = self.editorView.fields["amount"].value
+	self.team    = self.editorView.fields["team"].value
 end
 
 function AddFeatureState:enterState()
@@ -25,7 +27,7 @@ function AddFeatureState:MousePress(x, y, button)
         end
         return true
     elseif button == 3 then
-        self.featureImages:SelectItem(0)
+        self.featureImages.control:SelectItem(0)
         SCEN_EDIT.stateManager:SetState(DefaultState())
     end
 end
@@ -52,7 +54,8 @@ function AddFeatureState:MouseRelease(x, y, button)
             x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
         end
-        local cmd = AddFeatureCommand(self.featureDef, x, y, z, self.teamId, self.angle)
+		y = Spring.GetGroundHeight(x, z)
+        local cmd = AddFeatureCommand(self.featureDef, x, y, z, self.team, self.angle)
         commands[#commands + 1] = cmd
     end
 
@@ -92,6 +95,7 @@ function AddFeatureState:DrawWorld()
                 x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
                 z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             end
+			y = Spring.GetGroundHeight(x, z)
             gl.PushMatrix()
 
             gl.Translate(x, y, z)
@@ -101,7 +105,7 @@ function AddFeatureState:DrawWorld()
 
             gl.Texture(1, "%-" .. drawFeature .. ":1")
             gl.Color(1, 1, 1, 0.8)
-            gl.FeatureShape(drawFeature, self.teamId)
+            gl.FeatureShape(drawFeature, self.team)
             gl.PopMatrix()
         end
     end

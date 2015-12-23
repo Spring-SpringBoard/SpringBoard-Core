@@ -155,13 +155,12 @@ function UnitPropertyWindow:init(unitId)
         end
     end
 
-    self.window = Window:New {
-        width = 340,
-        height = 450,
-        minimumSize = {150,200},
-        x = 500,
-        y = 300,
-        parent = screen0,
+    self.window = Control:New {
+        x = 0,
+        y = 0,
+        bottom = 0,
+        width = "100%",
+        caption = '',
         children = { 
             btnOk,
             btnCancel,
@@ -178,14 +177,14 @@ function UnitPropertyWindow:init(unitId)
         }
         if self.edStockpile ~= nil then
             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "stockpile", tonumber(self.edStockpile.text)))
-        end        
+        end
         if self.edExperience ~= nil then
             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "experience", tonumber(self.edExperience.text)))
         end
         if self.edFuel ~= nil then
             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "fuel", tonumber(self.edFuel.text)))
         end
-        
+
         for rule, value in pairs(self.rules) do
             local v = self.ruleEditBoxes[rule].text
             if type(value) == "number" then
@@ -197,4 +196,6 @@ function UnitPropertyWindow:init(unitId)
         local compoundCommand = CompoundCommand(cmds)
         SCEN_EDIT.commandManager:execute(compoundCommand)
     end)
+
+    SCEN_EDIT.view:SetMainPanel(self.window)
 end

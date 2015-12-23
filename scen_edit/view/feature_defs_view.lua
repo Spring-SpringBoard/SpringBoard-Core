@@ -3,28 +3,26 @@ SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
 FeatureDefsView = MapEditorView:extends{}
 
 function FeatureDefsView:init()
-	self:super("init")
+    self:super("init")
 
-    self.featureDefsPanel = FeatureDefsPanel:New {
-        name='features',
-        x = 0,
-        right = 20,
-        OnSelectItem = {
-            function(obj,itemIdx,selected)
-                if selected and itemIdx > 0 then
-                    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                    if currentState:is_A(SelectFeatureTypeState) then
-                        selFeatureDef = self.featureDefsPanel.items[itemIdx].id
-                        CallListeners(currentState.btnSelectType.OnSelectFeatureType, selFeatureDef)
-                        SCEN_EDIT.stateManager:SetState(DefaultState())
-                    else
-                        selFeatureDef = self.featureDefsPanel.items[itemIdx].id
-                        SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDef, self.featureDefsPanel, self))
-                    end
-                    local feature = FeatureDefs[selFeatureDef]
+    self.featureDefsPanel = FeatureDefsPanel({
+        width = "100%",
+        height = "100%"
+    })
+    self.featureDefsPanel.control.OnSelectItem = {
+        function(obj,itemIdx,selected)
+            if selected and itemIdx > 0 then
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                if currentState:is_A(SelectFeatureTypeState) then
+                    local selFeatureDefID = self.featureDefsPanel:GetFeatureDefID(itemIdx)
+                    CallListeners(currentState.btnSelectType.OnSelectFeatureType, selFeatureDefID)
+                    SCEN_EDIT.stateManager:SetState(DefaultState())
+                else
+                    local selFeatureDefID = self.featureDefsPanel:GetFeatureDefID(itemIdx)
+                    SCEN_EDIT.stateManager:SetState(AddFeatureState(selFeatureDefID, self.featureDefsPanel, self))
                 end
-            end,
-        },
+            end
+        end
     }
 	
 	local children = {
@@ -32,10 +30,10 @@ function FeatureDefsView:init()
 			x = 1,
 			right = 1,
 			y = SCEN_EDIT.conf.C_HEIGHT * 4,
-			height = "30%",
+			height = "50%",
 			--horizontalScrollBar = false,
 			children = {
-				self.featureDefsPanel
+				self.featureDefsPanel.control
 			},
 		},
 		Label:New {
@@ -129,7 +127,7 @@ function FeatureDefsView:init()
 	table.insert(children, 
 		ScrollPanel:New {
 			x = 0,
-			y = "45%",
+			y = "65%",
 			bottom = 30,
 			right = 0,
 			borderColor = {0,0,0,0},

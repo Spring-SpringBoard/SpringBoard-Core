@@ -13,7 +13,7 @@ function GridView:init(tbl)
 		iconY = 88,
 		useRTT = true,
 	}
-	tbl = table.merge(defaults, tbl)
+	tbl = table.merge(tbl, defaults)
 	
 	self.iconX = tbl.iconX
 	self.iconY = tbl.iconY
@@ -48,6 +48,10 @@ function GridView:Select(indx)
 end
 
 function GridView:AddItem(caption, image, tooltip)
+    -- FIXME: hacks
+    if image:sub(1,1) ~= "#" then
+        image = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. image
+    end
 	local item = LayoutPanel:New{
 		width  = self.iconX+10,
 		height = self.iconY+20,
@@ -63,7 +67,7 @@ function GridView:AddItem(caption, image, tooltip)
 			Image:New {
 				width  = self.iconX,
 				height = self.iconY,
-				file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. image,
+				file = image,
 			},
 			Label:New {
 				width = self.iconX + 30,

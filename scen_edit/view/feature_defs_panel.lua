@@ -1,45 +1,38 @@
---//=============================================================================
-FeatureDefsPanel = LayoutPanel:Inherit {
-  --TODO: figure out how to use DrawItemBackground with correct class name, in this case "FeatureDefsPanel"
-  classname = "imagelistview", 
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "grid_view.lua")
 
-  autosize = true,
+FeatureDefsPanel = GridView:extends{}
 
-  autoArrangeH = false,
-  autoArrangeV = false,
-  centerItems  = false,
+function FeatureDefsPanel:init(tbl)
+    local defaults = {
+        iconX = 42,
+        iconY = 42,
+    }
+    tbl = table.merge(tbl, defaults)
+    GridView.init(self, tbl)
 
-  iconX     = 64,
-  iconY     = 64,
-
-  itemMargin    = {1, 1, 1, 1},
-
-  selectable  = true,
-  multiSelect = false,
-  columns = 5,
-
-  items = {},
-  featureTypeId = 1,
-  unitTerrainId = 1,
-  unitTypesId = 1,
-  teamId = 1,
-  drawcontrolv2 = true,
-}
-
-local this = FeatureDefsPanel 
-local inherited = this.inherited
-
---//=============================================================================
-
-function FeatureDefsPanel:New(obj)
-  obj = inherited.New(self, obj)
-  obj:PopulateFeatureDefsPanel()
-  return obj
+    self.unitTerrainId = 1
+    self.featureTypeId = 1
+    self.unitTypesId = 1
 end
 
---//=============================================================================
 function FeatureDefsPanel:PopulateFeatureDefsPanel()
-    self:Clear()
+    self.control:DisableRealign()
+    self.control:ClearChildren()
+
+    self:PopulateItems()
+
+--     self:SelectItem(0)
+    self.control:EnableRealign()
+
+    if self.control.parent then
+        self.control.parent:RequestRealign()
+    else
+        self.control:UpdateLayout()
+        self.control:Invalidate()
+    end
+end
+
+function FeatureDefsPanel:PopulateItems()
     local featureTypeId = self.featureTypeId
     --TODO create a default picture for features
     local defaultPicture = nil
@@ -74,9 +67,9 @@ function FeatureDefsPanel:PopulateFeatureDefsPanel()
 
                 -- BEAUTIFUL, MARVEL AT IT'S GLORY FOR IT ILLUMINATES US ALL
                 correctTerrain = unitTerrainId == 1 and (not unitDef.canFly and
-                not unitDef.floater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
+                not unitDef.floatOnWater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
                 unitTerrainId == 2 and unitDef.canFly or
-                unitTerrainId == 3 and (unitDef.canHover or unitDef.floater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
+                unitTerrainId == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
                 unitTerrainId == 4
                 if correctUnitType and correctTerrain then
                     correctUnit = true
@@ -88,18 +81,14 @@ function FeatureDefsPanel:PopulateFeatureDefsPanel()
             unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
             local fileExists = VFS.FileExists(unitImagePath, VFS.MOD)
             if not fileExists then
-                if unitDef ~= nil then
-                    unitImagePath = SCEN_EDIT.getUnitDefBuildPic(unitDef)
-                else
-                    unitImagePath = ""
-                end
+                unitImagePath = ""
             end
             local name = featureDef.humanName or featureDef.tooltip or featureDef.name
-            self:AddImage(name, featureDef.id, unitImagePath)
+            local item = self:AddItem(name, "#" .. featureDef.id, name)
+            item.id = featureDef.id
         end
     end
-    self.rows = #self.items / self.columns + 1
-    self:SelectItem(0)
+    self.control:SelectItem(0)
 end
 
 function FeatureDefsPanel:SelectTerrainId(unitTerrainId)
@@ -112,106 +101,11 @@ function FeatureDefsPanel:SelectFeatureTypesId(featureTypeId)
     self:PopulateFeatureDefsPanel()
 end
 
-function FeatureDefsPanel:SelectTeamId(teamId)
-    self.teamId = teamId
-end
-
-local function ExtractFileName(filepath)
-  filepath = filepath:gsub("\\", "/")
-  local lastChar = filepath:sub(-1)
-  if (lastChar == "/") then
-    filepath = filepath:sub(1,-2)
-  end
-  local pos,b,e,match,init,n = 1,1,1,1,0,0
-  repeat
-    pos,init,n = b,init+1,n+1
-    b,init,match = filepath:find("/",init,true)
-  until (not b)
-  if (n==1) then
-    return filepath
-  else
-    return filepath:sub(pos+1)
-  end
-end
-
---//=============================================================================
-
-function FeatureDefsPanel:AddImage(name, id, imagefile)
-  table.insert(self.items, {name=name, id=id})
-  self:AddChild(LayoutPanel:New{
-    width  = self.iconX+10,
-    height = self.iconY+20,
-    padding = {0,0,0,0},
-    itemPadding = {0,0,0,0},
-    itemMargin = {0,0,0,0},
-    rows = 2,
-    columns = 1,
-
-    children = {
-      Image:New {
-        width  = self.iconX,
-        height = self.iconY,
-        passive = true,
-        file = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. imagefile,
-      },
-      Label:New {
-        width = self.iconX+10,
-        height = 20,
-        align = 'center',
-        autosize = false,
-        caption = name,
-      },
-    },
-  })
-end
-
-function FeatureDefsPanel:Clear()
-    self.children = {}
-    self.items = {}
-end
-
-function FeatureDefsPanel:SelectTerrainId(unitTerrainId)
-    self.unitTerrainId = unitTerrainId
-    self:PopulateFeatureDefsPanel()
-end
-
 function FeatureDefsPanel:SelectUnitTypesId(unitTypesId)
     self.unitTypesId = unitTypesId
     self:PopulateFeatureDefsPanel()
 end
 
---//=============================================================================
-
-function FeatureDefsPanel:DrawItemBkGnd(index)
-  local cell = self._cells[index]
-  local itemPadding = self.itemPadding
-
-  if (self.selectedItems[index]) then
-    self:DrawItemBackground(cell[1] - itemPadding[1],cell[2] - itemPadding[2],cell[3] + itemPadding[1] + itemPadding[3],cell[4] + itemPadding[2] + itemPadding[4],"selected")
-  else
-    self:DrawItemBackground(cell[1] - itemPadding[1],cell[2] - itemPadding[2],cell[3] + itemPadding[1] + itemPadding[3],cell[4] + itemPadding[2] + itemPadding[4],"normal")
-  end
+function FeatureDefsPanel:GetFeatureDefID(index)
+    return self.control.children[index].id
 end
-
---//=============================================================================
-
-function FeatureDefsPanel:HitTest(x,y)
-  local cx,cy = self:LocalToClient(x,y)
-  local obj = inherited.HitTest(self,cx,cy)
-  if (obj) then return obj end
-  local itemIdx = self:GetItemIndexAt(cx,cy)
-  return (itemIdx>=0) and self
-end
-
-
-function FeatureDefsPanel:MouseDblClick(x,y)
-  local cx,cy = self:LocalToClient(x,y)
-  local itemIdx = self:GetItemIndexAt(cx,cy)
-
-  if (itemIdx<0) then return end
-
-  self:CallListeners(self.OnDblClickItem, self.items[itemIdx], itemIdx)
-  return self
-end
-
---//=============================================================================

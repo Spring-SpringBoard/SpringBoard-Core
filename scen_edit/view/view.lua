@@ -20,7 +20,7 @@ function View:init()
     SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
     if devMode then
-         self.runtimeView = RuntimeView()
+--          self.runtimeView = RuntimeView()
     end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true

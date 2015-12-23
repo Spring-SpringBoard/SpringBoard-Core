@@ -1,15 +1,18 @@
 AddUnitState = AbstractEditingState:extends{}
 
-function AddUnitState:init(unitDef, teamId, unitImages, amount)
-    self.unitDef = unitDef
-    self.teamId = teamId
+function AddUnitState:init(unitDefID, unitImages, editorView)
+    AbstractEditingState.init(self, editorView)
+
+    self.unitDefID = unitDefID
     self.unitImages = unitImages
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
-    self.amount = amount
     self.randomSeed = os.clock()
     self.mapGrid = MapGrid(100, 100)
     self.mapGrid.separatorSize = 2
+
+    self.amount  = self.editorView.fields["amount"].value
+	self.team    = self.editorView.fields["team"].value
 end
 
 function AddUnitState:enterState()
@@ -28,8 +31,8 @@ function AddUnitState:MousePress(x, y, button)
             return true
         end
     elseif button == 3 then
-        self.unitImages:SelectItem(0)
-        SCEN_EDIT.stateManager:SetState(DefaultState())        
+        self.unitImages.control:SelectItem(0)
+        SCEN_EDIT.stateManager:SetState(DefaultState())
     end
 end
 
@@ -55,7 +58,7 @@ function AddUnitState:MouseRelease(x, y, button)
             x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
         end
-        local cmd = AddUnitCommand(self.unitDef, x, y, z, self.teamId, self.angle)
+        local cmd = AddUnitCommand(self.unitDefID, x, y, z, self.team, self.angle)
         commands[#commands + 1] = cmd
     end
 
@@ -78,10 +81,10 @@ function AddUnitState:DrawWorld()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
 
-    local unitSizeX = UnitDefs[self.unitDef].footprintX
-    local unitSizeZ = UnitDefs[self.unitDef].footprintZ
+    local unitSizeX = UnitDefs[self.unitDefID].footprintX
+    local unitSizeZ = UnitDefs[self.unitDefID].footprintZ
     if unitSizeX == nil or unitSizeZ == nil then
-        local dim = Spring.GetUnitDefDimensions(self.unitDef)
+        local dim = Spring.GetUnitDefDimensions(self.unitDefID)
         unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
         unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)
     end
@@ -92,10 +95,10 @@ function AddUnitState:DrawWorld()
         self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
         local gridX, gridZ = self.mapGrid:GetGridPosition(baseX, baseZ)
         local gridY = Spring.GetGroundHeight(gridX, gridZ)
-        local blocking = Spring.TestBuildOrder(self.unitDef, gridX, gridY, gridZ, 0)
-        self.mapGrid:Draw(baseX, baseZ, blocking)
+        local blocking = Spring.TestBuildOrder(self.unitDefID, gridX, gridY, gridZ, 0)
+        --self.mapGrid:Draw(baseX, baseZ, blocking)
         math.randomseed(self.randomSeed)
-        
+
         for i = 1, self.amount do
             local x, y, z = gridX, gridY, gridZ
             if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
@@ -113,7 +116,7 @@ function AddUnitState:DrawWorld()
             end
 
             gl.Color(1, 1, 1, 0.8)
-            gl.UnitShape(self.unitDef, self.teamId)
+            gl.UnitShape(self.unitDefID, self.team)
             gl.PopMatrix()
         end
     end
