@@ -51,3 +51,9 @@ if WG and WG.Chili then
 	TabPanel = Chili.TabPanel
     screen0 = Chili.Screen0
 end
+
+if WG then
+	WG.SCEN_EDIT = SCEN_EDIT
+elseif GG then
+	GG.SCEN_EDIT = SCEN_EDIT
+end

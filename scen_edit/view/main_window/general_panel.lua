@@ -2,8 +2,8 @@ GeneralPanel = AbstractMainWindowPanel:extends{}
 
 function GeneralPanel:init()
 	self:super("init")
-	self.control:AddChild(TabbedPanelButton({			
-			tooltip = "Save project (Ctrl+S)", 
+	self.control:AddChild(TabbedPanelButton({
+			tooltip = "Save project (Ctrl+S)",
 			OnClick = {
 				function()
                     SaveAction():execute()
@@ -15,8 +15,8 @@ function GeneralPanel:init()
 			},
 		})
 	)
-	self.control:AddChild(TabbedPanelButton({			
-			tooltip = "Save project as... (Ctrl+Shift+S)", 
+	self.control:AddChild(TabbedPanelButton({
+			tooltip = "Save project as... (Ctrl+Shift+S)",
 			OnClick = {
 				function() 
                     SaveAsAction():execute()
@@ -28,8 +28,8 @@ function GeneralPanel:init()
 			},
 		})
 	)	
-	self.control:AddChild(TabbedPanelButton({			
-			tooltip = "Load project (Ctrl-O)", 
+	self.control:AddChild(TabbedPanelButton({
+			tooltip = "Load project (Ctrl-O)",
 			OnClick = {
 				function()
                     LoadAction():execute()
@@ -42,7 +42,7 @@ function GeneralPanel:init()
 		})
 	)
 	self.control:AddChild(TabbedPanelButton({
-			tooltip = "Scenario info settings", 
+			tooltip = "Scenario info settings",
 			OnClick = {
 				function()
 					local scenarioInfoView = ScenarioInfoView()
@@ -55,7 +55,7 @@ function GeneralPanel:init()
 		})
 	)
 	self.control:AddChild(TabbedPanelButton({
-			tooltip = "Export to (Ctrl-E)...", 
+			tooltip = "Export to (Ctrl-E)...",
 			OnClick = {
 				function()
                     ExportAction():execute()
@@ -68,7 +68,7 @@ function GeneralPanel:init()
 		})
 	)
     self.control:AddChild(TabbedPanelButton({
-			tooltip = "Import from (Ctrl-I)...", 
+			tooltip = "Import from (Ctrl-I)...",
 			OnClick = {
 				function()
                     ImportAction():execute()

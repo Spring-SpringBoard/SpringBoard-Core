@@ -11,9 +11,9 @@ function TabbedPanelButton(tbl)
 end
 
 function TabbedPanelImage(tbl)
-	return Image:New(table.merge({                             
+	return Image:New(table.merge({
 		width = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH / 2,
-		height = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 2, 					
+		height = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 2,
 		margin = {0, 0, 0, 0},
 		x = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH / 4,
 		y = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 8,

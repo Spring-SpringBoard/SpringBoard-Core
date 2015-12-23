@@ -520,10 +520,8 @@ function SCEN_EDIT.executeDelayedGL()
     local delayedGL = SCEN_EDIT.delayedGL
     SCEN_EDIT.delayedGL = {}
     for i, call in pairs(delayedGL) do
-        success, msg = pcall(call[1], unpack(call[2]))
-        if not success then
-            Spring.Echo(msg)
-        end
+		xpcall(function() call[1](unpack(call[2])) end,
+               function(err) Spring.Log("scened", LOG.ERROR, debug.traceback(err)) end )
     end
 end
 
@@ -536,10 +534,8 @@ function SCEN_EDIT.executeDelayed()
     local delayed = SCEN_EDIT.delayed
     SCEN_EDIT.delayed = {}
     for i, call in pairs(delayed) do
-        success, msg = pcall(call[1], unpack(call[2]))
-        if not success then
-            Spring.Echo(msg)
-        end
+        xpcall(function() call[1](unpack(call[2])) end,
+               function(err) Spring.Log("scened", LOG.ERROR, debug.traceback(err)) end )
     end
 end
 
@@ -592,4 +588,12 @@ function boolToNumber(bool)
     else
         return 0
     end
+end
+
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
+end
+
+function string.ends(String,End)
+   return End=='' or string.sub(String,-string.len(End))==End
 end

@@ -15,7 +15,7 @@ function TerrainPanel:init()
                     SCEN_EDIT.heightmapEditorView = self.heightmapEditorView
                 end
                 if SCEN_EDIT.heightmapEditorView.window.hidden then
-                    SCEN_EDIT.heightmapEditorView.window:Show()
+					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.heightmapEditorView.window)
                 end
             end
         },
@@ -35,7 +35,7 @@ function TerrainPanel:init()
                     SCEN_EDIT.terrainEditorView = self.terrainEditorView
                 end
                 if SCEN_EDIT.terrainEditorView.window.hidden then
-                    SCEN_EDIT.terrainEditorView.window:Show()
+					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.terrainEditorView.window)
                 end
             end
         },
@@ -55,13 +55,13 @@ function TerrainPanel:init()
                     SCEN_EDIT.grassEditorView = self.grassEditorView
                 end
                 if SCEN_EDIT.grassEditorView.window.hidden then
-                    SCEN_EDIT.grassEditorView.window:Show()
+					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.grassEditorView.window)
                 end
             end
         },
     })
     self.control:AddChild(btnModifyGrass)
-    
+
     local btnModifyMetal = TabbedPanelButton({
         tooltip = "Change metal map",
         children = {
@@ -75,10 +75,30 @@ function TerrainPanel:init()
                     SCEN_EDIT.metalEditorView = self.metalEditorView
                 end
                 if SCEN_EDIT.metalEditorView.window.hidden then
-                    SCEN_EDIT.metalEditorView.window:Show()
+					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.metalEditorView.window)
                 end
             end
         },
     })
     self.control:AddChild(btnModifyMetal)
+	
+	local btnTerrainSettings = TabbedPanelButton({
+        tooltip = "Change map settings",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelLabel({ caption = "Settings" }),
+        },
+        OnClick = {
+            function()
+                if SCEN_EDIT.terrainSettingsView == nil then
+                    self.terrainSettingsView = TerrainSettingsView()
+                    SCEN_EDIT.terrainSettingsView = self.terrainSettingsView
+                end
+                if SCEN_EDIT.terrainSettingsView.window.hidden then
+					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.terrainSettingsView.window)
+                end
+            end
+        },
+    })
+    self.control:AddChild(btnTerrainSettings)
 end

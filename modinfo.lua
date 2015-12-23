@@ -1,14 +1,12 @@
--- ScenarioEditor - Core module for the Scenario Editor
+-- Core module for Scened
 -- Authors: gajop
 
 local modinfo = {
-	name			= "Scenario Editor Core",
-	shortName		= "SEC",
+	name			= "Scened Core",
+	shortName		= "SCE_C",
 	version			= "git",
-	game			= "Scenario Editor Core",
-	shortGame		= "SEC",
 	mutator			= "Official",
-	description		= "Core module of the Scenario Editor",
+	description		= "Core module of Scened",
 	modtype			= 0,
 	depend = {
         "Spring Cursors",

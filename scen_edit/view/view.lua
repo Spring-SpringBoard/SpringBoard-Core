@@ -20,80 +20,21 @@ function View:init()
     SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
     if devMode then
-        self.runtimeView = RuntimeView()
+         self.runtimeView = RuntimeView()
     end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
 	self.tabbedWindow = TabbedWindow()
     self.commandWindow = CommandWindow()
+	self.commandWindow.window:Hide()
 
-    local teams = SCEN_EDIT.model.teamManager:getAllTeams()
-    local teamsTxt = {}
-    for _, team in pairs(teams) do
-        table.insert(teamsTxt, SCEN_EDIT.glToFontColor(team.color) .. "Team " .. team.name .. "\b")
-    end
-    table.insert(teamsTxt, "Spectator")
-    self.cmbTeamSelector = ComboBox:New {
-        parent = screen0,
-        right = 5,
-        y = 5,
-        width = 200,
-        height = 40,
-        items = teamsTxt,
-        font = { size = 16 },
-        teamIds = GetKeys(teams),
-    }
-    self.cmbTeamSelector.OnSelect = {
-        function(_, itemIdx)
-            if itemIdx < #teamsTxt then
-                local teamId = self.cmbTeamSelector.teamIds[itemIdx]
-                if Spring.GetMyTeamID() ~= teamId or Spring.GetSpectatingState() then
-                    if SCEN_EDIT.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
-                        local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), teamId)
-                        SCEN_EDIT.commandManager:execute(cmd)
-                    end
-                end
-            else
-                if not Spring.GetSpectatingState() then
-                    Spring.SendCommands("spectator")
-                end
-            end
-        end
-    }
-
-    SCEN_EDIT.lockTeam = false
-    self.cbLockTeam = Checkbox:New {
-        parent = screen0,
-        x = self.cmbTeamSelector.x + 10,
-        width = 90,
-        y = 45,
-        height = 20,
-        caption = "Lock team",
-        checked = false,
-        OnChange = { function(_, value) 
-            SCEN_EDIT.lockTeam = value
-        end}
-    }
+--     self.teamSelector = TeamSelector()
 end
 
 function View:Update()
-    local selectedTeamId = self.cmbTeamSelector.teamIds[self.cmbTeamSelector.selected]
-    if not Spring.GetSpectatingState() and Spring.GetMyTeamID() ~= selectedTeamId then
-        local OnSelect = self.cmbTeamSelector.OnSelect
-        self.cmbTeamSelector.OnSelect = nil
-        for i, teamId in pairs(self.cmbTeamSelector.teamIds) do
-            if teamId == Spring.GetMyTeamID() then
-                self.cmbTeamSelector:Select(i)
-                break
-            end
-        end
-        self.cmbTeamSelector.OnSelect = OnSelect
-    elseif Spring.GetSpectatingState() and selectedTeamId ~= nil then
-        local OnSelect = self.cmbTeamSelector.OnSelect
-        self.cmbTeamSelector.OnSelect = nil
-        self.cmbTeamSelector:Select(#self.cmbTeamSelector.items)
-        self.cmbTeamSelector.OnSelect = OnSelect
-    end
+    if self.teamSelector then
+		self.teamSelector:Update()
+	end
 end
 
 function View:drawRect(x1, z1, x2, z2)
@@ -165,9 +106,54 @@ function View:DrawScreen()
         end
         local x = w - self.font:GetTextWidth(text) * fontSize - 10
         self.font:Print(text, x, y, 20, 'o')
+		
+-- 		gl.PushMatrix()
+-- 			local i = 1
+-- 			local step = 200
+-- 			for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+-- 				gl.Texture(shadingTex)
+-- 				gl.TexRect(i * step, 1 * step, (i+1) * step, 2 * step)
+-- 				i = i + 1
+-- 			end
+-- 			i = 1
+-- 			for _, tex in pairs(SCEN_EDIT.model.textureManager.shadingTextureNaming) do
+-- 				gl.Texture("$" .. tex.engineName)
+-- 				gl.TexRect(i * step, 2 * step, (i+1) * step, 3 * step)
+-- 				i = i + 1
+-- 			end
+-- 			local mapTex = SCEN_EDIT.model.textureManager.mapFBOTextures[0][0]
+-- 			if mapTex then
+-- 				gl.Texture(mapTex.texture)
+-- 				gl.TexRect(i * step, 1 * step, (i+1) * step, (1+1) * step)
+-- 			end
+-- 		gl.PopMatrix()
     gl.PopMatrix()
 end
 
 function View:GameFrame(frameNum)
     self.selectionManager:GameFrame(frameNum)
+end
+
+function View:SetMainPanel(panel)
+	local mp = self.tabbedWindow.mainPanel
+
+	-- initialize if needed
+	if mp._hidden == nil then
+		mp._hidden = {}
+	end
+	
+	-- hide existing
+	local existing = mp.children[1]
+	if existing ~= nil then
+		mp._hidden[existing] = existing
+		existing:Hide()
+	end
+
+	-- add new or show hidden
+	if mp._hidden[panel] == nil then
+		mp:AddChild(panel)
+	else
+		mp._hidden[panel]:Show()
+		mp._hidden[panel] = nil
+	end
 end

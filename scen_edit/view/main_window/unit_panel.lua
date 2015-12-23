@@ -40,7 +40,24 @@ function UnitFeaturePanel:init()
 			},
 			children = {
 				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "feature.png" }),
-				TabbedPanelLabel({ caption = "Property edit" }),
+				TabbedPanelLabel({ caption = "Properties" }),
+			},
+		})
+	)
+	self.control:AddChild(TabbedPanelButton({
+			tooltip = "Collision volume",
+			OnClick = {
+				function()
+					Spring.Echo("Edit collision volume!")
+--                     local selType, units = SCEN_EDIT.view.selectionManager:GetSelection()
+--                     if selType == "units" and #units > 0 then
+--                         UnitPropertyWindow(units[1])
+--                     end
+				end
+			},
+			children = {
+				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "feature.png" }),
+				TabbedPanelLabel({ caption = "Colvol" }),
 			},
 		})
 	)
