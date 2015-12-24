@@ -32,15 +32,15 @@ end
 
 function RectangleSelectState:_MouseRelease(x, y, button)
     if self.endScreenX and self.endScreenZ then
-		local startScreenX, startScreenZ = Spring.WorldToScreenCoords(self.startWorldX, self.startWorldY, self.startWorldZ)
+        local startScreenX, startScreenZ = Spring.WorldToScreenCoords(self.startWorldX, self.startWorldY, self.startWorldZ)
 
         local unitIds = self:GetUnitsInScreenRectangle(startScreenX, startScreenZ, self.endScreenX, self.endScreenZ)
         local featureIds = self:GetFeaturesInScreenRectangle(startScreenX, startScreenZ, self.endScreenX, self.endScreenZ)
-        if #unitIds > 0 then
-            SCEN_EDIT.view.selectionManager:SelectUnits(unitIds)
-        elseif #featureIds > 0 then
-            SCEN_EDIT.view.selectionManager:SelectFeatures(featureIds)
-        end
+        local selection = {
+            units = unitIds,
+            features = featureIds
+        }
+        SCEN_EDIT.view.selectionManager:Select(selection)
     end
     SCEN_EDIT.stateManager:SetState(DefaultState())
 end

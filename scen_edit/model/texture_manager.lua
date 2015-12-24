@@ -316,6 +316,9 @@ function TextureManager:PushStack()
 end
 
 function TextureManager:RemoveStackItem(stackItem)
+    if not stackItem then
+        return
+    end
 	for name, value in pairs(stackItem) do
 		if name == "diffuse" then
 			local oldTextures = value

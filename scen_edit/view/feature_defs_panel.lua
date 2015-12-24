@@ -6,6 +6,7 @@ function FeatureDefsPanel:init(tbl)
     local defaults = {
         iconX = 42,
         iconY = 42,
+        multiSelect = true,
     }
     tbl = table.merge(tbl, defaults)
     GridView.init(self, tbl)
@@ -32,6 +33,15 @@ function FeatureDefsPanel:PopulateFeatureDefsPanel()
     end
 end
 
+function FeatureDefsPanel:getUnitDefBuildPic(unitDef)
+    unitImagePath = "unitpics/" .. unitDef.buildpicname
+    local fileExists = VFS.FileExists(unitImagePath)
+    if not fileExists then
+        unitImagePath = "buildicons/_1to1_128x128/" .. unitDef.name .. ".png"
+    end
+    return unitImagePath
+end
+
 function FeatureDefsPanel:PopulateItems()
     local featureTypeId = self.featureTypeId
     --TODO create a default picture for features
@@ -55,7 +65,7 @@ function FeatureDefsPanel:PopulateItems()
                     isWreck = true
                 end
             end
-            correctType = isWreck == (featureTypeId == 1)
+            correctType = isWreck == (featureTypeId == 2)
             if correctType and isWreck then
                 correctUnit = false
                 local unitTerrainId = self.unitTerrainId
@@ -81,10 +91,15 @@ function FeatureDefsPanel:PopulateItems()
             unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
             local fileExists = VFS.FileExists(unitImagePath, VFS.MOD)
             if not fileExists then
-                unitImagePath = ""
+                if unitDef then
+                    unitImagePath = self:getUnitDefBuildPic(unitDef)
+                end
+                if unitImagePath == nil or not VFS.FileExists(unitImagePath, VFS.MOD) then
+                    unitImagePath = "%-" .. featureDef.id
+                end
             end
             local name = featureDef.humanName or featureDef.tooltip or featureDef.name
-            local item = self:AddItem(name, "#" .. featureDef.id, name)
+            local item = self:AddItem(name, unitImagePath, name)
             item.id = featureDef.id
         end
     end
@@ -106,6 +121,6 @@ function FeatureDefsPanel:SelectUnitTypesId(unitTypesId)
     self:PopulateFeatureDefsPanel()
 end
 
-function FeatureDefsPanel:GetFeatureDefID(index)
+function FeatureDefsPanel:GetObjectDefID(index)
     return self.control.children[index].id
 end

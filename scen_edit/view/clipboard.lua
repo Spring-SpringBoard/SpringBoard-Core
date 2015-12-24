@@ -12,7 +12,6 @@ end
 
 -- copy will remove the unit IDs 
 function Clipboard:CopyUnits(unitIds)
-    self:Clear()
     for _, unitId in pairs(unitIds) do
         local unit = SCEN_EDIT.model.unitManager:serializeUnit(unitId)
         unit.id = nil
@@ -20,8 +19,7 @@ function Clipboard:CopyUnits(unitIds)
     end
 end
 
-function Clipboard:CutUnits(unitIds)
-    self:Clear()
+function Clipboard:CutUnitCommands(unitIds)
     self:CopyUnits(unitIds)
     local removeUnitCommands = {}
     for i = 1, #unitIds do
@@ -30,34 +28,24 @@ function Clipboard:CutUnits(unitIds)
         local cmd = RemoveUnitCommand(modelUnitId)
         table.insert(removeUnitCommands, cmd)
     end
-    local cmd = CompoundCommand(removeUnitCommands)
-    SCEN_EDIT.commandManager:execute(cmd)
+    return removeUnitCommands
 end
 
-function Clipboard:_PasteUnits(coords)
+function Clipboard:PasteUnitCommands(delta)
     local addUnitCommands = {}
-    local avgX, avgZ = 0, 0
+
     for _, unit in pairs(self.units) do
-        avgX = avgX + unit.x
-        avgZ = avgZ + unit.z
-    end
-    avgX = avgX / #self.units
-    avgZ = avgZ / #self.units
-    local dx = coords[1] - avgX
-    local dz = coords[3] - avgZ
-    for _, unit in pairs(self.units) do
-        local x, y, z = unit.x, unit.y, unit.z
-        unit.x = unit.x + dx
-        unit.z = unit.z + dz
-        local cmd = AddUnitCommand(unit)
+        local uc = SCEN_EDIT.deepcopy(unit)
+        local x, y, z = uc.x, uc.y, uc.z
+        uc.x = uc.x + delta.x
+        uc.z = uc.z + delta.z
+        local cmd = AddUnitCommand(uc)
         table.insert(addUnitCommands, cmd)
     end
-    local cmd = CompoundCommand(addUnitCommands)
-    SCEN_EDIT.commandManager:execute(cmd)
+    return addUnitCommands
 end
 
 function Clipboard:CopyFeatures(featureIds)
-    self:Clear()
     for i = 1, #featureIds do
         local featureId = featureIds[i]
         local x, y, z = Spring.GetFeaturePosition(featureId)
@@ -65,21 +53,18 @@ function Clipboard:CopyFeatures(featureIds)
         local featureTeamId = Spring.GetFeatureTeam(featureId)
         local dirX, dirY, dirZ = Spring.GetFeatureDirection(featureId)
         local angle = math.atan2(dirX, dirZ) * 180 / math.pi
-        table.insert(self.features,
-            {
-                x = x,
-                y = y,
-                z = z,
-                featureTypeId = featureTypeId,
-                featureTeamId = featureTeamId,
-                angle = angle,
-            }
-        )
+        table.insert(self.features, {
+            x = x,
+            y = y,
+            z = z,
+            featureTypeId = featureTypeId,
+            featureTeamId = featureTeamId,
+            angle = angle,
+        })
     end
 end
 
-function Clipboard:CutFeatures(featureIds)
-    self:Clear()
+function Clipboard:CutFeatureCommands(featureIds)
     self:CopyFeatures(featureIds)
     local removeFeatureCommands = {}
     for i = 1, #featureIds do
@@ -88,39 +73,80 @@ function Clipboard:CutFeatures(featureIds)
         local cmd = RemoveFeatureCommand(modelFeatureId)
         table.insert(removeFeatureCommands, cmd)
     end
-    local cmd = CompoundCommand(removeFeatureCommands)
-    SCEN_EDIT.commandManager:execute(cmd)
+    return removeFeatureCommands
 end
 
-function Clipboard:_PasteFeatures(coords)
+function Clipboard:PasteFeatureCommands(delta)
     local addFeatureCommands = {}
-    local avgX, avgZ = 0, 0
-    for i = 1, #self.features do
-        local feature = self.features[i]
-        avgX = avgX + feature.x
-        avgZ = avgZ + feature.z
-    end
-    avgX = avgX / #self.features
-    avgZ = avgZ / #self.features
-    local dx = coords[1] - avgX
-    local dz = coords[3] - avgZ
     for i = 1, #self.features do
         local feature = self.features[i]
         local x, y, z = feature.x, feature.y, feature.z
         local featureTypeId = feature.featureTypeId
         local featureTeamId = feature.featureTeamId
         local angle = feature.angle
-        local cmd = AddFeatureCommand(featureTypeId, x + dx, y, z + dz, featureTeamId, angle)
+        local cmd = AddFeatureCommand(featureTypeId, x + delta.x, y, z + delta.z, featureTeamId, angle)
         table.insert(addFeatureCommands, cmd)
     end
-    local cmd = CompoundCommand(addFeatureCommands)
+    return addFeatureCommands
+end
+
+function Clipboard:Cut(selection)
+    self:Clear()
+    local commands = {}
+    if selection.units then
+        local cmds = self:CutUnitCommands(selection.units)
+        for _, cmd in pairs(cmds) do
+            table.insert(commands, cmd)
+        end
+    end
+    if selection.features then
+        local cmds = self:CutFeatureCommands(selection.features)
+        for _, cmd in pairs(cmds) do
+            table.insert(commands, cmd)
+        end
+    end
+    local cmd = CompoundCommand(commands)
     SCEN_EDIT.commandManager:execute(cmd)
 end
 
 function Clipboard:Paste(coords)
+    local commands = {}
+
+    local avgX, avgZ = 0, 0
+    for _, unit in pairs(self.units) do
+        avgX = avgX + unit.x
+        avgZ = avgZ + unit.z
+    end
+    for _, feature in pairs(self.features) do
+        avgX = avgX + feature.x
+        avgZ = avgZ + feature.z
+    end
+    avgX = avgX / (#self.features + #self.units)
+    avgZ = avgZ / (#self.features + #self.units)
+    local delta = { x = coords[1] - avgX, z = coords[3] - avgZ }
+
     if #self.units > 0 then
-        self:_PasteUnits(coords)
-    elseif #self.features > 0 then
-        self:_PasteFeatures(coords)
+        local cmds = self:PasteUnitCommands(delta)
+        for _, cmd in pairs(cmds) do
+            table.insert(commands, cmd)
+        end
+    end
+    if #self.features > 0 then
+        local cmds = self:PasteFeatureCommands(delta)
+        for _, cmd in pairs(cmds) do
+            table.insert(commands, cmd)
+        end
+    end
+    local cmd = CompoundCommand(commands)
+    SCEN_EDIT.commandManager:execute(cmd)
+end
+
+function Clipboard:Copy(selection)
+    self:Clear()
+    if selection.units then
+        self:CopyUnits(selection.units)
+    end
+    if selection.features then
+        self:CopyFeatures(selection.features)
     end
 end

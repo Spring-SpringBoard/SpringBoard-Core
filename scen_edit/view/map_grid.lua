@@ -65,7 +65,7 @@ function MapGrid:Draw(x, z, blocking)
         for j = 1, self.columns-1 do
             gl.Utilities.DrawGroundRectangle(0, columnPart * j - self.separatorSize/2, Game.mapSizeX, columnPart * j + self.separatorSize/2)
         end
-        
+
         -- footprint 1
         gl.Color(1, 1, 1, 0.3)
         local totalRows = Game.mapSizeX / 8
@@ -96,9 +96,9 @@ function MapGrid:GetGridPosition(x, y)
     local totalColumns = Game.mapSizeZ / 8
     local totalRowsPart = Game.mapSizeX / totalRows
     local totalColumnsPart = Game.mapSizeZ / totalColumns
-    
+
     local rowPart = Game.mapSizeX / self.rows
     local columnPart = Game.mapSizeZ / self.columns
-    return totalRowsPart * math.floor(x / totalRowsPart) + totalRowsPart/2, 
+    return totalRowsPart * math.floor(x / totalRowsPart) + totalRowsPart/2,
            totalColumnsPart * math.floor(y / totalColumnsPart) + totalColumnsPart/2
 end

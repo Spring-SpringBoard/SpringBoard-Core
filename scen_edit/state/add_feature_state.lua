@@ -2,6 +2,7 @@ AddFeatureState = AbstractEditingState:extends{}
 
 function AddFeatureState:init(featureDef, featureImages, editorView)
 	AbstractEditingState.init(self, editorView)
+
     self.featureDef = featureDef
     self.featureImages = featureImages
     self.x, self.y, self.z = 0, 0, 0

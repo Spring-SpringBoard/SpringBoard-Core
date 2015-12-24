@@ -6,6 +6,7 @@ function UnitDefsPanel:init(tbl)
     local defaults = {
         iconX = 42,
         iconY = 42,
+        multiSelect = true,
     }
     tbl = table.merge(tbl, defaults)
     GridView.init(self, tbl)
@@ -65,6 +66,6 @@ function UnitDefsPanel:SelectUnitTypesId(unitTypesId)
     self:PopulateUnitDefsPanel()
 end
 
-function UnitDefsPanel:GetUnitDefID(index)
+function UnitDefsPanel:GetObjectDefID(index)
     return self.control.children[index].id
 end

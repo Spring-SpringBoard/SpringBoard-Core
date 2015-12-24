@@ -1,10 +1,10 @@
-AddUnitState = AbstractEditingState:extends{}
+AddObjectState = AbstractEditingState:extends{}
 
-function AddUnitState:init(unitDefID, unitImages, editorView)
+function AddObjectState:init(editorView, objectDefIDs)
     AbstractEditingState.init(self, editorView)
 
-    self.unitDefID = unitDefID
-    self.unitImages = unitImages
+    self.objectDefIDs = objectDefIDs
+--     self.unitImages = unitImages
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
     self.randomSeed = os.clock()
@@ -15,28 +15,22 @@ function AddUnitState:init(unitDefID, unitImages, editorView)
 	self.team    = self.editorView.fields["team"].value
 end
 
-function AddUnitState:enterState()
-end
-
-function AddUnitState:leaveState()
-end
-
-function AddUnitState:MousePress(x, y, button)
+function AddObjectState:MousePress(x, y, button)
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, true)
         if result == "ground" then
             self.x, self.y, self.z = unpack(coords)
-            self.x, self.z = self.mapGrid:GetGridPosition(self.x, self.z)
-            self.y = Spring.GetGroundHeight(self.x, self.z)
+--             self.x, self.z = self.mapGrid:GetGridPosition(self.x, self.z)
+--             self.y = Spring.GetGroundHeight(self.x, self.z)
             return true
         end
     elseif button == 3 then
-        self.unitImages.control:SelectItem(0)
+--         self.unitImages.control:SelectItem(0)
         SCEN_EDIT.stateManager:SetState(DefaultState())
     end
 end
 
-function AddUnitState:MouseMove(x, y, dx, dy, button)
+function AddObjectState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         local dx = coords[1] - self.x
@@ -49,21 +43,22 @@ function AddUnitState:MouseMove(x, y, dx, dy, button)
     end
 end
 
-function AddUnitState:MouseRelease(x, y, button)
+function AddObjectState:MouseRelease(x, y, button)
     local commands = {}
     math.randomseed(self.randomSeed)
     for i = 1, self.amount do
+        local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
         local x, y, z = self.x, self.y, self.z
         if i ~= 1 then
             x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
         end
-        local cmd = AddUnitCommand(self.unitDefID, x, y, z, self.team, self.angle)
+        local cmd = self.bridge.AddObjectCommand(objectDefID, x, y, z, self.team, self.angle)
         commands[#commands + 1] = cmd
     end
 
     local compoundCommand = CompoundCommand(commands)
-    
+
     SCEN_EDIT.commandManager:execute(compoundCommand)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
@@ -71,20 +66,26 @@ function AddUnitState:MouseRelease(x, y, button)
     return true
 end
 
-function AddUnitState:KeyPress(key, mods, isRepeat, label, unicode)
+function AddObjectState:KeyPress(key, mods, isRepeat, label, unicode)
     if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
         return true
     end
 end
 
-function AddUnitState:DrawWorld()
+function AddObjectState:DrawWorld()
+    if not self.objectDefIDs or #self.objectDefIDs == 0 then
+        return
+    end
+    math.randomseed(self.randomSeed)
+    local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
+
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
 
-    local unitSizeX = UnitDefs[self.unitDefID].footprintX
-    local unitSizeZ = UnitDefs[self.unitDefID].footprintZ
+    local unitSizeX = UnitDefs[objectDefID].footprintX
+    local unitSizeZ = UnitDefs[objectDefID].footprintZ
     if unitSizeX == nil or unitSizeZ == nil then
-        local dim = Spring.GetUnitDefDimensions(self.unitDefID)
+        local dim = Spring.GetUnitDefDimensions(objectDefID)
         unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
         unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)
     end
@@ -93,11 +94,12 @@ function AddUnitState:DrawWorld()
         local baseX, baseY, baseZ = unpack(coords)
         self.mapGrid.rows    = Game.mapSizeX / unitSizeX
         self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
-        local gridX, gridZ = self.mapGrid:GetGridPosition(baseX, baseZ)
-        local gridY = Spring.GetGroundHeight(gridX, gridZ)
-        local blocking = Spring.TestBuildOrder(self.unitDefID, gridX, gridY, gridZ, 0)
-        --self.mapGrid:Draw(baseX, baseZ, blocking)
-        math.randomseed(self.randomSeed)
+        local gridX, gridY, gridZ = baseX, baseY, baseZ
+--         local gridX, gridZ = self.mapGrid:GetGridPosition(baseX, baseZ)
+--         local gridY = Spring.GetGroundHeight(gridX, gridZ)
+--         local blocking = Spring.TestBuildOrder(objectDefID, gridX, gridY, gridZ, 0)
+--         self.mapGrid:Draw(baseX, baseZ, blocking)
+--         math.randomseed(self.randomSeed)
 
         for i = 1, self.amount do
             local x, y, z = gridX, gridY, gridZ
@@ -115,9 +117,21 @@ function AddUnitState:DrawWorld()
                 gl.Rotate(self.angle, 0, 1, 0)
             end
 
-            gl.Color(1, 1, 1, 0.8)
-            gl.UnitShape(self.unitDefID, self.team)
+            self.bridge.DrawObject(objectDefID, self.team)
             gl.PopMatrix()
         end
     end
+end
+
+-- Custom unit/feature classes
+AddUnitState = AddObjectState:extends{}
+function AddUnitState:init(...)
+    AddObjectState.init(self, ...)
+    self.bridge = unitBridge
+end
+
+AddFeatureState = AddObjectState:extends{}
+function AddFeatureState:init(...)
+    AddObjectState.init(self, ...)
+    self.bridge = featureBridge
 end

@@ -49,7 +49,7 @@ end
 
 function GridView:AddItem(caption, image, tooltip)
     -- FIXME: hacks
-    if image:sub(1,1) ~= "#" then
+    if image:sub(1,1) ~= "#" or image:sub(1, 1) == "%" then
         image = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. image
     end
 	local item = LayoutPanel:New{

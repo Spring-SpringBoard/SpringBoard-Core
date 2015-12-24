@@ -20,5 +20,9 @@ function CompoundCommand:unexecute()
 end
 
 function CompoundCommand:display()
-    return self.commands[1]:display()
+    if #self.commands > 0 then
+        return self.commands[1]:display()
+    else
+        return "CompoundCommand(empty)"
+    end
 end

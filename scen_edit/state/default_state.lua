@@ -68,7 +68,8 @@ function DefaultState:checkResizeIntersections(x, z)
 end
 
 function DefaultState:MousePress(x, y, button)
-    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selCount = #selection.units + #selection.features + #selection.areas
     if Spring.GetPressedKeys() == KEYSYMS.SPACE and button == 1 then
         local result, unitId = Spring.TraceScreenRay(x, y)
         if result == "unit" then
@@ -80,7 +81,7 @@ function DefaultState:MousePress(x, y, button)
         local result, coords = Spring.TraceScreenRay(x, y, false, false, true)
         if result == "ground" or result == "sky" then
             if SCEN_EDIT.view.displayDevelop then
-                if selType == "areas" and #items ~= 0 then
+                if #selection.areas ~= 0 and selCount == 1 then
                     toResize, resx, resz = self:checkResizeIntersections(coords[1], coords[3])
                     if toResize then
                         local _, resizeAreas = SCEN_EDIT.view.selectionManager:GetSelection()
@@ -123,7 +124,7 @@ function DefaultState:MousePress(x, y, button)
                     end
                 end
                 local _, ctrl = Spring.GetModKeyState()
-                if ctrl and (selType == "units" or selType == "features") then
+                if ctrl and selCount > 0 then
                     return true
                 else
                     selected, self.dragDiffX, self.dragDiffZ = SCEN_EDIT.checkAreaIntersections(coords[1], coords[3])
@@ -158,14 +159,10 @@ function DefaultState:MousePress(x, y, button)
             if coords ~= nil then
                 local x, y, z = Spring.GetUnitPosition(unitId)
                 self.dragDiffX, self.dragDiffZ =  x - coords[1], z - coords[3]
-
-                local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
-                if selType == "units" then
-                    for _, oldUnitId in pairs(items) do
-                        if oldUnitId == unitId then
-                            self.dragUnit = unitId
-                            return true
-                        end
+                for _, oldUnitId in pairs(selection.units) do
+                    if oldUnitId == unitId then
+                        self.dragUnitID = unitId
+                        return true
                     end
                 end
             end
@@ -176,39 +173,45 @@ function DefaultState:MousePress(x, y, button)
             if coords ~= nil then
                 local x, y, z = Spring.GetFeaturePosition(featureId)
                 self.dragDiffX, self.dragDiffZ = x - coords[1], z - coords[3]
-                if selType == "features" then                
-                    for _, oldFeatureId in pairs(items) do
-                        if oldFeatureId == featureId then
-                            self.dragFeature = featureId
-                            return true
-                        end
+                for _, oldFeatureId in pairs(selection.features) do
+                    if oldFeatureId == featureId then
+                        self.dragFeatureID = featureId
+                        return true
                     end
                 end
             end
-            SCEN_EDIT.view.selectionManager:SelectFeatures({featureId})            
+            SCEN_EDIT.view.selectionManager:SelectFeatures({featureId})
         end
     end
 end
 
 function DefaultState:MouseMove(x, y, dx, dy, button)
-    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
-    if selType == "areas" and SCEN_EDIT.view.displayDevelop then
-        SCEN_EDIT.stateManager:SetState(DragAreaState(self.dragArea, self.dragDiffX, self.dragDiffZ))
-    elseif selType == "units" then
+    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selCount = #selection.units + #selection.features + #selection.areas
+    if selCount > 0 then
         local _, ctrl = Spring.GetModKeyState()
         if ctrl then
-            SCEN_EDIT.stateManager:SetState(RotateUnitState())
+            SCEN_EDIT.stateManager:SetState(RotateObjectState())
         else
-            SCEN_EDIT.stateManager:SetState(DragUnitState(self.dragUnit, self.dragDiffX, self.dragDiffZ))
-        end
-    elseif selType == "features" then
-        local _, ctrl = Spring.GetModKeyState()
-        if ctrl then
-            SCEN_EDIT.stateManager:SetState(RotateFeatureState(items[1]))
-        else
-            SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeature, self.dragDiffX, self.dragDiffZ))
+            if self.dragUnitID then
+                SCEN_EDIT.stateManager:SetState(DragUnitState(self.dragUnitID, self.dragDiffX, self.dragDiffZ))
+            elseif self.dragFeatureID then
+                SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeatureID, self.dragDiffX, self.dragDiffZ))
+            end
         end
     end
+--     if selType == "areas" and SCEN_EDIT.view.displayDevelop then
+--         SCEN_EDIT.stateManager:SetState(DragAreaState(self.dragArea, self.dragDiffX, self.dragDiffZ))
+--     elseif selType == "units" then
+--         
+--     elseif selType == "features" then
+--         local _, ctrl = Spring.GetModKeyState()
+--         if ctrl then
+--             SCEN_EDIT.stateManager:SetState(RotateFeatureState(items[1]))
+--         else
+--             SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeature, self.dragDiffX, self.dragDiffZ))
+--         end
+--     end
 end
 
 function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
@@ -218,54 +221,36 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
 
     local gameSeconds = Spring.GetGameSeconds()
     local mouseX, mouseY, mouseLeft, mouseMiddle, mouseRight = Spring.GetMouseState()
-    local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selCount = #selection.units + #selection.features + #selection.areas
     if key == KEYSYMS.DELETE then
-        if selType == "areas" then
+        if selCount > 0 then
             local commands = {}
-            for _, areaId in pairs(items) do
+            for _, unitId in pairs(selection.units) do
+                local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+                table.insert(commands, RemoveUnitCommand(modelUnitId))
+            end
+
+            for _, featureId in pairs(selection.features) do
+                local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
+                table.insert(commands, RemoveFeatureCommand(modelFeatureId))
+            end
+
+            for _, areaId in pairs(selection.areas) do
                 table.insert(commands, RemoveAreaCommand(areaId))
             end
             --SCEN_EDIT.view.areaViews[self.selected] = nil
-            local cmd = CompoundCommand(commands)
-            SCEN_EDIT.commandManager:execute(cmd)
-            return true
-        elseif selType == "units" then
-            local removeUnitCommands = {}
-            for _, unitId in pairs(items) do
-                local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
-                local cmd = RemoveUnitCommand(modelUnitId)
-                table.insert(removeUnitCommands, cmd)
-            end
-            local cmd = CompoundCommand(removeUnitCommands)
-            SCEN_EDIT.commandManager:execute(cmd)
-            return true
-        elseif selType == "features" then
-            local commands = {}
-            for _, featureId in pairs(items) do
-                local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
-                local cmd = RemoveFeatureCommand(modelFeatureId)
-                table.insert(commands, cmd)
-            end
+
             local cmd = CompoundCommand(commands)
             SCEN_EDIT.commandManager:execute(cmd)
             return true
         end
     elseif key == KEYSYMS.C and mods.ctrl then
-        if selType == "units" then
-            SCEN_EDIT.clipboard:CopyUnits(items)
-            return true
-        elseif selType == "features" then
-            SCEN_EDIT.clipboard:CopyFeatures(items)
-            return true
-        end
+        SCEN_EDIT.clipboard:Copy(selection)
+        return true
     elseif key == KEYSYMS.X and mods.ctrl then
-        if selType == "units" then
-            SCEN_EDIT.clipboard:CutUnits(items)
-            return true
-        elseif selType == "features" then
-            SCEN_EDIT.clipboard:CutFeatures(items)
-            return true
-        end
+        SCEN_EDIT.clipboard:Cut(selection)
+        return true
     elseif key == KEYSYMS.V and mods.ctrl then
         local result, coords = Spring.TraceScreenRay(mouseX, mouseY, true)
         if result == "ground" then

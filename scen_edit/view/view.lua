@@ -35,6 +35,7 @@ function View:Update()
     if self.teamSelector then
 		self.teamSelector:Update()
 	end
+    self.selectionManager:Update()
 end
 
 function View:drawRect(x1, z1, x2, z2)
@@ -128,10 +129,6 @@ function View:DrawScreen()
 -- 			end
 -- 		gl.PopMatrix()
     gl.PopMatrix()
-end
-
-function View:GameFrame(frameNum)
-    self.selectionManager:GameFrame(frameNum)
 end
 
 function View:SetMainPanel(panel)

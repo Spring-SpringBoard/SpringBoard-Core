@@ -47,29 +47,29 @@ function TerrainEditorView:init()
         end
     }
 
-    self.detailTextureImages = ImageListView:New {
-        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/detail/",
-        width = "100%",
-        height = "100%",
-        multiSelect = false,
-        iconX = 48,
-        iconY = 48,
-    }
-    self.detailTextureImages.OnSelectItem = {
-        function(obj, itemIdx, selected)
-            -- FIXME: shouldn't be using ._dirsNum probably
-            if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
-                local item = self.detailTextureImages.items[itemIdx]
-                self.paintTexture.detail = item
-                SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.paintTexture))
-                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                if currentState:is_A(TerrainChangeTextureState) then
-                    currentState.paintTexture = self.paintTexture
-                end
-            end
-        end
-    }
-    self.detailTextureImages:Select("detailtex2.bmp")
+--     self.detailTextureImages = ImageListView:New {
+--         dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/detail/",
+--         width = "100%",
+--         height = "100%",
+--         multiSelect = false,
+--         iconX = 48,
+--         iconY = 48,
+--     }
+--     self.detailTextureImages.OnSelectItem = {
+--         function(obj, itemIdx, selected)
+--             -- FIXME: shouldn't be using ._dirsNum probably
+--             if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
+--                 local item = self.detailTextureImages.items[itemIdx]
+--                 self.paintTexture.detail = item
+--                 SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.paintTexture))
+--                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+--                 if currentState:is_A(TerrainChangeTextureState) then
+--                     currentState.paintTexture = self.paintTexture
+--                 end
+--             end
+--         end
+--     }
+--     self.detailTextureImages:Select("detailtex2.bmp")
 
 --     self.tabPanel = Chili.TabPanel:New {
 --         x = 0, 

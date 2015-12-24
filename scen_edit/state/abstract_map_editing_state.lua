@@ -28,7 +28,6 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 --     return true
 end
 
-
 function AbstractMapEditingState:CanApply()
 	local now = os.clock()
     if not self.lastTime then

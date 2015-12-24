@@ -10,13 +10,12 @@ function SelectionManager:init()
 end
 
 function SelectionManager:GetSelection()
-    if #self.selectedUnits > 0 then
-        return "units", self.selectedUnits
-    elseif #self.selectedFeatures > 0 then
-        return "features", self.selectedFeatures
-    elseif #self.selectedAreas > 0 then
-        return "areas", self.selectedAreas
-    end
+    local selection = {
+        units = self.selectedUnits,
+        features = self.selectedFeatures,
+        areas = self.selectedAreas,
+    }
+    return selection
 end
 
 function SelectionManager:ClearSelection()
@@ -39,7 +38,7 @@ function SelectionManager:SelectUnits(unitIds)
     Spring.SelectUnitArray(self.selectedUnits)
 end
 
-function SelectionManager:SelectFeatures(featureIds)    
+function SelectionManager:SelectFeatures(featureIds)
     assert(type(featureIds) == "table" and #featureIds > 0)
     self:ClearSelection()
 
@@ -49,28 +48,36 @@ end
 function SelectionManager:SelectAreas(areaIds)
     assert(type(areaIds) == "table" and #areaIds > 0)
     self:ClearSelection()
-    
+
     self.selectedAreas = areaIds
     for _, areaId in pairs(self.selectedAreas) do
         SCEN_EDIT.view.areaViews[areaId].selected = true
     end
 end
 
-function SelectionManager:GameFrame(frameNum)
+function SelectionManager:Select(selection)
+    self.selectedUnits = selection.units or {}
+    Spring.SelectUnitArray(self.selectedUnits)
+    self.selectedFeatures = selection.features or {}
+    self.selectedAreas = selection.areas or {}
+    for _, areaId in pairs(self.selectedAreas) do
+        SCEN_EDIT.view.areaViews[areaId].selected = true
+    end
+end
+
+function SelectionManager:Update()
     --update unit selection
     local unitIds = Spring.GetSelectedUnits()
-    if #unitIds > 0 then
-        self:SelectUnits(unitIds)
-    else
-        self.selectedUnits = {}
-        local newSelectedFeatures = {}
-        for _, featureId in pairs(self.selectedFeatures) do
-            if Spring.ValidFeatureID(featureId) then
-                table.insert(newSelectedFeatures, featureId)
-            end
+    self.selectedUnits = unitIds
+    Spring.SelectUnitArray(self.selectedUnits)
+
+    local newSelectedFeatures = {}
+    for _, featureId in pairs(self.selectedFeatures) do
+        if Spring.ValidFeatureID(featureId) then
+            table.insert(newSelectedFeatures, featureId)
         end
-        self.selectedFeatures = newSelectedFeatures
     end
+    self.selectedFeatures = newSelectedFeatures
     --[[
     if #unitIds ~= #self.selectedUnits then
         self:ClearSelection()
@@ -82,25 +89,23 @@ function SelectionManager:GameFrame(frameNum)
 end
 
 function SelectionManager:DrawWorldPreUnit()
-	local selType, items = self:GetSelection()
-    if selType == "features" then
-        for _, featureId in pairs(items) do
-            if Spring.ValidFeatureID(featureId) then
-                local bx, _, bz = Spring.GetFeaturePosition(featureId)
-                local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
-                local minx, maxx = featureDef.minx or -10, featureDef.maxx or 10
-                local minz, maxz = featureDef.minz or -10, featureDef.maxz or 10
-                local x1, z1 = bx + minx - 5, bz + minz + 5
-                local x2, z2 = bx + maxx - 5, bz + maxz + 5
-                gl.BeginEnd(GL.LINE_STRIP, function()
-                    gl.Color(0, 1, 0, 1)
-                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
-                    gl.Vertex(x2, Spring.GetGroundHeight(x2, z1), z1)
-                    gl.Vertex(x2, Spring.GetGroundHeight(x2, z2), z2)
-                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z2), z2)
-                    gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
-                end)
-            end
+    local selection = self:GetSelection()
+    for _, featureId in pairs(selection.features) do
+        if Spring.ValidFeatureID(featureId) then
+            local bx, _, bz = Spring.GetFeaturePosition(featureId)
+            local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
+            local minx, maxx = featureDef.minx or -10, featureDef.maxx or 10
+            local minz, maxz = featureDef.minz or -10, featureDef.maxz or 10
+            local x1, z1 = bx + minx - 5, bz + minz + 5
+            local x2, z2 = bx + maxx - 5, bz + maxz + 5
+            gl.BeginEnd(GL.LINE_STRIP, function()
+                gl.Color(0, 1, 0, 1)
+                gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
+                gl.Vertex(x2, Spring.GetGroundHeight(x2, z1), z1)
+                gl.Vertex(x2, Spring.GetGroundHeight(x2, z2), z2)
+                gl.Vertex(x1, Spring.GetGroundHeight(x1, z2), z2)
+                gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
+            end)
         end
     end
 end
