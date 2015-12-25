@@ -305,7 +305,6 @@ end
 function widget:GameFrame(frameNum)
     if SCEN_EDIT.view ~= nil then
         SCEN_EDIT.stateManager:GameFrame(frameNum)
-        SCEN_EDIT.view:GameFrame(frameNum)
     end
     SCEN_EDIT.displayUtil:OnFrame()
 end
