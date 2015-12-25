@@ -26,8 +26,5 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
         ImportAction():execute()
 	elseif key == 27 then -- KEYSYMS.ESC
         SCEN_EDIT.stateManager:SetState(DefaultState())
-    else
-        return false
     end
-    return true
 end

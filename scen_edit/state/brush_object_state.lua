@@ -104,11 +104,11 @@ function BrushObjectState:DrawWorld()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
-        local feature = FeatureDefs[objectDefID]
-        local drawFeature = feature.drawType
-        if drawFeature == 0 then
-            drawFeature = objectDefID
-        end
+--         local feature = FeatureDefs[objectDefID]
+--         local drawFeature = feature.drawType
+--         if drawFeature == 0 then
+--             drawFeature = objectDefID
+--         end
 
         local baseX, baseY, baseZ = unpack(coords)
         gl.PushMatrix()

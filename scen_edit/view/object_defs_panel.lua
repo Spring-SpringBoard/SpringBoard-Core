@@ -1,8 +1,8 @@
 SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "grid_view.lua")
 
-FeatureDefsPanel = GridView:extends{}
+ObjectDefsPanel = GridView:extends{}
 
-function FeatureDefsPanel:init(tbl)
+function ObjectDefsPanel:init(tbl)
     local defaults = {
         iconX = 42,
         iconY = 42,
@@ -12,11 +12,12 @@ function FeatureDefsPanel:init(tbl)
     GridView.init(self, tbl)
 
     self.unitTerrainId = 1
-    self.featureTypeId = 1
     self.unitTypesId = 1
+
+    self:PopulateObjectDefsPanel()
 end
 
-function FeatureDefsPanel:PopulateFeatureDefsPanel()
+function ObjectDefsPanel:PopulateObjectDefsPanel()
     self.control:DisableRealign()
     self.control:ClearChildren()
 
@@ -33,6 +34,49 @@ function FeatureDefsPanel:PopulateFeatureDefsPanel()
     end
 end
 
+function ObjectDefsPanel:SelectTerrainId(unitTerrainId)
+    self.unitTerrainId = unitTerrainId
+    self:PopulateObjectDefsPanel()
+end
+
+function ObjectDefsPanel:SelectUnitTypesId(unitTypesId)
+    self.unitTypesId = unitTypesId
+    self:PopulateObjectDefsPanel()
+end
+
+function ObjectDefsPanel:GetObjectDefID(index)
+    return self.control.children[index].id
+end
+
+-- Custom unit/feature classes
+UnitDefsPanel = ObjectDefsPanel:extends{}
+function UnitDefsPanel:PopulateItems()
+    local unitTerrainId = self.unitTerrainId
+    local unitTypesId = self.unitTypesId
+    for id, unitDef in pairs(UnitDefs) do
+        correctType = unitTypesId == 2 and unitDef.isBuilding or
+            unitTypesId == 1 and not unitDef.isBuilding or
+            unitTypesId == 3
+
+        -- BEAUTIFUL, MARVEL AT IT'S GLORY FOR IT ILLUMINATES US ALL
+        correctTerrain = unitTerrainId == 1 and (not unitDef.canFly and
+        not unitDef.floatOnWater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
+                unitTerrainId == 2 and unitDef.canFly or
+            unitTerrainId == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
+            unitTerrainId == 4
+        if correctType and correctTerrain then
+            local item = self:AddItem(unitDef.humanName, "#" .. unitDef.id, unitDef.humanName)
+            item.id = unitDef.id
+        end
+    end
+    self.control:SelectItem(0)
+end
+
+FeatureDefsPanel = ObjectDefsPanel:extends{}
+function FeatureDefsPanel:init(tbl)
+    ObjectDefsPanel.init(self, tbl)
+    self.featureTypeId = 1
+end
 function FeatureDefsPanel:getUnitDefBuildPic(unitDef)
     unitImagePath = "unitpics/" .. unitDef.buildpicname
     local fileExists = VFS.FileExists(unitImagePath)
@@ -41,7 +85,6 @@ function FeatureDefsPanel:getUnitDefBuildPic(unitDef)
     end
     return unitImagePath
 end
-
 function FeatureDefsPanel:PopulateItems()
     local featureTypeId = self.featureTypeId
     --TODO create a default picture for features
@@ -105,22 +148,7 @@ function FeatureDefsPanel:PopulateItems()
     end
     self.control:SelectItem(0)
 end
-
-function FeatureDefsPanel:SelectTerrainId(unitTerrainId)
-    self.unitTerrainId = unitTerrainId
-    self:PopulateFeatureDefsPanel()
-end
-
 function FeatureDefsPanel:SelectFeatureTypesId(featureTypeId)
     self.featureTypeId = featureTypeId
-    self:PopulateFeatureDefsPanel()
-end
-
-function FeatureDefsPanel:SelectUnitTypesId(unitTypesId)
-    self.unitTypesId = unitTypesId
-    self:PopulateFeatureDefsPanel()
-end
-
-function FeatureDefsPanel:GetObjectDefID(index)
-    return self.control.children[index].id
+    self:PopulateObjectDefsPanel()
 end

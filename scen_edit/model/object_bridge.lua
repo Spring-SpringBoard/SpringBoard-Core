@@ -15,9 +15,9 @@ UnitBridge.spValidObject            = Spring.ValidUnitID
 
 UnitBridge.AddObjectCommand         = AddUnitCommand
 UnitBridge.RemoveObjectCommand      = RemoveUnitCommand
-UnitBridge.DrawObject =             function(objectDefID, team)
+UnitBridge.DrawObject =             function(objectDefID, teamID)
     gl.Color(1, 1, 1, 0.8)
-    gl.UnitShape(objectDefID, team)
+    gl.UnitShape(objectDefID, teamID)
 end
 unitBridge = UnitBridge()
 
@@ -31,9 +31,14 @@ FeatureBridge.spValidObject                = Spring.ValidFeatureID
 
 FeatureBridge.AddObjectCommand             = AddFeatureCommand
 FeatureBridge.RemoveObjectCommand          = RemoveFeatureCommand
-FeatureBridge.DrawObject                   = function(objectDefID, team)
-    gl.Texture(1, "%-" .. objectDefID .. ":1")
+FeatureBridge.DrawObject                   = function(objectDefID, teamID)
+    local featureDef = FeatureDefs[objectDefID]
+    if featureDef.drawType == 0 then
+        gl.Texture(1, "%-" .. objectDefID .. ":1")
+    else
+        Spring.Echo("engine-tree, not sure what to do")
+    end
     gl.Color(1, 1, 1, 0.8)
-    gl.FeatureShape(objectDefID, team)
+    gl.FeatureShape(objectDefID, teamID)
 end
 featureBridge = FeatureBridge()
