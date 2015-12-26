@@ -6,6 +6,7 @@ function RotateObjectState:init()
         features = {},
         areas = {},
     }
+    SCEN_EDIT.SetMouseCursor("resize-x")
 end
 
 -- function RotateObjectState:GameFrame(frameNum)
@@ -64,13 +65,19 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
                 angle = objectAngle,
                 pos = {
                     x = unitX,
+                    y = unitY,
                     z = unitZ,
                 }
             }
             if len > 0 then
+                local x, z = avgX + len * math.sin(angle2), avgZ + len * math.cos(angle2)
+                if math.abs(unitY - Spring.GetGroundHeight(unitX, unitZ)) < 5 then -- on ground, stick to it
+                    unitY = Spring.GetGroundHeight(x, z)
+                end
                 self.ghostViews.units[unitID].pos = {
-                    x = avgX + len * math.sin(angle2),
-                    z = avgZ + len * math.cos(angle2),
+                    x = x,
+                    y = unitY,
+                    z = z,
                 }
             end
         end
@@ -88,13 +95,19 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
                 angle = objectAngle,
                 pos = {
                     x = unitX,
+                    y = unitY,
                     z = unitZ,
                 }
             }
             if len > 0 then
+                local x, z = avgX + len * math.sin(angle2), avgZ + len * math.cos(angle2)
+                if math.abs(unitY - Spring.GetGroundHeight(unitX, unitZ)) < 5 then -- on ground, stick to it
+                    unitY = Spring.GetGroundHeight(x, z)
+                end
                 self.ghostViews.features[featureID].pos = {
-                    x = avgX + len * math.sin(angle2),
-                    z = avgZ + len * math.cos(angle2),
+                    x = x,
+                    y = unitY,
+                    z = z,
                 }
             end
         end
@@ -109,8 +122,7 @@ function RotateObjectState:MouseRelease(x, y, button)
         local rotateCommand = RotateUnitCommand(modelID, object.angle * 180 / math.pi)
         table.insert(commands, rotateCommand)
         local pos = object.pos
-        local unitX, unitZ = pos.x, pos.z
-        local unitY = Spring.GetGroundHeight(unitX, unitZ)
+        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
         local cmd = MoveUnitCommand(modelID, unitX, unitY, unitZ)
         table.insert(commands, cmd)
     end
@@ -119,8 +131,7 @@ function RotateObjectState:MouseRelease(x, y, button)
         local rotateCommand = RotateFeatureCommand(modelID, object.angle * 180 / math.pi)
         table.insert(commands, rotateCommand)
         local pos = object.pos
-        local unitX, unitZ = pos.x, pos.z
-        local unitY = Spring.GetGroundHeight(unitX, unitZ)
+        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
         local cmd = MoveFeatureCommand(modelID, unitX, unitY, unitZ)
         table.insert(commands, cmd)
     end
@@ -137,8 +148,8 @@ function RotateObjectState:DrawWorld()
         local unitType = Spring.GetUnitDefID(unitID)
         local unitTeamId = Spring.GetUnitTeam(unitID)
         local pos = object.pos
-        local unitX, unitZ = pos.x, pos.z
-        local unitY = Spring.GetGroundHeight(unitX, unitZ)
+        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
+
         gl.Translate(unitX, unitY, unitZ)
 
         gl.Rotate(object.angle * 180 / math.pi, 0, 1, 0)
@@ -154,8 +165,8 @@ function RotateObjectState:DrawWorld()
         local featureDefId = Spring.GetFeatureDefID(featureID)
         local featureTeamId = Spring.GetFeatureTeam(featureID)
         local pos = object.pos
-        local unitX, unitZ = pos.x, pos.z
-        local unitY = Spring.GetGroundHeight(unitX, unitZ)
+        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
+
         gl.Translate(unitX, unitY, unitZ)
 
         gl.Rotate(object.angle * 180 / math.pi, 0, 1, 0)

@@ -32,17 +32,21 @@ function SetUnitPropertyCommand:execute()
     elseif self.key == "rule" then
         self.oldRule = Spring.GetUnitRulesParam(unitId, self.value[1])
         Spring.SetUnitRulesParam(unitId, self.value[1], self.value[2])
+    -- FIXME: no way to check if movectrl/gravity is already set
+    elseif self.key == "gravity" then
+        Spring.MoveCtrl.Enable(unitId, true)
+        Spring.MoveCtrl.SetGravity(unitId, self.value)
     end
 end
 
 function SetUnitPropertyCommand:unexecute()
     local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.modelUnitId)
 
-    if self.key == "health" then       
+    if self.key == "health" then
         Spring.SetUnitHealth(unitId, self.oldUnitHealth)
     elseif self.key == "maxhealth" then
         Spring.SetUnitMaxHealth(unitId, self.oldMaxHealth)
-    elseif self.key == "tooltip" then    
+    elseif self.key == "tooltip" then
         Spring.SetUnitTooltip(unitId, self.oldTooltip)
     elseif self.key == "stockpile" then
         Spring.SetUnitStockpile(unitId, self.oldStockpile)
@@ -50,5 +54,10 @@ function SetUnitPropertyCommand:unexecute()
         Spring.SetUnitExperience(unitId, self.oldExperience)
     elseif self.key == "fuel" then
         Spring.SetUnitFuel(unitId, self.oldFuel)
+    -- TODO: rule
+    -- FIXME: no way to check if movectrl/gravity is already set
+    elseif self.key == "gravity" then
+--         Spring.MoveCtrl.Enable(unitId, true)
+--         Spring.MoveCtrl.SetGravity(unitId, self.value)
     end
 end

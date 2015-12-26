@@ -123,8 +123,8 @@ function DefaultState:MousePress(x, y, button)
                         end
                     end
                 end
-                local _, ctrl = Spring.GetModKeyState()
-                if ctrl and selCount > 0 then
+                local _, ctrl, _, shift = Spring.GetModKeyState()
+                if (ctrl or shift) and selCount > 0 then
                     return true
                 else
                     selected, self.dragDiffX, self.dragDiffZ = SCEN_EDIT.checkAreaIntersections(coords[1], coords[3])
@@ -189,14 +189,19 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
     local selection = SCEN_EDIT.view.selectionManager:GetSelection()
     local selCount = #selection.units + #selection.features + #selection.areas
     if selCount > 0 then
-        local _, ctrl = Spring.GetModKeyState()
+        local _, ctrl, _, shift = Spring.GetModKeyState()
         if ctrl then
             SCEN_EDIT.stateManager:SetState(RotateObjectState())
         else
-            if self.dragUnitID then
-                SCEN_EDIT.stateManager:SetState(DragUnitState(self.dragUnitID, self.dragDiffX, self.dragDiffZ))
-            elseif self.dragFeatureID then
-                SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeatureID, self.dragDiffX, self.dragDiffZ))
+            if shift then
+                SCEN_EDIT.stateManager:SetState(DragHorizontalUnitState(y))
+                SCEN_EDIT.stateManager:SetState(DragHorizontalFeatureState(y))
+            else
+                if self.dragUnitID then
+                    SCEN_EDIT.stateManager:SetState(DragUnitState(self.dragUnitID, self.dragDiffX, self.dragDiffZ))
+                elseif self.dragFeatureID then
+                    SCEN_EDIT.stateManager:SetState(DragFeatureState(self.dragFeatureID, self.dragDiffX, self.dragDiffZ))
+                end
             end
         end
     end
