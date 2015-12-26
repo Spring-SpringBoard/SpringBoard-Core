@@ -62,7 +62,7 @@ function AddObjectState:MouseRelease(x, y, button)
     SCEN_EDIT.commandManager:execute(compoundCommand)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
-    self.randomSeed = os.clock()
+    self.randomSeed = self.randomSeed + os.clock()
     return true
 end
 
@@ -82,12 +82,17 @@ function AddObjectState:DrawWorld()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
 
-    local unitSizeX = UnitDefs[objectDefID].footprintX
-    local unitSizeZ = UnitDefs[objectDefID].footprintZ
+    local unitSizeX = self.bridge.ObjectDefs[objectDefID].footprintX
+    local unitSizeZ = self.bridge.ObjectDefs[objectDefID].footprintZ
     if unitSizeX == nil or unitSizeZ == nil then
-        local dim = Spring.GetUnitDefDimensions(objectDefID)
-        unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
-        unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)
+        if self.bridge.bridgeName == "UnitBridge" then
+            local dim = Spring.GetUnitDefDimensions(objectDefID)
+            unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
+            unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)
+        else
+            unitSizeX = 4
+            unitSizeZ = 4
+        end
     end
     if result == "ground" then
 

@@ -7,11 +7,13 @@ function BrushObjectState:init(editorView, objectDefIDs)
     self.objectDefIDs = objectDefIDs
     self.randomSeed = os.clock()
 
-    self.amount  = self.editorView.fields["amount"].value
+    self.spread  = self.editorView.fields["spread"].value
+    self.noise   = self.editorView.fields["noise"].value
     self.team    = self.editorView.fields["team"].value
 
     self.applyDelay          = 0.1
     self.initialDelay        = 0
+    self.tolerance           = 5
 end
 
 function BrushObjectState:GetApplyParams(x, z, button)
@@ -30,33 +32,62 @@ function BrushObjectState:FilterObject(objectID)
     return isApproved
 end
 
+function sunflower(n, alpha)   --  example: n=500, alpha=2
+    local b = math.floor(alpha * math.sqrt(n) + 0.5)      -- number of boundary points 
+    local phi = (math.sqrt(5)+1) / 2           -- golden ratio
+    local points = {}
+    for k = 1, n do
+        r = radius(k,n,b);
+        theta = 2 * math.pi * k / (phi * phi);
+        table.insert(points, {r*math.cos(theta), r*math.sin(theta)})
+        --plot(r*cos(theta), r*sin(theta), 'r*');
+    end
+    return points
+end
+
+function radius(k, n, b)
+    if k > n - b then
+        return 1 -- put on the boundary
+    else 
+        return math.sqrt(k-1/2)/math.sqrt(n-(b+1)/2)  -- apply square root
+    end
+end
+
+
 function BrushObjectState:Apply(bx, bz, button)
-    local size = self.size / 2
     local existing = {}
-    for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(bx, bz, size * math.sqrt(2))) do
+    local radius = self.size * math.sqrt(2)
+    for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(bx, bz, radius)) do
         if button == 3 or self:FilterObject(objectID) then
             table.insert(existing, objectID)
         end
     end
+    math.randomseed(self.randomSeed)
     local commands = {}
     if button == 1 then
-        local area = size * size
-        local desired = area / 100 / 100 * self.amount -- self.amount
-        desired = math.max(1, math.floor(desired))
-        for i = #existing+1, desired do
-            local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
-
-            local t = 2 * math.pi * math.random()
-            local r = math.sqrt(math.random()) * self.size
-            local dx, dz = r * math.cos(t), r * math.sin(t)
-            x = bx + dx
-            z = bz + dz
-            y = Spring.GetGroundHeight(x, z)
-            local angle = math.random() * 360
-            local cmd = self.bridge.AddObjectCommand(objectDefID, x, y, z, self.team, angle)
-            commands[#commands + 1] = cmd
+        if self.objectDefIDs and #self.objectDefIDs > 0 then
+            local numPoints = self.size * self.size / self.spread / self.spread
+            local points = sunflower(numPoints, 2)   --  example: n=500, alpha=2
+            for i = 1, #points do
+                local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
+                local angle = math.random() * 360
+                local x, z = bx + points[i][1] * radius/2, bz + points[i][2] * radius/2
+                x, z = x + math.random() * self.noise - self.noise / 2, z + math.random() * self.noise - self.noise / 2
+                local alreadyPlaced = false
+                for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(x, z, self.spread - self.tolerance)) do
+                    if self:FilterObject(objectID) then
+                        alreadyPlaced = true
+                        break
+                    end
+                end
+                if not alreadyPlaced then
+                    local y = Spring.GetGroundHeight(x, z)
+                    local cmd = self.bridge.AddObjectCommand(objectDefID, x, y, z, self.team, angle)
+                    commands[#commands + 1] = cmd
+                end
+            end
+            self.randomSeed = os.clock()
         end
-        self.randomSeed = os.clock()
     elseif button == 3 then
         for i = 1, #existing do
             local cmd = self.bridge.RemoveObjectCommand(existing[i])
@@ -68,6 +99,7 @@ function BrushObjectState:Apply(bx, bz, button)
         local compoundCommand = CompoundCommand(commands)
         SCEN_EDIT.commandManager:execute(compoundCommand)
     end
+    self.randomSeed = self.randomSeed + os.clock()
     return true
 end
 
@@ -95,42 +127,45 @@ function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function BrushObjectState:DrawWorld()
+    local x, y = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result ~= "ground" then
+        return
+    end
+    local baseX, baseY, baseZ = unpack(coords)
+    gl.PushMatrix()
+    gl.Color(0, 1, 0, 0.3)
+    --gl.DepthTest(true)
+    gl.Utilities.DrawGroundCircle(baseX, baseZ, self.size)
+    gl.PopMatrix()
+
     if not self.objectDefIDs or #self.objectDefIDs == 0 then
         return
     end
-    --math.randomseed(self.randomSeed)
+    math.randomseed(self.randomSeed)
     local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
 
-    local x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground" then
 --         local feature = FeatureDefs[objectDefID]
 --         local drawFeature = feature.drawType
 --         if drawFeature == 0 then
 --             drawFeature = objectDefID
 --         end
 
-        local baseX, baseY, baseZ = unpack(coords)
-        gl.PushMatrix()
-        gl.Color(0, 1, 0, 0.3)
-        --gl.DepthTest(true)
-        gl.Utilities.DrawGroundCircle(baseX, baseZ, self.size)
-        gl.PopMatrix()
-
-        for i = 1, self.amount do
-            local x, y, z = baseX, baseY, baseZ
-            if i ~= 1 then
-                x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
-                z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
-            end
-            y = Spring.GetGroundHeight(x, z)
-            gl.PushMatrix()
-
-            gl.Translate(x, y, z)
-
-            self.bridge.DrawObject(objectDefID, self.team)
-            gl.PopMatrix()
+    -- NOTICE: We're drawing only one feature actually
+    for i = 1, 1 do
+        local x, y, z = baseX, baseY, baseZ
+        if i ~= 1 then
+--                 x = x + (math.random() - 0.5) * 100 * math.sqrt(self.spread) -- wrong
+--                 z = z + (math.random() - 0.5) * 100 * math.sqrt(self.spread) -- wrong
+            break
         end
+        y = Spring.GetGroundHeight(x, z)
+        gl.PushMatrix()
+
+        gl.Translate(x, y, z)
+
+        self.bridge.DrawObject(objectDefID, self.team)
+        gl.PopMatrix()
     end
 end
 

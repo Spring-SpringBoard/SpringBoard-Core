@@ -8,10 +8,12 @@ ObjectBridge = LCS.class.abstract{}
 -- UNIT
 
 UnitBridge = ObjectBridge:extends{}
+UnitBridge.bridgeName               = "UnitBridge"
 UnitBridge.spGetObjectsInCylinder   = Spring.GetUnitsInCylinder
 UnitBridge.spGetObjectDefID         = Spring.GetUnitDefID
 UnitBridge.spGetObjectPosition      = Spring.GetUnitPosition
 UnitBridge.spValidObject            = Spring.ValidUnitID
+UnitBridge.ObjectDefs               = UnitDefs
 
 UnitBridge.AddObjectCommand         = AddUnitCommand
 UnitBridge.RemoveObjectCommand      = RemoveUnitCommand
@@ -24,10 +26,12 @@ unitBridge = UnitBridge()
 -- FEATURE
 
 FeatureBridge = ObjectBridge:extends{}
+FeatureBridge.bridgeName                   = "FeatureBridge"
 FeatureBridge.spGetObjectsInCylinder       = Spring.GetFeaturesInCylinder
 FeatureBridge.spGetObjectDefID             = Spring.GetFeatureDefID
 FeatureBridge.spGetObjectPosition          = Spring.GetFeaturePosition
 FeatureBridge.spValidObject                = Spring.ValidFeatureID
+FeatureBridge.ObjectDefs                   = FeatureDefs
 
 FeatureBridge.AddObjectCommand             = AddFeatureCommand
 FeatureBridge.RemoveObjectCommand          = RemoveFeatureCommand

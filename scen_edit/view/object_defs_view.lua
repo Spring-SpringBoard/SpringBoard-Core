@@ -18,7 +18,7 @@ function ObjectDefsView:init()
             function()
                 self.type = "set"
                 self:EnterState()
-                self:SetInvisibleFields("size")
+                self:SetInvisibleFields("size", "spread")
             end
         },
     })
@@ -34,7 +34,7 @@ function ObjectDefsView:init()
             function()
                 self.type = "brush"
                 self:EnterState()
-                self:SetInvisibleFields()
+                self:SetInvisibleFields("amount")
             end
         },
     })
@@ -118,6 +118,25 @@ function ObjectDefsView:init()
         maxValue = 5000, 
         title = "Size:",
         tooltip = "Size of the paint brush",
+    })
+
+    self:AddNumericProperty({
+        name = "spread", 
+        title = "Spread:",
+        tooltip = "Spread",
+        value = 100,
+        minValue = 20,
+        maxValue = 500,
+        step = 1,
+    })
+    self:AddNumericProperty({
+        name = "noise", 
+        title = "Noise:",
+        tooltip = "noise",
+        value = 100,
+        minValue = 1,
+        maxValue = 2000,
+        step = 1,
     })
 
     table.insert(children, 
