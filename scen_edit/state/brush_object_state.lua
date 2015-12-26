@@ -66,7 +66,7 @@ function BrushObjectState:Apply(bx, bz, button)
     local commands = {}
     if button == 1 then
         if self.objectDefIDs and #self.objectDefIDs > 0 then
-            local numPoints = self.size * self.size / self.spread / self.spread
+            local numPoints = math.ceil(self.size * self.size / self.spread / self.spread)
             local points = sunflower(numPoints, 2)   --  example: n=500, alpha=2
             for i = 1, #points do
                 local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
