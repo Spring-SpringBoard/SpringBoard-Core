@@ -77,7 +77,7 @@ function ObjectDefsView:init()
         ScrollPanel:New {
             x = 1,
 			right = 1,
-			y = SCEN_EDIT.conf.C_HEIGHT * 7,
+			y = SCEN_EDIT.conf.C_HEIGHT * 9,
 			height = "50%",
             children = {
                 self.objectDefPanel.control
@@ -196,7 +196,29 @@ function UnitDefsView:MakeFilters()
                     end
                 end
             },
-        }
+        },
+        Label:New {
+			x = 1,
+			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			caption = "Search:",
+		},
+		EditBox:New {
+			height = SCEN_EDIT.conf.B_HEIGHT,
+			x = 60,
+			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			text = "",
+			width = 90,
+			OnTextInput = {
+                function(obj) 
+                    self.objectDefPanel:SetSearchString(obj.text)
+                end
+            },
+            OnKeyPress = {
+                function(obj) 
+                    self.objectDefPanel:SetSearchString(obj.text)
+                end
+            },
+		},
     }
 end
 
@@ -278,6 +300,28 @@ function FeatureDefsView:MakeFilters()
 					end
 				end
 			},
-		}
+		},
+        Label:New {
+			x = 1,
+			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			caption = "Search:",
+		},
+		EditBox:New {
+			height = SCEN_EDIT.conf.B_HEIGHT,
+			x = 60,
+			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			text = "",
+			width = 90,
+			OnTextInput = {
+                function(obj) 
+                    self.objectDefPanel:SetSearchString(obj.text)
+                end
+            },
+            OnKeyPress = {
+                function(obj) 
+                    self.objectDefPanel:SetSearchString(obj.text)
+                end
+            },
+		},
     }
 end

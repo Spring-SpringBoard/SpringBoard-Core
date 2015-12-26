@@ -14,6 +14,7 @@ function GridView:init(tbl)
 		useRTT = true,
 	}
 	tbl = table.merge(tbl, defaults)
+    self.items = {}
 	
 	self.iconX = tbl.iconX
 	self.iconY = tbl.iconY
@@ -81,5 +82,6 @@ function GridView:AddItem(caption, image, tooltip)
 		},
 	}
 	self.control:AddChild(item)
+    table.insert(self.items, item)
 	return item
 end
