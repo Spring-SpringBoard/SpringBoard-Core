@@ -257,6 +257,13 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             SCEN_EDIT.clipboard:Paste(coords)
             return true
         end
+    elseif key == KEYSYMS.A and mods.ctrl then
+        local selection = {
+            units = Spring.GetAllUnits(),
+            features = Spring.GetAllFeatures(),
+            areas = SCEN_EDIT.model.areaManager:getAllAreas(),
+        }
+        SCEN_EDIT.view.selectionManager:Select(selection)
     elseif key == KEYSYMS.SPACE and mouseLeft and (self.gameSeconds == nil or self.gameSeconds + 1 < gameSeconds) then
         local result, unitId = Spring.TraceScreenRay(mouseX, mouseY)
         if result == "unit" then
