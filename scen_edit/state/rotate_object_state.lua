@@ -56,13 +56,21 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
             local dz = unitZ - avgZ
             local angle2 = angle + math.atan2(dx, dz)
             local len = math.sqrt(dx * dx + dz * dz)
+
+            local dirX, _, dirZ = Spring.GetUnitDirection(unitID)
+            local objectAngle = math.atan2(dirX, dirZ)
+            objectAngle = objectAngle + angle
+            self.ghostViews.units[unitID] = {
+                angle = objectAngle,
+                pos = {
+                    x = unitX,
+                    z = unitZ,
+                }
+            }
             if len > 0 then
-                self.ghostViews.units[unitID] = {
-                    angle = angle,
-                    pos = {
-                        x = avgX + len * math.sin(angle2),
-                        z = avgZ + len * math.cos(angle2),
-                    }
+                self.ghostViews.units[unitID].pos = {
+                    x = avgX + len * math.sin(angle2),
+                    z = avgZ + len * math.cos(angle2),
                 }
             end
         end
@@ -72,13 +80,21 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
             local dz = unitZ - avgZ
             local angle2 = angle + math.atan2(dx, dz)
             local len = math.sqrt(dx * dx + dz * dz)
+
+            local dirX, _, dirZ = Spring.GetFeatureDirection(featureID)
+            local objectAngle = math.atan2(dirX, dirZ)
+            objectAngle = objectAngle + angle
+            self.ghostViews.features[featureID] = {
+                angle = objectAngle,
+                pos = {
+                    x = unitX,
+                    z = unitZ,
+                }
+            }
             if len > 0 then
-                self.ghostViews.features[featureID] = {
-                    angle = angle,
-                    pos = {
-                        x = avgX + len * math.sin(angle2),
-                        z = avgZ + len * math.cos(angle2),
-                    }
+                self.ghostViews.features[featureID].pos = {
+                    x = avgX + len * math.sin(angle2),
+                    z = avgZ + len * math.cos(angle2),
                 }
             end
         end
@@ -90,7 +106,7 @@ function RotateObjectState:MouseRelease(x, y, button)
 
     for unitID, object in pairs(self.ghostViews.units) do
         local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(unitID)
-        local rotateCommand = RotateUnitCommand(modelID, object.angle)
+        local rotateCommand = RotateUnitCommand(modelID, object.angle * 180 / math.pi)
         table.insert(commands, rotateCommand)
         local pos = object.pos
         local unitX, unitZ = pos.x, pos.z
@@ -100,7 +116,7 @@ function RotateObjectState:MouseRelease(x, y, button)
     end
     for featureID, object in pairs(self.ghostViews.features) do
         local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(featureID)
-        local rotateCommand = RotateFeatureCommand(modelID, object.angle)
+        local rotateCommand = RotateFeatureCommand(modelID, object.angle * 180 / math.pi)
         table.insert(commands, rotateCommand)
         local pos = object.pos
         local unitX, unitZ = pos.x, pos.z
