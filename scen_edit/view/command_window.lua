@@ -15,7 +15,7 @@ function CommandWindow:init()
     self.list.CompareItems = function(obj, id1, id2)
         return id1 - id2
     end
-    self.CommandWindowWindow = Window:New {
+    self.window = Window:New {
         parent = screen0,
         caption = "Command stack",
         right = 0,
