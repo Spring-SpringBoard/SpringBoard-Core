@@ -274,7 +274,7 @@ function MapEditorView:SetNumericField(name, value, source)
     if field.inUpdate then
         return
     end
-    
+
     field.inUpdate = true
     value = tonumber(value)
     if value ~= nil and value ~= field.value then

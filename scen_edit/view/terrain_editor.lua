@@ -376,7 +376,8 @@ function TextureBrowser:PopulateItems()
 				tooltip = tooltip .. "\n" .. texType:sub(1,1):upper() .. texType:sub(2) .. ": \255\255\0\0✘\b"
 			end
 		end
-		local item = self:AddItem(name, texture.diffuse or "", tooltip)
+        local texturePath = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. texture.diffuse
+		local item = self:AddItem(name, texturePath or "", tooltip)
 		item.texture = texture
 	end
 end

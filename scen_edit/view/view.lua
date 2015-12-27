@@ -58,23 +58,9 @@ end
 
 function View:drawRects()
     gl.PushMatrix()
---    x, y = gl.GetViewSizes()
---    Spring.Echo(#self.areaViews)
     for _, areaView in pairs(self.areaViews) do
         areaView:Draw()
     end
-    --[[
-    for i, rect in pairs(SCEN_EDIT.model.areaManager:getAllAreas()) do
-        if selected ~= i then
-            gl.DrawGroundQuad(rect[1], rect[2], rect[3], rect[4])
-        end
-    end--]]
-    --[[
-    if selected ~= nil then
-        gl.Color(0, 127, 127, 0.2)
-        rect = SCEN_EDIT.model.areaManaget:getArea(selected)
-        self:DrawRect(rect[1], rect[2], rect[3], rect[4])
-    end--]]
     gl.PopMatrix()
 end
 

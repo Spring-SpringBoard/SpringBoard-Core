@@ -123,7 +123,7 @@ function DefaultState:MousePress(x, y, button)
         elseif result == "unit" or result == "feature" or result == "area" then
             local objectID = coords
 
-            if not SCEN_EDIT.lockTeam and result == "units" then
+            if not SCEN_EDIT.lockTeam and result == "unit" then
                 local unitTeamID = Spring.GetUnitTeam(objectID)
                 if Spring.GetMyTeamID() ~= unitTeamID or Spring.GetSpectatingState() then
                     if SCEN_EDIT.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then

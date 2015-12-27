@@ -14,6 +14,7 @@ function ObjectDefsPanel:init(tbl)
     self.unitTerrainId = 1
     self.unitTypesId = 1
     self.search = ""
+    self.objectDefIcons = {}
 
     self.control:DisableRealign()
     self:PopulateItems()
@@ -158,6 +159,13 @@ function FeatureDefsPanel:PopulateItems()
     end
     local items = {}
     for id, featureDef in pairs(FeatureDefs) do
+        if featureDef.tooltip and type(featureDef.tooltip) == "string" then
+            local defName = featureDef.name:gsub("_heap", ""):gsub("_dead", "")
+            unitDef = UnitDefNames[defName]
+            if unitDef then
+                isWreck = true
+            end
+        end
         --unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
         unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
         local fileExists = VFS.FileExists(unitImagePath, VFS.MOD)
@@ -166,7 +174,8 @@ function FeatureDefsPanel:PopulateItems()
                 unitImagePath = self:getUnitDefBuildPic(unitDef)
             end
             if unitImagePath == nil or not VFS.FileExists(unitImagePath, VFS.MOD) then
-                unitImagePath = "%-" .. featureDef.id
+                unitImagePath = ""
+--                 unitImagePath = "%-" .. featureDef.id
             end
         end
         local name = featureDef.humanName or featureDef.tooltip or featureDef.name
@@ -178,6 +187,18 @@ function FeatureDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3])
         ctrl.objectDefID = item[4]
+        if item[2] == "" then
+            SCEN_EDIT.delayGL(function()
+                local tex = gl.CreateTexture(256, 256)
+                gl.RenderToTexture(tex, function()
+                    gl.TexRect(-1, -1, 1, 1)
+                    gl.Texture(0, "-%" .. ctrl.objectDefID .. ":0")
+                    featureBridge.DrawObject(ctrl.objectDefID, 0)
+                    gl.Texture(0,false)
+                end)
+                ctrl.imgCtrl.file = tex
+            end)
+        end
     end
 end
 function FeatureDefsPanel:SelectFeatureTypesId(featureTypeId)

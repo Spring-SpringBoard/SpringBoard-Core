@@ -49,10 +49,20 @@ function GridView:Select(indx)
 end
 
 function GridView:AddItem(caption, image, tooltip)
-    -- FIXME: hacks
-    if image:sub(1,1) ~= "#" or image:sub(1, 1) == "%" then
-        image = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. image
-    end
+    local imgCtrl = Image:New {
+        width  = self.iconX,
+        height = self.iconY,
+        file = image,
+    }
+    local lblCtrl = Label:New {
+        width = self.iconX + 30,
+        height = 20,
+        align = 'center',
+        autosize = false,
+        --autosize = true,
+        caption = caption,
+        --fontsize = 12,
+    }
 	local item = LayoutPanel:New{
 		width  = self.iconX+10,
 		height = self.iconY+20,
@@ -65,21 +75,11 @@ function GridView:AddItem(caption, image, tooltip)
 		useRTT = false,
 		
 		children = {
-			Image:New {
-				width  = self.iconX,
-				height = self.iconY,
-				file = image,
-			},
-			Label:New {
-				width = self.iconX + 30,
-				height = 20,
-				align = 'center',
-				autosize = false,
-				--autosize = true,
-				caption = caption,
-				--fontsize = 12,
-			},
+			imgCtrl,
+            lblCtrl,
 		},
+        imgCtrl = imgCtrl,
+        lblCtrl = lblCtrl,
 	}
 	self.control:AddChild(item)
     table.insert(self.items, item)

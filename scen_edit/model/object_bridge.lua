@@ -17,6 +17,9 @@ UnitBridge.spGetObjectTeam          = Spring.GetUnitTeam
 UnitBridge.spGetObjectDirection     = Spring.GetUnitDirection
 UnitBridge.spGetAllObjects          = Spring.GetAllUnits
 UnitBridge.ObjectDefs               = UnitDefs
+if gl then
+    UnitBridge.glObjectShape        = gl.UnitShape
+end
 
 UnitBridge.AddObjectCommand         = AddUnitCommand
 UnitBridge.RemoveObjectCommand      = RemoveUnitCommand
@@ -31,7 +34,7 @@ UnitBridge.DrawObject =             function(params)
     gl.Rotate(angle.x, 1, 0, 0)
     gl.Rotate(angle.y, 0, 1, 0)
     gl.Rotate(angle.z, 0, 0, 1)
-    gl.UnitShape(objectDefID, objectTeamID)
+    unitBridge.glObjectShape(objectDefID, objectTeamID)
 end
 unitBridge = UnitBridge()
 
@@ -47,6 +50,9 @@ FeatureBridge.spGetObjectTeam              = Spring.GetFeatureTeam
 FeatureBridge.spGetObjectDirection         = Spring.GetFeatureDirection
 FeatureBridge.spGetAllObjects              = Spring.GetAllFeatures
 FeatureBridge.ObjectDefs                   = FeatureDefs
+if gl then
+    FeatureBridge.glObjectShape            = gl.FeatureShape
+end
 
 FeatureBridge.AddObjectCommand             = AddFeatureCommand
 FeatureBridge.RemoveObjectCommand          = RemoveFeatureCommand
@@ -69,7 +75,7 @@ FeatureBridge.DrawObject                   = function(params)
     gl.Rotate(angle.x, 1, 0, 0)
     gl.Rotate(angle.y, 0, 1, 0)
     gl.Rotate(angle.z, 0, 0, 1)
-    gl.FeatureShape(objectDefID, objectTeamID)
+    featureBridge.glObjectShape(objectDefID, objectTeamID)
 end
 featureBridge = FeatureBridge()
 
