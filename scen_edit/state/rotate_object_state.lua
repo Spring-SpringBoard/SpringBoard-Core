@@ -9,17 +9,6 @@ function RotateObjectState:init()
     SCEN_EDIT.SetMouseCursor("resize-x")
 end
 
--- function RotateObjectState:GameFrame(frameNum)
---     local selType, unitIds = SCEN_EDIT.view.selectionManager:GetSelection()
---     for i = 1, #unitIds do
---         local unitId = unitIds[i]
---         if not Spring.ValidUnitID(unitId) or Spring.GetUnitIsDead(unitId) then
---             SCEN_EDIT.stateManager:SetState(DefaultState())
---             return false
---         end
---     end
--- end
-
 function RotateObjectState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
@@ -142,37 +131,29 @@ function RotateObjectState:MouseRelease(x, y, button)
     SCEN_EDIT.stateManager:SetState(DefaultState())
 end
 
+function RotateObjectState:DrawObject(objectID, object, bridge)
+    gl.PushMatrix()
+    local objectDefID  = bridge.spGetObjectDefID(objectID)
+    local objectTeamID = bridge.spGetObjectTeam(objectID)
+    bridge.DrawObject({
+        color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
+        objectDefID     = objectDefID,
+        objectTeamID    = objectTeamID,
+        pos             = object.pos,
+        angle           = { x = 0, y = object.angle * 180 / math.pi, z = 0 },
+    })
+    gl.PopMatrix()
+end
+
 function RotateObjectState:DrawWorld()
-    for unitID, object in pairs(self.ghostViews.units) do
-        gl.PushMatrix()
-        local unitType = Spring.GetUnitDefID(unitID)
-        local unitTeamId = Spring.GetUnitTeam(unitID)
-        local pos = object.pos
-        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
-
-        gl.Translate(unitX, unitY, unitZ)
-
-        gl.Rotate(object.angle * 180 / math.pi, 0, 1, 0)
-
-        gl.Color(0.1, 1, 0.1, 0.8)
---        gl.UnitRaw(unitID, true)
-        gl.UnitShape(unitType, unitTeamId)
-        gl.PopMatrix()
+    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
+    for objectID, object in pairs(self.ghostViews.units) do
+        self:DrawObject(objectID, object, unitBridge)
     end
-    for featureID, object in pairs(self.ghostViews.features) do
-        gl.PushMatrix()
-		gl.Color(1, 1, 1, 0.5)
-        local featureDefId = Spring.GetFeatureDefID(featureID)
-        local featureTeamId = Spring.GetFeatureTeam(featureID)
-        local pos = object.pos
-        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
-
-        gl.Translate(unitX, unitY, unitZ)
-
-        gl.Rotate(object.angle * 180 / math.pi, 0, 1, 0)
-
-        gl.Texture(1, "%-" .. featureDefId .. ":1")
-        gl.FeatureShape(featureDefId, featureTeamId)
-        gl.PopMatrix()
+    for objectID, object in pairs(self.ghostViews.features) do
+        self:DrawObject(objectID, object, featureBridge)
     end
+    gl.PopMatrix()
 end

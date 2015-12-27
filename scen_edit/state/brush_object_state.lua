@@ -126,6 +126,21 @@ function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)
     return false
 end
 
+function BrushObjectState:DrawObject(object, bridge)
+    gl.PushMatrix()
+    local objectDefID         = object.objectDefID
+    local objectTeamID        = object.objectTeamID
+    local pos                 = object.pos
+    bridge.DrawObject({
+        color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
+        objectDefID     = objectDefID,
+        objectTeamID    = objectTeamID,
+        pos             = pos,
+        angle           = { x = 0, y = 0, z = 0 },
+    })
+    gl.PopMatrix()
+end
+
 function BrushObjectState:DrawWorld()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
@@ -143,30 +158,20 @@ function BrushObjectState:DrawWorld()
         return
     end
     math.randomseed(self.randomSeed)
-    local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
+    local objectDefID = self.objectDefIDs[1]
+    --local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
 
---         local feature = FeatureDefs[objectDefID]
---         local drawFeature = feature.drawType
---         if drawFeature == 0 then
---             drawFeature = objectDefID
---         end
-
-    -- NOTICE: We're drawing only one feature actually
-    for i = 1, 1 do
-        local x, y, z = baseX, baseY, baseZ
-        if i ~= 1 then
---                 x = x + (math.random() - 0.5) * 100 * math.sqrt(self.spread) -- wrong
---                 z = z + (math.random() - 0.5) * 100 * math.sqrt(self.spread) -- wrong
-            break
-        end
-        y = Spring.GetGroundHeight(x, z)
-        gl.PushMatrix()
-
-        gl.Translate(x, y, z)
-
-        self.bridge.DrawObject(objectDefID, self.team)
-        gl.PopMatrix()
-    end
+    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
+    baseY = Spring.GetGroundHeight(baseX, baseZ)
+    local object = {
+        objectDefID = objectDefID,
+        objectTeamID = self.team,
+        pos = { x = baseX, y = baseY, z = baseZ },
+    }
+    self:DrawObject(object, self.bridge)
+    gl.PopMatrix()
 end
 
 -- Custom unit/feature classes

@@ -35,14 +35,14 @@ function DragObjectState:GetMovedObjects()
     for _, unitID in pairs(selection.units) do
         local unitX, unitY, unitZ = Spring.GetUnitPosition(unitID)
         local y = Spring.GetGroundHeight(unitX + self.dx, unitZ + self.dz)
-        local position = { unitX + self.dx, y, unitZ + self.dz}
-        objects.units[unitID] = position
+        local position = { x = unitX + self.dx, y = y, z = unitZ + self.dz}
+        objects.units[unitID] = { pos = position }
     end
     for _, featureID in pairs(selection.features) do
         local unitX, unitY, unitZ = Spring.GetFeaturePosition(featureID)
         local y = Spring.GetGroundHeight(unitX + self.dx, unitZ + self.dz)
-        local position = { unitX + self.dx, y, unitZ + self.dz}
-        objects.features[featureID] = position
+        local position = { x = unitX + self.dx, y = y, z = unitZ + self.dz}
+        objects.features[featureID] = { pos = position }
     end
     return objects
 end
@@ -76,14 +76,16 @@ end
 function DragObjectState:MouseRelease(x, y, button)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
-    for unitID, pos in pairs(movedObjects.units) do
+    for unitID, object in pairs(movedObjects.units) do
         local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(unitID)
-        local cmd = MoveUnitCommand(modelID, pos[1], pos[2], pos[3])
+        local pos = object.pos
+        local cmd = MoveUnitCommand(modelID, pos.x, pos.y, pos.z)
         table.insert(commands, cmd)
     end
-    for featureID, pos in pairs(movedObjects.features) do
+    for featureID, object in pairs(movedObjects.features) do
         local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(featureID)
-        local cmd = MoveFeatureCommand(modelID, pos[1], pos[2], pos[3])
+        local pos = object.pos
+        local cmd = MoveFeatureCommand(modelID, pos.x, pos.y, pos.z)
         table.insert(commands, cmd)
     end
 
@@ -93,43 +95,33 @@ function DragObjectState:MouseRelease(x, y, button)
     SCEN_EDIT.stateManager:SetState(DefaultState())
 end
 
+function DragObjectState:DrawObject(objectID, object, bridge)
+    gl.PushMatrix()
+    local objectDefID         = bridge.spGetObjectDefID(objectID)
+    local objectTeamID        = bridge.spGetObjectTeam(objectID)
+    local dirX, _, dirZ       = bridge.spGetObjectDirection(objectID)
+    local angleY              = 180 / math.pi * math.atan2(dirX, dirZ)
+    bridge.DrawObject({
+        color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
+        objectDefID     = objectDefID,
+        objectTeamID    = objectTeamID,
+        pos             = object.pos,
+        angle           = { x = 0, y = angleY, z = 0 },
+    })
+    gl.PopMatrix()
+end
+
 function DragObjectState:DrawWorld()
-    for objectID, pos in pairs(self.ghostViews.units) do
-        gl.PushMatrix()
-        local unitType = Spring.GetUnitDefID(objectID)
-        local unitTeamId = Spring.GetUnitTeam(objectID)
-        gl.Translate(pos[1], pos[2], pos[3])
-
-        local dirX, dirY, dirZ = Spring.GetUnitDirection(objectID)
-        local angleY = math.atan2(dirX, dirZ)
-
-        if angleY ~= 0 then
-            gl.Rotate(180 / math.pi * angleY, 0, 1, 0)
-        end
-
-        gl.Color(0.1, 1, 0.1, 0.8)
---        gl.UnitRaw(objectID, true)
-        gl.UnitShape(unitType, unitTeamId)
-        gl.PopMatrix()
+    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
+    for objectID, object in pairs(self.ghostViews.units) do
+        self:DrawObject(objectID, object, unitBridge)
     end
-    for featureId, pos in pairs(self.ghostViews.features) do
-        gl.PushMatrix()
-		gl.Color(1, 1, 1, 0.5)
-        local featureDefId = Spring.GetFeatureDefID(featureId)
-        local featureTeamId = Spring.GetFeatureTeam(featureId)
-        gl.Translate(pos[1], pos[2], pos[3])
-
-        local dirX, dirY, dirZ = Spring.GetFeatureDirection(featureId)
-        local angleY = math.atan2(dirX, dirZ)
-
-        if angleY ~= 0 then
-            gl.Rotate(180 / math.pi * angleY, 0, 1, 0)
-        end
-
-        gl.Texture(1, "%-" .. featureDefId .. ":1")
-        gl.FeatureShape(featureDefId, featureTeamId)
-        gl.PopMatrix()
+    for objectID, object in pairs(self.ghostViews.features) do
+        self:DrawObject(objectID, object, featureBridge)
     end
+    gl.PopMatrix()
 end
 
 -- Custom unit/feature classes

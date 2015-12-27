@@ -72,16 +72,34 @@ function AddObjectState:KeyPress(key, mods, isRepeat, label, unicode)
     end
 end
 
+function AddObjectState:DrawObject(object, bridge)
+    gl.PushMatrix()
+    local objectDefID         = object.objectDefID
+    local objectTeamID        = object.objectTeamID
+    local pos                 = object.pos
+    local angleY              = object.angleY
+    bridge.DrawObject({
+        color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
+        objectDefID     = objectDefID,
+        objectTeamID    = objectTeamID,
+        pos             = pos,
+        angle           = { x = 0, y = angleY, z = 0 },
+    })
+    gl.PopMatrix()
+end
+
 function AddObjectState:DrawWorld()
     if not self.objectDefIDs or #self.objectDefIDs == 0 then
         return
     end
-    math.randomseed(self.randomSeed)
-    local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
 
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result ~= "ground" then
+        return
+    end
 
+    local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
     local unitSizeX = self.bridge.ObjectDefs[objectDefID].footprintX
     local unitSizeZ = self.bridge.ObjectDefs[objectDefID].footprintZ
     if unitSizeX == nil or unitSizeZ == nil then
@@ -94,38 +112,42 @@ function AddObjectState:DrawWorld()
             unitSizeZ = 4
         end
     end
-    if result == "ground" then
 
-        local baseX, baseY, baseZ = unpack(coords)
-        self.mapGrid.rows    = Game.mapSizeX / unitSizeX
-        self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
-        local gridX, gridY, gridZ = baseX, baseY, baseZ
+    math.randomseed(self.randomSeed)
+    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
+    local baseX, baseY, baseZ = unpack(coords)
+    self.mapGrid.rows    = Game.mapSizeX / unitSizeX
+    self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
+    local gridX, gridY, gridZ = baseX, baseY, baseZ
 --         local gridX, gridZ = self.mapGrid:GetGridPosition(baseX, baseZ)
 --         local gridY = Spring.GetGroundHeight(gridX, gridZ)
 --         local blocking = Spring.TestBuildOrder(objectDefID, gridX, gridY, gridZ, 0)
 --         self.mapGrid:Draw(baseX, baseZ, blocking)
 --         math.randomseed(self.randomSeed)
 
-        for i = 1, self.amount do
-            local x, y, z = gridX, gridY, gridZ
-            if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
-                x, y, z = self.x, self.y, self.z
-            end
-            if i ~= 1 then
-                x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
-                z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
-            end
-            gl.PushMatrix()
-
-            gl.Translate(x, y, z)
-            if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
-                gl.Rotate(self.angle, 0, 1, 0)
-            end
-
-            self.bridge.DrawObject(objectDefID, self.team)
-            gl.PopMatrix()
+    for i = 1, self.amount do
+        local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
+        local x, y, z = gridX, gridY, gridZ
+        if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
+            x, y, z = self.x, self.y, self.z
         end
+        if i ~= 1 then
+            x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
+            z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
+        end
+        gl.PushMatrix()
+        local object = {
+            objectDefID = objectDefID,
+            objectTeamID = self.team,
+            pos = { x = x, y = y, z = z },
+            angleY = self.angle,
+        }
+        self:DrawObject(object, self.bridge)
+        gl.PopMatrix()
     end
+    gl.PopMatrix()
 end
 
 -- Custom unit/feature classes
