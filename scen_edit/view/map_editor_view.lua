@@ -1,7 +1,7 @@
 MapEditorView = LCS.class{}
 
-local VALUE_POS = 180
 function MapEditorView:init(opts)
+    self.VALUE_POS = 180
     self.fields = {}
 	self.fieldOrder = {}
 
@@ -39,7 +39,9 @@ function MapEditorView:init(opts)
 end
 
 -- Override 
-
+function MapEditorView:OnFieldChange(name, value)
+end
+-- Override 
 function MapEditorView:IsValidTest(state)
     return false
 end
@@ -136,6 +138,14 @@ function MapEditorView:SetInvisibleFields(...)
 	self:_MEGA_HACK()
 end
 
+function MapEditorView:AddControl(name, children)
+    self.fields[name] = {
+        ctrl = self:_AddControl(name, children),
+        name = name,
+    }
+    return self.fields[name]
+end
+
 function MapEditorView:_AddControl(name, children)
 	local ctrl = Control:New {
         autosize = true,
@@ -147,28 +157,29 @@ function MapEditorView:_AddControl(name, children)
 	return ctrl
 end
 
---[[
-function MapEditorView:Select(indx)
-    self.textureImages:Select(indx)
-end]]
-
-function MapEditorView:UpdateChoiceField(name)
+function MapEditorView:UpdateChoiceField(name, source)
     local field = self.fields[name]
---[[
-    field.comboBox.text = tostring(field.value)
-    field.editBox:Invalidate()
-    ]]
+    -- HACK
+    if source ~= field.comboBox then
+        for i, id in pairs(field.comboBox.ids) do
+            if id == field.value then
+                field.comboBox:Select(i)
+                break
+            end
+        end
+    end
     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    self:OnFieldChange(field.name, field.value)
     if self:IsValidTest(currentState) then
         currentState[field.name] = field.value
     end
 end
 
-function MapEditorView:SetChoiceField(name, value)
+function MapEditorView:SetChoiceField(name, value, source)
     local field = self.fields[name]
     if value ~= nil and value ~= field.value then
         field.value = value
-        self:UpdateChoiceField(field.name)
+        self:UpdateChoiceField(field.name, source)
     end
 end
 
@@ -186,7 +197,7 @@ function MapEditorView:AddChoiceProperty(field)
 		captions = field.items
 	end
     field.comboBox = ComboBox:New {
-        x = VALUE_POS - 5,
+        x = self.VALUE_POS - 5,
         y = 0,
         width = 150,
         height = 30,
@@ -196,7 +207,7 @@ function MapEditorView:AddChoiceProperty(field)
     field.comboBox.OnSelect = {
         function(obj, indx)
             local value = field.comboBox.ids[indx]
-            self:SetChoiceField(field.name, value)
+            self:SetChoiceField(field.name, value, field.comboBox)
         end
     }
     field.value = field.items[1]
@@ -208,23 +219,26 @@ function MapEditorView:AddChoiceProperty(field)
 	return field
 end
 
-function MapEditorView:UpdateBooleanField(name)
+function MapEditorView:UpdateBooleanField(name, source)
     local field = self.fields[name]
---[[
-    field.checkBox.text = tostring(field.value)
-    field.editBox:Invalidate()
-    ]]
+    if source ~= field.checkBox then
+        if field.checkBox.checked ~= field.value then
+            field.checkBox:Toggle()
+        end
+        field.checkBox:Invalidate()
+    end
     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    self:OnFieldChange(field.name, field.value)
     if self:IsValidTest(currentState) then
         currentState[field.name] = field.value
     end
 end
 
-function MapEditorView:SetBooleanField(name, value)
+function MapEditorView:SetBooleanField(name, value, source)
     local field = self.fields[name]
     if value ~= nil and value ~= field.value then
         field.value = value
-        self:UpdateBooleanField(field.name)
+        self:UpdateBooleanField(field.name, source)
     end
 end
 
@@ -235,13 +249,13 @@ function MapEditorView:AddBooleanProperty(field)
 		caption = field.title,
         x = 1,
         y = 0,
-        width = VALUE_POS + 10,
+        width = self.VALUE_POS + 10,
         height = 20,
         checked = field.value,
     }
     field.checkBox.OnChange = {
         function(obj, checked)
-            self:SetBooleanField(field.name, checked)
+            self:SetBooleanField(field.name, checked, field.checkBox)
         end
     }
 
@@ -254,7 +268,7 @@ end
 function MapEditorView:UpdateNumericField(name, source)
     local field = self.fields[name]
 
-    -- hackzor
+    -- HACK
     if source ~= field.editBox then
         local v = tostring(field.value)
         v = v:sub(1, math.min(#v, 6))
@@ -264,6 +278,7 @@ function MapEditorView:UpdateNumericField(name, source)
         field.trackbar:SetValue(field.value)
     end
     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    self:OnFieldChange(field.name, field.value)
     if self:IsValidTest(currentState) then
         currentState[field.name] = field.value
     end
@@ -300,7 +315,7 @@ function MapEditorView:AddNumericProperty(field)
     }
     field.editBox = EditBox:New {
         text = v,
-        x = VALUE_POS,
+        x = self.VALUE_POS,
         y = 1,
         width = 100,
 		height = 20,
@@ -316,7 +331,7 @@ function MapEditorView:AddNumericProperty(field)
         },
     }
     field.trackbar = Trackbar:New {
-        x = VALUE_POS + 130,
+        x = self.VALUE_POS + 130,
         y = 1,
         value = field.value,
         min = field.minValue,
@@ -346,6 +361,7 @@ function MapEditorView:UpdateColorbarsField(name, source)
         field.colorbars:SetColor(field.value)
     end
     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    self:OnFieldChange(field.name, field.value)
     if self:IsValidTest(currentState) then
         currentState[field.name] = field.value
     end
@@ -376,7 +392,7 @@ function MapEditorView:AddColorbarsProperty(field)
     }
     field.colorbars = Colorbars:New {
         color = field.value,
-        x = VALUE_POS,
+        x = self.VALUE_POS,
         y = 1,
         width = 225,
         height = 60,

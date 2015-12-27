@@ -8,22 +8,30 @@ ObjectBridge = LCS.class.abstract{}
 -- UNIT
 
 UnitBridge = ObjectBridge:extends{}
-UnitBridge.bridgeName               = "UnitBridge"
-UnitBridge.spGetObjectsInCylinder   = Spring.GetUnitsInCylinder
-UnitBridge.spGetObjectDefID         = Spring.GetUnitDefID
-UnitBridge.spGetObjectPosition      = Spring.GetUnitPosition
-UnitBridge.spValidObject            = Spring.ValidUnitID
-UnitBridge.spGetObjectTeam          = Spring.GetUnitTeam
-UnitBridge.spGetObjectDirection     = Spring.GetUnitDirection
-UnitBridge.spGetAllObjects          = Spring.GetAllUnits
-UnitBridge.ObjectDefs               = UnitDefs
+UnitBridge.bridgeName                      = "UnitBridge"
+UnitBridge.spGetObjectsInCylinder          = Spring.GetUnitsInCylinder
+UnitBridge.spGetObjectDefID                = Spring.GetUnitDefID
+UnitBridge.spGetObjectPosition             = Spring.GetUnitPosition
+UnitBridge.spValidObject                   = Spring.ValidUnitID
+UnitBridge.spGetObjectTeam                 = Spring.GetUnitTeam
+UnitBridge.spGetObjectDirection            = Spring.GetUnitDirection
+UnitBridge.spGetAllObjects                 = Spring.GetAllUnits
+UnitBridge.spGetObjectCollisionVolumeData  = Spring.GetUnitCollisionVolumeData
+UnitBridge.spSetObjectCollisionVolumeData  = Spring.SetUnitCollisionVolumeData
+UnitBridge.spGetObjectRadius               = Spring.GetUnitRadius
+UnitBridge.spGetObjectHeight               = Spring.GetUnitHeight
+UnitBridge.spSetObjectRadiusAndHeight      = Spring.SetUnitRadiusAndHeight
+UnitBridge.spSetObjectMidAndAimPos         = Spring.SetUnitMidAndAimPos
+UnitBridge.spGetObjectBlocking             = Spring.GetUnitBlocking
+UnitBridge.spSetObjectBlocking             = Spring.SetUnitBlocking
+UnitBridge.ObjectDefs                      = UnitDefs
 if gl then
-    UnitBridge.glObjectShape        = gl.UnitShape
+    UnitBridge.glObjectShape               = gl.UnitShape
 end
 
-UnitBridge.AddObjectCommand         = AddUnitCommand
-UnitBridge.RemoveObjectCommand      = RemoveUnitCommand
-UnitBridge.DrawObject =             function(params)
+UnitBridge.AddObjectCommand                = AddUnitCommand
+UnitBridge.RemoveObjectCommand             = RemoveUnitCommand
+UnitBridge.DrawObject                      = function(params)
     local pos           = params.pos
     local angle         = params.angle
     local objectDefID   = params.objectDefID
@@ -36,27 +44,39 @@ UnitBridge.DrawObject =             function(params)
     gl.Rotate(angle.z, 0, 0, 1)
     unitBridge.glObjectShape(objectDefID, objectTeamID)
 end
+UnitBridge.getSpringObjectID               = function(modelID)
+    return SCEN_EDIT.model.unitManager:getSpringUnitId(modelID)
+end
 unitBridge = UnitBridge()
 
 -- FEATURE
 
 FeatureBridge = ObjectBridge:extends{}
-FeatureBridge.bridgeName                   = "FeatureBridge"
-FeatureBridge.spGetObjectsInCylinder       = Spring.GetFeaturesInCylinder
-FeatureBridge.spGetObjectDefID             = Spring.GetFeatureDefID
-FeatureBridge.spGetObjectPosition          = Spring.GetFeaturePosition
-FeatureBridge.spValidObject                = Spring.ValidFeatureID
-FeatureBridge.spGetObjectTeam              = Spring.GetFeatureTeam
-FeatureBridge.spGetObjectDirection         = Spring.GetFeatureDirection
-FeatureBridge.spGetAllObjects              = Spring.GetAllFeatures
-FeatureBridge.ObjectDefs                   = FeatureDefs
+FeatureBridge.bridgeName                      = "FeatureBridge"
+FeatureBridge.spGetObjectsInCylinder          = Spring.GetFeaturesInCylinder
+FeatureBridge.spGetObjectDefID                = Spring.GetFeatureDefID
+FeatureBridge.spGetObjectPosition             = Spring.GetFeaturePosition
+FeatureBridge.spValidObject                   = Spring.ValidFeatureID
+FeatureBridge.spGetObjectTeam                 = Spring.GetFeatureTeam
+FeatureBridge.spGetObjectDirection            = Spring.GetFeatureDirection
+FeatureBridge.spGetAllObjects                 = Spring.GetAllFeatures
+FeatureBridge.spGetObjectCollisionVolumeData  = Spring.GetFeatureCollisionVolumeData
+FeatureBridge.spSetObjectCollisionVolumeData  = Spring.SetFeatureCollisionVolumeData
+FeatureBridge.spGetObjectRadius               = Spring.GetFeatureRadius
+FeatureBridge.spGetObjectHeight               = Spring.GetFeatureHeight
+FeatureBridge.spSetObjectRadiusAndHeight      = Spring.SetFeatureRadiusAndHeight
+FeatureBridge.spSetObjectRadiusAndHeight      = Spring.SetFeatureRadiusAndHeight
+FeatureBridge.spSetObjectMidAndAimPos         = Spring.SetFeatureMidAndAimPos
+FeatureBridge.spGetObjectBlocking             = Spring.GetFeatureBlocking
+FeatureBridge.spSetObjectBlocking             = Spring.SetFeatureBlocking
+FeatureBridge.ObjectDefs                      = FeatureDefs
 if gl then
-    FeatureBridge.glObjectShape            = gl.FeatureShape
+    FeatureBridge.glObjectShape               = gl.FeatureShape
 end
 
-FeatureBridge.AddObjectCommand             = AddFeatureCommand
-FeatureBridge.RemoveObjectCommand          = RemoveFeatureCommand
-FeatureBridge.DrawObject                   = function(params)
+FeatureBridge.AddObjectCommand                = AddFeatureCommand
+FeatureBridge.RemoveObjectCommand             = RemoveFeatureCommand
+FeatureBridge.DrawObject                      = function(params)
     local pos           = params.pos
     local angle         = params.angle
     local objectDefID   = params.objectDefID
@@ -76,6 +96,9 @@ FeatureBridge.DrawObject                   = function(params)
     gl.Rotate(angle.y, 0, 1, 0)
     gl.Rotate(angle.z, 0, 0, 1)
     featureBridge.glObjectShape(objectDefID, objectTeamID)
+end
+FeatureBridge.getSpringObjectID               = function(modelID)
+    return SCEN_EDIT.model.featureManager:getSpringFeatureId(modelID)
 end
 featureBridge = FeatureBridge()
 

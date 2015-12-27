@@ -1,7 +1,8 @@
-SelectionManager = LCS.class{}
+SelectionManager = Observable:extends{}
 
 local AreaListener = AreaManagerListener:extends{}
 function SelectionManager:init()
+    self:super("init")
     self.selectedUnits = {}
     self.selectedFeatures = {}
     self.selectedAreas = {}
@@ -65,6 +66,8 @@ function SelectionManager:Select(selection)
     for _, areaId in pairs(self.selectedAreas) do
         SCEN_EDIT.view.areaViews[areaId].selected = true
     end
+
+    self:callListeners("OnSelectionChanged", self:GetSelection())
 end
 
 function SelectionManager:Update()

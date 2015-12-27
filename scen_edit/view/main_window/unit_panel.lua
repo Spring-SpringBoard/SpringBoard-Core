@@ -48,7 +48,7 @@ function UnitFeaturePanel:init()
 			tooltip = "Collision volume",
 			OnClick = {
 				function()
-					Spring.Echo("Edit collision volume!")
+                    self.collisionView = CollisionView()
 --                     local selType, units = SCEN_EDIT.view.selectionManager:GetSelection()
 --                     if selType == "units" and #units > 0 then
 --                         UnitPropertyWindow(units[1])
