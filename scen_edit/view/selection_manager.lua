@@ -56,6 +56,8 @@ function SelectionManager:SelectAreas(areaIds)
 end
 
 function SelectionManager:Select(selection)
+    self:ClearSelection()
+
     self.selectedUnits = selection.units or {}
     Spring.SelectUnitArray(self.selectedUnits)
     self.selectedFeatures = selection.features or {}

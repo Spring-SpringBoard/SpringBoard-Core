@@ -1,13 +1,13 @@
 Clipboard = LCS.class{}
 
 function Clipboard:init()
-    self.units = {}
-    self.features = {}
+    self:Clear()
 end
 
 function Clipboard:Clear()
-    self.units = {}
-    self.features = {}
+    self.units      = {}
+    self.features   = {}
+    self.areas      = {}
 end
 
 -- copy will remove the unit IDs 
@@ -19,20 +19,19 @@ function Clipboard:CopyUnits(unitIds)
     end
 end
 
-function Clipboard:CutUnitCommands(unitIds)
-    self:CopyUnits(unitIds)
-    local removeUnitCommands = {}
-    for i = 1, #unitIds do
-        local unitId = unitIds[i]
-        local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+function Clipboard:CutUnitCommands(objectIDs)
+    self:CopyUnits(objectIDs)
+    local removeCommands = {}
+    for _, objectID in pairs(objectIDs) do
+        local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
         local cmd = RemoveUnitCommand(modelUnitId)
-        table.insert(removeUnitCommands, cmd)
+        table.insert(removeCommands, cmd)
     end
-    return removeUnitCommands
+    return removeCommands
 end
 
 function Clipboard:PasteUnitCommands(delta)
-    local addUnitCommands = {}
+    local addCommands = {}
 
     for _, unit in pairs(self.units) do
         local uc = SCEN_EDIT.deepcopy(unit)
@@ -40,18 +39,17 @@ function Clipboard:PasteUnitCommands(delta)
         uc.x = uc.x + delta.x
         uc.z = uc.z + delta.z
         local cmd = AddUnitCommand(uc)
-        table.insert(addUnitCommands, cmd)
+        table.insert(addCommands, cmd)
     end
-    return addUnitCommands
+    return addCommands
 end
 
-function Clipboard:CopyFeatures(featureIds)
-    for i = 1, #featureIds do
-        local featureId = featureIds[i]
-        local x, y, z = Spring.GetFeaturePosition(featureId)
-        local featureTypeId = Spring.GetFeatureDefID(featureId)
-        local featureTeamId = Spring.GetFeatureTeam(featureId)
-        local dirX, dirY, dirZ = Spring.GetFeatureDirection(featureId)
+function Clipboard:CopyFeatures(objectIDs)
+    for _, objectID in pairs(objectIDs) do
+        local x, y, z = Spring.GetFeaturePosition(objectID)
+        local featureTypeId = Spring.GetFeatureDefID(objectID)
+        local featureTeamId = Spring.GetFeatureTeam(objectID)
+        local dirX, dirY, dirZ = Spring.GetFeatureDirection(objectID)
         local angle = math.atan2(dirX, dirZ) * 180 / math.pi
         table.insert(self.features, {
             x = x,
@@ -64,20 +62,19 @@ function Clipboard:CopyFeatures(featureIds)
     end
 end
 
-function Clipboard:CutFeatureCommands(featureIds)
-    self:CopyFeatures(featureIds)
-    local removeFeatureCommands = {}
-    for i = 1, #featureIds do
-        local featureId = featureIds[i]
-        local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
+function Clipboard:CutFeatureCommands(objectIDs)
+    self:CopyFeatures(objectIDs)
+    local removeCommands = {}
+    for _, objectID in pairs(objectIDs) do
+        local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
         local cmd = RemoveFeatureCommand(modelFeatureId)
-        table.insert(removeFeatureCommands, cmd)
+        table.insert(removeCommands, cmd)
     end
-    return removeFeatureCommands
+    return removeCommands
 end
 
 function Clipboard:PasteFeatureCommands(delta)
-    local addFeatureCommands = {}
+    local addCommands = {}
     for i = 1, #self.features do
         local feature = self.features[i]
         local x, y, z = feature.x, feature.y, feature.z
@@ -85,9 +82,36 @@ function Clipboard:PasteFeatureCommands(delta)
         local featureTeamId = feature.featureTeamId
         local angle = feature.angle
         local cmd = AddFeatureCommand(featureTypeId, x + delta.x, y, z + delta.z, featureTeamId, angle)
-        table.insert(addFeatureCommands, cmd)
+        table.insert(addCommands, cmd)
     end
-    return addFeatureCommands
+    return addCommands
+end
+
+function Clipboard:CopyAreas(objectIDs)
+    for _, objectID in pairs(objectIDs) do
+        table.insert(self.areas, SCEN_EDIT.model.areaManager:getArea(objectID))
+    end
+end
+
+function Clipboard:CutAreaCommands(objectIDs)
+    self:CopyAreas(objectIDs)
+    local removeCommands = {}
+    for _, objectID in pairs(objectIDs) do
+        local cmd = RemoveAreaCommand(objectID)
+        table.insert(removeCommands, cmd)
+    end
+    return removeCommands
+end
+
+function Clipboard:PasteAreaCommands(delta)
+    local addCommands = {}
+    for i = 1, #self.areas do
+        local area = self.areas[i]
+        local x1, z1, x2, z2 = area[1] + delta.x, area[2] + delta.z, area[3] + delta.x, area[4] + delta.z
+        local cmd = AddAreaCommand(x1, z1, x2, z2)
+        table.insert(addCommands, cmd)
+    end
+    return addCommands
 end
 
 function Clipboard:Cut(selection)
@@ -105,6 +129,12 @@ function Clipboard:Cut(selection)
             table.insert(commands, cmd)
         end
     end
+    if selection.areas then
+        local cmds = self:CutAreaCommands(selection.areas)
+        for _, cmd in pairs(cmds) do
+            table.insert(commands, cmd)
+        end
+    end
     local cmd = CompoundCommand(commands)
     SCEN_EDIT.commandManager:execute(cmd)
 end
@@ -113,6 +143,7 @@ function Clipboard:Paste(coords)
     local commands = {}
 
     local avgX, avgZ = 0, 0
+    local count = #self.features + #self.units + #self.areas
     for _, unit in pairs(self.units) do
         avgX = avgX + unit.x
         avgZ = avgZ + unit.z
@@ -121,8 +152,12 @@ function Clipboard:Paste(coords)
         avgX = avgX + feature.x
         avgZ = avgZ + feature.z
     end
-    avgX = avgX / (#self.features + #self.units)
-    avgZ = avgZ / (#self.features + #self.units)
+    for _, area in pairs(self.areas) do
+        avgX = avgX + (area[1] + area[3]) / 2
+        avgZ = avgZ + (area[2] + area[4]) / 2
+    end
+    avgX = avgX / count
+    avgZ = avgZ / count
     local delta = { x = coords[1] - avgX, z = coords[3] - avgZ }
 
     if #self.units > 0 then
@@ -133,6 +168,12 @@ function Clipboard:Paste(coords)
     end
     if #self.features > 0 then
         local cmds = self:PasteFeatureCommands(delta)
+        for _, cmd in pairs(cmds) do
+            table.insert(commands, cmd)
+        end
+    end
+    if #self.areas > 0 then
+        local cmds = self:PasteAreaCommands(delta)
         for _, cmd in pairs(cmds) do
             table.insert(commands, cmd)
         end
@@ -148,5 +189,8 @@ function Clipboard:Copy(selection)
     end
     if selection.features then
         self:CopyFeatures(selection.features)
+    end
+    if selection.areas then
+        self:CopyAreas(selection.areas)
     end
 end

@@ -34,7 +34,7 @@ function RuntimeModel:LoadMission()
     self.startListening = true
 
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
-    for id, _ in pairs(areas) do
+    for _, id in pairs(areas) do
         self:onAreaAdded(id)
     end
 

@@ -15,6 +15,7 @@ UnitBridge.spGetObjectPosition      = Spring.GetUnitPosition
 UnitBridge.spValidObject            = Spring.ValidUnitID
 UnitBridge.spGetObjectTeam          = Spring.GetUnitTeam
 UnitBridge.spGetObjectDirection     = Spring.GetUnitDirection
+UnitBridge.spGetAllObjects          = Spring.GetAllUnits
 UnitBridge.ObjectDefs               = UnitDefs
 
 UnitBridge.AddObjectCommand         = AddUnitCommand
@@ -44,6 +45,7 @@ FeatureBridge.spGetObjectPosition          = Spring.GetFeaturePosition
 FeatureBridge.spValidObject                = Spring.ValidFeatureID
 FeatureBridge.spGetObjectTeam              = Spring.GetFeatureTeam
 FeatureBridge.spGetObjectDirection         = Spring.GetFeatureDirection
+FeatureBridge.spGetAllObjects              = Spring.GetAllFeatures
 FeatureBridge.ObjectDefs                   = FeatureDefs
 
 FeatureBridge.AddObjectCommand             = AddFeatureCommand
@@ -70,3 +72,22 @@ FeatureBridge.DrawObject                   = function(params)
     gl.FeatureShape(objectDefID, objectTeamID)
 end
 featureBridge = FeatureBridge()
+
+-- AREA
+
+AreaBridge = ObjectBridge:extends{}
+AreaBridge.bridgeName                   = "AreaBridge"
+AreaBridge.spGetObjectPosition          = function(objectID)
+    local pos = SCEN_EDIT.model.areaManager:getArea(objectID)
+    local x, z = (pos[1] + pos[3]) / 2, (pos[2] + pos[4]) / 2
+    local y = Spring.GetGroundHeight(x, z)
+    return x, y, z
+end
+AreaBridge.spGetAllObjects              = function()
+    return SCEN_EDIT.model.areaManager:getAllAreas()
+end
+AreaBridge.spValidObject                = function(objectID)
+    return SCEN_EDIT.model.areaManager:getArea(objectID) ~= nil
+end
+
+areaBridge = AreaBridge()

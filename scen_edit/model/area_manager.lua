@@ -34,7 +34,11 @@ function AreaManager:getArea(areaId)
 end
 
 function AreaManager:getAllAreas()
-    return self.areas
+    local areas = {}
+    for id, _ in pairs(self.areas) do
+        table.insert(areas, id)
+    end
+    return areas
 end
 
 function AreaManager:serialize()

@@ -100,11 +100,13 @@ end
 function SCEN_EDIT.checkAreaIntersections(x, z)
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
     local selected, dragDiffX, dragDiffZ
-    for id, area in pairs(areas) do
+    for _, areaID in pairs(areas) do
+        local area = SCEN_EDIT.model.areaManager:getArea(areaID)
+        local objectX, _, objectZ = areaBridge.spGetObjectPosition(areaID)
         if x >= area[1] and x < area[3] and z >= area[2] and z < area[4] then
-            selected = id
-            dragDiffX = area[1] - x
-            dragDiffZ = area[2] - z
+            selected = areaID
+            dragDiffX = objectX - x
+            dragDiffZ = objectZ - z
         end
     end
     return selected, dragDiffX, dragDiffZ
