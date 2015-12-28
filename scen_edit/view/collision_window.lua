@@ -16,7 +16,7 @@ function CollisionView:init()
         tooltip = "Collision enabled",
     })
     self:AddChoiceProperty({
-        name = "type",
+        name = "vType",
         items = {
             "Cylinder",
             "Box",
@@ -307,8 +307,8 @@ function CollisionView:OnSelectionChanged(selection)
         self:SetNumericField("offsetY", offsetY)
         self:SetNumericField("offsetZ", offsetZ)
         self:SetBooleanField("enabled", not disabled)
-        local name = self.fields["type"].comboBox.items[volumeType]
-        self:SetChoiceField("type", name)
+        local name = self.fields["vType"].comboBox.items[volumeType]
+        self:SetChoiceField("vType", name)
 
         local radius = bridge.spGetObjectRadius(objectID)
         local height = bridge.spGetObjectHeight(objectID)
@@ -337,8 +337,8 @@ function CollisionView:OnSelectionChanged(selection)
 end
 
 function CollisionView:OnFieldChange(name, value)
-    local vType = self.fields["type"].value
-    if name == "type" then
+    local vType = self.fields["vType"].value
+    if name == "vType" then
         if vType == "Sphere" then
             self:SetInvisibleFields("scaleY", "scaleZ", "axis")
         elseif vType == "Cylinder" then
@@ -348,7 +348,7 @@ function CollisionView:OnFieldChange(name, value)
         end
     end
     if not self.selectionChanging then
-        if self.fields["type"].value == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
+        if self.fields["vType"].value == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
             if name ~= "scaleX" then
                 self:SetNumericField("scaleX", value)
             end
@@ -359,7 +359,7 @@ function CollisionView:OnFieldChange(name, value)
                 self:SetNumericField("scaleZ", value)
             end
         end
-        if self.fields["type"].value == "Cylinder" and (name == "scaleY" or name == "scaleZ") then
+        if self.fields["vType"].value == "Cylinder" and (name == "scaleY" or name == "scaleZ") then
             if name ~= "scaleY" then
                 self:SetNumericField("scaleY", value)
             end
@@ -371,8 +371,8 @@ function CollisionView:OnFieldChange(name, value)
         local selection = SCEN_EDIT.view.selectionManager:GetSelection()
         local params = {}
         for _, field in pairs(self.fields) do
-            if field.name == "type" then
-                for i, value in pairs(self.fields["type"].comboBox.ids) do
+            if field.name == "vType" then
+                for i, value in pairs(self.fields["vType"].comboBox.ids) do
                     if value == field.value then
                         params["vType"] = i
                     end
