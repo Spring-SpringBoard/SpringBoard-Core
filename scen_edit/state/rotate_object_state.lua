@@ -167,17 +167,16 @@ end
 
 function RotateObjectState:DrawWorld()
     gl.PushMatrix()
-    gl.DepthTest(GL.LEQUAL)
-    gl.DepthMask(true)
+    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    gl.UseShader(shaderObj.shader)
+    gl.Uniform(shaderObj.timeID, os.clock())
     for objectID, object in pairs(self.ghostViews.units) do
         self:DrawObject(objectID, object, unitBridge)
     end
     for objectID, object in pairs(self.ghostViews.features) do
         self:DrawObject(objectID, object, featureBridge)
     end
-    gl.Texture(1, false)
-    gl.Texture(2, false)
-    gl.Texture(0, false)
+    gl.UseShader(0)
     for objectID, object in pairs(self.ghostViews.areas) do
         local x1, z1, x2, z2 = unpack(SCEN_EDIT.model.areaManager:getArea(objectID))
         local mx, _, mz = areaBridge.spGetObjectPosition(objectID)

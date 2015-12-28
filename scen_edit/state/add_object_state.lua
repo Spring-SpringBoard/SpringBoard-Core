@@ -115,8 +115,9 @@ function AddObjectState:DrawWorld()
 
     math.randomseed(self.randomSeed)
     gl.PushMatrix()
-    gl.DepthTest(GL.LEQUAL)
-    gl.DepthMask(true)
+    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    gl.UseShader(shaderObj.shader)
+    gl.Uniform(shaderObj.timeID, os.clock())
     local baseX, baseY, baseZ = unpack(coords)
     self.mapGrid.rows    = Game.mapSizeX / unitSizeX
     self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
@@ -137,6 +138,7 @@ function AddObjectState:DrawWorld()
             x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
         end
+        y = Spring.GetGroundHeight(x, z)
         gl.PushMatrix()
         local object = {
             objectDefID = objectDefID,

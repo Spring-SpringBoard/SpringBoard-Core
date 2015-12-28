@@ -89,14 +89,16 @@ end
 
 function DragHorizontalObjectState:DrawWorld()
     gl.PushMatrix()
-    gl.DepthTest(GL.LEQUAL)
-    gl.DepthMask(true)
+    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    gl.UseShader(shaderObj.shader)
+    gl.Uniform(shaderObj.timeID, os.clock())
     for objectID, object in pairs(self.ghostViews.units) do
         self:DrawObject(objectID, object, unitBridge)
     end
     for objectID, object in pairs(self.ghostViews.features) do
         self:DrawObject(objectID, object, featureBridge)
     end
+    gl.UseShader(0)
     gl.PopMatrix()
 end
 

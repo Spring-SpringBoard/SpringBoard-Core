@@ -162,8 +162,9 @@ function BrushObjectState:DrawWorld()
     --local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
 
     gl.PushMatrix()
-    gl.DepthTest(GL.LEQUAL)
-    gl.DepthMask(true)
+    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    gl.UseShader(shaderObj.shader)
+    gl.Uniform(shaderObj.timeID, os.clock())
     baseY = Spring.GetGroundHeight(baseX, baseZ)
     local object = {
         objectDefID = objectDefID,
@@ -171,6 +172,7 @@ function BrushObjectState:DrawWorld()
         pos = { x = baseX, y = baseY, z = baseZ },
     }
     self:DrawObject(object, self.bridge)
+    gl.UseShader(0)
     gl.PopMatrix()
 end
 
