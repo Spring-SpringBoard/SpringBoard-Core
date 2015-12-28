@@ -183,7 +183,9 @@ function DefaultState:MousePress(x, y, button)
                     return true
                 end
             end
-            if bridge == featureBridge then
+            if bridge == unitBridge then
+                SCEN_EDIT.view.selectionManager:SelectUnits({objectID})
+            elseif bridge == featureBridge then
                 SCEN_EDIT.view.selectionManager:SelectFeatures({objectID})
             elseif bridge == areaBridge then
                 SCEN_EDIT.view.selectionManager:SelectAreas({objectID})
