@@ -17,7 +17,7 @@ function SetObjectMidAimPosCommand:unexecute(bridge)
     local objectID = bridge.getSpringObjectID(self.objectModelID)
     bridge.spSetObjectMidAndAimPos(objectID,
         self.old.mpx, self.old.mpy, self.old.mpz,
-        self.old.apx, self.old.apy, self.old.apz, true)
+        self.old.apx, self.old.apy, self.old.apz)
 end
 
 SetUnitMidAimPosCommand = SetObjectMidAimPosCommand:extends{}
