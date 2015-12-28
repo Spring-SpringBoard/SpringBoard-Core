@@ -32,10 +32,7 @@ function UnitFeaturePanel:init()
 			tooltip = "Edit selected unit property",
 			OnClick = {
 				function()
-                    local selType, units = SCEN_EDIT.view.selectionManager:GetSelection()
-                    if selType == "units" and #units > 0 then
-                        UnitPropertyWindow(units[1])
-                    end
+                    self.objectPropertyWindow = UnitPropertyWindow()
 				end
 			},
 			children = {
@@ -49,10 +46,6 @@ function UnitFeaturePanel:init()
 			OnClick = {
 				function()
                     self.collisionView = CollisionView()
---                     local selType, units = SCEN_EDIT.view.selectionManager:GetSelection()
---                     if selType == "units" and #units > 0 then
---                         UnitPropertyWindow(units[1])
---                     end
 				end
 			},
 			children = {

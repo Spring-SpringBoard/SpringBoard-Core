@@ -42,12 +42,13 @@ UnitBridge.DrawObject                      = function(params)
     gl.Rotate(angle.x, 1, 0, 0)
     gl.Rotate(angle.y, 0, 1, 0)
     gl.Rotate(angle.z, 0, 0, 1)
-    unitBridge.glObjectShape(objectDefID, objectTeamID)
+    unitBridge.glObjectShape(objectDefID, objectTeamID, false)
 end
 UnitBridge.getSpringObjectID               = function(modelID)
     return SCEN_EDIT.model.unitManager:getSpringUnitId(modelID)
 end
 unitBridge = UnitBridge()
+unitBridge.s11n                            = s11n:GetUnitBridge()
 
 -- FEATURE
 
@@ -85,22 +86,20 @@ FeatureBridge.DrawObject                      = function(params)
     local featureDef    = FeatureDefs[objectDefID]
 
     gl.Color(color.r, color.g, color.b, color.a)
-    if featureDef.drawType == 0 then
-        gl.Texture(1, "%-" .. objectDefID .. ":1")
-        gl.Texture(2, "%-" .. objectDefID .. ":2")
-    else
+    if featureDef.drawType ~= 0 then
         Spring.Echo("engine-tree, not sure what to do")
     end
     gl.Translate(pos.x, pos.y, pos.z)
     gl.Rotate(angle.x, 1, 0, 0)
     gl.Rotate(angle.y, 0, 1, 0)
     gl.Rotate(angle.z, 0, 0, 1)
-    featureBridge.glObjectShape(objectDefID, objectTeamID)
+    featureBridge.glObjectShape(objectDefID, objectTeamID, false)
 end
 FeatureBridge.getSpringObjectID               = function(modelID)
     return SCEN_EDIT.model.featureManager:getSpringFeatureId(modelID)
 end
 featureBridge = FeatureBridge()
+featureBridge.s11n                            = s11n:GetFeatureBridge()
 
 -- AREA
 

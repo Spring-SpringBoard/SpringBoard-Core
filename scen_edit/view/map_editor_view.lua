@@ -216,6 +216,9 @@ function MapEditorView:AddChoiceProperty(field)
 		field.label,
 		field.comboBox,
 	})
+    field.Set = function(...)
+        self:SetChoiceField(field.name, ...)
+    end
 	return field
 end
 
@@ -262,6 +265,9 @@ function MapEditorView:AddBooleanProperty(field)
     field.ctrl = self:_AddControl(field.name, {
 		field.checkBox,
 	})
+    field.Set = function(...)
+        self:SetBooleanField(field.name, ...)
+    end
 	return field
 end
 
@@ -351,7 +357,77 @@ function MapEditorView:AddNumericProperty(field)
 		field.editBox,
 		field.trackbar,
 	})
+    field.Set = function(...)
+        self:SetNumericField(field.name, ...)
+    end
 	return field
+end
+
+function MapEditorView:UpdateStringField(name, source)
+    local field = self.fields[name]
+
+    -- HACK
+    if source ~= field.editBox then
+        field.editBox:SetText(field.value)
+    end
+    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    self:OnFieldChange(field.name, field.value)
+    if self:IsValidTest(currentState) then
+        currentState[field.name] = field.value
+    end
+end
+
+function MapEditorView:SetStringField(name, value, source)
+    local field = self.fields[name]
+    if field.inUpdate then
+        return
+    end
+
+    field.inUpdate = true
+    if value ~= field.value then
+        field.value = value
+        self:UpdateStringField(field.name, source)
+    end
+    field.inUpdate = nil
+end
+
+function MapEditorView:AddStringProperty(field)
+    self.fields[field.name] = field
+
+    field.label = Label:New {
+        caption = field.title,
+        x = 1,
+        y = 1,
+        autosize = true,
+        tooltip = field.tooltip,
+    }
+    field.editBox = EditBox:New {
+        text = field.value,
+        x = self.VALUE_POS,
+        y = 1,
+        width = 100,
+        height = 20,
+        OnTextInput = {
+            function() 
+                self:SetStringField(field.name, field.editBox.text, field.editBox)
+            end
+        },
+        OnKeyPress = {
+            function() 
+                self:SetStringField(field.name, field.editBox.text, field.editBox)
+            end
+        },
+    }
+
+    field.ctrl = self:_AddControl(field.name, {
+        field.label,
+        field.editBox,
+        field.trackbar,
+    })
+    field.Set = function(...)
+        self:SetStringField(field.name, ...)
+    end
+    return field
 end
 
 function MapEditorView:UpdateColorbarsField(name, source)
@@ -406,5 +482,8 @@ function MapEditorView:AddColorbarsProperty(field)
 		field.label,
 		field.colorbars,
 	})
+    field.Set = function(...)
+        self:SetColorbarsField(field.name, ...)
+    end
 	return field
 end

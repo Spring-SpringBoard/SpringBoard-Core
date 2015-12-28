@@ -13,3 +13,6 @@
 [submodule "libs/i18n"]
 	path = libs/i18n
 	url = https://github.com/gajop/i18n.git
+[submodule "libs/s11n"]
+	path = libs/s11n
+	url = git@github.com:gajop/s11n.git

@@ -3,7 +3,7 @@ SCEN_EDIT_MODEL_DIR = SCEN_EDIT_DIR .. "model/"
 
 function Model:init()
     SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_DIR)
-    
+
     self._lua_rules_pre = "scen_edit"
 
     self.areaManager = AreaManager()

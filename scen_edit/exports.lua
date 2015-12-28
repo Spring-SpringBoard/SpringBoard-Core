@@ -53,7 +53,9 @@ if WG and WG.Chili then
 end
 
 if WG then
+    s11n = WG.s11n
 	WG.SCEN_EDIT = SCEN_EDIT
 elseif GG then
+    s11n = GG.s11n
 	GG.SCEN_EDIT = SCEN_EDIT
 end

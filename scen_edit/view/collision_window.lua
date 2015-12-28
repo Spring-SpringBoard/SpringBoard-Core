@@ -181,7 +181,7 @@ function CollisionView:init()
         maxValue = 128,
         step = 1,
     })
-    self:AddControl("aim-height-sep", {
+    self:AddControl("ap-height-sep", {
         Label:New {
             caption = "Aim",
         },
@@ -270,16 +270,16 @@ function CollisionView:init()
     })
 
     table.insert(children, 
-		ScrollPanel:New {
-			x = 0,
-			y = "0%",
-			bottom = 30,
-			right = 0,
-			borderColor = {0,0,0,0},
-			horizontalScrollbar = false,
-			children = { self.stackPanel },
-		}
-	)
+        ScrollPanel:New {
+            x = 0,
+            y = "0%",
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        }
+    )
 
     self:Finalize(children)
     SCEN_EDIT.view.selectionManager:addListener(self)
@@ -297,41 +297,37 @@ function CollisionView:OnSelectionChanged(selection)
         bridge = featureBridge
     end
     if objectID then
-        local scaleX, scaleY, scaleZ,
-              offsetX, offsetY, offsetZ,
-              volumeType, testType, primaryAxis, disabled = bridge.spGetObjectCollisionVolumeData(objectID)
-        self:SetNumericField("scaleX", scaleX)
-        self:SetNumericField("scaleY", scaleY)
-        self:SetNumericField("scaleZ", scaleZ)
-        self:SetNumericField("offsetX", offsetX)
-        self:SetNumericField("offsetY", offsetY)
-        self:SetNumericField("offsetZ", offsetZ)
-        self:SetBooleanField("enabled", not disabled)
-        local name = self.fields["vType"].comboBox.items[volumeType]
-        self:SetChoiceField("vType", name)
+        local collision = bridge.s11n:Get(objectID, "collision")
+        self.fields["scaleX"].Set(collision.scaleX)
+        self.fields["scaleY"].Set(collision.scaleY)
+        self.fields["scaleZ"].Set(collision.scaleZ)
+        self.fields["offsetX"].Set(collision.offsetX)
+        self.fields["offsetY"].Set(collision.offsetY)
+        self.fields["offsetZ"].Set(collision.offsetZ)
+        self.fields["enabled"].Set(not collision.disabled)
+        local name = self.fields["vType"].comboBox.items[collision.vType]
+        self.fields["vType"].Set(name)
 
-        local radius = bridge.spGetObjectRadius(objectID)
-        local height = bridge.spGetObjectHeight(objectID)
-        self:SetNumericField("radius", radius)
-        self:SetNumericField("height", height)
+        local radiusHeight = bridge.s11n:Get(objectID, "radiusHeight")
+        self.fields["radius"].Set(radiusHeight.radius)
+        self.fields["height"].Set(radiusHeight.height)
 
-        local _, _, _, mpx, mpy, mpz, apx, apy, apz = bridge.spGetObjectPosition(objectID)
-        self:SetNumericField("mpx", mpx)
-        self:SetNumericField("mpy", mpy)
-        self:SetNumericField("mpz", mpz)
-        self:SetNumericField("apx", apx)
-        self:SetNumericField("apy", apy)
-        self:SetNumericField("apz", apz)
+        local midAimPos = bridge.s11n:Get(objectID, "midAimPos")
+        self.fields["mpx"].Set(midAimPos.mid.x)
+        self.fields["mpy"].Set(midAimPos.mid.y)
+        self.fields["mpz"].Set(midAimPos.mid.z)
+        self.fields["apx"].Set(midAimPos.aim.x)
+        self.fields["apy"].Set(midAimPos.aim.y)
+        self.fields["apz"].Set(midAimPos.aim.z)
 
-        local isBlocking, isSolidObjectCollidable, isProjectileCollidable,
-              isRaySegmentCollidable, crushable, blockEnemyPushing, blockHeightChanges = bridge.spGetObjectBlocking(objectID)
-        self:SetBooleanField("isBlocking",              isBlocking)
-        self:SetBooleanField("isSolidObjectCollidable", isSolidObjectCollidable)
-        self:SetBooleanField("isProjectileCollidable",  isProjectileCollidable)
-        self:SetBooleanField("isRaySegmentCollidable",  isRaySegmentCollidable)
-        self:SetBooleanField("crushable",               crushable)
-        self:SetBooleanField("blockEnemyPushing",       blockEnemyPushing)
-        self:SetBooleanField("blockHeightChanges",      blockHeightChanges)
+        local blocking = bridge.s11n:Get(objectID, "blocking")
+        self.fields["isBlocking"].Set(                   blocking.isBlocking)
+        self.fields["isSolidObjectCollidable"].Set(      blocking.isSolidObjectCollidable)
+        self.fields["isProjectileCollidable"].Set(       blocking.isProjectileCollidable)
+        self.fields["isRaySegmentCollidable"].Set(       blocking.isRaySegmentCollidable)
+        self.fields["crushable"].Set(                    blocking.crushable)
+        self.fields["blockEnemyPushing"].Set(            blocking.blockEnemyPushing)
+        self.fields["blockHeightChanges"].Set(           blocking.blockHeightChanges)
     end
     self.selectionChanging = false
 end
@@ -368,59 +364,76 @@ function CollisionView:OnFieldChange(name, value)
             end
         end
 
-        local selection = SCEN_EDIT.view.selectionManager:GetSelection()
-        local params = {}
-        for _, field in pairs(self.fields) do
-            if field.name == "vType" then
-                for i, value in pairs(self.fields["vType"].comboBox.ids) do
-                    if value == field.value then
-                        params["vType"] = i
-                    end
+        if name == "mpx" or name == "mpy" or name == "mpz" or 
+                name == "apx" or name == "apy" or name == "apz" then
+            value = { mid = {
+                        x = self.fields["mpx"].value,
+                        y = self.fields["mpy"].value,
+                        z = self.fields["mpz"].value },
+                      aim = {
+                        x = self.fields["apx"].value,
+                        y = self.fields["apy"].value,
+                        z = self.fields["apz"].value },
+                      }
+            name = "midAimPos"
+        elseif name == "isBlocking" or name == "isSolidObjectCollidable" or
+                name == "isProjectileCollidable" or name == "isRaySegmentCollidable" or 
+                name == "crushable" or name == "blockEnemyPushing" or 
+                name == "blockHeightChanges" then
+            value = {
+                isBlocking                  = self.fields["isBlocking"].value,
+                isSolidObjectCollidable     = self.fields["isSolidObjectCollidable"].value,
+                isProjectileCollidable      = self.fields["isProjectileCollidable"].value,
+                isRaySegmentCollidable      = self.fields["isRaySegmentCollidable"].value,
+                crushable                   = self.fields["crushable"].value,
+                blockEnemyPushing           = self.fields["blockEnemyPushing"].value,
+                blockHeightChanges          = self.fields["blockHeightChanges"].value
+            }
+            name = "blocking"
+        elseif name == "radius" or name == "height" then
+            value = {
+                radius = self.fields["radius"].value,
+                height = self.fields["height"].value
+            }
+            name = "radiusHeight"
+        elseif name == "scaleX" or name == "scaleY" or name == "scaleZ" or
+               name == "offsetX" or name == "offsetY" or name == "offsetZ" or
+               name == "vType" or name == "testType" or name == "axis" or
+               name == "disabled" then
+            local vType, axis
+            for i, value in pairs(self.fields["vType"].comboBox.ids) do
+                if value == self.fields["vType"].value then
+                    vType = i
                 end
-            else
-                params[field.name] = field.value
             end
-        end
-        if not params["enabled"] then
-            params["vType"] = -1
-        end
-        for i, value in pairs(self.fields["axis"].comboBox.ids) do
-            if value == self.fields["axis"].value then
-                params["axis"] = i
+            for i, value in pairs(self.fields["axis"].comboBox.ids) do
+                if value == self.fields["axis"].value then
+                    axis = i
+                end
             end
+            value = {
+                scaleX                    = self.fields["scaleX"].value,
+                scaleY                    = self.fields["scaleY"].value,
+                scaleZ                    = self.fields["scaleZ"].value,
+                offsetX                   = self.fields["offsetX"].value,
+                offsetY                   = self.fields["offsetY"].value,
+                offsetZ                   = self.fields["offsetZ"].value,
+                vType                     = vType,
+                axis                      = axis,
+            }
+            name = "collision"
         end
-        local midAimParams = {
-            mpx = self.fields["mpx"].value,
-            mpy = self.fields["mpy"].value,
-            mpz = self.fields["mpz"].value,
-            apx = self.fields["apx"].value,
-            apy = self.fields["apy"].value,
-            apz = self.fields["apz"].value,
-        }
-        local blockingParams = {
-            isBlocking                  = self.fields["isBlocking"].value,
-            isSolidObjectCollidable     = self.fields["isSolidObjectCollidable"].value,
-            isProjectileCollidable      = self.fields["isProjectileCollidable"].value,
-            isRaySegmentCollidable      = self.fields["isRaySegmentCollidable"].value,
-            crushable                   = self.fields["crushable"].value,
-            blockEnemyPushing           = self.fields["blockEnemyPushing"].value,
-            blockHeightChanges          = self.fields["blockHeightChanges"].value
-        }
         local commands = {}
+        local selection = SCEN_EDIT.view.selectionManager:GetSelection()
         for _, objectID in pairs(selection.units) do
             local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
-            table.insert(commands, SetUnitCollisionVolumeDataCommand(modelID, params))
-            table.insert(commands, SetUnitModelRadiusCommand(modelID, self.fields["radius"].value, self.fields["height"].value))
-            table.insert(commands, SetUnitMidAimPosCommand(modelID, midAimParams))
-            table.insert(commands, SetUnitBlockingCommand(modelID, blockingParams))
+            table.insert(commands, SetUnitParamCommand(modelID, name, value))
         end
         for _, objectID in pairs(selection.features) do
             local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
-            table.insert(commands, SetFeatureCollisionVolumeDataCommand(modelID, params))
-            table.insert(commands, SetFeatureModelRadiusCommand(modelID, self.fields["radius"].value, self.fields["height"].value))
-            table.insert(commands, SetFeatureMidAimPosCommand(modelID, midAimParams))
-            table.insert(commands, SetFeatureBlockingCommand(modelID, blockingParams))
+            table.insert(commands, SetFeatureParamCommand(modelID, name, value))
         end
+
         local compoundCommand = CompoundCommand(commands)
         SCEN_EDIT.commandManager:execute(compoundCommand)
     end
