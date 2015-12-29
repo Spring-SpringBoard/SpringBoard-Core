@@ -24,6 +24,7 @@ UnitBridge.spSetObjectRadiusAndHeight      = Spring.SetUnitRadiusAndHeight
 UnitBridge.spSetObjectMidAndAimPos         = Spring.SetUnitMidAndAimPos
 UnitBridge.spGetObjectBlocking             = Spring.GetUnitBlocking
 UnitBridge.spSetObjectBlocking             = Spring.SetUnitBlocking
+UnitBridge.spDestroyObject                 = Spring.DestroyUnit
 UnitBridge.ObjectDefs                      = UnitDefs
 if gl then
     UnitBridge.glObjectShape               = gl.UnitShape
@@ -44,8 +45,14 @@ UnitBridge.DrawObject                      = function(params)
     gl.Rotate(angle.z, 0, 0, 1)
     unitBridge.glObjectShape(objectDefID, objectTeamID, false)
 end
-UnitBridge.getSpringObjectID               = function(modelID)
+UnitBridge.getObjectSpringID               = function(modelID)
     return SCEN_EDIT.model.unitManager:getSpringUnitId(modelID)
+end
+UnitBridge.getObjectModelID                = function(objectID)
+    return SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
+end
+UnitBridge.setObjectModelID                = function(objectID, modelID)
+    SCEN_EDIT.model.unitManager:setUnitModelId(objectID, modelID)
 end
 unitBridge = UnitBridge()
 unitBridge.s11n                            = s11n:GetUnitBridge()
@@ -70,6 +77,7 @@ FeatureBridge.spSetObjectRadiusAndHeight      = Spring.SetFeatureRadiusAndHeight
 FeatureBridge.spSetObjectMidAndAimPos         = Spring.SetFeatureMidAndAimPos
 FeatureBridge.spGetObjectBlocking             = Spring.GetFeatureBlocking
 FeatureBridge.spSetObjectBlocking             = Spring.SetFeatureBlocking
+FeatureBridge.spDestroyObject                 = Spring.DestroyFeature
 FeatureBridge.ObjectDefs                      = FeatureDefs
 if gl then
     FeatureBridge.glObjectShape               = gl.FeatureShape
@@ -95,8 +103,14 @@ FeatureBridge.DrawObject                      = function(params)
     gl.Rotate(angle.z, 0, 0, 1)
     featureBridge.glObjectShape(objectDefID, objectTeamID, false)
 end
-FeatureBridge.getSpringObjectID               = function(modelID)
+FeatureBridge.getObjectSpringID               = function(modelID)
     return SCEN_EDIT.model.featureManager:getSpringFeatureId(modelID)
+end
+FeatureBridge.getObjectModelID                = function(objectID)
+    return SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
+end
+FeatureBridge.setObjectModelID                = function(objectID, modelID)
+    SCEN_EDIT.model.featureManager:setFeatureModelId(objectID, modelID)
 end
 featureBridge = FeatureBridge()
 featureBridge.s11n                            = s11n:GetFeatureBridge()

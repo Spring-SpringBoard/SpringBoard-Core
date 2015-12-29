@@ -57,7 +57,7 @@ local function generateMap(size, delta, shapeName, rotation)
         return value
     end
 
-    local angle = rotation * math.pi / 180
+    local angle = math.rad(rotation)
     for x = 0, 2*size, Game.squareSize do
         for z = 0, 2*size, Game.squareSize do
             local rx, rz = x - size, z - size

@@ -32,7 +32,7 @@ function UnitFeaturePanel:init()
 			tooltip = "Edit selected unit property",
 			OnClick = {
 				function()
-                    self.objectPropertyWindow = UnitPropertyWindow()
+                    SCEN_EDIT.view.unitPropertyWindow = UnitPropertyWindow()
 				end
 			},
 			children = {
@@ -45,7 +45,7 @@ function UnitFeaturePanel:init()
 			tooltip = "Collision volume",
 			OnClick = {
 				function()
-                    self.collisionView = CollisionView()
+                    SCEN_EDIT.view.collisionView = CollisionView()
 				end
 			},
 			children = {

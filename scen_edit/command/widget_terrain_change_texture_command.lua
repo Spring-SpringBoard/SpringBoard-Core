@@ -384,7 +384,7 @@ local function GenerateCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ, opts)
 
 	OffsetCoords(tCoord, opts.texOffsetX, opts.texOffsetY)
 	ScaleCoords(tCoord, opts.texScale, opts.texScale)
-	RotateCoords(tCoord, opts.rotation * math.pi / 180)
+	RotateCoords(tCoord, math.rad(opts.rotation))
 	
 	return mCoord, tCoord, vCoord
 end

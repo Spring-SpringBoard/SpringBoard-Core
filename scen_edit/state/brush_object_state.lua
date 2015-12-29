@@ -70,7 +70,7 @@ function BrushObjectState:Apply(bx, bz, button)
             local points = sunflower(numPoints, 2)   --  example: n=500, alpha=2
             for i = 1, #points do
                 local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
-                local angle = math.random() * 360
+                local angle = math.random() * math.pi * 2
                 local x, z = bx + points[i][1] * radius/2, bz + points[i][2] * radius/2
                 x, z = x + math.random() * self.noise - self.noise / 2, z + math.random() * self.noise - self.noise / 2
                 local alreadyPlaced = false
@@ -82,7 +82,14 @@ function BrushObjectState:Apply(bx, bz, button)
                 end
                 if not alreadyPlaced then
                     local y = Spring.GetGroundHeight(x, z)
-                    local cmd = self.bridge.AddObjectCommand(objectDefID, x, y, z, self.team, angle)
+                    local dirX = math.sin(angle)
+                    local dirZ = math.cos(angle)
+                    local cmd = self.bridge.AddObjectCommand({
+                        defName = objectDefID,
+                        pos = { x = x, y = y, z = z },
+                        dir = { x = dirX, y = 0, z = dirZ },
+                        team = self.team,
+                    })
                     commands[#commands + 1] = cmd
                 end
             end

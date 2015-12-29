@@ -62,7 +62,7 @@ function TerrainChangeTextureState:DrawWorld()
         gl.Color(0, 1, 0, 0.3)
         gl.Utilities.DrawGroundCircle(x, z, self.size)
         gl.Color(0, 1, 1, 0.5)
-        local rotRad = self.rotation / 180 * math.pi + math.pi/2
+        local rotRad = math.rad(self.rotation) + math.pi/2
         gl.Utilities.DrawGroundHollowCircle(x+self.size * math.sin(rotRad), z+self.size * math.cos(rotRad), self.size / 10, self.size / 12)
         gl.PopMatrix()
     end

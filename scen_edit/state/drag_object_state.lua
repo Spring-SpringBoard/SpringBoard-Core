@@ -74,14 +74,12 @@ function DragObjectState:MouseRelease(x, y, button)
     local movedObjects = self:GetMovedObjects()
     for unitID, object in pairs(movedObjects.units) do
         local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(unitID)
-        local pos = object.pos
-        local cmd = MoveUnitCommand(modelID, pos.x, pos.y, pos.z)
+        local cmd = SetUnitParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
     end
     for featureID, object in pairs(movedObjects.features) do
         local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(featureID)
-        local pos = object.pos
-        local cmd = MoveFeatureCommand(modelID, pos.x, pos.y, pos.z)
+        local cmd = SetFeatureParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
     end
     for areaID, object in pairs(movedObjects.areas) do
@@ -101,7 +99,7 @@ function DragObjectState:DrawObject(objectID, object, bridge)
     local objectDefID         = bridge.spGetObjectDefID(objectID)
     local objectTeamID        = bridge.spGetObjectTeam(objectID)
     local dirX, _, dirZ       = bridge.spGetObjectDirection(objectID)
-    local angleY              = 180 / math.pi * math.atan2(dirX, dirZ)
+    local angleY              = math.deg(math.atan2(dirX, dirZ))
     bridge.DrawObject({
         color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
         objectDefID     = objectDefID,

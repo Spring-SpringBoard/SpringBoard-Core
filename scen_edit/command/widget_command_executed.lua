@@ -8,6 +8,12 @@ end
 
 function WidgetCommandExecuted:execute()
     SCEN_EDIT.view.commandWindow:PushCommand(self.display)
+    if SCEN_EDIT.view.unitPropertyWindow then
+        SCEN_EDIT.view.unitPropertyWindow:CommandExecuted()
+    end
+    if SCEN_EDIT.view.collisionView then
+        SCEN_EDIT.view.collisionView:CommandExecuted()
+    end
 end
 
 WidgetCommandUndo = AbstractCommand:extends{}

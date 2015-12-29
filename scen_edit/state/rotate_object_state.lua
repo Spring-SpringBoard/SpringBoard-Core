@@ -120,20 +120,18 @@ function RotateObjectState:MouseRelease(x, y, button)
 
     for objectID, object in pairs(self.ghostViews.units) do
         local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
-        local rotateCommand = RotateUnitCommand(modelID, object.angle * 180 / math.pi)
-        table.insert(commands, rotateCommand)
-        local pos = object.pos
-        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
-        local cmd = MoveUnitCommand(modelID, unitX, unitY, unitZ)
+        local cmd = SetUnitParamCommand(modelID, {
+            dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
+            pos = object.pos
+        })
         table.insert(commands, cmd)
     end
     for objectID, object in pairs(self.ghostViews.features) do
         local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
-        local rotateCommand = RotateFeatureCommand(modelID, object.angle * 180 / math.pi)
-        table.insert(commands, rotateCommand)
-        local pos = object.pos
-        local unitX, unitY, unitZ = pos.x, pos.y, pos.z
-        local cmd = MoveFeatureCommand(modelID, unitX, unitY, unitZ)
+        local cmd = SetFeatureParamCommand(modelID, {
+            dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
+            pos = object.pos
+        })
         table.insert(commands, cmd)
     end
     for objectID, object in pairs(self.ghostViews.areas) do
@@ -160,7 +158,7 @@ function RotateObjectState:DrawObject(objectID, object, bridge)
         objectDefID     = objectDefID,
         objectTeamID    = objectTeamID,
         pos             = object.pos,
-        angle           = { x = 0, y = object.angle * 180 / math.pi, z = 0 },
+        angle           = { x = 0, y = math.deg(object.angle), z = 0 },
     })
     gl.PopMatrix()
 end

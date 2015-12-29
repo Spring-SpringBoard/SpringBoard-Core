@@ -4,6 +4,8 @@ UnitPropertyWindow = MapEditorView:extends{}
 
 function UnitPropertyWindow:init()
     self:super("init")
+    self.objectKeys = { "health" }
+    self.unitKeys = {"tooltip", "maxHealth", "stockpile", "experience", "fuel"}
 
     self:AddControl("pos-sep", {
         Label:New {
@@ -28,8 +30,6 @@ function UnitPropertyWindow:init()
         title = "Y:",
         tooltip = "Position (y)",
         value = 0,
-        minValue = -1000,
-        maxValue = 1000,
         step = 1,
     })
     self:AddNumericProperty({
@@ -41,24 +41,58 @@ function UnitPropertyWindow:init()
         maxValue = Game.mapSizeZ,
         step = 1,
     })
+    self:AddControl("angle-sep", {
+        Label:New {
+            caption = "Angle",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddNumericProperty({
+        name = "angleX", 
+        title = "X:",
+        tooltip = "X angle",
+        value = 1,
+        minValue = -180,
+        maxValue = 180,
+        step = 1,
+    })
+    self:AddNumericProperty({
+        name = "angleY", 
+        title = "Y:",
+        tooltip = "Y angle",
+        value = 0,
+        minValue = -180,
+        maxValue = 180,
+        step = 1,
+    })
+--     self:AddNumericProperty({
+--         name = "angleZ",
+--         title = "Z:",
+--         tooltip = "Z angle",
+--         value = 0,
+--         minValue = -180,
+--         maxValue = 180,
+--         step = 1,
+--     })
     self:AddNumericProperty({
         name = "health", 
         title = "Health:",
         tooltip = "Health",
-        value = 1,
         minValue = 1,
-        maxValue = 10000,
-        step = 1,
+        value = 1,
+        step = 10,
     })
 
     self:AddNumericProperty({
         name = "maxHealth", 
         title = "Max health:",
         tooltip = "Max health",
-        value = 1,
         minValue = 1,
-        maxValue = 10000,
-        step = 1,
+        value = 1,
+        step = 10,
     })
 
     self:AddStringProperty({
@@ -68,60 +102,32 @@ function UnitPropertyWindow:init()
         value = "",
     })
 
+    self:AddNumericProperty({
+        name = "stockpile",
+        title = "Stockpile:",
+        tooltip = "Stockpile",
+        minValue = 0,
+        value = 1,
+        step = 1,
+    })
 
-    local stockpile --[[= Spring.GetUnitStockpile(self.unitId)]]
-    if stockpile ~= nil then
-        local stackPanel = MakeComponentPanel(mainPanel)
-        local lblStockpile = Label:New {
-            caption = "Stockpile:",
-            width = 100,
-            x = 1,
-            parent = stackPanel,
-        }  
-        self.edStockpile = EditBox:New {
-            text = tostring(stockpile),
-            x = 110,
-            width = 100,
-            height = SCEN_EDIT.conf.B_HEIGHT,
-            parent = stackPanel,
-        }
-    end
+    self:AddNumericProperty({
+        name = "experience",
+        title = "Experience:",
+        tooltip = "Experience",
+        minValue = 0,
+        value = 1,
+        step = 1,
+    })
 
-    local experience--[[ = Spring.GetUnitExperience(self.unitId)]]
-    if experience ~= nil then
-        local stackPanel = MakeComponentPanel(mainPanel)
-        local lblExperience = Label:New {
-            caption = "Experience:",
-            width = 100,
-            x = 1,
-            parent = stackPanel,
-        }
-        self.edExperience = EditBox:New {
-            text = tostring(experience),
-            x = 110,
-            width = 100,
-            height = SCEN_EDIT.conf.B_HEIGHT,
-            parent = stackPanel,
-        }
-    end
-
-    local fuel --[[= Spring.GetUnitFuel(self.unitId)]]
-    if fuel ~= nil then
-        local stackPanel = MakeComponentPanel(mainPanel)
-        local lblFuel = Label:New {
-            caption = "Fuel:",
-            width = 100,
-            x = 1,
-            parent = stackPanel,
-        }
-        self.edFuel = EditBox:New {
-            text = tostring(fuel),
-            x = 110,
-            width = 100,
-            height = SCEN_EDIT.conf.B_HEIGHT,
-            parent = stackPanel,
-        }
-    end
+    self:AddNumericProperty({
+        name = "fuel",
+        title = "Fuel:",
+        tooltip = "Fuel",
+        minValue = 0,
+        value = 1,
+        step = 1,
+    })
 
     self.rules = {}
     self.ruleEditBoxes = {}
@@ -150,20 +156,6 @@ function UnitPropertyWindow:init()
 
 --     SCEN_EDIT.MakeConfirmButton(self.window, btnOk)
 --     table.insert(self.window.OnConfirm, function()
---         local cmds = {
---             SetUnitPropertyCommand(self.modelUnitId, "maxhealth", tonumber(self.edMaxHealth.text)),
---             SetUnitPropertyCommand(self.modelUnitId, "health", tonumber(self.edHealth.text)),
---             SetUnitPropertyCommand(self.modelUnitId, "tooltip", self.edTooltip.text),
---         }
---         if self.edStockpile ~= nil then
---             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "stockpile", tonumber(self.edStockpile.text)))
---         end
---         if self.edExperience ~= nil then
---             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "experience", tonumber(self.edExperience.text)))
---         end
---         if self.edFuel ~= nil then
---             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "fuel", tonumber(self.edFuel.text)))
---         end
 -- 
 --         for rule, value in pairs(self.rules) do
 --             local v = self.ruleEditBoxes[rule].text
@@ -198,19 +190,65 @@ function UnitPropertyWindow:init()
     self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
 end
 
+function UnitPropertyWindow:CommandExecuted()
+    if not self._startedChanging then
+        self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
+    end
+end
+
+function UnitPropertyWindow:OnStartChange(name, value)
+    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
+end
+
+function UnitPropertyWindow:OnEndChange(name, value)
+    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
+end
+
+function UnitPropertyWindow:IsObjectKey(name)
+    for _, key in pairs(self.objectKeys) do
+        if key == name then
+            return true
+        end
+    end
+    if name == "pos" or name == "dir" then
+        return true
+    end
+    return false
+end
+
+function UnitPropertyWindow:IsFeatureKey(name)
+    if self:IsObjectKey(name) then
+        return true
+    end
+    return false
+end
+
+function UnitPropertyWindow:IsUnitKey(name)
+    if self:IsObjectKey(name) then
+        return true
+    end
+    for _, key in pairs(self.unitKeys) do
+        if key == name then
+            return true
+        end
+    end
+    return false
+end
+
 function UnitPropertyWindow:OnSelectionChanged(selection)
     self.selectionChanging = true
     local objectID, bridge
-    local keys = { "health" }
+    local keys
     if #selection.units > 0 then
         objectID = selection.units[1]
         bridge = unitBridge
-        for _, extra in pairs({"tooltip", "maxHealth"}) do
-            table.insert(keys, extra)
-        end
+        keys = self.unitKeys
+        self:SetInvisibleFields()
     elseif #selection.features > 0 then
         objectID = selection.features[1]
         bridge = featureBridge
+        keys = self.objectKeys
+        self:SetInvisibleFields(unpack(self.unitKeys))
     end
     if objectID then
         for _, key in pairs(keys) do
@@ -221,6 +259,13 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
         self.fields["posX"].Set(pos.x)
         self.fields["posY"].Set(pos.y)
         self.fields["posZ"].Set(pos.z)
+        local dir = bridge.s11n:Get(objectID, "dir")
+        local dirX, dirY, dirZ = bridge.spGetObjectDirection(objectID)
+
+        local angleY = math.asin(dirZ)
+        local angleX = math.acos(dirX / math.cos(angleY))
+        self.fields["angleX"].Set(math.deg(angleX))
+        self.fields["angleY"].Set(math.deg(angleY))
     end
     self.selectionChanging = false
 end
@@ -235,13 +280,25 @@ function UnitPropertyWindow:OnFieldChange(name, value)
                       z = self.fields["posZ"].value }
             name = "pos"
         end
-        for _, objectID in pairs(selection.units) do
-            local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
-            table.insert(commands, SetUnitParamCommand(modelID, name, value))
+        if name == "angleX" or name == "angleY" then
+            local angleX = math.rad(self.fields["angleX"].value)
+            local angleY = math.rad(self.fields["angleY"].value)
+            value = { x = math.cos(angleX)*math.cos(angleY),
+                      y = math.sin(angleX)*math.cos(angleY),
+                      z = math.sin(angleY) }
+            name = "dir"
         end
-        for _, objectID in pairs(selection.features) do
-            local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
-            table.insert(commands, SetFeatureParamCommand(modelID, name, value))
+        if self:IsUnitKey(name) then
+            for _, objectID in pairs(selection.units) do
+                local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
+                table.insert(commands, SetUnitParamCommand(modelID, name, value))
+            end
+        end
+        if self:IsFeatureKey(name) then
+            for _, objectID in pairs(selection.features) do
+                local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
+                table.insert(commands, SetFeatureParamCommand(modelID, name, value))
+            end
         end
         local compoundCommand = CompoundCommand(commands)
         SCEN_EDIT.commandManager:execute(compoundCommand)

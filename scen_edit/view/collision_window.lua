@@ -58,27 +58,24 @@ function CollisionView:init()
         name = "scaleX", 
         title = "X:",
         tooltip = "Scale (x)",
-        value = 1,
         minValue = 0,
-        maxValue = 256,
+        value = 1,
         step = 1,
     })
     self:AddNumericProperty({
         name = "scaleY", 
         title = "Y:",
         tooltip = "Scale (y)",
-        value = 1,
         minValue = 0,
-        maxValue = 256,
+        value = 1,
         step = 1,
     })
     self:AddNumericProperty({
         name = "scaleZ", 
         title = "Z:",
         tooltip = "Scale (z)",
-        value = 1,
         minValue = 0,
-        maxValue = 256,
+        value = 1,
         step = 1,
     })
 
@@ -96,8 +93,6 @@ function CollisionView:init()
         title = "X:",
         tooltip = "Offset (x)",
         value = 0,
-        minValue = -256,
-        maxValue = 256,
         step = 1,
     })
     self:AddNumericProperty({
@@ -105,8 +100,6 @@ function CollisionView:init()
         title = "Y:",
         tooltip = "Offset (y)",
         value = 0,
-        minValue = -256,
-        maxValue = 256,
         step = 1,
     })
     self:AddNumericProperty({
@@ -114,8 +107,6 @@ function CollisionView:init()
         title = "Z:",
         tooltip = "Offset (z)",
         value = 0,
-        minValue = -256,
-        maxValue = 256,
         step = 1,
     })
     self:AddControl("rad-height-sep", {
@@ -133,7 +124,6 @@ function CollisionView:init()
         tooltip = "Radius",
         value = 0,
         minValue = 0,
-        maxValue = 256,
         step = 1,
     })
     self:AddNumericProperty({
@@ -159,8 +149,6 @@ function CollisionView:init()
         title = "X:",
         tooltip = "Model position (x)",
         value = 1,
-        minValue = -128,
-        maxValue = 128,
         step = 1,
     })
     self:AddNumericProperty({
@@ -168,8 +156,6 @@ function CollisionView:init()
         title = "Y:",
         tooltip = "Model position (y)",
         value = 1,
-        minValue = -128,
-        maxValue = 128,
         step = 1,
     })
     self:AddNumericProperty({
@@ -177,8 +163,6 @@ function CollisionView:init()
         title = "Z:",
         tooltip = "Model position (z)",
         value = 1,
-        minValue = -128,
-        maxValue = 128,
         step = 1,
     })
     self:AddControl("ap-height-sep", {
@@ -195,8 +179,6 @@ function CollisionView:init()
         title = "X:",
         tooltip = "Aim position (x)",
         value = 1,
-        minValue = -128,
-        maxValue = 128,
         step = 1,
     })
     self:AddNumericProperty({
@@ -204,8 +186,6 @@ function CollisionView:init()
         title = "Y:",
         tooltip = "Aim position (y)",
         value = 1,
-        minValue = -128,
-        maxValue = 128,
         step = 1,
     })
     self:AddNumericProperty({
@@ -213,8 +193,6 @@ function CollisionView:init()
         title = "Z:",
         tooltip = "Aim position (z)",
         value = 1,
-        minValue = -128,
-        maxValue = 128,
         step = 1,
     })
     self:AddControl("blocking-height-sep", {
@@ -332,19 +310,35 @@ function CollisionView:OnSelectionChanged(selection)
     self.selectionChanging = false
 end
 
+function CollisionView:CommandExecuted()
+    if not self._startedChanging then
+        self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
+    end
+end
+
+function CollisionView:OnStartChange(name, value)
+    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
+end
+
+function CollisionView:OnEndChange(name, value)
+    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
+end
+
 function CollisionView:OnFieldChange(name, value)
     local vType = self.fields["vType"].value
+    local axis  = self.fields["axis"].value
     if name == "vType" then
         if vType == "Sphere" then
             self:SetInvisibleFields("scaleY", "scaleZ", "axis")
         elseif vType == "Cylinder" then
-            self:SetInvisibleFields("scaleZ")
+            self:SetInvisibleFields()
+--             self:SetInvisibleFields("scaleZ")
         else
             self:SetInvisibleFields("axis")
         end
     end
     if not self.selectionChanging then
-        if self.fields["vType"].value == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
+        if vType == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
             if name ~= "scaleX" then
                 self:SetNumericField("scaleX", value)
             end
@@ -355,12 +349,28 @@ function CollisionView:OnFieldChange(name, value)
                 self:SetNumericField("scaleZ", value)
             end
         end
-        if self.fields["vType"].value == "Cylinder" and (name == "scaleY" or name == "scaleZ") then
-            if name ~= "scaleY" then
-                self:SetNumericField("scaleY", value)
-            end
-            if name ~= "scaleZ" then
-                self:SetNumericField("scaleZ", value)
+        if vType == "Cylinder" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
+            if axis == "X" then
+                if name == "scaleX" then
+                    self:SetNumericField("scaleZ", value)
+                end
+                if name == "scaleZ" then
+                    self:SetNumericField("scaleX", value)
+                end
+            elseif axis == "Y" then
+                if name == "scaleX" then
+                    self:SetNumericField("scaleY", value)
+                end
+                if name == "scaleY" then
+                    self:SetNumericField("scaleX", value)
+                end
+            elseif axis == "Z" then
+                if name == "scaleY" then
+                    self:SetNumericField("scaleZ", value)
+                end
+                if name == "scaleZ" then
+                    self:SetNumericField("scaleY", value)
+                end
             end
         end
 

@@ -38,7 +38,7 @@ function AddObjectState:MouseMove(x, y, dx, dy, button)
 
         local len = math.sqrt(dx * dx + dz * dz)
         if len > 10 then
-            self.angle = math.atan2(dx / len, dz / len) / math.pi * 180
+            self.angle = math.atan2(dx / len, dz / len)
         end
     end
 end
@@ -53,7 +53,15 @@ function AddObjectState:MouseRelease(x, y, button)
             x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
         end
-        local cmd = self.bridge.AddObjectCommand(objectDefID, x, y, z, self.team, self.angle)
+
+        local dirX = math.sin(self.angle)
+        local dirZ = math.cos(self.angle)
+        local cmd = self.bridge.AddObjectCommand({
+            defName = objectDefID,
+            pos = { x = x, y = y, z = z },
+            dir = { x = dirX, y = 0, z = dirZ },
+            team = self.team,
+        })
         commands[#commands + 1] = cmd
     end
 
@@ -144,7 +152,7 @@ function AddObjectState:DrawWorld()
             objectDefID = objectDefID,
             objectTeamID = self.team,
             pos = { x = x, y = y, z = z },
-            angleY = self.angle,
+            angleY = math.deg(self.angle),
         }
         self:DrawObject(object, self.bridge)
         gl.PopMatrix()

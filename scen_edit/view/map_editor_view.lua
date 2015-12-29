@@ -38,6 +38,12 @@ function MapEditorView:init(opts)
 	self.stackPanel:DisableRealign()
 end
 
+-- Override
+function MapEditorView:OnStartChange(name, value)
+end
+-- Override
+function MapEditorView:OnEndChange(name, value)
+end
 -- Override 
 function MapEditorView:OnFieldChange(name, value)
 end
@@ -157,6 +163,14 @@ function MapEditorView:_AddControl(name, children)
 	return ctrl
 end
 
+function MapEditorView:ParseKey(editBox, key, mods, ...)
+    if key == Spring.GetKeyCode("enter") or 
+		key == Spring.GetKeyCode("numpad_enter") then
+        screen0:FocusControl(nil)
+        return true
+    end
+end
+
 function MapEditorView:UpdateChoiceField(name, source)
     local field = self.fields[name]
     -- HACK
@@ -212,13 +226,13 @@ function MapEditorView:AddChoiceProperty(field)
     }
     field.value = field.items[1]
 
+    field.Set = function(...)
+        self:SetChoiceField(field.name, ...)
+    end
     field.ctrl = self:_AddControl(field.name, {
 		field.label,
 		field.comboBox,
 	})
-    field.Set = function(...)
-        self:SetChoiceField(field.name, ...)
-    end
 	return field
 end
 
@@ -262,26 +276,29 @@ function MapEditorView:AddBooleanProperty(field)
         end
     }
 
-    field.ctrl = self:_AddControl(field.name, {
-		field.checkBox,
-	})
     field.Set = function(...)
         self:SetBooleanField(field.name, ...)
     end
-	return field
+    field.ctrl = self:_AddControl(field.name, {
+        field.checkBox,
+    })
+    return field
 end
 
 function MapEditorView:UpdateNumericField(name, source)
     local field = self.fields[name]
 
     -- HACK
+    local v = tostring(field.value)
+    v = v:sub(1, math.min(#v, 6))
     if source ~= field.editBox then
-        local v = tostring(field.value)
-        v = v:sub(1, math.min(#v, 6))
         field.editBox:SetText(v)
     end
-    if source ~= field.trackbar then
-        field.trackbar:SetValue(field.value)
+--     if source ~= field.trackbar then
+--         field.trackbar:SetValue(field.value)
+--     end
+    if source ~= field.lblValue then
+        field.lblValue:SetCaption(v)
     end
     local currentState = SCEN_EDIT.stateManager:GetCurrentState()
     self:OnFieldChange(field.name, field.value)
@@ -299,32 +316,52 @@ function MapEditorView:SetNumericField(name, value, source)
     field.inUpdate = true
     value = tonumber(value)
     if value ~= nil and value ~= field.value then
-        value = math.min(field.maxValue, value)
-        value = math.max(field.minValue, value)
+        if field.maxValue then
+            value = math.min(field.maxValue, value)
+        end
+        if field.minValue then
+            value = math.max(field.minValue, value)
+        end
         field.value = value
         self:UpdateNumericField(field.name, source)
     end
     field.inUpdate = nil
 end
 
+function MapEditorView:_OnStartChange(name, value)
+    if not self._startedChanging then
+        self._startedChanging = true
+        self:OnStartChange(name, value)
+    end
+end
+
+function MapEditorView:_OnEndChange(name, value)
+    if self._startedChanging then
+        self._startedChanging = false
+        self:OnEndChange(name, value)
+    end
+end
+
 function MapEditorView:AddNumericProperty(field)
+    if field.step == nil then
+        field.step = 1
+    end
     self.fields[field.name] = field
     local v = tostring(field.value)
     v = v:sub(1, math.min(#v, 6))
 
-    field.label = Label:New {
-        caption = field.title,
-        x = 1,
-        y = 1,
-		autosize = true,
-        tooltip = field.tooltip,
-    }
     field.editBox = EditBox:New {
         text = v,
-        x = self.VALUE_POS,
+        x = 1,
         y = 1,
-        width = 100,
-		height = 20,
+        width = 200,
+        height = 20,
+        KeyPress = function(...)
+			if not self:ParseKey(...) then
+				return Chili.EditBox.KeyPress(...)
+			end
+			return true
+		end,
         OnTextInput = {
             function() 
                 self:SetNumericField(field.name, field.editBox.text, field.editBox)
@@ -335,31 +372,129 @@ function MapEditorView:AddNumericProperty(field)
                 self:SetNumericField(field.name, field.editBox.text, field.editBox)
             end
         },
+        OnFocusUpdate = {
+            function(...)
+                if not field.editBox.state.focused then
+                    field.button:Show()
+                    field.editBox:Hide()
+                    self.stackPanel:Invalidate()
+                    self:_OnEndChange(name, value)
+                end
+            end
+        },
     }
-    field.trackbar = Trackbar:New {
-        x = self.VALUE_POS + 130,
+    field.lblValue = Label:New {
+        caption = "",
+        width = "100%",
+        right = 5,
+        y = 5,
+--                 padding = { 0, 0, 0, 0 },
+        align = "right",
+    }
+    field.button = Button:New {
+        caption = "",
+        x = 1,
         y = 1,
-        value = field.value,
-        min = field.minValue,
-        max = field.maxValue,
-        step = field.step or 0.01,
-		width = 95,
-		height = 20,
+        width = 200,
+        height = 30,
+        padding = {0, 0, 0, 0,},
+        OnClick = {
+            function()
+                if not self.notClick then
+                    field.button:Hide()
+                    field.editBox:Show()
+                    screen0:FocusControl(field.editBox)
+                    self:_OnStartChange(field.name, value)
+                end
+            end
+        },
+        OnMouseUp = {
+            function()
+                SCEN_EDIT.SetMouseCursor()
+                self.startX = nil
+                self.notClick = false
+                self:_OnEndChange(field.name, value)
+            end
+        },
+        OnMouseMove = {
+            function(obj, x, y, _, _, btn, ...)
+                if btn then
+                    local _, _, _, shift = Spring.GetModKeyState()
+                    if not self.startX then
+                        self.startX = x
+                        self.currentX = x
+                    end
+                    local dx = x - self.currentX
+                    self.currentX = x
+                    if math.abs(x - self.startX) > 4 then
+                        self.notClick = true
+                        self:_OnStartChange(field.name, value)
+                    end
+                    if self.notClick then
+                        if shift then
+                            dx = dx * 0.1
+                        end
+                        local value = field.value + dx * field.step
+                        self:SetNumericField(field.name, value, obj)
+                    end
+                    SCEN_EDIT.SetMouseCursor("resize-x")
+                end
+            end
+        },
+        children = { 
+            field.lblValue,
+            Label:New {
+                caption = field.title,
+                x = 10,
+                y = 5,
+--                 padding = { 0, 0, 0, 0 },
+                autosize = true,
+                tooltip = field.tooltip,
+            },
+        },
     }
-    field.trackbar.OnChange = {
-        function(obj, value)
-            self:SetNumericField(field.name, value, obj)
-        end
-    }
+--     field.trackbar = Trackbar:New {
+--         x = self.VALUE_POS + 130,
+--         y = 1,
+--         value = field.value,
+--         min = field.minValue,
+--         max = field.maxValue,
+--         step = field.step or 0.01,
+--         width = 95,
+--         height = 20,
+--     }
+--     field.trackbar.OnChange = {
+--         function(obj, value)
+--             self:SetNumericField(field.name, value, obj)
+--         end
+--     }
+--     field.trackbar.OnMouseUp = {
+--         function(obj, value)
+--             if self._startedChanging then
+--                 self._startedChanging = false
+--                 self:OnEndChange(field.name, value)
+--             end
+--         end
+--     }
+--     field.trackbar.OnMouseDown = {
+--         function(obj, value)
+--             if not self._startedChanging then
+--                 self._startedChanging = true
+--                 self:OnStartChange(field.name, value)
+--             end
+--         end
+--     }
 
-    field.ctrl = self:_AddControl(field.name, {
-		field.label,
-		field.editBox,
-		field.trackbar,
-	})
     field.Set = function(...)
         self:SetNumericField(field.name, ...)
     end
+    field.ctrl = self:_AddControl(field.name, {
+-- 		field.label,
+ 		field.editBox,
+-- 		field.trackbar,
+        field.button,
+	})
+    field.editBox:Hide()
 	return field
 end
 
@@ -407,6 +542,12 @@ function MapEditorView:AddStringProperty(field)
         y = 1,
         width = 100,
         height = 20,
+        KeyPress = function(...)
+			if not self:ParseKey(...) then
+				return Chili.EditBox.KeyPress(...)
+			end
+			return true
+		end,
         OnTextInput = {
             function() 
                 self:SetStringField(field.name, field.editBox.text, field.editBox)
@@ -417,16 +558,24 @@ function MapEditorView:AddStringProperty(field)
                 self:SetStringField(field.name, field.editBox.text, field.editBox)
             end
         },
+        OnFocusUpdate = {
+            function(...)
+                if not field.editBox.state.focused then
+                    self:_OnEndChange(name, value)
+                else
+                    self:_OnStartChange(name, value)
+                end
+            end
+        },
     }
 
-    field.ctrl = self:_AddControl(field.name, {
-        field.label,
-        field.editBox,
-        field.trackbar,
-    })
     field.Set = function(...)
         self:SetStringField(field.name, ...)
     end
+    field.ctrl = self:_AddControl(field.name, {
+        field.label,
+        field.editBox,
+    })
     return field
 end
 
@@ -478,12 +627,12 @@ function MapEditorView:AddColorbarsProperty(field)
             end
         },
     }
+    field.Set = function(...)
+        self:SetColorbarsField(field.name, ...)
+    end
     field.ctrl = self:_AddControl(field.name, {
 		field.label,
 		field.colorbars,
 	})
-    field.Set = function(...)
-        self:SetColorbarsField(field.name, ...)
-    end
 	return field
 end
