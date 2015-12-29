@@ -8,11 +8,11 @@ end
 
 function WidgetCommandExecuted:execute()
     SCEN_EDIT.view.commandWindow:PushCommand(self.display)
-    if SCEN_EDIT.view.unitPropertyWindow then
-        SCEN_EDIT.view.unitPropertyWindow:CommandExecuted()
+    if SCEN_EDIT.unitPropertyWindow then
+        SCEN_EDIT.unitPropertyWindow:CommandExecuted()
     end
-    if SCEN_EDIT.view.collisionView then
-        SCEN_EDIT.view.collisionView:CommandExecuted()
+    if SCEN_EDIT.collisionView then
+        SCEN_EDIT.collisionView:CommandExecuted()
     end
 end
 

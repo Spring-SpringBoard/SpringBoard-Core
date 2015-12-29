@@ -384,7 +384,7 @@ function MapEditorView:AddNumericProperty(field)
         },
     }
     field.lblValue = Label:New {
-        caption = "",
+        caption = v,
         width = "100%",
         right = 5,
         y = 5,

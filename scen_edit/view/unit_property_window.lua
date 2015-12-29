@@ -242,7 +242,10 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
     if #selection.units > 0 then
         objectID = selection.units[1]
         bridge = unitBridge
-        keys = self.unitKeys
+        keys = SCEN_EDIT.deepcopy(self.unitKeys)
+        for _, value in pairs(self.objectKeys) do
+            table.insert(keys, value)
+        end
         self:SetInvisibleFields()
     elseif #selection.features > 0 then
         objectID = selection.features[1]

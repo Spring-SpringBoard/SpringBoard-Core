@@ -6,7 +6,13 @@ function UnitFeaturePanel:init()
 			tooltip = "Unit type panel",
 			OnClick = {
 				function()
-					self.unitDefsView = UnitDefsView()
+                    if SCEN_EDIT.unitDefsView == nil then
+                        self.unitDefsView = UnitDefsView()
+                        SCEN_EDIT.unitDefsView = self.unitDefsView
+                    end
+                    if SCEN_EDIT.unitDefsView.window.hidden then
+                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.unitDefsView.window)
+                    end
 				end
 			},
 			children = {
@@ -19,7 +25,13 @@ function UnitFeaturePanel:init()
 			tooltip = "Feature type panel",
 			OnClick = {
 				function()
-					self.featureDefsView = FeatureDefsView()
+                    if SCEN_EDIT.featureDefsView == nil then
+                        self.featureDefsView = FeatureDefsView()
+                        SCEN_EDIT.featureDefsView = self.featureDefsView
+                    end
+                    if SCEN_EDIT.featureDefsView.window.hidden then
+                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.featureDefsView.window)
+                    end
 				end
 			},
 			children = {
@@ -32,7 +44,13 @@ function UnitFeaturePanel:init()
 			tooltip = "Edit selected unit property",
 			OnClick = {
 				function()
-                    SCEN_EDIT.view.unitPropertyWindow = UnitPropertyWindow()
+                    if SCEN_EDIT.unitPropertyWindow == nil then
+                        self.unitPropertyWindow = UnitPropertyWindow()
+                        SCEN_EDIT.unitPropertyWindow = self.unitPropertyWindow
+                    end
+                    if SCEN_EDIT.unitPropertyWindow.window.hidden then
+                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.unitPropertyWindow.window)
+                    end
 				end
 			},
 			children = {
@@ -45,7 +63,13 @@ function UnitFeaturePanel:init()
 			tooltip = "Collision volume",
 			OnClick = {
 				function()
-                    SCEN_EDIT.view.collisionView = CollisionView()
+                    if SCEN_EDIT.collisionView == nil then
+                        self.collisionView = CollisionView()
+                        SCEN_EDIT.collisionView = self.collisionView
+                    end
+                    if SCEN_EDIT.collisionView.window.hidden then
+                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.collisionView.window)
+                    end
 				end
 			},
 			children = {
