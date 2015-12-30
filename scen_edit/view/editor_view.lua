@@ -195,17 +195,17 @@ function EditorView:Update(name, _source)
     end
 end
 
-function EditorView:_OnStartChange(name, value)
+function EditorView:_OnStartChange(name)
     if not self._startedChanging then
         self._startedChanging = true
-        self:OnStartChange(name, value)
+        self:OnStartChange(name)
     end
 end
 
-function EditorView:_OnEndChange(name, value)
+function EditorView:_OnEndChange(name)
     if self._startedChanging then
         self._startedChanging = false
-        self:OnEndChange(name, value)
+        self:OnEndChange(name)
     end
 end
 
@@ -315,23 +315,120 @@ function BooleanField:init(field)
     }
 end
 
-function ParseKey(editBox, key, mods, ...)
-    if key == Spring.GetKeyCode("enter") or 
+function ParseKey(field, editBox, key, mods, ...)
+    if key == Spring.GetKeyCode("esc") then
+        field:Set(field.originalValue, editBox)
+        screen0:FocusControl(nil)
+        return true
+    end
+    if key == Spring.GetKeyCode("enter") or
         key == Spring.GetKeyCode("numpad_enter") then
         screen0:FocusControl(nil)
         return true
     end
 end
 
-NumericField = Field:extends{}
+StringField = Field:extends{}
+
+function StringField:Added()
+    self.editBox:Hide()
+end
+
+function StringField:Update(source)
+    if source ~= self.editBox then
+        self.editBox:SetText(self.value)
+    end
+    if source ~= self.lblValue then
+        self.lblValue:SetCaption(self.value)
+    end
+end
+
+function StringField:init(field)
+    self.width = 200
+    Field.init(self, field)
+
+    self.editBox = EditBox:New {
+        text = self.value,
+        width = self.width,
+        height = 30,
+        KeyPress = function(...)
+            if not ParseKey(self, ...) then
+                return Chili.EditBox.KeyPress(...)
+            end
+            return true
+        end,
+        OnTextInput = {
+            function()
+                self:Set(self.editBox.text, self.editBox)
+            end
+        },
+        OnKeyPress = {
+            function()
+                self:Set(self.editBox.text, self.editBox)
+            end
+        },
+        OnFocusUpdate = {
+            function(...)
+                if not self.editBox.state.focused then
+                    self.button:Show()
+                    self.editBox:Hide()
+                    self.ev.stackPanel:Invalidate()
+                    self.ev:_OnEndChange(self.name)
+                end
+            end
+        },
+    }
+    self.lblValue = Label:New {
+        caption = self.value,
+        width = "100%",
+        right = 5,
+        y = 5,
+        align = "right",
+    }
+    self.lblTitle = Label:New {
+        caption = self.title,
+        x = 10,
+        y = 5,
+        autosize = true,
+        tooltip = self.tooltip,
+    }
+
+    self.button = Button:New {
+        caption = "",
+        width = self.width,
+        height = 30,
+        padding = {0, 0, 0, 0,},
+        OnClick = {
+            function()
+                if not self.notClick then
+                    self.originalValue = self.value
+                    self.button:Hide()
+                    self.editBox:Show()
+                    self.editBox:SetText(tostring(self.value))
+                    self.editBox.cursor = #self.editBox.text + 1
+                    screen0:FocusControl(self.editBox)
+                    self.ev:_OnStartChange(self.name)
+                end
+            end
+        },
+        children = { 
+            self.lblValue,
+            self.lblTitle,
+        },
+    }
+
+    self.components = {
+        self.button,
+        self.editBox,
+    }
+end
+
+NumericField = StringField:extends{}
 function NumericField:Update(source)
     local v = string.format("%g", self.value)
-    if source ~= self.editBox then
+    if source ~= self.editBox and not self.editBox.state.focused then
         self.editBox:SetText(v)
     end
---     if source ~= self.trackbar then
---         self.trackbar:SetValue(self.value)
---     end
     if source ~= self.lblValue then
         self.lblValue:SetCaption(v)
     end
@@ -355,8 +452,7 @@ function NumericField:Validate(value)
 end
 
 function NumericField:init(field)
-    self.width = 200
-    self:super('init', field)
+    StringField.init(self, field)
     if self.step == nil then
         self.step = 1
         if self.minValue and self.maxValue then
@@ -364,200 +460,51 @@ function NumericField:init(field)
         end
     end
     local v = string.format("%g", self.value)
-
-    self.editBox = EditBox:New {
-        text = v,
-        width = self.width,
-        height = 30,
-        KeyPress = function(...)
-            if not ParseKey(...) then
-                return Chili.EditBox.KeyPress(...)
+    self.lblValue:SetCaption(v)
+    self.button.OnMouseUp = {
+        function()
+            SCEN_EDIT.SetMouseCursor()
+            self.lblValue.font:SetColor(1, 1, 1, 1)
+            self.lblTitle.font:SetColor(1, 1, 1, 1)
+            self.lblTitle:Invalidate()
+            if self.startX and self.startY then
+                Spring.WarpMouse(self.startX, self.startY)
             end
-            return true
-        end,
-        OnTextInput = {
-            function() 
-                self:Set(self.editBox.text, self.editBox)
-            end
-        },
-        OnKeyPress = {
-            function()
-                self:Set(self.editBox.text, self.editBox)
-            end
-        },
-        OnFocusUpdate = {
-            function(...)
-                if not self.editBox.state.focused then
-                    self.button:Show()
-                    self.editBox:Hide()
-                    self.ev.stackPanel:Invalidate()
-                    self.ev:_OnEndChange(name, value)
-                end
-            end
-        },
+            self.startX = nil
+            self.notClick = false
+            self.ev:_OnEndChange(self.name)
+        end
     }
-    self.lblValue = Label:New {
-        caption = v,
-        width = "100%",
-        right = 5,
-        y = 5,
---                 padding = { 0, 0, 0, 0 },
-        align = "right",
-    }
-    self.button = Button:New {
-        caption = "",
-        width = self.width,
-        height = 30,
-        padding = {0, 0, 0, 0,},
-        OnClick = {
-            function()
-                if not self.notClick then
-                    self.button:Hide()
-                    self.editBox:Show()
-                    self.editBox.cursor = #self.editBox.text + 1
-                    screen0:FocusControl(self.editBox)
-                    self.ev:_OnStartChange(self.name, value)
-                end
-            end
-        },
-        OnMouseUp = {
-            function()
-                SCEN_EDIT.SetMouseCursor()
-                self.startX = nil
-                self.notClick = false
-                self.ev:_OnEndChange(self.name, value)
-            end
-        },
-        OnMouseMove = {
-            function(obj, x, y, _, _, btn, ...)
-                if btn then
-                    local _, _, _, shift = Spring.GetModKeyState()
-                    if not self.startX then
-                        self.startX = x
-                        self.currentX = x
-                    end
-                    local dx = x - self.currentX
+    self.button.OnMouseMove = {
+        function(obj, x, y, dx, dy, btn, ...)
+            if btn then
+                local vsx, vsy = Spring.GetViewGeometry()
+                x, y = Spring.GetMouseState()
+                local _, _, _, shift = Spring.GetModKeyState()
+                if not self.startX then
+                    self.startX = x
+                    self.startY = y
                     self.currentX = x
-                    if math.abs(x - self.startX) > 4 then
-                        self.notClick = true
-                        self.ev:_OnStartChange(self.name, value)
-                    end
-                    if self.notClick then
-                        if shift then
-                            dx = dx * 0.1
-                        end
-                        local value = self.value + dx * self.step
-                        self:Set(value, obj)
-                    end
-                    SCEN_EDIT.SetMouseCursor("resize-x")
+                    self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
+                    self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
+                    self.lblTitle:Invalidate()
                 end
-            end
-        },
-        children = { 
-            self.lblValue,
-            Label:New {
-                caption = self.title,
-                x = 10,
-                y = 5,
---                 padding = { 0, 0, 0, 0 },
-                autosize = true,
-                tooltip = self.tooltip,
-            },
-        },
-    }
---     self.trackbar = Trackbar:New {
---         x = self.VALUE_POS + 130,
---         y = 1,
---         value = self.value,
---         min = self.minValue,
---         max = self.maxValue,
---         step = self.step or 0.01,
---         width = 95,
---         height = 20,
---     }
---     self.trackbar.OnChange = {
---         function(obj, value)
---             self:SetNumericField(self.name, value, obj)
---         end
---     }
---     self.trackbar.OnMouseUp = {
---         function(obj, value)
---             if self._startedChanging then
---                 self._startedChanging = false
---                 self:OnEndChange(self.name, value)
---             end
---         end
---     }
---     self.trackbar.OnMouseDown = {
---         function(obj, value)
---             if not self._startedChanging then
---                 self._startedChanging = true
---                 self:OnStartChange(self.name, value)
---             end
---         end
---     }
-
-    self.components = {
--- 		self.label,
- 		self.editBox,
--- 		self.trackbar,
-        self.button,
-	}
-end
-
-function NumericField:Added()
-    self.editBox:Hide()
-end
-
-StringField = Field:extends{}
-function StringField:Update(source)
-    if source ~= self.editBox then
-        self.editBox:SetText(self.value)
-    end
-end
-
-function StringField:init(field)
-    self:super('init', field)
-    self.label = Label:New {
-        caption = self.title,
-        autosize = true,
-        tooltip = self.tooltip,
-    }
-    self.editBox = EditBox:New {
-        text = self.value,
-        x = self.VALUE_POS,
-        width = 100,
-        height = 20,
-        KeyPress = function(...)
-            if not ParseKey(...) then
-                return Chili.EditBox.KeyPress(...)
-            end
-            return true
-        end,
-        OnTextInput = {
-            function()
-                self:Set(self.editBox.text, self.editBox)
-            end
-        },
-        OnKeyPress = {
-            function()
-                self:Set(self.editBox.text, self.editBox)
-            end
-        },
-        OnFocusUpdate = {
-            function(...)
-                if not self.editBox.state.focused then
-                    self.ev:_OnEndChange(name, value)
-                else
-                    self.ev:_OnStartChange(name, value)
+                self.currentX = x
+                if math.abs(x - self.startX) > 4 then
+                    self.notClick = true
+                    self.ev:_OnStartChange(self.name)
                 end
+                if self.notClick then
+                    if shift then
+                        dx = dx * 0.1
+                    end
+                    local value = self.value + dx * self.step
+                    self:Set(value, obj)
+                end
+                Spring.WarpMouse(vsx/2, vsy/2)
+                SCEN_EDIT.SetMouseCursor("empty")
             end
-        },
-    }
-
-    self.components = {
-        self.label,
-        self.editBox,
+        end
     }
 end
 

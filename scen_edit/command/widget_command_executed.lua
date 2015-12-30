@@ -1,6 +1,15 @@
 WidgetCommandExecuted = AbstractCommand:extends{}
 WidgetCommandExecuted.className = "WidgetCommandExecuted"
 
+function UpdateViews()
+    if SCEN_EDIT.unitPropertyWindow then
+        SCEN_EDIT.unitPropertyWindow:CommandExecuted()
+    end
+    if SCEN_EDIT.collisionView then
+        SCEN_EDIT.collisionView:CommandExecuted()
+    end
+end
+
 function WidgetCommandExecuted:init(display)
     self.className = "WidgetCommandExecuted"
     self.display = display
@@ -8,12 +17,7 @@ end
 
 function WidgetCommandExecuted:execute()
     SCEN_EDIT.view.commandWindow:PushCommand(self.display)
-    if SCEN_EDIT.unitPropertyWindow then
-        SCEN_EDIT.unitPropertyWindow:CommandExecuted()
-    end
-    if SCEN_EDIT.collisionView then
-        SCEN_EDIT.collisionView:CommandExecuted()
-    end
+    UpdateViews()
 end
 
 WidgetCommandUndo = AbstractCommand:extends{}
@@ -25,6 +29,7 @@ end
 
 function WidgetCommandUndo:execute()
     SCEN_EDIT.view.commandWindow:UndoCommand()
+    UpdateViews()
 end
 
 WidgetCommandRedo = AbstractCommand:extends{}
@@ -36,6 +41,7 @@ end
 
 function WidgetCommandRedo:execute()
     SCEN_EDIT.view.commandWindow:RedoCommand()
+    UpdateViews()
 end
 
 -- undo stack has been cleared

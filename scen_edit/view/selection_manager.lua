@@ -31,31 +31,6 @@ function SelectionManager:ClearSelection()
     self.selectedFeatures = {}
 end
 
-function SelectionManager:SelectUnits(unitIds)
-    assert(type(unitIds) == "table" and #unitIds > 0)
-    self:ClearSelection()
-
-    self.selectedUnits = unitIds
-    Spring.SelectUnitArray(self.selectedUnits)
-end
-
-function SelectionManager:SelectFeatures(featureIds)
-    assert(type(featureIds) == "table" and #featureIds > 0)
-    self:ClearSelection()
-
-    self.selectedFeatures = featureIds
-end
-
-function SelectionManager:SelectAreas(areaIds)
-    assert(type(areaIds) == "table" and #areaIds > 0)
-    self:ClearSelection()
-
-    self.selectedAreas = areaIds
-    for _, areaId in pairs(self.selectedAreas) do
-        SCEN_EDIT.view.areaViews[areaId].selected = true
-    end
-end
-
 function SelectionManager:Select(selection)
     self:ClearSelection()
 

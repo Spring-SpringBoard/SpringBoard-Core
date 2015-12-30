@@ -228,11 +228,11 @@ function UnitPropertyWindow:CommandExecuted()
     end
 end
 
-function UnitPropertyWindow:OnStartChange(name, value)
+function UnitPropertyWindow:OnStartChange(name)
     SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
-function UnitPropertyWindow:OnEndChange(name, value)
+function UnitPropertyWindow:OnEndChange(name)
     SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 

@@ -87,6 +87,7 @@ function StateManager:DrawWorld()
     if SCEN_EDIT.cursor then
         Spring.SetMouseCursor(SCEN_EDIT.cursor)
     end
+
     return self:_SafeCall(function() 
         return self.currentState:DrawWorld()
     end)

@@ -340,11 +340,11 @@ function CollisionView:CommandExecuted()
     end
 end
 
-function CollisionView:OnStartChange(name, value)
+function CollisionView:OnStartChange(name)
     SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
-function CollisionView:OnEndChange(name, value)
+function CollisionView:OnEndChange(name)
     SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
