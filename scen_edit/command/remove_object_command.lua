@@ -3,7 +3,7 @@ RemoveObjectCommand.className = "RemoveObjectCommand"
 
 function RemoveObjectCommand:execute(bridge)
     local objectID = bridge.getObjectSpringID(self.objectModelID)
-    if bridge.spValidObject(objectID) then
+    if objectID and bridge.spValidObject(objectID) then
         self.old = bridge.s11n:Get(objectID)
         bridge.spDestroyObject(objectID, false, true)
     end

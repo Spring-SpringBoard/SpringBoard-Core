@@ -138,8 +138,8 @@ function gadget:Initialize()
     SCEN_EDIT.commandManager = CommandManager()
 
     rtModel = RuntimeModel()
-    SCEN_EDIT.rtModel = rtModel    
-    
+    SCEN_EDIT.rtModel = rtModel
+
     if devMode then
         local areaManagerListener = AreaManagerListenerGadget()
         SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
@@ -194,9 +194,9 @@ function gadget:GameFrame(frameNum)
     SCEN_EDIT.rtModel:GameFrame(frameNum)
 
     --wait a bit before populating everything (so luaui is loaded)
---     if SCEN_EDIT.loadFrame == frameNum then
---         Load()
---     end
+    if SCEN_EDIT.loadFrame == frameNum then
+        Load()
+    end
 end
 
 function gadget:Update()

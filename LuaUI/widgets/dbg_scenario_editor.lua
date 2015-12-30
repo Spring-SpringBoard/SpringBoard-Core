@@ -149,6 +149,7 @@ local function CheckConfig()
     end
 end
 
+local RELOAD_GADGETS = true
 function widget:Initialize()
     dumpConfig()
 
@@ -167,7 +168,7 @@ function widget:Initialize()
 
     -- FIXME: globallos needs to be enabled for terrain loading to be visible
     Spring.SendCommands("globallos")
-    if devMode then
+    if devMode and RELOAD_GADGETS then
         reloadGadgets() --uncomment for development
     end
 
@@ -233,6 +234,7 @@ function widget:Initialize()
         local viewAreaManagerListener = ViewAreaManagerListener()
         SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
     end
+    self._START_TIME = os.clock()
 end
 
 function reloadGadgets()
@@ -310,6 +312,12 @@ function widget:GameFrame(frameNum)
 end
 
 function widget:Update()
+    if self._START_TIME and os.clock() - self._START_TIME >= 1 then
+        if not RELOAD_GADGETS then
+            SCEN_EDIT.commandManager:execute(ResendCommand())
+        end
+        self._START_TIME = nil
+    end
     if SCEN_EDIT.view ~= nil then
         SCEN_EDIT.stateManager:Update()
         SCEN_EDIT.view:Update()

@@ -2,6 +2,7 @@ SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
 
 UnitPropertyWindow = EditorView:extends{}
 
+gravity = 1
 function UnitPropertyWindow:init()
     self:super("init")
     self.objectKeys = { "health" }
@@ -46,6 +47,24 @@ function UnitPropertyWindow:init()
             width = 150,
         })
     }))
+    self:AddControl("btn-stick-ground", {
+        Button:New {
+            caption = "Stick to ground",
+            width = 200,
+            height = 30,
+            OnClick = {
+                function()
+                    gravity = 1 - gravity
+                    if gravity == 0 then
+                        self:OnFieldChange("movectrl", true)
+                    else
+                        self:OnFieldChange("movectrl", false)
+                    end
+                    self:OnFieldChange("gravity", gravity)
+                end
+            }
+        },
+    })
 
     self:AddControl("angle-sep", {
         Label:New {
@@ -304,7 +323,7 @@ function UnitPropertyWindow:OnFieldChange(name, value)
                       z = math.sin(angleY) }
             name = "dir"
         end
-        if self:IsUnitKey(name) then
+        if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" then
             for _, objectID in pairs(selection.units) do
                 local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
                 table.insert(commands, SetUnitParamCommand(modelID, name, value))

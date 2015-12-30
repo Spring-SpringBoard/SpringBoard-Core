@@ -258,7 +258,6 @@ function ChoiceField:init(field)
     self:super('init', field)
     self.label = Label:New {
         caption = self.title,
-        x = 1,
         y = 10,
         autosize = true,
     }
@@ -268,7 +267,6 @@ function ChoiceField:init(field)
     end
     self.comboBox = ComboBox:New {
         x = self.VALUE_POS - 5,
-        y = 0,
         width = 150,
         height = 30,
         items = captions,
@@ -302,8 +300,6 @@ function BooleanField:init(field)
     self:super('init', field)
     self.checkBox = Checkbox:New {
         caption = self.title,
-        x = 1,
-        y = 0,
         width = self.VALUE_POS + 10,
         height = 20,
         checked = self.value,
@@ -371,8 +367,6 @@ function NumericField:init(field)
 
     self.editBox = EditBox:New {
         text = v,
-        x = 1,
-        y = 1,
         width = self.width,
         height = 30,
         KeyPress = function(...)
@@ -412,8 +406,6 @@ function NumericField:init(field)
     }
     self.button = Button:New {
         caption = "",
-        x = 1,
-        y = 1,
         width = self.width,
         height = 30,
         padding = {0, 0, 0, 0,},
@@ -528,15 +520,12 @@ function StringField:init(field)
     self:super('init', field)
     self.label = Label:New {
         caption = self.title,
-        x = 1,
-        y = 1,
         autosize = true,
         tooltip = self.tooltip,
     }
     self.editBox = EditBox:New {
         text = self.value,
         x = self.VALUE_POS,
-        y = 1,
         width = 100,
         height = 20,
         KeyPress = function(...)
@@ -583,14 +572,11 @@ function ColorbarsField:init(field)
     self:super('init', field)
     self.label = Label:New {
         caption = self.title,
-        x = 1,
-        y = 1,
         tooltip = self.tooltip,
     }
     self.colorbars = Colorbars:New {
         color = self.value,
         x = self.VALUE_POS,
-        y = 1,
         width = 225,
         height = 60,
         OnChange = {

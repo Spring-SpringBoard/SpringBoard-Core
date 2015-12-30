@@ -99,7 +99,7 @@ function BrushObjectState:Apply(bx, bz, button)
         end
     elseif button == 3 then
         for i = 1, #existing do
-            local cmd = self.bridge.RemoveObjectCommand(existing[i])
+            local cmd = self.bridge.RemoveObjectCommand(self.bridge.getObjectModelID(existing[i]))
             commands[#commands + 1] = cmd
         end
     end

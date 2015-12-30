@@ -1,21 +1,32 @@
 SetObjectParamCommand = UndoableCommand:extends{}
 SetObjectParamCommand.className = "SetObjectParamCommand"
 
+function NoGetField(name)
+    return name == "gravity" or name == "movectrl"
+end
+
 function SetObjectParamCommand:execute(bridge)
     local objectID = bridge.getObjectSpringID(self.objectModelID)
     if self.value == nil then
         local keys = {}
         for name, _ in pairs(self.key) do
-            table.insert(keys, name)
+            if not NoGetField(name) then
+                table.insert(keys, name)
+            end
         end
         self.old = bridge.s11n:Get(objectID, keys)
     else
-        self.old = bridge.s11n:Get(objectID, self.key)
+        if not NoGetField(self.key) then
+            self.old = bridge.s11n:Get(objectID, self.key)
+        end
     end
     bridge.s11n:Set(objectID, self.key, self.value)
 end
 
 function SetObjectParamCommand:unexecute(bridge)
+    if self.old == nil then
+        return
+    end
     local objectID = bridge.getObjectSpringID(self.objectModelID)
     if self.value == nil then
         bridge.s11n:Set(objectID, self.old)

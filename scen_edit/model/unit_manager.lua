@@ -60,21 +60,11 @@ function UnitManager:removeUnitByModelId(modelId)
 end
 
 function UnitManager:getSpringUnitId(modelUnitId)
-    local unitId = self.m2sUnitIdMapping[modelUnitId]
-    if unitId ~= nil then
-        return unitId
-    else
-        return modelUnitId
-    end
+    return self.m2sUnitIdMapping[modelUnitId]
 end
 
 function UnitManager:getModelUnitId(springUnitId)
-    local unitId = self.s2mUnitIdMapping[springUnitId]
-    if unitId ~= nil then
-        return unitId
-    else
-        return springUnitId
-    end
+    return self.s2mUnitIdMapping[springUnitId]
 end
 
 function UnitManager:setUnitModelId(unitId, modelId)
