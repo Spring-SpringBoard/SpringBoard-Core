@@ -29,7 +29,7 @@ function View:init()
 	self.commandWindow.window:Hide()
     self.modelShaders = ModelShaders()
 
---     self.teamSelector = TeamSelector()
+    self.teamSelector = TeamSelector()
 end
 
 function View:Update()

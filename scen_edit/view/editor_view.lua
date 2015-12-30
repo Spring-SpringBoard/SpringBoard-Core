@@ -110,11 +110,11 @@ function EditorView:_SetFieldVisible(name, visible)
 		if visible then
 			self.stackPanel:AddChild(ctrl)
 			ctrl._visible = true
-			--ctrl:Show()
+-- 			ctrl:Show()
 		else
 			self.stackPanel:RemoveChild(ctrl)
 			ctrl._visible = false
-			--ctrl:Hide()
+-- 			ctrl:Hide()
 		end
 	end
 end
@@ -137,19 +137,25 @@ function EditorView:SetInvisibleFields(...)
 		end
 	end
 
+    -- HACK: because we're Add/Removing items to the stackPanel instead of using Show/Hide on the control itself, we need to to execute a :_HackSetInvisibleFields later
+    for _, field in pairs(self.fields) do
+        if field._HackSetInvisibleFields then
+            field:_HackSetInvisibleFields(fields)
+        end
+    end
+
 	self.stackPanel:EnableRealign()
 	self:_MEGA_HACK()
 end
 
 function EditorView:AddField(field)
-    self.fields[field.name] = field
     field.ctrl = self:_AddControl(field.name, field.components)
-    -- HACK (this is when we process ._hidden fields as we can't Hide fields before they've been added to the stack panel)
-    for _, comp in pairs(field.components) do
-        if comp._hidden then
-            comp:Hide()
-        end
-    end
+    self:_AddField(field)
+    field:Added()
+end
+
+function EditorView:_AddField(field)
+    self.fields[field.name] = field
     field.ev = self
 end
 
@@ -230,10 +236,14 @@ function Field:Set(value, source)
     end
     self.inUpdate = nil
 end
+function Field:Added()
+end
+-- HACK: see above
+function Field:_HackSetInvisibleFields(fields)
+end
 
 ChoiceField = Field:extends{}
 function ChoiceField:Update(source)
-    -- HACK
     if source ~= self.comboBox then
         for i, id in pairs(self.comboBox.ids) do
             if id == self.value then
@@ -288,7 +298,7 @@ function BooleanField:Update(source)
     end
 end
 
-function BooleanField:AddBooleanProperty(field)
+function BooleanField:init(field)
     self:super('init', field)
     self.checkBox = Checkbox:New {
         caption = self.title,
@@ -319,9 +329,7 @@ end
 
 NumericField = Field:extends{}
 function NumericField:Update(source)
-    -- HACK
-    local v = tostring(self.value)
-    v = v:sub(1, math.min(#v, 6))
+    local v = string.format("%g", self.value)
     if source ~= self.editBox then
         self.editBox:SetText(v)
     end
@@ -351,20 +359,22 @@ function NumericField:Validate(value)
 end
 
 function NumericField:init(field)
+    self.width = 200
     self:super('init', field)
     if self.step == nil then
         self.step = 1
+        if self.minValue and self.maxValue then
+            self.step = (self.maxValue - self.minValue) / 200
+        end
     end
-    local v = tostring(self.value)
-    v = v:sub(1, math.min(#v, 6))
+    local v = string.format("%g", self.value)
 
     self.editBox = EditBox:New {
         text = v,
         x = 1,
         y = 1,
-        width = 200,
-        height = 20,
-        _hidden = true,
+        width = self.width,
+        height = 30,
         KeyPress = function(...)
             if not ParseKey(...) then
                 return Chili.EditBox.KeyPress(...)
@@ -404,7 +414,7 @@ function NumericField:init(field)
         caption = "",
         x = 1,
         y = 1,
-        width = 200,
+        width = self.width,
         height = 30,
         padding = {0, 0, 0, 0,},
         OnClick = {
@@ -503,9 +513,12 @@ function NumericField:init(field)
 	}
 end
 
+function NumericField:Added()
+    self.editBox:Hide()
+end
+
 StringField = Field:extends{}
 function StringField:Update(source)
-    -- HACK
     if source ~= self.editBox then
         self.editBox:SetText(self.value)
     end
@@ -582,7 +595,7 @@ function ColorbarsField:init(field)
         height = 60,
         OnChange = {
             function(obj, value)
-                self:Set(value, obj)
+                self:Set(value, self.colorbars)
             end
         },
     }
@@ -590,5 +603,52 @@ function ColorbarsField:init(field)
         self.label,
         self.colorbars,
     }
-    return field
+end
+
+GroupField = Field:extends{}
+local _GROUP_INDEX = 0
+
+function GroupField:init(fields)
+    self:super('init', {})
+    _GROUP_INDEX = _GROUP_INDEX + 1
+    self.name = "_groupField" .. tostring(_GROUP_INDEX)
+    self.fields = fields
+    self.components = {
+    }
+end
+
+function GroupField:Added()
+    for i, field in pairs(self.fields) do
+        self.ev:_AddField(field)
+        for _, comp in pairs(field.components) do
+            comp.x = comp.x + (i-1) * field.width + 5
+            self.ctrl:AddChild(comp)
+        end
+        field:Added()
+        field.visible = true
+    end
+end
+
+function GroupField:_HackSetInvisibleFields(fields)
+    for _, field in pairs(self.fields) do
+        local visible = field.visible
+        local found = false
+        for _, name in pairs(fields) do
+            if name == field.name and visible then
+                field.visible = false
+                for _, comp in pairs(field.components) do
+                    self.ctrl:RemoveChild(comp)
+                end
+            end
+        end
+        if not visible and not found then
+            field.visible = true
+            for _, comp in pairs(field.components) do
+                self.ctrl:AddChild(comp)
+                if comp.hidden then
+                    comp:Hide()
+                end
+            end
+        end
+    end
 end

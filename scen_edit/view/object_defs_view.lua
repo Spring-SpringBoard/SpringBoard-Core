@@ -4,25 +4,9 @@ ObjectDefsView = EditorView:extends{}
 
 function ObjectDefsView:init()
     self:super("init")
-    self.type = nil
 
-    self.btnSet = TabbedPanelButton({
-        x = 0,
-        y = 0,
-        tooltip = "Set",
-        children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
-            TabbedPanelLabel({ caption = "Set" }),
-        },
-        OnClick = {
-            function()
-                self.type = "set"
-                self:EnterState()
-            end
-        },
-    })
     self.btnBrush = TabbedPanelButton({
-        x = 70,
+        x = 00,
         y = 0,
         tooltip = "Brush",
         children = {
@@ -32,6 +16,21 @@ function ObjectDefsView:init()
         OnClick = {
             function()
                 self.type = "brush"
+                self:EnterState()
+            end
+        },
+    })
+    self.btnSet = TabbedPanelButton({
+        x = 70,
+        y = 0,
+        tooltip = "Set",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
+            TabbedPanelLabel({ caption = "Set" }),
+        },
+        OnClick = {
+            function()
+                self.type = "set"
                 self:EnterState()
             end
         },
@@ -150,6 +149,8 @@ function ObjectDefsView:init()
 
     self:Finalize(children)
     self:SetInvisibleFields("size", "spread", "noise", "amount")
+    self.type = "brush"
+    self:EnterState()
 end
 
 function ObjectDefsView:IsValidTest(state)

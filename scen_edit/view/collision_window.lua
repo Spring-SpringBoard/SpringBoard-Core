@@ -9,12 +9,24 @@ function CollisionView:init()
         btnClose,
     }
 
-    self:AddField(BooleanField({
-        name = "enabled", 
-        value = true,
-        title = "Enabled:",
-        tooltip = "Collision enabled",
-    }))
+    self:AddControl("btn-show-vol", {
+        Button:New {
+            caption = "Show volume",
+            width = 200,
+            height = 40,
+            OnClick = {
+                function()
+                    Spring.SendCommands('debugcolvol')
+                end
+            }
+        },
+    })
+--     self:AddField(BooleanField({
+--         name = "enabled", 
+--         value = true,
+--         title = "Enabled:",
+--         tooltip = "Collision enabled",
+--     }))
     self:AddField(ChoiceField({
         name = "vType",
         items = {
@@ -33,18 +45,6 @@ function CollisionView:init()
         },
         title = "Axis:"
     }))
-    self:AddControl("btn-show-vol", {
-        Button:New {
-            caption = "Show volume",
-            width = 200,
-            height = 40,
-            OnClick = {
-                function()
-                    Spring.SendCommands('debugcolvol')
-                end
-            }
-        },
-    })
     self:AddControl("scale-sep", {
         Label:New {
             caption = "Scale",
@@ -54,29 +54,34 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddField(NumericField({
-        name = "scaleX", 
-        title = "X:",
-        tooltip = "Scale (x)",
-        minValue = 0,
-        value = 1,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "scaleY", 
-        title = "Y:",
-        tooltip = "Scale (y)",
-        minValue = 0,
-        value = 1,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "scaleZ", 
-        title = "Z:",
-        tooltip = "Scale (z)",
-        minValue = 0,
-        value = 1,
-        step = 1,
+    self:AddField(GroupField({
+        NumericField({
+            name = "scaleX", 
+            title = "X:",
+            tooltip = "Scale (x)",
+            minValue = 0,
+            value = 1,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "scaleY", 
+            title = "Y:",
+            tooltip = "Scale (y)",
+            minValue = 0,
+            value = 1,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "scaleZ", 
+            title = "Z:",
+            tooltip = "Scale (z)",
+            minValue = 0,
+            value = 1,
+            step = 1,
+            width = 150,
+        })
     }))
 
     self:AddControl("offset-sep", {
@@ -88,26 +93,31 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddField(NumericField({
-        name = "offsetX", 
-        title = "X:",
-        tooltip = "Offset (x)",
-        value = 0,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "offsetY", 
-        title = "Y:",
-        tooltip = "Offset (y)",
-        value = 0,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "offsetZ", 
-        title = "Z:",
-        tooltip = "Offset (z)",
-        value = 0,
-        step = 1,
+    self:AddField(GroupField({
+        NumericField({
+            name = "offsetX", 
+            title = "X:",
+            tooltip = "Offset (x)",
+            value = 0,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "offsetY", 
+            title = "Y:",
+            tooltip = "Offset (y)",
+            value = 0,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "offsetZ", 
+            title = "Z:",
+            tooltip = "Offset (z)",
+            value = 0,
+            step = 1,
+            width = 150,
+        }),
     }))
     self:AddControl("rad-height-sep", {
         Label:New {
@@ -118,22 +128,26 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddField(NumericField({
-        name = "radius", 
-        title = "Radius:",
-        tooltip = "Radius",
-        value = 0,
-        minValue = 0,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "height", 
-        title = "Height:",
-        tooltip = "Height",
-        value = 0,
-        minValue = 0,
-        maxValue = 256,
-        step = 1,
+    self:AddField(GroupField({
+        NumericField({
+            name = "radius", 
+            title = "Radius:",
+            tooltip = "Radius",
+            value = 0,
+            minValue = 0,
+            step = 1,
+            width = 225,
+        }),
+        NumericField({
+            name = "height", 
+            title = "Height:",
+            tooltip = "Height",
+            value = 0,
+            minValue = 0,
+            maxValue = 256,
+            step = 1,
+            width = 225,
+        })
     }))
     self:AddControl("center-height-sep", {
         Label:New {
@@ -144,26 +158,31 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddField(NumericField({
-        name = "mpx",
-        title = "X:",
-        tooltip = "Model position (x)",
-        value = 1,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "mpy",
-        title = "Y:",
-        tooltip = "Model position (y)",
-        value = 1,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "mpz",
-        title = "Z:",
-        tooltip = "Model position (z)",
-        value = 1,
-        step = 1,
+    self:AddField(GroupField({
+        NumericField({
+            name = "mpx",
+            title = "X:",
+            tooltip = "Model position (x)",
+            value = 1,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "mpy",
+            title = "Y:",
+            tooltip = "Model position (y)",
+            value = 1,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "mpz",
+            title = "Z:",
+            tooltip = "Model position (z)",
+            value = 1,
+            step = 1,
+            width = 150,
+        })
     }))
     self:AddControl("ap-height-sep", {
         Label:New {
@@ -174,26 +193,31 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddField(NumericField({
-        name = "apx",
-        title = "X:",
-        tooltip = "Aim position (x)",
-        value = 1,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "apy",
-        title = "Y:",
-        tooltip = "Aim position (y)",
-        value = 1,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "apz",
-        title = "Z:",
-        tooltip = "Aim position (z)",
-        value = 1,
-        step = 1,
+    self:AddField(GroupField({
+        NumericField({
+            name = "apx",
+            title = "X:",
+            tooltip = "Aim position (x)",
+            value = 1,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "apy",
+            title = "Y:",
+            tooltip = "Aim position (y)",
+            value = 1,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "apz",
+            title = "Z:",
+            tooltip = "Aim position (z)",
+            value = 1,
+            step = 1,
+            width = 150,
+        })
     }))
     self:AddControl("blocking-height-sep", {
         Label:New {
@@ -282,7 +306,7 @@ function CollisionView:OnSelectionChanged(selection)
         self:Set("offsetX", collision.offsetX)
         self:Set("offsetY", collision.offsetY)
         self:Set("offsetZ", collision.offsetZ)
-        self:Set("enabled", not collision.disabled)
+--         self:Set("enabled", not collision.disabled)
         local name = self.fields["vType"].comboBox.items[collision.vType]
         self:Set("vType", name)
 
@@ -340,36 +364,36 @@ function CollisionView:OnFieldChange(name, value)
     if not self.selectionChanging then
         if vType == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
             if name ~= "scaleX" then
-                self:SetNumericField("scaleX", value)
+                self:Set("scaleX", value)
             end
             if name ~= "scaleY" then
-                self:SetNumericField("scaleY", value)
+                self:Set("scaleY", value)
             end
             if name ~= "scaleZ" then
-                self:SetNumericField("scaleZ", value)
+                self:Set("scaleZ", value)
             end
         end
         if vType == "Cylinder" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
             if axis == "X" then
                 if name == "scaleX" then
-                    self:SetNumericField("scaleZ", value)
+                    self:Set("scaleZ", value)
                 end
                 if name == "scaleZ" then
-                    self:SetNumericField("scaleX", value)
+                    self:Set("scaleX", value)
                 end
             elseif axis == "Y" then
                 if name == "scaleX" then
-                    self:SetNumericField("scaleY", value)
+                    self:Set("scaleY", value)
                 end
                 if name == "scaleY" then
-                    self:SetNumericField("scaleX", value)
+                    self:Set("scaleX", value)
                 end
             elseif axis == "Z" then
                 if name == "scaleY" then
-                    self:SetNumericField("scaleZ", value)
+                    self:Set("scaleZ", value)
                 end
                 if name == "scaleZ" then
-                    self:SetNumericField("scaleY", value)
+                    self:Set("scaleY", value)
                 end
             end
         end

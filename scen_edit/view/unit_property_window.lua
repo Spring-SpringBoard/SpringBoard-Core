@@ -16,31 +16,37 @@ function UnitPropertyWindow:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddField(NumericField({
-        name = "posX",
-        title = "X:",
-        tooltip = "Position (x)",
-        value = 1,
-        minValue = 0,
-        maxValue = Game.mapSizeX,
-        step = 1,
+    self:AddField(GroupField({
+        NumericField({
+            name = "posX",
+            title = "X:",
+            tooltip = "Position (x)",
+            value = 1,
+            minValue = 0,
+            maxValue = Game.mapSizeX,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "posY",
+            title = "Y:",
+            tooltip = "Position (y)",
+            value = 0,
+            step = 1,
+            width = 150,
+        }),
+        NumericField({
+            name = "posZ",
+            title = "Z:",
+            tooltip = "Position (z)",
+            value = 1,
+            minValue = 0,
+            maxValue = Game.mapSizeZ,
+            step = 1,
+            width = 150,
+        })
     }))
-    self:AddField(NumericField({
-        name = "posY",
-        title = "Y:",
-        tooltip = "Position (y)",
-        value = 0,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "posZ",
-        title = "Z:",
-        tooltip = "Position (z)",
-        value = 1,
-        minValue = 0,
-        maxValue = Game.mapSizeZ,
-        step = 1,
-    }))
+
     self:AddControl("angle-sep", {
         Label:New {
             caption = "Angle",
@@ -50,23 +56,27 @@ function UnitPropertyWindow:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddField(NumericField({
-        name = "angleX",
-        title = "X:",
-        tooltip = "X angle",
-        value = 1,
-        minValue = -180,
-        maxValue = 180,
-        step = 1,
-    }))
-    self:AddField(NumericField({
-        name = "angleY",
-        title = "Y:",
-        tooltip = "Y angle",
-        value = 0,
-        minValue = -180,
-        maxValue = 180,
-        step = 1,
+    self:AddField(GroupField({
+        NumericField({
+            name = "angleX",
+            title = "X:",
+            tooltip = "X angle",
+            value = 1,
+            minValue = -180,
+            maxValue = 180,
+            step = 1,
+            width = 225,
+        }),
+        NumericField({
+            name = "angleY",
+            title = "Y:",
+            tooltip = "Y angle",
+            value = 0,
+            minValue = -180,
+            maxValue = 180,
+            step = 1,
+            width = 225,
+        }),
     }))
 --     self:AddNumericProperty({
 --         name = "angleZ",
@@ -77,22 +87,25 @@ function UnitPropertyWindow:init()
 --         maxValue = 180,
 --         step = 1,
 --     })
-    self:AddField(NumericField({
-        name = "health",
-        title = "Health:",
-        tooltip = "Health",
-        minValue = 1,
-        value = 1,
-        step = 10,
-    }))
-
-    self:AddField(NumericField({
-        name = "maxHealth",
-        title = "Max health:",
-        tooltip = "Max health",
-        minValue = 1,
-        value = 1,
-        step = 10,
+    self:AddField(GroupField({
+        NumericField({
+            name = "health",
+            title = "Health:",
+            tooltip = "Health",
+            minValue = 1,
+            value = 1,
+            step = 10,
+            width = 225,
+        }),
+        NumericField({
+            name = "maxHealth",
+            title = "Max health:",
+            tooltip = "Max health",
+            minValue = 1,
+            value = 1,
+            step = 10,
+            width = 225,
+        })
     }))
 
     self:AddField(StringField({
@@ -117,7 +130,7 @@ function UnitPropertyWindow:init()
         tooltip = "Experience",
         minValue = 0,
         value = 1,
-        step = 1,
+        step = 0.01,
     }))
 
     self:AddField(NumericField({

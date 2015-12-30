@@ -222,8 +222,8 @@ function TerrainEditorView:init()
     self:AddField(NumericField({
         name = "texScale",
         value = 2,
-        minValue = 0.1,
-        maxValue = 50,
+        minValue = 0.01,
+        step = 0.05,
         title = "Texture scale:",
         tooltip = "Texture sampling rate (larger number means higher frequency)",
     }))
@@ -285,11 +285,11 @@ function TerrainEditorView:init()
         tooltip = "The greater the value, the more transparent it will be.",
     }))
 	
-    self:AddColorbarsProperty({
+    self:AddField(ColorbarsField({
         name = "diffuseColor",
         title = "Color: ",
         value = {1,1,1,1},
-    })
+    }))
     self:Update("size")
     self:Update("mode")
     self:Update("diffuseColor")
