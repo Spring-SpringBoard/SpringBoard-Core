@@ -37,10 +37,9 @@ function sunflower(n, alpha)   --  example: n=500, alpha=2
     local phi = (math.sqrt(5)+1) / 2           -- golden ratio
     local points = {}
     for k = 1, n do
-        r = radius(k,n,b);
-        theta = 2 * math.pi * k / (phi * phi);
+        r = radius(k,n,b)
+        theta = 2 * math.pi * k / (phi * phi)
         table.insert(points, {r*math.cos(theta), r*math.sin(theta)})
-        --plot(r*cos(theta), r*sin(theta), 'r*');
     end
     return points
 end
@@ -66,7 +65,9 @@ function BrushObjectState:Apply(bx, bz, button)
     local commands = {}
     if button == 1 then
         if self.objectDefIDs and #self.objectDefIDs > 0 then
-            local numPoints = math.ceil(self.size * self.size / self.spread / self.spread)
+            local spread = self.spread * 100
+            local spreadSqrt = math.sqrt(spread)
+            local numPoints = math.ceil(self.size * self.size / spread)
             local points = sunflower(numPoints, 2)   --  example: n=500, alpha=2
             for i = 1, #points do
                 local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
@@ -75,7 +76,7 @@ function BrushObjectState:Apply(bx, bz, button)
                 x, z = x + math.random() * self.noise - self.noise / 2, z + math.random() * self.noise - self.noise / 2
                 x, z = math.max(0, math.min(Game.mapSizeX, x)), math.max(0, math.min(Game.mapSizeZ, z))
                 local alreadyPlaced = false
-                for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(x, z, self.spread - self.tolerance)) do
+                for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(x, z, spreadSqrt - self.tolerance)) do
                     if self:FilterObject(objectID) then
                         alreadyPlaced = true
                         break

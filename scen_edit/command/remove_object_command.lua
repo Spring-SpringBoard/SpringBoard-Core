@@ -3,12 +3,16 @@ RemoveObjectCommand.className = "RemoveObjectCommand"
 
 function RemoveObjectCommand:execute(bridge)
     local objectID = bridge.getObjectSpringID(self.objectModelID)
-    self.old = bridge.s11n:Get(objectID)
-    bridge.spDestroyObject(objectID, false, true)
+    if bridge.spValidObject(objectID) then
+        self.old = bridge.s11n:Get(objectID)
+        bridge.spDestroyObject(objectID, false, true)
+    end
 end
 function RemoveObjectCommand:unexecute(bridge)
-    local objectID = bridge.s11n:Add(self.old)
-    bridge.setObjectModelID(objectID, self.objectModelID)
+    if self.old then
+        local objectID = bridge.s11n:Add(self.old)
+        bridge.setObjectModelID(objectID, self.objectModelID)
+    end
 end
 
 RemoveUnitCommand = RemoveObjectCommand:extends{}

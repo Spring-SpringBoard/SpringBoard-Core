@@ -176,10 +176,10 @@ function EditorView:Set(name, value)
     local field = self.fields[name]
     field:Set(value)
 end
-function EditorView:Update(name)
+function EditorView:Update(name, _source)
     local field = self.fields[name]
 
-    field:Update()
+    field:Update(_source)
 
     -- update listeners and current state
     self:OnFieldChange(field.name, field.value)
