@@ -99,8 +99,8 @@ function SelectionManager:DrawWorldPreUnit()
         if Spring.ValidFeatureID(featureId) then
             local bx, _, bz = Spring.GetFeaturePosition(featureId)
             local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
-            local minx, maxx = featureDef.minx or -10, featureDef.maxx or 10
-            local minz, maxz = featureDef.minz or -10, featureDef.maxz or 10
+            local minx, maxx = featureDef.model.minx or -10, featureDef.model.maxx or 10
+            local minz, maxz = featureDef.model.minz or -10, featureDef.model.maxz or 10
             local x1, z1 = bx + minx - 5, bz + minz + 5
             local x2, z2 = bx + maxx - 5, bz + maxz + 5
             gl.BeginEnd(GL.LINE_STRIP, function()
