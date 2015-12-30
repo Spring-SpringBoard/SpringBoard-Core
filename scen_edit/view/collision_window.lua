@@ -1,6 +1,6 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
 
-CollisionView = MapEditorView:extends{}
+CollisionView = EditorView:extends{}
 
 function CollisionView:init()
     self:super("init")
@@ -9,13 +9,13 @@ function CollisionView:init()
         btnClose,
     }
 
-    self:AddBooleanProperty({
+    self:AddField(BooleanField({
         name = "enabled", 
         value = true,
         title = "Enabled:",
         tooltip = "Collision enabled",
-    })
-    self:AddChoiceProperty({
+    }))
+    self:AddField(ChoiceField({
         name = "vType",
         items = {
             "Cylinder",
@@ -23,8 +23,8 @@ function CollisionView:init()
             "Sphere",
         },
         title = "Type:"
-    })
-    self:AddChoiceProperty({
+    }))
+    self:AddField(ChoiceField({
         name = "axis",
         items = {
             "X",
@@ -32,7 +32,7 @@ function CollisionView:init()
             "Z",
         },
         title = "Axis:"
-    })
+    }))
     self:AddControl("btn-show-vol", {
         Button:New {
             caption = "Show volume",
@@ -54,30 +54,30 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "scaleX", 
         title = "X:",
         tooltip = "Scale (x)",
         minValue = 0,
         value = 1,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "scaleY", 
         title = "Y:",
         tooltip = "Scale (y)",
         minValue = 0,
         value = 1,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "scaleZ", 
         title = "Z:",
         tooltip = "Scale (z)",
         minValue = 0,
         value = 1,
         step = 1,
-    })
+    }))
 
     self:AddControl("offset-sep", {
         Label:New {
@@ -88,27 +88,27 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "offsetX", 
         title = "X:",
         tooltip = "Offset (x)",
         value = 0,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "offsetY", 
         title = "Y:",
         tooltip = "Offset (y)",
         value = 0,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "offsetZ", 
         title = "Z:",
         tooltip = "Offset (z)",
         value = 0,
         step = 1,
-    })
+    }))
     self:AddControl("rad-height-sep", {
         Label:New {
             caption = "Radius",
@@ -118,15 +118,15 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "radius", 
         title = "Radius:",
         tooltip = "Radius",
         value = 0,
         minValue = 0,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "height", 
         title = "Height:",
         tooltip = "Height",
@@ -134,7 +134,7 @@ function CollisionView:init()
         minValue = 0,
         maxValue = 256,
         step = 1,
-    })
+    }))
     self:AddControl("center-height-sep", {
         Label:New {
             caption = "Center",
@@ -144,27 +144,27 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "mpx",
         title = "X:",
         tooltip = "Model position (x)",
         value = 1,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "mpy",
         title = "Y:",
         tooltip = "Model position (y)",
         value = 1,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "mpz",
         title = "Z:",
         tooltip = "Model position (z)",
         value = 1,
         step = 1,
-    })
+    }))
     self:AddControl("ap-height-sep", {
         Label:New {
             caption = "Aim",
@@ -174,27 +174,27 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "apx",
         title = "X:",
         tooltip = "Aim position (x)",
         value = 1,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "apy",
         title = "Y:",
         tooltip = "Aim position (y)",
         value = 1,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "apz",
         title = "Z:",
         tooltip = "Aim position (z)",
         value = 1,
         step = 1,
-    })
+    }))
     self:AddControl("blocking-height-sep", {
         Label:New {
             caption = "Blocking",
@@ -204,48 +204,48 @@ function CollisionView:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddBooleanProperty({
+    self:AddField(BooleanField({
         name = "isBlocking", 
         value = true,
         title = "Blocking:",
         tooltip = "Is blocking",
-    })
-    self:AddBooleanProperty({
+    }))
+    self:AddField(BooleanField({
         name = "isSolidObjectCollidable", 
         value = true,
         title = "Solid object collidable:",
         tooltip = "Is solid object collidable",
-    })
-    self:AddBooleanProperty({
+    }))
+    self:AddField(BooleanField({
         name = "isProjectileCollidable", 
         value = true,
         title = "Projectile collidable:",
         tooltip = "Is projectile collidable",
-    })
-    self:AddBooleanProperty({
+    }))
+    self:AddField(BooleanField({
         name = "isRaySegmentCollidable", 
         value = true,
         title = "Ray segment collidable:",
         tooltip = "Is ray segment collidable",
-    })
-    self:AddBooleanProperty({
+    }))
+    self:AddField(BooleanField({
         name = "crushable", 
         value = true,
         title = "Crushable:",
         tooltip = "Is crushable",
-    })
-    self:AddBooleanProperty({
+    }))
+    self:AddField(BooleanField({
         name = "blockEnemyPushing", 
         value = true,
         title = "Block enemy pushing:",
         tooltip = "Blocks enemy pushing",
-    })
-    self:AddBooleanProperty({
+    }))
+    self:AddField(BooleanField({
         name = "blockHeightChanges", 
         value = true,
         title = "Block height changes",
         tooltip = "Blocks height changes",
-    })
+    }))
 
     table.insert(children, 
         ScrollPanel:New {
@@ -276,36 +276,36 @@ function CollisionView:OnSelectionChanged(selection)
     end
     if objectID then
         local collision = bridge.s11n:Get(objectID, "collision")
-        self.fields["scaleX"].Set(collision.scaleX)
-        self.fields["scaleY"].Set(collision.scaleY)
-        self.fields["scaleZ"].Set(collision.scaleZ)
-        self.fields["offsetX"].Set(collision.offsetX)
-        self.fields["offsetY"].Set(collision.offsetY)
-        self.fields["offsetZ"].Set(collision.offsetZ)
-        self.fields["enabled"].Set(not collision.disabled)
+        self:Set("scaleX",  collision.scaleX)
+        self:Set("scaleY",  collision.scaleY)
+        self:Set("scaleZ",  collision.scaleZ)
+        self:Set("offsetX", collision.offsetX)
+        self:Set("offsetY", collision.offsetY)
+        self:Set("offsetZ", collision.offsetZ)
+        self:Set("enabled", not collision.disabled)
         local name = self.fields["vType"].comboBox.items[collision.vType]
-        self.fields["vType"].Set(name)
+        self:Set("vType", name)
 
         local radiusHeight = bridge.s11n:Get(objectID, "radiusHeight")
-        self.fields["radius"].Set(radiusHeight.radius)
-        self.fields["height"].Set(radiusHeight.height)
+        self:Set("radius", radiusHeight.radius)
+        self:Set("height", radiusHeight.height)
 
         local midAimPos = bridge.s11n:Get(objectID, "midAimPos")
-        self.fields["mpx"].Set(midAimPos.mid.x)
-        self.fields["mpy"].Set(midAimPos.mid.y)
-        self.fields["mpz"].Set(midAimPos.mid.z)
-        self.fields["apx"].Set(midAimPos.aim.x)
-        self.fields["apy"].Set(midAimPos.aim.y)
-        self.fields["apz"].Set(midAimPos.aim.z)
+        self:Set("mpx", midAimPos.mid.x)
+        self:Set("mpy", midAimPos.mid.y)
+        self:Set("mpz", midAimPos.mid.z)
+        self:Set("apx", midAimPos.aim.x)
+        self:Set("apy", midAimPos.aim.y)
+        self:Set("apz", midAimPos.aim.z)
 
         local blocking = bridge.s11n:Get(objectID, "blocking")
-        self.fields["isBlocking"].Set(                   blocking.isBlocking)
-        self.fields["isSolidObjectCollidable"].Set(      blocking.isSolidObjectCollidable)
-        self.fields["isProjectileCollidable"].Set(       blocking.isProjectileCollidable)
-        self.fields["isRaySegmentCollidable"].Set(       blocking.isRaySegmentCollidable)
-        self.fields["crushable"].Set(                    blocking.crushable)
-        self.fields["blockEnemyPushing"].Set(            blocking.blockEnemyPushing)
-        self.fields["blockHeightChanges"].Set(           blocking.blockHeightChanges)
+        self:Set("isBlocking",                    blocking.isBlocking)
+        self:Set("isSolidObjectCollidable",       blocking.isSolidObjectCollidable)
+        self:Set("isProjectileCollidable",        blocking.isProjectileCollidable)
+        self:Set("isRaySegmentCollidable",        blocking.isRaySegmentCollidable)
+        self:Set("crushable",                     blocking.crushable)
+        self:Set("blockEnemyPushing",             blocking.blockEnemyPushing)
+        self:Set("blockHeightChanges",            blocking.blockHeightChanges)
     end
     self.selectionChanging = false
 end

@@ -1,6 +1,6 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
 
-UnitPropertyWindow = MapEditorView:extends{}
+UnitPropertyWindow = EditorView:extends{}
 
 function UnitPropertyWindow:init()
     self:super("init")
@@ -16,31 +16,31 @@ function UnitPropertyWindow:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddNumericProperty({
-        name = "posX", 
+    self:AddField(NumericField({
+        name = "posX",
         title = "X:",
         tooltip = "Position (x)",
         value = 1,
         minValue = 0,
         maxValue = Game.mapSizeX,
         step = 1,
-    })
-    self:AddNumericProperty({
-        name = "posY", 
+    }))
+    self:AddField(NumericField({
+        name = "posY",
         title = "Y:",
         tooltip = "Position (y)",
         value = 0,
         step = 1,
-    })
-    self:AddNumericProperty({
-        name = "posZ", 
+    }))
+    self:AddField(NumericField({
+        name = "posZ",
         title = "Z:",
         tooltip = "Position (z)",
         value = 1,
         minValue = 0,
         maxValue = Game.mapSizeZ,
         step = 1,
-    })
+    }))
     self:AddControl("angle-sep", {
         Label:New {
             caption = "Angle",
@@ -50,24 +50,24 @@ function UnitPropertyWindow:init()
             width = self.VALUE_POS,
         }
     })
-    self:AddNumericProperty({
-        name = "angleX", 
+    self:AddField(NumericField({
+        name = "angleX",
         title = "X:",
         tooltip = "X angle",
         value = 1,
         minValue = -180,
         maxValue = 180,
         step = 1,
-    })
-    self:AddNumericProperty({
-        name = "angleY", 
+    }))
+    self:AddField(NumericField({
+        name = "angleY",
         title = "Y:",
         tooltip = "Y angle",
         value = 0,
         minValue = -180,
         maxValue = 180,
         step = 1,
-    })
+    }))
 --     self:AddNumericProperty({
 --         name = "angleZ",
 --         title = "Z:",
@@ -77,57 +77,57 @@ function UnitPropertyWindow:init()
 --         maxValue = 180,
 --         step = 1,
 --     })
-    self:AddNumericProperty({
-        name = "health", 
+    self:AddField(NumericField({
+        name = "health",
         title = "Health:",
         tooltip = "Health",
         minValue = 1,
         value = 1,
         step = 10,
-    })
+    }))
 
-    self:AddNumericProperty({
-        name = "maxHealth", 
+    self:AddField(NumericField({
+        name = "maxHealth",
         title = "Max health:",
         tooltip = "Max health",
         minValue = 1,
         value = 1,
         step = 10,
-    })
+    }))
 
-    self:AddStringProperty({
-        name = "tooltip", 
+    self:AddField(StringField({
+        name = "tooltip",
         title = "Tooltip:",
         tooltip = "Tooltip",
         value = "",
-    })
+    }))
 
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "stockpile",
         title = "Stockpile:",
         tooltip = "Stockpile",
         minValue = 0,
         value = 1,
         step = 1,
-    })
+    }))
 
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "experience",
         title = "Experience:",
         tooltip = "Experience",
         minValue = 0,
         value = 1,
         step = 1,
-    })
+    }))
 
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "fuel",
         title = "Fuel:",
         tooltip = "Fuel",
         minValue = 0,
         value = 1,
         step = 1,
-    })
+    }))
 
     self.rules = {}
     self.ruleEditBoxes = {}
@@ -256,19 +256,19 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
     if objectID then
         for _, key in pairs(keys) do
             local value = bridge.s11n:Get(objectID, key)
-            self.fields[key].Set(value)
+            self:Set(key, value)
         end
         local pos = bridge.s11n:Get(objectID, "pos")
-        self.fields["posX"].Set(pos.x)
-        self.fields["posY"].Set(pos.y)
-        self.fields["posZ"].Set(pos.z)
+        self:Set("posX", pos.x)
+        self:Set("posY", pos.y)
+        self:Set("posZ", pos.z)
         local dir = bridge.s11n:Get(objectID, "dir")
         local dirX, dirY, dirZ = bridge.spGetObjectDirection(objectID)
 
         local angleY = math.asin(dirZ)
         local angleX = math.acos(dirX / math.cos(angleY))
-        self.fields["angleX"].Set(math.deg(angleX))
-        self.fields["angleY"].Set(math.deg(angleY))
+        self:Set("angleX", math.deg(angleX))
+        self:Set("angleY", math.deg(angleY))
     end
     self.selectionChanging = false
 end

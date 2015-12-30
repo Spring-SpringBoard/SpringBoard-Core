@@ -1,7 +1,7 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
 SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "folder_view.lua")
 
-TerrainEditorView = MapEditorView:extends{}
+TerrainEditorView = EditorView:extends{}
 
 function TerrainEditorView:init()
     self:super("init")
@@ -161,7 +161,7 @@ function TerrainEditorView:init()
         },
     })
 
-    self:AddChoiceProperty({
+    self:AddField(ChoiceField({
         name = "mode",
         items = {
             "Normal",
@@ -184,66 +184,66 @@ function TerrainEditorView:init()
             "ColorDodge",
         },
         title = "Mode:"
-    })
-	self:AddBooleanProperty({
+    }))
+	self:AddField(BooleanField({
         name = "diffuseEnabled", 
         value = true,
         title = "Diffuse:",
         tooltip = "Diffuse texture",
-    })
-	self:AddBooleanProperty({
+    }))
+	self:AddField(BooleanField({
         name = "specularEnabled", 
         value = true,
         title = "Specular:",
         tooltip = "Specular texture",
-    })
-	self:AddBooleanProperty({
+    }))
+	self:AddField(BooleanField({
         name = "normalEnabled", 
         value = true,
         title = "Normal:",
         tooltip = "Normal texture",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "size", 
         value = 100, 
         minValue = 10, 
         maxValue = 5000, 
         title = "Size:",
         tooltip = "Size of the paint brush",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "rotation",
         value = 0,
         minValue = 0,
         maxValue = 360,
         title = "Texture rotation:",
         tooltip = "Rotation of the texture",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "texScale",
         value = 2,
         minValue = 0.1,
         maxValue = 50,
         title = "Texture scale:",
         tooltip = "Texture sampling rate (larger number means higher frequency)",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "texOffsetX",
         value = 0,
         minValue = -1024,
         maxValue = 1024,
         title = "Texture offset X:",
         tooltip = "Texture offset X",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "texOffsetY",
         value = 0,
         minValue = -1024,
         maxValue = 1024,
         title = "Texture offset Y:",
         tooltip = "Texture offset Y",
-    })
---     self:AddNumericProperty({
+    }))
+--     self:AddField(NumericField({
 --         name = "detailTexScale",
 --         value = 0.2,
 --         minValue = 0.01,
@@ -251,48 +251,48 @@ function TerrainEditorView:init()
 --         title = "Detail texture scale:",
 --         tooltip = "Detail texture sampling rate (larger number means higher frequency)",
 --     })
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "blendFactor",
         value = 1,
         minValue = 0.0,
         maxValue = 1,
         title = "Blend:",
         tooltip = "Proportion of texture to be applied",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "falloffFactor",
         value = 0.3,
         minValue = 0.0,
         maxValue = 1,
         title = "Falloff:",
         tooltip = "Texture painting fade out (1 means crisp)",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "featureFactor",
         value = 1,
         minValue = 0.0,
         maxValue = 1,
         title = "Feature:",
         tooltip = "Feature filtering (1 means no filter filtering)",
-    })
+    }))
 	
-	self:AddNumericProperty({
+	self:AddField(NumericField({
         name = "voidFactor",
         value = 0,
         minValue = 0.0,
         maxValue = 1,
         title = "Transparency:",
         tooltip = "The greater the value, the more transparent it will be.",
-    })
+    }))
 	
     self:AddColorbarsProperty({
         name = "diffuseColor",
         title = "Color: ",
         value = {1,1,1,1},
     })
-    self:UpdateNumericField("size")
-    self:UpdateChoiceField("mode")
-    self:UpdateColorbarsField("diffuseColor")
+    self:Update("size")
+    self:Update("mode")
+    self:Update("diffuseColor")
 
 
 	local children = {

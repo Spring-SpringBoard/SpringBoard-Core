@@ -1,6 +1,6 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
 
-ObjectDefsView = MapEditorView:extends{}
+ObjectDefsView = EditorView:extends{}
 
 function ObjectDefsView:init()
     self:super("init")
@@ -18,7 +18,6 @@ function ObjectDefsView:init()
             function()
                 self.type = "set"
                 self:EnterState()
-                self:SetInvisibleFields("size", "spread")
             end
         },
     })
@@ -34,7 +33,6 @@ function ObjectDefsView:init()
             function()
                 self.type = "brush"
                 self:EnterState()
-                self:SetInvisibleFields("amount")
             end
         },
     })
@@ -89,38 +87,37 @@ function ObjectDefsView:init()
         table.insert(children, self.filters[i])
     end
 
-    self:AddNumericProperty({
-        name = "amount", 
-        title = "Amount:",
-        tooltip = "Amount",
-		value = 1,
-        minValue = 1,
-        maxValue = 100,
-		step = 1,
-    })
-
     local teamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id")
 	for i = 1, #teamIds do
 		teamIds[i] = tostring(teamIds[i])
 	end
 	local teamCaptions = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name")
-	self:AddChoiceProperty({
+	self:AddField(ChoiceField({
 	    name = "team",
         items = teamIds,
 		captions = teamCaptions,
         title = "Team: ",
-    })
-	self:UpdateChoiceField("team")
-    self:AddNumericProperty({
+    }))
+	self:Update("team")
+    self:AddField(NumericField({
+        name = "amount", 
+        title = "Amount:",
+        tooltip = "Amount",
+        value = 1,
+        minValue = 1,
+        maxValue = 100,
+        step = 1,
+    }))
+    self:AddField(NumericField({
         name = "size", 
         value = 100, 
         minValue = 10, 
         maxValue = 5000, 
         title = "Size:",
         tooltip = "Size of the paint brush",
-    })
+    }))
 
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "spread", 
         title = "Spread:",
         tooltip = "Spread",
@@ -128,8 +125,8 @@ function ObjectDefsView:init()
         minValue = 20,
         maxValue = 500,
         step = 1,
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "noise", 
         title = "Noise:",
         tooltip = "noise",
@@ -137,7 +134,7 @@ function ObjectDefsView:init()
         minValue = 1,
         maxValue = 2000,
         step = 1,
-    })
+    }))
 
     table.insert(children, 
 		ScrollPanel:New {
@@ -152,6 +149,7 @@ function ObjectDefsView:init()
 	)
 
     self:Finalize(children)
+    self:SetInvisibleFields("size", "spread", "noise", "amount")
 end
 
 function ObjectDefsView:IsValidTest(state)
@@ -167,8 +165,10 @@ function UnitDefsView:MakePanel()
 end
 function UnitDefsView:EnterState()
     if self.type == "set" then
+        self:SetInvisibleFields("noise", "spread")
         SCEN_EDIT.stateManager:SetState(AddUnitState(self, self.objectDefIDs))
     elseif self.type == "brush" then
+        self:SetInvisibleFields("size", "amount")
         SCEN_EDIT.stateManager:SetState(BrushUnitState(self, self.objectDefIDs))
     end
 end
@@ -250,8 +250,10 @@ function FeatureDefsView:MakePanel()
 end
 function FeatureDefsView:EnterState()
     if self.type == "set" then
+        self:SetInvisibleFields("noise", "spread")
         SCEN_EDIT.stateManager:SetState(AddFeatureState(self, self.objectDefIDs))
     elseif self.type == "brush" then
+        self:SetInvisibleFields("size", "amount")
         SCEN_EDIT.stateManager:SetState(BrushFeatureState(self, self.objectDefIDs))
     end
 end

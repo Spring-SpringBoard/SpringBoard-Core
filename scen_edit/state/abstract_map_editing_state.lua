@@ -88,7 +88,7 @@ function AbstractMapEditingState:MouseWheel(up, value)
         else
             self.size = self.size - self.size * 0.2 - 2
         end
-        self.editorView:SetNumericField("size", self.size)
+        self.editorView:Set("size", self.size)
         return true
     elseif alt and self.rotation ~= nil then
         if up then
@@ -97,7 +97,7 @@ function AbstractMapEditingState:MouseWheel(up, value)
             self.rotation = self.rotation - 5
         end
         self.rotation = self.rotation - math.floor(self.rotation/360) * 360
-        self.editorView:SetNumericField("rotation", self.rotation)
+        self.editorView:Set("rotation", self.rotation)
         return true
     end
 end

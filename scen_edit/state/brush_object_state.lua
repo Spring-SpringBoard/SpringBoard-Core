@@ -73,6 +73,7 @@ function BrushObjectState:Apply(bx, bz, button)
                 local angle = math.random() * math.pi * 2
                 local x, z = bx + points[i][1] * radius/2, bz + points[i][2] * radius/2
                 x, z = x + math.random() * self.noise - self.noise / 2, z + math.random() * self.noise - self.noise / 2
+                x, z = math.max(0, math.min(Game.mapSizeX, x)), math.max(0, math.min(Game.mapSizeZ, z))
                 local alreadyPlaced = false
                 for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(x, z, self.spread - self.tolerance)) do
                     if self:FilterObject(objectID) then

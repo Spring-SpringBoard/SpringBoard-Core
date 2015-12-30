@@ -13,7 +13,7 @@ function AbstractHeightmapEditingState:leaveState()
 end
 
 function AbstractHeightmapEditingState:enterState()
-    self.editorView:SetNumericField("size", self.size)
+    self.editorView:Set("size", self.size)
     self.editorView:StartedEditing()
 end
 

@@ -1,5 +1,5 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
-MetalEditorView = MapEditorView:extends{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+MetalEditorView = EditorView:extends{}
 
 function MetalEditorView:init()
     self:super("init")
@@ -19,28 +19,28 @@ function MetalEditorView:init()
         },
     })
 
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "size",
         value = 100,
         minValue = 10,
         maxValue = 5000,
         title = "Size:",
         tooltip = "Size of the paint brush",
-    })
+    }))
 
     local children = {
-		ScrollPanel:New {
-			x = 0,
-			y = 80,
-			bottom = 30,
-			right = 0,
-			borderColor = {0,0,0,0},
-			horizontalScrollbar = false,
-			children = { self.stackPanel },
-		},
-		self.btnAddMetal,
+        ScrollPanel:New {
+            x = 0,
+            y = 80,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        },
+        self.btnAddMetal,
     }
-	self:Finalize(children)
+    self:Finalize(children)
 end
 
 function MetalEditorView:IsValidTest(state)

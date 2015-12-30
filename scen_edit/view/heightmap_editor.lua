@@ -1,5 +1,5 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
-HeightmapEditorView = MapEditorView:extends{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+HeightmapEditorView = EditorView:extends{}
 
 function HeightmapEditorView:init()
     self:super("init")
@@ -112,31 +112,31 @@ function HeightmapEditorView:init()
 --         },
 --     })
 
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "size", 
         value = 100, 
         minValue = 10,
         maxValue = 1000,
         title = "Size:",
         tooltip = "Size of the height brush",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "rotation",
         value = 0,
         minValue = 0,
         maxValue = 360,
         title = "Shape rotation:",
         tooltip = "Rotation of the shape",
-    })
-    self:AddNumericProperty({
+    }))
+    self:AddField(NumericField({
         name = "strength",
         value = 10,
         minValue = 0.1,
         maxValue = 1000,
         title = "Strength:",
         tooltip = "Strength of the height map tool",
-    })
-    self:UpdateNumericField("size")
+    }))
+    self:Update("size")
 
     local children = {
 		self.btnAddState,

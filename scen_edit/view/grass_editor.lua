@@ -1,5 +1,5 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
-GrassEditorView = MapEditorView:extends{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+GrassEditorView = EditorView:extends{}
 
 function GrassEditorView:init()
     self:super("init")
@@ -19,28 +19,28 @@ function GrassEditorView:init()
         },
     })
 
-    self:AddNumericProperty({
+    self:AddField(NumericField({
         name = "size",
         value = 100,
         minValue = 10,
         maxValue = 5000,
         title = "Size:",
         tooltip = "Size of the paint brush",
-    })
+    }))
 
     local children = {
-		self.btnAddGrass,
-		ScrollPanel:New {
-			x = 0,
-			y = 80,
-			bottom = 30,
-			right = 0,
-			borderColor = {0,0,0,0},
-			horizontalScrollbar = false,
-			children = { self.stackPanel },
-		},
-	}
-	self:Finalize(children)
+        self.btnAddGrass,
+        ScrollPanel:New {
+            x = 0,
+            y = 80,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        },
+    }
+    self:Finalize(children)
 end
 
 function GrassEditorView:IsValidTest(state)

@@ -1,5 +1,5 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "map_editor_view.lua")
-TerrainSettingsView = MapEditorView:extends{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+TerrainSettingsView = EditorView:extends{}
 
 function TerrainSettingsView:init()
     self:super("init")
