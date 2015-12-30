@@ -106,6 +106,7 @@ function ObjectDefsView:init()
         minValue = 1,
         maxValue = 100,
         step = 1,
+        decimals = 0,
     }))
     self:AddField(NumericField({
         name = "size", 
@@ -114,6 +115,7 @@ function ObjectDefsView:init()
         maxValue = 5000, 
         title = "Size:",
         tooltip = "Size of the paint brush",
+        decimals = 0,
     }))
 
     self:AddField(NumericField({
@@ -124,6 +126,7 @@ function ObjectDefsView:init()
         minValue = 20,
         maxValue = 500,
         step = 1,
+        decimals = 0,
     }))
     self:AddField(NumericField({
         name = "noise", 
@@ -133,6 +136,7 @@ function ObjectDefsView:init()
         minValue = 1,
         maxValue = 2000,
         step = 1,
+        decimals = 0,
     }))
 
     table.insert(children, 

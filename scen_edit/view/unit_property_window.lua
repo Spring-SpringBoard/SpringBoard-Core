@@ -27,6 +27,7 @@ function UnitPropertyWindow:init()
             maxValue = Game.mapSizeX,
             step = 1,
             width = 150,
+            decimals = 0,
         }),
         NumericField({
             name = "posY",
@@ -35,6 +36,7 @@ function UnitPropertyWindow:init()
             value = 0,
             step = 1,
             width = 150,
+            decimals = 0,
         }),
         NumericField({
             name = "posZ",
@@ -45,6 +47,7 @@ function UnitPropertyWindow:init()
             maxValue = Game.mapSizeZ,
             step = 1,
             width = 150,
+            decimals = 0,
         })
     }))
     self:AddControl("btn-stick-ground", {

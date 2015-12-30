@@ -123,7 +123,7 @@ function HeightmapEditorView:init()
     self:AddField(NumericField({
         name = "rotation",
         value = 0,
-        minValue = 0,
+        minValue = -360,
         maxValue = 360,
         title = "Shape rotation:",
         tooltip = "Rotation of the shape",

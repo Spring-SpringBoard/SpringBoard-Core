@@ -96,7 +96,8 @@ function AbstractMapEditingState:MouseWheel(up, value)
         else
             self.rotation = self.rotation - 5
         end
-        self.rotation = self.rotation - math.floor(self.rotation/360) * 360
+        -- may uncomment this to rotate around
+        -- self.rotation = self.rotation - math.floor(self.rotation/360) * 360
         self.editorView:Set("rotation", self.rotation)
         return true
     end

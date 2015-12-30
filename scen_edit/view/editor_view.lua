@@ -211,7 +211,6 @@ end
 
 Field = LCS.class{}
 function Field:init(field)
-    self.VALUE_POS = 180
     for k, v in pairs(field) do
         self[k] = v
     end
@@ -255,6 +254,7 @@ function ChoiceField:Update(source)
 end
 
 function ChoiceField:init(field)
+    field.width = 150
     self:super('init', field)
     self.label = Label:New {
         caption = self.title,
@@ -266,8 +266,8 @@ function ChoiceField:init(field)
         captions = self.items
     end
     self.comboBox = ComboBox:New {
-        x = self.VALUE_POS - 5,
-        width = 150,
+        x = 190 - 5,
+        width = field.width,
         height = 30,
         items = captions,
         ids = ids,
@@ -297,10 +297,11 @@ function BooleanField:Update(source)
 end
 
 function BooleanField:init(field)
+    field.width = 200
     self:super('init', field)
     self.checkBox = Checkbox:New {
         caption = self.title,
-        width = self.VALUE_POS + 10,
+        width = field.width,
         height = 20,
         checked = self.value,
     }
@@ -317,7 +318,7 @@ end
 
 function ParseKey(field, editBox, key, mods, ...)
     if key == Spring.GetKeyCode("esc") then
-        field:Set(field.originalValue, editBox)
+        field:Set(field.originalValue)
         screen0:FocusControl(nil)
         return true
     end
@@ -403,8 +404,8 @@ function StringField:init(field)
                 if not self.notClick then
                     self.originalValue = self.value
                     self.button:Hide()
+                    self.editBox:SetText(self.lblValue.caption)
                     self.editBox:Show()
-                    self.editBox:SetText(tostring(self.value))
                     self.editBox.cursor = #self.editBox.text + 1
                     screen0:FocusControl(self.editBox)
                     self.ev:_OnStartChange(self.name)
@@ -425,7 +426,7 @@ end
 
 NumericField = StringField:extends{}
 function NumericField:Update(source)
-    local v = string.format("%g", self.value)
+    local v = string.format(self.format, self.value)
     if source ~= self.editBox and not self.editBox.state.focused then
         self.editBox:SetText(v)
     end
@@ -452,14 +453,16 @@ function NumericField:Validate(value)
 end
 
 function NumericField:init(field)
+    self.decimals = 2
     StringField.init(self, field)
+    self.format = "%." .. tostring(self.decimals) .. "f"
     if self.step == nil then
         self.step = 1
         if self.minValue and self.maxValue then
             self.step = (self.maxValue - self.minValue) / 200
         end
     end
-    local v = string.format("%g", self.value)
+    local v = string.format(self.format, self.value)
     self.lblValue:SetCaption(v)
     self.button.OnMouseUp = {
         function()
@@ -501,6 +504,7 @@ function NumericField:init(field)
                     local value = self.value + dx * self.step
                     self:Set(value, obj)
                 end
+                -- FIXME: This -could- be Spring.WarpMouse(self.startX, self.startY) but it doesn't seem to work well
                 Spring.WarpMouse(vsx/2, vsy/2)
                 SCEN_EDIT.SetMouseCursor("empty")
             end
@@ -516,6 +520,7 @@ function ColorbarsField:Update(source)
 end
 
 function ColorbarsField:init(field)
+    self.width = 200
     self:super('init', field)
     self.label = Label:New {
         caption = self.title,
@@ -523,8 +528,8 @@ function ColorbarsField:init(field)
     }
     self.colorbars = Colorbars:New {
         color = self.value,
-        x = self.VALUE_POS,
-        width = 225,
+        x = self.width + 10,
+        width = self.width,
         height = 60,
         OnChange = {
             function(obj, value)
@@ -554,7 +559,7 @@ function GroupField:Added()
     for i, field in pairs(self.fields) do
         self.ev:_AddField(field)
         for _, comp in pairs(field.components) do
-            comp.x = comp.x + (i-1) * field.width + 5
+            comp.x = comp.x + (i-1) * (field.width + 10)
             self.ctrl:AddChild(comp)
         end
         field:Added()
