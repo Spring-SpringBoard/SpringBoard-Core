@@ -5,6 +5,7 @@ UnitPropertyWindow = EditorView:extends{}
 gravity = 1
 function UnitPropertyWindow:init()
     self:super("init")
+    self.rules = {}
     self.objectKeys = { "health" }
     self.unitKeys = {"tooltip", "maxHealth", "stockpile", "experience", "fuel"}
 
@@ -164,31 +165,6 @@ function UnitPropertyWindow:init()
         step = 1,
     }))
 
-    self.rules = {}
-    self.ruleEditBoxes = {}
---     for _, foo in pairs(Spring.GetUnitRulesParams(self.unitId)) do
---         if type(foo) == "table" then
---             for rule, value in pairs(foo) do
---                 self.rules[rule] = value
---                 local stackPanel = MakeComponentPanel(mainPanel)
---                 local lblRule = Label:New {
---                     caption = rule .. ":",
---                     width = 100,
---                     x = 1,
---                     parent = stackPanel,
---                 }
---                 self.ruleEditBoxes[rule] = EditBox:New {
---                     text = tostring(value),
---                     x = 110,
---                     width = 100,
---                     height = SCEN_EDIT.conf.B_HEIGHT,
---                     parent = stackPanel,
---                 }
---             end
---         end
---     end
-
-
 --     SCEN_EDIT.MakeConfirmButton(self.window, btnOk)
 --     table.insert(self.window.OnConfirm, function()
 -- 
@@ -270,6 +246,43 @@ function UnitPropertyWindow:IsUnitKey(name)
     return false
 end
 
+function UnitPropertyWindow:AddObjectRules(objectID, bridge)
+    if #self.rules > 0 then
+        self:Remove("rule-sep")
+    end
+    for _, rule in pairs(self.rules) do
+        self:Remove(rule)
+    end
+    self.rules = {}
+    local addedRule = false
+    for _, foo in pairs(Spring.GetUnitRulesParams(objectID)) do
+        if type(foo) == "table" then
+            for rule, value in pairs(foo) do
+                if not addedRule then
+                    addedRule = true
+                    self:AddControl("rule-sep", {
+                        Label:New {
+                            caption = "Rules",
+                        },
+                        Line:New {
+                            x = 50,
+                            width = self.VALUE_POS,
+                        }
+                    })
+                end
+                local ruleName = "rule_" .. rule
+                self:AddField(StringField({
+                    name = ruleName,
+                    title = rule .. ":",
+                    tooltip = "Rule (" .. rule .. ")",
+                    value = tostring(value),
+                }))
+                table.insert(self.rules, ruleName)
+            end
+        end
+    end
+end
+
 function UnitPropertyWindow:OnSelectionChanged(selection)
     self.selectionChanging = true
     local objectID, bridge
@@ -289,6 +302,7 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
         self:SetInvisibleFields(unpack(self.unitKeys))
     end
     if objectID then
+        self:AddObjectRules(objectID, bridge)
         for _, key in pairs(keys) do
             local value = bridge.s11n:Get(objectID, key)
             self:Set(key, value)
@@ -325,6 +339,11 @@ function UnitPropertyWindow:OnFieldChange(name, value)
                       y = math.sin(angleX)*math.cos(angleY),
                       z = math.sin(angleY) }
             name = "dir"
+        end
+        if name:sub(1, #"rule_") == "rule_" then
+            local rule = name:sub(#"rule_"+1)
+            name = "rules"
+            return
         end
         if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" then
             for _, objectID in pairs(selection.units) do

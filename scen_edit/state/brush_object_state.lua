@@ -14,6 +14,8 @@ function BrushObjectState:init(editorView, objectDefIDs)
     self.applyDelay          = 0.1
     self.initialDelay        = 0
     self.tolerance           = 5
+
+    self.waitList = {}
 end
 
 function BrushObjectState:GetApplyParams(x, z, button)
@@ -63,6 +65,7 @@ function BrushObjectState:Apply(bx, bz, button)
     end
     math.randomseed(self.randomSeed)
     local commands = {}
+    local waitingObjects = {}
     if button == 1 then
         if self.objectDefIDs and #self.objectDefIDs > 0 then
             local spread = self.spread * 100
@@ -75,14 +78,7 @@ function BrushObjectState:Apply(bx, bz, button)
                 local x, z = bx + points[i][1] * radius/2, bz + points[i][2] * radius/2
                 x, z = x + math.random() * self.noise - self.noise / 2, z + math.random() * self.noise - self.noise / 2
                 x, z = math.max(0, math.min(Game.mapSizeX, x)), math.max(0, math.min(Game.mapSizeZ, z))
-                local alreadyPlaced = false
-                for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(x, z, spreadSqrt - self.tolerance)) do
-                    if self:FilterObject(objectID) then
-                        alreadyPlaced = true
-                        break
-                    end
-                end
-                if not alreadyPlaced then
+                if not self:CheckExisting(x, z, spreadSqrt - self.tolerance) then
                     local y = Spring.GetGroundHeight(x, z)
                     local dirX = math.sin(angle)
                     local dirZ = math.cos(angle)
@@ -93,6 +89,7 @@ function BrushObjectState:Apply(bx, bz, button)
                         team = self.team,
                     })
                     commands[#commands + 1] = cmd
+                    table.insert(waitingObjects, { x = x, y = y, z = z })
                 end
             end
             self.randomSeed = os.clock()
@@ -106,10 +103,39 @@ function BrushObjectState:Apply(bx, bz, button)
 
     if #commands > 0 then
         local compoundCommand = CompoundCommand(commands)
-        SCEN_EDIT.commandManager:execute(compoundCommand)
+        local cmdID = SCEN_EDIT.commandManager:execute(compoundCommand)
+        if button == 1 then
+            self.waitList[cmdID] = { objects = waitingObjects }
+        end
     end
     self.randomSeed = self.randomSeed + os.clock()
     return true
+end
+
+function BrushObjectState:CheckExisting(x, z, distance)
+    for _, waitCmd in pairs(self.waitList) do
+        local objects = waitCmd.objects
+        for _, object in pairs(objects) do
+            local dx, dz = object.x - x, object.z - z
+            local d = (dx * dx) + (dz * dz)
+            if d < distance * distance then
+                return true
+            end
+        end
+    end
+    for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(x, z, distance)) do
+        if self:FilterObject(objectID) then
+            return true
+        end
+    end
+    return false
+end
+
+function BrushObjectState:CommandExecuted(cmdID)
+    local waitCmd = self.waitList[cmdID]
+    if waitCmd then
+        self.waitList[cmdID] = nil
+    end
 end
 
 function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)

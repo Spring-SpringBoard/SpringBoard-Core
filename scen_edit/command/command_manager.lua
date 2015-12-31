@@ -14,6 +14,7 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.playerLock = nil --if set, it defines the id of the only player who can do commands
     self.multipleCommandStack = {}
     self.multipleCommandMode = false
+    self.idCount = 0
 end
 
 function CommandManager:_SafeCall(func)
@@ -44,6 +45,10 @@ function CommandManager:leaveMultipleCommandMode()
     if #self.multipleCommandStack == 0 then
         return
     end
+    local cmdIDs = {} -- send a list of executed commands
+    for _, cmd in pairs(self.multipleCommandStack) do
+        table.insert(cmdIDs, cmd.id)
+    end
     if self.multipleCommandStack[1].mergeCommand then
         -- there is a special command for merging
         local env = getfenv(1)
@@ -59,30 +64,40 @@ function CommandManager:leaveMultipleCommandMode()
     end
     self.multipleCommandStack = {}
     self:undoListAdd(cmd)
-    self:notify(cmd)
+    self:notify(cmd, cmdIDs)
 end
 
-function CommandManager:notify(cmd)
+function CommandManager:notify(cmd, cmdIDs)
     -- send display to the widget
     local display = cmd:display()
-    self:execute(WidgetCommandExecuted(display), true)
+    cmdIDs = cmdIDs or {cmd.id}
+    self:execute(WidgetCommandExecuted(display, cmdIDs), true)
+end
+
+-- Sends the command to the other state (gadget <-> widget)
+-- also returns the new command ID which can be used to track when it gets executed
+function CommandManager:_SendCommand(cmd)
+    assert(cmd.className, "Command instance lacks className value")
+    self.idCount = self.idCount + 1
+    cmd.id = self.idCount
+    local msg = Message("command", cmd)
+    SCEN_EDIT.messageManager:sendMessage(msg)
+    return cmd.id
 end
 
 --widget specifies whether the command should be executed in LuaUI(true) or LuaRules(false)
 --if the command is to be executed in a different lua state than currently in, it will send the message to the proper state using the message mechanism
 function CommandManager:execute(cmd, widget)
     assert(cmd, "Command is nil")
-    if self.widget then
+    if self.widget then -- from widget
         if not widget then
-            assert(cmd.className, "Command instance lacks className value")
-            local msg = Message("command", cmd)
-            SCEN_EDIT.messageManager:sendMessage(msg)
+            return self:_SendCommand(cmd)
         else
             self:_SafeCall(function() 
                 cmd:execute()
             end)
         end
-    else
+    else -- from gadget
         if not widget then
             self:_SafeCall(function()
                 cmd:execute()
@@ -96,9 +111,7 @@ function CommandManager:execute(cmd, widget)
                 end
             end)
         else
-            assert(cmd.className, "Command instance lacks className value")
-            local msg = Message("command", cmd)
-            SCEN_EDIT.messageManager:sendMessage(msg)
+            return self:_SendCommand(cmd)
         end
     end
 end

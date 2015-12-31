@@ -10,14 +10,21 @@ function UpdateViews()
     end
 end
 
-function WidgetCommandExecuted:init(display)
+function WidgetCommandExecuted:init(display, cmdIDs)
     self.className = "WidgetCommandExecuted"
     self.display = display
+    self.cmdIDs = cmdIDs
 end
 
 function WidgetCommandExecuted:execute()
     SCEN_EDIT.view.commandWindow:PushCommand(self.display)
     UpdateViews()
+    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    if currentState:is_A(BrushObjectState) then
+        for _, cmdID in pairs(self.cmdIDs) do
+            currentState:CommandExecuted(cmdID)
+        end
+    end
 end
 
 WidgetCommandUndo = AbstractCommand:extends{}

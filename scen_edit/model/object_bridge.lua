@@ -25,7 +25,6 @@ UnitBridge.spSetObjectMidAndAimPos         = Spring.SetUnitMidAndAimPos
 UnitBridge.spGetObjectBlocking             = Spring.GetUnitBlocking
 UnitBridge.spSetObjectBlocking             = Spring.SetUnitBlocking
 UnitBridge.spDestroyObject                 = Spring.DestroyUnit
-UnitBridge.ObjectDefs                      = UnitDefs
 if gl then
     UnitBridge.glObjectShape               = gl.UnitShape
 end
@@ -56,6 +55,7 @@ UnitBridge.setObjectModelID                = function(objectID, modelID)
 end
 unitBridge = UnitBridge()
 unitBridge.s11n                            = s11n:GetUnitBridge()
+unitBridge.ObjectDefs                      = UnitDefs
 
 -- FEATURE
 
@@ -78,7 +78,6 @@ FeatureBridge.spSetObjectMidAndAimPos         = Spring.SetFeatureMidAndAimPos
 FeatureBridge.spGetObjectBlocking             = Spring.GetFeatureBlocking
 FeatureBridge.spSetObjectBlocking             = Spring.SetFeatureBlocking
 FeatureBridge.spDestroyObject                 = Spring.DestroyFeature
-FeatureBridge.ObjectDefs                      = FeatureDefs
 if gl then
     FeatureBridge.glObjectShape               = gl.FeatureShape
 end
@@ -114,6 +113,7 @@ FeatureBridge.setObjectModelID                = function(objectID, modelID)
 end
 featureBridge = FeatureBridge()
 featureBridge.s11n                            = s11n:GetFeatureBridge()
+featureBridge.ObjectDefs                      = FeatureDefs
 
 -- AREA
 

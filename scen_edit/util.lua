@@ -454,12 +454,7 @@ function SCEN_EDIT.resolveCommand(cmdTable)
         else
             cmd[k] = v
         end
-    end--[[
-    if cmd.className == "CompoundCommand" then
-        for i = 1, #cmd.commands do
-            cmd.commands[i] = SCEN_EDIT.resolveCommand(cmd.commands[i])
-        end
-    end--]]
+    end
     return cmd
 end
 

@@ -222,7 +222,7 @@ function TerrainEditorView:init()
         NumericField({
             name = "size",
             value = 100,
-            minValue = 10,
+            minValue = 1,
             maxValue = 5000,
             title = "Size:",
             tooltip = "Size of the paint brush",

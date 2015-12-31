@@ -148,6 +148,17 @@ function EditorView:SetInvisibleFields(...)
 	self:_MEGA_HACK()
 end
 
+function EditorView:Remove(name)
+    local field = self.fields[name]
+    for i, orderName in pairs(self.fieldOrder) do
+        if orderName == name then
+            table.remove(self.fieldOrder, i)
+            break
+        end
+    end
+    self.stackPanel:RemoveChild(field.ctrl)
+    self.fields[name] = nil
+end
 function EditorView:AddField(field)
     field.ctrl = self:_AddControl(field.name, field.components)
     self:_AddField(field)
@@ -254,7 +265,7 @@ function ChoiceField:Update(source)
 end
 
 function ChoiceField:init(field)
-    field.width = 150
+    self.width = 150
     self:super('init', field)
     self.label = Label:New {
         caption = self.title,
@@ -297,7 +308,7 @@ function BooleanField:Update(source)
 end
 
 function BooleanField:init(field)
-    field.width = 200
+    self.width = 200
     self:super('init', field)
     self.checkBox = Checkbox:New {
         caption = self.title,

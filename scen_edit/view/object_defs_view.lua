@@ -154,11 +154,16 @@ function ObjectDefsView:init()
     self:Finalize(children)
     self:SetInvisibleFields("size", "spread", "noise", "amount")
     self.type = "brush"
-    self:EnterState()
 end
 
 function ObjectDefsView:IsValidTest(state)
     return state:is_A(AddObjectState) or state:is_A(BrushObjectState)
+end
+
+function ObjectDefsView:OnFieldChange(name, value)
+    if name == "team" then
+        self.objectDefPanel:SelectTeamID(value, type(value))
+    end
 end
 
 UnitDefsView = ObjectDefsView:extends{}

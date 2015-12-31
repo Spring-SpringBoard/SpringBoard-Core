@@ -4,8 +4,8 @@ ObjectDefsPanel = GridView:extends{}
 
 function ObjectDefsPanel:init(tbl)
     local defaults = {
-        iconX = 42,
-        iconY = 42,
+        iconX = 64,
+        iconY = 64,
         multiSelect = true,
     }
     tbl = table.merge(tbl, defaults)
@@ -13,8 +13,15 @@ function ObjectDefsPanel:init(tbl)
 
     self.unitTerrainId = 1
     self.unitTypesId = 1
+    self.teamID = 0
     self.search = ""
     self.objectDefIcons = {}
+
+    -- Icon rotation
+    self.drawIcons = {}
+    self.scheduleDraw = false
+    self.rotate = 0
+    self.refresh = os.clock()
 
     self.control:DisableRealign()
     self:PopulateItems()
@@ -58,6 +65,11 @@ function ObjectDefsPanel:SelectUnitTypesId(unitTypesId)
     self:Refresh()
 end
 
+function ObjectDefsPanel:SelectTeamID(teamID)
+    self.teamID = teamID
+--     self:Refresh()
+end
+
 function ObjectDefsPanel:SetSearchString(search)
     self.search = search
     self:Refresh()
@@ -67,8 +79,86 @@ function ObjectDefsPanel:GetObjectDefID(index)
     return self.control.children[index].objectDefID
 end
 
--- Custom unit/feature classes
+function ObjectDefsPanel:AddDrawIcon(ctrl)
+    local objectDefID = ctrl.objectDefID
+    local drawIcon = {ctrl = ctrl, radius = self:GetObjectDefRadius(objectDefID)}
+    self.drawIcons[objectDefID] = drawIcon
+    SCEN_EDIT.delayGL(function()
+        local tex = gl.CreateTexture(128, 128, {
+            border = false,
+            min_filter = GL.LINEAR,
+            mag_filter = GL.LINEAR,
+            wrap_s = GL.CLAMP_TO_EDGE,
+            wrap_t = GL.CLAMP_TO_EDGE,
+            fbo = true,
+        })
+        drawIcon.drawTex = tex
+        ctrl.imgCtrl.file = drawIcon.drawTex
+    end)
+    if not self.scheduleDraw then
+        self.scheduleDraw = true
+        SCEN_EDIT.delayGL(function()
+            self:DrawIcons()
+        end)
+    end
+end
+
+function ObjectDefsPanel:DrawIcons()
+    self.rotate = self.rotate + 0.5
+    local time = os.clock()
+    if (time - self.refresh) >= 0.1 then
+        self.refresh = time
+    else
+        SCEN_EDIT.delayGL(function()
+            self:DrawIcons()
+        end)
+        return
+    end
+    gl.PushMatrix()
+    --gl.Blending(false)
+    gl.Blending("disable")
+    gl.AlphaTest(false)
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
+    for objectDefID, drawIcon in pairs(self.drawIcons) do
+        if drawIcon.ctrl:IsInView() and drawIcon.drawTex ~= nil then
+            self:PeriodicDraw(drawIcon.drawTex, objectDefID, self.bridge, self.rotate, drawIcon.radius)
+            drawIcon.ctrl:Invalidate()
+        end
+    end
+    gl.Blending("alpha")
+    gl.Texture(false)
+    gl.PopMatrix()
+    SCEN_EDIT.delayGL(function()
+        self:DrawIcons()
+    end)
+end
+
+function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius)
+    local objectDef = bridge.ObjectDefs[objectDefID]
+    local scale = -1 / radius--math.sqrt(radius)
+    gl.Texture("LuaUI/images/scenedit/background.png")
+    gl.RenderToTexture(tex, function()
+        gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
+--                     gl.TexRect(-1, -1, 1, 1)
+        gl.Translate(0, 0.5, 0)
+        gl.Rotate(60, -1, 1, -0.5)
+        gl.Rotate(rotation, 0, 1, 0)
+--         gl.Scale(-0.01, -0.01, -0.01)
+        gl.Scale(scale, scale, scale)
+        bridge.glObjectShape(objectDefID, self.teamID, false)
+--                     gl.Texture(0, "-%" .. ctrl.objectDefID .. ":0")
+--                     featureBridge.DrawObject(ctrl.objectDefID, 0)
+    end)
+end
+
+-- UNIT PANEL
+
 UnitDefsPanel = ObjectDefsPanel:extends{}
+function UnitDefsPanel:init(tbl)
+    self.bridge = unitBridge
+    ObjectDefsPanel.init(self, tbl)
+end
 function UnitDefsPanel:FilterObject(objectDefID)
     local unitDef = UnitDefs[objectDefID]
     local correctType = self.unitTypesId == 2 and unitDef.isBuilding or
@@ -82,7 +172,6 @@ function UnitDefsPanel:FilterObject(objectDefID)
         self.unitTerrainId == 4
     return correctType and correctTerrain and unitDef.humanName:lower():find(self.search:lower():trim())
 end
-
 function UnitDefsPanel:PopulateItems()
     local items = {}
     for id, unitDef in pairs(UnitDefs) do
@@ -94,11 +183,24 @@ function UnitDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3])
         ctrl.objectDefID = item[4]
+--         Spring.Echo(item[2])
+        if item[2] == "" or true then
+            self:AddDrawIcon(ctrl)
+        end
     end
 end
+function UnitDefsPanel:GetObjectDefRadius(objectDefID)
+    local radius = 10
+    local dims = Spring.GetUnitDefDimensions(objectDefID)
+    radius = math.max(10, dims.radius)
+    return radius
+end
+
+-- FEATURE PANEL
 
 FeatureDefsPanel = ObjectDefsPanel:extends{}
 function FeatureDefsPanel:init(tbl)
+    self.bridge = featureBridge
     ObjectDefsPanel.init(self, tbl)
     self.featureTypeId = 1
 end
@@ -187,21 +289,22 @@ function FeatureDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3])
         ctrl.objectDefID = item[4]
-        if item[2] == "" then
-            SCEN_EDIT.delayGL(function()
-                local tex = gl.CreateTexture(256, 256)
-                gl.RenderToTexture(tex, function()
-                    gl.TexRect(-1, -1, 1, 1)
-                    gl.Texture(0, "-%" .. ctrl.objectDefID .. ":0")
-                    featureBridge.DrawObject(ctrl.objectDefID, 0)
-                    gl.Texture(0,false)
-                end)
-                ctrl.imgCtrl.file = tex
-            end)
-        end
+--         if item[2] == "" then
+            self:AddDrawIcon(ctrl)
+--         end
     end
 end
 function FeatureDefsPanel:SelectFeatureTypesId(featureTypeId)
     self.featureTypeId = featureTypeId
     self:Refresh()
+end
+function FeatureDefsPanel:GetObjectDefRadius(objectDefID)
+    local objectDef = self.bridge.ObjectDefs[objectDefID]
+    local radius = 10
+    local dx = objectDef.model.maxx - objectDef.model.minx
+    local dy = objectDef.model.maxy - objectDef.model.miny
+    local dz = objectDef.model.maxz - objectDef.model.minz
+    -- magic
+    radius = math.max(dx, dy, dz) / 2 * math.sqrt(2) * 1.2
+    return radius
 end
