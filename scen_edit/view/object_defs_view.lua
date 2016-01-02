@@ -175,10 +175,10 @@ function UnitDefsView:MakePanel()
 end
 function UnitDefsView:EnterState()
     if self.type == "set" then
-        self:SetInvisibleFields("noise", "spread")
+        self:SetInvisibleFields("size", "noise", "spread")
         SCEN_EDIT.stateManager:SetState(AddUnitState(self, self.objectDefIDs))
     elseif self.type == "brush" then
-        self:SetInvisibleFields("size", "amount")
+        self:SetInvisibleFields("amount")
         SCEN_EDIT.stateManager:SetState(BrushUnitState(self, self.objectDefIDs))
     end
 end
@@ -260,10 +260,10 @@ function FeatureDefsView:MakePanel()
 end
 function FeatureDefsView:EnterState()
     if self.type == "set" then
-        self:SetInvisibleFields("noise", "spread")
+        self:SetInvisibleFields("size", "noise", "spread")
         SCEN_EDIT.stateManager:SetState(AddFeatureState(self, self.objectDefIDs))
     elseif self.type == "brush" then
-        self:SetInvisibleFields("size", "amount")
+        self:SetInvisibleFields("amount")
         SCEN_EDIT.stateManager:SetState(BrushFeatureState(self, self.objectDefIDs))
     end
 end
