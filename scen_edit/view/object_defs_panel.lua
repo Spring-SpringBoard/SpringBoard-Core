@@ -175,7 +175,7 @@ end
 function UnitDefsPanel:PopulateItems()
     local items = {}
     for id, unitDef in pairs(UnitDefs) do
-        table.insert(items, {unitDef.humanName:trim(), "#" .. unitDef.id, unitDef.humanName:trim(), unitDef.id})
+        table.insert(items, {unitDef.humanName:trim(), "#" .. unitDef.id, unitDef.humanName:trim() .. "\ndefName: " .. tostring(unitDef.name), unitDef.id})
     end
     table.sort(items, function(a, b) return a[1]:lower() < b[1]:lower() end)
 
@@ -281,7 +281,7 @@ function FeatureDefsPanel:PopulateItems()
             end
         end
         local name = featureDef.humanName or featureDef.tooltip or featureDef.name
-        table.insert(items, {name:trim(), unitImagePath, name:trim(), featureDef.id})
+        table.insert(items, {name:trim(), unitImagePath, name:trim() .. "\ndefName: " .. tostring(featureDef.name), featureDef.id})
     end
     table.sort(items, function(a, b) return a[1]:lower() < b[1]:lower() end)
 

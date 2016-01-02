@@ -410,14 +410,20 @@ function StringField:init(field)
         width = self.width,
         height = 30,
         padding = {0, 0, 0, 0,},
+        MouseDown = function(obj, x, y, btn, ...) -- Overrides Chili.Button.MouseDown
+            if btn == 1 then
+                return Chili.Button.MouseDown(obj, x, y, btn, ...)
+            end
+        end,
         OnClick = {
-            function()
+            function(...)
                 if not self.notClick then
                     self.originalValue = self.value
                     self.button:Hide()
                     self.editBox:SetText(self.lblValue.caption)
                     self.editBox:Show()
                     self.editBox.cursor = #self.editBox.text + 1
+                    self.editBox:Select(1, #self.editBox.text + 1)
                     screen0:FocusControl(self.editBox)
                     self.ev:_OnStartChange(self.name)
                 end
@@ -476,7 +482,7 @@ function NumericField:init(field)
     local v = string.format(self.format, self.value)
     self.lblValue:SetCaption(v)
     self.button.OnMouseUp = {
-        function()
+        function(...)
             SCEN_EDIT.SetMouseCursor()
             self.lblValue.font:SetColor(1, 1, 1, 1)
             self.lblTitle.font:SetColor(1, 1, 1, 1)
@@ -491,7 +497,7 @@ function NumericField:init(field)
     }
     self.button.OnMouseMove = {
         function(obj, x, y, dx, dy, btn, ...)
-            if btn then
+            if btn == 1 then
                 local vsx, vsy = Spring.GetViewGeometry()
                 x, y = Spring.GetMouseState()
                 local _, _, _, shift = Spring.GetModKeyState()
@@ -567,12 +573,14 @@ function GroupField:init(fields)
 end
 
 function GroupField:Added()
+    local groupX = 0
     for i, field in pairs(self.fields) do
         self.ev:_AddField(field)
         for _, comp in pairs(field.components) do
-            comp.x = comp.x + (i-1) * (field.width + 10)
+            comp.x = groupX
             self.ctrl:AddChild(comp)
         end
+        groupX = groupX + field.width + 10
         field:Added()
         field.visible = true
     end

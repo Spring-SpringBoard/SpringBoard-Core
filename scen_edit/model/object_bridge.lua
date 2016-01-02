@@ -31,6 +31,7 @@ end
 
 UnitBridge.AddObjectCommand                = AddUnitCommand
 UnitBridge.RemoveObjectCommand             = RemoveUnitCommand
+UnitBridge.SetObjectParamCommand           = SetUnitParamCommand
 UnitBridge.DrawObject                      = function(params)
     local pos           = params.pos
     local angle         = params.angle
@@ -84,6 +85,7 @@ end
 
 FeatureBridge.AddObjectCommand                = AddFeatureCommand
 FeatureBridge.RemoveObjectCommand             = RemoveFeatureCommand
+FeatureBridge.SetObjectParamCommand           = SetFeatureParamCommand
 FeatureBridge.DrawObject                      = function(params)
     local pos           = params.pos
     local angle         = params.angle

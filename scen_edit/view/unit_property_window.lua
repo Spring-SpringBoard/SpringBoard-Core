@@ -2,7 +2,6 @@ SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
 
 UnitPropertyWindow = EditorView:extends{}
 
-gravity = 1
 function UnitPropertyWindow:init()
     self:super("init")
     self.rules = {}
@@ -27,7 +26,7 @@ function UnitPropertyWindow:init()
             minValue = 0,
             maxValue = Game.mapSizeX,
             step = 1,
-            width = 150,
+            width = 100,
             decimals = 0,
         }),
         NumericField({
@@ -36,7 +35,7 @@ function UnitPropertyWindow:init()
             tooltip = "Position (y)",
             value = 0,
             step = 1,
-            width = 150,
+            width = 100,
             decimals = 0,
         }),
         NumericField({
@@ -47,28 +46,30 @@ function UnitPropertyWindow:init()
             minValue = 0,
             maxValue = Game.mapSizeZ,
             step = 1,
-            width = 150,
+            width = 100,
             decimals = 0,
+        }),
+        Field({
+            name = "btn-stick-ground",
+            width = 150,
+            components = {
+                Button:New {
+                    caption = "Stick to ground",
+                    x = 0,
+                    width = 135,
+                    height = 30,
+                    OnClick = {
+                        function()
+                            self:OnFieldChange("movectrl", false)
+                            self:OnFieldChange("gravity", 1)
+                            local x, z = self.fields["posX"].value, self.fields["posZ"].value
+                            self:Set("posY", Spring.GetGroundHeight(x, z))
+                        end
+                    }
+                },
+            }
         })
     }))
-    self:AddControl("btn-stick-ground", {
-        Button:New {
-            caption = "Stick to ground",
-            width = 200,
-            height = 30,
-            OnClick = {
-                function()
-                    gravity = 1 - gravity
-                    if gravity == 0 then
-                        self:OnFieldChange("movectrl", true)
-                    else
-                        self:OnFieldChange("movectrl", false)
-                    end
-                    self:OnFieldChange("gravity", gravity)
-                end
-            }
-        },
-    })
 
     self:AddControl("angle-sep", {
         Label:New {
@@ -84,32 +85,27 @@ function UnitPropertyWindow:init()
             name = "angleX",
             title = "X:",
             tooltip = "X angle",
-            value = 1,
-            minValue = -180,
-            maxValue = 180,
-            step = 1,
-            width = 225,
+            value = 0,
+            step = 0.2,
+            width = 100,
         }),
         NumericField({
             name = "angleY",
             title = "Y:",
             tooltip = "Y angle",
             value = 0,
-            minValue = -180,
-            maxValue = 180,
-            step = 1,
-            width = 225,
+            step = 0.2,
+            width = 100,
+        }),
+        NumericField({
+            name = "angleZ",
+            title = "Z:",
+            tooltip = "Z angle",
+            value = 0,
+            step = 0.2,
+            width = 100,
         }),
     }))
---     self:AddNumericProperty({
---         name = "angleZ",
---         title = "Z:",
---         tooltip = "Z angle",
---         value = 0,
---         minValue = -180,
---         maxValue = 180,
---         step = 1,
---     })
     self:AddField(GroupField({
         NumericField({
             name = "health",
@@ -165,21 +161,6 @@ function UnitPropertyWindow:init()
         step = 1,
     }))
 
---     SCEN_EDIT.MakeConfirmButton(self.window, btnOk)
---     table.insert(self.window.OnConfirm, function()
--- 
---         for rule, value in pairs(self.rules) do
---             local v = self.ruleEditBoxes[rule].text
---             if type(value) == "number" then
---                 v = tonumber(v)
---             end
---             table.insert(cmds, SetUnitPropertyCommand(self.modelUnitId, "rule", {rule, v}))
---         end
--- 
---         local compoundCommand = CompoundCommand(cmds)
---         SCEN_EDIT.commandManager:execute(compoundCommand)
---     end)
-
     local children = {
         btnClose,
     }
@@ -221,7 +202,7 @@ function UnitPropertyWindow:IsObjectKey(name)
             return true
         end
     end
-    if name == "pos" or name == "dir" then
+    if name == "pos" or name == "dir" or name == "rot" then
         return true
     end
     return false
@@ -255,31 +236,36 @@ function UnitPropertyWindow:AddObjectRules(objectID, bridge)
     end
     self.rules = {}
     local addedRule = false
-    for _, foo in pairs(Spring.GetUnitRulesParams(objectID)) do
-        if type(foo) == "table" then
-            for rule, value in pairs(foo) do
-                if not addedRule then
-                    addedRule = true
-                    self:AddControl("rule-sep", {
-                        Label:New {
-                            caption = "Rules",
-                        },
-                        Line:New {
-                            x = 50,
-                            width = self.VALUE_POS,
-                        }
-                    })
-                end
-                local ruleName = "rule_" .. rule
-                self:AddField(StringField({
-                    name = ruleName,
-                    title = rule .. ":",
-                    tooltip = "Rule (" .. rule .. ")",
-                    value = tostring(value),
-                }))
-                table.insert(self.rules, ruleName)
-            end
+    for rule, value in pairs(bridge.s11n:Get(objectID, "rules")) do
+        if not addedRule then
+            addedRule = true
+            self:AddControl("rule-sep", {
+                Label:New {
+                    caption = "Rules",
+                },
+                Line:New {
+                    x = 50,
+                    width = self.VALUE_POS,
+                }
+            })
         end
+        local ruleName = "rule_" .. rule
+        if type(value) == "string" then
+            self:AddField(StringField({
+                name = ruleName,
+                title = rule .. ":",
+                tooltip = "Rule (" .. rule .. ")",
+                value = tostring(value),
+            }))
+        else
+            self:AddField(NumericField({
+                name = ruleName,
+                title = rule .. ":",
+                tooltip = "Rule (" .. rule .. ")",
+                value = value,
+            }))
+        end
+        table.insert(self.rules, ruleName)
     end
 end
 
@@ -302,7 +288,9 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
         self:SetInvisibleFields(unpack(self.unitKeys))
     end
     if objectID then
-        self:AddObjectRules(objectID, bridge)
+        if bridge == unitBridge then
+            self:AddObjectRules(objectID, bridge)
+        end
         for _, key in pairs(keys) do
             local value = bridge.s11n:Get(objectID, key)
             self:Set(key, value)
@@ -311,13 +299,12 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
         self:Set("posX", pos.x)
         self:Set("posY", pos.y)
         self:Set("posZ", pos.z)
-        local dir = bridge.s11n:Get(objectID, "dir")
-        local dirX, dirY, dirZ = bridge.spGetObjectDirection(objectID)
 
-        local angleY = math.asin(dirZ)
-        local angleX = math.acos(dirX / math.cos(angleY))
-        self:Set("angleX", math.deg(angleX))
-        self:Set("angleY", math.deg(angleY))
+        local rot = bridge.s11n:Get(objectID, "rot")
+        local dir = bridge.s11n:Get(objectID, "dir")
+        self:Set("angleX", math.deg(rot.x))
+        self:Set("angleY", math.deg(rot.y))
+        self:Set("angleZ", math.deg(rot.z))
     end
     self.selectionChanging = false
 end
@@ -332,32 +319,47 @@ function UnitPropertyWindow:OnFieldChange(name, value)
                       z = self.fields["posZ"].value }
             name = "pos"
         end
-        if name == "angleX" or name == "angleY" then
+        if name == "angleX" or name == "angleY" or name == "angleZ" then
             local angleX = math.rad(self.fields["angleX"].value)
             local angleY = math.rad(self.fields["angleY"].value)
-            value = { x = math.cos(angleX)*math.cos(angleY),
-                      y = math.sin(angleX)*math.cos(angleY),
-                      z = math.sin(angleY) }
-            name = "dir"
+            local angleZ = math.rad(self.fields["angleZ"].value)
+            value = { x = angleX,
+                      y = angleY,
+                      z = angleZ }
+            name = "rot"
         end
         if name:sub(1, #"rule_") == "rule_" then
             local rule = name:sub(#"rule_"+1)
             name = "rules"
-            return
+            value = {
+                [rule] = value
+            }
         end
-        if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" then
-            for _, objectID in pairs(selection.units) do
-                local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
-                table.insert(commands, SetUnitParamCommand(modelID, name, value))
+        -- HACK: needs cleanup
+        if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" or name == "rules" then
+            for _, command in pairs(self:GetCommands(selection.units, name, value, unitBridge)) do
+                table.insert(commands, command)
             end
         end
         if self:IsFeatureKey(name) then
-            for _, objectID in pairs(selection.features) do
-                local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
-                table.insert(commands, SetFeatureParamCommand(modelID, name, value))
+            for _, command in pairs(self:GetCommands(selection.features, name, value, featureBridge)) do
+                table.insert(commands, command)
             end
         end
         local compoundCommand = CompoundCommand(commands)
         SCEN_EDIT.commandManager:execute(compoundCommand)
     end
+end
+
+function UnitPropertyWindow:GetCommands(objectIDs, name, value, bridge)
+    local commands = {}
+    for _, objectID in pairs(objectIDs) do
+        local modelID = bridge.getObjectModelID(objectID)
+        table.insert(commands, bridge.SetObjectParamCommand(modelID, name, value))
+        if name == "pos" and bridge == unitBridge then
+            table.insert(commands, bridge.SetObjectParamCommand(modelID, "movectrl", true))
+            table.insert(commands, bridge.SetObjectParamCommand(modelID, "gravity", 0))
+        end
+    end
+    return commands
 end

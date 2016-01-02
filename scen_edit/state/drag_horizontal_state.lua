@@ -73,14 +73,13 @@ function DragHorizontalObjectState:DrawObject(objectID, object, bridge)
     gl.PushMatrix()
     local objectDefID         = bridge.spGetObjectDefID(objectID)
     local objectTeamID        = bridge.spGetObjectTeam(objectID)
-    local dirX, _, dirZ       = bridge.spGetObjectDirection(objectID)
-    local angleY              = math.deg(math.atan2(dirX, dirZ))
+    local rot                 = bridge.s11n:Get(objectID, "rot")
     bridge.DrawObject({
         color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
         objectDefID     = objectDefID,
         objectTeamID    = objectTeamID,
         pos             = object.pos,
-        angle           = { x = 0, y = angleY, z = 0 },
+        angle           = { x = -math.deg(rot.x), y = -math.deg(rot.y), z = -math.deg(rot.z)},
     })
     gl.PopMatrix()
 end
