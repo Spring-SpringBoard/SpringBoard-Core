@@ -7,6 +7,24 @@ ObjectBridge = LCS.class.abstract{}
 
 -- UNIT
 
+function DrawObject(params, bridge)
+    gl.PushMatrix()
+    local pos           = params.pos
+    local angle         = params.angle
+    local objectDefID   = params.objectDefID
+    local objectTeamID  = params.objectTeamID
+    local color         = params.color
+    gl.Color(color.r, color.g, color.b, color.a)
+    gl.Translate(pos.x, pos.y, pos.z)
+    gl.Rotate(angle.x, 1, 0, 0)
+    gl.Rotate(angle.y, 0, 1, 0)
+    gl.Rotate(angle.z, 0, 0, 1)
+    bridge.glObjectShapeTextures(objectDefID, true)
+    bridge.glObjectShape(objectDefID, objectTeamID, true)
+    bridge.glObjectShapeTextures(objectDefID, false)
+    gl.PopMatrix()
+end
+
 UnitBridge = ObjectBridge:extends{}
 UnitBridge.bridgeName                      = "UnitBridge"
 UnitBridge.spGetObjectsInCylinder          = Spring.GetUnitsInCylinder
@@ -25,26 +43,12 @@ UnitBridge.spSetObjectMidAndAimPos         = Spring.SetUnitMidAndAimPos
 UnitBridge.spGetObjectBlocking             = Spring.GetUnitBlocking
 UnitBridge.spSetObjectBlocking             = Spring.SetUnitBlocking
 UnitBridge.spDestroyObject                 = Spring.DestroyUnit
-if gl then
-    UnitBridge.glObjectShape               = gl.UnitShape
-end
 
 UnitBridge.AddObjectCommand                = AddUnitCommand
 UnitBridge.RemoveObjectCommand             = RemoveUnitCommand
 UnitBridge.SetObjectParamCommand           = SetUnitParamCommand
 UnitBridge.DrawObject                      = function(params)
-    local pos           = params.pos
-    local angle         = params.angle
-    local objectDefID   = params.objectDefID
-    local objectTeamID  = params.objectTeamID
-    local color         = params.color
-    gl.Color(color.r, color.g, color.b, color.a)
-    gl.LoadIdentity()
-    gl.Translate(pos.x, pos.y, pos.z)
-    gl.Rotate(angle.x, 1, 0, 0)
-    gl.Rotate(angle.y, 0, 1, 0)
-    gl.Rotate(angle.z, 0, 0, 1)
-    unitBridge.glObjectShape(objectDefID, objectTeamID, false)
+    DrawObject(params, unitBridge)
 end
 UnitBridge.getObjectSpringID               = function(modelID)
     return SCEN_EDIT.model.unitManager:getSpringUnitId(modelID)
@@ -58,6 +62,10 @@ end
 unitBridge = UnitBridge()
 unitBridge.s11n                            = s11n:GetUnitBridge()
 unitBridge.ObjectDefs                      = UnitDefs
+if gl then
+    unitBridge.glObjectShape               = gl.UnitShape
+    unitBridge.glObjectShapeTextures       = gl.UnitShapeTextures
+end
 
 -- FEATURE
 
@@ -80,31 +88,17 @@ FeatureBridge.spSetObjectMidAndAimPos         = Spring.SetFeatureMidAndAimPos
 FeatureBridge.spGetObjectBlocking             = Spring.GetFeatureBlocking
 FeatureBridge.spSetObjectBlocking             = Spring.SetFeatureBlocking
 FeatureBridge.spDestroyObject                 = Spring.DestroyFeature
-if gl then
-    FeatureBridge.glObjectShape               = gl.FeatureShape
-end
 
 FeatureBridge.AddObjectCommand                = AddFeatureCommand
 FeatureBridge.RemoveObjectCommand             = RemoveFeatureCommand
 FeatureBridge.SetObjectParamCommand           = SetFeatureParamCommand
 FeatureBridge.DrawObject                      = function(params)
-    local pos           = params.pos
-    local angle         = params.angle
-    local objectDefID   = params.objectDefID
-    local objectTeamID  = params.objectTeamID
-    local color         = params.color
-    local featureDef    = FeatureDefs[objectDefID]
-
-    gl.Color(color.r, color.g, color.b, color.a)
-    if featureDef.drawType ~= 0 then
-        Spring.Echo("engine-tree, not sure what to do")
-    end
-    gl.LoadIdentity()
-    gl.Translate(pos.x, pos.y, pos.z)
-    gl.Rotate(angle.x, 1, 0, 0)
-    gl.Rotate(angle.y, 0, 1, 0)
-    gl.Rotate(angle.z, 0, 0, 1)
-    featureBridge.glObjectShape(objectDefID, objectTeamID, false)
+    DrawObject(params, featureBridge)
+--     local featureDef    = FeatureDefs[objectDefID]
+-- 
+--     if featureDef.drawType ~= 0 then
+--         Spring.Echo("engine-tree, not sure what to do")
+--     end
 end
 FeatureBridge.getObjectSpringID               = function(modelID)
     return SCEN_EDIT.model.featureManager:getSpringFeatureId(modelID)
@@ -118,6 +112,10 @@ end
 featureBridge = FeatureBridge()
 featureBridge.s11n                            = s11n:GetFeatureBridge()
 featureBridge.ObjectDefs                      = FeatureDefs
+if gl then
+    featureBridge.glObjectShape               = gl.FeatureShape
+    featureBridge.glObjectShapeTextures       = gl.FeatureShapeTextures
+end
 
 -- AREA
 

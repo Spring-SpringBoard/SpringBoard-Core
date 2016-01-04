@@ -89,17 +89,18 @@ void main(void)
 	#endif
 
 	#ifdef deferred
-	gl_FragData[GBUFFER_NORMTEX_IDX] = vec4((normal + vec3(1.0, 1.0, 1.0)) * 0.5, 1.0);
-	gl_FragData[GBUFFER_DIFFTEX_IDX] = vec4(mix(diffuse.rgb, teamColor.rgb, diffuse.a), extraColor.a * teamColor.a);
+	gl_FragData[0] = vec4((normal + vec3(1.0, 1.0, 1.0)) * 0.5, 1.0);
+	gl_FragData[1] = vec4(mix(diffuse.rgb, teamColor.rgb, diffuse.a), extraColor.a * teamColor.a);
+	gl_FragData[0].rgb += sin(time*4) / 3.14 / 10 + 0.1;
 	// do not premultiply reflection, leave it to the deferred lighting pass
 	// gl_FragData[GBUFFER_DIFFTEX_IDX] = vec4(mix(diffuse.rgb, teamColor.rgb, diffuse.a) * reflection, extraColor.a * teamColor.a);
 	// allows standard-lighting reconstruction by lazy LuaMaterials using us
-	gl_FragData[GBUFFER_SPECTEX_IDX] = extraColor;
-	gl_FragData[GBUFFER_EMITTEX_IDX] = vec4(0.0, 0.0, 0.0, 0.0);
-	gl_FragData[GBUFFER_MISCTEX_IDX] = vec4(0.0, 0.0, 0.0, 0.0);
+	gl_FragData[2] = extraColor;
+	gl_FragData[3] = vec4(0.0, 0.0, 0.0, 0.0);
+	gl_FragData[4] = vec4(0.0, 0.0, 0.0, 0.0);
 	#else
 	//gl_FragColor.rgb = mix(gl_Fog.color.rgb, gl_FragColor.rgb, fogFactor); // fog
 	gl_FragColor.a   = extraColor.a;
-	#endif
 	__FRAGMENT_POST_SHADING__
+	#endif
 }

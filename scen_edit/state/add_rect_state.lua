@@ -54,7 +54,7 @@ function AddRectState:MouseRelease(x, y, button)
         if self.endX == nil or self.endZ == nil then
             return
         end
-        
+
         local cmd = AddAreaCommand(self.startX, self.startZ, self.endX, self.endZ)
         SCEN_EDIT.commandManager:execute(cmd)
 

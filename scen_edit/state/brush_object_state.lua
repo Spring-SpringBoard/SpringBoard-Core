@@ -162,7 +162,6 @@ function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function BrushObjectState:DrawObject(object, bridge)
-    gl.PushMatrix()
     local objectDefID         = object.objectDefID
     local objectTeamID        = object.objectTeamID
     local pos                 = object.pos
@@ -173,7 +172,6 @@ function BrushObjectState:DrawObject(object, bridge)
         pos             = pos,
         angle           = { x = 0, y = 0, z = 0 },
     })
-    gl.PopMatrix()
 end
 
 function BrushObjectState:DrawWorld()
@@ -196,7 +194,8 @@ function BrushObjectState:DrawWorld()
     local objectDefID = self.objectDefIDs[1]
     --local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
 
-    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
     local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
@@ -208,7 +207,6 @@ function BrushObjectState:DrawWorld()
     }
     self:DrawObject(object, self.bridge)
     gl.UseShader(0)
-    gl.PopMatrix()
 end
 
 -- Custom unit/feature classes

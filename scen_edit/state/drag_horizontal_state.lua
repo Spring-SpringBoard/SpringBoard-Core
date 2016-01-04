@@ -70,7 +70,6 @@ function DragHorizontalObjectState:MouseRelease(x, y, button)
 end
 
 function DragHorizontalObjectState:DrawObject(objectID, object, bridge)
-    gl.PushMatrix()
     local objectDefID         = bridge.spGetObjectDefID(objectID)
     local objectTeamID        = bridge.spGetObjectTeam(objectID)
     local rot                 = bridge.s11n:Get(objectID, "rot")
@@ -81,11 +80,11 @@ function DragHorizontalObjectState:DrawObject(objectID, object, bridge)
         pos             = object.pos,
         angle           = { x = -math.deg(rot.x), y = -math.deg(rot.y), z = -math.deg(rot.z)},
     })
-    gl.PopMatrix()
 end
 
 function DragHorizontalObjectState:DrawWorld()
-    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
     local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
@@ -96,7 +95,6 @@ function DragHorizontalObjectState:DrawWorld()
         self:DrawObject(objectID, object, featureBridge)
     end
     gl.UseShader(0)
-    gl.PopMatrix()
 end
 
 -- Custom unit/feature classes

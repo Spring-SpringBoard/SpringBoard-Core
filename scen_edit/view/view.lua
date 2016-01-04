@@ -20,7 +20,7 @@ function View:init()
     SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
     if devMode then
---          self.runtimeView = RuntimeView()
+         self.runtimeView = RuntimeView()
     end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
@@ -77,25 +77,27 @@ end
 
 function View:DrawScreen()
     gl.PushMatrix()
---         local vsx, vsy = Spring.GetViewGeometry()
---         if not rotate then
---             rotate = 0
---             id = 416
---         end
---         gl.PushMatrix()
---         --gl.Translate(100, Spring.GetGroundHeight(100, 100), 100)
---         gl.Translate(vsx / 2, 500, 50)
--- --         gl.Rotate(rotate, 0.1, 1, 0)
---         gl.Rotate(30, 1, -1, 0)
--- --         gl.Rotate(30, 1, 0, 0)
--- --         gl.Rotate(rotate, 1, 1, 1)
---         gl.Scale(1, 1, 1)
---         rotate = rotate + 10
---         if rotate % 180 == 0 then
---             id = id + 1
---         end
---         featureBridge.glObjectShape(id, 0, false)
---         gl.PopMatrix()
+        local vsx, vsy = Spring.GetViewGeometry()
+        if not rotate then
+            rotate = 0
+            id = 416
+        end
+        gl.PushMatrix()
+        --gl.Translate(100, Spring.GetGroundHeight(100, 100), 100)
+        gl.Translate(vsx / 2, 500, 50)
+--         gl.Rotate(rotate, 0.1, 1, 0)
+        gl.Rotate(30, 1, -1, 0)
+--         gl.Rotate(30, 1, 0, 0)
+--         gl.Rotate(rotate, 1, 1, 1)
+        gl.Scale(1, 1, 1)
+        rotate = rotate + 10
+        if rotate % 180 == 0 then
+            id = id + 1
+        end
+        featureBridge.glObjectShapeTextures(id, true)
+        featureBridge.glObjectShape(id, 0, true)
+        featureBridge.glObjectShapeTextures(id, false)
+        gl.PopMatrix()
 
         local w, h = Spring.GetScreenGeometry()
         local fontSize = 20

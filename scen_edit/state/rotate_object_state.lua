@@ -150,7 +150,6 @@ function RotateObjectState:MouseRelease(x, y, button)
 end
 
 function RotateObjectState:DrawObject(objectID, object, bridge)
-    gl.PushMatrix()
     local objectDefID  = bridge.spGetObjectDefID(objectID)
     local objectTeamID = bridge.spGetObjectTeam(objectID)
     bridge.DrawObject({
@@ -160,11 +159,11 @@ function RotateObjectState:DrawObject(objectID, object, bridge)
         pos             = object.pos,
         angle           = { x = 0, y = math.deg(object.angle), z = 0 },
     })
-    gl.PopMatrix()
 end
 
 function RotateObjectState:DrawWorld()
-    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
     local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
@@ -182,5 +181,4 @@ function RotateObjectState:DrawWorld()
         local areaView = AreaView(objectID)
         areaView:_Draw(x1 + dx, z1 + dz, x2 + dx, z2 + dz)
     end
-    gl.PopMatrix()
 end

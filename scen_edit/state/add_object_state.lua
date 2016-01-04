@@ -81,7 +81,6 @@ function AddObjectState:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function AddObjectState:DrawObject(object, bridge)
-    gl.PushMatrix()
     local objectDefID         = object.objectDefID
     local objectTeamID        = object.objectTeamID
     local pos                 = object.pos
@@ -93,7 +92,6 @@ function AddObjectState:DrawObject(object, bridge)
         pos             = pos,
         angle           = { x = 0, y = angleY, z = 0 },
     })
-    gl.PopMatrix()
 end
 
 function AddObjectState:DrawWorld()
@@ -122,7 +120,8 @@ function AddObjectState:DrawWorld()
     end
 
     math.randomseed(self.randomSeed)
-    gl.PushMatrix()
+    gl.DepthTest(GL.LEQUAL)
+    gl.DepthMask(true)
     local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
@@ -147,7 +146,6 @@ function AddObjectState:DrawWorld()
             z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
         end
         y = Spring.GetGroundHeight(x, z)
-        gl.PushMatrix()
         local object = {
             objectDefID = objectDefID,
             objectTeamID = self.team,
@@ -155,9 +153,8 @@ function AddObjectState:DrawWorld()
             angleY = math.deg(self.angle),
         }
         self:DrawObject(object, self.bridge)
-        gl.PopMatrix()
     end
-    gl.PopMatrix()
+    gl.UseShader(0)
 end
 
 -- Custom unit/feature classes
