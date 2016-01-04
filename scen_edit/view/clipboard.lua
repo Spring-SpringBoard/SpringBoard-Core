@@ -175,4 +175,9 @@ function Clipboard:Copy(selection)
     if selection.areas then
         self:CopyAreas(selection.areas)
     end
+    Spring.SetClipboard(table.show({
+        units       = self.units,
+        features    = self.features,
+        areas       = self.areas,
+    }))
 end
