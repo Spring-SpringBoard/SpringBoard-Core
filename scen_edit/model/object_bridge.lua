@@ -39,6 +39,7 @@ UnitBridge.DrawObject                      = function(params)
     local objectTeamID  = params.objectTeamID
     local color         = params.color
     gl.Color(color.r, color.g, color.b, color.a)
+    gl.LoadIdentity()
     gl.Translate(pos.x, pos.y, pos.z)
     gl.Rotate(angle.x, 1, 0, 0)
     gl.Rotate(angle.y, 0, 1, 0)
@@ -98,6 +99,7 @@ FeatureBridge.DrawObject                      = function(params)
     if featureDef.drawType ~= 0 then
         Spring.Echo("engine-tree, not sure what to do")
     end
+    gl.LoadIdentity()
     gl.Translate(pos.x, pos.y, pos.z)
     gl.Rotate(angle.x, 1, 0, 0)
     gl.Rotate(angle.y, 0, 1, 0)

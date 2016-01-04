@@ -141,6 +141,7 @@ function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius
     gl.RenderToTexture(tex, function()
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
 --                     gl.TexRect(-1, -1, 1, 1)
+        gl.LoadIdentity()
         gl.Translate(0, 0.5, 0)
         gl.Rotate(60, -1, 1, -0.5)
         gl.Rotate(rotation, 0, 1, 0)
