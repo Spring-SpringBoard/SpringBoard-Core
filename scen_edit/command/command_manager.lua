@@ -47,7 +47,7 @@ function CommandManager:leaveMultipleCommandMode()
     end
     local cmdIDs = {} -- send a list of executed commands
     for _, cmd in pairs(self.multipleCommandStack) do
-        table.insert(cmdIDs, cmd.id)
+        table.insert(cmdIDs, cmd.__cmd_id)
     end
     if self.multipleCommandStack[1].mergeCommand then
         -- there is a special command for merging
@@ -70,7 +70,7 @@ end
 function CommandManager:notify(cmd, cmdIDs)
     -- send display to the widget
     local display = cmd:display()
-    cmdIDs = cmdIDs or {cmd.id}
+    cmdIDs = cmdIDs or {cmd.__cmd_id}
     self:execute(WidgetCommandExecuted(display, cmdIDs), true)
 end
 
@@ -79,10 +79,10 @@ end
 function CommandManager:_SendCommand(cmd)
     assert(cmd.className, "Command instance lacks className value")
     self.idCount = self.idCount + 1
-    cmd.id = self.idCount
+    cmd.__cmd_id = self.idCount
     local msg = Message("command", cmd)
     SCEN_EDIT.messageManager:sendMessage(msg)
-    return cmd.id
+    return cmd.__cmd_id
 end
 
 --widget specifies whether the command should be executed in LuaUI(true) or LuaRules(false)
