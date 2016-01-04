@@ -508,31 +508,29 @@ function SCEN_EDIT.createNewPanel(input, ...)
     Spring.Echo("No panel for this input: " .. tostring(input))
 end
 
-SCEN_EDIT.delayedGL = {}
+SCEN_EDIT.delayed = {
+--     Update      = {},
+    GameFrame   = {},
+    DrawWorld   = {},
+    DrawScreen  = {},
+}
 function SCEN_EDIT.delayGL(func, params)
-    table.insert(SCEN_EDIT.delayedGL, {func, params or {}})
+    SCEN_EDIT.Delay("DrawWorld", func, params)
 end
-
-function SCEN_EDIT.executeDelayedGL()
-    local delayedGL = SCEN_EDIT.delayedGL
-    SCEN_EDIT.delayedGL = {}
-    for i, call in pairs(delayedGL) do
-		xpcall(function() call[1](unpack(call[2])) end,
-               function(err) Spring.Log("scened", LOG.ERROR, debug.traceback(err)) end )
-    end
-end
-
-SCEN_EDIT.delayed = {}
 function SCEN_EDIT.delay(func, params)
-    table.insert(SCEN_EDIT.delayed, {func, params or {}})
+    SCEN_EDIT.Delay("GameFrame", func, params)
+end
+function SCEN_EDIT.Delay(name, func, params)
+    local delayed = SCEN_EDIT.delayed[name]
+    table.insert(delayed, {func, params or {}})
 end
 
-function SCEN_EDIT.executeDelayed()
-    local delayed = SCEN_EDIT.delayed
-    SCEN_EDIT.delayed = {}
+function SCEN_EDIT.executeDelayed(name)
+    local delayed = SCEN_EDIT.delayed[name]
+    SCEN_EDIT.delayed[name] = {}
     for i, call in pairs(delayed) do
         xpcall(function() call[1](unpack(call[2])) end,
-               function(err) Spring.Log("scened", LOG.ERROR, debug.traceback(err)) end )
+              function(err) Spring.Log("scened", LOG.ERROR, debug.traceback(err)) end )
     end
 end
 

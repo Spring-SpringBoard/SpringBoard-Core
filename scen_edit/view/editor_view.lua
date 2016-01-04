@@ -222,6 +222,7 @@ end
 
 Field = LCS.class{}
 function Field:init(field)
+    self.height = 30
     for k, v in pairs(field) do
         self[k] = v
     end
@@ -277,9 +278,9 @@ function ChoiceField:init(field)
         captions = self.items
     end
     self.comboBox = ComboBox:New {
-        x = 190 - 5,
+        x = 120 - 5,
         width = field.width,
-        height = 30,
+        height = self.height,
         items = captions,
         ids = ids,
     }
@@ -312,8 +313,9 @@ function BooleanField:init(field)
     self:super('init', field)
     self.checkBox = Checkbox:New {
         caption = self.title,
-        width = field.width,
-        height = 20,
+        x = 0,
+        width = self.width,
+        height = self.height,
         checked = self.value,
     }
     self.checkBox.OnChange = {
@@ -362,7 +364,7 @@ function StringField:init(field)
     self.editBox = EditBox:New {
         text = self.value,
         width = self.width,
-        height = 30,
+        height = self.height,
         KeyPress = function(...)
             if not ParseKey(self, ...) then
                 return Chili.EditBox.KeyPress(...)
@@ -408,7 +410,7 @@ function StringField:init(field)
     self.button = Button:New {
         caption = "",
         width = self.width,
-        height = 30,
+        height = self.height,
         padding = {0, 0, 0, 0,},
         MouseDown = function(obj, x, y, btn, ...) -- Overrides Chili.Button.MouseDown
             if btn == 1 then
@@ -538,6 +540,7 @@ end
 
 function ColorbarsField:init(field)
     self.width = 200
+    self.height = 60
     self:super('init', field)
     self.label = Label:New {
         caption = self.title,
@@ -547,7 +550,7 @@ function ColorbarsField:init(field)
         color = self.value,
         x = self.width + 10,
         width = self.width,
-        height = 60,
+        height = self.height,
         OnChange = {
             function(obj, value)
                 self:Set(value, self.colorbars)

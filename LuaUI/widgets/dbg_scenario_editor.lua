@@ -242,6 +242,8 @@ function reloadGadgets()
 end
 
 function widget:DrawScreen()
+    SCEN_EDIT.executeDelayed("DrawScreen")
+
     if SCEN_EDIT.view ~= nil then
         SCEN_EDIT.stateManager:DrawScreen()
         SCEN_EDIT.view:DrawScreen()
@@ -249,7 +251,7 @@ function widget:DrawScreen()
 end
 
 function widget:DrawWorld()
-    SCEN_EDIT.executeDelayedGL()
+    SCEN_EDIT.executeDelayed("DrawWorld")
 
     if SCEN_EDIT.view ~= nil then
         SCEN_EDIT.stateManager:DrawWorld()
@@ -322,6 +324,6 @@ function widget:Update()
         SCEN_EDIT.stateManager:Update()
         SCEN_EDIT.view:Update()
     end
-    SCEN_EDIT.executeDelayed()
+    SCEN_EDIT.executeDelayed("GameFrame")
     SCEN_EDIT.displayUtil:Update()
 end

@@ -190,7 +190,7 @@ function gadget:GamePreload()
 end
 
 function gadget:GameFrame(frameNum)
-    SCEN_EDIT.executeDelayed()
+    SCEN_EDIT.executeDelayed("GameFrame")
     SCEN_EDIT.rtModel:GameFrame(frameNum)
 
     --wait a bit before populating everything (so luaui is loaded)

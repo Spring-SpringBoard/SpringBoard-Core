@@ -22,6 +22,7 @@ function gadget:GetInfo()
         api     = true,
     }
 end
+local _s11n
 function gadget:Initialize()
     LCS = loadstring(VFS.LoadFile(LCS_FOLDER .. "/LCS.lua"))
     LCS = LCS()
@@ -29,5 +30,22 @@ function gadget:Initialize()
     VFS.Include(S11N_FOLDER .. "/s11n.lua", nil, VFS.DEF_MODE)
 
     -- Export Gadget Globals
-    GG.s11n = s11n()
+    _s11n = s11n()
+    GG.s11n = _s11n
+    for _, objectID in pairs(Spring.GetAllUnits()) do
+        self:UnitCreated(objectID)
+    end
+    for _, objectID in pairs(Spring.GetAllFeatures()) do
+        self:FeatureCreated(objectID)
+    end
+end
+function gadget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
+    _s11n:GetUnitBridge():_ObjectCreated(unitID)
+end
+function gadget:FeatureCreated(featureID, allyTeamID)
+    _s11n:GetFeatureBridge():_ObjectCreated(featureID)
+end
+function gadget:GameFrame()
+    _s11n:GetFeatureBridge():_GameFrame()
+    _s11n:GetUnitBridge():_GameFrame()
 end

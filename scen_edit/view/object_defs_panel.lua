@@ -83,7 +83,7 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
     local objectDefID = ctrl.objectDefID
     local drawIcon = {ctrl = ctrl, radius = self:GetObjectDefRadius(objectDefID)}
     self.drawIcons[objectDefID] = drawIcon
-    SCEN_EDIT.delayGL(function()
+    SCEN_EDIT.Delay("DrawScreen", function()
         local tex = gl.CreateTexture(128, 128, {
             border = false,
             min_filter = GL.LINEAR,
@@ -97,7 +97,7 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
     end)
     if not self.scheduleDraw then
         self.scheduleDraw = true
-        SCEN_EDIT.delayGL(function()
+        SCEN_EDIT.Delay("DrawScreen", function()
             self:DrawIcons()
         end)
     end
@@ -109,7 +109,7 @@ function ObjectDefsPanel:DrawIcons()
     if (time - self.refresh) >= 0.1 then
         self.refresh = time
     else
-        SCEN_EDIT.delayGL(function()
+        SCEN_EDIT.Delay("DrawScreen", function()
             self:DrawIcons()
         end)
         return
@@ -129,7 +129,7 @@ function ObjectDefsPanel:DrawIcons()
     gl.Blending("alpha")
     gl.Texture(false)
     gl.PopMatrix()
-    SCEN_EDIT.delayGL(function()
+    SCEN_EDIT.Delay("DrawScreen", function()
         self:DrawIcons()
     end)
 end

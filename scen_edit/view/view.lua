@@ -95,7 +95,7 @@ function View:DrawScreen()
             id = id + 1
         end
         featureBridge.glObjectShapeTextures(id, true)
-        featureBridge.glObjectShape(id, 0, true)
+--         featureBridge.glObjectShape(id, 0, true)
         featureBridge.glObjectShapeTextures(id, false)
         gl.PopMatrix()
 

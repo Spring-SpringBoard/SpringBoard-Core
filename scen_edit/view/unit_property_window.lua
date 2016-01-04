@@ -6,7 +6,7 @@ function UnitPropertyWindow:init()
     self:super("init")
     self.rules = {}
     self.objectKeys = { "health" }
-    self.unitKeys = {"tooltip", "maxHealth", "stockpile", "experience", "fuel"}
+    self.unitKeys = {"tooltip", "maxHealth", "stockpile", "experience", "fuel", "team", "neutral", "maxRange", "harvestStorage", "capture", --[["paralyze",]] "build"}
 
     self:AddControl("pos-sep", {
         Label:New {
@@ -105,7 +105,51 @@ function UnitPropertyWindow:init()
             step = 0.2,
             width = 100,
         }),
+        Field({
+            name = "btn-align-ground",
+            width = 150,
+            components = {
+                Button:New {
+                    caption = "Align",
+                    x = 0,
+                    width = 135,
+                    height = 30,
+                    tooltip = "Align to heightmap",
+                    OnClick = {
+                        function()
+                            local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+                            local objectID, bridge
+                            if #selection.units > 0 then
+                                objectID = selection.units[1]
+                                bridge = unitBridge
+                            elseif #selection.features > 0 then
+                                objectID = selection.features[1]
+                                bridge = featureBridge
+                            end
+                            local x, z = self.fields["posX"].value, self.fields["posZ"].value
+                            local dirX, dirY, dirZ = Spring.GetGroundNormal(x, z)
+                            local frontDir = bridge.s11n:Get(objectID, "dir")
+                            local upDir =    {x=dirX,  y=dirY,  z=dirZ}
+                            local rightDir = CrossProduct(frontDir, upDir)
+                            frontDir = CrossProduct(upDir, rightDir)
+                            self:OnFieldChange("dir", frontDir)
+                            --self:OnFieldChange("dir", {x=1, y=0, z=0})
+                        end
+                    }
+                },
+            }
+        })
     }))
+
+    self:AddControl("health-sep", {
+        Label:New {
+            caption = "Health",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
     self:AddField(GroupField({
         NumericField({
             name = "health",
@@ -114,17 +158,133 @@ function UnitPropertyWindow:init()
             minValue = 1,
             value = 1,
             step = 10,
-            width = 225,
+            width = 160,
         }),
         NumericField({
             name = "maxHealth",
-            title = "Max health:",
+            title = "Max:",
             tooltip = "Max health",
             minValue = 1,
             value = 1,
             step = 10,
-            width = 225,
+            width = 160,
         })
+    }))
+    self:AddField(GroupField({
+        NumericField({
+            name = "capture",
+            title = "Capture:",
+            tooltip = "Capture",
+            minValue = 0,
+            maxValue = 1,
+            value = 1,
+            step = 0.001,
+            width = 160,
+        }),
+        NumericField({
+            name = "build",
+            title = "Build:",
+            tooltip = "Build health",
+            minValue = 0,
+            maxValue = 1,
+            value = 1,
+            step = 0.001,
+            width = 160,
+        }),
+--         NumericField({
+--             name = "paralyze",
+--             title = "Paralyze:",
+--             tooltip = "Paralyze",
+--             minValue = 0,
+--             value = 1,
+--             step = 10,
+--             width = 150,
+--         }),
+    }))
+
+    self:AddControl("state-sep", {
+        Label:New {
+            caption = "State",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        ChoiceField({
+            name = "fireState",
+            title = "",
+            tooltip = "Fire state",
+            items = {0, 1, 2},
+            captions = {"Hold fire", "Return fire", "Fire at will"},
+            width = 100,
+        }),
+        ChoiceField({
+            name = "moveState",
+            title = "",
+            tooltip = "Move state",
+            items = {0, 1, 2},
+            captions = {"Hold pos", "Maneuver", "Roam"},
+            width = 100,
+        }),
+        BooleanField({
+            name = "active",
+            title = "Active",
+            tooltip = "Active/passive unit",
+            width = 100,
+        }),
+        BooleanField({
+            name = "repeat",
+            title = "Repeat",
+            tooltip = "Should the unit repeat orders",
+            width = 100,
+        }),
+    }))
+    self:AddField(GroupField({
+        BooleanField({
+            name = "cloak",
+            title = "Cloak",
+            tooltip = "Cloak state",
+            width = 100,
+        }),
+        BooleanField({
+            name = "trajectory",
+            title = "Trajectory",
+            tooltip = "Shoot using a trajectory",
+            width = 100,
+        }),
+        BooleanField({
+            name = "autoRepairLevel",
+            title = "Auto repair",
+            tooltip = "Auto repair level",
+            width = 100,
+        }),
+        BooleanField({
+            name = "loopbackAttack",
+            title = "Loopback",
+            tooltip = "Loopback attack",
+            width = 100,
+        }),
+    }))
+
+    self:AddField(BooleanField({
+        name = "autoLand",
+        title = "Auto land",
+        tooltip = "Auto land",
+        width = 100,
+    }))
+
+    local teamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id")
+    for i = 1, #teamIds do
+        teamIds[i] = tostring(teamIds[i])
+    end
+    local teamCaptions = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name")
+    self:AddField(ChoiceField({
+        name = "team",
+        items = teamIds,
+        captions = teamCaptions,
+        title = "Team: ",
     }))
 
     self:AddField(StringField({
@@ -152,10 +312,98 @@ function UnitPropertyWindow:init()
         step = 0.01,
     }))
 
+    self:AddField(BooleanField({
+        name = "neutral",
+        title = "Neutral:",
+        tooltip = "Neutral",
+        minValue = 0,
+        value = 1,
+        step = 0.01,
+    }))
+
     self:AddField(NumericField({
         name = "fuel",
         title = "Fuel:",
         tooltip = "Fuel",
+        minValue = 0,
+        value = 1,
+        step = 1,
+    }))
+
+    self:AddField(NumericField({
+        name = "maxRange",
+        title = "Max range:",
+        tooltip = "Max unit engagement range",
+        minValue = 0,
+        value = 1,
+        step = 1,
+    }))
+
+    self:AddControl("metal-sep", {
+        Label:New {
+            caption = "Metal",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        NumericField({
+            name = "metalMake",
+            title = "Make:",
+            tooltip = "Metal make",
+            value = 0,
+            step = 0.2,
+            width = 200,
+        }),
+        NumericField({
+            name = "metalUse",
+            title = "Use:",
+            tooltip = "Metal use",
+            value = 0,
+            step = 0.2,
+            width = 200,
+        }),
+    }))
+    self:AddControl("energy-sep", {
+        Label:New {
+            caption = "Energy",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        NumericField({
+            name = "energyMake",
+            title = "Make:",
+            tooltip = "Energy make",
+            value = 0,
+            step = 0.2,
+            width = 200,
+        }),
+        NumericField({
+            name = "energyUse",
+            title = "Use:",
+            tooltip = "Energy use",
+            value = 0,
+            step = 0.2,
+            width = 200,
+        }),
+    }))
+    self:AddControl("energy-end", {
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+
+    self:AddField(NumericField({
+        name = "harvestStorage",
+        title = "Harvest storage:",
+        tooltip = "Harvest storage (metal)",
         minValue = 0,
         value = 1,
         step = 1,
@@ -180,6 +428,12 @@ function UnitPropertyWindow:init()
     self:Finalize(children)
     SCEN_EDIT.view.selectionManager:addListener(self)
     self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
+end
+
+function CrossProduct(u, v)
+    return {x = u.y * v.z - u.z * v.x,
+            y = u.z * v.x - u.x * v.z,
+            z = u.x * v.y - u.y * v.x}
 end
 
 function UnitPropertyWindow:CommandExecuted()
@@ -216,7 +470,7 @@ function UnitPropertyWindow:IsFeatureKey(name)
 end
 
 function UnitPropertyWindow:IsUnitKey(name)
-    if self:IsObjectKey(name) then
+    if self:IsObjectKey(name) or name == "resources" then
         return true
     end
     for _, key in pairs(self.unitKeys) do
@@ -292,6 +546,9 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
             self:AddObjectRules(objectID, bridge)
         end
         for _, key in pairs(keys) do
+            if key == "fuel" then -- FIXME: fuel is aircraft only
+                local maxFuel = bridge.ObjectDefs[bridge.spGetObjectDefID(objectID)].maxFuel
+            end
             local value = bridge.s11n:Get(objectID, key)
             self:Set(key, value)
         end
@@ -305,6 +562,27 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
         self:Set("angleX", math.deg(rot.x))
         self:Set("angleY", math.deg(rot.y))
         self:Set("angleZ", math.deg(rot.z))
+
+        if bridge == unitBridge then
+            local resources = bridge.s11n:Get(objectID, "resources")
+            local metalMake, metalUse, energyMake, energyUse = resources.metalMake, resources.metalUse, resources.energyMake, resources.energyUse
+            self:Set("metalMake",  metalMake)
+            self:Set("metalUse",   metalUse)
+            self:Set("energyMake", energyMake)
+            self:Set("energyUse",  energyUse)
+
+            local states = bridge.s11n:Get(objectID, "states")
+            Spring.Echo("ACTIVE", states.active)
+            self:Set("fireState",       states.fireState)
+            self:Set("moveState",       states.moveState)
+            self:Set("repeat",          states["repeat"])
+            self:Set("cloak",           states.cloak)
+            self:Set("active",          states.active)
+            self:Set("trajectory",      states.trajectory)
+            self:Set("autoLand",        states.autoLand)
+            self:Set("autoRepairLevel", states.autoRepairLevel)
+            self:Set("loopbackAttack",  states.loopbackAttack)
+        end
     end
     self.selectionChanging = false
 end
@@ -335,8 +613,28 @@ function UnitPropertyWindow:OnFieldChange(name, value)
                 [rule] = value
             }
         end
+        if name == "metalMake" or name == "metalUse" or name == "energyMake" or name == "energyUse" then
+            name = "resources"
+            value = { metalMake  = self.fields["metalMake"].value,
+                      metalUse   = self.fields["metalUse"].value,
+                      energyMake = self.fields["energyMake"].value,
+                      energyUse  = self.fields["energyUse"].value }
+        end
+        if name == "fireState" or name == "moveState" or name == "repeat" or name == "cloak" or name == "active" or name == "trajectory" or name == "autoLand" or name == "autoRepairLevel" or name == "loopbackAttack" then
+            name = "states"
+            value = { fireState         = self.fields["fireState"].value,
+                      moveState         = self.fields["moveState"].value,
+                      ["repeat"]        = self.fields["repeat"].value,
+                      cloak             = self.fields["cloak"].value,
+                      active            = self.fields["active"].value,
+                      trajectory        = self.fields["trajectory"].value,
+                      autoLand          = self.fields["autoLand"].value,
+                      autoRepairLevel   = self.fields["autoRepairLevel"].value,
+                      loopbackAttack    = self.fields["loopbackAttack"].value,
+            }
+        end
         -- HACK: needs cleanup
-        if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" or name == "rules" then
+        if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" or name == "rules" or name == "resources" or name == "states" then
             for _, command in pairs(self:GetCommands(selection.units, name, value, unitBridge)) do
                 table.insert(commands, command)
             end
