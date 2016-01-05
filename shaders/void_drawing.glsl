@@ -1,4 +1,5 @@
 uniform sampler2D mapTex;
+uniform sampler2D brushTex;
 
 uniform float x1, x2, z1, z2;
 uniform float falloffFactor;
@@ -11,6 +12,7 @@ vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
 void main(void)
 {
 	vec4 mapColor = texture2D(mapTex, gl_TexCoord[0].st);
+	vec4 brushColor = texture2D(brushTex, gl_TexCoord[1].st);
 	vec4 color = mapColor;
 	/*
 	// mode goes here
@@ -51,6 +53,7 @@ void main(void)
 // 		color.a = 1+color.a;
 // 		color.a = max(color.a, mapColor.a);
 // 	}
+    voidFactor *= brushColor.a;
 	if (voidFactor > 0) {
 		color.a = 1 - (1 - alpha) * voidFactor;
 		color.a = min(color.a, mapColor.a);

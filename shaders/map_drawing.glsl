@@ -1,4 +1,5 @@
 uniform sampler2D mapTex;
+uniform sampler2D brushTex;
 uniform sampler2D paintTex;
 
 uniform float x1, x2, z1, z2;
@@ -14,8 +15,9 @@ vec4 mix(vec4 penColor, vec4 mapColor, float alpha) {
 
 void main(void)
 {
-	vec4 mapColor = texture2D(mapTex, gl_TexCoord[0].st);
-	vec4 texColor = texture2D(paintTex, gl_TexCoord[1].st);
+	vec4 mapColor   = texture2D(mapTex, gl_TexCoord[0].st);
+    vec4 brushColor = texture2D(brushTex, gl_TexCoord[1].st);
+	vec4 texColor   = texture2D(paintTex, gl_TexCoord[2].st);
 
 	vec4 color = diffuseColor * texColor;
 	
@@ -41,12 +43,13 @@ void main(void)
 	float distance = sqrt(delta.x * delta.x + delta.y * delta.y);
 	float alpha = 1 - 2 * distance;
 	alpha = clamp(alpha, 0, 1);
-	color = mix(color, mapColor, alpha);
+// 	color = mix(color, mapColor, alpha);
 	
 	// falloff crispness (use previously calculated alpha to make for a smooth falloff blending
 	alpha = 1 - min(1.0f, alpha + falloffFactor);
-	color = mix(min(color, (max(color,mapColor+alpha)-alpha)-alpha)+alpha,mapColor,color.a);
+// 	color = mix(min(color, (max(color,mapColor+alpha)-alpha)-alpha)+alpha,mapColor,color.a);
 
+	color = mix(color, mapColor, brushColor.a);
 	// TODO: this can be used for deleting textures (void maps)
 	//alpha = 1;
 // 	if (alpha > 0.9) {

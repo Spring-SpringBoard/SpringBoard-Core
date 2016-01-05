@@ -6,6 +6,7 @@ TerrainEditorView = EditorView:extends{}
 function TerrainEditorView:init()
     self:super("init")
 	self.paintTexture = {}
+    self.brushTexture = {}
 
 	self.textureBrowser = TextureBrowser({
 		dir = SCEN_EDIT_IMG_DIR .. "resources/brush_textures/nobiax/",
@@ -47,14 +48,48 @@ function TerrainEditorView:init()
         end
     }
 
---     self.detailTextureImages = ImageListView:New {
---         dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/detail/",
---         width = "100%",
---         height = "100%",
---         multiSelect = false,
---         iconX = 48,
---         iconY = 48,
---     }
+    self.brushTextureImages = TextureBrowser({
+        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/terrain/",
+        width = "100%",
+        height = "100%",
+        multiSelect = false,
+        iconX = 64,
+        iconY = 64,
+    })
+
+    self.brushTextureImages.control.OnSelectItem = {
+        function(obj, itemIdx, selected)
+            if selected and itemIdx > 0 then
+-- 				Spring.Echo("new state")
+                local item = self.brushTextureImages.control.children[itemIdx]
+				for k, v in pairs(self.brushTexture) do
+					self.brushTexture[k] = nil
+				end
+				if item.texture ~= nil then
+					for k, v in pairs(item.texture) do
+						self.brushTexture[k] = v
+					end
+					SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.brushTexture))
+					
+					local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+-- 					if currentState.smartPaint then
+-- 						Spring.Echo("BLA!")
+-- 						table.insert(currentState.textures, {
+-- 							texture = SCEN_EDIT.deepcopy(self.brushTexture),
+-- 							minHeight = 160, -- math.random(100),
+-- 							--minSlope = math.random(),
+-- 							minSlope = #currentState.textures* 0.7 + 0,
+-- 						})
+-- 					end
+				end
+            end
+            -- FIXME: disallow deselection
+-- 			if not selected then
+-- 				local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+-- 				SCEN_EDIT.stateManager:SetState(DefaultState())
+-- 			end
+        end
+    }
 --     self.detailTextureImages.OnSelectItem = {
 --         function(obj, itemIdx, selected)
 --             -- FIXME: shouldn't be using ._dirsNum probably
@@ -141,9 +176,27 @@ function TerrainEditorView:init()
             end
         },
     })
+    self.btnBlur = TabbedPanelButton({
+        x = 140,
+        y = 0,
+        tooltip = "Make the terrain transparent (2)",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelLabel({ caption = "Blur" }),
+        },
+        OnClick = {
+            function()
+				local state = self:EnterState()
+                state.blur = true
+				state.void = false
+				state.smartPaint = false
+				self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation")
+            end
+        },
+    })
 	-- FIXME: Need to check if HeightMapTexture = 1 
 	self.btnSmartPaint = TabbedPanelButton({
-        x = 140,
+        x = 210,
         y = 0,
         tooltip = "Smart paint the terrain (3)",
         children = {
@@ -344,19 +397,30 @@ function TerrainEditorView:init()
 		self.btnPaint,
 		self.btnVoid,
 		self.btnSmartPaint,
+        self.btnBlur,
 		ScrollPanel:New {
 			x = 0, 
 			right = 0,
 			y = 70, 
-			height = "35%",
+			height = "30%",
 			padding = {0, 0, 0, 0},
 			children = { 
 				self.textureBrowser.control,
 			}
 		},
+        ScrollPanel:New {
+			x = 0, 
+			right = 0,
+			y = "38%", 
+			height = "20%",
+			padding = {0, 0, 0, 0},
+			children = { 
+				self.brushTextureImages.control,
+			}
+		},
 		ScrollPanel:New {
 			x = 0,
-			y = "45%",
+			y = "55%",
 			bottom = 30,
 			right = 0,
 			borderColor = {0,0,0,0},
@@ -374,6 +438,7 @@ function TerrainEditorView:EnterState()
 		SCEN_EDIT.stateManager:SetState(currentState)
 	end
 	currentState.paintTexture = self.paintTexture
+    currentState.brushTexture = self.brushTexture
 	return currentState
 end
 
@@ -422,6 +487,7 @@ function TextureBrowser:PopulateItems()
 			end
 		end
         local texturePath = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. texture.diffuse
+        Spring.Echo(texturePath)
 		local item = self:AddItem(name, texturePath or "", tooltip)
 		item.texture = texture
 	end
