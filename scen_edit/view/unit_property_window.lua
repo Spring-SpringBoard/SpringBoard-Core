@@ -141,6 +141,42 @@ function UnitPropertyWindow:init()
         })
     }))
 
+    self:AddControl("vel-sep", {
+        Label:New {
+            caption = "Velocity",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        NumericField({
+            name = "velX",
+            title = "X:",
+            tooltip = "Velocity (x)",
+            value = 1,
+            step = 1,
+            width = 100,
+        }),
+        NumericField({
+            name = "velY",
+            title = "Y:",
+            tooltip = "Velocity (y)",
+            value = 0,
+            step = 1,
+            width = 100,
+        }),
+        NumericField({
+            name = "velZ",
+            title = "Z:",
+            tooltip = "Velocity (z)",
+            value = 1,
+            step = 1,
+            width = 100,
+        }),
+    }))
+
     self:AddControl("health-sep", {
         Label:New {
             caption = "Health",
@@ -456,7 +492,7 @@ function UnitPropertyWindow:IsObjectKey(name)
             return true
         end
     end
-    if name == "pos" or name == "dir" or name == "rot" then
+    if name == "pos" or name == "dir" or name == "rot" or name == "vel" then
         return true
     end
     return false
@@ -557,6 +593,11 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
         self:Set("posY", pos.y)
         self:Set("posZ", pos.z)
 
+        local vel = bridge.s11n:Get(objectID, "vel")
+        self:Set("velX", vel.x)
+        self:Set("velY", vel.y)
+        self:Set("velZ", vel.z)
+
         local rot = bridge.s11n:Get(objectID, "rot")
         local dir = bridge.s11n:Get(objectID, "dir")
         self:Set("angleX", math.deg(rot.x))
@@ -596,6 +637,12 @@ function UnitPropertyWindow:OnFieldChange(name, value)
                       y = self.fields["posY"].value,
                       z = self.fields["posZ"].value }
             name = "pos"
+        end
+        if name == "velX" or name == "velY" or name == "velZ" then
+            value = { x = self.fields["velX"].value,
+                      y = self.fields["velY"].value,
+                      z = self.fields["velZ"].value }
+            name = "vel"
         end
         if name == "angleX" or name == "angleY" or name == "angleZ" then
             local angleX = math.rad(self.fields["angleX"].value)
@@ -654,9 +701,13 @@ function UnitPropertyWindow:GetCommands(objectIDs, name, value, bridge)
     for _, objectID in pairs(objectIDs) do
         local modelID = bridge.getObjectModelID(objectID)
         table.insert(commands, bridge.SetObjectParamCommand(modelID, name, value))
-        if name == "pos" and bridge == unitBridge then
-            table.insert(commands, bridge.SetObjectParamCommand(modelID, "movectrl", true))
-            table.insert(commands, bridge.SetObjectParamCommand(modelID, "gravity", 0))
+        if name == "pos" then
+            if bridge == unitBridge then
+                table.insert(commands, bridge.SetObjectParamCommand(modelID, "movectrl", true))
+                table.insert(commands, bridge.SetObjectParamCommand(modelID, "gravity", 0))
+            elseif bridge == featureBridge then
+                table.insert(commands, bridge.SetObjectParamCommand(modelID, "lockPos", false))
+            end
         end
     end
     return commands
