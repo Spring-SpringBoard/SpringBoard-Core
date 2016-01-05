@@ -125,6 +125,7 @@ function AddObjectState:DrawWorld()
     local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
+    gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(self.team))
     local baseX, baseY, baseZ = unpack(coords)
     self.mapGrid.rows    = Game.mapSizeX / unitSizeX
     self.mapGrid.columns = Game.mapSizeZ / unitSizeZ

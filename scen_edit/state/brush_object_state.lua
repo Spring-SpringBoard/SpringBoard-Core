@@ -161,10 +161,11 @@ function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)
     return false
 end
 
-function BrushObjectState:DrawObject(object, bridge)
+function BrushObjectState:DrawObject(object, bridge, shaderObj)
     local objectDefID         = object.objectDefID
     local objectTeamID        = object.objectTeamID
     local pos                 = object.pos
+    gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     bridge.DrawObject({
         color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
         objectDefID     = objectDefID,
@@ -205,7 +206,7 @@ function BrushObjectState:DrawWorld()
         objectTeamID = self.team,
         pos = { x = baseX, y = baseY, z = baseZ },
     }
-    self:DrawObject(object, self.bridge)
+    self:DrawObject(object, self.bridge, shaderObj)
     gl.UseShader(0)
 end
 

@@ -94,9 +94,10 @@ function DragObjectState:MouseRelease(x, y, button)
     SCEN_EDIT.stateManager:SetState(DefaultState())
 end
 
-function DragObjectState:DrawObject(objectID, object, bridge)
+function DragObjectState:DrawObject(objectID, object, bridge, shaderObj)
     local objectDefID         = bridge.spGetObjectDefID(objectID)
     local objectTeamID        = bridge.spGetObjectTeam(objectID)
+    gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     local rot                 = bridge.s11n:Get(objectID, "rot")
     bridge.DrawObject({
         color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },
@@ -114,10 +115,10 @@ function DragObjectState:DrawWorld()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
     for objectID, object in pairs(self.ghostViews.units) do
-        self:DrawObject(objectID, object, unitBridge)
+        self:DrawObject(objectID, object, unitBridge, shaderObj)
     end
     for objectID, object in pairs(self.ghostViews.features) do
-        self:DrawObject(objectID, object, featureBridge)
+        self:DrawObject(objectID, object, featureBridge, shaderObj)
     end
     gl.UseShader(0)
     for objectID, object in pairs(self.ghostViews.areas) do

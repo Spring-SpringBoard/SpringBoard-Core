@@ -22,7 +22,8 @@
   uniform float shadowDensity;
 #endif
 
-  uniform vec4 teamColor; // alpha contains `far distance fading factor`
+  uniform vec4 teamColor;
+  uniform float alphaPass;
 
   varying vec4 vertexWorldPos;
   varying vec3 cameraDir;
@@ -34,8 +35,6 @@
 #else
   varying vec3 normalv;
 #endif
-
-uniform int numModelDynLights;
 
 float GetShadowCoeff(vec4 shadowCoors)
 {
@@ -100,7 +99,7 @@ void main(void)
 	gl_FragData[4] = vec4(0.0, 0.0, 0.0, 0.0);
 	#else
 	//gl_FragColor.rgb = mix(gl_Fog.color.rgb, gl_FragColor.rgb, fogFactor); // fog
-	gl_FragColor.a   = extraColor.a;
+	gl_FragColor.a   = mix(extraColor.a * teamColor.a, teamColor.a, alphaPass);
 	__FRAGMENT_POST_SHADING__
 	#endif
 }

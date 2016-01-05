@@ -115,9 +115,6 @@ function ObjectDefsPanel:DrawIcons()
         return
     end
     gl.PushMatrix()
-    --gl.Blending(false)
-    gl.Blending("disable")
-    gl.AlphaTest(false)
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
     for objectDefID, drawIcon in pairs(self.drawIcons) do
@@ -136,12 +133,15 @@ end
 
 function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius)
     local objectDef = bridge.ObjectDefs[objectDefID]
-    local scale = -1.2 / radius--math.sqrt(radius)
+    local scale = -1 / radius--math.sqrt(radius)
     gl.Texture("LuaUI/images/scenedit/background.png")
     gl.RenderToTexture(tex, function()
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
 --                     gl.TexRect(-1, -1, 1, 1)
         gl.Translate(0, 0.5, 0)
+        local shaderObj = SCEN_EDIT.view.modelShaders:GetDefaultShader()
+        gl.UseShader(shaderObj.shader)
+        gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(self.teamID))
         gl.Rotate(60, -1, 1, -0.5)
         gl.Rotate(rotation, 0, 1, 0)
 --         gl.Scale(-0.01, -0.01, -0.01)
@@ -149,6 +149,7 @@ function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius
         bridge.glObjectShapeTextures(objectDefID, true)
         bridge.glObjectShape(objectDefID, self.teamID, true)
         bridge.glObjectShapeTextures(objectDefID, false)
+        gl.UseShader(0)
 --                     gl.Texture(0, "-%" .. ctrl.objectDefID .. ":0")
 --                     featureBridge.DrawObject(ctrl.objectDefID, 0)
     end)

@@ -72,7 +72,7 @@ function SelectionManager:DrawWorldPreUnit()
     local selection = self:GetSelection()
     for _, featureId in pairs(selection.features) do
         if Spring.ValidFeatureID(featureId) then
-            local bx, _, bz = Spring.GetFeaturePosition(featureId)
+            local bx, by, bz = Spring.GetFeaturePosition(featureId)
             local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
             local minx, maxx = featureDef.model.minx or -10, featureDef.model.maxx or 10
             local minz, maxz = featureDef.model.minz or -10, featureDef.model.maxz or 10
@@ -80,11 +80,11 @@ function SelectionManager:DrawWorldPreUnit()
             local x2, z2 = bx + maxx - 5, bz + maxz + 5
             gl.BeginEnd(GL.LINE_STRIP, function()
                 gl.Color(0, 1, 0, 1)
-                gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
-                gl.Vertex(x2, Spring.GetGroundHeight(x2, z1), z1)
-                gl.Vertex(x2, Spring.GetGroundHeight(x2, z2), z2)
-                gl.Vertex(x1, Spring.GetGroundHeight(x1, z2), z2)
-                gl.Vertex(x1, Spring.GetGroundHeight(x1, z1), z1)
+                gl.Vertex(x1, by, z1)
+                gl.Vertex(x2, by, z1)
+                gl.Vertex(x2, by, z2)
+                gl.Vertex(x1, by, z2)
+                gl.Vertex(x1, by, z1)
             end)
         end
     end
