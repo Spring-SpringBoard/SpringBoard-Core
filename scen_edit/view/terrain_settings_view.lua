@@ -69,12 +69,78 @@ function TerrainSettingsView:init()
         end
     }
 
+    self:AddControl("sun-sep", {
+        Label:New {
+            caption = "Sun",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self.initializing = true
+    self:AddField(GroupField({
+        NumericField({
+            name = "sunDirX",
+            title = "Dir X:",
+            tooltip = "X dir",
+            value = 0,
+            step = 0.002,
+            width = 100,
+        }),
+        NumericField({
+            name = "sunDirY",
+            title = "Dir Y:",
+            tooltip = "Y dir",
+            value = 0,
+            step = 0.002,
+            width = 100,
+        }),
+        NumericField({
+            name = "sunDirZ",
+            title = "Dir Z:",
+            tooltip = "Z dir",
+            value = 0,
+            step = 0.002,
+            width = 100,
+        }),
+    }))
+    self:AddField(GroupField({
+        NumericField({
+            name = "sunDistance",
+            title = "Sun distance:",
+            tooltip = "Sun distance",
+            value = 0,
+            step = 0.002,
+            width = 150,
+            minValue = -1,
+            maxValue = 1,
+        }),
+        NumericField({
+            name = "sunStartAngle",
+            title = "Start angle:",
+            tooltip = "Sun start angle",
+            value = 0,
+            step = 0.002,
+            width = 150,
+        }),
+        NumericField({
+            name = "sunOrbitTime",
+            title = "Orbit time:",
+            tooltip = "Sun orbit time",
+            value = 0,
+            step = 0.002,
+            width = 100,
+        }),
+    }))
+    self:UpdateSun()
+
     local children = {
 		ScrollPanel:New {
 			x = 0, 
 			right = 0,
 			y = 70, 
-			height = "35%",
+			height = "15%",
 			children = { 
 				self.images,
 			}
@@ -82,7 +148,7 @@ function TerrainSettingsView:init()
 		ScrollPanel:New {
 			x = 0, 
 			right = 0,
-			y = "50%", 
+			y = "60%", 
 			height = "35%",
 			children = { 
 				self.images2,
@@ -90,8 +156,8 @@ function TerrainSettingsView:init()
 		},
 		ScrollPanel:New {
 			x = 0,
-			y = "45%",
-			bottom = 30,
+			y = "25%",
+			height = "20%",
 			right = 0,
 			borderColor = {0,0,0,0},
 			horizontalScrollbar = false,
@@ -100,6 +166,42 @@ function TerrainSettingsView:init()
 	}
 
 	self:Finalize(children)
--- 	self.images:Hide()
--- 	self.images:Select("circle.png")
+    self.initializing = false
+end
+
+function TerrainSettingsView:UpdateSun()
+    local sunDirX, sunDirY, sunDirZ, sunDistance, sunStartAngle, sunOrbitTime = Spring.GetSunParameters()
+    self:Set("sunDirX", sunDirX)
+    self:Set("sunDirY", sunDirY)
+    self:Set("sunDirZ", sunDirZ)
+    self.dynamicSunEnabled = false
+    if sunStartAngle then
+        -- FIXME: distance is wrong, not usable atm
+--         self.dynamicSunEnabled = true
+        self:Set("sunDistance", sunDistance)
+        self:Set("sunStartAngle", sunStartAngle)
+        self:Set("sunOrbitTime", sunOrbitTime)
+    end
+end
+
+function TerrainSettingsView:OnFieldChange(name, value)
+    if self.initializing then
+        return
+    end
+    if name == "sunDirX" or name == "sunDirY" or name == "sunDirZ" or name == "sunStartAngle" or name == "sunOrbitTime" or name == "sunDistance" then
+        value = { dirX = self.fields["sunDirX"].value,
+                  dirY = self.fields["sunDirY"].value,
+                  dirZ = self.fields["sunDirZ"].value,
+                  distance = self.fields["sunDistance"].value,
+                  startAngle = self.fields["sunStartAngle"].value,
+                  orbitTime = self.fields["sunOrbitTime"].value,
+        }
+        if not self.dynamicSunEnabled then
+            value.distance = nil
+            value.startAngle = nil
+            value.orbitTime = nil
+        end
+        local cmd = SetSunParametersCommand(value)
+        SCEN_EDIT.commandManager:execute(cmd)
+    end
 end
