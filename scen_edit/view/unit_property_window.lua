@@ -445,9 +445,7 @@ function UnitPropertyWindow:init()
         step = 1,
     }))
 
-    local children = {
-        btnClose,
-    }
+    local children = {}
 
     table.insert(children,
         ScrollPanel:New {

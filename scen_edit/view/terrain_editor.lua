@@ -383,7 +383,7 @@ function TerrainEditorView:init()
         tooltip = "The greater the value, the more transparent it will be.",
     }))
 	
-    self:AddField(ColorbarsField({
+    self:AddField(ColorField({
         name = "diffuseColor",
         title = "Color: ",
         value = {1,1,1,1},

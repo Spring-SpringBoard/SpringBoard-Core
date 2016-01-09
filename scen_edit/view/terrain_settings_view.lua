@@ -105,34 +105,92 @@ function TerrainSettingsView:init()
             width = 100,
         }),
     }))
+    self:AddControl("sun-ground-sep", {
+        Label:New {
+            caption = "Sun ground color",
+        },
+        Line:New {
+            x = 150,
+            width = self.VALUE_POS,
+        }
+    })
     self:AddField(GroupField({
-        NumericField({
-            name = "sunDistance",
-            title = "Sun distance:",
-            tooltip = "Sun distance",
-            value = 0,
-            step = 0.002,
-            width = 150,
-            minValue = -1,
-            maxValue = 1,
-        }),
-        NumericField({
-            name = "sunStartAngle",
-            title = "Start angle:",
-            tooltip = "Sun start angle",
-            value = 0,
-            step = 0.002,
+        ColorField({
+            name = "groundSunColor",
+            title = "Diffuse:",
+            tooltip = "Ground diffuse color",
             width = 150,
         }),
-        NumericField({
-            name = "sunOrbitTime",
-            title = "Orbit time:",
-            tooltip = "Sun orbit time",
-            value = 0,
-            step = 0.002,
-            width = 100,
+        ColorField({
+            name = "groundAmbientColor",
+            title = "Ambient:",
+            tooltip = "Ground ambient color",
+            width = 150,
+        }),
+        ColorField({
+            name = "groundSpecularColor",
+            title = "Specular:",
+            tooltip = "Ground specular color",
+            width = 150,
         }),
     }))
+	self:AddControl("sun-unit-sep", {
+        Label:New {
+            caption = "Sun unit color",
+        },
+        Line:New {
+            x = 150,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        ColorField({
+            name = "unitSunColor",
+            title = "Diffuse:",
+            tooltip = "Unit diffuse color",
+            width = 150,
+        }),
+        ColorField({
+            name = "unitAmbientColor",
+            title = "Ambient:",
+            tooltip = "Unit ambient color",
+            width = 150,
+        }),
+        ColorField({
+            name = "unitSpecularColor",
+            title = "Specular:",
+            tooltip = "Unit specular color",
+            width = 150,
+        }),
+    }))
+--     self:AddField(GroupField({
+--         NumericField({
+--             name = "sunDistance",
+--             title = "Sun distance:",
+--             tooltip = "Sun distance",
+--             value = 0,
+--             step = 0.002,
+--             width = 150,
+--             minValue = -1,
+--             maxValue = 1,
+--         }),
+--         NumericField({
+--             name = "sunStartAngle",
+--             title = "Start angle:",
+--             tooltip = "Sun start angle",
+--             value = 0,
+--             step = 0.002,
+--             width = 150,
+--         }),
+--         NumericField({
+--             name = "sunOrbitTime",
+--             title = "Orbit time:",
+--             tooltip = "Sun orbit time",
+--             value = 0,
+--             step = 0.002,
+--             width = 100,
+--         }),
+--     }))
     self:UpdateSun()
 
     local children = {
@@ -157,7 +215,7 @@ function TerrainSettingsView:init()
 		ScrollPanel:New {
 			x = 0,
 			y = "25%",
-			height = "20%",
+			height = "40%",
 			right = 0,
 			borderColor = {0,0,0,0},
 			horizontalScrollbar = false,
@@ -169,19 +227,34 @@ function TerrainSettingsView:init()
     self.initializing = false
 end
 
+function _ColorArrayToChannels(colorArray)
+    return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
+end
+
 function TerrainSettingsView:UpdateSun()
-    local sunDirX, sunDirY, sunDirZ, sunDistance, sunStartAngle, sunOrbitTime = Spring.GetSunParameters()
+    local sunDirX, sunDirY, sunDirZ = gl.GetSun()
+--     local sunDirX, sunDirY, sunDirZ, sunDistance, sunStartAngle, sunOrbitTime = gl.GetSun()
     self:Set("sunDirX", sunDirX)
     self:Set("sunDirY", sunDirY)
     self:Set("sunDirZ", sunDirZ)
+    local groundDiffuse = {gl.GetSun("diffuse")}
+    groundDiffuse[4] = 1
+    local groundAmbient = {gl.GetSun("ambient")}
+    groundAmbient[4] = 1
+    local groundSpecular = {gl.GetSun("specular")}
+    groundSpecular[4] = 1
+    self:Set("groundSunColor", groundDiffuse)
+    self:Set("groundAmbientColor", groundAmbient)
+    self:Set("groundSpecularColor", groundSpecular)
+--     table.echo({groundDiffuse, groundAmbient, groundSpecular})
     self.dynamicSunEnabled = false
-    if sunStartAngle then
-        -- FIXME: distance is wrong, not usable atm
---         self.dynamicSunEnabled = true
-        self:Set("sunDistance", sunDistance)
-        self:Set("sunStartAngle", sunStartAngle)
-        self:Set("sunOrbitTime", sunOrbitTime)
-    end
+--     if sunStartAngle then
+--         -- FIXME: distance is wrong, not usable atm
+-- --         self.dynamicSunEnabled = true
+--         self:Set("sunDistance", sunDistance)
+--         self:Set("sunStartAngle", sunStartAngle)
+--         self:Set("sunOrbitTime", sunOrbitTime)
+--     end
 end
 
 function TerrainSettingsView:OnFieldChange(name, value)
@@ -192,16 +265,26 @@ function TerrainSettingsView:OnFieldChange(name, value)
         value = { dirX = self.fields["sunDirX"].value,
                   dirY = self.fields["sunDirY"].value,
                   dirZ = self.fields["sunDirZ"].value,
-                  distance = self.fields["sunDistance"].value,
-                  startAngle = self.fields["sunStartAngle"].value,
-                  orbitTime = self.fields["sunOrbitTime"].value,
+--                   distance = self.fields["sunDistance"].value,
+--                   startAngle = self.fields["sunStartAngle"].value,
+--                   orbitTime = self.fields["sunOrbitTime"].value,
         }
-        if not self.dynamicSunEnabled then
-            value.distance = nil
-            value.startAngle = nil
-            value.orbitTime = nil
-        end
+--         if not self.dynamicSunEnabled then
+--             value.distance = nil
+--             value.startAngle = nil
+--             value.orbitTime = nil
+--         end
         local cmd = SetSunParametersCommand(value)
         SCEN_EDIT.commandManager:execute(cmd)
+		return
     end
+-- 	Spring.Echo("SET LIGHT", name, value)
+-- 	table.echo(value)
+	local t = {}
+	if name ~= "unitAmbientColor" and name ~= "unitSunColor" then
+		value[4] = nil
+	end
+	t[name] = value
+-- 	table.echo(t)
+	Spring.SetSunLighting(t)
 end

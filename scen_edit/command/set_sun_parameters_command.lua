@@ -24,8 +24,9 @@ end
 
 function WidgetSetSunParametersCommand:execute()
     self.old = {
-        manuallyControlled = Spring.IsSunManuallyControlled(),
-        params = {Spring.GetSunParameters()},
+--         manuallyControlled = Spring.IsSunManuallyControlled(),
+--         params = {Spring.GetSunParameters()},
+        params = {gl.GetSun()},
     }
     Spring.SetSunManualControl(true)
     if self.opts.startAngle then
@@ -37,7 +38,7 @@ function WidgetSetSunParametersCommand:execute()
 end
 
 function WidgetSetSunParametersCommand:unexecute()
-    Spring.SetSunManualControl(self.old.manuallyControlled)
+--     Spring.SetSunManualControl(self.old.manuallyControlled)
     if #self.old.params >= 4 then
         Spring.SetSunParameters(self.old.params[1], self.old.params[2], self.old.params[3], self.old.params[4], self.old.params[5], self.old.params[6])
     else

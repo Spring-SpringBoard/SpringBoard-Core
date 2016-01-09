@@ -5,9 +5,7 @@ CollisionView = EditorView:extends{}
 function CollisionView:init()
     self:super("init")
 
-    local children = {
-        btnClose,
-    }
+    local children = {}
 
     self:AddControl("btn-show-vol", {
         Button:New {
