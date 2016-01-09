@@ -30,7 +30,7 @@ function GridView:init(tbl)
 		local itemIdx = ctrl:GetItemIndexAt(cx,cy)
 		return (itemIdx>=0) and ctrl
 	end
-	
+
 	self.control.DrawItemBkGnd = function(ctrl, index)
 		local cell = ctrl._cells[index]
 		local itemPadding = ctrl.itemPadding

@@ -246,6 +246,13 @@ function TerrainSettingsView:UpdateSun()
     self:Set("groundSunColor", groundDiffuse)
     self:Set("groundAmbientColor", groundAmbient)
     self:Set("groundSpecularColor", groundSpecular)
+    local unitDiffuse = {gl.GetSun("diffuse", "unit")}
+    local unitAmbient = {gl.GetSun("ambient", "unit")}
+    local unitSpecular = {gl.GetSun("specular", "unit")}
+    unitSpecular[4] = 1
+    self:Set("unitSunColor", unitDiffuse)
+    self:Set("unitAmbientColor", unitAmbient)
+    self:Set("unitSpecularColor", unitSpecular)
 --     table.echo({groundDiffuse, groundAmbient, groundSpecular})
     self.dynamicSunEnabled = false
 --     if sunStartAngle then
@@ -278,13 +285,12 @@ function TerrainSettingsView:OnFieldChange(name, value)
         SCEN_EDIT.commandManager:execute(cmd)
 		return
     end
--- 	Spring.Echo("SET LIGHT", name, value)
--- 	table.echo(value)
 	local t = {}
-	if name ~= "unitAmbientColor" and name ~= "unitSunColor" then
-		value[4] = nil
-	end
+	if name == "unitAmbientColor" or name == "unitSunColor" then
+		value[4] = 1
+    else
+        value[4] = nil
+    end
 	t[name] = value
--- 	table.echo(t)
 	Spring.SetSunLighting(t)
 end
