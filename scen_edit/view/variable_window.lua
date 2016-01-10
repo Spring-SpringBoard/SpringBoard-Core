@@ -61,10 +61,10 @@ function VariableWindow:init(variable)
         items = SCEN_EDIT.metaModel.variableTypes,
         parent = stackTypePanel,
         OnSelect = {
-            function(object, itemIdx, selected)    
+            function(object, itemIdx, selected)
                 if selected and itemIdx > 0 then
                     self.variablePanel:ClearChildren()
-            
+
                     local typeId = itemIdx
                     local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
                     local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel, "pred")

@@ -35,7 +35,7 @@ function TriggerWindow:init(trigger)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
-		tooltip = "Add event",
+        tooltip = "Add event",
     }
     local btnAddCondition = Button:New {
         caption='+ Condition',
@@ -44,7 +44,7 @@ function TriggerWindow:init(trigger)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
-		tooltip = "Add condition",
+        tooltip = "Add condition",
     }
     local btnAddAction = Button:New {
         caption='+ Action',
@@ -53,22 +53,22 @@ function TriggerWindow:init(trigger)
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
-		tooltip = "Add action",
+        tooltip = "Add action",
     }
-	local btnOk = Button:New {
+    local btnOk = Button:New {
         caption='OK',
         width=100,
         x = 370,
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
-		OnClick = {
-			function() 
-				self.trigger.name = edTriggerName.text
-				self.save = true
-				self.window:Dispose()
-			end
-		}
+        OnClick = {
+            function() 
+                self.trigger.name = edTriggerName.text
+                self.save = true
+                self.window:Dispose()
+            end
+        }
     }
     local btnCancel = Button:New {
         caption='Cancel',
@@ -131,7 +131,7 @@ function TriggerWindow:Populate()
             x = 1,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
-			tooltip = "Edit event",
+            tooltip = "Edit event",
             OnClick = {function() self:MakeEditEventWindow(event) end},			
         }
         local btnRemoveEvent = Button:New {
@@ -150,7 +150,7 @@ function TriggerWindow:Populate()
                     margin = {0, 0, 0, 0},
                 },
             },
-			tooltip = "Remove event",
+            tooltip = "Remove event",
             OnClick = {function() self:MakeRemoveEventWindow(event, i) end}
         }
     end
@@ -188,7 +188,7 @@ function TriggerWindow:Populate()
             x = SCEN_EDIT.conf.B_HEIGHT + 5,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackPanel,
-			tooltip = "Edit condition",
+            tooltip = "Edit condition",
             OnClick = {function() self:MakeEditConditionWindow(condition) end}
         }
         local btnRemoveCondition = Button:New {
@@ -198,7 +198,7 @@ function TriggerWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackPanel,
             padding = {0, 0, 0, 0},
-			tooltip = "Remove condition",
+            tooltip = "Remove condition",
             children = {
                 Image:New { 
                     tooltip = "Remove condition", 
@@ -247,7 +247,7 @@ function TriggerWindow:Populate()
             x = SCEN_EDIT.conf.B_HEIGHT + 5,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
-			tooltip = "Edit action",
+            tooltip = "Edit action",
             OnClick = {function() self:MakeEditActionWindow(action) end}
         }
         local btnRemoveAction = Button:New {
@@ -257,7 +257,7 @@ function TriggerWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
             padding = {0, 0, 0, 0},
-			tooltip = "Remove action",
+            tooltip = "Remove action",
             children = {
                 Image:New { 
                     tooltip = "Remove action", 
@@ -279,7 +279,7 @@ end
 function TriggerWindow:PopulateExpressions(root, rootType, level)
     for i, input in pairs(rootType.input) do
         local stackPanel = MakeComponentPanel(self._triggerPanel)
-        
+
         local param = root[input.name] or {}
         local paramName = param.name or param.id
         if param.type == 'var' then
@@ -310,7 +310,6 @@ function TriggerWindow:PopulateExpressions(root, rootType, level)
 
             self:PopulateExpressions(expr, exprType, level + 1)
         end
-        
     end
 end
 
@@ -354,4 +353,3 @@ function TriggerWindow:MakeRemoveActionWindow(action, idx)
     self.openedActionNodes = {}
     self:Populate()
 end
-

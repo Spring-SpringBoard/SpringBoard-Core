@@ -19,6 +19,7 @@ function BooleanField:init(field)
         width = self.width,
         height = self.height,
         checked = self.value,
+        tooltip = self.tooltip,
     }
     self.checkBox.OnChange = {
         function(obj, checked)

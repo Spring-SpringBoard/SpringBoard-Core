@@ -1,81 +1,53 @@
 MetaPanel = AbstractMainWindowPanel:extends{}
 
 function MetaPanel:init()
-	self:super("init")
-    local btnTriggers = TabbedPanelButton({
+    self:super("init")
+    self.control:AddChild(TabbedPanelButton({
+        tooltip = "Add a rectangle area", 
+        OnClick = {
+            function()
+                SCEN_EDIT.stateManager:SetState(AddRectState())
+            end
+        },
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "view-fullscreen.png" }),
+            TabbedPanelLabel({ caption = "Area" }),
+        },
+    }))
+    self.control:AddChild(TabbedPanelButton({
         tooltip = "Trigger settings",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "applications-system.png" }),
-			TabbedPanelLabel({ caption = "Triggers" }),
+            TabbedPanelLabel({ caption = "Triggers" }),
         },
-    })
-    local btnVariableSettings = TabbedPanelButton({
+        OnClick = {
+            function ()
+                if SCEN_EDIT.triggersWindow == nil then
+                    self.triggersWindow = TriggersWindow()
+                    SCEN_EDIT.triggersWindow = self.triggersWindow
+                end
+                if SCEN_EDIT.triggersWindow.window.hidden then
+                    SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.triggersWindow.window)
+                end
+            end
+        },
+    }))
+    self.control:AddChild(TabbedPanelButton({
         tooltip = "Variable settings",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "format-text-bold.png" }),
-			TabbedPanelLabel({ caption = "Variables" }),
+            TabbedPanelLabel({ caption = "Variables" }),
         },
-    })
-
-	self.control:AddChild(
-		TabbedPanelButton({
-			tooltip = "Add a rectangle area", 
-			OnClick = {
-				function()
-					SCEN_EDIT.stateManager:SetState(AddRectState())
-				end
-			},			
-			children = {
-				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "view-fullscreen.png" }),
-				TabbedPanelLabel({ caption = "Area" }),
-			},
-		})
-	)	
-	self.control:AddChild(Chili.LayoutPanel:New {
-			height = btnTriggers.height,
-			width = btnTriggers.width,
-			children = {btnTriggers},
-			padding = {0, 0, 0, 0},
-			margin = {0, 0, 0, 0},
-			itemMargin = {0, 0, 0, 0},
-			itemPadding = {0, 0, 0, 0},
-		}
-	)
-	self.control:AddChild(Chili.LayoutPanel:New {
-			height = btnVariableSettings.height,
-			width = btnVariableSettings.width,
-			children = {btnVariableSettings},
-			padding = {0, 0, 0, 0},
-			margin = {0, 0, 0, 0},
-			itemMargin = {0, 0, 0, 0},
-			itemPadding = {0, 0, 0, 0},
-		}
-	)
-	btnTriggers.OnClick = {
-        function () 
-            btnTriggers._toggle = TriggersWindow()
-            SCEN_EDIT.SetControlEnabled(btnTriggers.parent, false) 
-            table.insert(btnTriggers._toggle.window.OnDispose, 
-                function()
-                    if btnTriggers and btnTriggers.parent then
-                        SCEN_EDIT.SetControlEnabled(btnTriggers.parent, true) 
-                    end
+        OnClick = {
+            function()
+                if SCEN_EDIT.variablesWindow == nil then
+                    self.variablesWindow = VariableSettingsWindow()
+                    SCEN_EDIT.variablesWindow = self.variablesWindow
                 end
-            )
-        end
-    }
-
-    btnVariableSettings.OnClick = {
-        function()
-            btnVariableSettings._toggle = VariableSettingsWindow()
-            SCEN_EDIT.SetControlEnabled(btnVariableSettings.parent, false) 
-            table.insert(btnVariableSettings._toggle.window.OnDispose, 
-                function()
-                    if btnVariableSettings and btnVariableSettings.parent then
-                        SCEN_EDIT.SetControlEnabled(btnVariableSettings.parent, true) 
-                    end
+                if SCEN_EDIT.variablesWindow.window.hidden then
+                    SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.variablesWindow.window)
                 end
-            )
-        end
-    }
+            end
+        },
+    }))
 end

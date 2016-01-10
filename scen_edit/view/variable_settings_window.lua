@@ -1,6 +1,9 @@
-VariableSettingsWindow = LCS.class{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+VariableSettingsWindow = EditorView:extends{}
 
 function VariableSettingsWindow:init()
+    self:super("init")
+
     local btnAddVariable = Button:New {
         caption='+ Variable',
         width='40%',
@@ -8,17 +11,10 @@ function VariableSettingsWindow:init()
         bottom = 1,
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
-        OnClick={ 
-            function()                 
+        OnClick={
+            function()
                 self:AddVariable()
             end}
-    }
-    local btnClose = Button:New {
-        caption='Close',
-        width='40%',
-        x = '50%',
-        bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
     }
     self.variablesPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -28,36 +24,24 @@ function VariableSettingsWindow:init()
         autosize = true,
         resizeItems = false,
     }
-    self.window = Window:New {
-        width = 300,
-        height = 250,
-        minimumSize = {150,200},
-        x = 500,
-        y = 300,
-        parent = screen0,
-        children = {
-            ScrollPanel:New {
-                x = 1,
-                y = 15,
-                right = 5,
-                bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
-                children = { 
-                    self.variablesPanel
-                },
+    local children = {
+        ScrollPanel:New {
+            x = 1,
+            y = 15,
+            right = 5,
+            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+            children = { 
+                self.variablesPanel
             },
-            btnAddVariable,
-            btnClose,
-        }
+        },
+        btnAddVariable,
     }
 
-    btnClose.OnClick={
-        function() 
-            self.window:Dispose() 
-        end
-    }
     self:Populate()
     local variableManagerListener = VariableManagerListenerWidget(self)
     SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
+
+    self:Finalize(children)
 end
 
 function VariableSettingsWindow:AddVariable()
@@ -124,7 +108,7 @@ function VariableSettingsWindow:Populate()
             },
             OnClick = {function() self:MakeRemoveVariableWindow(variable.id) end},
         }
-            
+
         btnEditVariable.OnClick = {
             function() 
                 local newWin = self:MakeVariableWindow(variable, true)
@@ -148,17 +132,15 @@ function VariableSettingsWindow:MakeVariableWindow(variable, edit)
         end
     )
     newWin:UpdatePanel(variable)
+
     local sw = self.window
     local nw = newWin.window
-    if sw.x + sw.width + nw.width > screen0.width then
-        nw.x = sw.x - nw.width
-    else
-        nw.x = sw.x + sw.width
-    end
-    nw.y = sw.y
+    nw.x = 500
+    nw.y = 500
+
     SCEN_EDIT.SetControlEnabled(sw, false)
-    table.insert(nw.OnDispose, 
-        function() 
+    table.insert(nw.OnDispose,
+        function()
             SCEN_EDIT.SetControlEnabled(sw, true)
         end
     )

@@ -61,9 +61,9 @@ function RuntimeView:init()
     self.runtimeViewWindow = Window:New {
         parent = screen0,
         caption = "Runtime Window",
-        right = 0,
-        y = 350,
-		resizable = true,
+        right  = 600,
+        bottom = 0,
+        resizable = true,
         width = 375,
         height = 300,
         children = {
@@ -114,12 +114,12 @@ function RuntimeView:Populate()
 end
 
 function RuntimeView:UpdateStartStopButton()
-    self.btnStartStop:ClearChildren()    
+    self.btnStartStop:ClearChildren()
     if not self.started then
         self.btnStartStop.tooltip = "Start scenario"
         self.btnStartStop:AddChild(
-            Image:New { 
-				tooltip = "Start scenario",
+            Image:New {
+                tooltip = "Start scenario",
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
                 height = SCEN_EDIT.conf.B_HEIGHT - 2,
                 width = SCEN_EDIT.conf.B_HEIGHT - 2,
@@ -128,8 +128,8 @@ function RuntimeView:UpdateStartStopButton()
         )
     else
         self.btnStartStop.tooltip = "Stop scenario"
-        self.btnStartStop:AddChild(        
-            Image:New {                
+        self.btnStartStop:AddChild(
+            Image:New {
                 file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
                 height = SCEN_EDIT.conf.B_HEIGHT - 2,
                 width = SCEN_EDIT.conf.B_HEIGHT - 2,

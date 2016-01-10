@@ -31,6 +31,7 @@ end
 
 function NumericField:init(field)
     self.decimals = 2
+    self.value = 0
     StringField.init(self, field)
     self.format = "%." .. tostring(self.decimals) .. "f"
     if self.step == nil then

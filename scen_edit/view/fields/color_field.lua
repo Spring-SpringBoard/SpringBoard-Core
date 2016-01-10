@@ -47,12 +47,6 @@ function ColorField:init(field)
 --                 self.button:Hide()
                 self.colorPicker = ColorFieldPickerWindow(self.originalValue)
                 self.colorPicker.field = self
-                self.colorPicker.window.OnDispose = {
-                    function()
---                             self.button:Show()
-                    end,
-                }
---                     self.ev:_OnStartChange(self.name)
             end
         },
         children = {

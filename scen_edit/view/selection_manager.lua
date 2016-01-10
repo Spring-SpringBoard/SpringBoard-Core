@@ -76,6 +76,12 @@ function SelectionManager:DrawWorldPreUnit()
             local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
             local minx, maxx = featureDef.model.minx or -10, featureDef.model.maxx or 10
             local minz, maxz = featureDef.model.minz or -10, featureDef.model.maxz or 10
+            if maxx - minx < 20 then
+                minx, maxx = -10, 10
+            end
+            if maxz - minz < 20 then
+                minz, maxz = -10, 10
+            end
             local x1, z1 = bx + minx - 5, bz + minz + 5
             local x2, z2 = bx + maxx - 5, bz + maxz + 5
             gl.BeginEnd(GL.LINE_STRIP, function()
