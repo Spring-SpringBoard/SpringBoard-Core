@@ -1,6 +1,9 @@
-DiplomacyWindow = LCS.class{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+DiplomacyWindow = EditorView:extends{}
 
 function DiplomacyWindow:init(trigger)
+    self:super("init")
+
     self.teamsPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -18,7 +21,7 @@ function DiplomacyWindow:init(trigger)
         parent = titlesPanel,
     }
     local i = 1
-    for id, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do        
+    for id, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
         local fontColor = SCEN_EDIT.glToFontColor(team.color)
         local lblTeam = Label:New {
             caption = fontColor .. id .. "\b",
@@ -84,33 +87,16 @@ function DiplomacyWindow:init(trigger)
         --]]
     end
 
-    self.btnClose = Button:New {
-        caption='Close',
-        width = 100,
-        right = 1,
-        bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick = { function() self.window:Dispose() end }
-    }
-    self.window = Window:New {
-        width = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teamManager:getAllTeams() * 30)),
-        height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teamManager:getAllTeams() * 30)),
-        minimumSize = {300,300},
-        parent = screen0,
-        caption = "Alliances",
-        x = 500,
-        y = 200,
-        children = {
-            ScrollPanel:New {
-                x = 1,
-                y = 15,
-                right = 5,
-                bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
-                children = { 
-                    self.teamsPanel
-                },
+    local children = {
+        ScrollPanel:New {
+            x = 1,
+            y = 15,
+            right = 5,
+            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+            children = {
+                self.teamsPanel
             },
-            self.btnClose,
-        }
+        },
     }
+    self:Finalize(children)
 end

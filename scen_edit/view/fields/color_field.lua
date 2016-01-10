@@ -11,8 +11,9 @@ function ColorField:Update(source)
 end
 
 function ColorField:init(field)
-    self.width = 200
+    self.width  = 200
     self.height = 30
+    self.value  = {1, 1, 1, 1}
     self:super('init', field)
     self.lblTitle = Label:New {
         caption = self.title,
@@ -29,7 +30,7 @@ function ColorField:init(field)
         width       = self.height - 10,
         keepAspect  = false,
         file        = ":cl:bitmaps/ui/buckets/swatch.png",
-        color       = {1, 1, 1, 1},
+        color       = self.value,
     }
     self.button = Button:New {
         caption = "",

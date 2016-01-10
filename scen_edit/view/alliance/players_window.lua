@@ -1,6 +1,9 @@
-PlayersWindow = LCS.class{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+PlayersWindow = EditorView:extends{}
 
 function PlayersWindow:init()
+    self:super("init")
+
     self.teamsPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -12,14 +15,6 @@ function PlayersWindow:init()
     SCEN_EDIT.model.teamManager:addListener(self)
     self:Populate()
 
-    self.btnClose = Button:New {
-        caption = 'Close',
-        width = 100,
-        right = 1,
-        bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick = { function() self.window:Dispose() end }
-    }
     self.btnAddPlayer = Button:New {
         caption='+ Team',
         width=120,
@@ -38,28 +33,19 @@ function PlayersWindow:init()
         },
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
     }
-    self.window = Window:New {
-        width = 370,
-        height = math.min(800, math.max(400, 250 + #SCEN_EDIT.model.teamManager:getAllTeams() * 30)),
-        minimumSize = {300,300},
-        parent = screen0,
-        caption = "Players",
-        x = 500,
-        y = 200,
-        children = {
-            ScrollPanel:New {
-                x = 1,
-                y = 15,
-                right = 5,
-                bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
-                children = { 
-                    self.teamsPanel
-                },
+    local children = {
+        ScrollPanel:New {
+            x = 1,
+            y = 15,
+            right = 5,
+            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+            children = {
+                self.teamsPanel
             },
-            self.btnClose,
-            self.btnAddPlayer,
-        }
+        },
+        self.btnAddPlayer,
     }
+    self:Finalize(children)
 end
 
 function PlayersWindow:Populate()
@@ -110,11 +96,11 @@ function PlayersWindow:Populate()
                 parent = stackTeamPanel,
                 padding = {0, 0, 0, 0},
                 children = {
-                    Image:New { 
-                        tooltip = "Remove team", 
-                        file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                        height = SCEN_EDIT.conf.B_HEIGHT, 
-                        width = SCEN_EDIT.conf.B_HEIGHT, 
+                    Image:New {
+                        tooltip = "Remove team",
+                        file=SCEN_EDIT_IMG_DIR .. "list-remove.png",
+                        height = SCEN_EDIT.conf.B_HEIGHT,
+                        width = SCEN_EDIT.conf.B_HEIGHT,
                         margin = {0, 0, 0, 0},
                     },
                 },

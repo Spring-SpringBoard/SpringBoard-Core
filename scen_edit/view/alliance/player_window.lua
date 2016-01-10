@@ -1,168 +1,133 @@
-PlayerWindow = LCS.class{}
+SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+
+PlayerWindow = EditorView:extends{}
 
 function PlayerWindow:init(team)
+    self:super("init")
+
     self.team = team
 
-    self.lblName = Label:New {
-        x = 5,
-        y = 15,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = 50,
-        caption = "Name:",
-    }
-    self.ebName = EditBox:New {
-        x = 65,
-        y = 15,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = 200,
-        text = team.name,
-    }
+    self:AddField(StringField({
+        name = "name",
+        title = "Name:",
+        tooltip = "Team name",
+        value = team.name,
+    }))
 
-    self.cbAI = Checkbox:New {
-        x = 5,
-        y = SCEN_EDIT.conf.B_HEIGHT + 25,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = 70,
-        checked = not not team.ai,
-        caption = "AI",
-    }
-	
-	local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
-	if metal == nil then
-		metal = team.metal or 1000
-	end
-	if metalMax == nil then
-		metalMax = team.metalMax or 1000
-	end
-	self.lblMetal = Label:New {
-        x = 5,
-        y = 2 * SCEN_EDIT.conf.B_HEIGHT + 35,
-        height = 60,
-        width = 50,
-        caption = "Metal:",
-    }
-    self.ebMetal = EditBox:New {
-        x = 65,
-        y = 2 * SCEN_EDIT.conf.B_HEIGHT + 35,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = 100,
-		text = tostring(metal),
-    }
-	self.lblMetalMax = Label:New {
-        x = 175,
-        y = 2 * SCEN_EDIT.conf.B_HEIGHT + 35,
-        height = 60,
-        width = 30,
-        caption = "Max:",
-    }
-    self.ebMetalMax = EditBox:New {
-        x = 220,
-        y = 2 * SCEN_EDIT.conf.B_HEIGHT + 35,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = 100,
-		text = tostring(metalMax),
-    }
-			
-	local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
-	if energy == nil then
-		energy = team.energy or 1000
-	end
-	if energyMax == nil then
-		energyMax = team.energyMax or 1000
-	end	
-	self.lblEnergy = Label:New {
-        x = 5,
-        y = 3 * SCEN_EDIT.conf.B_HEIGHT + 45,
-        height = 60,
-        width = 50,
-        caption = "Energy:",
-    }
-    self.ebEnergy = EditBox:New {
-        x = 65,
-        y = 3 * SCEN_EDIT.conf.B_HEIGHT + 45,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = 100,
-		text = tostring(energy),
-    }
-	self.lblEnergyMax = Label:New {
-        x = 175,
-        y = 3 * SCEN_EDIT.conf.B_HEIGHT + 45,
-        height = 60,
-        width = 30,
-        caption = "Max:",
-    }
-    self.ebEnergyMax = EditBox:New {
-        x = 220,
-        y = 3 * SCEN_EDIT.conf.B_HEIGHT + 45,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = 100,
-		text = tostring(energyMax),
-    }
+    self:AddField(BooleanField({
+        name = "ai",
+        title = "AI:",
+        tooltip = "Is AI controlled",
+        value = not not team.ai,
+    }))
 
-    self.lblColor = Label:New {
-        x = 5,
-        y = 4 * SCEN_EDIT.conf.B_HEIGHT + 55,
-        height = 60,
-        width = 50,
-        caption = "Color:",
-    }
-    self.clbColor = Colorbars:New {
-        x = 65,
-        y = 4 * SCEN_EDIT.conf.B_HEIGHT + 55,
-        height = 60,
-        width = 300,
-        color = {team.color.r, team.color.g, team.color.b, team.color.a},
-    }
-	
-    self.btnClose = Button:New {
-        caption = 'Close',
-        width = 100,
-        right = 1,
-        bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        OnClick = { function() self.window:Dispose() end }
-    }
-    self.window = Window:New {
-        width = 400,
-        height = 320,
-        resizable = false,
-        parent = screen0,
-        caption = "Player",
-        x = 500,
-        y = 200,
-        children = {
-            self.lblName,
-            self.ebName,
-			self.lblMetal,
-			self.ebMetal,
-			self.lblMetalMax,
-			self.ebMetalMax,
-			self.lblEnergy,
-			self.ebEnergy,
-			self.lblEnergyMax,
-			self.ebEnergyMax,
-            self.cbAI,
-            self.lblColor,
-            self.clbColor,
-            self.btnClose,
+    local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
+    if metal == nil then
+        metal = team.metal or 1000
+    end
+    if metalMax == nil then
+        metalMax = team.metalMax or 1000
+    end
+    self:AddControl("metal-sep", {
+        Label:New {
+            caption = "Metal",
         },
-        OnDispose = { 
-            function()
-                local newTeam = SCEN_EDIT.deepcopy(team)
-                newTeam.name = self.ebName.text
-                local clbColor = self.clbColor.color
-                newTeam.color.r = clbColor[1]
-                newTeam.color.g = clbColor[2]
-                newTeam.color.b = clbColor[3]
-                newTeam.color.a = clbColor[4]
-                newTeam.ai = self.cbAI.checked				
-				newTeam.metal = tonumber(self.ebMetal.text) or energyMax
-				newTeam.metalMax = tonumber(self.ebMetalMax.text) or metalMax
-				newTeam.energy = tonumber(self.ebEnergy.text) or energy
-				newTeam.energyMax = tonumber(self.ebEnergyMax.text) or energyMax				
-                local cmd = UpdateTeamCommand(newTeam)
-                SCEN_EDIT.commandManager:execute(cmd)
-            end
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        NumericField({
+            name = "metal",
+            title = "Metal:",
+            tooltip = "Metal",
+            value = metal,
+            step = 0.2,
+            width = 200,
+        }),
+        NumericField({
+            name = "metalStorage",
+            title = "Storage:",
+            tooltip = "Metal storage",
+            value = metalMax,
+            step = 0.2,
+            width = 200,
+        }),
+    }))
+
+    local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
+    if energy == nil then
+        energy = team.energy or 1000
+    end
+    if energyMax == nil then
+        energyMax = team.energyMax or 1000
+    end
+    self:AddControl("energy-sep", {
+        Label:New {
+            caption = "Energy",
         },
-    }
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        NumericField({
+            name = "energy",
+            title = "Energy:",
+            tooltip = "Energy",
+            value = energy,
+            step = 0.2,
+            width = 200,
+        }),
+        NumericField({
+            name = "energyStorage",
+            title = "Storage:",
+            tooltip = "Energy storage",
+            value = energyMax,
+            step = 0.2,
+            width = 200,
+        }),
+    }))
+
+
+    self:AddField(ColorField({
+        name = "color",
+        title = "Color:",
+        value = {team.color.r, team.color.g, team.color.b, team.color.a},
+        tooltip = "Team color",
+    }))
+
+    local children = {}
+    table.insert(children,
+        ScrollPanel:New {
+            x = 0,
+            y = 0,
+            bottom = 0,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        }
+    )
+
+    self:Finalize(children, {notMainWindow = true})
+
+    table.insert(self.window.OnDispose, function()
+        local newTeam = SCEN_EDIT.deepcopy(team)
+        newTeam.name        = self.fields["name"].value
+        local clbColor      = self.fields["color"].value
+        newTeam.color.r     = clbColor[1]
+        newTeam.color.g     = clbColor[2]
+        newTeam.color.b     = clbColor[3]
+        newTeam.color.a     = clbColor[4] or 1
+        newTeam.ai          = self.fields["ai"].value
+        newTeam.metal       = self.fields["metal"].value or energyMax
+        newTeam.metalMax    = self.fields["metalStorage"].value or metalMax
+        newTeam.energy      = self.fields["energy"].value or energy
+        newTeam.energyMax   = self.fields["energyStorage"].value or energyMax
+        local cmd = UpdateTeamCommand(newTeam)
+        SCEN_EDIT.commandManager:execute(cmd)
+    end)
 end

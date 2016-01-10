@@ -352,9 +352,7 @@ function UnitPropertyWindow:init()
         name = "neutral",
         title = "Neutral:",
         tooltip = "Neutral",
-        minValue = 0,
-        value = 1,
-        step = 0.01,
+        value = false,
     }))
 
     self:AddField(NumericField({
