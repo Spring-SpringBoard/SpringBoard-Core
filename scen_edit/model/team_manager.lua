@@ -10,6 +10,7 @@ function TeamManager:addTeam(team, teamId)
     if teamId == nil then
         teamId = self.teamIdCount + 1
     end
+    team.id = teamId
     self.teamIdCount = teamId
     self.teams[teamId] = team
     self:callListeners("onTeamAdded", teamId)
@@ -39,10 +40,10 @@ function TeamManager:getAllTeams()
 end
 
 function TeamManager:setTeamResources(teamId, metal, metalMax, energy, energyMax)
-	Spring.SetTeamResource(teamId, "m", metal)
-	Spring.SetTeamResource(teamId, "ms", metalMax)
-	Spring.SetTeamResource(teamId, "e", energy)	
-	Spring.SetTeamResource(teamId, "es", energyMax)	
+    Spring.SetTeamResource(teamId, "m", metal)
+    Spring.SetTeamResource(teamId, "ms", metalMax)
+    Spring.SetTeamResource(teamId, "e", energy)	
+    Spring.SetTeamResource(teamId, "es", energyMax)	
 end
 
 function TeamManager:serialize()
@@ -83,11 +84,11 @@ function TeamManager:load(data)
         team.allies = nil
 
         self:addTeam(team, id)
-		if team.metal ~= nil and team.metalMax ~= nil and team.energy ~= nil and team.energyMax ~= nil then
-			SCEN_EDIT.delay(function()
-				self:setTeamResources(id, team.metal, team.metalMax, team.energy, team.energyMax)
-			end)
-		end
+        if team.metal ~= nil and team.metalMax ~= nil and team.energy ~= nil and team.energyMax ~= nil then
+            SCEN_EDIT.delay(function()
+                self:setTeamResources(id, team.metal, team.metalMax, team.energy, team.energyMax)
+            end)
+        end
     end
 end
 
@@ -102,6 +103,6 @@ function TeamManager:generateTeams(widget)
     local teams = SCEN_EDIT.GetTeams(widget)
     self.teams = {}
     for _, team in pairs(teams) do
-        self.teams[team.id] = team
+        self:addTeam(team, team.id)
     end
 end

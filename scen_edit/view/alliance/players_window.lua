@@ -79,6 +79,7 @@ function PlayersWindow:Populate()
                 caption = 'Edit',
                 x = 190,
                 width = 80,
+                height = SCEN_EDIT.conf.B_HEIGHT,
                 parent = stackTeamPanel,
                 OnClick = {
                     function() 
@@ -105,7 +106,7 @@ function PlayersWindow:Populate()
                     },
                 },
                 OnClick = {
-                    function() 
+                    function()
                         local cmd = RemoveTeamCommand(team.id)
                         SCEN_EDIT.commandManager:execute(cmd)
                     end
