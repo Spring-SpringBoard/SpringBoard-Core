@@ -123,7 +123,7 @@ function ObjectDefsView:init()
         title = "Spread:",
         tooltip = "Spread",
         value = 100,
-        minValue = 20,
+        minValue = 1,
         maxValue = 500,
         step = 1,
         decimals = 0,
