@@ -56,7 +56,7 @@ function ObjectDefsView:init()
             if selected then
                 table.insert(self.objectDefIDs, objectDefID)
                 -- TODO
-                if currentState:is_A(SelectUnitTypeState) or currentState:is_A(SelectFeatureTypeState) then
+                if currentState:is_A(SelectUnitTypeState) --[[or currentState:is_A(SelectFeatureTypeState)]] then
                     currentState:SelectObjectType(objectDefID)
                     SCEN_EDIT.stateManager:SetState(DefaultState())
                 end

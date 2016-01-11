@@ -28,10 +28,11 @@ function UnitTypePanel:MakePredefinedOpt()
             --SCEN_EDIT.SelectType(self.btnPredefinedType)
         end
     }
-    self.btnPredefinedType.OnSelectUnitType = {
+    self.btnPredefinedType.OnSelectObjectType = {
         function(unitTypeId)
             self.btnPredefinedType.unitTypeId = unitTypeId
-            self.btnPredefinedType.caption = "Id=" .. unitTypeId
+            local defName = unitBridge.ObjectDefs[unitTypeId].name
+            self.btnPredefinedType.caption = "Id=" .. defName
             self.btnPredefinedType:Invalidate()
             if not self.cbPredefinedType.checked then 
                 self.cbPredefinedType:Toggle()
@@ -54,7 +55,7 @@ function UnitTypePanel:UpdatePanel(field)
         if not self.cbPredefinedType.checked then
             self.cbPredefinedType:Toggle()
         end
-        self.btnPredefinedType.OnSelectUnitType[1](field.id)
+        self.btnPredefinedType.OnSelectObjectType[1](field.id)
         return true
     end
     return self:super('UpdatePanel', field)

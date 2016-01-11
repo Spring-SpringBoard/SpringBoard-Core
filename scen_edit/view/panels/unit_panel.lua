@@ -28,10 +28,10 @@ function UnitPanel:MakePredefinedOpt()
             SCEN_EDIT.stateManager:SetState(SelectUnitState(self.btnPredefinedUnit))
         end
     }
-    self.btnPredefinedUnit.OnSelectUnit = {
-        function(unitId)
-            self.btnPredefinedUnit.unitId = unitId
-            self.btnPredefinedUnit.caption = "Id=" .. unitId
+    self.btnPredefinedUnit.OnSelectObject = {
+        function(objectID)
+            self.btnPredefinedUnit.unitId = objectID
+            self.btnPredefinedUnit.caption = "Id=" .. objectID
             self.btnPredefinedUnit:Invalidate()
             if not self.cbPredefinedUnit.checked then 
                 self.cbPredefinedUnit:Toggle()
