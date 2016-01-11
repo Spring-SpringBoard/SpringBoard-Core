@@ -1,9 +1,9 @@
 TerrainLevelState = AbstractHeightmapEditingState:extends{}
 
 function TerrainLevelState:Apply(x, z)
-	local cmd = TerrainLevelCommand(x, z, self.size, self.height)
-	SCEN_EDIT.commandManager:execute(cmd)
-	return true
+    local cmd = TerrainLevelCommand(x, z, self.size, self.height)
+    SCEN_EDIT.commandManager:execute(cmd)
+    return true
 end
 
 function TerrainLevelState:MousePress(x, y, button)
