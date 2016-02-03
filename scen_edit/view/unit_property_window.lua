@@ -5,7 +5,7 @@ UnitPropertyWindow = EditorView:extends{}
 function UnitPropertyWindow:init()
     self:super("init")
     self.rules = {}
-    self.objectKeys = { "health" }
+    self.objectKeys = { "health", "mass" }
     self.unitKeys = {"tooltip", "maxHealth", "stockpile", "experience", "fuel", "team", "neutral", "maxRange", "harvestStorage", "capture", --[["paralyze",]] "build"}
 
     self:AddControl("pos-sep", {
@@ -175,6 +175,15 @@ function UnitPropertyWindow:init()
             step = 1,
             width = 100,
         }),
+    }))
+
+    self:AddField(NumericField({
+        name = "mass",
+        title = "Mass:",
+        tooltip = "Object mass",
+        value = 1,
+        step = 1,
+        width = 100,
     }))
 
     self:AddControl("health-sep", {

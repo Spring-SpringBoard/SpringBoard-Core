@@ -227,25 +227,26 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
     local selection = SCEN_EDIT.view.selectionManager:GetSelection()
     local selCount = #selection.units + #selection.features + #selection.areas
     if key == KEYSYMS.DELETE then
-        if selCount > 0 then
-            local commands = {}
-            for _, unitId in pairs(selection.units) do
-                local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
-                table.insert(commands, RemoveUnitCommand(modelUnitId))
-            end
-
-            for _, featureId in pairs(selection.features) do
-                local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
-                table.insert(commands, RemoveFeatureCommand(modelFeatureId))
-            end
-
-            for _, areaId in pairs(selection.areas) do
-                table.insert(commands, RemoveAreaCommand(areaId))
-            end
-
-            local cmd = CompoundCommand(commands)
-            SCEN_EDIT.commandManager:execute(cmd)
+        if selCount == 0 then
+            return false
         end
+        local commands = {}
+        for _, unitId in pairs(selection.units) do
+            local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+            table.insert(commands, RemoveUnitCommand(modelUnitId))
+        end
+
+        for _, featureId in pairs(selection.features) do
+            local modelFeatureId = SCEN_EDIT.model.featureManager:getModelFeatureId(featureId)
+            table.insert(commands, RemoveFeatureCommand(modelFeatureId))
+        end
+
+        for _, areaId in pairs(selection.areas) do
+            table.insert(commands, RemoveAreaCommand(areaId))
+        end
+
+        local cmd = CompoundCommand(commands)
+        SCEN_EDIT.commandManager:execute(cmd)
     elseif key == KEYSYMS.C and mods.ctrl then
         SCEN_EDIT.clipboard:Copy(selection)
     elseif key == KEYSYMS.X and mods.ctrl then

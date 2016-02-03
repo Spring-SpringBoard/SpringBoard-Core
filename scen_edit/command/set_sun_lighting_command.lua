@@ -31,9 +31,6 @@ function WidgetSetSunLightingCommand:execute()
         unitAmbientColor    = {gl.GetSun("ambient", "unit")},
         unitSpecularColor   = {gl.GetSun("specular", "unit")},
     }
---     for _, v in pairs(self.old) do
---         v[4] = 1
---     end
     Spring.SetSunLighting(self.opts)
 end
 

@@ -64,7 +64,7 @@ function TerrainSettingsView:init()
     })
     self:AddField(GroupField({
         ColorField({
-            name = "groundSunColor",
+            name = "groundDiffuseColor",
             title = "Diffuse:",
             tooltip = "Ground diffuse color",
             width = 140,
@@ -92,7 +92,7 @@ function TerrainSettingsView:init()
     })
     self:AddField(GroupField({
         ColorField({
-            name = "unitSunColor",
+            name = "unitDiffuseColor",
             title = "Diffuse:",
             tooltip = "Unit diffuse color",
             width = 140,
@@ -140,6 +140,69 @@ function TerrainSettingsView:init()
 --         }),
 --     }))
     self:UpdateSun()
+
+    self:AddControl("atmosphere-sep", {
+        Label:New {
+            caption = "Atmosphere color",
+        },
+        Line:New {
+            x = 150,
+        }
+    })
+    self:AddField(GroupField({
+        ColorField({
+            name = "skyColor",
+            title = "Sky:",
+            tooltip = "Sky color",
+            width = 100,
+        }),
+        ColorField({
+            name = "sunColor",
+            title = "Sun:",
+            tooltip = "Sun color",
+            width = 100,
+        }),
+        ColorField({
+            name = "cloudColor",
+            title = "Cloud:",
+            tooltip = "Cloud color",
+            width = 100,
+        }),
+    }))
+
+    self:AddControl("atmosphere-fog-sep", {
+        Label:New {
+            caption = "Fog",
+        },
+        Line:New {
+            x = 150,
+        }
+    })
+    self:AddField(GroupField({
+        ColorField({
+            name = "fogColor",
+            title = "Color:",
+            tooltip = "Fog color",
+            width = 100,
+        }),
+        NumericField({
+            name = "fogStart",
+            title = "Start:",
+            tooltip = "Fog start",
+            width = 140,
+            minValue = 0,
+            maxValue = 1,
+        }),
+        NumericField({
+            name = "fogEnd",
+            title = "End:",
+            tooltip = "Fog end",
+            width = 140,
+            minValue = 0,
+            maxValue = 1,
+        }),
+    }))
+    self:UpdateAtmosphere()
 
     self:AddControl("water-sun-sep", {
         Line:New {
@@ -445,7 +508,7 @@ function TerrainSettingsView:UpdateSun()
 --     groundDiffuse[4] = 1
 --     groundAmbient[4] = 1
 --     groundSpecular[4] = 1
-    self:Set("groundSunColor", groundDiffuse)
+    self:Set("groundDiffuseColor", groundDiffuse)
     self:Set("groundAmbientColor", groundAmbient)
     self:Set("groundSpecularColor", groundSpecular)
     local unitDiffuse = {gl.GetSun("diffuse", "unit")}
@@ -454,9 +517,19 @@ function TerrainSettingsView:UpdateSun()
 --     unitDiffuse[4] = 1
 --     unitAmbient[4] = 1
 --     unitSpecular[4] = 1
-    self:Set("unitSunColor", unitDiffuse)
+    self:Set("unitDiffuseColor", unitDiffuse)
     self:Set("unitAmbientColor", unitAmbient)
     self:Set("unitSpecularColor", unitSpecular)
+end
+
+function TerrainSettingsView:UpdateAtmosphere()
+    self:Set("fogStart",   gl.GetAtmosphere("fogStart"))
+    self:Set("fogEnd",     gl.GetAtmosphere("fogEnd"))
+    self:Set("fogColor",   {gl.GetAtmosphere("fogColor")})
+    self:Set("skyColor",   {gl.GetAtmosphere("skyColor")})
+--     self:Set("skyDir",     gl.GetAtmosphere("skyDir"))
+    self:Set("sunColor",   {gl.GetAtmosphere("sunColor")})
+    self:Set("cloudColor", {gl.GetAtmosphere("cloudColor")})
 end
 
 function TerrainSettingsView:OnFieldChange(name, value)
@@ -516,11 +589,16 @@ function TerrainSettingsView:OnFieldChange(name, value)
         local cmd = SetSunParametersCommand(value)
         SCEN_EDIT.commandManager:execute(cmd)
 
-    elseif name == "groundSunColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "unitAmbientColor" or name == "unitSunColor" or name == "unitSunColor" then
+    elseif name == "groundDiffuseColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "unitAmbientColor" or name == "unitDiffuseColor" or name == "unitSunColor" then
         local t = {}
---         value[4] = 1
         t[name] = value
         local cmd = SetSunLightingCommand(t)
+        SCEN_EDIT.commandManager:execute(cmd)
+
+    elseif name == "fogColor" or name == "skyColor" or name == "skyDir" or name == "sunColor" or name == "cloudColor" or name == "fogStart" or name == "fogEnd" then
+        local t = {}
+        t[name] = value
+        local cmd = SetAtmosphereCommand(t)
         SCEN_EDIT.commandManager:execute(cmd)
     else
 
