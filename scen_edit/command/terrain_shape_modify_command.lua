@@ -84,7 +84,7 @@ local function getMap(size, delta, shapeName, rotation)
     local mapsByShape = maps[shapeName]
     if not mapsByShape then
         mapsByShape = {}
-        maps[size] = mapsByShape
+        maps[shapeName] = mapsByShape
     end
 
     local mapsBySize = mapsByShape[size]
@@ -92,8 +92,8 @@ local function getMap(size, delta, shapeName, rotation)
         mapsBySize = {}
         mapsByShape[size] = mapsBySize
     end
-    
-    local mapsByRotation = mapsBySize[size]
+
+    local mapsByRotation = mapsBySize[rotation]
     if not mapsByRotation then
         mapsByRotation = {}
         mapsBySize[rotation] = mapsByRotation
