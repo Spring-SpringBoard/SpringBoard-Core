@@ -6,7 +6,7 @@ function HeightmapEditorView:init()
 
     self.heightmapBrushes = ImageListView:New {
         padding = {0, 0, 0, 0},
-        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/height",
+        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/terrain/good", -- "resources/brush_patterns/height",
         width = "100%",
         height = "100%",
     }
@@ -19,7 +19,7 @@ function HeightmapEditorView:init()
                 self.paintTexture = item
                 SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                if currentState:is_A(TerrainShapeModifyState) then
+                if currentState:is_A(AbstractHeightmapEditingState) then
                     currentState.paintTexture = item
                 end
             end
@@ -40,37 +40,9 @@ function HeightmapEditorView:init()
             end
         },
     })
-    self.btnSmoothState = TabbedPanelButton({
-        x = 70,
-        y = 0,
-        tooltip = "Smooth the terrain (2)",
-        children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Smooth" }),
-        },
-        OnClick = {
-            function()
-                SCEN_EDIT.stateManager:SetState(TerrainSmoothState(self))
-            end
-        },
-    })
-    self.btnLevelState = TabbedPanelButton({
-        x = 140,
-        y = 0,
-        tooltip = "Level the terrain (3)",
-        children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Level" }),
-        },
-        OnClick = {
-            function()
-                SCEN_EDIT.stateManager:SetState(TerrainLevelState(self))
-            end
-        },
-    })
 
     self.btnSetState = TabbedPanelButton({
-        x = 210,
+        x = 70,
         y = 0,
         tooltip = "Set the terrain (4)",
         children = {
@@ -83,6 +55,22 @@ function HeightmapEditorView:init()
             end
         },
     })
+
+    self.btnSmoothState = TabbedPanelButton({
+        x = 140,
+        y = 0,
+        tooltip = "Smooth the terrain (2)",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelLabel({ caption = "Smooth" }),
+        },
+        OnClick = {
+            function()
+                SCEN_EDIT.stateManager:SetState(TerrainSmoothState(self))
+            end
+        },
+    })
+
 --     self.btnChangeHeightRectState = TabbedPanelButton({
 --         x = 220,
 --         y = 10,
@@ -131,18 +119,23 @@ function HeightmapEditorView:init()
     self:AddField(NumericField({
         name = "strength",
         value = 10,
-        minValue = 0.1,
-        maxValue = 1000,
+        step = 0.1,
         title = "Strength:",
         tooltip = "Strength of the height map tool",
+    }))
+    self:AddField(NumericField({
+        name = "height",
+        value = 10,
+        step = 0.1,
+        title = "Height:",
+        tooltip = "Goal height",
     }))
     self:Update("size")
 
     local children = {
 		self.btnAddState,
+        self.btnSetState,
 		self.btnSmoothState,
-		self.btnLevelState,
-		self.btnSetState,
 		ScrollPanel:New {
 			x = 0, 
 			right = 0,
@@ -164,8 +157,7 @@ function HeightmapEditorView:init()
 	}
 
 	self:Finalize(children)
-	self.heightmapBrushes:Hide()
-	self.heightmapBrushes:Select("circle.png")
+-- 	self.heightmapBrushes:Select("circle.png")
 end
 
 function HeightmapEditorView:StoppedEditing()
@@ -175,15 +167,9 @@ function HeightmapEditorView:StoppedEditing()
     self.btnSmoothState.state.pressed = false
     self.btnSmoothState:Invalidate()
 
-    self.btnLevelState.state.pressed = false
-    self.btnLevelState:Invalidate()
-
     self.btnSetState.state.pressed = false
     self.btnSetState:Invalidate()
 
-    if self.heightmapBrushes.visible then
-        self.heightmapBrushes:Hide()
-    end
 --     self.btnChangeHeightRectState.state.pressed = false
 --     self.btnChangeHeightRectState:Invalidate()
 -- 
@@ -197,17 +183,12 @@ function HeightmapEditorView:StartedEditing()
         local btn
         if currentState:is_A(TerrainShapeModifyState) then
             btn = self.btnAddState
-            if self.heightmapBrushes.hidden then
-                self.heightmapBrushes:Show()
-            end
 --         elseif currentState:is_A(TerrainChangeHeightRectState) then
 --             btn = self.btnChangeHeightRectState
-        elseif currentState:is_A(TerrainSmoothState) then
-            btn = self.btnSmoothState
-        elseif currentState:is_A(TerrainLevelState) then
-            btn = self.btnLevelState
         elseif currentState:is_A(TerrainSetState) then
             btn = self.btnSetState
+        elseif currentState:is_A(TerrainSmoothState) then
+            btn = self.btnSmoothState
 --         elseif currentState:is_A(TerrainShapeModifyState) then
 --             btn = self.btnAddShapeState
         end

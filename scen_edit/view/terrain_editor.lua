@@ -49,7 +49,7 @@ function TerrainEditorView:init()
     }
 
     self.brushTextureImages = TextureBrowser({
-        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/terrain/",
+        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/terrain/good",
         width = "100%",
         height = "100%",
         multiSelect = false,

@@ -1,27 +1,17 @@
 TerrainSmoothState = AbstractHeightmapEditingState:extends{}
 
-function TerrainSmoothState:init(editorView)
-    self:super("init", editorView)
-    self.sigma = 1
+function TerrainSmoothState:GetCommand(x, z, strength)
+    self.sigma = math.max(math.min(math.sqrt(math.sqrt(strength)) / 2, 1.5), 0.20)
+    return TerrainSmoothCommand({
+        x = x,
+        z = z,
+        size = self.size,
+        shapeName = self.paintTexture,
+        rotation = self.rotation,
+        sigma = self.sigma,
+
+        strength = strength,
+    })
 end
 
-function TerrainSmoothState:Apply(x, z, strength)
-	self.sigma = math.max(math.min(math.sqrt(math.sqrt(strength)) / 2, 1.5), 0.20)
-	local cmd = TerrainSmoothCommand(x, z, self.size, self.sigma)
-	SCEN_EDIT.commandManager:execute(cmd)
-	return true
-end
-
-function TerrainSmoothState:DrawWorld()
-    x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground" then
-        local x, z = coords[1], coords[3]
-        gl.PushMatrix()
-        gl.Color(1, 1, 1, 0.4)
-        gl.Utilities.DrawGroundCircle(x, z, self.size)
-        gl.Color(0, 1, 0, 0.4)
-        gl.Utilities.DrawGroundCircle(x, z, self.size * 0.95)
-        gl.PopMatrix()
-    end
-end
+--gl.Color(0, 1, 0, 0.4)

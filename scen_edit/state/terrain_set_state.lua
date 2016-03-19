@@ -1,21 +1,29 @@
 TerrainSetState = AbstractHeightmapEditingState:extends{}
 
-function TerrainSetState:Apply(x, z, strength)
-    local cmd = TerrainLevelCommand(x, z, self.size, strength)
-    SCEN_EDIT.commandManager:execute(cmd)
-    return true
+function TerrainSetState:GetCommand(x, z, strength)
+    return TerrainLevelCommand({
+        x = x,
+        z = z,
+        size = self.size,
+        shapeName = self.paintTexture,
+        rotation = self.rotation,
+        height = self.height,
+
+        strength = strength,
+    })
 end
 
-function TerrainSetState:DrawWorld()
-    x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground" then
-        local x, z = coords[1], coords[3]
-        gl.PushMatrix()
-        gl.Color(1, 1, 1, 0.4)
-        gl.Utilities.DrawGroundCircle(x, z, self.size)
-        gl.Color(0, 0.5, 0.5, 0.4)
-        gl.Utilities.DrawGroundCircle(x, z, self.size * 0.95)
-        gl.PopMatrix()
+function TerrainSetState:MousePress(x, y, button)
+    if button == 3 then
+        local result, coords = Spring.TraceScreenRay(x, y, true)
+        if result == "ground"  then
+            self.height = coords[2]
+            self.editorView:Set("height", self.height)
+        end
+    else
+        return self:super("MousePress", x, y, button)
     end
 end
+
+
+--gl.Color(0, 0.5, 0.5, 0.4)

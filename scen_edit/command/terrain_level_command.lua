@@ -1,64 +1,39 @@
-TerrainLevelCommand = UndoableCommand:extends{}
+TerrainLevelCommand = AbstractTerrainModifyCommand:extends{}
 TerrainLevelCommand.className = "TerrainLevelCommand"
 
-function TerrainLevelCommand:init(x, z, size, height)
+function TerrainLevelCommand:init(opts)
     self.className = "TerrainLevelCommand"
-    self.x, self.z, self.size, self.height  = x, z, size, height
+    self.opts = opts
 end
 
-function TerrainLevelCommand:GetHeightMapFunc(isUndo)
-    return function()
-        local size = self.size
-        size = size - size % Game.squareSize
-        local centerX = self.x
-        local centerZ = self.z
-        local parts = 2*size / Game.squareSize + 1
-        local startX = centerX - size
-        local startZ = centerZ - size
-        startX = startX - startX % Game.squareSize
-        startZ = startZ - startZ % Game.squareSize
-        if not isUndo then
-            -- calculate the changes only once so redoing the command is faster
-            if self.toDo == nil then
-                self.toDo = {}
-                for x = 0, 2*size, Game.squareSize do
-                    for z = 0, 2*size, Game.squareSize do
+function TerrainLevelCommand:GenerateChanges(params)
+    local startX = params.startX
+    local startZ = params.startZ
+    local parts  = params.parts
+    local size   = params.size
+    local isUndo = params.isUndo
+    local map    = params.map
 
-                        local d = (size - x) * (size - x) + (size - z) * (size - z)
-                        if d <= size * size then
-                            if old ~= self.height then
-                                local old = Spring.GetGroundHeight(x + startX, z + startZ)
-                                self.toDo[x + z * parts] = self.height - old
-                            end
-                        end
-                    end
-                end
-            end
-            for x = 0, 2*size, Game.squareSize do
-                for z = 0, 2*size, Game.squareSize do
-                    local delta = self.toDo[x + z * parts] 
-                    if delta ~= nil then
-                        Spring.AddHeightMap(x + startX, z + startZ, delta)
-                    end
-                end
-            end
-        else
-            for x = 0, 2*size, Game.squareSize do
-                for z = 0, 2*size, Game.squareSize do
-                    local delta = self.toDo[x + z * parts] 
-                    if delta ~= nil then
-                        Spring.AddHeightMap(x + startX, z + startZ, -delta)
-                    end
+    local height = self.opts.height
+
+    local changes = {}
+
+    -- localized loop vars
+    local old, dh, d
+    for x = 0, 2*size, Game.squareSize do
+        for z = 0, 2*size, Game.squareSize do
+            d = map[x + z * parts]
+            if d > 0 then
+                old = Spring.GetGroundHeight(x + startX, z + startZ)
+                if height > old then
+                    dh = math.min(d, height - old)
+                    changes[x + z * parts] = dh
+                else
+                    dh = math.min(d, old - height)
+                    changes[x + z * parts] = -dh
                 end
             end
         end
     end
-end
-
-function TerrainLevelCommand:execute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))
-end
-
-function TerrainLevelCommand:unexecute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
+    return changes
 end
