@@ -78,7 +78,7 @@ function ModelShaders:_GetShader()
     uniform float time;
 ]]):gsub("__FRAGMENT_POST_SHADING__",
 [[
-    gl_FragColor.rgb += sin(time*4) / 3.14 / 5 + 0.1;
+    gl_FragColor.rgb += sin(time*4.0) / 3.14 / 5.0 + 0.1;
 ]])
     local obj = self:_CompileShader({vertex = shaderVertexStr, fragment = shaderFragStr})
     obj.timeID = gl.GetUniformLocation(obj.shader, "time")
