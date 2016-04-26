@@ -78,4 +78,23 @@ function UnitFeaturePanel:init()
             },
         })
     )
+    self.control:AddChild(TabbedPanelButton({
+            tooltip = "Unit animations",
+            OnClick = {
+                function()
+                    if SCEN_EDIT.animationsView == nil then
+                        self.animationsView = AnimationsView()
+                        SCEN_EDIT.animationsView = self.animationsView
+                    end
+                    if SCEN_EDIT.animationsView.window.hidden then
+                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.animationsView.window)
+                    end
+                end
+            },
+            children = {
+                TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
+                TabbedPanelLabel({ caption = "Anims" }),
+            },
+        })
+    )
 end
