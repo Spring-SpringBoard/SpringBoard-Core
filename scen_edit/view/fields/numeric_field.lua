@@ -2,7 +2,6 @@ SCEN_EDIT.Include(SCEN_EDIT_VIEW_FIELDS_DIR .. "string_field.lua")
 
 NumericField = StringField:extends{}
 function NumericField:Update(source)
-    Spring.Echo(source)
     local v = string.format(self.format, self.value)
     if source ~= self.editBox and not self.editBox.state.focused then
         self.editBox:SetText(v)

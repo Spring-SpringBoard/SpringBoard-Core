@@ -17,7 +17,6 @@ function ColorField:init(field)
     self:super('init', field)
     self.lblTitle = Label:New {
         caption = self.title,
-        tooltip = self.tooltip,
         x = 10,
         y = 5,
         autosize = true,
@@ -37,6 +36,7 @@ function ColorField:init(field)
         width = self.width,
         height = self.height,
         padding = {0, 0, 0, 0,},
+        tooltip = self.tooltip,
         MouseDown = function(obj, x, y, btn, ...) -- Overrides Chili.Button.MouseDown
             if btn == 1 then
                 return Chili.Button.MouseDown(obj, x, y, btn, ...)
