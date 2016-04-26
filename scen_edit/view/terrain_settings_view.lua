@@ -7,13 +7,6 @@ function TerrainSettingsView:init()
     self.initializing = true
 
     self:AddField(FileField({
-        name = "skyboxTexture",
-        title = "Skybox:",
-        tooltip = "Skybox texture",
-        value = SCEN_EDIT_IMG_DIR .. "resources/skyboxes",
-    }))
-
-    self:AddField(FileField({
         name = "detailTexture",
         title = "Detail:",
         tooltip = "Detail texture",
@@ -67,19 +60,27 @@ function TerrainSettingsView:init()
             name = "groundDiffuseColor",
             title = "Diffuse:",
             tooltip = "Ground diffuse color",
-            width = 140,
+            width = 100,
         }),
         ColorField({
             name = "groundAmbientColor",
             title = "Ambient:",
             tooltip = "Ground ambient color",
-            width = 140,
+            width = 100,
         }),
         ColorField({
             name = "groundSpecularColor",
             title = "Specular:",
             tooltip = "Ground specular color",
-            width = 140,
+            width = 100,
+        }),
+        NumericField({
+            name = "groundShadowDensity",
+            title = "Shadow density:",
+            tooltip = "Ground shadow density",
+            width = 100,
+            minValue = 0,
+            maxValue = 1,
         }),
     }))
     self:AddControl("sun-unit-sep", {
@@ -95,21 +96,58 @@ function TerrainSettingsView:init()
             name = "unitDiffuseColor",
             title = "Diffuse:",
             tooltip = "Unit diffuse color",
-            width = 140,
+            width = 100,
         }),
         ColorField({
             name = "unitAmbientColor",
             title = "Ambient:",
             tooltip = "Unit ambient color",
-            width = 140,
+            width = 100,
         }),
         ColorField({
             name = "unitSpecularColor",
             title = "Specular:",
             tooltip = "Unit specular color",
-            width = 140,
+            width = 100,
+        }),
+        NumericField({
+            name = "unitShadowDensity",
+            title = "Shadow density:",
+            tooltip = "Unit shadow density",
+            width = 100,
+            minValue = 0,
+            maxValue = 1,
         }),
     }))
+
+--     self:AddControl("sun-unit-sep", {
+--         Label:New {
+--             caption = "Sun unit color",
+--         },
+--         Line:New {
+--             x = 150,
+--         }
+--     })
+--     self:AddField(GroupField({
+--         ColorField({
+--             name = "unitDiffuseColor",
+--             title = "Diffuse:",
+--             tooltip = "Unit diffuse color",
+--             width = 140,
+--         }),
+--         ColorField({
+--             name = "unitAmbientColor",
+--             title = "Ambient:",
+--             tooltip = "Unit ambient color",
+--             width = 140,
+--         }),
+--         ColorField({
+--             name = "unitSpecularColor",
+--             title = "Specular:",
+--             tooltip = "Unit specular color",
+--             width = 140,
+--         }),
+--     }))
 
     --     self:AddField(GroupField({
 --         NumericField({
@@ -151,23 +189,29 @@ function TerrainSettingsView:init()
     })
     self:AddField(GroupField({
         ColorField({
-            name = "skyColor",
-            title = "Sky:",
-            tooltip = "Sky color",
-            width = 100,
-        }),
-        ColorField({
             name = "sunColor",
             title = "Sun:",
             tooltip = "Sun color",
-            width = 100,
+            width = 140,
+        }),
+        ColorField({
+            name = "skyColor",
+            title = "Sky:",
+            tooltip = "Sky color",
+            width = 140,
         }),
         ColorField({
             name = "cloudColor",
             title = "Cloud:",
-            tooltip = "Cloud color",
-            width = 100,
+            tooltip = "Cloud color (requires AdvSky)",
+            width = 140,
         }),
+    }))
+    self:AddField(FileField({
+        name = "skyboxTexture",
+        title = "Skybox:",
+        tooltip = "Skybox texture (requires SkyBox sky)",
+        value = SCEN_EDIT_IMG_DIR .. "resources/skyboxes",
     }))
 
     self:AddControl("atmosphere-fog-sep", {
@@ -505,21 +549,26 @@ function TerrainSettingsView:UpdateSun()
     local groundDiffuse = {gl.GetSun("diffuse")}
     local groundAmbient = {gl.GetSun("ambient")}
     local groundSpecular = {gl.GetSun("specular")}
+    local groundShadowDensity = gl.GetSun("shadowDensity")
 --     groundDiffuse[4] = 1
 --     groundAmbient[4] = 1
 --     groundSpecular[4] = 1
-    self:Set("groundDiffuseColor", groundDiffuse)
-    self:Set("groundAmbientColor", groundAmbient)
+    self:Set("groundDiffuseColor",  groundDiffuse)
+    self:Set("groundAmbientColor",  groundAmbient)
     self:Set("groundSpecularColor", groundSpecular)
+    self:Set("groundShadowDensity", groundShadowDensity)
+
     local unitDiffuse = {gl.GetSun("diffuse", "unit")}
     local unitAmbient = {gl.GetSun("ambient", "unit")}
     local unitSpecular = {gl.GetSun("specular", "unit")}
+    local unitShadowDensity = gl.GetSun("shadowDensity", "unit")
 --     unitDiffuse[4] = 1
 --     unitAmbient[4] = 1
 --     unitSpecular[4] = 1
-    self:Set("unitDiffuseColor", unitDiffuse)
-    self:Set("unitAmbientColor", unitAmbient)
+    self:Set("unitDiffuseColor",  unitDiffuse)
+    self:Set("unitAmbientColor",  unitAmbient)
     self:Set("unitSpecularColor", unitSpecular)
+    self:Set("unitShadowDensity", unitShadowDensity)
 end
 
 function TerrainSettingsView:UpdateAtmosphere()
@@ -589,7 +638,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
         local cmd = SetSunParametersCommand(value)
         SCEN_EDIT.commandManager:execute(cmd)
 
-    elseif name == "groundDiffuseColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "unitAmbientColor" or name == "unitDiffuseColor" or name == "unitSunColor" then
+    elseif name == "groundDiffuseColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "groundShadowDensity" or name == "unitAmbientColor" or name == "unitDiffuseColor" or name == "unitSunColor" or name == "unitShadowDensity" then
         local t = {}
         t[name] = value
         local cmd = SetSunLightingCommand(t)

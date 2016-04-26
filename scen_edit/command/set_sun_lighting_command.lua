@@ -27,9 +27,11 @@ function WidgetSetSunLightingCommand:execute()
         groundSunColor      = {gl.GetSun("diffuse")},
         groundAmbientColor  = {gl.GetSun("ambient")},
         groundSpecularColor = {gl.GetSun("specular")},
+        groundShadowDensity = gl.GetSun("shadowDensity"),
         unitDiffuseColor    = {gl.GetSun("diffuse", "unit")},
         unitAmbientColor    = {gl.GetSun("ambient", "unit")},
         unitSpecularColor   = {gl.GetSun("specular", "unit")},
+        unitShadowDesnity   = gl.GetSun("shadowDensity", "unit"),
     }
     Spring.SetSunLighting(self.opts)
 end
