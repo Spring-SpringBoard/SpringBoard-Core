@@ -29,8 +29,8 @@ void main(void)
 	//color.rgb = color.rgb * alpha;
 
 	// extract texture features
-	featureFactor = (1 - featureFactor) / 2;
-	color = mix(min(color, (max(color,mapColor+featureFactor)-featureFactor)-featureFactor)+featureFactor,mapColor,color.a);
+	float ff = (1.0 - featureFactor) / 2.0;
+	color = mix(min(color, (max(color,mapColor+ff)-ff)-ff)+ff,mapColor,color.a);
 
 	// apply only a percentage part of the texture
 	//blendFactor = blendFactor * blendFactor;
@@ -38,15 +38,15 @@ void main(void)
 
 	// calculate alpha (smaller the further away it is), used to draw circles
 	vec2 size = vec2(x2 - x1, z2 - z1);
-	vec2 center = size / 2;
+	vec2 center = size / 2.0;
 	vec2 delta = (gl_TexCoord[0].xy - vec2(x1, z1) - center) / size;
 	float distance = sqrt(delta.x * delta.x + delta.y * delta.y);
-	float alpha = 1 - 2 * distance;
-	alpha = clamp(alpha, 0, 1);
+	float alpha = 1.0 - 2.0 * distance;
+	alpha = clamp(alpha, 0.0, 1.0);
 // 	color = mix(color, mapColor, alpha);
 	
 	// falloff crispness (use previously calculated alpha to make for a smooth falloff blending
-	alpha = 1 - min(1.0f, alpha + falloffFactor);
+	alpha = 1.0 - min(1.0, alpha + falloffFactor);
 // 	color = mix(min(color, (max(color,mapColor+alpha)-alpha)-alpha)+alpha,mapColor,color.a);
 
 	color = mix(color, mapColor, brushColor.a);
@@ -55,10 +55,11 @@ void main(void)
 // 	if (alpha > 0.9) {
 // 		alpha = 1;
 // 	}
-	color.a = 1 - (1 - alpha) * voidFactor;
+	color.a = 1.0 - (1.0 - alpha) * voidFactor;
 	color.a = min(color.a, mapColor.a);
 	
-	color.a = mix(min(color.a, (max(color.a,mapColor.a+alpha)-alpha)-alpha)+alpha,mapColor.a,1 - alpha);
+	float f1 = min(color.a, (max(color.a, mapColor.a + alpha) - alpha) - alpha) + alpha;
+	color.a = f1 * alpha + mapColor.a * (1.0 - alpha);
 	
 	gl_FragColor = color;
 	//gl_FragColor.a = 1; // there are issues if this is less than 1

@@ -28,14 +28,14 @@ void main(void)
 
 	// calculate alpha (smaller the further away it is), used to draw circles
 	vec2 size = vec2(x2 - x1, z2 - z1);
-	vec2 center = size / 2;
+	vec2 center = size / 2.0;
 	vec2 delta = (gl_TexCoord[0].xy - vec2(x1, z1) - center) / size;
 	float distance = sqrt(delta.x * delta.x + delta.y * delta.y);
-	float alpha = 1 - 2 * distance;
-	alpha = clamp(alpha, 0, 1);
+	float alpha = 1.0 - 2.0 * distance;
+	alpha = clamp(alpha, 0.0, 1.0);
 
 	// falloff crispness (use previously calculated alpha to make for a smooth falloff blending
-	alpha = 1 - min(1.0f, alpha + falloffFactor);
+	alpha = 1.0 - min(1.0, alpha + falloffFactor);
 	/*	
 	color = mix(min(color, (max(color,mapColor+falloffAlpha)-falloffAlpha)-falloffAlpha)+falloffAlpha,mapColor,color.a);*/
 
@@ -53,15 +53,17 @@ void main(void)
 // 		color.a = 1+color.a;
 // 		color.a = max(color.a, mapColor.a);
 // 	}
-    voidFactor *= brushColor.a;
-	if (voidFactor > 0) {
-		color.a = 1 - (1 - alpha) * voidFactor;
+	float vf = voidFactor;
+    vf *= brushColor.a;
+	if (vf > 0.0) {
+		color.a = 1.0 - (1.0 - alpha) * vf;
 		color.a = min(color.a, mapColor.a);
 	} else {
-		color.a = -(1 - alpha) * voidFactor;
+		color.a = -(1.0 - alpha) * vf;
 		color.a = max(color.a, mapColor.a);
 	}
-	color.a = mix(min(color.a, (max(color.a,mapColor.a+alpha)-alpha)-alpha)+alpha,mapColor.a,1 - alpha);
+	float f1 = min(color.a, (max(color.a, mapColor.a + alpha) - alpha) - alpha) + alpha;
+	color.a = f1 * alpha + mapColor.a * (1.0 - alpha);
 	
 	gl_FragColor = color;
 	//gl_FragColor.a = 1; // there are issues if this is less than 1

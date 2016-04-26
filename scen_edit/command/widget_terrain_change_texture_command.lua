@@ -14,14 +14,14 @@ end
 
 
 local function _InitShaders()
-	if shaders == nil then
-		shaders = {
-			diffuse = {},
-			normal = {},
-			smart = {},
-			void = nil,
-		}
-	end
+    if shaders == nil then
+        shaders = {
+            diffuse = {},
+            normal = {},
+            smart = {},
+            void = nil,
+        }
+    end
 end
 
 function getNormalShader(mode)
@@ -80,23 +80,23 @@ function getNormalShader(mode)
         local shader = gl.CreateShader(shaderTemplate)
         local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
+            Spring.Echo("Normal shader")
             Spring.Echo(errors)
-        else
-            local shaderObj = {
-                shader = shader,
-                uniforms = {
-                    x1ID = gl.GetUniformLocation(shader, "x1"),
-                    x2ID = gl.GetUniformLocation(shader, "x2"),
-                    z1ID = gl.GetUniformLocation(shader, "z1"),
-                    z2ID = gl.GetUniformLocation(shader, "z2"),
-                    blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
-                    falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
-                    featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
-                    diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
-                },
-            }
-            shaders.normal[mode] = shaderObj
         end
+        local shaderObj = {
+            shader = shader,
+            uniforms = {
+                x1ID = gl.GetUniformLocation(shader, "x1"),
+                x2ID = gl.GetUniformLocation(shader, "x2"),
+                z1ID = gl.GetUniformLocation(shader, "z1"),
+                z2ID = gl.GetUniformLocation(shader, "z2"),
+                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
+                featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
+                diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
+            },
+        }
+        shaders.normal[mode] = shaderObj
     end
 
     return shaders.normal[mode]
@@ -158,24 +158,24 @@ function getPenShader(mode)
         local shader = gl.CreateShader(shaderTemplate)
         local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
+            Spring.Echo("Pen shader")
             Spring.Echo(errors)
-        else
-            local shaderObj = {
-                shader = shader,
-                uniforms = {
-                    x1ID = gl.GetUniformLocation(shader, "x1"),
-                    x2ID = gl.GetUniformLocation(shader, "x2"),
-                    z1ID = gl.GetUniformLocation(shader, "z1"),
-                    z2ID = gl.GetUniformLocation(shader, "z2"),
-                    blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
-                    falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
-                    featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
-                    diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
-					voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
-                },
-            }
-            shaders.diffuse[mode] = shaderObj
         end
+        local shaderObj = {
+            shader = shader,
+            uniforms = {
+                x1ID = gl.GetUniformLocation(shader, "x1"),
+                x2ID = gl.GetUniformLocation(shader, "x2"),
+                z1ID = gl.GetUniformLocation(shader, "z1"),
+                z2ID = gl.GetUniformLocation(shader, "z2"),
+                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
+                featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
+                diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
+                voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
+            },
+        }
+        shaders.diffuse[mode] = shaderObj
     end
 
     return shaders.diffuse[mode]
@@ -229,45 +229,45 @@ function getSmartShader(mode)
             fragment = string.format(shaderFragStr, penBlenders[mode]),
             uniformInt = {
                 mapTex = 0,
-				heightmapTex = 1,
+                heightmapTex = 1,
                 paintTex1 = 2,
-				paintTex2 = 3,
-				paintTex3 = 4,
-				paintTex4 = 5,
+                paintTex2 = 3,
+                paintTex3 = 4,
+                paintTex4 = 5,
             },
         }
 
         local shader = gl.CreateShader(shaderTemplate)
         local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
+            Spring.Echo("Smart shader")
             Spring.Echo(errors)
-        else
-            local shaderObj = {
-                shader = shader,
-                uniforms = {
-                    x1ID = gl.GetUniformLocation(shader, "x1"),
-                    x2ID = gl.GetUniformLocation(shader, "x2"),
-                    z1ID = gl.GetUniformLocation(shader, "z1"),
-                    z2ID = gl.GetUniformLocation(shader, "z2"),
-                    blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
-                    falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
-                    featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
-                    diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
-					voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
-					
-					minHeightID = gl.GetUniformLocation(shader, "minHeight"),
-					minSlopeID = gl.GetUniformLocation(shader, "minSlope"),
-                },
-            }
-            shaders.smart[mode] = shaderObj
         end
+        local shaderObj = {
+            shader = shader,
+            uniforms = {
+                x1ID = gl.GetUniformLocation(shader, "x1"),
+                x2ID = gl.GetUniformLocation(shader, "x2"),
+                z1ID = gl.GetUniformLocation(shader, "z1"),
+                z2ID = gl.GetUniformLocation(shader, "z2"),
+                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
+                featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
+                diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
+                voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
+                
+                minHeightID = gl.GetUniformLocation(shader, "minHeight"),
+                minSlopeID = gl.GetUniformLocation(shader, "minSlope"),
+            },
+        }
+        shaders.smart[mode] = shaderObj
     end
 
     return shaders.smart[mode]
 end
 
 function getVoidShader()
-	_InitShaders()
+    _InitShaders()
     if shaders.void == nil then
         local shaderFragStr = VFS.LoadFile("shaders/void_drawing.glsl")
         local shaderTemplate = {
@@ -281,28 +281,28 @@ function getVoidShader()
         local shader = gl.CreateShader(shaderTemplate)
         local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
+            Spring.Echo("Void shader")
             Spring.Echo(errors)
-        else
-            local shaderObj = {
-                shader = shader,
-                uniforms = {
-                    x1ID = gl.GetUniformLocation(shader, "x1"),
-                    x2ID = gl.GetUniformLocation(shader, "x2"),
-                    z1ID = gl.GetUniformLocation(shader, "z1"),
-                    z2ID = gl.GetUniformLocation(shader, "z2"),
-                    falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
-					voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
-                },
-            }
-            shaders.void = shaderObj
         end
+        local shaderObj = {
+            shader = shader,
+            uniforms = {
+                x1ID = gl.GetUniformLocation(shader, "x1"),
+                x2ID = gl.GetUniformLocation(shader, "x2"),
+                z1ID = gl.GetUniformLocation(shader, "z1"),
+                z2ID = gl.GetUniformLocation(shader, "z2"),
+                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
+                voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
+            },
+        }
+        shaders.void = shaderObj
     end
 
     return shaders.void
 end
 
 function getBlurShader()
-	_InitShaders()
+    _InitShaders()
     if shaders.blur == nil then
         local shaderFragStr = VFS.LoadFile("shaders/map_blur_drawing.glsl")
         local shaderTemplate = {
@@ -316,15 +316,15 @@ function getBlurShader()
         local shader = gl.CreateShader(shaderTemplate)
         local errors = gl.GetShaderLog(shader)
         if errors ~= "" then
+            Spring.Echo("Blur shader")
             Spring.Echo(errors)
-        else
-            local shaderObj = {
-                shader = shader,
-                uniforms = {
-                },
-            }
-            shaders.blur = shaderObj
         end
+        local shaderObj = {
+            shader = shader,
+            uniforms = {
+            },
+        }
+        shaders.blur = shaderObj
     end
 
     return shaders.blur
@@ -360,80 +360,80 @@ local function ApplyTexture(oldTexture, mCoord, tCoord, vCoord)
 end
 
 local function OffsetCoords(tCoord, offsetX, offsetY)
-	for i = 1, #tCoord, 2 do
-		tCoord[i] = tCoord[i] + offsetX
-		tCoord[i+1] = tCoord[i+1] + offsetY
-	end
+    for i = 1, #tCoord, 2 do
+        tCoord[i] = tCoord[i] + offsetX
+        tCoord[i+1] = tCoord[i+1] + offsetY
+    end
 end
 
 local function ScaleCoords(tCoord, scaleX, scaleY)
-	for i = 1, #tCoord, 2 do
-		tCoord[i] = tCoord[i] * scaleX
-		tCoord[i+1] = tCoord[i+1] * scaleY
-	end
+    for i = 1, #tCoord, 2 do
+        tCoord[i] = tCoord[i] * scaleX
+        tCoord[i+1] = tCoord[i+1] * scaleY
+    end
 end
 
 local function rotate(x, y, angle)
     return x * math.cos(angle) - y * math.sin(angle),
-           x * math.sin(angle) + y * math.cos(angle)
+        x * math.sin(angle) + y * math.cos(angle)
 end
 
 local function RotateCoords(tCoord, angle)
-	-- rotate center
-	local tdx = tCoord[5] - tCoord[1]
-	local tdz = tCoord[4] - tCoord[2]
-	for i = 1, #tCoord, 2 do
-		tCoord[i]   			 = tCoord[i] - tdx
-		tCoord[i + 1] 			 = tCoord[i + 1] - tdz
-		tCoord[i], tCoord[i + 1] = rotate(tCoord[i], tCoord[i + 1], angle)
-		tCoord[i]				 = tCoord[i] + tdx
-		tCoord[i + 1] 			 = tCoord[i + 1] + tdz
-	end
+    -- rotate center
+    local tdx = tCoord[5] - tCoord[1]
+    local tdz = tCoord[4] - tCoord[2]
+    for i = 1, #tCoord, 2 do
+        tCoord[i]   			 = tCoord[i] - tdx
+        tCoord[i + 1] 			 = tCoord[i + 1] - tdz
+        tCoord[i], tCoord[i + 1] = rotate(tCoord[i], tCoord[i + 1], angle)
+        tCoord[i]				 = tCoord[i] + tdx
+        tCoord[i + 1] 			 = tCoord[i + 1] + tdz
+    end
 end
 
 local function _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
-	local mCoord = {
-		mx,              mz,
-		mx,              mz + mSizeZ,
-		mx + mSizeX,     mz + mSizeZ,
-		mx + mSizeX,     mz
-	}
-	local vCoord = {} -- vertex coords
+    local mCoord = {
+        mx,              mz,
+        mx,              mz + mSizeZ,
+        mx + mSizeX,     mz + mSizeZ,
+        mx + mSizeX,     mz
+    }
+    local vCoord = {} -- vertex coords
 -- 	for i = 1, #mCoord, 2 do
 -- 		vCoord[i]     = mCoord[i]     * 2 - 1
 -- 		vCoord[i + 1] = mCoord[i + 1] * 2 - 1
 -- 	end
     for i = 1, #mCoord do
-		vCoord[i]     = mCoord[i]     * 2 - 1
-	end
+        vCoord[i]     = mCoord[i]     * 2 - 1
+    end
 
-	-- texture coords
-	local tCoord = {
-		x,             z,
-		x,             z + sizeZ,
-		x + sizeX,     z + sizeZ,
-		x + sizeX,     z
-	}
-	
-	return mCoord, tCoord, vCoord
+    -- texture coords
+    local tCoord = {
+        x,             z,
+        x,             z + sizeZ,
+        x + sizeX,     z + sizeZ,
+        x + sizeX,     z
+    }
+    
+    return mCoord, tCoord, vCoord
 end
 
 local function GenerateCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ, opts)
-	local mCoord, tCoord, vCoord = _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
+    local mCoord, tCoord, vCoord = _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
 
-	OffsetCoords(tCoord, opts.texOffsetX, opts.texOffsetY)
-	ScaleCoords(tCoord, opts.texScale, opts.texScale)
-	RotateCoords(tCoord, math.rad(opts.rotation))
-	
-	return mCoord, tCoord, vCoord
+    OffsetCoords(tCoord, opts.texOffsetX, opts.texOffsetY)
+    ScaleCoords(tCoord, opts.texScale, opts.texScale)
+    RotateCoords(tCoord, math.rad(opts.rotation))
+    
+    return mCoord, tCoord, vCoord
 end
 
 function DrawDiffuse(opts, x, z, size)
-	if not opts["diffuseEnabled"] or not opts.paintTexture.diffuse then
-		return
-	end
-	
-	local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    if not opts["diffuseEnabled"] or not opts.paintTexture.diffuse then
+        return
+    end
+    
+    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
     -- create temporary textures to be used as source for modifying the textures later on
     local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
@@ -443,12 +443,12 @@ function DrawDiffuse(opts, x, z, size)
         local tmp = tmps[i]
         SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
     end
-	
-	local shaderObj = getPenShader(opts.mode)
+    
+    local shaderObj = getPenShader(opts.mode)
     local shader = shaderObj.shader
     local uniforms = shaderObj.uniforms
-	
-	gl.Blending("disable")
+    
+    gl.Blending("disable")
     gl.UseShader(shader)
 
     gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
@@ -458,12 +458,12 @@ function DrawDiffuse(opts, x, z, size)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
-	gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
 
     local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
-	x = x / texSize
-	z = z / texSize
-	size = size / texSize
+    x = x / texSize
+    z = z / texSize
+    size = size / texSize
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local mx, mz = coords[1] / texSize, coords[2] / texSize
@@ -480,17 +480,17 @@ function DrawDiffuse(opts, x, z, size)
 
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
     end
-	CheckGLSL()
-	
-	-- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
+    CheckGLSL()
+    
+    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
     gl.Texture(1, false)
     gl.Texture(2, false)
-	gl.UseShader(0)
+    gl.UseShader(0)
 end
 
 function DrawBlur(opts, x, z, size)
-	local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
     -- create temporary textures to be used as source for modifying the textures later on
     local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
@@ -500,20 +500,20 @@ function DrawBlur(opts, x, z, size)
         local tmp = tmps[i]
         SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
     end
-	
-	local shaderObj = getBlurShader()
+    
+    local shaderObj = getBlurShader()
     local shader = shaderObj.shader
     local uniforms = shaderObj.uniforms
-	
-	gl.Blending("disable")
+    
+    gl.Blending("disable")
     gl.UseShader(shader)
 
     gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
 
     local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
-	x = x / texSize
-	z = z / texSize
-	size = size / texSize
+    x = x / texSize
+    z = z / texSize
+    size = size / texSize
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local mx, mz = coords[1] / texSize, coords[2] / texSize
@@ -525,16 +525,16 @@ function DrawBlur(opts, x, z, size)
 
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
     end
-	CheckGLSL()
-	
-	-- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
+    CheckGLSL()
+    
+    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
     gl.Texture(1, false)
-	gl.UseShader(0)
+    gl.UseShader(0)
 end
 
 function DrawVoid(opts, x, z, size)
-	local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
     -- create temporary textures to be used as source for modifying the textures later on
     local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
@@ -544,23 +544,23 @@ function DrawVoid(opts, x, z, size)
         local tmp = tmps[i]
         SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
     end
-	
-	local shaderObj = getVoidShader()
+    
+    local shaderObj = getVoidShader()
     local shader = shaderObj.shader
     local uniforms = shaderObj.uniforms
-	
-	gl.Blending("disable")
+    
+    gl.Blending("disable")
     gl.UseShader(shader)
 
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
-	gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
 
     gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
 
     local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
-	x = x / texSize
-	z = z / texSize
-	size = size / texSize
+    x = x / texSize
+    z = z / texSize
+    size = size / texSize
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local mx, mz = coords[1] / texSize, coords[2] / texSize
@@ -577,199 +577,199 @@ function DrawVoid(opts, x, z, size)
 
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
     end
-	CheckGLSL()
-	
-	-- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
+    CheckGLSL()
+    
+    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
     gl.Texture(1, false)
-	gl.UseShader(0)
+    gl.UseShader(0)
 end
 
 function DrawShadingTextures(opts, x, z, size)
-	local shadingTmps = {}
-	local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
-	for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
-		if opts.paintTexture[texType] and opts[texType .. "Enabled"] then
-			SCEN_EDIT.model.textureManager:backupMapShadingTexture(texType)
-			local tmpTexName = texType.."tmp"
-			shadingTmps[texType] = SCEN_EDIT.model.textureManager[tmpTexName]
-			if SCEN_EDIT.model.textureManager[tmpTexName] == nil then
-				local texInfo = gl.TextureInfo(shadingTex)
-				local texSizeX, texSizeZ = texInfo.xsize, texInfo.ysize
-				SCEN_EDIT.model.textureManager[tmpTexName] = gl.CreateTexture(texSizeX, texSizeZ, {
-					border = false,
-					min_filter = GL.LINEAR,
-					mag_filter = GL.LINEAR,
-					wrap_s = GL.CLAMP_TO_EDGE,
-					wrap_t = GL.CLAMP_TO_EDGE,
-					fbo = true,
-				})
-				shadingTmps[texType] = SCEN_EDIT.model.textureManager[tmpTexName]
-			end
-			SCEN_EDIT.model.textureManager:Blit(shadingTex, shadingTmps[texType])
-		end
-	end
-	
-	local shaderObj = getPenShader(opts.mode)
-    local shader = shaderObj.shader
-    local uniforms = shaderObj.uniforms
-	
-	gl.Blending("disable")
-    gl.UseShader(shader)
-	
-	gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
-    gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
-    gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
-    gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
-	gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
-	
-	x = x / texSize
-	z = z / texSize
-	size = size / texSize
-	for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
-		if texType ~= "normal" and opts.paintTexture[texType] and opts[texType .. "Enabled"] then
-			gl.Blending("disable")
-			local texInfo = gl.TextureInfo(shadingTex)
-			local sizeX  = size * texSize / Game.mapSizeX
-			local sizeZ  = size * texSize / Game.mapSizeZ
-			local mx     = x    * texSize / Game.mapSizeX
-			local mz     = z    * texSize / Game.mapSizeZ
-
-			local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
-
-			gl.Uniform(uniforms.x1ID, mCoord[1])
-			gl.Uniform(uniforms.x2ID, mCoord[5])
-			gl.Uniform(uniforms.z1ID, mCoord[2])
-			gl.Uniform(uniforms.z2ID, mCoord[4])
-
-            gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
-			gl.Texture(2, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture[texType]))
-			gl.RenderToTexture(shadingTex, ApplyTexture, shadingTmps[texType], mCoord, tCoord, vCoord)
-			
-			CheckGLSL()
-		end
-	end
-
-	if opts.paintTexture.normal and opts.normalEnabled then
-		gl.Blending("disable")
-		local shaderObj = getPenShader(opts.mode)--getNormalShader(opts.mode)
-		local shader = shaderObj.shader
-		local uniforms = shaderObj.uniforms
-		
-		gl.UseShader(shader)
-
-        gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
-		gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture.normal))
-
-		gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
-		gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
-		gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
-		gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
-		
-		local texInfo = gl.TextureInfo(opts.paintTexture.normal)
-		local sizeX  = size * texSize / Game.mapSizeX
-		local sizeZ  = size * texSize / Game.mapSizeZ
-		local mx     = x    * texSize / Game.mapSizeX
-		local mz     = z    * texSize / Game.mapSizeZ
-
-		local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
-			
-		gl.Uniform(uniforms.x1ID, mCoord[1])
-		gl.Uniform(uniforms.x2ID, mCoord[5])
-		gl.Uniform(uniforms.z1ID, mCoord[2])
-		gl.Uniform(uniforms.z2ID, mCoord[4])
-		
-		
-		gl.RenderToTexture(SCEN_EDIT.model.textureManager.shadingTextures.normal, ApplyTexture, shadingTmps.normal, mCoord, tCoord, vCoord)
-
-		CheckGLSL()
-	end
-	
-	-- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
-    gl.Texture(0, false)
-    gl.Texture(1, false)
-    gl.Texture(2, false)
-	gl.UseShader(0)
-end
-
-function DrawSmart(opts, x, z, size)
-	if not opts["diffuseEnabled"] or not opts.paintTexture.diffuse then
-		return
-	end
-	
-	local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
-    -- create temporary textures to be used as source for modifying the textures later on
-    local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
-    for i, v in pairs(textures) do
-        local mapTextureObj = v[1]
-        local mapTexture = mapTextureObj.texture
-
-        local tmp = tmps[i]
-        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
+    local shadingTmps = {}
+    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
+    for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+        if opts.paintTexture[texType] and opts[texType .. "Enabled"] then
+            SCEN_EDIT.model.textureManager:backupMapShadingTexture(texType)
+            local tmpTexName = texType.."tmp"
+            shadingTmps[texType] = SCEN_EDIT.model.textureManager[tmpTexName]
+            if SCEN_EDIT.model.textureManager[tmpTexName] == nil then
+                local texInfo = gl.TextureInfo(shadingTex)
+                local texSizeX, texSizeZ = texInfo.xsize, texInfo.ysize
+                SCEN_EDIT.model.textureManager[tmpTexName] = gl.CreateTexture(texSizeX, texSizeZ, {
+                    border = false,
+                    min_filter = GL.LINEAR,
+                    mag_filter = GL.LINEAR,
+                    wrap_s = GL.CLAMP_TO_EDGE,
+                    wrap_t = GL.CLAMP_TO_EDGE,
+                    fbo = true,
+                })
+                shadingTmps[texType] = SCEN_EDIT.model.textureManager[tmpTexName]
+            end
+            SCEN_EDIT.model.textureManager:Blit(shadingTex, shadingTmps[texType])
+        end
     end
-	
-	local shaderObj = getSmartShader(opts.mode)
+    
+    local shaderObj = getPenShader(opts.mode)
     local shader = shaderObj.shader
     local uniforms = shaderObj.uniforms
-	
-	gl.Blending("disable")
+    
+    gl.Blending("disable")
     gl.UseShader(shader)
-	
-	gl.Texture(1, "$heightmap")
+    
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
-	gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
-	
-	local order = {}
-	for i, texture in pairs(opts.textures) do
-		table.insert(order, { texture.minSlope, i})
-	end
-	table.sort(order, function(t1, t2) return t1[1] < t2[1] end)
-	local minSlopes = {}
-	for i, item in pairs(order) do
-		table.insert(minSlopes, item[1])
-		local texture = opts.textures[item[2]]
-		gl.Texture(1 + i, SCEN_EDIT.model.textureManager:GetTexture(texture.texture.diffuse))
-	end
-	Spring.Echo(minSlopes)
-	gl.Uniform(uniforms.minSlopeID, unpack(minSlopes))
-	
-	local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
-	x = x / texSize
-	z = z / texSize
-	size = size / texSize
-	for i, v in pairs(textures) do
-		local mapTextureObj, _, coords = v[1], v[2], v[3]
-		local mx, mz = coords[1] / texSize, coords[2] / texSize
+    gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    
+    x = x / texSize
+    z = z / texSize
+    size = size / texSize
+    for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+        if texType ~= "normal" and opts.paintTexture[texType] and opts[texType .. "Enabled"] then
+            gl.Blending("disable")
+            local texInfo = gl.TextureInfo(shadingTex)
+            local sizeX  = size * texSize / Game.mapSizeX
+            local sizeZ  = size * texSize / Game.mapSizeZ
+            local mx     = x    * texSize / Game.mapSizeX
+            local mz     = z    * texSize / Game.mapSizeZ
 
-		local mapTexture = mapTextureObj.texture
-		mapTextureObj.dirty = true
+            local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
 
-		local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, size, size, opts)
+            gl.Uniform(uniforms.x1ID, mCoord[1])
+            gl.Uniform(uniforms.x2ID, mCoord[5])
+            gl.Uniform(uniforms.z1ID, mCoord[2])
+            gl.Uniform(uniforms.z2ID, mCoord[4])
 
-		gl.Uniform(uniforms.x1ID, mCoord[1])
-		gl.Uniform(uniforms.x2ID, mCoord[5])
-		gl.Uniform(uniforms.z1ID, mCoord[2])
-		gl.Uniform(uniforms.z2ID, mCoord[4])
+            gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
+            gl.Texture(2, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture[texType]))
+            gl.RenderToTexture(shadingTex, ApplyTexture, shadingTmps[texType], mCoord, tCoord, vCoord)
+            
+            CheckGLSL()
+        end
+    end
 
-		gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
-	end
+    if opts.paintTexture.normal and opts.normalEnabled then
+        gl.Blending("disable")
+        local shaderObj = getPenShader(opts.mode)--getNormalShader(opts.mode)
+        local shader = shaderObj.shader
+        local uniforms = shaderObj.uniforms
+        
+        gl.UseShader(shader)
 
-	CheckGLSL()
-	
-	-- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
+        gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
+        gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture.normal))
+
+        gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+        gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
+        gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
+        gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
+        
+        local texInfo = gl.TextureInfo(opts.paintTexture.normal)
+        local sizeX  = size * texSize / Game.mapSizeX
+        local sizeZ  = size * texSize / Game.mapSizeZ
+        local mx     = x    * texSize / Game.mapSizeX
+        local mz     = z    * texSize / Game.mapSizeZ
+
+        local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
+            
+        gl.Uniform(uniforms.x1ID, mCoord[1])
+        gl.Uniform(uniforms.x2ID, mCoord[5])
+        gl.Uniform(uniforms.z1ID, mCoord[2])
+        gl.Uniform(uniforms.z2ID, mCoord[4])
+        
+        
+        gl.RenderToTexture(SCEN_EDIT.model.textureManager.shadingTextures.normal, ApplyTexture, shadingTmps.normal, mCoord, tCoord, vCoord)
+
+        CheckGLSL()
+    end
+    
+    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
     gl.Texture(1, false)
-	for i, item in pairs(order) do
-		gl.Texture(1 + i, false)
-	end
-	gl.UseShader(0)
+    gl.Texture(2, false)
+    gl.UseShader(0)
+end
+
+function DrawSmart(opts, x, z, size)
+    if not opts["diffuseEnabled"] or not opts.paintTexture.diffuse then
+        return
+    end
+    
+    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    -- create temporary textures to be used as source for modifying the textures later on
+    local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
+    for i, v in pairs(textures) do
+        local mapTextureObj = v[1]
+        local mapTexture = mapTextureObj.texture
+
+        local tmp = tmps[i]
+        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
+    end
+    
+    local shaderObj = getSmartShader(opts.mode)
+    local shader = shaderObj.shader
+    local uniforms = shaderObj.uniforms
+    
+    gl.Blending("disable")
+    gl.UseShader(shader)
+    
+    gl.Texture(1, "$heightmap")
+    gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+    gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
+    gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
+    gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
+    gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    
+    local order = {}
+    for i, texture in pairs(opts.textures) do
+        table.insert(order, { texture.minSlope, i})
+    end
+    table.sort(order, function(t1, t2) return t1[1] < t2[1] end)
+    local minSlopes = {}
+    for i, item in pairs(order) do
+        table.insert(minSlopes, item[1])
+        local texture = opts.textures[item[2]]
+        gl.Texture(1 + i, SCEN_EDIT.model.textureManager:GetTexture(texture.texture.diffuse))
+    end
+    Spring.Echo(minSlopes)
+    gl.Uniform(uniforms.minSlopeID, unpack(minSlopes))
+    
+    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
+    x = x / texSize
+    z = z / texSize
+    size = size / texSize
+    for i, v in pairs(textures) do
+        local mapTextureObj, _, coords = v[1], v[2], v[3]
+        local mx, mz = coords[1] / texSize, coords[2] / texSize
+
+        local mapTexture = mapTextureObj.texture
+        mapTextureObj.dirty = true
+
+        local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, size, size, opts)
+
+        gl.Uniform(uniforms.x1ID, mCoord[1])
+        gl.Uniform(uniforms.x2ID, mCoord[5])
+        gl.Uniform(uniforms.z1ID, mCoord[2])
+        gl.Uniform(uniforms.z2ID, mCoord[4])
+
+        gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
+    end
+
+    CheckGLSL()
+    
+    -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
+    gl.Texture(0, false)
+    gl.Texture(1, false)
+    for i, item in pairs(order) do
+        gl.Texture(1 + i, false)
+    end
+    gl.UseShader(0)
 end
 
 function CheckGLSL()
-	local errors = gl.GetShaderLog(shader)
+    local errors = gl.GetShaderLog(shader)
     if errors ~= "" then
         Spring.Log("Scened", LOG.ERROR, "Shader error!")
         Spring.Log("Scened", LOG.ERROR, errors)
@@ -785,17 +785,17 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     z = z
     size = size
 
-	if opts.void then
-		DrawVoid(opts, x, z, size)
+    if opts.void then
+        DrawVoid(opts, x, z, size)
     elseif opts.blur then
-		DrawBlur(opts, x, z, size)
-	elseif opts.smartPaint then
-		Spring.Echo("Smart paint!", #opts.textures)
-		DrawSmart(opts, x, z, size)
-	else
-		DrawDiffuse(opts, x, z, size)
-		DrawShadingTextures(opts, x, z, size)
-	end
+        DrawBlur(opts, x, z, size)
+    elseif opts.smartPaint then
+        Spring.Echo("Smart paint!", #opts.textures)
+        DrawSmart(opts, x, z, size)
+    else
+        DrawDiffuse(opts, x, z, size)
+        DrawShadingTextures(opts, x, z, size)
+    end
 end
 
 WidgetUndoTerrainChangeTextureCommand = AbstractCommand:extends{}
@@ -803,7 +803,7 @@ WidgetUndoTerrainChangeTextureCommand.className = "WidgetUndoTerrainChangeTextur
 
 function WidgetUndoTerrainChangeTextureCommand:execute()
     SCEN_EDIT.delayGL(function()
-		SCEN_EDIT.model.textureManager:PopStack()
+        SCEN_EDIT.model.textureManager:PopStack()
     end)
 end
 
