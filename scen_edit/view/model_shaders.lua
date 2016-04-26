@@ -15,11 +15,17 @@ function ModelShaders:GetDefaultShader()
     return self.shaderObjDef
 end
 
-function ModelShaders:_GetDefaultShader()
-    local shaderFragStr = VFS.LoadFile("shaders/ModelFragProg.glsl")
-    shaderFragStr = shaderFragStr:gsub("__FRAGMENT_GLOBAL_NAMESPACE__",""):gsub("__FRAGMENT_POST_SHADING__","")
+function ModelShaders:_GetShaderFiles()
+    return { 
+        vertex = VFS.LoadFile("shaders/ModelVertProg.glsl"),
+        fragment = VFS.LoadFile("shaders/ModelFragProg.glsl"),
+    }
+end
+
+function ModelShaders:_CompileShader(programs)
     local shaderTemplate = {
-        fragment = shaderFragStr,
+        vertex   = programs.vertex,
+        fragment = programs.fragment,
         uniformInt = {
             textureS3o1 = 0,
             textureS3o2 = 1,
@@ -30,11 +36,13 @@ function ModelShaders:_GetDefaultShader()
             --detailMap   = 6,
         },
         uniform = {
-            sunPos = {gl.GetSun("pos")},
+            sunDir = {gl.GetSun("pos")},
             sunAmbient = {gl.GetSun("ambient", "unit")},
             sunDiffuse = {gl.GetSun("diffuse", "unit")},
             shadowDensity = {gl.GetSun("shadowDensity" ,"unit")},
             shadowParams  = {gl.GetShadowMapParams()},
+
+            cameraPos = {Spring.GetCameraPosition()},
         },
         uniformMatrix = {
             shadowMatrix = {gl.GetMatrixData("shadow")},
@@ -45,7 +53,6 @@ function ModelShaders:_GetDefaultShader()
     local errors = gl.GetShaderLog(shader)
     if errors ~= "" then
         Spring.Echo(errors)
-        return
     end
     local shaderObj = {
         shader = shader,
@@ -54,8 +61,18 @@ function ModelShaders:_GetDefaultShader()
     return shaderObj
 end
 
+function ModelShaders:_GetDefaultShader()
+    local shaderFiles = self:_GetShaderFiles()
+    local shaderVertexStr = shaderFiles.vertex
+    local shaderFragStr = shaderFiles.fragment
+    shaderFragStr = shaderFragStr:gsub("__FRAGMENT_GLOBAL_NAMESPACE__",""):gsub("__FRAGMENT_POST_SHADING__","")
+    return self:_CompileShader({vertex = shaderVertexStr, fragment = shaderFragStr})
+end
+
 function ModelShaders:_GetShader()
-    local shaderFragStr = VFS.LoadFile("shaders/ModelFragProg.glsl")
+    local shaderFiles = self:_GetShaderFiles()
+    local shaderVertexStr = shaderFiles.vertex
+    local shaderFragStr = shaderFiles.fragment
     shaderFragStr = shaderFragStr:gsub("__FRAGMENT_GLOBAL_NAMESPACE__",
 [[
     uniform float time;
@@ -63,39 +80,7 @@ function ModelShaders:_GetShader()
 [[
     gl_FragColor.rgb += sin(time*4) / 3.14 / 5 + 0.1;
 ]])
-    local shaderTemplate = {
-        fragment = shaderFragStr,
-        uniformInt = {
-            textureS3o1 = 0,
-            textureS3o2 = 1,
-            shadowTex   = 2,
-            specularTex = 3,
-            reflectTex  = 4,
-            normalMap   = 5,
-            --detailMap   = 6,
-        },
-        uniform = {
-            sunPos = {gl.GetSun("pos")},
-            sunAmbient = {gl.GetSun("ambient", "unit")},
-            sunDiffuse = {gl.GetSun("diffuse", "unit")},
-            shadowDensity = {gl.GetSun("shadowDensity" ,"unit")},
-            shadowParams  = {gl.GetShadowMapParams()},
-        },
-        uniformMatrix = {
-            shadowMatrix = {gl.GetMatrixData("shadow")},
-        }
-    }
-
-    local shader = gl.CreateShader(shaderTemplate)
-    local errors = gl.GetShaderLog(shader)
-    if errors ~= "" then
-        Spring.Echo(errors)
-        return
-    end
-    local shaderObj = {
-        shader = shader,
-        teamColorID = gl.GetUniformLocation(shader, "teamColor"),
-        timeID = gl.GetUniformLocation(shader, "time")
-    }
-    return shaderObj
+    local obj = self:_CompileShader({vertex = shaderVertexStr, fragment = shaderFragStr})
+    obj.timeID = gl.GetUniformLocation(obj.shader, "time")
+    return obj
 end
