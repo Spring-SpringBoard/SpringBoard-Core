@@ -26,7 +26,7 @@ function View:init()
     self.displayDevelop = true
 	self.tabbedWindow = TabbedWindow()
     self.commandWindow = CommandWindow()
-	self.commandWindow.window:Hide()
+-- 	self.commandWindow.window:Hide()
     self.modelShaders = ModelShaders()
 
     self.teamSelector = TeamSelector()

@@ -581,6 +581,14 @@ function TerrainSettingsView:UpdateAtmosphere()
     self:Set("cloudColor", {gl.GetAtmosphere("cloudColor")})
 end
 
+function TerrainSettingsView:OnStartChange(name)
+    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
+end
+
+function TerrainSettingsView:OnEndChange(name)
+    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
+end
+
 function TerrainSettingsView:OnFieldChange(name, value)
     if self.initializing then
         return
