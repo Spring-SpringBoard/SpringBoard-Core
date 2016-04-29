@@ -7,6 +7,7 @@ function ObjectDefsPanel:init(tbl)
         iconX = 64,
         iconY = 64,
         multiSelect = true,
+        minWidth = 450, -- HACK: needed to fix the bug when no items reappear once the all items are hidden/shown (filtered out/filtered in)
     }
     tbl = table.merge(tbl, defaults)
     GridView.init(self, tbl)
@@ -16,6 +17,8 @@ function ObjectDefsPanel:init(tbl)
     self.teamID = 0
     self.search = ""
     self.objectDefIcons = {}
+
+    self.selectedObjectDefIDs = {}
 
     -- Icon rotation
     self.drawIcons = {}
@@ -27,6 +30,31 @@ function ObjectDefsPanel:init(tbl)
     self:PopulateItems()
     self.control:EnableRealign()
     self:Refresh()
+
+    self.selectListeners = {}
+    self.control.OnSelectItem = {
+        function(obj,itemIdx,selected)
+            if itemIdx <= 0 then
+                return
+            end
+            local objectDefID = self:GetObjectDefID(itemIdx)
+            if objectDefID == nil then
+                return
+            end
+            if not selected then
+                self:Unselect(objectDefID)
+            end
+            if selected then
+                table.insert(self.selectedObjectDefIDs, objectDefID)
+            end
+
+            if selected then
+                for _, listener in pairs(self.selectListeners) do
+                    listener(selected)
+                end
+            end
+        end
+    }
 end
 
 function ObjectDefsPanel:Refresh()
@@ -51,6 +79,8 @@ function ObjectDefsPanel:FilterItems()
         local objectDefID = item.objectDefID
         if self:FilterObject(objectDefID) then
             self.control:AddChild(item)
+        else
+            self:Unselect(objectDefID)
         end
     end
 end
@@ -76,7 +106,32 @@ function ObjectDefsPanel:SetSearchString(search)
 end
 
 function ObjectDefsPanel:GetObjectDefID(index)
-    return self.control.children[index].objectDefID
+    local item = self.control.children[index]
+    if item then 
+        return item.objectDefID
+    else
+        return nil
+    end
+end
+
+function ObjectDefsPanel:AddSelectListener(listener)
+    table.insert(self.selectListeners, listener)
+end
+
+function ObjectDefsPanel:GetSelectedObjectDefs()
+    return self.selectedObjectDefIDs
+end
+
+function ObjectDefsPanel:Unselect(objectDefID)
+    for i = 1, #self.selectedObjectDefIDs do
+        if self.selectedObjectDefIDs[i] == objectDefID then
+            table.remove(self.selectedObjectDefIDs, i)
+            for _, listener in pairs(self.selectListeners) do
+                listener(false)
+            end
+            break
+        end
+    end
 end
 
 function ObjectDefsPanel:AddDrawIcon(ctrl)
@@ -155,7 +210,9 @@ function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius
     end)
 end
 
+-------------
 -- UNIT PANEL
+-------------
 
 UnitDefsPanel = ObjectDefsPanel:extends{}
 function UnitDefsPanel:init(tbl)
@@ -199,7 +256,9 @@ function UnitDefsPanel:GetObjectDefRadius(objectDefID)
     return radius
 end
 
+----------------
 -- FEATURE PANEL
+----------------
 
 FeatureDefsPanel = ObjectDefsPanel:extends{}
 function FeatureDefsPanel:init(tbl)

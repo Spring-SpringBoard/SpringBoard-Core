@@ -37,35 +37,19 @@ function ObjectDefsView:init()
     })
 
     self:MakePanel()
-    self.objectDefIDs = {}
-    self.objectDefPanel.control.OnSelectItem = {
-        function(obj,itemIdx,selected)
-            if itemIdx <= 0 then
-                return
-            end
+    self.objectDefPanel:AddSelectListener(function(selected)
+        if #self.objectDefPanel:GetSelectedObjectDefs() > 0 then
+            self:EnterState()
+        end
+        if selected then
+            -- TODO move out
             local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-            local objectDefID = self.objectDefPanel:GetObjectDefID(itemIdx)
-            if not selected then
-                for i = 1, #self.objectDefIDs do
-                    if self.objectDefIDs[i] == objectDefID then
-                        table.remove(self.objectDefIDs, i)
-                        break
-                    end
-                end
-            end
-            if selected then
-                table.insert(self.objectDefIDs, objectDefID)
-                -- TODO
-                if currentState:is_A(SelectUnitTypeState) --[[or currentState:is_A(SelectFeatureTypeState)]] then
-                    currentState:SelectObjectType(objectDefID)
-                    SCEN_EDIT.stateManager:SetState(DefaultState())
-                end
-            end
-            if #self.objectDefIDs > 0 then
-                self:EnterState()
+            if currentState:is_A(SelectUnitTypeState) --[[or currentState:is_A(SelectFeatureTypeState)]] then
+                currentState:SelectObjectType(objectDefID)
+                SCEN_EDIT.stateManager:SetState(DefaultState())
             end
         end
-    }
+    end)
 
     self:MakeFilters()
     local children = {
@@ -176,10 +160,10 @@ end
 function UnitDefsView:EnterState()
     if self.type == "set" then
         self:SetInvisibleFields("size", "noise", "spread")
-        SCEN_EDIT.stateManager:SetState(AddUnitState(self, self.objectDefIDs))
+        SCEN_EDIT.stateManager:SetState(AddUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     elseif self.type == "brush" then
         self:SetInvisibleFields("amount")
-        SCEN_EDIT.stateManager:SetState(BrushUnitState(self, self.objectDefIDs))
+        SCEN_EDIT.stateManager:SetState(BrushUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     end
 end
 function UnitDefsView:MakeFilters()
@@ -261,10 +245,10 @@ end
 function FeatureDefsView:EnterState()
     if self.type == "set" then
         self:SetInvisibleFields("size", "noise", "spread")
-        SCEN_EDIT.stateManager:SetState(AddFeatureState(self, self.objectDefIDs))
+        SCEN_EDIT.stateManager:SetState(AddFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     elseif self.type == "brush" then
         self:SetInvisibleFields("amount")
-        SCEN_EDIT.stateManager:SetState(BrushFeatureState(self, self.objectDefIDs))
+        SCEN_EDIT.stateManager:SetState(BrushFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     end
 end
 function FeatureDefsView:MakeFilters()
