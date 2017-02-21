@@ -10,8 +10,6 @@ local modinfo = {
 	modtype			= 0,
 	depend = {
         "Spring Cursors",
-        "Spring Features v1.6",
-
         -- mods here :
 		-- enter your mod here!
 --        "XTA 9.715 beta", --works        
