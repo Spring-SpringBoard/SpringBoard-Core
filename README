@@ -1,7 +1,7 @@
 SpringBoard: Editor for Spring
 ===============
 
-Detailed (outdated) docs can be found: http://gajop.github.io/SpringBoard/
+Detailed (outdated) docs can be found: http://spring-springboard.github.io/SpringBoard-Core/
 
 This is just the core module, you still need a game-specific one.
 
