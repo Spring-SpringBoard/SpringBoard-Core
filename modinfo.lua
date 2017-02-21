@@ -4,7 +4,7 @@
 local modinfo = {
 	name			= "SpringBoard Core",
 	shortName		= "SB_C",
-	version			= "git",
+	version			= "$VERSION",
 	mutator			= "Official",
 	description		= "Core module of SpringBoard",
 	modtype			= 0,
