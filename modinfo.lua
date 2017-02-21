@@ -1,12 +1,12 @@
--- Core module for Scened
+-- Core module for SpringBoard
 -- Authors: gajop
 
 local modinfo = {
-	name			= "Scened Core",
-	shortName		= "SCE_C",
+	name			= "SpringBoard Core",
+	shortName		= "SB_C",
 	version			= "git",
 	mutator			= "Official",
-	description		= "Core module of Scened",
+	description		= "Core module of SpringBoard",
 	modtype			= 0,
 	depend = {
         "Spring Cursors",

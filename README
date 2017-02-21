@@ -1,16 +1,15 @@
-Scenario Editor
+SpringBoard: Editor for Spring
 ===============
 
-Detailed docs can be found: http://gajop.github.io/Scenario-Editor-Core/
+Detailed (outdated) docs can be found: http://gajop.github.io/SpringBoard/
 
-OFFICIAL Scenario Editor core source
-Spring Scenario Editor Core module
+This is just the core module, you still need a game-specific one.
 
 Installing (in your Spring games folder):
-git clone --recursive https://github.com/gajop/Scenario-Editor-Core.git Scenario-Editor-Core.sdd
+git clone --recursive https://github.com/gajop/SpringBoard.git SpringBoard.sdd
 (--recursive call will pick up submodules)
 
 You should also get the game-specific module! Examples:
-https://github.com/gajop/Scenario-Editor-BA
-https://github.com/gajop/Scenario-Editor-ZK
-https://github.com/gajop/Scenario-Editor-EVO
+https://github.com/gajop/SpringBoard-BA
+https://github.com/gajop/SpringBoard-ZK
+https://github.com/gajop/SpringBoard-EVO
