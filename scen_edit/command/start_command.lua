@@ -6,7 +6,6 @@ end
 
 function StartCommand:execute()
     Spring.Log("Scened", LOG.NOTICE, "Start command")
-        Spring.Echo("STARTCOMMAND", SCEN_EDIT.rtModel.hasStarted)
 
     if not SCEN_EDIT.rtModel.hasStarted then
         local oldModel = SCEN_EDIT.model:Serialize()
@@ -28,7 +27,7 @@ function StartCommand:execute()
             end)]]--
             Spring.SetUnitHealth(unitId, { paralyze = 0 })
         end
+        Spring.SetGameRulesParam("sb_gameMode", "test")
         SCEN_EDIT.rtModel:GameStart()
     end
-    Spring.Echo("STARTCOMMAND", SCEN_EDIT.rtModel.hasStarted)
 end

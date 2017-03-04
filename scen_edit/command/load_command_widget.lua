@@ -49,7 +49,7 @@ function LoadCommandWidget:execute()
     end
 
     local cmds = { LoadMap(heightmapData), LoadModelCommand(modelData)}
-    if not hasScenarioFile and not devMode then
+    if not hasScenarioFile and Spring.GetGameRulesParam("sb_gameMode") == "play" then
         table.insert(cmds, StartCommand())
     end
     local cmd = CompoundCommand(cmds)

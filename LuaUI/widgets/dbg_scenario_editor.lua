@@ -66,15 +66,15 @@ local function dumpConfig()
 end
 
 local function CheckConfig()
-    local ok = Spring.GetConfigInt("HeightMapTexture", 0) == 1 and 
-        Spring.GetConfigInt("LinkIncomingMaxPacketRate", 0) == 64000 and 
-        Spring.GetConfigInt("LinkIncomingMaxWaitingPackets", 0) == 512000 and 
-        Spring.GetConfigInt("LinkIncomingPeakBandwidth", 0) == 32768000 and 
-        Spring.GetConfigInt("LinkIncomingSustainedBandwidth", 0) == 2048000 and 
+    local ok = Spring.GetConfigInt("HeightMapTexture", 0) == 1 and
+        Spring.GetConfigInt("LinkIncomingMaxPacketRate", 0) == 64000 and
+        Spring.GetConfigInt("LinkIncomingMaxWaitingPackets", 0) == 512000 and
+        Spring.GetConfigInt("LinkIncomingPeakBandwidth", 0) == 32768000 and
+        Spring.GetConfigInt("LinkIncomingSustainedBandwidth", 0) == 2048000 and
         Spring.GetConfigInt("LinkOutgoingBandwidth", 0) == 65536000
 
     if not ok then
-        local window 
+        local window
         window = Window:New {
             x = "40%",
             y = "35%",
@@ -168,7 +168,7 @@ function widget:Initialize()
 
     -- FIXME: globallos needs to be enabled for terrain loading to be visible
     Spring.SendCommands("globallos")
-    if devMode and RELOAD_GADGETS then
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" and RELOAD_GADGETS then
         reloadGadgets() --uncomment for development
     end
 
@@ -185,10 +185,10 @@ function widget:Initialize()
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "conf/conf.lua")
     SCEN_EDIT.conf = Conf()
-    
+
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "meta/meta_model.lua")
     SCEN_EDIT.metaModel = MetaModel()
-    
+
     --TODO: relocate this
     local metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
@@ -217,7 +217,7 @@ function widget:Initialize()
     SCEN_EDIT.messageManager.widget = true
 
 
-    SCEN_EDIT.model.teamManager:generateTeams(widget) 
+    SCEN_EDIT.model.teamManager:generateTeams(widget)
     local commands = {}
     for id, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
         local cmd = SetTeamColorCommand(id, team.color)
@@ -227,7 +227,7 @@ function widget:Initialize()
     cmd.blockUndo = true
     SCEN_EDIT.commandManager:execute(cmd)
 
-    if devMode then
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
         Spring.SendCommands('forcestart')
         SCEN_EDIT.view = View()
 

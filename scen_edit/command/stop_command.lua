@@ -8,6 +8,7 @@ function StopCommand:execute()
     if SCEN_EDIT.rtModel.hasStarted then
         Spring.Log("Scened", LOG.NOTICE, "Stopping game...")
         Spring.StopSoundStream()
+        Spring.SetGameRulesParam("sb_gameMode", "dev")
         SCEN_EDIT.rtModel:GameStop()
         -- use meta data (except variables) from the new (runtime) model
         -- enable all triggers

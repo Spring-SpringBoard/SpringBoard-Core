@@ -17,12 +17,6 @@ SCEN_EDIT_FEATURE_PLACER_FILE_EXT = ".lua"
 local modOpts = Spring.GetModOptions()
 
 SCEN_EDIT.projectDir = modOpts.project_dir
-devMode = (tonumber(modOpts.play_mode) or 0) == 0
-if devMode then
-    Spring.Echo("Scenario Editor mode: dev")
-else
-    Spring.Echo("Scenario Editor mode: play")
-end
 hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 
 --chili export

@@ -19,7 +19,7 @@ function View:init()
 	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_ACTIONS_DIR)
     SCEN_EDIT.clipboard = Clipboard()
     self.areaViews = {}
-    if devMode then
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
          self.runtimeView = RuntimeView()
     end
     self.selectionManager = SelectionManager()
@@ -52,7 +52,7 @@ function View:drawRect(x1, z1, x2, z2)
         _z2 = z2
     else
         _z1 = z2
-        _z2 = z1 
+        _z2 = z1
     end
     gl.DrawGroundQuad(_x1, _z1, _x2, _z2)
 end
@@ -123,7 +123,7 @@ function View:DrawScreen()
         end
         local x = w - self.font:GetTextWidth(text) * fontSize - 10
         self.font:Print(text, x, y, 20, 'o')
-		
+
 -- 		gl.PushMatrix()
 -- 			local i = 1
 -- 			local step = 200
@@ -154,7 +154,7 @@ function View:SetMainPanel(panel)
 	if mp._hidden == nil then
 		mp._hidden = {}
 	end
-	
+
 	-- hide existing
 	local existing = mp.children[1]
 	if existing ~= nil then

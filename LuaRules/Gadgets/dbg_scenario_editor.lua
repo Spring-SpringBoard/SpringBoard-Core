@@ -31,14 +31,14 @@ local function explode(div,str)
 end
 
 function WidgetCallback(f, params, msgId)
-    local result = {f(unpack(params))}    
+    local result = {f(unpack(params))}
     SendToUnsynced("toWidget", table.show{
         tag = "msg",
         data = {
             result = result,
             msgId = msgId,
         },
-    })    
+    })
 end
 
 local msgParts = {}
@@ -64,8 +64,8 @@ function gadget:RecvLuaMsg(msg, playerID)
             if SCEN_EDIT.messageManager.compress then
                 msgParsed = SCEN_EDIT.ZlibDecompress(msgParsed)
             end
-            local success, msgTable = pcall(function() 
-                return assert(loadstring(msgParsed))() 
+            local success, msgTable = pcall(function()
+                return assert(loadstring(msgParsed))()
             end)
             if not success then
                 Spring.Echo("Failed to load command (size: " .. #msgParsed .. ": ")
@@ -75,7 +75,7 @@ function gadget:RecvLuaMsg(msg, playerID)
             local msg = Message(msgTable.tag, msgTable.data)
             if msg.tag == 'command' then
                 local cmd = SCEN_EDIT.resolveCommand(msg.data)
-                if devMode or SCEN_EDIT.projectDir ~= nil then
+                if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SCEN_EDIT.projectDir ~= nil then
                     GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
                 else
                     Spring.Echo("Command ignored: ", cmd.className)
@@ -105,6 +105,23 @@ function gadget:RecvLuaMsg(msg, playerID)
 end
 
 function gadget:Initialize()
+    -- detect game mode
+    local modOpts = Spring.GetModOptions()
+    local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)
+    if sb_gameMode == 0 then
+        sb_gameMode = "dev"
+    elseif sb_gameMode == 1 then
+        sb_gameMode = "test"
+    elseif sb_gameMode == 2 then
+        sb_gameMode = "play"
+    else
+        Spring.Log("SpringBoard", "error", "Unexpected sb_gameMode value: " ..
+            tostring(sb_gameMode) .. ". Defaulting to 0.")
+        sb_gameMode = "dev"
+    end
+    Spring.Log("SpringBoard", "info", "Running SpringBoard in " .. sb_gameMode .. "  gameMode.")
+    Spring.SetGameRulesParam("sb_gameMode", sb_gameMode)
+
     --Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     VFS.Include("scen_edit/exports.lua")
 
@@ -121,7 +138,7 @@ function gadget:Initialize()
 
     SCEN_EDIT.Include(SCEN_EDIT_DIR .. "meta/meta_model.lua")
     SCEN_EDIT.metaModel = MetaModel()
-    
+
     --TODO: relocate this
     metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
@@ -140,7 +157,7 @@ function gadget:Initialize()
     rtModel = RuntimeModel()
     SCEN_EDIT.rtModel = rtModel
 
-    if devMode then
+    if sb_gameMode ~= "play" then
         local areaManagerListener = AreaManagerListenerGadget()
         SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
 
@@ -179,7 +196,7 @@ function Load()
         SCEN_EDIT.commandManager:execute(CompoundCommand(cmds))
         SCEN_EDIT.commandManager:execute(LoadTextureCommand(texturePath), true)
 
-        if not devMode then
+        if Spring.GetGameRulesParam("sb_gameMode") == "play" then
             StartCommand():execute()
         end
     end
@@ -215,7 +232,7 @@ function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
     end
     if not SCEN_EDIT.rtModel.hasStarted then
         -- FIXME: hack to prevent units being frozen if startCommand is executed in the same frame
-        if not devMode then
+        if Spring.GetGameRulesParam("sb_gameMode") == "play" then
             return
         end
         --Spring.MoveCtrl.Enable(unitID)

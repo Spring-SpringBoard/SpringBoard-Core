@@ -93,22 +93,35 @@ end
 function _ObjectBridge:Add(object)
     local objectID = self:CreateObject(object)
 
+    if not objectID then
+        Spring.Log("SpringBoard", "error", "Failed to create object: ")
+        if type(object) == "table" then
+            table.echo(object)
+        else
+            Spring.Echo(object)
+        end
+        return
+    end
+
+    local team = object.team
+    object.team = nil
     self:_SetAllFields(objectID, object)
+    object.team = team
     return objectID
 end
 
 function _ObjectBridge:_CacheObject(objectID)
-    -- cache defaults
-    local defName = self:_GetField(objectID, "defName")
-    local defaults = self.objectDefaults[defName]
-    if not defaults then
-        defaults = self:_GetAllFields(objectID)
-        -- these fields don't have defaults
-        defaults.pos = nil
-        defaults.defName = nil
-        defaults.team = nil
-        self.objectDefaults[defName] = defaults
-    end
+--     -- cache defaults
+--     local defName = self:_GetField(objectID, "defName")
+--     local defaults = self.objectDefaults[defName]
+--     if not defaults then
+--         defaults = self:_GetAllFields(objectID)
+--         -- these fields don't have defaults
+--         defaults.pos = nil
+--         defaults.defName = nil
+--         defaults.team = nil
+--         self.objectDefaults[defName] = defaults
+--     end
 end
 
 function _ObjectBridge:_ObjectCreated(objectID)

@@ -107,9 +107,15 @@ function _UnitBridge:init()
             end
             return states
         end,
-        losState = function(objectID)
-            return Spring.GetUnitLosState(objectID, 0)
-        end,
+-- Erorrs are thrown in some cases (widget)
+--         losState = function(objectID)
+--             local s = {}
+--             for _, allyTeamID in pairs(Spring.GetAllyTeamList()) do
+--                 Spring.Echo(objectID, allyTeamID)
+--                 s[allyTeamID] = Spring.GetUnitLosState(objectID, allyTeamID)
+--             end
+--             return s
+--         end,
         rules = function(objectID)
             local ret = {}
             for _, foo in pairs(Spring.GetUnitRulesParams(objectID)) do
@@ -233,6 +239,7 @@ function _UnitBridge:init()
             Spring.SetUnitExperience(objectID, value)
         end,
         neutral = function(objectID, value)
+            Spring.Echo(objectID, value)
             Spring.SetUnitNeutral(objectID, value)
         end,
         fuel = function(objectID, value)
@@ -288,9 +295,11 @@ function _UnitBridge:init()
                 )
             end
         end,
-        losState = function(objectID, value)
-            Spring.SetUnitLosState(objectID, 0, value)
-        end,
+--         losState = function(objectID, value)
+--             for allyTeamID, v in pairs(value) do
+--                 Spring.SetUnitLosState(objectID, allyTeamID, v)
+--             end
+--         end,
         rules = function(objectID, value)
             for ruleName, ruleValue in pairs(value) do
                 Spring.SetUnitRulesParam(objectID, ruleName, ruleValue)
