@@ -7,20 +7,20 @@ local modinfo = {
 	version			= "$VERSION",
 	mutator			= "Official",
 	description		= "Core module of SpringBoard",
-	modtype			= 0,
+	modtype			= 1,
 	depend = {
         "Spring Cursors",
         -- mods here :
 		-- enter your mod here!
---        "XTA 9.715 beta", --works        
+--        "XTA 9.715 beta", --works
 --        "Balanced Annihilation V7.72", -- works
 --        "Balanced Annihilation Reloaded test-892", -- works
 --        "BattleTech: Legacy 0.1.r471", --works
 --        "BrickCraft epenis16 11Jan2012", --works
 --        "Conflict Terra ver1.02", -- works with slight bugs
---        "Contact beta 002", --buggy 
+--        "Contact beta 002", --buggy
 --        "Eternal Annihilation V1.04", --works
---        "Evolution RTS - test-209" -- errors (tobool, etc.)        
+--        "Evolution RTS - test-209" -- errors (tobool, etc.)
 --        "Frontier test-50", -- errors, is this older or newer than conflict terra?
 --        "Kernel Panic 4.4", -- how to run?
 --        "Micro Modules 1.09", --works i guess

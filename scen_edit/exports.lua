@@ -26,9 +26,9 @@ end
 hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 
 --chili export
-if WG and WG.Chili then
+if WG and WG.SBChili then
     -- setup Chili
-    Chili = WG.Chili
+    Chili = WG.SBChili
     Checkbox = Chili.Checkbox
     Control = Chili.Control
     ComboBox = Chili.ComboBox

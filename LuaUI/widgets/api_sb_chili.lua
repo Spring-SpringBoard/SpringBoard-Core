@@ -3,8 +3,8 @@
 
 function widget:GetInfo()
 	return {
-		name      = "Chili Framework",
-		desc      = "Hot GUI Framework",
+		name      = "Chili Framework (SpringBoard)",
+		desc      = "Hot GUI Framework (SpringBoard)",
 		author    = "jK",
 		date      = "WIP",
 		license   = "GPLv2",
@@ -39,14 +39,16 @@ CHILI_DIRNAME = "libs/chiliui/luaui/chili/chili/"
 function widget:Initialize()
 	Chili = VFS.Include(CHILI_DIRNAME .. "core.lua", nil, VFS.RAW_FIRST)
 
+	Spring.Echo("CUSTOM CHILI")
+
 	screen0 = Chili.Screen:New{}
 	th = Chili.TextureHandler
 	tk = Chili.TaskHandler
 	tf = Chili.FontHandler
 
 	--// Export Widget Globals
-	WG.Chili = Chili
-	WG.Chili.Screen0 = screen0
+	WG.SBChili = Chili
+	WG.SBChili.Screen0 = screen0
 
 	--// do this after the export to the WG table!
 	--// because other widgets use it with `parent=Chili.Screen0`,
@@ -56,7 +58,7 @@ end
 
 function widget:Shutdown()
 	--table.clear(Chili) the Chili table also is the global of the widget so it contains a lot more than chili's controls (pairs,select,...)
-	WG.Chili = nil
+	WG.SBChili = nil
 end
 
 function widget:Dispose()
