@@ -13,9 +13,9 @@ end
 local gameMode
 local function SetGameMode(gameMode)
     if gameMode == "play" then
-        Spring.SendCommands("Console 0")
+        --Spring.SendCommands("Console 0")
     else
-        Spring.SendCommands("Console 1")
+        --Spring.SendCommands("Console 1")
     end
 end
 
