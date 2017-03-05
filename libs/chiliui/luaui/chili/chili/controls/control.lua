@@ -75,7 +75,7 @@ Control = Object:Inherit{
 
   drawcontrolv2 = nil, --// disable backward support with old DrawControl gl state (with 2.1 self.xy translation isn't needed anymore)
 
-  useRTT = ((gl.CreateFBO and gl.BlendFuncSeparate) ~= nil),
+  useRTT = ((gl.CreateFBO and gl.BlendFuncSeparate) ~= nil) and false,
   useDLists = (gl.CreateList ~= nil) and false, --FIXME broken in combination with RTT (wrong blending)
 
   OnResize        = {},
@@ -641,7 +641,7 @@ function Control:SetPosRelative(x, y, w, h, clientArea, dontUpdateRelative)
   end
 end
 
---- Resize the control 
+--- Resize the control
 -- @int w width
 -- @int h height
 -- @param clientArea TODO

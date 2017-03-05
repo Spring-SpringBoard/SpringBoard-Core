@@ -6,6 +6,7 @@ function TabbedWindow:init()
 	local terrainPanel = TerrainPanel()
 	local metaPanel = MetaPanel()
     local alliancePanel = AlliancePanel()
+	local shaderPanel = ShaderPanel()
 
 	local commonControls = {
 		Button:New {
@@ -14,17 +15,17 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Undo (Ctrl+Z)", 
+			tooltip = "Undo (Ctrl+Z)",
 			OnClick = {
-				function() 
+				function()
 					local undoCommand = UndoCommand()
 					SCEN_EDIT.commandManager:execute(undoCommand)
 				end
 			},
 			children = {
-				Image:New { 
-					file=SCEN_EDIT_IMG_DIR .. "undo.png", 
-					height = 20, 
+				Image:New {
+					file=SCEN_EDIT_IMG_DIR .. "undo.png",
+					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
 					x = 0,
@@ -37,17 +38,17 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Redo (Ctrl+R)", 
+			tooltip = "Redo (Ctrl+R)",
 			OnClick = {
-				function() 
+				function()
 					local redoCommand = RedoCommand()
 					SCEN_EDIT.commandManager:execute(redoCommand)
 				end
 			},
 			children = {
-				Image:New { 
-					file=SCEN_EDIT_IMG_DIR .. "redo.png", 
-					height = 20, 
+				Image:New {
+					file=SCEN_EDIT_IMG_DIR .. "redo.png",
+					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
 					x = 0,
@@ -60,9 +61,9 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Reload meta model", 
+			tooltip = "Reload meta model",
 			OnClick = {
-				function() 
+				function()
 					SCEN_EDIT.conf:initializeListOfMetaModelFiles()
 					local reloadMetaModelCommand = ReloadMetaModelCommand(SCEN_EDIT.conf:GetMetaModelFiles())
 					SCEN_EDIT.commandManager:execute(reloadMetaModelCommand)
@@ -70,9 +71,9 @@ function TabbedWindow:init()
 				end
 			},
 			children = {
-				Image:New { 
-					file=SCEN_EDIT_IMG_DIR .. "refresh.png", 
-					height = 20, 
+				Image:New {
+					file=SCEN_EDIT_IMG_DIR .. "refresh.png",
+					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
 					x = 0,
@@ -85,9 +86,9 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Copy (Ctrl+C)", 
+			tooltip = "Copy (Ctrl+C)",
 			OnClick = {
-				function() 
+				function()
 					local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
 					if selType == "units" then
 						SCEN_EDIT.clipboard:CopyUnits(items)
@@ -99,9 +100,9 @@ function TabbedWindow:init()
 				end
 			},
 			children = {
-				Image:New { 
-					file=SCEN_EDIT_IMG_DIR .. "copy.png", 
-					height = 20, 
+				Image:New {
+					file=SCEN_EDIT_IMG_DIR .. "copy.png",
+					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
 					x = 0,
@@ -114,9 +115,9 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Cut (Ctrl+X)", 
+			tooltip = "Cut (Ctrl+X)",
 			OnClick = {
-				function() 
+				function()
 					local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
 					if selType == "units" then
 						SCEN_EDIT.clipboard:CutUnits(items)
@@ -128,9 +129,9 @@ function TabbedWindow:init()
 				end
 			},
 			children = {
-				Image:New { 
-					file=SCEN_EDIT_IMG_DIR .. "cut.png", 
-					height = 20, 
+				Image:New {
+					file=SCEN_EDIT_IMG_DIR .. "cut.png",
+					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
 					x = 0,
@@ -143,9 +144,9 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Paste (Ctrl+V)", 
+			tooltip = "Paste (Ctrl+V)",
 			OnClick = {
-				function() 
+				function()
 					local x, y = Spring.GetMouseState()
 					local result, coords = Spring.TraceScreenRay(x, y, true)
 					if result == "ground" then
@@ -155,9 +156,9 @@ function TabbedWindow:init()
 				end
 			},
 			children = {
-				Image:New { 
-					file=SCEN_EDIT_IMG_DIR .. "paste.png", 
-					height = 20, 
+				Image:New {
+					file=SCEN_EDIT_IMG_DIR .. "paste.png",
+					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
 					x = 0,
@@ -165,7 +166,7 @@ function TabbedWindow:init()
 			},
 		}
 	}
-	
+
 	local controls = {}
 	local mainPanelY = 130
 	if SCEN_EDIT.conf.SHOW_BASIC_CONTROLS then
@@ -173,9 +174,9 @@ function TabbedWindow:init()
 		mainPanelY = mainPanelY + 45
 	end
 	table.insert(controls, Chili.TabPanel:New {
-		x = 0, 
+		x = 0,
 		right = 0,
-		y = 10, 
+		y = 10,
 		bottom = 20,
 		padding = {0, 0, 0, 0},
 		tabs = {
@@ -184,15 +185,16 @@ function TabbedWindow:init()
 			{ name = "Map", children = {terrainPanel:getControl()} },
 			{ name = "Trigger", children = {metaPanel:getControl()} },
 			{ name = "Team", children = {alliancePanel:getControl()} },
+		--	{ name = "Shaders", children = {shaderPanel:getControl()} },
 		},
 	})
-	
+
 	table.insert(controls, Chili.Line:New {
 		y = mainPanelY - 5,
 		x = 0,
 		width = "100%",
 	})
-	
+
 	self.mainPanel = Chili.Control:New {
 		x = 0,
 		width = "100%",
@@ -201,7 +203,7 @@ function TabbedWindow:init()
 		padding = {0, 0, 0, 0},
 	}
 	table.insert(controls, self.mainPanel)
-	
+
 	self.window = Window:New {
 		right = 0,
 		y = 0,
@@ -216,4 +218,3 @@ function TabbedWindow:init()
 		children = controls,
 	}
 end
-
