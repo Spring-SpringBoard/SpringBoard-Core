@@ -7,6 +7,7 @@ function TerrainChangeTextureState:init(editorView)
     self.brushTexture   = self.editorView.brushTexture
     self.texScale       = self.editorView.fields["texScale"].value
     self.mode           = self.editorView.fields["mode"].value
+    self.kernelMode     = self.editorView.fields["kernelMode"].value
     self.blendFactor    = self.editorView.fields["blendFactor"].value
     self.falloffFactor  = self.editorView.fields["falloffFactor"].value
     self.featureFactor  = self.editorView.fields["featureFactor"].value
@@ -35,6 +36,7 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
         brushTexture = self.brushTexture.diffuse, -- FIXME: shouldn't be called "diffuse"
 		texScale = self.texScale,
 		mode = self.mode,
+        kernelMode = self.kernelMode,
 		blendFactor = self.blendFactor,
 		falloffFactor = self.falloffFactor,
 		featureFactor = self.featureFactor,

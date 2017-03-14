@@ -27,7 +27,7 @@ function TerrainEditorView:init()
 						self.paintTexture[k] = v
 					end
 					SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.paintTexture))
-					
+
 					local currentState = SCEN_EDIT.stateManager:GetCurrentState()
 					if currentState.smartPaint then
 						Spring.Echo("BLA!")
@@ -70,7 +70,7 @@ function TerrainEditorView:init()
 						self.brushTexture[k] = v
 					end
 					SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.brushTexture))
-					
+
 					local currentState = SCEN_EDIT.stateManager:GetCurrentState()
 -- 					if currentState.smartPaint then
 -- 						Spring.Echo("BLA!")
@@ -107,9 +107,9 @@ function TerrainEditorView:init()
 --     self.detailTextureImages:Select("detailtex2.bmp")
 
 --     self.tabPanel = Chili.TabPanel:New {
---         x = 0, 
+--         x = 0,
 --         right = 0,
---         y = 70, 
+--         y = 70,
 --         height = "40%",
 --         padding = {0, 0, 0, 0},
 --         tabs = { {
@@ -120,28 +120,28 @@ function TerrainEditorView:init()
 --                         right = 1,
 --                         y = 0,
 --                         bottom = 0,
---                         children = { 
+--                         children = {
 --                             self.textureBrowser.control,
 --                         }
 --                     },
 --                 },
 --             }, {
---                 name = "Detail", 
---                 children = { 
+--                 name = "Detail",
+--                 children = {
 --                     ScrollPanel:New {
 --                         x = 1,
 --                         right = 1,
 --                         y = 0,
 --                         bottom = 0,
---                         children = { 
---                             self.detailTextureImages 
+--                         children = {
+--                             self.detailTextureImages
 --                         },
 --                     },
 --                 },
 --             }
 --         },
 --     }
-	
+
 	self.btnPaint = TabbedPanelButton({
         x = 0,
         y = 0,
@@ -155,7 +155,7 @@ function TerrainEditorView:init()
 				local state = self:EnterState()
 				state.void = false
 				state.smartPaint = false
-				self:SetInvisibleFields("voidFactor")
+				self:SetInvisibleFields("voidFactor", "kernelMode")
             end
         },
     })
@@ -172,17 +172,17 @@ function TerrainEditorView:init()
 				local state = self:EnterState()
 				state.void = true
 				state.smartPaint = false
-				self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation")
+				self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode")
             end
         },
     })
     self.btnBlur = TabbedPanelButton({
         x = 140,
         y = 0,
-        tooltip = "Make the terrain transparent (2)",
+        tooltip = "Apply a filter (3)",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
-            TabbedPanelLabel({ caption = "Blur" }),
+            TabbedPanelLabel({ caption = "Filter" }),
         },
         OnClick = {
             function()
@@ -194,7 +194,7 @@ function TerrainEditorView:init()
             end
         },
     })
-	-- FIXME: Need to check if HeightMapTexture = 1 
+	-- FIXME: Need to check if HeightMapTexture = 1
 	self.btnSmartPaint = TabbedPanelButton({
         x = 210,
         y = 0,
@@ -208,7 +208,7 @@ function TerrainEditorView:init()
 				local state = self:EnterState()
 				state.void = false
 				state.smartPaint = true
-				self:SetInvisibleFields()
+				self:SetInvisibleFields("kernelMode")
 				state.textures = {}
             end
         },
@@ -238,6 +238,21 @@ function TerrainEditorView:init()
         },
         title = "Mode:"
     }))
+    self:AddField(ChoiceField({
+        name = "kernelMode",
+        items = {
+            "blur",
+            "bottom_sobel",
+            "emboss",
+            "left_sobel",
+            "outline",
+            "right_sobel",
+            "sharpen",
+            "top sobel",
+        },
+        title = "Filter:"
+    }))
+
     self:AddControl("tex-sep", {
         Label:New {
             caption = "Texture",
@@ -373,7 +388,7 @@ function TerrainEditorView:init()
             width = 150,
         })
     }))
-	
+
 	self:AddField(NumericField({
         name = "voidFactor",
         value = 0,
@@ -382,7 +397,7 @@ function TerrainEditorView:init()
         title = "Transparency:",
         tooltip = "The greater the value, the more transparent it will be.",
     }))
-	
+
     self:AddField(ColorField({
         name = "diffuseColor",
         title = "Color: ",
@@ -390,6 +405,7 @@ function TerrainEditorView:init()
     }))
     self:Update("size")
     self:Update("mode")
+    self:Update("kernelMode")
     self:Update("diffuseColor")
 
 
@@ -399,22 +415,22 @@ function TerrainEditorView:init()
 		self.btnSmartPaint,
         self.btnBlur,
 		ScrollPanel:New {
-			x = 0, 
+			x = 0,
 			right = 0,
-			y = 70, 
+			y = 70,
 			height = "30%",
 			padding = {0, 0, 0, 0},
-			children = { 
+			children = {
 				self.textureBrowser.control,
 			}
 		},
         ScrollPanel:New {
-			x = 0, 
+			x = 0,
 			right = 0,
-			y = "38%", 
+			y = "38%",
 			height = "20%",
 			padding = {0, 0, 0, 0},
-			children = { 
+			children = {
 				self.brushTextureImages.control,
 			}
 		},

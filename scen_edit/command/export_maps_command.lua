@@ -124,7 +124,7 @@ function ExportMapsCommand:execute()
 
         gl.RenderToTexture(grassTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, grassPath)
         gl.DeleteTexture(grassTexture)
-		
+
 		-- specular
 		for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
 			local texPath = self.path .. "/" .. texType .. ".png"
@@ -157,7 +157,7 @@ function ExportMapsCommand:execute()
 
         -- diffuse
         local texturePath = self.path .. "/texture.png"
- 
+
         if VFS.FileExists(texturePath, VFS.RAW) then
             Spring.Echo("removing the existing texture")
             os.remove(texturePath)
@@ -198,5 +198,6 @@ function ExportMapsCommand:execute()
         gl.DeleteTexture(totalMapTexture)
         -- FIXME: probably not needed -.-
         gl.Flush()
+        Spring.Echo("Done")
     end)
 end

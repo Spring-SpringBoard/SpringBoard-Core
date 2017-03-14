@@ -27,6 +27,53 @@ function ShaderPanel:init()
             end
         }
     }))
+    self.control:AddChild(TabbedPanelButton({
+        tooltip = "UI shader editor",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "format-text-bold.png" }),
+            TabbedPanelLabel({ caption = "UI"}),
+        },
+        OnClick = {
+            function()
+                Spring.Echo("UI shader editor")
+                uiEditor = UIEditor()
+                uiEditor:Create()
+            end
+        }
+    }))
+end
+
+UIEditor = LCS.class{}
+
+function UIEditor:Create()
+    self.workPanel = Control:New {
+        x = 0,
+        y = 0,
+        width = 2048,
+        height = 2048,
+    }
+    self.mainWindow = Window:New {
+        x = "20%",
+        y = "20%",
+        right = "40%",
+        bottom = "20%",
+        parent = screen0,
+        caption = "",
+        resizable = false,
+        draggable = true,
+        padding = {5, 0, 0, 0},
+        children = {
+            ScrollPanel:New {
+                x = 5,
+                right = 150,
+                y = 50,
+                bottom = 10,
+                children = {
+                    self.workPanel,
+                }
+            },
+        },
+    }
 end
 
 NodeEditor = LCS.class{}
