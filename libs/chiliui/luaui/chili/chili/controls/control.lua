@@ -75,8 +75,8 @@ Control = Object:Inherit{
 
   drawcontrolv2 = nil, --// disable backward support with old DrawControl gl state (with 2.1 self.xy translation isn't needed anymore)
 
-  useRTT = ((gl.CreateFBO and gl.BlendFuncSeparate) ~= nil) and false,
-  useDLists = (gl.CreateList ~= nil) and false, --FIXME broken in combination with RTT (wrong blending)
+  useRTT = false and ((gl.CreateFBO and gl.BlendFuncSeparate) ~= nil),
+  useDLists = false, --(gl.CreateList ~= nil), --FIXME broken in combination with RTT (wrong blending)
 
   OnResize        = {},
 }
@@ -96,7 +96,7 @@ function Control:New(obj)
 
 
   --// load the skin for this control
-  obj.classname = self.classname
+  obj.classname = obj.classname or self.classname
   theme.LoadThemeDefaults(obj)
   SkinHandler.LoadSkin(obj, self)
 
@@ -373,7 +373,7 @@ function Control:UpdateClientArea(dontRedraw)
   end
 
   if not dontRedraw then self:Invalidate() end --FIXME only when RTT!
-  self:CallListeners(self.OnResize) --FIXME more arguments and filter unchanged resizes
+  self:CallListeners(self.OnResize, self.clientWidth, self.clientHeight) --FIXME more arguments and filter unchanged resizes
 end
 
 
@@ -1111,6 +1111,11 @@ end
 
 
 function Control:IsInView()
+    -- FIXME: This is a workaround for the RTT bug, but probably not placed in
+    -- the right spot and might cause some other issues/not be optimal
+    if self.useRTT then
+        return true
+    end
 	if UnlinkSafe(self.parent) then
 		return self.parent:IsRectInView(self.x, self.y, self.width, self.height)
 	end
@@ -1495,17 +1500,6 @@ function Control:MouseWheel(x, y, ...)
   local cx,cy = self:LocalToClient(x,y)
   return inherited.MouseWheel(self, cx, cy, ...)
 end
-
---[[
-function Control:KeyPress(...)
-  return inherited.KeyPress(self, ...)
-end
-
-
-function Control:TextInput(...)
-  return inherited.TextInput(self, ...)
-end
---]]
 
 
 function Control:FocusUpdate(...)
