@@ -39,7 +39,7 @@ function MessageManager:sendMessage(message, callback)
             local current = 1
             local msgPartIdx = 1
             local parts = math.floor(size / maxMsgSize + 1)
-            --Spring.Echo("send multi part msg: ".. tostring(parts))
+            --Log.Notice("send multi part msg: ".. tostring(parts))
             Spring.SendLuaRulesMsg(self.prefix .. "|" .. "startMsgPart" .. "|" .. parts)
             while current < size do
                 local endIndex = math.min(current + maxMsgSize, size)

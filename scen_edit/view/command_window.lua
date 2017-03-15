@@ -35,7 +35,7 @@ end
 function CommandWindow:PushCommand(display)
     self.count = self.count + 1
     local id = self.count
-    Spring.Log("scened", LOG.DEBUG, "do", id)
+    Log.Debug("do", id)
     local lblVariableName = Label:New {
         caption = tostring(id) .. " " .. display,
         y = 0,
@@ -50,7 +50,7 @@ function CommandWindow:PushCommand(display)
 end
 
 function CommandWindow:UndoCommand()
-    Spring.Log("scened", LOG.DEBUG, "undo", self.count - self.undoCount)
+    Log.Debug("undo", self.count - self.undoCount)
     local row = self.list:GetRowItems(self.count - self.undoCount)
     local lbl = row[1]
     lbl._oldcaption = lbl.caption
@@ -62,7 +62,7 @@ function CommandWindow:UndoCommand()
 end
 
 function CommandWindow:RedoCommand()
-    Spring.Log("scened", LOG.DEBUG, "redo", self.count - self.undoCount + 1)
+    Log.Debug("redo", self.count - self.undoCount + 1)
     local row = self.list:GetRowItems(self.count - self.undoCount + 1)
     local lbl = row[1]
     lbl:SetCaption(lbl._oldcaption)
@@ -74,30 +74,30 @@ function CommandWindow:RedoCommand()
 end
 
 function CommandWindow:RemoveFirstUndo()
-    Spring.Log("scened", LOG.DEBUG, "remundo", self.removedCount + 1)
+    Log.Debug("remundo", self.removedCount + 1)
     self.removedCount = self.removedCount + 1
     self.list:RemoveRow(self.removedCount)
 end
 
 function CommandWindow:RemoveFirstRedo()
-    Spring.Log("scened", LOG.DEBUG, "remredo")
+    Log.Debug(LOG.DEBUG, "remredo")
     self.list:RemoveRow(self.count)
     self.count = self.count - 1
     self.undoCount= self.undoCount - 1
 end
 
 function CommandWindow:ClearUndoStack()
-    Spring.Log("scened", LOG.DEBUG, "clearundostack")
+    Log.Debug("clearundostack")
     while self.removedCount ~= self.count do
         self:RemoveFirstUndo()
     end
-    Spring.Log("scened", LOG.DEBUG, "clearundostackend")
+    Log.Debug("clearundostackend")
 end
 
 function CommandWindow:ClearRedoStack()
-    Spring.Log("scened", LOG.DEBUG, "clearredostack")
+    Log.Debug("clearredostack")
     while self.undoCount ~= 0 do
         self:RemoveFirstRedo()
     end
-    Spring.Log("scened", LOG.DEBUG, "clearredostackend")
+    Log.Debug("clearredostackend")
 end

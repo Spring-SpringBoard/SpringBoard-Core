@@ -11,8 +11,8 @@ end
 
 function StateManager:_SafeCall(func)
     succ, result = xpcall(func, function(err)
-        Spring.Log("scened", LOG.ERROR, debug.traceback(err))
-        Spring.Log("scened", LOG.ERROR, "Error in current state, switching to default state")
+        Log.Error(debug.traceback(err))
+        Log.Error("Error in current state, switching to default state")
         self:SetState(DefaultState())
     end)
     if succ then 

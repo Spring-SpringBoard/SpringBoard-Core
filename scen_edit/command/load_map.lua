@@ -11,7 +11,7 @@ end
 function LoadMap:execute()
     Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     Spring.SetHeightMapFunc(function()
-        --Spring.Echo("HEIGHTMAP LOAD")
+        --Log.Notice("HEIGHTMAP LOAD")
         if self.deltaMap == nil or #self.deltaMap == 0 then
             return
         end
@@ -20,7 +20,7 @@ function LoadMap:execute()
         local segmentNum = 0
         local totalSegments = math.ceil(#self.deltaMap / bufferSize)
         local dataSize = #self.deltaMap / floatSize
-        --Spring.Echo("Segments : " .. totalSegments .. " Floats: " .. dataSize)
+        --Log.Notice("Segments : " .. totalSegments .. " Floats: " .. dataSize)
 
         local fetchSegment = function()
             if segmentNum >= totalSegments then
@@ -51,6 +51,6 @@ function LoadMap:execute()
 
             end
         end
-        --Spring.Echo("HEIGHTMAP LOAD DONE")
+        --Log.Notice("HEIGHTMAP LOAD DONE")
     end)
 end

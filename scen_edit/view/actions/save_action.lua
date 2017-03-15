@@ -6,9 +6,9 @@ function SaveAction:execute()
         self:super("execute")
     else
         local path = SCEN_EDIT.projectDir
-        Spring.Echo("Saving project: " .. path .. " ...")
+        Log.Notice("Saving project: " .. path .. " ...")
         local saveCommand = SaveCommand(path)
         SCEN_EDIT.commandManager:execute(saveCommand, true)
-        Spring.Echo("Saved project.")
+        Log.Notice("Saved project.")
     end
 end

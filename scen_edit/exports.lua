@@ -1,8 +1,10 @@
 --dir names
-SCEN_EDIT_DIR = "scen_edit/"
 LIBS_DIR = "libs/"
-SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 LUAUI_DIR = "LuaUI/"
+
+SCEN_EDIT = {}
+SCEN_EDIT_DIR = "scen_edit/"
+SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 SCEN_EDIT_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
 --FIXME: don't assume path, find it programatically
 --FIXME: not used now

@@ -23,7 +23,6 @@ function ShaderPanel:init()
         },
         OnClick = {
             function()
-                Spring.Echo("Unit shader editor")
             end
         }
     }))
@@ -35,7 +34,6 @@ function ShaderPanel:init()
         },
         OnClick = {
             function()
-                Spring.Echo("UI shader editor")
                 uiEditor = UIEditor()
                 uiEditor:Create()
             end
@@ -247,7 +245,7 @@ function NodeEditor:Update()
             gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
         }
     ]]
-    shader = gl.CreateShader({
+    shader = Shaders.Compile({
         vertex = vertexShader,
 
         fragment = [[
@@ -261,13 +259,9 @@ function NodeEditor:Update()
         uniformInt = {
             texSampler = 0,
         },
-    })
+    }, "MapShader")
 
-    local errors = gl.GetShaderLog(shader)
-    if errors ~= "" then
-        Spring.Log("MapShaders", LOG.ERROR, errors)
-        Spring.SetMapShader(0, 0)
-    else
+    if shader then
         Spring.SetMapShader(shader, 0)
     end
 end

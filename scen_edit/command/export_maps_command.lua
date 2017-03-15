@@ -17,13 +17,12 @@ function ExportMapsCommand:GetShaderObj()
         }
     ]]
 
-    local shader = gl.CreateShader({
+    local shader = Shaders.Compile({
         fragment = heightmapScaleShader,
         uniformInt = {heightmapTexID = 0 },
-    })
-    local errors = gl.GetShaderLog(shader)
-    if errors ~= "" then
-        Spring.Echo(errors)
+    }, "ExportMapsShader")
+    if not shader then
+        return
     end
     shaderObj = {
         shader = shader,
@@ -44,10 +43,10 @@ function ExportMapsCommand:execute()
         -- heightmap
         local heightmapPath = self.path .. "/heightmap.png"
 
-        Spring.Echo("Saving the heightmap to " .. heightmapPath .. "...")
+        Log.Notice("Saving the heightmap to " .. heightmapPath .. "...")
 
         if VFS.FileExists(heightmapPath, VFS.RAW) then
-            Spring.Echo("removing the existing heightmap")
+            Log.Notice("Removing the existing heightmap")
             os.remove(heightmapPath)
         end
 
@@ -65,7 +64,7 @@ function ExportMapsCommand:execute()
 
         -- not used, seem incorrect
         local minHeight, maxHeight = Spring.GetGroundExtremes()
-        Spring.Echo(maxHeight, minHeight)
+        Log.Debug(maxHeight, minHeight)
 
         local maxH, minH = -math.huge, math.huge
         for x = 0, Game.mapSizeX, Game.squareSize do
@@ -79,7 +78,7 @@ function ExportMapsCommand:execute()
                 end
             end
         end
-        Spring.Echo(minH, maxH)
+        Log.Debug(minH, maxH)
 
         local shaderObj = self:GetShaderObj()
         gl.UseShader(shaderObj.shader)
@@ -98,10 +97,10 @@ function ExportMapsCommand:execute()
 
         -- grass
         local grassPath = self.path .. "/grass.png"
-        Spring.Echo("Saving the grass to " .. grassPath .. "...")
+        Log.Notice("Saving the grass to " .. grassPath .. "...")
 
         if VFS.FileExists(grassPath, VFS.RAW) then
-            Spring.Echo("removing the existing grass")
+            Log.Notice("removing the existing grass")
             os.remove(grassPath)
         end
 
@@ -128,10 +127,10 @@ function ExportMapsCommand:execute()
 		-- specular
 		for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
 			local texPath = self.path .. "/" .. texType .. ".png"
-			Spring.Echo("Saving the " .. texType .. " to " .. texPath .. "...")
+			Log.Notice("Saving the " .. texType .. " to " .. texPath .. "...")
 
 			if VFS.FileExists(texPath, VFS.RAW) then
-				Spring.Echo("removing the existing texture")
+				Log.Notice("removing the existing texture")
 				os.remove(texPath)
 			end
 			local texInfo = gl.TextureInfo(shadingTex)
@@ -159,11 +158,11 @@ function ExportMapsCommand:execute()
         local texturePath = self.path .. "/texture.png"
 
         if VFS.FileExists(texturePath, VFS.RAW) then
-            Spring.Echo("removing the existing texture")
+            Log.Notice("removing the existing texture")
             os.remove(texturePath)
         end
 
-        Spring.Echo("Saving the texture to " .. texturePath .. "...")
+        Log.Notice("Saving the texture to " .. texturePath .. "...")
         local totalMapTexture = gl.CreateTexture(Game.mapSizeX, Game.mapSizeZ, {
             border = false,
             min_filter = GL.NEAREST,
@@ -198,6 +197,6 @@ function ExportMapsCommand:execute()
         gl.DeleteTexture(totalMapTexture)
         -- FIXME: probably not needed -.-
         gl.Flush()
-        Spring.Echo("Done")
+        Log.Notice("Done")
     end)
 end

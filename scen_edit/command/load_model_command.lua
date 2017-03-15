@@ -19,7 +19,7 @@ function LoadModelCommand:execute()
 end
 
 function LoadModelCommand:Load()
-    Spring.Log("Scened", LOG.NOTICE, "Loading model...")
+    Log.Notice("Loading model...")
     local mission = loadstring(self.modelString)()
     SCEN_EDIT.model:Load(mission)
 end

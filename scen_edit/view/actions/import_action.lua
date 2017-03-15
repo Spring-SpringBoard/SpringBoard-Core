@@ -7,16 +7,16 @@ function ImportAction:execute()
     sfd:setConfirmDialogCallback(
         function(path, fileType)
             if fileType == fileTypes[1] then
-                Spring.Log("scened", LOG.NOTICE, "Importing feature placer file: " .. path .. " ...")
+                Log.Notice("Importing feature placer file: " .. path .. " ...")
                 local modelData = VFS.LoadFile(path, VFS.RAWFIRST)
                 local importCommand = ImportFeaturePlacerCommand(modelData)
                 SCEN_EDIT.commandManager:execute(importCommand)
-                Spring.Log("scened", LOG.NOTICE, "Import complete.")
+                Log.Notice("Import complete.")
             elseif fileType == fileTypes[2] then
-                Spring.Log("scened", LOG.NOTICE, "Importing diffuse: " .. path .. " ...")
+                Log.Notice("Importing diffuse: " .. path .. " ...")
                 local importCommand = ImportDiffuseCommand(path)
                 SCEN_EDIT.commandManager:execute(importCommand, true)
-                Spring.Log("scened", LOG.NOTICE, "Import complete.")
+                Log.Notice("Import complete.")
             elseif fileType == fileTypes[3] then
                 local ebMinHeight = EditBox:New {
                     hint = "Min height: ",
@@ -48,10 +48,10 @@ function ImportAction:execute()
                                         if maxHeight == nil or minHeight == nil then
                                             return
                                         end
-                                        Spring.Log("scened", LOG.NOTICE, "Importing heightmap: " .. path .. " ...")
+                                        Log.Notice("Importing heightmap: " .. path .. " ...")
                                         local importCommand = ImportHeightmapCommand(path, maxHeight, minHeight)
                                         SCEN_EDIT.commandManager:execute(importCommand, true)
-                                        Spring.Log("scened", LOG.NOTICE, "Import complete.")
+                                        Log.Notice("Import complete.")
                                         window:Dispose()
                                     end},
                                 },
@@ -66,7 +66,7 @@ function ImportAction:execute()
                     },
                 }
             else
-                Spring.Log("scened", LOG.ERROR, "Error trying to export. Invalida fileType specified: " .. tostring(fileType))
+                Log.Error("Error trying to export. Invalida fileType specified: " .. tostring(fileType))
             end
         end
     )

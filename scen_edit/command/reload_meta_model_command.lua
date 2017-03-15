@@ -7,9 +7,9 @@ function ReloadMetaModelCommand:init(metaModelFiles)
 end
 
 function ReloadMetaModelCommand:execute()
-	Spring.Echo("Reloading meta model...")
+	Log.Notice("Reloading meta model...")
     SCEN_EDIT.conf:SetMetaModelFiles(self.metaModelFiles)
     local metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
-	Spring.Echo("Reload completed successfully")
+	Log.Notice("Reload completed successfully")
 end

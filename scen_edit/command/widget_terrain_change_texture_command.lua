@@ -24,24 +24,6 @@ local function _InitShaders()
     end
 end
 
-local function _CompileShader(shaderCode, shaderName)
-    local shader = gl.CreateShader(shaderCode)
-    if not shader then
-        local shaderLog = gl.GetShaderLog(shader)
-        Spring.Log("SB", LOG.ERROR, "Errors found when compiling shader: " .. tostring(shaderName))
-        Spring.Log("SB", LOG.ERROR, shaderLog)
-        return
-    end
-
-    local shaderLog = gl.GetShaderLog(shader)
-    if shaderLog ~= "" then
-        Spring.Log("SB", LOG.WARNING, "Potential problems found when compiling shader: " .. tostring(shaderName))
-        Spring.Log("SB", LOG.WARNING, shaderLog)
-    end
-
-    return shader
-end
-
 function getNormalShader(mode)
     _InitShaders()
     if shaders.normal[mode] == nil then
@@ -95,7 +77,7 @@ function getNormalShader(mode)
             },
         }
 
-        local shader = _CompileShader(shaderTemplate, "normal")
+        local shader = Shaders.Compile(shaderTemplate, "normal")
         local shaderObj = {
             shader = shader,
             uniforms = {
@@ -168,7 +150,7 @@ function getPenShader(mode)
             },
         }
 
-        local shader = _CompileShader(shaderTemplate, "pen")
+        local shader = Shaders.Compile(shaderTemplate, "pen")
         local shaderObj = {
             shader = shader,
             uniforms = {
@@ -245,7 +227,7 @@ function getSmartShader(mode)
             },
         }
 
-        local shader = _CompileShader(shaderTemplate, "smart")
+        local shader = Shaders.Compile(shaderTemplate, "smart")
         local shaderObj = {
             shader = shader,
             uniforms = {
@@ -281,7 +263,7 @@ function getVoidShader()
             },
         }
 
-        local shader = _CompileShader(shaderTemplate, "void")
+        local shader = Shaders.Compile(shaderTemplate, "void")
         local shaderObj = {
             shader = shader,
             uniforms = {
@@ -311,7 +293,7 @@ function getBlurShader()
             },
         }
 
-        local shader = _CompileShader(shaderTemplate, "blur")
+        local shader = Shaders.Compile(shaderTemplate, "blur")
         local shaderObj = {
             shader = shader,
             uniforms = {
@@ -747,7 +729,7 @@ function DrawSmart(opts, x, z, size)
         local texture = opts.textures[item[2]]
         gl.Texture(1 + i, SCEN_EDIT.model.textureManager:GetTexture(texture.texture.diffuse))
     end
-    Spring.Echo(minSlopes)
+    Log.Debug(minSlopes)
     gl.Uniform(uniforms.minSlopeID, unpack(minSlopes))
 
     local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
@@ -782,11 +764,12 @@ function DrawSmart(opts, x, z, size)
     gl.UseShader(0)
 end
 
+-- FIXME: This is unnecessary probably. Confirm with engine code
 function CheckGLSL()
     local errors = gl.GetShaderLog(shader)
     if errors ~= "" then
-        Spring.Log("Scened", LOG.ERROR, "Shader error!")
-        Spring.Log("Scened", LOG.ERROR, errors)
+        Log.Error("Shader error!")
+        Log.Error(errors)
     end
 end
 
@@ -804,7 +787,7 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     elseif opts.blur then
         DrawBlur(opts, x, z, size)
     elseif opts.smartPaint then
-        Spring.Echo("Smart paint!", #opts.textures)
+        Log.Debug("Smart paint!", #opts.textures)
         DrawSmart(opts, x, z, size)
     else
         DrawDiffuse(opts, x, z, size)

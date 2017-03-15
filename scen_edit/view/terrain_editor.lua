@@ -17,7 +17,6 @@ function TerrainEditorView:init()
     self.textureBrowser.control.OnSelectItem = {
         function(obj, itemIdx, selected)
             if selected and itemIdx > 0 then
--- 				Spring.Echo("new state")
                 local item = self.textureBrowser.control.children[itemIdx]
 				for k, v in pairs(self.paintTexture) do
 					self.paintTexture[k] = nil
@@ -30,7 +29,6 @@ function TerrainEditorView:init()
 
 					local currentState = SCEN_EDIT.stateManager:GetCurrentState()
 					if currentState.smartPaint then
-						Spring.Echo("BLA!")
 						table.insert(currentState.textures, {
 							texture = SCEN_EDIT.deepcopy(self.paintTexture),
 							minHeight = 160, -- math.random(100),
@@ -60,7 +58,6 @@ function TerrainEditorView:init()
     self.brushTextureImages.control.OnSelectItem = {
         function(obj, itemIdx, selected)
             if selected and itemIdx > 0 then
--- 				Spring.Echo("new state")
                 local item = self.brushTextureImages.control.children[itemIdx]
 				for k, v in pairs(self.brushTexture) do
 					self.brushTexture[k] = nil
@@ -73,7 +70,6 @@ function TerrainEditorView:init()
 
 					local currentState = SCEN_EDIT.stateManager:GetCurrentState()
 -- 					if currentState.smartPaint then
--- 						Spring.Echo("BLA!")
 -- 						table.insert(currentState.textures, {
 -- 							texture = SCEN_EDIT.deepcopy(self.brushTexture),
 -- 							minHeight = 160, -- math.random(100),

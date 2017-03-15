@@ -55,7 +55,7 @@ function ExportFeaturePlacerCommand:execute()
             else
                 local buildingRot = rotlookup[rot] 
                 if buildingRot == nil then
-                    Spring.Log("scened", LOG.WARNING, "Custom building rotations cannot be saved accurately in the feature placer format.")
+                    Log.Warning("Custom building rotations cannot be saved accurately in the feature placer format.")
                     -- FIXME: should get the closest rotation, but lazy atm
                     buildingRot = rotlookup[0]
                 end

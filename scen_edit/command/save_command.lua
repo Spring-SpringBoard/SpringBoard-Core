@@ -16,19 +16,19 @@ local function HeightMapSave(path)
         if #data == 0 then
             return
         end
-        --Spring.Echo("Packing...")
+        --Log.Notice("Packing...")
         local str = VFS.PackF32(data)
-        --Spring.Echo("Unpacking...")
+        --Log.Notice("Unpacking...")
         local newData = VFS.UnpackF32(str, 1, #str / 4)
-        --Spring.Echo(#data, #newData)
+        --Log.Notice(#data, #newData)
         if #data ~= #newData then
-            --Spring.Echo("Different size!: ", #data, #newData)
+            --Log.Notice("Different size!: ", #data, #newData)
         end
         local diffCount = 0
         for i = 1, math.min(#data, #newData) do
             if data[i] ~= newData[i] then
                 diffCount = diffCount + 1
-                --Spring.Echo("DIFF:", data[i], newData[i])
+                --Log.Notice("DIFF:", data[i], newData[i])
             end
             if diffCount > 100 then
                 break
@@ -51,16 +51,16 @@ local function HeightMapSave(path)
     end
     bufferFlush()
     if totalChanged == 0 then
-        --Spring.Echo("Heightmap unchanged")
+        --Log.Notice("Heightmap unchanged")
     end
-    --Spring.Echo("Heightmap data: " .. totalChanged)
+    --Log.Notice("Heightmap data: " .. totalChanged)
     assert(file:close())
 end
 
 local function ModelSave(path)
     success, msg = pcall(Model.Save, SCEN_EDIT.model, path)
     if not success then 
-        Spring.Echo(msg)
+        Log.Error(msg)
     end
 end
 
@@ -278,21 +278,21 @@ function SaveCommand:execute()
 
     -- save files
     ModelSave(projectDir .. "/model.lua")
-    Spring.Echo("saved model")
+    Log.Notice("saved model")
     ModInfoSave(projectDir .. "/modinfo.lua")
-    Spring.Echo("saved modinfo")
+    Log.Notice("saved modinfo")
     HeightMapSave(projectDir .. "/heightmap.data")	
-    Spring.Echo("saved heightmap")
+    Log.Notice("saved heightmap")
     ScriptTxtSave(projectDir .. "/script.txt")
     ScriptTxtSave(projectDir .. "/script-dev.txt", true)
-    Spring.Echo("saved scripts")
+    Log.Notice("saved scripts")
 
     if #SCEN_EDIT.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = projectDir .. "/texturemap"
         Spring.CreateDir(texturemapDir)
         local cmd = SaveImagesCommand(texturemapDir)
         cmd:execute()
-        Spring.Echo("saved texturemap")
+        Log.Notice("saved texturemap")
     end
 
     SCEN_EDIT.projectLoaded = true

@@ -7,7 +7,7 @@ function ResendCommand:init(metaModelFiles)
 end
 
 function ResendCommand:execute()
-	Spring.Log("scened", LOG.NOTICE, "Resend data started...")
+	Log.Notice("Resend data started...")
     local s2mUnit =     SCEN_EDIT.model.unitManager.s2mUnitIdMapping
     local s2mFeature =  SCEN_EDIT.model.featureManager.s2mFeatureIdMapping
     local cmd = WidgetResendCommand({
@@ -31,5 +31,5 @@ function WidgetResendCommand:execute()
     for objectID, modelID in pairs(self.model.s2mFeature) do
         SCEN_EDIT.model.featureManager:setFeatureModelId(objectID, modelID)
     end
-    Spring.Log("scened", LOG.NOTICE, "Resend completed successfully.")
+    Log.Notice("Resend completed successfully.")
 end

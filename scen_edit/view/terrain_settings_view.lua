@@ -535,7 +535,6 @@ function TerrainSettingsView:UpdateSun()
     self:Set("sunDirX", sunDirX)
     self:Set("sunDirY", sunDirY)
     self:Set("sunDirZ", sunDirZ)
-    --     table.echo({groundDiffuse, groundAmbient, groundSpecular})
     self.dynamicSunEnabled = false
 --     if sunStartAngle then
 --         -- FIXME: distance is wrong, not usable atm
@@ -596,7 +595,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
 
     if name == "detailTexture" then
         SCEN_EDIT.delayGL(function()
---             Spring.Echo(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
+--             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
 --             
 --             local tex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
 -- 						target = 0x8513,
@@ -605,7 +604,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
 --                 fbo = true,
 --             })
 -- 					gl.Texture(item)
---             Spring.Echo(texInfo.xsize, texInfo.ysize, item)
+--             Log.Debug(texInfo.xsize, texInfo.ysize, item)
 --             SCEN_EDIT.model.textureManager:Blit(item, tex)
             local texInfo = gl.TextureInfo(value)
             gl.DeleteTexture(value)
@@ -615,7 +614,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
 
     elseif name == "skyboxTexture" then
         SCEN_EDIT.delayGL(function()
---             Spring.Echo(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
+--             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
 --             
 --             local tex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
 --                 target = 0x8513,
@@ -624,7 +623,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
 --                 fbo = true,
 --             })
 --             gl.Texture(item)
---             Spring.Echo(texInfo.xsize, texInfo.ysize, item)
+--             Log.Debug(texInfo.xsize, texInfo.ysize, item)
 --             SCEN_EDIT.model.textureManager:Blit(item, tex)
             local texInfo = gl.TextureInfo(value)
             Spring.SetSkyBoxTexture(value)

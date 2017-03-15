@@ -15,7 +15,7 @@ function FieldResolver:CallExpression(expr, exprType, params)
     end
     if not fail then
         if not exprType.execute then
-            SCEN_EDIT.Error("There is no function \"execute\" for expression: " .. exprType.name)
+            Log.Error("There is no function \"execute\" for expression: " .. exprType.name)
         else
             local result = exprType.execute(resolvedInputs)
             if exprType.doRepeat and result then

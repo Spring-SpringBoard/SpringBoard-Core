@@ -14,15 +14,15 @@ function LoadCommandWidget:execute()
 
     if not isZip then
         SCEN_EDIT.projectDir = self.path
-        Spring.Echo("set widget project dir:", SCEN_EDIT.projectDir)
+        Log.Notice("set widget project dir:", SCEN_EDIT.projectDir)
         SCEN_EDIT.commandManager:execute(WidgetSetProjectDirCommand(SCEN_EDIT.projectDir), true)
     end
 
     if isZip then
-        Spring.Echo("Loading archive: " .. path .. " ...")
+        Log.Notice("Loading archive: " .. path .. " ...")
 
         if not VFS.FileExists(path, VFS.RAW) then
-            Spring.Echo("Archive doesn't exist: " .. path)
+            Log.Error("Archive doesn't exist: " .. path)
             return
         end
 
@@ -36,10 +36,10 @@ function LoadCommandWidget:execute()
         heightmapData = VFS.LoadFile("heightmap.data", VFS.ZIP)
         texturePath = "texturemap/"
     else
-        Spring.Echo("Loading project: " .. path .. " ...")
+        Log.Notice("Loading project: " .. path .. " ...")
 
         if not SCEN_EDIT.DirExists(path, VFS.RAW) then
-            Spring.Echo("Project doesn't exist: " .. path)
+            Log.Error("Project doesn't exist: " .. path)
             return
         end
 
@@ -57,5 +57,5 @@ function LoadCommandWidget:execute()
     SCEN_EDIT.commandManager:execute(cmd)
     SCEN_EDIT.commandManager:execute(LoadTextureCommand(texturePath), true)
 
-    Spring.Echo("Load complete.")
+    Log.Notice("Load complete.")
 end

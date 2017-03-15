@@ -12,7 +12,7 @@ function LoadTextureCommand:execute()
 
         local files = VFS.DirList(self.texturePath)
         if #files == 0 and true then
-            Spring.Echo("Missing texture file: " .. tostring(self.texturePath))
+            Log.Error("Missing texture file: " .. tostring(self.texturePath))
             return
         end
 
@@ -23,8 +23,8 @@ function LoadTextureCommand:execute()
         for _, file in pairs(files) do
             local _, i, j = file:match(".*(texture)-(%d+)-(%d+).png")
             if i == nil or j == nil then
-                Spring.Echo(i, j)
-                Spring.Log("scened", LOG.ERROR, "Texture files names are in incorrect format. Expected \"texture-i-j.png\", got " .. tostring(file))
+                Log.Error(i, j)
+                Log.Error("Texture files names are in incorrect format. Expected \"texture-i-j.png\", got " .. tostring(file))
                 return
             end
             table.insert(textures, {path = file, i = tonumber(i), j = tonumber(j)})

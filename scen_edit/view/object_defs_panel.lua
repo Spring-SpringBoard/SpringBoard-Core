@@ -243,7 +243,6 @@ function UnitDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3])
         ctrl.objectDefID = item[4]
---         Spring.Echo(item[2])
         if item[2] == "" or true then
             self:AddDrawIcon(ctrl)
         end

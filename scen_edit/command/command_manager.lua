@@ -19,11 +19,11 @@ end
 
 function CommandManager:_SafeCall(func)
     succ, result = xpcall(func, function(err)
-        Spring.Log("scened", LOG.ERROR, "Error executing command. ")
+        Log.Error("Error executing command. ")
         if debug then
-            Spring.Log("scened", LOG.ERROR, debug.traceback(err))
+            Log.Error(debug.traceback(err))
         else
-            Spring.Log("scened", LOG.ERROR, err)
+            Log.Error(err)
         end
     end)
     if succ then 

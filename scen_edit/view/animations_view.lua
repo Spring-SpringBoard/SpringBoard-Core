@@ -108,7 +108,7 @@ end
 function AnimationsView:GetPieceHierarchy(objectID, bridge)
     local pieceInfo = Spring.GetUnitPieceInfo(objectID, 1)
     local pieceName = pieceInfo.name
-    Spring.Echo(pieceInfo, pieceName)
+    Spring.Log(pieceInfo, pieceName)
 end
 
 function AnimationsView:OnSelectionChanged(selection)

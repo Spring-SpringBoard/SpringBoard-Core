@@ -113,7 +113,7 @@ end
 -- Don't use this directly because ordering would be messed up.
 function EditorView:_SetFieldVisible(name, visible)
     if not self.fields[name] then
-        Spring.Log("Scened", LOG.ERROR, "Trying to set visibility on an invalid field: " .. tostring(name))
+        Log.Error("Trying to set visibility on an invalid field: " .. tostring(name))
         return
     end
 

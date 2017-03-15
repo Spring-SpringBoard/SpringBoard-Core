@@ -56,7 +56,7 @@ function VariableSettingsWindow:AddVariable()
         end
     )
     if not success then
-        Spring.Echo(msg)
+        Log.Error("Error adding variable", msg)
     end
 --[[    local newVariable = SCEN_EDIT.model:NewVariable("number")
     self:Populate()

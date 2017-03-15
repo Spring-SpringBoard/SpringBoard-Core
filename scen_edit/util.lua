@@ -34,8 +34,9 @@ end
 
 function SCEN_EDIT.Include(path)
     if not SCEN_EDIT.classes[path] then
-        VFS.Include(path)
+        -- mark it included before it's actually included to prevent circular inclusions
         SCEN_EDIT.classes[path] = true
+        VFS.Include(path)
     end
 end
 
@@ -431,10 +432,6 @@ function SCEN_EDIT.HintControl(control, color, timeout)
     end
 end
 
-function SCEN_EDIT.Error(msg)
-    Spring.Echo(msg)
-end
-
 function SCEN_EDIT.SetClassName(class, className)
     class.className = className
     if SCEN_EDIT.commandManager:getCommandType(className) == nil then
@@ -530,7 +527,7 @@ function SCEN_EDIT.executeDelayed(name)
     SCEN_EDIT.delayed[name] = {}
     for i, call in pairs(delayed) do
         xpcall(function() call[1](unpack(call[2])) end,
-              function(err) Spring.Log("scened", LOG.ERROR, debug.traceback(err)) end )
+              function(err) Log.Error(debug.traceback(err)) end )
     end
 end
 
@@ -585,6 +582,7 @@ function boolToNumber(bool)
     end
 end
 
+-- should go to string utils
 function string.starts(String,Start)
    return string.sub(String,1,string.len(Start))==Start
 end

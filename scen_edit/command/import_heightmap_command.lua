@@ -11,11 +11,11 @@ end
 function ImportHeightmapCommand:execute()
     SCEN_EDIT.delayGL(function()
         if not VFS.FileExists(self.heightmapImagePath) then
-            Spring.Echo("Missing heightmap file: " .. tostring(self.heightmapImagePath))
+            Log.Error("Missing heightmap file: " .. tostring(self.heightmapImagePath))
             return
         end
 
-        Spring.Log("scened", LOG.DEBUG, "Importing heightmap..")
+        Log.Debug("scened", LOG.DEBUG, "Importing heightmap..")
         local heightmapTexture = gl.CreateTexture(Game.mapSizeX / Game.squareSize + 1, Game.mapSizeZ / Game.squareSize + 1, {
             border = false,
             min_filter = GL.NEAREST,

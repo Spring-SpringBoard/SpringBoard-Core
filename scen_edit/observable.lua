@@ -12,7 +12,6 @@ function Observable:removeListener(listener)
     for k, v in pairs(self.listeners) do
         if v == listener then
             table.remove(self.listeners, k)
-       --     Spring.Echo("removed")
         end
     end
 

@@ -189,7 +189,7 @@ end
 
 function ExportCommand:execute()
 	if VFS.FileExists(self.path) then
-		Spring.Echo("File exists, trying to remove...")
+		Log.Notice("File exists, trying to remove...")
 		os.remove(self.path)
 	end	
     assert(not VFS.FileExists(self.path), "File already exists")
@@ -198,7 +198,7 @@ function ExportCommand:execute()
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script.txt")
     ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script-DEV.txt", true)
 
-    --Spring.Echo("compressing folder...")
+    --Log.Notice("compressing folder...")
     --create an archive from the directory
     VFS.CompressFolder(projectDir, "zip", self.path)
 end

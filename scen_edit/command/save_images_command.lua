@@ -23,7 +23,7 @@ function SaveImagesCommand:execute()
                     local mapTexturePath = self.path .. "/texture-" .. tostring(i) .. "-" .. tostring(j) .. ".png"
                     -- remove existing texture)
                     os.remove(mapTexturePath)
-                    Spring.Log("scened", LOG.DEBUG, "Saving subtexture", i, j, mapTexturePath)
+                    Log.Debug("Saving subtexture", i, j, mapTexturePath)
                     gl.RenderToTexture(mapTexture, gl.SaveImage, 0, 0, texSize, texSize, mapTexturePath, {yflip=true})
                     mapTextureObj.dirty = false
 
@@ -31,7 +31,7 @@ function SaveImagesCommand:execute()
                     for _, s in pairs(SCEN_EDIT.model.textureManager.stack) do
                         -- we only do this for the corresponding textures
                         if s[i] and s[i][j] then
-                            Spring.Log("scened", LOG.DEBUG, "Making subtexture dirty", i, j)
+                            Log.Debug("Making subtexture dirty", i, j)
                             local oldTextureObj = s[i][j]
                             oldTextureObj.dirty = true
                         end

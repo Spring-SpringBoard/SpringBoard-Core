@@ -42,10 +42,7 @@ function Field:Set(value, source)
         return
     end
     self.inUpdate = true
--- 	Spring.Echo(value)
--- 	Spring.Echo(self.value)
     local valid, value = self:Validate(value)
--- 	Spring.Echo(valid, value, source)
     if valid then
         self.value = value
         -- invoke editor view's update

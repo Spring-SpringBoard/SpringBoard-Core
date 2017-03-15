@@ -5,7 +5,7 @@ function SaveAsAction:execute()
     sfd = SaveProjectDialog(dir)
     sfd:setConfirmDialogCallback(
         function(path)
-            Spring.Echo("Saving project: " .. path .. " ...")
+            Log.Notice("Saving project: " .. path .. " ...")
             local setProjectDirCommand = SetProjectDirCommand(path)
             -- set the project dir in both the synced and unsynced (TODO: needs to be fixed for cooperative editing)
             SCEN_EDIT.commandManager:execute(setProjectDirCommand)
@@ -14,7 +14,7 @@ function SaveAsAction:execute()
             
             local saveCommand = SaveCommand(path)
             SCEN_EDIT.commandManager:execute(saveCommand, true)
-            Spring.Echo("Saved project.")
+            Log.Notice("Saved project.")
         end
     )
 end

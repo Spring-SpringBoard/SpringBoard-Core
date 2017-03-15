@@ -16,7 +16,7 @@ end
 function Conf:LoadMetaModelFile(metaModelFile)
     local success, data = pcall(function() return VFS.LoadFile(metaModelFile) end)
     if not success then
-        Spring.Echo("Failed to load file " .. metaModelFile .. ": " .. data)
+        Log.Error("Failed to load file " .. metaModelFile .. ": " .. data)
         return nil
     end
     return data
@@ -37,7 +37,7 @@ function Conf:initializeListOfMetaModelFiles()
         end
 	end
 
-    Spring.Echo("Project dir:", SCEN_EDIT.projectDir)
+    Log.Notice("Project dir:", SCEN_EDIT.projectDir)
     if SCEN_EDIT.projectDir ~= nil then
         files = VFS.DirList(SCEN_EDIT.projectDir .. "/triggers/", "*", VFS.RAW)
         for i = 1, #files do

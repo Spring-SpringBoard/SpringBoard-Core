@@ -618,7 +618,7 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
             self:Set("energyUse",  energyUse)
 
             local states = bridge.s11n:Get(objectID, "states")
-            Spring.Echo("ACTIVE", states.active)
+            Log.Debug("ACTIVE", states.active)
             self:Set("fireState",       states.fireState)
             self:Set("moveState",       states.moveState)
             self:Set("repeat",          states["repeat"])

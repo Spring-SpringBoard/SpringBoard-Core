@@ -49,10 +49,9 @@ function ModelShaders:_CompileShader(programs)
         }
     }
 
-    local shader = gl.CreateShader(shaderTemplate)
-    local errors = gl.GetShaderLog(shader)
-    if errors ~= "" then
-        Spring.Echo(errors)
+    local shader = Shaders.Compile(shaderTemplate, "ModelShader")
+    if not shader then
+        return
     end
     local shaderObj = {
         shader = shader,

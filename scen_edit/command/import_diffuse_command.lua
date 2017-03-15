@@ -9,11 +9,11 @@ end
 function ImportDiffuseCommand:execute()
     SCEN_EDIT.delayGL(function()
         if not VFS.FileExists(self.texturePath) then
-            Spring.Echo("Missing texture file: " .. tostring(self.texturePath))
+            Log.Error("Missing texture file: " .. tostring(self.texturePath))
             return
         end
 
-        Spring.Log("scened", LOG.DEBUG, "Importing texture..")
+        Log.Debug("Importing texture..")
         local totalMapTexture = gl.CreateTexture(Game.mapSizeX, Game.mapSizeZ, {
             border = false,
             min_filter = GL.NEAREST,

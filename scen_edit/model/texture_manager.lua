@@ -51,8 +51,7 @@ local shader
 function TextureManager:SetupShader()
 	local vertProg = VFS.LoadFile("shaders/SMFVertProg.glsl")
 	local fragProg = VFS.LoadFile("shaders/SMFFragProg.glsl")
-	Spring.Echo(vertProg, fragProg)
-	shader = gl.CreateShader({
+	shader = Shaders.Compile({
 		vertex = [[
 void main(void)
 {
@@ -72,13 +71,12 @@ void main(void)
     gl_FragColor = diffuseCol;
 } 
 ]]
-	})
+	}, "TextureManager:SetupShader")
 	Spring.SetMapShader(shader, shader)
-	Spring.Echo(shader)
 end
 
 function TextureManager:generateMapTextures()
-    Spring.Log("scened", LOG.DEBUG, "Generating textures...")
+    Log.Debug("Generating textures...")
     local oldMapTexture = self:createMapTexture(false)
 
     for i = 0, math.floor(Game.mapSizeX / self.TEXTURE_SIZE) do
@@ -100,10 +98,10 @@ function TextureManager:generateMapTextures()
 	self.shadingTextures = {}
 	for _, texture in pairs(self.shadingTextureNaming) do
 		local name, engineName = texture.name, texture.engineName
-		Spring.Echo("engine texture: " .. tostring(name))
+		Log.Notice("engine texture: " .. tostring(name))
 		local success = Spring.SetMapShadingTexture(engineName, "")
 		if not success then
-			Spring.Log("scened", LOG.ERROR, "Failure to set texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
+			Log.Error("Failure to set texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
 		end
 		--local tex = self:createMapTexture()
 		local sizeX, sizeZ--[[ = Game.mapSizeX/2, Game.mapSizeZ/2]]
@@ -380,5 +378,5 @@ end
 
 function TextureManager:PrintMemory()
 	local mbSize = math.ceil(self.stackSize / 1024 / 1024)
-	Spring.Echo("Memory: " .. tostring(mbSize) .. "MB")
+	Log.Debug("Memory: " .. tostring(mbSize) .. "MB")
 end

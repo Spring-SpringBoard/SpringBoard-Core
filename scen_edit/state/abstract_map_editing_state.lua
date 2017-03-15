@@ -183,11 +183,8 @@ function AbstractMapEditingState:initShader()
         },
     }
 
-    local shader = gl.CreateShader(shaderTemplate)
-    local errors = gl.GetShaderLog(shader)
-    if errors ~= "" then
-        Spring.Log("Scened", "error", "Error creating shader: " .. tostring(errors))
-    else
+    local shader = Shaders.Compile(shaderTemplate, "AbstractMapEditingState")
+    if shader then
         self.shaderObj = {
             shader = shader,
         }

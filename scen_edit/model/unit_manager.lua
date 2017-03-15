@@ -130,7 +130,7 @@ function UnitManager:serializeUnitCommands(unitId, unit)
                 if buildUnitDef ~= nil then
                     command.buildUnitDef = buildUnitDef.name
                 else
-                    Spring.Log("scened", LOG.ERROR, "No such unit def: (" .. math.abs(command.id) ..  ") for build command: " .. tostring(command.id))
+                    Log.Error("No such unit def: (" .. math.abs(command.id) ..  ") for build command: " .. tostring(command.id))
                 end
             end
             command.options = nil
@@ -292,12 +292,12 @@ function UnitManager:loadUnit(unit)
     -- FIXME: figure out why this sometimes fails on load with a specific unit.id
     local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId, false, true)
     if unitId == nil then
-        Spring.Log("scened", LOG.ERROR, "Failed to create the following unit: " .. table.show(unit))
+        Log.Error("Failed to create the following unit: " .. table.show(unit))
         return
     end
     -- FIXME: this check is not usable until unit creation by ID is fixed
     if false and unit.id ~= nil and unit.id ~= unitId then
-        Spring.Log("scened", LOG.ERROR, "Created unit has different id: " .. tostring(unit.id) .. ", " .. tostring(unitId))
+        Log.Error("Created unit has different id: " .. tostring(unit.id) .. ", " .. tostring(unitId))
     end
     self:setUnitProperties(unitId, unit)
     self:setUnitModelId(unitId, unit.id)

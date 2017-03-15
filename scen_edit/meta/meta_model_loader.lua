@@ -4,11 +4,11 @@ function MetaModelLoader:AttemptToLoadFile(metaModelFile)
     local data = metaModelFile.data
 	local success, data = pcall(function() return assert(loadstring(data))() end)
 	if not success then
-		Spring.Echo("Failed to parse file " .. metaModelFile.name .. ": ")
-        Spring.Echo(loadstring(metaModelFile.data))
+		Log.Error("Failed to parse file " .. metaModelFile.name .. ": ")
+        Log.Error(loadstring(metaModelFile.data))
 		return nil
 	end
-	
+
 	return data
 end
 
@@ -19,19 +19,18 @@ function MetaModelLoader:Load()
 
     -- load files
     for _, metaModelFile in pairs(metaModelFiles) do
-        Spring.Echo("Using file: " .. metaModelFile.name)
+        Log.Notice("Using file: " .. metaModelFile.name)
         local metaModel = {}
 
         for _, metaType in pairs(metaTypes) do
             metaModel[metaType] = {}
         end
-		
+
         local data = self:AttemptToLoadFile(metaModelFile)
 
 		if data ~= nil then
 			for _, metaType in pairs(metaTypes) do
 				if data[metaType] ~= nil then
-					--Spring.Echo("Loading " .. metaType)
 					local values = {}
 					if type(data[metaType]) == "table" then
 						values = data[metaType]
@@ -39,15 +38,14 @@ function MetaModelLoader:Load()
 						setfenv(data[metaType], getfenv())
 						values = data[metaType]()
 					else
-						Spring.Echo("Unexeptected data type when parsing meta model file", type(data[metaModel]))
+						Log.Error("Unexeptected data type when parsing meta model file", type(data[metaModel]))
 					end
 					for _, value in pairs(values) do
                         if type(value) == "table" then
 --                            if metaType == "functions" and value.output == nil or type(value.output) ~= "table" or #value.output == 0 then
---                                Spring.Echo("Error parsing " .. metaModelFile.name .. ", expected output 
                             table.insert(metaModel[metaType], value)
                         else
-                            Spring.Echo("Error parsing " .. metaModelFile.name .. ", expected table for " .. metaType .. ", but got " .. type(value) .. ", for element: " .. tostring(value))
+                            Log.Error("Error parsing " .. metaModelFile.name .. ", expected table for " .. metaType .. ", but got " .. type(value) .. ", for element: " .. tostring(value))
                         end
 					end
 				end
@@ -74,15 +72,15 @@ function MetaModelLoader:Load()
         {
             humanName = "Game started",
             name = "GAME_START",
-        }, 
+        },
         {
             humanName = "Game ends",
             name = "GAME_END",
-        }, 
+        },
         {
             humanName = "Team died",
             name = "TEAM_DIE",
-        }, 
+        },
         {
             humanName = "Unit created",
             name = "UNIT_CREATE",
@@ -109,10 +107,10 @@ function MetaModelLoader:Load()
         },
     }
 
-    Spring.Echo("Event types: " .. #mergedMetaModel.events)
-    Spring.Echo("Function types: " .. #mergedMetaModel.functions)
-    Spring.Echo("Action types: " .. #mergedMetaModel.actions)
-    Spring.Echo("Order types: " .. #mergedMetaModel.orders)
+    Log.Notice("Event types: " .. #mergedMetaModel.events)
+    Log.Notice("Function types: " .. #mergedMetaModel.functions)
+    Log.Notice("Action types: " .. #mergedMetaModel.actions)
+    Log.Notice("Order types: " .. #mergedMetaModel.orders)
     SCEN_EDIT.metaModel:SetEventTypes(mergedMetaModel.events)
     SCEN_EDIT.metaModel:SetFunctionTypes(mergedMetaModel.functions)
     SCEN_EDIT.metaModel:SetActionTypes(mergedMetaModel.actions)

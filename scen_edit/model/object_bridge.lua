@@ -80,7 +80,7 @@ FeatureBridge.DrawObject                      = function(params)
 --     local featureDef    = FeatureDefs[objectDefID]
 -- 
 --     if featureDef.drawType ~= 0 then
---         Spring.Echo("engine-tree, not sure what to do")
+--         Log.Warning("engine-tree, not sure what to do")
 --     end
 end
 FeatureBridge.getObjectSpringID               = function(modelID)

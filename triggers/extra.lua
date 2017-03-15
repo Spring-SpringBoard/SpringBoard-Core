@@ -3,7 +3,7 @@ return {
     },
     actions = {
         {
-            humanName = "Unit say", 
+            humanName = "Unit say",
             name = "UNIT_SAY",
             input = { "unit", "string" },
             execute = function (input)
@@ -30,6 +30,48 @@ return {
                 else
                     SCEN_EDIT.rtModel:ExecuteTrigger(trigger.id)
                 end
+            end
+        },
+        {
+            humanName = "Dialog",
+            name = "UI_DIALOG",
+            input = { "string" },
+            tags = {"Dialog"},
+            executeUnsynced = function (input)
+                local text = input.string
+
+                local window = nil
+                window = Chili.Window:New {
+                    caption = "",
+                    width = 310,
+                    height = 310,
+                    resizable = false,
+                    draggable = false,
+                    parent = screen0,
+                    children = {
+                        Chili.TextBox:New {
+                            x = 40,
+                            right = 0,
+                    		y = 15,
+                    		bottom = 50,
+                            text = text,
+                        },
+                        Chili.Button:New {
+                            caption = "OK",
+                            x = 76,
+                            width = 135,
+                            bottom = 1,
+                            height = 40,
+                            OnClick = {
+                                function()
+                                    Spring.SendCommands("pause 0")
+                                    window:Dispose()
+                                end
+                            },
+                        },
+                    },
+                }
+                Spring.SendCommands("pause 1")
             end
         },
     },

@@ -8,26 +8,27 @@ function ExportAction:execute()
         sfd:setConfirmDialogCallback(
             function(path, fileType)
                 if fileType == fileTypes[1] then
-                    Spring.Log("scened", LOG.NOTICE, "Exporting archive: " .. path .. " ...")
+                    Log.Notice("Exporting archive: " .. path .. " ...")
                     local exportCommand = ExportCommand(path)
                     SCEN_EDIT.commandManager:execute(exportCommand, true)
-                    Spring.Log("scened", LOG.NOTICE, "Exported archive.")
+                    Log.Notice("Exported archive.")
                 elseif fileType == fileTypes[2] then
-                    Spring.Log("scened", LOG.NOTICE, "Exporting to featureplacer format...")
+                    Log.Notice("Exporting to featureplacer format...")
                     local exportCommand = ExportFeaturePlacerCommand(path)
                     SCEN_EDIT.commandManager:execute(exportCommand, true)
-                    Spring.Log("scened", LOG.NOTICE, "Export complete.")
+                    Log.Notice("Export complete.")
                 elseif fileType == fileTypes[3] then
-                    Spring.Log("scened", LOG.NOTICE, "Exporting map textures...")
+                    Log.Notice("Exporting map textures...")
                     local exportCommand = ExportMapsCommand(path)
                     SCEN_EDIT.commandManager:execute(exportCommand, true)
-                    Spring.Log("scened", LOG.NOTICE, "Export complete.")
+                    Log.Notice("Export complete.")
                 else
-                    Spring.Log("scened", LOG.ERROR, "Error trying to export. Invalida fileType specified: " .. tostring(fileType))
+                    Log.Error("Error trying to export. Invalida fileType specified: " .. tostring(fileType))
                 end
             end
         )
     else
-        Spring.Log("scened", LOG.WARNING, "The project must be saved before exporting")
+        --FIXME: probably don't need for most types of export
+        Log.Warning("The project must be saved before exporting")
     end
 end

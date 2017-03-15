@@ -27,11 +27,8 @@ function MapGrid:initShader()
         vertex = shaderVertStr,
     }
 
-    local shader = gl.CreateShader(shaderTemplate)
-    local errors = gl.GetShaderLog(shader)
-    if errors ~= "" then
-        Spring.Log("Scened", "error", "Error creating shader: " .. tostring(errors))
-    else
+    local shader = Shaders.Compile(shaderTemplate, "MapGrid")
+    if shader then
         self.shaderObj = {
             shader = shader,
             uniforms = {

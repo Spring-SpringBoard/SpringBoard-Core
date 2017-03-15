@@ -27,7 +27,7 @@ function HeightMap:Serialize()
             end
         end
     end
---    Spring.Echo("Total saved: ", totalSaved)
+--    Log.Debug("Total saved: ", totalSaved)
     table.insert(self.segments, segment)
 end
 
@@ -42,7 +42,6 @@ function HeightMap:Load()
                 totalLoaded = totalLoaded + 1
             end
         end
---        Spring.Echo("Total loaded: ", totalLoaded)
+--        Log.Debug("Total loaded: ", totalLoaded)
     end)
 end
-

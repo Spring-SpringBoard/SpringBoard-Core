@@ -101,7 +101,7 @@ function SCEN_EDIT.parseData(data)
         if type(d) == "table" then
             local continue = true --lua has no continue and i don't want deep nesting
             if continue and not d.type then
-                Spring.Echo("Error, missing type of data " .. d.type)
+                Log.Error("Error, missing type of data " .. d.type)
                 continue = false
             end
             if continue and d.name == nil then
@@ -110,7 +110,7 @@ function SCEN_EDIT.parseData(data)
             if continue then
                 for _, d2 in pairs(newData) do
                     if d.name == d2.name then
-                        Spring.Echo("Error, name field is duplicate")
+                        Log.Error("Error, name field is duplicate")
                         continue = false
                     end
                 end
@@ -119,7 +119,7 @@ function SCEN_EDIT.parseData(data)
                 table.insert(newData, d)
             end            
         else
-            Spring.Echo("Unexpected data " .. tostring(d) .. " of type " .. type(d))
+            Log.Warning("Unexpected data " .. tostring(d) .. " of type " .. type(d))
         end        
     end
 
@@ -129,7 +129,7 @@ function SCEN_EDIT.parseData(data)
     for i = 1, #newData do
         local d = newData[i]
         if dataNames[d.name] then
-            Spring.Echo("Data of name " .. d.name .. " already exists ")
+            Log.Error("Data of name " .. d.name .. " already exists ")
         else
             table.insert(finalData, d)
         end
@@ -151,7 +151,7 @@ end
 function SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
     if resolvedInput == nil then
         local stringRepresentation = table.show(expr)
-        SCEN_EDIT.Error(input.name .. " cannot be resolved for : " .. stringRepresentation)
+        Log.Error(input.name .. " cannot be resolved for : " .. stringRepresentation)
         return true
     end
     return false
