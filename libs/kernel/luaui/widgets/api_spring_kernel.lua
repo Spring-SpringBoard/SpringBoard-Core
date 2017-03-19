@@ -12,98 +12,97 @@ return {
 }
 end
 
-local LOG_SECTION = "kernel"
-local CONFIG_FILE = KERNEL_FOLDER .. "kernel-config.json"
+__SK.CONFIG_FILE = KERNEL_FOLDER .. "kernel-config.json"
 
-local socket = socket
+__SK.socket = socket
 
-local host, port
-local client
-local buffer = ""
-local commands = {} -- table with possible commands
+__SK.host, __SK.port = nil, nil
+__SK.client = nil
+__SK.buffer = ""
+__SK.commands = {} -- table with possible commands
 
 -- drawing related
-local screenTex
-local vsx, vsy = 0, 0
-local draw_requested = false
+__SK.screenTex = nil
+__SK.vsx, __SK.vsy = 0, 0
+__SK.draw_requested = false
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- Connectivity and sending
 
-local function SocketConnect(host, port)
-	client=socket.tcp()
-	client:settimeout(0)
-	res, err = client:connect(host, port)
+function __SK.SocketConnect(host, port)
+	__SK.client=socket.tcp()
+	__SK.client:settimeout(0)
+	res, err = __SK.client:connect(host, port)
 	if not res and not res=="timeout" then
 		widgetHandler:RemoveWidget(self)
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Error in connecting: " .. err)
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Error in connecting: " .. err)
 		return false
 	elseif not res=="timeout" then
-		Spring.Log(LOG_SECTION, LOG.NOTICE, "Successfully connected to host.")
+		Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Successfully connected to host.")
 	end
 	return true
 end
 
-local SpringKernel = {}
+__SK.SpringKernel = {}
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- Callin Functions
 
-local currentCmd = ""
-local function DoGadget(cmd)
-	local msg = "spring_kernel_ex|" .. json.encode(cmd)
+__SK.currentCmd = ""
+function __SK.DoGadget(cmd)
+	local msg = "spring_kernel_ex|" .. __SK.json.encode(cmd)
 	Spring.SendLuaRulesMsg(msg)
 end
 
-local function ExecuteLua(args)
+function __SK.ExecuteLua(args)
 	local msg = {}
 	if args.state == "luaui" or args.state == "luamenu" then
-		local success, error = ExecuteLuaCommand(args.code)
+		local success, error = __SK.ExecuteLuaCommand(args.code)
 		if not success then
 			table.insert(msg, {error, "error"})
 		end
-		table.insert(msg, {getEchoOutput(), "output"})
-		SpringKernel.WriteOutput(msg)
+		table.insert(msg, {__SK.getEchoOutput(), "output"})
+		__SK.SpringKernel.WriteOutput(msg)
 	elseif args.state == "sluarules" or args.state == "uluarules" then
-		DoGadget(args)
+		__SK.DoGadget(args)
 	else
 		table.insert(msg, {"Invalid state: " .. tostring(args.state), "error"})
-		SpringKernel.WriteOutput(msg)
+		__SK.SpringKernel.WriteOutput(msg)
 	end
 end
 
-local function ShowScreen()
-	draw_requested = true
+function __SK.ShowScreen()
+	__SK.draw_requested = true
 	-- It will be drawn in the next opengl frame
 end
 
 -- Callin from gadgets
-local function RecieveGadgetMessage(msg)
-	local success, obj = pcall(json.decode, msg)
+function __SK.RecieveGadgetMessage(msg)
+	local success, obj = pcall(__SK.json.decode, msg)
 	if not success then
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(msg))
-		Spring.Log(LOG_SECTION, LOG.ERROR, debug.traceback())
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(msg))
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, debug.traceback())
 		return
 	end
 
-	SpringKernel.WriteOutput(obj)
+	__SK.SpringKernel.WriteOutput(obj)
 end
 
-commands["execute"] = ExecuteLua
-commands["show"] = ShowScreen
+__SK.commands["execute"] = __SK.ExecuteLua
+__SK.commands["show"] = __SK.ShowScreen
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- Callout Functions
 
 
 
-function SpringKernel.WriteOutput(msg)
+function __SK.SpringKernel.WriteOutput(msg)
 	-- NOTICE: The gsub part fixes an issue with incorrectly formatted json
 	-- FIXME: this suggests an issue with json.encode and should be fixed in the library
-	local encoded = json.encode(msg):gsub("\\'", "")
-	Spring.Log(LOG_SECTION, LOG.DEBUG, encoded)
-	client:send(encoded .. "\n")
+	local encoded = __SK.json.encode(msg):gsub("\\'", "")
+	Spring.Log(__SK.LOG_SECTION, LOG.DEBUG, encoded)
+	__SK.client:send(encoded .. "\n")
 end
 
 --------------------------------------------------------------------------------
@@ -114,44 +113,44 @@ end
 function widget:Initialize()
 	-- Only use this in development versions
 	if not Game.gameVersion:find("$VERSION") then
-		Spring.Log(LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
+		Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
 	    widgetHandler:RemoveWidget(self)
 		return
 	end
 
-	local config = json.decode(VFS.LoadFile(CONFIG_FILE))
-	host, port = config.host, config.port
-	if not port or not host then
+	local config = __SK.json.decode(VFS.LoadFile(__SK.CONFIG_FILE))
+	__SK.host, __SK.port = config.host, config.port
+	if not __SK.port or not __SK.host then
 		widgetHandler:RemoveWidget(self)
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Invalid connection details in " .. tostring(CONFIG_FILE))
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Invalid connection details in " .. tostring(CONFIG_FILE))
 		return
 	end
-	Spring.Log(LOG_SECTION, LOG.NOTICE, "Waiting for connection to " ..
-		tostring(host) .. ":" .. tostring(port))
-	SocketConnect(host, port)
+	Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Waiting for connection to " ..
+		tostring(__SK.host) .. ":" .. tostring(__SK.port))
+	__SK.SocketConnect(__SK.host, __SK.port)
 
-	widgetHandler:RegisterGlobal("SK_RecieveGadgetMessage", RecieveGadgetMessage)
+	widgetHandler:RegisterGlobal("SK_RecieveGadgetMessage", __SK.RecieveGadgetMessage)
 
-	WG.SpringKernel = SpringKernel
+	WG.SpringKernel = __SK.SpringKernel
 
 	widget:ViewResize()
 end
 
 -- pocesses raw string line and executes command
-local function CommandReceived(command)
-	local success, obj = pcall(json.decode, command)
+function __SK.CommandReceived(command)
+	local success, obj = pcall(__SK.json.decode, command)
 	if not success then
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(command))
-		Spring.Log(LOG_SECTION, LOG.ERROR, debug.traceback())
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(command))
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, debug.traceback())
 	else
 		local cmdName = obj.command
 		if not cmdName then
-			Spring.Log(LOG_SECTION, LOG.ERROR, "Command name is missing from message: " .. tostring(command))
+			Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Command name is missing from message: " .. tostring(command))
 			return
 		end
-		local f = commands[cmdName]
+		local f = __SK.commands[cmdName]
 		if not f then
-			Spring.Log(LOG_SECTION, LOG.ERROR, "No such command found: " .. tostring(cmdName))
+			Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "No such command found: " .. tostring(cmdName))
 			return
 		end
 		f(obj.data)
@@ -160,11 +159,11 @@ end
 
 -- update socket - receive data and split into lines
 function widget:Update()
-	if client == nil then
-		SocketConnect(host, port)
+	if __SK.client == nil then
+		__SK.SocketConnect(__SK.host, __SK.port)
 		return
 	end
-	local readable, writeable, err = socket.select({client}, {client}, 0)
+	local readable, writeable, err = __SK.socket.select({__SK.client}, {__SK.client}, 0)
 	if err ~= nil then
 		--Spring.Log(LOG_SECTION, "error", "SpringKernel error in select", err)
 		--Echo("Error in select: " .. err)
@@ -172,70 +171,70 @@ function widget:Update()
 	for _, input in ipairs(readable) do
 		local s, status, str = input:receive('*a') --try to read all data
 		if (status == "timeout" or status == nil) and str ~= nil and str ~= "" then
-			_connected = true
-			CommandReceived(str)
-		elseif status == "closed" and _connected then
-			Spring.Log(LOG_SECTION, LOG.NOTICE, "Connection closed")
+			__SK._connected = true
+			__SK.CommandReceived(str)
+		elseif status == "closed" and __SK._connected then
+			Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Connection closed")
 			input:close()
-			client = nil
-			_connected = false
-			SocketConnect(host, port)
+			__SK.client = nil
+			__SK._connected = false
+			__SK.SocketConnect(__SK.host, __SK.port)
 		end
 	end
 end
 
-local function CleanTextures()
-	if screenTex then
-		gl.DeleteTexture(screenTex)
-		screenTex = nil
+function __SK.CleanTextures()
+	if __SK.screenTex then
+		gl.DeleteTexture(__SK.screenTex)
+		__SK.screenTex = nil
 	end
 end
 
-local function CreateTextures()
-	screenTex = gl.CreateTexture(vsx, vsy, {
+function __SK.CreateTextures()
+	__SK.screenTex = gl.CreateTexture(__SK.vsx, __SK.vsy, {
 		-- It means you can draw on the texture ;)
 		fbo = true, min_filter = GL.LINEAR, mag_filter = GL.LINEAR,
 		wrap_s = GL.CLAMP, wrap_t = GL.CLAMP,
 	})
-	if screenTex == nil then
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Error creating screen texture for vsx: " ..
+	if __SK.screenTex == nil then
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Error creating screen texture for vsx: " ..
 			tostring(vsx) .. ", vsy: " .. tostring(vsy))
 	end
 end
 
-local function PerformDraw()
+function __SK.PerformDraw()
 	local imgName = "screen.png"
-	if draw_requested then
+	if __SK.draw_requested then
 		if VFS.FileExists(imgName, nil, VFS.RAW) then
 		    os.remove(imgName)
 		end
-		draw_requested = false
-		gl.CopyToTexture(screenTex, 0, 0, 0, 0, vsx, vsy)
+		__SK.draw_requested = false
+		gl.CopyToTexture(__SK.screenTex, 0, 0, 0, 0, __SK.vsx, __SK.vsy)
 		--gl.Texture(0, screenTex)
 		--gl.TexRect(0, vsy, vsx, 0)
-		gl.RenderToTexture(screenTex, gl.SaveImage, 0, 0, vsx, vsy, imgName)
+		gl.RenderToTexture(__SK.screenTex, gl.SaveImage, 0, 0, __SK.vsx, __SK.vsy, imgName)
 		gl.Texture(0, false)
-		SpringKernel.WriteOutput({imgPath = GetWriteDataDir() .. imgName})
+		__SK.SpringKernel.WriteOutput({imgPath = __SK.GetWriteDataDir() .. imgName})
 	end
 end
 
 function widget:ViewResize()
-	vsx, vsy = gl.GetViewSizes()
-	CleanTextures()
-	CreateTextures()
+	__SK.vsx, __SK.vsy = gl.GetViewSizes()
+	__SK.CleanTextures()
+	__SK.CreateTextures()
 end
 
 -- Adds partial compatibility with spring versions, which don't support "DrawScreenPost", remove this later.
 -- This call is removed in widget:Initialize() if DrawScreenPost is present
 function widget:DrawScreenEffects(vsx, vsy)
-	PerformDraw()
+	__SK.PerformDraw()
 end
 
 function widget:DrawScreenPost(vsx, vsy)
 	widgetHandler:RemoveCallIn("DrawScreenEffects")
-	PerformDraw()
+	__SK.PerformDraw()
 end
 
 function widget:Shutdown()
-	CleanTextures()
+	__SK.CleanTextures()
 end

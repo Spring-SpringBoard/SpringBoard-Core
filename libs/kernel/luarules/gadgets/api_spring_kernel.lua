@@ -18,75 +18,75 @@ if gadgetHandler:IsSyncedCode() then
 function gadget:Initialize()
 	-- Only use this in development versions
 	if not Game.gameVersion:find("$VERSION") then
-		Spring.Log(LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
+		Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
 	    gadgetHandler:RemoveWidget(self)
 		return
 	end
 end
 
-local function ExecuteLua(args)
+function __SK.ExecuteLua(args)
 	msg = {}
 	if args.state == "sluarules" then
-		local success, error = ExecuteLuaCommand(args.code)
+		local success, error = __SK.ExecuteLuaCommand(args.code)
 		if not success then
 			table.insert(msg, {error, "error"})
 		end
-		table.insert(msg, {getEchoOutput(), "output"})
-		SendToUnsynced("kernelSendToUnsynced", json.encode(msg))
+		table.insert(msg, {__SK.getEchoOutput(), "output"})
+		SendToUnsynced("kernelSendToUnsynced", __SK.json.encode(msg))
 	elseif args.state == "uluarules" then
-		SendToUnsynced("kernelExecuteUnsynced", json.encode(args))
+		SendToUnsynced("kernelExecuteUnsynced", __SK.json.encode(args))
 	end
 end
 
 function gadget:RecvLuaMsg(msg)
-	local msg_table = explode('|', msg)
+	local msg_table = __SK.explode('|', msg)
 	if msg_table[1] == "spring_kernel_ex" then
-		local success, obj = pcall(json.decode, msg_table[2])
+		local success, obj = pcall(__SK.json.decode, msg_table[2])
 		if not success then
-			Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(msg_table[2]))
-			Spring.Log(LOG_SECTION, LOG.ERROR, debug.traceback())
+			Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(msg_table[2]))
+			Spring.Log(__SK.LOG_SECTION, LOG.ERROR, debug.traceback())
 			return
 		end
-		ExecuteLua(obj)
+		__SK.ExecuteLua(obj)
 	end
 end
 
 -- UNSYNCED
 else
 
-local function UnsyncedToWidget(_, data)
+function __SK.UnsyncedToWidget(_, data)
     if Script.LuaUI('SK_RecieveGadgetMessage') then
         Script.LuaUI.SK_RecieveGadgetMessage(data)
     end
 end
 
-local function ExecuteInUnsynced(_, data)
-	local success, obj = pcall(json.decode, data)
+function __SK.ExecuteInUnsynced(_, data)
+	local success, obj = pcall(__SK.json.decode, data)
 	if not success then
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(data))
-		Spring.Log(LOG_SECTION, LOG.ERROR, debug.traceback())
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Failed to parse JSON: " .. tostring(data))
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, debug.traceback())
 		return
 	end
 
-	local success, error = ExecuteLuaCommand(obj.code)
+	local success, error = __SK.ExecuteLuaCommand(obj.code)
 	local msg = {}
 	if not success then
 		table.insert(msg, {error, "error"})
 	end
-	table.insert(msg, {getEchoOutput(), "output"})
-	UnsyncedToWidget(nil, json.encode(msg))
+	table.insert(msg, {__SK.getEchoOutput(), "output"})
+	__SK.UnsyncedToWidget(nil, __SK.json.encode(msg))
 end
 
 function gadget:Initialize()
 	-- Only use this in development versions
 	if not Game.gameVersion:find("$VERSION") then
-		Spring.Log(LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
+		Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
 	    gadgetHandler:RemoveWidget(self)
 		return
 	end
 
-	gadgetHandler:AddSyncAction('kernelExecuteUnsynced', ExecuteInUnsynced)
-	gadgetHandler:AddSyncAction('kernelSendToUnsynced', UnsyncedToWidget)
+	gadgetHandler:AddSyncAction('kernelExecuteUnsynced', __SK.ExecuteInUnsynced)
+	gadgetHandler:AddSyncAction('kernelSendToUnsynced', __SK.UnsyncedToWidget)
 end
 
 end
