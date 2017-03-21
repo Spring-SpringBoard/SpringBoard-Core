@@ -32,6 +32,7 @@ local tf
 -- Chili's location
 
 CHILI_DIRNAME = "libs/chiliui/luaui/chili/chili/"
+LUA_DIRNAME = LUA_DIRNAME or "LuaUI/"
 SKIN_DIRNAME  = LUA_DIRNAME .. "Configs/chili/skins/"
 THEME_DIRNAME = LUA_DIRNAME .. "Configs/chili/themes/"
 
@@ -41,8 +42,6 @@ THEME_DIRNAME = LUA_DIRNAME .. "Configs/chili/themes/"
 
 function widget:Initialize()
 	Chili = VFS.Include(CHILI_DIRNAME .. "core.lua", nil, VFS.RAW_FIRST)
-
-	Spring.Echo("CUSTOM CHILI")
 
 	screen0 = Chili.Screen:New{}
 	th = Chili.TextureHandler
