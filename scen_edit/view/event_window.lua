@@ -12,7 +12,7 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "5%",
-        y = "20%",
+        y = "15%",
         backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
     }
     self.btnCancel = Button:New {
@@ -20,7 +20,7 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
-        y = "20%",
+        y = "15%",
         backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
     }
     self.cmbEventTypes = ComboBox:New {
@@ -28,14 +28,31 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
         eventTypes = GetField(SCEN_EDIT.metaModel.eventTypes, "name"),
         height = SCEN_EDIT.conf.B_HEIGHT,
         width = "40%",
-        y = "60%",
+        y = "55%",
         x = '30%',
+    }
+    self.cmbEventTypes.OnSelect = {
+        function(object, itemIdx, selected)
+            if selected and itemIdx > 0 then
+                self.eventType = SCEN_EDIT.metaModel.eventTypes[self.cmbEventTypes.eventTypes[itemIdx]]
+                self:UpdateInfo()
+            end
+        end
+    }
+
+    self.tbInfo = TextBox:New {
+        text = "",
+        x = 1,
+        right = 1,
+        y = "80%",
+        autosize = true,
+        padding = {0, 0, 0, 0},
     }
 
     self.window = Window:New {
         resizable = false,
         clientWidth = 300,
-        clientHeight = 100,
+        clientHeight = 150,
         x = 500,
         y = 300,
         parent = screen0,
@@ -43,18 +60,19 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
             self.cmbEventTypes,
             self.btnOk,
             self.btnCancel,
+            self.tbInfo,
         }
     }
 
     self.btnCancel.OnClick = {
-        function() 
+        function()
             SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
             self.window:Dispose()
         end
     }
-    
+
     self.btnOk.OnClick = {
-        function()            
+        function()
             if self.mode == 'edit' then
                 self:EditEvent()
                 SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
@@ -66,7 +84,10 @@ function EventWindow:init(trigger, triggerWindow, mode, event)
             end
         end
     }
-    
+
+    self.cmbEventTypes:Select(0)
+    self.cmbEventTypes:Select(1)
+
     local tw = self.triggerWindow.window
     local sw = self.window
     if self.mode == 'add' then
@@ -99,4 +120,15 @@ function EventWindow:AddEvent()
     self.triggerWindow:Populate()
 end
 
-
+function EventWindow:UpdateInfo()
+    local txtInfo = ""
+    for i, param in pairs(self.eventType.param) do
+        if i == 1 then
+            txtInfo = "Params: "
+        else
+            txtInfo = txtInfo .. ", "
+        end
+        txtInfo = txtInfo .. param.name
+    end
+    self.tbInfo:SetText(txtInfo)
+end

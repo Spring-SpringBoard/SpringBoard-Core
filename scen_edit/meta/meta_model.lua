@@ -15,6 +15,13 @@ end
 function MetaModel:SetEventTypes(eventTypes)
     self.eventTypes = eventTypes
     self.eventTypes = SCEN_EDIT.CreateNameMapping(self.eventTypes)
+    for _, eventType in pairs(eventTypes) do
+        if eventType.param ~= nil then
+            eventType.param = SCEN_EDIT.parseData(eventType.param)
+        else
+            eventType.param = {}
+        end
+    end
 end
 
 function MetaModel:SetFunctionTypes(functionTypes)
@@ -37,7 +44,7 @@ function MetaModel:SetFunctionTypes(functionTypes)
         end
     end
     self.functionTypesByOutput = SCEN_EDIT.GroupByField(functionTypes, "output")
-    
+
     -- fill missing
     for k, v in pairs(self.functionTypesByInput) do
         self.functionTypesByInput[k] = SCEN_EDIT.CreateNameMapping(v)

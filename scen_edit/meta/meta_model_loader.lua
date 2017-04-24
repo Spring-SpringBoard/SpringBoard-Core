@@ -68,45 +68,6 @@ function MetaModelLoader:Load()
         end
     end
 
-    mergedMetaModel.events = {
-        {
-            humanName = "Game started",
-            name = "GAME_START",
-        },
-        {
-            humanName = "Game ends",
-            name = "GAME_END",
-        },
-        {
-            humanName = "Team died",
-            name = "TEAM_DIE",
-        },
-        {
-            humanName = "Unit created",
-            name = "UNIT_CREATE",
-        },
-        {
-            humanName = "Unit damaged",
-            name = "UNIT_DAMAGE",
-        },
-        {
-            humanName = "Unit destroyed",
-            name = "UNIT_DESTROY",
-        },
-        {
-            humanName = "Unit finished",
-            name = "UNIT_FINISH",
-        },
-        {
-            humanName = "Unit enters area",
-            name = "UNIT_ENTER_AREA",
-        },
-        {
-            humanName = "Unit leaves area",
-            name = "UNIT_LEAVE_AREA",
-        },
-    }
-
     Log.Notice("Event types: " .. #mergedMetaModel.events)
     Log.Notice("Function types: " .. #mergedMetaModel.functions)
     Log.Notice("Action types: " .. #mergedMetaModel.actions)

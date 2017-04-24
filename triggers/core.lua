@@ -10,7 +10,7 @@ return {
                     humanName = "Assign " .. type.humanName,
                     name = type.name .. "_VARIABLE_ASSIGN",
                     tags = {"Variable"},
-                    input = { 
+                    input = {
                         {
                             name = "variable",
                             rawVariable = "true",
@@ -41,7 +41,7 @@ return {
                     humanName = "Add to " .. arrayType,
                     name = "ADD_TO" .. arrayType,
                     tags = {"Variable"},
-                    input = { 
+                    input = {
                         {
                             name = "variable",
                             rawVariable = "true",
@@ -62,7 +62,7 @@ return {
                     humanName = "Remove from " .. arrayType,
                     name = arrayType .. "_REMOVE",
                     tags = {"Variable"},
-                    input = { 
+                    input = {
                         {
                             name = "array",
                             rawVariable = "true",
@@ -84,7 +84,7 @@ return {
 
         return {
             {
-                humanName = "Enable trigger", 
+                humanName = "Enable trigger",
                 name = "ENABLE_TRIGGER",
                 input = { "trigger" },
                 tags = {"Trigger"},
@@ -124,7 +124,7 @@ return {
                 end
             },
             {
-                humanName = "Kill team", 
+                humanName = "Kill team",
                 name = "KILL_TEAM",
                 input = "team",
                 tags = {"Game"},
@@ -133,7 +133,7 @@ return {
                 end
             },
             {
-                humanName = "Win game", 
+                humanName = "Win game",
                 name = "WIN_GAME",
                 input = "team_array",
                 tags = {"Game"},
@@ -151,7 +151,7 @@ return {
                 end
             },
             {
-                humanName = "Lose game", 
+                humanName = "Lose game",
                 name = "LOSE_GAME",
                 tags = {"Game"},
                 execute = function (input)
@@ -159,7 +159,7 @@ return {
                 end
             },
             {
-                humanName = "Add resources", 
+                humanName = "Add resources",
                 name = "ADD_TEAM_RESOURCES",
                 input = {"team", "string", "number"},
                 tags = {"Resources"},
@@ -168,7 +168,7 @@ return {
                 end
             },
             {
-                humanName = "Remove resources", 
+                humanName = "Remove resources",
                 name = "REMOVE_TEAM_RESOURCES",
                 input = {"team", "string", "number"},
                 tags = {"Resources"},
@@ -177,7 +177,7 @@ return {
                 end
             },
             {
-                humanName = "Set team resources", 
+                humanName = "Set team resources",
                 name = "SET_TEAM_RESOURCES",
                 input = {"team", "string", "number"},
                 tags = {"Resources"},
@@ -186,15 +186,15 @@ return {
                 end
             },
             {
-                humanName = "Make allied", 
+                humanName = "Make allied",
                 name = "MAKE_ALLIED",
-                input = { 
+                input = {
                     {
-                        name = "team1", 
+                        name = "team1",
                         type = "team",
                     },
                     {
-                        name = "team2", 
+                        name = "team2",
                         type = "team",
                     },
                 },
@@ -206,15 +206,15 @@ return {
                 end
             },
             {
-                humanName = "Make enemies", 
+                humanName = "Make enemies",
                 name = "MAKE_ENEMIES",
-                input = { 
+                input = {
                     {
-                        name = "team1", 
+                        name = "team1",
                         type = "team",
                     },
                     {
-                        name = "team2", 
+                        name = "team2",
                         type = "team",
                     },
                 },
@@ -226,7 +226,7 @@ return {
                 end
             },
             {
-                humanName = "Create unit", 
+                humanName = "Create unit",
                 name = "CREATE_UNIT",
                 input = { "unitType", "team", "position" },
                 tags = {"Unit"},
@@ -235,7 +235,7 @@ return {
                     local team = input.team
                     local x = input.position.x
                     local z = input.position.z
-                    local y = Spring.GetGroundHeight(x, z)                                                
+                    local y = Spring.GetGroundHeight(x, z)
                     local id = Spring.CreateUnit(unitType, x, y, z, 0, team)
 
                     local color = SCEN_EDIT.model.teamManager:getTeam(team).color
@@ -243,12 +243,12 @@ return {
                 end
             },
             {
-                humanName = "Remove unit", 
+                humanName = "Remove unit",
                 name = "REMOVE_UNIT",
                 input = { "unit" },
                 tags = {"Unit"},
                 execute = function (input)
-                    local unit = input.unit                
+                    local unit = input.unit
                     local x, y, z = Spring.GetUnitPosition(unit)
 
                     local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
@@ -257,12 +257,12 @@ return {
                 end
             },
             {
-                humanName = "Destroy unit", 
+                humanName = "Destroy unit",
                 name = "DESTROY_UNIT",
                 input = { "unit" },
                 tags = {"Unit"},
                 execute = function (input)
-                    local unit = input.unit                
+                    local unit = input.unit
                     local x, y, z = Spring.GetUnitPosition(unit)
 
                     local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
@@ -271,12 +271,12 @@ return {
                 end
             },
             {
-                humanName = "Self destruct unit", 
+                humanName = "Self destruct unit",
                 name = "SELFD_UNIT",
                 input = { "unit" },
                 tags = {"Unit"},
                 execute = function (input)
-                    local unit = input.unit                
+                    local unit = input.unit
                     local x, y, z = Spring.GetUnitPosition(unit)
 
                     local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
@@ -285,7 +285,7 @@ return {
                 end
             },
             {
-                humanName = "Transfer unit", 
+                humanName = "Transfer unit",
                 name = "TRANSFER_UNIT",
                 input = { "unit", "team" },
                 tags = {"Unit"},
@@ -296,7 +296,7 @@ return {
                 end
             },
             {
-                humanName = "Set unit health", 
+                humanName = "Set unit health",
                 name = "SET_UNIT_HEALTH",
                 input = { "unit", "number" },
                 tags = {"Unit"},
@@ -305,7 +305,7 @@ return {
                 end
             },
             {
-                humanName = "Set unit max health", 
+                humanName = "Set unit max health",
                 name = "SET_UNIT_MAX_HEALTH",
                 input = { "unit", "number" },
                 tags = {"Unit"},
@@ -314,7 +314,7 @@ return {
                 end
             },
             {
-                humanName = "Damage unit", 
+                humanName = "Damage unit",
                 name = "DAMAGE_UNIT",
                 input = { "unit", "number" },
                 tags = {"Unit"},
@@ -323,7 +323,7 @@ return {
                 end
             },
             {
-                humanName = "Set unit stockpile", 
+                humanName = "Set unit stockpile",
                 name = "SET_UNIT_STOCKPILE",
                 input = { "unit", "number" },
                 tags = {"Unit"},
@@ -332,25 +332,25 @@ return {
                 end
             },
             {
-                humanName = "Set unit target", 
+                humanName = "Set unit target",
                 name = "SET_UNIT_TARGET",
-                input = { 
+                input = {
                     {
                         name="unit",
-                        type="unit", 
+                        type="unit",
                     },
                     {
                         name="target",
-                        type="unit", 
+                        type="unit",
                     },
                 },
                 tags = {"Unit"},
-                execute = function (input)                
+                execute = function (input)
                     Spring.SetUnitTarget(input.unit, input.target)
                 end
             },
             {
-                humanName = "Move unit", 
+                humanName = "Move unit",
                 name = "MOVE_UNIT",
                 input = { "unit", "position" },
                 tags = {"Unit"},
@@ -363,7 +363,7 @@ return {
                 end
             },
             {
-                humanName = "Send message", 
+                humanName = "Send message",
                 name = "SEND_MESSAGE",
                 input = "string",
                 tags = {"Message"},
@@ -372,7 +372,7 @@ return {
                 end
             },
             {
-                humanName = "Send message to team", 
+                humanName = "Send message to team",
                 name = "SEND_MESSAGE_TEAM",
                 input = { "string",  "team" },
                 tags = {"Message"},
@@ -381,7 +381,7 @@ return {
                 end
             },
             {
-                humanName = "Send message to spectators", 
+                humanName = "Send message to spectators",
                 name = "SEND_MESSAGE_SPECTATORS",
                 input = "string",
                 tags = {"Message"},
@@ -390,7 +390,7 @@ return {
                 end
             },
             {
-                humanName = "Add Marker", 
+                humanName = "Add Marker",
                 name = "MARKER_ADD_POINT",
                 input = {"position", "string"},
                 tags = {"Marker"},
@@ -453,7 +453,7 @@ return {
             },
 
             {
-                humanName = "Issue order", 
+                humanName = "Issue order",
                 name = "ISSUE_ORDER",
                 input = { "unit", "order" },
                 tags = {"Order"},
@@ -472,7 +472,7 @@ return {
                 end
             },
             {
-                humanName = "Add order", 
+                humanName = "Add order",
                 name = "ADD_ORDER",
                 input = { "unit", "order" },
                 tags = {"Order"},
@@ -490,7 +490,7 @@ return {
                 end
             },
             {
-                humanName = "Issue order to units", 
+                humanName = "Issue order to units",
                 name = "ISSUE_ORDER_TO_UNITS",
                 input = { "unit_array", "order" },
                 tags = {"Order"},
@@ -512,7 +512,7 @@ return {
             {
             humanName = "Assign variable",
             name = "VARIABLE_ASSIGN",
-            input = { 
+            input = {
             {
             name = "variable",
             rawVariable = "true",
@@ -532,14 +532,60 @@ return {
             },--]]
         }
     end,
-
+    events = function()
+        return {
+            {
+                humanName = "Game started",
+                name = "GAME_START",
+            },
+            {
+                humanName = "Game ends",
+                name = "GAME_END",
+            },
+            {
+                humanName = "Team died",
+                name = "TEAM_DIE",
+                param = "team",
+            },
+            {
+                humanName = "Unit created",
+                name = "UNIT_CREATE",
+                param = "unit",
+            },
+            {
+                humanName = "Unit damaged",
+                name = "UNIT_DAMAGE",
+                param = "unit",
+            },
+            {
+                humanName = "Unit destroyed",
+                name = "UNIT_DESTROY",
+                param = "unit",
+            },
+            {
+                humanName = "Unit finished",
+                name = "UNIT_FINISH",
+                param = "unit",
+            },
+            {
+                humanName = "Unit enters area",
+                name = "UNIT_ENTER_AREA",
+                param = { "unit", "area" },
+            },
+            {
+                humanName = "Unit leaves area",
+                name = "UNIT_LEAVE_AREA",
+                param = { "unit", "area" },
+            },
+        }
+    end,
     functions = function()
         local functions = {}
         local coreTypes = SCEN_EDIT.coreTypes()
         local allTypes = coreTypes
 
         for i = 1, #allTypes do
-            local basicType = allTypes[i]        
+            local basicType = allTypes[i]
             if basicType.canCompare == nil or basicType.canCompare == true then
                 local relType
                 if basicType.name == "number" then
@@ -567,7 +613,7 @@ return {
                             allowNil = true,
                         },
                     },
-                    execute = function(input) 
+                    execute = function(input)
                         local first = input.first
                         local second = input.second
                         local relation = input.relation
@@ -609,20 +655,20 @@ return {
         end
         local coreTransforms = {
 	     {
-                humanName = "Get team resources", 
+                humanName = "Get team resources",
                 name = "Get_TEAM_RESOURCES",
 		output = "number",
-                input = {"team", "string"},		
+                input = {"team", "string"},
                 tags = {"Resources"},
                 execute = function (input)
                     return Spring.GetTeamResources(input.team, input.string)
                 end
             },
 	    {
-                humanName = "Get team resource income", 
+                humanName = "Get team resource income",
                 name = "Get_TEAM_RESOURCE_INCOME",
 		output = "number",
-                input = {"team", "string"},		
+                input = {"team", "string"},
                 tags = {"Resources"},
                 execute = function (input)
                     local _, _, _, income = Spring.GetTeamResources(input.team, input.string)
@@ -707,12 +753,12 @@ return {
                 name = "INTEGER_RANDOM",
                 input = {
                     {
-                        name = "min", 
+                        name = "min",
                         humanName = "Min",
                         type = "number",
                     },
                     {
-                        name = "max", 
+                        name = "max",
                         humanName = "Max",
                         type = "number",
                     },
@@ -727,12 +773,12 @@ return {
                 name = "TEAMS_ALLIED",
                 input = {
                     {
-                        name = "team1", 
+                        name = "team1",
                         humanName = "Team 1",
                         type = "team",
                     },
                     {
-                        name = "team2", 
+                        name = "team2",
                         humanName = "Team 2",
                         type = "team",
                     },
@@ -805,7 +851,7 @@ return {
             {
                 humanName = "Unit alive",
                 name = "UNIT_ALIVE",
-                input = { 
+                input = {
                     {
                         name = "unit",
                         type = "unit",
@@ -832,7 +878,7 @@ return {
                 humanName = "Unit team",
                 name = "UNIT_TEAM",
                 input = "unit",
-                output = "team",            
+                output = "team",
                 tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetUnitTeam(input.unit)
@@ -842,7 +888,7 @@ return {
                 humanName = "Unit Health",
                 name = "UNIT_HEALTH",
                 input = "unit",
-                output = "number",            
+                output = "number",
                 tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetUnitHealth(input.unit)
@@ -852,7 +898,7 @@ return {
                 humanName = "Unit Health %",
                 name = "UNIT_HEALTH_PERCENT",
                 input = "unit",
-                output = "number",            
+                output = "number",
                 tags = {"Unit"},
                 execute = function(input)
                     local hp, maxHp = Spring.GetUnitHealth(input.unit)
@@ -991,7 +1037,7 @@ return {
 					end
                     return #input.bool_array > 0
                 end,
-            },        
+            },
         }
         for i = 1, #coreTransforms do
             local coreTransform = coreTransforms[i]
@@ -1049,7 +1095,7 @@ return {
             {
                 humanName = "Attack unit",
                 name = "ATTACK_UNIT",
-                input = {                
+                input = {
                     {
                         name = "target",
                         type = "unit",
@@ -1110,7 +1156,7 @@ return {
             {
                 humanName = "Guard unit",
                 name = "GUARD_UNIT",
-                input = {                
+                input = {
                     {
                         name = "target",
                         type = "unit",
@@ -1127,7 +1173,7 @@ return {
             {
                 humanName = "Repair unit",
                 name = "REPAIR_UNIT",
-                input = {                
+                input = {
                     {
                         name = "target",
                         type = "unit",

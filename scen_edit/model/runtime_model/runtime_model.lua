@@ -63,7 +63,7 @@ function RuntimeModel:onTriggerRemoved(triggerId)
         return
     end
     for _, eventList in pairs(self.eventTriggers) do
-        repeat 
+        repeat
             local found = false
             for i, iterTrigger in pairs(eventList) do
                 if iterTrigger.id == triggerId then
@@ -163,7 +163,7 @@ function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
     if self.eventTriggers["UNIT_CREATE"] then
         for k = 1, #self.eventTriggers["UNIT_CREATE"] do
             local params = { triggerUnitId = modelUnitId }
-            local trigger = self.eventTriggers["UNIT_CREATE"][k]                
+            local trigger = self.eventTriggers["UNIT_CREATE"][k]
             self:ConditionStep(trigger, params)
         end
     end
@@ -217,7 +217,7 @@ function RuntimeModel:GameFrame(frameNum)
     if not self.hasStarted then
         return
     end
-    
+
     if Spring.GetGameFrame() % 10 == 0 then
         local newUnitIds = self:GetAllUnits()
         local unitIds = {}
@@ -237,10 +237,8 @@ function RuntimeModel:GameFrame(frameNum)
                     local enteredUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(results.entered[j])
                     for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
                         local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]
-                        if trigger.enabled then
-                            local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
-                            self:ConditionStep(trigger, params)
-                        end
+                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
+                        self:ConditionStep(trigger, params)
                     end
                 end
             end
@@ -249,10 +247,8 @@ function RuntimeModel:GameFrame(frameNum)
                     local leftUnitId = results.left[j]
                     for k = 1, #self.eventTriggers["UNIT_LEAVE_AREA"] do
                         local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]
-                        if trigger.enabled then
-                            local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
-                            self:ConditionStep(trigger, params)
-                        end
+                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
+                        self:ConditionStep(trigger, params)
                     end
                 end
             end

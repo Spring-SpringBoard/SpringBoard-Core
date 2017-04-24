@@ -44,10 +44,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         if field.type == "pred" then
             unitId = tonumber(field.id)
         elseif field.type == "spec" then
-            if field.name == "Trigger unit" then
-                unitId = tonumber(params.triggerUnitId)
-            end
-        elseif field.type == "var" then
+            unitId = tonumber(params.triggerUnitId)
         end
         if unitId ~= nil then
             local springId = SCEN_EDIT.model.unitManager:getSpringUnitId(unitId)
@@ -55,15 +52,13 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
                 return springId
             end
         end
-    elseif type == "unitType" then        
+    elseif type == "unitType" then
         if field.type == "pred" then
             return tonumber(field.id)
         elseif field.type == "spec" then
-            if field.name == "Trigger unit type" then
-                local triggerUnitId = tonumber(params.triggerUnitId)
-                if triggerUnitId then
-                    return Spring.GetUnitDefID(triggerUnitId)                        
-                end
+            local triggerUnitId = tonumber(params.triggerUnitId)
+            if triggerUnitId then
+                return Spring.GetUnitDefID(triggerUnitId)
             end
         end
     elseif type == "team" then
@@ -75,11 +70,9 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             local areaId = tonumber(field.id)
             return SCEN_EDIT.model.areaManager:getArea(areaId)
         elseif field.type == "spec" then
-            if field.name == "Trigger area" then
-                local areaId = tonumber(params.triggerAreaId)
-                if areaId then
-                    return SCEN_EDIT.model.areaManager:getArea(areaId)
-                end
+            local areaId = tonumber(params.triggerAreaId)
+            if areaId then
+                return SCEN_EDIT.model.areaManager:getArea(areaId)
             end
         end
     elseif type == "trigger" then
@@ -94,7 +87,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             input = {}
         }
         for i = 1, #orderType.input do
-            local input = orderType.input[i]    
+            local input = orderType.input[i]
             local resolvedInput = self:Resolve(field[input.name], input.type, nil, params)
             order.input[input.name] = resolvedInput
         end
