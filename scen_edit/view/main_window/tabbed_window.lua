@@ -8,10 +8,11 @@ function TabbedWindow:init()
     local alliancePanel = AlliancePanel()
 	local shaderPanel = ShaderPanel()
 
+	local mainPanelY = 130
 	local commonControls = {
 		Button:New {
 			x = 10,
-			y = 120,
+			y = mainPanelY,
 			height = 40,
 			width = 40,
 			caption = '',
@@ -34,7 +35,7 @@ function TabbedWindow:init()
 		},
 		Button:New {
 			x = 50,
-			y = 120,
+			y = mainPanelY,
 			height = 40,
 			width = 40,
 			caption = '',
@@ -57,7 +58,7 @@ function TabbedWindow:init()
 		},
 		Button:New {
 			x = 90,
-			y = 120,
+			y = mainPanelY,
 			height = 40,
 			width = 40,
 			caption = '',
@@ -82,7 +83,7 @@ function TabbedWindow:init()
 		},
 		Button:New {
 			x = 130,
-			y = 120,
+			y = mainPanelY,
 			height = 40,
 			width = 40,
 			caption = '',
@@ -111,7 +112,7 @@ function TabbedWindow:init()
 		},
 		Button:New {
 			x = 170,
-			y = 120,
+			y = mainPanelY,
 			height = 40,
 			width = 40,
 			caption = '',
@@ -140,7 +141,7 @@ function TabbedWindow:init()
 		},
 		Button:New {
 			x = 210,
-			y = 120,
+			y = mainPanelY,
 			height = 40,
 			width = 40,
 			caption = '',
@@ -168,7 +169,6 @@ function TabbedWindow:init()
 	}
 
 	local controls = {}
-	local mainPanelY = 130
 	if SCEN_EDIT.conf.SHOW_BASIC_CONTROLS then
 		controls = commonControls
 		mainPanelY = mainPanelY + 45

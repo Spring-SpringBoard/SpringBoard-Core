@@ -8,8 +8,8 @@ function Conf:init()
     self.BTN_CANCEL_COLOR = {0.84, 0.31, 0.30, 1}
 	self.TOOLBOX_ITEM_WIDTH = 70
 	self.TOOLBOX_ITEM_HEIGHT = 70
-	self.SHOW_BASIC_CONTROLS = false
-	self.metaModelFiles = {} -- { "core.lua" } default	
+	self.SHOW_BASIC_CONTROLS = true
+	self.metaModelFiles = {} -- { "core.lua" } default
 	self:initializeListOfMetaModelFiles()
 end
 
@@ -21,7 +21,7 @@ function Conf:LoadMetaModelFile(metaModelFile)
     end
     return data
 end
-	
+
 function Conf:initializeListOfMetaModelFiles()
     self.metaModelFiles = {}
 
