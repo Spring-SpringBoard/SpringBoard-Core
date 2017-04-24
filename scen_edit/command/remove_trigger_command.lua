@@ -12,5 +12,5 @@ function RemoveTriggerCommand:execute()
 end
 
 function RemoveTriggerCommand:unexecute()
-    SCEN_EDIT.model.triggerManager:newTrigger(self.trigger)
+    SCEN_EDIT.model.triggerManager:addTrigger(self.trigger)
 end
