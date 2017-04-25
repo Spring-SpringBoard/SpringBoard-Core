@@ -63,6 +63,9 @@ function AbstractHeightmapEditingState:GetApplyParams(x, z, button)
 end
 
 function AbstractHeightmapEditingState:Apply(x, z, strength)
+    if not self.paintTexture then
+        return false
+    end
     if SCEN_EDIT.model.terrainManager:getShape(self.paintTexture) == nil then
         SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
     end
