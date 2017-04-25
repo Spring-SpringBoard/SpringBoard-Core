@@ -31,6 +31,7 @@ end
 function NumericField:init(field)
     self.decimals = 2
     self.value = 0
+
     StringField.init(self, field)
     self.format = "%." .. tostring(self.decimals) .. "f"
     if self.step == nil then
@@ -40,7 +41,9 @@ function NumericField:init(field)
         end
     end
     local v = string.format(self.format, self.value)
+
     self.lblValue:SetCaption(v)
+    self.editBox:SetText(v)
     self.button.OnMouseUp = {
         function(...)
             SCEN_EDIT.SetMouseCursor()
