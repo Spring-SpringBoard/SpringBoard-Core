@@ -111,7 +111,7 @@ function TerrainSettingsView:init()
             width = 100,
         }),
         NumericField({
-            name = "unitShadowDensity",
+            name = "modelShadowDensity",
             title = "Shadow density:",
             tooltip = "Unit shadow density",
             width = 100,
@@ -511,7 +511,7 @@ function TerrainSettingsView:init()
     local children = {
         ScrollPanel:New {
             x = 0,
-            y = 0, 
+            y = 0,
             bottom = 10,
             right = 0,
             borderColor = {0,0,0,0},
@@ -560,14 +560,14 @@ function TerrainSettingsView:UpdateSun()
     local unitDiffuse = {gl.GetSun("diffuse", "unit")}
     local unitAmbient = {gl.GetSun("ambient", "unit")}
     local unitSpecular = {gl.GetSun("specular", "unit")}
-    local unitShadowDensity = gl.GetSun("shadowDensity", "unit")
+    local modelShadowDensity = gl.GetSun("shadowDensity", "unit")
 --     unitDiffuse[4] = 1
 --     unitAmbient[4] = 1
 --     unitSpecular[4] = 1
     self:Set("unitDiffuseColor",  unitDiffuse)
     self:Set("unitAmbientColor",  unitAmbient)
     self:Set("unitSpecularColor", unitSpecular)
-    self:Set("unitShadowDensity", unitShadowDensity)
+    self:Set("modelShadowDensity", modelShadowDensity)
 end
 
 function TerrainSettingsView:UpdateAtmosphere()
@@ -596,7 +596,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
     if name == "detailTexture" then
         SCEN_EDIT.delayGL(function()
 --             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
---             
+--
 --             local tex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
 -- 						target = 0x8513,
 --                 min_filter = GL.LINEAR,
@@ -615,7 +615,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
     elseif name == "skyboxTexture" then
         SCEN_EDIT.delayGL(function()
 --             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
---             
+--
 --             local tex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
 --                 target = 0x8513,
 --                 min_filter = GL.LINEAR,
@@ -645,7 +645,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
         local cmd = SetSunParametersCommand(value)
         SCEN_EDIT.commandManager:execute(cmd)
 
-    elseif name == "groundDiffuseColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "groundShadowDensity" or name == "unitAmbientColor" or name == "unitDiffuseColor" or name == "unitSunColor" or name == "unitShadowDensity" then
+    elseif name == "groundDiffuseColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "groundShadowDensity" or name == "unitAmbientColor" or name == "unitDiffuseColor" or name == "unitSunColor" or name == "modelShadowDensity" then
         local t = {}
         t[name] = value
         local cmd = SetSunLightingCommand(t)
