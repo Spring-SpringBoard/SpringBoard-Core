@@ -2,7 +2,7 @@ AbstractMainWindowPanel = LCS.class.abstract{}
 --subclasses of this class should assign a layoutpanel to the self.control variable
 
 function TabbedPanelButton(tbl)
-	return Button:New(table.merge({
+	return Button:New(Table.Merge({
 		width = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH,
 		height = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT,
 		caption = '',
@@ -11,7 +11,7 @@ function TabbedPanelButton(tbl)
 end
 
 function TabbedPanelImage(tbl)
-	return Image:New(table.merge({
+	return Image:New(Table.Merge({
 		width = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH / 2,
 		height = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 2,
 		margin = {0, 0, 0, 0},
@@ -21,7 +21,7 @@ function TabbedPanelImage(tbl)
 end
 
 function TabbedPanelLabel(tbl)
-	return Label:New(table.merge({
+	return Label:New(Table.Merge({
 		bottom = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 8,
 		width = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH,
 		align = "center",

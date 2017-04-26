@@ -18,7 +18,7 @@ function GeneralPanel:init()
 	self.control:AddChild(TabbedPanelButton({
 			tooltip = "Save project as... (Ctrl+Shift+S)",
 			OnClick = {
-				function() 
+				function()
                     SaveAsAction():execute()
 				end
 			},
@@ -27,7 +27,7 @@ function GeneralPanel:init()
 				TabbedPanelLabel({ caption = "Save as" }),
 			},
 		})
-	)	
+	)
 	self.control:AddChild(TabbedPanelButton({
 			tooltip = "Load project (Ctrl-O)",
 			OnClick = {
@@ -38,7 +38,7 @@ function GeneralPanel:init()
 			children = {
 				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-open.png" }),
 				TabbedPanelLabel({ caption = "Load" }),
-			},		
+			},
 		})
 	)
 	self.control:AddChild(TabbedPanelButton({
@@ -51,7 +51,7 @@ function GeneralPanel:init()
 			children = {
 				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "info.png" }),
 				TabbedPanelLabel({ caption = "Info" }),
-			},		
+			},
 		})
 	)
 	self.control:AddChild(TabbedPanelButton({

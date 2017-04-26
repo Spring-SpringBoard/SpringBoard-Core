@@ -8,13 +8,13 @@ function FolderView:init(tbl)
         imageFolderUp = nil,
         imageFolder = nil,
     }
-    tbl = table.merge(defaults, tbl)
+    tbl = Table.Merge(defaults, tbl)
     GridView.init(self, tbl)
-    
+
     self.showDirs = tbl.showDirs
     self.imageFolder = tbl.imageFolder or self._fakeControl.imageFolder
     self.imageFolderUp = tbl.imageFolderUp or self._fakeControl.imageFolderUp
-    
+
     self.control.MouseDblClick = function(ctrl, x, y, button, mods)
         if button ~= 1 then
             return
@@ -114,7 +114,7 @@ end
 
 function FolderView:ScanDir()
     self:ScanDirStarted()
-    
+
     local files = VFS.DirList(self.dir, "*")
     self.files = {}
     for _, file in pairs(files) do
@@ -125,18 +125,18 @@ function FolderView:ScanDir()
             end
         end
     end
-    
+
     self.dirs  = VFS.SubDirs(self.dir, "*")
     self._dirsNum = #self.dirs
 
     self:ScanDirFinished()
-    
+
     self.control:DisableRealign()
     --// clear old
     self.control:ClearChildren()
 
     --// add ".."
-    if self.showDirs then 
+    if self.showDirs then
         self:AddItem('', self.imageFolderUp)
     end
 
@@ -147,7 +147,7 @@ function FolderView:ScanDir()
         end
     end
     self:PopulateItems()
-    
+
     self.control:EnableRealign()
 end
 

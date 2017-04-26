@@ -9,7 +9,7 @@ function ObjectDefsPanel:init(tbl)
         multiSelect = true,
         minWidth = 450, -- HACK: needed to fix the bug when no items reappear once the all items are hidden/shown (filtered out/filtered in)
     }
-    tbl = table.merge(tbl, defaults)
+    tbl = Table.Merge(tbl, defaults)
     GridView.init(self, tbl)
 
     self.unitTerrainId = 1
@@ -107,7 +107,7 @@ end
 
 function ObjectDefsPanel:GetObjectDefID(index)
     local item = self.control.children[index]
-    if item then 
+    if item then
         return item.objectDefID
     else
         return nil

@@ -135,7 +135,7 @@ function hsv2rgb(value)
 end
 
 -- SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "color_picker_window.lua")
--- not the best naming, but this component is a specific implementation/listener 
+-- not the best naming, but this component is a specific implementation/listener
 -- for the ColorPickerWindow used to set the color field's value
 ColorFieldPickerWindow = ColorPickerWindow:extends{}
 function ColorFieldPickerWindow:OnFieldChange(name, value)
@@ -228,7 +228,7 @@ function ColorPickerField:init(field)
 end
 
 function ColorPickerField:AddColorImage(tbl)
-    return Image:New(table.merge({
+    return Image:New(Table.Merge({
         parent    = self.window,
         file      = ":cl:bitmaps/ui/buckets/swatch.png",
         color     = {1, 1, 1, 1},
@@ -236,7 +236,7 @@ function ColorPickerField:AddColorImage(tbl)
 end
 
 function ColorPickerField:AddColorTrackbar(tbl)
-    return Trackbar:New(table.merge({
+    return Trackbar:New(Table.Merge({
         parent       = self.window,
         color        = tbl.color,
         ThumbImage   = ":cl:bitmaps/ui/buckets/trackbar_thumb.png",

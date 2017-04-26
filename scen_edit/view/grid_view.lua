@@ -13,15 +13,15 @@ function GridView:init(tbl)
 		iconY = 88,
 		useRTT = true,
 	}
-	tbl = table.merge(tbl, defaults)
+	tbl = Table.Merge(tbl, defaults)
     self.items = {}
-	
+
 	self.iconX = tbl.iconX
 	self.iconY = tbl.iconY
 
-	-- we're using the fake control to handle skin-based rendering	
+	-- we're using the fake control to handle skin-based rendering
 	self._fakeControl = ImageListView:New{}
-	
+
 	self.control = LayoutPanel:New(tbl)
 	self.control.HitTest = function(ctrl, x,y)
 		local cx,cy = ctrl:LocalToClient(x,y)
@@ -73,7 +73,7 @@ function GridView:AddItem(caption, image, tooltip)
 		columns = 1,
 		tooltip = tooltip,
 		useRTT = false,
-		
+
 		children = {
 			imgCtrl,
             lblCtrl,
