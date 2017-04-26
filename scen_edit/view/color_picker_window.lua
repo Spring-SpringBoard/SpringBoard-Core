@@ -155,6 +155,14 @@ function ColorFieldPickerWindow:OnFieldChange(name, value)
     end
 end
 
+function ColorFieldPickerWindow:OnStartChange(name)
+    self.field.ev:_OnStartChange(self.field.name)
+end
+
+function ColorFieldPickerWindow:OnEndChange(name)
+    self.field.ev:_OnEndChange(self.field.name)
+end
+
 
 SCEN_EDIT.Include(SCEN_EDIT_VIEW_FIELDS_DIR .. "field.lua")
 
@@ -207,6 +215,18 @@ function ColorPickerField:init(field)
                 self:Changed(tbSlider)
             end
         }
+        tbSlider.MouseDown = function(...)
+            self.ev:_OnStartChange(self.name)
+            local result = Trackbar.MouseDown(...)
+            if not result then
+                self.ev:_OnEndChange(self.name)
+            end
+            return result
+        end
+        tbSlider.MouseUp = function(...)
+            self.ev:_OnEndChange(self.name)
+            return Trackbar.MouseUp(...)
+        end
         self.height = self.height + self.trackbarHeight + 10
         table.insert(self.sliders, tbSlider)
     end
