@@ -27,6 +27,9 @@ function GridView:init(tbl)
 		local cx,cy = ctrl:LocalToClient(x,y)
 		local obj = LayoutPanel.HitTest(ctrl,cx,cy)
 		if (obj) then return obj end
+		if ctrl.cells == nil then
+			return
+		end
 		local itemIdx = ctrl:GetItemIndexAt(cx,cy)
 		return (itemIdx>=0) and ctrl
 	end
