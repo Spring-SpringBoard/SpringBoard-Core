@@ -104,7 +104,12 @@ function DefaultState:MousePress(x, y, button)
     end
     local _, ctrl, _, shift = Spring.GetModKeyState()
     if (ctrl or shift) and selCount > 0 then
-        return true
+        -- TODO: There should be a cleaner way to disable some types of editing interactions during play
+        if Spring.GetGameRulesParam("sb_gameMode") == "dev" then
+            return true
+        else
+            return false
+        end
     end
     if button == 1 then
         local result, coords = Spring.TraceScreenRay(x, y, false, false, true)
