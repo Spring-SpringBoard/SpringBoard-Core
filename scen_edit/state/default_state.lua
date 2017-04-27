@@ -7,53 +7,53 @@ end
 
 function DefaultState:checkResizeIntersections(areaID, x, z)
     local rect = SCEN_EDIT.model.areaManager:getArea(areaID)
-    local accurancy = 20
+    local accuracy = 20
     local toResize = false
     local resx, resz = 0, 0
-    if math.abs(x - rect[1]) < accurancy then
+    if math.abs(x - rect[1]) < accuracy then
         resx = -1
         drag_diff_x = rect[1] - x
         toResize = true
-        if z > rect[2] + accurancy and z < rect[4] - accurancy then
+        if z > rect[2] + accuracy and z < rect[4] - accuracy then
             resz = 0
-        elseif math.abs(rect[2] - z) < accurancy then
+        elseif math.abs(rect[2] - z) < accuracy then
             drag_diff_z = rect[2] - z
             resz = -1
-        elseif math.abs(rect[4] - z) < accurancy then
+        elseif math.abs(rect[4] - z) < accuracy then
             drag_diff_z = rect[4] - z
             resz = 1
         else
             toResize = false
         end
-    elseif math.abs(x - rect[3]) < accurancy then
+    elseif math.abs(x - rect[3]) < accuracy then
         resx = 1
         drag_diff_x = rect[3] - x
         toResize = true
-        if z > rect[2] + accurancy and z < rect[4] - accurancy then
+        if z > rect[2] + accuracy and z < rect[4] - accuracy then
             resz = 0
-        elseif math.abs(rect[2] - z) < accurancy then
+        elseif math.abs(rect[2] - z) < accuracy then
             drag_diff_z = rect[2] - z
             resz = -1
-        elseif math.abs(rect[4] - z) < accurancy then
+        elseif math.abs(rect[4] - z) < accuracy then
             drag_diff_z = rect[4] - z
             resz = 1
         else
             toResize = false
         end
-    elseif math.abs(z - rect[2]) < accurancy then
+    elseif math.abs(z - rect[2]) < accuracy then
         resx = 0
         resz = -1
         drag_diff_z = rect[2] - z
-        if x > rect[1] + accurancy and x < rect[3] + accurancy then
+        if x > rect[1] + accuracy and x < rect[3] + accuracy then
             toResize = true
         else
             toResize = false
         end
-    elseif math.abs(z - rect[4]) < accurancy then
+    elseif math.abs(z - rect[4]) < accuracy then
         resx = 0
         resz = 1
         drag_diff_z = rect[4] - z
-        if x > rect[1] + accurancy and x < rect[3] + accurancy then
+        if x > rect[1] + accuracy and x < rect[3] + accuracy then
             toResize = true
         else
             toResize = false
