@@ -9,6 +9,14 @@ function SCEN_EDIT.coreTypes()
             name = "unitType",
         },
         {
+            humanName = "Feature",
+            name = "feature",
+        },
+        {
+            humanName = "Feature type",
+            name = "featureType",
+        },
+        {
             humanName = "Team",
             name = "team",
         },
@@ -97,7 +105,7 @@ function SCEN_EDIT.parseData(data)
                 name = d,
                 type = d,
             }
-        end            
+        end
         if type(d) == "table" then
             local continue = true --lua has no continue and i don't want deep nesting
             if continue and not d.type then
@@ -105,7 +113,7 @@ function SCEN_EDIT.parseData(data)
                 continue = false
             end
             if continue and d.name == nil then
-                d.name = d.type                
+                d.name = d.type
             end
             if continue then
                 for _, d2 in pairs(newData) do
@@ -117,10 +125,10 @@ function SCEN_EDIT.parseData(data)
             end
             if continue    then
                 table.insert(newData, d)
-            end            
+            end
         else
             Log.Warning("Unexpected data " .. tostring(d) .. " of type " .. type(d))
-        end        
+        end
     end
 
     -- verify named objects

@@ -18,9 +18,15 @@ function SelectObjectState:MousePress(x, y, button)
     end
 end
 
--- Custom unit/feature classes (just Unit for now)
+-- Custom unit/feature classes
 SelectUnitState = SelectObjectState:extends{}
 function SelectUnitState:init(...)
     SelectObjectState.init(self, ...)
     self.bridge = unitBridge
+end
+
+SelectFeatureState = SelectObjectState:extends{}
+function SelectFeatureState:init(...)
+    SelectObjectState.init(self, ...)
+    self.bridge = featureBridge
 end

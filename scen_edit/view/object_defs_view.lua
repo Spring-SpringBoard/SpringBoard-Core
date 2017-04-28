@@ -41,14 +41,6 @@ function ObjectDefsView:init()
         if #self.objectDefPanel:GetSelectedObjectDefs() > 0 then
             self:EnterState()
         end
-        if selected then
-            -- TODO move out
-            local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-            if currentState:is_A(SelectUnitTypeState) --[[or currentState:is_A(SelectFeatureTypeState)]] then
-                currentState:SelectObjectType(objectDefID)
-                SCEN_EDIT.stateManager:SetState(DefaultState())
-            end
-        end
     end)
 
     self:MakeFilters()
@@ -83,7 +75,7 @@ function ObjectDefsView:init()
     }))
 	self:Update("team")
     self:AddField(NumericField({
-        name = "amount", 
+        name = "amount",
         title = "Amount:",
         tooltip = "Amount",
         value = 1,
@@ -93,17 +85,17 @@ function ObjectDefsView:init()
         decimals = 0,
     }))
     self:AddField(NumericField({
-        name = "size", 
-        value = 100, 
-        minValue = 10, 
-        maxValue = 5000, 
+        name = "size",
+        value = 100,
+        minValue = 10,
+        maxValue = 5000,
         title = "Size:",
         tooltip = "Size of the paint brush",
         decimals = 0,
     }))
 
     self:AddField(NumericField({
-        name = "spread", 
+        name = "spread",
         title = "Spread:",
         tooltip = "Spread",
         value = 100,
@@ -113,7 +105,7 @@ function ObjectDefsView:init()
         decimals = 0,
     }))
     self:AddField(NumericField({
-        name = "noise", 
+        name = "noise",
         title = "Noise:",
         tooltip = "noise",
         value = 100,
@@ -123,7 +115,7 @@ function ObjectDefsView:init()
         decimals = 0,
     }))
 
-    table.insert(children, 
+    table.insert(children,
 		ScrollPanel:New {
 			x = 0,
 			y = "65%",
@@ -182,7 +174,7 @@ function UnitDefsView:MakeFilters()
             },
             width = 90,
             OnSelect = {
-                function (obj, itemIdx, selected) 
+                function (obj, itemIdx, selected)
                     if selected then
                         self.objectDefPanel:SelectUnitTypesId(itemIdx)
                     end
@@ -203,7 +195,7 @@ function UnitDefsView:MakeFilters()
             },
             width = 90,
             OnSelect = {
-                function (obj, itemIdx, selected) 
+                function (obj, itemIdx, selected)
                     if selected then
                         self.objectDefPanel:SelectTerrainId(itemIdx)
                     end
@@ -222,12 +214,12 @@ function UnitDefsView:MakeFilters()
 			text = "",
 			width = 90,
 			OnTextInput = {
-                function(obj) 
+                function(obj)
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
             },
             OnKeyPress = {
-                function(obj) 
+                function(obj)
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
             },
@@ -267,7 +259,7 @@ function FeatureDefsView:MakeFilters()
 			},
 			width = 90,
 			OnSelect = {
-				function (obj, itemIdx, selected) 
+				function (obj, itemIdx, selected)
 					if selected then
 						self.objectDefPanel:SelectFeatureTypesId(itemIdx)
 					end
@@ -309,7 +301,7 @@ function FeatureDefsView:MakeFilters()
 			x = 340,
 			width = 90,
 			OnSelect = {
-				function (obj, itemIdx, selected) 
+				function (obj, itemIdx, selected)
 					if selected then
 						self.objectDefPanel:SelectTerrainId(itemIdx)
 					end
@@ -328,12 +320,12 @@ function FeatureDefsView:MakeFilters()
 			text = "",
 			width = 90,
 			OnTextInput = {
-                function(obj) 
+                function(obj)
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
             },
             OnKeyPress = {
-                function(obj) 
+                function(obj)
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
             },

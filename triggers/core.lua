@@ -363,6 +363,58 @@ return {
                 end
             },
             {
+                humanName = "Create feature",
+                name = "CREATE_FEATURE",
+                input = { "featureType", "position" },
+                tags = {"Feature"},
+                execute = function (input)
+                    local featureType = input.featureType
+                    local x = input.position.x
+                    local z = input.position.z
+                    local y = Spring.GetGroundHeight(x, z)
+                    local id = Spring.CreateFeature(featureType, x, y, z)
+
+                    local team = Spring.GetFeatureTeam(id)
+                    local color = SCEN_EDIT.model.teamManager:getTeam(team).color
+                    SCEN_EDIT.displayUtil:displayText("Spawned", {x, y, z}, color )
+                end
+            },
+            {
+                humanName = "Remove feature",
+                name = "REMOVE_FEATURE",
+                input = { "feature" },
+                tags = {"Feature"},
+                execute = function (input)
+                    local feature = input.feature
+                    local x, y, z = Spring.GetFeaturePosition(feature)
+
+                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetFeatureTeam(feature)).color
+                    Spring.DestroyFeature(feature)
+                    SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
+                end
+            },
+            {
+                humanName = "Set feature health",
+                name = "SET_FEATURE_HEALTH",
+                input = { "feature", "number" },
+                tags = {"Feature"},
+                execute = function (input)
+                    Spring.SetFeatureHealth(input.feature, input.number)
+                end
+            },
+            {
+                humanName = "Move feature",
+                name = "MOVE_FEATURE",
+                input = { "feature", "position" },
+                tags = {"Feature"},
+                execute = function (input)
+                    local feature = input.feature
+                    local position = input.position
+                    local x, y, z = position.x, position.y, position.z
+                    Spring.SetFeaturePosition(unit, x, y, z)
+                end
+            },
+            {
                 humanName = "Send message",
                 name = "SEND_MESSAGE",
                 input = "string",

@@ -41,6 +41,19 @@ function ObjectDefsPanel:init(tbl)
             if objectDefID == nil then
                 return
             end
+
+            if selected then
+                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                local isSelectState =
+                    (currentState:is_A(SelectUnitTypeState) and self.bridge.bridgeName == "UnitBridge") or
+                    (currentState:is_A(SelectFeatureTypeState) and self.bridge.bridgeName == "FeatureBridge")
+
+                if isSelectState then
+                    currentState:SelectObjectType(objectDefID)
+                    return
+                end
+            end
+
             if not selected then
                 self:Unselect(objectDefID)
             end

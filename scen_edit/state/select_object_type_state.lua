@@ -24,9 +24,15 @@ function SelectObjectTypeState:SelectObjectType(objectDefID)
     SCEN_EDIT.stateManager:SetState(DefaultState())
 end
 
--- Custom unit/feature classes (just Unit for now)
+-- Custom unit/feature classes
 SelectUnitTypeState = SelectObjectTypeState:extends{}
 function SelectUnitTypeState:init(...)
     SelectObjectTypeState.init(self, ...)
     self.bridge = unitBridge
+end
+
+SelectFeatureTypeState = SelectObjectTypeState:extends{}
+function SelectFeatureTypeState:init(...)
+    SelectObjectTypeState.init(self, ...)
+    self.bridge = featureBridge
 end

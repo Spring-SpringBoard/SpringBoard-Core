@@ -61,6 +61,28 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
                 return Spring.GetUnitDefID(triggerUnitId)
             end
         end
+    elseif type == "feature" then
+        local featureId = nil
+        if field.type == "pred" then
+            featureId = tonumber(field.id)
+        elseif field.type == "spec" then
+            featureId = tonumber(params.triggerFeatureId)
+        end
+        if featureId ~= nil then
+            local springId = SCEN_EDIT.model.featureManager:getSpringfeatureId(featureId)
+            if Spring.ValidFeatureID(springId) then
+                return springId
+            end
+        end
+    elseif type == "featureType" then
+        if field.type == "pred" then
+            return tonumber(field.id)
+        elseif field.type == "spec" then
+            local triggerFeatureId = tonumber(params.triggerFeatureId)
+            if triggerFeatureId then
+                return Spring.GetFeatureDefID(triggerFeatureId)
+            end
+        end
     elseif type == "team" then
         if field.type == "pred" then
             return SCEN_EDIT.model.teamManager:getTeam(field.id).id

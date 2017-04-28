@@ -23,7 +23,7 @@ function SCEN_EDIT.IncludeDir(dirPath)
     for i = 1, #files do
         local file = files[i]
         -- don't load files ending in _gadget.lua in LuaUI nor _widget.lua in LuaRules
-        if file:sub(-string.len(".lua")) == ".lua" and 
+        if file:sub(-string.len(".lua")) == ".lua" and
             (context ~= "LuaRules" or file:sub(-string.len("_widget.lua")) ~= "_widget.lua") and
             (context ~= "LuaUI" or file:sub(-string.len("_gadget.lua")) ~= "_gadget.lua") then
 
@@ -209,7 +209,7 @@ end
 
 function PassToGadget(prefix, tag, data)
     newTable = { tag = tag, data = data }
-    local msg = prefix .. "|table" .. table.show(newTable)    
+    local msg = prefix .. "|table" .. table.show(newTable)
     Spring.SendLuaRulesMsg(msg)
 end
 
@@ -253,7 +253,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
             expr = data
         end
         local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
-        
+
         local paramsStr = ""
         local first = true
         for k, v in pairs(expr) do
@@ -265,8 +265,8 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
                 paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k, level + 1)
             end
         end
-        return exprHumanName .. " (" .. paramsStr .. ")"		
-    elseif exprType == "value" then 
+        return exprHumanName .. " (" .. paramsStr .. ")"
+    elseif exprType == "value" then
         if data.type == "pred" then
             if dataType == "unitType" then
                 local unitDef = UnitDefs[data.id]
@@ -312,7 +312,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         return SCEN_EDIT.metaModel.numericComparisonTypes[data.cmpTypeId]
     elseif exprType == "identity_comparison" then
         return SCEN_EDIT.metaModel.identityComparisonTypes[data.cmpTypeId]
-	end	
+	end
     return data.humanName
     end)
     if success then
@@ -328,7 +328,7 @@ end
 
 function SCEN_EDIT.GetTeams(widget)
     local teams = {}
-    
+
     local gaiaTeamId = Spring.GetGaiaTeamID()
     for _, teamId in pairs(Spring.GetTeamList()) do
         local team = { id = teamId }
@@ -351,23 +351,23 @@ function SCEN_EDIT.GetTeams(widget)
         local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(team.id)
         team.allyTeam = allyTeam
         team.side = side
-        
+
         team.gaia = gaiaTeamId == team.id
         if team.gaia then
             team.ai = true
         end
-		
+
 		if not widget then
 			local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
 			team.metal = metal
 			team.metalMax = metalMax
-			
+
 			local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
 			team.energy = energy
 			team.energyMax = energyMax
 		end
     end
-    return teams 
+    return teams
 end
 
 local function filterControls(ctrl)
@@ -390,7 +390,7 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
     local deltaTime = os.clock() - startTime
     local newColor = SCEN_EDIT.deepcopy(color)
     newColor[4] = 0.2 + math.abs(math.sin(deltaTime * 6) / 3.14)
-    
+
     if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
         ctrl.font.color = newColor
     else
@@ -477,12 +477,16 @@ end
 function SCEN_EDIT.createNewPanel(input, ...)
     if input == "unit" then
         return UnitPanel(...)
+    elseif input == "feature" then
+        return FeaturePanel(...)
     elseif input == "area" then
         return AreaPanel(...)
     elseif input == "trigger" then
         return TriggerPanel(...)
     elseif input == "unitType" then
         return UnitTypePanel(...)
+    elseif input == "featureType" then
+        return FeatureTypePanel(...)
     elseif input == "team" then
         return TeamPanel(...)
     elseif input == "number" then
@@ -533,8 +537,8 @@ end
 
 function SCEN_EDIT.glToFontColor(color)
     return "\255" ..
-        string.char(math.ceil(255 * color.r)) .. 
-        string.char(math.ceil(255 * color.g)) .. 
+        string.char(math.ceil(255 * color.r)) ..
+        string.char(math.ceil(255 * color.g)) ..
         string.char(math.ceil(255 * color.b))
 end
 
