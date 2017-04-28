@@ -1,6 +1,6 @@
 AbstractTypePanel = LCS.class.abstract{}
 
-function AbstractTypePanel:init(dataType, parent, sources)
+function AbstractTypePanel:init(dataType, parent, sources, trigger)
     self.dataType = dataType
     self.parent = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -18,6 +18,7 @@ function AbstractTypePanel:init(dataType, parent, sources)
     end
     self.sources = sources
     self.radioGroup = {}
+    self.trigger = trigger
 
     for _, source in pairs(self.sources) do
         if source == "pred" then
@@ -30,7 +31,7 @@ function AbstractTypePanel:init(dataType, parent, sources)
             self:MakeExpressionOpt()
         end
     end
-    
+
     if #self.radioGroup > 0 then
         SCEN_EDIT.MakeRadioButtonGroup(self.radioGroup)
     end
@@ -40,8 +41,54 @@ end
 function AbstractTypePanel:MakePredefinedOpt()
 end
 
--- abstract
 function AbstractTypePanel:MakeSpecialOpt()
+    if self.trigger and #self.trigger.events == 0 then
+        return
+    end
+    local validParams = {}
+    for _, event in pairs(self.trigger.events) do
+        local eventTypeName = event.eventTypeName
+        local eventType = SCEN_EDIT.metaModel.eventTypes[eventTypeName]
+        for _, param in pairs(eventType.param) do
+            if param.type == self.dataType then
+                table.insert(validParams, "Trigger: " .. param.name)
+            end
+        end
+    end
+    if #validParams == 0 then
+        return
+    end
+
+    --SPECIAL object, i.e TRIGGER
+    local stackPanel = MakeComponentPanel(self.parent)
+    local isChecked = true
+    if self.cbPredefined and self.cbPredefined.checked then
+        isChecked = false
+    end
+    self.cbSpecial = Checkbox:New {
+        caption = "Special " .. self.dataType .. ": ",
+        right = 100 + 10,
+        x = 1,
+        checked = isChecked,
+        parent = stackPanel,
+    }
+    table.insert(self.radioGroup, self.cbSpecial)
+    self.cmbSpecial = ComboBox:New {
+        right = 1,
+        width = 100,
+        height = SCEN_EDIT.conf.B_HEIGHT,
+        parent = stackPanel,
+        items = validParams,
+    }
+    self.cmbSpecial.OnSelect = {
+        function(obj, itemIdx, selected)
+            if selected and itemIdx > 0 then
+                if not self.cbSpecial.checked then
+                    self.cbSpecial:Toggle()
+                end
+            end
+        end
+    }
 end
 
 function AbstractTypePanel:MakeVariableOpt()
@@ -62,7 +109,11 @@ end
 
 -- abstract
 function AbstractTypePanel:UpdateModel(field)
-    if self.cbVariable and self.cbVariable.checked then
+    if self.cbSpecial and self.cbSpecial.checked then
+        field.type = "spec"
+        field.name = self.cmbSpecial.items[self.cmbSpecial.selected]
+        return true
+    elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
         field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
         return true
@@ -76,7 +127,13 @@ end
 
 -- abstract
 function AbstractTypePanel:UpdatePanel(field)
-    if field.type == "var" then
+    if field.type == "spec" then
+        if not self.cbSpecial.checked then
+            self.cbSpecial:Toggle()
+        end
+        self.cmbSpecial:Select(1) --TODO:fix it
+        return true
+    elseif field.type == "var" then
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()
         end
@@ -125,11 +182,11 @@ function AbstractTypePanel:AddExpression(dataType, parent)
                 if #btnExpressions.data > 0 then
                     mode = 'edit'
                 end
-                CustomWindow(parent.parent.parent, mode, dataType, btnExpressions.data, btnExpressions.data[1], cbExpressions, btnExpressions)
+                CustomWindow(parent.parent.parent, mode, dataType, btnExpressions.data, btnExpressions.data[1], cbExpressions, btnExpressions, self.trigger)
             end
         }
         return cbExpressions, btnExpressions
-    end    
+    end
     return nil, nil
 end
 
@@ -154,9 +211,9 @@ function AbstractTypePanel:MakeVariableChoice(variableType, panel)
             checked = false,
             parent = stackPanel,
         }
-        
+
         local cmbVariable = ComboBox:New {
-            right = 1,        
+            right = 1,
             width = 100,
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackPanel,
@@ -177,4 +234,3 @@ function AbstractTypePanel:MakeVariableChoice(variableType, panel)
         return nil, nil
     end
 end
-

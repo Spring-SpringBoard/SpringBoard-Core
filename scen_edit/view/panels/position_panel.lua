@@ -1,21 +1,21 @@
 PositionPanel = AbstractTypePanel:extends{}
 
-function PositionPanel:init(parent, sources)
-    self:super('init', 'position', parent, sources)
+function PositionPanel:init(...)
+    self:super('init', 'position', ...)
 end
 
 function PositionPanel:MakePredefinedOpt()
     --PREDEFINED
     local stackPositionPanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedPosition = Checkbox:New {
+    self.cbPredefined = Checkbox:New {
         caption = "Predefined position: ",
         right = 100 + 10,
         x = 1,
         checked = false,
         parent = stackPositionPanel,
     }
-    table.insert(self.radioGroup, self.cbPredefinedPosition)
-    self.btnPredefinedPosition = Button:New {
+    table.insert(self.radioGroup, self.cbPredefined)
+    self.btnPredefined = Button:New {
         caption = '...',
         right = 40,
         width = 60,
@@ -23,23 +23,23 @@ function PositionPanel:MakePredefinedOpt()
         parent = stackPositionPanel,
         position = nil,
     }
-    self.btnPredefinedPosition.OnClick = {
+    self.btnPredefined.OnClick = {
         function()
-            SCEN_EDIT.stateManager:SetState(SelectPositionState(self.btnPredefinedPosition))
+            SCEN_EDIT.stateManager:SetState(SelectPositionState(self.btnPredefined))
         end
     }
-    self.btnPredefinedPosition.OnSelectPosition = {
+    self.btnPredefined.OnSelectPosition = {
         function(position)
-            self.btnPredefinedPosition.position = position
-            self.btnPredefinedPosition.caption = 'pos'
-            self.btnPredefinedPosition.tooltip = "(" .. tostring(position.x) .. ", " .. tostring(position.y) .. ", " .. tostring(position.z) .. ")"
-            self.btnPredefinedPosition:Invalidate()
-            if not self.cbPredefinedPosition.checked then 
-                self.cbPredefinedPosition:Toggle()
+            self.btnPredefined.position = position
+            self.btnPredefined.caption = 'pos'
+            self.btnPredefined.tooltip = "(" .. tostring(position.x) .. ", " .. tostring(position.y) .. ", " .. tostring(position.z) .. ")"
+            self.btnPredefined:Invalidate()
+            if not self.cbPredefined.checked then
+                self.cbPredefined:Toggle()
             end
         end
     }
-    self.btnPredefinedPositionZoom = Button:New {
+    self.btnPredefinedZoom = Button:New {
         caption = "",
         right = 1,
         width = SCEN_EDIT.conf.B_HEIGHT,
@@ -47,10 +47,10 @@ function PositionPanel:MakePredefinedOpt()
         parent = stackPositionPanel,
         padding = {0, 0, 0, 0},
         children = {
-            Image:New { 
-                tooltip = "Select position", 
-                file=SCEN_EDIT_IMG_DIR .. "search.png", 
-                height = SCEN_EDIT.conf.B_HEIGHT, 
+            Image:New {
+                tooltip = "Select position",
+                file=SCEN_EDIT_IMG_DIR .. "search.png",
+                height = SCEN_EDIT.conf.B_HEIGHT,
                 width = SCEN_EDIT.conf.B_HEIGHT,
                 padding = {0, 0, 0, 0},
                 margin = {0, 0, 0, 0},
@@ -58,7 +58,7 @@ function PositionPanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                local position = self.btnPredefinedPosition.position
+                local position = self.btnPredefined.position
                 if position ~= nil then
                     Spring.MarkerAddPoint(position.x, position.y, position.z, "")
                 end
@@ -68,9 +68,9 @@ function PositionPanel:MakePredefinedOpt()
 end
 
 function PositionPanel:UpdateModel(field)
-    if self.cbPredefinedPosition and self.cbPredefinedPosition.checked and self.btnPredefinedPosition.position ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.position ~= nil then
         field.type = "pred"
-        field.id = self.btnPredefinedPosition.position
+        field.id = self.btnPredefined.position
         return true
     elseif self.cbSpecialPosition and self.cbSpecialPosition.checked then
         field.type = "spec"
@@ -82,10 +82,10 @@ end
 
 function PositionPanel:UpdatePanel(field)
     if field.type == "pred" then
-        if not self.cbPredefinedPosition.checked then
-            self.cbPredefinedPosition:Toggle()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefinedPosition.OnSelectPosition, field.id)
+        CallListeners(self.btnPredefined.OnSelectPosition, field.id)
         return true
     elseif field.type == "spec" then
         if not self.cbSpecialPosition.checked then

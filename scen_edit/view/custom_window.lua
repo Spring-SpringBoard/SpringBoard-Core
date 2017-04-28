@@ -1,6 +1,6 @@
 CustomWindow = LCS.class{}
 
-function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, cbExpressions, btnExpressions)
+function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, cbExpressions, btnExpressions, trigger)
     self.mode = mode
     self.parentWindow = parentWindow
     while self.parentWindow.classname ~= "window" do
@@ -11,6 +11,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
     self.condition = condition
     self.cbExpressions = cbExpressions
     self.btnExpressions = btnExpressions
+    self.trigger = trigger
 
     self.btnOk = Button:New {
         caption = "OK",
@@ -100,9 +101,9 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
 --                local cndName = self.cmbCustomTypes.conditionTypes[itemIdx]
                 local exprType = self.customTypes[itemIdx]
                 for i = 1, #exprType.input do
-                    local dataType = exprType.input[i]                    
+                    local dataType = exprType.input[i]
                     local subPanelName = dataType.name
-                    local subPanel = SCEN_EDIT.createNewPanel(dataType.type, self.conditionPanel, dataType.sources)
+                    local subPanel = SCEN_EDIT.createNewPanel(dataType.type, self.conditionPanel, dataType.sources, self.trigger)
                     if subPanel then
                         self.conditionPanel[subPanelName] = subPanel
                         if i ~= #exprType.input then
@@ -140,14 +141,14 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
     SCEN_EDIT.SetControlEnabled(self.parentWindow, false)
 
     self.btnCancel.OnClick = {
-        function() 
-            SCEN_EDIT.SetControlEnabled(self.parentWindow, true) 
+        function()
+            SCEN_EDIT.SetControlEnabled(self.parentWindow, true)
             self.window:Dispose()
         end
     }
-    
+
     self.btnOk.OnClick = {
-        function()            
+        function()
             local success, subPanels = false, nil
             if self.mode == 'edit' then
                 success, subPanels = self:EditCondition()
@@ -166,7 +167,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
                 end
             end
         end
-    }    
+    }
 
     if self.cmbTagGroups ~= nil then
         self.cmbTagGroups:Select(0)
@@ -206,7 +207,7 @@ function CustomWindow:init(parentWindow, mode, dataType, parentObj, condition, c
             sw.x = tw.x + tw.width
 --        end
         sw.y = tw.y
-    end    
+    end
 end
 
 function CustomWindow:UpdatePanel()
@@ -247,7 +248,7 @@ end
 
 function CustomWindow:EditCondition()
     local _condition = SCEN_EDIT.deepcopy(self.condition)
-    self.condition.conditionTypeName = self.cmbCustomTypes.conditionTypes[self.cmbCustomTypes.selected]    
+    self.condition.conditionTypeName = self.cmbCustomTypes.conditionTypes[self.cmbCustomTypes.selected]
     local success, subPanels = self:UpdateModel()
     if not success then
         SetTableValues(self.condition, _condition)
@@ -266,11 +267,9 @@ function CustomWindow:AddCondition()
         self.condition = nil
         return false, subPanels
     end
-    table.insert(self.parentObj, self.condition)    
+    table.insert(self.parentObj, self.condition)
     if self.cbExpressions and not self.cbExpressions.checked then
         self.cbExpressions:Toggle()
     end
     return true
 end
-
-

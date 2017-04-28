@@ -1,19 +1,19 @@
 StringPanel = AbstractTypePanel:extends{}
 
-function StringPanel:init(parent, sources)
-    self:super('init', 'string', parent, sources)
+function StringPanel:init(...)
+    self:super('init', 'string', ...)
 end
 
 function StringPanel:MakePredefinedOpt()
     local stackStringPanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedString = Checkbox:New {
+    self.cbPredefined = Checkbox:New {
         caption = "Predefined string: ",
         right = 100 + 10,
         x = 1,
         checked = true,
         parent = stackStringPanel,
-    }    
-    table.insert(self.radioGroup, self.cbPredefinedString)
+    }
+    table.insert(self.radioGroup, self.cbPredefined)
     self.edString = EditBox:New {
         text = "text",
         right = 1,
@@ -23,7 +23,7 @@ function StringPanel:MakePredefinedOpt()
 end
 
 function StringPanel:UpdateModel(field)
-    if self.cbPredefinedString and self.cbPredefinedString.checked then
+    if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
         field.id = self.edString.text
         return true
@@ -31,10 +31,10 @@ function StringPanel:UpdateModel(field)
     return self:super('UpdateModel', field)
 end
 
-function StringPanel:UpdatePanel(field)  
+function StringPanel:UpdatePanel(field)
     if field.type == "pred" then
-        if not self.cbPredefinedString.checked then
-            self.cbPredefinedString:Toggle()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
         end
         self.edString.text = field.id
         return true

@@ -1,7 +1,7 @@
 TriggerPanel = AbstractTypePanel:extends{}
 
-function TriggerPanel:init(parent)
-    self:super('init', 'trigger', parent, sources)
+function TriggerPanel:init(...)
+    self:super('init', 'trigger', ...)
 end
 
 function TriggerPanel:MakePredefinedOpt()

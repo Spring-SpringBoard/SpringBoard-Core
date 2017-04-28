@@ -1,6 +1,6 @@
 GenericArrayPanel = AbstractTypePanel:extends{}
 
-function GenericArrayPanel:init(type, parent, sources)
+function GenericArrayPanel:init(type, parent, ...)
     self.subPanels = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -10,7 +10,7 @@ function GenericArrayPanel:init(type, parent, sources)
         resizeItems = false,
         parent = parent,
     }
-    self:super('init', type, parent, sources)
+    self:super('init', type, parent, ...)
     self.type = type
     self.atomicType = type:gsub("_array", "")
     self.elements = {}
@@ -19,14 +19,14 @@ end
 function GenericArrayPanel:MakePredefinedOpt()
     local addPanel = MakeComponentPanel(self.parent)
 
-    self.cbPredefinedArray = Checkbox:New {
+    self.cbPredefined = Checkbox:New {
         caption = "Predefined array: ",
         right = 100 + 10,
         x = 1,
         checked = false,
         parent = addPanel,
     }
-    table.insert(self.radioGroup, self.cbPredefinedArray)
+    table.insert(self.radioGroup, self.cbPredefined)
     self.btnAddElement = Button:New {
         caption = '+',
         right = 40,
@@ -34,10 +34,10 @@ function GenericArrayPanel:MakePredefinedOpt()
         height = SCEN_EDIT.conf.B_HEIGHT,
         parent = addPanel,
         OnClick= {
-            function() 
-                self:AddElement() 
-                if not self.cbPredefinedArray.checked then 
-                    self.cbPredefinedArray:Toggle()
+            function()
+                self:AddElement()
+                if not self.cbPredefined.checked then
+                    self.cbPredefined:Toggle()
                 end
             end
         }
@@ -51,7 +51,7 @@ function GenericArrayPanel:AddElement()
 end
 
 function GenericArrayPanel:UpdateModel(field)
-    if self.cbPredefinedArray and self.cbPredefinedArray.checked then
+    if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
         field.id = {}
         for _, subPanel in pairs(self.elements) do
@@ -66,8 +66,8 @@ end
 
 function GenericArrayPanel:UpdatePanel(field)
     if field.type == "pred" then
-        if not self.cbPredefinedArray.checked then
-            self.cbPredefinedArray:Toggle()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
         end
         for i, data in pairs(field.id) do
             self:AddElement()

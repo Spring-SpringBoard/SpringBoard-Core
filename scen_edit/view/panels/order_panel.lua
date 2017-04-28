@@ -1,8 +1,9 @@
 OrderPanel = LCS.class{}
 
+-- TODO: Doesn't invoke self:super, it probably should
 function OrderPanel:init(parent)
     self.parent = parent
-    local stackPanel = MakeComponentPanel(self.parent)    
+    local stackPanel = MakeComponentPanel(self.parent)
     self.cmbOrderTypes = ComboBox:New {
         items = GetField(SCEN_EDIT.metaModel.orderTypes, "humanName"),
         orderTypes = GetField(SCEN_EDIT.metaModel.orderTypes, "name"),
@@ -19,7 +20,7 @@ function OrderPanel:init(parent)
         right = 1,
         autosize = true,
         resizeItems = false,
-        padding = {0, 0, 0, 0},    
+        padding = {0, 0, 0, 0},
         parent = self.parent,
     }
     self.cmbOrderTypes.OnSelect = {
@@ -30,7 +31,7 @@ function OrderPanel:init(parent)
                 local order = SCEN_EDIT.metaModel.orderTypes[ordName]
                 for i = 1, #order.input do
                     local input = order.input[i]
-                    local subPanelName = input.name                    
+                    local subPanelName = input.name
                     if input.humanName then
                         Label:New {
                             parent = self.orderPanel,
@@ -50,7 +51,7 @@ function OrderPanel:init(parent)
             end
         end
     }
-    
+
     self.cmbOrderTypes:Select(0)
     self.cmbOrderTypes:Select(1)
 end
@@ -75,7 +76,7 @@ end
 
 function OrderPanel:UpdatePanel(field)
     local ordName = field.orderTypeName
-    local order = SCEN_EDIT.metaModel.orderTypes[ordName]    
+    local order = SCEN_EDIT.metaModel.orderTypes[ordName]
     self.cmbOrderTypes:Select(GetIndex(self.cmbOrderTypes.orderTypes, ordName))
     for i = 1, #order.input do
         local input = order.input[i]

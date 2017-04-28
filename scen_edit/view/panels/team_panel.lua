@@ -1,20 +1,20 @@
 TeamPanel = AbstractTypePanel:extends{}
 
-function TeamPanel:init(parent, sources)
-    self:super('init', 'team', parent, sources)
+function TeamPanel:init(...)
+    self:super('init', 'team', ...)
 end
 
 function TeamPanel:MakePredefinedOpt()
     local stackTeamPanel = MakeComponentPanel(self.parent)
-    self.cbPredefinedTeam = Checkbox:New {
+    self.cbPredefined = Checkbox:New {
         caption = "Predefined team: ",
         right = 100 + 10,
         x = 1,
         checked = true,
         parent = stackTeamPanel,
     }
-    table.insert(self.radioGroup, self.cbPredefinedTeam)
-    self.cmbPredefinedTeam = ComboBox:New {
+    table.insert(self.radioGroup, self.cbPredefined)
+    self.cmbPredefined = ComboBox:New {
         right = 1,
         width = 100,
         height = SCEN_EDIT.conf.B_HEIGHT,
@@ -25,9 +25,9 @@ function TeamPanel:MakePredefinedOpt()
 end
 
 function TeamPanel:UpdateModel(field)
-    if self.cbPredefinedTeam and self.cbPredefinedTeam.checked then
+    if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
-        field.id = self.cmbPredefinedTeam.playerTeamIds[self.cmbPredefinedTeam.selected]
+        field.id = self.cmbPredefined.playerTeamIds[self.cmbPredefined.selected]
         return true
     end
     return self:super('UpdateModel', field)
@@ -35,10 +35,10 @@ end
 
 function TeamPanel:UpdatePanel(field)
     if field.type == "pred" then
-        if not self.cbPredefinedTeam.checked then
-            self.cbPredefinedTeam:Toggle()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
         end
-        self.cmbPredefinedTeam:Select(GetIndex(self.cmbPredefinedTeam.playerTeamIds, field.id))
+        self.cmbPredefined:Select(GetIndex(self.cmbPredefined.playerTeamIds, field.id))
         return true
     end
     return self:super('UpdatePanel', field)

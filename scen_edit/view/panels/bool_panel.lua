@@ -1,19 +1,19 @@
 BoolPanel = AbstractTypePanel:extends{}
 
-function BoolPanel:init(parent, sources)
-    self:super('init', 'bool', parent, sources)
+function BoolPanel:init(...)
+    self:super('init', 'bool', ...)
 end
 
 function BoolPanel:MakePredefinedOpt()
     local stackBoolPanel = MakeComponentPanel(self.parent)
-    self.cbPredefincbBool = Checkbox:New {
+    self.cbPredefined = Checkbox:New {
         caption = "Predefined bool: ",
         right = 100 + 10,
         x = 1,
         checked = true,
         parent = stackBoolPanel,
-    }    
-    table.insert(self.radioGroup, self.cbPredefincbBool)
+    }
+    table.insert(self.radioGroup, self.cbPredefined)
     self.cbBool = Checkbox:New {
         caption = "Value",
         checked = true,
@@ -24,7 +24,7 @@ function BoolPanel:MakePredefinedOpt()
 end
 
 function BoolPanel:UpdateModel(field)
-    if self.cbPredefinedBool and self.cbPredefincbBool.checked then
+    if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
         field.bool = self.cbBool.checked
         return true
@@ -32,10 +32,10 @@ function BoolPanel:UpdateModel(field)
     return self:super('UpdateModel', field)
 end
 
-function BoolPanel:UpdatePanel(field)  
+function BoolPanel:UpdatePanel(field)
     if field.type == "pred" then
-        if not self.cbPredefincbBool.checked then
-            self.cbPredefincbBool:Toggle()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
         end
         if field.bool ~= self.cbBool.checked then
             self.cbBool:Toggle()

@@ -22,7 +22,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
         x = "55%",
         y = "7%",
         backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
-    }    
+    }
     self.actionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -96,9 +96,9 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
                     local input = actionType.input[i]
                     local subPanelName = input.name
                     if input.humanName then
-                        
+
                     end
-                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.actionPanel, input.sources)
+                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.actionPanel, input.sources, self.trigger)
                     if subPanel then
                         self.actionPanel[subPanelName] = subPanel
                         if i ~= #actionType.input then
@@ -133,16 +133,16 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
             self.cmbTagGroups,
         }
     }
-    
+
     self.btnCancel.OnClick = {
-        function() 
+        function()
             SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
             self.window:Dispose()
         end
     }
-    
+
     self.btnOk.OnClick = {
-        function()            
+        function()
             local success, subPanels = false, nil
             if self.mode == 'edit' then
                 success, subPanels = self:EditAction()
@@ -165,7 +165,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
         self.cmbTagGroups:Select(0)
         self.cmbTagGroups:Select(1)
     end
-    
+
     self.cmbActionTypes:Select(0)
     self.cmbActionTypes:Select(1)
 
@@ -193,7 +193,7 @@ function ActionWindow:init(trigger, triggerWindow, mode, action)
             sw.x = tw.x + tw.width
         --end
         sw.y = tw.y
-    end    
+    end
 end
 
 function ActionWindow:UpdatePanel()
@@ -234,7 +234,7 @@ end
 
 function ActionWindow:EditAction()
     local _action = SCEN_EDIT.deepcopy(self.action)
-    self.action.actionTypeName = self.cmbActionTypes.actionTypes[self.cmbActionTypes.selected]    
+    self.action.actionTypeName = self.cmbActionTypes.actionTypes[self.cmbActionTypes.selected]
     local success, subPanels = self:UpdateModel()
     if not success then
         SetTableValues(self.action, _action)
@@ -251,9 +251,7 @@ function ActionWindow:AddAction()
         self.action = nil
         return false, subPanels
     end
-    table.insert(self.trigger.actions, self.action)    
+    table.insert(self.trigger.actions, self.action)
     self.triggerWindow:Populate()
     return true
 end
-
-

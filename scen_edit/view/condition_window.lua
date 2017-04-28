@@ -6,7 +6,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
     self.mode = mode
     self.condition = condition
 
-    SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, false) 
+    SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, false)
     self.btnOk = Button:New {
         caption = "OK",
         height = SCEN_EDIT.conf.B_HEIGHT,
@@ -22,7 +22,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
         x = "55%",
         y = "7%",
         backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
-    }    
+    }
     self.conditionPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -96,7 +96,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
                 for i = 1, #conditionType.input do
                     local input = conditionType.input[i]
                     local subPanelName = input.name
-                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.conditionPanel, input.sources)
+                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.conditionPanel, input.sources, self.trigger)
                     if subPanel then
                         self.conditionPanel[subPanelName] = subPanel
                         if i ~= #conditionType.input then
@@ -107,7 +107,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
             end
         end
     }
-    
+
     self.window = Window:New {
         resizable = false,
         width = 300,
@@ -134,16 +134,16 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
             self.cmbTagGroups,
         }
     }
-    
+
     self.btnCancel.OnClick = {
-        function() 
-            SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true) 
+        function()
+            SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
             self.window:Dispose()
         end
     }
-    
+
     self.btnOk.OnClick = {
-        function()            
+        function()
             local success, subPanels = false, nil
             if self.mode == 'edit' then
                 success, subPanels = self:EditCondition()
@@ -151,7 +151,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
                 success, subPanels = self:AddCondition()
             end
             if success then
-                SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true) 
+                SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
                 self.window:Dispose()
             else
                 if subPanels ~= nil and #subPanels > 0 then
@@ -167,7 +167,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
         self.cmbTagGroups:Select(0)
         self.cmbTagGroups:Select(1)
     end
-    
+
     self.cmbConditionTypes:Select(0)
     self.cmbConditionTypes:Select(1)
 
@@ -195,7 +195,7 @@ function ConditionWindow:init(trigger, triggerWindow, mode, condition)
             sw.x = tw.x + tw.width
         --end
         sw.y = tw.y
-    end    
+    end
 end
 
 function ConditionWindow:UpdatePanel()
@@ -236,7 +236,7 @@ end
 
 function ConditionWindow:EditCondition()
     local _condition = SCEN_EDIT.deepcopy(self.condition)
-    self.condition.conditionTypeName = self.cmbConditionTypes.conditionTypes[self.cmbConditionTypes.selected]    
+    self.condition.conditionTypeName = self.cmbConditionTypes.conditionTypes[self.cmbConditionTypes.selected]
     local success, subPanels = self:UpdateModel()
     if not success then
         SetTableValues(self.condition, _condition)
@@ -253,7 +253,7 @@ function ConditionWindow:AddCondition()
         self.condition = nil
         return false, subPanels
     end
-    table.insert(self.trigger.conditions, self.condition)    
+    table.insert(self.trigger.conditions, self.condition)
     self.triggerWindow:Populate()
     return true
 end
