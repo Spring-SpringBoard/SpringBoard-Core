@@ -50,7 +50,7 @@ local function encloseKey(s)
   if (not wrap) then
     if (keyWordSet[s]) then wrap = true end
   end
-    
+
   if (wrap) then
     return string.format('[%q]', s)
   else
@@ -107,22 +107,35 @@ local function MakeSortedTable(t)
   return st
 end
 
+local function isarray(t)
+	local i = 0
+ 	for _ in pairs(t) do
+    	i = i + 1
+		if t[i] == nil then return false end
+  	end
+  	return true
+end
 
 local function SaveTable(t, file, indent)
   file:write('{\n')
   local indent = indent .. indentString
-  
+
   local st = MakeSortedTable(t)
-  
+
+  local isArray = isarray(t)
+
   for _,kv in ipairs(st) do
     local k, v = kv[1], kv[2]
     local ktype = type(k)
     local vtype = type(v)
     -- output the key
-    if (ktype == 'string') then
-      file:write(indent..encloseKey(k)..' = ')
-    else
-      file:write(indent..'['..tostring(k)..'] = ')
+    file:write(indent)
+    if not isArray then
+      if ktype == 'string' then
+        file:write(encloseKey(k)..' = ')
+      else
+        file:write('['..tostring(k)..'] = ')
+      end
     end
     -- output the value
     if (vtype == 'string') then
@@ -152,9 +165,9 @@ function ShowTable(t, indent)
   local strings = {}
   strings[#strings+1] = '{\n'
   local indent = indent .. indentString
-  
+
   local st = MakeSortedTable(t)
-  
+
   for _,kv in ipairs(st) do
     local k, v = kv[1], kv[2]
     local ktype = type(k)
@@ -192,11 +205,11 @@ end
 
 function table.show(t, header)
   local strings = {}
-  
+
   if (header) then
     strings[#strings+1] = (header..'\n')
   end
-  
+
   strings[#strings+1] = 'return '
   strings[#strings+1] = ShowTable(t, '')
   strings[#strings+1] = '}\n'
@@ -224,7 +237,7 @@ function table.save(t, filename, header)
   end
   local file, errMsg = io.open(filename, 'w')
   if (not file) then
-    error(errMsg .. "\nFile not saved.")	
+    error(errMsg .. "\nFile not saved.")
     return
   end
   if (header) then
