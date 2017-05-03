@@ -3,7 +3,7 @@ FieldResolver = LCS.class{}
 function FieldResolver:init()
 end
 
-function FieldResolver:CallExpression(expr, exprType, params)
+function FieldResolver:CallExpression(expr, exprType, params, canExecuteUnsynced)
     local resolvedInputs = {}
     local fail = false
     for _, input in pairs(exprType.input) do
@@ -13,16 +13,22 @@ function FieldResolver:CallExpression(expr, exprType, params)
         end
         resolvedInputs[input.name] = resolvedInput
     end
-    if not fail then
-        if not exprType.execute then
-            Log.Error("There is no function \"execute\" for expression: " .. exprType.name)
-        else
-            local result = exprType.execute(resolvedInputs)
-            if exprType.doRepeat and result then
-                table.insert(SCEN_EDIT.rtModel.repeatCalls, {exprType = exprType, resolvedInputs = resolvedInputs})
-            end
-            return result
+    if fail then
+        return
+    end
+
+    if exprType.execute == nil and (exprType.executeUnsynced and canExecuteUnsynced) then
+        SCEN_EDIT.rtModel:ExecuteUnsynced(exprType.name, resolvedInputs)
+        return
+    end
+    if not exprType.execute then
+        Log.Error("There is no function \"execute\" for expression: " .. exprType.name)
+    else
+        local result = exprType.execute(resolvedInputs)
+        if exprType.doRepeat and result then
+            table.insert(SCEN_EDIT.rtModel.repeatCalls, {exprType = exprType, resolvedInputs = resolvedInputs})
         end
+        return result
     end
 end
 

@@ -282,7 +282,7 @@ end
 function RuntimeModel:ActionStep(trigger, params)
     for _, action in pairs(trigger.actions) do
         local actionType = SCEN_EDIT.metaModel.actionTypes[action.actionTypeName]
-        self.fieldResolver:CallExpression(action, actionType, params)
+        self.fieldResolver:CallExpression(action, actionType, params, true)
     end
 end
 
@@ -309,4 +309,9 @@ function RuntimeModel:ComputeTriggerConditions(trigger, params)
         end
     end
     return true
+end
+
+function RuntimeModel:ExecuteUnsynced(actionTypeName, resolvedInputs)
+    local cmd = WidgetExecuteUnsyncedActionCommand(actionTypeName, resolvedInputs)
+    SCEN_EDIT.commandManager:execute(cmd, true)
 end

@@ -40,14 +40,19 @@ return {
             executeUnsynced = function (input)
                 local text = input.string
 
+                local Chili = WG.Chili
+
                 local window = nil
                 window = Chili.Window:New {
                     caption = "",
-                    width = 310,
-                    height = 310,
+                    x = "30%",
+                    y = "30%",
+                    width = "20%",
+                    height = "20%",
                     resizable = false,
                     draggable = false,
                     parent = screen0,
+                    name = tostring(os.clock()),
                     children = {
                         Chili.TextBox:New {
                             x = 40,

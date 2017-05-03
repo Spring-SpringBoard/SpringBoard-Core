@@ -2,7 +2,9 @@ MetaModelLoader = LCS.class{}
 
 function MetaModelLoader:AttemptToLoadFile(metaModelFile)
     local data = metaModelFile.data
-	local success, data = pcall(function() return assert(loadstring(data))() end)
+	local success, data = pcall(function() 
+        return assert(loadstring(data))()
+    end)
 	if not success then
 		Log.Error("Failed to parse file " .. metaModelFile.name .. ": ")
         Log.Error(loadstring(metaModelFile.data))
