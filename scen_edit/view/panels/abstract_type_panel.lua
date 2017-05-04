@@ -182,7 +182,16 @@ function AbstractTypePanel:AddExpression(dataType, parent)
                 if #btnExpressions.data > 0 then
                     mode = 'edit'
                 end
-                CustomWindow(parent.parent.parent, mode, dataType, btnExpressions.data, btnExpressions.data[1], cbExpressions, btnExpressions, self.trigger)
+                CustomWindow({
+                    parentWindow = parent.parent.parent,
+                    mode = mode,
+                    dataType = dataType,
+                    parentObj = btnExpressions.data,
+                    condition = btnExpressions.data[1],
+                    cbExpressions = cbExpressions,
+                    btnExpressions = btnExpressions,
+                    trigger = self.trigger
+                })
             end
         }
         return cbExpressions, btnExpressions

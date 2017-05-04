@@ -1,259 +1,30 @@
-ConditionWindow = LCS.class{}
+ConditionWindow = AbstractTriggerElementWindow:extends{}
 
-function ConditionWindow:init(trigger, triggerWindow, mode, condition)
-    self.trigger = trigger
-    self.triggerWindow = triggerWindow
-    self.mode = mode
-    self.condition = condition
+function ConditionWindow:init(opts)
+    opts.element = opts.condition
+    self:super("init", opts)
+end
 
-    SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, false)
-    self.btnOk = Button:New {
-        caption = "OK",
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = "40%",
-        x = "5%",
-        y = "7%",
-        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
-    }
-    self.btnCancel = Button:New {
-        caption = "Cancel",
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = "40%",
-        x = "55%",
-        y = "7%",
-        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
-    }
-    self.conditionPanel = StackPanel:New {
-        itemMargin = {0, 0, 0, 0},
-        x = 1,
-        y = 1,
-        right = 1,
-        autosize = true,
-        resizeItems = false,
-        padding = {0, 0, 0, 0}
-    }
-    self.validConditionTypes = SortByName(SCEN_EDIT.metaModel.functionTypesByOutput["bool"], "humanName")
-    -- group by tags
-    if #self.validConditionTypes > 10 then
-        self.tagGroups = {}
-        for _, func in pairs(self.validConditionTypes) do
-            if func.tags ~= nil then
-                for _, tag in pairs(func.tags) do
-                    if self.tagGroups[tag] == nil then
-                        self.tagGroups[tag] = {}
-                    end
-                    table.insert(self.tagGroups[tag], func)
-                end
-            else
-                if self.tagGroups["Other"] == nil then
-                    self.tagGroups["Other"] = {}
-                end
-                table.insert(self.tagGroups["Other"], func)
-            end
-        end
-        self.cmbTagGroups = ComboBox:New {
-            items = GetKeys(self.tagGroups),
-            height = SCEN_EDIT.conf.B_HEIGHT,
-            width = "40%",
-            y = "20%",
-            x = 10,
-        }
-        self.cmbTagGroups.OnSelect = {
-            function(object, itemIdx, selected)
-                if selected and itemIdx > 0 then
-                    self.validConditionTypes = self.tagGroups[self.cmbTagGroups.items[itemIdx]]
-                    self.cmbConditionTypes.items = GetField(self.validConditionTypes, "humanName")
-                    self.cmbConditionTypes.conditionTypes = GetField(self.validConditionTypes, "name")
-                    self.cmbConditionTypes:Invalidate()
-                    self.cmbConditionTypes:Select(0)
-                    self.cmbConditionTypes:Select(1)
-                end
-            end
-        }
-    end
+function ConditionWindow:GetValidElementTypes()
+    return SCEN_EDIT.metaModel.functionTypesByOutput["bool"]
+end
 
-    local cmbConditionTypesX = "20%"
-    local cmbConditionTypesWidth = "60%"
-    if self.cmbTagGroups ~= nil then
-        cmbConditionTypesWidth = "40%"
-        cmbConditionTypesX = "55%"
-    end
-    self.cmbConditionTypes = ComboBox:New {
-        items = GetField(self.validConditionTypes, "humanName"),
-        conditionTypes = GetField(self.validConditionTypes, "name"),
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        width = cmbConditionTypesWidth,
-        y = "20%",
-        x = cmbConditionTypesX,
-    }
-
-    self.cmbConditionTypes.OnSelect = {
-        function(object, itemIdx, selected)
-            if selected and itemIdx > 0 then
-                self.conditionPanel:ClearChildren()
---                local cndName = obj.cmbConditionTypes.conditionTypes[itemIdx]
-                local conditionType = self.validConditionTypes[itemIdx]
-                for i = 1, #conditionType.input do
-                    local input = conditionType.input[i]
-                    local subPanelName = input.name
-                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.conditionPanel, input.sources, self.trigger)
-                    if subPanel then
-                        self.conditionPanel[subPanelName] = subPanel
-                        if i ~= #conditionType.input then
-                            SCEN_EDIT.MakeSeparator(self.conditionPanel)
-                        end
-                    end
-                end
-            end
-        end
-    }
-
-    self.window = Window:New {
-        resizable = false,
-        width = 300,
-        height = 400,
-        x = 500,
-        y = 300,
-        trigger = nil, --required
-        triggerWindow = nil, --required
-        mode = nil, --'add' or 'edit'
-        parent = screen0,
-        children = {
-            self.cmbConditionTypes,
-            self.btnOk,
-            self.btnCancel,
-            ScrollPanel:New {
-                x = 1,
-                y = self.cmbConditionTypes.y + self.cmbConditionTypes.height + 80,
-                bottom = 1,
-                right = 5,
-                children = {
-                    self.conditionPanel,
-                },
-            },
-            self.cmbTagGroups,
-        }
-    }
-
-    self.btnCancel.OnClick = {
-        function()
-            SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
-            self.window:Dispose()
-        end
-    }
-
-    self.btnOk.OnClick = {
-        function()
-            local success, subPanels = false, nil
-            if self.mode == 'edit' then
-                success, subPanels = self:EditCondition()
-            elseif self.mode == 'add' then
-                success, subPanels = self:AddCondition()
-            end
-            if success then
-                SCEN_EDIT.SetControlEnabled(self.triggerWindow.window, true)
-                self.window:Dispose()
-            else
-                if subPanels ~= nil and #subPanels > 0 then
-                    for _, subPanel in pairs(subPanels) do
-                        SCEN_EDIT.HintControl(subPanel)
-                    end
-                end
-            end
-        end
-    }
-
-    if self.cmbTagGroups ~= nil then
-        self.cmbTagGroups:Select(0)
-        self.cmbTagGroups:Select(1)
-    end
-
-    self.cmbConditionTypes:Select(0)
-    self.cmbConditionTypes:Select(1)
-
-    local tw = self.triggerWindow.window
-    local sw = self.window
+function ConditionWindow:GetWindowCaption()
     if self.mode == 'add' then
-        sw.caption = "New condition for - " .. self.trigger.name
-        sw.x = tw.x
-        sw.y = tw.y + tw.height + 5
-        --if tw.parent.height <= sw.y + sw.height then
-        --    sw.y = tw.y - sw.height
-        --end
+        return "New condition for - " .. self.trigger.name
     elseif self.mode == 'edit' then
-        local cndTags = SCEN_EDIT.metaModel.functionTypesByOutput["bool"][self.condition.conditionTypeName].tags
-        if cndTags ~= nil and self.cmbTagGroups ~= nil then
-            local primaryTag = cndTags[1]
-            self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
-        end
-        self.cmbConditionTypes:Select(GetIndex(self.cmbConditionTypes.conditionTypes, self.condition.conditionTypeName))
-        self:UpdatePanel()
-        sw.caption = "Edit condition for trigger " .. self.trigger.name
-        --if tw.x + tw.width + sw.width > tw.parent.width then
-        --    sw.x = tw.x - sw.width
-        --else
-            sw.x = tw.x + tw.width
-        --end
-        sw.y = tw.y
+        return "Edit condition for trigger " .. self.trigger.name
     end
 end
 
-function ConditionWindow:UpdatePanel()
-    local cndName = self.condition.conditionTypeName
-    local index = GetIndex(self.cmbConditionTypes.conditionTypes, cndName)
-    local conditionType = self.validConditionTypes[index]
-    for i = 1, #conditionType.input do
-        local data = conditionType.input[i]
-        local subPanelName = data.name
-        local subPanel = self.conditionPanel[subPanelName]
-        if subPanel then
-            subPanel:UpdatePanel(self.condition[subPanelName])
-        end
-    end
+function ConditionWindow:GetElementTypeName()
+    return self.element.conditionTypeName
 end
 
-function ConditionWindow:UpdateModel()
-    local cndName = self.condition.conditionTypeName
-    local index = GetIndex(self.cmbConditionTypes.conditionTypes, cndName)
-    local conditionType = self.validConditionTypes[index]
-
-    local success = true
-    local errorSubPanels = {}
-    for i = 1, #conditionType.input do
-        local data = conditionType.input[i]
-        local subPanelName = data.name
-        local subPanel = self.conditionPanel[subPanelName]
-        if subPanel then
-            self.condition[subPanelName] = {}
-            if not self.conditionPanel[subPanelName]:UpdateModel(self.condition[subPanelName]) then
-                success = false
-                table.insert(errorSubPanels, subPanel.parent)
-            end
-        end
-    end
-    return success, errorSubPanels
+function ConditionWindow:SetElementTypeName(elementTypeName)
+    self.element.conditionTypeName = elementTypeName
 end
 
-function ConditionWindow:EditCondition()
-    local _condition = SCEN_EDIT.deepcopy(self.condition)
-    self.condition.conditionTypeName = self.cmbConditionTypes.conditionTypes[self.cmbConditionTypes.selected]
-    local success, subPanels = self:UpdateModel()
-    if not success then
-        SetTableValues(self.condition, _condition)
-        return false, subPanels
-    end
-    self.triggerWindow:Populate()
-    return true
-end
-
-function ConditionWindow:AddCondition()
-    self.condition = { conditionTypeName = self.cmbConditionTypes.conditionTypes[self.cmbConditionTypes.selected] }
-    local success, subPanels = self:UpdateModel()
-    if not success then
-        self.condition = nil
-        return false, subPanels
-    end
-    table.insert(self.trigger.conditions, self.condition)
-    self.triggerWindow:Populate()
-    return true
+function ConditionWindow:AddParent()
+    table.insert(self.trigger.conditions, self.element)
 end

@@ -63,7 +63,7 @@ function TriggerWindow:init(trigger)
         height = SCEN_EDIT.conf.B_HEIGHT,
         backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
         OnClick = {
-            function() 
+            function()
                 self.trigger.name = edTriggerName.text
                 self.save = true
                 self.window:Dispose()
@@ -132,7 +132,7 @@ function TriggerWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackEventPanel,
             tooltip = "Edit event",
-            OnClick = {function() self:MakeEditEventWindow(event) end},			
+            OnClick = {function() self:MakeEditEventWindow(event) end},
         }
         local btnRemoveEvent = Button:New {
             caption = "",
@@ -142,11 +142,11 @@ function TriggerWindow:Populate()
             parent = stackEventPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Image:New { 
-                    tooltip = "Remove event", 
-                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = SCEN_EDIT.conf.B_HEIGHT, 
-                    width = SCEN_EDIT.conf.B_HEIGHT, 
+                Image:New {
+                    tooltip = "Remove event",
+                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png",
+                    height = SCEN_EDIT.conf.B_HEIGHT,
+                    width = SCEN_EDIT.conf.B_HEIGHT,
                     margin = {0, 0, 0, 0},
                 },
             },
@@ -174,9 +174,9 @@ function TriggerWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackPanel,
             backgroundColor = {0, 0, 0, 0},
-            OnClick = {function() 
+            OnClick = {function()
                 self.openedConditionNodes[i] = not self.openedConditionNodes[i]
-                self:Populate() 
+                self:Populate()
             end}
         }
         if self.openedConditionNodes[i] then
@@ -200,11 +200,11 @@ function TriggerWindow:Populate()
             padding = {0, 0, 0, 0},
             tooltip = "Remove condition",
             children = {
-                Image:New { 
-                    tooltip = "Remove condition", 
-                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = SCEN_EDIT.conf.B_HEIGHT, 
-                    width = SCEN_EDIT.conf.B_HEIGHT, 
+                Image:New {
+                    tooltip = "Remove condition",
+                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png",
+                    height = SCEN_EDIT.conf.B_HEIGHT,
+                    width = SCEN_EDIT.conf.B_HEIGHT,
                     margin = {0, 0, 0, 0},
                 },
             },
@@ -233,7 +233,7 @@ function TriggerWindow:Populate()
             height = SCEN_EDIT.conf.B_HEIGHT,
             parent = stackActionPanel,
             backgroundColor = {0, 0, 0, 0},
-            OnClick = {function() 
+            OnClick = {function()
                 self.openedActionNodes[i] = not self.openedActionNodes[i]
                 self:Populate()
             end}
@@ -259,11 +259,11 @@ function TriggerWindow:Populate()
             padding = {0, 0, 0, 0},
             tooltip = "Remove action",
             children = {
-                Image:New { 
-                    tooltip = "Remove action", 
-                    file= SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = SCEN_EDIT.conf.B_HEIGHT, 
-                    width = SCEN_EDIT.conf.B_HEIGHT, 
+                Image:New {
+                    tooltip = "Remove action",
+                    file= SCEN_EDIT_IMG_DIR .. "list-remove.png",
+                    height = SCEN_EDIT.conf.B_HEIGHT,
+                    width = SCEN_EDIT.conf.B_HEIGHT,
                     margin = {0, 0, 0, 0},
                 },
             },
@@ -314,11 +314,22 @@ function TriggerWindow:PopulateExpressions(root, rootType, level)
 end
 
 function TriggerWindow:MakeAddConditionWindow()
-    return ConditionWindow(self.trigger, self, 'add')
+    return ConditionWindow({
+        trigger = self.trigger,
+        parentWindow = self.window,
+        triggerWindow = self,
+        mode = 'add',
+    })
 end
 
 function TriggerWindow:MakeEditConditionWindow(condition)
-    return ConditionWindow(self.trigger, self, 'edit', condition)
+    return ConditionWindow({
+        trigger = self.trigger,
+        parentWindow = self.window,
+        triggerWindow = self,
+        mode = 'edit',
+        condition = condition,
+    })
 end
 
 function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
@@ -328,11 +339,22 @@ function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
 end
 
 function TriggerWindow:MakeAddEventWindow()
-    return EventWindow(self.trigger, self, 'add')
+    return EventWindow({
+        trigger = self.trigger,
+        parentWindow = self.window,
+        triggerWindow = self,
+        mode = 'add',
+    })
 end
 
 function TriggerWindow:MakeEditEventWindow(event)
-    return EventWindow(self.trigger, self, 'edit', event)
+    return EventWindow({
+        trigger = self.trigger,
+        parentWindow = self.window,
+        triggerWindow = self,
+        mode = 'edit',
+        event = event,
+    })
 end
 
 function TriggerWindow:MakeRemoveEventWindow(event, idx)
@@ -341,11 +363,22 @@ function TriggerWindow:MakeRemoveEventWindow(event, idx)
 end
 
 function TriggerWindow:MakeAddActionWindow()
-    return ActionWindow(self.trigger, self, 'add')
+    return ActionWindow({
+        trigger = self.trigger,
+        parentWindow = self.window,
+        triggerWindow = self,
+        mode = 'add',
+    })
 end
 
 function TriggerWindow:MakeEditActionWindow(action)
-    return ActionWindow(self.trigger, self, 'edit', action)
+    return ActionWindow({
+        trigger = self.trigger,
+        parentWindow = self.window,
+        triggerWindow = self,
+        mode = 'edit',
+        action = action,
+    })
 end
 
 function TriggerWindow:MakeRemoveActionWindow(action, idx)
