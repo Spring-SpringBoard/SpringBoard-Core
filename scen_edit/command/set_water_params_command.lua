@@ -29,7 +29,11 @@ function WidgetSetWaterParamsCommand:execute()
     if gl and gl.GetWaterRendering then
         self.oldValues = {}
         for k, v in pairs(self.opts) do
-            self.oldValues[k] = gl.GetWaterRendering(k)
+            local retVal = {gl.GetWaterRendering(k)}
+            if #retVal == 1 then
+                retVal = retVal[1]
+            end
+            self.oldValues[k] = retVal
         end
     end
     cmdStack[#cmdStack + 1] = self.oldValues
