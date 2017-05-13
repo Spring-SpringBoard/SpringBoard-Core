@@ -12,7 +12,8 @@ The development version can be obtained from this repository, by cloning it in y
 
 ### Game-specific modules
 This is the core module, you may still want to get additional game-specific modules if you're making a scenario.
+
 Some examples:
-https://github.com/Spring-SpringBoard/SpringBoard-BA
-https://github.com/Spring-SpringBoard/SpringBoard-ZK
-https://github.com/Spring-SpringBoard/SpringBoard-EVO
+- https://github.com/Spring-SpringBoard/SpringBoard-BA
+- https://github.com/Spring-SpringBoard/SpringBoard-ZK
+- https://github.com/Spring-SpringBoard/SpringBoard-EVO
