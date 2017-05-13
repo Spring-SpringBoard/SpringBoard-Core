@@ -508,6 +508,8 @@ function TerrainSettingsView:init()
         }),
     }))
 
+    self:UpdateWaterRendering()
+
     local children = {
         ScrollPanel:New {
             x = 0,
@@ -578,6 +580,49 @@ function TerrainSettingsView:UpdateAtmosphere()
 --     self:Set("skyDir",     gl.GetAtmosphere("skyDir"))
     self:Set("sunColor",   {gl.GetAtmosphere("sunColor")})
     self:Set("cloudColor", {gl.GetAtmosphere("cloudColor")})
+end
+
+function TerrainSettingsView:UpdateWaterRendering()
+    if not gl.GetWaterRendering then
+        Log.Warning("gl.GetWaterRendering missing; Update to newer engine.")
+        return
+    end
+
+    self:Set("forceRendering", gl.GetWaterRendering("forceRendering"))
+    self:Set("numTiles", gl.GetWaterRendering("numTiles"))
+    self:Set("normalTexture", gl.GetWaterRendering("normalTexture"))
+
+    self:Set("perlinStartFreq", gl.GetWaterRendering("perlinStartFreq"))
+    self:Set("perlinLacunarity", gl.GetWaterRendering("perlinLacunarity"))
+    self:Set("perlinAmplitude", gl.GetWaterRendering("perlinAmplitude"))
+
+    self:Set("diffuseFactor", gl.GetWaterRendering("diffuseFactor"))
+    self:Set("diffuseColor", {gl.GetWaterRendering("diffuseColor")})
+
+    self:Set("specularFactor", gl.GetWaterRendering("specularFactor"))
+    self:Set("specularPower", gl.GetWaterRendering("specularPower"))
+    self:Set("specularColor", {gl.GetWaterRendering("specularColor")})
+
+    self:Set("ambientFactor", gl.GetWaterRendering("ambientFactor"))
+
+    self:Set("fresnelMin", gl.GetWaterRendering("fresnelMin"))
+    self:Set("fresnelMax", gl.GetWaterRendering("fresnelMax"))
+    self:Set("fresnelPower", gl.GetWaterRendering("fresnelPower"))
+
+    self:Set("reflectionDistortion", gl.GetWaterRendering("reflectionDistortion"))
+
+    self:Set("blurBase", gl.GetWaterRendering("blurBase"))
+    self:Set("blurExponent", gl.GetWaterRendering("blurExponent"))
+
+    self:Set("hasWaterPlane", gl.GetWaterRendering("hasWaterPlane"))
+    self:Set("planeColor", {gl.GetWaterRendering("planeColor")})
+
+    self:Set("shoreWaves", gl.GetWaterRendering("shoreWaves"))
+    self:Set("foamTexture", gl.GetWaterRendering("foamTexture"))
+
+    self:Set("texture", gl.GetWaterRendering("texture"))
+    self:Set("repeatX", gl.GetWaterRendering("repeatX"))
+    self:Set("repeatY", gl.GetWaterRendering("repeatY"))
 end
 
 function TerrainSettingsView:OnStartChange(name)
@@ -657,8 +702,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
         local cmd = SetAtmosphereCommand(t)
         SCEN_EDIT.commandManager:execute(cmd)
     else
-
-        Spring.SetWaterParams({[name] = value})
-        Spring.SendCommands('water ' .. Spring.GetWaterMode())
+        local cmd = SetWaterParamsCommand({[name] = value})
+        SCEN_EDIT.commandManager:execute(cmd)
     end
 end
