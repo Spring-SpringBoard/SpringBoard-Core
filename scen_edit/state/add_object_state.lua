@@ -44,6 +44,10 @@ function AddObjectState:MouseMove(x, y, dx, dy, button)
 end
 
 function AddObjectState:MouseRelease(x, y, button)
+    if not self.objectDefIDs or #self.objectDefIDs == 0 then
+        return
+    end
+
     local commands = {}
     math.randomseed(self.randomSeed)
     for i = 1, self.amount do
@@ -71,7 +75,7 @@ function AddObjectState:MouseRelease(x, y, button)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
     self.randomSeed = self.randomSeed + os.clock()
-    return true
+    return
 end
 
 function AddObjectState:KeyPress(key, mods, isRepeat, label, unicode)
