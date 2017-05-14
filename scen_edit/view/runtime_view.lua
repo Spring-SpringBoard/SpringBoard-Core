@@ -10,7 +10,7 @@ function RuntimeView:init()
         width = 45,
         backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
         OnClick = {
-            function() 
+            function()
                 if not self.started then
                     local cmd = StartCommand()
                     SCEN_EDIT.commandManager:execute(cmd)
@@ -48,7 +48,7 @@ function RuntimeView:init()
         height = SCEN_EDIT.conf.B_HEIGHT + 20,
         tooltip = "Toggle displaying of debugging symbols",
         OnClick = {
-            function() 
+            function()
                 SCEN_EDIT.view.displayDevelop = not SCEN_EDIT.view.displayDevelop
                 if SCEN_EDIT.view.displayDevelop then
                     self.btnToggleShowDevelop.caption = 'Hide dev view'
@@ -61,11 +61,12 @@ function RuntimeView:init()
     self.runtimeViewWindow = Window:New {
         parent = screen0,
         caption = "Runtime Window",
-        right  = 600,
+        right = 501,
         bottom = 0,
-        resizable = true,
+        resizable = false,
+        draggable = false,
         width = 375,
-        height = 300,
+        height = 200,
         children = {
             Control:New {
                 orientation = 'horizontal',
@@ -90,14 +91,14 @@ function RuntimeView:init()
                     ScrollPanel:New {
                         width = "100%",
                         height = "100%",
-                        children = { 
+                        children = {
                             self.dvv,
                         },
                     },
                     ScrollPanel:New {
                         width = "100%",
                         height = "100%",
-                        children = { 
+                        children = {
                             self.dtv,
                         },
                     },

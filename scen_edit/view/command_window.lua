@@ -18,11 +18,12 @@ function CommandWindow:init()
     self.window = Window:New {
         parent = screen0,
         caption = "Command stack",
-        right = 0,
-        y = 550,
-        resizable = true,
+        right = 501 + 376,
+        bottom = 0,
+        resizable = false,
+        draggable = false,
         width = 375,
-        height = 300,
+        height = 200,
         children = {
             self.list.ctrl,
         }
