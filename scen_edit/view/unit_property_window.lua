@@ -634,71 +634,77 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
 end
 
 function UnitPropertyWindow:OnFieldChange(name, value)
-    if not self.selectionChanging then
-        local selection = SCEN_EDIT.view.selectionManager:GetSelection()
-        local commands = {}
-        if name == "posX" or name == "posY" or name == "posZ" then
-            value = { x = self.fields["posX"].value,
-                      y = self.fields["posY"].value,
-                      z = self.fields["posZ"].value }
-            name = "pos"
-        end
-        if name == "velX" or name == "velY" or name == "velZ" then
-            value = { x = self.fields["velX"].value,
-                      y = self.fields["velY"].value,
-                      z = self.fields["velZ"].value }
-            name = "vel"
-        end
-        if name == "angleX" or name == "angleY" or name == "angleZ" then
-            local angleX = math.rad(self.fields["angleX"].value)
-            local angleY = math.rad(self.fields["angleY"].value)
-            local angleZ = math.rad(self.fields["angleZ"].value)
-            value = { x = angleX,
-                      y = angleY,
-                      z = angleZ }
-            name = "rot"
-        end
-        if name:sub(1, #"rule_") == "rule_" then
-            local rule = name:sub(#"rule_"+1)
-            name = "rules"
-            value = {
-                [rule] = value
-            }
-        end
-        if name == "metalMake" or name == "metalUse" or name == "energyMake" or name == "energyUse" then
-            name = "resources"
-            value = { metalMake  = self.fields["metalMake"].value,
-                      metalUse   = self.fields["metalUse"].value,
-                      energyMake = self.fields["energyMake"].value,
-                      energyUse  = self.fields["energyUse"].value }
-        end
-        if name == "fireState" or name == "moveState" or name == "repeat" or name == "cloak" or name == "active" or name == "trajectory" or name == "autoLand" or name == "autoRepairLevel" or name == "loopbackAttack" then
-            name = "states"
-            value = { fireState         = self.fields["fireState"].value,
-                      moveState         = self.fields["moveState"].value,
-                      ["repeat"]        = self.fields["repeat"].value,
-                      cloak             = self.fields["cloak"].value,
-                      active            = self.fields["active"].value,
-                      trajectory        = self.fields["trajectory"].value,
-                      autoLand          = self.fields["autoLand"].value,
-                      autoRepairLevel   = self.fields["autoRepairLevel"].value,
-                      loopbackAttack    = self.fields["loopbackAttack"].value,
-            }
-        end
-        -- HACK: needs cleanup
-        if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" or name == "rules" or name == "resources" or name == "states" then
-            for _, command in pairs(self:GetCommands(selection.units, name, value, unitBridge)) do
-                table.insert(commands, command)
-            end
-        end
-        if self:IsFeatureKey(name) then
-            for _, command in pairs(self:GetCommands(selection.features, name, value, featureBridge)) do
-                table.insert(commands, command)
-            end
-        end
-        local compoundCommand = CompoundCommand(commands)
-        SCEN_EDIT.commandManager:execute(compoundCommand)
+    if self.selectionChanging then
+        return
     end
+
+    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    if #selection.units == 0 and #selection.features == 0 then
+        return
+    end
+
+    local commands = {}
+    if name == "posX" or name == "posY" or name == "posZ" then
+        value = { x = self.fields["posX"].value,
+                  y = self.fields["posY"].value,
+                  z = self.fields["posZ"].value }
+        name = "pos"
+    end
+    if name == "velX" or name == "velY" or name == "velZ" then
+        value = { x = self.fields["velX"].value,
+                  y = self.fields["velY"].value,
+                  z = self.fields["velZ"].value }
+        name = "vel"
+    end
+    if name == "angleX" or name == "angleY" or name == "angleZ" then
+        local angleX = math.rad(self.fields["angleX"].value)
+        local angleY = math.rad(self.fields["angleY"].value)
+        local angleZ = math.rad(self.fields["angleZ"].value)
+        value = { x = angleX,
+                  y = angleY,
+                  z = angleZ }
+        name = "rot"
+    end
+    if name:sub(1, #"rule_") == "rule_" then
+        local rule = name:sub(#"rule_"+1)
+        name = "rules"
+        value = {
+            [rule] = value
+        }
+    end
+    if name == "metalMake" or name == "metalUse" or name == "energyMake" or name == "energyUse" then
+        name = "resources"
+        value = { metalMake  = self.fields["metalMake"].value,
+                  metalUse   = self.fields["metalUse"].value,
+                  energyMake = self.fields["energyMake"].value,
+                  energyUse  = self.fields["energyUse"].value }
+    end
+    if name == "fireState" or name == "moveState" or name == "repeat" or name == "cloak" or name == "active" or name == "trajectory" or name == "autoLand" or name == "autoRepairLevel" or name == "loopbackAttack" then
+        name = "states"
+        value = { fireState         = self.fields["fireState"].value,
+                  moveState         = self.fields["moveState"].value,
+                  ["repeat"]        = self.fields["repeat"].value,
+                  cloak             = self.fields["cloak"].value,
+                  active            = self.fields["active"].value,
+                  trajectory        = self.fields["trajectory"].value,
+                  autoLand          = self.fields["autoLand"].value,
+                  autoRepairLevel   = self.fields["autoRepairLevel"].value,
+                  loopbackAttack    = self.fields["loopbackAttack"].value,
+        }
+    end
+    -- HACK: needs cleanup
+    if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" or name == "rules" or name == "resources" or name == "states" then
+        for _, command in pairs(self:GetCommands(selection.units, name, value, unitBridge)) do
+            table.insert(commands, command)
+        end
+    end
+    if self:IsFeatureKey(name) then
+        for _, command in pairs(self:GetCommands(selection.features, name, value, featureBridge)) do
+            table.insert(commands, command)
+        end
+    end
+    local compoundCommand = CompoundCommand(commands)
+    SCEN_EDIT.commandManager:execute(compoundCommand)
 end
 
 function UnitPropertyWindow:GetCommands(objectIDs, name, value, bridge)
