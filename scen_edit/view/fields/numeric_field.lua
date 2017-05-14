@@ -12,10 +12,7 @@ function NumericField:Update(source)
 end
 
 function NumericField:Validate(value)
-    local valid, value = self:super("Validate", value)
-    if value then
-        value = tonumber(value)
-    end
+    local valid, value = self:super("Validate", tonumber(value))
     if value then
         if self.maxValue then
             value = math.min(self.maxValue, value)
