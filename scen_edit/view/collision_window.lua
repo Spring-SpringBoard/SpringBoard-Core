@@ -20,7 +20,7 @@ function CollisionView:init()
         },
     })
 --     self:AddField(BooleanField({
---         name = "enabled", 
+--         name = "enabled",
 --         value = true,
 --         title = "Enabled:",
 --         tooltip = "Collision enabled",
@@ -54,7 +54,7 @@ function CollisionView:init()
     })
     self:AddField(GroupField({
         NumericField({
-            name = "scaleX", 
+            name = "scaleX",
             title = "X:",
             tooltip = "Scale (x)",
             minValue = 0,
@@ -63,7 +63,7 @@ function CollisionView:init()
             width = 150,
         }),
         NumericField({
-            name = "scaleY", 
+            name = "scaleY",
             title = "Y:",
             tooltip = "Scale (y)",
             minValue = 0,
@@ -72,7 +72,7 @@ function CollisionView:init()
             width = 150,
         }),
         NumericField({
-            name = "scaleZ", 
+            name = "scaleZ",
             title = "Z:",
             tooltip = "Scale (z)",
             minValue = 0,
@@ -93,7 +93,7 @@ function CollisionView:init()
     })
     self:AddField(GroupField({
         NumericField({
-            name = "offsetX", 
+            name = "offsetX",
             title = "X:",
             tooltip = "Offset (x)",
             value = 0,
@@ -101,7 +101,7 @@ function CollisionView:init()
             width = 150,
         }),
         NumericField({
-            name = "offsetY", 
+            name = "offsetY",
             title = "Y:",
             tooltip = "Offset (y)",
             value = 0,
@@ -109,7 +109,7 @@ function CollisionView:init()
             width = 150,
         }),
         NumericField({
-            name = "offsetZ", 
+            name = "offsetZ",
             title = "Z:",
             tooltip = "Offset (z)",
             value = 0,
@@ -128,7 +128,7 @@ function CollisionView:init()
     })
     self:AddField(GroupField({
         NumericField({
-            name = "radius", 
+            name = "radius",
             title = "Radius:",
             tooltip = "Radius",
             value = 0,
@@ -137,7 +137,7 @@ function CollisionView:init()
             width = 225,
         }),
         NumericField({
-            name = "height", 
+            name = "height",
             title = "Height:",
             tooltip = "Height",
             value = 0,
@@ -227,49 +227,49 @@ function CollisionView:init()
         }
     })
     self:AddField(BooleanField({
-        name = "isBlocking", 
+        name = "isBlocking",
         value = true,
         title = "Blocking:",
         tooltip = "Is blocking",
     }))
     self:AddField(BooleanField({
-        name = "isSolidObjectCollidable", 
+        name = "isSolidObjectCollidable",
         value = true,
         title = "Solid object collidable:",
         tooltip = "Is solid object collidable",
     }))
     self:AddField(BooleanField({
-        name = "isProjectileCollidable", 
+        name = "isProjectileCollidable",
         value = true,
         title = "Projectile collidable:",
         tooltip = "Is projectile collidable",
     }))
     self:AddField(BooleanField({
-        name = "isRaySegmentCollidable", 
+        name = "isRaySegmentCollidable",
         value = true,
         title = "Ray segment collidable:",
         tooltip = "Is ray segment collidable",
     }))
     self:AddField(BooleanField({
-        name = "crushable", 
+        name = "crushable",
         value = true,
         title = "Crushable:",
         tooltip = "Is crushable",
     }))
     self:AddField(BooleanField({
-        name = "blockEnemyPushing", 
+        name = "blockEnemyPushing",
         value = true,
         title = "Block enemy pushing:",
         tooltip = "Blocks enemy pushing",
     }))
     self:AddField(BooleanField({
-        name = "blockHeightChanges", 
+        name = "blockHeightChanges",
         value = true,
         title = "Block height changes",
         tooltip = "Blocks height changes",
     }))
 
-    table.insert(children, 
+    table.insert(children,
         ScrollPanel:New {
             x = 0,
             y = "0%",
@@ -359,114 +359,121 @@ function CollisionView:OnFieldChange(name, value)
             self:SetInvisibleFields("axis")
         end
     end
-    if not self.selectionChanging then
-        if vType == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
-            if name ~= "scaleX" then
-                self:Set("scaleX", value)
-            end
-            if name ~= "scaleY" then
-                self:Set("scaleY", value)
-            end
-            if name ~= "scaleZ" then
+
+    if self.selectionChanging then
+        return
+    end
+
+    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    if #selection.units == 0 and #selection.features == 0 then
+        return
+    end
+
+    if vType == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
+        if name ~= "scaleX" then
+            self:Set("scaleX", value)
+        end
+        if name ~= "scaleY" then
+            self:Set("scaleY", value)
+        end
+        if name ~= "scaleZ" then
+            self:Set("scaleZ", value)
+        end
+    end
+    if vType == "Cylinder" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
+        if axis == "X" then
+            if name == "scaleX" then
                 self:Set("scaleZ", value)
             end
-        end
-        if vType == "Cylinder" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
-            if axis == "X" then
-                if name == "scaleX" then
-                    self:Set("scaleZ", value)
-                end
-                if name == "scaleZ" then
-                    self:Set("scaleX", value)
-                end
-            elseif axis == "Y" then
-                if name == "scaleX" then
-                    self:Set("scaleY", value)
-                end
-                if name == "scaleY" then
-                    self:Set("scaleX", value)
-                end
-            elseif axis == "Z" then
-                if name == "scaleY" then
-                    self:Set("scaleZ", value)
-                end
-                if name == "scaleZ" then
-                    self:Set("scaleY", value)
-                end
+            if name == "scaleZ" then
+                self:Set("scaleX", value)
+            end
+        elseif axis == "Y" then
+            if name == "scaleX" then
+                self:Set("scaleY", value)
+            end
+            if name == "scaleY" then
+                self:Set("scaleX", value)
+            end
+        elseif axis == "Z" then
+            if name == "scaleY" then
+                self:Set("scaleZ", value)
+            end
+            if name == "scaleZ" then
+                self:Set("scaleY", value)
             end
         end
-
-        if name == "mpx" or name == "mpy" or name == "mpz" or 
-                name == "apx" or name == "apy" or name == "apz" then
-            value = { mid = {
-                        x = self.fields["mpx"].value,
-                        y = self.fields["mpy"].value,
-                        z = self.fields["mpz"].value },
-                      aim = {
-                        x = self.fields["apx"].value,
-                        y = self.fields["apy"].value,
-                        z = self.fields["apz"].value },
-                      }
-            name = "midAimPos"
-        elseif name == "isBlocking" or name == "isSolidObjectCollidable" or
-                name == "isProjectileCollidable" or name == "isRaySegmentCollidable" or 
-                name == "crushable" or name == "blockEnemyPushing" or 
-                name == "blockHeightChanges" then
-            value = {
-                isBlocking                  = self.fields["isBlocking"].value,
-                isSolidObjectCollidable     = self.fields["isSolidObjectCollidable"].value,
-                isProjectileCollidable      = self.fields["isProjectileCollidable"].value,
-                isRaySegmentCollidable      = self.fields["isRaySegmentCollidable"].value,
-                crushable                   = self.fields["crushable"].value,
-                blockEnemyPushing           = self.fields["blockEnemyPushing"].value,
-                blockHeightChanges          = self.fields["blockHeightChanges"].value
-            }
-            name = "blocking"
-        elseif name == "radius" or name == "height" then
-            value = {
-                radius = self.fields["radius"].value,
-                height = self.fields["height"].value
-            }
-            name = "radiusHeight"
-        elseif name == "scaleX" or name == "scaleY" or name == "scaleZ" or
-               name == "offsetX" or name == "offsetY" or name == "offsetZ" or
-               name == "vType" or name == "testType" or name == "axis" or
-               name == "disabled" then
-            local vType, axis
-            for i, value in pairs(self.fields["vType"].comboBox.ids) do
-                if value == self.fields["vType"].value then
-                    vType = i
-                end
-            end
-            for i, value in pairs(self.fields["axis"].comboBox.ids) do
-                if value == self.fields["axis"].value then
-                    axis = i
-                end
-            end
-            value = {
-                scaleX                    = self.fields["scaleX"].value,
-                scaleY                    = self.fields["scaleY"].value,
-                scaleZ                    = self.fields["scaleZ"].value,
-                offsetX                   = self.fields["offsetX"].value,
-                offsetY                   = self.fields["offsetY"].value,
-                offsetZ                   = self.fields["offsetZ"].value,
-                vType                     = vType,
-                axis                      = axis,
-            }
-            name = "collision"
-        end
-        local commands = {}
-        local selection = SCEN_EDIT.view.selectionManager:GetSelection()
-        for _, objectID in pairs(selection.units) do
-            local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
-            table.insert(commands, SetUnitParamCommand(modelID, name, value))
-        end
-        for _, objectID in pairs(selection.features) do
-            local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
-            table.insert(commands, SetFeatureParamCommand(modelID, name, value))
-        end
-
-        local compoundCommand = CompoundCommand(commands)
-        SCEN_EDIT.commandManager:execute(compoundCommand)
     end
+
+    if name == "mpx" or name == "mpy" or name == "mpz" or
+            name == "apx" or name == "apy" or name == "apz" then
+        value = { mid = {
+                    x = self.fields["mpx"].value,
+                    y = self.fields["mpy"].value,
+                    z = self.fields["mpz"].value },
+                  aim = {
+                    x = self.fields["apx"].value,
+                    y = self.fields["apy"].value,
+                    z = self.fields["apz"].value },
+                  }
+        name = "midAimPos"
+    elseif name == "isBlocking" or name == "isSolidObjectCollidable" or
+            name == "isProjectileCollidable" or name == "isRaySegmentCollidable" or
+            name == "crushable" or name == "blockEnemyPushing" or
+            name == "blockHeightChanges" then
+        value = {
+            isBlocking                  = self.fields["isBlocking"].value,
+            isSolidObjectCollidable     = self.fields["isSolidObjectCollidable"].value,
+            isProjectileCollidable      = self.fields["isProjectileCollidable"].value,
+            isRaySegmentCollidable      = self.fields["isRaySegmentCollidable"].value,
+            crushable                   = self.fields["crushable"].value,
+            blockEnemyPushing           = self.fields["blockEnemyPushing"].value,
+            blockHeightChanges          = self.fields["blockHeightChanges"].value
+        }
+        name = "blocking"
+    elseif name == "radius" or name == "height" then
+        value = {
+            radius = self.fields["radius"].value,
+            height = self.fields["height"].value
+        }
+        name = "radiusHeight"
+    elseif name == "scaleX" or name == "scaleY" or name == "scaleZ" or
+           name == "offsetX" or name == "offsetY" or name == "offsetZ" or
+           name == "vType" or name == "testType" or name == "axis" or
+           name == "disabled" then
+        local vType, axis
+        for i, value in pairs(self.fields["vType"].comboBox.ids) do
+            if value == self.fields["vType"].value then
+                vType = i
+            end
+        end
+        for i, value in pairs(self.fields["axis"].comboBox.ids) do
+            if value == self.fields["axis"].value then
+                axis = i
+            end
+        end
+        value = {
+            scaleX                    = self.fields["scaleX"].value,
+            scaleY                    = self.fields["scaleY"].value,
+            scaleZ                    = self.fields["scaleZ"].value,
+            offsetX                   = self.fields["offsetX"].value,
+            offsetY                   = self.fields["offsetY"].value,
+            offsetZ                   = self.fields["offsetZ"].value,
+            vType                     = vType,
+            axis                      = axis,
+        }
+        name = "collision"
+    end
+    local commands = {}
+    for _, objectID in pairs(selection.units) do
+        local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
+        table.insert(commands, SetUnitParamCommand(modelID, name, value))
+    end
+    for _, objectID in pairs(selection.features) do
+        local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
+        table.insert(commands, SetFeatureParamCommand(modelID, name, value))
+    end
+
+    local compoundCommand = CompoundCommand(commands)
+    SCEN_EDIT.commandManager:execute(compoundCommand)
 end
