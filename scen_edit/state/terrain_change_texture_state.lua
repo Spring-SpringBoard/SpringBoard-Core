@@ -27,6 +27,12 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
     if not self.brushTexture.diffuse then
         return
     end
+    if not self.paintMode or self.paintMode == "" then
+        return
+    end
+    if self.paintMode == "paint" and not self.paintTexture.diffuse then
+        return
+    end
 	local opts = {
 		x = x - self.size/2,
 		z = z - self.size/2,
@@ -47,9 +53,7 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
 		specularEnabled = self.specularEnabled,
 		normalEnabled = self.normalEnabled,
 		voidFactor = voidFactor,
-		void = not not self.void,
-		smartPaint = not not self.smartPaint,
-        blur = not not self.blur,
+        paintMode = self.paintMode,
 		textures = self.textures,
 	}
 	local command = TerrainChangeTextureCommand(opts)

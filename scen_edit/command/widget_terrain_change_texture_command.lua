@@ -782,16 +782,18 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     z = z
     size = size
 
-    if opts.void then
+    if opts.paintMode == "void" then
         DrawVoid(opts, x, z, size)
-    elseif opts.blur then
+    elseif opts.paintMode == "blur" then
         DrawBlur(opts, x, z, size)
-    elseif opts.smartPaint then
+    elseif opts.paintMode == "smartPaint" then
         Log.Debug("Smart paint!", #opts.textures)
         DrawSmart(opts, x, z, size)
-    else
+    elseif opts.paintMode == "paint" then
         DrawDiffuse(opts, x, z, size)
         DrawShadingTextures(opts, x, z, size)
+    else
+        Log.Error("Unexpected paint mode: " .. tostring(opts.paintMode))
     end
 end
 

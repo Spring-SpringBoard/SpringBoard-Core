@@ -149,8 +149,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
 				local state = self:EnterState()
-				state.void = false
-				state.smartPaint = false
+                state.paintMode = "paint"
 				self:SetInvisibleFields("voidFactor", "kernelMode")
             end
         },
@@ -166,8 +165,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
 				local state = self:EnterState()
-				state.void = true
-				state.smartPaint = false
+                state.paintMode = "void"
 				self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode")
             end
         },
@@ -183,9 +181,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
 				local state = self:EnterState()
-                state.blur = true
-				state.void = false
-				state.smartPaint = false
+                state.paintMode = "blur"
 				self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation")
             end
         },
@@ -202,8 +198,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
 				local state = self:EnterState()
-				state.void = false
-				state.smartPaint = true
+                state.paintMode = "smartPaint"
 				self:SetInvisibleFields("kernelMode")
 				state.textures = {}
             end
