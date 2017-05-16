@@ -30,6 +30,18 @@ function View:init()
     self.modelShaders = ModelShaders()
 
     self.teamSelector = TeamSelector()
+
+    self.lblProject = Label:New {
+        x = "45%",
+        y = 5,
+        autosize = true,
+        font = {
+            size = 22,
+            outline = true,
+        },
+        parent = screen0,
+        caption = SCEN_EDIT.projectDir or "Project not saved",
+    }
 end
 
 function View:Update()
@@ -106,24 +118,15 @@ function View:DrawScreen()
 --         gl.UseShader(0)
 --         gl.PopMatrix()
 
-        local w, h = Spring.GetScreenGeometry()
-        local fontSize = 20
-        if self.font == nil then
-            local fontName = "FreeSansBold.otf"
-            self.font = gl.LoadFont(fontName, fontSize)
-        end
-
-        local y = 10
-        local text
-        local x = w - 200
-        if SCEN_EDIT.projectDir ~= nil then
-            text = "Project:" .. SCEN_EDIT.projectDir
+        local projectCaption
+        if SCEN_EDIT.projectDir then
+            projectCaption = "Project: " .. SCEN_EDIT.projectDir
         else
-            text = "Project not saved"
+            projectCaption = "Project not saved"
         end
-        local x = w - self.font:GetTextWidth(text) * fontSize - 10
-        self.font:Print(text, x, y, 20, 'o')
-
+        if self.lblProject.caption ~= projectCaption then
+            self.lblProject:SetCaption(projectCaption)
+        end
 -- 		gl.PushMatrix()
 -- 			local i = 1
 -- 			local step = 200
