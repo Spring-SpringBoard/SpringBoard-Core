@@ -1,7 +1,7 @@
 SaveAsAction = AbstractAction:extends{}
 
 function SaveAsAction:execute()
-    local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
+    local dir = FilePanel.lastDir or SB_PROJECTS_DIR
     sfd = SaveProjectDialog(dir)
     sfd:setConfirmDialogCallback(
         function(path)
@@ -11,7 +11,7 @@ function SaveAsAction:execute()
             SCEN_EDIT.commandManager:execute(setProjectDirCommand)
             SCEN_EDIT.commandManager:execute(setProjectDirCommand, true)
             self:CreateProjectStructure(path)
-            
+
             local saveCommand = SaveCommand(path)
             SCEN_EDIT.commandManager:execute(saveCommand, true)
             Log.Notice("Saved project.")
@@ -19,7 +19,7 @@ function SaveAsAction:execute()
     )
 end
 
-function SaveAsAction:CreateProjectStructure(projectDir)	
+function SaveAsAction:CreateProjectStructure(projectDir)
 	-- create project if it doesn't exist already
 	if not SCEN_EDIT.DirExists(projectDir, VFS.RAW_ONLY) then
 		Spring.CreateDir(projectDir)

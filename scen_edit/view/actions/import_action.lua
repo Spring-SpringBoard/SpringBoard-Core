@@ -1,7 +1,7 @@
 ImportAction = AbstractAction:extends{}
 
 function ImportAction:execute()
-    local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
+    local dir = FilePanel.lastDir or SB_PROJECTS_DIR
     local fileTypes = {"Feature placer", "Diffuse", "Heightmap"}
     sfd = ImportFileDialog(dir, fileTypes)
     sfd:setConfirmDialogCallback(

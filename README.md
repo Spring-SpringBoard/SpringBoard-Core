@@ -17,3 +17,9 @@ Some examples:
 - https://github.com/Spring-SpringBoard/SpringBoard-BA
 - https://github.com/Spring-SpringBoard/SpringBoard-ZK
 - https://github.com/Spring-SpringBoard/SpringBoard-EVO
+
+## Assets
+
+Any assets (texture files, skyboxes, etc.) should be put in the "springboard/assets" folder, located inside the Spring data directory.
+
+Core assets can be obtained from the following [link](https://drive.google.com/file/d/0B9FQjbVMFgL2LTM2Z1VVaGRZRDQ/view?usp=sharing). Once downloaded, they should be extracted, with the resulting folder structure of "springboard/assets/core/".

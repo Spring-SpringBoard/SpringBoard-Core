@@ -2,7 +2,7 @@ ExportAction = AbstractAction:extends{}
 
 function ExportAction:execute()
     if SCEN_EDIT.projectDir ~= nil then
-        local dir = FilePanel.lastDir or SCEN_EDIT_EXAMPLE_DIR_RAW_FS
+        local dir = FilePanel.lastDir or SB_PROJECTS_DIR
         local fileTypes = {"Scenario archive", "Feature placer", "Map textures"}
         sfd = ExportFileDialog(dir, fileTypes)
         sfd:setConfirmDialogCallback(

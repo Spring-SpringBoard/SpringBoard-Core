@@ -6,10 +6,14 @@ SCEN_EDIT = {}
 SCEN_EDIT_DIR = "scen_edit/"
 SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
 SCEN_EDIT_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
+
 --FIXME: don't assume path, find it programatically
 --FIXME: not used now
 -- SCENARIO_EDITOR_DIR = "games/ToolBox.sdd/"
-SCEN_EDIT_EXAMPLE_DIR_RAW_FS = "projects/" -- SCENARIO_EDITOR_DIR .. "examples/"
+
+SB_ROOT = "springboard/"
+SB_PROJECTS_DIR = SB_ROOT .. "projects/"
+SB_ASSETS_DIR   = SB_ROOT .. "assets/"
 
 --properties
 SCEN_EDIT_FILE_EXT = ".sdz"
