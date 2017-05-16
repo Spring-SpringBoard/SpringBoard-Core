@@ -9,15 +9,6 @@ end
 function TextureBrowser:ScanDirStarted()
 	self.textures = {} -- file base -> texture mapping
 	self.textureOrder = {}
-	self.blacklist = {}
-	-- read blacklist
-	
-	pcall(function()
-		local blacklist = loadstring(VFS.LoadFile(self.dir .. "blacklist.lua"))()
-		for _, line in pairs(blacklist) do 
-			self.blacklist[line:lower():trim()] = true
-		end
-	end)
 end
 
 function TextureBrowser:PopulateItems()
@@ -66,12 +57,9 @@ function TextureBrowser:FilterFile(file)
 		base = file:gsub(ext, "")
 		tType = "diffuse"
 	end
-	
+
 	if base then
 		base = self:ExtractFileName(base)
-		if self.blacklist[base:lower()] then
-			return
-		end
 		if not self.textures[base] then
 			self.textures[base] = {}
 			table.insert(self.textureOrder, base)
