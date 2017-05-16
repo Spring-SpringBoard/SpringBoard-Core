@@ -76,7 +76,7 @@ function AbstractTriggerElementWindow:init(opts)
                 if selected and itemIdx > 0 then
                     self.elementTypes = self.tagGroups[self.cmbTagGroups.items[itemIdx]]
                     self.cmbElementTypes.items = GetField(self.elementTypes, "humanName")
-                    self.cmbElementTypes.conditionTypes = GetField(self.elementTypes, "name")
+                    self.cmbElementTypes.elementTypes = GetField(self.elementTypes, "name")
                     self.cmbElementTypes:Invalidate()
                     self.cmbElementTypes:Select(0)
                     self.cmbElementTypes:Select(1)
@@ -270,7 +270,6 @@ function AbstractTriggerElementWindow:EditElement()
         self.cbExpressions:Toggle()
     end
     if self.triggerWindow then
-        Spring.Echo("Populating trigger window")
         self.triggerWindow:Populate()
     end
     return true
@@ -289,7 +288,6 @@ function AbstractTriggerElementWindow:AddElement()
         self.cbExpressions:Toggle()
     end
     if self.triggerWindow then
-        Spring.Echo("Populating trigger window")
         self.triggerWindow:Populate()
     end
     return true
