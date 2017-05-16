@@ -128,6 +128,10 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         if field.type == "pred" then
             return field.id
         end
+    elseif type == "bool" then
+        if field.type == "pred" then
+            return field.id
+        end
     elseif type == "position" then
         if field.type == "pred" then
             return field.id
