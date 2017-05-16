@@ -45,7 +45,7 @@ function GenericArrayPanel:MakePredefinedOpt()
 end
 
 function GenericArrayPanel:AddElement()
-	local subPanel = SCEN_EDIT.createNewPanel(self.atomicType, self.subPanels)
+	local subPanel = SCEN_EDIT.createNewPanel(self.atomicType, self.subPanels, self.sources, self.trigger)
     table.insert(self.elements, subPanel)
 	SCEN_EDIT.MakeSeparator(self.subPanels)
 end
