@@ -185,7 +185,7 @@ function TabbedWindow:init()
 			{ name = "Map", children = {terrainPanel:getControl()} },
 			{ name = "Trigger", children = {metaPanel:getControl()} },
 			{ name = "Team", children = {alliancePanel:getControl()} },
-			{ name = "Shaders", children = {shaderPanel:getControl()} },
+			-- { name = "Shaders", children = {shaderPanel:getControl()} },
 		},
 	})
 

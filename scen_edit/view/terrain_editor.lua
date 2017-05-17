@@ -141,7 +141,7 @@ function TerrainEditorView:init()
 	self.btnPaint = TabbedPanelButton({
         x = 0,
         y = 0,
-        tooltip = "Paint the terrain (1)",
+        tooltip = "Paint the terrain",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Paint" }),
@@ -154,26 +154,10 @@ function TerrainEditorView:init()
             end
         },
     })
-    self.btnVoid = TabbedPanelButton({
+    self.btnBlur = TabbedPanelButton({
         x = 70,
         y = 0,
-        tooltip = "Make the terrain transparent (2)",
-        children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
-            TabbedPanelLabel({ caption = "Void" }),
-        },
-        OnClick = {
-            function()
-				local state = self:EnterState()
-                state.paintMode = "void"
-				self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode")
-            end
-        },
-    })
-    self.btnBlur = TabbedPanelButton({
-        x = 140,
-        y = 0,
-        tooltip = "Apply a filter (3)",
+        tooltip = "Apply a filter",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Filter" }),
@@ -186,11 +170,27 @@ function TerrainEditorView:init()
             end
         },
     })
+    self.btnVoid = TabbedPanelButton({
+        x = 140,
+        y = 0,
+        tooltip = "Make the terrain transparent",
+        children = {
+            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelLabel({ caption = "Void" }),
+        },
+        OnClick = {
+            function()
+                local state = self:EnterState()
+                state.paintMode = "void"
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode")
+            end
+        },
+    })
 	-- FIXME: Need to check if HeightMapTexture = 1
 	self.btnSmartPaint = TabbedPanelButton({
         x = 210,
         y = 0,
-        tooltip = "Smart paint the terrain (3)",
+        tooltip = "Smart paint the terrain",
         children = {
             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Smart paint" }),
@@ -402,9 +402,9 @@ function TerrainEditorView:init()
 
 	local children = {
 		self.btnPaint,
-		self.btnVoid,
-		self.btnSmartPaint,
         self.btnBlur,
+		--self.btnVoid,
+		--self.btnSmartPaint,
 		ScrollPanel:New {
 			x = 0,
 			right = 0,
