@@ -28,21 +28,27 @@ end
 
 function GroupField:_HackSetInvisibleFields(fields)
     for _, field in pairs(self.fields) do
-        local visible = field.visible
         local found = false
+        -- Remove the field if it's in the list of fields to hide
         for _, name in pairs(fields) do
-            if name == field.name and visible then
-                field.visible = false
-                for _, comp in pairs(field.components) do
-                    self.ctrl:RemoveChild(comp)
+            if name == field.name then
+                found = true
+                if field.visible then
+                    field.visible = false
+                    for _, comp in pairs(field.components) do
+                        self.ctrl:RemoveChild(comp)
+                    end
                 end
+                break
             end
         end
-        if not visible and not found then
+        -- Show the field if it's not in the list to hide and is invisible
+        if not field.visible and not found then
             field.visible = true
             for _, comp in pairs(field.components) do
+                local cmpHidden = comp.hidden
                 self.ctrl:AddChild(comp)
-                if comp.hidden then
+                if cmpHidden then
                     comp:Hide()
                 end
             end

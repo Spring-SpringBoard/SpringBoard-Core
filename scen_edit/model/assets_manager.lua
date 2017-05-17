@@ -20,6 +20,7 @@ local function SplitPath(dir, assetFolderName)
     return dirAsset, dirPath
 end
 
+-- FIXME: do properly asset -> spring conversion
 function AssetsManager:ToSpringPath(rootDir, assetPath)
     local path = assetPath
     return path
@@ -39,6 +40,7 @@ function AssetsManager:DirList(rootDir, dir, ...)
         local dirAsset, dirPath = SplitPath(dir, assetsFolder.name)
         if assetsFolder.name .. "/" == dirAsset then
             local dirList = VFS.DirList(assetsFolder.path .. rootDir .. dirPath, ...)
+            -- FIXME: return asset path rather than true file path
             for _, f in pairs(dirList) do
                 table.insert(files, f)
             end

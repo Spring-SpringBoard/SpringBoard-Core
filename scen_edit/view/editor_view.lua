@@ -43,10 +43,10 @@ end
 -- Override
 function EditorView:OnEndChange(name, value)
 end
--- Override 
+-- Override
 function EditorView:OnFieldChange(name, value)
 end
--- Override 
+-- Override
 function EditorView:IsValidTest(state)
     return false
 end
