@@ -9,7 +9,7 @@ function TerrainEditorView:init()
     self.brushTexture = {}
 
 	self.textureBrowser = TextureBrowser({
-		dir = SB_ASSETS_DIR .. "core/brush_textures/nobiax/",
+		rootDir = "brush_textures/",
         width = "100%",
         height = "100%",
     })
@@ -47,7 +47,7 @@ function TerrainEditorView:init()
     }
 
     self.brushTextureImages = TextureBrowser({
-        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/terrain/good",
+        rootDir = "brush_patterns/terrain/",
         width = "100%",
         height = "100%",
         multiSelect = false,

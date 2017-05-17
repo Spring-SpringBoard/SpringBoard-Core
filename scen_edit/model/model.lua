@@ -17,6 +17,7 @@ function Model:init()
     self.terrainManager = TerrainManager()
     if Script.GetName() == "LuaUI" then
         self.textureManager = TextureManager()
+        self.assetsManager = AssetsManager()
     end
 end
 

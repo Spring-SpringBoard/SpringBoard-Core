@@ -1,23 +1,5 @@
 FileDialog = Observable:extends{}
 
-local function ExtractFileName(filepath)
-  filepath = filepath:gsub("\\", "/")
-  local lastChar = filepath:sub(-1)
-  if (lastChar == "/") then
-    filepath = filepath:sub(1,-2)
-  end
-  local pos,b,e,match,init,n = 1,1,1,1,0,0
-  repeat
-    pos,init,n = b,init+1,n+1
-    b,init,match = filepath:find("/",init,true)
-  until (not b)
-  if (n==1) then
-    return filepath
-  else
-    return filepath:sub(pos+1)
-  end
-end
-
 function FileDialog:init(dir, caption, fileTypes)
     self.dir = dir or nil
 	self.caption = caption or "File dialog"
@@ -30,7 +12,7 @@ function FileDialog:init(dir, caption, fileTypes)
 		right = 0,
         height = "100%",
     }
-    
+
     local okButton = Button:New {
         height = SCEN_EDIT.conf.B_HEIGHT,
         bottom = 5,
@@ -38,7 +20,7 @@ function FileDialog:init(dir, caption, fileTypes)
         right = "22%",
         caption = "OK",
     }
-    
+
     local cancelButton = Button:New {
         height = SCEN_EDIT.conf.B_HEIGHT,
         bottom = 5,
@@ -56,16 +38,16 @@ function FileDialog:init(dir, caption, fileTypes)
         OnDblClickItem = { function() self:confirmDialog(); self.window:Dispose() end },
     }
     self.filePanel.OnSelectItem = {
-        function (obj, itemIdx, selected) 
-			--FIXME: loading from complex paths is broken, uncomment this when they get fixed    
+        function (obj, itemIdx, selected)
+			--FIXME: loading from complex paths is broken, uncomment this when they get fixed
             if selected then -- and itemIdx > self.filePanel._dirsNum+1 then
                 local fullPath = tostring(obj.items[itemIdx])
-                local fileName = ExtractFileName(fullPath)
+                local fileName = Path.ExtractFileName(fullPath)
                 self.fileEditBox:SetText(fileName)
             end
         end
     }
-    
+
     self.window = Window:New {
         x = 500,
         y = 200,
@@ -88,15 +70,15 @@ function FileDialog:init(dir, caption, fileTypes)
                 height = SCEN_EDIT.conf.B_HEIGHT,
                 bottom = SCEN_EDIT.conf.B_HEIGHT + 20,
                 padding = {0, 0, 0, 0},
-                children = {                
+                children = {
                     Label:New {
 						x = 1,
 						y = 4,
-						valign = "center",						
+						valign = "center",
                         width = 65,
                         caption = "File name: ",
 						align = "left",
-                    },                
+                    },
                     self.fileEditBox,
                 },
             },
@@ -132,7 +114,7 @@ function FileDialog:init(dir, caption, fileTypes)
         }
         self.window:AddChild(ctrl)
     end
-    
+
     okButton.OnClick = {
         function()
             self:confirmDialog()

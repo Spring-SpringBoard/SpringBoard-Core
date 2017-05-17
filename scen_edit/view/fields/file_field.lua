@@ -3,7 +3,7 @@ SCEN_EDIT.Include(SCEN_EDIT_VIEW_FIELDS_DIR .. "field.lua")
 FileField = Field:extends{}
 
 function FileField:Update(source)
-    local caption = FolderView.ExtractFileName(self, self.value)
+    local caption = Path.ExtractFileName(self.value)
     self.lblValue:SetCaption(caption)
 end
 
@@ -12,7 +12,7 @@ function FileField:init(field)
     self.value = "/"
     Field.init(self, field)
 
-    local caption = FolderView.ExtractFileName(self, self.value)
+    local caption = Path.ExtractFileName(self.value)
     self.lblValue = Label:New {
         caption = caption,
         width = "100%",
@@ -41,13 +41,13 @@ function FileField:init(field)
         OnClick = {
             function(...)
                 if not self.notClick then
-                    local folderPath = FolderView.ExtractDir(self, self.value)
+                    local folderPath = Path.ExtractDir(self.value)
                     self.fileFieldWindow = FilePickerWindow(folderPath)
                     self.fileFieldWindow.field = self
                 end
             end
         },
-        children = { 
+        children = {
             self.lblValue,
             self.lblTitle,
         },

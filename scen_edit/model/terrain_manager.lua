@@ -13,6 +13,9 @@ function TerrainManager:getShape(name)
 end
 
 function TerrainManager:generateShape(name)
+    if self:getShape(name) then
+        return
+    end
     SCEN_EDIT.delayGL(function()
         local shapeSize = 256
         local texName = ':r' .. tostring(shapeSize) .. "," .. tostring(shapeSize) .. ':' .. name

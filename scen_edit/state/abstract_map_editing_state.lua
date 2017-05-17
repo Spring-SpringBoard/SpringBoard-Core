@@ -18,7 +18,7 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     if AbstractEditingState.KeyPress(self, key, mods, isRepeat, label, unicode) then
         return true
     end
-	
+
 	return false
 --     if key == 27 then -- KEYSYMS.ESC
 --         SCEN_EDIT.stateManager:SetState(DefaultState())
@@ -175,7 +175,7 @@ function AbstractMapEditingState:initShader()
             //gl_FragColor = vec4(gl_TexCoord[0].st, 0, 1);
         }
     ]]
- 
+
     local shaderTemplate = {
         fragment = shaderFragStr,
         uniformInt = {

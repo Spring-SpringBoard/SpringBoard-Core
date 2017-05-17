@@ -61,7 +61,7 @@ VFS.Include("LuaRules/Configs/customcmds.h.lua")
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local reverseCompat = (Game.version:find('91.0') == 1) and 1 or 0
+local reverseCompat = (Engine.version:find('91.0') == 1) and 1 or 0
 
 local Chili
 local Button
@@ -2422,7 +2422,7 @@ function widget:Initialize()
 		return
     end
 
-	if (not WG.Chili) then
+	if (not WG.SBChili) then
 		widgetHandler:RemoveWidget(widget)
 		return
 	end
@@ -2437,7 +2437,7 @@ function widget:Initialize()
 	_, iconFormat = VFS.Include(LUAUI_DIRNAME .. "Configs/chilitip_conf.lua" , nil, VFSMODE)
 
 	-- setup Chili
-	Chili = WG.Chili
+	Chili = WG.SBChili
 	Button = Chili.Button
 	Label = Chili.Label
 	Window = Chili.Window

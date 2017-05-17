@@ -23,10 +23,10 @@ FilePanel = LayoutPanel:Inherit{
   imageFile = SCEN_EDIT_IMG_DIR .. "file.png",
   dir = '',
   drawcontrolv2 = true,
-  
+
   showFiles = true,
   showDirs = true,
-  
+
   columns = 5,
 }
 
@@ -45,64 +45,6 @@ function FilePanel:New(obj)
   obj = inherited.New(self,obj)
   obj:SetDir(obj.dir)
   return obj
-end
-
---//=============================================================================
-
-local function GetParentDir(dir)
-  dir = dir:gsub("\\", "/")
-  local lastChar = dir:sub(-1)
-  if (lastChar == "/") then
-    dir = dir:sub(1,-2)
-  end
-  local pos,b,e,match,init,n = 1,1,1,1,0,0
-  repeat
-    pos,init,n = b,init+1,n+1
-    b,init,match = dir:find("/",init,true)
-  until (not b)
-  if (n==1) then
-    return ''
-  else
-    return dir:sub(1,pos)
-  end
-end
-
-
-local function ExtractFileName(filepath)
-  filepath = filepath:gsub("\\", "/")
-  local lastChar = filepath:sub(-1)
-  if (lastChar == "/") then
-    filepath = filepath:sub(1,-2)
-  end
-  local pos,b,e,match,init,n = 1,1,1,1,0,0
-  repeat
-    pos,init,n = b,init+1,n+1
-    b,init,match = filepath:find("/",init,true)
-  until (not b)
-  if (n==1) then
-    return filepath
-  else
-    return filepath:sub(pos+1)
-  end
-end
-
-
-local function ExtractDir(filepath)
-  filepath = filepath:gsub("\\", "/")
-  local lastChar = filepath:sub(-1)
-  if (lastChar == "/") then
-    filepath = filepath:sub(1,-2)
-  end
-  local pos,b,e,match,init,n = 1,1,1,1,0,0
-  repeat
-    pos,init,n = b,init+1,n+1
-    b,init,match = filepath:find("/",init,true)
-  until (not b)
-  if (n==1) then
-    return filepath
-  else
-    return filepath:sub(1,pos)
-  end
 end
 
 --//=============================================================================
@@ -163,7 +105,7 @@ function FilePanel:ScanDir()
   end
 
   if self.showDirs then
-	  for i=1,#dirs do		
+	  for i=1,#dirs do
 		items[n],n=dirs[i],n+1
 	  end
   end
@@ -183,20 +125,20 @@ function FilePanel:ScanDir()
     end
 
     --// add ".."
-	if self.showDirs then 
+	if self.showDirs then
       self:_AddFile('..',self.imageFolderUp)
 	end
 
     --// add dirs at top
 	if self.showDirs then
 		for i=1,#dirs do
-		  self:_AddFile(ExtractFileName(dirs[i]),self.imageFolder)
+		  self:_AddFile(Path.ExtractFileName(dirs[i]),self.imageFolder)
 		end
 	end
 
     --// add files
     for i=1,#imageFiles do
-      self:_AddFile(ExtractFileName(imageFiles[i]),self.imageFile)
+      self:_AddFile(Path.ExtractFileName(imageFiles[i]),self.imageFile)
     end
   self:EnableRealign()
 end
@@ -218,8 +160,8 @@ end
 
 
 function FilePanel:GotoFile(filepath)
-  local dir = ExtractDir(filepath)
-  local file = ExtractFileName(filepath)
+  local dir = Path.ExtractDir(filepath)
+  local file = Path.ExtractFileName(filepath)
   self.dir = dir
   self:ScanDir()
   self:Select(file)
@@ -245,7 +187,7 @@ function FilePanel:Select(item)
   else
     local items = self.items
     for i=1,#items do
-      if (ExtractFileName(items[i])==item) then
+      if (Path.ExtractFileName(items[i])==item) then
         self:SelectItem(i)
         return
       end
@@ -284,9 +226,9 @@ function FilePanel:MouseDblClick(x,y)
 
   if (itemIdx<0) then return end
 
-  if self.showDirs then  
+  if self.showDirs then
 	  if itemIdx==1 then
-		self:SetDir(GetParentDir(self.dir))
+		self:SetDir(Path.GetParentDir(self.dir))
 		return self
 	  end
   end

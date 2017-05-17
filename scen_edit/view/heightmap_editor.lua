@@ -4,23 +4,23 @@ HeightmapEditorView = EditorView:extends{}
 function HeightmapEditorView:init()
     self:super("init")
 
-    self.heightmapBrushes = ImageListView:New {
-        padding = {0, 0, 0, 0},
-        dir = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/terrain/good", -- "resources/brush_patterns/height",
+    self.heightmapBrushes = TextureBrowser({
+		rootDir = "brush_patterns/terrain/",
         width = "100%",
         height = "100%",
-    }
+    })
     -- FIXME: implement a button for entering the mode instead of image selection
-    self.heightmapBrushes.OnSelectItem = {
+    self.heightmapBrushes.control.OnSelectItem = {
         function(obj, itemIdx, selected)
-            -- FIXME: shouldn't be using ._dirsNum probably
-            if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
-                local item = self.heightmapBrushes.items[itemIdx]
-                self.paintTexture = item
-                SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
-                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
-                if currentState:is_A(AbstractHeightmapEditingState) then
-                    currentState.paintTexture = item
+            if selected and itemIdx > 0 then
+                local item = self.heightmapBrushes.control.children[itemIdx]
+                if item.texture ~= nil then
+                    self.paintTexture = item.texture.diffuse
+                    SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
+                    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                    if currentState:is_A(AbstractHeightmapEditingState) then
+                        currentState.paintTexture = self.paintTexture
+                    end
                 end
             end
         end
@@ -101,8 +101,8 @@ function HeightmapEditorView:init()
 --     })
 
     self:AddField(NumericField({
-        name = "size", 
-        value = 100, 
+        name = "size",
+        value = 100,
         minValue = 10,
         maxValue = 1000,
         title = "Size:",
@@ -137,12 +137,12 @@ function HeightmapEditorView:init()
         self.btnSetState,
 		self.btnSmoothState,
 		ScrollPanel:New {
-			x = 0, 
+			x = 0,
 			right = 0,
-			y = 70, 
+			y = 70,
 			height = "35%",
-			children = { 
-				self.heightmapBrushes,
+			children = {
+				self.heightmapBrushes.control,
 			}
 		},
 		ScrollPanel:New {
@@ -172,7 +172,7 @@ function HeightmapEditorView:StoppedEditing()
 
 --     self.btnChangeHeightRectState.state.pressed = false
 --     self.btnChangeHeightRectState:Invalidate()
--- 
+--
 --     self.btnAddShapeState.state.pressed = false
 --     self.btnAddShapeState:Invalidate()
 end
