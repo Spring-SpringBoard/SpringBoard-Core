@@ -201,16 +201,20 @@ function AbstractTriggerElementWindow:init(opts)
             sw.y = tw.y
         end
     elseif self.mode == 'edit' then
-        local cndTags = self:GetValidElementTypes()[self:GetElementTypeName()].tags
-        if cndTags ~= nil and self.cmbTagGroups ~= nil then
-            local primaryTag = cndTags[1]
-            self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
+        local elType = self:GetValidElementTypes()[self:GetElementTypeName()]
+
+        if elType then
+            local elTags = elType.tags
+            if elTags ~= nil and self.cmbTagGroups ~= nil then
+                local primaryTag = elTags[1]
+                self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), elTags))
+            end
+
+            self.cmbElementTypes:Select(GetIndex(self.cmbElementTypes.elementTypes, self:GetElementTypeName()))
+
+            self:UpdatePanel()
+            self.window.caption = self:GetWindowCaption()
         end
-
-        self.cmbElementTypes:Select(GetIndex(self.cmbElementTypes.elementTypes, self:GetElementTypeName()))
-
-        self:UpdatePanel()
-        self.window.caption = self:GetWindowCaption()
 --        if tw.x + tw.width + sw.width > tw.parent.width then
 --            sw.x = tw.x - sw.width
 --        else

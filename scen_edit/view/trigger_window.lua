@@ -212,7 +212,7 @@ function TriggerWindow:Populate()
         }
         local openedNodes = self.openedConditionNodes[i]
         if openedNodes then
-            self:PopulateExpressions(condition, SCEN_EDIT.metaModel.functionTypes[condition.conditionTypeName], 2)
+            self:PopulateExpressions(condition, SCEN_EDIT.metaModel.functionTypes[condition.conditionTypeName], 2, condition.conditionTypeName)
         end
     end
     local actionLabel = Label:New {
@@ -271,12 +271,22 @@ function TriggerWindow:Populate()
         }
         local openedNodes = self.openedActionNodes[i]
         if openedNodes then
-            self:PopulateExpressions(action, SCEN_EDIT.metaModel.actionTypes[action.actionTypeName], 2)
+            self:PopulateExpressions(action, SCEN_EDIT.metaModel.actionTypes[action.actionTypeName], 2, action.actionTypeName)
         end
     end
 end
 
-function TriggerWindow:PopulateExpressions(root, rootType, level)
+function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
+    if rootType == nil then
+        local stackPanel = MakeComponentPanel(self._triggerPanel)
+        local lblParam = Label:New {
+            caption = "Error: Cannot find declaration for type: " ..typeName,
+            x = (level - 1) * 50,
+            right = 1,
+            parent = stackPanel,
+        }
+        return
+    end
     for i, input in pairs(rootType.input) do
         local stackPanel = MakeComponentPanel(self._triggerPanel)
 
@@ -308,7 +318,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level)
             local expr = param.expr[1]
             local exprType = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName]
 
-            self:PopulateExpressions(expr, exprType, level + 1)
+            self:PopulateExpressions(expr, exprType, level + 1, expr.conditionTypeName)
         end
     end
 end

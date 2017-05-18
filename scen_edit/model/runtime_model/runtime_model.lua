@@ -9,6 +9,11 @@ function RuntimeModel:init()
     self.fieldResolver = FieldResolver()
     self.repeatCalls = {}
     self.trackedUnitIDs = {}
+
+    -- triggers that contain missing references that would error when running
+    -- they are disabled and won't be added
+    self.error_triggers = {}
+
     SCEN_EDIT.model.areaManager:addListener(self)
     SCEN_EDIT.model.triggerManager:addListener(self)
 end
@@ -33,6 +38,8 @@ function RuntimeModel:LoadMission()
 
     self.startListening = true
 
+    self.error_triggers = {}
+
     local areas = SCEN_EDIT.model.areaManager:getAllAreas()
     for _, id in pairs(areas) do
         self:onAreaAdded(id)
@@ -45,11 +52,42 @@ function RuntimeModel:LoadMission()
     end
 end
 
+function RuntimeModel:VerifyTriggerIntegrityRecursive(trigger)
+end
+
+function RuntimeModel:VerifyTriggerIntegrity(trigger)
+    -- check events
+    for _, event in pairs(trigger.events) do
+        if not SCEN_EDIT.metaModel.eventTypes[event.eventTypeName] then
+            return false, "Missing reference: " .. event.eventTypeName
+        end
+    end
+    -- check conditions
+    for _, condition in pairs(trigger.conditions) do
+        if not SCEN_EDIT.metaModel.conditionsTypes[condition.conditionTypeName] then
+            return false, "Missing reference: " .. condition.conditionTypeName
+        end
+    end
+    -- check actions
+    for _, action in pairs(trigger.actions) do
+        if not SCEN_EDIT.metaModel.actionTypes[action.actionTypeName] then
+            return false, "Missing reference: " .. action.actionTypeName
+        end
+    end
+    return true
+end
+
 function RuntimeModel:onTriggerAdded(triggerId)
     if not self.startListening then
         return
     end
     local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+    local success, msg = self:VerifyTriggerIntegrity(trigger)
+    if not success then
+        Log.Warning("Trigger error: " .. tostring(triggerId) .. ". " .. tostring(msg))
+        self.error_triggers[triggerId] = true
+        return
+    end
     for _, event in pairs(trigger.events) do
         if not self.eventTriggers[event.eventTypeName] then
             self.eventTriggers[event.eventTypeName] = {}
@@ -62,6 +100,7 @@ function RuntimeModel:onTriggerRemoved(triggerId)
     if not self.startListening then
         return
     end
+    self.error_triggers[triggerId] = nil
     for _, eventList in pairs(self.eventTriggers) do
         repeat
             local found = false
@@ -287,17 +326,31 @@ function RuntimeModel:ActionStep(trigger, params)
 end
 
 function RuntimeModel:ExecuteTriggerActions(triggerId)
-    if self.hasStarted then
-        local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
-        self:ActionStep(trigger, {})
+    if not self.hasStarted then
+        return
     end
+
+    if self.error_triggers[triggerId] then
+        Log.Warning("Cannot execute trigger with errors: " .. tostring(triggerId))
+        return
+    end
+
+    local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+    self:ActionStep(trigger, {})
 end
 
 function RuntimeModel:ExecuteTrigger(triggerId)
-    if self.hasStarted then
-        local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
-        self:ConditionStep(trigger, {})
+    if not self.hasStarted then
+        return
     end
+
+    if self.error_triggers[triggerId] then
+        Log.Warning("Cannot execute trigger with errors: " .. tostring(triggerId))
+        return
+    end
+
+    local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+    self:ConditionStep(trigger, {})
 end
 
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
