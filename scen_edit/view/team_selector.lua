@@ -9,7 +9,7 @@ function TeamSelector:init()
     table.insert(teamsTxt, "Spectator")
     self.cmbTeamSelector = ComboBox:New {
         parent = screen0,
-        right = 5,
+        right = 501,
         y = 5,
         width = 200,
         height = 40,
@@ -44,7 +44,7 @@ function TeamSelector:init()
         height = 20,
         caption = "Lock team",
         checked = false,
-        OnChange = { function(_, value) 
+        OnChange = { function(_, value)
             SCEN_EDIT.lockTeam = value
         end}
     }

@@ -175,6 +175,7 @@ function GetField(origArray, field)
 end
 
 function GetIndex(table, value)
+    assert(value ~= nil, "GetIndex called with nil value.")
     for i = 1, #table do
         if table[i] == value then
             return i
@@ -223,19 +224,19 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
     if SCEN_EDIT.humanExpressionMaxLevel < level then
         return "..."
     end
-    if exprType == "condition" and data.conditionTypeName:find("compare_") then
+    if exprType == "condition" and data.typeName:find("compare_") then
         local firstExpr = SCEN_EDIT.humanExpression(data.first, "value", nil, level + 1)
         local relation
-        if data.conditionTypeName == "compare_number" then
+        if data.typeName == "compare_number" then
             relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison", nil, level + 1)
         else
             relation = SCEN_EDIT.humanExpression(data.relation, "identity_comparison", nil, level + 1)
         end
         local secondExpr = SCEN_EDIT.humanExpression(data.second, "value", nil, level + 1)
-        local condHumanName = SCEN_EDIT.metaModel.functionTypes[data.conditionTypeName].humanName
+        local condHumanName = SCEN_EDIT.metaModel.functionTypes[data.typeName].humanName
         return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
     elseif exprType == "action" then
-        local action = SCEN_EDIT.metaModel.actionTypes[data.actionTypeName]
+        local action = SCEN_EDIT.metaModel.actionTypes[data.typeName]
         local humanName = action.humanName .. " ("
         for i = 1, #action.input do
             local input = action.input[i]
@@ -252,12 +253,12 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         else
             expr = data
         end
-        local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
+        local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.typeName].humanName
 
         local paramsStr = ""
         local first = true
         for k, v in pairs(expr) do
-            if k ~= "conditionTypeName" then
+            if k ~= "typeName" then
                 if not first then
                     paramsStr = paramsStr .. ", "
                 end

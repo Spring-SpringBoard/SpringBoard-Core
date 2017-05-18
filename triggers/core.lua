@@ -2,9 +2,7 @@ return {
     actions = function()
         local variableAssignments = {}
         allTypes = SCEN_EDIT.coreTypes()
-        for i = 1, #allTypes do
-            local type = allTypes[i]
-
+        for _, type in pairs(allTypes) do
             if type.canBeVariable ~= false then
                 local variableAssignment = {
                     humanName = "Assign " .. type.humanName,
@@ -547,8 +545,7 @@ return {
                 input = { "unit_array", "order" },
                 tags = {"Order"},
                 execute = function (input)
-                    for i = 1, #input.unit_array do
-                        local unit = input.unit_array[i]
+                    for _, unit in pairs(input.unit_array) do
                         local orderTypeName = input.order.orderTypeName
                         local newInput = {
                             unit = unit,
@@ -636,8 +633,7 @@ return {
         local coreTypes = SCEN_EDIT.coreTypes()
         local allTypes = coreTypes
 
-        for i = 1, #allTypes do
-            local basicType = allTypes[i]
+        for _, basicType in pairs(allTypes) do
             if basicType.canCompare == nil or basicType.canCompare == true then
                 local relType
                 if basicType.name == "number" then
@@ -1065,8 +1061,7 @@ return {
                 output = "bool",
                 tags = {"Logical"},
                 execute = function(input)
-					for i = 1, #input.bool_array do
-						local bool = input.bool_array[i]
+                    for _, bool in pairs(input.bool_array) do
 						if bool then
 							return true
 						end
@@ -1081,8 +1076,7 @@ return {
                 output = "bool",
                 tags = {"Logical"},
                 execute = function(input)
-                    for i = 1, #input.bool_array do
-						local bool = input.bool_array[i]
+                    for _, bool in pairs(input.bool_array) do
 						if not bool then
 							return false
 						end
@@ -1091,18 +1085,16 @@ return {
                 end,
             },
         }
-        for i = 1, #coreTransforms do
-            local coreTransform = coreTransforms[i]
+        for _, coreTransform in pairs(coreTransforms) do
             table.insert(functions, coreTransform)
         end
 
         local arrayTypes = {}
-        for i = 1, #allTypes do
-            local type = allTypes[i]
+        for _, type in pairs(allTypes) do
             local arrayType = type.name .. "_array"
 
             if type.canBeVariable ~= false then
-                local itemFromArray = {
+                table.insert(functions, {
                     humanName = type.humanName .. " in array at position",
                     name = arrayType .. "_INDEXING",
                     input = { arrayType, "number" },
@@ -1113,19 +1105,61 @@ return {
                         local index = input.number
                         return array[index]
                     end,
-                }
-                table.insert(functions, itemFromArray)
-                local countArray = {
+                })
+
+                table.insert(functions, {
                     humanName = "Element count in " .. type.humanName .. " array",
                     name = arrayType .. "_COUNT",
-                    input = { arrayType },
+                    input = arrayType,
                     output = "number",
                     tags = {"Array"},
                     execute = function(input)
                         return #input[arrayType]
                     end,
-                }
-                table.insert(functions, countArray)
+                })
+
+                -- Higher order functions
+
+                table.insert(functions, {
+                    humanName = "Filter element in " .. type.humanName .. " array",
+                    name = arrayType .. "_FILTER",
+                    input = {
+                        arrayType,
+                        {
+                            name = "filter function",
+                            type = "function",
+                            input = type.name,
+                            output = type.name,
+                        },
+                    },
+                    output = arrayType,
+                    tags = {"Array"},
+                    execute = function(input)
+                        return #input[arrayType]
+                    end,
+                })
+
+                for _, type2 in pairs(allTypes) do
+                    local arrayType2 = type2.name .. "_array"
+                    table.insert(functions, {
+                        humanName = "Map from " .. type.humanName .. " array to " .. type2.humanName .. " array",
+                        name = arrayType .. "to" .. arrayType2 .. "_MAP",
+                        input = {
+                            arrayType,
+                            {
+                                name = "map function",
+                                type = "function",
+                                input = type.name,
+                                output = type2.name,
+                            },
+                        },
+                        output = arrayType2,
+                        tags = {"Array"},
+                        execute = function(input)
+                            return #input[arrayType]
+                        end,
+                    })
+                end
             end
         end
         return functions

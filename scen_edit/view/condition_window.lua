@@ -17,14 +17,6 @@ function ConditionWindow:GetWindowCaption()
     end
 end
 
-function ConditionWindow:GetElementTypeName()
-    return self.element.conditionTypeName
-end
-
-function ConditionWindow:SetElementTypeName(elementTypeName)
-    self.element.conditionTypeName = elementTypeName
-end
-
 function ConditionWindow:AddParent()
     table.insert(self.trigger.conditions, self.element)
 end

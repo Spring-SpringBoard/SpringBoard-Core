@@ -34,9 +34,9 @@ end
 
 function FieldResolver:Resolve(field, type, rawVariable, params)
     if field.type == "expr" then
-        local conditionTypeName = field.expr[1].conditionTypeName
-        local conditionType = SCEN_EDIT.metaModel.functionTypes[conditionTypeName]
-        return self:CallExpression(field.expr[1], conditionType, params)
+        local typeName = field.expr[1].typeName
+        local exprType = SCEN_EDIT.metaModel.functionTypes[typeName]
+        return self:CallExpression(field.expr[1], exprType, params)
     elseif field.type == "var" then
         local variable = SCEN_EDIT.model.variableManager:getVariable(field.id)
         if not rawVariable then

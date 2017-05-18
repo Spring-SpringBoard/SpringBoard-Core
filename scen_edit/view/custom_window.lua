@@ -17,14 +17,6 @@ function CustomWindow:GetWindowCaption()
     end
 end
 
-function CustomWindow:GetElementTypeName()
-    return self.element.conditionTypeName
-end
-
-function CustomWindow:SetElementTypeName(elementTypeName)
-    self.element.conditionTypeName = elementTypeName
-end
-
 function CustomWindow:AddParent()
     table.insert(self.parentObj, self.element)
 end

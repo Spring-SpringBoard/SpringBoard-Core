@@ -17,14 +17,6 @@ function ActionWindow:GetWindowCaption()
     end
 end
 
-function ActionWindow:GetElementTypeName()
-    return self.element.actionTypeName
-end
-
-function ActionWindow:SetElementTypeName(elementTypeName)
-    self.element.actionTypeName = elementTypeName
-end
-
 function ActionWindow:AddParent()
     table.insert(self.trigger.actions, self.element)
 end

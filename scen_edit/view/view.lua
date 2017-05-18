@@ -32,7 +32,7 @@ function View:init()
     self.teamSelector = TeamSelector()
 
     self.lblProject = Label:New {
-        x = "45%",
+        x = 0,
         y = 5,
         autosize = true,
         font = {

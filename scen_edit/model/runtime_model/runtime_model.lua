@@ -52,47 +52,22 @@ function RuntimeModel:LoadMission()
     end
 end
 
-function RuntimeModel:VerifyTriggerIntegrityRecursive(trigger)
-end
-
-function RuntimeModel:VerifyTriggerIntegrity(trigger)
-    -- check events
-    for _, event in pairs(trigger.events) do
-        if not SCEN_EDIT.metaModel.eventTypes[event.eventTypeName] then
-            return false, "Missing reference: " .. event.eventTypeName
-        end
-    end
-    -- check conditions
-    for _, condition in pairs(trigger.conditions) do
-        if not SCEN_EDIT.metaModel.conditionsTypes[condition.conditionTypeName] then
-            return false, "Missing reference: " .. condition.conditionTypeName
-        end
-    end
-    -- check actions
-    for _, action in pairs(trigger.actions) do
-        if not SCEN_EDIT.metaModel.actionTypes[action.actionTypeName] then
-            return false, "Missing reference: " .. action.actionTypeName
-        end
-    end
-    return true
-end
-
 function RuntimeModel:onTriggerAdded(triggerId)
     if not self.startListening then
         return
     end
     local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
-    local success, msg = self:VerifyTriggerIntegrity(trigger)
+    local success, msg = SCEN_EDIT.model.triggerManager:ValidateTrigger(trigger)
     if not success then
         Log.Warning("Trigger error: " .. tostring(triggerId) .. ". " .. tostring(msg))
         self.error_triggers[triggerId] = true
         return
     end
     for _, event in pairs(trigger.events) do
-        if not self.eventTriggers[event.eventTypeName] then
-            self.eventTriggers[event.eventTypeName] = {}
+        if not self.eventTriggers[event.typeName] then
+            self.eventTriggers[event.typeName] = {}
         end
-        table.insert(self.eventTriggers[event.eventTypeName], trigger)
+        table.insert(self.eventTriggers[event.typeName], trigger)
     end
 end
 
@@ -320,7 +295,7 @@ end
 
 function RuntimeModel:ActionStep(trigger, params)
     for _, action in pairs(trigger.actions) do
-        local actionType = SCEN_EDIT.metaModel.actionTypes[action.actionTypeName]
+        local actionType = SCEN_EDIT.metaModel.actionTypes[action.typeName]
         self.fieldResolver:CallExpression(action, actionType, params, true)
     end
 end
@@ -355,7 +330,7 @@ end
 
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
     for _, condition in pairs(trigger.conditions) do
-        local conditionType = SCEN_EDIT.metaModel.functionTypes[condition.conditionTypeName]
+        local conditionType = SCEN_EDIT.metaModel.functionTypes[condition.typeName]
         local result = self.fieldResolver:CallExpression(condition, conditionType, params)
         if not result then
             return false
@@ -364,7 +339,7 @@ function RuntimeModel:ComputeTriggerConditions(trigger, params)
     return true
 end
 
-function RuntimeModel:ExecuteUnsynced(actionTypeName, resolvedInputs)
-    local cmd = WidgetExecuteUnsyncedActionCommand(actionTypeName, resolvedInputs)
+function RuntimeModel:ExecuteUnsynced(typeName, resolvedInputs)
+    local cmd = WidgetExecuteUnsyncedActionCommand(typeName, resolvedInputs)
     SCEN_EDIT.commandManager:execute(cmd, true)
 end

@@ -69,12 +69,12 @@ function DefaultState:MakeAreaTrigger(areaID)
         actions = {},
         events = {
             {
-                eventTypeName = "UNIT_ENTER_AREA",
+                typeName = "UNIT_ENTER_AREA",
             },
         },
         conditions = {
             {
-                conditionTypeName = "compare_area",
+                typeName = "compare_area",
                 first = {
                     id = areaID,
                     type = "pred",

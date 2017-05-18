@@ -201,16 +201,17 @@ function AbstractTriggerElementWindow:init(opts)
             sw.y = tw.y
         end
     elseif self.mode == 'edit' then
-        local elType = self:GetValidElementTypes()[self:GetElementTypeName()]
+        local elTypeName = self.element.typeName
+        local elType = self:GetValidElementTypes()[elTypeName]
 
         if elType then
             local elTags = elType.tags
             if elTags ~= nil and self.cmbTagGroups ~= nil then
                 local primaryTag = elTags[1]
-                self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), elTags))
+                self.cmbTagGroups:Select(GetIndex(GetKeys(self.tagGroups), primaryTag))
             end
 
-            self.cmbElementTypes:Select(GetIndex(self.cmbElementTypes.elementTypes, self:GetElementTypeName()))
+            self.cmbElementTypes:Select(GetIndex(self.cmbElementTypes.elementTypes, elTypeName))
 
             self:UpdatePanel()
             self.window.caption = self:GetWindowCaption()
@@ -225,7 +226,7 @@ function AbstractTriggerElementWindow:init(opts)
 end
 
 function AbstractTriggerElementWindow:UpdatePanel()
-    local elTypeName = self:GetElementTypeName()
+    local elTypeName = self.element.typeName
     local index = GetIndex(self.cmbElementTypes.elementTypes, elTypeName)
     local elType = self.elementTypes[index]
     if elType.input then
@@ -240,7 +241,7 @@ function AbstractTriggerElementWindow:UpdatePanel()
 end
 
 function AbstractTriggerElementWindow:UpdateModel()
-    local elTypeName = self:GetElementTypeName()
+    local elTypeName = self.element.typeName
     local index = GetIndex(self.cmbElementTypes.elementTypes, elTypeName)
     local elType = self.elementTypes[index]
 
@@ -264,7 +265,7 @@ end
 
 function AbstractTriggerElementWindow:EditElement()
     local _element = SCEN_EDIT.deepcopy(self.element)
-    self:SetElementTypeName(self.cmbElementTypes.elementTypes[self.cmbElementTypes.selected])
+    self.element.typeName = self.cmbElementTypes.elementTypes[self.cmbElementTypes.selected]
     local success, subPanels = self:UpdateModel()
     if not success then
         SetTableValues(self.element, _element)
@@ -281,7 +282,7 @@ end
 
 function AbstractTriggerElementWindow:AddElement()
     self.element = {}
-    self:SetElementTypeName(self.cmbElementTypes.elementTypes[self.cmbElementTypes.selected])
+    self.element.typeName = self.cmbElementTypes.elementTypes[self.cmbElementTypes.selected]
     local success, subPanels = self:UpdateModel()
     if not success then
         self.element = nil

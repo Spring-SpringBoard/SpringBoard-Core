@@ -47,8 +47,8 @@ function AbstractTypePanel:MakeSpecialOpt()
     end
     local validParams = {}
     for _, event in pairs(self.trigger.events) do
-        local eventTypeName = event.eventTypeName
-        local eventType = SCEN_EDIT.metaModel.eventTypes[eventTypeName]
+        local typeName = event.typeName
+        local eventType = SCEN_EDIT.metaModel.eventTypes[typeName]
         for _, param in pairs(eventType.param) do
             if param.type == self.dataType then
                 table.insert(validParams, "Trigger: " .. param.name)

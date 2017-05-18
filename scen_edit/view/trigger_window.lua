@@ -126,7 +126,7 @@ function TriggerWindow:Populate()
         local event = self.trigger.events[i]
         local stackEventPanel = MakeComponentPanel(self._triggerPanel)
         local btnEditEvent = Button:New {
-            caption = SCEN_EDIT.metaModel.eventTypes[event.eventTypeName].humanName,
+            caption = SCEN_EDIT.model.triggerManager:GetSafeEventHumanName(trigger, event),
             right = SCEN_EDIT.conf.B_HEIGHT + 10,
             x = 1,
             height = SCEN_EDIT.conf.B_HEIGHT,
@@ -212,7 +212,7 @@ function TriggerWindow:Populate()
         }
         local openedNodes = self.openedConditionNodes[i]
         if openedNodes then
-            self:PopulateExpressions(condition, SCEN_EDIT.metaModel.functionTypes[condition.conditionTypeName], 2, condition.conditionTypeName)
+            self:PopulateExpressions(condition, SCEN_EDIT.metaModel.functionTypes[condition.typeName], 2, condition.typeName)
         end
     end
     local actionLabel = Label:New {
@@ -271,7 +271,7 @@ function TriggerWindow:Populate()
         }
         local openedNodes = self.openedActionNodes[i]
         if openedNodes then
-            self:PopulateExpressions(action, SCEN_EDIT.metaModel.actionTypes[action.actionTypeName], 2, action.actionTypeName)
+            self:PopulateExpressions(action, SCEN_EDIT.metaModel.actionTypes[action.typeName], 2, action.typeName)
         end
     end
 end
@@ -296,19 +296,19 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
             paramName = SCEN_EDIT.model.variableManager:getVariable(param.id).name
         elseif param.type == "expr" then
             local expr = param.expr[1]
-            paramName = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName].humanName
+            paramName = SCEN_EDIT.metaModel.functionTypes[expr.typeName].humanName
         elseif type(paramName) == 'table' then
             paramName = "{...}"
         end
         if input.name == "relation" then
-            if root.conditionTypeName == "compare_number" then
+            if root.typeName == "compare_number" then
                 paramName = SCEN_EDIT.metaModel.numericComparisonTypes[root.relation.cmpTypeId]
             else
                 paramName = SCEN_EDIT.metaModel.identityComparisonTypes[root.relation.cmpTypeId]
             end
         end
         local lblParam = Label:New {
-            caption = input.name .. ": " .. (paramName or "nil"),
+            caption = input.name .. ": " .. (tostring(paramName) or "nil"),
             x = (level - 1) * 50,
             right = 1,
             parent = stackPanel,
@@ -316,9 +316,9 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
 
         if param.type == "expr" then
             local expr = param.expr[1]
-            local exprType = SCEN_EDIT.metaModel.functionTypes[expr.conditionTypeName]
+            local exprType = SCEN_EDIT.metaModel.functionTypes[expr.typeName]
 
-            self:PopulateExpressions(expr, exprType, level + 1, expr.conditionTypeName)
+            self:PopulateExpressions(expr, exprType, level + 1, expr.typeName)
         end
     end
 end

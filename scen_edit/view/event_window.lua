@@ -25,14 +25,6 @@ function EventWindow:GetWindowCaption()
     end
 end
 
-function EventWindow:GetElementTypeName()
-    return self.element.eventTypeName
-end
-
-function EventWindow:SetElementTypeName(elementTypeName)
-    self.element.eventTypeName = elementTypeName
-end
-
 function EventWindow:UpdateInfo()
     local txtInfo = ""
     for i, param in pairs(self.eventType.param) do
