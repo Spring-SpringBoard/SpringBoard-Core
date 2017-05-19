@@ -99,7 +99,7 @@ function TriggerManager:ValidateEvents(trigger)
 end
 
 function TriggerManager:ValidateCondition(trigger, condition)
-    if not SCEN_EDIT.metaModel.conditionsTypes[condition.typeName] then
+    if not SCEN_EDIT.metaModel.functionTypes[condition.typeName] then
         return false, "Missing reference: " .. condition.typeName
     end
     return true
