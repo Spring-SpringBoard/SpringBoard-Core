@@ -85,6 +85,11 @@ function FileDialog:init(dir, caption, fileTypes)
             okButton,
             cancelButton,
         },
+        OnDispose = {
+            function()
+                SCEN_EDIT.stateManager:GetCurrentState():SetGlobalKeyListener()
+            end
+        }
     }
     if self.fileTypes then
         self.cmbFileTypes = ComboBox:New {
@@ -126,6 +131,19 @@ function FileDialog:init(dir, caption, fileTypes)
             self.window:Dispose()
         end
     }
+
+    local function keyListener(key)
+        if key == Spring.GetKeyCode("esc") then
+            self.window:Dispose()
+            return true
+        elseif key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
+            self:confirmDialog()
+            self.window:Dispose()
+            return true
+        end
+    end
+
+    SCEN_EDIT.stateManager:GetCurrentState():SetGlobalKeyListener(keyListener)
 --    self:SetDir(self.dir)
 end
 

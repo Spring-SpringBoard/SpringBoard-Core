@@ -9,7 +9,13 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     if button1 or button2 or button3 then
         return false
     end
-    -- TODO: make this configurable
+
+	if self.keyListener then
+		if self.keyListener(key, mods, isRepeat, label, unicode) then
+			return true
+		end
+	end
+	-- TODO: make this configurable
     if key == KEYSYMS.Z and mods.ctrl then
         SCEN_EDIT.commandManager:undo()
     elseif key == KEYSYMS.Y and mods.ctrl then
@@ -30,4 +36,8 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
         return false
     end
     return true
+end
+
+function AbstractEditingState:SetGlobalKeyListener(keyListener)
+	self.keyListener = keyListener
 end
