@@ -9,18 +9,15 @@ function MetalEditingState:init(editorView)
 end
 
 function MetalEditingState:Apply(x, z)
-    if self:super("Apply", x, z) then
-
-        local _, _, addMode, _, _ = Spring.GetMouseState()
-        local opts = {
-            x = x - self.size,
-            z = z - self.size,
-            size = self.size,
-            addMode = addMode,
-        }
-        local command = TerrainMetalCommand(opts)
-        SCEN_EDIT.commandManager:execute(command)
-    end
+    local _, _, addMode, _, _ = Spring.GetMouseState()
+    local opts = {
+        x = x - self.size,
+        z = z - self.size,
+        size = self.size,
+        addMode = addMode,
+    }
+    local command = TerrainMetalCommand(opts)
+    SCEN_EDIT.commandManager:execute(command)
 end
 
 function MetalEditingState:DrawWorld()

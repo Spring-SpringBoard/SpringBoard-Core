@@ -221,6 +221,22 @@ end
 -- local averageGroundHeight = (minheight + maxheight) / 2
 -- local shapeHeight = heightMargin + (maxheight - minheight) + heightMargin
 
+-- Simplified function for brush texture rendering
+local function DrawBrushTexture(vol_dlist)
+  gl.DepthMask(false)
+  if (gl.DepthClamp) then gl.DepthClamp(true) end
+
+  gl.Culling(GL.FRONT)
+  gl.DepthTest(false)
+  gl.ColorMask(true, true, true, true)
+
+  gl.CallList(vol_dlist)
+
+  if (gl.DepthClamp) then gl.DepthClamp(false) end
+  gl.DepthTest(true)
+  gl.Culling(false)
+end
+
 function DrawTexturedGroundRectangle(x1,z1,x2,z2, rot, dlist)
   if (type(x1) == "table") then
     local rect = x1
@@ -235,13 +251,13 @@ function DrawTexturedGroundRectangle(x1,z1,x2,z2, rot, dlist)
   gl.Rotate(rot, 0, 1, 0)
   gl.Translate(-sizeX/2, 0, -sizeZ/2)
   gl.Scale(x2-x1, 1, z2-z1)
-  gl.Utilities.DrawVolume(dlist)
+  DrawBrushTexture(dlist)
   gl.PopMatrix()
 end
 
 function AbstractMapEditingState:DrawShape(shape, x, z)
     gl.PushMatrix()
-    local scale = 1/2 * math.sqrt(2)
+    local scale = 1/2
 --     local rotRad = math.rad(self.rotation) + math.pi/2
 
     if not self.shaderObj then

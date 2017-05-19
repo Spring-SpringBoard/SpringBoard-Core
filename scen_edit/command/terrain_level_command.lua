@@ -20,8 +20,8 @@ function TerrainLevelCommand:GenerateChanges(params)
 
     -- localized loop vars
     local old, dh, d
-    for x = 0, 2*size, Game.squareSize do
-        for z = 0, 2*size, Game.squareSize do
+    for x = 0, size, Game.squareSize do
+        for z = 0, size, Game.squareSize do
             d = map[x + z * parts]
             if d > 0 then
                 old = Spring.GetGroundHeight(x + startX, z + startZ)

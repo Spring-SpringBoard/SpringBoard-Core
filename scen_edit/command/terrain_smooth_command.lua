@@ -55,10 +55,10 @@ function TerrainSmoothCommand:GenerateChanges(params)
     local changes = {}
 
     local halfKernelSize = math.ceil(kernelSize / 2)
-    for x = 0, 2*size, Game.squareSize do
-        for z = 0, 2*size, Game.squareSize do
+    for x = 0, size, Game.squareSize do
+        for z = 0, size, Game.squareSize do
             if map[x + z * parts] > 0 then
-                if x + startX >= halfKernelSize and x + startX < Game.mapSizeX + halfKernelSize and 
+                if x + startX >= halfKernelSize and x + startX < Game.mapSizeX + halfKernelSize and
                     z + startZ >= halfKernelSize and z + startZ < Game.mapSizeZ + halfKernelSize then
                     local total, totalWeight = 0, 0
                     for i = 1, kernelSize do

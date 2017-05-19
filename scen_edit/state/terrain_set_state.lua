@@ -2,8 +2,8 @@ TerrainSetState = AbstractHeightmapEditingState:extends{}
 
 function TerrainSetState:GetCommand(x, z, strength)
     return TerrainLevelCommand({
-        x = x,
-        z = z,
+        x = x + self.size/2,
+		z = z + self.size/2,
         size = self.size,
         shapeName = self.paintTexture,
         rotation = self.rotation,

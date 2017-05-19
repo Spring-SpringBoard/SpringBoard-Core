@@ -38,16 +38,16 @@ function TerrainShapeModifyCommand:GenerateChanges(params)
 
     local changes = {}
 
-    for x = offsetX, 2*size, Game.squareSize do
-        for z = offsetZ, 2*size, Game.squareSize do
+    for x = offsetX, size, Game.squareSize do
+        for z = offsetZ, size, Game.squareSize do
             local mx, mz = x + startX, z + startZ
             changes[x + z * parts] = map[x + z * parts] * multiplier
 --             local dh = map[x + z * parts] * multiplier
 --             local gh = Spring.GetGroundHeight(mx, mz)
 --             local height = gh + dh
---             local delta = 
+--             local delta =
 --             if dh > 0 then
---                 
+--
 --             end
 --             height = math.min(gh + dh, maxHeight)
 --             height = math.max(height, minHeight)

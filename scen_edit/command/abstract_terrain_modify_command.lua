@@ -12,9 +12,9 @@ local function generateMap(size, delta, shapeName, rotation)
     local map = { sizeX = sizeX, sizeZ = sizeZ }
     local res = greyscale.res
 
-    local scaleX = sizeX / (2*size)
-    local scaleZ = sizeZ / (2*size)
-    local parts = 2*size / Game.squareSize + 1
+    local scaleX = sizeX / (size)
+    local scaleZ = sizeZ / (size)
+    local parts = size / Game.squareSize + 1
 
     local function getIndex(x, z)
         local rx = math.min(sizeX-1, math.max(0, math.floor(scaleX * x)))
@@ -35,9 +35,9 @@ local function generateMap(size, delta, shapeName, rotation)
         local dx = 1 - (rxRaw - rx)
         local dz = 1 - (rzRaw - rz)
 
-        local value = res[indx] * dx * dz 
-                    + res[indx + i * sizeX] * (1 - dx) * dz 
-                    + res[indx + j] * dx * (1 - dz) 
+        local value = res[indx] * dx * dz
+                    + res[indx + i * sizeX] * (1 - dx) * dz
+                    + res[indx + j] * dx * (1 - dz)
                     + res[indx + i * sizeX + j] * (1 - dx) * (1 - dz)
 
         local w = dx * dx + (1 - dx) * dz + dx * (1 - dz) + (1 - dx) * (1 - dz)
@@ -45,8 +45,8 @@ local function generateMap(size, delta, shapeName, rotation)
     end
 
     local angle = math.rad(rotation)
-    for x = 0, 2*size, Game.squareSize do
-        for z = 0, 2*size, Game.squareSize do
+    for x = 0, size, Game.squareSize do
+        for z = 0, size, Game.squareSize do
             local rx, rz = x - size, z - size
             rx, rz = rotate(rx, rz, angle)
             rx, rz = rx + size, rz + size
@@ -100,7 +100,7 @@ function AbstractTerrainModifyCommand:GetHeightMapFunc(isUndo)
         size = size - size % Game.squareSize
         local centerX = self.opts.x
         local centerZ = self.opts.z
-        local parts = 2*size / Game.squareSize + 1
+        local parts = size / Game.squareSize + 1
         local startX = centerX - size
         local startZ = centerZ - size
         startX = startX - startX % Game.squareSize
@@ -118,18 +118,18 @@ function AbstractTerrainModifyCommand:GetHeightMapFunc(isUndo)
                     map    = map,
                 })
             end
-            for x = 0, 2*size, Game.squareSize do
-                for z = 0, 2*size, Game.squareSize do
-                    local delta = self.changes[x + z * parts] 
+            for x = 0, size, Game.squareSize do
+                for z = 0, size, Game.squareSize do
+                    local delta = self.changes[x + z * parts]
                     if delta ~= nil then
                         Spring.AddHeightMap(x + startX, z + startZ, delta)
                     end
                 end
             end
         else
-            for x = 0, 2*size, Game.squareSize do
-                for z = 0, 2*size, Game.squareSize do
-                    local delta = self.changes[x + z * parts] 
+            for x = 0, size, Game.squareSize do
+                for z = 0, size, Game.squareSize do
+                    local delta = self.changes[x + z * parts]
                     if delta ~= nil then
                         Spring.AddHeightMap(x + startX, z + startZ, -delta)
                     end
@@ -155,4 +155,3 @@ function AbstractTerrainModifyCommand:unexecute()
         Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
     end
 end
-
