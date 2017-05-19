@@ -144,6 +144,8 @@ function FileDialog:init(dir, caption, fileTypes)
     end
 
     SCEN_EDIT.stateManager:GetCurrentState():SetGlobalKeyListener(keyListener)
+
+    screen0:FocusControl(self.fileEditBox)
 --    self:SetDir(self.dir)
 end
 
