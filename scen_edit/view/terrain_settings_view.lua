@@ -177,7 +177,7 @@ function TerrainSettingsView:init()
 --             width = 100,
 --         }),
 --     }))
-    self:UpdateSun()
+    self:UpdateLighting()
 
     self:AddControl("atmosphere-sep", {
         Label:New {
@@ -530,7 +530,7 @@ function _ColorArrayToChannels(colorArray)
     return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
 end
 
-function TerrainSettingsView:UpdateSun()
+function TerrainSettingsView:UpdateLighting()
     -- Direction
     local sunDirX, sunDirY, sunDirZ = gl.GetSun()
 --     local sunDirX, sunDirY, sunDirZ, sunDistance, sunStartAngle, sunOrbitTime = gl.GetSun()

@@ -3,27 +3,29 @@ ExportAction = AbstractAction:extends{}
 function ExportAction:execute()
     if SCEN_EDIT.projectDir ~= nil then
         local dir = FilePanel.lastDir or SB_PROJECTS_DIR
-        local fileTypes = {"Scenario archive", "Feature placer", "Map textures"}
+        local fileTypes = {"Scenario archive", "Feature placer", "Map textures", "Map info"}
         sfd = ExportFileDialog(dir, fileTypes)
         sfd:setConfirmDialogCallback(
             function(path, fileType)
+                local exportCommand
                 if fileType == fileTypes[1] then
                     Log.Notice("Exporting archive: " .. path .. " ...")
-                    local exportCommand = ExportCommand(path)
-                    SCEN_EDIT.commandManager:execute(exportCommand, true)
-                    Log.Notice("Exported archive.")
+                    exportCommand = ExportCommand(path)
                 elseif fileType == fileTypes[2] then
                     Log.Notice("Exporting to featureplacer format...")
-                    local exportCommand = ExportFeaturePlacerCommand(path)
-                    SCEN_EDIT.commandManager:execute(exportCommand, true)
-                    Log.Notice("Export complete.")
+                    exportCommand = ExportFeaturePlacerCommand(path)
                 elseif fileType == fileTypes[3] then
                     Log.Notice("Exporting map textures...")
-                    local exportCommand = ExportMapsCommand(path)
-                    SCEN_EDIT.commandManager:execute(exportCommand, true)
-                    Log.Notice("Export complete.")
+                    exportCommand = ExportMapsCommand(path)
+                elseif fileType == fileTypes[4] then
+                    Log.Notice("Exporting map info...")
+                    exportCommand = ExportMapInfoCommand(path)
                 else
                     Log.Error("Error trying to export. Invalida fileType specified: " .. tostring(fileType))
+                end
+                if exportCommand then
+                    SCEN_EDIT.commandManager:execute(exportCommand, true)
+                    Log.Notice("Export complete.")
                 end
             end
         )

@@ -18,6 +18,7 @@ SB_ASSETS_DIR   = SB_ROOT .. "assets/"
 --properties
 SCEN_EDIT_FILE_EXT = ".sdz"
 SCEN_EDIT_FEATURE_PLACER_FILE_EXT = ".lua"
+SB_MAP_INFO_FILE_EXT = ".lua"
 
 --mod opts
 local modOpts = Spring.GetModOptions()

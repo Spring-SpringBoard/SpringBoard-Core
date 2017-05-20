@@ -168,15 +168,20 @@ function ShowTable(t, indent)
 
   local st = MakeSortedTable(t)
 
+  local isArray = isarray(t)
+
   for _,kv in ipairs(st) do
     local k, v = kv[1], kv[2]
     local ktype = type(k)
     local vtype = type(v)
     -- output the key
-    if (ktype == 'string') then
-      strings[#strings+1] = (indent..encloseKey(k)..' = ')
-    else
-      strings[#strings+1] = (indent..'['..tostring(k)..'] = ')
+    strings[#strings+1] = indent
+    if not isArray then
+      if ktype == 'string' then
+        strings[#strings+1] = encloseKey(k) .. ' = '
+      else
+        strings[#strings+1] = '[' .. tostring(k)..'] = '
+      end
     end
     -- output the value
     if (vtype == 'string') then
