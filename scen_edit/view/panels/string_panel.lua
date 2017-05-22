@@ -1,9 +1,5 @@
 StringPanel = AbstractTypePanel:extends{}
 
-function StringPanel:init(...)
-    self:super('init', 'string', ...)
-end
-
 function StringPanel:MakePredefinedOpt()
     local stackStringPanel = MakeComponentPanel(self.parent)
     self.cbPredefined = Checkbox:New {

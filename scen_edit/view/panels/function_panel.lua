@@ -1,8 +1,9 @@
 FunctionPanel = AbstractTypePanel:extends{}
 
 -- FIXME: sources is ignored
-function FunctionPanel:init(parent, sources, trigger)
-    self:super('init', 'function', parent, {"pred"}, trigger)
+function FunctionPanel:init(opts)
+    opts.dataType.sources = {"pred"}
+    self:super('init', opts)
 end
 
 function FunctionPanel:MakePredefinedOpt()
@@ -27,10 +28,10 @@ function FunctionPanel:MakePredefinedOpt()
                 if #self.btnFunction.data > 0 then
                     mode = 'edit'
                 end
-                CustomWindow({
+                FunctionWindow({
                     parentWindow = self.parent.parent.parent,
                     mode = mode,
-                    dataType = "bool",
+                    dataType = self.dataType,
                     parentObj = self.btnFunction.data,
                     condition = self.btnFunction.data[1],
                     cbExpressions = self.cbPredefined,
@@ -43,9 +44,9 @@ function FunctionPanel:MakePredefinedOpt()
 end
 
 function FunctionPanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked then
+    if self.cbPredefined and self.cbPredefined.checked and self.btnFunction.data ~= nil and #self.btnFunction.data ~= 0 then
         field.type = "pred"
-        field.id = self.cbBool.checked
+        field.expr = self.btnFunction.data
         return true
     end
     return self:super('UpdateModel', field)
@@ -56,9 +57,7 @@ function FunctionPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        if field.id ~= self.cbBool.checked then
-            self.cbBool:Toggle()
-        end
+        self.btnFunction.data = field.expr
         return true
     end
     return self:super('UpdatePanel', field)
@@ -69,8 +68,6 @@ FunctionWindow = AbstractTriggerElementWindow:extends{}
 
 function FunctionWindow:init(opts)
     opts.element = opts.condition
-    self.inputDataType = opts.inputDataType
-    self.outputDataType = opts.outputDataType
     self:super("init", opts)
 end
 
@@ -104,16 +101,16 @@ function FunctionWindow:GetValidElementTypes()
 
     -- If specified, Filter based on matching output data types.
     local functionTypes
-    if self.outputDataType then
-        functionTypes = SCEN_EDIT.metaModel.functionTypesByOutput[self.outputDataType]
+    if self.dataType.output then
+        functionTypes = SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType.output]
     else
         functionTypes = SCEN_EDIT.metaModel.functionTypes
     end
 
     -- If specified, Filter based on matching input data types.
-    if self.inputDataType ~= nil then
+    if self.dataType.input ~= nil then
         for _, functionType in pairs(functionTypes) do
-            if isMatch(functionType.input, self.inputDataType) then
+            if isMatch(functionType.input, self.dataType.input) then
                 table.insert(validFunctionTypes, functionType)
             end
         end

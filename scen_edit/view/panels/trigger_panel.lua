@@ -1,9 +1,5 @@
 TriggerPanel = AbstractTypePanel:extends{}
 
-function TriggerPanel:init(...)
-    self:super('init', 'trigger', ...)
-end
-
 function TriggerPanel:MakePredefinedOpt()
     local stackTriggerPanel = MakeComponentPanel(self.parent)
     local lblAttrType = Label:New {

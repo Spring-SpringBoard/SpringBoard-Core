@@ -1,7 +1,7 @@
 AbstractTypePanel = LCS.class.abstract{}
 
-function AbstractTypePanel:init(dataType, parent, sources, trigger)
-    self.dataType = dataType
+function AbstractTypePanel:init(opts)
+    self.dataType = opts.dataType
     self.parent = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -10,15 +10,14 @@ function AbstractTypePanel:init(dataType, parent, sources, trigger)
         autosize = true,
         resizeItems = false,
         padding = {0, 0, 0, 0},
-        parent = parent,
+        parent = opts.parent,
     }
-    sources = sources or {"pred", "spec", "variable", "expression"}
-    if type(sources) == "string" then
-        sources = {sources}
+    self.sources = opts.sources or {"pred", "spec", "variable", "expression"}
+    if type(self.sources) == "string" then
+        self.sources = {self.sources}
     end
-    self.sources = sources
     self.radioGroup = {}
-    self.trigger = trigger
+    self.trigger = opts.trigger
 
     for _, source in pairs(self.sources) do
         if source == "pred" then
@@ -50,7 +49,7 @@ function AbstractTypePanel:MakeSpecialOpt()
         local typeName = event.typeName
         local eventType = SCEN_EDIT.metaModel.eventTypes[typeName]
         for _, param in pairs(eventType.param) do
-            if param.type == self.dataType then
+            if param.type == self.dataType.type then
                 table.insert(validParams, "Trigger: " .. param.name)
             end
         end
@@ -66,7 +65,7 @@ function AbstractTypePanel:MakeSpecialOpt()
         isChecked = false
     end
     self.cbSpecial = Checkbox:New {
-        caption = "Special " .. self.dataType .. ": ",
+        caption = "Special " .. self.dataType.type .. ": ",
         right = 100 + 10,
         x = 1,
         checked = isChecked,
@@ -93,7 +92,7 @@ end
 
 function AbstractTypePanel:MakeVariableOpt()
     --VARIABLE
-    self.cbVariable, self.cmbVariable = self:MakeVariableChoice(self.dataType, self.parent)
+    self.cbVariable, self.cmbVariable = self:MakeVariableChoice(self.dataType.type, self.parent)
     if self.cbVariable then
         table.insert(self.radioGroup, self.cbVariable)
     end
@@ -158,7 +157,7 @@ function AbstractTypePanel:UpdatePanel(field)
 end
 
 function AbstractTypePanel:AddExpression(dataType, parent)
-    local viableExpressions = SCEN_EDIT.metaModel.functionTypesByOutput[dataType]
+    local viableExpressions = SCEN_EDIT.metaModel.functionTypesByOutput[dataType.type]
     if viableExpressions then
         local stackPanel = MakeComponentPanel(parent)
         local cbExpressions = Checkbox:New {

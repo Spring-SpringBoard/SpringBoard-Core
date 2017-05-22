@@ -1,6 +1,6 @@
 GenericArrayPanel = AbstractTypePanel:extends{}
 
-function GenericArrayPanel:init(type, parent, ...)
+function GenericArrayPanel:init(opts)
     self.subPanels = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         x = 1,
@@ -10,9 +10,8 @@ function GenericArrayPanel:init(type, parent, ...)
         resizeItems = false,
         parent = parent,
     }
-    self:super('init', type, parent, ...)
-    self.type = type
-    self.atomicType = type:gsub("_array", "")
+    self:super('init', opts)
+    self.atomicType = opts.dataType.type:gsub("_array", "")
     self.elements = {}
 end
 
@@ -45,7 +44,14 @@ function GenericArrayPanel:MakePredefinedOpt()
 end
 
 function GenericArrayPanel:AddElement()
-	local subPanel = SCEN_EDIT.createNewPanel(self.atomicType, self.subPanels, self.sources, self.trigger)
+	local subPanel = SCEN_EDIT.createNewPanel({
+        dataType = {
+            type = self.atomicType,
+            sources = self.sources
+        },
+        parent = self.subPanels,
+        trigger = self.trigger
+    })
     table.insert(self.elements, subPanel)
 	SCEN_EDIT.MakeSeparator(self.subPanels)
 end

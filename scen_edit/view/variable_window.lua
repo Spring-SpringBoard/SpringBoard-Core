@@ -66,8 +66,14 @@ function VariableWindow:init(variable)
                     self.variablePanel:ClearChildren()
 
                     local typeId = itemIdx
-                    local inputType = SCEN_EDIT.metaModel.variableTypes[typeId] 
-                    local subPanel = SCEN_EDIT.createNewPanel(inputType, self.variablePanel, "pred")
+                    local inputType = SCEN_EDIT.metaModel.variableTypes[typeId]
+                    local subPanel = SCEN_EDIT.createNewPanel({
+                        dataType = {
+                            type = inputType,
+                            sources = "pred",
+                        },
+                        parent = self.variablePanel,
+                    })
                     if subPanel then
                         self.variablePanel[inputType] = subPanel
                         SCEN_EDIT.MakeSeparator(self.variablePanel)
@@ -114,7 +120,7 @@ function VariableWindow:UpdatePanel(variable)
     self.edValue.text = variable.name
     self.variable = variable
     local varType = variable.type
-    self.variablePanel[varType]:UpdatePanel(variable.value)   
+    self.variablePanel[varType]:UpdatePanel(variable.value)
 end
 
 function VariableWindow:UpdateModel(variable)
@@ -127,7 +133,7 @@ function VariableWindow:UpdateModel(variable)
     variable.type = newVariableType
     variable.value = {}
     self.variablePanel[variable.type]:UpdateModel(self.variable.value)
-    
+
 --[[    if typeChanged then
         SCEN_EDIT.model:RemoveVariable(variable.id)
         newVariable = SCEN_EDIT.model:NewVariable(variable.type)

@@ -1,9 +1,5 @@
 FeatureTypePanel = AbstractTypePanel:extends{}
 
-function FeatureTypePanel:init(...)
-    self:super('init', 'featureType', ...)
-end
-
 function FeatureTypePanel:MakePredefinedOpt()
     local stackFeatureTypePanel = MakeComponentPanel(self.parent)
     self.cbPredefined = Checkbox:New {

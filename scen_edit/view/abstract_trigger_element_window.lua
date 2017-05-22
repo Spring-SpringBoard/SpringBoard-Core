@@ -106,11 +106,15 @@ function AbstractTriggerElementWindow:init(opts)
                 self.elementPanel:ClearChildren()
 --                local cndName = self.cmbCustomTypes.conditionTypes[itemIdx]
                 local exprType = self.elementTypes[itemIdx]
-                if exprType.input then
+                if exprType and exprType.input then
                     for i = 1, #exprType.input do
                         local dataType = exprType.input[i]
                         local subPanelName = dataType.name
-                        local subPanel = SCEN_EDIT.createNewPanel(dataType.type, self.elementPanel, dataType.sources, self.trigger)
+                        local subPanel = SCEN_EDIT.createNewPanel({
+                            dataType = dataType,
+                            parent = self.elementPanel,
+                            trigger = self.trigger
+                        })
                         if subPanel then
                             self.elementPanel[subPanelName] = subPanel
                             if i ~= #exprType.input then

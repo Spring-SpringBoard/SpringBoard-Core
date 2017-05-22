@@ -1,7 +1,8 @@
 IdentityComparisonPanel = AbstractTypePanel:extends{}
 
-function IdentityComparisonPanel:init(parent, ...)
-    self:super('init', 'identity_comparison', parent, "pred", ...)
+function IdentityComparisonPanel:init(opts)
+    opts.dataType.sources = {"pred"}
+    self:super('init', opts)
 end
 
 function IdentityComparisonPanel:MakePredefinedOpt()

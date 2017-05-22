@@ -1,9 +1,5 @@
 AreaPanel = AbstractTypePanel:extends{}
 
-function AreaPanel:init(...)
-    self:super('init', 'area', ...)
-end
-
 function AreaPanel:MakePredefinedOpt()
     local stackAreaPanel = MakeComponentPanel(self.parent)
     self.cbPredefined = Checkbox:New {

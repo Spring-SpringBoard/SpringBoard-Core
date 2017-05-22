@@ -1,9 +1,5 @@
 BoolPanel = AbstractTypePanel:extends{}
 
-function BoolPanel:init(...)
-    self:super('init', 'bool', ...)
-end
-
 function BoolPanel:MakePredefinedOpt()
     local stackBoolPanel = MakeComponentPanel(self.parent)
     self.cbPredefined = Checkbox:New {

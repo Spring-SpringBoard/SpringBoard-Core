@@ -1128,7 +1128,7 @@ return {
                         {
                             name = "filter_function",
                             type = "function",
-                            input = type.name,
+                            --input = type.name,
                             output = type.name,
                         },
                     },
@@ -1149,7 +1149,7 @@ return {
                             {
                                 name = "map_function",
                                 type = "function",
-                                input = type.name,
+                                --input = type.name,
                                 output = type2.name,
                             },
                         },

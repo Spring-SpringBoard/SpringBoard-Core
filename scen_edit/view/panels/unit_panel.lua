@@ -1,9 +1,5 @@
 UnitPanel = AbstractTypePanel:extends{}
 
-function UnitPanel:init(...)
-    self:super('init', 'unit', ...)
-end
-
 function UnitPanel:MakePredefinedOpt()
     --PREDEFINED
     local stackUnitPanel = MakeComponentPanel(self.parent)

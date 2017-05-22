@@ -1,8 +1,9 @@
 OrderPanel = LCS.class{}
 
 -- TODO: Doesn't invoke self:super, it probably should
-function OrderPanel:init(parent)
-    self.parent = parent
+-- FIXME: this is probably broken
+function OrderPanel:init(opts)
+    self.parent = opts.parent
     local stackPanel = MakeComponentPanel(self.parent)
     self.cmbOrderTypes = ComboBox:New {
         items = GetField(SCEN_EDIT.metaModel.orderTypes, "humanName"),
@@ -40,7 +41,12 @@ function OrderPanel:init(parent)
                             right = 1,
                         }
                     end
-                    local subPanel = SCEN_EDIT.createNewPanel(input.type, self.orderPanel)
+                    local subPanel = SCEN_EDIT.createNewPanel({
+                        dataType = input,
+                        parent = self.orderPanel,
+                        -- FIXME: no reference to self.trigger; things might break
+                        -- trigger = self.trigger
+                    })
                     if subPanel then
                         self.orderPanel[subPanelName] = subPanel
                         if i ~= #order.input then

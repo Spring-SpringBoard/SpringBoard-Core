@@ -1,9 +1,5 @@
 TeamPanel = AbstractTypePanel:extends{}
 
-function TeamPanel:init(...)
-    self:super('init', 'team', ...)
-end
-
 function TeamPanel:MakePredefinedOpt()
     local stackTeamPanel = MakeComponentPanel(self.parent)
     self.cbPredefined = Checkbox:New {

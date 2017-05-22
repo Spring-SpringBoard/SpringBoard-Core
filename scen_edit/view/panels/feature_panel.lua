@@ -1,9 +1,5 @@
 FeaturePanel = AbstractTypePanel:extends{}
 
-function FeaturePanel:init(...)
-    self:super('init', 'feature', ...)
-end
-
 function FeaturePanel:MakePredefinedOpt()
     --PREDEFINED
     local stackFeaturePanel = MakeComponentPanel(self.parent)

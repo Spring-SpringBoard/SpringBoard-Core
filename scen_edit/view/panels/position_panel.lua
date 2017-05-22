@@ -1,9 +1,5 @@
 PositionPanel = AbstractTypePanel:extends{}
 
-function PositionPanel:init(...)
-    self:super('init', 'position', ...)
-end
-
 function PositionPanel:MakePredefinedOpt()
     --PREDEFINED
     local stackPositionPanel = MakeComponentPanel(self.parent)

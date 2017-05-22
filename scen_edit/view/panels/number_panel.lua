@@ -1,9 +1,5 @@
 NumberPanel = AbstractTypePanel:extends{}
 
-function NumberPanel:init(...)
-    self:super('init', 'number', ...)
-end
-
 function NumberPanel:MakePredefinedOpt()
     local stackValuePanel = MakeComponentPanel(self.parent)
     self.cbPredefined = Checkbox:New {

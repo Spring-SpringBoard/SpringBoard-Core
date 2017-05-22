@@ -1,7 +1,8 @@
 NumericComparisonPanel = AbstractTypePanel:extends{}
 
-function NumericComparisonPanel:init(parent, ...)
-    self:super('init', 'numeric_comparison', parent, "pred", ...)
+function NumericComparisonPanel:init(opts)
+    opts.dataType.sources = {"pred"}
+    self:super('init', opts)
 end
 
 function NumericComparisonPanel:MakePredefinedOpt(parent)

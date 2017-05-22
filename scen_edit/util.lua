@@ -475,41 +475,42 @@ function SCEN_EDIT.GiveOrderToUnit(unitId, orderType, params)
         { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
 end
 
-function SCEN_EDIT.createNewPanel(input, ...)
-    if input == "unit" then
-        return UnitPanel(...)
-    elseif input == "feature" then
-        return FeaturePanel(...)
-    elseif input == "area" then
-        return AreaPanel(...)
-    elseif input == "trigger" then
-        return TriggerPanel(...)
-    elseif input == "unitType" then
-        return UnitTypePanel(...)
-    elseif input == "featureType" then
-        return FeatureTypePanel(...)
-    elseif input == "team" then
-        return TeamPanel(...)
-    elseif input == "number" then
-        return NumberPanel(...)
-    elseif input == "string" then
-        return StringPanel(...)
-    elseif input == "bool" then
-        return BoolPanel(...)
-    elseif input == "numericComparison" then
-        return NumericComparisonPanel(...)
-    elseif input == "order" then
-        return OrderPanel(...)
-    elseif input == "identityComparison" then
-        return IdentityComparisonPanel(...)
-    elseif input == "position" then
-        return PositionPanel(...)
-    elseif input == "function" then
-        return FunctionPanel(...)
-    elseif input:find("_array") then
-        return GenericArrayPanel(input, ...)
+function SCEN_EDIT.createNewPanel(opts)
+    local dataTypeName = opts.dataType.type
+    if dataTypeName == "unit" then
+        return UnitPanel(opts)
+    elseif dataTypeName == "feature" then
+        return FeaturePanel(opts)
+    elseif dataTypeName == "area" then
+        return AreaPanel(opts)
+    elseif dataTypeName == "trigger" then
+        return TriggerPanel(opts)
+    elseif dataTypeName == "unitType" then
+        return UnitTypePanel(opts)
+    elseif dataTypeName == "featureType" then
+        return FeatureTypePanel(opts)
+    elseif dataTypeName == "team" then
+        return TeamPanel(opts)
+    elseif dataTypeName == "number" then
+        return NumberPanel(opts)
+    elseif dataTypeName == "string" then
+        return StringPanel(opts)
+    elseif dataTypeName == "bool" then
+        return BoolPanel(opts)
+    elseif dataTypeName == "numericComparison" then
+        return NumericComparisonPanel(opts)
+    elseif dataTypeName == "order" then
+        return OrderPanel(opts)
+    elseif dataTypeName == "identityComparison" then
+        return IdentityComparisonPanel(opts)
+    elseif dataTypeName == "position" then
+        return PositionPanel(opts)
+    elseif dataTypeName == "function" then
+        return FunctionPanel(opts)
+    elseif dataTypeName:find("_array") then
+        return GenericArrayPanel(opts)
     end
-    Log.Error("No panel for this input: " .. tostring(input))
+    Log.Error("No panel for this data: " .. tostring(dataTypeName))
 end
 
 SCEN_EDIT.delayed = {

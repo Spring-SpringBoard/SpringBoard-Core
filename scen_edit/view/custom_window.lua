@@ -6,14 +6,14 @@ function CustomWindow:init(opts)
 end
 
 function CustomWindow:GetValidElementTypes()
-    return SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType]
+    return SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType.type]
 end
 
 function CustomWindow:GetWindowCaption()
     if self.mode == 'add' then
-        return "New expression of type " .. self.dataType
+        return "New expression of type " .. self.dataType.type
     elseif self.mode == 'edit' then
-        return "Edit expression of type " .. self.dataType
+        return "Edit expression of type " .. self.dataType.type
     end
 end
 

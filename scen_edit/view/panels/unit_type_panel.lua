@@ -1,9 +1,5 @@
 UnitTypePanel = AbstractTypePanel:extends{}
 
-function UnitTypePanel:init(...)
-    self:super('init', 'unitType', ...)
-end
-
 function UnitTypePanel:MakePredefinedOpt()
     local stackUnitTypePanel = MakeComponentPanel(self.parent)
     self.cbPredefined = Checkbox:New {
