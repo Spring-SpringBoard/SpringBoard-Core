@@ -80,17 +80,18 @@ end
 function MetaModel:SetVariableTypes()
     --add variables for core types
     self.variableTypes = {"unit", "unitType", "team", "area", "string", "number", "bool"}
-    for i = 1, #self.variableTypes do
-        local variableType = self.variableTypes[i]
-        local arrayType = variableType .. "_array"
+    local arrayTypes = {}
+    for _, variableType in pairs(self.variableTypes) do
+        table.insert(arrayTypes, variableType .. "_array")
+    end
+    for _, arrayType in pairs(arrayTypes) do
         table.insert(self.variableTypes, arrayType)
     end
 end
 
 --TODO: abstract order types out of the meta model
 function MetaModel:SetOrderTypes(orderTypes)
-    for i = 1, #orderTypes do
-        local orderType = orderTypes[i]
+    for _, orderType in pairs(orderTypes) do
         orderType.input = SCEN_EDIT.parseData(orderType.input)
     end
     self.orderTypes = SCEN_EDIT.CreateNameMapping(orderTypes)

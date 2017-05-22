@@ -504,6 +504,8 @@ function SCEN_EDIT.createNewPanel(input, ...)
         return IdentityComparisonPanel(...)
     elseif input == "position" then
         return PositionPanel(...)
+    elseif input == "function" then
+        return FunctionPanel(...)
     elseif input:find("_array") then
         return GenericArrayPanel(input, ...)
     end

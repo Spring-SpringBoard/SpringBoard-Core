@@ -60,25 +60,41 @@ function SCEN_EDIT.coreTypes()
             canCompare = false,
         },
         {
+            humanName = "Function",
+            name = "function",
+            canBeVariable = false,
+            canCompare = false,
+        },
+        {
             humanName = "Position",
             name = "position",
         },
     }
 end
 
-local function definitions()
+local function _definitions()
     return {
-        name = {
-            mandatory = true,
-            type = "string",
-        },
         type = {
             mandatory = true,
             type = "string",
         },
-        humanName = {
-            mandatory = true,
+        name = {
+            mandatory = false,
             type = "string",
+            parseFunction = function(d)
+                if d.name == nil then
+                    d.name = d.type
+                end
+            end,
+        },
+        humanName = {
+            mandatory = false,
+            type = "string",
+            parseFunction = function(d)
+                if d.humanName == nil then
+                    d.humanName = d.name
+                end
+            end,
         },
         raw = {
             mandatory = false,
@@ -90,7 +106,63 @@ local function definitions()
             type = "bool",
             default = false,
         },
+        input = {
+            mandatory = false,
+            parseFunction = function(d)
+                if d.type ~= "function" then
+                    return
+                end
+                if d.input then
+                    d.input = SCEN_EDIT.parseData(d)
+                end
+            end,
+        },
+        output = {
+            mandatory = false,
+            parseFunction = function(d)
+                -- TODO: Check if the output field is valid
+                if d.type ~= "function" then
+                    return
+                end
+            end,
+        },
     }
+end
+local definitions = _definitions()
+
+--[[
+function SCEN_EDIT.complexTypes()
+    return {
+        {
+            humanName = "Point",
+            name = "point",
+            input = { "number", "number"},
+        }
+    }
+end
+--]]
+
+local function parseDataType(d)
+    local errored = false
+    for key, def in pairs(definitions) do
+        local dValue = d[key]
+        if dValue == nil then
+            if def.mandatory then
+                Log.Error("Error, missing field \"" .. key .. "\" of data " .. tostring(d.type))
+                errored = true
+            elseif def.default then
+                d[key] = def.default
+            end
+        else
+            if def.type and (type(def.type) ~= type(dValue)) then
+                Log.Error("Error, wrong type of field: \"" .. tostring(def.type) ..
+                    "\", expected: \"" .. tostring(type(def.type)) ..
+                    "\", got: \"" .. tostring(type(dValue)) .. "\"")
+                errored = true
+            end
+        end
+    end
+    return not errored
 end
 
 function SCEN_EDIT.parseData(data)
@@ -108,9 +180,8 @@ function SCEN_EDIT.parseData(data)
         end
         if type(d) == "table" then
             local continue = true --lua has no continue and i don't want deep nesting
-            if continue and not d.type then
-                Log.Error("Error, missing type of data " .. d.type)
-                continue = false
+            if continue then
+                --continue = parseDataType(d)
             end
             if continue and d.name == nil then
                 d.name = d.type
@@ -123,7 +194,7 @@ function SCEN_EDIT.parseData(data)
                     end
                 end
             end
-            if continue    then
+            if continue then
                 table.insert(newData, d)
             end
         else
@@ -134,8 +205,7 @@ function SCEN_EDIT.parseData(data)
     -- verify named objects
     local finalData = {}
     local dataNames = {}
-    for i = 1, #newData do
-        local d = newData[i]
+    for _, d in pairs(newData) do
         if dataNames[d.name] then
             Log.Error("Data of name " .. d.name .. " already exists ")
         else
@@ -144,17 +214,6 @@ function SCEN_EDIT.parseData(data)
     end
     return finalData
 end
---[[
-function SCEN_EDIT.complexTypes()
-    return {
-        {
-            humanName = "Point",
-            name = "point",
-            input = { "number", "number"},
-        }
-    }
-end
---]]
 
 function SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
     if resolvedInput == nil then

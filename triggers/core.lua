@@ -1126,7 +1126,7 @@ return {
                     input = {
                         arrayType,
                         {
-                            name = "filter function",
+                            name = "filter_function",
                             type = "function",
                             input = type.name,
                             output = type.name,
@@ -1147,7 +1147,7 @@ return {
                         input = {
                             arrayType,
                             {
-                                name = "map function",
+                                name = "map_function",
                                 type = "function",
                                 input = type.name,
                                 output = type2.name,
