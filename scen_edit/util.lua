@@ -507,7 +507,7 @@ function SCEN_EDIT.createNewPanel(input, ...)
     elseif input:find("_array") then
         return GenericArrayPanel(input, ...)
     end
-    Spring.Echo("No panel for this input: " .. tostring(input))
+    Log.Error("No panel for this input: " .. tostring(input))
 end
 
 SCEN_EDIT.delayed = {
@@ -560,7 +560,7 @@ local warningsIssued = {}
 function SCEN_EDIT.MinVersion(versionNumber, feature)
     if Script.IsEngineMinVersion == nil or not Script.IsEngineMinVersion(versionNumber) then
         if warningsIssued[feature] == nil then
-            Spring.Echo(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
+            Log.Warning(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
             warningsIssued[feature] = true
         end
         return false
@@ -571,7 +571,7 @@ end
 function SCEN_EDIT.FunctionExists(fun, feature)
     if fun ~= nil then
         if warningsIssued[feature] == nil then
-            Spring.Echo(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
+            Log.Warning(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
             warningsIssued[feature] = true
         end
         return false

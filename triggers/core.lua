@@ -1121,7 +1121,7 @@ return {
                 -- Higher order functions
 
                 table.insert(functions, {
-                    humanName = "Filter element in " .. type.humanName .. " array",
+                    humanName = "Filter elements in " .. type.humanName .. " array",
                     name = arrayType .. "_FILTER",
                     input = {
                         arrayType,

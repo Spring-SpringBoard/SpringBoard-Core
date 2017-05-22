@@ -47,7 +47,6 @@ WidgetUndoSetWaterParamsCommand.className = "WidgetUndoSetWaterParamsCommand"
 
 function WidgetUndoSetWaterParamsCommand:execute()
     local oldValues = cmdStack[#cmdStack]
-    Spring.Echo(oldValues)
     cmdStack[#cmdStack] = nil
     if oldValues then
         Spring.SetWaterParams(oldValues)
