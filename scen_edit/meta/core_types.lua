@@ -98,12 +98,12 @@ local function _definitions()
         },
         raw = {
             mandatory = false,
-            type = "bool",
+            type = "boolean",
             default = false,
         },
         allowNil = {
             mandatory = false,
-            type = "bool",
+            type = "boolean",
             default = false,
         },
         input = {
@@ -113,7 +113,7 @@ local function _definitions()
                     return
                 end
                 if d.input then
-                    d.input = SCEN_EDIT.parseData(d)
+                    d.input = SCEN_EDIT.parseData(d.input)
                 end
             end,
         },
@@ -123,6 +123,17 @@ local function _definitions()
                 -- TODO: Check if the output field is valid
                 if d.type ~= "function" then
                     return
+                end
+            end,
+        },
+        extraSources = {
+            mandatory = false,
+            parseFunction = function(d)
+                if d.type ~= "function" then
+                    return
+                end
+                if d.extraSources then
+                    d.extraSources = SCEN_EDIT.parseData(d.extraSources)
                 end
             end,
         },
@@ -154,11 +165,16 @@ local function parseDataType(d)
                 d[key] = def.default
             end
         else
-            if def.type and (type(def.type) ~= type(dValue)) then
-                Log.Error("Error, wrong type of field: \"" .. tostring(def.type) ..
-                    "\", expected: \"" .. tostring(type(def.type)) ..
+            -- Perform a type check if def has a type specified
+            if def.type and (def.type ~= type(dValue)) then
+                Log.Error("Error, wrong type of field: \"" .. tostring(key) ..
+                    "\", expected: \"" .. tostring(def.type) ..
                     "\", got: \"" .. tostring(type(dValue)) .. "\"")
                 errored = true
+            end
+            -- Invoke the parseFunction if it exists
+            if not errored and def.parseFunction then
+                def.parseFunction(d)
             end
         end
     end
@@ -179,22 +195,16 @@ function SCEN_EDIT.parseData(data)
             }
         end
         if type(d) == "table" then
-            local continue = true --lua has no continue and i don't want deep nesting
-            if continue then
-                --continue = parseDataType(d)
-            end
-            if continue and d.name == nil then
-                d.name = d.type
-            end
-            if continue then
+            local success = parseDataType(d)
+            if success then
                 for _, d2 in pairs(newData) do
                     if d.name == d2.name then
                         Log.Error("Error, name field is duplicate")
-                        continue = false
+                        succses = false
                     end
                 end
             end
-            if continue then
+            if success then
                 table.insert(newData, d)
             end
         else

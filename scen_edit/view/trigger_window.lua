@@ -335,7 +335,6 @@ end
 function TriggerWindow:MakeAddConditionWindow()
     local opts = self:_GetTriggerElementWindowParams()
     opts.mode = 'add'
-    Spring.Echo(opts.params)
     return ConditionWindow(opts)
 end
 

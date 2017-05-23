@@ -76,7 +76,7 @@ function AbstractTypePanel:MakeSpecialOpt()
         width = 100,
         height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackPanel,
-        items = GetField(validParams, "humanName"),
+        items = GetField(validParams, "name"),
     }
     self.cmbSpecial.OnSelect = {
         function(obj, itemIdx, selected)

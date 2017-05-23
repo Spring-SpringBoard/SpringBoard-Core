@@ -1128,8 +1128,10 @@ return {
                         {
                             name = "filter_function",
                             type = "function",
-                            --input = type.name,
-                            output = type.name,
+                            extraSources = {
+                                type.name,
+                            },
+                            output = "bool",
                         },
                     },
                     output = arrayType,
@@ -1149,7 +1151,9 @@ return {
                             {
                                 name = "map_function",
                                 type = "function",
-                                --input = type.name,
+                                extraSources = {
+                                    type.name,
+                                },
                                 output = type2.name,
                             },
                         },

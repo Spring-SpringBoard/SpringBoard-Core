@@ -36,7 +36,8 @@ function FunctionPanel:MakePredefinedOpt()
                     condition = self.btnFunction.data[1],
                     cbExpressions = self.cbPredefined,
                     btnExpressions = self.btnFunction,
-                    trigger = self.trigger
+                    trigger = self.trigger,
+                    params = self.params,
                 })
             end
         },

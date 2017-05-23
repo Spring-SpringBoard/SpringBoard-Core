@@ -2,7 +2,7 @@ ConditionWindow = AbstractTriggerElementWindow:extends{}
 
 function ConditionWindow:init(opts)
     opts.element = opts.condition
-    Spring.Echo("ConditionWindow", opts.params)
+    --Spring.Echo("ConditionWindow", opts.params)
     self:super("init", opts)
 end
 
