@@ -6,6 +6,9 @@ function TriggerManager:init()
     self.triggers = {}
 end
 
+---------------
+-- CRUD methods
+---------------
 function TriggerManager:addTrigger(trigger)
     if trigger.id == nil then
         trigger.id = self.triggerIdCount + 1
@@ -76,6 +79,30 @@ function TriggerManager:clear()
         self:removeTrigger(triggerId)
     end
     self.triggerIdCount = 0
+end
+
+---------------
+-- CRUD methods
+---------------
+
+function TriggerManager:GetTriggerScopeParams(trigger)
+    local triggerScopeParams = {}
+    if #trigger.events == 0 then
+        return triggerScopeParams
+    end
+
+    for _, event in pairs(trigger.events) do
+        local typeName = event.typeName
+        local eventType = SCEN_EDIT.metaModel.eventTypes[typeName]
+        for _, param in pairs(eventType.param) do
+            table.insert(triggerScopeParams, {
+                name = param.name,
+                type = param.type,
+                humanName = "Trigger: " .. name,
+            })
+        end
+    end
+    return triggerScopeParams
 end
 
 ---------------------------------

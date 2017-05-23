@@ -1,6 +1,11 @@
 AbstractTypePanel = LCS.class.abstract{}
 
 function AbstractTypePanel:init(opts)
+    assert(opts.dataType, "dataType cannot be nil")
+    assert(opts.parent, "parent cannot be nil")
+    assert(opts.trigger, "trigger cannot be nil")
+    assert(opts.params, "params cannot be nil")
+
     self.dataType = opts.dataType
     self.parent = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -18,6 +23,7 @@ function AbstractTypePanel:init(opts)
     end
     self.radioGroup = {}
     self.trigger = opts.trigger
+    self.params = opts.params
 
     for _, source in pairs(self.sources) do
         if source == "pred" then
@@ -41,17 +47,10 @@ function AbstractTypePanel:MakePredefinedOpt()
 end
 
 function AbstractTypePanel:MakeSpecialOpt()
-    if self.trigger and #self.trigger.events == 0 then
-        return
-    end
     local validParams = {}
-    for _, event in pairs(self.trigger.events) do
-        local typeName = event.typeName
-        local eventType = SCEN_EDIT.metaModel.eventTypes[typeName]
-        for _, param in pairs(eventType.param) do
-            if param.type == self.dataType.type then
-                table.insert(validParams, "Trigger: " .. param.name)
-            end
+    for _, param in pairs(self.params) do
+        if param.type == self.dataType.type then
+            table.insert(validParams, param)
         end
     end
     if #validParams == 0 then
@@ -77,7 +76,7 @@ function AbstractTypePanel:MakeSpecialOpt()
         width = 100,
         height = SCEN_EDIT.conf.B_HEIGHT,
         parent = stackPanel,
-        items = validParams,
+        items = GetField(validParams, "humanName"),
     }
     self.cmbSpecial.OnSelect = {
         function(obj, itemIdx, selected)
@@ -189,7 +188,8 @@ function AbstractTypePanel:AddExpression(dataType, parent)
                     condition = btnExpressions.data[1],
                     cbExpressions = cbExpressions,
                     btnExpressions = btnExpressions,
-                    trigger = self.trigger
+                    trigger = self.trigger,
+                    params = self.params,
                 })
             end
         }

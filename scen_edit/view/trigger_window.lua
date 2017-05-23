@@ -323,23 +323,27 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
     end
 end
 
-function TriggerWindow:MakeAddConditionWindow()
-    return ConditionWindow({
+function TriggerWindow:_GetTriggerElementWindowParams()
+    return {
         trigger = self.trigger,
+        params = SCEN_EDIT.model.triggerManager:GetTriggerScopeParams(self.trigger),
         parentWindow = self.window,
         triggerWindow = self,
-        mode = 'add',
-    })
+    }
+end
+
+function TriggerWindow:MakeAddConditionWindow()
+    local opts = self:_GetTriggerElementWindowParams()
+    opts.mode = 'add'
+    Spring.Echo(opts.params)
+    return ConditionWindow(opts)
 end
 
 function TriggerWindow:MakeEditConditionWindow(condition)
-    return ConditionWindow({
-        trigger = self.trigger,
-        parentWindow = self.window,
-        triggerWindow = self,
-        mode = 'edit',
-        condition = condition,
-    })
+    local opts = self:_GetTriggerElementWindowParams()
+    opts.mode = 'edit'
+    opts.condition = condition
+    return ConditionWindow(opts)
 end
 
 function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
@@ -349,22 +353,16 @@ function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
 end
 
 function TriggerWindow:MakeAddEventWindow()
-    return EventWindow({
-        trigger = self.trigger,
-        parentWindow = self.window,
-        triggerWindow = self,
-        mode = 'add',
-    })
+    local opts = self:_GetTriggerElementWindowParams()
+    opts.mode = 'add'
+    return EventWindow(opts)
 end
 
 function TriggerWindow:MakeEditEventWindow(event)
-    return EventWindow({
-        trigger = self.trigger,
-        parentWindow = self.window,
-        triggerWindow = self,
-        mode = 'edit',
-        event = event,
-    })
+    local opts = self:_GetTriggerElementWindowParams()
+    opts.mode = 'edit'
+    opts.event = event
+    return EventWindow(opts)
 end
 
 function TriggerWindow:MakeRemoveEventWindow(event, idx)
@@ -373,22 +371,16 @@ function TriggerWindow:MakeRemoveEventWindow(event, idx)
 end
 
 function TriggerWindow:MakeAddActionWindow()
-    return ActionWindow({
-        trigger = self.trigger,
-        parentWindow = self.window,
-        triggerWindow = self,
-        mode = 'add',
-    })
+    local opts = self:_GetTriggerElementWindowParams()
+    opts.mode = 'add'
+    return ActionWindow(opts)
 end
 
 function TriggerWindow:MakeEditActionWindow(action)
-    return ActionWindow({
-        trigger = self.trigger,
-        parentWindow = self.window,
-        triggerWindow = self,
-        mode = 'edit',
-        action = action,
-    })
+    local opts = self:_GetTriggerElementWindowParams()
+    opts.mode = 'edit'
+    opts.action = action
+    return ActionWindow(opts)
 end
 
 function TriggerWindow:MakeRemoveActionWindow(action, idx)
