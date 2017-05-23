@@ -8,7 +8,7 @@ function GenericArrayPanel:init(opts)
         right = 1,
         autosize = true,
         resizeItems = false,
-        parent = parent,
+        parent = opts.parent,
     }
     self:super('init', opts)
     self.atomicType = opts.dataType.type:gsub("_array", "")
@@ -50,7 +50,8 @@ function GenericArrayPanel:AddElement()
             sources = self.sources
         },
         parent = self.subPanels,
-        trigger = self.trigger
+        trigger = self.trigger,
+        params = {},
     })
     table.insert(self.elements, subPanel)
 	SCEN_EDIT.MakeSeparator(self.subPanels)

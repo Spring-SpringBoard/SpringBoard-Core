@@ -150,5 +150,17 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             end
             return values
         end
+    elseif type == "action" then
+        table.echo(field.expr)
+        local typeName = field.expr[1].typeName
+        local exprType = SCEN_EDIT.metaModel.actionTypes[typeName]
+        return self.fieldResolver:CallExpression(condition, conditionType, params)
+        return exprType
+    elseif type == "function" then
+        table.echo(field.expr)
+        local typeName = field.expr[1].typeName
+        local exprType = SCEN_EDIT.metaModel.functionTypes[typeName]
+        return self.fieldResolver:CallExpression(condition, conditionType, params)
+        return exprType
     end
 end

@@ -73,6 +73,7 @@ function VariableWindow:init(variable)
                             sources = "pred",
                         },
                         parent = self.variablePanel,
+                        params = {},
                     })
                     if subPanel then
                         self.variablePanel[inputType] = subPanel

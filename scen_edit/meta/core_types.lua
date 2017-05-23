@@ -109,7 +109,8 @@ local function _definitions()
         input = {
             mandatory = false,
             parseFunction = function(d)
-                if d.type ~= "function" then
+                if d.type ~= "function" and d.type ~= "action" then
+                    Log.Error("parseFunction specified for \"input\" key in field: \"" .. tostring(d.type) .. "\"")
                     return
                 end
                 if d.input then
@@ -121,7 +122,8 @@ local function _definitions()
             mandatory = false,
             parseFunction = function(d)
                 -- TODO: Check if the output field is valid
-                if d.type ~= "function" then
+                if d.type ~= "function" and d.type ~= "action" then
+                    Log.Error("parseFunction specified for \"output\" key in field: \"" .. tostring(d.type) .. "\"")
                     return
                 end
             end,
@@ -129,7 +131,8 @@ local function _definitions()
         extraSources = {
             mandatory = false,
             parseFunction = function(d)
-                if d.type ~= "function" then
+                if d.type ~= "function" and d.type ~= "action" then
+                    Log.Error("parseFunction specified for \"extraSources\" key in field: \"" .. tostring(d.type) .. "\"")
                     return
                 end
                 if d.extraSources then

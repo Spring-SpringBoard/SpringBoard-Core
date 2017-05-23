@@ -3,7 +3,7 @@ AbstractTypePanel = LCS.class.abstract{}
 function AbstractTypePanel:init(opts)
     assert(opts.dataType, "dataType cannot be nil")
     assert(opts.parent, "parent cannot be nil")
-    assert(opts.trigger, "trigger cannot be nil")
+    --assert(opts.trigger, "trigger cannot be nil")
     assert(opts.params, "params cannot be nil")
 
     self.dataType = opts.dataType

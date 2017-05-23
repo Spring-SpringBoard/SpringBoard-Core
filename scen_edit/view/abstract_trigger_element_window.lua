@@ -130,6 +130,7 @@ function AbstractTriggerElementWindow:init(opts)
                             end
                         end
 
+                        table.echo(paramsI)
                         local subPanelName = dataType.name
                         local subPanel = SCEN_EDIT.createNewPanel({
                             dataType = dataType,

@@ -80,7 +80,7 @@ return {
             end
         end
 
-        return {
+        local actions = {
             {
                 humanName = "Enable trigger",
                 name = "ENABLE_TRIGGER",
@@ -580,6 +580,33 @@ return {
             end,
             },--]]
         }
+
+        for _, type in pairs(allTypes) do
+            local arrayType = type.name .. "_array"
+            -- Lua
+            table.insert(actions, {
+                humanName = "For each " .. type.humanName .. " in " .. type.humanName .. " array",
+                name = arrayType .. "_FOR_EACH",
+                input = {
+                    arrayType,
+                    {
+                        name = "for_each_action",
+                        type = "action",
+                        extraSources = {
+                            type.name,
+                        },
+                    },
+                },
+                tags = {"Array"},
+                execute = function(input)
+                    for _, element in pairs(input[arrayType]) do
+                        input.for_each_action(element)
+                    end
+                end,
+            })
+        end
+
+        return actions
     end,
     events = function()
         return {
@@ -702,17 +729,53 @@ return {
             end
         end
         local coreTransforms = {
-	     {
+            -- Lua
+            {
+                humanName = "Number to string",
+                name = "NUMBER_TO_STRING",
+                output = "string",
+                input = "number",
+                tags = {"Convert"},
+                execute = function (input)
+                    return tostring(input.number)
+                end
+            },
+            {
+                humanName = "Bool to string",
+                name = "BOOL_TO_STRING",
+                output = "string",
+                input = "bool",
+                tags = {"Convert"},
+                execute = function (input)
+                    if input.bool then
+                        return "true"
+                    else
+                        return "false"
+                    end
+                end
+            },
+            {
+                humanName = "String to number",
+                name = "STRING_TO_NUMBER",
+                output = "number",
+                input = "string",
+                tags = {"Convert"},
+                execute = function (input)
+                    return tonumber(input.string)
+                end
+            },
+            -- Spring
+            {
                 humanName = "Get team resources",
                 name = "Get_TEAM_RESOURCES",
-		output = "number",
+                output = "number",
                 input = {"team", "string"},
                 tags = {"Resources"},
                 execute = function (input)
                     return Spring.GetTeamResources(input.team, input.string)
                 end
             },
-	    {
+            {
                 humanName = "Get team resource income",
                 name = "Get_TEAM_RESOURCE_INCOME",
 		output = "number",
@@ -1169,7 +1232,7 @@ return {
         return functions
     end,
     orders = function()
-        return {
+        local orders = {
             {
                 humanName = "Move to position",
                 name = "MOVE_POSITION",
@@ -1290,6 +1353,8 @@ return {
                 end,
             },
         }
+
+        return orders
     end
 
 }

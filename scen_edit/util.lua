@@ -505,7 +505,7 @@ function SCEN_EDIT.createNewPanel(opts)
         return IdentityComparisonPanel(opts)
     elseif dataTypeName == "position" then
         return PositionPanel(opts)
-    elseif dataTypeName == "function" then
+    elseif dataTypeName == "function" or dataTypeName == "action" then
         return FunctionPanel(opts)
     elseif dataTypeName:find("_array") then
         return GenericArrayPanel(opts)
