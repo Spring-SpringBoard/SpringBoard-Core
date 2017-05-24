@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 TriggersWindow = EditorView:extends{}
 
 function TriggersWindow:init()
@@ -9,9 +9,9 @@ function TriggersWindow:init()
         width=120,
         x = 1,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         OnClick={function() self:AddTrigger() end},
-        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+        backgroundColor = SB.conf.BTN_ADD_COLOR,
         tooltip = "Add trigger",
     }
 
@@ -26,7 +26,7 @@ function TriggersWindow:init()
         ScrollPanel:New {
             y = 15,
             width = "100%",
-            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+            bottom = SB.conf.C_HEIGHT * 2,
             children = { 
                 self._triggers
             },
@@ -36,7 +36,7 @@ function TriggersWindow:init()
 
     self:Populate()
     local triggerManagerListener = TriggerManagerListenerWidget(self)
-    SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
+    SB.model.triggerManager:addListener(triggerManagerListener)
 
     self:Finalize(children)
 end
@@ -64,20 +64,20 @@ end
 
 function TriggersWindow:MakeRemoveTriggerWindow(triggerId)
     local cmd = RemoveTriggerCommand(triggerId)
-    SCEN_EDIT.commandManager:execute(cmd)
+    SB.commandManager:execute(cmd)
 end
 
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
-    local triggers = SortByName(SCEN_EDIT.model.triggerManager:getAllTriggers(), "name")
+    local triggers = SortByName(SB.model.triggerManager:getAllTriggers(), "name")
     for id, trigger in pairs(triggers)  do        
         local stackTriggerPanel = MakeComponentPanel(self._triggers)
         stackTriggerPanel.triggerId = trigger.id
         local btnEditTrigger = Button:New {
             caption = trigger.name,
             x = 1, 
-            right = SCEN_EDIT.conf.B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            right = SB.conf.B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
+            height = SB.conf.B_HEIGHT,
             _toggle = nil,
             parent = stackTriggerPanel,
             tooltip = "Edit trigger",
@@ -89,46 +89,46 @@ function TriggersWindow:Populate()
         }
         local btnCloneTrigger = Button:New {
             caption = "",
-            right = SCEN_EDIT.conf.B_HEIGHT + 8,
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            right = SB.conf.B_HEIGHT + 8,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
             tooltip = "Clone trigger",
             children = {
                 Image:New { 
                     tooltip = "Clone trigger", 
-                    file=SCEN_EDIT_IMG_DIR .. "clone.png", 
-                    height = SCEN_EDIT.conf.B_HEIGHT, 
-                    width = SCEN_EDIT.conf.B_HEIGHT,
+                    file=SB_IMG_DIR .. "clone.png", 
+                    height = SB.conf.B_HEIGHT, 
+                    width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
                 },
             },
             OnClick = {
                 function() 
-                    local newTrigger = SCEN_EDIT.deepcopy(trigger)
+                    local newTrigger = SB.deepcopy(trigger)
                     newTrigger.id = nil
                     newTrigger.name = newTrigger.name .. " copy"
                     local cmd = AddTriggerCommand(newTrigger)
-                    SCEN_EDIT.commandManager:execute(cmd)
+                    SB.commandManager:execute(cmd)
                 end
             },
         }
         local btnRemoveTrigger = Button:New {
             caption = "",
             right = 1,
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackTriggerPanel,
             padding = {0, 0, 0, 0},
             tooltip = "Remove trigger",
             children = {
                 Image:New { 
                     tooltip = "Remove trigger", 
-                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = SCEN_EDIT.conf.B_HEIGHT, 
-                    width = SCEN_EDIT.conf.B_HEIGHT,
+                    file=SB_IMG_DIR .. "list-remove.png", 
+                    height = SB.conf.B_HEIGHT, 
+                    width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
                 },
@@ -139,7 +139,7 @@ function TriggersWindow:Populate()
 end
 
 function TriggersWindow:MakeTriggerWindow(trigger, edit) 
-    local triggerCopy = SCEN_EDIT.deepcopy(trigger)
+    local triggerCopy = SB.deepcopy(trigger)
     local triggerWindow = TriggerWindow(triggerCopy)
 
     local sw = self.window
@@ -147,10 +147,10 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
     tw.x = 500
     tw.y = 500
 
-    SCEN_EDIT.SetControlEnabled(sw, false)
+    SB.SetControlEnabled(sw, false)
     table.insert(tw.OnDispose,
         function()
-            SCEN_EDIT.SetControlEnabled(sw, true)
+            SB.SetControlEnabled(sw, true)
             if not triggerWindow.save then
                 return
             end
@@ -160,7 +160,7 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
             else
                 cmd = AddTriggerCommand(triggerWindow.trigger)
             end
-            SCEN_EDIT.commandManager:execute(cmd)
+            SB.commandManager:execute(cmd)
         end
     )
     return triggerWindow

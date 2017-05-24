@@ -1,5 +1,5 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "texture_browser.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "texture_browser.lua")
 
 TerrainEditorView = EditorView:extends{}
 
@@ -25,12 +25,12 @@ function TerrainEditorView:init()
 					for k, v in pairs(item.texture) do
 						self.paintTexture[k] = v
 					end
-					SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.paintTexture))
+					SB.commandManager:execute(CacheTextureCommand(self.paintTexture))
 
-					local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+					local currentState = SB.stateManager:GetCurrentState()
 					if currentState.smartPaint then
 						table.insert(currentState.textures, {
-							texture = SCEN_EDIT.deepcopy(self.paintTexture),
+							texture = SB.deepcopy(self.paintTexture),
 							minHeight = 160, -- math.random(100),
 							--minSlope = math.random(),
 							minSlope = #currentState.textures* 0.7 + 0,
@@ -40,8 +40,8 @@ function TerrainEditorView:init()
             end
             -- FIXME: disallow deselection
 -- 			if not selected then
--- 				local currentState = SCEN_EDIT.stateManager:GetCurrentState()
--- 				SCEN_EDIT.stateManager:SetState(DefaultState())
+-- 				local currentState = SB.stateManager:GetCurrentState()
+-- 				SB.stateManager:SetState(DefaultState())
 -- 			end
         end
     }
@@ -66,12 +66,12 @@ function TerrainEditorView:init()
 					for k, v in pairs(item.texture) do
 						self.brushTexture[k] = v
 					end
-					SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.brushTexture))
+					SB.commandManager:execute(CacheTextureCommand(self.brushTexture))
 
-					local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+					local currentState = SB.stateManager:GetCurrentState()
 -- 					if currentState.smartPaint then
 -- 						table.insert(currentState.textures, {
--- 							texture = SCEN_EDIT.deepcopy(self.brushTexture),
+-- 							texture = SB.deepcopy(self.brushTexture),
 -- 							minHeight = 160, -- math.random(100),
 -- 							--minSlope = math.random(),
 -- 							minSlope = #currentState.textures* 0.7 + 0,
@@ -81,8 +81,8 @@ function TerrainEditorView:init()
             end
             -- FIXME: disallow deselection
 -- 			if not selected then
--- 				local currentState = SCEN_EDIT.stateManager:GetCurrentState()
--- 				SCEN_EDIT.stateManager:SetState(DefaultState())
+-- 				local currentState = SB.stateManager:GetCurrentState()
+-- 				SB.stateManager:SetState(DefaultState())
 -- 			end
         end
     }
@@ -92,8 +92,8 @@ function TerrainEditorView:init()
 --             if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
 --                 local item = self.detailTextureImages.items[itemIdx]
 --                 self.paintTexture.detail = item
---                 SCEN_EDIT.commandManager:execute(CacheTextureCommand(self.paintTexture))
---                 local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+--                 SB.commandManager:execute(CacheTextureCommand(self.paintTexture))
+--                 local currentState = SB.stateManager:GetCurrentState()
 --                 if currentState:is_A(TerrainChangeTextureState) then
 --                     currentState.paintTexture = self.paintTexture
 --                 end
@@ -143,7 +143,7 @@ function TerrainEditorView:init()
         y = 0,
         tooltip = "Paint the terrain",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Paint" }),
         },
         OnClick = {
@@ -159,7 +159,7 @@ function TerrainEditorView:init()
         y = 0,
         tooltip = "Apply a filter",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Filter" }),
         },
         OnClick = {
@@ -175,7 +175,7 @@ function TerrainEditorView:init()
         y = 0,
         tooltip = "Make the terrain transparent",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Void" }),
         },
         OnClick = {
@@ -192,7 +192,7 @@ function TerrainEditorView:init()
         y = 0,
         tooltip = "Smart paint the terrain",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Smart paint" }),
         },
         OnClick = {
@@ -439,10 +439,10 @@ function TerrainEditorView:init()
 end
 
 function TerrainEditorView:EnterState()
-	local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+	local currentState = SB.stateManager:GetCurrentState()
 	if not currentState:is_A(TerrainChangeTextureState) then
 		currentState = TerrainChangeTextureState(self)
-		SCEN_EDIT.stateManager:SetState(currentState)
+		SB.stateManager:SetState(currentState)
 	end
 	currentState.paintTexture = self.paintTexture
     currentState.brushTexture = self.brushTexture

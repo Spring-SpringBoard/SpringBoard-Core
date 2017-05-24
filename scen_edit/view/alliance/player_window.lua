@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 
 PlayerWindow = EditorView:extends{}
 
@@ -115,7 +115,7 @@ function PlayerWindow:init(team)
     self:Finalize(children, {notMainWindow = true})
 
     table.insert(self.window.OnDispose, function()
-        local newTeam = SCEN_EDIT.deepcopy(team)
+        local newTeam = SB.deepcopy(team)
         newTeam.name        = self.fields["name"].value
         local clbColor      = self.fields["color"].value
         newTeam.color.r     = clbColor[1]
@@ -128,6 +128,6 @@ function PlayerWindow:init(team)
         newTeam.energy      = self.fields["energy"].value or energy
         newTeam.energyMax   = self.fields["energyStorage"].value or energyMax
         local cmd = UpdateTeamCommand(newTeam)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
     end)
 end

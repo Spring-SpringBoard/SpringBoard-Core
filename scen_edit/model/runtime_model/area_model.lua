@@ -7,7 +7,7 @@ end
 
 function AreaModel:UnitInArea(unitId)
     local x, y, z = Spring.GetUnitPosition(unitId)
-    local area = SCEN_EDIT.model.areaManager:getArea(self.id)
+    local area = SB.model.areaManager:getArea(self.id)
     local res = x >= area[1] and x < area[3] and z >= area[2] and z < area[4]    
     return res
 end

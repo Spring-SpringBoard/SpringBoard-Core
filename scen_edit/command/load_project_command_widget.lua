@@ -13,9 +13,9 @@ function LoadProjectCommandWidget:execute()
     local modelData, heightMapdata, texturePath
 
     if not isZip then
-        SCEN_EDIT.projectDir = self.path
-        Log.Notice("set widget project dir:", SCEN_EDIT.projectDir)
-        SCEN_EDIT.commandManager:execute(WidgetSetProjectDirCommand(SCEN_EDIT.projectDir), true)
+        SB.projectDir = self.path
+        Log.Notice("set widget project dir:", SB.projectDir)
+        SB.commandManager:execute(WidgetSetProjectDirCommand(SB.projectDir), true)
     end
 
     if isZip then
@@ -26,19 +26,19 @@ function LoadProjectCommandWidget:execute()
             return
         end
 
-        if VFS.UnmapArchive and SCEN_EDIT.loadedArchive ~= nil then
-            VFS.UnmapArchive(SCEN_EDIT.loadedArchive)
+        if VFS.UnmapArchive and SB.loadedArchive ~= nil then
+            VFS.UnmapArchive(SB.loadedArchive)
         end
 
         VFS.MapArchive(path)
-        SCEN_EDIT.loadedArchive = path
+        SB.loadedArchive = path
         modelData = VFS.LoadFile("model.lua", VFS.ZIP)
         heightmapData = VFS.LoadFile("heightmap.data", VFS.ZIP)
         texturePath = "texturemap/"
     else
         Log.Notice("Loading project: " .. path .. " ...")
 
-        if not SCEN_EDIT.DirExists(path, VFS.RAW) then
+        if not SB.DirExists(path, VFS.RAW) then
             Log.Error("Project doesn't exist: " .. path)
             return
         end
@@ -54,8 +54,8 @@ function LoadProjectCommandWidget:execute()
     end
     local cmd = CompoundCommand(cmds)
     cmd.blockUndo = true
-    SCEN_EDIT.commandManager:execute(cmd)
-    SCEN_EDIT.commandManager:execute(LoadTextureCommand(texturePath), true)
+    SB.commandManager:execute(cmd)
+    SB.commandManager:execute(LoadTextureCommand(texturePath), true)
 
     Log.Notice("Load complete.")
 end

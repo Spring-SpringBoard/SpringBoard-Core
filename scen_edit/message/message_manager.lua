@@ -11,9 +11,9 @@ end
 function MessageManager:__encodeToString(message)
     local msg = table.show(message:serialize())
     if self.widget and self.compress then
-        local newMsg = SCEN_EDIT.ZlibCompress(msg)
+        local newMsg = SB.ZlibCompress(msg)
         -- FIXME: obvious slowdown, but detects weird Spring bugs
-        assert(SCEN_EDIT.ZlibDecompress(newMsg) == msg)
+        assert(SB.ZlibDecompress(newMsg) == msg)
         msg = newMsg
     end
     return msg

@@ -16,7 +16,7 @@ function TerrainManager:generateShape(name)
     if self:getShape(name) then
         return
     end
-    SCEN_EDIT.delayGL(function()
+    SB.delayGL(function()
         local shapeSize = 256
         local texName = ':r' .. tostring(shapeSize) .. "," .. tostring(shapeSize) .. ':' .. name
         local tex = gl.CreateTexture(shapeSize, shapeSize, {
@@ -58,6 +58,6 @@ function TerrainManager:generateShape(name)
         self:addShape(name, greyscale)
 
         local cmd = SetHeightmapBrushCommand(greyscale)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
     end)
 end

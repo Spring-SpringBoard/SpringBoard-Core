@@ -1,7 +1,7 @@
-SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
-SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'abstract_command.lua')
-SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'undoable_command.lua')
-SCEN_EDIT.IncludeDir(SCEN_EDIT_COMMAND_DIR)
+SB_COMMAND_DIR = SB_DIR .. "command/"
+SB.Include(SB_COMMAND_DIR .. 'abstract_command.lua')
+SB.Include(SB_COMMAND_DIR .. 'undoable_command.lua')
+SB.IncludeDir(SB_COMMAND_DIR)
 
 ObjectBridge = LCS.class.abstract{}
 
@@ -43,13 +43,13 @@ UnitBridge.DrawObject                      = function(params)
     DrawObject(params, unitBridge)
 end
 UnitBridge.getObjectSpringID               = function(modelID)
-    return SCEN_EDIT.model.unitManager:getSpringUnitId(modelID)
+    return SB.model.unitManager:getSpringUnitId(modelID)
 end
 UnitBridge.getObjectModelID                = function(objectID)
-    return SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
+    return SB.model.unitManager:getModelUnitId(objectID)
 end
 UnitBridge.setObjectModelID                = function(objectID, modelID)
-    SCEN_EDIT.model.unitManager:setUnitModelId(objectID, modelID)
+    SB.model.unitManager:setUnitModelId(objectID, modelID)
 end
 unitBridge = UnitBridge()
 unitBridge.s11n                            = s11n:GetUnitBridge()
@@ -84,13 +84,13 @@ FeatureBridge.DrawObject                      = function(params)
 --     end
 end
 FeatureBridge.getObjectSpringID               = function(modelID)
-    return SCEN_EDIT.model.featureManager:getSpringFeatureId(modelID)
+    return SB.model.featureManager:getSpringFeatureId(modelID)
 end
 FeatureBridge.getObjectModelID                = function(objectID)
-    return SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
+    return SB.model.featureManager:getModelFeatureId(objectID)
 end
 FeatureBridge.setObjectModelID                = function(objectID, modelID)
-    SCEN_EDIT.model.featureManager:setFeatureModelId(objectID, modelID)
+    SB.model.featureManager:setFeatureModelId(objectID, modelID)
 end
 featureBridge = FeatureBridge()
 featureBridge.s11n                            = s11n:GetFeatureBridge()
@@ -105,16 +105,16 @@ end
 AreaBridge = ObjectBridge:extends{}
 AreaBridge.bridgeName                   = "AreaBridge"
 AreaBridge.spGetObjectPosition          = function(objectID)
-    local pos = SCEN_EDIT.model.areaManager:getArea(objectID)
+    local pos = SB.model.areaManager:getArea(objectID)
     local x, z = (pos[1] + pos[3]) / 2, (pos[2] + pos[4]) / 2
     local y = Spring.GetGroundHeight(x, z)
     return x, y, z
 end
 AreaBridge.spGetAllObjects              = function()
-    return SCEN_EDIT.model.areaManager:getAllAreas()
+    return SB.model.areaManager:getAllAreas()
 end
 AreaBridge.spValidObject                = function(objectID)
-    return SCEN_EDIT.model.areaManager:getArea(objectID) ~= nil
+    return SB.model.areaManager:getArea(objectID) ~= nil
 end
 
 areaBridge = AreaBridge()

@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 
 FilePickerWindow = EditorView:extends{}
 

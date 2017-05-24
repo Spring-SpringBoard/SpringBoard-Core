@@ -1,5 +1,5 @@
 GrassEditingState = AbstractMapEditingState:extends{}
-SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
+SB.Include("scen_edit/model/texture_manager.lua")
 
 function GrassEditingState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
@@ -17,7 +17,7 @@ function GrassEditingState:Apply(x, z)
         addMode = addMode,
     }
     local command = TerrainGrassCommand(opts)
-    SCEN_EDIT.commandManager:execute(command)
+    SB.commandManager:execute(command)
 end
 
 function GrassEditingState:DrawWorld()

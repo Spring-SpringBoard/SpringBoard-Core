@@ -1,23 +1,23 @@
 
-SCEN_EDIT_VIEW_DIR = SCEN_EDIT_DIR .. "view/"
-SCEN_EDIT_VIEW_PANELS_DIR = SCEN_EDIT_VIEW_DIR .. "panels/"
-SCEN_EDIT_VIEW_MAIN_WINDOW_DIR = SCEN_EDIT_VIEW_DIR .. "main_window/"
-SCEN_EDIT_VIEW_ALLIANCE_DIR = SCEN_EDIT_VIEW_DIR .. "alliance/"
-SCEN_EDIT_VIEW_ACTIONS_DIR = SCEN_EDIT_VIEW_DIR .. "actions/"
+SB_VIEW_DIR = SB_DIR .. "view/"
+SB_VIEW_PANELS_DIR = SB_VIEW_DIR .. "panels/"
+SB_VIEW_MAIN_WINDOW_DIR = SB_VIEW_DIR .. "main_window/"
+SB_VIEW_ALLIANCE_DIR = SB_VIEW_DIR .. "alliance/"
+SB_VIEW_ACTIONS_DIR = SB_VIEW_DIR .. "actions/"
 
 View = LCS.class{}
 
 function View:init()
-    SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "view_area_manager_listener.lua")
-    SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_DIR)
-    SCEN_EDIT.Include(SCEN_EDIT_VIEW_PANELS_DIR .. "abstract_type_panel.lua")
-    SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_PANELS_DIR)
-	SCEN_EDIT.Include(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR .. "abstract_main_window_panel.lua")
-	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_MAIN_WINDOW_DIR)
-	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_ALLIANCE_DIR)
-	SCEN_EDIT.Include(SCEN_EDIT_VIEW_ACTIONS_DIR .. "abstract_action.lua")
-	SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_ACTIONS_DIR)
-    SCEN_EDIT.clipboard = Clipboard()
+    SB.Include(SB_VIEW_DIR .. "view_area_manager_listener.lua")
+    SB.IncludeDir(SB_VIEW_DIR)
+    SB.Include(SB_VIEW_PANELS_DIR .. "abstract_type_panel.lua")
+    SB.IncludeDir(SB_VIEW_PANELS_DIR)
+	SB.Include(SB_VIEW_MAIN_WINDOW_DIR .. "abstract_main_window_panel.lua")
+	SB.IncludeDir(SB_VIEW_MAIN_WINDOW_DIR)
+	SB.IncludeDir(SB_VIEW_ALLIANCE_DIR)
+	SB.Include(SB_VIEW_ACTIONS_DIR .. "abstract_action.lua")
+	SB.IncludeDir(SB_VIEW_ACTIONS_DIR)
+    SB.clipboard = Clipboard()
     self.areaViews = {}
     if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
          self.runtimeView = RuntimeView()
@@ -40,7 +40,7 @@ function View:init()
             outline = true,
         },
         parent = screen0,
-        caption = SCEN_EDIT.projectDir or "Project not saved",
+        caption = SB.projectDir or "Project not saved",
     }
 end
 
@@ -97,7 +97,7 @@ function View:DrawScreen()
 --         gl.PushMatrix()
 --         gl.DepthTest(GL.LEQUAL)
 --         gl.DepthMask(true)
---         local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+--         local shaderObj = SB.view.modelShaders:GetShader()
 --         gl.UseShader(shaderObj.shader)
 --         gl.Uniform(shaderObj.timeID, os.clock())
 --         --gl.Translate(100, Spring.GetGroundHeight(100, 100), 100)
@@ -119,8 +119,8 @@ function View:DrawScreen()
 --         gl.PopMatrix()
 
         local projectCaption
-        if SCEN_EDIT.projectDir then
-            projectCaption = "Project: " .. SCEN_EDIT.projectDir
+        if SB.projectDir then
+            projectCaption = "Project: " .. SB.projectDir
         else
             projectCaption = "Project not saved"
         end
@@ -130,18 +130,18 @@ function View:DrawScreen()
 -- 		gl.PushMatrix()
 -- 			local i = 1
 -- 			local step = 200
--- 			for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+-- 			for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
 -- 				gl.Texture(shadingTex)
 -- 				gl.TexRect(i * step, 1 * step, (i+1) * step, 2 * step)
 -- 				i = i + 1
 -- 			end
 -- 			i = 1
--- 			for _, tex in pairs(SCEN_EDIT.model.textureManager.shadingTextureNaming) do
+-- 			for _, tex in pairs(SB.model.textureManager.shadingTextureNaming) do
 -- 				gl.Texture("$" .. tex.engineName)
 -- 				gl.TexRect(i * step, 2 * step, (i+1) * step, 3 * step)
 -- 				i = i + 1
 -- 			end
--- 			local mapTex = SCEN_EDIT.model.textureManager.mapFBOTextures[0][0]
+-- 			local mapTex = SB.model.textureManager.mapFBOTextures[0][0]
 -- 			if mapTex then
 -- 				gl.Texture(mapTex.texture)
 -- 				gl.TexRect(i * step, 1 * step, (i+1) * step, (1+1) * step)

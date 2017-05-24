@@ -5,5 +5,5 @@ end
 
 function ScenarioInfoListenerGadget:onSet(name, description, version, author)
     local cmd = WidgetSetScenarioInfoCommand(name, description, version, author)
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end

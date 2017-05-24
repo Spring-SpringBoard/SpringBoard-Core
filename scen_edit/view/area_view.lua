@@ -53,6 +53,6 @@ function AreaView:_Draw(x1, z1, x2, z2)
 end
 
 function AreaView:Draw()
-    x1, z1, x2, z2 = unpack(SCEN_EDIT.model.areaManager:getArea(self.areaId))
+    x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(self.areaId))
     self:_Draw(x1, z1, x2, z2)
 end

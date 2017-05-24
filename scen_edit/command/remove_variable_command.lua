@@ -7,10 +7,10 @@ function RemoveVariableCommand:init(variableId)
 end
 
 function RemoveVariableCommand:execute()
-    self.variable = SCEN_EDIT.model.variableManager:getVariable(self.variableId)
-    SCEN_EDIT.model.variableManager:removeVariable(self.variableId)
+    self.variable = SB.model.variableManager:getVariable(self.variableId)
+    SB.model.variableManager:removeVariable(self.variableId)
 end
 
 function RemoveVariableCommand:unexecute()
-    SCEN_EDIT.model.variableManager:newVariable(self.variable)
+    SB.model.variableManager:newVariable(self.variable)
 end

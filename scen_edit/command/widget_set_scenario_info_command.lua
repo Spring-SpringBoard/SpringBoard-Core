@@ -10,5 +10,5 @@ function WidgetSetScenarioInfoCommand:init(name, description, version, author)
 end
 
 function WidgetSetScenarioInfoCommand:execute()
-	SCEN_EDIT.model.scenarioInfo:Set(self.name, self.description, self.version, self.author)
+	SB.model.scenarioInfo:Set(self.name, self.description, self.version, self.author)
 end

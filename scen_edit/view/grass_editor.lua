@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 GrassEditorView = EditorView:extends{}
 
 function GrassEditorView:init()
@@ -9,12 +9,12 @@ function GrassEditorView:init()
         y = 0,
         tooltip = "Add grass",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(GrassEditingState(self))
+                SB.stateManager:SetState(GrassEditingState(self))
             end
         },
     })

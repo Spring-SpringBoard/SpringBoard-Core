@@ -210,7 +210,7 @@ end
 end
 
 function ExportMapInfoCommand:execute()
-    local scenarioInfo = SCEN_EDIT.model.scenarioInfo
+    local scenarioInfo = SB.model.scenarioInfo
 
     local atmosphere = self:GetAtmosphere()
     local grass = self:GetGrass()

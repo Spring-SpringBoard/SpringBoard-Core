@@ -7,7 +7,7 @@ function ImportDiffuseCommand:init(texturePath)
 end
 
 function ImportDiffuseCommand:execute()
-    SCEN_EDIT.delayGL(function()
+    SB.delayGL(function()
         if not VFS.FileExists(self.texturePath) then
             Log.Error("Missing texture file: " .. tostring(self.texturePath))
             return
@@ -28,13 +28,13 @@ function ImportDiffuseCommand:execute()
             gl.DeleteTexture(self.texturePath)
         end)
 
-        local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE 
+        local texSize = SB.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
         local sizeZ = math.floor(Game.mapSizeZ / texSize)
         gl.Texture(totalMapTexture)
         for i = 0, sizeX do
             for j = 0, sizeZ do
-                local mapTexture = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
+                local mapTexture = SB.model.textureManager.mapFBOTextures[i][j]
                 mapTexture.dirty = true
                 gl.RenderToTexture(mapTexture.texture, function()
                     gl.TexRect(-1,-1, 1, 1,

@@ -1,7 +1,7 @@
 ExportAction = AbstractAction:extends{}
 
 function ExportAction:execute()
-    if SCEN_EDIT.projectDir ~= nil then
+    if SB.projectDir ~= nil then
         local dir = FilePanel.lastDir or SB_PROJECTS_DIR
         local fileTypes = {"Scenario archive", "Feature placer", "Map textures", "Map info"}
         sfd = ExportFileDialog(dir, fileTypes)
@@ -24,7 +24,7 @@ function ExportAction:execute()
                     Log.Error("Error trying to export. Invalida fileType specified: " .. tostring(fileType))
                 end
                 if exportCommand then
-                    SCEN_EDIT.commandManager:execute(exportCommand, true)
+                    SB.commandManager:execute(exportCommand, true)
                     Log.Notice("Export complete.")
                 end
             end

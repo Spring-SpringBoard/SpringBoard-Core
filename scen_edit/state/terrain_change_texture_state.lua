@@ -1,5 +1,5 @@
 TerrainChangeTextureState = AbstractMapEditingState:extends{}
-SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
+SB.Include("scen_edit/model/texture_manager.lua")
 
 function TerrainChangeTextureState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
@@ -57,7 +57,7 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
 		textures = self.textures,
 	}
 	local command = TerrainChangeTextureCommand(opts)
-	SCEN_EDIT.commandManager:execute(command)
+	SB.commandManager:execute(command)
 end
 
 function TerrainChangeTextureState:leaveState()
@@ -72,7 +72,7 @@ function TerrainChangeTextureState:DrawWorld()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         local x, z = coords[1], coords[3]
-        local shape = SCEN_EDIT.model.textureManager:GetTexture(self.brushTexture.diffuse)
+        local shape = SB.model.textureManager:GetTexture(self.brushTexture.diffuse)
         self:DrawShape(shape, x, z)
     end
 end

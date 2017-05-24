@@ -8,13 +8,13 @@ end
 
 function ResendCommand:execute()
 	Log.Notice("Resend data started...")
-    local s2mUnit =     SCEN_EDIT.model.unitManager.s2mUnitIdMapping
-    local s2mFeature =  SCEN_EDIT.model.featureManager.s2mFeatureIdMapping
+    local s2mUnit =     SB.model.unitManager.s2mUnitIdMapping
+    local s2mFeature =  SB.model.featureManager.s2mFeatureIdMapping
     local cmd = WidgetResendCommand({
         s2mUnit = s2mUnit,
         s2mFeature = s2mFeature
     })
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end
 
 WidgetResendCommand = AbstractCommand:extends{}
@@ -26,10 +26,10 @@ end
 
 function WidgetResendCommand:execute()
     for objectID, modelID in pairs(self.model.s2mUnit) do
-        SCEN_EDIT.model.unitManager:setUnitModelId(objectID, modelID)
+        SB.model.unitManager:setUnitModelId(objectID, modelID)
     end
     for objectID, modelID in pairs(self.model.s2mFeature) do
-        SCEN_EDIT.model.featureManager:setFeatureModelId(objectID, modelID)
+        SB.model.featureManager:setFeatureModelId(objectID, modelID)
     end
     Log.Notice("Resend completed successfully.")
 end

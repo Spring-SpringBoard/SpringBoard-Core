@@ -15,13 +15,13 @@ function UnitPanel:MakePredefinedOpt()
         caption = '...',
         right = 40,
         width = 60,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackUnitPanel,
         unitId = nil,
     }
     self.btnPredefined.OnClick = {
         function()
-            SCEN_EDIT.stateManager:SetState(SelectUnitState(self.btnPredefined))
+            SB.stateManager:SetState(SelectUnitState(self.btnPredefined))
         end
     }
     self.btnPredefined.OnSelectObject = {
@@ -37,16 +37,16 @@ function UnitPanel:MakePredefinedOpt()
     self.btnPredefinedZoom = Button:New {
         caption = "",
         right = 1,
-        width = SCEN_EDIT.conf.B_HEIGHT,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        width = SB.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackUnitPanel,
         padding = {0, 0, 0, 0},
         children = {
             Image:New {
                 tooltip = "Select unit",
-                file=SCEN_EDIT_IMG_DIR .. "search.png",
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                width = SCEN_EDIT.conf.B_HEIGHT,
+                file=SB_IMG_DIR .. "search.png",
+                height = SB.conf.B_HEIGHT,
+                width = SB.conf.B_HEIGHT,
                 padding = {0, 0, 0, 0},
                 margin = {0, 0, 0, 0},
             },
@@ -54,7 +54,7 @@ function UnitPanel:MakePredefinedOpt()
         OnClick = {
             function()
                 if self.btnPredefined.unitId ~= nil then
-                    local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.btnPredefined.unitId)
+                    local unitId = SB.model.unitManager:getSpringUnitId(self.btnPredefined.unitId)
                     if unitId ~= nil and Spring.ValidUnitID(unitId) then
                         local x, y, z = Spring.GetUnitPosition(unitId)
                         Spring.SelectUnitArray({unitId})

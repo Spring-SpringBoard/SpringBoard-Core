@@ -6,5 +6,5 @@ function WidgetRemoveTeamCommand:init(id)
 end
 
 function WidgetRemoveTeamCommand:execute()
-    SCEN_EDIT.model.teamManager:removeTeam(self.id)
+    SB.model.teamManager:removeTeam(self.id)
 end

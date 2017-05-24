@@ -26,7 +26,7 @@ function AddObjectState:MousePress(x, y, button)
         end
     elseif button == 3 then
 --         self.unitImages.control:SelectItem(0)
-        SCEN_EDIT.stateManager:SetState(DefaultState())
+        SB.stateManager:SetState(DefaultState())
     end
 end
 
@@ -71,7 +71,7 @@ function AddObjectState:MouseRelease(x, y, button)
 
     local compoundCommand = CompoundCommand(commands)
 
-    SCEN_EDIT.commandManager:execute(compoundCommand)
+    SB.commandManager:execute(compoundCommand)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
     self.randomSeed = self.randomSeed + os.clock()
@@ -126,7 +126,7 @@ function AddObjectState:DrawWorld()
     math.randomseed(self.randomSeed)
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
-    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    local shaderObj = SB.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(self.team))

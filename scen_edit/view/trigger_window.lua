@@ -33,8 +33,8 @@ function TriggerWindow:init(trigger)
         width=110,
         x = 1,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_ADD_COLOR,
         tooltip = "Add event",
     }
     local btnAddCondition = Button:New {
@@ -42,8 +42,8 @@ function TriggerWindow:init(trigger)
         width=120,
         x = 120,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_ADD_COLOR,
         tooltip = "Add condition",
     }
     local btnAddAction = Button:New {
@@ -51,8 +51,8 @@ function TriggerWindow:init(trigger)
         width=110,
         x = 250,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_ADD_COLOR,
         tooltip = "Add action",
     }
     local btnOk = Button:New {
@@ -60,8 +60,8 @@ function TriggerWindow:init(trigger)
         width=100,
         x = 370,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_OK_COLOR,
         OnClick = {
             function()
                 self.trigger.name = edTriggerName.text
@@ -75,8 +75,8 @@ function TriggerWindow:init(trigger)
         width=100,
         x = 480,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
         OnClick={function() self.window:Dispose() end}
     }
 
@@ -92,9 +92,9 @@ function TriggerWindow:init(trigger)
             stackTriggerPanel,
             ScrollPanel:New {
                 x = 1,
-                y = 15 + SCEN_EDIT.conf.B_HEIGHT,
+                y = 15 + SB.conf.B_HEIGHT,
                 right = 5,
-                bottom = SCEN_EDIT.conf.B_HEIGHT * 2,
+                bottom = SB.conf.B_HEIGHT * 2,
                 children = {
                     self._triggerPanel,
                 },
@@ -118,7 +118,7 @@ function TriggerWindow:Populate()
     self._triggerPanel:ClearChildren()
     local eventLabel = Label:New {
         caption = "- Events -",
-        height = SCEN_EDIT.conf.C_HEIGHT,
+        height = SB.conf.C_HEIGHT,
         align = 'center',
         parent = self._triggerPanel,
     }
@@ -126,10 +126,10 @@ function TriggerWindow:Populate()
         local event = self.trigger.events[i]
         local stackEventPanel = MakeComponentPanel(self._triggerPanel)
         local btnEditEvent = Button:New {
-            caption = SCEN_EDIT.model.triggerManager:GetSafeEventHumanName(trigger, event),
-            right = SCEN_EDIT.conf.B_HEIGHT + 10,
+            caption = SB.model.triggerManager:GetSafeEventHumanName(trigger, event),
+            right = SB.conf.B_HEIGHT + 10,
             x = 1,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackEventPanel,
             tooltip = "Edit event",
             OnClick = {function() self:MakeEditEventWindow(event) end},
@@ -137,16 +137,16 @@ function TriggerWindow:Populate()
         local btnRemoveEvent = Button:New {
             caption = "",
             right = 1,
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackEventPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New {
                     tooltip = "Remove event",
-                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png",
-                    height = SCEN_EDIT.conf.B_HEIGHT,
-                    width = SCEN_EDIT.conf.B_HEIGHT,
+                    file=SB_IMG_DIR .. "list-remove.png",
+                    height = SB.conf.B_HEIGHT,
+                    width = SB.conf.B_HEIGHT,
                     margin = {0, 0, 0, 0},
                 },
             },
@@ -156,7 +156,7 @@ function TriggerWindow:Populate()
     end
     local conditionLabel = Label:New {
         caption = "- Conditions -",
-        height = SCEN_EDIT.conf.C_HEIGHT,
+        height = SB.conf.C_HEIGHT,
         align = 'center',
         vlign = 'center',
         parent = self._triggerPanel,
@@ -164,14 +164,14 @@ function TriggerWindow:Populate()
     for i = 1, #self.trigger.conditions do
         local condition = self.trigger.conditions[i]
         local stackPanel = MakeComponentPanel(self._triggerPanel)
-        local conditionHumanName = SCEN_EDIT.humanExpression(condition, "condition")
+        local conditionHumanName = SB.humanExpression(condition, "condition")
 
         local btnOpenSubNodes = Button:New {
             caption = '+',
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             x = 1,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackPanel,
             backgroundColor = {0, 0, 0, 0},
             OnClick = {function()
@@ -184,9 +184,9 @@ function TriggerWindow:Populate()
         end
         local btnEditCondition = Button:New {
             caption = conditionHumanName,
-            right = SCEN_EDIT.conf.B_HEIGHT + 10,
-            x = SCEN_EDIT.conf.B_HEIGHT + 5,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            right = SB.conf.B_HEIGHT + 10,
+            x = SB.conf.B_HEIGHT + 5,
+            height = SB.conf.B_HEIGHT,
             parent = stackPanel,
             tooltip = "Edit condition",
             OnClick = {function() self:MakeEditConditionWindow(condition) end}
@@ -194,17 +194,17 @@ function TriggerWindow:Populate()
         local btnRemoveCondition = Button:New {
             caption = "",
             right = 1,
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackPanel,
             padding = {0, 0, 0, 0},
             tooltip = "Remove condition",
             children = {
                 Image:New {
                     tooltip = "Remove condition",
-                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png",
-                    height = SCEN_EDIT.conf.B_HEIGHT,
-                    width = SCEN_EDIT.conf.B_HEIGHT,
+                    file=SB_IMG_DIR .. "list-remove.png",
+                    height = SB.conf.B_HEIGHT,
+                    width = SB.conf.B_HEIGHT,
                     margin = {0, 0, 0, 0},
                 },
             },
@@ -212,25 +212,25 @@ function TriggerWindow:Populate()
         }
         local openedNodes = self.openedConditionNodes[i]
         if openedNodes then
-            self:PopulateExpressions(condition, SCEN_EDIT.metaModel.functionTypes[condition.typeName], 2, condition.typeName)
+            self:PopulateExpressions(condition, SB.metaModel.functionTypes[condition.typeName], 2, condition.typeName)
         end
     end
     local actionLabel = Label:New {
         caption = "- Actions -",
-        height = SCEN_EDIT.conf.C_HEIGHT,
+        height = SB.conf.C_HEIGHT,
         align = 'center',
         parent = self._triggerPanel,
     }
     for i = 1, #self.trigger.actions do
         local action = self.trigger.actions[i]
         local stackActionPanel = MakeComponentPanel(self._triggerPanel)
-        local actionHumanName = SCEN_EDIT.humanExpression(action, "action")
+        local actionHumanName = SB.humanExpression(action, "action")
         local btnOpenSubNodes = Button:New {
             caption = '+',
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             x = 1,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackActionPanel,
             backgroundColor = {0, 0, 0, 0},
             OnClick = {function()
@@ -243,9 +243,9 @@ function TriggerWindow:Populate()
         end
         local btnEditAction = Button:New {
             caption = actionHumanName,
-            right = SCEN_EDIT.conf.B_HEIGHT + 10,
-            x = SCEN_EDIT.conf.B_HEIGHT + 5,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            right = SB.conf.B_HEIGHT + 10,
+            x = SB.conf.B_HEIGHT + 5,
+            height = SB.conf.B_HEIGHT,
             parent = stackActionPanel,
             tooltip = "Edit action",
             OnClick = {function() self:MakeEditActionWindow(action) end}
@@ -253,17 +253,17 @@ function TriggerWindow:Populate()
         local btnRemoveAction = Button:New {
             caption = "",
             right = 1,
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackActionPanel,
             padding = {0, 0, 0, 0},
             tooltip = "Remove action",
             children = {
                 Image:New {
                     tooltip = "Remove action",
-                    file= SCEN_EDIT_IMG_DIR .. "list-remove.png",
-                    height = SCEN_EDIT.conf.B_HEIGHT,
-                    width = SCEN_EDIT.conf.B_HEIGHT,
+                    file= SB_IMG_DIR .. "list-remove.png",
+                    height = SB.conf.B_HEIGHT,
+                    width = SB.conf.B_HEIGHT,
                     margin = {0, 0, 0, 0},
                 },
             },
@@ -271,7 +271,7 @@ function TriggerWindow:Populate()
         }
         local openedNodes = self.openedActionNodes[i]
         if openedNodes then
-            self:PopulateExpressions(action, SCEN_EDIT.metaModel.actionTypes[action.typeName], 2, action.typeName)
+            self:PopulateExpressions(action, SB.metaModel.actionTypes[action.typeName], 2, action.typeName)
         end
     end
 end
@@ -293,18 +293,18 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         local param = root[input.name] or {}
         local paramName = param.name or param.value
         if param.type == 'var' then
-            paramName = SCEN_EDIT.model.variableManager:getVariable(param.value).name
+            paramName = SB.model.variableManager:getVariable(param.value).name
         elseif param.type == "expr" then
             local expr = param.expr[1]
-            paramName = SCEN_EDIT.metaModel.functionTypes[expr.typeName].humanName
+            paramName = SB.metaModel.functionTypes[expr.typeName].humanName
         elseif type(paramName) == 'table' then
             paramName = "{...}"
         end
         if input.name == "relation" then
             if root.typeName == "compare_number" then
-                paramName = SCEN_EDIT.metaModel.numericComparisonTypes[root.relation.cmpTypeId]
+                paramName = SB.metaModel.numericComparisonTypes[root.relation.cmpTypeId]
             else
-                paramName = SCEN_EDIT.metaModel.identityComparisonTypes[root.relation.cmpTypeId]
+                paramName = SB.metaModel.identityComparisonTypes[root.relation.cmpTypeId]
             end
         end
         local lblParam = Label:New {
@@ -316,7 +316,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
 
         if param.type == "expr" then
             local expr = param.expr[1]
-            local exprType = SCEN_EDIT.metaModel.functionTypes[expr.typeName]
+            local exprType = SB.metaModel.functionTypes[expr.typeName]
 
             self:PopulateExpressions(expr, exprType, level + 1, expr.typeName)
         end
@@ -326,7 +326,7 @@ end
 function TriggerWindow:_GetTriggerElementWindowParams()
     return {
         trigger = self.trigger,
-        params = SCEN_EDIT.model.triggerManager:GetTriggerScopeParams(self.trigger),
+        params = SB.model.triggerManager:GetTriggerScopeParams(self.trigger),
         parentWindow = self.window,
         triggerWindow = self,
     }

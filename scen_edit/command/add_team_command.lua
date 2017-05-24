@@ -16,9 +16,9 @@ function AddTeamCommand:execute()
         allyTeam = self.allyTeam,
         side = self.side,
     }
-    self.newTeamId = SCEN_EDIT.model.teamManager:addTeam(team)
+    self.newTeamId = SB.model.teamManager:addTeam(team)
 end
 
 function AddTeamCommand:unexecute()
-    SCEN_EDIT.model.teamManager:removeTeam(self.newTeamId)
+    SB.model.teamManager:removeTeam(self.newTeamId)
 end

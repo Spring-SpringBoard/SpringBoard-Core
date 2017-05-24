@@ -10,9 +10,9 @@ function NumericComparisonPanel:MakePredefinedOpt(parent)
     self.cmbCmpType = ComboBox:New {
         right = 1,
         width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackNumericComparisonPanel,
-        items = SCEN_EDIT.metaModel.numericComparisonTypes,
+        items = SB.metaModel.numericComparisonTypes,
     }
 end
 

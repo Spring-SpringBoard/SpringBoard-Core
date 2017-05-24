@@ -14,7 +14,7 @@ function FileDialog:init(dir, caption, fileTypes)
     }
 
     local okButton = Button:New {
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         bottom = 5,
         width = "20%",
         right = "22%",
@@ -22,7 +22,7 @@ function FileDialog:init(dir, caption, fileTypes)
     }
 
     local cancelButton = Button:New {
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         bottom = 5,
         width = "20%",
 		right = 10,
@@ -59,7 +59,7 @@ function FileDialog:init(dir, caption, fileTypes)
             ScrollPanel:New {
                 width = "100%",
                 y = 10,
-                bottom = 90 + SCEN_EDIT.conf.B_HEIGHT + 10,
+                bottom = 90 + SB.conf.B_HEIGHT + 10,
                 children = {
                     self.filePanel,
                 },
@@ -67,8 +67,8 @@ function FileDialog:init(dir, caption, fileTypes)
             Control:New {
                 x = 1,
                 width = "100%",
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                bottom = SCEN_EDIT.conf.B_HEIGHT + 20,
+                height = SB.conf.B_HEIGHT,
+                bottom = SB.conf.B_HEIGHT + 20,
                 padding = {0, 0, 0, 0},
                 children = {
                     Label:New {
@@ -87,7 +87,7 @@ function FileDialog:init(dir, caption, fileTypes)
         },
         OnDispose = {
             function()
-                SCEN_EDIT.stateManager:GetCurrentState():SetGlobalKeyListener()
+                SB.stateManager:GetCurrentState():SetGlobalKeyListener()
             end
         }
     }
@@ -95,15 +95,15 @@ function FileDialog:init(dir, caption, fileTypes)
         self.cmbFileTypes = ComboBox:New {
             items = self.fileTypes,
             width = 100,
-            height = SCEN_EDIT.conf.B_HEIGHT + 10,
+            height = SB.conf.B_HEIGHT + 10,
             x = 75,
             right = 0,
         }
         local ctrl = Control:New {
             x = 1,
             width = "100%",
-            height = SCEN_EDIT.conf.B_HEIGHT + 10,
-            bottom = 2 * SCEN_EDIT.conf.B_HEIGHT + 30,
+            height = SB.conf.B_HEIGHT + 10,
+            bottom = 2 * SB.conf.B_HEIGHT + 30,
             padding = {0, 0, 0, 0},
             children = {
                 Label:New {
@@ -143,7 +143,7 @@ function FileDialog:init(dir, caption, fileTypes)
         end
     end
 
-    SCEN_EDIT.stateManager:GetCurrentState():SetGlobalKeyListener(keyListener)
+    SB.stateManager:GetCurrentState():SetGlobalKeyListener(keyListener)
 
     screen0:FocusControl(self.fileEditBox)
 --    self:SetDir(self.dir)

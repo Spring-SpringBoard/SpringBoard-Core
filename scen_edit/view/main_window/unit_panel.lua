@@ -6,17 +6,17 @@ function UnitFeaturePanel:init()
             tooltip = "Unit type panel",
             OnClick = {
                 function()
-                    if SCEN_EDIT.unitDefsView == nil then
+                    if SB.unitDefsView == nil then
                         self.unitDefsView = UnitDefsView()
-                        SCEN_EDIT.unitDefsView = self.unitDefsView
+                        SB.unitDefsView = self.unitDefsView
                     end
-                    if SCEN_EDIT.unitDefsView.window.hidden then
-                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.unitDefsView.window)
+                    if SB.unitDefsView.window.hidden then
+                        SB.view:SetMainPanel(SB.unitDefsView.window)
                     end
                 end
             },
             children = {
-                TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
+                TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
                 TabbedPanelLabel({ caption = "Units" }),
             },
         })
@@ -25,17 +25,17 @@ function UnitFeaturePanel:init()
             tooltip = "Feature type panel",
             OnClick = {
                 function()
-                    if SCEN_EDIT.featureDefsView == nil then
+                    if SB.featureDefsView == nil then
                         self.featureDefsView = FeatureDefsView()
-                        SCEN_EDIT.featureDefsView = self.featureDefsView
+                        SB.featureDefsView = self.featureDefsView
                     end
-                    if SCEN_EDIT.featureDefsView.window.hidden then
-                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.featureDefsView.window)
+                    if SB.featureDefsView.window.hidden then
+                        SB.view:SetMainPanel(SB.featureDefsView.window)
                     end
                 end
             },
             children = {
-                TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "feature.png" }),
+                TabbedPanelImage({ file = SB_IMG_DIR .. "feature.png" }),
                 TabbedPanelLabel({ caption = "Features" }),
             },
         })
@@ -44,17 +44,17 @@ function UnitFeaturePanel:init()
             tooltip = "Edit selected unit property",
             OnClick = {
                 function()
-                    if SCEN_EDIT.unitPropertyWindow == nil then
+                    if SB.unitPropertyWindow == nil then
                         self.unitPropertyWindow = UnitPropertyWindow()
-                        SCEN_EDIT.unitPropertyWindow = self.unitPropertyWindow
+                        SB.unitPropertyWindow = self.unitPropertyWindow
                     end
-                    if SCEN_EDIT.unitPropertyWindow.window.hidden then
-                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.unitPropertyWindow.window)
+                    if SB.unitPropertyWindow.window.hidden then
+                        SB.view:SetMainPanel(SB.unitPropertyWindow.window)
                     end
                 end
             },
             children = {
-                TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "feature.png" }),
+                TabbedPanelImage({ file = SB_IMG_DIR .. "feature.png" }),
                 TabbedPanelLabel({ caption = "Properties" }),
             },
         })
@@ -63,17 +63,17 @@ function UnitFeaturePanel:init()
             tooltip = "Collision volume",
             OnClick = {
                 function()
-                    if SCEN_EDIT.collisionView == nil then
+                    if SB.collisionView == nil then
                         self.collisionView = CollisionView()
-                        SCEN_EDIT.collisionView = self.collisionView
+                        SB.collisionView = self.collisionView
                     end
-                    if SCEN_EDIT.collisionView.window.hidden then
-                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.collisionView.window)
+                    if SB.collisionView.window.hidden then
+                        SB.view:SetMainPanel(SB.collisionView.window)
                     end
                 end
             },
             children = {
-                TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "feature.png" }),
+                TabbedPanelImage({ file = SB_IMG_DIR .. "feature.png" }),
                 TabbedPanelLabel({ caption = "Colvol" }),
             },
         })
@@ -82,17 +82,17 @@ function UnitFeaturePanel:init()
             tooltip = "Unit animations",
             OnClick = {
                 function()
-                    if SCEN_EDIT.animationsView == nil then
+                    if SB.animationsView == nil then
                         self.animationsView = AnimationsView()
-                        SCEN_EDIT.animationsView = self.animationsView
+                        SB.animationsView = self.animationsView
                     end
-                    if SCEN_EDIT.animationsView.window.hidden then
-                        SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.animationsView.window)
+                    if SB.animationsView.window.hidden then
+                        SB.view:SetMainPanel(SB.animationsView.window)
                     end
                 end
             },
             children = {
-                TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
+                TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
                 TabbedPanelLabel({ caption = "Anims" }),
             },
         })

@@ -8,6 +8,6 @@ function WidgetDisplayTextCommand:init(text, coords, color)
 end
 
 function WidgetDisplayTextCommand:execute()
-    SCEN_EDIT.displayUtil:displayText(self.text, self.coords, self.color)
---    SCEN_EDIT.model.areaManager:addArea(self.value, self.id)
+    SB.displayUtil:displayText(self.text, self.coords, self.color)
+--    SB.model.areaManager:addArea(self.value, self.id)
 end

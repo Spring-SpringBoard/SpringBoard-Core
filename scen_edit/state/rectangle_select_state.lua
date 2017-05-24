@@ -32,9 +32,9 @@ function RectangleSelectState:_MouseRelease(x, y, button)
             features = features,
             areas = areas,
         }
-        SCEN_EDIT.view.selectionManager:Select(selection)
+        SB.view.selectionManager:Select(selection)
     end
-    SCEN_EDIT.stateManager:SetState(DefaultState())
+    SB.stateManager:SetState(DefaultState())
 end
 
 local function sort(v1, v2)

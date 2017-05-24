@@ -7,27 +7,27 @@ end
 function StartCommand:execute()
     Log.Notice("Start command")
 
-    if not SCEN_EDIT.rtModel.hasStarted then
-        local oldModel = SCEN_EDIT.model:Serialize()
-        SCEN_EDIT.model.oldModel = oldModel
+    if not SB.rtModel.hasStarted then
+        local oldModel = SB.model:Serialize()
+        SB.model.oldModel = oldModel
 
         local heightMap = HeightMap()
         heightMap:Serialize()
-        SCEN_EDIT.model.oldHeightMap = heightMap
+        SB.model.oldHeightMap = heightMap
 
-        SCEN_EDIT.rtModel:LoadMission(SCEN_EDIT.model:GetMetaData())
+        SB.rtModel:LoadMission(SB.model:GetMetaData())
         local allUnits = Spring.GetAllUnits()
         for i = 1, #allUnits do
             local unitId = allUnits[i]
             --[[Spring.GiveOrderToUnit(unitId, CMD.FIRE_STATE, { 2 }, {})
             Spring.MoveCtrl.Disable(unitId)
-            SCEN_EDIT.delay(function()
+            SB.delay(function()
                 Spring.GiveOrderToUnit(unitId, CMD.WAIT, {}, {})
                 Spring.GiveOrderToUnit(unitId, CMD.WAIT, {}, {})
             end)]]--
             Spring.SetUnitHealth(unitId, { paralyze = 0 })
         end
         Spring.SetGameRulesParam("sb_gameMode", "test")
-        SCEN_EDIT.rtModel:GameStart()
+        SB.rtModel:GameStart()
     end
 end

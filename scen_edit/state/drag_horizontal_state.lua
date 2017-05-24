@@ -8,11 +8,11 @@ function DragHorizontalObjectState:init(startY)
         features = {},
         areas = {},
     }
-    SCEN_EDIT.SetMouseCursor("resize-y")
+    SB.SetMouseCursor("resize-y")
 end
 
 function DragHorizontalObjectState:GetMovedObjects()
-    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selection = SB.view.selectionManager:GetSelection()
     local objects = {
         units = {},
         features = {},
@@ -52,21 +52,21 @@ function DragHorizontalObjectState:MouseRelease(x, y, button)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
     for unitID, object in pairs(movedObjects.units) do
-        local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(unitID)
+        local modelID = SB.model.unitManager:getModelUnitId(unitID)
         local cmd = SetUnitParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
         table.insert(commands, SetUnitPropertyCommand(modelID, "gravity", 0))
     end
     for featureID, object in pairs(movedObjects.features) do
-        local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(featureID)
+        local modelID = SB.model.featureManager:getModelFeatureId(featureID)
         local cmd = SetFeatureParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
     end
 
     local compoundCommand = CompoundCommand(commands)
-    SCEN_EDIT.commandManager:execute(compoundCommand)
+    SB.commandManager:execute(compoundCommand)
 
-    SCEN_EDIT.stateManager:SetState(DefaultState())
+    SB.stateManager:SetState(DefaultState())
 end
 
 function DragHorizontalObjectState:DrawObject(objectID, object, bridge, shaderObj)
@@ -86,7 +86,7 @@ end
 function DragHorizontalObjectState:DrawWorld()
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
-    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    local shaderObj = SB.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
     for objectID, object in pairs(self.ghostViews.units) do

@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 
 ColorPickerWindow = EditorView:extends{}
 
@@ -24,7 +24,7 @@ function ColorPickerWindow:init(color)
             },
         },
         CalculateColor = function(obj, color)
-            local c = SCEN_EDIT.deepcopy(color)
+            local c = SB.deepcopy(color)
             c[1] = math.min(0.998, c[1])
             c[2] = math.max(0.001, c[2])
             c[3] = math.max(0.001, c[3])
@@ -134,7 +134,7 @@ function hsv2rgb(value)
     return {r, g, b}
 end
 
--- SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "color_picker_window.lua")
+-- SB.Include(SB_VIEW_DIR .. "color_picker_window.lua")
 -- not the best naming, but this component is a specific implementation/listener
 -- for the ColorPickerWindow used to set the color field's value
 ColorFieldPickerWindow = ColorPickerWindow:extends{}
@@ -164,7 +164,7 @@ function ColorFieldPickerWindow:OnEndChange(name)
 end
 
 
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_FIELDS_DIR .. "field.lua")
+SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 ColorPickerField = Field:extends{}
 

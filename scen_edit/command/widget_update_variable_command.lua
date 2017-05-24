@@ -6,5 +6,5 @@ function WidgetUpdateVariableCommand:init(variable)
 end
 
 function WidgetUpdateVariableCommand:execute()
-    SCEN_EDIT.model.variableManager:setVariable(self.variable.id, self.variable)
+    SB.model.variableManager:setVariable(self.variable.id, self.variable)
 end

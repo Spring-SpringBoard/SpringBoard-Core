@@ -6,5 +6,5 @@ function WidgetRemoveAreaCommand:init(id)
 end
 
 function WidgetRemoveAreaCommand:execute()
-    SCEN_EDIT.model.areaManager:removeArea(self.id)
+    SB.model.areaManager:removeArea(self.id)
 end

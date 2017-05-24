@@ -13,10 +13,10 @@ function TeamPanel:MakePredefinedOpt()
     self.cmbPredefined = ComboBox:New {
         right = 1,
         width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackTeamPanel,
-        items = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name"),
-        playerTeamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id"),
+        items = GetField(SB.model.teamManager:getAllTeams(), "name"),
+        playerTeamIds = GetField(SB.model.teamManager:getAllTeams(), "id"),
     }
 end
 

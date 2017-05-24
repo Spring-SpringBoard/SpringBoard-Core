@@ -5,5 +5,5 @@ function UndoCommand:init()
 end
 
 function UndoCommand:execute()
-    SCEN_EDIT.commandManager:undo()
+    SB.commandManager:undo()
 end

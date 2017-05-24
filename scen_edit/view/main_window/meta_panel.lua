@@ -6,28 +6,28 @@ function MetaPanel:init()
         tooltip = "Add a rectangle area", 
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(AddRectState())
+                SB.stateManager:SetState(AddRectState())
             end
         },
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "view-fullscreen.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "view-fullscreen.png" }),
             TabbedPanelLabel({ caption = "Area" }),
         },
     }))
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Trigger settings",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "applications-system.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "applications-system.png" }),
             TabbedPanelLabel({ caption = "Triggers" }),
         },
         OnClick = {
             function ()
-                if SCEN_EDIT.triggersWindow == nil then
+                if SB.triggersWindow == nil then
                     self.triggersWindow = TriggersWindow()
-                    SCEN_EDIT.triggersWindow = self.triggersWindow
+                    SB.triggersWindow = self.triggersWindow
                 end
-                if SCEN_EDIT.triggersWindow.window.hidden then
-                    SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.triggersWindow.window)
+                if SB.triggersWindow.window.hidden then
+                    SB.view:SetMainPanel(SB.triggersWindow.window)
                 end
             end
         },
@@ -35,17 +35,17 @@ function MetaPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Variable settings",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "format-text-bold.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "format-text-bold.png" }),
             TabbedPanelLabel({ caption = "Variables" }),
         },
         OnClick = {
             function()
-                if SCEN_EDIT.variablesWindow == nil then
+                if SB.variablesWindow == nil then
                     self.variablesWindow = VariableSettingsWindow()
-                    SCEN_EDIT.variablesWindow = self.variablesWindow
+                    SB.variablesWindow = self.variablesWindow
                 end
-                if SCEN_EDIT.variablesWindow.window.hidden then
-                    SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.variablesWindow.window)
+                if SB.variablesWindow.window.hidden then
+                    SB.view:SetMainPanel(SB.variablesWindow.window)
                 end
             end
         },

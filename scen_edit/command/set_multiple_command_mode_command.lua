@@ -7,8 +7,8 @@ end
 
 function SetMultipleCommandModeCommand:execute()
     if self.state then
-        SCEN_EDIT.commandManager:enterMultipleCommandMode()
+        SB.commandManager:enterMultipleCommandMode()
     else
-        SCEN_EDIT.commandManager:leaveMultipleCommandMode()
+        SB.commandManager:leaveMultipleCommandMode()
     end
 end

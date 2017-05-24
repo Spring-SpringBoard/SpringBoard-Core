@@ -1,4 +1,4 @@
-function SCEN_EDIT.coreTypes()
+function SB.coreTypes()
     return {
         {
             humanName = "Unit",
@@ -114,7 +114,7 @@ local function _definitions()
                     return
                 end
                 if d.input then
-                    d.input = SCEN_EDIT.parseData(d.input)
+                    d.input = SB.parseData(d.input)
                 end
             end,
         },
@@ -136,7 +136,7 @@ local function _definitions()
                     return
                 end
                 if d.extraSources then
-                    d.extraSources = SCEN_EDIT.parseData(d.extraSources)
+                    d.extraSources = SB.parseData(d.extraSources)
                 end
             end,
         },
@@ -145,7 +145,7 @@ end
 local definitions = _definitions()
 
 --[[
-function SCEN_EDIT.complexTypes()
+function SB.complexTypes()
     return {
         {
             humanName = "Point",
@@ -184,7 +184,7 @@ local function parseDataType(d)
     return not errored
 end
 
-function SCEN_EDIT.parseData(data)
+function SB.parseData(data)
     local newData = {}
     -- verify unnamed objects
     if type(data) == "string" then
@@ -228,7 +228,7 @@ function SCEN_EDIT.parseData(data)
     return finalData
 end
 
-function SCEN_EDIT.resolveAssert(resolvedInput, input, expr)
+function SB.resolveAssert(resolvedInput, input, expr)
     if resolvedInput == nil then
         local stringRepresentation = table.show(expr)
         Log.Error(input.name .. " cannot be resolved for : " .. stringRepresentation)

@@ -8,7 +8,7 @@ end
 
 function SetSunLightingCommand:execute()
     local cmd = WidgetSetSunLightingCommand(self.opts)
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end
 
 function SetSunLightingCommand:unexecute()

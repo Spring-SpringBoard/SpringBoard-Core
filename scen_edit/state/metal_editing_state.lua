@@ -1,5 +1,5 @@
 MetalEditingState = AbstractMapEditingState:extends{}
-SCEN_EDIT.Include("scen_edit/model/texture_manager.lua")
+SB.Include("scen_edit/model/texture_manager.lua")
 
 function MetalEditingState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
@@ -17,7 +17,7 @@ function MetalEditingState:Apply(x, z)
         addMode = addMode,
     }
     local command = TerrainMetalCommand(opts)
-    SCEN_EDIT.commandManager:execute(command)
+    SB.commandManager:execute(command)
 end
 
 function MetalEditingState:DrawWorld()

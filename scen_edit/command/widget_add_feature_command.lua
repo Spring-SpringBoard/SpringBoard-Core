@@ -7,5 +7,5 @@ function WidgetAddFeatureCommand:init(springId, modelId)
 end
 
 function WidgetAddFeatureCommand:execute()
-    SCEN_EDIT.model.featureManager:addFeature(self.springId, self.modelId)
+    SB.model.featureManager:addFeature(self.springId, self.modelId)
 end

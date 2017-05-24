@@ -7,9 +7,9 @@ function AddTriggerCommand:init(trigger)
 end
 
 function AddTriggerCommand:execute()
-    self.triggerId = SCEN_EDIT.model.triggerManager:addTrigger(self.trigger)
+    self.triggerId = SB.model.triggerManager:addTrigger(self.trigger)
 end
 
 function AddTriggerCommand:unexecute()
-    SCEN_EDIT.model.triggerManager:removeTrigger(self.triggerId)
+    SB.model.triggerManager:removeTrigger(self.triggerId)
 end

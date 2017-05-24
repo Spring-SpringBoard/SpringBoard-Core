@@ -38,7 +38,7 @@ function AbstractTypePanel:init(opts)
     end
 
     if #self.radioGroup > 0 then
-        SCEN_EDIT.MakeRadioButtonGroup(self.radioGroup)
+        SB.MakeRadioButtonGroup(self.radioGroup)
     end
 end
 
@@ -74,7 +74,7 @@ function AbstractTypePanel:MakeSpecialOpt()
     self.cmbSpecial = ComboBox:New {
         right = 1,
         width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackPanel,
         items = GetField(validParams, "name"),
     }
@@ -148,7 +148,7 @@ function AbstractTypePanel:UpdatePanel(field)
             self.cbExpression:Toggle()
         end
         self.btnExpression.data = field.expr
-        local tooltip = SCEN_EDIT.humanExpression(self.btnExpression.data[1], "condition")
+        local tooltip = SB.humanExpression(self.btnExpression.data[1], "condition")
         self.btnExpression.tooltip = tooltip
         return true
     end
@@ -156,7 +156,7 @@ function AbstractTypePanel:UpdatePanel(field)
 end
 
 function AbstractTypePanel:AddExpression(dataType, parent)
-    local viableExpressions = SCEN_EDIT.metaModel.functionTypesByOutput[dataType.type]
+    local viableExpressions = SB.metaModel.functionTypesByOutput[dataType.type]
     if viableExpressions then
         local stackPanel = MakeComponentPanel(parent)
         local cbExpressions = Checkbox:New {
@@ -170,7 +170,7 @@ function AbstractTypePanel:AddExpression(dataType, parent)
             caption = 'Expression',
             right = 1,
             width = 100,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackPanel,
             data = {},
         }
@@ -199,7 +199,7 @@ function AbstractTypePanel:AddExpression(dataType, parent)
 end
 
 function AbstractTypePanel:MakeVariableChoice(variableType, panel)
-    local variablesOfType = SCEN_EDIT.model.variableManager:getVariablesOfType(variableType)
+    local variablesOfType = SB.model.variableManager:getVariablesOfType(variableType)
     if not variablesOfType then
         return nil, nil
     end
@@ -223,7 +223,7 @@ function AbstractTypePanel:MakeVariableChoice(variableType, panel)
         local cmbVariable = ComboBox:New {
             right = 1,
             width = 100,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackPanel,
             items = variableNames,
             variableIds = variableIds,

@@ -20,7 +20,7 @@ FilePanel = LayoutPanel:Inherit{
 
   items = {},
   extFilters = nil,
-  imageFile = SCEN_EDIT_IMG_DIR .. "file.png",
+  imageFile = SB_IMG_DIR .. "file.png",
   dir = '',
   drawcontrolv2 = true,
 

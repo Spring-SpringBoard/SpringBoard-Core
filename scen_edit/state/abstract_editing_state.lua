@@ -17,9 +17,9 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 	end
 	-- TODO: make this configurable
     if key == KEYSYMS.Z and mods.ctrl then
-        SCEN_EDIT.commandManager:undo()
+        SB.commandManager:undo()
     elseif key == KEYSYMS.Y and mods.ctrl then
-        SCEN_EDIT.commandManager:redo()
+        SB.commandManager:redo()
     elseif key == KEYSYMS.S and mods.ctrl and not mods.shift then
         SaveAction():execute()
     elseif key == KEYSYMS.S and mods.ctrl and mods.shift then
@@ -31,7 +31,7 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     elseif key == KEYSYMS.I and mods.ctrl then
         ImportAction():execute()
 	elseif key == 27 then -- KEYSYMS.ESC
-        SCEN_EDIT.stateManager:SetState(DefaultState())
+        SB.stateManager:SetState(DefaultState())
     else
         return false
     end

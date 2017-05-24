@@ -58,7 +58,7 @@ local function HeightMapSave(path)
 end
 
 local function ModelSave(path)
-    success, msg = pcall(Model.Save, SCEN_EDIT.model, path)
+    success, msg = pcall(Model.Save, SB.model, path)
     if not success then 
         Log.Error(msg)
     end
@@ -81,7 +81,7 @@ local modinfo = {
     }
 }      
 return modinfo]]
-	local scenarioInfo = SCEN_EDIT.model.scenarioInfo
+	local scenarioInfo = SB.model.scenarioInfo
 	modInfoTxt = modInfoTxt:gsub("__NAME__", scenarioInfo.name)
 						   :gsub("__SHORTNAME__", scenarioInfo.name)
 						   :gsub("__VERSION__", scenarioInfo.version)
@@ -141,24 +141,24 @@ local function GenerateScriptTxt(dev)
 
     local isMyPlayerNameSet = false
 
-    local scenarioInfo = SCEN_EDIT.model.scenarioInfo
+    local scenarioInfo = SB.model.scenarioInfo
     local projectDir = ""
     local gameType = Game.gameName .. " " .. Game.gameVersion
-    if SCEN_EDIT.projectDir then
-        projectDir = "project_dir = " .. SCEN_EDIT.projectDir .. ";"
+    if SB.projectDir then
+        projectDir = "project_dir = " .. SB.projectDir .. ";"
     end
 
     scriptTxt = scriptTxt:gsub("__MAP_NAME__", Game.mapName)
                          :gsub("__GAME_TYPE__", gameType)
-                         :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
-                         :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
+                         :gsub("__NUM_USERS__", tostring(#SB.model.teamManager:getAllTeams()))
+                         :gsub("__NUM_TEAMS__", tostring(#SB.model.teamManager:getAllTeams()))
                          :gsub("__PLAY_MODE__", tostring(playMode))
                          :gsub("__HAS_SCENARIO_FILE__", 0)
                          :gsub("__PROJECT_DIR__", tostring(projectDir))
 
     local numAIs = 0
     local numPlayers = 0
-    for _, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
+    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         if not team.gaia then
             local teamTxt = [[
     [__TEAM_ID__]
@@ -287,7 +287,7 @@ function SaveCommand:execute()
     ScriptTxtSave(projectDir .. "/script-dev.txt", true)
     Log.Notice("saved scripts")
 
-    if #SCEN_EDIT.model.textureManager.mapFBOTextures > 0 then
+    if #SB.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = projectDir .. "/texturemap"
         Spring.CreateDir(texturemapDir)
         local cmd = SaveImagesCommand(texturemapDir)
@@ -295,5 +295,5 @@ function SaveCommand:execute()
         Log.Notice("saved texturemap")
     end
 
-    SCEN_EDIT.projectLoaded = true
+    SB.projectLoaded = true
 end

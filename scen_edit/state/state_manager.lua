@@ -1,11 +1,11 @@
-SCEN_EDIT_STATE_DIR = SCEN_EDIT_DIR .. "state/"
+SB_STATE_DIR = SB_DIR .. "state/"
 
 StateManager = LCS.class{}
 
 function StateManager:init()
-    SCEN_EDIT.Include(SCEN_EDIT_STATE_DIR .. 'abstract_state.lua')
-    SCEN_EDIT.Include(SCEN_EDIT_STATE_DIR .. 'abstract_editing_state.lua')
-    SCEN_EDIT.IncludeDir(SCEN_EDIT_STATE_DIR)
+    SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
+    SB.Include(SB_STATE_DIR .. 'abstract_editing_state.lua')
+    SB.IncludeDir(SB_STATE_DIR)
     self:SetState(DefaultState())
 end
 
@@ -84,8 +84,8 @@ end
 
 function StateManager:DrawWorld()
     --FIXME: hack needed to properly draw the cursor each frame
-    if SCEN_EDIT.cursor then
-        Spring.SetMouseCursor(SCEN_EDIT.cursor)
+    if SB.cursor then
+        Spring.SetMouseCursor(SB.cursor)
     end
 
     return self:_SafeCall(function() 

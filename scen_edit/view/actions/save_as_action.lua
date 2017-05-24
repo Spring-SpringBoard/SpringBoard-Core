@@ -8,12 +8,12 @@ function SaveAsAction:execute()
             Log.Notice("Saving project: " .. path .. " ...")
             local setProjectDirCommand = SetProjectDirCommand(path)
             -- set the project dir in both the synced and unsynced (TODO: needs to be fixed for cooperative editing)
-            SCEN_EDIT.commandManager:execute(setProjectDirCommand)
-            SCEN_EDIT.commandManager:execute(setProjectDirCommand, true)
+            SB.commandManager:execute(setProjectDirCommand)
+            SB.commandManager:execute(setProjectDirCommand, true)
             self:CreateProjectStructure(path)
 
             local saveCommand = SaveCommand(path)
-            SCEN_EDIT.commandManager:execute(saveCommand, true)
+            SB.commandManager:execute(saveCommand, true)
             Log.Notice("Saved project.")
         end
     )
@@ -21,7 +21,7 @@ end
 
 function SaveAsAction:CreateProjectStructure(projectDir)
 	-- create project if it doesn't exist already
-	if not SCEN_EDIT.DirExists(projectDir, VFS.RAW_ONLY) then
+	if not SB.DirExists(projectDir, VFS.RAW_ONLY) then
 		Spring.CreateDir(projectDir)
 		Spring.CreateDir(projectDir .. "/triggers")
 

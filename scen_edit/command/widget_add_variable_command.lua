@@ -9,5 +9,5 @@ end
 function WidgetAddVariableCommand:execute()
     self.newVar = self.value
     self.newVar.id = self.id
-    SCEN_EDIT.model.variableManager:addVariable(self.newVar)
+    SB.model.variableManager:addVariable(self.newVar)
 end

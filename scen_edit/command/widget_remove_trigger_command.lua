@@ -6,5 +6,5 @@ function WidgetRemoveTriggerCommand:init(id)
 end
 
 function WidgetRemoveTriggerCommand:execute()
-    SCEN_EDIT.model.triggerManager:removeTrigger(self.id)
+    SB.model.triggerManager:removeTrigger(self.id)
 end

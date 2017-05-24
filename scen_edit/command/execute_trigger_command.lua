@@ -6,5 +6,5 @@ function ExecuteTriggerCommand:init(triggerId)
 end
 
 function ExecuteTriggerCommand:execute()
-    SCEN_EDIT.rtModel:ExecuteTrigger(self.triggerId)
+    SB.rtModel:ExecuteTrigger(self.triggerId)
 end

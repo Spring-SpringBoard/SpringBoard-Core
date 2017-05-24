@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_FIELDS_DIR .. "field.lua")
+SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 function ParseKey(field, editBox, key, mods, ...)
     if key == Spring.GetKeyCode("esc") then

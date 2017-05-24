@@ -6,7 +6,7 @@ function ActionWindow:init(opts)
 end
 
 function ActionWindow:GetValidElementTypes()
-    return SCEN_EDIT.metaModel.actionTypes
+    return SB.metaModel.actionTypes
 end
 
 function ActionWindow:GetWindowCaption()

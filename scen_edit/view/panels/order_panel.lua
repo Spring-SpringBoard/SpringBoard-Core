@@ -6,9 +6,9 @@ function OrderPanel:init(opts)
     self.parent = opts.parent
     local stackPanel = MakeComponentPanel(self.parent)
     self.cmbOrderTypes = ComboBox:New {
-        items = GetField(SCEN_EDIT.metaModel.orderTypes, "humanName"),
-        orderTypes = GetField(SCEN_EDIT.metaModel.orderTypes, "name"),
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        items = GetField(SB.metaModel.orderTypes, "humanName"),
+        orderTypes = GetField(SB.metaModel.orderTypes, "name"),
+        height = SB.conf.B_HEIGHT,
         width = "60%",
         y = "20%",
         x = '20%',
@@ -29,7 +29,7 @@ function OrderPanel:init(opts)
             if selected and itemIdx > 0 then
                 self.orderPanel:ClearChildren()
                 local ordName = self.cmbOrderTypes.orderTypes[itemIdx]
-                local order = SCEN_EDIT.metaModel.orderTypes[ordName]
+                local order = SB.metaModel.orderTypes[ordName]
                 for i = 1, #order.input do
                     local input = order.input[i]
                     local subPanelName = input.name
@@ -41,7 +41,7 @@ function OrderPanel:init(opts)
                             right = 1,
                         }
                     end
-                    local subPanel = SCEN_EDIT.createNewPanel({
+                    local subPanel = SB.createNewPanel({
                         dataType = input,
                         parent = self.orderPanel,
                         -- FIXME: no reference to self.trigger; things might break
@@ -50,7 +50,7 @@ function OrderPanel:init(opts)
                     if subPanel then
                         self.orderPanel[subPanelName] = subPanel
                         if i ~= #order.input then
-                            SCEN_EDIT.MakeSeparator(self.orderPanel)
+                            SB.MakeSeparator(self.orderPanel)
                         end
                     end
                 end
@@ -64,7 +64,7 @@ end
 
 function OrderPanel:UpdateModel(field)
     local ordName = self.cmbOrderTypes.orderTypes[self.cmbOrderTypes.selected]
-    local order = SCEN_EDIT.metaModel.orderTypes[ordName]
+    local order = SB.metaModel.orderTypes[ordName]
     field.orderTypeName = ordName
     for i = 1, #order.input do
         local input = order.input[i]
@@ -82,7 +82,7 @@ end
 
 function OrderPanel:UpdatePanel(field)
     local ordName = field.orderTypeName
-    local order = SCEN_EDIT.metaModel.orderTypes[ordName]
+    local order = SB.metaModel.orderTypes[ordName]
     self.cmbOrderTypes:Select(GetIndex(self.cmbOrderTypes.orderTypes, ordName))
     for i = 1, #order.input do
         local input = order.input[i]

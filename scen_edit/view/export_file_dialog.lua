@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "file_dialog.lua")
+SB.Include(SB_VIEW_DIR .. "file_dialog.lua")
 
 ExportFileDialog = FileDialog:extends{}
 

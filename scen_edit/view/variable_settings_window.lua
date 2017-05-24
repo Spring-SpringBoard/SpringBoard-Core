@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 VariableSettingsWindow = EditorView:extends{}
 
 function VariableSettingsWindow:init()
@@ -9,8 +9,8 @@ function VariableSettingsWindow:init()
         width='40%',
         x = 1,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_ADD_COLOR,
         OnClick={
             function()
                 self:AddVariable()
@@ -29,7 +29,7 @@ function VariableSettingsWindow:init()
             x = 1,
             y = 15,
             right = 5,
-            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+            bottom = SB.conf.C_HEIGHT * 2,
             children = { 
                 self.variablesPanel
             },
@@ -39,7 +39,7 @@ function VariableSettingsWindow:init()
 
     self:Populate()
     local variableManagerListener = VariableManagerListenerWidget(self)
-    SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
+    SB.model.variableManager:addListener(variableManagerListener)
 
     self:Finalize(children)
 end
@@ -58,7 +58,7 @@ function VariableSettingsWindow:AddVariable()
     if not success then
         Log.Error("Error adding variable", msg)
     end
---[[    local newVariable = SCEN_EDIT.model:NewVariable("number")
+--[[    local newVariable = SB.model:NewVariable("number")
     self:Populate()
     for i = 1, #self.variablesPanel.children do
         local panel = self.variablesPanel.children[i]
@@ -72,36 +72,36 @@ end
 
 function VariableSettingsWindow:MakeRemoveVariableWindow(variableId)
     local cmd = RemoveVariableCommand(variableId)
-    SCEN_EDIT.commandManager:execute(cmd)
+    SB.commandManager:execute(cmd)
 end
 
 function VariableSettingsWindow:Populate()
     self.variablesPanel:ClearChildren()
-    local variables = SCEN_EDIT.model.variableManager:getAllVariables()
+    local variables = SB.model.variableManager:getAllVariables()
     for _, variable in pairs(variables) do
         local variableStackPanel = MakeComponentPanel(self.variablesPanel)
         variableStackPanel.variableId = variable.id
         local btnEditVariable = Button:New {
             caption = variable.name,
-            right = SCEN_EDIT.conf.B_HEIGHT + 10,
+            right = SB.conf.B_HEIGHT + 10,
             x = 1,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             _toggle = nil,
             parent = variableStackPanel,
         }
         local btnRemoveVariable = Button:New {
             caption = "",
             right = 1,
-            width = SCEN_EDIT.conf.B_HEIGHT,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            width = SB.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = variableStackPanel,
             padding = {0, 0, 0, 0},
             children = {
                 Image:New { 
                     tooltip = "Remove variable", 
-                    file=SCEN_EDIT_IMG_DIR .. "list-remove.png", 
-                    height = SCEN_EDIT.conf.B_HEIGHT, 
-                    width = SCEN_EDIT.conf.B_HEIGHT,
+                    file=SB_IMG_DIR .. "list-remove.png", 
+                    height = SB.conf.B_HEIGHT, 
+                    width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
                 },
@@ -128,7 +128,7 @@ function VariableSettingsWindow:MakeVariableWindow(variable, edit)
             else
                 cmd = AddVariableCommand(variable)
             end
-            SCEN_EDIT.commandManager:execute(cmd)
+            SB.commandManager:execute(cmd)
         end
     )
     newWin:UpdatePanel(variable)
@@ -138,10 +138,10 @@ function VariableSettingsWindow:MakeVariableWindow(variable, edit)
     nw.x = 500
     nw.y = 500
 
-    SCEN_EDIT.SetControlEnabled(sw, false)
+    SB.SetControlEnabled(sw, false)
     table.insert(nw.OnDispose,
         function()
-            SCEN_EDIT.SetControlEnabled(sw, true)
+            SB.SetControlEnabled(sw, true)
         end
     )
     return newWin

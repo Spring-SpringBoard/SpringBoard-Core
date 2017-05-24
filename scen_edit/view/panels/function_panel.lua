@@ -104,13 +104,13 @@ function FunctionWindow:GetValidElementTypes()
     if self.dataType.type == "function" then
         -- If specified, Filter based on matching output data types.
         if self.dataType.output then
-            functionTypes = SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType.output]
+            functionTypes = SB.metaModel.functionTypesByOutput[self.dataType.output]
         else
-            functionTypes = SCEN_EDIT.metaModel.functionTypes
+            functionTypes = SB.metaModel.functionTypes
         end
     -- FIXME: things might need cleanup for well designed action support
     elseif self.dataType.type == "action" then
-        functionTypes = SCEN_EDIT.metaModel.actionTypes
+        functionTypes = SB.metaModel.actionTypes
     else
         Log.Error("Unexeptected data type: " .. tostring(self.dataType.type))
     end

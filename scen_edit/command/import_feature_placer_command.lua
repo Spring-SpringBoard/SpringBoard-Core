@@ -31,7 +31,7 @@ function ImportFeaturePlacerCommand:execute()
     -- we combine existing non-gaia units with fp units and buildings
     local units = {}
 
-    local oldUnits = SCEN_EDIT.model.unitManager:serialize()
+    local oldUnits = SB.model.unitManager:serialize()
     for _, unit in pairs(oldUnits) do
         if unit.teamId == gaiaID then
             table.insert(oldUnits, units)
@@ -85,9 +85,9 @@ function ImportFeaturePlacerCommand:execute()
         features = features,
     }
 
-    --SCEN_EDIT.model.unitManager:clear()
-    SCEN_EDIT.model.featureManager:clear()
+    --SB.model.unitManager:clear()
+    SB.model.featureManager:clear()
 
-    SCEN_EDIT.model.unitManager:load(mission.units)
-    SCEN_EDIT.model.featureManager:load(mission.features)
+    SB.model.unitManager:load(mission.units)
+    SB.model.featureManager:load(mission.features)
 end

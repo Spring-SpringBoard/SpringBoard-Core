@@ -8,12 +8,12 @@ end
 
 function SetWaterParamsCommand:execute()
     local cmd = WidgetSetWaterParamsCommand(self.opts)
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end
 
 function SetWaterParamsCommand:unexecute()
     local cmd = WidgetUndoSetWaterParamsCommand()
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end
 
 WidgetSetWaterParamsCommand = AbstractCommand:extends{}

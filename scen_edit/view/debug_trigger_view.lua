@@ -6,12 +6,12 @@ DebugTriggerView = TriggerManagerListener:extends{}
 function DebugTriggerView:init(parent)
     self.parent = parent
     self:Populate()
-    SCEN_EDIT.model.triggerManager:addListener(self)
+    SB.model.triggerManager:addListener(self)
 end
 
 function DebugTriggerView:Populate()
     self.parent:ClearChildren()
-    local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
+    local triggers = SB.model.triggerManager:getAllTriggers()
     for id, trigger in pairs(triggers)  do        
         local triggerPanel = MakeComponentPanel(self.parent)
         local maxChars = 18
@@ -29,7 +29,7 @@ function DebugTriggerView:Populate()
                 function(cbToggled, checked)
                     trigger.enabled = checked
                     local cmd = UpdateTriggerCommand(trigger)
-                    SCEN_EDIT.commandManager:execute(cmd)
+                    SB.commandManager:execute(cmd)
                 end
             },
         }
@@ -42,7 +42,7 @@ function DebugTriggerView:Populate()
             OnClick = {
                 function()
                     local cmd = ExecuteTriggerCommand(trigger.id)
-                    SCEN_EDIT.commandManager:execute(cmd)
+                    SB.commandManager:execute(cmd)
                 end
             },
         }
@@ -55,7 +55,7 @@ function DebugTriggerView:Populate()
             OnClick = {
                 function() 
                     local cmd = ExecuteTriggerActionsCommand(trigger.id)
-                    SCEN_EDIT.commandManager:execute(cmd)
+                    SB.commandManager:execute(cmd)
                 end
             },
         }
@@ -63,7 +63,7 @@ function DebugTriggerView:Populate()
 end
 
 function DebugTriggerView:Dispose()
-    SCEN_EDIT.model.triggerManager:removeListener(self)
+    SB.model.triggerManager:removeListener(self)
 end
 
 function DebugTriggerView:onTriggerAdded(triggerId)

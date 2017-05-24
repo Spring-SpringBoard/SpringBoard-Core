@@ -6,12 +6,12 @@ DebugVariableView = VariableManagerListener:extends{}
 function DebugVariableView:init(parent)
     self.parent = parent
     self:Populate()
-    SCEN_EDIT.model.variableManager:addListener(self)
+    SB.model.variableManager:addListener(self)
 end
 
 function DebugVariableView:Populate()
     self.parent:ClearChildren()
-    local variables = SCEN_EDIT.model.variableManager:getAllVariables()
+    local variables = SB.model.variableManager:getAllVariables()
     for id, variable in pairs(variables) do
         local variablePanel = MakeComponentPanel(self.parent)
         local maxChars = 15
@@ -23,7 +23,7 @@ function DebugVariableView:Populate()
             align = 'left',
         }
         local lblVariableValue = Label:New {
-            caption = SCEN_EDIT.humanExpression(variable.value, "value", variable.type),
+            caption = SB.humanExpression(variable.value, "value", variable.type),
             x = 120,
             right = 5,
             parent = variablePanel,
@@ -32,7 +32,7 @@ function DebugVariableView:Populate()
 end
 
 function DebugVariableView:Dispose()
-    SCEN_EDIT.model.variableManager:removeListener(self)
+    SB.model.variableManager:removeListener(self)
 end
 
 function DebugVariableView:onVariableAdded(variableId)

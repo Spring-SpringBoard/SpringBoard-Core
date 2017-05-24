@@ -7,7 +7,7 @@ function ConditionWindow:init(opts)
 end
 
 function ConditionWindow:GetValidElementTypes()
-    return SCEN_EDIT.metaModel.functionTypesByOutput["bool"]
+    return SB.metaModel.functionTypesByOutput["bool"]
 end
 
 function ConditionWindow:GetWindowCaption()

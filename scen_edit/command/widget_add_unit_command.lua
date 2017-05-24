@@ -7,5 +7,5 @@ function WidgetAddUnitCommand:init(springId, modelId)
 end
 
 function WidgetAddUnitCommand:execute()
-    SCEN_EDIT.model.unitManager:addUnit(self.springId, self.modelId)
+    SB.model.unitManager:addUnit(self.springId, self.modelId)
 end

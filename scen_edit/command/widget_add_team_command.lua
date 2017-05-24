@@ -7,5 +7,5 @@ function WidgetAddTeamCommand:init(id, value)
 end
 
 function WidgetAddTeamCommand:execute()
-    SCEN_EDIT.model.teamManager:addTeam(self.value, self.id)
+    SB.model.teamManager:addTeam(self.value, self.id)
 end

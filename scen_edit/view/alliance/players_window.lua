@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 PlayersWindow = EditorView:extends{}
 
 function PlayersWindow:init()
@@ -12,7 +12,7 @@ function PlayersWindow:init()
         autosize = true,
         resizeItems = false,
     }
-    SCEN_EDIT.model.teamManager:addListener(self)
+    SB.model.teamManager:addListener(self)
     self:Populate()
 
     self.btnAddPlayer = Button:New {
@@ -20,25 +20,25 @@ function PlayersWindow:init()
         width=120,
         x = 1,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         OnClick={
             function()
-                local name = "New team: " .. tostring(#SCEN_EDIT.model.teamManager:getAllTeams())
+                local name = "New team: " .. tostring(#SB.model.teamManager:getAllTeams())
                 local color = { r=math.random(), g=math.random(), b=math.random(), a=1}
                 local allyTeam = 1
                 local side = Spring.GetSideData(1)
                 local cmd = AddTeamCommand(name, color, allyTeam, side)
-                SCEN_EDIT.commandManager:execute(cmd)
+                SB.commandManager:execute(cmd)
             end
         },
-        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+        backgroundColor = SB.conf.BTN_ADD_COLOR,
     }
     local children = {
         ScrollPanel:New {
             x = 1,
             y = 15,
             right = 5,
-            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+            bottom = SB.conf.C_HEIGHT * 2,
             children = {
                 self.teamsPanel
             },
@@ -59,9 +59,9 @@ function PlayersWindow:Populate()
         parent = titlesPanel,
     }
     --teams
-    for _, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
+    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         local stackTeamPanel = MakeComponentPanel(self.teamsPanel)
-        local fontColor = SCEN_EDIT.glToFontColor(team.color)
+        local fontColor = SB.glToFontColor(team.color)
         local aiPrefix = "(Player) "
         if team.gaia then
             aiPrefix = "(Gaia)"
@@ -79,7 +79,7 @@ function PlayersWindow:Populate()
                 caption = 'Edit',
                 x = 190,
                 width = 80,
-                height = SCEN_EDIT.conf.B_HEIGHT,
+                height = SB.conf.B_HEIGHT,
                 parent = stackTeamPanel,
                 OnClick = {
                     function() 
@@ -92,23 +92,23 @@ function PlayersWindow:Populate()
             local btnRemoveTeam = Button:New {
                 caption = "",
                 x = 280,
-                width = SCEN_EDIT.conf.B_HEIGHT,
-                height = SCEN_EDIT.conf.B_HEIGHT,
+                width = SB.conf.B_HEIGHT,
+                height = SB.conf.B_HEIGHT,
                 parent = stackTeamPanel,
                 padding = {0, 0, 0, 0},
                 children = {
                     Image:New {
                         tooltip = "Remove team",
-                        file=SCEN_EDIT_IMG_DIR .. "list-remove.png",
-                        height = SCEN_EDIT.conf.B_HEIGHT,
-                        width = SCEN_EDIT.conf.B_HEIGHT,
+                        file=SB_IMG_DIR .. "list-remove.png",
+                        height = SB.conf.B_HEIGHT,
+                        width = SB.conf.B_HEIGHT,
                         margin = {0, 0, 0, 0},
                     },
                 },
                 OnClick = {
                     function()
                         local cmd = RemoveTeamCommand(team.id)
-                        SCEN_EDIT.commandManager:execute(cmd)
+                        SB.commandManager:execute(cmd)
                     end
                 }
             }

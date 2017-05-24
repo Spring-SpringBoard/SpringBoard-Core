@@ -21,9 +21,9 @@ function AddAreaCommand:execute()
         self.z1, self.z2 = self.z2, self.z1
     end
     local area = {self.x1, self.z1, self.x2, self.z2}
-    self.areaId = SCEN_EDIT.model.areaManager:addArea(area, self.areaId)
+    self.areaId = SB.model.areaManager:addArea(area, self.areaId)
 end
 
 function AddAreaCommand:unexecute()
-    SCEN_EDIT.model.areaManager:removeArea(self.areaId)
+    SB.model.areaManager:removeArea(self.areaId)
 end

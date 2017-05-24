@@ -10,7 +10,7 @@ return {
                 local unit = input.unit
                 local text = input.string
 
-                SCEN_EDIT.displayUtil:unitSay(unit, text)
+                SB.displayUtil:unitSay(unit, text)
             end
         },
         {
@@ -28,7 +28,7 @@ return {
                     input.number = input.number - 1
                     return true
                 else
-                    SCEN_EDIT.rtModel:ExecuteTrigger(trigger.id)
+                    SB.rtModel:ExecuteTrigger(trigger.id)
                 end
             end
         },

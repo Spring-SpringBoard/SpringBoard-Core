@@ -10,14 +10,14 @@ function SetScenarioInfoCommand:init(name, description, version, author)
 end
 
 function SetScenarioInfoCommand:execute()
-    self.oldName = SCEN_EDIT.model.scenarioInfo.name
-    self.oldDescription = SCEN_EDIT.model.scenarioInfo.description
-    self.oldVersion = SCEN_EDIT.model.scenarioInfo.version
-    self.oldAuthor = SCEN_EDIT.model.scenarioInfo.author
+    self.oldName = SB.model.scenarioInfo.name
+    self.oldDescription = SB.model.scenarioInfo.description
+    self.oldVersion = SB.model.scenarioInfo.version
+    self.oldAuthor = SB.model.scenarioInfo.author
 
-	SCEN_EDIT.model.scenarioInfo:Set(self.name, self.description, self.version, self.author)
+	SB.model.scenarioInfo:Set(self.name, self.description, self.version, self.author)
 end
 
 function SetScenarioInfoCommand:unexecute()
-    SCEN_EDIT.model.scenarioInfo:Set(self.oldName, self.oldDescription, self.oldVersion, self.oldAuthor)
+    SB.model.scenarioInfo:Set(self.oldName, self.oldDescription, self.oldVersion, self.oldAuthor)
 end

@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 
 UnitPropertyWindow = EditorView:extends{}
 
@@ -117,7 +117,7 @@ function UnitPropertyWindow:init()
                     tooltip = "Align to heightmap",
                     OnClick = {
                         function()
-                            local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+                            local selection = SB.view.selectionManager:GetSelection()
                             local objectID, bridge
                             if #selection.units > 0 then
                                 objectID = selection.units[1]
@@ -320,11 +320,11 @@ function UnitPropertyWindow:init()
         width = 100,
     }))
 
-    local teamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id")
+    local teamIds = GetField(SB.model.teamManager:getAllTeams(), "id")
     for i = 1, #teamIds do
         teamIds[i] = tostring(teamIds[i])
     end
-    local teamCaptions = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name")
+    local teamCaptions = GetField(SB.model.teamManager:getAllTeams(), "name")
     self:AddField(ChoiceField({
         name = "team",
         items = teamIds,
@@ -467,8 +467,8 @@ function UnitPropertyWindow:init()
     )
 
     self:Finalize(children)
-    SCEN_EDIT.view.selectionManager:addListener(self)
-    self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
+    SB.view.selectionManager:addListener(self)
+    self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
 end
 
 function CrossProduct(u, v)
@@ -479,16 +479,16 @@ end
 
 function UnitPropertyWindow:CommandExecuted()
     if not self._startedChanging then
-        self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
+        self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
     end
 end
 
 function UnitPropertyWindow:OnStartChange(name)
-    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
+    SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
 function UnitPropertyWindow:OnEndChange(name)
-    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
+    SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
 function UnitPropertyWindow:IsObjectKey(name)
@@ -571,7 +571,7 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
     if #selection.units > 0 then
         objectID = selection.units[1]
         bridge = unitBridge
-        keys = SCEN_EDIT.deepcopy(self.unitKeys)
+        keys = SB.deepcopy(self.unitKeys)
         for _, value in pairs(self.objectKeys) do
             table.insert(keys, value)
         end
@@ -638,7 +638,7 @@ function UnitPropertyWindow:OnFieldChange(name, value)
         return
     end
 
-    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selection = SB.view.selectionManager:GetSelection()
     if #selection.units == 0 and #selection.features == 0 then
         return
     end
@@ -704,7 +704,7 @@ function UnitPropertyWindow:OnFieldChange(name, value)
         end
     end
     local compoundCommand = CompoundCommand(commands)
-    SCEN_EDIT.commandManager:execute(compoundCommand)
+    SB.commandManager:execute(compoundCommand)
 end
 
 function UnitPropertyWindow:GetCommands(objectIDs, name, value, bridge)

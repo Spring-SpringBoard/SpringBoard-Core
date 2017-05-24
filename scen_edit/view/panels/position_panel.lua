@@ -15,13 +15,13 @@ function PositionPanel:MakePredefinedOpt()
         caption = '...',
         right = 40,
         width = 60,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackPositionPanel,
         position = nil,
     }
     self.btnPredefined.OnClick = {
         function()
-            SCEN_EDIT.stateManager:SetState(SelectPositionState(self.btnPredefined))
+            SB.stateManager:SetState(SelectPositionState(self.btnPredefined))
         end
     }
     self.btnPredefined.OnSelectPosition = {
@@ -38,16 +38,16 @@ function PositionPanel:MakePredefinedOpt()
     self.btnPredefinedZoom = Button:New {
         caption = "",
         right = 1,
-        width = SCEN_EDIT.conf.B_HEIGHT,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        width = SB.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackPositionPanel,
         padding = {0, 0, 0, 0},
         children = {
             Image:New {
                 tooltip = "Select position",
-                file=SCEN_EDIT_IMG_DIR .. "search.png",
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                width = SCEN_EDIT.conf.B_HEIGHT,
+                file=SB_IMG_DIR .. "search.png",
+                height = SB.conf.B_HEIGHT,
+                width = SB.conf.B_HEIGHT,
                 padding = {0, 0, 0, 0},
                 margin = {0, 0, 0, 0},
             },

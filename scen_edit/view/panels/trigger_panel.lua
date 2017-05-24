@@ -10,14 +10,14 @@ function TriggerPanel:MakePredefinedOpt()
     }
     local triggerNames = {}
     local triggerIds = {}
-    for id, trigger in pairs(SCEN_EDIT.model.triggerManager:getAllTriggers()) do
+    for id, trigger in pairs(SB.model.triggerManager:getAllTriggers()) do
         table.insert(triggerNames, trigger.name)
         table.insert(triggerIds, trigger.id)
     end
     self.cmbTrigger = ComboBox:New {
         right = 1,
         width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackTriggerPanel,
         items = triggerNames,
         triggerIds = triggerIds,

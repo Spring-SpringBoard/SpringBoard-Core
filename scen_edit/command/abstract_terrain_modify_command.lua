@@ -7,7 +7,7 @@ local function rotate(x, y, angle)
 end
 
 local function generateMap(size, delta, shapeName, rotation)
-    local greyscale = SCEN_EDIT.model.terrainManager:getShape(shapeName)
+    local greyscale = SB.model.terrainManager:getShape(shapeName)
     local sizeX, sizeZ = greyscale.sizeX, greyscale.sizeZ
     local map = { sizeX = sizeX, sizeZ = sizeZ }
     local res = greyscale.res
@@ -143,7 +143,7 @@ function AbstractTerrainModifyCommand:execute()
     -- set it only once
     if self.canExecute == nil then
         -- check if shape is available
-        self.canExecute = SCEN_EDIT.model.terrainManager:getShape(self.opts.shapeName) ~= nil
+        self.canExecute = SB.model.terrainManager:getShape(self.opts.shapeName) ~= nil
     end
     if self.canExecute then
         Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))

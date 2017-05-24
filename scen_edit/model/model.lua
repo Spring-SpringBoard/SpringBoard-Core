@@ -1,8 +1,8 @@
 Model = LCS.class{}
-SCEN_EDIT_MODEL_DIR = SCEN_EDIT_DIR .. "model/"
+SB_MODEL_DIR = SB_DIR .. "model/"
 
 function Model:init()
-    SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_DIR)
+    SB.IncludeDir(SB_MODEL_DIR)
 
     self._lua_rules_pre = "scen_edit"
 
@@ -38,7 +38,7 @@ function Model:Clear()
     end
 
     -- TODO: this should be done in a command instead
-    SCEN_EDIT.commandManager:clearUndoRedoStack()
+    SB.commandManager:clearUndoRedoStack()
 end
 
 function Model:Serialize()

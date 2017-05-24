@@ -6,5 +6,5 @@ function WidgetRemoveVariableCommand:init(id)
 end
 
 function WidgetRemoveVariableCommand:execute()
-    SCEN_EDIT.model.variableManager:removeVariable(self.id)
+    SB.model.variableManager:removeVariable(self.id)
 end

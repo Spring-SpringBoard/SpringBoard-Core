@@ -31,8 +31,8 @@ function gadget:RecvLuaMsg(msg, playerID)
     else
         if op == 'sync' then
             local msgParsed = msg:sub(#(pre .. "|" .. op .. "|") + 1)
-            if SCEN_EDIT.messageManager.compress then
-                msgParsed = SCEN_EDIT.ZlibDecompress(msgParsed)
+            if SB.messageManager.compress then
+                msgParsed = SB.ZlibDecompress(msgParsed)
             end
             local success, msgTable = pcall(function()
                 return assert(loadstring(msgParsed))()
@@ -44,9 +44,9 @@ function gadget:RecvLuaMsg(msg, playerID)
             end
             local msg = Message(msgTable.tag, msgTable.data)
             if msg.tag == 'command' then
-                local cmd = SCEN_EDIT.resolveCommand(msg.data)
-                if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SCEN_EDIT.projectDir ~= nil then
-                    GG.Delay.DelayCall(CommandManager.execute, {SCEN_EDIT.commandManager, cmd})
+                local cmd = SB.resolveCommand(msg.data)
+                if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SB.projectDir ~= nil then
+                    GG.Delay.DelayCall(CommandManager.execute, {SB.commandManager, cmd})
                 else
                     Log.Warning("Command ignored: ", cmd.className)
                 end
@@ -76,10 +76,10 @@ function gadget:Initialize()
     VFS.Include("scen_edit/exports.lua")
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
-    VFS.Include(SCEN_EDIT_DIR .. "util.lua")
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "utils/include.lua")
+    VFS.Include(SB_DIR .. "util.lua")
+    SB.Include(SB_DIR .. "utils/include.lua")
 
-    SCEN_EDIT.displayUtil = DisplayUtil(false)
+    SB.displayUtil = DisplayUtil(false)
 
     -- detect game mode
     local modOpts = Spring.GetModOptions()
@@ -99,50 +99,50 @@ function gadget:Initialize()
     Spring.SetGameRulesParam("sb_gameMode", sb_gameMode)
 
     --FIXME: shouldn't be here(?)
-    SCEN_EDIT.conf = Conf()
-    SCEN_EDIT.metaModel = MetaModel()
+    SB.conf = Conf()
+    SB.metaModel = MetaModel()
 
     --TODO: relocate this
     metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 
-    SCEN_EDIT.model = Model()
+    SB.model = Model()
 
-    SCEN_EDIT.messageManager = MessageManager()
-    SCEN_EDIT.commandManager = CommandManager()
+    SB.messageManager = MessageManager()
+    SB.commandManager = CommandManager()
 
     rtModel = RuntimeModel()
-    SCEN_EDIT.rtModel = rtModel
+    SB.rtModel = rtModel
 
     if sb_gameMode ~= "play" then
         local areaManagerListener = AreaManagerListenerGadget()
-        SCEN_EDIT.model.areaManager:addListener(areaManagerListener)
+        SB.model.areaManager:addListener(areaManagerListener)
 
         local unitManagerListener = UnitManagerListenerGadget()
-        SCEN_EDIT.model.unitManager:addListener(unitManagerListener)
+        SB.model.unitManager:addListener(unitManagerListener)
 
         local featureManagerListener = FeatureManagerListenerGadget()
-        SCEN_EDIT.model.featureManager:addListener(featureManagerListener)
+        SB.model.featureManager:addListener(featureManagerListener)
 
         local variableManagerListener = VariableManagerListenerGadget()
-        SCEN_EDIT.model.variableManager:addListener(variableManagerListener)
+        SB.model.variableManager:addListener(variableManagerListener)
 
         local triggerManagerListener = TriggerManagerListenerGadget()
-        SCEN_EDIT.model.triggerManager:addListener(triggerManagerListener)
+        SB.model.triggerManager:addListener(triggerManagerListener)
 
         local teamManagerListener = TeamManagerListenerGadget()
-        SCEN_EDIT.model.teamManager:addListener(teamManagerListener)
+        SB.model.teamManager:addListener(teamManagerListener)
 
         local scenarioInfoListener = ScenarioInfoListenerGadget()
-        SCEN_EDIT.model.scenarioInfo:addListener(scenarioInfoListener)
+        SB.model.scenarioInfo:addListener(scenarioInfoListener)
     end
     --populate the managers now that the listeners are set
-    SCEN_EDIT.loadFrame = Spring.GetGameFrame() + 1
+    SB.loadFrame = Spring.GetGameFrame() + 1
 end
 
 function Load()
-    SCEN_EDIT.model.unitManager:populate()
-    SCEN_EDIT.model.featureManager:populate()
+    SB.model.unitManager:populate()
+    SB.model.featureManager:populate()
     if hasScenarioFile then
         Log.Notice("Loading the scenario file...")
         local heightmapData = VFS.LoadFile("heightmap.data", VFS.MOD)
@@ -150,8 +150,8 @@ function Load()
         local texturePath = "texturemap/texture.png"
 
         local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
-        SCEN_EDIT.commandManager:execute(CompoundCommand(cmds))
-        SCEN_EDIT.commandManager:execute(LoadTextureCommand(texturePath), true)
+        SB.commandManager:execute(CompoundCommand(cmds))
+        SB.commandManager:execute(LoadTextureCommand(texturePath), true)
 
         if Spring.GetGameRulesParam("sb_gameMode") == "play" then
             StartCommand():execute()
@@ -164,61 +164,61 @@ function gadget:GamePreload()
 end
 
 function gadget:GameFrame(frameNum)
-    SCEN_EDIT.executeDelayed("GameFrame")
-    SCEN_EDIT.rtModel:GameFrame(frameNum)
+    SB.executeDelayed("GameFrame")
+    SB.rtModel:GameFrame(frameNum)
 
     --wait a bit before populating everything (so luaui is loaded)
-    if SCEN_EDIT.loadFrame == frameNum then
+    if SB.loadFrame == frameNum then
         Load()
     end
 end
 
 function gadget:Update()
-    --SCEN_EDIT.executeDelayed()
+    --SB.executeDelayed()
 end
 
 function gadget:TeamDied(teamID)
-	SCEN_EDIT.rtModel:TeamDied(teamID)
+	SB.rtModel:TeamDied(teamID)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
-    SCEN_EDIT.model.unitManager:addUnit(unitID)
-    SCEN_EDIT.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
+    SB.model.unitManager:addUnit(unitID)
+    SB.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
     if Game.gameShortName == "SE MCL" and (unitDefID == 9 or unitDefID == 49) then
         return
     end
-    if not SCEN_EDIT.rtModel.hasStarted then
+    if not SB.rtModel.hasStarted then
         -- FIXME: hack to prevent units being frozen if startCommand is executed in the same frame
         if Spring.GetGameRulesParam("sb_gameMode") == "play" then
             return
         end
         --Spring.MoveCtrl.Enable(unitID)
         --Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
-        SCEN_EDIT.delay(function()
+        SB.delay(function()
             Spring.SetUnitHealth(unitID, { paralyze = math.pow(2, 32) })
         end)
     end
 end
 
 function gadget:UnitDamaged(unitID, unitDefID, unitTeam, damage, paralyzer, weaponDefID, projectileID, attackerID, attackerDefID, attackerTeam)
-	SCEN_EDIT.rtModel:UnitDamaged(unitID)
+	SB.rtModel:UnitDamaged(unitID)
 end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
-    SCEN_EDIT.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
-    SCEN_EDIT.model.unitManager:removeUnit(unitID)
+    SB.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
+    SB.model.unitManager:removeUnit(unitID)
 end
 
 function gadget:UnitFinished(unitID, unitDefID, teamID)
-    SCEN_EDIT.rtModel:UnitFinished(unitID)
+    SB.rtModel:UnitFinished(unitID)
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
-    SCEN_EDIT.model.featureManager:addFeature(featureID)
+    SB.model.featureManager:addFeature(featureID)
 end
 
 function gadget:FeatureDestroyed(featureID, allyTeam)
-    SCEN_EDIT.model.featureManager:removeFeature(featureID)
+    SB.model.featureManager:removeFeature(featureID)
 end
 
 --[[

@@ -31,7 +31,7 @@ function TextureManager:init()
 			engineName = "$ssmf_normals",
 		}
 	}
-    SCEN_EDIT.delayGL(function()
+    SB.delayGL(function()
         self:generateMapTextures()
     end)
 end
@@ -253,7 +253,7 @@ function TextureManager:Blit(tex1, tex2)
 end
 
 function TextureManager:CacheTexture(name)
-    SCEN_EDIT.delayGL(function()
+    SB.delayGL(function()
         if self.cachedTexturesMapping[name] ~= nil then
             return
         end

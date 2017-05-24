@@ -7,10 +7,10 @@ function RemoveAreaCommand:init(areaId)
 end
 
 function RemoveAreaCommand:execute()
-    self.area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
-    SCEN_EDIT.model.areaManager:removeArea(self.areaId)
+    self.area = SB.model.areaManager:getArea(self.areaId)
+    SB.model.areaManager:removeArea(self.areaId)
 end
 
 function RemoveAreaCommand:unexecute()
-    self.areaId = SCEN_EDIT.model.areaManager:addArea(self.area, self.areaId)
+    self.areaId = SB.model.areaManager:addArea(self.area, self.areaId)
 end

@@ -6,9 +6,9 @@ function WidgetSetProjectDirCommand:init(projectDir)
 end
 
 function WidgetSetProjectDirCommand:execute()
-    SCEN_EDIT.projectDir = self.projectDir
-    SCEN_EDIT.conf:initializeListOfMetaModelFiles()
-    local reloadMetaModelCommand = ReloadMetaModelCommand(SCEN_EDIT.conf:GetMetaModelFiles())
-    SCEN_EDIT.commandManager:execute(reloadMetaModelCommand)
-    SCEN_EDIT.commandManager:execute(reloadMetaModelCommand, true)
+    SB.projectDir = self.projectDir
+    SB.conf:initializeListOfMetaModelFiles()
+    local reloadMetaModelCommand = ReloadMetaModelCommand(SB.conf:GetMetaModelFiles())
+    SB.commandManager:execute(reloadMetaModelCommand)
+    SB.commandManager:execute(reloadMetaModelCommand, true)
 end

@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(Path.Join(SCEN_EDIT_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
 TerrainSettingsView = EditorView:extends{}
 
 function TerrainSettingsView:init()
@@ -10,7 +10,7 @@ function TerrainSettingsView:init()
         name = "detailTexture",
         title = "Detail:",
         tooltip = "Detail texture",
-        value = Path.Join(SCEN_EDIT_IMG_DIR, "resources/brush_patterns/detail"),
+        value = Path.Join(SB_IMG_DIR, "resources/brush_patterns/detail"),
     }))
 
     self:AddControl("sun-sep", {
@@ -211,7 +211,7 @@ function TerrainSettingsView:init()
         name = "skyboxTexture",
         title = "Skybox:",
         tooltip = "Skybox texture (requires SkyBox sky)",
-        value = Path.Join(SCEN_EDIT_IMG_DIR, "resources/skyboxes"),
+        value = Path.Join(SB_IMG_DIR, "resources/skyboxes"),
     }))
 
     self:AddControl("atmosphere-fog-sep", {
@@ -626,11 +626,11 @@ function TerrainSettingsView:UpdateWaterRendering()
 end
 
 function TerrainSettingsView:OnStartChange(name)
-    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
+    SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
 function TerrainSettingsView:OnEndChange(name)
-    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
+    SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
 function TerrainSettingsView:OnFieldChange(name, value)
@@ -639,7 +639,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
     end
 
     if name == "detailTexture" then
-        SCEN_EDIT.delayGL(function()
+        SB.delayGL(function()
 --             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
 --
 --             local tex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
@@ -650,7 +650,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
 --             })
 -- 					gl.Texture(item)
 --             Log.Debug(texInfo.xsize, texInfo.ysize, item)
---             SCEN_EDIT.model.textureManager:Blit(item, tex)
+--             SB.model.textureManager:Blit(item, tex)
             local texInfo = gl.TextureInfo(value)
             gl.DeleteTexture(value)
             gl.Texture(value)
@@ -658,7 +658,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
         end)
 
     elseif name == "skyboxTexture" then
-        SCEN_EDIT.delayGL(function()
+        SB.delayGL(function()
 --             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
 --
 --             local tex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
@@ -669,7 +669,7 @@ function TerrainSettingsView:OnFieldChange(name, value)
 --             })
 --             gl.Texture(item)
 --             Log.Debug(texInfo.xsize, texInfo.ysize, item)
---             SCEN_EDIT.model.textureManager:Blit(item, tex)
+--             SB.model.textureManager:Blit(item, tex)
             local texInfo = gl.TextureInfo(value)
             Spring.SetSkyBoxTexture(value)
         end)
@@ -688,21 +688,21 @@ function TerrainSettingsView:OnFieldChange(name, value)
 --             value.orbitTime = nil
 --         end
         local cmd = SetSunParametersCommand(value)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
 
     elseif name == "groundDiffuseColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "groundShadowDensity" or name == "unitAmbientColor" or name == "unitDiffuseColor" or name == "unitSunColor" or name == "modelShadowDensity" then
         local t = {}
         t[name] = value
         local cmd = SetSunLightingCommand(t)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
 
     elseif name == "fogColor" or name == "skyColor" or name == "skyDir" or name == "sunColor" or name == "cloudColor" or name == "fogStart" or name == "fogEnd" then
         local t = {}
         t[name] = value
         local cmd = SetAtmosphereCommand(t)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
     else
         local cmd = SetWaterParamsCommand({[name] = value})
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
     end
 end

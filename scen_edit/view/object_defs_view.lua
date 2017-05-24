@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 
 ObjectDefsView = EditorView:extends{}
 
@@ -10,7 +10,7 @@ function ObjectDefsView:init()
         y = 0,
         tooltip = "Brush",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
             TabbedPanelLabel({ caption = "Brush" }),
         },
         OnClick = {
@@ -25,7 +25,7 @@ function ObjectDefsView:init()
         y = 0,
         tooltip = "Set",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
             TabbedPanelLabel({ caption = "Set" }),
         },
         OnClick = {
@@ -50,7 +50,7 @@ function ObjectDefsView:init()
         ScrollPanel:New {
             x = 1,
 			right = 1,
-			y = SCEN_EDIT.conf.C_HEIGHT * 9,
+			y = SB.conf.C_HEIGHT * 9,
 			height = "50%",
             children = {
                 self.objectDefPanel.control
@@ -62,11 +62,11 @@ function ObjectDefsView:init()
         table.insert(children, self.filters[i])
     end
 
-    local teamIds = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "id")
+    local teamIds = GetField(SB.model.teamManager:getAllTeams(), "id")
 	for i = 1, #teamIds do
 		teamIds[i] = tostring(teamIds[i])
 	end
-	local teamCaptions = GetField(SCEN_EDIT.model.teamManager:getAllTeams(), "name")
+	local teamCaptions = GetField(SB.model.teamManager:getAllTeams(), "name")
 	self:AddField(ChoiceField({
 	    name = "team",
         items = teamIds,
@@ -152,23 +152,23 @@ end
 function UnitDefsView:EnterState()
     if self.type == "set" then
         self:SetInvisibleFields("size", "noise", "spread")
-        SCEN_EDIT.stateManager:SetState(AddUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(AddUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     elseif self.type == "brush" then
         self:SetInvisibleFields("amount")
-        SCEN_EDIT.stateManager:SetState(BrushUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(BrushUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     end
 end
 function UnitDefsView:MakeFilters()
     self.filters = {
         Label:New {
             x = 1,
-            y = 8 + SCEN_EDIT.conf.C_HEIGHT * 5,
+            y = 8 + SB.conf.C_HEIGHT * 5,
             caption = "Type:",
         },
         ComboBox:New {
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             x = 40,
-            y = 1 + SCEN_EDIT.conf.C_HEIGHT * 5,
+            y = 1 + SB.conf.C_HEIGHT * 5,
             items = {
                 "Units", "Buildings", "All",
             },
@@ -184,12 +184,12 @@ function UnitDefsView:MakeFilters()
         Label:New {
             caption = "Terrain:",
             x = 140,
-            y = 8 + SCEN_EDIT.conf.C_HEIGHT * 5,
+            y = 8 + SB.conf.C_HEIGHT * 5,
         },
         ComboBox:New {
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             x = 190,
-            y = 1 + SCEN_EDIT.conf.C_HEIGHT * 5,
+            y = 1 + SB.conf.C_HEIGHT * 5,
             items = {
                 "Ground", "Air", "Water", "All",
             },
@@ -204,13 +204,13 @@ function UnitDefsView:MakeFilters()
         },
         Label:New {
 			x = 1,
-			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			y = 8 + SB.conf.C_HEIGHT * 7,
 			caption = "Search:",
 		},
 		EditBox:New {
-			height = SCEN_EDIT.conf.B_HEIGHT,
+			height = SB.conf.B_HEIGHT,
 			x = 60,
-			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			y = 1 + SB.conf.C_HEIGHT * 7,
 			text = "",
 			width = 90,
 			OnTextInput = {
@@ -237,23 +237,23 @@ end
 function FeatureDefsView:EnterState()
     if self.type == "set" then
         self:SetInvisibleFields("size", "noise", "spread")
-        SCEN_EDIT.stateManager:SetState(AddFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(AddFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     elseif self.type == "brush" then
         self:SetInvisibleFields("amount")
-        SCEN_EDIT.stateManager:SetState(BrushFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(BrushFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     end
 end
 function FeatureDefsView:MakeFilters()
     self.filters = {
         Label:New {
 			x = 1,
-			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 5,
+			y = 8 + SB.conf.C_HEIGHT * 5,
 			caption = "Type:",
 		},
 		ComboBox:New {
-			height = SCEN_EDIT.conf.B_HEIGHT,
+			height = SB.conf.B_HEIGHT,
 			x = 40,
-			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 5,
+			y = 1 + SB.conf.C_HEIGHT * 5,
 			items = {
 				"Other", "Wreckage", "All",
 			},
@@ -268,13 +268,13 @@ function FeatureDefsView:MakeFilters()
 		},
 		Label:New {
 			x = 140,
-			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 5,
+			y = 8 + SB.conf.C_HEIGHT * 5,
 			caption = "Wreck:",
 		},
 		ComboBox:New {
-			height = SCEN_EDIT.conf.B_HEIGHT,
+			height = SB.conf.B_HEIGHT,
 			x = 190,
-			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 5,
+			y = 1 + SB.conf.C_HEIGHT * 5,
 			items = {
 				"Units", "Buildings", "All",
 			},
@@ -290,11 +290,11 @@ function FeatureDefsView:MakeFilters()
 		Label:New {
 			caption = "Terrain:",
 			x = 290,
-			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 5,
+			y = 8 + SB.conf.C_HEIGHT * 5,
 		},
 		ComboBox:New {
-			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 5,
-			height = SCEN_EDIT.conf.B_HEIGHT,
+			y = 1 + SB.conf.C_HEIGHT * 5,
+			height = SB.conf.B_HEIGHT,
 			items = {
 				"Ground", "Air", "Water", "All",
 			},
@@ -310,13 +310,13 @@ function FeatureDefsView:MakeFilters()
 		},
         Label:New {
 			x = 1,
-			y = 8 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			y = 8 + SB.conf.C_HEIGHT * 7,
 			caption = "Search:",
 		},
 		EditBox:New {
-			height = SCEN_EDIT.conf.B_HEIGHT,
+			height = SB.conf.B_HEIGHT,
 			x = 60,
-			y = 1 + SCEN_EDIT.conf.C_HEIGHT * 7,
+			y = 1 + SB.conf.C_HEIGHT * 7,
 			text = "",
 			width = 90,
 			OnTextInput = {

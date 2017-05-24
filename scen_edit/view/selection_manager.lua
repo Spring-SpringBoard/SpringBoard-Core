@@ -7,7 +7,7 @@ function SelectionManager:init()
     self.selectedFeatures = {}
     self.selectedAreas = {}
     self.areaListener = AreaListener(self)
-    SCEN_EDIT.model.areaManager:addListener(self.areaListener)
+    SB.model.areaManager:addListener(self.areaListener)
 end
 
 function SelectionManager:GetSelection()
@@ -24,7 +24,7 @@ function SelectionManager:ClearSelection()
     Spring.SelectUnitArray({}, false)
 
     for _, areaId in pairs(self.selectedAreas) do
-        SCEN_EDIT.view.areaViews[areaId].selected = false
+        SB.view.areaViews[areaId].selected = false
     end
     self.selectedAreas = {}
 
@@ -39,7 +39,7 @@ function SelectionManager:Select(selection)
     self.selectedFeatures = selection.features or {}
     self.selectedAreas = selection.areas or {}
     for _, areaId in pairs(self.selectedAreas) do
-        SCEN_EDIT.view.areaViews[areaId].selected = true
+        SB.view.areaViews[areaId].selected = true
     end
 
     self:callListeners("OnSelectionChanged", self:GetSelection())

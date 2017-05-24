@@ -14,13 +14,13 @@ function AreaPanel:MakePredefinedOpt()
         caption = '...',
         right = 40,
         width = 60,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackAreaPanel,
         areaId = nil,
     }
     self.btnPredefined.OnClick = {
         function()
-            SCEN_EDIT.stateManager:SetState(SelectAreaState(self.btnPredefined))
+            SB.stateManager:SetState(SelectAreaState(self.btnPredefined))
         end
     }
     self.btnPredefined.OnSelectArea = {
@@ -36,16 +36,16 @@ function AreaPanel:MakePredefinedOpt()
     self.btnPredefinedZoom = Button:New {
         caption = "",
         right = 1,
-        width = SCEN_EDIT.conf.B_HEIGHT,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        width = SB.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackAreaPanel,
         padding = {0, 0, 0, 0},
         children = {
             Image:New {
                 tooltip = "Select area",
-                file=SCEN_EDIT_IMG_DIR .. "search.png",
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                width = SCEN_EDIT.conf.B_HEIGHT,
+                file=SB_IMG_DIR .. "search.png",
+                height = SB.conf.B_HEIGHT,
+                width = SB.conf.B_HEIGHT,
                 padding = {0, 0, 0, 0},
                 margin = {0, 0, 0, 0},
             },
@@ -53,7 +53,7 @@ function AreaPanel:MakePredefinedOpt()
         OnClick = {
             function()
                 if self.btnPredefined.areaId ~= nil then
-                    local area = SCEN_EDIT.model.areaManager:getArea(self.btnPredefined.areaId)
+                    local area = SB.model.areaManager:getArea(self.btnPredefined.areaId)
                     if area ~= nil then
                         local x = (area[1] + area[3]) / 2
                         local z = (area[2] + area[4]) / 2

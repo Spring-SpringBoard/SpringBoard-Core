@@ -9,11 +9,11 @@ function EditorView:init(opts)
         width = 100,
         right = 15,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         OnClick = {
             function()
                 self.window:Hide()
-                SCEN_EDIT.stateManager:SetState(DefaultState())
+                SB.stateManager:SetState(DefaultState())
             end
         },
     }
@@ -72,7 +72,7 @@ function EditorView:Finalize(children, opts)
         }
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
-        SCEN_EDIT.view:SetMainPanel(self.window)
+        SB.view:SetMainPanel(self.window)
     else
         table.insert(self.btnClose.OnClick, function()
             self.window:Dispose()
@@ -95,8 +95,8 @@ end
 
 function EditorView:_MEGA_HACK()
     -- FIXME: Mega hack to manually resize the stackPanel since autosize is broken
-    SCEN_EDIT.delay(function()
-    SCEN_EDIT.delay(function()
+    SB.delay(function()
+    SB.delay(function()
     self.stackPanel.resizeItems = false
     local h = 0
     for _, c in pairs(self.stackPanel.children) do
@@ -218,7 +218,7 @@ function EditorView:Update(name, _source)
 
     -- update listeners and current state
     self:OnFieldChange(field.name, field.value)
-    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    local currentState = SB.stateManager:GetCurrentState()
     if self:IsValidTest(currentState) then
         currentState[field.name] = field.value
     end
@@ -239,5 +239,5 @@ function EditorView:_OnEndChange(name)
 end
 
 -- We load these fields last as they might be/contain subclasses of editor view
-SCEN_EDIT_VIEW_FIELDS_DIR = SCEN_EDIT_VIEW_DIR .. "fields/"
-SCEN_EDIT.IncludeDir(SCEN_EDIT_VIEW_FIELDS_DIR)
+SB_VIEW_FIELDS_DIR = SB_VIEW_DIR .. "fields/"
+SB.IncludeDir(SB_VIEW_FIELDS_DIR)

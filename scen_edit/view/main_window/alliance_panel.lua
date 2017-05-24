@@ -5,17 +5,17 @@ function AlliancePanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Alliance settings",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "alliance.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "alliance.png" }),
             TabbedPanelLabel({ caption = "Alliances" }),
         },
         OnClick = {
             function() 
-                if SCEN_EDIT.diplomacyWindow == nil then
+                if SB.diplomacyWindow == nil then
                     self.diplomacyWindow = DiplomacyWindow()
-                    SCEN_EDIT.diplomacyWindow = self.diplomacyWindow
+                    SB.diplomacyWindow = self.diplomacyWindow
                 end
-                if SCEN_EDIT.diplomacyWindow.window.hidden then
-                    SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.diplomacyWindow.window)
+                if SB.diplomacyWindow.window.hidden then
+                    SB.view:SetMainPanel(SB.diplomacyWindow.window)
                 end
             end
         }
@@ -23,17 +23,17 @@ function AlliancePanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Team settings",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "players.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "players.png" }),
             TabbedPanelLabel({ caption = "Teams"}),
         },
         OnClick = {
             function() 
-                if SCEN_EDIT.playersWindow == nil then
+                if SB.playersWindow == nil then
                     self.playersWindow = PlayersWindow()
-                    SCEN_EDIT.playersWindow = self.playersWindow
+                    SB.playersWindow = self.playersWindow
                 end
-                if SCEN_EDIT.playersWindow.window.hidden then
-                    SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.playersWindow.window)
+                if SB.playersWindow.window.hidden then
+                    SB.view:SetMainPanel(SB.playersWindow.window)
                 end
             end
         }

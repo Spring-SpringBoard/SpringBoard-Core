@@ -2,10 +2,10 @@
 LIBS_DIR = "libs/"
 LUAUI_DIR = "LuaUI/"
 
-SCEN_EDIT = {}
-SCEN_EDIT_DIR = "scen_edit/"
-SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
-SCEN_EDIT_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
+SB = {}
+SB_DIR = "scen_edit/"
+SB_COMMAND_DIR = SB_DIR .. "command/"
+SB_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
 
 --FIXME: don't assume path, find it programatically
 --FIXME: not used now
@@ -16,14 +16,14 @@ SB_PROJECTS_DIR = SB_ROOT .. "projects/"
 SB_ASSETS_DIR   = SB_ROOT .. "assets/"
 
 --properties
-SCEN_EDIT_FILE_EXT = ".sdz"
-SCEN_EDIT_FEATURE_PLACER_FILE_EXT = ".lua"
+SB_FILE_EXT = ".sdz"
+SB_FEATURE_PLACER_FILE_EXT = ".lua"
 SB_MAP_INFO_FILE_EXT = ".lua"
 
 --mod opts
 local modOpts = Spring.GetModOptions()
 
-SCEN_EDIT.projectDir = modOpts.project_dir
+SB.projectDir = modOpts.project_dir
 hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 
 --chili export
@@ -55,8 +55,8 @@ end
 
 if WG then
     s11n = WG.s11n
-	WG.SCEN_EDIT = SCEN_EDIT
+	WG.SB = SB
 elseif GG then
     s11n = GG.s11n
-	GG.SCEN_EDIT = SCEN_EDIT
+	GG.SB = SB
 end

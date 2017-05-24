@@ -8,16 +8,16 @@ function RuntimeView:init()
         x = 1,
         height = 45,
         width = 45,
-        backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR,
+        backgroundColor = SB.conf.BTN_ADD_COLOR,
         OnClick = {
             function()
                 if not self.started then
                     local cmd = StartCommand()
-                    SCEN_EDIT.commandManager:execute(cmd)
+                    SB.commandManager:execute(cmd)
                     self:GameStarted()
                 else
                     local cmd = StopCommand()
-                    SCEN_EDIT.commandManager:execute(cmd)
+                    SB.commandManager:execute(cmd)
                     self:GameStopped()
                 end
             end
@@ -45,12 +45,12 @@ function RuntimeView:init()
         x = 55,
         y = 1,
         width= 110,
-        height = SCEN_EDIT.conf.B_HEIGHT + 20,
+        height = SB.conf.B_HEIGHT + 20,
         tooltip = "Toggle displaying of debugging symbols",
         OnClick = {
             function()
-                SCEN_EDIT.view.displayDevelop = not SCEN_EDIT.view.displayDevelop
-                if SCEN_EDIT.view.displayDevelop then
+                SB.view.displayDevelop = not SB.view.displayDevelop
+                if SB.view.displayDevelop then
                     self.btnToggleShowDevelop.caption = 'Hide dev view'
                 else
                     self.btnToggleShowDevelop.caption = 'Show dev view'
@@ -72,7 +72,7 @@ function RuntimeView:init()
                 orientation = 'horizontal',
                 width = '100%',
                 y = 10,
-                height = SCEN_EDIT.conf.B_HEIGHT * 2,
+                height = SB.conf.B_HEIGHT * 2,
                 padding = {0,0,0,0},
                 itemPadding = {0,10,10,10},
                 itemMargin = {0,0,0,0},
@@ -82,7 +82,7 @@ function RuntimeView:init()
                 },
             },
             StackPanel:New {
-                y = SCEN_EDIT.conf.B_HEIGHT * 2 + 10,
+                y = SB.conf.B_HEIGHT * 2 + 10,
                 x = 1,
                 right = 1,
                 bottom = 1,
@@ -121,9 +121,9 @@ function RuntimeView:UpdateStartStopButton()
         self.btnStartStop:AddChild(
             Image:New {
                 tooltip = "Start scenario",
-                file = SCEN_EDIT_IMG_DIR .. "media-playback-start.png",
-                height = SCEN_EDIT.conf.B_HEIGHT - 2,
-                width = SCEN_EDIT.conf.B_HEIGHT - 2,
+                file = SB_IMG_DIR .. "media-playback-start.png",
+                height = SB.conf.B_HEIGHT - 2,
+                width = SB.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
             }
         )
@@ -131,9 +131,9 @@ function RuntimeView:UpdateStartStopButton()
         self.btnStartStop.tooltip = "Stop scenario"
         self.btnStartStop:AddChild(
             Image:New {
-                file = SCEN_EDIT_IMG_DIR .. "media-playback-stop.png",
-                height = SCEN_EDIT.conf.B_HEIGHT - 2,
-                width = SCEN_EDIT.conf.B_HEIGHT - 2,
+                file = SB_IMG_DIR .. "media-playback-stop.png",
+                height = SB.conf.B_HEIGHT - 2,
+                width = SB.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
             }
         )
@@ -143,10 +143,10 @@ end
 function RuntimeView:GameStarted()
     self.started = true
     self:UpdateStartStopButton()
-    self.btnStartStop.backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR
+    self.btnStartStop.backgroundColor = SB.conf.BTN_CANCEL_COLOR
     self.btnStartStop.Update = function(self, ...)
         Chili.Button.Update(self, ...)
-        self.backgroundColor = SCEN_EDIT.deepcopy(SCEN_EDIT.conf.BTN_CANCEL_COLOR)
+        self.backgroundColor = SB.deepcopy(SB.conf.BTN_CANCEL_COLOR)
         self.backgroundColor[4] = 0.5 + math.abs(2 * math.sin(os.clock())) / math.pi
         self:Invalidate()
         self:RequestUpdate()
@@ -156,6 +156,6 @@ end
 function RuntimeView:GameStopped()
     self.started = false
     self:UpdateStartStopButton()
-    self.btnStartStop.backgroundColor = SCEN_EDIT.conf.BTN_ADD_COLOR
+    self.btnStartStop.backgroundColor = SB.conf.BTN_ADD_COLOR
     self.btnStartStop.Update = Chili.Button.Update
 end

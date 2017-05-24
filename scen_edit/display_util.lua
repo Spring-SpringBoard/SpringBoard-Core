@@ -142,7 +142,7 @@ function DisplayUtil:OnFrame()
 end
 
 function DisplayUtil:Draw()
-    if SCEN_EDIT.view == nil or not SCEN_EDIT.view.displayDevelop then
+    if SB.view == nil or not SB.view.displayDevelop then
         return
     end
     for i = 1, #self.texts do    
@@ -160,7 +160,7 @@ function DisplayUtil:displayText(text, coords, color)
         self:AddText(text, coords, color, 300)
     else
         local cmd = WidgetDisplayTextCommand(text, coords, color)
-        SCEN_EDIT.commandManager:execute(cmd, true)
+        SB.commandManager:execute(cmd, true)
     end
 end
 
@@ -169,7 +169,7 @@ function DisplayUtil:unitSay(unit, text)
         self:AddUnitSay(text, unit, 300)
     else
         local cmd = WidgetUnitSayCommand(unit, text)
-        SCEN_EDIT.commandManager:execute(cmd, true)
+        SB.commandManager:execute(cmd, true)
     end
 end
 
@@ -178,6 +178,6 @@ function DisplayUtil:followUnit(unit)
         self.follow = unit
     else
         local cmd = WidgetFollowUnitCommand(unit)
-        SCEN_EDIT.commandManager:execute(cmd, true)
+        SB.commandManager:execute(cmd, true)
     end
 end

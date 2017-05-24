@@ -4,11 +4,11 @@ function ViewAreaManagerListener:init()
 end
 
 function ViewAreaManagerListener:onAreaAdded(areaId)
-    SCEN_EDIT.view.areaViews[areaId] = AreaView(areaId)
+    SB.view.areaViews[areaId] = AreaView(areaId)
 end
 
 function ViewAreaManagerListener:onAreaRemoved(areaId)
-    SCEN_EDIT.view.areaViews[areaId] = nil
+    SB.view.areaViews[areaId] = nil
     if selected == areaId then
         selected = nil
     end

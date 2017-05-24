@@ -6,7 +6,7 @@ function CustomWindow:init(opts)
 end
 
 function CustomWindow:GetValidElementTypes()
-    return SCEN_EDIT.metaModel.functionTypesByOutput[self.dataType.type]
+    return SB.metaModel.functionTypesByOutput[self.dataType.type]
 end
 
 function CustomWindow:GetWindowCaption()

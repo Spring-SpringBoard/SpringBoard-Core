@@ -1,12 +1,12 @@
-SCEN_EDIT.classes = {}
+SB.classes = {}
 -- include this dir
-SCEN_EDIT.classes[SCEN_EDIT_DIR .. "util.lua"] = true
+SB.classes[SB_DIR .. "util.lua"] = true
 
 function MakeComponentPanel(parentPanel)
     local componentPanel = Control:New {
         parent = parentPanel,
         width = "100%",
-        height = SCEN_EDIT.conf.B_HEIGHT + 8,
+        height = SB.conf.B_HEIGHT + 8,
         orientation = "horizontal",
         padding = {0, 0, 0, 0},
         itemMarging = {0, 0, 0, 0},
@@ -17,7 +17,7 @@ function MakeComponentPanel(parentPanel)
 end
 
 --non recursive file include
-function SCEN_EDIT.IncludeDir(dirPath)
+function SB.IncludeDir(dirPath)
     local files = VFS.DirList(dirPath)
     local context = Script.GetName()
     for i = 1, #files do
@@ -27,24 +27,24 @@ function SCEN_EDIT.IncludeDir(dirPath)
             (context ~= "LuaRules" or file:sub(-string.len("_widget.lua")) ~= "_widget.lua") and
             (context ~= "LuaUI" or file:sub(-string.len("_gadget.lua")) ~= "_gadget.lua") then
 
-            SCEN_EDIT.Include(file)
+            SB.Include(file)
         end
     end
 end
 
-function SCEN_EDIT.Include(path)
-    if not SCEN_EDIT.classes[path] then
+function SB.Include(path)
+    if not SB.classes[path] then
         -- mark it included before it's actually included to prevent circular inclusions
-        SCEN_EDIT.classes[path] = true
+        SB.classes[path] = true
         VFS.Include(path)
     end
 end
 
-function SCEN_EDIT.ZlibCompress(str)
+function SB.ZlibCompress(str)
     return tostring(#str) .. "|" .. VFS.ZlibCompress(str)
 end
 
-function SCEN_EDIT.ZlibDecompress(str)
+function SB.ZlibDecompress(str)
     local compressedSize = 0
     local strStart = 0
     for i = 1, #str do
@@ -68,7 +68,7 @@ function CallListeners(listeners, ...)
     end
 end
 
-function SCEN_EDIT.MakeConfirmButton(dialog, btnConfirm)
+function SB.MakeConfirmButton(dialog, btnConfirm)
     dialog.OnConfirm = {}
     btnConfirm.OnClick = {
         function()
@@ -78,7 +78,7 @@ function SCEN_EDIT.MakeConfirmButton(dialog, btnConfirm)
     }
 end
 
-function SCEN_EDIT.MakeRadioButtonGroup(checkBoxes)
+function SB.MakeRadioButtonGroup(checkBoxes)
     for i = 1, #checkBoxes do
         local checkBox = checkBoxes[i]
         table.insert(checkBox.OnChange,
@@ -98,11 +98,11 @@ function SCEN_EDIT.MakeRadioButtonGroup(checkBoxes)
     end
 end
 
-function SCEN_EDIT.checkAreaIntersections(x, z)
-    local areas = SCEN_EDIT.model.areaManager:getAllAreas()
+function SB.checkAreaIntersections(x, z)
+    local areas = SB.model.areaManager:getAllAreas()
     local selected, dragDiffX, dragDiffZ
     for _, areaID in pairs(areas) do
-        local area = SCEN_EDIT.model.areaManager:getArea(areaID)
+        local area = SB.model.areaManager:getArea(areaID)
         local objectX, _, objectZ = areaBridge.spGetObjectPosition(areaID)
         if x >= area[1] and x < area[3] and z >= area[2] and z < area[4] then
             selected = areaID
@@ -113,29 +113,29 @@ function SCEN_EDIT.checkAreaIntersections(x, z)
     return selected, dragDiffX, dragDiffZ
 end
 
-SCEN_EDIT.assignedCursors = {}
-function SCEN_EDIT.SetMouseCursor(name)
-    SCEN_EDIT.cursor = name
-    if SCEN_EDIT.cursor ~= nil then
-        if SCEN_EDIT.assignedCursors[name] == nil then
+SB.assignedCursors = {}
+function SB.SetMouseCursor(name)
+    SB.cursor = name
+    if SB.cursor ~= nil then
+        if SB.assignedCursors[name] == nil then
             Spring.AssignMouseCursor(name, name, false)
-            SCEN_EDIT.assignedCursors[name] = true
+            SB.assignedCursors[name] = true
         end
-        Spring.SetMouseCursor(SCEN_EDIT.cursor)
+        Spring.SetMouseCursor(SB.cursor)
     end
 end
 
-function SCEN_EDIT.MakeSeparator(panel)
+function SB.MakeSeparator(panel)
     local lblSeparator = Line:New {
         parent = panel,
-        height = SCEN_EDIT.conf.B_HEIGHT + 10,
+        height = SB.conf.B_HEIGHT + 10,
         width = "100%",
     }
     return lblSeparator
 end
 
 
-function SCEN_EDIT.CreateNameMapping(origArray)
+function SB.CreateNameMapping(origArray)
     local newArray = {}
     for i = 1, #origArray do
         local item = origArray[i]
@@ -144,7 +144,7 @@ function SCEN_EDIT.CreateNameMapping(origArray)
     return newArray
 end
 
-function SCEN_EDIT.GroupByField(origArray, field)
+function SB.GroupByField(origArray, field)
     local newArray = {}
     for i = 1, #origArray do
         local item = origArray[i]
@@ -214,33 +214,33 @@ function PassToGadget(prefix, tag, data)
     Spring.SendLuaRulesMsg(msg)
 end
 
-SCEN_EDIT.humanExpressionMaxLevel = 3
-function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
+SB.humanExpressionMaxLevel = 3
+function SB.humanExpression(data, exprType, dataType, level)
     local success, data = pcall(function()
 
     if level == nil then
         level = 1
     end
-    if SCEN_EDIT.humanExpressionMaxLevel < level then
+    if SB.humanExpressionMaxLevel < level then
         return "..."
     end
 
     if exprType == "condition" and data.typeName:find("compare_") then
-        local firstExpr = SCEN_EDIT.humanExpression(data.first, "value", nil, level + 1)
+        local firstExpr = SB.humanExpression(data.first, "value", nil, level + 1)
         local relation
         if data.typeName == "compare_number" then
-            relation = SCEN_EDIT.humanExpression(data.relation, "numeric_comparison", nil, level + 1)
+            relation = SB.humanExpression(data.relation, "numeric_comparison", nil, level + 1)
         else
-            relation = SCEN_EDIT.humanExpression(data.relation, "identity_comparison", nil, level + 1)
+            relation = SB.humanExpression(data.relation, "identity_comparison", nil, level + 1)
         end
-        local secondExpr = SCEN_EDIT.humanExpression(data.second, "value", nil, level + 1)
-        local condHumanName = SCEN_EDIT.metaModel.functionTypes[data.typeName].humanName
+        local secondExpr = SB.humanExpression(data.second, "value", nil, level + 1)
+        local condHumanName = SB.metaModel.functionTypes[data.typeName].humanName
         return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
     elseif exprType == "action" then
-        local action = SCEN_EDIT.metaModel.actionTypes[data.typeName]
+        local action = SB.metaModel.actionTypes[data.typeName]
         local humanName = action.humanName .. " ("
         for i, input in pairs(action.input) do
-            humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value", nil, level + 1)
+            humanName = humanName .. SB.humanExpression(data[input.name], "value", nil, level + 1)
             if i ~= #action.input then
                 humanName = humanName .. ", "
             end
@@ -253,7 +253,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         else
             expr = data
         end
-        local exprHumanName = SCEN_EDIT.metaModel.functionTypes[expr.typeName].humanName
+        local exprHumanName = SB.metaModel.functionTypes[expr.typeName].humanName
 
         local paramsStr = ""
         local first = true
@@ -263,7 +263,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
                     paramsStr = paramsStr .. ", "
                 end
                 first = false
-                paramsStr = paramsStr .. SCEN_EDIT.humanExpression(v, "value", k, level + 1)
+                paramsStr = paramsStr .. SB.humanExpression(v, "value", k, level + 1)
             end
         end
         return exprHumanName .. " (" .. paramsStr .. ")"
@@ -278,7 +278,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
                     return dataIdStr
                 end
             elseif dataType == "unit" then
-                local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(data.value)
+                local unitId = SB.model.unitManager:getSpringUnitId(data.value)
                 local dataIdStr = "(id=" .. tostring(data.value) .. ")"
                 if Spring.ValidUnitID(unitId) then
                     local unitDef = UnitDefs[Spring.GetUnitDefID(unitId)]
@@ -298,21 +298,21 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
         elseif data.type == "spec" then
             return data.name
         elseif data.type == "var" then
-            return SCEN_EDIT.model.variableManager:getVariable(data.value).name
+            return SB.model.variableManager:getVariable(data.value).name
         elseif data.orderTypeName then
-            local orderType = SCEN_EDIT.metaModel.orderTypes[data.orderTypeName]
+            local orderType = SB.metaModel.orderTypes[data.orderTypeName]
             local humanName = orderType.humanName
             for i = 1, #orderType.input do
                 local input = orderType.input[i]
-                humanName = humanName .. " " .. SCEN_EDIT.humanExpression(data[input.name], "value", nil, level + 1)
+                humanName = humanName .. " " .. SB.humanExpression(data[input.name], "value", nil, level + 1)
             end
             return humanName
         end
         return "nothing"
     elseif exprType == "numeric_comparison" then
-        return SCEN_EDIT.metaModel.numericComparisonTypes[data.cmpTypeId]
+        return SB.metaModel.numericComparisonTypes[data.cmpTypeId]
     elseif exprType == "identity_comparison" then
-        return SCEN_EDIT.metaModel.identityComparisonTypes[data.cmpTypeId]
+        return SB.metaModel.identityComparisonTypes[data.cmpTypeId]
 	end
     return data.humanName
     end)
@@ -323,11 +323,11 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
     end
 end
 
-function SCEN_EDIT.GenerateTeamColor()
+function SB.GenerateTeamColor()
     return 1, 1, 1, 1 --yeah, ain't it great
 end
 
-function SCEN_EDIT.GetTeams(widget)
+function SB.GetTeams(widget)
     local teams = {}
 
     local gaiaTeamId = Spring.GetGaiaTeamID()
@@ -343,7 +343,7 @@ function SCEN_EDIT.GetTeams(widget)
             team.ai = true -- TODO: maybe get the exact AI as well?
         end
 
-        local r, g, b, a = SCEN_EDIT.GenerateTeamColor()--Spring.GetTeamColor(teamId)
+        local r, g, b, a = SB.GenerateTeamColor()--Spring.GetTeamColor(teamId)
         if widget then
             r, g, b, a = Spring.GetTeamColor(team.id)
         end
@@ -389,7 +389,7 @@ end
 
 local function hintCtrlFunction(ctrl, startTime, timeout, color)
     local deltaTime = os.clock() - startTime
-    local newColor = SCEN_EDIT.deepcopy(color)
+    local newColor = SB.deepcopy(color)
     newColor[4] = 0.2 + math.abs(math.sin(deltaTime * 6) / 3.14)
 
     if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
@@ -398,7 +398,7 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
         ctrl.backgroundColor = newColor
     end
     ctrl:Invalidate()
-    SCEN_EDIT.delay(
+    SB.delay(
         function()
             if os.clock() - startTime < timeout then
                 hintCtrlFunction(ctrl, startTime, timeout, color)
@@ -416,7 +416,7 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
 end
 
 
-function SCEN_EDIT.HintControl(control, color, timeout)
+function SB.HintControl(control, color, timeout)
     timeout = timeout or 1
     color = color or {1, 0, 0, 1}
     local childControls = filterControls(control)
@@ -424,23 +424,23 @@ function SCEN_EDIT.HintControl(control, color, timeout)
     for _, childControl in pairs(childControls) do
         if childControl._originalColor == nil then
             if childControl.classname == "label" or childControl.classname == "checkbox" or childControl.classname == "editbox" then
-                childControl._originalColor = SCEN_EDIT.deepcopy(childControl.font.color)
+                childControl._originalColor = SB.deepcopy(childControl.font.color)
             else
-                childControl._originalColor = SCEN_EDIT.deepcopy(childControl.backgroundColor)
+                childControl._originalColor = SB.deepcopy(childControl.backgroundColor)
             end
             hintCtrlFunction(childControl, startTime, timeout, color)
         end
     end
 end
 
-function SCEN_EDIT.SetClassName(class, className)
+function SB.SetClassName(class, className)
     class.className = className
-    if SCEN_EDIT.commandManager:getCommandType(className) == nil then
-        SCEN_EDIT.commandManager:addCommandType(className, class)
+    if SB.commandManager:getCommandType(className) == nil then
+        SB.commandManager:addCommandType(className, class)
     end
 end
 
-function SCEN_EDIT.resolveCommand(cmdTable)
+function SB.resolveCommand(cmdTable)
     local cmd = {}
     if cmdTable.className then
         local env = getfenv(1)
@@ -448,7 +448,7 @@ function SCEN_EDIT.resolveCommand(cmdTable)
     end
     for k, v in pairs(cmdTable) do
         if type(v) == "table" then
-            cmd[k] = SCEN_EDIT.resolveCommand(v)
+            cmd[k] = SB.resolveCommand(v)
         else
             cmd[k] = v
         end
@@ -456,13 +456,13 @@ function SCEN_EDIT.resolveCommand(cmdTable)
     return cmd
 end
 
-function SCEN_EDIT.deepcopy(t)
+function SB.deepcopy(t)
     if type(t) ~= 'table' then return t end
     local mt = getmetatable(t)
     local res = {}
     for k,v in pairs(t) do
         if type(v) == 'table' then
-            v = SCEN_EDIT.deepcopy(v)
+            v = SB.deepcopy(v)
         end
         res[k] = v
     end
@@ -470,12 +470,12 @@ function SCEN_EDIT.deepcopy(t)
     return res
 end
 
-function SCEN_EDIT.GiveOrderToUnit(unitId, orderType, params)
+function SB.GiveOrderToUnit(unitId, orderType, params)
     Spring.GiveOrderToUnit(unit, CMD.INSERT,
         { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
 end
 
-function SCEN_EDIT.createNewPanel(opts)
+function SB.createNewPanel(opts)
     local dataTypeName = opts.dataType.type
     if dataTypeName == "unit" then
         return UnitPanel(opts)
@@ -513,54 +513,54 @@ function SCEN_EDIT.createNewPanel(opts)
     Log.Error("No panel for this data: " .. tostring(dataTypeName))
 end
 
-SCEN_EDIT.delayed = {
+SB.delayed = {
 --     Update      = {},
     GameFrame   = {},
     DrawWorld   = {},
     DrawScreen  = {},
 }
-function SCEN_EDIT.delayGL(func, params)
-    SCEN_EDIT.Delay("DrawWorld", func, params)
+function SB.delayGL(func, params)
+    SB.Delay("DrawWorld", func, params)
 end
-function SCEN_EDIT.delay(func, params)
-    SCEN_EDIT.Delay("GameFrame", func, params)
+function SB.delay(func, params)
+    SB.Delay("GameFrame", func, params)
 end
-function SCEN_EDIT.Delay(name, func, params)
-    local delayed = SCEN_EDIT.delayed[name]
+function SB.Delay(name, func, params)
+    local delayed = SB.delayed[name]
     table.insert(delayed, {func, params or {}})
 end
 
-function SCEN_EDIT.executeDelayed(name)
-    local delayed = SCEN_EDIT.delayed[name]
-    SCEN_EDIT.delayed[name] = {}
+function SB.executeDelayed(name)
+    local delayed = SB.delayed[name]
+    SB.delayed[name] = {}
     for i, call in pairs(delayed) do
         xpcall(function() call[1](unpack(call[2])) end,
               function(err) Log.Error(debug.traceback(err)) end )
     end
 end
 
-function SCEN_EDIT.glToFontColor(color)
+function SB.glToFontColor(color)
     return "\255" ..
         string.char(math.ceil(255 * color.r)) ..
         string.char(math.ceil(255 * color.g)) ..
         string.char(math.ceil(255 * color.b))
 end
 
-function SCEN_EDIT.SetControlEnabled(control, enabled)
+function SB.SetControlEnabled(control, enabled)
     control.disableChildrenHitTest = not enabled
     control:Invalidate()
     for _, childCtrl in pairs(control.childrenByName) do
-        SCEN_EDIT.SetControlEnabled(childCtrl, enabled)
+        SB.SetControlEnabled(childCtrl, enabled)
     end
 end
 
-function SCEN_EDIT.DirExists(path, ...)
+function SB.DirExists(path, ...)
     return (#VFS.SubDirs(path, "*", ...) + #VFS.DirList(path, "*", ...)) ~= 0
 end
 
 local warningsIssued = {}
 
-function SCEN_EDIT.MinVersion(versionNumber, feature)
+function SB.MinVersion(versionNumber, feature)
     if Script.IsEngineMinVersion == nil or not Script.IsEngineMinVersion(versionNumber) then
         if warningsIssued[feature] == nil then
             Log.Warning(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
@@ -571,7 +571,7 @@ function SCEN_EDIT.MinVersion(versionNumber, feature)
     return true
 end
 
-function SCEN_EDIT.FunctionExists(fun, feature)
+function SB.FunctionExists(fun, feature)
     if fun ~= nil then
         if warningsIssued[feature] == nil then
             Log.Warning(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))

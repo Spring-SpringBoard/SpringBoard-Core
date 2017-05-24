@@ -14,7 +14,7 @@ function EventWindow:init(opts)
 end
 
 function EventWindow:GetValidElementTypes()
-    return SCEN_EDIT.metaModel.eventTypes
+    return SB.metaModel.eventTypes
 end
 
 function EventWindow:GetWindowCaption()

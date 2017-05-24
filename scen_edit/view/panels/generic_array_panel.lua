@@ -30,7 +30,7 @@ function GenericArrayPanel:MakePredefinedOpt()
         caption = '+',
         right = 40,
         width = 60,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = addPanel,
         OnClick= {
             function()
@@ -44,7 +44,7 @@ function GenericArrayPanel:MakePredefinedOpt()
 end
 
 function GenericArrayPanel:AddElement()
-	local subPanel = SCEN_EDIT.createNewPanel({
+	local subPanel = SB.createNewPanel({
         dataType = {
             type = self.atomicType,
             sources = self.sources
@@ -54,7 +54,7 @@ function GenericArrayPanel:AddElement()
         params = {},
     })
     table.insert(self.elements, subPanel)
-	SCEN_EDIT.MakeSeparator(self.subPanels)
+	SB.MakeSeparator(self.subPanels)
 end
 
 function GenericArrayPanel:UpdateModel(field)

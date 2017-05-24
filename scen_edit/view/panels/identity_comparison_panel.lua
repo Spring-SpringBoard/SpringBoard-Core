@@ -10,9 +10,9 @@ function IdentityComparisonPanel:MakePredefinedOpt()
     self.cmbCmpType = ComboBox:New {
         right = 1,
         width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackIdentityComparisonPanel,
-        items = SCEN_EDIT.metaModel.identityComparisonTypes,
+        items = SB.metaModel.identityComparisonTypes,
     }
 end
 

@@ -1,4 +1,4 @@
-SCEN_EDIT_COMMAND_DIR = SCEN_EDIT_DIR .. "command/"
+SB_COMMAND_DIR = SB_DIR .. "command/"
 
 CommandManager = LCS.class{maxUndoSize = 30, maxRedoSize = 30}
 
@@ -7,9 +7,9 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.maxRedoSize = maxRedoSize
     self.undoList = {}
     self.redoList = {}
-    SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'abstract_command.lua')
-    SCEN_EDIT.Include(SCEN_EDIT_COMMAND_DIR .. 'undoable_command.lua')
-    SCEN_EDIT.IncludeDir(SCEN_EDIT_COMMAND_DIR)
+    SB.Include(SB_COMMAND_DIR .. 'abstract_command.lua')
+    SB.Include(SB_COMMAND_DIR .. 'undoable_command.lua')
+    SB.IncludeDir(SB_COMMAND_DIR)
     --TODO: implement player lock
     self.playerLock = nil --if set, it defines the id of the only player who can do commands
     self.multipleCommandStack = {}
@@ -81,7 +81,7 @@ function CommandManager:_SendCommand(cmd)
     self.idCount = self.idCount + 1
     cmd.__cmd_id = self.idCount
     local msg = Message("command", cmd)
-    SCEN_EDIT.messageManager:sendMessage(msg)
+    SB.messageManager:sendMessage(msg)
     return cmd.__cmd_id
 end
 
@@ -150,7 +150,7 @@ end
 function CommandManager:undo()
     if self.widget then
         local msg = Message("command", UndoCommand())
-        SCEN_EDIT.messageManager:sendMessage(msg)
+        SB.messageManager:sendMessage(msg)
         return
     end
     assert(not self.multipleCommandMode, "Cannot undo while in multiple command mode")
@@ -168,7 +168,7 @@ end
 function CommandManager:redo()
     if self.widget then
         local msg = Message("command", RedoCommand())
-        SCEN_EDIT.messageManager:sendMessage(msg)
+        SB.messageManager:sendMessage(msg)
         return
     end
     assert(not self.multipleCommandMode, "Cannot redo while in multiple command mode")

@@ -7,7 +7,7 @@ function WidgetUpdateAreaCommand:init(id, mapping)
 end
 
 function WidgetUpdateAreaCommand:execute()
-    local area = SCEN_EDIT.model.areaManager:getArea(self.id)
+    local area = SB.model.areaManager:getArea(self.id)
     for k, v in pairs(self.mapping) do
         area[k] = v
     end

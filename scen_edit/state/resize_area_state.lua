@@ -5,15 +5,15 @@ function ResizeAreaState:init(areaId, resx, resz)
     self.resx, self.resz = resx, resz
 
     if self.resx ~= 0 and self.resz == 0 then
-        SCEN_EDIT.SetMouseCursor("resize-x")
+        SB.SetMouseCursor("resize-x")
     elseif self.resx == 0 and self.resz ~= 0 then
-        SCEN_EDIT.SetMouseCursor("resize-y")
+        SB.SetMouseCursor("resize-y")
     elseif self.resx * self.resz < 0 then
-        SCEN_EDIT.SetMouseCursor("resize-x-y-0")
+        SB.SetMouseCursor("resize-x-y-0")
     else
-        SCEN_EDIT.SetMouseCursor("resize-x-y-1")
+        SB.SetMouseCursor("resize-x-y-1")
     end
-    local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
+    local area = SB.model.areaManager:getArea(self.areaId)
     self.x1, self.z1, self.x2, self.z2 = unpack(area)
     self.areaView = AreaView(self.areaId)
 end
@@ -21,7 +21,7 @@ end
 function ResizeAreaState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
-        local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
+        local area = SB.model.areaManager:getArea(self.areaId)
         if self.resx == -1 then
             self.x1 = coords[1] + drag_diff_x 
         elseif self.resx == 1 then
@@ -36,7 +36,7 @@ function ResizeAreaState:MouseMove(x, y, dx, dy, button)
 end
 
 function ResizeAreaState:MouseRelease(x, y, button)
-    local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
+    local area = SB.model.areaManager:getArea(self.areaId)
     if self.x1 > self.x2 then
         self.x1, self.x2 = self.x2, self.x1
     end
@@ -44,8 +44,8 @@ function ResizeAreaState:MouseRelease(x, y, button)
         self.z1, self.z2 = self.z2, self.z1
     end
     local cmd = ResizeAreaCommand(self.areaId, self.x1, self.z1, self.x2, self.z2)
-    SCEN_EDIT.commandManager:execute(cmd)
-    SCEN_EDIT.stateManager:SetState(DefaultState())
+    SB.commandManager:execute(cmd)
+    SB.stateManager:SetState(DefaultState())
 end
 
 function ResizeAreaState:DrawWorld()

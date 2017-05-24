@@ -1,9 +1,9 @@
-SCEN_EDIT_MODEL_RUNTIME_DIR = SCEN_EDIT_MODEL_DIR .. "runtime_model/"
+SB_MODEL_RUNTIME_DIR = SB_MODEL_DIR .. "runtime_model/"
 
 RuntimeModel = LCS.class{}
 
 function RuntimeModel:init()
-    SCEN_EDIT.IncludeDir(SCEN_EDIT_MODEL_RUNTIME_DIR)
+    SB.IncludeDir(SB_MODEL_RUNTIME_DIR)
     self.areaModels = {}
     self.lastFrameUnitIds = {}
     self.fieldResolver = FieldResolver()
@@ -14,8 +14,8 @@ function RuntimeModel:init()
     -- they are disabled and won't be added
     self.error_triggers = {}
 
-    SCEN_EDIT.model.areaManager:addListener(self)
-    SCEN_EDIT.model.triggerManager:addListener(self)
+    SB.model.areaManager:addListener(self)
+    SB.model.triggerManager:addListener(self)
 end
 
 function RuntimeModel:CanTrackUnit(unitDefId)
@@ -40,13 +40,13 @@ function RuntimeModel:LoadMission()
 
     self.error_triggers = {}
 
-    local areas = SCEN_EDIT.model.areaManager:getAllAreas()
+    local areas = SB.model.areaManager:getAllAreas()
     for _, id in pairs(areas) do
         self:onAreaAdded(id)
     end
 
     self.eventTriggers = {}
-    local triggers = SCEN_EDIT.model.triggerManager:getAllTriggers()
+    local triggers = SB.model.triggerManager:getAllTriggers()
     for _, trigger in pairs(triggers) do
         self:onTriggerAdded(trigger.id)
     end
@@ -56,8 +56,8 @@ function RuntimeModel:onTriggerAdded(triggerId)
     if not self.startListening then
         return
     end
-    local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
-    local success, msg = SCEN_EDIT.model.triggerManager:ValidateTrigger(trigger)
+    local trigger = SB.model.triggerManager:getTrigger(triggerId)
+    local success, msg = SB.model.triggerManager:ValidateTrigger(trigger)
     if not success then
         Log.Warning("Trigger error: " .. tostring(triggerId) .. ". " .. tostring(msg))
         self.error_triggers[triggerId] = true
@@ -173,7 +173,7 @@ function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
     if not self.hasStarted then
         return
     end
-    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_CREATE"] then
         for k = 1, #self.eventTriggers["UNIT_CREATE"] do
             local params = { triggerUnitId = modelUnitId }
@@ -187,7 +187,7 @@ function RuntimeModel:UnitDamaged(unitId)
     if not self.hasStarted then
         return
     end
-    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_DAMAGE"] then
         for k = 1, #self.eventTriggers["UNIT_DAMAGE"] do
             local params = { triggerUnitId = modelUnitId }
@@ -202,7 +202,7 @@ function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attac
     if not self.hasStarted then
         return
     end
-    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_DESTROY"] then
         for k = 1, #self.eventTriggers["UNIT_DESTROY"] do
             local params = { triggerUnitId = modelUnitId }
@@ -216,7 +216,7 @@ function RuntimeModel:UnitFinished(unitId)
     if not self.hasStarted then
         return
     end
-    local modelUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(unitId)
+    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
     if self.eventTriggers["UNIT_FINISH"] then
         for k = 1, #self.eventTriggers["UNIT_FINISH"] do
             local params = { triggerUnitId = modelUnitId }
@@ -248,7 +248,7 @@ function RuntimeModel:GameFrame(frameNum)
             local area = areaModel.area
             if self.eventTriggers["UNIT_ENTER_AREA"] then
                 for j = 1, #results.entered do
-                    local enteredUnitId = SCEN_EDIT.model.unitManager:getModelUnitId(results.entered[j])
+                    local enteredUnitId = SB.model.unitManager:getModelUnitId(results.entered[j])
                     for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
                         local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]
                         local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
@@ -295,7 +295,7 @@ end
 
 function RuntimeModel:ActionStep(trigger, params)
     for _, action in pairs(trigger.actions) do
-        local actionType = SCEN_EDIT.metaModel.actionTypes[action.typeName]
+        local actionType = SB.metaModel.actionTypes[action.typeName]
         self.fieldResolver:CallExpression(action, actionType, params, true)
     end
 end
@@ -310,7 +310,7 @@ function RuntimeModel:ExecuteTriggerActions(triggerId)
         return
     end
 
-    local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+    local trigger = SB.model.triggerManager:getTrigger(triggerId)
     self:ActionStep(trigger, {})
 end
 
@@ -324,13 +324,13 @@ function RuntimeModel:ExecuteTrigger(triggerId)
         return
     end
 
-    local trigger = SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
+    local trigger = SB.model.triggerManager:getTrigger(triggerId)
     self:ConditionStep(trigger, {})
 end
 
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
     for _, condition in pairs(trigger.conditions) do
-        local conditionType = SCEN_EDIT.metaModel.functionTypes[condition.typeName]
+        local conditionType = SB.metaModel.functionTypes[condition.typeName]
         local result = self.fieldResolver:CallExpression(condition, conditionType, params)
         if not result then
             return false
@@ -341,5 +341,5 @@ end
 
 function RuntimeModel:ExecuteUnsynced(typeName, resolvedInputs)
     local cmd = WidgetExecuteUnsyncedActionCommand(typeName, resolvedInputs)
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end

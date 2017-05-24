@@ -36,7 +36,7 @@ function ExportMapsCommand:GetShaderObj()
 end
 
 function ExportMapsCommand:execute()
-    SCEN_EDIT.delayGL(function()
+    SB.delayGL(function()
         -- create dir just to be sure
         Spring.CreateDir(self.path)
 
@@ -125,7 +125,7 @@ function ExportMapsCommand:execute()
         gl.DeleteTexture(grassTexture)
 
 		-- specular
-		for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+		for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
 			local texPath = Path.Join(self.path, texType .. ".png")
 			Log.Notice("Saving the " .. texType .. " to " .. texPath .. "...")
 
@@ -174,13 +174,13 @@ function ExportMapsCommand:execute()
         local totalMapFBO = gl.CreateFBO({
             color0 = totalMapTexture
         })
-        local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
+        local texSize = SB.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
         local sizeZ = math.floor(Game.mapSizeZ / texSize)
         local mapFBO
         for i = 0, sizeX do
             for j = 0, sizeZ do
-                local mapTextureObj = SCEN_EDIT.model.textureManager.mapFBOTextures[i][j]
+                local mapTextureObj = SB.model.textureManager.mapFBOTextures[i][j]
 
                 local mapTexture = mapTextureObj.texture
                 mapFBO = gl.CreateFBO({

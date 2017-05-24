@@ -6,7 +6,7 @@ function RotateObjectState:init()
         features = {},
         areas = {},
     }
-    SCEN_EDIT.SetMouseCursor("resize-x")
+    SB.SetMouseCursor("resize-x")
 end
 
 function RotateObjectState:GetRotatedObject(params, bridge)
@@ -52,7 +52,7 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
 
-        local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+        local selection = SB.view.selectionManager:GetSelection()
         local selCount = #selection.units + #selection.features + #selection.areas
         self.ghostViews = {
             units = {},
@@ -119,7 +119,7 @@ function RotateObjectState:MouseRelease(x, y, button)
     local commands = {}
 
     for objectID, object in pairs(self.ghostViews.units) do
-        local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
+        local modelID = SB.model.unitManager:getModelUnitId(objectID)
         local cmd = SetUnitParamCommand(modelID, {
             dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
             pos = object.pos
@@ -127,7 +127,7 @@ function RotateObjectState:MouseRelease(x, y, button)
         table.insert(commands, cmd)
     end
     for objectID, object in pairs(self.ghostViews.features) do
-        local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
+        local modelID = SB.model.featureManager:getModelFeatureId(objectID)
         local cmd = SetFeatureParamCommand(modelID, {
             dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
             pos = object.pos
@@ -135,7 +135,7 @@ function RotateObjectState:MouseRelease(x, y, button)
         table.insert(commands, cmd)
     end
     for objectID, object in pairs(self.ghostViews.areas) do
-        local x1, z1, x2, z2 = unpack(SCEN_EDIT.model.areaManager:getArea(objectID))
+        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(objectID))
         local pos = object.pos
         local mx, _, mz = areaBridge.spGetObjectPosition(objectID)
         local dx, dz = pos.x - mx, pos.z - mz
@@ -144,9 +144,9 @@ function RotateObjectState:MouseRelease(x, y, button)
     end
 
     local compoundCommand = CompoundCommand(commands)
-    SCEN_EDIT.commandManager:execute(compoundCommand)
+    SB.commandManager:execute(compoundCommand)
 
-    SCEN_EDIT.stateManager:SetState(DefaultState())
+    SB.stateManager:SetState(DefaultState())
 end
 
 function RotateObjectState:DrawObject(objectID, object, bridge, shaderObj)
@@ -165,7 +165,7 @@ end
 function RotateObjectState:DrawWorld()
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
-    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    local shaderObj = SB.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
     for objectID, object in pairs(self.ghostViews.units) do
@@ -176,7 +176,7 @@ function RotateObjectState:DrawWorld()
     end
     gl.UseShader(0)
     for objectID, object in pairs(self.ghostViews.areas) do
-        local x1, z1, x2, z2 = unpack(SCEN_EDIT.model.areaManager:getArea(objectID))
+        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(objectID))
         local mx, _, mz = areaBridge.spGetObjectPosition(objectID)
         local dx, dz = object.pos.x - mx, object.pos.z - mz
         local areaView = AreaView(objectID)

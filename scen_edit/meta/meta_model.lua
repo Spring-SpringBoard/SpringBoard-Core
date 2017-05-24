@@ -1,8 +1,8 @@
 MetaModel = LCS.class{}
-SCEN_EDIT_META_MODEL_DIR = SCEN_EDIT_DIR .. "meta/"
+SB_META_MODEL_DIR = SB_DIR .. "meta/"
 
 function MetaModel:init()
-    SCEN_EDIT.IncludeDir(SCEN_EDIT_META_MODEL_DIR)
+    SB.IncludeDir(SB_META_MODEL_DIR)
 
     self.numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
     self.identityComparisonTypes = {"is", "is not"} -- maybe use more user friendly signs
@@ -14,10 +14,10 @@ end
 
 function MetaModel:SetEventTypes(eventTypes)
     self.eventTypes = eventTypes
-    self.eventTypes = SCEN_EDIT.CreateNameMapping(self.eventTypes)
+    self.eventTypes = SB.CreateNameMapping(self.eventTypes)
     for _, eventType in pairs(eventTypes) do
         if eventType.param ~= nil then
-            eventType.param = SCEN_EDIT.parseData(eventType.param)
+            eventType.param = SB.parseData(eventType.param)
         else
             eventType.param = {}
         end
@@ -27,12 +27,12 @@ end
 function MetaModel:SetFunctionTypes(functionTypes)
     for _, functionType in pairs(functionTypes) do
         if functionType.input ~= nil then
-            functionType.input = SCEN_EDIT.parseData(functionType.input)
+            functionType.input = SB.parseData(functionType.input)
         else
             functionType.input = {}
         end
     end
-    self.functionTypes = SCEN_EDIT.CreateNameMapping(functionTypes)
+    self.functionTypes = SB.CreateNameMapping(functionTypes)
     self.functionTypesByInput = {}
     for _, functionDef in pairs(self.functionTypes) do
         for _, input in pairs(functionDef.input) do
@@ -43,24 +43,24 @@ function MetaModel:SetFunctionTypes(functionTypes)
             end
         end
     end
-    self.functionTypesByOutput = SCEN_EDIT.GroupByField(functionTypes, "output")
+    self.functionTypesByOutput = SB.GroupByField(functionTypes, "output")
 
     -- fill missing
     for k, v in pairs(self.functionTypesByInput) do
-        self.functionTypesByInput[k] = SCEN_EDIT.CreateNameMapping(v)
+        self.functionTypesByInput[k] = SB.CreateNameMapping(v)
     end
     for k, v in pairs(self.functionTypesByOutput) do
-        self.functionTypesByOutput[k] = SCEN_EDIT.CreateNameMapping(v)
+        self.functionTypesByOutput[k] = SB.CreateNameMapping(v)
     end
     --[[
-    local coreTypes = SCEN_EDIT.coreTypes()
+    local coreTypes = SB.coreTypes()
     for i = 1, #coreTypes do
         local coreType = coreTypes[i]
         if self.functionTypesByInput[coreType.name] then
-            self.functionTypesByInput[coreType.name] = SCEN_EDIT.CreateNameMapping(self.functionTypesByInput[coreType.name])
+            self.functionTypesByInput[coreType.name] = SB.CreateNameMapping(self.functionTypesByInput[coreType.name])
         end
         if self.functionTypesByOutput[coreType.name] then
-            self.functionTypesByOutput[coreType.name] = SCEN_EDIT.CreateNameMapping(self.functionTypesByOutput[coreType.name])
+            self.functionTypesByOutput[coreType.name] = SB.CreateNameMapping(self.functionTypesByOutput[coreType.name])
         end
     end
     --]]
@@ -69,12 +69,12 @@ end
 function MetaModel:SetActionTypes(actionTypes)
     for _, actionType in pairs(actionTypes) do
         if actionType.input ~= nil then
-            actionType.input = SCEN_EDIT.parseData(actionType.input)
+            actionType.input = SB.parseData(actionType.input)
         else
             actionType.input = {}
         end
     end
-    self.actionTypes = SCEN_EDIT.CreateNameMapping(actionTypes)
+    self.actionTypes = SB.CreateNameMapping(actionTypes)
 end
 
 function MetaModel:SetVariableTypes()
@@ -92,7 +92,7 @@ end
 --TODO: abstract order types out of the meta model
 function MetaModel:SetOrderTypes(orderTypes)
     for _, orderType in pairs(orderTypes) do
-        orderType.input = SCEN_EDIT.parseData(orderType.input)
+        orderType.input = SB.parseData(orderType.input)
     end
-    self.orderTypes = SCEN_EDIT.CreateNameMapping(orderTypes)
+    self.orderTypes = SB.CreateNameMapping(orderTypes)
 end

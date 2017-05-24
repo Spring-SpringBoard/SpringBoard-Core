@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "file_dialog.lua")
+SB.Include(SB_VIEW_DIR .. "file_dialog.lua")
 
 OpenProjectDialog = FileDialog:extends{}
 
@@ -22,7 +22,7 @@ end
 -- FIXME: This could probably be moved somewhere else
 function OpenProjectDialog:DirIsProject(path)
     if not (VFS.FileExists(path, VFS.RAW_ONLY) or
-            SCEN_EDIT.DirExists(path, VFS.RAW_ONLY)) then
+            SB.DirExists(path, VFS.RAW_ONLY)) then
         return false
     end
 

@@ -15,7 +15,7 @@ function MetaModelLoader:AttemptToLoadFile(metaModelFile)
 end
 
 function MetaModelLoader:Load()
-    local metaModelFiles = SCEN_EDIT.conf:GetMetaModelFiles()
+    local metaModelFiles = SB.conf:GetMetaModelFiles()
     local metaTypes = {"functions", "actions", "orders", "events"}
     local metaModels = {}
 
@@ -74,8 +74,8 @@ function MetaModelLoader:Load()
     Log.Notice("Function types: " .. #mergedMetaModel.functions)
     Log.Notice("Action types: " .. #mergedMetaModel.actions)
     Log.Notice("Order types: " .. #mergedMetaModel.orders)
-    SCEN_EDIT.metaModel:SetEventTypes(mergedMetaModel.events)
-    SCEN_EDIT.metaModel:SetFunctionTypes(mergedMetaModel.functions)
-    SCEN_EDIT.metaModel:SetActionTypes(mergedMetaModel.actions)
-    SCEN_EDIT.metaModel:SetOrderTypes(mergedMetaModel.orders)
+    SB.metaModel:SetEventTypes(mergedMetaModel.events)
+    SB.metaModel:SetFunctionTypes(mergedMetaModel.functions)
+    SB.metaModel:SetActionTypes(mergedMetaModel.actions)
+    SB.metaModel:SetOrderTypes(mergedMetaModel.orders)
 end

@@ -11,22 +11,22 @@ function DragObjectState:init(objectID, startDiffX, startDiffZ)
         features = {},
         areas = {},
     }
-    SCEN_EDIT.SetMouseCursor("drag")
+    SB.SetMouseCursor("drag")
 end
 
 -- function DragObjectState:GameFrame(frameNum)
---     local objectIDs = SCEN_EDIT.view.selectionManager:GetSelection().units
+--     local objectIDs = SB.view.selectionManager:GetSelection().units
 --     for i = 1, #objectIDs do
 --         local objectID = objectIDs[i]
 --         if not Spring.ValidUnitID(objectID) or Spring.GetUnitIsDead(objectID) then
---             SCEN_EDIT.stateManager:SetState(DefaultState())
+--             SB.stateManager:SetState(DefaultState())
 --             return false
 --         end
 --     end
 -- end
 
 function DragObjectState:GetMovedObjects()
-    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selection = SB.view.selectionManager:GetSelection()
     local objects = {
         units = {},
         features = {},
@@ -45,7 +45,7 @@ function DragObjectState:GetMovedObjects()
         objects.features[featureID] = { pos = position }
     end
     for _, areaID in pairs(selection.areas) do
-        local x1, z1, x2, z2 = unpack(SCEN_EDIT.model.areaManager:getArea(areaID))
+        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(areaID))
         local position = { x1 = x1 + self.dx, z1 = z1 + self.dz, x2 = x2 + self.dx, z2 = z2 + self.dz}
         objects.areas[areaID] = { pos = position }
     end
@@ -59,7 +59,7 @@ function DragObjectState:MouseMove(x, y, dx, dy, button)
     end
 
     if not self.bridge.spValidObject(self.objectID) then -- or Spring.GetUnitIsDead(self.objectID) 
-        SCEN_EDIT.stateManager:SetState(DefaultState())
+        SB.stateManager:SetState(DefaultState())
         return false
     end
     local unitX, unitY, unitZ = self.bridge.spGetObjectPosition(self.objectID)
@@ -73,12 +73,12 @@ function DragObjectState:MouseRelease(x, y, button)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
     for unitID, object in pairs(movedObjects.units) do
-        local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(unitID)
+        local modelID = SB.model.unitManager:getModelUnitId(unitID)
         local cmd = SetUnitParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
     end
     for featureID, object in pairs(movedObjects.features) do
-        local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(featureID)
+        local modelID = SB.model.featureManager:getModelFeatureId(featureID)
         local cmd = SetFeatureParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
     end
@@ -89,9 +89,9 @@ function DragObjectState:MouseRelease(x, y, button)
     end
 
     local compoundCommand = CompoundCommand(commands)
-    SCEN_EDIT.commandManager:execute(compoundCommand)
+    SB.commandManager:execute(compoundCommand)
 
-    SCEN_EDIT.stateManager:SetState(DefaultState())
+    SB.stateManager:SetState(DefaultState())
 end
 
 function DragObjectState:DrawObject(objectID, object, bridge, shaderObj)
@@ -111,7 +111,7 @@ end
 function DragObjectState:DrawWorld()
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
-    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    local shaderObj = SB.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
     for objectID, object in pairs(self.ghostViews.units) do
@@ -122,7 +122,7 @@ function DragObjectState:DrawWorld()
     end
     gl.UseShader(0)
     for objectID, object in pairs(self.ghostViews.areas) do
-        local x1, z1, x2, z2 = unpack(SCEN_EDIT.model.areaManager:getArea(objectID))
+        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(objectID))
         local areaView = AreaView(objectID)
         areaView:_Draw(x1 + self.dx, z1 + self.dz, x2 + self.dx, z2 + self.dz)
     end

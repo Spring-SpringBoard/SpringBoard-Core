@@ -1,10 +1,10 @@
 TeamSelector = LCS.class{}
 
 function TeamSelector:init()
-    local teams = SCEN_EDIT.model.teamManager:getAllTeams()
+    local teams = SB.model.teamManager:getAllTeams()
     local teamsTxt = {}
     for _, team in pairs(teams) do
-        table.insert(teamsTxt, SCEN_EDIT.glToFontColor(team.color) .. "Team " .. team.name .. "\b")
+        table.insert(teamsTxt, SB.glToFontColor(team.color) .. "Team " .. team.name .. "\b")
     end
     table.insert(teamsTxt, "Spectator")
     self.cmbTeamSelector = ComboBox:New {
@@ -22,9 +22,9 @@ function TeamSelector:init()
             if itemIdx < #teamsTxt then
                 local teamId = self.cmbTeamSelector.teamIds[itemIdx]
                 if Spring.GetMyTeamID() ~= teamId or Spring.GetSpectatingState() then
-                    if SCEN_EDIT.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
+                    if SB.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
                         local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), teamId)
-                        SCEN_EDIT.commandManager:execute(cmd)
+                        SB.commandManager:execute(cmd)
                     end
                 end
             else
@@ -35,7 +35,7 @@ function TeamSelector:init()
         end
     }
 
-    SCEN_EDIT.lockTeam = false
+    SB.lockTeam = false
     self.cbLockTeam = Checkbox:New {
         parent = screen0,
         x = self.cmbTeamSelector.x + 10,
@@ -45,7 +45,7 @@ function TeamSelector:init()
         caption = "Lock team",
         checked = false,
         OnChange = { function(_, value)
-            SCEN_EDIT.lockTeam = value
+            SB.lockTeam = value
         end}
     }
 end
@@ -82,8 +82,8 @@ function TeamSelector:DrawScreen()
         local y = 10
         local text
         local x = w - 200
-        if SCEN_EDIT.projectDir ~= nil then
-            text = "Project:" .. SCEN_EDIT.projectDir
+        if SB.projectDir ~= nil then
+            text = "Project:" .. SB.projectDir
         else
             text = "Project not saved"
         end

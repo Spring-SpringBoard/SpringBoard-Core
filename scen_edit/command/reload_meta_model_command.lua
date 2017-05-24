@@ -8,7 +8,7 @@ end
 
 function ReloadMetaModelCommand:execute()
 	Log.Notice("Reloading meta model...")
-    SCEN_EDIT.conf:SetMetaModelFiles(self.metaModelFiles)
+    SB.conf:SetMetaModelFiles(self.metaModelFiles)
     local metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 	Log.Notice("Reload completed successfully")

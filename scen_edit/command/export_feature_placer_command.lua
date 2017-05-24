@@ -5,14 +5,14 @@ function ExportFeaturePlacerCommand:init(path)
     self.className = "ExportFeaturePlacerCommand"	
     self.path = path
     --add extension if it doesn't exist
-    if string.sub(self.path,-string.len(SCEN_EDIT_FEATURE_PLACER_FILE_EXT)) ~= SCEN_EDIT_FEATURE_PLACER_FILE_EXT then
-        self.path = self.path .. SCEN_EDIT_FEATURE_PLACER_FILE_EXT
+    if string.sub(self.path,-string.len(SB_FEATURE_PLACER_FILE_EXT)) ~= SB_FEATURE_PLACER_FILE_EXT then
+        self.path = self.path .. SB_FEATURE_PLACER_FILE_EXT
     end
 end
 
 function ExportFeaturePlacerCommand:execute()
     -- convert to feature placer format
-    local features = SCEN_EDIT.model.featureManager:serialize()
+    local features = SB.model.featureManager:serialize()
     local fpFeatures = {}
     for _, feature in pairs(features) do
         local rot = tostring(-feature.angle * 32768 / math.pi)
@@ -25,7 +25,7 @@ function ExportFeaturePlacerCommand:execute()
         table.insert(fpFeatures, fpFeature)
     end
 
-    local units = SCEN_EDIT.model.unitManager:serialize()
+    local units = SB.model.unitManager:serialize()
     local fpBuildings = {}
     local fpUnits = {}
     local gaiaID = Spring.GetGaiaTeamID()

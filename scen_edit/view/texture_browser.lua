@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "asset_view.lua")
+SB.Include(SB_VIEW_DIR .. "asset_view.lua")
 
 TextureBrowser = AssetView:extends{}
 
@@ -20,7 +20,7 @@ function TextureBrowser:PopulateItems()
 		else
 			tooltip = tooltip .. "\nDiffuse: \255\255\0\0NO\b"
 		end
-		for texType, _ in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+		for texType, _ in pairs(SB.model.textureManager.shadingTextures) do
 			if texture[texType] then
 				tooltip = tooltip .. "\n" .. texType:sub(1,1):upper() .. texType:sub(2) .. ": \255\0\255\0OK\b"
 			else
@@ -45,7 +45,7 @@ function TextureBrowser:FilterFile(filePath)
 		base = filePath:gsub("_diffuse" .. ext, "")
 		tType = "diffuse"
 	else
-		for texType, _ in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+		for texType, _ in pairs(SB.model.textureManager.shadingTextures) do
 			local fileEnd = "_" .. texType .. ext
 			if filePath:ends(fileEnd) then
 				base = filePath:gsub(fileEnd, "")

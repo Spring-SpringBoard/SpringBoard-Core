@@ -7,7 +7,7 @@ function LoadModelCommand:init(modelString)
 end
 
 function LoadModelCommand:execute()
-    SCEN_EDIT.model:Clear()
+    SB.model:Clear()
     -- wait a bit if it's already loaded, but start immediately otherwise
     if Spring.GetGameFrame() ~= nil and Spring.GetGameFrame() > 30 then 
         GG.Delay.DelayCall(function()
@@ -21,5 +21,5 @@ end
 function LoadModelCommand:Load()
     Log.Notice("Loading model...")
     local mission = loadstring(self.modelString)()
-    SCEN_EDIT.model:Load(mission)
+    SB.model:Load(mission)
 end

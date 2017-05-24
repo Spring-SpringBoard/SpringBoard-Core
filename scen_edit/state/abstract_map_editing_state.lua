@@ -21,7 +21,7 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 
 	return false
 --     if key == 27 then -- KEYSYMS.ESC
---         SCEN_EDIT.stateManager:SetState(DefaultState())
+--         SB.stateManager:SetState(DefaultState())
 --     else
 --         return false
 --     end
@@ -140,7 +140,7 @@ function AbstractMapEditingState:startChanging()
     if not self.startedChanging then
         self._initialDelay = self.initialDelay
         local cmd = SetMultipleCommandModeCommand(true)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
         self.startedChanging = true
     end
 end
@@ -148,7 +148,7 @@ end
 function AbstractMapEditingState:stopChanging()
     if self.startedChanging then
         local cmd = SetMultipleCommandModeCommand(false)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
         self.startedChanging = false
         self.lastTime = nil
     end

@@ -10,7 +10,7 @@ function GeneralPanel:init()
 				end
 			},
 			children = {
-				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-save.png" }),
+				TabbedPanelImage({ file = SB_IMG_DIR .. "document-save.png" }),
 				TabbedPanelLabel({ caption = "Save" }),
 			},
 		})
@@ -23,7 +23,7 @@ function GeneralPanel:init()
 				end
 			},
 			children = {
-				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-save.png" }),
+				TabbedPanelImage({ file = SB_IMG_DIR .. "document-save.png" }),
 				TabbedPanelLabel({ caption = "Save as" }),
 			},
 		})
@@ -36,7 +36,7 @@ function GeneralPanel:init()
 				end
 			},
 			children = {
-				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-open.png" }),
+				TabbedPanelImage({ file = SB_IMG_DIR .. "document-open.png" }),
 				TabbedPanelLabel({ caption = "Load" }),
 			},
 		})
@@ -49,7 +49,7 @@ function GeneralPanel:init()
 				end
 			},
 			children = {
-				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "info.png" }),
+				TabbedPanelImage({ file = SB_IMG_DIR .. "info.png" }),
 				TabbedPanelLabel({ caption = "Info" }),
 			},
 		})
@@ -62,7 +62,7 @@ function GeneralPanel:init()
 				end
 			},
 			children = {
-				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-save.png" }),
+				TabbedPanelImage({ file = SB_IMG_DIR .. "document-save.png" }),
 				TabbedPanelLabel({ caption = "Export" }),
 			},
 		})
@@ -75,7 +75,7 @@ function GeneralPanel:init()
 				end
 			},
 			children = {
-				TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "document-open.png" }),
+				TabbedPanelImage({ file = SB_IMG_DIR .. "document-open.png" }),
 				TabbedPanelLabel({ caption = "Import" }),
 			},
 		})

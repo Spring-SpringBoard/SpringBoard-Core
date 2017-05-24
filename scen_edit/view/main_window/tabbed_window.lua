@@ -20,12 +20,12 @@ function TabbedWindow:init()
 			OnClick = {
 				function()
 					local undoCommand = UndoCommand()
-					SCEN_EDIT.commandManager:execute(undoCommand)
+					SB.commandManager:execute(undoCommand)
 				end
 			},
 			children = {
 				Image:New {
-					file=SCEN_EDIT_IMG_DIR .. "undo.png",
+					file=SB_IMG_DIR .. "undo.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -43,12 +43,12 @@ function TabbedWindow:init()
 			OnClick = {
 				function()
 					local redoCommand = RedoCommand()
-					SCEN_EDIT.commandManager:execute(redoCommand)
+					SB.commandManager:execute(redoCommand)
 				end
 			},
 			children = {
 				Image:New {
-					file=SCEN_EDIT_IMG_DIR .. "redo.png",
+					file=SB_IMG_DIR .. "redo.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -65,15 +65,15 @@ function TabbedWindow:init()
 			tooltip = "Reload meta model",
 			OnClick = {
 				function()
-					SCEN_EDIT.conf:initializeListOfMetaModelFiles()
-					local reloadMetaModelCommand = ReloadMetaModelCommand(SCEN_EDIT.conf:GetMetaModelFiles())
-					SCEN_EDIT.commandManager:execute(reloadMetaModelCommand)
-					SCEN_EDIT.commandManager:execute(reloadMetaModelCommand, true)
+					SB.conf:initializeListOfMetaModelFiles()
+					local reloadMetaModelCommand = ReloadMetaModelCommand(SB.conf:GetMetaModelFiles())
+					SB.commandManager:execute(reloadMetaModelCommand)
+					SB.commandManager:execute(reloadMetaModelCommand, true)
 				end
 			},
 			children = {
 				Image:New {
-					file=SCEN_EDIT_IMG_DIR .. "refresh.png",
+					file=SB_IMG_DIR .. "refresh.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -90,19 +90,19 @@ function TabbedWindow:init()
 			tooltip = "Copy (Ctrl+C)",
 			OnClick = {
 				function()
-					local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+					local selType, items = SB.view.selectionManager:GetSelection()
 					if selType == "units" then
-						SCEN_EDIT.clipboard:CopyUnits(items)
+						SB.clipboard:CopyUnits(items)
 						return true
 					elseif selType == "features" then
-						SCEN_EDIT.clipboard:CopyFeatures(items)
+						SB.clipboard:CopyFeatures(items)
 						return true
 					end
 				end
 			},
 			children = {
 				Image:New {
-					file=SCEN_EDIT_IMG_DIR .. "copy.png",
+					file=SB_IMG_DIR .. "copy.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -119,19 +119,19 @@ function TabbedWindow:init()
 			tooltip = "Cut (Ctrl+X)",
 			OnClick = {
 				function()
-					local selType, items = SCEN_EDIT.view.selectionManager:GetSelection()
+					local selType, items = SB.view.selectionManager:GetSelection()
 					if selType == "units" then
-						SCEN_EDIT.clipboard:CutUnits(items)
+						SB.clipboard:CutUnits(items)
 						return true
 					elseif selType == "features" then
-						SCEN_EDIT.clipboard:CutFeatures(items)
+						SB.clipboard:CutFeatures(items)
 						return true
 					end
 				end
 			},
 			children = {
 				Image:New {
-					file=SCEN_EDIT_IMG_DIR .. "cut.png",
+					file=SB_IMG_DIR .. "cut.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -151,14 +151,14 @@ function TabbedWindow:init()
 					local x, y = Spring.GetMouseState()
 					local result, coords = Spring.TraceScreenRay(x, y, true)
 					if result == "ground" then
-						SCEN_EDIT.clipboard:Paste(coords)
+						SB.clipboard:Paste(coords)
 						return true
 					end
 				end
 			},
 			children = {
 				Image:New {
-					file=SCEN_EDIT_IMG_DIR .. "paste.png",
+					file=SB_IMG_DIR .. "paste.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -169,7 +169,7 @@ function TabbedWindow:init()
 	}
 
 	local controls = {}
-	if SCEN_EDIT.conf.SHOW_BASIC_CONTROLS then
+	if SB.conf.SHOW_BASIC_CONTROLS then
 		controls = commonControls
 		mainPanelY = mainPanelY + 45
 	end
@@ -208,7 +208,7 @@ function TabbedWindow:init()
 		right = 0,
 		y = 0,
 		width = 500,
-		--height = 110 + SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT,
+		--height = 110 + SB.conf.TOOLBOX_ITEM_HEIGHT,
 		height = "100%",
 		parent = screen0,
 		caption = "",

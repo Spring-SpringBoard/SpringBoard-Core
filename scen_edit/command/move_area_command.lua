@@ -9,11 +9,11 @@ function MoveAreaCommand:init(areaId, newX, newZ)
 end
 
 function MoveAreaCommand:execute()
-    local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
+    local area = SB.model.areaManager:getArea(self.areaId)
     self.deltaX = self.newX - area[1]
     self.deltaZ = self.newZ - area[2] 
 
-    SCEN_EDIT.model.areaManager:setArea(self.areaId, {
+    SB.model.areaManager:setArea(self.areaId, {
         area[1] + self.deltaX,
         area[2] + self.deltaZ,
         area[3] + self.deltaX,
@@ -22,9 +22,9 @@ function MoveAreaCommand:execute()
 end
 
 function MoveAreaCommand:unexecute()
-    local area = SCEN_EDIT.model.areaManager:getArea(self.areaId)
+    local area = SB.model.areaManager:getArea(self.areaId)
 
-    SCEN_EDIT.model.areaManager:setArea(self.areaId, {
+    SB.model.areaManager:setArea(self.areaId, {
         area[1] - self.deltaX,
         area[2] - self.deltaZ,
         area[3] - self.deltaX,

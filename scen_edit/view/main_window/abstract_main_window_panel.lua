@@ -3,8 +3,8 @@ AbstractMainWindowPanel = LCS.class.abstract{}
 
 function TabbedPanelButton(tbl)
 	return Button:New(Table.Merge({
-		width = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH,
-		height = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT,
+		width = SB.conf.TOOLBOX_ITEM_WIDTH,
+		height = SB.conf.TOOLBOX_ITEM_HEIGHT,
 		caption = '',
 		padding = {0, 0, 0, 0},
 	}, tbl))
@@ -12,21 +12,21 @@ end
 
 function TabbedPanelImage(tbl)
 	return Image:New(Table.Merge({
-		width = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH / 2,
-		height = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 2,
+		width = SB.conf.TOOLBOX_ITEM_WIDTH / 2,
+		height = SB.conf.TOOLBOX_ITEM_HEIGHT / 2,
 		margin = {0, 0, 0, 0},
-		x = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH / 4,
-		y = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 8,
+		x = SB.conf.TOOLBOX_ITEM_WIDTH / 4,
+		y = SB.conf.TOOLBOX_ITEM_HEIGHT / 8,
 	}, tbl))
 end
 
 function TabbedPanelLabel(tbl)
 	return Label:New(Table.Merge({
-		bottom = SCEN_EDIT.conf.TOOLBOX_ITEM_HEIGHT / 8,
-		width = SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH,
+		bottom = SB.conf.TOOLBOX_ITEM_HEIGHT / 8,
+		width = SB.conf.TOOLBOX_ITEM_WIDTH,
 		align = "center",
 		font = {
-			size = math.floor(SCEN_EDIT.conf.TOOLBOX_ITEM_WIDTH / 5),
+			size = math.floor(SB.conf.TOOLBOX_ITEM_WIDTH / 5),
 		},
 	}, tbl))
 end

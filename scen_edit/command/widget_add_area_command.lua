@@ -7,5 +7,5 @@ function WidgetAddAreaCommand:init(id, value)
 end
 
 function WidgetAddAreaCommand:execute()
-    SCEN_EDIT.model.areaManager:addArea(self.value, self.id)
+    SB.model.areaManager:addArea(self.value, self.id)
 end

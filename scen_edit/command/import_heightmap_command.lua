@@ -9,7 +9,7 @@ function ImportHeightmapCommand:init(heightmapImage, maxHeight, minHeight)
 end
 
 function ImportHeightmapCommand:execute()
-    SCEN_EDIT.delayGL(function()
+    SB.delayGL(function()
         if not VFS.FileExists(self.heightmapImagePath) then
             Log.Error("Missing heightmap file: " .. tostring(self.heightmapImagePath))
             return
@@ -46,7 +46,7 @@ function ImportHeightmapCommand:execute()
             end
         end
 
-        SCEN_EDIT.commandManager:execute(ImportHeightmapCommandSynced(greyscale))
+        SB.commandManager:execute(ImportHeightmapCommandSynced(greyscale))
     end)
 end
 

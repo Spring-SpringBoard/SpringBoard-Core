@@ -7,10 +7,10 @@ function UpdateVariableCommand:init(variable)
 end
 
 function UpdateVariableCommand:execute()
-    self.old = SCEN_EDIT.model.variableManager:getVariable(self.variable.id)
-    SCEN_EDIT.model.variableManager:setVariable(self.variable.id, self.variable)
+    self.old = SB.model.variableManager:getVariable(self.variable.id)
+    SB.model.variableManager:setVariable(self.variable.id, self.variable)
 end
 
 function UpdateVariableCommand:unexecute()
-    SCEN_EDIT.model.variableManager:setVariable(self.variable.id, self.old)
+    SB.model.variableManager:setVariable(self.variable.id, self.old)
 end

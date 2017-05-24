@@ -7,7 +7,7 @@ function ScenarioInfoView:init()
 		width = 80,
 	}
 	self.ebName = EditBox:New {
-		text = SCEN_EDIT.model.scenarioInfo.name,
+		text = SB.model.scenarioInfo.name,
 		right = 1,
 		width = 300,
 	}
@@ -19,7 +19,7 @@ function ScenarioInfoView:init()
 		y = 30,
 	}
 	self.ebDescription = EditBox:New {
-		text = SCEN_EDIT.model.scenarioInfo.description,
+		text = SB.model.scenarioInfo.description,
 		right = 1,
 		width = 300,
 		y = 30,
@@ -32,7 +32,7 @@ function ScenarioInfoView:init()
 		y = 60,
 	}
 	self.ebVersion = EditBox:New {
-		text = tostring(SCEN_EDIT.model.scenarioInfo.version),
+		text = tostring(SB.model.scenarioInfo.version),
 		right = 1,
 		width = 300,
 		y = 60,
@@ -45,7 +45,7 @@ function ScenarioInfoView:init()
 		y = 90,
 	}
 	self.ebAuthor = EditBox:New {
-		text = SCEN_EDIT.model.scenarioInfo.author,
+		text = SB.model.scenarioInfo.author,
 		right = 1,
 		width = 300,
 		y = 90,
@@ -56,7 +56,7 @@ function ScenarioInfoView:init()
 		y = 140,
 		x = 40,
 		width = 120,
-		height = SCEN_EDIT.conf.B_HEIGHT,
+		height = SB.conf.B_HEIGHT,
 	}
 	
 	self.btnCancel = Button:New {
@@ -64,7 +64,7 @@ function ScenarioInfoView:init()
 		y = 140,
 		right = 40,
 		width = 120,
-		height = SCEN_EDIT.conf.B_HEIGHT,
+		height = SB.conf.B_HEIGHT,
 	}
 	
 	self.window = Window:New {
@@ -102,5 +102,5 @@ end
 
 function ScenarioInfoView:confirm()
     local cmd = SetScenarioInfoCommand(self.ebName.text, self.ebDescription.text, self.ebVersion.text, self.ebAuthor.text)
-    SCEN_EDIT.commandManager:execute(cmd)
+    SB.commandManager:execute(cmd)
 end

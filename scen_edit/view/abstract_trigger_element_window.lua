@@ -19,22 +19,22 @@ function AbstractTriggerElementWindow:init(opts)
     self.params = opts.params
     self.triggerWindow = opts.triggerWindow
 
-    SCEN_EDIT.SetControlEnabled(self.parentWindow, false)
+    SB.SetControlEnabled(self.parentWindow, false)
     self.btnOk = Button:New {
         caption = "OK",
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         width = "40%",
         x = 10,
         y = 20,
-        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
+        backgroundColor = SB.conf.BTN_OK_COLOR,
     }
     self.btnCancel = Button:New {
         caption = "Cancel",
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         width = "40%",
         x = "55%",
         y = 20,
-        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
+        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
     }
     self.elementPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -67,7 +67,7 @@ function AbstractTriggerElementWindow:init(opts)
         end
         self.cmbTagGroups = ComboBox:New {
             items = GetKeys(self.tagGroups),
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             width = "40%",
             y = self.btnOk.y + self.btnOk.height + 10,
             x = 10,
@@ -95,7 +95,7 @@ function AbstractTriggerElementWindow:init(opts)
     self.cmbElementTypes = ComboBox:New {
         items = GetField(self.elementTypes, "humanName"),
         elementTypes = GetField(self.elementTypes, "name"),
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         width = cmbElementTypesWidth,
         y = self.btnOk.y + self.btnOk.height + 10,
         x = cmbElementTypesX,
@@ -111,7 +111,7 @@ function AbstractTriggerElementWindow:init(opts)
                     local params = self.params
                     local extraSourcesFunction = exprType.extraSources
                     if extraSourcesFunction then
-                        params = SCEN_EDIT.deepcopy(params)
+                        params = SB.deepcopy(params)
                         for _, es in pairs(extraSourcesFunction) do
                             table.insert(params, es)
                         end
@@ -122,14 +122,14 @@ function AbstractTriggerElementWindow:init(opts)
                         local paramsI = params
                         local extraSourcesInput = dataType.extraSources
                         if extraSourcesInput then
-                            paramsI = SCEN_EDIT.deepcopy(paramsI)
+                            paramsI = SB.deepcopy(paramsI)
                             for _, es in pairs(extraSourcesInput) do
                                 table.insert(paramsI, es)
                             end
                         end
 
                         local subPanelName = dataType.name
-                        local subPanel = SCEN_EDIT.createNewPanel({
+                        local subPanel = SB.createNewPanel({
                             dataType = dataType,
                             parent = self.elementPanel,
                             trigger = self.trigger,
@@ -138,7 +138,7 @@ function AbstractTriggerElementWindow:init(opts)
                         if subPanel then
                             self.elementPanel[subPanelName] = subPanel
                             if i ~= #exprType.input then
-                                SCEN_EDIT.MakeSeparator(self.elementPanel)
+                                SB.MakeSeparator(self.elementPanel)
                             end
                         end
                     end
@@ -173,7 +173,7 @@ function AbstractTriggerElementWindow:init(opts)
 
     self.btnCancel.OnClick = {
         function()
-            SCEN_EDIT.SetControlEnabled(self.parentWindow, true)
+            SB.SetControlEnabled(self.parentWindow, true)
             self.window:Dispose()
         end
     }
@@ -188,14 +188,14 @@ function AbstractTriggerElementWindow:init(opts)
             end
             if success then
                 if self.btnExpressions then
-                    self.btnExpressions.tooltip = SCEN_EDIT.humanExpression(self.btnExpressions.data[1], "condition")
+                    self.btnExpressions.tooltip = SB.humanExpression(self.btnExpressions.data[1], "condition")
                 end
-                SCEN_EDIT.SetControlEnabled(self.parentWindow, true)
+                SB.SetControlEnabled(self.parentWindow, true)
                 self.window:Dispose()
             else
                 if subPanels ~= nil and #subPanels > 0 then
                     for _, subPanel in pairs(subPanels) do
-                        SCEN_EDIT.HintControl(subPanel)
+                        SB.HintControl(subPanel)
                     end
                 end
             end
@@ -288,7 +288,7 @@ function AbstractTriggerElementWindow:UpdateModel()
 end
 
 function AbstractTriggerElementWindow:EditElement()
-    local _element = SCEN_EDIT.deepcopy(self.element)
+    local _element = SB.deepcopy(self.element)
     self.element.typeName = self.cmbElementTypes.elementTypes[self.cmbElementTypes.selected]
     local success, subPanels = self:UpdateModel()
     if not success then

@@ -60,7 +60,7 @@ function TriggerManager:getAllTriggers()
 end
 
 function TriggerManager:serialize()
-    return SCEN_EDIT.deepcopy(self.triggers)
+    return SB.deepcopy(self.triggers)
 --[[    local retVal = {}
     for _, trigger in pairs(self.triggers) do
         retVal[trigger.id] = trigger
@@ -93,7 +93,7 @@ function TriggerManager:GetTriggerScopeParams(trigger)
 
     for _, event in pairs(trigger.events) do
         local typeName = event.typeName
-        local eventType = SCEN_EDIT.metaModel.eventTypes[typeName]
+        local eventType = SB.metaModel.eventTypes[typeName]
         for _, param in pairs(eventType.param) do
             table.insert(triggerScopeParams, {
                 name = param.name,
@@ -109,7 +109,7 @@ end
 -- Trigger verification utilities
 ---------------------------------
 function TriggerManager:ValidateEvent(trigger, event)
-    if not SCEN_EDIT.metaModel.eventTypes[event.typeName] then
+    if not SB.metaModel.eventTypes[event.typeName] then
         return false, "Missing reference: " .. event.typeName
     end
     return true
@@ -126,7 +126,7 @@ function TriggerManager:ValidateEvents(trigger)
 end
 
 function TriggerManager:ValidateCondition(trigger, condition)
-    if not SCEN_EDIT.metaModel.functionTypes[condition.typeName] then
+    if not SB.metaModel.functionTypes[condition.typeName] then
         return false, "Missing reference: " .. condition.typeName
     end
     return true
@@ -143,7 +143,7 @@ function TriggerManager:ValidateConditions(trigger)
 end
 
 function TriggerManager:ValidateAction(trigger, action)
-    if not SCEN_EDIT.metaModel.actionTypes[action.typeName] then
+    if not SB.metaModel.actionTypes[action.typeName] then
         return false, "Missing reference: " .. action.typeName
     end
     return true
@@ -177,7 +177,7 @@ end
 
 function TriggerManager:GetSafeEventHumanName(trigger, event)
     if self:ValidateEvent(trigger, event) then
-        return SCEN_EDIT.metaModel.eventTypes[event.typeName].humanName
+        return SB.metaModel.eventTypes[event.typeName].humanName
     else
         return "Invalid event: " .. tostring(event.typeName)
     end

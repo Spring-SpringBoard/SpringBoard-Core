@@ -1,4 +1,4 @@
-SCEN_EDIT.Include("scen_edit/state/abstract_map_editing_state.lua")
+SB.Include("scen_edit/state/abstract_map_editing_state.lua")
 AbstractHeightmapEditingState = AbstractMapEditingState:extends{}
 
 function AbstractHeightmapEditingState:init(editorView)
@@ -29,25 +29,25 @@ function AbstractHeightmapEditingState:KeyPress(key, mods, isRepeat, label, unic
         if self.size then
             newState.size = self.size
         end
-        SCEN_EDIT.stateManager:SetState(newState)
+        SB.stateManager:SetState(newState)
     elseif key == 50 then -- 2
         local newState = TerrainSetState(self.editorView)
         if self.size then
             newState.size = self.size
         end
-        SCEN_EDIT.stateManager:SetState(newState)
+        SB.stateManager:SetState(newState)
     elseif key == 51 then -- 3
         local newState = TerrainSmoothState(self.editorView)
         if self.size then
             newState.size = self.size
         end
-        SCEN_EDIT.stateManager:SetState(newState)
+        SB.stateManager:SetState(newState)
 --     elseif key == 52 then -- 4
 --         local newState = TerrainChangeHeightRectState(self.editorView)
---         SCEN_EDIT.stateManager:SetState(newState)
+--         SB.stateManager:SetState(newState)
 --     elseif key == 53 then -- 5
 --         local newState = TerrainShapeModifyState(self.editorView)
---         SCEN_EDIT.stateManager:SetState(newState)
+--         SB.stateManager:SetState(newState)
     else
         return false
     end
@@ -66,12 +66,12 @@ function AbstractHeightmapEditingState:Apply(x, z, strength)
     if not self.paintTexture then
         return false
     end
-    if SCEN_EDIT.model.terrainManager:getShape(self.paintTexture) == nil then
-        SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
+    if SB.model.terrainManager:getShape(self.paintTexture) == nil then
+        SB.model.terrainManager:generateShape(self.paintTexture)
     end
 
     local cmd = self:GetCommand(x, z, strength)
-    SCEN_EDIT.commandManager:execute(cmd)
+    SB.commandManager:execute(cmd)
     return true
 end
 
@@ -83,7 +83,7 @@ function AbstractHeightmapEditingState:DrawWorld()
         if not self.paintTexture then
             return
         end
-        local shape = SCEN_EDIT.model.textureManager:GetTexture(self.paintTexture)
+        local shape = SB.model.textureManager:GetTexture(self.paintTexture)
         self:DrawShape(shape, x, z)
     end
 end

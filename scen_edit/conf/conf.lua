@@ -37,9 +37,9 @@ function Conf:initializeListOfMetaModelFiles()
         end
 	end
 
-    Log.Notice("Project dir:", SCEN_EDIT.projectDir)
-    if SCEN_EDIT.projectDir ~= nil then
-        files = VFS.DirList(SCEN_EDIT.projectDir .. "/triggers/", "*", VFS.RAW)
+    Log.Notice("Project dir:", SB.projectDir)
+    if SB.projectDir ~= nil then
+        files = VFS.DirList(SB.projectDir .. "/triggers/", "*", VFS.RAW)
         for i = 1, #files do
             local file = files[i]
             local data = self:LoadMetaModelFile(file)

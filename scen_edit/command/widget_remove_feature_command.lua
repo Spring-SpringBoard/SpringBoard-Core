@@ -6,5 +6,5 @@ function WidgetRemoveFeatureCommand:init(modelId)
 end
 
 function WidgetRemoveFeatureCommand:execute()
-    SCEN_EDIT.model.featureManager:removeFeatureByModelId(self.modelId)
+    SB.model.featureManager:removeFeatureByModelId(self.modelId)
 end

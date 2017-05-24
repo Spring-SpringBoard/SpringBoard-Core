@@ -7,7 +7,7 @@ function WidgetTerrainChangeTextureCommand:init(opts)
 end
 
 function WidgetTerrainChangeTextureCommand:execute()
-    SCEN_EDIT.delayGL(function()
+    SB.delayGL(function()
         self:SetTexture(self.opts)
     end)
 end
@@ -410,15 +410,15 @@ function DrawDiffuse(opts, x, z, size)
         return
     end
 
-    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    local textures = SB.model.textureManager:getMapTextures(x, z, x + size, z + size)
     -- create temporary textures to be used as source for modifying the textures later on
-    local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
+    local tmps = SB.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
         local mapTextureObj = v[1]
         local mapTexture = mapTextureObj.texture
 
         local tmp = tmps[i]
-        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
+        SB.model.textureManager:Blit(mapTexture, tmp)
     end
 
     local shaderObj = getPenShader(opts.mode)
@@ -428,8 +428,8 @@ function DrawDiffuse(opts, x, z, size)
     gl.Blending("disable")
     gl.UseShader(shader)
 
-    gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
-    gl.Texture(2, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture.diffuse))
+    gl.Texture(1, SB.model.textureManager:GetTexture(opts.brushTexture))
+    gl.Texture(2, SB.model.textureManager:GetTexture(opts.paintTexture.diffuse))
 
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
@@ -437,7 +437,7 @@ function DrawDiffuse(opts, x, z, size)
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
     gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
 
-    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
+    local texSize = SB.model.textureManager.TEXTURE_SIZE
     x = x / texSize
     z = z / texSize
     size = size / texSize
@@ -467,15 +467,15 @@ function DrawDiffuse(opts, x, z, size)
 end
 
 function DrawBlur(opts, x, z, size)
-    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    local textures = SB.model.textureManager:getMapTextures(x, z, x + size, z + size)
     -- create temporary textures to be used as source for modifying the textures later on
-    local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
+    local tmps = SB.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
         local mapTextureObj = v[1]
         local mapTexture = mapTextureObj.texture
 
         local tmp = tmps[i]
-        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
+        SB.model.textureManager:Blit(mapTexture, tmp)
     end
 
     local shaderObj = getBlurShader()
@@ -504,9 +504,9 @@ function DrawBlur(opts, x, z, size)
     end
 
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
-    gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
+    gl.Texture(1, SB.model.textureManager:GetTexture(opts.brushTexture))
 
-    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
+    local texSize = SB.model.textureManager.TEXTURE_SIZE
     x = x / texSize
     z = z / texSize
     size = size / texSize
@@ -530,15 +530,15 @@ function DrawBlur(opts, x, z, size)
 end
 
 function DrawVoid(opts, x, z, size)
-    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    local textures = SB.model.textureManager:getMapTextures(x, z, x + size, z + size)
     -- create temporary textures to be used as source for modifying the textures later on
-    local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
+    local tmps = SB.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
         local mapTextureObj = v[1]
         local mapTexture = mapTextureObj.texture
 
         local tmp = tmps[i]
-        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
+        SB.model.textureManager:Blit(mapTexture, tmp)
     end
 
     local shaderObj = getVoidShader()
@@ -551,9 +551,9 @@ function DrawVoid(opts, x, z, size)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
 
-    gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
+    gl.Texture(1, SB.model.textureManager:GetTexture(opts.brushTexture))
 
-    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
+    local texSize = SB.model.textureManager.TEXTURE_SIZE
     x = x / texSize
     z = z / texSize
     size = size / texSize
@@ -583,16 +583,16 @@ end
 
 function DrawShadingTextures(opts, x, z, size)
     local shadingTmps = {}
-    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
-    for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+    local texSize = SB.model.textureManager.TEXTURE_SIZE
+    for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
         if opts.paintTexture[texType] and opts[texType .. "Enabled"] then
-            SCEN_EDIT.model.textureManager:backupMapShadingTexture(texType)
+            SB.model.textureManager:backupMapShadingTexture(texType)
             local tmpTexName = texType.."tmp"
-            shadingTmps[texType] = SCEN_EDIT.model.textureManager[tmpTexName]
-            if SCEN_EDIT.model.textureManager[tmpTexName] == nil then
+            shadingTmps[texType] = SB.model.textureManager[tmpTexName]
+            if SB.model.textureManager[tmpTexName] == nil then
                 local texInfo = gl.TextureInfo(shadingTex)
                 local texSizeX, texSizeZ = texInfo.xsize, texInfo.ysize
-                SCEN_EDIT.model.textureManager[tmpTexName] = gl.CreateTexture(texSizeX, texSizeZ, {
+                SB.model.textureManager[tmpTexName] = gl.CreateTexture(texSizeX, texSizeZ, {
                     border = false,
                     min_filter = GL.LINEAR,
                     mag_filter = GL.LINEAR,
@@ -600,9 +600,9 @@ function DrawShadingTextures(opts, x, z, size)
                     wrap_t = GL.CLAMP_TO_EDGE,
                     fbo = true,
                 })
-                shadingTmps[texType] = SCEN_EDIT.model.textureManager[tmpTexName]
+                shadingTmps[texType] = SB.model.textureManager[tmpTexName]
             end
-            SCEN_EDIT.model.textureManager:Blit(shadingTex, shadingTmps[texType])
+            SB.model.textureManager:Blit(shadingTex, shadingTmps[texType])
         end
     end
 
@@ -622,7 +622,7 @@ function DrawShadingTextures(opts, x, z, size)
     x = x / texSize
     z = z / texSize
     size = size / texSize
-    for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
+    for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
         if texType ~= "normal" and opts.paintTexture[texType] and opts[texType .. "Enabled"] then
             gl.Blending("disable")
             local texInfo = gl.TextureInfo(shadingTex)
@@ -638,8 +638,8 @@ function DrawShadingTextures(opts, x, z, size)
             gl.Uniform(uniforms.z1ID, mCoord[2])
             gl.Uniform(uniforms.z2ID, mCoord[4])
 
-            gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
-            gl.Texture(2, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture[texType]))
+            gl.Texture(1, SB.model.textureManager:GetTexture(opts.brushTexture))
+            gl.Texture(2, SB.model.textureManager:GetTexture(opts.paintTexture[texType]))
             gl.RenderToTexture(shadingTex, ApplyTexture, shadingTmps[texType], mCoord, tCoord, vCoord)
 
             CheckGLSL()
@@ -654,8 +654,8 @@ function DrawShadingTextures(opts, x, z, size)
 
         gl.UseShader(shader)
 
-        gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.brushTexture))
-        gl.Texture(1, SCEN_EDIT.model.textureManager:GetTexture(opts.paintTexture.normal))
+        gl.Texture(1, SB.model.textureManager:GetTexture(opts.brushTexture))
+        gl.Texture(1, SB.model.textureManager:GetTexture(opts.paintTexture.normal))
 
         gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
         gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
@@ -676,7 +676,7 @@ function DrawShadingTextures(opts, x, z, size)
         gl.Uniform(uniforms.z2ID, mCoord[4])
 
 
-        gl.RenderToTexture(SCEN_EDIT.model.textureManager.shadingTextures.normal, ApplyTexture, shadingTmps.normal, mCoord, tCoord, vCoord)
+        gl.RenderToTexture(SB.model.textureManager.shadingTextures.normal, ApplyTexture, shadingTmps.normal, mCoord, tCoord, vCoord)
 
         CheckGLSL()
     end
@@ -693,15 +693,15 @@ function DrawSmart(opts, x, z, size)
         return
     end
 
-    local textures = SCEN_EDIT.model.textureManager:getMapTextures(x, z, x + size, z + size)
+    local textures = SB.model.textureManager:getMapTextures(x, z, x + size, z + size)
     -- create temporary textures to be used as source for modifying the textures later on
-    local tmps = SCEN_EDIT.model.textureManager:GetTMPs(#textures)
+    local tmps = SB.model.textureManager:GetTMPs(#textures)
     for i, v in pairs(textures) do
         local mapTextureObj = v[1]
         local mapTexture = mapTextureObj.texture
 
         local tmp = tmps[i]
-        SCEN_EDIT.model.textureManager:Blit(mapTexture, tmp)
+        SB.model.textureManager:Blit(mapTexture, tmp)
     end
 
     local shaderObj = getSmartShader(opts.mode)
@@ -727,12 +727,12 @@ function DrawSmart(opts, x, z, size)
     for i, item in pairs(order) do
         table.insert(minSlopes, item[1])
         local texture = opts.textures[item[2]]
-        gl.Texture(1 + i, SCEN_EDIT.model.textureManager:GetTexture(texture.texture.diffuse))
+        gl.Texture(1 + i, SB.model.textureManager:GetTexture(texture.texture.diffuse))
     end
     Log.Debug(minSlopes)
     gl.Uniform(uniforms.minSlopeID, unpack(minSlopes))
 
-    local texSize = SCEN_EDIT.model.textureManager.TEXTURE_SIZE
+    local texSize = SB.model.textureManager.TEXTURE_SIZE
     x = x / texSize
     z = z / texSize
     size = size / texSize
@@ -801,8 +801,8 @@ WidgetUndoTerrainChangeTextureCommand = AbstractCommand:extends{}
 WidgetUndoTerrainChangeTextureCommand.className = "WidgetUndoTerrainChangeTextureCommand"
 
 function WidgetUndoTerrainChangeTextureCommand:execute()
-    SCEN_EDIT.delayGL(function()
-        SCEN_EDIT.model.textureManager:PopStack()
+    SB.delayGL(function()
+        SB.model.textureManager:PopStack()
     end)
 end
 
@@ -810,7 +810,7 @@ WidgetTerrainChangeTexturePushStackCommand = AbstractCommand:extends{}
 WidgetTerrainChangeTexturePushStackCommand.className = "WidgetTerrainChangeTexturePushStackCommand"
 
 function WidgetTerrainChangeTexturePushStackCommand:execute()
-    SCEN_EDIT.delayGL(function()
-        SCEN_EDIT.model.textureManager:PushStack()
+    SB.delayGL(function()
+        SB.model.textureManager:PushStack()
     end)
 end

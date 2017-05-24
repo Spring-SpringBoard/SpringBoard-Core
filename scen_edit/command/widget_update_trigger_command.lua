@@ -6,5 +6,5 @@ function WidgetUpdateTriggerCommand:init(trigger)
 end
 
 function WidgetUpdateTriggerCommand:execute()
-    SCEN_EDIT.model.triggerManager:setTrigger(self.trigger.id, self.trigger)
+    SB.model.triggerManager:setTrigger(self.trigger.id, self.trigger)
 end

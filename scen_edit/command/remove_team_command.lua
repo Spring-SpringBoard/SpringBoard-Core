@@ -7,10 +7,10 @@ function RemoveTeamCommand:init(teamId)
 end
 
 function RemoveTeamCommand:execute()
-    self.team = SCEN_EDIT.model.teamManager:getTeam(self.teamId)
-    SCEN_EDIT.model.teamManager:removeTeam(self.teamId)
+    self.team = SB.model.teamManager:getTeam(self.teamId)
+    SB.model.teamManager:removeTeam(self.teamId)
 end
 
 function RemoveTeamCommand:unexecute()
-    self.teamId = SCEN_EDIT.model.teamManager:addTeam(self.team, self.teamId)
+    self.teamId = SB.model.teamManager:addTeam(self.team, self.teamId)
 end

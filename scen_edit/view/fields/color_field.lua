@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_FIELDS_DIR .. "field.lua")
+SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 ColorField = Field:extends{}
 
@@ -44,7 +44,7 @@ function ColorField:init(field)
         end,
         OnClick = {
             function(...)
-                self.originalValue = SCEN_EDIT.deepcopy(self.value)
+                self.originalValue = SB.deepcopy(self.value)
 --                 self.button:Hide()
                 self.colorPicker = ColorFieldPickerWindow(self.originalValue)
                 self.colorPicker.field = self

@@ -7,7 +7,7 @@ function WidgetExecuteUnsyncedActionCommand:init(typeName, resolvedInputs)
 end
 
 function WidgetExecuteUnsyncedActionCommand:execute()
-    local actionType = SCEN_EDIT.metaModel.actionTypes[self.typeName]
+    local actionType = SB.metaModel.actionTypes[self.typeName]
     setfenv(actionType.executeUnsynced, getfenv())
     actionType.executeUnsynced(self.resolvedInputs)
 end

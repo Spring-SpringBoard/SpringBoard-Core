@@ -5,7 +5,7 @@ function AddRectState:init()
 end
 
 function AddRectState:enterState()
-    SCEN_EDIT.view.selected = nil
+    SB.view.selected = nil
 end
 
 function AddRectState:leaveState()
@@ -25,7 +25,7 @@ function AddRectState:MousePress(x, y, button)
             end
         end
     elseif button == 3 then
-        SCEN_EDIT.stateManager:SetState(DefaultState())
+        SB.stateManager:SetState(DefaultState())
     end
 end
 
@@ -56,9 +56,9 @@ function AddRectState:MouseRelease(x, y, button)
         end
 
         local cmd = AddAreaCommand(self.startX, self.startZ, self.endX, self.endZ)
-        SCEN_EDIT.commandManager:execute(cmd)
+        SB.commandManager:execute(cmd)
 
-        SCEN_EDIT.stateManager:SetState(DefaultState())
+        SB.stateManager:SetState(DefaultState())
     end
 end
 
@@ -69,7 +69,7 @@ function AddRectState:DrawWorld()
     gl.PushMatrix()
     gl.Color(0, 1, 0, 0.2)
     if self.addSecondPoint then
-        SCEN_EDIT.view:drawRect(self.startX, self.startZ, self.endX, self.endZ)
+        SB.view:drawRect(self.startX, self.startZ, self.endX, self.endZ)
     end
     gl.PopMatrix()
 end

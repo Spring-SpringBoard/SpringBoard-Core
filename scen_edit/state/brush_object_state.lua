@@ -1,4 +1,4 @@
-SCEN_EDIT.Include("scen_edit/state/abstract_map_editing_state.lua")
+SB.Include("scen_edit/state/abstract_map_editing_state.lua")
 BrushObjectState = AbstractMapEditingState:extends{}
 
 function BrushObjectState:init(editorView, objectDefIDs)
@@ -103,7 +103,7 @@ function BrushObjectState:Apply(bx, bz, button)
 
     if #commands > 0 then
         local compoundCommand = CompoundCommand(commands)
-        local cmdID = SCEN_EDIT.commandManager:execute(compoundCommand)
+        local cmdID = SB.commandManager:execute(compoundCommand)
         if button == 1 then
             self.waitList[cmdID] = { objects = waitingObjects }
         end
@@ -148,13 +148,13 @@ function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)
 --         if self.size then
 --             newState.size = self.size
 --         end
---         SCEN_EDIT.stateManager:SetState(newState)
+--         SB.stateManager:SetState(newState)
 --     elseif key == 50 then -- 2
 --         local newState = TerrainSmoothState(self.editorView)
 --         if self.size then
 --             newState.size = self.size
 --         end
---         SCEN_EDIT.stateManager:SetState(newState)
+--         SB.stateManager:SetState(newState)
 --     else
 --         return false
 --     end
@@ -197,7 +197,7 @@ function BrushObjectState:DrawWorld()
 
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
-    local shaderObj = SCEN_EDIT.view.modelShaders:GetShader()
+    local shaderObj = SB.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
     baseY = Spring.GetGroundHeight(baseX, baseZ)

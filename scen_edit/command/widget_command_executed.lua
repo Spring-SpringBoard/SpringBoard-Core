@@ -2,11 +2,11 @@ WidgetCommandExecuted = AbstractCommand:extends{}
 WidgetCommandExecuted.className = "WidgetCommandExecuted"
 
 function UpdateViews()
-    if SCEN_EDIT.unitPropertyWindow then
-        SCEN_EDIT.unitPropertyWindow:CommandExecuted()
+    if SB.unitPropertyWindow then
+        SB.unitPropertyWindow:CommandExecuted()
     end
-    if SCEN_EDIT.collisionView then
-        SCEN_EDIT.collisionView:CommandExecuted()
+    if SB.collisionView then
+        SB.collisionView:CommandExecuted()
     end
 end
 
@@ -17,9 +17,9 @@ function WidgetCommandExecuted:init(display, cmdIDs)
 end
 
 function WidgetCommandExecuted:execute()
-    SCEN_EDIT.view.commandWindow:PushCommand(self.display)
+    SB.view.commandWindow:PushCommand(self.display)
     UpdateViews()
-    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    local currentState = SB.stateManager:GetCurrentState()
     if currentState:is_A(BrushObjectState) then
         for _, cmdID in pairs(self.cmdIDs) do
             currentState:CommandExecuted(cmdID)
@@ -35,7 +35,7 @@ function WidgetCommandUndo:init()
 end
 
 function WidgetCommandUndo:execute()
-    SCEN_EDIT.view.commandWindow:UndoCommand()
+    SB.view.commandWindow:UndoCommand()
     UpdateViews()
 end
 
@@ -47,7 +47,7 @@ function WidgetCommandRedo:init()
 end
 
 function WidgetCommandRedo:execute()
-    SCEN_EDIT.view.commandWindow:RedoCommand()
+    SB.view.commandWindow:RedoCommand()
     UpdateViews()
 end
 
@@ -60,7 +60,7 @@ function WidgetCommandClearUndoStack:init()
 end
 
 function WidgetCommandClearUndoStack:execute()
-    SCEN_EDIT.view.commandWindow:ClearUndoStack()
+    SB.view.commandWindow:ClearUndoStack()
 end
 
 -- redo stack has been cleared
@@ -72,7 +72,7 @@ function WidgetCommandClearRedoStack:init()
 end
 
 function WidgetCommandClearRedoStack:execute()
-    SCEN_EDIT.view.commandWindow:ClearRedoStack()
+    SB.view.commandWindow:ClearRedoStack()
 end
 
 -- removed first undo
@@ -84,9 +84,9 @@ function WidgetCommandRemoveFirstUndo:init()
 end
 
 function WidgetCommandRemoveFirstUndo:execute()
-    SCEN_EDIT.view.commandWindow:RemoveFirstUndo()
-	SCEN_EDIT.delayGL(function()
-		SCEN_EDIT.model.textureManager:RemoveFirst()
+    SB.view.commandWindow:RemoveFirstUndo()
+	SB.delayGL(function()
+		SB.model.textureManager:RemoveFirst()
 	end)
 end
 
@@ -99,5 +99,5 @@ function WidgetCommandRemoveFirstRedo:init()
 end
 
 function WidgetCommandRemoveFirstRedo:execute()
-    SCEN_EDIT.view.commandWindow:RemoveFirstRedo()
+    SB.view.commandWindow:RemoveFirstRedo()
 end

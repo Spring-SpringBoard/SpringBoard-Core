@@ -7,8 +7,8 @@ function LoadTextureCommand:init(texturePath)
 end
 
 function LoadTextureCommand:execute()
-    SCEN_EDIT.delayGL(function()
-        local tm = SCEN_EDIT.model.textureManager
+    SB.delayGL(function()
+        local tm = SB.model.textureManager
 
         local files = VFS.DirList(self.texturePath)
 

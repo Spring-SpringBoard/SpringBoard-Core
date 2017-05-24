@@ -5,7 +5,7 @@ function ShaderPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Map shader editor",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
             TabbedPanelLabel({ caption = "Map" }),
         },
         OnClick = {
@@ -18,7 +18,7 @@ function ShaderPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Unit shader editor",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "unit.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
             TabbedPanelLabel({ caption = "Unit"}),
         },
         OnClick = {
@@ -29,7 +29,7 @@ function ShaderPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "UI shader editor",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "format-text-bold.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "format-text-bold.png" }),
             TabbedPanelLabel({ caption = "UI"}),
         },
         OnClick = {
@@ -164,7 +164,7 @@ end
 
 function NodeEditor:NewNode(nodeClassName)
     local nodeClass = self.nodeClasses[nodeClassName]
-    nodeInstance = SCEN_EDIT.deepcopy(nodeClass)
+    nodeInstance = SB.deepcopy(nodeClass)
     return nodeInstance
 end
 

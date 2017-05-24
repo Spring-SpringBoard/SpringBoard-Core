@@ -8,7 +8,7 @@ end
 
 function CacheTextureCommand:execute()
     local cmd = WidgetCacheTextureCommand(self.texture)
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end
 
 WidgetCacheTextureCommand = AbstractCommand:extends{}
@@ -21,6 +21,6 @@ end
 
 function WidgetCacheTextureCommand:execute()
 	for _, tex in pairs(self.texture) do
-		SCEN_EDIT.model.textureManager:CacheTexture(tex)
+		SB.model.textureManager:CacheTexture(tex)
 	end
 end

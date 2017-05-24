@@ -6,5 +6,5 @@ function WidgetRemoveUnitCommand:init(modelId)
 end
 
 function WidgetRemoveUnitCommand:execute()
-    SCEN_EDIT.model.unitManager:removeUnitByModelId(self.modelId)
+    SB.model.unitManager:removeUnitByModelId(self.modelId)
 end

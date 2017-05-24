@@ -6,6 +6,6 @@ function WidgetFollowUnitCommand:init(unit)
 end
 
 function WidgetFollowUnitCommand:execute()
-    SCEN_EDIT.displayUtil:followUnit(self.unit)
---    SCEN_EDIT.model.areaManager:addArea(self.value, self.id)
+    SB.displayUtil:followUnit(self.unit)
+--    SB.model.areaManager:addArea(self.value, self.id)
 end

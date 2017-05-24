@@ -1,7 +1,7 @@
 return {
     actions = function()
         local variableAssignments = {}
-        allTypes = SCEN_EDIT.coreTypes()
+        allTypes = SB.coreTypes()
         for _, type in pairs(allTypes) do
             if type.canBeVariable ~= false then
                 local variableAssignment = {
@@ -21,10 +21,10 @@ return {
                         },
                     },
                     execute = function(input)
-                        --local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
-                        local newValue = SCEN_EDIT.deepcopy(input.variable)
+                        --local unitModelId = SB.model.unitManager:getModelUnitId(input.unit)
+                        local newValue = SB.deepcopy(input.variable)
                         newValue.value.id = input[type.name]
-                        SCEN_EDIT.model.variableManager:setVariable(input.variable.id, newValue)
+                        SB.model.variableManager:setVariable(input.variable.id, newValue)
 
                         --local array = input[arrayType]
                         --local index = input.number
@@ -88,7 +88,7 @@ return {
                 tags = {"Trigger"},
                 execute = function (input)
                     local trigger = input.trigger
-                    SCEN_EDIT.model.triggerManager:enableTrigger(trigger.id)
+                    SB.model.triggerManager:enableTrigger(trigger.id)
                 end
             },
             {
@@ -98,7 +98,7 @@ return {
                 tags = {"Trigger"},
                 execute = function (input)
                     local trigger = input.trigger
-                    SCEN_EDIT.model.triggerManager:disableTrigger(trigger.id)
+                    SB.model.triggerManager:disableTrigger(trigger.id)
                 end
             },
             {
@@ -106,7 +106,7 @@ return {
                 name = "SAVE_CHECKPOINT",
                 tags = {"Other"},
                 execute = function (input)
-                    SCEN_EDIT.savedModel = SCEN_EDIT.model:Serialize()
+                    SB.savedModel = SB.model:Serialize()
                 end
             },
             {
@@ -114,8 +114,8 @@ return {
                 name = "LOAD_CHECKPOINT",
                 tags = {"Other"},
                 execute = function (input)
-                    if SCEN_EDIT.savedModel ~= nil then
-                        SCEN_EDIT.model:Load(SCEN_EDIT.savedModel)
+                    if SB.savedModel ~= nil then
+                        SB.model:Load(SB.savedModel)
                     else
                         Spring.Log("Scened", LOG.ERROR, "There's no checkpoint to load from")
                     end
@@ -236,8 +236,8 @@ return {
                     local y = Spring.GetGroundHeight(x, z)
                     local id = Spring.CreateUnit(unitType, x, y, z, 0, team)
 
-                    local color = SCEN_EDIT.model.teamManager:getTeam(team).color
-                    SCEN_EDIT.displayUtil:displayText("Spawned", {x, y, z}, color )
+                    local color = SB.model.teamManager:getTeam(team).color
+                    SB.displayUtil:displayText("Spawned", {x, y, z}, color )
                 end
             },
             {
@@ -249,9 +249,9 @@ return {
                     local unit = input.unit
                     local x, y, z = Spring.GetUnitPosition(unit)
 
-                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
+                    local color = SB.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
                     Spring.DestroyUnit(unit, false, true)
-                    SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
+                    SB.displayUtil:displayText("Removed", {x, y, z}, color)
                 end
             },
             {
@@ -263,9 +263,9 @@ return {
                     local unit = input.unit
                     local x, y, z = Spring.GetUnitPosition(unit)
 
-                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
+                    local color = SB.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
                     Spring.DestroyUnit(unit, false, false)
-                    SCEN_EDIT.displayUtil:displayText("Destroyed", {x, y, z}, color)
+                    SB.displayUtil:displayText("Destroyed", {x, y, z}, color)
                 end
             },
             {
@@ -277,9 +277,9 @@ return {
                     local unit = input.unit
                     local x, y, z = Spring.GetUnitPosition(unit)
 
-                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
+                    local color = SB.model.teamManager:getTeam(Spring.GetUnitTeam(unit)).color
                     Spring.DestroyUnit(unit, true, false)
-                    SCEN_EDIT.displayUtil:displayText("Self Destruct", {x, y, z}, color)
+                    SB.displayUtil:displayText("Self Destruct", {x, y, z}, color)
                 end
             },
             {
@@ -373,8 +373,8 @@ return {
                     local id = Spring.CreateFeature(featureType, x, y, z)
 
                     local team = Spring.GetFeatureTeam(id)
-                    local color = SCEN_EDIT.model.teamManager:getTeam(team).color
-                    SCEN_EDIT.displayUtil:displayText("Spawned", {x, y, z}, color )
+                    local color = SB.model.teamManager:getTeam(team).color
+                    SB.displayUtil:displayText("Spawned", {x, y, z}, color )
                 end
             },
             {
@@ -386,9 +386,9 @@ return {
                     local feature = input.feature
                     local x, y, z = Spring.GetFeaturePosition(feature)
 
-                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetFeatureTeam(feature)).color
+                    local color = SB.model.teamManager:getTeam(Spring.GetFeatureTeam(feature)).color
                     Spring.DestroyFeature(feature)
-                    SCEN_EDIT.displayUtil:displayText("Removed", {x, y, z}, color)
+                    SB.displayUtil:displayText("Removed", {x, y, z}, color)
                 end
             },
             {
@@ -485,7 +485,7 @@ return {
                 input = { "unit" },
                 tags = { "Camera"},
                 execute = function (input)
-                    SCEN_EDIT.displayUtil:followUnit(input.unit)
+                    SB.displayUtil:followUnit(input.unit)
                 end
             },
             {
@@ -515,10 +515,10 @@ return {
                     }
 
                     Spring.GiveOrderToUnit(input.unit, CMD.STOP, {}, {})
-                    SCEN_EDIT.metaModel.orderTypes[orderTypeName].execute(newInput)
+                    SB.metaModel.orderTypes[orderTypeName].execute(newInput)
                     local x, y, z = Spring.GetUnitPosition(input.unit)
-                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(input.unit)).color
-                    SCEN_EDIT.displayUtil:displayText("Issued order", {x, y, z}, color )
+                    local color = SB.model.teamManager:getTeam(Spring.GetUnitTeam(input.unit)).color
+                    SB.displayUtil:displayText("Issued order", {x, y, z}, color )
                 end
             },
             {
@@ -533,10 +533,10 @@ return {
                         params = input.order.input,
                     }
 
-                    SCEN_EDIT.metaModel.orderTypes[orderTypeName].execute(newInput)
+                    SB.metaModel.orderTypes[orderTypeName].execute(newInput)
                     local x, y, z = Spring.GetUnitPosition(input.unit)
-                    local color = SCEN_EDIT.model.teamManager:getTeam(Spring.GetUnitTeam(input.unit)).color
-                    SCEN_EDIT.displayUtil:displayText("Added order", {x, y, z}, color )
+                    local color = SB.model.teamManager:getTeam(Spring.GetUnitTeam(input.unit)).color
+                    SB.displayUtil:displayText("Added order", {x, y, z}, color )
                 end
             },
             {
@@ -551,7 +551,7 @@ return {
                             unit = unit,
                             params = input.order.input,
                         }
-                        SCEN_EDIT.metaModel.orderTypes[orderTypeName].execute(newInput)
+                        SB.metaModel.orderTypes[orderTypeName].execute(newInput)
                     end
                 end
             },
@@ -573,10 +573,10 @@ return {
             },
             },
             execute = function(input)
-            local unitModelId = SCEN_EDIT.model.unitManager:getModelUnitId(input.unit)
-            local newValue = SCEN_EDIT.deepcopy(input.variable)
+            local unitModelId = SB.model.unitManager:getModelUnitId(input.unit)
+            local newValue = SB.deepcopy(input.variable)
             newValue.value.id = unitModelId
-            SCEN_EDIT.model.variableManager:setVariable(variable.id, newValue)
+            SB.model.variableManager:setVariable(variable.id, newValue)
             end,
             },--]]
         }
@@ -657,7 +657,7 @@ return {
     end,
     functions = function()
         local functions = {}
-        local coreTypes = SCEN_EDIT.coreTypes()
+        local coreTypes = SB.coreTypes()
         local allTypes = coreTypes
 
         for _, basicType in pairs(allTypes) do

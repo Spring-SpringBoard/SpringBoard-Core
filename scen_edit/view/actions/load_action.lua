@@ -6,7 +6,7 @@ function LoadAction:execute()
     ofd:setConfirmDialogCallback(
         function(path)
             local cmd = LoadProjectCommandWidget(path)
-            SCEN_EDIT.commandManager:execute(cmd, true)
+            SB.commandManager:execute(cmd, true)
         end
     )
 end

@@ -54,7 +54,7 @@ end
 function Clipboard:PasteObjectsCommands(delta, objects, bridge)
     local cmds = {}
     for _, object in pairs(objects) do
-        local uc = SCEN_EDIT.deepcopy(object)
+        local uc = SB.deepcopy(object)
         uc.pos.x = uc.pos.x + delta.x
         uc.pos.z = uc.pos.z + delta.z
         local cmd = bridge.AddObjectCommand(uc)
@@ -71,7 +71,7 @@ end
 
 function Clipboard:CopyAreas(objectIDs)
     for _, objectID in pairs(objectIDs) do
-        table.insert(self.areas, SCEN_EDIT.model.areaManager:getArea(objectID))
+        table.insert(self.areas, SB.model.areaManager:getArea(objectID))
     end
 end
 
@@ -118,7 +118,7 @@ function Clipboard:Cut(selection)
         end
     end
     local cmd = CompoundCommand(commands)
-    SCEN_EDIT.commandManager:execute(cmd)
+    SB.commandManager:execute(cmd)
 end
 
 function Clipboard:Paste(coords)
@@ -161,7 +161,7 @@ function Clipboard:Paste(coords)
         end
     end
     local cmd = CompoundCommand(commands)
-    SCEN_EDIT.commandManager:execute(cmd)
+    SB.commandManager:execute(cmd)
 end
 
 function Clipboard:Copy(selection)

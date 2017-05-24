@@ -9,8 +9,8 @@ function RecieveGadgetMessage(msg)
         local msgTable = loadstring(msgParsed)()
         local msg = Message(msgTable.tag, msgTable.data)
         if msg.tag == 'command' then
-            local cmd = SCEN_EDIT.resolveCommand(msg.data)
-            SCEN_EDIT.commandManager:execute(cmd, true)
+            local cmd = SB.resolveCommand(msg.data)
+            SB.commandManager:execute(cmd, true)
         end
         return
     end
@@ -120,8 +120,8 @@ function widget:Initialize()
     VFS.Include("scen_edit/exports.lua")
     LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
     LCS = LCS()
-    VFS.Include(SCEN_EDIT_DIR .. "util.lua")
-    SCEN_EDIT.Include(SCEN_EDIT_DIR .. "utils/include.lua")
+    VFS.Include(SB_DIR .. "util.lua")
+    SB.Include(SB_DIR .. "utils/include.lua")
 
     dumpConfig()
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
@@ -143,45 +143,45 @@ function widget:Initialize()
 
     CheckConfig()
 
-    SCEN_EDIT.displayUtil = DisplayUtil(true)
+    SB.displayUtil = DisplayUtil(true)
 
-    SCEN_EDIT.conf = Conf()
-    SCEN_EDIT.metaModel = MetaModel()
+    SB.conf = Conf()
+    SB.metaModel = MetaModel()
 
     --TODO: relocate this
     local metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 
-    SCEN_EDIT.model = Model()
+    SB.model = Model()
 
-    SCEN_EDIT.model.areaManager = AreaManager()
-    SCEN_EDIT.model.unitManager = UnitManager(true)
-    SCEN_EDIT.model.featureManager = FeatureManager(true)
-    SCEN_EDIT.model.variableManager = VariableManager(true)
-    SCEN_EDIT.model.triggerManager = TriggerManager(true)
-    SCEN_EDIT.commandManager = CommandManager()
-    SCEN_EDIT.commandManager.widget = true
-    SCEN_EDIT.stateManager = StateManager()
-    SCEN_EDIT.messageManager = MessageManager()
-    SCEN_EDIT.messageManager.widget = true
+    SB.model.areaManager = AreaManager()
+    SB.model.unitManager = UnitManager(true)
+    SB.model.featureManager = FeatureManager(true)
+    SB.model.variableManager = VariableManager(true)
+    SB.model.triggerManager = TriggerManager(true)
+    SB.commandManager = CommandManager()
+    SB.commandManager.widget = true
+    SB.stateManager = StateManager()
+    SB.messageManager = MessageManager()
+    SB.messageManager.widget = true
 
 
-    SCEN_EDIT.model.teamManager:generateTeams(widget)
+    SB.model.teamManager:generateTeams(widget)
     local commands = {}
-    for id, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
+    for id, team in pairs(SB.model.teamManager:getAllTeams()) do
         local cmd = SetTeamColorCommand(id, team.color)
         table.insert(commands, cmd)
     end
     local cmd = CompoundCommand(commands)
     cmd.blockUndo = true
-    SCEN_EDIT.commandManager:execute(cmd)
+    SB.commandManager:execute(cmd)
 
     if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
         Spring.SendCommands('forcestart')
-        SCEN_EDIT.view = View()
+        SB.view = View()
 
         local viewAreaManagerListener = ViewAreaManagerListener()
-        SCEN_EDIT.model.areaManager:addListener(viewAreaManagerListener)
+        SB.model.areaManager:addListener(viewAreaManagerListener)
     end
     self._START_TIME = os.clock()
 end
@@ -191,88 +191,88 @@ function reloadGadgets()
 end
 
 function widget:DrawScreen()
-    SCEN_EDIT.executeDelayed("DrawScreen")
+    SB.executeDelayed("DrawScreen")
 
-    if SCEN_EDIT.view ~= nil then
-        SCEN_EDIT.stateManager:DrawScreen()
-        SCEN_EDIT.view:DrawScreen()
+    if SB.view ~= nil then
+        SB.stateManager:DrawScreen()
+        SB.view:DrawScreen()
     end
 end
 
 function widget:DrawWorld()
-    SCEN_EDIT.executeDelayed("DrawWorld")
+    SB.executeDelayed("DrawWorld")
 
-    if SCEN_EDIT.view ~= nil then
-        SCEN_EDIT.stateManager:DrawWorld()
-        SCEN_EDIT.view:DrawWorld()
+    if SB.view ~= nil then
+        SB.stateManager:DrawWorld()
+        SB.view:DrawWorld()
     end
-    SCEN_EDIT.displayUtil:Draw()
+    SB.displayUtil:Draw()
 end
 
 function widget:DrawWorldPreUnit()
-    if SCEN_EDIT.view ~= nil then
-        SCEN_EDIT.stateManager:DrawWorldPreUnit()
-        SCEN_EDIT.view:DrawWorldPreUnit()
+    if SB.view ~= nil then
+        SB.stateManager:DrawWorldPreUnit()
+        SB.view:DrawWorldPreUnit()
     end
 end
 
 function widget:MousePress(x, y, button)
-    if SCEN_EDIT.view ~= nil then
-        return SCEN_EDIT.stateManager:MousePress(x, y, button)
+    if SB.view ~= nil then
+        return SB.stateManager:MousePress(x, y, button)
     end
 end
 
 function widget:MouseMove(x, y, dx, dy, button)
-    if SCEN_EDIT.view ~= nil then
-        return SCEN_EDIT.stateManager:MouseMove(x, y, dx, dy, button)
+    if SB.view ~= nil then
+        return SB.stateManager:MouseMove(x, y, dx, dy, button)
     end
 end
 
 function widget:MouseRelease(x, y, button)
-    if SCEN_EDIT.view ~= nil then
-        return SCEN_EDIT.stateManager:MouseRelease(x, y, button)
+    if SB.view ~= nil then
+        return SB.stateManager:MouseRelease(x, y, button)
     end
 end
 
 function widget:MouseWheel(up, value)
-    if SCEN_EDIT.view ~= nil then
-        return SCEN_EDIT.stateManager:MouseWheel(up, value)
+    if SB.view ~= nil then
+        return SB.stateManager:MouseWheel(up, value)
     end
 end
 
 function widget:KeyPress(key, mods, isRepeat, label, unicode)
-    if SCEN_EDIT.view ~= nil then
-        return SCEN_EDIT.stateManager:KeyPress(key, mods, isRepeat, label, unicode)
+    if SB.view ~= nil then
+        return SB.stateManager:KeyPress(key, mods, isRepeat, label, unicode)
     end
 end
 
 function widget:GamePreload()
-    if not hasScenarioFile and SCEN_EDIT.projectDir ~= nil and not SCEN_EDIT.projectLoaded then
+    if not hasScenarioFile and SB.projectDir ~= nil and not SB.projectLoaded then
         Log.Notice("Loading project (from widget)")
-        local cmd = LoadProjectCommandWidget(SCEN_EDIT.projectDir, false)
-        SCEN_EDIT.commandManager:execute(cmd, true)
-        SCEN_EDIT.projectLoaded = true
+        local cmd = LoadProjectCommandWidget(SB.projectDir, false)
+        SB.commandManager:execute(cmd, true)
+        SB.projectLoaded = true
     end
 end
 
 function widget:GameFrame(frameNum)
-    if SCEN_EDIT.view ~= nil then
-        SCEN_EDIT.stateManager:GameFrame(frameNum)
+    if SB.view ~= nil then
+        SB.stateManager:GameFrame(frameNum)
     end
-    SCEN_EDIT.displayUtil:OnFrame()
+    SB.displayUtil:OnFrame()
 end
 
 function widget:Update()
     if self._START_TIME and os.clock() - self._START_TIME >= 1 then
         if not RELOAD_GADGETS then
-            SCEN_EDIT.commandManager:execute(ResendCommand())
+            SB.commandManager:execute(ResendCommand())
         end
         self._START_TIME = nil
     end
-    if SCEN_EDIT.view ~= nil then
-        SCEN_EDIT.stateManager:Update()
-        SCEN_EDIT.view:Update()
+    if SB.view ~= nil then
+        SB.stateManager:Update()
+        SB.view:Update()
     end
-    SCEN_EDIT.executeDelayed("GameFrame")
-    SCEN_EDIT.displayUtil:Update()
+    SB.executeDelayed("GameFrame")
+    SB.displayUtil:Update()
 end

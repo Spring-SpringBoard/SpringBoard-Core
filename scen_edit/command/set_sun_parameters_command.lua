@@ -8,7 +8,7 @@ end
 
 function SetSunParametersCommand:execute()
     local cmd = WidgetSetSunParametersCommand(self.opts)
-    SCEN_EDIT.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd, true)
 end
 
 function SetSunParametersCommand:unexecute()

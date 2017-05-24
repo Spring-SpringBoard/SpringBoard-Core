@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "grid_view.lua")
+SB.Include(SB_VIEW_DIR .. "grid_view.lua")
 
 ObjectDefsPanel = GridView:extends{}
 
@@ -43,7 +43,7 @@ function ObjectDefsPanel:init(tbl)
             end
 
             if selected then
-                local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                local currentState = SB.stateManager:GetCurrentState()
                 local isSelectState =
                     (currentState:is_A(SelectUnitTypeState) and self.bridge.bridgeName == "UnitBridge") or
                     (currentState:is_A(SelectFeatureTypeState) and self.bridge.bridgeName == "FeatureBridge")
@@ -151,7 +151,7 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
     local objectDefID = ctrl.objectDefID
     local drawIcon = {ctrl = ctrl, radius = self:GetObjectDefRadius(objectDefID)}
     self.drawIcons[objectDefID] = drawIcon
-    SCEN_EDIT.Delay("DrawScreen", function()
+    SB.Delay("DrawScreen", function()
         local tex = gl.CreateTexture(128, 128, {
             border = false,
             min_filter = GL.LINEAR,
@@ -165,7 +165,7 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
     end)
     if not self.scheduleDraw then
         self.scheduleDraw = true
-        SCEN_EDIT.Delay("DrawScreen", function()
+        SB.Delay("DrawScreen", function()
             self:DrawIcons()
         end)
     end
@@ -177,7 +177,7 @@ function ObjectDefsPanel:DrawIcons()
     if (time - self.refresh) >= 0.1 then
         self.refresh = time
     else
-        SCEN_EDIT.Delay("DrawScreen", function()
+        SB.Delay("DrawScreen", function()
             self:DrawIcons()
         end)
         return
@@ -194,7 +194,7 @@ function ObjectDefsPanel:DrawIcons()
     gl.Blending("alpha")
     gl.Texture(false)
     gl.PopMatrix()
-    SCEN_EDIT.Delay("DrawScreen", function()
+    SB.Delay("DrawScreen", function()
         self:DrawIcons()
     end)
 end
@@ -207,7 +207,7 @@ function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
 --                     gl.TexRect(-1, -1, 1, 1)
         gl.Translate(0, 0.5, 0)
-        local shaderObj = SCEN_EDIT.view.modelShaders:GetDefaultShader()
+        local shaderObj = SB.view.modelShaders:GetDefaultShader()
         gl.UseShader(shaderObj.shader)
         gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(self.teamID))
         gl.Rotate(60, -1, 1, -0.5)

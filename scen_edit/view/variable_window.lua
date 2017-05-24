@@ -8,16 +8,16 @@ function VariableWindow:init(variable)
         width='40%',
         x = 1,
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_OK_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_OK_COLOR,
     }
     local btnCancel = Button:New {
         caption='Cancel',
         width='40%',
         x = '50%',
         bottom = 1,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        backgroundColor = SCEN_EDIT.conf.BTN_CANCEL_COLOR,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
         OnClick={function() self.window:Dispose() end}
     }
 
@@ -31,7 +31,7 @@ function VariableWindow:init(variable)
         text = self.variable.name,
         x = 60,
         width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         y = 10
     }
 
@@ -57,8 +57,8 @@ function VariableWindow:init(variable)
         x = 60,
         width = 100,
         y = 50,
-        height = SCEN_EDIT.conf.B_HEIGHT,
-        items = SCEN_EDIT.metaModel.variableTypes,
+        height = SB.conf.B_HEIGHT,
+        items = SB.metaModel.variableTypes,
         parent = stackTypePanel,
         OnSelect = {
             function(object, itemIdx, selected)
@@ -66,8 +66,8 @@ function VariableWindow:init(variable)
                     self.variablePanel:ClearChildren()
 
                     local typeId = itemIdx
-                    local inputType = SCEN_EDIT.metaModel.variableTypes[typeId]
-                    local subPanel = SCEN_EDIT.createNewPanel({
+                    local inputType = SB.metaModel.variableTypes[typeId]
+                    local subPanel = SB.createNewPanel({
                         dataType = {
                             type = inputType,
                             sources = "pred",
@@ -77,7 +77,7 @@ function VariableWindow:init(variable)
                     })
                     if subPanel then
                         self.variablePanel[inputType] = subPanel
-                        SCEN_EDIT.MakeSeparator(self.variablePanel)
+                        SB.MakeSeparator(self.variablePanel)
                     end
                 end
             end
@@ -85,7 +85,7 @@ function VariableWindow:init(variable)
     }
 
     self.cmbType:Select(-1)
-    self.cmbType:Select(GetIndex(SCEN_EDIT.metaModel.variableTypes, self.variable.type))
+    self.cmbType:Select(GetIndex(SB.metaModel.variableTypes, self.variable.type))
 
     self.window = Window:New {
         width = 340,
@@ -98,7 +98,7 @@ function VariableWindow:init(variable)
             ScrollPanel:New {
                 x = 1,
                 y = 90,
-                bottom = 2 * SCEN_EDIT.conf.C_HEIGHT,
+                bottom = 2 * SB.conf.C_HEIGHT,
                 right = 5,
                 parent = self.window,
                 children = {
@@ -114,7 +114,7 @@ function VariableWindow:init(variable)
         }
     }
 
-    SCEN_EDIT.MakeConfirmButton(self.window, btnOk)
+    SB.MakeConfirmButton(self.window, btnOk)
 end
 
 function VariableWindow:UpdatePanel(variable)
@@ -136,8 +136,8 @@ function VariableWindow:UpdateModel(variable)
     self.variablePanel[variable.type]:UpdateModel(self.variable.value)
 
 --[[    if typeChanged then
-        SCEN_EDIT.model:RemoveVariable(variable.id)
-        newVariable = SCEN_EDIT.model:NewVariable(variable.type)
+        SB.model:RemoveVariable(variable.id)
+        newVariable = SB.model:NewVariable(variable.type)
         newVariable.value = variable.value
         newVariable.name = variable.name
     end--]]

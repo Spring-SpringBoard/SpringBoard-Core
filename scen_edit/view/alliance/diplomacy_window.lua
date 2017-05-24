@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 DiplomacyWindow = EditorView:extends{}
 
 function DiplomacyWindow:init(trigger)
@@ -21,8 +21,8 @@ function DiplomacyWindow:init(trigger)
         parent = titlesPanel,
     }
     local i = 1
-    for id, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
-        local fontColor = SCEN_EDIT.glToFontColor(team.color)
+    for id, team in pairs(SB.model.teamManager:getAllTeams()) do
+        local fontColor = SB.glToFontColor(team.color)
         local lblTeam = Label:New {
             caption = fontColor .. id .. "\b",
             x = 160 + i * 40,
@@ -33,9 +33,9 @@ function DiplomacyWindow:init(trigger)
     end
 
     --teams
-    for _, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
+    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         local stackTeamPanel = MakeComponentPanel(self.teamsPanel)
-        local fontColor = SCEN_EDIT.glToFontColor(team.color)
+        local fontColor = SB.glToFontColor(team.color)
         local lblTeam = Label:New {
             caption = fontColor .. "Team: " .. team.name .. "\b",
             x = 1,
@@ -43,7 +43,7 @@ function DiplomacyWindow:init(trigger)
             parent = stackTeamPanel,
         }
         local j = 1
-        for _, team2 in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
+        for _, team2 in pairs(SB.model.teamManager:getAllTeams()) do
             if team.id ~= team2.id then
                 self.cbSpecialUnit = Checkbox:New {
                     caption = '',
@@ -55,7 +55,7 @@ function DiplomacyWindow:init(trigger)
                     OnChange = { 
                         function(cbToggled, checked) 
                             local cmd = SetAllyCommand(team.allyTeam, team2.allyTeam, checked)
-                            SCEN_EDIT.commandManager:execute(cmd)
+                            SB.commandManager:execute(cmd)
                         end
                     }
                 }
@@ -66,7 +66,7 @@ function DiplomacyWindow:init(trigger)
         local cmbAlliance = ComboBox:New {
             x = 160,
             width = 110,
-            height = SCEN_EDIT.conf.B_HEIGHT,
+            height = SB.conf.B_HEIGHT,
             parent = stackTeamPanel,
             items = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
         }
@@ -77,7 +77,7 @@ function DiplomacyWindow:init(trigger)
                     local newAllyTeamId = cmbAlliance.items[itemIdx]
                     if newAllyTeamId ~= team.allyTeam then
                         local cmd = ChangeAllyTeamCommand(team.id, newAllyTeamId)
-                        SCEN_EDIT.commandManager:execute(cmd)
+                        SB.commandManager:execute(cmd)
                         -- TODO: should be updated in a listener instead
                         team.allyTeam = newAllyTeamId
                     end
@@ -92,7 +92,7 @@ function DiplomacyWindow:init(trigger)
             x = 1,
             y = 15,
             right = 5,
-            bottom = SCEN_EDIT.conf.C_HEIGHT * 2,
+            bottom = SB.conf.C_HEIGHT * 2,
             children = {
                 self.teamsPanel
             },

@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 
 CollisionView = EditorView:extends{}
 
@@ -282,8 +282,8 @@ function CollisionView:init()
     )
 
     self:Finalize(children)
-    SCEN_EDIT.view.selectionManager:addListener(self)
-    self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
+    SB.view.selectionManager:addListener(self)
+    self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
 end
 
 function CollisionView:OnSelectionChanged(selection)
@@ -334,16 +334,16 @@ end
 
 function CollisionView:CommandExecuted()
     if not self._startedChanging then
-        self:OnSelectionChanged(SCEN_EDIT.view.selectionManager:GetSelection())
+        self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
     end
 end
 
 function CollisionView:OnStartChange(name)
-    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(true))
+    SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
 function CollisionView:OnEndChange(name)
-    SCEN_EDIT.commandManager:execute(SetMultipleCommandModeCommand(false))
+    SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
 function CollisionView:OnFieldChange(name, value)
@@ -364,7 +364,7 @@ function CollisionView:OnFieldChange(name, value)
         return
     end
 
-    local selection = SCEN_EDIT.view.selectionManager:GetSelection()
+    local selection = SB.view.selectionManager:GetSelection()
     if #selection.units == 0 and #selection.features == 0 then
         return
     end
@@ -466,14 +466,14 @@ function CollisionView:OnFieldChange(name, value)
     end
     local commands = {}
     for _, objectID in pairs(selection.units) do
-        local modelID = SCEN_EDIT.model.unitManager:getModelUnitId(objectID)
+        local modelID = SB.model.unitManager:getModelUnitId(objectID)
         table.insert(commands, SetUnitParamCommand(modelID, name, value))
     end
     for _, objectID in pairs(selection.features) do
-        local modelID = SCEN_EDIT.model.featureManager:getModelFeatureId(objectID)
+        local modelID = SB.model.featureManager:getModelFeatureId(objectID)
         table.insert(commands, SetFeatureParamCommand(modelID, name, value))
     end
 
     local compoundCommand = CompoundCommand(commands)
-    SCEN_EDIT.commandManager:execute(compoundCommand)
+    SB.commandManager:execute(compoundCommand)
 end

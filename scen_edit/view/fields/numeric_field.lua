@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_FIELDS_DIR .. "string_field.lua")
+SB.Include(SB_VIEW_FIELDS_DIR .. "string_field.lua")
 
 NumericField = StringField:extends{}
 function NumericField:Update(source)
@@ -43,7 +43,7 @@ function NumericField:init(field)
     self.editBox:SetText(v)
     self.button.OnMouseUp = {
         function(...)
-            SCEN_EDIT.SetMouseCursor()
+            SB.SetMouseCursor()
             self.lblValue.font:SetColor(1, 1, 1, 1)
             self.lblTitle.font:SetColor(1, 1, 1, 1)
             self.lblTitle:Invalidate()
@@ -83,7 +83,7 @@ function NumericField:init(field)
                 end
                 -- FIXME: This -could- be Spring.WarpMouse(self.startX, self.startY) but it doesn't seem to work well
                 Spring.WarpMouse(vsx/2, vsy/2)
-                SCEN_EDIT.SetMouseCursor("empty")
+                SB.SetMouseCursor("empty")
             end
         end
     }

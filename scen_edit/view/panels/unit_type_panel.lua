@@ -14,14 +14,14 @@ function UnitTypePanel:MakePredefinedOpt()
         caption = '...',
         right = 1,
         width = 100,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackUnitTypePanel,
         unitTypeId = nil,
     }
     self.btnPredefined.OnClick = {
         function()
-            SCEN_EDIT.stateManager:SetState(SelectUnitTypeState(self.btnPredefined))
-            --SCEN_EDIT.SelectType(self.btnPredefined)
+            SB.stateManager:SetState(SelectUnitTypeState(self.btnPredefined))
+            --SB.SelectType(self.btnPredefined)
         end
     }
     self.btnPredefined.OnSelectObjectType = {

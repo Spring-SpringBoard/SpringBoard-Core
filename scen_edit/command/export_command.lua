@@ -5,8 +5,8 @@ function ExportCommand:init(path)
     self.className = "ExportCommand"	
     self.path = path
 	--add extension if it doesn't exist
-	if string.sub(self.path,-string.len(SCEN_EDIT_FILE_EXT)) ~= SCEN_EDIT_FILE_EXT then
-		self.path = self.path .. SCEN_EDIT_FILE_EXT
+	if string.sub(self.path,-string.len(SB_FILE_EXT)) ~= SB_FILE_EXT then
+		self.path = self.path .. SB_FILE_EXT
 	end
 end
 
@@ -57,29 +57,29 @@ local function GenerateScriptTxt(dev)
 
     local isMyPlayerNameSet = false
 
-    local scenarioInfo = SCEN_EDIT.model.scenarioInfo
+    local scenarioInfo = SB.model.scenarioInfo
     local gameType = nil
     local projectDir = ""
     if not dev then
         gameType = scenarioInfo.name .. " " .. scenarioInfo.version
     else
         gameType = Game.gameName .. " " .. Game.gameVersion
-        if SCEN_EDIT.model.projectDir then
-            projectDir = "project_dir = " .. SCEN_EDIT.projectDir .. ";"
+        if SB.model.projectDir then
+            projectDir = "project_dir = " .. SB.projectDir .. ";"
         end
     end
 
     scriptTxt = scriptTxt:gsub("__MAP_NAME__", Game.mapName)
                          :gsub("__GAME_TYPE__", gameType)
-                         :gsub("__NUM_USERS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
-                         :gsub("__NUM_TEAMS__", tostring(#SCEN_EDIT.model.teamManager:getAllTeams()))
+                         :gsub("__NUM_USERS__", tostring(#SB.model.teamManager:getAllTeams()))
+                         :gsub("__NUM_TEAMS__", tostring(#SB.model.teamManager:getAllTeams()))
                          :gsub("__PLAY_MODE__", tostring(playMode))
                          :gsub("__HAS_SCENARIO_FILE__", tostring(playMode))
                          :gsub("__PROJECT_DIR__", tostring(projectDir))
 
     local numAIs = 0
     local numPlayers = 0
-    for _, team in pairs(SCEN_EDIT.model.teamManager:getAllTeams()) do
+    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         if not team.gaia then
             local teamTxt = [[
     [__TEAM_ID__]
@@ -194,9 +194,9 @@ function ExportCommand:execute()
 	end	
     assert(not VFS.FileExists(self.path), "File already exists")
   
-    local projectDir = SCEN_EDIT.projectDir
-    ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script.txt")
-    ScriptTxtSave(SCEN_EDIT.model.scenarioInfo.name .. "-script-DEV.txt", true)
+    local projectDir = SB.projectDir
+    ScriptTxtSave(SB.model.scenarioInfo.name .. "-script.txt")
+    ScriptTxtSave(SB.model.scenarioInfo.name .. "-script-DEV.txt", true)
 
     --Log.Notice("compressing folder...")
     --create an archive from the directory

@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "grid_view.lua")
+SB.Include(SB_VIEW_DIR .. "grid_view.lua")
 
 AssetView = GridView:extends{}
 
@@ -63,7 +63,7 @@ end
 function AssetView:ScanDir()
     self:ScanDirStarted()
 
-    local files = SCEN_EDIT.model.assetsManager:DirList(self.rootDir, self.dir, "*")
+    local files = SB.model.assetsManager:DirList(self.rootDir, self.dir, "*")
     self.files = {}
     for _, file in pairs(files) do
         local ext = (file:GetExt() or ""):lower()
@@ -74,7 +74,7 @@ function AssetView:ScanDir()
         end
     end
 
-    self.dirs = SCEN_EDIT.model.assetsManager:SubDirs(self.rootDir, self.dir, "*")
+    self.dirs = SB.model.assetsManager:SubDirs(self.rootDir, self.dir, "*")
     self._dirsNum = #self.dirs
 
     self:ScanDirFinished()

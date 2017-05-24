@@ -15,13 +15,13 @@ function FeaturePanel:MakePredefinedOpt()
         caption = '...',
         right = 40,
         width = 60,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackFeaturePanel,
         featureId = nil,
     }
     self.btnPredefined.OnClick = {
         function()
-            SCEN_EDIT.stateManager:SetState(SelectFeatureState(self.btnPredefined))
+            SB.stateManager:SetState(SelectFeatureState(self.btnPredefined))
         end
     }
     self.btnPredefined.OnSelectObject = {
@@ -37,16 +37,16 @@ function FeaturePanel:MakePredefinedOpt()
     self.btnPredefinedZoom = Button:New {
         caption = "",
         right = 1,
-        width = SCEN_EDIT.conf.B_HEIGHT,
-        height = SCEN_EDIT.conf.B_HEIGHT,
+        width = SB.conf.B_HEIGHT,
+        height = SB.conf.B_HEIGHT,
         parent = stackFeaturePanel,
         padding = {0, 0, 0, 0},
         children = {
             Image:New {
                 tooltip = "Select feature",
-                file=SCEN_EDIT_IMG_DIR .. "search.png",
-                height = SCEN_EDIT.conf.B_HEIGHT,
-                width = SCEN_EDIT.conf.B_HEIGHT,
+                file=SB_IMG_DIR .. "search.png",
+                height = SB.conf.B_HEIGHT,
+                width = SB.conf.B_HEIGHT,
                 padding = {0, 0, 0, 0},
                 margin = {0, 0, 0, 0},
             },
@@ -54,10 +54,10 @@ function FeaturePanel:MakePredefinedOpt()
         OnClick = {
             function()
                 if self.btnPredefined.featureId ~= nil then
-                    local featureId = SCEN_EDIT.model.featureManager:getSpringFeatureId(self.btnPredefined.featureId)
+                    local featureId = SB.model.featureManager:getSpringFeatureId(self.btnPredefined.featureId)
                     if featureId ~= nil and Spring.ValidFeatureID(featureId) then
                         local x, y, z = Spring.GetFeaturePosition(featureId)
-                        SCEN_EDIT.view.selectionManager:Select({
+                        SB.view.selectionManager:Select({
                             features = {featureId}
                         })
                         Spring.SetCameraTarget(x, y, z)

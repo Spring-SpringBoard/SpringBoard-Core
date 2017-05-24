@@ -5,17 +5,17 @@ function TerrainPanel:init()
     local btnModifyHeightMap = TabbedPanelButton({
         tooltip = "Modify heightmap",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
             TabbedPanelLabel({ caption = "Terrain" }),
         },
         OnClick = {
             function()
-                if SCEN_EDIT.heightmapEditorView == nil then
+                if SB.heightmapEditorView == nil then
                     self.heightmapEditorView = HeightmapEditorView()
-                    SCEN_EDIT.heightmapEditorView = self.heightmapEditorView
+                    SB.heightmapEditorView = self.heightmapEditorView
                 end
-                if SCEN_EDIT.heightmapEditorView.window.hidden then
-					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.heightmapEditorView.window)
+                if SB.heightmapEditorView.window.hidden then
+					SB.view:SetMainPanel(SB.heightmapEditorView.window)
                 end
             end
         },
@@ -25,17 +25,17 @@ function TerrainPanel:init()
     local btnModifyTextureMap = TabbedPanelButton({
         tooltip = "Change texture",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Texture" }),
         },
         OnClick = {
             function()
-                if SCEN_EDIT.terrainEditorView == nil then
+                if SB.terrainEditorView == nil then
                     self.terrainEditorView = TerrainEditorView()
-                    SCEN_EDIT.terrainEditorView = self.terrainEditorView
+                    SB.terrainEditorView = self.terrainEditorView
                 end
-                if SCEN_EDIT.terrainEditorView.window.hidden then
-					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.terrainEditorView.window)
+                if SB.terrainEditorView.window.hidden then
+					SB.view:SetMainPanel(SB.terrainEditorView.window)
                 end
             end
         },
@@ -45,17 +45,17 @@ function TerrainPanel:init()
     local btnModifyGrass = TabbedPanelButton({
         tooltip = "Change grass map",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Grass" }),
         },
         OnClick = {
             function()
-                if SCEN_EDIT.grassEditorView == nil then
+                if SB.grassEditorView == nil then
                     self.grassEditorView = GrassEditorView()
-                    SCEN_EDIT.grassEditorView = self.grassEditorView
+                    SB.grassEditorView = self.grassEditorView
                 end
-                if SCEN_EDIT.grassEditorView.window.hidden then
-					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.grassEditorView.window)
+                if SB.grassEditorView.window.hidden then
+					SB.view:SetMainPanel(SB.grassEditorView.window)
                 end
             end
         },
@@ -65,17 +65,17 @@ function TerrainPanel:init()
     local btnModifyMetal = TabbedPanelButton({
         tooltip = "Change metal map",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Metal" }),
         },
         OnClick = {
             function()
-                if SCEN_EDIT.metalEditorView == nil then
+                if SB.metalEditorView == nil then
                     self.metalEditorView = MetalEditorView()
-                    SCEN_EDIT.metalEditorView = self.metalEditorView
+                    SB.metalEditorView = self.metalEditorView
                 end
-                if SCEN_EDIT.metalEditorView.window.hidden then
-					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.metalEditorView.window)
+                if SB.metalEditorView.window.hidden then
+					SB.view:SetMainPanel(SB.metalEditorView.window)
                 end
             end
         },
@@ -85,17 +85,17 @@ function TerrainPanel:init()
 	local btnTerrainSettings = TabbedPanelButton({
         tooltip = "Change map settings",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
             TabbedPanelLabel({ caption = "Settings" }),
         },
         OnClick = {
             function()
-                if SCEN_EDIT.terrainSettingsView == nil then
+                if SB.terrainSettingsView == nil then
                     self.terrainSettingsView = TerrainSettingsView()
-                    SCEN_EDIT.terrainSettingsView = self.terrainSettingsView
+                    SB.terrainSettingsView = self.terrainSettingsView
                 end
-                if SCEN_EDIT.terrainSettingsView.window.hidden then
-					SCEN_EDIT.view:SetMainPanel(SCEN_EDIT.terrainSettingsView.window)
+                if SB.terrainSettingsView.window.hidden then
+					SB.view:SetMainPanel(SB.terrainSettingsView.window)
                 end
             end
         },

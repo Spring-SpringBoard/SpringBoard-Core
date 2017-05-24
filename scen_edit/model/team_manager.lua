@@ -48,7 +48,7 @@ end
 
 function TeamManager:serialize()
     local retVal = {}
-    local teams = SCEN_EDIT.deepcopy(self.teams)
+    local teams = SB.deepcopy(self.teams)
     for id, team in pairs(teams) do
         team.allies = {}
         for _, team2 in pairs(teams) do
@@ -85,7 +85,7 @@ function TeamManager:load(data)
 
         self:addTeam(team, id)
         if team.metal ~= nil and team.metalMax ~= nil and team.energy ~= nil and team.energyMax ~= nil then
-            SCEN_EDIT.delay(function()
+            SB.delay(function()
                 self:setTeamResources(id, team.metal, team.metalMax, team.energy, team.energyMax)
             end)
         end
@@ -100,7 +100,7 @@ function TeamManager:clear()
 end
 
 function TeamManager:generateTeams(widget)
-    local teams = SCEN_EDIT.GetTeams(widget)
+    local teams = SB.GetTeams(widget)
     self.teams = {}
     for _, team in pairs(teams) do
         self:addTeam(team, team.id)

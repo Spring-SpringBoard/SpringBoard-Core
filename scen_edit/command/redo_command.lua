@@ -5,5 +5,5 @@ function RedoCommand:init()
 end
 
 function RedoCommand:execute()
-    SCEN_EDIT.commandManager:redo()
+    SB.commandManager:redo()
 end

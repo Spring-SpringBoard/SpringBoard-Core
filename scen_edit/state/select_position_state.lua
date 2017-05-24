@@ -2,7 +2,7 @@ SelectPositionState = AbstractState:extends{}
 
 function SelectPositionState:init(btnSelectPosition)
     self.btnSelectPosition = btnSelectPosition
-    SCEN_EDIT.SetMouseCursor("search")
+    SB.SetMouseCursor("search")
 end
 
 function SelectPositionState:MousePress(x, y, button)
@@ -15,9 +15,9 @@ function SelectPositionState:MousePress(x, y, button)
                 z = coords[3],
             }
             CallListeners(self.btnSelectPosition.OnSelectPosition, position)
-            SCEN_EDIT.stateManager:SetState(DefaultState())
+            SB.stateManager:SetState(DefaultState())
         end
     elseif button == 3 then
-        SCEN_EDIT.stateManager:SetState(DefaultState())
+        SB.stateManager:SetState(DefaultState())
     end
 end

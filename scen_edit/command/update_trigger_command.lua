@@ -7,10 +7,10 @@ function UpdateTriggerCommand:init(trigger)
 end
 
 function UpdateTriggerCommand:execute()
-    self.old = SCEN_EDIT.model.triggerManager:getTrigger(self.trigger.id)
-    SCEN_EDIT.model.triggerManager:setTrigger(self.trigger.id, self.trigger)
+    self.old = SB.model.triggerManager:getTrigger(self.trigger.id)
+    SB.model.triggerManager:setTrigger(self.trigger.id, self.trigger)
 end
 
 function UpdateTriggerCommand:unexecute()
-    SCEN_EDIT.model.triggerManager:setTrigger(self.trigger.id, self.old)
+    SB.model.triggerManager:setTrigger(self.trigger.id, self.old)
 end

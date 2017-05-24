@@ -2,7 +2,7 @@ SelectObjectState = AbstractState:extends{}
 
 function SelectObjectState:init(btnSelectObject)
     self.btnSelectObject = btnSelectObject
-    SCEN_EDIT.SetMouseCursor("search")
+    SB.SetMouseCursor("search")
 end
 
 function SelectObjectState:MousePress(x, y, button)
@@ -11,10 +11,10 @@ function SelectObjectState:MousePress(x, y, button)
         if (result == "unit" and self.bridge.bridgeName == "UnitBridge") or
            (result == "feature" and self.bridge.bridgeName == "FeatureBridge") then
             CallListeners(self.btnSelectObject.OnSelectObject, self.bridge.getObjectModelID(objectID))
-            SCEN_EDIT.stateManager:SetState(DefaultState())
+            SB.stateManager:SetState(DefaultState())
         end
     elseif button == 3 then
-        SCEN_EDIT.stateManager:SetState(DefaultState())
+        SB.stateManager:SetState(DefaultState())
     end
 end
 

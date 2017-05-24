@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SB.Include(SB_VIEW_DIR .. "editor_view.lua")
 HeightmapEditorView = EditorView:extends{}
 
 function HeightmapEditorView:init()
@@ -16,8 +16,8 @@ function HeightmapEditorView:init()
                 local item = self.heightmapBrushes.control.children[itemIdx]
                 if item.texture ~= nil then
                     self.paintTexture = item.texture.diffuse
-                    SCEN_EDIT.model.terrainManager:generateShape(self.paintTexture)
-                    local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+                    SB.model.terrainManager:generateShape(self.paintTexture)
+                    local currentState = SB.stateManager:GetCurrentState()
                     if currentState:is_A(AbstractHeightmapEditingState) then
                         currentState.paintTexture = self.paintTexture
                     end
@@ -31,12 +31,12 @@ function HeightmapEditorView:init()
         y = 0,
         tooltip = "Increase or decrease (1)",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(TerrainShapeModifyState(self))
+                SB.stateManager:SetState(TerrainShapeModifyState(self))
             end
         },
     })
@@ -46,12 +46,12 @@ function HeightmapEditorView:init()
         y = 0,
         tooltip = "Set the terrain (4)",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
             TabbedPanelLabel({ caption = "Set" }),
         },
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(TerrainSetState(self))
+                SB.stateManager:SetState(TerrainSetState(self))
             end
         },
     })
@@ -61,12 +61,12 @@ function HeightmapEditorView:init()
         y = 0,
         tooltip = "Smooth the terrain (2)",
         children = {
-            TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
             TabbedPanelLabel({ caption = "Smooth" }),
         },
         OnClick = {
             function()
-                SCEN_EDIT.stateManager:SetState(TerrainSmoothState(self))
+                SB.stateManager:SetState(TerrainSmoothState(self))
             end
         },
     })
@@ -76,12 +76,12 @@ function HeightmapEditorView:init()
 --         y = 10,
 --         tooltip = "Square add the terrain (4)",
 --         children = {
---             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+--             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
 --             TabbedPanelLabel({ caption = "Square" }),
 --         },
 --         OnClick = {
 --             function()
---                 SCEN_EDIT.stateManager:SetState(TerrainChangeHeightRectState(self))
+--                 SB.stateManager:SetState(TerrainChangeHeightRectState(self))
 --             end
 --         },
 --     })
@@ -90,12 +90,12 @@ function HeightmapEditorView:init()
 --         y = 10,
 --         tooltip = "Modify the terrain by choosing one of the special shapes below (5)",
 --         children = {
---             TabbedPanelImage({ file = SCEN_EDIT_IMG_DIR .. "terrain_height.png" }),
+--             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
 --             TabbedPanelLabel({ caption = "Shape" }),
 --         },
 --         OnClick = {
 --             function()
---                 SCEN_EDIT.stateManager:SetState(TerrainShapeModifyState(self))
+--                 SB.stateManager:SetState(TerrainShapeModifyState(self))
 --             end
 --         },
 --     })
@@ -178,8 +178,8 @@ function HeightmapEditorView:StoppedEditing()
 end
 
 function HeightmapEditorView:StartedEditing()
-    SCEN_EDIT.delay(function()
-        local currentState = SCEN_EDIT.stateManager:GetCurrentState()
+    SB.delay(function()
+        local currentState = SB.stateManager:GetCurrentState()
         local btn
         if currentState:is_A(TerrainShapeModifyState) then
             btn = self.btnAddState

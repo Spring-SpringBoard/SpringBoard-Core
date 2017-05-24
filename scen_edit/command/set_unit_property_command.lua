@@ -9,7 +9,7 @@ function SetUnitPropertyCommand:init(modelUnitId, key, value)
 end
 
 function SetUnitPropertyCommand:execute()
-    local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.modelUnitId)
+    local unitId = SB.model.unitManager:getSpringUnitId(self.modelUnitId)
 
     if self.key == "health" then
         self.oldUnitHealth = Spring.GetUnitHealth(unitId)
@@ -40,7 +40,7 @@ function SetUnitPropertyCommand:execute()
 end
 
 function SetUnitPropertyCommand:unexecute()
-    local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(self.modelUnitId)
+    local unitId = SB.model.unitManager:getSpringUnitId(self.modelUnitId)
 
     if self.key == "health" then
         Spring.SetUnitHealth(unitId, self.oldUnitHealth)
