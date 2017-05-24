@@ -249,7 +249,7 @@ end
 function widget:GamePreload()
     if not hasScenarioFile and SCEN_EDIT.projectDir ~= nil and not SCEN_EDIT.projectLoaded then
         Log.Notice("Loading project (from widget)")
-        local cmd = LoadCommandWidget(SCEN_EDIT.projectDir, false)
+        local cmd = LoadProjectCommandWidget(SCEN_EDIT.projectDir, false)
         SCEN_EDIT.commandManager:execute(cmd, true)
         SCEN_EDIT.projectLoaded = true
     end

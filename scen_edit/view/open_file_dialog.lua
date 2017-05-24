@@ -8,10 +8,11 @@ end
 
 function OpenFileDialog:confirmDialog()
     local path = self:getSelectedFilePath()
-    local exists = VFS.FileExists(path, VFS.RAW_ONLY)    
-    if exists then
-        if self.confirmDialogCallback then 
-            self.confirmDialogCallback(path)
-        end
+    if not VFS.FileExists(path, VFS.RAW_ONLY) then
+        return
+    end
+
+    if self.confirmDialogCallback then
+        self.confirmDialogCallback(path)
     end
 end

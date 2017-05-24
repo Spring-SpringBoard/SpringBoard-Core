@@ -1,13 +1,13 @@
-LoadCommandWidget = AbstractCommand:extends{}
-LoadCommandWidget.className = "LoadCommandWidget"
+LoadProjectCommandWidget = AbstractCommand:extends{}
+LoadProjectCommandWidget.className = "LoadProjectCommandWidget"
 
-function LoadCommandWidget:init(path, isZip)
-    self.className = "LoadCommandWidget"
+function LoadProjectCommandWidget:init(path, isZip)
+    self.className = "LoadProjectCommandWidget"
     self.path = path
     self.isZip = isZip
 end
 
-function LoadCommandWidget:execute()
+function LoadProjectCommandWidget:execute()
     local path = self.path
     local isZip = self.isZip
     local modelData, heightMapdata, texturePath
@@ -43,9 +43,9 @@ function LoadCommandWidget:execute()
             return
         end
 
-        modelData = VFS.LoadFile(path .. "/" .. "model.lua", VFS.RAW)
-        heightmapData = VFS.LoadFile(path .. "/" .. "heightmap.data", VFS.RAW)
-        texturePath = path .. "/" .. "texturemap/"
+        modelData = VFS.LoadFile(Path.Join(path, "model.lua"), VFS.RAW)
+        heightmapData = VFS.LoadFile(Path.Join(path, "heightmap.data"), VFS.RAW)
+        texturePath = Path.Join(path, "texturemap/")
     end
 
     local cmds = { LoadMap(heightmapData), LoadModelCommand(modelData)}

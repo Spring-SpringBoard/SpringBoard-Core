@@ -119,7 +119,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     elseif type == "action" then
         local typeName = field.expr[1].typeName
         local exprType = SCEN_EDIT.metaModel.actionTypes[typeName]
-        return function(input, functionParams)
+        return function(functionParams)
             local fParams = params
             if functionParams then
                 fParams = SCEN_EDIT.deepcopy(params)
@@ -132,7 +132,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     elseif type == "function" then
         local typeName = field.expr[1].typeName
         local exprType = SCEN_EDIT.metaModel.functionTypes[typeName]
-        return function(input, functionParams)
+        return function(functionParams)
             local fParams = params
             if functionParams then
                 fParams = SCEN_EDIT.deepcopy(params)

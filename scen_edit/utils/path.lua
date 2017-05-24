@@ -53,3 +53,21 @@ function Path.GetParentDir(dir)
         return dir:sub(1, pos)
     end
 end
+
+function Path.Join(dir, path)
+    dir = dir:gsub("\\", "/")
+
+    local lastCharDir = dir:sub(-1)
+    local firstCharPath = path:sub(1, 1)
+
+    -- No slashes
+    if lastCharDir ~= "/" and firstCharPath ~= "/" then
+        return dir .. "/" .. path
+    -- Two slashes
+    elseif lastCharDir == "/" and firstCharPath == "/" then
+        return dir .. "/" .. path:sub(2)
+    -- One Slash
+    else
+        return dir .. path
+    end
+end

@@ -11,8 +11,8 @@ function LoadTextureCommand:execute()
         local tm = SCEN_EDIT.model.textureManager
 
         local files = VFS.DirList(self.texturePath)
-        if #files == 0 and true then
-            Log.Error("Missing texture file: " .. tostring(self.texturePath))
+
+        if #files == 0 then
             return
         end
 

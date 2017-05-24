@@ -41,7 +41,7 @@ function ExportMapsCommand:execute()
         Spring.CreateDir(self.path)
 
         -- heightmap
-        local heightmapPath = self.path .. "/heightmap.png"
+        local heightmapPath = Path.Join(self.path, "heightmap.png")
 
         Log.Notice("Saving the heightmap to " .. heightmapPath .. "...")
 
@@ -96,7 +96,7 @@ function ExportMapsCommand:execute()
         gl.DeleteTexture(heightmapTexture)
 
         -- grass
-        local grassPath = self.path .. "/grass.png"
+        local grassPath = Path.Join(self.path, "grass.png")
         Log.Notice("Saving the grass to " .. grassPath .. "...")
 
         if VFS.FileExists(grassPath, VFS.RAW) then
@@ -126,7 +126,7 @@ function ExportMapsCommand:execute()
 
 		-- specular
 		for texType, shadingTex in pairs(SCEN_EDIT.model.textureManager.shadingTextures) do
-			local texPath = self.path .. "/" .. texType .. ".png"
+			local texPath = Path.Join(self.path, texType .. ".png")
 			Log.Notice("Saving the " .. texType .. " to " .. texPath .. "...")
 
 			if VFS.FileExists(texPath, VFS.RAW) then
@@ -155,7 +155,7 @@ function ExportMapsCommand:execute()
 		end
 
         -- diffuse
-        local texturePath = self.path .. "/texture.png"
+        local texturePath = Path.Join(self.path, "texture.png")
 
         if VFS.FileExists(texturePath, VFS.RAW) then
             Log.Notice("removing the existing texture")

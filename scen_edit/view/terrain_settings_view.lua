@@ -1,4 +1,4 @@
-SCEN_EDIT.Include(SCEN_EDIT_VIEW_DIR .. "editor_view.lua")
+SCEN_EDIT.Include(Path.Join(SCEN_EDIT_VIEW_DIR, "editor_view.lua"))
 TerrainSettingsView = EditorView:extends{}
 
 function TerrainSettingsView:init()
@@ -10,7 +10,7 @@ function TerrainSettingsView:init()
         name = "detailTexture",
         title = "Detail:",
         tooltip = "Detail texture",
-        value = SCEN_EDIT_IMG_DIR .. "resources/brush_patterns/detail",
+        value = Path.Join(SCEN_EDIT_IMG_DIR, "resources/brush_patterns/detail"),
     }))
 
     self:AddControl("sun-sep", {
@@ -211,7 +211,7 @@ function TerrainSettingsView:init()
         name = "skyboxTexture",
         title = "Skybox:",
         tooltip = "Skybox texture (requires SkyBox sky)",
-        value = SCEN_EDIT_IMG_DIR .. "resources/skyboxes",
+        value = Path.Join(SCEN_EDIT_IMG_DIR, "resources/skyboxes"),
     }))
 
     self:AddControl("atmosphere-fog-sep", {

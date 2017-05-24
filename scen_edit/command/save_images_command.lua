@@ -20,7 +20,7 @@ function SaveImagesCommand:execute()
                 if mapTextureObj.dirty then
                     local mapTexture = mapTextureObj.texture
 
-                    local mapTexturePath = self.path .. "/texture-" .. tostring(i) .. "-" .. tostring(j) .. ".png"
+                    local mapTexturePath = Path.Join(self.path, "texture-" .. tostring(i) .. "-" .. tostring(j) .. ".png")
                     -- remove existing texture)
                     os.remove(mapTexturePath)
                     Log.Debug("Saving subtexture", i, j, mapTexturePath)

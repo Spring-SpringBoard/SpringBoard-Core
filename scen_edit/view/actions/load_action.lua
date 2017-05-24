@@ -5,7 +5,7 @@ function LoadAction:execute()
     ofd = OpenProjectDialog(dir)
     ofd:setConfirmDialogCallback(
         function(path)
-            local cmd = LoadCommandWidget(path)
+            local cmd = LoadProjectCommandWidget(path)
             SCEN_EDIT.commandManager:execute(cmd, true)
         end
     )
