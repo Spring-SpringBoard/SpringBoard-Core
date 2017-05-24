@@ -224,6 +224,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
     if SCEN_EDIT.humanExpressionMaxLevel < level then
         return "..."
     end
+
     if exprType == "condition" and data.typeName:find("compare_") then
         local firstExpr = SCEN_EDIT.humanExpression(data.first, "value", nil, level + 1)
         local relation
@@ -238,8 +239,7 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
     elseif exprType == "action" then
         local action = SCEN_EDIT.metaModel.actionTypes[data.typeName]
         local humanName = action.humanName .. " ("
-        for i = 1, #action.input do
-            local input = action.input[i]
+        for i, input in pairs(action.input) do
             humanName = humanName .. SCEN_EDIT.humanExpression(data[input.name], "value", nil, level + 1)
             if i ~= #action.input then
                 humanName = humanName .. ", "
@@ -270,16 +270,16 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
     elseif exprType == "value" then
         if data.type == "pred" then
             if dataType == "unitType" then
-                local unitDef = UnitDefs[data.id]
-                local dataIdStr = "(id=" .. tostring(data.id) .. ")"
+                local unitDef = UnitDefs[data.value]
+                local dataIdStr = "(id=" .. tostring(data.value) .. ")"
                 if unitDef then
                     return tostring(unitDef.name) .. " " .. dataIdStr
                 else
                     return dataIdStr
                 end
             elseif dataType == "unit" then
-                local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(data.id)
-                local dataIdStr = "(id=" .. tostring(data.id) .. ")"
+                local unitId = SCEN_EDIT.model.unitManager:getSpringUnitId(data.value)
+                local dataIdStr = "(id=" .. tostring(data.value) .. ")"
                 if Spring.ValidUnitID(unitId) then
                     local unitDef = UnitDefs[Spring.GetUnitDefID(unitId)]
                     if unitDef then
@@ -293,12 +293,12 @@ function SCEN_EDIT.humanExpression(data, exprType, dataType, level)
             elseif dataType == "trigger" then
                 return data.name
             else
-                return tostring(data.id)
+                return tostring(data.value)
             end
         elseif data.type == "spec" then
             return data.name
         elseif data.type == "var" then
-            return SCEN_EDIT.model.variableManager:getVariable(data.id).name
+            return SCEN_EDIT.model.variableManager:getVariable(data.value).name
         elseif data.orderTypeName then
             local orderType = SCEN_EDIT.metaModel.orderTypes[data.orderTypeName]
             local humanName = orderType.humanName

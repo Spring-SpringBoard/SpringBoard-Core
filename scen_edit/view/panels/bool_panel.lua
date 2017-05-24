@@ -22,7 +22,7 @@ end
 function BoolPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
-        field.id = self.cbBool.checked
+        field.value = self.cbBool.checked
         return true
     end
     return self:super('UpdateModel', field)
@@ -33,7 +33,7 @@ function BoolPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        if field.id ~= self.cbBool.checked then
+        if field.value ~= self.cbBool.checked then
             self.cbBool:Toggle()
         end
         return true

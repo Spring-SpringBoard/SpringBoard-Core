@@ -69,7 +69,7 @@ end
 function AreaPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.areaId ~= nil then
         field.type = "pred"
-        field.id = self.btnPredefined.areaId
+        field.value = self.btnPredefined.areaId
         return true
     end
     return self:super('UpdateModel', field)
@@ -80,7 +80,7 @@ function AreaPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectArea, field.id)
+        CallListeners(self.btnPredefined.OnSelectArea, field.value)
         return true
     end
     return self:super('UpdatePanel', field)

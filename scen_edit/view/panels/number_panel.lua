@@ -21,7 +21,7 @@ end
 function NumberPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked and tonumber(self.edValue.text) ~= nil then
         field.type = "pred"
-        field.id = tonumber(self.edValue.text)
+        field.value = tonumber(self.edValue.text)
         return true
     end
     return self:super('UpdateModel', field)
@@ -32,7 +32,7 @@ function NumberPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        self.edValue.text = tostring(field.id)
+        self.edValue.text = tostring(field.value)
         return true
     end
     return self:super('UpdatePanel', field)

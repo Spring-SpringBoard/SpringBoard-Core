@@ -113,7 +113,7 @@ function AbstractTypePanel:UpdateModel(field)
         return true
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
-        field.id = self.cmbVariable.variableIds[self.cmbVariable.selected]
+        field.value = self.cmbVariable.variableIds[self.cmbVariable.selected]
         return true
     elseif self.cbExpression and self.cbExpression.checked and self.btnExpression.data ~= nil  and #self.btnExpression.data ~= 0 then
         field.type = "expr"
@@ -137,7 +137,7 @@ function AbstractTypePanel:UpdatePanel(field)
         end
         for i = 1, #self.cmbVariable.variableIds do
             local variableId = self.cmbVariable.variableIds[i]
-            if variableId == field.id then
+            if variableId == field.value then
                 self.cmbVariable:Select(i)
                 break
             end

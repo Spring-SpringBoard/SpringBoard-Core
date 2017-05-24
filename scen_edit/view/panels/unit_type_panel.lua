@@ -40,7 +40,7 @@ end
 function UnitTypePanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitTypeId ~= nil then
         field.type = "pred"
-        field.id = self.btnPredefined.unitTypeId
+        field.value = self.btnPredefined.unitTypeId
         return true
     end
     return self:super('UpdateModel', field)
@@ -51,7 +51,7 @@ function UnitTypePanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        self.btnPredefined.OnSelectObjectType[1](field.id)
+        self.btnPredefined.OnSelectObjectType[1](field.value)
         return true
     end
     return self:super('UpdatePanel', field)

@@ -38,20 +38,28 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         local exprType = SCEN_EDIT.metaModel.functionTypes[typeName]
         return self:CallExpression(field.expr[1], exprType, params)
     elseif field.type == "var" then
-        local variable = SCEN_EDIT.model.variableManager:getVariable(field.id)
+        local variable = SCEN_EDIT.model.variableManager:getVariable(field.value)
         if not rawVariable then
             return self:Resolve(variable.value, variable.type, nil, params)
         else
             return variable
         end
+    elseif field.type == "spec" then
+        local value = {
+            type = "pred",
+            value = params[field.name],
+        }
+        return self:Resolve(value, type, nil, params)
     end
+
+    -- FIXME: field.cmpTypeId (comparisons) should also have a "pred" type probably
+    if field.type ~= "pred" and field.cmpTypeId == nil then
+        Log.Error("Unexpected field type: " .. tostring(field.type))
+        return
+    end
+
     if type == "unit" then
-        local unitId = nil
-        if field.type == "pred" then
-            unitId = tonumber(field.id)
-        elseif field.type == "spec" then
-            unitId = tonumber(params.triggerUnitId)
-        end
+        local unitId = tonumber(field.value)
         if unitId ~= nil then
             local springId = SCEN_EDIT.model.unitManager:getSpringUnitId(unitId)
             if Spring.ValidUnitID(springId) then
@@ -59,21 +67,9 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             end
         end
     elseif type == "unitType" then
-        if field.type == "pred" then
-            return tonumber(field.id)
-        elseif field.type == "spec" then
-            local triggerUnitId = tonumber(params.triggerUnitId)
-            if triggerUnitId then
-                return Spring.GetUnitDefID(triggerUnitId)
-            end
-        end
+        return tonumber(field.value)
     elseif type == "feature" then
-        local featureId = nil
-        if field.type == "pred" then
-            featureId = tonumber(field.id)
-        elseif field.type == "spec" then
-            featureId = tonumber(params.triggerFeatureId)
-        end
+        local featureId = tonumber(field.value)
         if featureId ~= nil then
             local springId = SCEN_EDIT.model.featureManager:getSpringfeatureId(featureId)
             if Spring.ValidFeatureID(springId) then
@@ -81,33 +77,13 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             end
         end
     elseif type == "featureType" then
-        if field.type == "pred" then
-            return tonumber(field.id)
-        elseif field.type == "spec" then
-            local triggerFeatureId = tonumber(params.triggerFeatureId)
-            if triggerFeatureId then
-                return Spring.GetFeatureDefID(triggerFeatureId)
-            end
-        end
+        return tonumber(field.value)
     elseif type == "team" then
-        if field.type == "pred" then
-            return SCEN_EDIT.model.teamManager:getTeam(field.id).id
-        end
+        return SCEN_EDIT.model.teamManager:getTeam(field.value).id
     elseif type == "area" then
-        if field.type == "pred" then
-            local areaId = tonumber(field.id)
-            return SCEN_EDIT.model.areaManager:getArea(areaId)
-        elseif field.type == "spec" then
-            local areaId = tonumber(params.triggerAreaId)
-            if areaId then
-                return SCEN_EDIT.model.areaManager:getArea(areaId)
-            end
-        end
+        return SCEN_EDIT.model.areaManager:getArea(tonumber(field.value))
     elseif type == "trigger" then
-        if field.type == "pred" then
-            local triggerId = tonumber(field.id)
-            return SCEN_EDIT.model.triggerManager:getTrigger(triggerId)
-        end
+        return SCEN_EDIT.model.triggerManager:getTrigger(tonumber(field.value))
     elseif type == "order" then
         local orderType = SCEN_EDIT.metaModel.orderTypes[field.orderTypeName]
         local order = {
@@ -121,46 +97,50 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         end
         return order
     elseif type == "string" then
-        if field.type == "pred" then
-            return field.id
-        end
+        return field.value
     elseif type == "number" then
-        if field.type == "pred" then
-            return field.id
-        end
+        return field.value
     elseif type == "bool" then
-        if field.type == "pred" then
-            return field.id
-        end
+        return field.value
     elseif type == "position" then
-        if field.type == "pred" then
-            return field.id
-        end
+        return field.value
     elseif type == "numericComparison" then
         return SCEN_EDIT.metaModel.numericComparisonTypes[field.cmpTypeId]
     elseif type == "identityComparison" then
         return SCEN_EDIT.metaModel.identityComparisonTypes[field.cmpTypeId]
     elseif type:find("_array") then
         local atomicType = type:sub(1, type:find("_array") - 1)
-        if field.type == "pred" then
-            local values = {}
-            for _, element in pairs(field.id) do
-                local value = self:Resolve(element, atomicType, nil, params)
-                table.insert(values, value)
-            end
-            return values
+        local values = {}
+        for _, element in pairs(field.value) do
+            local value = self:Resolve(element, atomicType, nil, params)
+            table.insert(values, value)
         end
+        return values
     elseif type == "action" then
-        table.echo(field.expr)
         local typeName = field.expr[1].typeName
         local exprType = SCEN_EDIT.metaModel.actionTypes[typeName]
-        return self.fieldResolver:CallExpression(condition, conditionType, params)
-        return exprType
+        return function(input, functionParams)
+            local fParams = params
+            if functionParams then
+                fParams = SCEN_EDIT.deepcopy(params)
+                for k, v in pairs(functionParams) do
+                    fParams[k] = v
+                end
+            end
+            self:CallExpression(field.expr[1], exprType, fParams)
+        end
     elseif type == "function" then
-        table.echo(field.expr)
         local typeName = field.expr[1].typeName
         local exprType = SCEN_EDIT.metaModel.functionTypes[typeName]
-        return self.fieldResolver:CallExpression(condition, conditionType, params)
-        return exprType
+        return function(input, functionParams)
+            local fParams = params
+            if functionParams then
+                fParams = SCEN_EDIT.deepcopy(params)
+                for k, v in pairs(functionParams) do
+                    fParams[k] = v
+                end
+            end
+            return self:CallExpression(field.expr[1], exprType, fParams)
+        end
     end
 end

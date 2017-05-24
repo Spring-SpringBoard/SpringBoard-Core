@@ -108,7 +108,6 @@ function AbstractTriggerElementWindow:init(opts)
 --                local cndName = self.cmbCustomTypes.conditionTypes[itemIdx]
                 local exprType = self.elementTypes[itemIdx]
                 if exprType and exprType.input then
-                    --table.echo(exprType)
                     local params = self.params
                     local extraSourcesFunction = exprType.extraSources
                     if extraSourcesFunction then
@@ -123,14 +122,12 @@ function AbstractTriggerElementWindow:init(opts)
                         local paramsI = params
                         local extraSourcesInput = dataType.extraSources
                         if extraSourcesInput then
-                            --table.echo(dataType)
                             paramsI = SCEN_EDIT.deepcopy(paramsI)
                             for _, es in pairs(extraSourcesInput) do
                                 table.insert(paramsI, es)
                             end
                         end
 
-                        table.echo(paramsI)
                         local subPanelName = dataType.name
                         local subPanel = SCEN_EDIT.createNewPanel({
                             dataType = dataType,

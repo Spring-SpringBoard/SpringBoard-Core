@@ -69,7 +69,7 @@ end
 function UnitPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitId ~= nil then
         field.type = "pred"
-        field.id = self.btnPredefined.unitId
+        field.value = self.btnPredefined.unitId
         return true
     end
     return self:super('UpdateModel', field)
@@ -80,7 +80,7 @@ function UnitPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectUnit, field.id)
+        CallListeners(self.btnPredefined.OnSelectUnit, field.value)
         return true
     end
     return self:super('UpdatePanel', field)

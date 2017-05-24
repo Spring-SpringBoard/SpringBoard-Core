@@ -25,7 +25,7 @@ function TriggerPanel:MakePredefinedOpt()
 end
 
 function TriggerPanel:UpdateModel(field)
-    field.id = self.cmbTrigger.triggerIds[self.cmbTrigger.selected]
+    field.value = self.cmbTrigger.triggerIds[self.cmbTrigger.selected]
     field.type = "pred"
     return true
 end
@@ -33,7 +33,7 @@ end
 function TriggerPanel:UpdatePanel(field)
     for i = 1, #self.cmbTrigger.triggerIds do
         local triggerId = self.cmbTrigger.triggerIds[i]
-        if triggerId == field.id then
+        if triggerId == field.value then
             self.cmbTrigger:Select(i)
             return true
         end

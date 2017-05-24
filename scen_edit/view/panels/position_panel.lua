@@ -66,7 +66,7 @@ end
 function PositionPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.position ~= nil then
         field.type = "pred"
-        field.id = self.btnPredefined.position
+        field.value = self.btnPredefined.position
         return true
     elseif self.cbSpecialPosition and self.cbSpecialPosition.checked then
         field.type = "spec"
@@ -81,7 +81,7 @@ function PositionPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectPosition, field.id)
+        CallListeners(self.btnPredefined.OnSelectPosition, field.value)
         return true
     elseif field.type == "spec" then
         if not self.cbSpecialPosition.checked then

@@ -291,9 +291,9 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         local stackPanel = MakeComponentPanel(self._triggerPanel)
 
         local param = root[input.name] or {}
-        local paramName = param.name or param.id
+        local paramName = param.name or param.value
         if param.type == 'var' then
-            paramName = SCEN_EDIT.model.variableManager:getVariable(param.id).name
+            paramName = SCEN_EDIT.model.variableManager:getVariable(param.value).name
         elseif param.type == "expr" then
             local expr = param.expr[1]
             paramName = SCEN_EDIT.metaModel.functionTypes[expr.typeName].humanName

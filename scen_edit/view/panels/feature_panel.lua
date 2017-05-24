@@ -71,7 +71,7 @@ end
 function FeaturePanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.featureId ~= nil then
         field.type = "pred"
-        field.id = self.btnPredefined.featureId
+        field.value = self.btnPredefined.featureId
         return true
     end
     return self:super('UpdateModel', field)
@@ -82,7 +82,7 @@ function FeaturePanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectFeature, field.id)
+        CallListeners(self.btnPredefined.OnSelectFeature, field.value)
         return true
     end
     return self:super('UpdatePanel', field)

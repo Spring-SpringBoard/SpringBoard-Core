@@ -600,7 +600,7 @@ return {
                 tags = {"Array"},
                 execute = function(input)
                     for _, element in pairs(input[arrayType]) do
-                        input.for_each_action(element)
+                        input.for_each_action(nil, {[type.name] = element})
                     end
                 end,
             })
@@ -1200,7 +1200,13 @@ return {
                     output = arrayType,
                     tags = {"Array"},
                     execute = function(input)
-                        return #input[arrayType]
+                        local retVal = {}
+                        for _, element in pairs(input[arrayType]) do
+                            if input.filter_function(nil, {[type.name] = element}) then
+                                table.insert(retVal, element)
+                            end
+                        end
+                        return retVal
                     end,
                 })
 
@@ -1223,7 +1229,11 @@ return {
                         output = arrayType2,
                         tags = {"Array"},
                         execute = function(input)
-                            return #input[arrayType]
+                            local retVal = {}
+                            for _, element in pairs(input[arrayType]) do
+                                table.insert(retVal, input.map_function(nil, {[type.name] = element}))
+                            end
+                            return retVal
                         end,
                     })
                 end

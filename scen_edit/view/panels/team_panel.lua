@@ -23,7 +23,7 @@ end
 function TeamPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
-        field.id = self.cmbPredefined.playerTeamIds[self.cmbPredefined.selected]
+        field.value = self.cmbPredefined.playerTeamIds[self.cmbPredefined.selected]
         return true
     end
     return self:super('UpdateModel', field)
@@ -34,7 +34,7 @@ function TeamPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        self.cmbPredefined:Select(GetIndex(self.cmbPredefined.playerTeamIds, field.id))
+        self.cmbPredefined:Select(GetIndex(self.cmbPredefined.playerTeamIds, field.value))
         return true
     end
     return self:super('UpdatePanel', field)

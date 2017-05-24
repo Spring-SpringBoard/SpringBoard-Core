@@ -60,11 +60,11 @@ end
 function GenericArrayPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
-        field.id = {}
+        field.value = {}
         for _, subPanel in pairs(self.elements) do
             local subPanelValue = {}
             subPanel:UpdateModel(subPanelValue)
-            table.insert(field.id, subPanelValue)
+            table.insert(field.value, subPanelValue)
         end
         return true
     end
@@ -76,7 +76,7 @@ function GenericArrayPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        for i, data in pairs(field.id) do
+        for i, data in pairs(field.value) do
             self:AddElement()
             self.elements[i]:UpdatePanel(data)
         end

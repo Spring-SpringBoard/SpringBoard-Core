@@ -21,7 +21,7 @@ end
 function StringPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
-        field.id = self.edString.text
+        field.value = self.edString.text
         return true
     end
     return self:super('UpdateModel', field)
@@ -32,7 +32,7 @@ function StringPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        self.edString.text = field.id
+        self.edString.text = field.value
         return true
     end
     return self:super('UpdatePanel', field)
