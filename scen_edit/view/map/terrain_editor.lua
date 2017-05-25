@@ -1,5 +1,5 @@
-SB.Include(SB_VIEW_DIR .. "editor_view.lua")
-SB.Include(SB_VIEW_DIR .. "texture_browser.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_MAP_DIR, "texture_browser.lua"))
 
 TerrainEditorView = EditorView:extends{}
 

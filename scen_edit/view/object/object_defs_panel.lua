@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "grid_view.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "grid_view.lua"))
 
 ObjectDefsPanel = GridView:extends{}
 

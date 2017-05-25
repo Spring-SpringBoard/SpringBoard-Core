@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "asset_view.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "asset_view.lua"))
 
 TextureBrowser = AssetView:extends{}
 

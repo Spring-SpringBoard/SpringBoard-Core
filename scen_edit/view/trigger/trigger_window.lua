@@ -1,3 +1,6 @@
+SB_VIEW_TRIGGER_PANELS_DIR = Path.Join(SB_VIEW_TRIGGER_DIR, "panels/")
+SB.IncludeDir(SB_VIEW_TRIGGER_PANELS_DIR)
+
 TriggerWindow = LCS.class{}
 
 function TriggerWindow:init(trigger)

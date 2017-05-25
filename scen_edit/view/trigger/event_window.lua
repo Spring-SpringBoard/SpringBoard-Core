@@ -1,3 +1,5 @@
+SB.Include(Path.Join(SB_VIEW_TRIGGER_DIR, "abstract_trigger_element_window.lua"))
+
 EventWindow = AbstractTriggerElementWindow:extends{}
 
 function EventWindow:init(opts)

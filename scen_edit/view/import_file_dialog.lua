@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "file_dialog.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "file_dialog.lua"))
 
 ImportFileDialog = FileDialog:extends{}
 
@@ -9,7 +9,7 @@ end
 function ImportFileDialog:confirmDialog()
     local filePath = self:getSelectedFilePath()
     local fileType = self:getSelectedFileType()
-    if self.confirmDialogCallback then 
+    if self.confirmDialogCallback then
         self.confirmDialogCallback(filePath, fileType)
     end
 end

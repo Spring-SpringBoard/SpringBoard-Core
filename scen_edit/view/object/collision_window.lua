@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "editor_view.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
 
 CollisionView = EditorView:extends{}
 

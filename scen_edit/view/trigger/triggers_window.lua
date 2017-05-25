@@ -1,4 +1,5 @@
-SB.Include(SB_VIEW_DIR .. "editor_view.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+
 TriggersWindow = EditorView:extends{}
 
 function TriggersWindow:init()
@@ -27,7 +28,7 @@ function TriggersWindow:init()
             y = 15,
             width = "100%",
             bottom = SB.conf.C_HEIGHT * 2,
-            children = { 
+            children = {
                 self._triggers
             },
         },
@@ -42,7 +43,7 @@ function TriggersWindow:init()
 end
 
 function TriggersWindow:AddTrigger()
-    local trigger = { 
+    local trigger = {
         name = "New trigger",
         events = {},
         conditions = {},
@@ -70,12 +71,12 @@ end
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
     local triggers = SortByName(SB.model.triggerManager:getAllTriggers(), "name")
-    for id, trigger in pairs(triggers)  do        
+    for id, trigger in pairs(triggers)  do
         local stackTriggerPanel = MakeComponentPanel(self._triggers)
         stackTriggerPanel.triggerId = trigger.id
         local btnEditTrigger = Button:New {
             caption = trigger.name,
-            x = 1, 
+            x = 1,
             right = SB.conf.B_HEIGHT * 2 + 10, --FIXME: figure out how to extend it a bit further
             height = SB.conf.B_HEIGHT,
             _toggle = nil,
@@ -96,17 +97,17 @@ function TriggersWindow:Populate()
             padding = {0, 0, 0, 0},
             tooltip = "Clone trigger",
             children = {
-                Image:New { 
-                    tooltip = "Clone trigger", 
-                    file=SB_IMG_DIR .. "clone.png", 
-                    height = SB.conf.B_HEIGHT, 
+                Image:New {
+                    tooltip = "Clone trigger",
+                    file=SB_IMG_DIR .. "clone.png",
+                    height = SB.conf.B_HEIGHT,
                     width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
                 },
             },
             OnClick = {
-                function() 
+                function()
                     local newTrigger = SB.deepcopy(trigger)
                     newTrigger.id = nil
                     newTrigger.name = newTrigger.name .. " copy"
@@ -124,10 +125,10 @@ function TriggersWindow:Populate()
             padding = {0, 0, 0, 0},
             tooltip = "Remove trigger",
             children = {
-                Image:New { 
-                    tooltip = "Remove trigger", 
-                    file=SB_IMG_DIR .. "list-remove.png", 
-                    height = SB.conf.B_HEIGHT, 
+                Image:New {
+                    tooltip = "Remove trigger",
+                    file=SB_IMG_DIR .. "list-remove.png",
+                    height = SB.conf.B_HEIGHT,
                     width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
@@ -138,7 +139,7 @@ function TriggersWindow:Populate()
     end
 end
 
-function TriggersWindow:MakeTriggerWindow(trigger, edit) 
+function TriggersWindow:MakeTriggerWindow(trigger, edit)
     local triggerCopy = SB.deepcopy(trigger)
     local triggerWindow = TriggerWindow(triggerCopy)
 

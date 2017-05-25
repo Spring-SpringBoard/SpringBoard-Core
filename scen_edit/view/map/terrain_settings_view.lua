@@ -1,4 +1,5 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+
 TerrainSettingsView = EditorView:extends{}
 
 function TerrainSettingsView:init()

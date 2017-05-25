@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "file_dialog.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "file_dialog.lua"))
 
 OpenProjectDialog = FileDialog:extends{}
 

@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "file_dialog.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "file_dialog.lua"))
 
 SaveProjectDialog = FileDialog:extends{}
 
@@ -8,7 +8,7 @@ function SaveProjectDialog:init(dir)
 end
 
 function SaveProjectDialog:save(path)
-    if self.confirmDialogCallback then 
+    if self.confirmDialogCallback then
         self.confirmDialogCallback(path)
     end
 end

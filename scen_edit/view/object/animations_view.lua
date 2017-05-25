@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "editor_view.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
 
 AnimationsView = EditorView:extends{}
 
@@ -88,7 +88,7 @@ function AnimationsView:init()
     }))
 
     local children = { tvPieceControl }
-    table.insert(children, 
+    table.insert(children,
         ScrollPanel:New {
             x = 0,
             y = "0%",
@@ -140,7 +140,7 @@ end
 
 function AnimationsView:OnFieldChange(name, value)
     if not self.selectionChanging then
-        
+
         local commands = {}
         local selection = SB.view.selectionManager:GetSelection()
         for _, objectID in pairs(selection.units) do

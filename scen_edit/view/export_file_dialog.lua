@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "file_dialog.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "file_dialog.lua"))
 
 ExportFileDialog = FileDialog:extends{}
 
@@ -15,7 +15,7 @@ function ExportFileDialog:confirmDialog()
 --         os.remove(filePath)
 --     end
     local fileType = self:getSelectedFileType()
-    if self.confirmDialogCallback then 
+    if self.confirmDialogCallback then
         self.confirmDialogCallback(filePath, fileType)
     end
 end

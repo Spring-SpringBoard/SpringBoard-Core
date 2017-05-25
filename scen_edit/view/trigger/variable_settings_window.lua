@@ -1,4 +1,5 @@
-SB.Include(SB_VIEW_DIR .. "editor_view.lua")
+SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+
 VariableSettingsWindow = EditorView:extends{}
 
 function VariableSettingsWindow:init()
@@ -30,7 +31,7 @@ function VariableSettingsWindow:init()
             y = 15,
             right = 5,
             bottom = SB.conf.C_HEIGHT * 2,
-            children = { 
+            children = {
                 self.variablesPanel
             },
         },
@@ -97,10 +98,10 @@ function VariableSettingsWindow:Populate()
             parent = variableStackPanel,
             padding = {0, 0, 0, 0},
             children = {
-                Image:New { 
-                    tooltip = "Remove variable", 
-                    file=SB_IMG_DIR .. "list-remove.png", 
-                    height = SB.conf.B_HEIGHT, 
+                Image:New {
+                    tooltip = "Remove variable",
+                    file=SB_IMG_DIR .. "list-remove.png",
+                    height = SB.conf.B_HEIGHT,
                     width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
                     margin = {0, 0, 0, 0},
@@ -110,7 +111,7 @@ function VariableSettingsWindow:Populate()
         }
 
         btnEditVariable.OnClick = {
-            function() 
+            function()
                 local newWin = self:MakeVariableWindow(variable, true)
             end
         }
