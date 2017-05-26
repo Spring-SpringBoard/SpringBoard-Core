@@ -1,11 +1,10 @@
 TabbedWindow = LCS.class{}
 
 function TabbedWindow:init()
-	local generalPanel = GeneralPanel()
 	local unitFeaturePanel = UnitFeaturePanel()
 	local terrainPanel = TerrainPanel()
 	local metaPanel = MetaPanel()
-    local alliancePanel = AlliancePanel()
+    local generalPanel = GeneralPanel()
 	local shaderPanel = ShaderPanel()
 
 	local mainPanelY = 130
@@ -165,7 +164,117 @@ function TabbedWindow:init()
 					x = 0,
 				},
 			},
-		}
+		},
+		Button:New {
+			x = 250,
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Save project (Ctrl+S)",
+			OnClick = {
+				function()
+					SaveAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "document-save.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			x = 290,
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Save project as... (Ctrl+Shift+S)",
+			OnClick = {
+				function()
+					SaveAsAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "document-save.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			x = 330,
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Load project (Ctrl-O)",
+			OnClick = {
+				function()
+					LoadAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "document-open.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			x = 370,
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Export to (Ctrl-E)...",
+			OnClick = {
+				function()
+					ExportAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "document-save.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			x = 410,
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Import from (Ctrl-I)...",
+			OnClick = {
+				function()
+					ImportAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "document-open.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
 	}
 
 	local controls = {}
@@ -180,11 +289,10 @@ function TabbedWindow:init()
 		bottom = 20,
 		padding = {0, 0, 0, 0},
 		tabs = {
-			{ name = "General", children = {generalPanel:getControl()} },
 			{ name = "Unit", children = {unitFeaturePanel:getControl()} },
 			{ name = "Map", children = {terrainPanel:getControl()} },
 			{ name = "Trigger", children = {metaPanel:getControl()} },
-			{ name = "Team", children = {alliancePanel:getControl()} },
+			{ name = "General", children = {generalPanel:getControl()} },
 			-- { name = "Shaders", children = {shaderPanel:getControl()} },
 		},
 	})

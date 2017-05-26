@@ -1,106 +1,64 @@
-ScenarioInfoView = LCS.class{}
+SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+
+ScenarioInfoView = EditorView:extends{}
 
 function ScenarioInfoView:init()
-	self.lblName = Label:New {
-		caption = "Name:",
-		x = 1,
-		width = 80,
-	}
-	self.ebName = EditBox:New {
-		text = SB.model.scenarioInfo.name,
-		right = 1,
-		width = 300,
-	}
-	
-	self.lblDescription = Label:New {
-		caption = "Description:",
-		x = 1,
-		width = 80,
-		y = 30,
-	}
-	self.ebDescription = EditBox:New {
-		text = SB.model.scenarioInfo.description,
-		right = 1,
-		width = 300,
-		y = 30,
-	}
-	
-	self.lblVersion = Label:New {
-		caption = "Version:",
-		x = 1,
-		width = 80,
-		y = 60,
-	}
-	self.ebVersion = EditBox:New {
-		text = tostring(SB.model.scenarioInfo.version),
-		right = 1,
-		width = 300,
-		y = 60,
-	}
-	
-	self.lblAuthor = Label:New {
-		caption = "Author:",
-		x = 1,
-		width = 80,
-		y = 90,
-	}
-	self.ebAuthor = EditBox:New {
-		text = SB.model.scenarioInfo.author,
-		right = 1,
-		width = 300,
-		y = 90,
-	}
-	
-	self.btnOK = Button:New {
-		caption = "OK",
-		y = 140,
-		x = 40,
-		width = 120,
-		height = SB.conf.B_HEIGHT,
-	}
-	
-	self.btnCancel = Button:New {
-		caption = "Cancel",
-		y = 140,
-		right = 40,
-		width = 120,
-		height = SB.conf.B_HEIGHT,
-	}
-	
-	self.window = Window:New {
-		x = 800,
-		y = 300,
-		width = 450,
-		height = 200,
-		children = {
-			self.lblName,
-			self.ebName,
-			self.lblDescription,
-			self.ebDescription,
-			self.lblVersion,
-			self.ebVersion,
-			self.lblAuthor,
-			self.ebAuthor,
-			self.btnOK,
-			self.btnCancel,
-		},
-		parent = screen0,
-	}
-	
-	self.btnOK.OnClick = { 
-		function() 
-			self:confirm() 
-			self.window:Dispose()
-		end
-	}
-	self.btnCancel.OnClick = { 
-		function() 
-			self.window:Dispose() 
-		end 
-	}
+	self:super("init")
+
+	self:AddField(
+		StringField({
+            name = "name",
+            title = "Name:",
+            width = 200,
+			value = SB.model.scenarioInfo.name,
+        })
+    )
+
+	self:AddField(
+		StringField({
+			name = "description",
+			title = "Description:",
+			width = 200,
+			value = SB.model.scenarioInfo.description,
+		})
+	)
+
+	self:AddField(
+		StringField({
+            name = "version",
+            title = "Version:",
+            width = 200,
+			value = tostring(SB.model.scenarioInfo.version),
+        })
+    )
+
+	self:AddField(
+		StringField({
+            name = "author",
+            title = "Author:",
+            width = 200,
+			value = SB.model.scenarioInfo.author,
+        })
+    )
+
+	local children = {
+        ScrollPanel:New {
+            x = 0,
+            y = 0,
+            bottom = 10,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        },
+    }
+
+	self:Finalize(children)
 end
 
-function ScenarioInfoView:confirm()
-    local cmd = SetScenarioInfoCommand(self.ebName.text, self.ebDescription.text, self.ebVersion.text, self.ebAuthor.text)
+function ScenarioInfoView:OnFieldChange(name, value)
+	local cmd = SetScenarioInfoCommand(
+		self.fields['name'].value, self.fields['description'].value,
+		self.fields['version'].value, self.fields['author'].value)
     SB.commandManager:execute(cmd)
 end

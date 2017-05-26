@@ -3,49 +3,15 @@ GeneralPanel = AbstractMainWindowPanel:extends{}
 function GeneralPanel:init()
 	self:super("init")
 	self.control:AddChild(TabbedPanelButton({
-			tooltip = "Save project (Ctrl+S)",
-			OnClick = {
-				function()
-                    SaveAction():execute()
-				end
-			},
-			children = {
-				TabbedPanelImage({ file = SB_IMG_DIR .. "document-save.png" }),
-				TabbedPanelLabel({ caption = "Save" }),
-			},
-		})
-	)
-	self.control:AddChild(TabbedPanelButton({
-			tooltip = "Save project as... (Ctrl+Shift+S)",
-			OnClick = {
-				function()
-                    SaveAsAction():execute()
-				end
-			},
-			children = {
-				TabbedPanelImage({ file = SB_IMG_DIR .. "document-save.png" }),
-				TabbedPanelLabel({ caption = "Save as" }),
-			},
-		})
-	)
-	self.control:AddChild(TabbedPanelButton({
-			tooltip = "Load project (Ctrl-O)",
-			OnClick = {
-				function()
-                    LoadAction():execute()
-				end
-			},
-			children = {
-				TabbedPanelImage({ file = SB_IMG_DIR .. "document-open.png" }),
-				TabbedPanelLabel({ caption = "Load" }),
-			},
-		})
-	)
-	self.control:AddChild(TabbedPanelButton({
 			tooltip = "Scenario info settings",
 			OnClick = {
 				function()
-					local scenarioInfoView = ScenarioInfoView()
+					if SB.scenarioInfoView == nil then
+						SB.scenarioInfoView = ScenarioInfoView()
+					end
+					if SB.scenarioInfoView.window.hidden then
+						SB.view:SetMainPanel(SB.scenarioInfoView.window)
+					end
 				end
 			},
 			children = {
@@ -55,29 +21,39 @@ function GeneralPanel:init()
 		})
 	)
 	self.control:AddChild(TabbedPanelButton({
-			tooltip = "Export to (Ctrl-E)...",
-			OnClick = {
-				function()
-                    ExportAction():execute()
+		tooltip = "Alliance settings",
+		children = {
+			TabbedPanelImage({ file = SB_IMG_DIR .. "alliance.png" }),
+			TabbedPanelLabel({ caption = "Alliances" }),
+		},
+		OnClick = {
+			function()
+				if SB.diplomacyWindow == nil then
+					self.diplomacyWindow = DiplomacyWindow()
+					SB.diplomacyWindow = self.diplomacyWindow
 				end
-			},
-			children = {
-				TabbedPanelImage({ file = SB_IMG_DIR .. "document-save.png" }),
-				TabbedPanelLabel({ caption = "Export" }),
-			},
-		})
-	)
-    self.control:AddChild(TabbedPanelButton({
-			tooltip = "Import from (Ctrl-I)...",
-			OnClick = {
-				function()
-                    ImportAction():execute()
+				if SB.diplomacyWindow.window.hidden then
+					SB.view:SetMainPanel(SB.diplomacyWindow.window)
 				end
-			},
-			children = {
-				TabbedPanelImage({ file = SB_IMG_DIR .. "document-open.png" }),
-				TabbedPanelLabel({ caption = "Import" }),
-			},
-		})
-	)
+			end
+		}
+	}))
+	self.control:AddChild(TabbedPanelButton({
+		tooltip = "Team settings",
+		children = {
+			TabbedPanelImage({ file = SB_IMG_DIR .. "players.png" }),
+			TabbedPanelLabel({ caption = "Teams"}),
+		},
+		OnClick = {
+			function()
+				if SB.playersWindow == nil then
+					self.playersWindow = PlayersWindow()
+					SB.playersWindow = self.playersWindow
+				end
+				if SB.playersWindow.window.hidden then
+					SB.view:SetMainPanel(SB.playersWindow.window)
+				end
+			end
+		}
+	}))
 end
