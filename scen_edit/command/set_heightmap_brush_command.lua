@@ -1,4 +1,4 @@
-SetHeightmapBrushCommand = AbstractCommand:extends{}
+SetHeightmapBrushCommand = Command:extends{}
 SetHeightmapBrushCommand.className = "SetHeightmapBrushCommand"
 
 -- TODO: make this save it only for one player

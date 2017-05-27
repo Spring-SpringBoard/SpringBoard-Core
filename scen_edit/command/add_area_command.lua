@@ -1,4 +1,4 @@
-AddAreaCommand = UndoableCommand:extends{}
+AddAreaCommand = Command:extends{}
 AddAreaCommand.className = "AddAreaCommand"
 
 function AddAreaCommand:init(x1, z1, x2, z2)

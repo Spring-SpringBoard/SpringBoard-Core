@@ -1,4 +1,4 @@
-TerrainGrassCommand = UndoableCommand:extends{}
+TerrainGrassCommand = Command:extends{}
 TerrainGrassCommand.className = "TerrainGrassCommand"
 
 function TerrainGrassCommand:init(opts)

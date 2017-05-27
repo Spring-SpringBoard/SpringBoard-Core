@@ -9,18 +9,18 @@ function ScenarioInfo:init()
 	self.author = playerName
 end
 
-function ScenarioInfo:Set(name, description, version, author)
-	self.name = name
-	self.description = description
-	self.version = version
-	self.author = author 
-    self:callListeners("onSet", self.name, self.description, self.version, self.author)
+function ScenarioInfo:Set(data)
+    self.name = data.name or self.name
+    self.description = data.description or self.description
+	self.version = data.version or self.version
+	self.author = data.author or self.author
+    self:callListeners("onSet", data)
 end
 
 function ScenarioInfo:clear()
 	self.name = ""
 	self.description = ""
-	self.version = "1"	
+	self.version = "1"
 	self.author = ""
 end
 
@@ -34,5 +34,15 @@ function ScenarioInfo:serialize()
 end
 
 function ScenarioInfo:load(data)
-    self:Set(data.name,	data.description, data.version,	data.author)
+    self:Set(data)
 end
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+ScenarioInfoListener = LCS.class.abstract{}
+
+function ScenarioInfoListener:onSet(data)
+end
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

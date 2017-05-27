@@ -1,4 +1,4 @@
-RedoCommand = AbstractCommand:extends{}
+RedoCommand = Command:extends{}
 
 function RedoCommand:init()
     self.className = "RedoCommand"

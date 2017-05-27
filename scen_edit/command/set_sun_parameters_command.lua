@@ -1,4 +1,4 @@
-SetSunParametersCommand = UndoableCommand:extends{}
+SetSunParametersCommand = Command:extends{}
 SetSunParametersCommand.className = "SetSunParametersCommand"
 
 function SetSunParametersCommand:init(opts)
@@ -15,7 +15,7 @@ function SetSunParametersCommand:unexecute()
     -- FIXME: widget command undo isn't implemented correctly yet
 end
 
-WidgetSetSunParametersCommand = UndoableCommand:extends{}
+WidgetSetSunParametersCommand = Command:extends{}
 WidgetSetSunParametersCommand.className = "WidgetSetSunParametersCommand"
 
 function WidgetSetSunParametersCommand:init(opts)

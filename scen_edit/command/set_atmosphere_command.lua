@@ -1,4 +1,4 @@
-SetAtmosphereCommand = UndoableCommand:extends{}
+SetAtmosphereCommand = Command:extends{}
 SetAtmosphereCommand.className = "SetAtmosphereCommand"
 
 function SetAtmosphereCommand:init(opts)
@@ -15,7 +15,7 @@ function SetAtmosphereCommand:unexecute()
     -- FIXME: widget command undo isn't implemented correctly yet
 end
 
-WidgetSetAtmosphereCommand = UndoableCommand:extends{}
+WidgetSetAtmosphereCommand = Command:extends{}
 WidgetSetAtmosphereCommand.className = "WidgetSetAtmosphereCommand"
 
 function WidgetSetAtmosphereCommand:init(opts)

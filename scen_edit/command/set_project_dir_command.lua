@@ -1,4 +1,4 @@
-SetProjectDirCommand = AbstractCommand:extends{}
+SetProjectDirCommand = Command:extends{}
 SetProjectDirCommand.className = "SetProjectDirCommand"
 
 function SetProjectDirCommand:init(projectDir)

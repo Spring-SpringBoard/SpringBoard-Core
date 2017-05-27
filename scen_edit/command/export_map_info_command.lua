@@ -1,4 +1,4 @@
-ExportMapInfoCommand = AbstractCommand:extends{}
+ExportMapInfoCommand = Command:extends{}
 ExportMapInfoCommand.className = "ExportMapInfoCommand"
 
 function ExportMapInfoCommand:init(path)

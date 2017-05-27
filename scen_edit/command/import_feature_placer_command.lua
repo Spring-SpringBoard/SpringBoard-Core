@@ -1,4 +1,4 @@
-ImportFeaturePlacerCommand = AbstractCommand:extends{}
+ImportFeaturePlacerCommand = Command:extends{}
 ImportFeaturePlacerCommand.className = "ImportFeaturePlacerCommand"
 
 function ImportFeaturePlacerCommand:init(modelData)

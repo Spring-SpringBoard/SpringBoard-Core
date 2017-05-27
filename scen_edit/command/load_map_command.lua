@@ -1,14 +1,14 @@
-LoadMap = AbstractCommand:extends{}
-LoadMap.className = "LoadMap"
+LoadMapCommand = Command:extends{}
+LoadMapCommand.className = "LoadMapCommand"
 
 local floatSize = 4
 
-function LoadMap:init(deltaMap)
-    self.className = "LoadMap"
+function LoadMapCommand:init(deltaMap)
+    self.className = "LoadMapCommand"
     self.deltaMap = deltaMap
 end
 
-function LoadMap:execute()
+function LoadMapCommand:execute()
     Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
     Spring.SetHeightMapFunc(function()
         --Log.Notice("HEIGHTMAP LOAD")

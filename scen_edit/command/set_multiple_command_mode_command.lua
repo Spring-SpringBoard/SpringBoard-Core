@@ -1,4 +1,4 @@
-SetMultipleCommandModeCommand = AbstractCommand:extends{}
+SetMultipleCommandModeCommand = Command:extends{}
 
 function SetMultipleCommandModeCommand:init(state)
     self.className = "SetMultipleCommandModeCommand"

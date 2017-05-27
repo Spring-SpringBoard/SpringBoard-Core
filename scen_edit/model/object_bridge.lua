@@ -1,6 +1,5 @@
 SB_COMMAND_DIR = SB_DIR .. "command/"
-SB.Include(SB_COMMAND_DIR .. 'abstract_command.lua')
-SB.Include(SB_COMMAND_DIR .. 'undoable_command.lua')
+SB.Include(SB_COMMAND_DIR .. 'command.lua')
 SB.IncludeDir(SB_COMMAND_DIR)
 
 ObjectBridge = LCS.class.abstract{}
@@ -78,7 +77,7 @@ FeatureBridge.SetObjectParamCommand           = SetFeatureParamCommand
 FeatureBridge.DrawObject                      = function(params)
     DrawObject(params, featureBridge)
 --     local featureDef    = FeatureDefs[objectDefID]
--- 
+--
 --     if featureDef.drawType ~= 0 then
 --         Log.Warning("engine-tree, not sure what to do")
 --     end

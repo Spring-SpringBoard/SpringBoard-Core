@@ -519,12 +519,16 @@ SB.delayed = {
     GameFrame   = {},
     DrawWorld   = {},
     DrawScreen  = {},
+    Initialize = {},
 }
 function SB.delayGL(func, params)
     SB.Delay("DrawWorld", func, params)
 end
 function SB.delay(func, params)
     SB.Delay("GameFrame", func, params)
+end
+function SB.OnInitialize(func, params)
+    SB.Delay("Initialize", func, params)
 end
 function SB.Delay(name, func, params)
     local delayed = SB.delayed[name]

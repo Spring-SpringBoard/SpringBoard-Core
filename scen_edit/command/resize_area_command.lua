@@ -1,4 +1,4 @@
-ResizeAreaCommand = UndoableCommand:extends{}
+ResizeAreaCommand = Command:extends{}
 ResizeAreaCommand.className = "ResizeAreaCommand"
 
 function ResizeAreaCommand:init(areaId, x1, z1, x2, z2)

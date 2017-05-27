@@ -42,8 +42,8 @@ end
 function TeamManager:setTeamResources(teamId, metal, metalMax, energy, energyMax)
     Spring.SetTeamResource(teamId, "m", metal)
     Spring.SetTeamResource(teamId, "ms", metalMax)
-    Spring.SetTeamResource(teamId, "e", energy)	
-    Spring.SetTeamResource(teamId, "es", energyMax)	
+    Spring.SetTeamResource(teamId, "e", energy)
+    Spring.SetTeamResource(teamId, "es", energyMax)
 end
 
 function TeamManager:serialize()
@@ -105,4 +105,16 @@ function TeamManager:generateTeams(widget)
     for _, team in pairs(teams) do
         self:addTeam(team, team.id)
     end
+end
+
+
+TeamManagerListener = LCS.class.abstract{}
+
+function TeamManagerListener:onTeamAdded(teamId)
+end
+
+function TeamManagerListener:onTeamRemoved(teamId)
+end
+
+function TeamManagerListener:onTeamChange(teamId, team)
 end

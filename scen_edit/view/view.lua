@@ -1,12 +1,12 @@
 SB_VIEW_DIR = Path.Join(SB_DIR, "view/")
 
 SB_VIEW_MAIN_WINDOW_DIR = Path.Join(SB_VIEW_DIR, "main_window/")
-SB_VIEW_ALLIANCE_DIR = Path.Join(SB_VIEW_DIR, "alliance/")
 SB_VIEW_ACTIONS_DIR = Path.Join(SB_VIEW_DIR, "actions/")
 
-SB_VIEW_TRIGGER_DIR = Path.Join(SB_VIEW_DIR, "trigger/")
 SB_VIEW_OBJECT_DIR = Path.Join(SB_VIEW_DIR, "object/")
 SB_VIEW_MAP_DIR = Path.Join(SB_VIEW_DIR, "map/")
+SB_VIEW_TRIGGER_DIR = Path.Join(SB_VIEW_DIR, "trigger/")
+SB_VIEW_GENERAL_DIR = Path.Join(SB_VIEW_DIR, "general/")
 
 View = LCS.class{}
 
@@ -14,13 +14,13 @@ function View:init()
     SB.IncludeDir(SB_VIEW_DIR)
 	SB.Include(Path.Join(SB_VIEW_MAIN_WINDOW_DIR, "abstract_main_window_panel.lua"))
 	SB.IncludeDir(SB_VIEW_MAIN_WINDOW_DIR)
-	SB.IncludeDir(SB_VIEW_ALLIANCE_DIR)
 	SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "abstract_action.lua"))
 	SB.IncludeDir(SB_VIEW_ACTIONS_DIR)
 
-    SB.IncludeDir(SB_VIEW_TRIGGER_DIR)
     SB.IncludeDir(SB_VIEW_OBJECT_DIR)
     SB.IncludeDir(SB_VIEW_MAP_DIR)
+    SB.IncludeDir(SB_VIEW_TRIGGER_DIR)
+    SB.IncludeDir(SB_VIEW_GENERAL_DIR)
 
     SB.clipboard = Clipboard()
     self.areaViews = {}

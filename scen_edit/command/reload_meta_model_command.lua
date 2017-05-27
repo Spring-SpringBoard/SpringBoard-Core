@@ -1,4 +1,4 @@
-ReloadMetaModelCommand = AbstractCommand:extends{}
+ReloadMetaModelCommand = Command:extends{}
 
 -- sends meta model files from widget to gadget
 function ReloadMetaModelCommand:init(metaModelFiles)

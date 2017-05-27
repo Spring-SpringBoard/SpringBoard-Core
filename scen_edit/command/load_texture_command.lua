@@ -1,4 +1,4 @@
-LoadTextureCommand = AbstractCommand:extends{}
+LoadTextureCommand = Command:extends{}
 LoadTextureCommand.className = "LoadTextureCommand"
 
 function LoadTextureCommand:init(texturePath)

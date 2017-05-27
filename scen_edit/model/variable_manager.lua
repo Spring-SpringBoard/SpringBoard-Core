@@ -78,3 +78,20 @@ function VariableManager:clear()
     self.variableIdCount = 0
     self.variables = {}
 end
+
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+VariableManagerListener = LCS.class.abstract{}
+
+function VariableManagerListener:onVariableAdded(variableId)
+end
+
+function VariableManagerListener:onVariableRemoved(variableId)
+end
+
+function VariableManagerListener:onVariableUpdated(variableId)
+end
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

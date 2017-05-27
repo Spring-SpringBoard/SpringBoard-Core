@@ -1,4 +1,4 @@
-WidgetUnitSayCommand = AbstractCommand:extends{}
+WidgetUnitSayCommand = Command:extends{}
 
 function WidgetUnitSayCommand:init(unit, text)
     self.className = "WidgetUnitSayCommand"

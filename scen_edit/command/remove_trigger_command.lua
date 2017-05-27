@@ -1,4 +1,4 @@
-RemoveTriggerCommand = UndoableCommand:extends{}
+RemoveTriggerCommand = Command:extends{}
 RemoveTriggerCommand.className = "RemoveTriggerCommand"
 
 function RemoveTriggerCommand:init(triggerId)

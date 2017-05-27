@@ -1,4 +1,4 @@
-SaveCommand = AbstractCommand:extends{}
+SaveCommand = Command:extends{}
 SaveCommand.className = "SaveCommand"
 
 function SaveCommand:init(path)

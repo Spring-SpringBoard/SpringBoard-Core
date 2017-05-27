@@ -1,4 +1,4 @@
-AddVariableCommand = UndoableCommand:extends{}
+AddVariableCommand = Command:extends{}
 AddVariableCommand.className = "AddVariableCommand"
 
 function AddVariableCommand:init(variable)

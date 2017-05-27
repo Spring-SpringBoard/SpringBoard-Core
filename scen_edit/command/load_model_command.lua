@@ -1,4 +1,4 @@
-LoadModelCommand = AbstractCommand:extends{}
+LoadModelCommand = Command:extends{}
 LoadModelCommand.className = "LoadModelCommand"
 
 function LoadModelCommand:init(modelString)

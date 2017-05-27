@@ -1,4 +1,4 @@
-TerrainChangeTextureCommand = UndoableCommand:extends{}
+TerrainChangeTextureCommand = Command:extends{}
 TerrainChangeTextureCommand.className = "TerrainChangeTextureCommand"
 
 function TerrainChangeTextureCommand:init(opts)

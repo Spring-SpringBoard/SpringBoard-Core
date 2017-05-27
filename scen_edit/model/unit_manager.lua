@@ -31,14 +31,14 @@ function UnitManager:addUnit(unitId, modelId)
         modelId = self.unitIdCounter
     end
     if not self.s2mUnitIdMapping[unitId] then
-        self.s2mUnitIdMapping[unitId] = modelId 
+        self.s2mUnitIdMapping[unitId] = modelId
     end
     if not self.m2sUnitIdMapping[modelId] then
         self.m2sUnitIdMapping[modelId] = unitId
     end
 
     self:callListeners("onUnitAdded", unitId, modelId)
-    return modelId 
+    return modelId
 end
 
 function UnitManager:removeUnit(unitId)
@@ -89,7 +89,7 @@ function UnitManager:serializeUnitProperties(unitId, unit)
     unit.id = self:getModelUnitId(unitId)
     local dirX, dirY, dirZ = Spring.GetUnitDirection(unitId)
     unit.angle = math.atan2(dirX, dirZ) * 180 / math.pi
-    
+
     unit.health = Spring.GetUnitHealth(unitId)
     _, unit.maxhealth = Spring.GetUnitHealth(unitId)
     if unit.maxhealth == UnitDefs[Spring.GetUnitDefID(unitId)].health then
@@ -310,7 +310,7 @@ end
 function UnitManager:load(units)
     self.unitIdCounter = 0
     -- load the units without the commands
-    local unitCommands = {} 
+    local unitCommands = {}
     for _, unit in pairs(units) do
         local commands = unit.commands
         unit.commands = nil
@@ -338,3 +338,17 @@ function UnitManager:clear()
     self.m2sUnitIdMapping = {}
     self.unitIdCounter = 0
 end
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+UnitManagerListener = LCS.class.abstract{}
+
+function UnitManagerListener:onUnitAdded(unitId, modelId)
+end
+
+function UnitManagerListener:onUnitRemoved(unitId, modelId)
+end
+
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

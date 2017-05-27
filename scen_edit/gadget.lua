@@ -114,28 +114,7 @@ function gadget:Initialize()
     rtModel = RuntimeModel()
     SB.rtModel = rtModel
 
-    if sb_gameMode ~= "play" then
-        local areaManagerListener = AreaManagerListenerGadget()
-        SB.model.areaManager:addListener(areaManagerListener)
-
-        local unitManagerListener = UnitManagerListenerGadget()
-        SB.model.unitManager:addListener(unitManagerListener)
-
-        local featureManagerListener = FeatureManagerListenerGadget()
-        SB.model.featureManager:addListener(featureManagerListener)
-
-        local variableManagerListener = VariableManagerListenerGadget()
-        SB.model.variableManager:addListener(variableManagerListener)
-
-        local triggerManagerListener = TriggerManagerListenerGadget()
-        SB.model.triggerManager:addListener(triggerManagerListener)
-
-        local teamManagerListener = TeamManagerListenerGadget()
-        SB.model.teamManager:addListener(teamManagerListener)
-
-        local scenarioInfoListener = ScenarioInfoListenerGadget()
-        SB.model.scenarioInfo:addListener(scenarioInfoListener)
-    end
+    SB.executeDelayed("Initialize")
     --populate the managers now that the listeners are set
     SB.loadFrame = Spring.GetGameFrame() + 1
 end
@@ -149,7 +128,7 @@ function Load()
         local modelData = VFS.LoadFile("model.lua", VFS.MOD)
         local texturePath = "texturemap/texture.png"
 
-        local cmds = { LoadModelCommand(modelData), LoadMap(heightmapData)}
+        local cmds = { LoadModelCommand(modelData), LoadMapCommand(heightmapData)}
         SB.commandManager:execute(CompoundCommand(cmds))
         SB.commandManager:execute(LoadTextureCommand(texturePath), true)
 

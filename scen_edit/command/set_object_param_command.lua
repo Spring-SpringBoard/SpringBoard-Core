@@ -1,4 +1,4 @@
-SetObjectParamCommand = UndoableCommand:extends{}
+SetObjectParamCommand = Command:extends{}
 SetObjectParamCommand.className = "SetObjectParamCommand"
 
 function NoGetField(name)

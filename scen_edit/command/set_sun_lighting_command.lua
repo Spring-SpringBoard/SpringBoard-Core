@@ -1,4 +1,4 @@
-SetSunLightingCommand = UndoableCommand:extends{}
+SetSunLightingCommand = Command:extends{}
 SetSunLightingCommand.className = "SetSunLightingCommand"
 
 function SetSunLightingCommand:init(opts)
@@ -15,7 +15,7 @@ function SetSunLightingCommand:unexecute()
     -- FIXME: widget command undo isn't implemented correctly yet
 end
 
-WidgetSetSunLightingCommand = UndoableCommand:extends{}
+WidgetSetSunLightingCommand = Command:extends{}
 WidgetSetSunLightingCommand.className = "WidgetSetSunLightingCommand"
 
 function WidgetSetSunLightingCommand:init(opts)

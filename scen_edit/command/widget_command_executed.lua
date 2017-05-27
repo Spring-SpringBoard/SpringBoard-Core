@@ -1,4 +1,4 @@
-WidgetCommandExecuted = AbstractCommand:extends{}
+WidgetCommandExecuted = Command:extends{}
 WidgetCommandExecuted.className = "WidgetCommandExecuted"
 
 function UpdateViews()
@@ -27,7 +27,7 @@ function WidgetCommandExecuted:execute()
     end
 end
 
-WidgetCommandUndo = AbstractCommand:extends{}
+WidgetCommandUndo = Command:extends{}
 WidgetCommandUndo.className = "WidgetCommandUndo"
 
 function WidgetCommandUndo:init()
@@ -39,7 +39,7 @@ function WidgetCommandUndo:execute()
     UpdateViews()
 end
 
-WidgetCommandRedo = AbstractCommand:extends{}
+WidgetCommandRedo = Command:extends{}
 WidgetCommandRedo.className = "WidgetCommandRedo"
 
 function WidgetCommandRedo:init()
@@ -52,7 +52,7 @@ function WidgetCommandRedo:execute()
 end
 
 -- undo stack has been cleared
-WidgetCommandClearUndoStack = AbstractCommand:extends{}
+WidgetCommandClearUndoStack = Command:extends{}
 WidgetCommandClearUndoStack.className = "WidgetCommandClearUndoStack"
 
 function WidgetCommandClearUndoStack:init()
@@ -64,7 +64,7 @@ function WidgetCommandClearUndoStack:execute()
 end
 
 -- redo stack has been cleared
-WidgetCommandClearRedoStack = AbstractCommand:extends{}
+WidgetCommandClearRedoStack = Command:extends{}
 WidgetCommandClearRedoStack.className = "WidgetCommandClearRedoStack"
 
 function WidgetCommandClearRedoStack:init()
@@ -76,7 +76,7 @@ function WidgetCommandClearRedoStack:execute()
 end
 
 -- removed first undo
-WidgetCommandRemoveFirstUndo = AbstractCommand:extends{}
+WidgetCommandRemoveFirstUndo = Command:extends{}
 WidgetCommandRemoveFirstUndo.className = "WidgetCommandRemoveFirstUndo"
 
 function WidgetCommandRemoveFirstUndo:init()
@@ -91,7 +91,7 @@ function WidgetCommandRemoveFirstUndo:execute()
 end
 
 -- removed first redo
-WidgetCommandRemoveFirstRedo = AbstractCommand:extends{}
+WidgetCommandRemoveFirstRedo = Command:extends{}
 WidgetCommandRemoveFirstRedo.className = "WidgetCommandRemoveFirstRedo"
 
 function WidgetCommandRemoveFirstRedo:init()

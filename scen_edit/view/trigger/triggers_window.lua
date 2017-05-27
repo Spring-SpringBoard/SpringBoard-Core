@@ -36,8 +36,7 @@ function TriggersWindow:init()
     }
 
     self:Populate()
-    local triggerManagerListener = TriggerManagerListenerWidget(self)
-    SB.model.triggerManager:addListener(triggerManagerListener)
+    SB.model.triggerManager:addListener(TriggerManagerListenerWidget(self))
 
     self:Finalize(children)
 end
@@ -165,4 +164,22 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
         end
     )
     return triggerWindow
+end
+
+TriggerManagerListenerWidget = TriggerManagerListener:extends{}
+
+function TriggerManagerListenerWidget:init(triggerWindow)
+    self.triggerWindow = triggerWindow
+end
+
+function TriggerManagerListenerWidget:onTriggerAdded(triggerId)
+    self.triggerWindow:Populate()
+end
+
+function TriggerManagerListenerWidget:onTriggerRemoved(triggerId)
+    self.triggerWindow:Populate()
+end
+
+function TriggerManagerListenerWidget:onTriggerUpdated(triggerId)
+    self.triggerWindow:Populate()
 end

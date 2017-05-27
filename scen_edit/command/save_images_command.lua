@@ -1,4 +1,4 @@
-SaveImagesCommand = AbstractCommand:extends{}
+SaveImagesCommand = Command:extends{}
 SaveImagesCommand.className = "SaveImagesCommand"
 
 function SaveImagesCommand:init(path)

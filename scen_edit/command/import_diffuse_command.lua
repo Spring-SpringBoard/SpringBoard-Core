@@ -1,4 +1,4 @@
-ImportDiffuseCommand = AbstractCommand:extends{}
+ImportDiffuseCommand = Command:extends{}
 ImportDiffuseCommand.className = "ImportDiffuseCommand"
 
 function ImportDiffuseCommand:init(texturePath)

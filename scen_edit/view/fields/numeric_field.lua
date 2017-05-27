@@ -43,6 +43,9 @@ function NumericField:init(field)
     self.editBox:SetText(v)
     self.button.OnMouseUp = {
         function(...)
+            if not self.notClick then
+                return
+            end
             SB.SetMouseCursor()
             self.lblValue.font:SetColor(1, 1, 1, 1)
             self.lblTitle.font:SetColor(1, 1, 1, 1)

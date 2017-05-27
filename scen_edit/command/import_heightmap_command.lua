@@ -1,4 +1,4 @@
-ImportHeightmapCommand = AbstractCommand:extends{}
+ImportHeightmapCommand = Command:extends{}
 ImportHeightmapCommand.className = "ImportHeightmapCommand"
 
 function ImportHeightmapCommand:init(heightmapImage, maxHeight, minHeight)
@@ -50,7 +50,7 @@ function ImportHeightmapCommand:execute()
     end)
 end
 
-ImportHeightmapCommandSynced = AbstractCommand:extends{}
+ImportHeightmapCommandSynced = Command:extends{}
 ImportHeightmapCommandSynced.className = "ImportHeightmapCommandSynced"
 
 function ImportHeightmapCommandSynced:init(greyscale)

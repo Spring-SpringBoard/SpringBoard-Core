@@ -66,3 +66,19 @@ function AreaManager:clear()
         self:removeArea(areaId)
     end
 end
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+AreaManagerListener = LCS.class.abstract{}
+
+function AreaManagerListener:onAreaAdded(areaId)
+end
+
+function AreaManagerListener:onAreaRemoved(areaId)
+end
+
+function AreaManagerListener:onAreaChange(areaId, area)
+end
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

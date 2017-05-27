@@ -1,4 +1,4 @@
-StartCommand = AbstractCommand:extends{}
+StartCommand = Command:extends{}
 
 function StartCommand:init()
     self.className = "StartCommand"

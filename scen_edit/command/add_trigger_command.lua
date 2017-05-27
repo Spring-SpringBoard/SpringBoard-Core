@@ -1,4 +1,4 @@
-AddTriggerCommand = UndoableCommand:extends{}
+AddTriggerCommand = Command:extends{}
 AddTriggerCommand.className = "AddTriggerCommand"
 
 function AddTriggerCommand:init(trigger)

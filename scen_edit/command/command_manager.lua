@@ -1,4 +1,9 @@
-SB_COMMAND_DIR = SB_DIR .. "command/"
+SB_COMMAND_DIR = Path.Join(SB_DIR, "command/")
+SB_COMMAND_SYNC_DIR = Path.Join(SB_COMMAND_DIR, "sync/")
+
+SB.Include(Path.Join(SB_COMMAND_DIR, 'command.lua'))
+SB.IncludeDir(SB_COMMAND_DIR)
+SB.IncludeDir(SB_COMMAND_SYNC_DIR)
 
 CommandManager = LCS.class{maxUndoSize = 30, maxRedoSize = 30}
 
@@ -7,9 +12,6 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.maxRedoSize = maxRedoSize
     self.undoList = {}
     self.redoList = {}
-    SB.Include(SB_COMMAND_DIR .. 'abstract_command.lua')
-    SB.Include(SB_COMMAND_DIR .. 'undoable_command.lua')
-    SB.IncludeDir(SB_COMMAND_DIR)
     --TODO: implement player lock
     self.playerLock = nil --if set, it defines the id of the only player who can do commands
     self.multipleCommandStack = {}
@@ -26,7 +28,7 @@ function CommandManager:_SafeCall(func)
             Log.Error(err)
         end
     end)
-    if succ then 
+    if succ then
         return result
     end
 end
@@ -42,6 +44,7 @@ end
 function CommandManager:leaveMultipleCommandMode()
     assert(self.multipleCommandMode, "Trying to leave multiple command mode while not in it")
     self.multipleCommandMode = false
+
     if #self.multipleCommandStack == 0 then
         return
     end
@@ -93,7 +96,7 @@ function CommandManager:execute(cmd, widget)
         if not widget then
             return self:_SendCommand(cmd)
         else
-            self:_SafeCall(function() 
+            self:_SafeCall(function()
                 cmd:execute()
             end)
         end
@@ -130,6 +133,11 @@ function CommandManager:clearRedoStack()
     end
 end
 
+function CommandManager:clearUndoRedoStack()
+    self:clearUndoStack()
+    self:clearRedoStack()
+end
+
 function CommandManager:undoListAdd(cmd)
     table.insert(self.undoList, cmd)
     if #self.undoList > self.maxUndoSize then
@@ -158,7 +166,7 @@ function CommandManager:undo()
         return
     end
     local cmd = table.remove(self.undoList, #self.undoList)
-    self:_SafeCall(function() 
+    self:_SafeCall(function()
         cmd:unexecute()
         self:redoListAdd(cmd)
         self:execute(WidgetCommandUndo(), true)
@@ -176,14 +184,9 @@ function CommandManager:redo()
         return
     end
     local cmd = table.remove(self.redoList, #self.redoList)
-    self:_SafeCall(function() 
+    self:_SafeCall(function()
         cmd:execute()
         self:execute(WidgetCommandRedo(), true)
         table.insert(self.undoList, cmd)
     end)
-end
-
-function CommandManager:clearUndoRedoStack()
-    self:clearUndoStack()
-    self:clearRedoStack()
 end

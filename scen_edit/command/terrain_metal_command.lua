@@ -1,4 +1,4 @@
-TerrainMetalCommand = UndoableCommand:extends{}
+TerrainMetalCommand = Command:extends{}
 TerrainMetalCommand.className = "TerrainMetalCommand"
 
 function TerrainMetalCommand:init(opts)

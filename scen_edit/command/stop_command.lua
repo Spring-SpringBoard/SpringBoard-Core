@@ -1,4 +1,4 @@
-StopCommand = AbstractCommand:extends{}
+StopCommand = Command:extends{}
 
 function StopCommand:init()
     self.className = "StopCommand"

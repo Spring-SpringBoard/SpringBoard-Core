@@ -1,4 +1,4 @@
-SetAllyCommand = AbstractCommand:extends{}
+SetAllyCommand = Command:extends{}
 SetAllyCommand.className = "SetAllyCommand"
 
 function SetAllyCommand:init(firstAllyTeamId, secondAllyTeamId, ally)

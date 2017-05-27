@@ -1,4 +1,4 @@
-WidgetTerrainChangeTextureCommand = AbstractCommand:extends{}
+WidgetTerrainChangeTextureCommand = Command:extends{}
 WidgetTerrainChangeTextureCommand.className = "WidgetTerrainChangeTextureCommand"
 
 function WidgetTerrainChangeTextureCommand:init(opts)
@@ -797,7 +797,7 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     end
 end
 
-WidgetUndoTerrainChangeTextureCommand = AbstractCommand:extends{}
+WidgetUndoTerrainChangeTextureCommand = Command:extends{}
 WidgetUndoTerrainChangeTextureCommand.className = "WidgetUndoTerrainChangeTextureCommand"
 
 function WidgetUndoTerrainChangeTextureCommand:execute()
@@ -806,7 +806,7 @@ function WidgetUndoTerrainChangeTextureCommand:execute()
     end)
 end
 
-WidgetTerrainChangeTexturePushStackCommand = AbstractCommand:extends{}
+WidgetTerrainChangeTexturePushStackCommand = Command:extends{}
 WidgetTerrainChangeTexturePushStackCommand.className = "WidgetTerrainChangeTexturePushStackCommand"
 
 function WidgetTerrainChangeTexturePushStackCommand:execute()

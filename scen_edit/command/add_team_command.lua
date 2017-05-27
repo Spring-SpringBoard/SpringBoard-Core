@@ -1,4 +1,4 @@
-AddTeamCommand = UndoableCommand:extends{}
+AddTeamCommand = Command:extends{}
 AddTeamCommand.className = "AddTeamCommand"
 
 function AddTeamCommand:init(name, color, allyTeam, side)

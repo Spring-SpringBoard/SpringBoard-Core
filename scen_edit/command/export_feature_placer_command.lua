@@ -1,4 +1,4 @@
-ExportFeaturePlacerCommand = AbstractCommand:extends{}
+ExportFeaturePlacerCommand = Command:extends{}
 ExportFeaturePlacerCommand.className = "ExportFeaturePlacerCommand"
 
 function ExportFeaturePlacerCommand:init(path)

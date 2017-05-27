@@ -1,4 +1,4 @@
-CacheTextureCommand = AbstractCommand:extends{}
+CacheTextureCommand = Command:extends{}
 CacheTextureCommand.className = "CacheTextureCommand"
 
 function CacheTextureCommand:init(texture)
@@ -11,7 +11,7 @@ function CacheTextureCommand:execute()
     SB.commandManager:execute(cmd, true)
 end
 
-WidgetCacheTextureCommand = AbstractCommand:extends{}
+WidgetCacheTextureCommand = Command:extends{}
 WidgetCacheTextureCommand.className = "WidgetCacheTextureCommand"
 
 function WidgetCacheTextureCommand:init(texture)

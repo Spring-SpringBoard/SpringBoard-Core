@@ -1,4 +1,4 @@
-WidgetDisplayTextCommand = AbstractCommand:extends{}
+WidgetDisplayTextCommand = Command:extends{}
 
 function WidgetDisplayTextCommand:init(text, coords, color)
     self.className = "WidgetDisplayTextCommand"

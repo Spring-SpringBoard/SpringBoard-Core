@@ -1,4 +1,4 @@
-AbstractTerrainModifyCommand = UndoableCommand:extends{}
+AbstractTerrainModifyCommand = Command:extends{}
 AbstractTerrainModifyCommand.className = "AbstractTerrainModifyCommand"
 
 local function rotate(x, y, angle)

@@ -1,4 +1,4 @@
-RemoveObjectCommand = AbstractCommand:extends{}
+RemoveObjectCommand = Command:extends{}
 RemoveObjectCommand.className = "RemoveObjectCommand"
 
 function RemoveObjectCommand:execute(bridge)

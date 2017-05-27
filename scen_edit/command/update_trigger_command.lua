@@ -1,4 +1,4 @@
-UpdateTriggerCommand = UndoableCommand:extends{}
+UpdateTriggerCommand = Command:extends{}
 UpdateTriggerCommand.className = "UpdateTriggerCommand"
 
 function UpdateTriggerCommand:init(trigger)

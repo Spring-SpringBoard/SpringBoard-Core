@@ -1,4 +1,4 @@
-ExecuteTriggerCommand = AbstractCommand:extends{}
+ExecuteTriggerCommand = Command:extends{}
 
 function ExecuteTriggerCommand:init(triggerId)
     self.className = "ExecuteTriggerCommand"

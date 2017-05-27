@@ -31,13 +31,13 @@ function FeatureManager:addFeature(featureId, modelId)
         modelId = self.featureIdCounter
     end
     if not self.s2mFeatureIdMapping[featureId] then
-        self.s2mFeatureIdMapping[featureId] = modelId 
+        self.s2mFeatureIdMapping[featureId] = modelId
     end
     if not self.m2sFeatureIdMapping[modelId] then
         self.m2sFeatureIdMapping[modelId] = featureId
     end
     self:callListeners("onFeatureAdded", featureId, modelId)
-    return modelId 
+    return modelId
 end
 
 function FeatureManager:removeFeature(featureId)
@@ -130,3 +130,16 @@ function FeatureManager:clear()
     self.featureIdCounter = 0
 
 end
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+FeatureManagerListener = LCS.class.abstract{}
+
+function FeatureManagerListener:onFeatureAdded(featureId, modelId)
+end
+
+function FeatureManagerListener:onFeatureRemoved(featureId, modelId)
+end
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

@@ -1,4 +1,4 @@
-ExportCommand = AbstractCommand:extends{}
+ExportCommand = Command:extends{}
 ExportCommand.className = "ExportCommand"
 
 function ExportCommand:init(path)

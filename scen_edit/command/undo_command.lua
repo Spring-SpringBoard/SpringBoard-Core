@@ -1,4 +1,4 @@
-UndoCommand = AbstractCommand:extends{}
+UndoCommand = Command:extends{}
 
 function UndoCommand:init()
     self.className = "UndoCommand"

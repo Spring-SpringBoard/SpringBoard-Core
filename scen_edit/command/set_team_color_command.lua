@@ -1,4 +1,4 @@
-SetTeamColorCommand = UndoableCommand:extends{}
+SetTeamColorCommand = Command:extends{}
 SetTeamColorCommand.className = "SetTeamColorCommand"
 
 function SetTeamColorCommand:init(teamId, color)

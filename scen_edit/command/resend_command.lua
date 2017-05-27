@@ -1,4 +1,4 @@
-ResendCommand = AbstractCommand:extends{}
+ResendCommand = Command:extends{}
 
 -- command sent from widget to gadget to resubmit all data
 function ResendCommand:init(metaModelFiles)
@@ -17,7 +17,7 @@ function ResendCommand:execute()
     SB.commandManager:execute(cmd, true)
 end
 
-WidgetResendCommand = AbstractCommand:extends{}
+WidgetResendCommand = Command:extends{}
 
 function WidgetResendCommand:init(model)
     self.className = "WidgetResendCommand"

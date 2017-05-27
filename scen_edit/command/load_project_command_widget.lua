@@ -1,4 +1,4 @@
-LoadProjectCommandWidget = AbstractCommand:extends{}
+LoadProjectCommandWidget = Command:extends{}
 LoadProjectCommandWidget.className = "LoadProjectCommandWidget"
 
 function LoadProjectCommandWidget:init(path, isZip)
@@ -48,7 +48,7 @@ function LoadProjectCommandWidget:execute()
         texturePath = Path.Join(path, "texturemap/")
     end
 
-    local cmds = { LoadMap(heightmapData), LoadModelCommand(modelData)}
+    local cmds = {LoadMapCommand(heightmapData), LoadModelCommand(modelData)}
     if not hasScenarioFile and Spring.GetGameRulesParam("sb_gameMode") == "play" then
         table.insert(cmds, StartCommand())
     end

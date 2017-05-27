@@ -1,4 +1,4 @@
-AddObjectCommand = AbstractCommand:extends{}
+AddObjectCommand = Command:extends{}
 AddObjectCommand.className = "AddObjectCommand"
 
 function AddObjectCommand:execute(bridge)

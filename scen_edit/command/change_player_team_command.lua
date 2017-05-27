@@ -1,4 +1,4 @@
-ChangePlayerTeamCommand = AbstractCommand:extends{}
+ChangePlayerTeamCommand = Command:extends{}
 
 function ChangePlayerTeamCommand:init(playerId, teamId)
     self.className = "ChangePlayerTeamCommand"

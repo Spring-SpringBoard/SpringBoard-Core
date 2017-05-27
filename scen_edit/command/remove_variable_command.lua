@@ -1,4 +1,4 @@
-RemoveVariableCommand = UndoableCommand:extends{}
+RemoveVariableCommand = Command:extends{}
 RemoveVariableCommand.className = "RemoveVariableCommand"
 
 function RemoveVariableCommand:init(variableId)

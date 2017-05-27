@@ -1,4 +1,4 @@
-MoveAreaCommand = UndoableCommand:extends{}
+MoveAreaCommand = Command:extends{}
 MoveAreaCommand.className = "MoveAreaCommand"
 
 function MoveAreaCommand:init(areaId, newX, newZ)

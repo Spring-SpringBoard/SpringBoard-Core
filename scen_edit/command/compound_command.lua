@@ -1,4 +1,4 @@
-CompoundCommand = UndoableCommand:extends{}
+CompoundCommand = Command:extends{}
 
 function CompoundCommand:init(commands)
     self.className = "CompoundCommand"
@@ -6,6 +6,7 @@ function CompoundCommand:init(commands)
 end
 
 function CompoundCommand:execute()
+    -- Execute commands in order
     for i = 1, #self.commands do
         local command = self.commands[i]
         command:execute()
@@ -13,6 +14,7 @@ function CompoundCommand:execute()
 end
 
 function CompoundCommand:unexecute()
+    -- Execute commands in reverse order
     for i = #self.commands, 1, -1 do
         local command = self.commands[i]
         command:unexecute()

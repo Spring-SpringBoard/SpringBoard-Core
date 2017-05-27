@@ -1,4 +1,4 @@
-HelloWorldCommand = AbstractCommand:extends{}
+HelloWorldCommand = Command:extends{}
 
 function HelloWorldCommand:init()
     self.className = "HelloWorldCommand"

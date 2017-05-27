@@ -1,4 +1,4 @@
-UpdateTeamCommand = UndoableCommand:extends{}
+UpdateTeamCommand = Command:extends{}
 UpdateTeamCommand.className = "UpdateTeamCommand"
 
 function UpdateTeamCommand:init(team)

@@ -102,7 +102,7 @@ function StringField:init(field)
                 end
             end
         },
-        children = { 
+        children = {
             self.lblValue,
             self.lblTitle,
         },

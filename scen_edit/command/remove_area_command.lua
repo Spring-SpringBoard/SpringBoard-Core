@@ -1,4 +1,4 @@
-RemoveAreaCommand = UndoableCommand:extends{}
+RemoveAreaCommand = Command:extends{}
 RemoveAreaCommand.className = "RemoveAreaCommand"
 
 function RemoveAreaCommand:init(areaId)

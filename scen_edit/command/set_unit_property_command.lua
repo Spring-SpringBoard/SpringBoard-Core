@@ -1,4 +1,4 @@
-SetUnitPropertyCommand = AbstractCommand:extends{}
+SetUnitPropertyCommand = Command:extends{}
 SetUnitPropertyCommand.className = "SetUnitPropertyCommand"
 
 function SetUnitPropertyCommand:init(modelUnitId, key, value)

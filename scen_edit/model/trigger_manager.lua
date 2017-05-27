@@ -182,3 +182,19 @@ function TriggerManager:GetSafeEventHumanName(trigger, event)
         return "Invalid event: " .. tostring(event.typeName)
     end
 end
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+TriggerManagerListener = LCS.class.abstract{}
+
+function TriggerManagerListener:onTriggerAdded(triggerId)
+end
+
+function TriggerManagerListener:onTriggerRemoved(triggerId)
+end
+
+function TriggerManagerListener:onTriggerUpdated(triggerId)
+end
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

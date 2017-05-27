@@ -1,4 +1,4 @@
-SetObjectCommand = AbstractCommand:extends{}
+SetObjectCommand = Command:extends{}
 SetObjectCommand.className = "SetObjectCommand"
 
 function SetObjectCommand:execute(bridge)

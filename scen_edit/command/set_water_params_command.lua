@@ -1,4 +1,4 @@
-SetWaterParamsCommand = UndoableCommand:extends{}
+SetWaterParamsCommand = Command:extends{}
 SetWaterParamsCommand.className = "SetWaterParamsCommand"
 
 function SetWaterParamsCommand:init(opts)
@@ -16,7 +16,7 @@ function SetWaterParamsCommand:unexecute()
     SB.commandManager:execute(cmd, true)
 end
 
-WidgetSetWaterParamsCommand = AbstractCommand:extends{}
+WidgetSetWaterParamsCommand = Command:extends{}
 WidgetSetWaterParamsCommand.className = "WidgetSetWaterParamsCommand"
 
 function WidgetSetWaterParamsCommand:init(opts)
@@ -42,7 +42,7 @@ function WidgetSetWaterParamsCommand:execute()
     Spring.SendCommands('water ' .. Spring.GetWaterMode())
 end
 
-WidgetUndoSetWaterParamsCommand = AbstractCommand:extends{}
+WidgetUndoSetWaterParamsCommand = Command:extends{}
 WidgetUndoSetWaterParamsCommand.className = "WidgetUndoSetWaterParamsCommand"
 
 function WidgetUndoSetWaterParamsCommand:execute()

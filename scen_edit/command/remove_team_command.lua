@@ -1,4 +1,4 @@
-RemoveTeamCommand = UndoableCommand:extends{}
+RemoveTeamCommand = Command:extends{}
 RemoveTeamCommand.className = "RemoveTeamCommand"
 
 function RemoveTeamCommand:init(teamId)

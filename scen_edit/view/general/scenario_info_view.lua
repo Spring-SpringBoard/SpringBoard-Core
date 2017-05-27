@@ -53,12 +53,50 @@ function ScenarioInfoView:init()
         },
     }
 
+	SB.model.scenarioInfo:addListener(ScenarioInfoListenerWidget(self))
+
 	self:Finalize(children)
 end
 
+function ScenarioInfoView:OnStartChange(name)
+    SB.commandManager:execute(SetMultipleCommandModeCommand(true))
+end
+
+function ScenarioInfoView:OnEndChange(name)
+    SB.commandManager:execute(SetMultipleCommandModeCommand(false))
+end
+
 function ScenarioInfoView:OnFieldChange(name, value)
-	local cmd = SetScenarioInfoCommand(
-		self.fields['name'].value, self.fields['description'].value,
-		self.fields['version'].value, self.fields['author'].value)
+	if self.updatingInfo then
+		return
+	end
+
+	local cmd = SetScenarioInfoCommand({
+		name = self.fields['name'].value,
+		description = self.fields['description'].value,
+		version = self.fields['version'].value,
+		author = self.fields['author'].value,
+	})
     SB.commandManager:execute(cmd)
+end
+
+function ScenarioInfoView:UpdateInfo(update)
+	if self._startedChanging then
+		return
+	end
+
+	self.updatingInfo = true
+	for k, v in pairs(update) do
+		self:Set(k, v)
+	end
+	self.updatingInfo = false
+end
+
+ScenarioInfoListenerWidget = ScenarioInfoListener:extends{}
+function ScenarioInfoListenerWidget:init(scenarioInfoView)
+    self.scenarioInfoView = scenarioInfoView
+end
+
+function ScenarioInfoListenerWidget:onSet(data)
+	self.scenarioInfoView:UpdateInfo(data)
 end
