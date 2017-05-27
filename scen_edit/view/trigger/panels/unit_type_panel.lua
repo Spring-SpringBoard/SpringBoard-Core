@@ -18,21 +18,19 @@ function UnitTypePanel:MakePredefinedOpt()
         parent = stackUnitTypePanel,
         unitTypeId = nil,
     }
+    self.OnSelectObjectType = function(unitTypeId)
+        self.btnPredefined.unitTypeId = unitTypeId
+        local defName = unitBridge.ObjectDefs[unitTypeId].name
+        self.btnPredefined.caption = "Id=" .. defName
+        self.btnPredefined:Invalidate()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
+        end
+    end
     self.btnPredefined.OnClick = {
         function()
-            SB.stateManager:SetState(SelectUnitTypeState(self.btnPredefined))
+            SB.stateManager:SetState(SelectUnitTypeState(self.OnSelectObjectType))
             --SB.SelectType(self.btnPredefined)
-        end
-    }
-    self.btnPredefined.OnSelectObjectType = {
-        function(unitTypeId)
-            self.btnPredefined.unitTypeId = unitTypeId
-            local defName = unitBridge.ObjectDefs[unitTypeId].name
-            self.btnPredefined.caption = "Id=" .. defName
-            self.btnPredefined:Invalidate()
-            if not self.cbPredefined.checked then
-                self.cbPredefined:Toggle()
-            end
         end
     }
 end
@@ -51,7 +49,7 @@ function UnitTypePanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        self.btnPredefined.OnSelectObjectType[1](field.value)
+        self.OnSelectObjectType(field.value)
         return true
     end
     return self:super('UpdatePanel', field)

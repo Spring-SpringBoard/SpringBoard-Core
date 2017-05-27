@@ -1,7 +1,7 @@
 SelectAreaState = AbstractState:extends{}
 
-function SelectAreaState:init(btnSelectArea)
-    self.btnSelectArea = btnSelectArea
+function SelectAreaState:init(callback)
+    self.callback = callback
     SB.SetMouseCursor("search")
 end
 
@@ -11,7 +11,7 @@ function SelectAreaState:MousePress(x, y, button)
         if result == "ground"  then
             local selected = SB.checkAreaIntersections(coords[1], coords[3])
             if selected ~= nil then
-                CallListeners(self.btnSelectArea.OnSelectArea, selected)
+                self.callback(selected)
                 SB.stateManager:SetState(DefaultState())
             end
         end

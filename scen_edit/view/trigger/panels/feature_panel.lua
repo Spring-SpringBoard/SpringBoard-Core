@@ -19,19 +19,17 @@ function FeaturePanel:MakePredefinedOpt()
         parent = stackFeaturePanel,
         featureId = nil,
     }
+    self.OnSelectObject = function(objectID)
+        self.btnPredefined.featureId = objectID
+        self.btnPredefined.caption = "Id=" .. objectID
+        self.btnPredefined:Invalidate()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
+        end
+    end
     self.btnPredefined.OnClick = {
         function()
-            SB.stateManager:SetState(SelectFeatureState(self.btnPredefined))
-        end
-    }
-    self.btnPredefined.OnSelectObject = {
-        function(objectID)
-            self.btnPredefined.featureId = objectID
-            self.btnPredefined.caption = "Id=" .. objectID
-            self.btnPredefined:Invalidate()
-            if not self.cbPredefined.checked then
-                self.cbPredefined:Toggle()
-            end
+            SB.stateManager:SetState(SelectFeatureState(self.OnSelectObject))
         end
     }
     self.btnPredefinedZoom = Button:New {
@@ -82,7 +80,7 @@ function FeaturePanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectFeature, field.value)
+        self.OnSelectFeature(field.value)
         return true
     end
     return self:super('UpdatePanel', field)

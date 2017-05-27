@@ -347,8 +347,8 @@ function SB.GetTeams(widget)
         local r, g, b, a = SB.GenerateTeamColor()--Spring.GetTeamColor(teamId)
         if widget then
             r, g, b, a = Spring.GetTeamColor(team.id)
+            team.color = { r = r, g = g, b = b, a = a }
         end
-        team.color = { r = r, g = g, b = b, a = a }
 
         local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(team.id)
         team.allyTeam = allyTeam

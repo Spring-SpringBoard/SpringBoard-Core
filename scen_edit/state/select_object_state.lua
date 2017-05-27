@@ -1,7 +1,7 @@
 SelectObjectState = AbstractState:extends{}
 
-function SelectObjectState:init(btnSelectObject)
-    self.btnSelectObject = btnSelectObject
+function SelectObjectState:init(callback)
+    self.callback = callback
     SB.SetMouseCursor("search")
 end
 
@@ -10,7 +10,7 @@ function SelectObjectState:MousePress(x, y, button)
         local result, objectID = Spring.TraceScreenRay(x, y)
         if (result == "unit" and self.bridge.bridgeName == "UnitBridge") or
            (result == "feature" and self.bridge.bridgeName == "FeatureBridge") then
-            CallListeners(self.btnSelectObject.OnSelectObject, self.bridge.getObjectModelID(objectID))
+            self.callback(self.bridge.getObjectModelID(objectID))
             SB.stateManager:SetState(DefaultState())
         end
     elseif button == 3 then

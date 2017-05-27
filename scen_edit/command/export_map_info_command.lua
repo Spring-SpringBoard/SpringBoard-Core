@@ -128,8 +128,28 @@ end
 
 function ExportMapInfoCommand:GetTeams()
     local tbl = {
-        -- FIXME: nothing set
+        teams = {}
     }
+    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
+        local areaId = team.startPos
+        local area
+        if areaId then
+            area = SB.model.areaManager:getArea(areaId)
+            if not area then
+                Log.Warning("No area for id: " .. tostring(areaId))
+            end
+        end
+        if area then
+            -- FIXME: We're just taking the middle point of the area
+            -- Ugly but sue me ^_^
+            table.insert(tbl.teams, {
+                startPos = {
+                    x = (area[1] + area[3]) / 2,
+                    z = (area[1] + area[4]) / 2,
+                }
+            })
+        end
+    end
     return tbl
 end
 

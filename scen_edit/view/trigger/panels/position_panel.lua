@@ -19,12 +19,7 @@ function PositionPanel:MakePredefinedOpt()
         parent = stackPositionPanel,
         position = nil,
     }
-    self.btnPredefined.OnClick = {
-        function()
-            SB.stateManager:SetState(SelectPositionState(self.btnPredefined))
-        end
-    }
-    self.btnPredefined.OnSelectPosition = {
+    self.OnSelectPosition = {
         function(position)
             self.btnPredefined.position = position
             self.btnPredefined.caption = 'pos'
@@ -33,6 +28,11 @@ function PositionPanel:MakePredefinedOpt()
             if not self.cbPredefined.checked then
                 self.cbPredefined:Toggle()
             end
+        end
+    }
+    self.btnPredefined.OnClick = {
+        function()
+            SB.stateManager:SetState(SelectPositionState(self.OnSelectPosition))
         end
     }
     self.btnPredefinedZoom = Button:New {
@@ -81,7 +81,7 @@ function PositionPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectPosition, field.value)
+        self.OnSelectPosition(field.value)
         return true
     elseif field.type == "spec" then
         if not self.cbSpecialPosition.checked then

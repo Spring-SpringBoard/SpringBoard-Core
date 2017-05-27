@@ -1,7 +1,7 @@
 SelectObjectTypeState = AbstractState:extends{}
 
-function SelectObjectTypeState:init(btnSelectObjectType)
-    self.btnSelectObjectType = btnSelectObjectType
+function SelectObjectTypeState:init(callback)
+    self.callback = callback
     SB.SetMouseCursor("search")
 end
 
@@ -11,8 +11,7 @@ function SelectObjectTypeState:MousePress(x, y, button)
         if (result == "unit" and self.bridge.bridgeName == "UnitBridge") or
            (result == "feature" and self.bridge.bridgeName == "FeatureBridge") then
             local objectDefID = self.bridge.spGetObjectDefID(objectID)
-            CallListeners(self.btnSelectObjectType.OnSelectObjectType, objectDefID)
-            SB.stateManager:SetState(DefaultState())
+            self:SelectObjectType(objectDefID)
         end
     elseif button == 3 then
         SB.stateManager:SetState(DefaultState())
@@ -20,7 +19,7 @@ function SelectObjectTypeState:MousePress(x, y, button)
 end
 
 function SelectObjectTypeState:SelectObjectType(objectDefID)
-    CallListeners(self.btnSelectObjectType.OnSelectObjectType, objectDefID)
+    self.callback(objectDefID)
     SB.stateManager:SetState(DefaultState())
 end
 

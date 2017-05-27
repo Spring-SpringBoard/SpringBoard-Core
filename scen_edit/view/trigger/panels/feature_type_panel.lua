@@ -18,21 +18,19 @@ function FeatureTypePanel:MakePredefinedOpt()
         parent = stackFeatureTypePanel,
         featureTypeId = nil,
     }
+    self.OnSelectObjectType = function(featureTypeId)
+        self.btnPredefined.featureTypeId = featureTypeId
+        local defName = featureBridge.ObjectDefs[featureTypeId].name
+        self.btnPredefined.caption = "Id=" .. defName
+        self.btnPredefined:Invalidate()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
+        end
+    end
     self.btnPredefined.OnClick = {
         function()
-            SB.stateManager:SetState(SelectFeatureTypeState(self.btnPredefined))
+            SB.stateManager:SetState(SelectFeatureTypeState(self.OnSelectObjectType))
             --SB.SelectType(self.btnPredefined)
-        end
-    }
-    self.btnPredefined.OnSelectObjectType = {
-        function(featureTypeId)
-            self.btnPredefined.featureTypeId = featureTypeId
-            local defName = featureBridge.ObjectDefs[featureTypeId].name
-            self.btnPredefined.caption = "Id=" .. defName
-            self.btnPredefined:Invalidate()
-            if not self.cbPredefined.checked then
-                self.cbPredefined:Toggle()
-            end
         end
     }
 end
@@ -51,7 +49,7 @@ function FeatureTypePanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        self.btnPredefined.OnSelectObjectType[1](field.value)
+        self.OnSelectObjectType(field.value)
         return true
     end
     return self:super('UpdatePanel', field)

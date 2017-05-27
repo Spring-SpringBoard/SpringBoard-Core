@@ -19,19 +19,17 @@ function UnitPanel:MakePredefinedOpt()
         parent = stackUnitPanel,
         unitId = nil,
     }
+    self.OnSelectObject = function(objectID)
+        self.btnPredefined.unitId = objectID
+        self.btnPredefined.caption = "Id=" .. objectID
+        self.btnPredefined:Invalidate()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
+        end
+    end
     self.btnPredefined.OnClick = {
         function()
-            SB.stateManager:SetState(SelectUnitState(self.btnPredefined))
-        end
-    }
-    self.btnPredefined.OnSelectObject = {
-        function(objectID)
-            self.btnPredefined.unitId = objectID
-            self.btnPredefined.caption = "Id=" .. objectID
-            self.btnPredefined:Invalidate()
-            if not self.cbPredefined.checked then
-                self.cbPredefined:Toggle()
-            end
+            SB.stateManager:SetState(SelectUnitState(self.OnSelectObject))
         end
     }
     self.btnPredefinedZoom = Button:New {
@@ -80,7 +78,7 @@ function UnitPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectUnit, field.value)
+        self.OnSelectUnit(field.value)
         return true
     end
     return self:super('UpdatePanel', field)

@@ -18,19 +18,17 @@ function AreaPanel:MakePredefinedOpt()
         parent = stackAreaPanel,
         areaId = nil,
     }
+    self.OnSelectArea = function(areaId)
+        self.btnPredefined.areaId = areaId
+        self.btnPredefined.caption = "Id=" .. areaId
+        self.btnPredefined:Invalidate()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
+        end
+    end
     self.btnPredefined.OnClick = {
         function()
-            SB.stateManager:SetState(SelectAreaState(self.btnPredefined))
-        end
-    }
-    self.btnPredefined.OnSelectArea = {
-        function(areaId)
-            self.btnPredefined.areaId = areaId
-            self.btnPredefined.caption = "Id=" .. areaId
-            self.btnPredefined:Invalidate()
-            if not self.cbPredefined.checked then
-                self.cbPredefined:Toggle()
-            end
+            SB.stateManager:SetState(SelectAreaState(self.OnSelectArea))
         end
     }
     self.btnPredefinedZoom = Button:New {
@@ -80,7 +78,7 @@ function AreaPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        CallListeners(self.btnPredefined.OnSelectArea, field.value)
+        self.OnSelectArea(field.value)
         return true
     end
     return self:super('UpdatePanel', field)

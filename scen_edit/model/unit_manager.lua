@@ -348,7 +348,6 @@ end
 
 function UnitManagerListener:onUnitRemoved(unitId, modelId)
 end
-
 ------------------------------------------------
 -- End listener definition
 ------------------------------------------------

@@ -99,6 +99,13 @@ function PlayerWindow:init(team)
         tooltip = "Team color",
     }))
 
+    self:AddField(AreaField({
+        name = "startPos",
+        title = "Start area:",
+        value = team.startPos,
+        tooltip = "Team starting position",
+    }))
+
     local children = {}
     table.insert(children,
         ScrollPanel:New {
@@ -127,6 +134,7 @@ function PlayerWindow:init(team)
         newTeam.metalMax    = self.fields["metalStorage"].value or metalMax
         newTeam.energy      = self.fields["energy"].value or energy
         newTeam.energyMax   = self.fields["energyStorage"].value or energyMax
+        newTeam.startPos    = self.fields["startPos"].value
         local cmd = UpdateTeamCommand(newTeam)
         SB.commandManager:execute(cmd)
     end)

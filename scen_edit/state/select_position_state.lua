@@ -1,7 +1,7 @@
 SelectPositionState = AbstractState:extends{}
 
-function SelectPositionState:init(btnSelectPosition)
-    self.btnSelectPosition = btnSelectPosition
+function SelectPositionState:init(callback)
+    self.callback = callback
     SB.SetMouseCursor("search")
 end
 
@@ -14,7 +14,7 @@ function SelectPositionState:MousePress(x, y, button)
                 y = coords[2],
                 z = coords[3],
             }
-            CallListeners(self.btnSelectPosition.OnSelectPosition, position)
+            self.callback(position)
             SB.stateManager:SetState(DefaultState())
         end
     elseif button == 3 then

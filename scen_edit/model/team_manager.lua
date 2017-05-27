@@ -12,7 +12,9 @@ function TeamManager:addTeam(team, teamId)
     end
     team.id = teamId
     self.teamIdCount = teamId
+
     self.teams[teamId] = team
+    self:_setTeam(teamId, team)
     self:callListeners("onTeamAdded", teamId)
     return teamId
 end
@@ -25,10 +27,20 @@ function TeamManager:removeTeam(teamId)
     end
 end
 
-function TeamManager:setTeam(teamId, value)
+function TeamManager:_setTeam(teamId, team)
     assert(self.teams[teamId])
-    self.teams[teamId] = value
-    self:callListeners("onTeamChange", teamId, value)
+    self.teams[teamId] = team
+    if team.color then
+        Spring.SetTeamColor(teamId, team.color.r, team.color.g, team.color.b)
+    end
+    if Script.GetSynced() then
+        self:setTeamResources(teamId, team.metal, team.metalMax, team.energy, team.energyMax)
+    end
+end
+
+function TeamManager:setTeam(teamId, team)
+    self:_setTeam(teamId, team)
+    self:callListeners("onTeamChange", teamId, team)
 end
 
 function TeamManager:getTeam(teamId)
@@ -40,10 +52,18 @@ function TeamManager:getAllTeams()
 end
 
 function TeamManager:setTeamResources(teamId, metal, metalMax, energy, energyMax)
-    Spring.SetTeamResource(teamId, "m", metal)
-    Spring.SetTeamResource(teamId, "ms", metalMax)
-    Spring.SetTeamResource(teamId, "e", energy)
-    Spring.SetTeamResource(teamId, "es", energyMax)
+    if metal then
+        Spring.SetTeamResource(teamId, "m", metal)
+    end
+    if metalMax then
+        Spring.SetTeamResource(teamId, "ms", metalMax)
+    end
+    if energy then
+        Spring.SetTeamResource(teamId, "e", energy)
+    end
+    if energyMax then
+        Spring.SetTeamResource(teamId, "es", energyMax)
+    end
 end
 
 function TeamManager:serialize()
@@ -66,7 +86,6 @@ end
 
 function TeamManager:load(data)
     for _, kv in pairs(data) do
-        local id = kv.id
         local team = kv.team
 
         if Spring.SetAlly ~= nil then
@@ -80,15 +99,9 @@ function TeamManager:load(data)
                 Spring.SetAlly(team.allyTeam, allyTeam2, true)
             end
         end
-        Spring.SetTeamColor(team.id, team.color.r, team.color.g, team.color.b)
         team.allies = nil
 
-        self:addTeam(team, id)
-        if team.metal ~= nil and team.metalMax ~= nil and team.energy ~= nil and team.energyMax ~= nil then
-            SB.delay(function()
-                self:setTeamResources(id, team.metal, team.metalMax, team.energy, team.energyMax)
-            end)
-        end
+        self:addTeam(team, team.id)
     end
 end
 
@@ -107,7 +120,9 @@ function TeamManager:generateTeams(widget)
     end
 end
 
-
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
 TeamManagerListener = LCS.class.abstract{}
 
 function TeamManagerListener:onTeamAdded(teamId)
@@ -118,3 +133,6 @@ end
 
 function TeamManagerListener:onTeamChange(teamId, team)
 end
+------------------------------------------------
+-- End listener definition
+------------------------------------------------
