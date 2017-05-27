@@ -83,13 +83,14 @@ function SB.MakeRadioButtonGroup(checkBoxes)
         local checkBox = checkBoxes[i]
         table.insert(checkBox.OnChange,
             function(cbToggled, checked)
-                if checked then
-                    for j = 1, #checkBoxes do
-                        if i ~= j then
-                            local cb = checkBoxes[j]
-                            if cb.checked then
-                                cb:Toggle()
-                            end
+                if not checked then
+                    return
+                end
+                for j = 1, #checkBoxes do
+                    if i ~= j then
+                        local cb = checkBoxes[j]
+                        if cb.checked then
+                            cb:Toggle()
                         end
                     end
                 end
