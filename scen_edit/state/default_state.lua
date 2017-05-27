@@ -98,7 +98,7 @@ function DefaultState:MousePress(x, y, button)
     if Spring.GetPressedKeys() == KEYSYMS.SPACE and button == 1 then
         local result, unitId = Spring.TraceScreenRay(x, y)
         if result == "unit" then
-            UnitPropertyWindow(unitId)
+            ObjectPropertyWindow(unitId)
             return true
         end
     end
@@ -272,7 +272,7 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         local result, unitId = Spring.TraceScreenRay(mouseX, mouseY)
         if result == "unit" then
             self.gameSeconds = gameSeconds
-            UnitPropertyWindow(unitId)
+            ObjectPropertyWindow(unitId)
         end
     else
         return false

@@ -3,7 +3,7 @@ MetaPanel = AbstractMainWindowPanel:extends{}
 function MetaPanel:init()
     self:super("init")
     self.control:AddChild(TabbedPanelButton({
-        tooltip = "Add a rectangle area", 
+        tooltip = "Add a rectangle area",
         OnClick = {
             function()
                 SB.stateManager:SetState(AddRectState())
@@ -23,8 +23,7 @@ function MetaPanel:init()
         OnClick = {
             function ()
                 if SB.triggersWindow == nil then
-                    self.triggersWindow = TriggersWindow()
-                    SB.triggersWindow = self.triggersWindow
+                    SB.triggersWindow = TriggersWindow()
                 end
                 if SB.triggersWindow.window.hidden then
                     SB.view:SetMainPanel(SB.triggersWindow.window)
@@ -41,8 +40,7 @@ function MetaPanel:init()
         OnClick = {
             function()
                 if SB.variablesWindow == nil then
-                    self.variablesWindow = VariableSettingsWindow()
-                    SB.variablesWindow = self.variablesWindow
+                    SB.variablesWindow = VariableSettingsWindow()
                 end
                 if SB.variablesWindow.window.hidden then
                     SB.view:SetMainPanel(SB.variablesWindow.window)

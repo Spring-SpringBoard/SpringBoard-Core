@@ -1,8 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
 
-UnitPropertyWindow = EditorView:extends{}
+ObjectPropertyWindow = EditorView:extends{}
 
-function UnitPropertyWindow:init()
+function ObjectPropertyWindow:init()
     self:super("init")
     self.rules = {}
     self.objectKeys = { "health", "mass" }
@@ -477,21 +477,21 @@ function CrossProduct(u, v)
             z = u.x * v.y - u.y * v.x}
 end
 
-function UnitPropertyWindow:CommandExecuted()
+function ObjectPropertyWindow:CommandExecuted()
     if not self._startedChanging then
         self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
     end
 end
 
-function UnitPropertyWindow:OnStartChange(name)
+function ObjectPropertyWindow:OnStartChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
-function UnitPropertyWindow:OnEndChange(name)
+function ObjectPropertyWindow:OnEndChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
-function UnitPropertyWindow:IsObjectKey(name)
+function ObjectPropertyWindow:IsObjectKey(name)
     for _, key in pairs(self.objectKeys) do
         if key == name then
             return true
@@ -503,14 +503,14 @@ function UnitPropertyWindow:IsObjectKey(name)
     return false
 end
 
-function UnitPropertyWindow:IsFeatureKey(name)
+function ObjectPropertyWindow:IsFeatureKey(name)
     if self:IsObjectKey(name) then
         return true
     end
     return false
 end
 
-function UnitPropertyWindow:IsUnitKey(name)
+function ObjectPropertyWindow:IsUnitKey(name)
     if self:IsObjectKey(name) or name == "resources" then
         return true
     end
@@ -522,7 +522,7 @@ function UnitPropertyWindow:IsUnitKey(name)
     return false
 end
 
-function UnitPropertyWindow:AddObjectRules(objectID, bridge)
+function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
     if #self.rules > 0 then
         self:Remove("rule-sep")
     end
@@ -564,7 +564,7 @@ function UnitPropertyWindow:AddObjectRules(objectID, bridge)
     end
 end
 
-function UnitPropertyWindow:OnSelectionChanged(selection)
+function ObjectPropertyWindow:OnSelectionChanged(selection)
     self.selectionChanging = true
     local objectID, bridge
     local keys
@@ -633,7 +633,7 @@ function UnitPropertyWindow:OnSelectionChanged(selection)
     self.selectionChanging = false
 end
 
-function UnitPropertyWindow:OnFieldChange(name, value)
+function ObjectPropertyWindow:OnFieldChange(name, value)
     if self.selectionChanging then
         return
     end
@@ -707,7 +707,7 @@ function UnitPropertyWindow:OnFieldChange(name, value)
     SB.commandManager:execute(compoundCommand)
 end
 
-function UnitPropertyWindow:GetCommands(objectIDs, name, value, bridge)
+function ObjectPropertyWindow:GetCommands(objectIDs, name, value, bridge)
     local commands = {}
     for _, objectID in pairs(objectIDs) do
         local modelID = bridge.getObjectModelID(objectID)

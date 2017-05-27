@@ -7,8 +7,7 @@ function UnitFeaturePanel:init()
             OnClick = {
                 function()
                     if SB.unitDefsView == nil then
-                        self.unitDefsView = UnitDefsView()
-                        SB.unitDefsView = self.unitDefsView
+                        SB.unitDefsView = UnitDefsView()
                     end
                     if SB.unitDefsView.window.hidden then
                         SB.view:SetMainPanel(SB.unitDefsView.window)
@@ -26,8 +25,7 @@ function UnitFeaturePanel:init()
             OnClick = {
                 function()
                     if SB.featureDefsView == nil then
-                        self.featureDefsView = FeatureDefsView()
-                        SB.featureDefsView = self.featureDefsView
+                        SB.featureDefsView = FeatureDefsView()
                     end
                     if SB.featureDefsView.window.hidden then
                         SB.view:SetMainPanel(SB.featureDefsView.window)
@@ -44,12 +42,11 @@ function UnitFeaturePanel:init()
             tooltip = "Edit selected unit property",
             OnClick = {
                 function()
-                    if SB.unitPropertyWindow == nil then
-                        self.unitPropertyWindow = UnitPropertyWindow()
-                        SB.unitPropertyWindow = self.unitPropertyWindow
+                    if SB.objectPropertyWindow == nil then
+                        SB.objectPropertyWindow = ObjectPropertyWindow()
                     end
-                    if SB.unitPropertyWindow.window.hidden then
-                        SB.view:SetMainPanel(SB.unitPropertyWindow.window)
+                    if SB.objectPropertyWindow.window.hidden then
+                        SB.view:SetMainPanel(SB.objectPropertyWindow.window)
                     end
                 end
             },
@@ -64,8 +61,7 @@ function UnitFeaturePanel:init()
             OnClick = {
                 function()
                     if SB.collisionView == nil then
-                        self.collisionView = CollisionView()
-                        SB.collisionView = self.collisionView
+                        SB.collisionView = CollisionView()
                     end
                     if SB.collisionView.window.hidden then
                         SB.view:SetMainPanel(SB.collisionView.window)
@@ -83,8 +79,7 @@ function UnitFeaturePanel:init()
             OnClick = {
                 function()
                     if SB.animationsView == nil then
-                        self.animationsView = AnimationsView()
-                        SB.animationsView = self.animationsView
+                        SB.animationsView = AnimationsView()
                     end
                     if SB.animationsView.window.hidden then
                         SB.view:SetMainPanel(SB.animationsView.window)

@@ -11,8 +11,7 @@ function TerrainPanel:init()
         OnClick = {
             function()
                 if SB.heightmapEditorView == nil then
-                    self.heightmapEditorView = HeightmapEditorView()
-                    SB.heightmapEditorView = self.heightmapEditorView
+                    SB.heightmapEditorView = HeightmapEditorView()
                 end
                 if SB.heightmapEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.heightmapEditorView.window)
@@ -31,8 +30,7 @@ function TerrainPanel:init()
         OnClick = {
             function()
                 if SB.terrainEditorView == nil then
-                    self.terrainEditorView = TerrainEditorView()
-                    SB.terrainEditorView = self.terrainEditorView
+                    SB.terrainEditorView = TerrainEditorView()
                 end
                 if SB.terrainEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.terrainEditorView.window)
@@ -51,8 +49,7 @@ function TerrainPanel:init()
         OnClick = {
             function()
                 if SB.grassEditorView == nil then
-                    self.grassEditorView = GrassEditorView()
-                    SB.grassEditorView = self.grassEditorView
+                    SB.grassEditorView = GrassEditorView()
                 end
                 if SB.grassEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.grassEditorView.window)
@@ -71,8 +68,7 @@ function TerrainPanel:init()
         OnClick = {
             function()
                 if SB.metalEditorView == nil then
-                    self.metalEditorView = MetalEditorView()
-                    SB.metalEditorView = self.metalEditorView
+                    SB.metalEditorView = MetalEditorView()
                 end
                 if SB.metalEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.metalEditorView.window)
@@ -81,7 +77,7 @@ function TerrainPanel:init()
         },
     })
     self.control:AddChild(btnModifyMetal)
-	
+
 	local btnTerrainSettings = TabbedPanelButton({
         tooltip = "Change map settings",
         children = {
@@ -91,8 +87,7 @@ function TerrainPanel:init()
         OnClick = {
             function()
                 if SB.terrainSettingsView == nil then
-                    self.terrainSettingsView = TerrainSettingsView()
-                    SB.terrainSettingsView = self.terrainSettingsView
+                    SB.terrainSettingsView = TerrainSettingsView()
                 end
                 if SB.terrainSettingsView.window.hidden then
 					SB.view:SetMainPanel(SB.terrainSettingsView.window)

@@ -2,8 +2,8 @@ WidgetCommandExecuted = Command:extends{}
 WidgetCommandExecuted.className = "WidgetCommandExecuted"
 
 function UpdateViews()
-    if SB.unitPropertyWindow then
-        SB.unitPropertyWindow:CommandExecuted()
+    if SB.objectPropertyWindow then
+        SB.objectPropertyWindow:CommandExecuted()
     end
     if SB.collisionView then
         SB.collisionView:CommandExecuted()

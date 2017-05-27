@@ -29,8 +29,7 @@ function GeneralPanel:init()
 		OnClick = {
 			function()
 				if SB.diplomacyWindow == nil then
-					self.diplomacyWindow = DiplomacyWindow()
-					SB.diplomacyWindow = self.diplomacyWindow
+					SB.diplomacyWindow = DiplomacyWindow()
 				end
 				if SB.diplomacyWindow.window.hidden then
 					SB.view:SetMainPanel(SB.diplomacyWindow.window)
@@ -47,8 +46,7 @@ function GeneralPanel:init()
 		OnClick = {
 			function()
 				if SB.playersWindow == nil then
-					self.playersWindow = PlayersWindow()
-					SB.playersWindow = self.playersWindow
+					SB.playersWindow = PlayersWindow()
 				end
 				if SB.playersWindow.window.hidden then
 					SB.view:SetMainPanel(SB.playersWindow.window)
