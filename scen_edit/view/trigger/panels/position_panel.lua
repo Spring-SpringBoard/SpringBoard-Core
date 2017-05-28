@@ -19,17 +19,15 @@ function PositionPanel:MakePredefinedOpt()
         parent = stackPositionPanel,
         position = nil,
     }
-    self.OnSelectPosition = {
-        function(position)
-            self.btnPredefined.position = position
-            self.btnPredefined.caption = 'pos'
-            self.btnPredefined.tooltip = "(" .. tostring(position.x) .. ", " .. tostring(position.y) .. ", " .. tostring(position.z) .. ")"
-            self.btnPredefined:Invalidate()
-            if not self.cbPredefined.checked then
-                self.cbPredefined:Toggle()
-            end
+    self.OnSelectPosition = function(position)
+        self.btnPredefined.position = position
+        self.btnPredefined.caption = 'pos'
+        self.btnPredefined.tooltip = "(" .. tostring(position.x) .. ", " .. tostring(position.y) .. ", " .. tostring(position.z) .. ")"
+        self.btnPredefined:Invalidate()
+        if not self.cbPredefined.checked then
+            self.cbPredefined:Toggle()
         end
-    }
+    end
     self.btnPredefined.OnClick = {
         function()
             SB.stateManager:SetState(SelectPositionState(self.OnSelectPosition))
