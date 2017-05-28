@@ -40,7 +40,7 @@ function MetaPanel:init()
         OnClick = {
             function()
                 if SB.variablesWindow == nil then
-                    SB.variablesWindow = VariableSettingsWindow()
+                    SB.variablesWindow = VariablesWindow()
                 end
                 if SB.variablesWindow.window.hidden then
                     SB.view:SetMainPanel(SB.variablesWindow.window)

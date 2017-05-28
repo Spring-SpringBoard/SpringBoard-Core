@@ -1,8 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
 
-VariableSettingsWindow = EditorView:extends{}
+VariablesWindow = EditorView:extends{}
 
-function VariableSettingsWindow:init()
+function VariablesWindow:init()
     self:super("init")
 
     local btnAddVariable = Button:New {
@@ -45,7 +45,7 @@ function VariableSettingsWindow:init()
     self:Finalize(children)
 end
 
-function VariableSettingsWindow:AddVariable()
+function VariablesWindow:AddVariable()
     local variable = {
         type = "number",
         value = {},
@@ -71,12 +71,12 @@ function VariableSettingsWindow:AddVariable()
     end-]]
 end
 
-function VariableSettingsWindow:MakeRemoveVariableWindow(variableId)
+function VariablesWindow:MakeRemoveVariableWindow(variableId)
     local cmd = RemoveVariableCommand(variableId)
     SB.commandManager:execute(cmd)
 end
 
-function VariableSettingsWindow:Populate()
+function VariablesWindow:Populate()
     self.variablesPanel:ClearChildren()
     local variables = SB.model.variableManager:getAllVariables()
     for _, variable in pairs(variables) do
@@ -118,7 +118,7 @@ function VariableSettingsWindow:Populate()
     end
 end
 
-function VariableSettingsWindow:MakeVariableWindow(variable, edit)
+function VariablesWindow:MakeVariableWindow(variable, edit)
     local newWin = VariableWindow(variable)
     table.insert(newWin.window.OnConfirm,
         function()
