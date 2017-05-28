@@ -74,22 +74,22 @@ function UnitFeaturePanel:init()
             },
         })
     )
-    self.control:AddChild(TabbedPanelButton({
-            tooltip = "Unit animations",
-            OnClick = {
-                function()
-                    if SB.animationsView == nil then
-                        SB.animationsView = AnimationsView()
-                    end
-                    if SB.animationsView.window.hidden then
-                        SB.view:SetMainPanel(SB.animationsView.window)
-                    end
-                end
-            },
-            children = {
-                TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
-                TabbedPanelLabel({ caption = "Anims" }),
-            },
-        })
-    )
+    -- self.control:AddChild(TabbedPanelButton({
+    --         tooltip = "Unit animations",
+    --         OnClick = {
+    --             function()
+    --                 if SB.animationsView == nil then
+    --                     SB.animationsView = AnimationsView()
+    --                 end
+    --                 if SB.animationsView.window.hidden then
+    --                     SB.view:SetMainPanel(SB.animationsView.window)
+    --                 end
+    --             end
+    --         },
+    --         children = {
+    --             TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
+    --             TabbedPanelLabel({ caption = "Anims" }),
+    --         },
+    --     })
+    -- )
 end
