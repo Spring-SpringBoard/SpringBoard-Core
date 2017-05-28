@@ -27,12 +27,12 @@ function SB.coreTypes()
         {
             humanName = "Order",
             name = "order",
-            canBeVariable = false,
+            sources = {"pred", "spec", "expr"},
         },
         {
             humanName = "Trigger",
             name = "trigger",
-            canBeVariable = false,
+            sources = {"pred", "spec", "expr"},
             canCompare = false,
         },
         {
@@ -50,19 +50,19 @@ function SB.coreTypes()
         {
             humanName = "Numeric comparison",
             name = "numericComparison",
-            canBeVariable = false,
+            sources = {"pred"},
             canCompare = false,
         },
         {
             humanName = "Identity comparison",
             name = "identityComparison",
-            canBeVariable = false,
+            sources = {"pred"},
             canCompare = false,
         },
         {
             humanName = "Function",
             name = "function",
-            canBeVariable = false,
+            sources = {"pred", "spec", "expr"},
             canCompare = false,
         },
         {

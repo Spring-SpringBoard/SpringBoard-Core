@@ -1,9 +1,23 @@
+local function CanBeVariable(type)
+    local sources = type.sources
+    if sources == nil then
+        return true
+    end
+
+    for _, s in pairs(sources) do
+        if s == "var" then
+            return true
+        end
+    end
+    return false
+end
+
 return {
     actions = function()
         local variableAssignments = {}
         allTypes = SB.coreTypes()
         for _, type in pairs(allTypes) do
-            if type.canBeVariable ~= false then
+            if CanBeVariable(type) then
                 local variableAssignment = {
                     humanName = "Assign " .. type.humanName,
                     name = type.name .. "_VARIABLE_ASSIGN",
@@ -12,7 +26,7 @@ return {
                         {
                             name = "variable",
                             rawVariable = "true",
-                            sources = "variable",
+                            sources = "var",
                             type = type.name,
                         },
                         {
@@ -23,7 +37,7 @@ return {
                     execute = function(input)
                         --local unitModelId = SB.model.unitManager:getModelUnitId(input.unit)
                         local newValue = SB.deepcopy(input.variable)
-                        newValue.value.id = input[type.name]
+                        newValue.value.value = input[type.name]
                         SB.model.variableManager:setVariable(input.variable.id, newValue)
 
                         --local array = input[arrayType]
@@ -43,7 +57,7 @@ return {
                         {
                             name = "variable",
                             rawVariable = "true",
-                            sources = "variable",
+                            sources = "var",
                             type = arrayType,
                         },
                         {
@@ -64,7 +78,7 @@ return {
                         {
                             name = "array",
                             rawVariable = "true",
-                            sources = "variable",
+                            sources = "var",
                             type = arrayType,
                         },
                         {
@@ -556,29 +570,6 @@ return {
                 end
             },
             unpack(variableAssignments),
-            --[[
-            --TODO.. variables, yeah..
-            {
-            humanName = "Assign variable",
-            name = "VARIABLE_ASSIGN",
-            input = {
-            {
-            name = "variable",
-            rawVariable = "true",
-            type = "unit",
-            },
-            {
-            name = "unit",
-            type = "unit"
-            },
-            },
-            execute = function(input)
-            local unitModelId = SB.model.unitManager:getModelUnitId(input.unit)
-            local newValue = SB.deepcopy(input.variable)
-            newValue.value.id = unitModelId
-            SB.model.variableManager:setVariable(variable.id, newValue)
-            end,
-            },--]]
         }
 
         for _, type in pairs(allTypes) do
@@ -764,6 +755,84 @@ return {
                     return tonumber(input.string)
                 end
             },
+            -- Math
+            {
+                humanName = "Add",
+                name = "ADD_NUMBERS",
+                output = "number",
+                input = {
+                    {
+                        name = "number1",
+                        type = "number"
+                    },
+                    {
+                        name = "number2",
+                        type = "number"
+                    },
+                },
+                tags = {"Math"},
+                execute = function (input)
+                    return input.number1 + input.number2
+                end
+            },
+            {
+                humanName = "Subtract",
+                name = "SUBTRACT_NUMBERS",
+                output = "number",
+                input = {
+                    {
+                        name = "number1",
+                        type = "number"
+                    },
+                    {
+                        name = "number2",
+                        type = "number"
+                    },
+                },
+                tags = {"Math"},
+                execute = function (input)
+                    return input.number1 - input.number2
+                end
+            },
+            {
+                humanName = "Multiply",
+                name = "MULTIPLY_NUMBERS",
+                output = "number",
+                input = {
+                    {
+                        name = "number1",
+                        type = "number"
+                    },
+                    {
+                        name = "number2",
+                        type = "number"
+                    },
+                },
+                tags = {"Math"},
+                execute = function (input)
+                    return input.number1 * input.number2
+                end
+            },
+            {
+                humanName = "Divide",
+                name = "DIVIDE_NUMBERS",
+                output = "number",
+                input = {
+                    {
+                        name = "number1",
+                        type = "number"
+                    },
+                    {
+                        name = "number2",
+                        type = "number"
+                    },
+                },
+                tags = {"Math"},
+                execute = function (input)
+                    return input.number1 / input.number2
+                end
+            },
+            -- TODO: Add more math functions
             -- Spring
             {
                 humanName = "Get team resources",
@@ -1156,7 +1225,7 @@ return {
         for _, type in pairs(allTypes) do
             local arrayType = type.name .. "_array"
 
-            if type.canBeVariable ~= false then
+            if CanBeVariable(type) then
                 table.insert(functions, {
                     humanName = type.humanName .. " in array at position",
                     name = arrayType .. "_INDEXING",

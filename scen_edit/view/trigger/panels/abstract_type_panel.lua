@@ -17,7 +17,7 @@ function AbstractTypePanel:init(opts)
         padding = {0, 0, 0, 0},
         parent = opts.parent,
     }
-    self.sources = opts.sources or {"pred", "spec", "variable", "expression"}
+    self.sources = opts.dataType.sources or {"pred", "spec", "var", "expr"}
     if type(self.sources) == "string" then
         self.sources = {self.sources}
     end
@@ -30,9 +30,9 @@ function AbstractTypePanel:init(opts)
             self:MakePredefinedOpt()
         elseif source == "spec" then
             self:MakeSpecialOpt()
-        elseif source == "variable" then
+        elseif source == "var" then
             self:MakeVariableOpt()
-        elseif source == "expression" then
+        elseif source == "expr" then
             self:MakeExpressionOpt()
         end
     end
