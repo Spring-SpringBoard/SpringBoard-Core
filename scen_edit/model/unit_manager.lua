@@ -145,17 +145,18 @@ function UnitManager:serializeUnitCommands(unitId, unit)
 end
 
 function UnitManager:serializeUnit(unitId)
-    local unit = {}
-
-    local unitDefId = Spring.GetUnitDefID(unitId)
-    unit.unitDefName = UnitDefs[unitDefId].name
-    unit.x, unit.y, unit.z = Spring.GetUnitPosition(unitId)
-    unit.teamId = Spring.GetUnitTeam(unitId)
-
-    self:serializeUnitProperties(unitId, unit)
-    self:serializeUnitCommands(unitId, unit)
-
-    return unit
+    -- local unit = {}
+    --
+    -- local unitDefId = Spring.GetUnitDefID(unitId)
+    -- unit.unitDefName = UnitDefs[unitDefId].name
+    -- unit.x, unit.y, unit.z = Spring.GetUnitPosition(unitId)
+    -- unit.teamId = Spring.GetUnitTeam(unitId)
+    --
+    -- self:serializeUnitProperties(unitId, unit)
+    -- self:serializeUnitCommands(unitId, unit)
+    --
+    -- return unit
+    return unitBridge.s11n:Get(unitId)
 end
 
 function UnitManager:serialize()
@@ -286,9 +287,6 @@ function UnitManager:loadUnit(unit)
     if self.m2sUnitIdMapping[unit.id] then
         return
     end
-    if unit.unitDefName == "house" then
-        unit.teamId = 2
-    end
     -- FIXME: figure out why this sometimes fails on load with a specific unit.id
     local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId, false, true)
     if unitId == nil then
@@ -309,20 +307,21 @@ end
 
 function UnitManager:load(units)
     self.unitIdCounter = 0
-    -- load the units without the commands
-    local unitCommands = {}
-    for _, unit in pairs(units) do
-        local commands = unit.commands
-        unit.commands = nil
-        local unitId = self:loadUnit(unit)
-        if unitId then
-            unitCommands[unitId] = commands
-        end
-    end
-    -- load the commands
-    for unitId, commands in pairs(unitCommands) do
-        self:setUnitCommands(unitId, commands)
-    end
+    unitBridge.s11n:Add(units)
+    -- -- load the units without the commands
+    -- local unitCommands = {}
+    -- for _, unit in pairs(units) do
+    --     local commands = unit.commands
+    --     unit.commands = nil
+    --     local unitId = self:loadUnit(unit)
+    --     if unitId then
+    --         unitCommands[unitId] = commands
+    --     end
+    -- end
+    -- -- load the commands
+    -- for unitId, commands in pairs(unitCommands) do
+    --     self:setUnitCommands(unitId, commands)
+    -- end
 end
 
 function UnitManager:clear()
