@@ -51,12 +51,13 @@ function ObjectPropertyWindow:init()
         }),
         Field({
             name = "btn-stick-ground",
-            width = 150,
+            width = 50,
             components = {
                 Button:New {
-                    caption = "Stick to ground",
+                    caption = "S",
+                    tooltip = "Stick to ground",
                     x = 0,
-                    width = 135,
+                    width = 60,
                     height = 30,
                     OnClick = {
                         function()
@@ -68,7 +69,14 @@ function ObjectPropertyWindow:init()
                     }
                 },
             }
-        })
+        }),
+        BooleanField({
+            name = "avgPos",
+            title = "G",
+            tooltip = "Alter the position of the object selection as a group.",
+            width = 50,
+            value = true,
+        }),
     }))
 
     self:AddControl("angle-sep", {
@@ -564,6 +572,27 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
     end
 end
 
+function ObjectPropertyWindow:_GetAveragePos()
+    local selection = SB.view.selectionManager:GetSelection()
+    local avg = {x=0, y=0, z=0}
+    for _, objectID in pairs(selection.units) do
+        local pos = unitBridge.s11n:Get(objectID, "pos")
+        avg.x = avg.x + pos.x
+        avg.y = avg.y + pos.y
+        avg.z = avg.z + pos.z
+    end
+    for _, objectID in pairs(selection.features) do
+        local pos = featureBridge.s11n:Get(objectID, "pos")
+        avg.x = avg.x + pos.x
+        avg.y = avg.y + pos.y
+        avg.z = avg.z + pos.z
+    end
+    avg.x = avg.x / (#selection.units + #selection.features)
+    avg.y = avg.y / (#selection.units + #selection.features)
+    avg.z = avg.z / (#selection.units + #selection.features)
+    return avg
+end
+
 function ObjectPropertyWindow:OnSelectionChanged(selection)
     self.selectionChanging = true
     local objectID, bridge
@@ -593,7 +622,12 @@ function ObjectPropertyWindow:OnSelectionChanged(selection)
             local value = bridge.s11n:Get(objectID, key)
             self:Set(key, value)
         end
-        local pos = bridge.s11n:Get(objectID, "pos")
+        local pos
+        if self.fields["avgPos"].value then
+            pos = self:_GetAveragePos()
+        else
+            pos = bridge.s11n:Get(objectID, "pos")
+        end
         self:Set("posX", pos.x)
         self:Set("posY", pos.y)
         self:Set("posZ", pos.z)
@@ -643,11 +677,27 @@ function ObjectPropertyWindow:OnFieldChange(name, value)
         return
     end
 
+    if name == "avgPos" then
+        self:OnSelectionChanged(selection)
+        return
+    end
+
     local commands = {}
     if name == "posX" or name == "posY" or name == "posZ" then
-        value = { x = self.fields["posX"].value,
-                  y = self.fields["posY"].value,
-                  z = self.fields["posZ"].value }
+        local avg
+        if self.fields["avgPos"].value then
+            avg = self:_GetAveragePos()
+        else
+            avg = { x=0, y=0, z=0}
+        end
+
+        if name == "posX" then
+            value = { x = self.fields["posX"].value - avg.x }
+        elseif name == "posY" then
+            value = { y = self.fields["posY"].value - avg.y }
+        elseif name == "posZ" then
+            value = { z = self.fields["posZ"].value - avg.z }
+        end
         name = "pos"
     end
     if name == "velX" or name == "velY" or name == "velZ" then
@@ -711,8 +761,18 @@ function ObjectPropertyWindow:GetCommands(objectIDs, name, value, bridge)
     local commands = {}
     for _, objectID in pairs(objectIDs) do
         local modelID = bridge.getObjectModelID(objectID)
-        table.insert(commands, bridge.SetObjectParamCommand(modelID, name, value))
-        if name == "pos" then
+        if name ~= "pos" then
+            table.insert(commands, bridge.SetObjectParamCommand(modelID, name, value))
+        else
+            local pos = bridge.s11n:Get(objectID, "pos")
+            for coordName, coordValue in pairs(value) do
+                if self.fields["avgPos"].value then
+                    pos[coordName] = pos[coordName] + coordValue
+                else
+                    pos[coordName] = coordValue
+                end
+            end
+            table.insert(commands, bridge.SetObjectParamCommand(modelID, name, pos))
             if bridge == unitBridge then
                 table.insert(commands, bridge.SetObjectParamCommand(modelID, "movectrl", true))
                 table.insert(commands, bridge.SetObjectParamCommand(modelID, "gravity", 0))
