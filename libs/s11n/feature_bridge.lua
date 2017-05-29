@@ -99,3 +99,7 @@ function _FeatureBridge:CreateObject(object)
     local objectID = Spring.CreateFeature(object.defName, object.pos.x, object.pos.y, object.pos.z)
     return objectID
 end
+
+function _FeatureBridge:GetAllObjectIDs()
+    return Spring.GetAllFeatures()
+end

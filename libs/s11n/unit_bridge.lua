@@ -348,3 +348,7 @@ function _UnitBridge:CreateObject(object)
     local objectID = Spring.CreateUnit(object.defName, object.pos.x, object.pos.y, object.pos.z, 0, object.team, false, true)
     return objectID
 end
+
+function _UnitBridge:GetAllObjectIDs()
+    return Spring.GetAllUnits()
+end

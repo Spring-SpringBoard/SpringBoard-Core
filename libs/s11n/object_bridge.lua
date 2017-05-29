@@ -10,7 +10,7 @@ function _ObjectBridge:_GetField(objectID, name)
     return self.getFuncs[name](objectID)
 end
 
-function _ObjectBridge:CompareValues(v1, v2)
+function _ObjectBridge:_CompareValues(v1, v2)
     local v1Type, v2Type = type(v1), type(v2)
     if v1Type ~= v2Type then
         return false
@@ -20,7 +20,7 @@ function _ObjectBridge:CompareValues(v1, v2)
         local kCount1 = 0
         for k, v in pairs(v1) do
             kCount1 = kCount1 + 1
-            if not self:CompareValues(v, v2[k]) then
+            if not self:_CompareValues(v, v2[k]) then
                 return false
             end
         end
@@ -42,7 +42,7 @@ function _ObjectBridge:_RemoveDefaults(objectID, values)
         for name, _ in pairs(self.getFuncs) do
             local default = defaults[name]
             if default ~= nil then
-                if self:CompareValues(values[name], default) then
+                if self:_CompareValues(values[name], default) then
 --                     Spring.Echo(name, values[name], default)
                     values[name] = nil
 --                 else
@@ -90,26 +90,6 @@ function _ObjectBridge:_SetAllFields(objectID, object)
     end
 end
 
-function _ObjectBridge:Add(object)
-    local objectID = self:CreateObject(object)
-
-    if not objectID then
-        Spring.Log("SpringBoard", "error", "Failed to create object: ")
-        if type(object) == "table" then
-            table.echo(object)
-        else
-            Spring.Echo(object)
-        end
-        return
-    end
-
-    local team = object.team
-    object.team = nil
-    self:_SetAllFields(objectID, object)
-    object.team = team
-    return objectID
-end
-
 function _ObjectBridge:_CacheObject(objectID)
 --     -- cache defaults
 --     local defName = self:_GetField(objectID, "defName")
@@ -135,44 +115,189 @@ function _ObjectBridge:_GameFrame()
     self._cacheQueue = {}
 end
 
+local function ReportObjectCreationFail(object)
+    Spring.Log("SpringBoard", "error", "Failed to create object: ")
+    if type(object) == "table" then
+        table.echo(object)
+    else
+        Spring.Echo(object)
+    end
+    return
+end
+
+-------------------------------------------------------
+-- API
+-------------------------------------------------------
+-- s11n:Add(object)
+-- s11n:Add(objects)
+function _ObjectBridge:Add(input)
+    -- If input is an array and there isn't a .defName, then this is
+    -- probably an array of objects to be created
+    -- Create multiple objects
+    -- s11n:Add(objects)
+    if #input > 0 and not input.defName then
+        local objectIDs = {}
+        for _, object in pairs(input) do
+            local objectID = self:CreateObject(object)
+            if not objectID then
+                ReportObjectCreationFail(object)
+                return
+            end
+            local team = object.team
+            object.team = nil
+            self:_SetAllFields(objectID, object)
+            object.team = team
+            table.insert(objectIDs, objectID)
+        end
+        return objectIDs
+    -- Create one object
+    -- s11n:Add(object)
+    else
+        local objectID = self:CreateObject(input)
+        if not objectID then
+            ReportObjectCreationFail(input)
+            return
+        end
+        local team = input.team
+        input.team = nil
+        self:_SetAllFields(objectID, input)
+        input.team = team
+        return objectID
+    end
+end
+
+-- s11n:Get()
+-- s11n:Get(objectID)
+-- s11n:Get(objectIDs)
+-- s11n:Get(objectID, key)
+-- s11n:Get(objectID, keys)
+-- s11n:Get(objectIDs, key)
+-- s11n:Get(objectIDs, keys)
 function _ObjectBridge:Get(...)
     local params = {...}
-    local objectID = params[1]
-    if #params == 1 then
+
+    local paramsCount = #params
+    -- Return all objects
+    -- s11n:Get()
+    if paramsCount == 0 then
+        local ret = {}
+        for _, objectID in pairs(self:GetAllObjectIDs()) do
+            ret[objectID] = self:_GetAllFields(objectID)
+        end
+        return ret
+    -- No keys are specified
+    elseif paramsCount == 1 then
+        -- One object
+        -- s11n:Get(objectID)
         if type(params[1]) ~= "table" then
-            return self:_GetAllFields(objectID)
+            return self:_GetAllFields(params[1])
+        -- Multiple objects
+        -- s11n:Get(objectIDs)
         else
-            local objectIDs = params[1]
             local ret = {}
-            for _, objectID in pairs(objectIDs) do
+            for _, objectID in pairs(params[1]) do
                 ret[objectID] = self:_GetAllFields(objectID)
             end
             return ret
         end
-    elseif #params == 2 then
-        if type(params[2]) ~= "table" then
-            local name = params[2]
-            return self:_GetField(objectID, name)
-        else
-            local names = params[2]
-            local ret = {}
-            for _, name in pairs(names) do
-                ret[name] = self:_GetField(objectID, name)
+    -- Keys are specified
+    elseif paramsCount == 2 then
+        -- One object
+        if type(params[1]) ~= "table" then
+            -- One key
+            -- s11n:Get(objectID, key)
+            if type(params[2]) ~= "table" then
+                return self:_GetField(params[1], params[2])
+            -- Multiple keys
+            -- s11n:Get(objectID, keys)
+            else
+                local ret = {}
+                for _, key in pairs(params[2]) do
+                    ret[key] = self:_GetField(params[1], key)
+                end
+                return ret
             end
-            return ret
+        -- Multiple objects
+        else
+            -- One key
+            -- s11n:Get(objectIDs, key)
+            if type(params[2]) ~= "table" then
+                local ret = {}
+                for _, objectID in pairs(params[1]) do
+                    ret[objectID] = self:_GetField(objectID, params[2])
+                end
+                return ret
+            -- Multiple keys
+            -- s11n:Get(objectIDs, keys)
+            else
+                local ret = {}
+                for _, objectID in pairs(params[1]) do
+                    local objectKeys = {}
+                    for _, key in pairs(params[2]) do
+                        ret[key] = self:_GetField(objectID, key)
+                    end
+                    ret[objectID] = objectKeys
+                end
+                return ret
+            end
         end
     end
 end
 
+-- s11n:Set(object)
+-- s11n:Set(objects)
+-- s11n:Set(objectID, key, value)
+-- s11n:Set(objectID, keys, values)
+-- s11n:Set(objectIDs, key, value)
+-- s11n:Set(objectIDs, keys, values)
 function _ObjectBridge:Set(...)
     local params = {...}
-    local objectID = params[1]
-    if #params == 2 then
-        local object = params[2]
-        self:_SetAllFields(objectID, object)
-    elseif #params == 3 then
-        local name = params[2]
-        local value = params[3]
-        self:_SetField(objectID, name, value)
+    local paramsCount = #params
+
+    -- Set object or objects
+    if paramsCount == 1 then
+        -- One object
+        -- s11n:Set(object)
+        if #params[1] > 0 and not params[1].objectID then
+            self:_SetAllFields(params[1])
+        -- Multiple object
+        -- s11n:Set(objects)
+        else
+            for objectID, object in pairs(params[1]) do
+                self:_SetAllFields(objectID, object)
+            end
+        end
+    -- Set keys-values
+    elseif paramsCount == 3 then
+        -- One key
+        if type(params[2]) ~= "table" then
+            -- One object
+            -- s11n:Set(objectID, key, value)
+            if type(params[1]) == "number" then
+                self:_SetField(params[1], params[2], params[3])
+            -- Multiple object
+            -- s11n:Set(objectIDs, key, value)
+            else
+                for _, objectID in pairs(params[1]) do
+                    self:_SetField(objectID, params[2], params[3])
+                end
+            end
+        -- Multiple keys
+        else
+            -- One object
+            -- s11n:Set(objectID, keys, values)
+            if type(params[1]) == "number" then
+                self:_SetAllFields(params[1], params[2], params[3])
+            -- Multiple object
+            -- s11n:Set(objectIDs, keys, values)
+            else
+                for _, objectID in pairs(params[1]) do
+                    self:_SetAllFields(objectID, params[2], params[3])
+                end
+            end
+        end
     end
 end
+-------------------------------------------------------
+-- End API
+-------------------------------------------------------
