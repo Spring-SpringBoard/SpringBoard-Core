@@ -77,15 +77,27 @@ function MetaModel:SetActionTypes(actionTypes)
     self.actionTypes = SB.CreateNameMapping(actionTypes)
 end
 
-function MetaModel:SetVariableTypes()
-    --add variables for core types
-    self.variableTypes = {"unit", "unitType", "team", "area", "string", "number", "bool"}
-    local arrayTypes = {}
-    for _, variableType in pairs(self.variableTypes) do
-        table.insert(arrayTypes, variableType .. "_array")
+local function CanBeVariable(type)
+    local sources = type.sources
+    if sources == nil then
+        return true
     end
-    for _, arrayType in pairs(arrayTypes) do
-        table.insert(self.variableTypes, arrayType)
+
+    for _, s in pairs(sources) do
+        if s == "var" then
+            return true
+        end
+    end
+    return false
+end
+
+function MetaModel:SetVariableTypes()
+    self.variableTypes = {}
+    for _, dataType in pairs(SB.coreTypes()) do
+        if CanBeVariable(dataType) then
+            table.insert(self.variableTypes, dataType.name)
+            table.insert(self.variableTypes, dataType.name .. "_array")
+        end
     end
 end
 
@@ -95,4 +107,16 @@ function MetaModel:SetOrderTypes(orderTypes)
         orderType.input = SB.parseData(orderType.input)
     end
     self.orderTypes = SB.CreateNameMapping(orderTypes)
+end
+
+function MetaModel:SetCustomDataTypes(dataTypes)
+    self.customDataTypes = dataTypes
+end
+
+function MetaModel:GetCustomDataType(name)
+    for _, dataType in pairs(self.customDataTypes) do
+        if dataType.name == name then
+            return dataType
+        end
+    end
 end

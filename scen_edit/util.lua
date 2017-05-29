@@ -510,6 +510,8 @@ function SB.createNewPanel(opts)
         return FunctionPanel(opts)
     elseif dataTypeName:find("_array") then
         return GenericArrayPanel(opts)
+    elseif dataTypeName ~= nil and SB.metaModel:GetCustomDataType(dataTypeName) then
+        return CustomDataTypePanel(opts)
     end
     Log.Error("No panel for this data: " .. tostring(dataTypeName))
 end

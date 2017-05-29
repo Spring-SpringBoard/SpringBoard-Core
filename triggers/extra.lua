@@ -1,4 +1,22 @@
 return {
+    dataTypes = {
+        {
+            humanName = "Person",
+            name = "person",
+            input = {
+                {
+                    name = "first_name",
+                    humanName = "First name",
+                    type = "string",
+                },
+                {
+                    name = "last_name",
+                    humanName = "Last name",
+                    type = "string",
+                }
+            }
+        },
+    },
     functions = {
     },
     actions = {
@@ -11,6 +29,17 @@ return {
                 local text = input.string
 
                 SB.displayUtil:unitSay(unit, text)
+            end
+        },
+        {
+            humanName = "Print person",
+            name = "PRINT_PERSON",
+            input = "person",
+            tags = {"Person"},
+            execute = function (input)
+                local person = input.person
+                Spring.Echo("Hello! I am " .. person.first_name .. " " ..
+                    person.last_name)
             end
         },
         {

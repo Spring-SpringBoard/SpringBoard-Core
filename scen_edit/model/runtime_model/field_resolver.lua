@@ -142,5 +142,17 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             end
             return self:CallExpression(field.expr[1], exprType, fParams)
         end
+    elseif type ~= nil then
+        local value = field.value[1]
+        local dataType = SB.metaModel:GetCustomDataType(value.typeName)
+        if dataType then
+            local retVal = {}
+            for _, input in pairs(dataType.input) do
+                local name = input.name
+                retVal[name] = self:Resolve(value[name], input.type,
+                                            false, params)
+            end
+            return retVal
+        end
     end
 end
