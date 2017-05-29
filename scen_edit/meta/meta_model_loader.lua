@@ -2,7 +2,7 @@ MetaModelLoader = LCS.class{}
 
 function MetaModelLoader:AttemptToLoadFile(metaModelFile)
     local data = metaModelFile.data
-	local success, data = pcall(function() 
+	local success, data = pcall(function()
         return assert(loadstring(data))()
     end)
 	if not success then
@@ -16,7 +16,7 @@ end
 
 function MetaModelLoader:Load()
     local metaModelFiles = SB.conf:GetMetaModelFiles()
-    local metaTypes = {"functions", "actions", "orders", "events"}
+    local metaTypes = {"functions", "actions", "orders", "events", "dataTypes"}
     local metaModels = {}
 
     -- load files
@@ -74,6 +74,7 @@ function MetaModelLoader:Load()
     Log.Notice("Function types: " .. #mergedMetaModel.functions)
     Log.Notice("Action types: " .. #mergedMetaModel.actions)
     Log.Notice("Order types: " .. #mergedMetaModel.orders)
+    Log.Notice("Data types: " .. #mergedMetaModel.dataTypes)
     SB.metaModel:SetEventTypes(mergedMetaModel.events)
     SB.metaModel:SetFunctionTypes(mergedMetaModel.functions)
     SB.metaModel:SetActionTypes(mergedMetaModel.actions)

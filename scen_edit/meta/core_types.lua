@@ -66,6 +66,12 @@ function SB.coreTypes()
             canCompare = false,
         },
         {
+            humanName = "Action",
+            name = "action",
+            sources = {"pred", "spec", "expr"},
+            canCompare = false,
+        },
+        {
             humanName = "Position",
             name = "position",
         },

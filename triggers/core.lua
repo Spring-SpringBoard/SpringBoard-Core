@@ -388,7 +388,7 @@ return {
 
                     local team = Spring.GetFeatureTeam(id)
                     local color = SB.model.teamManager:getTeam(team).color
-                    SB.displayUtil:displayText("Spawned", {x, y, z}, color )
+                    SB.displayUtil:displayText("Spawned", {x, y, z}, color)
                 end
             },
             {
