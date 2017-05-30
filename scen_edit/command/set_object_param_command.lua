@@ -2,7 +2,7 @@ SetObjectParamCommand = Command:extends{}
 SetObjectParamCommand.className = "SetObjectParamCommand"
 
 function NoGetField(name)
-    return name == "gravity" or name == "movectrl"
+    return name == "gravity"
 end
 
 function SetObjectParamCommand:execute(bridge)

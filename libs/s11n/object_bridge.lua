@@ -259,12 +259,27 @@ function _ObjectBridge:Set(...)
         -- One object
         -- s11n:Set(object)
         if #params[1] > 0 and not params[1].objectID then
+            -- FIXME: wrong invocation
             self:_SetAllFields(params[1])
         -- Multiple object
         -- s11n:Set(objects)
         else
             for objectID, object in pairs(params[1]) do
                 self:_SetAllFields(objectID, object)
+            end
+        end
+    -- Set objectID, keyValueTable
+    elseif paramsCount == 2 then
+        -- One object
+        -- s11n:Set(objectID, keyValueTable)
+        if type(params[1]) ~= "table" then
+            -- One object
+            self:_SetAllFields(params[1], params[2])
+        -- Multiple objects
+        -- s11n:Set(objectIDs, keyValueTable)
+        else
+            for _, objectID in pairs(params[1]) do
+                self:_SetAllFields(objectID, params[2])
             end
         end
     -- Set keys-values
@@ -287,15 +302,21 @@ function _ObjectBridge:Set(...)
             -- One object
             -- s11n:Set(objectID, keys, values)
             if type(params[1]) == "number" then
+                -- FIXME: Wrong _SetAllFields invocation
                 self:_SetAllFields(params[1], params[2], params[3])
             -- Multiple object
             -- s11n:Set(objectIDs, keys, values)
             else
                 for _, objectID in pairs(params[1]) do
+                    -- FIXME: Wrong _SetAllFields invocation
                     self:_SetAllFields(objectID, params[2], params[3])
                 end
             end
         end
+    else
+        table.echo(params)
+        error("Invalid parameters: " .. tostring(paramsCount) .. " for s11n:Set")
+
     end
 end
 -------------------------------------------------------

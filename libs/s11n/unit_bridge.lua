@@ -166,6 +166,9 @@ function _UnitBridge:init()
             local armored, armorMultiple = Spring.GetUnitArmored(objectID)
             return { armored = armored, armorMultiple = armorMultiple }
         end,
+        movectrl = function(objectID)
+            return Spring.MoveCtrl.IsEnabled(objectID)
+        end,
         crashing = function(objectID)
             local moveData = Spring.GetUnitMoveTypeData(objectID)
             if moveData and (moveData.name == "airplane" or moveData.name == "gunship") then
@@ -174,6 +177,10 @@ function _UnitBridge:init()
             return nil
         end,
     }
+    -- FIXME: movectrl get is not available in unsynced
+    if not Spring.MoveCtrl then
+        self.getFuncs.movectrl = nil
+    end
     self.setFuncs = {
         pos = function(objectID, value)
             Spring.SetUnitPosition(objectID, value.x, value.y, value.z)

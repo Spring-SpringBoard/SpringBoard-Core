@@ -27,6 +27,8 @@ s11n:Get(objectIDs, keys) -- Returns fields for objects
 -- API for s11n:Set()
 s11n:Set(object)
 s11n:Set(objects)
+s11n:Set(objectID, keyValueTable)
+s11n:Set(objectIDs, keyValueTable)
 s11n:Set(objectID, key, value)
 s11n:Set(objectID, keys, values)
 s11n:Set(objectIDs, key, value)
