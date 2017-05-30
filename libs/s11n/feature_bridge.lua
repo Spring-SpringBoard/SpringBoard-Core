@@ -95,7 +95,8 @@ function _FeatureBridge:init()
     }
 end
 
-function _FeatureBridge:CreateObject(object)
+-- FIXME: objectID not used
+function _FeatureBridge:CreateObject(object, objectID)
     local objectID = Spring.CreateFeature(object.defName, object.pos.x, object.pos.y, object.pos.z)
     return objectID
 end

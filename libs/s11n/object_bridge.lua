@@ -38,19 +38,21 @@ end
 function _ObjectBridge:_RemoveDefaults(objectID, values)
     local defName = self:_GetField(objectID, "defName")
     local defaults = self.objectDefaults[defName]
-    if defaults then
-        for name, _ in pairs(self.getFuncs) do
-            local default = defaults[name]
-            if default ~= nil then
-                if self:_CompareValues(values[name], default) then
+    if not defaults then
+        return
+    end
+
+    for name, _ in pairs(self.getFuncs) do
+        local default = defaults[name]
+        if default ~= nil then
+            if self:_CompareValues(values[name], default) then
 --                     Spring.Echo(name, values[name], default)
-                    values[name] = nil
+                values[name] = nil
 --                 else
 --                     Spring.Echo("DIFF", name, values[name], default)
 --                     if type(default) == "table" then
 --                         table.echo({values[name], default})
 --                     end
-                end
             end
         end
     end
@@ -135,19 +137,33 @@ function _ObjectBridge:Add(input)
     -- probably an array of objects to be created
     -- Create multiple objects
     -- s11n:Add(objects)
-    if #input > 0 and not input.defName then
+    if not input.defName then
         local objectIDs = {}
-        for _, object in pairs(input) do
-            local objectID = self:CreateObject(object)
+        for origObjectID, object in pairs(input) do
+            local objectID = self:CreateObject(object, origObjectID)
             if not objectID then
                 ReportObjectCreationFail(object)
                 return
             end
+
+            -- Hide fields
             local team = object.team
             object.team = nil
+            local commands = object.commands
+            object.commands = nil
+
             self:_SetAllFields(objectID, object)
+
+            -- Return fields
             object.team = team
+            object.commands = commands
+
             table.insert(objectIDs, objectID)
+        end
+        for objectID, object in pairs(input) do
+            if object.commands then
+                self:_SetField(objectID, "commands", object.commands)
+            end
         end
         return objectIDs
     -- Create one object

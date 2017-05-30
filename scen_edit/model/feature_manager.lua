@@ -82,9 +82,7 @@ end
 
 function FeatureManager:load(features)
     self.featureIdCounter = 0
-    if #units > 0 then
-        featureBridge.s11n:Add(features)
-    end
+    featureBridge.s11n:Add(features)
 end
 
 function FeatureManager:clear()

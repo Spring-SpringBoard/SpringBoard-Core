@@ -113,9 +113,7 @@ end
 
 function UnitManager:load(units)
     self.unitIdCounter = 0
-    if #units > 0 then
-        unitBridge.s11n:Add(units)
-    end
+    unitBridge.s11n:Add(units)
     -- -- load the units without the commands
     -- local unitCommands = {}
     -- for _, unit in pairs(units) do

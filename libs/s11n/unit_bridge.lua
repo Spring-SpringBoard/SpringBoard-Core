@@ -262,7 +262,6 @@ function _UnitBridge:init()
             Spring.SetUnitExperience(objectID, value)
         end,
         neutral = function(objectID, value)
-            Spring.Echo(objectID, value)
             Spring.SetUnitNeutral(objectID, value)
         end,
         fuel = function(objectID, value)
@@ -374,8 +373,8 @@ function _UnitBridge:init()
     }
 end
 
-function _UnitBridge:CreateObject(object)
-    local objectID = Spring.CreateUnit(object.defName, object.pos.x, object.pos.y, object.pos.z, 0, object.team, false, true)
+function _UnitBridge:CreateObject(object, objectID)
+    local objectID = Spring.CreateUnit(object.defName, object.pos.x, object.pos.y, object.pos.z, 0, object.team, false, true, objectID)
     return objectID
 end
 
