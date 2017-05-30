@@ -76,43 +76,14 @@ function FeatureManager:setFeatureModelId(featureId, modelId)
     self:addFeature(featureId, modelId)
 end
 
-function FeatureManager:serializeFeature(featureId)
-    local feature = {}
-
-    local featureDefId = Spring.GetFeatureDefID(featureId)
-    feature.featureDefName = FeatureDefs[featureDefId].name
-    feature.x, feature.y, feature.z = Spring.GetFeaturePosition(featureId)
-    feature.teamId = Spring.GetFeatureTeam(featureId)
-    feature.id = self:getModelFeatureId(featureId)
-    local dirX, dirY, dirZ = Spring.GetFeatureDirection(featureId)
-    feature.angle = math.atan2(dirX, dirZ) * 180 / math.pi
-
-    return feature
-end
-
-
 function FeatureManager:serialize()
-    local features = {}
-    for _, featureId in pairs(Spring.GetAllFeatures()) do
-        local feature = self:serializeFeature(featureId)
-        table.insert(features, feature)
-    end
-    return features
-end
-
-function FeatureManager:loadFeature(feature)
-    local featureId = Spring.CreateFeature(feature.featureDefName, feature.x, feature.y, feature.z, feature.teamId)
-    local x = math.sin(math.rad(feature.angle))
-    local z = math.cos(math.rad(feature.angle))
-    Spring.SetFeatureDirection(featureId, x, 0, z)
-    if feature.id ~= nil then
-        self:setFeatureModelId(featureId, feature.id)
-    end
+    return featureBridge.s11n:Get(Spring.GetAllFeatures())
 end
 
 function FeatureManager:load(features)
-    for _, feature in pairs(features) do
-        self:loadFeature(feature)
+    self.featureIdCounter = 0
+    if #units > 0 then
+        featureBridge.s11n:Add(features)
     end
 end
 

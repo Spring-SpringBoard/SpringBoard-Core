@@ -1,5 +1,18 @@
 _UnitBridge = _ObjectBridge:extends{}
 
+local function isUnitCommand(command)
+    if command.params ~= nil and #command.params ~= 1 then
+        return false
+    end
+    local unitCommands = { "DEATHWAIT", "ATTACK", "GUARD", "REPAIR", "LOAD_UNITS", "UNLOAD_UNITS", "RECLAIM", "RESSURECT", "CAPTURE", "LOOPBACKATTACK" }
+    for _, unitCommand in pairs(unitCommands) do
+        if command.name == unitCommand then
+            return true
+        end
+    end
+    return false
+end
+
 function _UnitBridge:init()
     _ObjectBridge.init(self)
     self.getFuncs = {
@@ -181,6 +194,9 @@ function _UnitBridge:init()
     if not Spring.MoveCtrl then
         self.getFuncs.movectrl = nil
     end
+    -- TODO: this isn't available
+    -- unit.alwaysVisible = Spring.GetAlwaysVisible(unitId)
+
     self.setFuncs = {
         pos = function(objectID, value)
             Spring.SetUnitPosition(objectID, value.x, value.y, value.z)
@@ -314,10 +330,17 @@ function _UnitBridge:init()
         end,
         commands = function(objectID, value)
             for _, command in pairs(value) do
-                if command.name ~= "BUILD_COMMAND" then
-                    Spring.GiveOrderToUnit(objectID, CMD[command.name], command.params, {"shift"})
+                local params
+                -- unit commands need to get the real unit ID
+                if false and isUnitCommand(command) then
+                    params = { self:getSpringUnitId(command.params[1]) }
                 else
-                    Spring.GiveOrderToUnit(objectID, -UnitDefNames[command.buildUnitDef].id, command.params, {"shift"})
+                    params = command.params
+                end
+                if command.name ~= "BUILD_COMMAND" then
+                    Spring.GiveOrderToUnit(objectID, CMD[command.name], params, {"shift"})
+                else
+                    Spring.GiveOrderToUnit(objectID, -UnitDefNames[command.buildUnitDef].id, params, {"shift"})
                 end
             end
         end,
