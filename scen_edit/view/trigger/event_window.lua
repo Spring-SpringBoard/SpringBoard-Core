@@ -3,16 +3,19 @@ SB.Include(Path.Join(SB_VIEW_TRIGGER_DIR, "abstract_trigger_element_window.lua")
 EventWindow = AbstractTriggerElementWindow:extends{}
 
 function EventWindow:init(opts)
-    opts.element = opts.event
-    self:super("init", opts)
     self.tbInfo = TextBox:New {
         text = "",
-        x = 1,
-        right = 1,
-        y = "80%",
+        x = 0,
+        right = 0,
+        y = 0,
         autosize = true,
         padding = {0, 0, 0, 0},
     }
+
+    opts.element = opts.event
+    self:super("init", opts)
+
+    self.elementPanel:AddChild(self.tbInfo)
 end
 
 function EventWindow:GetValidElementTypes()
@@ -27,9 +30,9 @@ function EventWindow:GetWindowCaption()
     end
 end
 
-function EventWindow:UpdateInfo()
+function EventWindow:OnExprTypeChange(exprType)
     local txtInfo = ""
-    for i, param in pairs(self.eventType.param) do
+    for i, param in pairs(self.exprType.param) do
         if i == 1 then
             txtInfo = "Params: "
         else
@@ -38,6 +41,7 @@ function EventWindow:UpdateInfo()
         txtInfo = txtInfo .. param.name
     end
     self.tbInfo:SetText(txtInfo)
+    self.elementPanel:AddChild(self.tbInfo)
 end
 
 function EventWindow:AddParent()

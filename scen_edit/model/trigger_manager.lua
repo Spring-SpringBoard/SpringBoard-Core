@@ -98,7 +98,7 @@ function TriggerManager:GetTriggerScopeParams(trigger)
             table.insert(triggerScopeParams, {
                 name = param.name,
                 type = param.type,
-                humanName = "Trigger: " .. name,
+                humanName = "Trigger: " .. param.name,
             })
         end
     end

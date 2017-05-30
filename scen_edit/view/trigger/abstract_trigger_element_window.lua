@@ -4,6 +4,10 @@ AbstractTriggerElementWindow = LCS.class.abstract{}
 function AbstractTriggerElementWindow:GetValidElementTypes()
 end
 
+-- abstract
+function AbstractTriggerElementWindow:OnExprTypeChange(exprType)
+end
+
 function AbstractTriggerElementWindow:init(opts)
     self.mode = opts.mode
     self.parentWindow = opts.parentWindow
@@ -48,43 +52,7 @@ function AbstractTriggerElementWindow:init(opts)
 
     self.elementTypes = SortByName(self:GetValidElementTypes(), "humanName")
     -- group by tags
-    if #self.elementTypes > 10 then
-        self.tagGroups = {}
-        for _, func in pairs(self.elementTypes) do
-            if func.tags ~= nil then
-                for _, tag in pairs(func.tags) do
-                    if self.tagGroups[tag] == nil then
-                        self.tagGroups[tag] = {}
-                    end
-                    table.insert(self.tagGroups[tag], func)
-                end
-            else
-                if self.tagGroups["Other"] == nil then
-                    self.tagGroups["Other"] = {}
-                end
-                table.insert(self.tagGroups["Other"], func)
-            end
-        end
-        self.cmbTagGroups = ComboBox:New {
-            items = GetKeys(self.tagGroups),
-            height = SB.conf.B_HEIGHT,
-            width = "40%",
-            y = self.btnOk.y + self.btnOk.height + 10,
-            x = 10,
-        }
-        self.cmbTagGroups.OnSelect = {
-            function(object, itemIdx, selected)
-                if selected and itemIdx > 0 then
-                    self.elementTypes = self.tagGroups[self.cmbTagGroups.items[itemIdx]]
-                    self.cmbElementTypes.items = GetField(self.elementTypes, "humanName")
-                    self.cmbElementTypes.elementTypes = GetField(self.elementTypes, "name")
-                    self.cmbElementTypes:Invalidate()
-                    self.cmbElementTypes:Select(0)
-                    self.cmbElementTypes:Select(1)
-                end
-            end
-        }
-    end
+    self:_AddTagGroups()
 
     local cmbElementTypesX = "20%"
     local cmbElementTypesWidth = "60%"
@@ -103,46 +71,54 @@ function AbstractTriggerElementWindow:init(opts)
 
     self.cmbElementTypes.OnSelect = {
         function(object, itemIdx, selected)
-            if selected and itemIdx > 0 then
-                self.elementPanel:ClearChildren()
+            if not selected or itemIdx == 0 then
+                return
+            end
+
+            self.elementPanel:ClearChildren()
 --                local cndName = self.cmbCustomTypes.conditionTypes[itemIdx]
-                local exprType = self.elementTypes[itemIdx]
-                if exprType and exprType.input then
-                    local params = self.params
-                    local extraSourcesFunction = exprType.extraSources
-                    if extraSourcesFunction then
-                        params = SB.deepcopy(params)
-                        for _, es in pairs(extraSourcesFunction) do
-                            table.insert(params, es)
+            local exprType = self.elementTypes[itemIdx]
+            local changedExprType = self.exprType ~= exprType
+            self.exprType = exprType
+
+            if self.exprType and self.exprType.input then
+                local params = self.params
+                local extraSourcesFunction = self.exprType.extraSources
+                if extraSourcesFunction then
+                    params = SB.deepcopy(params)
+                    for _, es in pairs(extraSourcesFunction) do
+                        table.insert(params, es)
+                    end
+                end
+                for i = 1, #self.exprType.input do
+                    local dataType = self.exprType.input[i]
+
+                    local paramsI = params
+                    local extraSourcesInput = dataType.extraSources
+                    if extraSourcesInput then
+                        paramsI = SB.deepcopy(paramsI)
+                        for _, es in pairs(extraSourcesInput) do
+                            table.insert(paramsI, es)
                         end
                     end
-                    for i = 1, #exprType.input do
-                        local dataType = exprType.input[i]
 
-                        local paramsI = params
-                        local extraSourcesInput = dataType.extraSources
-                        if extraSourcesInput then
-                            paramsI = SB.deepcopy(paramsI)
-                            for _, es in pairs(extraSourcesInput) do
-                                table.insert(paramsI, es)
-                            end
-                        end
-
-                        local subPanelName = dataType.name
-                        local subPanel = SB.createNewPanel({
-                            dataType = dataType,
-                            parent = self.elementPanel,
-                            trigger = self.trigger,
-                            params = paramsI
-                        })
-                        if subPanel then
-                            self.elementPanel[subPanelName] = subPanel
-                            if i ~= #exprType.input then
-                                SB.MakeSeparator(self.elementPanel)
-                            end
+                    local subPanelName = dataType.name
+                    local subPanel = SB.createNewPanel({
+                        dataType = dataType,
+                        parent = self.elementPanel,
+                        trigger = self.trigger,
+                        params = paramsI
+                    })
+                    if subPanel then
+                        self.elementPanel[subPanelName] = subPanel
+                        if i ~= #self.exprType.input then
+                            SB.MakeSeparator(self.elementPanel)
                         end
                     end
                 end
+            end
+            if changedExprType then
+                self:OnExprTypeChange(self.exprType)
             end
         end
     }
@@ -247,6 +223,48 @@ function AbstractTriggerElementWindow:init(opts)
 --        end
         sw.y = tw.y
     end
+end
+
+function AbstractTriggerElementWindow:_AddTagGroups()
+    if #self.elementTypes <= 10 then
+        return
+    end
+
+    self.tagGroups = {}
+    for _, func in pairs(self.elementTypes) do
+        if func.tags ~= nil then
+            for _, tag in pairs(func.tags) do
+                if self.tagGroups[tag] == nil then
+                    self.tagGroups[tag] = {}
+                end
+                table.insert(self.tagGroups[tag], func)
+            end
+        else
+            if self.tagGroups["Other"] == nil then
+                self.tagGroups["Other"] = {}
+            end
+            table.insert(self.tagGroups["Other"], func)
+        end
+    end
+    self.cmbTagGroups = ComboBox:New {
+        items = GetKeys(self.tagGroups),
+        height = SB.conf.B_HEIGHT,
+        width = "40%",
+        y = self.btnOk.y + self.btnOk.height + 10,
+        x = 10,
+    }
+    self.cmbTagGroups.OnSelect = {
+        function(object, itemIdx, selected)
+            if selected and itemIdx > 0 then
+                self.elementTypes = self.tagGroups[self.cmbTagGroups.items[itemIdx]]
+                self.cmbElementTypes.items = GetField(self.elementTypes, "humanName")
+                self.cmbElementTypes.elementTypes = GetField(self.elementTypes, "name")
+                self.cmbElementTypes:Invalidate()
+                self.cmbElementTypes:Select(0)
+                self.cmbElementTypes:Select(1)
+            end
+        end
+    }
 end
 
 function AbstractTriggerElementWindow:UpdatePanel()
