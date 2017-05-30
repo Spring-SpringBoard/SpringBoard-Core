@@ -49,26 +49,12 @@ function ObjectPropertyWindow:init()
             width = 100,
             decimals = 0,
         }),
-        Field({
-            name = "btn-stick-ground",
+        BooleanField({
+            name = "stickToGround",
+            title = "S",
+            tooltip = "Stick to ground",
             width = 50,
-            components = {
-                Button:New {
-                    caption = "S",
-                    tooltip = "Stick to ground",
-                    x = 0,
-                    width = 60,
-                    height = 30,
-                    OnClick = {
-                        function()
-                            self:OnFieldChange("movectrl", false)
-                            self:OnFieldChange("gravity", 1)
-                            local x, z = self.fields["posX"].value, self.fields["posZ"].value
-                            self:Set("posY", Spring.GetGroundHeight(x, z))
-                        end
-                    }
-                },
-            }
+            value = true,
         }),
         BooleanField({
             name = "avgPos",
@@ -682,6 +668,16 @@ function ObjectPropertyWindow:OnFieldChange(name, value)
         return
     end
 
+    if name == "stickToGround" then
+        if value then
+            self:OnFieldChange("movectrl", false)
+            self:OnFieldChange("gravity", 1)
+            -- Force refreshing the position
+            self:OnFieldChange("posX", self.fields["posX"].value)
+        end
+        return
+    end
+
     local commands = {}
     if name == "posX" or name == "posY" or name == "posZ" then
         local avg
@@ -694,6 +690,9 @@ function ObjectPropertyWindow:OnFieldChange(name, value)
         if name == "posX" then
             value = { x = self.fields["posX"].value - avg.x }
         elseif name == "posY" then
+            if self.fields["stickToGround"].value then
+                self:Set("stickToGround", false)
+            end
             value = { y = self.fields["posY"].value - avg.y }
         elseif name == "posZ" then
             value = { z = self.fields["posZ"].value - avg.z }
@@ -771,6 +770,9 @@ function ObjectPropertyWindow:GetCommands(objectIDs, name, value, bridge)
                 else
                     pos[coordName] = coordValue
                 end
+            end
+            if self.fields["stickToGround"].value then
+                pos.y = Spring.GetGroundHeight(pos.x, pos.z)
             end
             table.insert(commands, bridge.SetObjectParamCommand(modelID, name, pos))
             if bridge == unitBridge then
