@@ -256,17 +256,22 @@ function _ObjectBridge:Set(...)
 
     -- Set object or objects
     if paramsCount == 1 then
-        -- One object
-        -- s11n:Set(object)
-        if #params[1] > 0 and not params[1].objectID then
-            -- FIXME: wrong invocation
-            self:_SetAllFields(params[1])
         -- Multiple object
         -- s11n:Set(objects)
-        else
-            for objectID, object in pairs(params[1]) do
-                self:_SetAllFields(objectID, object)
+        if #params[1] > 0 and not params[1].objectID then
+            for _, object in pairs(params[1]) do
+                local objectID = object.id
+                object.objectID = nil
+                self:_SetAllFields(object.id, object)
+                object.objectID = objectID
             end
+        -- One object
+        -- s11n:Set(object)
+        else
+            local objectID = params[1].id
+            params[1].objectID = nil
+            self:_SetAllFields(objectID, params[1])
+            params[1].objectID = objectID
         end
     -- Set objectID, keyValueTable
     elseif paramsCount == 2 then
@@ -302,14 +307,20 @@ function _ObjectBridge:Set(...)
             -- One object
             -- s11n:Set(objectID, keys, values)
             if type(params[1]) == "number" then
-                -- FIXME: Wrong _SetAllFields invocation
-                self:_SetAllFields(params[1], params[2], params[3])
+                local keys, values = params[2], params[3]
+                for i = 1, #keys do
+                    local key, value = keys[i], values[i]
+                    self:_SetField(params[1], key, value)
+                end
             -- Multiple object
             -- s11n:Set(objectIDs, keys, values)
             else
+                local keys, values = params[2], params[3]
                 for _, objectID in pairs(params[1]) do
-                    -- FIXME: Wrong _SetAllFields invocation
-                    self:_SetAllFields(objectID, params[2], params[3])
+                    for i = 1, #keys do
+                        local key, value = keys[i], values[i]
+                        self:_SetField(objectID, key, value)
+                    end
                 end
             end
         end
