@@ -132,98 +132,41 @@ function RuntimeModel:GameStart()
     --END
 
     self.hasStarted = true
-    if self.eventTriggers["GAME_START"] then
-        for k = 1, #self.eventTriggers["GAME_START"] do
-            local params = { }
-            local trigger = self.eventTriggers["GAME_START"][k]
-            self:ConditionStep(trigger, params)
-        end
-    end
+    self:OnEvent("GAME_START")
 end
 
 function RuntimeModel:GameStop()
-    if self.eventTriggers["GAME_END"] then
-        for k = 1, #self.eventTriggers["GAME_END"] do
-            local params = { }
-            local trigger = self.eventTriggers["GAME_END"][k]
-            self:ConditionStep(trigger, params)
-        end
-    end
+    self:OnEvent("GAME_END")
     self.hasStarted = false
     self.startListening = false
 end
 
 function RuntimeModel:TeamDied(teamId)
-    if not self.hasStarted then
-        return
-    end
-    if self.eventTriggers["TEAM_DIE"] then
-        for k = 1, #self.eventTriggers["TEAM_DIE"] do
-            local params = { triggerTeamId = teamId }
-            local trigger = self.eventTriggers["TEAM_DIE"][k]
-            self:ConditionStep(trigger, params)
-        end
-    end
+    self:OnEvent("TEAM_DIE", { team = teamId })
 end
 
 function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
     if self:CanTrackUnit(unitDefId) then
         self.trackedUnitIDs[unitId] = unitId
     end
-    if not self.hasStarted then
-        return
-    end
     local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    if self.eventTriggers["UNIT_CREATE"] then
-        for k = 1, #self.eventTriggers["UNIT_CREATE"] do
-            local params = { triggerUnitId = modelUnitId }
-            local trigger = self.eventTriggers["UNIT_CREATE"][k]
-            self:ConditionStep(trigger, params)
-        end
-    end
+    self:OnEvent("UNIT_CREATE", { unit = modelUnitId })
 end
 
 function RuntimeModel:UnitDamaged(unitId)
-    if not self.hasStarted then
-        return
-    end
     local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    if self.eventTriggers["UNIT_DAMAGE"] then
-        for k = 1, #self.eventTriggers["UNIT_DAMAGE"] do
-            local params = { triggerUnitId = modelUnitId }
-            local trigger = self.eventTriggers["UNIT_DAMAGE"][k]
-            self:ConditionStep(trigger, params)
-        end
-    end
+    self:OnEvent("UNIT_DAMAGE", { unit = modelUnitId })
 end
 
 function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attackerDefId, attackerTeamId)
     self.trackedUnitIDs[unitId] = nil
-    if not self.hasStarted then
-        return
-    end
     local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    if self.eventTriggers["UNIT_DESTROY"] then
-        for k = 1, #self.eventTriggers["UNIT_DESTROY"] do
-            local params = { triggerUnitId = modelUnitId }
-            local trigger = self.eventTriggers["UNIT_DESTROY"][k]
-            self:ConditionStep(trigger, params)
-        end
-    end
+    self:OnEvent("UNIT_DESTROY", { unit = modelUnitId })
 end
 
 function RuntimeModel:UnitFinished(unitId)
-    if not self.hasStarted then
-        return
-    end
     local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    if self.eventTriggers["UNIT_FINISH"] then
-        for k = 1, #self.eventTriggers["UNIT_FINISH"] do
-            local params = { triggerUnitId = modelUnitId }
-            local trigger = self.eventTriggers["UNIT_FINISH"][k]
-            self:ConditionStep(trigger, params)
-        end
-    end
+    self:OnEvent("UNIT_FINISH", { unit = modelUnitId })
 end
 
 local checkRate = 10
@@ -242,28 +185,25 @@ function RuntimeModel:GameFrame(frameNum)
             end
         end
         --check for any enter/leave area events
-        for i = 1, #self.areaModels do
-            local areaModel = self.areaModels[i]
+        for _, areaModel in pairs(self.areaModels) do
             local results = areaModel:Populate(unitIds)
             local area = areaModel.area
             if self.eventTriggers["UNIT_ENTER_AREA"] then
-                for j = 1, #results.entered do
-                    local enteredUnitId = SB.model.unitManager:getModelUnitId(results.entered[j])
-                    for k = 1, #self.eventTriggers["UNIT_ENTER_AREA"] do
-                        local trigger = self.eventTriggers["UNIT_ENTER_AREA"][k]
-                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id}
-                        self:ConditionStep(trigger, params)
-                    end
+                for _, unitID in pairs(results.entered) do
+                    local modelUnitId = SB.model.unitManager:getModelUnitId(unitID)
+                    self:OnEvent("UNIT_ENTER_AREA", {
+                        unit = modelUnitId,
+                        area = areaModel.id
+                    })
                 end
             end
             if self.eventTriggers["UNIT_LEAVE_AREA"] then
-                for j = 1, #results.left do
-                    local leftUnitId = results.left[j]
-                    for k = 1, #self.eventTriggers["UNIT_LEAVE_AREA"] do
-                        local trigger = self.eventTriggers["UNIT_LEAVE_AREA"][k]
-                        local params = { triggerUnitId = enteredUnitId, triggerAreaId = areaModel.id }
-                        self:ConditionStep(trigger, params)
-                    end
+                -- TODO: check if leftUnitId really doesn't need to be the model id
+                for _, leftUnitId in pairs(results) do
+                    self:OnEvent("UNIT_LEAVE_AREA", {
+                        unit = leftUnitId,
+                        area = areaModel.id
+                    })
                 end
             end
             areaModel:Populate(newUnitIds)
@@ -281,6 +221,20 @@ function RuntimeModel:GameFrame(frameNum)
         end
     end
     self.repeatCalls = newCalls
+end
+
+function RuntimeModel:OnEvent(eventName, params)
+    if not self.hasStarted then
+        return
+    end
+
+    params = params or {}
+
+    if self.eventTriggers[eventName] then
+        for _, trigger in pairs(self.eventTriggers[eventName]) do
+            self:ConditionStep(trigger, params)
+        end
+    end
 end
 
 function RuntimeModel:ConditionStep(trigger, params)

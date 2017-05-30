@@ -163,6 +163,7 @@ end
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
     SB.model.unitManager:addUnit(unitID)
     SB.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
+    -- FIXME: Remove MCL specific hacks
     if Game.gameShortName == "SE MCL" and (unitDefID == 9 or unitDefID == 49) then
         return
     end
