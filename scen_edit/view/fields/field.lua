@@ -52,6 +52,9 @@ function Field:Set(value, source)
 end
 function Field:Added()
 end
+-- Override
+function Field:Update(source)
+end
 -- HACK: see above
 function Field:_HackSetInvisibleFields(fields)
 end

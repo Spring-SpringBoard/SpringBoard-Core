@@ -238,6 +238,20 @@ function EditorView:_OnEndChange(name)
     end
 end
 
+function EditorView:Serialize()
+    local retVal = {}
+    for name, field in pairs(self.fields) do
+        retVal[name] = field.value
+    end
+    return retVal
+end
+
+function EditorView:Load(tbl)
+    for name, value in pairs(tbl) do
+        self.fields[name]:Set(value)
+    end
+end
+
 -- We load these fields last as they might be/contain subclasses of editor view
 SB_VIEW_FIELDS_DIR = SB_VIEW_DIR .. "fields/"
 SB.IncludeDir(SB_VIEW_FIELDS_DIR)

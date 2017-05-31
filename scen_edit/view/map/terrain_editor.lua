@@ -1,36 +1,99 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "texture_browser.lua"))
+SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
 TerrainEditorView = EditorView:extends{}
 
 function TerrainEditorView:init()
     self:super("init")
-	self.paintTexture = {}
-    self.brushTexture = {}
+    self:AddField(Field({
+        name = "paintTexture",
+        value = {},
+    }))
+    self:AddField(Field({
+        name = "brushTexture",
+        value = {},
+    }))
 
-	self.textureBrowser = TextureBrowser({
+    local btnSave = Button:New {
+        caption = "Save",
+        tooltip = "Save current brush settings",
+        x = 0,
+        y = 0,
+        width = 100,
+        height = 50,
+        OnClick = {
+            function()
+                local tbl = self:Serialize()
+                if not tbl.paintTexture.diffuse then
+                    return
+                end
+                local diffuse = tbl.paintTexture.diffuse
+                local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
+                if self.selectedSaveBrushIndx then
+                    Spring.Echo("UPDATE BRUSH")
+                else
+                    self.savedBrushes:AddBrush("Saved", texturePath, "Bla", tbl)
+                end
+            end
+        },
+    }
+
+    self.savedBrushes = SavedBrushes({
+        width = "100%",
+        height = "100%",
+        iconX = 32,
+        iconY = 32,
+        -- FIXME: minWidth shouldn't need setting, but it does for some reason
+        minWidth = 400,
+    })
+
+    self.savedBrushes.control.OnSelectItem = {
+        function(obj, itemIdx, selected)
+            if selected then
+                if itemIdx > 0 then
+                    local item = self.savedBrushes.control.children[itemIdx]
+                    if item then
+                        self.selectedSaveBrushIndx = itemIdx
+                        self:Load(item.opts)
+                        self.brushTextureImages.control:DeselectAll()
+                        self.textureBrowser.control:DeselectAll()
+                    end
+                end
+            else
+                self.selectedSaveBrushIndx = nil
+            end
+        end
+    }
+
+    self.textureBrowser = TextureBrowser({
 		rootDir = "brush_textures/",
         width = "100%",
         height = "100%",
+        iconX = 64,
+        iconY = 64,
     })
 
     self.textureBrowser.control.OnSelectItem = {
         function(obj, itemIdx, selected)
             if selected and itemIdx > 0 then
                 local item = self.textureBrowser.control.children[itemIdx]
-				for k, v in pairs(self.paintTexture) do
-					self.paintTexture[k] = nil
-				end
+                self:Set("paintTexture", {})
+				--for k, v in pairs(self.paintTexture) do
+				--	self.paintTexture[k] = nil
+				--end
 				if item.texture ~= nil then
-					for k, v in pairs(item.texture) do
-						self.paintTexture[k] = v
-					end
-					SB.commandManager:execute(CacheTextureCommand(self.paintTexture))
+                    self.savedBrushes.control:DeselectAll()
+                    self:Set("paintTexture", item.texture)
+					--for k, v in pairs(item.texture) do
+					--	self.paintTexture[k] = v
+					--end
+					SB.commandManager:execute(CacheTextureCommand(self.fields["paintTexture"].value))
 
 					local currentState = SB.stateManager:GetCurrentState()
 					if currentState.smartPaint then
 						table.insert(currentState.textures, {
-							texture = SB.deepcopy(self.paintTexture),
+							texture = SB.deepcopy(self.fields["paintTexture"].value),
 							minHeight = 160, -- math.random(100),
 							--minSlope = math.random(),
 							minSlope = #currentState.textures* 0.7 + 0,
@@ -51,22 +114,18 @@ function TerrainEditorView:init()
         width = "100%",
         height = "100%",
         multiSelect = false,
-        iconX = 64,
-        iconY = 64,
+        iconX = 48,
+        iconY = 48,
     })
 
     self.brushTextureImages.control.OnSelectItem = {
         function(obj, itemIdx, selected)
             if selected and itemIdx > 0 then
                 local item = self.brushTextureImages.control.children[itemIdx]
-				for k, v in pairs(self.brushTexture) do
-					self.brushTexture[k] = nil
-				end
+                self:Set("brushTexture", {})
 				if item.texture ~= nil then
-					for k, v in pairs(item.texture) do
-						self.brushTexture[k] = v
-					end
-					SB.commandManager:execute(CacheTextureCommand(self.brushTexture))
+                    self:Set("brushTexture", item.texture)
+					SB.commandManager:execute(CacheTextureCommand(self.fields["brushTexture"].value))
 
 					local currentState = SB.stateManager:GetCurrentState()
 -- 					if currentState.smartPaint then
@@ -405,11 +464,21 @@ function TerrainEditorView:init()
         self.btnBlur,
 		--self.btnVoid,
 		--self.btnSmartPaint,
-		ScrollPanel:New {
+        ScrollPanel:New {
 			x = 0,
 			right = 0,
 			y = 70,
-			height = "30%",
+			bottom = "83%", -- 100 - 17
+			padding = {0, 0, 0, 0},
+			children = {
+				self.savedBrushes.control,
+			}
+		},
+		ScrollPanel:New {
+			x = 0,
+			right = 0,
+			y = "17%",
+			bottom = "62%", -- 100 - 38
 			padding = {0, 0, 0, 0},
 			children = {
 				self.textureBrowser.control,
@@ -419,7 +488,7 @@ function TerrainEditorView:init()
 			x = 0,
 			right = 0,
 			y = "38%",
-			height = "20%",
+            bottom = "45%", -- 100 - 55
 			padding = {0, 0, 0, 0},
 			children = {
 				self.brushTextureImages.control,
@@ -432,7 +501,10 @@ function TerrainEditorView:init()
 			right = 0,
 			borderColor = {0,0,0,0},
 			horizontalScrollbar = false,
-			children = { self.stackPanel },
+			children = {
+                btnSave,
+                self.stackPanel
+            },
 		},
 	}
 	self:Finalize(children)
@@ -444,8 +516,6 @@ function TerrainEditorView:EnterState()
 		currentState = TerrainChangeTextureState(self)
 		SB.stateManager:SetState(currentState)
 	end
-	currentState.paintTexture = self.paintTexture
-    currentState.brushTexture = self.brushTexture
 	return currentState
 end
 

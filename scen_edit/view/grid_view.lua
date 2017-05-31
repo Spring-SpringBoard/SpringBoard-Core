@@ -12,7 +12,6 @@ function GridView:init(tbl)
 		iconX = 88,
 		iconY = 88,
 		useRTT = true,
-		vc
 	}
 	tbl = Table.Merge(tbl, defaults)
     self.items = {}

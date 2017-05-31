@@ -3,8 +3,8 @@ SB.Include("scen_edit/model/texture_manager.lua")
 
 function TerrainChangeTextureState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
-    self.paintTexture   = self.editorView.paintTexture
-    self.brushTexture   = self.editorView.brushTexture
+    self.paintTexture   = self.editorView.fields["paintTexture"].value
+    self.brushTexture   = self.editorView.fields["brushTexture"].value
     self.texScale       = self.editorView.fields["texScale"].value
     self.mode           = self.editorView.fields["mode"].value
     self.kernelMode     = self.editorView.fields["kernelMode"].value
