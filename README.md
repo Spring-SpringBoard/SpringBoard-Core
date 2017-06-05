@@ -1,7 +1,9 @@
 # SpringBoard: Editor for Spring
 
-
-Detailed (outdated) docs can be found: http://spring-springboard.github.io/SpringBoard-Core/
+Resources:
+- [Wiki](https://github.com/Spring-SpringBoard/SpringBoard-Core/wiki/Starting-out)
+- API (TODO)
+- Examples (TODO)
 
 ## Installing
 The production version can be obtained from rapid, via:
