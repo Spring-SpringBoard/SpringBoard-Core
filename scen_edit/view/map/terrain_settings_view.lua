@@ -7,11 +7,11 @@ function TerrainSettingsView:init()
 
     self.initializing = true
 
-    self:AddField(FileField({
+    self:AddField(AssetField({
         name = "detailTexture",
         title = "Detail:",
         tooltip = "Detail texture",
-        value = Path.Join(SB_IMG_DIR, "resources/brush_patterns/detail"),
+        rootDir = "detail/",
     }))
 
     self:AddControl("sun-sep", {
@@ -208,11 +208,11 @@ function TerrainSettingsView:init()
             width = 140,
         }),
     }))
-    self:AddField(FileField({
+    self:AddField(AssetField({
         name = "skyboxTexture",
         title = "Skybox:",
         tooltip = "Skybox texture (requires SkyBox sky)",
-        value = Path.Join(SB_IMG_DIR, "resources/skyboxes"),
+        rootDir = "skyboxes/",
     }))
 
     self:AddControl("atmosphere-fog-sep", {
@@ -276,7 +276,7 @@ function TerrainSettingsView:init()
             tooltip = "How many Tiles does the `normalTexture` have?\nSuch Tiles are used when DynamicWaves are enabled in BumpWater, the more the better.\nCheck the example php script to generate such tiled bumpmaps.",
             width = 140,
         }),
-        TextureField({
+        FileField({
             name = "normalTexture",
             title = "Normal texture:",
             tooltip = "The normal texture.",
@@ -472,7 +472,7 @@ function TerrainSettingsView:init()
             title = "Enabled:",
             width = 140,
         }),
-        TextureField({
+        FileField({
             name = "foamTexture",
             title = "Texture:",
             width = 140,
@@ -489,7 +489,7 @@ function TerrainSettingsView:init()
         }
     })
     self:AddField(GroupField({
-        TextureField({
+        FileField({
             name = "texture",
             title = "Texture:",
             width = 140,
@@ -515,7 +515,7 @@ function TerrainSettingsView:init()
         ScrollPanel:New {
             x = 0,
             y = 0,
-            bottom = 10,
+            bottom = 30,
             right = 0,
             borderColor = {0,0,0,0},
             horizontalScrollbar = false,

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 511.99999 511.99999"
+   id="svg3552"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="variable-add.svg"
+   inkscape:export-filename="/home/gajop/games_spring/SB/SB-C.sdd/LuaUI/images/scenedit/modifications/variable-add.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs3554" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.96053275"
+     inkscape:cx="-165.8259"
+     inkscape:cy="-28.381535"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3557">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-540.36219)">
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1"
+       width="84.859909"
+       height="229.37032"
+       x="-699.96277"
+       y="279.70242"
+       transform="matrix(0,-1,1,0,0,0)" />
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1-2"
+       width="84.859909"
+       height="229.37032"
+       x="351.95764"
+       y="542.84766" />
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff"
+       d="m 198.84697,745.23717 c -82.90986,0 -150.450324,72.10963 -150.450324,161.41874 0,34.17789 9.828727,66.33269 26.642162,92.46468 -19.57416,-10.6 -38.80393,-23.43453 -57.985648,-39.18036 l 0,76.17267 140.0025,0 c -38.44353,-26.6358 -65.299529,-65.86019 -65.299529,-110.6517 0,-59.72121 47.958289,-108.13442 107.089239,-108.13442 59.13254,0 107.09083,48.41321 107.09083,108.13442 0,44.79151 -26.8544,84.0151 -65.29792,110.6517 l 140.0009,0 0,-76.17267 c -19.23778,15.91001 -38.67979,28.99283 -58.50784,39.70095 17.05691,-26.24571 27.16675,-58.53827 27.16675,-92.98527 0,-89.30911 -67.54046,-161.41874 -150.45032,-161.41874 z"
+       id="path4" />
+  </g>
+</svg>

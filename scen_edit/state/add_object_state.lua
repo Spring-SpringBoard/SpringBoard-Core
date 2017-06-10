@@ -4,7 +4,6 @@ function AddObjectState:init(editorView, objectDefIDs)
     AbstractEditingState.init(self, editorView)
 
     self.objectDefIDs = objectDefIDs
---     self.unitImages = unitImages
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
     self.randomSeed = os.clock()
@@ -25,7 +24,6 @@ function AddObjectState:MousePress(x, y, button)
             return true
         end
     elseif button == 3 then
---         self.unitImages.control:SelectItem(0)
         SB.stateManager:SetState(DefaultState())
     end
 end

@@ -37,7 +37,7 @@ function AssetView:init(tbl)
             self:SetDir(self.dirs[itemIdx])
             return ctrl
         else
-            ctrl:CallListeners(ctrl.OnDblClickItem, ctrl.items[itemIdx], itemIdx)
+            ctrl:CallListeners(ctrl.OnDblClickItem, self.items[itemIdx], itemIdx)
             return ctrl
         end
     end
@@ -51,13 +51,6 @@ function AssetView:SetDir(directory)
     self.dir = directory
 -- 	TextureBrowser.lastDir = self.dir
     self:ScanDir()
-
-    if self.control.parent then
-        self.control.parent:RequestRealign()
-    else
-        self.control:UpdateLayout()
-        self.control:Invalidate()
-    end
 end
 
 function AssetView:ScanDir()
@@ -73,21 +66,18 @@ function AssetView:ScanDir()
             end
         end
     end
-
     self.dirs = SB.model.assetsManager:SubDirs(self.rootDir, self.dir, "*")
     self._dirsNum = #self.dirs
 
     self:ScanDirFinished()
 
-    self.control:DisableRealign()
-    --// clear old
-    self.control:ClearChildren()
+    self:StartMultiModify()
+    self:ClearItems()
 
     --// add ".."
     if self.showDirs and self.dir ~= "" then
         self:AddItem('', self.imageFolderUp)
     end
-
     --// add dirs at top
     if self.showDirs then
         for _, dir in pairs(self.dirs) do
@@ -97,10 +87,21 @@ function AssetView:ScanDir()
     end
     self:PopulateItems()
 
-    self.control:EnableRealign()
+    self:EndMultiModify()
 end
 
--- API. Override these functions
+function AssetView:SelectAsset(path)
+    local assetPath = SB.model.assetsManager:ToAssetPath(self.rootDir, path)
+    local dir = Path.GetParentDir(assetPath)
+    self:SetDir(dir)
+    for itemIdx, item in pairs(self:GetAllItems()) do
+        if item.path == path then
+            self:SelectItem(itemIdx)
+        end
+    end
+end
+
+-- Override
 function AssetView:ScanDirStarted()
 end
 
@@ -108,7 +109,14 @@ function AssetView:ScanDirFinished()
 end
 
 function AssetView:FilterFile(file)
+    return true
 end
 
 function AssetView:PopulateItems()
+    for _, file in pairs(self.files) do
+        local texturePath = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. tostring(file)
+        local name = Path.ExtractFileName(file)
+        local item = self:AddItem(name, texturePath, "")
+        item.path = file
+    end
 end

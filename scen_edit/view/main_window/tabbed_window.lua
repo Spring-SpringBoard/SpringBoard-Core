@@ -24,7 +24,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file=SB_IMG_DIR .. "undo.png",
+					file = SB_IMG_DIR .. "anticlockwise-rotation.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -47,7 +47,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file=SB_IMG_DIR .. "redo.png",
+					file = SB_IMG_DIR .. "clockwise-rotation.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -72,7 +72,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file=SB_IMG_DIR .. "refresh.png",
+					file = SB_IMG_DIR .. "recycle.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -101,7 +101,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file=SB_IMG_DIR .. "copy.png",
+					file = SB_IMG_DIR .. "copy.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -130,7 +130,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file=SB_IMG_DIR .. "cut.png",
+					file = SB_IMG_DIR .. "scissors-rotated.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -157,7 +157,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file=SB_IMG_DIR .. "paste.png",
+					file = SB_IMG_DIR .. "stabbed-note.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -179,7 +179,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file = SB_IMG_DIR .. "document-save.png",
+					file = SB_IMG_DIR .. "save.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -201,7 +201,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file = SB_IMG_DIR .. "document-save.png",
+					file = SB_IMG_DIR .. "save.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -223,7 +223,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file = SB_IMG_DIR .. "document-open.png",
+					file = SB_IMG_DIR .. "open-folder.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -245,7 +245,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file = SB_IMG_DIR .. "document-save.png",
+					file = SB_IMG_DIR .. "save.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -267,7 +267,7 @@ function TabbedWindow:init()
 			},
 			children = {
 				Image:New {
-					file = SB_IMG_DIR .. "document-open.png",
+					file = SB_IMG_DIR .. "open-folder.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
@@ -289,7 +289,7 @@ function TabbedWindow:init()
 		bottom = 20,
 		padding = {0, 0, 0, 0},
 		tabs = {
-			{ name = "Unit", children = {unitFeaturePanel:getControl()} },
+			{ name = "Object", children = {unitFeaturePanel:getControl()} },
 			{ name = "Map", children = {terrainPanel:getControl()} },
 			{ name = "Trigger", children = {metaPanel:getControl()} },
 			{ name = "General", children = {generalPanel:getControl()} },

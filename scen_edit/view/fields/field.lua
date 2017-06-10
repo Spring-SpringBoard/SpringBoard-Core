@@ -32,7 +32,9 @@ function Field:_CompareValues(v1, v2)
 end
 -- Override
 function Field:Validate(value)
-    if value ~= nil and not self:_CompareValues(value, self.value) then
+    -- FIXME: specify whether the field can be nil
+    -- and value ~= nil
+    if not self:_CompareValues(value, self.value) then
         return true, value
     end
     return false

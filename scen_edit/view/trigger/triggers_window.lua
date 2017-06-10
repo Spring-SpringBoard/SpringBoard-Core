@@ -5,16 +5,21 @@ TriggersWindow = EditorView:extends{}
 function TriggersWindow:init()
     self:super("init")
 
-    local btnAddTrigger = Button:New {
-        caption='+ Trigger',
-        width=120,
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        OnClick={function() self:AddTrigger() end},
-        backgroundColor = SB.conf.BTN_ADD_COLOR,
+    self.btnAddTrigger = TabbedPanelButton({
+        x = 0,
+        y = 0,
         tooltip = "Add trigger",
-    }
+        children = {
+            TabbedPanelImage({ file = SB_IMG_DIR .. "trigger-add.png" }),
+            TabbedPanelLabel({ caption = "Add" }),
+        },
+        OnClick = {
+            function()
+                self:AddTrigger()
+                self.btnAddTrigger:SetPressedState(true)
+            end
+        },
+    })
 
     self._triggers = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -25,14 +30,17 @@ function TriggersWindow:init()
 
     local children = {
         ScrollPanel:New {
-            y = 15,
-            width = "100%",
-            bottom = SB.conf.C_HEIGHT * 2,
+            x = 0,
+            y = 80,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
             children = {
                 self._triggers
             },
         },
-        btnAddTrigger,
+        self.btnAddTrigger,
     }
 
     self:Populate()
@@ -97,8 +105,7 @@ function TriggersWindow:Populate()
             tooltip = "Clone trigger",
             children = {
                 Image:New {
-                    tooltip = "Clone trigger",
-                    file=SB_IMG_DIR .. "clone.png",
+                    file = SB_IMG_DIR .. "trigger-add.png",
                     height = SB.conf.B_HEIGHT,
                     width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
@@ -117,20 +124,19 @@ function TriggersWindow:Populate()
         }
         local btnRemoveTrigger = Button:New {
             caption = "",
-            right = 1,
+            right = 0,
             width = SB.conf.B_HEIGHT,
             height = SB.conf.B_HEIGHT,
             parent = stackTriggerPanel,
-            padding = {0, 0, 0, 0},
+            padding = {2, 2, 2, 2},
             tooltip = "Remove trigger",
+            classname = "negative_button",
             children = {
                 Image:New {
                     tooltip = "Remove trigger",
-                    file=SB_IMG_DIR .. "list-remove.png",
-                    height = SB.conf.B_HEIGHT,
-                    width = SB.conf.B_HEIGHT,
-                    padding = {0, 0, 0, 0},
-                    margin = {0, 0, 0, 0},
+                    file = SB_IMG_DIR .. "cancel.png",
+                    height = "100%",
+                    width = "100%",
                 },
             },
             OnClick = {function() self:MakeRemoveTriggerWindow(trigger.id) end},
@@ -151,6 +157,7 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
     table.insert(tw.OnDispose,
         function()
             SB.SetControlEnabled(sw, true)
+            self.btnAddTrigger:SetPressedState(false)
             if not triggerWindow.save then
                 return
             end

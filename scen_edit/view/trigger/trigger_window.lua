@@ -98,6 +98,7 @@ function TriggerWindow:init(trigger)
                 y = 15 + SB.conf.B_HEIGHT,
                 right = 5,
                 bottom = SB.conf.B_HEIGHT * 2,
+                borderColor = {0,0,0,0},
                 children = {
                     self._triggerPanel,
                 },
@@ -139,18 +140,18 @@ function TriggerWindow:Populate()
         }
         local btnRemoveEvent = Button:New {
             caption = "",
-            right = 1,
+            right = 0,
             width = SB.conf.B_HEIGHT,
             height = SB.conf.B_HEIGHT,
             parent = stackEventPanel,
-            padding = {0, 0, 0, 0},
+            padding = {2, 2, 2, 2},
+            tooltip = "Remove event",
+            classname = "negative_button",
             children = {
                 Image:New {
-                    tooltip = "Remove event",
-                    file=SB_IMG_DIR .. "list-remove.png",
-                    height = SB.conf.B_HEIGHT,
-                    width = SB.conf.B_HEIGHT,
-                    margin = {0, 0, 0, 0},
+                    file = SB_IMG_DIR .. "cancel.png",
+                    height = "100%",
+                    width = "100%",
                 },
             },
             tooltip = "Remove event",
@@ -196,19 +197,18 @@ function TriggerWindow:Populate()
         }
         local btnRemoveCondition = Button:New {
             caption = "",
-            right = 1,
+            right = 0,
             width = SB.conf.B_HEIGHT,
             height = SB.conf.B_HEIGHT,
             parent = stackPanel,
-            padding = {0, 0, 0, 0},
+            padding = {2, 2, 2, 2},
             tooltip = "Remove condition",
+            classname = "negative_button",
             children = {
                 Image:New {
-                    tooltip = "Remove condition",
-                    file=SB_IMG_DIR .. "list-remove.png",
-                    height = SB.conf.B_HEIGHT,
-                    width = SB.conf.B_HEIGHT,
-                    margin = {0, 0, 0, 0},
+                    file = SB_IMG_DIR .. "cancel.png",
+                    height = "100%",
+                    width = "100%",
                 },
             },
             OnClick = {function() self:MakeRemoveConditionWindow(condition, i) end}
@@ -255,19 +255,18 @@ function TriggerWindow:Populate()
         }
         local btnRemoveAction = Button:New {
             caption = "",
-            right = 1,
+            right = 0,
             width = SB.conf.B_HEIGHT,
             height = SB.conf.B_HEIGHT,
             parent = stackActionPanel,
-            padding = {0, 0, 0, 0},
+            padding = {2, 2, 2, 2},
             tooltip = "Remove action",
+            classname = "negative_button",
             children = {
                 Image:New {
-                    tooltip = "Remove action",
-                    file= SB_IMG_DIR .. "list-remove.png",
-                    height = SB.conf.B_HEIGHT,
-                    width = SB.conf.B_HEIGHT,
-                    margin = {0, 0, 0, 0},
+                    file = SB_IMG_DIR .. "cancel.png",
+                    height = "100%",
+                    width = "100%",
                 },
             },
             OnClick = {function() self:MakeRemoveActionWindow(action, i) end},

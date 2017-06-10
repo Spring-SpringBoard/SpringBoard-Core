@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 511.99999 511.99999"
+   id="svg3552"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="copy.svg"
+   inkscape:export-filename="/home/gajop/games_spring/SB/SB-C.sdd/LuaUI/images/scenedit/modifications/copy.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs3554" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.96053272"
+     inkscape:cx="223.89313"
+     inkscape:cy="220.57384"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3557">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-540.36219)">
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff"
+       d="m 201.33302,563.45907 -130.682307,34.6886 86.038647,324.12217 44.84715,-11.90449 0.56718,-242.66293 0.026,-11.17772 107.68207,0.25206 -10.29109,-38.76104 c -21.1815,1.64248 -36.10108,-0.94763 -62.042,17.36795 l -8.385,5.92193 -6.61239,-7.85266 c -19.37737,-23.00661 -19.02723,-48.67709 -21.14826,-69.99387 z m 23.15178,3.99914 c 1.68466,16.32203 2.44034,30.83085 9.65182,43.69046 17.58851,-10.24782 32.60291,-13.09234 45.9626,-14.28487 -16.42368,-12.03416 -34.24804,-20.344 -55.61442,-29.40559 z m -0.0514,111.4764 -0.78192,335.34689 216.11163,0.5015 0.6016,-257.41937 c -20.88634,-3.8969 -34.62899,-10.26393 -64.42584,0.7139 l -9.63087,3.54935 -4.35275,-9.29414 c -12.76389,-27.23787 -5.78171,-51.94339 -2.3133,-73.08216 z m 156.53783,10.171 c -2.59618,16.20205 -5.62219,30.41112 -1.98496,44.69864 19.64088,-5.34611 34.87932,-4.20769 48.09242,-1.9016 -12.74942,-15.87483 -27.81484,-28.51582 -46.10746,-42.79704 z"
+       id="path4"
+       sodipodi:nodetypes="ccccccccccccccccccccccccccccc" />
+  </g>
+</svg>

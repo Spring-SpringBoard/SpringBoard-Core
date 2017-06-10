@@ -13,7 +13,8 @@ function EditorView:init(opts)
         OnClick = {
             function()
                 self.window:Hide()
-                SB.stateManager:SetState(DefaultState())
+                -- FIXME: should be resetting to the default state?
+                -- SB.stateManager:SetState(DefaultState())
             end
         },
     }
@@ -49,6 +50,23 @@ end
 -- Override
 function EditorView:IsValidTest(state)
     return false
+end
+-- Override
+function EditorView:OnEnterState(state)
+end
+-- Override
+function EditorView:OnLeaveState(state)
+end
+
+function EditorView:_OnEnterState(state)
+    if self:IsValidTest(state) then
+        self:OnEnterState(state)
+    end
+end
+function EditorView:_OnLeaveState(state)
+    if self:IsValidTest(state) then
+        self:OnLeaveState(state)
+    end
 end
 
 -- NOTICE: Invoke :Finalize at the end of init
@@ -178,7 +196,9 @@ function EditorView:Remove(name)
     self.fields[name] = nil
 end
 function EditorView:AddField(field)
-    field.ctrl = self:_AddControl(field.name, field.components)
+    if field.components then
+        field.ctrl = self:_AddControl(field.name, field.components)
+    end
     self:_AddField(field)
     field:Added()
 end
@@ -247,6 +267,13 @@ function EditorView:Serialize()
 end
 
 function EditorView:Load(tbl)
+    -- set missing fields to nil
+    for name, field in pairs(self.fields) do
+        -- some fields (like GroupField) don't have .Set
+        if self.fields[name].Set and tbl[name] == nil then
+            self.fields[name]:Set(nil)
+        end
+    end
     for name, value in pairs(tbl) do
         self.fields[name]:Set(value)
     end

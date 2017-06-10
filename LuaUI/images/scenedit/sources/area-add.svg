@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 511.99999 511.99999"
+   id="svg3552"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="area-add.svg"
+   inkscape:export-filename="/home/gajop/games_spring/SB/SB-C.sdd/LuaUI/images/scenedit/modifications/area-add.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs3554" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.99574998"
+     inkscape:cx="-153.23733"
+     inkscape:cy="120.84196"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3557">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-540.36219)">
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1"
+       width="84.859909"
+       height="229.37032"
+       x="-699.96277"
+       y="279.70242"
+       transform="matrix(0,-1,1,0,0,0)" />
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1-2"
+       width="84.859909"
+       height="229.37032"
+       x="351.95764"
+       y="542.84766" />
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff"
+       d="M 21.890979,688.29754 C 45.601694,684.31566 72.957203,677.9902 140.3583,645.92194 l 26.27157,81.64557 115.11248,34.57719 6.06267,77.06143 49.36803,2.80528 23.56215,57.78309 -20.19613,47.12429 c -25.98401,-10.74347 -47.79765,-26.56393 -97.05306,-8.97659 -12.91133,15.27809 -18.91569,45.75201 -26.92816,71.8088 -61.36158,-11.50078 -109.19518,-7.8839 -134.640834,20.7568 L 27.501546,867.8181 c 8.248108,-54.54008 8.320796,-113.36316 -5.609768,-179.52056 z"
+       id="path4" />
+  </g>
+</svg>

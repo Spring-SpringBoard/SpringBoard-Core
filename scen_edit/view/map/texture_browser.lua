@@ -20,14 +20,15 @@ function TextureBrowser:PopulateItems()
 		else
 			tooltip = tooltip .. "\nDiffuse: \255\255\0\0NO\b"
 		end
-		for texType, _ in pairs(SB.model.textureManager.shadingTextures) do
-			if texture[texType] then
-				tooltip = tooltip .. "\n" .. texType:sub(1,1):upper() .. texType:sub(2) .. ": \255\0\255\0OK\b"
-			else
-				tooltip = tooltip .. "\n" .. texType:sub(1,1):upper() .. texType:sub(2) .. ": \255\255\0\0NO\b"
+		for name, texDef in pairs(SB.model.textureManager:GetShadingTextureDefs()) do
+			if texDef.enabled then
+				if texture[name] then
+					tooltip = tooltip .. "\n" .. name:sub(1,1):upper() .. name:sub(2) .. ": \255\0\255\0OK\b"
+				else
+					tooltip = tooltip .. "\n" .. name:sub(1,1):upper() .. name:sub(2) .. ": \255\255\0\0NO\b"
+				end
 			end
 		end
-		--Spring.Echo(tooltip)
         local texturePath = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. tostring(texture.diffuse)
 		local item = self:AddItem(name, texturePath or "", tooltip)
 		item.texture = texture
@@ -45,11 +46,14 @@ function TextureBrowser:FilterFile(filePath)
 		base = filePath:gsub("_diffuse" .. ext, "")
 		tType = "diffuse"
 	else
-		for texType, _ in pairs(SB.model.textureManager.shadingTextures) do
-			local fileEnd = "_" .. texType .. ext
+		for name, texDef in pairs(SB.model.textureManager:GetShadingTextureDefs()) do
+			local fileEnd = "_" .. name .. ext
 			if filePath:ends(fileEnd) then
+				if not texDef.enabled then
+					return
+				end
 				base = filePath:gsub(fileEnd, "")
-				tType = texType
+				tType = name
 				break
 			end
 		end
@@ -59,13 +63,11 @@ function TextureBrowser:FilterFile(filePath)
 		tType = "diffuse"
 	end
 
-	if base then
-		base = Path.ExtractFileName(base)
-		if not self.textures[base] then
-			self.textures[base] = {}
-			table.insert(self.textureOrder, base)
-		end
-		self.textures[base][tType] = filePath
-		return true
+	base = Path.ExtractFileName(base)
+	if not self.textures[base] then
+		self.textures[base] = {}
+		table.insert(self.textureOrder, base)
 	end
+	self.textures[base][tType] = filePath
+	return true
 end

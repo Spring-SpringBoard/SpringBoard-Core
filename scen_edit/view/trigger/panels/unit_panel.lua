@@ -38,15 +38,13 @@ function UnitPanel:MakePredefinedOpt()
         width = SB.conf.B_HEIGHT,
         height = SB.conf.B_HEIGHT,
         parent = stackUnitPanel,
-        padding = {0, 0, 0, 0},
+        tooltip = "Select unit",
+        padding = {2, 2, 2, 2},
         children = {
             Image:New {
-                tooltip = "Select unit",
-                file=SB_IMG_DIR .. "search.png",
-                height = SB.conf.B_HEIGHT,
-                width = SB.conf.B_HEIGHT,
-                padding = {0, 0, 0, 0},
-                margin = {0, 0, 0, 0},
+                file = SB_IMG_DIR .. "position-marker.png",
+                height = "100%",
+                width = "100%",
             },
         },
         OnClick = {

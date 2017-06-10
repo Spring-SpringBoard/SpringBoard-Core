@@ -52,8 +52,8 @@ function DiplomacyWindow:init(trigger)
                     checked = Spring.AreTeamsAllied(team.id, team2.id),
                     boxalign = 'left',
                     parent = stackTeamPanel,
-                    OnChange = { 
-                        function(cbToggled, checked) 
+                    OnChange = {
+                        function(cbToggled, checked)
                             local cmd = SetAllyCommand(team.allyTeam, team2.allyTeam, checked)
                             SB.commandManager:execute(cmd)
                         end
@@ -89,10 +89,12 @@ function DiplomacyWindow:init(trigger)
 
     local children = {
         ScrollPanel:New {
-            x = 1,
-            y = 15,
-            right = 5,
-            bottom = SB.conf.C_HEIGHT * 2,
+            x = 0,
+            y = 0,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
             children = {
                 self.teamsPanel
             },

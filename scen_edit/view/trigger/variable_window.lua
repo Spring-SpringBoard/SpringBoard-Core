@@ -101,6 +101,7 @@ function VariableWindow:init(variable)
                 bottom = 2 * SB.conf.C_HEIGHT,
                 right = 5,
                 parent = self.window,
+                borderColor = {0,0,0,0},
                 children = {
                     self.variablePanel,
                 },

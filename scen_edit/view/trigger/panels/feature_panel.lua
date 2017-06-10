@@ -38,15 +38,13 @@ function FeaturePanel:MakePredefinedOpt()
         width = SB.conf.B_HEIGHT,
         height = SB.conf.B_HEIGHT,
         parent = stackFeaturePanel,
-        padding = {0, 0, 0, 0},
+        tooltip = "Select feature",
+        padding = {2, 2, 2, 2},
         children = {
             Image:New {
-                tooltip = "Select feature",
-                file=SB_IMG_DIR .. "search.png",
-                height = SB.conf.B_HEIGHT,
-                width = SB.conf.B_HEIGHT,
-                padding = {0, 0, 0, 0},
-                margin = {0, 0, 0, 0},
+                file = SB_IMG_DIR .. "position-marker.png",
+                height = "100%",
+                width = "100%",
             },
         },
         OnClick = {

@@ -4,10 +4,12 @@ ObjectDefsPanel = GridView:extends{}
 
 function ObjectDefsPanel:init(tbl)
     local defaults = {
-        iconX = 64,
-        iconY = 64,
-        multiSelect = true,
-        minWidth = 450, -- HACK: needed to fix the bug when no items reappear once the all items are hidden/shown (filtered out/filtered in)
+        ctrl = {
+            iconX = 96,
+            iconY = 96,
+            multiSelect = true,
+            minWidth = 450, -- HACK: needed to fix the bug when no items reappear once the all items are hidden/shown (filtered out/filtered in)
+        }
     }
     tbl = Table.Merge(tbl, defaults)
     GridView.init(self, tbl)
@@ -26,74 +28,33 @@ function ObjectDefsPanel:init(tbl)
     self.rotate = 0
     self.refresh = os.clock()
 
-    self.control:DisableRealign()
+    self:StartMultiModify()
     self:PopulateItems()
-    self.control:EnableRealign()
     self:Refresh()
-
-    self.selectListeners = {}
-    self.control.OnSelectItem = {
-        function(obj,itemIdx,selected)
-            if itemIdx <= 0 then
-                return
-            end
-            local objectDefID = self:GetObjectDefID(itemIdx)
-            if objectDefID == nil then
-                return
-            end
-
-            if selected then
-                local currentState = SB.stateManager:GetCurrentState()
-                local isSelectState =
-                    (currentState:is_A(SelectUnitTypeState) and self.bridge.bridgeName == "UnitBridge") or
-                    (currentState:is_A(SelectFeatureTypeState) and self.bridge.bridgeName == "FeatureBridge")
-
-                if isSelectState then
-                    currentState:SelectObjectType(objectDefID)
-                    return
-                end
-            end
-
-            if not selected then
-                self:Unselect(objectDefID)
-            end
-            if selected then
-                table.insert(self.selectedObjectDefIDs, objectDefID)
-            end
-
-            if selected then
-                for _, listener in pairs(self.selectListeners) do
-                    listener(selected)
-                end
-            end
-        end
-    }
 end
 
 function ObjectDefsPanel:Refresh()
-    self.control:DisableRealign()
-    self.control:DeselectAll()
-
+    self:StartMultiModify()
     self:FilterItems()
-
-    self.control:EnableRealign()
-
-    if self.control.parent then
-        self.control.parent:RequestRealign()
-    else
-        self.control:UpdateLayout()
-        self.control:Invalidate()
-    end
+    self:EndMultiModify()
 end
 
 function ObjectDefsPanel:FilterItems()
+    self.control:DeselectAll()
     self.control:ClearChildren()
     for _, item in pairs(self.items) do
         local objectDefID = item.objectDefID
         if self:FilterObject(objectDefID) then
             self.control:AddChild(item)
-        else
-            self:Unselect(objectDefID)
+        end
+    end
+end
+
+function ObjectDefsPanel:_UnselectItem(objectDefID)
+    for i = 1, #self.selectedObjectDefIDs do
+        if self.selectedObjectDefIDs[i] == objectDefID then
+            table.remove(self.selectedObjectDefIDs, i)
+            break
         end
     end
 end
@@ -127,24 +88,43 @@ function ObjectDefsPanel:GetObjectDefID(index)
     end
 end
 
+function ObjectDefsPanel:_OnValidateSelectItem(obj, itemIdx, selected)
+    local item = self:super("_OnValidateSelectItem", obj, itemIdx, selected)
+    if item and item.objectDefID then
+        return item
+    end
+end
+
+function ObjectDefsPanel:_OnSelectItem(obj, itemIdx, selected)
+	local item = self:_OnValidateSelectItem(obj, itemIdx, selected)
+    if not item then
+        return
+    end
+
+    local objectDefID = item.objectDefID
+
+    if selected then
+        local currentState = SB.stateManager:GetCurrentState()
+        if currentState.SelectObjectType then
+            currentState:SelectObjectType(objectDefID)
+            return
+        end
+    end
+
+    if not selected then
+        self:_UnselectItem(objectDefID)
+    else
+        table.insert(self.selectedObjectDefIDs, objectDefID)
+    end
+    CallListeners(self.OnSelectItem, item, selected)
+end
+
 function ObjectDefsPanel:AddSelectListener(listener)
     table.insert(self.selectListeners, listener)
 end
 
 function ObjectDefsPanel:GetSelectedObjectDefs()
     return self.selectedObjectDefIDs
-end
-
-function ObjectDefsPanel:Unselect(objectDefID)
-    for i = 1, #self.selectedObjectDefIDs do
-        if self.selectedObjectDefIDs[i] == objectDefID then
-            table.remove(self.selectedObjectDefIDs, i)
-            for _, listener in pairs(self.selectListeners) do
-                listener(false)
-            end
-            break
-        end
-    end
 end
 
 function ObjectDefsPanel:AddDrawIcon(ctrl)
@@ -204,6 +184,7 @@ function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius
     local scale = -1 / radius--math.sqrt(radius)
     gl.Texture("LuaUI/images/scenedit/background.png")
     gl.RenderToTexture(tex, function()
+        gl.Color(0.2, 0.3, 0.3, 1)
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
 --                     gl.TexRect(-1, -1, 1, 1)
         gl.Translate(0, 0.5, 0)
@@ -221,6 +202,34 @@ function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius
 --                     gl.Texture(0, "-%" .. ctrl.objectDefID .. ":0")
 --                     featureBridge.DrawObject(ctrl.objectDefID, 0)
     end)
+end
+
+function ObjectDefsPanel:_GetDefHumanName(def)
+    local name
+
+    name = def.humanName
+    if name then
+        name = name:trim()
+        if #name > 0 then
+            return name
+        end
+    end
+
+    name = def.tooltip
+    if name then
+        name = name:trim()
+        if #name > 0 then
+            return name
+        end
+    end
+
+    name = def.name
+    if name then
+        name = name:trim()
+        if #name > 0 then
+            return name
+        end
+    end
 end
 
 -------------
@@ -243,12 +252,18 @@ function UnitDefsPanel:FilterObject(objectDefID)
             self.unitTerrainId == 2 and unitDef.canFly or
         self.unitTerrainId == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
         self.unitTerrainId == 4
-    return correctType and correctTerrain and unitDef.humanName:lower():find(self.search:lower():trim())
+    return correctType and correctTerrain and self:_GetDefHumanName(unitDef):lower():find(self.search:lower():trim())
 end
 function UnitDefsPanel:PopulateItems()
     local items = {}
     for id, unitDef in pairs(UnitDefs) do
-        table.insert(items, {unitDef.humanName:trim(), "#" .. unitDef.id, unitDef.humanName:trim() .. "\ndefName: " .. tostring(unitDef.name), unitDef.id})
+        local humanName = self:_GetDefHumanName(unitDef)
+        table.insert(items, {
+            humanName,
+            "#" .. unitDef.id,
+            humanName .. "\ndefName: " .. tostring(unitDef.name),
+            unitDef.id
+        })
     end
     table.sort(items, function(a, b) return a[1]:lower() < b[1]:lower() end)
 
@@ -322,8 +337,8 @@ function FeatureDefsPanel:FilterObject(objectDefID)
             end
         end
     end
-    local name = featureDef.humanName or featureDef.tooltip or featureDef.name
-    return correctType and correctUnit and name:lower():find(self.search:lower():trim())
+    local humanName = self:_GetDefHumanName(featureDef)
+    return correctType and correctUnit and humanName:lower():find(self.search:lower():trim())
 end
 function FeatureDefsPanel:PopulateItems()
     local featureTypeId = self.featureTypeId
@@ -354,8 +369,8 @@ function FeatureDefsPanel:PopulateItems()
 --                 unitImagePath = "%-" .. featureDef.id
             end
         end
-        local name = featureDef.humanName or featureDef.tooltip or featureDef.name
-        table.insert(items, {name:trim(), unitImagePath, name:trim() .. "\ndefName: " .. tostring(featureDef.name), featureDef.id})
+        local humanName = self:_GetDefHumanName(featureDef)
+        table.insert(items, {humanName, unitImagePath, humanName .. "\ndefName: " .. tostring(featureDef.name), featureDef.id})
     end
     table.sort(items, function(a, b) return a[1]:lower() < b[1]:lower() end)
 

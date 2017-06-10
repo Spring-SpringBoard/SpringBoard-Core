@@ -6,11 +6,11 @@ function ObjectDefsView:init()
     self:super("init")
 
     self.btnBrush = TabbedPanelButton({
-        x = 00,
+        x = 0,
         y = 0,
-        tooltip = "Brush",
+        tooltip = "Add or remove objects by painting the map",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "object-brush-add.png" }),
             TabbedPanelLabel({ caption = "Brush" }),
         },
         OnClick = {
@@ -23,10 +23,10 @@ function ObjectDefsView:init()
     self.btnSet = TabbedPanelButton({
         x = 70,
         y = 0,
-        tooltip = "Set",
+        tooltip = "Add objects by clicking on the map",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
-            TabbedPanelLabel({ caption = "Set" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "object-set-add.png" }),
+            TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
             function()
@@ -37,30 +37,16 @@ function ObjectDefsView:init()
     })
 
     self:MakePanel()
-    self.objectDefPanel:AddSelectListener(function(selected)
-        if #self.objectDefPanel:GetSelectedObjectDefs() > 0 then
-            self:EnterState()
+    self.objectDefPanel.OnSelectItem = {
+        function(item, selected)
+            if #self.objectDefPanel:GetSelectedObjectDefs() > 0 then
+                self:EnterState()
+            else
+                SB.stateManager:SetState(DefaultState())
+            end
         end
-    end)
-
-    self:MakeFilters()
-    local children = {
-        self.btnSet,
-        self.btnBrush,
-        ScrollPanel:New {
-            x = 1,
-			right = 1,
-			y = SB.conf.C_HEIGHT * 9,
-			height = "50%",
-            children = {
-                self.objectDefPanel.control
-            },
-        },
-        btnClose,
     }
-    for i = 1, #self.filters do
-        table.insert(children, self.filters[i])
-    end
+    self:MakeFilters()
 
     local teamIds = GetField(SB.model.teamManager:getAllTeams(), "id")
 	for i = 1, #teamIds do
@@ -115,6 +101,25 @@ function ObjectDefsView:init()
         decimals = 0,
     }))
 
+    local children = {
+        self.btnSet,
+        self.btnBrush,
+        ScrollPanel:New {
+            x = 0,
+            right = 0,
+            y = 150,
+            bottom = "35%", -- 100 - 65
+            borderColor = {0,0,0,0},
+            children = {
+                self.objectDefPanel.control
+            },
+        },
+        btnClose,
+    }
+    for i = 1, #self.filters do
+        table.insert(children, self.filters[i])
+    end
+
     table.insert(children,
 		ScrollPanel:New {
 			x = 0,
@@ -142,11 +147,27 @@ function ObjectDefsView:OnFieldChange(name, value)
     end
 end
 
+function ObjectDefsView:OnLeaveState(state)
+    for _, btn in pairs({self.btnBrush, self.btnSet}) do
+        btn:SetPressedState(false)
+    end
+end
+
+function ObjectDefsView:OnEnterState(state)
+    if state:is_A(AddObjectState) then
+        self.btnSet:SetPressedState(true)
+    elseif state:is_A(BrushObjectState) then
+        self.btnBrush:SetPressedState(true)
+    end
+end
+
 UnitDefsView = ObjectDefsView:extends{}
 function UnitDefsView:MakePanel()
     self.objectDefPanel = UnitDefsPanel({
-        width = "100%",
-        height = "100%"
+        ctrl = {
+            width = "100%",
+            height = "100%"
+        },
     })
 end
 function UnitDefsView:EnterState()
@@ -230,8 +251,10 @@ end
 FeatureDefsView = ObjectDefsView:extends{}
 function FeatureDefsView:MakePanel()
     self.objectDefPanel = FeatureDefsPanel({
-        width = "100%",
-        height = "100%"
+        ctrl = {
+            width = "100%",
+            height = "100%"
+        },
     })
 end
 function FeatureDefsView:EnterState()

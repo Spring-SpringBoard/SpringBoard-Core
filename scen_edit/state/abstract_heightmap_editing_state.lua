@@ -11,12 +11,12 @@ function AbstractHeightmapEditingState:init(editorView)
 end
 
 function AbstractHeightmapEditingState:leaveState()
-    self.editorView:StoppedEditing()
+    self:super("leaveState")
 end
 
 function AbstractHeightmapEditingState:enterState()
+    self:super("enterState")
     self.editorView:Set("size", self.size)
-    self.editorView:StartedEditing()
 end
 
 function AbstractHeightmapEditingState:KeyPress(key, mods, isRepeat, label, unicode)

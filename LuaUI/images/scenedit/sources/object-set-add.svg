@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 511.99999 511.99999"
+   id="svg3552"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="object-set-add.svg"
+   inkscape:export-filename="/home/gajop/games_spring/SB/SB-C.sdd/LuaUI/images/scenedit/modifications/object-set-add.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs3554" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.99574998"
+     inkscape:cx="8.3234498"
+     inkscape:cy="157.02902"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3557">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-540.36219)">
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1"
+       width="84.859909"
+       height="229.37032"
+       x="-699.96277"
+       y="279.70242"
+       transform="matrix(0,-1,1,0,0,0)" />
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1-2"
+       width="84.859909"
+       height="229.37032"
+       x="351.95764"
+       y="542.84766" />
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff"
+       d="m 154.93301,604.40237 0,0.23306 c -16.88684,36.01669 -42.012,67.45787 -72.423042,95.96338 l 35.164602,-3.67121 -47.866556,60.62631 23.129209,-7.37133 -31.346091,51.15741 15.41015,9.17617 -60.82954,85.91368 33.64969,0.17527 -48.1844537,77.93079 59.2558957,-7.57549 11.187042,29.91975 61.937054,-23.56924 -10.57548,73.06538 49.35164,0 -6.08948,-63.59555 35.60089,15.29456 9.49687,-23.10404 41.28298,19.54935 52.58469,-19.34426 -34.55304,-59.75185 -11.59444,-2.1274 6.32068,16.02543 7.3126,18.55651 -18.58727,-7.25293 -47.4573,-18.55931 0,33.329 -13.19698,-8.01179 -64.67509,-39.15464 -20.13201,19.81038 -16.808533,16.5475 2.009008,-23.51143 1.981039,-22.98471 16.955826,1.45431 8.59351,-8.47604 4.8384,-4.7489 5.79675,3.49595 57.21706,34.63881 0,-27.87998 11.88623,4.6333 40.75626,15.93408 -4.74704,-12.03166 -5.73988,-14.59536 15.41295,2.82473 42.3877,7.77965 -32.19072,-36.30195 -22.02448,13.08231 -6.23492,3.69918 -4.77779,-5.47605 -13.31258,-15.32345 0.20323,1.13455 -17.15906,3.00186 -5.56555,-31.98842 -5.36046,-30.8231 20.50958,23.62797 29.07512,33.44459 40.93245,-24.26655 c -22.99869,-18.21903 -36.83054,-31.57543 -46.29384,-45.50703 l 0.75792,11.7986 1.83654,28.89986 -17.47975,-23.07327 -32.13478,-42.3588 -20.74264,43.64158 -12.90612,27.15188 -3.58265,-29.86194 -3.26289,-26.88899 15.41202,-1.83467 15.49778,-32.60091 6.14728,-12.93502 8.65131,11.39214 23.30634,30.7047 -0.69919,-10.74888 -0.84462,-13.31258 12.55745,4.6016 21.23394,7.77873 -24.35512,-32.77431 -52.05983,-26.91882 -8.33249,18.8483 -9.00184,20.45085 -7.19699,-21.15097 -6.96207,-20.39304 15.82034,-5.38843 3.46612,-7.86635 3.72901,-8.50682 8.24485,4.28184 46.03002,23.80044 15.35142,-5.1852 C 185.4494,668.98982 165.6763,636.75623 154.93115,604.40051 Z"
+       id="path4" />
+  </g>
+</svg>

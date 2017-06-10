@@ -4,6 +4,20 @@ function AbstractEditingState:init(editorView)
 	self.editorView = editorView
 end
 
+function AbstractEditingState:enterState()
+	-- FIXME: self.editorView should always be available
+	if self.editorView then
+		self.editorView:_OnEnterState(self)
+	end
+end
+
+function AbstractEditingState:leaveState()
+	-- FIXME: self.editorView should always be available
+	if self.editorView then
+		self.editorView:_OnLeaveState(self)
+	end
+end
+
 function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     local _, _, button1, button2, button3 = Spring.GetMouseState()
     if button1 or button2 or button3 then

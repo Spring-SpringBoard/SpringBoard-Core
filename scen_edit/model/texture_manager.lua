@@ -16,24 +16,31 @@ function TextureManager:init()
     self.maxCache = 20
 
 	self.shadingTextures = {}
-	
-	self.shadingTextureNaming = {
-		{
-			name = "specular",
+	self.shadingTextureDefs = {
+		specular = {
 			engineName = "$ssmf_specular",
-		}, 
--- 		{
--- 			name = "detail",
--- 			engineName = "ground_detail",
--- 		}, 
-		{
-			name = "normal",
+		},
+		normal = {
 			engineName = "$ssmf_normals",
 		}
 	}
+    self.shadingTextureNames = {}
+    for name, texDef in pairs(self.shadingTextureDefs) do
+        texDef.name = name
+        table.insert(self.shadingTextureNames, name)
+    end
+
     SB.delayGL(function()
         self:generateMapTextures()
     end)
+end
+
+-- Texture def fields:
+-- name: string
+-- engineName: string
+-- enabled: bool
+function TextureManager:GetShadingTextureDefs()
+    return self.shadingTextureDefs
 end
 
 function TextureManager:createMapTexture(notFBO)
@@ -69,7 +76,7 @@ void main(void)
     vec2 diffTexCoords = diffuseTexCoords;
     vec4 diffuseCol = texture2D(diffuseTex, diffTexCoords);
     gl_FragColor = diffuseCol;
-} 
+}
 ]]
 	}, "TextureManager:SetupShader")
 	Spring.SetMapShader(shader, shader)
@@ -94,10 +101,12 @@ function TextureManager:generateMapTextures()
             Spring.SetMapSquareTexture(i, j, mapTexture)
         end
     end
-	
+
 	self.shadingTextures = {}
-	for _, texture in pairs(self.shadingTextureNaming) do
-		local name, engineName = texture.name, texture.engineName
+	for name, texDef in pairs(self.shadingTextureDefs) do
+        texDef.enabled = false
+
+		local engineName = texDef.engineName
 		Log.Notice("engine texture: " .. tostring(name))
 		local success = Spring.SetMapShadingTexture(engineName, "")
 		if not success then
@@ -109,41 +118,28 @@ function TextureManager:generateMapTextures()
 		if texInfo and texInfo.xsize > 0 then
 			sizeX, sizeZ = texInfo.xsize, texInfo.ysize
 		end
-		
+
 		if sizeX and sizeZ then
 			local texFormat
 			if name == "normal" then
 				GL_RG = 34836
 				texFormat = GL_RG
 			end
-			local tex
-			if name ~= "detail" then
-				tex = gl.CreateTexture(sizeX, sizeZ, {
-					border = false,
-					min_filter = GL.LINEAR,
-					mag_filter = GL.LINEAR,
-					wrap_s = GL.CLAMP_TO_EDGE,
-					wrap_t = GL.CLAMP_TO_EDGE,
-					fbo = true,
-					format = texFormat,
-				})
-			else
-				sizeX, sizeZ = math.floor(sizeX * 0.02), math.floor(sizeZ * 0.02)
-				sizeX, sizeZ = 128, 128
-				tex = gl.CreateTexture(sizeX, sizeZ, {
-					border = false,
-					min_filter = GL.LINEAR,
-					mag_filter = GL.LINEAR,
-					wrap_s = GL.REPEAT,
-					wrap_t = GL.REPEAT,
-					fbo = true,
-					format = texFormat,
-				})
-			end
+			local tex = gl.CreateTexture(sizeX, sizeZ, {
+				border = false,
+				min_filter = GL.LINEAR,
+				mag_filter = GL.LINEAR,
+				wrap_s = GL.CLAMP_TO_EDGE,
+				wrap_t = GL.CLAMP_TO_EDGE,
+				fbo = true,
+				format = texFormat,
+			})
 	-- 		local engineTex = gl.Texture()
 			self:Blit(engineName, tex)
 			self.shadingTextures[name] = tex
 			Spring.SetMapShadingTexture(engineName, tex)
+
+            texDef.enabled = true
 		end
 	end
 --  	self:SetupShader()
@@ -193,7 +189,7 @@ function TextureManager:getOldShadingTexture(name)
 			fbo = true,
 		})
 		self:Blit(texture, oldTexture)
-		
+
 		self.oldShadingTextures[name] = oldTexture
 	end
 	return self.oldShadingTextures[name]
@@ -225,17 +221,17 @@ function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     local textureSize = self.TEXTURE_SIZE
 
     local i1 = math.max(0, math.floor(startX / textureSize))
-    local i2 = math.min(math.floor(Game.mapSizeX / textureSize), 
+    local i2 = math.min(math.floor(Game.mapSizeX / textureSize),
                         math.floor(endX / textureSize))
     local j1 = math.max(0, math.floor(startZ / textureSize))
-    local j2 = math.min(math.floor(Game.mapSizeZ / textureSize), 
+    local j2 = math.min(math.floor(Game.mapSizeZ / textureSize),
                         math.floor(endZ / textureSize))
 
     for i = i1, i2 do
         for j = j1, j2 do
-            table.insert(textures, { 
+            table.insert(textures, {
                 self.mapFBOTextures[i][j], self:getOldMapTexture(i, j),
-                { startX - i * textureSize, startZ - j * textureSize } 
+                { startX - i * textureSize, startZ - j * textureSize }
             })
         end
     end
@@ -299,17 +295,17 @@ function TextureManager:PushStack()
 		stackItem[name] = texture
 		self.stackSize = self.stackSize + self:_CalculateTextureMemorySize(texture)
 	end
-	
+
 	for _, row in pairs(stackItem.diffuse) do
 		for _, textureObj in pairs(row) do
 			self.stackSize = self.stackSize + self:_CalculateTextureMemorySize(textureObj.texture)
 		end
 	end
-	
+
 	table.insert(self.stack, stackItem)
 	self.oldMapFBOTextures = {}
 	self.oldShadingTextures = {}
-	
+
 	self:PrintMemory()
 end
 
@@ -323,7 +319,7 @@ function TextureManager:RemoveStackItem(stackItem)
 			for i, v in pairs(oldTextures) do
 				for j, oldTextureObj in pairs(v) do
 					self.stackSize = self.stackSize - self:_CalculateTextureMemorySize(oldTextureObj.texture)
-					
+
 					gl.DeleteTexture(oldTextureObj.texture)
 				end
 			end
@@ -340,7 +336,7 @@ function TextureManager:RestoreStackItem(stackItem)
 			local oldTextures = value
 			for i, v in pairs(oldTextures) do
 				for j, oldTextureObj in pairs(v) do
-					
+
 					local mapTextureObj = self.mapFBOTextures[i][j]
 					local mapTexture = mapTextureObj.texture
 					self:Blit(oldTextureObj.texture, mapTexture)
@@ -356,7 +352,7 @@ end
 
 function TextureManager:RemoveFirst()
 	local stackItem = self.stack[1]
-	
+
 	self:RemoveStackItem(stackItem)
 
 	table.remove(self.stack, 1)
@@ -365,13 +361,13 @@ end
 
 function TextureManager:PopStack()
 	local stackItem = self.stack[#self.stack]
-	
+
 	self:RestoreStackItem(stackItem)
 	self:RemoveStackItem(stackItem)
 
 	self.oldMapFBOTextures = {}
 	self.oldShadingTextures = {}
-	
+
 	table.remove(self.stack, #self.stack)
 	self:PrintMemory()
 end

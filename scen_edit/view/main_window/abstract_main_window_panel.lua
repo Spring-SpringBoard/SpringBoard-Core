@@ -7,6 +7,29 @@ function TabbedPanelButton(tbl)
 		height = SB.conf.TOOLBOX_ITEM_HEIGHT,
 		caption = '',
 		padding = {0, 0, 0, 0},
+		SetPressedState = function(obj, pressed)
+			SB.delay(function()
+				for _, child in pairs(obj.children) do
+					if type(child) == "table" then
+						if child.classname == "image" then
+							if pressed then
+								child.color = {0, 1, 0, 1}
+							else
+								child.color = {1, 1, 1, 1}
+							end
+						elseif child.classname == "label" then
+							if pressed then
+								child.font.color = {0, 1, 0, 1}
+							else
+								child.font.color = {1, 1, 1, 1}
+							end
+						end
+					end
+				end
+				obj.state.pressed = pressed
+				obj:Invalidate()
+			end)
+		end
 	}, tbl))
 end
 

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 511.99999 511.99999"
+   id="svg3552"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="metal-add.svg"
+   inkscape:export-filename="/home/gajop/games_spring/SB/SB-C.sdd/LuaUI/images/scenedit/modifications/metal-add.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs3554" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.99574998"
+     inkscape:cx="62.680328"
+     inkscape:cy="305.6273"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1855"
+     inkscape:window-height="1056"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3557">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-540.36219)">
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1"
+       width="84.859909"
+       height="229.37032"
+       x="-699.96277"
+       y="279.70242"
+       transform="matrix(0,-1,1,0,0,0)" />
+    <rect
+       style="fill:#ffffff"
+       id="rect3591-1-2"
+       width="84.859909"
+       height="229.37032"
+       x="351.95764"
+       y="543.85193" />
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff"
+       d="m 173.08848,1047.4781 -18.93738,-116.5685 -11.65952,113.6501 -39.34331,-21.8621 43.58007,-150.18604 36.55555,59.85325 17.48128,81.59889 -27.67669,33.5135 z m -136.623301,-3.4491 -6.951618,-24.7601 -24.6915792,-8.0201 24.7466942,-6.957 8.018363,-24.69865 6.960508,24.75285 24.697802,8.0273 -24.752029,6.9516 -8.027252,24.7041 z M 90.638022,994.71333 64.885031,992.7203 7.8497582,899.03349 4.1623781,825.33034 73.912357,852.30119 119.33789,912.71982 104.76083,968.68124 48.663402,894.85719 90.6398,994.71333 Z m 129.487668,-25.56272 -15.12999,-1.89081 -7.56322,-38.77972 -12.69426,-23.80084 81.60062,-81.59973 27.69091,8.73397 -11.65863,65.57278 -62.24454,71.76346 z M 236.43621,931.90878 260.67798,903 l 8.87176,-36.37865 -22.38652,28.90878 -10.72701,36.37865 z m -111.04543,-34.14027 -34.248721,-45.88779 19.672551,-96.91818 68.49033,-84.49683 56.09742,75.76286 -5.82265,93.99352 -52.45893,53.90616 -33.51356,-51.00195 -18.21733,54.64221 z m 42.06529,-42.00306 24.16176,-84.09503 21.99094,-20.3197 -24.91737,3.42247 -9.89583,-38.47392 -5.82976,38.47392 -40.30961,4.90347 40.09892,14.37438 -5.29816,81.71263 z M 81.007096,838.22906 56.226622,798.87774 64.973927,715.8379 92.658614,771.20728 81.006208,838.22994 Z m 206.466624,-19.96591 -8.77398,-31.26894 -31.18183,-10.12785 31.24939,-8.78909 10.12785,-31.18094 8.7882,31.25561 31.18094,10.13585 -31.24939,8.77398 -10.14296,31.20227 z M 97.32651,731.19636 86.353264,692.09128 47.349529,679.42369 86.44216,668.43178 l 12.664925,-39.00374 10.993695,39.09263 38.99573,12.67915 -39.08552,10.97858 -12.685369,39.01796 z"
+       id="path4" />
+  </g>
+</svg>

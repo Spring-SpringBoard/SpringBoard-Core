@@ -3,8 +3,8 @@ SB.Include("scen_edit/model/texture_manager.lua")
 
 function TerrainChangeTextureState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
-    self.paintTexture   = self.editorView.fields["paintTexture"].value
     self.brushTexture   = self.editorView.fields["brushTexture"].value
+    self.patternTexture = self.editorView.fields["patternTexture"].value
     self.texScale       = self.editorView.fields["texScale"].value
     self.mode           = self.editorView.fields["mode"].value
     self.kernelMode     = self.editorView.fields["kernelMode"].value
@@ -17,20 +17,20 @@ function TerrainChangeTextureState:init(editorView)
 	self.diffuseEnabled = self.editorView.fields["diffuseEnabled"].value
 	self.specularEnabled= self.editorView.fields["specularEnabled"].value
 	self.normalEnabled  = self.editorView.fields["normalEnabled"].value
-	self.voidFactor     = self.editorView.fields["voidFactor"].value
+	-- self.voidFactor     = self.editorView.fields["voidFactor"].value
 
     self.updateDelay    = 0.2
     self.applyDelay     = 0.02
 end
 
 function TerrainChangeTextureState:Apply(x, z, voidFactor)
-    if not self.brushTexture.diffuse then
+    if not self.patternTexture then
         return
     end
     if not self.paintMode or self.paintMode == "" then
         return
     end
-    if self.paintMode == "paint" and not self.paintTexture.diffuse then
+    if self.paintMode == "paint" and not self.brushTexture.diffuse then
         return
     end
 	local opts = {
@@ -38,8 +38,8 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
 		z = z - self.size/2,
 		size = self.size,
 		rotation = self.rotation,
-		paintTexture = self.paintTexture,
-        brushTexture = self.brushTexture.diffuse, -- FIXME: shouldn't be called "diffuse"
+		brushTexture = self.brushTexture,
+        patternTexture = self.patternTexture,
 		texScale = self.texScale,
 		mode = self.mode,
         kernelMode = self.kernelMode,
@@ -52,7 +52,7 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
 		diffuseEnabled = self.diffuseEnabled,
 		specularEnabled = self.specularEnabled,
 		normalEnabled = self.normalEnabled,
-		voidFactor = voidFactor,
+		-- voidFactor = voidFactor,
         paintMode = self.paintMode,
 		textures = self.textures,
 	}
@@ -60,27 +60,23 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
 	SB.commandManager:execute(command)
 end
 
-function TerrainChangeTextureState:leaveState()
-    self.editorView:Select(0)
-end
-
 function TerrainChangeTextureState:DrawWorld()
-    if not self.brushTexture.diffuse then
+    if not self.patternTexture then
         return
     end
     x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         local x, z = coords[1], coords[3]
-        local shape = SB.model.textureManager:GetTexture(self.brushTexture.diffuse)
+        local shape = SB.model.textureManager:GetTexture(self.patternTexture)
         self:DrawShape(shape, x, z)
     end
 end
 
-function TerrainChangeTextureState:GetApplyParams(x, z, button)
-	local voidFactor = self.voidFactor
-	if button == 3 then
-		voidFactor = -1
-	end
-	return x, z, voidFactor
-end
+-- function TerrainChangeTextureState:GetApplyParams(x, z, button)
+-- 	local voidFactor = self.voidFactor
+-- 	if button == 3 then
+-- 		voidFactor = -1
+-- 	end
+-- 	return x, z, voidFactor
+-- end

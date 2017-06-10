@@ -120,8 +120,7 @@ function RuntimeView:UpdateStartStopButton()
         self.btnStartStop.tooltip = "Start scenario"
         self.btnStartStop:AddChild(
             Image:New {
-                tooltip = "Start scenario",
-                file = SB_IMG_DIR .. "media-playback-start.png",
+                file = SB_IMG_DIR .. "play-button.png",
                 height = SB.conf.B_HEIGHT - 2,
                 width = SB.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
@@ -131,7 +130,7 @@ function RuntimeView:UpdateStartStopButton()
         self.btnStartStop.tooltip = "Stop scenario"
         self.btnStartStop:AddChild(
             Image:New {
-                file = SB_IMG_DIR .. "media-playback-stop.png",
+                file = SB_IMG_DIR .. "stop-button.png",
                 height = SB.conf.B_HEIGHT - 2,
                 width = SB.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},

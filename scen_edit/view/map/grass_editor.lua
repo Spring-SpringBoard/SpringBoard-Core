@@ -8,10 +8,10 @@ function GrassEditorView:init()
     self.btnAddGrass = TabbedPanelButton({
         x = 0,
         y = 0,
-        tooltip = "Add grass",
+        tooltip = "Paint grass on the map",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
-            TabbedPanelLabel({ caption = "Add" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "grass-add.png" }),
+            TabbedPanelLabel({ caption = "Paint" }),
         },
         OnClick = {
             function()
@@ -45,5 +45,15 @@ function GrassEditorView:init()
 end
 
 function GrassEditorView:IsValidTest(state)
-    return state:is_A(TerrainChangeTextureState)
+    return state:is_A(GrassEditingState)
+end
+
+function GrassEditorView:OnLeaveState(state)
+    for _, btn in pairs({self.btnAddGrass}) do
+        btn:SetPressedState(false)
+    end
+end
+
+function GrassEditorView:OnEnterState(state)
+    self.btnAddGrass:SetPressedState(true)
 end

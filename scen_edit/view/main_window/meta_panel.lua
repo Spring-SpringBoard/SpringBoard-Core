@@ -5,25 +5,42 @@ function MetaPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Add a rectangle area",
         OnClick = {
-            function()
-                SB.stateManager:SetState(AddRectState())
+            function(obj)
+                obj:SetPressedState(true)
+                if SB.areasWindow == nil then
+                    SB.areasWindow = AreasWindow()
+                    SB.areasWindow.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
+                end
+                if SB.areasWindow.window.hidden then
+                    SB.view:SetMainPanel(SB.areasWindow.window)
+                end
             end
         },
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "view-fullscreen.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "bolivia.png" }),
             TabbedPanelLabel({ caption = "Area" }),
         },
     }))
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Trigger settings",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "applications-system.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "cog.png" }),
             TabbedPanelLabel({ caption = "Triggers" }),
         },
         OnClick = {
-            function ()
+            function(obj)
+                obj:SetPressedState(true)
                 if SB.triggersWindow == nil then
                     SB.triggersWindow = TriggersWindow()
+                    SB.triggersWindow.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
                 end
                 if SB.triggersWindow.window.hidden then
                     SB.view:SetMainPanel(SB.triggersWindow.window)
@@ -34,13 +51,19 @@ function MetaPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Variable settings",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "format-text-bold.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "omega.png" }),
             TabbedPanelLabel({ caption = "Variables" }),
         },
         OnClick = {
-            function()
+            function(obj)
+                obj:SetPressedState(true)
                 if SB.variablesWindow == nil then
                     SB.variablesWindow = VariablesWindow()
+                    SB.variablesWindow.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
                 end
                 if SB.variablesWindow.window.hidden then
                     SB.view:SetMainPanel(SB.variablesWindow.window)

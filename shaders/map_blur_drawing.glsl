@@ -1,5 +1,5 @@
 uniform sampler2D mapTex;
-uniform sampler2D brushTex;
+uniform sampler2D patternTexture;
 
 uniform mat3 kernel;
 uniform float blendFactor;
@@ -7,7 +7,7 @@ uniform float blendFactor;
 void main(void)
 {
 	vec4 mapColor   = texture2D(mapTex, gl_TexCoord[0].st);
-	vec4 brushColor = texture2D(brushTex, gl_TexCoord[1].st);
+	vec4 patternColor = texture2D(patternTexture, gl_TexCoord[1].st);
 
 	vec4 color = mapColor;
 
@@ -32,5 +32,5 @@ void main(void)
     weightColor /= totalWeight;
 */
 
-	gl_FragColor = mix(weightColor, mapColor, 1.0 - brushColor.a * blendFactor);
+	gl_FragColor = mix(weightColor, mapColor, 1.0 - patternColor.a * blendFactor);
 }

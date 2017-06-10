@@ -33,9 +33,22 @@ skin.icons = {
   imageplaceholder = ":cl:placeholder.png",
 }
 
+local buttonPressedColor = {4, 4, 4, 4}
+function DrawMyButton(obj, ...)
+    if obj.state and obj.state.pressed then
+        local oldColor = obj.backgroundColor
+        obj.backgroundColor = buttonPressedColor
+        DrawButton(obj, ...)
+        obj.backgroundColor = oldColor
+    else
+        DrawButton(obj, ...)
+    end
+
+end
+
 skin.button = {
-  TileImageBK = ":cl:tech_button_small_bk.png",
-  TileImageFG = ":cl:tech_button_small_fg.png",
+  TileImageBK = ":cl:tech_button_bright_small_bk.png",
+  TileImageFG = ":cl:tech_button_bright_small_fg.png",
   tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
   padding = {10, 10, 10, 10},
 
@@ -43,7 +56,7 @@ skin.button = {
   focusColor  = {0.94, 0.50, 0.23, 0.7},
   borderColor = {1,1,1,0},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.button_large = {
@@ -56,7 +69,7 @@ skin.button_large = {
   focusColor  = {0.94, 0.50, 0.23, 0.7},
   borderColor = {1,1,1,0},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.button_highlight = {
@@ -69,7 +82,7 @@ skin.button_highlight = {
   focusColor  = {0.3, 0.375, 0.525, 0.5},
   borderColor = {1,1,1,0},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.button_square = {
@@ -82,7 +95,7 @@ skin.button_square = {
   focusColor  = {0.94, 0.50, 0.23, 0.4},
   borderColor = {1,1,1,0},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.button_planet = {
@@ -90,12 +103,12 @@ skin.button_planet = {
   TileImageFG = ":cl:tech_button_circle_fg.png",
   tiles = {32, 32, 32, 32}, --// tile widths: left,top,right,bottom
   padding = {0, 0, 0, 0},
-  
+
   backgroundColor = {0, 0, 0, 0},
   focusColor  = {0.94, 0.50, 0.23, 0.4},
   borderColor = {1,1,1,0},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.action_button = {
@@ -108,7 +121,7 @@ skin.action_button = {
   focusColor  = {0.98, 0.48, 0.26, 0.9},
   borderColor = {0.98, 0.48, 0.26, 0.15},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.option_button = {
@@ -116,12 +129,12 @@ skin.option_button = {
   TileImageFG = ":cl:tech_button_bright_small_fg.png",
   tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
   padding = {10, 10, 10, 10},
-  
+
   backgroundColor = {0.21, 0.53, 0.60, 0.65},
   focusColor  = {0.21, 0.53, 0.60, 0.9},
   borderColor = {0.21, 0.53, 0.60, 0.15},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.negative_button = {
@@ -129,12 +142,12 @@ skin.negative_button = {
   TileImageFG = ":cl:tech_button_bright_small_fg.png",
   tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
   padding = {10, 10, 10, 10},
-  
+
   backgroundColor = {0.85, 0.05, 0.25, 0.65},
   focusColor  = {0.85, 0.05, 0.25, 0.9},
   borderColor = {0.85, 0.05, 0.25, 0.15},
 
-  DrawControl = DrawButton,
+  DrawControl = DrawMyButton,
 }
 
 skin.combobox = {
@@ -183,10 +196,10 @@ skin.checkbox = {
 
 skin.editbox = {
   hintFont = table.merge({color = {1,1,1,0.7}}, skin.general.font),
-  
+
   backgroundColor = {0.1, 0.1, 0.1, 0},
   cursorColor     = {1.0, 0.7, 0.1, 0.8},
-  
+
   focusColor  = {1, 1, 1, 1},
   borderColor = {1, 1, 1, 0.6},
 
@@ -203,7 +216,7 @@ skin.textbox = {
 
   TileImageBK = ":cl:panel2_bg.png",
   bkgndtiles = {14,14,14,14},
-  
+
   TileImageFG = ":cl:panel2_border.png",
   tiles       = {2, 2, 2, 2},
 

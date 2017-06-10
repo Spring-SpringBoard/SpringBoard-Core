@@ -5,37 +5,41 @@ VariablesWindow = EditorView:extends{}
 function VariablesWindow:init()
     self:super("init")
 
-    local btnAddVariable = Button:New {
-        caption='+ Variable',
-        width='40%',
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_ADD_COLOR,
-        OnClick={
+    self.btnAddVariable = TabbedPanelButton({
+        x = 0,
+        y = 0,
+        tooltip = "Add variable",
+        children = {
+            TabbedPanelImage({ file = SB_IMG_DIR .. "variable-add.png" }),
+            TabbedPanelLabel({ caption = "Add" }),
+        },
+        OnClick = {
             function()
                 self:AddVariable()
-            end}
-    }
+                self.btnAddVariable:SetPressedState(true)
+            end
+        },
+    })
+
     self.variablesPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
-        x = 1,
-        y = 1,
-        right = 1,
+        width = "100%",
         autosize = true,
         resizeItems = false,
     }
     local children = {
         ScrollPanel:New {
-            x = 1,
-            y = 15,
-            right = 5,
-            bottom = SB.conf.C_HEIGHT * 2,
+            x = 0,
+            y = 80,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
             children = {
                 self.variablesPanel
             },
         },
-        btnAddVariable,
+        self.btnAddVariable,
     }
 
     self:Populate()
@@ -49,7 +53,7 @@ function VariablesWindow:AddVariable()
     local variable = {
         type = "number",
         value = {},
-        name = "new variable",
+        name = "New variable",
     }
     success, msg = pcall(
         function()
@@ -92,19 +96,18 @@ function VariablesWindow:Populate()
         }
         local btnRemoveVariable = Button:New {
             caption = "",
-            right = 1,
+            right = 0,
             width = SB.conf.B_HEIGHT,
             height = SB.conf.B_HEIGHT,
             parent = variableStackPanel,
-            padding = {0, 0, 0, 0},
+            padding = {2, 2, 2, 2},
+            tooltip = "Remove variable",
+            classname = "negative_button",
             children = {
                 Image:New {
-                    tooltip = "Remove variable",
-                    file=SB_IMG_DIR .. "list-remove.png",
-                    height = SB.conf.B_HEIGHT,
-                    width = SB.conf.B_HEIGHT,
-                    padding = {0, 0, 0, 0},
-                    margin = {0, 0, 0, 0},
+                    file = SB_IMG_DIR .. "cancel.png",
+                    height = "100%",
+                    width = "100%",
                 },
             },
             OnClick = {function() self:MakeRemoveVariableWindow(variable.id) end},
@@ -142,6 +145,7 @@ function VariablesWindow:MakeVariableWindow(variable, edit)
     SB.SetControlEnabled(sw, false)
     table.insert(nw.OnDispose,
         function()
+            self.btnAddVariable:SetPressedState(false)
             SB.SetControlEnabled(sw, true)
         end
     )

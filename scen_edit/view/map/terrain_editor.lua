@@ -6,210 +6,87 @@ TerrainEditorView = EditorView:extends{}
 
 function TerrainEditorView:init()
     self:super("init")
-    self:AddField(Field({
-        name = "paintTexture",
+    self:AddField(TextureField({
+        name = "brushTexture",
+        title = "Texture:",
         value = {},
+        rootDir = "brush_textures/",
+        width = 200,
     }))
     self:AddField(Field({
-        name = "brushTexture",
-        value = {},
+        name = "patternTexture",
+        Update = function(...)
+            local path = self.fields["patternTexture"].value
+            local item = self.patternTextureImages:GetSelectedItems()[1]
+            if not item or path ~= item then
+                if path then
+                    self.patternTextureImages:SelectAsset(path)
+                else
+                    self.patternTextureImages:DeselectAll()
+                end
+            end
+        end
     }))
 
-    local btnSave = Button:New {
-        caption = "Save",
-        tooltip = "Save current brush settings",
-        x = 0,
-        y = 0,
-        width = 100,
-        height = 50,
-        OnClick = {
-            function()
-                local tbl = self:Serialize()
-                if not tbl.paintTexture.diffuse then
-                    return
-                end
-                local diffuse = tbl.paintTexture.diffuse
-                local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
-                if self.selectedSaveBrushIndx then
-                    Spring.Echo("UPDATE BRUSH")
-                else
-                    self.savedBrushes:AddBrush("Saved", texturePath, "Bla", tbl)
+    self.savedBrushes = SavedBrushes({
+        ctrl = {
+            width = "100%",
+            height = "100%",
+            iconX = 64,
+            iconY = 64,
+            -- FIXME: Shouldn't need to set minWidth
+            minWidth = 400,
+        },
+        editor = self,
+        GetNewBrush = function()
+            local tbl = self:Serialize()
+
+            local diffuse = tbl.brushTexture.diffuse
+            local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
+
+            -- invoke the UI dialog to pick the paint texture
+            CallListeners(self.fields["brushTexture"].button.OnClick)
+
+            return {
+                opts = tbl,
+                caption = nil,
+                image = texturePath,
+                tooltip = nil,
+            }
+        end,
+    })
+
+    self.patternTextureImages = AssetView({
+        ctrl = {
+            width = "100%",
+            height = "100%",
+            multiSelect = false,
+            iconX = 65,
+            iconY = 65,
+        },
+        rootDir = "brush_patterns/terrain/",
+        OnSelectItem = {
+            function(item, selected)
+                self:Set("patternTexture", nil)
+                if selected then
+                    self:Set("patternTexture", item.path)
                 end
             end
         },
-    }
-
-    self.savedBrushes = SavedBrushes({
-        width = "100%",
-        height = "100%",
-        iconX = 32,
-        iconY = 32,
-        -- FIXME: minWidth shouldn't need setting, but it does for some reason
-        minWidth = 400,
     })
 
-    self.savedBrushes.control.OnSelectItem = {
-        function(obj, itemIdx, selected)
-            if selected then
-                if itemIdx > 0 then
-                    local item = self.savedBrushes.control.children[itemIdx]
-                    if item then
-                        self.selectedSaveBrushIndx = itemIdx
-                        self:Load(item.opts)
-                        self.brushTextureImages.control:DeselectAll()
-                        self.textureBrowser.control:DeselectAll()
-                    end
-                end
-            else
-                self.selectedSaveBrushIndx = nil
-            end
-        end
-    }
-
-    self.textureBrowser = TextureBrowser({
-		rootDir = "brush_textures/",
-        width = "100%",
-        height = "100%",
-        iconX = 64,
-        iconY = 64,
-    })
-
-    self.textureBrowser.control.OnSelectItem = {
-        function(obj, itemIdx, selected)
-            if selected and itemIdx > 0 then
-                local item = self.textureBrowser.control.children[itemIdx]
-                self:Set("paintTexture", {})
-				--for k, v in pairs(self.paintTexture) do
-				--	self.paintTexture[k] = nil
-				--end
-				if item.texture ~= nil then
-                    self.savedBrushes.control:DeselectAll()
-                    self:Set("paintTexture", item.texture)
-					--for k, v in pairs(item.texture) do
-					--	self.paintTexture[k] = v
-					--end
-					SB.commandManager:execute(CacheTextureCommand(self.fields["paintTexture"].value))
-
-					local currentState = SB.stateManager:GetCurrentState()
-					if currentState.smartPaint then
-						table.insert(currentState.textures, {
-							texture = SB.deepcopy(self.fields["paintTexture"].value),
-							minHeight = 160, -- math.random(100),
-							--minSlope = math.random(),
-							minSlope = #currentState.textures* 0.7 + 0,
-						})
-					end
-				end
-            end
-            -- FIXME: disallow deselection
--- 			if not selected then
--- 				local currentState = SB.stateManager:GetCurrentState()
--- 				SB.stateManager:SetState(DefaultState())
--- 			end
-        end
-    }
-
-    self.brushTextureImages = TextureBrowser({
-        rootDir = "brush_patterns/terrain/",
-        width = "100%",
-        height = "100%",
-        multiSelect = false,
-        iconX = 48,
-        iconY = 48,
-    })
-
-    self.brushTextureImages.control.OnSelectItem = {
-        function(obj, itemIdx, selected)
-            if selected and itemIdx > 0 then
-                local item = self.brushTextureImages.control.children[itemIdx]
-                self:Set("brushTexture", {})
-				if item.texture ~= nil then
-                    self:Set("brushTexture", item.texture)
-					SB.commandManager:execute(CacheTextureCommand(self.fields["brushTexture"].value))
-
-					local currentState = SB.stateManager:GetCurrentState()
--- 					if currentState.smartPaint then
--- 						table.insert(currentState.textures, {
--- 							texture = SB.deepcopy(self.brushTexture),
--- 							minHeight = 160, -- math.random(100),
--- 							--minSlope = math.random(),
--- 							minSlope = #currentState.textures* 0.7 + 0,
--- 						})
--- 					end
-				end
-            end
-            -- FIXME: disallow deselection
--- 			if not selected then
--- 				local currentState = SB.stateManager:GetCurrentState()
--- 				SB.stateManager:SetState(DefaultState())
--- 			end
-        end
-    }
---     self.detailTextureImages.OnSelectItem = {
---         function(obj, itemIdx, selected)
---             -- FIXME: shouldn't be using ._dirsNum probably
---             if selected and itemIdx > 0 and itemIdx > obj._dirsNum + 1 then
---                 local item = self.detailTextureImages.items[itemIdx]
---                 self.paintTexture.detail = item
---                 SB.commandManager:execute(CacheTextureCommand(self.paintTexture))
---                 local currentState = SB.stateManager:GetCurrentState()
---                 if currentState:is_A(TerrainChangeTextureState) then
---                     currentState.paintTexture = self.paintTexture
---                 end
---             end
---         end
---     }
---     self.detailTextureImages:Select("detailtex2.bmp")
-
---     self.tabPanel = Chili.TabPanel:New {
---         x = 0,
---         right = 0,
---         y = 70,
---         height = "40%",
---         padding = {0, 0, 0, 0},
---         tabs = { {
---                 name = "Brush",
---                 children = {
---                     ScrollPanel:New {
---                         x = 1,
---                         right = 1,
---                         y = 0,
---                         bottom = 0,
---                         children = {
---                             self.textureBrowser.control,
---                         }
---                     },
---                 },
---             }, {
---                 name = "Detail",
---                 children = {
---                     ScrollPanel:New {
---                         x = 1,
---                         right = 1,
---                         y = 0,
---                         bottom = 0,
---                         children = {
---                             self.detailTextureImages
---                         },
---                     },
---                 },
---             }
---         },
---     }
-
-	self.btnPaint = TabbedPanelButton({
+    self.btnPaint = TabbedPanelButton({
         x = 0,
         y = 0,
         tooltip = "Paint the terrain",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "large-paint-brush.png" }),
             TabbedPanelLabel({ caption = "Paint" }),
         },
         OnClick = {
             function()
-				local state = self:EnterState()
-                state.paintMode = "paint"
-				self:SetInvisibleFields("voidFactor", "kernelMode")
+                self:_EnterState("paint")
+                self:SetInvisibleFields("kernelMode")
             end
         },
     })
@@ -218,14 +95,13 @@ function TerrainEditorView:init()
         y = 0,
         tooltip = "Apply a filter",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "filter-brush.png" }),
             TabbedPanelLabel({ caption = "Filter" }),
         },
         OnClick = {
             function()
-				local state = self:EnterState()
-                state.paintMode = "blur"
-				self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation")
+                self:_EnterState("blur")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation")
             end
         },
     })
@@ -234,32 +110,13 @@ function TerrainEditorView:init()
         y = 0,
         tooltip = "Make the terrain transparent",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "large-paint-brush.png" }),
             TabbedPanelLabel({ caption = "Void" }),
         },
         OnClick = {
             function()
-                local state = self:EnterState()
-                state.paintMode = "void"
+                self:_EnterState("void")
                 self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode")
-            end
-        },
-    })
-	-- FIXME: Need to check if HeightMapTexture = 1
-	self.btnSmartPaint = TabbedPanelButton({
-        x = 210,
-        y = 0,
-        tooltip = "Smart paint the terrain",
-        children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
-            TabbedPanelLabel({ caption = "Smart paint" }),
-        },
-        OnClick = {
-            function()
-				local state = self:EnterState()
-                state.paintMode = "smartPaint"
-				self:SetInvisibleFields("kernelMode")
-				state.textures = {}
             end
         },
     })
@@ -308,7 +165,8 @@ function TerrainEditorView:init()
             caption = "Texture",
         },
         Line:New {
-            x = 50,
+            x = 55,
+            y = 4,
             width = self.VALUE_POS,
         }
     })
@@ -371,6 +229,7 @@ function TerrainEditorView:init()
         },
         Line:New {
             x = 50,
+            y = 4,
             width = self.VALUE_POS,
         }
     })
@@ -392,20 +251,13 @@ function TerrainEditorView:init()
             tooltip = "Texture offset Y",
         })
     }))
---     self:AddField(NumericField({
---         name = "detailTexScale",
---         value = 0.2,
---         minValue = 0.01,
---         maxValue = 1,
---         title = "Detail texture scale:",
---         tooltip = "Detail texture sampling rate (larger number means higher frequency)",
---     })
     self:AddControl("blending-sep", {
         Label:New {
             caption = "Blending",
         },
         Line:New {
             x = 50,
+            y = 4,
             width = self.VALUE_POS,
         }
     })
@@ -439,14 +291,14 @@ function TerrainEditorView:init()
         })
     }))
 
-	self:AddField(NumericField({
-        name = "voidFactor",
-        value = 0,
-        minValue = 0.0,
-        maxValue = 1,
-        title = "Transparency:",
-        tooltip = "The greater the value, the more transparent it will be.",
-    }))
+    -- self:AddField(NumericField({
+    --     name = "voidFactor",
+    --     value = 0,
+    --     minValue = 0.0,
+    --     maxValue = 1,
+    --     title = "Transparency:",
+    --     tooltip = "The greater the value, the more transparent it will be.",
+    -- }))
 
     self:AddField(ColorField({
         name = "diffuseColor",
@@ -459,70 +311,84 @@ function TerrainEditorView:init()
     self:Update("diffuseColor")
 
 
-	local children = {
-		self.btnPaint,
+    local children = {
+        self.btnPaint,
         self.btnBlur,
-		--self.btnVoid,
-		--self.btnSmartPaint,
+        --self.btnVoid,
         ScrollPanel:New {
-			x = 0,
-			right = 0,
-			y = 70,
-			bottom = "83%", -- 100 - 17
-			padding = {0, 0, 0, 0},
-			children = {
-				self.savedBrushes.control,
-			}
-		},
-		ScrollPanel:New {
-			x = 0,
-			right = 0,
-			y = "17%",
-			bottom = "62%", -- 100 - 38
-			padding = {0, 0, 0, 0},
-			children = {
-				self.textureBrowser.control,
-			}
-		},
+            x = 0,
+            right = 0,
+            y = 70,
+            bottom = "70%", -- 100 - 30
+            padding = {0, 0, 0, 0},
+            borderColor = {0,0,0,0},
+            children = {
+                self.patternTextureImages.control,
+            }
+        },
         ScrollPanel:New {
-			x = 0,
-			right = 0,
-			y = "38%",
+            x = 0,
+            right = 0,
+            y = "30%",
             bottom = "45%", -- 100 - 55
-			padding = {0, 0, 0, 0},
-			children = {
-				self.brushTextureImages.control,
-			}
-		},
-		ScrollPanel:New {
-			x = 0,
-			y = "55%",
-			bottom = 30,
-			right = 0,
-			borderColor = {0,0,0,0},
-			horizontalScrollbar = false,
-			children = {
-                btnSave,
+            padding = {0, 0, 0, 0},
+            borderColor = {0,0,0,0},
+            children = {
+                self.savedBrushes.control,
+            }
+        },
+        ScrollPanel:New {
+            x = 0,
+            y = "55%",
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = {
                 self.stackPanel
             },
-		},
-	}
-	self:Finalize(children)
+        },
+    }
+    self:Finalize(children)
 end
 
-function TerrainEditorView:EnterState()
-	local currentState = SB.stateManager:GetCurrentState()
-	if not currentState:is_A(TerrainChangeTextureState) then
-		currentState = TerrainChangeTextureState(self)
-		SB.stateManager:SetState(currentState)
-	end
-	return currentState
+function TerrainEditorView:OnFieldChange(name, value)
+    local brush = self.savedBrushes:GetSelectedBrush()
+    if brush then
+        self.savedBrushes:UpdateBrush(brush.brushID, name, value)
+        if name == "brushTexture" then
+            SB.commandManager:execute(CacheTextureCommand(value))
+
+            local diffuse = value.diffuse
+            local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
+
+            self.savedBrushes:UpdateBrushImage(brush.brushID, texturePath)
+        end
+    end
 end
 
-function TerrainEditorView:Select(indx)
-    self.textureBrowser:Select(indx)
+function TerrainEditorView:_EnterState(paintMode)
+    local state = TerrainChangeTextureState(self)
+    state.paintMode = paintMode
+    SB.stateManager:SetState(state)
 end
 
 function TerrainEditorView:IsValidTest(state)
     return state:is_A(TerrainChangeTextureState)
+end
+
+function TerrainEditorView:OnLeaveState(state)
+    for _, btn in pairs({self.btnPaint, self.btnBlur, self.btnVoid}) do
+        btn:SetPressedState(false)
+    end
+end
+
+function TerrainEditorView:OnEnterState(state)
+    if state.paintMode == "paint" then
+        self.btnPaint:SetPressedState(true)
+    elseif state.paintMode == "blur" then
+        self.btnBlur:SetPressedState(true)
+    elseif state.paintMode == "void" then
+        self.btnVoid:SetPressedState(true)
+    end
 end

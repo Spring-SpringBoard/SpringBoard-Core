@@ -5,13 +5,19 @@ function TerrainPanel:init()
     local btnModifyHeightMap = TabbedPanelButton({
         tooltip = "Modify heightmap",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "peaks.png" }),
             TabbedPanelLabel({ caption = "Terrain" }),
         },
         OnClick = {
-            function()
+            function(obj)
+                obj:SetPressedState(true)
                 if SB.heightmapEditorView == nil then
                     SB.heightmapEditorView = HeightmapEditorView()
+                    SB.heightmapEditorView.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
                 end
                 if SB.heightmapEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.heightmapEditorView.window)
@@ -24,13 +30,19 @@ function TerrainPanel:init()
     local btnModifyTextureMap = TabbedPanelButton({
         tooltip = "Change texture",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "palette.png" }),
             TabbedPanelLabel({ caption = "Texture" }),
         },
         OnClick = {
-            function()
+            function(obj)
+                obj:SetPressedState(true)
                 if SB.terrainEditorView == nil then
                     SB.terrainEditorView = TerrainEditorView()
+                    SB.terrainEditorView.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
                 end
                 if SB.terrainEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.terrainEditorView.window)
@@ -43,13 +55,19 @@ function TerrainPanel:init()
     local btnModifyGrass = TabbedPanelButton({
         tooltip = "Change grass map",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "grass.png" }),
             TabbedPanelLabel({ caption = "Grass" }),
         },
         OnClick = {
-            function()
+            function(obj)
+                obj:SetPressedState(true)
                 if SB.grassEditorView == nil then
                     SB.grassEditorView = GrassEditorView()
+                    SB.grassEditorView.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
                 end
                 if SB.grassEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.grassEditorView.window)
@@ -62,13 +80,19 @@ function TerrainPanel:init()
     local btnModifyMetal = TabbedPanelButton({
         tooltip = "Change metal map",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "minerals.png" }),
             TabbedPanelLabel({ caption = "Metal" }),
         },
         OnClick = {
-            function()
+            function(obj)
+                obj:SetPressedState(true)
                 if SB.metalEditorView == nil then
                     SB.metalEditorView = MetalEditorView()
+                    SB.metalEditorView.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
                 end
                 if SB.metalEditorView.window.hidden then
 					SB.view:SetMainPanel(SB.metalEditorView.window)
@@ -81,13 +105,19 @@ function TerrainPanel:init()
 	local btnTerrainSettings = TabbedPanelButton({
         tooltip = "Change map settings",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_texture.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "globe.png" }),
             TabbedPanelLabel({ caption = "Settings" }),
         },
         OnClick = {
-            function()
+            function(obj)
+                obj:SetPressedState(true)
                 if SB.terrainSettingsView == nil then
                     SB.terrainSettingsView = TerrainSettingsView()
+                    SB.terrainSettingsView.window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
                 end
                 if SB.terrainSettingsView.window.hidden then
 					SB.view:SetMainPanel(SB.terrainSettingsView.window)

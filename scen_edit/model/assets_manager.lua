@@ -29,6 +29,9 @@ end
 function AssetsManager:ToAssetPath(rootDir, springPath)
     local path = springPath:sub(#SB_ASSETS_DIR + 1)
     local fsplit = path:find("/")
+    if not fsplit then
+        return ""
+    end
     local assetFolderName = path:sub(1, fsplit)
     path = assetFolderName .. path:sub(fsplit + 1):sub(#rootDir + 1)
     return path

@@ -5,18 +5,16 @@ HeightmapEditorView = EditorView:extends{}
 function HeightmapEditorView:init()
     self:super("init")
 
-    self.heightmapBrushes = TextureBrowser({
-		rootDir = "brush_patterns/terrain/",
-        width = "100%",
-        height = "100%",
-    })
-    -- FIXME: implement a button for entering the mode instead of image selection
-    self.heightmapBrushes.control.OnSelectItem = {
-        function(obj, itemIdx, selected)
-            if selected and itemIdx > 0 then
-                local item = self.heightmapBrushes.control.children[itemIdx]
-                if item.texture ~= nil then
-                    self.paintTexture = item.texture.diffuse
+    self.heightmapBrushes = AssetView({
+        ctrl = {
+            width = "100%",
+            height = "100%",
+        },
+        rootDir = "brush_patterns/terrain/",
+        OnSelectItem = {
+            function(item, selected)
+                self.paintTexture = item.path
+                if selected and item.path then
                     SB.model.terrainManager:generateShape(self.paintTexture)
                     local currentState = SB.stateManager:GetCurrentState()
                     if currentState:is_A(AbstractHeightmapEditingState) then
@@ -24,15 +22,15 @@ function HeightmapEditorView:init()
                     end
                 end
             end
-        end
-    }
+        }
+    })
 
     self.btnAddState = TabbedPanelButton({
         x = 0,
         y = 0,
         tooltip = "Increase or decrease (1)",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "up-card.png" }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -45,9 +43,9 @@ function HeightmapEditorView:init()
     self.btnSetState = TabbedPanelButton({
         x = 70,
         y = 0,
-        tooltip = "Set the terrain (4)",
+        tooltip = "Set the terrain (2)",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-set.png" }),
             TabbedPanelLabel({ caption = "Set" }),
         },
         OnClick = {
@@ -60,9 +58,9 @@ function HeightmapEditorView:init()
     self.btnSmoothState = TabbedPanelButton({
         x = 140,
         y = 0,
-        tooltip = "Smooth the terrain (2)",
+        tooltip = "Smooth the terrain (3)",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-smooth.png" }),
             TabbedPanelLabel({ caption = "Smooth" }),
         },
         OnClick = {
@@ -71,35 +69,6 @@ function HeightmapEditorView:init()
             end
         },
     })
-
---     self.btnChangeHeightRectState = TabbedPanelButton({
---         x = 220,
---         y = 10,
---         tooltip = "Square add the terrain (4)",
---         children = {
---             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
---             TabbedPanelLabel({ caption = "Square" }),
---         },
---         OnClick = {
---             function()
---                 SB.stateManager:SetState(TerrainChangeHeightRectState(self))
---             end
---         },
---     })
---     self.btnAddShapeState = TabbedPanelButton({
---         x = 290,
---         y = 10,
---         tooltip = "Modify the terrain by choosing one of the special shapes below (5)",
---         children = {
---             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
---             TabbedPanelLabel({ caption = "Shape" }),
---         },
---         OnClick = {
---             function()
---                 SB.stateManager:SetState(TerrainShapeModifyState(self))
---             end
---         },
---     })
 
     self:AddField(NumericField({
         name = "size",
@@ -141,7 +110,8 @@ function HeightmapEditorView:init()
 			x = 0,
 			right = 0,
 			y = 70,
-			height = "35%",
+            bottom = "55%", -- 100 - 45
+            borderColor = {0,0,0,0},
 			children = {
 				self.heightmapBrushes.control,
 			}
@@ -158,44 +128,24 @@ function HeightmapEditorView:init()
 	}
 
 	self:Finalize(children)
--- 	self.heightmapBrushes:Select("circle.png")
 end
 
-function HeightmapEditorView:StoppedEditing()
-    self.btnAddState.state.pressed = false
-    self.btnAddState:Invalidate()
-
-    self.btnSmoothState.state.pressed = false
-    self.btnSmoothState:Invalidate()
-
-    self.btnSetState.state.pressed = false
-    self.btnSetState:Invalidate()
-
---     self.btnChangeHeightRectState.state.pressed = false
---     self.btnChangeHeightRectState:Invalidate()
---
---     self.btnAddShapeState.state.pressed = false
---     self.btnAddShapeState:Invalidate()
+function HeightmapEditorView:OnLeaveState(state)
+    for _, btn in pairs({self.btnAddState, self.btnSmoothState, self.btnSetState}) do
+        btn:SetPressedState(false)
+    end
 end
 
-function HeightmapEditorView:StartedEditing()
-    SB.delay(function()
-        local currentState = SB.stateManager:GetCurrentState()
-        local btn
-        if currentState:is_A(TerrainShapeModifyState) then
-            btn = self.btnAddState
---         elseif currentState:is_A(TerrainChangeHeightRectState) then
---             btn = self.btnChangeHeightRectState
-        elseif currentState:is_A(TerrainSetState) then
-            btn = self.btnSetState
-        elseif currentState:is_A(TerrainSmoothState) then
-            btn = self.btnSmoothState
---         elseif currentState:is_A(TerrainShapeModifyState) then
---             btn = self.btnAddShapeState
-        end
-        btn.state.pressed = true
-        btn:Invalidate()
-    end)
+function HeightmapEditorView:OnEnterState(state)
+    local btn
+    if state:is_A(TerrainShapeModifyState) then
+        btn = self.btnAddState
+    elseif state:is_A(TerrainSetState) then
+        btn = self.btnSetState
+    elseif state:is_A(TerrainSmoothState) then
+        btn = self.btnSmoothState
+    end
+    btn:SetPressedState(true)
 end
 
 function HeightmapEditorView:Select(indx)

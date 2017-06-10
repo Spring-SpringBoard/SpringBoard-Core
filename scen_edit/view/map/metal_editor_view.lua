@@ -10,7 +10,7 @@ function MetalEditorView:init()
         y = 0,
         tooltip = "Add metal",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain_height.png" }),
+            TabbedPanelImage({ file = SB_IMG_DIR .. "metal-add.png" }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -45,5 +45,15 @@ function MetalEditorView:init()
 end
 
 function MetalEditorView:IsValidTest(state)
-    return state:is_A(TerrainChangeTextureState)
+    return state:is_A(MetalEditingState)
+end
+
+function MetalEditorView:OnLeaveState(state)
+    for _, btn in pairs({self.btnAddMetal}) do
+        btn:SetPressedState(false)
+    end
+end
+
+function MetalEditorView:OnEnterState(state)
+    self.btnAddMetal:SetPressedState(true)
 end

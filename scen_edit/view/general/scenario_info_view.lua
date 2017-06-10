@@ -43,12 +43,12 @@ function ScenarioInfoView:init()
 
 	local children = {
         ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 10,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
+			x = 0,
+			y = 0,
+			bottom = 30,
+			right = 0,
+			borderColor = {0,0,0,0},
+			horizontalScrollbar = false,
             children = { self.stackPanel },
         },
     }

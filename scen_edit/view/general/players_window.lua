@@ -15,13 +15,15 @@ function PlayersWindow:init()
     SB.model.teamManager:addListener(self)
     self:Populate()
 
-    self.btnAddPlayer = Button:New {
-        caption='+ Team',
-        width=120,
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        OnClick={
+    self.btnAddPlayer = TabbedPanelButton({
+        x = 0,
+        y = 0,
+        tooltip = "Add team",
+        children = {
+            TabbedPanelImage({ file = SB_IMG_DIR .. "team-add.png" }),
+            TabbedPanelLabel({ caption = "Add" }),
+        },
+        OnClick = {
             function()
                 local name = "New team: " .. tostring(#SB.model.teamManager:getAllTeams())
                 local color = { r=math.random(), g=math.random(), b=math.random(), a=1}
@@ -31,14 +33,16 @@ function PlayersWindow:init()
                 SB.commandManager:execute(cmd)
             end
         },
-        backgroundColor = SB.conf.BTN_ADD_COLOR,
-    }
+    })
+
     local children = {
         ScrollPanel:New {
-            x = 1,
-            y = 15,
-            right = 5,
-            bottom = SB.conf.C_HEIGHT * 2,
+            x = 0,
+            y = 80,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
             children = {
                 self.teamsPanel
             },
@@ -82,7 +86,7 @@ function PlayersWindow:Populate()
                 height = SB.conf.B_HEIGHT,
                 parent = stackTeamPanel,
                 OnClick = {
-                    function() 
+                    function()
                         local playerWindow = PlayerWindow(team)
                         playerWindow.window.x = self.window.x + self.window.width
                         playerWindow.window.y = self.window.y
@@ -95,14 +99,14 @@ function PlayersWindow:Populate()
                 width = SB.conf.B_HEIGHT,
                 height = SB.conf.B_HEIGHT,
                 parent = stackTeamPanel,
-                padding = {0, 0, 0, 0},
+                padding = {2, 2, 2, 2},
+                tooltip = "Remove team",
+                classname = "negative_button",
                 children = {
                     Image:New {
-                        tooltip = "Remove team",
-                        file=SB_IMG_DIR .. "list-remove.png",
-                        height = SB.conf.B_HEIGHT,
-                        width = SB.conf.B_HEIGHT,
-                        margin = {0, 0, 0, 0},
+                        file = SB_IMG_DIR .. "cancel.png",
+                        height = "100%",
+                        width = "100%",
                     },
                 },
                 OnClick = {

@@ -1,28 +1,18 @@
-AddRectState = AbstractState:extends{}
-
-function AddRectState:init()
-    self.addSecondPoint = false
-end
-
-function AddRectState:enterState()
-    SB.view.selected = nil
-end
-
-function AddRectState:leaveState()
-end
+AddRectState = AbstractEditingState:extends{}
 
 function AddRectState:MousePress(x, y, button)
     if button == 1 then
-        if not self.addSecondPoint then
-            local result, coords = Spring.TraceScreenRay(x, y, true)
-            if result == "ground" then
-                self.startX = coords[1]
-                self.startZ = coords[3]
-                self.endX = coords[1]
-                self.endZ = coords[3]
-                self.addSecondPoint = true
-                return true
-            end
+        if self.addSecondPoint then
+            return
+        end
+        local result, coords = Spring.TraceScreenRay(x, y, true)
+        if result == "ground" then
+            self.startX = coords[1]
+            self.startZ = coords[3]
+            self.endX = coords[1]
+            self.endZ = coords[3]
+            self.addSecondPoint = true
+            return true
         end
     elseif button == 3 then
         SB.stateManager:SetState(DefaultState())
@@ -30,39 +20,40 @@ function AddRectState:MousePress(x, y, button)
 end
 
 function AddRectState:MouseMove(x, y, dx, dy, button)
-    if self.addSecondPoint then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground" then
-            self.endX = coords[1]
-            self.endZ = coords[3]
-        end
+    if not self.addSecondPoint then
+        return
+    end
+
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground" then
+        self.endX = coords[1]
+        self.endZ = coords[3]
     end
 end
 
 function AddRectState:MouseRelease(x, y, button)
-    if self.addSecondPoint then
-        if button ~= 1 then
-            self.endX = nil
-            self.endZ = nil
-            return
-        end
-        local result, coords = Spring.TraceScreenRay(x, y, true)
-        if result == "ground" then
-            self.endX = coords[1]
-            self.endZ = coords[3]
-        end
-        if self.endX == nil or self.endZ == nil then
-            return
-        end
-
-        local cmd = AddAreaCommand(self.startX, self.startZ, self.endX, self.endZ)
-        SB.commandManager:execute(cmd)
-
-        SB.stateManager:SetState(DefaultState())
+    if not self.addSecondPoint then
+        return
     end
-end
 
-function AddRectState:KeyPress(key, mods, isRepeat, label, unicode)
+    if button ~= 1 then
+        self.endX = nil
+        self.endZ = nil
+        return
+    end
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground" then
+        self.endX = coords[1]
+        self.endZ = coords[3]
+    end
+    if self.endX == nil or self.endZ == nil then
+        return
+    end
+
+    local cmd = AddAreaCommand(self.startX, self.startZ, self.endX, self.endZ)
+    SB.commandManager:execute(cmd)
+
+    SB.stateManager:SetState(DefaultState())
 end
 
 function AddRectState:DrawWorld()
