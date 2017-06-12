@@ -17,7 +17,6 @@ function TerrainChangeTextureState:init(editorView)
     self.texOffsetY     = self.editorView.fields["texOffsetY"].value
 	self.diffuseEnabled = self.editorView.fields["diffuseEnabled"].value
 	self.specularEnabled= self.editorView.fields["specularEnabled"].value
-	self.normalEnabled  = self.editorView.fields["normalEnabled"].value
 	self.voidFactor     = self.editorView.fields["voidFactor"].value
     self.exclusive      = self.editorView.fields["exclusive"].value
     self.value          = self.editorView.fields["value"].value
@@ -61,10 +60,8 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
 		texOffsetY = self.texOffsetY,
 		diffuseEnabled = self.diffuseEnabled,
 		specularEnabled = self.specularEnabled,
-		normalEnabled = self.normalEnabled,
 		voidFactor = voidFactor,
         paintMode = self.paintMode,
-		textures = self.textures,
         colorIndex = colorIndex,
         exclusive = exclusive,
         value = self.value,

@@ -102,7 +102,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("blur")
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -128,7 +128,7 @@ function TerrainEditorView:init()
 				-- 	SB.view:SetMainPanel(SB.dntsEditorView.window)
                 -- end
                 self:_EnterState("dnts")
-                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "falloffFactor", "offset-sep", "voidFactor", "tex-sep")
+                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "falloffFactor", "offset-sep", "voidFactor", "tex-sep")
             end
         },
     })
@@ -143,7 +143,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("void")
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -227,13 +227,6 @@ function TerrainEditorView:init()
             tooltip = "Specular texture",
             width = 140,
         }),
-        BooleanField({
-            name = "normalEnabled",
-            value = true,
-            title = "Normal:",
-            tooltip = "Normal texture",
-            width = 140,
-        })
     }))
 
     self:AddField(GroupField({

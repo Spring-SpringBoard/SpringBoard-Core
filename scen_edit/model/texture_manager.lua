@@ -20,9 +20,6 @@ function TextureManager:init()
 		specular = {
 			engineName = "$ssmf_specular",
 		},
-		normal = {
-			engineName = "$ssmf_normals",
-		},
         splat_distr = {
             engineName = "$ssmf_splat_distr",
         },
@@ -154,11 +151,6 @@ function TextureManager:generateMapTextures()
 		end
 
 		if sizeX and sizeZ then
-			local texFormat
-			if name == "normal" then
-				GL_RG = 34836
-				texFormat = GL_RG
-			end
             local tex
 
             local min_filter = GL.LINEAR
@@ -174,7 +166,6 @@ function TextureManager:generateMapTextures()
                     wrap_s = GL.REPEAT,
                     wrap_t = GL.REPEAT,
                     fbo = true,
-                    format = texFormat,
                 })
                 --gl.GenerateMipmap(tex)
             else
@@ -185,7 +176,6 @@ function TextureManager:generateMapTextures()
                     wrap_s = GL.CLAMP_TO_EDGE,
                     wrap_t = GL.CLAMP_TO_EDGE,
                     fbo = true,
-                    format = texFormat,
                 })
             end
 	-- 		local engineTex = gl.Texture()

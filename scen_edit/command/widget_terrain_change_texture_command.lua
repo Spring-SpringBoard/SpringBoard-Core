@@ -17,85 +17,11 @@ local function _InitShaders()
     if shaders == nil then
         shaders = {
             diffuse = {},
-            normal = {},
             void = nil,
             blur = nil,
             dnts = nil,
         }
     end
-end
-
-function getNormalShader(mode)
-    _InitShaders()
-    if shaders.normal[mode] == nil then
-        local penBlenders = {
-            --'from'
-            --// 2010 Kevin Bjorke http://www.botzilla.com
-            --// Uses Processing & the GLGraphics library
-            ["Normal"] = [[mix(color,mapColor,color.a);]],
-
-            ["Add"] = [[mix((mapColor+color),mapColor,color.a);]],
-
-            ["ColorBurn"] = [[mix(1.0-(1.0-mapColor)/color,mapColor,color.a);]],
-
-            ["ColorDodge"] = [[mix(mapColor/(1.0-color),mapColor,color.a);]],
-
-            ["Color"] = [[mix(sqrt(dot(mapColor.rgb,mapColor.rgb)) * normalize(color),mapColor,color.a);]],
-
-            ["Darken"] = [[mix(min(mapColor,color),mapColor,color.a);]],
-
-            ["Difference"] = [[mix(abs(color-mapColor),mapColor,color.a);]],
-
-            ["Exclusion"] = [[mix(color+mapColor-(2.0*color*mapColor),mapColor,color.a);]],
-
-            ["HardLight"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),color)- 0.45)))),mapColor,color.a);]],
-
-            ["InverseDifference"] = [[mix(1.0-abs(mapColor-color),mapColor,color.a);]],
-
-            ["Lighten"] = [[mix(max(color,mapColor),mapColor,color.a);]],
-
-            ["Luminance"] = [[mix(dot(color,vec4(0.25,0.65,0.1,0.0))*normalize(mapColor),mapColor,color.a);]],
-
-            ["Multiply"] = [[mix(color*mapColor,mapColor,color.a);]],
-
-            ["Overlay"] = [[mix(lerp(2.0 * mapColor * color,1.0 - 2.0*(1.0-color)*(1.0-mapColor),min(1.0,max(0.0,10.0*(dot(vec4(0.25,0.65,0.1,0.0),mapColor)- 0.45)))),mapColor,color.a);]],
-
-            ["Premultiplied"] = [[vec4(color.rgb + (1.0-color.a)*mapColor.rgb, (color.a+mapColor.a));]],
-
-            ["Screen"] = [[mix(1.0-(1.0-mapColor)*(1.0-color),mapColor,color.a);]],
-
-            ["SoftLight"] = [[mix(2.0*mapColor*color+mapColor*mapColor-2.0*mapColor*mapColor*color,mapColor,color.a);]],
-            ["Subtract"] = [[mix(mapColor-color,mapColor,color.a);]],
-        }
-
-        local shaderFragStr = VFS.LoadFile("shaders/normal_drawing.glsl")
-        local shaderTemplate = {
-            fragment = string.format(shaderFragStr, penBlenders[mode]),
-            uniformInt = {
-                mapTex = 0,
-                patternTexture = 1,
-                brushTexture = 2,
-            },
-        }
-
-        local shader = Shaders.Compile(shaderTemplate, "normal")
-        local shaderObj = {
-            shader = shader,
-            uniforms = {
-                x1ID = gl.GetUniformLocation(shader, "x1"),
-                x2ID = gl.GetUniformLocation(shader, "x2"),
-                z1ID = gl.GetUniformLocation(shader, "z1"),
-                z2ID = gl.GetUniformLocation(shader, "z2"),
-                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
-                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
-                featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
-                diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
-            },
-        }
-        shaders.normal[mode] = shaderObj
-    end
-
-    return shaders.normal[mode]
 end
 
 function getPenShader(mode)
@@ -644,7 +570,7 @@ function DrawShadingTextures(opts, x, z, size)
     z = z / texSize
     size = size / texSize
     for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
-        if texType ~= "normal" and opts.brushTexture[texType] and opts[texType .. "Enabled"] then
+        if opts.brushTexture[texType] and opts[texType .. "Enabled"] then
             gl.Blending("disable")
             local texInfo = gl.TextureInfo(shadingTex)
             local sizeX  = size * texSize / Game.mapSizeX
@@ -665,41 +591,6 @@ function DrawShadingTextures(opts, x, z, size)
 
             CheckGLSL()
         end
-    end
-
-    if opts.brushTexture.normal and opts.normalEnabled then
-        gl.Blending("disable")
-        local shaderObj = getPenShader(opts.mode)--getNormalShader(opts.mode)
-        local shader = shaderObj.shader
-        local uniforms = shaderObj.uniforms
-
-        gl.UseShader(shader)
-
-        gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
-        gl.Texture(2, SB.model.textureManager:GetTexture(opts.brushTexture.normal))
-
-        gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
-        gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
-        gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
-        gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
-
-        local texInfo = gl.TextureInfo(opts.brushTexture.normal)
-        local sizeX  = size * texSize / Game.mapSizeX
-        local sizeZ  = size * texSize / Game.mapSizeZ
-        local mx     = x    * texSize / Game.mapSizeX
-        local mz     = z    * texSize / Game.mapSizeZ
-
-        local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
-
-        gl.Uniform(uniforms.x1ID, mCoord[1])
-        gl.Uniform(uniforms.x2ID, mCoord[5])
-        gl.Uniform(uniforms.z1ID, mCoord[2])
-        gl.Uniform(uniforms.z2ID, mCoord[4])
-
-
-        gl.RenderToTexture(SB.model.textureManager.shadingTextures.normal, ApplyTexture, shadingTmps.normal, mCoord, tCoord, vCoord)
-
-        CheckGLSL()
     end
 
     -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
