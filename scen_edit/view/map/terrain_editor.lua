@@ -87,7 +87,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("paint")
-                self:SetInvisibleFields("kernelMode", "dnts", "splatTexScale", "splatTexMult", "splat-sep")
+                self:SetInvisibleFields("kernelMode", "dnts", "splatTexScale", "splatTexMult", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -102,7 +102,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("blur")
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -115,14 +115,23 @@ function TerrainEditorView:init()
             TabbedPanelLabel({ caption = "DNTS" }),
         },
         OnClick = {
-            function()
+            function(obj)
+                -- if SB.dntsEditorView == nil then
+                --     SB.dntsEditorView = DNTSEditorView()
+                --     SB.dntsEditorView.window.OnHide = {
+				-- 		function()
+				-- 			obj:SetPressedState(false)
+				-- 		end
+				-- 	}
+                -- end
+                -- if SB.dntsEditorView.window.hidden then
+				-- 	SB.view:SetMainPanel(SB.dntsEditorView.window)
+                -- end
                 self:_EnterState("dnts")
-                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "falloffFactor", "offset-sep")
+                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "falloffFactor", "offset-sep", "voidFactor", "tex-sep")
             end
         },
     })
-
-
     self.btnVoid = TabbedPanelButton({
         x = 210,
         y = 0,
@@ -134,7 +143,7 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("void")
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -186,6 +195,11 @@ function TerrainEditorView:init()
             "4",
         },
         title = "DNTS:"
+    }))
+    self:AddField(BooleanField({
+        name = "exclusive",
+        title = "Exclusive: ",
+        value = false,
     }))
 
     self:AddControl("tex-sep", {
@@ -319,14 +333,23 @@ function TerrainEditorView:init()
         })
     }))
 
-    -- self:AddField(NumericField({
-    --     name = "voidFactor",
-    --     value = 0,
-    --     minValue = 0.0,
-    --     maxValue = 1,
-    --     title = "Transparency:",
-    --     tooltip = "The greater the value, the more transparent it will be.",
-    -- }))
+    self:AddField(NumericField({
+        name = "value",
+        value = 1,
+        minValue = 0.0,
+        maxValue = 1,
+        title = "Value:",
+        tooltip = "Goal value to be set for DNTS textures when painting.",
+    }))
+
+    self:AddField(NumericField({
+        name = "voidFactor",
+        value = 0,
+        minValue = 0.0,
+        maxValue = 1,
+        title = "Transparency:",
+        tooltip = "The greater the value, the more transparent it will be.",
+    }))
 
     self:AddControl("splat-sep", {
         Label:New {
@@ -373,7 +396,7 @@ function TerrainEditorView:init()
         self.btnPaint,
         self.btnFilter,
         self.btnDNTS,
-        --self.btnVoid,
+        self.btnVoid,
         ScrollPanel:New {
             x = 0,
             right = 0,

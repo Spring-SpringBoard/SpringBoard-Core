@@ -18,7 +18,9 @@ function TerrainChangeTextureState:init(editorView)
 	self.diffuseEnabled = self.editorView.fields["diffuseEnabled"].value
 	self.specularEnabled= self.editorView.fields["specularEnabled"].value
 	self.normalEnabled  = self.editorView.fields["normalEnabled"].value
-	-- self.voidFactor     = self.editorView.fields["voidFactor"].value
+	self.voidFactor     = self.editorView.fields["voidFactor"].value
+    self.exclusive      = self.editorView.fields["exclusive"].value
+    self.value          = self.editorView.fields["value"].value
 
     self.updateDelay    = 0.2
     self.applyDelay     = 0.02
@@ -34,8 +36,12 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
     if self.paintMode == "paint" and not self.brushTexture.diffuse then
         return
     end
-    --local voidFactor = self.voidFactor * applyAction
+    local voidFactor = self.voidFactor * applyAction
     local colorIndex = tonumber(self.dnts) * applyAction
+    local exclusive = 0
+    if self.exclusive then
+        exclusive = 1
+    end
 
 	local opts = {
 		x = x - self.size/2,
@@ -56,10 +62,12 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
 		diffuseEnabled = self.diffuseEnabled,
 		specularEnabled = self.specularEnabled,
 		normalEnabled = self.normalEnabled,
-		-- voidFactor = voidFactor,
+		voidFactor = voidFactor,
         paintMode = self.paintMode,
 		textures = self.textures,
         colorIndex = colorIndex,
+        exclusive = exclusive,
+        value = self.value,
 	}
 	local command = TerrainChangeTextureCommand(opts)
 	SB.commandManager:execute(command)

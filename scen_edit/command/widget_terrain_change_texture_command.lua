@@ -192,7 +192,6 @@ function getVoidShader()
                 x2ID = gl.GetUniformLocation(shader, "x2"),
                 z1ID = gl.GetUniformLocation(shader, "z1"),
                 z2ID = gl.GetUniformLocation(shader, "z2"),
-                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
                 voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
             },
         }
@@ -249,9 +248,9 @@ function getDNTSShader()
                 z1ID = gl.GetUniformLocation(shader, "z1"),
                 z2ID = gl.GetUniformLocation(shader, "z2"),
                 blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
-                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
-                voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
                 colorIndexID = gl.GetUniformLocation(shader, "colorIndex"),
+                exclusiveID = gl.GetUniformLocation(shader, "exclusive"),
+                valueID = gl.GetUniformLocation(shader, "value"),
             },
         }
         shaders.dnts = shaderObj
@@ -351,9 +350,15 @@ end
 local function GenerateCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ, opts)
     local mCoord, tCoord, vCoord = _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
 
-    OffsetCoords(tCoord, opts.texOffsetX, opts.texOffsetY)
-    ScaleCoords(tCoord, opts.texScale, opts.texScale)
-    RotateCoords(tCoord, math.rad(opts.rotation))
+    if opts.texOffsetX then
+        OffsetCoords(tCoord, opts.texOffsetX, opts.texOffsetY)
+    end
+    if opts.texScale then
+        ScaleCoords(tCoord, opts.texScale, opts.texScale)
+    end
+    if opts.rotation then
+        RotateCoords(tCoord, math.rad(opts.rotation))
+    end
 
     return mCoord, tCoord, vCoord
 end
@@ -501,8 +506,7 @@ function DrawVoid(opts, x, z, size)
     gl.Blending("disable")
     gl.UseShader(shader)
 
-    gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
-    --gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
 
     gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
 
@@ -566,9 +570,9 @@ function DrawDNTS(opts, x, z, size)
     gl.UseShader(shader)
 
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
-    gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.UniformInt(uniforms.colorIndexID, opts.colorIndex)
-    --gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    gl.UniformInt(uniforms.exclusiveID, opts.exclusive)
+    gl.Uniform(uniforms.valueID, opts.value)
 
     x = x / texSize
     z = z / texSize
