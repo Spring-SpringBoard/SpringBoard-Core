@@ -7,6 +7,32 @@ function TerrainSettingsView:init()
 
     self.initializing = true
 
+    self:AddControl("map-sep", {
+        Label:New {
+            caption = "Map",
+        },
+        Line:New {
+            x = 50,
+        }
+    })
+
+    self:AddField(GroupField({
+        BooleanField({
+            name = "voidWater",
+            title = "Void water:",
+            tooltip = "Determines whether ground is rendered transparent where there should be water.",
+            width = 140,
+        }),
+        BooleanField({
+            name = "voidGround",
+            title = "Void ground:",
+            tooltip = "Determines whether ground can be rendered transparent.",
+            width = 140,
+        }),
+    }))
+
+    self:UpdateMapRendering()
+
     self:AddField(AssetField({
         name = "detailTexture",
         title = "Detail:",
@@ -531,6 +557,15 @@ function _ColorArrayToChannels(colorArray)
     return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
 end
 
+function TerrainSettingsView:UpdateMapRendering()
+    if not gl.GetMapRendering then
+        return
+    end
+
+    self:Set("voidWater", gl.GetMapRendering("voidWater"))
+    self:Set("voidGround", gl.GetMapRendering("voidGround"))
+end
+
 function TerrainSettingsView:UpdateLighting()
     -- Direction
     local sunDirX, sunDirY, sunDirZ = gl.GetSun()
@@ -701,6 +736,12 @@ function TerrainSettingsView:OnFieldChange(name, value)
         local t = {}
         t[name] = value
         local cmd = SetAtmosphereCommand(t)
+        SB.commandManager:execute(cmd)
+    elseif name == "voidWater" or name == "voidGround" then
+        local t = {
+            [name] = value,
+        }
+        local cmd = SetMapRenderingParamsCommand(t)
         SB.commandManager:execute(cmd)
     else
         local cmd = SetWaterParamsCommand({[name] = value})

@@ -262,8 +262,8 @@ function ExportMapInfoCommand:execute()
         --tidalStrength   = 0,
         --maxMetal        = 1,
         --extractorRadius = 0,
-        --voidWater       = false,
-        --voidGround      = false,
+        voidWater       = gl.GetMapRendering and gl.GetMapRendering("voidWater"),
+        voidGround      = gl.GetMapRendering and gl.GetMapRendering("voidGround"),
 
         -- Section: GUI
         --autoShowMetal   = true,

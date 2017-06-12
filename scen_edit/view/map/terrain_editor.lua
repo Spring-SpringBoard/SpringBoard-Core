@@ -5,6 +5,7 @@ SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 TerrainEditorView = EditorView:extends{}
 
 function TerrainEditorView:init()
+    self.initializing = true
     self:super("init")
     self:AddField(TextureField({
         name = "brushTexture",
@@ -86,11 +87,11 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("paint")
-                self:SetInvisibleFields("kernelMode")
+                self:SetInvisibleFields("kernelMode", "dnts", "splatTexScale", "splatTexMult", "splat-sep")
             end
         },
     })
-    self.btnBlur = TabbedPanelButton({
+    self.btnFilter = TabbedPanelButton({
         x = 70,
         y = 0,
         tooltip = "Apply a filter",
@@ -101,12 +102,29 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("blur")
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep")
             end
         },
     })
-    self.btnVoid = TabbedPanelButton({
+    self.btnDNTS = TabbedPanelButton({
         x = 140,
+        y = 0,
+        tooltip = "DNTS textures",
+        children = {
+            TabbedPanelImage({ file = SB_IMG_DIR .. "paint-brush.png" }),
+            TabbedPanelLabel({ caption = "DNTS" }),
+        },
+        OnClick = {
+            function()
+                self:_EnterState("dnts")
+                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "normalEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "falloffFactor", "offset-sep")
+            end
+        },
+    })
+
+
+    self.btnVoid = TabbedPanelButton({
+        x = 210,
         y = 0,
         tooltip = "Make the terrain transparent",
         children = {
@@ -158,6 +176,16 @@ function TerrainEditorView:init()
             "top sobel",
         },
         title = "Filter:"
+    }))
+    self:AddField(ChoiceField({
+        name = "dnts",
+        items = {
+            "1",
+            "2",
+            "3",
+            "4",
+        },
+        title = "DNTS:"
     }))
 
     self:AddControl("tex-sep", {
@@ -300,6 +328,36 @@ function TerrainEditorView:init()
     --     tooltip = "The greater the value, the more transparent it will be.",
     -- }))
 
+    self:AddControl("splat-sep", {
+        Label:New {
+            caption = "Splat",
+        },
+        Line:New {
+            x = 55,
+            y = 4,
+            width = self.VALUE_POS,
+        }
+    })
+    self:AddField(GroupField({
+        NumericField({
+            name = "splatTexScale",
+            value = 1,
+            step = 0.000001,
+            decimals = 6,
+            title = "Scale:",
+            tooltip = "Splat texture multiplier",
+            width = 150,
+        }),
+        NumericField({
+            name = "splatTexMult",
+            value = 0.5,
+            step = 0.01,
+            title = "Mult:",
+            tooltip = "Splat texture multiplier",
+            width = 150,
+        }),
+    }))
+
     self:AddField(ColorField({
         name = "diffuseColor",
         title = "Color: ",
@@ -309,11 +367,12 @@ function TerrainEditorView:init()
     self:Update("mode")
     self:Update("kernelMode")
     self:Update("diffuseColor")
-
+    self:_UpdateDNTS()
 
     local children = {
         self.btnPaint,
-        self.btnBlur,
+        self.btnFilter,
+        self.btnDNTS,
         --self.btnVoid,
         ScrollPanel:New {
             x = 0,
@@ -350,6 +409,31 @@ function TerrainEditorView:init()
         },
     }
     self:Finalize(children)
+    self.initializing = false
+end
+
+function TerrainEditorView:_UpdateDNTS()
+    if not gl.GetMapRendering then
+        return
+    end
+
+    local splatTexScales = {gl.GetMapRendering("splatTexScales")}
+    local splatTexMults = {gl.GetMapRendering("splatTexMults")}
+    local index = tonumber(self.fields["dnts"].value)
+    self:Set("splatTexScale", splatTexScales[index])
+    self:Set("splatTexMult", splatTexMults[index])
+end
+
+function TerrainEditorView:OnStartChange(name)
+    if name == "splatTexScale" or name == "splatTexMult" then
+        SB.commandManager:execute(SetMultipleCommandModeCommand(true))
+    end
+end
+
+function TerrainEditorView:OnEndChange(name)
+    if name == "splatTexScale" or name == "splatTexMult" then
+        SB.commandManager:execute(SetMultipleCommandModeCommand(false))
+    end
 end
 
 function TerrainEditorView:OnFieldChange(name, value)
@@ -365,6 +449,23 @@ function TerrainEditorView:OnFieldChange(name, value)
             self.savedBrushes:UpdateBrushImage(brush.brushID, texturePath)
         end
     end
+
+    if self.initializing then
+        return
+    end
+
+    if name == "dnts" then
+        self:_UpdateDNTS()
+    elseif name == "splatTexScale" or name == "splatTexMult" then
+        local index = tonumber(self.fields["dnts"].value)
+        local tbl = {gl.GetMapRendering(name .. "s")}
+        tbl[index] = value
+        local t = {
+            [name .. "s"] = tbl,
+        }
+        local cmd = SetMapRenderingParamsCommand(t)
+        SB.commandManager:execute(cmd)
+    end
 end
 
 function TerrainEditorView:_EnterState(paintMode)
@@ -378,7 +479,7 @@ function TerrainEditorView:IsValidTest(state)
 end
 
 function TerrainEditorView:OnLeaveState(state)
-    for _, btn in pairs({self.btnPaint, self.btnBlur, self.btnVoid}) do
+    for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS, self.btnVoid}) do
         btn:SetPressedState(false)
     end
 end
@@ -387,7 +488,9 @@ function TerrainEditorView:OnEnterState(state)
     if state.paintMode == "paint" then
         self.btnPaint:SetPressedState(true)
     elseif state.paintMode == "blur" then
-        self.btnBlur:SetPressedState(true)
+        self.btnFilter:SetPressedState(true)
+    elseif state.paintMode == "dnts" then
+        self.btnDNTS:SetPressedState(true)
     elseif state.paintMode == "void" then
         self.btnVoid:SetPressedState(true)
     end

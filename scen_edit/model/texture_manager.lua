@@ -22,7 +22,29 @@ function TextureManager:init()
 		},
 		normal = {
 			engineName = "$ssmf_normals",
-		}
+		},
+        splat_distr = {
+            engineName = "$ssmf_splat_distr",
+        },
+        -- splat_detail = {
+        --     engineName = "$ssmf_splat_detail",
+        -- },
+        -- splat_normals1 = {
+        --     engineName = "$ssmf_splat_normals:1",
+        --     _setParams = {"$ssmf_splat_normals", 1},
+        -- },
+        -- splat_normals2 = {
+        --     engineName = "$ssmf_splat_normals:2",
+        --     _setParams = {"$ssmf_splat_normals", 2},
+        -- },
+        -- splat_normals3 = {
+        --     engineName = "$ssmf_splat_normals:3",
+        --     _setParams = {"$ssmf_splat_normals", 3},
+        -- },
+        -- splat_normals4 = {
+        --     engineName = "$ssmf_splat_normals:4",
+        --     _setParams = {"$ssmf_splat_normals", 4},
+        -- },
 	}
     self.shadingTextureNames = {}
     for name, texDef in pairs(self.shadingTextureDefs) do
@@ -43,10 +65,16 @@ function TextureManager:GetShadingTextureDefs()
     return self.shadingTextureDefs
 end
 
-function TextureManager:createMapTexture(notFBO)
+function TextureManager:createMapTexture(notFBO, notMinMap)
+    local min_filter
+    if notMinMap then
+        min_filter = GL.LINEAR
+    else
+        min_filter = GL.LINEAR --GL.LINEAR_MIPMAP_NEAREST
+    end
     return gl.CreateTexture(self.TEXTURE_SIZE, self.TEXTURE_SIZE, {
         border = false,
-        min_filter = GL.LINEAR,
+        min_filter = min_filter,
         mag_filter = GL.LINEAR,
         wrap_s = GL.CLAMP_TO_EDGE,
         wrap_t = GL.CLAMP_TO_EDGE,
@@ -84,7 +112,7 @@ end
 
 function TextureManager:generateMapTextures()
     Log.Debug("Generating textures...")
-    local oldMapTexture = self:createMapTexture(false)
+    local oldMapTexture = self:createMapTexture(true, true)
 
     for i = 0, math.floor(Game.mapSizeX / self.TEXTURE_SIZE) do
         self.mapFBOTextures[i] = {}
@@ -93,6 +121,7 @@ function TextureManager:generateMapTextures()
 
             Spring.GetMapSquareTexture(i, j, 0, oldMapTexture)
             self:Blit(oldMapTexture, mapTexture)
+            --gl.GenerateMipmap(mapTexture)
 
             self.mapFBOTextures[i][j] = {
                 texture = mapTexture,
@@ -108,9 +137,14 @@ function TextureManager:generateMapTextures()
 
 		local engineName = texDef.engineName
 		Log.Notice("engine texture: " .. tostring(name))
-		local success = Spring.SetMapShadingTexture(engineName, "")
+		local success
+        if texDef._setParams then
+            success = Spring.SetMapShadingTexture(texDef._setParams[1], "", texDef._setParams[2])
+        else
+            success = Spring.SetMapShadingTexture(engineName, "")
+        end
 		if not success then
-			Log.Error("Failure to set texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
+			Log.Error("Failed to set texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
 		end
 		--local tex = self:createMapTexture()
 		local sizeX, sizeZ--[[ = Game.mapSizeX/2, Game.mapSizeZ/2]]
@@ -125,19 +159,46 @@ function TextureManager:generateMapTextures()
 				GL_RG = 34836
 				texFormat = GL_RG
 			end
-			local tex = gl.CreateTexture(sizeX, sizeZ, {
-				border = false,
-				min_filter = GL.LINEAR,
-				mag_filter = GL.LINEAR,
-				wrap_s = GL.CLAMP_TO_EDGE,
-				wrap_t = GL.CLAMP_TO_EDGE,
-				fbo = true,
-				format = texFormat,
-			})
+            local tex
+
+            local min_filter = GL.LINEAR
+            if name == "splat_distr" then
+            --    min_filter = GL.LINEAR_MIPMAP_NEAREST
+            end
+
+            if name:find("splat_normals") then
+                tex = gl.CreateTexture(sizeX, sizeZ, {
+                    border = false,
+                    min_filter = GL.LINEAR_MIPMAP_NEAREST,
+                    mag_filter = GL.LINEAR,
+                    wrap_s = GL.REPEAT,
+                    wrap_t = GL.REPEAT,
+                    fbo = true,
+                    format = texFormat,
+                })
+                --gl.GenerateMipmap(tex)
+            else
+                tex = gl.CreateTexture(sizeX, sizeZ, {
+                    border = false,
+                    min_filter = min_filter,
+                    mag_filter = GL.LINEAR,
+                    wrap_s = GL.CLAMP_TO_EDGE,
+                    wrap_t = GL.CLAMP_TO_EDGE,
+                    fbo = true,
+                    format = texFormat,
+                })
+            end
 	-- 		local engineTex = gl.Texture()
 			self:Blit(engineName, tex)
+            if name == "splat_distr" then
+            --    gl.GenerateMipmap(tex)
+            end
 			self.shadingTextures[name] = tex
-			Spring.SetMapShadingTexture(engineName, tex)
+            if texDef._setParams then
+                Spring.SetMapShadingTexture(texDef._setParams[1], tex, texDef._setParams[2])
+            else
+                Spring.SetMapShadingTexture(engineName, tex)
+            end
 
             texDef.enabled = true
 		end

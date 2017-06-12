@@ -7,6 +7,7 @@ function TerrainChangeTextureState:init(editorView)
     self.patternTexture = self.editorView.fields["patternTexture"].value
     self.texScale       = self.editorView.fields["texScale"].value
     self.mode           = self.editorView.fields["mode"].value
+    self.dnts           = self.editorView.fields["dnts"].value
     self.kernelMode     = self.editorView.fields["kernelMode"].value
     self.blendFactor    = self.editorView.fields["blendFactor"].value
     self.falloffFactor  = self.editorView.fields["falloffFactor"].value
@@ -23,7 +24,7 @@ function TerrainChangeTextureState:init(editorView)
     self.applyDelay     = 0.02
 end
 
-function TerrainChangeTextureState:Apply(x, z, voidFactor)
+function TerrainChangeTextureState:Apply(x, z, applyAction)
     if not self.patternTexture then
         return
     end
@@ -33,6 +34,9 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
     if self.paintMode == "paint" and not self.brushTexture.diffuse then
         return
     end
+    --local voidFactor = self.voidFactor * applyAction
+    local colorIndex = tonumber(self.dnts) * applyAction
+
 	local opts = {
 		x = x - self.size/2,
 		z = z - self.size/2,
@@ -55,6 +59,7 @@ function TerrainChangeTextureState:Apply(x, z, voidFactor)
 		-- voidFactor = voidFactor,
         paintMode = self.paintMode,
 		textures = self.textures,
+        colorIndex = colorIndex,
 	}
 	local command = TerrainChangeTextureCommand(opts)
 	SB.commandManager:execute(command)
@@ -73,10 +78,10 @@ function TerrainChangeTextureState:DrawWorld()
     end
 end
 
--- function TerrainChangeTextureState:GetApplyParams(x, z, button)
--- 	local voidFactor = self.voidFactor
--- 	if button == 3 then
--- 		voidFactor = -1
--- 	end
--- 	return x, z, voidFactor
--- end
+function TerrainChangeTextureState:GetApplyParams(x, z, button)
+	local applyAction = 1
+	if button == 3 then
+		applyAction = -1
+	end
+	return x, z, applyAction
+end

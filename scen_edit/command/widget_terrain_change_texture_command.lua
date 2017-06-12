@@ -19,6 +19,8 @@ local function _InitShaders()
             diffuse = {},
             normal = {},
             void = nil,
+            blur = nil,
+            dnts = nil,
         }
     end
 end
@@ -224,6 +226,38 @@ function getBlurShader()
     end
 
     return shaders.blur
+end
+
+function getDNTSShader()
+    _InitShaders()
+    if shaders.dnts == nil then
+        local shaderFragStr = VFS.LoadFile("shaders/dnts_drawing.glsl")
+        local shaderTemplate = {
+            fragment = shaderFragStr,
+            uniformInt = {
+                mapTex = 0,
+                patternTexture = 1,
+            },
+        }
+
+        local shader = Shaders.Compile(shaderTemplate, "dnts")
+        local shaderObj = {
+            shader = shader,
+            uniforms = {
+                x1ID = gl.GetUniformLocation(shader, "x1"),
+                x2ID = gl.GetUniformLocation(shader, "x2"),
+                z1ID = gl.GetUniformLocation(shader, "z1"),
+                z2ID = gl.GetUniformLocation(shader, "z2"),
+                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
+                voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
+                colorIndexID = gl.GetUniformLocation(shader, "colorIndex"),
+            },
+        }
+        shaders.dnts = shaderObj
+    end
+
+    return shaders.dnts
 end
 
 local function DrawQuads(mCoord, tCoord, vCoord)
@@ -500,6 +534,70 @@ function DrawVoid(opts, x, z, size)
     gl.UseShader(0)
 end
 
+function DrawDNTS(opts, x, z, size)
+    local shadingTmps = {}
+    local texSize = SB.model.textureManager.TEXTURE_SIZE
+    local texType = "splat_distr"
+    local shadingTex = SB.model.textureManager.shadingTextures[texType]
+
+    SB.model.textureManager:backupMapShadingTexture(texType)
+    local tmpTexName = texType.."tmp"
+    shadingTmps[texType] = SB.model.textureManager[tmpTexName]
+    if SB.model.textureManager[tmpTexName] == nil then
+        local texInfo = gl.TextureInfo(shadingTex)
+        local texSizeX, texSizeZ = texInfo.xsize, texInfo.ysize
+        SB.model.textureManager[tmpTexName] = gl.CreateTexture(texSizeX, texSizeZ, {
+            border = false,
+            min_filter = GL.LINEAR,
+            mag_filter = GL.LINEAR,
+            wrap_s = GL.CLAMP_TO_EDGE,
+            wrap_t = GL.CLAMP_TO_EDGE,
+            fbo = true,
+        })
+        shadingTmps[texType] = SB.model.textureManager[tmpTexName]
+    end
+    SB.model.textureManager:Blit(shadingTex, shadingTmps[texType])
+
+    local shaderObj = getDNTSShader(opts.mode)
+    local shader = shaderObj.shader
+    local uniforms = shaderObj.uniforms
+
+    gl.Blending("disable")
+    gl.UseShader(shader)
+
+    gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+    gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
+    gl.UniformInt(uniforms.colorIndexID, opts.colorIndex)
+    --gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+
+    x = x / texSize
+    z = z / texSize
+    size = size / texSize
+
+    gl.Blending("enable")
+    local texInfo = gl.TextureInfo(shadingTex)
+    local sizeX  = size * texSize / Game.mapSizeX
+    local sizeZ  = size * texSize / Game.mapSizeZ
+    local mx     = x    * texSize / Game.mapSizeX
+    local mz     = z    * texSize / Game.mapSizeZ
+
+    local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
+
+    gl.Uniform(uniforms.x1ID, mCoord[1])
+    gl.Uniform(uniforms.x2ID, mCoord[5])
+    gl.Uniform(uniforms.z1ID, mCoord[2])
+    gl.Uniform(uniforms.z2ID, mCoord[4])
+
+    gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
+    gl.RenderToTexture(shadingTex, ApplyTexture, shadingTmps[texType], mCoord, tCoord, vCoord)
+
+    CheckGLSL()
+
+    gl.Texture(0, false)
+    gl.Texture(1, false)
+    gl.UseShader(0)
+end
+
 function DrawShadingTextures(opts, x, z, size)
     local shadingTmps = {}
     local texSize = SB.model.textureManager.TEXTURE_SIZE
@@ -574,7 +672,7 @@ function DrawShadingTextures(opts, x, z, size)
         gl.UseShader(shader)
 
         gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
-        gl.Texture(1, SB.model.textureManager:GetTexture(opts.brushTexture.normal))
+        gl.Texture(2, SB.model.textureManager:GetTexture(opts.brushTexture.normal))
 
         gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
         gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
@@ -632,6 +730,8 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     elseif opts.paintMode == "paint" then
         DrawDiffuse(opts, x, z, size)
         DrawShadingTextures(opts, x, z, size)
+    elseif opts.paintMode == "dnts" then
+        DrawDNTS(opts, x, z, size)
     else
         Log.Error("Unexpected paint mode: " .. tostring(opts.paintMode))
     end
