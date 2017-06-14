@@ -20,7 +20,7 @@ function WaterEditorView:init()
             tooltip = "How many Tiles does the `normalTexture` have?\nSuch Tiles are used when DynamicWaves are enabled in BumpWater, the more the better.\nCheck the example php script to generate such tiled bumpmaps.",
             width = 140,
         }),
-        FileField({
+        AssetField({
             name = "normalTexture",
             title = "Normal texture:",
             tooltip = "The normal texture.",
@@ -216,7 +216,7 @@ function WaterEditorView:init()
             title = "Enabled:",
             width = 140,
         }),
-        FileField({
+        AssetField({
             name = "foamTexture",
             title = "Texture:",
             width = 140,
@@ -233,7 +233,7 @@ function WaterEditorView:init()
         }
     })
     self:AddField(GroupField({
-        FileField({
+        AssetField({
             name = "texture",
             title = "Texture:",
             width = 140,

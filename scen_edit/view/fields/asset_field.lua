@@ -67,11 +67,11 @@ function AssetField:init(field)
 end
 
 function AssetField:GetDefaultPath()
-    return AssetField.defaultPaths[self.rootDir]
+    return AssetField.defaultPaths[self.rootDir or ""]
 end
 
 function AssetField:SetDefaultPath(path)
-    AssetField.defaultPaths[self.rootDir] = path
+    AssetField.defaultPaths[self.rootDir or ""] = path
 end
 
 function AssetField:OnSelectItem(item)

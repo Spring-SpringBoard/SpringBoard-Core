@@ -7,6 +7,7 @@ function AssetView:init(tbl)
         showDirs = true,
         imageFolderUp = nil,
         imageFolder = nil,
+        showPath = true,
     }
     tbl = Table.Merge(defaults, tbl)
     GridView.init(self, tbl)
@@ -41,6 +42,31 @@ function AssetView:init(tbl)
             return ctrl
         end
     end
+    if self.showPath then
+        self.layoutPanel:SetPos(nil, 20)
+        self.lblPath = Label:New {
+            x = 5, y = 5,
+            width = 100,
+            height = 20,
+            caption = "",
+            parent = self.scrollPanel,
+            font = {
+                color = {0.7, 0.7, 0.7, 1.0},
+            },
+        }
+        if self.rootDir then
+            self.lblRootDir = Label:New {
+                right = 5, y = 5,
+                width = 100,
+                height = 20,
+                caption = "Root: " .. tostring(self.rootDir),
+                parent = self.scrollPanel,
+                font = {
+                    color = {0.7, 0.7, 0.7, 1.0},
+                },
+            }
+        end
+    end
     self:SetDir(tbl.dir or '')
 end
 
@@ -49,6 +75,9 @@ local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.ico','.gif','.psd','.ti
 function AssetView:SetDir(directory)
     self.layoutPanel:DeselectAll()
     self.dir = directory
+    if self.lblPath then
+        self.lblPath:SetCaption("Path: " .. self.dir)
+    end
 -- 	MaterialBrowser.lastDir = self.dir
     self:ScanDir()
 end
