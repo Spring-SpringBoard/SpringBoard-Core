@@ -1,5 +1,5 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
-SB.Include(Path.Join(SB_VIEW_MAP_DIR, "texture_browser.lua"))
+SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
 TerrainEditorView = EditorView:extends{}
@@ -19,7 +19,7 @@ function TerrainEditorView:init()
         Update = function(...)
             local path = self.fields["patternTexture"].value
             local item = self.patternTextureImages:GetSelectedItems()[1]
-            if not item or path ~= item then
+            if not item or (path ~= item and item.isFile) then
                 if path then
                     self.patternTextureImages:SelectAsset(path)
                 else
@@ -28,22 +28,39 @@ function TerrainEditorView:init()
             end
         end
     }))
-
+    self.patternTextureImages = AssetView({
+        ctrl = {
+            x = 0,
+            right = 0,
+            y = 70,
+            bottom = "70%", -- 100 - 30
+        },
+        multiSelect = false,
+        itemWidth = 65,
+        itemHeight = 65,
+        rootDir = "brush_patterns/terrain/",
+        OnSelectItem = {
+            function(item, selected)
+                self:Set("patternTexture", nil)
+                if selected then
+                    self:Set("patternTexture", item.path)
+                end
+            end
+        },
+    })
     self.savedBrushes = SavedBrushes({
         ctrl = {
-            width = "100%",
-            height = "100%",
-            iconX = 64,
-            iconY = 64,
-            -- FIXME: Shouldn't need to set minWidth
-            minWidth = 400,
+            x = 0,
+            right = 0,
+            y = "30%",
+            bottom = "45%", -- 100 - 55
         },
         editor = self,
         GetNewBrush = function()
             local tbl = self:Serialize()
 
             local diffuse = tbl.brushTexture.diffuse
-            local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
+            local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(diffuse)
 
             -- invoke the UI dialog to pick the paint texture
             CallListeners(self.fields["brushTexture"].button.OnClick)
@@ -56,26 +73,37 @@ function TerrainEditorView:init()
             }
         end,
     })
-
-    self.patternTextureImages = AssetView({
+    self.savedDNTSBrushes = SavedBrushes({
         ctrl = {
-            width = "100%",
-            height = "100%",
-            multiSelect = false,
-            iconX = 65,
-            iconY = 65,
+            x = 0,
+            right = 0,
+            y = "30%",
+            bottom = "45%", -- 100 - 55
         },
-        rootDir = "brush_patterns/terrain/",
-        OnSelectItem = {
-            function(item, selected)
-                self:Set("patternTexture", nil)
-                if selected then
-                    self:Set("patternTexture", item.path)
-                end
-            end
-        },
-    })
+        editor = self,
+        disableAdd = true,
+        disableRemove = true,
+        GetNewBrush = function()
+            local tbl = self:Serialize()
 
+            local normal = tbl.brushTexture.normal
+            local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(normal)
+
+            -- invoke the UI dialog to pick the paint texture
+            CallListeners(self.fields["brushTexture"].button.OnClick)
+
+            return {
+                opts = tbl,
+                caption = nil,
+                image = texturePath,
+                tooltip = nil,
+            }
+        end,
+    })
+    self:AddField(Field({
+        name = "dntsIndex",
+        value = 0,
+    }))
     self.btnPaint = TabbedPanelButton({
         x = 0,
         y = 0,
@@ -87,7 +115,9 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("paint")
-                self:SetInvisibleFields("kernelMode", "dnts", "splatTexScale", "splatTexMult", "splat-sep", "exclusive", "value")
+                self.savedBrushes:GetControl():Show()
+                self.savedDNTSBrushes:GetControl():Hide()
+                self:SetInvisibleFields("kernelMode", "splatTexScale", "splatTexMult", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -102,7 +132,9 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("blur")
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self.savedBrushes:GetControl():Hide()
+                self.savedDNTSBrushes:GetControl():Hide()
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -128,6 +160,8 @@ function TerrainEditorView:init()
 				-- 	SB.view:SetMainPanel(SB.dntsEditorView.window)
                 -- end
                 self:_EnterState("dnts")
+                self.savedBrushes:GetControl():Hide()
+                self.savedDNTSBrushes:GetControl():Show()
                 self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "falloffFactor", "offset-sep", "voidFactor", "tex-sep")
             end
         },
@@ -143,7 +177,9 @@ function TerrainEditorView:init()
         OnClick = {
             function()
                 self:_EnterState("void")
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode", "dnts", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self.savedBrushes:GetControl():Hide()
+                self.savedDNTSBrushes:GetControl():Hide()
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -185,16 +221,6 @@ function TerrainEditorView:init()
             "top sobel",
         },
         title = "Filter:"
-    }))
-    self:AddField(ChoiceField({
-        name = "dnts",
-        items = {
-            "1",
-            "2",
-            "3",
-            "4",
-        },
-        title = "DNTS:"
     }))
     self:AddField(BooleanField({
         name = "exclusive",
@@ -337,7 +363,7 @@ function TerrainEditorView:init()
 
     self:AddField(NumericField({
         name = "voidFactor",
-        value = 0,
+        value = 1,
         minValue = 0.0,
         maxValue = 1,
         title = "Transparency:",
@@ -379,39 +405,15 @@ function TerrainEditorView:init()
         title = "Color: ",
         value = {1,1,1,1},
     }))
-    self:Update("size")
-    self:Update("mode")
-    self:Update("kernelMode")
-    self:Update("diffuseColor")
-    self:_UpdateDNTS()
 
     local children = {
         self.btnPaint,
         self.btnFilter,
         self.btnDNTS,
         self.btnVoid,
-        ScrollPanel:New {
-            x = 0,
-            right = 0,
-            y = 70,
-            bottom = "70%", -- 100 - 30
-            padding = {0, 0, 0, 0},
-            borderColor = {0,0,0,0},
-            children = {
-                self.patternTextureImages.control,
-            }
-        },
-        ScrollPanel:New {
-            x = 0,
-            right = 0,
-            y = "30%",
-            bottom = "45%", -- 100 - 55
-            padding = {0, 0, 0, 0},
-            borderColor = {0,0,0,0},
-            children = {
-                self.savedBrushes.control,
-            }
-        },
+        self.patternTextureImages:GetControl(),
+        self.savedBrushes:GetControl(),
+        self.savedDNTSBrushes:GetControl(),
         ScrollPanel:New {
             x = 0,
             y = "55%",
@@ -425,19 +427,37 @@ function TerrainEditorView:init()
         },
     }
     self:Finalize(children)
+    for i = 0, 3 do
+        self:__AddEngineDNTSTexture("$ssmf_splat_normals:" .. tostring(i), i+1)
+    end
+    self.savedDNTSBrushes:GetControl():Hide()
+
     self.initializing = false
 end
 
-function TerrainEditorView:_UpdateDNTS()
-    if not gl.GetMapRendering then
-        return
+function TerrainEditorView:__AddEngineDNTSTexture(textureName, dntsIndex)
+    local tbl = self:Serialize()
+
+    tbl.dntsIndex = dntsIndex
+
+    if gl.GetMapRendering then
+        local splatTexScales = {gl.GetMapRendering("splatTexScales")}
+        local splatTexMults = {gl.GetMapRendering("splatTexMults")}
+        tbl.splatTexScale = splatTexScales[dntsIndex]
+        tbl.splatTexMult = splatTexMults[dntsIndex]
     end
 
-    local splatTexScales = {gl.GetMapRendering("splatTexScales")}
-    local splatTexMults = {gl.GetMapRendering("splatTexMults")}
-    local index = tonumber(self.fields["dnts"].value)
-    self:Set("splatTexScale", splatTexScales[index])
-    self:Set("splatTexMult", splatTexMults[index])
+    local texturePath = textureName
+    self.savedDNTSBrushes:__AddBrush({
+        opts = tbl,
+        caption = "DNTS:" .. tostring(dntsIndex),
+        image = textureName,
+        tooltip = nil,
+    })
+end
+
+function TerrainEditorView:_GetDNTSIndex()
+    return self.fields["dntsIndex"].value
 end
 
 function TerrainEditorView:OnStartChange(name)
@@ -453,16 +473,31 @@ function TerrainEditorView:OnEndChange(name)
 end
 
 function TerrainEditorView:OnFieldChange(name, value)
-    local brush = self.savedBrushes:GetSelectedBrush()
-    if brush then
-        self.savedBrushes:UpdateBrush(brush.brushID, name, value)
-        if name == "brushTexture" then
-            SB.commandManager:execute(CacheTextureCommand(value))
+    if self.savedBrushes:GetControl().visible then
+        local brush = self.savedBrushes:GetSelectedBrush()
+        if brush then
+            self.savedBrushes:UpdateBrush(brush.brushID, name, value)
+            if name == "brushTexture" then
+                SB.commandManager:execute(CacheTextureCommand(value))
 
-            local diffuse = value.diffuse
-            local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
+                local diffuse = value.diffuse
+                local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(diffuse)
 
-            self.savedBrushes:UpdateBrushImage(brush.brushID, texturePath)
+                self.savedBrushes:UpdateBrushImage(brush.brushID, texturePath)
+            end
+        end
+    elseif self.savedDNTSBrushes:GetControl().visible then
+        local brush = self.savedDNTSBrushes:GetSelectedBrush()
+        if brush then
+            self.savedDNTSBrushes:UpdateBrush(brush.brushID, name, value)
+            if name == "brushTexture" then
+                SB.commandManager:execute(CacheTextureCommand(value))
+
+                local normal = value.normal
+                local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(normal)
+
+                self.savedDNTSBrushes:UpdateBrushImage(brush.brushID, texturePath)
+            end
         end
     end
 
@@ -470,10 +505,14 @@ function TerrainEditorView:OnFieldChange(name, value)
         return
     end
 
-    if name == "dnts" then
-        self:_UpdateDNTS()
+    if name == "brushTexture" and self.savedDNTSBrushes:GetControl().visible then
+        local dntsIndex = self:_GetDNTSIndex()
+        local texture = self.fields["brushTexture"].value.normal
+        if dntsIndex and texture then
+            Spring.SetMapShadingTexture("$ssmf_splat_normals", texture, dntsIndex)
+        end
     elseif name == "splatTexScale" or name == "splatTexMult" then
-        local index = tonumber(self.fields["dnts"].value)
+        local index = self:_GetDNTSIndex()
         local tbl = {gl.GetMapRendering(name .. "s")}
         tbl[index] = value
         local t = {

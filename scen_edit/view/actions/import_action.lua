@@ -1,9 +1,8 @@
 ImportAction = AbstractAction:extends{}
 
 function ImportAction:execute()
-    local dir = FilePanel.lastDir or SB_PROJECTS_DIR
     local fileTypes = {"Feature placer", "Diffuse", "Heightmap"}
-    sfd = ImportFileDialog(dir, fileTypes)
+    sfd = ImportFileDialog(SB_PROJECTS_DIR, fileTypes)
     sfd:setConfirmDialogCallback(
         function(path, fileType)
             if fileType == fileTypes[1] then

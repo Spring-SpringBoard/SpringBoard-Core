@@ -7,14 +7,16 @@ function HeightmapEditorView:init()
 
     self.heightmapBrushes = AssetView({
         ctrl = {
-            width = "100%",
-            height = "100%",
+			x = 0,
+			right = 0,
+			y = 70,
+            bottom = "55%", -- 100 - 45
         },
         rootDir = "brush_patterns/terrain/",
         OnSelectItem = {
             function(item, selected)
                 self.paintTexture = item.path
-                if selected and item.path then
+                if selected and item.isFile then
                     SB.model.terrainManager:generateShape(self.paintTexture)
                     local currentState = SB.stateManager:GetCurrentState()
                     if currentState:is_A(AbstractHeightmapEditingState) then
@@ -106,16 +108,7 @@ function HeightmapEditorView:init()
 		self.btnAddState,
         self.btnSetState,
 		self.btnSmoothState,
-		ScrollPanel:New {
-			x = 0,
-			right = 0,
-			y = 70,
-            bottom = "55%", -- 100 - 45
-            borderColor = {0,0,0,0},
-			children = {
-				self.heightmapBrushes.control,
-			}
-		},
+        self.heightmapBrushes:GetControl(),
 		ScrollPanel:New {
 			x = 0,
 			y = "45%",

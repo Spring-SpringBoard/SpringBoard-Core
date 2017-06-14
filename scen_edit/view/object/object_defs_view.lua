@@ -36,7 +36,14 @@ function ObjectDefsView:init()
         },
     })
 
-    self:MakePanel()
+    self:MakePanel({
+        ctrl = {
+            x = 0,
+            right = 0,
+            y = 150,
+            bottom = "35%", -- 100 - 65
+        }
+    })
     self.objectDefPanel.OnSelectItem = {
         function(item, selected)
             if #self.objectDefPanel:GetSelectedObjectDefs() > 0 then
@@ -104,16 +111,7 @@ function ObjectDefsView:init()
     local children = {
         self.btnSet,
         self.btnBrush,
-        ScrollPanel:New {
-            x = 0,
-            right = 0,
-            y = 150,
-            bottom = "35%", -- 100 - 65
-            borderColor = {0,0,0,0},
-            children = {
-                self.objectDefPanel.control
-            },
-        },
+        self.objectDefPanel:GetControl(),
         btnClose,
     }
     for i = 1, #self.filters do
@@ -162,13 +160,8 @@ function ObjectDefsView:OnEnterState(state)
 end
 
 UnitDefsView = ObjectDefsView:extends{}
-function UnitDefsView:MakePanel()
-    self.objectDefPanel = UnitDefsPanel({
-        ctrl = {
-            width = "100%",
-            height = "100%"
-        },
-    })
+function UnitDefsView:MakePanel(tbl)
+    self.objectDefPanel = UnitDefsPanel(tbl)
 end
 function UnitDefsView:EnterState()
     if self.type == "set" then
@@ -249,13 +242,8 @@ function UnitDefsView:MakeFilters()
 end
 
 FeatureDefsView = ObjectDefsView:extends{}
-function FeatureDefsView:MakePanel()
-    self.objectDefPanel = FeatureDefsPanel({
-        ctrl = {
-            width = "100%",
-            height = "100%"
-        },
-    })
+function FeatureDefsView:MakePanel(tbl)
+    self.objectDefPanel = FeatureDefsPanel(tbl)
 end
 function FeatureDefsView:EnterState()
     if self.type == "set" then

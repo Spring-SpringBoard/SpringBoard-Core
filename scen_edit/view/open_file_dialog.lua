@@ -8,6 +8,7 @@ end
 
 function OpenFileDialog:confirmDialog()
     local path = self:getSelectedFilePath()
+    Spring.Echo(path)
     if not VFS.FileExists(path, VFS.RAW_ONLY) then
         return
     end

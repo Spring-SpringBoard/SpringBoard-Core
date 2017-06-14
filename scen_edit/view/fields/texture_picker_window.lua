@@ -3,10 +3,12 @@ SB.Include(Path.Join(SB_VIEW_FIELDS_DIR, "asset_picker_window.lua"))
 TexturePickerWindow = AssetPickerWindow:extends{}
 
 function TexturePickerWindow:MakeAssetView(rootDir, dir, OnSelectItem)
-    return TextureBrowser({
+    return MaterialBrowser({
         ctrl = {
-            width = "100%",
-            height = "100%",
+            x = 0,
+            right = 0,
+            y = 0,
+            height = "80%",
         },
         rootDir = rootDir,
         dir = dir,

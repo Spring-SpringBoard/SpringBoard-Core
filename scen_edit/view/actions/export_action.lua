@@ -2,9 +2,8 @@ ExportAction = AbstractAction:extends{}
 
 function ExportAction:execute()
     if SB.projectDir ~= nil then
-        local dir = FilePanel.lastDir or SB_PROJECTS_DIR
         local fileTypes = {"Scenario archive", "Feature placer", "Map textures", "Map info"}
-        sfd = ExportFileDialog(dir, fileTypes)
+        sfd = ExportFileDialog(SB_PROJECTS_DIR, fileTypes)
         sfd:setConfirmDialogCallback(
             function(path, fileType)
                 local exportCommand

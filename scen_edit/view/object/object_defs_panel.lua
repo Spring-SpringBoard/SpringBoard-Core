@@ -4,12 +4,9 @@ ObjectDefsPanel = GridView:extends{}
 
 function ObjectDefsPanel:init(tbl)
     local defaults = {
-        ctrl = {
-            iconX = 96,
-            iconY = 96,
-            multiSelect = true,
-            minWidth = 450, -- HACK: needed to fix the bug when no items reappear once the all items are hidden/shown (filtered out/filtered in)
-        }
+        itemWidth = 76,
+        itemHeight = 76,
+        multiSelect = true,
     }
     tbl = Table.Merge(tbl, defaults)
     GridView.init(self, tbl)
@@ -40,12 +37,12 @@ function ObjectDefsPanel:Refresh()
 end
 
 function ObjectDefsPanel:FilterItems()
-    self.control:DeselectAll()
-    self.control:ClearChildren()
+    self.layoutPanel:DeselectAll()
+    self.layoutPanel:ClearChildren()
     for _, item in pairs(self.items) do
         local objectDefID = item.objectDefID
         if self:FilterObject(objectDefID) then
-            self.control:AddChild(item)
+            self.layoutPanel:AddChild(item)
         end
     end
 end
@@ -80,7 +77,7 @@ function ObjectDefsPanel:SetSearchString(search)
 end
 
 function ObjectDefsPanel:GetObjectDefID(index)
-    local item = self.control.children[index]
+    local item = self.layoutPanel.children[index]
     if item then
         return item.objectDefID
     else

@@ -28,25 +28,30 @@ function FileDialog:init(dir, caption, fileTypes)
 		right = 10,
         caption = "Cancel",
     }
-    self.filePanel = FilePanel:New {
-        x = 10,
-        y = 10,
-        width = "100%",
-        height = "100%",
+    self.fileView = AssetView({
+        ctrl = {
+            width = "100%",
+            y = 10,
+            bottom = 90 + SB.conf.B_HEIGHT + 10,
+        },
+        multiSelect = false,
         dir = self.dir,
-        multiselect = false,
-        OnDblClickItem = { function() self:confirmDialog(); self.window:Dispose() end },
-    }
-    self.filePanel.OnSelectItem = {
-        function (obj, itemIdx, selected)
-			--FIXME: loading from complex paths is broken, uncomment this when they get fixed
-            if selected then -- and itemIdx > self.filePanel._dirsNum+1 then
-                local fullPath = tostring(obj.items[itemIdx])
-                local fileName = Path.ExtractFileName(fullPath)
-                self.fileEditBox:SetText(fileName)
+        OnDblClickItem = {
+            function()
+                self:confirmDialog()
+                self.window:Dispose()
             end
-        end
-    }
+        },
+        OnSelectItem = {
+            function(item, selected)
+                if selected then
+                    local path = item.path
+                    local fileName = Path.ExtractFileName(item.path)
+                    self.fileEditBox:SetText(fileName)
+                end
+            end
+        }
+    })
 
     self.window = Window:New {
         x = 500,
@@ -56,14 +61,7 @@ function FileDialog:init(dir, caption, fileTypes)
         parent = screen0,
         caption = self.caption,
         children = {
-            ScrollPanel:New {
-                width = "100%",
-                y = 10,
-                bottom = 90 + SB.conf.B_HEIGHT + 10,
-                children = {
-                    self.filePanel,
-                },
-            },
+            self.fileView:GetControl(),
             Control:New {
                 x = 1,
                 width = "100%",
@@ -154,7 +152,7 @@ function FileDialog:setConfirmDialogCallback(func)
 end
 
 function FileDialog:getSelectedFilePath()
-    local path = self.filePanel.dir .. self.fileEditBox.text
+    local path = self.fileView.dir .. self.fileEditBox.text
     return path
 end
 

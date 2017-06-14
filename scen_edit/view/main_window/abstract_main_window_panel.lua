@@ -71,3 +71,36 @@ end
 function AbstractMainWindowPanel:getControl()
 	return self.control
 end
+
+function AbstractMainWindowPanel:AddElement(tbl)
+	local caption = tbl.caption
+	local tooltip = tbl.tooltip or ""
+	local image = tbl.image or ""
+	local viewName = tbl.viewName
+	local ViewClass = tbl.ViewClass
+
+	local btn = TabbedPanelButton({
+        tooltip = tooltip,
+        children = {
+            TabbedPanelImage({ file = image }),
+            TabbedPanelLabel({ caption = caption }),
+        },
+        OnClick = {
+            function(obj)
+                obj:SetPressedState(true)
+                if SB[viewName] == nil then
+                    SB[viewName] = ViewClass()
+                    SB[viewName].window.OnHide = {
+						function()
+							obj:SetPressedState(false)
+						end
+					}
+                end
+                if SB[viewName].window.hidden then
+					SB.view:SetMainPanel(SB[viewName].window)
+                end
+            end
+        },
+    })
+    self.control:AddChild(btn)
+end

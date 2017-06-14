@@ -1,40 +1,61 @@
 GridView = LCS.class{}
 
 function GridView:init(tbl)
-	local defaults = {
-		ctrl = {
-			selectable = true,
-			multiSelect = false,
-			autosize = true,
-			autoArrangeH = false,
-			autoArrangeV = false,
-			centerItems  = false,
-			itemMargin   = {1, 1, 1, 1},
-			iconX = 88,
-			iconY = 88,
-			useRTT = true,
-		},
-		OnSelectItem = {},
-	}
+	-- Defaults
+	local layoutPanelSettings = {
+		selectable = true,
+		multiSelect = false,
+		autosize = true,
+		autoArrangeH = false,
+		autoArrangeV = false,
+		centerItems  = false,
+		itemMargin   = {1, 1, 1, 1},
+		iconX = 88,
+		iconY = 88,
+		useRTT = true,
 
-	tbl = Table.Merge(tbl, defaults)
+		x = 0,
+		y = 0,
+		width = "100%",
+		height = "100%",
+
+		-- FIXME: Shouldn't need to set minWidth
+		minWidth = 450,
+	}
+	local scrollPanelSettings = {
+		borderColor = {0,0,0,0},
+		padding = {0, 0, 0, 0},
+		children = {},
+	}
+	self.OnSelectItem = {}
+
+	self.itemWidth = layoutPanelSettings.iconX
+	self.itemHeight = layoutPanelSettings.iconY
+	if tbl.itemWidth then
+		layoutPanelSettings.iconX = tbl.itemWidth
+	end
+	if tbl.itemHeight then
+		layoutPanelSettings.iconY = tbl.itemHeight
+	end
+	if tbl.multiSelect then
+		layoutPanelSettings.multiSelect = tbl.multiSelect
+	end
+
 	local ctrl = tbl.ctrl
+	ctrl = Table.Merge(ctrl, scrollPanelSettings)
 	tbl.ctrl = nil
 
 	for k, v in pairs(tbl) do
 		self[k] = v
 	end
 
-	self.iconX = ctrl.iconX
-	self.iconY = ctrl.iconY
-
 	self.items = {}
 
 	-- we're using the fake control to handle skin-based rendering
 	self._fakeControl = ImageListView:New{}
 
-	self.control = LayoutPanel:New(ctrl)
-	self.control.HitTest = function(ctrl, x,y)
+	self.layoutPanel = LayoutPanel:New(layoutPanelSettings)
+	self.layoutPanel.HitTest = function(ctrl, x,y)
 		local cx,cy = ctrl:LocalToClient(x,y)
 		local obj = LayoutPanel.HitTest(ctrl,cx,cy)
 		if (obj) then return obj end
@@ -45,7 +66,7 @@ function GridView:init(tbl)
 		return (itemIdx>=0) and ctrl
 	end
 
-	self.control.DrawItemBkGnd = function(ctrl, index)
+	self.layoutPanel.DrawItemBkGnd = function(ctrl, index)
 		local cell = ctrl._cells[index]
 		local itemPadding = ctrl.itemPadding
 
@@ -61,18 +82,21 @@ function GridView:init(tbl)
 		end
 	end
 
-	self.control.OnSelectItem = {
+	self.layoutPanel.OnSelectItem = {
 		function(...)
 			self:_OnSelectItem(...)
 		end
 	}
+
+	table.insert(ctrl.children, self.layoutPanel)
+	self.scrollPanel = ScrollPanel:New(ctrl)
 end
 
 function GridView:_OnValidateSelectItem(obj, itemIdx, selected)
 	if itemIdx == 0 then
 		return
 	end
-	local item = self.control.children[itemIdx]
+	local item = self.layoutPanel.children[itemIdx]
 	return item
 end
 
@@ -83,15 +107,19 @@ function GridView:_OnSelectItem(obj, itemIdx, selected)
 	end
 end
 
+function GridView:GetControl()
+	return self.scrollPanel
+end
+
 function GridView:GetAllItems()
 	return self.items
 end
 
 function GridView:GetSelectedItems()
 	local items = {}
-	for itemIdx, selected in pairs(self.control.selectedItems) do
+	for itemIdx, selected in pairs(self.layoutPanel.selectedItems) do
 		if selected then
-			local item = self.control.children[itemIdx]
+			local item = self.layoutPanel.children[itemIdx]
 			table.insert(items, item)
 		end
 	end
@@ -99,7 +127,7 @@ function GridView:GetSelectedItems()
 end
 
 function GridView:GetItem(itemIdx)
-	return self.control.children[itemIdx]
+	return self.layoutPanel.children[itemIdx]
 end
 
 function GridView:GetItemIndex(item)
@@ -111,17 +139,17 @@ function GridView:GetItemIndex(item)
 end
 
 function GridView:SelectItem(itemIdx)
-	self.control:SelectItem(itemIdx)
+	self.layoutPanel:SelectItem(itemIdx)
 end
 
 function GridView:DeselectAll()
-	self.control:DeselectAll()
+	self.layoutPanel:DeselectAll()
 end
 
 function GridView:NewItem(tbl)
 	local defaults = {
-		width  = self.iconX,
-		height = self.iconY,
+		width  = self.itemWidth,
+		height = self.itemHeight,
 		padding = {0,0,0,0},
 		itemPadding = {0,0,0,0},
 		itemMargin = {0,0,0,0},
@@ -130,7 +158,7 @@ function GridView:NewItem(tbl)
 	tbl = Table.Merge(tbl, defaults)
 	local item = Control:New(tbl)
 
-	self.control:AddChild(item)
+	self.layoutPanel:AddChild(item)
 	table.insert(self.items, item)
 	return item
 end
@@ -179,21 +207,21 @@ end
 
 function GridView:ClearItems()
 	self.items = {}
-    --self.control:DeselectAll()
-    self.control:ClearChildren()
+    --self.layoutPanel:DeselectAll()
+    self.layoutPanel:ClearChildren()
 end
 
 function GridView:StartMultiModify()
-	self.control:DisableRealign()
+	self.layoutPanel:DisableRealign()
 end
 
 function GridView:EndMultiModify()
-	self.control:EnableRealign()
-    self.control:RequestRealign()
-    if self.control.parent then
-        self.control.parent:RequestRealign()
-        self.control.parent:Invalidate()
+	self.layoutPanel:EnableRealign()
+    self.layoutPanel:RequestRealign()
+    if self.scrollPanel then
+        self.scrollPanel:RequestRealign()
+        self.scrollPanel:Invalidate()
     end
-    self.control:UpdateLayout()
-    self.control:Invalidate()
+    self.layoutPanel:UpdateLayout()
+    self.layoutPanel:Invalidate()
 end

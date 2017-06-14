@@ -10,7 +10,7 @@ function SavedBrushes:init(opts)
     self.editor = opts.editor
     self:super("init", opts)
     self:_UpdateBrushes()
-    self.control:DeselectAll()
+    self.layoutPanel:DeselectAll()
 end
 
 function SavedBrushes:GetSelectedBrush()
@@ -64,7 +64,9 @@ function SavedBrushes:_LoadBrush(item)
     local brush = self.savedBrushes[brushID]
     assert(brush, "No brush for brushID: " .. tostring(brushID))
 
+    self.editor.initializing = true
     self.editor:Load(brush.opts)
+    self.editor.initializing = false
     --self.brushTextureImages.control:DeselectAll()
     --self.textureBrowser.control:DeselectAll()
 end
@@ -86,7 +88,7 @@ function SavedBrushes:_UpdateBrushes()
     self:EndMultiModify()
 end
 
-function SavedBrushes:PopulateItems()
+function SavedBrushes:_AddAddBrush()
     local addBrush = self:NewItem({
         tooltip = "Add new brush",
         children = {
@@ -119,48 +121,61 @@ function SavedBrushes:PopulateItems()
     --local addBrush = self:AddItem("Add", Path.Join(SB_IMG_DIR, "add-plus-button.png"), "Add new brush")
     addBrush.__add_brush = true
     addBrush.__no_background = true
+end
 
+function SavedBrushes:_MakeCloseButton(closeBrushID)
+    local btnClose = Button:New {
+        caption = "",
+        width = 20,
+        height = 20,
+        right = 0,
+        y = 0,
+        padding = {2, 2, 2, 2},
+        tooltip = "Remove brush",
+        classname = "negative_button",
+        children = {
+            Image:New {
+                file = SB_IMG_DIR .. "cancel.png",
+                height = "100%",
+                width = "100%",
+            },
+        },
+        OnClick = {
+            function()
+                self.savedBrushes[closeBrushID] = nil
+                for i, brushID in pairs(self.savedBrushesOrder) do
+                    if closeBrushID == brushID then
+                        table.remove(self.savedBrushesOrder, i)
+                    end
+                end
+                self:_UpdateBrushes()
+            end
+        }
+    }
+    return btnClose
+end
+
+function SavedBrushes:PopulateItems()
+    if not self.disableAdd then
+        self:_AddAddBrush()
+    end
     for _, brushID in pairs(self.savedBrushesOrder) do
         local brush = self.savedBrushes[brushID]
         local item = self:AddItem(brush.caption, brush.image, brush.tooltip)
         item.brushID = brush.brushID
-        local btnClose = Button:New {
-            caption = "",
-            width = 20,
-            height = 20,
-            right = 0,
-            y = 0,
-            padding = {2, 2, 2, 2},
-            tooltip = "Remove brush",
-            classname = "negative_button",
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
-                    height = "100%",
-                    width = "100%",
-                },
-            },
-            OnClick = {
-                function()
-                    self.savedBrushes[brush.brushID] = nil
-                    for i, brushID in pairs(self.savedBrushesOrder) do
-                        if brush.brushID == brushID then
-                            table.remove(self.savedBrushesOrder, i)
-                        end
-                    end
-                    self:_UpdateBrushes()
-                end
-            }
-        }
-        item:AddChild(btnClose)
-        item.btnClose = btnClose
 
-        item:SetChildLayer(item.imgCtrl, 2)
-        item:SetChildLayer(item.btnClose, 1)
+        if not self.disableRemove then
+            local btnClose = self:_MakeCloseButton()
+            item:AddChild(btnClose)
+            item.btnClose = btnClose
+
+            item:SetChildLayer(item.imgCtrl, 2)
+            item:SetChildLayer(item.btnClose, 1)
+        end
         item:Invalidate()
     end
 
     SB.delay(function()
-        self.control:Invalidate()
+        self.layoutPanel:Invalidate()
     end)
 end

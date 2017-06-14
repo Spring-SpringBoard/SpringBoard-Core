@@ -4,7 +4,6 @@ ExportFileDialog = FileDialog:extends{}
 
 function ExportFileDialog:init(dir, fileTypes)
     self:super("init", dir, "Export file", fileTypes)
-	self.filePanel.showFiles = false
 end
 
 function ExportFileDialog:confirmDialog()

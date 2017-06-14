@@ -3,6 +3,7 @@ TabbedWindow = LCS.class{}
 function TabbedWindow:init()
 	local unitFeaturePanel = UnitFeaturePanel()
 	local terrainPanel = TerrainPanel()
+	local envPanel = EnvPanel()
 	local metaPanel = MetaPanel()
     local generalPanel = GeneralPanel()
 	local shaderPanel = ShaderPanel()
@@ -291,6 +292,7 @@ function TabbedWindow:init()
 		tabs = {
 			{ name = "Object", children = {unitFeaturePanel:getControl()} },
 			{ name = "Map", children = {terrainPanel:getControl()} },
+			{ name = "Env", children = {envPanel:getControl()} },
 			{ name = "Trigger", children = {metaPanel:getControl()} },
 			{ name = "General", children = {generalPanel:getControl()} },
 			-- { name = "Shaders", children = {shaderPanel:getControl()} },

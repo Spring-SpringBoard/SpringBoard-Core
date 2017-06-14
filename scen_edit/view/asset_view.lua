@@ -16,7 +16,7 @@ function AssetView:init(tbl)
     self.imageFolder = tbl.imageFolder or self._fakeControl.imageFolder
     self.imageFolderUp = tbl.imageFolderUp or self._fakeControl.imageFolderUp
 
-    self.control.MouseDblClick = function(ctrl, x, y, button, mods)
+    self.layoutPanel.MouseDblClick = function(ctrl, x, y, button, mods)
         if button ~= 1 then
             return
         end
@@ -47,16 +47,16 @@ end
 local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.ico','.gif','.psd','.tif'} --'.psp'
 
 function AssetView:SetDir(directory)
-    self.control:DeselectAll()
+    self.layoutPanel:DeselectAll()
     self.dir = directory
--- 	TextureBrowser.lastDir = self.dir
+-- 	MaterialBrowser.lastDir = self.dir
     self:ScanDir()
 end
 
 function AssetView:ScanDir()
     self:ScanDirStarted()
 
-    local files = SB.model.assetsManager:DirList(self.rootDir, self.dir, "*")
+    local files = self:_DirList()
     self.files = {}
     for _, file in pairs(files) do
         local ext = (file:GetExt() or ""):lower()
@@ -66,7 +66,7 @@ function AssetView:ScanDir()
             end
         end
     end
-    self.dirs = SB.model.assetsManager:SubDirs(self.rootDir, self.dir, "*")
+    self.dirs = self:_SubDirs()
     self._dirsNum = #self.dirs
 
     self:ScanDirFinished()
@@ -82,7 +82,8 @@ function AssetView:ScanDir()
     if self.showDirs then
         for _, dir in pairs(self.dirs) do
             local item = self:AddItem(Path.ExtractFileName(dir), self.imageFolder)
-            item.dir = dir
+            item.path = dir
+            item.isFolder = true
         end
     end
     self:PopulateItems()
@@ -91,13 +92,37 @@ function AssetView:ScanDir()
 end
 
 function AssetView:SelectAsset(path)
-    local assetPath = SB.model.assetsManager:ToAssetPath(self.rootDir, path)
+    local assetPath = self:_ToAssetPath(path)
     local dir = Path.GetParentDir(assetPath)
     self:SetDir(dir)
     for itemIdx, item in pairs(self:GetAllItems()) do
         if item.path == path then
             self:SelectItem(itemIdx)
         end
+    end
+end
+
+function AssetView:_DirList()
+    if self.rootDir then
+        return SB.model.assetsManager:DirList(self.rootDir, self.dir, "*")
+    else
+        return VFS.DirList(self.dir, "*")
+    end
+end
+
+function AssetView:_SubDirs()
+    if self.rootDir then
+        return SB.model.assetsManager:SubDirs(self.rootDir, self.dir, "*")
+    else
+        return VFS.SubDirs(self.dir, "*")
+    end
+end
+
+function AssetView:_ToAssetPath(path)
+    if self.rootDir then
+        return SB.model.assetsManager:ToAssetPath(self.rootDir, path)
+    else
+        return path
     end
 end
 
@@ -114,9 +139,10 @@ end
 
 function AssetView:PopulateItems()
     for _, file in pairs(self.files) do
-        local texturePath = ':clr' .. self.iconX .. ',' .. self.iconY .. ':' .. tostring(file)
+        local texturePath = ':clr' .. self.itemWidth .. ',' .. self.itemHeight .. ':' .. tostring(file)
         local name = Path.ExtractFileName(file)
         local item = self:AddItem(name, texturePath, "")
         item.path = file
+        item.isFile = true
     end
 end

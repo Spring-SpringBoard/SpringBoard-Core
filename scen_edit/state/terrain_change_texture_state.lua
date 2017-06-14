@@ -7,7 +7,7 @@ function TerrainChangeTextureState:init(editorView)
     self.patternTexture = self.editorView.fields["patternTexture"].value
     self.texScale       = self.editorView.fields["texScale"].value
     self.mode           = self.editorView.fields["mode"].value
-    self.dnts           = self.editorView.fields["dnts"].value
+    self.dntsIndex      = self.editorView.fields["dntsIndex"].value
     self.kernelMode     = self.editorView.fields["kernelMode"].value
     self.blendFactor    = self.editorView.fields["blendFactor"].value
     self.falloffFactor  = self.editorView.fields["falloffFactor"].value
@@ -36,7 +36,10 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
         return
     end
     local voidFactor = self.voidFactor * applyAction
-    local colorIndex = tonumber(self.dnts) * applyAction
+    local colorIndex = self.dntsIndex
+    if colorIndex then
+        colorIndex = colorIndex * applyAction
+    end
     local exclusive = 0
     if self.exclusive then
         exclusive = 1

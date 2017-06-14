@@ -43,6 +43,32 @@ function TextureManager:init()
         --     _setParams = {"$ssmf_splat_normals", 4},
         -- },
 	}
+    self.materialTextures = {
+        diffuse = {
+            suffix = "_diffuse",
+            enabled = true,
+        },
+        specular = {
+            suffix = "_specular",
+            enabled = true,
+        },
+        normal = {
+            suffix = "_normal",
+            enabled = true,
+        },
+        emissive = {
+            suffix = "_emissive",
+            enabled = true,
+        },
+        height = {
+            suffix = "_height",
+            enabled = false,
+        },
+        glow = {
+            suffix = "_glow",
+            enabled = false,
+        }
+    }
     self.shadingTextureNames = {}
     for name, texDef in pairs(self.shadingTextureDefs) do
         texDef.name = name
@@ -134,12 +160,7 @@ function TextureManager:generateMapTextures()
 
 		local engineName = texDef.engineName
 		Log.Notice("engine texture: " .. tostring(name))
-		local success
-        if texDef._setParams then
-            success = Spring.SetMapShadingTexture(texDef._setParams[1], "", texDef._setParams[2])
-        else
-            success = Spring.SetMapShadingTexture(engineName, "")
-        end
+		local success = Spring.SetMapShadingTexture(engineName, "")
 		if not success then
 			Log.Error("Failed to set texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
 		end
@@ -184,15 +205,16 @@ function TextureManager:generateMapTextures()
             --    gl.GenerateMipmap(tex)
             end
 			self.shadingTextures[name] = tex
-            if texDef._setParams then
-                Spring.SetMapShadingTexture(texDef._setParams[1], tex, texDef._setParams[2])
-            else
-                Spring.SetMapShadingTexture(engineName, tex)
-            end
+            Spring.SetMapShadingTexture(engineName, tex)
 
             texDef.enabled = true
 		end
 	end
+
+    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 0)
+    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 1)
+    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 2)
+    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 3)
 --  	self:SetupShader()
 end
 

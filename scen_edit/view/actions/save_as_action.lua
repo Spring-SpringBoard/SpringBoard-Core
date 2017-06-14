@@ -1,8 +1,7 @@
 SaveAsAction = AbstractAction:extends{}
 
 function SaveAsAction:execute()
-    local dir = FilePanel.lastDir or SB_PROJECTS_DIR
-    sfd = SaveProjectDialog(dir)
+    sfd = SaveProjectDialog(SB_PROJECTS_DIR)
     sfd:setConfirmDialogCallback(
         function(path)
             Log.Notice("Saving project: " .. path .. " ...")
@@ -21,23 +20,31 @@ end
 
 function SaveAsAction:CreateProjectStructure(projectDir)
 	-- create project if it doesn't exist already
-	if not SB.DirExists(projectDir, VFS.RAW_ONLY) then
-		Spring.CreateDir(projectDir)
-		Spring.CreateDir(projectDir .. "/triggers")
+	if SB.DirExists(projectDir, VFS.RAW_ONLY) then
+        return
+    end
 
-		local myCustomTriggersLua = [[
+	Spring.CreateDir(projectDir)
+	Spring.CreateDir(Path.Join(projectDir, "triggers"))
+
+	local myCustomTriggersLua = [[
 return {
+    dataTypes = {
+        -- Custom data types go here
+    },
+    events = {
+        -- Custom events go here
+    },
 	actions = {
-		-- My custom actions go here
+		-- Custom actions go here
 	},
 	functions = {
-		-- My custom functions go here
+		-- Custom functions go here
 	},
 }
 
 ]]
-		local file = assert(io.open(projectDir .. "/triggers/my_custom_triggers.lua", "w"))
-		file:write(myCustomTriggersLua)
-		file:close()
-	end
+	local file = assert(io.open(Path.Join(projectDir, "triggers/my_custom_triggers.lua"), "w"))
+	file:write(myCustomTriggersLua)
+	file:close()
 end

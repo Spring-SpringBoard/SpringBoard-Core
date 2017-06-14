@@ -8,7 +8,7 @@ function FilePickerWindow:init(path)
     self.path = path or "/"
     self.selectedFile = {}
 
-    self.fileBrowser = TextureBrowser({
+    self.fileBrowser = MaterialBrowser({
         ctrl = {
             width = "100%",
             height = "100%",
@@ -40,7 +40,7 @@ function FilePickerWindow:init(path)
             height = "80%",
             padding = {0, 0, 0, 0},
             children = {
-                self.fileBrowser.control,
+                self.fileBrowser:GetControl(),
             }
         },
     }

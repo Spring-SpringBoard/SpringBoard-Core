@@ -1,5 +1,5 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
-SB.Include(Path.Join(SB_VIEW_MAP_DIR, "texture_browser.lua"))
+SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
 DNTSEditorView = EditorView:extends{}
@@ -35,8 +35,6 @@ function DNTSEditorView:init()
             height = "100%",
             iconX = 64,
             iconY = 64,
-            -- FIXME: Shouldn't need to set minWidth
-            minWidth = 400,
         },
         editor = self,
         GetNewBrush = function()
@@ -183,7 +181,7 @@ function DNTSEditorView:init()
             padding = {0, 0, 0, 0},
             borderColor = {0,0,0,0},
             children = {
-                self.patternTextureImages.control,
+                self.patternTextureImages:GetControl(),
             }
         },
         ScrollPanel:New {
@@ -194,7 +192,7 @@ function DNTSEditorView:init()
             padding = {0, 0, 0, 0},
             borderColor = {0,0,0,0},
             children = {
-                self.savedBrushes.control,
+                self.savedBrushes:GetControl(),
             }
         },
         ScrollPanel:New {

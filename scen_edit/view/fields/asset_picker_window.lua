@@ -14,16 +14,7 @@ function AssetPickerWindow:init(opts)
 
     self.assetBrowser = self:MakeAssetView(rootDir, dir, OnSelectItem)
     local children = {
-        ScrollPanel:New {
-            x = 0,
-            right = 0,
-            y = 0,
-            height = "80%",
-            padding = {0, 0, 0, 0},
-            children = {
-                self.assetBrowser.control,
-            }
-        },
+        self.assetBrowser:GetControl(),
     }
 
     table.insert(children,
@@ -43,8 +34,10 @@ end
 function AssetPickerWindow:MakeAssetView(rootDir, dir, OnSelectItem)
     return AssetView({
         ctrl = {
-            width = "100%",
-            height = "100%",
+            x = 0,
+            right = 0,
+            y = 0,
+            height = "80%",
         },
         rootDir = rootDir,
         dir = dir,

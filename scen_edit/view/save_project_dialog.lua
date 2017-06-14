@@ -4,7 +4,6 @@ SaveProjectDialog = FileDialog:extends{}
 
 function SaveProjectDialog:init(dir)
     self:super("init", dir, "Save project")
-	self.filePanel.showFiles = false
 end
 
 function SaveProjectDialog:save(path)
@@ -14,10 +13,10 @@ function SaveProjectDialog:save(path)
 end
 
 function SaveProjectDialog:confirmDialog()
-    local filePath = self:getSelectedFilePath()
+    local path = self:getSelectedFilePath()
     --TODO: create a dialogue which prompts the user if they want to delete the existing file
-    if (VFS.FileExists(filePath)) then
-        os.remove(filePath)
+    if VFS.FileExists(path, VFS.RAW_ONLY) then
+        os.remove(path)
     end
-    self:save(filePath)
+    self:save(path)
 end
