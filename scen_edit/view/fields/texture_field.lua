@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_FIELDS_DIR .. "file_field.lua")
+SB.Include(SB_VIEW_FIELDS_DIR .. "asset_field.lua")
 
 TextureField = AssetField:extends{}
 
