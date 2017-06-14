@@ -21,7 +21,6 @@ end
 -- Checks whether directory is a SpringBoard project
 -- FIXME: This could probably be moved somewhere else
 function OpenProjectDialog:DirIsProject(path)
-    Spring.Echo(path)
     if not (VFS.FileExists(path, VFS.RAW_ONLY) or
             SB.DirExists(path, VFS.RAW_ONLY)) then
         return false
@@ -31,8 +30,6 @@ function OpenProjectDialog:DirIsProject(path)
         VFS.RAW)
     local heightMapExists = VFS.FileExists(Path.Join(path, "heightmap.data"),
         VFS.RAW)
-
-    Spring.Echo(modelExists, heightMapExists)
 
     return modelExists and heightMapExists
 end
