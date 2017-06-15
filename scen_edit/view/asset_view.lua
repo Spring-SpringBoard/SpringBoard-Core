@@ -26,41 +26,60 @@ function AssetView:init(tbl)
 
         if itemIdx < 0 then return end
 
-        if itemIdx == 1 and self.dir ~= "" then
-            self:SetDir(Path.GetParentDir(self.dir))
-            return ctrl
-        end
-
-        if itemIdx <= self._dirsNum + 1 then
-            if self.dir ~= "" then
-                itemIdx = itemIdx - 1
-            end
-            self:SetDir(self.dirs[itemIdx])
+        local item = self.items[itemIdx]
+        if item.isFolder then
+            self:SetDir(item.path)
             return ctrl
         else
-            ctrl:CallListeners(ctrl.OnDblClickItem, self.items[itemIdx], itemIdx)
+            ctrl:CallListeners(ctrl.OnDblClickItem, item, itemIdx)
             return ctrl
         end
     end
     if self.showPath then
-        self.layoutPanel:SetPos(nil, 20)
+        self.scrollPanel:SetPos(nil, 20)
         self.lblPath = Label:New {
-            x = 5, y = 5,
+            x = 35,
+            y = 3,
             width = 100,
             height = 20,
             caption = "",
-            parent = self.scrollPanel,
+            parent = self.holderControl,
             font = {
                 color = {0.7, 0.7, 0.7, 1.0},
             },
         }
+        self.btnUp = Button:New {
+            x = 5,
+            y = 2,
+            width = 18,
+            height = 18,
+            caption = "",
+            parent = self.holderControl,
+            padding = {0, 0, 0, 0},
+            children = {
+                Image:New {
+                    x = 0,
+                    y = 0,
+                    width = "100%",
+                    height = "100%",
+                    margin = {0, 0, 0, 0},
+                    file = self.imageFolderUp,
+                }
+            },
+            OnClick = {
+                function()
+                    self:SetDir(Path.GetParentDir(self.dir))
+                end
+            },
+        }
         if self.rootDir then
             self.lblRootDir = Label:New {
-                right = 5, y = 5,
+                right = 5,
+                y = 3,
                 width = 100,
                 height = 20,
                 caption = "Root: " .. tostring(self.rootDir),
-                parent = self.scrollPanel,
+                parent = self.holderControl,
                 font = {
                     color = {0.7, 0.7, 0.7, 1.0},
                 },
@@ -76,7 +95,7 @@ function AssetView:SetDir(directory)
     self.layoutPanel:DeselectAll()
     self.dir = directory
     if self.lblPath then
-        self.lblPath:SetCaption("Path: " .. self.dir)
+        self.lblPath:SetCaption(self.dir)
     end
 -- 	MaterialBrowser.lastDir = self.dir
     self:ScanDir()
@@ -96,17 +115,12 @@ function AssetView:ScanDir()
         end
     end
     self.dirs = self:_SubDirs()
-    self._dirsNum = #self.dirs
 
     self:ScanDirFinished()
 
     self:StartMultiModify()
     self:ClearItems()
 
-    --// add ".."
-    if self.showDirs and self.dir ~= "" then
-        self:AddItem('', self.imageFolderUp)
-    end
     --// add dirs at top
     if self.showDirs then
         for _, dir in pairs(self.dirs) do

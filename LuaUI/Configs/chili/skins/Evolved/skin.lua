@@ -300,6 +300,8 @@ skin.progressbar = {
 }
 
 skin.scrollpanel = {
+  backgroundColor = {0,0,0,0},
+
   BorderTileImage = ":cl:panel2_border.png",
   bordertiles = {2, 2, 2, 2},
 

@@ -8,7 +8,7 @@ function TexturePickerWindow:MakeAssetView(rootDir, dir, OnSelectItem)
             x = 0,
             right = 0,
             y = 0,
-            height = "80%",
+            bottom = 30,
         },
         rootDir = rootDir,
         dir = dir,

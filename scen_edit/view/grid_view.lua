@@ -26,6 +26,16 @@ function GridView:init(tbl)
 		borderColor = {0,0,0,0},
 		padding = {0, 0, 0, 0},
 		children = {},
+
+		x = 0,
+		y = 0,
+		width = "100%",
+		height = "100%",
+	}
+	local holderControlSettings = {
+		padding = {0, 0, 0, 0},
+		children = {},
+		classname = "panel",
 	}
 	self.OnSelectItem = {}
 
@@ -42,7 +52,7 @@ function GridView:init(tbl)
 	end
 
 	local ctrl = tbl.ctrl
-	ctrl = Table.Merge(ctrl, scrollPanelSettings)
+	ctrl = Table.Merge(ctrl, holderControlSettings)
 	tbl.ctrl = nil
 
 	for k, v in pairs(tbl) do
@@ -88,8 +98,11 @@ function GridView:init(tbl)
 		end
 	}
 
-	table.insert(ctrl.children, self.layoutPanel)
-	self.scrollPanel = ScrollPanel:New(ctrl)
+	table.insert(scrollPanelSettings.children, self.layoutPanel)
+	self.scrollPanel = ScrollPanel:New(scrollPanelSettings)
+
+	table.insert(ctrl.children, self.scrollPanel)
+	self.holderControl = Control:New(ctrl)
 end
 
 function GridView:_OnValidateSelectItem(obj, itemIdx, selected)
@@ -108,7 +121,7 @@ function GridView:_OnSelectItem(obj, itemIdx, selected)
 end
 
 function GridView:GetControl()
-	return self.scrollPanel
+	return self.holderControl
 end
 
 function GridView:GetAllItems()
