@@ -32,6 +32,7 @@ function View:init()
 	self.tabbedWindow = TabbedWindow()
     self.commandWindow = CommandWindow()
 -- 	self.commandWindow.window:Hide()
+    self.statusWindow = StatusWindow()
     self.modelShaders = ModelShaders()
 
     self.teamSelector = TeamSelector()
@@ -54,6 +55,7 @@ function View:Update()
 		self.teamSelector:Update()
 	end
     self.selectionManager:Update()
+    self.statusWindow:Update()
 end
 
 function View:drawRect(x1, z1, x2, z2)
