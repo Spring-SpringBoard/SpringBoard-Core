@@ -35,7 +35,7 @@ function BrushObjectState:FilterObject(objectID)
 end
 
 function sunflower(n, alpha)   --  example: n=500, alpha=2
-    local b = math.floor(alpha * math.sqrt(n) + 0.5)      -- number of boundary points 
+    local b = math.floor(alpha * math.sqrt(n) + 0.5)      -- number of boundary points
     local phi = (math.sqrt(5)+1) / 2           -- golden ratio
     local points = {}
     for k = 1, n do
@@ -49,7 +49,7 @@ end
 function radius(k, n, b)
     if k > n - b then
         return 1 -- put on the boundary
-    else 
+    else
         return math.sqrt(k-1/2)/math.sqrt(n-(b+1)/2)  -- apply square root
     end
 end
@@ -222,3 +222,26 @@ function BrushFeatureState:init(...)
     BrushObjectState.init(self, ...)
     self.bridge = featureBridge
 end
+
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+BrushCommandManagerListener = CommandManagerListener:extends{}
+
+function BrushCommandManagerListener:OnCommandExecuted(cmdIDs, isUndo, isRedo)
+    if not cmdIDs or isUndo or isRedo then
+        return
+    end
+
+    local currentState = SB.stateManager:GetCurrentState()
+    if currentState:is_A(BrushObjectState) then
+        for _, cmdID in pairs(cmdIDs) do
+            currentState:CommandExecuted(cmdID)
+        end
+    end
+end
+
+brushCommandManagerListener = BrushCommandManagerListener()
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

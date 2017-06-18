@@ -11,4 +11,8 @@ function SetMultipleCommandModeCommand:execute()
     else
         SB.commandManager:leaveMultipleCommandMode()
     end
+    -- Also set the multiple command mode in unsynced
+    if Script.GetName() ~= "LuaUI" then
+        SB.commandManager:execute(self, true)
+    end
 end

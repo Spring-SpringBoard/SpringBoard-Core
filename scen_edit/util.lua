@@ -441,22 +441,6 @@ function SB.SetClassName(class, className)
     end
 end
 
-function SB.resolveCommand(cmdTable)
-    local cmd = {}
-    if cmdTable.className then
-        local env = getfenv(1)
-        cmd = env[cmdTable.className]()
-    end
-    for k, v in pairs(cmdTable) do
-        if type(v) == "table" then
-            cmd[k] = SB.resolveCommand(v)
-        else
-            cmd[k] = v
-        end
-    end
-    return cmd
-end
-
 function SB.deepcopy(t)
     if type(t) ~= 'table' then return t end
     local mt = getmetatable(t)

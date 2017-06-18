@@ -103,6 +103,7 @@ function AnimationsView:init()
     self:Finalize(children)
     SB.view.selectionManager:addListener(self)
     self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+    SB.commandManager:addListener(self)
 end
 
 function AnimationsView:GetPieceHierarchy(objectID, bridge)
@@ -124,7 +125,7 @@ function AnimationsView:OnSelectionChanged(selection)
     self.selectionChanging = false
 end
 
-function AnimationsView:CommandExecuted()
+function AnimationsView:OnCommandExecuted()
     if not self._startedChanging then
         self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
     end

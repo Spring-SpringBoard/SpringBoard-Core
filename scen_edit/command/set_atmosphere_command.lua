@@ -4,25 +4,10 @@ SetAtmosphereCommand.className = "SetAtmosphereCommand"
 function SetAtmosphereCommand:init(opts)
     self.className = "SetAtmosphereCommand"
     self.opts = opts
+    self._execute_unsynced = true
 end
 
 function SetAtmosphereCommand:execute()
-    local cmd = WidgetSetAtmosphereCommand(self.opts)
-    SB.commandManager:execute(cmd, true)
-end
-
-function SetAtmosphereCommand:unexecute()
-    -- FIXME: widget command undo isn't implemented correctly yet
-end
-
-WidgetSetAtmosphereCommand = Command:extends{}
-WidgetSetAtmosphereCommand.className = "WidgetSetAtmosphereCommand"
-
-function WidgetSetAtmosphereCommand:init(opts)
-    self.opts = opts
-end
-
-function WidgetSetAtmosphereCommand:execute()
     self.old = {
         fogStart   = gl.GetAtmosphere("fogStart"),
         fogEnd     = gl.GetAtmosphere("fogEnd"),
@@ -35,6 +20,6 @@ function WidgetSetAtmosphereCommand:execute()
     Spring.SetAtmosphere(self.opts)
 end
 
-function WidgetSetAtmosphereCommand:unexecute()
+function SetAtmosphereCommand:unexecute()
     Spring.SetAtmosphere(self.old)
 end

@@ -122,6 +122,8 @@ function LightingEditorView:init()
 
     self:Finalize(children)
     self.initializing = false
+
+    SB.commandManager:addListener(self)
 end
 
 function _ColorArrayToChannels(colorArray)
@@ -129,6 +131,8 @@ function _ColorArrayToChannels(colorArray)
 end
 
 function LightingEditorView:UpdateLighting()
+    self.updating = true
+
     local sunDirX, sunDirY, sunDirZ = gl.GetSun()
     self:Set("sunDirX", sunDirX)
     self:Set("sunDirY", sunDirY)
@@ -154,6 +158,14 @@ function LightingEditorView:UpdateLighting()
     self:Set("unitAmbientColor",  unitAmbient)
     self:Set("unitSpecularColor", unitSpecular)
     self:Set("modelShadowDensity", modelShadowDensity)
+
+    self.updating = false
+end
+
+function LightingEditorView:OnCommandExecuted()
+    if not self._startedChanging then
+        self:UpdateLighting()
+    end
 end
 
 function LightingEditorView:OnStartChange(name)
@@ -165,7 +177,7 @@ function LightingEditorView:OnEndChange(name)
 end
 
 function LightingEditorView:OnFieldChange(name, value)
-    if self.initializing then
+    if self.initializing or self.updating then
         return
     end
 

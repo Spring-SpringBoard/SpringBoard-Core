@@ -284,6 +284,7 @@ function CollisionView:init()
     self:Finalize(children)
     SB.view.selectionManager:addListener(self)
     self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+    SB.commandManager:addListener(self)
 end
 
 function CollisionView:OnSelectionChanged(selection)
@@ -332,7 +333,7 @@ function CollisionView:OnSelectionChanged(selection)
     self.selectionChanging = false
 end
 
-function CollisionView:CommandExecuted()
+function CollisionView:OnCommandExecuted()
     if not self._startedChanging then
         self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
     end

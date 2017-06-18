@@ -269,6 +269,8 @@ function WaterEditorView:init()
 
     self:Finalize(children)
     self.initializing = false
+
+    SB.commandManager:addListener(self)
 end
 
 function _ColorArrayToChannels(colorArray)
@@ -280,6 +282,8 @@ function WaterEditorView:UpdateWaterRendering()
         Log.Warning("gl.GetWaterRendering missing; Update to newer engine.")
         return
     end
+
+    self.updating = true
 
     self:Set("forceRendering", gl.GetWaterRendering("forceRendering"))
     self:Set("numTiles", gl.GetWaterRendering("numTiles"))
@@ -316,6 +320,14 @@ function WaterEditorView:UpdateWaterRendering()
     self:Set("texture", gl.GetWaterRendering("texture"))
     self:Set("repeatX", gl.GetWaterRendering("repeatX"))
     self:Set("repeatY", gl.GetWaterRendering("repeatY"))
+
+    self.updating = false
+end
+
+function WaterEditorView:OnCommandExecuted()
+    if not self._startedChanging then
+        self:UpdateWaterRendering()
+    end
 end
 
 function WaterEditorView:OnStartChange(name)
@@ -327,7 +339,7 @@ function WaterEditorView:OnEndChange(name)
 end
 
 function WaterEditorView:OnFieldChange(name, value)
-    if self.initializing then
+    if self.initializing or self.updating then
         return
     end
 

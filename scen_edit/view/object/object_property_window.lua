@@ -463,6 +463,7 @@ function ObjectPropertyWindow:init()
     self:Finalize(children)
     SB.view.selectionManager:addListener(self)
     self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+    SB.commandManager:addListener(self)
 end
 
 function CrossProduct(u, v)
@@ -471,7 +472,7 @@ function CrossProduct(u, v)
             z = u.x * v.y - u.y * v.x}
 end
 
-function ObjectPropertyWindow:CommandExecuted()
+function ObjectPropertyWindow:OnCommandExecuted()
     if not self._startedChanging then
         self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
     end

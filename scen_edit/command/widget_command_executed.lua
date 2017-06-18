@@ -1,15 +1,6 @@
 WidgetCommandExecuted = Command:extends{}
 WidgetCommandExecuted.className = "WidgetCommandExecuted"
 
-function UpdateViews()
-    if SB.objectPropertyWindow then
-        SB.objectPropertyWindow:CommandExecuted()
-    end
-    if SB.collisionView then
-        SB.collisionView:CommandExecuted()
-    end
-end
-
 function WidgetCommandExecuted:init(display, cmdIDs)
     self.className = "WidgetCommandExecuted"
     self.display = display
@@ -18,13 +9,7 @@ end
 
 function WidgetCommandExecuted:execute()
     SB.view.commandWindow:PushCommand(self.display)
-    UpdateViews()
-    local currentState = SB.stateManager:GetCurrentState()
-    if currentState:is_A(BrushObjectState) then
-        for _, cmdID in pairs(self.cmdIDs) do
-            currentState:CommandExecuted(cmdID)
-        end
-    end
+    SB.commandManager:callListeners("OnCommandExecuted", self.cmdIDs)
 end
 
 WidgetCommandUndo = Command:extends{}
@@ -36,7 +21,7 @@ end
 
 function WidgetCommandUndo:execute()
     SB.view.commandWindow:UndoCommand()
-    UpdateViews()
+    SB.commandManager:callListeners("OnCommandExecuted", self.cmdIDs, true)
 end
 
 WidgetCommandRedo = Command:extends{}
@@ -48,7 +33,7 @@ end
 
 function WidgetCommandRedo:execute()
     SB.view.commandWindow:RedoCommand()
-    UpdateViews()
+    SB.commandManager:callListeners("OnCommandExecuted", self.cmdIDs, false, true)
 end
 
 -- undo stack has been cleared

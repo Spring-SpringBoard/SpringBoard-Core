@@ -82,6 +82,8 @@ function SkyEditorView:init()
 
     self:Finalize(children)
     self.initializing = false
+
+    SB.commandManager:addListener(self)
 end
 
 function _ColorArrayToChannels(colorArray)
@@ -89,6 +91,8 @@ function _ColorArrayToChannels(colorArray)
 end
 
 function SkyEditorView:UpdateAtmosphere()
+    self.updating = true
+
     self:Set("fogStart",   gl.GetAtmosphere("fogStart"))
     self:Set("fogEnd",     gl.GetAtmosphere("fogEnd"))
     self:Set("fogColor",   {gl.GetAtmosphere("fogColor")})
@@ -96,6 +100,14 @@ function SkyEditorView:UpdateAtmosphere()
 --     self:Set("skyDir",     gl.GetAtmosphere("skyDir"))
     self:Set("sunColor",   {gl.GetAtmosphere("sunColor")})
     self:Set("cloudColor", {gl.GetAtmosphere("cloudColor")})
+
+    self.updating = false
+end
+
+function SkyEditorView:OnCommandExecuted()
+    if not self._startedChanging then
+        self:UpdateAtmosphere()
+    end
 end
 
 function SkyEditorView:OnStartChange(name)
@@ -107,7 +119,7 @@ function SkyEditorView:OnEndChange(name)
 end
 
 function SkyEditorView:OnFieldChange(name, value)
-    if self.initializing then
+    if self.initializing or self.updating then
         return
     end
 

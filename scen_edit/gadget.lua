@@ -44,9 +44,8 @@ function gadget:RecvLuaMsg(msg, playerID)
             end
             local msg = Message(msgTable.tag, msgTable.data)
             if msg.tag == 'command' then
-                local cmd = SB.resolveCommand(msg.data)
                 if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SB.projectDir ~= nil then
-                    GG.Delay.DelayCall(CommandManager.execute, {SB.commandManager, cmd})
+                    SB.commandManager:HandleCommandMessage(msg)
                 else
                     Log.Warning("Command ignored: ", cmd.className)
                 end

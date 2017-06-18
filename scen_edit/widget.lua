@@ -9,8 +9,7 @@ function RecieveGadgetMessage(msg)
         local msgTable = loadstring(msgParsed)()
         local msg = Message(msgTable.tag, msgTable.data)
         if msg.tag == 'command' then
-            local cmd = SB.resolveCommand(msg.data)
-            SB.commandManager:execute(cmd, true)
+            SB.commandManager:HandleCommandMessage(msg, true)
         end
         return
     end

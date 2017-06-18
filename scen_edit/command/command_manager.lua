@@ -5,9 +5,11 @@ SB.Include(Path.Join(SB_COMMAND_DIR, 'command.lua'))
 SB.IncludeDir(SB_COMMAND_DIR)
 SB.IncludeDir(SB_COMMAND_SYNC_DIR)
 
-CommandManager = LCS.class{maxUndoSize = 30, maxRedoSize = 30}
+CommandManager = Observable:extends{maxUndoSize = 30, maxRedoSize = 30}
 
 function CommandManager:init(maxUndoSize, maxRedoSize)
+    self:super('init')
+
     self.maxUndoSize = maxUndoSize
     self.maxRedoSize = maxRedoSize
     self.undoList = {}
@@ -67,7 +69,9 @@ function CommandManager:leaveMultipleCommandMode()
     end
     self.multipleCommandStack = {}
     self:undoListAdd(cmd)
-    self:notify(cmd, cmdIDs)
+    if not self.widget then
+        self:notify(cmd, cmdIDs)
+    end
 end
 
 function CommandManager:notify(cmd, cmdIDs)
@@ -92,31 +96,30 @@ end
 --if the command is to be executed in a different lua state than currently in, it will send the message to the proper state using the message mechanism
 function CommandManager:execute(cmd, widget)
     assert(cmd, "Command is nil")
-    if self.widget then -- from widget
-        if not widget then
-            return self:_SendCommand(cmd)
+    return self:__execute(cmd, self.widget == widget)
+end
+
+function CommandManager:__execute(cmd, sameContext)
+    if not sameContext then
+        return self:_SendCommand(cmd)
+
+    self:_SafeCall(function()
+        if cmd._execute_unsynced and not self.widget then
+            self:_SendCommand(cmd)
         else
-            self:_SafeCall(function()
-                cmd:execute()
-            end)
+            cmd:execute()
         end
-    else -- from gadget
-        if not widget then
-            self:_SafeCall(function()
-                cmd:execute()
-                if cmd.unexecute and not cmd.blockUndo then
-                    if self.multipleCommandMode then
-                        table.insert(self.multipleCommandStack, cmd)
-                    else
-                        self:undoListAdd(cmd)
-                        self:notify(cmd)
-                    end
+        if cmd.unexecute and not cmd.blockUndo then
+            if self.multipleCommandMode then
+                table.insert(self.multipleCommandStack, cmd)
+            else
+                self:undoListAdd(cmd)
+                if not self.widget then
+                    self:notify(cmd)
                 end
-            end)
-        else
-            return self:_SendCommand(cmd)
+            end
         end
-    end
+    end)
 end
 
 function CommandManager:clearUndoStack()
@@ -142,7 +145,9 @@ function CommandManager:undoListAdd(cmd)
     table.insert(self.undoList, cmd)
     if #self.undoList > self.maxUndoSize then
         table.remove(self.undoList, 1)
-        self:execute(WidgetCommandRemoveFirstUndo(), true)
+        if not self.widget then
+            self:execute(WidgetCommandRemoveFirstUndo(), true)
+        end
     end
     self:clearRedoStack()
 end
@@ -151,42 +156,81 @@ function CommandManager:redoListAdd(cmd)
     table.insert(self.redoList, cmd)
     if #self.redoList > self.maxRedoSize then
         table.remove(self.redoList, 1)
-        self:execute(WidgetCommandRemoveFirstRedo(), true)
+        if not self.widget then
+            self:execute(WidgetCommandRemoveFirstRedo(), true)
+        end
     end
 end
 
-function CommandManager:undo()
-    if self.widget then
-        local msg = Message("command", UndoCommand())
-        SB.messageManager:sendMessage(msg)
-        return
-    end
+function CommandManager:undo(widget)
     assert(not self.multipleCommandMode, "Cannot undo while in multiple command mode")
     if #self.undoList < 1 then
         return
     end
     local cmd = table.remove(self.undoList, #self.undoList)
     self:_SafeCall(function()
-        cmd:unexecute()
+        if not cmd._execute_unsynced or self.widget then
+            cmd:unexecute()
+        else
+            local msg = Message("command", UndoCommand())
+            SB.messageManager:sendMessage(msg)
+        end
         self:redoListAdd(cmd)
-        self:execute(WidgetCommandUndo(), true)
+        if not self.widget then
+            self:execute(WidgetCommandUndo(), true)
+        end
     end)
 end
 
 function CommandManager:redo()
-    if self.widget then
-        local msg = Message("command", RedoCommand())
-        SB.messageManager:sendMessage(msg)
-        return
-    end
     assert(not self.multipleCommandMode, "Cannot redo while in multiple command mode")
     if #self.redoList < 1 then
         return
     end
     local cmd = table.remove(self.redoList, #self.redoList)
     self:_SafeCall(function()
-        cmd:execute()
-        self:execute(WidgetCommandRedo(), true)
+        if not cmd._execute_unsynced or self.widget then
+            cmd:execute()
+        else
+            --self:_SendCommand(cmd)
+            local msg = Message("command", RedoCommand())
+            SB.messageManager:sendMessage(msg)
+        end
+        if not self.widget then
+            self:execute(WidgetCommandRedo(), true)
+        end
         table.insert(self.undoList, cmd)
     end)
 end
+
+function CommandManager:HandleCommandMessage(msg, widget)
+    local cmd = self:_resolveCommand(msg.data)
+    self:execute(cmd, widget)
+end
+
+function CommandManager:_resolveCommand(cmdTable)
+    local cmd = {}
+    if cmdTable.className then
+        local env = getfenv(1)
+        cmd = env[cmdTable.className]()
+    end
+    for k, v in pairs(cmdTable) do
+        if type(v) == "table" then
+            cmd[k] = self:_resolveCommand(v)
+        else
+            cmd[k] = v
+        end
+    end
+    return cmd
+end
+
+------------------------------------------------
+-- Listener definition
+------------------------------------------------
+CommandManagerListener = LCS.class.abstract{}
+
+function CommandManagerListener:OnCommandExecuted(cmdIDs, isUndo, isRedo)
+end
+------------------------------------------------
+-- End listener definition
+------------------------------------------------

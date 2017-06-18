@@ -3,6 +3,14 @@ CompoundCommand = Command:extends{}
 function CompoundCommand:init(commands)
     self.className = "CompoundCommand"
     self.commands = commands
+    if self.commands then
+        for _, cmd in pairs(self.commands) do
+            if cmd._execute_unsynced then
+                self._execute_unsynced = cmd._execute_unsynced
+                break
+            end
+        end
+    end
 end
 
 function CompoundCommand:execute()

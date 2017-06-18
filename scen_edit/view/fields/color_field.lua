@@ -5,6 +5,11 @@ ColorField = Field:extends{}
 function ColorField:Update(source)
     self.imValue.color = self.value
     self.imValue:Invalidate()
+
+    if self.colorPicker and source ~= self.colorPicker then
+        self.colorPicker:Set("rgbColor", self.value)
+        self.colorPicker:Set("hsvColor", self.value)
+    end
 --     if source ~= self.colorbars then
 --         self.colorbars:SetColor(self.value)
 --     end

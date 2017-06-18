@@ -31,9 +31,9 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 	end
 	-- TODO: make this configurable
     if key == KEYSYMS.Z and mods.ctrl then
-        SB.commandManager:undo()
+        SB.commandManager:execute(UndoCommand())
     elseif key == KEYSYMS.Y and mods.ctrl then
-        SB.commandManager:redo()
+		SB.commandManager:execute(RedoCommand())
     elseif key == KEYSYMS.S and mods.ctrl and not mods.shift then
         SaveAction():execute()
     elseif key == KEYSYMS.S and mods.ctrl and mods.shift then

@@ -4,6 +4,7 @@ SetSunParametersCommand.className = "SetSunParametersCommand"
 function SetSunParametersCommand:init(opts)
     self.className = "SetSunParametersCommand"
     self.opts = opts
+    self._execute_unsynced = true
 end
 
 function SetSunParametersCommand:execute()
@@ -12,17 +13,6 @@ function SetSunParametersCommand:execute()
 end
 
 function SetSunParametersCommand:unexecute()
-    -- FIXME: widget command undo isn't implemented correctly yet
-end
-
-WidgetSetSunParametersCommand = Command:extends{}
-WidgetSetSunParametersCommand.className = "WidgetSetSunParametersCommand"
-
-function WidgetSetSunParametersCommand:init(opts)
-    self.opts = opts
-end
-
-function WidgetSetSunParametersCommand:execute()
     self.old = {
 --         params = {Spring.GetSunParameters()},
         params = {gl.GetSun()},
@@ -35,7 +25,7 @@ function WidgetSetSunParametersCommand:execute()
     end
 end
 
-function WidgetSetSunParametersCommand:unexecute()
+function SetSunParametersCommand:unexecute()
     if #self.old.params >= 4 then
         Spring.SetSunParameters(self.old.params[1], self.old.params[2], self.old.params[3], self.old.params[4], self.old.params[5], self.old.params[6])
     else
