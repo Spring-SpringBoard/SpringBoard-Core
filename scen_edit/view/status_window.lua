@@ -17,7 +17,7 @@ function StatusWindow:init()
         resizable = false,
         draggable = false,
         width = 230,
-        height = 50,
+        height = 80,
         children = {
             self.lblStatus
         }

@@ -102,6 +102,7 @@ end
 function CommandManager:__execute(cmd, sameContext)
     if not sameContext then
         return self:_SendCommand(cmd)
+    end
 
     self:_SafeCall(function()
         if cmd._execute_unsynced and not self.widget then

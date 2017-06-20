@@ -4,7 +4,7 @@ function CommandWindow:init()
     local children = {
         Button:New {
             x = 10,
-            y = 30,
+            y = 15,
             height = 40,
             width = 40,
             caption = '',
@@ -26,7 +26,7 @@ function CommandWindow:init()
         },
         Button:New {
             x = 50,
-            y = 30,
+            y = 15,
             height = 40,
             width = 40,
             caption = '',
@@ -48,7 +48,7 @@ function CommandWindow:init()
         },
         Button:New {
             x = 90,
-            y = 30,
+            y = 15,
             height = 40,
             width = 40,
             caption = '',
@@ -75,20 +75,22 @@ function CommandWindow:init()
         return id1 - id2
     end
 
+Spring.Echo("self.list.ctrl", self.list.ctrl, type(self.list.ctrl))
     table.insert(children, self.list.ctrl)
 
     self.window = Window:New {
         parent = screen0,
-        caption = "Command stack",
+        caption = "",
         right = 500 + 375,
         bottom = 0,
         resizable = false,
         draggable = false,
-        width = 375,
-        height = 200,
+        width = 400,
+        height = 80,
+        padding = {5,5,0,0},
         children = children,
     }
-    self.list.ctrl:SetPos(nil, 70)
+    self.list.ctrl:SetPos(140, nil, 400 - 140 - 10)
 
     self.count = 0
     self.removedCount = 0

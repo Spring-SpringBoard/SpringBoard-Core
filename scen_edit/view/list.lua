@@ -8,18 +8,22 @@ function List:init()
         right = 0,
         borderColor = {0,0,0,0},
         horizontalScrollbar = false,
+        padding = {0, 0, 0, 0},
     }
 
     self.ctrl = Control:New {
         x = 0,
-        right = 0,
         y = 0,
+        right = 0,
         bottom = 0,
         padding = {0, 0, 0, 0},
         children = {
             self.panel,
         },
     }
+
+    self.height = 30
+    self.padding = 5
 
     self.itemPanelMapping = {}
     self.orderPanelMapping = {}
@@ -31,20 +35,18 @@ end
 
 function List:AddRow(items, id)
     local w = items[#items].x + items[#items].width
-    local h = 40
-    local padding = 15
 
     local container = Control:New {
         width = w,
         y = 0,
-        height = h,
+        height = self.height,
         padding = {0, 0, 0, 0},
         children = items,
     }
     local panel = LayoutPanel:New {
         x = 0,
         right = 0,
-        height = h,
+        height = self.height,
         padding = {0, 0, 0, 0},
         itemMargin = {0, 0, 0, 0},
         itemPadding = {0, 0, 0, 0},
@@ -56,7 +58,7 @@ function List:AddRow(items, id)
         x = 0,
         right = 0,
         y = self:CalculateHeight(index),
-        height = h,
+        height = self.height,
         children = { panel },
         resizable = false,
         draggable = false,
@@ -77,9 +79,7 @@ function List:GetRowItems(id)
 end
 
 function List:CalculateHeight(index)
-    local h = 40
-    local padding = 15
-    return 10 + (index - 1) * (h + padding)
+    return self.padding + (index - 1) * (self.height + self.padding)
 end
 
 -- res >  0: id1 before id2
