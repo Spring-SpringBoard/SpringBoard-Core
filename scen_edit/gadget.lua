@@ -171,11 +171,13 @@ function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
         if Spring.GetGameRulesParam("sb_gameMode") == "play" then
             return
         end
-        --Spring.MoveCtrl.Enable(unitID)
-        --Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
-        SB.delay(function()
-            Spring.SetUnitHealth(unitID, { paralyze = math.pow(2, 32) })
-        end)
+        if not SB_USE_PLAY_PAUSE then
+            --Spring.MoveCtrl.Enable(unitID)
+            --Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 0 }, {})
+            SB.delay(function()
+                Spring.SetUnitHealth(unitID, { paralyze = math.pow(2, 32) })
+            end)
+        end
     end
 end
 

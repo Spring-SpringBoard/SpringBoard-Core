@@ -5,17 +5,24 @@ function StartCommand:init()
 end
 
 function StartCommand:execute()
-    Log.Notice("Start command")
+    if SB.rtModel.hasStarted then
+        return
+    end
 
-    if not SB.rtModel.hasStarted then
-        local oldModel = SB.model:Serialize()
-        SB.model.oldModel = oldModel
+    Log.Notice("Starting game...")
 
-        local heightMap = HeightMap()
-        heightMap:Serialize()
-        SB.model.oldHeightMap = heightMap
+    local oldModel = SB.model:Serialize()
+    SB.model.oldModel = oldModel
 
-        SB.rtModel:LoadMission(SB.model:GetMetaData())
+    local heightMap = HeightMap()
+    heightMap:Serialize()
+    SB.model.oldHeightMap = heightMap
+
+    SB.rtModel:LoadMission(SB.model:GetMetaData())
+
+    if SB_USE_PLAY_PAUSE then
+        Spring.SendCommands("pause 0")
+    else
         local allUnits = Spring.GetAllUnits()
         for i = 1, #allUnits do
             local unitId = allUnits[i]
@@ -27,7 +34,8 @@ function StartCommand:execute()
             end)]]--
             Spring.SetUnitHealth(unitId, { paralyze = 0 })
         end
-        Spring.SetGameRulesParam("sb_gameMode", "test")
-        SB.rtModel:GameStart()
     end
+
+    Spring.SetGameRulesParam("sb_gameMode", "test")
+    SB.rtModel:GameStart()
 end

@@ -5,22 +5,29 @@ function StopCommand:init()
 end
 
 function StopCommand:execute()
-    if SB.rtModel.hasStarted then
-        Log.Notice("Stopping game...")
-        Spring.StopSoundStream()
-        Spring.SetGameRulesParam("sb_gameMode", "dev")
-        SB.rtModel:GameStop()
-        -- use meta data (except variables) from the new (runtime) model
-        -- enable all triggers
-        local meta = SB.model:GetMetaData()
-        for _, trigger in pairs(meta.triggers) do
-            trigger.enabled = true
-        end
-        meta.variables = SB.model.oldModel.meta.variables
+    if not SB.rtModel.hasStarted then
+        return
+    end
 
-        SB.model.oldModel.meta = meta
+    Log.Notice("Stopping game...")
 
-        SB.model:Load(SB.model.oldModel)
-        SB.model.oldHeightMap:Load()
+    Spring.StopSoundStream()
+    Spring.SetGameRulesParam("sb_gameMode", "dev")
+    SB.rtModel:GameStop()
+    -- use meta data (except variables) from the new (runtime) model
+    -- enable all triggers
+    local meta = SB.model:GetMetaData()
+    for _, trigger in pairs(meta.triggers) do
+        trigger.enabled = true
+    end
+    meta.variables = SB.model.oldModel.meta.variables
+
+    SB.model.oldModel.meta = meta
+
+    SB.model:Load(SB.model.oldModel)
+    SB.model.oldHeightMap:Load()
+
+    if SB_USE_PLAY_PAUSE then
+        Spring.SendCommands("pause 1")
     end
 end
