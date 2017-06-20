@@ -4,21 +4,21 @@ function EnvPanel:init()
     self:super("init")
     self:AddElement({
         caption = "Water",
-        tooltip = "Modify water",
+        tooltip = "Edit water",
         image = SB_IMG_DIR .. "wave-crest.png",
         ViewClass = WaterEditorView,
         viewName = "waterEditorView",
     })
     self:AddElement({
         caption = "Lighting",
-        tooltip = "Modify lighting",
+        tooltip = "Edit lighting",
         image = SB_IMG_DIR .. "sunbeams.png",
         ViewClass = LightingEditorView,
         viewName = "lightingEditorView",
     })
     self:AddElement({
         caption = "Sky",
-        tooltip = "Modify sky and fog",
+        tooltip = "Edit sky and fog",
         image = SB_IMG_DIR .. "night-sky.png",
         ViewClass = SkyEditorView,
         viewName = "skyEditorView",
