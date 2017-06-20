@@ -2,7 +2,7 @@ MessageManager = LCS.class{}
 
 function MessageManager:init()
     self.prefix = "scen_edit"
-    self.messageIdCount = 0
+    self.messageIDCount = 0
     self.callbacks = {}
     self.widget = false
     self.compress = true
@@ -20,8 +20,8 @@ function MessageManager:__encodeToString(message)
 end
 
 function MessageManager:sendMessage(message, callback)
-    self.messageIdCount = self.messageIdCount + 1
-    message.id = self.messageIdCount
+    self.messageIDCount = self.messageIDCount + 1
+    message.id = self.messageIDCount
 
     local messageType = "sync"
     if callback ~= nil then

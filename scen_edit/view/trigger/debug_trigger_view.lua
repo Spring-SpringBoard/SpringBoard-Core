@@ -66,14 +66,14 @@ function DebugTriggerView:Dispose()
     SB.model.triggerManager:removeListener(self)
 end
 
-function DebugTriggerView:onTriggerAdded(triggerId)
+function DebugTriggerView:onTriggerAdded(triggerID)
     self:Populate()
 end
 
-function DebugTriggerView:onTriggerRemoved(triggerId)
+function DebugTriggerView:onTriggerRemoved(triggerID)
     self:Populate()
 end
 
-function DebugTriggerView:onTriggerUpdated(triggerId)
+function DebugTriggerView:onTriggerUpdated(triggerID)
     self:Populate()
 end

@@ -2,7 +2,7 @@ TriggerManager = Observable:extends{}
 
 function TriggerManager:init()
     self:super('init')
-    self.triggerIdCount = 0
+    self.triggerIDCount = 0
     self.triggers = {}
 end
 
@@ -11,48 +11,48 @@ end
 ---------------
 function TriggerManager:addTrigger(trigger)
     if trigger.id == nil then
-        trigger.id = self.triggerIdCount + 1
+        trigger.id = self.triggerIDCount + 1
     end
-    self.triggerIdCount = math.max(trigger.id, self.triggerIdCount)
+    self.triggerIDCount = math.max(trigger.id, self.triggerIDCount)
     self.triggers[trigger.id] = trigger
     self:callListeners("onTriggerAdded", trigger.id)
     return trigger.id
 end
 
-function TriggerManager:removeTrigger(triggerId)
-    if triggerId == nil then
+function TriggerManager:removeTrigger(triggerID)
+    if triggerID == nil then
         return
     end
-    if self.triggers[triggerId] then
-        self.triggers[triggerId] = nil
-        self:callListeners("onTriggerRemoved", triggerId)
+    if self.triggers[triggerID] then
+        self.triggers[triggerID] = nil
+        self:callListeners("onTriggerRemoved", triggerID)
         return true
     else
         return false
     end
 end
 
-function TriggerManager:setTrigger(triggerId, value)
-    self.triggers[triggerId] = value
-    self:callListeners("onTriggerUpdated", triggerId)
+function TriggerManager:setTrigger(triggerID, value)
+    self.triggers[triggerID] = value
+    self:callListeners("onTriggerUpdated", triggerID)
 end
 
-function TriggerManager:disableTrigger(triggerId)
-    if self.triggers[triggerId].enabled then
-        self.triggers[triggerId].enabled = false
-        self:callListeners("onTriggerUpdated", triggerId)
+function TriggerManager:disableTrigger(triggerID)
+    if self.triggers[triggerID].enabled then
+        self.triggers[triggerID].enabled = false
+        self:callListeners("onTriggerUpdated", triggerID)
     end
 end
 
-function TriggerManager:enableTrigger(triggerId)
-    if not self.triggers[triggerId].enabled then
-        self.triggers[triggerId].enabled = true
-        self:callListeners("onTriggerUpdated", triggerId)
+function TriggerManager:enableTrigger(triggerID)
+    if not self.triggers[triggerID].enabled then
+        self.triggers[triggerID].enabled = true
+        self:callListeners("onTriggerUpdated", triggerID)
     end
 end
 
-function TriggerManager:getTrigger(triggerId)
-    return self.triggers[triggerId]
+function TriggerManager:getTrigger(triggerID)
+    return self.triggers[triggerID]
 end
 
 function TriggerManager:getAllTriggers()
@@ -75,10 +75,10 @@ function TriggerManager:load(data)
 end
 
 function TriggerManager:clear()
-    for triggerId, _ in pairs(self.triggers) do
-        self:removeTrigger(triggerId)
+    for triggerID, _ in pairs(self.triggers) do
+        self:removeTrigger(triggerID)
     end
-    self.triggerIdCount = 0
+    self.triggerIDCount = 0
 end
 
 ---------------
@@ -187,13 +187,13 @@ end
 ------------------------------------------------
 TriggerManagerListener = LCS.class.abstract{}
 
-function TriggerManagerListener:onTriggerAdded(triggerId)
+function TriggerManagerListener:onTriggerAdded(triggerID)
 end
 
-function TriggerManagerListener:onTriggerRemoved(triggerId)
+function TriggerManagerListener:onTriggerRemoved(triggerID)
 end
 
-function TriggerManagerListener:onTriggerUpdated(triggerId)
+function TriggerManagerListener:onTriggerUpdated(triggerID)
 end
 ------------------------------------------------
 -- End listener definition

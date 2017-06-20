@@ -67,7 +67,7 @@ function VariablesWindow:AddVariable()
     self:Populate()
     for i = 1, #self.variablesPanel.children do
         local panel = self.variablesPanel.children[i]
-        if panel.variableId == newVariable.id then
+        if panel.variableID == newVariable.id then
             local btnEdit = panel.children[1]
             btnEdit:CallListeners(btnEdit.OnClick)
             break
@@ -75,8 +75,8 @@ function VariablesWindow:AddVariable()
     end-]]
 end
 
-function VariablesWindow:MakeRemoveVariableWindow(variableId)
-    local cmd = RemoveVariableCommand(variableId)
+function VariablesWindow:MakeRemoveVariableWindow(variableID)
+    local cmd = RemoveVariableCommand(variableID)
     SB.commandManager:execute(cmd)
 end
 
@@ -85,7 +85,7 @@ function VariablesWindow:Populate()
     local variables = SB.model.variableManager:getAllVariables()
     for _, variable in pairs(variables) do
         local variableStackPanel = MakeComponentPanel(self.variablesPanel)
-        variableStackPanel.variableId = variable.id
+        variableStackPanel.variableID = variable.id
         local btnEditVariable = Button:New {
             caption = variable.name,
             right = SB.conf.B_HEIGHT + 10,
@@ -158,14 +158,14 @@ function VariableManagerListenerWidget:init(variableWindow)
     self.variableWindow = variableWindow
 end
 
-function VariableManagerListenerWidget:onVariableAdded(variableId)
+function VariableManagerListenerWidget:onVariableAdded(variableID)
     self.variableWindow:Populate()
 end
 
-function VariableManagerListenerWidget:onVariableRemoved(variableId)
+function VariableManagerListenerWidget:onVariableRemoved(variableID)
     self.variableWindow:Populate()
 end
 
-function VariableManagerListenerWidget:onVariableUpdated(variableId)
+function VariableManagerListenerWidget:onVariableUpdated(variableID)
     self.variableWindow:Populate()
 end

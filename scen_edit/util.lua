@@ -272,24 +272,24 @@ function SB.humanExpression(data, exprType, dataType, level)
         if data.type == "pred" then
             if dataType == "unitType" then
                 local unitDef = UnitDefs[data.value]
-                local dataIdStr = "(id=" .. tostring(data.value) .. ")"
+                local dataIDStr = "(id=" .. tostring(data.value) .. ")"
                 if unitDef then
-                    return tostring(unitDef.name) .. " " .. dataIdStr
+                    return tostring(unitDef.name) .. " " .. dataIDStr
                 else
-                    return dataIdStr
+                    return dataIDStr
                 end
             elseif dataType == "unit" then
-                local unitId = SB.model.unitManager:getSpringUnitId(data.value)
-                local dataIdStr = "(id=" .. tostring(data.value) .. ")"
-                if Spring.ValidUnitID(unitId) then
-                    local unitDef = UnitDefs[Spring.GetUnitDefID(unitId)]
+                local unitID = SB.model.unitManager:getSpringUnitID(data.value)
+                local dataIDStr = "(id=" .. tostring(data.value) .. ")"
+                if Spring.ValidUnitID(unitID) then
+                    local unitDef = UnitDefs[Spring.GetUnitDefID(unitID)]
                     if unitDef then
-                        return tostring(unitDef.name) .. " " .. dataIdStr
+                        return tostring(unitDef.name) .. " " .. dataIDStr
                     else
-                        return dataIdStr
+                        return dataIDStr
                     end
                 else
-                    return dataIdStr
+                    return dataIDStr
                 end
             elseif dataType == "trigger" then
                 return data.name
@@ -311,9 +311,9 @@ function SB.humanExpression(data, exprType, dataType, level)
         end
         return "nothing"
     elseif exprType == "numeric_comparison" then
-        return SB.metaModel.numericComparisonTypes[data.cmpTypeId]
+        return SB.metaModel.numericComparisonTypes[data.cmpTypeID]
     elseif exprType == "identity_comparison" then
-        return SB.metaModel.identityComparisonTypes[data.cmpTypeId]
+        return SB.metaModel.identityComparisonTypes[data.cmpTypeID]
 	end
     return data.humanName
     end)
@@ -331,9 +331,9 @@ end
 function SB.GetTeams(widget)
     local teams = {}
 
-    local gaiaTeamId = Spring.GetGaiaTeamID()
-    for _, teamId in pairs(Spring.GetTeamList()) do
-        local team = { id = teamId }
+    local gaiaTeamID = Spring.GetGaiaTeamID()
+    for _, teamID in pairs(Spring.GetTeamList()) do
+        local team = { id = teamID }
         table.insert(teams, team)
 
         team.name = tostring(team.id)
@@ -344,7 +344,7 @@ function SB.GetTeams(widget)
             team.ai = true -- TODO: maybe get the exact AI as well?
         end
 
-        local r, g, b, a = SB.GenerateTeamColor()--Spring.GetTeamColor(teamId)
+        local r, g, b, a = SB.GenerateTeamColor()--Spring.GetTeamColor(teamID)
         if widget then
             r, g, b, a = Spring.GetTeamColor(team.id)
             team.color = { r = r, g = g, b = b, a = a }
@@ -354,7 +354,7 @@ function SB.GetTeams(widget)
         team.allyTeam = allyTeam
         team.side = side
 
-        team.gaia = gaiaTeamId == team.id
+        team.gaia = gaiaTeamID == team.id
         if team.gaia then
             team.ai = true
         end
@@ -455,7 +455,7 @@ function SB.deepcopy(t)
     return res
 end
 
-function SB.GiveOrderToUnit(unitId, orderType, params)
+function SB.GiveOrderToUnit(unitID, orderType, params)
     Spring.GiveOrderToUnit(unit, CMD.INSERT,
         { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
 end

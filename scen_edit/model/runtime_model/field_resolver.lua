@@ -52,28 +52,28 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         return self:Resolve(value, type, nil, params)
     end
 
-    -- FIXME: field.cmpTypeId (comparisons) should also have a "pred" type probably
-    if field.type ~= "pred" and field.cmpTypeId == nil then
+    -- FIXME: field.cmpTypeID (comparisons) should also have a "pred" type probably
+    if field.type ~= "pred" and field.cmpTypeID == nil then
         Log.Error("Unexpected field type: " .. tostring(field.type))
         return
     end
 
     if type == "unit" then
-        local unitId = tonumber(field.value)
-        if unitId ~= nil then
-            local springId = SB.model.unitManager:getSpringUnitId(unitId)
-            if Spring.ValidUnitID(springId) then
-                return springId
+        local unitID = tonumber(field.value)
+        if unitID ~= nil then
+            local springID = SB.model.unitManager:getSpringUnitID(unitID)
+            if Spring.ValidUnitID(springID) then
+                return springID
             end
         end
     elseif type == "unitType" then
         return tonumber(field.value)
     elseif type == "feature" then
-        local featureId = tonumber(field.value)
-        if featureId ~= nil then
-            local springId = SB.model.featureManager:getSpringfeatureId(featureId)
-            if Spring.ValidFeatureID(springId) then
-                return springId
+        local featureID = tonumber(field.value)
+        if featureID ~= nil then
+            local springID = SB.model.featureManager:getSpringfeatureID(featureID)
+            if Spring.ValidFeatureID(springID) then
+                return springID
             end
         end
     elseif type == "featureType" then
@@ -105,9 +105,9 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     elseif type == "position" then
         return field.value
     elseif type == "numericComparison" then
-        return SB.metaModel.numericComparisonTypes[field.cmpTypeId]
+        return SB.metaModel.numericComparisonTypes[field.cmpTypeID]
     elseif type == "identityComparison" then
-        return SB.metaModel.identityComparisonTypes[field.cmpTypeId]
+        return SB.metaModel.identityComparisonTypes[field.cmpTypeID]
     elseif type:find("_array") then
         local atomicType = type:sub(1, type:find("_array") - 1)
         local values = {}

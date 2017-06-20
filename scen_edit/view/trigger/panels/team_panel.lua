@@ -16,14 +16,14 @@ function TeamPanel:MakePredefinedOpt()
         height = SB.conf.B_HEIGHT,
         parent = stackTeamPanel,
         items = GetField(SB.model.teamManager:getAllTeams(), "name"),
-        playerTeamIds = GetField(SB.model.teamManager:getAllTeams(), "id"),
+        playerTeamIDs = GetField(SB.model.teamManager:getAllTeams(), "id"),
     }
 end
 
 function TeamPanel:UpdateModel(field)
     if self.cbPredefined and self.cbPredefined.checked then
         field.type = "pred"
-        field.value = self.cmbPredefined.playerTeamIds[self.cmbPredefined.selected]
+        field.value = self.cmbPredefined.playerTeamIDs[self.cmbPredefined.selected]
         return true
     end
     return self:super('UpdateModel', field)
@@ -34,7 +34,7 @@ function TeamPanel:UpdatePanel(field)
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
         end
-        self.cmbPredefined:Select(GetIndex(self.cmbPredefined.playerTeamIds, field.value))
+        self.cmbPredefined:Select(GetIndex(self.cmbPredefined.playerTeamIDs, field.value))
         return true
     end
     return self:super('UpdatePanel', field)

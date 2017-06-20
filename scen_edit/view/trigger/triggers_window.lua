@@ -62,7 +62,7 @@ function TriggersWindow:AddTrigger()
     self:Populate()
     for i = 1, #self._triggers.children do
         local panel = self._triggers.children[i]
-        if panel.triggerId == newTrigger.id then
+        if panel.triggerID == newTrigger.id then
             local btnEdit = panel.children[1]
             btnEdit:CallListeners(btnEdit.OnClick)
             return
@@ -70,8 +70,8 @@ function TriggersWindow:AddTrigger()
     end--]]
 end
 
-function TriggersWindow:MakeRemoveTriggerWindow(triggerId)
-    local cmd = RemoveTriggerCommand(triggerId)
+function TriggersWindow:MakeRemoveTriggerWindow(triggerID)
+    local cmd = RemoveTriggerCommand(triggerID)
     SB.commandManager:execute(cmd)
 end
 
@@ -80,7 +80,7 @@ function TriggersWindow:Populate()
     local triggers = SortByName(SB.model.triggerManager:getAllTriggers(), "name")
     for id, trigger in pairs(triggers)  do
         local stackTriggerPanel = MakeComponentPanel(self._triggers)
-        stackTriggerPanel.triggerId = trigger.id
+        stackTriggerPanel.triggerID = trigger.id
         local btnEditTrigger = Button:New {
             caption = trigger.name,
             x = 1,
@@ -179,14 +179,14 @@ function TriggerManagerListenerWidget:init(triggerWindow)
     self.triggerWindow = triggerWindow
 end
 
-function TriggerManagerListenerWidget:onTriggerAdded(triggerId)
+function TriggerManagerListenerWidget:onTriggerAdded(triggerID)
     self.triggerWindow:Populate()
 end
 
-function TriggerManagerListenerWidget:onTriggerRemoved(triggerId)
+function TriggerManagerListenerWidget:onTriggerRemoved(triggerID)
     self.triggerWindow:Populate()
 end
 
-function TriggerManagerListenerWidget:onTriggerUpdated(triggerId)
+function TriggerManagerListenerWidget:onTriggerUpdated(triggerID)
     self.triggerWindow:Populate()
 end

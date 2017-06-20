@@ -18,7 +18,7 @@ function RecieveGadgetMessage(msg)
     local tag = tbl.tag
 
     if tag == "msg" then
-        model:InvokeCallback(data.msgId, data.result)
+        model:InvokeCallback(data.msgID, data.result)
     end
 end
 

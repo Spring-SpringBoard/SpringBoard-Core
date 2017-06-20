@@ -30,14 +30,14 @@ end
 ----------------------------------------------------------
 WidgetUpdateTeamCommand = Command:extends{}
 
-function WidgetUpdateTeamCommand:init(teamId, team)
+function WidgetUpdateTeamCommand:init(teamID, team)
     self.className = "WidgetUpdateTeamCommand"
-    self.teamId = teamId
+    self.teamID = teamID
     self.team = team
 end
 
 function WidgetUpdateTeamCommand:execute()
-    SB.model.teamManager:setTeam(self.teamId, self.team)
+    SB.model.teamManager:setTeam(self.teamID, self.team)
 end
 ----------------------------------------------------------
 -- END Widget callback commands
@@ -53,19 +53,19 @@ SB.OnInitialize(function()
     SB.model.teamManager:addListener(TeamManagerListenerGadget())
 end)
 
-function TeamManagerListenerGadget:onTeamAdded(teamId)
-    local team = SB.model.teamManager:getTeam(teamId)
-    local cmd = WidgetAddTeamCommand(teamId, team)
+function TeamManagerListenerGadget:onTeamAdded(teamID)
+    local team = SB.model.teamManager:getTeam(teamID)
+    local cmd = WidgetAddTeamCommand(teamID, team)
     SB.commandManager:execute(cmd, true)
 end
 
-function TeamManagerListenerGadget:onTeamRemoved(teamId)
-    local cmd = WidgetRemoveTeamCommand(teamId)
+function TeamManagerListenerGadget:onTeamRemoved(teamID)
+    local cmd = WidgetRemoveTeamCommand(teamID)
     SB.commandManager:execute(cmd, true)
 end
 
-function TeamManagerListenerGadget:onTeamChange(teamId, team)
-    local cmd = WidgetUpdateTeamCommand(teamId, team)
+function TeamManagerListenerGadget:onTeamChange(teamID, team)
+    local cmd = WidgetUpdateTeamCommand(teamID, team)
     SB.commandManager:execute(cmd, true)
 end
 

@@ -20,7 +20,7 @@ local function SplitPath(dir, assetFolderName)
     return dirAsset, dirPath
 end
 
--- FIXME: do properly asset -> spring conversion
+-- FIXME: do proper asset -> spring conversion
 function AssetsManager:ToSpringPath(rootDir, assetPath)
     local path = assetPath
     return path

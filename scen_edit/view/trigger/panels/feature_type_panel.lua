@@ -16,12 +16,12 @@ function FeatureTypePanel:MakePredefinedOpt()
         width = 100,
         height = SB.conf.B_HEIGHT,
         parent = stackFeatureTypePanel,
-        featureTypeId = nil,
+        featureTypeID = nil,
     }
-    self.OnSelectObjectType = function(featureTypeId)
-        self.btnPredefined.featureTypeId = featureTypeId
-        local defName = featureBridge.ObjectDefs[featureTypeId].name
-        self.btnPredefined.caption = "Id=" .. defName
+    self.OnSelectObjectType = function(featureTypeID)
+        self.btnPredefined.featureTypeID = featureTypeID
+        local defName = featureBridge.ObjectDefs[featureTypeID].name
+        self.btnPredefined.caption = "ID=" .. defName
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
@@ -36,9 +36,9 @@ function FeatureTypePanel:MakePredefinedOpt()
 end
 
 function FeatureTypePanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.featureTypeId ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.featureTypeID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.featureTypeId
+        field.value = self.btnPredefined.featureTypeID
         return true
     end
     return self:super('UpdateModel', field)

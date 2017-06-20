@@ -31,9 +31,9 @@ function Model:Clear()
     self.unitManager:clear()
     self.featureManager:clear()
 
-    for _, projectileId in pairs(Spring.GetProjectilesInRectangle(0, 0, Game.mapSizeX,  Game.mapSizeZ)) do
-        Spring.SetProjectilePosition(projectileId, math.huge, math.huge, math.huge)
-        Spring.SetProjectileCollision(projectileId)
+    for _, projectileID in pairs(Spring.GetProjectilesInRectangle(0, 0, Game.mapSizeX,  Game.mapSizeZ)) do
+        Spring.SetProjectilePosition(projectileID, math.huge, math.huge, math.huge)
+        Spring.SetProjectileCollision(projectileID)
     end
 
     if not self.widget then

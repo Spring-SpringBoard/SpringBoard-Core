@@ -74,12 +74,12 @@ function DiplomacyWindow:init(trigger)
         cmbAlliance.OnSelect = {
             function(obj, itemIdx, selected)
                 if selected and itemIdx > 0 then
-                    local newAllyTeamId = cmbAlliance.items[itemIdx]
-                    if newAllyTeamId ~= team.allyTeam then
-                        local cmd = ChangeAllyTeamCommand(team.id, newAllyTeamId)
+                    local newAllyTeamID = cmbAlliance.items[itemIdx]
+                    if newAllyTeamID ~= team.allyTeam then
+                        local cmd = ChangeAllyTeamCommand(team.id, newAllyTeamID)
                         SB.commandManager:execute(cmd)
                         -- TODO: should be updated in a listener instead
-                        team.allyTeam = newAllyTeamId
+                        team.allyTeam = newAllyTeamID
                     end
                 end
             end

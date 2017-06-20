@@ -120,14 +120,14 @@ function PlayersWindow:Populate()
     end
 end
 
-function PlayersWindow:onTeamAdded(teamId)
+function PlayersWindow:onTeamAdded(teamID)
     self:Populate()
 end
 
-function PlayersWindow:onTeamRemoved(teamId)
+function PlayersWindow:onTeamRemoved(teamID)
     self:Populate()
 end
 
-function PlayersWindow:onTeamChange(teamId, team)
+function PlayersWindow:onTeamChange(teamID, team)
     self:Populate()
 end

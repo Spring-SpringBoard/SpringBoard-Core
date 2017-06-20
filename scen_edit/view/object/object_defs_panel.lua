@@ -11,8 +11,8 @@ function ObjectDefsPanel:init(tbl)
     tbl = Table.Merge(tbl, defaults)
     GridView.init(self, tbl)
 
-    self.unitTerrainId = 1
-    self.unitTypesId = 1
+    self.unitTerrainID = 1
+    self.unitTypesID = 1
     self.teamID = 0
     self.search = ""
     self.objectDefIcons = {}
@@ -56,13 +56,13 @@ function ObjectDefsPanel:_UnselectItem(objectDefID)
     end
 end
 
-function ObjectDefsPanel:SelectTerrainId(unitTerrainId)
-    self.unitTerrainId = unitTerrainId
+function ObjectDefsPanel:SelectTerrainID(unitTerrainID)
+    self.unitTerrainID = unitTerrainID
     self:Refresh()
 end
 
-function ObjectDefsPanel:SelectUnitTypesId(unitTypesId)
-    self.unitTypesId = unitTypesId
+function ObjectDefsPanel:SelectUnitTypesID(unitTypesID)
+    self.unitTypesID = unitTypesID
     self:Refresh()
 end
 
@@ -240,15 +240,15 @@ function UnitDefsPanel:init(tbl)
 end
 function UnitDefsPanel:FilterObject(objectDefID)
     local unitDef = UnitDefs[objectDefID]
-    local correctType = self.unitTypesId == 2 and unitDef.isBuilding or
-            self.unitTypesId == 1 and not unitDef.isBuilding or
-            self.unitTypesId == 3
+    local correctType = self.unitTypesID == 2 and unitDef.isBuilding or
+            self.unitTypesID == 1 and not unitDef.isBuilding or
+            self.unitTypesID == 3
 
-    local correctTerrain = self.unitTerrainId == 1 and (not unitDef.canFly and
+    local correctTerrain = self.unitTerrainID == 1 and (not unitDef.canFly and
     not unitDef.floatOnWater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
-            self.unitTerrainId == 2 and unitDef.canFly or
-        self.unitTerrainId == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
-        self.unitTerrainId == 4
+            self.unitTerrainID == 2 and unitDef.canFly or
+        self.unitTerrainID == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
+        self.unitTerrainID == 4
     return correctType and correctTerrain and self:_GetDefHumanName(unitDef):lower():find(self.search:lower():trim())
 end
 function UnitDefsPanel:PopulateItems()
@@ -288,7 +288,7 @@ FeatureDefsPanel = ObjectDefsPanel:extends{}
 function FeatureDefsPanel:init(tbl)
     self.bridge = featureBridge
     ObjectDefsPanel.init(self, tbl)
-    self.featureTypeId = 1
+    self.featureTypeID = 1
 end
 function FeatureDefsPanel:getUnitDefBuildPic(unitDef)
     unitImagePath = "unitpics/" .. unitDef.buildpicname
@@ -303,7 +303,7 @@ function FeatureDefsPanel:FilterObject(objectDefID)
     local correctType = false
     local correctUnit = true
     local unitDef = nil
-    if self.featureTypeId == 3 then
+    if self.featureTypeID == 3 then
         correctType = true
     else
         local isWreck = false
@@ -314,21 +314,21 @@ function FeatureDefsPanel:FilterObject(objectDefID)
                 isWreck = true
             end
         end
-        correctType = isWreck == (self.featureTypeId == 2)
+        correctType = isWreck == (self.featureTypeID == 2)
         if correctType and isWreck then
             correctUnit = false
-            local unitTerrainId = self.unitTerrainId
-            local unitTypesId = self.unitTypesId
+            local unitTerrainID = self.unitTerrainID
+            local unitTypesID = self.unitTypesID
             local correctUnitType = false
-            correctUnitType = unitTypesId == 2 and unitDef.isBuilding or
-            unitTypesId == 1 and not unitDef.isBuilding or
-            unitTypesId == 3
+            correctUnitType = unitTypesID == 2 and unitDef.isBuilding or
+            unitTypesID == 1 and not unitDef.isBuilding or
+            unitTypesID == 3
 
-            correctTerrain = unitTerrainId == 1 and (not unitDef.canFly and
+            correctTerrain = unitTerrainID == 1 and (not unitDef.canFly and
             not unitDef.floatOnWater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
-            unitTerrainId == 2 and unitDef.canFly or
-            unitTerrainId == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
-            unitTerrainId == 4
+            unitTerrainID == 2 and unitDef.canFly or
+            unitTerrainID == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
+            unitTerrainID == 4
             if correctUnitType and correctTerrain then
                 correctUnit = true
             end
@@ -338,7 +338,7 @@ function FeatureDefsPanel:FilterObject(objectDefID)
     return correctType and correctUnit and humanName:lower():find(self.search:lower():trim())
 end
 function FeatureDefsPanel:PopulateItems()
-    local featureTypeId = self.featureTypeId
+    local featureTypeID = self.featureTypeID
     --TODO create a default picture for features
     local defaultPicture = nil
     for id, unitDef in pairs(UnitDefs) do
@@ -380,8 +380,8 @@ function FeatureDefsPanel:PopulateItems()
 --         end
     end
 end
-function FeatureDefsPanel:SelectFeatureTypesId(featureTypeId)
-    self.featureTypeId = featureTypeId
+function FeatureDefsPanel:SelectFeatureTypesID(featureTypeID)
+    self.featureTypeID = featureTypeID
     self:Refresh()
 end
 function FeatureDefsPanel:GetObjectDefRadius(objectDefID)

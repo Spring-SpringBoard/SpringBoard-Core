@@ -52,15 +52,13 @@ function DragHorizontalObjectState:MouseRelease(x, y, button)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
     for unitID, object in pairs(movedObjects.units) do
-        local modelID = SB.model.unitManager:getModelUnitId(unitID)
-        local cmd = SetUnitParamCommand(modelID, "pos", object.pos)
-        table.insert(commands, cmd)
-        table.insert(commands, SetUnitPropertyCommand(modelID, "gravity", 0))
+        local modelID = SB.model.unitManager:getModelUnitID(unitID)
+        table.insert(commands, SetUnitParamCommand(modelID, "pos", object.pos))
+        table.insert(commands, SetUnitParamCommand(modelID, "gravity", 0))
     end
     for featureID, object in pairs(movedObjects.features) do
-        local modelID = SB.model.featureManager:getModelFeatureId(featureID)
-        local cmd = SetFeatureParamCommand(modelID, "pos", object.pos)
-        table.insert(commands, cmd)
+        local modelID = SB.model.featureManager:getModelFeatureID(featureID)
+        table.insert(commands, SetFeatureParamCommand(modelID, "pos", object.pos))
     end
 
     local compoundCommand = CompoundCommand(commands)

@@ -16,11 +16,11 @@ function AreaPanel:MakePredefinedOpt()
         width = 60,
         height = SB.conf.B_HEIGHT,
         parent = stackAreaPanel,
-        areaId = nil,
+        areaID = nil,
     }
-    self.OnSelectArea = function(areaId)
-        self.btnPredefined.areaId = areaId
-        self.btnPredefined.caption = "Id=" .. areaId
+    self.OnSelectArea = function(areaID)
+        self.btnPredefined.areaID = areaID
+        self.btnPredefined.caption = "ID=" .. areaID
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
@@ -48,8 +48,8 @@ function AreaPanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                if self.btnPredefined.areaId ~= nil then
-                    local area = SB.model.areaManager:getArea(self.btnPredefined.areaId)
+                if self.btnPredefined.areaID ~= nil then
+                    local area = SB.model.areaManager:getArea(self.btnPredefined.areaID)
                     if area ~= nil then
                         local x = (area[1] + area[3]) / 2
                         local z = (area[2] + area[4]) / 2
@@ -63,9 +63,9 @@ function AreaPanel:MakePredefinedOpt()
 end
 
 function AreaPanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.areaId ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.areaID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.areaId
+        field.value = self.btnPredefined.areaID
         return true
     end
     return self:super('UpdateModel', field)

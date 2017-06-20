@@ -2,67 +2,67 @@ TeamManager = Observable:extends{}
 
 function TeamManager:init()
     self:super('init')
-    self.teamIdCount = 0
+    self.teamIDCount = 0
     self.teams = {}
 end
 
-function TeamManager:addTeam(team, teamId)
-    if teamId == nil then
-        teamId = self.teamIdCount + 1
+function TeamManager:addTeam(team, teamID)
+    if teamID == nil then
+        teamID = self.teamIDCount + 1
     end
-    team.id = teamId
-    self.teamIdCount = teamId
+    team.id = teamID
+    self.teamIDCount = teamID
 
-    self.teams[teamId] = team
-    self:_setTeam(teamId, team)
-    self:callListeners("onTeamAdded", teamId)
-    return teamId
+    self.teams[teamID] = team
+    self:_setTeam(teamID, team)
+    self:callListeners("onTeamAdded", teamID)
+    return teamID
 end
 
-function TeamManager:removeTeam(teamId)
-    assert(self.teams[teamId])
-    if self.teams[teamId] ~= nil then
-        self.teams[teamId] = nil
-        self:callListeners("onTeamRemoved", teamId)
+function TeamManager:removeTeam(teamID)
+    assert(self.teams[teamID])
+    if self.teams[teamID] ~= nil then
+        self.teams[teamID] = nil
+        self:callListeners("onTeamRemoved", teamID)
     end
 end
 
-function TeamManager:_setTeam(teamId, team)
-    assert(self.teams[teamId])
-    self.teams[teamId] = team
+function TeamManager:_setTeam(teamID, team)
+    assert(self.teams[teamID])
+    self.teams[teamID] = team
     if team.color then
-        Spring.SetTeamColor(teamId, team.color.r, team.color.g, team.color.b)
+        Spring.SetTeamColor(teamID, team.color.r, team.color.g, team.color.b)
     end
     if Script.GetSynced() then
-        self:setTeamResources(teamId, team.metal, team.metalMax, team.energy, team.energyMax)
+        self:setTeamResources(teamID, team.metal, team.metalMax, team.energy, team.energyMax)
     end
 end
 
-function TeamManager:setTeam(teamId, team)
-    self:_setTeam(teamId, team)
-    self:callListeners("onTeamChange", teamId, team)
+function TeamManager:setTeam(teamID, team)
+    self:_setTeam(teamID, team)
+    self:callListeners("onTeamChange", teamID, team)
 end
 
-function TeamManager:getTeam(teamId)
-    return self.teams[teamId]
+function TeamManager:getTeam(teamID)
+    return self.teams[teamID]
 end
 
 function TeamManager:getAllTeams()
     return self.teams
 end
 
-function TeamManager:setTeamResources(teamId, metal, metalMax, energy, energyMax)
+function TeamManager:setTeamResources(teamID, metal, metalMax, energy, energyMax)
     if metal then
-        Spring.SetTeamResource(teamId, "m", metal)
+        Spring.SetTeamResource(teamID, "m", metal)
     end
     if metalMax then
-        Spring.SetTeamResource(teamId, "ms", metalMax)
+        Spring.SetTeamResource(teamID, "ms", metalMax)
     end
     if energy then
-        Spring.SetTeamResource(teamId, "e", energy)
+        Spring.SetTeamResource(teamID, "e", energy)
     end
     if energyMax then
-        Spring.SetTeamResource(teamId, "es", energyMax)
+        Spring.SetTeamResource(teamID, "es", energyMax)
     end
 end
 
@@ -106,10 +106,10 @@ function TeamManager:load(data)
 end
 
 function TeamManager:clear()
-    for teamId, _ in pairs(self.teams) do
-        self:removeTeam(teamId)
+    for teamID, _ in pairs(self.teams) do
+        self:removeTeam(teamID)
     end
-    self.teamIdCount = 0
+    self.teamIDCount = 0
 end
 
 function TeamManager:generateTeams(widget)
@@ -125,13 +125,13 @@ end
 ------------------------------------------------
 TeamManagerListener = LCS.class.abstract{}
 
-function TeamManagerListener:onTeamAdded(teamId)
+function TeamManagerListener:onTeamAdded(teamID)
 end
 
-function TeamManagerListener:onTeamRemoved(teamId)
+function TeamManagerListener:onTeamRemoved(teamID)
 end
 
-function TeamManagerListener:onTeamChange(teamId, team)
+function TeamManagerListener:onTeamChange(teamID, team)
 end
 ------------------------------------------------
 -- End listener definition

@@ -5,26 +5,26 @@ SB.Include(Path.Join(SB_MODEL_DIR, "feature_manager.lua"))
 ----------------------------------------------------------
 WidgetAddFeatureCommand = Command:extends{}
 
-function WidgetAddFeatureCommand:init(springId, modelId)
+function WidgetAddFeatureCommand:init(springID, modelID)
     self.className = "WidgetAddFeatureCommand"
-    self.springId = springId
-    self.modelId = modelId
+    self.springID = springID
+    self.modelID = modelID
 end
 
 function WidgetAddFeatureCommand:execute()
-    SB.model.featureManager:addFeature(self.springId, self.modelId)
+    SB.model.featureManager:addFeature(self.springID, self.modelID)
 end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetRemoveFeatureCommand = Command:extends{}
 
-function WidgetRemoveFeatureCommand:init(modelId)
+function WidgetRemoveFeatureCommand:init(modelID)
     self.className = "WidgetRemoveFeatureCommand"
-    self.modelId = modelId
+    self.modelID = modelID
 end
 
 function WidgetRemoveFeatureCommand:execute()
-    SB.model.featureManager:removeFeatureByModelId(self.modelId)
+    SB.model.featureManager:removeFeatureByModelID(self.modelID)
 end
 ----------------------------------------------------------
 -- END Widget callback commands
@@ -40,13 +40,13 @@ SB.OnInitialize(function()
     SB.model.featureManager:addListener(FeatureManagerListenerGadget())
 end)
 
-function FeatureManagerListenerGadget:onFeatureAdded(featureId, modelId)
-    local cmd = WidgetAddFeatureCommand(featureId, modelId)
+function FeatureManagerListenerGadget:onFeatureAdded(featureID, modelID)
+    local cmd = WidgetAddFeatureCommand(featureID, modelID)
     SB.commandManager:execute(cmd, true)
 end
 
-function FeatureManagerListenerGadget:onFeatureRemoved(featureId, modelId)
-    local cmd = WidgetRemoveFeatureCommand(modelId)
+function FeatureManagerListenerGadget:onFeatureRemoved(featureID, modelID)
+    local cmd = WidgetRemoveFeatureCommand(modelID)
     SB.commandManager:execute(cmd, true)
 end
 

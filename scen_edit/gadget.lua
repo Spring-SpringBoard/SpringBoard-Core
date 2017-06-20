@@ -1,12 +1,12 @@
 if (gadgetHandler:IsSyncedCode()) then
 
-function WidgetCallback(f, params, msgId)
+function WidgetCallback(f, params, msgID)
     local result = {f(unpack(params))}
     SendToUnsynced("toWidget", table.show{
         tag = "msg",
         data = {
             result = result,
-            msgId = msgId,
+            msgID = msgID,
         },
     })
 end

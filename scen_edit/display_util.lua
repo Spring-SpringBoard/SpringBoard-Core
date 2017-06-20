@@ -10,8 +10,8 @@ end
 
 function DisplayUtil:AddText(text, coords, color, time)
     table.insert(self.texts, {
-        text = text, 
-        coords = coords, 
+        text = text,
+        coords = coords,
         color = color,
         time = time,
     })
@@ -31,14 +31,14 @@ local function GetTipDimensions(unitID, str, height, invert)
             y = screen0.height - y
         end
     end
-    
+
     return textWidth, textHeight, x, y, height
 end
 
-function DisplayUtil:AddUnitSay(text, unitId, time)
-    local height = Spring.GetUnitHeight(unitId)
-    
-    local textWidth, textHeight, x, y = GetTipDimensions(unitId, text, height)
+function DisplayUtil:AddUnitSay(text, unitID, time)
+    local height = Spring.GetUnitHeight(unitID)
+
+    local textWidth, textHeight, x, y = GetTipDimensions(unitID, text, height)
 
     local img = Image:New {
         width = textWidth + 4,
@@ -70,7 +70,7 @@ function DisplayUtil:AddUnitSay(text, unitId, time)
     end
     table.insert(self.unitSays, {
         text = text,
-        unitId = unitId,
+        unitID = unitID,
         time = time,
         img = img,
         height = height,
@@ -92,27 +92,27 @@ end
 function DisplayUtil:OnFrame()
     local toDelete = {}
 
-    for i = 1, #self.texts do        
+    for i = 1, #self.texts do
         local text = self.texts[i]
         text.time = text.time - 1
         if text.time <= 0 then
-            table.insert(toDelete, i)        
+            table.insert(toDelete, i)
         end
-    end    
-    
+    end
+
     for i = #toDelete, 1, -1 do
         table.remove(self.texts, toDelete[i])
     end
 
     toDelete = {}
-    for i = 1, #self.unitSays do        
+    for i = 1, #self.unitSays do
         local text = self.unitSays[i]
         text.time = text.time - 1
         if text.time <= 0 then
-            table.insert(toDelete, i)        
+            table.insert(toDelete, i)
         end
-    end    
-    
+    end
+
     for i = #toDelete, 1, -1 do
         local del = toDelete[i]
         if self.unitSays[del].img then
@@ -120,19 +120,19 @@ function DisplayUtil:OnFrame()
         end
         table.remove(self.unitSays, i)
     end
-    
+
     -- chili code
     for _, unitSay in pairs(self.unitSays) do
-        if Spring.IsUnitInView(unitSay.unitId) then
-            local textWidth, textHeight, x, y = GetTipDimensions(unitSay.unitId, unitSay.text, unitSay.height)
-            
+        if Spring.IsUnitInView(unitSay.unitID) then
+            local textWidth, textHeight, x, y = GetTipDimensions(unitSay.unitID, unitSay.text, unitSay.height)
+
             local img = unitSay.img
             if img.hidden then
                 screen0:AddChild(img)
                 img.hidden = false
             end
-            
-            
+
+
             img:SetPos(x - (textWidth+8)/2, y - textHeight - 4 - fontSize)
         elseif not unitSay.img.hidden then
             screen0:RemoveChild(unitSay.img)
@@ -145,7 +145,7 @@ function DisplayUtil:Draw()
     if SB.view == nil or not SB.view.displayDevelop then
         return
     end
-    for i = 1, #self.texts do    
+    for i = 1, #self.texts do
         local text = self.texts[i]
         gl.PushMatrix()
         gl.Translate(text.coords[1], text.coords[2], text.coords[3])

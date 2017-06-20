@@ -1,7 +1,7 @@
 AreaView = LCS.class{}
 
-function AreaView:init(areaId)
-    self.areaId = areaId
+function AreaView:init(areaID)
+    self.areaID = areaID
     self.selected = false
 end
 
@@ -15,7 +15,7 @@ function AreaView:_Draw(x1, z1, x2, z2)
     gl.PushMatrix()
     --    gl.Translate(0, 0, 0)
 --        gl.Rotate(90, 1, 0, 0)
---        local y = Spring.GetGroundHeight(x1, z1)    
+--        local y = Spring.GetGroundHeight(x1, z1)
 --        gl.Translate(0, 0, -y)
         local bt = 4
         gl.Color(1, 1, 1, 0.7)
@@ -38,14 +38,14 @@ function AreaView:_Draw(x1, z1, x2, z2)
     gl.PushMatrix()
         gl.Rotate(90, 1, 0, 0)
         local fontSize = 58
-        local txt = tostring(self.areaId)
+        local txt = tostring(self.areaID)
         local w = gl.GetTextWidth(txt) * fontSize
         local h = gl.GetTextHeight(txt) * fontSize
         local cx = (x1 + x2 - w) / 2
         local cz = (z1 + z2 + h) / 2
         local y = Spring.GetGroundHeight(cx, cz)
         gl.Translate(cx, cz, -y)
-        gl.Color(1, 1, 1, 1)    
+        gl.Color(1, 1, 1, 1)
         gl.Rotate(180, 0, 0, 1)
         gl.Scale(-1, 1, 1)
         gl.Text(txt, 0, 0, fontSize)
@@ -53,6 +53,6 @@ function AreaView:_Draw(x1, z1, x2, z2)
 end
 
 function AreaView:Draw()
-    x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(self.areaId))
+    x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(self.areaID))
     self:_Draw(x1, z1, x2, z2)
 end

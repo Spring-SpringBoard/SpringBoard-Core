@@ -2,9 +2,9 @@ FeatureManager = Observable:extends{}
 
 function FeatureManager:init(widget)
     self:super('init')
-    self.s2mFeatureIdMapping = {}
-    self.m2sFeatureIdMapping = {}
-    self.featureIdCounter = 0
+    self.s2mFeatureIDMapping = {}
+    self.m2sFeatureIDMapping = {}
+    self.featureIDCounter = 0
     self.widget = widget
 end
 
@@ -12,68 +12,68 @@ function FeatureManager:populate()
     if not self.widget then
         local allFeatures = Spring.GetAllFeatures()
         for i = 1, #allFeatures do
-            local featureId = allFeatures[i]
-            self:addFeature(featureId)
+            local featureID = allFeatures[i]
+            self:addFeature(featureID)
         end
     end
 end
 
-function FeatureManager:addFeature(featureId, modelId)
-    if self.s2mFeatureIdMapping[featureId] then
+function FeatureManager:addFeature(featureID, modelID)
+    if self.s2mFeatureIDMapping[featureID] then
         return
     end
-    if modelId ~= nil then
-        if self.featureIdCounter < modelId then
-            self.featureIdCounter = modelId
+    if modelID ~= nil then
+        if self.featureIDCounter < modelID then
+            self.featureIDCounter = modelID
         end
     else
-        self.featureIdCounter = self.featureIdCounter + 1
-        modelId = self.featureIdCounter
+        self.featureIDCounter = self.featureIDCounter + 1
+        modelID = self.featureIDCounter
     end
-    if not self.s2mFeatureIdMapping[featureId] then
-        self.s2mFeatureIdMapping[featureId] = modelId
+    if not self.s2mFeatureIDMapping[featureID] then
+        self.s2mFeatureIDMapping[featureID] = modelID
     end
-    if not self.m2sFeatureIdMapping[modelId] then
-        self.m2sFeatureIdMapping[modelId] = featureId
+    if not self.m2sFeatureIDMapping[modelID] then
+        self.m2sFeatureIDMapping[modelID] = featureID
     end
-    self:callListeners("onFeatureAdded", featureId, modelId)
-    return modelId
+    self:callListeners("onFeatureAdded", featureID, modelID)
+    return modelID
 end
 
-function FeatureManager:removeFeature(featureId)
-    if featureId == nil then
+function FeatureManager:removeFeature(featureID)
+    if featureID == nil then
         return
     end
-    local modelId = self.s2mFeatureIdMapping[featureId]
-    if self.s2mFeatureIdMapping[featureId] then
-        self.m2sFeatureIdMapping[modelId] = nil
+    local modelID = self.s2mFeatureIDMapping[featureID]
+    if self.s2mFeatureIDMapping[featureID] then
+        self.m2sFeatureIDMapping[modelID] = nil
     end
-    self.s2mFeatureIdMapping[featureId] = nil
+    self.s2mFeatureIDMapping[featureID] = nil
 
-    self:callListeners("onFeatureRemoved", featureId, modelId)
+    self:callListeners("onFeatureRemoved", featureID, modelID)
 end
 
-function FeatureManager:removeFeatureByModelId(modelId)
-    local springId = self.m2sFeatureIdMapping[modelId]
-    self:removeFeature(springId)
+function FeatureManager:removeFeatureByModelID(modelID)
+    local springID = self.m2sFeatureIDMapping[modelID]
+    self:removeFeature(springID)
 end
 
-function FeatureManager:getSpringFeatureId(modelFeatureId)
-    return self.m2sFeatureIdMapping[modelFeatureId]
+function FeatureManager:getSpringFeatureID(modelFeatureID)
+    return self.m2sFeatureIDMapping[modelFeatureID]
 end
 
-function FeatureManager:getModelFeatureId(springFeatureId)
-    return self.s2mFeatureIdMapping[springFeatureId]
+function FeatureManager:getModelFeatureID(springFeatureID)
+    return self.s2mFeatureIDMapping[springFeatureID]
 end
 
-function FeatureManager:setFeatureModelId(featureId, modelId)
-    if self.s2mFeatureIdMapping[featureId] then
-        self:removeFeature(featureId)
+function FeatureManager:setFeatureModelID(featureID, modelID)
+    if self.s2mFeatureIDMapping[featureID] then
+        self:removeFeature(featureID)
     end
-    if self.m2sFeatureIdMapping[modelId] then
-        self:removeFeatureByModelId(modelId)
+    if self.m2sFeatureIDMapping[modelID] then
+        self:removeFeatureByModelID(modelID)
     end
-    self:addFeature(featureId, modelId)
+    self:addFeature(featureID, modelID)
 end
 
 function FeatureManager:serialize()
@@ -81,22 +81,22 @@ function FeatureManager:serialize()
 end
 
 function FeatureManager:load(features)
-    self.featureIdCounter = 0
+    self.featureIDCounter = 0
     featureBridge.s11n:Add(features)
 end
 
 function FeatureManager:clear()
-    for _, featureId in pairs(Spring.GetAllFeatures()) do
-        Spring.DestroyFeature(featureId, false, true)
---        self:removeFeature(featureId)
+    for _, featureID in pairs(Spring.GetAllFeatures()) do
+        Spring.DestroyFeature(featureID, false, true)
+--        self:removeFeature(featureID)
     end
 
-    for featureId, _ in pairs(self.s2mFeatureIdMapping) do
-        self:removeFeature(featureId)
+    for featureID, _ in pairs(self.s2mFeatureIDMapping) do
+        self:removeFeature(featureID)
     end
-    self.s2mFeatureIdMapping = {}
-    self.m2sFeatureIdMapping = {}
-    self.featureIdCounter = 0
+    self.s2mFeatureIDMapping = {}
+    self.m2sFeatureIDMapping = {}
+    self.featureIDCounter = 0
 
 end
 ------------------------------------------------
@@ -104,10 +104,10 @@ end
 ------------------------------------------------
 FeatureManagerListener = LCS.class.abstract{}
 
-function FeatureManagerListener:onFeatureAdded(featureId, modelId)
+function FeatureManagerListener:onFeatureAdded(featureID, modelID)
 end
 
-function FeatureManagerListener:onFeatureRemoved(featureId, modelId)
+function FeatureManagerListener:onFeatureRemoved(featureID, modelID)
 end
 ------------------------------------------------
 -- End listener definition

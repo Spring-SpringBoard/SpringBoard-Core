@@ -58,7 +58,7 @@ function DragObjectState:MouseMove(x, y, dx, dy, button)
         return
     end
 
-    if not self.bridge.spValidObject(self.objectID) then -- or Spring.GetUnitIsDead(self.objectID) 
+    if not self.bridge.spValidObject(self.objectID) then -- or Spring.GetUnitIsDead(self.objectID)
         SB.stateManager:SetState(DefaultState())
         return false
     end
@@ -73,12 +73,12 @@ function DragObjectState:MouseRelease(x, y, button)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
     for unitID, object in pairs(movedObjects.units) do
-        local modelID = SB.model.unitManager:getModelUnitId(unitID)
+        local modelID = SB.model.unitManager:getModelUnitID(unitID)
         local cmd = SetUnitParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
     end
     for featureID, object in pairs(movedObjects.features) do
-        local modelID = SB.model.featureManager:getModelFeatureId(featureID)
+        local modelID = SB.model.featureManager:getModelFeatureID(featureID)
         local cmd = SetFeatureParamCommand(modelID, "pos", object.pos)
         table.insert(commands, cmd)
     end

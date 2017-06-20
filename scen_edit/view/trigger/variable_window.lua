@@ -65,8 +65,8 @@ function VariableWindow:init(variable)
                 if selected and itemIdx > 0 then
                     self.variablePanel:ClearChildren()
 
-                    local typeId = itemIdx
-                    local inputType = SB.metaModel.variableTypes[typeId]
+                    local typeID = itemIdx
+                    local inputType = SB.metaModel.variableTypes[typeID]
                     local subPanel = SB.createNewPanel({
                         dataType = {
                             type = inputType,

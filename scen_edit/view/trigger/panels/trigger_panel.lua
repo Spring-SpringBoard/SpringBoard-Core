@@ -9,10 +9,10 @@ function TriggerPanel:MakePredefinedOpt()
         parent = stackTriggerPanel,
     }
     local triggerNames = {}
-    local triggerIds = {}
+    local triggerIDs = {}
     for id, trigger in pairs(SB.model.triggerManager:getAllTriggers()) do
         table.insert(triggerNames, trigger.name)
-        table.insert(triggerIds, trigger.id)
+        table.insert(triggerIDs, trigger.id)
     end
     self.cmbTrigger = ComboBox:New {
         right = 1,
@@ -20,20 +20,20 @@ function TriggerPanel:MakePredefinedOpt()
         height = SB.conf.B_HEIGHT,
         parent = stackTriggerPanel,
         items = triggerNames,
-        triggerIds = triggerIds,
+        triggerIDs = triggerIDs,
     }
 end
 
 function TriggerPanel:UpdateModel(field)
-    field.value = self.cmbTrigger.triggerIds[self.cmbTrigger.selected]
+    field.value = self.cmbTrigger.triggerIDs[self.cmbTrigger.selected]
     field.type = "pred"
     return true
 end
 
 function TriggerPanel:UpdatePanel(field)
-    for i = 1, #self.cmbTrigger.triggerIds do
-        local triggerId = self.cmbTrigger.triggerIds[i]
-        if triggerId == field.value then
+    for i = 1, #self.cmbTrigger.triggerIDs do
+        local triggerID = self.cmbTrigger.triggerIDs[i]
+        if triggerID == field.value then
             self.cmbTrigger:Select(i)
             return true
         end

@@ -15,15 +15,15 @@ function TeamSelector:init()
         height = 40,
         items = teamsTxt,
         font = { size = 16 },
-        teamIds = GetKeys(teams),
+        teamIDs = GetKeys(teams),
     }
     self.cmbTeamSelector.OnSelect = {
         function(_, itemIdx)
             if itemIdx < #teamsTxt then
-                local teamId = self.cmbTeamSelector.teamIds[itemIdx]
-                if Spring.GetMyTeamID() ~= teamId or Spring.GetSpectatingState() then
+                local teamID = self.cmbTeamSelector.teamIDs[itemIdx]
+                if Spring.GetMyTeamID() ~= teamID or Spring.GetSpectatingState() then
                     if SB.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
-                        local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), teamId)
+                        local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), teamID)
                         SB.commandManager:execute(cmd)
                     end
                 end
@@ -51,18 +51,18 @@ function TeamSelector:init()
 end
 
 function TeamSelector:Update()
-    local selectedTeamId = self.cmbTeamSelector.teamIds[self.cmbTeamSelector.selected]
-    if not Spring.GetSpectatingState() and Spring.GetMyTeamID() ~= selectedTeamId then
+    local selectedTeamID = self.cmbTeamSelector.teamIDs[self.cmbTeamSelector.selected]
+    if not Spring.GetSpectatingState() and Spring.GetMyTeamID() ~= selectedTeamID then
         local OnSelect = self.cmbTeamSelector.OnSelect
         self.cmbTeamSelector.OnSelect = nil
-        for i, teamId in pairs(self.cmbTeamSelector.teamIds) do
-            if teamId == Spring.GetMyTeamID() then
+        for i, teamID in pairs(self.cmbTeamSelector.teamIDs) do
+            if teamID == Spring.GetMyTeamID() then
                 self.cmbTeamSelector:Select(i)
                 break
             end
         end
         self.cmbTeamSelector.OnSelect = OnSelect
-    elseif Spring.GetSpectatingState() and selectedTeamId ~= nil then
+    elseif Spring.GetSpectatingState() and selectedTeamID ~= nil then
         local OnSelect = self.cmbTeamSelector.OnSelect
         self.cmbTeamSelector.OnSelect = nil
         self.cmbTeamSelector:Select(#self.cmbTeamSelector.items)

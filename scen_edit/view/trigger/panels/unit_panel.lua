@@ -17,11 +17,11 @@ function UnitPanel:MakePredefinedOpt()
         width = 60,
         height = SB.conf.B_HEIGHT,
         parent = stackUnitPanel,
-        unitId = nil,
+        unitID = nil,
     }
     self.OnSelectObject = function(objectID)
-        self.btnPredefined.unitId = objectID
-        self.btnPredefined.caption = "Id=" .. objectID
+        self.btnPredefined.unitID = objectID
+        self.btnPredefined.caption = "ID=" .. objectID
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
@@ -49,11 +49,11 @@ function UnitPanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                if self.btnPredefined.unitId ~= nil then
-                    local unitId = SB.model.unitManager:getSpringUnitId(self.btnPredefined.unitId)
-                    if unitId ~= nil and Spring.ValidUnitID(unitId) then
-                        local x, y, z = Spring.GetUnitPosition(unitId)
-                        Spring.SelectUnitArray({unitId})
+                if self.btnPredefined.unitID ~= nil then
+                    local unitID = SB.model.unitManager:getSpringUnitID(self.btnPredefined.unitID)
+                    if unitID ~= nil and Spring.ValidUnitID(unitID) then
+                        local x, y, z = Spring.GetUnitPosition(unitID)
+                        Spring.SelectUnitArray({unitID})
                         Spring.SetCameraTarget(x, y, z)
                     end
                 end
@@ -63,9 +63,9 @@ function UnitPanel:MakePredefinedOpt()
 end
 
 function UnitPanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitId ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.unitId
+        field.value = self.btnPredefined.unitID
         return true
     end
     return self:super('UpdateModel', field)

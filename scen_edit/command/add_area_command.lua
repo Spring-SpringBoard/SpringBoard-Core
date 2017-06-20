@@ -21,9 +21,9 @@ function AddAreaCommand:execute()
         self.z1, self.z2 = self.z2, self.z1
     end
     local area = {self.x1, self.z1, self.x2, self.z2}
-    self.areaId = SB.model.areaManager:addArea(area, self.areaId)
+    self.areaID = SB.model.areaManager:addArea(area, self.areaID)
 end
 
 function AddAreaCommand:unexecute()
-    SB.model.areaManager:removeArea(self.areaId)
+    SB.model.areaManager:removeArea(self.areaID)
 end

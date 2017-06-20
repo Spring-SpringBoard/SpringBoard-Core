@@ -24,15 +24,14 @@ function StartCommand:execute()
         Spring.SendCommands("pause 0")
     else
         local allUnits = Spring.GetAllUnits()
-        for i = 1, #allUnits do
-            local unitId = allUnits[i]
-            --[[Spring.GiveOrderToUnit(unitId, CMD.FIRE_STATE, { 2 }, {})
-            Spring.MoveCtrl.Disable(unitId)
+        for _, unitID in pairs(allUnits) do
+            --[[Spring.GiveOrderToUnit(unitID, CMD.FIRE_STATE, { 2 }, {})
+            Spring.MoveCtrl.Disable(unitID)
             SB.delay(function()
-                Spring.GiveOrderToUnit(unitId, CMD.WAIT, {}, {})
-                Spring.GiveOrderToUnit(unitId, CMD.WAIT, {}, {})
+                Spring.GiveOrderToUnit(unitID, CMD.WAIT, {}, {})
+                Spring.GiveOrderToUnit(unitID, CMD.WAIT, {}, {})
             end)]]--
-            Spring.SetUnitHealth(unitId, { paralyze = 0 })
+            Spring.SetUnitHealth(unitID, { paralyze = 0 })
         end
     end
 

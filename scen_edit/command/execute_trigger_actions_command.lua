@@ -1,10 +1,10 @@
 ExecuteTriggerActionsCommand = Command:extends{}
 
-function ExecuteTriggerActionsCommand:init(triggerId)
+function ExecuteTriggerActionsCommand:init(triggerID)
     self.className = "ExecuteTriggerActionsCommand"
-    self.triggerId = triggerId
+    self.triggerID = triggerID
 end
 
 function ExecuteTriggerActionsCommand:execute()
-    SB.rtModel:ExecuteTriggerActions(self.triggerId)
+    SB.rtModel:ExecuteTriggerActions(self.triggerID)
 end

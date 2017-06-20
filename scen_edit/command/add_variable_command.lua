@@ -7,9 +7,9 @@ function AddVariableCommand:init(variable)
 end
 
 function AddVariableCommand:execute()
-    self.variableId = SB.model.variableManager:addVariable(self.variable)
+    self.variableID = SB.model.variableManager:addVariable(self.variable)
 end
 
 function AddVariableCommand:unexecute()
-    SB.model.variableManager:removeVariable(self.variableId)
+    SB.model.variableManager:removeVariable(self.variableID)
 end

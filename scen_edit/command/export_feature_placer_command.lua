@@ -39,7 +39,7 @@ function ExportFeaturePlacerCommand:execute()
     for _, unit in pairs(units) do
         local unitDef = UnitDefNames[unit.unitDefName]
         -- NOTICE: this will only export GAIA units and is used to best mimic FP functionality
-        if unit.teamId == gaiaID then
+        if unit.teamID == gaiaID then
             local rot = tostring(-unit.angle * 32768 / math.pi)
             local fpObj = {
                 name = unit.unitDefName,

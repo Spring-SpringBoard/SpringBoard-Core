@@ -1,11 +1,11 @@
 ChangePlayerTeamCommand = Command:extends{}
 
-function ChangePlayerTeamCommand:init(playerId, teamId)
+function ChangePlayerTeamCommand:init(playerID, teamID)
     self.className = "ChangePlayerTeamCommand"
-    self.playerId = playerId
-    self.teamId = teamId
+    self.playerID = playerID
+    self.teamID = teamID
 end
 
 function ChangePlayerTeamCommand:execute()
-    Spring.AssignPlayerToTeam(self.playerId, self.teamId)
+    Spring.AssignPlayerToTeam(self.playerID, self.teamID)
 end

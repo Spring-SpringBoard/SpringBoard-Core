@@ -54,19 +54,19 @@ SB.OnInitialize(function()
     SB.model.variableManager:addListener(VariableManagerListenerGadget())
 end)
 
-function VariableManagerListenerGadget:onVariableAdded(variableId)
-    local variable = SB.model.variableManager:getVariable(variableId)
-    local cmd = WidgetAddVariableCommand(variableId, variable)
+function VariableManagerListenerGadget:onVariableAdded(variableID)
+    local variable = SB.model.variableManager:getVariable(variableID)
+    local cmd = WidgetAddVariableCommand(variableID, variable)
     SB.commandManager:execute(cmd, true)
 end
 
-function VariableManagerListenerGadget:onVariableRemoved(variableId)
-    local cmd = WidgetRemoveVariableCommand(variableId)
+function VariableManagerListenerGadget:onVariableRemoved(variableID)
+    local cmd = WidgetRemoveVariableCommand(variableID)
     SB.commandManager:execute(cmd, true)
 end
 
-function VariableManagerListenerGadget:onVariableUpdated(variableId)
-    local variable = SB.model.variableManager:getVariable(variableId)
+function VariableManagerListenerGadget:onVariableUpdated(variableID)
+    local variable = SB.model.variableManager:getVariable(variableID)
     local cmd = WidgetUpdateVariableCommand(variable)
     SB.commandManager:execute(cmd, true)
 end

@@ -80,7 +80,7 @@ function DefaultState:MakeAreaTrigger(areaID)
                     type = "pred",
                 },
                 relation = {
-                    cmpTypeId = 1,
+                    cmpTypeID = 1,
                 },
                 second = {
                     name = "Trigger area",
@@ -96,9 +96,9 @@ function DefaultState:MousePress(x, y, button)
     local selection = SB.view.selectionManager:GetSelection()
     local selCount = #selection.units + #selection.features + #selection.areas
     if Spring.GetPressedKeys() == KEYSYMS.SPACE and button == 1 then
-        local result, unitId = Spring.TraceScreenRay(x, y)
+        local result, unitID = Spring.TraceScreenRay(x, y)
         if result == "unit" then
-            ObjectPropertyWindow(unitId)
+            ObjectPropertyWindow(unitID)
             return true
         end
     end
@@ -236,18 +236,18 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             return false
         end
         local commands = {}
-        for _, unitId in pairs(selection.units) do
-            local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-            table.insert(commands, RemoveUnitCommand(modelUnitId))
+        for _, unitID in pairs(selection.units) do
+            local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+            table.insert(commands, RemoveUnitCommand(modelUnitID))
         end
 
-        for _, featureId in pairs(selection.features) do
-            local modelFeatureId = SB.model.featureManager:getModelFeatureId(featureId)
-            table.insert(commands, RemoveFeatureCommand(modelFeatureId))
+        for _, featureID in pairs(selection.features) do
+            local modelFeatureID = SB.model.featureManager:getModelFeatureID(featureID)
+            table.insert(commands, RemoveFeatureCommand(modelFeatureID))
         end
 
-        for _, areaId in pairs(selection.areas) do
-            table.insert(commands, RemoveAreaCommand(areaId))
+        for _, areaID in pairs(selection.areas) do
+            table.insert(commands, RemoveAreaCommand(areaID))
         end
 
         local cmd = CompoundCommand(commands)
@@ -269,10 +269,10 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         }
         SB.view.selectionManager:Select(selection)
     elseif key == KEYSYMS.SPACE and mouseLeft and (self.gameSeconds == nil or self.gameSeconds + 1 < gameSeconds) then
-        local result, unitId = Spring.TraceScreenRay(mouseX, mouseY)
+        local result, unitID = Spring.TraceScreenRay(mouseX, mouseY)
         if result == "unit" then
             self.gameSeconds = gameSeconds
-            ObjectPropertyWindow(unitId)
+            ObjectPropertyWindow(unitID)
         end
     else
         return false

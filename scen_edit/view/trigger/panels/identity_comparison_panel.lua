@@ -17,11 +17,11 @@ function IdentityComparisonPanel:MakePredefinedOpt()
 end
 
 function IdentityComparisonPanel:UpdateModel(comparison)
-    comparison.cmpTypeId = self.cmbCmpType.selected
+    comparison.cmpTypeID = self.cmbCmpType.selected
     return true
 end
 
 function IdentityComparisonPanel:UpdatePanel(comparison)
-    self.cmbCmpType:Select(comparison.cmpTypeId)
+    self.cmbCmpType:Select(comparison.cmpTypeID)
     return true
 end

@@ -17,11 +17,11 @@ function NumericComparisonPanel:MakePredefinedOpt(parent)
 end
 
 function NumericComparisonPanel:UpdateModel(comparison)
-    comparison.cmpTypeId = self.cmbCmpType.selected
+    comparison.cmpTypeID = self.cmbCmpType.selected
     return true
 end
 
 function NumericComparisonPanel:UpdatePanel(comparison)
-    self.cmbCmpType:Select(comparison.cmpTypeId)
+    self.cmbCmpType:Select(comparison.cmpTypeID)
     return true
 end

@@ -2,9 +2,9 @@ UnitManager = Observable:extends{}
 
 function UnitManager:init(widget)
     self:super('init')
-    self.s2mUnitIdMapping = {}
-    self.m2sUnitIdMapping = {}
-    self.unitIdCounter = 0
+    self.s2mUnitIDMapping = {}
+    self.m2sUnitIDMapping = {}
+    self.unitIDCounter = 0
     self.widget = widget
 end
 
@@ -12,74 +12,74 @@ function UnitManager:populate()
     if not self.widget then
         local allUnits = Spring.GetAllUnits()
         for i = 1, #allUnits do
-            local unitId = allUnits[i]
-            self:addUnit(unitId)
+            local unitID = allUnits[i]
+            self:addUnit(unitID)
         end
     end
 end
 
-function UnitManager:addUnit(unitId, modelId)
-    if self.s2mUnitIdMapping[unitId] then
+function UnitManager:addUnit(unitID, modelID)
+    if self.s2mUnitIDMapping[unitID] then
         return
     end
-    if modelId ~= nil then
-        if self.unitIdCounter < modelId then
-            self.unitIdCounter = modelId
+    if modelID ~= nil then
+        if self.unitIDCounter < modelID then
+            self.unitIDCounter = modelID
         end
     else
-        self.unitIdCounter = self.unitIdCounter + 1
-        modelId = self.unitIdCounter
+        self.unitIDCounter = self.unitIDCounter + 1
+        modelID = self.unitIDCounter
     end
-    if not self.s2mUnitIdMapping[unitId] then
-        self.s2mUnitIdMapping[unitId] = modelId
+    if not self.s2mUnitIDMapping[unitID] then
+        self.s2mUnitIDMapping[unitID] = modelID
     end
-    if not self.m2sUnitIdMapping[modelId] then
-        self.m2sUnitIdMapping[modelId] = unitId
+    if not self.m2sUnitIDMapping[modelID] then
+        self.m2sUnitIDMapping[modelID] = unitID
     end
 
-    self:callListeners("onUnitAdded", unitId, modelId)
-    return modelId
+    self:callListeners("onUnitAdded", unitID, modelID)
+    return modelID
 end
 
-function UnitManager:removeUnit(unitId)
-    if unitId == nil then
+function UnitManager:removeUnit(unitID)
+    if unitID == nil then
         return
     end
-    local modelId = self.s2mUnitIdMapping[unitId]
-    if self.s2mUnitIdMapping[unitId] then
-        self.m2sUnitIdMapping[modelId] = nil
+    local modelID = self.s2mUnitIDMapping[unitID]
+    if self.s2mUnitIDMapping[unitID] then
+        self.m2sUnitIDMapping[modelID] = nil
     end
-    self.s2mUnitIdMapping[unitId] = nil
+    self.s2mUnitIDMapping[unitID] = nil
 
-    self:callListeners("onUnitRemoved", unitId, modelId)
+    self:callListeners("onUnitRemoved", unitID, modelID)
 end
 
-function UnitManager:removeUnitByModelId(modelId)
-    local springId = self.m2sUnitIdMapping[modelId]
-    self:removeUnit(springId)
+function UnitManager:removeUnitByModelID(modelID)
+    local springID = self.m2sUnitIDMapping[modelID]
+    self:removeUnit(springID)
 end
 
-function UnitManager:getSpringUnitId(modelUnitId)
-    return self.m2sUnitIdMapping[modelUnitId]
+function UnitManager:getSpringUnitID(modelUnitID)
+    return self.m2sUnitIDMapping[modelUnitID]
 end
 
-function UnitManager:getModelUnitId(springUnitId)
-    return self.s2mUnitIdMapping[springUnitId]
+function UnitManager:getModelUnitID(springUnitID)
+    return self.s2mUnitIDMapping[springUnitID]
 end
 
-function UnitManager:setUnitModelId(unitId, modelId)
-    if self.s2mUnitIdMapping[unitId] then
-        self:removeUnit(unitId)
+function UnitManager:setUnitModelID(unitID, modelID)
+    if self.s2mUnitIDMapping[unitID] then
+        self:removeUnit(unitID)
     end
-    if self.m2sUnitIdMapping[modelId] then
-        self:removeUnitByModelId(modelId)
+    if self.m2sUnitIDMapping[modelID] then
+        self:removeUnitByModelID(modelID)
     end
-    self:addUnit(unitId, modelId)
+    self:addUnit(unitID, modelID)
 end
 
 function UnitManager:getAllUnits()
     local allUnits = {}
-    for id, _ in pairs(self.m2sUnitIdMapping) do
+    for id, _ in pairs(self.m2sUnitIDMapping) do
         table.insert(allUnits, id)
     end
     return allUnits
@@ -90,68 +90,68 @@ function UnitManager:serialize()
 end
 
 -- function UnitManager:loadUnit(unit)
---     if self.m2sUnitIdMapping[unit.id] then
+--     if self.m2sUnitIDMapping[unit.id] then
 --         return
 --     end
 --     -- FIXME: figure out why this sometimes fails on load with a specific unit.id
---     local unitId = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamId, false, true)
---     if unitId == nil then
+--     local unitID = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamID, false, true)
+--     if unitID == nil then
 --         Log.Error("Failed to create the following unit: " .. table.show(unit))
 --         return
 --     end
 --     -- FIXME: this check is not usable until unit creation by ID is fixed
---     if false and unit.id ~= nil and unit.id ~= unitId then
---         Log.Error("Created unit has different id: " .. tostring(unit.id) .. ", " .. tostring(unitId))
+--     if false and unit.id ~= nil and unit.id ~= unitID then
+--         Log.Error("Created unit has different id: " .. tostring(unit.id) .. ", " .. tostring(unitID))
 --     end
---     self:setUnitProperties(unitId, unit)
---     self:setUnitModelId(unitId, unit.id)
+--     self:setUnitProperties(unitID, unit)
+--     self:setUnitModelID(unitID, unit.id)
 --     if unit.commands ~= nil then
---         self:setUnitCommands(unitId, unit.commands)
+--         self:setUnitCommands(unitID, unit.commands)
 --     end
---     return unitId
+--     return unitID
 -- end
 
 function UnitManager:load(units)
-    self.unitIdCounter = 0
+    self.unitIDCounter = 0
     unitBridge.s11n:Add(units)
     -- -- load the units without the commands
     -- local unitCommands = {}
     -- for _, unit in pairs(units) do
     --     local commands = unit.commands
     --     unit.commands = nil
-    --     local unitId = self:loadUnit(unit)
-    --     if unitId then
-    --         unitCommands[unitId] = commands
+    --     local unitID = self:loadUnit(unit)
+    --     if unitID then
+    --         unitCommands[unitID] = commands
     --     end
     -- end
     -- -- load the commands
-    -- for unitId, commands in pairs(unitCommands) do
-    --     self:setUnitCommands(unitId, commands)
+    -- for unitID, commands in pairs(unitCommands) do
+    --     self:setUnitCommands(unitID, commands)
     -- end
 end
 
 function UnitManager:clear()
-    for _, unitId in pairs(Spring.GetAllUnits()) do
-        Spring.DestroyUnit(unitId, false, true)
-        --self:removeUnit(unitId)
+    for _, unitID in pairs(Spring.GetAllUnits()) do
+        Spring.DestroyUnit(unitID, false, true)
+        --self:removeUnit(unitID)
     end
 
-    for unitId, _ in pairs(self.s2mUnitIdMapping) do
-        self:removeUnit(unitId)
+    for unitID, _ in pairs(self.s2mUnitIDMapping) do
+        self:removeUnit(unitID)
     end
-    self.s2mUnitIdMapping = {}
-    self.m2sUnitIdMapping = {}
-    self.unitIdCounter = 0
+    self.s2mUnitIDMapping = {}
+    self.m2sUnitIDMapping = {}
+    self.unitIDCounter = 0
 end
 ------------------------------------------------
 -- Listener definition
 ------------------------------------------------
 UnitManagerListener = LCS.class.abstract{}
 
-function UnitManagerListener:onUnitAdded(unitId, modelId)
+function UnitManagerListener:onUnitAdded(unitID, modelID)
 end
 
-function UnitManagerListener:onUnitRemoved(unitId, modelId)
+function UnitManagerListener:onUnitRemoved(unitID, modelID)
 end
 ------------------------------------------------
 -- End listener definition

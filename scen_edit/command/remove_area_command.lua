@@ -1,16 +1,16 @@
 RemoveAreaCommand = Command:extends{}
 RemoveAreaCommand.className = "RemoveAreaCommand"
 
-function RemoveAreaCommand:init(areaId)
+function RemoveAreaCommand:init(areaID)
     self.className = "RemoveAreaCommand"
-    self.areaId = areaId
+    self.areaID = areaID
 end
 
 function RemoveAreaCommand:execute()
-    self.area = SB.model.areaManager:getArea(self.areaId)
-    SB.model.areaManager:removeArea(self.areaId)
+    self.area = SB.model.areaManager:getArea(self.areaID)
+    SB.model.areaManager:removeArea(self.areaID)
 end
 
 function RemoveAreaCommand:unexecute()
-    self.areaId = SB.model.areaManager:addArea(self.area, self.areaId)
+    self.areaID = SB.model.areaManager:addArea(self.area, self.areaID)
 end

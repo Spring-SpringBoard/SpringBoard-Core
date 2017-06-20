@@ -162,7 +162,7 @@ function _UnitBridge:init()
                     -- TODO
                     -- serialized unit commands use the model unit id
     --                 if isUnitCommand(command) then
-    --                     command.params[1] = self:getModelUnitId(command.params[1])
+    --                     command.params[1] = self:getModelUnitID(command.params[1])
     --                 end
                 end
             end
@@ -195,7 +195,7 @@ function _UnitBridge:init()
         self.getFuncs.movectrl = nil
     end
     -- TODO: this isn't available
-    -- unit.alwaysVisible = Spring.GetAlwaysVisible(unitId)
+    -- unit.alwaysVisible = Spring.GetAlwaysVisible(unitID)
 
     self.setFuncs = {
         pos = function(objectID, value)
@@ -332,7 +332,7 @@ function _UnitBridge:init()
                 local params
                 -- unit commands need to get the real unit ID
                 if false and isUnitCommand(command) then
-                    params = { self:getSpringUnitId(command.params[1]) }
+                    params = { self:getSpringUnitID(command.params[1]) }
                 else
                     params = command.params
                 end

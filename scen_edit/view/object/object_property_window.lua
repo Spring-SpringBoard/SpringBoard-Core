@@ -314,14 +314,14 @@ function ObjectPropertyWindow:init()
         width = 100,
     }))
 
-    local teamIds = GetField(SB.model.teamManager:getAllTeams(), "id")
-    for i = 1, #teamIds do
-        teamIds[i] = tostring(teamIds[i])
+    local teamIDs = GetField(SB.model.teamManager:getAllTeams(), "id")
+    for i = 1, #teamIDs do
+        teamIDs[i] = tostring(teamIDs[i])
     end
     local teamCaptions = GetField(SB.model.teamManager:getAllTeams(), "name")
     self:AddField(ChoiceField({
         name = "team",
-        items = teamIds,
+        items = teamIDs,
         captions = teamCaptions,
         title = "Team: ",
     }))

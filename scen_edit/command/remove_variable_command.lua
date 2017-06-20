@@ -1,14 +1,14 @@
 RemoveVariableCommand = Command:extends{}
 RemoveVariableCommand.className = "RemoveVariableCommand"
 
-function RemoveVariableCommand:init(variableId)
+function RemoveVariableCommand:init(variableID)
     self.className = "RemoveVariableCommand"
-    self.variableId = variableId
+    self.variableID = variableID
 end
 
 function RemoveVariableCommand:execute()
-    self.variable = SB.model.variableManager:getVariable(self.variableId)
-    SB.model.variableManager:removeVariable(self.variableId)
+    self.variable = SB.model.variableManager:getVariable(self.variableID)
+    SB.model.variableManager:removeVariable(self.variableID)
 end
 
 function RemoveVariableCommand:unexecute()

@@ -1,17 +1,17 @@
 SetTeamColorCommand = Command:extends{}
 SetTeamColorCommand.className = "SetTeamColorCommand"
 
-function SetTeamColorCommand:init(teamId, color)
+function SetTeamColorCommand:init(teamID, color)
     self.className = "SetTeamColorCommand"
-    self.teamId = teamId
+    self.teamID = teamID
     self.color = color
 end
 
 function SetTeamColorCommand:execute()
-    self.oldColor = SB.model.teamManager:getTeam(self.teamId).color
-    SB.model.teamManager:getTeam(self.teamId).color = self.color
+    self.oldColor = SB.model.teamManager:getTeam(self.teamID).color
+    SB.model.teamManager:getTeam(self.teamID).color = self.color
 end
 
 function SetTeamColorCommand:unexecute()
-    SB.model.teamManager:getTeam(self.teamId).color = self.oldColor
+    SB.model.teamManager:getTeam(self.teamID).color = self.oldColor
 end

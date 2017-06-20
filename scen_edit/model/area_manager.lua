@@ -2,35 +2,35 @@ AreaManager = Observable:extends{}
 
 function AreaManager:init()
     self:super('init')
-    self.areaIdCount = 0
+    self.areaIDCount = 0
     self.areas = {}
 end
 
-function AreaManager:addArea(area, areaId)
-    if areaId == nil then
-        areaId = self.areaIdCount + 1
+function AreaManager:addArea(area, areaID)
+    if areaID == nil then
+        areaID = self.areaIDCount + 1
     end
-    self.areaIdCount = areaId
-    self.areas[areaId] = area
-    self:callListeners("onAreaAdded", areaId)
-    return areaId
+    self.areaIDCount = areaID
+    self.areas[areaID] = area
+    self:callListeners("onAreaAdded", areaID)
+    return areaID
 end
 
-function AreaManager:removeArea(areaId)
-    if self.areas[areaId] ~= nil then
-        self.areas[areaId] = nil
-        self:callListeners("onAreaRemoved", areaId)
+function AreaManager:removeArea(areaID)
+    if self.areas[areaID] ~= nil then
+        self.areas[areaID] = nil
+        self:callListeners("onAreaRemoved", areaID)
     end
 end
 
-function AreaManager:setArea(areaId, value)
-    assert(self.areas[areaId])
-    self.areas[areaId] = value
-    self:callListeners("onAreaChange", areaId, value)
+function AreaManager:setArea(areaID, value)
+    assert(self.areas[areaID])
+    self.areas[areaID] = value
+    self:callListeners("onAreaChange", areaID, value)
 end
 
-function AreaManager:getArea(areaId)
-    return self.areas[areaId]
+function AreaManager:getArea(areaID)
+    return self.areas[areaID]
 end
 
 function AreaManager:getAllAreas()
@@ -53,7 +53,7 @@ function AreaManager:serialize()
 end
 
 function AreaManager:load(data)
-    self.areaIdCount = 0
+    self.areaIDCount = 0
     for _, kv in pairs(data) do
         id = kv.id
         area = kv.area
@@ -62,8 +62,8 @@ function AreaManager:load(data)
 end
 
 function AreaManager:clear()
-    for areaId, _ in pairs(self.areas) do
-        self:removeArea(areaId)
+    for areaID, _ in pairs(self.areas) do
+        self:removeArea(areaID)
     end
 end
 ------------------------------------------------
@@ -71,13 +71,13 @@ end
 ------------------------------------------------
 AreaManagerListener = LCS.class.abstract{}
 
-function AreaManagerListener:onAreaAdded(areaId)
+function AreaManagerListener:onAreaAdded(areaID)
 end
 
-function AreaManagerListener:onAreaRemoved(areaId)
+function AreaManagerListener:onAreaRemoved(areaID)
 end
 
-function AreaManagerListener:onAreaChange(areaId, area)
+function AreaManagerListener:onAreaChange(areaID, area)
 end
 ------------------------------------------------
 -- End listener definition

@@ -131,12 +131,12 @@ function ExportMapInfoCommand:GetTeams()
         teams = {}
     }
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
-        local areaId = team.startPos
+        local areaID = team.startPos
         local area
-        if areaId then
-            area = SB.model.areaManager:getArea(areaId)
+        if areaID then
+            area = SB.model.areaManager:getArea(areaID)
             if not area then
-                Log.Warning("No area for id: " .. tostring(areaId))
+                Log.Warning("No area for id: " .. tostring(areaID))
             end
         end
         if area then

@@ -33,7 +33,7 @@ function ImportFeaturePlacerCommand:execute()
 
     local oldUnits = SB.model.unitManager:serialize()
     for _, unit in pairs(oldUnits) do
-        if unit.teamId == gaiaID then
+        if unit.teamID == gaiaID then
             table.insert(oldUnits, units)
         end
     end

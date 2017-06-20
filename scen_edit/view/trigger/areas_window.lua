@@ -51,11 +51,11 @@ end
 function AreasWindow:Populate()
     self.areasPanel:ClearChildren()
     local areas = SB.model.areaManager:getAllAreas()
-    for _, areaId in pairs(areas) do
+    for _, areaID in pairs(areas) do
         local areaStackPanel = MakeComponentPanel(self.areasPanel)
-        areaStackPanel.areaId = areaId
+        areaStackPanel.areaID = areaID
         local lblArea = Label:New {
-            caption = "Area ID: " .. tostring(areaId),
+            caption = "Area ID: " .. tostring(areaID),
             right = SB.conf.B_HEIGHT + 10,
             x = 1,
             height = SB.conf.B_HEIGHT,
@@ -81,7 +81,7 @@ function AreasWindow:Populate()
             },
             OnClick = {
                 function()
-                    local area = SB.model.areaManager:getArea(areaId)
+                    local area = SB.model.areaManager:getArea(areaID)
                     if area ~= nil then
                         local x = (area[1] + area[3]) / 2
                         local z = (area[2] + area[4]) / 2
@@ -109,7 +109,7 @@ function AreasWindow:Populate()
             },
             OnClick = {
                 function()
-                    local cmd = RemoveAreaCommand(areaId)
+                    local cmd = RemoveAreaCommand(areaID)
                     SB.commandManager:execute(cmd)
                 end
             },
@@ -137,14 +137,14 @@ function AreaManagerListenerWidget:init(areaWindow)
     self.areaWindow = areaWindow
 end
 
-function AreaManagerListenerWidget:onAreaAdded(areaId)
+function AreaManagerListenerWidget:onAreaAdded(areaID)
     self.areaWindow:Populate()
 end
 
-function AreaManagerListenerWidget:onAreaRemoved(areaId)
+function AreaManagerListenerWidget:onAreaRemoved(areaID)
     self.areaWindow:Populate()
 end
 
-function AreaManagerListenerWidget:onAreaChange(areaId, area)
+function AreaManagerListenerWidget:onAreaChange(areaID, area)
     self.areaWindow:Populate()
 end

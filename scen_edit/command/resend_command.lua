@@ -8,8 +8,8 @@ end
 
 function ResendCommand:execute()
 	Log.Notice("Resend data started...")
-    local s2mUnit =     SB.model.unitManager.s2mUnitIdMapping
-    local s2mFeature =  SB.model.featureManager.s2mFeatureIdMapping
+    local s2mUnit =     SB.model.unitManager.s2mUnitIDMapping
+    local s2mFeature =  SB.model.featureManager.s2mFeatureIDMapping
     local cmd = WidgetResendCommand({
         s2mUnit = s2mUnit,
         s2mFeature = s2mFeature
@@ -26,10 +26,10 @@ end
 
 function WidgetResendCommand:execute()
     for objectID, modelID in pairs(self.model.s2mUnit) do
-        SB.model.unitManager:setUnitModelId(objectID, modelID)
+        SB.model.unitManager:setUnitModelID(objectID, modelID)
     end
     for objectID, modelID in pairs(self.model.s2mFeature) do
-        SB.model.featureManager:setFeatureModelId(objectID, modelID)
+        SB.model.featureManager:setFeatureModelID(objectID, modelID)
     end
     Log.Notice("Resend completed successfully.")
 end

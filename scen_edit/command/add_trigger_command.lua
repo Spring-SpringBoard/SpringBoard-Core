@@ -7,9 +7,9 @@ function AddTriggerCommand:init(trigger)
 end
 
 function AddTriggerCommand:execute()
-    self.triggerId = SB.model.triggerManager:addTrigger(self.trigger)
+    self.triggerID = SB.model.triggerManager:addTrigger(self.trigger)
 end
 
 function AddTriggerCommand:unexecute()
-    SB.model.triggerManager:removeTrigger(self.triggerId)
+    SB.model.triggerManager:removeTrigger(self.triggerID)
 end

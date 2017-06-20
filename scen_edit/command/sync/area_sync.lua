@@ -56,19 +56,19 @@ SB.OnInitialize(function()
     SB.model.areaManager:addListener(AreaManagerListenerGadget())
 end)
 
-function AreaManagerListenerGadget:onAreaAdded(areaId)
-    local area = SB.model.areaManager:getArea(areaId)
-    local cmd = WidgetAddAreaCommand(areaId, area)
+function AreaManagerListenerGadget:onAreaAdded(areaID)
+    local area = SB.model.areaManager:getArea(areaID)
+    local cmd = WidgetAddAreaCommand(areaID, area)
     SB.commandManager:execute(cmd, true)
 end
 
-function AreaManagerListenerGadget:onAreaRemoved(areaId)
-    local cmd = WidgetRemoveAreaCommand(areaId)
+function AreaManagerListenerGadget:onAreaRemoved(areaID)
+    local cmd = WidgetRemoveAreaCommand(areaID)
     SB.commandManager:execute(cmd, true)
 end
 
-function AreaManagerListenerGadget:onAreaChange(areaId, area)
-    local cmd = WidgetUpdateAreaCommand(areaId, area)
+function AreaManagerListenerGadget:onAreaChange(areaID, area)
+    local cmd = WidgetUpdateAreaCommand(areaID, area)
     SB.commandManager:execute(cmd, true)
 end
 

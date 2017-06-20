@@ -5,26 +5,26 @@ SB.Include(Path.Join(SB_MODEL_DIR, "unit_manager.lua"))
 ----------------------------------------------------------
 WidgetAddUnitCommand = Command:extends{}
 
-function WidgetAddUnitCommand:init(springId, modelId)
+function WidgetAddUnitCommand:init(springID, modelID)
     self.className = "WidgetAddUnitCommand"
-    self.springId = springId
-    self.modelId = modelId
+    self.springID = springID
+    self.modelID = modelID
 end
 
 function WidgetAddUnitCommand:execute()
-    SB.model.unitManager:addUnit(self.springId, self.modelId)
+    SB.model.unitManager:addUnit(self.springID, self.modelID)
 end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetRemoveUnitCommand = Command:extends{}
 
-function WidgetRemoveUnitCommand:init(modelId)
+function WidgetRemoveUnitCommand:init(modelID)
     self.className = "WidgetRemoveUnitCommand"
-    self.modelId = modelId
+    self.modelID = modelID
 end
 
 function WidgetRemoveUnitCommand:execute()
-    SB.model.unitManager:removeUnitByModelId(self.modelId)
+    SB.model.unitManager:removeUnitByModelID(self.modelID)
 end
 ----------------------------------------------------------
 -- END Widget callback commands
@@ -40,13 +40,13 @@ SB.OnInitialize(function()
     SB.model.unitManager:addListener(UnitManagerListenerGadget())
 end)
 
-function UnitManagerListenerGadget:onUnitAdded(unitId, modelId)
-    local cmd = WidgetAddUnitCommand(unitId, modelId)
+function UnitManagerListenerGadget:onUnitAdded(unitID, modelID)
+    local cmd = WidgetAddUnitCommand(unitID, modelID)
     SB.commandManager:execute(cmd, true)
 end
 
-function UnitManagerListenerGadget:onUnitRemoved(unitId, modelId)
-    local cmd = WidgetRemoveUnitCommand(modelId)
+function UnitManagerListenerGadget:onUnitRemoved(unitID, modelID)
+    local cmd = WidgetRemoveUnitCommand(modelID)
     SB.commandManager:execute(cmd, true)
 end
 

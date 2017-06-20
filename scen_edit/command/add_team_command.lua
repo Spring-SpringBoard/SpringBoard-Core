@@ -16,9 +16,9 @@ function AddTeamCommand:execute()
         allyTeam = self.allyTeam,
         side = self.side,
     }
-    self.newTeamId = SB.model.teamManager:addTeam(team)
+    self.newTeamID = SB.model.teamManager:addTeam(team)
 end
 
 function AddTeamCommand:unexecute()
-    SB.model.teamManager:removeTeam(self.newTeamId)
+    SB.model.teamManager:removeTeam(self.newTeamID)
 end

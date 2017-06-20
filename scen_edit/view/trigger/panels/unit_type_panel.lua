@@ -16,12 +16,12 @@ function UnitTypePanel:MakePredefinedOpt()
         width = 100,
         height = SB.conf.B_HEIGHT,
         parent = stackUnitTypePanel,
-        unitTypeId = nil,
+        unitTypeID = nil,
     }
-    self.OnSelectObjectType = function(unitTypeId)
-        self.btnPredefined.unitTypeId = unitTypeId
-        local defName = unitBridge.ObjectDefs[unitTypeId].name
-        self.btnPredefined.caption = "Id=" .. defName
+    self.OnSelectObjectType = function(unitTypeID)
+        self.btnPredefined.unitTypeID = unitTypeID
+        local defName = unitBridge.ObjectDefs[unitTypeID].name
+        self.btnPredefined.caption = "ID=" .. defName
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
@@ -36,9 +36,9 @@ function UnitTypePanel:MakePredefinedOpt()
 end
 
 function UnitTypePanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitTypeId ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitTypeID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.unitTypeId
+        field.value = self.btnPredefined.unitTypeID
         return true
     end
     return self:super('UpdateModel', field)

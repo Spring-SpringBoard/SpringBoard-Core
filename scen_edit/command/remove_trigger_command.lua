@@ -1,14 +1,14 @@
 RemoveTriggerCommand = Command:extends{}
 RemoveTriggerCommand.className = "RemoveTriggerCommand"
 
-function RemoveTriggerCommand:init(triggerId)
+function RemoveTriggerCommand:init(triggerID)
     self.className = "RemoveTriggerCommand"
-    self.triggerId = triggerId
+    self.triggerID = triggerID
 end
 
 function RemoveTriggerCommand:execute()
-    self.trigger = SB.model.triggerManager:getTrigger(self.triggerId)
-    SB.model.triggerManager:removeTrigger(self.triggerId)
+    self.trigger = SB.model.triggerManager:getTrigger(self.triggerID)
+    SB.model.triggerManager:removeTrigger(self.triggerID)
 end
 
 function RemoveTriggerCommand:unexecute()

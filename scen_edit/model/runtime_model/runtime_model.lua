@@ -5,7 +5,7 @@ RuntimeModel = LCS.class{}
 function RuntimeModel:init()
     SB.IncludeDir(SB_MODEL_RUNTIME_DIR)
     self.areaModels = {}
-    self.lastFrameUnitIds = {}
+    self.lastFrameUnitIDs = {}
     self.fieldResolver = FieldResolver()
     self.repeatCalls = {}
     self.trackedUnitIDs = {}
@@ -18,8 +18,8 @@ function RuntimeModel:init()
     SB.model.triggerManager:addListener(self)
 end
 
-function RuntimeModel:CanTrackUnit(unitDefId)
-    local customParams = UnitDefs[unitDefId].customParams
+function RuntimeModel:CanTrackUnit(unitDefID)
+    local customParams = UnitDefs[unitDefID].customParams
     if customParams.wall or customParams.effect then
         return false
     else
@@ -32,7 +32,7 @@ function RuntimeModel:GetAllUnits()
 end
 
 function RuntimeModel:LoadMission()
-    self.lastFrameUnitIds = self:GetAllUnits()
+    self.lastFrameUnitIDs = self:GetAllUnits()
     self.areaModels = {}
     self.repeatCalls = {}
 
@@ -52,15 +52,15 @@ function RuntimeModel:LoadMission()
     end
 end
 
-function RuntimeModel:onTriggerAdded(triggerId)
+function RuntimeModel:onTriggerAdded(triggerID)
     if not self.startListening then
         return
     end
-    local trigger = SB.model.triggerManager:getTrigger(triggerId)
+    local trigger = SB.model.triggerManager:getTrigger(triggerID)
     local success, msg = SB.model.triggerManager:ValidateTrigger(trigger)
     if not success then
-        Log.Warning("Trigger error: " .. tostring(triggerId) .. ". " .. tostring(msg))
-        self.error_triggers[triggerId] = true
+        Log.Warning("Trigger error: " .. tostring(triggerID) .. ". " .. tostring(msg))
+        self.error_triggers[triggerID] = true
         return
     end
     for _, event in pairs(trigger.events) do
@@ -71,16 +71,16 @@ function RuntimeModel:onTriggerAdded(triggerId)
     end
 end
 
-function RuntimeModel:onTriggerRemoved(triggerId)
+function RuntimeModel:onTriggerRemoved(triggerID)
     if not self.startListening then
         return
     end
-    self.error_triggers[triggerId] = nil
+    self.error_triggers[triggerID] = nil
     for _, eventList in pairs(self.eventTriggers) do
         repeat
             local found = false
             for i, iterTrigger in pairs(eventList) do
-                if iterTrigger.id == triggerId then
+                if iterTrigger.id == triggerID then
                     table.remove(eventList, i)
                     found = true
                     break
@@ -90,41 +90,41 @@ function RuntimeModel:onTriggerRemoved(triggerId)
     end
 end
 
-function RuntimeModel:onTriggerUpdated(triggerId)
+function RuntimeModel:onTriggerUpdated(triggerID)
     if not self.startListening then
         return
     end
-    self:onTriggerRemoved(triggerId)
-    self:onTriggerAdded(triggerId)
+    self:onTriggerRemoved(triggerID)
+    self:onTriggerAdded(triggerID)
 end
 
-function RuntimeModel:onAreaAdded(areaId)
+function RuntimeModel:onAreaAdded(areaID)
     if not self.startListening then
         return
     end
-    local areaModel = AreaModel(areaId)
-    areaModel:Populate(self.lastFrameUnitIds)
+    local areaModel = AreaModel(areaID)
+    areaModel:Populate(self.lastFrameUnitIDs)
     table.insert(self.areaModels, areaModel)
 end
 
-function RuntimeModel:onAreaRemoved(areaId)
+function RuntimeModel:onAreaRemoved(areaID)
     if not self.startListening then
         return
     end
     for i, areaModel in pairs(self.areaModels) do
-        if areaModel.id == areaId then
+        if areaModel.id == areaID then
             table.remove(self.areaModels, i)
             break
         end
     end
 end
 
-function RuntimeModel:onAreaChange(areaId)
+function RuntimeModel:onAreaChange(areaID)
     if not self.startListening then
         return
     end
-    self:onAreaRemoved(areaId)
-    self:onAreaAdded(areaId)
+    self:onAreaRemoved(areaID)
+    self:onAreaAdded(areaID)
 end
 
 function RuntimeModel:GameStart()
@@ -141,32 +141,32 @@ function RuntimeModel:GameStop()
     self.startListening = false
 end
 
-function RuntimeModel:TeamDied(teamId)
-    self:OnEvent("TEAM_DIE", { team = teamId })
+function RuntimeModel:TeamDied(teamID)
+    self:OnEvent("TEAM_DIE", { team = teamID })
 end
 
-function RuntimeModel:UnitCreated(unitId, unitDefId, teamId, builderId)
-    if self:CanTrackUnit(unitDefId) then
-        self.trackedUnitIDs[unitId] = unitId
+function RuntimeModel:UnitCreated(unitID, unitDefID, teamID, builderID)
+    if self:CanTrackUnit(unitDefID) then
+        self.trackedUnitIDs[unitID] = unitID
     end
-    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    self:OnEvent("UNIT_CREATE", { unit = modelUnitId })
+    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    self:OnEvent("UNIT_CREATE", { unit = modelUnitID })
 end
 
-function RuntimeModel:UnitDamaged(unitId)
-    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    self:OnEvent("UNIT_DAMAGE", { unit = modelUnitId })
+function RuntimeModel:UnitDamaged(unitID)
+    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    self:OnEvent("UNIT_DAMAGE", { unit = modelUnitID })
 end
 
-function RuntimeModel:UnitDestroyed(unitId, unitDefId, teamId, attackerId, attackerDefId, attackerTeamId)
-    self.trackedUnitIDs[unitId] = nil
-    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    self:OnEvent("UNIT_DESTROY", { unit = modelUnitId })
+function RuntimeModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
+    self.trackedUnitIDs[unitID] = nil
+    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    self:OnEvent("UNIT_DESTROY", { unit = modelUnitID })
 end
 
-function RuntimeModel:UnitFinished(unitId)
-    local modelUnitId = SB.model.unitManager:getModelUnitId(unitId)
-    self:OnEvent("UNIT_FINISH", { unit = modelUnitId })
+function RuntimeModel:UnitFinished(unitID)
+    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    self:OnEvent("UNIT_FINISH", { unit = modelUnitID })
 end
 
 local checkRate = 10
@@ -176,39 +176,39 @@ function RuntimeModel:GameFrame(frameNum)
     end
 
     if Spring.GetGameFrame() % 10 == 0 then
-        local newUnitIds = self:GetAllUnits()
-        local unitIds = {}
+        local newUnitIDs = self:GetAllUnits()
+        local unitIDs = {}
         --update area-unit models
-        for _, newId in pairs(newUnitIds) do
-            if self.lastFrameUnitIds[newId] then
-                table.insert(unitIds, newId)
+        for _, newID in pairs(newUnitIDs) do
+            if self.lastFrameUnitIDs[newID] then
+                table.insert(unitIDs, newID)
             end
         end
         --check for any enter/leave area events
         for _, areaModel in pairs(self.areaModels) do
-            local results = areaModel:Populate(unitIds)
+            local results = areaModel:Populate(unitIDs)
             local area = areaModel.area
             if self.eventTriggers["UNIT_ENTER_AREA"] then
                 for _, unitID in pairs(results.entered) do
-                    local modelUnitId = SB.model.unitManager:getModelUnitId(unitID)
+                    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
                     self:OnEvent("UNIT_ENTER_AREA", {
-                        unit = modelUnitId,
+                        unit = modelUnitID,
                         area = areaModel.id
                     })
                 end
             end
             if self.eventTriggers["UNIT_LEAVE_AREA"] then
-                -- TODO: check if leftUnitId really doesn't need to be the model id
-                for _, leftUnitId in pairs(results) do
+                -- TODO: check if leftUnitID really doesn't need to be the model id
+                for _, leftUnitID in pairs(results) do
                     self:OnEvent("UNIT_LEAVE_AREA", {
-                        unit = leftUnitId,
+                        unit = leftUnitID,
                         area = areaModel.id
                     })
                 end
             end
-            areaModel:Populate(newUnitIds)
+            areaModel:Populate(newUnitIDs)
         end
-        self.lastFrameUnitIds = newUnitIds
+        self.lastFrameUnitIDs = newUnitIDs
     end
 
     local newCalls = {}
@@ -254,31 +254,31 @@ function RuntimeModel:ActionStep(trigger, params)
     end
 end
 
-function RuntimeModel:ExecuteTriggerActions(triggerId)
+function RuntimeModel:ExecuteTriggerActions(triggerID)
     if not self.hasStarted then
         return
     end
 
-    if self.error_triggers[triggerId] then
-        Log.Warning("Cannot execute trigger with errors: " .. tostring(triggerId))
+    if self.error_triggers[triggerID] then
+        Log.Warning("Cannot execute trigger with errors: " .. tostring(triggerID))
         return
     end
 
-    local trigger = SB.model.triggerManager:getTrigger(triggerId)
+    local trigger = SB.model.triggerManager:getTrigger(triggerID)
     self:ActionStep(trigger, {})
 end
 
-function RuntimeModel:ExecuteTrigger(triggerId)
+function RuntimeModel:ExecuteTrigger(triggerID)
     if not self.hasStarted then
         return
     end
 
-    if self.error_triggers[triggerId] then
-        Log.Warning("Cannot execute trigger with errors: " .. tostring(triggerId))
+    if self.error_triggers[triggerID] then
+        Log.Warning("Cannot execute trigger with errors: " .. tostring(triggerID))
         return
     end
 
-    local trigger = SB.model.triggerManager:getTrigger(triggerId)
+    local trigger = SB.model.triggerManager:getTrigger(triggerID)
     self:ConditionStep(trigger, {})
 end
 

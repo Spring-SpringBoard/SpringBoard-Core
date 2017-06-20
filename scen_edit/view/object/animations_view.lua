@@ -145,7 +145,7 @@ function AnimationsView:OnFieldChange(name, value)
         local commands = {}
         local selection = SB.view.selectionManager:GetSelection()
         for _, objectID in pairs(selection.units) do
-            local modelID = SB.model.unitManager:getModelUnitId(objectID)
+            local modelID = SB.model.unitManager:getModelUnitID(objectID)
             table.insert(commands, SetUnitParamCommand(modelID, name, value))
         end
         local compoundCommand = CompoundCommand(commands)

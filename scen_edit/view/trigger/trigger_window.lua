@@ -304,9 +304,9 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         end
         if input.name == "relation" then
             if root.typeName == "compare_number" then
-                paramName = SB.metaModel.numericComparisonTypes[root.relation.cmpTypeId]
+                paramName = SB.metaModel.numericComparisonTypes[root.relation.cmpTypeID]
             else
-                paramName = SB.metaModel.identityComparisonTypes[root.relation.cmpTypeId]
+                paramName = SB.metaModel.identityComparisonTypes[root.relation.cmpTypeID]
             end
         end
         local lblParam = Label:New {

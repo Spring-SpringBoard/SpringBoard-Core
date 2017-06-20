@@ -42,13 +42,13 @@ UnitBridge.DrawObject                      = function(params)
     DrawObject(params, unitBridge)
 end
 UnitBridge.getObjectSpringID               = function(modelID)
-    return SB.model.unitManager:getSpringUnitId(modelID)
+    return SB.model.unitManager:getSpringUnitID(modelID)
 end
 UnitBridge.getObjectModelID                = function(objectID)
-    return SB.model.unitManager:getModelUnitId(objectID)
+    return SB.model.unitManager:getModelUnitID(objectID)
 end
 UnitBridge.setObjectModelID                = function(objectID, modelID)
-    SB.model.unitManager:setUnitModelId(objectID, modelID)
+    SB.model.unitManager:setUnitModelID(objectID, modelID)
 end
 unitBridge = UnitBridge()
 unitBridge.s11n                            = s11n:GetUnitBridge()
@@ -83,13 +83,13 @@ FeatureBridge.DrawObject                      = function(params)
 --     end
 end
 FeatureBridge.getObjectSpringID               = function(modelID)
-    return SB.model.featureManager:getSpringFeatureId(modelID)
+    return SB.model.featureManager:getSpringFeatureID(modelID)
 end
 FeatureBridge.getObjectModelID                = function(objectID)
-    return SB.model.featureManager:getModelFeatureId(objectID)
+    return SB.model.featureManager:getModelFeatureID(objectID)
 end
 FeatureBridge.setObjectModelID                = function(objectID, modelID)
-    SB.model.featureManager:setFeatureModelId(objectID, modelID)
+    SB.model.featureManager:setFeatureModelID(objectID, modelID)
 end
 featureBridge = FeatureBridge()
 featureBridge.s11n                            = s11n:GetFeatureBridge()

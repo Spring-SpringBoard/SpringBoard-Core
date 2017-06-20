@@ -113,7 +113,7 @@ function AbstractTypePanel:UpdateModel(field)
         return true
     elseif self.cbVariable and self.cbVariable.checked then
         field.type = "var"
-        field.value = self.cmbVariable.variableIds[self.cmbVariable.selected]
+        field.value = self.cmbVariable.variableIDs[self.cmbVariable.selected]
         return true
     elseif self.cbExpression and self.cbExpression.checked and self.btnExpression.data ~= nil  and #self.btnExpression.data ~= 0 then
         field.type = "expr"
@@ -135,9 +135,9 @@ function AbstractTypePanel:UpdatePanel(field)
         if not self.cbVariable.checked then
             self.cbVariable:Toggle()
         end
-        for i = 1, #self.cmbVariable.variableIds do
-            local variableId = self.cmbVariable.variableIds[i]
-            if variableId == field.value then
+        for i = 1, #self.cmbVariable.variableIDs do
+            local variableID = self.cmbVariable.variableIDs[i]
+            if variableID == field.value then
                 self.cmbVariable:Select(i)
                 break
             end
@@ -204,13 +204,13 @@ function AbstractTypePanel:MakeVariableChoice(variableType, panel)
         return nil, nil
     end
     local variableNames = {}
-    local variableIds = {}
+    local variableIDs = {}
     for id, variable in pairs(variablesOfType) do
         table.insert(variableNames, variable.name)
-        table.insert(variableIds, id)
+        table.insert(variableIDs, id)
     end
 
-    if #variableIds > 0 then
+    if #variableIDs > 0 then
         local stackPanel = MakeComponentPanel(panel)
         local cbVariable = Checkbox:New {
             caption = "Variable: ",
@@ -226,7 +226,7 @@ function AbstractTypePanel:MakeVariableChoice(variableType, panel)
             height = SB.conf.B_HEIGHT,
             parent = stackPanel,
             items = variableNames,
-            variableIds = variableIds,
+            variableIDs = variableIDs,
         }
         cmbVariable.OnSelect = {
             function(obj, itemIdx, selected)

@@ -241,15 +241,15 @@ local function GenerateScriptTxt(dev)
         scriptTxt = scriptTxt:gsub("__MY_PLAYER_NAME__", "Player")
     end
 
-    for _, allyTeamId in pairs(Spring.GetAllyTeamList()) do
+    for _, allyTeamID in pairs(Spring.GetAllyTeamList()) do
         local allyTeamTxt = [[
     [__ALLYTEAM_ID__]
     {
         NumAllies=0;
     }
 ]]
-        allyTeamTxt = allyTeamTxt:gsub("__ALLYTEAM_ID__", "ALLYTEAM" .. allyTeamId)
-        allyTeamInfo = Spring.GetAllyTeamInfo(allyTeamId)
+        allyTeamTxt = allyTeamTxt:gsub("__ALLYTEAM_ID__", "ALLYTEAM" .. allyTeamID)
+        allyTeamInfo = Spring.GetAllyTeamInfo(allyTeamID)
         if allyTeamInfo.numallies then -- this should filter out the gaia ally team
             scriptTxt = scriptTxt .. allyTeamTxt
         end

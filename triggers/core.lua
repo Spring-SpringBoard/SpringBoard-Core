@@ -35,7 +35,7 @@ return {
                         },
                     },
                     execute = function(input)
-                        --local unitModelId = SB.model.unitManager:getModelUnitId(input.unit)
+                        --local unitModelID = SB.model.unitManager:getModelUnitID(input.unit)
                         local newValue = SB.deepcopy(input.variable)
                         newValue.value.value = input[type.name]
                         SB.model.variableManager:setVariable(input.variable.id, newValue)

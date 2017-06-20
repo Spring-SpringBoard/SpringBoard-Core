@@ -23,8 +23,8 @@ function SelectionManager:ClearSelection()
     self.selectedUnits = {}
     Spring.SelectUnitArray({}, false)
 
-    for _, areaId in pairs(self.selectedAreas) do
-        SB.view.areaViews[areaId].selected = false
+    for _, areaID in pairs(self.selectedAreas) do
+        SB.view.areaViews[areaID].selected = false
     end
     self.selectedAreas = {}
 
@@ -38,8 +38,8 @@ function SelectionManager:Select(selection)
     Spring.SelectUnitArray(self.selectedUnits)
     self.selectedFeatures = selection.features or {}
     self.selectedAreas = selection.areas or {}
-    for _, areaId in pairs(self.selectedAreas) do
-        SB.view.areaViews[areaId].selected = true
+    for _, areaID in pairs(self.selectedAreas) do
+        SB.view.areaViews[areaID].selected = true
     end
 
     self:callListeners("OnSelectionChanged", self:GetSelection())
@@ -47,33 +47,32 @@ end
 
 function SelectionManager:Update()
     --update unit selection
-    local unitIds = Spring.GetSelectedUnits()
-    self.selectedUnits = unitIds
+    self.selectedUnits = Spring.GetSelectedUnits()
     Spring.SelectUnitArray(self.selectedUnits)
 
     local newSelectedFeatures = {}
-    for _, featureId in pairs(self.selectedFeatures) do
-        if Spring.ValidFeatureID(featureId) then
-            table.insert(newSelectedFeatures, featureId)
+    for _, featureID in pairs(self.selectedFeatures) do
+        if Spring.ValidFeatureID(featureID) then
+            table.insert(newSelectedFeatures, featureID)
         end
     end
     self.selectedFeatures = newSelectedFeatures
     --[[
-    if #unitIds ~= #self.selectedUnits then
+    if #unitIDs ~= #self.selectedUnits then
         self:ClearSelection()
-        if #unitIds > 0 then
-            self:SelectUnits(unitIds)
+        if #unitIDs > 0 then
+            self:SelectUnits(unitIDs)
         end
-    elseif #unitIds > 0 then
+    elseif #unitIDs > 0 then
     end--]]
 end
 
 function SelectionManager:DrawWorldPreUnit()
     local selection = self:GetSelection()
-    for _, featureId in pairs(selection.features) do
-        if Spring.ValidFeatureID(featureId) then
-            local bx, by, bz = Spring.GetFeaturePosition(featureId)
-            local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureId)]
+    for _, featureID in pairs(selection.features) do
+        if Spring.ValidFeatureID(featureID) then
+            local bx, by, bz = Spring.GetFeaturePosition(featureID)
+            local featureDef = FeatureDefs[Spring.GetFeatureDefID(featureID)]
             local minx, maxx = featureDef.model.minx or -10, featureDef.model.maxx or 10
             local minz, maxz = featureDef.model.minz or -10, featureDef.model.maxz or 10
             if maxx - minx < 20 then
@@ -100,13 +99,12 @@ function AreaListener:init(selectionManager)
     self.selectionManager = selectionManager
 end
 
-function AreaListener:onAreaRemoved(areaId)
+function AreaListener:onAreaRemoved(areaID)
     if #self.selectionManager.selectedAreas ~= 0 then
-        for i, selAreaId in pairs(self.selectionManager.selectedAreas) do
-            if selAreaId == areaId then
+        for i, selAreaID in pairs(self.selectionManager.selectedAreas) do
+            if selAreaID == areaID then
                 table.remove(self.selectionManager.selectedAreas, i)
             end
         end
     end
 end
-

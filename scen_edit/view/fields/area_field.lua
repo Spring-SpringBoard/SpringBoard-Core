@@ -8,7 +8,7 @@ end
 
 function AreaField:GetCaption()
     if self.value then
-        return "Id=" .. tostring(self.value)
+        return "ID=" .. tostring(self.value)
     else
         return ""
     end
@@ -33,8 +33,8 @@ function AreaField:init(field)
         autosize = true,
     }
 
-    self.OnSelectArea = function(areaId)
-        self:Set(areaId, self.button)
+    self.OnSelectArea = function(areaID)
+        self:Set(areaID, self.button)
     end
 
     self.button = Button:New {

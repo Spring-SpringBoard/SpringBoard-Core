@@ -17,11 +17,11 @@ function FeaturePanel:MakePredefinedOpt()
         width = 60,
         height = SB.conf.B_HEIGHT,
         parent = stackFeaturePanel,
-        featureId = nil,
+        featureID = nil,
     }
     self.OnSelectObject = function(objectID)
-        self.btnPredefined.featureId = objectID
-        self.btnPredefined.caption = "Id=" .. objectID
+        self.btnPredefined.featureID = objectID
+        self.btnPredefined.caption = "ID=" .. objectID
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
             self.cbPredefined:Toggle()
@@ -49,12 +49,12 @@ function FeaturePanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                if self.btnPredefined.featureId ~= nil then
-                    local featureId = SB.model.featureManager:getSpringFeatureId(self.btnPredefined.featureId)
-                    if featureId ~= nil and Spring.ValidFeatureID(featureId) then
-                        local x, y, z = Spring.GetFeaturePosition(featureId)
+                if self.btnPredefined.featureID ~= nil then
+                    local featureID = SB.model.featureManager:getSpringFeatureID(self.btnPredefined.featureID)
+                    if featureID ~= nil and Spring.ValidFeatureID(featureID) then
+                        local x, y, z = Spring.GetFeaturePosition(featureID)
                         SB.view.selectionManager:Select({
-                            features = {featureId}
+                            features = {featureID}
                         })
                         Spring.SetCameraTarget(x, y, z)
                     end
@@ -65,9 +65,9 @@ function FeaturePanel:MakePredefinedOpt()
 end
 
 function FeaturePanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.featureId ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.featureID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.featureId
+        field.value = self.btnPredefined.featureID
         return true
     end
     return self:super('UpdateModel', field)

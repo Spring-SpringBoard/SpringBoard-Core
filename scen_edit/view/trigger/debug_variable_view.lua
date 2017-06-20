@@ -35,14 +35,14 @@ function DebugVariableView:Dispose()
     SB.model.variableManager:removeListener(self)
 end
 
-function DebugVariableView:onVariableAdded(variableId)
+function DebugVariableView:onVariableAdded(variableID)
     self:Populate()
 end
 
-function DebugVariableView:onVariableRemoved(variableId)
+function DebugVariableView:onVariableRemoved(variableID)
     self:Populate()
 end
 
-function DebugVariableView:onVariableUpdated(variableId)
+function DebugVariableView:onVariableUpdated(variableID)
     self:Populate()
 end

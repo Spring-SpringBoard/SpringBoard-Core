@@ -119,7 +119,7 @@ function RotateObjectState:MouseRelease(x, y, button)
     local commands = {}
 
     for objectID, object in pairs(self.ghostViews.units) do
-        local modelID = SB.model.unitManager:getModelUnitId(objectID)
+        local modelID = SB.model.unitManager:getModelUnitID(objectID)
         local cmd = SetUnitParamCommand(modelID, {
             dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
             pos = object.pos
@@ -127,7 +127,7 @@ function RotateObjectState:MouseRelease(x, y, button)
         table.insert(commands, cmd)
     end
     for objectID, object in pairs(self.ghostViews.features) do
-        local modelID = SB.model.featureManager:getModelFeatureId(objectID)
+        local modelID = SB.model.featureManager:getModelFeatureID(objectID)
         local cmd = SetFeatureParamCommand(modelID, {
             dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
             pos = object.pos
