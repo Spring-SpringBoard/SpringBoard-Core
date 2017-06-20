@@ -1,5 +1,4 @@
 AbstractMainWindowPanel = LCS.class.abstract{}
---subclasses of this class should assign a layoutpanel to the self.control variable
 
 function TabbedPanelButton(tbl)
 	return Button:New(Table.Merge({

@@ -46,6 +46,7 @@ end
 
 function WidgetCommandClearUndoStack:execute()
     SB.view.commandWindow:ClearUndoStack()
+    SB.commandManager:ClearUndoStack()
 end
 
 -- redo stack has been cleared
@@ -58,6 +59,7 @@ end
 
 function WidgetCommandClearRedoStack:execute()
     SB.view.commandWindow:ClearRedoStack()
+    SB.commandManager:ClearRedoStack()
 end
 
 -- removed first undo

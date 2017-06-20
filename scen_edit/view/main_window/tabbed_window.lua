@@ -16,52 +16,6 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Undo (Ctrl+Z)",
-			OnClick = {
-				function()
-					local undoCommand = UndoCommand()
-					SB.commandManager:execute(undoCommand)
-				end
-			},
-			children = {
-				Image:New {
-					file = SB_IMG_DIR .. "anticlockwise-rotation.png",
-					height = 20,
-					width = 20,
-					margin = {0, 0, 0, 0},
-					x = 0,
-				},
-			},
-		},
-		Button:New {
-			x = 50,
-			y = mainPanelY,
-			height = 40,
-			width = 40,
-			caption = '',
-			tooltip = "Redo (Ctrl+R)",
-			OnClick = {
-				function()
-					local redoCommand = RedoCommand()
-					SB.commandManager:execute(redoCommand)
-				end
-			},
-			children = {
-				Image:New {
-					file = SB_IMG_DIR .. "clockwise-rotation.png",
-					height = 20,
-					width = 20,
-					margin = {0, 0, 0, 0},
-					x = 0,
-				},
-			},
-		},
-		Button:New {
-			x = 90,
-			y = mainPanelY,
-			height = 40,
-			width = 40,
-			caption = '',
 			tooltip = "Reload meta model",
 			OnClick = {
 				function()
@@ -82,7 +36,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 130,
+			x = 50,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -111,7 +65,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 170,
+			x = 90,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -140,7 +94,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 210,
+			x = 130,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -167,7 +121,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 250,
+			x = 170,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -189,7 +143,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 290,
+			x =  210,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -211,7 +165,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 330,
+			x = 250,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -233,7 +187,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 370,
+			x = 290,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -255,7 +209,7 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 410,
+			x = 330,
 			y = mainPanelY,
 			height = 40,
 			width = 40,

@@ -1,20 +1,82 @@
 CommandWindow = LCS.class{}
 
 function CommandWindow:init()
-    self.commandsPanel = StackPanel:New {
-        itemMargin = {0, 0, 0, 0},
-        x = 0,
-        y = 30,
-        right = 0,
-        bottom = 0,
-        autosize = false,
-        resizeItems = false,
-        centerItems = false,
+    local children = {
+        Button:New {
+            x = 10,
+            y = 30,
+            height = 40,
+            width = 40,
+            caption = '',
+            tooltip = "Undo (Ctrl+Z)",
+            OnClick = {
+                function()
+                    SB.commandManager:execute(UndoCommand())
+                end
+            },
+            children = {
+                Image:New {
+                    file = SB_IMG_DIR .. "anticlockwise-rotation.png",
+                    height = 20,
+                    width = 20,
+                    margin = {0, 0, 0, 0},
+                    x = 0,
+                },
+            },
+        },
+        Button:New {
+            x = 50,
+            y = 30,
+            height = 40,
+            width = 40,
+            caption = '',
+            tooltip = "Redo (Ctrl+R)",
+            OnClick = {
+                function()
+                    SB.commandManager:execute(RedoCommand())
+                end
+            },
+            children = {
+                Image:New {
+                    file = SB_IMG_DIR .. "clockwise-rotation.png",
+                    height = 20,
+                    width = 20,
+                    margin = {0, 0, 0, 0},
+                    x = 0,
+                },
+            },
+        },
+        Button:New {
+            x = 90,
+            y = 30,
+            height = 40,
+            width = 40,
+            caption = '',
+            tooltip = "Clear undo-redo stack",
+            OnClick = {
+                function()
+                    SB.commandManager:execute(ClearUndoRedoCommand())
+                end
+            },
+            children = {
+                Image:New {
+                    file = SB_IMG_DIR .. "cancel.png",
+                    height = 20,
+                    width = 20,
+                    margin = {0, 0, 0, 0},
+                    x = 0,
+                },
+            },
+        },
     }
+
     self.list = List()
     self.list.CompareItems = function(obj, id1, id2)
         return id1 - id2
     end
+
+    table.insert(children, self.list.ctrl)
+
     self.window = Window:New {
         parent = screen0,
         caption = "Command stack",
@@ -24,10 +86,10 @@ function CommandWindow:init()
         draggable = false,
         width = 375,
         height = 200,
-        children = {
-            self.list.ctrl,
-        }
+        children = children,
     }
+    self.list.ctrl:SetPos(nil, 70)
+
     self.count = 0
     self.removedCount = 0
     self.undoCount = 0
@@ -57,7 +119,6 @@ function CommandWindow:UndoCommand()
     lbl._oldcaption = lbl.caption
     lbl:SetCaption("\255\100\100\100" .. lbl.caption .. "\b")
     lbl:Invalidate()
-    self.commandsPanel:Invalidate()
 
     self.undoCount = self.undoCount + 1
 end
@@ -68,7 +129,6 @@ function CommandWindow:RedoCommand()
     local lbl = row[1]
     lbl:SetCaption(lbl._oldcaption)
     lbl:Invalidate()
-    self.commandsPanel:Invalidate()
     lbl._oldcaption = nil
 
     self.undoCount = self.undoCount - 1

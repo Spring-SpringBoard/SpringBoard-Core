@@ -36,8 +36,9 @@ function Model:Clear()
         Spring.SetProjectileCollision(projectileId)
     end
 
-    -- TODO: this should be done in a command instead
-    SB.commandManager:clearUndoRedoStack()
+    if not self.widget then
+        SB.commandManager:execute(ClearUndoRedoCommand())
+    end
 end
 
 function Model:Serialize()
