@@ -8,27 +8,13 @@ function SetSunParametersCommand:init(opts)
 end
 
 function SetSunParametersCommand:execute()
-    local cmd = WidgetSetSunParametersCommand(self.opts)
-    SB.commandManager:execute(cmd, true)
-end
-
-function SetSunParametersCommand:unexecute()
     self.old = {
 --         params = {Spring.GetSunParameters()},
         params = {gl.GetSun()},
     }
-    if self.opts.startAngle then
-        Spring.SetSunParameters(self.opts.dirX, self.opts.dirY, self.opts.dirZ,
-            self.opts.distance, self.opts.startAngle, self.opts.orbitTime)
-    else
-        Spring.SetSunDirection(self.opts.dirX, self.opts.dirY, self.opts.dirZ)
-    end
+    Spring.SetSunDirection(self.opts.dirX, self.opts.dirY, self.opts.dirZ)
 end
 
 function SetSunParametersCommand:unexecute()
-    if #self.old.params >= 4 then
-        Spring.SetSunParameters(self.old.params[1], self.old.params[2], self.old.params[3], self.old.params[4], self.old.params[5], self.old.params[6])
-    else
-        Spring.SetSunDirection(self.old.params[1], self.old.params[2], self.old.params[3])
-    end
+    Spring.SetSunDirection(self.old.params[1], self.old.params[2], self.old.params[3])
 end
