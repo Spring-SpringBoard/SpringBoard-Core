@@ -7,7 +7,7 @@ TerrainEditorView = EditorView:extends{}
 function TerrainEditorView:init()
     self.initializing = true
     self:super("init")
-    self:AddField(TextureField({
+    self:AddField(MaterialField({
         name = "brushTexture",
         title = "Texture:",
         value = {},

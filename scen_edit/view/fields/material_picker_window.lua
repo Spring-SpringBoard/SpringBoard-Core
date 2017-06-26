@@ -1,8 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_FIELDS_DIR, "asset_picker_window.lua"))
 
-TexturePickerWindow = AssetPickerWindow:extends{}
+MaterialPickerWindow = AssetPickerWindow:extends{}
 
-function TexturePickerWindow:MakeAssetView(rootDir, dir, OnSelectItem)
+function MaterialPickerWindow:MakeAssetView(rootDir, dir, OnSelectItem)
     return MaterialBrowser({
         ctrl = {
             x = 0,

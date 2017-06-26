@@ -1,10 +1,10 @@
 SB.Include(SB_VIEW_FIELDS_DIR .. "asset_field.lua")
 
-TextureField = AssetField:extends{}
+MaterialField = AssetField:extends{}
 
---function TextureField:init(field) end
+--function MaterialField:init(field) end
 
-function TextureField:GetCaption()
+function MaterialField:GetCaption()
     local fname = Path.ExtractFileName(self.value.diffuse or "")
     local index = fname:find("_diffuse")
 
@@ -16,10 +16,10 @@ function TextureField:GetCaption()
     end
 end
 
-function TextureField:GetPath()
+function MaterialField:GetPath()
     return self.value.diffuse
 end
 
-function TextureField:MakePickerWindow(tbl)
-    return TexturePickerWindow(tbl)
+function MaterialField:MakePickerWindow(tbl)
+    return MaterialPickerWindow(tbl)
 end

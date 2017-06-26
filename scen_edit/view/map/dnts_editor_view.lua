@@ -7,7 +7,7 @@ DNTSEditorView = EditorView:extends{}
 function DNTSEditorView:init()
     self.initializing = true
     self:super("init")
-    self:AddField(TextureField({
+    self:AddField(MaterialField({
         name = "brushTexture",
         title = "Texture:",
         value = {},
