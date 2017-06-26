@@ -10,7 +10,7 @@ end
 function LoadProjectCommandWidget:execute()
     local path = self.path
     local isZip = self.isZip
-    local modelData, heightMapdata, texturePath
+    local modelData, heightMapdata, guiState, texturePath
 
     if not isZip then
         SB.projectDir = self.path
@@ -34,6 +34,7 @@ function LoadProjectCommandWidget:execute()
         SB.loadedArchive = path
         modelData = VFS.LoadFile("model.lua", VFS.ZIP)
         heightmapData = VFS.LoadFile("heightmap.data", VFS.ZIP)
+        guiState = VFS.LoadFile("sb_gui.lua", VFS.ZIP)
         texturePath = "texturemap/"
     else
         Log.Notice("Loading project: " .. path .. " ...")
@@ -45,6 +46,7 @@ function LoadProjectCommandWidget:execute()
 
         modelData = VFS.LoadFile(Path.Join(path, "model.lua"), VFS.RAW)
         heightmapData = VFS.LoadFile(Path.Join(path, "heightmap.data"), VFS.RAW)
+        guiState = VFS.LoadFile(Path.Join(path, "sb_gui.lua"), VFS.RAW)
         texturePath = Path.Join(path, "texturemap/")
     end
 
@@ -56,6 +58,7 @@ function LoadProjectCommandWidget:execute()
     cmd.blockUndo = true
     SB.commandManager:execute(cmd)
     SB.commandManager:execute(LoadTextureCommand(texturePath), true)
+    SB.commandManager:execute(LoadGUIStateCommand(guiState), true)
 
     Log.Notice("Load complete.")
 end

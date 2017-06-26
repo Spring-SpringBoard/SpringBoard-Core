@@ -56,6 +56,7 @@ function TerrainEditorView:init()
             bottom = "45%", -- 100 - 55
         },
         editor = self,
+        name = "mapMaterials",
         GetNewBrush = function()
             local tbl = self:Serialize()
 
@@ -83,6 +84,7 @@ function TerrainEditorView:init()
         editor = self,
         disableAdd = true,
         disableRemove = true,
+        name = "mapDNTS",
         GetNewBrush = function()
             local tbl = self:Serialize()
 

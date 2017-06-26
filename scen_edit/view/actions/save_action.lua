@@ -7,8 +7,6 @@ function SaveAction:execute()
     else
         local path = SB.projectDir
         Log.Notice("Saving project: " .. path .. " ...")
-        local saveCommand = SaveCommand(path)
-        SB.commandManager:execute(saveCommand, true)
-        Log.Notice("Saved project.")
+        self:Save(path)
     end
 end

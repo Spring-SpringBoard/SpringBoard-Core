@@ -59,13 +59,13 @@ end
 
 local function ModelSave(path)
     success, msg = pcall(Model.Save, SB.model, path)
-    if not success then 
+    if not success then
         Log.Error(msg)
     end
 end
 
 local function GenerateModInfo()
-    local modInfoTxt = 
+    local modInfoTxt =
 [[
 local modinfo = {
     name = "__NAME__",
@@ -73,13 +73,13 @@ local modinfo = {
 	version	= "__VERSION__",
 	game = "__GAME__", --what is this?
 	shortGame = "__SHORTGAME__", --what is this?
-	mutator = "Official", --what is this? 
+	mutator = "Official", --what is this?
 	description = "__DESCRIPTION__",
-	modtype = "1", 
+	modtype = "1",
     depend = {
         "__GAME_NAME__ __GAME_VERSION__",
     }
-}      
+}
 return modinfo]]
 	local scenarioInfo = SB.model.scenarioInfo
 	modInfoTxt = modInfoTxt:gsub("__NAME__", scenarioInfo.name)
@@ -99,7 +99,7 @@ local function GenerateScriptTxt(dev)
     if dev then
         playMode = 0
     end
-	local scriptTxt = 
+	local scriptTxt =
 [[
 [GAME]
 {
@@ -273,19 +273,33 @@ local function ModInfoSave(path)
 	file:close()
 end
 
+local function GUIStateSave(path)
+    local brushes = {}
+    for name, brush in pairs(SB.savedBrushesRegistry) do
+        brushes[name] = brush:Serialize()
+    end
+
+    local guiState = {
+        brushes = brushes,
+    }
+    table.save(guiState, path)
+end
+
 function SaveCommand:execute()
     local projectDir = self.path
 
     -- save files
-    ModelSave(projectDir .. "/model.lua")
+    ModelSave(Path.Join(projectDir, "model.lua"))
     Log.Notice("saved model")
-    ModInfoSave(projectDir .. "/modinfo.lua")
+    ModInfoSave(Path.Join(projectDir, "modinfo.lua"))
     Log.Notice("saved modinfo")
-    HeightMapSave(projectDir .. "/heightmap.data")	
+    HeightMapSave(Path.Join(projectDir, "heightmap.data"))
     Log.Notice("saved heightmap")
-    ScriptTxtSave(projectDir .. "/script.txt")
-    ScriptTxtSave(projectDir .. "/script-dev.txt", true)
+    ScriptTxtSave(Path.Join(projectDir, "script.txt"))
+    ScriptTxtSave(Path.Join(projectDir, "script-dev.txt", true))
     Log.Notice("saved scripts")
+    GUIStateSave(Path.Join(projectDir, "sb_gui.lua"))
+    Log.Notice("saved GUI state")
 
     if #SB.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = projectDir .. "/texturemap"

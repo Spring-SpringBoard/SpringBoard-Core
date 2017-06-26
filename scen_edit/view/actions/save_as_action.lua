@@ -11,11 +11,15 @@ function SaveAsAction:execute()
             SB.commandManager:execute(setProjectDirCommand, true)
             self:CreateProjectStructure(path)
 
-            local saveCommand = SaveCommand(path)
-            SB.commandManager:execute(saveCommand, true)
-            Log.Notice("Saved project.")
+            self:Save(path)
         end
     )
+end
+
+function SaveAsAction:Save(path)
+    local saveCommand = SaveCommand(path)
+    SB.commandManager:execute(saveCommand, true)
+    Log.Notice("Saved project.")
 end
 
 function SaveAsAction:CreateProjectStructure(projectDir)

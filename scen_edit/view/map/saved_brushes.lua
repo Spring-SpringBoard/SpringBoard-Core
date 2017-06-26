@@ -2,15 +2,25 @@ SB.Include(Path.Join(SB_VIEW_DIR, "grid_view.lua"))
 
 SavedBrushes = GridView:extends{}
 
-function SavedBrushes:init(opts)
-    self.__brushIDCounter = 0
+SB.savedBrushesRegistry = {}
+SB.savedBrushesRegistryData = {}
 
-    self.savedBrushes = {}
-    self.savedBrushesOrder = {}
+function SavedBrushes:init(opts)
+    SB.savedBrushesRegistry[opts.name] = self
+
     self.editor = opts.editor
     self:super("init", opts)
-    self:_UpdateBrushes()
-    self.layoutPanel:DeselectAll()
+
+    local registryData = SB.savedBrushesRegistryData[opts.name]
+    if registryData then
+        self:Load(registryData)
+    else
+        self.__brushIDCounter = 1
+        self.savedBrushes = {}
+        self.savedBrushesOrder = {}
+        self:_UpdateBrushes()
+        self.layoutPanel:DeselectAll()
+    end
 end
 
 function SavedBrushes:GetSelectedBrush()
@@ -178,4 +188,25 @@ function SavedBrushes:PopulateItems()
     SB.delay(function()
         self.layoutPanel:Invalidate()
     end)
+end
+
+function SavedBrushes:Serialize()
+    return {
+        brushes = self.savedBrushes,
+        order = self.savedBrushesOrder,
+    }
+end
+
+function SavedBrushes:Load(data)
+    self.savedBrushes = data.brushes
+    self.savedBrushesOrder = data.order
+
+    self.__brushIDCounter = 1
+    for id, _ in pairs(self.savedBrushes) do
+        if self.__brushIDCounter < id then
+            self.__brushIDCounter = id + 1
+        end
+    end
+
+    self:_UpdateBrushes()
 end
