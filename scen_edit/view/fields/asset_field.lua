@@ -79,6 +79,18 @@ function AssetField:OnSelectItem(item)
     self:SetDefaultPath(self:GetPath())
 end
 
+function AssetField:Serialize()
+    return {
+        value = self.value,
+        path = self:GetPath(),
+    }
+end
+
+function AssetField:Load(data)
+    self:Set(data.value)
+    self:SetDefaultPath(data.defaultPath)
+end
+
 ---------------------------------
 -- Override
 ---------------------------------

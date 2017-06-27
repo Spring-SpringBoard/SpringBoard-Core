@@ -34,7 +34,15 @@ function TerrainEditor:init()
                     self.patternTextureImages:DeselectAll()
                 end
             end
-        end
+        end,
+        Serialize = function()
+            return self.fields["patternTexture"].value
+        end,
+        Load = function(data)
+            self.patternTextureImages:SetDir(Path.GetParentDir(data))
+            Spring.Echo("Path.GetParentDir(data)", Path.GetParentDir(data))
+            self.fields["patternTexture"]:Set(data)
+        end,
     }))
     self.patternTextureImages = AssetView({
         ctrl = {

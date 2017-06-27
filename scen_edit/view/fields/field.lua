@@ -30,6 +30,7 @@ function Field:_CompareValues(v1, v2)
         return true
     end
 end
+
 -- Override
 function Field:Validate(value)
     -- FIXME: specify whether the field can be nil
@@ -39,6 +40,7 @@ function Field:Validate(value)
     end
     return false
 end
+
 function Field:Set(value, source)
     if self.inUpdate then
         return
@@ -52,11 +54,23 @@ function Field:Set(value, source)
     end
     self.inUpdate = false
 end
+
 function Field:Added()
 end
+
+-- Override
+function Field:Serialize()
+    return self.value
+end
+
+function Field:Load(data)
+    self:Set(data)
+end
+
 -- Override
 function Field:Update(source)
 end
+
 -- HACK: see above
 function Field:_HackSetInvisibleFields(fields)
 end

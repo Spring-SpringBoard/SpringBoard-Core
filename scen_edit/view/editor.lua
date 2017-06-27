@@ -261,7 +261,11 @@ end
 function Editor:Serialize()
     local retVal = {}
     for name, field in pairs(self.fields) do
-        retVal[name] = field.value
+        if field.Serialize then
+            retVal[name] = field:Serialize()
+        else
+            Spring.Echo(name)
+        end
     end
     return retVal
 end
@@ -269,13 +273,13 @@ end
 function Editor:Load(tbl)
     -- set missing fields to nil
     for name, field in pairs(self.fields) do
-        -- some fields (like GroupField) don't have .Set
+        -- some fields (like separator) don't have .Set
         if self.fields[name].Set and tbl[name] == nil then
             self.fields[name]:Set(nil)
         end
     end
-    for name, value in pairs(tbl) do
-        self.fields[name]:Set(value)
+    for name, data in pairs(tbl) do
+        self.fields[name]:Load(data)
     end
 end
 
