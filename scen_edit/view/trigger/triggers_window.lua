@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 TriggersWindow = Editor:extends{}
+Editor.Register({
+    name = "triggersWindow",
+    editor = TriggersWindow,
+    tab = "Logic",
+    caption = "Triggers",
+    tooltip = "Edit triggers",
+    image = SB_IMG_DIR .. "cog.png",
+})
 
 function TriggersWindow:init()
     self:super("init")

@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 CollisionView = Editor:extends{}
+Editor.Register({
+    name = "collisionView",
+    editor = CollisionView,
+    tab = "Objects",
+    caption = "Colvol",
+    tooltip = "Edit collision volumes",
+    image = SB_IMG_DIR .. "boulder-dash.png",
+})
 
 function CollisionView:init()
     self:super("init")

@@ -1,6 +1,15 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 TerrainSettingsView = Editor:extends{}
+Editor.Register({
+    name = "terrainSettings",
+    editor = TerrainSettingsView,
+    tab = "Map",
+    caption = "Settings",
+    tooltip = "Edit map settings",
+    image = SB_IMG_DIR .. "globe.png",
+})
+
 function TerrainSettingsView:init()
     self:super("init")
 

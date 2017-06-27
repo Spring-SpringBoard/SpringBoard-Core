@@ -1,5 +1,14 @@
 SB.Include(SB_VIEW_DIR .. "editor.lua")
+
 DiplomacyWindow = Editor:extends{}
+Editor.Register({
+    name = "diplomacyWindow",
+    editor = DiplomacyWindow,
+    tab = "Misc",
+    caption = "Alliances",
+    tooltip = "Edit alliances",
+    image = SB_IMG_DIR .. "shaking-hands.png",
+})
 
 function DiplomacyWindow:init(trigger)
     self:super("init")

@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 MetalEditor = Editor:extends{}
+Editor.Register({
+    name = "metalEditor",
+    editor = MetalEditor,
+    tab = "Map",
+    caption = "Metal",
+    tooltip = "Edit metal map",
+    image = SB_IMG_DIR .. "minerals.png",
+})
 
 function MetalEditor:init()
     self:super("init")

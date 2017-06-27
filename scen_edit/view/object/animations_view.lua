@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 AnimationsView = Editor:extends{}
+-- Editor.Register({
+--     name = "animationsView",
+--     editor = AnimationsView,
+--     tab = "Objects",
+--     caption = "Anims",
+--     tooltip = "Unit animations",
+--     image = SB_IMG_DIR .. "meeple.png",
+-- })
 
 function AnimationsView:init()
     self:super("init")

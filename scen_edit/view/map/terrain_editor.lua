@@ -3,6 +3,14 @@ SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
 TerrainEditor = Editor:extends{}
+Editor.Register({
+    name = "terrainEditor",
+    editor = TerrainEditor,
+    tab = "Map",
+    caption = "Texture",
+    tooltip = "Edit textures",
+    image = SB_IMG_DIR .. "palette.png",
+})
 
 function TerrainEditor:init()
     self.initializing = true

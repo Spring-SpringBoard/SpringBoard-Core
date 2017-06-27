@@ -12,7 +12,7 @@ View = LCS.class{}
 
 function View:init()
     SB.IncludeDir(SB_VIEW_DIR)
-	SB.Include(Path.Join(SB_VIEW_MAIN_WINDOW_DIR, "abstract_main_window_panel.lua"))
+	SB.Include(Path.Join(SB_VIEW_MAIN_WINDOW_DIR, "main_window_panel.lua"))
 	SB.IncludeDir(SB_VIEW_MAIN_WINDOW_DIR)
 	SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "abstract_action.lua"))
 	SB.IncludeDir(SB_VIEW_ACTIONS_DIR)

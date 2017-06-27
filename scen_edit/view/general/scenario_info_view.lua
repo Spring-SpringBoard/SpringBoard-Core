@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 ScenarioInfoView = Editor:extends{}
+Editor.Register({
+    name = "scenarioInfoView",
+    editor = ScenarioInfoView,
+    tab = "Misc",
+	caption = "Info",
+	tooltip = "Edit project info",
+	image = SB_IMG_DIR .. "info.png",
+})
 
 function ScenarioInfoView:init()
 	self:super("init")

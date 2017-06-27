@@ -1,4 +1,4 @@
-ShaderPanel = AbstractMainWindowPanel:extends{}
+ShaderPanel = LCS.class{}
 
 function ShaderPanel:init()
     self:super("init")

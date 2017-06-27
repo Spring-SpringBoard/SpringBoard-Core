@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 LightingEditor = Editor:extends{}
+Editor.Register({
+    name = "lightingEditor",
+    editor = LightingEditor,
+    tab = "Env",
+    caption = "Lighting",
+    tooltip = "Edit lighting",
+    image = SB_IMG_DIR .. "sunbeams.png",
+})
 
 function LightingEditor:init()
     self:super("init")

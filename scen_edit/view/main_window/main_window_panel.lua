@@ -1,4 +1,4 @@
-AbstractMainWindowPanel = LCS.class.abstract{}
+MainWindowPanel = LCS.class{}
 
 function TabbedPanelButton(tbl)
 	return Button:New(Table.Merge({
@@ -53,7 +53,7 @@ function TabbedPanelLabel(tbl)
 	}, tbl))
 end
 
-function AbstractMainWindowPanel:init()
+function MainWindowPanel:init()
 	self.control = LayoutPanel:New {
 		x = 0,
 		y = 0,
@@ -67,16 +67,16 @@ function AbstractMainWindowPanel:init()
 	}
 end
 
-function AbstractMainWindowPanel:getControl()
+function MainWindowPanel:getControl()
 	return self.control
 end
 
-function AbstractMainWindowPanel:AddElement(tbl)
+function MainWindowPanel:AddElement(tbl)
 	local caption = tbl.caption
 	local tooltip = tbl.tooltip or ""
 	local image = tbl.image or ""
-	local viewName = tbl.viewName
-	local ViewClass = tbl.ViewClass
+	local name = tbl.name
+	local editor = tbl.editor
 
 	local btn = TabbedPanelButton({
         tooltip = tooltip,
@@ -87,19 +87,25 @@ function AbstractMainWindowPanel:AddElement(tbl)
         OnClick = {
             function(obj)
                 obj:SetPressedState(true)
-                if SB[viewName] == nil then
-                    SB[viewName] = ViewClass()
-                    SB[viewName].window.OnHide = {
+                if SB[name] == nil then
+                    SB[name] = editor()
+                    SB[name].window.OnHide = {
 						function()
 							obj:SetPressedState(false)
 						end
 					}
                 end
-                if SB[viewName].window.hidden then
-					SB.view:SetMainPanel(SB[viewName].window)
+                if SB[name].window.hidden then
+					SB.view:SetMainPanel(SB[name].window)
                 end
             end
         },
     })
     self.control:AddChild(btn)
+end
+
+function MainWindowPanel:AddElements(elements)
+	for _, element in pairs(elements) do
+		self:AddElement(element)
+	end
 end

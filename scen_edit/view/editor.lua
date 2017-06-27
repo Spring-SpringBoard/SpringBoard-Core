@@ -279,6 +279,32 @@ function Editor:Load(tbl)
     end
 end
 
+-- Supported opts:
+-- name (string)
+-- editor (class to be instanced)
+-- tab (tab in which to place the editor button)
+-- caption (string)
+-- tooltip (string)
+-- image (string, path to file)
+SB.editorRegistry = {}
+function Editor.Register(opts)
+    assert(opts.name, "Missing name for editor.")
+    assert(not SB.editorRegistry[opts.name],
+        "Editor with name: " .. opts.name .. " already exists")
+    assert(opts.editor, "Missing editor for: " .. opts.name)
+    opts.tab = opts.tab or "Other"
+    opts.caption = opts.caption or name
+    opts.tooltip = opts.tooltip or opts.caption
+    opts.image = opts.image or ""
+
+    SB.editorRegistry[opts.name] = opts
+end
+
+function Editor.Deregister(name)
+    assert(opts.name, "Missing name for editor.")
+    SB.editorRegistry[opts.name] = opts
+end
+
 -- We load these fields last as they might be/contain subclasses of editor view
 SB_VIEW_FIELDS_DIR = SB_VIEW_DIR .. "fields/"
 SB.IncludeDir(SB_VIEW_FIELDS_DIR)

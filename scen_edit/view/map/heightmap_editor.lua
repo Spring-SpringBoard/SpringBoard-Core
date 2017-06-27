@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 HeightmapEditor = Editor:extends{}
+Editor.Register({
+    name = "heightmapEditor",
+    editor = HeightmapEditor,
+    tab = "Map",
+    caption = "Terrain",
+    tooltip = "Edit heightmap",
+    image = SB_IMG_DIR .. "peaks.png",
+})
 
 function HeightmapEditor:init()
     self:super("init")

@@ -160,6 +160,15 @@ function ObjectDefsView:OnEnterState(state)
 end
 
 UnitDefsView = ObjectDefsView:extends{}
+Editor.Register({
+    name = "unitDefsView",
+    editor = UnitDefsView,
+    tab = "Objects",
+    caption = "Units",
+    tooltip = "Add units",
+    image = SB_IMG_DIR .. "meeple.png",
+})
+
 function UnitDefsView:MakePanel(tbl)
     self.objectDefPanel = UnitDefsPanel(tbl)
 end
@@ -242,6 +251,15 @@ function UnitDefsView:MakeFilters()
 end
 
 FeatureDefsView = ObjectDefsView:extends{}
+Editor.Register({
+    name = "featureDefsView",
+    editor = FeatureDefsView,
+    tab = "Objects",
+    caption = "Features",
+    tooltip = "Add features",
+    image = SB_IMG_DIR .. "beech.png",
+})
+
 function FeatureDefsView:MakePanel(tbl)
     self.objectDefPanel = FeatureDefsPanel(tbl)
 end

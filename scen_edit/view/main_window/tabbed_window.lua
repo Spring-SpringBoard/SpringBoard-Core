@@ -1,13 +1,6 @@
 TabbedWindow = LCS.class{}
 
 function TabbedWindow:init()
-	local unitFeaturePanel = UnitFeaturePanel()
-	local terrainPanel = TerrainPanel()
-	local envPanel = EnvPanel()
-	local metaPanel = MetaPanel()
-    local generalPanel = GeneralPanel()
-	local shaderPanel = ShaderPanel()
-
 	local mainPanelY = 130
 	local commonControls = {
 		Button:New {
@@ -237,20 +230,28 @@ function TabbedWindow:init()
 		controls = commonControls
 		mainPanelY = mainPanelY + 45
 	end
+
+	-- Create tabs from the editor registry
+	local tabs = {}
+	tabMapping = SB.GroupByField(SB.editorRegistry, "tab")
+	for tabName, editors in pairs(tabMapping) do
+		local panel = MainWindowPanel()
+		panel:AddElements(editors)
+		table.insert(tabs, {
+			name = tabName,
+			children = {
+				panel:getControl()
+			},
+		})
+	end
+
 	table.insert(controls, Chili.TabPanel:New {
 		x = 0,
 		right = 0,
 		y = 10,
 		bottom = 20,
 		padding = {0, 0, 0, 0},
-		tabs = {
-			{ name = "Object", children = {unitFeaturePanel:getControl()} },
-			{ name = "Map", children = {terrainPanel:getControl()} },
-			{ name = "Env", children = {envPanel:getControl()} },
-			{ name = "Trigger", children = {metaPanel:getControl()} },
-			{ name = "General", children = {generalPanel:getControl()} },
-			-- { name = "Shaders", children = {shaderPanel:getControl()} },
-		},
+		tabs = tabs,
 	})
 
 	table.insert(controls, Chili.Line:New {

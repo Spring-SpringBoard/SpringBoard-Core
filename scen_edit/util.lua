@@ -145,10 +145,9 @@ function SB.CreateNameMapping(origArray)
     return newArray
 end
 
-function SB.GroupByField(origArray, field)
+function SB.GroupByField(tbl, field)
     local newArray = {}
-    for i = 1, #origArray do
-        local item = origArray[i]
+    for _, item in pairs(tbl) do
         local fieldValue = item[field]
         if newArray[fieldValue] then
             table.insert(newArray[fieldValue], item)

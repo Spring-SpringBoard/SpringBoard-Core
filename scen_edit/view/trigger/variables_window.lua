@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 VariablesWindow = Editor:extends{}
+Editor.Register({
+    name = "variablesWindow",
+    editor = VariablesWindow,
+    tab = "Logic",
+    caption = "Variables",
+    tooltip = "Edit variables",
+    image = SB_IMG_DIR .. "omega.png",
+})
 
 function VariablesWindow:init()
     self:super("init")

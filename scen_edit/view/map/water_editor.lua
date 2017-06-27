@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 WaterEditor = Editor:extends{}
+Editor.Register({
+    name = "waterEditor",
+    editor = WaterEditor,
+    tab = "Env",
+    caption = "Water",
+    tooltip = "Edit water",
+    image = SB_IMG_DIR .. "wave-crest.png",
+})
 
 function WaterEditor:init()
     self:super("init")

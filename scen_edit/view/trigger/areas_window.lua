@@ -1,6 +1,15 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 AreasWindow = Editor:extends{}
+Editor.Register({
+    name = "areasWindow",
+    editor = AreasWindow,
+    tab = "Logic",
+    caption = "Area",
+    tooltip = "Edit areas",
+    image = SB_IMG_DIR .. "bolivia.png",
+})
+
 
 function AreasWindow:init()
     self:super("init")

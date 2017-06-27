@@ -1,6 +1,14 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 ObjectPropertyWindow = Editor:extends{}
+Editor.Register({
+    name = "objectPropertyWindow",
+    editor = ObjectPropertyWindow,
+    tab = "Objects",
+    caption = "Properties",
+    tooltip = "Edit object properties",
+    image = SB_IMG_DIR .. "anatomy.png",
+})
 
 function ObjectPropertyWindow:init()
     self:super("init")
