@@ -277,7 +277,7 @@ local function GenerateCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ, opts)
     local mCoord, tCoord, vCoord = _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
 
     if opts.texOffsetX then
-        OffsetCoords(tCoord, opts.texOffsetX, opts.texOffsetY)
+        OffsetCoords(tCoord, opts.texOffsetX * sizeX, opts.texOffsetY * sizeZ)
     end
     if opts.texScale then
         ScaleCoords(tCoord, opts.texScale, opts.texScale)
@@ -318,6 +318,7 @@ function DrawDiffuse(opts, x, z, size)
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
+    opts.diffuseColor[4] = 1.0
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
     --gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
 
@@ -563,6 +564,7 @@ function DrawShadingTextures(opts, x, z, size)
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
+    opts.diffuseColor[4] = 1.0
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
     --gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
 

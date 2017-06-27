@@ -1,31 +1,37 @@
 BrushDrawer = {}
 
-function BrushDrawer.GetBrushTexture(texturePath, width, height, drawOpts)
+function BrushDrawer.GetBrushTexture(width, height)
     local luaTex = gl.CreateTexture(width, height, {
         border = false,
         min_filter = GL.LINEAR,
         mag_filter = GL.LINEAR,
-        wrap_s = GL.CLAMP_TO_EDGE,
-        wrap_t = GL.CLAMP_TO_EDGE,
         fbo = true,
     })
-    BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOpts)
     return luaTex
 end
 
-local drawMethods = {
-    color = function(data)
-        gl.Color(data[1], data[2], data[3], data[4])
-    end,
-    rotation = function(data)
-        gl.Rotate(data[1], 1, 1)
-    end,
-    offset = function(data)
-        gl.Translate(data[1], data[2], data[3], data[4])
-    end,
-}
-
 function BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOpts)
-    local texFile = ':clr' .. width .. ',' .. height .. ':' .. tostring(texturePath)
+    local texFile = ':lr' .. width .. ',' .. height .. ':' .. tostring(texturePath)
+    if drawOpts.color then
+        gl.Color(drawOpts.color[1], drawOpts.color[2], drawOpts.color[3], drawOpts.color[4])
+    end
+    if drawOpts.offset then
+
+    end
+
+    gl.MatrixMode(GL.TEXTURE)
+    gl.LoadIdentity()
+    if drawOpts.offset then
+        gl.Translate(drawOpts.offset[1], drawOpts.offset[2], 0.0)
+    end
+    if drawOpts.rotation then
+        gl.Translate(0.5,0.5,0.0)
+        gl.Rotate(drawOpts.rotation, 0.0, 0.0, 1.0)
+        gl.Translate(-0.5,-0.5,0.0)
+    end
+    if drawOpts.scale then
+        gl.Scale(drawOpts.scale, drawOpts.scale, drawOpts.scale)
+    end
     SB.model.textureManager:Blit(texFile, luaTex)
+    gl.MatrixMode(GL.MODELVIEW)
 end

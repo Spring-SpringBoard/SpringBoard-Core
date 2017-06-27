@@ -59,16 +59,6 @@ function TerrainEditorView:init()
         name = "mapMaterials",
         GetNewBrush = function()
             local tbl = self:Serialize()
-
-            SB.delayGL(function()
-                local brush = self.savedBrushes:GetSelectedBrush()
-
-                local diffusePath = tbl.brushTexture.diffuse
-                local texName = BrushDrawer.GetBrushTexture(diffusePath, self.savedBrushes.itemWidth, self.savedBrushes.itemHeight)
-
-                self.savedBrushes:UpdateBrushImage(brush.brushID, texName)
-            end)
-
             -- invoke the UI dialog to pick the paint texture
             CallListeners(self.fields["brushTexture"].button.OnClick)
 
@@ -78,6 +68,22 @@ function TerrainEditorView:init()
                 image = "",
                 tooltip = nil,
             }
+        end,
+        GetBrushImage = function(brush)
+            local texturePath = tostring(self.fields["brushTexture"].value.diffuse)
+            local texName = brush.image
+            if texName == "" then
+                texName = BrushDrawer.GetBrushTexture(
+                    self.savedBrushes.itemWidth,
+                    self.savedBrushes.itemHeight)
+            end
+            BrushDrawer.UpdateLuaTexture(texName,
+                texturePath,
+                self.savedBrushes.itemWidth,
+                self.savedBrushes.itemHeight,
+                self:__GetBrushDrawOpts())
+
+            return texName
         end,
     })
     self.savedDNTSBrushes = SavedBrushes({
@@ -94,9 +100,6 @@ function TerrainEditorView:init()
         GetNewBrush = function()
             local tbl = self:Serialize()
 
-            local normal = tbl.brushTexture.normal
-            local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(normal)
-
             -- invoke the UI dialog to pick the paint texture
             CallListeners(self.fields["brushTexture"].button.OnClick)
 
@@ -106,6 +109,28 @@ function TerrainEditorView:init()
                 image = texturePath,
                 tooltip = nil,
             }
+        end,
+        GetBrushImage = function(brush)
+            local texturePath = self.fields["brushTexture"].value.normal
+            local texName = brush.image
+
+            -- if there is no texture path set, assume it's one of the existing engine textures
+            if texturePath == nil then
+                return texName
+            end
+            texturePath = tostring(texturePath)
+            if texName == "" or texName:sub(1, 1) == "$" then
+                texName = BrushDrawer.GetBrushTexture(
+                    self.savedBrushes.itemWidth,
+                    self.savedBrushes.itemHeight)
+            end
+            BrushDrawer.UpdateLuaTexture(texName,
+                texturePath,
+                self.savedBrushes.itemWidth,
+                self.savedBrushes.itemHeight,
+                self:__GetBrushDrawOpts())
+
+            return texName
         end,
     })
     self:AddField(Field({
@@ -306,16 +331,18 @@ function TerrainEditorView:init()
         NumericField({
             name = "texOffsetX",
             value = 0,
-            minValue = -1024,
-            maxValue = 1024,
+            minValue = -1,
+            maxValue = 1,
+            step = 0.001,
             title = "X:",
             tooltip = "Texture offset X",
         }),
         NumericField({
             name = "texOffsetY",
             value = 0,
-            minValue = -1024,
-            maxValue = 1024,
+            minValue = -1,
+            maxValue = 1,
+            step = 0.001,
             title = "Y:",
             tooltip = "Texture offset Y",
         })
@@ -469,6 +496,15 @@ function TerrainEditorView:_GetDNTSIndex()
 end
 
 function TerrainEditorView:__GetBrushDrawOpts()
+    return {
+        color = self.fields["diffuseColor"].value,
+        rotation = self.fields["rotation"].value,
+        offset = {
+            self.fields["texOffsetX"].value,
+            self.fields["texOffsetY"].value,
+        },
+        scale = self.fields["texScale"].value,
+    }
 end
 
 function TerrainEditorView:OnStartChange(name)
@@ -488,15 +524,13 @@ function TerrainEditorView:OnFieldChange(name, value)
         local brush = self.savedBrushes:GetSelectedBrush()
         if brush then
             self.savedBrushes:UpdateBrush(brush.brushID, name, value)
-            if name == "brushTexture" then
-                SB.commandManager:execute(CacheTextureCommand(value))
+            if name == "brushTexture" or name == "texOffsetX" or name == "texOffsetY"
+                or name == "diffuseColor" or name == "rotation" or name == "texScale" then
+                if name == "brushTexture" then
+                    SB.commandManager:execute(CacheTextureCommand(value))
+                end
 
-                SB.delayGL(function()
-                    local diffusePath = value.diffuse
-                    BrushDrawer.UpdateLuaTexture(brush.image, diffusePath, self.savedBrushes.itemWidth, self.savedBrushes.itemHeight)
-
-                    self.savedBrushes:UpdateBrushImage(brush.brushID, brush.image)
-                end)
+                self.savedBrushes:RefreshBrushImage(brush.brushID)
             end
         end
     elseif self.savedDNTSBrushes:GetControl().visible then
@@ -504,12 +538,8 @@ function TerrainEditorView:OnFieldChange(name, value)
         if brush then
             self.savedDNTSBrushes:UpdateBrush(brush.brushID, name, value)
             if name == "brushTexture" then
-                SB.commandManager:execute(CacheTextureCommand(value))
-
-                local normal = value.normal
-                local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(normal)
-
-                self.savedDNTSBrushes:UpdateBrushImage(brush.brushID, texturePath)
+                --SB.commandManager:execute(CacheTextureCommand(value))
+                self.savedDNTSBrushes:RefreshBrushImage(brush.brushID)
             end
         end
     end

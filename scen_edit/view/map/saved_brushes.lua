@@ -24,8 +24,12 @@ function SavedBrushes:UpdateBrush(brushID, key, value)
     self.brushManager:UpdateBrush(brushID, key, value)
 end
 
-function SavedBrushes:UpdateBrushImage(brushID, image)
-    self.brushManager:UpdateBrushImage(brushID, image)
+function SavedBrushes:RefreshBrushImage(brushID)
+    SB.delayGL(function()
+        local brush = self.brushManager:GetBrush(brushID)
+        local texName = self.GetBrushImage(brush)
+        self.brushManager:UpdateBrushImage(brushID, texName)
+    end)
 end
 
 function SavedBrushes:SelectBrush(brushID)
@@ -38,6 +42,9 @@ function SavedBrushes:SelectBrush(brushID)
 end
 
 function SavedBrushes:OnBrushAdded(brush)
+    SB.delayGL(function()
+        self:RefreshBrushImage(brush.brushID)
+    end)
     self:_UpdateBrushes()
 end
 
