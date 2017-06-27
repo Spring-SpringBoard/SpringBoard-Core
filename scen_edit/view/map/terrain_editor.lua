@@ -60,8 +60,14 @@ function TerrainEditorView:init()
         GetNewBrush = function()
             local tbl = self:Serialize()
 
-            local diffuse = tbl.brushTexture.diffuse
-            local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(diffuse)
+            SB.delayGL(function()
+                local brush = self.savedBrushes:GetSelectedBrush()
+
+                local diffusePath = tbl.brushTexture.diffuse
+                local texName = BrushDrawer.GetBrushTexture(diffusePath, self.savedBrushes.itemWidth, self.savedBrushes.itemHeight)
+
+                self.savedBrushes:UpdateBrushImage(brush.brushID, texName)
+            end)
 
             -- invoke the UI dialog to pick the paint texture
             CallListeners(self.fields["brushTexture"].button.OnClick)
@@ -69,7 +75,7 @@ function TerrainEditorView:init()
             return {
                 opts = tbl,
                 caption = nil,
-                image = texturePath,
+                image = "",
                 tooltip = nil,
             }
         end,
@@ -462,6 +468,9 @@ function TerrainEditorView:_GetDNTSIndex()
     return self.fields["dntsIndex"].value
 end
 
+function TerrainEditorView:__GetBrushDrawOpts()
+end
+
 function TerrainEditorView:OnStartChange(name)
     if name == "splatTexScale" or name == "splatTexMult" then
         SB.commandManager:execute(SetMultipleCommandModeCommand(true))
@@ -482,10 +491,12 @@ function TerrainEditorView:OnFieldChange(name, value)
             if name == "brushTexture" then
                 SB.commandManager:execute(CacheTextureCommand(value))
 
-                local diffuse = value.diffuse
-                local texturePath = ':clr' .. self.savedBrushes.itemWidth .. ',' .. self.savedBrushes.itemHeight .. ':' .. tostring(diffuse)
+                SB.delayGL(function()
+                    local diffusePath = value.diffuse
+                    BrushDrawer.UpdateLuaTexture(brush.image, diffusePath, self.savedBrushes.itemWidth, self.savedBrushes.itemHeight)
 
-                self.savedBrushes:UpdateBrushImage(brush.brushID, texturePath)
+                    self.savedBrushes:UpdateBrushImage(brush.brushID, brush.image)
+                end)
             end
         end
     elseif self.savedDNTSBrushes:GetControl().visible then
