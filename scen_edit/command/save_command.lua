@@ -275,8 +275,8 @@ end
 
 local function GUIStateSave(path)
     local brushes = {}
-    for name, brush in pairs(SB.savedBrushesRegistry) do
-        brushes[name] = brush:Serialize()
+    for name, brushManager in pairs(SB.model.brushManagers:GetBrushManagers()) do
+        brushes[name] = brushManager:Serialize()
     end
 
     local guiState = {

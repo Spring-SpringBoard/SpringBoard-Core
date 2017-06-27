@@ -2,25 +2,13 @@ SB.Include(Path.Join(SB_VIEW_DIR, "grid_view.lua"))
 
 SavedBrushes = GridView:extends{}
 
-SB.savedBrushesRegistry = {}
-SB.savedBrushesRegistryData = {}
-
 function SavedBrushes:init(opts)
-    SB.savedBrushesRegistry[opts.name] = self
-
     self.editor = opts.editor
     self:super("init", opts)
 
-    local registryData = SB.savedBrushesRegistryData[opts.name]
-    if registryData then
-        self:Load(registryData)
-    else
-        self.__brushIDCounter = 1
-        self.savedBrushes = {}
-        self.savedBrushesOrder = {}
-        self:_UpdateBrushes()
-        self.layoutPanel:DeselectAll()
-    end
+    self.brushManager = SB.model.brushManagers:GetBrushManager(opts.name)
+    self.brushManager:addListener(self)
+    self:_UpdateBrushes()
 end
 
 function SavedBrushes:GetSelectedBrush()
@@ -29,23 +17,15 @@ function SavedBrushes:GetSelectedBrush()
         return
     end
 
-    return self.savedBrushes[item.brushID]
+    return self.brushManager:GetBrush(item.brushID)
 end
 
-function SavedBrushes:UpdateBrush(brushID, name, value)
-    local brush = self.savedBrushes[brushID]
-    brush.opts[name] = value
+function SavedBrushes:UpdateBrush(brushID, key, value)
+    self.brushManager:UpdateBrush(brushID, key, value)
 end
 
 function SavedBrushes:UpdateBrushImage(brushID, image)
-    local brush = self.savedBrushes[brushID]
-    brush.image = image
-    for itemIdx, item in pairs(self:GetAllItems()) do
-        if item.brushID == brushID then
-            item.imgCtrl.file = image
-            item:Invalidate()
-        end
-    end
+    self.brushManager:UpdateBrushImage(brushID, image)
 end
 
 function SavedBrushes:SelectBrush(brushID)
@@ -57,13 +37,25 @@ function SavedBrushes:SelectBrush(brushID)
     end
 end
 
-function SavedBrushes:__AddBrush(brush)
-    self.__brushIDCounter = self.__brushIDCounter + 1
-    brush.brushID = self.__brushIDCounter
-    self.savedBrushes[brush.brushID] = brush
-    table.insert(self.savedBrushesOrder, brush.brushID)
+function SavedBrushes:OnBrushAdded(brush)
     self:_UpdateBrushes()
-    return brush.brushID
+end
+
+function SavedBrushes:OnBrushRemoved(brush)
+    self:_UpdateBrushes()
+end
+
+function SavedBrushes:OnBrushUpdated()
+end
+
+function SavedBrushes:OnBrushImageUpdated(brush, image)
+    for itemIdx, item in pairs(self:GetAllItems()) do
+        if item.brushID == brush.brushID then
+            item.imgCtrl.file = image
+            item:Invalidate()
+            break
+        end
+    end
 end
 
 function SavedBrushes:_LoadBrush(item)
@@ -71,7 +63,7 @@ function SavedBrushes:_LoadBrush(item)
     if not brushID then
         return
     end
-    local brush = self.savedBrushes[brushID]
+    local brush = self.brushManager:GetBrush(brushID)
     assert(brush, "No brush for brushID: " .. tostring(brushID))
 
     self.editor.initializing = true
@@ -98,6 +90,14 @@ function SavedBrushes:_UpdateBrushes()
     self:EndMultiModify()
 end
 
+function SavedBrushes:AddBrush(brush)
+    return self.brushManager:AddBrush(brush)
+end
+
+function SavedBrushes:RemoveBrush(brushID)
+    self.brushManager:RemoveBrush(brushID)
+end
+
 function SavedBrushes:_AddAddBrush()
     local addBrush = self:NewItem({
         tooltip = "Add new brush",
@@ -121,7 +121,7 @@ function SavedBrushes:_AddAddBrush()
                 OnClick = {
                     function()
                         local brush = self.GetNewBrush()
-                        local brushID = self:__AddBrush(brush)
+                        local brushID = self:AddBrush(brush)
                         self:SelectBrush(brushID)
                     end
                 }
@@ -133,7 +133,7 @@ function SavedBrushes:_AddAddBrush()
     addBrush.__no_background = true
 end
 
-function SavedBrushes:_MakeCloseButton(closeBrushID)
+function SavedBrushes:_MakeCloseButton(brushID)
     local btnClose = Button:New {
         caption = "",
         width = 20,
@@ -152,12 +152,7 @@ function SavedBrushes:_MakeCloseButton(closeBrushID)
         },
         OnClick = {
             function()
-                self.savedBrushes[closeBrushID] = nil
-                for i, brushID in pairs(self.savedBrushesOrder) do
-                    if closeBrushID == brushID then
-                        table.remove(self.savedBrushesOrder, i)
-                    end
-                end
+                self:RemoveBrush(brushID)
                 self:_UpdateBrushes()
             end
         }
@@ -169,13 +164,13 @@ function SavedBrushes:PopulateItems()
     if not self.disableAdd then
         self:_AddAddBrush()
     end
-    for _, brushID in pairs(self.savedBrushesOrder) do
-        local brush = self.savedBrushes[brushID]
+    for _, brushID in pairs(self.brushManager:GetBrushes()) do
+        local brush = self.brushManager:GetBrush(brushID)
         local item = self:AddItem(brush.caption, brush.image, brush.tooltip)
         item.brushID = brush.brushID
 
         if not self.disableRemove then
-            local btnClose = self:_MakeCloseButton()
+            local btnClose = self:_MakeCloseButton(brushID)
             item:AddChild(btnClose)
             item.btnClose = btnClose
 
@@ -188,25 +183,4 @@ function SavedBrushes:PopulateItems()
     SB.delay(function()
         self.layoutPanel:Invalidate()
     end)
-end
-
-function SavedBrushes:Serialize()
-    return {
-        brushes = self.savedBrushes,
-        order = self.savedBrushesOrder,
-    }
-end
-
-function SavedBrushes:Load(data)
-    self.savedBrushes = data.brushes
-    self.savedBrushesOrder = data.order
-
-    self.__brushIDCounter = 1
-    for id, _ in pairs(self.savedBrushes) do
-        if self.__brushIDCounter < id then
-            self.__brushIDCounter = id + 1
-        end
-    end
-
-    self:_UpdateBrushes()
 end

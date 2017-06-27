@@ -10,7 +10,8 @@ function LoadGUIStateCommand:execute()
     local guiState = loadstring(self.guiState)()
     local brushes = guiState.brushes
 
-    for name, brush in pairs(brushes) do
-        SB.savedBrushesRegistryData[name] = brush
+    for name, brushes in pairs(brushes) do
+        local brushManager = SB.model.brushManagers:GetBrushManager(name)
+        brushManager:Load(brushes)
     end
 end

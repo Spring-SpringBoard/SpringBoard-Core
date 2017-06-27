@@ -450,7 +450,7 @@ function TerrainEditorView:__AddEngineDNTSTexture(textureName, dntsIndex)
     end
 
     local texturePath = textureName
-    self.savedDNTSBrushes:__AddBrush({
+    self.savedDNTSBrushes:AddBrush({
         opts = tbl,
         caption = "DNTS:" .. tostring(dntsIndex),
         image = textureName,
