@@ -279,6 +279,11 @@ function Editor:Load(tbl)
     end
 end
 
+-- Registered editor classes
+SB.editorRegistry = {}
+-- Globally available editor instances
+SB.editors = {}
+
 -- Supported opts:
 -- name (string)
 -- editor (class to be instanced)
@@ -286,7 +291,6 @@ end
 -- caption (string)
 -- tooltip (string)
 -- image (string, path to file)
-SB.editorRegistry = {}
 function Editor.Register(opts)
     assert(opts.name, "Missing name for editor.")
     assert(not SB.editorRegistry[opts.name],

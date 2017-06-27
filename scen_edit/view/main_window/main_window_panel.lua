@@ -87,20 +87,21 @@ function MainWindowPanel:AddElement(tbl)
         OnClick = {
             function(obj)
                 obj:SetPressedState(true)
-                if SB[name] == nil then
-                    SB[name] = editor()
-                    SB[name].window.OnHide = {
-						function()
-							obj:SetPressedState(false)
-						end
-					}
-                end
-                if SB[name].window.hidden then
-					SB.view:SetMainPanel(SB[name].window)
+                if SB.editors[name].window.hidden then
+					SB.view:SetMainPanel(SB.editors[name].window)
                 end
             end
         },
     })
+	SB.delay(function()
+		SB.editors[name] = editor()
+		SB.editors[name].window.OnHide = {
+			function()
+				btn:SetPressedState(false)
+			end
+		}
+		SB.editors[name].window:Hide()
+	end)
     self.control:AddChild(btn)
 end
 

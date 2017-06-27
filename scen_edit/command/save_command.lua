@@ -279,8 +279,14 @@ local function GUIStateSave(path)
         brushes[name] = brushManager:Serialize()
     end
 
+    local editors = {}
+    for name, editor in pairs(SB.editors) do
+        editors[name] = editor:Serialize()
+    end
+
     local guiState = {
         brushes = brushes,
+        editors = editors,
     }
     table.save(guiState, path)
 end
