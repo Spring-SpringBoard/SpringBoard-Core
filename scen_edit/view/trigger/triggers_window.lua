@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-TriggersWindow = EditorView:extends{}
+TriggersWindow = Editor:extends{}
 
 function TriggersWindow:init()
     self:super("init")

@@ -1,8 +1,8 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-HeightmapEditorView = EditorView:extends{}
+HeightmapEditor = Editor:extends{}
 
-function HeightmapEditorView:init()
+function HeightmapEditor:init()
     self:super("init")
 
     self.heightmapBrushes = AssetView({
@@ -123,13 +123,13 @@ function HeightmapEditorView:init()
 	self:Finalize(children)
 end
 
-function HeightmapEditorView:OnLeaveState(state)
+function HeightmapEditor:OnLeaveState(state)
     for _, btn in pairs({self.btnAddState, self.btnSmoothState, self.btnSetState}) do
         btn:SetPressedState(false)
     end
 end
 
-function HeightmapEditorView:OnEnterState(state)
+function HeightmapEditor:OnEnterState(state)
     local btn
     if state:is_A(TerrainShapeModifyState) then
         btn = self.btnAddState
@@ -141,10 +141,10 @@ function HeightmapEditorView:OnEnterState(state)
     btn:SetPressedState(true)
 end
 
-function HeightmapEditorView:Select(indx)
+function HeightmapEditor:Select(indx)
     self.heightmapBrushes:Select(indx)
 end
 
-function HeightmapEditorView:IsValidTest(state)
+function HeightmapEditor:IsValidTest(state)
     return state:is_A(AbstractHeightmapEditingState)
 end

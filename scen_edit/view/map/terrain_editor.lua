@@ -1,10 +1,10 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
-TerrainEditorView = EditorView:extends{}
+TerrainEditor = Editor:extends{}
 
-function TerrainEditorView:init()
+function TerrainEditor:init()
     self.initializing = true
     self:super("init")
     self:AddField(MaterialField({
@@ -181,16 +181,16 @@ function TerrainEditorView:init()
         },
         OnClick = {
             function(obj)
-                -- if SB.dntsEditorView == nil then
-                --     SB.dntsEditorView = DNTSEditorView()
-                --     SB.dntsEditorView.window.OnHide = {
+                -- if SB.dntsEditor == nil then
+                --     SB.dntsEditor = DNTSEditor()
+                --     SB.dntsEditor.window.OnHide = {
 				-- 		function()
 				-- 			obj:SetPressedState(false)
 				-- 		end
 				-- 	}
                 -- end
-                -- if SB.dntsEditorView.window.hidden then
-				-- 	SB.view:SetMainPanel(SB.dntsEditorView.window)
+                -- if SB.dntsEditor.window.hidden then
+				-- 	SB.view:SetMainPanel(SB.dntsEditor.window)
                 -- end
                 self:_EnterState("dnts")
                 self.savedBrushes:GetControl():Hide()
@@ -470,7 +470,7 @@ function TerrainEditorView:init()
     self.initializing = false
 end
 
-function TerrainEditorView:__AddEngineDNTSTexture(textureName, dntsIndex)
+function TerrainEditor:__AddEngineDNTSTexture(textureName, dntsIndex)
     local tbl = self:Serialize()
 
     tbl.dntsIndex = dntsIndex
@@ -491,11 +491,11 @@ function TerrainEditorView:__AddEngineDNTSTexture(textureName, dntsIndex)
     })
 end
 
-function TerrainEditorView:_GetDNTSIndex()
+function TerrainEditor:_GetDNTSIndex()
     return self.fields["dntsIndex"].value
 end
 
-function TerrainEditorView:__GetBrushDrawOpts()
+function TerrainEditor:__GetBrushDrawOpts()
     return {
         color = self.fields["diffuseColor"].value,
         rotation = self.fields["rotation"].value,
@@ -507,19 +507,19 @@ function TerrainEditorView:__GetBrushDrawOpts()
     }
 end
 
-function TerrainEditorView:OnStartChange(name)
+function TerrainEditor:OnStartChange(name)
     if name == "splatTexScale" or name == "splatTexMult" then
         SB.commandManager:execute(SetMultipleCommandModeCommand(true))
     end
 end
 
-function TerrainEditorView:OnEndChange(name)
+function TerrainEditor:OnEndChange(name)
     if name == "splatTexScale" or name == "splatTexMult" then
         SB.commandManager:execute(SetMultipleCommandModeCommand(false))
     end
 end
 
-function TerrainEditorView:OnFieldChange(name, value)
+function TerrainEditor:OnFieldChange(name, value)
     if self.savedBrushes:GetControl().visible then
         local brush = self.savedBrushes:GetSelectedBrush()
         if brush then
@@ -566,23 +566,23 @@ function TerrainEditorView:OnFieldChange(name, value)
     end
 end
 
-function TerrainEditorView:_EnterState(paintMode)
+function TerrainEditor:_EnterState(paintMode)
     local state = TerrainChangeTextureState(self)
     state.paintMode = paintMode
     SB.stateManager:SetState(state)
 end
 
-function TerrainEditorView:IsValidTest(state)
+function TerrainEditor:IsValidTest(state)
     return state:is_A(TerrainChangeTextureState)
 end
 
-function TerrainEditorView:OnLeaveState(state)
+function TerrainEditor:OnLeaveState(state)
     for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS, self.btnVoid}) do
         btn:SetPressedState(false)
     end
 end
 
-function TerrainEditorView:OnEnterState(state)
+function TerrainEditor:OnEnterState(state)
     if state.paintMode == "paint" then
         self.btnPaint:SetPressedState(true)
     elseif state.paintMode == "blur" then

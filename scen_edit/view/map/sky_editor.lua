@@ -1,8 +1,8 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-SkyEditorView = EditorView:extends{}
+SkyEditor = Editor:extends{}
 
-function SkyEditorView:init()
+function SkyEditor:init()
     self:super("init")
 
     self.initializing = true
@@ -90,7 +90,7 @@ function _ColorArrayToChannels(colorArray)
     return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
 end
 
-function SkyEditorView:UpdateAtmosphere()
+function SkyEditor:UpdateAtmosphere()
     self.updating = true
 
     self:Set("fogStart",   gl.GetAtmosphere("fogStart"))
@@ -104,21 +104,21 @@ function SkyEditorView:UpdateAtmosphere()
     self.updating = false
 end
 
-function SkyEditorView:OnCommandExecuted()
+function SkyEditor:OnCommandExecuted()
     if not self._startedChanging then
         self:UpdateAtmosphere()
     end
 end
 
-function SkyEditorView:OnStartChange(name)
+function SkyEditor:OnStartChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
-function SkyEditorView:OnEndChange(name)
+function SkyEditor:OnEndChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
-function SkyEditorView:OnFieldChange(name, value)
+function SkyEditor:OnFieldChange(name, value)
     if self.initializing or self.updating then
         return
     end

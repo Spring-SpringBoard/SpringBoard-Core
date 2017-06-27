@@ -1,8 +1,8 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-GrassEditorView = EditorView:extends{}
+GrassEditor = Editor:extends{}
 
-function GrassEditorView:init()
+function GrassEditor:init()
     self:super("init")
 
     self.btnAddGrass = TabbedPanelButton({
@@ -44,16 +44,16 @@ function GrassEditorView:init()
     self:Finalize(children)
 end
 
-function GrassEditorView:IsValidTest(state)
+function GrassEditor:IsValidTest(state)
     return state:is_A(GrassEditingState)
 end
 
-function GrassEditorView:OnLeaveState(state)
+function GrassEditor:OnLeaveState(state)
     for _, btn in pairs({self.btnAddGrass}) do
         btn:SetPressedState(false)
     end
 end
 
-function GrassEditorView:OnEnterState(state)
+function GrassEditor:OnEnterState(state)
     self.btnAddGrass:SetPressedState(true)
 end

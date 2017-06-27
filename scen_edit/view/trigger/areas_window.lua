@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-AreasWindow = EditorView:extends{}
+AreasWindow = Editor:extends{}
 
 function AreasWindow:init()
     self:super("init")

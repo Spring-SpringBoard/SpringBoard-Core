@@ -1,7 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-TerrainSettingsView = EditorView:extends{}
-
+TerrainSettingsView = Editor:extends{}
 function TerrainSettingsView:init()
     self:super("init")
 

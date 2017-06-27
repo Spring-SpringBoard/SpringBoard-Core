@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-ScenarioInfoView = EditorView:extends{}
+ScenarioInfoView = Editor:extends{}
 
 function ScenarioInfoView:init()
 	self:super("init")

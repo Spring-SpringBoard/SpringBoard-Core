@@ -1,8 +1,8 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-LightingEditorView = EditorView:extends{}
+LightingEditor = Editor:extends{}
 
-function LightingEditorView:init()
+function LightingEditor:init()
     self:super("init")
 
     self.initializing = true
@@ -130,7 +130,7 @@ function _ColorArrayToChannels(colorArray)
     return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
 end
 
-function LightingEditorView:UpdateLighting()
+function LightingEditor:UpdateLighting()
     self.updating = true
 
     local sunDirX, sunDirY, sunDirZ = gl.GetSun()
@@ -162,21 +162,21 @@ function LightingEditorView:UpdateLighting()
     self.updating = false
 end
 
-function LightingEditorView:OnCommandExecuted()
+function LightingEditor:OnCommandExecuted()
     if not self._startedChanging then
         self:UpdateLighting()
     end
 end
 
-function LightingEditorView:OnStartChange(name)
+function LightingEditor:OnStartChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
-function LightingEditorView:OnEndChange(name)
+function LightingEditor:OnEndChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
-function LightingEditorView:OnFieldChange(name, value)
+function LightingEditor:OnFieldChange(name, value)
     if self.initializing or self.updating then
         return
     end

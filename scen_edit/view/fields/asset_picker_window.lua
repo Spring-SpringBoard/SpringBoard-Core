@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-AssetPickerWindow = EditorView:extends{}
+AssetPickerWindow = Editor:extends{}
 
 function AssetPickerWindow:init(opts)
     self:super("init")

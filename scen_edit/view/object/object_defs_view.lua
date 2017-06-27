@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-ObjectDefsView = EditorView:extends{}
+ObjectDefsView = Editor:extends{}
 
 function ObjectDefsView:init()
     self:super("init")

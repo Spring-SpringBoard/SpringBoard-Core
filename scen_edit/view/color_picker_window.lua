@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-ColorPickerWindow = EditorView:extends{}
+ColorPickerWindow = Editor:extends{}
 
 function ColorPickerWindow:init(color)
     self:super("init")

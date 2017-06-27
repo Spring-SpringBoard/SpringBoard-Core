@@ -1,8 +1,8 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-WaterEditorView = EditorView:extends{}
+WaterEditor = Editor:extends{}
 
-function WaterEditorView:init()
+function WaterEditor:init()
     self:super("init")
 
     self.initializing = true
@@ -277,7 +277,7 @@ function _ColorArrayToChannels(colorArray)
     return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
 end
 
-function WaterEditorView:UpdateWaterRendering()
+function WaterEditor:UpdateWaterRendering()
     if not gl.GetWaterRendering then
         Log.Warning("gl.GetWaterRendering missing; Update to newer engine.")
         return
@@ -324,21 +324,21 @@ function WaterEditorView:UpdateWaterRendering()
     self.updating = false
 end
 
-function WaterEditorView:OnCommandExecuted()
+function WaterEditor:OnCommandExecuted()
     if not self._startedChanging then
         self:UpdateWaterRendering()
     end
 end
 
-function WaterEditorView:OnStartChange(name)
+function WaterEditor:OnStartChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
-function WaterEditorView:OnEndChange(name)
+function WaterEditor:OnEndChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
-function WaterEditorView:OnFieldChange(name, value)
+function WaterEditor:OnFieldChange(name, value)
     if self.initializing or self.updating then
         return
     end

@@ -1,10 +1,10 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
-DNTSEditorView = EditorView:extends{}
+DNTSEditor = Editor:extends{}
 
-function DNTSEditorView:init()
+function DNTSEditor:init()
     self.initializing = true
     self:super("init")
     self:AddField(MaterialField({
@@ -211,7 +211,7 @@ function DNTSEditorView:init()
     self.initializing = false
 end
 
-function DNTSEditorView:_UpdateDNTS()
+function DNTSEditor:_UpdateDNTS()
     if not gl.GetMapRendering then
         return
     end
@@ -223,19 +223,19 @@ function DNTSEditorView:_UpdateDNTS()
     self:Set("splatTexMult", splatTexMults[index])
 end
 
-function DNTSEditorView:OnStartChange(name)
+function DNTSEditor:OnStartChange(name)
     if name == "splatTexScale" or name == "splatTexMult" then
         SB.commandManager:execute(SetMultipleCommandModeCommand(true))
     end
 end
 
-function DNTSEditorView:OnEndChange(name)
+function DNTSEditor:OnEndChange(name)
     if name == "splatTexScale" or name == "splatTexMult" then
         SB.commandManager:execute(SetMultipleCommandModeCommand(false))
     end
 end
 
-function DNTSEditorView:OnFieldChange(name, value)
+function DNTSEditor:OnFieldChange(name, value)
     local brush = self.savedBrushes:GetSelectedBrush()
     if brush then
         self.savedBrushes:UpdateBrush(brush.brushID, name, value)
@@ -267,14 +267,14 @@ function DNTSEditorView:OnFieldChange(name, value)
     end
 end
 
-function DNTSEditorView:IsValidTest(state)
+function DNTSEditor:IsValidTest(state)
     return state:is_A(TerrainChangeTextureState)
 end
 
-function DNTSEditorView:OnLeaveState(state)
+function DNTSEditor:OnLeaveState(state)
     self.btnDNTS:SetPressedState(false)
 end
 
-function DNTSEditorView:OnEnterState(state)
+function DNTSEditor:OnEnterState(state)
     self.btnDNTS:SetPressedState(true)
 end

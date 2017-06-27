@@ -1,8 +1,8 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-MetalEditorView = EditorView:extends{}
+MetalEditor = Editor:extends{}
 
-function MetalEditorView:init()
+function MetalEditor:init()
     self:super("init")
 
     self.btnAddMetal = TabbedPanelButton({
@@ -44,16 +44,16 @@ function MetalEditorView:init()
     self:Finalize(children)
 end
 
-function MetalEditorView:IsValidTest(state)
+function MetalEditor:IsValidTest(state)
     return state:is_A(MetalEditingState)
 end
 
-function MetalEditorView:OnLeaveState(state)
+function MetalEditor:OnLeaveState(state)
     for _, btn in pairs({self.btnAddMetal}) do
         btn:SetPressedState(false)
     end
 end
 
-function MetalEditorView:OnEnterState(state)
+function MetalEditor:OnEnterState(state)
     self.btnAddMetal:SetPressedState(true)
 end

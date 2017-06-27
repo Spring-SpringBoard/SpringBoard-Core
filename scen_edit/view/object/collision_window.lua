@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-CollisionView = EditorView:extends{}
+CollisionView = Editor:extends{}
 
 function CollisionView:init()
     self:super("init")

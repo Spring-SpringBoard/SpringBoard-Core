@@ -1,5 +1,5 @@
-SB.Include(SB_VIEW_DIR .. "editor_view.lua")
-PlayersWindow = EditorView:extends{}
+SB.Include(SB_VIEW_DIR .. "editor.lua")
+PlayersWindow = Editor:extends{}
 
 function PlayersWindow:init()
     self:super("init")

@@ -1,5 +1,5 @@
-SB.Include(SB_VIEW_DIR .. "editor_view.lua")
-DiplomacyWindow = EditorView:extends{}
+SB.Include(SB_VIEW_DIR .. "editor.lua")
+DiplomacyWindow = Editor:extends{}
 
 function DiplomacyWindow:init(trigger)
     self:super("init")

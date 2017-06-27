@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-ObjectPropertyWindow = EditorView:extends{}
+ObjectPropertyWindow = Editor:extends{}
 
 function ObjectPropertyWindow:init()
     self:super("init")

@@ -1,6 +1,6 @@
-EditorView = LCS.class{}
+Editor = LCS.class{}
 
-function EditorView:init(opts)
+function Editor:init(opts)
     self.fields = {}
     self.fieldOrder = {}
 
@@ -39,38 +39,38 @@ function EditorView:init(opts)
 end
 
 -- Override
-function EditorView:OnStartChange(name, value)
+function Editor:OnStartChange(name, value)
 end
 -- Override
-function EditorView:OnEndChange(name, value)
+function Editor:OnEndChange(name, value)
 end
 -- Override
-function EditorView:OnFieldChange(name, value)
+function Editor:OnFieldChange(name, value)
 end
 -- Override
-function EditorView:IsValidTest(state)
+function Editor:IsValidTest(state)
     return false
 end
 -- Override
-function EditorView:OnEnterState(state)
+function Editor:OnEnterState(state)
 end
 -- Override
-function EditorView:OnLeaveState(state)
+function Editor:OnLeaveState(state)
 end
 
-function EditorView:_OnEnterState(state)
+function Editor:_OnEnterState(state)
     if self:IsValidTest(state) then
         self:OnEnterState(state)
     end
 end
-function EditorView:_OnLeaveState(state)
+function Editor:_OnLeaveState(state)
     if self:IsValidTest(state) then
         self:OnLeaveState(state)
     end
 end
 
 -- NOTICE: Invoke :Finalize at the end of init
-function EditorView:Finalize(children, opts)
+function Editor:Finalize(children, opts)
     opts = opts or {}
     table.insert(children, self.btnClose)
 
@@ -111,7 +111,7 @@ function EditorView:Finalize(children, opts)
     end
 end
 
-function EditorView:_MEGA_HACK()
+function Editor:_MEGA_HACK()
     -- FIXME: Mega hack to manually resize the stackPanel since autosize is broken
     SB.delay(function()
     SB.delay(function()
@@ -129,7 +129,7 @@ function EditorView:_MEGA_HACK()
 end
 
 -- Don't use this directly because ordering would be messed up.
-function EditorView:_SetFieldVisible(name, visible)
+function Editor:_SetFieldVisible(name, visible)
     if not self.fields[name] then
         Log.Error("Trying to set visibility on an invalid field: " .. tostring(name))
         return
@@ -155,7 +155,7 @@ function EditorView:_SetFieldVisible(name, visible)
     end
 end
 
-function EditorView:SetInvisibleFields(...)
+function Editor:SetInvisibleFields(...)
     self.stackPanel:DisableRealign()
 
     local fields = {...}
@@ -184,7 +184,7 @@ function EditorView:SetInvisibleFields(...)
     self:_MEGA_HACK()
 end
 
-function EditorView:RemoveField(name)
+function Editor:RemoveField(name)
     local field = self.fields[name]
     for i, orderName in pairs(self.fieldOrder) do
         if orderName == name then
@@ -195,7 +195,7 @@ function EditorView:RemoveField(name)
     self.stackPanel:RemoveChild(field.ctrl)
     self.fields[name] = nil
 end
-function EditorView:AddField(field)
+function Editor:AddField(field)
     if field.components then
         field.ctrl = self:_AddControl(field.name, field.components)
     end
@@ -203,12 +203,12 @@ function EditorView:AddField(field)
     field:Added()
 end
 
-function EditorView:_AddField(field)
+function Editor:_AddField(field)
     self.fields[field.name] = field
     field.ev = self
 end
 
-function EditorView:AddControl(name, children)
+function Editor:AddControl(name, children)
     self.fields[name] = {
         ctrl = self:_AddControl(name, children),
         name = name,
@@ -216,7 +216,7 @@ function EditorView:AddControl(name, children)
     return self.fields[name]
 end
 
-function EditorView:_AddControl(name, children)
+function Editor:_AddControl(name, children)
     local ctrl = Control:New {
         autosize = true,
         padding = {0, 0, 0, 0},
@@ -227,11 +227,11 @@ function EditorView:_AddControl(name, children)
     return ctrl
 end
 
-function EditorView:Set(name, value)
+function Editor:Set(name, value)
     local field = self.fields[name]
     field:Set(value)
 end
-function EditorView:Update(name, _source)
+function Editor:Update(name, _source)
     local field = self.fields[name]
 
     field:Update(_source)
@@ -244,21 +244,21 @@ function EditorView:Update(name, _source)
     end
 end
 
-function EditorView:_OnStartChange(name)
+function Editor:_OnStartChange(name)
     if not self._startedChanging then
         self._startedChanging = true
         self:OnStartChange(name)
     end
 end
 
-function EditorView:_OnEndChange(name)
+function Editor:_OnEndChange(name)
     if self._startedChanging then
         self._startedChanging = false
         self:OnEndChange(name)
     end
 end
 
-function EditorView:Serialize()
+function Editor:Serialize()
     local retVal = {}
     for name, field in pairs(self.fields) do
         retVal[name] = field.value
@@ -266,7 +266,7 @@ function EditorView:Serialize()
     return retVal
 end
 
-function EditorView:Load(tbl)
+function Editor:Load(tbl)
     -- set missing fields to nil
     for name, field in pairs(self.fields) do
         -- some fields (like GroupField) don't have .Set

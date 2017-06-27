@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor_view.lua"))
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-AnimationsView = EditorView:extends{}
+AnimationsView = Editor:extends{}
 
 function AnimationsView:init()
     self:super("init")
