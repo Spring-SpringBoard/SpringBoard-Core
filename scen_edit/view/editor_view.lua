@@ -184,7 +184,7 @@ function EditorView:SetInvisibleFields(...)
     self:_MEGA_HACK()
 end
 
-function EditorView:Remove(name)
+function EditorView:RemoveField(name)
     local field = self.fields[name]
     for i, orderName in pairs(self.fieldOrder) do
         if orderName == name then

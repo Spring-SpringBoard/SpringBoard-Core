@@ -519,10 +519,10 @@ end
 
 function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
     if #self.rules > 0 then
-        self:Remove("rule-sep")
+        self:RemoveField("rule-sep")
     end
     for _, rule in pairs(self.rules) do
-        self:Remove(rule)
+        self:RemoveField(rule)
     end
     self.rules = {}
     local addedRule = false
