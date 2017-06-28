@@ -1,6 +1,8 @@
 Field = LCS.class{}
 function Field:init(field)
-    self.height = 30
+    if not self.height then
+        self.height = 30
+    end
     for k, v in pairs(field) do
         self[k] = v
     end

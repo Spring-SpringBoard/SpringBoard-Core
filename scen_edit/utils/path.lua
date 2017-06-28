@@ -71,3 +71,11 @@ function Path.Join(dir, path)
         return dir .. path
     end
 end
+
+function Path.GetExt(path)
+    -- Find the last dot in the path
+    local index = string.find(path, ".[^.]*$")
+    if index then
+        return path:sub(index)
+    end
+end

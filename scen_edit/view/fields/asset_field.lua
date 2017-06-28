@@ -5,12 +5,25 @@ AssetField.defaultPaths = {}
 
 function AssetField:Update(source)
     self.lblValue:SetCaption(self:GetCaption())
+    if source ~= self.assetWindow then
+        self.assetWindow.assetBrowser:SelectAsset(self:GetPath())
+    end
 end
 
 function AssetField:init(field)
-    self.width = 200
     self.value = "/"
+    if field.expand then
+        self.height = 200
+    end
     Field.init(self, field)
+
+    if not self.width then
+        if self.expand then
+            self.width = 450
+        else
+            self.width = 200
+        end
+    end
 
     self.lblValue = Label:New {
         caption = self:GetCaption(),
@@ -40,18 +53,7 @@ function AssetField:init(field)
         OnClick = {
             function(...)
                 if not self.notClick then
-                    --local folderPath = Path.ExtractDir(self.value)
-                    --self.AssetFieldWindow = FilePickerWindow(folderPath)
-                    --self.AssetFieldWindow.field = self
-                    self:MakePickerWindow({
-                        rootDir = self.rootDir,
-                        path = self:GetPath() or self:GetDefaultPath(),
-                        OnSelectItem = {
-                            function(item)
-                                self:OnSelectItem(item)
-                            end
-                        }
-                    })
+                    self.assetWindow.window:Show()
                 end
             end
         },
@@ -61,9 +63,33 @@ function AssetField:init(field)
         },
     }
 
-    self.components = {
-        self.button,
-    }
+    --local folderPath = Path.ExtractDir(self.value)
+    --self.AssetFieldWindow = FilePickerWindow(folderPath)
+    --self.AssetFieldWindow.field = self
+    self.assetWindow = self:MakePickerWindow({
+        rootDir = self.rootDir,
+        path = self:GetPath() or self:GetDefaultPath(),
+        OnSelectItem = {
+            function(item)
+                self:OnSelectItem(item)
+            end
+        },
+        expand = self.expand,
+        itemHeight = self.itemHeight,
+        itemWidth = self.itemWidth,
+    })
+    self.assetWindow.window:Hide()
+
+    if self.expand then
+        self.assetWindow.window:SetPos(0, 0, self.width, self.height)
+        self.components = {
+            self.assetWindow.window
+        }
+    else
+        self.components = {
+            self.button,
+        }
+    end
 end
 
 function AssetField:GetDefaultPath()
@@ -75,7 +101,7 @@ function AssetField:SetDefaultPath(path)
 end
 
 function AssetField:OnSelectItem(item)
-    self:Set(item)
+    self:Set(item, self.assetWindow)
     self:SetDefaultPath(self:GetPath())
 end
 

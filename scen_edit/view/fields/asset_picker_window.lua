@@ -12,7 +12,18 @@ function AssetPickerWindow:init(opts)
 
     self.selectedFile = {}
 
-    self.assetBrowser = self:MakeAssetView(rootDir, dir, OnSelectItem)
+    local bottom = 30
+    if opts.expand then
+        bottom = 0
+    end
+    self.assetBrowser = self:MakeAssetView({
+        rootDir = rootDir,
+        dir = dir,
+        OnSelectItem = OnSelectItem,
+        bottom = bottom,
+        itemWidth = opts.itemWidth,
+        itemHeight = opts.itemHeight,
+    })
     local children = {
         self.assetBrowser:GetControl(),
     }
@@ -28,19 +39,25 @@ function AssetPickerWindow:init(opts)
             children = { self.stackPanel },
         }
     )
-    self:Finalize(children, {notMainWindow = true})
+    if opts.expand then
+        self:Finalize(children, {noCloseButton = true})
+    else
+        self:Finalize(children, {notMainWindow = true, noDispose = true})
+    end
 end
 
-function AssetPickerWindow:MakeAssetView(rootDir, dir, OnSelectItem)
+function AssetPickerWindow:MakeAssetView(opts)
     return AssetView({
         ctrl = {
             x = 0,
             right = 0,
             y = 0,
-            bottom = 30,
+            bottom = opts.bottom,
         },
-        rootDir = rootDir,
-        dir = dir,
+        rootDir = opts.rootDir,
+        dir = opts.dir,
+        itemWidth = opts.itemWidth,
+        itemHeight = opts.itemHeight,
         OnSelectItem = {
             function(item, selected)
                 local path = item.path
@@ -54,7 +71,7 @@ function AssetPickerWindow:MakeAssetView(rootDir, dir, OnSelectItem)
                     self.selectedFile[path] = false
                 end
 
-                CallListeners(OnSelectItem, path)
+                CallListeners(opts.OnSelectItem, path)
             end
         },
     })

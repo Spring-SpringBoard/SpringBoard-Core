@@ -15,9 +15,6 @@ function BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOp
     if drawOpts.color then
         gl.Color(drawOpts.color[1], drawOpts.color[2], drawOpts.color[3], drawOpts.color[4])
     end
-    if drawOpts.offset then
-
-    end
 
     gl.MatrixMode(GL.TEXTURE)
     gl.LoadIdentity()

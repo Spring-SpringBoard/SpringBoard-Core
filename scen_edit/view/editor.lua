@@ -72,7 +72,9 @@ end
 -- NOTICE: Invoke :Finalize at the end of init
 function Editor:Finalize(children, opts)
     opts = opts or {}
-    table.insert(children, self.btnClose)
+    if not opts.noCloseButton then
+        table.insert(children, self.btnClose)
+    end
 
     if not opts.notMainWindow then
         self.window = Control:New {
@@ -87,14 +89,17 @@ function Editor:Finalize(children, opts)
             right = 0,
             caption = '',
             children = children,
+            padding = {0,0,0,0},
         }
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
         SB.view:SetMainPanel(self.window)
     else
-        table.insert(self.btnClose.OnClick, function()
-            self.window:Dispose()
-        end)
+        if not opts.noDispose then
+            table.insert(self.btnClose.OnClick, function()
+                self.window:Dispose()
+            end)
+        end
         -- TODO: Make configurable
         self.window = Window:New {
             parent = screen0,
@@ -263,8 +268,6 @@ function Editor:Serialize()
     for name, field in pairs(self.fields) do
         if field.Serialize then
             retVal[name] = field:Serialize()
-        else
-            Spring.Echo(name)
         end
     end
     return retVal

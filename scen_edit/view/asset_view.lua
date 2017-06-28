@@ -107,7 +107,7 @@ function AssetView:ScanDir()
     local files = self:_DirList()
     self.files = {}
     for _, file in pairs(files) do
-        local ext = (file:GetExt() or ""):lower()
+        local ext = (Path.GetExt(file) or ""):lower()
         if table.ifind(image_exts, ext) then
             if self:FilterFile(file) then
                 table.insert(self.files, file)

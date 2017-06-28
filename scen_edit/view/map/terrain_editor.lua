@@ -12,9 +12,27 @@ Editor.Register({
     image = SB_IMG_DIR .. "palette.png",
 })
 
+local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.tif'}
+
 function TerrainEditor:init()
     self.initializing = true
     self:super("init")
+    self:AddField(AssetField({
+        name = "patternTexture",
+        title = "Pattern:",
+        rootDir = "brush_patterns/terrain/",
+        expand = true,
+        itemWidth = 65,
+        itemHeight = 65,
+        Validate = function(obj, value)
+            if not AssetField.Validate(obj, value) then
+                return false
+            end
+
+            local ext = Path.GetExt(value) or ""
+            return table.ifind(image_exts, ext), value
+        end
+    }))
     self:AddField(MaterialField({
         name = "brushTexture",
         title = "Texture:",
@@ -22,54 +40,14 @@ function TerrainEditor:init()
         rootDir = "brush_textures/",
         width = 200,
     }))
-    self:AddField(Field({
-        name = "patternTexture",
-        Update = function(...)
-            local path = self.fields["patternTexture"].value
-            local item = self.patternTextureImages:GetSelectedItems()[1]
-            if not item or (path ~= item and item.isFile) then
-                if path then
-                    self.patternTextureImages:SelectAsset(path)
-                else
-                    self.patternTextureImages:DeselectAll()
-                end
-            end
-        end,
-        Serialize = function()
-            return self.fields["patternTexture"].value
-        end,
-        Load = function(data)
-            self.patternTextureImages:SetDir(Path.GetParentDir(data))
-            Spring.Echo("Path.GetParentDir(data)", Path.GetParentDir(data))
-            self.fields["patternTexture"]:Set(data)
-        end,
-    }))
-    self.patternTextureImages = AssetView({
-        ctrl = {
-            x = 0,
-            right = 0,
-            y = 70,
-            bottom = "70%", -- 100 - 30
-        },
-        multiSelect = false,
-        itemWidth = 65,
-        itemHeight = 65,
-        rootDir = "brush_patterns/terrain/",
-        OnSelectItem = {
-            function(item, selected)
-                self:Set("patternTexture", nil)
-                if selected then
-                    self:Set("patternTexture", item.path)
-                end
-            end
-        },
-    })
     self.savedBrushes = SavedBrushes({
         ctrl = {
             x = 0,
             right = 0,
-            y = "30%",
-            bottom = "45%", -- 100 - 55
+            --y = "30%",
+            --bottom = "45%", -- 100 - 55
+            y = 70,
+            bottom = "65%", -- 100 - 55
         },
         editor = self,
         name = "mapMaterials",
@@ -102,6 +80,7 @@ function TerrainEditor:init()
             return texName
         end,
     })
+
     self.savedDNTSBrushes = SavedBrushes({
         ctrl = {
             x = 0,
@@ -462,12 +441,13 @@ function TerrainEditor:init()
         self.btnFilter,
         self.btnDNTS,
         self.btnVoid,
-        self.patternTextureImages:GetControl(),
+        --self.patternTextureImages:GetControl(),
         self.savedBrushes:GetControl(),
         self.savedDNTSBrushes:GetControl(),
         ScrollPanel:New {
             x = 0,
-            y = "55%",
+            --y = "55%",
+            y = "35%",
             bottom = 30,
             right = 0,
             borderColor = {0,0,0,0},
