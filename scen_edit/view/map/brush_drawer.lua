@@ -17,6 +17,7 @@ function BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOp
     end
 
     gl.MatrixMode(GL.TEXTURE)
+    --gl.PushMatrix()
     gl.LoadIdentity()
     if drawOpts.offset then
         gl.Translate(drawOpts.offset[1], drawOpts.offset[2], 0.0)
@@ -30,5 +31,6 @@ function BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOp
         gl.Scale(drawOpts.scale, drawOpts.scale, drawOpts.scale)
     end
     SB.model.textureManager:Blit(texFile, luaTex)
+    --gl.PopMatrix()
     gl.MatrixMode(GL.MODELVIEW)
 end
