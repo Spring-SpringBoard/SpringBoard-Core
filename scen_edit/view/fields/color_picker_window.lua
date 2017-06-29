@@ -2,10 +2,14 @@ SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 ColorPickerWindow = Editor:extends{}
 
-function ColorPickerWindow:init(color)
+function ColorPickerWindow:init(opts)
     self:super("init")
 
-    self.color = color or {1, 1, 1, 1}
+    self.color = opts.color or {1, 1, 1, 1}
+    self.OnUpdate = opts.OnUpdate
+    -- Listeners suffix is necessary as the self.On*Change methods exist
+    self.OnStartChangeListeners = opts.OnStartChange
+    self.OnEndChangeListeners = opts.OnEndChange
 
     self:AddField(ColorPickerField({
         name = "hsvColor",
@@ -72,7 +76,11 @@ function ColorPickerWindow:init(color)
             children = { self.stackPanel },
         }
     )
-    self:Finalize(children, {notMainWindow = true})
+    if opts.expand then
+        self:Finalize(children, {noCloseButton = true})
+    else
+        self:Finalize(children, {notMainWindow = true, noDispose = true})
+    end
 end
 
 function rgb2hsv(value)
@@ -150,17 +158,16 @@ function ColorFieldPickerWindow:OnFieldChange(name, value)
         self:Set("rgbColor", value)
     end
     self.updating = false
-    if self.field then
-        self.field:Set(value)
-    end
+
+    CallListeners(self.OnUpdate, value)
 end
 
 function ColorFieldPickerWindow:OnStartChange(name)
-    self.field.ev:_OnStartChange(self.field.name)
+    CallListeners(self.OnStartChangeListeners, name)
 end
 
 function ColorFieldPickerWindow:OnEndChange(name)
-    self.field.ev:_OnEndChange(self.field.name)
+    CallListeners(self.OnEndChangeListeners, name)
 end
 
 

@@ -14,16 +14,12 @@ function AssetField:init(field)
     self.value = "/"
     if field.expand then
         self.height = 200
+        self.width = 450
+    else
+        self.width = 200
     end
-    Field.init(self, field)
 
-    if not self.width then
-        if self.expand then
-            self.width = 450
-        else
-            self.width = 200
-        end
-    end
+    Field.init(self, field)
 
     self.lblValue = Label:New {
         caption = self:GetCaption(),

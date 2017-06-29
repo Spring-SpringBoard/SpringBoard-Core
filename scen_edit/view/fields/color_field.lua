@@ -6,9 +6,9 @@ function ColorField:Update(source)
     self.imValue.color = self.value
     self.imValue:Invalidate()
 
-    if self.colorPicker and source ~= self.colorPicker then
-        self.colorPicker:Set("rgbColor", self.value)
-        self.colorPicker:Set("hsvColor", self.value)
+    if source ~= self.colorWindow then
+        self.colorWindow:Set("rgbColor", self.value)
+        self.colorWindow:Set("hsvColor", self.value)
     end
 --     if source ~= self.colorbars then
 --         self.colorbars:SetColor(self.value)
@@ -16,10 +16,16 @@ function ColorField:Update(source)
 end
 
 function ColorField:init(field)
-    self.width  = 200
-    self.height = 30
     self.value  = {1, 1, 1, 1}
-    self:super('init', field)
+    if field.expand then
+        self.height = 230
+        self.width = 450
+    else
+        self.width = 200
+    end
+
+    Field.init(self, field)
+
     self.lblTitle = Label:New {
         caption = self.title,
         x = 10,
@@ -49,10 +55,9 @@ function ColorField:init(field)
         end,
         OnClick = {
             function(...)
-                self.originalValue = SB.deepcopy(self.value)
---                 self.button:Hide()
-                self.colorPicker = ColorFieldPickerWindow(self.originalValue)
-                self.colorPicker.field = self
+                if not self.notClick then
+                    self.colorWindow.window:Show()
+                end
             end
         },
         children = {
@@ -60,7 +65,41 @@ function ColorField:init(field)
             self.lblTitle,
         },
     }
-    self.components = {
-        self.button,
-    }
+
+    self.originalValue = SB.deepcopy(self.value)
+    self.colorWindow = ColorFieldPickerWindow({
+        expand = self.expand,
+        value = self.originalValue,
+        OnUpdate = {
+            function(value)
+                self:OnUpdate(value)
+            end
+        },
+        OnStartChange = {
+            function(name)
+                self.ev:_OnStartChange(self.name)
+            end
+        },
+        OnEndChange = {
+            function(name)
+                self.ev:_OnEndChange(self.name)
+            end
+        },
+    })
+    self.colorWindow.window:Hide()
+
+    if self.expand then
+        self.colorWindow.window:SetPos(0, 0, self.width, self.height)
+        self.components = {
+            self.colorWindow.window
+        }
+    else
+        self.components = {
+            self.button,
+        }
+    end
+end
+
+function ColorField:OnUpdate(value)
+    self:Set(value, self.colorWindow)
 end
