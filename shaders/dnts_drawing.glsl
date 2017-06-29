@@ -23,9 +23,7 @@ void main(void)
     vec4 patternColor = texture2D(patternTexture, gl_TexCoord[1].st);
 
 	int index = colorIndex;
-	int factor = 1;
 	if (colorIndex < 0) {
-		factor = -1;
 		index = -index;
 	}
 	index = index - 1;
@@ -49,9 +47,7 @@ void main(void)
 			color = vec4(1.0 - value);
 		}
 		color = mix(mapColor, color, blendFactor * patternColor.a);
-		if (colorIndex > 0) {
-			color = max(mapColor, color);
-		} else {
+		if (colorIndex < 0) {
 			color = min(mapColor, color);
 		}
 		gl_FragColor = color;
