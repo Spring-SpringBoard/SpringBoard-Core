@@ -2,17 +2,17 @@ SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
-TerrainEditor = Editor:extends{}
+TextureEditor = Editor:extends{}
 Editor.Register({
-    name = "terrainEditor",
-    editor = TerrainEditor,
+    name = "textureEditor",
+    editor = TextureEditor,
     tab = "Map",
     caption = "Texture",
     tooltip = "Edit textures",
     image = SB_IMG_DIR .. "palette.png",
 })
 
-function TerrainEditor:init()
+function TextureEditor:init()
     self.initializing = true
     self:super("init")
 
@@ -472,7 +472,7 @@ function TerrainEditor:init()
     self.initializing = false
 end
 
-function TerrainEditor:__AddEngineDNTSTexture(textureName, dntsIndex)
+function TextureEditor:__AddEngineDNTSTexture(textureName, dntsIndex)
     local tbl = self:Serialize()
 
     tbl.dntsIndex = dntsIndex
@@ -493,11 +493,11 @@ function TerrainEditor:__AddEngineDNTSTexture(textureName, dntsIndex)
     })
 end
 
-function TerrainEditor:_GetDNTSIndex()
+function TextureEditor:_GetDNTSIndex()
     return self.fields["dntsIndex"].value
 end
 
-function TerrainEditor:__GetBrushDrawOpts()
+function TextureEditor:__GetBrushDrawOpts()
     return {
         color = self.fields["diffuseColor"].value,
         rotation = self.fields["rotation"].value,
@@ -509,19 +509,19 @@ function TerrainEditor:__GetBrushDrawOpts()
     }
 end
 
-function TerrainEditor:OnStartChange(name)
+function TextureEditor:OnStartChange(name)
     if name == "splatTexScale" or name == "splatTexMult" then
         SB.commandManager:execute(SetMultipleCommandModeCommand(true))
     end
 end
 
-function TerrainEditor:OnEndChange(name)
+function TextureEditor:OnEndChange(name)
     if name == "splatTexScale" or name == "splatTexMult" then
         SB.commandManager:execute(SetMultipleCommandModeCommand(false))
     end
 end
 
-function TerrainEditor:OnFieldChange(name, value)
+function TextureEditor:OnFieldChange(name, value)
     if self.initializing then
         return
     end
@@ -568,23 +568,23 @@ function TerrainEditor:OnFieldChange(name, value)
     end
 end
 
-function TerrainEditor:_EnterState(paintMode)
+function TextureEditor:_EnterState(paintMode)
     local state = TerrainChangeTextureState(self)
     state.paintMode = paintMode
     SB.stateManager:SetState(state)
 end
 
-function TerrainEditor:IsValidTest(state)
+function TextureEditor:IsValidTest(state)
     return state:is_A(TerrainChangeTextureState)
 end
 
-function TerrainEditor:OnLeaveState(state)
+function TextureEditor:OnLeaveState(state)
     for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS, self.btnVoid}) do
         btn:SetPressedState(false)
     end
 end
 
-function TerrainEditor:OnEnterState(state)
+function TextureEditor:OnEnterState(state)
     if state.paintMode == "paint" then
         self.btnPaint:SetPressedState(true)
     elseif state.paintMode == "blur" then

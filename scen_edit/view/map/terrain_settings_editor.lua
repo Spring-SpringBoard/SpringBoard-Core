@@ -1,16 +1,16 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-TerrainSettingsView = Editor:extends{}
+TerrainSettingsEditor = Editor:extends{}
 Editor.Register({
     name = "terrainSettings",
-    editor = TerrainSettingsView,
+    editor = TerrainSettingsEditor,
     tab = "Map",
     caption = "Settings",
     tooltip = "Edit map settings",
     image = SB_IMG_DIR .. "globe.png",
 })
 
-function TerrainSettingsView:init()
+function TerrainSettingsEditor:init()
     self:super("init")
 
     self.initializing = true
@@ -66,7 +66,7 @@ function _ColorArrayToChannels(colorArray)
     return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
 end
 
-function TerrainSettingsView:UpdateMapRendering()
+function TerrainSettingsEditor:UpdateMapRendering()
     if not gl.GetMapRendering then
         return
     end
@@ -76,15 +76,15 @@ function TerrainSettingsView:UpdateMapRendering()
     self:Set("splatDetailNormalDiffuseAlpha", gl.GetMapRendering("splatDetailNormalDiffuseAlpha"))
 end
 
-function TerrainSettingsView:OnStartChange(name)
+function TerrainSettingsEditor:OnStartChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
-function TerrainSettingsView:OnEndChange(name)
+function TerrainSettingsEditor:OnEndChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
 
-function TerrainSettingsView:OnFieldChange(name, value)
+function TerrainSettingsEditor:OnFieldChange(name, value)
     if self.initializing then
         return
     end
