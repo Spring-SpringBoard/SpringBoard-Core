@@ -19,7 +19,7 @@ function FeatureTypePanel:MakePredefinedOpt()
         featureTypeID = nil,
     }
     self.OnSelectObjectType = function(featureTypeID)
-        self.btnPredefined.featureTypeID = featureTypeID
+        self.featureTypeID = featureTypeID
         local defName = featureBridge.ObjectDefs[featureTypeID].name
         self.btnPredefined.caption = "ID=" .. defName
         self.btnPredefined:Invalidate()
@@ -36,9 +36,9 @@ function FeatureTypePanel:MakePredefinedOpt()
 end
 
 function FeatureTypePanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.featureTypeID ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.featureTypeID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.featureTypeID
+        field.value = self.featureTypeID
         return true
     end
     return self:super('UpdateModel', field)

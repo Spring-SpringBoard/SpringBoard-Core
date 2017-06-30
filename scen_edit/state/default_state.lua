@@ -76,7 +76,7 @@ function DefaultState:MakeAreaTrigger(areaID)
             {
                 typeName = "compare_area",
                 first = {
-                    id = areaID,
+                    value = areaID,
                     type = "pred",
                 },
                 relation = {

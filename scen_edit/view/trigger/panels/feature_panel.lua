@@ -20,7 +20,7 @@ function FeaturePanel:MakePredefinedOpt()
         featureID = nil,
     }
     self.OnSelectObject = function(objectID)
-        self.btnPredefined.featureID = objectID
+        self.featureID = objectID
         self.btnPredefined.caption = "ID=" .. objectID
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
@@ -49,8 +49,8 @@ function FeaturePanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                if self.btnPredefined.featureID ~= nil then
-                    local featureID = SB.model.featureManager:getSpringFeatureID(self.btnPredefined.featureID)
+                if self.featureID ~= nil then
+                    local featureID = SB.model.featureManager:getSpringFeatureID(self.featureID)
                     if featureID ~= nil and Spring.ValidFeatureID(featureID) then
                         local x, y, z = Spring.GetFeaturePosition(featureID)
                         SB.view.selectionManager:Select({
@@ -65,9 +65,9 @@ function FeaturePanel:MakePredefinedOpt()
 end
 
 function FeaturePanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.featureID ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.featureID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.featureID
+        field.value = self.featureID
         return true
     end
     return self:super('UpdateModel', field)

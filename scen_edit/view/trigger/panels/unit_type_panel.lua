@@ -19,7 +19,7 @@ function UnitTypePanel:MakePredefinedOpt()
         unitTypeID = nil,
     }
     self.OnSelectObjectType = function(unitTypeID)
-        self.btnPredefined.unitTypeID = unitTypeID
+        self.unitTypeID = unitTypeID
         local defName = unitBridge.ObjectDefs[unitTypeID].name
         self.btnPredefined.caption = "ID=" .. defName
         self.btnPredefined:Invalidate()
@@ -36,9 +36,9 @@ function UnitTypePanel:MakePredefinedOpt()
 end
 
 function UnitTypePanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitTypeID ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.unitTypeID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.unitTypeID
+        field.value = self.unitTypeID
         return true
     end
     return self:super('UpdateModel', field)

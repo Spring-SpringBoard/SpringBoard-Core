@@ -20,7 +20,7 @@ function PositionPanel:MakePredefinedOpt()
         position = nil,
     }
     self.OnSelectPosition = function(position)
-        self.btnPredefined.position = position
+        self.position = position
         self.btnPredefined.caption = 'pos'
         self.btnPredefined.tooltip = "(" .. tostring(position.x) .. ", " .. tostring(position.y) .. ", " .. tostring(position.z) .. ")"
         self.btnPredefined:Invalidate()
@@ -50,7 +50,7 @@ function PositionPanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                local position = self.btnPredefined.position
+                local position = self.position
                 if position ~= nil then
                     Spring.MarkerAddPoint(position.x, position.y, position.z, "")
                 end
@@ -60,9 +60,9 @@ function PositionPanel:MakePredefinedOpt()
 end
 
 function PositionPanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.position ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.position ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.position
+        field.value = self.position
         return true
     elseif self.cbSpecialPosition and self.cbSpecialPosition.checked then
         field.type = "spec"

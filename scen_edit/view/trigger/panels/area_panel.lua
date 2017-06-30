@@ -19,7 +19,7 @@ function AreaPanel:MakePredefinedOpt()
         areaID = nil,
     }
     self.OnSelectArea = function(areaID)
-        self.btnPredefined.areaID = areaID
+        self.areaID = areaID
         self.btnPredefined.caption = "ID=" .. areaID
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
@@ -48,8 +48,8 @@ function AreaPanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                if self.btnPredefined.areaID ~= nil then
-                    local area = SB.model.areaManager:getArea(self.btnPredefined.areaID)
+                if self.areaID ~= nil then
+                    local area = SB.model.areaManager:getArea(self.areaID)
                     if area ~= nil then
                         local x = (area[1] + area[3]) / 2
                         local z = (area[2] + area[4]) / 2
@@ -63,9 +63,9 @@ function AreaPanel:MakePredefinedOpt()
 end
 
 function AreaPanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.areaID ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.areaID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.areaID
+        field.value = self.areaID
         return true
     end
     return self:super('UpdateModel', field)

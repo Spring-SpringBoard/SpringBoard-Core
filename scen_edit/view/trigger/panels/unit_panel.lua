@@ -20,7 +20,7 @@ function UnitPanel:MakePredefinedOpt()
         unitID = nil,
     }
     self.OnSelectObject = function(objectID)
-        self.btnPredefined.unitID = objectID
+        self.unitID = objectID
         self.btnPredefined.caption = "ID=" .. objectID
         self.btnPredefined:Invalidate()
         if not self.cbPredefined.checked then
@@ -49,8 +49,8 @@ function UnitPanel:MakePredefinedOpt()
         },
         OnClick = {
             function()
-                if self.btnPredefined.unitID ~= nil then
-                    local unitID = SB.model.unitManager:getSpringUnitID(self.btnPredefined.unitID)
+                if self.unitID ~= nil then
+                    local unitID = SB.model.unitManager:getSpringUnitID(self.unitID)
                     if unitID ~= nil and Spring.ValidUnitID(unitID) then
                         local x, y, z = Spring.GetUnitPosition(unitID)
                         Spring.SelectUnitArray({unitID})
@@ -63,9 +63,9 @@ function UnitPanel:MakePredefinedOpt()
 end
 
 function UnitPanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnPredefined.unitID ~= nil then
+    if self.cbPredefined and self.cbPredefined.checked and self.unitID ~= nil then
         field.type = "pred"
-        field.value = self.btnPredefined.unitID
+        field.value = self.unitID
         return true
     end
     return self:super('UpdateModel', field)
