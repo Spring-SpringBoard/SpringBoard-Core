@@ -5,7 +5,7 @@ function TerrainSetState:GetCommand(x, z, strength)
         x = x + self.size/2,
 		z = z + self.size/2,
         size = self.size,
-        shapeName = self.paintTexture,
+        shapeName = self.patternTexture,
         rotation = self.rotation,
         height = self.height,
 

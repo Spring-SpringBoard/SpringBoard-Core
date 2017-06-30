@@ -135,6 +135,11 @@ function AssetView:ScanDir()
 end
 
 function AssetView:SelectAsset(path)
+    if path == nil then
+        self:DeselectAll()
+        return
+    end
+
     local assetPath = self:_ToAssetPath(path)
     local dir = Path.GetParentDir(assetPath)
     self:SetDir(dir)

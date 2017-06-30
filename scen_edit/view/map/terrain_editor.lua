@@ -12,11 +12,11 @@ Editor.Register({
     image = SB_IMG_DIR .. "palette.png",
 })
 
-local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.tif'}
-
 function TerrainEditor:init()
     self.initializing = true
     self:super("init")
+
+    local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.tif'}
     self:AddField(AssetField({
         name = "patternTexture",
         title = "Pattern:",
@@ -29,6 +29,9 @@ function TerrainEditor:init()
                 return false
             end
 
+            if value == nil then
+                return true
+            end
             local ext = Path.GetExt(value) or ""
             return table.ifind(image_exts, ext), value
         end
@@ -85,8 +88,10 @@ function TerrainEditor:init()
         ctrl = {
             x = 0,
             right = 0,
-            y = "30%",
-            bottom = "45%", -- 100 - 55
+            --y = "30%",
+            --bottom = "45%", -- 100 - 55
+            y = 70,
+            bottom = "65%", -- 100 - 55
         },
         editor = self,
         disableAdd = true,
@@ -462,6 +467,7 @@ function TerrainEditor:init()
         self:__AddEngineDNTSTexture("$ssmf_splat_normals:" .. tostring(i), i+1)
     end
     self.savedDNTSBrushes:GetControl():Hide()
+    self.savedDNTSBrushes:DeselectAll()
 
     self.initializing = false
 end
@@ -516,6 +522,10 @@ function TerrainEditor:OnEndChange(name)
 end
 
 function TerrainEditor:OnFieldChange(name, value)
+    if self.initializing then
+        return
+    end
+
     if self.savedBrushes:GetControl().visible then
         local brush = self.savedBrushes:GetSelectedBrush()
         if brush then
@@ -538,10 +548,6 @@ function TerrainEditor:OnFieldChange(name, value)
                 self.savedDNTSBrushes:RefreshBrushImage(brush.brushID)
             end
         end
-    end
-
-    if self.initializing then
-        return
     end
 
     if name == "brushTexture" and self.savedDNTSBrushes:GetControl().visible then

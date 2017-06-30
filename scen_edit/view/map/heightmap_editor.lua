@@ -13,27 +13,28 @@ Editor.Register({
 function HeightmapEditor:init()
     self:super("init")
 
-    self.heightmapBrushes = AssetView({
-        ctrl = {
-			x = 0,
-			right = 0,
-			y = 70,
-            bottom = "55%", -- 100 - 45
-        },
+    local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.tif'}
+    self:AddField(AssetField({
+        name = "patternTexture",
+        title = "Pattern:",
         rootDir = "brush_patterns/terrain/",
-        OnSelectItem = {
-            function(item, selected)
-                self.paintTexture = item.path
-                if selected and item.isFile then
-                    SB.model.terrainManager:generateShape(self.paintTexture)
-                    local currentState = SB.stateManager:GetCurrentState()
-                    if currentState:is_A(AbstractHeightmapEditingState) then
-                        currentState.paintTexture = self.paintTexture
-                    end
-                end
+        expand = true,
+        itemWidth = 65,
+        itemHeight = 65,
+        Validate = function(obj, value)
+            if not AssetField.Validate(obj, value) then
+                return false
             end
-        }
-    })
+
+            local ext = Path.GetExt(value) or ""
+            return table.ifind(image_exts, ext), value
+        end,
+        Update = function(...)
+            AssetField.Update(...)
+            local texture = self.fields["patternTexture"].value
+            SB.model.terrainManager:generateShape(texture)
+        end
+    }))
 
     self.btnAddState = TabbedPanelButton({
         x = 0,
@@ -116,10 +117,9 @@ function HeightmapEditor:init()
 		self.btnAddState,
         self.btnSetState,
 		self.btnSmoothState,
-        self.heightmapBrushes:GetControl(),
 		ScrollPanel:New {
 			x = 0,
-			y = "45%",
+			y = 70,
 			bottom = 30,
 			right = 0,
 			borderColor = {0,0,0,0},
@@ -147,10 +147,6 @@ function HeightmapEditor:OnEnterState(state)
         btn = self.btnSmoothState
     end
     btn:SetPressedState(true)
-end
-
-function HeightmapEditor:Select(indx)
-    self.heightmapBrushes:Select(indx)
 end
 
 function HeightmapEditor:IsValidTest(state)

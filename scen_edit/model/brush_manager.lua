@@ -21,7 +21,7 @@ BrushManager = Observable:extends{}
 function BrushManager:init()
     self:super('init')
 
-    self.__brushIDCounter = 1
+    self.__brushIDCounter = 0
     self.savedBrushes = {}
     self.savedBrushesOrder = {}
 end

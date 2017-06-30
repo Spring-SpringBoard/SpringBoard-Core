@@ -3,7 +3,7 @@ AbstractHeightmapEditingState = AbstractMapEditingState:extends{}
 
 function AbstractHeightmapEditingState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
-    self.paintTexture        = self.editorView.paintTexture
+    self.patternTexture      = self.editorView.fields["patternTexture"].value
     self.strength            = self.editorView.fields["strength"].value
     self.height              = self.editorView.fields["height"].value
     self.applyDelay          = 0.03
@@ -63,11 +63,11 @@ function AbstractHeightmapEditingState:GetApplyParams(x, z, button)
 end
 
 function AbstractHeightmapEditingState:Apply(x, z, strength)
-    if not self.paintTexture then
+    if not self.patternTexture then
         return false
     end
-    if SB.model.terrainManager:getShape(self.paintTexture) == nil then
-        SB.model.terrainManager:generateShape(self.paintTexture)
+    if SB.model.terrainManager:getShape(self.patternTexture) == nil then
+        SB.model.terrainManager:generateShape(self.patternTexture)
     end
 
     local cmd = self:GetCommand(x, z, strength)
@@ -80,10 +80,10 @@ function AbstractHeightmapEditingState:DrawWorld()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         local x, z = coords[1], coords[3]
-        if not self.paintTexture then
+        if not self.patternTexture then
             return
         end
-        local shape = SB.model.textureManager:GetTexture(self.paintTexture)
+        local shape = SB.model.textureManager:GetTexture(self.patternTexture)
         self:DrawShape(shape, x, z)
     end
 end

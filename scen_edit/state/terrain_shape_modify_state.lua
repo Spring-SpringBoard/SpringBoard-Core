@@ -6,7 +6,7 @@ function TerrainShapeModifyState:GetCommand(x, z, strength)
 		z = z + self.size/2,
         size = self.size,
         strength = strength,
-        shapeName = self.paintTexture,
+        shapeName = self.patternTexture,
         rotation = self.rotation
     })
 end

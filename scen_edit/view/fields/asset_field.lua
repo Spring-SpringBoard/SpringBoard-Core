@@ -11,7 +11,6 @@ function AssetField:Update(source)
 end
 
 function AssetField:init(field)
-    self.value = "/"
     if field.expand then
         self.height = 200
         self.width = 450
@@ -75,6 +74,7 @@ function AssetField:init(field)
         itemWidth = self.itemWidth,
     })
     self.assetWindow.window:Hide()
+    --self.assetWindow.assetBrowser:DeselectAll()
 
     if self.expand then
         self.assetWindow.window:SetPos(0, 0, self.width, self.height)
@@ -99,18 +99,6 @@ end
 function AssetField:OnSelectItem(item)
     self:Set(item, self.assetWindow)
     self:SetDefaultPath(self:GetPath())
-end
-
-function AssetField:Serialize()
-    return {
-        value = self.value,
-        path = self:GetPath(),
-    }
-end
-
-function AssetField:Load(data)
-    self:Set(data.value)
-    self:SetDefaultPath(data.defaultPath)
 end
 
 ---------------------------------
