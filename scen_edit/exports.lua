@@ -13,7 +13,8 @@ SB_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
 
 SB_ROOT = "springboard/"
 SB_PROJECTS_DIR = SB_ROOT .. "projects/"
-SB_ASSETS_DIR   = SB_ROOT .. "assets/"
+SB_ASSETS_DIR = SB_ROOT .. "assets/"
+SB_EXTS_DIR = SB_ROOT .. "exts/"
 
 --properties
 SB_FILE_EXT = ".sdz"
