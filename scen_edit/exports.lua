@@ -7,10 +7,6 @@ SB_DIR = "scen_edit/"
 SB_COMMAND_DIR = SB_DIR .. "command/"
 SB_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
 
---FIXME: don't assume path, find it programatically
---FIXME: not used now
--- SCENARIO_EDITOR_DIR = "games/ToolBox.sdd/"
-
 SB_ROOT = "springboard/"
 SB_PROJECTS_DIR = SB_ROOT .. "projects/"
 SB_ASSETS_DIR = SB_ROOT .. "assets/"

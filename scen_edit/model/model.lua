@@ -17,8 +17,8 @@ function Model:init()
     if Script.GetName() == "LuaUI" then
         self.textureManager = TextureManager()
         self.assetsManager = AssetsManager()
-        self.extensionsManager = ExtensionsManager()
         self.brushManagers = BrushManagers()
+        self.extensionsManager = ExtensionsManager()
     end
 end
 
