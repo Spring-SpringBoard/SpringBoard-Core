@@ -190,21 +190,19 @@ function reloadGadgets()
 end
 
 function widget:DrawScreen()
-    SB.executeDelayed("DrawScreen")
-
     if SB.view ~= nil then
         SB.stateManager:DrawScreen()
         SB.view:DrawScreen()
     end
+    SB.executeDelayed("DrawScreen")
 end
 
 function widget:DrawWorld()
-    SB.executeDelayed("DrawWorld")
-
     if SB.view ~= nil then
         SB.stateManager:DrawWorld()
         SB.view:DrawWorld()
     end
+    SB.executeDelayed("DrawWorld")
     SB.displayUtil:Draw()
 end
 

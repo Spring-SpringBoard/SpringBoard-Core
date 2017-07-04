@@ -73,19 +73,6 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
 	SB.commandManager:execute(command)
 end
 
-function TerrainChangeTextureState:DrawWorld()
-    if not self.patternTexture then
-        return
-    end
-    x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground" then
-        local x, z = coords[1], coords[3]
-        local shape = SB.model.textureManager:GetTexture(self.patternTexture)
-        self:DrawShape(shape, x, z)
-    end
-end
-
 function TerrainChangeTextureState:GetApplyParams(x, z, button)
 	local applyAction = 1
 	if button == 3 then

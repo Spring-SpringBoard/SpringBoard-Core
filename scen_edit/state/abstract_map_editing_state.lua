@@ -255,24 +255,41 @@ function DrawTexturedGroundRectangle(x1,z1,x2,z2, rot, dlist)
   gl.PopMatrix()
 end
 
+local pushAttribBits = math.bit_or(GL.COLOR_BUFFER_BIT, GL.ENABLE_BIT, GL.CURRENT_BIT)
 function AbstractMapEditingState:DrawShape(shape, x, z)
-    gl.PushMatrix()
-    local scale = 1/2
---     local rotRad = math.rad(self.rotation) + math.pi/2
+    gl.PushPopMatrix(function()
+		gl.PushAttrib(pushAttribBits)
 
-    if not self.shaderObj then
-        self:initShader()
-        self.dlist = gl.CreateList(DrawRectangle)
+	    local scale = 1/2
+	--     local rotRad = math.rad(self.rotation) + math.pi/2
+
+	    if not self.shaderObj then
+	        self:initShader()
+	        self.dlist = gl.CreateList(DrawRectangle)
+	    end
+	    gl.Texture(0, shape)
+	    gl.UseShader(self.shaderObj.shader)
+	    gl.Blending("alpha_add")
+	    gl.Color(0, 1, 1, 0.5)
+	    DrawTexturedGroundRectangle(x-self.size*scale, z-self.size*scale, x+self.size*scale, z+self.size*scale, self.rotation, self.dlist)
+	    gl.UseShader(0)
+	    gl.Texture(0, false)
+
+
+		gl.PopAttrib(pushAttribBits)
+	end)
+end
+
+function AbstractMapEditingState:DrawWorld()
+    if not self.patternTexture then
+        return
     end
-    gl.Texture(0, shape)
-    gl.UseShader(self.shaderObj.shader)
-    gl.Blending("alpha_add")
-    gl.Color(0, 1, 0, 0.3)
---         gl.Utilities.DrawGroundRectangle(x-self.size, z-self.size, x+self.size, z+self.size)
-    DrawTexturedGroundRectangle(x-self.size*scale, z-self.size*scale, x+self.size*scale, z+self.size*scale, self.rotation, self.dlist)
-    gl.UseShader(0)
-    gl.Texture(0, false)
-    gl.Color(0, 1, 1, 0.5)
---     gl.Utilities.DrawGroundHollowCircle(x+self.size * math.sin(rotRad), z+self.size * math.cos(rotRad), self.size / 10, self.size / 12)
-    gl.PopMatrix()
+
+    x, y = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(x, y, true)
+    if result == "ground" then
+        local x, z = coords[1], coords[3]
+        local shape = SB.model.textureManager:GetTexture(self.patternTexture)
+        self:DrawShape(shape, x, z)
+    end
 end
