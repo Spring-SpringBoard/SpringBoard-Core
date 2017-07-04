@@ -260,7 +260,29 @@ local function GenerateScriptTxt(dev)
 end
 
 local function ScriptTxtSave(path, dev)
-	local scriptTxt = GenerateScriptTxt(dev)
+    local game
+    if not dev then
+        game = {}
+        game.name = SB.model.scenarioInfo.name
+        game.version = SB.model.scenarioInfo.version
+    end
+
+    local modOptions = {
+        deathmode = "neverend",
+        has_scenario_file = not dev,
+        play_mode = not dev,
+    }
+    if dev and SB.projectDir then
+        modOptions.project_dir = SB.projectDir
+    end
+    local teams = SB.model.teamManager:getAllTeams()
+
+    local scriptTxt = StartScript.GenerateScriptTxt({
+        game = game,
+        modOptions = modOptions,
+        --teams = teams,
+    })
+
 	local file = assert(io.open(path, "w"))
 	file:write(scriptTxt)
 	file:close()
@@ -291,6 +313,18 @@ local function GUIStateSave(path)
     table.save(guiState, path)
 end
 
+local function SBInfoSave(path)
+    local sbInfo = {
+        game = {
+            name = Game.gameName,
+            version = Game.gameVersion,
+        },
+        mapName = Game.mapName,
+    }
+
+    table.save(sbInfo, path)
+end
+
 function SaveCommand:execute()
     local projectDir = self.path
 
@@ -302,10 +336,12 @@ function SaveCommand:execute()
     HeightMapSave(Path.Join(projectDir, "heightmap.data"))
     Log.Notice("saved heightmap")
     ScriptTxtSave(Path.Join(projectDir, "script.txt"))
-    ScriptTxtSave(Path.Join(projectDir, "script-dev.txt", true))
+    ScriptTxtSave(Path.Join(projectDir, "script-dev.txt"), true)
     Log.Notice("saved scripts")
     GUIStateSave(Path.Join(projectDir, "sb_gui.lua"))
     Log.Notice("saved GUI state")
+    SBInfoSave(Path.Join(projectDir, "sb_info.lua"))
+    Log.Notice("saved SpringBoard info")
 
     if #SB.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = projectDir .. "/texturemap"

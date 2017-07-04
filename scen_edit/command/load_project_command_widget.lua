@@ -7,48 +7,45 @@ function LoadProjectCommandWidget:init(path, isZip)
     self.isZip = isZip
 end
 
-function LoadProjectCommandWidget:execute()
-    local path = self.path
-    local isZip = self.isZip
-    local modelData, heightMapdata, guiState, texturePath
+-- function LoadProjectCommandWidget:__ReloadInto(game, mapName)
+-- 	local scriptTxt = StartScript.GenerateScriptTxt({
+--         game = game,
+--         mapName = mapName,
+--     })
+-- 	Spring.Echo(scriptTxt)
+-- 	Spring.Reload(scriptTxt)
+-- end
 
-    if not isZip then
+function LoadProjectCommandWidget:execute()
+    if not self.isZip then
         SB.projectDir = self.path
         Log.Notice("set widget project dir:", SB.projectDir)
         SB.commandManager:execute(WidgetSetProjectDirCommand(SB.projectDir), true)
     end
 
-    if isZip then
-        Log.Notice("Loading archive: " .. path .. " ...")
+    -- Check if archive exists
+    if not self:__CheckExists() then
+        return
+    end
 
-        if not VFS.FileExists(path, VFS.RAW) then
-            Log.Error("Archive doesn't exist: " .. path)
-            return
-        end
+    -- Check if we're using the correct editor and map
+    if not self:__CheckCorrectEditorAndMap() then
+        return
+    end
 
-        if VFS.UnmapArchive and SB.loadedArchive ~= nil then
-            VFS.UnmapArchive(SB.loadedArchive)
-        end
-
-        VFS.MapArchive(path)
-        SB.loadedArchive = path
-        modelData = VFS.LoadFile("model.lua", VFS.ZIP)
-        heightmapData = VFS.LoadFile("heightmap.data", VFS.ZIP)
-        guiState = VFS.LoadFile("sb_gui.lua", VFS.ZIP)
+    local texturePath
+    if self.isZip then
+        Log.Notice("Loading archive: " .. self.path .. " ...")
+        self:__LoadArchive(self.path)
         texturePath = "texturemap/"
     else
-        Log.Notice("Loading project: " .. path .. " ...")
-
-        if not SB.DirExists(path, VFS.RAW) then
-            Log.Error("Project doesn't exist: " .. path)
-            return
-        end
-
-        modelData = VFS.LoadFile(Path.Join(path, "model.lua"), VFS.RAW)
-        heightmapData = VFS.LoadFile(Path.Join(path, "heightmap.data"), VFS.RAW)
-        guiState = VFS.LoadFile(Path.Join(path, "sb_gui.lua"), VFS.RAW)
-        texturePath = Path.Join(path, "texturemap/")
+        Log.Notice("Loading project: " .. self.path .. " ...")
+        texturePath = Path.Join(self.path, "texturemap/")
     end
+
+    local modelData = self:__LoadFile("model.lua")
+    local heightmapData = self:__LoadFile("heightmap.data")
+    local guiState = self:__LoadFile("sb_gui.lua")
 
     local cmds = {LoadMapCommand(heightmapData), LoadModelCommand(modelData)}
     if not hasScenarioFile and Spring.GetGameRulesParam("sb_gameMode") == "play" then
@@ -61,4 +58,57 @@ function LoadProjectCommandWidget:execute()
     SB.commandManager:execute(LoadGUIStateCommand(guiState), true)
 
     Log.Notice("Load complete.")
+end
+
+function LoadProjectCommandWidget:__CheckExists()
+    if self.isZip then
+        if not VFS.FileExists(self.path, VFS.RAW) then
+            Log.Error("Archive doesn't exist: " .. self.path)
+            return false
+        end
+    else
+        if not SB.DirExists(self.path, VFS.RAW) then
+            Log.Error("Project doesn't exist: " .. self.path)
+            return false
+        end
+    end
+    return true
+end
+
+function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
+    if self.isZip then
+        self:__LoadArchive(self.path)
+    end
+
+    local sbInfo = self:__LoadFile("sb_info.lua")
+    local sbInfo = loadstring(sbInfo)()
+    local game, mapName = sbInfo.game, sbInfo.mapName
+    if game.name ~= Game.gameName or mapName ~= Game.mapName then
+        Log.Notice("Different game (" .. game.name .. " " .. game.version ..
+            ") or map (" .. mapName .. "). Reloading into project...")
+
+        local scriptTxt = self:__LoadFile("script-dev.txt")
+        Spring.Reload(scriptTxt)
+
+        return false
+    end
+    return true
+end
+
+function LoadProjectCommandWidget:__LoadFile(fname)
+    if self.isZip then
+        return VFS.LoadFile(fname, VFS.ZIP)
+    else
+        return VFS.LoadFile(Path.Join(self.path, fname), VFS.RAW)
+    end
+end
+
+function LoadProjectCommandWidget:__LoadArchive(path)
+    if SB.loadedArchive ~= path then
+        if VFS.UnmapArchive then
+            VFS.UnmapArchive(SB.loadedArchive)
+        end
+        VFS.MapArchive(path)
+        SB.loadedArchive = path
+    end
 end
