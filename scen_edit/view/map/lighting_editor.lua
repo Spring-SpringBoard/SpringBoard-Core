@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Lighting",
     tooltip = "Edit lighting",
     image = SB_IMG_DIR .. "sunbeams.png",
+    order = 0,
 })
 
 function LightingEditor:init()

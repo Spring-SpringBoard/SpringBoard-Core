@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Sky",
     tooltip = "Edit sky and fog",
     image = SB_IMG_DIR .. "night-sky.png",
+    order = 1,
 })
 
 function SkyEditor:init()

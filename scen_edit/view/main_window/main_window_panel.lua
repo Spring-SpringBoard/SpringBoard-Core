@@ -73,8 +73,8 @@ end
 
 function MainWindowPanel:AddElement(tbl)
 	local caption = tbl.caption
-	local tooltip = tbl.tooltip or ""
-	local image = tbl.image or ""
+	local tooltip = tbl.tooltip
+	local image = tbl.image
 	local name = tbl.name
 	local editor = tbl.editor
 

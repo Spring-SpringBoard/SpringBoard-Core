@@ -8,6 +8,7 @@ Editor.Register({
 	caption = "Info",
 	tooltip = "Edit project info",
 	image = SB_IMG_DIR .. "info.png",
+    order = 0,
 })
 
 function ScenarioInfoView:init()

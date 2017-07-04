@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Teams",
     tooltip = "Edit teams",
     image = SB_IMG_DIR .. "person.png",
+    order = 1,
 })
 
 function PlayersWindow:init()

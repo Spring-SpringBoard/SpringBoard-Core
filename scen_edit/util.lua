@@ -194,11 +194,9 @@ function SetTableValues(origTable, newTable)
 end
 
 function SortByName(t, name)
-    local i = 1
     local sortedTable = {}
     for k, v in pairs(t) do
-        sortedTable[i] = v
-        i = i + 1
+        table.insert(sortedTable, v)
     end
     table.sort(sortedTable,
         function(a, b)

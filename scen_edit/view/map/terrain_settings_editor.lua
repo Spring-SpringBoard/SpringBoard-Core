@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Settings",
     tooltip = "Edit map settings",
     image = SB_IMG_DIR .. "globe.png",
+    order = 5,
 })
 
 function TerrainSettingsEditor:init()

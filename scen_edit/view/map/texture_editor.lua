@@ -10,6 +10,7 @@ Editor.Register({
     caption = "Texture",
     tooltip = "Edit textures",
     image = SB_IMG_DIR .. "palette.png",
+    order = 1,
 })
 
 function TextureEditor:init()

@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Properties",
     tooltip = "Edit object properties",
     image = SB_IMG_DIR .. "anatomy.png",
+    order = 2,
 })
 
 function ObjectPropertyWindow:init()

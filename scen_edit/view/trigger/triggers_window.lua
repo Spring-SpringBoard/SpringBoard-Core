@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Triggers",
     tooltip = "Edit triggers",
     image = SB_IMG_DIR .. "cog.png",
+    order = 1,
 })
 
 function TriggersWindow:init()

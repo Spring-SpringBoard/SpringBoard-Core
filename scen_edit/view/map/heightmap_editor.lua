@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Terrain",
     tooltip = "Edit heightmap",
     image = SB_IMG_DIR .. "peaks.png",
+    order = 0,
 })
 
 function HeightmapEditor:init()

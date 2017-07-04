@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Water",
     tooltip = "Edit water",
     image = SB_IMG_DIR .. "wave-crest.png",
+    order = 2,
 })
 
 function WaterEditor:init()

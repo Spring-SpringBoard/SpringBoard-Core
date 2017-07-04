@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Metal",
     tooltip = "Edit metal map",
     image = SB_IMG_DIR .. "minerals.png",
+    order = 3,
 })
 
 function MetalEditor:init()

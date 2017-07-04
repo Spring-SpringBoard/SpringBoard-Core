@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Area",
     tooltip = "Edit areas",
     image = SB_IMG_DIR .. "bolivia.png",
+    order = 0,
 })
 
 

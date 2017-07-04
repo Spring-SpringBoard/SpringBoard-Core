@@ -167,6 +167,7 @@ Editor.Register({
     caption = "Units",
     tooltip = "Add units",
     image = SB_IMG_DIR .. "meeple.png",
+    order = 0,
 })
 
 function UnitDefsView:MakePanel(tbl)
@@ -258,6 +259,7 @@ Editor.Register({
     caption = "Features",
     tooltip = "Add features",
     image = SB_IMG_DIR .. "beech.png",
+    order = 1,
 })
 
 function FeatureDefsView:MakePanel(tbl)

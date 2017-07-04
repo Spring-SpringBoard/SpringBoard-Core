@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Grass",
     tooltip = "Edit grass",
     image = SB_IMG_DIR .. "grass.png",
+    order = 4,
 })
 
 function GrassEditor:init()

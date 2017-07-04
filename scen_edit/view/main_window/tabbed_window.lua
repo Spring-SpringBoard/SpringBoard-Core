@@ -233,8 +233,35 @@ function TabbedWindow:init()
 
 	-- Create tabs from the editor registry
 	local tabs = {}
+
+	-- Group editors by the tab they belong to
 	tabMapping = SB.GroupByField(SB.editorRegistry, "tab")
-	for tabName, editors in pairs(tabMapping) do
+	-- Order tabs as specified in Conf first, and in alphabetical order second
+	local tabMapping_ = {}
+	for _, v in pairs(tabMapping) do
+		table.insert(tabMapping_, v)
+	end
+	tabMapping = tabMapping_
+	table.sort(tabMapping, function(a, b)
+		local tab1, tab2 = a[1].tab, b[1].tab
+		local order1, order2 = SB.conf:GetTabOrder(tab1), SB.conf:GetTabOrder(tab2)
+		if order1 ~= order2 then
+			return order1 < order2
+		end
+		return tab1 < tab2
+	end)
+	-- Create tab panels
+	for _, editors in pairs(tabMapping) do
+		-- Order editors as specified in the 'order' key when registering them,
+		-- and in alphabetical order second
+		local tabName = editors[1].tab
+		table.sort(editors, function(a, b)
+			if a.order ~= b.order then
+				return a.order < b.order
+			end
+			return a.caption < b.caption
+		end)
+
 		local panel = MainWindowPanel()
 		panel:AddElements(editors)
 		table.insert(tabs, {

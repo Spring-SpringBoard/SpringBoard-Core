@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Variables",
     tooltip = "Edit variables",
     image = SB_IMG_DIR .. "omega.png",
+    order = 2,
 })
 
 function VariablesWindow:init()

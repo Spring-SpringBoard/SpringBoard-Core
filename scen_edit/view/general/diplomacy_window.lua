@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Alliances",
     tooltip = "Edit alliances",
     image = SB_IMG_DIR .. "shaking-hands.png",
+    order = 2,
 })
 
 function DiplomacyWindow:init(trigger)
