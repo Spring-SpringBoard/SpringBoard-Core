@@ -10,32 +10,8 @@ function ExportCommand:init(path)
 	end
 end
 
-local function __GenerateStartScript(dev)
-    local game
-    if not dev then
-        game.name = SB.model.scenarioInfo.name
-        game.version = SB.model.scenarioInfo.version
-    end
-
-    local modOptions = {
-        deathmode = "neverend",
-        has_scenario_file = not dev,
-        play_mode = not dev,
-    }
-    if dev and SB.projectDir then
-        modOptions.project_dir = SB.projectDir
-    end
-    local teams = SB.model.teamManager:getAllTeams()
-
-    local scriptTxt = StartScript.GenerateScriptTxt({
-        game = game,
-        modOptions = modOptions,
-        --teams = teams,
-    })
-end
-
 local function ScriptTxtSave(path, dev)
-    local scriptTxt = __GenerateStartScript(dev)
+    local scriptTxt = SaveCommand.GenerateScript(dev)
 	local file = assert(io.open(path, "w"))
 	file:write(scriptTxt)
 	file:close()

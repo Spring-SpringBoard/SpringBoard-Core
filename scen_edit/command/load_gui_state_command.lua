@@ -16,7 +16,12 @@ function LoadGUIStateCommand:execute()
     end
 
     local editors = guiState.editors or {}
-    for name, editorData in pairs(editors) do
-        SB.editors[name]:Load(editorData)
-    end
+
+    SB.delay(function()
+    SB.delay(function()
+        for name, editorData in pairs(editors) do
+            SB.editors[name]:Load(editorData)
+        end
+    end)
+    end)
 end

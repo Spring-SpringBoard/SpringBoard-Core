@@ -85,7 +85,7 @@ function StartScript.GenerateScriptTxt(opts)
                     color = {Spring.GetTeamColor(player.Team)}
                 end
                 table.insert(teams, {
-                    TeamLeader = 0, -- FIXME: should it be 1?
+                    TeamLeader = 0,
                     AllyTeam = #teams,
                     RGBColor = tostring(color[1]) .. " " ..
                         tostring(color[2]) .. " " .. tostring(color[3]),

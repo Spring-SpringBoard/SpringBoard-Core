@@ -94,172 +94,7 @@ return modinfo]]
     return modInfoTxt
 end
 
-local function GenerateScriptTxt(dev)
-    local playMode = 1
-    if dev then
-        playMode = 0
-    end
-	local scriptTxt =
-[[
-[GAME]
-{
-	MapName=__MAP_NAME__;
-	GameMode=0;
-	GameType=__GAME_TYPE__;
-
-
-	NumTeams=__NUM_TEAMS__;
-	NumUsers=__NUM_USERS__;
-
-	HostIP=127.0.0.1;
-	HostPort=8452;
-	IsHost=1;
-	NumPlayers=1;
-    GameStartDelay=0;
-
-	StartMetal=1000;
-	StartEnergy=1000;
-
-	StartposType=3;
-	LimitDGun=0;
-	DiminishingMMs=0;
-	GhostedBuildings=1;
-	MyPlayerNum=1;
-	MyPlayerName=__MY_PLAYER_NAME__;
-	NumRestrictions=0;
-	MaxSpeed=20;
-	MinSpeed=0.1;
-	[MODOPTIONS]
-	{
-        play_mode = __PLAY_MODE__;
-        deathmode = neverend;
-        has_scenario_file = __HAS_SCENARIO_FILE__;
-        __PROJECT_DIR__
-	}
-
-]]
-
-    local isMyPlayerNameSet = false
-
-    local scenarioInfo = SB.model.scenarioInfo
-    local projectDir = ""
-    local gameType = Game.gameName .. " " .. Game.gameVersion
-    if SB.projectDir then
-        projectDir = "project_dir = " .. SB.projectDir .. ";"
-    end
-
-    scriptTxt = scriptTxt:gsub("__MAP_NAME__", Game.mapName)
-                         :gsub("__GAME_TYPE__", gameType)
-                         :gsub("__NUM_USERS__", tostring(#SB.model.teamManager:getAllTeams()))
-                         :gsub("__NUM_TEAMS__", tostring(#SB.model.teamManager:getAllTeams()))
-                         :gsub("__PLAY_MODE__", tostring(playMode))
-                         :gsub("__HAS_SCENARIO_FILE__", 0)
-                         :gsub("__PROJECT_DIR__", tostring(projectDir))
-
-    local numAIs = 0
-    local numPlayers = 0
-    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
-        if not team.gaia then
-            local teamTxt = [[
-    [__TEAM_ID__]
-    {
-        AllyTeam=__ALLY_TEAM__;
-        Side=__TEAM_SIDE__;
-        RGBColor=__RGB_COLOR__;
-
-        TeamLeader=1;
-        Handicap=0;
-        StartPosX=0;
-        StartPosZ=0;
-    }
-]]
-            teamTxt = teamTxt:gsub("__TEAM_ID__", "TEAM" .. team.id)
-                             :gsub("__ALLY_TEAM__", team.allyTeam)
-                             :gsub("__TEAM_SIDE__", team.side)
-                             :gsub("__RGB_COLOR__", team.color.r .. " " .. team.color.g .. " " .. team.color.b)
-            scriptTxt = scriptTxt .. teamTxt
-            if team.ai then
-                local aiTxt = [[
-    [__AI_ID__]
-    {
-		Name=__NAME__;
-		ShortName=__SHORT_NAME__;
-		Team=__TEAM__;
-		IsFromDemo=0;
-		Host=1;
-		[Options] {}
-    }
-]]
-                numAIs = numAIs + 1
-                aiTxt = aiTxt:gsub("__AI_ID__", "AI" .. numAIs)
-                             :gsub("__NAME__", team.name)
-                             :gsub("__SHORT_NAME__", "NullAI") -- TODO: support other AIs as well
-                             :gsub("__TEAM__", team.id)
-                scriptTxt = scriptTxt .. aiTxt
-            else
-                local playerTxt = [[
-    [__PLAYER_ID__]
-    {
-        Name=__NAME__;
-        Spectator=__SPECTATOR__;
-        Team=__TEAM__;
-    }
-]]
-                local spectator = 0
-                if dev then
-                    spectator = 1
-                end
-                numPlayers = numPlayers + 1
-                playerTxt = playerTxt:gsub("__PLAYER_ID__", "PLAYER" .. numPlayers)
-                             :gsub("__NAME__", team.name)
-                             :gsub("__SPECTATOR__", spectator)
-                             :gsub("__TEAM__", team.id)
-                if not isMyPlayerNameSet then
-                    scriptTxt = scriptTxt:gsub("__MY_PLAYER_NAME__", team.name)
-                    isMyPlayerNameSet = true
-                end
-                scriptTxt = scriptTxt .. playerTxt
-            end
-        end
-    end
-
-    if numPlayers == 0 then
-        local playerTxt = [[
-    [__PLAYER_ID__]
-    {
-        Name=__NAME__;
-        Spectator=1;
-        Team=__TEAM__;
-    }
-]]
-        numPlayers = numPlayers + 1
-        playerTxt = playerTxt:gsub("__PLAYER_ID__", "PLAYER" .. numPlayers)
-                             :gsub("__NAME__", "Player")
-                             :gsub("__TEAM__", 1)
-
-        scriptTxt = scriptTxt .. playerTxt
-        scriptTxt = scriptTxt:gsub("__MY_PLAYER_NAME__", "Player")
-    end
-
-    for _, allyTeamID in pairs(Spring.GetAllyTeamList()) do
-        local allyTeamTxt = [[
-    [__ALLYTEAM_ID__]
-    {
-        NumAllies=0;
-    }
-]]
-        allyTeamTxt = allyTeamTxt:gsub("__ALLYTEAM_ID__", "ALLYTEAM" .. allyTeamID)
-        allyTeamInfo = Spring.GetAllyTeamInfo(allyTeamID)
-        if allyTeamInfo.numallies then -- this should filter out the gaia ally team
-            scriptTxt = scriptTxt .. allyTeamTxt
-        end
-    end
-
-    scriptTxt = scriptTxt .. "\n}"
-	return scriptTxt
-end
-
-local function ScriptTxtSave(path, dev)
+function SaveCommand.GenerateScript(dev)
     local game
     if not dev then
         game = {}
@@ -275,14 +110,62 @@ local function ScriptTxtSave(path, dev)
     if dev and SB.projectDir then
         modOptions.project_dir = SB.projectDir
     end
-    local teams = SB.model.teamManager:getAllTeams()
+
+    local teams = {}
+    local ais = {}
+    local players = {}
+    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
+        if not team.gaia then
+            table.insert(teams, {
+                -- TeamID = team.id, ID is implicit as index-1
+                TeamLeader = 0,
+                AllyTeam = team.allyTeam,
+                RGBColor = team.color.r .. " " .. team.color.g .. " " .. team.color.b,
+            })
+        end
+        if team.ai then
+            local aiShortName = "NullAI"
+            local aiVersion = ""
+            if not dev then
+                -- TODO: Support other AIs for non-dev scripts
+            end
+
+            table.insert(ais, {
+                Name = team.name,
+                Team = team.id - 1,
+                ShortName = aiShortName,
+                Version = aiVersion,
+
+                IsFromDemo = false,
+                Host = 0,
+            })
+        else
+            local spectator = false
+            if dev then
+                spectator = true
+            end
+            table.insert(players, {
+                Name = team.name,
+                Team = team.id - 1,
+                Spectator = spectator,
+
+                IsFromDemo = true,
+            })
+        end
+    end
 
     local scriptTxt = StartScript.GenerateScriptTxt({
         game = game,
         modOptions = modOptions,
-        --teams = teams,
+        teams = teams,
+        players = players,
+        ais = ais,
     })
+    return scriptTxt
+end
 
+local function ScriptTxtSave(path, dev)
+    local scriptTxt = SaveCommand.GenerateScript(dev)
 	local file = assert(io.open(path, "w"))
 	file:write(scriptTxt)
 	file:close()
@@ -330,21 +213,27 @@ function SaveCommand:execute()
 
     -- save files
     ModelSave(Path.Join(projectDir, "model.lua"))
-    Log.Notice("saved model")
+    Log.Notice("Saved model")
+
     ModInfoSave(Path.Join(projectDir, "modinfo.lua"))
-    Log.Notice("saved modinfo")
+    Log.Notice("Saved modinfo")
+
     HeightMapSave(Path.Join(projectDir, "heightmap.data"))
-    Log.Notice("saved heightmap")
+    Log.Notice("Saved heightmap")
+
     ScriptTxtSave(Path.Join(projectDir, "script.txt"))
     ScriptTxtSave(Path.Join(projectDir, "script-dev.txt"), true)
-    Log.Notice("saved scripts")
+    Log.Notice("Saved start scripts")
+
     GUIStateSave(Path.Join(projectDir, "sb_gui.lua"))
-    Log.Notice("saved GUI state")
+    Log.Notice("Saved GUI state")
+
     SBInfoSave(Path.Join(projectDir, "sb_info.lua"))
-    Log.Notice("saved SpringBoard info")
+    Log.Notice("Saved SpringBoard info")
+
 
     if #SB.model.textureManager.mapFBOTextures > 0 then
-        local texturemapDir = projectDir .. "/texturemap"
+        local texturemapDir = Path.Join(projectDir, "texturemap")
         Spring.CreateDir(texturemapDir)
         local cmd = SaveImagesCommand(texturemapDir)
         cmd:execute()

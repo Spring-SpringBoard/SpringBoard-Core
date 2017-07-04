@@ -303,6 +303,9 @@ function Editor.Register(opts)
     assert(not SB.editorRegistry[opts.name],
         "Editor with name: " .. opts.name .. " already exists")
     assert(opts.editor, "Missing editor for: " .. opts.name)
+
+    Log.Notice("Registering: " .. opts.name)
+
     opts.tab = opts.tab or "Other"
     opts.caption = opts.caption or name
     opts.tooltip = opts.tooltip or opts.caption
