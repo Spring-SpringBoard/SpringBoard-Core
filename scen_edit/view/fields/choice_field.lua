@@ -47,7 +47,7 @@ function ChoiceField:init(field)
             self:Set(value, self.comboBox)
         end
     }
-    self.value = self.items[1]
+    self.value = ids[1]
 
     if self.title then
         self.components = {

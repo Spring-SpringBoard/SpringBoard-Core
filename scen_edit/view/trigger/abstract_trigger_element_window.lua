@@ -188,7 +188,7 @@ function AbstractTriggerElementWindow:__RefreshElementType()
                 end
             end
         end
-    else
+    elseif self.__isCoreDataType then
         local subPanelName = self.elType.name
         local subPanel = SB.createNewPanel({
             dataType = {
@@ -256,7 +256,7 @@ function AbstractTriggerElementWindow:UpdatePanel()
                 subPanel:UpdatePanel(self.element[subPanelName])
             end
         end
-    else
+    elseif self.__isCoreDataType then
         local subPanelName = self.elType.name
         local subPanel = self.elementPanel[subPanelName]
         if subPanel then
@@ -283,7 +283,7 @@ function AbstractTriggerElementWindow:UpdateModel()
                 end
             end
         end
-    else
+    elseif self.__isCoreDataType then
         local subPanelName = self.elType.name
         local subPanel = self.elementPanel[subPanelName]
         if subPanel then

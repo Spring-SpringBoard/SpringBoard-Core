@@ -84,7 +84,7 @@ function DefaultState:MakeAreaTrigger(areaID)
                     type = "pred",
                 },
                 second = {
-                    name = "Trigger area",
+                    name = "area",
                     type = "spec",
                 },
             },

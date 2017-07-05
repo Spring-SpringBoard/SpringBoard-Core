@@ -151,7 +151,7 @@ end
 function ObjectDefsPanel:DrawIcons()
     self.rotate = self.rotate + 0.5
     local time = os.clock()
-    if (time - self.refresh) >= 0.1 then
+    if (time - self.refresh) >= 1.1 then
         self.refresh = time
     else
         SB.Delay("DrawScreen", function()

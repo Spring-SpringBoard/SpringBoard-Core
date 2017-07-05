@@ -1,8 +1,5 @@
 FieldResolver = LCS.class{}
 
-function FieldResolver:init()
-end
-
 function FieldResolver:CallExpression(expr, exprType, params, canExecuteUnsynced)
     local resolvedInputs = {}
     local fail = false

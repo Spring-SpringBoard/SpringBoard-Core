@@ -82,7 +82,7 @@ function TriggerManager:clear()
 end
 
 ---------------
--- CRUD methods
+-- END CRUD methods
 ---------------
 
 function TriggerManager:GetTriggerScopeParams(trigger)

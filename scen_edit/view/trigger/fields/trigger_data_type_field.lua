@@ -52,6 +52,14 @@ TriggerDataTypeWindow = AbstractTriggerElementWindow:extends{}
 function TriggerDataTypeWindow:init(opts)
     self.dataType = opts.dataType
     self.dataTypeDef = SB.metaModel:GetDataType(self.dataType.type)
+
+    -- FIXME: AbstractTriggerElementWindow shouldn't use this information, but
+    -- it has to right now
+    if self.dataTypeDef then
+        self.__isCoreDataType = not SB.metaModel:GetCustomDataType(self.dataType.type)
+    end
+
+
     AbstractTriggerElementWindow.init(self, opts)
 end
 

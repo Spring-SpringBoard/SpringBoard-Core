@@ -289,9 +289,6 @@ end
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
     for _, condition in pairs(trigger.conditions) do
         local conditionType = SB.metaModel.functionTypes[condition.typeName]
-        table.echo(condition)
-        table.echo(params)
-        table.echo(conditionType)
         local result = self.fieldResolver:CallExpression(condition, conditionType, params)
         if not result then
             return false

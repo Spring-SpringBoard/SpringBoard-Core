@@ -522,7 +522,7 @@ return {
                 input = { "unit", "order" },
                 tags = {"Order"},
                 execute = function (input)
-                    local orderTypeName = input.order.orderTypeName
+                    local orderTypeName = input.order.typeName
                     local newInput = {
                         unit = input.unit,
                         params = input.order.input,
@@ -541,7 +541,7 @@ return {
                 input = { "unit", "order" },
                 tags = {"Order"},
                 execute = function (input)
-                    local orderTypeName = input.order.orderTypeName
+                    local orderTypeName = input.order.typeName
                     local newInput = {
                         unit = input.unit,
                         params = input.order.input,
