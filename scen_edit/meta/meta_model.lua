@@ -6,8 +6,6 @@ function MetaModel:init()
 
     self.numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
     self.identityComparisonTypes = {"is", "is not"} -- maybe use more user friendly signs
-
-    self:SetVariableTypes()
     --TODO: add array type
     --local arrayTypes = {}
 end
@@ -91,9 +89,9 @@ local function CanBeVariable(type)
     return false
 end
 
-function MetaModel:SetVariableTypes()
+function MetaModel:GenerateVariableTypes()
     self.variableTypes = {}
-    for _, dataType in pairs(SB.coreTypes()) do
+    for _, dataType in pairs(self:GetAllDataTypes()) do
         if CanBeVariable(dataType) then
             table.insert(self.variableTypes, dataType.name)
             table.insert(self.variableTypes, dataType.name .. "_array")
@@ -111,6 +109,10 @@ end
 
 function MetaModel:SetCustomDataTypes(dataTypes)
     self.customDataTypes = dataTypes
+    self.allDataTypes = SB.deepcopy(SB.coreTypes())
+    for _, dataType in pairs(self.customDataTypes) do
+        table.insert(self.allDataTypes, dataType)
+    end
 end
 
 function MetaModel:GetCustomDataType(name)
@@ -119,4 +121,8 @@ function MetaModel:GetCustomDataType(name)
             return dataType
         end
     end
+end
+
+function MetaModel:GetAllDataTypes()
+    return self.allDataTypes
 end

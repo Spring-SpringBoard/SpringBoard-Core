@@ -14,8 +14,6 @@ Editor.Register({
 function TerrainSettingsEditor:init()
     self:super("init")
 
-    self.initializing = true
-
     self:AddField(GroupField({
         BooleanField({
             name = "voidWater",
@@ -47,6 +45,18 @@ function TerrainSettingsEditor:init()
         rootDir = "detail/",
     }))
 
+    self:AddField(FeatureField({
+        name = "ff",
+        title = "Feature:",
+        tooltip = "da feature field.",
+    }))
+
+    self:AddField(FeatureTypeField({
+        name = "ftf",
+        title = "Feature type:",
+        tooltip = "da feature type field.",
+    }))
+
     local children = {
         ScrollPanel:New {
             x = 0,
@@ -60,7 +70,6 @@ function TerrainSettingsEditor:init()
     }
 
     self:Finalize(children)
-    self.initializing = false
 end
 
 function _ColorArrayToChannels(colorArray)
@@ -86,10 +95,6 @@ function TerrainSettingsEditor:OnEndChange(name)
 end
 
 function TerrainSettingsEditor:OnFieldChange(name, value)
-    if self.initializing then
-        return
-    end
-
     if name == "detailTexture" then
         SB.delayGL(function()
 --             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)

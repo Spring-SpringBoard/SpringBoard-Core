@@ -14,19 +14,29 @@ end
 
 function ChoiceField:init(field)
     self.width = 150
-    self:super('init', field)
-    self.label = Label:New {
-        caption = self.title,
-        y = 10,
-        autosize = true,
-    }
+
+    Field.init(self, field)
+
+    if self.title then
+        self.label = Label:New {
+            caption = self.title,
+            y = 10,
+            autosize = true,
+            width = 50,
+        }
+    end
+
     local ids, captions = self.items, self.captions
     if captions == nil then
         captions = self.items
     end
+    local comboBoxX = 0
+    if self.label then
+        comboBoxX = self.label.width + 5
+    end
     self.comboBox = ComboBox:New {
-        x = 120 - 5,
-        width = field.width,
+        x = comboBoxX,
+        width = self.width - comboBoxX,
         height = self.height,
         items = captions,
         ids = ids,
@@ -39,8 +49,14 @@ function ChoiceField:init(field)
     }
     self.value = self.items[1]
 
-    self.components = {
-        self.label,
-        self.comboBox,
-    }
+    if self.title then
+        self.components = {
+            self.label,
+            self.comboBox,
+        }
+    else
+        self.components = {
+            self.comboBox,
+        }
+    end
 end

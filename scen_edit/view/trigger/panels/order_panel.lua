@@ -1,3 +1,5 @@
+VFS.Include(Path.Join(SB_VIEW_TRIGGER_PANELS_DIR, "type_panel.lua"))
+
 OrderPanel = LCS.class{}
 
 -- TODO: Doesn't invoke self:super, it probably should

@@ -14,8 +14,6 @@ Editor.Register({
 function LightingEditor:init()
     self:super("init")
 
-    self.initializing = true
-
     self:AddField(GroupField({
         NumericField({
             name = "sunDirX",
@@ -129,10 +127,9 @@ function LightingEditor:init()
         },
     }
 
-    self:Finalize(children)
-    self.initializing = false
-
     SB.commandManager:addListener(self)
+
+    self:Finalize(children)
 end
 
 function _ColorArrayToChannels(colorArray)
@@ -186,7 +183,7 @@ function LightingEditor:OnEndChange(name)
 end
 
 function LightingEditor:OnFieldChange(name, value)
-    if self.initializing or self.updating then
+    if self.updating then
         return
     end
 

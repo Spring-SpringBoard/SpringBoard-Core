@@ -16,7 +16,7 @@ end
 -- maybe i18n tables? e.g.: {"cmd-units-added", {units=5}} ?
 -- supporting both tables and strings seems to be the easiest option
 function Command:display()
-    return self.className .. " executed."
+    return self.className
 end
 
 -- Specify the onMerge command to execute for multipleCommandMode

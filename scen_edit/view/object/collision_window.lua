@@ -5,7 +5,7 @@ Editor.Register({
     name = "collisionView",
     editor = CollisionView,
     tab = "Objects",
-    caption = "Colvol",
+    caption = "Collision",
     tooltip = "Edit collision volumes",
     image = SB_IMG_DIR .. "boulder-dash.png",
 })

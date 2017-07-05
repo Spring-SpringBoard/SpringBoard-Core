@@ -107,6 +107,7 @@ function MetaModelLoader:Load()
     local dataTypes = self:_LoadDataTypes(metaModelFiles)
     Log.Notice("Data types: " .. #dataTypes)
     SB.metaModel:SetCustomDataTypes(dataTypes)
+    SB.metaModel:GenerateVariableTypes()
 
     Log.Notice("Loading meta-triggers...")
     local mergedMetaModel = self:_LoadMetaModels(metaModelFiles, metaTypes)

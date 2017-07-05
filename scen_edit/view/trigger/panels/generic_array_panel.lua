@@ -1,4 +1,6 @@
-GenericArrayPanel = AbstractTypePanel:extends{}
+VFS.Include(Path.Join(SB_VIEW_TRIGGER_PANELS_DIR, "type_panel.lua"))
+
+GenericArrayPanel = TypePanel:extends{}
 
 function GenericArrayPanel:init(opts)
     self.subPanels = StackPanel:New {
@@ -10,37 +12,33 @@ function GenericArrayPanel:init(opts)
         resizeItems = false,
         parent = opts.parent,
     }
-    self:super('init', opts)
+
+    opts.FieldType = function(opts)
+        return Field({
+            name = opts.name,
+            title = opts.title,
+            height = 30,
+            width = 150,
+            components = {
+                Button:New {
+                    caption = opts.title,
+                    width = 150,
+                    height = 30,
+                    OnClick = {
+                        function()
+                            self:AddElement()
+                            self:Set("cbPredefined", true)
+                        end
+                    },
+                }
+            }
+        })
+    end
+
+    TypePanel.init(self, opts)
+
     self.atomicType = opts.dataType.type:gsub("_array", "")
     self.elements = {}
-end
-
-function GenericArrayPanel:MakePredefinedOpt()
-    local addPanel = MakeComponentPanel(self.parent)
-
-    self.cbPredefined = Checkbox:New {
-        caption = "Predefined array: ",
-        right = 100 + 10,
-        x = 1,
-        checked = false,
-        parent = addPanel,
-    }
-    table.insert(self.radioGroup, self.cbPredefined)
-    self.btnAddElement = Button:New {
-        caption = '+',
-        right = 40,
-        width = 60,
-        height = SB.conf.B_HEIGHT,
-        parent = addPanel,
-        OnClick= {
-            function()
-                self:AddElement()
-                if not self.cbPredefined.checked then
-                    self.cbPredefined:Toggle()
-                end
-            end
-        }
-    }
 end
 
 function GenericArrayPanel:AddElement()

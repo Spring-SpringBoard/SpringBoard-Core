@@ -30,6 +30,7 @@ end
 
 function StringField:init(field)
     self.width = 200
+
     Field.init(self, field)
 
     self.editBox = EditBox:New {
@@ -71,7 +72,7 @@ function StringField:init(field)
         align = "right",
     }
     self.lblTitle = Label:New {
-        caption = self.title,
+        caption = self.title or "",
         x = 10,
         y = 5,
         autosize = true,

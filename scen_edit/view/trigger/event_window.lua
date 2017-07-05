@@ -13,9 +13,7 @@ function EventWindow:init(opts)
     }
 
     opts.element = opts.event
-    self:super("init", opts)
-
-    self.elementPanel:AddChild(self.tbInfo)
+    AbstractTriggerElementWindow.init(self, opts)
 end
 
 function EventWindow:GetValidElementTypes()
@@ -32,7 +30,7 @@ end
 
 function EventWindow:OnExprTypeChange(exprType)
     local txtInfo = ""
-    for i, param in pairs(self.exprType.param) do
+    for i, param in pairs(exprType.param) do
         if i == 1 then
             txtInfo = "Params: "
         else
@@ -42,8 +40,4 @@ function EventWindow:OnExprTypeChange(exprType)
     end
     self.tbInfo:SetText(txtInfo)
     self.elementPanel:AddChild(self.tbInfo)
-end
-
-function EventWindow:AddParent()
-    table.insert(self.trigger.events, self.element)
 end

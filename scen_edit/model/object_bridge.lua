@@ -2,6 +2,12 @@ SB_COMMAND_DIR = SB_DIR .. "command/"
 SB.Include(SB_COMMAND_DIR .. 'command.lua')
 SB.IncludeDir(SB_COMMAND_DIR)
 
+SB_STATE_DIR = SB_DIR .. "state/"
+SB.Include(SB_STATE_DIR .. 'state_manager.lua')
+SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
+SB.Include(SB_STATE_DIR .. 'abstract_editing_state.lua')
+SB.IncludeDir(SB_STATE_DIR)
+
 ObjectBridge = LCS.class.abstract{}
 
 -- UNIT
@@ -38,9 +44,19 @@ UnitBridge.spDestroyObject                 = Spring.DestroyUnit
 UnitBridge.AddObjectCommand                = AddUnitCommand
 UnitBridge.RemoveObjectCommand             = RemoveUnitCommand
 UnitBridge.SetObjectParamCommand           = SetUnitParamCommand
+
+UnitBridge.SelectObjectState               = SelectUnitState
+UnitBridge.SelectObjectTypeState           = SelectUnitTypeState
+
 UnitBridge.DrawObject                      = function(params)
     DrawObject(params, unitBridge)
 end
+UnitBridge.Select                          = function(objectIDs)
+    SB.view.selectionManager:Select({
+        units = objectIDs
+    })
+end
+
 UnitBridge.getObjectSpringID               = function(modelID)
     return SB.model.unitManager:getSpringUnitID(modelID)
 end
@@ -74,6 +90,10 @@ FeatureBridge.spDestroyObject                 = Spring.DestroyFeature
 FeatureBridge.AddObjectCommand                = AddFeatureCommand
 FeatureBridge.RemoveObjectCommand             = RemoveFeatureCommand
 FeatureBridge.SetObjectParamCommand           = SetFeatureParamCommand
+
+FeatureBridge.SelectObjectState               = SelectFeatureState
+FeatureBridge.SelectObjectTypeState           = SelectFeatureTypeState
+
 FeatureBridge.DrawObject                      = function(params)
     DrawObject(params, featureBridge)
 --     local featureDef    = FeatureDefs[objectDefID]
@@ -82,6 +102,12 @@ FeatureBridge.DrawObject                      = function(params)
 --         Log.Warning("engine-tree, not sure what to do")
 --     end
 end
+FeatureBridge.Select                          = function(objectIDs)
+    SB.view.selectionManager:Select({
+        features = objectIDs
+    })
+end
+
 FeatureBridge.getObjectSpringID               = function(modelID)
     return SB.model.featureManager:getSpringFeatureID(modelID)
 end
@@ -116,4 +142,38 @@ AreaBridge.spValidObject                = function(objectID)
     return SB.model.areaManager:getArea(objectID) ~= nil
 end
 
+AreaBridge.SelectObjectState            = SelectAreaState
+AreaBridge.Select                       = function(objectIDs)
+    SB.view.selectionManager:Select({
+        areas = objectIDs
+    })
+end
+
+AreaBridge.getObjectSpringID            = function(modelID)
+    return modelID
+end
+
 areaBridge = AreaBridge()
+
+-- POSITION
+
+PositionBridge = ObjectBridge:extends{}
+PositionBridge.bridgeName                   = "PositionBridge"
+PositionBridge.spGetObjectPosition          = function(objectID)
+    return objectID.x, objectID.y, objectID.z
+end
+PositionBridge.spValidObject                = function()
+    return true
+end
+
+PositionBridge.SelectObjectState            = SelectPositionState
+PositionBridge.Select                       = function(objectIDs)
+    -- no-op
+    -- SB.view.selectionManager:Select({})
+end
+
+PositionBridge.getObjectSpringID            = function(objectID)
+    return objectID
+end
+
+positionBridge = PositionBridge()

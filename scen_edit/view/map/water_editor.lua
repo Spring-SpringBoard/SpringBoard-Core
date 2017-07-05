@@ -14,8 +14,6 @@ Editor.Register({
 function WaterEditor:init()
     self:super("init")
 
-    self.initializing = true
-
     self:AddField(GroupField({
         BooleanField({
             name = "forceRendering",
@@ -276,10 +274,9 @@ function WaterEditor:init()
         },
     }
 
-    self:Finalize(children)
-    self.initializing = false
-
     SB.commandManager:addListener(self)
+
+    self:Finalize(children)
 end
 
 function _ColorArrayToChannels(colorArray)
@@ -348,7 +345,7 @@ function WaterEditor:OnEndChange(name)
 end
 
 function WaterEditor:OnFieldChange(name, value)
-    if self.initializing or self.updating then
+    if self.updating then
         return
     end
 

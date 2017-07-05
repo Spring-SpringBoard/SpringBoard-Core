@@ -14,7 +14,6 @@ Editor.Register({
 })
 
 function TextureEditor:init()
-    self.initializing = true
     self:super("init")
 
     local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.tif'}
@@ -463,14 +462,14 @@ function TextureEditor:init()
             },
         },
     }
-    self:Finalize(children)
     for i = 0, 3 do
         self:__AddEngineDNTSTexture("$ssmf_splat_normals:" .. tostring(i), i+1)
     end
-    self.savedDNTSBrushes:GetControl():Hide()
     self.savedDNTSBrushes:DeselectAll()
 
-    self.initializing = false
+    self:Finalize(children)
+
+    self.savedDNTSBrushes:GetControl():Hide()
 end
 
 function TextureEditor:__AddEngineDNTSTexture(textureName, dntsIndex)
@@ -523,10 +522,6 @@ function TextureEditor:OnEndChange(name)
 end
 
 function TextureEditor:OnFieldChange(name, value)
-    if self.initializing then
-        return
-    end
-
     if self.savedBrushes:GetControl().visible then
         local brush = self.savedBrushes:GetSelectedBrush()
         if brush then

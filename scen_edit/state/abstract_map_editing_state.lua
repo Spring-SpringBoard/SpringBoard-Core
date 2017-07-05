@@ -255,8 +255,8 @@ function DrawTexturedGroundRectangle(x1,z1,x2,z2, rot, dlist)
   gl.PopMatrix()
 end
 
-local pushAttribBits = math.bit_or(GL.COLOR_BUFFER_BIT, GL.ENABLE_BIT, GL.CURRENT_BIT)
 function AbstractMapEditingState:DrawShape(shape, x, z)
+	local pushAttribBits = math.bit_or(GL.COLOR_BUFFER_BIT, GL.ENABLE_BIT, GL.CURRENT_BIT)
     gl.PushPopMatrix(function()
 		gl.PushAttrib(pushAttribBits)
 

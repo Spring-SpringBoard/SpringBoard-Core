@@ -3,7 +3,7 @@ SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 AssetPickerWindow = Editor:extends{}
 
 function AssetPickerWindow:init(opts)
-    self:super("init")
+    Editor.init(self, opts)
 
     local rootDir = opts.rootDir
     local dir = Path.ExtractDir(opts.path or '/')

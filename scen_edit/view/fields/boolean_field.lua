@@ -12,10 +12,12 @@ end
 
 function BooleanField:init(field)
     self.width = 200
-    self:super('init', field)
+    self.value = false
+
+    Field.init(self, field)
+
     self.checkBox = Checkbox:New {
-        caption = self.title,
-        x = 0,
+        caption = self.title or "",
         width = self.width,
         height = self.height,
         checked = self.value,

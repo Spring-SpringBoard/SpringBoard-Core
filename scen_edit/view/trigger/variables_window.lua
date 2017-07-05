@@ -131,19 +131,20 @@ function VariablesWindow:Populate()
 end
 
 function VariablesWindow:MakeVariableWindow(variable, edit)
-    local newWin = VariableWindow(variable)
-    table.insert(newWin.window.OnConfirm,
-        function()
-            newWin:UpdateModel(variable)
-            local cmd = nil
-            if edit then
-                cmd = UpdateVariableCommand(variable)
-            else
-                cmd = AddVariableCommand(variable)
+    local newWin = VariableWindow({
+        variable = variable,
+        OnConfirm = {
+            function(var)
+                local cmd
+                if edit then
+                    cmd = UpdateVariableCommand(var)
+                else
+                    cmd = AddVariableCommand(var)
+                end
+                SB.commandManager:execute(cmd)
             end
-            SB.commandManager:execute(cmd)
-        end
-    )
+        }
+    })
     newWin:UpdatePanel(variable)
 
     local sw = self.window

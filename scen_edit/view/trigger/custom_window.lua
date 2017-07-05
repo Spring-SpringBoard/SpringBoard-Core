@@ -4,7 +4,8 @@ CustomWindow = AbstractTriggerElementWindow:extends{}
 
 function CustomWindow:init(opts)
     opts.element = opts.condition
-    self:super("init", opts)
+    self.dataType = opts.dataType
+    AbstractTriggerElementWindow.init(self, opts)
 end
 
 function CustomWindow:GetValidElementTypes()
@@ -17,8 +18,4 @@ function CustomWindow:GetWindowCaption()
     elseif self.mode == 'edit' then
         return "Edit expression of type " .. self.dataType.type
     end
-end
-
-function CustomWindow:AddParent()
-    table.insert(self.parentObj, self.element)
 end

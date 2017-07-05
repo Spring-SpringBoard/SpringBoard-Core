@@ -1,6 +1,8 @@
 Editor = LCS.class{}
 
 function Editor:init(opts)
+    self.__initializing = true
+
     self.fields = {}
     self.fieldOrder = {}
 
@@ -71,6 +73,11 @@ end
 
 -- NOTICE: Invoke :Finalize at the end of init
 function Editor:Finalize(children, opts)
+    if not self.__initializing then
+        Log.Error("\"Editor.init(self)\" wasn't invoked properly.")
+        Log.Error(debug.traceback())
+    end
+
     opts = opts or {}
     if not opts.noCloseButton then
         table.insert(children, self.btnClose)
@@ -93,7 +100,11 @@ function Editor:Finalize(children, opts)
         }
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
-        SB.view:SetMainPanel(self.window)
+        if not opts.haxxor then
+            SB.view:SetMainPanel(self.window)
+        else
+            Spring.Echo("haxxor")
+        end
     else
         if not opts.noDispose then
             table.insert(self.btnClose.OnClick, function()
@@ -114,6 +125,8 @@ function Editor:Finalize(children, opts)
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
     end
+
+    self.__initializing = false
 end
 
 function Editor:_MEGA_HACK()
@@ -191,6 +204,7 @@ end
 
 function Editor:RemoveField(name)
     local field = self.fields[name]
+    assert(field, "Trying to remove field that doesn't exist.")
     for i, orderName in pairs(self.fieldOrder) do
         if orderName == name then
             table.remove(self.fieldOrder, i)
@@ -242,7 +256,9 @@ function Editor:Update(name, _source)
     field:Update(_source)
 
     -- update listeners and current state
-    self:OnFieldChange(field.name, field.value)
+    if not self.__initializing then
+        self:OnFieldChange(field.name, field.value)
+    end
     local currentState = SB.stateManager:GetCurrentState()
     if self:IsValidTest(currentState) then
         currentState[field.name] = field.value

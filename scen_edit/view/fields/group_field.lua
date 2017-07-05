@@ -4,12 +4,12 @@ GroupField = Field:extends{}
 local _GROUP_INDEX = 0
 
 function GroupField:init(fields)
-    self:super('init', {})
+    Field.init(self, {})
+
     _GROUP_INDEX = _GROUP_INDEX + 1
     self.name = "_groupField" .. tostring(_GROUP_INDEX)
     self.fields = fields
-    self.components = {
-    }
+    self.components = {}
 end
 
 function GroupField:Added()
@@ -17,7 +17,10 @@ function GroupField:Added()
     for i, field in pairs(self.fields) do
         self.ev:_AddField(field)
         for _, comp in pairs(field.components) do
-            comp.x = groupX
+            if not comp.x then
+                comp.x = 0
+            end
+            comp.x = comp.x + groupX
             self.ctrl:AddChild(comp)
         end
         groupX = groupX + field.width + 10

@@ -1,75 +1,53 @@
-FunctionPanel = AbstractTypePanel:extends{}
+SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
+
+FunctionField = Field:extends{}
 
 -- FIXME: sources is ignored
-function FunctionPanel:init(opts)
-    opts.dataType.sources = {"pred"}
-    self:super('init', opts)
-end
+function FunctionField:init(field)
+    self.width = 200
 
-function FunctionPanel:MakePredefinedOpt()
-    local stackFunctionPanel = MakeComponentPanel(self.parent)
-    self.cbPredefined = Checkbox:New {
-        caption = "Predefined function: ",
-        right = 100 + 10,
-        x = 1,
-        checked = true,
-        parent = stackFunctionPanel,
-    }
-    table.insert(self.radioGroup, self.cbPredefined)
+    Field.init(self, field)
+
     self.btnFunction = Button:New {
         caption = "Function",
-        right = 1,
-        width = 100,
-        parent = stackFunctionPanel,
-        data = {},
+        width = self.width,
+        height = self.height,
         OnClick = {
             function()
                 local mode = 'add'
-                if #self.btnFunction.data > 0 then
+                if self.value then
                     mode = 'edit'
                 end
-                FunctionWindow({
-                    parentWindow = self.parent.parent.parent,
+                local functionWindow = FunctionWindow({
                     mode = mode,
                     dataType = self.dataType,
-                    parentObj = self.btnFunction.data,
-                    condition = self.btnFunction.data[1],
-                    cbExpressions = self.cbPredefined,
-                    btnExpressions = self.btnFunction,
+                    element = self.value,
                     trigger = self.trigger,
                     params = self.params,
+
+                    OnConfirm = {
+                        function(element)
+                            self:Set(element)
+                        end
+                    },
                 })
+                --SB.MakeWindowModal(customWindow.window, self.parent.parent.parent)
+                -- SB.MakeWindowModal(functionWindow.window, self.parent)
             end
         },
     }
-end
 
-function FunctionPanel:UpdateModel(field)
-    if self.cbPredefined and self.cbPredefined.checked and self.btnFunction.data ~= nil and #self.btnFunction.data ~= 0 then
-        field.type = "pred"
-        field.expr = self.btnFunction.data
-        return true
-    end
-    return self:super('UpdateModel', field)
-end
-
-function FunctionPanel:UpdatePanel(field)
-    if field.type == "pred" then
-        if not self.cbPredefined.checked then
-            self.cbPredefined:Toggle()
-        end
-        self.btnFunction.data = field.expr
-        return true
-    end
-    return self:super('UpdatePanel', field)
+    self.components = {
+        self.btnFunction
+    }
 end
 
 -- Function window class
 FunctionWindow = AbstractTriggerElementWindow:extends{}
 
 function FunctionWindow:init(opts)
-    opts.element = opts.condition
-    self:super("init", opts)
+    self.dataType = opts.dataType
+    AbstractTriggerElementWindow.init(self, opts)
 end
 
 -- TODO: Checking if input types are equivalent should be removed to a
@@ -136,8 +114,4 @@ function FunctionWindow:GetWindowCaption()
     elseif self.mode == 'edit' then
         return "Edit function"
     end
-end
-
-function FunctionWindow:AddParent()
-    table.insert(self.parentObj, self.element)
 end

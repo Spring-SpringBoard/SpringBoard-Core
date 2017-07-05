@@ -1,26 +1,18 @@
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
+SB.Include(SB_STATE_DIR .. "select_object_type_state.lua")
 
-AreaField = Field:extends{}
-
-function AreaField:Update(source)
+ObjectTypeField = Field:extends{}
+function ObjectTypeField:Update()
     self.lblValue:SetCaption(self:GetCaption())
 end
 
-function AreaField:GetCaption()
-    if self.value then
-        return "ID=" .. tostring(self.value)
-    else
-        return ""
-    end
-end
-
-function AreaField:init(field)
+function ObjectTypeField:init(field)
     self.width = 200
+
     Field.init(self, field)
 
-    local caption = self:GetCaption()
     self.lblValue = Label:New {
-        caption = caption,
+        caption = self:GetCaption(),
         width = "100%",
         right = 5,
         y = 5,
@@ -33,8 +25,8 @@ function AreaField:init(field)
         autosize = true,
     }
 
-    self.OnSelectArea = function(areaID)
-        self:Set(areaID, self.button)
+    self.OnSelectObjectType = function(objectTypeID)
+        self:Set(objectTypeID, self.button)
     end
 
     self.button = Button:New {
@@ -49,8 +41,8 @@ function AreaField:init(field)
             end
         end,
         OnClick = {
-            function()
-                SB.stateManager:SetState(SelectAreaState(self.OnSelectArea))
+            function(...)
+                SB.stateManager:SetState(self.bridge.SelectObjectTypeState(self.OnSelectObjectType))
             end
         },
         children = {
@@ -61,5 +53,27 @@ function AreaField:init(field)
 
     self.components = {
         self.button,
+        self.btnZoom,
     }
+end
+
+function ObjectTypeField:GetCaption()
+    if self.value ~= nil then
+        return "ID=" .. self.value
+    else
+        return "None"
+    end
+end
+
+-- Custom object classes
+UnitTypeField = ObjectTypeField:extends{}
+function UnitTypeField:init(...)
+    ObjectTypeField.init(self, ...)
+    self.bridge = unitBridge
+end
+
+FeatureTypeField = ObjectTypeField:extends{}
+function FeatureTypeField:init(...)
+    ObjectTypeField.init(self, ...)
+    self.bridge = featureBridge
 end

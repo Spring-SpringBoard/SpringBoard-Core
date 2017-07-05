@@ -262,7 +262,6 @@ function ObjectPropertyWindow:init()
     self:AddField(GroupField({
         ChoiceField({
             name = "fireState",
-            title = "",
             tooltip = "Fire state",
             items = {0, 1, 2},
             captions = {"Hold fire", "Return fire", "Fire at will"},
@@ -270,7 +269,6 @@ function ObjectPropertyWindow:init()
         }),
         ChoiceField({
             name = "moveState",
-            title = "",
             tooltip = "Move state",
             items = {0, 1, 2},
             captions = {"Hold pos", "Maneuver", "Roam"},

@@ -1,3 +1,5 @@
+SB.Include(SB_STATE_DIR .. "abstract_state.lua")
+
 SelectObjectState = AbstractState:extends{}
 
 function SelectObjectState:init(callback)

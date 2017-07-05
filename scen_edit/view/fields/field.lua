@@ -44,17 +44,19 @@ function Field:Validate(value)
 end
 
 function Field:Set(value, source)
-    if self.inUpdate then
+    if self.__inUpdate then
         return
     end
-    self.inUpdate = true
+    self.__inUpdate = true
     local valid, value = self:Validate(value)
     if valid then
         self.value = value
         -- invoke editor view's update
-        self.ev:Update(self.name, source)
+        if self.ev then
+            self.ev:Update(self.name, source)
+        end
     end
-    self.inUpdate = false
+    self.__inUpdate = false
 end
 
 function Field:Added()

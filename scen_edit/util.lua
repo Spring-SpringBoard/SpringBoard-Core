@@ -68,37 +68,6 @@ function CallListeners(listeners, ...)
     end
 end
 
-function SB.MakeConfirmButton(dialog, btnConfirm)
-    dialog.OnConfirm = {}
-    btnConfirm.OnClick = {
-        function()
-            CallListeners(dialog.OnConfirm)
-            dialog:Dispose()
-        end
-    }
-end
-
-function SB.MakeRadioButtonGroup(checkBoxes)
-    for i = 1, #checkBoxes do
-        local checkBox = checkBoxes[i]
-        table.insert(checkBox.OnChange,
-            function(cbToggled, checked)
-                if not checked then
-                    return
-                end
-                for j = 1, #checkBoxes do
-                    if i ~= j then
-                        local cb = checkBoxes[j]
-                        if cb.checked then
-                            cb:Toggle()
-                        end
-                    end
-                end
-            end
-        )
-    end
-end
-
 function SB.checkAreaIntersections(x, z)
     local areas = SB.model.areaManager:getAllAreas()
     local selected, dragDiffX, dragDiffZ
@@ -134,7 +103,6 @@ function SB.MakeSeparator(panel)
     }
     return lblSeparator
 end
-
 
 function SB.CreateNameMapping(origArray)
     local newArray = {}
@@ -247,7 +215,7 @@ function SB.humanExpression(data, exprType, dataType, level)
     elseif (exprType == "value" and data.type == "expr") or exprType == "condition" then
         local expr = nil
         if data.expr then
-            expr = data.expr[1]
+            expr = data.expr
         else
             expr = data
         end
@@ -308,9 +276,9 @@ function SB.humanExpression(data, exprType, dataType, level)
         end
         return "nothing"
     elseif exprType == "numeric_comparison" then
-        return SB.metaModel.numericComparisonTypes[data.cmpTypeID]
+        return SB.metaModel.numericComparisonTypes[data.value]
     elseif exprType == "identity_comparison" then
-        return SB.metaModel.identityComparisonTypes[data.cmpTypeID]
+        return SB.metaModel.identityComparisonTypes[data.value]
 	end
     return data.humanName
     end)
@@ -459,42 +427,67 @@ end
 
 function SB.createNewPanel(opts)
     local dataTypeName = opts.dataType.type
-    if dataTypeName == "unit" then
-        return UnitPanel(opts)
-    elseif dataTypeName == "feature" then
-        return FeaturePanel(opts)
-    elseif dataTypeName == "area" then
-        return AreaPanel(opts)
-    elseif dataTypeName == "trigger" then
-        return TriggerPanel(opts)
-    elseif dataTypeName == "unitType" then
-        return UnitTypePanel(opts)
-    elseif dataTypeName == "featureType" then
-        return FeatureTypePanel(opts)
-    elseif dataTypeName == "team" then
-        return TeamPanel(opts)
-    elseif dataTypeName == "number" then
-        return NumberPanel(opts)
-    elseif dataTypeName == "string" then
-        return StringPanel(opts)
-    elseif dataTypeName == "bool" then
-        return BoolPanel(opts)
-    elseif dataTypeName == "numericComparison" then
-        return NumericComparisonPanel(opts)
+
+    local fieldTypeMapping = {
+        unit = UnitField,
+        feature = FeatureField,
+        area = AreaField,
+        trigger = TriggerField,
+        unitType = UnitTypeField,
+        featureType = FeatureTypeField,
+        team = TeamField,
+        number = NumericField,
+        string = StringField,
+        bool = BooleanField,
+        numericComparison = NumericComparisonField,
+        identityComparison = IdentityComparisonField,
+        position = PositionField,
+
+    }
+
+    local fieldType = fieldTypeMapping[dataTypeName]
+
+    if fieldType then
+        opts.FieldType = fieldType
     elseif dataTypeName == "order" then
         return OrderPanel(opts)
-    elseif dataTypeName == "identityComparison" then
-        return IdentityComparisonPanel(opts)
-    elseif dataTypeName == "position" then
-        return PositionPanel(opts)
-    elseif dataTypeName == "function" or dataTypeName == "action" then
-        return FunctionPanel(opts)
     elseif dataTypeName:find("_array") then
-        return GenericArrayPanel(opts)
+        -- return GenericArrayPanel(opts)
+        local atomicType = dataTypeName:gsub("_array", "")
+        opts.FieldType = function(tbl)
+            local atomicField = fieldTypeMapping[atomicType]
+            tbl.type = atomicField
+            -- tbl.type = function(atomicTbl)
+            --     Field({
+            --         components = {
+            --             Button:New {
+            --
+            --             }
+            --         }
+            --     })
+            -- end
+            return ArrayField(tbl)
+        end
+    elseif dataTypeName == "function" or dataTypeName == "action" then
+        opts.FieldType = function(tbl)
+            tbl.dataType = opts.dataType
+            tbl.trigger = opts.trigger
+            tbl.params = opts.params
+            return FunctionField(tbl)
+        end
     elseif dataTypeName ~= nil and SB.metaModel:GetCustomDataType(dataTypeName) then
-        return CustomDataTypePanel(opts)
+        opts.FieldType = function(tbl)
+            tbl.dataType = opts.dataType
+            tbl.trigger = opts.trigger
+            tbl.params = opts.params
+            return CustomDataTypeField(tbl)
+        end
+
+    else
+        Log.Error("No panel for this data: " .. tostring(dataTypeName))
+        return
     end
-    Log.Error("No panel for this data: " .. tostring(dataTypeName))
+    return TypePanel(opts)
 end
 
 SB.delayed = {
@@ -540,6 +533,25 @@ function SB.SetControlEnabled(control, enabled)
     for _, childCtrl in pairs(control.childrenByName) do
         SB.SetControlEnabled(childCtrl, enabled)
     end
+end
+
+-- Make window modal in respect to the source control.
+-- The source control will not be usable until the window is disposed.
+function SB.MakeWindowModal(window, source)
+    -- FIXME: Needed?
+    while source.classname ~= "window" do
+        source = source.parent
+    end
+    SB.SetControlEnabled(source, false)
+
+    if not window.OnDispose then
+        window.OnDispose = {}
+    end
+    table.insert(window.OnDispose,
+        function()
+            SB.SetControlEnabled(source, true)
+        end
+    )
 end
 
 function SB.DirExists(path, ...)

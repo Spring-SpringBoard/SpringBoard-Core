@@ -80,7 +80,8 @@ function DefaultState:MakeAreaTrigger(areaID)
                     type = "pred",
                 },
                 relation = {
-                    cmpTypeID = 1,
+                    value = 1,
+                    type = "pred",
                 },
                 second = {
                     name = "Trigger area",

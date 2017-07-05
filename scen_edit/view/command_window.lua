@@ -75,7 +75,6 @@ function CommandWindow:init()
         return id1 - id2
     end
 
-Spring.Echo("self.list.ctrl", self.list.ctrl, type(self.list.ctrl))
     table.insert(children, self.list.ctrl)
 
     self.window = Window:New {

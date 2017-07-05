@@ -34,9 +34,10 @@ end
 
 function FieldResolver:Resolve(field, type, rawVariable, params)
     if field.type == "expr" then
-        local typeName = field.expr[1].typeName
+        local expr = field.expr
+        local typeName = expr.typeName
         local exprType = SB.metaModel.functionTypes[typeName]
-        return self:CallExpression(field.expr[1], exprType, params)
+        return self:CallExpression(expr, exprType, params)
     elseif field.type == "var" then
         local variable = SB.model.variableManager:getVariable(field.value)
         if not rawVariable then
@@ -52,8 +53,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         return self:Resolve(value, type, nil, params)
     end
 
-    -- FIXME: field.cmpTypeID (comparisons) should also have a "pred" type probably
-    if field.type ~= "pred" and field.cmpTypeID == nil then
+    if field.type ~= "pred" then
         Log.Error("Unexpected field type: " .. tostring(field.type))
         return
     end
@@ -105,9 +105,9 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     elseif type == "position" then
         return field.value
     elseif type == "numericComparison" then
-        return SB.metaModel.numericComparisonTypes[field.cmpTypeID]
+        return SB.metaModel.numericComparisonTypes[field.value]
     elseif type == "identityComparison" then
-        return SB.metaModel.identityComparisonTypes[field.cmpTypeID]
+        return SB.metaModel.identityComparisonTypes[field.value]
     elseif type:find("_array") then
         local atomicType = type:sub(1, type:find("_array") - 1)
         local values = {}
@@ -117,7 +117,8 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         end
         return values
     elseif type == "action" then
-        local typeName = field.expr[1].typeName
+        local expr = field.expr
+        local typeName = expr.typeName
         local exprType = SB.metaModel.actionTypes[typeName]
         return function(functionParams)
             local fParams = params
@@ -127,10 +128,11 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
                     fParams[k] = v
                 end
             end
-            self:CallExpression(field.expr[1], exprType, fParams)
+            self:CallExpression(expr, exprType, fParams)
         end
     elseif type == "function" then
-        local typeName = field.expr[1].typeName
+        local expr = field.expr
+        local typeName = expr.typeName
         local exprType = SB.metaModel.functionTypes[typeName]
         return function(functionParams)
             local fParams = params
@@ -140,10 +142,10 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
                     fParams[k] = v
                 end
             end
-            return self:CallExpression(field.expr[1], exprType, fParams)
+            return self:CallExpression(expr, exprType, fParams)
         end
     elseif type ~= nil then
-        local value = field.value[1]
+        local value = field.value
         local dataType = SB.metaModel:GetCustomDataType(value.typeName)
         if dataType then
             local retVal = {}

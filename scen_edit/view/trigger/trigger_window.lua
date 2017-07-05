@@ -1,5 +1,7 @@
 SB_VIEW_TRIGGER_PANELS_DIR = Path.Join(SB_VIEW_TRIGGER_DIR, "panels/")
 SB.IncludeDir(SB_VIEW_TRIGGER_PANELS_DIR)
+SB_VIEW_TRIGGER_FIELDS_DIR = Path.Join(SB_VIEW_TRIGGER_DIR, "fields/")
+SB.IncludeDir(SB_VIEW_TRIGGER_FIELDS_DIR)
 
 TriggerWindow = LCS.class{}
 
@@ -58,7 +60,7 @@ function TriggerWindow:init(trigger)
         backgroundColor = SB.conf.BTN_ADD_COLOR,
         tooltip = "Add action",
     }
-    local btnOk = Button:New {
+    local btnOK = Button:New {
         caption='OK',
         width=100,
         x = 370,
@@ -106,7 +108,7 @@ function TriggerWindow:init(trigger)
             btnAddEvent,
             btnAddCondition,
             btnAddAction,
-            btnOk,
+            btnOK,
             btnCancel,
         }
     }
@@ -297,16 +299,16 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         if param.type == 'var' then
             paramName = SB.model.variableManager:getVariable(param.value).name
         elseif param.type == "expr" then
-            local expr = param.expr[1]
+            local expr = param.expr
             paramName = SB.metaModel.functionTypes[expr.typeName].humanName
         elseif type(paramName) == 'table' then
             paramName = "{...}"
         end
         if input.name == "relation" then
             if root.typeName == "compare_number" then
-                paramName = SB.metaModel.numericComparisonTypes[root.relation.cmpTypeID]
+                paramName = SB.metaModel.numericComparisonTypes[root.relation.value]
             else
-                paramName = SB.metaModel.identityComparisonTypes[root.relation.cmpTypeID]
+                paramName = SB.metaModel.identityComparisonTypes[root.relation.value]
             end
         end
         local lblParam = Label:New {
@@ -317,7 +319,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         }
 
         if param.type == "expr" then
-            local expr = param.expr[1]
+            local expr = param.expr
             local exprType = SB.metaModel.functionTypes[expr.typeName]
 
             self:PopulateExpressions(expr, exprType, level + 1, expr.typeName)
@@ -329,22 +331,36 @@ function TriggerWindow:_GetTriggerElementWindowParams()
     return {
         trigger = self.trigger,
         params = SB.model.triggerManager:GetTriggerScopeParams(self.trigger),
-        parentWindow = self.window,
-        triggerWindow = self,
     }
+end
+
+function TriggerWindow:_PostElementWindowCreate(elementWindow)
+    SB.MakeWindowModal(elementWindow.window, self.window)
+    return elementWindow
 end
 
 function TriggerWindow:MakeAddConditionWindow()
     local opts = self:_GetTriggerElementWindowParams()
     opts.mode = 'add'
-    return ConditionWindow(opts)
+    opts.OnConfirm = {
+        function(element)
+            table.insert(self.trigger.conditions, element)
+            self:Populate()
+        end
+    }
+    return self:_PostElementWindowCreate(ConditionWindow(opts))
 end
 
 function TriggerWindow:MakeEditConditionWindow(condition)
     local opts = self:_GetTriggerElementWindowParams()
     opts.mode = 'edit'
     opts.condition = condition
-    return ConditionWindow(opts)
+    opts.OnConfirm = {
+        function(element)
+            self:Populate()
+        end
+    }
+    return self:_PostElementWindowCreate(ConditionWindow(opts))
 end
 
 function TriggerWindow:MakeRemoveConditionWindow(condition, idx)
@@ -356,14 +372,25 @@ end
 function TriggerWindow:MakeAddEventWindow()
     local opts = self:_GetTriggerElementWindowParams()
     opts.mode = 'add'
-    return EventWindow(opts)
+    opts.OnConfirm = {
+        function(element)
+            table.insert(self.trigger.events, element)
+            self:Populate()
+        end
+    }
+    return self:_PostElementWindowCreate(EventWindow(opts))
 end
 
 function TriggerWindow:MakeEditEventWindow(event)
     local opts = self:_GetTriggerElementWindowParams()
     opts.mode = 'edit'
     opts.event = event
-    return EventWindow(opts)
+    opts.OnConfirm = {
+        function(element)
+            self:Populate()
+        end
+    }
+    return self:_PostElementWindowCreate(EventWindow(opts))
 end
 
 function TriggerWindow:MakeRemoveEventWindow(event, idx)
@@ -374,14 +401,25 @@ end
 function TriggerWindow:MakeAddActionWindow()
     local opts = self:_GetTriggerElementWindowParams()
     opts.mode = 'add'
-    return ActionWindow(opts)
+    opts.OnConfirm = {
+        function(element)
+            table.insert(self.trigger.actions, element)
+            self:Populate()
+        end
+    }
+    return self:_PostElementWindowCreate(ActionWindow(opts))
 end
 
 function TriggerWindow:MakeEditActionWindow(action)
     local opts = self:_GetTriggerElementWindowParams()
     opts.mode = 'edit'
     opts.action = action
-    return ActionWindow(opts)
+    opts.OnConfirm = {
+        function(element)
+            self:Populate()
+        end
+    }
+    return self:_PostElementWindowCreate(ActionWindow(opts))
 end
 
 function TriggerWindow:MakeRemoveActionWindow(action, idx)

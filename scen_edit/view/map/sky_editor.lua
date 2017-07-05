@@ -14,8 +14,6 @@ Editor.Register({
 function SkyEditor:init()
     self:super("init")
 
-    self.initializing = true
-
     self:AddField(GroupField({
         ColorField({
             name = "sunColor",
@@ -89,10 +87,9 @@ function SkyEditor:init()
         },
     }
 
-    self:Finalize(children)
-    self.initializing = false
-
     SB.commandManager:addListener(self)
+
+    self:Finalize(children)
 end
 
 function _ColorArrayToChannels(colorArray)
@@ -128,7 +125,7 @@ function SkyEditor:OnEndChange(name)
 end
 
 function SkyEditor:OnFieldChange(name, value)
-    if self.initializing or self.updating then
+    if self.updating then
         return
     end
 
