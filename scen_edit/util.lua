@@ -265,8 +265,8 @@ function SB.humanExpression(data, exprType, dataType, level)
             return data.name
         elseif data.type == "var" then
             return SB.model.variableManager:getVariable(data.value).name
-        elseif data.orderTypeName then
-            local orderType = SB.metaModel.orderTypes[data.orderTypeName]
+        elseif data.typeName then
+            local orderType = SB.metaModel.orderTypes[data.typeName]
             local humanName = orderType.humanName
             for i = 1, #orderType.input do
                 local input = orderType.input[i]
@@ -450,22 +450,31 @@ function SB.createNewPanel(opts)
     if fieldType then
         opts.FieldType = fieldType
     elseif dataTypeName == "order" then
-        return OrderPanel(opts)
+        opts.FieldType = function(tbl)
+            tbl.dataType = opts.dataType
+            tbl.trigger = opts.trigger
+            tbl.params = opts.params
+            tbl.windowType = OrderWindow
+            return TriggerDataTypeField(tbl)
+        end
+        -- return OrderPanel(opts)
     elseif dataTypeName:find("_array") then
         -- return GenericArrayPanel(opts)
         local atomicType = dataTypeName:gsub("_array", "")
+        local atomicField = fieldTypeMapping[atomicType]
+        -- override TypePanel's FieldType in order to use a custom type
         opts.FieldType = function(tbl)
-            local atomicField = fieldTypeMapping[atomicType]
-            tbl.type = atomicField
-            -- tbl.type = function(atomicTbl)
-            --     Field({
-            --         components = {
-            --             Button:New {
-            --
-            --             }
-            --         }
-            --     })
-            -- end
+            -- override ArrayField's type in order to pass trigger data for
+            -- element creation
+            tbl.type = function(tblEl)
+                tblEl.dataType = {
+                    type = atomicType,
+                    sources = opts.dataType.sources,
+                }
+                tblEl.trigger = opts.trigger
+                tblEl.params = opts.params
+                return TriggerDataTypeField(tblEl)
+            end
             return ArrayField(tbl)
         end
     elseif dataTypeName == "function" or dataTypeName == "action" then
@@ -480,9 +489,8 @@ function SB.createNewPanel(opts)
             tbl.dataType = opts.dataType
             tbl.trigger = opts.trigger
             tbl.params = opts.params
-            return CustomDataTypeField(tbl)
+            return TriggerDataTypeField(tbl)
         end
-
     else
         Log.Error("No panel for this data: " .. tostring(dataTypeName))
         return

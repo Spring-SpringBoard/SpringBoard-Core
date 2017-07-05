@@ -115,6 +115,14 @@ function MetaModel:SetCustomDataTypes(dataTypes)
     end
 end
 
+function MetaModel:GetDataType(name)
+    for _, dataType in pairs(self.allDataTypes) do
+        if dataType.name == name then
+            return dataType
+        end
+    end
+end
+
 function MetaModel:GetCustomDataType(name)
     for _, dataType in pairs(self.customDataTypes) do
         if dataType.name == name then

@@ -106,6 +106,7 @@ function TypePanel:MakeSpecialOpt()
             name = "cmbSpecial",
             width = self.width,
             items = GetField(validParams, "name"),
+            captions = GetField(validParams, "humanName"),
         })
     }))
 

@@ -123,8 +123,8 @@ function AbstractTriggerElementWindow:init(opts)
             end
 
             self:Set("elementType", elTypeName)
-            self:UpdatePanel()
         end
+        self:UpdatePanel()
     end
 
     self.window.caption = self:GetWindowCaption()
@@ -188,6 +188,19 @@ function AbstractTriggerElementWindow:__RefreshElementType()
                 end
             end
         end
+    else
+        local subPanelName = self.elType.name
+        local subPanel = SB.createNewPanel({
+            dataType = {
+                type = self.elType.name,
+                sources = "pred",
+            },
+            parent = self.elementPanel,
+            params = self.params,
+        })
+        if subPanel then
+            self.elementPanel[subPanelName] = subPanel
+        end
     end
     if changedExprType then
         self:OnExprTypeChange(self.elType)
@@ -235,13 +248,19 @@ end
 function AbstractTriggerElementWindow:UpdatePanel()
     local elTypeName = self.element.typeName
     local elType = self:GetValidElementTypes()[self.fields["elementType"].value]
-    if elType.input then
+    if elType and elType.input then
         for _, dataType in pairs(elType.input) do
             local subPanelName = dataType.name
             local subPanel = self.elementPanel[subPanelName]
             if subPanel then
                 subPanel:UpdatePanel(self.element[subPanelName])
             end
+        end
+    else
+        local subPanelName = self.elType.name
+        local subPanel = self.elementPanel[subPanelName]
+        if subPanel then
+            subPanel:UpdatePanel(self.element)
         end
     end
 end
@@ -252,7 +271,7 @@ function AbstractTriggerElementWindow:UpdateModel()
 
     local success = true
     local errorSubPanels = {}
-    if elType.input then
+    if elType and elType.input then
         for _, dataType in pairs(elType.input) do
             local subPanelName = dataType.name
             local subPanel = self.elementPanel[subPanelName]
@@ -262,6 +281,16 @@ function AbstractTriggerElementWindow:UpdateModel()
                     success = false
                     table.insert(errorSubPanels, subPanel.stackPanel)
                 end
+            end
+        end
+    else
+        local subPanelName = self.elType.name
+        local subPanel = self.elementPanel[subPanelName]
+        if subPanel then
+            self.element = {}
+            if not self.elementPanel[subPanelName]:UpdateModel(self.element) then
+                success = false
+                table.insert(errorSubPanels, subPanel.stackPanel)
             end
         end
     end

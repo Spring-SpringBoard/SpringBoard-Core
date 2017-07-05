@@ -175,7 +175,7 @@ function RuntimeModel:GameFrame(frameNum)
         return
     end
 
-    if Spring.GetGameFrame() % 10 == 0 then
+    if Spring.GetGameFrame() % checkRate == 0 then
         local newUnitIDs = self:GetAllUnits()
         local unitIDs = {}
         --update area-unit models
@@ -229,6 +229,7 @@ function RuntimeModel:OnEvent(eventName, params)
     end
 
     params = params or {}
+    Spring.Echo("Event: " .. eventName, table.show(params))
 
     if self.eventTriggers[eventName] then
         for _, trigger in pairs(self.eventTriggers[eventName]) do
@@ -242,6 +243,8 @@ function RuntimeModel:ConditionStep(trigger, params)
         return
     end
     local cndSatisfied = self:ComputeTriggerConditions(trigger, params)
+    Spring.Echo("[Trigger:" .. tostring(trigger.id) .. "] Condition check: " ..
+        tostring(cndSatisfied))
     if cndSatisfied then
         self:ActionStep(trigger, params)
     end
@@ -250,6 +253,7 @@ end
 function RuntimeModel:ActionStep(trigger, params)
     for _, action in pairs(trigger.actions) do
         local actionType = SB.metaModel.actionTypes[action.typeName]
+        Spring.Echo("[Trigger:" .. tostring(trigger.id) .. "] Action:" .. tostring(action.typeName))
         self.fieldResolver:CallExpression(action, actionType, params, true)
     end
 end
@@ -285,6 +289,9 @@ end
 function RuntimeModel:ComputeTriggerConditions(trigger, params)
     for _, condition in pairs(trigger.conditions) do
         local conditionType = SB.metaModel.functionTypes[condition.typeName]
+        table.echo(condition)
+        table.echo(params)
+        table.echo(conditionType)
         local result = self.fieldResolver:CallExpression(condition, conditionType, params)
         if not result then
             return false

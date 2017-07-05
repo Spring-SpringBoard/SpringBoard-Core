@@ -1,13 +1,14 @@
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
-CustomDataTypeField = Field:extends{}
+TriggerDataTypeField = Field:extends{}
 
-function CustomDataTypeField:init(field)
+function TriggerDataTypeField:init(field)
     self.width = 200
+    self.windowType = TriggerDataTypeWindow
 
     Field.init(self, field)
 
-    self.btnCustomDataType = Button:New {
+    self.btnDataType = Button:New {
         caption = "Custom dataType",
         width = self.width,
         height = self.height,
@@ -17,7 +18,7 @@ function CustomDataTypeField:init(field)
                 if self.value then
                     mode = 'edit'
                 end
-                local customDataTypeWindow = CustomDataTypeWindow({
+                self.windowType({
                     mode = mode,
                     dataType = self.dataType,
                     element = self.value,
@@ -31,13 +32,13 @@ function CustomDataTypeField:init(field)
                     },
                 })
                 -- parentWindow = self.parent.parent.parent,
-                -- SB.MakeWindowModal(customDataTypeWindow.window, self.parent)
+                -- SB.MakeWindowModal(TriggerDataTypeWindow.window, self.parent)
             end
         },
     }
 
     self.components = {
-        self.btnCustomDataType
+        self.btnDataType
     }
 end
 
@@ -46,21 +47,22 @@ end
 ------------------
 SB.Include(Path.Join(SB_VIEW_TRIGGER_DIR, "abstract_trigger_element_window.lua"))
 
-CustomDataTypeWindow = AbstractTriggerElementWindow:extends{}
+TriggerDataTypeWindow = AbstractTriggerElementWindow:extends{}
 
-function CustomDataTypeWindow:init(opts)
+function TriggerDataTypeWindow:init(opts)
     self.dataType = opts.dataType
+    self.dataTypeDef = SB.metaModel:GetDataType(self.dataType.type)
     AbstractTriggerElementWindow.init(self, opts)
 end
 
-function CustomDataTypeWindow:GetValidElementTypes()
-    return SB.CreateNameMapping({SB.metaModel:GetCustomDataType(self.dataType.type)})
+function TriggerDataTypeWindow:GetValidElementTypes()
+    return SB.CreateNameMapping({self.dataTypeDef})
 end
 
-function CustomDataTypeWindow:GetWindowCaption()
+function TriggerDataTypeWindow:GetWindowCaption()
     if self.mode == 'add' then
-        return "New " .. self.dataType.type
+        return "New " .. self.dataTypeDef.humanName
     elseif self.mode == 'edit' then
-        return "Edit " .. self.dataType.type
+        return "Edit " .. self.dataTypeDef.humanName
     end
 end

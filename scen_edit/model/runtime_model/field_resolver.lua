@@ -54,7 +54,9 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     end
 
     if field.type ~= "pred" then
-        Log.Error("Unexpected field type: " .. tostring(field.type))
+        Log.Error("Unexpected field type: " .. tostring(field.type) ..
+            " for field name: " .. tostring(field.name))
+        table.echo(field)
         return
     end
 
@@ -85,9 +87,11 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     elseif type == "trigger" then
         return SB.model.triggerManager:getTrigger(tonumber(field.value))
     elseif type == "order" then
-        local orderType = SB.metaModel.orderTypes[field.orderTypeName]
+        -- FIXME: maybe we should be saving orders directly as well
+        field = field.value
+        local orderType = SB.metaModel.orderTypes[field.typeName]
         local order = {
-            orderTypeName = field.orderTypeName,
+            typeName = field.typeName,
             input = {}
         }
         for i = 1, #orderType.input do
@@ -117,7 +121,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         end
         return values
     elseif type == "action" then
-        local expr = field.expr
+        local expr = field.value
         local typeName = expr.typeName
         local exprType = SB.metaModel.actionTypes[typeName]
         return function(functionParams)
@@ -131,7 +135,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             self:CallExpression(expr, exprType, fParams)
         end
     elseif type == "function" then
-        local expr = field.expr
+        local expr = field.value
         local typeName = expr.typeName
         local exprType = SB.metaModel.functionTypes[typeName]
         return function(functionParams)

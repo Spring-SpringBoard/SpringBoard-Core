@@ -15,7 +15,7 @@ end
 return {
     actions = function()
         local variableAssignments = {}
-        allTypes = SB.coreTypes()
+        allTypes = SB.metaModel:GetAllDataTypes()
         for _, type in pairs(allTypes) do
             if CanBeVariable(type) then
                 local variableAssignment = {
@@ -553,22 +553,6 @@ return {
                     SB.displayUtil:displayText("Added order", {x, y, z}, color )
                 end
             },
-            {
-                humanName = "Issue order to units",
-                name = "ISSUE_ORDER_TO_UNITS",
-                input = { "unit_array", "order" },
-                tags = {"Order"},
-                execute = function (input)
-                    for _, unit in pairs(input.unit_array) do
-                        local orderTypeName = input.order.orderTypeName
-                        local newInput = {
-                            unit = unit,
-                            params = input.order.input,
-                        }
-                        SB.metaModel.orderTypes[orderTypeName].execute(newInput)
-                    end
-                end
-            },
             unpack(variableAssignments),
         }
 
@@ -648,8 +632,7 @@ return {
     end,
     functions = function()
         local functions = {}
-        local coreTypes = SB.coreTypes()
-        local allTypes = coreTypes
+        local allTypes = SB.metaModel:GetAllDataTypes()
 
         for _, basicType in pairs(allTypes) do
             if basicType.canCompare == nil or basicType.canCompare == true then
@@ -683,6 +666,7 @@ return {
                         local first = input.first
                         local second = input.second
                         local relation = input.relation
+                        Spring.Echo(first, second, relation)
                         if relation == "is" or relation == "is not" then
                             local isSame = false
                             -- note: we want nil to be ~= to nil

@@ -114,6 +114,15 @@ local function CheckConfig()
     end
 end
 
+local function MaybeLoad()
+    if not hasScenarioFile and SB.projectDir ~= nil and not SB.projectLoaded then
+        Log.Notice("Loading project (from widget)")
+        local cmd = LoadProjectCommandWidget(SB.projectDir, false)
+        SB.commandManager:execute(cmd, true)
+        SB.projectLoaded = true
+    end
+end
+
 local RELOAD_GADGETS = true
 function widget:Initialize()
     VFS.Include("scen_edit/exports.lua")
@@ -183,6 +192,10 @@ function widget:Initialize()
         SB.model.areaManager:addListener(viewAreaManagerListener)
     end
     self._START_TIME = os.clock()
+
+    if Spring.GetGameFrame() > 10 then
+        MaybeLoad()
+    end
 end
 
 function reloadGadgets()
@@ -244,12 +257,7 @@ function widget:KeyPress(key, mods, isRepeat, label, unicode)
 end
 
 function widget:GamePreload()
-    if not hasScenarioFile and SB.projectDir ~= nil and not SB.projectLoaded then
-        Log.Notice("Loading project (from widget)")
-        local cmd = LoadProjectCommandWidget(SB.projectDir, false)
-        SB.commandManager:execute(cmd, true)
-        SB.projectLoaded = true
-    end
+    MaybeLoad()
 end
 
 function widget:GameFrame(frameNum)
