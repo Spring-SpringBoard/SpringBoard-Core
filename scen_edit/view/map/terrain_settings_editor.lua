@@ -11,6 +11,25 @@ Editor.Register({
     order = 5,
 })
 
+local WRITE_DATA_DIR = nil
+local function GetWriteDataDir()
+	if WRITE_DATA_DIR then
+		return WRITE_DATA_DIR
+	end
+
+	local dataDirStr = "write data directory: "
+	lines = explode("\n", VFS.LoadFile("infolog.txt", nil, VFS.RAW))
+	dataDir = ""
+	for i, line in pairs(lines) do
+	    if line:find(dataDirStr) then
+	        dataDir = line:sub(line:find(dataDirStr) + #dataDirStr)
+	        break
+	    end
+	end
+	WRITE_DATA_DIR = dataDir
+	return WRITE_DATA_DIR
+end
+
 function TerrainSettingsEditor:init()
     self:super("init")
 
@@ -56,6 +75,59 @@ function TerrainSettingsEditor:init()
         title = "Feature type:",
         tooltip = "da feature type field.",
     }))
+
+    self.btnCompile = Button:New ({
+        caption = "Compile",
+        height = 30,
+        width = 150,
+        OnClick = {
+            function()
+                local folderPath = Path.Join(GetWriteDataDir(), SB_PROJECTS_DIR, "comp1")
+                WG.Connector.Send({
+                    name = "CompileMap",
+                    command = {
+                        heightPath = Path.Join(folderPath, "heightmap.png"),
+                        diffusePath = Path.Join(folderPath, "texture.png"),
+                        grass = Path.Join(folderPath, "grass.png"),
+                        outputPath = Path.Join(folderPath, "MyName"),
+                    }
+                })
+            end
+        }
+    })
+    self.progressBar = Progressbar:New ({
+        x = 160,
+        height = 30,
+        width = 200,
+        value = 0,
+    })
+    self:AddField(Field({
+        name = "btnCompile",
+        height = 30,
+        components = {
+            self.btnCompile,
+            self.progressBar,
+        }
+    }))
+
+    WG.Connector.Register("StartCompiling", function()
+        self.progressBar:SetCaption("Starting...")
+    end)
+
+    WG.Connector.Register("FinishCompiling", function()
+        self.progressBar:SetCaption("Finished")
+    end)
+
+    WG.Connector.Register("UpdateCompiling", function(command)
+        local est, total = command.est, command.total
+        local value = est * 100 / total
+        value = math.max(value, 0)
+        value = math.min(value, 100)
+        self.progressBar:SetValue(value)
+        if self.progressBar.caption ~= "Compiling" then
+            self.progressBar:SetCaption("Compiling")
+        end
+    end)
 
     local children = {
         ScrollPanel:New {

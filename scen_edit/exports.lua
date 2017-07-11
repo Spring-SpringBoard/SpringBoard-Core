@@ -52,6 +52,7 @@ if WG and WG.SBChili then
     Trackbar = Chili.Trackbar
 	TabBar = Chili.TabBar
 	TabPanel = Chili.TabPanel
+    Progressbar = Chili.Progressbar
     screen0 = Chili.Screen0
 end
 
