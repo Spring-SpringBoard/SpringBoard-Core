@@ -54,7 +54,7 @@ function Path.GetParentDir(dir)
     end
 end
 
-function Path.Join(dir, path)
+local function _Join(dir, path)
     dir = dir:gsub("\\", "/")
 
     local lastCharDir = dir:sub(-1)
@@ -70,6 +70,14 @@ function Path.Join(dir, path)
     else
         return dir .. path
     end
+end
+
+function Path.Join(dir, ...)
+    local fullPath = dir
+    for _, path in pairs({...}) do
+        fullPath = _Join(fullPath, path)
+    end
+    return fullPath
 end
 
 function Path.GetExt(path)
