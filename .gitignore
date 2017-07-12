@@ -2,3 +2,7 @@ Session.vim
 .svn
 *.swp
 doc/build
+
+#Python
+__pycache__/
+env/
