@@ -11,10 +11,11 @@ class Wrapper(object):
         self.sc.send({
             "name" : "StartCompiling"
         })
-        self.compileMap_SpringMapConvNG(command)
-        self.sc.send({
-            "name" : "FinishCompiling"
-        })
+        success = self.compileMap_SpringMapConvNG(command)
+        if success:
+            self.sc.send({
+                "name" : "FinishCompiling"
+            })
 
     def compileMap_SpringMapConvNG(self, params):
         callParams = [
@@ -24,14 +25,13 @@ class Wrapper(object):
                 "-ct", "1",
                 "-o", params["outputPath"]
         ]
-        proc = Popen(callParams, stdout=subprocess.PIPE, universal_newlines=True)
+        proc = Popen(callParams, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         for line in iter(proc.stdout.readline, ""):
             try:
                 line = line.split("Compressing")[1]
                 est, total = line.split("/")[0], line.split("/")[1]
                 est = int(est.strip())
                 total = int(total.strip().split()[0].strip())
-                print(est, total)
             except Exception:
                 pass
             else:
@@ -45,8 +45,17 @@ class Wrapper(object):
                 #yield stdout_line
         proc.stdout.close()
         return_code = proc.wait()
+        stderr = proc.stderr.read()
         if return_code:
-            raise subprocess.CalledProcessError(return_code, cmd)
+            self.sc.send({
+                "name" : "ErrorCompiling",
+                "command" : {
+                    "msg" : stderr,
+                }
+            })
+            return False
+        else:
+            return True
 
     def run(self):
         config = json.load(open(CONFIG_FILE, "r"))

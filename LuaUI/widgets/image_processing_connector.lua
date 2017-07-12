@@ -20,6 +20,7 @@ local socket = socket
 
 local host, port
 local client
+local isConnected = false
 local buffer = ""
 local commands = {} -- table with possible commands
 
@@ -59,6 +60,11 @@ local Connector = {
 }
 
 function Connector.Send(command)
+	if not isConnected then
+		Spring.Log(LOG_SECTION, LOG.WARNING,
+			"No wrapper client detected. Ignoring command: " .. tostring(command.name))
+		return
+	end
 	Spring.Log(LOG_SECTION, "info", "Connector.SendCommand(...)")
 	local encoded = json.encode(command)
 	client:send(encoded .. "\n")
@@ -121,10 +127,17 @@ end
 
 -- update socket - receive data and split into lines
 function widget:Update()
+	isConnected = false
+	if client then
+		if client:getpeername() then
+			isConnected = true
+		end
+	end
 	if client == nil then
 		SocketConnect(host, port)
 		return
 	end
+
 	local readable, writeable, err = socket.select({client}, {client}, 0)
 	if err ~= nil then
 		Spring.Log(LOG_SECTION, "warning", "connector error in select", err)

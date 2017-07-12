@@ -76,38 +76,85 @@ function TerrainSettingsEditor:init()
         tooltip = "da feature type field.",
     }))
 
+    self:AddControl("compile-sep", {
+        Label:New {
+            caption = "Compile map",
+        },
+        Line:New {
+            x = 150,
+        }
+    })
     self.btnCompile = Button:New ({
-        caption = "Compile",
+        caption = "Start",
         height = 30,
-        width = 150,
+        width = 100,
         OnClick = {
             function()
-                local folderPath = Path.Join(GetWriteDataDir(), SB_PROJECTS_DIR, "comp1")
+                self.progressBar.tooltip = ""
+                self.progressBar:SetCaption("")
+
+                local folderPath = self.fields["compileFolder"].value
+                if folderPath == nil then
+                    Spring.Echo("Choose a folder with textures first.")
+                    return
+                end
+
+                heightPath = Path.Join(folderPath, "heightmap.png")
+                diffusePath = Path.Join(folderPath, "texture.png")
+                grass = Path.Join(folderPath, "grass.png")
+                outputPath = Path.Join(folderPath, "MyName")
+
+                if not VFS.FileExists(heightPath, VFS.RAW) then
+                    Spring.Echo("Heightmap texture missing from: " .. tostring(heightPath))
+                    return
+                end
+
+                if not VFS.FileExists(diffusePath, VFS.RAW) then
+                    Spring.Echo("Diffuse texture missing from: " .. tostring(diffusePath))
+                    return
+                end
+
+                folderPath = Path.Join(GetWriteDataDir(), folderPath)
+
+                heightPath = Path.Join(folderPath, "heightmap.png")
+                diffusePath = Path.Join(folderPath, "texture.png")
+                grass = Path.Join(folderPath, "grass.png")
+                outputPath = Path.Join(folderPath, "MyName")
+
                 WG.Connector.Send({
                     name = "CompileMap",
                     command = {
-                        heightPath = Path.Join(folderPath, "heightmap.png"),
-                        diffusePath = Path.Join(folderPath, "texture.png"),
-                        grass = Path.Join(folderPath, "grass.png"),
-                        outputPath = Path.Join(folderPath, "MyName"),
+                        heightPath = heightPath,
+                        diffusePath = diffusePath,
+                        grass = grass,
+                        outputPath = outputPath,
                     }
                 })
             end
         }
     })
     self.progressBar = Progressbar:New ({
-        x = 160,
+        x = 105,
         height = 30,
-        width = 200,
+        width = 120,
         value = 0,
     })
-    self:AddField(Field({
-        name = "btnCompile",
-        height = 30,
-        components = {
-            self.btnCompile,
-            self.progressBar,
-        }
+    self:AddField(GroupField({
+        AssetField({
+            name = "compileFolder",
+            title = "Folder:",
+            tooltip = "Select the compile folder with textures",
+            value = SB_PROJECTS_DIR,
+        }),
+        Field({
+            name = "btnCompile",
+            height = 30,
+            width = 220,
+            components = {
+                self.btnCompile,
+                self.progressBar,
+            }
+        }),
     }))
 
     WG.Connector.Register("StartCompiling", function()
@@ -116,6 +163,12 @@ function TerrainSettingsEditor:init()
 
     WG.Connector.Register("FinishCompiling", function()
         self.progressBar:SetCaption("Finished")
+    end)
+
+    WG.Connector.Register("ErrorCompiling", function(command)
+        self.progressBar:SetCaption("Error")
+        Log.Warning("Failed to compile: " .. tostring(command.msg))
+        self.progressBar.tooltip = tostring(command.msg)
     end)
 
     WG.Connector.Register("UpdateCompiling", function(command)

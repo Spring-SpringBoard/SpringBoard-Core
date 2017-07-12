@@ -8,7 +8,9 @@ function AssetPickerWindow:init(opts)
     local rootDir = opts.rootDir
     local dir = Path.ExtractDir(opts.path or '/')
     local OnSelectItem = opts.OnSelectItem or {}
-    dir = SB.model.assetsManager:ToAssetPath(rootDir, dir)
+    if rootDir then
+        dir = SB.model.assetsManager:ToAssetPath(rootDir, dir)
+    end
 
     self.selectedFile = {}
 
