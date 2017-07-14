@@ -124,9 +124,7 @@ function AssetView:ScanDir()
     --// add dirs at top
     if self.showDirs then
         for _, dir in pairs(self.dirs) do
-            local item = self:AddItem(Path.ExtractFileName(dir), self.imageFolder)
-            item.path = dir
-            item.isFolder = true
+            self:AddFolder(dir)
         end
     end
     self:PopulateItems()
@@ -185,12 +183,47 @@ function AssetView:FilterFile(file)
     return true
 end
 
+function AssetView:AddFolder(folder)
+    local tooltip
+    local image = self.imageFolder
+
+    if SB.DirIsProject(folder) then
+        local sbInfoPath = Path.Join(folder, "sb_info.lua")
+        if VFS.FileExists(sbInfoPath, VFS.RAW) then
+            local sbInfo = VFS.LoadFile(sbInfoPath, VFS.RAW)
+            local sbInfo = loadstring(sbInfo)()
+            local game, mapName = sbInfo.game, sbInfo.mapName
+
+            tooltip = string.format("Game: %s %s\nMap: %s",
+                game.name,
+                game.version,
+                mapName
+            )
+        else
+            Log.Warning("Missing sb_info.lua for project: " .. tostring(folder))
+        end
+
+        local imgPath = Path.Join(folder, "sb_screen.png")
+        if VFS.FileExists(imgPath, VFS.RAW) then
+            image = imgPath
+        end
+    end
+
+    local item = self:AddItem(Path.ExtractFileName(folder), image, tooltip)
+    item.path = folder
+    item.isFolder = true
+end
+
+function AssetView:AddFile(file)
+    local texturePath = ':clr' .. self.itemWidth .. ',' .. self.itemHeight .. ':' .. tostring(file)
+    local name = Path.ExtractFileName(file)
+    local item = self:AddItem(name, texturePath, "")
+    item.path = file
+    item.isFile = true
+end
+
 function AssetView:PopulateItems()
     for _, file in pairs(self.files) do
-        local texturePath = ':clr' .. self.itemWidth .. ',' .. self.itemHeight .. ':' .. tostring(file)
-        local name = Path.ExtractFileName(file)
-        local item = self:AddItem(name, texturePath, "")
-        item.path = file
-        item.isFile = true
+        self:AddFile(file)
     end
 end

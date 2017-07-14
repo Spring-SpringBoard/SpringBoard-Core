@@ -281,3 +281,60 @@ function widget:Update()
     SB.executeDelayed("GameFrame")
     SB.displayUtil:Update()
 end
+
+-- Hackery copied from spring kernel in
+-- order to take screenshots programatically
+local screenTex = nil
+local vsx, vsy = 0, 0
+local function CleanTextures()
+	if screenTex then
+		gl.DeleteTexture(screenTex)
+		screenTex = nil
+	end
+end
+
+function CreateTextures()
+	screenTex = gl.CreateTexture(vsx, vsy, {
+		-- It means you can draw on the texture ;)
+		fbo = true, min_filter = GL.LINEAR, mag_filter = GL.LINEAR,
+		wrap_s = GL.CLAMP, wrap_t = GL.CLAMP,
+	})
+	if screenTex == nil then
+		Log.Error("Error creating screen texture for vsx: " ..
+			tostring(vsx) .. ", vsy: " .. tostring(vsy))
+	end
+end
+
+function PerformDraw()
+    local imgPath = SB.RequestScreenshotPath
+    SB.RequestScreenshotPath = nil
+	if not imgPath then
+        return
+    end
+
+	if VFS.FileExists(imgPath, nil, VFS.RAW) then
+	    os.remove(imgPath)
+	end
+	gl.CopyToTexture(screenTex, 0, 0, 0, 0, vsx, vsy)
+	--gl.Texture(0, screenTex)
+	--gl.TexRect(0, vsy, vsx, 0)
+	gl.RenderToTexture(screenTex, gl.SaveImage, 0, 0, vsx, vsy, imgPath)
+	gl.Texture(0, false)
+end
+
+function widget:ViewResize()
+	vsx, vsy = gl.GetViewSizes()
+	CleanTextures()
+	CreateTextures()
+end
+
+function widget:DrawScreenPost(vsx, vsy)
+    if not screenTex then
+        self:ViewResize()
+    end
+	PerformDraw()
+end
+
+function widget:Shutdown()
+	CleanTextures()
+end

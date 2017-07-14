@@ -598,15 +598,6 @@ function boolToNumber(bool)
     end
 end
 
--- should go to string utils
-function string.starts(String,Start)
-   return string.sub(String,1,string.len(Start))==Start
-end
-
-function string.ends(String,End)
-   return End=='' or string.sub(String,-string.len(End))==End
-end
-
 function explode(div, str)
   if (div=='') then return false end
   local pos,arr = 0,{}
@@ -617,4 +608,19 @@ function explode(div, str)
   end
   table.insert(arr,string.sub(str,pos)) -- Attach chars right of last divider
   return arr
+end
+
+-- Checks whether directory is a SpringBoard project
+function SB.DirIsProject(path)
+    if not (VFS.FileExists(path, VFS.RAW_ONLY) or
+            SB.DirExists(path, VFS.RAW_ONLY)) then
+        return false
+    end
+
+    local modelExists = VFS.FileExists(Path.Join(path, "model.lua"),
+        VFS.RAW)
+    local heightMapExists = VFS.FileExists(Path.Join(path, "heightmap.data"),
+        VFS.RAW)
+
+    return modelExists and heightMapExists
 end

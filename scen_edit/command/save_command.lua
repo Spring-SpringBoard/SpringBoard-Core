@@ -231,7 +231,6 @@ function SaveCommand:execute()
     SBInfoSave(Path.Join(projectDir, "sb_info.lua"))
     Log.Notice("Saved SpringBoard info")
 
-
     if #SB.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = Path.Join(projectDir, "texturemap")
         Spring.CreateDir(texturemapDir)
@@ -239,6 +238,9 @@ function SaveCommand:execute()
         cmd:execute()
         Log.Notice("saved texturemap")
     end
+
+    SB.RequestScreenshotPath = Path.Join(projectDir, "sb_screen.png")
+    Log.Notice("Taking project screenshot...")
 
     SB.projectLoaded = true
 end
