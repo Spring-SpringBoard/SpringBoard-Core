@@ -20,6 +20,7 @@ __SK.host, __SK.port = nil, nil
 __SK.client = nil
 __SK.buffer = ""
 __SK.commands = {} -- table with possible commands
+__SK.isConnected = false
 
 -- drawing related
 __SK.screenTex = nil
@@ -49,9 +50,13 @@ __SK.SpringKernel = {}
 --------------------------------------------------------------------------------
 -- Callin Functions
 
-__SK.currentCmd = ""
 function __SK.DoGadget(cmd)
 	local msg = "spring_kernel_ex|" .. __SK.json.encode(cmd)
+	Spring.SendLuaRulesMsg(msg)
+end
+
+function __SK.AutocompleteGadget(cmd)
+	local msg = "spring_kernel_autocomplete|" .. __SK.json.encode(cmd)
 	Spring.SendLuaRulesMsg(msg)
 end
 
@@ -66,6 +71,20 @@ function __SK.ExecuteLua(args)
 		__SK.SpringKernel.WriteOutput(msg)
 	elseif args.state == "sluarules" or args.state == "uluarules" then
 		__SK.DoGadget(args)
+	else
+		table.insert(msg, {"Invalid state: " .. tostring(args.state), "error"})
+		__SK.SpringKernel.WriteOutput(msg)
+	end
+end
+
+function __SK.Autocomplete(args)
+	local msg = {}
+	if args.state == "luaui" or args.state == "luamenu" then
+		local matches = __SK.autocomplete(args.code)
+		table.insert(msg, {"matches", matches})
+		__SK.SpringKernel.WriteOutput(msg)
+	elseif args.state == "sluarules" or args.state == "uluarules" then
+		__SK.AutocompleteGadget(args)
 	else
 		table.insert(msg, {"Invalid state: " .. tostring(args.state), "error"})
 		__SK.SpringKernel.WriteOutput(msg)
@@ -90,6 +109,7 @@ function __SK.RecieveGadgetMessage(msg)
 end
 
 __SK.commands["execute"] = __SK.ExecuteLua
+__SK.commands["autocomplete"] = __SK.Autocomplete
 __SK.commands["show"] = __SK.ShowScreen
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -99,9 +119,8 @@ __SK.commands["show"] = __SK.ShowScreen
 
 function __SK.SpringKernel.WriteOutput(msg)
 	-- NOTICE: The gsub part fixes an issue with incorrectly formatted json
-	-- FIXME: this suggests an issue with json.encode and should be fixed in the library
-	local encoded = __SK.json.encode(msg):gsub("\\'", "")
-	Spring.Log(__SK.LOG_SECTION, LOG.DEBUG, encoded)
+	local encoded = __SK.json.encode(msg)
+	Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, encoded)
 	__SK.client:send(encoded .. "\n")
 end
 
@@ -159,7 +178,16 @@ end
 
 -- update socket - receive data and split into lines
 function widget:Update()
-	if __SK.client == nil then
+	local isConnectedOrig = __SK.isConnected
+	__SK.isConnected = false
+	if __SK.client then
+		if __SK.client:getpeername() then
+			__SK.isConnected = true
+			if not isConnectedOrig then
+				Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Connected to " .. __SK.client:getpeername())
+			end
+		end
+	elseif __SK.client == nil then
 		__SK.SocketConnect(__SK.host, __SK.port)
 		return
 	end
@@ -171,14 +199,11 @@ function widget:Update()
 	for _, input in ipairs(readable) do
 		local s, status, str = input:receive('*a') --try to read all data
 		if (status == "timeout" or status == nil) and str ~= nil and str ~= "" then
-			__SK._connected = true
 			__SK.CommandReceived(str)
-		elseif status == "closed" and __SK._connected then
+		elseif status == "closed" then
 			Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Connection closed")
 			input:close()
 			__SK.client = nil
-			__SK._connected = false
-			__SK.SocketConnect(__SK.host, __SK.port)
 		end
 	end
 end

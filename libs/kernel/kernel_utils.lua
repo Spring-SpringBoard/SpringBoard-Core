@@ -160,6 +160,41 @@ function __SK.ExecuteLuaCommand(luaCommandStr)
 	return true
 end
 
+function __SK.autocomplete(str)
+    local matches = {}
+
+	local success, err = pcall(function()
+	    local tbl = getfenv()
+	    while true do
+	        local dotStart, dotEnd = str:find(".", 1, true)
+	        if dotStart ~= dotEnd then
+	            return matches
+	        end
+	        if dotStart then
+	            local left = str:sub(1, dotStart-1)
+	            local right = str:sub(dotStart+1)
+
+	            tbl = tbl[left]
+	            if tbl == nil or type(tbl) ~= "table" then
+	                return
+	            end
+	            str = right
+	        else
+	            break
+	        end
+	    end
+
+	    for k, v in pairs(tbl) do
+	        local startIndx = k:find(str, 1, true)
+	        if startIndx == 1 then
+	            table.insert(matches, k)
+	        end
+	    end
+    	return
+	end)
+	return matches
+end
+
 -- returns information about a function
 function _source(f)
     if type(f) ~= "function" then
