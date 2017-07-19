@@ -64,18 +64,6 @@ function TerrainSettingsEditor:init()
         rootDir = "detail/",
     }))
 
-    self:AddField(FeatureField({
-        name = "ff",
-        title = "Feature:",
-        tooltip = "da feature field.",
-    }))
-
-    self:AddField(FeatureTypeField({
-        name = "ftf",
-        title = "Feature type:",
-        tooltip = "da feature type field.",
-    }))
-
     self:AddControl("compile-sep", {
         Label:New {
             caption = "Compile map",
