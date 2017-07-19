@@ -11,8 +11,8 @@ function BooleanField:Update(source)
 end
 
 function BooleanField:init(field)
-    self.width = 200
-    self.value = false
+    self:__SetDefault("width", 200)
+    self:__SetDefault("value", false)
 
     Field.init(self, field)
 

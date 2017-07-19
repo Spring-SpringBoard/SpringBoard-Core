@@ -81,8 +81,8 @@ end
 --sets triggers, areas, etc.
 function Model:SetMetaData(meta)
     self.areaManager:load(meta.areas)
-    self.triggerManager:load(meta.triggers)
     self.variableManager:load(meta.variables)
     self.teamManager:load(meta.teams)
 	self.scenarioInfo:load(meta.info)
+    self.triggerManager:load(meta.triggers)
 end

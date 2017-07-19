@@ -11,10 +11,10 @@ ArrayField = Field:extends{}
 --     canRemove = false, -- true by default
 -- })
 function ArrayField:init(field)
-    self.width = 200
-    self.canAdd = true
-    self.canRemove = true
-    self.value = {}
+    self:__SetDefault("width", 200)
+    self:__SetDefault("canAdd", true)
+    self:__SetDefault("canRemove", true)
+    self:__SetDefault("value", {})
 
     Field.init(self, field)
 

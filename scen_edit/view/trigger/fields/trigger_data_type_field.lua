@@ -3,7 +3,7 @@ SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 TriggerDataTypeField = Field:extends{}
 
 function TriggerDataTypeField:init(field)
-    self.width = 200
+    self:__SetDefault("width", 200)
     self.windowType = TriggerDataTypeWindow
 
     Field.init(self, field)

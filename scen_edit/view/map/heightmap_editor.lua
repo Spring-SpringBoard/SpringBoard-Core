@@ -23,6 +23,9 @@ function HeightmapEditor:init()
         itemWidth = 65,
         itemHeight = 65,
         Validate = function(obj, value)
+            if value == nil then
+                return true
+            end
             if not AssetField.Validate(obj, value) then
                 return false
             end

@@ -1,10 +1,15 @@
 Field = LCS.class{}
 function Field:init(field)
-    if not self.height then
-        self.height = 30
-    end
+    self:__SetDefault("allowNil", true)
+    self:__SetDefault("height", 30)
     for k, v in pairs(field) do
         self[k] = v
+    end
+end
+
+function Field:__SetDefault(key, value)
+    if self[key] == nil then
+        self[key] = value
     end
 end
 
@@ -35,12 +40,7 @@ end
 
 -- Override
 function Field:Validate(value)
-    -- FIXME: specify whether the field can be nil
-    -- and value ~= nil
-    if not self:_CompareValues(value, self.value) then
-        return true, value
-    end
-    return false
+    return self.allowNil, value
 end
 
 function Field:Set(value, source)
@@ -49,7 +49,7 @@ function Field:Set(value, source)
     end
     self.__inUpdate = true
     local valid, value = self:Validate(value)
-    if valid then
+    if valid and not self:_CompareValues(value, self.value) then
         self.value = value
         -- invoke editor view's update
         if self.ev then

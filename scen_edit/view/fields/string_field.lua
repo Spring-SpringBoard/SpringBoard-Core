@@ -29,7 +29,8 @@ function StringField:Update(source)
 end
 
 function StringField:init(field)
-    self.width = 200
+    self:__SetDefault("width", 200)
+    self:__SetDefault("allowNil", false)
 
     Field.init(self, field)
 

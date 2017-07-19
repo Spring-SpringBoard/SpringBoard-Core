@@ -6,8 +6,17 @@ function ObjectTypeField:Update()
     self.lblValue:SetCaption(self:GetCaption())
 end
 
+function ObjectTypeField:Validate(value)
+    if value == nil then
+        return Field.Validate(self, value)
+    end
+    if self.bridge.ObjectDefs and self.bridge.ObjectDefs[value] then
+        return true, value
+    end
+end
+
 function ObjectTypeField:init(field)
-    self.width = 200
+    self:__SetDefault("width", 200)
 
     Field.init(self, field)
 

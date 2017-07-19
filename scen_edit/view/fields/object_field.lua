@@ -6,8 +6,18 @@ function ObjectField:Update()
     self.lblValue:SetCaption(self:GetCaption())
 end
 
+function ObjectField:Validate(value)
+    if value == nil then
+        return Field.Validate(self, value)
+    end
+    local springID = self.bridge.getObjectSpringID(value)
+    if springID and self.bridge.spValidObject(springID) then
+        return true, value
+    end
+end
+
 function ObjectField:init(field)
-    self.width = 200
+    self:__SetDefault("width", 200)
 
     Field.init(self, field)
 

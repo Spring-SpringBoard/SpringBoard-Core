@@ -252,6 +252,10 @@ function Editor:_AddControl(name, children)
     return ctrl
 end
 
+function Editor:Validate(name, value)
+    local field = self.fields[name]
+    return field:Validate(value)
+end
 function Editor:Set(name, value)
     local field = self.fields[name]
     field:Set(value)

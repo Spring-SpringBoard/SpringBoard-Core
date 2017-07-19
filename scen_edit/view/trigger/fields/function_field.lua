@@ -4,7 +4,7 @@ FunctionField = Field:extends{}
 
 -- FIXME: sources is ignored
 function FunctionField:init(field)
-    self.width = 200
+    self:__SetDefault("width", 200)
 
     Field.init(self, field)
 

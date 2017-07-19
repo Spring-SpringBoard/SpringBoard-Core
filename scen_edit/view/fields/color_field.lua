@@ -16,7 +16,7 @@ function ColorField:Update(source)
 end
 
 function ColorField:init(field)
-    self.value  = {1, 1, 1, 1}
+    self:__SetDefault("value", {1, 1, 1, 1})
     if field.expand then
         self.height = 230
         self.width = 450

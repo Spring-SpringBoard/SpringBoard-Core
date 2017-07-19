@@ -12,4 +12,13 @@ function ReloadMetaModelCommand:execute()
     local metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 	Log.Notice("Reload completed successfully")
+    Log.Notice("Validating trggers...")
+    for _, trigger in pairs(SB.model.triggerManager:getAllTriggers()) do
+        local success, msg = SB.model.triggerManager:ValidateTrigger(trigger)
+        if not success then
+            Log.Warning("Trigger error: " .. tostring(trigger.id) .. ". " .. tostring(msg))
+            return
+        end
+    end
+    Log.Notice("Trigger validation complete.")
 end

@@ -10,6 +10,12 @@ end
 -- CRUD methods
 ---------------
 function TriggerManager:addTrigger(trigger)
+    local success, err = self:ValidateTrigger(trigger)
+    if not success and Script.GetName() == "LuaUI" then
+        Log.Warning("Failed validating trigger: " .. tostring(trigger.id) .. " err: " .. tostring(err))
+        --table.echo(trigger)
+    end
+
     if trigger.id == nil then
         trigger.id = self.triggerIDCount + 1
     end
@@ -125,11 +131,53 @@ function TriggerManager:ValidateEvents(trigger)
     return true
 end
 
+function TriggerManager:ValidateExpression(trigger, expr, exprDef)
+    -- First check if all inputs defined in definition exist in instance
+    -- Ignore "typeName" field
+    local found = {typeName = true}
+    local success = true
+    local err
+    for _, dataDef in ipairs(exprDef.input) do
+        local dataDefName = dataDef.name
+        if expr[dataDefName] then
+            found[dataDefName] = true
+        else
+            -- Don't fail early, check for all errors
+            success = false
+            if err then
+                err = err .. "\n"
+            else
+                err = ""
+            end
+            err = err .. "Missing " .. tostring(exprDef.name) .. ":" ..
+                        tostring(dataDefName) .. " for trigger: " ..
+                        tostring(trigger.id)
+        end
+    end
+    -- Now check if there are any extra inputs that aren't present in the definition
+    for name, value in pairs(expr) do
+        if not found[name] then
+            if err then
+                err = err .. "\n"
+            else
+                err = ""
+            end
+            err = err .. "Unexpected " .. tostring(exprDef.name) ..
+                  ":" .. tostring(name) .. " for trigger: " ..
+                  tostring(trigger.id) .. ". Removing."
+            expr[name] = nil
+        end
+    end
+
+    return success, err
+end
+
 function TriggerManager:ValidateCondition(trigger, condition)
-    if not SB.metaModel.functionTypes[condition.typeName] then
+    local exprDef = SB.metaModel.functionTypes[condition.typeName]
+    if not exprDef then
         return false, "Missing reference: " .. condition.typeName
     end
-    return true
+    return self:ValidateExpression(trigger, condition, exprDef)
 end
 
 function TriggerManager:ValidateConditions(trigger)
@@ -143,10 +191,11 @@ function TriggerManager:ValidateConditions(trigger)
 end
 
 function TriggerManager:ValidateAction(trigger, action)
-    if not SB.metaModel.actionTypes[action.typeName] then
+    local exprDef = SB.metaModel.actionTypes[action.typeName]
+    if not exprDef then
         return false, "Missing reference: " .. action.typeName
     end
-    return true
+    return self:ValidateExpression(trigger, action, exprDef)
 end
 
 function TriggerManager:ValidateActions(trigger)

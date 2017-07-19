@@ -69,6 +69,7 @@ end
 
 -- abstract
 function TypePanel:MakePredefinedOpt()
+    local allowNil = not not self.dataType.allowNil
     self:AddField(GroupField({
         BooleanField({
             name = "cbPredefined",
@@ -79,6 +80,7 @@ function TypePanel:MakePredefinedOpt()
         self.FieldType({
             name = "predefined",
             width = self.width,
+            allowNil = allowNil,
         })
     }))
     table.insert(self.radioButtons, "cbPredefined")
@@ -209,46 +211,55 @@ end
 
 -- abstract
 function TypePanel:UpdateModel(field)
+    local fname, value
     if self.fields["cbPredefined"] and self.fields["cbPredefined"].value then
         field.type = "pred"
         field.value = self.fields["predefined"].value
-        return true
+
+        fname, value = "predefined", field.value
     elseif self.fields["cbSpecial"] and self.fields["cbSpecial"].value then
         field.type = "spec"
         field.name = self.fields["cmbSpecial"].value
-        return true
+
+        fname, value = "cmbSpecial", field.name
     elseif self.fields["cbVariable"] and self.fields["cbVariable"].value then
         field.type = "var"
         field.value = self.fields["cmbVariable"].value
-        return true
+
+        fname, value = "cmbVariable", field.value
     elseif self.fields["cbExpression"] and self.fields["cbExpression"].value and self.fields["expression"].value then
         field.type = "expr"
         field.expr = self.fields["expression"].value
-        return true
+
+        fname, value = "expression", field.expr
+    else
+        return false
     end
-    return false
+
+    return self:Validate(fname, value)
 end
 
 -- abstract
 function TypePanel:UpdatePanel(field)
+    local result = false
     if field.type == "pred" then
         self:Set("cbPredefined", true)
+        result = self:Validate("predefined", field.value)
         self:Set("predefined", field.value)
-        return true
     elseif field.type == "spec" then
         self:Set("cbSpecial", true)
+        result = self:Validate("cmbSpecial", field.name)
         self:Set("cmbSpecial", field.name)
-        return true
     elseif field.type == "var" then
         self:Set("cbVariable", true)
+        result = self:Validate("cmbVariable", field.value)
         self:Set("cmbVariable", field.value)
-        return true
     elseif field.type == "expr" then
         self:Set("cbExpression", true)
+        result = self:Validate("expression", field.value)
         self:Set("expression", field.value)
-        return true
     end
-    return false
+    return result
 end
 
 function TypePanel:OnFieldChange(name, value)

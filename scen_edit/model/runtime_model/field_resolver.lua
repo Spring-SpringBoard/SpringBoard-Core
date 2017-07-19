@@ -70,7 +70,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     elseif type == "feature" then
         local featureID = tonumber(field.value)
         if featureID ~= nil then
-            local springID = SB.model.featureManager:getSpringfeatureID(featureID)
+            local springID = SB.model.featureManager:getSpringFeatureID(featureID)
             if Spring.ValidFeatureID(springID) then
                 return springID
             end

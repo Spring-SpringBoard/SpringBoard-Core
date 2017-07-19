@@ -29,8 +29,9 @@ function NumericField:init(field)
     self.__dragSensitivity = 3
     self.__shiftMultiplier = 0.1
 
-    self.decimals = 2
-    self.value = 0
+    self:__SetDefault("decimals", 2)
+    self:__SetDefault("value", 0)
+    self:__SetDefault("allowNil", false)
 
     StringField.init(self, field)
 

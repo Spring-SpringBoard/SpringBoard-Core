@@ -13,7 +13,7 @@ function ChoiceField:Update(source)
 end
 
 function ChoiceField:init(field)
-    self.width = 150
+    self:__SetDefault("width", 150)
 
     Field.init(self, field)
 

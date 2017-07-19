@@ -252,8 +252,29 @@ function AbstractTriggerElementWindow:UpdatePanel()
         for _, dataType in pairs(elType.input) do
             local subPanelName = dataType.name
             local subPanel = self.elementPanel[subPanelName]
-            if subPanel then
-                subPanel:UpdatePanel(self.element[subPanelName])
+            local subElement = self.element[subPanelName]
+            if subPanel and subElement then
+                local validationSuccess = false
+                local callOK = xpcall(
+                    function()
+                        validationSuccess = subPanel:UpdatePanel(subElement)
+                    end,
+                    function()
+                        -- Lua/code error
+                        Log.Error(debug.traceback())
+                        Log.Error("Failed to :UpdatePanel for \"".. tostring(subPanelName) .. "\" panel for def: " .. tostring(elTypeName))
+                    end
+                )
+                -- Failed to validate (data error)
+                if callOK and not validationSuccess then
+                    Log.Warning("Validation failed for \"".. tostring(subPanelName) .. "\" panel for def: " .. tostring(elTypeName) .. " with value:")
+                    table.echo(subElement)
+                end
+            elseif not subPanel then
+                Log.Error("Failed to create \"".. tostring(subPanelName) .. "\" panel for def: " .. tostring(elTypeName))
+            elseif not subElement then
+                -- FIXME: Issue warning as a UI notification. This is not necessarily a user error.
+                Log.Warning("Missing field: \"" .. tostring(subPanelName) .. "\" for def: " .. tostring(elTypeName))
             end
         end
     elseif self.__isCoreDataType then
