@@ -44,10 +44,10 @@ function NumericField:init(field)
     self.editBox:SetText(v)
     self.button.OnMouseUp = {
         function(...)
+            SB.SetMouseCursor()
             if not self.notClick then
                 return
             end
-            SB.SetMouseCursor()
             self.lblValue.font:SetColor(1, 1, 1, 1)
             self.lblTitle.font:SetColor(1, 1, 1, 1)
             self.lblTitle:Invalidate()
@@ -61,31 +61,36 @@ function NumericField:init(field)
     }
     self.button.OnMouseMove = {
         function(obj, x, y, dx, dy, btn, ...)
-            if btn == 1 then
-                local vsx, vsy = Spring.GetViewGeometry()
-                x, y = Spring.GetMouseState()
-                local _, _, _, shift = Spring.GetModKeyState()
-                if not self.startX then
-                    self.startX = x
-                    self.startY = y
-                    self.currentX = x
-                    self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
-                    self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
-                    self.lblTitle:Invalidate()
-                end
+            if btn ~= 1 then
+                return
+            end
+
+            local vsx, vsy = Spring.GetViewGeometry()
+            x, y = Spring.GetMouseState()
+            local _, _, _, shift = Spring.GetModKeyState()
+            if not self.startX then
+                self.startX = x
+                self.startY = y
                 self.currentX = x
-                if math.abs(x - self.startX) > 4 then
-                    self.notClick = true
-                    self.ev:_OnStartChange(self.name)
+                self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
+                self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
+                self.lblTitle:Invalidate()
+            end
+            self.currentX = x
+            if math.abs(x - self.startX) > 4 then
+                self.notClick = true
+                self.ev:_OnStartChange(self.name)
+            end
+            if self.notClick then
+                if shift then
+                    dx = dx * 0.1
                 end
-                if self.notClick then
-                    if shift then
-                        dx = dx * 0.1
-                    end
-                    local value = self.value + dx * self.step
-                    self:Set(value, obj)
-                end
-                -- FIXME: This -could- be Spring.WarpMouse(self.startX, self.startY) but it doesn't seem to work well
+                local value = self.value + dx * self.step
+                self:Set(value, obj)
+
+                -- FIXME: This -could- be  but it doesn't seem to work well
+                -- Spring.Echo(self.startX, self.startY)
+                --Spring.WarpMouse(self.startX, self.startY)
                 Spring.WarpMouse(vsx/2, vsy/2)
                 SB.SetMouseCursor("empty")
             end
