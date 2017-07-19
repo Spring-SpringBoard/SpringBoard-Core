@@ -14,7 +14,6 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     if self.startedChanging then
         return false
     end
-    -- FIXME: cannot use "super" here in the current version of LCS and the new version is broken
     if AbstractEditingState.KeyPress(self, key, mods, isRepeat, label, unicode) then
         return true
     end

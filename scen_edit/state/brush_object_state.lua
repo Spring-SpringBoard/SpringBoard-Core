@@ -139,7 +139,6 @@ function BrushObjectState:CommandExecuted(cmdID)
 end
 
 function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)
-    -- FIXME: cannot use "super" here in the current version of LCS and the new version is broken
     if AbstractMapEditingState.KeyPress(self, key, mods, isRepeat, label, unicode) then
         return true
     end
