@@ -91,16 +91,7 @@ function StringField:init(field)
         end,
         OnClick = {
             function(...)
-                if not self.notClick then
-                    self.originalValue = self.value
-                    self.button:Hide()
-                    self.editBox:SetText(self.lblValue.caption)
-                    self.editBox:Show()
-                    self.editBox.cursor = #self.editBox.text + 1
-                    self.editBox:Select(1, #self.editBox.text + 1)
-                    screen0:FocusControl(self.editBox)
-                    self.ev:_OnStartChange(self.name)
-                end
+                self:__OnClick()
             end
         },
         children = {
@@ -113,4 +104,15 @@ function StringField:init(field)
         self.button,
         self.editBox,
     }
+end
+
+function StringField:__OnClick()
+    self.originalValue = self.value
+    self.button:Hide()
+    self.editBox:SetText(self.lblValue.caption)
+    self.editBox:Show()
+    self.editBox.cursor = #self.editBox.text + 1
+    self.editBox:Select(1, #self.editBox.text + 1)
+    screen0:FocusControl(self.editBox)
+    self.ev:_OnStartChange(self.name)
 end

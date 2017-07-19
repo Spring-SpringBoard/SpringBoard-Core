@@ -47,9 +47,7 @@ function AssetField:init(field)
         end,
         OnClick = {
             function(...)
-                if not self.notClick then
-                    self.assetWindow.window:Show()
-                end
+                self.assetWindow.window:Show()
             end
         },
         children = {

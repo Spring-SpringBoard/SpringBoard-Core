@@ -55,9 +55,7 @@ function ColorField:init(field)
         end,
         OnClick = {
             function(...)
-                if not self.notClick then
-                    self.colorWindow.window:Show()
-                end
+                self.colorWindow.window:Show()
             end
         },
         children = {

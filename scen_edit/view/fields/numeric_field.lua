@@ -26,6 +26,9 @@ function NumericField:Validate(value)
 end
 
 function NumericField:init(field)
+    self.__dragSensitivity = 3
+    self.__shiftMultiplier = 0.1
+
     self.decimals = 2
     self.value = 0
 
@@ -44,56 +47,90 @@ function NumericField:init(field)
     self.editBox:SetText(v)
     self.button.OnMouseUp = {
         function(...)
-            SB.SetMouseCursor()
-            if not self.notClick then
-                return
+            if self.__isDragging then
+                self:__StopDragging()
             end
-            self.lblValue.font:SetColor(1, 1, 1, 1)
-            self.lblTitle.font:SetColor(1, 1, 1, 1)
-            self.lblTitle:Invalidate()
-            if self.startX and self.startY then
-                Spring.WarpMouse(self.startX, self.startY)
-            end
-            self.startX = nil
-            self.notClick = false
-            self.ev:_OnEndChange(self.name)
         end
     }
     self.button.OnMouseMove = {
-        function(obj, x, y, dx, dy, btn, ...)
+        function(obj, _, _, dx, _, btn, ...)
             if btn ~= 1 then
                 return
             end
 
-            local vsx, vsy = Spring.GetViewGeometry()
-            x, y = Spring.GetMouseState()
-            local _, _, _, shift = Spring.GetModKeyState()
-            if not self.startX then
-                self.startX = x
-                self.startY = y
-                self.currentX = x
-                self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
-                self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
-                self.lblTitle:Invalidate()
+            -- Save the initial state so it can be reverted back to
+            local x, y = Spring.GetMouseState()
+            if not self.__initX then
+                self.__initX = x
+                self.__initY = y
             end
-            self.currentX = x
-            if math.abs(x - self.startX) > 4 then
-                self.notClick = true
-                self.ev:_OnStartChange(self.name)
+            -- Determine whether we are dragging the mouse
+            if not self.__isDragging and
+                math.abs(x - self.__initX) > self.__dragSensitivity then
+                -- Initialize the dragging state
+                self:__StartDragging()
             end
-            if self.notClick then
-                if shift then
-                    dx = dx * 0.1
-                end
-                local value = self.value + dx * self.step
-                self:Set(value, obj)
-
-                -- FIXME: This -could- be  but it doesn't seem to work well
-                -- Spring.Echo(self.startX, self.startY)
-                --Spring.WarpMouse(self.startX, self.startY)
-                Spring.WarpMouse(vsx/2, vsy/2)
-                SB.SetMouseCursor("empty")
+            -- Update dragging
+            if self.__isDragging then
+                self:__DraggingUpdate(dx)
             end
         end
     }
+end
+
+-- Overriden
+function NumericField:__OnClick()
+    if not self.__isDragging then
+        StringField.__OnClick(self)
+    end
+end
+
+function NumericField:__StartDragging()
+    -- Set the internal state
+    self.__isDragging = true
+
+    -- Set the controls
+    self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
+    self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
+    self.lblTitle:Invalidate()
+
+    -- Hide the mouse cursor
+    SB.SetMouseCursor("empty")
+
+    -- Notify editor that we have started dragging
+    self.ev:_OnStartChange(self.name)
+end
+
+function NumericField:__StopDragging()
+    -- Reset the controls
+    self.lblValue.font:SetColor(1, 1, 1, 1)
+    self.lblTitle.font:SetColor(1, 1, 1, 1)
+    self.lblTitle:Invalidate()
+
+    -- Reset the mouse cursor and position
+    SB.SetMouseCursor()
+    if self.__initX and self.__initY then
+        Spring.WarpMouse(self.__initX, self.__initY)
+    end
+
+    -- Reset the internal state
+    self.__initX, self.__initY = nil, nil
+    self.__isDragging = false
+
+    -- Notify editor that we have stopped dragging
+    self.ev:_OnEndChange(self.name)
+end
+
+function NumericField:__DraggingUpdate(delta)
+    -- Apply the shift multiplier if it's pressed
+    local _, _, _, shift = Spring.GetModKeyState()
+    if shift then
+        delta = delta * self.__shiftMultiplier
+    end
+    -- Set the new value
+    local value = self.value + delta * self.step
+    self:Set(value, self.button)
+
+    -- Make the mouse fixed
+    Spring.WarpMouse(self.__initX, self.__initY)
 end
