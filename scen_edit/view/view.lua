@@ -54,7 +54,7 @@ end
 
 function View:MaybeAddLobbyButton()
     local luaMenu = Spring.GetMenuName and Spring.SendLuaMenuMsg and Spring.GetMenuName()
-	if not luaMenu then
+	if not luaMenu or luaMenu == "" then
         return
     end
 
