@@ -548,6 +548,8 @@ end
 function SB.MakeWindowModal(window, source)
     -- FIXME: Needed?
     while source.classname ~= "window" do
+        Log.Warning("SB.MakeWindowModal", "Sent source which isn't a window")
+        Log.Warning(debug.traceback())
         source = source.parent
     end
     SB.SetControlEnabled(source, false)
