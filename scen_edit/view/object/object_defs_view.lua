@@ -108,6 +108,50 @@ function ObjectDefsView:init()
         decimals = 0,
     }))
 
+    self.brushFields = {"size", "noise", "spread"}
+    self.setFields = {"amount"}
+    -- Currently we are doing random fields only for the brush mode
+    -- for _, prefix in pairs({"set", "brush"}) do
+    for _, prefix in pairs({"brush"}) do
+        for _, axis in pairs({"x", "y", "z"}) do
+            local minValue, maxValue = 0, 0
+            if prefix == "brush" and axis == "y" then
+                minValue, maxValue = -180, 180
+            end
+            local fieldMinName = prefix .. "Rot" .. axis .. "Min"
+            local fieldMaxName = prefix .. "Rot" .. axis .. "Max"
+            local groupField = GroupField({
+                NumericField({
+                    name = fieldMinName,
+                    value = minValue,
+                    minValue = -360,
+                    maxValue = 360,
+                    title = "Min rot " .. axis .. ":",
+                    tooltip = "Minimum rotation " .. axis
+                }),
+                NumericField({
+                    name = fieldMaxName,
+                    value = maxValue,
+                    minValue = -360,
+                    maxValue = 360,
+                    title = "Max rot " .. axis .. ":",
+                    tooltip = "Minimum rotation " .. axis
+                })
+            })
+            self:AddField(groupField)
+            local tbl
+            if prefix == "brush" then
+                tbl = self.brushFields
+            else
+                tbl = self.setFields
+            end
+            table.insert(tbl, fieldMinName)
+            table.insert(tbl, fieldMaxName)
+            table.insert(tbl, groupField.name)
+        end
+    end
+    self.allFields = Table.Concat(self.brushFields, self.setFields)
+
     local children = {
         self.btnSet,
         self.btnBrush,
@@ -131,7 +175,7 @@ function ObjectDefsView:init()
 	)
 
     self:Finalize(children)
-    self:SetInvisibleFields("size", "spread", "noise", "amount")
+    self:SetInvisibleFields(unpack(self.allFields))
     self.type = "brush"
 end
 
@@ -175,10 +219,10 @@ function UnitDefsView:MakePanel(tbl)
 end
 function UnitDefsView:EnterState()
     if self.type == "set" then
-        self:SetInvisibleFields("size", "noise", "spread")
+        self:SetInvisibleFields(unpack(self.brushFields))
         SB.stateManager:SetState(AddUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     elseif self.type == "brush" then
-        self:SetInvisibleFields("amount")
+        self:SetInvisibleFields(unpack(self.setFields))
         SB.stateManager:SetState(BrushUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     end
 end
@@ -267,10 +311,10 @@ function FeatureDefsView:MakePanel(tbl)
 end
 function FeatureDefsView:EnterState()
     if self.type == "set" then
-        self:SetInvisibleFields("size", "noise", "spread")
+        self:SetInvisibleFields(unpack(self.brushFields))
         SB.stateManager:SetState(AddFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     elseif self.type == "brush" then
-        self:SetInvisibleFields("amount")
+        self:SetInvisibleFields(unpack(self.setFields))
         SB.stateManager:SetState(BrushFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
     end
 end

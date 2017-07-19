@@ -16,17 +16,3 @@ end
 function s11n:GetFeatureBridge()
     return self.featureBridge
 end
-
-function s11n:Get()
-end
-
-function s11n:Set()
-end
-
-function boolToNumber(bool)
-    if bool then
-        return 1
-    else
-        return 0
-    end
-end

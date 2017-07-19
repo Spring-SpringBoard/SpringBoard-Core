@@ -16,3 +16,16 @@ function Table:Merge(table2)
     end
     return self
 end
+
+-- Concatenates one or more array tables into a
+-- new table and returns it
+function Table.Concat(...)
+    local ret = {}
+    local tables = {...}
+    for _, tbl in ipairs(tables) do
+        for _, element in ipairs(tbl) do
+            table.insert(ret, element)
+        end
+    end
+    return ret
+end

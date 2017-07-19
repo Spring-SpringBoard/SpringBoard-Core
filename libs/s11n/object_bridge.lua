@@ -75,7 +75,7 @@ function _ObjectBridge:_SetField(objectID, name, value)
         applyDir = self:_GetField(objectID, "rot")
     end
     self.setFuncs[name](objectID, value)
-    -- ENGINE BUG
+    -- FIXME: ENGINE BUG
     -- If buildings are moved, their direction will be reset.
     -- An additional rotation must be applied after movement.
     if applyDir then
@@ -124,7 +124,6 @@ local function ReportObjectCreationFail(object)
     else
         Spring.Echo(object)
     end
-    return
 end
 
 -------------------------------------------------------

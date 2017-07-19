@@ -1,5 +1,13 @@
 _UnitBridge = _ObjectBridge:extends{}
 
+local function boolToNumber(bool)
+    if bool then
+        return 1
+    else
+        return 0
+    end
+end
+
 local function isUnitCommand(command)
     if command.params ~= nil and #command.params ~= 1 then
         return false

@@ -11,6 +11,12 @@ function BrushObjectState:init(editorView, objectDefIDs)
     self.spread  = self.editorView.fields["spread"].value
     self.noise   = self.editorView.fields["noise"].value
     self.team    = self.editorView.fields["team"].value
+    for _, axis in pairs({"x", "y", "z"}) do
+        local fieldMinName = "brushRot" .. axis .. "Min"
+        local fieldMaxName = "brushRot" .. axis .. "Max"
+        self[fieldMinName] = self.editorView.fields[fieldMinName].value
+        self[fieldMaxName] = self.editorView.fields[fieldMaxName].value
+    end
 
     self.applyDelay          = 0.1
     self.initialDelay        = 0
@@ -81,14 +87,17 @@ function BrushObjectState:Apply(bx, bz, button)
                 x, z = x + math.random() * self.noise - self.noise / 2, z + math.random() * self.noise - self.noise / 2
                 x, z = math.max(0, math.min(Game.mapSizeX, x)), math.max(0, math.min(Game.mapSizeZ, z))
                 if not self:CheckExisting(x, z, spreadSqrt - self.tolerance) then
-                    local angle = math.random() * math.pi * 2
+                    local angles = {}
+                    for _, axis in pairs({"x", "y", "z"}) do
+                        local fieldMinName = "brushRot" .. axis .. "Min"
+                        local fieldMaxName = "brushRot" .. axis .. "Max"
+                        angles[axis] = math.random() * (self[fieldMaxName] - self[fieldMinName]) + self[fieldMinName]
+                    end
                     local y = Spring.GetGroundHeight(x, z)
-                    local dirX = math.sin(angle)
-                    local dirZ = math.cos(angle)
                     local cmd = self.bridge.AddObjectCommand({
                         defName = objectDefID,
                         pos = { x = x, y = y, z = z },
-                        dir = { x = dirX, y = 0, z = dirZ },
+                        rot = angles,
                         team = self.team,
                     })
                     commands[#commands + 1] = cmd
