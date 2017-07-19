@@ -83,6 +83,8 @@ function Editor:Finalize(children, opts)
         table.insert(children, self.btnClose)
     end
 
+    local OnShow = {function() self:__OnShow() end}
+    local OnHide = {function() self:__OnHide() end}
     if not opts.notMainWindow then
         self.window = Control:New {
 --         parent = screen0,
@@ -97,11 +99,13 @@ function Editor:Finalize(children, opts)
             caption = '',
             children = children,
             padding = {0,0,0,0},
+            OnParentPost = OnShow,
+            OnOrphan = OnHide,
         }
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
         if not opts.haxxor then
-            SB.view:SetMainPanel(self.window)
+            SB.view.tabbedWindow:SetMainPanel(self.window)
         else
             Spring.Echo("haxxor")
         end
@@ -121,6 +125,8 @@ function Editor:Finalize(children, opts)
             resizable  = false,
             caption = '',
             children = children,
+            OnParentPost = OnShow,
+            OnOrphan = OnHide,
         }
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
@@ -276,6 +282,40 @@ function Editor:_OnEndChange(name)
     if self._startedChanging then
         self._startedChanging = false
         self:OnEndChange(name)
+    end
+end
+
+function Editor:AddDefaultKeybinding(buttons)
+    local KEY_ZERO = KEYSYMS.N_0
+    self.__keybinding = {}
+    for i, button in ipairs(buttons) do
+        self.__keybinding[KEY_ZERO + i] = button
+        button.tooltip = button.tooltip .. " (" .. tostring(i) .. ")"
+    end
+end
+
+function Editor:KeyPress(key, mods, isRepeat, label, unicode)
+    if not self.__keybinding then
+        return
+    end
+    local button = self.__keybinding[key]
+    if not button then
+        return
+    end
+    CallListeners(button.OnClick)
+    return true
+end
+
+function Editor:__OnShow()
+end
+
+function Editor:__OnHide()
+    local currentState = SB.stateManager:GetCurrentState()
+    if self:IsValidTest(currentState) then
+        SB.stateManager:SetState(DefaultState())
+    end
+    if SB.currentEditor == self then
+        SB.currentEditor = nil
     end
 end
 

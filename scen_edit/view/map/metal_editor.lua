@@ -28,6 +28,9 @@ function MetalEditor:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnAddMetal
+    })
 
     self:AddField(NumericField({
         name = "size",

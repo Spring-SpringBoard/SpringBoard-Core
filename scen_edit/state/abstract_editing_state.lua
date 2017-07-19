@@ -29,6 +29,24 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 			return true
 		end
 	end
+	local editor = self.editorView or SB.currentEditor
+	if editor then
+		if editor:KeyPress(key, mods, isRepeat, label, unicode) then
+			return true
+		end
+	end
+
+	if key == KEYSYMS.TAB then
+		if mods.ctrl then
+			if mods.shift then
+				SB.view.tabbedWindow:PreviousTab()
+				return true
+			else
+				SB.view.tabbedWindow:NextTab()
+				return true
+			end
+		end
+	end
 	-- TODO: make this configurable
     if key == KEYSYMS.Z and mods.ctrl then
         SB.commandManager:execute(UndoCommand())

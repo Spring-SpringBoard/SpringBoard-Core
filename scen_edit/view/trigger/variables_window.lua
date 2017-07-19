@@ -29,6 +29,9 @@ function VariablesWindow:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnAddVariable
+    })
 
     self.variablesPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},

@@ -19,40 +19,6 @@ function AbstractHeightmapEditingState:enterState()
     self.editorView:Set("size", self.size)
 end
 
-function AbstractHeightmapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
-    if AbstractMapEditingState.KeyPress(self, key, mods, isRepeat, label, unicode) then
-        return true
-    end
-    if key == 49 then -- 1
-        local newState = TerrainShapeModifyState(self.editorView)
-        if self.size then
-            newState.size = self.size
-        end
-        SB.stateManager:SetState(newState)
-    elseif key == 50 then -- 2
-        local newState = TerrainSetState(self.editorView)
-        if self.size then
-            newState.size = self.size
-        end
-        SB.stateManager:SetState(newState)
-    elseif key == 51 then -- 3
-        local newState = TerrainSmoothState(self.editorView)
-        if self.size then
-            newState.size = self.size
-        end
-        SB.stateManager:SetState(newState)
---     elseif key == 52 then -- 4
---         local newState = TerrainChangeHeightRectState(self.editorView)
---         SB.stateManager:SetState(newState)
---     elseif key == 53 then -- 5
---         local newState = TerrainShapeModifyState(self.editorView)
---         SB.stateManager:SetState(newState)
-    else
-        return false
-    end
-    return false
-end
-
 function AbstractHeightmapEditingState:GetApplyParams(x, z, button)
 	local strength = self.strength
 	if button == 3 and strength ~= nil then

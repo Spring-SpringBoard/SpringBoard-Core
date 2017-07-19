@@ -40,7 +40,7 @@ function HeightmapEditor:init()
     self.btnAddState = TabbedPanelButton({
         x = 0,
         y = 0,
-        tooltip = "Increase or decrease (1)",
+        tooltip = "Increase or decrease",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "up-card.png" }),
             TabbedPanelLabel({ caption = "Add" }),
@@ -55,7 +55,7 @@ function HeightmapEditor:init()
     self.btnSetState = TabbedPanelButton({
         x = 70,
         y = 0,
-        tooltip = "Set the terrain (2)",
+        tooltip = "Set the terrain",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-set.png" }),
             TabbedPanelLabel({ caption = "Set" }),
@@ -70,7 +70,7 @@ function HeightmapEditor:init()
     self.btnSmoothState = TabbedPanelButton({
         x = 140,
         y = 0,
-        tooltip = "Smooth the terrain (3)",
+        tooltip = "Smooth the terrain",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-smooth.png" }),
             TabbedPanelLabel({ caption = "Smooth" }),
@@ -80,6 +80,11 @@ function HeightmapEditor:init()
                 SB.stateManager:SetState(TerrainSmoothState(self))
             end
         },
+    })
+    self:AddDefaultKeybinding({
+        self.btnAddState,
+        self.btnSetState,
+        self.btnSmoothState
     })
 
     self:AddField(NumericField({

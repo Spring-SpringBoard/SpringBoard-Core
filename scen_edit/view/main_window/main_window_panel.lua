@@ -88,7 +88,8 @@ function MainWindowPanel:AddElement(tbl)
             function(obj)
                 obj:SetPressedState(true)
                 if SB.editors[name].window.hidden then
-					SB.view:SetMainPanel(SB.editors[name].window)
+					SB.view.tabbedWindow:SetMainPanel(SB.editors[name].window)
+					SB.currentEditor = SB.editors[name]
                 end
             end
         },

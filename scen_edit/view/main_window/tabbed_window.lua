@@ -232,7 +232,7 @@ function TabbedWindow:init()
 	end
 
 	-- Create tabs from the editor registry
-	local tabs = {}
+	self.tabs = {}
 
 	-- Group editors by the tab they belong to
 	tabMapping = SB.GroupByField(SB.editorRegistry, "tab")
@@ -264,7 +264,7 @@ function TabbedWindow:init()
 
 		local panel = MainWindowPanel()
 		panel:AddElements(editors)
-		table.insert(tabs, {
+		table.insert(self.tabs, {
 			name = tabName,
 			children = {
 				panel:getControl()
@@ -272,14 +272,15 @@ function TabbedWindow:init()
 		})
 	end
 
-	table.insert(controls, Chili.TabPanel:New {
+	self.__tabPanel = Chili.TabPanel:New {
 		x = 0,
 		right = 0,
 		y = 10,
 		bottom = 20,
 		padding = {0, 0, 0, 0},
-		tabs = tabs,
-	})
+		tabs = self.tabs,
+	}
+	table.insert(controls, self.__tabPanel)
 
 	table.insert(controls, Chili.Line:New {
 		y = mainPanelY - 5,
@@ -309,4 +310,60 @@ function TabbedWindow:init()
 		padding = {5, 0, 0, 0},
 		children = controls,
 	}
+end
+
+function TabbedWindow:SetMainPanel(panel)
+	local mp = self.mainPanel
+
+	-- initialize if needed
+	if mp._hidden == nil then
+		mp._hidden = {}
+	end
+
+	-- hide existing
+	local existing = mp.children[1]
+	if existing ~= nil then
+		mp._hidden[existing] = existing
+		existing:Hide()
+	end
+
+	-- add new or show hidden
+	if mp._hidden[panel] == nil then
+		mp:AddChild(panel)
+	else
+		mp._hidden[panel]:Show()
+		mp._hidden[panel] = nil
+	end
+end
+
+function TabbedWindow:NextTab()
+	local nextTab
+	for i, tab in pairs(self.tabs) do
+		local name = tab.name
+		if self.__tabPanel.children[1]:IsSelected(name) then
+			if i + 1 <= #self.tabs then
+				nextTab = self.tabs[i + 1]
+			else
+				nextTab = self.tabs[1]
+			end
+			break
+		end
+	end
+	self.__tabPanel.children[1]:Select(nextTab.name)
+end
+
+function TabbedWindow:PreviousTab()
+	local prevTab
+	for i, tab in pairs(self.tabs) do
+		local name = tab.name
+		if self.__tabPanel.children[1]:IsSelected(name) then
+			if i - 1 >= 1 then
+				prevTab = self.tabs[i - 1]
+			else
+				prevTab = self.tabs[#self.tabs]
+			end
+			break
+		end
+	end
+	self.__tabPanel.children[1]:Select(prevTab.name)
 end

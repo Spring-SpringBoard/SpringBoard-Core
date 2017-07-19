@@ -29,6 +29,9 @@ function TriggersWindow:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnAddTrigger
+    })
 
     self._triggers = StackPanel:New {
         itemMargin = {0, 0, 0, 0},

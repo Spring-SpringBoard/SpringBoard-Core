@@ -216,6 +216,12 @@ function TextureEditor:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnPaint,
+        self.btnFilter,
+        self.btnDNTS,
+        self.btnVoid
+    })
 
     self:AddField(ChoiceField({
         name = "mode",

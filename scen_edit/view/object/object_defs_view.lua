@@ -35,6 +35,10 @@ function ObjectDefsView:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnBrush,
+        self.btnSet,
+    })
 
     self:MakePanel({
         ctrl = {

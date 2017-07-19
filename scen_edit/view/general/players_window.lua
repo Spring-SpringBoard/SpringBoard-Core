@@ -44,6 +44,9 @@ function PlayersWindow:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnAddPlayer
+    })
 
     local children = {
         ScrollPanel:New {

@@ -151,27 +151,3 @@ function View:DrawScreen()
 -- 		gl.PopMatrix()
     gl.PopMatrix()
 end
-
-function View:SetMainPanel(panel)
-	local mp = self.tabbedWindow.mainPanel
-
-	-- initialize if needed
-	if mp._hidden == nil then
-		mp._hidden = {}
-	end
-
-	-- hide existing
-	local existing = mp.children[1]
-	if existing ~= nil then
-		mp._hidden[existing] = existing
-		existing:Hide()
-	end
-
-	-- add new or show hidden
-	if mp._hidden[panel] == nil then
-		mp:AddChild(panel)
-	else
-		mp._hidden[panel]:Show()
-		mp._hidden[panel] = nil
-	end
-end

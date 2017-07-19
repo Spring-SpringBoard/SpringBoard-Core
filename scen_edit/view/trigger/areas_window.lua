@@ -29,6 +29,9 @@ function AreasWindow:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnAddArea
+    })
 
     self.areasPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},

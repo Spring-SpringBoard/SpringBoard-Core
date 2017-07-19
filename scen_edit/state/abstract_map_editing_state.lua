@@ -14,17 +14,8 @@ function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
     if self.startedChanging then
         return false
     end
-    if AbstractEditingState.KeyPress(self, key, mods, isRepeat, label, unicode) then
-        return true
-    end
 
-	return false
---     if key == 27 then -- KEYSYMS.ESC
---         SB.stateManager:SetState(DefaultState())
---     else
---         return false
---     end
---     return true
+	return AbstractEditingState.KeyPress(self, key, mods, isRepeat, label, unicode)
 end
 
 function AbstractMapEditingState:CanApply()

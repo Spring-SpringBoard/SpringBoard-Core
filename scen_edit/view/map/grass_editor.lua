@@ -28,6 +28,9 @@ function GrassEditor:init()
             end
         },
     })
+    self:AddDefaultKeybinding({
+        self.btnAddGrass
+    })
 
     self:AddField(NumericField({
         name = "size",
