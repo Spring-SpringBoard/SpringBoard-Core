@@ -72,7 +72,7 @@ function NumericField:init(field)
             end
             -- Update dragging
             if self.__isDragging then
-                self:__DraggingUpdate(dx)
+                self:__UpdateDragging(dx)
             end
         end
     }
@@ -121,7 +121,7 @@ function NumericField:__StopDragging()
     self.ev:_OnEndChange(self.name)
 end
 
-function NumericField:__DraggingUpdate(delta)
+function NumericField:__UpdateDragging(delta)
     -- Apply the shift multiplier if it's pressed
     local _, _, _, shift = Spring.GetModKeyState()
     if shift then
