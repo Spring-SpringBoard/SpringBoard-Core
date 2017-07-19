@@ -30,7 +30,7 @@ function ExtensionsManager:__SyncPathRecursive(path)
         self:__SyncFile(fileName)
     end
     for _, folderName in pairs(VFS.SubDirs(path)) do
-        self:SyncPath(folderName)
+        self:__SyncPathRecursive(folderName)
     end
 end
 
@@ -44,6 +44,12 @@ end
 function ExtensionsManager:LoadAllExtensions()
     Log.Notice("Loading " .. tostring(self.extsCount) .. " extensions...")
     for _, extFolder in pairs(self.extsFolders) do
-        self:LoadExtension(extFolder)
+        local success, err = pcall(function()
+            self:LoadExtension(extFolder)
+        end)
+        if not success then
+            Log.Error(string.format("Failed to load extension: %s", extFolder.name))
+            Log.Error(err)
+        end
     end
 end
