@@ -1,6 +1,7 @@
 SB.Include("scen_edit/state/abstract_map_editing_state.lua")
 BrushObjectState = AbstractMapEditingState:extends{}
 
+local waitList = {}
 function BrushObjectState:init(editorView, objectDefIDs)
     AbstractMapEditingState.init(self, editorView)
 
@@ -14,8 +15,6 @@ function BrushObjectState:init(editorView, objectDefIDs)
     self.applyDelay          = 0.1
     self.initialDelay        = 0
     self.tolerance           = 5
-
-    self.waitList = {}
 end
 
 function BrushObjectState:GetApplyParams(x, z, button)
@@ -56,6 +55,10 @@ end
 
 
 function BrushObjectState:Apply(bx, bz, button)
+    -- Create a temporary element in the waitList to store objects which are
+    -- currently being added
+    waitList["temp"] = { objects = {} }
+
     local existing = {}
     local radius = self.size * math.sqrt(2)
     for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(bx, bz, radius)) do
@@ -65,7 +68,7 @@ function BrushObjectState:Apply(bx, bz, button)
     end
     math.randomseed(self.randomSeed)
     local commands = {}
-    local waitingObjects = {}
+
     if button == 1 then
         if self.objectDefIDs and #self.objectDefIDs > 0 then
             local spread = self.spread * 100
@@ -74,11 +77,11 @@ function BrushObjectState:Apply(bx, bz, button)
             local points = sunflower(numPoints, 2)   --  example: n=500, alpha=2
             for i = 1, #points do
                 local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
-                local angle = math.random() * math.pi * 2
                 local x, z = bx + points[i][1] * radius/2, bz + points[i][2] * radius/2
                 x, z = x + math.random() * self.noise - self.noise / 2, z + math.random() * self.noise - self.noise / 2
                 x, z = math.max(0, math.min(Game.mapSizeX, x)), math.max(0, math.min(Game.mapSizeZ, z))
                 if not self:CheckExisting(x, z, spreadSqrt - self.tolerance) then
+                    local angle = math.random() * math.pi * 2
                     local y = Spring.GetGroundHeight(x, z)
                     local dirX = math.sin(angle)
                     local dirZ = math.cos(angle)
@@ -89,7 +92,7 @@ function BrushObjectState:Apply(bx, bz, button)
                         team = self.team,
                     })
                     commands[#commands + 1] = cmd
-                    table.insert(waitingObjects, { x = x, y = y, z = z })
+                    table.insert(waitList["temp"].objects, { x = x, y = y, z = z })
                 end
             end
             self.randomSeed = os.clock()
@@ -105,20 +108,21 @@ function BrushObjectState:Apply(bx, bz, button)
         local compoundCommand = CompoundCommand(commands)
         local cmdID = SB.commandManager:execute(compoundCommand)
         if button == 1 then
-            self.waitList[cmdID] = { objects = waitingObjects }
+            waitList[cmdID] = waitList["temp"]
         end
     end
     self.randomSeed = self.randomSeed + os.clock()
+    waitList["temp"] = nil
     return true
 end
 
 function BrushObjectState:CheckExisting(x, z, distance)
-    for _, waitCmd in pairs(self.waitList) do
+    for _, waitCmd in pairs(waitList) do
         local objects = waitCmd.objects
         for _, object in pairs(objects) do
             local dx, dz = object.x - x, object.z - z
             local d = (dx * dx) + (dz * dz)
-            if d < distance * distance then
+            if d < 4 * distance * distance then
                 return true
             end
         end
@@ -129,13 +133,6 @@ function BrushObjectState:CheckExisting(x, z, distance)
         end
     end
     return false
-end
-
-function BrushObjectState:CommandExecuted(cmdID)
-    local waitCmd = self.waitList[cmdID]
-    if waitCmd then
-        self.waitList[cmdID] = nil
-    end
 end
 
 function BrushObjectState:KeyPress(key, mods, isRepeat, label, unicode)
@@ -235,12 +232,18 @@ function BrushCommandManagerListener:OnCommandExecuted(cmdIDs, isUndo, isRedo)
     local currentState = SB.stateManager:GetCurrentState()
     if currentState:is_A(BrushObjectState) then
         for _, cmdID in pairs(cmdIDs) do
-            currentState:CommandExecuted(cmdID)
+            local waitCmd = waitList[cmdID]
+            if waitCmd then
+                waitList[cmdID] = nil
+            end
         end
     end
 end
 
 brushCommandManagerListener = BrushCommandManagerListener()
+SB.delay(function()
+    SB.commandManager:addListener(brushCommandManagerListener)
+end)
 ------------------------------------------------
 -- End listener definition
 ------------------------------------------------
