@@ -2,24 +2,25 @@ UnitManager = Observable:extends{}
 
 function UnitManager:init(widget)
     self:super('init')
-    self.s2mUnitIDMapping = {}
-    self.m2sUnitIDMapping = {}
+    self._s2m = {}
+    self._m2s = {}
     self.unitIDCounter = 0
     self.widget = widget
 end
 
 function UnitManager:populate()
-    if not self.widget then
-        local allUnits = Spring.GetAllUnits()
-        for i = 1, #allUnits do
-            local unitID = allUnits[i]
-            self:addUnit(unitID)
-        end
+    if self.widget then
+        return
+    end
+    for _, unitID in ipairs(Spring.GetAllUnits()) do
+        self:addUnit(unitID)
     end
 end
 
 function UnitManager:addUnit(unitID, modelID)
-    if self.s2mUnitIDMapping[unitID] then
+    if self._s2m[unitID] then
+        Log.Warning(string.format("Trying to register existing unit. Spring ID: %d Model ID: %d",
+            unitID, self._s2m[unitID]))
         return
     end
     if modelID ~= nil then
@@ -30,11 +31,11 @@ function UnitManager:addUnit(unitID, modelID)
         self.unitIDCounter = self.unitIDCounter + 1
         modelID = self.unitIDCounter
     end
-    if not self.s2mUnitIDMapping[unitID] then
-        self.s2mUnitIDMapping[unitID] = modelID
+    if not self._s2m[unitID] then
+        self._s2m[unitID] = modelID
     end
-    if not self.m2sUnitIDMapping[modelID] then
-        self.m2sUnitIDMapping[modelID] = unitID
+    if not self._m2s[modelID] then
+        self._m2s[modelID] = unitID
     end
 
     self:callListeners("onUnitAdded", unitID, modelID)
@@ -45,33 +46,33 @@ function UnitManager:removeUnit(unitID)
     if unitID == nil then
         return
     end
-    local modelID = self.s2mUnitIDMapping[unitID]
-    if self.s2mUnitIDMapping[unitID] then
-        self.m2sUnitIDMapping[modelID] = nil
+    local modelID = self._s2m[unitID]
+    if self._s2m[unitID] then
+        self._m2s[modelID] = nil
     end
-    self.s2mUnitIDMapping[unitID] = nil
+    self._s2m[unitID] = nil
 
     self:callListeners("onUnitRemoved", unitID, modelID)
 end
 
 function UnitManager:removeUnitByModelID(modelID)
-    local springID = self.m2sUnitIDMapping[modelID]
+    local springID = self._m2s[modelID]
     self:removeUnit(springID)
 end
 
 function UnitManager:getSpringUnitID(modelUnitID)
-    return self.m2sUnitIDMapping[modelUnitID]
+    return self._m2s[modelUnitID]
 end
 
 function UnitManager:getModelUnitID(springUnitID)
-    return self.s2mUnitIDMapping[springUnitID]
+    return self._s2m[springUnitID]
 end
 
 function UnitManager:setUnitModelID(unitID, modelID)
-    if self.s2mUnitIDMapping[unitID] then
+    if self._s2m[unitID] then
         self:removeUnit(unitID)
     end
-    if self.m2sUnitIDMapping[modelID] then
+    if self._m2s[modelID] then
         self:removeUnitByModelID(modelID)
     end
     self:addUnit(unitID, modelID)
@@ -79,7 +80,7 @@ end
 
 function UnitManager:getAllUnits()
     local allUnits = {}
-    for id, _ in pairs(self.m2sUnitIDMapping) do
+    for id, _ in pairs(self._m2s) do
         table.insert(allUnits, id)
     end
     return allUnits
@@ -90,7 +91,7 @@ function UnitManager:serialize()
 end
 
 -- function UnitManager:loadUnit(unit)
---     if self.m2sUnitIDMapping[unit.id] then
+--     if self._m2s[unit.id] then
 --         return
 --     end
 --     -- FIXME: figure out why this sometimes fails on load with a specific unit.id
@@ -136,11 +137,11 @@ function UnitManager:clear()
         --self:removeUnit(unitID)
     end
 
-    for unitID, _ in pairs(self.s2mUnitIDMapping) do
+    for unitID, _ in pairs(self._s2m) do
         self:removeUnit(unitID)
     end
-    self.s2mUnitIDMapping = {}
-    self.m2sUnitIDMapping = {}
+    self._s2m = {}
+    self._m2s = {}
     self.unitIDCounter = 0
 end
 ------------------------------------------------

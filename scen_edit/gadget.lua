@@ -160,7 +160,9 @@ function gadget:TeamDied(teamID)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
-    SB.model.unitManager:addUnit(unitID)
+    if Spring.GetGameFrame() > SB.loadFrame then
+        SB.model.unitManager:addUnit(unitID)
+    end
     SB.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
     -- FIXME: Remove MCL specific hacks
     if Game.gameShortName == "SE MCL" and (unitDefID == 9 or unitDefID == 49) then
@@ -187,7 +189,9 @@ end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
     SB.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
-    SB.model.unitManager:removeUnit(unitID)
+    if Spring.GetGameFrame() > SB.loadFrame then
+        SB.model.unitManager:removeUnit(unitID)
+    end
 end
 
 function gadget:UnitFinished(unitID, unitDefID, teamID)
@@ -195,11 +199,15 @@ function gadget:UnitFinished(unitID, unitDefID, teamID)
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
-    SB.model.featureManager:addFeature(featureID)
+    if Spring.GetGameFrame() > SB.loadFrame then
+        SB.model.featureManager:addFeature(featureID)
+    end
 end
 
 function gadget:FeatureDestroyed(featureID, allyTeam)
-    SB.model.featureManager:removeFeature(featureID)
+    if Spring.GetGameFrame() > SB.loadFrame then
+        SB.model.featureManager:removeFeature(featureID)
+    end
 end
 
 --[[
