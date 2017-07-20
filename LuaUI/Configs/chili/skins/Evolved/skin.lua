@@ -112,9 +112,9 @@ skin.toggle_button = {
 
   -- Checkbox specific properties
   TileImageChecked = ":cl:little_blurred_circle.png",
-  TileImageUnchecked = ":cl:little_blurred_circle.png",
+  TileImageUnchecked = ":cl:little_blurred_circle_empty.png",
   tilesCheckbox = {0.1,0.1,0.1,0.1},
-  uncheckedColor = {1.0, 0, 0, 0.5},
+  uncheckedColor = {0, 0, 0, 1},
   --checkedColor = {0.14, 0.4, 0.8, 1.0},
   checkedColor = {0, 1, 0, 1.0},
   boxsize = 15,
