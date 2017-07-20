@@ -120,7 +120,11 @@ __SK.commands["show"] = __SK.ShowScreen
 function __SK.SpringKernel.WriteOutput(msg)
 	-- NOTICE: The gsub part fixes an issue with incorrectly formatted json
 	local encoded = __SK.json.encode(msg)
-	Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, encoded)
+	if not encoded then
+		__SK.client:send("{} \n")
+		return
+	end
+	Spring.Log(__SK.LOG_SECTION, LOG.DEBUG, encoded)
 	__SK.client:send(encoded .. "\n")
 end
 
@@ -191,6 +195,11 @@ function widget:Update()
 		__SK.SocketConnect(__SK.host, __SK.port)
 		return
 	end
+
+	if isConnectedOrig and not __SK.isConnected then
+		Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Connection closed")
+	end
+
 	local readable, writeable, err = __SK.socket.select({__SK.client}, {__SK.client}, 0)
 	if err ~= nil then
 		--Spring.Log(LOG_SECTION, "error", "SpringKernel error in select", err)
@@ -201,7 +210,6 @@ function widget:Update()
 		if (status == "timeout" or status == nil) and str ~= nil and str ~= "" then
 			__SK.CommandReceived(str)
 		elseif status == "closed" then
-			Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Connection closed")
 			input:close()
 			__SK.client = nil
 		end

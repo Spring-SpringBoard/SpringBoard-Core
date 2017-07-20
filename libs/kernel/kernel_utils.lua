@@ -6,7 +6,18 @@ __SK = {
 }
 
 function __SK.json.encode(...)
-	return __SK.JSON:encode(...)
+	local obj
+	local params = {...}
+	local success, msg = pcall(function()
+		obj = __SK.JSON:encode(unpack(params))
+	end)
+	if success then
+		return obj
+	else
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Error converting json. " .. tostring(msg))
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, debug.traceback())
+		Spring.Log(__SK.LOG_SECTION, LOG.ERROR, __SK._tostring(params))		return nil
+	end
 end
 
 function __SK.json.decode(...)
@@ -154,7 +165,10 @@ function __SK.ExecuteLuaCommand(luaCommandStr)
 		-- 	end
 		-- end)
 		if not success then
-			return false, msg
+			if type(msg) == "function" then
+				Spring.Log(__SK.LOG_SECTION, LOG.ERROR, "Error should not be a function. " .. tostring(luaCommandStr))
+			end
+			return false, tostring(msg)
 		end
 	end
 	return true
