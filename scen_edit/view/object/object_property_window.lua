@@ -337,7 +337,6 @@ function ObjectPropertyWindow:init()
         name = "tooltip",
         title = "Tooltip:",
         tooltip = "Tooltip",
-        value = "",
     }))
 
     self:AddField(NumericField({

@@ -30,6 +30,7 @@ end
 
 function StringField:init(field)
     self:__SetDefault("width", 200)
+    self:__SetDefault("value", "")
     self:__SetDefault("allowNil", false)
 
     Field.init(self, field)
