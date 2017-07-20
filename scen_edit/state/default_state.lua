@@ -77,15 +77,15 @@ function DefaultState:MakeAreaTrigger(areaID)
                 typeName = "compare_area",
                 first = {
                     value = areaID,
-                    type = "pred",
+                    type = "const",
                 },
                 relation = {
                     value = 1,
-                    type = "pred",
+                    type = "const",
                 },
                 second = {
-                    name = "area",
-                    type = "spec",
+                    value = "area",
+                    type = "scoped",
                 },
             },
         },

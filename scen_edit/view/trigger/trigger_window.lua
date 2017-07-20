@@ -299,11 +299,11 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         local stackPanel = MakeComponentPanel(self._triggerPanel)
 
         local param = root[input.name] or {}
-        local paramName = param.name or param.value
+        local paramName = param.value
         if param.type == 'var' then
             paramName = SB.model.variableManager:getVariable(param.value).name
         elseif param.type == "expr" then
-            local expr = param.expr
+            local expr = param.value
             paramName = SB.metaModel.functionTypes[expr.typeName].humanName
         elseif type(paramName) == 'table' then
             paramName = "{...}"
@@ -323,7 +323,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         }
 
         if param.type == "expr" then
-            local expr = param.expr
+            local expr = param.value
             local exprType = SB.metaModel.functionTypes[expr.typeName]
 
             self:PopulateExpressions(expr, exprType, level + 1, expr.typeName)

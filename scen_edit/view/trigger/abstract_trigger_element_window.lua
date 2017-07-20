@@ -187,9 +187,14 @@ function AbstractTriggerElementWindow:__RefreshElementType()
                 params = paramsI,
                 OnBegin = {
                     function(obj)
+                        local humanName = dataType.humanName
+                        if not humanName then
+                            humanName = dataType.name
+                            humanName = humanName:sub(1, 1):upper() .. humanName:sub(2)
+                        end
                         obj:AddControl(dataType.name .. "-sep", {
                             Label:New {
-                                caption = dataType.name,
+                                caption = humanName,
                             },
                             Line:New {
                                 x = 150,
@@ -207,7 +212,7 @@ function AbstractTriggerElementWindow:__RefreshElementType()
         local subPanel = SB.createNewPanel({
             dataType = {
                 type = self.elType.name,
-                sources = "pred",
+                sources = "const",
             },
             parent = self.elementPanel,
             params = self.params,

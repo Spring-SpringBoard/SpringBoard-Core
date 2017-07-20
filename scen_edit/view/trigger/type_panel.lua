@@ -11,21 +11,17 @@ function TypePanel:init(opts)
     assert(opts.params, "params cannot be nil")
 
     self.dataType = opts.dataType
-    -- self.parent = StackPanel:New {
-    --     itemMargin = {0, 0, 0, 0},
-    --     x = 1,
-    --     y = 1,
-    --     right = 1,
-    --     autosize = true,
-    --     resizeItems = false,
-    --     padding = {0, 0, 0, 0},
-    --     parent = opts.parent,
-    -- }
-    self.sources = opts.dataType.sources or {"pred", "spec", "var", "expr"}
+    self.sources = opts.dataType.sources or {"const", "scoped", "var", "expr"}
+    self.sourceNames = {
+        const = "Value",
+        scoped = "Parameter",
+        var = "Variable",
+        expr = "Expression",
+    }
     if type(self.sources) == "string" then
         self.sources = {self.sources}
     end
-    self.radioButtons = {}
+
     self.trigger = opts.trigger
     self.params = opts.params
     self.FieldType = opts.FieldType
@@ -36,11 +32,12 @@ function TypePanel:init(opts)
     self.OnBegin = opts.OnBegin or {}
     CallListeners(self.OnBegin, self)
 
+    self.sourceFieldMap = {}
     for _, source in pairs(self.sources) do
-        if source == "pred" then
-            self:MakePredefinedOpt()
-        elseif source == "spec" then
-            self:MakeSpecialOpt()
+        if source == "const" then
+            self:MakeConstOpt()
+        elseif source == "scoped" then
+            self:MakeScopedOpt()
         elseif source == "var" then
             self:MakeVariableOpt()
         elseif source == "expr" then
@@ -48,48 +45,76 @@ function TypePanel:init(opts)
         end
     end
 
-    -- local children = {
-    --     self.stackPanel,
-    -- }
+    local names = GetKeys(self.sourceFieldMap)
+    local fields = GetValues(self.sourceFieldMap)
+    local captions = {}
+    for _, name in pairs(names) do
+        table.insert(captions, self.sourceNames[name])
+    end
+    if #names > 1 then
+        -- Offset all fields by self.width
+        for _, field in pairs(fields) do
+            for _, comp in pairs(field.components) do
+                if not comp.x then
+                    comp.x = 0
+                end
+                comp.x = comp.x + self.width + 10
+            end
+        end
+        -- Add Choice field that controls which field gets selected
+        table.insert(fields, 1,
+            ChoiceField({
+                x = 0,
+                name = "sourceType",
+                items = names,
+                captions = captions,
+                width = self.width,
+            })
+        )
 
-    -- table.insert(children,
-    --     ScrollPanel:New {
-    --         x = 0,
-    --         y = 0,
-    --         bottom = 0,
-    --         right = 0,
-    --         borderColor = {0,0,0,0},
-    --         horizontalScrollbar = false,
-    --         children = { self.stackPanel },
-    --     }
-    -- )
-    -- self:Finalize(children, {noCloseButton = true, haxxor = true})
-    -- opts.parent:AddChild(self.window)
-    -- self.window:Show()
+        self.groupField = GroupField(fields)
+        self.groupField.autoSize = false
+        self:AddField(self.groupField)
+    else
+        self:AddField(Field({
+            name = "sourceType",
+            value = names[1],
+        }))
+        self:AddField(fields[1])
+    end
 
     self.__initializing = false
+
+    self:_RefreshSourceTypes()
+end
+
+function TypePanel:_RefreshSourceTypes()
+    if not self.groupField then
+        return
+    end
+
+    local invisibleFields = {}
+    for fname, _ in pairs(self.sourceFieldMap) do
+        if fname ~= self.fields["sourceType"].value then
+            table.insert(invisibleFields, fname)
+        end
+    end
+    self.groupField:_HackSetInvisibleFields(invisibleFields)
 end
 
 -- abstract
-function TypePanel:MakePredefinedOpt()
+function TypePanel:MakeConstOpt()
     local allowNil = not not self.dataType.allowNil
-    self:AddField(GroupField({
-        BooleanField({
-            name = "cbPredefined",
-            title = "Predefined:",
-            width = self.width,
-        }),
-        -- Uses a FieldType specified in the constructor
-        self.FieldType({
-            name = "predefined",
-            width = self.width,
-            allowNil = allowNil,
-        })
-    }))
-    table.insert(self.radioButtons, "cbPredefined")
+    -- Uses a FieldType specified in the constructor
+    self.sourceFieldMap["const"] = self.FieldType({
+        name = "const",
+        width = self.width,
+        x = self.width,
+        allowNil = allowNil,
+    })
 end
 
-function TypePanel:MakeSpecialOpt()
+function TypePanel:MakeScopedOpt()
     local validParams = {}
     for _, param in pairs(self.params) do
         if param.type == self.dataType.type then
@@ -100,22 +125,13 @@ function TypePanel:MakeSpecialOpt()
         return
     end
 
-    self:AddField(GroupField({
-        BooleanField({
-            name = "cbSpecial",
-            title = "Special " .. self.dataType.type .. ": ",
-            width = self.width,
-            value = false,
-        }),
-        ChoiceField({
-            name = "cmbSpecial",
-            width = self.width,
-            items = GetField(validParams, "name"),
-            captions = GetField(validParams, "humanName"),
-        })
-    }))
-
-    table.insert(self.radioButtons, "cbSpecial")
+    self.sourceFieldMap["scoped"] = ChoiceField({
+        name = "scoped",
+        width = self.width,
+        x = self.width,
+        items = GetField(validParams, "name"),
+        captions = GetField(validParams, "humanName"),
+    })
 end
 
 function TypePanel:MakeVariableOpt()
@@ -135,21 +151,13 @@ function TypePanel:MakeVariableOpt()
         return
     end
 
-    self:AddField(GroupField({
-        BooleanField({
-            name = "cbVariable",
-            title = "Variable: ",
-            width = self.width,
-            value = false,
-        }),
-        ChoiceField({
-            name = "cmbVariable",
-            width = self.width,
-            captions = variableNames,
-            items = variableIDs,
-        })
-    }))
-    table.insert(self.radioButtons, "cbVariable")
+    self.sourceFieldMap["var"] = ChoiceField({
+        name = "var",
+        width = self.width,
+        x = self.width,
+        captions = variableNames,
+        items = variableIDs,
+    })
 end
 
 function TypePanel:MakeExpressionOpt()
@@ -159,135 +167,74 @@ function TypePanel:MakeExpressionOpt()
         return
     end
 
-    local stackPanel = MakeComponentPanel(parent)
-    self:AddField(GroupField({
-        BooleanField({
-            name = "cbExpression",
-            title = "Expression: ",
-            width = self.width,
-        }),
-        Field({
-            name = "expression",
-            width = self.width,
-            components = {
-                Button:New {
-                    caption = 'Expression',
-                    width = self.width,
-                    height = 30,
-                    data = {},
-                    OnClick = {
-                        function()
-                            local mode = 'add'
-                            local expr = self.fields["expression"].value
-                            if expr then
-                                mode = 'edit'
-                            end
-                            local customWindow = CustomWindow({
-                                mode = mode,
-                                dataType = self.dataType,
-                                condition = expr,
-                                trigger = self.trigger,
-                                params = self.params,
-
-                                OnConfirm = {
-                                    function(element)
-                                        if self.fields["cbExpression"] and not self.fields["cbExpression"].value then
-                                            self:Set("cbExpression", true)
-                                        end
-
-                                        if mode == 'add' then
-                                            expr = element
-                                        end
-                                        self:Set("expression", expr)
-                                    end
-                                }
-                            })
-                            SB.MakeWindowModal(customWindow.window, self.parent)
-                        end
-                    }
+    self.sourceFieldMap["expr"] = Field({
+        name = "expr",
+        width = self.width,
+        x = self.width,
+        components = {
+            Button:New {
+                caption = 'Expression',
+                width = self.width,
+                height = 30,
+                data = {},
+                OnClick = {
+                    function()
+                        self:__MakeExpressionWindow()
+                    end
                 }
             }
-        })
-    }))
-    table.insert(self.radioButtons, "cbExpression")
+        }
+    })
+end
+
+function TypePanel:__MakeExpressionWindow()
+    local mode = 'add'
+    local expr = self.fields["expr"].value
+    if expr then
+        mode = 'edit'
+    end
+    local customWindow = CustomWindow({
+        mode = mode,
+        dataType = self.dataType,
+        condition = expr,
+        trigger = self.trigger,
+        params = self.params,
+
+        OnConfirm = {
+            function(element)
+                if mode == 'add' then
+                    expr = element
+                end
+                self:Set("expr", expr)
+            end
+        }
+    })
+    SB.MakeWindowModal(customWindow.window, self.parent)
 end
 
 -- abstract
 function TypePanel:UpdateModel(field)
-    local fname, value
-    if self.fields["cbPredefined"] and self.fields["cbPredefined"].value then
-        field.type = "pred"
-        field.value = self.fields["predefined"].value
-        fname, value = "predefined", field.value
-    elseif self.fields["cbSpecial"] and self.fields["cbSpecial"].value then
-        field.type = "spec"
-        field.name = self.fields["cmbSpecial"].value
-        fname, value = "cmbSpecial", field.name
-    elseif self.fields["cbVariable"] and self.fields["cbVariable"].value then
-        field.type = "var"
-        field.value = self.fields["cmbVariable"].value
-        fname, value = "cmbVariable", field.value
-    elseif self.fields["cbExpression"] and self.fields["cbExpression"].value and self.fields["expression"].value then
-        field.type = "expr"
-        field.expr = self.fields["expression"].value
+    local sourceType = self.fields["sourceType"].value
 
-        fname, value = "expression", field.expr
-    else
-        return false
-    end
+    field.type = sourceType
+    field.value = self.fields[sourceType].value
 
-    return self:Validate(fname, value)
+    return self:Validate(sourceType, field.value)
 end
 
 -- abstract
 function TypePanel:UpdatePanel(field)
-    local result = false
-    if field.type == "pred" then
-        self:Set("cbPredefined", true)
-        result = self:Validate("predefined", field.value)
-        self:Set("predefined", field.value)
-    elseif field.type == "spec" then
-        self:Set("cbSpecial", true)
-        result = self:Validate("cmbSpecial", field.name)
-        self:Set("cmbSpecial", field.name)
-    elseif field.type == "var" then
-        self:Set("cbVariable", true)
-        result = self:Validate("cmbVariable", field.value)
-        self:Set("cmbVariable", field.value)
-    elseif field.type == "expr" then
-        self:Set("cbExpression", true)
-        result = self:Validate("expression", field.value)
-        self:Set("expression", field.value)
-    end
+    self:Set("sourceType", field.type)
+    local result = self:Validate(field.type, field.value)
+    self:Set(field.type, field.value)
     return result
 end
 
 function TypePanel:OnFieldChange(name, value)
-    if value then
-        local isRadioButton = false
-        for _, radioButton in pairs(self.radioButtons) do
-            if radioButton == name then
-                isRadioButton = true
-            end
-        end
-        if isRadioButton then
-            for _, radioButton in pairs(self.radioButtons) do
-                if radioButton ~= name then
-                    self:Set(radioButton, false)
-                end
-            end
-        end
-    end
-
-    if name == "predefined" then
-        self:Set("cbPredefined", true)
-    elseif name == "cmbSpecial" then
-        self:Set("cbSpecial", true)
-    elseif name == "cmbVariable" then
-        self:Set("cbVariable", true)
-    elseif name == "expression" then
-        self:Set("cbExpression", true)
+    if name == "sourceType" then
+        self:_RefreshSourceTypes()
+    elseif name == "expr" then
         local tooltip = SB.humanExpression(value, "condition")
-        self.fields["expression"].components[1].tooltip = tooltip
+        self.fields["expr"].components[1].tooltip = tooltip
     end
 end

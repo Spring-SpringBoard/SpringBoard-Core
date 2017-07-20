@@ -10,20 +10,25 @@ function GroupField:init(fields)
     self.name = "_groupField" .. tostring(_GROUP_INDEX)
     self.fields = fields
     self.components = {}
+    self.autoSize = true
 end
 
 function GroupField:Added()
     local groupX = 0
-    for i, field in pairs(self.fields) do
+    for _, field in pairs(self.fields) do
         self.ev:_AddField(field)
         for _, comp in pairs(field.components) do
-            if not comp.x then
-                comp.x = 0
+            if self.autoSize then
+                if not comp.x then
+                    comp.x = 0
+                end
+                comp.x = comp.x + groupX
             end
-            comp.x = comp.x + groupX
             self.ctrl:AddChild(comp)
         end
-        groupX = groupX + field.width + 10
+        if self.autoSize then
+            groupX = groupX + field.width + 10
+        end
         field:Added()
         field.visible = true
     end

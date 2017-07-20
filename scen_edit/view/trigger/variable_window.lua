@@ -92,7 +92,7 @@ function VariableWindow:__RefreshVariablePanel()
     local subPanel = SB.createNewPanel({
         dataType = {
             type = inputType,
-            sources = "pred",
+            sources = "const",
         },
         parent = self.variablePanel,
         params = {},

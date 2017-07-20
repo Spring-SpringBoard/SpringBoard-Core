@@ -104,76 +104,6 @@ function SB.MakeSeparator(panel)
     return lblSeparator
 end
 
-function SB.CreateNameMapping(origArray)
-    local newArray = {}
-    for i = 1, #origArray do
-        local item = origArray[i]
-        newArray[item.name] = item
-    end
-    return newArray
-end
-
-function SB.GroupByField(tbl, field)
-    local newArray = {}
-    for _, item in pairs(tbl) do
-        local fieldValue = item[field]
-        if newArray[fieldValue] then
-            table.insert(newArray[fieldValue], item)
-        else
-            newArray[fieldValue] = { item }
-        end
-    end
-    return newArray
-end
-
-function GetKeys(tbl)
-    local keys = {}
-    for k, _ in pairs(tbl) do
-        table.insert(keys, k)
-    end
-    return keys
-end
-
-function GetField(origArray, field)
-    local newArray = {}
-    for k, v in pairs(origArray) do
-        table.insert(newArray, v[field])
-    end
-    return newArray
-end
-
-function GetIndex(table, value)
-    assert(value ~= nil, "GetIndex called with nil value.")
-    for i = 1, #table do
-        if table[i] == value then
-            return i
-        end
-    end
-end
-
--- basically does origTable = newTableValues but instead uses the old table reference
-function SetTableValues(origTable, newTable)
-    for k in pairs(origTable) do
-        origTable[k] = nil
-    end
-    for k in pairs(newTable) do
-        origTable[k] = newTable[k]
-    end
-end
-
-function SortByName(t, name)
-    local sortedTable = {}
-    for k, v in pairs(t) do
-        table.insert(sortedTable, v)
-    end
-    table.sort(sortedTable,
-        function(a, b)
-            return a[name] < b[name]
-        end
-    )
-    return sortedTable
-end
-
 function PassToGadget(prefix, tag, data)
     newTable = { tag = tag, data = data }
     local msg = prefix .. "|table" .. table.show(newTable)
@@ -213,12 +143,7 @@ function SB.humanExpression(data, exprType, dataType, level)
         end
         return humanName .. ")"
     elseif (exprType == "value" and data.type == "expr") or exprType == "condition" then
-        local expr = nil
-        if data.expr then
-            expr = data.expr
-        else
-            expr = data
-        end
+        local expr = data.value or data
         local exprHumanName = SB.metaModel.functionTypes[expr.typeName].humanName
 
         local paramsStr = ""
@@ -234,7 +159,7 @@ function SB.humanExpression(data, exprType, dataType, level)
         end
         return exprHumanName .. " (" .. paramsStr .. ")"
     elseif exprType == "value" then
-        if data.type == "pred" then
+        if data.type == "const" then
             if dataType == "unitType" then
                 local unitDef = UnitDefs[data.value]
                 local dataIDStr = "(id=" .. tostring(data.value) .. ")"
@@ -261,8 +186,8 @@ function SB.humanExpression(data, exprType, dataType, level)
             else
                 return tostring(data.value)
             end
-        elseif data.type == "spec" then
-            return data.name
+        elseif data.type == "scoped" then
+            return data.value
         elseif data.type == "var" then
             return SB.model.variableManager:getVariable(data.value).name
         elseif data.typeName then
@@ -285,7 +210,7 @@ function SB.humanExpression(data, exprType, dataType, level)
     if success then
         return data
     else
-        return "Err."
+        return "Err." .. tostring(data)
     end
 end
 

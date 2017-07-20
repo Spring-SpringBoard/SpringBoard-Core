@@ -31,7 +31,7 @@ end
 
 function FieldResolver:Resolve(field, type, rawVariable, params)
     if field.type == "expr" then
-        local expr = field.expr
+        local expr = field.value
         local typeName = expr.typeName
         local exprType = SB.metaModel.functionTypes[typeName]
         return self:CallExpression(expr, exprType, params)
@@ -42,15 +42,15 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         else
             return variable
         end
-    elseif field.type == "spec" then
+    elseif field.type == "scoped" then
         local value = {
-            type = "pred",
-            value = params[field.name],
+            type = "const",
+            value = params[field.value],
         }
         return self:Resolve(value, type, nil, params)
     end
 
-    if field.type ~= "pred" then
+    if field.type ~= "const" then
         Log.Error("Unexpected field type: " .. tostring(field.type) ..
             " for field name: " .. tostring(field.name))
         table.echo(field)

@@ -27,12 +27,12 @@ function SB.coreTypes()
         {
             humanName = "Order",
             name = "order",
-            sources = {"pred", "spec", "expr"},
+            sources = {"const", "scoped", "expr"},
         },
         {
             humanName = "Trigger",
             name = "trigger",
-            sources = {"pred", "spec", "expr"},
+            sources = {"const", "scoped", "expr"},
             canCompare = false,
         },
         {
@@ -50,25 +50,25 @@ function SB.coreTypes()
         {
             humanName = "Numeric comparison",
             name = "numericComparison",
-            sources = {"pred"},
+            sources = {"const"},
             canCompare = false,
         },
         {
             humanName = "Identity comparison",
             name = "identityComparison",
-            sources = {"pred"},
+            sources = {"const"},
             canCompare = false,
         },
         {
             humanName = "Function",
             name = "function",
-            sources = {"pred", "spec", "expr"},
+            sources = {"const", "scoped", "expr"},
             canCompare = false,
         },
         {
             humanName = "Action",
             name = "action",
-            sources = {"pred", "spec", "expr"},
+            sources = {"const", "scoped", "expr"},
             canCompare = false,
         },
         {
