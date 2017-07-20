@@ -1,32 +1,29 @@
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+
 SB_VIEW_TRIGGER_FIELDS_DIR = Path.Join(SB_VIEW_TRIGGER_DIR, "fields/")
 SB.IncludeDir(SB_VIEW_TRIGGER_FIELDS_DIR)
 
-TriggerWindow = LCS.class{}
+TriggerWindow = Editor:extends{}
 
 function TriggerWindow:init(trigger)
+    Editor.init(self)
+
     self.trigger = trigger
-    self._triggerPanel = nil
     self.openedConditionNodes = {}
     self.openedActionNodes = {}
 
-    local stackTriggerPanel = MakeComponentPanel(nil)
-    stackTriggerPanel.y = 10
-    local lblTriggerName = Label:New {
-        caption = "Name: ",
-        x = 1,
-        parent = stackTriggerPanel,
-    }
-    local edTriggerName = EditBox:New {
-        text = self.trigger.name,
-        x = 100,
-        width = 100,
-        parent = stackTriggerPanel,
-    }
+    self:AddField(StringField({
+        name = "name",
+        title = "Name:",
+        tooltip = "Trigger name",
+        value = self.trigger.name,
+    }))
+
     self._triggerPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
-        x = 1,
-        y = 1,
-        right = 1,
+        x = 0,
+        y = 0,
+        right = 0,
         autosize = true,
         resizeItems = false,
         padding = {0, 0, 0, 0}
@@ -67,7 +64,7 @@ function TriggerWindow:init(trigger)
         backgroundColor = SB.conf.BTN_OK_COLOR,
         OnClick = {
             function()
-                self.trigger.name = edTriggerName.text
+                self.trigger.name = self.fields["name"].value
                 self.save = true
                 self.window:Dispose()
             end
@@ -83,33 +80,42 @@ function TriggerWindow:init(trigger)
         OnClick={function() self.window:Dispose() end}
     }
 
-    self.window = Window:New {
+    local children = {
+        btnAddEvent,
+        btnAddCondition,
+        btnAddAction,
+        btnOK,
+        btnCancel,
+    }
+
+    table.insert(children,
+        ScrollPanel:New {
+            x = 0,
+            y = 0,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        }
+    )
+    table.insert(children,
+        ScrollPanel:New {
+            x = 0,
+            y = 90,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self._triggerPanel },
+        }
+    )
+    self:Finalize(children, {
+        notMainWindow = true,
+        noCloseButton = true,
         width = 610,
         height = 350,
-        minimumSize = {500,300},
-        x = 500,
-        y = 300,
-        caption = self.trigger.name,
-        parent = screen0,
-        children = {
-            stackTriggerPanel,
-            ScrollPanel:New {
-                x = 1,
-                y = 15 + SB.conf.B_HEIGHT,
-                right = 5,
-                bottom = SB.conf.B_HEIGHT * 2,
-                borderColor = {0,0,0,0},
-                children = {
-                    self._triggerPanel,
-                },
-            },
-            btnAddEvent,
-            btnAddCondition,
-            btnAddAction,
-            btnOK,
-            btnCancel,
-        }
-    }
+    })
 
     self:Populate()
 
