@@ -9,9 +9,12 @@
 -- @string[opt="button"] caption caption to be displayed
 Button = Control:Inherit{
   classname= "button",
-  caption  = 'button', 
+  caption  = 'button',
   defaultWidth  = 70,
   defaultHeight = 20,
+
+  align = "center",
+  valign = "center",
 }
 
 local this = Button

@@ -547,8 +547,9 @@ function DrawButton(obj)
     gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawTiledTexture, 0,0,w,h, skLeft,skTop,skRight,skBottom, tw,th, 0)
   gl.Texture(0,false)
 
-  if (obj.caption) then
-    obj.font:Print(obj.caption, w*0.5, h*0.5, "center", "center")
+  if obj.caption then
+    local cx, cy, cw, ch = unpack4(obj.clientArea)
+    obj.font:DrawInBox(obj.caption, cx, cy, cw, ch, obj.align, obj.valign)
   end
 end
 
