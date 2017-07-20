@@ -5,11 +5,12 @@ SB.IncludeDir(SB_MODEL_DIR)
 function Model:init()
     self._lua_rules_pre = "scen_edit"
 
+    local isWidget = Script.GetName() == "LuaUI"
     self.areaManager = AreaManager()
-    self.unitManager = UnitManager()
-    self.featureManager = FeatureManager()
-    self.variableManager = VariableManager()
-    self.triggerManager = TriggerManager()
+    self.unitManager = UnitManager(isWidget)
+    self.featureManager = FeatureManager(isWidget)
+    self.variableManager = VariableManager(isWidget)
+    self.triggerManager = TriggerManager(isWidget)
     self.teamManager = TeamManager()
     self.teamManager:generateTeams()
     self.scenarioInfo = ScenarioInfo()

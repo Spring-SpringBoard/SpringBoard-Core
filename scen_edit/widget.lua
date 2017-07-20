@@ -162,11 +162,6 @@ function widget:Initialize()
 
     SB.model = Model()
 
-    SB.model.areaManager = AreaManager()
-    SB.model.unitManager = UnitManager(true)
-    SB.model.featureManager = FeatureManager(true)
-    SB.model.variableManager = VariableManager(true)
-    SB.model.triggerManager = TriggerManager(true)
     SB.commandManager = CommandManager()
     SB.commandManager.widget = true
     SB.stateManager = StateManager()

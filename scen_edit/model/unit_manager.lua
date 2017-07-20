@@ -19,8 +19,8 @@ end
 
 function UnitManager:addUnit(unitID, modelID)
     if self._s2m[unitID] then
-        Log.Warning(string.format("Trying to register existing unit. Spring ID: %d Model ID: %d",
-            unitID, self._s2m[unitID]))
+        Log.Warning(string.format("%s: Trying to register existing unit. Spring ID: %d Model ID: %d",
+            Script.GetName(), unitID, self._s2m[unitID]))
         return
     end
     if modelID ~= nil then

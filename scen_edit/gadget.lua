@@ -13,6 +13,7 @@ end
 
 local msgParts = {}
 local msgPartsSize = 0
+local __populated = false
 
 function gadget:RecvLuaMsg(msg, playerID)
     pre = "scen_edit"
@@ -119,8 +120,13 @@ function gadget:Initialize()
 end
 
 function Load()
+    if __populated then
+        return
+    end
+
     SB.model.unitManager:populate()
     SB.model.featureManager:populate()
+    __populated = true
     if hasScenarioFile then
         Log.Notice("Loading the scenario file...")
         local heightmapData = VFS.LoadFile("heightmap.data", VFS.MOD)
@@ -160,7 +166,7 @@ function gadget:TeamDied(teamID)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
-    if Spring.GetGameFrame() > SB.loadFrame then
+    if __populated then
         SB.model.unitManager:addUnit(unitID)
     end
     SB.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
@@ -189,7 +195,7 @@ end
 
 function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
     SB.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
-    if Spring.GetGameFrame() > SB.loadFrame then
+    if __populated then
         SB.model.unitManager:removeUnit(unitID)
     end
 end
@@ -199,13 +205,13 @@ function gadget:UnitFinished(unitID, unitDefID, teamID)
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
-    if Spring.GetGameFrame() > SB.loadFrame then
+    if __populated then
         SB.model.featureManager:addFeature(featureID)
     end
 end
 
 function gadget:FeatureDestroyed(featureID, allyTeam)
-    if Spring.GetGameFrame() > SB.loadFrame then
+    if __populated then
         SB.model.featureManager:removeFeature(featureID)
     end
 end

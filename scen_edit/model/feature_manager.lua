@@ -20,8 +20,8 @@ end
 
 function FeatureManager:addFeature(featureID, modelID)
     if self._s2m[featureID] then
-        Log.Warning(string.format("Trying to register existing feature. Spring ID: %d Model ID: %d",
-            featureID, self._s2m[featureID]))
+        Log.Warning(string.format("%s: Trying to register existing feature. Spring ID: %d Model ID: %d",
+            Script.GetName(), featureID, self._s2m[featureID]))
         return
     end
     if modelID ~= nil then
