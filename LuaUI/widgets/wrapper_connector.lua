@@ -3,8 +3,8 @@ VFS.Include(LIBS_DIRNAME .. "json.lua")
 
 function widget:GetInfo()
 return {
-	name    = "image processing connector interface",
-	desc    = "Creates a commlink between image processing and SB",
+	name    = "Wrapper connector interface",
+	desc    = "Creates a commlink between a wrapper program and SB",
 	author  = "gajop",
 	date    = "before steam release",
 	license = "GNU GPL, v2 or later",
