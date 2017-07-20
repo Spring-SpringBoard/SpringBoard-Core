@@ -132,8 +132,7 @@ function widget:Update()
 		if client:getpeername() then
 			isConnected = true
 		end
-	end
-	if client == nil then
+	elseif client == nil then
 		SocketConnect(host, port)
 		return
 	end
