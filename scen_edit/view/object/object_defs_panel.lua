@@ -268,7 +268,8 @@ function UnitDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3])
         ctrl.objectDefID = item[4]
-        if item[2] == "" or true then
+        --if item[2] == "" or true then
+        if item[2] == "" then
             self:AddDrawIcon(ctrl)
         end
     end
@@ -375,9 +376,9 @@ function FeatureDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3])
         ctrl.objectDefID = item[4]
---         if item[2] == "" then
+        if item[2] == "" then
             self:AddDrawIcon(ctrl)
---         end
+        end
     end
 end
 function FeatureDefsPanel:SelectFeatureTypesID(featureTypeID)
