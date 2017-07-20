@@ -45,9 +45,9 @@ function TypePanel:init(opts)
         end
     end
 
-    local children = {
-        self.stackPanel,
-    }
+    -- local children = {
+    --     self.stackPanel,
+    -- }
 
     -- table.insert(children,
     --     ScrollPanel:New {
@@ -215,17 +215,14 @@ function TypePanel:UpdateModel(field)
     if self.fields["cbPredefined"] and self.fields["cbPredefined"].value then
         field.type = "pred"
         field.value = self.fields["predefined"].value
-
         fname, value = "predefined", field.value
     elseif self.fields["cbSpecial"] and self.fields["cbSpecial"].value then
         field.type = "spec"
         field.name = self.fields["cmbSpecial"].value
-
         fname, value = "cmbSpecial", field.name
     elseif self.fields["cbVariable"] and self.fields["cbVariable"].value then
         field.type = "var"
         field.value = self.fields["cmbVariable"].value
-
         fname, value = "cmbVariable", field.value
     elseif self.fields["cbExpression"] and self.fields["cbExpression"].value and self.fields["expression"].value then
         field.type = "expr"

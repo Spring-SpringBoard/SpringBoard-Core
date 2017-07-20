@@ -30,6 +30,8 @@ function ChoiceField:init(field)
     if captions == nil then
         captions = self.items
     end
+    self:__SetDefault("value", ids[1])
+
     local comboBoxX = 0
     if self.label then
         comboBoxX = self.label.width + 5
@@ -47,7 +49,7 @@ function ChoiceField:init(field)
             self:Set(value, self.comboBox)
         end
     }
-    self.value = ids[1]
+    self:Update(self.value)
 
     if self.title then
         self.components = {

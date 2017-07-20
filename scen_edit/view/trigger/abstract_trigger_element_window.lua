@@ -53,7 +53,6 @@ function AbstractTriggerElementWindow:init(opts)
     -- group by tags
     self:_AddTagGroups()
 
-
     if not self.fields["elementType"] then
         self:AddField(ChoiceField({
             name = "elementType",
@@ -71,21 +70,26 @@ function AbstractTriggerElementWindow:init(opts)
 
     self.btnOK.OnClick = {
         function()
-            local success, subPanels = false, nil
+            local success, errorEditors = false, nil
             if self.mode == 'edit' then
-                success, subPanels = self:EditElement()
+                success, errorEditors = self:EditElement()
             elseif self.mode == 'add' then
-                success, subPanels = self:AddElement()
+                success, errorEditors = self:AddElement()
             end
 
             if success then
+                -- Close the form
                 CallListeners(self.OnConfirm, self.element)
                 self.window:Dispose()
             else
-                if subPanels ~= nil and #subPanels > 0 then
-                    for _, subPanel in pairs(subPanels) do
-                        SB.HintControl(subPanel)
+                -- Display errors
+                if errorEditors ~= nil and #errorEditors > 0 then
+                    for _, errorEditor in pairs(errorEditors) do
+                        SB.HintEditor(errorEditor)
                     end
+                else
+                    Log.Error(debug.traceback())
+                    Log.Error("Failed to confirm the operation but no errorEditors to show")
                 end
             end
         end
@@ -291,7 +295,7 @@ function AbstractTriggerElementWindow:UpdateModel()
     local elType = self:GetValidElementTypes()[self.fields["elementType"].value]
 
     local success = true
-    local errorSubPanels = {}
+    local errorEditors = {}
     if elType and elType.input then
         for _, dataType in pairs(elType.input) do
             local subPanelName = dataType.name
@@ -300,10 +304,11 @@ function AbstractTriggerElementWindow:UpdateModel()
                 self.element[subPanelName] = {}
                 if not self.elementPanel[subPanelName]:UpdateModel(self.element[subPanelName]) then
                     success = false
-                    table.insert(errorSubPanels, subPanel.stackPanel)
+                    table.insert(errorEditors, subPanel)
                 end
             end
         end
+    -- FIXME: probably shouldn't be using self.__isCoreDataType explicitly
     elseif self.__isCoreDataType then
         local subPanelName = self.elType.name
         local subPanel = self.elementPanel[subPanelName]
@@ -311,20 +316,22 @@ function AbstractTriggerElementWindow:UpdateModel()
             self.element = {}
             if not self.elementPanel[subPanelName]:UpdateModel(self.element) then
                 success = false
-                table.insert(errorSubPanels, subPanel.stackPanel)
+                table.insert(errorEditors, subPanel)
             end
         end
     end
-    return success, errorSubPanels
+    return success, errorEditors
 end
 
 function AbstractTriggerElementWindow:EditElement()
     local _element = SB.deepcopy(self.element)
     self.element.typeName = self.fields["elementType"].value
-    local success, subPanels = self:UpdateModel()
+
+    local success, errorEditors = self:UpdateModel()
+
     if not success then
         SetTableValues(self.element, _element)
-        return false, subPanels
+        return false, errorEditors
     end
     return true
 end
@@ -332,10 +339,12 @@ end
 function AbstractTriggerElementWindow:AddElement()
     self.element = {}
     self.element.typeName = self.fields["elementType"].value
-    local success, subPanels = self:UpdateModel()
+
+    local success, errorEditors = self:UpdateModel()
+
     if not success then
         self.element = nil
-        return false, subPanels
+        return false, errorEditors
     end
     return true
 end

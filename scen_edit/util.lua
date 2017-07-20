@@ -337,20 +337,9 @@ function SB.GetTeams(widget)
     return teams
 end
 
-local function filterControls(ctrl)
-    if ctrl.classname == "button" or ctrl.classname == "combobox" or ctrl.classname == "editbox" or ctrl.classname == "checkbox" or ctrl.classname == "label" or ctrl.classname == "editbox" then
-        return {ctrl}
-    end
-    local childRets = {}
-    for _, childCtrl in pairs(ctrl.childrenByName) do
-        childRet = filterControls(childCtrl)
-        if childRet ~= nil and type(childRet) == "table" then
-            for _, v in pairs(childRet) do
-                table.insert(childRets, v)
-            end
-        end
-    end
-    return childRets
+function SB.IsButton(ctrl)
+    -- FIXME: checking for control type via .classname will cause skinning issues
+    return ctrl.classname == "button" or ctrl.classname == "toggle_button"
 end
 
 local function hintCtrlFunction(ctrl, startTime, timeout, color)
@@ -358,6 +347,7 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
     local newColor = SB.deepcopy(color)
     newColor[4] = 0.2 + math.abs(math.sin(deltaTime * 6) / 3.14)
 
+    -- FIXME: checking for control type via .classname will cause skinning issues
     if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
         ctrl.font.color = newColor
     else
@@ -369,6 +359,7 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
             if os.clock() - startTime < timeout then
                 hintCtrlFunction(ctrl, startTime, timeout, color)
             else
+                -- FIXME: checking for control type via .classname will cause skinning issues
                 if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
                     ctrl.font.color = ctrl._originalColor
                 else
@@ -382,19 +373,20 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
 end
 
 
-function SB.HintControl(control, color, timeout)
+function SB.HintEditor(editor, color, timeout)
     timeout = timeout or 1
     color = color or {1, 0, 0, 1}
-    local childControls = filterControls(control)
+    local ctrls = editor:GetAllControls()
     local startTime = os.clock()
-    for _, childControl in pairs(childControls) do
-        if childControl._originalColor == nil then
-            if childControl.classname == "label" or childControl.classname == "checkbox" or childControl.classname == "editbox" then
-                childControl._originalColor = SB.deepcopy(childControl.font.color)
+    for _, ctrl in pairs(ctrls) do
+        if ctrl._originalColor == nil then
+            -- FIXME: checking for control type via .classname will cause skinning issues
+            if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
+                ctrl._originalColor = SB.deepcopy(ctrl.font.color)
             else
-                childControl._originalColor = SB.deepcopy(childControl.backgroundColor)
+                ctrl._originalColor = SB.deepcopy(ctrl.backgroundColor)
             end
-            hintCtrlFunction(childControl, startTime, timeout, color)
+            hintCtrlFunction(ctrl, startTime, timeout, color)
         end
     end
 end

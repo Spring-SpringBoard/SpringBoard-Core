@@ -40,7 +40,11 @@ end
 
 -- Override
 function Field:Validate(value)
-    return self.allowNil, value
+    if value == nil then
+        return self.allowNil, value
+    else
+        return true, value
+    end
 end
 
 function Field:Set(value, source)

@@ -289,6 +289,9 @@ function Editor:_OnEndChange(name)
     end
 end
 
+--------------------
+-- START Utility
+--------------------
 function Editor:AddDefaultKeybinding(buttons)
     local KEY_ZERO = KEYSYMS.N_0
     self.__keybinding = {}
@@ -297,6 +300,19 @@ function Editor:AddDefaultKeybinding(buttons)
         button.tooltip = button.tooltip .. " (" .. tostring(i) .. ")"
     end
 end
+
+function Editor:GetAllControls()
+    local ctrls = {}
+    for _, field in pairs(self.fields) do
+        for _, ctrl in pairs(field.components or {}) do
+            table.insert(ctrls, ctrl)
+        end
+    end
+    return ctrls
+end
+--------------------
+-- END Utility
+--------------------
 
 function Editor:KeyPress(key, mods, isRepeat, label, unicode)
     if not self.__keybinding then
