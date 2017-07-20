@@ -13,7 +13,7 @@ local skin = {
 --//
 
 skin.general = {
-  focusColor  = {0.94, 0.50, 0.23, 1},
+  focusColor  = {0.14, 0.50, 0.73, 0.7},
   borderColor = {1.0, 1.0, 1.0, 1.0},
 
   font = {
@@ -43,7 +43,42 @@ function DrawMyButton(obj, ...)
     else
         DrawButton(obj, ...)
     end
+end
 
+function DrawMyToggleButton(obj, ...)
+    if obj.checked then
+        local oldColor = obj.backgroundColor
+        obj.backgroundColor = buttonPressedColor
+        DrawButton(obj, ...)
+        obj.backgroundColor = oldColor
+    else
+        DrawButton(obj, ...)
+    end
+    -- Draw custom toggle button (largely based on DrawCheckbox)
+    local boxSize = obj.boxsize
+    local cx, cy, cw, ch = unpack4(obj.clientArea)
+    local x = cx + cw      - boxSize
+    local y = cy + ch*0.5 - boxSize*0.5
+    local w = boxSize
+    local h = boxSize
+
+    local skLeft,skTop,skRight,skBottom = unpack4(obj.tilesCheckbox)
+
+    local TileImage, color
+    if obj.checked then
+        TileImage = obj.TileImageChecked
+        color = obj.checkedColor
+    else
+        TileImage = obj.TileImageUnchecked
+        color = obj.uncheckedColor
+    end
+    gl.Color(color)
+    TextureHandler.LoadTexture(0, TileImage, obj)
+      local texInfo = gl.TextureInfo(TileImage) or {xsize=1, ysize=1}
+      local tw,th = texInfo.xsize, texInfo.ysize
+
+      gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawTiledTexture, x,y,w,h, skLeft,skTop,skRight,skBottom, tw,th, 0)
+    gl.Texture(0,false)
 end
 
 skin.button = {
@@ -53,10 +88,38 @@ skin.button = {
   padding = {10, 10, 10, 10},
 
   backgroundColor = {0, 0, 0, 0.7},
-  focusColor  = {0.94, 0.50, 0.23, 0.7},
   borderColor = {1,1,1,0},
 
   DrawControl = DrawMyButton,
+}
+
+skin.toggle_button = {
+  -- TileImageFG = ":cl:tech_checkbox_checked.png",
+  -- TileImageBK = ":cl:tech_checkbox_unchecked.png",
+  -- tiles       = {3,3,3,3},
+  -- boxsize     = 13,
+
+  TileImageBK = ":cl:tech_button_bright_small_bk.png",
+  TileImageFG = ":cl:tech_button_bright_small_fg.png",
+
+  tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
+  padding = {10, 10, 10, 10},
+
+  backgroundColor = {0, 0, 0, 0.7},
+  borderColor = {1,1,1,0},
+
+  align = 'left',
+
+  -- Checkbox specific properties
+  TileImageChecked = ":cl:little_blurred_circle.png",
+  TileImageUnchecked = ":cl:little_blurred_circle.png",
+  tilesCheckbox = {0.1,0.1,0.1,0.1},
+  uncheckedColor = {1.0, 0, 0, 0.5},
+  --checkedColor = {0.14, 0.4, 0.8, 1.0},
+  checkedColor = {0, 1, 0, 1.0},
+  boxsize = 15,
+
+  DrawControl = DrawMyToggleButton,
 }
 
 skin.button_large = {
