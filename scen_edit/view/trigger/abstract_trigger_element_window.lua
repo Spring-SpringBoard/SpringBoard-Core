@@ -179,17 +179,27 @@ function AbstractTriggerElementWindow:__RefreshElementType()
 
             local subPanelName = dataType.name
             Log.Debug("Adding subpanel: " .. tostring(dataType.type))
+
             local subPanel = SB.createNewPanel({
                 dataType = dataType,
                 parent = self.elementPanel,
                 trigger = self.trigger,
-                params = paramsI
+                params = paramsI,
+                OnBegin = {
+                    function(obj)
+                        obj:AddControl(dataType.name .. "-sep", {
+                            Label:New {
+                                caption = dataType.name,
+                            },
+                            Line:New {
+                                x = 150,
+                            }
+                        })
+                    end
+                },
             })
             if subPanel then
                 self.elementPanel[subPanelName] = subPanel
-                if i ~= #self.elType.input then
-                    SB.MakeSeparator(self.elementPanel)
-                end
             end
         end
     elseif self.__isCoreDataType then

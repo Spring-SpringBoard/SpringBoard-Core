@@ -33,6 +33,9 @@ function TypePanel:init(opts)
 
     self.width = 140
 
+    self.OnBegin = opts.OnBegin or {}
+    CallListeners(self.OnBegin, self)
+
     for _, source in pairs(self.sources) do
         if source == "pred" then
             self:MakePredefinedOpt()

@@ -17,6 +17,7 @@ end
 
 function ObjectTypeField:init(field)
     self:__SetDefault("width", 200)
+    self:__SetDefault("title", "")
 
     Field.init(self, field)
 
