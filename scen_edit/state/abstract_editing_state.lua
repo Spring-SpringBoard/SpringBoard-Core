@@ -62,6 +62,8 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
         ExportAction():execute()
     elseif key == KEYSYMS.I and mods.ctrl then
         ImportAction():execute()
+	elseif key == KEYSYMS.N and mods.ctrl then
+		NewAction():execute()
 	elseif key == 27 then -- KEYSYMS.ESC
         SB.stateManager:SetState(DefaultState())
     else

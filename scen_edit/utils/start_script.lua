@@ -13,6 +13,7 @@ StartScript = StartScript or {}
 -- modOptions (optional, default: {})
 -- modOptions.minSpeed (optional, engine default: 0.3)
 -- modOptions.maxSpeed (optional, engine default: 20.0)
+-- mapOptions (optional, default: {})
 -- For details see https://github.com/spring/spring/blob/develop/rts/Game/GameSetup.cpp
 function StartScript.GenerateScriptTxt(opts)
     local mapFullName = opts.mapName or Game.mapName
@@ -134,6 +135,7 @@ function StartScript.GenerateScriptTxt(opts)
         NumUsers = #players + #ais,
 
         ModOptions = opts.modOptions or {},
+        MapOptions = opts.mapOptions or {},
     }
 
     for i, ai in pairs(ais) do
@@ -183,5 +185,5 @@ function StartScript.__WriteTable(key, value)
 end
 
 function StartScript.__WriteStartScript(script)
-    return StartScript.__WriteTable("Game", script)
+    return StartScript.__WriteTable("GAME", script)
 end
