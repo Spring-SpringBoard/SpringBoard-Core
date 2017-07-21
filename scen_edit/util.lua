@@ -162,7 +162,6 @@ function SB.humanExpression(data, exprType, dataType, level)
         return exprHumanName .. " (" .. paramsStr .. ")"
     elseif exprType == "value" then
         if data.type == "const" then
-            Spring.Echo(dataType)
             if dataType == "unitType" then
                 local unitDef = UnitDefs[data.value]
                 local dataIDStr = "(id=" .. tostring(data.value) .. ")"
