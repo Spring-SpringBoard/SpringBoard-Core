@@ -143,7 +143,7 @@ function NumericField:__UpdateDragging(delta)
 end
 
 local _draggingColor = {1.0, 0.7, 0.1, 0.8}
-function NumericField:__DrawDisplayControl(displayControl)
+function NumericField:__DrawDisplayControl()
     -- Leave if we're no longer dragging
     if not self.__isDragging then
         return
@@ -197,7 +197,8 @@ function NumericField:__DrawDisplayControl(displayControl)
         self.__draggingFont:Draw(maxValueStr, x + w - 15, y - offy)
     end
 
-    displayControl:Invalidate()
+    -- return true to keep redrawing
+    return true
 end
 
 function NumericField:__SetupDraggingControl()

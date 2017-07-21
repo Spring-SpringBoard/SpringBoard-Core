@@ -17,7 +17,7 @@ end
 
 function SelectObjectState:MousePress(x, y, button)
     if button == 1 then
-        local success, objectID = self:CanTraceObject(x, y)
+        local success, objectID = self:__MaybeTraceObject(x, y)
         if success then
             self.callback(self.bridge.getObjectModelID(objectID))
             SB.stateManager:SetState(DefaultState())
@@ -27,8 +27,12 @@ function SelectObjectState:MousePress(x, y, button)
     end
 end
 
+function SelectObjectState:__GetInfoText()
+    return "Select " .. tostring(self.bridge.humanName)
+end
+
 local _displayColor = {1.0, 0.7, 0.1, 0.8}
-function SelectObjectState:__DrawInfo(displayControl)
+function SelectObjectState:__DrawInfo()
     if not self.__displayFont then
         self.__displayFont = Chili.Font:New {
             size = 12,
@@ -41,51 +45,84 @@ function SelectObjectState:__DrawInfo(displayControl)
     local vsx, vsy = Spring.GetViewGeometry()
     y = vsy - y
 
-    self.__displayFont:Draw("Select " .. tostring(self.bridge.humanName), x, y - 30)
+    self.__displayFont:Draw(self:__GetInfoText(), x, y - 30)
 
-    displayControl:Invalidate()
+    -- return true to keep redrawing
+    return true
 end
 
+--------------------------
+-- Custom object classes
+--------------------------
 
--- Custom unit/feature classes
+--------------------------
+-- Unit
+--------------------------
 SelectUnitState = SelectObjectState:extends{}
 function SelectUnitState:init(...)
     SelectObjectState.init(self, ...)
     self.bridge = unitBridge
 end
 
-function SelectUnitState:CanTraceObject(x, y)
+function SelectUnitState:__MaybeTraceObject(x, y)
     local result, objectID = Spring.TraceScreenRay(x, y)
     if result == "unit" then
         return true, objectID
     end
 end
 
+--------------------------
+-- Feature
+--------------------------
 SelectFeatureState = SelectObjectState:extends{}
 function SelectFeatureState:init(...)
     SelectObjectState.init(self, ...)
     self.bridge = featureBridge
 end
 
-function SelectFeatureState:CanTraceObject(x, y)
+function SelectFeatureState:__MaybeTraceObject(x, y)
     local result, objectID = Spring.TraceScreenRay(x, y)
     if result == "feature" then
         return true, objectID
     end
 end
 
+--------------------------
+-- Area
+--------------------------
 SelectAreaState = SelectObjectState:extends{}
 function SelectAreaState:init(...)
     SelectObjectState.init(self, ...)
     self.bridge = areaBridge
 end
 
-function SelectAreaState:CanTraceObject(x, y)
+function SelectAreaState:__MaybeTraceObject(x, y)
     local result, coords = Spring.TraceScreenRay(x, y)
     if result == "ground" then
         local selected = SB.checkAreaIntersections(coords[1], coords[3])
         if selected ~= nil then
             return true, selected
         end
+    end
+end
+
+--------------------------
+-- Position
+--------------------------
+SelectPositionState = SelectObjectState:extends{}
+function SelectPositionState:init(...)
+    SelectObjectState.init(self, ...)
+    self.bridge = positionBridge
+end
+
+function SelectPositionState:__MaybeTraceObject(x, y)
+    local result, coords = Spring.TraceScreenRay(x, y)
+    if result == "ground"  then
+        local position = {
+            x = coords[1],
+            y = coords[2],
+            z = coords[3],
+        }
+        return true, position
     end
 end

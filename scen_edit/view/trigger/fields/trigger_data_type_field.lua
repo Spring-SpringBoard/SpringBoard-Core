@@ -2,6 +2,10 @@ SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 TriggerDataTypeField = Field:extends{}
 
+function TriggerDataTypeField:Update(source)
+    self.btnDataType:SetCaption(self:_GetCaption())
+end
+
 function TriggerDataTypeField:init(field)
     self:__SetDefault("width", 200)
     self.windowType = TriggerDataTypeWindow
@@ -9,7 +13,7 @@ function TriggerDataTypeField:init(field)
     Field.init(self, field)
 
     self.btnDataType = Button:New {
-        caption = "Custom dataType",
+        caption = self:_GetCaption(),
         width = self.width,
         height = self.height,
         OnClick = {
@@ -40,6 +44,18 @@ function TriggerDataTypeField:init(field)
     self.components = {
         self.btnDataType
     }
+end
+
+function TriggerDataTypeField:_GetCaption()
+    if self.value then
+        return SB.humanExpression({
+            type = "const",
+            value = self.value,
+        }, "value", self.dataType)
+    else
+        local dataTypeDef = SB.metaModel:GetDataType(self.dataType.type)
+        return String.Capitalize(dataTypeDef.humanName)
+    end
 end
 
 ------------------

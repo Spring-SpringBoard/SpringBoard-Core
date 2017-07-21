@@ -110,6 +110,8 @@ function PassToGadget(prefix, tag, data)
     Spring.SendLuaRulesMsg(msg)
 end
 
+-- FIXME: This becomes complicated very fast
+-- Maybe Field classes should be responsible for providing display instead?
 SB.humanExpressionMaxLevel = 3
 function SB.humanExpression(data, exprType, dataType, level)
     local success, data = pcall(function()
@@ -160,11 +162,20 @@ function SB.humanExpression(data, exprType, dataType, level)
         return exprHumanName .. " (" .. paramsStr .. ")"
     elseif exprType == "value" then
         if data.type == "const" then
+            Spring.Echo(dataType)
             if dataType == "unitType" then
                 local unitDef = UnitDefs[data.value]
                 local dataIDStr = "(id=" .. tostring(data.value) .. ")"
                 if unitDef then
                     return tostring(unitDef.name) .. " " .. dataIDStr
+                else
+                    return dataIDStr
+                end
+            elseif dataType == "featureType" then
+                local featureDef = FeatureDefs[data.value]
+                local dataIDStr = "(id=" .. tostring(data.value) .. ")"
+                if featureDef then
+                    return tostring(featureDef.name) .. " " .. dataIDStr
                 else
                     return dataIDStr
                 end
@@ -183,6 +194,17 @@ function SB.humanExpression(data, exprType, dataType, level)
                 end
             elseif dataType == "trigger" then
                 return data.name
+            elseif dataType == "position" then
+                return string.format("(%.1f,%.1f,%.1f)", data.value.x, data.value.y, data.value.z)
+            elseif dataType and dataType.type == "order" then
+                local orderTypeName = data.value.typeName
+                local orderType = SB.metaModel.orderTypes[orderTypeName]
+                local humanName = orderType.humanName
+                for _, input in pairs(orderType.input) do
+                    humanName = humanName .. " " ..
+                        SB.humanExpression(data.value[input.name], "value", input.type, level + 1)
+                end
+                return humanName
             else
                 return tostring(data.value)
             end
@@ -190,14 +212,8 @@ function SB.humanExpression(data, exprType, dataType, level)
             return data.value
         elseif data.type == "var" then
             return SB.model.variableManager:getVariable(data.value).name
-        elseif data.typeName then
-            local orderType = SB.metaModel.orderTypes[data.typeName]
-            local humanName = orderType.humanName
-            for i = 1, #orderType.input do
-                local input = orderType.input[i]
-                humanName = humanName .. " " .. SB.humanExpression(data[input.name], "value", nil, level + 1)
-            end
-            return humanName
+        elseif dataType.typeName then
+            Spring.Echo("dataType.typeName", dataType.typeName)
         end
         return "nothing"
     elseif exprType == "numeric_comparison" then
@@ -496,9 +512,14 @@ function SB.SetGlobalRenderingFunction(f)
             drawcontrolv2 = true,
         }
     end
-    __displayControl.DrawControl = f
+    __displayControl.DrawControl = function(...)
+        if f and f(...) then
+            __displayControl:Invalidate()
+            __displayControl:BringToFront()
+        end
+    end
     if f ~= nil then
-        __displayControl:SetLayer(1)
+        __displayControl:BringToFront()
     else
         __displayControl:Hide()
     end

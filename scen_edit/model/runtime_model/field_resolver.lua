@@ -91,8 +91,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             typeName = field.typeName,
             input = {}
         }
-        for i = 1, #orderType.input do
-            local input = orderType.input[i]
+        for _, input in ipairs(orderType.input) do
             local resolvedInput = self:Resolve(field[input.name], input.type, nil, params)
             order.input[input.name] = resolvedInput
         end

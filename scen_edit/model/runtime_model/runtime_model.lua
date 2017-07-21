@@ -254,7 +254,12 @@ function RuntimeModel:ActionStep(trigger, params)
     for _, action in pairs(trigger.actions) do
         local actionType = SB.metaModel.actionTypes[action.typeName]
         Spring.Echo("[Trigger:" .. tostring(trigger.id) .. "] Action:" .. tostring(action.typeName))
-        self.fieldResolver:CallExpression(action, actionType, params, true)
+        table.echo(params)
+        local result = self.fieldResolver:CallExpression(action, actionType, params, true)
+        -- Some actions may produce results that can be used to populate the trigger scope
+        for _, param in pairs(actionType.param) do
+            params[param.name] = result[param.name]
+        end
     end
 end
 

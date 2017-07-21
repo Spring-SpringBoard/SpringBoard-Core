@@ -182,5 +182,8 @@ end
 PositionBridge.getObjectSpringID            = function(objectID)
     return objectID
 end
+PositionBridge.getObjectModelID             = function(objectID)
+    return objectID
+end
 
 positionBridge = PositionBridge()

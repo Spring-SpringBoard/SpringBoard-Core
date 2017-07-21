@@ -67,12 +67,24 @@ function ObjectTypeField:init(field)
     }
 end
 
+-- Make this usable for other elements.
+-- Perhaps create a class method that just takes the ID as param?
 function ObjectTypeField:GetCaption()
-    if self.value ~= nil then
-        return "ID=" .. self.value
-    else
+    if self.value == nil then
         return "None"
     end
+
+    if not self.bridge.ObjectDefs then
+        return "ID=" .. self.value
+    end
+
+    local def = self.bridge.ObjectDefs[self.value]
+    if not def then
+        return "ID=" .. self.value
+    end
+
+    -- FIXME: Use a utility for extracting Spring def names
+    return "Def: " .. tostring(def.name)
 end
 
 -- Custom object classes

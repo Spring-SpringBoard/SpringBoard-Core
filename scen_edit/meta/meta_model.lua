@@ -71,6 +71,11 @@ function MetaModel:SetActionTypes(actionTypes)
         else
             actionType.input = {}
         end
+        if actionType.param ~= nil then
+            actionType.param = SB.parseData(actionType.param)
+        else
+            actionType.param = {}
+        end
     end
     self.actionTypes = SB.CreateNameMapping(actionTypes)
 end

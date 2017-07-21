@@ -241,6 +241,7 @@ return {
                 humanName = "Create unit",
                 name = "CREATE_UNIT",
                 input = { "unitType", "team", "position" },
+                param = "unit",
                 tags = {"Unit"},
                 execute = function (input)
                     local unitType = input.unitType
@@ -252,6 +253,8 @@ return {
 
                     local color = SB.model.teamManager:getTeam(team).color
                     SB.displayUtil:displayText("Spawned", {x, y, z}, color )
+
+                    return { unit = id }
                 end
             },
             {
@@ -378,6 +381,7 @@ return {
                 humanName = "Create feature",
                 name = "CREATE_FEATURE",
                 input = { "featureType", "position" },
+                param = "feature",
                 tags = {"Feature"},
                 execute = function (input)
                     local featureType = input.featureType
@@ -389,6 +393,8 @@ return {
                     local team = Spring.GetFeatureTeam(id)
                     local color = SB.model.teamManager:getTeam(team).color
                     SB.displayUtil:displayText("Spawned", {x, y, z}, color)
+
+                    return { feature = id }
                 end
             },
             {

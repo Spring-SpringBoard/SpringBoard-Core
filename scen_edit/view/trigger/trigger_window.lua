@@ -402,8 +402,29 @@ function TriggerWindow:MakeRemoveEventWindow(event, idx)
     self:Populate()
 end
 
+-- Merge additional params from other, previous actions
+-- FIXME: Maybe this should be moved to the triggerManager
+function TriggerWindow:_MergeExtraActionParams(opts, action)
+    for _, a in ipairs(self.trigger.actions) do
+        -- Do not include actions *after* this action
+        if a == action then
+            break
+        end
+
+        local aType = SB.metaModel.actionTypes[a.typeName]
+        for _, param in pairs(aType.param) do
+            table.insert(opts.params, {
+                name = param.name,
+                type = param.type,
+                humanName = "Action(" .. aType.humanName .. "): " .. param.name,
+            })
+        end
+    end
+end
+
 function TriggerWindow:MakeAddActionWindow()
     local opts = self:_GetTriggerElementWindowParams()
+    self:_MergeExtraActionParams(opts)
     opts.mode = 'add'
     opts.OnConfirm = {
         function(element)
@@ -416,6 +437,7 @@ end
 
 function TriggerWindow:MakeEditActionWindow(action)
     local opts = self:_GetTriggerElementWindowParams()
+    self:_MergeExtraActionParams(opts, action)
     opts.mode = 'edit'
     opts.action = action
     opts.OnConfirm = {

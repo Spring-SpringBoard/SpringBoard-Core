@@ -27,7 +27,8 @@ function TypePanel:init(opts)
     self.FieldType = opts.FieldType
     self.parent = opts.parent
 
-    self.width = 140
+    self.choiceWidth = 140
+    self.valueWidth = 300
 
     self.OnBegin = opts.OnBegin or {}
     CallListeners(self.OnBegin, self)
@@ -52,13 +53,13 @@ function TypePanel:init(opts)
         table.insert(captions, self.sourceNames[name])
     end
     if #names > 1 then
-        -- Offset all fields by self.width
+        -- Offset all fields by self.choiceWidth
         for _, field in pairs(fields) do
             for _, comp in pairs(field.components) do
                 if not comp.x then
                     comp.x = 0
                 end
-                comp.x = comp.x + self.width + 10
+                comp.x = comp.x + self.choiceWidth + 10
             end
         end
         -- Add Choice field that controls which field gets selected
@@ -68,7 +69,7 @@ function TypePanel:init(opts)
                 name = "sourceType",
                 items = names,
                 captions = captions,
-                width = self.width,
+                width = self.choiceWidth,
             })
         )
 
@@ -108,8 +109,8 @@ function TypePanel:MakeConstOpt()
     -- Uses a FieldType specified in the constructor
     self.sourceFieldMap["const"] = self.FieldType({
         name = "const",
-        width = self.width,
-        x = self.width,
+        width = self.valueWidth,
+        x = self.choiceWidth,
         allowNil = allowNil,
     })
 end
@@ -127,8 +128,8 @@ function TypePanel:MakeScopedOpt()
 
     self.sourceFieldMap["scoped"] = ChoiceField({
         name = "scoped",
-        width = self.width,
-        x = self.width,
+        width = self.valueWidth,
+        x = self.choiceWidth,
         items = GetField(validParams, "name"),
         captions = GetField(validParams, "humanName"),
     })
@@ -153,8 +154,8 @@ function TypePanel:MakeVariableOpt()
 
     self.sourceFieldMap["var"] = ChoiceField({
         name = "var",
-        width = self.width,
-        x = self.width,
+        width = self.valueWidth,
+        x = self.choiceWidth,
         captions = variableNames,
         items = variableIDs,
     })
@@ -169,12 +170,12 @@ function TypePanel:MakeExpressionOpt()
 
     self.sourceFieldMap["expr"] = Field({
         name = "expr",
-        width = self.width,
-        x = self.width,
+        width = self.valueWidth,
+        x = self.choiceWidth,
         components = {
             Button:New {
                 caption = 'Expression',
-                width = self.width,
+                width = self.valueWidth,
                 height = 30,
                 data = {},
                 OnClick = {

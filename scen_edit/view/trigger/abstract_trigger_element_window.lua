@@ -190,7 +190,7 @@ function AbstractTriggerElementWindow:__RefreshElementType()
                         local humanName = dataType.humanName
                         if not humanName then
                             humanName = dataType.name
-                            humanName = humanName:sub(1, 1):upper() .. humanName:sub(2)
+                            humanName = String.Capitalize(humanName)
                         end
                         obj:AddControl(dataType.name .. "-sep", {
                             Label:New {
