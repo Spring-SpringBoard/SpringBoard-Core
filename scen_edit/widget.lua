@@ -205,6 +205,14 @@ function widget:DrawScreen()
     SB.executeDelayed("DrawScreen")
 end
 
+function widget:DrawScreenPost()
+    SB.executeDelayed("DrawScreenPost")
+end
+
+function widget:DrawScreenEffects()
+    SB.executeDelayed("DrawScreenEffects")
+end
+
 function widget:DrawWorld()
     if SB.view ~= nil then
         SB.stateManager:DrawWorld()

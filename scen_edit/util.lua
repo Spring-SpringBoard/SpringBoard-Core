@@ -420,6 +420,8 @@ SB.delayed = {
     GameFrame   = {},
     DrawWorld   = {},
     DrawScreen  = {},
+    DrawScreenPost  = {},
+    DrawScreenEffects = {},
     Initialize = {},
 }
 function SB.delayGL(func, params)
