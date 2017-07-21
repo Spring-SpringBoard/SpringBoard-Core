@@ -32,6 +32,7 @@ end
 
 UnitBridge = ObjectBridge:extends{}
 UnitBridge.bridgeName                      = "UnitBridge"
+UnitBridge.humanName                       = "Unit"
 UnitBridge.spGetObjectsInCylinder          = Spring.GetUnitsInCylinder
 UnitBridge.spGetObjectDefID                = Spring.GetUnitDefID
 UnitBridge.spGetObjectPosition             = Spring.GetUnitPosition
@@ -78,6 +79,7 @@ end
 
 FeatureBridge = ObjectBridge:extends{}
 FeatureBridge.bridgeName                      = "FeatureBridge"
+FeatureBridge.humanName                       = "Feature"
 FeatureBridge.spGetObjectsInCylinder          = Spring.GetFeaturesInCylinder
 FeatureBridge.spGetObjectDefID                = Spring.GetFeatureDefID
 FeatureBridge.spGetObjectPosition             = Spring.GetFeaturePosition
@@ -129,6 +131,7 @@ end
 
 AreaBridge = ObjectBridge:extends{}
 AreaBridge.bridgeName                   = "AreaBridge"
+AreaBridge.humanName                    = "Area"
 AreaBridge.spGetObjectPosition          = function(objectID)
     local pos = SB.model.areaManager:getArea(objectID)
     local x, z = (pos[1] + pos[3]) / 2, (pos[2] + pos[4]) / 2
@@ -152,6 +155,9 @@ end
 AreaBridge.getObjectSpringID            = function(modelID)
     return modelID
 end
+AreaBridge.getObjectModelID             = function(objectID)
+    return objectID
+end
 
 areaBridge = AreaBridge()
 
@@ -159,6 +165,7 @@ areaBridge = AreaBridge()
 
 PositionBridge = ObjectBridge:extends{}
 PositionBridge.bridgeName                   = "PositionBridge"
+PositionBridge.humanName                    = "Position"
 PositionBridge.spGetObjectPosition          = function(objectID)
     return objectID.x, objectID.y, objectID.z
 end

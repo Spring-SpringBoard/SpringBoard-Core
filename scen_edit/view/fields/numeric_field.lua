@@ -142,27 +142,27 @@ function NumericField:__UpdateDragging(delta)
     Spring.WarpMouse(self.__initX, self.__initY)
 end
 
-local displayControl
-function NumericField:__DrawDisplayControl()
+local _draggingColor = {1.0, 0.7, 0.1, 0.8}
+function NumericField:__DrawDisplayControl(displayControl)
     -- Leave if we're no longer dragging
     if not self.__isDragging then
         return
     end
 
-    local vsx, vsy = Spring.GetViewGeometry()
+    if not self.__draggingFont then
+        self.__draggingFont = Chili.Font:New {
+            size = 12,
+            color = _draggingColor,
+            outline = true,
+        }
+    end
+
     local x, y = self.button:CorrectlyImplementedLocalToScreen(self.button.x, 0)
     local w = self.button.width
 
-    local step = self.step
-    local _, _, _, shift = Spring.GetModKeyState()
-    if shift then
-        step = step * self.__shiftMultiplier
-    end
-
-
+    gl.Color(unpack(_draggingColor))
     if self.minValue and self.maxValue then
         gl.BeginEnd(GL.LINES, function()
-            gl.Color(unpack(displayControl.font.color))
             -- Draw the beginning |
             gl.Vertex(x, y)
             gl.Vertex(x, y - 20)
@@ -188,41 +188,24 @@ function NumericField:__DrawDisplayControl()
     end
     if self.minValue then
         local minValueStr = string.format(self.format, self.minValue)
-        displayControl.font:Draw(minValueStr, x - 5, y - offy, 12)
+        self.__draggingFont:Draw(minValueStr, x - 5, y - offy)
     end
-    local stepStr = string.format("±" .. self.format, step)
-    displayControl.font:Draw(stepStr, x + w / 2 - 15, y - offy, 12)
+    local valueStr = string.format(self.format, self.value)
+    self.__draggingFont:Draw(valueStr, x + w / 2 - 15, y - offy)
     if self.maxValue then
         local maxValueStr = string.format(self.format, self.maxValue)
-        displayControl.font:Draw(maxValueStr, x + w - 15, y - offy, 12)
+        self.__draggingFont:Draw(maxValueStr, x + w - 15, y - offy)
     end
 
     displayControl:Invalidate()
 end
 
 function NumericField:__SetupDraggingControl()
-    -- We setup a fake Chili control that does the rendering
-    -- It helps us set the appropriate font and more importantly
-    -- it makes it easier to properly order rendering, so it stays
-    -- on top of other controls
-    if not displayControl then
-        displayControl = Control:New {
-            parent = screen0,
-            x = 0, y = 0,
-            bottom = 0, right = 0,
-            font = {
-                size = 12,
-                color = {1.0, 0.7, 0.1, 0.8},
-            },
-            drawcontrolv2 = true,
-        }
-    end
-    displayControl.DrawControl = function()
-        self:__DrawDisplayControl()
-    end
-    displayControl:SetLayer(1)
+    SB.SetGlobalRenderingFunction(function(...)
+        self:__DrawDisplayControl(...)
+    end)
 end
 
 function NumericField:__HideDraggingControl()
-    displayControl.field = nil
+    SB.SetGlobalRenderingFunction(nil)
 end

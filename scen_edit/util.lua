@@ -483,6 +483,28 @@ function SB.MakeWindowModal(window, source)
     )
 end
 
+-- We setup a fake Chili control that does the rendering
+-- It helps us set the appropriate font and more importantly
+-- it makes it easier to properly order rendering, so it stays
+-- on top of other controls
+local __displayControl
+function SB.SetGlobalRenderingFunction(f)
+    if not __displayControl then
+        __displayControl = Control:New {
+            parent = screen0,
+            x = 0, y = 0,
+            bottom = 0, right = 0,
+            drawcontrolv2 = true,
+        }
+    end
+    __displayControl.DrawControl = f
+    if f ~= nil then
+        __displayControl:SetLayer(1)
+    else
+        __displayControl:Hide()
+    end
+end
+
 function SB.DirExists(path, ...)
     return (#VFS.SubDirs(path, "*", ...) + #VFS.DirList(path, "*", ...)) ~= 0
 end
