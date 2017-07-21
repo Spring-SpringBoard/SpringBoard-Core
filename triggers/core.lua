@@ -254,7 +254,7 @@ return {
                     local color = SB.model.teamManager:getTeam(team).color
                     SB.displayUtil:displayText("Spawned", {x, y, z}, color )
 
-                    return { unit = id }
+                    return { unit = SB.model.unitManager:getModelUnitID(id) }
                 end
             },
             {
@@ -394,7 +394,7 @@ return {
                     local color = SB.model.teamManager:getTeam(team).color
                     SB.displayUtil:displayText("Spawned", {x, y, z}, color)
 
-                    return { feature = id }
+                    return { feature = SB.model.featureManager:getModelFeatureID(id) }
                 end
             },
             {
@@ -429,7 +429,7 @@ return {
                     local feature = input.feature
                     local position = input.position
                     local x, y, z = position.x, position.y, position.z
-                    Spring.SetFeaturePosition(unit, x, y, z)
+                    Spring.SetFeaturePosition(feature, x, y, z)
                 end
             },
             {
