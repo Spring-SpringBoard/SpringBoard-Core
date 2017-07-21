@@ -163,15 +163,19 @@ function NumericField:__DrawDisplayControl()
     if self.minValue and self.maxValue then
         gl.BeginEnd(GL.LINES, function()
             gl.Color(unpack(displayControl.font.color))
+            -- Draw the beginning |
             gl.Vertex(x, y)
             gl.Vertex(x, y - 20)
 
+            -- Draw the end |
             gl.Vertex(x + w, y)
             gl.Vertex(x + w, y - 20)
 
+            -- Draw the line -----
             gl.Vertex(x, y - 10)
             gl.Vertex(x + w, y - 10)
 
+            -- Draw the current position |
             local percent = (self.value - self.minValue) / (self.maxValue - self.minValue)
             gl.Vertex(x + w * percent, y)
             gl.Vertex(x + w * percent, y - 20)
