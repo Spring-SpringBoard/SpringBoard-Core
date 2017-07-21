@@ -1,10 +1,13 @@
 String = String or {}
 
--- TODO: Convert to String. table format
-function string.starts(String,Start)
-   return string.sub(String,1,string.len(Start))==Start
+function String.Starts(str, s)
+   return string.sub(str, 1, string.len(str)) == s
 end
 
-function string.ends(String,End)
-   return End=='' or string.sub(String,-string.len(End))==End
+function String.Ends(str, s)
+   return s == "" or string.sub(str, -string.len(str)) == s
+end
+
+function String.Capitalize(str)
+    return str:sub(1, 1):upper() .. str:sub(2)
 end

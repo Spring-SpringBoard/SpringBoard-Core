@@ -44,7 +44,7 @@ function MaterialBrowser:FilterFile(filePath)
 	for _, texName in pairs(self.textures) do
 		local texDef = SB.model.textureManager.materialTextures[texName]
 		local fileEnd = texDef.suffix .. ext
-		if filePath:ends(fileEnd) then
+		if String.Ends(filePath, fileEnd) then
 			if not texDef.enabled then
 				return
 			end

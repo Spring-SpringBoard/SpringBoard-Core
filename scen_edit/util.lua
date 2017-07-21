@@ -297,7 +297,6 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
     )
 end
 
-
 function SB.HintEditor(editor, color, timeout)
     timeout = timeout or 1
     color = color or {1, 0, 0, 1}
