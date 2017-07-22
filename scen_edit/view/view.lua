@@ -24,9 +24,6 @@ function View:init()
 
     SB.clipboard = Clipboard()
     self.areaViews = {}
-    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
-         self.runtimeView = RuntimeView()
-    end
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
 	self.tabbedWindow = TabbedWindow()

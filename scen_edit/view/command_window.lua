@@ -80,7 +80,7 @@ function CommandWindow:init()
     self.window = Window:New {
         parent = screen0,
         caption = "",
-        right = 500 + 375,
+        right = 500,
         bottom = 0,
         resizable = false,
         draggable = false,

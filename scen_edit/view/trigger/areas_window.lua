@@ -85,7 +85,7 @@ function AreasWindow:Populate()
             tooltip = "Center camera on area",
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "magnifying-glass.png",
+                    file = SB_IMG_DIR .. "position-marker.png",
                     height = SB.conf.B_HEIGHT,
                     width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},

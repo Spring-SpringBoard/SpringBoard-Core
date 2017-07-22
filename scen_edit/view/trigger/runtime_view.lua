@@ -1,6 +1,21 @@
-RuntimeView = LCS.class{}
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-function RuntimeView:init()
+RuntimeWindow = Editor:extends{}
+if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
+    Editor.Register({
+        name = "runtimeWindow",
+        editor = RuntimeWindow,
+        tab = "Logic",
+        caption = "Runtime",
+        tooltip = "See runtime triggers and variables",
+        image = SB_IMG_DIR .. "trigger-inspect.png",
+        order = 4,
+    })
+end
+
+function RuntimeWindow:init()
+    self:super("init")
+
     self.started = false --FIXME: check instead of assuming
     self.btnStartStop = Button:New {
         caption='',
@@ -58,63 +73,58 @@ function RuntimeView:init()
             end
         }
     }
-    self.runtimeViewWindow = Window:New {
-        parent = screen0,
-        caption = "Runtime Window",
-        right = 500,
-        bottom = 0,
-        resizable = false,
-        draggable = false,
-        width = 375,
-        height = 200,
-        children = {
-            Control:New {
-                orientation = 'horizontal',
-                width = '100%',
-                y = 10,
-                height = SB.conf.B_HEIGHT * 2,
-                padding = {0,0,0,0},
-                itemPadding = {0,10,10,10},
-                itemMargin = {0,0,0,0},
-                children = {
-                    self.btnStartStop,
-                    self.btnToggleShowDevelop,
-                },
+
+    local children = {
+        Control:New {
+            orientation = 'horizontal',
+            width = '100%',
+            y = 10,
+            height = SB.conf.B_HEIGHT * 2,
+            padding = {0,0,0,0},
+            itemPadding = {0,10,10,10},
+            itemMargin = {0,0,0,0},
+            children = {
+                self.btnStartStop,
+                self.btnToggleShowDevelop,
             },
-            StackPanel:New {
-                y = SB.conf.B_HEIGHT * 2 + 10,
-                x = 1,
-                right = 1,
-                bottom = 1,
-                itemMargin = {0, 0, 0, 0},
-                children = {
-                    ScrollPanel:New {
-                        width = "100%",
-                        height = "100%",
-                        children = {
-                            self.dvv,
-                        },
+        },
+        StackPanel:New {
+            y = SB.conf.B_HEIGHT * 2 + 10,
+            x = 1,
+            right = 1,
+            bottom = 30,
+            itemMargin = {0, 0, 0, 0},
+            children = {
+                ScrollPanel:New {
+                    width = "100%",
+                    height = "100%",
+                    children = {
+                        self.dvv,
                     },
-                    ScrollPanel:New {
-                        width = "100%",
-                        height = "100%",
-                        children = {
-                            self.dtv,
-                        },
+                },
+                ScrollPanel:New {
+                    width = "100%",
+                    height = "100%",
+                    children = {
+                        self.dtv,
                     },
                 },
             },
-        }
+        },
     }
+    self:Populate()
+
+    self:Finalize(children)
+
     self:Populate()
 end
 
-function RuntimeView:Populate()
+function RuntimeWindow:Populate()
     DebugTriggerView(self.dtv)
     DebugVariableView(self.dvv)
 end
 
-function RuntimeView:UpdateStartStopButton()
+function RuntimeWindow:UpdateStartStopButton()
     self.btnStartStop:ClearChildren()
     if not self.started then
         self.btnStartStop.tooltip = "Start scenario"
@@ -139,7 +149,7 @@ function RuntimeView:UpdateStartStopButton()
     end
 end
 
-function RuntimeView:GameStarted()
+function RuntimeWindow:GameStarted()
     self.started = true
     self:UpdateStartStopButton()
     self.btnStartStop.backgroundColor = SB.conf.BTN_CANCEL_COLOR
@@ -152,7 +162,7 @@ function RuntimeView:GameStarted()
     end
 end
 
-function RuntimeView:GameStopped()
+function RuntimeWindow:GameStopped()
     self.started = false
     self:UpdateStartStopButton()
     self.btnStartStop.backgroundColor = SB.conf.BTN_ADD_COLOR
