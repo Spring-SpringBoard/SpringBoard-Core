@@ -135,11 +135,11 @@ function SB.humanExpression(data, exprType, dataType, level)
         local condHumanName = SB.metaModel.functionTypes[data.typeName].humanName
         return condHumanName .. " (" .. firstExpr .. " " .. relation .. " " .. secondExpr .. ")"
     elseif exprType == "action" then
-        local action = SB.metaModel.actionTypes[data.typeName]
-        local humanName = action.humanName .. " ("
-        for i, input in pairs(action.input) do
-            humanName = humanName .. SB.humanExpression(data[input.name], "value", nil, level + 1)
-            if i ~= #action.input then
+        local actionDef = SB.metaModel.actionTypes[data.typeName]
+        local humanName = actionDef.humanName .. " ("
+        for i, input in pairs(actionDef.input) do
+            humanName = humanName .. SB.humanExpression(data[input.name], "value", input.type, level + 1)
+            if i ~= #actionDef.input then
                 humanName = humanName .. ", "
             end
         end
@@ -162,11 +162,16 @@ function SB.humanExpression(data, exprType, dataType, level)
         return exprHumanName .. " (" .. paramsStr .. ")"
     elseif exprType == "value" then
         if data.type == "const" then
+            -- if dataType ~= nil then
+            --     local fieldType = SB.__GetFieldType(dataType)
+            --     Spring.Echo(dataType, not not fieldType)
+            --     Spring.Echo(fieldType)
+            -- end
             if dataType == "unitType" then
                 local unitDef = UnitDefs[data.value]
                 local dataIDStr = "(id=" .. tostring(data.value) .. ")"
                 if unitDef then
-                    return tostring(unitDef.name) .. " " .. dataIDStr
+                    return tostring(unitDef.name) -- .. " " .. dataIDStr
                 else
                     return dataIDStr
                 end
@@ -174,7 +179,7 @@ function SB.humanExpression(data, exprType, dataType, level)
                 local featureDef = FeatureDefs[data.value]
                 local dataIDStr = "(id=" .. tostring(data.value) .. ")"
                 if featureDef then
-                    return tostring(featureDef.name) .. " " .. dataIDStr
+                    return tostring(featureDef.name) -- .. " " .. dataIDStr
                 else
                     return dataIDStr
                 end
@@ -208,7 +213,7 @@ function SB.humanExpression(data, exprType, dataType, level)
                 return tostring(data.value)
             end
         elseif data.type == "scoped" then
-            return data.value
+            return "scoped: " .. data.value
         elseif data.type == "var" then
             return SB.model.variableManager:getVariable(data.value).name
         elseif dataType.typeName then
@@ -356,27 +361,33 @@ function SB.GiveOrderToUnit(unitID, orderType, params)
         { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
 end
 
+local __fieldTypeMapping
+function SB.__GetFieldType(name)
+    if not __fieldTypeMapping then
+        __fieldTypeMapping = {
+            unit = UnitField,
+            feature = FeatureField,
+            area = AreaField,
+            trigger = TriggerField,
+            unitType = UnitTypeField,
+            featureType = FeatureTypeField,
+            team = TeamField,
+            number = NumericField,
+            string = StringField,
+            bool = BooleanField,
+            numericComparison = NumericComparisonField,
+            identityComparison = IdentityComparisonField,
+            position = PositionField,
+        }
+    end
+
+    return __fieldTypeMapping[name]
+end
+
 function SB.createNewPanel(opts)
     local dataTypeName = opts.dataType.type
 
-    local fieldTypeMapping = {
-        unit = UnitField,
-        feature = FeatureField,
-        area = AreaField,
-        trigger = TriggerField,
-        unitType = UnitTypeField,
-        featureType = FeatureTypeField,
-        team = TeamField,
-        number = NumericField,
-        string = StringField,
-        bool = BooleanField,
-        numericComparison = NumericComparisonField,
-        identityComparison = IdentityComparisonField,
-        position = PositionField,
-
-    }
-
-    local fieldType = fieldTypeMapping[dataTypeName]
+    local fieldType = SB.__GetFieldType(dataTypeName)
 
     if fieldType then
         opts.FieldType = fieldType
@@ -392,7 +403,7 @@ function SB.createNewPanel(opts)
     elseif dataTypeName:find("_array") then
         -- return GenericArrayPanel(opts)
         local atomicType = dataTypeName:gsub("_array", "")
-        local atomicField = fieldTypeMapping[atomicType]
+        local atomicField = __fieldTypeMapping[atomicType]
         -- override TypePanel's FieldType in order to use a custom type
         opts.FieldType = function(tbl)
             -- override ArrayField's type in order to pass trigger data for

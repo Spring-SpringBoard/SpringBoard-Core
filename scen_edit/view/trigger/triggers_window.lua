@@ -89,7 +89,7 @@ end
 
 function TriggersWindow:Populate()
     self._triggers:ClearChildren()
-    local triggers = SortByName(SB.model.triggerManager:getAllTriggers(), "name")
+    local triggers = Table.SortByAttr(SB.model.triggerManager:getAllTriggers(), "name")
     for id, trigger in pairs(triggers)  do
         local stackTriggerPanel = MakeComponentPanel(self._triggers)
         stackTriggerPanel.triggerID = trigger.id

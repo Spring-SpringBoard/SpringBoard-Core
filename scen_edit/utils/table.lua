@@ -98,14 +98,16 @@ function SetTableValues(origTable, newTable)
     end
 end
 
-function SortByName(t, name)
+function Table.SortByAttr(t, attrName)
+    assert(attrName ~= nil, "Sort attribute name is nil")
+
     local sortedTable = {}
     for k, v in pairs(t) do
         table.insert(sortedTable, v)
     end
     table.sort(sortedTable,
         function(a, b)
-            return a[name] < b[name]
+            return a[attrName] < b[attrName]
         end
     )
     return sortedTable

@@ -49,7 +49,7 @@ function AbstractTriggerElementWindow:init(opts)
         padding = {0, 0, 0, 0}
     }
 
-    self.elementTypes = SortByName(self:GetValidElementTypes(), "humanName")
+    self.elementTypes = Table.SortByAttr(self:GetValidElementTypes(), "humanName")
     -- group by tags
     self:_AddTagGroups()
 
@@ -256,9 +256,11 @@ function AbstractTriggerElementWindow:_AddTagGroups()
         end
     end
 
+    local tagGroupNames = GetKeys(self.tagGroups)
+    table.sort(tagGroupNames)
     self:AddField(ChoiceField({
         name = "tag",
-        items = GetKeys(self.tagGroups),
+        items = tagGroupNames,
     }))
 
     self:__RefreshTagGroups()
