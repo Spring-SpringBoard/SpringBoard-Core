@@ -169,6 +169,24 @@ function RuntimeModel:UnitFinished(unitID)
     self:OnEvent("UNIT_FINISH", { unit = modelUnitID })
 end
 
+function RuntimeModel:FeatureCreated(featureID, allyTeam)
+    -- if self:CanTrackUnit(unitDefID) then
+    --     self.trackedUnitIDs[unitID] = unitID
+    -- end
+    local modelID = SB.model.featureManager:getModelFeatureID(featureID)
+    self:OnEvent("FEATURE_CREATE", { featureID = modelID })
+end
+
+function RuntimeModel:FeatureDamaged(featureID)
+    local modelID = SB.model.featureManager:getModelFeatureID(featureID)
+    self:OnEvent("FEATURE_DAMAGE", { featureID = modelID })
+end
+
+function RuntimeModel:FeatureDestroyed(featureID)
+    local modelID = SB.model.featureManager:getModelFeatureID(featureID)
+    self:OnEvent("FEATURE_DESTROY", { featureID = modelID })
+end
+
 local checkRate = 10
 function RuntimeModel:GameFrame(frameNum)
     if not self.hasStarted then

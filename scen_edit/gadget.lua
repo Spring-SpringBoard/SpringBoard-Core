@@ -193,8 +193,8 @@ function gadget:UnitDamaged(unitID, unitDefID, unitTeam, damage, paralyzer, weap
 	SB.rtModel:UnitDamaged(unitID)
 end
 
-function gadget:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
-    SB.rtModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
+function gadget:UnitDestroyed(unitID, ...)
+    SB.rtModel:UnitDestroyed(unitID, ...)
     if __populated then
         SB.model.unitManager:removeUnit(unitID)
     end
@@ -208,9 +208,15 @@ function gadget:FeatureCreated(featureID, allyTeam)
     if __populated then
         SB.model.featureManager:addFeature(featureID)
     end
+    SB.rtModel:FeatureCreated(featureID, allyTeam)
 end
 
-function gadget:FeatureDestroyed(featureID, allyTeam)
+function gadget:FeatureDamaged(featureID, ...)
+	SB.rtModel:FeatureDamaged(featureID, ...)
+end
+
+function gadget:FeatureDestroyed(featureID, ...)
+    SB.rtModel:FeatureDestroyed(featureID, ...)
     if __populated then
         SB.model.featureManager:removeFeature(featureID)
     end

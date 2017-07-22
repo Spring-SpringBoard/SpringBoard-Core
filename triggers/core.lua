@@ -634,6 +634,21 @@ return {
                 name = "UNIT_LEAVE_AREA",
                 param = { "unit", "area" },
             },
+            {
+                humanName = "Feature created",
+                name = "FEATURE_CREATE",
+                param = "feature",
+            },
+            {
+                humanName = "Feature damaged",
+                name = "FEATURE_DAMAGE",
+                param = "feature",
+            },
+            {
+                humanName = "Feature destroyed",
+                name = "FEATURE_DESTROY",
+                param = "feature",
+            },
         }
     end,
     functions = function()
@@ -959,6 +974,7 @@ return {
                     return Spring.AreTeamsAllied(input.team1, input.team2)
                 end
             },
+
             {
                 humanName = "All units",
                 name = "ALL_UNITS",
@@ -1116,21 +1132,6 @@ return {
                     return Spring.GetUnitLastAttacker(input.unit)
                 end,
             },
-
-
-            {
-                humanName = "Center of Area",
-                name = "CENTER_OF_AREA",
-                input = "area",
-                output = "position",
-                execute = function(input)
-                    local area = input.area
-                    local x = (area[1] + area[3]) / 2
-                    local z = (area[2] + area[4]) / 2
-                    local y = Spring.GetGroundHeight(x, z)
-                    return {x=x, y=y, z=z}
-                end
-            },
             {
                 humanName = "Unit is in Area",
                 name = "UNIT_IS_IN_AREA",
@@ -1146,6 +1147,98 @@ return {
                     return false
                 end,
             },
+
+            {
+                humanName = "Center of Area",
+                name = "CENTER_OF_AREA",
+                input = "area",
+                output = "position",
+                execute = function(input)
+                    local area = input.area
+                    local x = (area[1] + area[3]) / 2
+                    local z = (area[2] + area[4]) / 2
+                    local y = Spring.GetGroundHeight(x, z)
+                    return {x=x, y=y, z=z}
+                end
+            },
+
+            {
+                humanName = "All features",
+                name = "ALL_FEATURES",
+                output = "feature_array",
+                tags = {"FEATURES"},
+                execute = function()
+                    return Spring.GetAllFeatures()
+                end
+            },
+            {
+                humanName = "Features in Area",
+                name = "FEATURES_IN_AREA",
+                input = "area",
+                output = "feature_array",
+                tags = {"Features"},
+                execute = function(input)
+                    return Spring.GetFeaturesInRectangle(unpack(input.area))
+                end,
+            },
+            {
+                humanName = "Feature type",
+                name = "FEATURE_TYPE",
+                input = "feature",
+                output = "featureType",
+                tags = {"Feature"},
+                execute = function(input)
+                    return Spring.GetFeatureDefID(input.feature)
+                end,
+            },
+            {
+                humanName = "Feature team",
+                name = "FEATURE_TEAM",
+                input = "feature",
+                output = "team",
+                tags = {"Feature"},
+                execute = function(input)
+                    return Spring.GetFeatureTeam(input.feature)
+                end,
+            },
+            {
+                humanName = "Feature health",
+                name = "FEATURE_HEALTH",
+                input = "feature",
+                output = "number",
+                tags = {"Feature"},
+                execute = function(input)
+                    return Spring.GetFeatureHealth(input.feature)
+                end,
+            },
+            {
+                humanName = "Feature Health %",
+                name = "FEATURE_HEALTH_PERCENT",
+                input = "feature",
+                output = "number",
+                tags = {"Feature"},
+                execute = function(input)
+                    local hp, maxHp = Spring.GetFeatureHealth(input.feature)
+                    return hp / maxHp
+                end,
+            },
+            {
+                humanName = "Feature is in Area",
+                name = "FEATURE_IS_IN_AREA",
+                input = { "area", "feature" },
+                output = "bool",
+                tags = {"Features"},
+                execute = function(input)
+                    local features = Spring.GetFeaturesInRectangle(unpack(input.area))
+                    for _, id in pairs(features) do
+                        if id == input.feature then
+                            return true
+                        end
+                    end
+                    return false
+                end,
+            },
+
             {
                 humanName = "Trigger disabled",
                 name = "TRIGGER_DISABLED",
