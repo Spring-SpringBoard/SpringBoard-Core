@@ -35,7 +35,7 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
 		end
 	end
 	local editor = self.editorView or SB.currentEditor
-	if editor then
+	if editor and not editor.window.__disabled then
 		if editor:KeyPress(key, mods, isRepeat, label, unicode) then
 			return true
 		end

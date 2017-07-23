@@ -468,6 +468,8 @@ end
 
 function SB.SetControlEnabled(control, enabled)
     control.disableChildrenHitTest = not enabled
+    -- Not a Chili flag, used internally in SB for keybinding
+    control.__disabled = not enabled
     control:Invalidate()
     for _, childCtrl in pairs(control.childrenByName) do
         SB.SetControlEnabled(childCtrl, enabled)
