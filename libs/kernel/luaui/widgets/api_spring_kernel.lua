@@ -1,3 +1,5 @@
+KERNEL_FOLDER = "libs/kernel/"
+
 VFS.Include(KERNEL_FOLDER .. "kernel_utils.lua")
 
 function widget:GetInfo()
