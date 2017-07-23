@@ -113,7 +113,12 @@ function AbstractTriggerElementWindow:init(opts)
         }
     )
 
-    self:Finalize(children, {notMainWindow = true, noCloseButton = true})
+    self:Finalize(children, {
+        notMainWindow = true,
+        noCloseButton = true,
+        x = tostring(math.random(30, 40)) .. "%",
+        y = tostring(math.random(30, 40)) .. "%",
+    })
 
     if self.mode == 'edit' then
         local elTypeName = self.element.typeName

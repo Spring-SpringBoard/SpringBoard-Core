@@ -115,6 +115,8 @@ function TriggerWindow:init(trigger)
         noCloseButton = true,
         width = 610,
         height = 350,
+        x = tostring(math.random(35, 45)) .. "%",
+        y = tostring(math.random(35, 45)) .. "%",
     })
 
     self:Populate()

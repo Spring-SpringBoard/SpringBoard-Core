@@ -118,8 +118,8 @@ function Editor:Finalize(children, opts)
         -- TODO: Make configurable
         self.window = Window:New {
             parent = screen0,
-            x = "40%",
-            y = "40%",
+            x = opts.x or "40%",
+            y = opts.y or "40%",
             width = opts.width or 550,
             height = opts.height or 500,
             resizable  = false,
