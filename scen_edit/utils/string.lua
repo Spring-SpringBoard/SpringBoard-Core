@@ -5,7 +5,7 @@ function String.Starts(str, s)
 end
 
 function String.Ends(str, s)
-   return s == "" or string.sub(str, -string.len(str)) == s
+   return s == "" or string.sub(str, -string.len(s)) == s
 end
 
 function String.Capitalize(str)
