@@ -107,7 +107,7 @@ end
 function SelectAreaState:__MaybeTraceObject(x, y)
     local result, coords = Spring.TraceScreenRay(x, y)
     if result == "ground" then
-        local selected = SB.checkAreaIntersections(coords[1], coords[3])
+        local selected = SB.model.areaManager:GetAreaIn(coords[1], coords[3])
         if selected ~= nil then
             return true, selected
         end

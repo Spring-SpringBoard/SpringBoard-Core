@@ -66,6 +66,20 @@ function AreaManager:clear()
         self:removeArea(areaID)
     end
 end
+
+-- Utility functions
+function AreaManager:GetAreaIn(x, z)
+    local selected, dragDiffX, dragDiffZ
+    for areaID, area in pairs(self.areas) do
+        local objectX, _, objectZ = areaBridge.spGetObjectPosition(areaID)
+        if x >= area[1] and x < area[3] and z >= area[2] and z < area[4] then
+            selected = areaID
+            dragDiffX = objectX - x
+            dragDiffZ = objectZ - z
+        end
+    end
+    return selected, dragDiffX, dragDiffZ
+end
 ------------------------------------------------
 -- Listener definition
 ------------------------------------------------

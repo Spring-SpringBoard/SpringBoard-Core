@@ -68,21 +68,6 @@ function CallListeners(listeners, ...)
     end
 end
 
-function SB.checkAreaIntersections(x, z)
-    local areas = SB.model.areaManager:getAllAreas()
-    local selected, dragDiffX, dragDiffZ
-    for _, areaID in pairs(areas) do
-        local area = SB.model.areaManager:getArea(areaID)
-        local objectX, _, objectZ = areaBridge.spGetObjectPosition(areaID)
-        if x >= area[1] and x < area[3] and z >= area[2] and z < area[4] then
-            selected = areaID
-            dragDiffX = objectX - x
-            dragDiffZ = objectZ - z
-        end
-    end
-    return selected, dragDiffX, dragDiffZ
-end
-
 SB.assignedCursors = {}
 function SB.SetMouseCursor(name)
     SB.cursor = name

@@ -117,7 +117,7 @@ function DefaultState:MousePress(x, y, button)
 
         -- transform ground to area
         if result == "ground" and SB.view.displayDevelop then
-            local areaID = SB.checkAreaIntersections(coords[1], coords[3])
+            local areaID = SB.model.areaManager:GetAreaIn(coords[1], coords[3])
             if areaID then
                 result = "area"
                 coords = areaID
