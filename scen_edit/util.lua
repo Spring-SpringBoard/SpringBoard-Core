@@ -86,13 +86,15 @@ end
 SB.assignedCursors = {}
 function SB.SetMouseCursor(name)
     SB.cursor = name
-    if SB.cursor ~= nil then
-        if SB.assignedCursors[name] == nil then
-            Spring.AssignMouseCursor(name, name, false)
-            SB.assignedCursors[name] = true
-        end
-        Spring.SetMouseCursor(SB.cursor)
+    if SB.cursor == nil then
+        return
     end
+
+    if SB.assignedCursors[name] == nil then
+        Spring.AssignMouseCursor(name, name, true)
+        SB.assignedCursors[name] = true
+    end
+    Spring.SetMouseCursor(SB.cursor)
 end
 
 function SB.MakeSeparator(panel)

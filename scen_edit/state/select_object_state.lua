@@ -44,7 +44,12 @@ function SelectObjectState:__DrawInfo()
         }
     end
 
-    local x, y = Spring.GetMouseState()
+    local x, y, _, _, _, outsideSpring = Spring.GetMouseState()
+    -- Don't draw if outside Spring
+    if outsideSpring then
+        return true
+    end
+
     local vsx, vsy = Spring.GetViewGeometry()
     y = vsy - y
 
