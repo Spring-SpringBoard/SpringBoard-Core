@@ -89,7 +89,7 @@ function StateManager:DrawWorld()
     -- This allows us to later reset it when it gets back, which prevents a bug
     -- https://github.com/Spring-SpringBoard/SpringBoard-Core/issues/220
     if outsideSpring then
-        Spring.SetMouseCursor("empty")
+        Spring.SetMouseCursor("dont_use")
     -- This is needed to properly draw the cursor each frame when it is visible
     elseif SB.cursor then
         Spring.AssignMouseCursor(SB.cursor, SB.cursor, false)
