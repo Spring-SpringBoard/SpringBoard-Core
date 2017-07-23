@@ -66,6 +66,23 @@ function ArrayField:init(field)
     end
 end
 
+-- Overriden
+-- Not used
+function ArrayField:__GetDisplayText()
+    local retStr = "{"
+    for i, f in pairs(self.value) do
+        if f.__GetDisplayText then
+            local fText = f:__GetDisplayText()
+            retStr = retStr .. fText
+            if i ~= #self.value then
+                retStr = retStr .. ", "
+            end
+        end
+    end
+    retStr = retStr .. "}"
+    return retStr
+end
+
 function ArrayField:Validate(value)
     -- Let fields do their own validation when they're created
     -- for _, v in pairs(value) do

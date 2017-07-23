@@ -2,7 +2,7 @@ SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 function ParseKey(field, editBox, key, mods, ...)
     if key == Spring.GetKeyCode("esc") then
-        field:Set(field.originalValue)
+        field:Set(field.__originalValue)
         screen0:FocusControl(nil)
         return true
     end
@@ -108,8 +108,13 @@ function StringField:init(field)
     }
 end
 
+-- Overriden
+function StringField:__GetDisplayText()
+    return tostring(self.value)
+end
+
 function StringField:__OnClick()
-    self.originalValue = self.value
+    self.__originalValue = self.value
     self.button:Hide()
     self.editBox:SetText(self.lblValue.caption)
     self.editBox:Show()

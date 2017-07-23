@@ -47,11 +47,19 @@ function TriggerDataTypeField:init(field)
 end
 
 function TriggerDataTypeField:_GetCaption()
+    --return SB.humanExpression(self.value, "value", self.dataType)
     if self.value then
-        return SB.humanExpression({
-            type = "const",
-            value = self.value,
-        }, "value", self.dataType)
+        local customDataType = SB.metaModel:GetCustomDataType(self.dataType.type)
+        if customDataType then
+            result = SB.humanExpression({
+                type = "const",
+                value = self.value,
+            }, "value", self.dataType.type)
+            return customDataType.humanName .. "(".. result .. ")"
+        else
+            local result = SB.humanExpression(self.value, "value", self.dataType.type)
+            return result
+        end
     else
         local dataTypeDef = SB.metaModel:GetDataType(self.dataType.type)
         return String.Capitalize(dataTypeDef.humanName)

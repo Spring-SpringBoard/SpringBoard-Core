@@ -184,7 +184,8 @@ function SB.humanExpression(data, exprType, dataType, level)
                     return dataIDStr
                 end
             elseif dataType == "trigger" then
-                return data.name
+                local trigger = SB.model.triggerManager:getTrigger(data.value)
+                return trigger.name
             elseif dataType == "position" then
                 return string.format("(%.1f,%.1f,%.1f)", data.value.x, data.value.y, data.value.z)
             elseif dataType and dataType.type == "order" then
@@ -196,6 +197,18 @@ function SB.humanExpression(data, exprType, dataType, level)
                         SB.humanExpression(data.value[input.name], "value", input.type, level + 1)
                 end
                 return humanName
+            -- custom data types
+            elseif type(data.value) == "table" then
+                local retStr = ""
+                for k, v in pairs(data.value) do
+                    if k ~= "typeName" then
+                        if retStr ~= "" then
+                            retStr = retStr .. ", "
+                        end
+                        retStr = retStr .. tostring(v.value)
+                    end
+                end
+                return retStr
             else
                 return tostring(data.value)
             end
@@ -203,8 +216,6 @@ function SB.humanExpression(data, exprType, dataType, level)
             return "scoped: " .. data.value
         elseif data.type == "var" then
             return SB.model.variableManager:getVariable(data.value).name
-        elseif dataType.typeName then
-            Spring.Echo("dataType.typeName", dataType.typeName)
         end
         return "nothing"
     elseif exprType == "numeric_comparison" then

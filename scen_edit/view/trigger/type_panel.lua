@@ -172,9 +172,11 @@ function TypePanel:MakeExpressionOpt()
         name = "expr",
         width = self.valueWidth,
         x = self.choiceWidth,
+        -- FIXME: it seems that similarity check doesn't always work well in field.lua
+        __dontCheckIfSimilar = true,
         components = {
             Button:New {
-                caption = 'Expression',
+                caption = 'Select...',
                 width = self.valueWidth,
                 height = 30,
                 data = {},
@@ -235,7 +237,10 @@ function TypePanel:OnFieldChange(name, value)
     if name == "sourceType" then
         self:_RefreshSourceTypes()
     elseif name == "expr" then
-        local tooltip = SB.humanExpression(value, "condition")
-        self.fields["expr"].components[1].tooltip = tooltip
+        local exprStr = SB.humanExpression(value, "condition")
+        local buttonExpr = self.fields["expr"].components[1]
+        --buttonExpr.tooltip = tooltip
+        buttonExpr:SetCaption(exprStr)
+        buttonExpr:Invalidate()
     end
 end

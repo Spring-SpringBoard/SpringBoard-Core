@@ -308,7 +308,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
             local expr = param.value
             paramName = SB.metaModel.functionTypes[expr.typeName].humanName
         elseif type(paramName) == 'table' then
-            paramName = "{...}"
+            paramName = SB.humanExpression(param, "value", input.type)
         end
         if input.name == "relation" then
             if root.typeName == "compare_number" then

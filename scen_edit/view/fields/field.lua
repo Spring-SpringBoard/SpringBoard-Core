@@ -53,7 +53,9 @@ function Field:Set(value, source)
     end
     self.__inUpdate = true
     local valid, value = self:Validate(value)
-    if valid and not self:_CompareValues(value, self.value) then
+    -- FIXME: it seems that similarity check doesn't always work well in field.lua
+    if valid and
+        (self.__dontCheckIfSimilar or not self:_CompareValues(value, self.value)) then
         self.value = value
         -- invoke editor view's update
         if self.ev then

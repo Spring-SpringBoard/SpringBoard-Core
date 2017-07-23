@@ -42,7 +42,7 @@ function AbstractTriggerElementWindow:init(opts)
     }
     self.elementPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
-        y = 200,
+        y = 150,
         x = 0,
         right = 0,
         bottom = 0,
@@ -58,6 +58,7 @@ function AbstractTriggerElementWindow:init(opts)
             name = "elementType",
             captions = GetField(self.elementTypes, "humanName"),
             items = GetField(self.elementTypes, "name"),
+            width = 350,
         }))
     end
     self:__RefreshElementType()
@@ -104,8 +105,8 @@ function AbstractTriggerElementWindow:init(opts)
     table.insert(children,
         ScrollPanel:New {
             x = 0,
-            y = 60,
-            bottom = 30,
+            y = 50,
+            bottom = 0,
             right = 0,
             borderColor = {0,0,0,0},
             horizontalScrollbar = false,
@@ -118,6 +119,8 @@ function AbstractTriggerElementWindow:init(opts)
         noCloseButton = true,
         x = tostring(math.random(30, 40)) .. "%",
         y = tostring(math.random(30, 40)) .. "%",
+        width = 500,
+        height = 350,
     })
 
     if self.mode == 'edit' then
@@ -150,6 +153,7 @@ function AbstractTriggerElementWindow:__RefreshTagGroups()
         name = "elementType",
         captions = GetField(self.elementTypes, "humanName"),
         items = GetField(self.elementTypes, "name"),
+        width = 350,
     }))
 
     self:__RefreshElementType()
@@ -266,6 +270,7 @@ function AbstractTriggerElementWindow:_AddTagGroups()
     self:AddField(ChoiceField({
         name = "tag",
         items = tagGroupNames,
+        width = 350,
     }))
 
     self:__RefreshTagGroups()

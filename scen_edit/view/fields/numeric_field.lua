@@ -2,7 +2,7 @@ SB.Include(SB_VIEW_FIELDS_DIR .. "string_field.lua")
 
 NumericField = StringField:extends{}
 function NumericField:Update(source)
-    local v = string.format(self.format, self.value)
+    local v = self:__GetDisplayText()
     if source ~= self.editBox and not self.editBox.state.focused then
         self.editBox:SetText(v)
     end
@@ -42,10 +42,11 @@ function NumericField:init(field)
             self.step = (self.maxValue - self.minValue) / 200
         end
     end
-    local v = string.format(self.format, self.value)
 
+    local v = self:__GetDisplayText()
     self.lblValue:SetCaption(v)
     self.editBox:SetText(v)
+
     self.button.OnMouseUp = {
         function(...)
             if self.__isDragging then
@@ -77,6 +78,11 @@ function NumericField:init(field)
             end
         end
     }
+end
+
+-- Overriden
+function NumericField:__GetDisplayText()
+    return string.format(self.format, self.value)
 end
 
 -- Overriden

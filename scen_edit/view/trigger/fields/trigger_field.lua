@@ -11,7 +11,7 @@ function TriggerField:init(opts)
         table.insert(triggerIDs, trigger.id)
     end
 
-    opts.title = "Triggers:"
+    --opts.title = "Triggers:"
     opts.captions = triggerNames
     opts.items = triggerIDs
 
