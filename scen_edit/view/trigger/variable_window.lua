@@ -114,7 +114,9 @@ function VariableWindow:UpdatePanel(variable)
 
     self:Set("name", self.variable.name)
     self:Set("type", self.variable.type)
-    self.variablePanel[self.variable.type]:UpdatePanel(variable.value)
+    if self.variable.value then
+        self.variablePanel[self.variable.type]:UpdatePanel(self.variable.value)
+    end
 end
 
 function VariableWindow:UpdateModel(variable)

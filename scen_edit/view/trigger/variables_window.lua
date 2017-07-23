@@ -64,7 +64,6 @@ end
 function VariablesWindow:AddVariable()
     local variable = {
         type = "number",
-        value = {},
         name = "New variable",
     }
     success, msg = pcall(
@@ -73,6 +72,7 @@ function VariablesWindow:AddVariable()
         end
     )
     if not success then
+        Log.Error(debug.traceback())
         Log.Error("Error adding variable", msg)
     end
 --[[    local newVariable = SB.model:NewVariable("number")
