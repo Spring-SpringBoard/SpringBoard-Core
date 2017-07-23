@@ -139,8 +139,6 @@ function widget:Initialize()
         Spring.SendCommands("cheat")
     end
 
-    -- FIXME: globallos needs to be enabled for terrain loading to be visible
-    Spring.SendCommands("globallos")
     if Spring.GetGameRulesParam("sb_gameMode") ~= "play" and RELOAD_GADGETS then
         reloadGadgets() --uncomment for development
     end
@@ -185,6 +183,13 @@ function widget:Initialize()
 
         local viewAreaManagerListener = ViewAreaManagerListener()
         SB.model.areaManager:addListener(viewAreaManagerListener)
+
+        -- enable global LoS so heightmap changes are always visible
+        local cmd = SetGlobalLosCommand({
+            allyTeamID = Spring.GetMyAllyTeamID(),
+            value = true,
+        })
+        SB.commandManager:execute(cmd)
     end
     self._START_TIME = os.clock()
 
