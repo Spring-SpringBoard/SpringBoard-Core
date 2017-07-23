@@ -1,8 +1,10 @@
 SB.Include(SB_STATE_DIR .. "abstract_state.lua")
 
-SelectObjectState = AbstractState:extends{}
+SelectObjectState = AbstractEditingState:extends{}
 
 function SelectObjectState:init(callback)
+    AbstractEditingState.init(self)
+
     self.callback = callback
     SB.SetMouseCursor("search")
 
@@ -12,6 +14,7 @@ function SelectObjectState:init(callback)
 end
 
 function SelectObjectState:leaveState()
+    AbstractEditingState.leaveState(self)
     SB.SetGlobalRenderingFunction(nil)
 end
 

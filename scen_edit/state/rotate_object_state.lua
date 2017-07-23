@@ -1,6 +1,8 @@
-RotateObjectState = AbstractState:extends{}
+RotateObjectState = AbstractEditingState:extends{}
 
 function RotateObjectState:init()
+    AbstractEditingState.init(self)
+
     self.ghostViews = {
         units = {},
         features = {},

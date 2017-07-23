@@ -76,12 +76,6 @@ function AddObjectState:MouseRelease(x, y, button)
     return
 end
 
-function AddObjectState:KeyPress(key, mods, isRepeat, label, unicode)
-    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
-        return true
-    end
-end
-
 function AddObjectState:DrawObject(object, bridge)
     local objectDefID         = object.objectDefID
     local objectTeamID        = object.objectTeamID

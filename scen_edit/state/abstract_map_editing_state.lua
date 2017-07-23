@@ -9,13 +9,9 @@ function AbstractMapEditingState:init(editorView)
     end
 end
 
-function AbstractMapEditingState:KeyPress(key, mods, isRepeat, label, unicode)
-    -- disable keybindings while changing stuff
-    if self.startedChanging then
-        return false
-    end
-
-	return AbstractEditingState.KeyPress(self, key, mods, isRepeat, label, unicode)
+function AbstractMapEditingState:leaveState()
+	self:stopChanging()
+	AbstractEditingState.leaveState(self)
 end
 
 function AbstractMapEditingState:CanApply()

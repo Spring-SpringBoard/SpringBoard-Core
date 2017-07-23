@@ -19,6 +19,11 @@ function AbstractEditingState:leaveState()
 end
 
 function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
+	if key == KEYSYMS.ESCAPE then
+		SB.stateManager:SetState(DefaultState())
+		return true
+	end
+
     local _, _, button1, button2, button3 = Spring.GetMouseState()
     if button1 or button2 or button3 then
         return false
@@ -64,8 +69,6 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
         ImportAction():execute()
 	elseif key == KEYSYMS.N and mods.ctrl then
 		NewAction():execute()
-	elseif key == 27 then -- KEYSYMS.ESC
-        SB.stateManager:SetState(DefaultState())
     else
         return false
     end

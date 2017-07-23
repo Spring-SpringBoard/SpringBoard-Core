@@ -1,6 +1,8 @@
-RectangleSelectState = AbstractState:extends{}
+RectangleSelectState = AbstractEditingState:extends{}
 
 function RectangleSelectState:init(startScreenX, startScreenZ)
+    AbstractEditingState.init(self)
+
     local _, coords1 = Spring.TraceScreenRay(startScreenX, startScreenZ, true, false, true)
     self.startWorldX, self.startWorldY, self.startWorldZ = unpack(coords1)
     self.endScreenX = nil
@@ -37,7 +39,7 @@ function RectangleSelectState:_MouseRelease(x, y, button)
     SB.stateManager:SetState(DefaultState())
 end
 
-local function sort(v1, v2)
+local function minMax(v1, v2)
 	if v1 > v2 then
 		return v2, v1
 	else
@@ -47,9 +49,9 @@ end
 
 function RectangleSelectState:GetObjectsInScreenRectangle(x1, y1, x2, y2, bridge)
 	local objects = bridge.spGetAllObjects()
-	
-	local left, right = sort(x1, x2)
-	local bottom, top = sort(y1, y2)
+
+	local left, right = minMax(x1, x2)
+	local bottom, top = minMax(y1, y2)
 
 	local result = {}
 
