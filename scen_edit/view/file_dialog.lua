@@ -85,7 +85,9 @@ function FileDialog:init(dir, caption, fileTypes)
         },
         OnDispose = {
             function()
-                SB.stateManager:GetCurrentState():SetGlobalKeyListener()
+                -- FIXME: editbox still has focus after disposing so this is necessary
+                screen0:FocusControl(self.window)
+                SB.stateManager:RemoveGlobalKeyListener(self.keyListener)
             end
         }
     }
@@ -130,18 +132,19 @@ function FileDialog:init(dir, caption, fileTypes)
         end
     }
 
-    local function keyListener(key)
+    self.keyListener = function(key)
         if key == Spring.GetKeyCode("esc") then
             self.window:Dispose()
             return true
         elseif key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
-            self:confirmDialog()
-            self.window:Dispose()
+            if self:confirmDialog() then
+                self.window:Dispose()
+            end
             return true
         end
     end
 
-    SB.stateManager:GetCurrentState():SetGlobalKeyListener(keyListener)
+    SB.stateManager:AddGlobalKeyListener(self.keyListener)
 
     screen0:FocusControl(self.fileEditBox)
 --    self:SetDir(self.dir)
@@ -166,6 +169,7 @@ end
 function FileDialog:confirmDialog()
     local path = self:getSelectedFilePath()
     if self.confirmDialogCallback then
-        self.confirmDialogCallback(path)
+        return self.confirmDialogCallback(path)
     end
+    return false
 end

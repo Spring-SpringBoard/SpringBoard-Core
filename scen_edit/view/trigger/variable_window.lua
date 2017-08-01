@@ -17,9 +17,7 @@ function VariableWindow:init(opts)
         backgroundColor = SB.conf.BTN_OK_COLOR,
         OnClick = {
             function()
-                if self:UpdateModel(self.variable) then
-                    self.window:Dispose()
-                end
+                self:ConfirmDialog()
             end
         }
     }
@@ -90,6 +88,12 @@ function VariableWindow:init(opts)
     })
 
     self:__RefreshVariablePanel()
+end
+
+function VariableWindow:ConfirmDialog()
+    if self:UpdateModel(self.variable) then
+        self.window:Dispose()
+    end
 end
 
 function VariableWindow:__RefreshVariablePanel()

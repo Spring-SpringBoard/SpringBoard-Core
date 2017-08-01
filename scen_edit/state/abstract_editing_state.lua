@@ -19,26 +19,21 @@ function AbstractEditingState:leaveState()
 end
 
 function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
-	if key == KEYSYMS.ESCAPE then
-		SB.stateManager:SetState(DefaultState())
-		return true
-	end
-
     local _, _, button1, button2, button3 = Spring.GetMouseState()
     if button1 or button2 or button3 then
         return false
     end
 
-	if self.keyListener then
-		if self.keyListener(key, mods, isRepeat, label, unicode) then
-			return true
-		end
-	end
 	local editor = self.editorView or SB.currentEditor
 	if editor and not editor.window.__disabled then
 		if editor:KeyPress(key, mods, isRepeat, label, unicode) then
 			return true
 		end
+	end
+
+	if key == KEYSYMS.ESCAPE then
+		SB.stateManager:SetState(DefaultState())
+		return true
 	end
 
 	if key == KEYSYMS.TAB then
@@ -73,8 +68,4 @@ function AbstractEditingState:KeyPress(key, mods, isRepeat, label, unicode)
         return false
     end
     return true
-end
-
-function AbstractEditingState:SetGlobalKeyListener(keyListener)
-	self.keyListener = keyListener
 end

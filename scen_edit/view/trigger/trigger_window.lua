@@ -64,9 +64,7 @@ function TriggerWindow:init(trigger)
         backgroundColor = SB.conf.BTN_OK_COLOR,
         OnClick = {
             function()
-                self.trigger.name = self.fields["name"].value
-                self.save = true
-                self.window:Dispose()
+                self:ConfirmDialog()
             end
         }
     }
@@ -124,6 +122,12 @@ function TriggerWindow:init(trigger)
     btnAddEvent.OnClick={function() self:MakeAddEventWindow() end}
     btnAddCondition.OnClick={function() self:MakeAddConditionWindow() end}
     btnAddAction.OnClick={function() self:MakeAddActionWindow() end}
+end
+
+function TriggerWindow:ConfirmDialog()
+    self.trigger.name = self.fields["name"].value
+    self.save = true
+    self.window:Dispose()
 end
 
 function TriggerWindow:Populate()

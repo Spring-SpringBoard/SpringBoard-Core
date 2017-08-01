@@ -14,7 +14,7 @@ function Editor:init(opts)
         height = SB.conf.B_HEIGHT,
         OnClick = {
             function()
-                self.window:Hide()
+                self:__CloseOrHide()
                 -- FIXME: should be resetting to the default state?
                 -- SB.stateManager:SetState(DefaultState())
             end
@@ -110,11 +110,7 @@ function Editor:Finalize(children, opts)
             Spring.Echo("haxxor")
         end
     else
-        if not opts.noDispose then
-            table.insert(self.btnClose.OnClick, function()
-                self.window:Dispose()
-            end)
-        end
+        self.__noDispose = opts.noDispose
         -- TODO: Make configurable
         self.window = Window:New {
             parent = screen0,
@@ -128,6 +124,24 @@ function Editor:Finalize(children, opts)
             OnParentPost = OnShow,
             OnOrphan = OnHide,
         }
+        self.keyListener = function(key)
+            if key == Spring.GetKeyCode("esc") then
+                self:__MaybeClose()
+                return true
+            elseif key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
+                if self.ConfirmDialog then
+                    if self:ConfirmDialog() then
+                        self:__MaybeClose()
+                    end
+                    return true
+                elseif not opts.noCloseButton then
+                    self:__MaybeClose()
+                    return true
+                end
+            end
+        end
+        self:__AddKeyListener()
+
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
     end
@@ -296,9 +310,13 @@ function Editor:AddDefaultKeybinding(buttons)
     local KEY_ZERO = KEYSYMS.N_0
     self.__keybinding = {}
     for i, button in ipairs(buttons) do
-        self.__keybinding[KEY_ZERO + i] = button
+        self.__keybinding[KEY_ZERO + i] = button.OnClick
         button.tooltip = button.tooltip .. " (" .. tostring(i) .. ")"
     end
+end
+
+function Editor:AddKeybinding(key, f)
+    self.__keybinding[key] = {f}
 end
 
 function Editor:GetAllControls()
@@ -318,24 +336,52 @@ function Editor:KeyPress(key, mods, isRepeat, label, unicode)
     if not self.__keybinding then
         return
     end
-    local button = self.__keybinding[key]
-    if not button then
+    local listeners = self.__keybinding[key]
+    if not listeners then
         return
     end
-    CallListeners(button.OnClick)
+    CallListeners(listeners)
     return true
 end
 
+function Editor:__AddKeyListener()
+    if not self.__addedKeyListener then
+        self.__addedKeyListener = true
+        SB.stateManager:AddGlobalKeyListener(self.keyListener)
+    end
+end
+
+function Editor:__RemoveKeyListener()
+    if self.__addedKeyListener then
+        self.__addedKeyListener = false
+        SB.stateManager:RemoveGlobalKeyListener(self.keyListener)
+    end
+end
+
 function Editor:__OnShow()
+    if self.keyListener then
+        self:__AddKeyListener()
+    end
 end
 
 function Editor:__OnHide()
+    if self.keyListener then
+        self:__RemoveKeyListener()
+    end
+
     local currentState = SB.stateManager:GetCurrentState()
     if self:IsValidTest(currentState) then
         SB.stateManager:SetState(DefaultState())
     end
     if SB.currentEditor == self then
         SB.currentEditor = nil
+    end
+end
+
+function Editor:__MaybeClose()
+    self.window:Hide()
+    if not self.__noDispose then
+        self.window:Dispose()
     end
 end
 

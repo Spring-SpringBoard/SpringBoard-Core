@@ -2,7 +2,46 @@ SB_STATE_DIR = SB_DIR .. "state/"
 
 StateManager = LCS.class{}
 
+---------------------------
+-- API
+---------------------------
+function StateManager:GetCurrentState()
+    return self.currentState
+end
+
+function StateManager:SetState(state)
+    if self.currentState ~= nil then
+        local oldState = self.currentState
+        self.currentState = nil
+        oldState:leaveState()
+    end
+    self.currentState = state
+    self.currentState:enterState()
+end
+
+function StateManager:AddGlobalKeyListener(f)
+	table.insert(self.keyListeners, f)
+end
+
+function StateManager:RemoveGlobalKeyListener(f)
+    for i, keyListener in ipairs(self.keyListeners) do
+        if keyListener == f then
+            table.remove(self.keyListeners, i)
+            return
+        end
+    end
+    Log.Warning(debug.traceback())
+    Log.Warning("Trying to remove a listener that doesn't exist")
+end
+---------------------------
+-- end API
+---------------------------
+
+---------------------------
+-- Internal
+---------------------------
 function StateManager:init()
+    self.keyListeners = {}
     SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
     SB.Include(SB_STATE_DIR .. 'abstract_editing_state.lua')
     SB.IncludeDir(SB_STATE_DIR)
@@ -20,20 +59,9 @@ function StateManager:_SafeCall(func)
     end
 end
 
-function StateManager:GetCurrentState()
-    return self.currentState
-end
-
-function StateManager:SetState(state)
-    if self.currentState ~= nil then
-        local oldState = self.currentState
-        self.currentState = nil
-        oldState:leaveState()
-    end
-    self.currentState = state
-    self.currentState:enterState()
-end
-
+---------------------------
+-- Callins (internal)
+---------------------------
 function StateManager:MousePress(x, y, button)
     return self:_SafeCall(function()
         return self.currentState:MousePress(x, y, button)
@@ -59,6 +87,20 @@ function StateManager:MouseWheel(up, value)
 end
 
 function StateManager:KeyPress(key, mods, isRepeat, label, unicode)
+    --Spring.Echo(#self.keyListeners)
+    for i = #self.keyListeners, 1, -1 do
+        local keyListener = self.keyListeners[i]
+        local ret = false
+        self:_SafeCall(function()
+            if keyListener(key, mods, isRepeat, label, unicode) then
+                ret = true
+            end
+        end)
+        if ret then
+            return true
+        end
+    end
+
     return self:_SafeCall(function()
         return self.currentState:KeyPress(key, mods, isRepeat, label, unicode)
     end)
@@ -106,3 +148,10 @@ function StateManager:DrawWorldPreUnit()
         return self.currentState:DrawWorldPreUnit()
     end)
 end
+---------------------------
+-- End Callins (internal)
+---------------------------
+
+---------------------------
+-- End Internal
+---------------------------

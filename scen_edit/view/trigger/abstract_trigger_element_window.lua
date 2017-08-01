@@ -71,28 +71,7 @@ function AbstractTriggerElementWindow:init(opts)
 
     self.btnOK.OnClick = {
         function()
-            local success, errorEditors = false, nil
-            if self.mode == 'edit' then
-                success, errorEditors = self:EditElement()
-            elseif self.mode == 'add' then
-                success, errorEditors = self:AddElement()
-            end
-
-            if success then
-                -- Close the form
-                CallListeners(self.OnConfirm, self.element)
-                self.window:Dispose()
-            else
-                -- Display errors
-                if errorEditors ~= nil and #errorEditors > 0 then
-                    for _, errorEditor in pairs(errorEditors) do
-                        SB.HintEditor(errorEditor)
-                    end
-                else
-                    Log.Error(debug.traceback())
-                    Log.Error("Failed to confirm the operation but no errorEditors to show")
-                end
-            end
+            self:ConfirmDialog()
         end
     }
 
@@ -140,6 +119,31 @@ function AbstractTriggerElementWindow:init(opts)
     end
 
     self.window.caption = self:GetWindowCaption()
+end
+
+function AbstractTriggerElementWindow:ConfirmDialog()
+    local success, errorEditors = false, nil
+    if self.mode == 'edit' then
+        success, errorEditors = self:EditElement()
+    elseif self.mode == 'add' then
+        success, errorEditors = self:AddElement()
+    end
+
+    if success then
+        -- Close the form
+        CallListeners(self.OnConfirm, self.element)
+        self.window:Dispose()
+    else
+        -- Display errors
+        if errorEditors ~= nil and #errorEditors > 0 then
+            for _, errorEditor in pairs(errorEditors) do
+                SB.HintEditor(errorEditor)
+            end
+        else
+            Log.Error(debug.traceback())
+            Log.Error("Failed to confirm the operation but no errorEditors to show")
+        end
+    end
 end
 
 function AbstractTriggerElementWindow:__RefreshTagGroups()
@@ -266,6 +270,13 @@ function AbstractTriggerElementWindow:_AddTagGroups()
     end
 
     local tagGroupNames = GetKeys(self.tagGroups)
+
+    -- Don't use tags if there is just one tag group, no matter how many elements there are
+    if #tagGroupNames == 1 then
+        self.tagGroups = nil
+        return
+    end
+
     table.sort(tagGroupNames)
     self:AddField(ChoiceField({
         name = "tag",

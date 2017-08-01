@@ -14,5 +14,7 @@ function OpenFileDialog:confirmDialog()
 
     if self.confirmDialogCallback then
         self.confirmDialogCallback(path)
+        return true
     end
+    return false
 end

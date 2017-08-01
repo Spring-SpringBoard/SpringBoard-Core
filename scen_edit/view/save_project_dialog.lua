@@ -19,4 +19,5 @@ function SaveProjectDialog:confirmDialog()
         os.remove(path)
     end
     self:save(path)
+    return true
 end
