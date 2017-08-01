@@ -52,7 +52,9 @@ function TypePanel:init(opts)
     for _, name in pairs(names) do
         table.insert(captions, self.sourceNames[name])
     end
-    if #names > 1 then
+    if #names == 0 then
+        return
+    elseif #names > 1 then
         -- Offset all fields by self.choiceWidth
         for _, field in pairs(fields) do
             for _, comp in pairs(field.components) do

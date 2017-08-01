@@ -55,7 +55,7 @@ function VariableWindow:init(opts)
 
     self.variablePanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
-        y = 90,
+        y = 110,
         x = 0,
         right = 0,
         bottom = 0,
@@ -80,7 +80,14 @@ function VariableWindow:init(opts)
         }
     )
 
-    self:Finalize(children, {notMainWindow = true, noCloseButton = true})
+    self:Finalize(children, {
+        notMainWindow = true,
+        noCloseButton = true,
+        x = tostring(math.random(30, 40)) .. "%",
+        y = tostring(math.random(30, 40)) .. "%",
+        width = 500,
+        height = 200,
+    })
 
     self:__RefreshVariablePanel()
 end
