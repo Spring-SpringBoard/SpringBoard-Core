@@ -79,7 +79,7 @@ function SB.SetMouseCursor(name)
         Spring.AssignMouseCursor(name, name, true)
         SB.assignedCursors[name] = true
     end
-    Spring.SetMouseCursor(SB.cursor)
+    Spring.SetMouseCursor(name)
 end
 
 function SB.MakeSeparator(panel)
