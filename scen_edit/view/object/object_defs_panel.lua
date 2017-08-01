@@ -100,12 +100,14 @@ function ObjectDefsPanel:_OnSelectItem(obj, itemIdx, selected)
 
     local objectDefID = item.objectDefID
 
-    if selected then
-        local currentState = SB.stateManager:GetCurrentState()
-        if currentState.SelectObjectType then
+    local currentState = SB.stateManager:GetCurrentState()
+    -- always block calls if current state is object selection
+    if currentState.SelectObjectType then
+        -- even if we don't want the current item
+        if selected then
             currentState:SelectObjectType(objectDefID)
-            return
         end
+        return
     end
 
     if not selected then
