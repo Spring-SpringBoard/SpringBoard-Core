@@ -96,13 +96,6 @@ end
 function DefaultState:MousePress(x, y, button)
     local selection = SB.view.selectionManager:GetSelection()
     local selCount = #selection.units + #selection.features + #selection.areas
-    if Spring.GetPressedKeys() == KEYSYMS.SPACE and button == 1 then
-        local result, unitID = Spring.TraceScreenRay(x, y)
-        if result == "unit" then
-            ObjectPropertyWindow(unitID)
-            return true
-        end
-    end
     local _, ctrl, _, shift = Spring.GetModKeyState()
     if (ctrl or shift) and selCount > 0 then
         -- TODO: There should be a cleaner way to disable some types of editing interactions during play
@@ -270,12 +263,6 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
             areas = SB.model.areaManager:getAllAreas(),
         }
         SB.view.selectionManager:Select(selection)
-    elseif key == KEYSYMS.SPACE and mouseLeft and (self.gameSeconds == nil or self.gameSeconds + 1 < gameSeconds) then
-        local result, unitID = Spring.TraceScreenRay(mouseX, mouseY)
-        if result == "unit" then
-            self.gameSeconds = gameSeconds
-            ObjectPropertyWindow(unitID)
-        end
     else
         return false
     end
