@@ -27,6 +27,7 @@ function ArrayField:init(field)
         OnClick = {
             function()
                 self.arrayWindow.window:Show()
+                SB.MakeWindowModal(self.arrayWindow.window, self.btnEdit)
             end
         },
     }

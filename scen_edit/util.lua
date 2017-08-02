@@ -478,6 +478,8 @@ function SB.glToFontColor(color)
 end
 
 function SB.SetControlEnabled(control, enabled)
+    control:SetEnabled(enabled)
+
     control.disableChildrenHitTest = not enabled
     -- Not a Chili flag, used internally in SB for keybinding
     control.__disabled = not enabled
@@ -502,6 +504,14 @@ function SB.MakeWindowModal(window, source)
         window.OnDispose = {}
     end
     table.insert(window.OnDispose,
+        function()
+            SB.SetControlEnabled(source, true)
+        end
+    )
+    if not window.OnHide then
+        window.OnHide = {}
+    end
+    table.insert(window.OnHide,
         function()
             SB.SetControlEnabled(source, true)
         end
