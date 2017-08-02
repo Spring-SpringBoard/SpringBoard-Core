@@ -28,6 +28,7 @@ Control = Object:Inherit{
   borderColor2    = {0.0, 0.0, 0.0, 0.8},
   backgroundColor = {0.8, 0.8, 1.0, 0.4},
   focusColor      = {0.2, 0.2, 1.0, 0.6},
+  disabledColor   = {0.4, 0.4, 0.4, 0.6},
 
   autosize        = false,
   savespace       = true, --// iff autosize==true, it shrinks the control to the minimum needed space, if disabled autosize _normally_ only enlarges the control
@@ -67,7 +68,7 @@ Control = Object:Inherit{
     checked  = false,
     selected = false, --FIXME implement
     pressed  = false,
-    enabled  = true, --FIXME implement
+    enabled  = true,
   },
 
   skin            = nil,
@@ -79,7 +80,9 @@ Control = Object:Inherit{
   useDLists = false, --(gl.CreateList ~= nil), --FIXME broken in combination with RTT (wrong blending)
 
   OnResize        = {},
+  OnEnableChanged = {},
 }
+Control.disabledFont = table.merge({ color = {0.8, 0.8, 0.8, 0.8} }, Control.font)
 
 local this = Control
 local inherited = this.inherited
@@ -129,6 +132,10 @@ function Control:New(obj)
   --// create font
   obj.font = Font:New(obj.font)
   obj.font:SetParent(obj)
+
+  --// create disabled font
+  obj.disabledFont = Font:New(obj.disabledFont)
+  obj.disabledFont:SetParent(obj)
 
   obj:DetectRelativeBounds()
   obj:AlignControl()
@@ -346,6 +353,13 @@ function Control:GetRelativeBox(savespace)
   return {left, top, width, height}
 end
 
+--//=============================================================================
+
+function Control:SetEnabled(enabled)
+    self.state.enabled = enabled
+    self:CallListeners(self.OnEnableChanged, not self.state.enabled)
+    self:Invalidate()
+end
 
 --//=============================================================================
 
