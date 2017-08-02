@@ -178,6 +178,7 @@ function DefaultState:MousePress(x, y, button)
                                     local trigger = self:MakeAreaTrigger(self.dragAreaID)
                                     local cmd = AddTriggerCommand(trigger)
                                     SB.commandManager:execute(cmd)
+                                    Log.Notice(("Created new trigger for entering area ID: %d"):format(self.dragAreaID))
                                     return
                                 end
                             end
