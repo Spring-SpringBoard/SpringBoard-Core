@@ -85,7 +85,7 @@ function CommandWindow:init()
         resizable = false,
         draggable = false,
         width = 400,
-        height = 80,
+        height = SB.conf.BOTTOM_BAR_HEIGHT,
         padding = {5,5,0,0},
         children = children,
     }

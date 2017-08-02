@@ -19,7 +19,7 @@ function SelectionManager:GetSelection()
     return selection
 end
 
-function SelectionManager:ClearSelection()
+function SelectionManager:__ClearSelection()
     self.selectedUnits = {}
     Spring.SelectUnitArray({}, false)
 
@@ -31,8 +31,13 @@ function SelectionManager:ClearSelection()
     self.selectedFeatures = {}
 end
 
+function SelectionManager:ClearSelection()
+    self:__ClearSelection()
+    self:callListeners("OnSelectionChanged", self:GetSelection())
+end
+
 function SelectionManager:Select(selection)
-    self:ClearSelection()
+    self:__ClearSelection()
 
     self.selectedUnits = selection.units or {}
     Spring.SelectUnitArray(self.selectedUnits)
@@ -46,25 +51,35 @@ function SelectionManager:Select(selection)
 end
 
 function SelectionManager:Update()
+    local changed = false
     --update unit selection
-    self.selectedUnits = Spring.GetSelectedUnits()
+    local selUnits = Spring.GetSelectedUnits()
+    if not Table.Compare(self.selectedUnits, selUnits) then
+        changed = true
+    end
+    self.selectedUnits = selUnits
     Spring.SelectUnitArray(self.selectedUnits)
 
     local newSelectedFeatures = {}
     for _, featureID in pairs(self.selectedFeatures) do
         if Spring.ValidFeatureID(featureID) then
             table.insert(newSelectedFeatures, featureID)
+        else
+            changed = true
         end
     end
     self.selectedFeatures = newSelectedFeatures
     --[[
     if #unitIDs ~= #self.selectedUnits then
-        self:ClearSelection()
+        self:__ClearSelection()
         if #unitIDs > 0 then
             self:SelectUnits(unitIDs)
         end
     elseif #unitIDs > 0 then
     end--]]
+    if changed then
+        self:callListeners("OnSelectionChanged", self:GetSelection())
+    end
 end
 
 function SelectionManager:DrawWorldPreUnit()
@@ -107,4 +122,5 @@ function AreaListener:onAreaRemoved(areaID)
             end
         end
     end
+    self.selectionManager:callListeners("OnSelectionChanged", self.selectionManager:GetSelection())
 end

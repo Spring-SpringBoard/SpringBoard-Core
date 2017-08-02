@@ -112,3 +112,28 @@ function Table.SortByAttr(t, attrName)
     )
     return sortedTable
 end
+
+function Table.Compare(v1, v2)
+    local v1Type, v2Type = type(v1), type(v2)
+    if v1Type ~= v2Type then
+        return false
+    elseif v1Type ~= "table" then
+        return v1 == v2
+    else
+        local kCount1 = 0
+        for k, v in pairs(v1) do
+            kCount1 = kCount1 + 1
+            if not Table.Compare(v, v2[k]) then
+                return false
+            end
+        end
+        local kCount2 = 0
+        for k, v in pairs(v2) do
+            kCount2 = kCount2 + 1
+        end
+        if kCount1 ~= kCount2 then
+            return false
+        end
+        return true
+    end
+end

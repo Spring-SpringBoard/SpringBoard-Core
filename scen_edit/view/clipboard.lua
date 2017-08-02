@@ -117,6 +117,9 @@ function Clipboard:Cut(selection)
             table.insert(commands, cmd)
         end
     end
+    if #commands == 0 then
+        return
+    end
     local cmd = CompoundCommand(commands)
     SB.commandManager:execute(cmd)
 end
@@ -159,6 +162,9 @@ function Clipboard:Paste(coords)
         for _, cmd in pairs(cmds) do
             table.insert(commands, cmd)
         end
+    end
+    if #commands == 0 then
+        return
     end
     local cmd = CompoundCommand(commands)
     SB.commandManager:execute(cmd)

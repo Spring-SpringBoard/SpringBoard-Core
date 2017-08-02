@@ -3,10 +3,19 @@ StatusWindow = LCS.class{}
 function StatusWindow:init()
     self.lblStatus = Label:New {
         x = 0,
-        y = 0,
-        width = "100%",
-        height = "100%",
+        bottom = 10,
+        width = "50%",
+        height = 20,
         caption = "",
+        --valign = "ascender",
+    }
+    self.lblMemory = Label:New {
+        x = "50%",
+        bottom = 10,
+        width = "50%",
+        height = 20,
+        caption = "",
+        --valign = "ascender",
     }
     self.statusWindow = Window:New {
         parent = screen0,
@@ -16,10 +25,11 @@ function StatusWindow:init()
         bottom = 0,
         resizable = false,
         draggable = false,
-        width = 230,
-        height = 80,
+        width = 500,
+        height = SB.conf.BOTTOM_BAR_HEIGHT,
         children = {
-            self.lblStatus
+            self.lblStatus,
+            self.lblMemory
         }
     }
 
@@ -30,9 +40,11 @@ function StatusWindow:init()
 
     self.posStr = ""
     self.selectionStr = ""
+
+    self.update = 0
 end
 
-function StatusWindow:_UpdateStatus()
+function StatusWindow:_UpdateSelection()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground"  then
@@ -43,8 +55,22 @@ function StatusWindow:_UpdateStatus()
     self.lblStatus:SetCaption(self.posStr .. ". " .. self.selectionStr)
 end
 
+function StatusWindow:_UpdateMemory()
+    if self.update % 60 ~= 0 then
+        return
+    end
+
+    local memory = collectgarbage("count") / 1024
+    local memoryStr = "Memory " .. ('%.0f'):format(memory) .. " MB"
+
+    self.lblMemory:SetCaption(memoryStr)
+end
+
 function StatusWindow:Update()
-    self:_UpdateStatus()
+    self:_UpdateSelection()
+    self:_UpdateMemory()
+
+    self.update = self.update + 1
 end
 
 function StatusWindow:OnSelectionChanged(selection)

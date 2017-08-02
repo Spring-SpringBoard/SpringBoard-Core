@@ -8,6 +8,7 @@ function Conf:init()
     self.BTN_CANCEL_COLOR = {0.84, 0.31, 0.30, 1}
     self.TOOLBOX_ITEM_WIDTH = 70
     self.TOOLBOX_ITEM_HEIGHT = 70
+    self.BOTTOM_BAR_HEIGHT = 80
     self.SHOW_BASIC_CONTROLS = true
     self.metaModelFiles = {} -- { "core.lua" } default
     self:initializeListOfMetaModelFiles()
