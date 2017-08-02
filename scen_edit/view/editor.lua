@@ -14,7 +14,7 @@ function Editor:init(opts)
         height = SB.conf.B_HEIGHT,
         OnClick = {
             function()
-                self:__CloseOrHide()
+                self:__MaybeClose()
                 -- FIXME: should be resetting to the default state?
                 -- SB.stateManager:SetState(DefaultState())
             end
