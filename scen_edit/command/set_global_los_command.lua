@@ -7,5 +7,6 @@ function SetGlobalLosCommand:init(opts)
 end
 
 function SetGlobalLosCommand:execute()
+    Log.Notice(("Set global LOS=%s for allyTeam:%d"):format(tostring(self.opts.value), self.opts.allyTeamID))
     Spring.SetGlobalLos(self.opts.allyTeamID, self.opts.value)
 end

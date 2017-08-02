@@ -645,16 +645,19 @@ function ObjectPropertyWindow:OnSelectionChanged(selection)
             self:Set("energyUse",  energyUse)
 
             local states = bridge.s11n:Get(objectID, "states")
-            Log.Debug("ACTIVE", states.active)
-            self:Set("fireState",       states.fireState)
-            self:Set("moveState",       states.moveState)
-            self:Set("repeat",          states["repeat"])
-            self:Set("cloak",           states.cloak)
-            self:Set("active",          states.active)
-            self:Set("trajectory",      states.trajectory)
-            self:Set("autoLand",        states.autoLand)
-            self:Set("autoRepairLevel", states.autoRepairLevel)
-            self:Set("loopbackAttack",  states.loopbackAttack)
+            -- FIXME: states should always be available if we use globallos ?
+            if states then
+                Log.Debug("ACTIVE", states.active)
+                self:Set("fireState",       states.fireState)
+                self:Set("moveState",       states.moveState)
+                self:Set("repeat",          states["repeat"])
+                self:Set("cloak",           states.cloak)
+                self:Set("active",          states.active)
+                self:Set("trajectory",      states.trajectory)
+                self:Set("autoLand",        states.autoLand)
+                self:Set("autoRepairLevel", states.autoRepairLevel)
+                self:Set("loopbackAttack",  states.loopbackAttack)
+            end
         end
     end
     self.selectionChanging = false
