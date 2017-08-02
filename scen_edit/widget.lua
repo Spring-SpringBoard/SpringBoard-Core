@@ -320,20 +320,21 @@ function PerformDraw()
         return
     end
 
-    local timer1 = Spring.GetTimer()
+    Time.MeasureTime(function()
+        if VFS.FileExists(imgPath, nil, VFS.RAW) then
+            gl.DeleteTexture(imgPath)
+            os.remove(imgPath)
+        end
+        gl.CopyToTexture(screenTex, 0, 0, 0, 0, vsx, vsy)
+        --gl.Texture(0, screenTex)
+        --gl.TexRect(0, vsy, vsx, 0)
+        gl.RenderToTexture(screenTex, gl.SaveImage, 0, 0, vsx, vsy, imgPath)
+        gl.Texture(0, false)
+        gl.Texture(imgPath)
 
-	if VFS.FileExists(imgPath, nil, VFS.RAW) then
-	    os.remove(imgPath)
-	end
-	gl.CopyToTexture(screenTex, 0, 0, 0, 0, vsx, vsy)
-	--gl.Texture(0, screenTex)
-	--gl.TexRect(0, vsy, vsx, 0)
-	gl.RenderToTexture(screenTex, gl.SaveImage, 0, 0, vsx, vsy, imgPath)
-	gl.Texture(0, false)
-
-    local timer2 = Spring.GetTimer()
-    local diff = Spring.DiffTimers(timer2, timer1)
-    Log.Notice(("[%.4fs] Saved project screenshot."):format(diff))
+    end, function(elapsed)
+        Log.Notice(("[%.4fs] Saved project screenshot."):format(elapsed))
+    end)
 end
 
 function widget:ViewResize()

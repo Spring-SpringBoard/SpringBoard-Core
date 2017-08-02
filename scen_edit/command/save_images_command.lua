@@ -13,7 +13,7 @@ end
 
 function SaveImagesCommand:execute()
     SB.delayGL(function()
-        local timer1 = Spring.GetTimer()
+    Time.MeasureTime(function()
 
         local texSize = SB.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
@@ -56,8 +56,8 @@ function SaveImagesCommand:execute()
             end
         end
 
-        local timer2 = Spring.GetTimer()
-        local diff = Spring.DiffTimers(timer2, timer1)
-        Log.Notice(("[%.4fs] Saved diffuse"):format(diff))
-    end)
+    end, function(elapsed)
+        Log.Notice(("[%.4fs] Saved diffuse."):format(elapsed))
+    end) -- end Time.MeasureTime
+    end) -- end SB.delayGL
 end
