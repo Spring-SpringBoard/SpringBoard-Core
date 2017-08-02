@@ -203,7 +203,7 @@ function AssetView:AddFolder(folder)
             Log.Warning("Missing sb_info.lua for project: " .. tostring(folder))
         end
 
-        local imgPath = Path.Join(folder, "sb_screen.png")
+        local imgPath = Path.Join(folder, SB_SCREENSHOT_FILE)
         if VFS.FileExists(imgPath, VFS.RAW) then
             image = imgPath
         end

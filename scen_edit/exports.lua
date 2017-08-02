@@ -17,6 +17,8 @@ SB_FILE_EXT = ".sdz"
 SB_FEATURE_PLACER_FILE_EXT = ".lua"
 SB_MAP_INFO_FILE_EXT = ".lua"
 
+SB_SCREENSHOT_FILE = "sb_screen.jpg"
+
 SB_USE_PLAY_PAUSE = false
 
 --mod opts

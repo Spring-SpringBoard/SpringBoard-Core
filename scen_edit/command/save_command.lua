@@ -1,9 +1,10 @@
 SaveCommand = Command:extends{}
 SaveCommand.className = "SaveCommand"
 
-function SaveCommand:init(path)
+function SaveCommand:init(path, isNewProject)
     self.className = "SaveCommand"
     self.path = path
+    self.isNewProject = isNewProject
 end
 
 local function HeightMapSave(path)
@@ -211,36 +212,54 @@ end
 function SaveCommand:execute()
     local projectDir = self.path
 
+    local timer1, timer2, diff
+
     -- save files
+    timer1 = Spring.GetTimer()
     ModelSave(Path.Join(projectDir, "model.lua"))
-    Log.Notice("Saved model")
+    timer2 = Spring.GetTimer()
+    diff = Spring.DiffTimers(timer2, timer1)
+    Log.Notice(("[%.4fs] Saved model"):format(diff))
 
+    timer1 = Spring.GetTimer()
     ModInfoSave(Path.Join(projectDir, "modinfo.lua"))
-    Log.Notice("Saved modinfo")
+    timer2 = Spring.GetTimer()
+    diff = Spring.DiffTimers(timer2, timer1)
+    Log.Notice(("[%.4fs] Saved modinfo"):format(diff))
 
+    timer1 = Spring.GetTimer()
     HeightMapSave(Path.Join(projectDir, "heightmap.data"))
-    Log.Notice("Saved heightmap")
+    timer2 = Spring.GetTimer()
+    diff = Spring.DiffTimers(timer2, timer1)
+    Log.Notice(("[%.4fs] Saved heightmap"):format(diff))
 
+    timer1 = Spring.GetTimer()
     ScriptTxtSave(Path.Join(projectDir, "script.txt"))
     ScriptTxtSave(Path.Join(projectDir, "script-dev.txt"), true)
-    Log.Notice("Saved start scripts")
+    timer2 = Spring.GetTimer()
+    diff = Spring.DiffTimers(timer2, timer1)
+    Log.Notice(("[%.4fs] Saved start scripts"):format(diff))
 
+    timer1 = Spring.GetTimer()
     GUIStateSave(Path.Join(projectDir, "sb_gui.lua"))
-    Log.Notice("Saved GUI state")
+    timer2 = Spring.GetTimer()
+    diff = Spring.DiffTimers(timer2, timer1)
+    Log.Notice(("[%.4fs] Saved GUI state"):format(diff))
 
+    timer1 = Spring.GetTimer()
     SBInfoSave(Path.Join(projectDir, "sb_info.lua"))
-    Log.Notice("Saved SpringBoard info")
+    timer2 = Spring.GetTimer()
+    diff = Spring.DiffTimers(timer2, timer1)
+    Log.Notice(("[%.4fs] Saved SpringBoard info"):format(diff))
 
     if #SB.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = Path.Join(projectDir, "texturemap")
         Spring.CreateDir(texturemapDir)
-        local cmd = SaveImagesCommand(texturemapDir)
+        local cmd = SaveImagesCommand(texturemapDir, self.isNewProject)
         cmd:execute()
-        Log.Notice("saved texturemap")
     end
 
-    SB.RequestScreenshotPath = Path.Join(projectDir, "sb_screen.png")
-    Log.Notice("Taking project screenshot...")
+    SB.RequestScreenshotPath = Path.Join(projectDir, SB_SCREENSHOT_FILE)
 
     SB.projectLoaded = true
 end

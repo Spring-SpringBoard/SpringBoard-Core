@@ -1,25 +1,37 @@
 SaveAsAction = AbstractAction:extends{}
 
 function SaveAsAction:execute()
+    local origProjDir = SB.projectDir
     sfd = SaveProjectDialog(SB_PROJECTS_DIR)
     sfd:setConfirmDialogCallback(
         function(path)
-            Log.Notice("Saving project: " .. path .. " ...")
+            local isNewProject = path ~= origProjDir
+            if isNewProject then
+                Log.Notice("Saving (new) project: " .. path .. " ...")
+            else
+                Log.Notice("Saving project: " .. path .. " ...")
+            end
             local setProjectDirCommand = SetProjectDirCommand(path)
             -- set the project dir in both the synced and unsynced (TODO: needs to be fixed for cooperative editing)
             SB.commandManager:execute(setProjectDirCommand)
             SB.commandManager:execute(setProjectDirCommand, true)
             self:CreateProjectStructure(path)
 
-            self:Save(path)
+            self:Save(path, isNewProject)
         end
     )
 end
 
-function SaveAsAction:Save(path)
-    local saveCommand = SaveCommand(path)
+function SaveAsAction:Save(path, isNewProject)
+    local saveCommand = SaveCommand(path, isNewProject)
     SB.commandManager:execute(saveCommand, true)
-    Log.Notice("Saved project.")
+
+    -- We delay this notice twice to ensure texture map and screenshot is taken
+    SB.delayGL(function()
+        SB.delayGL(function()
+            Log.Notice("Saved project.")
+        end)
+    end)
 end
 
 function SaveAsAction:CreateProjectStructure(projectDir)
