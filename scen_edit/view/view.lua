@@ -7,6 +7,7 @@ SB_VIEW_OBJECT_DIR = Path.Join(SB_VIEW_DIR, "object/")
 SB_VIEW_MAP_DIR = Path.Join(SB_VIEW_DIR, "map/")
 SB_VIEW_TRIGGER_DIR = Path.Join(SB_VIEW_DIR, "trigger/")
 SB_VIEW_GENERAL_DIR = Path.Join(SB_VIEW_DIR, "general/")
+SB_VIEW_FLOATING_DIR = Path.Join(SB_VIEW_DIR, "floating/")
 
 View = LCS.class{}
 
@@ -21,6 +22,7 @@ function View:init()
     SB.IncludeDir(SB_VIEW_MAP_DIR)
     SB.IncludeDir(SB_VIEW_TRIGGER_DIR)
     SB.IncludeDir(SB_VIEW_GENERAL_DIR)
+    SB.IncludeDir(SB_VIEW_FLOATING_DIR)
 
     SB.clipboard = Clipboard()
     self.areaViews = {}
@@ -29,50 +31,14 @@ function View:init()
 	self.tabbedWindow = TabbedWindow()
     self.commandWindow = CommandWindow()
 -- 	self.commandWindow.window:Hide()
-    self.statusWindow = StatusWindow()
+
     self.modelShaders = ModelShaders()
 
+    self.statusWindow = StatusWindow()
     self.teamSelector = TeamSelector()
-
-    self.lblProject = Label:New {
-        x = 0,
-        y = 5,
-        autosize = true,
-        font = {
-            size = 22,
-            outline = true,
-        },
-        parent = screen0,
-        caption = SB.projectDir or "Project not saved",
-    }
-
-    self:MaybeAddLobbyButton()
-end
-
-function View:MaybeAddLobbyButton()
-    local luaMenu = Spring.GetMenuName and Spring.SendLuaMenuMsg and Spring.GetMenuName()
-	if not luaMenu or luaMenu == "" then
-        return
-    end
-
-    Spring.SendLuaMenuMsg("disableLobbyButton")
-    self.btnMenu = Button:New {
-        x = 5,
-        y = 35,
-        width = 100,
-        height = 50,
-        font = {
-            size = 22,
-            outline = true,
-        },
-        parent = screen0,
-        caption = "Menu",
-        OnClick = {
-            function()
-                Spring.SendLuaMenuMsg("showLobby")
-            end
-        }
-    }
+    self.lobbyButton = LobbyButton()
+    self.projectStatus = ProjectStatus()
+    self.controlButtons = ControlButtons()
 end
 
 function View:Update()
@@ -81,6 +47,7 @@ function View:Update()
 	end
     self.selectionManager:Update()
     self.statusWindow:Update()
+    self.projectStatus:Update()
 end
 
 function View:drawRect(x1, z1, x2, z2)
@@ -150,15 +117,6 @@ function View:DrawScreen()
 --         gl.UseShader(0)
 --         gl.PopMatrix()
 
-        local projectCaption
-        if SB.projectDir then
-            projectCaption = "Project: " .. SB.projectDir
-        else
-            projectCaption = "Project not saved"
-        end
-        if self.lblProject.caption ~= projectCaption then
-            self.lblProject:SetCaption(projectCaption)
-        end
 -- 		gl.PushMatrix()
 -- 			local i = 1
 -- 			local step = 200
