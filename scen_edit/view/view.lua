@@ -8,6 +8,7 @@ SB_VIEW_MAP_DIR = Path.Join(SB_VIEW_DIR, "map/")
 SB_VIEW_TRIGGER_DIR = Path.Join(SB_VIEW_DIR, "trigger/")
 SB_VIEW_GENERAL_DIR = Path.Join(SB_VIEW_DIR, "general/")
 SB_VIEW_FLOATING_DIR = Path.Join(SB_VIEW_DIR, "floating/")
+SB_VIEW_DIALOG_DIR = Path.Join(SB_VIEW_DIR, "dialog/")
 
 View = LCS.class{}
 
@@ -23,6 +24,7 @@ function View:init()
     SB.IncludeDir(SB_VIEW_TRIGGER_DIR)
     SB.IncludeDir(SB_VIEW_GENERAL_DIR)
     SB.IncludeDir(SB_VIEW_FLOATING_DIR)
+    SB.IncludeDir(SB_VIEW_DIALOG_DIR)
 
     SB.clipboard = Clipboard()
     self.areaViews = {}
