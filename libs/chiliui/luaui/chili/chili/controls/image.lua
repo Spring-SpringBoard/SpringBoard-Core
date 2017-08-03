@@ -30,6 +30,8 @@ Image = Button:Inherit{
   useRTT = false;
 
   OnClick  = {},
+
+  __nofont = true,
 }
 
 
