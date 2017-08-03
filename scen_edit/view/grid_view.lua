@@ -167,6 +167,7 @@ function GridView:NewItem(tbl)
 		itemPadding = {0,0,0,0},
 		itemMargin = {0,0,0,0},
 		useRTT = false,
+		__nofont = true,
 	}
 	tbl = Table.Merge(tbl, defaults)
 	local item = Control:New(tbl)
