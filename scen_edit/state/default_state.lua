@@ -94,6 +94,10 @@ function DefaultState:MakeAreaTrigger(areaID)
 end
 
 function DefaultState:MousePress(x, y, button)
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
+        return
+    end
+
     local selection = SB.view.selectionManager:GetSelection()
     local selCount = #selection.units + #selection.features + #selection.areas
     local _, ctrl, _, shift = Spring.GetModKeyState()
