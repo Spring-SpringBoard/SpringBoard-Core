@@ -54,10 +54,10 @@ function GetText()
 end
 
 function widget:Initialize()
-	if not WG.SBChili then
+	Chili = WG.SBChili or WG.Chili
+	if not Chili then
 		widgetHandler:RemoveWidget(widget)
 	end
-	Chili = WG.SBChili
 	screen0 = Chili.Screen0
 
 	InitializeExtensions()

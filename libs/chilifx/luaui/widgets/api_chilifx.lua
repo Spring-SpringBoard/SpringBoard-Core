@@ -19,11 +19,11 @@ LCS = LCS()
 CHILILFX_DIR = LIBS_DIR .. "chilifx/chilifx/"
 
 function widget:Initialize()
-    -- if not WG.Chili then
-    --     Spring.Log("ChiliFX", LOG.ERROR, "Missing chiliui.")
-    --     widgetHandler:RemoveWidget(widget)
-    --     return
-    -- end
+    if not WG.SBChili and not WG.Chili then
+        Spring.Log("ChiliFX", LOG.ERROR, "Missing chiliui.")
+        widgetHandler:RemoveWidget(widget)
+        return
+    end
 
     ChiliFX = VFS.Include(CHILILFX_DIR .. "core.lua", nil)
 

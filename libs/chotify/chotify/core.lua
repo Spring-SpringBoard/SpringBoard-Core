@@ -5,7 +5,7 @@ local includes = {
 
 local Core = widget
 
-Chili = WG.SBChili
+Chili = WG.SBChili or WG.Chili
 ChiliFX = WG.ChiliFX
 
 for _, file in ipairs(includes) do
