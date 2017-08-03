@@ -81,6 +81,9 @@ Control = Object:Inherit{
 
   OnResize        = {},
   OnEnableChanged = {},
+
+  -- __nofont should be manually set to true when using this class directly
+  __nofont = false,
 }
 Control.disabledFont = table.merge({ color = {0.8, 0.8, 0.8, 0.8} }, Control.font)
 
@@ -129,13 +132,20 @@ function Control:New(obj)
     obj.height = obj.clientHeight + p[2] + p[4]
   end
 
-  --// create font
-  obj.font = Font:New(obj.font)
-  obj.font:SetParent(obj)
+  -- We don't create fonts for controls that don't need them
+  -- This should drastically use memory usage for some cases
+  if not obj.__nofont then
+    --// create font
+    obj.font = Font:New(obj.font)
+    obj.font:SetParent(obj)
 
-  --// create disabled font
-  obj.disabledFont = Font:New(obj.disabledFont)
-  obj.disabledFont:SetParent(obj)
+    --// create disabled font
+    obj.disabledFont = Font:New(obj.disabledFont)
+    obj.disabledFont:SetParent(obj)
+  else
+    obj.font = nil
+    obj.disabledFont = nil
+  end
 
   obj:DetectRelativeBounds()
   obj:AlignControl()
@@ -178,7 +188,11 @@ function Control:Dispose(...)
   end
 
   inherited.Dispose(self,...)
-  self.font:SetParent()
+
+  if not self.__nofont then
+    self.font:SetParent()
+    self.disabledFont:SetParent()
+  end
 end
 
 --//=============================================================================
