@@ -3,16 +3,16 @@ StatusWindow = LCS.class{}
 function StatusWindow:init(parent)
     self.lblStatus = Label:New {
         x = 0,
-        bottom = 10,
-        width = "50%",
+        bottom = 30,
+        width = "100%",
         height = 20,
         caption = "",
         --valign = "ascender",
     }
     self.lblMemory = Label:New {
-        x = "50%",
-        bottom = 10,
-        width = "50%",
+        x = 0,
+        bottom = 0,
+        width = "100%",
         height = 20,
         caption = "",
         --valign = "ascender",
@@ -22,7 +22,7 @@ function StatusWindow:init(parent)
         caption = "",
         x = 0,
         bottom = 10,
-        width = 500,
+        width = 300,
         height = "100%",
         children = {
             self.lblStatus,

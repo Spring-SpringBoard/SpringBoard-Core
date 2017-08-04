@@ -38,7 +38,7 @@ function TeamSelector:init()
     SB.lockTeam = false
     self.cbLockTeam = Checkbox:New {
         parent = screen0,
-        x = self.cmbTeamSelector.x + 10,
+        right = 501 + 10,
         width = 90,
         y = 45,
         height = 20,
