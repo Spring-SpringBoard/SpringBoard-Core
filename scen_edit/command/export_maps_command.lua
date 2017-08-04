@@ -180,6 +180,8 @@ function ExportMapsCommand:execute()
         local mapFBO
         for i = 0, sizeX do
             for j = 0, sizeZ do
+                Spring.ClearWatchDogTimer()
+
                 local mapTextureObj = SB.model.textureManager.mapFBOTextures[i][j]
 
                 local mapTexture = mapTextureObj.texture
@@ -193,6 +195,7 @@ function ExportMapsCommand:execute()
             end
         end
         -- Either blitting isn't working, or FBOs aren't properly mapped to textures...?
+        Spring.ClearWatchDogTimer()
         gl.RenderToTexture(totalMapTexture, gl.SaveImage, 0, 0, Game.mapSizeX, Game.mapSizeZ, texturePath)
         gl.DeleteTexture(totalMapTexture)
         -- FIXME: probably not needed -.-

@@ -38,8 +38,9 @@ function FileDialog:init(dir, caption, fileTypes)
         dir = self.dir,
         OnDblClickItem = {
             function()
-                self:confirmDialog()
-                self.window:Dispose()
+                if self:confirmDialog() then
+                    self.window:Dispose()
+                end
             end
         },
         OnSelectItem = {
@@ -122,8 +123,9 @@ function FileDialog:init(dir, caption, fileTypes)
 
     okButton.OnClick = {
         function()
-            self:confirmDialog()
-            self.window:Dispose()
+            if self:confirmDialog() then
+                self.window:Dispose()
+            end
         end
     }
     cancelButton.OnClick = {
@@ -171,5 +173,4 @@ function FileDialog:confirmDialog()
     if self.confirmDialogCallback then
         return self.confirmDialogCallback(path)
     end
-    return false
 end

@@ -15,6 +15,6 @@ function ExportFileDialog:confirmDialog()
 --     end
     local fileType = self:getSelectedFileType()
     if self.confirmDialogCallback then
-        self.confirmDialogCallback(filePath, fileType)
+        return self.confirmDialogCallback(filePath, fileType)
     end
 end

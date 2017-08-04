@@ -34,6 +34,8 @@ function ImportDiffuseCommand:execute()
         gl.Texture(totalMapTexture)
         for i = 0, sizeX do
             for j = 0, sizeZ do
+                Spring.ClearWatchDogTimer()
+
                 local mapTexture = SB.model.textureManager.mapFBOTextures[i][j]
                 mapTexture.dirty = true
                 gl.RenderToTexture(mapTexture.texture, function()

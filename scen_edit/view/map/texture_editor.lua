@@ -16,7 +16,6 @@ Editor.Register({
 function TextureEditor:init()
     self:super("init")
 
-    local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.tif'}
     self:AddField(AssetField({
         name = "patternTexture",
         title = "Pattern:",
@@ -33,7 +32,7 @@ function TextureEditor:init()
                 return true
             end
             local ext = Path.GetExt(value) or ""
-            return table.ifind(image_exts, ext), value
+            return table.ifind(SB_IMG_EXTS, ext), value
         end
     }))
     self:AddField(MaterialField({

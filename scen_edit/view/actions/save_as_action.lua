@@ -23,6 +23,8 @@ function SaveAsAction:execute()
             self:CreateProjectStructure(path)
 
             self:Save(path, isNewProject)
+
+            return true
         end
     )
 end

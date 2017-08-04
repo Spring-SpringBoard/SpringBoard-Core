@@ -14,7 +14,6 @@ Editor.Register({
 function HeightmapEditor:init()
     self:super("init")
 
-    local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.tif'}
     self:AddField(AssetField({
         name = "patternTexture",
         title = "Pattern:",
@@ -31,7 +30,7 @@ function HeightmapEditor:init()
             end
 
             local ext = Path.GetExt(value) or ""
-            return table.ifind(image_exts, ext), value
+            return table.ifind(SB_IMG_EXTS, ext), value
         end,
         Update = function(...)
             AssetField.Update(...)

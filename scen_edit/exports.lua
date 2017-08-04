@@ -14,12 +14,14 @@ SB_EXTS_DIR = SB_ROOT .. "exts/"
 
 --properties
 SB_FILE_EXT = ".sdz"
-SB_FEATURE_PLACER_FILE_EXT = ".lua"
+SB_S11N_EXT = ".lua"
 SB_MAP_INFO_FILE_EXT = ".lua"
 
 SB_SCREENSHOT_FILE = "sb_screen.jpg"
 
 SB_USE_PLAY_PAUSE = false
+
+SB_IMG_EXTS = {'.jpg','.bmp','.png','.tga','.tif'}
 
 --mod opts
 local modOpts = Spring.GetModOptions()

@@ -31,6 +31,8 @@ function SaveImagesCommand:execute()
         -- We're saving the map in parts
         for i = 0, sizeX do
             for j = 0, sizeZ do
+                Spring.ClearWatchDogTimer()
+
                 local mapTextureObj = SB.model.textureManager.mapFBOTextures[i][j]
                 -- only write those textures that have changed since last save
                 if mapTextureObj.dirty then

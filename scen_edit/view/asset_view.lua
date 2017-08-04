@@ -89,8 +89,6 @@ function AssetView:init(tbl)
     self:SetDir(tbl.dir or '')
 end
 
-local image_exts = {'.jpg','.bmp','.png','.tga','.dds','.ico','.gif','.psd','.tif'} --'.psp'
-
 function AssetView:SetDir(directory)
     self.layoutPanel:DeselectAll()
     self.dir = directory
@@ -108,10 +106,8 @@ function AssetView:ScanDir()
     self.files = {}
     for _, file in pairs(files) do
         local ext = (Path.GetExt(file) or ""):lower()
-        if table.ifind(image_exts, ext) then
-            if self:FilterFile(file) then
-                table.insert(self.files, file)
-            end
+        if self:FilterFile(file) then
+            table.insert(self.files, file)
         end
     end
     self.dirs = self:_SubDirs()
@@ -215,7 +211,13 @@ function AssetView:AddFolder(folder)
 end
 
 function AssetView:AddFile(file)
-    local texturePath = ':clr' .. self.itemWidth .. ',' .. self.itemHeight .. ':' .. tostring(file)
+    local ext = (Path.GetExt(file) or ""):lower()
+
+    local texturePath
+    if table.ifind(SB_IMG_EXTS, ext) then
+        texturePath = ':clr' .. self.itemWidth .. ',' .. self.itemHeight .. ':' .. tostring(file)
+    end
+
     local name = Path.ExtractFileName(file)
     local item = self:AddItem(name, texturePath, "")
     item.path = file
