@@ -9,6 +9,9 @@ function NumericField:Update(source)
     if source ~= self.lblValue then
         self.lblValue:SetCaption(v)
     end
+    if self.minValue and self.maxValue then
+        self.button.__progress = (self.value - self.minValue) / (self.maxValue - self.minValue)
+    end
 end
 
 function NumericField:Validate(value)
@@ -32,6 +35,7 @@ function NumericField:init(field)
     self:__SetDefault("decimals", 2)
     self:__SetDefault("value", 0)
     self:__SetDefault("allowNil", false)
+    self:__SetDefault("__btnClassname", "progress_button")
 
     StringField.init(self, field)
 
@@ -148,71 +152,91 @@ function NumericField:__UpdateDragging(delta)
     Spring.WarpMouse(self.__initX, self.__initY)
 end
 
-local _draggingColor = {1.0, 0.7, 0.1, 0.8}
 function NumericField:__DrawDisplayControl()
     -- Leave if we're no longer dragging
     if not self.__isDragging then
         return
     end
 
+    local x, y = self.button:CorrectlyImplementedLocalToScreen(self.button.x, 0)
+    local w = self.button.width
+
+    local offy = -10
+    if self.minValue then
+        self.__draggingFont:Draw(self.__minValueStr,
+            self.__leftStart, y - offy)
+    end
+    if self.maxValue then
+        self.__draggingFont:Draw(self.__maxValueStr,
+            x + w + self.__pdx + self.__ew / 2, y - offy)
+    end
+
+    return true
+end
+
+local leftDisplay = Image:New {
+    file = Path.Join(SB_IMG_DIR, "left-numeric.png"),
+    parent = screen0,
+    keepAspect = false,
+}
+local rightDisplay = Image:New {
+    file = Path.Join(SB_IMG_DIR, "right-numeric.png"),
+    parent = screen0,
+    keepAspect = false,
+}
+leftDisplay:Hide()
+rightDisplay:Hide()
+function NumericField:__SetupDraggingControl()
     if not self.__draggingFont then
+        local _draggingColor = {0.76,0.63,0.06, 1}
         self.__draggingFont = Chili.Font:New {
             size = 12,
             color = _draggingColor,
-            outline = true,
+            shadow = true,
         }
     end
 
     local x, y = self.button:CorrectlyImplementedLocalToScreen(self.button.x, 0)
-    local w = self.button.width
+    local eh = 10
+    self.__ew = 10
+    self.__pdx = 2
 
-    gl.Color(unpack(_draggingColor))
-    if self.minValue and self.maxValue then
-        gl.BeginEnd(GL.LINES, function()
-            -- Draw the beginning |
-            gl.Vertex(x, y)
-            gl.Vertex(x, y - 20)
-
-            -- Draw the end |
-            gl.Vertex(x + w, y)
-            gl.Vertex(x + w, y - 20)
-
-            -- Draw the line -----
-            gl.Vertex(x, y - 10)
-            gl.Vertex(x + w, y - 10)
-
-            -- Draw the current position |
-            local percent = (self.value - self.minValue) / (self.maxValue - self.minValue)
-            gl.Vertex(x + w * percent, y)
-            gl.Vertex(x + w * percent, y - 20)
-        end)
-    end
-
-    local offy = 15
-    if self.minValue and self.maxValue then
-        offy = offy + 20
-    end
     if self.minValue then
-        local minValueStr = string.format(self.format, self.minValue)
-        self.__draggingFont:Draw(minValueStr, x - 5, y - offy)
+        self.__minValueStr = string.format(self.format, self.minValue)
+        local w = self.__draggingFont:GetTextWidth(tostring(self.__minValueStr))
+        w = math.max(w, self.height - self.__ew)
+        self.__leftStart = x - w - self.__ew / 2 - self.__pdx
+        w = w + self.__ew
+
+        leftDisplay:Show()
+        leftDisplay:SetPos(x - w - self.__pdx, y - eh / 2 + 2,
+                           w, self.height + eh / 2)
+        leftDisplay:SetLayer(1)
     end
-    local valueStr = string.format(self.format, self.value)
-    self.__draggingFont:Draw(valueStr, x + w / 2 - 15, y - offy)
     if self.maxValue then
-        local maxValueStr = string.format(self.format, self.maxValue)
-        self.__draggingFont:Draw(maxValueStr, x + w - 15, y - offy)
+        self.__maxValueStr = string.format(self.format, self.maxValue)
+        local w = self.__draggingFont:GetTextWidth(tostring(self.__maxValueStr))
+        w = math.max(w, self.height - self.__ew)
+        w = w + self.__ew
+
+        rightDisplay:Show()
+        rightDisplay:SetPos(x + self.button.width + self.__pdx, y - eh / 2 + 2,
+                            w, self.height + eh / 2)
+        rightDisplay:SetLayer(2)
     end
-
-    -- return true to keep redrawing
-    return true
-end
-
-function NumericField:__SetupDraggingControl()
     SB.SetGlobalRenderingFunction(function(...)
         self:__DrawDisplayControl(...)
+        -- leftDisplay:SetLayer(2)
+        -- rightDisplay:SetLayer(3)
     end)
 end
 
 function NumericField:__HideDraggingControl()
+    if leftDisplay.visible then
+        leftDisplay:Hide()
+    end
+    if rightDisplay.visible then
+        rightDisplay:Hide()
+    end
     SB.SetGlobalRenderingFunction(nil)
 end

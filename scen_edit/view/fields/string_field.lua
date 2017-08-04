@@ -32,6 +32,7 @@ function StringField:init(field)
     self:__SetDefault("width", 200)
     self:__SetDefault("value", "")
     self:__SetDefault("allowNil", false)
+    self:__SetDefault("__btnClassname", "button")
 
     Field.init(self, field)
 
@@ -39,6 +40,8 @@ function StringField:init(field)
         text = self.value,
         width = self.width,
         height = self.height,
+        -- FIXME: align = 'right' doesn't work for editbox
+        -- align = 'right',
         KeyPress = function(...)
             if not ParseKey(self, ...) then
                 return Chili.EditBox.KeyPress(...)
@@ -81,6 +84,7 @@ function StringField:init(field)
     }
 
     self.button = Button:New {
+        classname = self.__btnClassname,
         caption = "",
         width = self.width,
         height = self.height,

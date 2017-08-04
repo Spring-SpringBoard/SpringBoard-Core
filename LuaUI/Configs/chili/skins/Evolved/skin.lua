@@ -45,6 +45,18 @@ function DrawMyButton(obj, ...)
     end
 end
 
+skin.button = {
+  TileImageBK = ":cl:tech_button_bright_small_bk.png",
+  TileImageFG = ":cl:tech_button_bright_small_fg.png",
+  tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
+  padding = {10, 10, 10, 10},
+
+  backgroundColor = {0, 0, 0, 0.7},
+  borderColor = {1,1,1,0},
+
+  DrawControl = DrawMyButton,
+}
+
 function DrawMyToggleButton(obj, ...)
     if obj.checked then
         local oldColor = obj.backgroundColor
@@ -81,18 +93,6 @@ function DrawMyToggleButton(obj, ...)
     gl.Texture(0,false)
 end
 
-skin.button = {
-  TileImageBK = ":cl:tech_button_bright_small_bk.png",
-  TileImageFG = ":cl:tech_button_bright_small_fg.png",
-  tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
-  padding = {10, 10, 10, 10},
-
-  backgroundColor = {0, 0, 0, 0.7},
-  borderColor = {1,1,1,0},
-
-  DrawControl = DrawMyButton,
-}
-
 skin.toggle_button = {
   -- TileImageFG = ":cl:tech_checkbox_checked.png",
   -- TileImageBK = ":cl:tech_checkbox_unchecked.png",
@@ -120,6 +120,58 @@ skin.toggle_button = {
   boxsize = 15,
 
   DrawControl = DrawMyToggleButton,
+}
+
+function DrawMyProgressButton(obj, ...)
+    if obj.state and obj.state.pressed then
+        local oldColor = obj.backgroundColor
+        obj.backgroundColor = buttonPressedColor
+        DrawButton(obj, ...)
+        obj.backgroundColor = oldColor
+
+        if obj.__progress then
+            local w = obj.width
+            local h = obj.height
+            local skLeft,skTop,skRight,skBottom = unpack4(obj.tiles)
+
+            gl.Color(obj.progressColor)
+            TextureHandler.LoadTexture(0,obj.TileImageBK,obj)
+              local texInfo = gl.TextureInfo(obj.TileImageBK) or {xsize=1, ysize=1}
+              local tw,th = texInfo.xsize, texInfo.ysize
+
+              gl.ClipPlane(1, -1,0,0, w * obj.__progress)
+              gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawTiledTexture, 0,0,w,h, skLeft,skTop,skRight,skBottom, tw,th, 0)
+              gl.ClipPlane(1, false)
+            gl.Texture(0,false)
+        end
+    else
+        DrawButton(obj, ...)
+    end
+end
+
+skin.progress_button = {
+  -- TileImageFG = ":cl:tech_checkbox_checked.png",
+  -- TileImageBK = ":cl:tech_checkbox_unchecked.png",
+  -- tiles       = {3,3,3,3},
+  -- boxsize     = 13,
+
+  TileImageBK = ":cl:tech_button_bright_small_bk.png",
+  TileImageFG = ":cl:tech_button_bright_small_fg.png",
+
+  tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
+  padding = {10, 10, 10, 10},
+
+  backgroundColor = {0, 0, 0, 0.7},
+  borderColor = {1,1,1,0},
+
+
+  -- Checkbox specific properties
+  -- TileImageBK = ":cl:tech_button_bright_small_bk.png",
+  -- TileImageFG = ":cl:tech_button_bright_small_fg.png",
+
+  progressColor = {0, 0.4, 0.8, 1.0},
+
+  DrawControl = DrawMyProgressButton,
 }
 
 skin.button_large = {
