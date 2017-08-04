@@ -148,6 +148,20 @@ function NumericField:__UpdateDragging(delta)
     local value = self.value + delta * self.step
     self:Set(value, self.button)
 
+    if self.value == self.minValue or self.value == self.maxValue then
+        if not self.__reachedExtreme  then
+            self.lblValue.font:SetColor(0, 1.0, 0.1, 1)
+            self.lblTitle.font:SetColor(0, 1.0, 0.1, 1)
+            self.lblTitle:Invalidate()
+            self.__reachedExtreme = true
+        end
+    elseif self.__reachedExtreme then
+        self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
+        self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
+        self.lblTitle:Invalidate()
+        self.__reachedExtreme = false
+    end
+
     -- Make the mouse fixed
     Spring.WarpMouse(self.__initX, self.__initY)
 end
@@ -226,8 +240,6 @@ function NumericField:__SetupDraggingControl()
     end
     SB.SetGlobalRenderingFunction(function(...)
         self:__DrawDisplayControl(...)
-        -- leftDisplay:SetLayer(2)
-        -- rightDisplay:SetLayer(3)
     end)
 end
 
