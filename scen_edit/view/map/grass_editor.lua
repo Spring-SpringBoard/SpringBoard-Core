@@ -17,10 +17,10 @@ function GrassEditor:init()
     self.btnAddGrass = TabbedPanelButton({
         x = 0,
         y = 0,
-        tooltip = "Paint grass on the map",
+        tooltip = "Add grass to the map",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "grass-add.png" }),
-            TabbedPanelLabel({ caption = "Paint" }),
+            TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
             function()
