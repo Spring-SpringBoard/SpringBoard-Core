@@ -45,6 +45,7 @@ function View:Update()
 		self.teamSelector:Update()
 	end
     self.selectionManager:Update()
+    self.projectStatus:Update()
 
     self.bottomBar:Update()
 end
