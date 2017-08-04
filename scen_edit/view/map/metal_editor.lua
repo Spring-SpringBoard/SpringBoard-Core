@@ -36,7 +36,7 @@ function MetalEditor:init()
         name = "size",
         value = 100,
         minValue = 10,
-        maxValue = 5000,
+        maxValue = 200,
         title = "Size:",
         tooltip = "Size of the paint brush",
     }))

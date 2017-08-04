@@ -36,7 +36,7 @@ function GrassEditor:init()
         name = "size",
         value = 100,
         minValue = 10,
-        maxValue = 5000,
+        maxValue = 1000,
         title = "Size:",
         tooltip = "Size of the paint brush",
     }))
