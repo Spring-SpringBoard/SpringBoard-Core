@@ -90,6 +90,19 @@ function HeightmapEditor:init()
         self.btnSmoothState
     })
 
+    self:AddControl("btn-show-metal", {
+        Button:New {
+            caption = "Show elevation",
+            width = 200,
+            height = 40,
+            OnClick = {
+                function()
+                    Spring.SendCommands('showelevation')
+                end
+            }
+        },
+    })
+
     self:AddField(NumericField({
         name = "size",
         value = 100,

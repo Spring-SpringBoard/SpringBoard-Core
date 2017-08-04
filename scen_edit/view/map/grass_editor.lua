@@ -33,6 +33,17 @@ function GrassEditor:init()
     })
 
     self:AddField(NumericField({
+        name = "grassDetail",
+        value = Spring.GetConfigInt("GrassDetail"),
+        minValue = 0,
+        maxValue = 10000,
+        step = 0.1,
+        title = "Detail:",
+        tooltip = "`GrassDetail` engine parameter: controls how much grass is visible." ..
+            "This is unsynced and will not be saved.",
+    }))
+
+    self:AddField(NumericField({
         name = "size",
         value = 100,
         minValue = 10,
@@ -54,6 +65,13 @@ function GrassEditor:init()
         },
     }
     self:Finalize(children)
+end
+
+function GrassEditor:OnFieldChange(name, value)
+    if name == "grassDetail" then
+        --Spring.SendCommands('set GrassDetail ' .. tostring(math.ceil(value)))
+        Spring.SetConfigInt("GrassDetail", math.ceil(value), true)
+    end
 end
 
 function GrassEditor:IsValidTest(state)

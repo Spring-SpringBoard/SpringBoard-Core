@@ -32,6 +32,19 @@ function MetalEditor:init()
         self.btnAddMetal
     })
 
+    self:AddControl("btn-show-metal", {
+        Button:New {
+            caption = "Show metal map",
+            width = 200,
+            height = 40,
+            OnClick = {
+                function()
+                    Spring.SendCommands('showmetalmap')
+                end
+            }
+        },
+    })
+
     self:AddField(NumericField({
         name = "size",
         value = 100,
