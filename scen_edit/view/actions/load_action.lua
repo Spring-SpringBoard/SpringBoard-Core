@@ -1,6 +1,11 @@
 LoadAction = AbstractAction:extends{}
 
 function LoadAction:execute()
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
+        Log.Warning("Cannot load while testing.")
+        return
+    end
+
     ofd = OpenProjectDialog(SB_PROJECTS_DIR)
     ofd:setConfirmDialogCallback(
         function(path)

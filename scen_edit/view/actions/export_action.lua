@@ -1,6 +1,11 @@
 ExportAction = AbstractAction:extends{}
 
 function ExportAction:execute()
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
+        Log.Warning("Cannot export while testing.")
+        return
+    end
+
     if SB.projectDir == nil then
         --FIXME: probably don't need for most types of export
         Log.Warning("The project must be saved before exporting")

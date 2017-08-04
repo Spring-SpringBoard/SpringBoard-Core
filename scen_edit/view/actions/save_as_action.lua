@@ -1,6 +1,11 @@
 SaveAsAction = AbstractAction:extends{}
 
 function SaveAsAction:execute()
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
+        Log.Warning("Cannot save while testing.")
+        return
+    end
+
     local origProjDir = SB.projectDir
     sfd = SaveProjectDialog(SB_PROJECTS_DIR)
     sfd:setConfirmDialogCallback(

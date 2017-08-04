@@ -1,17 +1,16 @@
 ImportAction = AbstractAction:extends{}
 
 function ImportAction:execute()
-    local fileTypes = {"Feature placer", "Diffuse", "Heightmap"}
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
+        Log.Warning("Cannot import while testing.")
+        return
+    end
+
+    local fileTypes = {"Diffuse", "Heightmap"}
     sfd = ImportFileDialog(SB_PROJECTS_DIR, fileTypes)
     sfd:setConfirmDialogCallback(
         function(path, fileType)
-            if fileType == fileTypes[1] then
-                Log.Notice("Importing feature placer file: " .. path .. " ...")
-                local modelData = VFS.LoadFile(path, VFS.RAWFIRST)
-                local importCommand = ImportFeaturePlacerCommand(modelData)
-                SB.commandManager:execute(importCommand)
-                Log.Notice("Import complete.")
-            elseif fileType == fileTypes[2] then
+            if fileType == fileTypes[2] then
                 Log.Notice("Importing diffuse: " .. path .. " ...")
                 local importCommand = ImportDiffuseCommand(path)
                 SB.commandManager:execute(importCommand, true)
