@@ -69,22 +69,24 @@ end
 function AbstractMapEditingState:MouseWheel(up, value)
     local alt, _, _, shift = Spring.GetModKeyState()
     if shift then
+		local size = self.size
         if up then
-            self.size = self.size + self.size * 0.2 + 2
+            size = size + size * 0.2 + 2
         else
-            self.size = self.size - self.size * 0.2 - 2
+            size = size - size * 0.2 - 2
         end
-        self.editorView:Set("size", self.size)
+        self.editorView:Set("size", size)
         return true
     elseif alt and self.rotation ~= nil then
+		local rotation = self.rotation
         if up then
-            self.rotation = self.rotation + 5
+            rotation = rotation + 5
         else
-            self.rotation = self.rotation - 5
+            rotation = rotation - 5
         end
         -- may uncomment this to rotate around
         -- self.rotation = self.rotation - math.floor(self.rotation/360) * 360
-        self.editorView:Set("rotation", self.rotation)
+        self.editorView:Set("rotation", rotation)
         return true
     end
 end
