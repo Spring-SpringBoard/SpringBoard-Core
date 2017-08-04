@@ -8,8 +8,8 @@ function WidgetCommandExecuted:init(display, cmdIDs)
 end
 
 function WidgetCommandExecuted:execute()
-    SB.view.commandWindow:PushCommand(self.display)
-    SB.commandManager:callListeners("OnCommandExecuted", self.cmdIDs)
+    SB.commandManager:callListeners("OnCommandExecuted",
+        self.cmdIDs, false, false, self.display)
 end
 
 WidgetCommandUndo = Command:extends{}
@@ -20,8 +20,8 @@ function WidgetCommandUndo:init()
 end
 
 function WidgetCommandUndo:execute()
-    SB.view.commandWindow:UndoCommand()
-    SB.commandManager:callListeners("OnCommandExecuted", self.cmdIDs, true)
+    SB.commandManager:callListeners("OnCommandExecuted",
+        self.cmdIDs, true)
 end
 
 WidgetCommandRedo = Command:extends{}
@@ -32,8 +32,8 @@ function WidgetCommandRedo:init()
 end
 
 function WidgetCommandRedo:execute()
-    SB.view.commandWindow:RedoCommand()
-    SB.commandManager:callListeners("OnCommandExecuted", self.cmdIDs, false, true)
+    SB.commandManager:callListeners("OnCommandExecuted",
+        self.cmdIDs, false, true)
 end
 
 -- undo stack has been cleared
@@ -45,7 +45,7 @@ function WidgetCommandClearUndoStack:init()
 end
 
 function WidgetCommandClearUndoStack:execute()
-    SB.view.commandWindow:ClearUndoStack()
+    SB.commandManager:callListeners("OnClearUndoStack")
     SB.commandManager:clearUndoStack()
 end
 
@@ -58,7 +58,7 @@ function WidgetCommandClearRedoStack:init()
 end
 
 function WidgetCommandClearRedoStack:execute()
-    SB.view.commandWindow:ClearRedoStack()
+    SB.commandManager:callListeners("OnClearRedoStack")
     SB.commandManager:clearRedoStack()
 end
 
@@ -71,7 +71,7 @@ function WidgetCommandRemoveFirstUndo:init()
 end
 
 function WidgetCommandRemoveFirstUndo:execute()
-    SB.view.commandWindow:RemoveFirstUndo()
+    SB.commandManager:callListeners("OnRemoveFirstUndo")
 	SB.delayGL(function()
 		SB.model.textureManager:RemoveFirst()
 	end)
@@ -86,5 +86,5 @@ function WidgetCommandRemoveFirstRedo:init()
 end
 
 function WidgetCommandRemoveFirstRedo:execute()
-    SB.view.commandWindow:RemoveFirstRedo()
+    SB.commandManager:callListeners("OnRemoveFirstRedo")
 end

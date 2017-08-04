@@ -5,6 +5,11 @@ function Observable:init()
 end
 
 function Observable:addListener(listener)
+    if listener == nil then
+        Log.Error(debug.traceback())
+        Log.Error("listener cannot be nil")
+        return
+    end
     table.insert(self.listeners, listener)
 end
 
@@ -14,13 +19,27 @@ function Observable:removeListener(listener)
             table.remove(self.listeners, k)
         end
     end
-
-    --table.remove(self.listeners, listener)
 end
 
 function Observable:callListeners(func, ...)
-    for i = 1, #self.listeners do
-        local listener = self.listeners[i]
-        listener[func](listener, ...)
+    local listeners = Table.ShallowCopy(self.listeners)
+    local args = {...}
+    local n = select("#", ...)
+    for _, listener in ipairs(self.listeners) do
+        xpcall(
+            function()
+                local eventFunc = listener[func]
+                if eventFunc then
+                    eventFunc(listener, unpack(args, 1, n))
+                end
+            end,
+            function(err)
+                self:_PrintError(err)
+            end
+        )
     end
+end
+
+function Observable:_PrintError(err)
+    Log.Error(debug.traceback(err, 2))
 end

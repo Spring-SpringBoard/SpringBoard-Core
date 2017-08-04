@@ -1,6 +1,6 @@
 CommandWindow = LCS.class{}
 
-function CommandWindow:init()
+function CommandWindow:init(parent)
     local children = {
         Button:New {
             x = 10,
@@ -77,15 +77,13 @@ function CommandWindow:init()
 
     table.insert(children, self.list.ctrl)
 
-    self.window = Window:New {
-        parent = screen0,
+    self.window = Control:New {
+        parent = parent,
         caption = "",
-        right = 500,
-        bottom = 0,
-        resizable = false,
-        draggable = false,
+        right = 0,
+        bottom = 3,
         width = 400,
-        height = SB.conf.BOTTOM_BAR_HEIGHT,
+        height = "100%",
         padding = {5,5,0,0},
         children = children,
     }
@@ -94,6 +92,18 @@ function CommandWindow:init()
     self.count = 0
     self.removedCount = 0
     self.undoCount = 0
+
+    SB.commandManager:addListener(self)
+end
+
+function CommandWindow:OnCommandExecuted(cmdIDs, isUndo, isRedo, display)
+    if isUndo then
+        self:UndoCommand()
+    elseif isRedo then
+        self:RedoCommand()
+    else
+        self:PushCommand(display)
+    end
 end
 
 function CommandWindow:PushCommand(display)
@@ -135,31 +145,31 @@ function CommandWindow:RedoCommand()
     self.undoCount = self.undoCount - 1
 end
 
-function CommandWindow:RemoveFirstUndo()
+function CommandWindow:OnRemoveFirstUndo()
     Log.Debug("remundo", self.removedCount + 1)
     self.removedCount = self.removedCount + 1
     self.list:RemoveRow(self.removedCount)
 end
 
-function CommandWindow:RemoveFirstRedo()
+function CommandWindow:OnRemoveFirstRedo()
     Log.Debug(LOG.DEBUG, "remredo")
     self.list:RemoveRow(self.count)
     self.count = self.count - 1
     self.undoCount= self.undoCount - 1
 end
 
-function CommandWindow:ClearUndoStack()
+function CommandWindow:OnClearUndoStack()
     Log.Debug("clearundostack")
     while self.removedCount ~= self.count do
-        self:RemoveFirstUndo()
+        self:OnRemoveFirstUndo()
     end
     Log.Debug("clearundostackend")
 end
 
-function CommandWindow:ClearRedoStack()
+function CommandWindow:OnClearRedoStack()
     Log.Debug("clearredostack")
     while self.undoCount ~= 0 do
-        self:RemoveFirstRedo()
+        self:OnRemoveFirstRedo()
     end
     Log.Debug("clearredostackend")
 end

@@ -31,16 +31,13 @@ function View:init()
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
 	self.tabbedWindow = TabbedWindow()
-    self.commandWindow = CommandWindow()
--- 	self.commandWindow.window:Hide()
 
     self.modelShaders = ModelShaders()
 
-    self.statusWindow = StatusWindow()
+    self.bottomBar = BottomBar()
     self.teamSelector = TeamSelector()
     self.lobbyButton = LobbyButton()
     self.projectStatus = ProjectStatus()
-    self.controlButtons = ControlButtons()
 end
 
 function View:Update()
@@ -48,8 +45,8 @@ function View:Update()
 		self.teamSelector:Update()
 	end
     self.selectionManager:Update()
-    self.statusWindow:Update()
-    self.projectStatus:Update()
+
+    self.bottomBar:Update()
 end
 
 function View:drawRect(x1, z1, x2, z2)

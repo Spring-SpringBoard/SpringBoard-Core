@@ -1,6 +1,6 @@
 ControlButtons = LCS.class{}
 
-function ControlButtons:init()
+function ControlButtons:init(parent)
     self.started = false --FIXME: check instead of assuming
     self.btnStartStop = Button:New {
         caption='',
@@ -25,15 +25,13 @@ function ControlButtons:init()
     }
     self:UpdateStartStopButton()
 
-    self.window = Window:New {
-        parent = screen0,
+    self.window = Control:New {
+        parent = parent,
         caption = "",
-        right = 500 + 400,
-        bottom = 0,
-        resizable = false,
-        draggable = false,
+        right = 400,
+        bottom = 10,
         width = 75,
-        height = SB.conf.BOTTOM_BAR_HEIGHT,
+        height = "100%",
         children = {
             self.btnStartStop,
         }

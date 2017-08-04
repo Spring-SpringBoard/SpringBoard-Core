@@ -137,3 +137,11 @@ function Table.Compare(v1, v2)
         return true
     end
 end
+
+function Table.ShallowCopy(t)
+    local ret = {}
+    for k, v in pairs(t) do
+        ret[k] = v
+    end
+    return ret
+end

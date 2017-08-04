@@ -230,7 +230,19 @@ end
 ------------------------------------------------
 CommandManagerListener = LCS.class.abstract{}
 
-function CommandManagerListener:OnCommandExecuted(cmdIDs, isUndo, isRedo)
+function CommandManagerListener:OnCommandExecuted(cmdIDs, isUndo, isRedo, display)
+end
+
+function CommandManagerListener:OnClearUndoStack()
+end
+
+function CommandManagerListener:OnClearRedoStack()
+end
+
+function CommandManagerListener:OnRemoveFirstUndo()
+end
+
+function CommandManagerListener:OnRemoveFirstRedo()
 end
 ------------------------------------------------
 -- End listener definition

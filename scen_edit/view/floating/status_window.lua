@@ -1,6 +1,6 @@
 StatusWindow = LCS.class{}
 
-function StatusWindow:init()
+function StatusWindow:init(parent)
     self.lblStatus = Label:New {
         x = 0,
         bottom = 10,
@@ -17,16 +17,13 @@ function StatusWindow:init()
         caption = "",
         --valign = "ascender",
     }
-    self.statusWindow = Window:New {
-        parent = screen0,
+    self.statusWindow = Control:New {
+        parent = parent,
         caption = "",
-        --right = 500 + 375 + 375,
         x = 0,
-        bottom = 0,
-        resizable = false,
-        draggable = false,
+        bottom = 10,
         width = 500,
-        height = SB.conf.BOTTOM_BAR_HEIGHT,
+        height = "100%",
         children = {
             self.lblStatus,
             self.lblMemory
