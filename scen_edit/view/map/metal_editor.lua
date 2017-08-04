@@ -49,9 +49,19 @@ function MetalEditor:init()
         name = "size",
         value = 100,
         minValue = 10,
-        maxValue = 200,
+        maxValue = 5000,
         title = "Size:",
         tooltip = "Size of the paint brush",
+    }))
+
+    self:AddField(NumericField({
+        name = "amount",
+        value = 50,
+        minValue = 1,
+        maxValue = 10000,
+        step = 0.01,
+        title = "Amount:",
+        tooltip = "Amount of metal",
     }))
 
     local children = {

@@ -15,9 +15,9 @@ function TerrainGrassCommand:GetHeightMapFunc(isUndo)
         else
             f = Spring.RemoveGrass
         end
-        for x = 0, 2*size, Game.squareSize/4 do
+        for x = 0, 2*size, Game.squareSize do
             local dx = size - x
-            for z = 0, 2*size, Game.squareSize/4 do
+            for z = 0, 2*size, Game.squareSize do
                 local dz = size - z
                 if dx*dx + dz*dz <= size * size then
                     f(x + self.opts.x, z + self.opts.z)

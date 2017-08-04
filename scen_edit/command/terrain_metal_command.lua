@@ -6,32 +6,60 @@ function TerrainMetalCommand:init(opts)
     self.opts = opts
 end
 
-function TerrainMetalCommand:GetHeightMapFunc(isUndo)
-    return function()
-        local size = self.opts.size
-        local amount
-        if (not isUndo and self.opts.addMode) or (isUndo and not self.opts.addMode) then
-            amount = 1000
-        else
-            amount = 0
-        end
-        local partSize = Game.squareSize / 16
-        for x = 0, 2*size, Game.squareSize/16 do
-            local dx = size - x
-            for z = 0, 2*size, Game.squareSize/16 do
-                local dz = size - z
-                if dx*dx + dz*dz <= size * size then
-                    Spring.SetMetalAmount((x + self.opts.x)/16, (z + self.opts.z)/16, amount)
+function TerrainMetalCommand:GenerateChanges(opts)
+    local amount = math.ceil(opts.amount)
+    local size = opts.size
+
+    if not opts.addMode then
+        amount = 0
+    end
+
+    local changes = {}
+
+    local partSize = Game.squareSize
+    for x = 0, 2*size, partSize do
+        local dx = size - x
+        local cx = (x + opts.x) / 16
+        cx = cx - cx % 1
+        for z = 0, 2*size, partSize do
+            local dz = size - z
+            if dx*dx + dz*dz <= size * size then
+                local cz = (z + opts.z) / 16
+                cz = cz - cz % 1
+                local change = math.ceil(amount - Spring.GetMetalAmount(cx, cz))
+                if change ~= 0 then
+                    table.insert(changes, {
+                        x = cx,
+                        z = cz,
+                        value = change,
+                    })
                 end
             end
         end
     end
+
+    return changes
 end
 
 function TerrainMetalCommand:execute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))
+    if not self.changes then
+        self.changes = self:GenerateChanges(self.opts)
+    end
+    self:_ApplyChanges(self.changes, false)
 end
 
 function TerrainMetalCommand:unexecute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
+    self:_ApplyChanges(self.changes, true)
+end
+
+function TerrainMetalCommand:_ApplyChanges(changes, isUndo)
+    if not isUndo then
+        for _, change in ipairs(changes) do
+            Spring.SetMetalAmount(change.x, change.z, change.value)
+        end
+    else
+        for _, change in ipairs(changes) do
+            Spring.SetMetalAmount(change.x, change.z, -change.value)
+        end
+    end
 end

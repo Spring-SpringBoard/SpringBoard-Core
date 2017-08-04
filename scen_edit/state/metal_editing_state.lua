@@ -4,6 +4,8 @@ SB.Include("scen_edit/model/texture_manager.lua")
 function MetalEditingState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
 
+    self.amount = self.editorView.fields["amount"].value
+
     self.updateDelay    = 0.2
     self.applyDelay     = 0.02
 end
@@ -14,6 +16,7 @@ function MetalEditingState:Apply(x, z)
         x = x - self.size,
         z = z - self.size,
         size = self.size,
+        amount = self.amount,
         addMode = addMode,
     }
     local command = TerrainMetalCommand(opts)
