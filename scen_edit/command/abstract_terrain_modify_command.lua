@@ -6,6 +6,11 @@ local function rotate(x, y, angle)
            x * math.sin(angle) + y * math.cos(angle)
 end
 
+-- goes up to size * sqrt(2) at rotation = pi/4
+local function rotatedSize(size, rotation)
+    return size * math.sin(2 * rotation)
+end
+
 local function generateMap(size, delta, shapeName, rotation)
     local greyscale = SB.model.terrainManager:getShape(shapeName)
     local sizeX, sizeZ = greyscale.sizeX, greyscale.sizeZ
