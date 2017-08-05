@@ -216,6 +216,9 @@ function AssetView:AddFile(file)
     local texturePath
     if table.ifind(SB_IMG_EXTS, ext) then
         texturePath = ':clr' .. self.itemWidth .. ',' .. self.itemHeight .. ':' .. tostring(file)
+        -- FIXME: why not just use the file directly? it works
+        -- What is the performance/caching difference, if any?
+        -- texturePath = file
     end
 
     local name = Path.ExtractFileName(file)
