@@ -26,6 +26,8 @@ function View:init()
     SB.IncludeDir(SB_VIEW_FLOATING_DIR)
     SB.IncludeDir(SB_VIEW_DIALOG_DIR)
 
+    self.__visible = true
+
     SB.clipboard = Clipboard()
     self.areaViews = {}
     self.selectionManager = SelectionManager()
@@ -38,6 +40,27 @@ function View:init()
     self.teamSelector = TeamSelector()
     self.lobbyButton = LobbyButton()
     self.projectStatus = ProjectStatus()
+end
+
+function View:SetVisible(visible)
+    if self.__visible == visible then
+        return
+    end
+
+    self.__visible = visible
+    if visible then
+        self.tabbedWindow.window:Show()
+        self.teamSelector.cmbTeamSelector:Show()
+        self.teamSelector.cbLockTeam:Show()
+        self.projectStatus.lblProject:Show()
+        self.bottomBar.window:Show()
+    else
+        self.tabbedWindow.window:Hide()
+        self.teamSelector.cmbTeamSelector:Hide()
+        self.teamSelector.cbLockTeam:Hide()
+        self.projectStatus.lblProject:Hide()
+        self.bottomBar.window:Hide()
+    end
 end
 
 function View:Update()

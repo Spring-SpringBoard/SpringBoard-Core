@@ -4,7 +4,7 @@ function ControlButtons:init(parent)
     self.started = false --FIXME: check instead of assuming
     self.btnStartStop = Button:New {
         caption='',
-        bottom = 5,
+        y = 0,
         x = 0,
         height = 45,
         width = 45,
@@ -25,17 +25,52 @@ function ControlButtons:init(parent)
     }
     self:UpdateStartStopButton()
 
+    local x = "45%"
+    local y = 10
+    pcall(function()
+        local startStop = loadstring(VFS.LoadFile("sb_settings.lua"))().startStop
+        x = startStop.x or x
+        y = startStop.y or y
+    end)
+
     self.window = Control:New {
-        parent = parent,
+        parent = screen0,
         caption = "",
-        right = 400,
-        bottom = 10,
-        width = 75,
-        height = "100%",
+        x = x,
+        width = 70,
+        y = y,
+        height = 70,
         children = {
             self.btnStartStop,
         }
     }
+
+    self:UpdateGameDrawing()
+end
+
+-- All this better belongs to some command/model
+function ControlButtons:UpdateGameDrawing()
+    -- show/hide SB GUI
+    if SB.view then
+        if not self.started then
+            SB.view:SetVisible(true)
+        else
+            SB.view:SetVisible(false)
+        end
+    end
+
+    -- This relies on *game* Chili, not SB
+    -- If game doesn't use Chili, we don't control its drawing
+    if not WG.Chili then
+        return
+    end
+    if not self.started then
+        -- Disable game drawing
+        self.__oldDraw = WG.Chili.Screen0.Draw or WG.Chili.Screen.Draw
+        WG.Chili.Screen0.Draw = function() end
+    else
+        WG.Chili.Screen0.Draw = self.__oldDraw or WG.Chili.Screen.Draw
+    end
 end
 
 function ControlButtons:UpdateStartStopButton()
@@ -74,6 +109,8 @@ function ControlButtons:GameStarted()
         self:Invalidate()
         self:RequestUpdate()
     end
+
+    self:UpdateGameDrawing()
 end
 
 function ControlButtons:GameStopped()
@@ -81,4 +118,6 @@ function ControlButtons:GameStopped()
     self:UpdateStartStopButton()
     self.btnStartStop.backgroundColor = SB.conf.BTN_ADD_COLOR
     self.btnStartStop.Update = Chili.Button.Update
+
+    self:UpdateGameDrawing()
 end

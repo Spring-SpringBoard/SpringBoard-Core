@@ -16,7 +16,9 @@ function BottomBar:init()
 
     self.commandWindow = CommandWindow(self.window)
     self.statusWindow = StatusWindow(self.window)
-    self.controlButtons = ControlButtons(self.window)
+
+
+    self.controlButtons = ControlButtons()
 end
 
 function BottomBar:Update()
