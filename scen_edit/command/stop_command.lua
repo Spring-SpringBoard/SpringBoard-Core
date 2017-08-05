@@ -11,6 +11,10 @@ function StopCommand:execute()
 
     Log.Notice("Stopping game...")
 
+    for _, allyTeamID in ipairs(Spring.GetAllyTeamList()) do
+        Spring.SetGlobalLos(allyTeamID, true)
+    end
+
     Spring.StopSoundStream()
     Spring.SetGameRulesParam("sb_gameMode", "dev")
     SB.rtModel:GameStop()
@@ -24,9 +28,10 @@ function StopCommand:execute()
 
     SB.model.oldModel.meta = meta
 
-    SB.model:Load(SB.model.oldModel)
-    SB.model.oldHeightMap:Load()
-
+    --SB.delay(function()
+        SB.model:Load(SB.model.oldModel)
+        SB.model.oldHeightMap:Load()
+    --end)
     if SB_USE_PLAY_PAUSE then
         Spring.SendCommands("pause 1")
     end
