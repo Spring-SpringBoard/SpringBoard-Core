@@ -11,6 +11,14 @@ function ControlButtons:init(parent)
         backgroundColor = SB.conf.BTN_ADD_COLOR,
         OnClick = {
             function()
+                local frame = Spring.GetGameFrame()
+                if self.__lastFrame then
+                    if frame - self.__lastFrame < 15 then
+                        return
+                    end
+                end
+                self.__lastFrame = frame
+
                 if not self.started then
                     local cmd = StartCommand()
                     SB.commandManager:execute(cmd)
