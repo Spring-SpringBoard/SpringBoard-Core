@@ -188,6 +188,10 @@ function _UnitBridge:init()
             return { armored = armored, armorMultiple = armorMultiple }
         end,
         movectrl = function(objectID)
+            -- FIXME: IsEnabled doesn't exist?!
+            if not Spring.MoveCtrl.IsEnabled then
+                return false
+            end
             return Spring.MoveCtrl.IsEnabled(objectID)
         end,
         crashing = function(objectID)
@@ -382,6 +386,7 @@ function _UnitBridge:init()
 end
 
 function _UnitBridge:CreateObject(object, objectID)
+    objectID = nil
     local objectID = Spring.CreateUnit(object.defName, object.pos.x, object.pos.y, object.pos.z, 0, object.team, false, true, objectID)
     return objectID
 end
