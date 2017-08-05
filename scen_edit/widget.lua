@@ -205,7 +205,6 @@ end
 function widget:DrawScreen()
     if SB.view ~= nil then
         SB.stateManager:DrawScreen()
-        SB.view:DrawScreen()
     end
     SB.executeDelayed("DrawScreen")
 end
@@ -221,7 +220,6 @@ end
 function widget:DrawWorld()
     if SB.view ~= nil then
         SB.stateManager:DrawWorld()
-        SB.view:DrawWorld()
     end
     SB.executeDelayed("DrawWorld")
     SB.displayUtil:Draw()

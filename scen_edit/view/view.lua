@@ -64,9 +64,7 @@ function View:SetVisible(visible)
 end
 
 function View:Update()
-    if self.teamSelector then
-		self.teamSelector:Update()
-	end
+	self.teamSelector:Update()
     self.selectionManager:Update()
     self.projectStatus:Update()
 
@@ -99,61 +97,9 @@ function View:drawRects()
     gl.PopMatrix()
 end
 
-function View:DrawWorld()
-end
-
 function View:DrawWorldPreUnit()
     if self.displayDevelop then
         self:drawRects()
     end
     self.selectionManager:DrawWorldPreUnit()
-end
-
-function View:DrawScreen()
-    gl.PushMatrix()
-        local vsx, vsy = Spring.GetViewGeometry()
-        if not rotate then
-            rotate = 0
-            id = 0
-        end
---         gl.PushMatrix()
---         gl.DepthTest(GL.LEQUAL)
---         gl.DepthMask(true)
---         local shaderObj = SB.view.modelShaders:GetShader()
---         gl.UseShader(shaderObj.shader)
---         gl.Uniform(shaderObj.timeID, os.clock())
---         --gl.Translate(100, Spring.GetGroundHeight(100, 100), 100)
---         gl.Translate(vsx / 2, 500, 50)
---         gl.Rotate(30, 1, -1, 0)
---         gl.Rotate(rotate, 0, 1, 0)
---         gl.Scale(5, 5, 5)
---         rotate = rotate + 5
---         if rotate % 360 == 0 then
---             id = id + 1
---         end
--- --         featureBridge.glObjectShapeTextures(id, true)
--- --         featureBridge.glObjectShape(id, 0, true)
--- --         featureBridge.glObjectShapeTextures(id, false)
---         unitBridge.glObjectShapeTextures(id, true)
---         unitBridge.glObjectShape(id, 0, true)
---         unitBridge.glObjectShapeTextures(id, false)
---         gl.UseShader(0)
---         gl.PopMatrix()
-
--- 		gl.PushMatrix()
--- 			local i = 1
--- 			local step = 200
--- 			for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
--- 				gl.Texture(shadingTex)
--- 				gl.TexRect(i * step, 1 * step, (i+1) * step, 2 * step)
--- 				i = i + 1
--- 			end
--- 			i = 1
--- 			local mapTex = SB.model.textureManager.mapFBOTextures[0][0]
--- 			if mapTex then
--- 				gl.Texture(mapTex.texture)
--- 				gl.TexRect(i * step, 1 * step, (i+1) * step, (1+1) * step)
--- 			end
--- 		gl.PopMatrix()
-    gl.PopMatrix()
 end
