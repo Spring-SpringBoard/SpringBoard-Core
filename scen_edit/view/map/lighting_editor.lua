@@ -14,6 +14,22 @@ Editor.Register({
 function LightingEditor:init()
     self:super("init")
 
+    local shadowMode = Spring.GetConfigInt("Shadows")
+    self:AddField(ChoiceField({
+        name = "shadowMode",
+        title = "Shadows:",
+        tooltip = "Shadow mode. Unsynced (and unsaved) setting.",
+        items = { "Off", "Terrain", "Full" },
+        width = 200,
+    }))
+    if shadowMode == 0 then
+        self.fields["shadowMode"]:Set("Off")
+    elseif shadowMode == 1 then
+        self.fields["shadowMode"]:Set("Full")
+    elseif shadowMode == 2 then
+        self.fields["shadowMode"]:Set("Terrain")
+    end
+
     self:AddField(GroupField({
         NumericField({
             name = "sunDirX",
@@ -187,7 +203,15 @@ function LightingEditor:OnFieldChange(name, value)
         return
     end
 
-    if name == "sunDirX" or name == "sunDirY" or name == "sunDirZ" or name == "sunStartAngle" or name == "sunOrbitTime" or name == "sunDistance" then
+    if name == "shadowMode" then
+        if value == "Off" then
+            Spring.SendCommands("shadows 0")
+        elseif value == "Terrain" then
+            Spring.SendCommands("shadows 2")
+        else
+            Spring.SendCommands("shadows 1")
+        end
+    elseif name == "sunDirX" or name == "sunDirY" or name == "sunDirZ" or name == "sunStartAngle" or name == "sunOrbitTime" or name == "sunDistance" then
         value = { dirX = self.fields["sunDirX"].value,
                   dirY = self.fields["sunDirY"].value,
                   dirZ = self.fields["sunDirZ"].value,
