@@ -69,25 +69,3 @@ function TeamSelector:Update()
         self.cmbTeamSelector.OnSelect = OnSelect
     end
 end
-
-function TeamSelector:DrawScreen()
-    gl.PushMatrix()
-        local w, h = Spring.GetScreenGeometry()
-        local fontSize = 20
-        if self.font == nil then
-            local fontName = "FreeSansBold.otf"
-            self.font = gl.LoadFont(fontName, fontSize)
-        end
-
-        local y = 10
-        local text
-        local x = w - 200
-        if SB.projectDir ~= nil then
-            text = "Project:" .. SB.projectDir
-        else
-            text = "Project not saved"
-        end
-        local x = w - self.font:GetTextWidth(text) * fontSize - 10
-        self.font:Print(text, x, y, 20, 'o')
-    gl.PopMatrix()
-end
