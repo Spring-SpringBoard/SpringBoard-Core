@@ -378,7 +378,7 @@ function FeatureDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3], ("featureDefsPanel[%d]"):format(i))
         ctrl.objectDefID = item[4]
-        if item[2] == "" and false then
+        if item[2] == "" then
             self:AddDrawIcon(ctrl)
         end
     end
