@@ -524,13 +524,6 @@ function ObjectPropertyWindow:IsUnitKey(name)
 end
 
 function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
-    if #self.rules > 0 then
-        self:RemoveField("rule-sep")
-    end
-    for _, rule in pairs(self.rules) do
-        self:RemoveField(rule)
-    end
-    self.rules = {}
     local addedRule = false
     for rule, value in pairs(bridge.s11n:Get(objectID, "rules")) do
         if not addedRule then
@@ -604,6 +597,15 @@ function ObjectPropertyWindow:OnSelectionChanged(selection)
         keys = self.objectKeys
         self:SetInvisibleFields(unpack(self.unitKeys))
     end
+
+    if self.fields["rule-sep"] then
+        self:RemoveField("rule-sep")
+    end
+    for _, rule in pairs(self.rules) do
+        self:RemoveField(rule)
+    end
+    self.rules = {}
+
     if objectID then
         if bridge == unitBridge then
             self:AddObjectRules(objectID, bridge)

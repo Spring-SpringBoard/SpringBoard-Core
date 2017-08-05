@@ -72,16 +72,16 @@ end
 function TeamManager:serialize()
     local retVal = {}
     local teams = SB.deepcopy(self.teams)
-    for id, team in pairs(teams) do
+    for team1ID, team in pairs(teams) do
         team.allies = {}
-        for _, team2 in pairs(teams) do
-            if Spring.AreTeamsAllied(team.id, team2.id) then
-                table.insert(team.allies, team2.id)
+        for team2ID, _ in pairs(teams) do
+            if Spring.AreTeamsAllied(team1ID, team2ID) then
+                table.insert(team.allies, team2ID)
             end
         end
         table.insert(retVal, {
             team = team,
-            id = id,
+            id = team1ID,
         })
     end
     return retVal
@@ -123,28 +123,28 @@ local function _GenerateTeams()
         local team = { id = teamID }
         table.insert(teams, team)
 
-        team.name = tostring(team.id)
+        team.name = tostring(teamID)
 
-        local aiID, _, _, name = Spring.GetAIInfo(team.id)
+        local aiID, _, _, name = Spring.GetAIInfo(teamID)
         if aiID ~= nil then
             team.name = team.name .. ": " .. name
             team.ai = true -- TODO: maybe get the exact AI as well?
         end
 
-        local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(team.id)
+        local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(teamID)
         team.allyTeam = allyTeam
         team.side = side
 
-        team.gaia = gaiaTeamID == team.id
+        team.gaia = gaiaTeamID == teamID
         if team.gaia then
             team.ai = true
         end
 
-		local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
+		local metal, metalMax = Spring.GetTeamResources(teamID, "metal")
 		team.metal = metal
 		team.metalMax = metalMax
 
-		local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
+		local energy, energyMax = Spring.GetTeamResources(teamID, "energy")
 		team.energy = energy
 		team.energyMax = energyMax
     end

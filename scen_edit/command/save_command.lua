@@ -256,6 +256,8 @@ function SaveCommand:execute()
         Log.Notice(("[%.4fs] Saved SpringBoard info"):format(elapsed))
     end)
 
+    Spring.SendCommands("console 0")
+
     if #SB.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = Path.Join(projectDir, "texturemap")
         Spring.CreateDir(texturemapDir)

@@ -319,6 +319,7 @@ function PerformDraw()
         gl.Texture(0, false)
         gl.Texture(imgPath)
 
+        Spring.SendCommands("console 1")
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved project screenshot."):format(elapsed))
     end)
