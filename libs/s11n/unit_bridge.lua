@@ -138,15 +138,7 @@ function _UnitBridge:init()
 --             return s
 --         end,
         rules = function(objectID)
-            local ret = {}
-            for _, foo in pairs(Spring.GetUnitRulesParams(objectID)) do
-                if type(foo) == "table" then
-                    for rule, value in pairs(foo) do
-                        ret[rule] = value
-                    end
-                end
-            end
-            return ret
+            return Spring.GetUnitRulesParams(objectID)
         end,
         commands = function(objectID)
             -- -1 needed here to work around jk's attempt at optimization (otherwise we get errors)
