@@ -5,14 +5,12 @@ SB.IncludeDir(SB_MODEL_DIR)
 function Model:init()
     self._lua_rules_pre = "scen_edit"
 
-    local isWidget = Script.GetName() == "LuaUI"
     self.areaManager = AreaManager()
-    self.unitManager = UnitManager(isWidget)
-    self.featureManager = FeatureManager(isWidget)
-    self.variableManager = VariableManager(isWidget)
-    self.triggerManager = TriggerManager(isWidget)
+    self.unitManager = UnitManager()
+    self.featureManager = FeatureManager()
+    self.variableManager = VariableManager()
+    self.triggerManager = TriggerManager()
     self.teamManager = TeamManager()
-    self.teamManager:generateTeams()
     self.scenarioInfo = ScenarioInfo()
     self.terrainManager = TerrainManager()
     if Script.GetName() == "LuaUI" then
@@ -39,7 +37,7 @@ function Model:Clear()
         Spring.SetProjectileCollision(projectileID)
     end
 
-    if not self.widget then
+    if not Script.GetName() == "LuaUI" then
         SB.commandManager:execute(ClearUndoRedoCommand())
     end
 end

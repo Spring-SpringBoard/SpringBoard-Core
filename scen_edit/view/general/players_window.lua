@@ -78,7 +78,7 @@ function PlayersWindow:Populate()
     --teams
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         local stackTeamPanel = MakeComponentPanel(self.teamsPanel)
-        local fontColor = SB.glToFontColor(team.color)
+        local fontColor = SB.glToFontColor(team.color or {r=1, g=1, b=1})
         local aiPrefix = "(Player) "
         if team.gaia then
             aiPrefix = "(Gaia)"

@@ -4,13 +4,13 @@ function MessageManager:init()
     self.prefix = "scen_edit"
     self.messageIDCount = 0
     self.callbacks = {}
-    self.widget = false
+    self.__isWidget = Script.GetName() == "LuaUI"
     self.compress = true
 end
 
 function MessageManager:__encodeToString(message)
     local msg = table.show(message:serialize())
-    if self.widget and self.compress then
+    if self.__isWidget and self.compress then
         local newMsg = SB.ZlibCompress(msg)
         -- FIXME: obvious slowdown, but detects weird Spring bugs
         assert(SB.ZlibDecompress(newMsg) == msg)
@@ -30,7 +30,7 @@ function MessageManager:sendMessage(message, callback)
     end
 
     local fullMessage = self.prefix .. "|" .. messageType .. "|" .. self:__encodeToString(message)
-    if self.widget then
+    if self.__isWidget then
         local size = #fullMessage
         local maxMsgSize = 50000
         if size < maxMsgSize then

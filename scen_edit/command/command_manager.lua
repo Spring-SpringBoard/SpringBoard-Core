@@ -19,13 +19,15 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.multipleCommandStack = {}
     self.multipleCommandMode = false
     self.idCount = 0
+
+    self.__isWidget = Script.GetName() == "LuaUI"
 end
 
 function CommandManager:_SafeCall(func)
     succ, result = xpcall(func, function(err)
         Log.Error("Error executing command [" .. Script.GetName() .. "]. ")
         if debug then
-            Log.Error(debug.traceback(err))
+            Log.Error(debug.traceback(err, 2))
         else
             Log.Error(err)
         end
@@ -69,7 +71,7 @@ function CommandManager:leaveMultipleCommandMode()
     end
     self.multipleCommandStack = {}
     self:undoListAdd(cmd)
-    if not self.widget then
+    if not self.__isWidget then
         self:notify(cmd, cmdIDs)
     end
 end
@@ -95,8 +97,10 @@ end
 --widget specifies whether the command should be executed in LuaUI(true) or LuaRules(false)
 --if the command is to be executed in a different lua state than currently in, it will send the message to the proper state using the message mechanism
 function CommandManager:execute(cmd, widget)
+    widget = not not widget
+    Log.Debug(("[%s] %s, widget:%s"):format(Script.GetName(), cmd.className, tostring(not not widget)))
     assert(cmd, "Command is nil")
-    return self:__execute(cmd, self.widget == widget)
+    return self:__execute(cmd, self.__isWidget == widget)
 end
 
 function CommandManager:__execute(cmd, sameContext)
@@ -105,7 +109,7 @@ function CommandManager:__execute(cmd, sameContext)
     end
 
     self:_SafeCall(function()
-        if cmd._execute_unsynced and not self.widget then
+        if cmd._execute_unsynced and not self.__isWidget then
             self:_SendCommand(cmd)
         else
             cmd:execute()
@@ -115,7 +119,7 @@ function CommandManager:__execute(cmd, sameContext)
                 table.insert(self.multipleCommandStack, cmd)
             else
                 self:undoListAdd(cmd)
-                if not self.widget then
+                if not self.__isWidget then
                     self:notify(cmd)
                 end
             end
@@ -146,7 +150,7 @@ function CommandManager:undoListAdd(cmd)
     table.insert(self.undoList, cmd)
     if #self.undoList > self.maxUndoSize then
         table.remove(self.undoList, 1)
-        if not self.widget then
+        if not self.__isWidget then
             self:execute(WidgetCommandRemoveFirstUndo(), true)
         end
     end
@@ -157,7 +161,7 @@ function CommandManager:redoListAdd(cmd)
     table.insert(self.redoList, cmd)
     if #self.redoList > self.maxRedoSize then
         table.remove(self.redoList, 1)
-        if not self.widget then
+        if not self.__isWidget then
             self:execute(WidgetCommandRemoveFirstRedo(), true)
         end
     end
@@ -170,14 +174,14 @@ function CommandManager:undo(widget)
     end
     local cmd = table.remove(self.undoList, #self.undoList)
     self:_SafeCall(function()
-        if not cmd._execute_unsynced or self.widget then
+        if not cmd._execute_unsynced or self.__isWidget then
             cmd:unexecute()
         else
             local msg = Message("command", UndoCommand())
             SB.messageManager:sendMessage(msg)
         end
         self:redoListAdd(cmd)
-        if not self.widget then
+        if not self.__isWidget then
             self:execute(WidgetCommandUndo(), true)
         end
     end)
@@ -190,14 +194,14 @@ function CommandManager:redo()
     end
     local cmd = table.remove(self.redoList, #self.redoList)
     self:_SafeCall(function()
-        if not cmd._execute_unsynced or self.widget then
+        if not cmd._execute_unsynced or self.__isWidget then
             cmd:execute()
         else
             --self:_SendCommand(cmd)
             local msg = Message("command", RedoCommand())
             SB.messageManager:sendMessage(msg)
         end
-        if not self.widget then
+        if not self.__isWidget then
             self:execute(WidgetCommandRedo(), true)
         end
         table.insert(self.undoList, cmd)

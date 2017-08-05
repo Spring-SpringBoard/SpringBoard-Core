@@ -69,6 +69,32 @@ function TeamManagerListenerGadget:onTeamChange(teamID, team)
     SB.commandManager:execute(cmd, true)
 end
 
+else -- UNSYNCED
+
+TeamManagerListenerWidget = TeamManagerListener:extends{}
+SB.OnInitialize(function()
+    SB.model.teamManager:addListener(TeamManagerListenerWidget())
+end)
+
+function TeamManagerListenerWidget:onTeamAdded(teamID)
+    local team = SB.model.teamManager:getTeam(teamID)
+    if team.color then
+        return
+    end
+
+    -- get local AI name (synced has weird AI names)
+    local aiID, _, _, name = Spring.GetAIInfo(teamID)
+    if aiID ~= nil then
+        team.name = tostring(teamID) .. ": " .. name
+    end
+    -- use our unsynced color
+    local r, g, b = Spring.GetTeamColor(teamID)
+    team.color = {r=r, g=g, b=b}
+    local cmd = UpdateTeamCommand(team)
+    cmd.blockUndo = true
+    SB.commandManager:execute(cmd)
+end
+
 end
 ----------------------------------------------------------
 -- END Widget callback listener

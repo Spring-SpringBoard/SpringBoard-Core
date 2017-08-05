@@ -79,7 +79,7 @@ function gadget:Initialize()
     VFS.Include(SB_DIR .. "util.lua")
     SB.Include(SB_DIR .. "utils/include.lua")
 
-    SB.displayUtil = DisplayUtil(false)
+    SB.displayUtil = DisplayUtil()
 
     -- detect game mode
     local modOpts = Spring.GetModOptions()
@@ -126,6 +126,7 @@ function Load()
 
     SB.model.unitManager:populate()
     SB.model.featureManager:populate()
+    SB.model.teamManager:populate()
     __populated = true
     if hasScenarioFile then
         Log.Notice("Loading the scenario file...")

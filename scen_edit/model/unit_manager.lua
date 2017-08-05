@@ -1,15 +1,14 @@
 UnitManager = Observable:extends{}
 
-function UnitManager:init(widget)
+function UnitManager:init()
     self:super('init')
     self._s2m = {}
     self._m2s = {}
     self.unitIDCounter = 0
-    self.widget = widget
 end
 
 function UnitManager:populate()
-    if self.widget then
+    if Script.GetName() == "LuaUI" then
         return
     end
     for _, unitID in ipairs(Spring.GetAllUnits()) do

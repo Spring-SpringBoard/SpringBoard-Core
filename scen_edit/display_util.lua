@@ -2,8 +2,8 @@ DisplayUtil = LCS.class{}
 
 local fontSize = 12
 
-function DisplayUtil:init(isWidget)
-    self.isWidget = isWidget
+function DisplayUtil:init()
+    self.__isWidget = Script.GetName() == "LuaUI"
     self.texts = {}
     self.unitSays = {}
 end
@@ -156,7 +156,7 @@ function DisplayUtil:Draw()
 end
 
 function DisplayUtil:displayText(text, coords, color)
-    if self.isWidget then
+    if self.__isWidget then
         self:AddText(text, coords, color, 300)
     else
         local cmd = WidgetDisplayTextCommand(text, coords, color)
@@ -165,7 +165,7 @@ function DisplayUtil:displayText(text, coords, color)
 end
 
 function DisplayUtil:unitSay(unit, text)
-    if self.isWidget then
+    if self.__isWidget then
         self:AddUnitSay(text, unit, 300)
     else
         local cmd = WidgetUnitSayCommand(unit, text)
@@ -174,7 +174,7 @@ function DisplayUtil:unitSay(unit, text)
 end
 
 function DisplayUtil:followUnit(unit)
-    if self.isWidget then
+    if self.__isWidget then
         self.follow = unit
     else
         local cmd = WidgetFollowUnitCommand(unit)

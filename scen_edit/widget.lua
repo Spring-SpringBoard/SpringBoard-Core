@@ -149,7 +149,7 @@ function widget:Initialize()
 
     CheckConfig()
 
-    SB.displayUtil = DisplayUtil(true)
+    SB.displayUtil = DisplayUtil()
 
     SB.conf = Conf()
     SB.metaModel = MetaModel()
@@ -161,21 +161,8 @@ function widget:Initialize()
     SB.model = Model()
 
     SB.commandManager = CommandManager()
-    SB.commandManager.widget = true
     SB.stateManager = StateManager()
     SB.messageManager = MessageManager()
-    SB.messageManager.widget = true
-
-
-    SB.model.teamManager:generateTeams(widget)
-    local commands = {}
-    for id, team in pairs(SB.model.teamManager:getAllTeams()) do
-        local cmd = SetTeamColorCommand(id, team.color)
-        table.insert(commands, cmd)
-    end
-    local cmd = CompoundCommand(commands)
-    cmd.blockUndo = true
-    SB.commandManager:execute(cmd)
 
     if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
         Spring.SendCommands('forcestart')
@@ -196,6 +183,8 @@ function widget:Initialize()
     if Spring.GetGameFrame() > 10 then
         MaybeLoad()
     end
+
+    SB.executeDelayed("Initialize")
 end
 
 function reloadGadgets()

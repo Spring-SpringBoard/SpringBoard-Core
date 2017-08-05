@@ -232,54 +232,6 @@ function SB.humanExpression(data, exprType, dataType, level)
     end
 end
 
-function SB.GenerateTeamColor()
-    return 1, 1, 1, 1 --yeah, ain't it great
-end
-
-function SB.GetTeams(widget)
-    local teams = {}
-
-    local gaiaTeamID = Spring.GetGaiaTeamID()
-    for _, teamID in pairs(Spring.GetTeamList()) do
-        local team = { id = teamID }
-        table.insert(teams, team)
-
-        team.name = tostring(team.id)
-
-        local aiID, _, _, name = Spring.GetAIInfo(team.id)
-        if aiID ~= nil then
-            team.name = team.name .. ": " .. name
-            team.ai = true -- TODO: maybe get the exact AI as well?
-        end
-
-        local r, g, b, a = SB.GenerateTeamColor()--Spring.GetTeamColor(teamID)
-        if widget then
-            r, g, b, a = Spring.GetTeamColor(team.id)
-            team.color = { r = r, g = g, b = b, a = a }
-        end
-
-        local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(team.id)
-        team.allyTeam = allyTeam
-        team.side = side
-
-        team.gaia = gaiaTeamID == team.id
-        if team.gaia then
-            team.ai = true
-        end
-
-		if not widget then
-			local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
-			team.metal = metal
-			team.metalMax = metalMax
-
-			local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
-			team.energy = energy
-			team.energyMax = energyMax
-		end
-    end
-    return teams
-end
-
 function SB.IsButton(ctrl)
     -- FIXME: checking for control type via .classname will cause skinning issues
     return ctrl.classname == "button" or ctrl.classname == "toggle_button"

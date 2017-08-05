@@ -4,6 +4,8 @@ function TeamManager:init()
     self:super('init')
     self.teamIDCount = 0
     self.teams = {}
+
+    self.__isWidget = Script.GetName() == "LuaUI"
 end
 
 function TeamManager:addTeam(team, teamID)
@@ -15,6 +17,7 @@ function TeamManager:addTeam(team, teamID)
 
     self.teams[teamID] = team
     self:_setTeam(teamID, team)
+
     self:callListeners("onTeamAdded", teamID)
     return teamID
 end
@@ -112,8 +115,48 @@ function TeamManager:clear()
     self.teamIDCount = 0
 end
 
-function TeamManager:generateTeams(widget)
-    local teams = SB.GetTeams(widget)
+local function _GenerateTeams()
+    local teams = {}
+
+    local gaiaTeamID = Spring.GetGaiaTeamID()
+    for _, teamID in pairs(Spring.GetTeamList()) do
+        local team = { id = teamID }
+        table.insert(teams, team)
+
+        team.name = tostring(team.id)
+
+        local aiID, _, _, name = Spring.GetAIInfo(team.id)
+        if aiID ~= nil then
+            team.name = team.name .. ": " .. name
+            team.ai = true -- TODO: maybe get the exact AI as well?
+        end
+
+        local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(team.id)
+        team.allyTeam = allyTeam
+        team.side = side
+
+        team.gaia = gaiaTeamID == team.id
+        if team.gaia then
+            team.ai = true
+        end
+
+		local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
+		team.metal = metal
+		team.metalMax = metalMax
+
+		local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
+		team.energy = energy
+		team.energyMax = energyMax
+    end
+    return teams
+end
+
+function TeamManager:populate()
+    if self.__isWidget then
+        return
+    end
+
+    local teams = _GenerateTeams()
     self.teams = {}
     for _, team in pairs(teams) do
         self:addTeam(team, team.id)

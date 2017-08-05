@@ -26,12 +26,15 @@ function StopCommand:execute()
     end
     meta.variables = SB.model.oldModel.meta.variables
 
+    local teamData = SB.model.oldModel.meta.teams
     SB.model.oldModel.meta = meta
 
     --SB.delay(function()
         SB.model:Load(SB.model.oldModel)
         SB.model.oldHeightMap:Load()
     --end)
+
+    SB.model.teamManager:load(teamData)
     if SB_USE_PLAY_PAUSE then
         Spring.SendCommands("pause 1")
     end

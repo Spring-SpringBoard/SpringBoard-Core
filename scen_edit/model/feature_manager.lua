@@ -1,15 +1,14 @@
 FeatureManager = Observable:extends{}
 
-function FeatureManager:init(widget)
+function FeatureManager:init()
     self:super('init')
     self._s2m = {}
     self._m2s = {}
     self.featureIDCounter = 0
-    self.widget = widget
 end
 
 function FeatureManager:populate()
-    if self.widget then
+    if Script.GetName() == "LuaUI" then
         return
     end
 
