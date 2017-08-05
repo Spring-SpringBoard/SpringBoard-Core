@@ -60,6 +60,7 @@ function AssetField:init(field)
     --self.AssetFieldWindow = FilePickerWindow(folderPath)
     --self.AssetFieldWindow.field = self
     self.assetWindow = self:MakePickerWindow({
+        name = self.name,
         rootDir = self.rootDir,
         path = self:GetPath() or self:GetDefaultPath(),
         OnSelectItem = {

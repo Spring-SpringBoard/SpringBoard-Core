@@ -177,8 +177,17 @@ function GridView:NewItem(tbl)
 	return item
 end
 
-function GridView:AddItem(caption, image, tooltip)
+function GridView:AddItem(caption, image, tooltip, __chiliName)
 	local children = {}
+
+	local __chiliImgName
+	local __chiliCtrlName
+	local __chiliLabelName
+	if __chiliName then
+		__chiliImgName = __chiliName .. "_image"
+		__chiliCtrlName = __chiliName .. "_ctrl"
+		__chiliLabelName = __chiliName .. "_label"
+	end
 
 	local imgCtrl, lblCtrl
 	if image then
@@ -192,6 +201,7 @@ function GridView:AddItem(caption, image, tooltip)
 			right = 0,
 			bottom = bottom,
 			file = image,
+			name = __chiliImgName,
 		}
 		table.insert(children, imgCtrl)
 	end
@@ -206,6 +216,7 @@ function GridView:AddItem(caption, image, tooltip)
 	        autosize = false,
 	        caption = caption,
 	        --fontsize = 12,
+			name = __chiliLabelName,
 	    }
 		table.insert(children, lblCtrl)
 	end
@@ -215,6 +226,7 @@ function GridView:AddItem(caption, image, tooltip)
 		children = children,
         imgCtrl = imgCtrl,
         lblCtrl = lblCtrl,
+		name = __chiliCtrlName,
 	})
 	return item
 end

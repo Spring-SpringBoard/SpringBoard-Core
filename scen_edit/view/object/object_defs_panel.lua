@@ -268,7 +268,7 @@ function UnitDefsPanel:PopulateItems()
 
     for i = 1, #items do
         local item = items[i]
-        local ctrl = self:AddItem(item[1], item[2], item[3])
+        local ctrl = self:AddItem(item[1], item[2], item[3], ("unitDefsPanel[%d]"):format(i))
         ctrl.objectDefID = item[4]
         --if item[2] == "" or true then
         if item[2] == "" then
@@ -376,9 +376,9 @@ function FeatureDefsPanel:PopulateItems()
 
     for i = 1, #items do
         local item = items[i]
-        local ctrl = self:AddItem(item[1], item[2], item[3])
+        local ctrl = self:AddItem(item[1], item[2], item[3], ("featureDefsPanel[%d]"):format(i))
         ctrl.objectDefID = item[4]
-        if item[2] == "" then
+        if item[2] == "" and false then
             self:AddDrawIcon(ctrl)
         end
     end

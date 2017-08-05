@@ -4,6 +4,7 @@ MaterialPickerWindow = AssetPickerWindow:extends{}
 
 function MaterialPickerWindow:MakeAssetView(opts)
     return MaterialBrowser({
+        name = opts.name,
         ctrl = {
             x = 0,
             right = 0,

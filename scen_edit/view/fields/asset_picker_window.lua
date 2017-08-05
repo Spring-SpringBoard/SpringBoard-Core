@@ -11,6 +11,7 @@ function AssetPickerWindow:init(opts)
     if rootDir then
         dir = SB.model.assetsManager:ToAssetPath(rootDir, dir)
     end
+    local name = opts.name
 
     self.selectedFile = {}
 
@@ -19,6 +20,7 @@ function AssetPickerWindow:init(opts)
         bottom = 0
     end
     self.assetBrowser = self:MakeAssetView({
+        name = name,
         rootDir = rootDir,
         dir = dir,
         OnSelectItem = OnSelectItem,
@@ -50,6 +52,7 @@ end
 
 function AssetPickerWindow:MakeAssetView(opts)
     return AssetView({
+        name = opts.name,
         ctrl = {
             x = 0,
             right = 0,
