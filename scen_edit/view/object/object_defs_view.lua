@@ -59,18 +59,8 @@ function ObjectDefsView:init()
     }
     self:MakeFilters()
 
-    local teamIDs = GetField(SB.model.teamManager:getAllTeams(), "id")
-	for i = 1, #teamIDs do
-		teamIDs[i] = tostring(teamIDs[i])
-	end
-	local teamCaptions = GetField(SB.model.teamManager:getAllTeams(), "name")
-	self:AddField(ChoiceField({
-	    name = "team",
-        items = teamIDs,
-		captions = teamCaptions,
-        title = "Team: ",
-    }))
-	self:Update("team")
+    self:PopulateTeams()
+
     self:AddField(NumericField({
         name = "amount",
         title = "Amount:",
@@ -181,6 +171,38 @@ function ObjectDefsView:init()
     self:Finalize(children)
     self:SetInvisibleFields(unpack(self.allFields))
     self.type = "brush"
+
+    SB.model.teamManager:addListener(self)
+end
+
+function ObjectDefsView:PopulateTeams()
+    if self.fields["team"] then
+        self:RemoveField("team")
+    end
+
+    local teamIDs = GetField(SB.model.teamManager:getAllTeams(), "id")
+    for i = 1, #teamIDs do
+        teamIDs[i] = tostring(teamIDs[i])
+    end
+    local teamCaptions = GetField(SB.model.teamManager:getAllTeams(), "name")
+    self:AddField(ChoiceField({
+        name = "team",
+        items = teamIDs,
+        captions = teamCaptions,
+        title = "Team: ",
+    }))
+end
+
+function ObjectDefsView:onTeamAdded(teamID)
+    self:PopulateTeams()
+end
+
+function ObjectDefsView:onTeamRemoved(teamID)
+    self:PopulateTeams()
+end
+
+function ObjectDefsView:onTeamChange(teamID, team)
+    self:PopulateTeams()
 end
 
 function ObjectDefsView:IsValidTest(state)

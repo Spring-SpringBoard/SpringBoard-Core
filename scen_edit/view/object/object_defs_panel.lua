@@ -257,9 +257,14 @@ function UnitDefsPanel:PopulateItems()
     local items = {}
     for id, unitDef in pairs(UnitDefs) do
         local humanName = self:_GetDefHumanName(unitDef)
+        local buildPic = "#" .. unitDef.id
+        if unitDef.buildpicname == "" or unitDef.buildpicname == nil then
+            buildPic = ""
+        end
+        -- Spring.Echo(buildPic, unitDef.buildpicname)
         table.insert(items, {
             humanName,
-            "#" .. unitDef.id,
+            buildPic,
             humanName .. "\ndefName: " .. tostring(unitDef.name),
             unitDef.id
         })
