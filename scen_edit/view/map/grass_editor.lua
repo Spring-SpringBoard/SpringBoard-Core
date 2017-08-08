@@ -14,6 +14,30 @@ Editor.Register({
 function GrassEditor:init()
     self:super("init")
 
+    self:AddField(AssetField({
+        name = "patternTexture",
+        title = "Pattern:",
+        rootDir = "brush_patterns/terrain/",
+        expand = true,
+        itemWidth = 65,
+        itemHeight = 65,
+        Validate = function(obj, value)
+            if value == nil then
+                return true
+            end
+            if not AssetField.Validate(obj, value) then
+                return false
+            end
+
+            local ext = Path.GetExt(value) or ""
+            return table.ifind(SB_IMG_EXTS, ext), value
+        end,
+        Update = function(...)
+            AssetField.Update(...)
+            local texture = self.fields["patternTexture"].value
+            SB.model.terrainManager:generateShape(texture)
+        end
+    }))
     self.btnAddGrass = TabbedPanelButton({
         x = 0,
         y = 0,
@@ -46,10 +70,18 @@ function GrassEditor:init()
     self:AddField(NumericField({
         name = "size",
         value = 100,
-        minValue = 10,
-        maxValue = 5000,
+        minValue = 40,
+        maxValue = 2000,
         title = "Size:",
         tooltip = "Size of the paint brush",
+    }))
+    self:AddField(NumericField({
+        name = "rotation",
+        value = 0,
+        minValue = -360,
+        maxValue = 360,
+        title = "Rotation:",
+        tooltip = "Rotation of the shape",
     }))
 
     local children = {

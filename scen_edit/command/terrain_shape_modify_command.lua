@@ -3,13 +3,11 @@ TerrainShapeModifyCommand.className = "TerrainShapeModifyCommand"
 
 function TerrainShapeModifyCommand:init(opts)
     self.className = "TerrainShapeModifyCommand"
-    self.opts = opts
-    if self.opts ~= ni then
-        local opts = self.opts
-        opts.x = math.floor(opts.x)
-        opts.z = math.floor(opts.z)
-        opts.size = math.floor(opts.size)
-    end
+    self:__init(opts)
+end
+
+function TerrainShapeModifyCommand:GetChangeFunction()
+    return Spring.AddHeightMap
 end
 
 function TerrainShapeModifyCommand:GenerateChanges(params)

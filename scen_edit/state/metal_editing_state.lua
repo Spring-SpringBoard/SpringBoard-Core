@@ -1,37 +1,28 @@
-MetalEditingState = AbstractMapEditingState:extends{}
-SB.Include("scen_edit/model/texture_manager.lua")
+MetalEditingState = AbstractHeightmapEditingState:extends{}
 
 function MetalEditingState:init(editorView)
-    AbstractMapEditingState.init(self, editorView)
-
+    AbstractHeightmapEditingState.init(self, editorView)
     self.amount = self.editorView.fields["amount"].value
-
-    self.updateDelay    = 0.2
-    self.applyDelay     = 0.02
+    self.initialDelay = 0
 end
 
-function MetalEditingState:Apply(x, z)
-    local _, _, addMode, _, _ = Spring.GetMouseState()
-    local opts = {
-        x = x - self.size,
-        z = z - self.size,
+function MetalEditingState:GetCommand(x, z, applyAction)
+    return TerrainMetalCommand({
+        x = x + self.size/2,
+		z = z + self.size/2,
         size = self.size,
-        amount = self.amount,
-        addMode = addMode,
-    }
-    local command = TerrainMetalCommand(opts)
-    SB.commandManager:execute(command)
+        shapeName = self.patternTexture,
+        rotation = self.rotation,
+        amount = self.amount * applyAction,
+
+        strength = self.strength,
+    })
 end
 
-function MetalEditingState:DrawWorld()
-    x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground" then
-        local x, z = coords[1], coords[3]
-        gl.PushMatrix()
-        gl.Color(0, 1, 0, 0.3)
-        --gl.DepthTest(true)
-        gl.Utilities.DrawGroundCircle(x, z, self.size)
-        gl.PopMatrix()
-    end
+function MetalEditingState:GetApplyParams(x, z, button)
+	local applyAction = 1
+	if button == 3 then
+		applyAction = 0
+	end
+	return x, z, applyAction
 end

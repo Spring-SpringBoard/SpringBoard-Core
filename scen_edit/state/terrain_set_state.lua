@@ -1,5 +1,10 @@
 TerrainSetState = AbstractHeightmapEditingState:extends{}
 
+function TerrainSetState:init(editorView)
+    AbstractHeightmapEditingState.init(self, editorView)
+    self.height = self.editorView.fields["height"].value
+end
+
 function TerrainSetState:GetCommand(x, z, strength)
     return TerrainLevelCommand({
         x = x + self.size/2,

@@ -3,7 +3,11 @@ TerrainLevelCommand.className = "TerrainLevelCommand"
 
 function TerrainLevelCommand:init(opts)
     self.className = "TerrainLevelCommand"
-    self.opts = opts
+    self:__init(opts)
+end
+
+function TerrainLevelCommand:GetChangeFunction()
+    return Spring.AddHeightMap
 end
 
 function TerrainLevelCommand:GenerateChanges(params)

@@ -14,6 +14,30 @@ Editor.Register({
 function MetalEditor:init()
     self:super("init")
 
+    self:AddField(AssetField({
+        name = "patternTexture",
+        title = "Pattern:",
+        rootDir = "brush_patterns/terrain/",
+        expand = true,
+        itemWidth = 65,
+        itemHeight = 65,
+        Validate = function(obj, value)
+            if value == nil then
+                return true
+            end
+            if not AssetField.Validate(obj, value) then
+                return false
+            end
+
+            local ext = Path.GetExt(value) or ""
+            return table.ifind(SB_IMG_EXTS, ext), value
+        end,
+        Update = function(...)
+            AssetField.Update(...)
+            local texture = self.fields["patternTexture"].value
+            SB.model.terrainManager:generateShape(texture)
+        end
+    }))
     self.btnAddMetal = TabbedPanelButton({
         x = 0,
         y = 0,
@@ -48,16 +72,30 @@ function MetalEditor:init()
     self:AddField(NumericField({
         name = "size",
         value = 100,
-        minValue = 10,
-        maxValue = 5000,
+        minValue = 40,
+        maxValue = 1000,
         title = "Size:",
         tooltip = "Size of the paint brush",
     }))
-
+    self:AddField(NumericField({
+        name = "rotation",
+        value = 0,
+        minValue = -360,
+        maxValue = 360,
+        title = "Rotation:",
+        tooltip = "Rotation of the shape",
+    }))
+    self:AddField(NumericField({
+        name = "strength",
+        value = 50,
+        step = 0.1,
+        title = "Strength:",
+        tooltip = "Strength of the height map tool",
+    }))
     self:AddField(NumericField({
         name = "amount",
         value = 50,
-        minValue = 1,
+        minValue = 0,
         maxValue = 10000,
         step = 0.01,
         title = "Amount:",
@@ -65,16 +103,16 @@ function MetalEditor:init()
     }))
 
     local children = {
+        self.btnAddMetal,
         ScrollPanel:New {
             x = 0,
-            y = 80,
+            y = 70,
             bottom = 30,
             right = 0,
             borderColor = {0,0,0,0},
             horizontalScrollbar = false,
             children = { self.stackPanel },
         },
-        self.btnAddMetal,
     }
     self:Finalize(children)
 end

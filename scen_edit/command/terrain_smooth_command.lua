@@ -3,7 +3,7 @@ TerrainSmoothCommand.className = "TerrainSmoothCommand"
 
 function TerrainSmoothCommand:init(opts)
     self.className = "TerrainSmoothCommand"
-    self.opts = opts
+    self:__init(opts)
 end
 
 local function generateKernel(sigma)
@@ -40,6 +40,10 @@ local function getKernel(sigma)
         kernels[sigma] = {kernel, kernelSize}
     end
     return kernel, kernelSize
+end
+
+function TerrainSmoothCommand:GetChangeFunction()
+    return Spring.AddHeightMap
 end
 
 function TerrainSmoothCommand:GenerateChanges(params)

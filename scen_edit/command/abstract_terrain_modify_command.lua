@@ -118,7 +118,17 @@ local function getMap(size, delta, shapeName, rotation, origSize)
     return map
 end
 
-function AbstractTerrainModifyCommand:GetHeightMapFunc(isUndo)
+function AbstractTerrainModifyCommand:__init(opts)
+    if opts == nil then
+        return
+    end
+    opts.x = math.floor(opts.x)
+    opts.z = math.floor(opts.z)
+    opts.size = math.floor(opts.size)
+    self.opts = opts
+end
+
+function AbstractTerrainModifyCommand:GetMapFunc(isUndo)
     return function()
         local rotation = math.rad(self.opts.rotation)
         local size = self.opts.size
@@ -129,7 +139,7 @@ function AbstractTerrainModifyCommand:GetHeightMapFunc(isUndo)
         local origSize = size
         size = rotatedSize
 
-        local map = getMap(size, self.opts.strength, self.opts.shapeName, rotation, origSize)
+        local map = getMap(size, self.opts.strength or 1, self.opts.shapeName, rotation, origSize)
 
         local centerX = self.opts.x
         local centerZ = self.opts.z
@@ -137,6 +147,12 @@ function AbstractTerrainModifyCommand:GetHeightMapFunc(isUndo)
         local dsh = Math.RoundInt((size - origSize) / 2, Game.squareSize)
         local startX = Math.RoundInt(centerX - size + dsh, Game.squareSize)
         local startZ = Math.RoundInt(centerZ - size + dsh, Game.squareSize)
+
+        local changeFunction = self:GetChangeFunction()
+        local step = Game.squareSize
+        if self.GetChangeStep then
+            step = self:GetChangeStep()
+        end
 
         if not isUndo then
             -- calculate the changes only once so redoing the command is faster
@@ -150,11 +166,11 @@ function AbstractTerrainModifyCommand:GetHeightMapFunc(isUndo)
                     map    = map,
                 })
             end
-            for x = 0, size, Game.squareSize do
-                for z = 0, size, Game.squareSize do
+            for x = 0, size, step do
+                for z = 0, size, step do
                     local delta = self.changes[x + z * parts]
                     if delta ~= nil then
-                        Spring.AddHeightMap(
+                        changeFunction(
                             x + startX,
                             z + startZ,
                             delta
@@ -163,11 +179,11 @@ function AbstractTerrainModifyCommand:GetHeightMapFunc(isUndo)
                 end
             end
         else
-            for x = 0, size, Game.squareSize do
-                for z = 0, size, Game.squareSize do
+            for x = 0, size, step do
+                for z = 0, size, step do
                     local delta = self.changes[x + z * parts]
                     if delta ~= nil then
-                        Spring.AddHeightMap(
+                        changeFunction(
                             x + startX,
                             z + startZ,
                             -delta
@@ -186,12 +202,14 @@ function AbstractTerrainModifyCommand:execute()
         self.canExecute = SB.model.terrainManager:getShape(self.opts.shapeName) ~= nil
     end
     if self.canExecute then
-        Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))
+        Spring.SetHeightMapFunc(self:GetMapFunc(false))
+        --self:GetMapFunc(false)()
     end
 end
 
 function AbstractTerrainModifyCommand:unexecute()
     if self.canExecute then
-        Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
+        Spring.SetHeightMapFunc(self:GetMapFunc(true))
+        --self:GetMapFunc(true)()
     end
 end

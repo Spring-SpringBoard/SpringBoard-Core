@@ -1,36 +1,48 @@
-TerrainGrassCommand = Command:extends{}
+TerrainGrassCommand = AbstractTerrainModifyCommand:extends{}
 TerrainGrassCommand.className = "TerrainGrassCommand"
 
 function TerrainGrassCommand:init(opts)
     self.className = "TerrainGrassCommand"
-    self.opts = opts
+    self:__init(opts)
 end
 
-function TerrainGrassCommand:GetHeightMapFunc(isUndo)
-    return function()
-        local size = self.opts.size
-        local f
-        if (not isUndo and self.opts.addMode) or (isUndo and not self.opts.addMode) then
-            f = Spring.AddGrass
+function TerrainGrassCommand:GetChangeFunction()
+    return function(x, z, amount)
+        if amount == 1 then
+            Spring.AddGrass(x, z)
         else
-            f = Spring.RemoveGrass
-        end
-        for x = 0, 2*size, Game.squareSize do
-            local dx = size - x
-            for z = 0, 2*size, Game.squareSize do
-                local dz = size - z
-                if dx*dx + dz*dz <= size * size then
-                    f(x + self.opts.x, z + self.opts.z)
-                end
-            end
+            Spring.RemoveGrass(x, z)
         end
     end
 end
 
-function TerrainGrassCommand:execute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(false))
-end
+function TerrainGrassCommand:GenerateChanges(params)
+    local startX = params.startX
+    local startZ = params.startZ
+    local parts  = params.parts
+    local size   = params.size
+    local isUndo = params.isUndo
+    local map    = params.map
 
-function TerrainGrassCommand:unexecute()
-    Spring.SetHeightMapFunc(self:GetHeightMapFunc(true))
+    local amount = self.opts.amount
+    if amount < 0 then
+        amount = 0
+    end
+
+    local changes = {}
+
+    -- localized loop vars
+    local d
+    for x = 0, size, Game.squareSize do
+        for z = 0, size, Game.squareSize do
+            d = map[x + z * parts]
+            if d >= 0.5 then
+                local old = Spring.GetGrass(startX + x, startZ + z)
+                if old ~= amount then
+                    changes[x + z * parts] = amount - old
+                end
+            end
+        end
+    end
+    return changes
 end

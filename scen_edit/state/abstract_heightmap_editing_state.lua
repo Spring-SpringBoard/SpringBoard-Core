@@ -4,8 +4,11 @@ AbstractHeightmapEditingState = AbstractMapEditingState:extends{}
 function AbstractHeightmapEditingState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
     self.patternTexture      = self.editorView.fields["patternTexture"].value
-    self.strength            = self.editorView.fields["strength"].value
-    self.height              = self.editorView.fields["height"].value
+    if self.editorView.fields["strength"] then
+        self.strength = self.editorView.fields["strength"].value
+    else
+        self.strength = 1
+    end
     self.applyDelay          = 0.03
     self.initialDelay        = 0.3
 end
