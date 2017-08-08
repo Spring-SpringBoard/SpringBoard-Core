@@ -159,7 +159,7 @@ function TextureManager:generateMapTextures()
         texDef.enabled = false
 
 		local engineName = texDef.engineName
-		Log.Notice("engine texture: " .. tostring(name))
+		Log.Notice("Engine texture: " .. tostring(name))
 		local success = Spring.SetMapShadingTexture(engineName, "")
 		if not success then
 			Log.Error("Failed to set texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))

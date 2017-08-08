@@ -22,12 +22,24 @@ function LoadTextureCommand:execute()
         local textures = {}
         for _, file in pairs(files) do
             local _, i, j = file:match(".*(texture)-(%d+)-(%d+).png")
-            if i == nil or j == nil then
-                Log.Error(i, j)
-                Log.Error("Texture files names are in incorrect format. Expected \"texture-i-j.png\", got " .. tostring(file))
-                return
+            if i ~= nil and j ~= nil then
+                table.insert(textures, {
+                        path = file,
+                        i = tonumber(i),
+                        j = tonumber(j)
+                    })
+            else
+                -- Log.Error(i, j)
+                -- Log.Error("Texture files names are in incorrect format. Expected \"texture-i-j.png\", got " .. tostring(file))
+                -- return
             end
-            table.insert(textures, {path = file, i = tonumber(i), j = tonumber(j)})
+        end
+
+        for texType, _ in pairs(SB.model.textureManager.shadingTextures) do
+            local texPath = Path.Join(self.texturePath, "shading-" .. texType .. ".png")
+            if VFS.FileExists(texPath) then
+                LoadShadingTexture(texType, texPath)
+            end
         end
 
         for _, texture in pairs(textures) do

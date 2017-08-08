@@ -6,6 +6,37 @@ function ExportMapsCommand:init(path)
     self.path = path
 end
 
+function SaveShadingTextures(path)
+    for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
+        local texPath = Path.Join(path, "shading-" .. texType .. ".png")
+        Log.Notice("Saving " .. texType .. " to " .. texPath .. "...")
+
+        if VFS.FileExists(texPath, VFS.RAW) then
+            --Log.Notice("removing the existing texture")
+            os.remove(texPath)
+        end
+        local texInfo = gl.TextureInfo(shadingTex)
+        local shadingTex2 = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+            border = false,
+            min_filter = GL.LINEAR,
+            mag_filter = GL.LINEAR,
+            wrap_s = GL.CLAMP_TO_EDGE,
+            wrap_t = GL.CLAMP_TO_EDGE,
+            fbo = true,
+        })
+
+        gl.Texture(shadingTex)
+        gl.RenderToTexture(shadingTex2,
+        function()
+            gl.TexRect(-1,-1, 1, 1)
+        end)
+        gl.Texture(false)
+
+        gl.RenderToTexture(shadingTex2, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath)
+        gl.DeleteTexture(shadingTex2)
+    end
+end
+
 local shaderObj
 function ExportMapsCommand:GetShaderObj()
     local heightmapScaleShader = [[
@@ -124,35 +155,7 @@ function ExportMapsCommand:execute()
         gl.RenderToTexture(grassTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, grassPath)
         gl.DeleteTexture(grassTexture)
 
-		-- specular
-		for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
-			local texPath = Path.Join(self.path, texType .. ".png")
-			Log.Notice("Saving the " .. texType .. " to " .. texPath .. "...")
-
-			if VFS.FileExists(texPath, VFS.RAW) then
-				Log.Notice("removing the existing texture")
-				os.remove(texPath)
-			end
-			local texInfo = gl.TextureInfo(shadingTex)
-			local shadingTex2 = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
-				border = false,
-				min_filter = GL.LINEAR,
-				mag_filter = GL.LINEAR,
-				wrap_s = GL.CLAMP_TO_EDGE,
-				wrap_t = GL.CLAMP_TO_EDGE,
-				fbo = true,
-			})
-
-			gl.Texture(shadingTex)
-			gl.RenderToTexture(shadingTex2,
-			function()
-				gl.TexRect(-1,-1, 1, 1)
-			end)
-			gl.Texture(false)
-
-			gl.RenderToTexture(shadingTex2, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath)
-			gl.DeleteTexture(shadingTex2)
-		end
+        SaveShadingTextures(self.path)
 
         -- diffuse
         local texturePath = Path.Join(self.path, "texture.png")

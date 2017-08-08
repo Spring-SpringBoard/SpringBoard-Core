@@ -28,6 +28,8 @@ function SaveImagesCommand:execute()
             end
         end
 
+        SaveShadingTextures(self.path)
+
         -- We're saving the map in parts
         for i = 0, sizeX do
             for j = 0, sizeZ do
