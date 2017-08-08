@@ -5,13 +5,16 @@ function SetSunParametersCommand:init(opts)
     self.className = "SetSunParametersCommand"
     self.opts = opts
     self._execute_unsynced = true
+    self.mergeCommand = "MergedCommand"
 end
 
 function SetSunParametersCommand:execute()
-    self.old = {
---         params = {Spring.GetSunParameters()},
-        params = {gl.GetSun()},
-    }
+    if not self.old then
+        self.old = {
+    --         params = {Spring.GetSunParameters()},
+            params = {gl.GetSun()},
+        }
+    end
     Spring.SetSunDirection(self.opts.dirX, self.opts.dirY, self.opts.dirZ)
 end
 

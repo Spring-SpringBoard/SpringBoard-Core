@@ -5,17 +5,18 @@ function SetWaterParamsCommand:init(opts)
     self.className = "SetWaterParamsCommand"
     self.opts = opts
     self._execute_unsynced = true
+    self.mergeCommand = "MergedCommand"
 end
 
 function SetWaterParamsCommand:execute()
-    if gl and gl.GetWaterRendering and not self.oldValues then
-        self.oldValues = {}
+    if gl and gl.GetWaterRendering and not self.old then
+        self.old = {}
         for k, v in pairs(self.opts) do
             local retVal = {gl.GetWaterRendering(k)}
             if #retVal == 1 then
                 retVal = retVal[1]
             end
-            self.oldValues[k] = retVal
+            self.old[k] = retVal
         end
     end
     Spring.SetWaterParams(self.opts)
@@ -24,8 +25,8 @@ function SetWaterParamsCommand:execute()
 end
 
 function SetWaterParamsCommand:unexecute()
-    if self.oldValues then
-        Spring.SetWaterParams(self.oldValues)
+    if self.old then
+        Spring.SetWaterParams(self.old)
         Spring.SendCommands('water ' .. Spring.GetWaterMode())
     end
 end

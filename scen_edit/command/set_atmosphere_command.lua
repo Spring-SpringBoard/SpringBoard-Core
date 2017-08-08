@@ -5,18 +5,21 @@ function SetAtmosphereCommand:init(opts)
     self.className = "SetAtmosphereCommand"
     self.opts = opts
     self._execute_unsynced = true
+    self.mergeCommand = "MergedCommand"
 end
 
 function SetAtmosphereCommand:execute()
-    self.old = {
-        fogStart   = gl.GetAtmosphere("fogStart"),
-        fogEnd     = gl.GetAtmosphere("fogEnd"),
-        fogColor   = {gl.GetAtmosphere("fogColor")},
-        skyColor   = {gl.GetAtmosphere("skyColor")},
-    --     self:Set("skyDir",     gl.GetAtmosphere("skyDir"))
-        sunColor   = {gl.GetAtmosphere("sunColor")},
-        cloudColor = {gl.GetAtmosphere("cloudColor")}
-    }
+    if not self.old then
+        self.old = {
+            fogStart   = gl.GetAtmosphere("fogStart"),
+            fogEnd     = gl.GetAtmosphere("fogEnd"),
+            fogColor   = {gl.GetAtmosphere("fogColor")},
+            skyColor   = {gl.GetAtmosphere("skyColor")},
+        --     self:Set("skyDir",     gl.GetAtmosphere("skyDir"))
+            sunColor   = {gl.GetAtmosphere("sunColor")},
+            cloudColor = {gl.GetAtmosphere("cloudColor")}
+        }
+    end
     Spring.SetAtmosphere(self.opts)
 end
 
