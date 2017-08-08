@@ -40,8 +40,7 @@ function StringField:init(field)
         text = self.value,
         width = self.width,
         height = self.height,
-        -- FIXME: align = 'right' doesn't work for editbox
-        -- align = 'right',
+        align = 'right',
         KeyPress = function(...)
             if not ParseKey(self, ...) then
                 return Chili.EditBox.KeyPress(...)
