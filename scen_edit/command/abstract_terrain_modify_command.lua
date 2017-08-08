@@ -20,7 +20,6 @@ local function GetRotatedSize(size, rotation)
     )
 end
 
-local once = true
 local function generateMap(size, delta, shapeName, rotation, origSize)
     local greyscale = SB.model.terrainManager:getShape(shapeName)
     local sizeX, sizeZ = greyscale.sizeX, greyscale.sizeZ
@@ -31,7 +30,6 @@ local function generateMap(size, delta, shapeName, rotation, origSize)
     local scaleZ = sizeZ / (size)
     local parts = size / Game.squareSize + 1
 
-    local diffSize = size - origSize
     local function getIndex(x, z)
         local rx = math.min(sizeX-1, math.max(0, math.floor(scaleX * x)))
         local rz = math.min(sizeZ-1, math.max(0, math.floor(scaleZ * z)))
@@ -60,28 +58,32 @@ local function generateMap(size, delta, shapeName, rotation, origSize)
         return value
     end
 
-    Spring.Echo("diffSize", diffSize)
+    local sizeRatio = size / origSize
+    local dsh = (size - origSize) / 2
+    local sh = size / 2
     for x = 0, size, Game.squareSize do
         for z = 0, size, Game.squareSize do
-            -- local rx, rz = x, z
-            local rx, rz = x - size, z - size
+            local rx, rz = x, z
+            rx, rz = rx - sh, rz - sh
             rx, rz = rotate(rx, rz, rotation)
-            rx, rz = rx + size, rz + size
-    --        rx, rz = rx + diffSize, rz + diffSize
-            if once then
-                Spring.Echo(("%d:%d, %d:%d"):format(x, z, rx, rz))
-            end
+            rx, rz = rx + sh, rz + sh
+            rx, rz = rx * sizeRatio, rz * sizeRatio
+            rx, rz = rx - dsh, rz - dsh
             local diff
-            local indx = getIndex(rx, rz)
-            if indx > sizeX + 1 and indx < sizeX * (sizeX - 1) - 1 then
-                diff = interpolate(rx, rz)
+            -- we ignore points that fall outside of the original image (when rotated)
+            if rx < 0 or rz < 0 or scaleX * rx > sizeX-1 or scaleZ * rz > sizeZ-1 then
+                diff = 0
             else
-                diff = res[indx]
+                local indx = getIndex(rx, rz)
+                if indx > sizeX + 1 and indx < sizeX * (sizeX - 1) - 1 then
+                    diff = interpolate(rx, rz)
+                else
+                    diff = res[indx]
+                end
             end
             map[x + z * parts] = diff * delta
         end
     end
-    once = true
     return map
 end
 
