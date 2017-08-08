@@ -717,7 +717,14 @@ function DrawEditBox(obj)
 
 			local cc = obj.cursorColor
 			gl.Color(cc[1], cc[2], cc[3], cc[4] * alpha)
-			gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawCursor, cursorX + clientX - 1, clientY, 3, clientHeight)
+
+            if obj.align == "left" then
+                gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawCursor, cursorX + clientX - 1, clientY, 3, clientHeight)
+            elseif obj.align == "right" then
+                local texLen = font:GetTextWidth(text)
+                cursorX = obj:__GetStartX(text) + cursorX - clientX
+                gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawCursor, cursorX, clientY, 3, clientHeight)
+            end
 		end
         if obj.selStart and obj.state.focused then
 			local cc = obj.selectionColor
@@ -755,7 +762,13 @@ function DrawEditBox(obj)
 				-- limit the selection to the editbox width
 				w = math.min(w, obj.width - leftX - 3)
 
-				gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawSelection, leftX + clientX - 1, y, w, height)
+                if obj.align == "left" then
+                    gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawSelection, leftX + clientX - 1, y, w, height)
+                elseif obj.align == "right" then
+                    local texLen = font:GetTextWidth(text)
+                    leftX = obj:__GetStartX(text) + leftX - clientX
+                    gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawSelection, leftX, y, w, height)
+                end
 			else
 				local topLine, bottomLine = obj.physicalLines[top], obj.physicalLines[bottom]
 				local leftTxt = topLine.text:sub(obj.offset, left - 1)
