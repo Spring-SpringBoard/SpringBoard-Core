@@ -66,9 +66,9 @@ function TextureEditor:init()
             }
         end,
         GetBrushImage = function(brush)
-            local texturePath = tostring(self.fields["brushTexture"].value.diffuse)
+            local texturePath = brush.opts.brushTexture.diffuse
             local texName = brush.image
-            if texName == "" then
+            if texName == nil or texName == "" then
                 texName = BrushDrawer.GetBrushTexture(
                     self.savedBrushes.itemWidth,
                     self.savedBrushes.itemHeight)
