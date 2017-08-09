@@ -25,10 +25,10 @@ local engineTextures = {
 	"$ssmf_specular",
 	"$ssmf_splat_distr",
 	"$ssmf_splat_detail",
+	"$ssmf_splat_normals:0",
 	"$ssmf_splat_normals:1",
     "$ssmf_splat_normals:2",
     "$ssmf_splat_normals:3",
-    "$ssmf_splat_normals:4",
 	"$ssmf_sky_refl",
 	"$ssmf_emission",
 	"$ssmf_parallax",
@@ -80,14 +80,14 @@ local engineTextures = {
 }
 
 commands = {
-	{ 
+	{
 		command = "texture",
 		description = i18n("texture_desc", {default="Displays various OpenGL textures"}),
 		cheat = false,
 		suggestions = function(cmd, cmdParts)
 			local suggestions = {}
 			local param = cmdParts[2]
-			
+
 			for _, engineTexture in pairs(engineTextures) do
 				if param == nil or param == "" or engineTexture:starts(param) then
 					table.insert(suggestions, { command = "/texture " .. engineTexture, text = engineTexture, description = value })
