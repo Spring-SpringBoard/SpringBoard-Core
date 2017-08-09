@@ -73,9 +73,9 @@ function SavedBrushes:_LoadBrush(item)
     local brush = self.brushManager:GetBrush(brushID)
     assert(brush, "No brush for brushID: " .. tostring(brushID))
 
-    self.editor.initializing = true
+    self.editor.__initializing = true
     self.editor:Load(brush.opts)
-    self.editor.initializing = false
+    self.editor.__initializing = false
     --self.brushTextureImages.control:DeselectAll()
     --self.textureBrowser.control:DeselectAll()
 end
