@@ -21,7 +21,17 @@ BrushManager = Observable:extends{}
 function BrushManager:init()
     self:super('init')
 
-    self.__brushIDCounter = 0
+    self:Clear()
+end
+
+function BrushManager:Clear()
+    if self.savedBrushes then
+        for brushID, _ in pairs(self.savedBrushes) do
+            self:RemoveBrush(brushID)
+        end
+    end
+
+    self.__brushIDCounter = 1
     self.savedBrushes = {}
     self.savedBrushesOrder = {}
 end
@@ -73,26 +83,24 @@ function BrushManager:GetBrushes()
 end
 
 function BrushManager:Serialize()
+    local brushes = {}
+    for _, brush in pairs(self.savedBrushes) do
+        local brushCopy = SB.deepcopy(brush)
+        brushCopy.image = nil
+        brushes[brush.brushID] = brushCopy
+    end
     return {
-        brushes = self.savedBrushes,
+        brushes = brushes,
         order = self.savedBrushesOrder,
     }
-end
-
-function BrushManager:Clear()
-    for brushID, _ in pairs(self.savedBrushes) do
-        self:RemoveBrush(brushID)
-    end
-
-    self.__brushIDCounter = 1
 end
 
 function BrushManager:Load(data)
     self:Clear()
 
     for _, brushID in pairs(data.order) do
-        local brush = data.brushes[brushID]
-        self:AddBrush(brush)
+        local brushData = data.brushes[brushID]
+        self:AddBrush(brushData)
     end
 end
 

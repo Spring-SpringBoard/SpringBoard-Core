@@ -38,6 +38,7 @@ function LoadTextureCommand:execute()
         for texType, _ in pairs(SB.model.textureManager.shadingTextures) do
             local texPath = Path.Join(self.texturePath, "shading-" .. texType .. ".png")
             if VFS.FileExists(texPath) then
+                Log.Notice("Loading " .. texPath)
                 LoadShadingTexture(texType, texPath)
             end
         end

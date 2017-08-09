@@ -14,6 +14,7 @@ function LoadShadingTexture(texType, path)
         return
     end
 
+    gl.Blending("disable")
     gl.RenderToTexture(tex, function()
         gl.Texture(path)
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)

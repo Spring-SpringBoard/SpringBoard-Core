@@ -110,15 +110,18 @@ function TextureEditor:init()
             }
         end,
         GetBrushImage = function(brush)
-            local texturePath = self.fields["brushTexture"].value.normal
+            local texturePath = brush.opts.brushTexture.normal
             local texName = brush.image
 
             -- if there is no texture path set, assume it's one of the existing engine textures
             if texturePath == nil then
-                return texName
+                local dntsIndex = brush.opts.dntsIndex
+                local dntsName = "$ssmf_splat_normals:" .. tostring(dntsIndex - 1)
+                return dntsName
             end
             texturePath = tostring(texturePath)
-            if texName == "" or texName:sub(1, 1) == "$" then
+
+            if texName == nil or texName == "" or texName:sub(1, 1) == "$" then
                 texName = BrushDrawer.GetBrushTexture(
                     self.savedBrushes.itemWidth,
                     self.savedBrushes.itemHeight)
@@ -468,7 +471,7 @@ function TextureEditor:init()
         },
     }
     for i = 0, 3 do
-        self:__AddEngineDNTSTexture("$ssmf_splat_normals:" .. tostring(i), i+1)
+        self:__AddEngineDNTSTexture(i+1)
     end
     self.savedDNTSBrushes:DeselectAll()
 
@@ -477,7 +480,7 @@ function TextureEditor:init()
     self.savedDNTSBrushes:GetControl():Hide()
 end
 
-function TextureEditor:__AddEngineDNTSTexture(textureName, dntsIndex)
+function TextureEditor:__AddEngineDNTSTexture(dntsIndex)
     local tbl = self:Serialize()
 
     tbl.dntsIndex = dntsIndex
@@ -489,11 +492,9 @@ function TextureEditor:__AddEngineDNTSTexture(textureName, dntsIndex)
         tbl.splatTexMult = splatTexMults[dntsIndex]
     end
 
-    local texturePath = textureName
     self.savedDNTSBrushes:AddBrush({
         opts = tbl,
         caption = "DNTS:" .. tostring(dntsIndex),
-        image = textureName,
         tooltip = nil,
     })
 end

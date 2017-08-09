@@ -173,7 +173,7 @@ function SavedBrushes:PopulateItems()
     end
     for _, brushID in pairs(self.brushManager:GetBrushes()) do
         local brush = self.brushManager:GetBrush(brushID)
-        local item = self:AddItem(brush.caption, brush.image, brush.tooltip)
+        local item = self:AddItem(brush.caption, brush.image or "", brush.tooltip)
         item.brushID = brush.brushID
 
         if not self.disableRemove then

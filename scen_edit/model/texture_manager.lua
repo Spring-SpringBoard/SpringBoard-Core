@@ -22,6 +22,7 @@ function TextureManager:init()
 		},
         splat_distr = {
             engineName = "$ssmf_splat_distr",
+            alpha = true,
         },
         -- splat_detail = {
         --     engineName = "$ssmf_splat_detail",

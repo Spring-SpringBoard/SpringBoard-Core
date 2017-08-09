@@ -8,6 +8,8 @@ end
 
 function SaveShadingTextures(path)
     for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
+        local texDef = SB.model.textureManager.shadingTextureDefs[texType]
+
         local texPath = Path.Join(path, "shading-" .. texType .. ".png")
         Log.Notice("Saving " .. texType .. " to " .. texPath .. "...")
 
@@ -16,24 +18,10 @@ function SaveShadingTextures(path)
             os.remove(texPath)
         end
         local texInfo = gl.TextureInfo(shadingTex)
-        local shadingTex2 = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
-            border = false,
-            min_filter = GL.LINEAR,
-            mag_filter = GL.LINEAR,
-            wrap_s = GL.CLAMP_TO_EDGE,
-            wrap_t = GL.CLAMP_TO_EDGE,
-            fbo = true,
-        })
 
-        gl.Texture(shadingTex)
-        gl.RenderToTexture(shadingTex2,
-        function()
-            gl.TexRect(-1,-1, 1, 1)
-        end)
-        gl.Texture(false)
-
-        gl.RenderToTexture(shadingTex2, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath)
-        gl.DeleteTexture(shadingTex2)
+        local alpha = not not texDef.alpha
+        gl.Blending("enable")
+        gl.RenderToTexture(shadingTex, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath, {alpha=alpha, yflip=true})
     end
 end
 
