@@ -36,7 +36,7 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
         return
     end
     local voidFactor = self.voidFactor * applyAction
-    local colorIndex = self.dntsIndex
+    local colorIndex = self.dntsIndex + 1
     if colorIndex then
         colorIndex = colorIndex * applyAction
     end

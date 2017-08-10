@@ -20,6 +20,9 @@ function LoadShadingTexture(texType, path)
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
         gl.DeleteTexture(path)
     end)
+    if texType:find("splat_normals") then
+        gl.GenerateMipmap(tex)
+    end
 end
 
 function ImportShadingImageCommand:execute()

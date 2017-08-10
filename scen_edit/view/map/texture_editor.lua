@@ -110,16 +110,9 @@ function TextureEditor:init()
             }
         end,
         GetBrushImage = function(brush)
-            local texturePath = brush.opts.brushTexture.normal
+            local texturePath = SB.model.textureManager.shadingTextures["splat_normals" .. 
+                tostring(brush.opts.dntsIndex)]
             local texName = brush.image
-
-            -- if there is no texture path set, assume it's one of the existing engine textures
-            if texturePath == nil then
-                local dntsIndex = brush.opts.dntsIndex
-                local dntsName = "$ssmf_splat_normals:" .. tostring(dntsIndex - 1)
-                return dntsName
-            end
-            texturePath = tostring(texturePath)
 
             if texName == nil or texName == "" or texName:sub(1, 1) == "$" then
                 texName = BrushDrawer.GetBrushTexture(
@@ -471,7 +464,7 @@ function TextureEditor:init()
         },
     }
     for i = 0, 3 do
-        self:__AddEngineDNTSTexture(i+1)
+        self:__AddEngineDNTSTexture(i)
     end
     self.savedDNTSBrushes:DeselectAll()
 
@@ -554,14 +547,16 @@ function TextureEditor:OnFieldChange(name, value)
 
     if name == "brushTexture" and self.savedDNTSBrushes:GetControl().visible then
         local dntsIndex = self:_GetDNTSIndex()
-        local texture = self.fields["brushTexture"].value.normal
-        if dntsIndex and texture then
-            Spring.SetMapShadingTexture("$ssmf_splat_normals", texture, dntsIndex)
+        local material = self.fields["brushTexture"].value
+        if dntsIndex and material.normal then
+            SB.delayGL(function()
+                SB.model.textureManager:SetDNTS(dntsIndex, material)
+            end)
         end
     elseif name == "splatTexScale" or name == "splatTexMult" then
         local index = self:_GetDNTSIndex()
         local tbl = {gl.GetMapRendering(name .. "s")}
-        tbl[index] = value
+        tbl[index+1] = value
         local t = {
             [name .. "s"] = tbl,
         }

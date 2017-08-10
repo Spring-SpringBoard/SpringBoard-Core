@@ -27,22 +27,26 @@ function TextureManager:init()
         -- splat_detail = {
         --     engineName = "$ssmf_splat_detail",
         -- },
-        -- splat_normals1 = {
-        --     engineName = "$ssmf_splat_normals:1",
-        --     _setParams = {"$ssmf_splat_normals", 1},
-        -- },
-        -- splat_normals2 = {
-        --     engineName = "$ssmf_splat_normals:2",
-        --     _setParams = {"$ssmf_splat_normals", 2},
-        -- },
-        -- splat_normals3 = {
-        --     engineName = "$ssmf_splat_normals:3",
-        --     _setParams = {"$ssmf_splat_normals", 3},
-        -- },
-        -- splat_normals4 = {
-        --     engineName = "$ssmf_splat_normals:4",
-        --     _setParams = {"$ssmf_splat_normals", 4},
-        -- },
+        splat_normals0 = {
+            engineName = "$ssmf_splat_normals:0",
+            _setParams = {"$ssmf_splat_normals", 0},
+            alpha = true,
+        },
+        splat_normals1 = {
+            engineName = "$ssmf_splat_normals:1",
+            _setParams = {"$ssmf_splat_normals", 1},
+            alpha = true,
+        },
+        splat_normals2 = {
+            engineName = "$ssmf_splat_normals:2",
+            _setParams = {"$ssmf_splat_normals", 2},
+            alpha = true,
+        },
+        splat_normals3 = {
+            engineName = "$ssmf_splat_normals:3",
+            _setParams = {"$ssmf_splat_normals", 3},
+            alpha = true,
+        },
 	}
     self.materialTextures = {
         diffuse = {
@@ -155,16 +159,23 @@ function TextureManager:generateMapTextures()
         end
     end
 
+    local smftTexAniso, ssmfTexAniso = Spring.GetConfigInt("SMFTexAniso"), Spring.GetConfigInt("SSMFTexAniso")
+
 	self.shadingTextures = {}
 	for name, texDef in pairs(self.shadingTextureDefs) do
         texDef.enabled = false
 
 		local engineName = texDef.engineName
 		Log.Notice("Engine texture: " .. tostring(name))
-		local success = Spring.SetMapShadingTexture(engineName, "")
-		if not success then
-			Log.Error("Failed to set texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
-		end
+		local success
+        if texDef._setParams then
+            success = Spring.SetMapShadingTexture(texDef._setParams[1], "", texDef._setParams[2])
+        else
+            success = Spring.SetMapShadingTexture(engineName, "")
+        end
+        if not success then
+            Log.Error("Failed to reset texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
+        end
 		--local tex = self:createMapTexture()
 		local sizeX, sizeZ--[[ = Game.mapSizeX/2, Game.mapSizeZ/2]]
 		local texInfo = gl.TextureInfo(engineName)
@@ -180,13 +191,14 @@ function TextureManager:generateMapTextures()
             --    min_filter = GL.LINEAR_MIPMAP_NEAREST
             end
 
-            if name:find("splat_normals") then
+            if engineName:find("splat_normals") then
                 tex = gl.CreateTexture(sizeX, sizeZ, {
                     border = false,
                     min_filter = GL.LINEAR_MIPMAP_NEAREST,
                     mag_filter = GL.LINEAR,
                     wrap_s = GL.REPEAT,
                     wrap_t = GL.REPEAT,
+                    aniso = ssmfTexAniso,
                     fbo = true,
                 })
                 --gl.GenerateMipmap(tex)
@@ -202,21 +214,66 @@ function TextureManager:generateMapTextures()
             end
 	-- 		local engineTex = gl.Texture()
 			self:Blit(engineName, tex)
-            if name == "splat_distr" then
-            --    gl.GenerateMipmap(tex)
+            if engineName:find("splat_normals") then
+                gl.GenerateMipmap(tex)
             end
 			self.shadingTextures[name] = tex
-            Spring.SetMapShadingTexture(engineName, tex)
+
+            local success
+            if texDef._setParams then
+                success = Spring.SetMapShadingTexture(texDef._setParams[1], tex, texDef._setParams[2])
+            else
+                success = Spring.SetMapShadingTexture(engineName, tex)
+            end
+            if not success then
+                Log.Error("Failed to set new texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
+            end
 
             texDef.enabled = true
 		end
 	end
 
-    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 0)
-    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 1)
-    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 2)
-    Spring.SetMapShadingTexture("$ssmf_splat_normals", "", 3)
 --  	self:SetupShader()
+end
+
+local grayscaleShader
+local function _GetDNTSShader()
+    if not grayscaleShader then
+    	grayscaleShader = Shaders.Compile({
+    		fragment = [[
+    uniform sampler2D normalTex;
+    uniform sampler2D diffuseTex;
+    void main(void)
+    {
+        vec4 normalColor = texture2D(normalTex, gl_TexCoord[0].st);
+        vec4 diffuseColor = texture2D(diffuseTex, gl_TexCoord[0].st);
+
+        float grayscale =  dot(diffuseColor.rgb, float3(0.3, 0.59, 0.11));
+        gl_FragColor = vec4(normalColor.rgb, grayscale);
+    }
+    ]]
+    	}, "TextureManager:_GetDNTSShader")
+        return grayscaleShader
+    end
+    return grayscaleShader
+end
+
+function TextureManager:SetDNTS(dntsIndex, material)
+    local tex = self.shadingTextures["splat_normals" .. tostring(dntsIndex)]
+    local shader = _GetDNTSShader()
+
+    gl.UseShader(shader)
+    gl.Blending("disable")
+    gl.Texture(0, material.normal)
+    gl.Texture(1, material.diffuse)
+    gl.RenderToTexture(tex, function()
+        gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
+    end)
+    gl.Texture(0, false)
+    gl.Texture(1, false)
+    gl.UseShader(0)
+
+    gl.GenerateMipmap(tex)
 end
 
 function TextureManager:GetTMPs(num)

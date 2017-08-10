@@ -12,6 +12,9 @@ end
 
 function BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOpts)
     local texFile = ':lr' .. width .. ',' .. height .. ':' .. tostring(texturePath)
+    if texturePath:sub(1, 1) == "!" then
+        texFile = texturePath
+    end
 
     gl.MatrixMode(GL.TEXTURE)
 
