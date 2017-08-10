@@ -1,7 +1,7 @@
-AddObjectState = AbstractEditingState:extends{}
+AddObjectState = AbstractState:extends{}
 
 function AddObjectState:init(editorView, objectDefIDs)
-    AbstractEditingState.init(self, editorView)
+    AbstractState.init(self, editorView)
 
     self.objectDefIDs = objectDefIDs
     self.x, self.y, self.z = 0, 0, 0

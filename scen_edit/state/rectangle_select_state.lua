@@ -1,7 +1,7 @@
-RectangleSelectState = AbstractEditingState:extends{}
+RectangleSelectState = AbstractState:extends{}
 
 function RectangleSelectState:init(startScreenX, startScreenZ)
-    AbstractEditingState.init(self)
+    AbstractState.init(self)
 
     local _, coords1 = Spring.TraceScreenRay(startScreenX, startScreenZ, true, false, true)
     self.startWorldX, self.startWorldY, self.startWorldZ = unpack(coords1)

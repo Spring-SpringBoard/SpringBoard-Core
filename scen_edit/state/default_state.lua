@@ -1,4 +1,4 @@
-DefaultState = AbstractEditingState:extends{}
+DefaultState = AbstractState:extends{}
 
 function DefaultState:init()
     self.areaSelectTime = os.clock()

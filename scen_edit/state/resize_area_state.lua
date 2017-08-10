@@ -1,7 +1,7 @@
-ResizeAreaState = AbstractEditingState:extends{}
+ResizeAreaState = AbstractState:extends{}
 
 function ResizeAreaState:init(areaID, resx, resz)
-    AbstractEditingState.init(self)
+    AbstractState.init(self)
 
     self.areaID = areaID
     self.resx, self.resz = resx, resz

@@ -43,7 +43,7 @@ end
 function StateManager:init()
     self.keyListeners = {}
     SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
-    SB.Include(SB_STATE_DIR .. 'abstract_editing_state.lua')
+    SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
     SB.IncludeDir(SB_STATE_DIR)
     self:SetState(DefaultState())
 end
@@ -64,25 +64,33 @@ end
 ---------------------------
 function StateManager:MousePress(x, y, button)
     return self:_SafeCall(function()
-        return self.currentState:MousePress(x, y, button)
+        if self.currentState.MousePress then
+            return self.currentState:MousePress(x, y, button)
+        end
     end)
 end
 
 function StateManager:MouseMove(x, y, dx, dy, button)
     return self:_SafeCall(function()
-        return self.currentState:MouseMove(x, y, dx, dy, button)
+        if self.currentState.MouseMove then
+            return self.currentState:MouseMove(x, y, dx, dy, button)
+        end
     end)
 end
 
 function StateManager:MouseRelease(x, y, button)
     return self:_SafeCall(function()
-        return self.currentState:MouseRelease(x, y, button)
+        if self.currentState.MouseRelease then
+            return self.currentState:MouseRelease(x, y, button)
+        end
     end)
 end
 
 function StateManager:MouseWheel(up, value)
     return self:_SafeCall(function()
-        return self.currentState:MouseWheel(up, value)
+        if self.currentState.MouseWheel then
+            return self.currentState:MouseWheel(up, value)
+        end
     end)
 end
 
@@ -102,25 +110,33 @@ function StateManager:KeyPress(key, mods, isRepeat, label, unicode)
     end
 
     return self:_SafeCall(function()
-        return self.currentState:KeyPress(key, mods, isRepeat, label, unicode)
+        if self.currentState.KeyPress then
+            return self.currentState:KeyPress(key, mods, isRepeat, label, unicode)
+        end
     end)
 end
 
 function StateManager:GameFrame(frameNum)
     return self:_SafeCall(function()
-        return self.currentState:GameFrame()
+        if self.currentState.GameFrame then
+            return self.currentState:GameFrame()
+        end
     end)
 end
 
 function StateManager:Update(frameNum)
     return self:_SafeCall(function()
-        return self.currentState:Update()
+        if self.currentState.Update then
+            return self.currentState:Update()
+        end
     end)
 end
 
 function StateManager:DrawScreen()
     return self:_SafeCall(function()
-        return self.currentState:DrawScreen()
+        if self.currentState.DrawScreen then
+            return self.currentState:DrawScreen()
+        end
     end)
 end
 
@@ -139,13 +155,17 @@ function StateManager:DrawWorld()
     end
 
     return self:_SafeCall(function()
-        return self.currentState:DrawWorld()
+        if self.currentState.DrawWorld then
+            return self.currentState:DrawWorld()
+        end
     end)
 end
 
 function StateManager:DrawWorldPreUnit()
     return self:_SafeCall(function()
-        return self.currentState:DrawWorldPreUnit()
+        if self.currentState.DrawWorldPreUnit then
+            return self.currentState:DrawWorldPreUnit()
+        end
     end)
 end
 ---------------------------

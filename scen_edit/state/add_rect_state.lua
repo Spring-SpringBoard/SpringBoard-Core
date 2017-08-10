@@ -1,4 +1,4 @@
-AddRectState = AbstractEditingState:extends{}
+AddRectState = AbstractState:extends{}
 
 function AddRectState:MousePress(x, y, button)
     if button == 1 then

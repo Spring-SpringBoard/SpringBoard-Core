@@ -1,7 +1,7 @@
-DragObjectState = AbstractEditingState:extends{}
+DragObjectState = AbstractState:extends{}
 
 function DragObjectState:init(objectID, startDiffX, startDiffZ)
-    AbstractEditingState.init(self)
+    AbstractState.init(self)
 
     self.objectID = objectID
     self.dx = 0

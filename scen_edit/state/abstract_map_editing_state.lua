@@ -1,7 +1,7 @@
-AbstractMapEditingState = AbstractEditingState:extends{}
+AbstractMapEditingState = AbstractState:extends{}
 
 function AbstractMapEditingState:init(editorView)
-	AbstractEditingState.init(self, editorView)
+	AbstractState.init(self, editorView)
     -- common fields
     self.size                = self.editorView.fields["size"].value
     if self.editorView.fields["rotation"] then
@@ -11,7 +11,7 @@ end
 
 function AbstractMapEditingState:leaveState()
 	self:stopChanging()
-	AbstractEditingState.leaveState(self)
+	AbstractState.leaveState(self)
 end
 
 function AbstractMapEditingState:CanApply()

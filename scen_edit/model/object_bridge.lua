@@ -5,7 +5,7 @@ SB.IncludeDir(SB_COMMAND_DIR)
 SB_STATE_DIR = SB_DIR .. "state/"
 SB.Include(SB_STATE_DIR .. 'state_manager.lua')
 SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
-SB.Include(SB_STATE_DIR .. 'abstract_editing_state.lua')
+SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
 SB.IncludeDir(SB_STATE_DIR)
 
 ObjectBridge = LCS.class.abstract{}

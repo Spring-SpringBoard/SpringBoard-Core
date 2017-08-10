@@ -1,7 +1,7 @@
-DragHorizontalObjectState = AbstractEditingState:extends{}
+DragHorizontalObjectState = AbstractState:extends{}
 
 function DragHorizontalObjectState:init(startY)
-    AbstractEditingState.init(self)
+    AbstractState.init(self)
 
     self.dy = 0
     self.startDiffY = startDiffY
