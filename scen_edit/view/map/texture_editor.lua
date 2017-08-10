@@ -110,8 +110,9 @@ function TextureEditor:init()
             }
         end,
         GetBrushImage = function(brush)
-            local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
+            local texObj = SB.model.textureManager.shadingTextures["splat_normals" ..
                 tostring(brush.opts.dntsIndex)]
+            local texturePath = texObj.texture
             local texName = brush.image
 
             if texName == nil or texName == "" or texName:sub(1, 1) == "$" then
@@ -463,6 +464,7 @@ function TextureEditor:init()
             },
         },
     }
+    SB.delay(function()
     for i = 0, 3 do
         local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
             tostring(i)]
@@ -471,6 +473,7 @@ function TextureEditor:init()
         end
     end
     self.savedDNTSBrushes:DeselectAll()
+    end)
 
     self:Finalize(children)
 

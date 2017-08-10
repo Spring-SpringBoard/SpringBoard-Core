@@ -28,7 +28,7 @@ function SaveImagesCommand:execute()
             end
         end
 
-        SaveShadingTextures(self.path)
+        SaveShadingTextures(self.path, true)
 
         -- We're saving the map in parts
         for i = 0, sizeX do
@@ -48,8 +48,9 @@ function SaveImagesCommand:execute()
                     mapTextureObj.dirty = false
 
                     -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things
-                    for _, s in pairs(SB.model.textureManager.stack) do
+                    for _, stackItem in pairs(SB.model.textureManager.stack) do
                         -- we only do this for the corresponding textures
+                        local s = stackItem.diffuse
                         if s[i] and s[i][j] then
                             Log.Debug("Making subtexture dirty", i, j)
                             local oldTextureObj = s[i][j]
@@ -61,7 +62,7 @@ function SaveImagesCommand:execute()
         end
 
     end, function(elapsed)
-        Log.Notice(("[%.4fs] Saved diffuse."):format(elapsed))
+        Log.Notice(("[%.4fs] Saved texture."):format(elapsed))
     end) -- end Time.MeasureTime
     end) -- end SB.delayGL
 end

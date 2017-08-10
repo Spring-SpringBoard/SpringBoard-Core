@@ -39,7 +39,7 @@ function LoadTextureCommand:execute()
             local texPath = Path.Join(self.texturePath, "shading-" .. texType .. ".png")
             if VFS.FileExists(texPath) then
                 Log.Notice("Loading " .. texPath)
-                LoadShadingTexture(texType, texPath)
+                LoadShadingTexture(texType, texPath, true)
             end
         end
 

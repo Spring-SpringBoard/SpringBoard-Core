@@ -217,7 +217,10 @@ function TextureManager:generateMapTextures()
             if engineName:find("splat_normals") then
                 gl.GenerateMipmap(tex)
             end
-			self.shadingTextures[name] = tex
+			self.shadingTextures[name] = {
+                texture = tex,
+                dirty = true,
+            }
 
             local success
             if texDef._setParams then
@@ -259,21 +262,23 @@ local function _GetDNTSShader()
 end
 
 function TextureManager:SetDNTS(dntsIndex, material)
-    local tex = self.shadingTextures["splat_normals" .. tostring(dntsIndex)]
+    local texObj = self.shadingTextures["splat_normals" .. tostring(dntsIndex)]
+    local texture = texObj.texture
     local shader = _GetDNTSShader()
 
     gl.UseShader(shader)
     gl.Blending("disable")
     gl.Texture(0, material.normal)
     gl.Texture(1, material.diffuse)
-    gl.RenderToTexture(tex, function()
+    gl.RenderToTexture(texture, function()
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
     end)
     gl.Texture(0, false)
     gl.Texture(1, false)
     gl.UseShader(0)
 
-    gl.GenerateMipmap(tex)
+    gl.GenerateMipmap(texture)
+    texObj.dirty = true
 end
 
 function TextureManager:GetTMPs(num)
@@ -308,7 +313,8 @@ end
 
 function TextureManager:getOldShadingTexture(name)
 	if self.oldShadingTextures[name] == nil then
-		local texture = self.shadingTextures[name]
+        local texObj = self.shadingTextures[name]
+		local texture = texObj.texture
 		local texInfo = gl.TextureInfo(texture)
 		local texSizeX, texSizeZ = texInfo.xsize, texInfo.ysize
 		local oldTexture = gl.CreateTexture(texSizeX, texSizeZ, {
@@ -321,8 +327,13 @@ function TextureManager:getOldShadingTexture(name)
 		})
 		self:Blit(texture, oldTexture)
 
-		self.oldShadingTextures[name] = oldTexture
+        local oldTextureObj = {
+            texture = oldTexture,
+            dirty = texObj.dirty,
+        }
+		self.oldShadingTextures[name] = oldTextureObj
 	end
+
 	return self.oldShadingTextures[name]
 end
 
@@ -422,9 +433,9 @@ function TextureManager:PushStack()
 	local stackItem = {
 		diffuse = self.oldMapFBOTextures,
 	}
-	for name, texture in pairs(self.oldShadingTextures) do
-		stackItem[name] = texture
-		self.stackSize = self.stackSize + self:_CalculateTextureMemorySize(texture)
+	for name, textureObj in pairs(self.oldShadingTextures) do
+		stackItem[name] = textureObj
+		self.stackSize = self.stackSize + self:_CalculateTextureMemorySize(textureObj.texture)
 	end
 
 	for _, row in pairs(stackItem.diffuse) do
@@ -455,8 +466,8 @@ function TextureManager:RemoveStackItem(stackItem)
 				end
 			end
 		else
-			self.stackSize = self.stackSize - self:_CalculateTextureMemorySize(value)
-			gl.DeleteTexture(value)
+			self.stackSize = self.stackSize - self:_CalculateTextureMemorySize(value.texture)
+			gl.DeleteTexture(value.texture)
 		end
 	end
 end
@@ -475,8 +486,12 @@ function TextureManager:RestoreStackItem(stackItem)
 				end
 			end
 		else
-			local shadingTex = self.shadingTextures[name]
-			self:Blit(value, shadingTex)
+            local oldObject = value
+
+			local shadingTexObj = self.shadingTextures[name]
+            local shadingTex = shadingTexObj.texture
+			self:Blit(oldObject.texture, shadingTex)
+            shadingTexObj.dirty = oldObject.dirty
 		end
 	end
 end

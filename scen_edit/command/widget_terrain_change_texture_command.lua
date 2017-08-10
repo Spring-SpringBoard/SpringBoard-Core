@@ -469,7 +469,9 @@ function DrawDNTS(opts, x, z, size)
     local shadingTmps = {}
     local texSize = SB.model.textureManager.TEXTURE_SIZE
     local texType = "splat_distr"
-    local shadingTex = SB.model.textureManager.shadingTextures[texType]
+    local shadingTexObj = SB.model.textureManager.shadingTextures[texType]
+    shadingTexObj.dirty = true
+    local shadingTex = shadingTexObj.texture
 
     SB.model.textureManager:backupMapShadingTexture(texType)
     local tmpTexName = texType.."tmp"
@@ -532,8 +534,10 @@ end
 function DrawShadingTextures(opts, x, z, size)
     local shadingTmps = {}
     local texSize = SB.model.textureManager.TEXTURE_SIZE
-    for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
+    for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
         if opts.brushTexture[texType] and opts[texType .. "Enabled"] then
+            local shadingTex = shadingTexObj.texture
+            shadingTexObj.dirty = true
             SB.model.textureManager:backupMapShadingTexture(texType)
             local tmpTexName = texType.."tmp"
             shadingTmps[texType] = SB.model.textureManager[tmpTexName]
@@ -571,8 +575,10 @@ function DrawShadingTextures(opts, x, z, size)
     x = x / texSize
     z = z / texSize
     size = size / texSize
-    for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
+    for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
         if opts.brushTexture[texType] and opts[texType .. "Enabled"] then
+            local shadingTex = shadingTexObj.texture
+            shadingTexObj.dirty = true
             gl.Blending("disable")
             local texInfo = gl.TextureInfo(shadingTex)
             local sizeX  = size * texSize / Game.mapSizeX

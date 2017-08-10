@@ -6,22 +6,37 @@ function ExportMapsCommand:init(path)
     self.path = path
 end
 
-function SaveShadingTextures(path)
-    for texType, shadingTex in pairs(SB.model.textureManager.shadingTextures) do
-        local texDef = SB.model.textureManager.shadingTextureDefs[texType]
+function SaveShadingTextures(path, toProject)
+    for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
+        if shadingTexObj.dirty then
+            local texPath = Path.Join(path, "shading-" .. texType .. ".png")
+            if VFS.FileExists(texPath, VFS.RAW) then
+                Log.Notice("Removing existing texture: " .. tostring(texPath))
+                os.remove(texPath)
+            end
 
-        local texPath = Path.Join(path, "shading-" .. texType .. ".png")
-        Log.Notice("Saving " .. texType .. " to " .. texPath .. "...")
+            Log.Notice("Saving " .. texType .. " to " .. texPath .. "...")
+            local texture = shadingTexObj.texture
+            local texInfo = gl.TextureInfo(texture)
 
-        if VFS.FileExists(texPath, VFS.RAW) then
-            --Log.Notice("removing the existing texture")
-            os.remove(texPath)
+            local texDef = SB.model.textureManager.shadingTextureDefs[texType]
+            local alpha = not not texDef.alpha
+            gl.Blending("enable")
+            gl.RenderToTexture(texture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath, {alpha=alpha, yflip=true})
+
+            if toProject then
+                shadingTexObj.dirty = false
+                -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things
+                for _, stackItem in pairs(SB.model.textureManager.stack) do
+                    -- we only do this for the corresponding texture
+                    local oldTextureObj = stackItem[texType]
+                    if oldTextureObj then
+                        Log.Debug("Making subtexture dirty", i, j)
+                        oldTextureObj.dirty = true
+                    end
+                end
+            end
         end
-        local texInfo = gl.TextureInfo(shadingTex)
-
-        local alpha = not not texDef.alpha
-        gl.Blending("enable")
-        gl.RenderToTexture(shadingTex, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath, {alpha=alpha, yflip=true})
     end
 end
 
@@ -143,7 +158,7 @@ function ExportMapsCommand:execute()
         gl.RenderToTexture(grassTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, grassPath)
         gl.DeleteTexture(grassTexture)
 
-        SaveShadingTextures(self.path)
+        SaveShadingTextures(self.path, false)
 
         -- diffuse
         local texturePath = Path.Join(self.path, "texture.png")

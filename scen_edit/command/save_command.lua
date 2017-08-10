@@ -239,12 +239,6 @@ function SaveCommand:execute()
     end)
 
     Time.MeasureTime(function()
-        ModelSave(Path.Join(projectDir, "model.lua"))
-    end, function(elapsed)
-        Log.Notice(("[%.4fs] Saved model"):format(elapsed))
-    end)
-
-    Time.MeasureTime(function()
         GUIStateSave(Path.Join(projectDir, "sb_gui.lua"))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved GUI state"):format(elapsed))
