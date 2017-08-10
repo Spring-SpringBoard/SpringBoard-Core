@@ -110,7 +110,7 @@ function TextureEditor:init()
             }
         end,
         GetBrushImage = function(brush)
-            local texturePath = SB.model.textureManager.shadingTextures["splat_normals" .. 
+            local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
                 tostring(brush.opts.dntsIndex)]
             local texName = brush.image
 
@@ -464,7 +464,11 @@ function TextureEditor:init()
         },
     }
     for i = 0, 3 do
-        self:__AddEngineDNTSTexture(i)
+        local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
+            tostring(i)]
+        if texturePath then
+            self:__AddEngineDNTSTexture(i)
+        end
     end
     self.savedDNTSBrushes:DeselectAll()
 
