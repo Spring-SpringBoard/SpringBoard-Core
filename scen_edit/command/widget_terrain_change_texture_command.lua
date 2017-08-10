@@ -230,7 +230,7 @@ end
 
 local function rotate(x, y, angle)
     return x * math.cos(angle) - y * math.sin(angle),
-        x * math.sin(angle) + y * math.cos(angle)
+           x * math.sin(angle) + y * math.cos(angle)
 end
 
 local function RotateCoords(tCoord, angle)
@@ -246,7 +246,7 @@ local function RotateCoords(tCoord, angle)
     end
 end
 
-local function _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
+local function __GenerateMapCoords(mx, mz, mSizeX, mSizeZ)
     local mCoord = {
         mx,              mz,
         mx,              mz + mSizeZ,
@@ -262,19 +262,16 @@ local function _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
         vCoord[i]     = mCoord[i]     * 2 - 1
     end
 
-    -- texture coords
+    return mCoord, vCoord
+end
+
+local function __GenerateTextureCoords(x, z, sizeX, sizeZ, opts)
     local tCoord = {
         x,             z,
         x,             z + sizeZ,
         x + sizeX,     z + sizeZ,
         x + sizeX,     z
     }
-
-    return mCoord, tCoord, vCoord
-end
-
-local function GenerateCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ, opts)
-    local mCoord, tCoord, vCoord = _GetCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ)
 
     if opts.texOffsetX then
         OffsetCoords(tCoord, opts.texOffsetX * sizeX, opts.texOffsetY * sizeZ)
@@ -285,8 +282,7 @@ local function GenerateCoords(x, z, sizeX, sizeZ, mx, mz, mSizeX, mSizeZ, opts)
     if opts.rotation then
         RotateCoords(tCoord, math.rad(opts.rotation))
     end
-
-    return mCoord, tCoord, vCoord
+    return tCoord
 end
 
 function DrawDiffuse(opts, x, z, size)
@@ -326,6 +322,7 @@ function DrawDiffuse(opts, x, z, size)
     x = x / texSize
     z = z / texSize
     size = size / texSize
+    local tCoord = __GenerateTextureCoords(x, z, size, size, opts)
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local mx, mz = coords[1] / texSize, coords[2] / texSize
@@ -333,7 +330,7 @@ function DrawDiffuse(opts, x, z, size)
         local mapTexture = mapTextureObj.texture
         mapTextureObj.dirty = true
 
-        local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, size, size, opts)
+        local mCoord, vCoord = __GenerateMapCoords(mx, mz, size, size)
 
         gl.Uniform(uniforms.x1ID, mCoord[1])
         gl.Uniform(uniforms.x2ID, mCoord[5])
@@ -395,6 +392,7 @@ function DrawBlur(opts, x, z, size)
     x = x / texSize
     z = z / texSize
     size = size / texSize
+    local tCoord = __GenerateTextureCoords(x, z, size, size, opts)
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local mx, mz = coords[1] / texSize, coords[2] / texSize
@@ -402,8 +400,7 @@ function DrawBlur(opts, x, z, size)
         local mapTexture = mapTextureObj.texture
         mapTextureObj.dirty = true
 
-        local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, size, size, opts)
-
+        local mCoord, vCoord = __GenerateMapCoords(mx, mz, size, size)
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
     end
     CheckGLSL()
@@ -441,6 +438,7 @@ function DrawVoid(opts, x, z, size)
     x = x / texSize
     z = z / texSize
     size = size / texSize
+    local tCoord = __GenerateTextureCoords(x, z, size, size, opts)
     for i, v in pairs(textures) do
         local mapTextureObj, _, coords = v[1], v[2], v[3]
         local mx, mz = coords[1] / texSize, coords[2] / texSize
@@ -448,7 +446,7 @@ function DrawVoid(opts, x, z, size)
         local mapTexture = mapTextureObj.texture
         mapTextureObj.dirty = true
 
-        local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, size, size, opts)
+        local mCoord, vCoord = __GenerateMapCoords(mx, mz, size, size)
 
         gl.Uniform(uniforms.x1ID, mCoord[1])
         gl.Uniform(uniforms.x2ID, mCoord[5])
@@ -514,7 +512,8 @@ function DrawDNTS(opts, x, z, size)
     local mx     = x    * texSize / Game.mapSizeX
     local mz     = z    * texSize / Game.mapSizeZ
 
-    local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
+    local tCoord = __GenerateTextureCoords(x, z, size, size, opts)
+    local mCoord, vCoord = __GenerateMapCoords(mx, mz, sizeX, sizeZ)
 
     gl.Uniform(uniforms.x1ID, mCoord[1])
     gl.Uniform(uniforms.x2ID, mCoord[5])
@@ -575,6 +574,7 @@ function DrawShadingTextures(opts, x, z, size)
     x = x / texSize
     z = z / texSize
     size = size / texSize
+    local tCoord = __GenerateTextureCoords(x, z, size, size, opts)
     for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
         if opts.brushTexture[texType] and opts[texType .. "Enabled"] then
             local shadingTex = shadingTexObj.texture
@@ -586,7 +586,7 @@ function DrawShadingTextures(opts, x, z, size)
             local mx     = x    * texSize / Game.mapSizeX
             local mz     = z    * texSize / Game.mapSizeZ
 
-            local mCoord, tCoord, vCoord = GenerateCoords(x, z, size, size, mx, mz, sizeX, sizeZ, opts)
+            local mCoord, vCoord = __GenerateMapCoords(mx, mz, sizeX, sizeZ)
 
             gl.Uniform(uniforms.x1ID, mCoord[1])
             gl.Uniform(uniforms.x2ID, mCoord[5])
