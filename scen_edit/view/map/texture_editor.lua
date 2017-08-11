@@ -163,7 +163,7 @@ function TextureEditor:init()
                 self:_EnterState("blur")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "texRotation", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -191,7 +191,7 @@ function TextureEditor:init()
                 self:_EnterState("dnts")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Show()
-                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "rotation", "falloffFactor", "offset-sep", "voidFactor", "tex-sep")
+                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "texRotation", "falloffFactor", "offset-sep", "voidFactor", "tex-sep")
             end
         },
     })
@@ -208,7 +208,7 @@ function TextureEditor:init()
                 self:_EnterState("void")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "rotation", "kernelMode", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
             end
         },
     })
@@ -263,16 +263,17 @@ function TextureEditor:init()
         value = false,
     }))
 
-    self:AddControl("tex-sep", {
+    self:AddControl("offset-sep", {
         Label:New {
-            caption = "Texture",
+            caption = "Pattern",
         },
         Line:New {
-            x = 55,
+            x = 50,
             y = 4,
             width = self.VALUE_POS,
         }
     })
+
     self:AddField(GroupField({
         BooleanField({
             name = "diffuseEnabled",
@@ -298,7 +299,7 @@ function TextureEditor:init()
             maxValue = 5000,
             title = "Size:",
             tooltip = "Size of the paint brush",
-            width = 150,
+            width = 140,
         }),
         NumericField({
             name = "rotation",
@@ -306,8 +307,8 @@ function TextureEditor:init()
             minValue = -360,
             maxValue = 360,
             title = "Rotation:",
-            tooltip = "Rotation of the texture",
-            width = 150,
+            tooltip = "Rotation of the paint brush",
+            width = 140,
         }),
         NumericField({
             name = "texScale",
@@ -316,20 +317,31 @@ function TextureEditor:init()
             step = 0.05,
             title = "Scale:",
             tooltip = "Texture sampling rate (larger number means higher frequency)",
-            width = 150,
+            width = 140,
         })
     }))
-    self:AddControl("offset-sep", {
+
+    self:AddControl("tex-sep", {
         Label:New {
-            caption = "Offset",
+            caption = "Material",
         },
         Line:New {
-            x = 50,
+            x = 55,
             y = 4,
             width = self.VALUE_POS,
         }
     })
+
     self:AddField(GroupField({
+        NumericField({
+            name = "texRotation",
+            value = 0,
+            minValue = -360,
+            maxValue = 360,
+            title = "Tex rotation:",
+            tooltip = "Rotation of the texture",
+            width = 140,
+        }),
         NumericField({
             name = "texOffsetX",
             value = 0,
@@ -338,6 +350,7 @@ function TextureEditor:init()
             step = 0.001,
             title = "X:",
             tooltip = "Texture offset X",
+            width = 140,
         }),
         NumericField({
             name = "texOffsetY",
@@ -347,8 +360,10 @@ function TextureEditor:init()
             step = 0.001,
             title = "Y:",
             tooltip = "Texture offset Y",
+            width = 140,
         })
     }))
+
     self:AddControl("blending-sep", {
         Label:New {
             caption = "Blending",
@@ -367,7 +382,7 @@ function TextureEditor:init()
             maxValue = 1,
             title = "Blend:",
             tooltip = "Proportion of texture to be applied",
-            width = 150,
+            width = 140,
         }),
         NumericField({
             name = "falloffFactor",
@@ -376,7 +391,7 @@ function TextureEditor:init()
             maxValue = 1,
             title = "Falloff:",
             tooltip = "Texture painting fade out (1 means crisp)",
-            width = 150,
+            width = 140,
         }),
         NumericField({
             name = "featureFactor",
@@ -385,7 +400,7 @@ function TextureEditor:init()
             maxValue = 1,
             title = "Feature:",
             tooltip = "Feature filtering (1 means no filter filtering)",
-            width = 150,
+            width = 140,
         })
     }))
 
@@ -396,6 +411,7 @@ function TextureEditor:init()
         maxValue = 1,
         title = "Value:",
         tooltip = "Goal value to be set for DNTS textures when painting.",
+        width = 140,
     }))
 
     self:AddField(NumericField({
@@ -405,6 +421,7 @@ function TextureEditor:init()
         maxValue = 1,
         title = "Transparency:",
         tooltip = "The greater the value, the more transparent it will be.",
+        width = 140,
     }))
 
     self:AddControl("splat-sep", {
@@ -425,7 +442,7 @@ function TextureEditor:init()
             decimals = 6,
             title = "Scale:",
             tooltip = "Splat texture multiplier",
-            width = 150,
+            width = 140,
         }),
         NumericField({
             name = "splatTexMult",
@@ -433,7 +450,7 @@ function TextureEditor:init()
             step = 0.01,
             title = "Mult:",
             tooltip = "Splat texture multiplier",
-            width = 150,
+            width = 140,
         }),
     }))
 
@@ -441,6 +458,7 @@ function TextureEditor:init()
         name = "diffuseColor",
         title = "Color: ",
         value = {1,1,1,1},
+        width = 140,
     }))
 
     local children = {
@@ -506,7 +524,7 @@ end
 function TextureEditor:__GetBrushDrawOpts()
     return {
         color = self.fields["diffuseColor"].value,
-        rotation = self.fields["rotation"].value,
+        rotation = self.fields["texRotation"].value,
         offset = {
             self.fields["texOffsetX"].value,
             self.fields["texOffsetY"].value,
@@ -533,7 +551,7 @@ function TextureEditor:OnFieldChange(name, value)
         if brush then
             self.savedBrushes:UpdateBrush(brush.brushID, name, value)
             if name == "brushTexture" or name == "texOffsetX" or name == "texOffsetY"
-                or name == "diffuseColor" or name == "rotation" or name == "texScale" then
+                or name == "diffuseColor" or name == "texRotation" or name == "texScale" then
                 if name == "brushTexture" then
                     SB.commandManager:execute(CacheTextureCommand(value))
                 end

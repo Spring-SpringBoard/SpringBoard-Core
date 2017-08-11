@@ -85,6 +85,7 @@ function getPenShader(mode)
                 x2ID = gl.GetUniformLocation(shader, "x2"),
                 z1ID = gl.GetUniformLocation(shader, "z1"),
                 z2ID = gl.GetUniformLocation(shader, "z2"),
+                patternRotationID = gl.GetUniformLocation(shader, "patternRotation"),
                 blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
                 falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
                 featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
@@ -118,6 +119,7 @@ function getVoidShader()
                 x2ID = gl.GetUniformLocation(shader, "x2"),
                 z1ID = gl.GetUniformLocation(shader, "z1"),
                 z2ID = gl.GetUniformLocation(shader, "z2"),
+                patternRotationID = gl.GetUniformLocation(shader, "patternRotation"),
                 voidFactorID = gl.GetUniformLocation(shader, "voidFactor"),
             },
         }
@@ -143,6 +145,7 @@ function getBlurShader()
         local shaderObj = {
             shader = shader,
             uniforms = {
+                patternRotationID = gl.GetUniformLocation(shader, "patternRotation"),
                 blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
                 kernelID = gl.GetUniformLocation(shader, "kernel"),
             },
@@ -173,6 +176,7 @@ function getDNTSShader()
                 x2ID = gl.GetUniformLocation(shader, "x2"),
                 z1ID = gl.GetUniformLocation(shader, "z1"),
                 z2ID = gl.GetUniformLocation(shader, "z2"),
+                patternRotationID = gl.GetUniformLocation(shader, "patternRotation"),
                 blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
                 colorIndexID = gl.GetUniformLocation(shader, "colorIndex"),
                 exclusiveID = gl.GetUniformLocation(shader, "exclusive"),
@@ -280,7 +284,7 @@ local function __GenerateTextureCoords(x, z, sizeX, sizeZ, opts)
         ScaleCoords(tCoord, opts.texScale, opts.texScale)
     end
     if opts.rotation then
-        RotateCoords(tCoord, math.rad(opts.rotation))
+        RotateCoords(tCoord, opts.rotation)
     end
     return tCoord
 end
@@ -317,6 +321,7 @@ function DrawDiffuse(opts, x, z, size)
     opts.diffuseColor[4] = 1.0
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
     --gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    gl.Uniform(uniforms.patternRotationID, opts.patternRotation)
 
     local texSize = SB.model.textureManager.TEXTURE_SIZE
     x = x / texSize
@@ -387,6 +392,7 @@ function DrawBlur(opts, x, z, size)
 
     gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
     gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
+    gl.Uniform(uniforms.patternRotationID, opts.patternRotation)
 
     local texSize = SB.model.textureManager.TEXTURE_SIZE
     x = x / texSize
@@ -431,6 +437,7 @@ function DrawVoid(opts, x, z, size)
     gl.UseShader(shader)
 
     gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    gl.Uniform(uniforms.patternRotationID, opts.patternRotation)
 
     gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
 
@@ -500,6 +507,7 @@ function DrawDNTS(opts, x, z, size)
     gl.UniformInt(uniforms.colorIndexID, opts.colorIndex)
     gl.UniformInt(uniforms.exclusiveID, opts.exclusive)
     gl.Uniform(uniforms.valueID, opts.value)
+    gl.Uniform(uniforms.patternRotationID, opts.patternRotation)
 
     x = x / texSize
     z = z / texSize
@@ -570,6 +578,7 @@ function DrawShadingTextures(opts, x, z, size)
     opts.diffuseColor[4] = 1.0
     gl.Uniform(uniforms.diffuseColorID, unpack(opts.diffuseColor))
     --gl.Uniform(uniforms.voidFactorID, opts.voidFactor)
+    gl.Uniform(uniforms.patternRotationID, opts.patternRotation)
 
     x = x / texSize
     z = z / texSize
@@ -621,10 +630,22 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
     local x, z = opts.x, opts.z
     local size = opts.size
 
-    -- change size depending on falloff (larger size if falloff factor is small)
-    x = x
-    z = z
-    size = size
+    -- We calculate coordinates so we know x and z extremes
+    local patternRot = opts.patternRotation
+    local sh = size/2
+    -- clockwise coords
+    local x1, z1 = rotate(-sh, sh, patternRot)
+    local x2, z2 = rotate(sh, sh, patternRot)
+    local x3, z3 = rotate(sh, -sh, patternRot)
+    local x4, z4 = rotate(-sh, -sh, patternRot)
+    x1, z1 = x1 + x + sh, z1 + z + sh
+    x2, z2 = x2 + x + sh, z2 + z + sh
+    x3, z3 = x3 + x + sh, z3 + z + sh
+    x4, z4 = x4 + x + sh, z4 + z + sh
+    x = math.min(x1, x2, x3, x4)
+    z = math.min(z1, z2, z3, z4)
+    size = math.max(x1, x2, x3, x4) - x
+
 
     if opts.paintMode == "void" then
         DrawVoid(opts, x, z, size)
