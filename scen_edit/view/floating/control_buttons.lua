@@ -36,7 +36,7 @@ function ControlButtons:init(parent)
     local x = "45%"
     local y = 10
     pcall(function()
-        local startStop = loadstring(VFS.LoadFile("sb_settings.lua"))().startStop
+        local startStop = SB.model.game.startStop
         x = startStop.x or x
         y = startStop.y or y
     end)
@@ -119,6 +119,13 @@ function ControlButtons:GameStarted()
     end
 
     self:UpdateGameDrawing()
+
+    pcall(function()
+        local OnStartUnsynced = SB.model.game.OnStartUnsynced
+        if OnStartUnsynced then
+            OnStartUnsynced()
+        end
+    end)
 end
 
 function ControlButtons:GameStopped()
@@ -128,4 +135,11 @@ function ControlButtons:GameStopped()
     self.btnStartStop.Update = Chili.Button.Update
 
     self:UpdateGameDrawing()
+
+    pcall(function()
+        local OnStopUnsynced = SB.model.game.OnStopUnsynced
+        if OnStopUnsynced then
+            OnStopUnsynced()
+        end
+    end)
 end

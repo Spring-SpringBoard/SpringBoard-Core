@@ -19,6 +19,8 @@ function Model:init()
         self.brushManagers = BrushManagers()
         self.extensionsManager = ExtensionsManager()
     end
+
+    self:LoadGameSettings()
 end
 
 --clears all units, areas, triggers, etc.
@@ -84,4 +86,11 @@ function Model:SetMetaData(meta)
     self.teamManager:load(meta.teams)
 	self.scenarioInfo:load(meta.info)
     self.triggerManager:load(meta.triggers)
+end
+
+function Model:LoadGameSettings()
+    self.game = {}
+    pcall(function()
+        self.game = loadstring(VFS.LoadFile("sb_settings.lua"))()
+    end)
 end
