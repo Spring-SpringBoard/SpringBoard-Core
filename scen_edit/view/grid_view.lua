@@ -12,6 +12,7 @@ function GridView:init(tbl)
 		itemMargin   = {1, 1, 1, 1},
 		iconX = 88,
 		iconY = 88,
+		--useRTT = true,
 		useRTT = true,
 
 		x = 0,

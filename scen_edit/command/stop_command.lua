@@ -9,6 +9,13 @@ function StopCommand:execute()
         return
     end
 
+    pcall(function()
+        local OnStartEditingSynced = SB.model.game.OnStartEditingSynced
+        if OnStartEditingSynced then
+            OnStartEditingSynced()
+        end
+    end)
+
     Log.Notice("Stopping game...")
 
     for _, allyTeamID in ipairs(Spring.GetAllyTeamList()) do

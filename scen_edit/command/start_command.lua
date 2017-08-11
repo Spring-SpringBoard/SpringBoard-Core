@@ -9,6 +9,13 @@ function StartCommand:execute()
         return
     end
 
+    pcall(function()
+        local OnStopEditingSynced = SB.model.game.OnStopEditingSynced
+        if OnStopEditingSynced then
+            OnStopEditingSynced()
+        end
+    end)
+
     Log.Notice("Starting game...")
 
     for _, allyTeamID in ipairs(Spring.GetAllyTeamList()) do

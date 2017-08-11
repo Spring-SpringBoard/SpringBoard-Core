@@ -142,6 +142,13 @@ function Load()
             StartCommand():execute()
         end
     end
+
+    pcall(function()
+        local OnStartEditingSynced = SB.model.game.OnStartEditingSynced
+        if OnStartEditingSynced then
+            OnStartEditingSynced()
+        end
+    end)
 end
 
 function gadget:GamePreload()

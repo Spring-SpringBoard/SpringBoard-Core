@@ -133,26 +133,12 @@ function RuntimeModel:GameStart()
 
     self.hasStarted = true
     self:OnEvent("GAME_START")
-
-    pcall(function()
-        local OnStartSynced = SB.model.game.OnStartSynced
-        if OnStartSynced then
-            OnStartSynced()
-        end
-    end)
 end
 
 function RuntimeModel:GameStop()
     self:OnEvent("GAME_END")
     self.hasStarted = false
     self.startListening = false
-
-    pcall(function()
-        local OnStopSynced = SB.model.game.OnStopSynced
-        if OnStopSynced then
-            OnStopSynced()
-        end
-    end)
 end
 
 function RuntimeModel:TeamDied(teamID)
