@@ -7,13 +7,11 @@ end
 
 function ExtensionsManager:loadAll()
     self.extsFolders = {}
-    self.extsCount = 0
-    for _, subDir in pairs(VFS.SubDirs(SB_EXTS_DIR)) do
+    for _, subDir in ipairs(VFS.SubDirs(SB_EXTS_DIR)) do
         table.insert(self.extsFolders, {
             path = subDir,
             name = Path.ExtractFileName(subDir),
         })
-        self.extsCount = self.extsCount + 1
     end
 end
 
@@ -26,10 +24,10 @@ function ExtensionsManager:__SyncFile(path)
 end
 
 function ExtensionsManager:__SyncPathRecursive(path)
-    for _, fileName in pairs(VFS.DirList(path)) do
+    for _, fileName in ipairs(VFS.DirList(path)) do
         self:__SyncFile(fileName)
     end
-    for _, folderName in pairs(VFS.SubDirs(path)) do
+    for _, folderName in ipairs(VFS.SubDirs(path)) do
         self:__SyncPathRecursive(folderName)
     end
 end
@@ -42,8 +40,8 @@ function ExtensionsManager:LoadExtension(extFolder)
 end
 
 function ExtensionsManager:LoadAllExtensions()
-    Log.Notice("Loading " .. tostring(self.extsCount) .. " extensions...")
-    for _, extFolder in pairs(self.extsFolders) do
+    Log.Notice("Loading " .. tostring(#self.extsFolders) .. " extensions...")
+    for _, extFolder in ipairs(self.extsFolders) do
         local success, err = pcall(function()
             self:LoadExtension(extFolder)
         end)
