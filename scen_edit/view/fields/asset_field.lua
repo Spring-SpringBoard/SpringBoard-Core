@@ -5,7 +5,7 @@ AssetField.defaultPaths = {}
 
 function AssetField:Update(source)
     self.lblValue:SetCaption(self:GetCaption())
-    if source ~= self.assetWindow then
+    if source ~= self.assetWindow and self.assetWindow then
         self.assetWindow.assetBrowser:SelectAsset(self:GetPath())
     end
 end
@@ -47,6 +47,9 @@ function AssetField:init(field)
         end,
         OnClick = {
             function(...)
+                self:__MaybeCreatePickerWindow()
+                -- TODO: Necessary? Or is it done on create properly?
+                self.assetWindow.assetBrowser:SelectAsset(self:GetPath())
                 self.assetWindow.window:Show()
             end
         },
@@ -56,6 +59,22 @@ function AssetField:init(field)
         },
     }
 
+    if self.expand then
+        self:__MaybeCreatePickerWindow()
+        self.components = {
+            self.assetWindow.window
+        }
+    else
+        self.components = {
+            self.button,
+        }
+    end
+end
+
+function AssetField:__MaybeCreatePickerWindow()
+    if self.assetWindow then
+        return self.assetWindow
+    end
     --local folderPath = Path.ExtractDir(self.value)
     --self.AssetFieldWindow = FilePickerWindow(folderPath)
     --self.AssetFieldWindow.field = self
@@ -77,13 +96,6 @@ function AssetField:init(field)
 
     if self.expand then
         self.assetWindow.window:SetPos(0, 0, self.width, self.height)
-        self.components = {
-            self.assetWindow.window
-        }
-    else
-        self.components = {
-            self.button,
-        }
     end
 end
 
