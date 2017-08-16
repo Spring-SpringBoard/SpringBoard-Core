@@ -122,11 +122,11 @@ function ObjectPropertyWindow:init()
                         function()
                             local selection = SB.view.selectionManager:GetSelection()
                             local objectID, bridge
-                            if #selection.units > 0 then
-                                objectID = selection.units[1]
+                            if #selection.unit > 0 then
+                                objectID = selection.unit[1]
                                 bridge = unitBridge
-                            elseif #selection.features > 0 then
-                                objectID = selection.features[1]
+                            elseif #selection.feature > 0 then
+                                objectID = selection.feature[1]
                                 bridge = featureBridge
                             end
                             local x, z = self.fields["posX"].value, self.fields["posZ"].value
@@ -468,7 +468,7 @@ function ObjectPropertyWindow:init()
 
     self:Finalize(children)
     SB.view.selectionManager:addListener(self)
-    self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+    self:OnSelectionChanged()
     SB.commandManager:addListener(self)
 end
 
@@ -480,7 +480,7 @@ end
 
 function ObjectPropertyWindow:OnCommandExecuted()
     if not self._startedChanging then
-        self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+        self:OnSelectionChanged()
     end
 end
 
@@ -560,39 +560,40 @@ end
 
 function ObjectPropertyWindow:_GetAveragePos()
     local selection = SB.view.selectionManager:GetSelection()
+    local selCount  = SB.view.selectionManager:GetSelectionCount()
     local avg = {x=0, y=0, z=0}
-    for _, objectID in pairs(selection.units) do
-        local pos = unitBridge.s11n:Get(objectID, "pos")
-        avg.x = avg.x + pos.x
-        avg.y = avg.y + pos.y
-        avg.z = avg.z + pos.z
+    for selType, selected in pairs(selection) do
+        local bridge = ObjectBridge.GetObjectBridge(selType)
+        for _, objectID in pairs(selected) do
+            local x, y, z = bridge.spGetObjectPosition(objectID)
+            avg.x = avg.x + x
+            avg.y = avg.y + y
+            avg.z = avg.z + z
+        end
     end
-    for _, objectID in pairs(selection.features) do
-        local pos = featureBridge.s11n:Get(objectID, "pos")
-        avg.x = avg.x + pos.x
-        avg.y = avg.y + pos.y
-        avg.z = avg.z + pos.z
-    end
-    avg.x = avg.x / (#selection.units + #selection.features)
-    avg.y = avg.y / (#selection.units + #selection.features)
-    avg.z = avg.z / (#selection.units + #selection.features)
+
+    avg.x = avg.x / selCount
+    avg.y = avg.y / selCount
+    avg.z = avg.z / selCount
     return avg
 end
 
-function ObjectPropertyWindow:OnSelectionChanged(selection)
+function ObjectPropertyWindow:OnSelectionChanged()
+    local selection = SB.view.selectionManager:GetSelection()
+    local selCount = SB.view.selectionManager:GetSelection()
     self.selectionChanging = true
     local objectID, bridge
     local keys
-    if #selection.units > 0 then
-        objectID = selection.units[1]
+    if #selection.unit > 0 then
+        objectID = selection.unit[1]
         bridge = unitBridge
         keys = SB.deepcopy(self.unitKeys)
         for _, value in pairs(self.objectKeys) do
             table.insert(keys, value)
         end
         self:SetInvisibleFields()
-    elseif #selection.features > 0 then
-        objectID = selection.features[1]
+    elseif #selection.feature > 0 then
+        objectID = selection.feature[1]
         bridge = featureBridge
         keys = self.objectKeys
         self:SetInvisibleFields(unpack(self.unitKeys))
@@ -671,12 +672,12 @@ function ObjectPropertyWindow:OnFieldChange(name, value)
     end
 
     local selection = SB.view.selectionManager:GetSelection()
-    if #selection.units == 0 and #selection.features == 0 then
+    if #selection.unit == 0 and #selection.feature == 0 then
         return
     end
 
     if name == "avgPos" then
-        self:OnSelectionChanged(selection)
+        self:OnSelectionChanged()
         return
     end
 
@@ -755,12 +756,12 @@ function ObjectPropertyWindow:OnFieldChange(name, value)
     end
     -- HACK: needs cleanup
     if self:IsUnitKey(name) or name == "gravity" or name == "movectrl" or name == "rules" or name == "resources" or name == "states" then
-        for _, command in pairs(self:GetCommands(selection.units, name, value, unitBridge)) do
+        for _, command in pairs(self:GetCommands(selection.unit, name, value, unitBridge)) do
             table.insert(commands, command)
         end
     end
     if self:IsFeatureKey(name) then
-        for _, command in pairs(self:GetCommands(selection.features, name, value, featureBridge)) do
+        for _, command in pairs(self:GetCommands(selection.feature, name, value, featureBridge)) do
             table.insert(commands, command)
         end
     end

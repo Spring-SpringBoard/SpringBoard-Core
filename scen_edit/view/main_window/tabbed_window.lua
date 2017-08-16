@@ -12,10 +12,7 @@ function TabbedWindow:init()
 			tooltip = "Reload meta model",
 			OnClick = {
 				function()
-					SB.conf:initializeListOfMetaModelFiles()
-					local reloadMetaModelCommand = ReloadMetaModelCommand(SB.conf:GetMetaModelFiles())
-					SB.commandManager:execute(reloadMetaModelCommand)
-					SB.commandManager:execute(reloadMetaModelCommand, true)
+					ReloadAction():execute()
 				end
 			},
 			children = {
@@ -37,14 +34,7 @@ function TabbedWindow:init()
 			tooltip = "Copy (Ctrl+C)",
 			OnClick = {
 				function()
-					local selType, items = SB.view.selectionManager:GetSelection()
-					if selType == "units" then
-						SB.clipboard:CopyUnits(items)
-						return true
-					elseif selType == "features" then
-						SB.clipboard:CopyFeatures(items)
-						return true
-					end
+					CopyAction():execute()
 				end
 			},
 			children = {
@@ -66,14 +56,7 @@ function TabbedWindow:init()
 			tooltip = "Cut (Ctrl+X)",
 			OnClick = {
 				function()
-					local selType, items = SB.view.selectionManager:GetSelection()
-					if selType == "units" then
-						SB.clipboard:CutUnits(items)
-						return true
-					elseif selType == "features" then
-						SB.clipboard:CutFeatures(items)
-						return true
-					end
+					CutAction():execute()
 				end
 			},
 			children = {
@@ -95,12 +78,7 @@ function TabbedWindow:init()
 			tooltip = "Paste (Ctrl+V)",
 			OnClick = {
 				function()
-					local x, y = Spring.GetMouseState()
-					local result, coords = Spring.TraceScreenRay(x, y, true)
-					if result == "ground" then
-						SB.clipboard:Paste(coords)
-						return true
-					end
+					PasteAction():execute()
 				end
 			},
 			children = {

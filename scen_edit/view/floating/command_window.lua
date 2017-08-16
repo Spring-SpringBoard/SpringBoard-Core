@@ -128,7 +128,7 @@ function CommandWindow:UndoCommand()
     local row = self.list:GetRowItems(self.count - self.undoCount)
     local lbl = row[1]
     lbl._oldcaption = lbl.caption
-    lbl:SetCaption("\255\100\100\100" .. lbl.caption .. "\b")
+    lbl:SetCaption("\255\88\143\143" .. lbl.caption .. "\b")
     lbl:Invalidate()
 
     self.undoCount = self.undoCount + 1

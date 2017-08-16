@@ -26,14 +26,16 @@ function RectangleSelectState:_MouseRelease(x, y, button)
     if self.endScreenX and self.endScreenZ then
         local startScreenX, startScreenZ = Spring.WorldToScreenCoords(self.startWorldX, self.startWorldY, self.startWorldZ)
 
-        local units = self:GetObjectsInScreenRectangle(startScreenX, startScreenZ, self.endScreenX, self.endScreenZ, unitBridge)
-        local features = self:GetObjectsInScreenRectangle(startScreenX, startScreenZ, self.endScreenX, self.endScreenZ, featureBridge)
-        local areas = self:GetObjectsInScreenRectangle(startScreenX, startScreenZ, self.endScreenX, self.endScreenZ, areaBridge)
-        local selection = {
-            units = units,
-            features = features,
-            areas = areas,
-        }
+        local selection = {}
+        for name, objectBridge in pairs(ObjectBridge.GetObjectBridges()) do
+            if objectBridge.spGetAllObjects then
+                selection[name] = self:GetObjectsInScreenRectangle(
+                    startScreenX, startScreenZ,
+                    self.endScreenX, self.endScreenZ,
+                    objectBridge
+                )
+            end
+        end
         SB.view.selectionManager:Select(selection)
     end
     SB.stateManager:SetState(DefaultState())

@@ -1,4 +1,4 @@
-ImportAction = AbstractAction:extends{}
+ImportAction = LCS.class{}
 
 local IMPORT_DIFFUSE = "Diffuse"
 local IMPORT_HEIGHTMAP = "Heightmap"

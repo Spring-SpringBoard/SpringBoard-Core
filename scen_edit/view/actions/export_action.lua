@@ -1,4 +1,4 @@
-ExportAction = AbstractAction:extends{}
+ExportAction = LCS.class{}
 
 local EXPORT_SCENARIO_ARCHIVE = "Scenario archive"
 local EXPORT_MAP_TEXTURES = "Map textures"

@@ -3,6 +3,7 @@ AddObjectCommand.className = "AddObjectCommand"
 
 function AddObjectCommand:execute(bridge)
     local objectID = bridge.s11n:Add(self.params)
+    self.params.objectID = objectID
     if self.objectModelID == nil then
         self.objectModelID = bridge.getObjectModelID(objectID)
     else
@@ -41,4 +42,17 @@ function AddFeatureCommand:execute()
 end
 function AddFeatureCommand:unexecute()
     self:super("unexecute", featureBridge)
+end
+
+AddAreaCommand = AddObjectCommand:extends{}
+AddAreaCommand.className = "AddAreaCommand"
+function AddAreaCommand:init(params)
+    self.className        = "AddAreaCommand"
+    self.params           = params
+end
+function AddAreaCommand:execute()
+    self:super("execute", areaBridge)
+end
+function AddAreaCommand:unexecute()
+    self:super("unexecute", areaBridge)
 end

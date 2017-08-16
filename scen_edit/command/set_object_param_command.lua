@@ -64,3 +64,18 @@ end
 function SetFeatureParamCommand:unexecute()
     self:super("unexecute", featureBridge)
 end
+
+SetAreaParamCommand = SetObjectParamCommand:extends{}
+SetAreaParamCommand.className = "SetAreaParamCommand"
+function SetAreaParamCommand:init(objectModelID, key, value)
+    self.className        = "SetAreaParamCommand"
+    self.objectModelID    = objectModelID
+    self.key              = key
+    self.value            = value
+end
+function SetAreaParamCommand:execute()
+    self:super("execute", areaBridge)
+end
+function SetAreaParamCommand:unexecute()
+    self:super("unexecute", areaBridge)
+end

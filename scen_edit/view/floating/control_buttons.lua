@@ -40,7 +40,6 @@ function ControlButtons:init(parent)
         local startStop = SB.model.game.startStop
         right = startStop.right
         bottom = startStop.bottom
-        Spring.Echo("bottom", bottom)
         if not right then
             x = startStop.x
         end

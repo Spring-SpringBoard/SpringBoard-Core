@@ -1,55 +1,29 @@
 DragObjectState = AbstractState:extends{}
 
-function DragObjectState:init(objectID, startDiffX, startDiffZ)
+function DragObjectState:init(objectID, bridge, startDiffX, startDiffZ)
     AbstractState.init(self)
 
     self.objectID = objectID
+    self.bridge = bridge
     self.dx = 0
     self.dz = 0
     self.startDiffX = startDiffX
     self.startDiffZ = startDiffZ
-    self.ghostViews = {
-        units = {},
-        features = {},
-        areas = {},
-    }
     SB.SetMouseCursor("drag")
 end
 
--- function DragObjectState:GameFrame(frameNum)
---     local objectIDs = SB.view.selectionManager:GetSelection().units
---     for i = 1, #objectIDs do
---         local objectID = objectIDs[i]
---         if not Spring.ValidUnitID(objectID) or Spring.GetUnitIsDead(objectID) then
---             SB.stateManager:SetState(DefaultState())
---             return false
---         end
---     end
--- end
-
 function DragObjectState:GetMovedObjects()
     local selection = SB.view.selectionManager:GetSelection()
-    local objects = {
-        units = {},
-        features = {},
-        areas = {},
-    }
-    for _, unitID in pairs(selection.units) do
-        local unitX, unitY, unitZ = Spring.GetUnitPosition(unitID)
-        local y = Spring.GetGroundHeight(unitX + self.dx, unitZ + self.dz)
-        local position = { x = unitX + self.dx, y = y, z = unitZ + self.dz}
-        objects.units[unitID] = { pos = position }
-    end
-    for _, featureID in pairs(selection.features) do
-        local unitX, unitY, unitZ = Spring.GetFeaturePosition(featureID)
-        local y = Spring.GetGroundHeight(unitX + self.dx, unitZ + self.dz)
-        local position = { x = unitX + self.dx, y = y, z = unitZ + self.dz}
-        objects.features[featureID] = { pos = position }
-    end
-    for _, areaID in pairs(selection.areas) do
-        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(areaID))
-        local position = { x1 = x1 + self.dx, z1 = z1 + self.dz, x2 = x2 + self.dx, z2 = z2 + self.dz}
-        objects.areas[areaID] = { pos = position }
+    local objects = {}
+    for selType, selected in pairs(selection) do
+        objects[selType] = {}
+        local bridge = ObjectBridge.GetObjectBridge(selType)
+        for _, objectID in pairs(selected) do
+            local x, y, z = bridge.spGetObjectPosition(objectID)
+            local y = Spring.GetGroundHeight(x + self.dx, z + self.dz)
+            local position = { x = x + self.dx, y = y, z = z + self.dz}
+            objects[selType][objectID] = { pos = position }
+        end
     end
     return objects
 end
@@ -64,9 +38,9 @@ function DragObjectState:MouseMove(x, y, dx, dy, button)
         SB.stateManager:SetState(DefaultState())
         return false
     end
-    local unitX, unitY, unitZ = self.bridge.spGetObjectPosition(self.objectID)
-    self.dx = coords[1] - unitX + self.startDiffX
-    self.dz = coords[3] - unitZ + self.startDiffZ
+    local ox, _, oz = self.bridge.spGetObjectPosition(self.objectID)
+    self.dx = coords[1] - ox + self.startDiffX
+    self.dz = coords[3] - oz + self.startDiffZ
 
     self.ghostViews = self:GetMovedObjects()
 end
@@ -74,20 +48,13 @@ end
 function DragObjectState:MouseRelease(x, y, button)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
-    for unitID, object in pairs(movedObjects.units) do
-        local modelID = SB.model.unitManager:getModelUnitID(unitID)
-        local cmd = SetUnitParamCommand(modelID, "pos", object.pos)
-        table.insert(commands, cmd)
-    end
-    for featureID, object in pairs(movedObjects.features) do
-        local modelID = SB.model.featureManager:getModelFeatureID(featureID)
-        local cmd = SetFeatureParamCommand(modelID, "pos", object.pos)
-        table.insert(commands, cmd)
-    end
-    for areaID, object in pairs(movedObjects.areas) do
-        local pos = object.pos
-        local cmd = MoveAreaCommand(areaID, pos.x1, pos.z1)
-        table.insert(commands, cmd)
+    for objType, objs in pairs(movedObjects) do
+        local bridge = ObjectBridge.GetObjectBridge(objType)
+        for objectID, obj in pairs(objs) do
+            local modelID = bridge.getObjectModelID(objectID)
+            local cmd = bridge.SetObjectParamCommand(modelID, "pos", obj.pos)
+            table.insert(commands, cmd)
+        end
     end
 
     local compoundCommand = CompoundCommand(commands)
@@ -111,40 +78,34 @@ function DragObjectState:DrawObject(objectID, object, bridge, shaderObj)
 end
 
 function DragObjectState:DrawWorld()
+    if not self.ghostViews then
+        return
+    end
+    gl.PushAttrib(GL.DEPTH_BUFFER_BIT)
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
     local shaderObj = SB.view.modelShaders:GetShader()
+
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
-    for objectID, object in pairs(self.ghostViews.units) do
+
+    for objectID, object in pairs(self.ghostViews.unit) do
         self:DrawObject(objectID, object, unitBridge, shaderObj)
     end
-    for objectID, object in pairs(self.ghostViews.features) do
+    for objectID, object in pairs(self.ghostViews.feature) do
         self:DrawObject(objectID, object, featureBridge, shaderObj)
     end
     gl.UseShader(0)
-    for objectID, object in pairs(self.ghostViews.areas) do
-        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(objectID))
-        local areaView = AreaView(objectID)
-        areaView:_Draw(x1 + self.dx, z1 + self.dz, x2 + self.dx, z2 + self.dz)
+
+    for objType, objs in pairs(self.ghostViews) do
+        if objType ~= "unit" and objType ~= "feature" then
+            local bridge = ObjectBridge.GetObjectBridge(objType)
+            if bridge.DrawObject then
+                for objectID, object in pairs(objs) do
+                    bridge.DrawObject(objectID, object)
+                end
+            end
+        end
     end
-end
-
--- Custom unit/feature/area classes
-DragUnitState = DragObjectState:extends{}
-function DragUnitState:init(...)
-    DragObjectState.init(self, ...)
-    self.bridge = unitBridge
-end
-
-DragFeatureState = DragObjectState:extends{}
-function DragFeatureState:init(...)
-    DragObjectState.init(self, ...)
-    self.bridge = featureBridge
-end
-
-DragAreaState = DragObjectState:extends{}
-function DragAreaState:init(...)
-    DragObjectState.init(self, ...)
-    self.bridge = areaBridge
+    gl.PopAttrib(GL.DEPTH_BUFFER_BIT)
 end

@@ -1,4 +1,4 @@
-SaveAsAction = AbstractAction:extends{}
+SaveAsAction = LCS.class{}
 
 function SaveAsAction:execute()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then

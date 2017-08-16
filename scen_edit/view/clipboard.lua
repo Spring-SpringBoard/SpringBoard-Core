@@ -5,12 +5,7 @@ function Clipboard:init()
 end
 
 function Clipboard:Clear()
-    self.units          = {}
-    self.unitCount      = 0
-    self.features       = {}
-    self.featureCount   = 0
-    self.areas          = {}
-    self.areaCount      = 0
+    self.copy = {}
 end
 
 -- COPY
@@ -24,15 +19,9 @@ function Clipboard:CopyObjects(objectIDs, bridge)
     end
     return objects, objectCount
 end
-function Clipboard:CopyUnits(objectIDs)
-    self.units, self.unitCount = self:CopyObjects(objectIDs, unitBridge)
-end
-function Clipboard:CopyFeatures(objectIDs)
-    self.features, self.featureCount = self:CopyObjects(objectIDs, featureBridge)
-end
 
 -- CUT
-function Clipboard:CutObjectsCommands(objectIDs, bridge)
+function Clipboard:GenerateCutObjectsCommands(objectIDs, bridge)
     local cmds = {}
     for _, objectID in pairs(objectIDs) do
         local objectModelID = bridge.getObjectModelID(objectID)
@@ -41,79 +30,27 @@ function Clipboard:CutObjectsCommands(objectIDs, bridge)
     end
     return cmds
 end
-function Clipboard:CutUnitCommands(objectIDs)
-    self:CopyUnits(objectIDs)
-    return self:CutObjectsCommands(objectIDs, unitBridge)
-end
-function Clipboard:CutFeatureCommands(objectIDs)
-    self:CopyFeatures(objectIDs)
-    return self:CutObjectsCommands(objectIDs, featureBridge)
-end
 
 -- PASTE
-function Clipboard:PasteObjectsCommands(delta, objects, bridge)
+function Clipboard:GeneratePasteObjectsCommands(delta, objects, bridge)
     local cmds = {}
     for _, object in pairs(objects) do
-        local uc = SB.deepcopy(object)
-        uc.pos.x = uc.pos.x + delta.x
-        uc.pos.z = uc.pos.z + delta.z
-        local cmd = bridge.AddObjectCommand(uc)
-        table.insert(cmds, cmd)
-    end
-    return cmds
-end
-function Clipboard:PasteUnitCommands(delta)
-    return self:PasteObjectsCommands(delta, self.units, unitBridge)
-end
-function Clipboard:PasteFeatureCommands(delta)
-    return self:PasteObjectsCommands(delta, self.features, featureBridge)
-end
-
-function Clipboard:CopyAreas(objectIDs)
-    for _, objectID in pairs(objectIDs) do
-        table.insert(self.areas, SB.model.areaManager:getArea(objectID))
-    end
-end
-
-function Clipboard:CutAreaCommands(objectIDs)
-    self:CopyAreas(objectIDs)
-    local cmds = {}
-    for _, objectID in pairs(objectIDs) do
-        local cmd = RemoveAreaCommand(objectID)
+        local oc = SB.deepcopy(object)
+        oc.pos.x = oc.pos.x + delta.x
+        oc.pos.z = oc.pos.z + delta.z
+        local cmd = bridge.AddObjectCommand(oc)
         table.insert(cmds, cmd)
     end
     return cmds
 end
 
-function Clipboard:PasteAreaCommands(delta)
-    local cmds = {}
-    for i = 1, #self.areas do
-        local area = self.areas[i]
-        local x1, z1, x2, z2 = area[1] + delta.x, area[2] + delta.z, area[3] + delta.x, area[4] + delta.z
-        local cmd = AddAreaCommand(x1, z1, x2, z2)
-        table.insert(cmds, cmd)
-    end
-    return cmds
-end
-
-function Clipboard:Cut(selection)
-    self:Clear()
+function Clipboard:Cut(objectGroups)
+    self:Copy(objectGroups)
     local commands = {}
-    if #selection.units > 0 then
-        local cmds = self:CutUnitCommands(selection.units)
-        for _, cmd in pairs(cmds) do
-            table.insert(commands, cmd)
-        end
-    end
-    if #selection.features > 0 then
-        local cmds = self:CutFeatureCommands(selection.features)
-        for _, cmd in pairs(cmds) do
-            table.insert(commands, cmd)
-        end
-    end
-    if #selection.areas > 0 then
-        local cmds = self:CutAreaCommands(selection.areas)
-        for _, cmd in pairs(cmds) do
+    for name, objectIDs in pairs(objectGroups) do
+        local bridge = ObjectBridge.GetObjectBridge(name)
+        local cmds = self:GenerateCutObjectsCommands(objectIDs, bridge)
+        for _, cmd in ipairs(cmds) do
             table.insert(commands, cmd)
         end
     end
@@ -125,44 +62,39 @@ function Clipboard:Cut(selection)
 end
 
 function Clipboard:Paste(coords)
+    -- local cp = Spring.GetClipboard()
+    -- pcall(function()
+    --     self.copy = loadstring(cp)()
+    -- end)
+
+    local avg = {x=0, y=0, z=0}
+    local count = 0
+    for name, objects in pairs(self.copy) do
+        local bridge = ObjectBridge.GetObjectBridge(name)
+        for _, object in pairs(objects) do
+            local pos = object.pos
+            avg.x = avg.x + pos.x
+            avg.y = avg.y + pos.y
+            avg.z = avg.z + pos.z
+            count = count + 1
+        end
+    end
+
+    avg.x = avg.x / count
+    avg.y = avg.y / count
+    avg.z = avg.z / count
+
+    local delta = { x = coords[1] - avg.x, z = coords[3] - avg.z }
+
     local commands = {}
+    for name, objects in pairs(self.copy) do
+        local bridge = ObjectBridge.GetObjectBridge(name)
+        local cmds = self:GeneratePasteObjectsCommands(delta, objects, bridge)
+        for _, cmd in ipairs(cmds) do
+            table.insert(commands, cmd)
+        end
+    end
 
-    local avgX, avgZ = 0, 0
-    local count = self.featureCount + self.unitCount + #self.areas
-    for _, unit in pairs(self.units) do
-        avgX = avgX + unit.pos.x
-        avgZ = avgZ + unit.pos.z
-    end
-    for _, feature in pairs(self.features) do
-        avgX = avgX + feature.pos.x
-        avgZ = avgZ + feature.pos.z
-    end
-    for _, area in pairs(self.areas) do
-        avgX = avgX + (area[1] + area[3]) / 2
-        avgZ = avgZ + (area[2] + area[4]) / 2
-    end
-    avgX = avgX / count
-    avgZ = avgZ / count
-    local delta = { x = coords[1] - avgX, z = coords[3] - avgZ }
-
-    if self.unitCount > 0 then
-        local cmds = self:PasteUnitCommands(delta)
-        for _, cmd in pairs(cmds) do
-            table.insert(commands, cmd)
-        end
-    end
-    if self.featureCount > 0 then
-        local cmds = self:PasteFeatureCommands(delta)
-        for _, cmd in pairs(cmds) do
-            table.insert(commands, cmd)
-        end
-    end
-    if #self.areas > 0 then
-        local cmds = self:PasteAreaCommands(delta)
-        for _, cmd in pairs(cmds) do
-            table.insert(commands, cmd)
-        end
-    end
     if #commands == 0 then
         return
     end
@@ -170,20 +102,14 @@ function Clipboard:Paste(coords)
     SB.commandManager:execute(cmd)
 end
 
-function Clipboard:Copy(selection)
+function Clipboard:Copy(objectGroups)
     self:Clear()
-    if selection.units then
-        self:CopyUnits(selection.units)
+    for name, objectIDs in pairs(objectGroups) do
+        local bridge = ObjectBridge.GetObjectBridge(name)
+        if bridge.s11n then
+            local objects, count = self:CopyObjects(objectIDs, bridge)
+            self.copy[name] = objects
+        end
     end
-    if selection.features then
-        self:CopyFeatures(selection.features)
-    end
-    if selection.areas then
-        self:CopyAreas(selection.areas)
-    end
-    Spring.SetClipboard(table.show({
-        units       = self.units,
-        features    = self.features,
-        areas       = self.areas,
-    }))
+    Spring.SetClipboard(table.show(self.copy))
 end

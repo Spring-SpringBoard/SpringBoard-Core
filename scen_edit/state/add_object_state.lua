@@ -105,7 +105,7 @@ function AddObjectState:DrawWorld()
     local unitSizeX = self.bridge.ObjectDefs[objectDefID].footprintX
     local unitSizeZ = self.bridge.ObjectDefs[objectDefID].footprintZ
     if unitSizeX == nil or unitSizeZ == nil then
-        if self.bridge.bridgeName == "UnitBridge" then
+        if self.bridge.name == "unit" then
             local dim = Spring.GetUnitDefDimensions(objectDefID)
             unitSizeX = math.abs(dim.minx) + math.abs(dim.maxx)
             unitSizeZ = math.abs(dim.minz) + math.abs(dim.maxz)

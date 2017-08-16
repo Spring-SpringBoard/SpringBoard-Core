@@ -525,6 +525,49 @@ function SB.FunctionExists(fun, feature)
     return true
 end
 
+local __minHeight, __maxHeight = Spring.GetGroundExtremes()
+function SB.TraceScreenRay(x, y, opts)
+    opts = opts or {}
+    local onlyCoords = opts.onlyCoords
+    if onlyCoords == nil then
+        onlyCoords = false
+    end
+    local useMinimap = opts.useMinimap
+    if useMinimap == nil then
+        useMinimap = false
+    end
+    local includeSky = opts.includeSky
+    if includeSky == nil then
+        includeSky = true
+    end
+    local ignoreWater= opts.ignoreWater
+    if ignoreWater== nil then
+        ignoreWater = true
+    end
+    local D = opts.D
+    if D == nil then
+        --D = (__maxHeight + __minHeight) / 2
+    end
+
+    local traceType, value = Spring.TraceScreenRay(x, y, onlyCoords, useMinimap, includeSky, ignoreWater, D)
+
+    -- FIXME: How should SB.view.displayDevelop be used? It is currently intended primarily for areas
+    if traceType == "ground" and SB.view.displayDevelop and not onlyCoords then
+        for name, objectBridge in pairs(ObjectBridge.GetObjectBridges()) do
+            -- we utilize engine trace for unit and feature
+            if name ~= "unit" and name ~= "feature" and objectBridge.GetObjectAt then
+                local _value = objectBridge.GetObjectAt(value[1], value[3])
+                if _value then
+                    traceType = name
+                    value = _value
+                end
+            end
+        end
+    end
+
+    return traceType, value
+end
+
 function boolToNumber(bool)
     if bool then
         return 1

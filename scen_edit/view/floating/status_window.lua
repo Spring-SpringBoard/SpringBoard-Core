@@ -32,7 +32,7 @@ function StatusWindow:init(parent)
 
     SB.delay(function()
         SB.view.selectionManager:addListener(self)
-        self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+        self:OnSelectionChanged()
     end)
 
     self.posStr = ""
@@ -70,10 +70,10 @@ function StatusWindow:Update()
     self.update = self.update + 1
 end
 
-function StatusWindow:OnSelectionChanged(selection)
-    local selObjectsCount = #selection.units + #selection.features + #selection.areas
-    if selObjectsCount > 0 then
-        self.selectionStr = string.format("Selected: %d", selObjectsCount)
+function StatusWindow:OnSelectionChanged()
+    local selCount = SB.view.selectionManager:GetSelectionCount()
+    if selCount > 0 then
+        self.selectionStr = string.format("Selected: %d", selCount)
     else
         self.selectionStr = "No selection"
     end

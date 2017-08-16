@@ -1,4 +1,4 @@
-LoadAction = AbstractAction:extends{}
+LoadAction = LCS.class{}
 
 function LoadAction:execute()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then

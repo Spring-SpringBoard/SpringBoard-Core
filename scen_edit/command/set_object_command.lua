@@ -24,3 +24,13 @@ end
 function SetFeatureCommand:execute()
     self:super("execute", featureBridge)
 end
+
+SetAreaParamCommand = SetObjectCommand:extends{}
+SetAreaParamCommand.className = "SetAreaParamCommand"
+function SetAreaParamCommand:init(params)
+    self.className        = "SetAreaParamCommand"
+    self.params           = params
+end
+function SetFeatureCommand:execute()
+    self:super("execute", areaBridge)
+end

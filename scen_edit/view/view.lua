@@ -16,7 +16,6 @@ function View:init()
     SB.IncludeDir(SB_VIEW_DIR)
 	SB.Include(Path.Join(SB_VIEW_MAIN_WINDOW_DIR, "main_window_panel.lua"))
 	SB.IncludeDir(SB_VIEW_MAIN_WINDOW_DIR)
-	SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "abstract_action.lua"))
 	SB.IncludeDir(SB_VIEW_ACTIONS_DIR)
 
     SB.IncludeDir(SB_VIEW_OBJECT_DIR)
@@ -71,25 +70,7 @@ function View:Update()
     self.bottomBar:Update()
 end
 
-function View:drawRect(x1, z1, x2, z2)
-    if x1 < x2 then
-        _x1 = x1
-        _x2 = x2
-    else
-        _x1 = x2
-        _x2 = x1
-    end
-    if z1 < z2 then
-        _z1 = z1
-        _z2 = z2
-    else
-        _z1 = z2
-        _z2 = z1
-    end
-    gl.DrawGroundQuad(_x1, _z1, _x2, _z2)
-end
-
-function View:drawRects()
+function View:__DrawAreas()
     gl.PushMatrix()
     for _, areaView in pairs(self.areaViews) do
         areaView:Draw()
@@ -99,7 +80,7 @@ end
 
 function View:DrawWorldPreUnit()
     if self.displayDevelop then
-        self:drawRects()
+        self:__DrawAreas()
     end
     self.selectionManager:DrawWorldPreUnit()
 end

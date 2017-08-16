@@ -39,13 +39,10 @@ end
 
 function ResizeAreaState:MouseRelease(x, y, button)
     local area = SB.model.areaManager:getArea(self.areaID)
-    if self.x1 > self.x2 then
-        self.x1, self.x2 = self.x2, self.x1
-    end
-    if self.z1 > self.z2 then
-        self.z1, self.z2 = self.z2, self.z1
-    end
-    local cmd = ResizeAreaCommand(self.areaID, self.x1, self.z1, self.x2, self.z2)
+    local cmd = SetAreaParamCommand(self.areaID, {
+        pos = { x = (self.x1 + self.x2)/2, y = 0, z = (self.z1 + self.z2)/2},
+        size = { x = math.abs(self.x1 - self.x2), y = 0, z = math.abs(self.z1 - self.z2)},
+    })
     SB.commandManager:execute(cmd)
     SB.stateManager:SetState(DefaultState())
 end

@@ -41,6 +41,7 @@ function gadget:RecvLuaMsg(msg, playerID)
             if not success then
                 Log.Error("Failed to load command (size: " .. #msgParsed .. ": ")
                 Log.Error(msgTable)
+                Log.Error(msgParsed)
                 return
             end
             local msg = Message(msgTable.tag, msgTable.data)

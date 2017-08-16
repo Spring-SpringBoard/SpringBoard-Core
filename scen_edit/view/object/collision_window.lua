@@ -291,18 +291,19 @@ function CollisionView:init()
 
     self:Finalize(children)
     SB.view.selectionManager:addListener(self)
-    self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+    self:OnSelectionChanged()
     SB.commandManager:addListener(self)
 end
 
-function CollisionView:OnSelectionChanged(selection)
+function CollisionView:OnSelectionChanged()
     self.selectionChanging = true
+    local selection = SB.view.selectionManager:GetSelection()
     local objectID, bridge
-    if #selection.units > 0 then
-        objectID = selection.units[1]
+    if #selection.unit > 0 then
+        objectID = selection.unit[1]
         bridge = unitBridge
-    elseif #selection.features > 0 then
-        objectID = selection.features[1]
+    elseif #selection.feature > 0 then
+        objectID = selection.feature[1]
         bridge = featureBridge
     end
     if objectID then
@@ -343,7 +344,7 @@ end
 
 function CollisionView:OnCommandExecuted()
     if not self._startedChanging then
-        self:OnSelectionChanged(SB.view.selectionManager:GetSelection())
+        self:OnSelectionChanged()
     end
 end
 
@@ -374,7 +375,7 @@ function CollisionView:OnFieldChange(name, value)
     end
 
     local selection = SB.view.selectionManager:GetSelection()
-    if #selection.units == 0 and #selection.features == 0 then
+    if #selection.unit == 0 and #selection.feature == 0 then
         return
     end
 
@@ -474,11 +475,11 @@ function CollisionView:OnFieldChange(name, value)
         name = "collision"
     end
     local commands = {}
-    for _, objectID in pairs(selection.units) do
+    for _, objectID in pairs(selection.unit) do
         local modelID = SB.model.unitManager:getModelUnitID(objectID)
         table.insert(commands, SetUnitParamCommand(modelID, name, value))
     end
-    for _, objectID in pairs(selection.features) do
+    for _, objectID in pairs(selection.feature) do
         local modelID = SB.model.featureManager:getModelFeatureID(objectID)
         table.insert(commands, SetFeatureParamCommand(modelID, name, value))
     end

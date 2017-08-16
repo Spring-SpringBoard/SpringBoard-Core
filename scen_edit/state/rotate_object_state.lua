@@ -2,12 +2,6 @@ RotateObjectState = AbstractState:extends{}
 
 function RotateObjectState:init()
     AbstractState.init(self)
-
-    self.ghostViews = {
-        units = {},
-        features = {},
-        areas = {},
-    }
     SB.SetMouseCursor("resize-x")
 end
 
@@ -52,67 +46,46 @@ end
 
 function RotateObjectState:MouseMove(x, y, dx, dy, button)
     local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result == "ground" then
+    if result ~= "ground" then
+        return
+    end
 
-        local selection = SB.view.selectionManager:GetSelection()
-        local selCount = #selection.units + #selection.features + #selection.areas
-        self.ghostViews = {
-            units = {},
-            features = {},
-            areas = {},
-        }
+    local selection = SB.view.selectionManager:GetSelection()
+    local selCount  = SB.view.selectionManager:GetSelectionCount()
+    local avg = {x=0, y=0, z=0}
+    for selType, selected in pairs(selection) do
+        local bridge = ObjectBridge.GetObjectBridge(selType)
+        for _, objectID in pairs(selected) do
+            local x, y, z = bridge.spGetObjectPosition(objectID)
+            avg.x = avg.x + x
+            avg.y = avg.y + y
+            avg.z = avg.z + z
+        end
+    end
 
-        local avgX, avgZ = 0, 0
-        for _, objectID in pairs(selection.units) do
-            local unitX, unitY, unitZ = Spring.GetUnitPosition(objectID)
-            avgX = avgX + unitX
-            avgZ = avgZ + unitZ
-        end
-        for _, objectID in pairs(selection.features) do
-            local unitX, unitY, unitZ = Spring.GetFeaturePosition(objectID)
-            avgX = avgX + unitX
-            avgZ = avgZ + unitZ
-        end
-        for _, objectID in pairs(selection.areas) do
-            local unitX, unitY, unitZ = AreaBridge.spGetObjectPosition(objectID)
-            avgX = avgX + unitX
-            avgZ = avgZ + unitZ
-        end
-        avgX = avgX / (selCount)
-        avgZ = avgZ / (selCount)
-        local dx, dz = coords[1] - avgX, coords[3] - avgZ
-        local angle = math.atan2(dx, dz)
-        if self.angle == nil then
-            self.angle = angle
-        end
-        angle = angle - self.angle
+    avg.x = avg.x / selCount
+    avg.y = avg.y / selCount
+    avg.z = avg.z / selCount
 
-        for _, objectID in pairs(selection.units) do
+    local dx, dz = coords[1] - avg.x, coords[3] - avg.z
+    local angle = math.atan2(dx, dz)
+    if self.angle == nil then
+        self.angle = angle
+    end
+    angle = angle - self.angle
+
+    self.ghostViews = {}
+    for selType, selected in pairs(selection) do
+        local bridge = ObjectBridge.GetObjectBridge(selType)
+        self.ghostViews[selType] = {}
+        for _, objectID in pairs(selected) do
             local object = self:GetRotatedObject({
                 objectID = objectID,
                 angle = angle,
-                avgX = avgX,
-                avgZ = avgZ,
-                }, unitBridge)
-            self.ghostViews.units[objectID] = object
-        end
-        for _, objectID in pairs(selection.features) do
-            local object = self:GetRotatedObject({
-                objectID = objectID,
-                angle = angle,
-                avgX = avgX,
-                avgZ = avgZ,
-                }, featureBridge)
-            self.ghostViews.features[objectID] = object
-        end
-        for _, objectID in pairs(selection.areas) do
-            local object = self:GetRotatedObject({
-                objectID = objectID,
-                angle = angle,
-                avgX = avgX,
-                avgZ = avgZ,
-                }, areaBridge)
-            self.ghostViews.areas[objectID] = object
+                avgX = avg.x,
+                avgZ = avg.z,
+            }, bridge)
+            self.ghostViews[selType][objectID] = object
         end
     end
 end
@@ -120,29 +93,19 @@ end
 function RotateObjectState:MouseRelease(x, y, button)
     local commands = {}
 
-    for objectID, object in pairs(self.ghostViews.units) do
-        local modelID = SB.model.unitManager:getModelUnitID(objectID)
-        local cmd = SetUnitParamCommand(modelID, {
-            dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
-            pos = object.pos
-        })
-        table.insert(commands, cmd)
-    end
-    for objectID, object in pairs(self.ghostViews.features) do
-        local modelID = SB.model.featureManager:getModelFeatureID(objectID)
-        local cmd = SetFeatureParamCommand(modelID, {
-            dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) },
-            pos = object.pos
-        })
-        table.insert(commands, cmd)
-    end
-    for objectID, object in pairs(self.ghostViews.areas) do
-        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(objectID))
-        local pos = object.pos
-        local mx, _, mz = areaBridge.spGetObjectPosition(objectID)
-        local dx, dz = pos.x - mx, pos.z - mz
-        local cmd = MoveAreaCommand(objectID, x1 + dx, z1 + dz)
-        table.insert(commands, cmd)
+    for objType, objects in pairs(self.ghostViews) do
+        local bridge = ObjectBridge.GetObjectBridge(objType)
+        for objectID, object in pairs(objects) do
+            local modelID = bridge.getObjectModelID(objectID)
+            local opts = {
+                pos = object.pos
+            }
+            if bridge.s11n.setFuncs.dir then
+                opts.dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) }
+            end
+            local cmd = bridge.SetObjectParamCommand(modelID, opts)
+            table.insert(commands, cmd)
+        end
     end
 
     local compoundCommand = CompoundCommand(commands)
@@ -165,23 +128,37 @@ function RotateObjectState:DrawObject(objectID, object, bridge, shaderObj)
 end
 
 function RotateObjectState:DrawWorld()
+    if not self.ghostViews then
+        return
+    end
+    gl.PushAttrib(GL.DEPTH_BUFFER_BIT)
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
+
     local shaderObj = SB.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
-    for objectID, object in pairs(self.ghostViews.units) do
-        self:DrawObject(objectID, object, unitBridge, shaderObj)
+    if self.ghostViews.unit then
+        for objectID, object in pairs(self.ghostViews.unit) do
+            self:DrawObject(objectID, object, unitBridge, shaderObj)
+        end
     end
-    for objectID, object in pairs(self.ghostViews.features) do
-        self:DrawObject(objectID, object, featureBridge, shaderObj)
+    if self.ghostViews.feature then
+        for objectID, object in pairs(self.ghostViews.feature) do
+            self:DrawObject(objectID, object, featureBridge, shaderObj)
+        end
     end
     gl.UseShader(0)
-    for objectID, object in pairs(self.ghostViews.areas) do
-        local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(objectID))
-        local mx, _, mz = areaBridge.spGetObjectPosition(objectID)
-        local dx, dz = object.pos.x - mx, object.pos.z - mz
-        local areaView = AreaView(objectID)
-        areaView:_Draw(x1 + dx, z1 + dz, x2 + dx, z2 + dz)
+
+    for objType, objs in pairs(self.ghostViews) do
+        if objType ~= "unit" and objType ~= "feature" then
+            local bridge = ObjectBridge.GetObjectBridge(objType)
+            if bridge.DrawObject then
+                for objectID, object in pairs(objs) do
+                    bridge.DrawObject(objectID, object)
+                end
+            end
+        end
     end
+    gl.PopAttrib(GL.DEPTH_BUFFER_BIT)
 end
