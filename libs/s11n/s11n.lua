@@ -9,6 +9,11 @@ function s11n:init()
     self.featureBridge      = _FeatureBridge()
 end
 
+function s11n:MakeNewBridge(name)
+    self[name] = _ObjectBridge:extends{}
+    return self[name]
+end
+
 function s11n:GetUnitBridge()
     return self.unitBridge
 end

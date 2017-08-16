@@ -21,8 +21,7 @@ local function isUnitCommand(command)
     return false
 end
 
-function _UnitBridge:init()
-    _ObjectBridge.init(self)
+function _UnitBridge:OnInit()
     self.getFuncs = {
         pos = function(objectID)
             local px, py, pz = Spring.GetUnitPosition(objectID)

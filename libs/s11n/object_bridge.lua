@@ -3,6 +3,7 @@ _ObjectBridge = LCS.class{}
 function _ObjectBridge:init()
     self.objectDefaults = {} -- cached object defaults
     self._cacheQueue    = {}
+    self:OnInit()
 end
 
 function _ObjectBridge:_GetField(objectID, name)
@@ -36,6 +37,9 @@ function _ObjectBridge:_CompareValues(v1, v2)
 end
 
 function _ObjectBridge:_RemoveDefaults(objectID, values)
+    if not self.getFuncs.defName then
+        return
+    end
     local defName = self:_GetField(objectID, "defName")
     local defaults = self.objectDefaults[defName]
     if not defaults then
@@ -71,14 +75,14 @@ end
 function _ObjectBridge:_SetField(objectID, name, value)
     assert(self.setFuncs[name] ~= nil, "No such field: " .. tostring(name))
     local applyDir = nil
-    if name == "pos" then
+    if name == "pos" and self.getFuncs.rot then
         applyDir = self:_GetField(objectID, "rot")
     end
     self.setFuncs[name](objectID, value)
     -- FIXME: ENGINE BUG
     -- If buildings are moved, their direction will be reset.
     -- An additional rotation must be applied after movement.
-    if applyDir then
+    if applyDir and self.getFuncs.rot then
         self:_SetField(objectID, "rot", applyDir)
     end
 end
@@ -132,11 +136,11 @@ end
 -- s11n:Add(object)
 -- s11n:Add(objects)
 function _ObjectBridge:Add(input)
-    -- If input is an array and there isn't a .defName, then this is
+    -- If input is an array and there isn't a .pos, then this is
     -- probably an array of objects to be created
     -- Create multiple objects
     -- s11n:Add(objects)
-    if not input.defName then
+    if not input.pos then
         local objectIDs = {}
         for origObjectID, object in pairs(input) do
             local objectID = self:CreateObject(object, origObjectID)
@@ -168,7 +172,7 @@ function _ObjectBridge:Add(input)
     -- Create one object
     -- s11n:Add(object)
     else
-        local objectID = self:CreateObject(input)
+        local objectID = self:CreateObject(input, input.objectID)
         if not objectID then
             ReportObjectCreationFail(input)
             return

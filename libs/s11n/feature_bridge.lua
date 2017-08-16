@@ -1,7 +1,6 @@
 _FeatureBridge = _ObjectBridge:extends{}
 
-function _FeatureBridge:init()
-    _ObjectBridge.init(self)
+function _FeatureBridge:OnInit()
     self.getFuncs = {
         pos = function(objectID)
             local px, py, pz = Spring.GetFeaturePosition(objectID)
