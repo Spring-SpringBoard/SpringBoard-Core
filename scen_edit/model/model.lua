@@ -1,6 +1,8 @@
 Model = LCS.class{}
 SB_MODEL_DIR = Path.Join(SB_DIR, "model/")
 SB.IncludeDir(SB_MODEL_DIR)
+SB_MODEL_OBJECT_DIR = Path.Join(SB_MODEL_DIR, "object/")
+SB.IncludeDir(SB_MODEL_OBJECT_DIR)
 
 function Model:init()
     self._lua_rules_pre = "scen_edit"
