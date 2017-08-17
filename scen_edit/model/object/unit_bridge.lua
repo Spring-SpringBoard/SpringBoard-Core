@@ -4,9 +4,7 @@ UnitBridge = ObjectBridge:extends{}
 UnitBridge.humanName                       = "Unit"
 UnitBridge.spGetObjectsInCylinder          = Spring.GetUnitsInCylinder
 UnitBridge.spGetObjectDefID                = Spring.GetUnitDefID
-UnitBridge.spGetObjectPosition             = Spring.GetUnitPosition
 UnitBridge.spValidObject                   = Spring.ValidUnitID
-UnitBridge.spGetObjectTeam                 = Spring.GetUnitTeam
 UnitBridge.spGetObjectDirection            = Spring.GetUnitDirection
 UnitBridge.spGetAllObjects                 = Spring.GetAllUnits
 UnitBridge.spDestroyObject                 = Spring.DestroyUnit
@@ -46,4 +44,5 @@ if gl then
     unitBridge.glObjectShape               = gl.UnitShape
     unitBridge.glObjectShapeTextures       = gl.UnitShapeTextures
 end
+unitBridge.s11nFieldOrder = {"pos", "rot", "vel", "team", }
 ObjectBridge.Register("unit", unitBridge)

@@ -60,7 +60,8 @@ function DefaultState:MousePress(x, y, button)
     local bridge = ObjectBridge.GetObjectBridge(result)
     local objects = selection[result] or {}
     local _, coords = SB.TraceScreenRay(x, y, {onlyCoords = true})
-    local x, y, z = bridge.spGetObjectPosition(objectID)
+    local pos = bridge.s11n:Get(objectID, "pos")
+    local x, y, z = pos.x, pos.y, pos.z
     -- it's possible that there is no ground behind (if object is near the map edge)
     if coords == nil then
         coords = { x, y, z }

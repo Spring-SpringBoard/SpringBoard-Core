@@ -23,23 +23,16 @@ function SelectionManager:GetSelectionCount()
     return selCount
 end
 
-function SelectionManager:__ClearSelection()
-    Spring.SelectUnitArray({}, false)
-
-    self.selected = {}
-    for name, _ in pairs(ObjectBridge.GetObjectBridges()) do
-        self.selected[name] = {}
-    end
-end
-
 function SelectionManager:ClearSelection()
-    self:__ClearSelection()
-    self:callListeners("OnSelectionChanged")
+    self:Select({})
 end
 
 function SelectionManager:Select(selection)
     local oldSelected = self.selected
-    self:__ClearSelection()
+    self.selected = {}
+    for name, _ in pairs(ObjectBridge.GetObjectBridges()) do
+        self.selected[name] = {}
+    end
 
     for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
         self.selected[name] = selection[name] or {}

@@ -4,6 +4,16 @@ function _ObjectBridge:init()
     self.objectDefaults = {} -- cached object defaults
     self._cacheQueue    = {}
     self:OnInit()
+    self:__makeFunctions()
+end
+
+function _ObjectBridge:__makeFunctions()
+    self.getFuncs = {}
+    self.setFuncs = {}
+    for k, v in pairs(self.funcs) do
+        self.getFuncs[k] = v.get
+        self.setFuncs[k] = v.set
+    end
 end
 
 function _ObjectBridge:_GetField(objectID, name)

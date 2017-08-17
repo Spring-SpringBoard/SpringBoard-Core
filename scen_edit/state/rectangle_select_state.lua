@@ -58,8 +58,8 @@ function RectangleSelectState:GetObjectsInScreenRectangle(x1, y1, x2, y2, bridge
 	local result = {}
 
 	for _, objectID in pairs(objects) do
-		local x, y, z = bridge.spGetObjectPosition(objectID)
-		x, y = Spring.WorldToScreenCoords(x, y, z)
+		local pos = bridge.s11n:Get(objectID, "pos")
+		x, y = Spring.WorldToScreenCoords(pos.x, pos.y, pos.z)
 		if (left <= x and x <= right) and (top >= y and y >= bottom) then
             table.insert(result, objectID)
 		end

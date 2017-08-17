@@ -16,9 +16,9 @@ function DragHorizontalObjectState:GetMovedObjects()
         local bridge = ObjectBridge.GetObjectBridge(selType)
         if not bridge.NoHorizontalDrag and not bridge.NoDrag then
             for _, objectID in pairs(selected) do
-                local x, y, z = bridge.spGetObjectPosition(objectID)
-                local position = { x = x, y = y + self.dy, z = z}
-                objects[selType][objectID] = { pos = position }
+                local pos = bridge.s11n:Get(objectID, "pos")
+                pos.y = pos.y + self.dy
+                objects[selType][objectID] = { pos = pos }
             end
         end
     end
@@ -51,7 +51,7 @@ end
 
 function DragHorizontalObjectState:DrawObject(objectID, object, bridge, shaderObj)
     local objectDefID         = bridge.spGetObjectDefID(objectID)
-    local objectTeamID        = bridge.spGetObjectTeam(objectID)
+    local objectTeamID        = bridge.s11n:Get(objectID, "team")
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     local rot                 = bridge.s11n:Get(objectID, "rot")
     bridge.DrawObject({

@@ -4,9 +4,7 @@ FeatureBridge = ObjectBridge:extends{}
 FeatureBridge.humanName                       = "Feature"
 FeatureBridge.spGetObjectsInCylinder          = Spring.GetFeaturesInCylinder
 FeatureBridge.spGetObjectDefID                = Spring.GetFeatureDefID
-FeatureBridge.spGetObjectPosition             = Spring.GetFeaturePosition
 FeatureBridge.spValidObject                   = Spring.ValidFeatureID
-FeatureBridge.spGetObjectTeam                 = Spring.GetFeatureTeam
 FeatureBridge.spGetObjectDirection            = Spring.GetFeatureDirection
 FeatureBridge.spGetAllObjects                 = Spring.GetAllFeatures
 FeatureBridge.spDestroyObject                 = Spring.DestroyFeature
@@ -82,4 +80,5 @@ if gl then
     featureBridge.glObjectShape               = gl.FeatureShape
     featureBridge.glObjectShapeTextures       = gl.FeatureShapeTextures
 end
+featureBridge.s11nFieldOrder = {"pos", "rot", "vel"}
 ObjectBridge.Register("feature", featureBridge)

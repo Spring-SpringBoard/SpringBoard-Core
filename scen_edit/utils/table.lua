@@ -145,3 +145,12 @@ function Table.ShallowCopy(t)
     end
     return ret
 end
+
+function Table.Contains(t, value)
+    for _, v in pairs(t) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end

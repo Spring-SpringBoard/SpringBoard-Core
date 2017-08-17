@@ -91,12 +91,6 @@ end
 AreaBridge = ObjectBridge:extends{}
 AreaBridge.humanName                    = "Area"
 AreaBridge.NoHorizontalDrag             = true
-AreaBridge.spGetObjectPosition          = function(objectID)
-    local pos = SB.model.areaManager:getArea(objectID)
-    local x, z = (pos[1] + pos[3]) / 2, (pos[2] + pos[4]) / 2
-    local y = Spring.GetGroundHeight(x, z)
-    return x, y, z
-end
 AreaBridge.spGetAllObjects              = function()
     return SB.model.areaManager:getAllAreas()
 end
@@ -166,47 +160,51 @@ end
 areaBridge = AreaBridge()
 AreaS11N = s11n:MakeNewBridge("areaBridge")
 function AreaS11N:OnInit()
-    self.getFuncs = {
-        pos = function(objectID)
-            local area = SB.model.areaManager:getArea(objectID)
-            local x, z = (area[1] + area[3]) / 2, (area[2] + area[4]) / 2
-            local y = Spring.GetGroundHeight(x, z)
-            return {x = x, y = y, z = z}
-        end,
-        size = function(objectID)
-            local area = SB.model.areaManager:getArea(objectID)
-            local sizeX = math.abs(area[1] - area[3])
-            local sizeZ = math.abs(area[2] - area[4])
-            return {x = sizeX, y = 0, z = sizeZ}
-        end,
-    }
-    self.setFuncs = {
-        pos = function(objectID, value)
-            local area = SB.model.areaManager:getArea(objectID)
-            local centerX = (area[1] + area[3]) / 2
-            local centerZ = (area[2] + area[4]) / 2
-            local deltaX = value.x - centerX
-            local deltaZ = value.z - centerZ
-            SB.model.areaManager:setArea(objectID, {
-                area[1] + deltaX,
-                area[2] + deltaZ,
-                area[3] + deltaX,
-                area[4] + deltaZ,
-            })
-        end,
-        size = function(objectID, value)
-            local area = SB.model.areaManager:getArea(objectID)
-            local centerX = (area[1] + area[3]) / 2
-            local centerZ = (area[2] + area[4]) / 2
-            local x1, x2, z1, z2
-            x1 = centerX - value.x / 2
-            x2 = centerX + value.x / 2
-            z1 = centerZ - value.z / 2
-            z2 = centerZ + value.z / 2
-            SB.model.areaManager:setArea(objectID, {
-                x1, z1, x2, z2
-            })
-        end,
+    self.funcs = {
+        pos = {
+            get = function(objectID)
+                local area = SB.model.areaManager:getArea(objectID)
+                local x, z = (area[1] + area[3]) / 2, (area[2] + area[4]) / 2
+                local y = Spring.GetGroundHeight(x, z)
+                return {x = x, y = y, z = z}
+            end,
+            set = function(objectID, value)
+                local area = SB.model.areaManager:getArea(objectID)
+                local centerX = (area[1] + area[3]) / 2
+                local centerZ = (area[2] + area[4]) / 2
+                local deltaX = value.x - centerX
+                local deltaZ = value.z - centerZ
+                SB.model.areaManager:setArea(objectID, {
+                    area[1] + deltaX,
+                    area[2] + deltaZ,
+                    area[3] + deltaX,
+                    area[4] + deltaZ,
+                })
+            end,
+            dtype = "xyz",
+        },
+        size = {
+            get = function(objectID)
+                local area = SB.model.areaManager:getArea(objectID)
+                local sizeX = math.abs(area[1] - area[3])
+                local sizeZ = math.abs(area[2] - area[4])
+                return {x = sizeX, y = 0, z = sizeZ}
+            end,
+            set = function(objectID, value)
+                local area = SB.model.areaManager:getArea(objectID)
+                local centerX = (area[1] + area[3]) / 2
+                local centerZ = (area[2] + area[4]) / 2
+                local x1, x2, z1, z2
+                x1 = centerX - value.x / 2
+                x2 = centerX + value.x / 2
+                z1 = centerZ - value.z / 2
+                z2 = centerZ + value.z / 2
+                SB.model.areaManager:setArea(objectID, {
+                    x1, z1, x2, z2
+                })
+            end,
+            dtype = "xyz",
+        },
     }
 end
 -- FIXME: Disable setting fields afterwards (faster)
@@ -230,4 +228,5 @@ function AreaS11N:GetAllObjectIDs()
     return
 end
 areaBridge.s11n                         = AreaS11N()
+areaBridge.s11nFieldOrder = {"pos", "size"}
 ObjectBridge.Register("area", areaBridge)

@@ -85,9 +85,9 @@ function ObjectField:init(field)
                 end
                 local springID = self.bridge.getObjectSpringID(self.value)
                 if springID and self.bridge.spValidObject(springID) then
-                    local x, y, z = self.bridge.spGetObjectPosition(springID)
+                    local pos = self.bridge.s11n:Get(springID, "pos")
                     self.bridge.Select({springID})
-                    Spring.SetCameraTarget(x, y, z)
+                    Spring.SetCameraTarget(pos.x, pos.y, pos.z)
                 end
             end
         }

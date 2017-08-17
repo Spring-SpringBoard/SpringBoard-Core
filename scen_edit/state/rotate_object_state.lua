@@ -10,7 +10,8 @@ function RotateObjectState:GetRotatedObject(params, bridge)
     local angle = params.angle
     local avgX, avgZ = params.avgX, params.avgZ
 
-    local objectX, objectY, objectZ = bridge.spGetObjectPosition(objectID)
+    local pos = bridge.s11n:Get(objectID, "pos")
+    local objectX, objectY, objectZ = pos.x, pos.y, pos.z
     local dx = objectX - avgX
     local dz = objectZ - avgZ
     local angle2 = angle + math.atan2(dx, dz)
@@ -56,10 +57,10 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
     for selType, selected in pairs(selection) do
         local bridge = ObjectBridge.GetObjectBridge(selType)
         for _, objectID in pairs(selected) do
-            local x, y, z = bridge.spGetObjectPosition(objectID)
-            avg.x = avg.x + x
-            avg.y = avg.y + y
-            avg.z = avg.z + z
+            local pos = bridge.s11n:Get(objectID, "pos")
+            avg.x = avg.x + pos.x
+            avg.y = avg.y + pos.y
+            avg.z = avg.z + pos.z
         end
     end
 
@@ -116,7 +117,7 @@ end
 
 function RotateObjectState:DrawObject(objectID, object, bridge, shaderObj)
     local objectDefID  = bridge.spGetObjectDefID(objectID)
-    local objectTeamID = bridge.spGetObjectTeam(objectID)
+    local objectTeamID = bridge.s11n:Get(objectID, "team")
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     bridge.DrawObject({
         color           = { r = 0.4, g = 1, b = 0.4, a = 0.8 },

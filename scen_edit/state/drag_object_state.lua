@@ -19,10 +19,12 @@ function DragObjectState:GetMovedObjects()
         objects[selType] = {}
         local bridge = ObjectBridge.GetObjectBridge(selType)
         for _, objectID in pairs(selected) do
-            local x, y, z = bridge.spGetObjectPosition(objectID)
-            local y = Spring.GetGroundHeight(x + self.dx, z + self.dz)
-            local position = { x = x + self.dx, y = y, z = z + self.dz}
-            objects[selType][objectID] = { pos = position }
+            local pos = bridge.s11n:Get(objectID, "pos")
+            local dy = pos.y - Spring.GetGroundHeight(pos.x, pos.z)
+            pos.x = pos.x + self.dx
+            pos.z = pos.z + self.dz
+            pos.y = Spring.GetGroundHeight(pos.x, pos.z) + dy
+            objects[selType][objectID] = { pos = pos }
         end
     end
     return objects
@@ -38,9 +40,9 @@ function DragObjectState:MouseMove(x, y, dx, dy, button)
         SB.stateManager:SetState(DefaultState())
         return false
     end
-    local ox, _, oz = self.bridge.spGetObjectPosition(self.objectID)
-    self.dx = coords[1] - ox + self.startDiffX
-    self.dz = coords[3] - oz + self.startDiffZ
+    local pos = self.bridge.s11n:Get(self.objectID, "pos")
+    self.dx = coords[1] - pos.x + self.startDiffX
+    self.dz = coords[3] - pos.z + self.startDiffZ
 
     self.ghostViews = self:GetMovedObjects()
 end
@@ -65,7 +67,7 @@ end
 
 function DragObjectState:DrawObject(objectID, object, bridge, shaderObj)
     local objectDefID         = bridge.spGetObjectDefID(objectID)
-    local objectTeamID        = bridge.spGetObjectTeam(objectID)
+    local objectTeamID        = bridge.s11n:Get(objectID, "team")
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     local rot                 = bridge.s11n:Get(objectID, "rot")
     bridge.DrawObject({
