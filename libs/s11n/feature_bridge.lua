@@ -132,7 +132,11 @@ end
 
 -- FIXME: objectID not used
 function _FeatureBridge:CreateObject(object, objectID)
+    local y = Spring.GetGroundHeight(object.pos.x, object.pos.z)
     local objectID = Spring.CreateFeature(object.defName, object.pos.x, object.pos.y, object.pos.z)
+    if y ~= object.pos.y then
+        Spring.SetFeatureMoveCtrl(objectID, true)
+    end
     return objectID
 end
 
