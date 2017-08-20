@@ -132,5 +132,4 @@ for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
     local fname = String.Capitalize(name) .. "Field"
     local g = getfenv()
     g[fname] = f
-    Spring.Echo(UnitField)
 end

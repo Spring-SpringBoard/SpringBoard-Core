@@ -340,8 +340,8 @@ function ObjectPropertyWindow:AddObjectFields(bridge, objectID)
         end
     end
     self.rules = {}
-    if bridge == unitBridge then
-        self:AddObjectRules(objectID, unitBridge)
+    if bridge == unitBridge or bridge == featureBridge then
+        self:AddObjectRules(objectID, bridge)
     end
 end
 
@@ -377,6 +377,10 @@ end
 function ObjectPropertyWindow:OnCommandExecuted()
     if not self._startedChanging then
         self.selectionChanging = true
+        if self.__fullRefresh then
+            self:OnSelectionChanged()
+            self.__fullRefresh = true
+        end
         self:__UpdateFields()
         self.selectionChanging = false
     end
@@ -389,6 +393,81 @@ end
 function ObjectPropertyWindow:OnEndChange(name)
     SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 end
+
+NewRuleDialog = Editor:extends{}
+
+function NewRuleDialog:init(objectPropertyWindow)
+    self:super("init")
+
+    self.initializing = true
+    self.objectPropertyWindow = objectPropertyWindow
+
+    local btnOK = Button:New {
+        caption = 'OK',
+        width = '40%',
+        x = 1,
+        bottom = 1,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_OK_COLOR,
+        OnClick = {
+            function()
+                local ruleName = self.fields["ruleName"].value
+                local ruleType = self.fields["ruleType"].value
+                local value = 0
+                if ruleType == "String" then
+                    value = "empty"
+                end
+                self.objectPropertyWindow:OnFieldChange("rule_" .. ruleName, value)
+                self.objectPropertyWindow.__fullRefresh = true
+                self.window:Dispose()
+            end
+        }
+    }
+    local btnCancel = Button:New {
+        caption = 'Cancel',
+        width = '40%',
+        x = '50%',
+        bottom = 1,
+        height = SB.conf.B_HEIGHT,
+        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
+        OnClick = {
+            function()
+                self.window:Dispose()
+            end
+        }
+    }
+
+    self:AddField(GroupField({
+        StringField({
+            name = "ruleName",
+            title = "Name:",
+            width = 140,
+        }),
+        ChoiceField({
+            name = "ruleType",
+            title = "Type:",
+            width = 140,
+            items = {"String", "Number"}
+        })
+    }))
+
+    local children = {
+        btnOK,
+        btnCancel,
+        ScrollPanel:New {
+            x = 0,
+            y = 0,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        },
+    }
+
+    self:Finalize(children, {notMainWindow=true, noCloseButton=true})
+end
+
 
 function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
     local addedRule = false
@@ -406,21 +485,51 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
             })
         end
         local ruleName = "rule_" .. rule
+        local fields = {}
+
         if type(value) == "string" then
-            self:AddField(StringField({
+            table.insert(fields, StringField({
                 name = ruleName,
                 title = rule .. ":",
                 tooltip = "Rule (" .. rule .. ")",
                 value = tostring(value),
             }))
         else
-            self:AddField(NumericField({
+            table.insert(fields, NumericField({
                 name = ruleName,
                 title = rule .. ":",
                 tooltip = "Rule (" .. rule .. ")",
                 value = value,
             }))
         end
+        table.insert(fields, Field({
+            name = "rem_" .. ruleName,
+            width = SB.conf.B_HEIGHT,
+            components = {
+                Button:New {
+                    caption = "",
+                    width = SB.conf.B_HEIGHT,
+                    height = SB.conf.B_HEIGHT,
+                    padding = {2, 2, 2, 2},
+                    tooltip = "Remove team",
+                    classname = "negative_button",
+                    children = {
+                        Image:New {
+                            file = SB_IMG_DIR .. "cancel.png",
+                            height = "100%",
+                            width = "100%",
+                        },
+                    },
+                    OnClick = {
+                        function()
+                            self:OnFieldChange(ruleName, false)
+                            self.__fullRefresh = true
+                        end
+                    }
+                },
+            }
+        }))
+        self:AddField(GroupField(fields))
         table.insert(self.rules, ruleName)
     end
     self:AddField(Field({
@@ -435,7 +544,7 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
                 tooltip = "Add unit rule",
                 OnClick = {
                     function()
-
+                        NewRuleDialog(self)
                     end
                 }
             },

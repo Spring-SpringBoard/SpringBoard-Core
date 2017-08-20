@@ -251,52 +251,28 @@ function _UnitBridge:OnInit()
             end,
             set = function(objectID, value)
                 if value.fireState ~= nil then
-                    Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.FIRE_STATE, CMD.OPT_ALT, value.fireState},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.FIRE_STATE, {value.fireState}, {})
                 end
                 if value.moveState ~= nil then
-                    Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.MOVE_STATE, CMD.OPT_ALT, value.moveState},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.MOVE_STATE, {value.moveState}, {})
                 end
                 if value.active ~= nil then
-                    Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.ONOFF, CMD.OPT_ALT, boolToNumber(value.active)},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.ACTIVE, {boolToNumber(value.active)}, {})
                 end
                 if value["repeat"] ~= nil then
-                    Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.REPEAT, CMD.OPT_ALT, boolToNumber(value["repeat"])},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.REPEAT, {boolToNumber(value["repeat"])}, {})
                 end
                 if value.cloak ~= nil then
-                    Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.CLOAK, CMD.OPT_ALT, boolToNumber(value.cloak)},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.CLOAK, {boolToNumber(value.cloak)}, {})
                 end
                 if value.trajectory ~= nil then
-                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.TRAJECTORY, CMD.OPT_ALT, boolToNumber(value.trajectory)},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.TRAJECTORY, {boolToNumber(value.trajectory)}, {})
                 end
                 if value.autoRepairLevel ~= nil then
-                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.AUTOREPAIRLEVEL, CMD.OPT_ALT, boolToNumber(value.autoRepairLevel)},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.AUTOREPAIRLEVEL, {boolToNumber(value.autoRepairLevel)}, {})
                 end
                 if value.loopbackAttack ~= nil then
-                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { -1, CMD.LOOPBACKATTACK, CMD.OPT_ALT, boolToNumber(value.loopbackAttack)},
-                        {"alt"}
-                    )
+                    Spring.GiveOrderToUnit(objectID, CMD.LOOPBACKATTACK, {boolToNumber(value.loopbackAttack)}, {})
                 end
             end,
         },
@@ -321,7 +297,11 @@ function _UnitBridge:OnInit()
             end,
             set = function(objectID, value)
                 for ruleName, ruleValue in pairs(value) do
-                    Spring.SetUnitRulesParam(objectID, ruleName, ruleValue)
+                    if ruleValue == false then
+                        Spring.SetUnitRulesParam(objectID, ruleName, nil)
+                    else
+                        Spring.SetUnitRulesParam(objectID, ruleName, ruleValue)
+                    end
                 end
             end,
         },

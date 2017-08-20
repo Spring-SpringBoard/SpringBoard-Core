@@ -121,6 +121,20 @@ function _FeatureBridge:OnInit()
             end,
             minValue = 1,
         },
+        rules = {
+            get = function(objectID)
+                return Spring.GetFeatureRulesParams(objectID)
+            end,
+            set = function(objectID, value)
+                for ruleName, ruleValue in pairs(value) do
+                    if ruleValue == false then
+                        Spring.SetFeatureRulesParam(objectID, ruleName, nil)
+                    else
+                        Spring.SetFeatureRulesParam(objectID, ruleName, ruleValue)
+                    end
+                end
+            end,
+        },
     }
 end
 
