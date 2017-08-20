@@ -11,7 +11,7 @@ function ObjectField:Validate(value)
         return Field.Validate(self, value)
     end
     local springID = self.bridge.getObjectSpringID(value)
-    if springID and self.bridge.spValidObject(springID) then
+    if springID and self.bridge.ValidObject(springID) then
         return true, value
     end
 end
@@ -55,7 +55,10 @@ function ObjectField:init(field)
         end,
         OnClick = {
             function(...)
-                SB.stateManager:SetState(self.bridge.SelectObjectState(self.OnSelectObject))
+                SB.stateManager:SetState(
+                    SelectObjectState(self.bridge,
+                                      self.OnSelectObject)
+                )
             end
         },
         children = {
@@ -84,9 +87,16 @@ function ObjectField:init(field)
                     return
                 end
                 local springID = self.bridge.getObjectSpringID(self.value)
-                if springID and self.bridge.spValidObject(springID) then
-                    local pos = self.bridge.s11n:Get(springID, "pos")
-                    self.bridge.Select({springID})
+                if springID and self.bridge.ValidObject(springID) then
+                    local pos
+                    if self.bridge == positionBridge then
+                        pos = springID
+                    else
+                        pos = self.bridge.s11n:Get(springID, "pos")
+                    end
+                    SB.view.selectionManager:Select({
+                        [self.bridge.name] = {springID}
+                    })
                     Spring.SetCameraTarget(pos.x, pos.y, pos.z)
                 end
             end
@@ -101,42 +111,26 @@ end
 
 function ObjectField:GetCaption()
     if self.value ~= nil then
-        return "ID=" .. self.value
+        if self.bridge == positionBridge then
+            return string.format("(%.1f,%.1f,%.1f)",
+                   self.value.x, self.value.y, self.value.z)
+        else
+            return self.value
+        end
     else
         return "None"
     end
 end
 
--- Custom object classes
-UnitField = ObjectField:extends{}
-function UnitField:init(...)
-    ObjectField.init(self, ...)
-    self.bridge = unitBridge
-end
-
-FeatureField = ObjectField:extends{}
-function FeatureField:init(...)
-    ObjectField.init(self, ...)
-    self.bridge = featureBridge
-end
-
-AreaField = ObjectField:extends{}
-function AreaField:init(...)
-    ObjectField.init(self, ...)
-    self.bridge = areaBridge
-end
-
-PositionField = ObjectField:extends{}
-
-function PositionField:init(...)
-    ObjectField.init(self, ...)
-    self.bridge = positionBridge
-end
-
-function PositionField:GetCaption()
-    if self.value ~= nil then
-        return string.format("(%.1f,%.1f,%.1f)", self.value.x, self.value.y, self.value.z)
-    else
-        return ObjectField.GetCaption(self)
+-- FIXME: doens't work, global variable doesn't seem found
+for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
+    local f = ObjectField:extends{}
+    function f:init(opts)
+        opts.bridge = bridge
+        ObjectField.init(self, opts)
     end
+    local fname = String.Capitalize(name) .. "Field"
+    local g = getfenv()
+    g[fname] = f
+    Spring.Echo(UnitField)
 end

@@ -2,18 +2,13 @@ SB.Include(SB_MODEL_OBJECT_DIR .. 'object_bridge.lua')
 
 FeatureBridge = ObjectBridge:extends{}
 FeatureBridge.humanName                       = "Feature"
-FeatureBridge.spGetObjectsInCylinder          = Spring.GetFeaturesInCylinder
-FeatureBridge.spGetObjectDefID                = Spring.GetFeatureDefID
-FeatureBridge.spValidObject                   = Spring.ValidFeatureID
-FeatureBridge.spGetObjectDirection            = Spring.GetFeatureDirection
-FeatureBridge.spGetAllObjects                 = Spring.GetAllFeatures
-FeatureBridge.spDestroyObject                 = Spring.DestroyFeature
+FeatureBridge.GetObjectsInCylinder            = Spring.GetFeaturesInCylinder
+FeatureBridge.GetObjectDefID                  = Spring.GetFeatureDefID
+FeatureBridge.ValidObject                     = Spring.ValidFeatureID
+FeatureBridge.GetObjectDirection              = Spring.GetFeatureDirection
+FeatureBridge.GetAllObjects                   = Spring.GetAllFeatures
+FeatureBridge.DestroyObject                   = Spring.DestroyFeature
 
-FeatureBridge.AddObjectCommand                = AddFeatureCommand
-FeatureBridge.RemoveObjectCommand             = RemoveFeatureCommand
-FeatureBridge.SetObjectParamCommand           = SetFeatureParamCommand
-
-FeatureBridge.SelectObjectState               = SelectFeatureState
 FeatureBridge.SelectObjectTypeState           = SelectFeatureTypeState
 
 FeatureBridge.DrawObject                      = function(params)
@@ -58,11 +53,6 @@ FeatureBridge.DrawSelected                    = function(objectID)
     local x2, z2 = bx + maxx - 5, bz + maxz + 5
     gl.BeginEnd(GL.LINE_STRIP, DrawLines, x1, x2, z1, z2, by)
 end
-FeatureBridge.Select                          = function(objectIDs)
-    SB.view.selectionManager:Select({
-        feature = objectIDs
-    })
-end
 
 FeatureBridge.getObjectSpringID               = function(modelID)
     return SB.model.featureManager:getSpringFeatureID(modelID)
@@ -81,4 +71,8 @@ if gl then
     featureBridge.glObjectShapeTextures       = gl.FeatureShapeTextures
 end
 featureBridge.s11nFieldOrder = {"pos", "rot", "vel"}
+featureBridge.blockedFields = {
+    "dir", "defName", "collision", "blocking", "radiusHeight", "midAimPos",
+    "team",
+}
 ObjectBridge.Register("feature", featureBridge)

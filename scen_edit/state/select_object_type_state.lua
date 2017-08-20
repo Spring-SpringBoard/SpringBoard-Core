@@ -8,7 +8,7 @@ function SelectObjectTypeState:MousePress(x, y, button)
     if button == 1 then
         local success, objectID = self:__MaybeTraceObject(x, y)
         if success then
-            local objectDefID = self.bridge.spGetObjectDefID(objectID)
+            local objectDefID = self.bridge.GetObjectDefID(objectID)
             self:SelectObjectType(objectDefID)
         end
     elseif button == 3 then

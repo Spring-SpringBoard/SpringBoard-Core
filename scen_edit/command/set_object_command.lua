@@ -1,36 +1,14 @@
 SetObjectCommand = Command:extends{}
 SetObjectCommand.className = "SetObjectCommand"
 
+function SetObjectCommand:init(objType, params)
+    self.className = "SetObjectCommand"
+    self.objType   = objType
+    self.params    = params
+end
+
 function SetObjectCommand:execute(bridge)
+    local bridge = ObjectBridge.GetObjectBridge(self.objType)
+
     bridge.s11n:Set(self.params)
-end
-
-SetUnitCommand = SetObjectCommand:extends{}
-SetUnitCommand.className = "SetUnitCommand"
-function SetUnitCommand:init(params)
-    self.className        = "SetUnitCommand"
-    self.params           = params
-end
-function SetUnitCommand:execute()
-    self:super("execute", unitBridge)
-end
-
-SetFeatureCommand = SetObjectCommand:extends{}
-SetFeatureCommand.className = "SetFeatureCommand"
-function SetFeatureCommand:init(params)
-    self.className        = "SetFeatureCommand"
-    self.params           = params
-end
-function SetFeatureCommand:execute()
-    self:super("execute", featureBridge)
-end
-
-SetAreaParamCommand = SetObjectCommand:extends{}
-SetAreaParamCommand.className = "SetAreaParamCommand"
-function SetAreaParamCommand:init(params)
-    self.className        = "SetAreaParamCommand"
-    self.params           = params
-end
-function SetFeatureCommand:execute()
-    self:super("execute", areaBridge)
 end

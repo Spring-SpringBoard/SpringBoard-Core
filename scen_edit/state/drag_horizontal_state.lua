@@ -6,6 +6,7 @@ function DragHorizontalObjectState:init(startY)
     self.dy = 0
     self.startDiffY = startDiffY
     SB.SetMouseCursor("resize-y")
+    self.ghostViews = {}
 end
 
 function DragHorizontalObjectState:GetMovedObjects()
@@ -37,9 +38,11 @@ function DragHorizontalObjectState:MouseRelease(x, y, button)
         local bridge = ObjectBridge.GetObjectBridge(objType)
         for objectID, obj in pairs(objs) do
             local modelID = bridge.getObjectModelID(objectID)
-            table.insert(commands, bridge.SetObjectParamCommand(modelID, "pos", obj.pos))
-            if bridge.s11n.setFuncs.gravity then
-                table.insert(commands, bridge.SetObjectParamCommand(modelID, "gravity", 0))
+            table.insert(commands, SetObjectParamCommand(bridge.name, modelID, "pos", obj.pos))
+            if bridge.s11n.setFuncs["gravity"] and
+               bridge.s11n.setFuncs["movectrl"] then
+                table.insert(commands, SetObjectParamCommand(bridge.name, modelID, "movectrl", true))
+                table.insert(commands, SetObjectParamCommand(bridge.name, modelID, "gravity", 0))
             end
         end
     end
@@ -50,7 +53,7 @@ function DragHorizontalObjectState:MouseRelease(x, y, button)
 end
 
 function DragHorizontalObjectState:DrawObject(objectID, object, bridge, shaderObj)
-    local objectDefID         = bridge.spGetObjectDefID(objectID)
+    local objectDefID         = bridge.GetObjectDefID(objectID)
     local objectTeamID        = bridge.s11n:Get(objectID, "team")
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     local rot                 = bridge.s11n:Get(objectID, "rot")

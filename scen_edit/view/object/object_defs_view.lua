@@ -254,10 +254,22 @@ end
 function UnitDefsView:EnterState()
     if self.type == "set" then
         self:SetInvisibleFields(unpack(self.brushFields))
-        SB.stateManager:SetState(AddUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(
+            AddObjectState(
+                unitBridge,
+                self,
+                self.objectDefPanel:GetSelectedObjectDefs()
+            )
+        )
     elseif self.type == "brush" then
         self:SetInvisibleFields(unpack(self.setFields))
-        SB.stateManager:SetState(BrushUnitState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(
+            BrushObjectState(
+                unitBridge,
+                self,
+                self.objectDefPanel:GetSelectedObjectDefs()
+            )
+        )
     end
 end
 function UnitDefsView:MakeFilters()
@@ -346,10 +358,22 @@ end
 function FeatureDefsView:EnterState()
     if self.type == "set" then
         self:SetInvisibleFields(unpack(self.brushFields))
-        SB.stateManager:SetState(AddFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(
+            AddObjectState(
+                featureBridge,
+                self,
+                self.objectDefPanel:GetSelectedObjectDefs()
+            )
+        )
     elseif self.type == "brush" then
         self:SetInvisibleFields(unpack(self.setFields))
-        SB.stateManager:SetState(BrushFeatureState(self, self.objectDefPanel:GetSelectedObjectDefs()))
+        SB.stateManager:SetState(
+            BrushObjectState(
+                featureBridge,
+                self,
+                self.objectDefPanel:GetSelectedObjectDefs()
+            )
+        )
     end
 end
 function FeatureDefsView:MakeFilters()

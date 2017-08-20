@@ -1,12 +1,22 @@
 SetObjectParamCommand = Command:extends{}
 SetObjectParamCommand.className = "SetObjectParamCommand"
 
-function NoGetField(name)
+function SetObjectParamCommand:init(objType, modelID, key, value)
+    self.className        = "SetObjectParamCommand"
+    self.objType          = objType
+    self.modelID          = modelID
+    self.key              = key
+    self.value            = value
+end
+
+local function NoGetField(name)
     return name == "gravity"
 end
 
-function SetObjectParamCommand:execute(bridge)
-    local objectID = bridge.getObjectSpringID(self.objectModelID)
+function SetObjectParamCommand:execute()
+    local bridge = ObjectBridge.GetObjectBridge(self.objType)
+
+    local objectID = bridge.getObjectSpringID(self.modelID)
     if self.value == nil then
         local keys = {}
         for name, _ in pairs(self.key) do
@@ -23,59 +33,16 @@ function SetObjectParamCommand:execute(bridge)
     bridge.s11n:Set(objectID, self.key, self.value)
 end
 
-function SetObjectParamCommand:unexecute(bridge)
+function SetObjectParamCommand:unexecute()
+    local bridge = ObjectBridge.GetObjectBridge(self.objType)
+
     if self.old == nil then
         return
     end
-    local objectID = bridge.getObjectSpringID(self.objectModelID)
+    local objectID = bridge.getObjectSpringID(self.modelID)
     if self.value == nil then
         bridge.s11n:Set(objectID, self.old)
     else
         bridge.s11n:Set(objectID, self.key, self.old)
     end
-end
-
-SetUnitParamCommand = SetObjectParamCommand:extends{}
-SetUnitParamCommand.className = "SetUnitParamCommand"
-function SetUnitParamCommand:init(objectModelID, key, value)
-    self.className        = "SetUnitParamCommand"
-    self.objectModelID    = objectModelID
-    self.key              = key
-    self.value            = value
-end
-function SetUnitParamCommand:execute()
-    self:super("execute", unitBridge)
-end
-function SetUnitParamCommand:unexecute()
-    self:super("unexecute", unitBridge)
-end
-
-SetFeatureParamCommand = SetObjectParamCommand:extends{}
-SetFeatureParamCommand.className = "SetFeatureParamCommand"
-function SetFeatureParamCommand:init(objectModelID, key, value)
-    self.className      = "SetFeatureParamCommand"
-    self.objectModelID    = objectModelID
-    self.key              = key
-    self.value            = value
-end
-function SetFeatureParamCommand:execute()
-    self:super("execute", featureBridge)
-end
-function SetFeatureParamCommand:unexecute()
-    self:super("unexecute", featureBridge)
-end
-
-SetAreaParamCommand = SetObjectParamCommand:extends{}
-SetAreaParamCommand.className = "SetAreaParamCommand"
-function SetAreaParamCommand:init(objectModelID, key, value)
-    self.className        = "SetAreaParamCommand"
-    self.objectModelID    = objectModelID
-    self.key              = key
-    self.value            = value
-end
-function SetAreaParamCommand:execute()
-    self:super("execute", areaBridge)
-end
-function SetAreaParamCommand:unexecute()
-    self:super("unexecute", areaBridge)
 end

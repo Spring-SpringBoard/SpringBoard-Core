@@ -187,7 +187,9 @@ local function GUIStateSave(path)
 
     local editors = {}
     for name, editor in pairs(SB.editors) do
-        editors[name] = editor:Serialize()
+        if not SB.editorRegistry[name].dont_save then
+            editors[name] = editor:Serialize()
+        end
     end
 
     local guiState = {

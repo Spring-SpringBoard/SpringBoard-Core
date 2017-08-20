@@ -2,10 +2,13 @@ SB.Include("scen_edit/state/abstract_map_editing_state.lua")
 BrushObjectState = AbstractMapEditingState:extends{}
 
 local waitList = {}
-function BrushObjectState:init(editorView, objectDefIDs)
+function BrushObjectState:init(bridge, editorView, objectDefIDs)
     AbstractMapEditingState.init(self, editorView)
 
+    self.bridge = bridge
+
     self.objectDefIDs = objectDefIDs
+
     self.randomSeed = os.clock()
 
     self.spread  = self.editorView.fields["spread"].value
@@ -28,7 +31,7 @@ function BrushObjectState:GetApplyParams(x, z, button)
 end
 
 function BrushObjectState:FilterObject(objectID)
-    local objectDefID = self.bridge.spGetObjectDefID(objectID)
+    local objectDefID = self.bridge.GetObjectDefID(objectID)
     local isApproved = false
     for _, approvedObjectDefID in pairs(self.objectDefIDs) do
         if approvedObjectDefID == objectDefID then
@@ -67,7 +70,7 @@ function BrushObjectState:Apply(bx, bz, button)
 
     local existing = {}
     local radius = self.size * math.sqrt(2)
-    for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(bx, bz, radius)) do
+    for _, objectID in pairs(self.bridge.GetObjectsInCylinder(bx, bz, radius)) do
         if button == 3 or self:FilterObject(objectID) then
             table.insert(existing, objectID)
         end
@@ -94,7 +97,7 @@ function BrushObjectState:Apply(bx, bz, button)
                         angles[axis] = math.random() * (self[fieldMaxName] - self[fieldMinName]) + self[fieldMinName]
                     end
                     local y = Spring.GetGroundHeight(x, z)
-                    local cmd = self.bridge.AddObjectCommand({
+                    local cmd = AddObjectCommand(self.bridge.name, {
                         defName = objectDefID,
                         pos = { x = x, y = y, z = z },
                         rot = angles,
@@ -108,7 +111,8 @@ function BrushObjectState:Apply(bx, bz, button)
         end
     elseif button == 3 then
         for i = 1, #existing do
-            local cmd = self.bridge.RemoveObjectCommand(self.bridge.getObjectModelID(existing[i]))
+            local cmd = RemoveObjectCommand(self.bridge.name,
+            self.bridge.getObjectModelID(existing[i]))
             commands[#commands + 1] = cmd
         end
     end
@@ -136,7 +140,7 @@ function BrushObjectState:CheckExisting(x, z, distance)
             end
         end
     end
-    for _, objectID in pairs(self.bridge.spGetObjectsInCylinder(x, z, distance)) do
+    for _, objectID in pairs(self.bridge.GetObjectsInCylinder(x, z, distance)) do
         if self:FilterObject(objectID) then
             return true
         end
@@ -213,19 +217,6 @@ function BrushObjectState:DrawWorld()
     }
     self:DrawObject(object, self.bridge, shaderObj)
     gl.UseShader(0)
-end
-
--- Custom unit/feature classes
-BrushUnitState = BrushObjectState:extends{}
-function BrushUnitState:init(...)
-    BrushObjectState.init(self, ...)
-    self.bridge = unitBridge
-end
-
-BrushFeatureState = BrushObjectState:extends{}
-function BrushFeatureState:init(...)
-    BrushObjectState.init(self, ...)
-    self.bridge = featureBridge
 end
 
 ------------------------------------------------

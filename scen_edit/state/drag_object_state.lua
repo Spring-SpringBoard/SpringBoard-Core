@@ -36,7 +36,7 @@ function DragObjectState:MouseMove(x, y, dx, dy, button)
         return
     end
 
-    if not self.bridge.spValidObject(self.objectID) then -- or Spring.GetUnitIsDead(self.objectID)
+    if not self.bridge.ValidObject(self.objectID) then -- or Spring.GetUnitIsDead(self.objectID)
         SB.stateManager:SetState(DefaultState())
         return false
     end
@@ -54,7 +54,7 @@ function DragObjectState:MouseRelease(x, y, button)
         local bridge = ObjectBridge.GetObjectBridge(objType)
         for objectID, obj in pairs(objs) do
             local modelID = bridge.getObjectModelID(objectID)
-            local cmd = bridge.SetObjectParamCommand(modelID, "pos", obj.pos)
+            local cmd = SetObjectParamCommand(bridge.name, modelID, "pos", obj.pos)
             table.insert(commands, cmd)
         end
     end
@@ -66,7 +66,7 @@ function DragObjectState:MouseRelease(x, y, button)
 end
 
 function DragObjectState:DrawObject(objectID, object, bridge, shaderObj)
-    local objectDefID         = bridge.spGetObjectDefID(objectID)
+    local objectDefID         = bridge.GetObjectDefID(objectID)
     local objectTeamID        = bridge.s11n:Get(objectID, "team")
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     local rot                 = bridge.s11n:Get(objectID, "rot")
@@ -83,6 +83,7 @@ function DragObjectState:DrawWorld()
     if not self.ghostViews then
         return
     end
+
     gl.PushAttrib(GL.DEPTH_BUFFER_BIT)
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)

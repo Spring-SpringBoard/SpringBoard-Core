@@ -10,24 +10,20 @@ function DefaultState:MousePress(x, y, button)
     self.__clickedObjectID = nil
     self.__clickedObjectBridge = nil
 
-    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" or button ~= 1 then
         return
     end
 
     local selection = SB.view.selectionManager:GetSelection()
     local selCount = SB.view.selectionManager:GetSelectionCount()
     local _, ctrl, _, shift = Spring.GetModKeyState()
-    if (ctrl or shift) and selCount > 0 then
+    if ctrl and selCount > 0 then
         -- TODO: There should be a cleaner way to disable some types of editing interactions during play
         if Spring.GetGameRulesParam("sb_gameMode") == "dev" then
             return true
         else
             return false
         end
-    end
-
-    if button ~= 1 then
-        return
     end
 
     local isDoubleClick = false
@@ -100,23 +96,25 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
     end
     local _, ctrl, _, shift = Spring.GetModKeyState()
     if ctrl then
-        SB.stateManager:SetState(RotateObjectState())
-    elseif shift then
-        local draggable = false
-        for selType, selected in pairs(selection) do
-            local bridge = ObjectBridge.GetObjectBridge(selType)
-            if not bridge.NoHorizontalDrag and not bridge.NoDrag then
-                for _, _ in pairs(selected) do
-                    draggable = true
+        if shift then
+            local draggable = false
+            for selType, selected in pairs(selection) do
+                local bridge = ObjectBridge.GetObjectBridge(selType)
+                if not bridge.NoHorizontalDrag and not bridge.NoDrag then
+                    for _, _ in pairs(selected) do
+                        draggable = true
+                        break
+                    end
+                end
+                if draggable then
                     break
                 end
             end
             if draggable then
-                break
+                SB.stateManager:SetState(DragHorizontalObjectState())
             end
-        end
-        if draggable then
-            SB.stateManager:SetState(DragHorizontalObjectState())
+        else
+            SB.stateManager:SetState(RotateObjectState())
         end
     else
         if self.__clickedObjectID and self.__wasSelected then
@@ -131,7 +129,19 @@ end
 function DefaultState:MouseRelease(x, y, button)
     if self.__clickedObjectID then
         local objType = self.__clickedObjectBridge.name
-        SB.view.selectionManager:Select({ [objType] = {self.__clickedObjectID}})
+        local _, ctrl, _, shift = Spring.GetModKeyState()
+        if shift then
+            local selection = SB.view.selectionManager:GetSelection()
+            if Table.Contains(selection[objType], self.__clickedObjectID) then
+                local indx = GetIndex(selection[objType], self.__clickedObjectID)
+                table.remove(selection[objType], indx)
+            else
+                table.insert(selection[objType], self.__clickedObjectID)
+            end
+            SB.view.selectionManager:Select(selection)
+        else
+            SB.view.selectionManager:Select({ [objType] = {self.__clickedObjectID}})
+        end
     end
 end
 

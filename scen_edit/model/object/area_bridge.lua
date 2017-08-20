@@ -91,26 +91,16 @@ end
 AreaBridge = ObjectBridge:extends{}
 AreaBridge.humanName                    = "Area"
 AreaBridge.NoHorizontalDrag             = true
-AreaBridge.spGetAllObjects              = function()
+AreaBridge.GetAllObjects              = function()
     return SB.model.areaManager:getAllAreas()
 end
-AreaBridge.spDestroyObject              = function(objectID)
+AreaBridge.DestroyObject              = function(objectID)
     SB.model.areaManager:removeArea(objectID)
 end
-AreaBridge.spValidObject                = function(objectID)
+AreaBridge.ValidObject                = function(objectID)
     return SB.model.areaManager:getArea(objectID) ~= nil
 end
 
-AreaBridge.AddObjectCommand             = AddAreaCommand
-AreaBridge.RemoveObjectCommand          = RemoveAreaCommand
-AreaBridge.SetObjectParamCommand        = SetAreaParamCommand
-
-AreaBridge.SelectObjectState            = SelectAreaState
-AreaBridge.Select                       = function(objectIDs)
-    SB.view.selectionManager:Select({
-        area = objectIDs
-    })
-end
 AreaBridge.OnSelect                     = function(objectIDs)
     for _, areaID in pairs(SB.model.areaManager:getAllAreas()) do
         SB.view.areaViews[areaID].selected = false
@@ -181,7 +171,6 @@ function AreaS11N:OnInit()
                     area[4] + deltaZ,
                 })
             end,
-            dtype = "xyz",
         },
         size = {
             get = function(objectID)
@@ -203,7 +192,6 @@ function AreaS11N:OnInit()
                     x1, z1, x2, z2
                 })
             end,
-            dtype = "xyz",
         },
     }
 end

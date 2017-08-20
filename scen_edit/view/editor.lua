@@ -276,6 +276,9 @@ function Editor:Set(name, value)
 end
 function Editor:Update(name, _source)
     local field = self.fields[name]
+    if not field then
+        return
+    end
 
     field:Update(_source)
 

@@ -7,6 +7,8 @@ function RectangleSelectState:init(startScreenX, startScreenZ)
     self.startWorldX, self.startWorldY, self.startWorldZ = unpack(coords1)
     self.endScreenX = nil
     self.endScreenZ = nil
+    self.origSel = SB.view.selectionManager:GetSelection()
+    SB.view.selectionManager.__disabledChange = true
 end
 
 function RectangleSelectState:Update()
@@ -28,7 +30,7 @@ function RectangleSelectState:_MouseRelease(x, y, button)
 
         local selection = {}
         for name, objectBridge in pairs(ObjectBridge.GetObjectBridges()) do
-            if objectBridge.spGetAllObjects then
+            if objectBridge.GetAllObjects then
                 selection[name] = self:GetObjectsInScreenRectangle(
                     startScreenX, startScreenZ,
                     self.endScreenX, self.endScreenZ,
@@ -36,8 +38,29 @@ function RectangleSelectState:_MouseRelease(x, y, button)
                 )
             end
         end
+        local _, _, _, shift = Spring.GetModKeyState()
+        if shift then
+            local result = {}
+            for selType, _ in pairs(self.origSel) do
+                local s1 = selection[selType]
+                local s2 = self.origSel[selType]
+                result[selType] = {}
+                for _, objectID in pairs(s1) do
+                    if not Table.Contains(s2, objectID) then
+                        table.insert(result[selType], objectID)
+                    end
+                end
+                for _, objectID in pairs(s2) do
+                    if not Table.Contains(s1, objectID) then
+                        table.insert(result[selType], objectID)
+                    end
+                end
+            end
+            selection = result
+        end
         SB.view.selectionManager:Select(selection)
     end
+    SB.view.selectionManager.__disabledChange = false
     SB.stateManager:SetState(DefaultState())
 end
 
@@ -50,7 +73,7 @@ local function minMax(v1, v2)
 end
 
 function RectangleSelectState:GetObjectsInScreenRectangle(x1, y1, x2, y2, bridge)
-	local objects = bridge.spGetAllObjects()
+	local objects = bridge.GetAllObjects()
 
 	local left, right = minMax(x1, x2)
 	local bottom, top = minMax(y1, y2)

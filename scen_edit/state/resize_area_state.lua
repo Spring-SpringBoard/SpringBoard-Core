@@ -39,7 +39,7 @@ end
 
 function ResizeAreaState:MouseRelease(x, y, button)
     local area = SB.model.areaManager:getArea(self.areaID)
-    local cmd = SetAreaParamCommand(self.areaID, {
+    local cmd = SetObjectParamCommand(areaBridge.name, self.areaID, {
         pos = { x = (self.x1 + self.x2)/2, y = 0, z = (self.z1 + self.z2)/2},
         size = { x = math.abs(self.x1 - self.x2), y = 0, z = math.abs(self.z1 - self.z2)},
     })

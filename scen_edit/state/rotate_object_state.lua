@@ -3,6 +3,7 @@ RotateObjectState = AbstractState:extends{}
 function RotateObjectState:init()
     AbstractState.init(self)
     SB.SetMouseCursor("resize-x")
+    self.ghostViews = {}
 end
 
 function RotateObjectState:GetRotatedObject(params, bridge)
@@ -18,8 +19,8 @@ function RotateObjectState:GetRotatedObject(params, bridge)
     local len = math.sqrt(dx * dx + dz * dz)
 
     local objectAngle = 0
-    if bridge.spGetObjectDirection then
-        local dirX, _, dirZ = bridge.spGetObjectDirection(objectID)
+    if bridge.GetObjectDirection then
+        local dirX, _, dirZ = bridge.GetObjectDirection(objectID)
         objectAngle = math.atan2(dirX, dirZ) + angle
     end
 
@@ -92,6 +93,10 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
 end
 
 function RotateObjectState:MouseRelease(x, y, button)
+    if not self.ghostViews then
+        return
+    end
+
     local commands = {}
 
     for objType, objects in pairs(self.ghostViews) do
@@ -104,7 +109,7 @@ function RotateObjectState:MouseRelease(x, y, button)
             if bridge.s11n.setFuncs.dir then
                 opts.dir = { x = math.sin(object.angle), y = 0, z = math.cos(object.angle) }
             end
-            local cmd = bridge.SetObjectParamCommand(modelID, opts)
+            local cmd = SetObjectParamCommand(bridge.name, modelID, opts)
             table.insert(commands, cmd)
         end
     end
@@ -116,7 +121,7 @@ function RotateObjectState:MouseRelease(x, y, button)
 end
 
 function RotateObjectState:DrawObject(objectID, object, bridge, shaderObj)
-    local objectDefID  = bridge.spGetObjectDefID(objectID)
+    local objectDefID  = bridge.GetObjectDefID(objectID)
     local objectTeamID = bridge.s11n:Get(objectID, "team")
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(objectTeamID))
     bridge.DrawObject({

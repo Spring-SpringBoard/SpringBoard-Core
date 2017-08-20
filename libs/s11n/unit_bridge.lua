@@ -31,7 +31,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitPosition(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Position",
         },
         vel = {
@@ -42,7 +41,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitVelocity(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Velocity",
         },
         mass = {
@@ -52,7 +50,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitMass(objectID, value)
             end,
-            dtype = "float",
             humanName = "Mass",
         },
         dir = {
@@ -63,7 +60,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitDirection(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Direction",
         },
         rot = {
@@ -74,7 +70,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitRotation(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Rotation",
         },
         midAimPos = {
@@ -96,7 +91,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitMaxRange(objectID, value)
             end,
-            dtype = "float",
         },
         blocking = {
             get = function(objectID)
@@ -159,7 +153,7 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitHealth(objectID, value)
             end,
-            dtype = "float",
+            minValue = 1,
         },
         paralyze = {
             get = function(objectID)
@@ -169,7 +163,6 @@ function _UnitBridge:OnInit()
             set =  function(objectID, value)
                 Spring.SetUnitHealth(objectID, {paralyze=value})
             end,
-            dtype = "float",
         },
         capture = {
             get = function(objectID)
@@ -179,7 +172,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitHealth(objectID, {capture=value})
             end,
-            dtype = "float",
         },
         build = {
             get = function(objectID)
@@ -189,7 +181,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitHealth(objectID, {build=value})
             end,
-            dtype = "float",
         },
         maxHealth = {
             get = function(objectID)
@@ -199,7 +190,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitMaxHealth(objectID, value)
             end,
-            dtype = "float",
         },
         tooltip = {
             get = function(objectID)
@@ -208,7 +198,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitTooltip(objectID, value)
             end,
-            dtype = "string",
         },
         stockpile = {
             get = function(objectID)
@@ -217,7 +206,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitStockpile(objectID, value)
             end,
-            dtype = "float",
         },
         experience = {
             get = function(objectID)
@@ -226,7 +214,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitExperience(objectID, value)
             end,
-            dtype = "float",
         },
         neutral = {
             get = function(objectID)
@@ -235,7 +222,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitNeutral(objectID, value)
             end,
-            dtype = "bool",
         },
         fuel = {
             get = function(objectID)
@@ -244,7 +230,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitFuel(objectID, value)
             end,
-            dtype = "float",
         },
         states = {
             get = function(objectID)
@@ -267,49 +252,49 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 if value.fireState ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.FIRE_STATE, 0, value.fireState},
+                        { -1, CMD.FIRE_STATE, CMD.OPT_ALT, value.fireState},
                         {"alt"}
                     )
                 end
                 if value.moveState ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.MOVE_STATE, 0, value.moveState},
+                        { -1, CMD.MOVE_STATE, CMD.OPT_ALT, value.moveState},
                         {"alt"}
                     )
                 end
                 if value.active ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.ONOFF, 0, boolToNumber(value.active)},
+                        { -1, CMD.ONOFF, CMD.OPT_ALT, boolToNumber(value.active)},
                         {"alt"}
                     )
                 end
                 if value["repeat"] ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.REPEAT, 0, boolToNumber(value["repeat"])},
+                        { -1, CMD.REPEAT, CMD.OPT_ALT, boolToNumber(value["repeat"])},
                         {"alt"}
                     )
                 end
                 if value.cloak ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.CLOAK, 0, boolToNumber(value.cloak)},
+                        { -1, CMD.CLOAK, CMD.OPT_ALT, boolToNumber(value.cloak)},
                         {"alt"}
                     )
                 end
                 if value.trajectory ~= nil then
                      Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.TRAJECTORY, 0, boolToNumber(value.trajectory)},
+                        { -1, CMD.TRAJECTORY, CMD.OPT_ALT, boolToNumber(value.trajectory)},
                         {"alt"}
                     )
                 end
                 if value.autoRepairLevel ~= nil then
                      Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.AUTOREPAIRLEVEL, 0, boolToNumber(value.autoRepairLevel)},
+                        { -1, CMD.AUTOREPAIRLEVEL, CMD.OPT_ALT, boolToNumber(value.autoRepairLevel)},
                         {"alt"}
                     )
                 end
                 if value.loopbackAttack ~= nil then
                      Spring.GiveOrderToUnit(objectID, CMD.INSERT,
-                        { 0, CMD.LOOPBACKATTACK, 0, boolToNumber(value.loopbackAttack)},
+                        { -1, CMD.LOOPBACKATTACK, CMD.OPT_ALT, boolToNumber(value.loopbackAttack)},
                         {"alt"}
                     )
                 end
@@ -393,7 +378,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitHarvestStorage(objectID, value)
             end,
-            dtype = "float",
         },
         resources = {
             get = function(objectID)
@@ -445,7 +429,6 @@ function _UnitBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetUnitCrashing(objectID, value)
             end,
-            dtype = "bool",
         },
         gravity = {
             set = function(objectID, value)

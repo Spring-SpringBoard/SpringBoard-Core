@@ -2,9 +2,10 @@ SB.Include(SB_STATE_DIR .. "abstract_state.lua")
 
 SelectObjectState = AbstractState:extends{}
 
-function SelectObjectState:init(callback)
+function SelectObjectState:init(bridge, callback)
     AbstractState.init(self)
 
+    self.bridge = bridge
     self.callback = callback
     SB.SetMouseCursor("search")
 
@@ -20,7 +21,12 @@ end
 
 function SelectObjectState:MousePress(x, y, button)
     if button == 1 then
-        local success, objectID = self:__MaybeTraceObject(x, y)
+        -- local success, objectID = self:__MaybeTraceObject(x, y)
+        local onlyCoords = self.bridge == positionBridge
+        local success, objectID = SB.TraceScreenRay(x, y, {
+            onlyCoords = onlyCoords,
+            type = self.bridge.name,
+        })
         if success then
             self.callback(self.bridge.getObjectModelID(objectID))
             SB.stateManager:SetState(DefaultState())
@@ -29,6 +35,13 @@ function SelectObjectState:MousePress(x, y, button)
         SB.stateManager:SetState(DefaultState())
     end
     return true
+end
+
+function SelectObjectState:__MaybeTraceObject(x, y)
+    local result, objectID = Spring.TraceScreenRay(x, y)
+    if result == "unit" then
+        return true, objectID
+    end
 end
 
 function SelectObjectState:__GetInfoText()
@@ -60,78 +73,30 @@ function SelectObjectState:__DrawInfo()
     return true
 end
 
---------------------------
--- Custom object classes
---------------------------
-
---------------------------
--- Unit
---------------------------
-SelectUnitState = SelectObjectState:extends{}
-function SelectUnitState:init(...)
-    SelectObjectState.init(self, ...)
-    self.bridge = unitBridge
-end
-
-function SelectUnitState:__MaybeTraceObject(x, y)
-    local result, objectID = Spring.TraceScreenRay(x, y)
-    if result == "unit" then
-        return true, objectID
-    end
-end
-
---------------------------
--- Feature
---------------------------
-SelectFeatureState = SelectObjectState:extends{}
-function SelectFeatureState:init(...)
-    SelectObjectState.init(self, ...)
-    self.bridge = featureBridge
-end
-
-function SelectFeatureState:__MaybeTraceObject(x, y)
-    local result, objectID = Spring.TraceScreenRay(x, y)
-    if result == "feature" then
-        return true, objectID
-    end
-end
-
---------------------------
--- Area
---------------------------
-SelectAreaState = SelectObjectState:extends{}
-function SelectAreaState:init(...)
-    SelectObjectState.init(self, ...)
-    self.bridge = areaBridge
-end
-
-function SelectAreaState:__MaybeTraceObject(x, y)
-    local result, coords = Spring.TraceScreenRay(x, y)
-    if result == "ground" then
-        local selected = SB.model.areaManager:GetAreaIn(coords[1], coords[3])
-        if selected ~= nil then
-            return true, selected
-        end
-    end
-end
-
---------------------------
--- Position
---------------------------
-SelectPositionState = SelectObjectState:extends{}
-function SelectPositionState:init(...)
-    SelectObjectState.init(self, ...)
-    self.bridge = positionBridge
-end
-
-function SelectPositionState:__MaybeTraceObject(x, y)
-    local result, coords = Spring.TraceScreenRay(x, y)
-    if result == "ground"  then
-        local position = {
-            x = coords[1],
-            y = coords[2],
-            z = coords[3],
-        }
-        return true, position
-    end
-end
+-- --------------------------
+-- -- Area
+-- --------------------------
+-- function SelectAreaState:__MaybeTraceObject(x, y)
+--     local result, coords = Spring.TraceScreenRay(x, y)
+--     if result == "ground" then
+--         local selected = SB.model.areaManager:GetAreaIn(coords[1], coords[3])
+--         if selected ~= nil then
+--             return true, selected
+--         end
+--     end
+-- end
+--
+-- --------------------------
+-- -- Position
+-- --------------------------
+-- function SelectPositionState:__MaybeTraceObject(x, y)
+--     local result, coords = Spring.TraceScreenRay(x, y)
+--     if result == "ground"  then
+--         local position = {
+--             x = coords[1],
+--             y = coords[2],
+--             z = coords[3],
+--         }
+--         return true, position
+--     end
+-- end

@@ -1,9 +1,11 @@
 AddObjectState = AbstractState:extends{}
 
-function AddObjectState:init(editorView, objectDefIDs)
+function AddObjectState:init(bridge, editorView, objectDefIDs)
     AbstractState.init(self, editorView)
 
+    self.bridge = bridge
     self.objectDefIDs = objectDefIDs
+
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
     self.randomSeed = os.clock()
@@ -58,7 +60,7 @@ function AddObjectState:MouseRelease(x, y, button)
 
         local dirX = math.sin(self.angle)
         local dirZ = math.cos(self.angle)
-        local cmd = self.bridge.AddObjectCommand({
+        local cmd = AddObjectCommand(self.bridge.name, {
             defName = objectDefID,
             pos = { x = x, y = y, z = z },
             dir = { x = dirX, y = 0, z = dirZ },
@@ -152,17 +154,4 @@ function AddObjectState:DrawWorld()
         self:DrawObject(object, self.bridge)
     end
     gl.UseShader(0)
-end
-
--- Custom unit/feature classes
-AddUnitState = AddObjectState:extends{}
-function AddUnitState:init(...)
-    AddObjectState.init(self, ...)
-    self.bridge = unitBridge
-end
-
-AddFeatureState = AddObjectState:extends{}
-function AddFeatureState:init(...)
-    AddObjectState.init(self, ...)
-    self.bridge = featureBridge
 end

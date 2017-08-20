@@ -1,58 +1,29 @@
 AddObjectCommand = Command:extends{}
 AddObjectCommand.className = "AddObjectCommand"
 
+function AddObjectCommand:init(objType, params)
+    self.className = "AddObjectCommand"
+    self.objType   = objType
+    self.params    = params
+end
+
 function AddObjectCommand:execute(bridge)
+    local bridge = ObjectBridge.GetObjectBridge(self.objType)
+
     local objectID = bridge.s11n:Add(self.params)
     self.params.objectID = objectID
-    if self.objectModelID == nil then
-        self.objectModelID = bridge.getObjectModelID(objectID)
+    if self.modelID == nil then
+        self.modelID = bridge.getObjectModelID(objectID)
     else
-        bridge.setObjectModelID(objectID, self.objectModelID)
+        bridge.setObjectModelID(objectID, self.modelID)
     end
 end
 
 function AddObjectCommand:unexecute(bridge)
-    if self.objectModelID then
-        local objectID = bridge.getObjectSpringID(self.objectModelID)
-        bridge.spDestroyObject(objectID, false, true)
+    local bridge = ObjectBridge.GetObjectBridge(self.objType)
+
+    if self.modelID then
+        local objectID = bridge.getObjectSpringID(self.modelID)
+        bridge.DestroyObject(objectID, false, true)
     end
-end
-
-AddUnitCommand = AddObjectCommand:extends{}
-AddUnitCommand.className = "AddUnitCommand"
-function AddUnitCommand:init(params)
-    self.className        = "AddUnitCommand"
-    self.params           = params
-end
-function AddUnitCommand:execute()
-    self:super("execute", unitBridge)
-end
-function AddUnitCommand:unexecute()
-    self:super("unexecute", unitBridge)
-end
-
-AddFeatureCommand = AddObjectCommand:extends{}
-AddFeatureCommand.className = "AddFeatureCommand"
-function AddFeatureCommand:init(params)
-    self.className        = "AddFeatureCommand"
-    self.params           = params
-end
-function AddFeatureCommand:execute()
-    self:super("execute", featureBridge)
-end
-function AddFeatureCommand:unexecute()
-    self:super("unexecute", featureBridge)
-end
-
-AddAreaCommand = AddObjectCommand:extends{}
-AddAreaCommand.className = "AddAreaCommand"
-function AddAreaCommand:init(params)
-    self.className        = "AddAreaCommand"
-    self.params           = params
-end
-function AddAreaCommand:execute()
-    self:super("execute", areaBridge)
-end
-function AddAreaCommand:unexecute()
-    self:super("unexecute", areaBridge)
 end

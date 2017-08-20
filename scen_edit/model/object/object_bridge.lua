@@ -16,7 +16,7 @@ function ObjectBridge.getObjectModelID(objectID)
 end
 function ObjectBridge.setObjectModelID(objectID, modelID)
 end
-function ObjectBridge.spValidObject(objectID)
+function ObjectBridge.ValidObject(objectID)
     return true
 end
 
@@ -49,3 +49,5 @@ function DrawObject(params, bridge)
     bridge.glObjectShapeTextures(objectDefID, false)
     gl.PopMatrix()
 end
+
+ObjectBridge.blockedFields = {}

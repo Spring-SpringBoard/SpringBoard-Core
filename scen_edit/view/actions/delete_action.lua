@@ -4,11 +4,11 @@ function DeleteAction:execute()
     local selection = SB.view.selectionManager:GetSelection()
 
     local commands = {}
-    for selType, selected in pairs(selection) do
-        local objectBridge = ObjectBridge.GetObjectBridge(selType)
+    for objType, selected in pairs(selection) do
+        local objectBridge = ObjectBridge.GetObjectBridge(objType)
         for _, objectID in pairs(selected) do
             local modelID = objectBridge.getObjectModelID(objectID)
-            local cmd = objectBridge.RemoveObjectCommand(modelID)
+            local cmd = RemoveObjectCommand(objType, modelID)
             table.insert(commands, cmd)
         end
     end

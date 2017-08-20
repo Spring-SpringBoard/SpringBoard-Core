@@ -25,7 +25,7 @@ function Clipboard:GenerateCutObjectsCommands(objectIDs, bridge)
     local cmds = {}
     for _, objectID in pairs(objectIDs) do
         local objectModelID = bridge.getObjectModelID(objectID)
-        local cmd = bridge.RemoveObjectCommand(objectModelID)
+        local cmd = RemoveObjectCommand(bridge.name, objectModelID)
         table.insert(cmds, cmd)
     end
     return cmds
@@ -38,7 +38,7 @@ function Clipboard:GeneratePasteObjectsCommands(delta, objects, bridge)
         local oc = SB.deepcopy(object)
         oc.pos.x = oc.pos.x + delta.x
         oc.pos.z = oc.pos.z + delta.z
-        local cmd = bridge.AddObjectCommand(oc)
+        local cmd = AddObjectCommand(bridge.name, oc)
         table.insert(cmds, cmd)
     end
     return cmds

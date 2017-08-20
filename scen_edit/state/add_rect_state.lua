@@ -25,7 +25,7 @@ function AddRectState:MousePress(x, y, button)
             self.addSecondPoint = true
             return true
         end
-    elseif button == 3 then
+    else
         SB.stateManager:SetState(DefaultState())
     end
 end
@@ -48,10 +48,9 @@ function AddRectState:MouseRelease(x, y, button)
     end
 
     if button ~= 1 then
-        self.endX = nil
-        self.endZ = nil
         return
     end
+
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground" then
         self.endX = coords[1]
@@ -61,7 +60,7 @@ function AddRectState:MouseRelease(x, y, button)
         return
     end
 
-    local cmd = AddAreaCommand({
+    local cmd = AddObjectCommand(areaBridge.name, {
         pos = { x = (self.startX + self.endX)/2, y = 0, z = (self.startZ + self.endZ)/2},
         size = { x = math.abs(self.endX - self.startX), y = 0, z = math.abs(self.endZ - self.startZ)},
     })

@@ -10,7 +10,6 @@ function _FeatureBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetFeaturePosition(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Position",
         },
         vel = {
@@ -21,7 +20,6 @@ function _FeatureBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetFeatureVelocity(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Velocity",
         },
         mass = {
@@ -31,7 +29,6 @@ function _FeatureBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetFeatureMass(objectID, value)
             end,
-            dtype = "float",
             minValue = 1,
             humanName = "Mass",
         },
@@ -43,7 +40,6 @@ function _FeatureBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetFeatureDirection(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Direction",
         },
         rot = {
@@ -54,7 +50,6 @@ function _FeatureBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetFeatureRotation(objectID, value.x, value.y, value.z)
             end,
-            dtype = "xyz",
             humanName = "Rotation",
         },
         midAimPos = {
@@ -124,7 +119,6 @@ function _FeatureBridge:OnInit()
             set = function(objectID, value)
                 Spring.SetFeatureHealth(objectID, value)
             end,
-            dtype = "float",
             minValue = 1,
         },
     }
@@ -136,6 +130,7 @@ function _FeatureBridge:CreateObject(object, objectID)
     local objectID = Spring.CreateFeature(object.defName, object.pos.x, object.pos.y, object.pos.z)
     if y ~= object.pos.y then
         Spring.SetFeatureMoveCtrl(objectID, true)
+        Spring.SetFeatureMoveCtrl(objectID, false)
     end
     return objectID
 end

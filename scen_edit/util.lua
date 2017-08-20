@@ -548,18 +548,36 @@ function SB.TraceScreenRay(x, y, opts)
     if D == nil then
         --D = (__maxHeight + __minHeight) / 2
     end
+    local selType = opts.type
 
+    if selType == "position" then
+        onlyCoords = true
+    end
     local traceType, value = Spring.TraceScreenRay(x, y, onlyCoords, useMinimap, includeSky, ignoreWater, D)
+    if selType == "position" then
+        return "position", {x=value[1], y=value[2], z=value[3]}
+    end
 
     -- FIXME: How should SB.view.displayDevelop be used? It is currently intended primarily for areas
-    if traceType == "ground" and SB.view.displayDevelop and not onlyCoords then
-        for name, objectBridge in pairs(ObjectBridge.GetObjectBridges()) do
-            -- we utilize engine trace for unit and feature
-            if name ~= "unit" and name ~= "feature" and objectBridge.GetObjectAt then
-                local _value = objectBridge.GetObjectAt(value[1], value[3])
-                if _value then
-                    traceType = name
-                    value = _value
+    if traceType == "ground" and SB.view.displayDevelop and
+       not onlyCoords and selType ~= "unit" and selType ~= "feature" then
+        if selType then
+            local bridge = ObjectBridge.GetObjectBridge(selType)
+            local _value = bridge.GetObjectAt(value[1], value[3])
+            if _value then
+                traceType = selType
+                value = _value
+            end
+        else
+            for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
+                -- we utilize engine trace for unit and feature
+                if name ~= "unit" and name ~= "feature" and
+                   bridge.GetObjectAt then
+                    local _value = bridge.GetObjectAt(value[1], value[3])
+                    if _value then
+                        traceType = name
+                        value = _value
+                    end
                 end
             end
         end
