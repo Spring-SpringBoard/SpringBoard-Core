@@ -5,9 +5,6 @@ UnitBridge.humanName                       = "Unit"
 UnitBridge.GetObjectsInCylinder            = Spring.GetUnitsInCylinder
 UnitBridge.GetObjectDefID                  = Spring.GetUnitDefID
 UnitBridge.ValidObject                     = Spring.ValidUnitID
-UnitBridge.GetObjectDirection              = Spring.GetUnitDirection
-UnitBridge.GetAllObjects                   = Spring.GetAllUnits
-UnitBridge.DestroyObject                   = Spring.DestroyUnit
 
 UnitBridge.SelectObjectTypeState           = SelectUnitTypeState
 
@@ -27,6 +24,14 @@ end
 UnitBridge.setObjectModelID                = function(objectID, modelID)
     SB.model.unitManager:setUnitModelID(objectID, modelID)
 end
+
+UnitBridge.OnLuaUIAdded = function(objectID)
+    SB.model.unitManager:addUnit(objectID, objectID)
+end
+UnitBridge.OnLuaUIRemoved = function(objectID)
+    SB.model.unitManager:removeUnitByModelID(objectID)
+end
+
 unitBridge = UnitBridge()
 unitBridge.s11n                            = s11n:GetUnitBridge()
 unitBridge.ObjectDefs                      = UnitDefs
@@ -36,7 +41,8 @@ if gl then
 end
 unitBridge.s11nFieldOrder = {"pos", "rot", "vel", "team"}
 unitBridge.blockedFields = {
-    "dir", "defName", "collision", "blocking", "radiusHeight", "midAimPos",
-    "paralyze", "commands", "rules"
+    "collision", "blocking", "radiusHeight", "midAimPos",
+    "dir", "defName", "paralyze", "commands", "rules"
 }
+
 ObjectBridge.Register("unit", unitBridge)

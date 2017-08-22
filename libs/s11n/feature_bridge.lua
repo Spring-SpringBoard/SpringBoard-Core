@@ -1,5 +1,6 @@
 _FeatureBridge = _ObjectBridge:extends{}
 
+-- local modelIDs = {}
 function _FeatureBridge:OnInit()
     self.funcs = {
         pos = {
@@ -135,6 +136,15 @@ function _FeatureBridge:OnInit()
                 end
             end,
         },
+        -- modelID = {
+        --     get = function(objectID)
+        --         return modelIDs[objectID]
+        --     end,
+        --     set = function(objectID, value)
+        --         Spring.Echo("S11N", objectID, value)
+        --         modelIDs[objectID] = value
+        --     end,
+        -- }
     }
 end
 
@@ -147,6 +157,10 @@ function _FeatureBridge:CreateObject(object, objectID)
         Spring.SetFeatureMoveCtrl(objectID, false)
     end
     return objectID
+end
+
+function _FeatureBridge:DestroyObject(objectID)
+    return Spring.DestroyFeature(objectID, false, true)
 end
 
 function _FeatureBridge:GetAllObjectIDs()

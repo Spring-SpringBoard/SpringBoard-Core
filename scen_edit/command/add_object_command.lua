@@ -24,6 +24,6 @@ function AddObjectCommand:unexecute(bridge)
 
     if self.modelID then
         local objectID = bridge.getObjectSpringID(self.modelID)
-        bridge.DestroyObject(objectID, false, true)
+        bridge.s11n:Remove(objectID)
     end
 end

@@ -13,7 +13,8 @@ function RemoveObjectCommand:execute(bridge)
     local objectID = bridge.getObjectSpringID(self.modelID)
     if objectID and bridge.ValidObject(objectID) then
         self.old = bridge.s11n:Get(objectID)
-        bridge.DestroyObject(objectID, false, true)
+        self.old.objectID = objectID
+        bridge.s11n:Remove(objectID)
     end
 end
 

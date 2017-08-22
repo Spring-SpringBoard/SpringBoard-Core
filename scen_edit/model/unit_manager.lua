@@ -89,45 +89,9 @@ function UnitManager:serialize()
     return unitBridge.s11n:Get(Spring.GetAllUnits())
 end
 
--- function UnitManager:loadUnit(unit)
---     if self._m2s[unit.id] then
---         return
---     end
---     -- FIXME: figure out why this sometimes fails on load with a specific unit.id
---     local unitID = Spring.CreateUnit(unit.unitDefName, unit.x, unit.y, unit.z, 0, unit.teamID, false, true)
---     if unitID == nil then
---         Log.Error("Failed to create the following unit: " .. table.show(unit))
---         return
---     end
---     -- FIXME: this check is not usable until unit creation by ID is fixed
---     if false and unit.id ~= nil and unit.id ~= unitID then
---         Log.Error("Created unit has different id: " .. tostring(unit.id) .. ", " .. tostring(unitID))
---     end
---     self:setUnitProperties(unitID, unit)
---     self:setUnitModelID(unitID, unit.id)
---     if unit.commands ~= nil then
---         self:setUnitCommands(unitID, unit.commands)
---     end
---     return unitID
--- end
-
 function UnitManager:load(units)
     self.unitIDCounter = 0
     unitBridge.s11n:Add(units)
-    -- -- load the units without the commands
-    -- local unitCommands = {}
-    -- for _, unit in pairs(units) do
-    --     local commands = unit.commands
-    --     unit.commands = nil
-    --     local unitID = self:loadUnit(unit)
-    --     if unitID then
-    --         unitCommands[unitID] = commands
-    --     end
-    -- end
-    -- -- load the commands
-    -- for unitID, commands in pairs(unitCommands) do
-    --     self:setUnitCommands(unitID, commands)
-    -- end
 end
 
 function UnitManager:clear()

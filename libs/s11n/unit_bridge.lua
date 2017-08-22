@@ -21,6 +21,7 @@ local function isUnitCommand(command)
     return false
 end
 
+-- local modelIDs = {}
 function _UnitBridge:OnInit()
     self.funcs = {
         pos = {
@@ -415,6 +416,14 @@ function _UnitBridge:OnInit()
                 Spring.MoveCtrl.SetGravity(objectID, value)
             end,
         },
+        -- modelID = {
+        --     get = function(objectID)
+        --         return modelIDs[objectID]
+        --     end,
+        --     set = function(objectID, value)
+        --         modelIDs[objectID] = value
+        --     end,
+        -- }
     }
 
     -- FIXME: movectrl get is not available in unsynced
@@ -429,6 +438,10 @@ function _UnitBridge:CreateObject(object, objectID)
     objectID = nil
     local objectID = Spring.CreateUnit(object.defName, object.pos.x, object.pos.y, object.pos.z, 0, object.team, false, true, objectID)
     return objectID
+end
+
+function _UnitBridge:DestroyObject(objectID)
+    return Spring.DestroyUnit(objectID, false, true)
 end
 
 function _UnitBridge:GetAllObjectIDs()

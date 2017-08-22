@@ -91,12 +91,6 @@ end
 AreaBridge = ObjectBridge:extends{}
 AreaBridge.humanName                    = "Area"
 AreaBridge.NoHorizontalDrag             = true
-AreaBridge.GetAllObjects              = function()
-    return SB.model.areaManager:getAllAreas()
-end
-AreaBridge.DestroyObject              = function(objectID)
-    SB.model.areaManager:removeArea(objectID)
-end
 AreaBridge.ValidObject                = function(objectID)
     return SB.model.areaManager:getArea(objectID) ~= nil
 end
@@ -145,6 +139,16 @@ end
 
 AreaBridge.GetObjectAt                  = function(x, z)
     return SB.model.areaManager:GetAreaIn(x, z)
+end
+
+AreaBridge.OnLuaUIAdded = function(objectID, object)
+    areaBridge.s11n:Add(object)
+end
+AreaBridge.OnLuaUIRemoved = function(objectID)
+    areaBridge.s11n:Remove(objectID)
+end
+AreaBridge.OnLuaUIUpdated = function(objectID, name, value)
+    areaBridge.s11n:Set(objectID, name, value)
 end
 
 areaBridge = AreaBridge()
@@ -212,9 +216,14 @@ function AreaS11N:CreateObject(object, objectID)
     return areaID
 end
 
-function AreaS11N:GetAllObjectIDs()
-    return
+function AreaS11N:DestroyObject(objectID)
+    SB.model.areaManager:removeArea(objectID)
 end
-areaBridge.s11n                         = AreaS11N()
+
+function AreaS11N:GetAllObjectIDs()
+    return SB.model.areaManager:getAllAreas()
+end
+
+areaBridge.s11n = AreaS11N()
 areaBridge.s11nFieldOrder = {"pos", "size"}
 ObjectBridge.Register("area", areaBridge)

@@ -577,6 +577,7 @@ function SB.TraceScreenRay(x, y, opts)
                     if _value then
                         traceType = name
                         value = _value
+                        break
                     end
                 end
             end

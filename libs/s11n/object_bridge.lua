@@ -3,8 +3,27 @@ _ObjectBridge = LCS.class{}
 function _ObjectBridge:init()
     self.objectDefaults = {} -- cached object defaults
     self._cacheQueue    = {}
+    self.__listeners      = {}
     self:OnInit()
     self:__makeFunctions()
+end
+
+function _ObjectBridge:AddListener(listener)
+    if listener == nil then
+        Log.Error(debug.traceback())
+        Log.Error("listener cannot be nil")
+        return
+    end
+    table.insert(self.__listeners, listener)
+end
+
+function _ObjectBridge:RemoveListener(listener)
+    for k, v in pairs(self.__listeners) do
+        if v == listener then
+            table.remove(self.__listeners, k)
+            break
+        end
+    end
 end
 
 function _ObjectBridge:__makeFunctions()
@@ -17,7 +36,8 @@ function _ObjectBridge:__makeFunctions()
 end
 
 function _ObjectBridge:_GetField(objectID, name)
-    assert(self.getFuncs[name] ~= nil, "No such field: " .. tostring(name))
+    assert(self.getFuncs[name] ~= nil,
+           "No such field: " .. tostring(name))
     return self.getFuncs[name](objectID)
 end
 
@@ -88,7 +108,29 @@ function _ObjectBridge:_SetField(objectID, name, value)
     if name == "pos" and self.getFuncs.rot then
         applyDir = self:_GetField(objectID, "rot")
     end
+
     self.setFuncs[name](objectID, value)
+
+    if not self.__blockSetListener then
+        local listeners = self.__listeners
+        -- TODO: should probably do a shallow copy
+        -- local listeners = Table.ShallowCopy(self.__listeners)
+        for _, listener in ipairs(listeners) do
+            xpcall(
+                function()
+                    local eventFunc = listener["OnFieldSet"]
+                    if eventFunc then
+                        eventFunc(listener, objectID, name, value)
+                    end
+                end,
+                function(err)
+                    Spring.Log("s11n", "error", "Failed to invoke OnFieldSet listener ")
+                    Spring.Log("s11n", "error", err)
+                end
+            )
+        end
+    end
+
     -- FIXME: ENGINE BUG
     -- If buildings are moved, their direction will be reset.
     -- An additional rotation must be applied after movement.
@@ -131,12 +173,33 @@ function _ObjectBridge:_GameFrame()
     self._cacheQueue = {}
 end
 
-local function ReportObjectCreationFail(object)
+function _ObjectBridge:__ReportObjectCreationFail(object)
     Spring.Log("SpringBoard", "error", "Failed to create object: ")
     if type(object) == "table" then
         table.echo(object)
     else
         Spring.Echo(object)
+    end
+end
+
+function _ObjectBridge:_Remove(objectID)
+    self:DestroyObject(objectID)
+
+    local listeners = self.__listeners
+    -- local listeners = Table.ShallowCopy(self.__listeners)
+    for _, listener in ipairs(listeners) do
+        xpcall(
+            function()
+                local eventFunc = listener["OnDestroyObject"]
+                if eventFunc then
+                    eventFunc(listener, objectID)
+                end
+            end,
+            function(err)
+                Spring.Log("s11n", "error", "Failed to invoke OnDestroyObject listener ")
+                Spring.Log("s11n", "error", err)
+            end
+        )
     end
 end
 
@@ -146,16 +209,19 @@ end
 -- s11n:Add(object)
 -- s11n:Add(objects)
 function _ObjectBridge:Add(input)
+    local objectIDs = {}
+    local retVal
+    self.__blockSetListener = true
     -- If input is an array and there isn't a .pos, then this is
     -- probably an array of objects to be created
     -- Create multiple objects
     -- s11n:Add(objects)
     if not input.pos then
-        local objectIDs = {}
         for origObjectID, object in pairs(input) do
             local objectID = self:CreateObject(object, origObjectID)
             if not objectID then
-                ReportObjectCreationFail(object)
+                self:__ReportObjectCreationFail(object)
+                self.__blockSetListener = false
                 return
             end
 
@@ -178,20 +244,59 @@ function _ObjectBridge:Add(input)
                 self:_SetField(objectID, "commands", object.commands)
             end
         end
-        return objectIDs
+        retVal = objectIDs
     -- Create one object
     -- s11n:Add(object)
     else
         local objectID = self:CreateObject(input, input.objectID)
         if not objectID then
-            ReportObjectCreationFail(input)
+            self:__ReportObjectCreationFail(input)
+            self.__blockSetListener = false
             return
         end
         local team = input.team
         input.team = nil
         self:_SetAllFields(objectID, input)
         input.team = team
-        return objectID
+        table.insert(objectIDs, objectID)
+        retVal = objectID
+    end
+
+    self.__blockSetListener = false
+
+    for _, objectID in pairs(objectIDs) do
+        local listeners = self.__listeners
+        -- local listeners = Table.ShallowCopy(self.__listeners)
+        for _, listener in ipairs(listeners) do
+            xpcall(
+                function()
+                    local eventFunc = listener["OnCreateObject"]
+                    if eventFunc then
+                        eventFunc(listener, objectID)
+                    end
+                end,
+                function(err)
+                    Spring.Log("s11n", "error", "Failed to invoke OnCreateObject listener ")
+                    Spring.Log("s11n", "error", err)
+                end
+            )
+        end
+    end
+
+    return retVal
+end
+
+-------------------------------------------------------
+-- API
+-------------------------------------------------------
+-- s11n:Remove(objectID)
+-- s11n:Remove(objectIDs)
+function _ObjectBridge:Remove(objectIDs)
+    if type(objectIDs) ~= "table" then
+        objectIDs = {objectIDs}
+    end
+    for _, objectID in pairs(objectIDs) do
+        self:_Remove(objectID)
     end
 end
 
@@ -356,7 +461,6 @@ function _ObjectBridge:Set(...)
     else
         table.echo(params)
         error("Invalid parameters: " .. tostring(paramsCount) .. " for s11n:Set")
-
     end
 end
 -------------------------------------------------------

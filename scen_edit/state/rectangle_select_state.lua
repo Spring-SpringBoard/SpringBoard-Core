@@ -29,12 +29,12 @@ function RectangleSelectState:_MouseRelease(x, y, button)
         local startScreenX, startScreenZ = Spring.WorldToScreenCoords(self.startWorldX, self.startWorldY, self.startWorldZ)
 
         local selection = {}
-        for name, objectBridge in pairs(ObjectBridge.GetObjectBridges()) do
-            if objectBridge.GetAllObjects then
+        for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
+            if bridge.s11n and bridge.s11n.GetAllObjectIDs then
                 selection[name] = self:GetObjectsInScreenRectangle(
                     startScreenX, startScreenZ,
                     self.endScreenX, self.endScreenZ,
-                    objectBridge
+                    bridge
                 )
             end
         end
@@ -73,17 +73,18 @@ local function minMax(v1, v2)
 end
 
 function RectangleSelectState:GetObjectsInScreenRectangle(x1, y1, x2, y2, bridge)
-	local objects = bridge.GetAllObjects()
+	local objectIDs = bridge.s11n:GetAllObjectIDs()
 
 	local left, right = minMax(x1, x2)
 	local bottom, top = minMax(y1, y2)
 
 	local result = {}
 
-	for _, objectID in pairs(objects) do
+	for _, objectID in pairs(objectIDs) do
 		local pos = bridge.s11n:Get(objectID, "pos")
 		x, y = Spring.WorldToScreenCoords(pos.x, pos.y, pos.z)
-		if (left <= x and x <= right) and (top >= y and y >= bottom) then
+		if left <= x and x <= right and
+           top >= y and y >= bottom then
             table.insert(result, objectID)
 		end
 	end

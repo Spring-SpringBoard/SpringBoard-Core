@@ -25,7 +25,7 @@ function Observable:callListeners(func, ...)
     local listeners = Table.ShallowCopy(self.listeners)
     local args = {...}
     local n = select("#", ...)
-    for _, listener in ipairs(self.listeners) do
+    for _, listener in ipairs(listeners) do
         xpcall(
             function()
                 local eventFunc = listener[func]

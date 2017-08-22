@@ -19,9 +19,9 @@ function RotateObjectState:GetRotatedObject(params, bridge)
     local len = math.sqrt(dx * dx + dz * dz)
 
     local objectAngle = 0
-    if bridge.GetObjectDirection then
-        local dirX, _, dirZ = bridge.GetObjectDirection(objectID)
-        objectAngle = math.atan2(dirX, dirZ) + angle
+    if bridge.s11n.getFuncs.dir then
+        local dir = bridge.s11n:Get(objectID, "dir")
+        objectAngle = math.atan2(dir.x, dir.z) + angle
     end
 
     local object = {

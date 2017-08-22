@@ -5,9 +5,6 @@ FeatureBridge.humanName                       = "Feature"
 FeatureBridge.GetObjectsInCylinder            = Spring.GetFeaturesInCylinder
 FeatureBridge.GetObjectDefID                  = Spring.GetFeatureDefID
 FeatureBridge.ValidObject                     = Spring.ValidFeatureID
-FeatureBridge.GetObjectDirection              = Spring.GetFeatureDirection
-FeatureBridge.GetAllObjects                   = Spring.GetAllFeatures
-FeatureBridge.DestroyObject                   = Spring.DestroyFeature
 
 FeatureBridge.SelectObjectTypeState           = SelectFeatureTypeState
 
@@ -63,6 +60,14 @@ end
 FeatureBridge.setObjectModelID                = function(objectID, modelID)
     SB.model.featureManager:setFeatureModelID(objectID, modelID)
 end
+
+FeatureBridge.OnLuaUIAdded = function(objectID, modelID)
+    SB.model.featureManager:addFeature(objectID, modelID)
+end
+FeatureBridge.OnLuaUIRemoved = function(objectID)
+    SB.model.featureManager:removeFeatureByModelID(objectID)
+end
+
 featureBridge = FeatureBridge()
 featureBridge.s11n                            = s11n:GetFeatureBridge()
 featureBridge.ObjectDefs                      = FeatureDefs
@@ -72,7 +77,8 @@ if gl then
 end
 featureBridge.s11nFieldOrder = {"pos", "rot", "vel"}
 featureBridge.blockedFields = {
-    "dir", "defName", "collision", "blocking", "radiusHeight", "midAimPos",
-    "team", "rules",
+    "collision", "blocking", "radiusHeight", "midAimPos",
+    "dir", "defName", "team", "rules",
 }
+
 ObjectBridge.Register("feature", featureBridge)
