@@ -63,25 +63,28 @@ if SB.SyncModel then
 S11NGadgetListener = LCS.class{}
 
 SB.OnInitialize(function()
-    for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
-        if bridge.s11n and bridge ~= unitBridge and bridge ~= featureBridge then
-            local listener = S11NGadgetListener()
-            listener.objType = name
+    SB.delay(function()
+        for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
+            if bridge.s11n and bridge ~= unitBridge and bridge ~= featureBridge then
+                Log.Notice("Sync: " .. tostring(name))
+                local listener = S11NGadgetListener()
+                listener.objType = name
 
-            -- not using 'nil' because of metatable magix
-            if not bridge.OnLuaUIAdded then
-                listener.OnCreateObject = false
-            end
-            if not bridge.OnLuaUIRemoved then
-                listener.OnDestroyObject = false
-            end
-            if not bridge.OnLuaUIUpdated then
-                listener.OnFieldSet = false
-            end
+                -- not using 'nil' because of metatable magix
+                if not bridge.OnLuaUIAdded then
+                    listener.OnCreateObject = false
+                end
+                if not bridge.OnLuaUIRemoved then
+                    listener.OnDestroyObject = false
+                end
+                if not bridge.OnLuaUIUpdated then
+                    listener.OnFieldSet = false
+                end
 
-            bridge.s11n:AddListener(listener)
+                bridge.s11n:AddListener(listener)
+            end
         end
-    end
+    end)
 end)
 
 function S11NGadgetListener:OnCreateObject(objectID)
