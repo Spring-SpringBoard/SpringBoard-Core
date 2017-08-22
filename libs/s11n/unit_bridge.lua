@@ -258,7 +258,7 @@ function _UnitBridge:OnInit()
                     Spring.GiveOrderToUnit(objectID, CMD.MOVE_STATE, {value.moveState}, {})
                 end
                 if value.active ~= nil then
-                    Spring.GiveOrderToUnit(objectID, CMD.ACTIVE, {boolToNumber(value.active)}, {})
+                    Spring.GiveOrderToUnit(objectID, CMD.ONOFF, {boolToNumber(value.active)}, {})
                 end
                 if value["repeat"] ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.REPEAT, {boolToNumber(value["repeat"])}, {})

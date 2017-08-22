@@ -25,8 +25,8 @@ UnitBridge.setObjectModelID                = function(objectID, modelID)
     SB.model.unitManager:setUnitModelID(objectID, modelID)
 end
 
-UnitBridge.OnLuaUIAdded = function(objectID)
-    SB.model.unitManager:addUnit(objectID, objectID)
+UnitBridge.OnLuaUIAdded = function(objectID, modelID)
+    SB.model.unitManager:addUnit(objectID, modelID)
 end
 UnitBridge.OnLuaUIRemoved = function(objectID)
     SB.model.unitManager:removeUnitByModelID(objectID)
