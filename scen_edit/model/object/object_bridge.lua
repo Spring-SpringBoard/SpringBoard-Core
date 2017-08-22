@@ -51,4 +51,4 @@ function DrawObject(params, bridge)
 end
 
 ObjectBridge.blockedFields = {}
-ObjectBridge.s11nFieldOrder = {}
+ObjectBridge.s11nFieldOrder = {"pos"}
