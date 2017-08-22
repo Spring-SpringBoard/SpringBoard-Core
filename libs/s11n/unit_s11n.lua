@@ -1,4 +1,4 @@
-_UnitBridge = _ObjectBridge:extends{}
+_UnitS11N = _ObjectS11N:extends{}
 
 local function boolToNumber(bool)
     if bool then
@@ -22,7 +22,7 @@ local function isUnitCommand(command)
 end
 
 -- local modelIDs = {}
-function _UnitBridge:OnInit()
+function _UnitS11N:OnInit()
     self.funcs = {
         pos = {
             get = function(objectID)
@@ -434,16 +434,16 @@ function _UnitBridge:OnInit()
     -- unit.alwaysVisible = Spring.GetAlwaysVisible(unitID)
 end
 
-function _UnitBridge:CreateObject(object, objectID)
+function _UnitS11N:CreateObject(object, objectID)
     objectID = nil
     local objectID = Spring.CreateUnit(object.defName, object.pos.x, object.pos.y, object.pos.z, 0, object.team, false, true, objectID)
     return objectID
 end
 
-function _UnitBridge:DestroyObject(objectID)
+function _UnitS11N:DestroyObject(objectID)
     return Spring.DestroyUnit(objectID, false, true)
 end
 
-function _UnitBridge:GetAllObjectIDs()
+function _UnitS11N:GetAllObjectIDs()
     return Spring.GetAllUnits()
 end

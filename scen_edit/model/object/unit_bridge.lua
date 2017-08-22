@@ -33,7 +33,7 @@ UnitBridge.OnLuaUIRemoved = function(objectID)
 end
 
 unitBridge = UnitBridge()
-unitBridge.s11n                            = s11n:GetUnitBridge()
+unitBridge.s11n                            = s11n:GetUnitS11N()
 unitBridge.ObjectDefs                      = UnitDefs
 if gl then
     unitBridge.glObjectShape               = gl.UnitShape

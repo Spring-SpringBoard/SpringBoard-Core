@@ -39,12 +39,12 @@ function widget:Initialize()
     end
 end
 function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
-    _s11n:GetUnitBridge():_ObjectCreated(unitID)
+    _s11n:GetUnitS11N():_ObjectCreated(unitID)
 end
 function widget:FeatureCreated(featureID, allyTeamID)
-    _s11n:GetFeatureBridge():_ObjectCreated(featureID)
+    _s11n:GetFeatureS11N():_ObjectCreated(featureID)
 end
 function widget:GameFrame()
-    _s11n:GetFeatureBridge():_GameFrame()
-    _s11n:GetUnitBridge():_GameFrame()
+    _s11n:GetFeatureS11N():_GameFrame()
+    _s11n:GetUnitS11N():_GameFrame()
 end

@@ -69,7 +69,7 @@ FeatureBridge.OnLuaUIRemoved = function(objectID)
 end
 
 featureBridge = FeatureBridge()
-featureBridge.s11n                            = s11n:GetFeatureBridge()
+featureBridge.s11n                            = s11n:GetFeatureS11N()
 featureBridge.ObjectDefs                      = FeatureDefs
 if gl then
     featureBridge.glObjectShape               = gl.FeatureShape

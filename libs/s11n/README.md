@@ -4,8 +4,8 @@ Design goals
 
 API
 ```lua
-s11n:GetUnitBridge() -> s11nUnit
-s11n:GetFeatureBridge() -> s11nFeature
+s11n:GetUnitS11N() -> s11nUnit
+s11n:GetFeatureS11N() -> s11nFeature
 
 s11n:Get(...)
 s11n:Add(...)

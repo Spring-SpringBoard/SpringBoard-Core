@@ -1,6 +1,6 @@
-_ObjectBridge = LCS.class{}
+_ObjectS11N = LCS.class{}
 
-function _ObjectBridge:init()
+function _ObjectS11N:init()
     self.objectDefaults = {} -- cached object defaults
     self._cacheQueue    = {}
     self.__listeners      = {}
@@ -8,7 +8,7 @@ function _ObjectBridge:init()
     self:__makeFunctions()
 end
 
-function _ObjectBridge:AddListener(listener)
+function _ObjectS11N:AddListener(listener)
     if listener == nil then
         Log.Error(debug.traceback())
         Log.Error("listener cannot be nil")
@@ -17,7 +17,7 @@ function _ObjectBridge:AddListener(listener)
     table.insert(self.__listeners, listener)
 end
 
-function _ObjectBridge:RemoveListener(listener)
+function _ObjectS11N:RemoveListener(listener)
     for k, v in pairs(self.__listeners) do
         if v == listener then
             table.remove(self.__listeners, k)
@@ -26,7 +26,7 @@ function _ObjectBridge:RemoveListener(listener)
     end
 end
 
-function _ObjectBridge:__makeFunctions()
+function _ObjectS11N:__makeFunctions()
     self.getFuncs = {}
     self.setFuncs = {}
     for k, v in pairs(self.funcs) do
@@ -35,13 +35,13 @@ function _ObjectBridge:__makeFunctions()
     end
 end
 
-function _ObjectBridge:_GetField(objectID, name)
+function _ObjectS11N:_GetField(objectID, name)
     assert(self.getFuncs[name] ~= nil,
            "No such field: " .. tostring(name))
     return self.getFuncs[name](objectID)
 end
 
-function _ObjectBridge:_CompareValues(v1, v2)
+function _ObjectS11N:_CompareValues(v1, v2)
     local v1Type, v2Type = type(v1), type(v2)
     if v1Type ~= v2Type then
         return false
@@ -66,7 +66,7 @@ function _ObjectBridge:_CompareValues(v1, v2)
     end
 end
 
-function _ObjectBridge:_RemoveDefaults(objectID, values)
+function _ObjectS11N:_RemoveDefaults(objectID, values)
     if not self.getFuncs.defName then
         return
     end
@@ -92,7 +92,7 @@ function _ObjectBridge:_RemoveDefaults(objectID, values)
     end
 end
 
-function _ObjectBridge:_GetAllFields(objectID)
+function _ObjectS11N:_GetAllFields(objectID)
     local values = {}
     for name, _ in pairs(self.getFuncs) do
         values[name] = self:_GetField(objectID, name)
@@ -102,7 +102,7 @@ function _ObjectBridge:_GetAllFields(objectID)
     return values
 end
 
-function _ObjectBridge:_SetField(objectID, name, value)
+function _ObjectS11N:_SetField(objectID, name, value)
     assert(self.setFuncs[name] ~= nil, "No such field: " .. tostring(name))
     local applyDir = nil
     if name == "pos" and self.getFuncs.rot then
@@ -139,7 +139,7 @@ function _ObjectBridge:_SetField(objectID, name, value)
     end
 end
 
-function _ObjectBridge:_SetAllFields(objectID, object)
+function _ObjectS11N:_SetAllFields(objectID, object)
     local values = {}
     for name, value in pairs(object) do
         if self.setFuncs[name] ~= nil then
@@ -148,7 +148,7 @@ function _ObjectBridge:_SetAllFields(objectID, object)
     end
 end
 
-function _ObjectBridge:_CacheObject(objectID)
+function _ObjectS11N:_CacheObject(objectID)
 --     -- cache defaults
 --     local defName = self:_GetField(objectID, "defName")
 --     local defaults = self.objectDefaults[defName]
@@ -162,18 +162,18 @@ function _ObjectBridge:_CacheObject(objectID)
 --     end
 end
 
-function _ObjectBridge:_ObjectCreated(objectID)
+function _ObjectS11N:_ObjectCreated(objectID)
     table.insert(self._cacheQueue, objectID)
 end
 
-function _ObjectBridge:_GameFrame()
+function _ObjectS11N:_GameFrame()
     for _, objectID in pairs(self._cacheQueue) do
         self:_CacheObject(objectID)
     end
     self._cacheQueue = {}
 end
 
-function _ObjectBridge:__ReportObjectCreationFail(object)
+function _ObjectS11N:__ReportObjectCreationFail(object)
     Spring.Log("SpringBoard", "error", "Failed to create object: ")
     if type(object) == "table" then
         table.echo(object)
@@ -182,7 +182,7 @@ function _ObjectBridge:__ReportObjectCreationFail(object)
     end
 end
 
-function _ObjectBridge:_Remove(objectID)
+function _ObjectS11N:_Remove(objectID)
     self:DestroyObject(objectID)
 
     local listeners = self.__listeners
@@ -208,7 +208,7 @@ end
 -------------------------------------------------------
 -- s11n:Add(object)
 -- s11n:Add(objects)
-function _ObjectBridge:Add(input)
+function _ObjectS11N:Add(input)
     local objectIDs = {}
     local retVal
     self.__blockSetListener = true
@@ -291,7 +291,7 @@ end
 -------------------------------------------------------
 -- s11n:Remove(objectID)
 -- s11n:Remove(objectIDs)
-function _ObjectBridge:Remove(objectIDs)
+function _ObjectS11N:Remove(objectIDs)
     if type(objectIDs) ~= "table" then
         objectIDs = {objectIDs}
     end
@@ -307,7 +307,7 @@ end
 -- s11n:Get(objectID, keys)
 -- s11n:Get(objectIDs, key)
 -- s11n:Get(objectIDs, keys)
-function _ObjectBridge:Get(...)
+function _ObjectS11N:Get(...)
     local params = {...}
 
     local paramsCount = #params
@@ -384,7 +384,7 @@ end
 -- s11n:Set(objectID, keys, values)
 -- s11n:Set(objectIDs, key, value)
 -- s11n:Set(objectIDs, keys, values)
-function _ObjectBridge:Set(...)
+function _ObjectS11N:Set(...)
     local params = {...}
     local paramsCount = #params
 

@@ -152,7 +152,7 @@ AreaBridge.OnLuaUIUpdated = function(objectID, name, value)
 end
 
 areaBridge = AreaBridge()
-AreaS11N = s11n:MakeNewBridge("areaBridge")
+AreaS11N = s11n:MakeNewS11N("areaBridge")
 function AreaS11N:OnInit()
     self.funcs = {
         pos = {

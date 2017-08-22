@@ -1,7 +1,7 @@
-_FeatureBridge = _ObjectBridge:extends{}
+_FeatureS11N = _ObjectS11N:extends{}
 
 -- local modelIDs = {}
-function _FeatureBridge:OnInit()
+function _FeatureS11N:OnInit()
     self.funcs = {
         pos = {
             get = function(objectID)
@@ -149,7 +149,7 @@ function _FeatureBridge:OnInit()
 end
 
 -- FIXME: objectID not used
-function _FeatureBridge:CreateObject(object, objectID)
+function _FeatureS11N:CreateObject(object, objectID)
     local y = Spring.GetGroundHeight(object.pos.x, object.pos.z)
     local objectID = Spring.CreateFeature(object.defName, object.pos.x, object.pos.y, object.pos.z)
     if y ~= object.pos.y then
@@ -159,10 +159,10 @@ function _FeatureBridge:CreateObject(object, objectID)
     return objectID
 end
 
-function _FeatureBridge:DestroyObject(objectID)
+function _FeatureS11N:DestroyObject(objectID)
     return Spring.DestroyFeature(objectID, false, true)
 end
 
-function _FeatureBridge:GetAllObjectIDs()
+function _FeatureS11N:GetAllObjectIDs()
     return Spring.GetAllFeatures()
 end
