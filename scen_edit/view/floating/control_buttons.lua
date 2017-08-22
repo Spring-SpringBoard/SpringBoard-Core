@@ -83,32 +83,23 @@ function ControlButtons:UpdateGameDrawing()
     end
 
     if self.started then
-        pcall(function()
-            local OnStopEditingUnsynced = SB.model.game.OnStopEditingUnsynced
-            if OnStopEditingUnsynced then
-                OnStopEditingUnsynced()
-            end
+        SB.delay(function()
+            pcall(function()
+                local OnStopEditingUnsynced = SB.model.game.OnStopEditingUnsynced
+                if OnStopEditingUnsynced then
+                    OnStopEditingUnsynced()
+                end
+            end)
         end)
     else
-        pcall(function()
-            local OnStartEditingUnsynced = SB.model.game.OnStartEditingUnsynced
-            if OnStartEditingUnsynced then
-                OnStartEditingUnsynced()
-            end
+        SB.delay(function()
+            pcall(function()
+                local OnStartEditingUnsynced = SB.model.game.OnStartEditingUnsynced
+                if OnStartEditingUnsynced then
+                    OnStartEditingUnsynced()
+                end
+            end)
         end)
-    end
-
-    -- This relies on *game* Chili, not SB
-    -- If game doesn't use Chili, we don't control its drawing
-    if not WG.Chili then
-        return
-    end
-    if not self.started then
-        -- Disable game drawing
-        self.__oldDraw = WG.Chili.Screen0.Draw or WG.Chili.Screen.Draw
-        WG.Chili.Screen0.Draw = function() end
-    else
-        WG.Chili.Screen0.Draw = self.__oldDraw or WG.Chili.Screen.Draw
     end
 end
 
