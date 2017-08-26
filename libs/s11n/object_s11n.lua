@@ -224,6 +224,7 @@ function _ObjectS11N:Add(input)
                 self.__blockSetListener = false
                 return
             end
+            object.objectID = objectID
 
             -- Hide fields
             local team = object.team
@@ -239,7 +240,8 @@ function _ObjectS11N:Add(input)
 
             table.insert(objectIDs, objectID)
         end
-        for objectID, object in pairs(input) do
+        for _, object in pairs(input) do
+            local objectID = object.objectID
             if object.commands then
                 self:_SetField(objectID, "commands", object.commands)
             end

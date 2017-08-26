@@ -8,7 +8,31 @@ local function boolToNumber(bool)
     end
 end
 
+local function __getSpringUnitID(modelID)
+    local luaState = WG or GG
+    if not luaState.SB then
+        return modelID
+    end
+    local SB = luaState.SB
+    return SB.model.unitManager:getSpringUnitID(modelID)
+end
+
+local function __getModelUnitID(springID)
+    local luaState = WG or GG
+    if not luaState.SB then
+        return springID
+    end
+    local SB = luaState.SB
+    return SB.model.unitManager:getModelUnitID(springID)
+end
+
 local function isUnitCommand(command)
+    local luaState = WG or GG
+    if not luaState.SB then
+        return
+    end
+    local SB = luaState.SB
+
     if command.params ~= nil and #command.params ~= 1 then
         return false
     end
@@ -269,9 +293,10 @@ function _UnitS11N:OnInit()
                 if value.trajectory ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.TRAJECTORY, {boolToNumber(value.trajectory)}, {})
                 end
-                if value.autoRepairLevel ~= nil then
-                    Spring.GiveOrderToUnit(objectID, CMD.AUTOREPAIRLEVEL, {boolToNumber(value.autoRepairLevel)}, {})
-                end
+                -- FIXME: needs to be done differently as it clears the commands
+                -- if value.autoRepairLevel ~= nil then
+                --     Spring.GiveOrderToUnit(objectID, CMD.AUTOREPAIRLEVEL, {boolToNumber(value.autoRepairLevel)}, {})
+                -- end
                 if value.loopbackAttack ~= nil then
                     Spring.GiveOrderToUnit(objectID, CMD.LOOPBACKATTACK, {boolToNumber(value.loopbackAttack)}, {})
                 end
@@ -291,7 +316,6 @@ function _UnitS11N:OnInit()
 --                 Spring.SetUnitLosState(objectID, allyTeamID, v)
 --             end
 --         end,
-
         rules = {
             get = function(objectID)
                 return Spring.GetUnitRulesParams(objectID)
@@ -308,7 +332,7 @@ function _UnitS11N:OnInit()
         },
         commands = {
             get = function(objectID)
-                -- -1 needed here to work around jk's attempt at optimization (otherwise we get errors)
+                -- -1 needed here to work an Engine limit (otherwise we get errors)
                 local commands = Spring.GetUnitCommands(objectID, -1)
                 if commands then
                     for _, command in pairs(commands) do
@@ -325,12 +349,13 @@ function _UnitS11N:OnInit()
                         end
                         command.options = nil
                         command.tag = nil
-                        command.id = nil
-                        -- TODO
+                        if command.name ~= nil then
+                            command.id = nil
+                        end
                         -- serialized unit commands use the model unit id
-        --                 if isUnitCommand(command) then
-        --                     command.params[1] = self:getModelUnitID(command.params[1])
-        --                 end
+                        if isUnitCommand(command) then
+                            command.params[1] = __getModelUnitID(command.params[1])
+                        end
                     end
                 end
                 return commands
@@ -339,17 +364,19 @@ function _UnitS11N:OnInit()
                 for _, command in pairs(value) do
                     local params
                     -- unit commands need to get the real unit ID
-                    if false and isUnitCommand(command) then
-                        params = { self:getSpringUnitID(command.params[1]) }
+                    if isUnitCommand(command) then
+                        params = { __getSpringUnitID(command.params[1]) }
                     else
                         params = command.params
                     end
                     if command.name ~= "BUILD_COMMAND" then
-                        Spring.GiveOrderToUnit(objectID, CMD[command.name], params, {"shift"})
+                        local cmdID = CMD[command.name] or command.id
+                        Spring.GiveOrderToUnit(objectID, cmdID, params, {"shift"})
                     else
                         Spring.GiveOrderToUnit(objectID, -UnitDefNames[command.buildUnitDef].id, params, {"shift"})
                     end
                 end
+                local commands = Spring.GetUnitCommands(objectID, -1)
             end,
         },
         harvestStorage = {
