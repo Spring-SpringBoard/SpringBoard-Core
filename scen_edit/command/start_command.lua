@@ -18,12 +18,12 @@ function StartCommand:execute()
 
     Log.Notice("Starting game...")
 
+    local oldModel = SB.model:Serialize()
+    SB.model.oldModel = oldModel
+
     for _, allyTeamID in ipairs(Spring.GetAllyTeamList()) do
         Spring.SetGlobalLos(allyTeamID, false)
     end
-
-    local oldModel = SB.model:Serialize()
-    SB.model.oldModel = oldModel
 
     local heightMap = HeightMap()
     heightMap:Serialize()

@@ -14,6 +14,7 @@ end
 local msgParts = {}
 local msgPartsSize = 0
 local __populated = false
+local __populatedTeam = false
 
 function gadget:RecvLuaMsg(msg, playerID)
     pre = "scen_edit"
@@ -127,7 +128,6 @@ function Load()
 
     SB.model.unitManager:populate()
     SB.model.featureManager:populate()
-    SB.model.teamManager:populate()
     __populated = true
     if hasScenarioFile then
         Log.Notice("Loading the scenario file...")
@@ -157,6 +157,11 @@ function gadget:GamePreload()
 end
 
 function gadget:GameFrame(frameNum)
+    if __populated and not __populatedTeam then
+        SB.model.teamManager:populate()
+        __populatedTeam = true
+    end
+
     SB.executeDelayed("GameFrame")
     SB.rtModel:GameFrame(frameNum)
 

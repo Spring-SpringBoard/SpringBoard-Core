@@ -16,9 +16,10 @@ function TeamManager:addTeam(team, teamID)
     self.teamIDCount = teamID
 
     self.teams[teamID] = team
-    self:_setTeam(teamID, team)
-
     self:callListeners("onTeamAdded", teamID)
+
+    self:setTeam(teamID, team)
+
     return teamID
 end
 
@@ -30,7 +31,7 @@ function TeamManager:removeTeam(teamID)
     end
 end
 
-function TeamManager:_setTeam(teamID, team)
+function TeamManager:setTeam(teamID, team)
     assert(self.teams[teamID])
     self.teams[teamID] = team
     if team.color then
@@ -39,10 +40,6 @@ function TeamManager:_setTeam(teamID, team)
     if Script.GetSynced() then
         self:setTeamResources(teamID, team.metal, team.metalMax, team.energy, team.energyMax)
     end
-end
-
-function TeamManager:setTeam(teamID, team)
-    self:_setTeam(teamID, team)
     self:callListeners("onTeamChange", teamID, team)
 end
 

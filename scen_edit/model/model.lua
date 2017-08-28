@@ -85,7 +85,9 @@ end
 function Model:SetMetaData(meta)
     self.areaManager:load(meta.areas)
     self.variableManager:load(meta.variables)
-    self.teamManager:load(meta.teams)
+    if meta.teams then
+        self.teamManager:load(meta.teams)
+    end
 	self.scenarioInfo:load(meta.info)
     self.triggerManager:load(meta.triggers)
 end

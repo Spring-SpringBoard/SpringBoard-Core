@@ -21,28 +21,12 @@ function PlayerWindow:init(team)
         value = not not team.ai,
     }))
 
-    local metal, metalMax = Spring.GetTeamResources(team.id, "metal")
-    if metal == nil then
-        metal = team.metal or 1000
-    end
-    if metalMax == nil then
-        metalMax = team.metalMax or 1000
-    end
-    self:AddControl("metal-sep", {
-        Label:New {
-            caption = "Metal",
-        },
-        Line:New {
-            x = 50,
-            width = self.VALUE_POS,
-        }
-    })
     self:AddField(GroupField({
         NumericField({
             name = "metal",
             title = "Metal:",
             tooltip = "Metal",
-            value = metal,
+            value = team.metal,
             step = 0.2,
             width = 200,
         }),
@@ -50,19 +34,12 @@ function PlayerWindow:init(team)
             name = "metalStorage",
             title = "Storage:",
             tooltip = "Metal storage",
-            value = metalMax,
+            value = team.metalMax,
             step = 0.2,
             width = 200,
         }),
     }))
 
-    local energy, energyMax = Spring.GetTeamResources(team.id, "energy")
-    if energy == nil then
-        energy = team.energy or 1000
-    end
-    if energyMax == nil then
-        energyMax = team.energyMax or 1000
-    end
     self:AddControl("energy-sep", {
         Label:New {
             caption = "Energy",
@@ -77,7 +54,7 @@ function PlayerWindow:init(team)
             name = "energy",
             title = "Energy:",
             tooltip = "Energy",
-            value = energy,
+            value = team.energy,
             step = 0.2,
             width = 200,
         }),
@@ -85,7 +62,7 @@ function PlayerWindow:init(team)
             name = "energyStorage",
             title = "Storage:",
             tooltip = "Energy storage",
-            value = energyMax,
+            value = team.energyMax,
             step = 0.2,
             width = 200,
         }),

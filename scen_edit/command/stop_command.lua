@@ -35,13 +35,16 @@ function StopCommand:execute()
 
     local teamData = SB.model.oldModel.meta.teams
     SB.model.oldModel.meta = meta
+    SB.model.oldModel.meta.teams = nil
 
-    --SB.delay(function()
+    SB.delay(function()
         SB.model:Load(SB.model.oldModel)
         SB.model.oldHeightMap:Load()
-    --end)
+        SB.delay(function()
+            SB.model.teamManager:load(teamData)
+        end)
+    end)
 
-    SB.model.teamManager:load(teamData)
     if SB_USE_PLAY_PAUSE then
         Spring.SendCommands("pause 1")
     end
