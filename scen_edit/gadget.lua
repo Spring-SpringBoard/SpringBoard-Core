@@ -28,6 +28,19 @@ function gadget:RecvLuaMsg(msg, playerID)
 
     --TODO: figure proper msg name :)
     if op == 'game' then
+        local msgParsed = msg:sub(#(pre .. "|" .. op .. "|") + 1)
+        if SB.messageManager.compress then
+            msgParsed = SB.ZlibDecompress(msgParsed)
+        end
+        -- FIXME: not super safe to read lua code like this
+        local success, msgTable = pcall(function()
+            return assert(loadstring(msgParsed))()
+        end)
+        local msg = Message(msgTable.tag, msgTable.data)
+        if msg.tag == 'event' then
+            local data = msg.data
+            SB.rtModel:OnEvent(data.eventName, data.params)
+        end
     elseif op == 'meta' then
         Log.Notice("Send meta data signal")
     else

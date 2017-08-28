@@ -19,11 +19,13 @@ function MessageManager:__encodeToString(message)
     return msg
 end
 
-function MessageManager:sendMessage(message, callback)
+function MessageManager:sendMessage(message, callback, messageType)
     self.messageIDCount = self.messageIDCount + 1
     message.id = self.messageIDCount
 
-    local messageType = "sync"
+    if not messageType then
+        messageType = "sync"
+    end
     if callback ~= nil then
         messageType = "async"
         self.callbacks[message.id] = callback

@@ -621,3 +621,16 @@ function SB.DirIsProject(path)
 
     return modelExists and heightMapExists
 end
+
+function SB.ExecuteEvent(eventName, params)
+    if Script.GetSynced() then
+        SB.rtModel:OnEvent(eventName, params)
+    else
+        local event = {
+            eventName = eventName,
+            params = params,
+        }
+        local msg = Message("event", event)
+        SB.messageManager:sendMessage(msg, nil, "game")
+    end
+end
