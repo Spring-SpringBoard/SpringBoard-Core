@@ -61,6 +61,9 @@ VFS.Include("LuaRules/Configs/customcmds.h.lua")
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+if Engine == nil then
+	Engine = Game
+end
 local reverseCompat = (Engine.version:find('91.0') == 1) and 1 or 0
 
 local Chili
