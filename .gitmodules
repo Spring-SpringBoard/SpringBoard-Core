@@ -1,0 +1,3 @@
+[submodule "libs/liblobby"]
+	path = libs/liblobby
+	url = https://github.com/gajop/liblobby.git
