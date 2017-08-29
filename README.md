@@ -10,7 +10,12 @@ The production version can be obtained from rapid, via:
 `pr-downloader sbc:test`
 
 The development version can be obtained from this repository, by cloning it in your game folder:
-`git clone https://github.com/Spring-SpringBoard/SpringBoard-Core SB-C.sdd`
+```
+git clone https://github.com/Spring-SpringBoard/SpringBoard-Core SB-C.sdd
+cd SB-C.sdd
+git submodule init
+git submodule update
+```
 
 ### Game-specific modules
 This is the core module, you may still want to get additional game-specific modules if you're making a scenario.
