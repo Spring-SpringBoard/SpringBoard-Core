@@ -21,7 +21,7 @@ function NewProjectDialog:init()
                         name = Game.gameName,
                         version = Game.gameVersion,
                     },
-                    map = "FlatTemplate",
+                    mapName = "FlatTemplate",
                     teams = {},
                     players = {},
                     ais = {},
