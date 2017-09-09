@@ -19,7 +19,7 @@ function gadget:Initialize()
 	-- Only use this in development versions
 	if not Game.gameVersion:find("$VERSION") then
 		Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
-	    gadgetHandler:RemoveWidget(self)
+	    gadgetHandler:RemoveGadget(self)
 		return
 	end
 end
@@ -114,7 +114,7 @@ function gadget:Initialize()
 	-- Only use this in development versions
 	if not Game.gameVersion:find("$VERSION") then
 		Spring.Log(__SK.LOG_SECTION, LOG.NOTICE, "Removing kernel for non-development version.")
-	    gadgetHandler:RemoveWidget(self)
+	    gadgetHandler:RemoveGadget(self)
 		return
 	end
 
