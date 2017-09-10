@@ -30,6 +30,7 @@ function FieldResolver:CallExpression(expr, exprType, params, canExecuteUnsynced
 end
 
 function FieldResolver:Resolve(field, type, rawVariable, params)
+    -- Spring.Echo(field, type, rawVariable, params)
     if field.type == "expr" then
         local expr = field.value
         local typeName = expr.typeName
@@ -63,6 +64,9 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             local springID = SB.model.unitManager:getSpringUnitID(unitID)
             if Spring.ValidUnitID(springID) then
                 return springID
+            -- This shouldn't exist, we should always use the model id?
+            elseif Spring.ValidUnitID(unitID) then
+                return unitID
             end
         end
     elseif type == "unitType" then
