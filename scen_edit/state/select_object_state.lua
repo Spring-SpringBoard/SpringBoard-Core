@@ -21,7 +21,6 @@ end
 
 function SelectObjectState:MousePress(x, y, button)
     if button == 1 then
-        -- local success, objectID = self:__MaybeTraceObject(x, y)
         local onlyCoords = self.bridge == positionBridge
         local success, objectID = SB.TraceScreenRay(x, y, {
             onlyCoords = onlyCoords,
@@ -35,13 +34,6 @@ function SelectObjectState:MousePress(x, y, button)
         SB.stateManager:SetState(DefaultState())
     end
     return true
-end
-
-function SelectObjectState:__MaybeTraceObject(x, y)
-    local result, objectID = Spring.TraceScreenRay(x, y)
-    if result == "unit" then
-        return true, objectID
-    end
 end
 
 function SelectObjectState:__GetInfoText()
@@ -72,31 +64,3 @@ function SelectObjectState:__DrawInfo()
     -- return true to keep redrawing
     return true
 end
-
--- --------------------------
--- -- Area
--- --------------------------
--- function SelectAreaState:__MaybeTraceObject(x, y)
---     local result, coords = Spring.TraceScreenRay(x, y)
---     if result == "ground" then
---         local selected = SB.model.areaManager:GetAreaIn(coords[1], coords[3])
---         if selected ~= nil then
---             return true, selected
---         end
---     end
--- end
---
--- --------------------------
--- -- Position
--- --------------------------
--- function SelectPositionState:__MaybeTraceObject(x, y)
---     local result, coords = Spring.TraceScreenRay(x, y)
---     if result == "ground"  then
---         local position = {
---             x = coords[1],
---             y = coords[2],
---             z = coords[3],
---         }
---         return true, position
---     end
--- end

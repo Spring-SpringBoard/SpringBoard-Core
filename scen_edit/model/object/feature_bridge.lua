@@ -6,8 +6,6 @@ FeatureBridge.GetObjectsInCylinder            = Spring.GetFeaturesInCylinder
 FeatureBridge.GetObjectDefID                  = Spring.GetFeatureDefID
 FeatureBridge.ValidObject                     = Spring.ValidFeatureID
 
-FeatureBridge.SelectObjectTypeState           = SelectFeatureTypeState
-
 FeatureBridge.DrawObject                      = function(params)
     DrawObject(params, featureBridge)
 --     local featureDef    = FeatureDefs[objectDefID]

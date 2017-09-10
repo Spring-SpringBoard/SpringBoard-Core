@@ -122,7 +122,6 @@ function ObjectField:GetCaption()
     end
 end
 
--- FIXME: doens't work, global variable doesn't seem found
 for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
     local f = ObjectField:extends{}
     function f:init(opts)

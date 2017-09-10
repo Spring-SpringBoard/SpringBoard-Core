@@ -52,7 +52,10 @@ function ObjectTypeField:init(field)
         end,
         OnClick = {
             function(...)
-                SB.stateManager:SetState(self.bridge.SelectObjectTypeState(self.OnSelectObjectType))
+                SB.stateManager:SetState(
+                    SelectObjectTypeState(self.bridge,
+                                      self.OnSelectObjectType)
+                )
             end
         },
         children = {
@@ -87,15 +90,15 @@ function ObjectTypeField:GetCaption()
     return "Def: " .. tostring(def.name)
 end
 
--- Custom object classes
-UnitTypeField = ObjectTypeField:extends{}
-function UnitTypeField:init(...)
-    ObjectTypeField.init(self, ...)
-    self.bridge = unitBridge
-end
-
-FeatureTypeField = ObjectTypeField:extends{}
-function FeatureTypeField:init(...)
-    ObjectTypeField.init(self, ...)
-    self.bridge = featureBridge
+for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
+    if name == "unit" or name == "feature" then
+        local f = ObjectTypeField:extends{}
+        function f:init(opts)
+            opts.bridge = bridge
+            ObjectTypeField.init(self, opts)
+        end
+        local fname = String.Capitalize(name) .. "TypeField"
+        local g = getfenv()
+        g[fname] = f
+    end
 end

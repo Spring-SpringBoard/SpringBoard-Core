@@ -6,8 +6,6 @@ UnitBridge.GetObjectsInCylinder            = Spring.GetUnitsInCylinder
 UnitBridge.GetObjectDefID                  = Spring.GetUnitDefID
 UnitBridge.ValidObject                     = Spring.ValidUnitID
 
-UnitBridge.SelectObjectTypeState           = SelectUnitTypeState
-
 UnitBridge.DrawObject                      = function(params)
     DrawObject(params, unitBridge)
 end
