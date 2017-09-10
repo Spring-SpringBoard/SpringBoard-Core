@@ -444,10 +444,12 @@ end
 -- Make window modal in respect to the source control.
 -- The source control will not be usable until the window is disposed.
 function SB.MakeWindowModal(window, source)
-    -- FIXME: Needed?
     while source.classname ~= "window" do
-        Log.Warning("SB.MakeWindowModal", "Sent source which isn't a window")
-        Log.Warning(debug.traceback())
+        -- FIXME: would like to avoid this; when debugging change the if
+        if false then
+            Log.Warning("SB.MakeWindowModal", "Sent source which isn't a window")
+            Log.Warning(debug.traceback())
+        end
         source = source.parent
     end
     SB.SetControlEnabled(source, false)
@@ -582,6 +584,10 @@ function SB.TraceScreenRay(x, y, opts)
                 end
             end
         end
+    end
+
+    if traceType == "ground" and selType then
+        return false
     end
 
     return traceType, value

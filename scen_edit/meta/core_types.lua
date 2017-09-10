@@ -87,6 +87,11 @@ local function _definitions()
         name = {
             mandatory = false,
             type = "string",
+            default = function(d)
+                if d.name == nil then
+                    return d.type
+                end
+            end,
             parseFunction = function(d)
                 if d.name == nil then
                     d.name = d.type
@@ -96,9 +101,14 @@ local function _definitions()
         humanName = {
             mandatory = false,
             type = "string",
+            default = function(d)
+                if d.humanName == nil then
+                    return d.name or d.type
+                end
+            end,
             parseFunction = function(d)
                 if d.humanName == nil then
-                    d.humanName = d.name
+                    d.humanName = d.name or d.type
                 end
             end,
         },
@@ -137,11 +147,12 @@ local function _definitions()
         extraSources = {
             mandatory = false,
             parseFunction = function(d)
-                if d.type ~= "function" and d.type ~= "action" then
-                    Log.Error("parseFunction specified for \"extraSources\" key in field: \"" .. tostring(d.type) .. "\"")
-                    return
-                end
                 if d.extraSources then
+                    if d.type ~= "function" and d.type ~= "action" then
+                        Log.Error("parseFunction specified for \"extraSources\" key in field: \"" .. tostring(d.type) .. "\"")
+                        return
+                    end
+
                     d.extraSources = SB.parseData(d.extraSources)
                 end
             end,
@@ -171,7 +182,11 @@ local function parseDataType(d)
                 Log.Error("Error, missing field \"" .. key .. "\" of data " .. tostring(d.type))
                 errored = true
             elseif def.default then
-                d[key] = def.default
+                if type(def.default) == "function" then
+                    d[key] = def.default(d)
+                else
+                    d[key] = def.default
+                end
             end
         else
             -- Perform a type check if def has a type specified
@@ -209,7 +224,7 @@ function SB.parseData(data)
                 for _, d2 in pairs(newData) do
                     if d.name == d2.name then
                         Log.Error("Error, name field is duplicate")
-                        succses = false
+                        success = false
                     end
                 end
             end
