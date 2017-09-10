@@ -477,11 +477,11 @@ function CollisionView:OnFieldChange(name, value)
     local commands = {}
     for _, objectID in pairs(selection.unit) do
         local modelID = SB.model.unitManager:getModelUnitID(objectID)
-        table.insert(commands, SetUnitParamCommand(modelID, name, value))
+        table.insert(commands, SetObjectParamCommand("unit", modelID, name, value))
     end
     for _, objectID in pairs(selection.feature) do
         local modelID = SB.model.featureManager:getModelFeatureID(objectID)
-        table.insert(commands, SetFeatureParamCommand(modelID, name, value))
+        table.insert(commands, SetObjectParamCommand("feature", modelID, name, value))
     end
 
     local compoundCommand = CompoundCommand(commands)
