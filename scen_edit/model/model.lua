@@ -95,6 +95,9 @@ end
 function Model:LoadGameSettings()
     self.game = {}
     pcall(function()
-        self.game = loadstring(VFS.LoadFile("sb_settings.lua"))()
+        local _game = loadstring(VFS.LoadFile("sb_settings.lua"))
+        setfenv(_game, getfenv())
+        _game = _game()
+        self.game = _game
     end)
 end

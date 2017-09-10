@@ -84,21 +84,29 @@ function ControlButtons:UpdateGameDrawing()
 
     if self.started then
         SB.delay(function()
-            pcall(function()
+            local success, msg = pcall(function()
                 local OnStopEditingUnsynced = SB.model.game.OnStopEditingUnsynced
                 if OnStopEditingUnsynced then
                     OnStopEditingUnsynced()
                 end
             end)
+            if not success then
+                Log.Error(msg)
+                Log.Error("Error in custom OnStopEditingUnsynced")
+            end
         end)
     else
         SB.delay(function()
-            pcall(function()
+            local success, msg = pcall(function()
                 local OnStartEditingUnsynced = SB.model.game.OnStartEditingUnsynced
                 if OnStartEditingUnsynced then
                     OnStartEditingUnsynced()
                 end
             end)
+            if not success then
+                Log.Error(msg)
+                Log.Error("Error in custom OnStartEditingUnsynced")
+            end
         end)
     end
 end
