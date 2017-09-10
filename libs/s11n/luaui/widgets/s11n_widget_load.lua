@@ -29,7 +29,7 @@ function widget:Initialize()
     VFS.Include(S11N_FOLDER .. "/s11n.lua", nil, VFS.DEF_MODE)
 
     -- Export Widget Globals
-    _s11n = s11n()
+    _s11n = s11n.instance
     WG.s11n = _s11n
     for _, objectID in pairs(Spring.GetAllUnits()) do
         self:UnitCreated(objectID)

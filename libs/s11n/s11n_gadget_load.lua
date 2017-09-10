@@ -30,7 +30,7 @@ function gadget:Initialize()
     VFS.Include(S11N_FOLDER .. "/s11n.lua", nil, VFS.DEF_MODE)
 
     -- Export Gadget Globals
-    _s11n = s11n()
+    _s11n = s11n.instance
     GG.s11n = _s11n
     for _, objectID in pairs(Spring.GetAllUnits()) do
         self:UnitCreated(objectID)

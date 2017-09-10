@@ -6,6 +6,10 @@ function _ObjectS11N:init()
     self.__listeners      = {}
     self:OnInit()
     self:__makeFunctions()
+
+    -- Register instance
+    s11n.instance[self.__name] = self
+    s11n.instance.s11nByName[self.__name] = self
 end
 
 function _ObjectS11N:AddListener(listener)

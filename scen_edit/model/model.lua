@@ -27,7 +27,7 @@ end
 
 --clears all units, areas, triggers, etc.
 function Model:Clear()
-    self.areaManager:clear()
+    --self.areaManager:clear()
     self.variableManager:clear()
     self.triggerManager:clear()
     self.teamManager:clear()
@@ -35,6 +35,11 @@ function Model:Clear()
 
     self.unitManager:clear()
     self.featureManager:clear()
+    for name, objectS11N in pairs(s11n.s11nByName) do
+        if name ~= "unitS11N" and name ~= "featureS11N" then
+            objectS11N:Remove(objectS11N:GetAllObjectIDs())
+        end
+    end
 
     for _, projectileID in pairs(Spring.GetProjectilesInRectangle(0, 0, Game.mapSizeX,  Game.mapSizeZ)) do
         Spring.SetProjectilePosition(projectileID, math.huge, math.huge, math.huge)
@@ -52,7 +57,11 @@ function Model:Serialize()
     mission.meta = self:GetMetaData()
     mission.units = self.unitManager:serialize()
     mission.features = self.featureManager:serialize()
-
+    for name, objectS11N in pairs(s11n.s11nByName) do
+        if name ~= "unitS11N" and name ~= "featureS11N" then
+            mission[name] = objectS11N:Get()
+        end
+    end
     return mission
 end
 
@@ -66,6 +75,13 @@ function Model:Load(mission)
 
     self.unitManager:load(mission.units)
     self.featureManager:load(mission.features)
+    -- TODO: some serialization should persist through save/load (and belongs to .meta)
+    -- Right now everything will be reset each Start/Stop
+    for name, objectS11N in pairs(s11n.s11nByName) do
+        if name ~= "unitS11N" and name ~= "featureS11N" then
+            objectS11N:Add(mission[name])
+        end
+    end
 
     self:SetMetaData(mission.meta)
 end
@@ -73,7 +89,6 @@ end
 --returns a table that holds triggers, areas and other non-engine content
 function Model:GetMetaData()
     return {
-        areas = self.areaManager:serialize(),
         triggers = self.triggerManager:serialize(),
         variables = self.variableManager:serialize(),
         teams = self.teamManager:serialize(),
@@ -83,7 +98,6 @@ end
 
 --sets triggers, areas, etc.
 function Model:SetMetaData(meta)
-    self.areaManager:load(meta.areas)
     self.variableManager:load(meta.variables)
     if meta.teams then
         self.teamManager:load(meta.teams)

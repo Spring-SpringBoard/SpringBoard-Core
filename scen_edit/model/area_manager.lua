@@ -41,32 +41,6 @@ function AreaManager:getAllAreas()
     return areas
 end
 
-function AreaManager:serialize()
-    local retVal = {}
-    for id, area in pairs(self.areas) do
-        table.insert(retVal, {
-            area = area,
-            id = id,
-        })
-    end
-    return retVal
-end
-
-function AreaManager:load(data)
-    self.areaIDCount = 0
-    for _, kv in pairs(data) do
-        id = kv.id
-        area = kv.area
-        self:addArea(area, id)
-    end
-end
-
-function AreaManager:clear()
-    for areaID, _ in pairs(self.areas) do
-        self:removeArea(areaID)
-    end
-end
-
 -- Utility functions
 function AreaManager:GetAreaIn(x, z)
     local selected, dragDiffX, dragDiffZ
