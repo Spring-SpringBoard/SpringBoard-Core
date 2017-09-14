@@ -11,7 +11,7 @@ The following should be done:
 2. Pick one of the Scenario Editor mods (mutators) configured for the game, and not the game itself. *Scenario Editor BA 0.2+* is correct, where *Balanced Annihilation v80* isn't.
 3. Run it as a spectator by checking *Spectate only*.
 
-.. figure:: mod_select.png
+.. figure:: img/mod_select.png
    :scale: 70%
    :align: center
 
@@ -19,7 +19,7 @@ The following should be done:
 
 In addition, depending on the game in question, you might need to select a specific end condition (*Options* tab). In the case of *Scenario Editor BA*, this is done by selecting *None* for the *Game End Mode* as shown on Figure 2.
 
-.. figure:: mod_config.png
+.. figure:: img/mod_config.png
    :scale: 70%
    :align: center
 
@@ -35,7 +35,7 @@ _______
 Once you start the Scenario Editor you should see something similar to Figure 3.
 In the top right part of the UI you should see the *Scenario Toolbox*, or just *Toolbox* for short. You will use this component to do complete most operations within the editor.
 
-.. figure:: toolbox.jpg
+.. figure:: img/toolbox.jpg
    :align: center
 
    Figure 3. Initial screen
@@ -47,14 +47,14 @@ Along side that, common actions such as *Undo, Redo, Reload meta model, Copy, Cu
 
 In the first tab, we can see access the components to do the following: Save, Save as, Load, Set project information and Export.
 
-.. figure:: general_tab.png
+.. figure:: img/general_tab.png
    :align: center
 
    Figure 4. General tab
 
 The unit tab (Figure 5) is usually used to select and add units and features.
 
-.. figure:: unit_tab.png
+.. figure:: img/unit_tab.png
    :align: center
 
    Figure 5. Unit tab
@@ -63,14 +63,14 @@ The map tab (Figure 6) offers components for heightmap (terrain) and texturemap 
 
 .. note:: Texture map saving is currently not implemented and is currently just experimental.
 
-.. figure:: map_tab.png
+.. figure:: img/map_tab.png
    :align: center
 
    Figure 6. Map tab
 
 The trigger tab (Figure 7) provides components to program the scenario, and can be used to add areas, triggers and variables. This will be explained in detail in the :ref:`gui_programming` section.
 
-.. figure:: trigger_tab.png
+.. figure:: img/trigger_tab.png
    :align: center
 
    Figure 7. Trigger tab
@@ -79,7 +79,7 @@ The alliance tab (Figure 8) allows editing of players and alliances.
 
 .. note:: Any changes to the Players component that leads to new teams being added or old ones removed requires a restart of the game.
 
-.. figure:: alliance_tab.png
+.. figure:: img/alliance_tab.png
    :align: center
 
    Figure 8. Alliance tab
