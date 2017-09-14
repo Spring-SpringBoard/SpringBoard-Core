@@ -167,6 +167,3 @@ texinfo_documents = [
      author, 'SpringBoard', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

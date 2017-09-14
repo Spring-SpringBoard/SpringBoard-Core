@@ -13,9 +13,12 @@ Contents:
 
    getting_started
    gui_programming
-   faq
-
    meta_programming
+   extensions
+   assets
+   hot_keys
+   api
+
 
 
 
@@ -25,4 +28,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
