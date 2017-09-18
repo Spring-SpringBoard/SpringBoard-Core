@@ -1,14 +1,27 @@
+--- StateManager module.
 SB_STATE_DIR = SB_DIR .. "state/"
 
+--- StateManager class.
 StateManager = LCS.class{}
 
 ---------------------------
 -- API
 ---------------------------
+
+--- Get current state.
+-- @return current state
 function StateManager:GetCurrentState()
     return self.currentState
 end
 
+--- Set new state.
+-- @tparam abstract_state.AbstractState state New state to set.
+-- @usage
+-- -- Enter the metal editing state.
+-- SB.stateManager:SetState(MetalEditingState(self))
+--
+-- -- Revert to the default state
+-- SB.stateManager:SetState(DefaultState())
 function StateManager:SetState(state)
     if self.currentState ~= nil then
         local oldState = self.currentState
@@ -40,6 +53,7 @@ end
 ---------------------------
 -- Internal
 ---------------------------
+
 function StateManager:init()
     self.keyListeners = {}
     SB.Include(SB_STATE_DIR .. 'abstract_state.lua')

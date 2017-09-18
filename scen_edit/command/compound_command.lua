@@ -1,7 +1,12 @@
+--- CompoundCommand module.
+
 --- CompoundCommand class. Execute commands in sequence.
+-- @type CompoundCommand
 CompoundCommand = Command:extends{}
 
-
+--- CompoundCommand constructor.
+-- Commands will be executed in sequence. In case of undo, they will be unexecuted in reverse order.
+-- @tparam table commands list of Command instances which are grouped to a single comamnd and executed in sequence.
 function CompoundCommand:init(commands)
     self.className = "CompoundCommand"
     self.commands = commands

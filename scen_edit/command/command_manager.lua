@@ -7,6 +7,8 @@ SB.Include(Path.Join(SB_COMMAND_DIR, 'command.lua'))
 SB.IncludeDir(SB_COMMAND_DIR)
 SB.IncludeDir(SB_COMMAND_SYNC_DIR)
 
+--- CommandManager class
+-- @type CommandManager
 CommandManager = Observable:extends{maxUndoSize = 30, maxRedoSize = 30}
 
 function CommandManager:init(maxUndoSize, maxRedoSize)
@@ -96,8 +98,12 @@ function CommandManager:_SendCommand(cmd)
     return cmd.__cmd_id
 end
 
---widget specifies whether the command should be executed in LuaUI(true) or LuaRules(false)
---if the command is to be executed in a different lua state than currently in, it will send the message to the proper state using the message mechanism
+--- Execute a command
+-- If the command is to be executed in a different Lua state than where this method is invoked from, it will be sent as a message to the proper state using the message mechanism.
+-- @tparam command.Command Instance of a class that implements the Command interface.
+-- @tparam[opt=false] boolean widget Specifies whether the command should be executed in LuaUI(true) or LuaRules(false).
+-- @usage
+-- SB.commandManager:execute(PrintMessageCommand("hello"))
 function CommandManager:execute(cmd, widget)
     widget = not not widget
     Log.Debug(("[%s] %s, widget:%s"):format(Script.GetName(), cmd.className, tostring(not not widget)))

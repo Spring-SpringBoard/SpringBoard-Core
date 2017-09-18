@@ -1,5 +1,12 @@
+--- AbstractState module.
+
+--- AbstractState class.
+-- @type AbstractState
+-- @see state_manager.StateManager
 AbstractState = LCS.class{}
 
+--- AbstractState constructor. Should be invoked from child classes.
+-- @tparam editor.Editor editorView Editor to which this state relates to.
 function AbstractState:init(editorView)
 	self.editorView = editorView
 end
@@ -22,6 +29,7 @@ function AbstractState:leaveState()
 	end
 end
 
+--- KeyPress handling event. Should be invoked from child classes.
 function AbstractState:KeyPress(key, mods, isRepeat, label, unicode)
     local _, _, button1, button2, button3 = Spring.GetMouseState()
     if button1 or button2 or button3 then
