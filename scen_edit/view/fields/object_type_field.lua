@@ -1,7 +1,11 @@
+--- ObjectTypeField module.
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 SB.Include(SB_STATE_DIR .. "select_object_type_state.lua")
 
+--- ObjectTypeField class. Used to represent object types (UnitTypeField and FeatureTypeField).
+-- @type ObjectTypeField
 ObjectTypeField = Field:extends{}
+
 function ObjectTypeField:Update()
     self.lblValue:SetCaption(self:GetCaption())
 end
@@ -15,6 +19,27 @@ function ObjectTypeField:Validate(value)
     end
 end
 
+--- ObjectTypeField constructor.
+-- It's possible to use this directly, by specifying the bridge parameter.
+-- Alternatively, there are: UnitTypeField and FeatureTypeField classes.
+-- @function ObjectField()
+-- @see field.Field
+-- @see model.ObjectBridge
+-- @tparam table opts Table
+-- @tparam string opts.title Title.
+-- @param opts.bridge Object bridge.
+-- @usage
+-- -- using the bridge parameter
+-- ObjectTypeField({
+--     name = "myUnitTypeField",
+--     bridge = unitBridge,
+--     title = "My unit type",
+-- })
+-- -- Using the generated field class
+-- FeatureTypeField({
+--     name = "myFeatureTypeField",
+--     title = "My feature type",
+-- })
 function ObjectTypeField:init(field)
     self:__SetDefault("width", 200)
     self:__SetDefault("title", "")

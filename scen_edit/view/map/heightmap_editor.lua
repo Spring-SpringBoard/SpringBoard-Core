@@ -170,6 +170,6 @@ function HeightmapEditor:OnEnterState(state)
     btn:SetPressedState(true)
 end
 
-function HeightmapEditor:IsValidTest(state)
+function HeightmapEditor:IsValidState(state)
     return state:is_A(AbstractHeightmapEditingState)
 end

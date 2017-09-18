@@ -1,5 +1,8 @@
+--- ColorField module.
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
+--- ColorField class.
+-- @type ColorField
 ColorField = Field:extends{}
 
 function ColorField:Update(source)
@@ -15,6 +18,17 @@ function ColorField:Update(source)
 --     end
 end
 
+--- ColorField constructor.
+-- @function ColorField()
+-- @see field.Field
+-- @tparam table opts Table
+-- @tparam string opts.title Title.
+-- @tparam[opt=false] boolean opts.expand Whether to expand the field in the Editor or open it with a button.
+-- @usage
+-- ColorField({
+--     name = "myColorField",
+--     value = {0.5, 1, 0.2},
+-- })
 function ColorField:init(field)
     self:__SetDefault("value", {1, 1, 1, 1})
     if field.expand then

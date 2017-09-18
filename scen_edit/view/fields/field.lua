@@ -1,4 +1,15 @@
+--- Field module.
+
+--- Field class. Inherit to implement custom field types or use directly.
+-- @type Field
 Field = LCS.class{}
+
+--- Field constructor.
+-- @function Field()
+-- @see editor.Editor
+-- @tparam table opts
+-- @tparam bool opts.allowNil Allow nil values.
+-- @tparam number opts.height Field height size.
 function Field:init(field)
     self:__SetDefault("allowNil", true)
     self:__SetDefault("height", 30)
@@ -38,7 +49,9 @@ function Field:_CompareValues(v1, v2)
     end
 end
 
--- Override
+--- Validate value. Can be overriden.
+-- @param value Value to validate.
+-- @return valid, validatedValue
 function Field:Validate(value)
     if value == nil then
         return self.allowNil, value
@@ -47,6 +60,9 @@ function Field:Validate(value)
     end
 end
 
+--- Set value. Will not be set if it's invalid.
+-- @param value Value to set.
+-- @param source Source control the value was set from.
 function Field:Set(value, source)
     if self.__inUpdate then
         return

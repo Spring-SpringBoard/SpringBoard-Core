@@ -1,3 +1,5 @@
+--- CommandManager module. Available globally as SB.commandManager.
+
 SB_COMMAND_DIR = Path.Join(SB_DIR, "command/")
 SB_COMMAND_SYNC_DIR = Path.Join(SB_COMMAND_DIR, "sync/")
 

@@ -1,6 +1,11 @@
+--- BooleanField module.
+
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
+--- BooleanField class.
+-- @type BooleanField
 BooleanField = Field:extends{}
+
 function BooleanField:Update(source)
     -- if source ~= self.checkBox then
     --     if self.checkBox.checked ~= self.value then
@@ -14,6 +19,17 @@ function BooleanField:Update(source)
     end
 end
 
+--- BooleanField constructor.
+-- @function BooleanField()
+-- @see field.Field
+-- @tparam table opts Table
+-- @tparam string opts.title Title.
+-- @usage
+-- BooleanField({
+--     name = "myBooleanField",
+--     value = true,
+--     title = "My field",
+-- })
 function BooleanField:init(field)
     self:__SetDefault("width", 200)
     self:__SetDefault("value", false)

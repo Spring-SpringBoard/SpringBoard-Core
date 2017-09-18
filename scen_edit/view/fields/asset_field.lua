@@ -1,5 +1,9 @@
+--- AssetField module.
+
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
+--- AssetField class.
+--- @type AssetField.
 AssetField = Field:extends{}
 AssetField.defaultPaths = {}
 
@@ -10,6 +14,13 @@ function AssetField:Update(source)
     end
 end
 
+--- AssetField constructor.
+-- @function AssetField()
+-- @see field.Field
+-- @param opts
+-- @tparam string opts.title Field title.
+-- @tparam[opt=false] boolean opts.expand Whether to expand the field in the Editor or open it with a button.
+-- @tparam number opts.height Field height size.
 function AssetField:init(field)
     if field.expand then
         self.height = 200

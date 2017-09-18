@@ -1,4 +1,4 @@
--- Abstract, root command that specifies the Command interface
+--- Command class. Inherit to implement a custom command.
 Command = LCS.class.abstract{}
 
 function Command:init()

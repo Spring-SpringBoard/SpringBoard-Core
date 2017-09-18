@@ -1,6 +1,10 @@
+--- NumericField module.
 SB.Include(SB_VIEW_FIELDS_DIR .. "string_field.lua")
 
+--- NumericField class.
+-- @type NumericField
 NumericField = StringField:extends{}
+
 function NumericField:Update(source)
     local v = self:__GetDisplayText()
     if source ~= self.editBox and not self.editBox.state.focused then
@@ -28,6 +32,20 @@ function NumericField:Validate(value)
     return nil
 end
 
+--- NumericField constructor.
+-- @function NumericField()
+-- @see string_field.StringField
+-- @tparam table opts Table
+-- @tparam string opts.title Title.
+-- @tparam number opts.minValue Minimum value.
+-- @tparam number opts.maxValue Maximum value.
+-- @tparam number opts.step Step, mouse dragging speed.
+-- @tparam number[opt=2] opts.decimals Number of decimals to show.
+-- @usage
+-- NumericField({
+--     name = "myNumericField",
+--     value = 42.24,
+-- })
 function NumericField:init(field)
     self.__dragSensitivity = 3
     self.__shiftMultiplier = 0.1

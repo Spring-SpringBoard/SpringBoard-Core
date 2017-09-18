@@ -213,7 +213,7 @@ function ObjectDefsView:onTeamChange(teamID, team)
     self:PopulateTeams()
 end
 
-function ObjectDefsView:IsValidTest(state)
+function ObjectDefsView:IsValidState(state)
     return state:is_A(AddObjectState) or state:is_A(BrushObjectState)
 end
 

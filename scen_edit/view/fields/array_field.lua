@@ -1,14 +1,25 @@
+--- ArrayField module.
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
+--- ArrayField class.
+-- @type ArrayField
 ArrayField = Field:extends{}
 
--- Example usage
+--- ArrayField constructor.
+-- @function ArrayField()
+-- @see field.Field
+-- @tparam table opts Table
+-- @tparam[opt='Array'] string opts.title Title.
+-- @tparam[opt=false] boolean opts.expand Whether to expand the field in the Editor or open it with a button.
+-- @tparam[opt=true] boolean opts.canAdd Allow adding new elements with the GUI.
+-- @tparam[opt=true] boolean opts.canRemove Allow removing elements with the GUI.
+-- @usage
 -- ArrayField({
 --     name = "myArrayField",
 --     type = NumericField,
 --     value = {2, 1, -3},
---     canAdd = true, -- true by default
---     canRemove = false, -- true by default
+--     canAdd = true,
+--     canRemove = false,
 -- })
 function ArrayField:init(field)
     self:__SetDefault("width", 200)

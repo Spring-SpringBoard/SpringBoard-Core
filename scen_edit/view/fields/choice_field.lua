@@ -1,6 +1,10 @@
+--- ChoiceField module.
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
+--- ChoiceField class.
+-- @type ChoiceField
 ChoiceField = Field:extends{}
+
 function ChoiceField:Update(source)
     if source ~= self.comboBox then
         for i, id in pairs(self.comboBox.ids) do
@@ -12,6 +16,19 @@ function ChoiceField:Update(source)
     end
 end
 
+--- ChoiceField constructor.
+-- @function ChoiceField()
+-- @see field.Field
+-- @tparam table opts Table
+-- @tparam string opts.title Title.
+-- @tparam table opts.items List of items.
+-- @tparam[opt=items] table opts.captions List of captions (one per item).
+-- @usage
+-- ChoiceField({
+--     name = "choiceField",
+--     items = {1, 2, 3},
+--     captions = {"Blue", "Green", "Yellow"},
+-- })
 function ChoiceField:init(field)
     self:__SetDefault("width", 150)
 

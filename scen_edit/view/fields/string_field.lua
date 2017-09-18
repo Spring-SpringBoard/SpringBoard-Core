@@ -1,4 +1,9 @@
+--- StringField module.
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
+
+--- StringField class.
+-- @type StringField
+StringField = Field:extends{}
 
 function ParseKey(field, editBox, key, mods, ...)
     if key == Spring.GetKeyCode("esc") then
@@ -13,8 +18,6 @@ function ParseKey(field, editBox, key, mods, ...)
     end
 end
 
-StringField = Field:extends{}
-
 function StringField:Added()
     self.editBox:Hide()
 end
@@ -28,6 +31,16 @@ function StringField:Update(source)
     end
 end
 
+--- StringField constructor.
+-- @function StringField()
+-- @see field.Field
+-- @tparam table opts Table
+-- @tparam string opts.title Title.
+-- @usage
+-- StringField({
+--     name = "myStringField",
+--     value = "Some text",
+-- })
 function StringField:init(field)
     self:__SetDefault("width", 200)
     self:__SetDefault("value", "")

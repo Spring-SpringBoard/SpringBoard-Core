@@ -1,8 +1,31 @@
+--- GroupField module
+
+--- GroupField class. Used to group multiple fields and display them in a single line.
+-- @type GroupField
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 GroupField = Field:extends{}
 local _GROUP_INDEX = 0
 
+--- GroupField constructor.
+-- @function GroupField()
+-- @see field.Field
+-- @tparam table fields List of fields
+-- @usage
+-- GroupField({
+--     NumericField({
+--         name = "nf1",
+--         value = 12,
+--         title = "Field1",
+--         width = 70,
+--     }),
+--     NumericField({
+--         name = "nf2",
+--         value = 7,
+--         title = "Field2",
+--         width = 70,
+--     }),
+-- })
 function GroupField:init(fields)
     Field.init(self, {})
 

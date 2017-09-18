@@ -106,7 +106,7 @@ function GrassEditor:OnFieldChange(name, value)
     end
 end
 
-function GrassEditor:IsValidTest(state)
+function GrassEditor:IsValidState(state)
     return state:is_A(GrassEditingState)
 end
 

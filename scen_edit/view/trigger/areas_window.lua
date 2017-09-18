@@ -130,7 +130,7 @@ function AreasWindow:Populate()
     end
 end
 
-function AreasWindow:IsValidTest(state)
+function AreasWindow:IsValidState(state)
     return state:is_A(AddRectState)
 end
 

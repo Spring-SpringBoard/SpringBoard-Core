@@ -117,7 +117,7 @@ function MetalEditor:init()
     self:Finalize(children)
 end
 
-function MetalEditor:IsValidTest(state)
+function MetalEditor:IsValidState(state)
     return state:is_A(MetalEditingState)
 end
 

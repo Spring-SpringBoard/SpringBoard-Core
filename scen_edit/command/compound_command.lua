@@ -1,4 +1,6 @@
+--- CompoundCommand class. Execute commands in sequence.
 CompoundCommand = Command:extends{}
+
 
 function CompoundCommand:init(commands)
     self.className = "CompoundCommand"

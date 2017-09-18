@@ -596,7 +596,7 @@ function TextureEditor:_EnterState(paintMode)
     SB.stateManager:SetState(state)
 end
 
-function TextureEditor:IsValidTest(state)
+function TextureEditor:IsValidState(state)
     return state:is_A(TerrainChangeTextureState)
 end
 

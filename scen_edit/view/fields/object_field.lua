@@ -1,7 +1,11 @@
+--- ObjectField module
 SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 SB.Include(SB_STATE_DIR .. "select_object_state.lua")
 
+--- ObjectField class. Used to represent various map objects (e.g. Unit).
+-- @type ObjectField
 ObjectField = Field:extends{}
+
 function ObjectField:Update()
     self.lblValue:SetCaption(self:GetCaption())
 end
@@ -16,6 +20,28 @@ function ObjectField:Validate(value)
     end
 end
 
+--- ObjectField constructor.
+-- It's possible to use this directly, by specifying the bridge parameter.
+-- Alternatively, each ObjectBridge class should have a dynamically generated Field.
+-- Builtin fields are: UnitField, FeatureField, AreaField and PositionField.
+-- @function ObjectField()
+-- @see field.Field
+-- @see model.ObjectBridge
+-- @tparam table opts Table
+-- @tparam string opts.title Title.
+-- @param opts.bridge Object bridge.
+-- @usage
+-- -- using the bridge parameter
+-- ObjectField({
+--     name = "myUnitField",
+--     bridge = unitBridge,
+--     title = "My unit",
+-- })
+-- -- Using the generated field class
+-- FeatureField({
+--     name = "myFeatureField",
+--     title = "My feature",
+-- })
 function ObjectField:init(field)
     self:__SetDefault("width", 200)
 

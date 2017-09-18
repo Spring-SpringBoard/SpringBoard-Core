@@ -267,7 +267,7 @@ function DNTSEditor:OnFieldChange(name, value)
     end
 end
 
-function DNTSEditor:IsValidTest(state)
+function DNTSEditor:IsValidState(state)
     return state:is_A(TerrainChangeTextureState)
 end
 

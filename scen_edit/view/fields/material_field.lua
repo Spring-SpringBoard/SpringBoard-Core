@@ -1,7 +1,15 @@
+--- MaterialField module.
 SB.Include(SB_VIEW_FIELDS_DIR .. "asset_field.lua")
 
+--- MaterialField class.
+-- @type MaterialField
 MaterialField = AssetField:extends{}
 
+--- MaterialField constructor.
+-- @function MaterialField()
+-- @see asset_field.AssetField
+-- @tparam table opts Table
+-- @usage
 --function MaterialField:init(field) end
 
 function MaterialField:GetCaption()

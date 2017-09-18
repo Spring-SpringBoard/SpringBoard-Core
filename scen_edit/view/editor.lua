@@ -1,6 +1,19 @@
+--- Editor module
+
+--- Editor class. Inherit to create custom Editors
+-- @type Editor
 Editor = LCS.class{}
 
-function Editor:init(opts)
+--- Editor constructor. Make sure you invoke this in your custom editor
+-- @see Editor.Finalize
+-- @usage
+-- MyEditor = Editor:extends{}
+-- function MyEditor:init()
+--     Editor.init(self)
+--     -- rest of code
+--     self:Finalize(children, opts)
+-- end
+function Editor:init()
     self.__initializing = true
 
     self.fields = {}
@@ -40,38 +53,59 @@ function Editor:init(opts)
     self.stackPanel:DisableRealign()
 end
 
--- Override
-function Editor:OnStartChange(name, value)
+--- Called when a field starts to change.
+--- Override.
+-- @tparam string name Name of the field.
+function Editor:OnStartChange(name)
 end
--- Override
-function Editor:OnEndChange(name, value)
+-- Called when a field stops to change.
+--- Override.
+-- @tparam string name Name of the field.
+function Editor:OnEndChange(name)
 end
--- Override
+--- Called when a field value was modified
+--- Override.
+-- @tparam string name Name of the modified field.
+-- @param value New value of the modified field.
 function Editor:OnFieldChange(name, value)
 end
--- Override
-function Editor:IsValidTest(state)
+--- Should return true if state is valid for this editor.
+--- Override.
+-- @param name state State.
+function Editor:IsValidState(state)
     return false
 end
--- Override
+--- Called when the state was entered.
+--- Override.
+-- @param name state State.
 function Editor:OnEnterState(state)
 end
--- Override
+--- Called when the state was left.
+--- Override.
+-- @param name state State.
 function Editor:OnLeaveState(state)
 end
 
 function Editor:_OnEnterState(state)
-    if self:IsValidTest(state) then
+    if self:IsValidState(state) then
         self:OnEnterState(state)
     end
 end
 function Editor:_OnLeaveState(state)
-    if self:IsValidTest(state) then
+    if self:IsValidState(state) then
         self:OnLeaveState(state)
     end
 end
 
--- NOTICE: Invoke :Finalize at the end of init
+--- Called at the end of :init(), to finalize the UI
+--- Override.
+-- @tparam table children List of Chili controls.
+-- @tparam table opts Editor options
+-- @tparam[opt=false] boolean opts.notMainWindow If true, editor will not be added to the main panel (right side), but will instead be a floating window.
+-- @tparam[opt=550] boolean opts.width Specifies window width. Only applicable for floating windows.
+-- @tparam[opt=550] boolean opts.height Specifies window height. Only applicable for floating windows.
+-- @tparam[opt=false] boolean opts.noCloseButton If true, there will be no close button.
+-- @tparam[opt=false] boolean opts.noDispose If true, the window will not be disposed when closed.
 function Editor:Finalize(children, opts)
     if not self.__initializing then
         Log.Error("\"Editor.init(self)\" wasn't invoked properly.")
@@ -104,11 +138,7 @@ function Editor:Finalize(children, opts)
         }
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
-        if not opts.haxxor then
-            SB.view.tabbedWindow:SetMainPanel(self.window)
-        else
-            Spring.Echo("haxxor")
-        end
+        SB.view.tabbedWindow:SetMainPanel(self.window)
     else
         self.__noDispose = opts.noDispose
         -- TODO: Make configurable
@@ -193,6 +223,8 @@ function Editor:_SetFieldVisible(name, visible)
     end
 end
 
+--- Sets fields which are to be made invisible.
+-- @tparam {string, ...} ... Field names to be set invisible
 function Editor:SetInvisibleFields(...)
     self.stackPanel:DisableRealign()
 
@@ -222,6 +254,8 @@ function Editor:SetInvisibleFields(...)
     self:_MEGA_HACK()
 end
 
+--- Remove field by name.
+-- @tparam string name Name of field which should be removed.
 function Editor:RemoveField(name)
     local field = self.fields[name]
     assert(field, "Trying to remove field that doesn't exist.")
@@ -234,6 +268,17 @@ function Editor:RemoveField(name)
     self.stackPanel:RemoveChild(field.ctrl)
     self.fields[name] = nil
 end
+--- Add field.
+-- @tparam field.Field field Field to be added.
+-- @usage
+-- self:AddField(NumericField({
+--     name = "size",
+--     value = 100,
+--     minValue = 40,
+--     maxValue = 2000,
+--     title = "Size:",
+--     tooltip = "Size of the paint brush",
+-- }))
 function Editor:AddField(field)
     if field.components then
         field.ctrl = self:_AddControl(field.name, field.components)
@@ -270,6 +315,12 @@ function Editor:Validate(name, value)
     local field = self.fields[name]
     return field:Validate(value)
 end
+
+--- Set value of a field.
+-- @tparam string name Field name.
+-- @param value New value.
+-- @usage
+-- self:Set("myNumber", 15)
 function Editor:Set(name, value)
     local field = self.fields[name]
     field:Set(value)
@@ -287,7 +338,7 @@ function Editor:Update(name, _source)
         self:OnFieldChange(field.name, field.value)
     end
     local currentState = SB.stateManager:GetCurrentState()
-    if self:IsValidTest(currentState) then
+    if self:IsValidState(currentState) then
         currentState[field.name] = field.value
     end
 end
@@ -306,9 +357,9 @@ function Editor:_OnEndChange(name)
     end
 end
 
---------------------
 -- START Utility
---------------------
+--- Set default keybinding (binding button actions to 1-9).
+-- @param buttons List of Chili Buttons.
 function Editor:AddDefaultKeybinding(buttons)
     local KEY_ZERO = KEYSYMS.N_0
     self.__keybinding = {}
@@ -331,9 +382,7 @@ function Editor:GetAllControls()
     end
     return ctrls
 end
---------------------
 -- END Utility
---------------------
 
 function Editor:KeyPress(key, mods, isRepeat, label, unicode)
     if not self.__keybinding then
@@ -373,7 +422,7 @@ function Editor:__OnHide()
     end
 
     local currentState = SB.stateManager:GetCurrentState()
-    if self:IsValidTest(currentState) then
+    if self:IsValidState(currentState) then
         SB.stateManager:SetState(DefaultState())
     end
     if SB.currentEditor == self then
@@ -388,6 +437,8 @@ function Editor:__MaybeClose()
     end
 end
 
+--- Serialize editor fields into a table.
+-- @return Serialized table of all fields.
 function Editor:Serialize()
     local retVal = {}
     for name, field in pairs(self.fields) do
@@ -398,6 +449,8 @@ function Editor:Serialize()
     return retVal
 end
 
+--- Load table into fields.
+-- @tparam table tbl Serialized table to load.
 function Editor:Load(tbl)
     -- set missing fields to nil
     for name, field in pairs(self.fields) do
@@ -416,13 +469,25 @@ SB.editorRegistry = {}
 -- Globally available editor instances
 SB.editors = {}
 
--- Supported opts:
--- name (string)
--- editor (class to be instanced)
--- tab (tab in which to place the editor button)
--- caption (string)
--- tooltip (string)
--- image (string, path to file)
+--- Register editor globally.
+-- @tparam table opts Table
+-- @tparam string opts.name Machine name of the editor control.
+-- @tparam Editor opts.editor Class inheritng from Editor
+-- @tparam string opts.tab Tab in which to place the editor button.
+-- @tparam string opts.caption Title of the Editor control.
+-- @tparam string opts.tooltip Mouseover tooltip.
+-- @tparam string opts.image Path to the Editor icon.
+-- @usage
+-- GrassEditor = Editor:extends{}
+-- Editor.Register({
+--     name = "grassEditor",
+--     editor = GrassEditor,
+--     tab = "Map",
+--     caption = "Grass",
+--     tooltip = "Edit grass",
+--     image = SB_IMG_DIR .. "grass.png",
+--     order = 4,
+-- })
 function Editor.Register(opts)
     assert(opts.name, "Missing name for editor.")
     assert(not SB.editorRegistry[opts.name],
@@ -440,6 +505,8 @@ function Editor.Register(opts)
     SB.editorRegistry[opts.name] = opts
 end
 
+--- Deregister editor globally.
+-- @tparam string name Name of Editor to unregister
 function Editor.Deregister(name)
     assert(opts.name, "Missing name for editor.")
     SB.editorRegistry[opts.name] = opts

@@ -1,7 +1,7 @@
+WidgetAddObjectCommand = Command:extends{}
 ----------------------------------------------------------
 -- Widget callback commands
 ----------------------------------------------------------
-WidgetAddObjectCommand = Command:extends{}
 
 function WidgetAddObjectCommand:init(objType, objectID, object)
     self.className = "WidgetAddObjectCommand"
