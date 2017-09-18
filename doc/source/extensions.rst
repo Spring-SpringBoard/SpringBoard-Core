@@ -155,4 +155,6 @@ The *UndoableExampleCommand* is slightly more complicated as it also has a value
 Extensions used in games
 ------------------------
 
-SpringBoard Zero-K metal spot editing extension: https://github.com/Spring-SpringBoard/SpringBoard-ZK/tree/master/springboard/exts/metal_spots
+Zero-K's `metal spot extension <https://github.com/Spring-SpringBoard/SpringBoard-ZK/tree/master/springboard/exts/metal_spots>`_.
+
+This extension describes how the `ObjectBridge API <./_static/modules/model.object.object_bridge.html>`_ can be used to create new, custom editors for game world objects.
