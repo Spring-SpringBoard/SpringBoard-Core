@@ -21,6 +21,7 @@ Game-specific modules
 This is the core module, you may still want to get additional game-specific modules if you're making a scenario.
 
 Some examples:
+
 - https://github.com/Spring-SpringBoard/SpringBoard-BA
 - https://github.com/Spring-SpringBoard/SpringBoard-ZK
 - https://github.com/Spring-SpringBoard/SpringBoard-EVO
@@ -39,6 +40,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   installing
    getting_started
    gui_programming
    meta_programming

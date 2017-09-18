@@ -1,9 +1,7 @@
 # SpringBoard: Editor for Spring
 
-Resources:
-- [Docs](http://springboard-core.readthedocs.io/en/latest/)
-- [API](http://springboard-core.readthedocs.io/en/latest/_static/index.html)
-- Examples (TODO)
+[Docs](http://springboard-core.readthedocs.io/en/latest/)
+[API](http://springboard-core.readthedocs.io/en/latest/_static/index.html)
 
 ## Installing
 The production version can be obtained from rapid, via:
