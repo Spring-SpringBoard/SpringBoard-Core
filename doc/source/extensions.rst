@@ -3,21 +3,19 @@
 Extensions
 ==========
 
-SpringBoard support editor extensions. They should be created in separate folders, in the SB_PATH/exts folder, and they consist of two subfolders:
+SpringBoard support editor extensions. They should be created in separate folders, in the ``springboard/exts`` folder, and they consist of two subfolders:
 
 - **ui**. This is where you should place all strictly unsynced extensions, like the Editor GUI and States.
 - **cmd**. This folder should contain files that should be shared by both synced and unsynced extensions, like Command and Model.
-
-Consult the API docs for details.
 
 Example
 -------
 
 We present a full example of a SpringBoard extension consisting of *ui* and *cmd* modules.
-This example is distributed with SpringBoard, and is contained in the *exts/example* folder of the repository.
+This example is `distributed <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/exts/example>`_ with SpringBoard, and is contained in the *exts/example* folder of the repository.
 
-First we will define the UI elements, given in a *ui/example.lua* file.
-At the top of the file, we will include the Editor class and make a new ExampleEditor subclass out of it, with which we will define our custom Editor.
+First we will define the UI elements, given in a `ui/example.lua <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/exts/example/ui/example.lua>`_ file.
+At the top of the file, we will include the *Editor* class and make a new *ExampleEditor* subclass out of it, with which we will define our custom *Editor*.
 
 .. code-block:: lua
 
@@ -26,7 +24,6 @@ At the top of the file, we will include the Editor class and make a new ExampleE
     ExampleEditor = Editor:extends{}
 
 We will then register the newly defined class to make it accessible in the SpringBoard interface.
-For details of what each field means, consult the API documentation.
 
 .. code-block:: lua
 
@@ -39,7 +36,7 @@ For details of what each field means, consult the API documentation.
         image = SB_IMG_DIR .. "globe.png",
     })
 
-Then in the init method, we will define the fields. We create two NumericFields: *example* and *undoable*, and we add them to the Editor.
+Then in the init method, we will define the fields. We create two *NumericFields*: *example* and *undoable*, and we add them to the *Editor*.
 
 .. code-block:: lua
 
@@ -84,7 +81,7 @@ Then in the init method, we will define the fields. We create two NumericFields:
         self.initializing = false
     end
 
-To handle field changes, we will create an OnFieldChange method, and when fields change, we will create and execute appropriate Commands.
+To handle field changes, we will create an *OnFieldChange* method, and when fields change, we will create and execute appropriate *Commands*.
 
 .. code-block:: lua
 
@@ -114,7 +111,7 @@ We also want to group all changes for the *UndoableExampleCommand* into a single
         end
     end
 
-We also need to define the two commands. This is done in separate files, in the *cmd* folder, which makes the Commands accessible from both unsynced (GUI) and synced (execution).
+We also need to define the two commands. This is done in separate files, in the `cmd folder <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/exts/example/cmd>`_, which makes the Commands accessible from both unsynced (GUI) and synced (execution).
 The *HelloWorldCommand* is rather simple, and it just prints out a single line of text.
 
 .. code-block:: lua
@@ -159,11 +156,3 @@ Extensions used in games
 ------------------------
 
 SpringBoard Zero-K metal spot editing extension: https://github.com/Spring-SpringBoard/SpringBoard-ZK/tree/master/springboard/exts/metal_spots
-
-.. TODO: This section
-
-While SpringBoard offers powerful editing capabilities out of the box, there are a number of ways it can be further extended. These include:
-
-- **[Assets](https://github.com/Spring-SpringBoard/SpringBoard-Core/wiki/Assets).**
-- **[Extensions](https://github.com/Spring-SpringBoard/SpringBoard-Core/wiki/Extensions).**
-- **[Meta-programming](https://github.com/Spring-SpringBoard/SpringBoard-Core/wiki/Meta-programming).**

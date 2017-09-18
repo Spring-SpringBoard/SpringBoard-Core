@@ -4,7 +4,13 @@
 [API](http://springboard-core.readthedocs.io/en/latest/_static/index.html)
 
 ## Installing
-The production version can be obtained from rapid, via:
+
+Packages:
+- [Windows build](https://drive.google.com/file/d/0B9FQjbVMFgL2WUYtVUJIRXpkY3M/view?usp=sharing)
+- [Linux build ](https://drive.google.com/file/d/0B9FQjbVMFgL2aE9lTElTQWVHUjg/view?usp=sharing)
+
+
+Alternatively it's possible to install manually via rapid:
 `pr-downloader sbc:test`
 
 The development version can be obtained from this repository, by cloning it in your game folder:

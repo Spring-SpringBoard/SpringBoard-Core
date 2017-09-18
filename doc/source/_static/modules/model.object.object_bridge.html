@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/command.command.html">command.command</a></li>
+  <li><a href="../modules/command.command_manager.html">command.command_manager</a></li>
+  <li><a href="../modules/command.compound_command.html">command.compound_command</a></li>
+  <li><a href="../modules/command.set_multiple_command_mode_command.html">command.set_multiple_command_mode_command</a></li>
+  <li><strong>model.object.object_bridge</strong></li>
+  <li><a href="../modules/state.abstract_state.html">state.abstract_state</a></li>
+  <li><a href="../modules/state.state_manager.html">state.state_manager</a></li>
+  <li><a href="../modules/view.editor.html">view.editor</a></li>
+  <li><a href="../modules/view.fields.array_field.html">view.fields.array_field</a></li>
+  <li><a href="../modules/view.fields.asset_field.html">view.fields.asset_field</a></li>
+  <li><a href="../modules/view.fields.boolean_field.html">view.fields.boolean_field</a></li>
+  <li><a href="../modules/view.fields.choice_field.html">view.fields.choice_field</a></li>
+  <li><a href="../modules/view.fields.color_field.html">view.fields.color_field</a></li>
+  <li><a href="../modules/view.fields.field.html">view.fields.field</a></li>
+  <li><a href="../modules/view.fields.group_field.html">view.fields.group_field</a></li>
+  <li><a href="../modules/view.fields.material_field.html">view.fields.material_field</a></li>
+  <li><a href="../modules/view.fields.numeric_field.html">view.fields.numeric_field</a></li>
+  <li><a href="../modules/view.fields.object_field.html">view.fields.object_field</a></li>
+  <li><a href="../modules/view.fields.object_type_field.html">view.fields.object_type_field</a></li>
+  <li><a href="../modules/view.fields.string_field.html">view.fields.string_field</a></li>
+  <li><a href="../modules/view.fields.team_field.html">view.fields.team_field</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>model.object.object_bridge</code></h1>
+<p>ObjectBridge module.</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ObjectBridge.Register">ObjectBridge.Register (name, objectBridge)</a></td>
+	<td class="summary">Register new bridge.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ObjectBridge.GetObjectBridges">ObjectBridge.GetObjectBridges ()</a></td>
+	<td class="summary">Get a associative array of name->objectBridge for all objectBridges.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ObjectBridge.GetObjectBridge">ObjectBridge.GetObjectBridge (name)</a></td>
+	<td class="summary">Get a specific objectBridge</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ObjectBridge">ObjectBridge</a></td>
+	<td class="summary">ObjectBridge class.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "ObjectBridge.Register"></a>
+    <strong>ObjectBridge.Register (name, objectBridge)</strong>
+    </dt>
+    <dd>
+    Register new bridge.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Name of the bridge.
+        </li>
+        <li><span class="parameter">objectBridge</span>
+            <span class="types"><a class="type" href="../modules/model.object.object_bridge.html#ObjectBridge">ObjectBridge</a></span>
+         Instance of a class implementing the ObjectBridge interface.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ObjectBridge.GetObjectBridges"></a>
+    <strong>ObjectBridge.GetObjectBridges ()</strong>
+    </dt>
+    <dd>
+    Get a associative array of name->objectBridge for all objectBridges.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ObjectBridge.GetObjectBridge"></a>
+    <strong>ObjectBridge.GetObjectBridge (name)</strong>
+    </dt>
+    <dd>
+    Get a specific objectBridge
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Name of the ObjectBridge.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        ObjectBridge.
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "ObjectBridge"></a>
+    <strong>ObjectBridge</strong>
+    </dt>
+    <dd>
+    ObjectBridge class.  Use to represent objects in the game world.
+ It can use the s11n API to provide serialization support. Consult https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/libs/s11n for details.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">humanName</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Human readable name.
+        </li>
+        <li><span class="parameter">NoHorizontalDrag</span>
+            <span class="types"><span class="type">bool</span></span>
+         If true, disables horizontal drag
+        </li>
+        <li><span class="parameter">ValidObject</span>
+            <span class="types"><span class="type">function</span></span>
+         Function accepting objectID number. Returns true if objectID is valid.
+        </li>
+        <li><span class="parameter">OnSelect</span>
+            <span class="types"><span class="type">function</span></span>
+         Function accepting objectIDs table, invoked when selected.
+        </li>
+        <li><span class="parameter">DrawObject</span>
+            <span class="types"><span class="type">function</span></span>
+         Function invoked when drawing objects manually. Accepts objectID number and obj table as params.
+        </li>
+        <li><span class="parameter">OnDoubleClick</span>
+            <span class="types"><span class="type">function</span></span>
+         Function invoked when double clicked on an object in the game world.
+        </li>
+        <li><span class="parameter">OnClick</span>
+            <span class="types"><span class="type">function</span></span>
+         Function invoked when clicked on an object in the game world. Accepts objectID, x, y and z as parameters.
+        </li>
+        <li><span class="parameter">GetObjectAt</span>
+            <span class="types"><span class="type">function</span></span>
+         Function that returns an object at location x, z (if any exists).
+        </li>
+        <li><span class="parameter">OnLuaUIAdded</span>
+            <span class="types"><span class="type">function</span></span>
+         Function invoked when LuaUI gets notification that an object was added. Accepts (objectID, object).
+        </li>
+        <li><span class="parameter">OnLuaUIRemoved</span>
+            <span class="types"><span class="type">function</span></span>
+         Function invoked when LuaUI gets notification that an object was removed. Accepts (objectID).
+        </li>
+        <li><span class="parameter">OnLuaUIUpdated</span>
+            <span class="types"><span class="type">function</span></span>
+         Function invoked when LuaUI gets notification that an object was updated. Accepts (objectID, name, value).
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2017-09-19 03:28:36 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

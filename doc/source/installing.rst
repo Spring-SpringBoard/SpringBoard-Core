@@ -26,3 +26,5 @@ The production version can be obtained from rapid, via:
 
 The development version can be obtained from this repository, by cloning it in your game folder:
 ``git clone https://github.com/Spring-SpringBoard/SpringBoard-Core SB-C.sdd``
+
+.. note:: Games can distribute their packages differently. Some games might include the editor as part of the ingame lobby. For more information, consult the game's documentation.
