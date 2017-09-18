@@ -1,8 +1,8 @@
 # SpringBoard: Editor for Spring
 
 Resources:
-- [Wiki](https://github.com/Spring-SpringBoard/SpringBoard-Core/wiki/Starting-out)
-- API (TODO)
+- [Docs](http://springboard-core.readthedocs.io/en/latest/)
+- [API](http://springboard-core.readthedocs.io/en/latest/_static/index.html)
 - Examples (TODO)
 
 ## Installing
