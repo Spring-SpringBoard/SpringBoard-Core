@@ -1,0 +1,566 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_Editor">Class Editor </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/command.command.html">command.command</a></li>
+  <li><a href="../modules/command.command_manager.html">command.command_manager</a></li>
+  <li><a href="../modules/command.compound_command.html">command.compound_command</a></li>
+  <li><a href="../modules/command.set_multiple_command_mode_command.html">command.set_multiple_command_mode_command</a></li>
+  <li><a href="../modules/state.abstract_state.html">state.abstract_state</a></li>
+  <li><a href="../modules/state.state_manager.html">state.state_manager</a></li>
+  <li><strong>view.editor</strong></li>
+  <li><a href="../modules/view.fields.array_field.html">view.fields.array_field</a></li>
+  <li><a href="../modules/view.fields.asset_field.html">view.fields.asset_field</a></li>
+  <li><a href="../modules/view.fields.boolean_field.html">view.fields.boolean_field</a></li>
+  <li><a href="../modules/view.fields.choice_field.html">view.fields.choice_field</a></li>
+  <li><a href="../modules/view.fields.color_field.html">view.fields.color_field</a></li>
+  <li><a href="../modules/view.fields.field.html">view.fields.field</a></li>
+  <li><a href="../modules/view.fields.group_field.html">view.fields.group_field</a></li>
+  <li><a href="../modules/view.fields.material_field.html">view.fields.material_field</a></li>
+  <li><a href="../modules/view.fields.numeric_field.html">view.fields.numeric_field</a></li>
+  <li><a href="../modules/view.fields.object_field.html">view.fields.object_field</a></li>
+  <li><a href="../modules/view.fields.object_type_field.html">view.fields.object_type_field</a></li>
+  <li><a href="../modules/view.fields.string_field.html">view.fields.string_field</a></li>
+  <li><a href="../modules/view.fields.team_field.html">view.fields.team_field</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>view.editor</code></h1>
+<p>Editor module</p>
+<p></p>
+
+
+<h2><a href="#Class_Editor">Class Editor </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Editor:init">Editor:init ()</a></td>
+	<td class="summary">Editor constructor.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:OnStartChange">Editor:OnStartChange (name)</a></td>
+	<td class="summary">Called when a field starts to change.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:OnFieldChange">Editor:OnFieldChange (name, value)</a></td>
+	<td class="summary">Called when a field value was modified
+ Override.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:IsValidState">Editor:IsValidState (name)</a></td>
+	<td class="summary">Should return true if state is valid for this editor.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:OnEnterState">Editor:OnEnterState (name)</a></td>
+	<td class="summary">Called when the state was entered.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:OnLeaveState">Editor:OnLeaveState (name)</a></td>
+	<td class="summary">Called when the state was left.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:Finalize">Editor:Finalize (children, opts)</a></td>
+	<td class="summary">Called at the end of :init(), to finalize the UI
+ Override.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:SetInvisibleFields">Editor:SetInvisibleFields (...)</a></td>
+	<td class="summary">Sets fields which are to be made invisible.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:RemoveField">Editor:RemoveField (name)</a></td>
+	<td class="summary">Remove field by name.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:AddField">Editor:AddField (field)</a></td>
+	<td class="summary">Add field.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:Set">Editor:Set (name, value)</a></td>
+	<td class="summary">Set value of a field.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:Serialize">Editor:Serialize ()</a></td>
+	<td class="summary">Serialize editor fields into a table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor:Load">Editor:Load (tbl)</a></td>
+	<td class="summary">Load table into fields.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor.Register">Editor.Register (opts)</a></td>
+	<td class="summary">Register editor globally.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Editor.Deregister">Editor.Deregister (name)</a></td>
+	<td class="summary">Deregister editor globally.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Class_Editor"></a>Class Editor </h2>
+
+        Editor class.  Inherit to create custom Editors
+    <dl class="function">
+    <dt>
+    <a name = "Editor:init"></a>
+    <strong>Editor:init ()</strong>
+    </dt>
+    <dd>
+    Editor constructor.  Make sure you invoke this in your custom editor
+
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">
+ MyEditor = Editor:extends{}
+ <span class="keyword">function</span> MyEditor:init()
+     Editor.init(self)
+     <span class="comment">-- rest of code
+</span>     self:Finalize(children, opts)
+ <span class="keyword">end</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Editor:OnStartChange"></a>
+    <strong>Editor:OnStartChange (name)</strong>
+    </dt>
+    <dd>
+    Called when a field starts to change.
+ Override.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Name of the field.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:OnFieldChange"></a>
+    <strong>Editor:OnFieldChange (name, value)</strong>
+    </dt>
+    <dd>
+    Called when a field value was modified
+ Override.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Name of the modified field.
+        </li>
+        <li><span class="parameter">value</span>
+         New value of the modified field.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:IsValidState"></a>
+    <strong>Editor:IsValidState (name)</strong>
+    </dt>
+    <dd>
+    Should return true if state is valid for this editor.
+ Override.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         state State.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:OnEnterState"></a>
+    <strong>Editor:OnEnterState (name)</strong>
+    </dt>
+    <dd>
+    Called when the state was entered.
+ Override.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         state State.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:OnLeaveState"></a>
+    <strong>Editor:OnLeaveState (name)</strong>
+    </dt>
+    <dd>
+    Called when the state was left.
+ Override.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         state State.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:Finalize"></a>
+    <strong>Editor:Finalize (children, opts)</strong>
+    </dt>
+    <dd>
+    Called at the end of :init(), to finalize the UI
+ Override.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">children</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         List of Chili controls.
+        </li>
+        <li><span class="parameter">opts</span> Editor options
+        <ul>
+        <li><span class="parameter">notMainWindow</span>
+            <span class="types"><span class="type">boolean</span></span>
+         If true, editor will not be added to the main panel (right side), but will instead be a floating window.
+         (<em>default</em> false)
+        </li>
+        <li><span class="parameter">width</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Specifies window width. Only applicable for floating windows.
+         (<em>default</em> 550)
+        </li>
+        <li><span class="parameter">height</span>
+            <span class="types"><span class="type">boolean</span></span>
+         Specifies window height. Only applicable for floating windows.
+         (<em>default</em> 550)
+        </li>
+        <li><span class="parameter">noCloseButton</span>
+            <span class="types"><span class="type">boolean</span></span>
+         If true, there will be no close button.
+         (<em>default</em> false)
+        </li>
+        <li><span class="parameter">noDispose</span>
+            <span class="types"><span class="type">boolean</span></span>
+         If true, the window will not be disposed when closed.
+         (<em>default</em> false)
+        </li>
+        </li></ul>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:SetInvisibleFields"></a>
+    <strong>Editor:SetInvisibleFields (...)</strong>
+    </dt>
+    <dd>
+    Sets fields which are to be made invisible.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">{string,</a></span>
+        } ... Field names to be set invisible
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:RemoveField"></a>
+    <strong>Editor:RemoveField (name)</strong>
+    </dt>
+    <dd>
+    Remove field by name.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Name of field which should be removed.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:AddField"></a>
+    <strong>Editor:AddField (field)</strong>
+    </dt>
+    <dd>
+    Add field.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">field</span>
+            <span class="types"><span class="type">field.Field</span></span>
+         Field to be added.
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">
+ self:AddField(NumericField({
+     name = <span class="string">"size"</span>,
+     value = <span class="number">100</span>,
+     minValue = <span class="number">40</span>,
+     maxValue = <span class="number">2000</span>,
+     title = <span class="string">"Size:"</span>,
+     tooltip = <span class="string">"Size of the paint brush"</span>,
+ }))</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Editor:Set"></a>
+    <strong>Editor:Set (name, value)</strong>
+    </dt>
+    <dd>
+    Set value of a field.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Field name.
+        </li>
+        <li><span class="parameter">value</span>
+         New value.
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">self:Set(<span class="string">"myNumber"</span>, <span class="number">15</span>)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Editor:Serialize"></a>
+    <strong>Editor:Serialize ()</strong>
+    </dt>
+    <dd>
+    Serialize editor fields into a table.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Serialized table of all fields.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor:Load"></a>
+    <strong>Editor:Load (tbl)</strong>
+    </dt>
+    <dd>
+    Load table into fields.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tbl</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+         Serialized table to load.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Editor.Register"></a>
+    <strong>Editor.Register (opts)</strong>
+    </dt>
+    <dd>
+    Register editor globally.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opts</span> Table
+        <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Machine name of the editor control.
+        </li>
+        <li><span class="parameter">editor</span>
+            <span class="types"><a class="type" href="../modules/view.editor.html#Editor">Editor</a></span>
+         Class inheritng from Editor
+        </li>
+        <li><span class="parameter">tab</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Tab in which to place the editor button.
+        </li>
+        <li><span class="parameter">caption</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Title of the Editor control.
+        </li>
+        <li><span class="parameter">tooltip</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Mouseover tooltip.
+        </li>
+        <li><span class="parameter">image</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Path to the Editor icon.
+        </li>
+        </li></ul>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">
+ GrassEditor = Editor:extends{}
+ Editor.Register({
+     name = <span class="string">"grassEditor"</span>,
+     editor = GrassEditor,
+     tab = <span class="string">"Map"</span>,
+     caption = <span class="string">"Grass"</span>,
+     tooltip = <span class="string">"Edit grass"</span>,
+     image = SB_IMG_DIR .. <span class="string">"grass.png"</span>,
+     order = <span class="number">4</span>,
+ })</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "Editor.Deregister"></a>
+    <strong>Editor.Deregister (name)</strong>
+    </dt>
+    <dd>
+    Deregister editor globally.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="http://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Name of Editor to unregister
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2017-09-18 17:48:38 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

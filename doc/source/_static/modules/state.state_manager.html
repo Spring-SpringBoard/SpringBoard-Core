@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/command.command.html">command.command</a></li>
+  <li><a href="../modules/command.command_manager.html">command.command_manager</a></li>
+  <li><a href="../modules/command.compound_command.html">command.compound_command</a></li>
+  <li><a href="../modules/command.set_multiple_command_mode_command.html">command.set_multiple_command_mode_command</a></li>
+  <li><a href="../modules/state.abstract_state.html">state.abstract_state</a></li>
+  <li><strong>state.state_manager</strong></li>
+  <li><a href="../modules/view.editor.html">view.editor</a></li>
+  <li><a href="../modules/view.fields.array_field.html">view.fields.array_field</a></li>
+  <li><a href="../modules/view.fields.asset_field.html">view.fields.asset_field</a></li>
+  <li><a href="../modules/view.fields.boolean_field.html">view.fields.boolean_field</a></li>
+  <li><a href="../modules/view.fields.choice_field.html">view.fields.choice_field</a></li>
+  <li><a href="../modules/view.fields.color_field.html">view.fields.color_field</a></li>
+  <li><a href="../modules/view.fields.field.html">view.fields.field</a></li>
+  <li><a href="../modules/view.fields.group_field.html">view.fields.group_field</a></li>
+  <li><a href="../modules/view.fields.material_field.html">view.fields.material_field</a></li>
+  <li><a href="../modules/view.fields.numeric_field.html">view.fields.numeric_field</a></li>
+  <li><a href="../modules/view.fields.object_field.html">view.fields.object_field</a></li>
+  <li><a href="../modules/view.fields.object_type_field.html">view.fields.object_type_field</a></li>
+  <li><a href="../modules/view.fields.string_field.html">view.fields.string_field</a></li>
+  <li><a href="../modules/view.fields.team_field.html">view.fields.team_field</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>state.state_manager</code></h1>
+<p>StateManager module.</p>
+<p></p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#StateManager:GetCurrentState">StateManager:GetCurrentState ()</a></td>
+	<td class="summary">Get current state.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#StateManager:SetState">StateManager:SetState (state)</a></td>
+	<td class="summary">Set new state.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#StateManager:init">StateManager:init ()</a></td>
+	<td class="summary">Internal</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#StateManager:MousePress">StateManager:MousePress (x, y, button)</a></td>
+	<td class="summary">Callins (internal)</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#StateManager">StateManager</a></td>
+	<td class="summary">StateManager class.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "StateManager:GetCurrentState"></a>
+    <strong>StateManager:GetCurrentState ()</strong>
+    </dt>
+    <dd>
+    Get current state.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        current state
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "StateManager:SetState"></a>
+    <strong>StateManager:SetState (state)</strong>
+    </dt>
+    <dd>
+    Set new state.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">state</span>
+            <span class="types"><span class="type">abstract_state.AbstractState</span></span>
+         New state to set.
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">
+ <span class="comment">-- Enter the metal editing state.
+</span> SB.stateManager:SetState(MetalEditingState(self))
+
+ <span class="comment">-- Revert to the default state
+</span> SB.stateManager:SetState(DefaultState())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "StateManager:init"></a>
+    <strong>StateManager:init ()</strong>
+    </dt>
+    <dd>
+    Internal
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "StateManager:MousePress"></a>
+    <strong>StateManager:MousePress (x, y, button)</strong>
+    </dt>
+    <dd>
+    Callins (internal)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+
+        </li>
+        <li><span class="parameter">y</span>
+
+        </li>
+        <li><span class="parameter">button</span>
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "StateManager"></a>
+    <strong>StateManager</strong>
+    </dt>
+    <dd>
+    StateManager class.
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2017-09-18 17:48:38 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
