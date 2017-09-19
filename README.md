@@ -1,7 +1,6 @@
 # SpringBoard: Editor for Spring
 
-[Docs](http://springboard-core.readthedocs.io/en/latest/)
-[API](http://springboard-core.readthedocs.io/en/latest/_static/index.html)
+[Documentation](http://springboard-core.readthedocs.io/en/latest/)
 
 ## Installing
 
@@ -23,6 +22,7 @@ Some examples:
 - https://github.com/Spring-SpringBoard/SpringBoard-BA
 - https://github.com/Spring-SpringBoard/SpringBoard-ZK
 - https://github.com/Spring-SpringBoard/SpringBoard-EVO
+- https://github.com/Spring-SpringBoard/SpringBoard-S44
 
 ## Assets
 

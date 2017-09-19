@@ -25,6 +25,7 @@ Some examples:
 - https://github.com/Spring-SpringBoard/SpringBoard-BA
 - https://github.com/Spring-SpringBoard/SpringBoard-ZK
 - https://github.com/Spring-SpringBoard/SpringBoard-EVO
+- https://github.com/Spring-SpringBoard/SpringBoard-S44
 
 Assets
 ------
@@ -45,6 +46,7 @@ Contents
    gui_programming
    meta_programming
    extensions
+   game_specific_modules
    assets
    hot_keys
    api
