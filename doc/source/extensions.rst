@@ -152,6 +152,8 @@ The *UndoableExampleCommand* is slightly more complicated as it also has a value
 
 .. note:: Displaying a synchronized value in the GUI requires additional steps. Depending on how this value is kept, things like RulesParams can be used. Refer to the Spring documentation for details: https://springrts.com/wiki/Lua_SyncedCtrl#RulesParams https://springrts.com/wiki/Lua_SyncedRead#RulesParams
 
+.. _extension_games:
+
 Extensions used in games
 ------------------------
 

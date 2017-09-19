@@ -1,65 +1,86 @@
 Starting out
 ============
 
-First make sure you have properly installed SpringBoard.
-
-.. TODO: install link/description
+This section introduces the layout of the Editor. First make sure you have properly :ref:`installed <installing>` SpringBoard. If you are using officially distributed packages, simply run the executable to start SpringBoard. In case you're using a game-specific version of SpringBoard, refer to its manual on how to run it.
 
 .. note:: Avoid running it in Multiplayer mode (even if it's just a host bot), as SpringBoard might cause extensive network usage, and not work properly.
 
-Toolbox
-_______
+Layout
+------
 
-.. TODO: Redo everything with final version + new screens
+Once you start the SpringBoard you should see something similar to :ref:`fig_overview`.
+The main editor elements are in the top right part of the UI, separated into tabs. Each of the large buttons with icons represents a specific Editor control.
 
-Once you start the SpringBoard you should see something similar to Figure 3.
-In the top right part of the UI you should see the *Scenario Toolbox*, or just *Toolbox* for short. You will use this component to do complete most operations within the editor.
+At the bottom of the screen is the status display, which shows various information about the current state of the Editor, such as memory usage, mouse position, currently selected objects and the undo-redo stack.
 
-.. figure:: img/toolbox.jpg
+At the top left is the project name, and just next to the tabs is the team changer control. In the top middle of the screen is the Start/Stop button which is used to start/stop testing the project.
+
+.. _fig_overview:
+.. figure:: img/overview.jpg
    :align: center
 
-   Figure 3. Initial screen
+   Overview
 
-Zooming in (Figure 4), we look at the components of the Toolbox in detail.
-Toolbox components are grouped in 5 categories that can be accessed in different tabs. Some of them also have :ref:`hot_keys`.
+Zooming in :ref:`fig_objects`, we look at the tab elements in more detail.
 
-Along side that, common actions such as *Undo, Redo, Reload meta model, Copy, Cut and Paste* are accessible from all tabs. *Reload meta model* action is likely the only which usage isn't apparent, and will be described in the :ref:`meta_programming` section.
-
-In the first tab, we can see access the components to do the following: Save, Save as, Load, Set project information and Export.
-
-.. figure:: img/general_tab.png
+.. _fig_objects:
+.. figure:: img/tab_objects.jpg
    :align: center
 
-   Figure 4. General tab
+   Objects tab
 
-The unit tab (Figure 5) is usually used to select and add units and features.
+The editor is split into 5 main categories (with an extra one for the example tab). It is possible to navigate between these tabs by either clicking on them or by pressing Shift+Tab to go forward and Shift+Control+Tab to go backwards. For additinoal hotkeys refer to :ref:`hot_keys`.
 
-.. figure:: img/unit_tab.png
+The smaller buttons are shared between all tabs and represent common actions actions such as *Reload meta model, Copy, Cut, Paste, Save project, Save project as, Load project, Export to, Import from* are accessible from all tabs. *Reload meta model* is unique to SpringBoard, and will be described in the :ref:`meta_programming` section.
+Additional common buttons (*Undo, Redo, Clear undo-redo Stack*) are available in the bottom middle of the screen, in the status window.
+
+The tab opened by default is the :ref:`fig_objects`. The first two buttons (*Units* and *Features*), are editors for adding and removing new unit and feature objects to the game world, with *Set* and *Brush* editing modes. The *Properties* editor allows editing properties of any selected object group, while *Collision* provides support for editing collision mechanics related properties.
+
+.. _fig_maps:
+.. figure:: img/tab_map.jpg
    :align: center
 
-   Figure 5. Unit tab
+   Map tab
 
-The map tab (Figure 6) offers components for heightmap (terrain) and texturemap editing.
+The :ref:`fig_maps` offers components for editing various `Spring maps <https://springrts.com/wiki/Mapdev:Main>`_. `Heightmap <https://springrts.com/wiki/Mapdev:height>`_ can be edited with the *Terrain*, via the *Add*, *Set*, and *Smooth* tools. `Diffuse <https://springrts.com/wiki/Mapdev:diffuse>`_, `Specular <https://springrts.com/wiki/Mapdev:specular>`_ and `DNTS <https://springrts.com/wiki/Mapdev:splatdetailnormals>`_ maps can be edited using the *Texture* tools, which also support applying arbitrary filters like *blur* and *sharpen* as well as a *Void* editing tool which can be used to make certain map parts invisible.
 
-.. note:: Texture map saving is currently not implemented and is currently just experimental.
+The *Metal* and *Grass* elements provide support for editing the `metal <https://springrts.com/wiki/Mapdev:metal>`_ and `grass <https://springrts.com/wiki/Mapdev:grass>`_ maps respectively.
+Games that instead use metal spots (or any point-based resource system) should refer to :ref:`_extension_games`.
 
-.. figure:: img/map_tab.png
+*Settings* allows configuring some map rendering properties, and it also includes an *experimental* map compilation tool.
+
+All map editing tools support custom :ref:`assets` (both brushes and materials).
+
+.. _fig_env:
+.. figure:: img/tab_env.jpg
    :align: center
 
-   Figure 6. Map tab
+   Env tab
 
-The trigger tab (Figure 7) provides components to program the scenario, and can be used to add areas, triggers and variables. This will be explained in detail in the :ref:`gui_programming` section.
+The :ref:`fig_env` (environment) can be used to set various rendering options. *Lighting*, *Sky* and *Water* can be used to set `lighting <https://springrts.com/wiki/Mapdev:mapinfo.lua#Lighting>`_, `atmosphere <https://springrts.com/wiki/Mapdev:mapinfo.lua#atmosphere>`_ and `water <https://springrts.com/wiki/Mapdev:mapinfo.lua#water>`_ options respectively.
 
-.. figure:: img/trigger_tab.png
+.. _fig_logic:
+.. figure:: img/tab_logic.jpg
    :align: center
 
-   Figure 7. Trigger tab
+   Logic tab
 
-The alliance tab (Figure 8) allows editing of players and alliances.
+The :ref:`fig_logic` provides components to program the scenario, and can be used to add areas, triggers and variables. This is explained in detail in the :ref:`gui_programming` section.
+
+.. _fig_misc:
+.. figure:: img/tab_misc.jpg
+   :align: center
+
+   Misc tab
+
+The :ref:`fig_misc` allows editing of players and alliances, as well as setting general project information.
 
 .. note:: Any changes to the Players component that leads to new teams being added or old ones removed requires a restart of the game.
 
-.. figure:: img/alliance_tab.png
+.. _fig_example:
+.. figure:: img/tab_example.jpg
    :align: center
 
-   Figure 8. Alliance tab
+   Example tab
+
+Lastly, the :ref:`fig_example` shows how a custom :ref:`extension <extensions>` can be seamlessly integrated into SpringBoard.
