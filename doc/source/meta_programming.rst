@@ -157,6 +157,86 @@ This custom data type can then be used in meta-programming as usual. Below we pr
         end
     }
 
+Higher-order functions (Advanced)
+---------------------------------
+
+As one of the more advanced uses meta-programming also has support for higher-order functions, i.e. fuctions that take other functions as parameters. An example of a *filter* higher-order function implemented in Lua is given below. This function will filter out table elements that don't satisfy a given function. In this case, it will filter out elements that are lower or equal to five. As functions as first-class citizens in Lua, writing them is relatively simple.
+
+.. code-block:: lua
+
+    function above5(x)
+    	return x > 5
+    end
+
+    function filter(elements, f)
+    	local retVal = {}
+    	for _, el in pairs(elements) do
+    		if f(el) then
+    			table.insert(retVal, el)
+    		end
+    	end
+    	return retVal
+    end
+
+    elements = {1, 12, 3, -5, 7}
+    filter(elements, above5)
+
+In SpringBoard's meta-programming however, higher-order functions need to have explicit types, as the meta-programming language is statically (and explicitly) typed. The same filter function type is given below, now in SpringBoard's meta-programming language. The *extraSources* parameter defines additional scoped inputs. The function signature is defined by the *output* parameter. Normally the *input* parameter could also be specified, but that wasn't done in this case, as the predicate function isn't *required* to use the *number* parameter.
+
+.. code-block:: lua
+
+    {
+        humanName = "Filter elements in number array",
+        name = "number_array_FILTER",
+        input = {
+            "number_array",
+            {
+                name = "filter_function",
+                type = "function",
+                extraSources = {
+                    "number",
+                },
+                output = "bool",
+            },
+        },
+        output = "number_array",
+        tags = {"Array"},
+        execute = function(input)
+            local retVal = {}
+            for _, element in pairs(input.number_array) do
+                if input.filter_function({number = element}) then
+                    table.insert(retVal, element)
+                end
+            end
+            return retVal
+        end,
+    }
+
+Additionally, it is possible to use actions as parameters to higher-order actions types, in the same way like it is done for functions. Below we present a *foreach* action type that will iterate through all elements of an array and execute the specified action for them.
+
+.. code-block:: lua
+
+    {
+        humanName = "For each number in number array",
+        name = "number_array_FOR_EACH",
+        input = {
+            "number_array",
+            {
+                name = "for_each_action",
+                type = "action",
+                extraSources = {
+                    "number",
+                },
+            },
+        },
+        tags = {"Array"},
+        execute = function(input)
+            for _, element in pairs(input.number_array) do
+                input.for_each_action({number = element})
+            end
+        end,
+    }
+
 Example
 -------
 
