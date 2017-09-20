@@ -25,7 +25,7 @@ SB.IncludeDir(SB_STATE_DIR)
 -- @table ObjectBridge
 ObjectBridge = LCS.class.abstract{}
 
-function getObjectSpringID(modelID)
+function ObjectBridge.getObjectSpringID(modelID)
     return modelID
 end
 function ObjectBridge.getObjectModelID(objectID)

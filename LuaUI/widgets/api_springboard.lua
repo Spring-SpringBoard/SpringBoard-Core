@@ -6,7 +6,7 @@ local info = {
   license   = "GPL-v2",
   layer     = 1001,
   enabled   = true,
-  handler   = true,
+  -- handler   = true,
 }
 
 -- new addonhandler currently disabled

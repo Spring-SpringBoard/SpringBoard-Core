@@ -72,7 +72,17 @@ end
 
 function StatusWindow:OnSelectionChanged()
     local selCount = SB.view.selectionManager:GetSelectionCount()
-    if selCount > 0 then
+    if selCount == 1 then
+        -- FIXME: selectionManager could use a utility function to get just one objectID
+        local selection = SB.view.selectionManager:GetSelection()
+        local objectID
+        for _, v in pairs(selection) do
+            if v and #v == 1 then
+                objectID = v[1]
+            end
+        end
+        self.selectionStr = string.format("Selected : 1 (ID=%d)", objectID)
+    elseif selCount > 0 then
         self.selectionStr = string.format("Selected: %d", selCount)
     else
         self.selectionStr = "No selection"

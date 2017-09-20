@@ -29,7 +29,7 @@ end
 
 function CommandManager:_SafeCall(func)
     succ, result = xpcall(func, function(err)
-        Log.Error("Error executing command [" .. Script.GetName() .. "]. ")
+        Log.Error("[" .. Script.GetName() .. "] Error executing command.")
         if debug then
             Log.Error(debug.traceback(err, 2))
         else

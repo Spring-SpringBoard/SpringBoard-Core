@@ -42,11 +42,12 @@ function FeatureManager:addFeature(featureID, modelID)
 end
 
 function FeatureManager:removeFeature(featureID)
+    --assert(featureID, "Trying to remove feature with no featureID specified.")
     if featureID == nil then
         return
     end
     local modelID = self._s2m[featureID]
-    if self._s2m[featureID] then
+    if modelID then
         self._m2s[modelID] = nil
     end
     self._s2m[featureID] = nil
@@ -59,12 +60,27 @@ function FeatureManager:removeFeatureByModelID(modelID)
     self:removeFeature(springID)
 end
 
-function FeatureManager:getSpringFeatureID(modelFeatureID)
-    return self._m2s[modelFeatureID]
+function FeatureManager:getSpringFeatureID(modelID)
+    assert(modelID, "missing modelID argument")
+    if not self._m2s[modelID] then
+        if debug then
+            Log.Warning(debug.traceback())
+        end
+        Log.Warning(("[%s] No feature springID for modelID: %d"):format(Script.GetName(), modelID))
+    end
+    return self._m2s[modelID]
 end
 
-function FeatureManager:getModelFeatureID(springFeatureID)
-    return self._s2m[springFeatureID]
+function FeatureManager:getModelFeatureID(springID)
+    assert(springID, "missing springID argument")
+    local modelID = self._s2m[springID]
+    if not modelID then
+        if debug then
+            Log.Warning(debug.traceback())
+        end
+        Log.Warning(("[%s] No feature modelID for springID: %d"):format(Script.GetName(), springID))
+    end
+    return modelID
 end
 
 function FeatureManager:setFeatureModelID(featureID, modelID)

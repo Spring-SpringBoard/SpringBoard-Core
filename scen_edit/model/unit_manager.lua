@@ -59,12 +59,27 @@ function UnitManager:removeUnitByModelID(modelID)
     self:removeUnit(springID)
 end
 
-function UnitManager:getSpringUnitID(modelUnitID)
-    return self._m2s[modelUnitID]
+function UnitManager:getSpringUnitID(modelID)
+    assert(modelID, "missing modelID argument")
+    if not self._m2s[modelID] then
+        if debug then
+            Log.Warning(debug.traceback())
+        end
+        Log.Warning(("[%s] No unit springID for modelID: %d"):format(Script.GetName(), modelID))
+    end
+    return self._m2s[modelID]
 end
 
-function UnitManager:getModelUnitID(springUnitID)
-    return self._s2m[springUnitID]
+function UnitManager:getModelUnitID(springID)
+    assert(springID, "missing springID argument")
+    local modelID = self._s2m[springID]
+    if not modelID then
+        if debug then
+            Log.Warning(debug.traceback())
+        end
+        Log.Warning(("[%s] No unit modelID for springID: %d"):format(Script.GetName(), springID))
+    end
+    return modelID
 end
 
 function UnitManager:setUnitModelID(unitID, modelID)
