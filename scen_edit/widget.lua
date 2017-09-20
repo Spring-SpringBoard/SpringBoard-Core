@@ -133,6 +133,15 @@ function widget:Initialize()
     VFS.Include(SB_DIR .. "util.lua")
     SB.Include(SB_DIR .. "utils/include.lua")
 
+    -- we can't have handler=true because then RegisterGlobal doesn't work
+    -- so we expose handler API to our widgetHandler
+    widgetHandler.DisableWidget = function(_, ...)
+        WG.SB_widgetHandler:DisableWidget(...)
+    end
+    widgetHandler.EnableWidget = function(_, ...)
+        WG.SB_widgetHandler:EnableWidget(...)
+    end
+
     dumpConfig()
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
 
