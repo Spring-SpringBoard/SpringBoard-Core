@@ -105,7 +105,7 @@ end
 -- @tparam[opt=550] boolean opts.width Specifies window width. Only applicable for floating windows.
 -- @tparam[opt=550] boolean opts.height Specifies window height. Only applicable for floating windows.
 -- @tparam[opt=false] boolean opts.noCloseButton If true, there will be no close button.
--- @tparam[opt=false] boolean opts.noDispose If true, the window will not be disposed when closed.
+-- @tparam boolean opts.disposeOnClose If true, the window will be disposed when closed. Defaults to true if opts.notMainWindow is true, otherwise it defaults to false.
 function Editor:Finalize(children, opts)
     if not self.__initializing then
         Log.Error("\"Editor.init(self)\" wasn't invoked properly.")
@@ -119,7 +119,11 @@ function Editor:Finalize(children, opts)
 
     local OnShow = {function() self:__OnShow() end}
     local OnHide = {function() self:__OnHide() end}
+    self.__disposeOnClose = opts.disposeOnClose
     if not opts.notMainWindow then
+        if opts.disposeOnClose == nil then
+            self.__disposeOnClose = false
+        end
         self.window = Control:New {
 --         parent = screen0,
 --         x = 10,
@@ -140,7 +144,9 @@ function Editor:Finalize(children, opts)
         self:_MEGA_HACK()
         SB.view.tabbedWindow:SetMainPanel(self.window)
     else
-        self.__noDispose = opts.noDispose
+        if opts.disposeOnClose == nil then
+            self.__disposeOnClose = true
+        end
         -- TODO: Make configurable
         self.window = Window:New {
             parent = screen0,
@@ -432,7 +438,7 @@ end
 
 function Editor:__MaybeClose()
     self.window:Hide()
-    if not self.__noDispose then
+    if self.__disposeOnClose then
         self.window:Dispose()
     end
 end
