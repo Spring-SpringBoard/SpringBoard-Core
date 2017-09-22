@@ -10,11 +10,14 @@ SpringBoard is an in-game editor for the `SpringRTS <https://springrts.com/>`_ e
 
 Installing
 ----------
-The production version can be obtained from rapid, via:
-``pr-downloader sbc:test``
 
-The development version can be obtained from this repository, by cloning it in your game folder:
-``git clone https://github.com/Spring-SpringBoard/SpringBoard-Core SB-C.sdd``
+The simplest way to download and install SpringBoard is use one of the packaged builds:
+
+- `Windows build <https://drive.google.com/file/d/0B9FQjbVMFgL2WUYtVUJIRXpkY3M/view?usp=sharing>`_
+
+- `Linux build <https://drive.google.com/file/d/0B9FQjbVMFgL2aE9lTElTQWVHUjg/view?usp=sharing>`_
+
+For details refer to :ref:`installing`.
 
 Game-specific modules
 ---------------------
@@ -29,8 +32,6 @@ Some examples:
 
 Assets
 ------
-
-Any assets (texture files, skyboxes, etc.) should be put in the "springboard/assets" folder, located inside the Spring data directory.
 
 Core assets can be obtained from the following
 `link <https://drive.google.com/file/d/0B9FQjbVMFgL2LTM2Z1VVaGRZRDQ/view?usp=sharing>`_. Once downloaded, they should be extracted, with the resulting folder structure of "springboard/assets/core/".

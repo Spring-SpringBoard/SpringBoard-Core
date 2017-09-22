@@ -1,7 +1,7 @@
 Starting out
 ============
 
-This section introduces the layout of the Editor. First make sure you have properly :ref:`installed <installing>` SpringBoard. If you are using officially distributed packages, simply run the executable to start SpringBoard. In case you're using a game-specific version of SpringBoard, refer to its manual on how to run it.
+This section introduces the layout of SpringBoard. First make sure you have properly :ref:`installed <installing>` SpringBoard. If you are using officially distributed packages, simply run the executable to start SpringBoard. In case you're using a game-specific version of SpringBoard, refer to its manual on how to run it.
 
 .. note:: Avoid running it in Multiplayer mode (even if it's just a host bot), as SpringBoard might cause extensive network usage, and not work properly.
 
@@ -9,17 +9,18 @@ Layout
 ------
 
 Once you start the SpringBoard you should see something similar to :ref:`fig_overview`.
-The main editor elements are in the top right part of the UI, separated into tabs. Each of the large buttons with icons represents a specific Editor control.
-
-At the bottom of the screen is the status display, which shows various information about the current state of the Editor, such as memory usage, mouse position, currently selected objects and the undo-redo stack.
-
-At the top left is the project name, and just next to the tabs is the team changer control. In the top middle of the screen is the Start/Stop button which is used to start/stop testing the project.
 
 .. _fig_overview:
 .. figure:: img/overview.jpg
    :align: center
 
    Overview
+
+The main editor elements are in the top right part of the UI, separated into tabs. Each of the large buttons with icons represents a specific Editor control.
+
+At the bottom of the screen is the status display, which shows various information about the current state of the Editor, such as memory usage, mouse position, currently selected objects and the undo-redo stack.
+
+At the top left is the project name, and just next to the tabs is the team changer control. In the top middle of the screen is the Start/Stop button which is used to start/stop testing the project.
 
 Zooming in :ref:`fig_objects`, we look at the tab elements in more detail.
 
@@ -34,7 +35,7 @@ The editor is split into 5 main categories (with an extra one for the example ta
 The smaller buttons are shared between all tabs and represent common actions actions such as *Reload meta model, Copy, Cut, Paste, Save project, Save project as, Load project, Export to, Import from* are accessible from all tabs. *Reload meta model* is unique to SpringBoard, and will be described in the :ref:`meta_programming` section.
 Additional common buttons (*Undo, Redo, Clear undo-redo Stack*) are available in the bottom middle of the screen, in the status window.
 
-The tab opened by default is the :ref:`fig_objects`. The first two buttons (*Units* and *Features*), are editors for adding and removing new unit and feature objects to the game world, with *Set* and *Brush* editing modes. The *Properties* editor allows editing properties of any selected object group, while *Collision* provides support for editing collision mechanics related properties.
+The tab opened by default is the :ref:`fig_objects`. The first two buttons (*Units* and *Features*), are editors for adding and removing unit and feature objects in the game world, with the *Set* and *Brush* editing modes. The *Properties* editor allows editing properties of any selected object group, while *Collision* provides support for editing collision mechanics related properties.
 
 .. _fig_maps:
 .. figure:: img/tab_map.jpg
@@ -45,7 +46,7 @@ The tab opened by default is the :ref:`fig_objects`. The first two buttons (*Uni
 The :ref:`fig_maps` offers components for editing various `Spring maps <https://springrts.com/wiki/Mapdev:Main>`_. `Heightmap <https://springrts.com/wiki/Mapdev:height>`_ can be edited with the *Terrain*, via the *Add*, *Set*, and *Smooth* tools. `Diffuse <https://springrts.com/wiki/Mapdev:diffuse>`_, `Specular <https://springrts.com/wiki/Mapdev:specular>`_ and `DNTS <https://springrts.com/wiki/Mapdev:splatdetailnormals>`_ maps can be edited using the *Texture* tools, which also support applying arbitrary filters like *blur* and *sharpen* as well as a *Void* editing tool which can be used to make certain map parts invisible.
 
 The *Metal* and *Grass* elements provide support for editing the `metal <https://springrts.com/wiki/Mapdev:metal>`_ and `grass <https://springrts.com/wiki/Mapdev:grass>`_ maps respectively.
-Games that instead use metal spots (or any point-based resource system) should refer to :ref:`_extension_games`.
+Games that instead use metal spots (or any point-based resource system) should refer to :ref:`extension_games`.
 
 *Settings* allows configuring some map rendering properties, and it also includes an *experimental* map compilation tool.
 

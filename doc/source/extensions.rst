@@ -12,9 +12,9 @@ Example
 -------
 
 We present a full example of a SpringBoard extension consisting of *ui* and *cmd* modules.
-This example is `distributed <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/exts/example>`_ with SpringBoard, and is contained in the *exts/example* folder of the repository.
+This example is located in the `exts/example <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/exts/example>`_ folder of the repository.
 
-First we will define the UI elements, given in a `ui/example.lua <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/exts/example/ui/example.lua>`_ file.
+First we will define the UI elements, given in the `ui/example.lua <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/exts/example/ui/example.lua>`_ file.
 At the top of the file, we will include the *Editor* class and make a new *ExampleEditor* subclass out of it, with which we will define our custom *Editor*.
 
 .. code-block:: lua

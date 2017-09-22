@@ -38,7 +38,7 @@ Configuration
 
 General configuration is given in the ``sb_settings.lua`` file. It allows to configure the following behavior:
 
-- ``startStop`: Position of the startStop button.
+- ``startStop``: Position of the startStop button.
 - ``OnStartEditingSynced``: Function to be executed in synced when editing starts.
 - ``OnStopEditingSynced``: Function to be executed in synced when editing stops.
 - ``OnStartEditingUnsynced``: Function to be executed in unsynced when editing starts. This is commonly used to disable widgets that would get in the way of editing.

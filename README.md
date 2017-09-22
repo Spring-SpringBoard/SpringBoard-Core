@@ -4,16 +4,11 @@
 
 ## Installing
 
-Packages:
+The simplest way to download and install SpringBoard is use one of the packaged builds:
 - [Windows build](https://drive.google.com/file/d/0B9FQjbVMFgL2WUYtVUJIRXpkY3M/view?usp=sharing)
 - [Linux build ](https://drive.google.com/file/d/0B9FQjbVMFgL2aE9lTElTQWVHUjg/view?usp=sharing)
 
-
-Alternatively it's possible to install manually via rapid:
-`pr-downloader sbc:test`
-
-The development version can be obtained from this repository, by cloning it in your game folder:
-`git clone https://github.com/Spring-SpringBoard/SpringBoard-Core SB-C.sdd`
+For details see (http://springboard-core.readthedocs.io/en/latest/installing.html0)
 
 ### Game-specific modules
 This is the core module, you may still want to get additional game-specific modules if you're making a scenario.
