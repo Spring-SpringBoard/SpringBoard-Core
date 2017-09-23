@@ -49,5 +49,6 @@ Contents
    extensions
    game_specific_modules
    assets
+   video_tutorials
    hot_keys
    api
