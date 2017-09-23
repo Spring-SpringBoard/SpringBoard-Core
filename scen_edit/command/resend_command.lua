@@ -8,12 +8,12 @@ end
 
 function ResendCommand:execute()
 	Log.Notice("Resend data started...")
-    local s2mUnit =     SB.model.unitManager.s2mUnitIDMapping
-    local s2mFeature =  SB.model.featureManager.s2mFeatureIDMapping
-    local cmd = WidgetResendCommand({
-        s2mUnit = s2mUnit,
-        s2mFeature = s2mFeature
-    })
+    -- TODO: Update to use s11n
+    Log.Error("NOT IMPLEMENTED: RESEND")
+    -- local cmd = WidgetResendCommand({
+    --     s2mUnit = s2mUnit,
+    --     s2mFeature = s2mFeature
+    -- })
     SB.commandManager:execute(cmd, true)
 end
 
@@ -25,11 +25,8 @@ function WidgetResendCommand:init(model)
 end
 
 function WidgetResendCommand:execute()
-    for objectID, modelID in pairs(self.model.s2mUnit) do
-        SB.model.unitManager:setUnitModelID(objectID, modelID)
-    end
-    for objectID, modelID in pairs(self.model.s2mFeature) do
-        SB.model.featureManager:setFeatureModelID(objectID, modelID)
+    for name, objectS11N in pairs(s11n.s11nByName) do
+        -- do stuff
     end
     Log.Notice("Resend completed successfully.")
 end

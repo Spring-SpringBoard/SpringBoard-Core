@@ -65,7 +65,7 @@ S11NGadgetListener = LCS.class{}
 SB.OnInitialize(function()
     SB.delay(function()
         for name, bridge in pairs(ObjectBridge.GetObjectBridges()) do
-            if bridge.s11n and bridge ~= unitBridge and bridge ~= featureBridge then
+            if bridge.s11n then
                 Log.Notice("Sync: " .. tostring(name))
                 local listener = S11NGadgetListener()
                 listener.objType = name
@@ -90,7 +90,12 @@ end)
 function S11NGadgetListener:OnCreateObject(objectID)
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
 
-    local object = bridge.s11n:Get(objectID)
+    local object
+    if bridge == unitBridge or bridge == featureBridge then
+        object = bridge.s11n:GetModelID(objectID)
+    else
+        object = bridge.s11n:Get(objectID)
+    end
     local cmd = WidgetAddObjectCommand(self.objType, objectID, object)
     SB.commandManager:execute(cmd, true)
 end
@@ -102,37 +107,6 @@ end
 
 function S11NGadgetListener:OnFieldSet(objectID, name, value)
     local cmd = WidgetUpdateObjectCommand(self.objType, objectID, name, value)
-    SB.commandManager:execute(cmd, true)
-end
-
--- Custom listeners for unit and feature
-UnitManagerListenerGadget = UnitManagerListener:extends{}
-SB.OnInitialize(function()
-    SB.model.unitManager:addListener(UnitManagerListenerGadget())
-end)
-
-function UnitManagerListenerGadget:onUnitAdded(unitID, modelID)
-    local cmd = WidgetAddObjectCommand("unit", unitID, modelID)
-    SB.commandManager:execute(cmd, true)
-end
-
-function UnitManagerListenerGadget:onUnitRemoved(unitID, modelID)
-    local cmd = WidgetRemoveObjectCommand("unit", modelID)
-    SB.commandManager:execute(cmd, true)
-end
-
-FeatureManagerListenerGadget = FeatureManagerListener:extends{}
-SB.OnInitialize(function()
-    SB.model.featureManager:addListener(FeatureManagerListenerGadget())
-end)
-
-function FeatureManagerListenerGadget:onFeatureAdded(featureID, modelID)
-    local cmd = WidgetAddObjectCommand("feature", featureID, modelID)
-    SB.commandManager:execute(cmd, true)
-end
-
-function FeatureManagerListenerGadget:onFeatureRemoved(featureID, modelID)
-    local cmd = WidgetRemoveObjectCommand("feature", modelID)
     SB.commandManager:execute(cmd, true)
 end
 

@@ -8,8 +8,6 @@ function Model:init()
     self._lua_rules_pre = "scen_edit"
 
     self.areaManager = AreaManager()
-    self.unitManager = UnitManager()
-    self.featureManager = FeatureManager()
     self.variableManager = VariableManager()
     self.triggerManager = TriggerManager()
     self.teamManager = TeamManager()
@@ -33,12 +31,9 @@ function Model:Clear()
     self.teamManager:clear()
 	self.scenarioInfo:clear()
 
-    self.unitManager:clear()
-    self.featureManager:clear()
-    for name, objectS11N in pairs(s11n.s11nByName) do
-        if name ~= "unitS11N" and name ~= "featureS11N" then
-            objectS11N:Remove(objectS11N:GetAllObjectIDs())
-        end
+    -- "CLEAR MODEL"
+    for _, objectS11N in pairs(s11n.s11nByName) do
+        objectS11N:Clear()
     end
 
     for _, projectileID in pairs(Spring.GetProjectilesInRectangle(0, 0, Game.mapSizeX,  Game.mapSizeZ)) do
@@ -55,12 +50,8 @@ function Model:Serialize()
     local mission = {}
 
     mission.meta = self:GetMetaData()
-    mission.units = self.unitManager:serialize()
-    mission.features = self.featureManager:serialize()
     for name, objectS11N in pairs(s11n.s11nByName) do
-        if name ~= "unitS11N" and name ~= "featureS11N" then
-            mission[name] = objectS11N:Get()
-        end
+        mission[name] = objectS11N:Get()
     end
     return mission
 end
@@ -71,16 +62,10 @@ function Model:Save(fileName)
 end
 
 function Model:Load(mission)
-    self:Clear()
-
-    self.unitManager:load(mission.units)
-    self.featureManager:load(mission.features)
     -- TODO: some serialization should persist through save/load (and belongs to .meta)
     -- Right now everything will be reset each Start/Stop
     for name, objectS11N in pairs(s11n.s11nByName) do
-        if name ~= "unitS11N" and name ~= "featureS11N" then
-            objectS11N:Add(mission[name])
-        end
+        objectS11N:Add(mission[name])
     end
 
     self:SetMetaData(mission.meta)

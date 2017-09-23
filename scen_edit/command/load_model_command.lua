@@ -8,14 +8,9 @@ end
 
 function LoadModelCommand:execute()
     SB.model:Clear()
-    -- wait a bit if it's already loaded, but start immediately otherwise
-    if Spring.GetGameFrame() ~= nil and Spring.GetGameFrame() > 30 then 
-        GG.Delay.DelayCall(function()
-            self:Load()
-        end, {}, 2)
-    else
+    GG.Delay.DelayCall(function()
         self:Load()
-    end
+    end, {}, 8)
 end
 
 function LoadModelCommand:Load()

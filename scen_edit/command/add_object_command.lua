@@ -12,18 +12,17 @@ function AddObjectCommand:execute(bridge)
 
     local objectID = bridge.s11n:Add(self.params)
     self.params.objectID = objectID
-    if self.modelID == nil then
-        self.modelID = bridge.getObjectModelID(objectID)
-    else
-        bridge.setObjectModelID(objectID, self.modelID)
-    end
+    self.params.__modelID = bridge.getObjectModelID(objectID)
 end
 
 function AddObjectCommand:unexecute(bridge)
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
-
-    if self.modelID then
-        local objectID = bridge.getObjectSpringID(self.modelID)
-        bridge.s11n:Remove(objectID)
+    if not self.params.__modelID then
+        Log.Warning("No modelID for un-add (remove).")
     end
+    local objectID = bridge.getObjectSpringID(self.params.__modelID)
+    if not objectID then
+        Log.Warning("No objectID for un-add (remove) for modelID: .", self.params.__modelID)
+    end
+    bridge.s11n:Remove(objectID)
 end

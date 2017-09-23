@@ -50,20 +50,20 @@ FeatureBridge.DrawSelected                    = function(objectID)
 end
 
 FeatureBridge.getObjectSpringID               = function(modelID)
-    return SB.model.featureManager:getSpringFeatureID(modelID)
+    return featureBridge.s11n:GetSpringID(modelID)
 end
 FeatureBridge.getObjectModelID                = function(objectID)
-    return SB.model.featureManager:getModelFeatureID(objectID)
+    return featureBridge.s11n:GetModelID(objectID)
 end
 FeatureBridge.setObjectModelID                = function(objectID, modelID)
-    SB.model.featureManager:setFeatureModelID(objectID, modelID)
+    featureBridge.s11n:Set(objectID, "__modelID", modelID)
 end
 
 FeatureBridge.OnLuaUIAdded = function(objectID, modelID)
-    SB.model.featureManager:addFeature(objectID, modelID)
+    featureBridge.s11n:_ObjectCreated(objectID, modelID)
 end
 FeatureBridge.OnLuaUIRemoved = function(objectID)
-    SB.model.featureManager:removeFeatureByModelID(objectID)
+    featureBridge.s11n:_ObjectDestroyed(objectID)
 end
 
 featureBridge = FeatureBridge()
@@ -77,6 +77,7 @@ featureBridge.s11nFieldOrder = {"pos", "rot", "vel"}
 featureBridge.blockedFields = {
     "collision", "blocking", "radiusHeight", "midAimPos",
     "dir", "defName", "team", "rules",
+--    "__modelID",
 }
 
 ObjectBridge.Register("feature", featureBridge)

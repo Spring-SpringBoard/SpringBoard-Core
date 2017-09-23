@@ -13,7 +13,6 @@ end
 
 local msgParts = {}
 local msgPartsSize = 0
-local __populated = false
 local __populatedTeam = false
 
 function gadget:RecvLuaMsg(msg, playerID)
@@ -135,13 +134,12 @@ function gadget:Initialize()
 end
 
 function Load()
-    if __populated then
+    if SB.__populated then
         return
     end
 
-    SB.model.unitManager:populate()
-    SB.model.featureManager:populate()
-    __populated = true
+    s11n:Populate()
+    SB.__populated = true
     if hasScenarioFile then
         Log.Notice("Loading the scenario file...")
         local heightmapData = VFS.LoadFile("heightmap.data", VFS.MOD)
@@ -170,7 +168,7 @@ function gadget:GamePreload()
 end
 
 function gadget:GameFrame(frameNum)
-    if __populated and not __populatedTeam then
+    if SB.__populated and not __populatedTeam then
         SB.model.teamManager:populate()
         __populatedTeam = true
     end
@@ -193,9 +191,6 @@ function gadget:TeamDied(teamID)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
-    if __populated then
-        SB.model.unitManager:addUnit(unitID)
-    end
     SB.rtModel:UnitCreated(unitID, unitDefID, teamID, builderID)
     -- FIXME: Remove MCL specific hacks
     if Game.gameShortName == "SE MCL" and (unitDefID == 9 or unitDefID == 49) then
@@ -222,9 +217,6 @@ end
 
 function gadget:UnitDestroyed(unitID, ...)
     SB.rtModel:UnitDestroyed(unitID, ...)
-    if __populated then
-        SB.model.unitManager:removeUnit(unitID)
-    end
 end
 
 function gadget:UnitFinished(unitID, unitDefID, teamID)
@@ -232,9 +224,6 @@ function gadget:UnitFinished(unitID, unitDefID, teamID)
 end
 
 function gadget:FeatureCreated(featureID, allyTeam)
-    if __populated then
-        SB.model.featureManager:addFeature(featureID)
-    end
     SB.rtModel:FeatureCreated(featureID, allyTeam)
 end
 
@@ -244,9 +233,6 @@ end
 
 function gadget:FeatureDestroyed(featureID, ...)
     SB.rtModel:FeatureDestroyed(featureID, ...)
-    if __populated then
-        SB.model.featureManager:removeFeature(featureID)
-    end
 end
 
 --[[

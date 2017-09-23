@@ -28,22 +28,24 @@ function gadget:Initialize()
     LCS = LCS()
 
     VFS.Include(S11N_FOLDER .. "/s11n.lua", nil, VFS.DEF_MODE)
-
     -- Export Gadget Globals
     _s11n = s11n.instance
     GG.s11n = _s11n
-    for _, objectID in pairs(Spring.GetAllUnits()) do
-        self:UnitCreated(objectID)
-    end
-    for _, objectID in pairs(Spring.GetAllFeatures()) do
-        self:FeatureCreated(objectID)
-    end
+
+    -- _s11n:Populate() -- we let SB control this
 end
-function gadget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
+
+function gadget:UnitCreated(unitID)
     _s11n:GetUnitS11N():_ObjectCreated(unitID)
 end
-function gadget:FeatureCreated(featureID, allyTeamID)
+function gadget:FeatureCreated(featureID)
     _s11n:GetFeatureS11N():_ObjectCreated(featureID)
+end
+function gadget:UnitDestroyed(unitID, ...)
+    _s11n:GetUnitS11N():_ObjectDestroyed(unitID, ...)
+end
+function gadget:FeatureDestroyed(featureID, ...)
+    _s11n:GetFeatureS11N():_ObjectDestroyed(featureID, ...)
 end
 function gadget:GameFrame()
     _s11n:GetFeatureS11N():_GameFrame()

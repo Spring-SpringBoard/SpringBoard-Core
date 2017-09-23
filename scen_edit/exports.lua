@@ -32,6 +32,8 @@ hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)
 SB.SyncModel = Script.GetSynced() and sb_gameMode ~= "play"
 
+SB.__populated = false
+
 --chili export
 if WG and WG.SBChili then
     -- setup Chili

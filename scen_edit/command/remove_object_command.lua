@@ -13,7 +13,6 @@ function RemoveObjectCommand:execute(bridge)
     local objectID = bridge.getObjectSpringID(self.modelID)
     if objectID and bridge.ValidObject(objectID) then
         self.old = bridge.s11n:Get(objectID)
-        self.old.objectID = objectID
         bridge.s11n:Remove(objectID)
     end
 end
@@ -22,7 +21,6 @@ function RemoveObjectCommand:unexecute(bridge)
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
 
     if self.old then
-        local objectID = bridge.s11n:Add(self.old)
-        bridge.setObjectModelID(objectID, self.modelID)
+        bridge.s11n:Add(self.old)
     end
 end

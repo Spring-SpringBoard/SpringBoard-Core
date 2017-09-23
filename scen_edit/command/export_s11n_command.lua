@@ -13,8 +13,10 @@ end
 function ExportS11NCommand:execute()
     Time.MeasureTime(function()
         local model = {}
-        model.units = SB.model.unitManager:serialize()
-        model.features = SB.model.featureManager:serialize()
+
+        for name, objectS11N in pairs(s11n.s11nByName) do
+            model[name] = objectS11N:Get()
+        end
 
         table.save(model, self.path)
     end, function(elapsed)

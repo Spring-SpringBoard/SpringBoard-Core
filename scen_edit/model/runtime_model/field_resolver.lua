@@ -61,7 +61,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     if type == "unit" then
         local unitID = tonumber(field.value)
         if unitID ~= nil then
-            local springID = SB.model.unitManager:getSpringUnitID(unitID)
+            local springID = unitBridge.getObjectSpringID(unitID)
             if Spring.ValidUnitID(springID) then
                 return springID
             -- This shouldn't exist, we should always use the model id?
@@ -74,7 +74,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
     elseif type == "feature" then
         local featureID = tonumber(field.value)
         if featureID ~= nil then
-            local springID = SB.model.featureManager:getSpringFeatureID(featureID)
+            local springID = featureBridge.getObjectSpringID(featureID)
             if Spring.ValidFeatureID(springID) then
                 return springID
             end

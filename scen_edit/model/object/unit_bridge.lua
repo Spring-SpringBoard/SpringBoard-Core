@@ -14,20 +14,20 @@ UnitBridge.OnSelect                        = function(objectIDs)
 end
 
 UnitBridge.getObjectSpringID               = function(modelID)
-    return SB.model.unitManager:getSpringUnitID(modelID)
+    return unitBridge.s11n:GetSpringID(modelID)
 end
 UnitBridge.getObjectModelID                = function(objectID)
-    return SB.model.unitManager:getModelUnitID(objectID)
+    return unitBridge.s11n:GetModelID(objectID)
 end
 UnitBridge.setObjectModelID                = function(objectID, modelID)
-    SB.model.unitManager:setUnitModelID(objectID, modelID)
+    unitBridge.s11n:Set(objectID, "__modelID", modelID)
 end
 
 UnitBridge.OnLuaUIAdded = function(objectID, modelID)
-    SB.model.unitManager:addUnit(objectID, modelID)
+    unitBridge.s11n:_ObjectCreated(objectID, modelID)
 end
 UnitBridge.OnLuaUIRemoved = function(objectID)
-    SB.model.unitManager:removeUnitByModelID(objectID)
+    unitBridge.s11n:_ObjectDestroyed(objectID)
 end
 
 unitBridge = UnitBridge()
@@ -40,7 +40,8 @@ end
 unitBridge.s11nFieldOrder = {"pos", "rot", "vel", "team"}
 unitBridge.blockedFields = {
     "collision", "blocking", "radiusHeight", "midAimPos",
-    "dir", "defName", "paralyze", "commands", "rules"
+    "dir", "defName", "paralyze", "commands", "rules",
+    "__modelID",
 }
 
 ObjectBridge.Register("unit", unitBridge)

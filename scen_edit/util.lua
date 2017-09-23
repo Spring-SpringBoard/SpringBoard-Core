@@ -171,7 +171,7 @@ function SB.humanExpression(data, exprType, dataType, level)
                     return dataIDStr
                 end
             elseif dataType == "unit" then
-                local unitID = SB.model.unitManager:getSpringUnitID(data.value)
+                local unitID = data.value
                 local dataIDStr = "(id=" .. tostring(data.value) .. ")"
                 if Spring.ValidUnitID(unitID) then
                     local unitDef = UnitDefs[Spring.GetUnitDefID(unitID)]

@@ -34,5 +34,14 @@ function s11n:GetFeatureS11N()
     return self.featureS11N
 end
 
+function s11n:Populate()
+    for _, objectID in pairs(Spring.GetAllUnits()) do
+        gadget:UnitCreated(objectID)
+    end
+    for _, objectID in pairs(Spring.GetAllFeatures()) do
+        gadget:FeatureCreated(objectID)
+    end
+end
+
 s11n.instance = s11n()
 s11n.instance:__CreateDefaults()

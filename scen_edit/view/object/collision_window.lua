@@ -474,16 +474,19 @@ function CollisionView:OnFieldChange(name, value)
         }
         name = "collision"
     end
-    local commands = {}
-    for _, objectID in pairs(selection.unit) do
-        local modelID = SB.model.unitManager:getModelUnitID(objectID)
-        table.insert(commands, SetObjectParamCommand("unit", modelID, name, value))
-    end
-    for _, objectID in pairs(selection.feature) do
-        local modelID = SB.model.featureManager:getModelFeatureID(objectID)
-        table.insert(commands, SetObjectParamCommand("feature", modelID, name, value))
-    end
 
+    local commands = {}
+    for selType, objectIDs in pairs(selection) do
+        if #objectIDs > 0 then
+            bridge = ObjectBridge.GetObjectBridge(selType)
+            if bridge.s11n.setFuncs[name] then
+                for _, objectID in pairs(objectIDs) do
+                    local modelID = bridge.getObjectModelID(objectID)
+                    table.insert(commands, SetObjectParamCommand(bridge.name, modelID, name, value))
+                end
+            end
+        end
+    end
     local compoundCommand = CompoundCommand(commands)
     SB.commandManager:execute(compoundCommand)
 end

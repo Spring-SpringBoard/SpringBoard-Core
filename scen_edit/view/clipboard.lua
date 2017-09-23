@@ -15,6 +15,7 @@ function Clipboard:CopyObjects(objectIDs, bridge)
     for _, object in pairs(objects) do
         -- Remove the object IDs
         object.id = nil
+        object.__modelID = nil
         objectCount = objectCount + 1
     end
     return objects, objectCount

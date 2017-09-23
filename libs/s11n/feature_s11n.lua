@@ -146,6 +146,7 @@ function _FeatureS11N:OnInit()
         --     end,
         -- }
     }
+    self:__AddModelIDField()
 end
 
 -- FIXME: objectID not used

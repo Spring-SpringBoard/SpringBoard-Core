@@ -59,13 +59,13 @@ end
 
 function StartMarker()
 	Spring.SendCommands("unbindkeyset Any+` drawinmap")
-	Spring.SendCommands("unbindkeyset Any+\ drawinmap")
+	--Spring.SendCommands("unbindkeyset Any+\ drawinmap")
 	Spring.SendCommands("unbindkeyset Any+0xa7 drawinmap")
 end
 
 function CloseMarker()
 	Spring.SendCommands("bindkeyset Any+` drawinmap")
-	Spring.SendCommands("bindkeyset Any+\ drawinmap")
+	--Spring.SendCommands("bindkeyset Any+\ drawinmap")
 	Spring.SendCommands("bindkeyset Any+0xa7 drawinmap")
 end
 

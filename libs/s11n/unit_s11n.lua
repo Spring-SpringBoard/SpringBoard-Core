@@ -8,24 +8,6 @@ local function boolToNumber(bool)
     end
 end
 
-local function __getSpringUnitID(modelID)
-    local luaState = WG or GG
-    if not luaState.SB then
-        return modelID
-    end
-    local SB = luaState.SB
-    return SB.model.unitManager:getSpringUnitID(modelID)
-end
-
-local function __getModelUnitID(springID)
-    local luaState = WG or GG
-    if not luaState.SB then
-        return springID
-    end
-    local SB = luaState.SB
-    return SB.model.unitManager:getModelUnitID(springID)
-end
-
 local function isUnitCommand(command)
     local luaState = WG or GG
     if not luaState.SB then
@@ -45,7 +27,6 @@ local function isUnitCommand(command)
     return false
 end
 
--- local modelIDs = {}
 function _UnitS11N:OnInit()
     self.funcs = {
         pos = {
@@ -354,7 +335,7 @@ function _UnitS11N:OnInit()
                         end
                         -- serialized unit commands use the model unit id
                         if isUnitCommand(command) then
-                            command.params[1] = __getModelUnitID(command.params[1])
+                            command.params[1] = self:GetModelID(command.params[1])
                         end
                     end
                 end
@@ -365,7 +346,7 @@ function _UnitS11N:OnInit()
                     local params
                     -- unit commands need to get the real unit ID
                     if isUnitCommand(command) then
-                        params = { __getSpringUnitID(command.params[1]) }
+                        params = { self:GetSpringID(command.params[1]) }
                     else
                         params = command.params
                     end
@@ -443,14 +424,6 @@ function _UnitS11N:OnInit()
                 Spring.MoveCtrl.SetGravity(objectID, value)
             end,
         },
-        -- modelID = {
-        --     get = function(objectID)
-        --         return modelIDs[objectID]
-        --     end,
-        --     set = function(objectID, value)
-        --         modelIDs[objectID] = value
-        --     end,
-        -- }
     }
 
     -- FIXME: movectrl get is not available in unsynced
@@ -459,6 +432,7 @@ function _UnitS11N:OnInit()
     end
     -- TODO: this isn't available
     -- unit.alwaysVisible = Spring.GetAlwaysVisible(unitID)
+    self:__AddModelIDField()
 end
 
 function _UnitS11N:CreateObject(object, objectID)

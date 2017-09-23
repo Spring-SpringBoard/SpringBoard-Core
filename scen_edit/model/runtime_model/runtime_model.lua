@@ -149,23 +149,23 @@ function RuntimeModel:UnitCreated(unitID, unitDefID, teamID, builderID)
     if self:CanTrackUnit(unitDefID) then
         self.trackedUnitIDs[unitID] = unitID
     end
-    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    local modelUnitID = unitBridge.getObjectModelID(unitID)
     self:OnEvent("UNIT_CREATE", { unit = modelUnitID })
 end
 
 function RuntimeModel:UnitDamaged(unitID)
-    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    local modelUnitID = unitBridge.getObjectModelID(unitID)
     self:OnEvent("UNIT_DAMAGE", { unit = modelUnitID })
 end
 
 function RuntimeModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
     self.trackedUnitIDs[unitID] = nil
-    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    local modelUnitID = unitBridge.getObjectModelID(unitID)
     self:OnEvent("UNIT_DESTROY", { unit = modelUnitID })
 end
 
 function RuntimeModel:UnitFinished(unitID)
-    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+    local modelUnitID = unitBridge.getObjectModelID(unitID)
     self:OnEvent("UNIT_FINISH", { unit = modelUnitID })
 end
 
@@ -173,17 +173,17 @@ function RuntimeModel:FeatureCreated(featureID, allyTeam)
     -- if self:CanTrackUnit(unitDefID) then
     --     self.trackedUnitIDs[unitID] = unitID
     -- end
-    local modelID = SB.model.featureManager:getModelFeatureID(featureID)
+    local modelID = featureBridge.getObjectModelID(featureID)
     self:OnEvent("FEATURE_CREATE", { featureID = modelID })
 end
 
 function RuntimeModel:FeatureDamaged(featureID)
-    local modelID = SB.model.featureManager:getModelFeatureID(featureID)
+    local modelID = featureBridge.getObjectModelID(featureID)
     self:OnEvent("FEATURE_DAMAGE", { featureID = modelID })
 end
 
 function RuntimeModel:FeatureDestroyed(featureID)
-    local modelID = SB.model.featureManager:getModelFeatureID(featureID)
+    local modelID = featureBridge.getObjectModelID(featureID)
     self:OnEvent("FEATURE_DESTROY", { featureID = modelID })
 end
 
@@ -208,7 +208,7 @@ function RuntimeModel:GameFrame(frameNum)
             local area = areaModel.area
             if self.eventTriggers["UNIT_ENTER_AREA"] then
                 for _, unitID in pairs(results.entered) do
-                    local modelUnitID = SB.model.unitManager:getModelUnitID(unitID)
+                    local modelUnitID = unitBridge.getObjectModelID(unitID)
                     self:OnEvent("UNIT_ENTER_AREA", {
                         unit = modelUnitID,
                         area = areaModel.id

@@ -1,5 +1,7 @@
 _ObjectS11N = LCS.class{}
 
+local LOG_SECTION = "s11n"
+
 function _ObjectS11N:init()
     self.objectDefaults = {} -- cached object defaults
     self._cacheQueue    = {}
@@ -12,10 +14,150 @@ function _ObjectS11N:init()
     s11n.instance.s11nByName[self.__name] = self
 end
 
+-- Start model ID functions
+function _ObjectS11N:__AddModelIDField()
+    self.__m2s = {}
+    self.__s2m = {}
+    self.__modelIDCount = 0
+    self.__s2mToDelete = {}
+
+    self.funcs.__modelID = {
+        get = function(objectID)
+            return self.__s2m[objectID]
+        end,
+        set = function(objectID, value)
+            -- delete the old ID if it exists
+            if self.__s2m[objectID] then
+                local oldModelID = self.__s2m[objectID]
+                self.__m2s[oldModelID] = nil
+            end
+
+            self.__s2m[objectID] = value
+            self.__m2s[value] = objectID
+
+            self.__modelIDCount = math.max(value, self.__modelIDCount)
+        end,
+    }
+end
+
+function _ObjectS11N:__Added(objectID, modelID)
+    local currModelID = self.__s2m[objectID]
+
+    -- If object is already assigned, we should just update the field.
+    if currModelID then
+        if not Script.GetName() == "LuaRules" then
+            if debug then
+                Spring.Log(LOG_SECTION, LOG.WARNING, debug.traceback())
+            end
+            Spring.Log(LOG_SECTION, LOG.WARNING,
+                string.format("[%s] Trying to register %s with existing objectID. Spring ID: %d Model ID: %d",
+                Script.GetName(), self.__name, objectID, currModelID))
+            return
+        end
+
+        self:_SetField(objectID, "__modelID", modelID)
+        return
+    end
+
+    if modelID ~= nil then
+        -- Set counter to be at least as large as the modelID
+        if self.__modelIDCount < modelID then
+            self.__modelIDCount = modelID
+        end
+    else
+        -- if no modelID is specified, increment the counter and use it as new modelID
+        self.__modelIDCount = self.__modelIDCount + 1
+        modelID = self.__modelIDCount
+    end
+
+    if self.__m2s[modelID] then
+        Spring.Log(LOG_SECTION, LOG.WARNING,
+            string.format("[%s] Trying to register %s with existing modelID. Spring ID: %d Model ID: %d",
+            Script.GetName(), self.__name, modelID, self.__m2s[modelID]))
+        return
+    end
+
+    self.__s2m[objectID] = modelID
+    self.__m2s[modelID] = objectID
+
+    local listeners = self.__listeners
+    -- local listeners = Table.ShallowCopy(self.__listeners)
+    for _, listener in ipairs(listeners) do
+        xpcall(
+            function()
+                local eventFunc = listener["OnCreateObject"]
+                if eventFunc then
+                    eventFunc(listener, objectID)
+                end
+            end,
+            function(err)
+                Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to invoke OnCreateObject listener ")
+                Spring.Log(LOG_SECTION, LOG.ERROR, err)
+            end
+        )
+    end
+end
+
+function _ObjectS11N:__Removed(objectID)
+    assert(objectID,
+           ("Trying to remove %s with no featureID specified."):format(self.__name))
+
+    -- We delay deleting objectID <-> modelID mappings until next GameFrame
+    -- This ensures all addons that use the ObjectDestroy callin can still
+    -- use the mapping
+    table.insert(self.__s2mToDelete, objectID)
+
+
+    local listeners = self.__listeners
+    -- local listeners = Table.ShallowCopy(self.__listeners)
+    for _, listener in ipairs(listeners) do
+        xpcall(
+            function()
+                local eventFunc = listener["OnDestroyObject"]
+                if eventFunc then
+                    eventFunc(listener, objectID)
+                end
+            end,
+            function(err)
+                Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to invoke OnDestroyObject listener ")
+                Spring.Log(LOG_SECTION, LOG.ERROR, err)
+            end
+        )
+    end
+end
+
+function _ObjectS11N:GetSpringID(modelID)
+    assert(modelID, ("[%s] Missing modelID argument for %s"):format(Script.GetName(), self.__name))
+    local objectID = self.__m2s[modelID]
+    if not objectID then
+        if debug then
+            Spring.Log(LOG_SECTION, LOG.WARNING, debug.traceback())
+        end
+        Spring.Log(LOG_SECTION, LOG.WARNING, ("[%s] No %s springID for modelID: %d"):format(Script.GetName(), self.__name, modelID))
+    end
+    return objectID
+end
+
+-- TODO: This is unnecessary if it can be accessed through :Get as any other field
+function _ObjectS11N:GetModelID(objectID)
+    assert(objectID, ("[%s] Missing objectID argument for %s"):format(Script.GetName(), self.__name))
+    local modelID = self.__s2m[objectID]
+    if not modelID then
+        if debug then
+            Spring.Log(LOG_SECTION, LOG.WARNING, debug.traceback())
+        end
+        Spring.Log(LOG_SECTION, LOG.WARNING, ("[%s] No %s modelID for objectID: %d"):format(Script.GetName(), self.__name, objectID))
+        Spring.bla()
+    end
+    return modelID
+end
+
+-- End model ID functions
+
 function _ObjectS11N:AddListener(listener)
     if listener == nil then
-        Log.Error(debug.traceback())
-        Log.Error("listener cannot be nil")
+        Spring.Log(LOG_SECTION, LOG.ERROR, debug.traceback())
+        Spring.Log(LOG_SECTION, LOG.ERROR, "listener cannot be nil")
         return
     end
     table.insert(self.__listeners, listener)
@@ -128,8 +270,8 @@ function _ObjectS11N:_SetField(objectID, name, value)
                     end
                 end,
                 function(err)
-                    Spring.Log("s11n", "error", "Failed to invoke OnFieldSet listener ")
-                    Spring.Log("s11n", "error", err)
+                    Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to invoke OnFieldSet listener")
+                    Spring.Log(LOG_SECTION, LOG.ERROR, err)
                 end
             )
         end
@@ -166,8 +308,16 @@ function _ObjectS11N:_CacheObject(objectID)
 --     end
 end
 
-function _ObjectS11N:_ObjectCreated(objectID)
+function _ObjectS11N:_ObjectCreated(objectID, modelID)
     table.insert(self._cacheQueue, objectID)
+    if self.funcs.__modelID then
+        self:__Added(objectID, modelID)
+    end
+end
+function _ObjectS11N:_ObjectDestroyed(objectID)
+    if self.funcs.__modelID then
+        self:__Removed(objectID)
+    end
 end
 
 function _ObjectS11N:_GameFrame()
@@ -175,14 +325,31 @@ function _ObjectS11N:_GameFrame()
         self:_CacheObject(objectID)
     end
     self._cacheQueue = {}
+
+    for _, objectID in pairs(self.__s2mToDelete) do
+        local modelID = self.__s2m[objectID]
+        self.__s2m[objectID] = nil
+        if modelID then
+            self.__m2s[modelID] = nil
+        end
+    end
+    if self.__delayedClear and
+       self.__delayedClear <= Spring.GetGameFrame() then
+           Spring.Echo("__delayedClear HAPPENED")
+        self.__s2m = {}
+        self.__m2s = {}
+        self.__modelIDCount = 0
+        self.__delayedClear = nil
+    end
+    self.__s2mToDelete = {}
 end
 
 function _ObjectS11N:__ReportObjectCreationFail(object)
-    Spring.Log("SpringBoard", "error", "Failed to create object: ")
+    Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to create object: ")
     if type(object) == "table" then
         table.echo(object)
     else
-        Spring.Echo(object)
+        Spring.Log(LOG_SECTION, LOG.ERROR, object)
     end
 end
 
@@ -200,8 +367,8 @@ function _ObjectS11N:_Remove(objectID)
                 end
             end,
             function(err)
-                Spring.Log("s11n", "error", "Failed to invoke OnDestroyObject listener ")
-                Spring.Log("s11n", "error", err)
+                Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to invoke OnDestroyObject listener ")
+                Spring.Log(LOG_SECTION, LOG.ERROR, err)
             end
         )
     end
@@ -282,8 +449,8 @@ function _ObjectS11N:Add(input)
                     end
                 end,
                 function(err)
-                    Spring.Log("s11n", "error", "Failed to invoke OnCreateObject listener ")
-                    Spring.Log("s11n", "error", err)
+                    Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to invoke OnCreateObject listener ")
+                    Spring.Log(LOG_SECTION, LOG.ERROR, err)
                 end
             )
         end
@@ -295,6 +462,23 @@ end
 -------------------------------------------------------
 -- API
 -------------------------------------------------------
+
+-- s11n:Clear()
+function _ObjectS11N:Clear()
+    for _, objectID in pairs(self:GetAllObjectIDs()) do
+        self:_Remove(objectID)
+    end
+    if self.funcs.__modelID then
+        -- We do a delayed clear as well.
+        self.__delayedClear = Spring.GetGameFrame() + 3
+
+        -- self.__s2m = {}
+        -- self.__m2s = {}
+        -- self.__modelIDCount = 0
+        -- self.__delayedClear = nil
+    end
+end
+
 -- s11n:Remove(objectID)
 -- s11n:Remove(objectIDs)
 function _ObjectS11N:Remove(objectIDs)
