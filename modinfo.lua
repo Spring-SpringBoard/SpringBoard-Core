@@ -41,4 +41,3 @@ local modinfo = {
 }
 
 return modinfo
-
