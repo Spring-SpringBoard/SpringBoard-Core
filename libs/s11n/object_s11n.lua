@@ -147,7 +147,6 @@ function _ObjectS11N:GetModelID(objectID)
             Spring.Log(LOG_SECTION, LOG.WARNING, debug.traceback())
         end
         Spring.Log(LOG_SECTION, LOG.WARNING, ("[%s] No %s modelID for objectID: %d"):format(Script.GetName(), self.__name, objectID))
-        Spring.bla()
     end
     return modelID
 end

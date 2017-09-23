@@ -164,7 +164,8 @@ function Load()
 end
 
 function gadget:GamePreload()
-    Load()
+    -- We cannot load it in GamePreload because LuaUI won't get modelIDs right apparently
+    -- Load()
 end
 
 function gadget:GameFrame(frameNum)
