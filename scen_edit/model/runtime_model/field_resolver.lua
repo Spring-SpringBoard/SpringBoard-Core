@@ -25,6 +25,25 @@ function FieldResolver:CallExpression(expr, exprType, params, canExecuteUnsynced
         if exprType.doRepeat and result then
             table.insert(SB.rtModel.repeatCalls, {exprType = exprType, resolvedInputs = resolvedInputs})
         end
+        if exprType.output then
+            if exprType.output == "unit" then
+                result = unitBridge.getObjectModelID(result)
+            elseif exprType.output == "unit_array" then
+                local res = {}
+                for _, objectID in pairs(result) do
+                    table.insert(res, unitBridge.getObjectModelID(objectID))
+                end
+                result = res
+            elseif exprType.output == "feature" then
+                result = featureBridge.getObjectModelID(result)
+            elseif exprType.output == "feature_array" then
+                local res = {}
+                for _, objectID in pairs(result) do
+                    table.insert(res, featureBridge.getObjectModelID(objectID))
+                end
+                result = res
+            end
+        end
         return result
     end
 end
@@ -64,9 +83,6 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
             local springID = unitBridge.getObjectSpringID(unitID)
             if Spring.ValidUnitID(springID) then
                 return springID
-            -- This shouldn't exist, we should always use the model id?
-            elseif Spring.ValidUnitID(unitID) then
-                return unitID
             end
         end
     elseif type == "unitType" then

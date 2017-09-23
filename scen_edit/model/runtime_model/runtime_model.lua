@@ -149,42 +149,35 @@ function RuntimeModel:UnitCreated(unitID, unitDefID, teamID, builderID)
     if self:CanTrackUnit(unitDefID) then
         self.trackedUnitIDs[unitID] = unitID
     end
-    local modelUnitID = unitBridge.getObjectModelID(unitID)
-    self:OnEvent("UNIT_CREATE", { unit = modelUnitID })
+    self:OnEvent("UNIT_CREATE", { unit = unitID })
 end
 
 function RuntimeModel:UnitDamaged(unitID)
-    local modelUnitID = unitBridge.getObjectModelID(unitID)
-    self:OnEvent("UNIT_DAMAGE", { unit = modelUnitID })
+    self:OnEvent("UNIT_DAMAGE", { unit = unitID })
 end
 
 function RuntimeModel:UnitDestroyed(unitID, unitDefID, teamID, attackerID, attackerDefID, attackerTeamID)
     self.trackedUnitIDs[unitID] = nil
-    local modelUnitID = unitBridge.getObjectModelID(unitID)
-    self:OnEvent("UNIT_DESTROY", { unit = modelUnitID })
+    self:OnEvent("UNIT_DESTROY", { unit = unitID })
 end
 
 function RuntimeModel:UnitFinished(unitID)
-    local modelUnitID = unitBridge.getObjectModelID(unitID)
-    self:OnEvent("UNIT_FINISH", { unit = modelUnitID })
+    self:OnEvent("UNIT_FINISH", { unit = unitID })
 end
 
 function RuntimeModel:FeatureCreated(featureID, allyTeam)
     -- if self:CanTrackUnit(unitDefID) then
     --     self.trackedUnitIDs[unitID] = unitID
     -- end
-    local modelID = featureBridge.getObjectModelID(featureID)
-    self:OnEvent("FEATURE_CREATE", { featureID = modelID })
+    self:OnEvent("FEATURE_CREATE", { feature = featureID })
 end
 
 function RuntimeModel:FeatureDamaged(featureID)
-    local modelID = featureBridge.getObjectModelID(featureID)
-    self:OnEvent("FEATURE_DAMAGE", { featureID = modelID })
+    self:OnEvent("FEATURE_DAMAGE", { feature = featureID })
 end
 
 function RuntimeModel:FeatureDestroyed(featureID)
-    local modelID = featureBridge.getObjectModelID(featureID)
-    self:OnEvent("FEATURE_DESTROY", { featureID = modelID })
+    self:OnEvent("FEATURE_DESTROY", { feature = featureID })
 end
 
 local checkRate = 10
@@ -208,9 +201,8 @@ function RuntimeModel:GameFrame(frameNum)
             local area = areaModel.area
             if self.eventTriggers["UNIT_ENTER_AREA"] then
                 for _, unitID in pairs(results.entered) do
-                    local modelUnitID = unitBridge.getObjectModelID(unitID)
                     self:OnEvent("UNIT_ENTER_AREA", {
-                        unit = modelUnitID,
+                        unit = unitID,
                         area = areaModel.id
                     })
                 end
@@ -247,6 +239,14 @@ function RuntimeModel:OnEvent(eventName, params)
     end
 
     params = params or {}
+
+    if params.unit then
+        params.unit = unitBridge.getObjectModelID(params.unit)
+    end
+    if params.feature then
+        params.feature = featureBridge.getObjectModelID(params.feature)
+    end
+
     Spring.Echo("Event: " .. eventName, table.show(params))
 
     if self.eventTriggers[eventName] then

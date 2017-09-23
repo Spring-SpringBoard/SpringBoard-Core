@@ -18,7 +18,8 @@ TeamField = ChoiceField:extends{}
 function TeamField:init(opts)
     local items = GetField(SB.model.teamManager:getAllTeams(), "name")
     local ids = GetField(SB.model.teamManager:getAllTeams(), "id")
-    opts.items = items
+    opts.items = ids
+    opts.captions = items
 
     ChoiceField.init(self, opts)
 end
