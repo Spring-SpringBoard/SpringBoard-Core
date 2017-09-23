@@ -48,7 +48,7 @@ The :ref:`fig_maps` offers components for editing various `Spring maps <https://
 The *Metal* and *Grass* elements provide support for editing the `metal <https://springrts.com/wiki/Mapdev:metal>`_ and `grass <https://springrts.com/wiki/Mapdev:grass>`_ maps respectively.
 Games that instead use metal spots (or any point-based resource system) should refer to :ref:`extension_games`.
 
-*Settings* allows configuring some map rendering properties, and it also includes an *experimental* map compilation tool.
+*Settings* allows configuring some map rendering properties, and it also includes an *experimental* map compilation tool (Linux only for now).
 
 All map editing tools support custom :ref:`assets` (both brushes and materials).
 
