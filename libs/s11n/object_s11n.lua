@@ -335,7 +335,6 @@ function _ObjectS11N:_GameFrame()
     end
     if self.__delayedClear and
        self.__delayedClear <= Spring.GetGameFrame() then
-           Spring.Echo("__delayedClear HAPPENED")
         self.__s2m = {}
         self.__m2s = {}
         self.__modelIDCount = 0
