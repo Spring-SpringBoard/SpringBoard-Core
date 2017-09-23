@@ -275,3 +275,6 @@ The *LINK_PLATE_GATE* action type takes two unit parameters, one representing a 
             GG.Plate.SimpleLink(input.plate, input.gate)
         end
     }
+
+Example scenario implemented using this custom meta-programming is available at `Gravitas Example <https://drive.google.com/file/d/0B9FQjbVMFgL2dmFsWmpCUVl5R0U/view?usp=sharing>`_.
+To use it, extract it and open it as a SpringBoard project.
