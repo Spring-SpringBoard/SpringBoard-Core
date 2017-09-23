@@ -77,7 +77,7 @@ featureBridge.s11nFieldOrder = {"pos", "rot", "vel"}
 featureBridge.blockedFields = {
     "collision", "blocking", "radiusHeight", "midAimPos",
     "dir", "defName", "team", "rules",
---    "__modelID",
+    "__modelID",
 }
 
 ObjectBridge.Register("feature", featureBridge)
