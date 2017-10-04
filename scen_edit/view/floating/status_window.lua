@@ -3,7 +3,7 @@ StatusWindow = LCS.class{}
 function StatusWindow:init(parent)
     self.lblStatus = Label:New {
         x = 0,
-        bottom = 30,
+        bottom = 40,
         width = "100%",
         height = 20,
         caption = "",
@@ -11,9 +11,9 @@ function StatusWindow:init(parent)
     }
     self.lblMemory = Label:New {
         x = 0,
-        bottom = 0,
+        bottom = 15,
         width = "100%",
-        height = 20,
+        height = 30,
         caption = "",
         --valign = "ascender",
     }
@@ -57,8 +57,27 @@ function StatusWindow:_UpdateMemory()
         return
     end
 
-    local memory = collectgarbage("count") / 1024
+    local videoMemoryStr
+    -- Compatibility
+    if Spring.GetVidMemUsage then
+        local vram, vramMax = Spring.GetVidMemUsage()
+        videoMemoryStr = ("Video memory: %.0f/%.0f MB"):format(vram, vramMax)
+    end
+
+    local memory
+    -- Compatibility
+    if Spring.GetLuaMemUsage then
+        local memoryInStates = {Spring.GetLuaMemUsage()}
+        -- total memory is stored in the first value
+        memory = memoryInStates[3] / 1024
+    else
+        memory = collectgarbage("count") / 1024
+    end
     local memoryStr = "Memory " .. ('%.0f'):format(memory) .. " MB"
+
+    if videoMemoryStr then
+        memoryStr = memoryStr .. "\n" .. videoMemoryStr
+    end
 
     self.lblMemory:SetCaption(memoryStr)
 end
