@@ -16,25 +16,8 @@ function NewProjectDialog:init()
         backgroundColor = SB.conf.BTN_OK_COLOR,
         OnClick = {
             function()
-                local scriptTxt = StartScript.GenerateScriptTxt({
-                    game = {
-                        name = Game.gameName,
-                        version = Game.gameVersion,
-                    },
-                    mapName = "FlatTemplate",
-                    teams = {},
-                    players = {},
-                    ais = {},
-                    mapOptions = {
-                        sizeX = self.fields["sizeX"].value,
-                        sizeZ = self.fields["sizeZ"].value,
-                    }
-                })
-                Spring.Echo(scriptTxt)
-                Spring.Reload(scriptTxt)
-                --if self:UpdateModel(self.variable) then
-                --    self.window:Dispose()
-                --end
+                -- self:LoadEmptyMap()
+                self:LoadExistingMap()
             end
         }
     }
@@ -52,24 +35,31 @@ function NewProjectDialog:init()
         }
     }
 
-    self:AddField(GroupField({
-        NumericField({
-            name = "sizeX",
-            title = "Size X:",
-            width = 140,
-            minValue = 1,
-            value = 5,
-            maxValue = 32,
-        }),
-        NumericField({
-            name = "sizeZ",
-            title = "Size Z:",
-            width = 140,
-            minValue = 1,
-            value = 5,
-            maxValue = 32,
-        })
+    self:AddField(ChoiceField({
+        name = "mapName",
+        title = "Map:",
+        items = VFS.GetMaps(),
+        width = 300,
     }))
+
+    -- self:AddField(GroupField({
+    --     NumericField({
+    --         name = "sizeX",
+    --         title = "Size X:",
+    --         width = 140,
+    --         minValue = 1,
+    --         value = 5,
+    --         maxValue = 32,
+    --     }),
+    --     NumericField({
+    --         name = "sizeZ",
+    --         title = "Size Z:",
+    --         width = 140,
+    --         minValue = 1,
+    --         value = 5,
+    --         maxValue = 32,
+    --     })
+    -- }))
 
     local children = {
         btnOK,
@@ -85,5 +75,44 @@ function NewProjectDialog:init()
         },
     }
 
-    self:Finalize(children, {notMainWindow=true, noCloseButton=true})
+    self:Finalize(children, {
+        notMainWindow = true,
+        noCloseButton = true,
+        width = 500,
+        height = 200,
+    })
+end
+
+function NewProjectDialog:LoadEmptyMap()
+    local scriptTxt = StartScript.GenerateScriptTxt({
+        game = {
+            name = Game.gameName,
+            version = Game.gameVersion,
+        },
+        mapName = "FlatTemplate",
+        teams = {},
+        players = {},
+        ais = {},
+        mapOptions = {
+            sizeX = self.fields["sizeX"].value,
+            sizeZ = self.fields["sizeZ"].value,
+        }
+    })
+    Spring.Echo(scriptTxt)
+    Spring.Reload(scriptTxt)
+end
+
+function NewProjectDialog:LoadExistingMap()
+    local scriptTxt = StartScript.GenerateScriptTxt({
+        game = {
+            name = Game.gameName,
+            version = Game.gameVersion,
+        },
+        mapName = self.fields["mapName"].value,
+        teams = {},
+        players = {},
+        ais = {},
+    })
+    Spring.Echo(scriptTxt)
+    Spring.Reload(scriptTxt)
 end
