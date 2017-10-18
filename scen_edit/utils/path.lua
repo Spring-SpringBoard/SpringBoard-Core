@@ -56,6 +56,7 @@ end
 
 local function _Join(dir, path)
     dir = dir:gsub("\\", "/")
+    path = path:gsub("\\", "/")
 
     local lastCharDir = dir:sub(-1)
     local firstCharPath = path:sub(1, 1)
