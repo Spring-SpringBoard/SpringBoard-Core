@@ -6,12 +6,16 @@ end
 
 function AssetsManager:loadAll()
     self.assetsFolders = {}
+    Log.Notice("Scanning asset dirs...")
     for _, subDir in pairs(VFS.SubDirs(SB_ASSETS_DIR)) do
+        local name = Path.ExtractFileName(subDir)
         table.insert(self.assetsFolders, {
             path = subDir,
-            name = Path.ExtractFileName(subDir),
+            name = name,
         })
+        Log.Notice("Detected folder: " .. name)
     end
+    Log.Notice("Scan complete. Found " .. #self.assetsFolders .. " asset folders.")
 end
 
 local function SplitPath(dir, assetFolderName)
