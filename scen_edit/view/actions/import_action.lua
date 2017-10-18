@@ -31,7 +31,7 @@ function ImportAction:execute()
                     return
                 end
 
-                self:ImportHeightmap()
+                self:ImportHeightmap(path)
                 return true
             else
                 Log.Error("Error trying to export. Invalida fileType specified: " .. tostring(fileType))
@@ -40,7 +40,7 @@ function ImportAction:execute()
     )
 end
 
-function ImportAction:ImportHeightmap()
+function ImportAction:ImportHeightmap(path)
     local ebMinHeight = EditBox:New {
         hint = "Min height: ",
         text = ""
