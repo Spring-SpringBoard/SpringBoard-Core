@@ -8,6 +8,7 @@ function AssetsManager:loadAll()
     self.assetsFolders = {}
     Log.Notice("Scanning asset dirs...")
     for _, subDir in pairs(VFS.SubDirs(SB_ASSETS_DIR)) do
+        subDir = subDir:gsub("\\", "/")
         local name = Path.ExtractFileName(subDir)
         table.insert(self.assetsFolders, {
             path = subDir,
@@ -49,6 +50,7 @@ function AssetsManager:DirList(rootDir, dir, ...)
             local dirList = VFS.DirList(assetsFolder.path .. rootDir .. dirPath, ...)
             -- FIXME: return asset path rather than true file path
             for _, f in pairs(dirList) do
+                f = f:gsub("\\", "/")
                 table.insert(files, f)
             end
         end
@@ -68,6 +70,7 @@ function AssetsManager:SubDirs(rootDir, dir, ...)
             if assetsFolder.name .. "/" == dirAsset then
                 local subDirs = VFS.SubDirs(assetsFolder.path .. rootDir .. dirPath, ...)
                 for _, d in pairs(subDirs) do
+                    d = d:gsub("\\", "/")
                     local assetPath = self:ToAssetPath(rootDir, d)
                     local subDirAsset, subDirPath = SplitPath(assetPath, assetsFolder.name)
                     table.insert(dirs, assetPath)
