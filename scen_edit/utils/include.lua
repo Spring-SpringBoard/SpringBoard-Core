@@ -1,6 +1,7 @@
 -- Shared include (widget & gadget)
 VFS.Include("savetable.lua")
 SB.IncludeDir(SB_DIR .. "utils/")
+Log.DebugWithInfo(true)
 SB.Include(Path.Join(SB_DIR, "observable.lua"))
 SB.Include(Path.Join(SB_DIR, "display_util.lua"))
 SB.Include(Path.Join(SB_DIR, "conf/conf.lua"))
