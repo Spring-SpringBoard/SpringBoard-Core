@@ -44,6 +44,7 @@ Contents
 
    installing
    getting_started
+   map_features
    gui_programming
    meta_programming
    extensions
