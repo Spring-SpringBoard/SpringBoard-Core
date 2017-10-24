@@ -41,7 +41,9 @@ function gadget:GamePreload()
 
     Spring.Log("s11n", LOG_LEVEL, "Populating game world...")
     for name, objectS11N in pairs(s11n.s11nByName) do
-        objectS11N:Add(mission[name])
+        if mission[name] then
+            objectS11N:Add(mission[name])
+        end
     end
     Spring.Log("s11n", LOG_LEVEL, "s11n loading complete.")
 end
