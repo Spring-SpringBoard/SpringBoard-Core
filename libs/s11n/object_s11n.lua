@@ -44,7 +44,7 @@ function _ObjectS11N:__Added(objectID, modelID)
     local currModelID = self.__s2m[objectID]
 
     -- If object is already assigned, we should just update the field.
-    if currModelID then
+    if currModelID and modelID ~= nil then
         if not Script.GetName() == "LuaRules" then
             if debug then
                 Spring.Log(LOG_SECTION, LOG.WARNING, debug.traceback())
