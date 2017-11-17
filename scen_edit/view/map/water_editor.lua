@@ -201,13 +201,12 @@ function WaterEditor:init()
             width = 140,
             tooltip = "The WaterPlane is a single Quad beneath the map.\nIt should have the same color as the ocean floor to hide the map -> background boundary.",
         }),
-        -- FIXME: Unused by the engine atm. Remove?
-        -- ColorField({
-        --     name = "planeColor",
-        --     title = "Color:",
-        --     width = 140,
-        --     tooltip = "The WaterPlane is a single Quad beneath the map.\nIt should have the same color as the ocean floor to hide the map -> background boundary.",
-        -- }),
+        ColorField({
+            name = "planeColor",
+            title = "Color:",
+            width = 140,
+            tooltip = "The WaterPlane is a single Quad beneath the map.\nIt should have the same color as the ocean floor to hide the map -> background boundary.",
+        }),
     }))
 
     self:AddControl("water-waves-sep", {
@@ -319,7 +318,7 @@ function WaterEditor:UpdateWaterRendering()
     self:Set("blurExponent", gl.GetWaterRendering("blurExponent"))
 
     self:Set("hasWaterPlane", gl.GetWaterRendering("hasWaterPlane"))
-    -- self:Set("planeColor", {gl.GetWaterRendering("planeColor")})
+    self:Set("planeColor", {gl.GetWaterRendering("planeColor")})
 
     self:Set("shoreWaves", gl.GetWaterRendering("shoreWaves"))
     self:Set("foamTexture", gl.GetWaterRendering("foamTexture"))
