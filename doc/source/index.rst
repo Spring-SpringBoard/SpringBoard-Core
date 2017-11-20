@@ -52,4 +52,5 @@ Contents
    assets
    video_tutorials
    hot_keys
+   comparison
    api
