@@ -86,6 +86,9 @@ function ExportMapsCommand:execute()
 
         local texInfo = gl.TextureInfo("$heightmap")
         local GL_LUMINANCE32F_ARB = 0x8818
+        if Platform.osFamily == "Windows" then
+            GL_LUMINANCE32F_ARB = nil
+        end
         local heightmapTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
             format = GL_LUMINANCE32F_ARB,
             border = false,
@@ -126,7 +129,11 @@ function ExportMapsCommand:execute()
         gl.Texture(0, false)
         gl.UseShader(0)
 
-        gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath, {grayscale16bit = true})
+        useGrayscale16bit = true
+        if Platform.osFamily == "Windows" then
+            useGrayscale16bit = false
+        end
+        gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, heightmapPath, {grayscale16bit = useGrayscale16bit})
         gl.DeleteTexture(heightmapTexture)
 
         -- grass
