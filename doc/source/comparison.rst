@@ -34,6 +34,6 @@ Comparing them to SpringBoard:
 
 - They are released under a proprietary license, and need to be paid to be used. SpringBoard is free and open source.
 
-- They offer extensibility in terms of coding, while SpringBoard supports it with meta-programming. The SpringBoard approach allows
+- They offer extensibility in terms of coding, while SpringBoard supports it with meta-programming. The SpringBoard approach allows extensions to be created by more experienced developers and they are seamlessly integrated within the editor, which makes them usable by novices.
 
 SpringBoard, ZKME and Starcraft 2/Warcraft 3 editors all use a event/condition/action system, and that seems to be the most popular approach for defining scenarios.
