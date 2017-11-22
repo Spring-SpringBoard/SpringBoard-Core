@@ -86,9 +86,9 @@ function ExportMapsCommand:execute()
 
         local texInfo = gl.TextureInfo("$heightmap")
         local GL_LUMINANCE32F_ARB = 0x8818
-        if Platform.osFamily == "Windows" then
-            GL_LUMINANCE32F_ARB = nil
-        end
+        -- if Platform.osFamily == "Windows" then
+        --     GL_LUMINANCE32F_ARB = nil
+        -- end
         local heightmapTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
             format = GL_LUMINANCE32F_ARB,
             border = false,
