@@ -35,3 +35,14 @@ Hardware requirements
 SpringBoard runs on most machines that support the SpringRTS engine, with the requirements described `here <https://springrts.com/wiki/About#System_requirements>`_. The only additional requirement is that the Graphics Card drivers must support basic OpenGL Shaders (GLSL). Most modern GPUs should be usable, but it is necessary to ensure the system has newest OpenGL drivers (see `this <https://www.khronos.org/opengl/wiki/Getting_Started#Downloading_OpenGL>`_ for download instructions).
 
 Additionally, for better performance having a good GPU will make terrain texture editing more efficient, while having a decent CPU and more RAM will make heightmap editing and scenario editing work more smoothly.
+
+Software requirements
+---------------------
+
+Besides having OpenGL installed, it is necessary to install additional software on Linux:
+
+- SDL (Ubuntu package: `libsdl2-2.0-0`)
+
+- OpenAL (Ubuntu package: `libopenal1`)
+
+- libCurl (Ubuntu package: `libcurl3`)
