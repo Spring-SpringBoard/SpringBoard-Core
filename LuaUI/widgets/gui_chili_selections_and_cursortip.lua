@@ -1822,8 +1822,8 @@ local function MakeToolTip_Unit(data, tooltip)
 			{ name= 'bp', directcontrol = 'buildpic_unit' },
 			{ name= 'cost', icon = 'LuaUI/images/ibeam.png', text = cyan .. numformat((tt_ud and tt_ud.metalCost) or '0') },
 
-			{ name='res_m', icon = 'LuaUI/images/metalplus.png', text = m },
-			{ name='res_e', icon = 'LuaUI/images/energy.png', text = e },
+			{ name='res_m', text = "Metal:  " .. tostring(m) },
+			{ name='res_e', text = "Energy: " .. tostring(e) },
 		},
 		main = {
 			{ name='uname', icon = iconPath, text = fullname, fontSize=4, },
@@ -1873,8 +1873,8 @@ local function MakeToolTip_SelUnit(data, tooltip)
 			{ name= 'bp', directcontrol = 'buildpic_selunit' },
 			{ name= 'cost', icon = 'LuaUI/images/ibeam.png', text = cyan .. numformat((stt_ud and stt_ud.metalCost) or '0') },
 
-			{ name='res_m', icon = 'LuaUI/images/metalplus.png', text = m },
-			{ name='res_e', icon = 'LuaUI/images/energy.png', text = e },
+            { name='res_m', text = "Metal:  " .. tostring(m) },
+            { name='res_e', text = "Energy: " .. tostring(e) },
 		},
 		main = {
 			{ name='uname', icon = iconPath, text = fullname, fontSize=4, }, --name in window
@@ -1939,13 +1939,13 @@ local function MakeToolTip_Feature(data, tooltip)
 		{ name= 'bp', directcontrol = 'buildpic_feature' },
 		{ name='cost', icon = 'LuaUI/images/ibeam.png', text = cyan .. numformat((tt_ud and tt_ud.metalCost) or '0'), },
 
-		{ name='res_m', icon = 'LuaUI/images/metalplus.png', text = m },
-		{ name='res_e', icon = 'LuaUI/images/energy.png', text = e },
+        { name='res_m', text = "Metal:  " .. tostring(m) },
+        { name='res_e', text = "Energy: " .. tostring(e) },
 	}
 	or {
 
-		{ name='res_1', icon = 'LuaUI/images/metalplus.png', text = m },
-		{ name='res_2', icon = 'LuaUI/images/energy.png', text = e },
+        { name='res_1', text = "Metal:  " .. tostring(m) },
+        { name='res_2', text = "Energy: " .. tostring(e) },
 	}
 
 	local tt_structure = {
