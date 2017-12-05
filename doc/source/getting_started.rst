@@ -3,6 +3,8 @@ Starting out
 
 This section introduces the layout of SpringBoard. First make sure you have properly :ref:`installed <installing>` SpringBoard. If you are using officially distributed packages, simply run the executable to start SpringBoard. In case you're using a game-specific version of SpringBoard, refer to its manual on how to run it.
 
+.. note:: SpringBoard might show a black screen on the first run until it loads. This is expected behavior, during which the program is caching files, and the program isn't hanging.
+
 .. note:: Avoid running it in Multiplayer mode (even if it's just a host bot), as SpringBoard might cause extensive network usage, and not work properly.
 
 Layout
