@@ -33,17 +33,24 @@ function gadget:RecvLuaMsg(msg, playerID)
         if SB.messageManager.compress then
             msgParsed = SB.ZlibDecompress(msgParsed)
         end
-        local msgTable
+        local success, msgTable
         if SB.messageManager.pack then
-            msgTable = SB.messageManager.packer.unpack(msgParsed)
+            success, msgTable = pcall(function()
+                return SB.messageManager.packer.unpack(msgParsed)
+            end)
         else
-          -- FIXME: not super safe to read lua code like this
-          -- Jose Luis Cercos-Pita: Packing and unpacking is an efficient way to
-          -- fix that
-          local success
-          success, msgTable = pcall(function()
-              return assert(loadstring(msgParsed))()
-          end)
+            -- FIXME: not super safe to read lua code like this
+            -- Jose Luis Cercos-Pita: Packing and unpacking is an efficient way to
+            -- fix that
+            success, msgTable = pcall(function()
+                return assert(loadstring(msgParsed))()
+            end)
+        end
+        if not success then
+            Log.Error("Failed to load command (size: " .. #msgParsed .. "): ")
+            Log.Error(msgTable)
+            Log.Error(msgParsed)
+            return
         end
         local msg = Message(msgTable.tag, msgTable.data)
         if msg.tag == 'event' then
@@ -60,15 +67,16 @@ function gadget:RecvLuaMsg(msg, playerID)
             end
             local success, msgTable
             if SB.messageManager.pack then
-                msgTable = SB.messageManager.packer.unpack(msgParsed)
-                success = true
+                success, msgTable = pcall(function()
+                    return SB.messageManager.packer.unpack(msgParsed)
+                end)
             else
                 success, msgTable = pcall(function()
                     return assert(loadstring(msgParsed))()
                 end)
             end
             if not success then
-                Log.Error("Failed to load command (size: " .. #msgParsed .. ": ")
+                Log.Error("Failed to load command (size: " .. #msgParsed .. "): ")
                 Log.Error(msgTable)
                 Log.Error(msgParsed)
                 return
