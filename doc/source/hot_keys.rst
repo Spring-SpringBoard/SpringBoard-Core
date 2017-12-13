@@ -10,9 +10,13 @@ Hotkey        Action
 ============  ==========
 Ctrl-Z        Undo
 Ctrl-Y        Redo
+Ctrl-A        Select All
+Ctrl-T        Select objects of same type as current selection
+Ctrl-Shift-T  Select objects in view, of same type as current selection
 Ctrl-X        Cut
 Ctrl-C        Copy
 Ctrl-V        Paste
+Del           Delete current selection objects
 Ctrl-S        Save
 Ctrl-Shift-S  Save as
 Ctrl-O        Open
