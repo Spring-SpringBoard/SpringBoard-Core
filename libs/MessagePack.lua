@@ -521,6 +521,9 @@ end
 local unpackers         -- forward declaration
 
 local function unpack_cursor (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i > j then
         c:underflow(i)
@@ -533,6 +536,9 @@ end
 m.unpack_cursor = unpack_cursor
 
 local function unpack_str (c, n)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     local e = i+n-1
     if e > j or n < 0 then
@@ -568,6 +574,9 @@ local function unpack_map (c, n)
 end
 
 local function unpack_float (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+3 > j then
         c:underflow(i+3)
@@ -599,6 +608,9 @@ local function unpack_float (c)
 end
 
 local function unpack_double (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+7 > j then
         c:underflow(i+7)
@@ -630,6 +642,9 @@ local function unpack_double (c)
 end
 
 local function unpack_uint8 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i > j then
         c:underflow(i)
@@ -641,6 +656,9 @@ local function unpack_uint8 (c)
 end
 
 local function unpack_uint16 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+1 > j then
         c:underflow(i+1)
@@ -652,6 +670,9 @@ local function unpack_uint16 (c)
 end
 
 local function unpack_uint32 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+3 > j then
         c:underflow(i+3)
@@ -663,6 +684,9 @@ local function unpack_uint32 (c)
 end
 
 local function unpack_uint64 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+7 > j then
         c:underflow(i+7)
@@ -674,6 +698,9 @@ local function unpack_uint64 (c)
 end
 
 local function unpack_int8 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i > j then
         c:underflow(i)
@@ -689,6 +716,9 @@ local function unpack_int8 (c)
 end
 
 local function unpack_int16 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+1 > j then
         c:underflow(i+1)
@@ -704,6 +734,9 @@ local function unpack_int16 (c)
 end
 
 local function unpack_int32 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+3 > j then
         c:underflow(i+3)
@@ -719,6 +752,9 @@ local function unpack_int32 (c)
 end
 
 local function unpack_int64 (c)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     if i+7 > j then
         c:underflow(i+7)
@@ -738,6 +774,9 @@ function m.build_ext (tag, data)
 end
 
 local function unpack_ext (c, n, tag)
+    if c.i > math.floor(maxinteger / 2) then
+        c:discard(math.floor(maxinteger / 4))
+    end
     local s, i, j = c.s, c.i, c.j
     local e = i+n-1
     if e > j or n < 0 then
@@ -809,6 +848,17 @@ local function cursor_string (str)
         underflow = function ()
                         error "missing bytes"
                     end,
+        discard = function (self, e)
+                      -- Discard the first e bytes of the message. Useful when
+                      -- unpacking large messages, to avoid consumed data
+                      -- tracking issues due to integer precission
+                      if e >= self.i then
+                          error("Discarding " .. tostring(e) .. " bytes while just "  .. tostring(self.i - 1) .. " has been consumed")
+                      end
+                      self.s = self.s:sub(e + 1)
+                      self.i = self.i - e
+                      self.j = #self.s
+                  end,
     }
 end
 
@@ -831,6 +881,17 @@ local function cursor_loader (ld)
                             self.j = #self.s
                         end
                     end,
+        discard = function (self, e)
+                      -- Discard the first e bytes of the message. Useful when
+                      -- unpacking large messages, to avoid consumed data
+                      -- tracking issues due to integer precission
+                      if e >= self.i then
+                          error("Discarding " .. tostring(e) .. " bytes while just "  .. tostring(self.i - 1) .. " has been consumed")
+                      end
+                      self.s = self.s:sub(e + 1)
+                      self.i = self.i - e
+                      self.j = #self.s
+                  end,
     }
 end
 
@@ -839,7 +900,7 @@ function m.unpack (s)
     local cursor = cursor_string(s)
     local data = unpack_cursor(cursor)
     if cursor.i <= cursor.j then
-        error "extra bytes"
+        error ("extra bytes (" .. tostring(cursor.i) .. " vs. " .. tostring(cursor.j) .. ")")
     end
     return data
 end
