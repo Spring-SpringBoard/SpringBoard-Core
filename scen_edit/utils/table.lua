@@ -154,3 +154,19 @@ function Table.Contains(t, value)
     end
     return false
 end
+
+-- very simple (and probably inefficient) implementation of unique()
+function Table.Unique(t)
+    -- Use values as keys in a new table (to guarantee uniqueness)
+    local valueKeys = {}
+    for _, v in pairs(t) do
+        valueKeys[v] = true
+    end
+
+    -- convert it back to a normal array-like table
+    local values = {}
+    for k, _ in pairs(valueKeys) do
+        table.insert(values, k)
+    end
+    return values
+end

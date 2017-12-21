@@ -172,6 +172,10 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         PasteAction():execute()
     elseif key == KEYSYMS.A and mods.ctrl then
         SelectAllAction():execute()
+    elseif key == KEYSYMS.T and mods.ctrl and mods.shift then
+        SelectSameTypeInViewAction():execute()
+    elseif key == KEYSYMS.T and mods.ctrl then
+        SelectSameTypeAction():execute()
     else
         return false
     end

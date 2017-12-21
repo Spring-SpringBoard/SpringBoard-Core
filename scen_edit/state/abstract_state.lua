@@ -75,7 +75,7 @@ function AbstractState:KeyPress(key, mods, isRepeat, label, unicode)
     elseif key == KEYSYMS.I and mods.ctrl then
         ImportAction():execute()
 	elseif key == KEYSYMS.N and mods.ctrl then
-		-- FIXME: New project is disabled until engine is updated.
+		-- FIXME: Full new project support needs an engine update.
 		NewAction():execute()
     else
         return false
