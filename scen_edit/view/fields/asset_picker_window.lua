@@ -6,7 +6,11 @@ function AssetPickerWindow:init(opts)
     Editor.init(self, opts)
 
     local rootDir = opts.rootDir
-    local dir = Path.ExtractDir(opts.path or '/')
+    local dir = Path.ExtractDir(opts.path or
+        SB.model.assetsManager:ToSpringPath(
+            rootDir,
+            SB.model.game.defaultAssetsFolder
+        ))
     local OnSelectItem = opts.OnSelectItem or {}
     if rootDir then
         dir = SB.model.assetsManager:ToAssetPath(rootDir, dir)

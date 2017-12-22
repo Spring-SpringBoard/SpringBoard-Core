@@ -26,9 +26,19 @@ local function SplitPath(dir, assetFolderName)
     return dirAsset, dirPath
 end
 
--- FIXME: do proper asset -> spring conversion
 function AssetsManager:ToSpringPath(rootDir, assetPath)
-    local path = assetPath
+
+    local assetDir = ""
+    local assetRemaining = ""
+    local fsplit = assetPath:find("/")
+    if not fsplit then
+        assetDir = assetPath
+    else
+        assetDir = assetPath:sub(1, fsplit)
+        assetRemaining = assetPath:sub(fsplit+2)
+    end
+
+    local path = Path.Join(SB_ASSETS_DIR, assetDir, rootDir, assetRemaining)
     Log.Debug("[assets_manager] :ToSpringPath()", rootDir, assetPath)
     return path
 end
