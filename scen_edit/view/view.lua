@@ -38,6 +38,7 @@ function View:init()
     self.bottomBar = BottomBar()
     self.teamSelector = TeamSelector()
     self.lobbyButton = LobbyButton()
+    self.exitButton = ExitButton()
     self.projectStatus = ProjectStatus()
 end
 

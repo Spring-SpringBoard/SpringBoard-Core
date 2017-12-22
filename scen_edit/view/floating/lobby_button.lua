@@ -8,7 +8,7 @@ function LobbyButton:init()
 
     Spring.SendLuaMenuMsg("disableLobbyButton")
     self.btnMenu = Button:New {
-        x = 5,
+        x = 110,
         y = 35,
         width = 100,
         height = 50,
