@@ -285,7 +285,12 @@ function _ObjectS11N:_SetField(objectID, name, value)
 end
 
 function _ObjectS11N:_SetAllFields(objectID, object)
-    local values = {}
+    if object.rot then
+        -- If we can set Rotation attribute, let's do that as soon as possible.
+        -- In that way we are safe of assertion errors, and eventually fix
+        -- errors due to the rotation reset position related engine bug
+        self:_SetField(objectID, "rot", object.rot)
+    end
     for name, value in pairs(object) do
         if self.setFuncs[name] ~= nil then
             self:_SetField(objectID, name, value)
