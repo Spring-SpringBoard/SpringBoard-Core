@@ -3,7 +3,11 @@ LoadModelCommand.className = "LoadModelCommand"
 
 function LoadModelCommand:init(modelString)
     self.className = "LoadModelCommand"
-    self.modelString = modelString
+    -- Since the introduction of the data packing/unpacking, is much more
+    -- efficient passing tables than strings
+    if modelString then
+        self.mission = loadstring(modelString)()
+    end
 end
 
 function LoadModelCommand:execute()
@@ -15,6 +19,5 @@ end
 
 function LoadModelCommand:Load()
     Log.Notice("Loading model...")
-    local mission = loadstring(self.modelString)()
-    SB.model:Load(mission)
+    SB.model:Load(self.mission)
 end
