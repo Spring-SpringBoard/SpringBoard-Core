@@ -1333,6 +1333,17 @@ return {
                     end,
                 })
 
+                table.insert(functions, {
+                    humanName = type.humanName .. " array empty",
+                    name = arrayType .. "_EMPTY",
+                    input = arrayType,
+                    output = "bool",
+                    tags = {"Array"},
+                    execute = function(input)
+                        return #input[arrayType] == 0
+                    end,
+                })
+
                 -- Higher order functions
 
                 table.insert(functions, {
