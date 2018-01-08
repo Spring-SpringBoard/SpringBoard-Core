@@ -99,4 +99,5 @@ function Model:LoadGameSettings()
         _game = _game()
         self.game = _game
     end)
+    self.game.defaultAssetsFolder = self.game.defaultAssetsFolder or "core/"
 end
