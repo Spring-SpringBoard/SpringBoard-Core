@@ -124,7 +124,6 @@ function AreasWindow:Populate()
                 function()
                     local cmd = RemoveObjectCommand(areaBridge.name,
                                                     areaID)
-                    -- local cmd = RemoveAreaCommand(areaID)
                     SB.commandManager:execute(cmd)
                 end
             },
