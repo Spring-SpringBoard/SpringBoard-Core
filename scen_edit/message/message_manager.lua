@@ -5,11 +5,21 @@ function MessageManager:init()
     self.messageIDCount = 0
     self.callbacks = {}
     self.__isWidget = Script.GetName() == "LuaUI"
+    self.pack = true
+    if self.pack then
+      self.packer = VFS.Include(LIBS_DIR .. "MessagePack.lua")
+    end
     self.compress = true
 end
 
 function MessageManager:__encodeToString(message)
-    local msg = table.show(message:serialize())
+    local serialized = message:serialize()
+    local msg
+    if self.__isWidget and self.pack then
+        msg = self.packer.pack(serialized)
+    else
+        msg = table.show(serialized)
+    end
     if self.__isWidget and self.compress then
         local newMsg = SB.ZlibCompress(msg)
         -- FIXME: obvious slowdown, but detects weird Spring bugs

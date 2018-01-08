@@ -57,6 +57,10 @@ function LoadProjectCommandWidget:execute()
     SB.commandManager:execute(LoadTextureCommand(texturePath), true)
     SB.commandManager:execute(LoadGUIStateCommand(guiState), true)
 
+    -- We don't need the stuff stored in the command classes anymore. Better
+    -- we clear that to make room for synced commands
+    collectgarbage()
+
     Log.Notice("Load complete.")
 end
 
