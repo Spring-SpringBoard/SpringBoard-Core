@@ -122,7 +122,9 @@ function AreasWindow:Populate()
             },
             OnClick = {
                 function()
-                    local cmd = RemoveAreaCommand(areaID)
+                    local cmd = RemoveObjectCommand(areaBridge.name,
+                                                    areaID)
+                    -- local cmd = RemoveAreaCommand(areaID)
                     SB.commandManager:execute(cmd)
                 end
             },
