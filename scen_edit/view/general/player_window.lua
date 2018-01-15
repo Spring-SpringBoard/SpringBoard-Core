@@ -83,6 +83,22 @@ function PlayerWindow:init(team)
         tooltip = "Team starting position",
     }))
 
+    local side_names, captions, i = {}, {}, 1
+    while Spring.GetSideData(i) ~= nil do
+        local side_name, _, caption = Spring.GetSideData(i)
+        side_names[i] = side_name
+        captions[i] = caption
+        i = i + 1
+    end
+    self:AddField(ChoiceField({
+        name = "side",
+        captions = captions,
+        items = side_names,
+        value = team.side,
+        tooltip = "Team side",
+        width = 400,
+    }))
+
     local children = {}
     table.insert(children,
         ScrollPanel:New {
@@ -112,6 +128,7 @@ function PlayerWindow:init(team)
         newTeam.energy      = self.fields["energy"].value or energy
         newTeam.energyMax   = self.fields["energyStorage"].value or energyMax
         newTeam.startPos    = self.fields["startPos"].value
+        newTeam.side        = self.fields["side"].value
         local cmd = UpdateTeamCommand(newTeam)
         SB.commandManager:execute(cmd)
     end)
