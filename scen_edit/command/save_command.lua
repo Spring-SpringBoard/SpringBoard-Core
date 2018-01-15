@@ -122,6 +122,7 @@ function SaveCommand.GenerateScript(dev)
                 TeamLeader = 0,
                 AllyTeam = team.allyTeam,
                 RGBColor = team.color.r .. " " .. team.color.g .. " " .. team.color.b,
+                Side = team.side,
             })
             if team.ai then
                 local aiShortName = "NullAI"
