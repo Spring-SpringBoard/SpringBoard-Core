@@ -123,35 +123,35 @@ function SaveCommand.GenerateScript(dev)
                 AllyTeam = team.allyTeam,
                 RGBColor = team.color.r .. " " .. team.color.g .. " " .. team.color.b,
             })
-        end
-        if team.ai then
-            local aiShortName = "NullAI"
-            local aiVersion = ""
-            if not dev then
-                -- TODO: Support other AIs for non-dev scripts
+            if team.ai then
+                local aiShortName = "NullAI"
+                local aiVersion = ""
+                if not dev then
+                    -- TODO: Support other AIs for non-dev scripts
+                end
+
+                table.insert(ais, {
+                    Name = team.name,
+                    Team = team.id - 1,
+                    ShortName = aiShortName,
+                    Version = aiVersion,
+
+                    IsFromDemo = false,
+                    Host = 0,
+                })
+            else
+                local spectator = false
+                if dev then
+                    spectator = true
+                end
+                table.insert(players, {
+                    Name = team.name,
+                    Team = team.id - 1,
+                    Spectator = spectator,
+
+                    IsFromDemo = true,
+                })
             end
-
-            table.insert(ais, {
-                Name = team.name,
-                Team = team.id - 1,
-                ShortName = aiShortName,
-                Version = aiVersion,
-
-                IsFromDemo = false,
-                Host = 0,
-            })
-        else
-            local spectator = false
-            if dev then
-                spectator = true
-            end
-            table.insert(players, {
-                Name = team.name,
-                Team = team.id - 1,
-                Spectator = spectator,
-
-                IsFromDemo = true,
-            })
         end
     end
 
