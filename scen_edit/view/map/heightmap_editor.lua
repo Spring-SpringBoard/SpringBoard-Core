@@ -132,7 +132,13 @@ function HeightmapEditor:init()
         title = "Height:",
         tooltip = "Goal height",
     }))
+    self:AddField(ChoiceField({
+        name = "applyDir",
+        items = {"Both", "Only Raise", "Only Lower"},
+        tooltip = "Whether terrain should be only lowered, raised or both.",
+    }))
     self:Update("size")
+    self:SetInvisibleFields("applyDir")
 
     local children = {
 		self.btnAddState,
@@ -161,10 +167,13 @@ end
 function HeightmapEditor:OnEnterState(state)
     local btn
     if state:is_A(TerrainShapeModifyState) then
+        self:SetInvisibleFields("applyDir")
         btn = self.btnAddState
     elseif state:is_A(TerrainSetState) then
+        self:SetInvisibleFields()
         btn = self.btnSetState
     elseif state:is_A(TerrainSmoothState) then
+        self:SetInvisibleFields("applyDir")
         btn = self.btnSmoothState
     end
     btn:SetPressedState(true)

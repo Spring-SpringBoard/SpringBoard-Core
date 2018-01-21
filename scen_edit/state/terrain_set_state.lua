@@ -3,9 +3,16 @@ TerrainSetState = AbstractHeightmapEditingState:extends{}
 function TerrainSetState:init(editorView)
     AbstractHeightmapEditingState.init(self, editorView)
     self.height = self.editorView.fields["height"].value
+    self.applyDir = self.editorView.fields["applyDir"].value
 end
 
+local applyDirIDs = {
+    ["Both"] = 0,
+    ["Only Raise"] = 1,
+    ["Only Lower"] = -1,
+}
 function TerrainSetState:GetCommand(x, z, strength)
+    local applyDirID = applyDirIDs[self.applyDir]
     return TerrainLevelCommand({
         x = x + self.size/2,
 		z = z + self.size/2,
@@ -13,6 +20,7 @@ function TerrainSetState:GetCommand(x, z, strength)
         shapeName = self.patternTexture,
         rotation = self.rotation,
         height = self.height,
+        applyDirID = applyDirID,
 
         strength = strength,
     })
