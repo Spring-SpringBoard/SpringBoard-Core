@@ -114,7 +114,7 @@ function StartScript.GenerateScriptTxt(opts)
             local allyTeamInfo = Spring.GetAllyTeamInfo(allyTeamID)
             if allyTeamInfo.numallies then -- this should filter out the gaia ally team
                 table.insert(allyTeams, {
-                    NumAllies = 0,
+                    NumAllies = allyTeamInfo.numallies,
                 })
             end
         end
