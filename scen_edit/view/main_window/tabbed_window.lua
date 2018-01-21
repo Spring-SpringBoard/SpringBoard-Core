@@ -29,90 +29,6 @@ function TabbedWindow:init()
 			height = 40,
 			width = 40,
 			caption = '',
-			tooltip = "Reload meta model",
-			OnClick = {
-				function()
-					ReloadAction():execute()
-				end
-			},
-			children = {
-				Image:New {
-					file = SB_IMG_DIR .. "recycle.png",
-					height = 20,
-					width = 20,
-					margin = {0, 0, 0, 0},
-					x = 0,
-				},
-			},
-		},
-		Button:New {
-			y = mainPanelY,
-			height = 40,
-			width = 40,
-			caption = '',
-			tooltip = "Copy (Ctrl+C)",
-			OnClick = {
-				function()
-					CopyAction():execute()
-				end
-			},
-			children = {
-				Image:New {
-					file = SB_IMG_DIR .. "copy.png",
-					height = 20,
-					width = 20,
-					margin = {0, 0, 0, 0},
-					x = 0,
-				},
-			},
-		},
-		Button:New {
-			y = mainPanelY,
-			height = 40,
-			width = 40,
-			caption = '',
-			tooltip = "Cut (Ctrl+X)",
-			OnClick = {
-				function()
-					CutAction():execute()
-				end
-			},
-			children = {
-				Image:New {
-					file = SB_IMG_DIR .. "scissors-rotated.png",
-					height = 20,
-					width = 20,
-					margin = {0, 0, 0, 0},
-					x = 0,
-				},
-			},
-		},
-		Button:New {
-			y = mainPanelY,
-			height = 40,
-			width = 40,
-			caption = '',
-			tooltip = "Paste (Ctrl+V)",
-			OnClick = {
-				function()
-					PasteAction():execute()
-				end
-			},
-			children = {
-				Image:New {
-					file = SB_IMG_DIR .. "stabbed-note.png",
-					height = 20,
-					width = 20,
-					margin = {0, 0, 0, 0},
-					x = 0,
-				},
-			},
-		},
-		Button:New {
-			y = mainPanelY,
-			height = 40,
-			width = 40,
-			caption = '',
 			tooltip = "Save project (Ctrl+S)",
 			OnClick = {
 				function()
@@ -206,6 +122,90 @@ function TabbedWindow:init()
 			children = {
 				Image:New {
 					file = SB_IMG_DIR .. "open-folder.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Reload meta model",
+			OnClick = {
+				function()
+					ReloadAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "recycle.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Copy (Ctrl+C)",
+			OnClick = {
+				function()
+					CopyAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "copy.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Cut (Ctrl+X)",
+			OnClick = {
+				function()
+					CutAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "scissors-rotated.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "Paste (Ctrl+V)",
+			OnClick = {
+				function()
+					PasteAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "stabbed-note.png",
 					height = 20,
 					width = 20,
 					margin = {0, 0, 0, 0},
