@@ -122,13 +122,16 @@ local function _GenerateTeams()
 
         team.name = tostring(teamID)
 
-        local aiID, _, _, name = Spring.GetAIInfo(teamID)
+        local aiID, name, _, shortname = Spring.GetAIInfo(teamID)
+        local _, leader, _, _, side, allyTeam = Spring.GetTeamInfo(teamID)
         if aiID ~= nil then
-            team.name = team.name .. ": " .. name
+            team.name = name
             team.ai = true -- TODO: maybe get the exact AI as well?
+        else
+            if Spring.GetPlayerInfo(leader) then
+                team.name, _ = Spring.GetPlayerInfo(leader)
+            end
         end
-
-        local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(teamID)
         team.allyTeam = allyTeam
         team.side = side
 
