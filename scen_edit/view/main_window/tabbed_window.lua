@@ -4,7 +4,27 @@ function TabbedWindow:init()
 	local mainPanelY = 130
 	local commonControls = {
 		Button:New {
-			x = 10,
+			y = mainPanelY,
+			height = 40,
+			width = 40,
+			caption = '',
+			tooltip = "New project",
+			OnClick = {
+				function()
+					NewAction():execute()
+				end
+			},
+			children = {
+				Image:New {
+					file = SB_IMG_DIR .. "file.png",
+					height = 20,
+					width = 20,
+					margin = {0, 0, 0, 0},
+					x = 0,
+				},
+			},
+		},
+		Button:New {
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -26,7 +46,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 50,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -48,7 +67,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 90,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -70,7 +88,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 130,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -92,7 +109,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 170,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -114,7 +130,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x =  210,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -136,7 +151,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 250,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -158,7 +172,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 290,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -180,7 +193,6 @@ function TabbedWindow:init()
 			},
 		},
 		Button:New {
-			x = 330,
 			y = mainPanelY,
 			height = 40,
 			width = 40,
@@ -202,6 +214,10 @@ function TabbedWindow:init()
 			},
 		},
 	}
+	commonControls[1].x = 5
+	for i = 2, #commonControls do
+		commonControls[i].x = commonControls[i-1].x + 40 + 1
+	end
 
 	local controls = {}
 	if SB.conf.SHOW_BASIC_CONTROLS then
