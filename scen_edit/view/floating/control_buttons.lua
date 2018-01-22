@@ -31,6 +31,28 @@ function ControlButtons:init(parent)
             end
         }
     }
+    self.btnShowToggle = Button:New {
+        caption = '',
+        tooltip='Toggle editor display',
+        y = 5,
+        x = 60,
+        height = 35,
+        width = 35,
+        -- backgroundColor = SB.conf.BTN_ADD_COLOR,
+        OnClick = {
+            function()
+                SB.view:SetVisible(not SB.view.__visible)
+            end
+        },
+        children = {
+            Image:New {
+                file = SB_IMG_DIR .. "trigger-inspect.png",
+                height = SB.conf.B_HEIGHT - 2 - 3,
+                width = SB.conf.B_HEIGHT - 2 - 3,
+                margin = {0, 0, 0, 0},
+            }
+        },
+    }
     self:UpdateStartStopButton()
 
     local x
@@ -61,10 +83,11 @@ function ControlButtons:init(parent)
         y = y,
         bottom = bottom,
         right = right,
-        width = 70,
+        width = 150,
         height = 70,
         children = {
             self.btnStartStop,
+            self.btnShowToggle
         }
     }
 
