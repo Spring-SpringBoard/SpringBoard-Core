@@ -35,7 +35,6 @@ return {
                         },
                     },
                     execute = function(input)
-                        --local unitModelID = SB.model.unitManager:getModelUnitID(input.unit)
                         local newValue = SB.deepcopy(input.variable)
                         newValue.value.value = input[type.name]
                         SB.model.variableManager:setVariable(input.variable.id, newValue)
@@ -254,7 +253,7 @@ return {
                     local color = SB.model.teamManager:getTeam(team).color
                     SB.displayUtil:displayText("Spawned", {x, y, z}, color )
 
-                    return { unit = SB.model.unitManager:getModelUnitID(id) }
+                    return { unit = unitBridge.s11n:GetModelID(id) }
                 end
             },
             {
@@ -394,7 +393,7 @@ return {
                     local color = SB.model.teamManager:getTeam(team).color
                     SB.displayUtil:displayText("Spawned", {x, y, z}, color)
 
-                    return { feature = SB.model.featureManager:getModelFeatureID(id) }
+                    return { feature = featureBridge.s11n:GetModelID(id) }
                 end
             },
             {
