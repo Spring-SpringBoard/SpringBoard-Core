@@ -120,20 +120,17 @@ local function _GenerateTeams()
         local team = { id = teamID }
         table.insert(teams, team)
 
+        -- Temporal name. We are later using the unsynced version.
+        -- See team_sync.lua
         team.name = tostring(teamID)
 
-        local aiID, name, _, shortname = Spring.GetAIInfo(teamID)
-        local _, leader, _, _, side, allyTeam = Spring.GetTeamInfo(teamID)
+        local aiID, _, _, _ = Spring.GetAIInfo(teamID)
         if aiID ~= nil then
-            team.name = name
             team.ai = true -- TODO: maybe get the exact AI as well?
-        else
-            if Spring.GetPlayerInfo(leader) then
-                team.name, _ = Spring.GetPlayerInfo(leader)
-            end
         end
-        team.allyTeam = allyTeam
+        local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(teamID)
         team.side = side
+        team.allyTeam = allyTeam
 
         team.gaia = gaiaTeamID == teamID
         if team.gaia then

@@ -82,6 +82,19 @@ function TeamManagerListenerWidget:onTeamAdded(teamID)
         return
     end
 
+    -- Setup the team names from unsynced side (Apparently those makes more
+    -- sense than synced ones).
+    local aiID, name, _, shortname = Spring.GetAIInfo(teamID)
+    if aiID ~= nil then
+        team.name = name
+    else
+        local _, leader, _, _, _, _ = Spring.GetTeamInfo(teamID)
+        if Spring.GetPlayerInfo(leader) then
+            team.name, _ = Spring.GetPlayerInfo(leader)
+        end
+    end
+
+    
     -- use our unsynced color
     local r, g, b = Spring.GetTeamColor(teamID)
     team.color = {r=r, g=g, b=b}
