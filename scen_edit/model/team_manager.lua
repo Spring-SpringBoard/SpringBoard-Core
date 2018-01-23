@@ -124,7 +124,7 @@ local function _GenerateTeams()
         -- See team_sync.lua
         team.name = tostring(teamID)
 
-        local aiID, _, _, _ = Spring.GetAIInfo(teamID)
+        local aiID = Spring.GetAIInfo(teamID)
         if aiID ~= nil then
             team.ai = true -- TODO: maybe get the exact AI as well?
         end
