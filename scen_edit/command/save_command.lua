@@ -117,41 +117,44 @@ function SaveCommand.GenerateScript(dev)
     local players = {}
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         if not team.gaia then
-            table.insert(teams, {
+            -- We wanna preserve the team ids, so better using teams as a
+            -- map/dictionary, where the keys are the teams ids
+            teams[team.id] = {
                 -- TeamID = team.id, ID is implicit as index-1
                 TeamLeader = 0,
                 AllyTeam = team.allyTeam,
                 RGBColor = team.color.r .. " " .. team.color.g .. " " .. team.color.b,
-            })
-        end
-        if team.ai then
-            local aiShortName = "NullAI"
-            local aiVersion = ""
-            if not dev then
-                -- TODO: Support other AIs for non-dev scripts
+                Side = team.side,
+            }
+            if team.ai then
+                local aiShortName = "NullAI"
+                local aiVersion = ""
+                if not dev then
+                    -- TODO: Support other AIs for non-dev scripts
+                end
+
+                table.insert(ais, {
+                    Name = team.name,
+                    Team = team.id,
+                    ShortName = aiShortName,
+                    Version = aiVersion,
+
+                    IsFromDemo = false,
+                    Host = 0,
+                })
+            else
+                local spectator = false
+                if dev then
+                    spectator = true
+                end
+                table.insert(players, {
+                    Name = team.name,
+                    Team = team.id,
+                    Spectator = spectator,
+
+                    IsFromDemo = true,
+                })
             end
-
-            table.insert(ais, {
-                Name = team.name,
-                Team = team.id - 1,
-                ShortName = aiShortName,
-                Version = aiVersion,
-
-                IsFromDemo = false,
-                Host = 0,
-            })
-        else
-            local spectator = false
-            if dev then
-                spectator = true
-            end
-            table.insert(players, {
-                Name = team.name,
-                Team = team.id - 1,
-                Spectator = spectator,
-
-                IsFromDemo = true,
-            })
         end
     end
 
