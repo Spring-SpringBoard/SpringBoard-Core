@@ -553,7 +553,7 @@ function SB.TraceScreenRay(x, y, opts)
     local selType = opts.type
 
     local traceType, value
-    if selType ~= "unit" and selType ~= "feature" then
+    if selType ~= nil and selType ~= "unit" and selType ~= "feature" then
         traceType, value = Spring.TraceScreenRay(x, y, true, useMinimap, includeSky, ignoreWater, D)
     else
         traceType, value = Spring.TraceScreenRay(x, y, onlyCoords, useMinimap, includeSky, ignoreWater, D)
