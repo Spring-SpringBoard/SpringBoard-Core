@@ -670,7 +670,7 @@ return {
                 local compareCond = {
                     humanName = "Compare " .. basicType.name,
                     name = "compare_" .. basicType.name,
-                    tags = {"Compare"},
+                    tags = {String.Capitalize(basicType.name)},
                     input = {
                         {
                             name = "first",
@@ -983,7 +983,7 @@ return {
                 humanName = "All units",
                 name = "ALL_UNITS",
                 output = "unit_array",
-                tags = {"Units"},
+                tags = {"Unit"},
                 execute = function()
                     return Spring.GetAllUnits()
                 end
@@ -993,7 +993,7 @@ return {
                 name = "TEAM_UNITS",
                 input = "team",
                 output = "unit_array",
-                tags = {"Units"},
+                tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetTeamUnits(input.team)
                 end
@@ -1003,7 +1003,7 @@ return {
                 name = "TEAM_UNITS_BY_TYPE",
                 input = { "team", "unitType" },
                 output = "unit_array",
-                tags = {"Units"},
+                tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetTeamUnitsByDefs(input.team, input.unitType)
                 end
@@ -1013,7 +1013,7 @@ return {
                 name = "UNITS_IN_AREA",
                 input = "area",
                 output = "unit_array",
-                tags = {"Units"},
+                tags = {"Unit"},
                 execute = function(input)
                     return Spring.GetUnitsInRectangle(unpack(input.area))
                 end,
@@ -1170,7 +1170,7 @@ return {
                 humanName = "All features",
                 name = "ALL_FEATURES",
                 output = "feature_array",
-                tags = {"FEATURES"},
+                tags = {"Feature"},
                 execute = function()
                     return Spring.GetAllFeatures()
                 end
@@ -1180,7 +1180,7 @@ return {
                 name = "FEATURES_IN_AREA",
                 input = "area",
                 output = "feature_array",
-                tags = {"Features"},
+                tags = {"Feature"},
                 execute = function(input)
                     return Spring.GetFeaturesInRectangle(unpack(input.area))
                 end,
@@ -1231,7 +1231,7 @@ return {
                 name = "FEATURE_IS_IN_AREA",
                 input = { "area", "feature" },
                 output = "bool",
-                tags = {"Features"},
+                tags = {"Feature"},
                 execute = function(input)
                     local features = Spring.GetFeaturesInRectangle(unpack(input.area))
                     for _, id in pairs(features) do
