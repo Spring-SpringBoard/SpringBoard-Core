@@ -36,16 +36,16 @@ function AbstractState:KeyPress(key, mods, isRepeat, label, unicode)
         return false
     end
 
+	if key == KEYSYMS.ESCAPE and not self:is_A(DefaultState) then
+		SB.stateManager:SetState(DefaultState())
+		return true
+	end
+
 	local editor = self:__GetEditor()
 	if editor and not editor.window.__disabled then
 		if editor:KeyPress(key, mods, isRepeat, label, unicode) then
 			return true
 		end
-	end
-
-	if key == KEYSYMS.ESCAPE then
-		SB.stateManager:SetState(DefaultState())
-		return true
 	end
 
 	if key == KEYSYMS.TAB then

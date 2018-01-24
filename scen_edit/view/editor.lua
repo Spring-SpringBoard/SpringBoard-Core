@@ -161,6 +161,10 @@ function Editor:Finalize(children, opts)
             OnOrphan = OnHide,
         }
         self.keyListener = function(key)
+            local currentState = SB.stateManager:GetCurrentState()
+            if not currentState:is_A(DefaultState) then
+                return
+            end
             if key == Spring.GetKeyCode("esc") then
                 self:__MaybeClose()
                 return true
