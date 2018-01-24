@@ -63,12 +63,26 @@ end
 
 function TriggersWindow:AddTrigger()
     local trigger = {
-        name = "New trigger",
         events = {},
         conditions = {},
         actions = {},
         enabled = true,
     }
+    -- generate new trigger name
+    local triggers = Table.SortByAttr(SB.model.triggerManager:getAllTriggers(), "name")
+    for i = 1, math.huge do
+        trigger.name = "Trigger " .. tostring(i)
+        local found = false
+        for _, t in pairs(triggers) do
+            if t.name == trigger.name then
+                found = true
+                break
+            end
+        end
+        if not found then
+            break
+        end
+    end
     self:MakeTriggerWindow(trigger, false)
 --[[    local newTrigger = model:NewTrigger()
     self:Populate()
