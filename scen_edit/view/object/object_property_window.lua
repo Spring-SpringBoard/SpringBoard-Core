@@ -408,7 +408,7 @@ function NewRuleDialog:init(objectPropertyWindow)
         x = 1,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_OK_COLOR,
+        classname = "option_button",
         OnClick = {
             function()
                 local ruleName = self.fields["ruleName"].value

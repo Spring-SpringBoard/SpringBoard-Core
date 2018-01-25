@@ -30,7 +30,7 @@ function AbstractTriggerElementWindow:init(opts)
         width = "40%",
         x = 10,
         y = 20,
-        backgroundColor = SB.conf.BTN_OK_COLOR,
+        classname = "option_button",
     }
     self.btnCancel = Button:New {
         caption = "Cancel",

@@ -34,7 +34,7 @@ function TriggerWindow:init(trigger)
         x = 1,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_ADD_COLOR,
+        classname = "positive_button",
         tooltip = "Add event",
     }
     local btnAddCondition = Button:New {
@@ -43,7 +43,7 @@ function TriggerWindow:init(trigger)
         x = 120,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_ADD_COLOR,
+        classname = "positive_button",
         tooltip = "Add condition",
     }
     local btnAddAction = Button:New {
@@ -52,7 +52,7 @@ function TriggerWindow:init(trigger)
         x = 250,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_ADD_COLOR,
+        classname = "positive_button",
         tooltip = "Add action",
     }
     local btnOK = Button:New {
@@ -61,7 +61,7 @@ function TriggerWindow:init(trigger)
         x = 370,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_OK_COLOR,
+        classname = "option_button",
         OnClick = {
             function()
                 self:ConfirmDialog()
@@ -74,7 +74,7 @@ function TriggerWindow:init(trigger)
         x = 480,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
+        classname = "negative_button",
         OnClick={function() self.window:Dispose() end}
     }
 
@@ -100,7 +100,7 @@ function TriggerWindow:init(trigger)
     table.insert(children,
         ScrollPanel:New {
             x = 0,
-            y = 90,
+            y = 50,
             bottom = 30,
             right = 0,
             borderColor = {0,0,0,0},

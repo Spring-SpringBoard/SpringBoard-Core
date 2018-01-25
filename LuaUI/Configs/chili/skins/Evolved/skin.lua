@@ -213,41 +213,28 @@ skin.button_square = {
   DrawControl = DrawMyButton,
 }
 
-skin.button_planet = {
-  TileImageBK = ":cl:tech_button_circle_bk.png",
-  TileImageFG = ":cl:tech_button_circle_fg.png",
-  tiles = {32, 32, 32, 32}, --// tile widths: left,top,right,bottom
-  padding = {0, 0, 0, 0},
-
-  backgroundColor = {0, 0, 0, 0},
-  focusColor  = {0.94, 0.50, 0.23, 0.4},
-  borderColor = {1,1,1,0},
-
-  DrawControl = DrawMyButton,
-}
-
-skin.action_button = {
-  TileImageBK = ":cl:tech_button_bright_small_bk.png",
-  TileImageFG = ":cl:tech_button_bright_small_fg.png",
-  tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
-  padding = {10, 10, 10, 10},
-
-  backgroundColor = {0.98, 0.48, 0.26, 0.65},
-  focusColor  = {0.98, 0.48, 0.26, 0.9},
-  borderColor = {0.98, 0.48, 0.26, 0.15},
-
-  DrawControl = DrawMyButton,
-}
-
 skin.option_button = {
   TileImageBK = ":cl:tech_button_bright_small_bk.png",
   TileImageFG = ":cl:tech_button_bright_small_fg.png",
   tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
   padding = {10, 10, 10, 10},
 
-  backgroundColor = {0.21, 0.53, 0.60, 0.65},
-  focusColor  = {0.21, 0.53, 0.60, 0.9},
-  borderColor = {0.21, 0.53, 0.60, 0.15},
+  backgroundColor = {0.1, 0.8, 1.0, 0.7},
+  focusColor      = {0.1, 0.8, 1.0, 1.0},
+  borderColor     = {0.21, 0.53, 0.60, 0.15},
+
+  DrawControl = DrawMyButton,
+}
+
+skin.positive_button = {
+  TileImageBK = ":cl:tech_button_bright_small_bk.png",
+  TileImageFG = ":cl:tech_button_bright_small_fg.png",
+  tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
+  padding = {10, 10, 10, 10},
+
+  backgroundColor = {0.36, 0.72, 0.36, 0.7},
+  focusColor      = {0.36, 0.72, 0.36, 1.0},
+  borderColor     = {0.98, 0.48, 0.26, 0.15},
 
   DrawControl = DrawMyButton,
 }
@@ -258,9 +245,9 @@ skin.negative_button = {
   tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
   padding = {10, 10, 10, 10},
 
-  backgroundColor = {0.85, 0.05, 0.25, 0.65},
-  focusColor  = {0.85, 0.05, 0.25, 0.9},
-  borderColor = {0.85, 0.05, 0.25, 0.15},
+  backgroundColor = {0.85, 0.05, 0.25, 0.7},
+  focusColor      = {0.85, 0.05, 0.25, 1.0},
+  borderColor     = {0.85, 0.05, 0.25, 0.15},
 
   DrawControl = DrawMyButton,
 }
