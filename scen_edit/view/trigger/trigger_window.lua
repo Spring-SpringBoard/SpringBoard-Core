@@ -12,6 +12,11 @@ function TriggerWindow:init(trigger)
     self.openedConditionNodes = {}
     self.openedActionNodes = {}
 
+
+    self.showEvents = true
+    self.showConditions = true
+    self.showActions = true
+
     self:AddField(StringField({
         name = "name",
         title = "Name:",
@@ -130,162 +135,216 @@ function TriggerWindow:ConfirmDialog()
     self.window:Dispose()
 end
 
+function TriggerWindow:_AddSectionHeader(opts)
+    local title = opts.title
+    local icon = opts.icon
+    local AddFunction = opts.AddFunction
+    local ToggleShowFunction = opts.ToggleShowFunction
+
+    local headerPanel = Control:New {
+        width = "100%",
+        height = 50,
+        parent = self._triggerPanel,
+        padding = {0, 0, 0, 0},
+    }
+    local captionWidth = headerPanel.font:GetTextWidth(title)
+    local btnAdd = Button:New {
+        parent = headerPanel,
+        x = captionWidth + 20,
+        y = 2,
+        height = 24,
+        width = 72,
+        caption = "Add",
+        OnClick = {AddFunction},
+    }
+
+    local btnToggleDisplay = Button:New {
+        parent = headerPanel,
+        width = "100%",
+        height = 30,
+        caption = title,
+        align = "left",
+        valign = "center",
+        OnClick = {ToggleShowFunction},
+    }
+end
+
 function TriggerWindow:Populate()
     self._triggerPanel:ClearChildren()
-    local eventLabel = Label:New {
-        caption = "- Events -",
-        height = SB.conf.C_HEIGHT,
-        align = 'center',
-        parent = self._triggerPanel,
-    }
-    for i = 1, #self.trigger.events do
-        local event = self.trigger.events[i]
-        local stackEventPanel = MakeComponentPanel(self._triggerPanel)
-        local btnEditEvent = Button:New {
-            caption = SB.model.triggerManager:GetSafeEventHumanName(trigger, event),
-            right = SB.conf.B_HEIGHT + 10,
-            x = 1,
-            height = SB.conf.B_HEIGHT,
-            parent = stackEventPanel,
-            tooltip = "Edit event",
-            OnClick = {function() self:MakeEditEventWindow(event) end},
-        }
-        local btnRemoveEvent = Button:New {
-            caption = "",
-            right = 0,
-            width = SB.conf.B_HEIGHT,
-            height = SB.conf.B_HEIGHT,
-            parent = stackEventPanel,
-            padding = {2, 2, 2, 2},
-            tooltip = "Remove event",
-            classname = "negative_button",
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
-                    height = "100%",
-                    width = "100%",
-                },
-            },
-            tooltip = "Remove event",
-            OnClick = {function() self:MakeRemoveEventWindow(event, i) end}
-        }
+    do -- Events
+        self:_AddSectionHeader({
+            title = "Events",
+            icon = "",
+            AddFunction = function() self:MakeAddEventWindow() end,
+            ToggleShowFunction = function()
+                self.showEvents = not self.showEvents
+                self:Populate()
+            end
+        })
+        if self.showEvents then
+            for i = 1, #self.trigger.events do
+                local event = self.trigger.events[i]
+                local stackEventPanel = MakeComponentPanel(self._triggerPanel)
+                local btnEditEvent = Button:New {
+                    caption = SB.model.triggerManager:GetSafeEventHumanName(trigger, event),
+                    right = SB.conf.B_HEIGHT + 10,
+                    x = 1,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackEventPanel,
+                    tooltip = "Edit event",
+                    OnClick = {function() self:MakeEditEventWindow(event) end},
+                }
+                local btnRemoveEvent = Button:New {
+                    caption = "",
+                    right = 0,
+                    width = SB.conf.B_HEIGHT,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackEventPanel,
+                    padding = {2, 2, 2, 2},
+                    tooltip = "Remove event",
+                    classname = "negative_button",
+                    children = {
+                        Image:New {
+                            file = SB_IMG_DIR .. "cancel.png",
+                            height = "100%",
+                            width = "100%",
+                        },
+                    },
+                    tooltip = "Remove event",
+                    OnClick = {function() self:MakeRemoveEventWindow(event, i) end}
+                }
+            end
+        end
     end
-    local conditionLabel = Label:New {
-        caption = "- Conditions -",
-        height = SB.conf.C_HEIGHT,
-        align = 'center',
-        vlign = 'center',
-        parent = self._triggerPanel,
-    }
-    for i = 1, #self.trigger.conditions do
-        local condition = self.trigger.conditions[i]
-        local stackPanel = MakeComponentPanel(self._triggerPanel)
-        local conditionHumanName = SB.humanExpression(condition, "condition")
+    do -- Conditions
+        self:_AddSectionHeader({
+            title = "Conditions",
+            icon = "",
+            AddFunction = function() self:MakeAddConditionWindow() end,
+            ToggleShowFunction = function()
+                self.showConditions = not self.showConditions
+                self:Populate()
+            end
+        })
+        if self.showConditions then
+            for i = 1, #self.trigger.conditions do
+                local condition = self.trigger.conditions[i]
+                local stackPanel = MakeComponentPanel(self._triggerPanel)
+                local conditionHumanName = SB.humanExpression(condition, "condition")
 
-        local btnOpenSubNodes = Button:New {
-            caption = '+',
-            width = SB.conf.B_HEIGHT,
-            height = SB.conf.B_HEIGHT,
-            x = 1,
-            height = SB.conf.B_HEIGHT,
-            parent = stackPanel,
-            backgroundColor = {0, 0, 0, 0},
-            OnClick = {function()
-                self.openedConditionNodes[i] = not self.openedConditionNodes[i]
-                self:Populate()
-            end}
-        }
-        if self.openedConditionNodes[i] then
-            btnOpenSubNodes:SetCaption('-')
-        end
-        local btnEditCondition = Button:New {
-            caption = conditionHumanName,
-            right = SB.conf.B_HEIGHT + 10,
-            x = SB.conf.B_HEIGHT + 5,
-            height = SB.conf.B_HEIGHT,
-            parent = stackPanel,
-            tooltip = "Edit condition",
-            OnClick = {function() self:MakeEditConditionWindow(condition) end}
-        }
-        local btnRemoveCondition = Button:New {
-            caption = "",
-            right = 0,
-            width = SB.conf.B_HEIGHT,
-            height = SB.conf.B_HEIGHT,
-            parent = stackPanel,
-            padding = {2, 2, 2, 2},
-            tooltip = "Remove condition",
-            classname = "negative_button",
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
-                    height = "100%",
-                    width = "100%",
-                },
-            },
-            OnClick = {function() self:MakeRemoveConditionWindow(condition, i) end}
-        }
-        local openedNodes = self.openedConditionNodes[i]
-        if openedNodes then
-            self:PopulateExpressions(condition, SB.metaModel.functionTypes[condition.typeName], 2, condition.typeName)
+                local btnOpenSubNodes = Button:New {
+                    caption = '+',
+                    width = SB.conf.B_HEIGHT,
+                    height = SB.conf.B_HEIGHT,
+                    x = 1,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackPanel,
+                    backgroundColor = {0, 0, 0, 0},
+                    OnClick = {function()
+                        self.openedConditionNodes[i] = not self.openedConditionNodes[i]
+                        self:Populate()
+                    end}
+                }
+                if self.openedConditionNodes[i] then
+                    btnOpenSubNodes:SetCaption('-')
+                end
+                local btnEditCondition = Button:New {
+                    caption = conditionHumanName,
+                    right = SB.conf.B_HEIGHT + 10,
+                    x = SB.conf.B_HEIGHT + 5,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackPanel,
+                    tooltip = "Edit condition",
+                    OnClick = {function() self:MakeEditConditionWindow(condition) end}
+                }
+                local btnRemoveCondition = Button:New {
+                    caption = "",
+                    right = 0,
+                    width = SB.conf.B_HEIGHT,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackPanel,
+                    padding = {2, 2, 2, 2},
+                    tooltip = "Remove condition",
+                    classname = "negative_button",
+                    children = {
+                        Image:New {
+                            file = SB_IMG_DIR .. "cancel.png",
+                            height = "100%",
+                            width = "100%",
+                        },
+                    },
+                    OnClick = {function() self:MakeRemoveConditionWindow(condition, i) end}
+                }
+                local openedNodes = self.openedConditionNodes[i]
+                if openedNodes then
+                    self:PopulateExpressions(condition, SB.metaModel.functionTypes[condition.typeName], 2, condition.typeName)
+                end
+            end
         end
     end
-    local actionLabel = Label:New {
-        caption = "- Actions -",
-        height = SB.conf.C_HEIGHT,
-        align = 'center',
-        parent = self._triggerPanel,
-    }
-    for i = 1, #self.trigger.actions do
-        local action = self.trigger.actions[i]
-        local stackActionPanel = MakeComponentPanel(self._triggerPanel)
-        local actionHumanName = SB.humanExpression(action, "action")
-        local btnOpenSubNodes = Button:New {
-            caption = '+',
-            width = SB.conf.B_HEIGHT,
-            height = SB.conf.B_HEIGHT,
-            x = 1,
-            height = SB.conf.B_HEIGHT,
-            parent = stackActionPanel,
-            backgroundColor = {0, 0, 0, 0},
-            OnClick = {function()
-                self.openedActionNodes[i] = not self.openedActionNodes[i]
+    do -- Actions
+        self:_AddSectionHeader({
+            title = "Actions",
+            icon = "",
+            AddFunction = function() self:MakeAddActionWindow() end,
+            ToggleShowFunction = function()
+                self.showActions = not self.showActions
                 self:Populate()
-            end}
-        }
-        if self.openedActionNodes[i] then
-            btnOpenSubNodes:SetCaption('-')
-        end
-        local btnEditAction = Button:New {
-            caption = actionHumanName,
-            right = SB.conf.B_HEIGHT + 10,
-            x = SB.conf.B_HEIGHT + 5,
-            height = SB.conf.B_HEIGHT,
-            parent = stackActionPanel,
-            tooltip = "Edit action",
-            OnClick = {function() self:MakeEditActionWindow(action) end}
-        }
-        local btnRemoveAction = Button:New {
-            caption = "",
-            right = 0,
-            width = SB.conf.B_HEIGHT,
-            height = SB.conf.B_HEIGHT,
-            parent = stackActionPanel,
-            padding = {2, 2, 2, 2},
-            tooltip = "Remove action",
-            classname = "negative_button",
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
-                    height = "100%",
-                    width = "100%",
-                },
-            },
-            OnClick = {function() self:MakeRemoveActionWindow(action, i) end},
-        }
-        local openedNodes = self.openedActionNodes[i]
-        if openedNodes then
-            self:PopulateExpressions(action, SB.metaModel.actionTypes[action.typeName], 2, action.typeName)
+            end
+        })
+        if self.showActions then
+            for i = 1, #self.trigger.actions do
+                local action = self.trigger.actions[i]
+                local stackActionPanel = MakeComponentPanel(self._triggerPanel)
+                local actionHumanName = SB.humanExpression(action, "action")
+                local btnOpenSubNodes = Button:New {
+                    caption = '+',
+                    width = SB.conf.B_HEIGHT,
+                    height = SB.conf.B_HEIGHT,
+                    x = 1,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackActionPanel,
+                    backgroundColor = {0, 0, 0, 0},
+                    OnClick = {function()
+                        self.openedActionNodes[i] = not self.openedActionNodes[i]
+                        self:Populate()
+                    end}
+                }
+                if self.openedActionNodes[i] then
+                    btnOpenSubNodes:SetCaption('-')
+                end
+                local btnEditAction = Button:New {
+                    caption = actionHumanName,
+                    right = SB.conf.B_HEIGHT + 10,
+                    x = SB.conf.B_HEIGHT + 5,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackActionPanel,
+                    tooltip = "Edit action",
+                    OnClick = {function() self:MakeEditActionWindow(action) end}
+                }
+                local btnRemoveAction = Button:New {
+                    caption = "",
+                    right = 0,
+                    width = SB.conf.B_HEIGHT,
+                    height = SB.conf.B_HEIGHT,
+                    parent = stackActionPanel,
+                    padding = {2, 2, 2, 2},
+                    tooltip = "Remove action",
+                    classname = "negative_button",
+                    children = {
+                        Image:New {
+                            file = SB_IMG_DIR .. "cancel.png",
+                            height = "100%",
+                            width = "100%",
+                        },
+                    },
+                    OnClick = {function() self:MakeRemoveActionWindow(action, i) end},
+                }
+                local openedNodes = self.openedActionNodes[i]
+                if openedNodes then
+                    self:PopulateExpressions(action, SB.metaModel.actionTypes[action.typeName], 2, action.typeName)
+                end
+            end
         end
     end
 end
