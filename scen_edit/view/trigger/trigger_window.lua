@@ -33,33 +33,6 @@ function TriggerWindow:init(trigger)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    local btnAddEvent = Button:New {
-        caption='+ Event',
-        width=110,
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "positive_button",
-        tooltip = "Add event",
-    }
-    local btnAddCondition = Button:New {
-        caption='+ Condition',
-        width=120,
-        x = 120,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "positive_button",
-        tooltip = "Add condition",
-    }
-    local btnAddAction = Button:New {
-        caption='+ Action',
-        width=110,
-        x = 250,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "positive_button",
-        tooltip = "Add action",
-    }
     local btnOK = Button:New {
         caption='OK',
         width=100,
@@ -84,9 +57,6 @@ function TriggerWindow:init(trigger)
     }
 
     local children = {
-        btnAddEvent,
-        btnAddCondition,
-        btnAddAction,
         btnOK,
         btnCancel,
     }
@@ -117,16 +87,12 @@ function TriggerWindow:init(trigger)
         notMainWindow = true,
         noCloseButton = true,
         width = 610,
-        height = 350,
-        x = tostring(math.random(35, 45)) .. "%",
-        y = tostring(math.random(35, 45)) .. "%",
+        height = 550,
+        x = tostring(math.random(25, 35)) .. "%",
+        y = tostring(math.random(15, 25)) .. "%",
     })
 
     self:Populate()
-
-    btnAddEvent.OnClick={function() self:MakeAddEventWindow() end}
-    btnAddCondition.OnClick={function() self:MakeAddConditionWindow() end}
-    btnAddAction.OnClick={function() self:MakeAddActionWindow() end}
 end
 
 function TriggerWindow:ConfirmDialog()
@@ -140,22 +106,46 @@ function TriggerWindow:_AddSectionHeader(opts)
     local icon = opts.icon
     local AddFunction = opts.AddFunction
     local ToggleShowFunction = opts.ToggleShowFunction
+    local isCollapsed = opts.isCollapsed
 
+    local panelHeight
+    if isCollapsed then
+        panelHeight = 30
+    else
+        panelHeight = 45
+    end
     local headerPanel = Control:New {
         width = "100%",
-        height = 50,
+        height = panelHeight,
         parent = self._triggerPanel,
         padding = {0, 0, 0, 0},
     }
     local captionWidth = headerPanel.font:GetTextWidth(title)
     local btnAdd = Button:New {
         parent = headerPanel,
-        x = captionWidth + 20,
-        y = 2,
-        height = 24,
-        width = 72,
+        -- x = captionWidth + 20,
+        x = 100,
+        y = 0,
+        height = 30,
+        width = 80,
         caption = "Add",
         OnClick = {AddFunction},
+        classname = "positive_button",
+    }
+
+    local imgFile
+    if isCollapsed then
+        imgFile = SB_IMG_DIR .. "expand.png"
+    else
+        imgFile = SB_IMG_DIR .. "collapse.png"
+    end
+    local imgCollapsedState = Image:New {
+        parent = headerPanel,
+        right = 10,
+        width = 15,
+        height = 15,
+        y = 7,
+        file = imgFile,
     }
 
     local btnToggleDisplay = Button:New {
@@ -166,11 +156,13 @@ function TriggerWindow:_AddSectionHeader(opts)
         align = "left",
         valign = "center",
         OnClick = {ToggleShowFunction},
+        classname = "collapse_panel_header",
     }
 end
 
 function TriggerWindow:Populate()
     self._triggerPanel:ClearChildren()
+    local ELEMENT_INDENT = 10
     do -- Events
         self:_AddSectionHeader({
             title = "Events",
@@ -179,7 +171,8 @@ function TriggerWindow:Populate()
             ToggleShowFunction = function()
                 self.showEvents = not self.showEvents
                 self:Populate()
-            end
+            end,
+            isCollapsed = not self.showEvents,
         })
         if self.showEvents then
             for i = 1, #self.trigger.events do
@@ -188,7 +181,7 @@ function TriggerWindow:Populate()
                 local btnEditEvent = Button:New {
                     caption = SB.model.triggerManager:GetSafeEventHumanName(trigger, event),
                     right = SB.conf.B_HEIGHT + 10,
-                    x = 1,
+                    x = ELEMENT_INDENT,
                     height = SB.conf.B_HEIGHT,
                     parent = stackEventPanel,
                     tooltip = "Edit event",
@@ -224,7 +217,8 @@ function TriggerWindow:Populate()
             ToggleShowFunction = function()
                 self.showConditions = not self.showConditions
                 self:Populate()
-            end
+            end,
+            isCollapsed = not self.showConditions,
         })
         if self.showConditions then
             for i = 1, #self.trigger.conditions do
@@ -232,26 +226,37 @@ function TriggerWindow:Populate()
                 local stackPanel = MakeComponentPanel(self._triggerPanel)
                 local conditionHumanName = SB.humanExpression(condition, "condition")
 
-                local btnOpenSubNodes = Button:New {
-                    caption = '+',
-                    width = SB.conf.B_HEIGHT,
-                    height = SB.conf.B_HEIGHT,
-                    x = 1,
-                    height = SB.conf.B_HEIGHT,
-                    parent = stackPanel,
-                    backgroundColor = {0, 0, 0, 0},
-                    OnClick = {function()
-                        self.openedConditionNodes[i] = not self.openedConditionNodes[i]
-                        self:Populate()
-                    end}
-                }
+                local imgFile
                 if self.openedConditionNodes[i] then
-                    btnOpenSubNodes:SetCaption('-')
+                    imgFile = SB_IMG_DIR .. "collapse.png"
+                else
+                    imgFile = SB_IMG_DIR .. "expand.png"
                 end
+                local btnOpenSubNodes = Button:New {
+                    caption = '',
+                    x = ELEMENT_INDENT,
+                    width = SB.conf.B_HEIGHT - 4,
+                    height = SB.conf.B_HEIGHT - 4,
+                    padding = {2, 2, 2, 2},
+                    parent = stackPanel,
+                    OnClick = {
+                        function()
+                            self.openedConditionNodes[i] = not self.openedConditionNodes[i]
+                            self:Populate()
+                        end
+                    },
+                    children = {
+                        Image:New {
+                            height = "100%",
+                            width = "100%",
+                            file = imgFile,
+                        }
+                    }
+                }
                 local btnEditCondition = Button:New {
                     caption = conditionHumanName,
                     right = SB.conf.B_HEIGHT + 10,
-                    x = SB.conf.B_HEIGHT + 5,
+                    x = ELEMENT_INDENT + SB.conf.B_HEIGHT + 5,
                     height = SB.conf.B_HEIGHT,
                     parent = stackPanel,
                     tooltip = "Edit condition",
@@ -290,33 +295,46 @@ function TriggerWindow:Populate()
             ToggleShowFunction = function()
                 self.showActions = not self.showActions
                 self:Populate()
-            end
+            end,
+            isCollapsed = not self.showActions,
         })
         if self.showActions then
             for i = 1, #self.trigger.actions do
                 local action = self.trigger.actions[i]
                 local stackActionPanel = MakeComponentPanel(self._triggerPanel)
                 local actionHumanName = SB.humanExpression(action, "action")
-                local btnOpenSubNodes = Button:New {
-                    caption = '+',
-                    width = SB.conf.B_HEIGHT,
-                    height = SB.conf.B_HEIGHT,
-                    x = 1,
-                    height = SB.conf.B_HEIGHT,
-                    parent = stackActionPanel,
-                    backgroundColor = {0, 0, 0, 0},
-                    OnClick = {function()
-                        self.openedActionNodes[i] = not self.openedActionNodes[i]
-                        self:Populate()
-                    end}
-                }
+
+                local imgFile
                 if self.openedActionNodes[i] then
-                    btnOpenSubNodes:SetCaption('-')
+                    imgFile = SB_IMG_DIR .. "collapse.png"
+                else
+                    imgFile = SB_IMG_DIR .. "expand.png"
                 end
+                local btnOpenSubNodes = Button:New {
+                    caption = '',
+                    x = ELEMENT_INDENT,
+                    width = SB.conf.B_HEIGHT - 4,
+                    height = SB.conf.B_HEIGHT - 4,
+                    padding = {2, 2, 2, 2},
+                    parent = stackActionPanel,
+                    OnClick = {
+                        function()
+                            self.openedActionNodes[i] = not self.openedActionNodes[i]
+                            self:Populate()
+                        end
+                    },
+                    children = {
+                        Image:New {
+                            height = "100%",
+                            width = "100%",
+                            file = imgFile,
+                        }
+                    }
+                }
                 local btnEditAction = Button:New {
                     caption = actionHumanName,
                     right = SB.conf.B_HEIGHT + 10,
-                    x = SB.conf.B_HEIGHT + 5,
+                    x = ELEMENT_INDENT + SB.conf.B_HEIGHT + 5,
                     height = SB.conf.B_HEIGHT,
                     parent = stackActionPanel,
                     tooltip = "Edit action",

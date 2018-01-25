@@ -252,6 +252,19 @@ skin.negative_button = {
   DrawControl = DrawMyButton,
 }
 
+skin.collapse_panel_header = {
+  TileImageBK = ":cl:tech_button_bright_small_bk.png",
+  TileImageFG = ":cl:tech_button_bright_small_fg.png",
+  tiles = {20, 14, 20, 14}, --// tile widths: left,top,right,bottom
+  padding = {10, 10, 10, 10},
+
+  backgroundColor = {0.4, 0.4, 0.4, 0.8},
+  focusColor      = {0.4, 0.4, 0.4, 1.0},
+  borderColor     = {0.85, 0.05, 0.25, 0.0},
+
+  DrawControl = DrawMyButton,
+}
+
 skin.combobox = {
 	TileImageBK = ":cl:combobox_ctrl.png",
 	TileImageFG = ":cl:combobox_ctrl_fg.png",
