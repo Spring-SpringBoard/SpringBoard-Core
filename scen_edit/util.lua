@@ -444,7 +444,8 @@ end
 -- Make window modal in respect to the source control.
 -- The source control will not be usable until the window is disposed.
 function SB.MakeWindowModal(window, source)
-    while source.classname ~= "window" do
+    -- FIXME: This isn't an ideal way to verify is something is an instance of the Window class, improve.
+    while not source.classname:find("window")  do
         -- FIXME: would like to avoid this; when debugging change the if
         if false then
             Log.Warning("SB.MakeWindowModal", "Sent source which isn't a window")

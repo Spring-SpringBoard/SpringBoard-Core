@@ -492,6 +492,31 @@ skin.window = {
   DrawResizeGrip = DrawResizeGrip,
 }
 
+skin.trigger_window = {
+  TileImage = ":c:tech_dragwindow_full.png",
+  tiles = {2, 2, 2, 2}, --// tile widths: left,top,right,bottom
+  padding = {13, 13, 13, 13},
+  hitpadding = {4, 4, 4, 4},
+
+  captionColor = {1, 1, 1, 0.45},
+
+  color = {0.3, 0.3, 0.3, 0.90},
+  backgroundColor = {0.1, 0.1, 0.1, 0.7},
+
+  boxes = {
+    resize = {-21, -21, -10, -10},
+    drag = {0, 0, "100%", 10},
+  },
+
+  NCHitTest = NCHitTestWithPadding,
+  NCMouseDown = WindowNCMouseDown,
+  NCMouseDownPostChildren = WindowNCMouseDownPostChildren,
+
+  DrawControl = DrawWindow,
+  DrawDragGrip = function() end,
+  DrawResizeGrip = DrawResizeGrip,
+}
+
 skin.main_window = {
   TileImage = ":c:tech_mainwindow_dark.png",
   tiles = {176, 64, 176, 64}, --// tile widths: left,top,right,bottom

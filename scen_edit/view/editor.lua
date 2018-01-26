@@ -139,6 +139,7 @@ function Editor:Finalize(children, opts)
             padding = {0,0,0,0},
             OnParentPost = OnShow,
             OnOrphan = OnHide,
+            classname = opts.classname,
         }
         self.stackPanel:EnableRealign()
         self:_MEGA_HACK()
@@ -159,6 +160,7 @@ function Editor:Finalize(children, opts)
             children = children,
             OnParentPost = OnShow,
             OnOrphan = OnHide,
+            classname = opts.classname,
         }
         self.keyListener = function(key)
             local currentState = SB.stateManager:GetCurrentState()
