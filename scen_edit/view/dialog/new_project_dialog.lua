@@ -27,7 +27,7 @@ function NewProjectDialog:init()
         x = '50%',
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
+        classname = "negative_button",
         OnClick = {
             function()
                 self.window:Dispose()

@@ -64,8 +64,21 @@ end
 function VariablesWindow:AddVariable()
     local variable = {
         type = "number",
-        name = "New variable",
     }
+    local variables = SB.model.variableManager:getAllVariables()
+    for i = 1, math.huge do
+        variable.name = "Variable " .. tostring(i)
+        local found = false
+        for _, v in pairs(variables) do
+            if v.name == variable.name then
+                found = true
+                break
+            end
+        end
+        if not found then
+            break
+        end
+    end
     success, msg = pcall(
         function()
             self:MakeVariableWindow(variable, false)

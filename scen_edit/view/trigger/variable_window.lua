@@ -27,7 +27,7 @@ function VariableWindow:init(opts)
         x = '50%',
         bottom = 1,
         height = SB.conf.B_HEIGHT,
-        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
+        classname = "negative_button",
         OnClick = {
             function()
                 self.window:Dispose()
@@ -85,6 +85,7 @@ function VariableWindow:init(opts)
         y = tostring(math.random(30, 40)) .. "%",
         width = 500,
         height = 200,
+        classname = "trigger_window",
     })
 
     self:__RefreshVariablePanel()
@@ -104,6 +105,7 @@ function VariableWindow:__RefreshVariablePanel()
         dataType = {
             type = inputType,
             sources = "const",
+            allowNil = true,
         },
         parent = self.variablePanel,
         params = {},

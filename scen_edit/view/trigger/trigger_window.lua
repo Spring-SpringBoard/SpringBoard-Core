@@ -34,9 +34,9 @@ function TriggerWindow:init(trigger)
         padding = {0, 0, 0, 0}
     }
     local btnOK = Button:New {
-        caption='OK',
-        width=100,
-        x = 370,
+        caption = 'OK',
+        width = 200,
+        x = 170,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
         classname = "option_button",
@@ -47,13 +47,17 @@ function TriggerWindow:init(trigger)
         }
     }
     local btnCancel = Button:New {
-        caption='Cancel',
-        width=100,
-        x = 480,
+        caption = 'Cancel',
+        width = 200,
+        x = 380,
         bottom = 1,
         height = SB.conf.B_HEIGHT,
         classname = "negative_button",
-        OnClick={function() self.window:Dispose() end}
+        OnClick = {
+            function()
+                self.window:Dispose()
+            end
+        }
     }
 
     local children = {

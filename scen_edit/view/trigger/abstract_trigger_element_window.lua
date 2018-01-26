@@ -38,7 +38,7 @@ function AbstractTriggerElementWindow:init(opts)
         width = "40%",
         x = "55%",
         y = 20,
-        backgroundColor = SB.conf.BTN_CANCEL_COLOR,
+        classname = "negative_button",
     }
     self.elementPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
