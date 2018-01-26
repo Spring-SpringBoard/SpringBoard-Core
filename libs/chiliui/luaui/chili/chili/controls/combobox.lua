@@ -83,16 +83,27 @@ function ComboBox:_CloseWindow()
 end
 
 function ComboBox:FocusUpdate()
-  if not self.state.focused then
-    self:_CloseWindow()
-  end
+    self:RequestUpdate()
+end
+
+function ComboBox:Update(...)
+    -- obj:RequestUpdate()
+    inherited.Update(self, ...)
+
+    if self._dropDownWindow then
+        if self.state.focused or self._scrollPanelCtrl.state.focused then
+            self:RequestUpdate()
+        else
+            self:_CloseWindow()
+        end
+    end
 end
 
 function ComboBox:MouseDown(x, y)
   self.state.pressed = true
   if not self._dropDownWindow then
     local sx,sy = self:LocalToScreen(0,0)
-	
+
 	local selectByName = self.selectByName
     local labels = {}
 
@@ -160,6 +171,7 @@ function ComboBox:MouseDown(x, y)
         }
       }
     }
+    self._scrollPanelCtrl = self._dropDownWindow.children[1]
     self:CallListeners(self.OnOpen)
   else
     self:_CloseWindow()
