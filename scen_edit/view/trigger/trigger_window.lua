@@ -106,7 +106,7 @@ function TriggerWindow:ConfirmDialog()
     self.window:Dispose()
 end
 
-function TriggerWindow:_AddSectionHeader(opts)
+function TriggerWindow:_AddSection(opts)
     local title = opts.title
     local icon = opts.icon
     local AddFunction = opts.AddFunction
@@ -114,15 +114,18 @@ function TriggerWindow:_AddSectionHeader(opts)
     local isCollapsed = opts.isCollapsed
     local hasElements = opts.hasElements
 
-    local panelHeight
+    local headerHeight
+    local minElementPanelHeight
     if isCollapsed or hasElements then
-        panelHeight = 35
+        headerHeight = 32
+        minElementPanelHeight = 0
     else
-        panelHeight = 50
+        headerHeight = 30
+        minElementPanelHeight = 20
     end
     local headerPanel = Control:New {
         width = "100%",
-        height = panelHeight,
+        height = headerHeight,
         parent = self._triggerPanel,
         padding = {0, 0, 0, 0},
     }
@@ -164,13 +167,28 @@ function TriggerWindow:_AddSectionHeader(opts)
         OnClick = {ToggleShowFunction},
         classname = "collapse_panel_header",
     }
+
+    local elementPanel = StackPanel:New {
+        parent = self._triggerPanel,
+        itemMargin = {0, 0, 0, 0},
+        x = 0,
+        y = 0,
+        right = 0,
+        autosize = true,
+        resizeItems = false,
+        padding = {0, 5, 0, 0},
+        classname = "panel",
+        minHeight = minElementPanelHeight,
+    }
+
+    return elementPanel
 end
 
 function TriggerWindow:Populate()
     self._triggerPanel:ClearChildren()
     local ELEMENT_INDENT = 10
     do -- Events
-        self:_AddSectionHeader({
+        local elementPanel = self:_AddSection({
             title = "Events",
             icon = "",
             AddFunction = function() self:MakeAddEventWindow() end,
@@ -184,7 +202,7 @@ function TriggerWindow:Populate()
         if self.showEvents then
             for i = 1, #self.trigger.events do
                 local event = self.trigger.events[i]
-                local stackEventPanel = MakeComponentPanel(self._triggerPanel)
+                local stackEventPanel = MakeComponentPanel(elementPanel)
                 local btnEditEvent = Button:New {
                     caption = SB.model.triggerManager:GetSafeEventHumanName(trigger, event),
                     right = SB.conf.B_HEIGHT + 10,
@@ -217,7 +235,7 @@ function TriggerWindow:Populate()
         end
     end
     do -- Conditions
-        self:_AddSectionHeader({
+        local elementPanel = self:_AddSection({
             title = "Conditions",
             icon = "",
             AddFunction = function() self:MakeAddConditionWindow() end,
@@ -231,7 +249,7 @@ function TriggerWindow:Populate()
         if self.showConditions then
             for i = 1, #self.trigger.conditions do
                 local condition = self.trigger.conditions[i]
-                local stackPanel = MakeComponentPanel(self._triggerPanel)
+                local stackPanel = MakeComponentPanel(elementPanel)
                 local conditionHumanName = SB.humanExpression(condition, "condition")
 
                 local imgFile
@@ -290,13 +308,13 @@ function TriggerWindow:Populate()
                 }
                 local openedNodes = self.openedConditionNodes[i]
                 if openedNodes then
-                    self:PopulateExpressions(condition, SB.metaModel.functionTypes[condition.typeName], 2, condition.typeName)
+                    self:PopulateExpressions(condition, SB.metaModel.functionTypes[condition.typeName], 2, condition.typeName, elementPanel)
                 end
             end
         end
     end
     do -- Actions
-        self:_AddSectionHeader({
+        local elementPanel = self:_AddSection({
             title = "Actions",
             icon = "",
             AddFunction = function() self:MakeAddActionWindow() end,
@@ -310,7 +328,7 @@ function TriggerWindow:Populate()
         if self.showActions then
             for i = 1, #self.trigger.actions do
                 local action = self.trigger.actions[i]
-                local stackActionPanel = MakeComponentPanel(self._triggerPanel)
+                local stackActionPanel = MakeComponentPanel(elementPanel)
                 local actionHumanName = SB.humanExpression(action, "action")
 
                 local imgFile
@@ -369,16 +387,16 @@ function TriggerWindow:Populate()
                 }
                 local openedNodes = self.openedActionNodes[i]
                 if openedNodes then
-                    self:PopulateExpressions(action, SB.metaModel.actionTypes[action.typeName], 2, action.typeName)
+                    self:PopulateExpressions(action, SB.metaModel.actionTypes[action.typeName], 2, action.typeName, elementPanel)
                 end
             end
         end
     end
 end
 
-function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
+function TriggerWindow:PopulateExpressions(root, rootType, level, typeName, panel)
     if rootType == nil then
-        local stackPanel = MakeComponentPanel(self._triggerPanel)
+        local stackPanel = MakeComponentPanel(panel)
         local lblParam = Label:New {
             caption = "Error: Cannot find declaration for type: " ..typeName,
             x = (level - 1) * 50,
@@ -388,7 +406,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
         return
     end
     for i, input in pairs(rootType.input) do
-        local stackPanel = MakeComponentPanel(self._triggerPanel)
+        local stackPanel = MakeComponentPanel(panel)
 
         local param = root[input.name] or {}
         local paramName = param.value
@@ -418,7 +436,7 @@ function TriggerWindow:PopulateExpressions(root, rootType, level, typeName)
             local expr = param.value
             local exprType = SB.metaModel.functionTypes[expr.typeName]
 
-            self:PopulateExpressions(expr, exprType, level + 1, expr.typeName)
+            self:PopulateExpressions(expr, exprType, level + 1, expr.typeName, panel)
         end
     end
 end
