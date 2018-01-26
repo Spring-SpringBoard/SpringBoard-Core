@@ -441,6 +441,7 @@ function TriggerWindow:MakeAddConditionWindow()
     opts.OnConfirm = {
         function(element)
             table.insert(self.trigger.conditions, element)
+            self.showConditions = true
             self:Populate()
         end
     }
@@ -471,6 +472,7 @@ function TriggerWindow:MakeAddEventWindow()
     opts.OnConfirm = {
         function(element)
             table.insert(self.trigger.events, element)
+            self.showEvents = true
             self:Populate()
         end
     }
@@ -521,6 +523,7 @@ function TriggerWindow:MakeAddActionWindow()
     opts.OnConfirm = {
         function(element)
             table.insert(self.trigger.actions, element)
+            self.showActions = true
             self:Populate()
         end
     }
