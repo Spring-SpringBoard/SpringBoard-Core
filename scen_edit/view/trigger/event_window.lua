@@ -13,6 +13,7 @@ function EventWindow:init(opts)
     }
 
     opts.element = opts.event
+    opts.height = 200
     AbstractTriggerElementWindow.init(self, opts)
 end
 

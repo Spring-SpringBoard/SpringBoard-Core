@@ -98,8 +98,8 @@ function AbstractTriggerElementWindow:init(opts)
         noCloseButton = true,
         x = tostring(math.random(30, 40)) .. "%",
         y = tostring(math.random(30, 40)) .. "%",
-        width = 500,
-        height = 350,
+        width = opts.width or 500,
+        height = opts.height or 350,
         classname = "trigger_window",
     })
 
