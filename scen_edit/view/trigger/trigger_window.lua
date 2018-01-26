@@ -108,12 +108,13 @@ function TriggerWindow:_AddSectionHeader(opts)
     local AddFunction = opts.AddFunction
     local ToggleShowFunction = opts.ToggleShowFunction
     local isCollapsed = opts.isCollapsed
+    local hasElements = opts.hasElements
 
     local panelHeight
-    if isCollapsed then
-        panelHeight = 30
+    if isCollapsed or hasElements then
+        panelHeight = 35
     else
-        panelHeight = 45
+        panelHeight = 50
     end
     local headerPanel = Control:New {
         width = "100%",
@@ -174,6 +175,7 @@ function TriggerWindow:Populate()
                 self:Populate()
             end,
             isCollapsed = not self.showEvents,
+            hasElements = #self.trigger.events > 0,
         })
         if self.showEvents then
             for i = 1, #self.trigger.events do
@@ -220,6 +222,7 @@ function TriggerWindow:Populate()
                 self:Populate()
             end,
             isCollapsed = not self.showConditions,
+            hasElements = #self.trigger.conditions > 0,
         })
         if self.showConditions then
             for i = 1, #self.trigger.conditions do
@@ -298,6 +301,7 @@ function TriggerWindow:Populate()
                 self:Populate()
             end,
             isCollapsed = not self.showActions,
+            hasElements = #self.trigger.actions > 0,
         })
         if self.showActions then
             for i = 1, #self.trigger.actions do
