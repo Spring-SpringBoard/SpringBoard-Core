@@ -7,5 +7,5 @@ function SetProjectDirCommand:init(projectDir)
 end
 
 function SetProjectDirCommand:execute()
-	SB.projectDir = self.projectDir
+    SB.projectDir = self.projectDir
 end

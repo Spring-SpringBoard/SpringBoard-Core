@@ -8,12 +8,12 @@ function LoadProjectCommandWidget:init(path, isZip)
 end
 
 -- function LoadProjectCommandWidget:__ReloadInto(game, mapName)
--- 	local scriptTxt = StartScript.GenerateScriptTxt({
+--     local scriptTxt = StartScript.GenerateScriptTxt({
 --         game = game,
 --         mapName = mapName,
 --     })
--- 	Spring.Echo(scriptTxt)
--- 	Spring.Reload(scriptTxt)
+--     Spring.Echo(scriptTxt)
+--     Spring.Reload(scriptTxt)
 -- end
 
 function LoadProjectCommandWidget:execute()

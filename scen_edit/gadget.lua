@@ -212,7 +212,7 @@ function gadget:Update()
 end
 
 function gadget:TeamDied(teamID)
-	SB.rtModel:TeamDied(teamID)
+    SB.rtModel:TeamDied(teamID)
 end
 
 function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
@@ -237,7 +237,7 @@ function gadget:UnitCreated(unitID, unitDefID, teamID, builderID)
 end
 
 function gadget:UnitDamaged(unitID, unitDefID, unitTeam, damage, paralyzer, weaponDefID, projectileID, attackerID, attackerDefID, attackerTeam)
-	SB.rtModel:UnitDamaged(unitID)
+    SB.rtModel:UnitDamaged(unitID)
 end
 
 function gadget:UnitDestroyed(unitID, ...)
@@ -253,7 +253,7 @@ function gadget:FeatureCreated(featureID, allyTeam)
 end
 
 function gadget:FeatureDamaged(featureID, ...)
-	SB.rtModel:FeatureDamaged(featureID, ...)
+    SB.rtModel:FeatureDamaged(featureID, ...)
 end
 
 function gadget:FeatureDestroyed(featureID, ...)

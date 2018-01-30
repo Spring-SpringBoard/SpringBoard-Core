@@ -12,7 +12,7 @@ function WidgetSetScenarioInfoCommand:init(data)
 end
 
 function WidgetSetScenarioInfoCommand:execute()
-	SB.model.scenarioInfo:Set(self.data)
+    SB.model.scenarioInfo:Set(self.data)
 end
 ----------------------------------------------------------
 -- END Widget callback commands

@@ -42,15 +42,15 @@ function SaveAsAction:Save(path, isNewProject)
 end
 
 function SaveAsAction:CreateProjectStructure(projectDir)
-	-- create project if it doesn't exist already
-	if SB.DirExists(projectDir, VFS.RAW_ONLY) then
+    -- create project if it doesn't exist already
+    if SB.DirExists(projectDir, VFS.RAW_ONLY) then
         return
     end
 
-	Spring.CreateDir(projectDir)
-	Spring.CreateDir(Path.Join(projectDir, "triggers"))
+    Spring.CreateDir(projectDir)
+    Spring.CreateDir(Path.Join(projectDir, "triggers"))
 
-	local myCustomTriggersLua = [[
+    local myCustomTriggersLua = [[
 return {
     dataTypes = {
         -- Custom data types go here
@@ -58,16 +58,16 @@ return {
     events = {
         -- Custom events go here
     },
-	actions = {
-		-- Custom actions go here
-	},
-	functions = {
-		-- Custom functions go here
-	},
+    actions = {
+        -- Custom actions go here
+    },
+    functions = {
+        -- Custom functions go here
+    },
 }
 
 ]]
-	local file = assert(io.open(Path.Join(projectDir, "triggers/my_custom_triggers.lua"), "w"))
-	file:write(myCustomTriggersLua)
-	file:close()
+    local file = assert(io.open(Path.Join(projectDir, "triggers/my_custom_triggers.lua"), "w"))
+    file:write(myCustomTriggersLua)
+    file:close()
 end

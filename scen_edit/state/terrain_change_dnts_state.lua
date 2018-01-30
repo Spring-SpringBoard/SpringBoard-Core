@@ -18,18 +18,18 @@ function TerrainChangeDNTSState:Apply(x, z, applyAction)
     end
     local colorIndex = tonumber(self.dnts) * applyAction
 
-	local opts = {
-		x = x - self.size/2,
-		z = z - self.size/2,
-		size = self.size,
+    local opts = {
+        x = x - self.size/2,
+        z = z - self.size/2,
+        size = self.size,
         patternTexture = self.patternTexture,
-		blendFactor = self.blendFactor,
+        blendFactor = self.blendFactor,
         colorIndex = colorIndex,
 
         paintMode = "dnts",
-	}
-	local command = TerrainChangeTextureCommand(opts)
-	SB.commandManager:execute(command)
+    }
+    local command = TerrainChangeTextureCommand(opts)
+    SB.commandManager:execute(command)
 end
 
 function TerrainChangeDNTSState:DrawWorld()
@@ -46,9 +46,9 @@ function TerrainChangeDNTSState:DrawWorld()
 end
 
 function TerrainChangeDNTSState:GetApplyParams(x, z, button)
-	local applyAction = 1
-	if button == 3 then
-		applyAction = -1
-	end
-	return x, z, applyAction
+    local applyAction = 1
+    if button == 3 then
+        applyAction = -1
+    end
+    return x, z, applyAction
 end

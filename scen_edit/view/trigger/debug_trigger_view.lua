@@ -15,10 +15,10 @@ function DebugTriggerView:Populate()
     for id, trigger in pairs(triggers)  do        
         local triggerPanel = MakeComponentPanel(self.parent)
         local maxChars = 18
-		shortName = trigger.name:sub(1, maxChars)
-		if #trigger.name > maxChars then
-			shortName = shortName .. "..."
-		end
+        shortName = trigger.name:sub(1, maxChars)
+        if #trigger.name > maxChars then
+            shortName = shortName .. "..."
+        end
         local cbTriggerName = Checkbox:New {
             caption = shortName,
             width = 150,

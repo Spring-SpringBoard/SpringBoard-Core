@@ -27,7 +27,7 @@ function BrushObjectState:init(bridge, editorView, objectDefIDs)
 end
 
 function BrushObjectState:GetApplyParams(x, z, button)
-	return x, z, button
+    return x, z, button
 end
 
 function BrushObjectState:FilterObject(objectID)

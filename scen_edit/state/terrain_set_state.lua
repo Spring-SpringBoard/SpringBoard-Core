@@ -15,7 +15,7 @@ function TerrainSetState:GetCommand(x, z, strength)
     local applyDirID = applyDirIDs[self.applyDir]
     return TerrainLevelCommand({
         x = x + self.size/2,
-		z = z + self.size/2,
+        z = z + self.size/2,
         size = self.size,
         shapeName = self.patternTexture,
         rotation = self.rotation,

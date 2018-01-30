@@ -72,9 +72,9 @@ end
 
 function WidgetCommandRemoveFirstUndo:execute()
     SB.commandManager:callListeners("OnRemoveFirstUndo")
-	SB.delayGL(function()
-		SB.model.textureManager:RemoveFirst()
-	end)
+    SB.delayGL(function()
+        SB.model.textureManager:RemoveFirst()
+    end)
 end
 
 -- removed first redo

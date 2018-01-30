@@ -29,7 +29,7 @@ function Model:Clear()
     self.variableManager:clear()
     self.triggerManager:clear()
     self.teamManager:clear()
-	self.scenarioInfo:clear()
+    self.scenarioInfo:clear()
 
     -- "CLEAR MODEL"
     for _, objectS11N in pairs(s11n.s11nByName) do
@@ -77,7 +77,7 @@ function Model:GetMetaData()
         triggers = self.triggerManager:serialize(),
         variables = self.variableManager:serialize(),
         teams = self.teamManager:serialize(),
-		info = self.scenarioInfo:serialize(),
+        info = self.scenarioInfo:serialize(),
     }
 end
 
@@ -87,7 +87,7 @@ function Model:SetMetaData(meta)
     if meta.teams then
         self.teamManager:load(meta.teams)
     end
-	self.scenarioInfo:load(meta.info)
+    self.scenarioInfo:load(meta.info)
     self.triggerManager:load(meta.triggers)
 end
 

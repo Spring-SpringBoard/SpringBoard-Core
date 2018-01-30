@@ -33,7 +33,7 @@ function StateManager:SetState(state)
 end
 
 function StateManager:AddGlobalKeyListener(f)
-	table.insert(self.keyListeners, f)
+    table.insert(self.keyListeners, f)
 end
 
 function StateManager:RemoveGlobalKeyListener(f)

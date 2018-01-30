@@ -56,16 +56,16 @@ if WG and WG.SBChili then
     ImageListView = Chili.ImageListView
     TreeView = Chili.TreeView
     Trackbar = Chili.Trackbar
-	TabBar = Chili.TabBar
-	TabPanel = Chili.TabPanel
+    TabBar = Chili.TabBar
+    TabPanel = Chili.TabPanel
     Progressbar = Chili.Progressbar
     screen0 = Chili.Screen0
 end
 
 if WG then
     s11n = WG.s11n
-	WG.SB = SB
+    WG.SB = SB
 elseif GG then
     s11n = GG.s11n
-	GG.SB = SB
+    GG.SB = SB
 end

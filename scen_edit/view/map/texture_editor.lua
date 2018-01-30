@@ -180,13 +180,13 @@ function TextureEditor:init()
                 -- if SB.dntsEditor == nil then
                 --     SB.dntsEditor = DNTSEditor()
                 --     SB.dntsEditor.window.OnHide = {
-				-- 		function()
-				-- 			obj:SetPressedState(false)
-				-- 		end
-				-- 	}
+                --         function()
+                --             obj:SetPressedState(false)
+                --         end
+                --     }
                 -- end
                 -- if SB.dntsEditor.window.hidden then
-				-- 	SB.view:SetMainPanel(SB.dntsEditor.window)
+                --     SB.view:SetMainPanel(SB.dntsEditor.window)
                 -- end
                 self:_EnterState("dnts")
                 self.savedBrushes:GetControl():Hide()

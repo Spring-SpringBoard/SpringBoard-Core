@@ -95,7 +95,7 @@ function AssetView:SetDir(directory)
     if self.lblPath then
         self.lblPath:SetCaption(self.dir)
     end
--- 	MaterialBrowser.lastDir = self.dir
+--     MaterialBrowser.lastDir = self.dir
     self:ScanDir()
 end
 

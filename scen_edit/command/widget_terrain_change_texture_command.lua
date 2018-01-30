@@ -242,11 +242,11 @@ local function RotateCoords(tCoord, angle)
     local tdx = tCoord[5] - tCoord[1]
     local tdz = tCoord[4] - tCoord[2]
     for i = 1, #tCoord, 2 do
-        tCoord[i]   			 = tCoord[i] - tdx
-        tCoord[i + 1] 			 = tCoord[i + 1] - tdz
+        tCoord[i]                = tCoord[i] - tdx
+        tCoord[i + 1]              = tCoord[i + 1] - tdz
         tCoord[i], tCoord[i + 1] = rotate(tCoord[i], tCoord[i + 1], angle)
-        tCoord[i]				 = tCoord[i] + tdx
-        tCoord[i + 1] 			 = tCoord[i + 1] + tdz
+        tCoord[i]                 = tCoord[i] + tdx
+        tCoord[i + 1]              = tCoord[i + 1] + tdz
     end
 end
 
@@ -258,10 +258,10 @@ local function __GenerateMapCoords(mx, mz, mSizeX, mSizeZ)
         mx + mSizeX,     mz
     }
     local vCoord = {} -- vertex coords
--- 	for i = 1, #mCoord, 2 do
--- 		vCoord[i]     = mCoord[i]     * 2 - 1
--- 		vCoord[i + 1] = mCoord[i + 1] * 2 - 1
--- 	end
+--     for i = 1, #mCoord, 2 do
+--         vCoord[i]     = mCoord[i]     * 2 - 1
+--         vCoord[i + 1] = mCoord[i + 1] * 2 - 1
+--     end
     for i = 1, #mCoord do
         vCoord[i]     = mCoord[i]     * 2 - 1
     end

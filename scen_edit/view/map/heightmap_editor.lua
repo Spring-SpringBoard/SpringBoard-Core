@@ -141,21 +141,21 @@ function HeightmapEditor:init()
     self:SetInvisibleFields("applyDir")
 
     local children = {
-		self.btnAddState,
+        self.btnAddState,
         self.btnSetState,
-		self.btnSmoothState,
-		ScrollPanel:New {
-			x = 0,
-			y = 70,
-			bottom = 30,
-			right = 0,
-			borderColor = {0,0,0,0},
-			horizontalScrollbar = false,
-			children = { self.stackPanel },
-		},
-	}
+        self.btnSmoothState,
+        ScrollPanel:New {
+            x = 0,
+            y = 70,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        },
+    }
 
-	self:Finalize(children)
+    self:Finalize(children)
 end
 
 function HeightmapEditor:OnLeaveState(state)

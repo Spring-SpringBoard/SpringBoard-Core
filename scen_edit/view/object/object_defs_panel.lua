@@ -93,7 +93,7 @@ function ObjectDefsPanel:_OnValidateSelectItem(obj, itemIdx, selected)
 end
 
 function ObjectDefsPanel:_OnSelectItem(obj, itemIdx, selected)
-	local item = self:_OnValidateSelectItem(obj, itemIdx, selected)
+    local item = self:_OnValidateSelectItem(obj, itemIdx, selected)
     if not item then
         return
     end

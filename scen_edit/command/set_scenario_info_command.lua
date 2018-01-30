@@ -10,7 +10,7 @@ function SetScenarioInfoCommand:execute()
     if not self.oldData then
         self.oldData = SB.model.scenarioInfo:serialize()
     end
-	SB.model.scenarioInfo:Set(self.data)
+    SB.model.scenarioInfo:Set(self.data)
 end
 
 function SetScenarioInfoCommand:unexecute()

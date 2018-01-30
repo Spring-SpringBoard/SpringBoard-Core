@@ -226,11 +226,11 @@ function Editor:_SetFieldVisible(name, visible)
         if visible then
             self.stackPanel:AddChild(ctrl)
             ctrl._visible = true
--- 			ctrl:Show()
+--             ctrl:Show()
         else
             self.stackPanel:RemoveChild(ctrl)
             ctrl._visible = false
--- 			ctrl:Hide()
+--             ctrl:Hide()
         end
     end
 end

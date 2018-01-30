@@ -7,7 +7,7 @@ function ResendCommand:init(metaModelFiles)
 end
 
 function ResendCommand:execute()
-	Log.Notice("Resend data started...")
+    Log.Notice("Resend data started...")
     -- TODO: Update to use s11n
     Log.Error("NOT IMPLEMENTED: RESEND")
     -- local cmd = WidgetResendCommand({

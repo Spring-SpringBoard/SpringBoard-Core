@@ -23,11 +23,11 @@ function AbstractHeightmapEditingState:enterState()
 end
 
 function AbstractHeightmapEditingState:GetApplyParams(x, z, button)
-	local strength = self.strength
-	if button == 3 and strength ~= nil then
-		strength = -strength
-	end
-	return x, z, strength
+    local strength = self.strength
+    if button == 3 and strength ~= nil then
+        strength = -strength
+    end
+    return x, z, strength
 end
 
 function AbstractHeightmapEditingState:Apply(x, z, strength)

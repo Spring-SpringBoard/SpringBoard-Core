@@ -14,9 +14,9 @@ View = LCS.class{}
 
 function View:init()
     SB.IncludeDir(SB_VIEW_DIR)
-	SB.Include(Path.Join(SB_VIEW_MAIN_WINDOW_DIR, "main_window_panel.lua"))
-	SB.IncludeDir(SB_VIEW_MAIN_WINDOW_DIR)
-	SB.IncludeDir(SB_VIEW_ACTIONS_DIR)
+    SB.Include(Path.Join(SB_VIEW_MAIN_WINDOW_DIR, "main_window_panel.lua"))
+    SB.IncludeDir(SB_VIEW_MAIN_WINDOW_DIR)
+    SB.IncludeDir(SB_VIEW_ACTIONS_DIR)
 
     SB.IncludeDir(SB_VIEW_OBJECT_DIR)
     SB.IncludeDir(SB_VIEW_MAP_DIR)
@@ -31,7 +31,7 @@ function View:init()
     self.areaViews = {}
     self.selectionManager = SelectionManager()
     self.displayDevelop = true
-	self.tabbedWindow = TabbedWindow()
+    self.tabbedWindow = TabbedWindow()
 
     self.modelShaders = ModelShaders()
 
@@ -64,7 +64,7 @@ function View:SetVisible(visible)
 end
 
 function View:Update()
-	self.teamSelector:Update()
+    self.teamSelector:Update()
     self.selectionManager:Update()
     self.projectStatus:Update()
 

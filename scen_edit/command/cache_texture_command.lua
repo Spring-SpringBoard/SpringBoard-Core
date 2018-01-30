@@ -20,7 +20,7 @@ function WidgetCacheTextureCommand:init(texture)
 end
 
 function WidgetCacheTextureCommand:execute()
-	for _, tex in pairs(self.texture) do
-		SB.model.textureManager:CacheTexture(tex)
-	end
+    for _, tex in pairs(self.texture) do
+        SB.model.textureManager:CacheTexture(tex)
+    end
 end

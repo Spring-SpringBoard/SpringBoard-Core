@@ -16,9 +16,9 @@ function TerrainChangeTextureState:init(editorView)
     self.texOffsetX     = self.editorView.fields["texOffsetX"].value
     self.texOffsetY     = self.editorView.fields["texOffsetY"].value
     self.texRotation    = self.editorView.fields["texRotation"].value
-	self.diffuseEnabled = self.editorView.fields["diffuseEnabled"].value
-	self.specularEnabled= self.editorView.fields["specularEnabled"].value
-	self.voidFactor     = self.editorView.fields["voidFactor"].value
+    self.diffuseEnabled = self.editorView.fields["diffuseEnabled"].value
+    self.specularEnabled= self.editorView.fields["specularEnabled"].value
+    self.voidFactor     = self.editorView.fields["voidFactor"].value
     self.exclusive      = self.editorView.fields["exclusive"].value
     self.value          = self.editorView.fields["value"].value
 
@@ -46,39 +46,39 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
         exclusive = 1
     end
 
-	local opts = {
-		x = x - self.size/2,
-		z = z - self.size/2,
-		size = self.size,
-		brushTexture = self.brushTexture,
+    local opts = {
+        x = x - self.size/2,
+        z = z - self.size/2,
+        size = self.size,
+        brushTexture = self.brushTexture,
         patternTexture = self.patternTexture,
         patternRotation = math.rad(self.rotation),
-		texScale = self.texScale,
-		mode = self.mode,
+        texScale = self.texScale,
+        mode = self.mode,
         kernelMode = self.kernelMode,
-		blendFactor = self.blendFactor,
-		falloffFactor = self.falloffFactor,
-		featureFactor = self.featureFactor,
-		diffuseColor = self.diffuseColor,
-		texOffsetX = self.texOffsetX,
-		texOffsetY = self.texOffsetY,
+        blendFactor = self.blendFactor,
+        falloffFactor = self.falloffFactor,
+        featureFactor = self.featureFactor,
+        diffuseColor = self.diffuseColor,
+        texOffsetX = self.texOffsetX,
+        texOffsetY = self.texOffsetY,
         rotation = math.rad(self.texRotation),
-		diffuseEnabled = self.diffuseEnabled,
-		specularEnabled = self.specularEnabled,
-		voidFactor = voidFactor,
+        diffuseEnabled = self.diffuseEnabled,
+        specularEnabled = self.specularEnabled,
+        voidFactor = voidFactor,
         paintMode = self.paintMode,
         colorIndex = colorIndex,
         exclusive = exclusive,
         value = self.value,
-	}
-	local command = TerrainChangeTextureCommand(opts)
-	SB.commandManager:execute(command)
+    }
+    local command = TerrainChangeTextureCommand(opts)
+    SB.commandManager:execute(command)
 end
 
 function TerrainChangeTextureState:GetApplyParams(x, z, button)
-	local applyAction = 1
-	if button == 3 then
-		applyAction = -1
-	end
-	return x, z, applyAction
+    local applyAction = 1
+    if button == 3 then
+        applyAction = -1
+    end
+    return x, z, applyAction
 end

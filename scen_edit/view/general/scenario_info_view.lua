@@ -5,66 +5,66 @@ Editor.Register({
     name = "scenarioInfoView",
     editor = ScenarioInfoView,
     tab = "Misc",
-	caption = "Info",
-	tooltip = "Edit project info",
-	image = SB_IMG_DIR .. "info.png",
+    caption = "Info",
+    tooltip = "Edit project info",
+    image = SB_IMG_DIR .. "info.png",
     order = 0,
 })
 
 function ScenarioInfoView:init()
-	self:super("init")
+    self:super("init")
 
-	self:AddField(
-		StringField({
+    self:AddField(
+        StringField({
             name = "name",
             title = "Name:",
             width = 200,
-			value = SB.model.scenarioInfo.name,
+            value = SB.model.scenarioInfo.name,
         })
     )
 
-	self:AddField(
-		StringField({
-			name = "description",
-			title = "Description:",
-			width = 200,
-			value = SB.model.scenarioInfo.description,
-		})
-	)
+    self:AddField(
+        StringField({
+            name = "description",
+            title = "Description:",
+            width = 200,
+            value = SB.model.scenarioInfo.description,
+        })
+    )
 
-	self:AddField(
-		StringField({
+    self:AddField(
+        StringField({
             name = "version",
             title = "Version:",
             width = 200,
-			value = tostring(SB.model.scenarioInfo.version),
+            value = tostring(SB.model.scenarioInfo.version),
         })
     )
 
-	self:AddField(
-		StringField({
+    self:AddField(
+        StringField({
             name = "author",
             title = "Author:",
             width = 200,
-			value = SB.model.scenarioInfo.author,
+            value = SB.model.scenarioInfo.author,
         })
     )
 
-	local children = {
+    local children = {
         ScrollPanel:New {
-			x = 0,
-			y = 0,
-			bottom = 30,
-			right = 0,
-			borderColor = {0,0,0,0},
-			horizontalScrollbar = false,
+            x = 0,
+            y = 0,
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
             children = { self.stackPanel },
         },
     }
 
-	SB.model.scenarioInfo:addListener(ScenarioInfoListenerWidget(self))
+    SB.model.scenarioInfo:addListener(ScenarioInfoListenerWidget(self))
 
-	self:Finalize(children)
+    self:Finalize(children)
 end
 
 function ScenarioInfoView:OnStartChange(name)
@@ -76,29 +76,29 @@ function ScenarioInfoView:OnEndChange(name)
 end
 
 function ScenarioInfoView:OnFieldChange(name, value)
-	if self.updatingInfo then
-		return
-	end
+    if self.updatingInfo then
+        return
+    end
 
-	local cmd = SetScenarioInfoCommand({
-		name = self.fields['name'].value,
-		description = self.fields['description'].value,
-		version = self.fields['version'].value,
-		author = self.fields['author'].value,
-	})
+    local cmd = SetScenarioInfoCommand({
+        name = self.fields['name'].value,
+        description = self.fields['description'].value,
+        version = self.fields['version'].value,
+        author = self.fields['author'].value,
+    })
     SB.commandManager:execute(cmd)
 end
 
 function ScenarioInfoView:UpdateInfo(update)
-	if self._startedChanging then
-		return
-	end
+    if self._startedChanging then
+        return
+    end
 
-	self.updatingInfo = true
-	for k, v in pairs(update) do
-		self:Set(k, v)
-	end
-	self.updatingInfo = false
+    self.updatingInfo = true
+    for k, v in pairs(update) do
+        self:Set(k, v)
+    end
+    self.updatingInfo = false
 end
 
 ScenarioInfoListenerWidget = ScenarioInfoListener:extends{}
@@ -107,5 +107,5 @@ function ScenarioInfoListenerWidget:init(scenarioInfoView)
 end
 
 function ScenarioInfoListenerWidget:onSet(data)
-	self.scenarioInfoView:UpdateInfo(data)
+    self.scenarioInfoView:UpdateInfo(data)
 end

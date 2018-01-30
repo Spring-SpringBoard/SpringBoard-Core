@@ -70,27 +70,27 @@ local function GenerateModInfo()
 [[
 local modinfo = {
     name = "__NAME__",
-	shortName = "__SHORTNAME__",
-	version	= "__VERSION__",
-	game = "__GAME__", --what is this?
-	shortGame = "__SHORTGAME__", --what is this?
-	mutator = "Official", --what is this?
-	description = "__DESCRIPTION__",
-	modtype = "1",
+    shortName = "__SHORTNAME__",
+    version    = "__VERSION__",
+    game = "__GAME__", --what is this?
+    shortGame = "__SHORTGAME__", --what is this?
+    mutator = "Official", --what is this?
+    description = "__DESCRIPTION__",
+    modtype = "1",
     depend = {
         "__GAME_NAME__ __GAME_VERSION__",
     }
 }
 return modinfo]]
-	local scenarioInfo = SB.model.scenarioInfo
-	modInfoTxt = modInfoTxt:gsub("__NAME__", scenarioInfo.name)
-						   :gsub("__SHORTNAME__", scenarioInfo.name)
-						   :gsub("__VERSION__", scenarioInfo.version)
-						   :gsub("__GAME__", scenarioInfo.name)
-						   :gsub("__SHORTGAME__", scenarioInfo.name)
-						   :gsub("__DESCRIPTION__", scenarioInfo.description)
-						   :gsub("__GAME_NAME__", Game.gameName)
-						   :gsub("__GAME_VERSION__", Game.gameVersion)
+    local scenarioInfo = SB.model.scenarioInfo
+    modInfoTxt = modInfoTxt:gsub("__NAME__", scenarioInfo.name)
+                           :gsub("__SHORTNAME__", scenarioInfo.name)
+                           :gsub("__VERSION__", scenarioInfo.version)
+                           :gsub("__GAME__", scenarioInfo.name)
+                           :gsub("__SHORTGAME__", scenarioInfo.name)
+                           :gsub("__DESCRIPTION__", scenarioInfo.description)
+                           :gsub("__GAME_NAME__", Game.gameName)
+                           :gsub("__GAME_VERSION__", Game.gameVersion)
 
     return modInfoTxt
 end
@@ -170,16 +170,16 @@ end
 
 local function ScriptTxtSave(path, dev)
     local scriptTxt = SaveCommand.GenerateScript(dev)
-	local file = assert(io.open(path, "w"))
-	file:write(scriptTxt)
-	file:close()
+    local file = assert(io.open(path, "w"))
+    file:write(scriptTxt)
+    file:close()
 end
 
 local function ModInfoSave(path)
-	local modInfoTxt = GenerateModInfo()
-	local file = assert(io.open(path, "w"))
-	file:write(modInfoTxt)
-	file:close()
+    local modInfoTxt = GenerateModInfo()
+    local file = assert(io.open(path, "w"))
+    file:write(modInfoTxt)
+    file:close()
 end
 
 local function GUIStateSave(path)

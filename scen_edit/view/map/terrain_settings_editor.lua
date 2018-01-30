@@ -13,21 +13,21 @@ Editor.Register({
 
 local WRITE_DATA_DIR = nil
 local function GetWriteDataDir()
-	if WRITE_DATA_DIR then
-		return WRITE_DATA_DIR
-	end
+    if WRITE_DATA_DIR then
+        return WRITE_DATA_DIR
+    end
 
-	local dataDirStr = "write data directory: "
-	lines = explode("\n", VFS.LoadFile("infolog.txt", nil, VFS.RAW))
-	dataDir = ""
-	for i, line in pairs(lines) do
-	    if line:find(dataDirStr) then
-	        dataDir = line:sub(line:find(dataDirStr) + #dataDirStr)
-	        break
-	    end
-	end
-	WRITE_DATA_DIR = dataDir
-	return WRITE_DATA_DIR
+    local dataDirStr = "write data directory: "
+    lines = explode("\n", VFS.LoadFile("infolog.txt", nil, VFS.RAW))
+    dataDir = ""
+    for i, line in pairs(lines) do
+        if line:find(dataDirStr) then
+            dataDir = line:sub(line:find(dataDirStr) + #dataDirStr)
+            break
+        end
+    end
+    WRITE_DATA_DIR = dataDir
+    return WRITE_DATA_DIR
 end
 
 function TerrainSettingsEditor:init()
@@ -213,12 +213,12 @@ function TerrainSettingsEditor:OnFieldChange(name, value)
 --             Log.Debug(GL.TEXTURE_CUBE_MAP, GL.TEXTURE_2D)
 --
 --             local tex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
--- 						target = 0x8513,
+--                         target = 0x8513,
 --                 min_filter = GL.LINEAR,
 --                 mag_filter = GL.LINEAR,
 --                 fbo = true,
 --             })
--- 					gl.Texture(item)
+--                     gl.Texture(item)
 --             Log.Debug(texInfo.xsize, texInfo.ysize, item)
 --             SB.model.textureManager:Blit(item, tex)
             local texInfo = gl.TextureInfo(value)

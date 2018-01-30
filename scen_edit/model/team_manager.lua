@@ -137,13 +137,13 @@ local function _GenerateTeams()
             team.ai = true
         end
 
-		local metal, metalMax = Spring.GetTeamResources(teamID, "metal")
-		team.metal = metal
-		team.metalMax = metalMax
+        local metal, metalMax = Spring.GetTeamResources(teamID, "metal")
+        team.metal = metal
+        team.metalMax = metalMax
 
-		local energy, energyMax = Spring.GetTeamResources(teamID, "energy")
-		team.energy = energy
-		team.energyMax = energyMax
+        local energy, energyMax = Spring.GetTeamResources(teamID, "energy")
+        team.energy = energy
+        team.energyMax = energyMax
     end
     return teams
 end

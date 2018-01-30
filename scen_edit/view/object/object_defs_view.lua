@@ -157,16 +157,16 @@ function ObjectDefsView:init()
     end
 
     table.insert(children,
-		ScrollPanel:New {
-			x = 0,
-			y = "65%",
-			bottom = 30,
-			right = 0,
-			borderColor = {0,0,0,0},
-			horizontalScrollbar = false,
-			children = { self.stackPanel },
-		}
-	)
+        ScrollPanel:New {
+            x = 0,
+            y = "65%",
+            bottom = 30,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        }
+    )
 
     self:Finalize(children)
     self:SetInvisibleFields(unpack(self.allFields))
@@ -317,17 +317,17 @@ function UnitDefsView:MakeFilters()
             },
         },
         Label:New {
-			x = 1,
-			y = 8 + SB.conf.C_HEIGHT * 7,
-			caption = "Search:",
-		},
-		EditBox:New {
-			height = SB.conf.B_HEIGHT,
-			x = 60,
-			y = 1 + SB.conf.C_HEIGHT * 7,
-			text = "",
-			width = 90,
-			OnTextInput = {
+            x = 1,
+            y = 8 + SB.conf.C_HEIGHT * 7,
+            caption = "Search:",
+        },
+        EditBox:New {
+            height = SB.conf.B_HEIGHT,
+            x = 60,
+            y = 1 + SB.conf.C_HEIGHT * 7,
+            text = "",
+            width = 90,
+            OnTextInput = {
                 function(obj)
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
@@ -337,7 +337,7 @@ function UnitDefsView:MakeFilters()
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
             },
-		},
+        },
     }
 end
 
@@ -379,80 +379,80 @@ end
 function FeatureDefsView:MakeFilters()
     self.filters = {
         Label:New {
-			x = 1,
-			y = 8 + SB.conf.C_HEIGHT * 5,
-			caption = "Type:",
-		},
-		ComboBox:New {
-			height = SB.conf.B_HEIGHT,
-			x = 40,
-			y = 1 + SB.conf.C_HEIGHT * 5,
-			items = {
-				"Other", "Wreckage", "All",
-			},
-			width = 90,
-			OnSelect = {
-				function (obj, itemIdx, selected)
-					if selected then
-						self.objectDefPanel:SelectFeatureTypesID(itemIdx)
-					end
-				end
-			},
-		},
-		Label:New {
-			x = 140,
-			y = 8 + SB.conf.C_HEIGHT * 5,
-			caption = "Wreck:",
-		},
-		ComboBox:New {
-			height = SB.conf.B_HEIGHT,
-			x = 190,
-			y = 1 + SB.conf.C_HEIGHT * 5,
-			items = {
-				"Units", "Buildings", "All",
-			},
-			width = 90,
-			OnSelect = {
-				function (obj, itemIdx, selected)
-					if selected then
-                        self.objectDefPanel:SelectUnitTypesID(itemIdx)
-					end
-				end
-			},
-		},
-		Label:New {
-			caption = "Terrain:",
-			x = 290,
-			y = 8 + SB.conf.C_HEIGHT * 5,
-		},
-		ComboBox:New {
-			y = 1 + SB.conf.C_HEIGHT * 5,
-			height = SB.conf.B_HEIGHT,
-			items = {
-				"Ground", "Air", "Water", "All",
-			},
-			x = 340,
-			width = 90,
-			OnSelect = {
-				function (obj, itemIdx, selected)
-					if selected then
-						self.objectDefPanel:SelectTerrainID(itemIdx)
-					end
-				end
-			},
-		},
+            x = 1,
+            y = 8 + SB.conf.C_HEIGHT * 5,
+            caption = "Type:",
+        },
+        ComboBox:New {
+            height = SB.conf.B_HEIGHT,
+            x = 40,
+            y = 1 + SB.conf.C_HEIGHT * 5,
+            items = {
+                "Other", "Wreckage", "All",
+            },
+            width = 90,
+            OnSelect = {
+                function (obj, itemIdx, selected)
+                    if selected then
+                        self.objectDefPanel:SelectFeatureTypesID(itemIdx)
+                    end
+                end
+            },
+        },
         Label:New {
-			x = 1,
-			y = 8 + SB.conf.C_HEIGHT * 7,
-			caption = "Search:",
-		},
-		EditBox:New {
-			height = SB.conf.B_HEIGHT,
-			x = 60,
-			y = 1 + SB.conf.C_HEIGHT * 7,
-			text = "",
-			width = 90,
-			OnTextInput = {
+            x = 140,
+            y = 8 + SB.conf.C_HEIGHT * 5,
+            caption = "Wreck:",
+        },
+        ComboBox:New {
+            height = SB.conf.B_HEIGHT,
+            x = 190,
+            y = 1 + SB.conf.C_HEIGHT * 5,
+            items = {
+                "Units", "Buildings", "All",
+            },
+            width = 90,
+            OnSelect = {
+                function (obj, itemIdx, selected)
+                    if selected then
+                        self.objectDefPanel:SelectUnitTypesID(itemIdx)
+                    end
+                end
+            },
+        },
+        Label:New {
+            caption = "Terrain:",
+            x = 290,
+            y = 8 + SB.conf.C_HEIGHT * 5,
+        },
+        ComboBox:New {
+            y = 1 + SB.conf.C_HEIGHT * 5,
+            height = SB.conf.B_HEIGHT,
+            items = {
+                "Ground", "Air", "Water", "All",
+            },
+            x = 340,
+            width = 90,
+            OnSelect = {
+                function (obj, itemIdx, selected)
+                    if selected then
+                        self.objectDefPanel:SelectTerrainID(itemIdx)
+                    end
+                end
+            },
+        },
+        Label:New {
+            x = 1,
+            y = 8 + SB.conf.C_HEIGHT * 7,
+            caption = "Search:",
+        },
+        EditBox:New {
+            height = SB.conf.B_HEIGHT,
+            x = 60,
+            y = 1 + SB.conf.C_HEIGHT * 7,
+            text = "",
+            width = 90,
+            OnTextInput = {
                 function(obj)
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
@@ -462,6 +462,6 @@ function FeatureDefsView:MakeFilters()
                     self.objectDefPanel:SetSearchString(obj.text)
                 end
             },
-		},
+        },
     }
 end

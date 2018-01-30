@@ -2,14 +2,14 @@ FileDialog = Observable:extends{}
 
 function FileDialog:init(dir, caption, fileTypes)
     self.dir = dir or nil
-	self.caption = caption or "File dialog"
+    self.caption = caption or "File dialog"
     self.confirmDialogCallback = nil
     self.fileTypes = fileTypes
     local buttonPanel = MakeComponentPanel()
     self.fileEditBox = EditBox:New {
         y = 1,
-		x = 75,
-		right = 0,
+        x = 75,
+        right = 0,
         height = "100%",
     }
 
@@ -25,7 +25,7 @@ function FileDialog:init(dir, caption, fileTypes)
         height = SB.conf.B_HEIGHT,
         bottom = 5,
         width = "20%",
-		right = 10,
+        right = 10,
         caption = "Cancel",
     }
     self.fileView = AssetView({
@@ -71,12 +71,12 @@ function FileDialog:init(dir, caption, fileTypes)
                 padding = {0, 0, 0, 0},
                 children = {
                     Label:New {
-						x = 1,
-						y = 4,
-						valign = "center",
+                        x = 1,
+                        y = 4,
+                        valign = "center",
                         width = 65,
                         caption = "File name: ",
-						align = "left",
+                        align = "left",
                     },
                     self.fileEditBox,
                 },

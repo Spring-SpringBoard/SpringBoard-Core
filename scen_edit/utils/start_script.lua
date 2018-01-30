@@ -164,24 +164,24 @@ function boolToNumber(bool)
 end
 
 function StartScript.__WriteTable(key, value)
-	local str = '\t['..key..']\n\t{\n'
+    local str = '\t['..key..']\n\t{\n'
     -- First write Tables
-	for k, v in pairs(value) do
+    for k, v in pairs(value) do
         if type(v) == 'table' then
             str = str .. StartScript.__WriteTable(k, v)
-		end
-	end
+        end
+    end
 
-	-- Then the rest (purely for aesthetics)
+    -- Then the rest (purely for aesthetics)
     for k, v in pairs(value) do
         if type(v) ~= 'table' then
             if type(v) == "boolean" then
                 v = boolToNumber(v)
             end
             str = str .. '\t\t' .. k .. ' = ' .. tostring(v) .. ';\n'
-		end
-	end
-	return str .. '\t}\n\n'
+        end
+    end
+    return str .. '\t}\n\n'
 end
 
 function StartScript.__WriteStartScript(script)

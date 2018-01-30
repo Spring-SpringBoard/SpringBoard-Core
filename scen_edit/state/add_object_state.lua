@@ -13,7 +13,7 @@ function AddObjectState:init(bridge, editorView, objectDefIDs)
     self.mapGrid.separatorSize = 2
 
     self.amount  = self.editorView.fields["amount"].value
-	self.team    = self.editorView.fields["team"].value
+    self.team    = self.editorView.fields["team"].value
 end
 
 function AddObjectState:MousePress(x, y, button)

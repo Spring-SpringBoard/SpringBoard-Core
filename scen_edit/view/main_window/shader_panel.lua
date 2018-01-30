@@ -123,15 +123,15 @@ function NodeEditor:Create()
     }
     self.mainWindow = Window:New {
         x = "20%",
-		y = "20%",
+        y = "20%",
         right = "40%",
         bottom = "20%",
-		parent = screen0,
-		caption = "Map shader editor",
-		resizable = false,
-		draggable = true,
-		padding = {5, 0, 0, 0},
-		children = {
+        parent = screen0,
+        caption = "Map shader editor",
+        resizable = false,
+        draggable = true,
+        padding = {5, 0, 0, 0},
+        children = {
             ScrollPanel:New {
                 x = 5,
                 right = 150,

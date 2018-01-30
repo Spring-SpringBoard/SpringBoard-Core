@@ -222,7 +222,7 @@ function SB.humanExpression(data, exprType, dataType, level)
         return SB.metaModel.numericComparisonTypes[data.value]
     elseif exprType == "identity_comparison" then
         return SB.metaModel.identityComparisonTypes[data.value]
-	end
+    end
     return data.humanName
     end)
     if success then

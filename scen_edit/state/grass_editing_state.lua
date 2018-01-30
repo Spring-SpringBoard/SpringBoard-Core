@@ -8,7 +8,7 @@ end
 function GrassEditingState:GetCommand(x, z, applyAction)
     return TerrainGrassCommand({
         x = x + self.size/2,
-		z = z + self.size/2,
+        z = z + self.size/2,
         size = self.size,
         shapeName = self.patternTexture,
         rotation = self.rotation,
