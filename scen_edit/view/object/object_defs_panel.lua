@@ -183,6 +183,8 @@ function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius
     local scale = -1 / radius--math.sqrt(radius)
     gl.Texture("LuaUI/images/scenedit/background.png")
     gl.RenderToTexture(tex, function()
+        -- FIXME: this is awful code and should be fixed
+
         gl.Color(0.2, 0.3, 0.3, 1)
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
 --                     gl.TexRect(-1, -1, 1, 1)
