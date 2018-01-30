@@ -117,8 +117,6 @@ function SaveCommand.GenerateScript(dev)
     local players = {}
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         if not team.gaia then
-            -- We wanna preserve the team ids, so better using teams as a
-            -- map/dictionary, where the keys are the teams ids
             teams[team.id] = {
                 -- TeamID = team.id, ID is implicit as index-1
                 TeamLeader = 0,

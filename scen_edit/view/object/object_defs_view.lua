@@ -180,24 +180,10 @@ function ObjectDefsView:PopulateTeams()
         self:RemoveField("team")
     end
 
-    local teamIDs = {}
-    local teamCaptions = {}
-    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
-        local teamCaption = "Team " .. team.name
-        if team.color then
-            teamCaption = SB.glToFontColor(team.color) .. teamCaption .. "\b"
-        end
-        if team.gaia then
-            teamCaption = teamCaption .. " (GAIA)"
-        end
-        table.insert(teamCaptions, teamCaption)
-        table.insert(teamIDs, team.id)
-    end
-    self:AddField(ChoiceField({
+    self:AddField(TeamField({
         name = "team",
-        items = teamIDs,
-        captions = teamCaptions,
         title = "Team: ",
+        width = 300,
     }))
 end
 

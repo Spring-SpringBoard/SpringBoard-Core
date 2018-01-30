@@ -120,13 +120,13 @@ local function _GenerateTeams()
         local team = { id = teamID }
         table.insert(teams, team)
 
-        -- Temporal name. We are later using the unsynced version.
+        -- Temporary name. Later we use the name generated from unsynced.
         -- See team_sync.lua
         team.name = tostring(teamID)
 
         local aiID = Spring.GetAIInfo(teamID)
         if aiID ~= nil then
-            team.ai = true -- TODO: maybe get the exact AI as well?
+            team.ai = true
         end
         local _, _, _, _, side, allyTeam = Spring.GetTeamInfo(teamID)
         team.side = side

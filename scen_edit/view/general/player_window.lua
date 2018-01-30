@@ -83,21 +83,23 @@ function PlayerWindow:init(team)
         tooltip = "Team starting position",
     }))
 
-    local side_names, captions, i = {}, {}, 1
+    local sideNames, sideCaptions, i = {}, {}, 1
     while Spring.GetSideData(i) ~= nil do
-        local side_name, _, caption = Spring.GetSideData(i)
-        side_names[i] = side_name
-        captions[i] = caption
+        local name, _, caption = Spring.GetSideData(i)
+        table.insert(sideNames, name)
+        table.insert(sideCaptions, caption)
         i = i + 1
     end
-    self:AddField(ChoiceField({
-        name = "side",
-        captions = captions,
-        items = side_names,
-        value = team.side,
-        tooltip = "Team side",
-        width = 400,
-    }))
+    if #sideNames > 0 then
+        self:AddField(ChoiceField({
+            name = "side",
+            captions = sideCaptions,
+            items = sideNames,
+            value = team.side,
+            tooltip = "Team side",
+            width = 400,
+        }))
+    end
 
     local children = {}
     table.insert(children,
@@ -128,7 +130,9 @@ function PlayerWindow:init(team)
         newTeam.energy      = self.fields["energy"].value or energy
         newTeam.energyMax   = self.fields["energyStorage"].value or energyMax
         newTeam.startPos    = self.fields["startPos"].value
-        newTeam.side        = self.fields["side"].value
+        if self.fields["side"] then
+            newTeam.side        = self.fields["side"].value
+        end
         local cmd = UpdateTeamCommand(newTeam)
         SB.commandManager:execute(cmd)
     end)

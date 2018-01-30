@@ -16,10 +16,23 @@ TeamField = ChoiceField:extends{}
 --     title = "Teams",
 -- })
 function TeamField:init(opts)
-    local items = GetField(SB.model.teamManager:getAllTeams(), "name")
-    local ids = GetField(SB.model.teamManager:getAllTeams(), "id")
-    opts.items = ids
-    opts.captions = items
+    local teamIDs = {}
+    local teamCaptions = {}
+
+    local sortedTeams = Table.SortByAttr(SB.model.teamManager:getAllTeams(), "id")
+    for _, team in pairs(sortedTeams) do
+        local teamCaption = team.name
+        if team.color then
+            teamCaption = SB.glToFontColor(team.color) .. teamCaption .. "\b"
+        end
+
+        teamCaption = teamCaption .. " (ID: " .. tonumber(team.id) .. ")"
+        table.insert(teamCaptions, teamCaption)
+        table.insert(teamIDs, team.id)
+    end
+
+    opts.items = teamIDs
+    opts.captions = teamCaptions
 
     ChoiceField.init(self, opts)
 end

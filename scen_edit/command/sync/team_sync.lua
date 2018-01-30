@@ -78,6 +78,7 @@ end)
 
 function TeamManagerListenerWidget:onTeamAdded(teamID)
     local team = SB.model.teamManager:getTeam(teamID)
+    -- Generate values from unsynced only once
     if team.color then
         return
     end
@@ -87,6 +88,9 @@ function TeamManagerListenerWidget:onTeamAdded(teamID)
     local aiID, name = Spring.GetAIInfo(teamID)
     if aiID ~= nil then
         team.name = name
+    elseif teamID == Spring.GetGaiaTeamID() then
+        -- Force the name for GAIA team
+        team.name = "GAIA"
     else
         local _, leader = Spring.GetTeamInfo(teamID)
         if Spring.GetPlayerInfo(leader) then
@@ -94,7 +98,6 @@ function TeamManagerListenerWidget:onTeamAdded(teamID)
         end
     end
 
-    
     -- use our unsynced color
     local r, g, b = Spring.GetTeamColor(teamID)
     team.color = {r=r, g=g, b=b}
