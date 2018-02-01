@@ -186,6 +186,10 @@ function RuntimeModel:GameFrame(frameNum)
         return
     end
 
+    if self.eventTriggers["GAME_FRAME"] then
+        self:OnEvent("GAME_FRAME")
+    end
+
     if Spring.GetGameFrame() % checkRate == 0 then
         local newUnitIDs = self:GetAllUnits()
         local unitIDs = {}
