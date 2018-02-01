@@ -909,16 +909,6 @@ return {
                     return Spring.IsGameOver()
                 end
             },
-
-            {
-                humanName = "Game speed",
-                name = "GAME_SPEED",
-                output = "number",
-                tags = { "Time" },
-                execute = function(input)
-                    return Spring.GetGameSpeed()
-                end
-            },
             {
                 humanName = "Game frame",
                 name = "GAME_FRAME",
