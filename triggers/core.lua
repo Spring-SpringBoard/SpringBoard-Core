@@ -603,7 +603,7 @@ return {
                 humanName = "Game ends",
                 name = "GAME_END",
             },
-            {  -- Useful to execute something every single frame
+            {
                 humanName = "Game frame",
                 name = "GAME_FRAME",
             },
