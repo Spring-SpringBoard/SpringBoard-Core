@@ -604,6 +604,10 @@ return {
                 name = "GAME_END",
             },
             {
+                humanName = "Game frame",
+                name = "GAME_FRAME",
+            },
+            {
                 humanName = "Team died",
                 name = "TEAM_DIE",
                 param = "team",
