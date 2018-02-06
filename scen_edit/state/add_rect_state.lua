@@ -1,6 +1,8 @@
 AddRectState = AbstractState:extends{}
 
-function AddRectState:init()
+function AddRectState:enterState()
+    AbstractState.enterState(self)
+
     SB.SetGlobalRenderingFunction(function(...)
         self:__DrawInfo(...)
     end)
@@ -8,6 +10,7 @@ end
 
 function AddRectState:leaveState()
     AbstractState.leaveState(self)
+
     SB.SetGlobalRenderingFunction(nil)
 end
 

@@ -7,8 +7,12 @@ function SelectObjectState:init(bridge, callback)
 
     self.bridge = bridge
     self.callback = callback
-    SB.SetMouseCursor("search")
+end
 
+function SelectObjectState:enterState()
+    AbstractState.enterState(self)
+
+    SB.SetMouseCursor("search")
     SB.SetGlobalRenderingFunction(function(...)
         self:__DrawInfo(...)
     end)
@@ -16,6 +20,7 @@ end
 
 function SelectObjectState:leaveState()
     AbstractState.leaveState(self)
+
     SB.SetGlobalRenderingFunction(nil)
 end
 
