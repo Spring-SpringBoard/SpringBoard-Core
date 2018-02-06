@@ -170,6 +170,71 @@ function TerrainSettingsEditor:init()
         end
     end)
 
+    self:AddControl("shader-sep", {
+        Label:New {
+            caption = "Load shader",
+        },
+        Line:New {
+            x = 150,
+        }
+    })
+    self.btnLoadShader = Button:New ({
+        caption = "Load",
+        height = 30,
+        width = 100,
+        OnClick = {
+            function()
+                local shaderFile = self.fields["shaderFile"].value
+                if not shaderFile or shaderFile == "" then
+                    return
+                end
+                local success, msg = pcall(function()
+                    local envTbl = getfenv()
+                    envTbl.__path__ = shaderFile
+                    local shader = VFS.Include(shaderFile, envTbl)
+                    Spring.SetMapShader(shader, shader)
+                end)
+                if not success then
+                    Log.Error(msg)
+                end
+            end
+        }
+    })
+    self.btnResetShader = Button:New ({
+        caption = "Reset",
+        height = 30,
+        width = 100,
+        OnClick = {
+            function()
+                Spring.SetMapShader(nil, nil)
+            end
+        }
+    })
+    self:AddField(GroupField({
+        AssetField({
+            name = "shaderFile",
+            title = "Shader file:",
+            tooltip = "SpringBoard Shader Lua file",
+            rootDir = "shaders/",
+        }),
+        Field({
+            name = "btnLoadShader",
+            height = 30,
+            width = 100,
+            components = {
+                self.btnLoadShader,
+            }
+        }),
+        Field({
+            name = "btnResetShader",
+            height = 30,
+            width = 100,
+            components = {
+                self.btnResetShader,
+            }
+        }),
+    }))
+
     local children = {
         ScrollPanel:New {
             x = 0,
