@@ -101,19 +101,20 @@ function ObjectDefsPanel:_OnSelectItem(obj, itemIdx, selected)
     local objectDefID = item.objectDefID
 
     local currentState = SB.stateManager:GetCurrentState()
-    -- always block calls if current state is object selection
-    if currentState.SelectObjectType then
-        -- even if we don't want the current item
-        if selected then
-            currentState:SelectObjectType(objectDefID)
-        end
-        return
+    if currentState.SelectObjectType and selected then
+        currentState:SelectObjectType(objectDefID)
     end
 
     if not selected then
         self:_UnselectItem(objectDefID)
     else
         table.insert(self.selectedObjectDefIDs, objectDefID)
+    end
+
+    -- always block calls if current state is object selection
+    -- even if we don't want the current item
+    if currentState.SelectObjectType then
+        return
     end
     CallListeners(self.OnSelectItem, item, selected)
 end
