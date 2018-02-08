@@ -17,6 +17,12 @@ return {
             }
         },
     },
+    events = {
+        {
+            humanName = "Closed Dialog",
+            name = "UI_DIALOG_CLOSE",
+        },
+    },
     functions = {
     },
     actions = {
@@ -99,6 +105,7 @@ return {
                             OnClick = {
                                 function()
                                     Spring.SendCommands("pause 0")
+                                    SB.commandManager:execute(OnEventCommand("UI_DIALOG_CLOSE"))
                                     window:Dispose()
                                 end
                             },
