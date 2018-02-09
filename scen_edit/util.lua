@@ -197,18 +197,22 @@ function SB.humanExpression(data, exprType, dataType, level)
                         SB.humanExpression(data.value[input.name], "value", input.type, level + 1)
                 end
                 return humanName
-            -- custom data types
+            -- array and custom data types
             elseif type(data.value) == "table" then
-                local retStr = ""
-                for k, v in pairs(data.value) do
-                    if k ~= "typeName" then
-                        if retStr ~= "" then
-                            retStr = retStr .. ", "
+                if String.Ends(dataType, "_array") then
+                    return dataType .. "{...}"
+                else
+                    local retStr = ""
+                    for k, v in pairs(data.value) do
+                        if k ~= "typeName" then
+                            if retStr ~= "" then
+                                retStr = retStr .. ", "
+                            end
+                            retStr = retStr .. tostring(v.value)
                         end
-                        retStr = retStr .. tostring(v.value)
                     end
+                    return retStr
                 end
-                return retStr
             else
                 return tostring(data.value)
             end
