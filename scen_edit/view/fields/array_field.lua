@@ -253,7 +253,7 @@ end
 
 function ArrayFieldWindow:__RemoveField(fieldName)
     -- Sometimes we want to remove the group field instead
-    local removeField = self.fields[fieldName].removeField
+    local removeField = self.fields[fieldName].removeFieldName
     self:RemoveField(removeField)
 
     local index = self.__fieldIndex[fieldName]
