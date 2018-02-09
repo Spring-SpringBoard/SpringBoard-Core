@@ -105,7 +105,7 @@ return {
                             OnClick = {
                                 function()
                                     Spring.SendCommands("pause 0")
-                                    SB.commandManager:execute(OnEventCommand("UI_DIALOG_CLOSE"))
+                                    SB.ExecuteEvent("UI_DIALOG_CLOSE")
                                     window:Dispose()
                                 end
                             },
