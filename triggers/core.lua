@@ -477,6 +477,54 @@ return {
                 end
             },
             {
+                humanName = "Remove Marker",
+                name = "MARKER_DEL_POINT",
+                input = {"position"},
+                tags = {"Marker"},
+                execute = function (input)
+                    local position = input.position
+                    local x = position.x
+                    local y = position.y
+                    local z = position.z
+                    Spring.MarkerErasePosition(x, y, z)
+                end
+            },
+            {
+                humanName = "Draw Line",
+                name = "MARKER_LINE",
+                input = {
+                    {
+                        name = "origin",
+                        type = "position"
+                    },
+                    {
+                        name = "destination",
+                        type = "position"
+                    },
+                },
+                tags = {"Marker"},
+                execute = function (input)
+                    local p1 = input.origin
+                    local p2 = input.destination
+                    Spring.MarkerAddLine(p1.x, p1.y, p1.z,
+                                         p2.x, p2.y, p2.z)
+                end
+            },
+            {
+                humanName = "Draw Connected Lines",
+                name = "MARKER_LINE_STRIP",
+                input = {"position_array"},
+                tags = {"Marker"},
+                execute = function (input)
+                    for i=2,#input.position_array do
+                        local p1 = input.position_array[i - 1]
+                        local p2 = input.position_array[i]
+                        Spring.MarkerAddLine(p1.x, p1.y, p1.z,
+                                             p2.x, p2.y, p2.z)
+                    end
+                end
+            },
+            {
                 humanName = "Play sound",
                 name = "PLAY_SOUND_FILE",
                 input = { "string" },
