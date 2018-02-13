@@ -106,7 +106,7 @@ function SaveCommand.GenerateScript(dev)
     local modOptions = {
         deathmode = "neverend",
         has_scenario_file = not dev,
-        play_mode = not dev,
+        sb_gameMode = if dev then 0 else 2,
     }
     if dev and SB.projectDir then
         modOptions.project_dir = SB.projectDir
