@@ -505,7 +505,7 @@ return {
                 tags = {"Marker"},
                 execute = function (input)
                     local p1 = input.origin
-                    local p2 = input.origin
+                    local p2 = input.destination
                     Spring.MarkerAddLine(p1.x, p1.y, p1.z,
                                          p2.x, p2.y, p2.z)
                 end
