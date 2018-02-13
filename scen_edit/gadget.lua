@@ -130,7 +130,7 @@ function gadget:Initialize()
         Log.Error("Outdated init script mod option 'play_mode'. " ..
                   "Please, export your project again")
     end
-    local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)
+    local sb_gameMode = (tonumber(modOpts.sb_gamemode) or 0)
     if sb_gameMode == 0 then
         sb_gameMode = "dev"
     elseif sb_gameMode == 1 then
