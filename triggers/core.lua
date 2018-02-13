@@ -504,21 +504,6 @@ return {
                 end
             },
             {
-                humanName = "Remove Markers",
-                name = "MARKER_DEL_POINTS",
-                input = {"position_array"},
-                tags = {"Marker"},
-                execute = function (input)
-                    for i=1,#input.position_array do
-                        local position = input.position_array[i]
-                        local x = position.x
-                        local y = position.y
-                        local z = position.z
-                        Spring.MarkerErasePosition(x, y, z)
-                    end
-                end
-            },
-            {
                 humanName = "Play sound",
                 name = "PLAY_SOUND_FILE",
                 input = { "string" },
