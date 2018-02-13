@@ -492,12 +492,33 @@ return {
             {
                 humanName = "Draw Line",
                 name = "MARKER_LINE",
+                input = {
+                    {
+                        name = "origin",
+                        type = "position"
+                    },
+                    {
+                        name = "destination",
+                        type = "position"
+                    },
+                },
+                tags = {"Marker"},
+                execute = function (input)
+                    local p1 = input.origin
+                    local p2 = input.origin
+                    Spring.MarkerAddLine(p1.x, p1.y, p1.z,
+                                         p2.x, p2.y, p2.z)
+                end
+            },
+            {
+                humanName = "Draw Connected Lines",
+                name = "MARKER_LINE_STRIP",
                 input = {"position_array"},
                 tags = {"Marker"},
                 execute = function (input)
                     for i=2,#input.position_array do
-                        p1 = input.position_array[i - 1]
-                        p2 = input.position_array[i]
+                        local p1 = input.position_array[i - 1]
+                        local p2 = input.position_array[i]
                         Spring.MarkerAddLine(p1.x, p1.y, p1.z,
                                              p2.x, p2.y, p2.z)
                     end
