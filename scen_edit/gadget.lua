@@ -121,6 +121,15 @@ function gadget:Initialize()
 
     -- detect game mode
     local modOpts = Spring.GetModOptions()
+    if modOpts.sb_gameMode == nil and modOpts.play_mode ~= nil then
+        -- That's not actually stright-forward, but so far a smart alternative.
+        -- If the script has the play_mode mod option, then we are reporting
+        -- this error, and using the default sb_gameMode = "dev" mod option,
+        -- which will launch SpringBoard in dev mode to can export/update the
+        -- project
+        Log.Error("Outdated init script mod option 'play_mode'. " ..
+                  "Please, export your project again")
+    end
     local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)
     if sb_gameMode == 0 then
         sb_gameMode = "dev"
