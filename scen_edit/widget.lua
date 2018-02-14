@@ -232,6 +232,12 @@ function widget:DrawWorldPreUnit()
     end
 end
 
+function widget:DrawGroundPreForward()
+    if SB.DrawGroundPreForward ~= nil then
+        SB.DrawGroundPreForward()
+    end
+end
+
 function widget:MousePress(x, y, button)
     if SB.view ~= nil then
         return SB.stateManager:MousePress(x, y, button)

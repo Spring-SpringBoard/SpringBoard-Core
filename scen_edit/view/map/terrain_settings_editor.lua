@@ -191,8 +191,9 @@ function TerrainSettingsEditor:init()
                 local success, msg = pcall(function()
                     local envTbl = getfenv()
                     envTbl.__path__ = shaderFile
-                    local shader = VFS.Include(shaderFile, envTbl)
-                    Spring.SetMapShader(shader, shader)
+                    local shaderDef = VFS.Include(shaderFile, envTbl)
+                    Spring.SetMapShader(shaderDef.shader, shaderDef.shader)
+                    SB.DrawGroundPreForward = shaderDef.DrawGroundPreForward
                 end)
                 if not success then
                     Log.Error(msg)
