@@ -121,16 +121,15 @@ function gadget:Initialize()
 
     -- detect game mode
     local modOpts = Spring.GetModOptions()
-    local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)
-    if sb_gameMode == 0 then
-        sb_gameMode = "dev"
-    elseif sb_gameMode == 1 then
-        sb_gameMode = "test"
-    elseif sb_gameMode == 2 then
-        sb_gameMode = "play"
-    else
-        Log.Error("Unexpected sb_gameMode value: " ..
-            tostring(sb_gameMode) .. ". Defaulting to 0.")
+    if modOpts.sb_game_mode == nil and modOpts.play_mode ~= nil then
+        -- Report outdated script.txt, and use "dev" mode to can update it
+        Log.Error("Outdated init script mod option 'play_mode'. " ..
+                  "Please, export your project again")
+    end
+    local sb_gameMode = (modOpts.sb_game_mode or "dev")
+    if sb_gameMode ~= "dev" and sb_gameMode ~= "test" and sb_gameMode ~= "play" then
+        Log.Error("Unexpected sb_game_mode value: " ..
+            sb_gameMode .. ". Defaulting to 'dev'.")
         sb_gameMode = "dev"
     end
     Log.Notice("SpringBoard", "info", "Running SpringBoard in " .. sb_gameMode .. "  gameMode.")
