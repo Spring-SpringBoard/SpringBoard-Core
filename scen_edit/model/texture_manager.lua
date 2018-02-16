@@ -187,9 +187,9 @@ function TextureManager:generateMapTextures()
             local tex
 
             local min_filter = GL.LINEAR
-            if name == "splat_distr" then
+            -- if name == "splat_distr" then
             --    min_filter = GL.LINEAR_MIPMAP_NEAREST
-            end
+            -- end
 
             if engineName:find("splat_normals") then
                 tex = gl.CreateTexture(sizeX, sizeZ, {

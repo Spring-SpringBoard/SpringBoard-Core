@@ -7,7 +7,7 @@ function SetObjectCommand:init(objType, params)
     self.params    = params
 end
 
-function SetObjectCommand:execute(bridge)
+function SetObjectCommand:execute()
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
 
     bridge.s11n:Set(self.params)

@@ -7,7 +7,7 @@ function AddObjectCommand:init(objType, params)
     self.params    = params
 end
 
-function AddObjectCommand:execute(bridge)
+function AddObjectCommand:execute()
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
 
     local objectID = bridge.s11n:Add(self.params)
@@ -15,7 +15,7 @@ function AddObjectCommand:execute(bridge)
     self.params.__modelID = bridge.getObjectModelID(objectID)
 end
 
-function AddObjectCommand:unexecute(bridge)
+function AddObjectCommand:unexecute()
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
     if not self.params.__modelID then
         Log.Warning("No modelID for un-add (remove).")

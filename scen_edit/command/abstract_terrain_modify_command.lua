@@ -90,8 +90,6 @@ end
 local maps = {}
 --  FIXME: ugly, rework
 local function getMap(size, delta, shapeName, rotation, origSize)
-    local map = nil
-
     local mapsByShape = maps[shapeName]
     if not mapsByShape then
         mapsByShape = {}

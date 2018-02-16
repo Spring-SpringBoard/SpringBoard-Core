@@ -7,7 +7,7 @@ function RemoveObjectCommand:init(objType, modelID)
     self.modelID          = modelID
 end
 
-function RemoveObjectCommand:execute(bridge)
+function RemoveObjectCommand:execute()
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
 
     local objectID = bridge.getObjectSpringID(self.modelID)
@@ -17,7 +17,7 @@ function RemoveObjectCommand:execute(bridge)
     end
 end
 
-function RemoveObjectCommand:unexecute(bridge)
+function RemoveObjectCommand:unexecute()
     local bridge = ObjectBridge.GetObjectBridge(self.objType)
 
     if self.old then

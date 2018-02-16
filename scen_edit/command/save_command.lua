@@ -22,9 +22,10 @@ local function HeightMapSave(path)
         --Log.Notice("Unpacking...")
         local newData = VFS.UnpackF32(str, 1, #str / 4)
         --Log.Notice(#data, #newData)
-        if #data ~= #newData then
-            --Log.Notice("Different size!: ", #data, #newData)
-        end
+
+        -- if #data ~= #newData then
+        --     Log.Notice("Different size!: ", #data, #newData)
+        -- end
         local diffCount = 0
         for i = 1, math.min(#data, #newData) do
             if data[i] ~= newData[i] then
@@ -51,9 +52,11 @@ local function HeightMapSave(path)
         end
     end
     bufferFlush()
-    if totalChanged == 0 then
-        --Log.Notice("Heightmap unchanged")
-    end
+
+    -- if totalChanged == 0 then
+    --     Log.Notice("Heightmap unchanged")
+    -- end
+
     --Log.Notice("Heightmap data: " .. totalChanged)
     assert(file:close())
 end
@@ -131,9 +134,9 @@ function SaveCommand.GenerateScript(dev)
             if team.ai then
                 local aiShortName = "NullAI"
                 local aiVersion = ""
-                if not dev then
+                -- if not dev then
                     -- TODO: Support other AIs for non-dev scripts
-                end
+                -- end
 
                 table.insert(ais, {
                     Name = team.name,
