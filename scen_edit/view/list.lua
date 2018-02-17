@@ -34,10 +34,10 @@ function List:Clear()
 end
 
 function List:AddRow(items, id)
-    local w = items[#items].x + items[#items].width
+    local width = items[#items].x + items[#items].width
 
     local container = Control:New {
-        width = w,
+        width = width,
         y = 0,
         height = self.height,
         padding = {0, 0, 0, 0},
@@ -54,7 +54,7 @@ function List:AddRow(items, id)
     }
 
     local index = #self.panel.children + 1
-    local w = Window:New {
+    local window = Window:New {
         x = 0,
         right = 0,
         y = self:CalculateHeight(index),
@@ -66,9 +66,9 @@ function List:AddRow(items, id)
         id = id,
         index = index
     }
-    self.panel:AddChild(w)
-    self.itemPanelMapping[id] = w
-    self.orderPanelMapping[index] = w
+    self.panel:AddChild(window)
+    self.itemPanelMapping[id] = window
+    self.orderPanelMapping[index] = window
 
     self:RecalculatePosition(id)
 end

@@ -35,20 +35,14 @@ function CollisionView:init()
 --     }))
     self:AddField(ChoiceField({
         name = "vType",
-        items = {
-            "Cylinder",
-            "Box",
-            "Sphere",
-        },
+        items = {1, 2, 3},
+        captions = {"Cylinder","Box","Sphere"},
         title = "Type:"
     }))
     self:AddField(ChoiceField({
         name = "axis",
-        items = {
-            "X",
-            "Y",
-            "Z",
-        },
+        items = {1, 2, 3},
+        captions = {"X","Y","Z"},
         title = "Axis:"
     }))
     self:AddControl("scale-sep", {
@@ -315,8 +309,7 @@ function CollisionView:OnSelectionChanged()
         self:Set("offsetY", collision.offsetY)
         self:Set("offsetZ", collision.offsetZ)
 --         self:Set("enabled", not collision.disabled)
-        local name = self.fields["vType"].comboBox.items[collision.vType]
-        self:Set("vType", name)
+        self:Set("vType", collision.vType)
 
         local radiusHeight = bridge.s11n:Get(objectID, "radiusHeight")
         self:Set("radius", radiusHeight.radius)
@@ -357,12 +350,12 @@ function CollisionView:OnEndChange(name)
 end
 
 function CollisionView:OnFieldChange(name, value)
-    local vType = self.fields["vType"].value
-    local axis  = self.fields["axis"].value
+    local vTypeCaption = self.fields["vType"]:GetCaption()
+    local axisCaption  = self.fields["axis"]:GetCaption()
     if name == "vType" then
-        if vType == "Sphere" then
+        if vTypeCaption == "Sphere" then
             self:SetInvisibleFields("scaleY", "scaleZ", "axis")
-        elseif vType == "Cylinder" then
+        elseif vTypeCaption == "Cylinder" then
             self:SetInvisibleFields()
 --             self:SetInvisibleFields("scaleZ")
         else
@@ -379,7 +372,7 @@ function CollisionView:OnFieldChange(name, value)
         return
     end
 
-    if vType == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
+    if vTypeCaption == "Sphere" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
         if name ~= "scaleX" then
             self:Set("scaleX", value)
         end
@@ -390,22 +383,22 @@ function CollisionView:OnFieldChange(name, value)
             self:Set("scaleZ", value)
         end
     end
-    if vType == "Cylinder" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
-        if axis == "X" then
+    if vTypeCaption == "Cylinder" and (name == "scaleX" or name == "scaleY" or name == "scaleZ") then
+        if axisCaption == "X" then
             if name == "scaleX" then
                 self:Set("scaleZ", value)
             end
             if name == "scaleZ" then
                 self:Set("scaleX", value)
             end
-        elseif axis == "Y" then
+        elseif axisCaption == "Y" then
             if name == "scaleX" then
                 self:Set("scaleY", value)
             end
             if name == "scaleY" then
                 self:Set("scaleX", value)
             end
-        elseif axis == "Z" then
+        elseif axisCaption == "Z" then
             if name == "scaleY" then
                 self:Set("scaleZ", value)
             end
@@ -451,17 +444,6 @@ function CollisionView:OnFieldChange(name, value)
            name == "offsetX" or name == "offsetY" or name == "offsetZ" or
            name == "vType" or name == "testType" or name == "axis" or
            name == "disabled" then
-        local vType, axis
-        for i, value in pairs(self.fields["vType"].comboBox.ids) do
-            if value == self.fields["vType"].value then
-                vType = i
-            end
-        end
-        for i, value in pairs(self.fields["axis"].comboBox.ids) do
-            if value == self.fields["axis"].value then
-                axis = i
-            end
-        end
         value = {
             scaleX                    = self.fields["scaleX"].value,
             scaleY                    = self.fields["scaleY"].value,
@@ -469,8 +451,8 @@ function CollisionView:OnFieldChange(name, value)
             offsetX                   = self.fields["offsetX"].value,
             offsetY                   = self.fields["offsetY"].value,
             offsetZ                   = self.fields["offsetZ"].value,
-            vType                     = vType,
-            axis                      = axis,
+            vType                     = self.fields["vType"].value,
+            axis                      = self.fields["axis"].value,
         }
         name = "collision"
     end

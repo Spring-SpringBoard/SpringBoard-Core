@@ -163,8 +163,8 @@ function ControlButtons:GameStarted()
     self.started = true
     self:UpdateStartStopButton()
     self.btnStartStop.backgroundColor = SB.conf.BTN_CANCEL_COLOR
-    self.btnStartStop.Update = function(self, ...)
-        Chili.Button.Update(self, ...)
+    self.btnStartStop.Update = function(obj, ...)
+        Chili.Button.Update(obj, ...)
         self.backgroundColor = SB.deepcopy(SB.conf.BTN_CANCEL_COLOR)
         self.backgroundColor[4] = 0.5 + math.abs(2 * math.sin(os.clock())) / math.pi
         self:Invalidate()

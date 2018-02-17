@@ -1,15 +1,15 @@
 function RecieveGadgetMessage(msg)
     pre = "scen_edit"
-    local data = explode( '|', msg)
-    if data[1] ~= pre then return end
-    local op = data[2]
+    local msgParams = explode( '|', msg)
+    if msgParams[1] ~= pre then return end
+    local op = msgParams[2]
 
     if op == 'sync' then
         local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
         local msgTable = loadstring(msgParsed)()
-        local msg = Message(msgTable.tag, msgTable.data)
-        if msg.tag == 'command' then
-            SB.commandManager:HandleCommandMessage(msg, true)
+        local msgObj = Message(msgTable.tag, msgTable.data)
+        if msgObj.tag == 'command' then
+            SB.commandManager:HandleCommandMessage(msgObj, true)
         end
         return
     end

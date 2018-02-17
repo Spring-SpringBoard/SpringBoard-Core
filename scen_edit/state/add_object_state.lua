@@ -9,18 +9,19 @@ function AddObjectState:init(bridge, editorView, objectDefIDs)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
     self.randomSeed = os.clock()
-    self.mapGrid = MapGrid(100, 100)
-    self.mapGrid.separatorSize = 2
+
+    -- self.mapGrid = MapGrid(100, 100)
+    -- self.mapGrid.separatorSize = 1
 
     self.amount  = self.editorView.fields["amount"].value
     self.team    = self.editorView.fields["team"].value
 end
 
-function AddObjectState:MousePress(x, y, button)
+function AddObjectState:MousePress(mx, my, button)
     if button == 1 then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
+        local result, coords = Spring.TraceScreenRay(mx, my, true)
         if result == "ground" then
-            self.x, self.y, self.z = unpack(coords)
+            self.x, self.y, self.z = coords[1], coords[2], coords[3]
 --             self.x, self.z = self.mapGrid:GetGridPosition(self.x, self.z)
 --             self.y = Spring.GetGroundHeight(self.x, self.z)
             return true
@@ -30,8 +31,8 @@ function AddObjectState:MousePress(x, y, button)
     end
 end
 
-function AddObjectState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+function AddObjectState:MouseMove(mx, my, ...)
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground" then
         local dx = coords[1] - self.x
         local dz = coords[3] - self.z
@@ -43,7 +44,7 @@ function AddObjectState:MouseMove(x, y, dx, dy, button)
     end
 end
 
-function AddObjectState:MouseRelease(x, y, button)
+function AddObjectState:MouseRelease(...)
     if not self.objectDefIDs or #self.objectDefIDs == 0 then
         return
     end
@@ -92,15 +93,9 @@ function AddObjectState:DrawObject(object, bridge)
     })
 end
 
-function AddObjectState:DrawWorld()
-    if not self.objectDefIDs or #self.objectDefIDs == 0 then
-        return
-    end
-
-    local x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
-    if result ~= "ground" then
-        return
+function AddObjectState:DoMapGrid(x, y, z)
+    if self.mapGrid == nil then
+        return x, y, z
     end
 
     local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
@@ -117,23 +112,38 @@ function AddObjectState:DrawWorld()
         end
     end
 
-    math.randomseed(self.randomSeed)
+    self.mapGrid.rows    = Game.mapSizeX / unitSizeX
+    self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
+
+    local gridX, gridZ = self.mapGrid:GetGridPosition(x, z)
+    local gridY = Spring.GetGroundHeight(gridX, gridZ)
+    local blocking = Spring.TestBuildOrder(objectDefID, gridX, gridY, gridZ, 0)
+    self.mapGrid:Draw(x, z, blocking)
+
+    return gridX, gridY, gridZ
+end
+
+function AddObjectState:DrawWorld()
+    if not self.objectDefIDs or #self.objectDefIDs == 0 then
+        return
+    end
+
+    local mx, my = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
+    if result ~= "ground" then
+        return
+    end
+
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
     local shaderObj = SB.view.modelShaders:GetShader()
     gl.UseShader(shaderObj.shader)
     gl.Uniform(shaderObj.timeID, os.clock())
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(self.team))
-    local baseX, baseY, baseZ = unpack(coords)
-    self.mapGrid.rows    = Game.mapSizeX / unitSizeX
-    self.mapGrid.columns = Game.mapSizeZ / unitSizeZ
-    local gridX, gridY, gridZ = baseX, baseY, baseZ
---         local gridX, gridZ = self.mapGrid:GetGridPosition(baseX, baseZ)
---         local gridY = Spring.GetGroundHeight(gridX, gridZ)
---         local blocking = Spring.TestBuildOrder(objectDefID, gridX, gridY, gridZ, 0)
---         self.mapGrid:Draw(baseX, baseZ, blocking)
---         math.randomseed(self.randomSeed)
 
+    local gridX, gridY, gridZ = self:DoMapGrid(coords[1], coords[2], coords[3])
+
+    math.randomseed(self.randomSeed)
     for i = 1, self.amount do
         local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
         local x, y, z = gridX, gridY, gridZ

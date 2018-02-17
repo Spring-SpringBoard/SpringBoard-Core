@@ -791,7 +791,7 @@ function ObjectPropertyWindow:GetCommands(objectIDs, name, value, bridge)
             if bridge == unitBridge then
                 table.insert(commands, SetObjectParamCommand(bridge.name, modelID, "movectrl", true))
                 table.insert(commands, SetObjectParamCommand(bridge.name, modelID, "gravity", 0))
-            elseif bridge == featureBridge then
+            -- elseif bridge == featureBridge then
                 --table.insert(commands, SetObjectParamCommand(bridge.name, modelID, "lockPos", false))
             end
         end

@@ -24,10 +24,10 @@ function SelectObjectState:leaveState()
     SB.SetGlobalRenderingFunction(nil)
 end
 
-function SelectObjectState:MousePress(x, y, button)
+function SelectObjectState:MousePress(mx, my, button)
     if button == 1 then
         local onlyCoords = self.bridge == positionBridge
-        local success, objectID = SB.TraceScreenRay(x, y, {
+        local success, objectID = SB.TraceScreenRay(mx, my, {
             onlyCoords = onlyCoords,
             type = self.bridge.name,
         })
@@ -55,16 +55,17 @@ function SelectObjectState:__DrawInfo()
         }
     end
 
-    local x, y, _, _, _, outsideSpring = Spring.GetMouseState()
+    local mx, my, _, _, _, outsideSpring = Spring.GetMouseState()
     -- Don't draw if outside Spring
     if outsideSpring then
         return true
     end
 
     local vsx, vsy = Spring.GetViewGeometry()
-    y = vsy - y
 
-    self.__displayFont:Draw(self:__GetInfoText(), x, y - 30)
+    local x = mx
+    local y = vsy - my - 30
+    self.__displayFont:Draw(self:__GetInfoText(), x, y)
 
     -- return true to keep redrawing
     return true

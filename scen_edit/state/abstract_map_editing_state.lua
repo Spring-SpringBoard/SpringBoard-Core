@@ -39,10 +39,10 @@ function AbstractMapEditingState:_Apply(...)
     end
 end
 
-function AbstractMapEditingState:MousePress(x, y, button)
+function AbstractMapEditingState:MousePress(mx, my, button)
     if button == 1 or button == 3 then
         self:startChanging()
-        local result, coords = Spring.TraceScreenRay(x, y, true)
+        local result, coords = Spring.TraceScreenRay(mx, my, true)
         if result == "ground"  then
             self.x, self.z = coords[1], coords[3]
             self:_Apply(self:GetApplyParams(self.x, self.z, button))
@@ -51,14 +51,14 @@ function AbstractMapEditingState:MousePress(x, y, button)
     end
 end
 
-function AbstractMapEditingState:MouseRelease(x, y, button)
+function AbstractMapEditingState:MouseRelease(mx, my, button)
     if button == 1 or button == 3 then
         self:stopChanging()
     end
 end
 
-function AbstractMapEditingState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+function AbstractMapEditingState:MouseMove(mx, my, mdx, mdy, button)
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground"  then
         self.x, self.z = coords[1], coords[3]
         self:_Apply(self:GetApplyParams(self.x, self.z, button))
@@ -103,10 +103,10 @@ function AbstractMapEditingState:Update()
             return false
         end
     end
-    local x, y, button1, _, button3 = Spring.GetMouseState()
+    local mx, my, button1, _, button3 = Spring.GetMouseState()
     local _, _, _, shift = Spring.GetModKeyState()
     if button1 or button3 then
-        local result, coords = Spring.TraceScreenRay(x, y, true)
+        local result, coords = Spring.TraceScreenRay(mx, my, true)
         if result == "ground" then
             local x, z = coords[1], coords[3]
             local tolerance = 200

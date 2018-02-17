@@ -186,8 +186,8 @@ function AssetView:AddFolder(folder)
     if SB.DirIsProject(folder) then
         local sbInfoPath = Path.Join(folder, "sb_info.lua")
         if VFS.FileExists(sbInfoPath, VFS.RAW) then
-            local sbInfo = VFS.LoadFile(sbInfoPath, VFS.RAW)
-            local sbInfo = loadstring(sbInfo)()
+            local sbInfoStr = VFS.LoadFile(sbInfoPath, VFS.RAW)
+            local sbInfo = loadstring(sbInfoStr)()
             local game, mapName = sbInfo.game, sbInfo.mapName
 
             tooltip = string.format("Game: %s %s\nMap: %s",

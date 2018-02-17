@@ -84,8 +84,8 @@ function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
         self:__LoadArchive(self.path)
     end
 
-    local sbInfo = self:__LoadFile("sb_info.lua")
-    local sbInfo = loadstring(sbInfo)()
+    local sbInfoStr = self:__LoadFile("sb_info.lua")
+    local sbInfo = loadstring(sbInfoStr)()
     local game, mapName = sbInfo.game, sbInfo.mapName
     if game.name ~= Game.gameName or mapName ~= Game.mapName then
         Log.Notice("Different game (" .. game.name .. " " .. game.version ..

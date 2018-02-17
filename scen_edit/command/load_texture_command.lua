@@ -28,7 +28,7 @@ function LoadTextureCommand:execute()
                         i = tonumber(i),
                         j = tonumber(j)
                     })
-            else
+            -- else
                 -- Log.Error(i, j)
                 -- Log.Error("Texture files names are in incorrect format. Expected \"texture-i-j.png\", got " .. tostring(file))
                 -- return

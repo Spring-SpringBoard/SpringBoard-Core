@@ -52,8 +52,8 @@ function GridView:init(tbl)
         layoutPanelSettings.multiSelect = tbl.multiSelect
     end
 
-    local ctrl = tbl.ctrl
-    ctrl = Table.Merge(ctrl, holderControlSettings)
+    local ctrlOpt = tbl.ctrl
+    ctrlOpt = Table.Merge(ctrlOpt, holderControlSettings)
     tbl.ctrl = nil
 
     for k, v in pairs(tbl) do
@@ -102,8 +102,8 @@ function GridView:init(tbl)
     table.insert(scrollPanelSettings.children, self.layoutPanel)
     self.scrollPanel = ScrollPanel:New(scrollPanelSettings)
 
-    table.insert(ctrl.children, self.scrollPanel)
-    self.holderControl = Control:New(ctrl)
+    table.insert(ctrlOpt.children, self.scrollPanel)
+    self.holderControl = Control:New(ctrlOpt)
 end
 
 function GridView:_OnValidateSelectItem(obj, itemIdx, selected)

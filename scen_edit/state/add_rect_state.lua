@@ -14,13 +14,14 @@ function AddRectState:leaveState()
     SB.SetGlobalRenderingFunction(nil)
 end
 
-function AddRectState:MousePress(x, y, button)
+function AddRectState:MousePress(mx, my, button)
     if button == 1 then
         if self.addSecondPoint then
             return
         end
-        local result, coords = Spring.TraceScreenRay(x, y, true)
+        local result, coords = Spring.TraceScreenRay(mx, my, true)
         if result == "ground" then
+            local x, z = coords[1], coords[3]
             self.startX = coords[1]
             self.startZ = coords[3]
             self.endX = coords[1]
@@ -33,19 +34,19 @@ function AddRectState:MousePress(x, y, button)
     end
 end
 
-function AddRectState:MouseMove(x, y, dx, dy, button)
+function AddRectState:MouseMove(mx, my, mdx, mdy, button)
     if not self.addSecondPoint then
         return
     end
 
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground" then
         self.endX = coords[1]
         self.endZ = coords[3]
     end
 end
 
-function AddRectState:MouseRelease(x, y, button)
+function AddRectState:MouseRelease(mx, my, button)
     if not self.addSecondPoint then
         return
     end
@@ -54,7 +55,7 @@ function AddRectState:MouseRelease(x, y, button)
         return
     end
 
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground" then
         self.endX = coords[1]
         self.endZ = coords[3]
@@ -95,16 +96,17 @@ function AddRectState:__DrawInfo()
         }
     end
 
-    local x, y, _, _, _, outsideSpring = Spring.GetMouseState()
+    local mx, my, _, _, _, outsideSpring = Spring.GetMouseState()
     -- Don't draw if outside Spring
     if outsideSpring then
         return true
     end
 
     local vsx, vsy = Spring.GetViewGeometry()
-    y = vsy - y
 
-    self.__displayFont:Draw(self:__GetInfoText(), x, y - 30)
+    local x = mx
+    local y = vsy - my - 30
+    self.__displayFont:Draw(self:__GetInfoText(), x, y)
 
     -- return true to keep redrawing
     return true

@@ -76,26 +76,26 @@ end
 ---------------------------
 -- Callins (internal)
 ---------------------------
-function StateManager:MousePress(x, y, button)
+function StateManager:MousePress(mx, my, button)
     return self:_SafeCall(function()
         if self.currentState.MousePress then
-            return self.currentState:MousePress(x, y, button)
+            return self.currentState:MousePress(mx, my, button)
         end
     end)
 end
 
-function StateManager:MouseMove(x, y, dx, dy, button)
+function StateManager:MouseMove(mx, my, mdx, mdy, button)
     return self:_SafeCall(function()
         if self.currentState.MouseMove then
-            return self.currentState:MouseMove(x, y, dx, dy, button)
+            return self.currentState:MouseMove(mx, my, mdx, mdy, button)
         end
     end)
 end
 
-function StateManager:MouseRelease(x, y, button)
+function StateManager:MouseRelease(mx, my, button)
     return self:_SafeCall(function()
         if self.currentState.MouseRelease then
-            return self.currentState:MouseRelease(x, y, button)
+            return self.currentState:MouseRelease(mx, my, button)
         end
     end)
 end

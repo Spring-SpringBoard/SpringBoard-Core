@@ -20,8 +20,8 @@ function ResizeAreaState:init(areaID, resx, resz)
     self.areaView = AreaView(self.areaID)
 end
 
-function ResizeAreaState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+function ResizeAreaState:MouseMove(mx, my, ...)
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground" then
         local area = SB.model.areaManager:getArea(self.areaID)
         if self.resx == -1 then
@@ -37,7 +37,7 @@ function ResizeAreaState:MouseMove(x, y, dx, dy, button)
     end
 end
 
-function ResizeAreaState:MouseRelease(x, y, button)
+function ResizeAreaState:MouseRelease(...)
     local area = SB.model.areaManager:getArea(self.areaID)
     local cmd = SetObjectParamCommand(areaBridge.name, self.areaID, {
         pos = { x = (self.x1 + self.x2)/2, y = 0, z = (self.z1 + self.z2)/2},

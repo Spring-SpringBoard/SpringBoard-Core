@@ -46,6 +46,7 @@ function ChoiceField:init(field)
     local ids, captions = self.items, self.captions
     if captions == nil then
         captions = self.items
+        self.captions = self.items
     end
     self:__SetDefault("value", ids[1])
 
@@ -78,4 +79,9 @@ function ChoiceField:init(field)
             self.comboBox,
         }
     end
+end
+
+function ChoiceField:GetCaption(id)
+    id = id or self.value
+    return self.captions[GetIndex(self.items, id)]
 end

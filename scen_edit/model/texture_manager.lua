@@ -110,11 +110,10 @@ function TextureManager:createMapTexture(notFBO, notMinMap)
     })
 end
 
-local shader
 function TextureManager:SetupShader()
     local vertProg = VFS.LoadFile("shaders/SMFVertProg.glsl")
     local fragProg = VFS.LoadFile("shaders/SMFFragProg.glsl")
-    shader = Shaders.Compile({
+    TextureManager.mapShader = Shaders.Compile({
         vertex = [[
 void main(void)
 {
@@ -135,7 +134,7 @@ void main(void)
 }
 ]]
     }, "TextureManager:SetupShader")
-    Spring.SetMapShader(shader, shader)
+    Spring.SetMapShader(TextureManager.mapShader, TextureManager.mapShader)
 end
 
 function TextureManager:generateMapTextures()
@@ -222,7 +221,6 @@ function TextureManager:generateMapTextures()
                 dirty = true,
             }
 
-            local success
             if texDef._setParams then
                 success = Spring.SetMapShadingTexture(texDef._setParams[1], tex, texDef._setParams[2])
             else

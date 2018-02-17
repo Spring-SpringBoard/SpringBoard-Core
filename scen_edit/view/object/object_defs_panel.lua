@@ -351,11 +351,11 @@ end
 function FeatureDefsPanel:PopulateItems()
     local featureTypeID = self.featureTypeID
     --TODO create a default picture for features
-    local defaultPicture = nil
-    for id, unitDef in pairs(UnitDefs) do
-        defaultPicture = "unitpics/" .. unitDef.buildpicname
-        break
-    end
+    -- local defaultPicture = nil
+    -- do
+    --     local id, unitDef = next(UnitDefs)
+    --     defaultPicture = "unitpics/" .. unitDef.buildpicname
+    -- end
     local items = {}
     for id, featureDef in pairs(FeatureDefs) do
         if featureDef.tooltip and type(featureDef.tooltip) == "string" then

@@ -6,7 +6,7 @@ function DefaultState:init()
     self.__clickedObjectBridge = nil
 end
 
-function DefaultState:MousePress(x, y, button)
+function DefaultState:MousePress(mx, my, button)
     self.__clickedObjectID = nil
     self.__clickedObjectBridge = nil
 
@@ -34,12 +34,12 @@ function DefaultState:MousePress(x, y, button)
     end
     self.__lastClick = currentTime
 
-    local result, objectID = SB.TraceScreenRay(x, y)
+    local result, objectID = SB.TraceScreenRay(mx, my)
 
     -- TODO: Instead of letting Spring handle it, maybe we should capture the
     -- event and draw the screen rectangle ourselves
     if result == "ground" or result == "sky" then
-        SB.stateManager:SetState(RectangleSelectState(x, y))
+        SB.stateManager:SetState(RectangleSelectState(mx, my))
         return
     end
 
@@ -55,7 +55,7 @@ function DefaultState:MousePress(x, y, button)
 
     local bridge = ObjectBridge.GetObjectBridge(result)
     local objects = selection[result] or {}
-    local _, coords = SB.TraceScreenRay(x, y, {onlyCoords = true})
+    local _, coords = SB.TraceScreenRay(mx, my, {onlyCoords = true})
     local pos = bridge.s11n:Get(objectID, "pos")
     local x, y, z = pos.x, pos.y, pos.z
     -- it's possible that there is no ground behind (if object is near the map edge)
@@ -101,9 +101,8 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
             for selType, selected in pairs(selection) do
                 local bridge = ObjectBridge.GetObjectBridge(selType)
                 if not bridge.NoHorizontalDrag and not bridge.NoDrag then
-                    for _, _ in pairs(selected) do
+                    if next(selected) ~= nil then
                         draggable = true
-                        break
                     end
                 end
                 if draggable then
@@ -126,7 +125,7 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
     end
 end
 
-function DefaultState:MouseRelease(x, y, button)
+function DefaultState:MouseRelease(...)
     if self.__clickedObjectID then
         local objType = self.__clickedObjectBridge.name
         local _, ctrl, _, shift = Spring.GetModKeyState()

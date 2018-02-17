@@ -12,19 +12,19 @@ function RectangleSelectState:init(startScreenX, startScreenZ)
 end
 
 function RectangleSelectState:Update()
-    local x, y, pressed = Spring.GetMouseState()
-    self:_MouseMove(x, y)
+    local mx, my, pressed = Spring.GetMouseState()
+    self:_MouseMove(mx, my)
     if not pressed then
-        self:_MouseRelease(x, y, button)
+        self:_MouseRelease(mx, my, button)
     end
 end
 
-function RectangleSelectState:_MouseMove(x, y)
-    self.endScreenX = x
-    self.endScreenZ = y
+function RectangleSelectState:_MouseMove(mx, my)
+    self.endScreenX = mx
+    self.endScreenZ = my
 end
 
-function RectangleSelectState:_MouseRelease(x, y, button)
+function RectangleSelectState:_MouseRelease(...)
     if self.endScreenX and self.endScreenZ then
         local startScreenX, startScreenZ = Spring.WorldToScreenCoords(self.startWorldX, self.startWorldY, self.startWorldZ)
 

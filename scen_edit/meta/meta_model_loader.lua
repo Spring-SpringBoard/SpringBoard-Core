@@ -1,7 +1,7 @@
 MetaModelLoader = LCS.class{}
 
 function MetaModelLoader:AttemptToLoadFile(metaModelFile)
-    local data = metaModelFile.data
+    local dataStr = metaModelFile.data
     local success, data = pcall(function()
         return assert(loadstring(data))()
     end)

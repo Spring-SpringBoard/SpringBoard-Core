@@ -101,7 +101,7 @@ end
 -- Maybe Field classes should be responsible for providing display instead?
 SB.humanExpressionMaxLevel = 3
 function SB.humanExpression(data, exprType, dataType, level)
-    local success, data = pcall(function()
+    local success, result = pcall(function()
 
     if level == nil then
         level = 1
@@ -230,9 +230,9 @@ function SB.humanExpression(data, exprType, dataType, level)
     return data.humanName
     end)
     if success then
-        return data
+        return result
     else
-        return "Err." .. tostring(data)
+        return "Err." .. tostring(result)
     end
 end
 
@@ -451,10 +451,10 @@ function SB.MakeWindowModal(window, source)
     -- FIXME: This isn't an ideal way to verify is something is an instance of the Window class, improve.
     while not source.classname:find("window")  do
         -- FIXME: would like to avoid this; when debugging change the if
-        if false then
-            Log.Warning("SB.MakeWindowModal", "Sent source which isn't a window")
-            Log.Warning(debug.traceback())
-        end
+        -- if false then
+        --     Log.Warning("SB.MakeWindowModal", "Sent source which isn't a window")
+        --     Log.Warning(debug.traceback())
+        -- end
         source = source.parent
     end
     SB.SetControlEnabled(source, false)
@@ -552,9 +552,9 @@ function SB.TraceScreenRay(x, y, opts)
         ignoreWater = true
     end
     local D = opts.D
-    if D == nil then
+    -- if D == nil then
         --D = (__maxHeight + __minHeight) / 2
-    end
+    -- end
     local selType = opts.type
 
     local traceType, value

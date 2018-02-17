@@ -30,8 +30,8 @@ function DragObjectState:GetMovedObjects()
     return objects
 end
 
-function DragObjectState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+function DragObjectState:MouseMove(mx, my, ...)
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result ~= "ground" then
         return
     end
@@ -47,7 +47,7 @@ function DragObjectState:MouseMove(x, y, dx, dy, button)
     self.ghostViews = self:GetMovedObjects()
 end
 
-function DragObjectState:MouseRelease(x, y, button)
+function DragObjectState:MouseRelease(...)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
     for objType, objs in pairs(movedObjects) do

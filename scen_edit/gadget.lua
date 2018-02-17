@@ -21,9 +21,9 @@ function gadget:RecvLuaMsg(msg, playerID)
         return
     end
 
-    local data = explode( '|', msg)
-    local op = data[2]
-    local par1 = data[3]
+    local msgParams = explode( '|', msg)
+    local op = msgParams[2]
+    local par1 = msgParams[3]
 
     --TODO: figure proper msg name :)
     if op == 'game' then
@@ -52,9 +52,9 @@ function gadget:RecvLuaMsg(msg, playerID)
             Log.Error(msgParsed)
             return
         end
-        local msg = Message(msgTable.tag, msgTable.data)
-        if msg.tag == 'event' then
-            local data = msg.data
+        local msgObj = Message(msgTable.tag, msgTable.data)
+        if msgObj.tag == 'event' then
+            local data = msgObj.data
             SB.rtModel:OnEvent(data.eventName, data.params)
         end
     elseif op == 'meta' then
@@ -81,10 +81,10 @@ function gadget:RecvLuaMsg(msg, playerID)
                 Log.Error(msgParsed)
                 return
             end
-            local msg = Message(msgTable.tag, msgTable.data)
-            if msg.tag == 'command' then
+            local msgObj = Message(msgTable.tag, msgTable.data)
+            if msgObj.tag == 'command' then
                 if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SB.projectDir ~= nil then
-                    SB.commandManager:HandleCommandMessage(msg)
+                    SB.commandManager:HandleCommandMessage(msgObj)
                 else
                     Log.Warning("Command ignored: ", cmd.className)
                 end

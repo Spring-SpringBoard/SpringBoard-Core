@@ -68,10 +68,10 @@ function Field:Set(value, source)
         return
     end
     self.__inUpdate = true
-    local valid, value = self:Validate(value)
+    local valid, validatedValue = self:Validate(value)
     if valid and
-        (self.__dontCheckIfSimilar or not self:_CompareValues(value, self.value)) then
-        self.value = value
+        (self.__dontCheckIfSimilar or not self:_CompareValues(validatedValue, self.value)) then
+        self.value = validatedValue
         -- invoke editor view's update
         if self.ev then
             self.ev:Update(self.name, source)

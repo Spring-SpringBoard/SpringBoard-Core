@@ -13,15 +13,15 @@ function MapGrid:initShader()
         {
             vec2 delta = gl_FragCoord.xy - vec2(x, z);
             float distance = delta.x * delta.x + delta.y * delta.y;
-            float alpha = 1 - 2 * distance / 400000;
+            float alpha = 1.0 - 2.0 * distance / 400000.0;
 
-            alpha = clamp(alpha, 0, 1);
+            alpha = clamp(alpha, 0.0, 1.0);
 
             gl_FragColor = gl_Color;
             gl_FragColor.a *= alpha;
         }
     ]]
- 
+
     local shaderTemplate = {
         fragment = shaderFragStr,
         vertex = shaderVertStr,

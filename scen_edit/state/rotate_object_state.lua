@@ -46,8 +46,8 @@ function RotateObjectState:GetRotatedObject(params, bridge)
     return object
 end
 
-function RotateObjectState:MouseMove(x, y, dx, dy, button)
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+function RotateObjectState:MouseMove(mx, my, ...)
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result ~= "ground" then
         return
     end
@@ -92,7 +92,7 @@ function RotateObjectState:MouseMove(x, y, dx, dy, button)
     end
 end
 
-function RotateObjectState:MouseRelease(x, y, button)
+function RotateObjectState:MouseRelease(...)
     if not self.ghostViews then
         return
     end

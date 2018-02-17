@@ -19,15 +19,15 @@ function NumericField:Update(source)
 end
 
 function NumericField:Validate(value)
-    local valid, value = self:super("Validate", tonumber(value))
-    if value then
+    local valid, validatedValue = self:super("Validate", tonumber(value))
+    if validatedValue then
         if self.maxValue then
-            value = math.min(self.maxValue, value)
+            validatedValue = math.min(self.maxValue, validatedValue)
         end
         if self.minValue then
-            value = math.max(self.minValue, value)
+            validatedValue = math.max(self.minValue, validatedValue)
         end
-        return true, value
+        return true, validatedValue
     end
     return nil
 end

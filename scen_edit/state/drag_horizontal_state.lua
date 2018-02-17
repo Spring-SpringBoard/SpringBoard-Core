@@ -26,12 +26,12 @@ function DragHorizontalObjectState:GetMovedObjects()
     return objects
 end
 
-function DragHorizontalObjectState:MouseMove(x, y, dx, dy, button)
-    self.dy = self.dy + dy
+function DragHorizontalObjectState:MouseMove(_, _, _, mdy, ...)
+    self.dy = self.dy + mdy
     self.ghostViews = self:GetMovedObjects()
 end
 
-function DragHorizontalObjectState:MouseRelease(x, y, button)
+function DragHorizontalObjectState:MouseRelease(...)
     local commands = {}
     local movedObjects = self:GetMovedObjects()
     for objType, objs in pairs(movedObjects) do

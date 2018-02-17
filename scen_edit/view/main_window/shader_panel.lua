@@ -205,8 +205,8 @@ function NodeEditor:AddNodeView(node)
             y = i * 35 + 10,
             height = 30,
             OnClick = {function()
-                if field.output then
-                end
+                -- if field.output then
+                -- end
                 if self.fOutput then
                     self.CanLink(fOutput, field)
                     self:Link(fOutput, field)

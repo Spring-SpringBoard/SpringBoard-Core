@@ -185,8 +185,8 @@ function BrushObjectState:DrawObject(object, bridge, shaderObj)
 end
 
 function BrushObjectState:DrawWorld()
-    local x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+    local mx, my = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result ~= "ground" then
         return
     end
