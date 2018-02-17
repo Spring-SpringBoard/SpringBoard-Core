@@ -12,7 +12,7 @@ end
 function DebugTriggerView:Populate()
     self.parent:ClearChildren()
     local triggers = SB.model.triggerManager:getAllTriggers()
-    for id, trigger in pairs(triggers)  do        
+    for id, trigger in pairs(triggers) do
         local triggerPanel = MakeComponentPanel(self.parent)
         local maxChars = 18
         shortName = trigger.name:sub(1, maxChars)
@@ -53,7 +53,7 @@ function DebugTriggerView:Populate()
             height = B_HEIGHT,
             parent = triggerPanel,
             OnClick = {
-                function() 
+                function()
                     local cmd = ExecuteTriggerActionsCommand(trigger.id)
                     SB.commandManager:execute(cmd)
                 end

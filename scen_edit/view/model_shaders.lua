@@ -16,7 +16,7 @@ function ModelShaders:GetDefaultShader()
 end
 
 function ModelShaders:_GetShaderFiles()
-    return { 
+    return {
         vertex = VFS.LoadFile("shaders/ModelVertProg.glsl"),
         fragment = VFS.LoadFile("shaders/ModelFragProg.glsl"),
     }

@@ -35,7 +35,7 @@ function LoadMapCommand:execute()
         local data = fetchSegment()
         local i = 1
         local getData = function()
-            local chunk = data[i]            
+            local chunk = data[i]
             i = i + 1
             if i > #data then
                 data = fetchSegment()
