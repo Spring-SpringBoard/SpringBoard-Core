@@ -297,7 +297,7 @@ end
 -- Hackery copied from spring kernel in
 -- order to take screenshots programatically
 local screenTex = nil
-local vsx, vsy = 0, 0
+local _vsx, _vsy = 0, 0
 local function CleanTextures()
     if screenTex then
         gl.DeleteTexture(screenTex)
@@ -306,14 +306,14 @@ local function CleanTextures()
 end
 
 function CreateTextures()
-    screenTex = gl.CreateTexture(vsx, vsy, {
+    screenTex = gl.CreateTexture(_vsx, _vsy, {
         -- It means you can draw on the texture ;)
         fbo = true, min_filter = GL.LINEAR, mag_filter = GL.LINEAR,
         wrap_s = GL.CLAMP, wrap_t = GL.CLAMP,
     })
     if screenTex == nil then
         Log.Error("Error creating screen texture for vsx: " ..
-            tostring(vsx) .. ", vsy: " .. tostring(vsy))
+            tostring(_vsx) .. ", vsy: " .. tostring(_vsy))
     end
 end
 
@@ -329,10 +329,10 @@ function PerformDraw()
             gl.DeleteTexture(imgPath)
             os.remove(imgPath)
         end
-        gl.CopyToTexture(screenTex, 0, 0, 0, 0, vsx, vsy)
+        gl.CopyToTexture(screenTex, 0, 0, 0, 0, _vsx, _vsy)
         --gl.Texture(0, screenTex)
-        --gl.TexRect(0, vsy, vsx, 0)
-        gl.RenderToTexture(screenTex, gl.SaveImage, 0, 0, vsx, vsy, imgPath)
+        --gl.TexRect(0, _vsy, _vsx, 0)
+        gl.RenderToTexture(screenTex, gl.SaveImage, 0, 0, _vsx, _vsy, imgPath)
         gl.Texture(0, false)
         gl.Texture(imgPath)
 
@@ -344,7 +344,7 @@ function PerformDraw()
 end
 
 function widget:ViewResize()
-    vsx, vsy = gl.GetViewSizes()
+    _vsx, _vsy = gl.GetViewSizes()
     CleanTextures()
     CreateTextures()
 end
