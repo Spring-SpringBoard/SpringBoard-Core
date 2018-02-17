@@ -1,5 +1,7 @@
 # SpringBoard: Editor for Spring
 
+[![Build Status](https://travis-ci.org/Spring-SpringBoard/SpringBoard-Core.svg?branch=master)](https://travis-ci.org/Spring-SpringBoard/SpringBoard-Core)
+
 [Documentation](http://springboard-core.readthedocs.io/en/latest/)
 
 ## Installing
