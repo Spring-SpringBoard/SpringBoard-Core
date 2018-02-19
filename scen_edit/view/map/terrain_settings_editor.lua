@@ -194,6 +194,7 @@ function TerrainSettingsEditor:init()
                     local shaderDef = VFS.Include(shaderFile, envTbl)
                     Spring.SetMapShader(shaderDef.shader, shaderDef.shader)
                     SB.DrawGroundPreForward = shaderDef.DrawGroundPreForward
+                    SB.DrawWorld = shaderDef.DrawWorld
                 end)
                 if not success then
                     Log.Error(msg)

@@ -223,6 +223,10 @@ function widget:DrawWorld()
     end
     SB.executeDelayed("DrawWorld")
     SB.displayUtil:Draw()
+    -- HACK
+    if SB.DrawWorld ~= nil then
+        SB.DrawWorld()
+    end
 end
 
 function widget:DrawWorldPreUnit()
@@ -233,6 +237,7 @@ function widget:DrawWorldPreUnit()
 end
 
 function widget:DrawGroundPreForward()
+    -- HACK
     if SB.DrawGroundPreForward ~= nil then
         SB.DrawGroundPreForward()
     end
