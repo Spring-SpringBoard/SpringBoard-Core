@@ -88,3 +88,34 @@ function Path.GetExt(path)
         return path:sub(index)
     end
 end
+
+-- Tests
+local lu = luaunit
+if not lu then
+    return
+end
+
+function testExtractFileName()
+    lu.assertEquals(Path.ExtractFileName("abc.txt"), "abc.txt")
+    lu.assertEquals(Path.ExtractFileName("xyz/abc.txt"), "abc.txt")
+    lu.assertEquals(Path.ExtractFileName("xyz\\abc.txt"), "abc.txt")
+    lu.assertEquals(Path.ExtractFileName("xyz/efg/abc.txt"), "abc.txt")
+    lu.assertEquals(Path.ExtractFileName("xyz/efg\\abc.txt"), "abc.txt")
+end
+
+function testExtractDir()
+    -- lu.assertEquals(Path.ExtractDir("xyz/abc.txt"), "xyz")
+    -- lu.assertEquals(Path.ExtractDir("xyz"), "xyz")
+    -- lu.assertEquals(Path.ExtractDir("xyz/"), "xyz")
+    -- lu.assertEquals(Path.ExtractDir("xyz\\"), "xyz")
+    -- lu.assertEquals(Path.ExtractDir("xyz\\abc.txt"), "xyz")
+end
+
+function testJoin()
+    lu.assertEquals(Path.Join("folder", "file"), "folder/file")
+    lu.assertEquals(Path.Join("folder/", "file"), "folder/file")
+end
+
+if lu then
+    lu.LuaUnit.run()
+end

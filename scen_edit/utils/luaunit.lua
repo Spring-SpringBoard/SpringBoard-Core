@@ -9,7 +9,21 @@ License: BSD License, see LICENSE.txt
 Version: 3.2
 ]]--
 
-require("math")
+if Script.GetSynced() or true then
+    return
+end
+
+if os == nil then
+    os = {}
+    function os.clock()
+        return Spring.GetGameFrame() / 30.0
+    end
+    function os.date()
+        return 1
+    end
+end
+
+
 local M={}
 
 -- private exported functions (for testing)
@@ -61,7 +75,7 @@ M.DISABLE_DEEP_ANALYSIS = false
 -- EXPORT_ASSERT_TO_GLOBALS = true
 
 -- we need to keep a copy of the script args before it is overriden
-local cmdline_argv = rawget(_G, "arg")
+local cmdline_argv = nil -- we don't use command line args for Spring
 
 M.FAILURE_PREFIX = 'LuaUnit test FAILURE: ' -- prefix string for failed tests
 
@@ -98,14 +112,12 @@ local is_equal -- defined here to allow calling from mismatchFormattingPureList
 
 local function pcall_or_abort(func, ...)
     -- unpack is a global function for Lua 5.1, otherwise use table.unpack
-    local unpack = rawget(_G, "unpack") or table.unpack
     local result = {pcall(func, ...)}
     if not result[1] then
         -- an error occurred
         print(result[2]) -- error message
         print()
         print(M.USAGE)
-        os.exit(-1)
     end
     return unpack(result, 2)
 end
@@ -1775,10 +1787,10 @@ for _,v in ipairs( list_of_funcs ) do
     local funcname, alias = v[1], v[2]
     M[alias] = M[funcname]
 
-    if EXPORT_ASSERT_TO_GLOBALS then
-        _G[funcname] = M[funcname]
-        _G[alias] = M[funcname]
-    end
+    -- if EXPORT_ASSERT_TO_GLOBALS then
+    --     _G[funcname] = M[funcname]
+    --     _G[alias] = M[funcname]
+    -- end
 end
 
 ----------------------------------------------------------------
@@ -2214,7 +2226,7 @@ end
         -- that match LuaUnit.isTestName
 
         local testNames = {}
-        for k, _ in pairs(_G) do
+        for k, _ in pairs(getfenv()) do
             if type(k) == "string" and M.LuaUnit.isTestName( k ) then
                 table.insert( testNames , k )
             end
@@ -2297,25 +2309,25 @@ end
             error('Unknown option: '..option,3)
         end
 
-        local function setArg( cmdArg, state )
-            if state == SET_OUTPUT then
+        local function setArg( cmdArg, state_ )
+            if state_ == SET_OUTPUT then
                 result['output'] = cmdArg
                 return
-            elseif state == SET_FNAME then
+            elseif state_ == SET_FNAME then
                 result['fname'] = cmdArg
                 return
-            elseif state == SET_REPEAT then
+            elseif state_ == SET_REPEAT then
                 result['exeRepeat'] = tonumber(cmdArg)
                                      or error('Malformed -r argument: '..cmdArg)
                 return
-            elseif state == SET_PATTERN then
+            elseif state_ == SET_PATTERN then
                 if result['pattern'] then
                     table.insert( result['pattern'], cmdArg )
                 else
                     result['pattern'] = { cmdArg }
                 end
                 return
-            elseif state == SET_EXCLUDE then
+            elseif state_ == SET_EXCLUDE then
                 local notArg = '!'..cmdArg
                 if result['pattern'] then
                     table.insert( result['pattern'],  notArg )
@@ -2324,7 +2336,7 @@ end
                 end
                 return
             end
-            error('Unknown parse state: '.. state)
+            error('Unknown parse state: '.. state_)
         end
 
 
@@ -2362,12 +2374,10 @@ end
 
     function M.LuaUnit.help()
         print(M.USAGE)
-        os.exit(0)
     end
 
     function M.LuaUnit.version()
         print('LuaUnit v'..M.VERSION..' by Philippe Fremy <phil@freehackers.org>')
-        os.exit(0)
     end
 
 ----------------------------------------------------------------
@@ -2486,7 +2496,7 @@ end
             currentNode = nil,
             suiteStarted = true,
             startTime = os.clock(),
-            startDate = os.date(os.getenv('LUAUNIT_DATEFMT')),
+            startDate = os.date(),
             startIsodate = os.date('%Y-%m-%dT%H:%M:%S'),
             patternIncludeFilter = self.patternIncludeFilter,
             tests = {},
@@ -2851,7 +2861,6 @@ end
 
         if self.result.aborted then
             print("LuaUnit ABORTED (as requested by --error or --failure option)")
-            os.exit(-2)
         end
     end
 
@@ -2868,7 +2877,7 @@ end
             local className, methodName = M.LuaUnit.splitClassMethod( name )
             if className then
                 instanceName = className
-                instance = _G[instanceName]
+                instance = getfenv()[instanceName]
 
                 if instance == nil then
                     error( "No such name in global space: "..instanceName )
@@ -2886,7 +2895,7 @@ end
             else
                 -- for functions and classes
                 instanceName = name
-                instance = _G[instanceName]
+                instance = getfenv()[instanceName]
             end
 
             if instance == nil then
@@ -2946,7 +2955,6 @@ end
         if options.output then
             if options.output:lower() == 'junit' and options.fname == nil then
                 print('With junit output, a filename must be supplied with -n or --name')
-                os.exit(-1)
             end
             pcall_or_abort(self.setOutputType, self, options.output)
         end
@@ -2968,4 +2976,4 @@ M.set_verbosity = M.setVerbosity
 M.SetVerbosity = M.setVerbosity
 
 
-return M
+luaunit = M
