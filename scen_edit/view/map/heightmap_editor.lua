@@ -89,7 +89,7 @@ function HeightmapEditor:init()
         self.btnSmoothState
     })
 
-    self:AddControl("btn-show-metal", {
+    self:AddControl("btn-show-elevation", {
         Button:New {
             caption = "Show elevation",
             width = 200,
@@ -106,7 +106,7 @@ function HeightmapEditor:init()
         name = "size",
         value = 100,
         minValue = 10,
-        maxValue = 1000,
+        maxValue = 5000,
         title = "Size:",
         tooltip = "Size of the height brush",
     }))
