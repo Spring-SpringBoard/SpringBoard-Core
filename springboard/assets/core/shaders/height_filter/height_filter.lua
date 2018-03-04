@@ -7,13 +7,22 @@ local shader = Shaders.Compile({
         minHeight = minHeight,
         maxHeight = maxHeight,
     },
+    uniformInt = {
+        heightmap = 2,
+    }
 }, "Height-based shading")
 
 -- Spring.Echo(shader)
 -- table.echo(gl.GetActiveUniforms(shader))
 
+-- local function DrawGroundPreForward()
+--     gl.Texture(2, "$heightmap")
+-- end
+
+
 return {
     shader = shader,
+    -- DrawGroundPreForward = DrawGroundPreForward,
     uniform = {
         minHeight = minHeight,
         maxHeight = maxHeight,

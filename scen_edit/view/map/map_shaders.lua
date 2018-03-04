@@ -22,27 +22,7 @@ function MapShadersEditor:init()
             x = 150,
         }
     })
-    self.btnLoadShader = Button:New ({
-        caption = "Load",
-        height = 30,
-        width = 100,
-        OnClick = {
-            function()
-                self:LoadShader()
-            end
-        }
-    })
-    self.btnResetShader = Button:New ({
-        caption = "Reset",
-        height = 30,
-        width = 100,
-        OnClick = {
-            function()
-                Spring.SetMapShader(nil, nil)
-                self:_ClearFields()
-            end
-        }
-    })
+
     self:AddField(GroupField({
         AssetField({
             name = "shaderFile",
@@ -50,13 +30,10 @@ function MapShadersEditor:init()
             tooltip = "SpringBoard Shader Lua file",
             rootDir = "shaders/",
         }),
-        Field({
-            name = "btnLoadShader",
+        BooleanField({
+            name = "shaderEnabled",
             height = 30,
             width = 100,
-            components = {
-                self.btnLoadShader,
-            }
         }),
         Field({
             name = "btnResetShader",
@@ -140,5 +117,18 @@ function MapShadersEditor:OnFieldChange(name, value)
             local nameID = gl.GetUniformLocation(self.shaderDef.shader, name:sub(#"uniform_" + 1))
             gl.Uniform(nameID, value)
         end)
+    elseif name == "shaderEnabled" then
+        if value then
+            self:LoadShader()
+        else
+            Spring.SetMapShader(nil, nil)
+            self:_ClearFields()
+        end
+    elseif name == "shaderFile" then
+        if not String.Ends(value, ".lua") then
+            return
+        end
+        self:Set("shaderEnabled", false)
+        self:Set("shaderEnabled", true)
     end
 end
