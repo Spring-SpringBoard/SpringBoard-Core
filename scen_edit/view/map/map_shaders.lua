@@ -39,6 +39,7 @@ function MapShadersEditor:init()
         OnClick = {
             function()
                 Spring.SetMapShader(nil, nil)
+                self:_ClearFields()
             end
         }
     })
@@ -82,6 +83,14 @@ function MapShadersEditor:init()
     self:Finalize(children)
 end
 
+function MapShadersEditor:_ClearFields()
+    for name, _ in pairs(self.fields) do
+        if name:find("uniform_") or name == "uniform-sep" then
+            self:RemoveField(name)
+        end
+    end
+end
+
 function MapShadersEditor:LoadShader()
     local shaderFile = self.fields["shaderFile"].value
     if not shaderFile or shaderFile == "" then
@@ -101,11 +110,7 @@ function MapShadersEditor:LoadShader()
     if not success then
         Log.Error(msg)
     else
-        for name, _ in pairs(self.fields) do
-            if name:find("uniform_") or name == "uniform-sep" then
-                self:RemoveField(name)
-            end
-        end
+        self:_ClearFields()
 
         if self.shaderDef.uniform then
             self:AddControl("uniform-sep", {
