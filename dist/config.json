@@ -1,0 +1,25 @@
+{
+    "server" : {
+            "address" : "springrts.com",
+            "port" : 8200,
+            "serverName" : "Spring",
+            "protocol" : "spring"
+    },
+    "game" : "generic",
+
+    "local_connection" : {
+        "host" : "127.0.0.1",
+        "port" : 51031
+    },
+
+    "games" : ["sbc:test"],
+    "maps" : ["Obsidian_1.5"],
+    "engines" : [ "104.0.1-104-g2135e2e maintenance" ],
+
+	"auto_download" : true,
+	"auto_start" : true,
+    "no_downloads" : false,
+
+	"game_title": "SpringBoard",
+    "start_args" : ["--game", "rapid://sbc:test", "--map", "Obsidian_1.5"]
+}
