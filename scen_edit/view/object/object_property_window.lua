@@ -511,7 +511,7 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
                     width = SB.conf.B_HEIGHT,
                     height = SB.conf.B_HEIGHT,
                     padding = {2, 2, 2, 2},
-                    tooltip = "Remove team",
+                    tooltip = "Remove rule",
                     classname = "negative_button",
                     children = {
                         Image:New {
