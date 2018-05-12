@@ -12,7 +12,7 @@ function widget:GetInfo()
 	}
 end
 
-local currentTime = 0
+local currentTime = os.clock()
 local calls = {}
 local ids = 0
 
