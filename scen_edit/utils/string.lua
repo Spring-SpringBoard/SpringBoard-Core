@@ -1,7 +1,7 @@
 String = String or {}
 
 function String.Starts(str, s)
-   return string.sub(str, 1, string.len(str)) == s
+   return string.sub(str, 1, string.len(s)) == s
 end
 
 function String.Ends(str, s)
