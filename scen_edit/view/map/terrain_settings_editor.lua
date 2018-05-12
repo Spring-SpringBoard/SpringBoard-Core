@@ -64,111 +64,114 @@ function TerrainSettingsEditor:init()
         rootDir = "detail/",
     }))
 
-    self:AddControl("compile-sep", {
-        Label:New {
-            caption = "Compile map",
-        },
-        Line:New {
-            x = 150,
-        }
-    })
-    self.btnCompile = Button:New ({
-        caption = "Start",
-        height = 30,
-        width = 100,
-        OnClick = {
-            function()
-                self.progressBar.tooltip = ""
-                self.progressBar:SetCaption("")
-
-                local folderPath = self.fields["compileFolder"].value
-                if folderPath == nil then
-                    Spring.Echo("Choose a folder with textures first.")
-                    return
-                end
-
-                heightPath = Path.Join(folderPath, "heightmap.png")
-                diffusePath = Path.Join(folderPath, "texture.png")
-                grass = Path.Join(folderPath, "grass.png")
-                outputPath = Path.Join(folderPath, "MyName")
-
-                if not VFS.FileExists(heightPath, VFS.RAW) then
-                    Spring.Echo("Heightmap texture missing from: " .. tostring(heightPath))
-                    return
-                end
-
-                if not VFS.FileExists(diffusePath, VFS.RAW) then
-                    Spring.Echo("Diffuse texture missing from: " .. tostring(diffusePath))
-                    return
-                end
-
-                folderPath = Path.Join(GetWriteDataDir(), folderPath)
-
-                heightPath = Path.Join(folderPath, "heightmap.png")
-                diffusePath = Path.Join(folderPath, "texture.png")
-                grass = Path.Join(folderPath, "grass.png")
-                outputPath = Path.Join(folderPath, "MyName")
-
-                WG.Connector.Send({
-                    name = "CompileMap",
-                    command = {
-                        heightPath = heightPath,
-                        diffusePath = diffusePath,
-                        grass = grass,
-                        outputPath = outputPath,
-                    }
-                })
-            end
-        }
-    })
-    self.progressBar = Progressbar:New ({
-        x = 105,
-        height = 30,
-        width = 120,
-        value = 0,
-    })
-    self:AddField(GroupField({
-        AssetField({
-            name = "compileFolder",
-            title = "Folder:",
-            tooltip = "Select the compile folder with textures",
-            value = SB_PROJECTS_DIR,
-        }),
-        Field({
-            name = "btnCompile",
-            height = 30,
-            width = 220,
-            components = {
-                self.btnCompile,
-                self.progressBar,
+    if WG.Connector then
+        self:AddControl("compile-sep", {
+            Label:New {
+                caption = "Compile map",
+            },
+            Line:New {
+                x = 150,
             }
-        }),
-    }))
+        })
+        self.btnCompile = Button:New ({
+            caption = "Start",
+            height = 30,
+            width = 100,
+            OnClick = {
+                function()
+                    self.progressBar.tooltip = ""
+                    self.progressBar:SetCaption("")
 
-    WG.Connector.Register("StartCompiling", function()
-        self.progressBar:SetCaption("Starting...")
-    end)
+                    local folderPath = self.fields["compileFolder"].value
+                    if folderPath == nil then
+                        Spring.Echo("Choose a folder with textures first.")
+                        return
+                    end
 
-    WG.Connector.Register("FinishCompiling", function()
-        self.progressBar:SetCaption("Finished")
-    end)
+                    heightPath = Path.Join(folderPath, "heightmap.png")
+                    diffusePath = Path.Join(folderPath, "texture.png")
+                    grass = Path.Join(folderPath, "grass.png")
+                    outputPath = Path.Join(folderPath, "MyName")
 
-    WG.Connector.Register("ErrorCompiling", function(command)
-        self.progressBar:SetCaption("Error")
-        Log.Warning("Failed to compile: " .. tostring(command.msg))
-        self.progressBar.tooltip = tostring(command.msg)
-    end)
+                    if not VFS.FileExists(heightPath, VFS.RAW) then
+                        Spring.Echo("Heightmap texture missing from: " .. tostring(heightPath))
+                        return
+                    end
 
-    WG.Connector.Register("UpdateCompiling", function(command)
-        local est, total = command.est, command.total
-        local value = est * 100 / total
-        value = math.max(value, 0)
-        value = math.min(value, 100)
-        self.progressBar:SetValue(value)
-        if self.progressBar.caption ~= "Compiling" then
-            self.progressBar:SetCaption("Compiling")
-        end
-    end)
+                    if not VFS.FileExists(diffusePath, VFS.RAW) then
+                        Spring.Echo("Diffuse texture missing from: " .. tostring(diffusePath))
+                        return
+                    end
+
+                    folderPath = Path.Join(GetWriteDataDir(), folderPath)
+
+                    heightPath = Path.Join(folderPath, "heightmap.png")
+                    diffusePath = Path.Join(folderPath, "texture.png")
+                    grass = Path.Join(folderPath, "grass.png")
+                    outputPath = Path.Join(folderPath, "MyName")
+
+                    WG.Connector.Send({
+                        name = "CompileMap",
+                        command = {
+                            heightPath = heightPath,
+                            diffusePath = diffusePath,
+                            grass = grass,
+                            outputPath = outputPath,
+                        }
+                    })
+                end
+            }
+        })
+        self.progressBar = Progressbar:New ({
+            x = 105,
+            height = 30,
+            width = 120,
+            value = 0,
+        })
+        self:AddField(GroupField({
+            AssetField({
+                name = "compileFolder",
+                title = "Folder:",
+                tooltip = "Select the compile folder with textures",
+                value = SB_PROJECTS_DIR,
+            }),
+            Field({
+                name = "btnCompile",
+                height = 30,
+                width = 220,
+                components = {
+                    self.btnCompile,
+                    self.progressBar,
+                }
+            }),
+        }))
+
+
+        WG.Connector.Register("StartCompiling", function()
+            self.progressBar:SetCaption("Starting...")
+        end)
+
+        WG.Connector.Register("FinishCompiling", function()
+            self.progressBar:SetCaption("Finished")
+        end)
+
+        WG.Connector.Register("ErrorCompiling", function(command)
+            self.progressBar:SetCaption("Error")
+            Log.Warning("Failed to compile: " .. tostring(command.msg))
+            self.progressBar.tooltip = tostring(command.msg)
+        end)
+
+        WG.Connector.Register("UpdateCompiling", function(command)
+            local est, total = command.est, command.total
+            local value = est * 100 / total
+            value = math.max(value, 0)
+            value = math.min(value, 100)
+            self.progressBar:SetValue(value)
+            if self.progressBar.caption ~= "Compiling" then
+                self.progressBar:SetCaption("Compiling")
+            end
+        end)
+    end
 
     local children = {
         ScrollPanel:New {

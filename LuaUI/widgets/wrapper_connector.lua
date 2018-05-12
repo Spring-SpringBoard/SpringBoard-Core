@@ -83,7 +83,13 @@ end
 
 -- init
 function widget:Initialize()
-	local config = json.decode(VFS.LoadFile(CONFIG_FILE))
+	file = VFS.LoadFile(CONFIG_FILE)
+	if not file then
+		widgetHandler:RemoveWidget(self)
+		Spring.Log(LOG_SECTION, "error", "Missing file with connection details " .. tostring(CONFIG_FILE))
+		return
+	end
+	local config = json.decode(file)
 	host, port = config.host, config.port
 	if not port or not host then
 		widgetHandler:RemoveWidget(self)
