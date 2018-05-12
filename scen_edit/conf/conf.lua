@@ -9,6 +9,7 @@ function Conf:init()
     self.TOOLBOX_ITEM_WIDTH = 70
     self.TOOLBOX_ITEM_HEIGHT = 70
     self.BOTTOM_BAR_HEIGHT = 80
+    self.RIGHT_PANEL_WIDTH = 500
     self.SHOW_BASIC_CONTROLS = true
     self.metaModelFiles = {} -- { "core.lua" } default
     self:initializeListOfMetaModelFiles()

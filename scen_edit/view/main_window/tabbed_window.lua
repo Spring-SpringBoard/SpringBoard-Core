@@ -294,7 +294,7 @@ function TabbedWindow:init()
     self.window = Window:New {
         right = 0,
         y = 0,
-        width = 500,
+        width = SB.conf.RIGHT_PANEL_WIDTH,
         --height = 110 + SB.conf.TOOLBOX_ITEM_HEIGHT,
         height = "100%",
         parent = screen0,
