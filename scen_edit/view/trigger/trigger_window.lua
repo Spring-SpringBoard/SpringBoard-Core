@@ -94,7 +94,7 @@ function TriggerWindow:init(trigger)
         height = 550,
         x = tostring(math.random(25, 35)) .. "%",
         y = tostring(math.random(15, 25)) .. "%",
-        classname = "trigger_window",
+        classname = "sb_window",
     })
 
     self:Populate()

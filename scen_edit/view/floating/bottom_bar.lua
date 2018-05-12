@@ -12,6 +12,7 @@ function BottomBar:init()
         width = 400,
         height = SB.conf.BOTTOM_BAR_HEIGHT,
         padding = {0, 0, 0, 0},
+        classname = 'sb_window',
     }
 
     self.commandWindow = CommandWindow(self.window)

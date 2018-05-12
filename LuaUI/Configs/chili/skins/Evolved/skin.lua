@@ -493,7 +493,7 @@ skin.window = {
   DrawResizeGrip = DrawResizeGrip,
 }
 
-skin.trigger_window = {
+skin.sb_window = {
   TileImage = ":c:tech_dragwindow_full.png",
   tiles = {2, 2, 2, 2}, --// tile widths: left,top,right,bottom
   padding = {13, 13, 13, 13},

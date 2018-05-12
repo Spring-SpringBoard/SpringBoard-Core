@@ -85,7 +85,7 @@ function VariableWindow:init(opts)
         y = tostring(math.random(30, 40)) .. "%",
         width = 500,
         height = 200,
-        classname = "trigger_window",
+        classname = "sb_window",
     })
 
     self:__RefreshVariablePanel()

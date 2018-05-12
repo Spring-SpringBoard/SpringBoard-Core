@@ -100,7 +100,7 @@ function AbstractTriggerElementWindow:init(opts)
         y = tostring(math.random(30, 40)) .. "%",
         width = opts.width or 500,
         height = opts.height or 350,
-        classname = "trigger_window",
+        classname = "sb_window",
     })
 
     if self.mode == 'edit' then

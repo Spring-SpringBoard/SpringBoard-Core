@@ -303,6 +303,7 @@ function TabbedWindow:init()
         draggable = false,
         padding = {5, 0, 0, 0},
         children = controls,
+        classname = "sb_window",
     }
 end
 
