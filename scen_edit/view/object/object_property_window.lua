@@ -592,7 +592,7 @@ function ObjectPropertyWindow:OnSelectionChanged()
 
     if not bridge then
         self.stackPanel:EnableRealign()
-        self:_MEGA_HACK()
+        self.stackPanel:Invalidate()
         return
     end
 
@@ -602,7 +602,7 @@ function ObjectPropertyWindow:OnSelectionChanged()
 
     self:__UpdateFields()
     self.stackPanel:EnableRealign()
-    self:_MEGA_HACK()
+    self.stackPanel:Invalidate()
 
     self.selectionChanging = false
 end

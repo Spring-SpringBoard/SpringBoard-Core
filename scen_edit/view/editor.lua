@@ -41,9 +41,8 @@ function Editor:init()
 
         centerItems = false,
 
-        -- autosize = true, -- FIXME: autosize is not working. If enabled (and height disabled) it will cause controls not to render any changes.
-        -- debug = true,
-        resizeItems = true, -- FIXME: This is also temporarily enabled because of the bug above
+        autosize = true,
+        resizeItems = false,
 
         itemPadding = {0,10,0,0},
         padding = {0,0,0,0},
@@ -141,8 +140,6 @@ function Editor:Finalize(children, opts)
             OnOrphan = OnHide,
             classname = opts.classname,
         }
-        self.stackPanel:EnableRealign()
-        self:_MEGA_HACK()
         SB.view.tabbedWindow:SetMainPanel(self.window)
     else
         if opts.disposeOnClose == nil then
@@ -184,28 +181,11 @@ function Editor:Finalize(children, opts)
         end
         self:__AddKeyListener()
 
-        self.stackPanel:EnableRealign()
-        self:_MEGA_HACK()
     end
+    self.stackPanel:EnableRealign()
+    self.stackPanel:Invalidate()
 
     self.__initializing = false
-end
-
-function Editor:_MEGA_HACK()
-    -- FIXME: Mega hack to manually resize the stackPanel since autosize is broken
-    SB.delay(function()
-    SB.delay(function()
-    self.stackPanel.resizeItems = false
-    local h = 0
-    for _, c in pairs(self.stackPanel.children) do
-        if type(c) == "table" then
-            c:UpdateLayout()
-            h = h + c.height + self.stackPanel.itemPadding[2]
-        end
-    end
-    self.stackPanel:Resize(nil, h)
-    end)
-    end)
 end
 
 -- Don't use this directly because ordering would be messed up.
@@ -220,17 +200,16 @@ function Editor:_SetFieldVisible(name, visible)
     end
 
     local ctrl = self.fields[name].ctrl
-    -- HACK: use Add/Remove instead of Show/Hide to have proper ordering
     --if ctrl.visible ~= visible then
     if ctrl._visible ~= visible then
         if visible then
-            self.stackPanel:AddChild(ctrl)
+            -- self.stackPanel:AddChild(ctrl)
+            ctrl:Show()
             ctrl._visible = true
---             ctrl:Show()
         else
-            self.stackPanel:RemoveChild(ctrl)
+            -- self.stackPanel:RemoveChild(ctrl)
+            ctrl:Hide()
             ctrl._visible = false
---             ctrl:Hide()
         end
     end
 end
@@ -245,8 +224,6 @@ function Editor:SetInvisibleFields(...)
         local name = self.fieldOrder[i]
         self:_SetFieldVisible(name, false)
     end
-
-    self.stackPanel.resizeItems = true
 
     for i = 1, #self.fieldOrder do
         local name = self.fieldOrder[i]
@@ -263,7 +240,7 @@ function Editor:SetInvisibleFields(...)
     end
 
     self.stackPanel:EnableRealign()
-    self:_MEGA_HACK()
+    self.stackPanel:Invalidate()
 end
 
 --- Remove field by name.

@@ -106,7 +106,7 @@ function MapShadersEditor:LoadShader()
         end
 
         self.stackPanel:EnableRealign()
-        self:_MEGA_HACK()
+        self.stackPanel:Invalidate()
     end
 end
 
