@@ -53,6 +53,10 @@ function Chotify:Post(obj)
         return
     end
 
+    if type(obj) == "string" then
+        obj = { body = obj }
+    end
+
     local title = obj.title or ""
     local body = obj.body or ""
     local icon = obj.icon or ""
