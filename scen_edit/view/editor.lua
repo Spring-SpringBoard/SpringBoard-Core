@@ -300,6 +300,24 @@ function Editor:_AddControl(name, children)
     return ctrl
 end
 
+function Editor:RenameField(oldName, newName)
+    if newName == oldName then
+        return
+    end
+    assert(not self.fields[newName], "Field with same name already exists")
+
+    local field = self.fields[oldName]
+    self.fields[newName] = field
+    self.fields[oldName]  = nil
+    field.name = newName
+    for i, fname in pairs(self.fieldOrder) do
+        if fname == oldName then
+            self.fieldOrder[i] = newName
+            break
+        end
+    end
+end
+
 function Editor:Validate(name, value)
     local field = self.fields[name]
     return field:Validate(value)
