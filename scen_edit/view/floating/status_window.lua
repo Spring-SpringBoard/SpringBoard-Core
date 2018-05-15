@@ -73,7 +73,26 @@ function StatusWindow:_UpdateMemory()
     else
         memory = collectgarbage("count") / 1024
     end
-    local memoryStr = "Memory " .. ('%.0f'):format(memory) .. " MB"
+    -- We're detecting extensive memory usage here and exiting the current state if critical.
+    -- TODO: Act on it a bit better and automatically clear the undo-redo stack instead of prompting the user to do stuff.
+    color = SB.conf.STATUS_TEXT_OK_COLOR
+    if memory > 500 then
+        color = SB.conf.STATUS_TEXT_DANGER_COLOR
+        if not self.warnedTime or os.clock() - self.warnedTime > 10 then
+            self.warnedTime = os.clock()
+            WG.Chotify:Post({
+                -- FIXME: The white line after Danger is an ugly hack - seems to be an Editbox issue with multi-line coloring
+                body = SB.conf.STATUS_TEXT_DANGER_COLOR .. "Danger:\b\255\255\255\255 Large memory usage, may lead to a crash if it increases further.\n\n" ..
+                       "Consider clearing the undo-redo stack to free memory.\b",
+                title = "Low Memory",
+                time = 10,
+            })
+            SB.stateManager:SetState(DefaultState())
+        end
+    elseif memory > 300 then
+        color = SB.conf.STATUS_TEXT_WARN_COLOR
+    end
+    local memoryStr = "Memory " .. color .. ('%.0f'):format(memory) .. " MB\b"
 
     if videoMemoryStr then
         memoryStr = memoryStr .. "\n" .. videoMemoryStr

@@ -30,6 +30,13 @@ function AbstractHeightmapEditingState:GetApplyParams(x, z, button)
     return x, z, strength
 end
 
+function AbstractHeightmapEditingState:CanApply()
+    local ss = self.size * self.size / 5000.0 / 5000.0
+    self.applyDelay = ss * 1.0
+    self.applyDelay = math.max(0.01, self.applyDelay)
+    return AbstractMapEditingState.CanApply(self)
+end
+
 function AbstractHeightmapEditingState:Apply(x, z, strength)
     if not self.patternTexture then
         return false

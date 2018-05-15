@@ -13,6 +13,11 @@ function Conf:init()
     self.SHOW_BASIC_CONTROLS = true
     self.metaModelFiles = {} -- { "core.lua" } default
     self:initializeListOfMetaModelFiles()
+
+    self.STATUS_TEXT_OK_COLOR      = '\255\1\180\20'
+    self.STATUS_TEXT_WARN_COLOR    = '\255\150\150\10'
+    self.STATUS_TEXT_DANGER_COLOR  = '\255\255\20\50'
+
     self.tabOrder = {
         Objects = 1,
         Map = 2,

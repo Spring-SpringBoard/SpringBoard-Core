@@ -10,5 +10,3 @@ function TerrainShapeModifyState:GetCommand(x, z, strength)
         rotation = self.rotation
     })
 end
-
---gl.Color(0, 0, 1, 0.4)
