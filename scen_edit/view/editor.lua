@@ -190,7 +190,8 @@ end
 
 -- Don't use this directly because ordering would be messed up.
 function Editor:_SetFieldVisible(name, visible)
-    if not self.fields[name] then
+    local field = self.fields[name]
+    if not field then
         Log.Error("Trying to set visibility on an invalid field: " .. tostring(name))
         return
     end
@@ -199,7 +200,7 @@ function Editor:_SetFieldVisible(name, visible)
         return
     end
 
-    local ctrl = self.fields[name].ctrl
+    local ctrl = field.ctrl
     --if ctrl.visible ~= visible then
     if ctrl._visible ~= visible then
         if visible then
