@@ -465,31 +465,30 @@ function Object:SetVisibility(visible)
   if self.visible == visible then
     return
   end
-  if (visible) then
+
+  if visible then
     self.parent:ShowChild(self)
   else
     self.parent:HideChild(self)
   end
   self.visible = visible
   self.hidden  = not visible
-end
 
---- Hides the objects
-function Object:Hide()
-  local wasHidden = self.hidden
-  self:SetVisibility(false)
-  if not wasHidden then
+  if visible then
+    self:CallListeners(self.OnShow, self)
+  else
     self:CallListeners(self.OnHide, self)
   end
 end
 
+--- Hides the objects
+function Object:Hide()
+  self:SetVisibility(false)
+end
+
 --- Makes the object visible
 function Object:Show()
-  local wasVisible = self.hidden
   self:SetVisibility(true)
-  if not wasVisible then
-    self:CallListeners(self.OnShow, self)
-  end
 end
 
 --- Toggles object visibility
