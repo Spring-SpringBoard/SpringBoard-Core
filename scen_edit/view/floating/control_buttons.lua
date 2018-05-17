@@ -33,7 +33,7 @@ function ControlButtons:init(parent)
     }
     self.btnShowToggle = Button:New {
         caption = '',
-        tooltip='Toggle editor display',
+        tooltip = 'Toggle editor display',
         y = 5,
         x = 60,
         height = 35,
