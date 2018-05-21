@@ -47,6 +47,8 @@ function StatusWindow:_UpdateSelection()
     if result == "ground"  then
         local worldX, worldZ = coords[1], coords[3]
         self.posStr = string.format("X: %d, Z: %d", worldX, worldZ)
+    else
+        self.posStr = "Off-screen"
     end
 
     self.lblStatus:SetCaption(self.posStr .. ". " .. self.selectionStr)
