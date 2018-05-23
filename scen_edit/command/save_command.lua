@@ -7,58 +7,43 @@ function SaveCommand:init(path, isNewProject)
     self.isNewProject = isNewProject
 end
 
-local function HeightMapSave(path)
-    local file = assert(io.open(path, "wb"))
-    local data = {}
-    local totalChanged = 0
+local gameMapSizeX, gameMapSizeZ = Game.mapSizeX, Game.mapSizeZ
+local gameSquareSize = Game.squareSize
+local spGetGroundHeight = Spring.GetGroundHeight
+local spGetGrass = Spring.GetGrass
+local spGetMetalAmount = Spring.GetMetalAmount
 
-    local bufferSize = 100000
-    local bufferFlush = function()
-        if #data == 0 then
-            return
-        end
-        --Log.Notice("Packing...")
-        local str = VFS.PackF32(data)
-        --Log.Notice("Unpacking...")
-        local newData = VFS.UnpackF32(str, 1, #str / 4)
-        --Log.Notice(#data, #newData)
-
-        -- if #data ~= #newData then
-        --     Log.Notice("Different size!: ", #data, #newData)
-        -- end
-        local diffCount = 0
-        for i = 1, math.min(#data, #newData) do
-            if data[i] ~= newData[i] then
-                diffCount = diffCount + 1
-                --Log.Notice("DIFF:", data[i], newData[i])
-            end
-            if diffCount > 100 then
-                break
+local function SaveHeightMap(path)
+    Array.SaveFunc(path, function(arrayWriter)
+        for x = 0, gameMapSizeX, gameSquareSize do
+            for z = 0, gameMapSizeZ, gameSquareSize do
+                arrayWriter.Write(spGetGroundHeight(x, z))
             end
         end
-        file:write(str)
-    end
-    local addData = function(chunk)
-        data[#data + 1] = chunk
-        totalChanged = totalChanged + 1
-        if #data >= bufferSize then
-            bufferFlush()
-            data = {}
-        end
-    end
-    for x = 0, Game.mapSizeX, Game.squareSize do
-        for z = 0, Game.mapSizeZ, Game.squareSize do
-            addData(Spring.GetGroundHeight(x, z))
-        end
-    end
-    bufferFlush()
+    end)
+end
 
-    -- if totalChanged == 0 then
-    --     Log.Notice("Heightmap unchanged")
-    -- end
+local function SaveGrassMap(path)
+    Array.SaveFunc(path, function(arrayWriter)
+        for x = 0, gameMapSizeX, gameSquareSize do
+            for z = 0, gameMapSizeZ, gameSquareSize do
+                arrayWriter.Write(spGetGrass(x, z))
+            end
+        end
+    end, "uint8")
+end
 
-    --Log.Notice("Heightmap data: " .. totalChanged)
-    assert(file:close())
+local METAL_RESOLUTION = 16
+local function SaveMetalMap(path)
+    Array.SaveFunc(path, function(arrayWriter)
+        for x = 0, Game.mapSizeX, METAL_RESOLUTION do
+            local rx = math.round(x/METAL_RESOLUTION)
+            for z = 0, Game.mapSizeZ, METAL_RESOLUTION do
+                local rz = math.round(z/METAL_RESOLUTION)
+                arrayWriter.Write(spGetMetalAmount(rx, rz))
+            end
+        end
+    end)
 end
 
 local function ModelSave(path)
@@ -236,9 +221,21 @@ function SaveCommand:execute()
     end)
 
     Time.MeasureTime(function()
-        HeightMapSave(Path.Join(projectDir, "heightmap.data"))
+        SaveHeightMap(Path.Join(projectDir, "heightmap.data"))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved heightmap"):format(elapsed))
+    end)
+
+    Time.MeasureTime(function()
+        SaveMetalMap(Path.Join(projectDir, "metal.data"))
+    end, function(elapsed)
+        Log.Notice(("[%.4fs] Saved metalmap"):format(elapsed))
+    end)
+
+    Time.MeasureTime(function()
+        SaveGrassMap(Path.Join(projectDir, "grass.data"))
+    end, function(elapsed)
+        Log.Notice(("[%.4fs] Saved grass"):format(elapsed))
     end)
 
     Time.MeasureTime(function()

@@ -51,6 +51,16 @@ function LoadProjectCommandWidget:execute()
     if not hasScenarioFile and Spring.GetGameRulesParam("sb_gameMode") == "play" then
         table.insert(cmds, StartCommand())
     end
+
+    local grassData = self:__LoadFile("grass.data")
+    if grassData then
+        table.insert(cmds, LoadGrassMapCommand(grassData))
+    end
+    local metalData = self:__LoadFile("metal.data")
+    if metalData then
+        table.insert(cmds, LoadMetalMapCommand(metalData))
+    end
+
     local cmd = CompoundCommand(cmds)
     cmd.blockUndo = true
     SB.commandManager:execute(cmd)
