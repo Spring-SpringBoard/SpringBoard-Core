@@ -92,8 +92,8 @@ function Array.LoadFunc(str, lua_function, dtype)
         end
         local startIndx = 1 + segmentNum * bufferSize
         segmentNum = segmentNum + 1
-        local str = str:sub(startIndx, startIndx + bufferSize)
-        return unpackFunc(str, 1, bufferSize / dtypeSize) or {}
+        local substr = str:sub(startIndx, startIndx + bufferSize)
+        return unpackFunc(substr, 1, bufferSize / dtypeSize) or {}
 --            return VFS.UnpackF32(self.deltaMap, startIndx, bufferSize / floatSize) or {}
     end
     local data = fetchSegment()
