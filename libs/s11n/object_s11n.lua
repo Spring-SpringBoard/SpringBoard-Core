@@ -3,9 +3,12 @@ _ObjectS11N = LCS.class{}
 local LOG_SECTION = "s11n"
 
 function _ObjectS11N:init()
-    self.objectDefaults = {} -- cached object defaults
+    -- Object default values
+    self.USE_OBJECT_DEFAULTS = true
+    self.objectDefaults = {}
     self._cacheQueue    = {}
-    self.__listeners      = {}
+
+    self.__listeners    = {}
     self:OnInit()
     self:__makeFunctions()
 
@@ -299,17 +302,24 @@ function _ObjectS11N:_SetAllFields(objectID, object)
 end
 
 function _ObjectS11N:_CacheObject(objectID)
---     -- cache defaults
---     local defName = self:_GetField(objectID, "defName")
---     local defaults = self.objectDefaults[defName]
---     if not defaults then
---         defaults = self:_GetAllFields(objectID)
---         -- these fields don't have defaults
---         defaults.pos = nil
---         defaults.defName = nil
---         defaults.team = nil
---         self.objectDefaults[defName] = defaults
---     end
+    if not self.USE_OBJECT_DEFAULTS then
+        return
+    end
+
+    -- cache defaults
+    local defName = self:_GetField(objectID, "defName")
+    local defaults = self.objectDefaults[defName]
+    if not defaults then
+        defaults = self:_GetAllFields(objectID)
+        -- these fields don't have defaults
+        defaults.pos = nil
+        defaults.defName = nil
+        defaults.team = nil
+        self.objectDefaults[defName] = defaults
+        -- Some verbosity for debugging:
+        -- Spring.Echo("Defaults for: " .. tostring(defName))
+        -- table.echo(defaults)
+    end
 end
 
 function _ObjectS11N:_ObjectCreated(objectID, modelID)

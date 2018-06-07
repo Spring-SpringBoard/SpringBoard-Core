@@ -32,26 +32,26 @@ function widget:Initialize()
     _s11n = s11n.instance
     WG.s11n = _s11n
 
-    -- for _, objectID in pairs(Spring.GetAllUnits()) do
-    --     self:UnitCreated(objectID)
-    -- end
-    -- for _, objectID in pairs(Spring.GetAllFeatures()) do
-    --     self:FeatureCreated(objectID)
-    -- end
+    for _, objectID in pairs(Spring.GetAllUnits()) do
+        self:UnitCreated(objectID)
+    end
+    for _, objectID in pairs(Spring.GetAllFeatures()) do
+        self:FeatureCreated(objectID)
+    end
 end
 
--- function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
---     _s11n:GetUnitS11N():_ObjectCreated(unitID)
--- end
--- function widget:FeatureCreated(featureID, allyTeamID)
---     _s11n:GetFeatureS11N():_ObjectCreated(featureID)
--- end
--- function widget:UnitDestroyed(unitID, ...)
---     _s11n:GetUnitS11N():_ObjectDestroyed(unitID, ...)
--- end
--- function widget:FeatureDestroyed(featureID, ...)
---     _s11n:GetFeatureS11N():_ObjectDestroyed(featureID, ...)
--- end
+function widget:UnitCreated(unitID, unitDefID, unitTeam, builderID)
+    _s11n:GetUnitS11N():_ObjectCreated(unitID)
+end
+function widget:FeatureCreated(featureID, allyTeamID)
+    _s11n:GetFeatureS11N():_ObjectCreated(featureID)
+end
+function widget:UnitDestroyed(unitID, ...)
+    _s11n:GetUnitS11N():_ObjectDestroyed(unitID, ...)
+end
+function widget:FeatureDestroyed(featureID, ...)
+    _s11n:GetFeatureS11N():_ObjectDestroyed(featureID, ...)
+end
 
 function widget:GameFrame()
     _s11n:GetFeatureS11N():_GameFrame()
