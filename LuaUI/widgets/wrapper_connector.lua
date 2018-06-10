@@ -144,7 +144,7 @@ function widget:Update()
 	end
 
 	local readable, writeable, err = socket.select({client}, {client}, 0)
-	if err ~= nil then
+	if err ~= nil and err ~= "timeout" then
 		Spring.Log(LOG_SECTION, "warning", "connector error in select", err)
 		--Echo("Error in select: " .. err)
 	end
