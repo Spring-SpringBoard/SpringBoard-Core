@@ -8,6 +8,7 @@ Editor.Register({
     caption = "Collision",
     tooltip = "Edit collision volumes",
     image = SB_IMG_DIR .. "boulder-dash.png",
+    no_serialize = true,
 })
 
 function CollisionView:init()

@@ -22,7 +22,7 @@ function LoadGUIStateCommand:execute()
     SB.delay(function()
     SB.delay(function()
         for name, editorData in pairs(editors) do
-            if not SB.editorRegistry[name].dont_save then
+            if not SB.editorRegistry[name].no_serialize then
                 SB.editors[name]:Load(editorData)
             end
         end

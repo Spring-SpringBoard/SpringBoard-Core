@@ -9,7 +9,7 @@ Editor.Register({
     tooltip = "Edit object properties",
     image = SB_IMG_DIR .. "anatomy.png",
     order = 2,
-    dont_save = true,
+    no_serialize = true,
 })
 
 function ObjectPropertyWindow:_GetValue(name)

@@ -507,6 +507,7 @@ function Editor.Register(opts)
     opts.tooltip = opts.tooltip or opts.caption
     opts.image = opts.image or ""
     opts.order = opts.order or math.huge
+    opts.no_serialize = opts.no_serialize
 
     SB.editorRegistry[opts.name] = opts
 end
