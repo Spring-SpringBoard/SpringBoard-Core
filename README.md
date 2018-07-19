@@ -23,6 +23,6 @@ Some examples:
 
 ## Assets
 
-Any assets (texture files, skyboxes, etc.) should be put in the "springboard/assets" folder, located inside the Spring data directory.
+All assets (texture files, skyboxes, etc.) should be placed in the `springboard/assets` folder, located inside the Spring data directory.
 
 A set of [core assets](https://drive.google.com/file/d/0B9FQjbVMFgL2LTM2Z1VVaGRZRDQ/view?usp=sharing) are available. To use, extract them to `springboard/assets/core/`.
