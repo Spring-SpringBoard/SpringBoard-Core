@@ -1,5 +1,4 @@
-LIBS_DIRNAME = "libs/"
-VFS.Include(LIBS_DIRNAME .. "json.lua")
+VFS.Include(WG.SB_LIBS_DIR .. "json.lua")
 
 function widget:GetInfo()
 return {

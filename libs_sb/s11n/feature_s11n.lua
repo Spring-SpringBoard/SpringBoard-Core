@@ -97,6 +97,10 @@ function _FeatureS11N:OnInit()
                 }
             end,
             set = function(objectID, value)
+                Spring.Echo(objectID,
+                    value.scaleX, value.scaleY, value.scaleZ,
+                    value.offsetX, value.offsetY, value.offsetZ,
+                    value.vType, 1, value.axis)
                 Spring.SetFeatureCollisionVolumeData(objectID,
                     value.scaleX, value.scaleY, value.scaleZ,
                     value.offsetX, value.offsetY, value.offsetZ,

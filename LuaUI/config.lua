@@ -26,8 +26,9 @@ VFSMODE = VFS.RAW_FIRST
 --// when false, the handler will `compress` some output (e.g. list of started widgets)
 handler.verbose = false or true
 
+-- FIXME: Not used
 local function LoadLibraries()
-	for _, lib in pairs(VFS.SubDirs("libs/")) do
+	for _, lib in pairs(VFS.SubDirs("libs_sb/")) do
 		local addonDir = lib .. LUA_NAME .. "/widgets"
 		if #VFS.DirList(addonDir) > 0 then
 			table.insert(ADDON_DIRS, addonDir)
@@ -62,4 +63,5 @@ else
 		LUA_DIRNAME .. 'System' .. AddonNames;
 	}
 end
-LoadLibraries()
+
+-- LoadLibraries()

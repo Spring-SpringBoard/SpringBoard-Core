@@ -1,8 +1,15 @@
 --dir names
-LIBS_DIR = "libs/"
+if WG then
+	LIBS_DIR = WG.SB_LIBS_DIR
+	SB = WG.SB
+
+	Scene = WG.Scene
+else
+	LIBS_DIR = GG.SB_LIBS_DIR
+	SB = GG.SB
+end
 LUAUI_DIR = "LuaUI/"
 
-SB = {}
 SB_DIR = "scen_edit/"
 SB_COMMAND_DIR = SB_DIR .. "command/"
 SB_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
@@ -62,10 +69,4 @@ if WG and WG.SBChili then
     screen0 = Chili.Screen0
 end
 
-if WG then
-    s11n = WG.s11n
-    WG.SB = SB
-elseif GG then
-    s11n = GG.s11n
-    GG.SB = SB
-end
+s11n = SB.s11n

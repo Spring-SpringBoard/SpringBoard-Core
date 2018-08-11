@@ -12,11 +12,10 @@ return {
 }
 end
 
-LIBS_DIR = "libs/"
-LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
+LCS = loadstring(VFS.LoadFile(WG.SB_LIBS_DIR .. "lcs/LCS.lua"))
 LCS = LCS()
 
-CHILILFX_DIR = LIBS_DIR .. "chilifx/chilifx/"
+CHILILFX_DIR = WG.SB_LIBS_DIR .. "chilifx/chilifx/"
 
 function widget:Initialize()
     -- if not WG.Chili then

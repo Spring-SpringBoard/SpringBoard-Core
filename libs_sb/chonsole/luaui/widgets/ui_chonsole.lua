@@ -10,8 +10,6 @@ function widget:GetInfo()
   }
 end
 
-CHONSOLE_FOLDER = "libs/chonsole"
-
 VFS.Include(CHONSOLE_FOLDER .. "/luaui/config/globals.lua", nil, VFS.DEF_MODE)
 
 -- Chili

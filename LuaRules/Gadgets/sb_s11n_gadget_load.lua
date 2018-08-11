@@ -3,8 +3,8 @@
 -- Copy this file to the luarules/gadgets folder
 
 -- Set this line to the s11n installation folder
-S11N_FOLDER = "libs/s11n"
-LCS_FOLDER  = "libs/lcs"
+S11N_FOLDER = GG.SB_LIBS_DIR .. "s11n"
+LCS_FOLDER  = GG.SB_LIBS_DIR .. "lcs"
 
 -- Do NOT modify the following lines
 if not gadgetHandler:IsSyncedCode() then
@@ -12,7 +12,7 @@ if not gadgetHandler:IsSyncedCode() then
 end
 function gadget:GetInfo()
     return {
-        name    = "s11n gadget",
+        name    = "SB s11n gadget",
         desc    = "Spring serialization library gadget",
         author  = "gajop",
         license = "GPLv2",
@@ -27,10 +27,10 @@ function gadget:Initialize()
     LCS = loadstring(VFS.LoadFile(LCS_FOLDER .. "/LCS.lua"))
     LCS = LCS()
 
-    VFS.Include(S11N_FOLDER .. "/s11n.lua", nil, VFS.DEF_MODE)
+    VFS.Include(S11N_FOLDER .. "/s11n.lua", nil, VFS.MOD)
     -- Export Gadget Globals
     _s11n = s11n.instance
-    GG.s11n = _s11n
+    GG.SB.s11n = _s11n
 
     -- _s11n:Populate() -- we let SB control this
 end
