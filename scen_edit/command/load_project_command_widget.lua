@@ -89,6 +89,7 @@ function LoadProjectCommandWidget:__CheckExists()
     return true
 end
 
+-- Returns true if no reload is necessary, and false otherwise
 function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
     if self.isZip then
         self:__LoadArchive(self.path)
@@ -97,16 +98,21 @@ function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
     local sbInfoStr = self:__LoadFile("sb_info.lua")
     local sbInfo = loadstring(sbInfoStr)()
     local game, mapName = sbInfo.game, sbInfo.mapName
-    if game.name ~= Game.gameName or mapName ~= Game.mapName then
-        Log.Notice("Different game (" .. game.name .. " " .. game.version ..
-            ") or map (" .. mapName .. "). Reloading into project...")
 
+	local reload = false
+    if game.name ~= Game.gameName then
+		Log.Notice("Different game (" .. game.name .. " " .. game.version .. "). Reloading into project...")
+        reload = true
+	elseif mapName ~= Game.mapName then
+		Log.Notice("Different map (" .. mapName .. "). Reloading into project...")
+		reload = true
+    end
+	if reload then
         local scriptTxt = self:__LoadFile("script-dev.txt")
         Spring.Reload(scriptTxt)
+	end
 
-        return false
-    end
-    return true
+    return not reload
 end
 
 function LoadProjectCommandWidget:__LoadFile(fname)
