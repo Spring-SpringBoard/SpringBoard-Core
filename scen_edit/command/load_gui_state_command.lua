@@ -22,7 +22,9 @@ function LoadGUIStateCommand:execute()
     SB.delay(function()
     SB.delay(function()
         for name, editorData in pairs(editors) do
-            if not SB.editorRegistry[name].no_serialize then
+            if not SB.editorRegistry[name] then
+                Log.Warning("Missing Editor in registry: ", name)
+            elseif not SB.editorRegistry[name].no_serialize then
                 SB.editors[name]:Load(editorData)
             end
         end
