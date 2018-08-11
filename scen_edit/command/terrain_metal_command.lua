@@ -2,7 +2,6 @@ TerrainMetalCommand = AbstractTerrainModifyCommand:extends{}
 TerrainMetalCommand.className = "TerrainMetalCommand"
 
 function TerrainMetalCommand:init(opts)
-    self.className = "TerrainMetalCommand"
     self:__init(opts)
 end
 

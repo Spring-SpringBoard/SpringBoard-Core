@@ -64,7 +64,9 @@ end
 
 function StateManager:_SafeCall(func)
     succ, result = xpcall(func, function(err)
-        Log.Error(debug.traceback(err))
+        -- we don't need the full log (probably!)
+        -- Log.Error(debug.traceback(err))
+        Log.Error(debug.traceback(err, 3))
         Log.Error("Error in current state, switching to default state")
         self:SetState(DefaultState())
     end)
