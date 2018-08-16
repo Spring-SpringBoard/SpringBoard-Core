@@ -211,7 +211,7 @@ function ObjectDefsPanel:_GetDefHumanName(def)
 
     name = def.humanName
     if name then
-        name = name:trim()
+        name = String.Trim(name)
         if #name > 0 then
             return name
         end
@@ -219,7 +219,7 @@ function ObjectDefsPanel:_GetDefHumanName(def)
 
     name = def.tooltip
     if name then
-        name = name:trim()
+        name = String.Trim(name)
         if #name > 0 then
             return name
         end
@@ -227,7 +227,7 @@ function ObjectDefsPanel:_GetDefHumanName(def)
 
     name = def.name
     if name then
-        name = name:trim()
+        name = String.Trim(name)
         if #name > 0 then
             return name
         end
@@ -346,7 +346,7 @@ function FeatureDefsPanel:FilterObject(objectDefID)
         end
     end
     local humanName = self:_GetDefHumanName(featureDef)
-    return correctType and correctUnit and humanName:lower():find(self.search:lower():trim())
+    return correctType and correctUnit and humanName:lower():find(String.Trim(self.search:lower()))
 end
 function FeatureDefsPanel:PopulateItems()
     local featureTypeID = self.featureTypeID
