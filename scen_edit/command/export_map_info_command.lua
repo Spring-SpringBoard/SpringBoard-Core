@@ -127,9 +127,8 @@ function ExportMapInfoCommand:GetWater()
 end
 
 function ExportMapInfoCommand:GetTeams()
-    local tbl = {
-        teams = {}
-    }
+    local tbl = {}
+    local counter = 0 -- teams start with 0
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         local areaID = team.startPos
         local area
@@ -139,16 +138,20 @@ function ExportMapInfoCommand:GetTeams()
                 Log.Warning("No area for id: " .. tostring(areaID))
             end
         end
-        if area then
-            -- FIXME: We're just taking the middle point of the area
-            -- Ugly but sue me ^_^
-            table.insert(tbl.teams, {
-                startPos = {
-                    x = (area[1] + area[3]) / 2,
-                    z = (area[1] + area[4]) / 2,
-                }
-            })
+        if not area then
+            area = { -- if there's no area, we default to the entire map
+                0, 0, Game.mapSizeX, Game.mapSizeZ
+            }
         end
+        -- FIXME: We're just taking the middle point of the area
+        -- Ugly but sue me ^_^
+        tbl[counter] = {
+            startPos = {
+                x = (area[1] + area[3]) / 2,
+                z = (area[1] + area[4]) / 2,
+            }
+        }
+        counter = counter + 1
     end
     return tbl
 end
