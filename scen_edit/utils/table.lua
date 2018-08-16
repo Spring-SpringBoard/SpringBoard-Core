@@ -30,7 +30,10 @@ function Table.Concat(...)
     return ret
 end
 
+-- This function is a workaround for the # operator which fails with associative
+-- arrays. 
 function Table.IsEmpty(t)
+    -- luacheck: ignore
     for _ in pairs(t) do
         return false
     end
