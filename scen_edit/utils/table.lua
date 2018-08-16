@@ -30,6 +30,21 @@ function Table.Concat(...)
     return ret
 end
 
+function Table.IsEmpty(t)
+    for _ in pairs(t) do
+        return false
+    end
+    return true
+end
+
+function Table.GetSize(t)
+    local i = 0
+    for _ in pairs(t) do
+        i = i + 1
+    end
+    return i
+end
+
 -- FIXME
 -- FIXME: Cleanup everything below
 -- FIXME

@@ -116,6 +116,9 @@ function SaveCommand.GenerateScript(dev)
                 RGBColor = team.color.r .. " " .. team.color.g .. " " .. team.color.b,
                 Side = team.side,
             }
+            if String.Trim(team.side) == "" then
+                teams[team.id].Side = nil
+            end
             if team.ai then
                 local aiShortName = "NullAI"
                 local aiVersion = ""

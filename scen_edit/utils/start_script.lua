@@ -163,25 +163,57 @@ function boolToNumber(bool)
     end
 end
 
-function StartScript.__WriteTable(key, value)
-    local str = '\t['..key..']\n\t{\n'
-    -- First write Tables
-    for k, v in pairs(value) do
-        if type(v) == 'table' then
-            str = str .. StartScript.__WriteTable(k, v)
-        end
+-- NOTICE: potentially dangerous to prune empty tables
+-- (an empty table might still count as a definition)
+local PRUNE_EMPTY_TABLES = false
+function StartScript.__WriteTable(key, value, indent)
+    if Table.IsEmpty(value) and PRUNE_EMPTY_TABLES then
+        return ""
     end
 
-    -- Then the rest (purely for aesthetics)
-    for k, v in pairs(value) do
+    if indent == nil then
+        indent = 0
+    end
+    local istr = string.rep('\t', indent) -- indent prefix
+    local cstr = istr .. '\t'             -- indent for children
+
+    local str =  istr .. '['..key..']\n'
+    str = str .. istr .. '{\n'
+
+    local sortedKeys = GetKeys(value)
+    table.sort(sortedKeys, function(a, b)
+        return a:lower() < b:lower()
+    end)
+
+    local hasTables = false
+    -- 1) First write basic types
+    for _, k in pairs(sortedKeys) do
+        local v = value[k]
         if type(v) ~= 'table' then
             if type(v) == "boolean" then
                 v = boolToNumber(v)
             end
-            str = str .. '\t\t' .. k .. ' = ' .. tostring(v) .. ';\n'
+            str = str .. cstr .. k .. ' = ' .. tostring(v) .. ';\n'
+        elseif not hasTables then
+            if not PRUNE_EMPTY_TABLES or not Table.IsEmpty(v) then
+                hasTables = true
+            end
         end
     end
-    return str .. '\t}\n\n'
+
+    -- 2) then the tables (purely for aesthetics)
+    if hasTables then
+        str = str .. '\n'
+        for _, k in pairs(sortedKeys) do
+            local v = value[k]
+            if type(v) == 'table' and (not PRUNE_EMPTY_TABLES or not Table.IsEmpty(v)) then
+                str = str .. istr .. StartScript.__WriteTable(k, v, indent+1)
+            end
+        end
+    end
+
+
+    return str .. istr ..  '}\n\n'
 end
 
 function StartScript.__WriteStartScript(script)
