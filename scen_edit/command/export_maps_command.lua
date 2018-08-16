@@ -165,7 +165,7 @@ function ExportMapsCommand:ExportGrass()
 end
 
 function ExportMapsCommand:ExportDiffuse()
-    local texturePath = Path.Join(self.path, "texture.png")
+    local texturePath = Path.Join(self.path, "diffuse.png")
 
     if VFS.FileExists(texturePath, VFS.RAW) then
         Log.Notice("removing the existing texture")
