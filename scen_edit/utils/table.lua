@@ -31,7 +31,7 @@ function Table.Concat(...)
 end
 
 -- This function is a workaround for the # operator which fails with associative
--- arrays. 
+-- arrays.
 function Table.IsEmpty(t)
     -- luacheck: ignore
     for _ in pairs(t) do
