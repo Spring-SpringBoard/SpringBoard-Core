@@ -6,10 +6,14 @@ function ExportMapsCommand:init(path)
     self.path = path
 end
 
-function SaveShadingTextures(path, toProject)
+function SaveShadingTextures(path, toProject, prefix)
+    -- FIXME: Maybe totally get rid of this prefix thing?
+    if not prefix then
+        prefix = ""
+    end
     for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
-        if shadingTexObj.dirty then
-            local texPath = Path.Join(path, "shading-" .. texType .. ".png")
+        if shadingTexObj.dirty or not toProject then
+            local texPath = Path.Join(path, prefix .. texType .. ".png")
             if VFS.FileExists(texPath, VFS.RAW) then
                 Log.Notice("Removing existing texture: " .. tostring(texPath))
                 os.remove(texPath)
@@ -217,11 +221,25 @@ function ExportMapsCommand:execute()
         -- create dir just to be sure
         Spring.CreateDir(self.path)
 
-        self:ExportHeightmap()
-        self:ExportGrass()
-        SaveShadingTextures(self.path, false)
-        self:ExportDiffuse()
-
-        Log.Notice("Done")
+        Time.MeasureTime(function()
+            self:ExportHeightmap()
+        end, function (elapsed)
+            Log.Notice(("[%.4fs] Exported heightmap"):format(elapsed))
+        end)
+        Time.MeasureTime(function()
+            self:ExportGrass()
+        end, function (elapsed)
+            Log.Notice(("[%.4fs] Exported grass"):format(elapsed))
+        end)
+        Time.MeasureTime(function()
+            SaveShadingTextures(self.path, false, "")
+        end, function (elapsed)
+            Log.Notice(("[%.4fs] Exported shading textures"):format(elapsed))
+        end)
+        Time.MeasureTime(function()
+            self:ExportDiffuse()
+        end, function (elapsed)
+            Log.Notice(("[%.4fs] Exported diffuse"):format(elapsed))
+        end)
     end)
 end

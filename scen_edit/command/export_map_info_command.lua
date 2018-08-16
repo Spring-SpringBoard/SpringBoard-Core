@@ -170,6 +170,64 @@ function ExportMapInfoCommand:GetCustom()
     return tbl
 end
 
+function ExportMapInfoCommand:GetSMF()
+    local maxH, minH = -math.huge, math.huge
+    for z = 0, Game.mapSizeZ, Game.squareSize do
+        for x = 0, Game.mapSizeX, Game.squareSize do
+            local groundHeight = Spring.GetGroundHeight(x, z)
+            if groundHeight > maxH then
+                maxH = groundHeight
+            end
+            if groundHeight < minH then
+                minH = groundHeight
+            end
+        end
+    end
+
+    local scenarioInfo = SB.model.scenarioInfo
+    local tbl = {
+        minheight = minH,
+		maxheight = maxH,
+		smtFileName0 = scenarioInfo.name .. ".smt",
+    }
+    return tbl
+end
+
+function ExportMapInfoCommand:GetResources()
+    -- Engine parses these textures from the resource table.
+    -- These are the possible values:
+        -- detailTex
+        -- specularTex
+        -- splatDetailTex
+        -- splatDistrTex
+        -- splatDetailNormalTex
+        -- grassShadingTex
+        -- skyReflectModTex
+        -- detailNormalTex
+        -- lightEmissionTex
+        -- parallaxHeightTex
+
+    -- However, we ONLY support the following subset (code below)
+
+    local tbl = {
+        splatDetailNormalDiffuseAlpha = gl.GetMapRendering("splatDetailNormalDiffuseAlpha"),
+    }
+    local dnts = {}
+    for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
+        local fileName = texType .. ".png"
+        -- FIXME: HARDCODED
+        if texType == "specular" then
+            tbl["specularTex"] = fileName
+        elseif texType == "splat_distr" then
+            tbl["splatDistrTex"] = fileName
+        elseif texType:find("splat_normals") ~= nil then
+            local key = "splatDetailNormalTex" .. texType:sub(#"splat_normals" + 1)
+            tbl[key] = fileName
+        end
+    end
+    return tbl
+end
+
 function ExportMapInfoCommand:GetExtraString()
     return [[
 --------------------------------------------------------------------------------
@@ -196,13 +254,13 @@ local function lowerkeys(ta)
     end
 end
 
-lowerkeys(mapinfo)
+lowerkeys(mapInfo)
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- Map Options
 
-do
+if (Spring) then
     local function tmerge(t1, t2)
         for i,v in pairs(t2) do
             if (type(v) == "table") then
@@ -214,21 +272,41 @@ do
         end
     end
 
-    getfenv()["mapinfo"] = mapinfo
+    -- make code safe in unitsync
+    if (not Spring.GetMapOptions) then
+        Spring.GetMapOptions = function() return {} end
+    end
+    function tobool(val)
+        local t = type(val)
+        if (t == 'nil') then
+            return false
+        elseif (t == 'boolean') then
+            return val
+        elseif (t == 'number') then
+            return (val ~= 0)
+        elseif (t == 'string') then
+            return ((val ~= '0') and (val ~= 'false'))
+        end
+        return false
+    end
+
+    getfenv()["mapInfo"] = mapInfo
         local files = VFS.DirList("mapconfig/mapinfo/", "*.lua")
         table.sort(files)
         for i=1,#files do
             local newcfg = VFS.Include(files[i])
             if newcfg then
                 lowerkeys(newcfg)
-                tmerge(mapinfo, newcfg)
+                tmerge(mapInfo, newcfg)
             end
         end
-    getfenv()["mapinfo"] = nil
+    getfenv()["mapInfo"] = nil
 end
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
+return mapInfo
 ]]
 end
 
@@ -242,6 +320,8 @@ function ExportMapInfoCommand:execute()
     local teams = self:GetTeams()
     local terrainTypes = self:GetTerrainTypes()
     local custom = self:GetCustom()
+    local smf = self:GetSMF()
+    local resources = self:GetResources()
 
     local mapInfo = {
         -- Section: Global
@@ -278,12 +358,13 @@ function ExportMapInfoCommand:execute()
         teams = teams,
         terrainTypes = terrainTypes,
         custom = custom,
+        smf = smf,
+        resources = resources,
     }
 
     local file = assert(io.open(self.path, "w"))
     file:write("local mapInfo =")
     file:write(table.show(mapInfo):sub(#"return "))
     file:write(self:GetExtraString())
-    file:write("return mapInfo")
     file:close()
 end
