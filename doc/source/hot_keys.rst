@@ -35,7 +35,7 @@ Hotkey                  Action
 Mouse1                  Apply (e.g. increase terrain)
 Mouse2                  Reverse apply (e.g. decrease terrain)
 Shift+Mouse wheel up    Increase size of brush if present
-Ctrl+Mouse down         Decrease size of brush if present
+Shift+Mouse wheel down  Decrease size of brush if present
 Alt+Mouse wheel up      Rotate brush clockwise
 Alt+Mouse wheel down    Rotate brush counterclockwise
 Esc                     Exit current editing mode
