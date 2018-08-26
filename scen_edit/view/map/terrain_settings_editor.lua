@@ -109,15 +109,13 @@ function TerrainSettingsEditor:init()
                     diffusePath = Path.Join(folderPath, "diffuse.png")
                     grass = Path.Join(folderPath, "grass.png")
                     outputPath = Path.Join(folderPath, "MyName")
+                    self.compileFolderPath = folderPath
 
-                    WG.Connector.Send({
-                        name = "CompileMap",
-                        command = {
-                            heightPath = heightPath,
-                            diffusePath = diffusePath,
-                            grass = grass,
-                            outputPath = outputPath,
-                        }
+                    WG.Connector.Send("CompileMap", {
+                        heightPath = heightPath,
+                        diffusePath = diffusePath,
+                        grass = grass,
+                        outputPath = outputPath,
                     })
                 end
             }
@@ -154,6 +152,10 @@ function TerrainSettingsEditor:init()
         WG.Connector.Register("CompileMapFinished", function()
             self.progressBar:SetValue(100)
             self.progressBar:SetCaption("Finished")
+
+            WG.Connector.Send("OpenFile", {
+                path = "file://" .. self.compileFolderPath,
+            })
         end)
 
         WG.Connector.Register("CompileMapError", function(command)

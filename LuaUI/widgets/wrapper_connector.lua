@@ -58,7 +58,11 @@ local Connector = {
 	callbacks = {}, -- name based callbacks
 }
 
-function Connector.Send(command)
+function Connector.Send(name, opt)
+	local command = {
+		name = name,
+		command = opt
+	}
 	if not isConnected then
 		Spring.Log(LOG_SECTION, LOG.WARNING,
 			"No wrapper client detected. Ignoring command: " .. tostring(command.name))
