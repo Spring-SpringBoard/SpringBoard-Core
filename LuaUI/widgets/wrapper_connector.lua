@@ -82,14 +82,17 @@ end
 
 -- init
 function widget:Initialize()
-	file = VFS.LoadFile(CONFIG_FILE)
-	if not file then
-		widgetHandler:RemoveWidget(self)
-		Spring.Log(LOG_SECTION, "error", "Missing file with connection details " .. tostring(CONFIG_FILE))
-		return
-	end
-	local config = json.decode(file)
-	host, port = config.host, config.port
+	-- file = VFS.LoadFile(CONFIG_FILE)
+	-- if not file then
+	-- 	widgetHandler:RemoveWidget(self)
+	-- 	Spring.Log(LOG_SECTION, "error", "Missing file with connection details " .. tostring(CONFIG_FILE))
+	-- 	return
+	-- end
+	-- local config = json.decode(file)
+	-- host, port = config.host, config.port
+	local modOpts = Spring.GetModOptions()
+	host = modOpts._sl_address;
+	port = modOpts._sl_port;
 	if not port or not host then
 		widgetHandler:RemoveWidget(self)
 		Spring.Log(LOG_SECTION, "error", "Invalid connection details in " .. tostring(CONFIG_FILE))

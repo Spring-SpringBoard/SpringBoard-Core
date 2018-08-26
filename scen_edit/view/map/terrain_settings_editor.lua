@@ -147,23 +147,24 @@ function TerrainSettingsEditor:init()
         }))
 
 
-        WG.Connector.Register("StartCompiling", function()
+        WG.Connector.Register("CompileMapStarted", function()
             self.progressBar:SetCaption("Starting...")
         end)
 
-        WG.Connector.Register("FinishCompiling", function()
+        WG.Connector.Register("CompileMapFinished", function()
+            self.progressBar:SetValue(100)
             self.progressBar:SetCaption("Finished")
         end)
 
-        WG.Connector.Register("ErrorCompiling", function(command)
+        WG.Connector.Register("CompileMapError", function(command)
             self.progressBar:SetCaption("Error")
             Log.Warning("Failed to compile: " .. tostring(command.msg))
             self.progressBar.tooltip = tostring(command.msg)
         end)
 
-        WG.Connector.Register("UpdateCompiling", function(command)
-            local est, total = command.est, command.total
-            local value = est * 100 / total
+        WG.Connector.Register("CompileMapProgress", function(command)
+            local current, total = command.current, command.total
+            local value = current * 100 / total
             value = math.max(value, 0)
             value = math.min(value, 100)
             self.progressBar:SetValue(value)
