@@ -89,7 +89,7 @@ function TerrainSettingsEditor:init()
                     end
 
                     heightPath = Path.Join(folderPath, "heightmap.png")
-                    diffusePath = Path.Join(folderPath, "texture.png")
+                    diffusePath = Path.Join(folderPath, "diffuse.png")
                     grass = Path.Join(folderPath, "grass.png")
                     outputPath = Path.Join(folderPath, "MyName")
 
@@ -106,7 +106,7 @@ function TerrainSettingsEditor:init()
                     folderPath = Path.Join(GetWriteDataDir(), folderPath)
 
                     heightPath = Path.Join(folderPath, "heightmap.png")
-                    diffusePath = Path.Join(folderPath, "texture.png")
+                    diffusePath = Path.Join(folderPath, "diffuse.png")
                     grass = Path.Join(folderPath, "grass.png")
                     outputPath = Path.Join(folderPath, "MyName")
 
