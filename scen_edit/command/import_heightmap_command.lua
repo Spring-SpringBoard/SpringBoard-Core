@@ -15,8 +15,10 @@ function ImportHeightmapCommand:execute()
             return
         end
 
-        Log.Debug("scened", LOG.DEBUG, "Importing heightmap..")
-        local heightmapTexture = gl.CreateTexture(Game.mapSizeX / Game.squareSize + 1, Game.mapSizeZ / Game.squareSize + 1, {
+        Log.Debug("Importing heightmap..")
+        local heightmapTexture = gl.CreateTexture(
+            Game.mapSizeX / Game.squareSize + 1,
+            Game.mapSizeZ / Game.squareSize + 1, {
             border = false,
             min_filter = GL.NEAREST,
             mag_filter = GL.NEAREST,
@@ -30,22 +32,24 @@ function ImportHeightmapCommand:execute()
         local res
 
         gl.Blending("disable")
+        gl.Texture(self.heightmapImagePath)
         gl.RenderToTexture(heightmapTexture, function()
-            gl.Texture(self.heightmapImagePath)
             gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
             res = gl.ReadPixels(0, 0, w, h)
-            gl.DeleteTexture(self.heightmapImagePath)
         end)
+        gl.Texture(false)
+        gl.DeleteTexture(self.heightmapImagePath)
+        gl.DeleteTexture(heightmapTexture)
 
         local greyscale = {}
-        for i, row in pairs(res) do
+        local h = 0
+        for i, row in ipairs(res) do
             greyscale[i] = {}
-            for j, point in pairs(row) do
-                greyscale[i][j] = (point[1] + point[2] + point[3]) / 3 * point[4]
-                greyscale[i][j] = self.minHeight + greyscale[i][j] * (self.maxHeight - self.minHeight)
+            for j, point in ipairs(row) do
+                h = (point[1] + point[2] + point[3]) / 3 * point[4]
+                greyscale[i][j] = self.minHeight + h * (self.maxHeight - self.minHeight)
             end
         end
-
         SB.commandManager:execute(ImportHeightmapCommandSynced(greyscale))
     end)
 end
@@ -60,10 +64,10 @@ end
 
 function ImportHeightmapCommandSynced:execute()
     Spring.SetHeightMapFunc(function()
-        for z = 0, Game.mapSizeZ, Game.squareSize do
-            for x = 0, Game.mapSizeX, Game.squareSize do
-                local column = self.greyscale[z / Game.squareSize + 1]
-                Spring.SetHeightMap(x, z, column[x / Game.squareSize + 1])
+        for x = 0, Game.mapSizeX, Game.squareSize do
+            for z = 0, Game.mapSizeZ, Game.squareSize do
+                local column = self.greyscale[x / Game.squareSize + 1]
+                Spring.SetHeightMap(x, z, column[z / Game.squareSize + 1])--column[z / Game.squareSize + 1])
             end
         end
     end)
