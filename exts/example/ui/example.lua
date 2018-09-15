@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 ExampleEditor = Editor:extends{}
-Editor.Register({
+ExampleEditor:Register({
     name = "exampleEditor",
-    editor = ExampleEditor,
     tab = "Example",
     caption = "Example",
     tooltip = "Example editor",
