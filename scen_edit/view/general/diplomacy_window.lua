@@ -1,9 +1,8 @@
 SB.Include(SB_VIEW_DIR .. "editor.lua")
 
 DiplomacyWindow = Editor:extends{}
-Editor.Register({
+DiplomacyWindow:Register({
     name = "diplomacyWindow",
-    editor = DiplomacyWindow,
     tab = "Misc",
     caption = "Alliances",
     tooltip = "Edit alliances",

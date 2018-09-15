@@ -1,9 +1,8 @@
 SB.Include(SB_VIEW_DIR .. "editor.lua")
 
 PlayersWindow = Editor:extends{}
-Editor.Register({
+PlayersWindow:Register({
     name = "playersWindow",
-    editor = PlayersWindow,
     tab = "Misc",
     caption = "Teams",
     tooltip = "Edit teams",

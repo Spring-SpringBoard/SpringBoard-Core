@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 VariablesWindow = Editor:extends{}
-Editor.Register({
+VariablesWindow:Register({
     name = "variablesWindow",
-    editor = VariablesWindow,
     tab = "Logic",
     caption = "Variables",
     tooltip = "Edit variables",

@@ -1,4 +1,17 @@
-ExportAction = LCS.class{}
+SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+
+ExportAction = Action:extends{}
+
+ExportAction:Register({
+    name = "sb_export",
+    tooltip = "Export",
+    image = SB_IMG_DIR .. "save.png",
+    toolbar_order = 6,
+    hotkey = {
+        key = KEYSYMS.E,
+        ctrl = true
+    }
+})
 
 local EXPORT_SCENARIO_ARCHIVE = "Scenario archive"
 local EXPORT_MAP_TEXTURES = "Map textures"
@@ -6,19 +19,21 @@ local EXPORT_MAP_INFO = "Map info"
 local EXPORT_S11N = "s11n object format"
 local fileTypes = {EXPORT_SCENARIO_ARCHIVE, EXPORT_MAP_TEXTURES, EXPORT_MAP_INFO, EXPORT_S11N}
 
-function ExportAction:execute()
+function ExportAction:canExecute()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
         Log.Warning("Cannot export while testing.")
-        return
+        return false
     end
-
     if SB.projectDir == nil then
-        --FIXME: probably don't need for most types of export
+        -- FIXME: this should probably be relaxed for most types of export
         Log.Warning("The project must be saved before exporting")
-        return
+        return false
     end
+    return true
+end
 
-    sfd = ExportFileDialog(SB_PROJECTS_DIR, fileTypes)
+function ExportAction:execute()
+    local sfd = ExportFileDialog(SB_PROJECTS_DIR, fileTypes)
     sfd:setConfirmDialogCallback(
         function(path, fileType)
             local baseName = Path.ExtractFileName(path)

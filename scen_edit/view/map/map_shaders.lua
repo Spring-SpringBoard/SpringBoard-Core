@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 MapShadersEditor = Editor:extends{}
-Editor.Register({
+MapShadersEditor:Register({
     name = "mapShaders",
-    editor = MapShadersEditor,
     tab = "Map",
     caption = "Shaders",
     tooltip = "Edit map shaders",

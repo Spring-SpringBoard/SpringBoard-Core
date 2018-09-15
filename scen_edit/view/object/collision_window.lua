@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 CollisionView = Editor:extends{}
-Editor.Register({
+CollisionView:Register({
     name = "collisionView",
-    editor = CollisionView,
     tab = "Objects",
     caption = "Collision",
     tooltip = "Edit collision volumes",

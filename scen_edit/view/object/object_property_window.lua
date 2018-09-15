@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 ObjectPropertyWindow = Editor:extends{}
-Editor.Register({
+ObjectPropertyWindow:Register({
     name = "objectPropertyWindow",
-    editor = ObjectPropertyWindow,
     tab = "Objects",
     caption = "Properties",
     tooltip = "Edit object properties",

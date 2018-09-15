@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 AreasWindow = Editor:extends{}
-Editor.Register({
+AreasWindow:Register({
     name = "areasWindow",
-    editor = AreasWindow,
     tab = "Logic",
     caption = "Area",
     tooltip = "Edit areas",

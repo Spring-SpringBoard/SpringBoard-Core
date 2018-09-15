@@ -149,34 +149,12 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         return true
     end
 
-    if key == KEYSYMS.DELETE then
-        local selCount = SB.view.selectionManager:GetSelectionCount()
-        if selCount == 0 then
-            return false
-        end
-        DeleteAction():execute()
-    elseif key == KEYSYMS.C and mods.ctrl then
-        local selCount = SB.view.selectionManager:GetSelectionCount()
-        if selCount == 0 then
-            return false
-        end
-        CopyAction():execute()
-    elseif key == KEYSYMS.X and mods.ctrl then
-        local selCount = SB.view.selectionManager:GetSelectionCount()
-        if selCount == 0 then
-            return false
-        end
-        CutAction():execute()
-    elseif key == KEYSYMS.V and mods.ctrl then
-        PasteAction():execute()
-    elseif key == KEYSYMS.A and mods.ctrl then
-        SelectAllAction():execute()
-    elseif key == KEYSYMS.T and mods.ctrl and mods.shift then
-        SelectSameTypeInViewAction():execute()
-    elseif key == KEYSYMS.T and mods.ctrl then
-        SelectSameTypeAction():execute()
-    else
-        return false
+    local action = Action.GetActionsForKeyPress(
+        true, key, mods, isRepeat, label, unicode
+    )
+    if action then
+        action:execute()
+        return true
     end
-    return true
+    return false
 end

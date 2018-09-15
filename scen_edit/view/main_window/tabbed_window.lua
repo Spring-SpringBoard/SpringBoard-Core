@@ -1,228 +1,12 @@
 TabbedWindow = LCS.class{}
 
 function TabbedWindow:init()
-    local mainPanelY = 130
-    local commonControls = {
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "New project",
-            OnClick = {
-                function()
-                    NewAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "file.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Save project (Ctrl+S)",
-            OnClick = {
-                function()
-                    SaveAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "save.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Save project as... (Ctrl+Shift+S)",
-            OnClick = {
-                function()
-                    SaveAsAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "save.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Load project (Ctrl-O)",
-            OnClick = {
-                function()
-                    LoadAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "open-folder.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Export to (Ctrl-E)...",
-            OnClick = {
-                function()
-                    ExportAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "save.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Import from (Ctrl-I)...",
-            OnClick = {
-                function()
-                    ImportAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "open-folder.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Reload meta model",
-            OnClick = {
-                function()
-                    ReloadAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "recycle.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Copy (Ctrl+C)",
-            OnClick = {
-                function()
-                    CopyAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "copy.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Cut (Ctrl+X)",
-            OnClick = {
-                function()
-                    CutAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "scissors-rotated.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-        Button:New {
-            y = mainPanelY,
-            height = 40,
-            width = 40,
-            caption = '',
-            tooltip = "Paste (Ctrl+V)",
-            OnClick = {
-                function()
-                    PasteAction():execute()
-                end
-            },
-            children = {
-                Image:New {
-                    file = SB_IMG_DIR .. "stabbed-note.png",
-                    height = 20,
-                    width = 20,
-                    margin = {0, 0, 0, 0},
-                    x = 0,
-                },
-            },
-        },
-    }
-    commonControls[1].x = 5
-    for i = 2, #commonControls do
-        commonControls[i].x = commonControls[i-1].x + 40 + 1
-    end
+    self.mainPanelY = 130
 
     local controls = {}
     if SB.conf.SHOW_BASIC_CONTROLS then
-        controls = commonControls
-        mainPanelY = mainPanelY + 45
+        controls = self:MakeActionButtons(SB.actionRegistry)
+        self.mainPanelY = self.mainPanelY + 45
     end
 
     -- Create tabs from the editor registry
@@ -277,7 +61,7 @@ function TabbedWindow:init()
     table.insert(controls, self.__tabPanel)
 
     table.insert(controls, Chili.Line:New {
-        y = mainPanelY - 5,
+        y = self.mainPanelY - 5,
         x = 0,
         width = "100%",
     })
@@ -285,7 +69,7 @@ function TabbedWindow:init()
     self.mainPanel = Chili.Control:New {
         x = 0,
         width = "100%",
-        y = mainPanelY,
+        y = self.mainPanelY,
         bottom = 5,
         padding = {0, 0, 0, 0},
     }
@@ -330,6 +114,54 @@ function TabbedWindow:SetMainPanel(panel)
         mp._hidden[panel] = nil
     end
 end
+
+function TabbedWindow:MakeActionButton(actionCfg)
+    local btnAction = Button:New {
+        y = self.mainPanelY,
+        height = 40,
+        width = 40,
+        caption = '',
+        tooltip = actionCfg.tooltip,
+        OnClick = {
+            function()
+                local action = actionCfg.action()
+                if not action.canExecute or action:canExecute() then
+                    action:execute()
+                end
+            end
+        },
+        children = {
+            Image:New {
+                file = actionCfg.image,
+                height = 20,
+                width = 20,
+                margin = {0, 0, 0, 0},
+                x = 0,
+            },
+        },
+    }
+    return btnAction
+end
+
+function TabbedWindow:MakeActionButtons(actions)
+    local i = 1
+    local x = 5
+    local btnActions = {}
+    actions = Table.Filter(actions, function(v)
+        return v.toolbar_order ~= nil
+    end)
+    actions = Table.SortByAttr(actions, "toolbar_order")
+    for _, action in pairs(actions) do
+        if action.image and action.tooltip then
+            local btnAction = self:MakeActionButton(action)
+            btnAction.x = x
+            table.insert(btnActions, btnAction)
+            x = x + 40 + 1
+        end
+    end
+    return btnActions
+end
+
 
 function TabbedWindow:NextTab()
     local nextTab

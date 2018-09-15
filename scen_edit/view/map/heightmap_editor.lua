@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 HeightmapEditor = Editor:extends{}
-Editor.Register({
+HeightmapEditor:Register({
     name = "heightmapEditor",
-    editor = HeightmapEditor,
     tab = "Map",
     caption = "Terrain",
     tooltip = "Edit heightmap",

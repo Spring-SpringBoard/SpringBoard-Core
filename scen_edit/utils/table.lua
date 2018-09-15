@@ -48,6 +48,16 @@ function Table.GetSize(t)
     return i
 end
 
+function Table.Filter(t, f)
+    local ret = {}
+    for k, v in pairs(t) do
+        if f(v) then
+            ret[k] = v
+        end
+    end
+    return ret
+end
+
 -- FIXME
 -- FIXME: Cleanup everything below
 -- FIXME

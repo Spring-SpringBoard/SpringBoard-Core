@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 WaterEditor = Editor:extends{}
-Editor.Register({
+WaterEditor:Register({
     name = "waterEditor",
-    editor = WaterEditor,
     tab = "Env",
     caption = "Water",
     tooltip = "Edit water",

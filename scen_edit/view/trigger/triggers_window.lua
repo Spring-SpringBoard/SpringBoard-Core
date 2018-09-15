@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 TriggersWindow = Editor:extends{}
-Editor.Register({
+TriggersWindow:Register({
     name = "triggersWindow",
-    editor = TriggersWindow,
     tab = "Logic",
     caption = "Triggers",
     tooltip = "Edit triggers",

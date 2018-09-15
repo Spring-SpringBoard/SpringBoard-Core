@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 LightingEditor = Editor:extends{}
-Editor.Register({
+LightingEditor:Register({
     name = "lightingEditor",
-    editor = LightingEditor,
     tab = "Env",
     caption = "Lighting",
     tooltip = "Edit lighting",

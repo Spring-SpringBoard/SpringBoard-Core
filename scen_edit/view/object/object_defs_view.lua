@@ -224,9 +224,8 @@ function ObjectDefsView:OnEnterState(state)
 end
 
 UnitDefsView = ObjectDefsView:extends{}
-Editor.Register({
+UnitDefsView:Register({
     name = "unitDefsView",
-    editor = UnitDefsView,
     tab = "Objects",
     caption = "Units",
     tooltip = "Add units",
@@ -328,9 +327,8 @@ function UnitDefsView:MakeFilters()
 end
 
 FeatureDefsView = ObjectDefsView:extends{}
-Editor.Register({
+FeatureDefsView:Register({
     name = "featureDefsView",
-    editor = FeatureDefsView,
     tab = "Objects",
     caption = "Features",
     tooltip = "Add features",

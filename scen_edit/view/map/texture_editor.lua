@@ -3,9 +3,8 @@ SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 
 TextureEditor = Editor:extends{}
-Editor.Register({
+TextureEditor:Register({
     name = "textureEditor",
-    editor = TextureEditor,
     tab = "Map",
     caption = "Texture",
     tooltip = "Edit textures",

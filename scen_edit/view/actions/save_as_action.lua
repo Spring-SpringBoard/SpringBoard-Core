@@ -1,11 +1,28 @@
-SaveAsAction = LCS.class{}
+SB.Include(SB_VIEW_ACTIONS_DIR .. "action.lua")
 
-function SaveAsAction:execute()
+SaveProjectAsAction = Action:extends{}
+
+SaveProjectAsAction:Register({
+    name = "sb_save_project_as",
+    tooltip = "Save project as...",
+    image = SB_IMG_DIR .. "save.png",
+    toolbar_order = 5,
+    hotkey = {
+        key = KEYSYMS.S,
+        ctrl = true,
+        shift = true,
+    },
+})
+
+function SaveProjectAsAction:canExecute()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
         Log.Warning("Cannot save while testing.")
-        return
+        return false
     end
+    return true
+end
 
+function SaveProjectAsAction:execute()
     local origProjDir = SB.projectDir
     sfd = SaveProjectDialog(SB_PROJECTS_DIR)
     sfd:setConfirmDialogCallback(
@@ -29,7 +46,7 @@ function SaveAsAction:execute()
     )
 end
 
-function SaveAsAction:Save(path, isNewProject)
+function SaveProjectAsAction:Save(path, isNewProject)
     local saveCommand = SaveCommand(path, isNewProject)
     SB.commandManager:execute(saveCommand, true)
 
@@ -41,7 +58,7 @@ function SaveAsAction:Save(path, isNewProject)
     end)
 end
 
-function SaveAsAction:CreateProjectStructure(projectDir)
+function SaveProjectAsAction:CreateProjectStructure(projectDir)
     -- create project if it doesn't exist already
     if SB.DirExists(projectDir, VFS.RAW_ONLY) then
         return
@@ -71,3 +88,4 @@ return {
     file:write(myCustomTriggersLua)
     file:close()
 end
+

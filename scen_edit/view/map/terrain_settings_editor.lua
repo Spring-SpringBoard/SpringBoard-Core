@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 TerrainSettingsEditor = Editor:extends{}
-Editor.Register({
+TerrainSettingsEditor:Register({
     name = "terrainSettings",
-    editor = TerrainSettingsEditor,
     tab = "Map",
     caption = "Settings",
     tooltip = "Edit map settings",

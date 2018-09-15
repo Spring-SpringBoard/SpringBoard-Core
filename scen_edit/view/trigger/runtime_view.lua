@@ -3,9 +3,8 @@ SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 RuntimeWindow = Editor:extends{}
 -- TODO: Unnecessary check?
 if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
-    Editor.Register({
+    RuntimeWindow:Register({
         name = "runtimeWindow",
-        editor = RuntimeWindow,
         tab = "Logic",
         caption = "Runtime",
         tooltip = "See runtime triggers and variables",

@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 SkyEditor = Editor:extends{}
-Editor.Register({
+SkyEditor:Register({
     name = "skyEditor",
-    editor = SkyEditor,
     tab = "Env",
     caption = "Sky",
     tooltip = "Edit sky and fog",

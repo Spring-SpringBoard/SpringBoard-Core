@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 MetalEditor = Editor:extends{}
-Editor.Register({
+MetalEditor:Register({
     name = "metalEditor",
-    editor = MetalEditor,
     tab = "Map",
     caption = "Metal",
     tooltip = "Edit metal map",

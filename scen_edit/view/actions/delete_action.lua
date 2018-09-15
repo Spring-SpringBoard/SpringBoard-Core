@@ -1,4 +1,19 @@
-DeleteAction = LCS.class{}
+SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+
+DeleteAction = Action:extends{}
+
+DeleteAction:Register({
+    name = "sb_delete",
+    tooltip = "Delete",
+    hotkey = {
+        key = KEYSYMS.DELETE
+    },
+    limit_state = true,
+})
+
+function DeleteAction:canExecute()
+    return SB.view.selectionManager:GetSelectionCount() > 0
+end
 
 function DeleteAction:execute()
     local selection = SB.view.selectionManager:GetSelection()

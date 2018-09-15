@@ -59,26 +59,13 @@ function AbstractState:KeyPress(key, mods, isRepeat, label, unicode)
             end
         end
     end
-    -- TODO: make this configurable
-    if key == KEYSYMS.Z and mods.ctrl then
-        SB.commandManager:execute(UndoCommand())
-    elseif key == KEYSYMS.Y and mods.ctrl then
-        SB.commandManager:execute(RedoCommand())
-    elseif key == KEYSYMS.S and mods.ctrl and not mods.shift then
-        SaveAction():execute()
-    elseif key == KEYSYMS.S and mods.ctrl and mods.shift then
-        SaveAsAction():execute()
-    elseif key == KEYSYMS.O and mods.ctrl then
-        LoadAction():execute()
-    elseif key == KEYSYMS.E and mods.ctrl then
-        ExportAction():execute()
-    elseif key == KEYSYMS.I and mods.ctrl then
-        ImportAction():execute()
-    elseif key == KEYSYMS.N and mods.ctrl then
-        -- FIXME: Full new project support needs an engine update.
-        NewAction():execute()
-    else
-        return false
+
+    local action = Action.GetActionsForKeyPress(
+        false, key, mods, isRepeat, label, unicode
+    )
+    if action then
+        action:execute()
+        return true
     end
-    return true
+    return false
 end

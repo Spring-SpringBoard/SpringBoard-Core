@@ -1,9 +1,20 @@
-SelectSameTypeAction = LCS.class{}
+SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
 
 -- NOTE: This currently filters based on def and additionally whether the object
 -- is in screen
 -- NOTE: In the future maybe rewrite this to support arbitrary filters, but seems
 -- unnecessary now
+
+SelectSameTypeAction = Action:extends{}
+
+SelectSameTypeAction:Register({
+    name = "sb_select_same",
+    hotkey = {
+        key = KEYSYMS.T,
+        ctrl = true,
+    },
+    limit_state = true,
+})
 
 function SelectSameTypeAction:execute()
     local currentSelection = SB.view.selectionManager:GetSelection()
@@ -54,3 +65,13 @@ end
 
 SelectSameTypeInViewAction = SelectSameTypeAction:extends{}
 SelectSameTypeInViewAction.checkPos = true
+
+SelectSameTypeInViewAction:Register({
+    name = "sb_select_same_in_view",
+    hotkey = {
+        key = KEYSYMS.T,
+        ctrl = true,
+        shift = true,
+    },
+    limit_state = true,
+})

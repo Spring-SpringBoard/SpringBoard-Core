@@ -475,7 +475,7 @@ SB.editorRegistry = {}
 -- Globally available editor instances
 SB.editors = {}
 
---- Register editor globally.
+--- Register editor.
 -- @tparam table opts Table
 -- @tparam string opts.name Machine name of the editor control.
 -- @tparam Editor opts.editor Class inheritng from Editor
@@ -484,23 +484,25 @@ SB.editors = {}
 -- @tparam string opts.tooltip Mouseover tooltip.
 -- @tparam string opts.image Path to the Editor icon.
 -- @usage
--- GrassEditor = Editor:extends{}
--- Editor.Register({
---     name = "grassEditor",
---     editor = GrassEditor,
---     tab = "Map",
---     caption = "Grass",
---     tooltip = "Edit grass",
---     image = SB_IMG_DIR .. "grass.png",
---     order = 4,
+-- MyEditor = Editor:extends{}
+-- MyEditor:Register({
+--     name = "myEditor",
+--     tab = "MyTag",
+--     caption = "MyEditor",
+--     tooltip = "Edit something",
+--     image = SB_IMG_DIR .. "my_icon.png",
+--     order = 42,
 -- })
-function Editor.Register(opts)
+function Editor:Register(opts)
+    -- Prevents invalid invocation with missing opts table
+    assert(opts ~= nil, "Missing opts table for editor. Did you mean MyEditor:Register instead of MyEditor.Register?")
     assert(opts.name, "Missing name for editor.")
     assert(not SB.editorRegistry[opts.name],
         "Editor with name: " .. opts.name .. " already exists")
-    assert(opts.editor, "Missing editor for: " .. opts.name)
 
     Log.Notice("Registering: " .. opts.name)
+
+    opts.editor = self
 
     opts.tab = opts.tab or "Other"
     opts.caption = opts.caption or name
@@ -512,11 +514,18 @@ function Editor.Register(opts)
     SB.editorRegistry[opts.name] = opts
 end
 
---- Deregister editor globally.
--- @tparam string name Name of Editor to unregister
-function Editor.Deregister(name)
-    assert(opts.name, "Missing name for editor.")
-    SB.editorRegistry[opts.name] = opts
+--- Deregister the editor.
+-- @usage
+-- MyEditor:Deregister()
+-- -- alternatively
+-- Editor.Deregister("my-editor")
+function Editor:Deregister()
+    if type(self) == "string" then
+        SB.editorRegistry[self] = nil
+    else
+        SB.editorRegistry[self.name] = nil
+    end
+    -- TODO: Remove the editor from the GUI?
 end
 
 -- We load these fields last as they might be/contain subclasses of editor view

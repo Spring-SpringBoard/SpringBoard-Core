@@ -1,9 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
 GrassEditor = Editor:extends{}
-Editor.Register({
+GrassEditor:Register({
     name = "grassEditor",
-    editor = GrassEditor,
     tab = "Map",
     caption = "Grass",
     tooltip = "Edit grass",

@@ -1,16 +1,32 @@
-ImportAction = LCS.class{}
+SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+
+ImportAction = Action:extends{}
+
+ImportAction:Register({
+    name = "sb_import",
+    tooltip = "Import",
+    image = SB_IMG_DIR .. "open-folder.png",
+    toolbar_order = 3,
+    hotkey = {
+        key = KEYSYMS.I,
+        ctrl = true
+    }
+})
 
 local IMPORT_DIFFUSE = "Diffuse"
 local IMPORT_HEIGHTMAP = "Heightmap"
 local fileTypes = {IMPORT_DIFFUSE, IMPORT_HEIGHTMAP}
 
-function ImportAction:execute()
+function ImportAction:canExecute()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
         Log.Warning("Cannot import while testing.")
-        return
+        return false
     end
+    return true
+end
 
-    sfd = ImportFileDialog(SB_PROJECTS_DIR, fileTypes)
+function ImportAction:execute()
+    local sfd = ImportFileDialog(SB_PROJECTS_DIR, fileTypes)
     sfd:setConfirmDialogCallback(
         function(path, fileType)
             local ext = Path.GetExt(path)
@@ -65,24 +81,28 @@ function ImportAction:ImportHeightmap(path)
                     ebMaxHeight,
                     Button:New {
                         caption = "OK",
-                        OnClick = { function()
-                            local maxHeight = tonumber(ebMaxHeight.text)
-                            local minHeight = tonumber(ebMinHeight.text)
-                            if maxHeight == nil or minHeight == nil then
-                                return
+                        OnClick = {
+                            function()
+                                local maxHeight = tonumber(ebMaxHeight.text)
+                                local minHeight = tonumber(ebMinHeight.text)
+                                if maxHeight == nil or minHeight == nil then
+                                    return
+                                end
+                                Log.Notice("Importing heightmap: " .. path .. " ...")
+                                local importCommand = ImportHeightmapCommand(path, maxHeight, minHeight)
+                                SB.commandManager:execute(importCommand, true)
+                                Log.Notice("Import complete.")
+                                window:Dispose()
                             end
-                            Log.Notice("Importing heightmap: " .. path .. " ...")
-                            local importCommand = ImportHeightmapCommand(path, maxHeight, minHeight)
-                            SB.commandManager:execute(importCommand, true)
-                            Log.Notice("Import complete.")
-                            window:Dispose()
-                        end},
+                        },
                     },
                     Button:New {
                         caption = "Cancel",
-                        OnClick = { function()
-                            window:Dispose()
-                        end},
+                        OnClick = {
+                            function()
+                                window:Dispose()
+                            end
+                        },
                     },
                 },
             }
