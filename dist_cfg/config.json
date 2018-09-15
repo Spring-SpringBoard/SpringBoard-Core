@@ -1,26 +1,67 @@
-{
-    "server" : {
-            "address" : "springrts.com",
-            "port" : 8200,
-            "serverName" : "Spring",
-            "protocol" : "spring"
+[
+  {
+    "package": {
+      "id": "stable",
+      "display": "Stable"
     },
-    "game" : "generic",
-
-    "local_connection" : {
-        "host" : "127.0.0.1",
-        "port" : 51031
+    "downloads": {
+      "games" : ["sbc:stable"],
+      "maps" : ["Obsidian_1.5"],
+      "engines" : [ "104.0.1-667-g4835668 maintenance" ]
     },
+    "launch": {
+      "game": "rapid://sbc:stable",
+      "map": "Obsidian_1.5"
+    }
+  },
 
-    "launcher_game_id" : "sb",
-    "games" : ["sbc:test"],
-    "maps" : ["Obsidian_1.5"],
-    "engines" : [ "104.0.1-104-g2135e2e maintenance" ],
+  {
+    "package": {
+      "id": "test-win",
+      "platform": "win32",
+      "display": "Testing-Windows"
+    },
+    "downloads": {
+      "games" : ["sbc:test"],
+      "maps" : ["Obsidian_1.5"],
+      "engines" : [ "104.0.1-something-else maintenance" ]
+    },
+    "launch": {
+      "game": "rapid://sbc:test",
+      "map": "Obsidian_1.5"
+    }
+  },
 
-	"auto_download" : true,
-	"auto_start" : true,
-    "no_downloads" : false,
+  {
+    "package": {
+      "id": "test",
+      "display": "Testing"
+    },
+    "downloads": {
+      "games" : ["sbc:test"],
+      "maps" : ["Obsidian_1.5"],
+      "engines" : [ "104.0.1-667-g4835668 maintenance" ]
+    },
+    "launch": {
+      "game": "rapid://sbc:test",
+      "map": "Obsidian_1.5"
+    }
+  },
 
-	"game_title": "SpringBoard",
-    "start_args" : ["--game", "rapid://sbc:test", "--map", "Obsidian_1.5"]
-}
+  {
+    "package": {
+      "id": "dev",
+      "display": "Development"
+    },
+    "downloads": {
+      "maps" : ["Obsidian_1.5"],
+      "engines" : [ "104.0.1-667-g4835668 maintenance" ]
+    },
+    "auto_start" : true,
+    "no_downloads" : true,
+    "launch": {
+      "game": "SpringBoard Core $VERSION",
+      "map": "Obsidian_1.5"
+    }
+  }
+]
