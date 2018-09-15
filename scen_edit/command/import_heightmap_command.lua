@@ -20,22 +20,21 @@ function ImportHeightmapCommand:execute()
             Game.mapSizeX / Game.squareSize + 1,
             Game.mapSizeZ / Game.squareSize + 1, {
             border = false,
-            min_filter = GL.NEAREST,
-            mag_filter = GL.NEAREST,
+            min_filter = GL.LINEAR,
+            mag_filter = GL.LINEAR,
             wrap_s = GL.CLAMP_TO_EDGE,
             wrap_t = GL.CLAMP_TO_EDGE,
             fbo = true,
         })
 
         local texInfo = gl.TextureInfo(heightmapTexture)
-        local w, h = texInfo.xsize, texInfo.ysize
         local res
 
         gl.Blending("disable")
         gl.Texture(self.heightmapImagePath)
         gl.RenderToTexture(heightmapTexture, function()
-            gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
-            res = gl.ReadPixels(0, 0, w, h)
+            gl.TexRect(-1, -1, 1, 1, 0, 0, 1, 1)
+            res = gl.ReadPixels(0, 0, texInfo.xsize, texInfo.ysize)
         end)
         gl.Texture(false)
         gl.DeleteTexture(self.heightmapImagePath)
