@@ -6,11 +6,13 @@
 
 ## Installing
 
-The simplest way to download and install SpringBoard is use one of the packaged builds:
-- [Windows build](https://drive.google.com/file/d/0B9FQjbVMFgL2WUYtVUJIRXpkY3M/view?usp=sharing)
-- [Linux build ](https://drive.google.com/file/d/0B9FQjbVMFgL2aE9lTElTQWVHUjg/view?usp=sharing)
+~~The simplest way to download and install SpringBoard is use one of the packaged builds:~~
+- ~~[Windows build](https://drive.google.com/file/d/0B9FQjbVMFgL2WUYtVUJIRXpkY3M/view?usp=sharing)~~
+- ~~[Linux build ](https://drive.google.com/file/d/0B9FQjbVMFgL2aE9lTElTQWVHUjg/view?usp=sharing)~~
 
-See [detailed instructions](http://springboard-core.readthedocs.io/en/latest/installing.html)
+~~See [detailed instructions](http://springboard-core.readthedocs.io/en/latest/installing.html)~~
+
+The automated downloader is currently broken, and the recommendation is to follow the manual installation steps: https://springboard-core.readthedocs.io/en/latest/installing.html#manual-setup
 
 ### Game-specific modules
 This is the core module, you may still want to get additional game-specific modules if you're making a scenario.
