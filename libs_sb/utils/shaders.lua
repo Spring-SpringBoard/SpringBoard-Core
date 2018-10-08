@@ -1,4 +1,5 @@
 Shaders = Shaders or {}
+-- Depends on log.lua
 
 function Shaders.Compile(shaderCode, shaderName)
     local shader = gl.CreateShader(shaderCode)

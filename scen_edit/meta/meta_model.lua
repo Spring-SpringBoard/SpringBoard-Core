@@ -12,7 +12,7 @@ end
 
 function MetaModel:SetEventTypes(eventTypes)
     self.eventTypes = eventTypes
-    self.eventTypes = SB.CreateNameMapping(self.eventTypes)
+    self.eventTypes = Table.CreateNameMapping(self.eventTypes)
     for _, eventType in pairs(eventTypes) do
         if eventType.param ~= nil then
             eventType.param = SB.parseData(eventType.param)
@@ -30,7 +30,7 @@ function MetaModel:SetFunctionTypes(functionTypes)
             functionType.input = {}
         end
     end
-    self.functionTypes = SB.CreateNameMapping(functionTypes)
+    self.functionTypes = Table.CreateNameMapping(functionTypes)
     self.functionTypesByInput = {}
     for _, functionDef in pairs(self.functionTypes) do
         for _, input in pairs(functionDef.input) do
@@ -45,20 +45,20 @@ function MetaModel:SetFunctionTypes(functionTypes)
 
     -- fill missing
     for k, v in pairs(self.functionTypesByInput) do
-        self.functionTypesByInput[k] = SB.CreateNameMapping(v)
+        self.functionTypesByInput[k] = Table.CreateNameMapping(v)
     end
     for k, v in pairs(self.functionTypesByOutput) do
-        self.functionTypesByOutput[k] = SB.CreateNameMapping(v)
+        self.functionTypesByOutput[k] = Table.CreateNameMapping(v)
     end
     --[[
     local coreTypes = SB.coreTypes()
     for i = 1, #coreTypes do
         local coreType = coreTypes[i]
         if self.functionTypesByInput[coreType.name] then
-            self.functionTypesByInput[coreType.name] = SB.CreateNameMapping(self.functionTypesByInput[coreType.name])
+            self.functionTypesByInput[coreType.name] = Table.CreateNameMapping(self.functionTypesByInput[coreType.name])
         end
         if self.functionTypesByOutput[coreType.name] then
-            self.functionTypesByOutput[coreType.name] = SB.CreateNameMapping(self.functionTypesByOutput[coreType.name])
+            self.functionTypesByOutput[coreType.name] = Table.CreateNameMapping(self.functionTypesByOutput[coreType.name])
         end
     end
     --]]
@@ -77,7 +77,7 @@ function MetaModel:SetActionTypes(actionTypes)
             actionType.param = {}
         end
     end
-    self.actionTypes = SB.CreateNameMapping(actionTypes)
+    self.actionTypes = Table.CreateNameMapping(actionTypes)
 end
 
 local function CanBeVariable(type)
@@ -109,7 +109,7 @@ function MetaModel:SetOrderTypes(orderTypes)
     for _, orderType in pairs(orderTypes) do
         orderType.input = SB.parseData(orderType.input)
     end
-    self.orderTypes = SB.CreateNameMapping(orderTypes)
+    self.orderTypes = Table.CreateNameMapping(orderTypes)
 end
 
 function MetaModel:SetCustomDataTypes(dataTypes)

@@ -280,7 +280,7 @@ function ObjectPropertyWindow:AddS11NField(name, value, s11nField)
                     width = self.VALUE_POS,
                 }
             })
-            local tkeys = GetKeys(value)
+            local tkeys = Table.GetKeys(value)
             table.sort(tkeys)
             local fields = {}
             local count = 0
@@ -628,8 +628,7 @@ function ObjectPropertyWindow:__UpdateFields()
         if not Table.Contains(bridge.blockedFields, k) and k ~= "pos" and k ~= "rot" then
             local dtype = type(v)
             if dtype == "table" then
-                local tkeys = GetKeys(v)
-                for _, tkey in pairs(tkeys) do
+                for _, tkey in pairs(Table.GetKeys(v)) do
                     tkey = tostring(tkey)
                     local name = k .. tkey
                     if self.fields[name] then

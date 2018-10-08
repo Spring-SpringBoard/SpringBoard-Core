@@ -46,8 +46,8 @@ function TypePanel:init(opts)
         end
     end
 
-    local names = GetKeys(self.sourceFieldMap)
-    local fields = GetValues(self.sourceFieldMap)
+    local names = Table.GetKeys(self.sourceFieldMap)
+    local fields = Table.GetValues(self.sourceFieldMap)
     local captions = {}
     for _, name in pairs(names) do
         table.insert(captions, self.sourceNames[name])

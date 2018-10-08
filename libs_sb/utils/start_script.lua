@@ -1,4 +1,5 @@
 StartScript = StartScript or {}
+-- requires table.lua
 
 -- opts:
 -- mapName (optional, default: Game.mapName)
@@ -180,7 +181,7 @@ function StartScript.__WriteTable(key, value, indent)
     local str =  istr .. '['..key..']\n'
     str = str .. istr .. '{\n'
 
-    local sortedKeys = GetKeys(value)
+    local sortedKeys = Table.GetKeys(value)
     table.sort(sortedKeys, function(a, b)
         return a:lower() < b:lower()
     end)

@@ -270,7 +270,7 @@ function AbstractTriggerElementWindow:_AddTagGroups()
         end
     end
 
-    local tagGroupNames = GetKeys(self.tagGroups)
+    local tagGroupNames = Table.GetKeys(self.tagGroups)
 
     -- Don't use tags if there is just one tag group, no matter how many elements there are
     if #tagGroupNames == 1 then

@@ -88,7 +88,7 @@ function TriggerDataTypeWindow:init(opts)
 end
 
 function TriggerDataTypeWindow:GetValidElementTypes()
-    return SB.CreateNameMapping({self.dataTypeDef})
+    return Table.CreateNameMapping({self.dataTypeDef})
 end
 
 function TriggerDataTypeWindow:GetWindowCaption()

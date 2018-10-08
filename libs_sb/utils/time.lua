@@ -9,10 +9,13 @@ Time = Time or {}
 --         -- use elapsed (in seconds)
 --     end)
 -- )
-function Time.MeasureTime(f1, f2)
+function Time.MeasureTime(exec, after)
     local timer1 = Spring.GetTimer()
-    f1()
+
+    exec()
+
     local timer2 = Spring.GetTimer()
-    diff = Spring.DiffTimers(timer2, timer1)
-    f2(diff)
+    local diff = Spring.DiffTimers(timer2, timer1)
+
+    after(diff)
 end

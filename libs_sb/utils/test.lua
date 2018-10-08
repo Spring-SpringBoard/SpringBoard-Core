@@ -1,0 +1,1 @@
+require("./luaunit.lua")

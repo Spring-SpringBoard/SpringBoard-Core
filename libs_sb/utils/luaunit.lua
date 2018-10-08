@@ -9,7 +9,7 @@ License: BSD License, see LICENSE.txt
 Version: 3.2
 ]]--
 
-if Script.GetSynced() or true then
+if (Script and Script.GetSynced()) or true then
     return
 end
 

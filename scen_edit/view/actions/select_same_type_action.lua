@@ -34,7 +34,7 @@ function SelectSameTypeAction:execute()
             else
                 -- get unique def names and put in a map for faster access
                 local defNames = bridge.s11n:Get(currentSelection[name], "defName")
-                defNames = Table.Unique(GetValues(defNames))
+                defNames = Table.Unique(Table.GetValues(defNames))
                 defNameMap = {}
                 for _, v in pairs(defNames) do
                     defNameMap[v] = true

@@ -58,32 +58,7 @@ function Table.Filter(t, f)
     return ret
 end
 
--- FIXME
--- FIXME: Cleanup everything below
--- FIXME
-function SB.CreateNameMapping(origArray)
-    local newArray = {}
-    for i = 1, #origArray do
-        local item = origArray[i]
-        newArray[item.name] = item
-    end
-    return newArray
-end
-
-function SB.GroupByField(tbl, field)
-    local newArray = {}
-    for _, item in pairs(tbl) do
-        local fieldValue = item[field]
-        if newArray[fieldValue] then
-            table.insert(newArray[fieldValue], item)
-        else
-            newArray[fieldValue] = { item }
-        end
-    end
-    return newArray
-end
-
-function GetKeys(tbl)
+function Table.GetKeys(tbl)
     local keys = {}
     for k, _ in pairs(tbl) do
         table.insert(keys, k)
@@ -91,7 +66,7 @@ function GetKeys(tbl)
     return keys
 end
 
-function GetValues(tbl)
+function Table.GetValues(tbl)
     local values = {}
     for _, v in pairs(tbl) do
         table.insert(values, v)
@@ -99,7 +74,7 @@ function GetValues(tbl)
     return values
 end
 
-function GetField(origArray, field)
+function Table.GetField(origArray, field)
     local newArray = {}
     for k, v in pairs(origArray) do
         table.insert(newArray, v[field])
@@ -197,4 +172,29 @@ function Table.Unique(t)
         table.insert(values, k)
     end
     return values
+end
+
+-- FIXME
+-- FIXME: Cleanup everything below
+-- FIXME
+function Table.CreateNameMapping(origArray)
+    local newArray = {}
+    for i = 1, #origArray do
+        local item = origArray[i]
+        newArray[item.name] = item
+    end
+    return newArray
+end
+
+function SB.GroupByField(tbl, field)
+    local newArray = {}
+    for _, item in pairs(tbl) do
+        local fieldValue = item[field]
+        if newArray[fieldValue] then
+            table.insert(newArray[fieldValue], item)
+        else
+            newArray[fieldValue] = { item }
+        end
+    end
+    return newArray
 end
