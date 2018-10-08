@@ -2,7 +2,6 @@ LoadGrassMapCommand = Command:extends{}
 LoadGrassMapCommand.className = "LoadGrassMapCommand"
 
 function LoadGrassMapCommand:init(deltaMap)
-    self.className = "LoadGrassMapCommand"
     self.deltaMap = deltaMap
 end
 

@@ -2,7 +2,6 @@ ExportMapInfoCommand = Command:extends{}
 ExportMapInfoCommand.className = "ExportMapInfoCommand"
 
 function ExportMapInfoCommand:init(path)
-    self.className = "ExportMapInfoCommand"
     self.path = path
     --add extension if it doesn't exist
     if string.sub(self.path, -string.len(SB_MAP_INFO_FILE_EXT)) ~= SB_MAP_INFO_FILE_EXT then

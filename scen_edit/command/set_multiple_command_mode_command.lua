@@ -11,9 +11,10 @@
 -- -- Leave multiple comamnd mode (creates only one command on the undo/redo stack)
 -- SB.commandManager:execute(SetMultipleCommandModeCommand(false))
 SetMultipleCommandModeCommand = Command:extends{}
+SetMultipleCommandModeCommand.className = "SetMultipleCommandModeCommand"
+
 
 function SetMultipleCommandModeCommand:init(state)
-    self.className = "SetMultipleCommandModeCommand"
     self.state = state
 end
 

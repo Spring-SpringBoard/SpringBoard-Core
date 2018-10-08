@@ -1,7 +1,7 @@
 WidgetDisplayTextCommand = Command:extends{}
+WidgetDisplayTextCommand.className = "WidgetDisplayTextCommand"
 
 function WidgetDisplayTextCommand:init(text, coords, color)
-    self.className = "WidgetDisplayTextCommand"
     self.text = text
     self.coords = coords
     self.color = color

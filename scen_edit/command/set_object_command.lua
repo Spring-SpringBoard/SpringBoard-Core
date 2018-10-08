@@ -2,7 +2,6 @@ SetObjectCommand = Command:extends{}
 SetObjectCommand.className = "SetObjectCommand"
 
 function SetObjectCommand:init(objType, params)
-    self.className = "SetObjectCommand"
     self.objType   = objType
     self.params    = params
 end

@@ -1,10 +1,10 @@
 WidgetAddObjectCommand = Command:extends{}
+WidgetAddObjectCommand.className = "WidgetAddObjectCommand"
 ----------------------------------------------------------
 -- Widget callback commands
 ----------------------------------------------------------
 
 function WidgetAddObjectCommand:init(objType, objectID, object)
-    self.className = "WidgetAddObjectCommand"
     self.objType = objType
     self.objectID = objectID
     self.object = object
@@ -23,9 +23,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetRemoveObjectCommand = Command:extends{}
+WidgetRemoveObjectCommand.className = "WidgetRemoveObjectCommand"
 
 function WidgetRemoveObjectCommand:init(objType, objectID)
-    self.className = "WidgetRemoveObjectCommand"
     self.objType = objType
     self.objectID = objectID
 end
@@ -37,9 +37,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetUpdateObjectCommand = Command:extends{}
+WidgetUpdateObjectCommand.className = "WidgetUpdateObjectCommand"
 
 function WidgetUpdateObjectCommand:init(objType, objectID, name, value)
-    self.className = "WidgetUpdateObjectCommand"
     self.objType = objType
     self.objectID = objectID
     self.name = name

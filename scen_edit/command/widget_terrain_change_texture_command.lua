@@ -2,7 +2,6 @@ WidgetTerrainChangeTextureCommand = Command:extends{}
 WidgetTerrainChangeTextureCommand.className = "WidgetTerrainChangeTextureCommand"
 
 function WidgetTerrainChangeTextureCommand:init(opts)
-    self.className = "WidgetTerrainChangeTextureCommand"
     self.opts = opts
 end
 

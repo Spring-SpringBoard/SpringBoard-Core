@@ -2,7 +2,6 @@ AddTeamCommand = Command:extends{}
 AddTeamCommand.className = "AddTeamCommand"
 
 function AddTeamCommand:init(name, color, allyTeam, side)
-    self.className = "AddTeamCommand"
     self.name = name
     self.color = color
     self.allyTeam = allyTeam

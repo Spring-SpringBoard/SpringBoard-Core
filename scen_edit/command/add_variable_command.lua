@@ -2,7 +2,6 @@ AddVariableCommand = Command:extends{}
 AddVariableCommand.className = "AddVariableCommand"
 
 function AddVariableCommand:init(variable)
-    self.className = "AddVariableCommand"
     self.variable = variable
 end
 

@@ -2,7 +2,6 @@ SaveImagesCommand = Command:extends{}
 SaveImagesCommand.className = "SaveImagesCommand"
 
 function SaveImagesCommand:init(path, isNewProject)
-    self.className = "SaveImagesCommand"
     self.path = path
     self.isNewProject = isNewProject
 end

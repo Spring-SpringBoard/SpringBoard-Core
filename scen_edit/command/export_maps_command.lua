@@ -2,7 +2,6 @@ ExportMapsCommand = Command:extends{}
 ExportMapsCommand.className = "ExportMapsCommand"
 
 function ExportMapsCommand:init(path)
-    self.className = "ExportMapsCommand"
     self.path = path
 end
 

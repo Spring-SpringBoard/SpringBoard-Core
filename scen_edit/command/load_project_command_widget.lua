@@ -2,7 +2,6 @@ LoadProjectCommandWidget = Command:extends{}
 LoadProjectCommandWidget.className = "LoadProjectCommandWidget"
 
 function LoadProjectCommandWidget:init(path, isZip)
-    self.className = "LoadProjectCommandWidget"
     self.path = path
     self.isZip = isZip
 end

@@ -2,7 +2,6 @@ ExportS11NCommand = Command:extends{}
 ExportS11NCommand.className = "ExportS11NCommand"
 
 function ExportS11NCommand:init(path)
-    self.className = "ExportS11NCommand"
     self.path = path
     --add extension if it doesn't exist
     if Path.GetExt(self.path) ~= SB_S11N_EXT then

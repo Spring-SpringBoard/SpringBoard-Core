@@ -2,7 +2,6 @@ LoadGUIStateCommand = Command:extends{}
 LoadGUIStateCommand.className = "LoadGUIStateCommand"
 
 function LoadGUIStateCommand:init(guiState)
-    self.className = "LoadGUIStateCommand"
     -- Since the introduction of the data packing/unpacking, is much more
     -- efficient passing tables than strings
     if guiState then

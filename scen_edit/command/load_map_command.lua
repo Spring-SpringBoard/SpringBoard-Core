@@ -2,7 +2,6 @@ LoadMapCommand = Command:extends{}
 LoadMapCommand.className = "LoadMapCommand"
 
 function LoadMapCommand:init(deltaMap)
-    self.className = "LoadMapCommand"
     self.deltaMap = deltaMap
 end
 

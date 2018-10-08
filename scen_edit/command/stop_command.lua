@@ -1,8 +1,5 @@
 StopCommand = Command:extends{}
-
-function StopCommand:init()
-    self.className = "StopCommand"
-end
+StopCommand.className = "StopCommand"
 
 function StopCommand:execute()
     if not SB.rtModel.hasStarted then

@@ -4,9 +4,9 @@ SB.Include(Path.Join(SB_MODEL_DIR, "team_manager.lua"))
 -- Widget callback commands
 ----------------------------------------------------------
 WidgetAddTeamCommand = Command:extends{}
+WidgetAddTeamCommand.className = "WidgetAddTeamCommand"
 
 function WidgetAddTeamCommand:init(id, value)
-    self.className = "WidgetAddTeamCommand"
     self.id = id
     self.value = value
 end
@@ -17,9 +17,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetRemoveTeamCommand = Command:extends{}
+WidgetRemoveTeamCommand.className = "WidgetRemoveTeamCommand"
 
 function WidgetRemoveTeamCommand:init(id)
-    self.className = "WidgetRemoveTeamCommand"
     self.id = id
 end
 
@@ -29,9 +29,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetUpdateTeamCommand = Command:extends{}
+WidgetUpdateTeamCommand.className = "WidgetUpdateTeamCommand"
 
 function WidgetUpdateTeamCommand:init(teamID, team)
-    self.className = "WidgetUpdateTeamCommand"
     self.teamID = teamID
     self.team = team
 end

@@ -2,10 +2,9 @@ ExportCommand = Command:extends{}
 ExportCommand.className = "ExportCommand"
 
 function ExportCommand:init(path)
-    self.className = "ExportCommand"
     self.path = path
     --add extension if it doesn't exist
-    if string.sub(self.path,-string.len(SB_FILE_EXT)) ~= SB_FILE_EXT then
+    if Path.GetExt(self.path) ~= SB_FILE_EXT then
         self.path = self.path .. SB_FILE_EXT
     end
 end

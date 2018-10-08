@@ -2,7 +2,6 @@ CacheTextureCommand = Command:extends{}
 CacheTextureCommand.className = "CacheTextureCommand"
 
 function CacheTextureCommand:init(texture)
-    self.className = "CacheTextureCommand"
     self.texture = texture
 end
 
@@ -15,7 +14,6 @@ WidgetCacheTextureCommand = Command:extends{}
 WidgetCacheTextureCommand.className = "WidgetCacheTextureCommand"
 
 function WidgetCacheTextureCommand:init(texture)
-    self.className = "WidgetCacheTextureCommand"
     self.texture = texture
 end
 

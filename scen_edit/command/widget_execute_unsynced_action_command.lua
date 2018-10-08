@@ -1,7 +1,7 @@
 WidgetExecuteUnsyncedActionCommand = Command:extends{}
+WidgetExecuteUnsyncedActionCommand.className = "WidgetExecuteUnsyncedActionCommand"
 
 function WidgetExecuteUnsyncedActionCommand:init(typeName, resolvedInputs)
-    self.className = "WidgetExecuteUnsyncedActionCommand"
     self.typeName = typeName
     self.resolvedInputs = resolvedInputs
 end

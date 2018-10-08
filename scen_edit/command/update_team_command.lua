@@ -2,7 +2,6 @@ UpdateTeamCommand = Command:extends{}
 UpdateTeamCommand.className = "UpdateTeamCommand"
 
 function UpdateTeamCommand:init(team)
-    self.className = "UpdateTeamCommand"
     self.team = team
 end
 

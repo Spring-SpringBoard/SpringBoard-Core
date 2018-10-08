@@ -4,9 +4,9 @@ SB.Include(Path.Join(SB_MODEL_DIR, "trigger_manager.lua"))
 -- Widget callback commands
 ----------------------------------------------------------
 WidgetAddTriggerCommand = Command:extends{}
+WidgetAddTriggerCommand.className = "WidgetAddTriggerCommand"
 
 function WidgetAddTriggerCommand:init(id, value)
-    self.className = "WidgetAddTriggerCommand"
     self.id = id
     self.value = value
 end
@@ -17,9 +17,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetRemoveTriggerCommand = Command:extends{}
+WidgetRemoveTriggerCommand.className = "WidgetRemoveTriggerCommand"
 
 function WidgetRemoveTriggerCommand:init(id)
-    self.className = "WidgetRemoveTriggerCommand"
     self.id = id
 end
 
@@ -29,9 +29,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetUpdateTriggerCommand = Command:extends{}
+WidgetUpdateTriggerCommand.className = "WidgetUpdateTriggerCommand"
 
 function WidgetUpdateTriggerCommand:init(trigger)
-    self.className = "WidgetUpdateTriggerCommand"
     self.trigger = trigger
 end
 

@@ -1,7 +1,7 @@
 WidgetSetProjectDirCommand = Command:extends{}
+WidgetSetProjectDirCommand.className = "WidgetSetProjectDirCommand"
 
 function WidgetSetProjectDirCommand:init(projectDir)
-    self.className = "WidgetSetProjectDirCommand"
     self.projectDir = projectDir
 end
 

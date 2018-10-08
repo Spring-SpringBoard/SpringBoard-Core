@@ -2,7 +2,6 @@ AddTriggerCommand = Command:extends{}
 AddTriggerCommand.className = "AddTriggerCommand"
 
 function AddTriggerCommand:init(trigger)
-    self.className = "AddTriggerCommand"
     self.trigger = trigger
 end
 

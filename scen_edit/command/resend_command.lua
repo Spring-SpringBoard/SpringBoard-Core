@@ -1,8 +1,8 @@
 ResendCommand = Command:extends{}
+ResendCommand.className = "ResendCommand"
 
 -- command sent from widget to gadget to resubmit all data
 function ResendCommand:init(metaModelFiles)
-    self.className = "ResendCommand"
     self.metaModelFiles = metaModelFiles
 end
 
@@ -18,9 +18,9 @@ function ResendCommand:execute()
 end
 
 WidgetResendCommand = Command:extends{}
+WidgetResendCommand.className = "WidgetResendCommand"
 
 function WidgetResendCommand:init(model)
-    self.className = "WidgetResendCommand"
     self.model = model
 end
 

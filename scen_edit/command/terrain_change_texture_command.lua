@@ -2,7 +2,6 @@ TerrainChangeTextureCommand = Command:extends{}
 TerrainChangeTextureCommand.className = "TerrainChangeTextureCommand"
 
 function TerrainChangeTextureCommand:init(opts)
-    self.className = "TerrainChangeTextureCommand"
     self.opts = opts
     self.mergeCommand = "TerrainChangeTextureMergedCommand"
 end

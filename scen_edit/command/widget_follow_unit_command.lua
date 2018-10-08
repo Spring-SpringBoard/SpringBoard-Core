@@ -1,7 +1,7 @@
 WidgetFollowUnitCommand = Command:extends{}
+WidgetFollowUnitCommand.className = "WidgetFollowUnitCommand"
 
 function WidgetFollowUnitCommand:init(unit)
-    self.className = "WidgetFollowUnitCommand"
     self.unit = unit
 end
 

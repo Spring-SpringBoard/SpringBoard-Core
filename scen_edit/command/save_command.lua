@@ -2,7 +2,6 @@ SaveCommand = Command:extends{}
 SaveCommand.className = "SaveCommand"
 
 function SaveCommand:init(path, isNewProject)
-    self.className = "SaveCommand"
     self.path = path
     self.isNewProject = isNewProject
 end

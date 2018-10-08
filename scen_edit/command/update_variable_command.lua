@@ -2,7 +2,6 @@ UpdateVariableCommand = Command:extends{}
 UpdateVariableCommand.className = "UpdateVariableCommand"
 
 function UpdateVariableCommand:init(variable)
-    self.className = "UpdateVariableCommand"
     self.variable = variable
 end
 

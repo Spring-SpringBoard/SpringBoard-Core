@@ -2,7 +2,6 @@ SetWaterParamsCommand = Command:extends{}
 SetWaterParamsCommand.className = "SetWaterParamsCommand"
 
 function SetWaterParamsCommand:init(opts)
-    self.className = "SetWaterParamsCommand"
     self.opts = opts
     self._execute_unsynced = true
     self.mergeCommand = "MergedCommand"

@@ -4,9 +4,9 @@ SB.Include(Path.Join(SB_MODEL_DIR, "variable_manager.lua"))
 -- Widget callback commands
 ----------------------------------------------------------
 WidgetAddVariableCommand = Command:extends{}
+WidgetAddVariableCommand.className = "WidgetAddVariableCommand"
 
 function WidgetAddVariableCommand:init(id, value)
-    self.className = "WidgetAddVariableCommand"
     self.id = id
     self.value = value
 end
@@ -19,9 +19,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetRemoveVariableCommand = Command:extends{}
+WidgetRemoveVariableCommand.className = "WidgetRemoveVariableCommand"
 
 function WidgetRemoveVariableCommand:init(id)
-    self.className = "WidgetRemoveVariableCommand"
     self.id = id
 end
 
@@ -31,9 +31,9 @@ end
 ----------------------------------------------------------
 ----------------------------------------------------------
 WidgetUpdateVariableCommand = Command:extends{}
+WidgetUpdateVariableCommand.className = "WidgetUpdateVariableCommand"
 
 function WidgetUpdateVariableCommand:init(variable)
-    self.className = "WidgetUpdateVariableCommand"
     self.variable = variable
 end
 

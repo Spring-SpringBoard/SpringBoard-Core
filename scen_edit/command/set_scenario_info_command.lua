@@ -2,7 +2,6 @@ SetScenarioInfoCommand = Command:extends{}
 SetScenarioInfoCommand.className = "SetScenarioInfoCommand"
 
 function SetScenarioInfoCommand:init(data)
-    self.className = "SetScenarioInfoCommand"
     self.data = data
 end
 

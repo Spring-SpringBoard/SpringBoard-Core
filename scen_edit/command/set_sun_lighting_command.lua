@@ -2,7 +2,6 @@ SetSunLightingCommand = Command:extends{}
 SetSunLightingCommand.className = "SetSunLightingCommand"
 
 function SetSunLightingCommand:init(opts)
-    self.className = "SetSunLightingCommand"
     self.opts = opts
     self._execute_unsynced = true
     self.mergeCommand = "MergedCommand"

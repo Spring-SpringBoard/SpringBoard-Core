@@ -1,8 +1,8 @@
 UndoCommand = Command:extends{}
+UndoCommand.className = "UndoCommand"
 
 local isWidget = Script.GetName() == "LuaUI"
 function UndoCommand:init()
-    self.className = "UndoCommand"
     self.isWidget = isWidget
 end
 

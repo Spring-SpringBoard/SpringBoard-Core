@@ -2,7 +2,6 @@ LoadModelCommand = Command:extends{}
 LoadModelCommand.className = "LoadModelCommand"
 
 function LoadModelCommand:init(modelString)
-    self.className = "LoadModelCommand"
     -- Since the introduction of the data packing/unpacking, is much more
     -- efficient passing tables than strings
     if modelString then

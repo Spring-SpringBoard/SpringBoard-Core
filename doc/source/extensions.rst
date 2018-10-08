@@ -117,9 +117,9 @@ The *HelloWorldCommand* is rather simple, and it just prints out a single line o
 .. code-block:: lua
 
     HelloWorldCommand = Command:extends{}
+    HelloWorldCommand.className = "HelloWorldCommand"
 
     function HelloWorldCommand:init(number)
-        self.className = "HelloWorldCommand"
         self.number = number
     end
 
@@ -132,10 +132,10 @@ The *UndoableExampleCommand* is slightly more complicated as it also has a value
 .. code-block:: lua
 
     UndoableExampleCommand = Command:extends{}
+    UndoableExampleCommand.className = "UndoableExampleCommand"
 
     local value = 0
     function UndoableExampleCommand:init(number)
-        self.className = "UndoableExampleCommand"
         self.number = number
     end
 

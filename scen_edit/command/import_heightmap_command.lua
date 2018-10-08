@@ -2,7 +2,6 @@ ImportHeightmapCommand = Command:extends{}
 ImportHeightmapCommand.className = "ImportHeightmapCommand"
 
 function ImportHeightmapCommand:init(heightmapImage, maxHeight, minHeight)
-    self.className = "ImportHeightmapCommand"
     self.heightmapImagePath = heightmapImage
     self.maxHeight = maxHeight
     self.minHeight = minHeight
@@ -57,7 +56,6 @@ ImportHeightmapCommandSynced = Command:extends{}
 ImportHeightmapCommandSynced.className = "ImportHeightmapCommandSynced"
 
 function ImportHeightmapCommandSynced:init(greyscale)
-    self.className = "ImportHeightmapCommandSynced"
     self.greyscale = greyscale
 end
 

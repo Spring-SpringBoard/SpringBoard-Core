@@ -2,7 +2,6 @@ ImportDiffuseCommand = Command:extends{}
 ImportDiffuseCommand.className = "ImportDiffuseCommand"
 
 function ImportDiffuseCommand:init(texturePath)
-    self.className = "ImportDiffuseCommand"
     self.texturePath = texturePath
 end
 

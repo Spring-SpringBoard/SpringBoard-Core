@@ -2,7 +2,6 @@ RemoveTriggerCommand = Command:extends{}
 RemoveTriggerCommand.className = "RemoveTriggerCommand"
 
 function RemoveTriggerCommand:init(triggerID)
-    self.className = "RemoveTriggerCommand"
     self.triggerID = triggerID
 end
 

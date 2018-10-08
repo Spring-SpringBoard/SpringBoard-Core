@@ -1,8 +1,8 @@
 UndoableExampleCommand = Command:extends{}
+UndoableExampleCommand.className = "UndoableExampleCommand"
 
 local value = 0
 function UndoableExampleCommand:init(number)
-    self.className = "UndoableExampleCommand"
     self.number = number
 end
 

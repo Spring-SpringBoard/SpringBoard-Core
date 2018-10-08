@@ -1,8 +1,8 @@
 ReloadMetaModelCommand = Command:extends{}
+ReloadMetaModelCommand.className = "ReloadMetaModelCommand"
 
 -- sends meta model files from widget to gadget
 function ReloadMetaModelCommand:init(metaModelFiles)
-    self.className = "ReloadMetaModelCommand"
     self.metaModelFiles = metaModelFiles
 end
 

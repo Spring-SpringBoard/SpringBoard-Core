@@ -2,7 +2,6 @@ RemoveObjectCommand = Command:extends{}
 RemoveObjectCommand.className = "RemoveObjectCommand"
 
 function RemoveObjectCommand:init(objType, modelID)
-    self.className        = "RemoveObjectCommand"
     self.objType          = objType
     self.modelID          = modelID
 end

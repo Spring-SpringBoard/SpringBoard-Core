@@ -2,7 +2,6 @@ RemoveVariableCommand = Command:extends{}
 RemoveVariableCommand.className = "RemoveVariableCommand"
 
 function RemoveVariableCommand:init(variableID)
-    self.className = "RemoveVariableCommand"
     self.variableID = variableID
 end
 

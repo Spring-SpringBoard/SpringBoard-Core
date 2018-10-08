@@ -1,7 +1,7 @@
 WidgetUnitSayCommand = Command:extends{}
+WidgetUnitSayCommand.className = "WidgetUnitSayCommand"
 
 function WidgetUnitSayCommand:init(unit, text)
-    self.className = "WidgetUnitSayCommand"
     self.unit = unit
     self.text = text
 end

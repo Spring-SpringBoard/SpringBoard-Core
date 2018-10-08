@@ -1,8 +1,5 @@
 StartCommand = Command:extends{}
-
-function StartCommand:init()
-    self.className = "StartCommand"
-end
+StartCommand.className = "StartCommand"
 
 function StartCommand:execute()
     if SB.rtModel.hasStarted then

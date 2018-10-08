@@ -2,7 +2,6 @@ SetGlobalLosCommand = Command:extends{}
 SetGlobalLosCommand.className = "SetGlobalLosCommand"
 
 function SetGlobalLosCommand:init(opts)
-    self.className = "SetGlobalLosCommand"
     self.opts = opts
 end
 

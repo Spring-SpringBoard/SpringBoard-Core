@@ -2,7 +2,6 @@ TerrainSmoothCommand = AbstractTerrainModifyCommand:extends{}
 TerrainSmoothCommand.className = "TerrainSmoothCommand"
 
 function TerrainSmoothCommand:init(opts)
-    self.className = "TerrainSmoothCommand"
     self:__init(opts)
 end
 

@@ -1,7 +1,7 @@
 ChangePlayerTeamCommand = Command:extends{}
+ChangePlayerTeamCommand.className = "ChangePlayerTeamCommand"
 
 function ChangePlayerTeamCommand:init(playerID, teamID)
-    self.className = "ChangePlayerTeamCommand"
     self.playerID = playerID
     self.teamID = teamID
 end

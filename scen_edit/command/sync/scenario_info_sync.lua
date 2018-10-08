@@ -7,7 +7,6 @@ WidgetSetScenarioInfoCommand = Command:extends{}
 WidgetSetScenarioInfoCommand.className = "WidgetSetScenarioInfoCommand"
 
 function WidgetSetScenarioInfoCommand:init(data)
-    self.className = "WidgetSetScenarioInfoCommand"
     self.data = data
 end
 

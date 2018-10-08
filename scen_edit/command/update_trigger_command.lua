@@ -2,7 +2,6 @@ UpdateTriggerCommand = Command:extends{}
 UpdateTriggerCommand.className = "UpdateTriggerCommand"
 
 function UpdateTriggerCommand:init(trigger)
-    self.className = "UpdateTriggerCommand"
     self.trigger = trigger
 end
 

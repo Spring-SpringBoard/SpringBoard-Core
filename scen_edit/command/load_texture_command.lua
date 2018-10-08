@@ -2,7 +2,6 @@ LoadTextureCommand = Command:extends{}
 LoadTextureCommand.className = "LoadTextureCommand"
 
 function LoadTextureCommand:init(texturePath)
-    self.className = "LoadTextureCommand"
     self.texturePath = texturePath
 end
 

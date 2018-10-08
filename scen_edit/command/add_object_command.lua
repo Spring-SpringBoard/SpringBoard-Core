@@ -2,7 +2,6 @@ AddObjectCommand = Command:extends{}
 AddObjectCommand.className = "AddObjectCommand"
 
 function AddObjectCommand:init(objType, params)
-    self.className = "AddObjectCommand"
     self.objType   = objType
     self.params    = params
 end

@@ -2,7 +2,6 @@ LoadMetalMapCommand = Command:extends{}
 LoadMetalMapCommand.className = "LoadMetalMapCommand"
 
 function LoadMetalMapCommand:init(deltaMap)
-    self.className = "LoadMetalMapCommand"
     self.deltaMap = deltaMap
 end
 

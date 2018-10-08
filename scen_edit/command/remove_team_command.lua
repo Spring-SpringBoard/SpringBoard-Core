@@ -2,7 +2,6 @@ RemoveTeamCommand = Command:extends{}
 RemoveTeamCommand.className = "RemoveTeamCommand"
 
 function RemoveTeamCommand:init(teamID)
-    self.className = "RemoveTeamCommand"
     self.teamID = teamID
 end
 

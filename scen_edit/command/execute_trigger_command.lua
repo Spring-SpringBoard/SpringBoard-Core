@@ -1,7 +1,7 @@
 ExecuteTriggerCommand = Command:extends{}
+ExecuteTriggerCommand.className = "ExecuteTriggerCommand"
 
 function ExecuteTriggerCommand:init(triggerID)
-    self.className = "ExecuteTriggerCommand"
     self.triggerID = triggerID
 end
 

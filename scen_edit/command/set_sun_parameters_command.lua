@@ -2,7 +2,6 @@ SetSunParametersCommand = Command:extends{}
 SetSunParametersCommand.className = "SetSunParametersCommand"
 
 function SetSunParametersCommand:init(opts)
-    self.className = "SetSunParametersCommand"
     self.opts = opts
     self._execute_unsynced = true
     self.mergeCommand = "MergedCommand"

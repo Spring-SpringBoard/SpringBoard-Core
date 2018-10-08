@@ -2,7 +2,6 @@ TerrainShapeModifyCommand = AbstractTerrainModifyCommand:extends{}
 TerrainShapeModifyCommand.className = "TerrainShapeModifyCommand"
 
 function TerrainShapeModifyCommand:init(opts)
-    self.className = "TerrainShapeModifyCommand"
     self:__init(opts)
 end
 

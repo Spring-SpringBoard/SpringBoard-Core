@@ -2,7 +2,6 @@ SetAtmosphereCommand = Command:extends{}
 SetAtmosphereCommand.className = "SetAtmosphereCommand"
 
 function SetAtmosphereCommand:init(opts)
-    self.className = "SetAtmosphereCommand"
     self.opts = opts
     self._execute_unsynced = true
     self.mergeCommand = "MergedCommand"

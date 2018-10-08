@@ -2,7 +2,6 @@ SetMapRenderingParamsCommand = Command:extends{}
 SetMapRenderingParamsCommand.className = "SetMapRenderingParamsCommand"
 
 function SetMapRenderingParamsCommand:init(opts)
-    self.className = "SetMapRenderingParamsCommand"
     self.opts = opts
 end
 
@@ -23,8 +22,7 @@ function WidgetSetMapRenderingParamsCommand:init(opts)
 end
 
 function WidgetSetMapRenderingParamsCommand:execute()
-    self.old = {
-    }
+    self.old = {}
     Spring.SetMapRenderingParams(self.opts)
 end
 

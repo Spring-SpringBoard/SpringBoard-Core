@@ -1,7 +1,7 @@
 HelloWorldCommand = Command:extends{}
+HelloWorldCommand.className = "HelloWorldCommand"
 
 function HelloWorldCommand:init(number)
-    self.className = "HelloWorldCommand"
     self.number = number
 end
 
