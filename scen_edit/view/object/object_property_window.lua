@@ -220,11 +220,11 @@ function ObjectPropertyWindow:AddStateField()
 end
 
 function ObjectPropertyWindow:AddTeamField()
-    local teamIDs = GetField(SB.model.teamManager:getAllTeams(), "id")
+    local teamIDs = Table.GetField(SB.model.teamManager:getAllTeams(), "id")
     for i = 1, #teamIDs do
         teamIDs[i] = tostring(teamIDs[i])
     end
-    local teamCaptions = GetField(SB.model.teamManager:getAllTeams(), "name")
+    local teamCaptions = Table.GetField(SB.model.teamManager:getAllTeams(), "name")
     self:AddField(ChoiceField({
         name = "team",
         items = teamIDs,

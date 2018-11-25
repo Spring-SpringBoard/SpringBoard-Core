@@ -56,8 +56,8 @@ function AbstractTriggerElementWindow:init(opts)
     if not self.fields["elementType"] then
         self:AddField(ChoiceField({
             name = "elementType",
-            captions = GetField(self.elementTypes, "humanName"),
-            items = GetField(self.elementTypes, "name"),
+            captions = Table.GetField(self.elementTypes, "humanName"),
+            items = Table.GetField(self.elementTypes, "name"),
             width = 350,
         }))
     end
@@ -156,8 +156,8 @@ function AbstractTriggerElementWindow:__RefreshTagGroups()
 
     self:AddField(ChoiceField({
         name = "elementType",
-        captions = GetField(self.elementTypes, "humanName"),
-        items = GetField(self.elementTypes, "name"),
+        captions = Table.GetField(self.elementTypes, "humanName"),
+        items = Table.GetField(self.elementTypes, "name"),
         width = 350,
     }))
 

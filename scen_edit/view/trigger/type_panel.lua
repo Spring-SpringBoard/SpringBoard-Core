@@ -132,8 +132,8 @@ function TypePanel:MakeScopedOpt()
         name = "scoped",
         width = self.valueWidth,
         x = self.choiceWidth,
-        items = GetField(validParams, "name"),
-        captions = GetField(validParams, "humanName"),
+        items = Table.GetField(validParams, "name"),
+        captions = Table.GetField(validParams, "humanName"),
     })
 end
 
