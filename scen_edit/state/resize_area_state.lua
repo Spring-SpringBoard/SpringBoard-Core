@@ -23,7 +23,6 @@ end
 function ResizeAreaState:MouseMove(mx, my, ...)
     local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground" then
-        local area = SB.model.areaManager:getArea(self.areaID)
         if self.resx == -1 then
             self.x1 = coords[1] + drag_diff_x
         elseif self.resx == 1 then

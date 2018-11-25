@@ -29,7 +29,7 @@ end
 
 local kernels = {}
 local function getKernel(sigma)
-    local kernel, kernelSize = nil, nil
+    local kernel, kernelSize
 
     local data = kernels[sigma]
     if data ~= nil then

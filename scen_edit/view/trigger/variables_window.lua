@@ -139,7 +139,7 @@ function VariablesWindow:Populate()
 
         btnEditVariable.OnClick = {
             function()
-                local newWin = self:MakeVariableWindow(variable, true)
+                self:MakeVariableWindow(variable, true)
             end
         }
     end

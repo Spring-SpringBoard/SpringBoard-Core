@@ -175,11 +175,12 @@ function CommandManager:redoListAdd(cmd)
     end
 end
 
-function CommandManager:undo(widget)
+function CommandManager:undo()
     assert(not self.multipleCommandMode, "Cannot undo while in multiple command mode")
     if #self.undoList < 1 then
         return
     end
+
     local cmd = table.remove(self.undoList, #self.undoList)
     self:_SafeCall(function()
         if not cmd._execute_unsynced or self.__isWidget then
@@ -200,6 +201,7 @@ function CommandManager:redo()
     if #self.redoList < 1 then
         return
     end
+
     local cmd = table.remove(self.redoList, #self.redoList)
     self:_SafeCall(function()
         if not cmd._execute_unsynced or self.__isWidget then

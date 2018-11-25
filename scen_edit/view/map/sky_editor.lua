@@ -141,7 +141,7 @@ function SkyEditor:OnFieldChange(name, value)
     --             gl.Texture(item)
     --             Log.Debug(texInfo.xsize, texInfo.ysize, item)
     --             SB.model.textureManager:Blit(item, tex)
-            local texInfo = gl.TextureInfo(value)
+    --             local texInfo = gl.TextureInfo(value)
             Spring.SetSkyBoxTexture(value)
         end)
     else

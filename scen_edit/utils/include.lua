@@ -1,6 +1,6 @@
 -- Shared include (widget & gadget)
 VFS.Include("savetable.lua")
-SB.Include(LIBS_DIR .. "utils/luaunit.lua")
+-- SB.Include(LIBS_DIR .. "utils/luaunit.lua")
 SB.IncludeDir(LIBS_DIR .. "utils/")
 Log.SetLogSection("SpringBoard")
 Log.DebugWithInfo(true)

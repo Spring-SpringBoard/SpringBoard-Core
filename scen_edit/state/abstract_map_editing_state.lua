@@ -97,49 +97,56 @@ function AbstractMapEditingState:Update()
     end
     if self.updateDelay then
         local now = os.clock()
-        if not self.lastUpdateTime or now - self.lastUpdateTime >= self.updateDelay then
-            self.lastUpdateTime = now
-        else
-            return false
+        if self.lastUpdateTime and now - self.lastUpdateTime < self.updateDelay then
+            return
         end
+        self.lastUpdateTime = now
     end
+
     local mx, my, button1, _, button3 = Spring.GetMouseState()
-    local _, _, _, shift = Spring.GetModKeyState()
-    if button1 or button3 then
-        local result, coords = Spring.TraceScreenRay(mx, my, true)
-        if result == "ground" then
-            local x, z = coords[1], coords[3]
-            local tolerance = 200
-            if math.abs(x - self.x) > tolerance or math.abs(z - self.z) > tolerance then
-                self.x, self.z = x, z
-            end
-            local button
-            if button1 then
-                button = 1
-            elseif button3 then
-                button = 3
-            end
-            self:_Apply(self:GetApplyParams(self.x, self.z, button))
-        end
+    if not (button1 or button3) then
+        return
     end
+
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
+    if result ~= "ground" then
+        return
+    end
+
+    local x, z = coords[1], coords[3]
+    local tolerance = 200
+    if math.abs(x - self.x) > tolerance or math.abs(z - self.z) > tolerance then
+        self.x, self.z = x, z
+    end
+    local button
+    if button1 then
+        button = 1
+    elseif button3 then
+        button = 3
+    end
+    self:_Apply(self:GetApplyParams(self.x, self.z, button))
 end
 
 function AbstractMapEditingState:startChanging()
-    if not self.startedChanging then
-        self._initialDelay = self.initialDelay
-        local cmd = SetMultipleCommandModeCommand(true)
-        SB.commandManager:execute(cmd)
-        self.startedChanging = true
+    if self.startedChanging then
+        return
     end
+
+    self._initialDelay = self.initialDelay
+    local cmd = SetMultipleCommandModeCommand(true)
+    SB.commandManager:execute(cmd)
+    self.startedChanging = true
 end
 
 function AbstractMapEditingState:stopChanging()
-    if self.startedChanging then
-        local cmd = SetMultipleCommandModeCommand(false)
-        SB.commandManager:execute(cmd)
-        self.startedChanging = false
-        self.lastTime = nil
+    if not self.startedChanging then
+        return
     end
+
+    local cmd = SetMultipleCommandModeCommand(false)
+    SB.commandManager:execute(cmd)
+    self.startedChanging = false
+    self.lastTime = nil
 end
 
 -- To implement custom states, override the following methods

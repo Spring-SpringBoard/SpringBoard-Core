@@ -49,13 +49,10 @@ local function generateMap(size, delta, shapeName, rotation, origSize)
         local dx = 1 - (rxRaw - rx)
         local dz = 1 - (rzRaw - rz)
 
-        local value = res[indx] * dx * dz
-                    + res[indx + i * sizeX] * (1 - dx) * dz
-                    + res[indx + j] * dx * (1 - dz)
-                    + res[indx + i * sizeX + j] * (1 - dx) * (1 - dz)
-
-        local w = dx * dx + (1 - dx) * dz + dx * (1 - dz) + (1 - dx) * (1 - dz)
-        return value
+        return   res[indx]                 * dx * dz
+               + res[indx + i * sizeX]     * (1 - dx) * dz
+               + res[indx + j]             * dx * (1 - dz)
+               + res[indx + i * sizeX + j] * (1 - dx) * (1 - dz)
     end
 
     local sizeRatio = size / origSize

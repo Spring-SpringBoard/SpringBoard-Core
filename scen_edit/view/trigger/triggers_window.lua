@@ -117,7 +117,7 @@ function TriggersWindow:Populate()
         }
         btnEditTrigger.OnClick = {
             function()
-                local newWin = self:MakeTriggerWindow(trigger, true)
+                self:MakeTriggerWindow(trigger, true)
             end
         }
         local btnCloneTrigger = Button:New {
@@ -186,7 +186,7 @@ function TriggersWindow:MakeTriggerWindow(trigger, edit)
             if not triggerWindow.save then
                 return
             end
-            local cmd = nil
+            local cmd
             if edit then
                 cmd = UpdateTriggerCommand(triggerCopy)
             else

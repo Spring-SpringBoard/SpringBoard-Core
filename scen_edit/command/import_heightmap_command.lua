@@ -40,11 +40,10 @@ function ImportHeightmapCommand:execute()
         gl.DeleteTexture(heightmapTexture)
 
         local greyscale = {}
-        local h = 0
         for i, row in ipairs(res) do
             greyscale[i] = {}
             for j, point in ipairs(row) do
-                h = (point[1] + point[2] + point[3]) / 3 * point[4]
+                local h = (point[1] + point[2] + point[3]) / 3 * point[4]
                 greyscale[i][j] = self.minHeight + h * (self.maxHeight - self.minHeight)
             end
         end

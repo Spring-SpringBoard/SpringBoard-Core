@@ -21,7 +21,6 @@ function AddRectState:MousePress(mx, my, button)
         end
         local result, coords = Spring.TraceScreenRay(mx, my, true)
         if result == "ground" then
-            local x, z = coords[1], coords[3]
             self.startX = coords[1]
             self.startZ = coords[3]
             self.endX = coords[1]
@@ -102,7 +101,7 @@ function AddRectState:__DrawInfo()
         return true
     end
 
-    local vsx, vsy = Spring.GetViewGeometry()
+    local _, vsy = Spring.GetViewGeometry()
 
     local x = mx
     local y = vsy - my - 30

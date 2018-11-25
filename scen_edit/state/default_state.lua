@@ -16,7 +16,7 @@ function DefaultState:MousePress(mx, my, button)
 
     local selection = SB.view.selectionManager:GetSelection()
     local selCount = SB.view.selectionManager:GetSelectionCount()
-    local _, ctrl, _, shift = Spring.GetModKeyState()
+    local _, ctrl = Spring.GetModKeyState()
     if ctrl and selCount > 0 then
         -- TODO: There should be a cleaner way to disable some types of editing interactions during play
         if Spring.GetGameRulesParam("sb_gameMode") == "dev" then
@@ -128,7 +128,7 @@ end
 function DefaultState:MouseRelease(...)
     if self.__clickedObjectID then
         local objType = self.__clickedObjectBridge.name
-        local _, ctrl, _, shift = Spring.GetModKeyState()
+        local _, _, _, shift = Spring.GetModKeyState()
         if shift then
             local selection = SB.view.selectionManager:GetSelection()
             if Table.Contains(selection[objType], self.__clickedObjectID) then

@@ -28,7 +28,7 @@ end
 
 function AssetsManager:ToSpringPath(rootDir, assetPath)
 
-    local assetDir = ""
+    local assetDir
     local assetRemaining = ""
     local fsplit = assetPath:find("/")
     if not fsplit then

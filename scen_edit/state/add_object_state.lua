@@ -76,7 +76,6 @@ function AddObjectState:MouseRelease(...)
     self.x, self.y, self.z = 0, 0, 0
     self.angle = 0
     self.randomSeed = self.randomSeed + os.clock()
-    return
 end
 
 function AddObjectState:DrawObject(object, bridge)
@@ -141,20 +140,20 @@ function AddObjectState:DrawWorld()
     gl.Uniform(shaderObj.timeID, os.clock())
     gl.Uniform(shaderObj.teamColorID, Spring.GetTeamColor(self.team))
 
-    local gridX, gridY, gridZ = self:DoMapGrid(coords[1], coords[2], coords[3])
+    local gridX, _, gridZ = self:DoMapGrid(coords[1], coords[2], coords[3])
 
     math.randomseed(self.randomSeed)
     for i = 1, self.amount do
         local objectDefID = self.objectDefIDs[math.random(1, #self.objectDefIDs)]
-        local x, y, z = gridX, gridY, gridZ
-        if self.x ~= 0 or self.y ~= 0 or self.z ~= 0 then
-            x, y, z = self.x, self.y, self.z
+        local x, z = gridX, gridZ
+        if self.x ~= 0 or self.z ~= 0 then
+            x, z = self.x, self.z
         end
         if i ~= 1 then
             x = x + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
             z = z + (math.random() - 0.5) * 100 * math.sqrt(self.amount)
         end
-        y = Spring.GetGroundHeight(x, z)
+        local y = Spring.GetGroundHeight(x, z)
         local object = {
             objectDefID = objectDefID,
             objectTeamID = self.team,

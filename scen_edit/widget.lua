@@ -72,8 +72,7 @@ local function CheckConfig()
                         Spring.SetConfigInt("LinkIncomingSustainedBandwidth", 2048000)
                         Spring.SetConfigInt("LinkOutgoingBandwidth", 65536000)
                         window:Dispose()
-                        local restartWindow
-                        restartWindow = Window:New {
+                        local restartWindow = Window:New {
                             x = "40%",
                             y = "35%",
                             width = 350,

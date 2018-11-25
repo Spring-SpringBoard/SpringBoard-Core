@@ -129,7 +129,7 @@ function TriggerWindow:_AddSection(opts)
         parent = self._triggerPanel,
         padding = {0, 0, 0, 0},
     }
-    local captionWidth = headerPanel.font:GetTextWidth(title)
+    -- local captionWidth = headerPanel.font:GetTextWidth(title)
     local btnAdd = Button:New {
         parent = headerPanel,
         -- x = captionWidth + 20,
@@ -228,7 +228,6 @@ function TriggerWindow:Populate()
                             width = "100%",
                         },
                     },
-                    tooltip = "Remove event",
                     OnClick = {function() self:MakeRemoveEventWindow(event, i) end}
                 }
             end

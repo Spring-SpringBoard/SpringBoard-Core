@@ -1,6 +1,3 @@
-local C_HEIGHT = 16
-local B_HEIGHT = 24
-
 DebugVariableView = VariableManagerListener:extends{}
 
 function DebugVariableView:init(parent)

@@ -135,10 +135,12 @@ end
 function VariableWindow:UpdateModel(variable)
     variable.name = self.fields["name"].value
     local newVariableType = self.fields["type"].value
+    --[[
     local typeChanged = false
     if variable.type ~= newVarType then
         typeChanged = true
     end
+    --]]
     variable.type = newVariableType
     variable.value = {}
     if not self.variablePanel[variable.type]:UpdateModel(self.variable.value) then

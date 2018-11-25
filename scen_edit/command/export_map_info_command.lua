@@ -211,7 +211,6 @@ function ExportMapInfoCommand:GetResources()
     local tbl = {
         splatDetailNormalDiffuseAlpha = gl.GetMapRendering("splatDetailNormalDiffuseAlpha"),
     }
-    local dnts = {}
     for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
         local fileName = texType .. ".png"
         -- FIXME: HARDCODED

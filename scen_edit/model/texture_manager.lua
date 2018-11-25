@@ -111,8 +111,8 @@ function TextureManager:createMapTexture(notFBO, notMinMap)
 end
 
 function TextureManager:SetupShader()
-    local vertProg = VFS.LoadFile("shaders/SMFVertProg.glsl")
-    local fragProg = VFS.LoadFile("shaders/SMFFragProg.glsl")
+    -- local vertProg = VFS.LoadFile("shaders/SMFVertProg.glsl")
+    -- local fragProg = VFS.LoadFile("shaders/SMFFragProg.glsl")
     TextureManager.mapShader = Shaders.Compile({
         vertex = [[
 void main(void)
