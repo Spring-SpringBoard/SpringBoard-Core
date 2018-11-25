@@ -127,7 +127,7 @@ function AnimationsView:OnSelectionChanged(selection)
         bridge = unitBridge
     end
     if objectID then
-        self:GetPieceHierarchy(objectID, unitBridge)
+        self:GetPieceHierarchy(objectID, bridge)
     end
     self.selectionChanging = false
 end

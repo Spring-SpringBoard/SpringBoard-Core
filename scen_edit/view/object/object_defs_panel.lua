@@ -180,7 +180,7 @@ function ObjectDefsPanel:DrawIcons()
 end
 
 function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius)
-    local objectDef = bridge.ObjectDefs[objectDefID]
+    -- local objectDef = bridge.ObjectDefs[objectDefID]
     local scale = -1 / radius--math.sqrt(radius)
     gl.Texture("LuaUI/images/scenedit/background.png")
     gl.RenderToTexture(tex, function()
@@ -285,10 +285,8 @@ function UnitDefsPanel:PopulateItems()
     end
 end
 function UnitDefsPanel:GetObjectDefRadius(objectDefID)
-    local radius = 10
     local dims = Spring.GetUnitDefDimensions(objectDefID)
-    radius = math.max(10, dims.radius)
-    return radius
+    return math.max(10, dims.radius)
 end
 
 ----------------
@@ -349,7 +347,6 @@ function FeatureDefsPanel:FilterObject(objectDefID)
     return correctType and correctUnit and humanName:lower():find(String.Trim(self.search:lower()))
 end
 function FeatureDefsPanel:PopulateItems()
-    local featureTypeID = self.featureTypeID
     --TODO create a default picture for features
     -- local defaultPicture = nil
     -- do

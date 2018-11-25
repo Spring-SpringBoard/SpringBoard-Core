@@ -84,7 +84,8 @@ function Array.LoadFunc(str, lua_function, dtype)
     local bufferSize = 100000 * dtypeSize
     local segmentNum = 0
     local totalSegments = math.ceil(#str / bufferSize)
-    local dataSize = #str / dtypeSize
+    -- FIXME: error?
+    -- local dataSize = #str / dtypeSize
 
     local fetchSegment = function()
         if segmentNum >= totalSegments then

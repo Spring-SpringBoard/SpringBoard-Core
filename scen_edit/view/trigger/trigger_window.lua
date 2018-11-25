@@ -108,7 +108,6 @@ end
 
 function TriggerWindow:_AddSection(opts)
     local title = opts.title
-    local icon = opts.icon
     local AddFunction = opts.AddFunction
     local ToggleShowFunction = opts.ToggleShowFunction
     local isCollapsed = opts.isCollapsed
@@ -190,7 +189,6 @@ function TriggerWindow:Populate()
     do -- Events
         local elementPanel = self:_AddSection({
             title = "Events",
-            icon = "",
             AddFunction = function() self:MakeAddEventWindow() end,
             ToggleShowFunction = function()
                 self.showEvents = not self.showEvents
@@ -236,7 +234,6 @@ function TriggerWindow:Populate()
     do -- Conditions
         local elementPanel = self:_AddSection({
             title = "Conditions",
-            icon = "",
             AddFunction = function() self:MakeAddConditionWindow() end,
             ToggleShowFunction = function()
                 self.showConditions = not self.showConditions
@@ -315,7 +312,6 @@ function TriggerWindow:Populate()
     do -- Actions
         local elementPanel = self:_AddSection({
             title = "Actions",
-            icon = "",
             AddFunction = function() self:MakeAddActionWindow() end,
             ToggleShowFunction = function()
                 self.showActions = not self.showActions

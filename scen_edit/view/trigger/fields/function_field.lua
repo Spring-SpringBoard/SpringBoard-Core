@@ -18,8 +18,7 @@ function FunctionField:init(field)
                 if self.value then
                     mode = 'edit'
                 end
-                -- local functionWindow = 
-                FunctionWindow({
+                local functionWindow = FunctionWindow({
                     mode = mode,
                     dataType = self.dataType,
                     element = self.value,

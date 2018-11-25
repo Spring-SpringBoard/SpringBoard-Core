@@ -6,10 +6,11 @@ function Path.ExtractFileName(path)
     if lastChar == "/" then
         path = path:sub(1, -2)
     end
-    local pos, b, e, match, init, n = 1, 1, 1, 1, 0, 0
+    local pos
+    local b, init, n = 1, 0, 0
     repeat
         pos, init, n = b, init + 1, n + 1
-        b, init, match = path:find("/", init, true)
+        b, init, _ = path:find("/", init, true)
     until not b
     if n == 1 then
         return path
@@ -24,10 +25,11 @@ function Path.ExtractDir(path)
     if lastChar == "/" then
         path = path:sub(1, -2)
     end
-    local pos, b, e, match, init, n = 1, 1, 1, 1, 0, 0
+    local pos
+    local b, init, n = 1, 0, 0
     repeat
         pos, init, n = b, init + 1, n + 1
-        b, init, match = path:find("/", init, true)
+        b, init, _ = path:find("/", init, true)
     until not b
     if n == 1 then
         return path
@@ -42,10 +44,11 @@ function Path.GetParentDir(dir)
     if lastChar == "/" then
         dir = dir:sub(1, -2)
     end
-    local pos, b, e, match, init, n = 1, 1, 1, 1, 0, 0
+    local pos
+    local b, init, n = 1, 0, 0
     repeat
         pos, init, n = b, init + 1, n + 1
-        b, init, match = dir:find("/", init, true)
+        b, init, _ = dir:find("/", init, true)
     until not b
     if n == 1 then
         return ''

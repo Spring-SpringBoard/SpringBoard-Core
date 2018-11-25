@@ -31,17 +31,17 @@ function StartScript.GenerateScriptTxt(opts)
         isHost = true
     end
 
-    local myPlayerName = opts.myPlayerName
-    if not myPlayerName then
-        assert(Spring.GetMyPlayerID,
-            "myPlayerName not set and script generation invoked in synced Lua state.")
+    -- local myPlayerName = opts.myPlayerName
+    -- if not myPlayerName then
+    --     assert(Spring.GetMyPlayerID,
+    --         "myPlayerName not set and script generation invoked in synced Lua state.")
 
-        for _, player in pairs(Spring.GetPlayerRoster()) do
-            if Spring.GetMyPlayerID() == player.playerID then
-                myPlayerName = player.name
-            end
-        end
-    end
+    --     for _, player in pairs(Spring.GetPlayerRoster()) do
+    --         if Spring.GetMyPlayerID() == player.playerID then
+    --             myPlayerName = player.name
+    --         end
+    --     end
+    -- end
 
     local players = opts.players
     if not players then

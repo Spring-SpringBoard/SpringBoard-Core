@@ -94,8 +94,8 @@ function MapGrid:GetGridPosition(x, y)
     local totalRowsPart = Game.mapSizeX / totalRows
     local totalColumnsPart = Game.mapSizeZ / totalColumns
 
-    local rowPart = Game.mapSizeX / self.rows
-    local columnPart = Game.mapSizeZ / self.columns
+    -- local rowPart = Game.mapSizeX / self.rows
+    -- local columnPart = Game.mapSizeZ / self.columns
     return totalRowsPart * math.floor(x / totalRowsPart) + totalRowsPart/2,
            totalColumnsPart * math.floor(y / totalColumnsPart) + totalColumnsPart/2
 end

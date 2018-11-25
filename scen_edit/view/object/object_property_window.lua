@@ -573,7 +573,6 @@ end
 
 function ObjectPropertyWindow:OnSelectionChanged()
     local selection = SB.view.selectionManager:GetSelection()
-    local selCount = SB.view.selectionManager:GetSelection()
     self.selectionChanging = true
 
     local objectID, bridge
