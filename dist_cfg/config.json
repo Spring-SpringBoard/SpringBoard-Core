@@ -7,7 +7,7 @@
     "downloads": {
       "games" : ["sbc:stable"],
       "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-667-g4835668 maintenance" ]
+      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
     },
     "launch": {
       "game": "rapid://sbc:stable",
@@ -24,7 +24,7 @@
     "downloads": {
       "games" : ["sbc:test"],
       "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-something-else maintenance" ]
+      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
     },
     "launch": {
       "game": "rapid://sbc:test",
@@ -40,7 +40,7 @@
     "downloads": {
       "games" : ["sbc:test"],
       "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-667-g4835668 maintenance" ]
+      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
     },
     "launch": {
       "game": "rapid://sbc:test",
@@ -55,9 +55,9 @@
     },
     "downloads": {
       "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-667-g4835668 maintenance" ]
+      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
     },
-    "auto_start" : true,
+    "auto_start" : false,
     "no_downloads" : true,
     "launch": {
       "game": "SpringBoard Core $VERSION",
