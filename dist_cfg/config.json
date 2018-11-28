@@ -3,6 +3,22 @@
   "setups" : [
     {
       "package": {
+        "id": "test",
+        "display": "Latest"
+      },
+      "downloads": {
+        "games" : ["sbc:test"],
+        "maps" : ["Obsidian_1.5"],
+        "engines" : [ "104.0.1-909-g82a205f maintenance" ]
+      },
+      "launch": {
+        "game": "rapid://sbc:test",
+        "map": "Obsidian_1.5"
+      }
+    },
+
+    {
+      "package": {
         "id": "stable",
         "display": "Stable"
       },
@@ -13,39 +29,6 @@
       },
       "launch": {
         "game": "rapid://sbc:stable",
-        "map": "Obsidian_1.5"
-      }
-    },
-
-    {
-      "package": {
-        "id": "test-win",
-        "platform": "win32",
-        "display": "Testing-Windows"
-      },
-      "downloads": {
-        "games" : ["sbc:test"],
-        "maps" : ["Obsidian_1.5"],
-        "engines" : [ "104.0.1-909-g82a205f maintenance" ]
-      },
-      "launch": {
-        "game": "rapid://sbc:test",
-        "map": "Obsidian_1.5"
-      }
-    },
-
-    {
-      "package": {
-        "id": "test",
-        "display": "Testing"
-      },
-      "downloads": {
-        "games" : ["sbc:test"],
-        "maps" : ["Obsidian_1.5"],
-        "engines" : [ "104.0.1-909-g82a205f maintenance" ]
-      },
-      "launch": {
-        "game": "rapid://sbc:test",
         "map": "Obsidian_1.5"
       }
     },
