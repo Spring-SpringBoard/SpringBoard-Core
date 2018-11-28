@@ -1,67 +1,70 @@
-[
-  {
-    "package": {
-      "id": "stable",
-      "display": "Stable"
+{
+  "title" : "SpringBoard",
+  "setups" : [
+    {
+      "package": {
+        "id": "stable",
+        "display": "Stable"
+      },
+      "downloads": {
+        "games" : ["sbc:stable"],
+        "maps" : ["Obsidian_1.5"],
+        "engines" : [ "104.0.1-909-g82a205f maintenance" ]
+      },
+      "launch": {
+        "game": "rapid://sbc:stable",
+        "map": "Obsidian_1.5"
+      }
     },
-    "downloads": {
-      "games" : ["sbc:stable"],
-      "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
-    },
-    "launch": {
-      "game": "rapid://sbc:stable",
-      "map": "Obsidian_1.5"
-    }
-  },
 
-  {
-    "package": {
-      "id": "test-win",
-      "platform": "win32",
-      "display": "Testing-Windows"
+    {
+      "package": {
+        "id": "test-win",
+        "platform": "win32",
+        "display": "Testing-Windows"
+      },
+      "downloads": {
+        "games" : ["sbc:test"],
+        "maps" : ["Obsidian_1.5"],
+        "engines" : [ "104.0.1-909-g82a205f maintenance" ]
+      },
+      "launch": {
+        "game": "rapid://sbc:test",
+        "map": "Obsidian_1.5"
+      }
     },
-    "downloads": {
-      "games" : ["sbc:test"],
-      "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
-    },
-    "launch": {
-      "game": "rapid://sbc:test",
-      "map": "Obsidian_1.5"
-    }
-  },
 
-  {
-    "package": {
-      "id": "test",
-      "display": "Testing"
+    {
+      "package": {
+        "id": "test",
+        "display": "Testing"
+      },
+      "downloads": {
+        "games" : ["sbc:test"],
+        "maps" : ["Obsidian_1.5"],
+        "engines" : [ "104.0.1-909-g82a205f maintenance" ]
+      },
+      "launch": {
+        "game": "rapid://sbc:test",
+        "map": "Obsidian_1.5"
+      }
     },
-    "downloads": {
-      "games" : ["sbc:test"],
-      "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
-    },
-    "launch": {
-      "game": "rapid://sbc:test",
-      "map": "Obsidian_1.5"
-    }
-  },
 
-  {
-    "package": {
-      "id": "dev",
-      "display": "Development"
-    },
-    "downloads": {
-      "maps" : ["Obsidian_1.5"],
-      "engines" : [ "104.0.1-909-g82a205f maintenance" ]
-    },
-    "auto_start" : false,
-    "no_downloads" : true,
-    "launch": {
-      "game": "SpringBoard Core $VERSION",
-      "map": "Obsidian_1.5"
+    {
+      "package": {
+        "id": "dev",
+        "display": "Development"
+      },
+      "downloads": {
+        "maps" : ["Obsidian_1.5"],
+        "engines" : [ "104.0.1-909-g82a205f maintenance" ]
+      },
+      "auto_start" : false,
+      "no_downloads" : true,
+      "launch": {
+        "game": "SpringBoard Core $VERSION",
+        "map": "Obsidian_1.5"
+      }
     }
-  }
-]
+  ]
+}
