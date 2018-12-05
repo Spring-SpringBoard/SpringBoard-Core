@@ -97,10 +97,6 @@ function _FeatureS11N:OnInit()
                 }
             end,
             set = function(objectID, value)
-                Spring.Echo(objectID,
-                    value.scaleX, value.scaleY, value.scaleZ,
-                    value.offsetX, value.offsetY, value.offsetZ,
-                    value.vType, 1, value.axis)
                 Spring.SetFeatureCollisionVolumeData(objectID,
                     value.scaleX, value.scaleY, value.scaleZ,
                     value.offsetX, value.offsetY, value.offsetZ,
@@ -140,6 +136,20 @@ function _FeatureS11N:OnInit()
                 end
             end,
         },
+        -- TODO: The engine {Get,Set}FeatureResources API needs rework
+        -- can't reliably get and set reclaimTime/reclaimLeft
+        resources = {
+            get = function(objectID)
+                local metal, _, energy = Spring.GetFeatureResources(objectID)
+                return {
+                    metal = metal,
+                    energy = energy
+                }
+            end,
+            set = function(objectID, value)
+                Spring.SetFeatureResources(objectID, value.metal, value.energy)
+            end
+        }
         -- modelID = {
         --     get = function(objectID)
         --         return modelIDs[objectID]
