@@ -111,6 +111,11 @@ function TextureEditor:init()
         GetBrushImage = function(brush)
             local texObj = SB.model.textureManager.shadingTextures["splat_normals" ..
                 tostring(brush.opts.dntsIndex)]
+            if not texObj then
+                Log.Warning("Couldn't find texture for DNTS: ", "splat_normals" ..
+                tostring(brush.opts.dntsIndex))
+                return
+            end
             local texturePath = texObj.texture
             local texName = brush.image
 
