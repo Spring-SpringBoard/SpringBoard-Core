@@ -39,7 +39,6 @@ function ChoiceField:init(field)
             caption = self.title,
             y = 10,
             autosize = true,
-            width = 50,
         }
     end
 

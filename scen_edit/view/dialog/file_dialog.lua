@@ -1,38 +1,20 @@
-FileDialog = Observable:extends{}
+SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+
+FileDialog = Editor:extends{}
 
 function FileDialog:init(dir, caption, fileTypes)
+    Editor.init(self)
+
     self.dir = dir or nil
     self.caption = caption or "File dialog"
     self.confirmDialogCallback = nil
     self.fileTypes = fileTypes
-    local buttonPanel = MakeComponentPanel()
-    self.fileEditBox = EditBox:New {
-        y = 1,
-        x = 75,
-        right = 0,
-        height = "100%",
-    }
 
-    local okButton = Button:New {
-        height = SB.conf.B_HEIGHT,
-        bottom = 5,
-        width = "20%",
-        right = "22%",
-        caption = "OK",
-    }
-
-    local cancelButton = Button:New {
-        height = SB.conf.B_HEIGHT,
-        bottom = 5,
-        width = "20%",
-        right = 10,
-        caption = "Cancel",
-    }
     self.fileView = AssetView({
         ctrl = {
             width = "100%",
             y = 10,
-            bottom = 90 + SB.conf.B_HEIGHT + 10,
+            bottom = 130 + SB.conf.B_HEIGHT + 10,
         },
         multiSelect = false,
         dir = self.dir,
@@ -46,95 +28,79 @@ function FileDialog:init(dir, caption, fileTypes)
         OnSelectItem = {
             function(item, selected)
                 if selected then
-                    local path = item.path
-                    local fileName = Path.ExtractFileName(item.path)
-                    self.fileEditBox:SetText(fileName)
+                    self:Set("fileName", Path.ExtractFileName(item.path))
                 end
             end
         }
     })
 
-    self.window = Window:New {
-        x = 500,
-        y = 200,
-        width = 600,
-        height = 600,
-        parent = screen0,
-        caption = self.caption,
-        children = {
-            self.fileView:GetControl(),
-            Control:New {
-                x = 1,
-                width = "100%",
-                height = SB.conf.B_HEIGHT,
-                bottom = SB.conf.B_HEIGHT + 20,
-                padding = {0, 0, 0, 0},
-                children = {
-                    Label:New {
-                        x = 1,
-                        y = 4,
-                        valign = "center",
-                        width = 65,
-                        caption = "File name: ",
-                        align = "left",
-                    },
-                    self.fileEditBox,
-                },
-            },
-            okButton,
-            cancelButton,
-        },
-        OnDispose = {
-            function()
-                -- FIXME: editbox still has focus after disposing so this is necessary
-                screen0:FocusControl(self.window)
-                SB.stateManager:RemoveGlobalKeyListener(self.keyListener)
-            end
-        }
+    local fileNameField = {
+        name = "fileName",
+        title = "File name:",
+        width = 250,
     }
+
     if self.fileTypes then
-        self.cmbFileTypes = ComboBox:New {
-            items = self.fileTypes,
-            width = 100,
-            height = SB.conf.B_HEIGHT + 10,
-            x = 75,
-            right = 0,
-        }
-        local ctrl = Control:New {
-            x = 1,
-            width = "100%",
-            height = SB.conf.B_HEIGHT + 10,
-            bottom = 2 * SB.conf.B_HEIGHT + 30,
-            padding = {0, 0, 0, 0},
-            children = {
-                Label:New {
-                    x = 1,
-                    y = 4,
-                    valign = "center",
-                    width = 65,
-                    caption = "File type: ",
-                    align = "left",
-                },
-                self.cmbFileTypes,
-            },
-        }
-        self.window:AddChild(ctrl)
+        self:AddField(GroupField({
+            StringField(fileNameField),
+            ChoiceField({
+                name = "fileType",
+                title = "File type:",
+                items = self.fileTypes,
+                width = 300,
+            })
+        }))
+    else
+        fileNameField.width = 500
+        self:AddField(StringField(fileNameField))
     end
 
-    okButton.OnClick = {
-        function()
-            if self:confirmDialog() then
-                self.window:Dispose()
+    local btnOK = Button:New {
+        width = '40%',
+        x = 1,
+        bottom = 1,
+        height = SB.conf.B_HEIGHT,
+        caption = "OK",
+        classname = "option_button",
+        OnClick = {
+            function()
+                if self:confirmDialog() then
+                    self.window:Dispose()
+                end
             end
-        end
-    }
-    cancelButton.OnClick = {
-        function()
-            self.window:Dispose()
-        end
+        }
     }
 
-    self.keyListener = function(key)
+    local btnCancel = Button:New {
+        width = '40%',
+        x = '50%',
+        bottom = 1,
+        height = SB.conf.B_HEIGHT,
+        caption = "Cancel",
+        classname = "negative_button",
+        OnClick = {
+            function()
+                self.window:Dispose()
+            end
+        }
+    }
+
+    local children = {
+        self.fileView:GetControl(),
+        ScrollPanel:New {
+            x = 0,
+            bottom = SB.conf.B_HEIGHT + 10,
+            height = 120,
+            right = 0,
+            borderColor = {0,0,0,0},
+            horizontalScrollbar = false,
+            children = { self.stackPanel },
+        },
+        btnOK,
+        btnCancel,
+    }
+
+    local keyListener = function(key)
         if key == Spring.GetKeyCode("esc") then
             self.window:Dispose()
             return true
@@ -146,9 +112,27 @@ function FileDialog:init(dir, caption, fileTypes)
         end
     end
 
-    SB.stateManager:AddGlobalKeyListener(self.keyListener)
+    SB.stateManager:AddGlobalKeyListener(keyListener)
 
-    screen0:FocusControl(self.fileEditBox)
+    self:Finalize(children, {
+        notMainWindow = true,
+        noCloseButton = true,
+        x = 500,
+        y = 200,
+        width = 600,
+        height = 650,
+    })
+
+    self.window.OnDispose = {
+        function()
+            SB.stateManager:RemoveGlobalKeyListener(keyListener)
+        end
+    }
+
+    -- FIXME: expose a 'focus' function
+    self.fields.fileName:__OnClick()
+
+
 --    self:SetDir(self.dir)
 end
 
@@ -157,15 +141,7 @@ function FileDialog:setConfirmDialogCallback(func)
 end
 
 function FileDialog:getSelectedFilePath()
-    local path = self.fileView.dir .. self.fileEditBox.text
-    return path
-end
-
-function FileDialog:getSelectedFileType()
-    if self.cmbFileTypes == nil then
-        return nil
-    end
-    return self.cmbFileTypes.items[self.cmbFileTypes.selected]
+    return self.fileView.dir .. self.fields.fileName.value
 end
 
 function FileDialog:confirmDialog()

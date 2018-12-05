@@ -35,7 +35,7 @@ end
 function ExportAction:execute()
     local sfd = ExportFileDialog(SB_PROJECTS_DIR, fileTypes)
     sfd:setConfirmDialogCallback(
-        function(path, fileType)
+        function(path, fileType, heightmapExtremes)
             local baseName = Path.ExtractFileName(path)
             local isFile = VFS.FileExists(path, VFS.RAW_ONLY)
             local isDir = SB.DirExists(path, VFS.RAW_ONLY)
@@ -43,7 +43,6 @@ function ExportAction:execute()
             if baseName == "" then
                 return
             end
-
             local exportCommand
             if fileType == EXPORT_SCENARIO_ARCHIVE then
                 if isDir then
@@ -58,7 +57,7 @@ function ExportAction:execute()
                 end
 
                 Log.Notice("Exporting map textures...")
-                exportCommand = ExportMapsCommand(path)
+                exportCommand = ExportMapsCommand(path, heightmapExtremes)
             elseif fileType == EXPORT_MAP_INFO then
                 if isDir then
                     return false
@@ -74,7 +73,7 @@ function ExportAction:execute()
                 Log.Notice("Exporting s11n objects...")
                 exportCommand = ExportS11NCommand(path)
             else
-                Log.Error("Error trying to export. Invalida fileType specified: " .. tostring(fileType))
+                Log.Error("Error trying to export. Invalid fileType specified: " .. tostring(fileType))
             end
 
             if exportCommand then

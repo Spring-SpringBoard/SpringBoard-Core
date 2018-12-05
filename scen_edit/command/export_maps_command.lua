@@ -1,8 +1,9 @@
 ExportMapsCommand = Command:extends{}
 ExportMapsCommand.className = "ExportMapsCommand"
 
-function ExportMapsCommand:init(path)
+function ExportMapsCommand:init(path, heightmapExtremes)
     self.path = path
+    self.heightmapExtremes = heightmapExtremes
 end
 
 function SaveShadingTextures(path, toProject, prefix)
@@ -99,28 +100,31 @@ function ExportMapsCommand:ExportHeightmap()
         fbo = true,
     })
 
-    -- not used, seem incorrect
-    local minHeight, maxHeight = Spring.GetGroundExtremes()
-    Log.Debug(maxHeight, minHeight)
-
-    local maxH, minH = -math.huge, math.huge
-    for x = 0, Game.mapSizeX, Game.squareSize do
-        for z = 0, Game.mapSizeZ, Game.squareSize do
-            local groundHeight = Spring.GetGroundHeight(x, z)
-            if groundHeight > maxH then
-                maxH = groundHeight
-            end
-            if groundHeight < minH then
-                minH = groundHeight
+    local minHeight, maxHeight
+    Spring.Echo(self.heightmapExtremes)
+    if self.heightmapExtremes ~= nil then
+        minHeight, maxHeight = self.heightmapExtremes[1], self.heightmapExtremes[2]
+    else
+        maxHeight, minHeight = -math.huge, math.huge
+        for x = 0, Game.mapSizeX, Game.squareSize do
+            for z = 0, Game.mapSizeZ, Game.squareSize do
+                local groundHeight = Spring.GetGroundHeight(x, z)
+                if groundHeight > maxHeight then
+                    maxHeight = groundHeight
+                end
+                if groundHeight < minHeight then
+                    minHeight = groundHeight
+                end
             end
         end
     end
-    Log.Debug(minH, maxH)
+    Log.Notice("Exporting heightmap with extremes: " ..
+                tostring(minHeight) .. " and " .. tostring(maxHeight))
 
     local shaderObj = self:GetShaderObj()
     gl.UseShader(shaderObj.shader)
-    gl.Uniform(shaderObj.uniforms.groundMaxID, maxH)
-    gl.Uniform(shaderObj.uniforms.groundMinID, minH)
+    gl.Uniform(shaderObj.uniforms.groundMaxID, maxHeight)
+    gl.Uniform(shaderObj.uniforms.groundMinID, minHeight)
     gl.Texture(0, "$heightmap")
     gl.RenderToTexture(heightmapTexture,
     function()
