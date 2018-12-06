@@ -31,14 +31,12 @@ local function dumpConfig()
 end
 
 local function CheckConfig()
-    local ok = Spring.GetConfigInt("HeightMapTexture", 0) == 1 and
-        Spring.GetConfigInt("LinkIncomingMaxPacketRate", 0) == 64000 and
-        Spring.GetConfigInt("LinkIncomingMaxWaitingPackets", 0) == 512000 and
-        Spring.GetConfigInt("LinkIncomingPeakBandwidth", 0) == 32768000 and
-        Spring.GetConfigInt("LinkIncomingSustainedBandwidth", 0) == 2048000 and
-        Spring.GetConfigInt("LinkOutgoingBandwidth", 0) == 65536000
-
-    if ok then
+    if Spring.GetConfigInt("HeightMapTexture", 0) == 1 and
+       Spring.GetConfigInt("LinkIncomingMaxPacketRate", 0) == 64000 and
+       Spring.GetConfigInt("LinkIncomingMaxWaitingPackets", 0) == 512000 and
+       Spring.GetConfigInt("LinkIncomingPeakBandwidth", 0) == 32768000 and
+       Spring.GetConfigInt("LinkIncomingSustainedBandwidth", 0) == 2048000 and
+       Spring.GetConfigInt("LinkOutgoingBandwidth", 0) == 65536000 then
         return
     end
 
@@ -83,14 +81,14 @@ local function CheckConfig()
                                     caption = "Spring needs to restart for changes to take effect."
                                 },
                                 Button:New {
-                                    caption = "Exit Spring.",
+                                    caption = "Restart",
                                     x = "35%",
                                     width = "30%",
                                     height = 80,
                                     y = "51%",
                                     OnClick = {
                                         function()
-                                            Spring.SendCommands("quit","quitforce")
+                                            Spring.Reload(VFS.LoadFile("_script.txt"))
                                         end
                                     }
                                 }
