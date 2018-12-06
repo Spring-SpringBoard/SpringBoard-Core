@@ -28,7 +28,7 @@ end
 
 function TerrainSetState:MousePress(mx, my, button)
     if button == 3 then
-        local result, coords = Spring.TraceScreenRay(mx, my, true)
+        local result, coords = Spring.TraceScreenRay(mx, my, true, false, false, true)
         if result == "ground"  then
             self.height = coords[2]
             self.editorView:Set("height", self.height)
