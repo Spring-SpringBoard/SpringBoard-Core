@@ -9,7 +9,7 @@ function ExportFileDialog:init(dir, fileTypes)
     self:AddField(GroupField({
         ChoiceField({
             name = "heightmapExtremes",
-            title = "Heightmap min/max",    
+            title = "Heightmap min/max",
             items = {"Automatic", "Initial", "Manual"},
         }),
         NumericField({
