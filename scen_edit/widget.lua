@@ -113,6 +113,34 @@ local function CheckConfig()
     }
 end
 
+local function CheckSpringBoardDir()
+    -- Make the initial SB directory tree and
+    -- add a README.txt file if it doesn't exist.
+    -- Also prints out the absolute directory path.
+    if not VFS.FileExists(SB_ROOT, VFS.RAW) then
+        Log.Notice("Creating initial SpringBoard directory")
+        Spring.CreateDir(SB_ROOT)
+        Spring.CreateDir(SB_PROJECTS_DIR)
+        Spring.CreateDir(SB_ASSETS_DIR)
+        Spring.CreateDir(SB_EXTS_DIR)
+    end
+
+    local readmePath = Path.Join(SB_ROOT, 'README.txt')
+    if not VFS.FileExists(readmePath) then
+        -- TODO: Maybe we should update the file if there's a change.
+        -- Don't want to do it every time as it might be slow and annoying
+        -- (updating file mtime unnecessarily).
+        local readmetxt = VFS.LoadFile("templates/root_dir_README.txt", VFS.ZIP)
+        local file = assert(io.open(readmePath, "w"))
+        file:write(readmetxt)
+        file:close()
+    end
+
+    -- luacheck: ignore
+    SB_ROOT_ABS = Path.GetParentDir(VFS.GetFileAbsolutePath(readmePath))
+    Log.Notice('SpringBoard directory path at: ' .. tostring(SB_ROOT_ABS))
+end
+
 local function MaybeLoad()
     if not hasScenarioFile and SB.projectDir ~= nil and not SB.projectLoaded then
         Log.Notice("Loading project (from widget)")
@@ -156,6 +184,7 @@ function widget:Initialize()
     end
 
     CheckConfig()
+    CheckSpringBoardDir()
 
     SB.displayUtil = DisplayUtil()
 
