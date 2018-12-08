@@ -1,8 +1,7 @@
-
-# SpringBoard: Editor for Spring
-
 [![Build Status](https://travis-ci.org/Spring-SpringBoard/SpringBoard-Core.svg?branch=master)](https://travis-ci.org/Spring-SpringBoard/SpringBoard-Core)
 [![Discord](https://img.shields.io/discord/223585969956323328.svg)](https://discord.gg/c8hmDnr)
+
+# SpringBoard: Editor for Spring
 
 [Documentation](http://springboard-core.readthedocs.io/en/latest/)
 
