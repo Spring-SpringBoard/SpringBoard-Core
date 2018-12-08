@@ -10,9 +10,9 @@ The simplest way to install SpringBoard is to download one of the packaged build
 
 Packages:
 
-- `Windows build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard%201.1013.0.exe>`_
+- `Windows build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.exe>`_
 
-- `Linux build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard%201.1013.0.AppImage>`_
+- `Linux build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.AppImage>`_
 
 Once you have downloaded the zip files, extract them and run the SpringBoard executable. This will open a window that will download the necessary files and launch SpringBoard itself.
 

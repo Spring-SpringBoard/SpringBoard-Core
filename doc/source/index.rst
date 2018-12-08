@@ -54,7 +54,7 @@ Contents
    getting_started
    directory_structure
    making_scenarios
-      meta_programming
+   meta_programming
    map_features
    assets
    extensions

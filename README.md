@@ -10,8 +10,8 @@
 The automated downloader is currently in alpha testing, and the recommendation is to follow the manual installation steps: https://springboard-core.readthedocs.io/en/latest/installing.html#manual-setup
 
 The simplest way to download and install SpringBoard is use one of the packaged builds:
-- [Windows build](http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard%201.1013.0.exe)
-- [Linux build ](http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard%201.1013.0.AppImage)
+- [Windows build](http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.exe)
+- [Linux build ](http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.AppImage)
 
 See [detailed instructions](http://springboard-core.readthedocs.io/en/latest/installing.html)
 
