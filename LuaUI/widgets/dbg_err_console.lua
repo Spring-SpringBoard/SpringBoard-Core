@@ -4,6 +4,7 @@
 -- Make neat UI icons for the controls
 -- Better toggle (On/Off) buttons
 -- Put it on a repository, load it like other libs
+-- Fix fontsize changing on select
 
 function widget:GetInfo()
 	return {
