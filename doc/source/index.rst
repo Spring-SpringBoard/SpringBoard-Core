@@ -36,6 +36,14 @@ Assets
 Core assets can be obtained from the following
 `link <https://drive.google.com/file/d/0B9FQjbVMFgL2LTM2Z1VVaGRZRDQ/view?usp=sharing>`_. Once downloaded, they should be extracted, with the resulting folder structure of "springboard/assets/core/".
 
+Help
+----
+
+Please post any questions, bugs and feature requests as Github `issues <https://github.com/Spring-SpringBoard/SpringBoard-Core/issues/new>`_.
+
+For realtime troubleshooting feel free to join us on `Discord <https://discordapp.com/invite/c8hmDnr>`_ in the #springboard channel.
+
+
 Contents
 --------
 
@@ -44,12 +52,13 @@ Contents
 
    installing
    getting_started
+   directory_structure
+   making_scenarios
+      meta_programming
    map_features
-   gui_programming
-   meta_programming
+   assets
    extensions
    game_specific_modules
-   assets
    video_tutorials
    hot_keys
    comparison

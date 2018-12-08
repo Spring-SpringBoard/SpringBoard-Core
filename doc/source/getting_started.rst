@@ -68,7 +68,7 @@ The :ref:`fig_env` (environment) can be used to set various rendering options. *
 
    Logic tab
 
-The :ref:`fig_logic` provides components to program the scenario, and can be used to add areas, triggers and variables. This is explained in detail in the :ref:`gui_programming` section.
+The :ref:`fig_logic` provides components to program the scenario, and can be used to add areas, triggers and variables. This is explained in detail in the :ref:`making_scenarios` section.
 
 .. _fig_misc:
 .. figure:: img/tab_misc.jpg

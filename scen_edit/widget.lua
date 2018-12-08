@@ -136,6 +136,11 @@ local function CheckSpringBoardDir()
         file:close()
     end
 
+    if not VFS.GetFileAbsolutePath then
+        Log.Notice("Cannot retrieve SpringBoard directory path. " .. 
+                    "Current engine version doesn't support VFS.GetFileAbsolutePath()")
+        return
+    end
     -- luacheck: ignore
     SB_ROOT_ABS = Path.GetParentDir(VFS.GetFileAbsolutePath(readmePath))
     Log.Notice('SpringBoard directory path at: ' .. tostring(SB_ROOT_ABS))

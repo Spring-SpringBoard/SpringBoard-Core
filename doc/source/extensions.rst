@@ -27,9 +27,8 @@ We will then register the newly defined class to make it accessible in the Sprin
 
 .. code-block:: lua
 
-    Editor.Register({
+    ExampleEditor:Register({
         name = "exampleEditor",
-        editor = ExampleEditor,
         tab = "Example",
         caption = "Example",
         tooltip = "Example editor",

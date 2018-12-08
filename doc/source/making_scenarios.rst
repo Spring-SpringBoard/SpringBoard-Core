@@ -1,7 +1,7 @@
-.. _gui_programming:
+.. _making_scenarios:
 
-GUI Programming
-===============
+Making Scenarios
+================
 
 Scenario programming consists of writing triggers - components that consist of events, conditions and actions.
 Each trigger can have multiple events - *any* of which can invoke it. Once the trigger has been invoked, *every* condition will be checked, and only if *all* of them are true, *all* actions will be executed.
