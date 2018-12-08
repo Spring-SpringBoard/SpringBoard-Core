@@ -1,16 +1,18 @@
+
 # SpringBoard: Editor for Spring
 
 [![Build Status](https://travis-ci.org/Spring-SpringBoard/SpringBoard-Core.svg?branch=master)](https://travis-ci.org/Spring-SpringBoard/SpringBoard-Core)
+[![Discord](https://img.shields.io/discord/:223585969956323328.svg?style=for-the-badge)](https://discord.gg/c8hmDnr)
 
 [Documentation](http://springboard-core.readthedocs.io/en/latest/)
 
 ## Installing
 
-~~The simplest way to download and install SpringBoard is use one of the packaged builds:~~
-- ~~[Windows build](https://drive.google.com/file/d/0B9FQjbVMFgL2WUYtVUJIRXpkY3M/view?usp=sharing)~~
-- ~~[Linux build ](https://drive.google.com/file/d/0B9FQjbVMFgL2aE9lTElTQWVHUjg/view?usp=sharing)~~
+The simplest way to download and install SpringBoard is use one of the packaged builds:
+- [Windows build](http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard%201.1013.0.exe)
+- [Linux build ](http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard%201.1013.0.AppImage)
 
-~~See [detailed instructions](http://springboard-core.readthedocs.io/en/latest/installing.html)~~
+See [detailed instructions](http://springboard-core.readthedocs.io/en/latest/installing.html)
 
 The automated downloader is currently broken, and the recommendation is to follow the manual installation steps: https://springboard-core.readthedocs.io/en/latest/installing.html#manual-setup
 
