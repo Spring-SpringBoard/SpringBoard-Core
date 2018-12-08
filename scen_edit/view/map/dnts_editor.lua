@@ -1,3 +1,5 @@
+-- UNUSED (dnts is in texture_editor.lua)
+
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
 SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))

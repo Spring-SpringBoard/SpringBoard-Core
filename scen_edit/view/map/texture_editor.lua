@@ -192,6 +192,9 @@ function TextureEditor:init()
                 -- if SB.dntsEditor.window.hidden then
                 --     SB.view:SetMainPanel(SB.dntsEditor.window)
                 -- end
+                if #self.savedDNTSBrushes.brushManager:GetBrushes() == 0 then
+                    return
+                end
                 self:_EnterState("dnts")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Show()
@@ -487,14 +490,18 @@ function TextureEditor:init()
         },
     }
     SB.delay(function()
-    for i = 0, 3 do
-        local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
-            tostring(i)]
-        if texturePath then
-            self:__AddEngineDNTSTexture(i)
+        for i = 0, 3 do
+            local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
+                tostring(i)]
+            if texturePath then
+                self:__AddEngineDNTSTexture(i)
+            end
         end
-    end
-    self.savedDNTSBrushes:DeselectAll()
+        self.savedDNTSBrushes:DeselectAll()
+        if #self.savedDNTSBrushes.brushManager:GetBrushes() == 0 then
+            self.btnDNTS:SetEnabled(false)
+            self.btnDNTS.tooltip = "No DNTS textures detected for current map."
+        end
     end)
 
     self:Finalize(children)
