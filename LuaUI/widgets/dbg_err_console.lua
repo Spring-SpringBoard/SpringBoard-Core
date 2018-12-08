@@ -429,14 +429,8 @@ function widget:Initialize()
 		WG.Connector.Register("OpenFileFinished", self.openFileCallback)
 	end
 	loadWindow()
-	ReloadAllMessages(true)
-	hack = true
 	Spring.SendCommands('bind f8 ' .. COMMAND_NAME)
 	Spring.SendCommands('console 0')
-
-	if not cfg.visible then
-		window:SetVisibility(false)
-	end
 end
 
 function widget:Shutdown()
@@ -456,6 +450,12 @@ end
 function widget:SetConfigData(data)
 	for k, v in pairs(data) do
 		cfg[k] = v
+	end
+
+	-- Initialization which depends on the content
+	ReloadAllMessages(true)
+	if not cfg.visible then
+		window:SetVisibility(false)
 	end
 end
 
@@ -534,7 +534,7 @@ function widget:AddConsoleLine(msg)
 	-- 	end
 	-- end
 	NewConsoleLine(text)
-	hack = hack or Spring.GetDrawFrame()+1
+	-- hack = hack or Spring.GetDrawFrame()+1
 end
 
 function CheckForLuaFilePath(text)
@@ -598,7 +598,7 @@ function ReloadAllMessages(initialLoad)
 	for _,l in ipairs(buffer) do
 		if initialLoad and sfind(l.text, "LuaUI Entry Point") or sfind(l.text, "LuaRules Entry Point") then
 			reloadCount = reloadCount + 1
-			if reloadCount>2 then -- allow one for initial luaui load, and one for initial luarules load; beyond that, on initial load, show only msgs since last reload; fails if we don't have enough buffer
+			if reloadCount > 2 then -- allow one for initial luaui load, and one for initial luarules load; beyond that, on initial load, show only msgs since last reload; fails if we don't have enough buffer
 				RemoveAllMessages()
 			end
 		end
