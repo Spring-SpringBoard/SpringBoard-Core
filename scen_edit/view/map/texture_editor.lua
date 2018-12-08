@@ -500,7 +500,7 @@ function TextureEditor:init()
         self.savedDNTSBrushes:DeselectAll()
         if #self.savedDNTSBrushes.brushManager:GetBrushes() == 0 then
             self.btnDNTS:SetEnabled(false)
-            self.btnDNTS.tooltip = "No DNTS textures detected for current map."
+            self.btnDNTS.tooltip = "(DISABLED) No DNTS textures detected for current map."
         end
     end)
 

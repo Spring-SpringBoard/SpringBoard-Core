@@ -5,6 +5,8 @@
 -- Better toggle (On/Off) buttons
 -- Put it on a repository, load it like other libs
 -- Fix fontsize changing on select
+-- Pop up on new error/warning (option)
+-- Button to upload log (using the connector)
 
 function widget:GetInfo()
 	return {
