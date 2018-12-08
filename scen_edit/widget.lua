@@ -137,7 +137,7 @@ local function CheckSpringBoardDir()
     end
 
     if not VFS.GetFileAbsolutePath then
-        Log.Notice("Cannot retrieve SpringBoard directory path. " .. 
+        Log.Notice("Cannot retrieve SpringBoard directory path. " ..
                     "Current engine version doesn't support VFS.GetFileAbsolutePath()")
         return
     end
