@@ -6,3 +6,6 @@ doc/build
 #Python
 __pycache__/
 env/
+
+# don't track local (dev) file
+*.local
