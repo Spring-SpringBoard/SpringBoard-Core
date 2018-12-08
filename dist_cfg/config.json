@@ -3,17 +3,33 @@
   "setups" : [
     {
       "package": {
-        "id": "test",
+        "id": "latest",
         "display": "Latest"
       },
       "downloads": {
         "games" : ["sbc:test"],
-        "maps" : ["Obsidian_1.5"],
+        "maps" : ["Adansonia v4.1"],
         "engines" : [ "104.0.1-909-g82a205f maintenance" ]
       },
       "launch": {
         "game": "rapid://sbc:test",
-        "map": "Obsidian_1.5"
+        "map": "Adansonia v4.1"
+      }
+    },
+
+    {
+      "package": {
+        "id": "latest-104.0",
+        "display": "Diffuse-export (104.0)"
+      },
+      "downloads": {
+        "games" : ["sbc:test"],
+        "maps" : ["Adansonia v4.1"],
+        "engines" : [ "104.0" ]
+      },
+      "launch": {
+        "game": "rapid://sbc:test",
+        "map": "Adansonia v4.1"
       }
     },
 
@@ -24,12 +40,12 @@
       },
       "downloads": {
         "games" : ["sbc:stable"],
-        "maps" : ["Obsidian_1.5"],
+        "maps" : ["Adansonia v4.1"],
         "engines" : [ "104.0.1-909-g82a205f maintenance" ]
       },
       "launch": {
         "game": "rapid://sbc:stable",
-        "map": "Obsidian_1.5"
+        "map": "Adansonia v4.1"
       }
     },
 
@@ -39,14 +55,31 @@
         "display": "Development"
       },
       "downloads": {
-        "maps" : ["Obsidian_1.5"],
+        "maps" : ["Adansonia v4.1"],
         "engines" : [ "104.0.1-909-g82a205f maintenance" ]
       },
       "auto_start" : false,
       "no_downloads" : true,
       "launch": {
         "game": "SpringBoard Core $VERSION",
-        "map": "Obsidian_1.5"
+        "map": "Adansonia v4.1"
+      }
+    },
+
+    {
+      "package": {
+        "id": "dev-104.0",
+        "display": "Development (104.0)"
+      },
+      "downloads": {
+        "maps" : ["Adansonia v4.1"],
+        "engines" : [ "104.0" ]
+      },
+      "auto_start" : false,
+      "no_downloads" : true,
+      "launch": {
+        "game": "SpringBoard Core $VERSION",
+        "map": "Adansonia v4.1"
       }
     }
   ]
