@@ -19,6 +19,18 @@ SB_PROJECTS_DIR = SB_ROOT .. "projects/"
 SB_ASSETS_DIR = SB_ROOT .. "assets/"
 SB_EXTS_DIR = SB_ROOT .. "exts/"
 
+local modOpts = Spring.GetModOptions()
+local writePath = modOpts._sl_write_path
+if writePath then
+    -- luacheck: ignore
+    if writePath:sub(-1) ~= '/' then
+        writePath = writePath .. '/'
+    end
+    SB_ROOT_ABS = writePath .. "springboard/"
+    SB_EXTS_ABS_DIR = SB_ROOT_ABS .. "exts/"
+    SB_ASSETS_ABS_DIR = SB_ROOT_ABS .. "assets/"
+end
+
 --properties
 SB_FILE_EXT = ".sdz"
 SB_S11N_EXT = ".lua"

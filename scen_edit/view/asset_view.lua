@@ -2,7 +2,10 @@ SB.Include(Path.Join(SB_VIEW_DIR, "grid_view.lua"))
 
 AssetView = GridView:extends{}
 
+-- TODO: make weak links instead so we can GC in case we want to
+SB._assetViews = {}
 function AssetView:init(tbl)
+    table.insert(SB._assetViews, self)
     local defaults = {
         showDirs = true,
         imageFolderUp = nil,

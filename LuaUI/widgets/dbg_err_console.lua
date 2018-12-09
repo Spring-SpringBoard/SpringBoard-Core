@@ -579,7 +579,7 @@ function NewConsoleLine(text)
 				endIndex = e,
 				OnTextClick = {
 					function()
-						WG.Connector.Send("OpenFile", { path = absPath }) 
+						WG.Connector.Send("OpenFile", { path = absPath })
 					end
 				}
 			}

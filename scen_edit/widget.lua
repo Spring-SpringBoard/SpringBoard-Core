@@ -136,15 +136,6 @@ local function CheckSpringBoardDir()
         file:write(readmetxt)
         file:close()
     end
-
-    if not VFS.GetFileAbsolutePath then
-        Log.Notice("Cannot retrieve SpringBoard directory path. " ..
-                    "Current engine version doesn't support VFS.GetFileAbsolutePath()")
-        return
-    end
-    -- luacheck: ignore
-    SB_ROOT_ABS = Path.GetParentDir(VFS.GetFileAbsolutePath(readmePath))
-    Log.Notice('SpringBoard directory path at: ' .. tostring(SB_ROOT_ABS))
 end
 
 local function MaybeLoad()
@@ -163,6 +154,8 @@ function widget:Initialize()
     LCS = LCS()
     VFS.Include(SB_DIR .. "util.lua")
     SB.Include(SB_DIR .. "utils/include.lua")
+
+    Log.Notice('SpringBoard directory path at: ' .. tostring(SB_ROOT_ABS))
 
     -- we can't have handler=true because then RegisterGlobal doesn't work
     -- so we expose handler API to our widgetHandler
