@@ -51,8 +51,8 @@ local color = {
 	other  = '\255\255\255\255', --normal chat color
 	ally   = '\255\001\255\001', --ally chat
 	spec   = '\255\255\255\001', --spectator chat
-	red    = '\255\255\100\001',
-	orange = '\255\255\165\001',
+	error  = '\255\255\001\001',
+	warning= '\255\255\245\001',
 	blue   = '\255\001\255\255',
 }
 
@@ -505,9 +505,9 @@ local function processLine(line)
 	--end
 	local lowerLine = slower(line)
 	if sfind(lowerLine,"error") or sfind(lowerLine,"failed") then
-		textColor = color.red
+		textColor = color.error
 	elseif sfind(lowerLine,"warning") then
-		textColor = color.orange
+		textColor = color.warning
 	else
 		textColor = color.other
 		if cfg.onlyErrorsAndWarnings then
