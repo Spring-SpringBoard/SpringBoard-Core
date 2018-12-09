@@ -8,12 +8,12 @@
       },
       "downloads": {
         "games" : ["sbc:test"],
-        "maps" : ["Adansonia v4.1"],
+        "maps" : ["TitanDuel 2.2"],
         "engines" : [ "104.0.1-909-g82a205f maintenance" ]
       },
       "launch": {
         "game": "rapid://sbc:test",
-        "map": "Adansonia v4.1"
+        "map": "TitanDuel 2.2"
       }
     },
 
@@ -24,12 +24,12 @@
       },
       "downloads": {
         "games" : ["sbc:test"],
-        "maps" : ["Adansonia v4.1"],
+        "maps" : ["TitanDuel 2.2"],
         "engines" : [ "104.0" ]
       },
       "launch": {
         "game": "rapid://sbc:test",
-        "map": "Adansonia v4.1"
+        "map": "TitanDuel 2.2"
       }
     },
 
@@ -40,12 +40,12 @@
       },
       "downloads": {
         "games" : ["sbc:stable"],
-        "maps" : ["Adansonia v4.1"],
+        "maps" : ["TitanDuel 2.2"],
         "engines" : [ "104.0.1-909-g82a205f maintenance" ]
       },
       "launch": {
         "game": "rapid://sbc:stable",
-        "map": "Adansonia v4.1"
+        "map": "TitanDuel 2.2"
       }
     },
 
@@ -55,14 +55,14 @@
         "display": "Development"
       },
       "downloads": {
-        "maps" : ["Adansonia v4.1"],
+        "maps" : ["TitanDuel 2.2"],
         "engines" : [ "104.0.1-909-g82a205f maintenance" ]
       },
       "auto_start" : false,
       "no_downloads" : true,
       "launch": {
         "game": "SpringBoard Core $VERSION",
-        "map": "Adansonia v4.1"
+        "map": "TitanDuel 2.2"
       }
     },
 
@@ -72,14 +72,14 @@
         "display": "Development (104.0)"
       },
       "downloads": {
-        "maps" : ["Adansonia v4.1"],
+        "maps" : ["TitanDuel 2.2"],
         "engines" : [ "104.0" ]
       },
       "auto_start" : false,
       "no_downloads" : true,
       "launch": {
         "game": "SpringBoard Core $VERSION",
-        "map": "Adansonia v4.1"
+        "map": "TitanDuel 2.2"
       }
     }
   ]
