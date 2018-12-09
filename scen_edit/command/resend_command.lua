@@ -14,7 +14,7 @@ function ResendCommand:execute()
     --     s2mUnit = s2mUnit,
     --     s2mFeature = s2mFeature
     -- })
-    SB.commandManager:execute(cmd, true)
+    -- SB.commandManager:execute(cmd, true)
 end
 
 WidgetResendCommand = Command:extends{}

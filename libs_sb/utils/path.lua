@@ -10,7 +10,7 @@ function Path.ExtractFileName(path)
     local b, init, n = 1, 0, 0
     repeat
         pos, init, n = b, init + 1, n + 1
-        b, init, _ = path:find("/", init, true)
+        b, init = path:find("/", init, true)
     until not b
     if n == 1 then
         return path
@@ -29,7 +29,7 @@ function Path.ExtractDir(path)
     local b, init, n = 1, 0, 0
     repeat
         pos, init, n = b, init + 1, n + 1
-        b, init, _ = path:find("/", init, true)
+        b, init = path:find("/", init, true)
     until not b
     if n == 1 then
         return path
@@ -48,7 +48,7 @@ function Path.GetParentDir(dir)
     local b, init, n = 1, 0, 0
     repeat
         pos, init, n = b, init + 1, n + 1
-        b, init, _ = dir:find("/", init, true)
+        b, init = dir:find("/", init, true)
     until not b
     if n == 1 then
         return ''
@@ -98,6 +98,7 @@ if not lu then
     return
 end
 
+-- luacheck: ignore
 function testExtractFileName()
     lu.assertEquals(Path.ExtractFileName("abc.txt"), "abc.txt")
     lu.assertEquals(Path.ExtractFileName("xyz/abc.txt"), "abc.txt")

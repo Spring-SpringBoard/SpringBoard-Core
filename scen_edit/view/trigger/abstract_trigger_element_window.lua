@@ -369,7 +369,7 @@ function AbstractTriggerElementWindow:EditElement()
     local success, errorEditors = self:UpdateModel()
 
     if not success then
-        SetTableValues(self.element, _element)
+        Table.SetTableValues(self.element, _element)
         return false, errorEditors
     end
     return true

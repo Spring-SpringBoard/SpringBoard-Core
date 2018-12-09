@@ -28,7 +28,7 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
 end
 
 function CommandManager:_SafeCall(func)
-    succ, result = xpcall(func, function(err)
+    local succ, result = xpcall(func, function(err)
         Log.Error("[" .. Script.GetName() .. "] Error executing command.")
         if debug then
             Log.Error(debug.traceback(err, 2))
@@ -60,6 +60,7 @@ function CommandManager:leaveMultipleCommandMode()
     for _, cmd in pairs(self.multipleCommandStack) do
         table.insert(cmdIDs, cmd.__cmd_id)
     end
+    local cmd
     if self.multipleCommandStack[1].mergeCommand then
         -- there is a special command for merging
         local env = getfenv(1)

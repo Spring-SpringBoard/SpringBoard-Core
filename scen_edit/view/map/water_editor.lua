@@ -278,10 +278,6 @@ function WaterEditor:init()
     self:Finalize(children)
 end
 
-function _ColorArrayToChannels(colorArray)
-    return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
-end
-
 function WaterEditor:UpdateWaterRendering()
     if not gl.GetWaterRendering then
         Log.Warning("gl.GetWaterRendering missing; Update to newer engine.")

@@ -1,10 +1,11 @@
 ResizeAreaState = AbstractState:extends{}
 
-function ResizeAreaState:init(areaID, resx, resz)
+function ResizeAreaState:init(areaID, resx, resz, drag_diff_x, drag_diff_z)
     AbstractState.init(self)
 
     self.areaID = areaID
     self.resx, self.resz = resx, resz
+    self.drag_diff_x, self.drag_diff_z = drag_diff_x, drag_diff_z
 
     if self.resx ~= 0 and self.resz == 0 then
         SB.SetMouseCursor("resize-x")
@@ -24,14 +25,14 @@ function ResizeAreaState:MouseMove(mx, my, ...)
     local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground" then
         if self.resx == -1 then
-            self.x1 = coords[1] + drag_diff_x
+            self.x1 = coords[1] + self.drag_diff_x
         elseif self.resx == 1 then
-            self.x2 = coords[1] + drag_diff_x
+            self.x2 = coords[1] + self.drag_diff_x
         end
         if self.resz == -1 then
-            self.z1 = coords[3] + drag_diff_z
+            self.z1 = coords[3] + self.drag_diff_z
         elseif self.resz == 1 then
-            self.z2 = coords[3] + drag_diff_z
+            self.z2 = coords[3] + self.drag_diff_z
         end
     end
 end

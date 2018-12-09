@@ -4,7 +4,7 @@ function DragHorizontalObjectState:init(startY)
     AbstractState.init(self)
 
     self.dy = 0
-    self.startDiffY = startDiffY
+    self.startDiffY = startY
     SB.SetMouseCursor("resize-y")
     self.ghostViews = {}
 end

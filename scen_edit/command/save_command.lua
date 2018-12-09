@@ -46,7 +46,7 @@ local function SaveMetalMap(path)
 end
 
 local function ModelSave(path)
-    success, msg = pcall(Model.Save, SB.model, path)
+    local success, msg = pcall(Model.Save, SB.model, path)
     if not success then
         Log.Error(msg)
     end

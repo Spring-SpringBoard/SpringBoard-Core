@@ -11,7 +11,7 @@ function WidgetTerrainChangeTextureCommand:execute()
     end)
 end
 
-
+local shaders
 local function _InitShaders()
     if shaders == nil then
         shaders = {
@@ -343,7 +343,7 @@ function DrawDiffuse(opts, x, z, size)
 
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
     end
-    CheckGLSL()
+    CheckGLSL(shader)
 
     -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
@@ -408,7 +408,7 @@ function DrawBlur(opts, x, z, size)
         local mCoord, vCoord = __GenerateMapCoords(mx, mz, size, size)
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
     end
-    CheckGLSL()
+    CheckGLSL(shader)
 
     -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
@@ -461,7 +461,7 @@ function DrawVoid(opts, x, z, size)
 
         gl.RenderToTexture(mapTexture, ApplyTexture, tmps[i], mCoord, tCoord, vCoord)
     end
-    CheckGLSL()
+    CheckGLSL(shader)
 
     -- texture 0 is changed multiple times inside the for loops, but it's OK to disabled it just once here
     gl.Texture(0, false)
@@ -530,7 +530,7 @@ function DrawDNTS(opts, x, z, size)
     gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
     gl.RenderToTexture(shadingTex, ApplyTexture, shadingTmps[texType], mCoord, tCoord, vCoord)
 
-    CheckGLSL()
+    CheckGLSL(shader)
 
     gl.Texture(0, false)
     gl.Texture(1, false)
@@ -605,7 +605,7 @@ function DrawShadingTextures(opts, x, z, size)
             gl.Texture(2, SB.model.textureManager:GetTexture(opts.brushTexture[texType]))
             gl.RenderToTexture(shadingTex, ApplyTexture, shadingTmps[texType], mCoord, tCoord, vCoord)
 
-            CheckGLSL()
+            CheckGLSL(shader)
         end
     end
 
@@ -617,7 +617,7 @@ function DrawShadingTextures(opts, x, z, size)
 end
 
 -- FIXME: This is unnecessary probably. Confirm with engine code
-function CheckGLSL()
+function CheckGLSL(shader)
     local errors = gl.GetShaderLog(shader)
     if errors ~= "" then
         Log.Error("Shader error!")

@@ -65,8 +65,7 @@ end
 function VariableManager:load(data)
     self.variableIDCount = 0
     for _, kv in pairs(data) do
-        id = kv.id
-        variable = kv.variable
+        local variable = kv.variable
         self:addVariable(variable)
     end
 end

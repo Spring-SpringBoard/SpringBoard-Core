@@ -751,7 +751,7 @@ function ObjectPropertyWindow:OnFieldChange(name, value)
     end
     for selType, objectIDs in pairs(selection) do
         if #objectIDs > 0 then
-            bridge = ObjectBridge.GetObjectBridge(selType)
+            local bridge = ObjectBridge.GetObjectBridge(selType)
             if bridge.s11n.setFuncs[name] then
                 local cmds = self:GetCommands(objectIDs, name, value, bridge)
                 for _, command in pairs(cmds) do

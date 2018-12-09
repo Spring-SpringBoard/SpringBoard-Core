@@ -34,11 +34,4 @@ globals = {
     "WG", "widgetHandler", "widget",
     -- Libs
     "LCS", "Path", "Table", "Log", "String", "Shaders", "Time", "Array", "StartScript",
-    -- SB speciifc
-    "SB", "SB_DIR",
-
-    -- SB view fields
-    "UnitField", "FeatureField", "AreaField", "TriggerField", "UnitTypeField", "FeatureTypeField",
-    "TeamField", "NumericField", "StringField", "BooleanField", "NumericComparisonField", "IdentityComparisonField",
-    "PositionField"
 }

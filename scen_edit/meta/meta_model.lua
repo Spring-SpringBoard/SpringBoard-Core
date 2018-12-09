@@ -35,7 +35,7 @@ function MetaModel:SetFunctionTypes(functionTypes)
     for _, functionDef in pairs(self.functionTypes) do
         for _, input in pairs(functionDef.input) do
             if self.functionTypesByInput[input.name] then
-                table.insert(self.functionTypesByInput[input.name], v)
+                table.insert(self.functionTypesByInput[input.name], functionDef)
             else
                 self.functionTypesByInput[input.name] = {functionDef}
             end

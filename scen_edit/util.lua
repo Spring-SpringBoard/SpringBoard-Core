@@ -91,8 +91,9 @@ function SB.MakeSeparator(panel)
     return lblSeparator
 end
 
-function PassToGadget(prefix, tag, data)
-    newTable = { tag = tag, data = data }
+-- Unused
+function SB.PassToGadget(prefix, tag, data)
+    local newTable = { tag = tag, data = data }
     local msg = prefix .. "|table" .. table.show(newTable)
     Spring.SendLuaRulesMsg(msg)
 end
@@ -310,11 +311,6 @@ function SB.deepcopy(t)
     return res
 end
 
-function SB.GiveOrderToUnit(unitID, orderType, params)
-    Spring.GiveOrderToUnit(unit, CMD.INSERT,
-        { -1, orderType, CMD.OPT_SHIFT, unpack(params) }, { "alt" })
-end
-
 local __fieldTypeMapping
 function SB.__GetFieldType(name)
     if not __fieldTypeMapping then
@@ -524,7 +520,7 @@ end
 function SB.FunctionExists(fun, feature)
     if fun ~= nil then
         if warningsIssued[feature] == nil then
-            Log.Warning(feature .. " requires a minimum Spring version of " .. tostring(versionNumber))
+            Log.Warning(feature .. " feature missing.")
             warningsIssued[feature] = true
         end
         return false
@@ -599,14 +595,6 @@ function SB.TraceScreenRay(x, y, opts)
     end
 
     return traceType, value
-end
-
-function boolToNumber(bool)
-    if bool then
-        return 1
-    else
-        return 0
-    end
 end
 
 -- Checks whether directory is a SpringBoard project

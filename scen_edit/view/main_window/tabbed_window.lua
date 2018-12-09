@@ -13,7 +13,7 @@ function TabbedWindow:init()
     self.tabs = {}
 
     -- Group editors by the tab they belong to
-    tabMapping = SB.GroupByField(SB.editorRegistry, "tab")
+    local tabMapping = SB.GroupByField(SB.editorRegistry, "tab")
     -- Order tabs as specified in Conf first, and in alphabetical order second
     local tabMapping_ = {}
     for _, v in pairs(tabMapping) do

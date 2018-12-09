@@ -24,7 +24,7 @@ function MapGrid:initShader()
 
     local shaderTemplate = {
         fragment = shaderFragStr,
-        vertex = shaderVertStr,
+        -- vertex = shaderVertStr,
     }
 
     local shader = Shaders.Compile(shaderTemplate, "MapGrid")

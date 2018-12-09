@@ -63,7 +63,7 @@ function StateManager:init()
 end
 
 function StateManager:_SafeCall(func)
-    succ, result = xpcall(func, function(err)
+    local succ, result = xpcall(func, function(err)
         -- we don't need the full log (probably!)
         -- Log.Error(debug.traceback(err))
         Log.Error(debug.traceback(err, 3))

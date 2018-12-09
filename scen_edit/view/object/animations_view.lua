@@ -13,7 +13,7 @@ function AnimationsView:init()
     self:super("init")
 
     local tvPieceControl = TreeView:New {
-        nodes = nodes,
+        -- nodes = nodes,
     }
     self:AddControl("pos-sep", {
         Label:New {
@@ -153,7 +153,7 @@ function AnimationsView:OnFieldChange(name, value)
         local selection = SB.view.selectionManager:GetSelection()
         for _, objectID in pairs(selection.units) do
             local modelID = SB.model.unitManager:getModelUnitID(objectID)
-            table.insert(commands, SetUnitParamCommand(modelID, name, value))
+            table.insert(commands, SetObjectParamCommand(unitBridge, modelID, name, value))
         end
         local compoundCommand = CompoundCommand(commands)
         SB.commandManager:execute(compoundCommand)

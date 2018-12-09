@@ -14,7 +14,7 @@ function DebugTriggerView:Populate()
     for id, trigger in pairs(triggers) do
         local triggerPanel = MakeComponentPanel(self.parent)
         local maxChars = 18
-        shortName = trigger.name:sub(1, maxChars)
+        local shortName = trigger.name:sub(1, maxChars)
         if #trigger.name > maxChars then
             shortName = shortName .. "..."
         end

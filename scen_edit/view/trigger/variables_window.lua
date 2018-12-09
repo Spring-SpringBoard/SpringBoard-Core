@@ -78,7 +78,7 @@ function VariablesWindow:AddVariable()
             break
         end
     end
-    success, msg = pcall(
+    local success, msg = pcall(
         function()
             self:MakeVariableWindow(variable, false)
         end

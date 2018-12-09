@@ -64,7 +64,7 @@ function DisplayUtil:AddUnitSay(text, unitID, time)
             color  = {0,0,0,1},
         },
     }
-    if x == -1 and y == -1 and z == -1 and not img.hidden then
+    if x == -1 and y == -1 and not img.hidden then
         screen0:RemoveChild(img)
         img.hidden = true
     end

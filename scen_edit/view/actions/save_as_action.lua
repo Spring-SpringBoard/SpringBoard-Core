@@ -24,7 +24,7 @@ end
 
 function SaveProjectAsAction:execute()
     local origProjDir = SB.projectDir
-    sfd = SaveProjectDialog(SB_PROJECTS_DIR)
+    local sfd = SaveProjectDialog(SB_PROJECTS_DIR)
     sfd:setConfirmDialogCallback(
         function(path)
             local isNewProject = path ~= origProjDir

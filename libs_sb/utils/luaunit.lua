@@ -2175,6 +2175,7 @@ M.LuaUnit = {
 }
 local LuaUnit_MT = { __index = M.LuaUnit }
 
+-- luacheck: ignore
 if EXPORT_ASSERT_TO_GLOBALS then
     LuaUnit = M.LuaUnit
 end

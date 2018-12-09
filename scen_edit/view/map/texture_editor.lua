@@ -104,7 +104,7 @@ function TextureEditor:init()
             return {
                 opts = tbl,
                 caption = nil,
-                image = texturePath,
+                image = "",
                 tooltip = nil,
             }
         end,

@@ -3,7 +3,7 @@ if WG then
 	LIBS_DIR = WG.SB_LIBS_DIR
 	SB = WG.SB
 
-	Scene = WG.Scene
+	-- Scene = WG.Scene
 else
 	LIBS_DIR = GG.SB_LIBS_DIR
 	SB = GG.SB
@@ -48,7 +48,7 @@ if WG and WG.SBChili then
     Checkbox = Chili.Checkbox
     Control = Chili.Control
     ComboBox = Chili.ComboBox
-    Colorbars = Chili.Colorbars
+    -- Colorbars = Chili.Colorbars
     Button = Chili.Button
     Label = Chili.Label
     Line = Chili.Line
@@ -57,14 +57,14 @@ if WG and WG.SBChili then
     ScrollPanel = Chili.ScrollPanel
     LayoutPanel = Chili.LayoutPanel
     StackPanel = Chili.StackPanel
-    Grid = Chili.Grid
+    -- Grid = Chili.Grid
     TextBox = Chili.TextBox
     Image = Chili.Image
     ImageListView = Chili.ImageListView
     TreeView = Chili.TreeView
     Trackbar = Chili.Trackbar
-    TabBar = Chili.TabBar
-    TabPanel = Chili.TabPanel
+    -- TabBar = Chili.TabBar
+    -- TabPanel = Chili.TabPanel
     Progressbar = Chili.Progressbar
     screen0 = Chili.Screen0
 end

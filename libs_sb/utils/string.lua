@@ -17,7 +17,7 @@ function String.Trim(str)
 end
 
 -- TODO: Cleanup
-function explode(div, str)
+function String.Explode(div, str)
     if (div=='') then return false end
     local pos,arr = 0,{}
     -- for each divider found

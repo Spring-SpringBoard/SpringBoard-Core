@@ -77,7 +77,7 @@ function StatusWindow:_UpdateMemory()
     end
     -- We're detecting extensive memory usage here and exiting the current state if critical.
     -- TODO: Act on it a bit better and automatically clear the undo-redo stack instead of prompting the user to do stuff.
-    color = SB.conf.STATUS_TEXT_OK_COLOR
+    local color = SB.conf.STATUS_TEXT_OK_COLOR
     if memory > 500 then
         color = SB.conf.STATUS_TEXT_DANGER_COLOR
         if not self.warnedTime or os.clock() - self.warnedTime > 10 then

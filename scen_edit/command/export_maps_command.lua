@@ -35,7 +35,7 @@ function SaveShadingTextures(path, toProject, prefix)
                     -- we only do this for the corresponding texture
                     local oldTextureObj = stackItem[texType]
                     if oldTextureObj then
-                        Log.Debug("Making subtexture dirty", i, j)
+                        Log.Debug("Making shading texture dirty: " .. tostring(texType))
                         oldTextureObj.dirty = true
                     end
                 end
@@ -133,7 +133,7 @@ function ExportMapsCommand:ExportHeightmap()
     gl.Texture(0, false)
     gl.UseShader(0)
 
-    useGrayscale16bit = true
+    local useGrayscale16bit = true
     if Platform.osFamily == "Windows" then
         useGrayscale16bit = false
     end

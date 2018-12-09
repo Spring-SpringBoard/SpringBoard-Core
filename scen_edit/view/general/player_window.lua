@@ -125,10 +125,10 @@ function PlayerWindow:init(team)
         newTeam.color.b     = clbColor[3]
         newTeam.color.a     = clbColor[4] or 1
         newTeam.ai          = self.fields["ai"].value
-        newTeam.metal       = self.fields["metal"].value or energyMax
-        newTeam.metalMax    = self.fields["metalStorage"].value or metalMax
-        newTeam.energy      = self.fields["energy"].value or energy
-        newTeam.energyMax   = self.fields["energyStorage"].value or energyMax
+        newTeam.metal       = self.fields["metal"].value
+        newTeam.metalMax    = self.fields["metalStorage"].value
+        newTeam.energy      = self.fields["energy"].value
+        newTeam.energyMax   = self.fields["energyStorage"].value
         newTeam.startPos    = self.fields["startPos"].value
         if self.fields["side"] then
             newTeam.side        = self.fields["side"].value

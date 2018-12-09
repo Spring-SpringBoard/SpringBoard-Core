@@ -1,33 +1,33 @@
 if (gadgetHandler:IsSyncedCode()) then
 
-function WidgetCallback(f, params, msgID)
-    local result = {f(unpack(params))}
-    SendToUnsynced("toWidget", table.show{
-        tag = "msg",
-        data = {
-            result = result,
-            msgID = msgID,
-        },
-    })
-end
+-- Unused
+-- function WidgetCallback(f, params, msgID)
+--     local result = {f(unpack(params))}
+--     SendToUnsynced("toWidget", table.show{
+--         tag = "msg",
+--         data = {
+--             result = result,
+--             msgID = msgID,
+--         },
+--     })
+-- end
 
 local msgParts = {}
 local msgPartsSize = 0
 local __populatedTeam = false
 
 function gadget:RecvLuaMsg(msg, playerID)
-    pre = "scen_edit"
-    if #msg < #pre or msg:sub(1, #pre) ~= "scen_edit" then
+    if #msg < #SB.messageManager.prefix or msg:sub(1, #SB.messageManager.prefix) ~= SB.messageManager.prefix then
         return
     end
 
-    local msgParams = explode( '|', msg)
+    local msgParams = String.Explode( '|', msg)
     local op = msgParams[2]
     local par1 = msgParams[3]
 
     --TODO: figure proper msg name :)
     if op == 'game' then
-        local msgParsed = msg:sub(#(pre .. "|" .. op .. "|") + 1)
+        local msgParsed = msg:sub(#(SB.messageManager.prefix .. "|" .. op .. "|") + 1)
         -- The package is eventually packed and then compressed. So we must
         -- first uncompress, and then unpack
         if SB.messageManager.compress then
@@ -61,7 +61,7 @@ function gadget:RecvLuaMsg(msg, playerID)
         Log.Notice("Send meta data signal")
     else
         if op == 'sync' then
-            local msgParsed = msg:sub(#(pre .. "|" .. op .. "|") + 1)
+            local msgParsed = msg:sub(#(SB.messageManager.prefix .. "|" .. op .. "|") + 1)
             if SB.messageManager.compress then
                 msgParsed = SB.ZlibDecompress(msgParsed)
             end
@@ -86,14 +86,14 @@ function gadget:RecvLuaMsg(msg, playerID)
                 if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SB.projectDir ~= nil then
                     SB.commandManager:HandleCommandMessage(msgObj)
                 else
-                    Log.Warning("Command ignored: ", cmd.className)
+                    Log.Warning("Command ignored: ", msgTable.data)
                 end
             end
         elseif op == 'startMsgPart' then
             msgPartsSize = tonumber(par1)
         elseif op == "msgPart" then
             local index = tonumber(par1)
-            local value = msg:sub(#(pre .. "|" .. op .. "|" .. par1 .. "|") + 1)
+            local value = msg:sub(#(SB.messageManager.prefix .. "|" .. op .. "|" .. par1 .. "|") + 1)
             msgParts[index] = value
             if #msgParts == msgPartsSize then
                 local fullMessage = ""
@@ -140,7 +140,7 @@ function gadget:Initialize()
     SB.metaModel = MetaModel()
 
     --TODO: relocate this
-    metaModelLoader = MetaModelLoader()
+    local metaModelLoader = MetaModelLoader()
     metaModelLoader:Load()
 
     SB.model = Model()
@@ -148,7 +148,7 @@ function gadget:Initialize()
     SB.messageManager = MessageManager()
     SB.commandManager = CommandManager()
 
-    rtModel = RuntimeModel()
+    local rtModel = RuntimeModel()
     SB.rtModel = rtModel
 
     SB.executeDelayed("Initialize")

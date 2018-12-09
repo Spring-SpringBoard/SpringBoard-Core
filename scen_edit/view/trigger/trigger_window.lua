@@ -202,7 +202,7 @@ function TriggerWindow:Populate()
                 local event = self.trigger.events[i]
                 local stackEventPanel = MakeComponentPanel(elementPanel)
                 local btnEditEvent = Button:New {
-                    caption = SB.model.triggerManager:GetSafeEventHumanName(trigger, event),
+                    caption = SB.model.triggerManager:GetSafeEventHumanName(self.trigger, event),
                     right = SB.conf.B_HEIGHT + 10,
                     x = ELEMENT_INDENT,
                     height = SB.conf.B_HEIGHT,

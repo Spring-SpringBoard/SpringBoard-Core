@@ -82,5 +82,5 @@ end
 
 function ChoiceField:GetCaption(id)
     id = id or self.value
-    return self.captions[GetIndex(self.items, id)]
+    return self.captions[Table.GetIndex(self.items, id)]
 end

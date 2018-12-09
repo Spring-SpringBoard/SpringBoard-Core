@@ -1,11 +1,12 @@
 function RecieveGadgetMessage(msg)
-    pre = "scen_edit"
-    local msgParams = explode( '|', msg)
-    if msgParams[1] ~= pre then return end
+    local msgParams = String.Explode('|', msg)
+    if msgParams[1] ~= SB.messageManager.prefix then
+        return
+    end
     local op = msgParams[2]
 
     if op == 'sync' then
-        local msgParsed = string.sub(msg, #(pre .. "|sync|") + 1)
+        local msgParsed = string.sub(msg, #(SB.messageManager.prefix .. "|sync|") + 1)
         local msgTable = loadstring(msgParsed)()
         local msgObj = Message(msgTable.tag, msgTable.data)
         if msgObj.tag == 'command' then
@@ -13,13 +14,13 @@ function RecieveGadgetMessage(msg)
         end
         return
     end
-    local tbl = loadstring(msg)()
-    local data = tbl.data
-    local tag = tbl.tag
 
-    if tag == "msg" then
-        model:InvokeCallback(data.msgID, data.result)
-    end
+    -- local tbl = loadstring(msg)()
+    -- local data = tbl.data
+    -- local tag = tbl.tag
+    -- if tag == "msg" then
+    --     model:InvokeCallback(data.msgID, data.result)
+    -- end
 end
 
 local function dumpConfig()

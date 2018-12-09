@@ -82,8 +82,8 @@ function Table.GetField(origArray, field)
     return newArray
 end
 
-function GetIndex(table, value)
-    assert(value ~= nil, "GetIndex called with nil value.")
+function Table.GetIndex(table, value)
+    assert(value ~= nil, "Table.GetIndex called with nil value.")
     for i = 1, #table do
         if table[i] == value then
             return i
@@ -92,7 +92,7 @@ function GetIndex(table, value)
 end
 
 -- basically does origTable = newTableValues but instead uses the old table reference
-function SetTableValues(origTable, newTable)
+function Table.SetTableValues(origTable, newTable)
     for k in pairs(origTable) do
         origTable[k] = nil
     end

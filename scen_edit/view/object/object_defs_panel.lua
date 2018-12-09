@@ -300,7 +300,7 @@ function FeatureDefsPanel:init(tbl)
     self.featureTypeID = 1
 end
 function FeatureDefsPanel:getUnitDefBuildPic(unitDef)
-    unitImagePath = "unitpics/" .. unitDef.buildpicname
+    local unitImagePath = "unitpics/" .. unitDef.buildpicname
     local fileExists = VFS.FileExists(unitImagePath)
     if not fileExists then
         unitImagePath = "buildicons/_1to1_128x128/" .. unitDef.name .. ".png"
@@ -333,7 +333,7 @@ function FeatureDefsPanel:FilterObject(objectDefID)
             unitTypesID == 1 and not unitDef.isBuilding or
             unitTypesID == 3
 
-            correctTerrain = unitTerrainID == 1 and (not unitDef.canFly and
+            local correctTerrain = unitTerrainID == 1 and (not unitDef.canFly and
             not unitDef.floatOnWater and not unitDef.canSubmerge and unitDef.waterline == 0 and unitDef.minWaterDepth <= 0) or
             unitTerrainID == 2 and unitDef.canFly or
             unitTerrainID == 3 and (unitDef.canHover or unitDef.floatOnWater or unitDef.waterline > 0 or unitDef.minWaterDepth > 0) or
@@ -355,15 +355,13 @@ function FeatureDefsPanel:PopulateItems()
     -- end
     local items = {}
     for id, featureDef in pairs(FeatureDefs) do
+        local unitDef
         if featureDef.tooltip and type(featureDef.tooltip) == "string" then
             local defName = featureDef.name:gsub("_heap", ""):gsub("_dead", "")
             unitDef = UnitDefNames[defName]
-            if unitDef then
-                isWreck = true
-            end
         end
         --unitImagePath = "buildicons/_1to1_128x128/" .. "feature_" .. featureDef.name .. ".png"
-        unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
+        local unitImagePath = "unitpics/featureplacer/" .. featureDef.name .. "_unit.png"
         local fileExists = VFS.FileExists(unitImagePath, VFS.MOD)
         if not fileExists then
             if unitDef then

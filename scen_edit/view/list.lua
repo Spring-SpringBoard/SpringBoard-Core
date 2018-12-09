@@ -90,7 +90,7 @@ function List:CompareItems(id1, id2)
 end
 
 function List:SwapPlaces(panel1, panel2)
-    tmp = panel1.index
+    local tmp = panel1.index
 
     panel1.index = panel2.index
     self.orderPanelMapping[panel1.index] = panel1

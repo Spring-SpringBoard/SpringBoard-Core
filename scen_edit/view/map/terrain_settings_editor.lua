@@ -17,8 +17,8 @@ local function GetWriteDataDir()
     end
 
     local dataDirStr = "write data directory: "
-    lines = explode("\n", VFS.LoadFile("infolog.txt", nil, VFS.RAW))
-    dataDir = ""
+    local lines = String.Explode("\n", VFS.LoadFile("infolog.txt", nil, VFS.RAW))
+    local dataDir = ""
     for i, line in pairs(lines) do
         if line:find(dataDirStr) then
             dataDir = line:sub(line:find(dataDirStr) + #dataDirStr)
@@ -87,10 +87,10 @@ function TerrainSettingsEditor:init()
                         return
                     end
 
-                    heightPath = Path.Join(folderPath, "heightmap.png")
-                    diffusePath = Path.Join(folderPath, "diffuse.png")
-                    grass = Path.Join(folderPath, "grass.png")
-                    outputPath = Path.Join(folderPath, "MyName")
+                    local heightPath = Path.Join(folderPath, "heightmap.png")
+                    local diffusePath = Path.Join(folderPath, "diffuse.png")
+                    local grass = Path.Join(folderPath, "grass.png")
+                    local outputPath = Path.Join(folderPath, "MyName")
 
                     if not VFS.FileExists(heightPath, VFS.RAW) then
                         Spring.Echo("Heightmap texture missing from: " .. tostring(heightPath))
@@ -188,10 +188,6 @@ function TerrainSettingsEditor:init()
     }
 
     self:Finalize(children)
-end
-
-function _ColorArrayToChannels(colorArray)
-    return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
 end
 
 function TerrainSettingsEditor:UpdateMapRendering()

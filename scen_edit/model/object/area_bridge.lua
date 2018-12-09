@@ -5,6 +5,8 @@ local function __CheckResizeIntersections(areaID, x, z)
     local accuracy = 20
     local toResize = false
     local resx, resz = 0, 0
+
+    local drag_diff_x, drag_diff_z
     if math.abs(x - rect[1]) < accuracy then
         resx = -1
         drag_diff_x = rect[1] - x
@@ -54,7 +56,7 @@ local function __CheckResizeIntersections(areaID, x, z)
             toResize = false
         end
     end
-    return toResize, resx, resz
+    return toResize, resx, resz, drag_diff_x, drag_diff_z
 end
 
 local function __MakeAreaTrigger(areaID)
@@ -130,9 +132,9 @@ AreaBridge.OnClick                      = function(objectID, x, y, z)
         return
     end
 
-    local toResize, resx, resz = __CheckResizeIntersections(objectID, x, z)
+    local toResize, resx, resz, drag_diff_x, drag_diff_z = __CheckResizeIntersections(objectID, x, z)
     if toResize then
-        SB.stateManager:SetState(ResizeAreaState(objectID, resx, resz))
+        SB.stateManager:SetState(ResizeAreaState(objectID, resx, resz, drag_diff_x, drag_diff_z))
         return true
     end
 end

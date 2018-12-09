@@ -53,6 +53,6 @@ function AreaView:_Draw(x1, z1, x2, z2)
 end
 
 function AreaView:Draw()
-    x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(self.areaID))
+    local x1, z1, x2, z2 = unpack(SB.model.areaManager:getArea(self.areaID))
     self:_Draw(x1, z1, x2, z2)
 end

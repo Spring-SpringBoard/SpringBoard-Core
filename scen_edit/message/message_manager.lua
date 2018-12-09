@@ -1,7 +1,7 @@
 MessageManager = LCS.class{}
+MessageManager.prefix = "scen_edit"
 
 function MessageManager:init()
-    self.prefix = "scen_edit"
     self.messageIDCount = 0
     self.callbacks = {}
     self.__isWidget = Script.GetName() == "LuaUI"

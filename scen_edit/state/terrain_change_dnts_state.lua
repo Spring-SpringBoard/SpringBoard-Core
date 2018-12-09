@@ -36,8 +36,8 @@ function TerrainChangeDNTSState:DrawWorld()
     if not self.patternTexture then
         return
     end
-    x, y = Spring.GetMouseState()
-    local result, coords = Spring.TraceScreenRay(x, y, true)
+    local mx, my = Spring.GetMouseState()
+    local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result == "ground" then
         local x, z = coords[1], coords[3]
         local shape = SB.model.textureManager:GetTexture(self.patternTexture)

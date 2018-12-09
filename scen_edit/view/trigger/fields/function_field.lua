@@ -57,7 +57,7 @@ local function isMatch(inputTypes1, inputTypes2)
         return false
     end
     local isMatched2 = {} -- index mapping of inputs already used in the matching
-    for _, input1 in pairs(inputTypes1) do
+    for _, inputType1 in pairs(inputTypes1) do
         local matched1 = true
         for i, inputType2 in pairs(inputTypes2) do
             if not isMatched2[i] then

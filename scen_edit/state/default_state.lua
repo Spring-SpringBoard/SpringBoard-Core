@@ -132,7 +132,7 @@ function DefaultState:MouseRelease(...)
         if shift then
             local selection = SB.view.selectionManager:GetSelection()
             if Table.Contains(selection[objType], self.__clickedObjectID) then
-                local indx = GetIndex(selection[objType], self.__clickedObjectID)
+                local indx = Table.GetIndex(selection[objType], self.__clickedObjectID)
                 table.remove(selection[objType], indx)
             else
                 table.insert(selection[objType], self.__clickedObjectID)

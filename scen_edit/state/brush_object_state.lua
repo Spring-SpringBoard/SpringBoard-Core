@@ -47,8 +47,8 @@ function sunflower(n, alpha)   --  example: n=500, alpha=2
     local phi = (math.sqrt(5)+1) / 2           -- golden ratio
     local points = {}
     for k = 1, n do
-        r = radius(k,n,b)
-        theta = 2 * math.pi * k / (phi * phi)
+        local r = radius(k,n,b)
+        local theta = 2 * math.pi * k / (phi * phi)
         table.insert(points, {r*math.cos(theta), r*math.sin(theta)})
     end
     return points

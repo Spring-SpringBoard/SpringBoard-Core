@@ -15,7 +15,7 @@ function RectangleSelectState:Update()
     local mx, my, pressed = Spring.GetMouseState()
     self:_MouseMove(mx, my)
     if not pressed then
-        self:_MouseRelease(mx, my, button)
+        self:_MouseRelease(mx, my)
     end
 end
 
@@ -24,7 +24,7 @@ function RectangleSelectState:_MouseMove(mx, my)
     self.endScreenZ = my
 end
 
-function RectangleSelectState:_MouseRelease(...)
+function RectangleSelectState:_MouseRelease()
     if self.endScreenX and self.endScreenZ then
         local startScreenX, startScreenZ = Spring.WorldToScreenCoords(self.startWorldX, self.startWorldY, self.startWorldZ)
 
@@ -82,7 +82,7 @@ function RectangleSelectState:GetObjectsInScreenRectangle(x1, y1, x2, y2, bridge
 
     for _, objectID in pairs(objectIDs) do
         local pos = bridge.s11n:Get(objectID, "pos")
-        x, y = Spring.WorldToScreenCoords(pos.x, pos.y, pos.z)
+        local x, y = Spring.WorldToScreenCoords(pos.x, pos.y, pos.z)
         if left <= x and x <= right and
            top >= y and y >= bottom then
             table.insert(result, objectID)

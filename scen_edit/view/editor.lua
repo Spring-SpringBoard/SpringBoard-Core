@@ -505,7 +505,7 @@ function Editor:Register(opts)
     opts.editor = self
 
     opts.tab = opts.tab or "Other"
-    opts.caption = opts.caption or name
+    opts.caption = opts.caption or opts.name
     opts.tooltip = opts.tooltip or opts.caption
     opts.image = opts.image or ""
     opts.order = opts.order or math.huge

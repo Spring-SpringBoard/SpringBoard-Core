@@ -150,7 +150,6 @@ function ObjectDefsView:init()
         self.btnSet,
         self.btnBrush,
         self.objectDefPanel:GetControl(),
-        btnClose,
     }
     for i = 1, #self.filters do
         table.insert(children, self.filters[i])

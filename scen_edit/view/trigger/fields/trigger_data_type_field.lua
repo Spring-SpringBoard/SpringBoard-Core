@@ -51,7 +51,7 @@ function TriggerDataTypeField:_GetCaption()
     if self.value then
         local customDataType = SB.metaModel:GetCustomDataType(self.dataType.type)
         if customDataType then
-            result = SB.humanExpression({
+            local result = SB.humanExpression({
                 type = "const",
                 value = self.value,
             }, "value", self.dataType.type)

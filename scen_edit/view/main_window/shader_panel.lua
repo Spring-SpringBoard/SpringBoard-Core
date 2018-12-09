@@ -10,7 +10,7 @@ function ShaderPanel:init()
         },
         OnClick = {
             function()
-                nodeEditor = NodeEditor()
+                local nodeEditor = NodeEditor()
                 nodeEditor:Create()
             end
         }
@@ -34,7 +34,7 @@ function ShaderPanel:init()
         },
         OnClick = {
             function()
-                uiEditor = UIEditor()
+                local uiEditor = UIEditor()
                 uiEditor:Create()
             end
         }
@@ -88,7 +88,7 @@ function NodeEditor:Create()
         nodeClassCtrl= Button:New {
             caption = nodeClass.title,
             OnMouseDown = {function()
-                _, nodeView = self:AddNode(self:NewNode(nodeName))
+                local _, nodeView = self:AddNode(self:NewNode(nodeName))
                 nodeClassCtrl._addingCtrl = nodeView
 
                 local ax, ay = nodeView:CorrectlyImplementedLocalToScreen(nodeView.x, nodeView.y)
@@ -164,7 +164,7 @@ end
 
 function NodeEditor:NewNode(nodeClassName)
     local nodeClass = self.nodeClasses[nodeClassName]
-    nodeInstance = SB.deepcopy(nodeClass)
+    local nodeInstance = SB.deepcopy(nodeClass)
     return nodeInstance
 end
 
@@ -208,8 +208,8 @@ function NodeEditor:AddNodeView(node)
                 -- if field.output then
                 -- end
                 if self.fOutput then
-                    self.CanLink(fOutput, field)
-                    self:Link(fOutput, field)
+                    self.CanLink(self.fOutput, field)
+                    self:Link(self.fOutput, field)
                 else
                     self.fOutput = field
                 end
@@ -245,7 +245,7 @@ function NodeEditor:Update()
             gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
         }
     ]]
-    shader = Shaders.Compile({
+    local shader = Shaders.Compile({
         vertex = vertexShader,
 
         fragment = [[

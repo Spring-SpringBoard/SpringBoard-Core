@@ -147,10 +147,6 @@ function LightingEditor:init()
     self:Finalize(children)
 end
 
-function _ColorArrayToChannels(colorArray)
-    return {r = colorArray[1], g = colorArray[2], b = colorArray[3], a = colorArray[4]}
-end
-
 function LightingEditor:UpdateLighting()
     self.updating = true
 

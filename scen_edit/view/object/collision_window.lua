@@ -460,7 +460,7 @@ function CollisionView:OnFieldChange(name, value)
     local commands = {}
     for selType, objectIDs in pairs(selection) do
         if #objectIDs > 0 then
-            bridge = ObjectBridge.GetObjectBridge(selType)
+            local bridge = ObjectBridge.GetObjectBridge(selType)
             if bridge.s11n.setFuncs[name] then
                 for _, objectID in pairs(objectIDs) do
                     local modelID = bridge.getObjectModelID(objectID)
