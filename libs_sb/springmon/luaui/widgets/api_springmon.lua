@@ -1,4 +1,5 @@
-VFS.Include(SPRINGMON_DIR .. "utils/shared.lua")
+
+VFS.Include(SPRINGMON_DIR .. "utils/shared.lua", nil, VFS.ZIP)
 
 -- TODO: belongs to a lib, like Path.Recurse or Path.Walk
 local function Recurse(path, f, opts)
@@ -25,11 +26,13 @@ local function TrackFiles()
 			local absPath = VFS.GetFileAbsolutePath(vfsFilePath)
 			local archiveName = VFS.GetArchiveContainingFile(vfsFilePath)
 			if archiveName == (Game.gameName .. " " .. Game.gameVersion) then
-				Spring.Log(LOG_SECTION, LOG.NOTICE, 'Watching: ' .. tostring(vfsFilePath))
-				WG.Connector.Send("WatchFile", {
-					path = absPath
-				})
-				absPathToVfsPath[absPath] = vfsFilePath
+				if vfsFilePath:sub(-4) == '.lua' then
+					Spring.Log(LOG_SECTION, LOG.NOTICE, 'Watching: ' .. tostring(vfsFilePath))
+					WG.Connector.Send("WatchFile", {
+						path = absPath
+					})
+					absPathToVfsPath[absPath] = vfsFilePath
+				end
 			end
 		end, {
 			mode = VFS.ZIP

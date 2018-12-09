@@ -1,4 +1,4 @@
-VFS.Include(SPRINGMON_DIR .. "utils/shared.lua")
+VFS.Include(SPRINGMON_DIR .. "utils/shared.lua", nil, VFS.ZIP)
 
 if gadgetHandler:IsSyncedCode() then
 ----------------------------
