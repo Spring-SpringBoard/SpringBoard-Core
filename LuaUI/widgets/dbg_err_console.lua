@@ -78,7 +78,7 @@ function loadWindow()
 	local wBottom = 0
 	local wRight = 0
 	local classname
-	if WG.SB then
+	if WG.SB and WG.SB.conf then
 		wBottom = WG.SB.conf.BOTTOM_BAR_HEIGHT
 		wRight = WG.SB.conf.RIGHT_PANEL_WIDTH
 		classname = 'sb_window'

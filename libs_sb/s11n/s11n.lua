@@ -9,9 +9,9 @@ function s11n:init()
 end
 
 function s11n:__CreateDefaults()
-    VFS.Include(S11N_FOLDER .. "/object_s11n.lua", nil, VFS.MOD)
-    VFS.Include(S11N_FOLDER .. "/unit_s11n.lua", nil, VFS.MOD)
-    VFS.Include(S11N_FOLDER .. "/feature_s11n.lua", nil, VFS.MOD)
+    VFS.Include(S11N_FOLDER .. "/object_s11n.lua", nil, VFS.ZIP)
+    VFS.Include(S11N_FOLDER .. "/unit_s11n.lua", nil, VFS.ZIP)
+    VFS.Include(S11N_FOLDER .. "/feature_s11n.lua", nil, VFS.ZIP)
 
     _UnitS11N.__name = "unitS11N"
     _FeatureS11N.__name = "featureS11N"

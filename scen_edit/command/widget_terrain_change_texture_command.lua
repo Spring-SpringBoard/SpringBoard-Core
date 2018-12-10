@@ -66,7 +66,7 @@ function getPenShader(mode)
             ["Subtract"] = [[mix(mapColor-color,mapColor,color.a);]],
         }
 
-        local shaderFragStr = VFS.LoadFile("shaders/map_drawing.glsl")
+        local shaderFragStr = VFS.LoadFile("shaders/map_drawing.glsl", nil, VFS.MOD)
         local shaderTemplate = {
             fragment = string.format(shaderFragStr, penBlenders[mode]),
             uniformInt = {
@@ -101,7 +101,7 @@ end
 function getVoidShader()
     _InitShaders()
     if shaders.void == nil then
-        local shaderFragStr = VFS.LoadFile("shaders/void_drawing.glsl")
+        local shaderFragStr = VFS.LoadFile("shaders/void_drawing.glsl", nil, VFS.MOD)
         local shaderTemplate = {
             fragment = shaderFragStr,
             uniformInt = {
@@ -131,7 +131,7 @@ end
 function getBlurShader()
     _InitShaders()
     if shaders.blur == nil then
-        local shaderFragStr = VFS.LoadFile("shaders/map_blur_drawing.glsl")
+        local shaderFragStr = VFS.LoadFile("shaders/map_blur_drawing.glsl", nil, VFS.MOD)
         local shaderTemplate = {
             fragment = shaderFragStr,
             uniformInt = {
@@ -158,7 +158,7 @@ end
 function getDNTSShader()
     _InitShaders()
     if shaders.dnts == nil then
-        local shaderFragStr = VFS.LoadFile("shaders/dnts_drawing.glsl")
+        local shaderFragStr = VFS.LoadFile("shaders/dnts_drawing.glsl", nil, VFS.MOD)
         local shaderTemplate = {
             fragment = shaderFragStr,
             uniformInt = {

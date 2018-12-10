@@ -131,7 +131,7 @@ local function CheckSpringBoardDir()
         -- TODO: Maybe we should update the file if there's a change.
         -- Don't want to do it every time as it might be slow and annoying
         -- (updating file mtime unnecessarily).
-        local readmetxt = VFS.LoadFile("templates/root_dir_README.txt", VFS.ZIP)
+        local readmetxt = VFS.LoadFile("templates/root_dir_README.txt", VFS.MOD)
         local file = assert(io.open(readmePath, "w"))
         file:write(readmetxt)
         file:close()

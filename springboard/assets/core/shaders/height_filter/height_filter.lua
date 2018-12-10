@@ -1,8 +1,8 @@
 local dir = Path.ExtractDir(__path__)
 local minHeight, maxHeight = Spring.GetGroundExtremes()
 local shader = Shaders.Compile({
-    vertex = VFS.LoadFile(Path.Join(dir, "height_filter.vert")),
-    fragment = VFS.LoadFile(Path.Join(dir, "height_filter.frag")),
+    vertex = VFS.LoadFile(Path.Join(dir, "height_filter.vert"), nil, VFS.MOD),
+    fragment = VFS.LoadFile(Path.Join(dir, "height_filter.frag"), nil, VFS.MOD),
     uniform = {
         minHeight = minHeight,
         maxHeight = maxHeight,

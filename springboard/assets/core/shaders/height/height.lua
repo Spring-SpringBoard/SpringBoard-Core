@@ -1,7 +1,7 @@
 local dir = Path.ExtractDir(__path__)
 local shader = Shaders.Compile({
-    vertex = VFS.LoadFile(Path.Join(dir, "height.vert")),
-    fragment = VFS.LoadFile(Path.Join(dir, "height.frag")),
+    vertex = VFS.LoadFile(Path.Join(dir, "height.vert"), nil, VFS.MOD),
+    fragment = VFS.LoadFile(Path.Join(dir, "height.frag"), nil, VFS.MOD),
     uniformInt = {
         customSampler = 1,
     },
