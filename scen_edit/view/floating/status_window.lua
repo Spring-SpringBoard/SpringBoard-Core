@@ -45,8 +45,8 @@ function StatusWindow:_UpdateSelection()
     local x, y = Spring.GetMouseState()
     local result, coords = Spring.TraceScreenRay(x, y, true)
     if result == "ground"  then
-        local worldX, worldZ = coords[1], coords[3]
-        self.posStr = string.format("X: %d, Z: %d", worldX, worldZ)
+        local worldX, worldY, worldZ = coords[1], coords[2], coords[3]
+        self.posStr = string.format("X: %d, Y: %d Z: %d", worldX, worldY, worldZ)
     else
         self.posStr = "Off-screen"
     end
