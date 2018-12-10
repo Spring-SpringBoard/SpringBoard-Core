@@ -3,7 +3,7 @@ StatusWindow = LCS.class{}
 function StatusWindow:init(parent)
     self.lblStatus = Label:New {
         x = 0,
-        bottom = 40,
+        bottom = 50,
         width = "100%",
         height = 20,
         caption = "",
@@ -11,22 +11,38 @@ function StatusWindow:init(parent)
     }
     self.lblMemory = Label:New {
         x = 0,
-        bottom = 15,
+        bottom = 25,
         width = "100%",
         height = 30,
         caption = "",
+        --valign = "ascender",
+    }
+    local modOpts = Spring.GetModOptions()
+    local launcherVersion = modOpts._sl_launcher_version
+    if launcherVersion ~= nil then
+        launcherVersion = ' (' .. launcherVersion .. ')'
+    else
+        launcherVersion = ''
+    end
+    self.lblSpringBoard = Label:New {
+        x = 0,
+        bottom = 0,
+        width = "100%",
+        height = 20,
+        caption = Game.gameName .. "-" .. Game.gameVersion .. launcherVersion,
         --valign = "ascender",
     }
     self.statusWindow = Control:New {
         parent = parent,
         caption = "",
         x = 0,
-        bottom = 10,
-        width = 300,
+        bottom = 0,
+        width = 400,
         height = "100%",
         children = {
             self.lblStatus,
-            self.lblMemory
+            self.lblMemory,
+            self.lblSpringBoard
         }
     }
 
@@ -97,7 +113,7 @@ function StatusWindow:_UpdateMemory()
     local memoryStr = "Memory " .. color .. ('%.0f'):format(memory) .. " MB\b"
 
     if videoMemoryStr then
-        memoryStr = memoryStr .. "\n" .. videoMemoryStr
+        memoryStr = memoryStr .. " " .. videoMemoryStr
     end
 
     self.lblMemory:SetCaption(memoryStr)
