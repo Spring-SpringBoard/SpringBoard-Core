@@ -41,9 +41,9 @@ end
 
 function AbstractMapEditingState:MousePress(mx, my, button)
     if button == 1 or button == 3 then
-        self:startChanging()
         local result, coords = Spring.TraceScreenRay(mx, my, true)
-        if result == "ground"  then
+        if result == "ground" then
+            self:startChanging()
             self.x, self.z = coords[1], coords[3]
             self:_Apply(self:GetApplyParams(self.x, self.z, button))
         end
