@@ -114,11 +114,12 @@ function StringField:init(field)
         },
         children = {
             self.lblValue,
-            self.lblTitle,
+            -- self.lblTitle,
         },
     }
 
     self.components = {
+        self.lblTitle,
         self.button,
         self.editBox,
     }
