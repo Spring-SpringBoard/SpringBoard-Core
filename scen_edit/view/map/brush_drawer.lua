@@ -14,6 +14,8 @@ function BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOp
     local texFile = ':lr' .. width .. ',' .. height .. ':' .. tostring(texturePath)
     if texturePath ~= nil and texturePath:sub(1, 1) == "!" then
         texFile = texturePath
+    else
+        gl.DeleteTexture(texFile)
     end
 
     gl.MatrixMode(GL.TEXTURE)

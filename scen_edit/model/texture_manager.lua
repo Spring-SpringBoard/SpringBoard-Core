@@ -412,6 +412,26 @@ function TextureManager:CacheTexture(name)
     end)
 end
 
+function TextureManager:UnCacheTexture(name)
+    local objDel = self.cachedTexturesMapping[name]
+    if objDel == nil then
+        Log.Debug("No texture to uncache: " .. tostring(name))
+        return
+    end
+
+    for i, obj in pairs(self.cachedTextures) do
+        if obj == objDel then
+            Log.Debug("Deleted texture[" .. tostring(i) ..
+                       "]: " .. tostring(name))
+            table.remove(self.cachedTextures, i)
+            gl.DeleteTexture(obj.texture)
+            self.cachedTexturesMapping[name] = nil
+            return
+        end
+    end
+    Log.Warning('Failed to delete texture: ' .. tostring(name))
+end
+
 function TextureManager:GetTexture(name)
     local cachedTex = self.cachedTexturesMapping[name]
     if cachedTex ~= nil then

@@ -2,7 +2,10 @@ SB.Include(Path.Join(SB_VIEW_DIR, "grid_view.lua"))
 
 SavedBrushes = GridView:extends{}
 
+SB._savedBrushes = {}
+setmetatable(SB._savedBrushes, { __mode = 'v' })
 function SavedBrushes:init(opts)
+    table.insert(SB._savedBrushes, self)
     self.editor = opts.editor
     self:super("init", opts)
 
@@ -171,7 +174,7 @@ function SavedBrushes:PopulateItems()
     if not self.disableAdd then
         self:_AddAddBrush()
     end
-    for _, brushID in pairs(self.brushManager:GetBrushes()) do
+    for _, brushID in pairs(self.brushManager:GetBrushIDs()) do
         local brush = self.brushManager:GetBrush(brushID)
         local item = self:AddItem(brush.caption, brush.image or "", brush.tooltip)
         item.brushID = brush.brushID

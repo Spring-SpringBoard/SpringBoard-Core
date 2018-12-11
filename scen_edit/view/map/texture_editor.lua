@@ -192,7 +192,7 @@ function TextureEditor:init()
                 -- if SB.dntsEditor.window.hidden then
                 --     SB.view:SetMainPanel(SB.dntsEditor.window)
                 -- end
-                if #self.savedDNTSBrushes.brushManager:GetBrushes() == 0 then
+                if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
                     return
                 end
                 self:_EnterState("dnts")
@@ -498,7 +498,7 @@ function TextureEditor:init()
             end
         end
         self.savedDNTSBrushes:DeselectAll()
-        if #self.savedDNTSBrushes.brushManager:GetBrushes() == 0 then
+        if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
             self.btnDNTS:SetEnabled(false)
             self.btnDNTS.tooltip = "(DISABLED) No DNTS textures detected for current map."
         end

@@ -7,6 +7,12 @@ local absPathToVfsPath = {}
 -- where context is one of: "widget", "gadget_synced", "gadget_unsynced")
 local fileContextMap = {}
 
+-- We won't update listeners until at least WAIT_TIME has passed after the last change
+-- This can help prevent disasterous race conditions like reading a file that is being flushed to disk
+local WAIT_TIME = 0.5
+local fileChangedBuffer = {}
+local lastChange = nil
+
 -- TODO: belongs to a lib, like Path.Recurse or Path.Walk
 local function Recurse(path, f, opts)
 	opts = opts or {}
@@ -53,6 +59,35 @@ local function TrackVFSDir(vfsDir, anyFile)
 	Track(paths)
 end
 
+function widget:Update()
+	if lastChange == nil then
+		return
+	end
+
+	if os.clock() - lastChange > WAIT_TIME then
+		FlushChanges()
+	end
+end
+
+-- TODO: Maybe we should send a list of paths instead
+-- This could allow listeners to optimize reload
+-- (e.g. only reload once per a list of files)
+function FlushChanges()
+	-- Cleanup early in case an error happens (prevents error spam)
+	local buffer = fileChangedBuffer
+	lastChange = nil
+	fileChangedBuffer = {}
+
+	local pathsMap = {}
+	for _, cmd in pairs(buffer) do
+		local path = cmd.path
+		if not pathsMap[path] then
+			pathsMap[path] = true
+			OnFileChanged(path)
+		end
+	end
+end
+
 function widget:Initialize()
 	if not WG.Connector or not WG.Connector.enabled then
 		Spring.Log(LOG_SECTION, LOG.NOTICE, "Disabling springmon as the connector is also disabled.")
@@ -78,7 +113,10 @@ function widget:Initialize()
 		end
 		luaContexts["gadget"] = true
 	end)
-	WG.Connector.Register("FileChanged", OnFileChanged)
+	WG.Connector.Register("FileChanged", function(cmd)
+		lastChange = os.clock()
+		table.insert(fileChangedBuffer, cmd)
+	end)
 
 	Spring.Log(LOG_SECTION, LOG.NOTICE, "Watching files for changes...")
 	TrackVFSDir("LuaUI")
@@ -94,8 +132,7 @@ local Springmon = {
 	-- TrackVFSDir = TrackVFSDir
 }
 
-function OnFileChanged(command)
-	local filePath = command.path
+function OnFileChanged(filePath)
 	local tracker_name = Springmon.custom_trackers[filePath]
 	if tracker_name ~= nil then
 		local tracker = Springmon.trackers[custom_tracker]
