@@ -68,6 +68,16 @@ function CallListeners(listeners, ...)
     end
 end
 
+function SB.GetPersistantModOptions()
+    local modOpts = Spring.GetModOptions()
+    return {
+        _sl_address = modOpts._sl_address,
+        _sl_port = modOpts._sl_port,
+        _sl_write_path = modOpts._sl_write_path,
+        _sl_launcher_version = modOpts._sl_launcher_version,
+    }
+end
+
 SB.assignedCursors = {}
 function SB.SetMouseCursor(name)
     SB.cursor = name

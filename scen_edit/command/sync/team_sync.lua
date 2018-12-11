@@ -87,15 +87,20 @@ function TeamManagerListenerWidget:onTeamAdded(teamID)
     -- sense than synced ones).
     local aiID, name = Spring.GetAIInfo(teamID)
     if aiID ~= nil then
-        team.name = name
+        team.name = teamID .. "  " .. name
     elseif teamID == Spring.GetGaiaTeamID() then
         -- Force the name for GAIA team
         team.name = "GAIA"
+
+    -- Using leader info seems like a sure way to get duplicate team names
+    -- This is bad as it would result in invalid start scripts
+    -- else
+    --     local _, leader = Spring.GetTeamInfo(teamID)
+    --     if Spring.GetPlayerInfo(leader) then
+    --         team.name = Spring.GetPlayerInfo(leader)
+    --     end
     else
-        local _, leader = Spring.GetTeamInfo(teamID)
-        if Spring.GetPlayerInfo(leader) then
-            team.name = Spring.GetPlayerInfo(leader)
-        end
+        team.name = 'Team ' .. tostring(teamID)
     end
 
     -- use our unsynced color

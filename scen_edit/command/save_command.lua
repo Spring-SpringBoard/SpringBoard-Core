@@ -143,7 +143,6 @@ function SaveCommand.GenerateScript(dev)
                     Name = team.name,
                     Team = team.id,
                     Spectator = spectator,
-
                     IsFromDemo = true,
                 })
             end

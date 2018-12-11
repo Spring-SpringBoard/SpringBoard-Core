@@ -96,7 +96,8 @@ function NewProjectDialog:LoadEmptyMap()
         mapOptions = {
             sizeX = self.fields["sizeX"].value,
             sizeZ = self.fields["sizeZ"].value,
-        }
+        },
+        modOptions = SB.GetPersistantModOptions(),
     })
     Spring.Echo(scriptTxt)
     Spring.Reload(scriptTxt)
@@ -109,6 +110,7 @@ function NewProjectDialog:LoadExistingMap()
             version = Game.gameVersion,
         },
         mapName = self.fields["mapName"].value,
+        modOptions = SB.GetPersistantModOptions(),
         teams = {},
         players = {},
         ais = {},

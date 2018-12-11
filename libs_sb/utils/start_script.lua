@@ -81,7 +81,7 @@ function StartScript.GenerateScriptTxt(opts)
     if not teams then
         teams = {}
         for _, player in pairs(players) do
-            if not player.spectator then
+            if player.spectator == 0 then
                 local color = {0.99609375, 0.546875, 0}
                 if Spring.GetTeamColor then
                     color = {Spring.GetTeamColor(player.Team)}

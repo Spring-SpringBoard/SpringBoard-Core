@@ -106,8 +106,45 @@ function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
 		Log.Notice("Different map (" .. mapName .. "). Reloading into project...")
 		reload = true
     end
-	if reload then
+    if reload then
+        local modOpts = SB.GetPersistantModOptions()
+        local modOptsTxt = ""
+        for k, v in pairs(modOpts) do
+            modOptsTxt = modOptsTxt .. tostring(k) .. " = " .. tostring(v) .. ";\n"
+        end
+
+        -- We make a lowercase copy of the script.txt and parse it
+        -- This is necessary as it simplifies searching with case-sensitive tools
+        -- However we have to create the new script using the original case..
+        -- .. or we risk case sensitive elements (e.g. map name) being broken
         local scriptTxt = self:__LoadFile("script-dev.txt")
+        local scriptTxtCpy = scriptTxt:lower()
+        local _, endTitle = scriptTxtCpy:find("modoptions")
+        if endTitle then
+            endTitle = endTitle + 1
+            local bracesStart = endTitle + scriptTxtCpy:sub(endTitle):find("{")
+            scriptTxt = scriptTxt:sub(1, bracesStart) ..
+                        modOptsTxt ..
+                        scriptTxt:sub(bracesStart + 1)
+        else
+            _, endTitle = scriptTxtCpy:find("game")
+            if endTitle then
+                endTitle = endTitle + 1
+                local bracesStart = endTitle + scriptTxtCpy:sub(endTitle):find("{")
+                scriptTxt = scriptTxt:sub(1, bracesStart) ..
+                            '\n[modoptions]' ..
+                            '\n{\n' ..
+                            modOptsTxt ..
+                            '{\n' ..
+                            scriptTxt:sub(bracesStart + 1)
+            else
+                Log.Warning('Problem parsing script.txt, launching with existing setting.\n' ..
+                            'Spring-Launcher may fail to work')
+                Log.Warning(scriptTxt)
+            end
+        end
+        Log.Notice('Reloading with start script: ')
+        Log.Notice(scriptTxt)
         Spring.Reload(scriptTxt)
 	end
 
