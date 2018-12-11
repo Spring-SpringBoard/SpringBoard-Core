@@ -14,7 +14,7 @@ Packages:
 
 - `Linux build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.AppImage>`_
 
-Once you have downloaded the zip files, extract them and run the SpringBoard executable. This will open a window that will download the necessary files and launch SpringBoard itself.
+Once you have downloaded one of the above files, simply run them and install as necessary. After installation, it will open a window that will download the necessary files and launch SpringBoard itself.
 
 Manual setup
 ------------
