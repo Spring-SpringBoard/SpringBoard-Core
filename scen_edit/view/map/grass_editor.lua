@@ -87,7 +87,7 @@ function GrassEditor:init()
         self.btnAddGrass,
         ScrollPanel:New {
             x = 0,
-            y = 80,
+            y = 70,
             bottom = 30,
             right = 0,
             borderColor = {0,0,0,0},
