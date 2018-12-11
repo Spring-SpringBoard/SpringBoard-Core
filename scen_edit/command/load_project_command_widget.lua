@@ -143,6 +143,30 @@ function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
                 Log.Warning(scriptTxt)
             end
         end
+
+        -- Replace gameName and gameVersion with latest
+        if scriptTxt:find("@SB_NAME:") then
+            local gameStart, gameEnd = scriptTxt:find("@SB_NAME:")
+            local gameNameScript = scriptTxt:sub(gameEnd + 1, scriptTxt:find("@SB_VERSION:") - 2)
+
+            local newGameName = Game.gameName
+            local newGameVersion = Game.gameVersion
+
+            if gameNameScript ~= newGameName then
+                Log.Warning("Trying to open project in incompatible editor: " ..
+                            "\nEditor: " .. newGameName .. " Project: " .. gameNameScript ..
+                            "\nCannot run in appropriate version")
+                newGameName = gameNameScript
+                local s, e = scriptTxt:find("@SB_VERSION:")
+                local versionEnd = e + scriptTxt:sub(e):find(";")
+                newGameVersion = scriptTxt:sub(e + 1, versionEnd - 2)
+            end
+            local versionEnd = gameStart + scriptTxt:sub(gameStart):find(";")
+            scriptTxt = scriptTxt:sub(1, gameStart - 1) ..
+                        newGameName .. " " .. newGameVersion .. ';' ..
+                        scriptTxt:sub(versionEnd)
+        end
+
         Log.Notice('Reloading with start script: ')
         Log.Notice(scriptTxt)
         Spring.Reload(scriptTxt)

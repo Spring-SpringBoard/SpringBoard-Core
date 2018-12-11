@@ -88,6 +88,11 @@ function SaveCommand.GenerateScript(dev)
         game = {}
         game.name = SB.model.scenarioInfo.name
         game.version = SB.model.scenarioInfo.version
+    else
+        game = {}
+        -- TODO: Maybe add this in a hidden field so we can run it without a launcher
+        game.name = '@SB_NAME:' .. Game.gameName
+        game.version = '@SB_VERSION:' .. Game.gameVersion
     end
 
     local modOptions = {
