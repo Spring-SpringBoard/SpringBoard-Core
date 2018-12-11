@@ -9,18 +9,25 @@ function ExportFileDialog:init(dir, fileTypes)
     self:AddField(GroupField({
         ChoiceField({
             name = "heightmapExtremes",
-            title = "Heightmap min/max",
-            items = {"Automatic", "Initial", "Manual"},
+            title = "Heightmap extremes",
+            tooltip = "How should the heightmap be scaled when exported to an image file\n" ..
+                      "Automatic will use the min/max values as visible on the map\n" ..
+                      "Initial will use the min/max values of the original map." ..
+                        "This is useful when you want to use the original mapinfo.lua\n" ..
+                      "Custom will let you specify the min and max values",
+            items = {"Automatic", "Initial", "Custom"},
+            labelWidth = 150,
+            width = 250,
         }),
         NumericField({
             name = "minh",
-            title = "minh",
+            title = "Min",
             value = minHeight,
             width = 100,
         }),
         NumericField({
             name = "maxh",
-            title = "maxh",
+            title = "Max",
             value = maxHeight,
             width = 100,
         }),
@@ -33,7 +40,7 @@ local EXPORT_MAP_TEXTURES = "Map textures"
 function ExportFileDialog:OnFieldChange(name, value)
     if name == "fileType" then
         if value == EXPORT_MAP_TEXTURES then
-            if self.fields.heightmapExtremes.value == "Manual" then
+            if self.fields.heightmapExtremes.value == "Custom" then
                 self:SetInvisibleFields()
             else
                 self:SetInvisibleFields("minh", "maxh")
@@ -42,7 +49,7 @@ function ExportFileDialog:OnFieldChange(name, value)
             self:SetInvisibleFields("heightmapExtremes", "minh", "maxh")
         end
     elseif name == "heightmapExtremes" then
-        if value == "Manual" then
+        if value == "Custom" then
             self:SetInvisibleFields()
         else
             self:SetInvisibleFields("minh", "maxh")

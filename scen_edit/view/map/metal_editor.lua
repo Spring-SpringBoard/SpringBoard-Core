@@ -40,7 +40,7 @@ function MetalEditor:init()
     self.btnAddMetal = TabbedPanelButton({
         x = 0,
         y = 0,
-        tooltip = "Add metal",
+        tooltip = "Left Click to add metal. Right click to remove it.",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "metal-add.png" }),
             TabbedPanelLabel({ caption = "Add" }),

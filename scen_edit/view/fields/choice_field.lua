@@ -39,6 +39,8 @@ function ChoiceField:init(field)
             caption = self.title,
             y = 10,
             autosize = true,
+            -- FIXME: autosize doesn't work... so we have to use this sometimes
+            width = self.labelWidth,
         }
     end
 
@@ -59,6 +61,7 @@ function ChoiceField:init(field)
         height = self.height,
         items = captions,
         ids = ids,
+        tooltip = self.tooltip,
     }
     self.comboBox.OnSelect = {
         function(obj, indx)

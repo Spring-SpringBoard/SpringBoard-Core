@@ -41,7 +41,7 @@ function HeightmapEditor:init()
     self.btnAddState = TabbedPanelButton({
         x = 0,
         y = 0,
-        tooltip = "Increase or decrease",
+        tooltip = "Left Click to add height, Right Click to remove height",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "up-card.png" }),
             TabbedPanelLabel({ caption = "Add" }),
@@ -56,7 +56,7 @@ function HeightmapEditor:init()
     self.btnSetState = TabbedPanelButton({
         x = 70,
         y = 0,
-        tooltip = "Set the terrain",
+        tooltip = "Left Click to set height. Right click to sample height",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-set.png" }),
             TabbedPanelLabel({ caption = "Set" }),
@@ -71,7 +71,7 @@ function HeightmapEditor:init()
     self.btnSmoothState = TabbedPanelButton({
         x = 140,
         y = 0,
-        tooltip = "Smooth the terrain",
+        tooltip = "Click to smooth terrain",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-smooth.png" }),
             TabbedPanelLabel({ caption = "Smooth" }),

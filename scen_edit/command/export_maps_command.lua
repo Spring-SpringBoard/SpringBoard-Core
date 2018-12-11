@@ -101,11 +101,10 @@ function ExportMapsCommand:ExportHeightmap()
     })
 
     local minHeight, maxHeight
-    Spring.Echo(self.heightmapExtremes)
     if self.heightmapExtremes ~= nil then
         minHeight, maxHeight = self.heightmapExtremes[1], self.heightmapExtremes[2]
     else
-        maxHeight, minHeight = -math.huge, math.huge
+        minHeight, maxHeight = math.huge, -math.huge
         for x = 0, Game.mapSizeX, Game.squareSize do
             for z = 0, Game.mapSizeZ, Game.squareSize do
                 local groundHeight = Spring.GetGroundHeight(x, z)
