@@ -125,6 +125,10 @@ function StringField:init(field)
     }
 end
 
+function StringField:Focus()
+    self:__OnClick()
+end
+
 -- Overriden
 function StringField:__GetDisplayText()
     return tostring(self.value)

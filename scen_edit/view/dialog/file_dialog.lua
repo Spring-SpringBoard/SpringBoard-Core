@@ -129,10 +129,7 @@ function FileDialog:init(dir, caption, fileTypes)
         end
     }
 
-    -- FIXME: expose a 'focus' function
-    self.fields.fileName:__OnClick()
-
-
+    self.fields.fileName:Focus()
 --    self:SetDir(self.dir)
 end
 
