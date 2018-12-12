@@ -26,7 +26,8 @@ if writePath then
     if writePath:sub(-1) ~= '/' then
         writePath = writePath .. '/'
     end
-    SB_ROOT_ABS = writePath .. "springboard/"
+    SB_WRITE_PATH = writePath
+    SB_ROOT_ABS = SB_WRITE_PATH .. "springboard/"
     SB_EXTS_ABS_DIR = SB_ROOT_ABS .. "exts/"
     SB_ASSETS_ABS_DIR = SB_ROOT_ABS .. "assets/"
 end

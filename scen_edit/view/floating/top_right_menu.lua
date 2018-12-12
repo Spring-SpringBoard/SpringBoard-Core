@@ -1,18 +1,33 @@
-TopRightButtons = LCS.class{}
+TopRightMenu = LCS.class{}
 
-function TopRightButtons:init()
+function TopRightMenu:init()
     self.y = 35
-    self.item_h = 50
-    self.item_fontSize = 18
-    self.item_padding = 5
+    self.item_h = 35
+    self.item_fontSize = 16
+    self.item_padding = 7
+
+    self.children = {}
 
     self:AddExitButton()
     self:AddLobbyButton()
     self:AddUploadLogButton()
-    self:AddOpenProjectButton()
+    self:AddOpenDataDirButton()
+    self:AddProjectMenu()
 end
 
-function TopRightButtons:AddTopRightButton(tbl)
+function TopRightMenu:Show()
+    for _, btn in pairs(self.children) do
+        btn:Show()
+    end
+end
+
+function TopRightMenu:Hide()
+    for _, btn in pairs(self.children) do
+        btn:Hide()
+    end
+end
+
+function TopRightMenu:AddTopRightButton(tbl)
     local btn = Button:New(Table.Merge({
         x = 5,
         y = self.y,
@@ -25,10 +40,11 @@ function TopRightButtons:AddTopRightButton(tbl)
         parent = screen0,
     }, tbl))
     self.y = self.y + self.item_h + self.item_padding
+    table.insert(self.children, btn)
     return btn
 end
 
-function TopRightButtons:AddExitButton()
+function TopRightMenu:AddExitButton()
     self:AddTopRightButton({
         caption = "Exit",
         OnClick = {
@@ -39,7 +55,7 @@ function TopRightButtons:AddExitButton()
     })
 end
 
-function TopRightButtons:AddLobbyButton()
+function TopRightMenu:AddLobbyButton()
     local luaMenu = Spring.GetMenuName and Spring.SendLuaMenuMsg and Spring.GetMenuName()
     if not luaMenu or luaMenu == "" then
         return
@@ -56,7 +72,7 @@ function TopRightButtons:AddLobbyButton()
     })
 end
 
-function TopRightButtons:AddUploadLogButton()
+function TopRightMenu:AddUploadLogButton()
     if not WG.Connector then
         return
     end
@@ -107,8 +123,8 @@ function TopRightButtons:AddUploadLogButton()
     })
 end
 
-function TopRightButtons:AddOpenProjectButton()
-    if not WG.Connector and SB_ROOT_ABS then
+function TopRightMenu:AddOpenDataDirButton()
+    if not WG.Connector or not SB_ROOT_ABS then
         return
     end
 
@@ -123,5 +139,60 @@ function TopRightButtons:AddOpenProjectButton()
             end
         }
     })
+end
+
+function TopRightMenu:AddProjectMenu()
+    self.lblProject = Label:New {
+        x = 0,
+        y = 5,
+        autosize = true,
+        font = {
+            size = 22,
+            outline = true,
+        },
+        parent = screen0,
+        caption = "",
+    }
+    table.insert(self.children, self.lblProject)
+    if WG.Connector and SB_ROOT_ABS then
+        self.btnOpenProject = self:AddTopRightButton({
+            caption = "Open project",
+            tooltip = 'Open current project',
+            OnClick = {
+                function()
+                    if self.projectDir == nil then
+                        return
+                    end
+                    WG.Connector.Send('OpenFile', {
+                        path = Path.Join(SB_WRITE_PATH, self.projectDir)
+                    })
+                end
+            },
+        })
+    end
+
+    -- initial, invalid value to enforce updating the caption
+    self.projectDir = -1
+
+    self:Update()
+end
+
+function TopRightMenu:Update()
+    if SB.projectDir == self.projectDir then
+        return
+    end
+    self.projectDir = SB.projectDir
+
+    local projectCaption
+    if self.projectDir then
+        projectCaption = "Project: " .. self.projectDir
+        self.btnOpenProject:SetEnabled(true)
+    else
+        projectCaption = "Project not saved"
+        self.btnOpenProject:SetEnabled(false)
+    end
+    if self.lblProject.caption ~= projectCaption then
+        self.lblProject:SetCaption(projectCaption)
+    end
 end
 
