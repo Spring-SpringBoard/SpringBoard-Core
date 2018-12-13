@@ -19,6 +19,8 @@ SB_PROJECTS_DIR = SB_ROOT .. "projects/"
 SB_ASSETS_DIR = SB_ROOT .. "assets/"
 SB_EXTS_DIR = SB_ROOT .. "exts/"
 
+-- TODO: maybe some of these _sl_ modopts should be parsed into SL_ instead of SB_
+-- that said, having both SB_ and SL_ would be error prone
 local modOpts = Spring.GetModOptions()
 local writePath = modOpts._sl_write_path
 if writePath then
@@ -31,6 +33,7 @@ if writePath then
     SB_EXTS_ABS_DIR = SB_ROOT_ABS .. "exts/"
     SB_ASSETS_ABS_DIR = SB_ROOT_ABS .. "assets/"
 end
+SB_LAUNCHER_VERSION = modOpts._sl_launcher_version
 
 --properties
 SB_FILE_EXT = ".sdz"

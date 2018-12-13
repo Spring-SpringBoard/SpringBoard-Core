@@ -17,7 +17,7 @@ end
 
 function SpringmonManager:TrackExtensions()
     WG.Springmon.AddTracker("SB_EXT", SB_EXTS_ABS_DIR, function(path)
-        Spring.Echo("Extension changed. path: ", path)
+        Log.Notice("Extension changed. path: " .. tostring(path))
     end, function(path)
         return String.Starts(path, SB_EXTS_ABS_DIR)
     end)
@@ -35,7 +35,7 @@ end
 -- 1. Refreshing all views to include the latest list of assets (easy)
 -- 2. Deleting all caches of old textures, including GUI, brushes, etc. (hard)
 function SpringmonManager:_OnAssetUpdate(path)
-    Spring.Echo("Asset changed. path: ", path)
+    Log.Notice("Asset changed. path: " .. tostring(path))
     -- 1. Update views
     SB.model.assetsManager:loadAll()
     for _, assetView in pairs(SB._assetViews) do

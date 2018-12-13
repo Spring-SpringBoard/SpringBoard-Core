@@ -7,7 +7,6 @@ function StatusWindow:init(parent)
         width = "100%",
         height = 20,
         caption = "",
-        --valign = "ascender",
     }
     self.lblMemory = Label:New {
         x = 0,
@@ -15,12 +14,10 @@ function StatusWindow:init(parent)
         width = "100%",
         height = 30,
         caption = "",
-        --valign = "ascender",
     }
-    local modOpts = Spring.GetModOptions()
-    local launcherVersion = modOpts._sl_launcher_version
-    if launcherVersion ~= nil then
-        launcherVersion = ' (' .. launcherVersion .. ')'
+    local launcherVersion
+    if SB_LAUNCHER_VERSION ~= nil then
+        launcherVersion = ' (' .. SB_LAUNCHER_VERSION .. ')'
     else
         launcherVersion = ''
     end
