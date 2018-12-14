@@ -13,7 +13,8 @@ function ExportFileDialog:init(dir, fileTypes)
             tooltip = "How should the heightmap be scaled when exported to an image file\n" ..
                       "Automatic will use the min/max values as visible on the map\n" ..
                       "Initial will use the min/max values of the original map." ..
-                        "This is useful when you want to use the original mapinfo.lua\n" ..
+                        "This is useful when you want to use the ground extremes " ..
+                        "set in the original mapinfo.lua\n" ..
                       "Custom will let you specify the min and max values",
             items = {"Automatic", "Initial", "Custom"},
             labelWidth = 150,

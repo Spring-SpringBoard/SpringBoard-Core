@@ -114,7 +114,6 @@ function StringField:init(field)
         },
         children = {
             self.lblValue,
-            -- self.lblTitle,
         },
     }
 

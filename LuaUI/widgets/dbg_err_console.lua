@@ -562,7 +562,7 @@ function NewConsoleLine(text)
 	local filePath, lineNumber, s, e = CheckForLuaFilePath(text)
 	local OnTextClick
 	local tooltip
-	if filePath and WG.Connector then
+	if filePath and WG.Connector and VFS.GetFileAbsolutePath then
 		filePath = filePath:lower()
 		local absPath = VFS.GetFileAbsolutePath(filePath)
 		local archiveName = VFS.GetArchiveContainingFile(filePath)
