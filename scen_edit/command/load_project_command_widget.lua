@@ -107,66 +107,42 @@ function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
 		reload = true
     end
     if reload then
-        local modOpts = SB.GetPersistantModOptions()
-        local modOptsTxt = ""
-        for k, v in pairs(modOpts) do
-            modOptsTxt = modOptsTxt .. tostring(k) .. " = " .. tostring(v) .. ";\n"
-        end
-
         -- We make a lowercase copy of the script.txt and parse it
         -- This is necessary as it simplifies searching with case-sensitive tools
         -- However we have to create the new script using the original case..
         -- .. or we risk case sensitive elements (e.g. map name) being broken
         local scriptTxt = self:__LoadFile("script-dev.txt")
-        local scriptTxtCpy = scriptTxt:lower()
-        local _, endTitle = scriptTxtCpy:find("modoptions")
-        if endTitle then
-            endTitle = endTitle + 1
-            local bracesStart = endTitle + scriptTxtCpy:sub(endTitle):find("{")
-            scriptTxt = scriptTxt:sub(1, bracesStart) ..
-                        modOptsTxt ..
-                        scriptTxt:sub(bracesStart + 1)
+        local scriptObj = StartScript.ParseStartScript(scriptTxt)
+        for k, v in pairs(SB.GetPersistantModOptions()) do
+            scriptObj.modOptions[k] = v
+        end
+
+        local scriptGame = scriptObj.modOptions._sb_game_name
+        local scriptVersion = scriptObj.modOptions._sb_game_version
+        if scriptGame == nil then
+            Log.Notice('Project saved with older editor.' ..
+                ' Please upgrade manually')
+        elseif scriptGame ~= Game.gameName then
+            Log.Warning("Trying to open project in incompatible editor: " ..
+                "Editor: " .. Game.gameName .. " Project: " .. scriptGame ..
+                ". Cannot run in appropriate version")
         else
-            _, endTitle = scriptTxtCpy:find("game")
-            if endTitle then
-                endTitle = endTitle + 1
-                local bracesStart = endTitle + scriptTxtCpy:sub(endTitle):find("{")
-                scriptTxt = scriptTxt:sub(1, bracesStart) ..
-                            '\n[modoptions]' ..
-                            '\n{\n' ..
-                            modOptsTxt ..
-                            '{\n' ..
-                            scriptTxt:sub(bracesStart + 1)
-            else
-                Log.Warning('Problem parsing script.txt, launching with existing setting.\n' ..
-                            'Spring-Launcher may fail to work')
-                Log.Warning(scriptTxt)
+            if scriptVersion ~= Game.gameVersion then
+                Log.Notice('Opening project saved with different game version: ' ..
+                    'Editor: ' .. Game.gameVersion .. ' Project: ' .. scriptVersion)
             end
+            scriptObj.game = {
+                name = Game.gameName,
+                version = Game.gameVersion
+            }
         end
+        scriptObj.modOptions._sb_game_name = nil
+        scriptObj.modOptions._sb_game_version = nil
+        scriptObj.players = scriptObj.players or {}
+        scriptObj.ais = scriptObj.ais or {}
 
-        -- Replace gameName and gameVersion with latest
-        if scriptTxt:find("@SB_NAME:") then
-            local gameStart, gameEnd = scriptTxt:find("@SB_NAME:")
-            local gameNameScript = scriptTxt:sub(gameEnd + 1, scriptTxt:find("@SB_VERSION:") - 2)
-
-            local newGameName = Game.gameName
-            local newGameVersion = Game.gameVersion
-
-            if gameNameScript ~= newGameName then
-                Log.Warning("Trying to open project in incompatible editor: " ..
-                            "\nEditor: " .. newGameName .. " Project: " .. gameNameScript ..
-                            "\nCannot run in appropriate version")
-                newGameName = gameNameScript
-                local s, e = scriptTxt:find("@SB_VERSION:")
-                local versionEnd = e + scriptTxt:sub(e):find(";")
-                newGameVersion = scriptTxt:sub(e + 1, versionEnd - 2)
-            end
-            local versionEnd = gameStart + scriptTxt:sub(gameStart):find(";")
-            scriptTxt = scriptTxt:sub(1, gameStart - 1) ..
-                        newGameName .. " " .. newGameVersion .. ';' ..
-                        scriptTxt:sub(versionEnd)
-        end
-
+        table.echo(scriptObj)
+        scriptTxt = StartScript.GenerateScriptTxt(scriptObj)
         Log.Notice('Reloading with start script: ')
         Log.Notice(scriptTxt)
         Spring.Reload(scriptTxt)

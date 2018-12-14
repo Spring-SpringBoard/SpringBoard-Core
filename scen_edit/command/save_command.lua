@@ -84,20 +84,23 @@ end
 
 function SaveCommand.GenerateScript(dev)
     local game
-    if not dev then
-        game = {}
-        game.name = SB.model.scenarioInfo.name
-        game.version = SB.model.scenarioInfo.version
+    if dev then
+        game = {
+            name = Game.gameName,
+            version = Game.gameVersion
+        }
     else
-        game = {}
-        -- TODO: Maybe add this in a hidden field so we can run it without a launcher
-        game.name = '@SB_NAME:' .. Game.gameName
-        game.version = '@SB_VERSION:' .. Game.gameVersion
+        game = {
+            name = SB.model.scenarioInfo.name,
+            version = SB.model.scenarioInfo.version
+        }
     end
 
     local modOptions = {
         deathmode = "neverend",
         has_scenario_file = not dev,
+        _sb_game_name = Game.gameName,
+        _sb_game_version = Game.gameVersion,
     }
     if dev then
         modOptions.sb_game_mode = "dev"
@@ -111,17 +114,21 @@ function SaveCommand.GenerateScript(dev)
     local teams = {}
     local ais = {}
     local players = {}
+
+    -- we ignore SB's teamIDs and make sure they make a no-gap array
+    local teamIDCount = 1
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
         if not team.gaia then
-            teams[team.id] = {
+            local t = {
                 -- TeamID = team.id, ID is implicit as index-1
-                TeamLeader = 0,
-                AllyTeam = team.allyTeam,
+                teamLeader = 0,
+                allyTeam = team.allyTeam,
                 RGBColor = team.color.r .. " " .. team.color.g .. " " .. team.color.b,
-                Side = team.side,
+                side = team.side,
             }
+            teams[teamIDCount] = t
             if String.Trim(team.side) == "" then
-                teams[team.id].Side = nil
+                t.side = nil
             end
             if team.ai then
                 local aiShortName = "NullAI"
@@ -131,13 +138,13 @@ function SaveCommand.GenerateScript(dev)
                 -- end
 
                 table.insert(ais, {
-                    Name = team.name,
-                    Team = team.id,
-                    ShortName = aiShortName,
-                    Version = aiVersion,
+                    name = team.name,
+                    team = teamIDCount,
+                    shortName = aiShortName,
+                    version = aiVersion,
 
-                    IsFromDemo = false,
-                    Host = 0,
+                    isFromDemo = false,
+                    host = 0,
                 })
             else
                 local spectator = false
@@ -145,21 +152,32 @@ function SaveCommand.GenerateScript(dev)
                     spectator = true
                 end
                 table.insert(players, {
-                    Name = team.name,
-                    Team = team.id,
-                    Spectator = spectator,
-                    IsFromDemo = true,
+                    name = team.name,
+                    team = teamIDCount,
+                    spectator = spectator,
+                    isFromDemo = true,
                 })
             end
+
+            teamIDCount = teamIDCount + 1
         end
+    end
+
+    local allyTeams = {}
+    for i = 1, #teams do
+        table.insert(allyTeams, {
+            numAllies = 1,
+        })
     end
 
     local scriptTxt = StartScript.GenerateScriptTxt({
         game = game,
+        mapName = Game.mapName,
         modOptions = modOptions,
-        teams = teams,
         players = players,
         ais = ais,
+        teams = teams,
+        allyTeams = allyTeams,
     })
     return scriptTxt
 end

@@ -83,16 +83,64 @@ function NewProjectDialog:init()
     })
 end
 
+-- Generates teams, allyteams, players and AI for a new map
+local function GenerateEmptyMapParticipants()
+    return {
+        players = {
+            {
+                name = 'Player',
+                team = 0,
+                isFromDemo = 0,
+                spectator = 0,
+                rank = 0,
+                host = 1,
+            },
+        },
+        ais = {
+            {
+                name = 'AI',
+                team = 1,
+                isFromDemo = 0,
+                shortName = "NullAI",
+                version = "",
+                host = 0,
+            },
+        },
+        teams = {
+            {
+                RGBColor = "0.2 0.9 0.7",
+                allyTeam = 0,
+                teamLeader = 0
+            },
+            {
+                RGBColor = "0.9 0.5 0",
+                allyTeam = 1,
+                teamLeader = 0
+            }
+        },
+        allyTeams = {
+            {
+                numAllies = 1,
+            },
+            {
+                numAllies = 1,
+            },
+        }
+    }
+end
+
 function NewProjectDialog:LoadEmptyMap()
+    local participants = GenerateEmptyMapParticipants()
     local scriptTxt = StartScript.GenerateScriptTxt({
         game = {
             name = Game.gameName,
             version = Game.gameVersion,
         },
         mapName = "FlatTemplate",
-        teams = {},
-        players = {},
-        ais = {},
+        teams = participants.teams,
+        players = participants.players,
+        ais = participants.ais,
+        allyTeams = participants.allyTeams,
         mapOptions = {
             sizeX = self.fields["sizeX"].value,
             sizeZ = self.fields["sizeZ"].value,
@@ -104,16 +152,18 @@ function NewProjectDialog:LoadEmptyMap()
 end
 
 function NewProjectDialog:LoadExistingMap()
+    local participants = GenerateEmptyMapParticipants()
     local scriptTxt = StartScript.GenerateScriptTxt({
         game = {
             name = Game.gameName,
             version = Game.gameVersion,
         },
         mapName = self.fields["mapName"].value,
+        teams = participants.teams,
+        players = participants.players,
+        ais = participants.ais,
+        allyTeams = participants.allyTeams,
         modOptions = SB.GetPersistantModOptions(),
-        teams = {},
-        players = {},
-        ais = {},
     })
     Spring.Echo(scriptTxt)
     Spring.Reload(scriptTxt)
