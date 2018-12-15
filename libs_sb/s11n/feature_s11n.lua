@@ -136,18 +136,29 @@ function _FeatureS11N:OnInit()
                 end
             end,
         },
-        -- TODO: The engine {Get,Set}FeatureResources API needs rework
-        -- can't reliably get and set reclaimTime/reclaimLeft
         resources = {
             get = function(objectID)
-                local metal, _, energy = Spring.GetFeatureResources(objectID)
-                return {
-                    metal = metal,
-                    energy = energy
-                }
+                local metal, _, energy, _, reclaimLeft, reclaimTime = Spring.GetFeatureResources(objectID)
+                if reclaimTime ~= nil then
+                    return {
+                        metal = metal,
+                        energy = energy,
+                        reclaimTime = reclaimTime,
+                        reclaimLeft = reclaimLeft
+                    }
+                else
+                    return {
+                        metal = metal,
+                        energy = energy
+                    }
+                end
             end,
             set = function(objectID, value)
-                Spring.SetFeatureResources(objectID, value.metal, value.energy)
+                if value.reclaimLeft then
+                    Spring.SetFeatureResources(objectID, value.metal, value.energy, value.reclaimTime, value.reclaimLeft)
+                else
+                    Spring.SetFeatureResources(objectID, value.metal, value.energy)
+                end
             end
         }
         -- modelID = {

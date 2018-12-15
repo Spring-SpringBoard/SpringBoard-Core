@@ -37,7 +37,7 @@ function View:init()
 
     self.bottomBar = BottomBar()
     self.teamSelector = TeamSelector()
-    self.topRightMenu = TopRightMenu()
+    self.topLeftMenu = TopLeftMenu()
 end
 
 function View:SetVisible(visible)
@@ -50,13 +50,13 @@ function View:SetVisible(visible)
         self.tabbedWindow.window:Show()
         self.teamSelector.cmbTeamSelector:Show()
         self.teamSelector.cbLockTeam:Show()
-        self.topRightMenu:Show()
+        self.topLeftMenu:Show()
         self.bottomBar.window:Show()
     else
         self.tabbedWindow.window:Hide()
         self.teamSelector.cmbTeamSelector:Hide()
         self.teamSelector.cbLockTeam:Hide()
-        self.topRightMenu:Hide()
+        self.topLeftMenu:Hide()
         self.bottomBar.window:Hide()
     end
 end
@@ -64,7 +64,7 @@ end
 function View:Update()
     self.teamSelector:Update()
     self.selectionManager:Update()
-    self.topRightMenu:Update()
+    self.topLeftMenu:Update()
 
     self.bottomBar:Update()
 end

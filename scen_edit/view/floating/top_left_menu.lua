@@ -1,8 +1,8 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "dialog/dialog.lua"))
 
-TopRightMenu = LCS.class{}
+TopLeftMenu = LCS.class{}
 
-function TopRightMenu:init()
+function TopLeftMenu:init()
     self.y = 35
     self.item_h = 35
     self.item_fontSize = 16
@@ -17,19 +17,19 @@ function TopRightMenu:init()
     self:AddProjectMenu()
 end
 
-function TopRightMenu:Show()
+function TopLeftMenu:Show()
     for _, btn in pairs(self.children) do
         btn:Show()
     end
 end
 
-function TopRightMenu:Hide()
+function TopLeftMenu:Hide()
     for _, btn in pairs(self.children) do
         btn:Hide()
     end
 end
 
-function TopRightMenu:AddTopRightButton(tbl)
+function TopLeftMenu:AddTopRightButton(tbl)
     local btn = Button:New(Table.Merge({
         x = 5,
         y = self.y,
@@ -46,7 +46,7 @@ function TopRightMenu:AddTopRightButton(tbl)
     return btn
 end
 
-function TopRightMenu:AddExitButton()
+function TopLeftMenu:AddExitButton()
     self:AddTopRightButton({
         caption = "Exit",
         OnClick = {
@@ -62,7 +62,7 @@ function TopRightMenu:AddExitButton()
     })
 end
 
-function TopRightMenu:AddLobbyButton()
+function TopLeftMenu:AddLobbyButton()
     local luaMenu = Spring.GetMenuName and Spring.SendLuaMenuMsg and Spring.GetMenuName()
     if not luaMenu or luaMenu == "" then
         return
@@ -79,7 +79,7 @@ function TopRightMenu:AddLobbyButton()
     })
 end
 
-function TopRightMenu:AddUploadLogButton()
+function TopLeftMenu:AddUploadLogButton()
     if not WG.Connector then
         return
     end
@@ -128,7 +128,7 @@ function TopRightMenu:AddUploadLogButton()
     })
 end
 
-function TopRightMenu:UploadLog()
+function TopLeftMenu:UploadLog()
     -- FIXME: Chili shouldn't allow this to be invoked if disabled
     if not self.btnUpload.state.enabled then
         return
@@ -140,7 +140,7 @@ function TopRightMenu:UploadLog()
     })
 end
 
-function TopRightMenu:AddOpenDataDirButton()
+function TopLeftMenu:AddOpenDataDirButton()
     if not WG.Connector or not SB_ROOT_ABS then
         return
     end
@@ -158,7 +158,7 @@ function TopRightMenu:AddOpenDataDirButton()
     })
 end
 
-function TopRightMenu:AddProjectMenu()
+function TopLeftMenu:AddProjectMenu()
     self.lblProject = Label:New {
         x = 0,
         y = 5,
@@ -194,7 +194,7 @@ function TopRightMenu:AddProjectMenu()
     self:Update()
 end
 
-function TopRightMenu:Update()
+function TopLeftMenu:Update()
     if SB.projectDir == self.projectDir then
         return
     end
@@ -203,10 +203,14 @@ function TopRightMenu:Update()
     local projectCaption
     if self.projectDir then
         projectCaption = "Project: " .. self.projectDir
-        self.btnOpenProject:SetEnabled(true)
+        if self.btnOpenProject ~= nil then
+            self.btnOpenProject:SetEnabled(true)
+        end
     else
         projectCaption = "Project not saved"
-        self.btnOpenProject:SetEnabled(false)
+        if self.btnOpenProject ~= nil then
+            self.btnOpenProject:SetEnabled(false)
+        end
     end
     if self.lblProject.caption ~= projectCaption then
         self.lblProject:SetCaption(projectCaption)
