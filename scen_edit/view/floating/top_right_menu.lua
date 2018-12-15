@@ -1,3 +1,5 @@
+SB.Include(Path.Join(SB_VIEW_DIR, "dialog/dialog.lua"))
+
 TopRightMenu = LCS.class{}
 
 function TopRightMenu:init()
@@ -49,7 +51,12 @@ function TopRightMenu:AddExitButton()
         caption = "Exit",
         OnClick = {
             function()
-                Spring.SendCommands("quit", "quitforce")
+                Dialog({
+                    message = "Are you sure you want to exit?",
+                    ConfirmDialog = function()
+                        Spring.SendCommands("quit", "quitforce")
+                    end,
+                })
             end
         }
     })
@@ -106,20 +113,30 @@ function TopRightMenu:AddUploadLogButton()
 
     self.btnUpload = self:AddTopRightButton({
         caption = "Upload Log",
-        tooltip = 'Upload the entire log (all data will be public). Do this if you want to report bugs.',
+        tooltip = 'Upload the entire log. Do this if you want to report bugs.',
         OnClick = {
             function()
-                -- FIXME: Chili shouldn't allow this to be invoked if disabled
-                if not self.btnUpload.state.enabled then
-                    return
-                end
-                self.btnUpload:SetCaption('Uploading...')
-                self.btnUpload:SetEnabled(false)
-                WG.Connector.Send('UploadLog', {
-                    path = SB_ROOT_ABS
+                Dialog({
+                    message = "Do you want to upload your log to http://logs.springrts.com ?" ..
+                              "\nAll information will be public.",
+                    ConfirmDialog = function()
+                        self:UploadLog()
+                    end,
                 })
             end
         }
+    })
+end
+
+function TopRightMenu:UploadLog()
+    -- FIXME: Chili shouldn't allow this to be invoked if disabled
+    if not self.btnUpload.state.enabled then
+        return
+    end
+    self.btnUpload:SetCaption('Uploading...')
+    self.btnUpload:SetEnabled(false)
+    WG.Connector.Send('UploadLog', {
+        path = SB_ROOT_ABS
     })
 end
 

@@ -370,13 +370,13 @@ function Editor:AddDefaultKeybinding(buttons)
     local KEY_ZERO = KEYSYMS.N_0
     self.__keybinding = {}
     for i, button in ipairs(buttons) do
-        self.__keybinding[KEY_ZERO + i] = button.OnClick
+        self:AddKeybinding(KEY_ZERO + i, button.OnClick)
         button.tooltip = button.tooltip .. " (" .. tostring(i) .. ")"
     end
 end
 
-function Editor:AddKeybinding(key, f)
-    self.__keybinding[key] = {f}
+function Editor:AddKeybinding(key, functions)
+    self.__keybinding[key] = functions
 end
 
 function Editor:GetAllControls()
