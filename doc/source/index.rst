@@ -11,7 +11,7 @@ SpringBoard is an in-game editor for the `SpringRTS <https://springrts.com/>`_ e
 Installing
 ----------
 
-The simplest way to download and install SpringBoard is use one of the packaged builds:
+The simplest way to download SpringBoard is by using one of the provided installers:
 
 - `Windows build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.exe>`_
 

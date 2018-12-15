@@ -6,5 +6,3 @@ This is the top level SpringBoard directory, containing user projects, assets an
 See also: 
 - Assets: https://springboard-core.readthedocs.io/en/latest/assets.html
 - Extensions: https://springboard-core.readthedocs.io/en/latest/extensions.html
-
-PS: Do not remove this file.

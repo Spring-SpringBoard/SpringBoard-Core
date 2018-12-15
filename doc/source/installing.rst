@@ -6,7 +6,7 @@ Installing
 Using packaged builds
 ---------------------
 
-(ALPHA) The simplest way to install SpringBoard is to download one of the packaged builds. These builds will automatically download all of the needed resources (engine, editor archives, maps) and setup files, and launch SpringBoard. They will also check for updates on launch and keep the editor updated.
+The simplest way to download SpringBoard is by using one of the provided installers. They will automatically download all of the needed resources (engine, editor archives, maps) and setup files, and launch SpringBoard. They will also check for updates on launch and keep the editor updated.
 
 Packages:
 
