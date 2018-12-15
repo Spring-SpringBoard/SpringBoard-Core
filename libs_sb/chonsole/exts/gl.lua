@@ -96,8 +96,45 @@ commands = {
 			return suggestions
 		end,
 		exec = function(command, cmdParts)
-		end,
-		execs = function(rule, value)
+			if #cmdParts < 3 then
+				return
+			end
+			delayGL = function()
+				local succ, err = pcall(function()
+					local texture = cmdParts[2]
+					local outputFile = cmdParts[3]
+
+					local texInfo = gl.TextureInfo(texture)
+					if texInfo == nil or texInfo.xsize == -1 then
+						return
+					end
+					local fboTex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+						border = false,
+						min_filter = GL.LINEAR,
+						mag_filter = GL.LINEAR,
+						wrap_s = GL.CLAMP_TO_EDGE,
+						wrap_t = GL.CLAMP_TO_EDGE,
+						fbo = true,
+					})
+
+					gl.Texture(texture)
+					gl.RenderToTexture(fboTex,
+					function()
+						gl.TexRect(-1,-1, 1, 1)
+					end)
+					gl.Texture(false)
+
+					gl.RenderToTexture(fboTex, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, outputFile)
+					gl.DeleteTexture(fboTex)
+					Spring.Log("Chonsole", LOG.NOTICE, 'Exported texture: ' ..
+							   tostring(cmdParts[2]).. ' to file: ' .. tostring(cmdParts[3]))
+				end)
+				if not succ then
+					Spring.Log("Chonsole", LOG.ERROR, 'Failed to export texture: ' ..
+							   tostring(cmdParts[2]).. ' to file: ' .. tostring(cmdParts[3]))
+					Spring.Log("Chonsole", LOG.ERROR, err)
+				end
+			end
 		end,
 	},
 }

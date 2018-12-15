@@ -24,7 +24,7 @@ local function ExecuteLuaCommand(luaCommandStr)
 end
 
 commands = {
-	{ 
+	{
 		command = "exec",
 		description = i18n("exec_desc", {default = "Execute Lua command in a widget"}),
 		cheat = false,
@@ -35,7 +35,7 @@ commands = {
 			ExecuteLuaCommand(luaCommandStr)
 		end,
 	},
-	{ 
+	{
 		command = "execs",
 		description = i18n("execs_desc", {default = "Execute Lua command in a synced gadget"}),
 		cheat = true,
@@ -49,7 +49,7 @@ commands = {
 			ExecuteLuaCommand(luaCommandStr)
 		end,
 	},
-	{ 
+	{
 		command = "execu",
 		description = i18n("execu_desc", {default = "Execute Lua command in an unsynced gadget"}),
 		cheat = true,
@@ -66,7 +66,7 @@ commands = {
 			ExecuteLuaCommand(luaCommandStr)
 		end,
 	},
-	{ 
+	{
 		command = "execgl",
 		description = i18n("execgl_desc", {default = "Execute Lua command in a widget OpenGL callin"}),
 		cheat = false,

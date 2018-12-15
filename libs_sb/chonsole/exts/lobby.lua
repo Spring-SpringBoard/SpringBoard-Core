@@ -49,7 +49,7 @@ lobby:AddListener("OnLeft",
 		end
 	end
 )
-lobby:AddListener("OnSaid", 
+lobby:AddListener("OnSaid",
 	function(listener, chanName, userName, message)
 		for id, name in pairs(consoles) do
 			if name == chanName then
