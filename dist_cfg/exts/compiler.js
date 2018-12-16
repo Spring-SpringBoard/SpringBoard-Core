@@ -13,10 +13,17 @@ class Compiler extends EventEmitter {
     this.bridge = bridge;
 
     let executableBin;
-    if (process.platform === 'windows') {
+    if (process.platform === 'win32') {
       executableBin = 'springMapConvNG.exe';
     } else if (process.platform === 'linux') {
       executableBin = 'springMapConvNG';
+    } else {
+      const errMsg = `Unsupported platform: ${process.platform}, cannot compile`;
+      log.error(errMsg);
+      this.bridge.send("CompileMapError", {
+        "code": errMsg,
+      });
+      return;
     }
 
     this.executablePath = path.resolve(`${__dirname}/../../bin/${executableBin}`);
