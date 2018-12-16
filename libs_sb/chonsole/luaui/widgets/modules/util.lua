@@ -47,8 +47,8 @@ function ExtractFileName(filepath)
 end
 
 function explode(div,str)
-	if (div=='') then return 
-		false 
+	if (div=='') then return
+		false
 	end
 	local pos,arr = 0,{}
 	-- for each divider found

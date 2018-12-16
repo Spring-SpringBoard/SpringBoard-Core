@@ -136,14 +136,14 @@ local function _TryContextCall(context, fname, ...)
 	end
 	local varargs = {...}
 	succ, result = xpcall(
-		function() 
+		function()
 			return context[fname](unpack(varargs)) end,
 		function(err)
 			Spring.Log("Chonsole", LOG.ERROR, "Error invoking " .. fname .. " custom context: " .. tostring(context.name))
 			Spring.Log("Chonsole", LOG.ERROR, debug.traceback(err))
 		end
 	)
-	if succ then 
+	if succ then
 		return result
 	end
 end

@@ -8,7 +8,7 @@ local filteredHistory = {}
 function LoadHistory()
 	-- read history
 	pcall(function()
-		for line in io.lines(historyFilePath) do 
+		for line in io.lines(historyFilePath) do
 			table.insert(history, line)
 		end
 	end)
@@ -58,7 +58,7 @@ end
 
 function NextHistoryItem()
 	if #filteredHistory > currentHistory then
-		--and not (currentHistory == 0 and ebConsole.text ~= "") 
+		--and not (currentHistory == 0 and ebConsole.text ~= "")
 		currentHistory = currentHistory + 1
 		ShowHistoryItem()
 		ShowSuggestions()

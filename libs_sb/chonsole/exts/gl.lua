@@ -90,7 +90,11 @@ commands = {
 
 			for _, engineTexture in pairs(engineTextures) do
 				if param == nil or param == "" or engineTexture:starts(param) then
-					table.insert(suggestions, { command = "/texture " .. engineTexture, text = engineTexture, description = value })
+					table.insert(suggestions, {
+						command = "/texture " .. engineTexture,
+						text = engineTexture,
+						description = value
+					})
 				end
 			end
 			return suggestions

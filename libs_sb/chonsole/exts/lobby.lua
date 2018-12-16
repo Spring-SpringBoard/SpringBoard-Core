@@ -82,7 +82,7 @@ lobby:AddListener("OnDisconnected",
 		if lobby:GetConnectionStatus() == "disconnected" then
 			-- FIXME: make this variable part of the API
 			local delay = lobby.reconnectionDelay
-			Spring.Echo("\255" .. channelColor .. i18n("announce_reconnect", {default="Attempting reconnect in %{delay} seconds.", delay=delay}) .. "\b")	
+			Spring.Echo("\255" .. channelColor .. i18n("announce_reconnect", {default="Attempting reconnect in %{delay} seconds.", delay=delay}) .. "\b")
 		end
 	end
 )

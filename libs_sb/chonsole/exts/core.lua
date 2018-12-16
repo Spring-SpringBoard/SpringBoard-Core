@@ -109,6 +109,6 @@ commands = {
 				end
 			end
 			return suggestions
-		end, 
+		end,
 	},
 }

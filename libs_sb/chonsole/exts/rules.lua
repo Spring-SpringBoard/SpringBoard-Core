@@ -1,7 +1,7 @@
 if not (Spring.Utilities and Spring.Utilities.IsCurrentVersionNewerThan) or Spring.Utilities.IsCurrentVersionNewerThan(101, 172) then
 
 commands = {
-	{ 
+	{
 		command = "gamerules",
 		description = i18n("gamerules_desc", {default="Sets values of specific gamerules variables"}),
 		cheat = true,
@@ -24,7 +24,7 @@ commands = {
 			Spring.SetGameRulesParam(rule, value)
 		end,
 	},
-	{ 
+	{
 		command = "teamrules",
 		description = i18n("teamrules_desc", {default="Sets values of specific teamrules variables"}),
 		cheat = true,
@@ -52,7 +52,7 @@ commands = {
 			Spring.SetTeamRulesParam(teamID, rule, value)
 		end,
 	},
-	{ 
+	{
 		command = "unitrules",
 		description = i18n("unitrules_desc", {default="Sets unitrules for the selected units"}),
 		cheat = true,
@@ -62,7 +62,7 @@ commands = {
 			if #units == 0 then
 				return suggestions
 			end
-			
+
 			local unitrules = {}
 			local different = {} -- mapping of unit rules that differ
 			for i, unitID in pairs(units) do
@@ -76,7 +76,7 @@ commands = {
 					end
 				end
 			end
-			
+
 			local param = cmdParts[2]
 			for name, value in pairs(unitrules) do
 				if param == nil or param == "" or name:starts(param) then
@@ -109,7 +109,7 @@ commands = {
 else -- backward compatibility
 
 commands = {
-	{ 
+	{
 		command = "gamerules",
 		description = i18n("gamerules_desc", {default="Sets values of specific gamerules variables"}),
 		cheat = true,
@@ -136,7 +136,7 @@ commands = {
 			Spring.SetGameRulesParam(rule, value)
 		end,
 	},
-	{ 
+	{
 		command = "teamrules",
 		description = i18n("teamrules_desc", {default="Sets values of specific teamrules variables"}),
 		cheat = true,
@@ -168,7 +168,7 @@ commands = {
 			Spring.SetTeamRulesParam(teamID, rule, value)
 		end,
 	},
-	{ 
+	{
 		command = "unitrules",
 		description = i18n("unitrules_desc", {default="Sets unitrules for the selected units"}),
 		cheat = true,
@@ -178,7 +178,7 @@ commands = {
 			if #units == 0 then
 				return suggestions
 			end
-			
+
 			local unitrules = {}
 			local different = {} -- mapping of unit rules that differ
 			for i, unitID in pairs(units) do
@@ -196,7 +196,7 @@ commands = {
 					end
 				end
 			end
-			
+
 			local param = cmdParts[2]
 			for name, value in pairs(unitrules) do
 				if param == nil or param == "" or name:starts(param) then

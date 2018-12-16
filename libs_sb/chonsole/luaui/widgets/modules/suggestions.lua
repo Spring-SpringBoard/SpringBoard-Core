@@ -61,7 +61,7 @@ function MakeSuggestion(suggestion)
 		parent = ctrlSuggestion,
 	}
 	ctrlSuggestion.lblDescription = lblDescription
-	if suggestion.cheat then 
+	if suggestion.cheat then
 		local lblCheat = Chili.Label:New {
 			width = 100,
 			x = 200,
@@ -146,7 +146,7 @@ function CleanupSuggestions()
 	end
 
 	filteredSuggestions = {}
-	
+
 	for _, suggestion in pairs(suggestions) do
 		suggestion.visible = false
 	end
@@ -154,7 +154,7 @@ end
 
 function FilterSuggestions(txt)
 	CleanupSuggestions()
-	
+
 	local count = 0
 	if txt:sub(1, 1) == "/" then
 		local cmdParts = explode(" ", txt:sub(2):trimLeft():gsub("%s+", " "))
@@ -163,7 +163,7 @@ function FilterSuggestions(txt)
 		for _, suggestion in pairs(suggestions) do
 			local cmdName = suggestion.command:lower()
 			local matched
-			if #cmdParts > 1 then 
+			if #cmdParts > 1 then
 				matched = cmdName == partialCmd
 			else
 				matched = cmdName:starts(partialCmd)
@@ -187,7 +187,7 @@ function FilterSuggestions(txt)
 			local suggestion = suggestions[filteredSuggestions[1]]
 			if suggestion.suggestions ~= nil then
 				local subSuggestions
-				local success, err = pcall(function() 
+				local success, err = pcall(function()
 					subSuggestions = suggestion.suggestions(txt, cmdParts)
 				end)
 				if not success then
@@ -228,7 +228,7 @@ function ShowSuggestions()
 	if not scrollSuggestions.visible and not config.suggestions.disableMenu then
 		scrollSuggestions:Show()
 	end
-	
+
 	FilterSuggestions(ebConsole.text)
 	UpdateSuggestions()
 end
@@ -246,7 +246,7 @@ function UpdateSuggestionDisplay(suggestion, ctrlSuggestion, row)
 		elseif suggestion.dynId ~= nil and suggestion.dynId == currentSubSuggestion then
 			ctrlSuggestion.backgroundColor = config.suggestions.suggestionColor
 		elseif suggestion.id == nil then
- 			ctrlSuggestion.backgroundColor = config.suggestions.subsuggestionColor
+			ctrlSuggestion.backgroundColor = config.suggestions.subsuggestionColor
 		else
 			ctrlSuggestion.backgroundColor = { 0, 0, 0, 0 }
 		end
@@ -354,7 +354,7 @@ function SuggestionsDown()
 	if not (#filteredSuggestions > currentSuggestion or (#dynamicSuggestions > currentSubSuggestion and dynamicSuggestions[currentSubSuggestion+1].visible)) then
 		return false
 	end
-	
+
 	if #filteredSuggestions == 1 and #dynamicSuggestions ~= 0 then
 		if #dynamicSuggestions > currentSubSuggestion and dynamicSuggestions[currentSubSuggestion+1].visible then
 			currentSubSuggestion = currentSubSuggestion + 1
@@ -384,10 +384,10 @@ function SuggestionsTab()
 	if #filteredSuggestions == 0 then
 		return
 	end
-	if config.suggestions.disableMenu then
+	-- if config.suggestions.disableMenu then
 -- 		PrintSuggestions()
 -- 		return
-	end
+	-- end
 	local nextSuggestion, nextSubSuggestion
 	if #filteredSuggestions > currentSuggestion then
 		nextSuggestion = currentSuggestion + 1
@@ -500,13 +500,13 @@ end
 
 function GetCommandList()
 	local commandList = {}
-	
+
 	if Spring.GetUICommands then
 		commandList = Spring.GetUICommands()
 	else
 		Spring.Log("Chonsole", LOG.ERROR, "Using unsupported engine: no Spring.GetUICommands function")
 	end
-	
+
 	local names = {}
 	for _, command in pairs(commandList) do
 		if command.synced then
@@ -521,7 +521,7 @@ function GetCommandList()
 			table.remove(commandList, i)
 		end
 	end
-	
+
 	-- create a name mapping and merge any existing commands
 	names = {}
 	for _, command in pairs(commandList) do
@@ -535,8 +535,8 @@ function GetCommandList()
 			table.merge(cmd, command)
 		end
 	end
-	table.sort(commandList, function(cmd1, cmd2) 
-		return cmd1.command:lower() < cmd2.command:lower() 
+	table.sort(commandList, function(cmd1, cmd2)
+		return cmd1.command:lower() < cmd2.command:lower()
 	end)
 	return commandList
 end

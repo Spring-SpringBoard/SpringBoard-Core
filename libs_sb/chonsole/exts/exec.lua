@@ -6,9 +6,9 @@ local function ExecuteLuaCommand(luaCommandStr)
 -- 			if not luaCommandStr:gsub("==", "_"):gsub("~=", "_"):gsub(">=", "_"):gsub("<=", "_"):find("=") then
 -- 				luaCommandStr = "return " .. luaCommandStr
 -- 			end
-	local luaCommand, msg = loadstring(luaCommandStr)
+	local luaCommand, err = loadstring(luaCommandStr)
 	if not luaCommand then
-		Spring.Echo(msg)
+		Spring.Echo(err)
 	else
 		setfenv(luaCommand, getfenv())
 		local success, msg = pcall(function()
