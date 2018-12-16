@@ -79,6 +79,8 @@ local engineTextures = {
 	"$fontsmall",
 }
 
+local GL_LUMINANCE32F_ARB = 0x8818
+
 commands = {
 	{
 		command = "texture",
@@ -105,6 +107,7 @@ commands = {
 			end
 			delayGL = function()
 				local succ, err = pcall(function()
+					Spring.Echo(command)
 					local texture = cmdParts[2]
 					local outputFile = cmdParts[3]
 
@@ -112,7 +115,15 @@ commands = {
 					if texInfo == nil or texInfo.xsize == -1 then
 						return
 					end
+
+					local format
+					if texture == "$heightmap" then
+						if Platform.osFamily ~= "Windows" or cmdParts[4] == 'luminance' then
+							format = GL_LUMINANCE32F_ARB
+						end
+					end
 					local fboTex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+						format = format,
 						border = false,
 						min_filter = GL.LINEAR,
 						mag_filter = GL.LINEAR,
