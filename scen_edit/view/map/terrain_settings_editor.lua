@@ -22,6 +22,7 @@ local function GetWriteDataDir()
     for i, line in pairs(lines) do
         if line:find(dataDirStr) then
             dataDir = line:sub(line:find(dataDirStr) + #dataDirStr)
+            dataDir = dataDir:gsub("\r", "")
             break
         end
     end
