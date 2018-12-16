@@ -16,4 +16,4 @@ before_install:
 #                  # in the root of the repository.
 
 script:
-  - luacheck scen_edit libs_sb/utils --config .luacheckrc-travis.lua
+  - luacheck --config .luacheckrc-travis.lua scen_edit libs_sb/utils savetable.lua

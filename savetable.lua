@@ -109,16 +109,18 @@ end
 
 local function isarray(t)
 	local i = 0
- 	for _ in pairs(t) do
-    	i = i + 1
-		if t[i] == nil then return false end
-  	end
-  	return true
+  for _ in pairs(t) do
+    i = i + 1
+    if t[i] == nil then
+      return false
+    end
+  end
+  return true
 end
 
 local function SaveTable(t, file, indent)
   file:write('{\n')
-  local indent = indent .. indentString
+  indent = indent .. indentString
 
   local st = MakeSortedTable(t)
 
@@ -164,7 +166,7 @@ end
 function ShowTable(t, indent)
   local strings = {}
   strings[#strings+1] = '{\n'
-  local indent = indent .. indentString
+  indent = indent .. indentString
 
   local st = MakeSortedTable(t)
 

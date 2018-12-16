@@ -22,7 +22,7 @@ std=lua51
 globals = {
     -- std extensions
     "math.round", "math.bit_or",
-    "table.ifind", "table.show", "table.save", "table.echo",
+    "table.ifind", "table.show", "table.save", "table.echo", "table.print",
     -- Spring
     "Spring", "VFS", "gl", "GL", "Game",
     "UnitDefs", "UnitDefNames", "FeatureDefs", "FeatureDefNames",
