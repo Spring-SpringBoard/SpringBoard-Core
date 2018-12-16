@@ -31,7 +31,7 @@ function BrushManager:Clear()
         end
     end
 
-    self.__brushIDCounter = 1
+    self.__brushIDCounter = 0
     self.brushes = {}
     self.brushOrder = {}
 end
