@@ -14,7 +14,7 @@ Packages:
 
 - `Linux build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.AppImage>`_
 
-Once you have downloaded one of the above files, simply run them and install as necessary. After installation, it will open a window that will download the necessary files and launch SpringBoard itself.
+Once you have downloaded one of the above files, simply run them and install as necessary. After installation, it will download the necessary files and launch SpringBoard itself.
 
 Manual setup
 ------------
@@ -39,10 +39,8 @@ Additionally, for better performance having a good GPU will make terrain texture
 Software requirements
 ---------------------
 
-Besides having OpenGL installed, it is necessary to install additional software on Linux:
+Linux has additional software requirements:
 
 - SDL (Ubuntu package: `libsdl2-2.0-0`)
 
 - OpenAL (Ubuntu package: `libopenal1`)
-
-- libCurl (Ubuntu package: `libcurl3`)

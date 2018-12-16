@@ -59,6 +59,9 @@ function View:SetVisible(visible)
         self.topLeftMenu:Hide()
         self.bottomBar.window:Hide()
     end
+    if WG.DevConsole then
+        WG.DevConsole.SetVisibility(visible)
+    end
 end
 
 function View:Update()

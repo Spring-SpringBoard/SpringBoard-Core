@@ -17,8 +17,8 @@ end
 
 function LoadProjectCommandWidget:execute()
     if not self.isZip then
-        SB.projectDir = self.path
-        Log.Notice("set widget project dir:", SB.projectDir)
+        SB.SetProjectDir(self.path)
+        Log.Notice("Set widget project dir:", SB.projectDir)
         SB.commandManager:execute(WidgetSetProjectDirCommand(SB.projectDir), true)
     end
 

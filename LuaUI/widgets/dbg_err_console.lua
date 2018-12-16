@@ -462,16 +462,6 @@ function widget:SetConfigData(data)
 end
 
 
--- function widget:DrawScreen()
--- 	if not hack then return end
--- 	local hack2 = Spring.GetDrawFrame()
--- 	if hack2 ~= hack then
--- 		window:Resize(window.width - 1)
--- 		window:Resize(window.width + 1)
--- 		hack = nil
--- 	end
--- end
-
 local function processLine(line)
 	-- get data from player roster
 	local roster = Spring.GetPlayerRoster()
@@ -536,7 +526,6 @@ function widget:AddConsoleLine(msg)
 	-- 	end
 	-- end
 	NewConsoleLine(text)
-	-- hack = hack or Spring.GetDrawFrame()+1
 end
 
 function CheckForLuaFilePath(text)
@@ -625,3 +614,7 @@ function widget:GameFrame(n)
 	Spring.Echo("Error "..n)
 end
 ]]
+
+WG.DevConsole = {
+	SetVisibility = SetWindowVisibility
+}

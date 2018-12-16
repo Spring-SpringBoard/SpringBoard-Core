@@ -6,7 +6,7 @@ function WidgetSetProjectDirCommand:init(projectDir)
 end
 
 function WidgetSetProjectDirCommand:execute()
-    SB.projectDir = self.projectDir
+    SB.SetProjectDir(self.projectDir)
     SB.conf:initializeListOfMetaModelFiles()
     local reloadMetaModelCommand = ReloadMetaModelCommand(SB.conf:GetMetaModelFiles())
     SB.commandManager:execute(reloadMetaModelCommand)

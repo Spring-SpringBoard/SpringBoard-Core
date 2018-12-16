@@ -49,7 +49,14 @@ SB_IMG_EXTS = {'.jpg','.bmp','.png','.tga','.tif'}
 --mod opts
 local modOpts = Spring.GetModOptions()
 
-SB.projectDir = modOpts.project_dir
+function SB.SetProjectDir(path)
+    SB.projectDir = path
+    if path ~= nil and
+        Script.GetName() == "LuaUI" then
+        Spring.SetWMCaption(path)
+    end
+end
+SB.SetProjectDir(modOpts.project_dir)
 hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 
 local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)
