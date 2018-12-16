@@ -117,9 +117,11 @@ commands = {
 					end
 
 					local format
+					local useGrayscale16bit = false
 					if texture == "$heightmap" then
-						if Platform.osFamily ~= "Windows" or cmdParts[4] == 'luminance' then
-							format = GL_LUMINANCE32F_ARB
+						format = GL_LUMINANCE32F_ARB
+						if Platform.osFamily ~= "Windows" or cmdParts[4] == '16bit' then
+							useGrayscale16bit = true
 						end
 					end
 					local fboTex = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
@@ -139,7 +141,7 @@ commands = {
 					end)
 					gl.Texture(false)
 
-					gl.RenderToTexture(fboTex, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, outputFile)
+					gl.RenderToTexture(fboTex, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, outputFile, {grayscale16bit = useGrayscale16bit})
 					gl.DeleteTexture(fboTex)
 					Spring.Log("Chonsole", LOG.NOTICE, 'Exported texture: ' ..
 							   tostring(cmdParts[2]).. ' to file: ' .. tostring(cmdParts[3]))
