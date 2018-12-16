@@ -56,8 +56,8 @@ function ExportAction:execute()
                     return false
                 end
 
-                Log.Notice("Exporting map textures...")
-                exportCommand = ExportMapsCommand(path, heightmapExtremes)
+                self:MaybeExportMapTextures(path, heightmapExtremes)
+                return true
             elseif fileType == EXPORT_MAP_INFO then
                 if isDir then
                     return false
@@ -83,4 +83,30 @@ function ExportAction:execute()
             end
         end
     )
+end
+
+function ExportAction:MaybeExportMapTextures(path, heightmapExtremes)
+    -- At least 2x the necessary amount? Super arbitrary...
+    local wantedTexMemPoolSize = Game.mapSizeX / 1024 * Game.mapSizeZ / 1024 * 3 * 2
+    local texMemPoolSize = Spring.GetConfigInt("TextureMemPoolSize", 0)
+    if wantedTexMemPoolSize > texMemPoolSize then
+        Dialog({
+            message = "Texture pool size (" .. tostring(texMemPoolSize) ..
+                       ") is too small to save the diffuse texture." ..
+                      "\nDo you want to increase the pool size (to " ..
+                      tostring(wantedTexMemPoolSize) .. ")?",
+            ConfirmDialog = function()
+                Spring.SetConfigInt("TextureMemPoolSize", wantedTexMemPoolSize)
+                SB.AskToRestart()
+            end,
+        })
+        return
+    end
+
+    self:ExportMapTextures(path, heightmapExtremes)
+end
+
+function ExportAction:ExportMapTextures(path, heightmapExtremes)
+    Log.Notice("Exporting map textures...")
+    SB.commandManager:execute(ExportMapsCommand(path, heightmapExtremes), true)
 end

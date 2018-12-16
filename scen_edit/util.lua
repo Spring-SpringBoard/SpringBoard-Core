@@ -634,3 +634,79 @@ function SB.ExecuteEvent(eventName, params)
         SB.messageManager:sendMessage(msg, nil, "game")
     end
 end
+
+
+-- Spring Config related
+function SB.IsSpringConfigValid(springConfig)
+    for name, config in pairs(springConfig) do
+        local GetFunction
+        if config.type == 'int' then
+            GetFunction = Spring.GetConfigInt
+        elseif config.type == 'string' then
+            GetFunction = Sprnig.GetConfigString
+        elseif config.type == 'float' then
+            GetFunction = Spring.GetConfigFloat
+        end
+        if config.value ~= nil then
+            if GetFunction(name) ~= config.value then
+                return false
+            end
+        elseif config.min ~= nil then
+            local value = GetFunction(name)
+            if value == nil or value < config.min then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+function SB.SetSpringConfig(springConfig)
+    for name, config in pairs(springConfig) do
+        local SetFunction
+        if config.type == 'int' then
+            SetFunction = Spring.SetConfigInt
+        elseif config.type == 'string' then
+            SetFunction = Sprnig.SetConfigString
+        elseif config.type == 'float' then
+            SetFunction = Spring.SetConfigFloat
+        end
+        SetFunction(name, config.value)
+    end
+end
+
+function SB.AskToRestart()
+    local window
+    window = Window:New {
+        x = "25%",
+        y = "15%",
+        width = 450,
+        height = 150,
+        parent = screen0,
+        resizable = false,
+        children = {
+            TextBox:New {
+                --text = "Spring needs to restart for changes to take effect."
+                x = "1%",
+                y = 10,
+                width = "100%",
+                text = "Spring needs to be restarted manually for changes to take effect."
+            },
+            Button:New {
+                -- caption = "Restart",
+                caption = "Quit",
+                x = "35%",
+                width = "30%",
+                height = 40,
+                bottom = 0,
+                OnClick = {
+                    function()
+                        window:Dispose()
+                        Spring.SendCommands("quit", "quitforce")
+                        --Spring.Reload(VFS.LoadFile("_script.txt"))
+                    end
+                }
+            }
+        }
+    }
+end

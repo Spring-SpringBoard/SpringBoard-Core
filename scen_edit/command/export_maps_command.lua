@@ -206,7 +206,12 @@ function ExportMapsCommand:ExportDiffuse()
             })
             gl.BlitFBO(
                 mapFBO, 0, 0, texSize, texSize,
-                totalMapFBO, i * texSize, (sizeZ - j) * texSize, (i + 1) * texSize, (sizeZ - j - 1) * texSize)
+                totalMapFBO,
+
+                i * texSize,
+                (sizeZ - j) * texSize,
+                (i + 1) * texSize,
+                (sizeZ - j - 1) * texSize)
             gl.DeleteFBO(mapFBO)
         end
     end

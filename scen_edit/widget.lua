@@ -32,77 +32,54 @@ local function dumpConfig()
 end
 
 local function CheckConfig()
-    if Spring.GetConfigInt("HeightMapTexture", 0) == 1 and
-       Spring.GetConfigInt("LinkIncomingMaxPacketRate", 0) == 64000 and
-       Spring.GetConfigInt("LinkIncomingMaxWaitingPackets", 0) == 512000 and
-       Spring.GetConfigInt("LinkIncomingPeakBandwidth", 0) == 32768000 and
-       Spring.GetConfigInt("LinkIncomingSustainedBandwidth", 0) == 2048000 and
-       Spring.GetConfigInt("LinkOutgoingBandwidth", 0) == 65536000 then
+    local springConfig = {
+        HeightMapTexture = { value = 1, type = 'int' },
+        LinkIncomingMaxPacketRate = { value = 64000, type = 'int' },
+        LinkIncomingMaxWaitingPackets = { value = 512000, type = 'int' },
+        LinkIncomingPeakBandwidth = { value = 32768000, type = 'int' },
+        LinkIncomingSustainedBandwidth = { value = 2048000, type = 'int' },
+        LinkOutgoingBandwidth = { value = 65536000, type = 'int' },
+        TextureMemPoolSize = { value = 300, type = 'int' },
+    }
+    if SB.IsSpringConfigValid(springConfig) then
         return
     end
 
     local window
     window = Window:New {
-        x = "40%",
-        y = "35%",
-        width = 350,
-        height = 250,
+        x = "25%",
+        y = "15%",
+        width = 450,
+        height = 150,
         parent = screen0,
+        resizable = false,
         children = {
             Label:New {
                 x = "1%",
                 y = "1%",
                 width = "99%",
                 bottom = "50%",
-                caption = "Scened needs to set correct Engine configuration.",
+                caption = "SpringBoard needs to set correct Engine configuration.",
             },
             Button:New {
                 x = "5%",
-                height = "30%",
-                bottom = "1%",
-                width = 150,
+                height = 40,
+                bottom = 0,
+                width = 180,
                 caption = "Set config values",
                 OnClick = {
                     function()
-                        Spring.SetConfigInt("HeightMapTexture", 1)
-                        Spring.SetConfigInt("LinkIncomingMaxPacketRate", 64000)
-                        Spring.SetConfigInt("LinkIncomingMaxWaitingPackets", 512000)
-                        Spring.SetConfigInt("LinkIncomingPeakBandwidth", 32768000)
-                        Spring.SetConfigInt("LinkIncomingSustainedBandwidth", 2048000)
-                        Spring.SetConfigInt("LinkOutgoingBandwidth", 65536000)
+                        SB.SetSpringConfig(springConfig)
                         window:Dispose()
-                        local restartWindow = Window:New {
-                            x = "40%",
-                            y = "35%",
-                            width = 350,
-                            height = 250,
-                            parent = screen0,
-                            children = {
-                                Label:New {
-                                    caption = "Spring needs to restart for changes to take effect."
-                                },
-                                Button:New {
-                                    caption = "Restart",
-                                    x = "35%",
-                                    width = "30%",
-                                    height = 80,
-                                    y = "51%",
-                                    OnClick = {
-                                        function()
-                                            Spring.Reload(VFS.LoadFile("_script.txt"))
-                                        end
-                                    }
-                                }
-                            }
-                        }
+                        SB.AskToRestart()
                     end
                 }
             },
             Button:New {
                 right = "5%",
-                height = "30%",
-                bottom = "1%",
-                width = 150,
+                height = 40,
+                bottom = 0,
+                width = 180,
                 caption = "Continue without setting",
                 OnClick = {
                     function()
