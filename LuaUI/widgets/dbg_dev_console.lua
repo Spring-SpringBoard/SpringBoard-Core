@@ -7,11 +7,12 @@
 -- Fix fontsize changing on select
 -- Pop up on new error/warning (option)
 -- Button to upload log (using the connector)
+-- Scrollbar should have a constant height (it can be too small if there's a lot of text)
 
 function widget:GetInfo()
 	return {
-		name    = 'Debug Err Console',
-		desc    = 'Displays errors',
+		name    = 'Developer Console',
+		desc    = 'Displays useful information for developers',
 		author  = 'Bluestone, gajop, GoogleFrog',
 		date    = '2016+',
 		license = 'GNU GPL v2',
@@ -30,7 +31,7 @@ local screen
 local window
 local log
 
-local COMMAND_NAME = "toggleErrorConsole"
+local COMMAND_NAME = "toggleDevConsole"
 
 -- Config --
 local cfg = {
@@ -98,8 +99,6 @@ function loadWindow()
 	-- chat box
 	local msgWindow = Chili.ScrollPanel:New {
 		verticalSmartScroll = true,
-		scrollPosX = 0,
-		scrollPosY = 0,
 		parent = window,
 		x = 0,
 		y = 0,
