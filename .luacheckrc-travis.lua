@@ -2,7 +2,7 @@
 self = false
 unused = false
 -- unused_args = false
-global = false
+global = true
 allow_defined_top = true
 max_line_length = false
 codes = true

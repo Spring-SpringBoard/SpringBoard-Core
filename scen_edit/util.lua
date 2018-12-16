@@ -643,7 +643,7 @@ function SB.IsSpringConfigValid(springConfig)
         if config.type == 'int' then
             GetFunction = Spring.GetConfigInt
         elseif config.type == 'string' then
-            GetFunction = Sprnig.GetConfigString
+            GetFunction = Spring.GetConfigString
         elseif config.type == 'float' then
             GetFunction = Spring.GetConfigFloat
         end
@@ -667,7 +667,7 @@ function SB.SetSpringConfig(springConfig)
         if config.type == 'int' then
             SetFunction = Spring.SetConfigInt
         elseif config.type == 'string' then
-            SetFunction = Sprnig.SetConfigString
+            SetFunction = Spring.SetConfigString
         elseif config.type == 'float' then
             SetFunction = Spring.SetConfigFloat
         end
