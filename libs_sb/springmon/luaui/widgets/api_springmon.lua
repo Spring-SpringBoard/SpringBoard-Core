@@ -45,6 +45,9 @@ local function TrackVFSDir(vfsDir, anyFile)
 		function(vfsFilePath)
 			vfsFilePath = vfsFilePath:lower()
 			local absPath = VFS.GetFileAbsolutePath(vfsFilePath)
+			if  absPath == nil then
+				return
+			end
 			local archiveName = VFS.GetArchiveContainingFile(vfsFilePath)
 			if archiveName == (Game.gameName .. " " .. Game.gameVersion) then
 				if not anyFile and vfsFilePath:sub(-4) == '.lua' then

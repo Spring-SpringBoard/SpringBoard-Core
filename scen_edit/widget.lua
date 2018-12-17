@@ -23,24 +23,24 @@ function RecieveGadgetMessage(msg)
     -- end
 end
 
-local function dumpConfig()
+local springConfig = {
+    HeightMapTexture = { value = 1, type = 'int' },
+    LinkIncomingMaxPacketRate = { value = 64000, type = 'int' },
+    LinkIncomingMaxWaitingPackets = { value = 512000, type = 'int' },
+    LinkIncomingPeakBandwidth = { value = 32768000, type = 'int' },
+    LinkIncomingSustainedBandwidth = { value = 2048000, type = 'int' },
+    LinkOutgoingBandwidth = { value = 65536000, type = 'int' },
+    TextureMemPoolSize = { min = 600, type = 'int' }
+}
+
+local function DumpConfig()
     Log.Notice("Dump of relevant engine config:")
-    local confs = {"HeightMapTexture", "LinkIncomingMaxPacketRate", "LinkIncomingMaxWaitingPackets", "LinkIncomingPeakBandwidth", "LinkIncomingSustainedBandwidth", "LinkOutgoingBandwidth"}
-    for _, conf in ipairs(confs) do
-        Log.Notice(conf .. " = " .. Spring.GetConfigString(conf, ""))
+    for name, _ in pairs(springConfig) do
+        Log.Notice(name .. " = " .. Spring.GetConfigString(name, ""))
     end
 end
 
 local function CheckConfig()
-    local springConfig = {
-        HeightMapTexture = { value = 1, type = 'int' },
-        LinkIncomingMaxPacketRate = { value = 64000, type = 'int' },
-        LinkIncomingMaxWaitingPackets = { value = 512000, type = 'int' },
-        LinkIncomingPeakBandwidth = { value = 32768000, type = 'int' },
-        LinkIncomingSustainedBandwidth = { value = 2048000, type = 'int' },
-        LinkOutgoingBandwidth = { value = 65536000, type = 'int' },
-        TextureMemPoolSize = { min = 600, type = 'int' }
-    }
     if SB.IsSpringConfigValid(springConfig) then
         return
     end
@@ -143,7 +143,6 @@ function widget:Initialize()
         WG.SB_widgetHandler:EnableWidget(...)
     end
 
-    dumpConfig()
     widgetHandler:RegisterGlobal("RecieveGadgetMessage", RecieveGadgetMessage)
 
     local wasEnabled = Spring.IsCheatingEnabled()
@@ -159,6 +158,7 @@ function widget:Initialize()
         Spring.SendCommands("cheat")
     end
 
+    DumpConfig()
     CheckConfig()
     CheckSpringBoardDir()
 
