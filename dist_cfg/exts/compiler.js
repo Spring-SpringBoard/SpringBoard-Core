@@ -2,6 +2,7 @@ const EventEmitter = require('events');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const log = require('electron-log');
 
 const { bridge } = require('../spring_api');
 
