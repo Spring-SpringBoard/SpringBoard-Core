@@ -39,12 +39,31 @@ class Compiler extends EventEmitter {
   }
 
   compileMap_SpringMapConvNG(opts) {
-    const callParams = [
+    var callParams = [
         "-t", opts["diffusePath"],
         "-h", opts["heightPath"],
-        "-ct", "1",
+        "-ct", "1", // TODO: allow customization?
         "-o", opts["outputPath"]
     ]
+    const extraParams = {
+      "metalPath" : "-m",
+      "typePath"  : "-z",
+      "maxh" : "-maxh",
+      "minh" : "-minh",
+      "minimap" : "-minimap",
+
+      // disable some potential footguns
+      // "-ccount [compare_tilecount]",
+      // "-th [compression_level]",
+      // "-features [featurefile]"
+    }
+
+    for (var k in extraParams) {
+      if (k in opts) {
+        callParams.push(extraParams[k], opts[k]);
+      }
+    }
+
     // proc = Popen(callParams, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     // for line in iter(proc.stdout.readline, ""):
     //     try:
@@ -70,6 +89,7 @@ class Compiler extends EventEmitter {
     // const compilerPath = "./src/exts/springMapConvNG";
     // process = spawn('ls');
 
+    log.info(callParams);
     process = spawn(this.executablePath, callParams);
 
     process.stdout.on('data', (data) => {
