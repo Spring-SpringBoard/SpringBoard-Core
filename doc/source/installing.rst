@@ -16,6 +16,8 @@ Packages:
 
 Once you have downloaded one of the above files, simply run them and install as necessary. After installation, it will download the necessary files and launch SpringBoard itself.
 
+.. note:: Linux users need to make the downloaded .AppImage file executable, by doing ``chmod +x SpringBoard.AppImage``
+
 Manual setup
 ------------
 
