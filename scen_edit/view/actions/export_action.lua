@@ -87,7 +87,7 @@ end
 
 function ExportAction:MaybeExportMapTextures(path, heightmapExtremes)
     -- At least 2x the necessary amount? Super arbitrary...
-    local wantedTexMemPoolSize = Game.mapSizeX / 1024 * Game.mapSizeZ / 1024 * 3 * 2
+    local wantedTexMemPoolSize = Game.mapSizeX / 1024 * Game.mapSizeZ / 1024 * 3 * 4
     local texMemPoolSize = Spring.GetConfigInt("TextureMemPoolSize", 0)
     if wantedTexMemPoolSize > texMemPoolSize then
         Dialog({
