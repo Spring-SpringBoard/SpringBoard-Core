@@ -686,24 +686,25 @@ function SB.AskToRestart()
         resizable = false,
         children = {
             TextBox:New {
-                --text = "Spring needs to restart for changes to take effect."
+                text = "Spring needs to reload for changes to take effect.",
+                --text = "Spring needs to be restarted manually for changes to take effect."
                 x = "1%",
                 y = 10,
                 width = "100%",
-                text = "Spring needs to be restarted manually for changes to take effect."
             },
             Button:New {
-                -- caption = "Restart",
-                caption = "Quit",
+                caption = "Reload",
+                -- caption = "Quit",
                 x = "35%",
                 width = "30%",
                 height = 40,
                 bottom = 0,
                 OnClick = {
                     function()
-                        window:Dispose()
-                        Spring.SendCommands("quit", "quitforce")
-                        --Spring.Reload(VFS.LoadFile("_script.txt"))
+                        Spring.Reload(VFS.LoadFile("_script.txt"))
+
+                        -- window:Dispose()
+                        -- Spring.SendCommands("quit", "quitforce")
                     end
                 }
             }

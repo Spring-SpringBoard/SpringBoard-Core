@@ -196,8 +196,6 @@ function ExportMapsCommand:ExportDiffuse()
     local mapFBO
     for i = 0, sizeX do
         for j = 0, sizeZ do
-            Spring.ClearWatchDogTimer()
-
             local mapTextureObj = SB.model.textureManager.mapFBOTextures[i][j]
 
             local mapTexture = mapTextureObj.texture
@@ -215,8 +213,6 @@ function ExportMapsCommand:ExportDiffuse()
             gl.DeleteFBO(mapFBO)
         end
     end
-    -- Either blitting isn't working, or FBOs aren't properly mapped to textures...?
-    Spring.ClearWatchDogTimer()
     gl.RenderToTexture(totalMapTexture, gl.SaveImage, 0, 0, Game.mapSizeX, Game.mapSizeZ, texturePath)
     gl.DeleteTexture(totalMapTexture)
     -- FIXME: probably not needed -.-
@@ -229,22 +225,30 @@ function ExportMapsCommand:execute()
         Spring.CreateDir(self.path)
 
         Time.MeasureTime(function()
+            Spring.ClearWatchDogTimer(true)
             self:ExportHeightmap()
+            Spring.ClearWatchDogTimer(false)
         end, function (elapsed)
             Log.Notice(("[%.4fs] Exported heightmap"):format(elapsed))
         end)
         Time.MeasureTime(function()
+            Spring.ClearWatchDogTimer(true)
             self:ExportGrass()
+            Spring.ClearWatchDogTimer(false)
         end, function (elapsed)
             Log.Notice(("[%.4fs] Exported grass"):format(elapsed))
         end)
         Time.MeasureTime(function()
+            Spring.ClearWatchDogTimer(true)
             SaveShadingTextures(self.path, false, "")
+            Spring.ClearWatchDogTimer(false)
         end, function (elapsed)
             Log.Notice(("[%.4fs] Exported shading textures"):format(elapsed))
         end)
         Time.MeasureTime(function()
+            Spring.ClearWatchDogTimer(true)
             self:ExportDiffuse()
+            Spring.ClearWatchDogTimer(false)
         end, function (elapsed)
             Log.Notice(("[%.4fs] Exported diffuse"):format(elapsed))
         end)

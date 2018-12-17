@@ -39,8 +39,7 @@ local function CheckConfig()
         LinkIncomingPeakBandwidth = { value = 32768000, type = 'int' },
         LinkIncomingSustainedBandwidth = { value = 2048000, type = 'int' },
         LinkOutgoingBandwidth = { value = 65536000, type = 'int' },
-        TextureMemPoolSize = { value = 300, type = 'int' },
-        HangTimeout = { value = -1, type = 'int' }
+        TextureMemPoolSize = { value = 300, type = 'int' }
     }
     if SB.IsSpringConfigValid(springConfig) then
         return

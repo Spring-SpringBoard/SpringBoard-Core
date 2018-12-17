@@ -9,7 +9,7 @@
       "downloads": {
         "games" : ["sbc:test"],
         "maps" : ["TitanDuel 2.2"],
-        "engines" : [ "104.0.1-933-gcb09246 maintenance" ]
+        "engines" : [ "104.0.1-941-gfcc4751 maintenance" ]
       },
       "launch": {
         "game": "rapid://sbc:test",
@@ -25,7 +25,7 @@
       "downloads": {
         "games" : ["sbc:stable"],
         "maps" : ["TitanDuel 2.2"],
-        "engines" : [ "104.0.1-933-gcb09246 maintenance" ]
+        "engines" : [ "104.0.1-941-gfcc4751 maintenance" ]
       },
       "launch": {
         "game": "rapid://sbc:stable",
@@ -40,7 +40,7 @@
       },
       "downloads": {
         "maps" : ["TitanDuel 2.2"],
-        "engines" : [ "104.0.1-933-gcb09246 maintenance" ]
+        "engines" : [ "104.0.1-941-gfcc4751 maintenance" ]
       },
       "auto_start" : false,
       "no_downloads" : true,

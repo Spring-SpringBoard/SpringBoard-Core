@@ -13,6 +13,7 @@ end
 function SaveImagesCommand:execute()
     SB.delayGL(function()
     Time.MeasureTime(function()
+        Spring.ClearWatchDogTimer(true)
 
         local texSize = SB.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
@@ -32,8 +33,6 @@ function SaveImagesCommand:execute()
         -- We're saving the map in parts
         for i = 0, sizeX do
             for j = 0, sizeZ do
-                Spring.ClearWatchDogTimer()
-
                 local mapTextureObj = SB.model.textureManager.mapFBOTextures[i][j]
                 -- only write those textures that have changed since last save
                 if mapTextureObj.dirty then
@@ -61,6 +60,7 @@ function SaveImagesCommand:execute()
         end
 
     end, function(elapsed)
+        Spring.ClearWatchDogTimer(false)
         Log.Notice(("[%.4fs] Saved texture."):format(elapsed))
     end) -- end Time.MeasureTime
     end) -- end SB.delayGL
