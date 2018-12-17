@@ -30,8 +30,9 @@ if writePath then
     end
     SB_WRITE_PATH = writePath
     SB_ROOT_ABS = SB_WRITE_PATH .. "springboard/"
-    SB_EXTS_ABS_DIR = SB_ROOT_ABS .. "exts/"
+    SB_PROJECTS_ABS_DIR = SB_ROOT_ABS .. "projects/"
     SB_ASSETS_ABS_DIR = SB_ROOT_ABS .. "assets/"
+    SB_EXTS_ABS_DIR = SB_ROOT_ABS .. "exts/"
 end
 SB_LAUNCHER_VERSION = modOpts._sl_launcher_version
 

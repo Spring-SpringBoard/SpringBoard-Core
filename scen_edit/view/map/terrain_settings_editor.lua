@@ -10,26 +10,6 @@ TerrainSettingsEditor:Register({
     order = 5,
 })
 
-local WRITE_DATA_DIR = nil
-local function GetWriteDataDir()
-    if WRITE_DATA_DIR then
-        return WRITE_DATA_DIR
-    end
-
-    local dataDirStr = "write data directory: "
-    local lines = String.Explode("\n", VFS.LoadFile("infolog.txt", nil, VFS.RAW))
-    local dataDir = ""
-    for i, line in pairs(lines) do
-        if line:find(dataDirStr) then
-            dataDir = line:sub(line:find(dataDirStr) + #dataDirStr)
-            dataDir = dataDir:gsub("\r", "")
-            break
-        end
-    end
-    WRITE_DATA_DIR = dataDir
-    return WRITE_DATA_DIR
-end
-
 function TerrainSettingsEditor:init()
     self:super("init")
 
@@ -64,117 +44,7 @@ function TerrainSettingsEditor:init()
         rootDir = "detail/",
     }))
 
-    if WG.Connector then
-        self:AddControl("compile-sep", {
-            Label:New {
-                caption = "Compile map",
-            },
-            Line:New {
-                x = 150,
-            }
-        })
-        self.btnCompile = Button:New ({
-            caption = "Start",
-            height = 30,
-            width = 100,
-            OnClick = {
-                function()
-                    self.progressBar.tooltip = ""
-                    self.progressBar:SetCaption("")
-
-                    local folderPath = self.fields["compileFolder"].value
-                    if folderPath == nil then
-                        Spring.Echo("Choose a folder with textures first.")
-                        return
-                    end
-
-                    local heightPath = Path.Join(folderPath, "heightmap.png")
-                    local diffusePath = Path.Join(folderPath, "diffuse.png")
-                    local grass = Path.Join(folderPath, "grass.png")
-                    local outputPath = Path.Join(folderPath, "MyName")
-
-                    if not VFS.FileExists(heightPath, VFS.RAW) then
-                        Spring.Echo("Heightmap texture missing from: " .. tostring(heightPath))
-                        return
-                    end
-
-                    if not VFS.FileExists(diffusePath, VFS.RAW) then
-                        Spring.Echo("Diffuse texture missing from: " .. tostring(diffusePath))
-                        return
-                    end
-
-                    folderPath = Path.Join(GetWriteDataDir(), folderPath)
-
-                    heightPath = Path.Join(folderPath, "heightmap.png")
-                    diffusePath = Path.Join(folderPath, "diffuse.png")
-                    grass = Path.Join(folderPath, "grass.png")
-                    outputPath = Path.Join(folderPath, "MyName")
-                    self.compileFolderPath = folderPath
-
-                    WG.Connector.Send("CompileMap", {
-                        heightPath = heightPath,
-                        diffusePath = diffusePath,
-                        grass = grass,
-                        outputPath = outputPath,
-                    })
-                end
-            }
-        })
-        self.progressBar = Progressbar:New ({
-            x = 105,
-            height = 30,
-            width = 120,
-            value = 0,
-        })
-        self:AddField(GroupField({
-            AssetField({
-                name = "compileFolder",
-                title = "Folder:",
-                tooltip = "Select the compile folder with textures",
-                value = SB_PROJECTS_DIR,
-            }),
-            Field({
-                name = "btnCompile",
-                height = 30,
-                width = 220,
-                components = {
-                    self.btnCompile,
-                    self.progressBar,
-                }
-            }),
-        }))
-
-
-        WG.Connector.Register("CompileMapStarted", function()
-            self.progressBar:SetCaption("Starting...")
-        end)
-
-        WG.Connector.Register("CompileMapFinished", function()
-            self.progressBar:SetValue(100)
-            self.progressBar:SetCaption("Finished")
-
-            WG.Connector.Send("OpenFile", {
-                path = "file://" .. self.compileFolderPath,
-            })
-        end)
-
-        WG.Connector.Register("CompileMapError", function(command)
-            self.progressBar:SetCaption("Error")
-            Log.Warning("Failed to compile: " .. tostring(command.msg))
-            self.progressBar.tooltip = tostring(command.msg)
-        end)
-
-        WG.Connector.Register("CompileMapProgress", function(command)
-            local current, total = command.current, command.total
-            local value = current * 100 / total
-            value = math.max(value, 0)
-            value = math.min(value, 100)
-            self.progressBar:SetValue(value)
-            if self.progressBar.caption ~= "Compiling" then
-                self.progressBar:SetCaption("Compiling")
-            end
-        end)
-    end
+    self:_AddMapCompileControls()
 
     local children = {
         ScrollPanel:New {
@@ -189,6 +59,136 @@ function TerrainSettingsEditor:init()
     }
 
     self:Finalize(children)
+end
+
+function TerrainSettingsEditor:_AddMapCompileControls()
+    if WG.Connector == nil or VFS.GetFileAbsolutePath == nil then
+        return
+    end
+
+    self:AddControl("compile-sep", {
+        Label:New {
+            caption = "Compile map",
+        },
+        Line:New {
+            x = 150,
+        }
+    })
+    self.btnCompile = Button:New ({
+        caption = "Start",
+        height = 30,
+        width = 140,
+        OnClick = {
+            function()
+                self.progressBar.tooltip = ""
+                self.progressBar:SetCaption("")
+
+                local heightPath = self.fields["heightPath"].value
+                local diffusePath = self.fields["diffusePath"].value
+
+                if not VFS.FileExists(heightPath, VFS.RAW) then
+                    Log.Warn("Heightmap texture missing from: " .. tostring(heightPath))
+                    return
+                end
+
+                if not VFS.FileExists(diffusePath, VFS.RAW) then
+                    Log.Warn("Diffuse texture missing from: " .. tostring(diffusePath))
+                    return
+                end
+
+                heightPath = VFS.GetFileAbsolutePath(heightPath)
+                diffusePath = VFS.GetFileAbsolutePath(diffusePath)
+
+                self.compileFolderPath = nil
+                if SB.projectDir ~= nil then
+                    self.compileFolderPath = Path.Join(SB_WRITE_PATH, SB.projectDir)
+                else
+                    self.compileFolderPath = SB_PROJECTS_ABS_DIR
+                end
+
+                local outputPath = Path.Join(self.compileFolderPath, "Compiled")
+                WG.Connector.Send("CompileMap", {
+                    heightPath = heightPath,
+                    diffusePath = diffusePath,
+                    outputPath = outputPath,
+                })
+            end
+        }
+    })
+    self.progressBar = Progressbar:New ({
+        x = 145,
+        height = 30,
+        width = 160,
+        value = 0,
+    })
+
+    local exportTooltip = "You may want to export maps first."
+
+    self:AddField(AssetField({
+        name = "heightPath",
+        title = "Height:",
+        tooltip = "Path to height image. " .. tostring(exportTooltip),
+        width = 300,
+        value = SB_PROJECTS_DIR,
+    }))
+    self:AddField(AssetField({
+        name = "diffusePath",
+        title = "Diffuse:",
+        tooltip = "Path to diffuse image. " .. tostring(exportTooltip),
+        width = 300,
+        value = SB_PROJECTS_DIR,
+    }))
+
+    self:AddField(Field({
+        name = "btnCompile",
+        height = 30,
+        width = 400,
+        components = {
+            self.btnCompile,
+            self.progressBar,
+        }
+    }))
+
+
+    WG.Connector.Register("CompileMapStarted", function()
+        self.progressBar:SetCaption("Starting...")
+    end)
+
+    WG.Connector.Register("CompileMapFinished", function()
+        self.progressBar:SetValue(100)
+        self.progressBar:SetCaption("Finished")
+
+        WG.Connector.Send("OpenFile", {
+            path = "file://" .. self.compileFolderPath,
+        })
+    end)
+
+    WG.Connector.Register("CompileMapError", function(command)
+        self.progressBar:SetCaption("Error")
+        Log.Warning("Failed to compile: " .. tostring(command.msg))
+        self.progressBar.tooltip = tostring(command.msg)
+    end)
+
+    WG.Connector.Register("CompileMapProgress", function(command)
+        local current, total = command.current, command.total
+        local value = current * 100 / total
+        value = math.max(value, 0)
+        value = math.min(value, 100)
+        self.progressBar:SetValue(value)
+        if self.progressBar.caption ~= "Compiling" then
+            self.progressBar:SetCaption("Compiling")
+        end
+    end)
+
+    -- TODO: listen on commands
+    -- SB.commandManager:addListener(self)
+end
+
+--function TerrainSettingsEditor:OnCommandExecuted(cmdIDs, isUndo, isRedo, display)
+-- if display == "ExportMapsCommand" and SB_EXPORTED_TO ~= nil then
+function TerrainSettingsEditor:UpdateCompilePaths(folderPath)
+    self:Set("heightPath", Path.Join(folderPath, "heightmap.png"))
+    self:Set("diffusePath", Path.Join(folderPath, "diffuse.png"))
 end
 
 function TerrainSettingsEditor:UpdateMapRendering()

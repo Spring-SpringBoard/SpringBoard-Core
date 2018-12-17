@@ -251,6 +251,11 @@ function ExportMapsCommand:execute()
             Spring.ClearWatchDogTimer(false)
         end, function (elapsed)
             Log.Notice(("[%.4fs] Exported diffuse"):format(elapsed))
+
+            -- TODO: Cleanup
+            if SB.editors["terrainSettings"] ~= nil then
+                SB.editors["terrainSettings"]:UpdateCompilePaths(self.path)
+            end
         end)
     end)
 end
