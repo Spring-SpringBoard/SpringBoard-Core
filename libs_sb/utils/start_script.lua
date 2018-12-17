@@ -300,22 +300,18 @@ function StartScript.ParseStartScript(scriptTxt)
     local parsed = {}
 
     local lines = String.Explode('\n', scriptTxt)
-    -- Spring.Echo("Total lines: " .. tostring(#lines))
     local stack = {parsed}
     for _, line in ipairs(lines) do
-        -- Spring.Echo(unpack({ParseTDFLine(line)}))
         local result = {ParseTDFLine(line)}
         local lineType = result[1]
         if lineType ~= nil then
             if lineType == 'section' then
-                -- Spring.Echo('push', result[2]:lower())
                 local current = stack[#stack]
                 local newTbl = {}
                 table.insert(stack, newTbl)
                 current[result[2]:lower()] = newTbl
             -- section_push can be ignored
             elseif lineType == 'section_pop' then
-                -- Spring.Echo('pop')
                 table.remove(stack, #stack)
             elseif lineType == 'assign' then
                 local current = stack[#stack]
@@ -332,9 +328,7 @@ function StartScript.ParseStartScript(scriptTxt)
         if type(v) == 'table' then
             local num = k:match('%d+$')
             if num then
-                -- Spring.Echo("MATCHED", k)
                 local bare = k:sub(1, -#num - 1) .. 's'
-                -- Spring.Echo("BARE", bare)
                 if groups[bare] == nil then
                     groups[bare] = {}
                 end
@@ -357,8 +351,6 @@ function StartScript.ParseStartScript(scriptTxt)
         end
         merged[bare] = tbl
     end
-    -- table.echo(groups)
-    -- table.echo(merged)
 
     -- fix well know cases
     merged.modOptions = merged.modoptions

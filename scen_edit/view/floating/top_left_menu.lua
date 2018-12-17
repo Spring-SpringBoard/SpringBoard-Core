@@ -118,7 +118,7 @@ function TopLeftMenu:AddUploadLogButton()
             function()
                 Dialog({
                     message = "Do you want to upload your log to http://logs.springrts.com ?" ..
-                              "\nAll information will be public.",
+                              "\nAll data will be public.",
                     ConfirmDialog = function()
                         self:UploadLog()
                     end,
