@@ -56,7 +56,7 @@ local glTexRect 	= gl.TexRect
 local abs						= math.abs
 local strFormat 				= string.format
 
-include("keysym.h.lua")
+require("keysym.lua")
 VFS.Include("LuaRules/Configs/customcmds.h.lua")
 
 --------------------------------------------------------------------------------
