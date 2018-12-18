@@ -12,7 +12,7 @@ function ImportDiffuseCommand:execute()
             return
         end
 
-        Spring.ClearWatchDogTimer(true)
+        Spring.ClearWatchDogTimer(nil, true)
         Log.Debug("Importing texture..")
         local totalMapTexture = gl.CreateTexture(Game.mapSizeX, Game.mapSizeZ, {
             border = false,
@@ -44,6 +44,6 @@ function ImportDiffuseCommand:execute()
         end
         gl.Texture(false)
         gl.DeleteTexture(totalMapTexture)
-        Spring.ClearWatchDogTimer(false)
+        Spring.ClearWatchDogTimer(nil, false)
     end)
 end

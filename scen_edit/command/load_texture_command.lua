@@ -15,6 +15,7 @@ function LoadTextureCommand:execute()
             return
         end
 
+        Spring.ClearWatchDogTimer(nil, true)
         tm:resetMapTextures()
         tm:generateMapTextures()
 
@@ -43,8 +44,6 @@ function LoadTextureCommand:execute()
         end
 
         for _, texture in pairs(textures) do
-            Spring.ClearWatchDogTimer()
-
             local fboTextureObj = tm.mapFBOTextures[texture.i][texture.j]
             gl.RenderToTexture(fboTextureObj.texture, function()
                 gl.Texture(texture.path)
@@ -53,5 +52,6 @@ function LoadTextureCommand:execute()
             end)
         end
         gl.Texture(false)
+        Spring.ClearWatchDogTimer(nil, false)
     end)
 end

@@ -13,7 +13,7 @@ end
 function SaveImagesCommand:execute()
     SB.delayGL(function()
     Time.MeasureTime(function()
-        Spring.ClearWatchDogTimer(true)
+        Spring.ClearWatchDogTimer(nil, true)
 
         local texSize = SB.model.textureManager.TEXTURE_SIZE
         local sizeX = math.floor(Game.mapSizeX / texSize)
@@ -60,7 +60,7 @@ function SaveImagesCommand:execute()
         end
 
     end, function(elapsed)
-        Spring.ClearWatchDogTimer(false)
+        Spring.ClearWatchDogTimer(nil, false)
         Log.Notice(("[%.4fs] Saved texture."):format(elapsed))
     end) -- end Time.MeasureTime
     end) -- end SB.delayGL
