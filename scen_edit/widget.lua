@@ -30,7 +30,7 @@ local springConfig = {
     LinkIncomingPeakBandwidth = { value = 32768000, type = 'int' },
     LinkIncomingSustainedBandwidth = { value = 2048000, type = 'int' },
     LinkOutgoingBandwidth = { value = 65536000, type = 'int' },
-    TextureMemPoolSize = { min = 600, type = 'int' }
+    TextureMemPoolSize = { min = 600, value = 600, type = 'int' }
 }
 
 local function DumpConfig()

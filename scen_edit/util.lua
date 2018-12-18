@@ -639,6 +639,8 @@ end
 -- Spring Config related
 function SB.IsSpringConfigValid(springConfig)
     for name, config in pairs(springConfig) do
+        assert(config.type ~= nil, name)
+        assert(config.value ~= nil, name)
         local GetFunction
         if config.type == 'int' then
             GetFunction = Spring.GetConfigInt
@@ -647,14 +649,26 @@ function SB.IsSpringConfigValid(springConfig)
         elseif config.type == 'float' then
             GetFunction = Spring.GetConfigFloat
         end
-        if config.value ~= nil then
-            if GetFunction(name) ~= config.value then
+
+        local value = GetFunction(name)
+        if value ~= config.value then
+            -- exact match or value is missing
+            if value == nil or
+               (config.min == nil and config.max == nil) then
                 return false
             end
-        elseif config.min ~= nil then
-            local value = GetFunction(name)
-            if value == nil or value < config.min then
-                return false
+
+            if config.min ~= nil then
+                assert(config.min <= config.value, name)
+                if value < config.min then
+                    return false
+                end
+            end
+            if config.max ~= nil then
+                assert(config.max >= config.value, name)
+                if value > config.max then
+                    return false
+                end
             end
         end
     end
