@@ -138,11 +138,13 @@ function _FeatureS11N:OnInit()
         },
         resources = {
             get = function(objectID)
-                local metal, _, energy, _, reclaimLeft, reclaimTime = Spring.GetFeatureResources(objectID)
+                local metal, metalMax, energy, energyMax, reclaimLeft, reclaimTime = Spring.GetFeatureResources(objectID)
                 if reclaimTime ~= nil then
                     return {
                         metal = metal,
+                        metalMax = metalMax,
                         energy = energy,
+                        energyMax = energyMax,
                         reclaimTime = reclaimTime,
                         reclaimLeft = reclaimLeft
                     }
@@ -155,7 +157,8 @@ function _FeatureS11N:OnInit()
             end,
             set = function(objectID, value)
                 if value.reclaimLeft then
-                    Spring.SetFeatureResources(objectID, value.metal, value.energy, value.reclaimTime, value.reclaimLeft)
+                    Spring.SetFeatureResources(objectID, value.metal, value.energy,
+                        value.reclaimTime, value.reclaimLeft,value.metalMax, value.energyMax)
                 else
                     Spring.SetFeatureResources(objectID, value.metal, value.energy)
                 end

@@ -150,8 +150,9 @@ function widget:Initialize()
         Spring.SendCommands("cheat")
     end
 
-    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" and RELOAD_GADGETS then
-        reloadGadgets() --uncomment for development
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" and RELOAD_GADGETS and Spring.GetGameFrame() > 0 then
+        -- TODO: Maybe don't reload luarules every time. Necessary for now.
+        Spring.SendCommands("luarules reload")
     end
 
     if not wasEnabled then
@@ -198,10 +199,6 @@ function widget:Initialize()
     end
 
     SB.executeDelayed("Initialize")
-end
-
-function reloadGadgets()
-    Spring.SendCommands("luarules reload")
 end
 
 function widget:DrawScreen()
