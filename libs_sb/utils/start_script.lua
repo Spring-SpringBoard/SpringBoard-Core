@@ -197,6 +197,8 @@ function StartScript.GenerateScriptTxt(opts)
         MapName = opts.mapName,
         GameType = opts.game.name .. " " .. opts.game.version,
 
+        MapSeed = opts.mapSeed,
+
         IsHost = isHost,
         HostIP = "127.0.0.1",
         HostPort = opts.hostPort,

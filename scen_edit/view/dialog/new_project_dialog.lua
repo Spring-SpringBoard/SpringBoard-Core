@@ -16,8 +16,13 @@ function NewProjectDialog:init()
         classname = "option_button",
         OnClick = {
             function()
-                -- self:LoadEmptyMap()
-                self:LoadExistingMap()
+                if self.fields.mapType.value == "Blank" then
+                    if self.fields.sizeX.value > 0 and self.fields.sizeZ.value > 0 then
+                        self:LoadEmptyMap()
+                    end
+                else
+                    self:LoadExistingMap()
+                end
             end
         }
     }
@@ -35,31 +40,39 @@ function NewProjectDialog:init()
         }
     }
 
+
     self:AddField(ChoiceField({
-        name = "mapName",
+        name = "mapType",
+        title = "Map type:",
+        items = {"Blank", "Existing map"},
+        width = 300,
+    }))
+
+    self:AddField(ChoiceField({
+        name = "existingMap",
         title = "Map:",
         items = VFS.GetMaps(),
         width = 300,
     }))
 
-    -- self:AddField(GroupField({
-    --     NumericField({
-    --         name = "sizeX",
-    --         title = "Size X:",
-    --         width = 140,
-    --         minValue = 1,
-    --         value = 5,
-    --         maxValue = 32,
-    --     }),
-    --     NumericField({
-    --         name = "sizeZ",
-    --         title = "Size Z:",
-    --         width = 140,
-    --         minValue = 1,
-    --         value = 5,
-    --         maxValue = 32,
-    --     })
-    -- }))
+    self:AddField(GroupField({
+        NumericField({
+            name = "sizeX",
+            title = "Size X:",
+            width = 140,
+            minValue = 1,
+            value = 5,
+            maxValue = 32,
+        }),
+        NumericField({
+            name = "sizeZ",
+            title = "Size Z:",
+            width = 140,
+            minValue = 1,
+            value = 5,
+            maxValue = 32,
+        })
+    }))
 
     local children = {
         btnOK,
@@ -78,9 +91,21 @@ function NewProjectDialog:init()
     self:Finalize(children, {
         notMainWindow = true,
         noCloseButton = true,
-        width = 500,
+        width = 400,
         height = 200,
     })
+
+    self:SetInvisibleFields("existingMap")
+end
+
+function NewProjectDialog:OnFieldChange(name, value)
+    if name == "mapType" then
+        if value == "Blank" then
+            self:SetInvisibleFields("existingMap")
+        else
+            self:SetInvisibleFields("sizeX", "sizeZ")
+        end
+    end
 end
 
 -- Generates teams, allyteams, players and AI for a new map
@@ -130,23 +155,29 @@ local function GenerateEmptyMapParticipants()
 end
 
 function NewProjectDialog:LoadEmptyMap()
+    local sizeX, sizeZ = self.fields.sizeX.value, self.fields.sizeZ.value
     local participants = GenerateEmptyMapParticipants()
-    local scriptTxt = StartScript.GenerateScriptTxt({
+    local script = {
         game = {
             name = Game.gameName,
             version = Game.gameVersion,
         },
-        mapName = "FlatTemplate",
+        -- mapSeed = 1, -- value doesn't matter
+        mapSeed = sizeX * 1000 + sizeZ,
+        mapName = "SpringBlankTemplate_" .. tostring(sizeX) .. "x" .. tostring(sizeZ),
         teams = participants.teams,
         players = participants.players,
         ais = participants.ais,
         allyTeams = participants.allyTeams,
         mapOptions = {
-            sizeX = self.fields["sizeX"].value,
-            sizeZ = self.fields["sizeZ"].value,
+            new_map_x = sizeX,
+            new_map_z = sizeZ,
         },
         modOptions = SB.GetPersistantModOptions(),
-    })
+    }
+    script.modOptions.new_map_x = sizeX
+    script.modOptions.new_map_z = sizeZ
+    local scriptTxt = StartScript.GenerateScriptTxt(script)
     Spring.Echo(scriptTxt)
     Spring.Reload(scriptTxt)
 end
@@ -158,7 +189,7 @@ function NewProjectDialog:LoadExistingMap()
             name = Game.gameName,
             version = Game.gameVersion,
         },
-        mapName = self.fields["mapName"].value,
+        mapName = self.fields.existingMap.value,
         teams = participants.teams,
         players = participants.players,
         ais = participants.ais,
