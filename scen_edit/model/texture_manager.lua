@@ -243,6 +243,7 @@ function TextureManager:SetShadingTexture(name, tex)
         texture = tex,
         dirty = true,
     }
+    local success
     if texDef._setParams then
         success = Spring.SetMapShadingTexture(texDef._setParams[1], tex, texDef._setParams[2])
     else
@@ -250,7 +251,7 @@ function TextureManager:SetShadingTexture(name, tex)
     end
     if not success then
         Log.Error("Failed to set new texture: " .. tostring(name) ..
-                  ", engine name: " .. tostring(engineName))
+                  ", engine name: " .. tostring(texDef.engineName))
         return
     end
     texDef.enabled = true
@@ -261,6 +262,7 @@ function TextureManager:MakeShadingTexture(name, sizeX, sizeY)
     -- if name == "splat_distr" then
     --    min_filter = GL.LINEAR_MIPMAP_NEAREST
     -- end
+    local tex
     if name:find("splat_normals") then
         tex = gl.CreateTexture(sizeX, sizeY, {
             border = false,
