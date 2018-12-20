@@ -43,6 +43,7 @@ function Editor:init()
 
         autosize = true,
         resizeItems = false,
+        preserveChildrenOrder = true,
 
         itemPadding = {0,10,0,0},
         padding = {0,0,0,0},
@@ -100,11 +101,13 @@ end
 --- Override.
 -- @tparam table children List of Chili controls.
 -- @tparam table opts Editor options
--- @tparam[opt=false] boolean opts.notMainWindow If true, editor will not be added to the main panel (right side), but will instead be a floating window.
+-- @tparam[opt=false] boolean opts.notMainWindow If true,
+--   editor will not be added to the main panel (right side), but will instead be a floating window.
 -- @tparam[opt=550] boolean opts.width Specifies window width. Only applicable for floating windows.
 -- @tparam[opt=550] boolean opts.height Specifies window height. Only applicable for floating windows.
 -- @tparam[opt=false] boolean opts.noCloseButton If true, there will be no close button.
--- @tparam boolean opts.disposeOnClose If true, the window will be disposed when closed. Defaults to true if opts.notMainWindow is true, otherwise it defaults to false.
+-- @tparam boolean opts.disposeOnClose If true, the window will
+--   be disposed when closed. Defaults to true if opts.notMainWindow is true, otherwise it defaults to false.
 function Editor:Finalize(children, opts)
     if not self.__initializing then
         Log.Error("\"Editor.init(self)\" wasn't invoked properly.")
@@ -167,7 +170,8 @@ function Editor:Finalize(children, opts)
             if key == Spring.GetKeyCode("esc") then
                 self:__MaybeClose()
                 return true
-            elseif key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
+            elseif key == Spring.GetKeyCode("enter") or
+                   key == Spring.GetKeyCode("numpad_enter") then
                 if self.ConfirmDialog then
                     if self:ConfirmDialog() then
                         self:__MaybeClose()
@@ -197,6 +201,7 @@ function Editor:_SetFieldVisible(name, visible)
     end
 
     if visible == nil then
+        Log.Error("Visible is nil for field: " .. tostring(name))
         return
     end
 
@@ -233,7 +238,8 @@ function Editor:SetInvisibleFields(...)
         end
     end
 
-    -- HACK: because we're Add/Removing items to the stackPanel instead of using Show/Hide on the control itself, we need to to execute a :_HackSetInvisibleFields later
+    -- HACK: because we're Add/Removing items to the stackPanel instead of using Show/Hide on
+    -- the control itself, we need to to execute a :_HackSetInvisibleFields later
     for _, field in pairs(self.fields) do
         if field._HackSetInvisibleFields then
             field:_HackSetInvisibleFields(fields)
@@ -495,7 +501,8 @@ SB.editors = {}
 -- })
 function Editor:Register(opts)
     -- Prevents invalid invocation with missing opts table
-    assert(opts ~= nil, "Missing opts table for editor. Did you mean MyEditor:Register instead of MyEditor.Register?")
+    assert(opts ~= nil, "Missing opts table for editor. Did you mean" ..
+                        "MyEditor:Register instead of MyEditor.Register?")
     assert(opts.name, "Missing name for editor.")
     assert(not SB.editorRegistry[opts.name],
         "Editor with name: " .. opts.name .. " already exists")
