@@ -16,8 +16,11 @@ function TerrainChangeTextureState:init(editorView)
     self.texOffsetX     = self.editorView.fields["texOffsetX"].value
     self.texOffsetY     = self.editorView.fields["texOffsetY"].value
     self.texRotation    = self.editorView.fields["texRotation"].value
-    self.diffuseEnabled = self.editorView.fields["diffuseEnabled"].value
-    self.specularEnabled= self.editorView.fields["specularEnabled"].value
+
+    for _, fname in pairs(self.editorView.matFieldNames) do
+        self[fname] = self.editorView.fields[fname].value
+    end
+
     self.voidFactor     = self.editorView.fields["voidFactor"].value
     self.exclusive      = self.editorView.fields["exclusive"].value
     self.value          = self.editorView.fields["value"].value
@@ -33,8 +36,20 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
     if not self.paintMode or self.paintMode == "" then
         return
     end
-    if self.paintMode == "paint" and not self.brushTexture.diffuse then
-        return
+    if self.paintMode == "paint" then
+        if not self.brushTexture then
+            return
+        end
+
+        local hasMat = false
+        -- luacheck: ignore 512
+        for _, fname in pairs(self.brushTexture) do
+            hasMat = true
+            break
+        end
+        if not hasMat then
+            return
+        end
     end
     local voidFactor = self.voidFactor * applyAction
     local colorIndex = self.dntsIndex + 1
@@ -63,14 +78,16 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
         texOffsetX = self.texOffsetX,
         texOffsetY = self.texOffsetY,
         rotation = math.rad(self.texRotation),
-        diffuseEnabled = self.diffuseEnabled,
-        specularEnabled = self.specularEnabled,
         voidFactor = voidFactor,
         paintMode = self.paintMode,
         colorIndex = colorIndex,
         exclusive = exclusive,
         value = self.value,
     }
+    for _, fname in pairs(self.editorView.matFieldNames) do
+        opts[fname] = self[fname]
+    end
+
     local command = TerrainChangeTextureCommand(opts)
     SB.commandManager:execute(command)
 end

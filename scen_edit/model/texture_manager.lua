@@ -1,8 +1,13 @@
 TextureManager = Observable:extends{}
 
+-- local smftTexAniso = Spring.GetConfigInt("SMFTexAniso")
+local ssmfTexAniso
+
 function TextureManager:init()
     self:super('init')
     self.TEXTURE_SIZE = 1024
+
+    ssmfTexAniso = Spring.GetConfigInt("SSMFTexAniso")
 
     self.mapFBOTextures = {}
     self.oldMapFBOTextures = {}
@@ -20,6 +25,15 @@ function TextureManager:init()
         specular = {
             engineName = "$ssmf_specular",
         },
+        emission = {
+            engineName = "$ssmf_emission",
+        },
+        refl = {
+            engineName = "$ssmf_sky_refl",
+        },
+        -- parallax = {
+        --     engineName = "$ssmf_parallax",
+        -- },
         splat_distr = {
             engineName = "$ssmf_splat_distr",
             alpha = true,
@@ -61,13 +75,21 @@ function TextureManager:init()
             suffix = "_normal",
             enabled = true,
         },
-        emissive = {
-            suffix = "_emissive",
+        emission = {
+            suffix = "_emission",
             enabled = true,
         },
+        refl = {
+            suffix = "_refl",
+            enabled = true,
+        },
+
+        -- NB: DISABLED below
+        -- Would like to use it for parallax, but how?
+        -- Maybe we can just forget about parallax without splats
         height = {
             suffix = "_height",
-            enabled = false,
+            enabled = true,
         },
         glow = {
             suffix = "_glow",
@@ -81,7 +103,7 @@ function TextureManager:init()
     end
 
     SB.delayGL(function()
-        self:generateMapTextures()
+        self:GenerateMapTextures()
     end)
 end
 
@@ -137,7 +159,7 @@ void main(void)
     Spring.SetMapShader(TextureManager.mapShader, TextureManager.mapShader)
 end
 
-function TextureManager:generateMapTextures()
+function TextureManager:GenerateMapTextures()
     Log.Debug("Generating textures...")
     local oldMapTexture = self:createMapTexture(true, true)
 
@@ -158,83 +180,132 @@ function TextureManager:generateMapTextures()
         end
     end
 
-    local smftTexAniso, ssmfTexAniso = Spring.GetConfigInt("SMFTexAniso"), Spring.GetConfigInt("SSMFTexAniso")
-
     self.shadingTextures = {}
     for name, texDef in pairs(self.shadingTextureDefs) do
-        texDef.enabled = false
+        self:ResetShadingTexture(name)
 
-        local engineName = texDef.engineName
-        Log.Notice("Engine texture: " .. tostring(name))
-        local success
-        if texDef._setParams then
-            success = Spring.SetMapShadingTexture(texDef._setParams[1], "", texDef._setParams[2])
-        else
-            success = Spring.SetMapShadingTexture(engineName, "")
-        end
-        if not success then
-            Log.Error("Failed to reset texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
-        end
-        --local tex = self:createMapTexture()
-        local sizeX, sizeZ--[[ = Game.mapSizeX/2, Game.mapSizeZ/2]]
-        local texInfo = gl.TextureInfo(engineName)
+        local sizeX, sizeY
+        local texInfo = gl.TextureInfo(texDef.engineName)
         if texInfo and texInfo.xsize > 0 then
-            sizeX, sizeZ = texInfo.xsize, texInfo.ysize
+            sizeX, sizeY = texInfo.xsize, texInfo.ysize
         end
 
-        if sizeX and sizeZ then
-            local tex
-
-            local min_filter = GL.LINEAR
-            -- if name == "splat_distr" then
-            --    min_filter = GL.LINEAR_MIPMAP_NEAREST
-            -- end
-
-            if engineName:find("splat_normals") then
-                tex = gl.CreateTexture(sizeX, sizeZ, {
-                    border = false,
-                    min_filter = GL.LINEAR_MIPMAP_NEAREST,
-                    mag_filter = GL.LINEAR,
-                    wrap_s = GL.REPEAT,
-                    wrap_t = GL.REPEAT,
-                    aniso = ssmfTexAniso,
-                    fbo = true,
-                })
-                --gl.GenerateMipmap(tex)
-            else
-                tex = gl.CreateTexture(sizeX, sizeZ, {
-                    border = false,
-                    min_filter = min_filter,
-                    mag_filter = GL.LINEAR,
-                    wrap_s = GL.CLAMP_TO_EDGE,
-                    wrap_t = GL.CLAMP_TO_EDGE,
-                    fbo = true,
-                })
-            end
-    --         local engineTex = gl.Texture()
-            self:Blit(engineName, tex)
-            if engineName:find("splat_normals") then
-                gl.GenerateMipmap(tex)
-            end
-            self.shadingTextures[name] = {
-                texture = tex,
-                dirty = true,
-            }
-
-            if texDef._setParams then
-                success = Spring.SetMapShadingTexture(texDef._setParams[1], tex, texDef._setParams[2])
-            else
-                success = Spring.SetMapShadingTexture(engineName, tex)
-            end
-            if not success then
-                Log.Error("Failed to set new texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
-            end
-
-            texDef.enabled = true
+        if sizeX and sizeY then
+            self:AssignShadingTexture(name, {
+                tex = texDef.engineName,
+                sizeX = sizeX,
+                sizeY = sizeY,
+            })
         end
+
+        Log.Notice("texture [" .. tostring(name) .. "] enabled: "
+                   .. tostring(texDef.enabled))
     end
 
 --      self:SetupShader()
+end
+
+function TextureManager:ResetShadingTexture(name)
+    local texDef = self.shadingTextureDefs[name]
+    texDef.enabled = false
+    local engineName = texDef.engineName
+
+    local success
+    if texDef._setParams then
+        success = Spring.SetMapShadingTexture(texDef._setParams[1], "", texDef._setParams[2])
+    else
+        success = Spring.SetMapShadingTexture(engineName, "")
+    end
+
+    if not success then
+        Log.Error("Failed to reset texture: " .. tostring(name) .. ", engine name: " .. tostring(engineName))
+    end
+end
+
+function TextureManager:AssignShadingTexture(name, opts)
+    local source = opts.tex
+    local sizeX = opts.sizeX
+    local sizeY = opts.sizeY
+    local texDef = self.shadingTextureDefs[name]
+
+    local tex = self:MakeShadingTexture(name, sizeX, sizeY)
+
+    self:Blit(source, tex)
+    if name:find("splat_normals") then
+        gl.GenerateMipmap(tex)
+    end
+    self:SetShadingTexture(name, tex)
+end
+
+function TextureManager:SetShadingTexture(name, tex)
+    local texDef = self.shadingTextureDefs[name]
+    self.shadingTextures[name] = {
+        texture = tex,
+        dirty = true,
+    }
+    if texDef._setParams then
+        success = Spring.SetMapShadingTexture(texDef._setParams[1], tex, texDef._setParams[2])
+    else
+        success = Spring.SetMapShadingTexture(texDef.engineName, tex)
+    end
+    if not success then
+        Log.Error("Failed to set new texture: " .. tostring(name) ..
+                  ", engine name: " .. tostring(engineName))
+        return
+    end
+    texDef.enabled = true
+end
+
+function TextureManager:MakeShadingTexture(name, sizeX, sizeY)
+    local min_filter = GL.LINEAR
+    -- if name == "splat_distr" then
+    --    min_filter = GL.LINEAR_MIPMAP_NEAREST
+    -- end
+    if name:find("splat_normals") then
+        tex = gl.CreateTexture(sizeX, sizeY, {
+            border = false,
+            min_filter = GL.LINEAR_MIPMAP_NEAREST,
+            mag_filter = GL.LINEAR,
+            wrap_s = GL.REPEAT,
+            wrap_t = GL.REPEAT,
+            aniso = ssmfTexAniso,
+            fbo = true,
+        })
+        --gl.GenerateMipmap(tex)
+    else
+        tex = gl.CreateTexture(sizeX, sizeY, {
+            border = false,
+            min_filter = min_filter,
+            mag_filter = GL.LINEAR,
+            wrap_s = GL.CLAMP_TO_EDGE,
+            wrap_t = GL.CLAMP_TO_EDGE,
+            fbo = true,
+        })
+    end
+    return tex
+end
+
+function TextureManager:MakeAndEnableMapShadingTexture(name, sizeX, sizeY)
+    -- gl.DeleteTexture(self.shadingTextureDefs[name].engineName)
+    local tex = self:MakeShadingTexture(name, sizeX, sizeY)
+    gl.Blending("enable")
+    if name == "splat_distr" then
+        gl.Color(1, 0, 0, 0)
+    elseif name:find("splat_normals") then
+        gl.Color(0.5, 0.5, 1, 0.5)
+    elseif name == "emission" then
+        -- gl.Color(0.5, 0.5, 0.5, 1.0)
+        gl.Color(0.0, 0.0, 0.0, 0.2)
+    elseif name == "refl" then
+        gl.Color(0.0, 0.0, 0.0, 1.0)
+    elseif name == "specular" then
+        gl.Color(0.0, 0.0, 0.0, 1.0)
+    end
+    gl.RenderToTexture(tex, function()
+        gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
+    end)
+    self:SetShadingTexture(name, tex)
+    return tex
 end
 
 local grayscaleShader
@@ -290,7 +361,7 @@ function TextureManager:GetTMPs(num)
     return tmps
 end
 
-function TextureManager:resetMapTextures()
+function TextureManager:ResetMapTextures()
     for i, v in pairs(self.mapFBOTextures) do
         for j, textureObj in pairs(v) do
             gl.DeleteTexture(textureObj.texture)

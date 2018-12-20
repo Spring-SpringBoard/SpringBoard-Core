@@ -167,7 +167,10 @@ function TextureEditor:init()
                 self:_EnterState("blur")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "texRotation", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor",
+                                        "mode", "texRotation", "splatTexScale", "splatTexMult", "offset-sep",
+                                        "splat-sep", "exclusive", "value",
+                                        unpack(self.matFieldNames))
             end
         },
     })
@@ -198,7 +201,10 @@ function TextureEditor:init()
                 self:_EnterState("dnts")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Show()
-                self:SetInvisibleFields("kernelMode", "diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor", "mode", "texRotation", "falloffFactor", "offset-sep", "voidFactor", "tex-sep")
+                self:SetInvisibleFields("kernelMode", "texScale", "texOffsetX", "texOffsetY",
+                                        "featureFactor", "diffuseColor", "mode", "texRotation",
+                                        "falloffFactor", "offset-sep", "voidFactor", "tex-sep",
+                                        unpack(self.matFieldNames))
             end
         },
     })
@@ -215,7 +221,10 @@ function TextureEditor:init()
                 self:_EnterState("void")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("diffuseEnabled", "specularEnabled", "texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor", "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale", "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value")
+                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor",
+                                        "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
+                                        "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
+                                        unpack(self.matFieldNames))
             end
         },
     })
@@ -281,22 +290,30 @@ function TextureEditor:init()
         }
     })
 
-    self:AddField(GroupField({
-        BooleanField({
-            name = "diffuseEnabled",
-            value = true,
-            title = "Diffuse:",
-            tooltip = "Diffuse texture",
-            width = 140,
-        }),
-        BooleanField({
-            name = "specularEnabled",
-            value = true,
-            title = "Specular:",
-            tooltip = "Specular texture",
-            width = 140,
-        }),
-    }))
+    local matFields = {}
+    self.matFieldNames = {}
+    for name, _ in pairs(SB.model.textureManager.materialTextures) do
+        if name ~= "normal" and name ~= "glow" then
+            local fname = name .. "Enabled"
+            table.insert(matFields, BooleanField({
+                name = fname,
+                value = true,
+                title = String.Capitalize(name) .. ":",
+                tooltip = String.Capitalize(name) .. " texture",
+                width = 140,
+            }))
+            table.insert(self.matFieldNames, fname)
+            if #matFields == 3 then
+                self:AddField(GroupField(matFields))
+                matFields = {}
+            end
+        end
+    end
+    if #matFields ~= 0 then
+        self:AddField(GroupField(matFields))
+        matFields = {}
+    end
+
 
     self:AddField(GroupField({
         NumericField({

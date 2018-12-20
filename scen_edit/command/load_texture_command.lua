@@ -16,8 +16,8 @@ function LoadTextureCommand:execute()
         end
 
         Spring.ClearWatchDogTimer(nil, true)
-        tm:resetMapTextures()
-        tm:generateMapTextures()
+        tm:ResetMapTextures()
+        tm:GenerateMapTextures()
 
         local textures = {}
         for _, file in pairs(files) do

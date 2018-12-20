@@ -44,6 +44,7 @@ function TerrainSettingsEditor:init()
         rootDir = "detail/",
     }))
 
+    self:_AddMapTextureControls()
     self:_AddMapCompileControls()
 
     local children = {
@@ -59,6 +60,34 @@ function TerrainSettingsEditor:init()
     }
 
     self:Finalize(children)
+end
+
+function TerrainSettingsEditor:_AddMapTextureControls()
+    self:AddControl("map-textures-sep", {
+        Label:New {
+            caption = "Map textures",
+        },
+        Line:New {
+            x = 150,
+        }
+    })
+    self.mapTextures = {}
+    for name, def in pairs(SB.model.textureManager.shadingTextureDefs) do
+        local engineName = def.engineName
+        Spring.Echo(engineName)
+        local texInfo = gl.TextureInfo(engineName)
+        local exists = texInfo.xsize > 0 and texInfo.ysize > 0
+
+        local fname = "tex_" .. tostring(name)
+        self.mapTextures[fname] = name
+        self:AddField(BooleanField({
+            name = fname,
+            value = exists,
+            title = String.Capitalize(name),
+            tooltip = "Toggle texture enable: " .. tostring(engineName),
+            width = 140,
+        }))
+    end
 end
 
 function TerrainSettingsEditor:_AddMapCompileControls()
@@ -234,5 +263,23 @@ function TerrainSettingsEditor:OnFieldChange(name, value)
         }
         local cmd = SetMapRenderingParamsCommand(t)
         SB.commandManager:execute(cmd)
+    elseif self.mapTextures ~= nil and self.mapTextures[name] ~= nil then
+        SB.delayGL(function()
+            if value then
+                -- Make configurable
+                local sizeX, sizeZ
+                if name:find("splat_normals") then
+                    sizeX, sizeZ = 512, 512
+                else
+                    sizeX, sizeZ = Game.mapSizeX / 4, Game.mapSizeZ / 4
+                end
+
+                local tex = SB.model.textureManager:MakeAndEnableMapShadingTexture(self.mapTextures[name],
+                    sizeX, sizeZ)
+            else
+                SB.model.textureManager:ResetShadingTexture(self.mapTextures[name])
+            end
+            SB.commandManager:execute(ClearUndoRedoCommand())
+        end)
     end
 end
