@@ -69,7 +69,7 @@ function ObjectPropertyWindow:AddPosField()
             title = "G",
             tooltip = "Alter the position of the object selection as a group.",
             width = 50,
-            value = true,
+            value = self.__avgPosValue,
         }),
     }))
 end
@@ -346,6 +346,7 @@ end
 
 function ObjectPropertyWindow:init()
     self:super("init")
+    self.__avgPosValue = true
 
     local children = {}
 
@@ -690,6 +691,7 @@ function ObjectPropertyWindow:OnFieldChange(name, value)
     end
 
     if name == "avgPos" then
+        self.__avgPosValue = value
         self:OnSelectionChanged()
         return
     end
