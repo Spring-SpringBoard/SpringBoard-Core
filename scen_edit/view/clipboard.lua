@@ -37,8 +37,16 @@ function Clipboard:GeneratePasteObjectsCommands(delta, objects, bridge)
     local cmds = {}
     for _, object in pairs(objects) do
         local oc = SB.deepcopy(object)
+        -- We maintain the same distance to ground as in the previous object
+        -- This is probably the best default behavior, although in the future
+        -- we may want to develop some additional ones:
+        -- 1) never snap
+        -- 2) always snap
+        -- 3) snap if original was snapped (or visually equivalent to snapping)
+        local deltaY = oc.pos.y - Spring.GetGroundHeight(oc.pos.x, oc.pos.z)
         oc.pos.x = oc.pos.x + delta.x
         oc.pos.z = oc.pos.z + delta.z
+        oc.pos.y = Spring.GetGroundHeight(oc.pos.x, oc.pos.z) + deltaY
         local cmd = AddObjectCommand(bridge.name, oc)
         table.insert(cmds, cmd)
     end

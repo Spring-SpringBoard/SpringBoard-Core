@@ -177,13 +177,14 @@ function _FeatureS11N:OnInit()
     self:__AddModelIDField()
 end
 
--- FIXME: objectID not used
+-- FIXME: objectID argument not used
+-- luacheck: ignore 412
 function _FeatureS11N:CreateObject(object, objectID)
     local y = Spring.GetGroundHeight(object.pos.x, object.pos.z)
     local objectID = Spring.CreateFeature(object.defName, object.pos.x, object.pos.y, object.pos.z)
     if y ~= object.pos.y then
         Spring.SetFeatureMoveCtrl(objectID, true)
-        Spring.SetFeatureMoveCtrl(objectID, false)
+        -- Spring.SetFeatureMoveCtrl(objectID, false)
     end
     return objectID
 end
