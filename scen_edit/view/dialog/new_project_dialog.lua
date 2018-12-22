@@ -16,7 +16,7 @@ function NewProjectDialog:init()
         classname = "option_button",
         OnClick = {
             function()
-                if self.fields.mapType.value == "Blank" then
+                if self.fields.mapName.value == "SB_Blank_Map" then
                     if self.fields.sizeX.value > 0 and self.fields.sizeZ.value > 0 then
                         self:LoadEmptyMap()
                     end
@@ -40,18 +40,15 @@ function NewProjectDialog:init()
         }
     }
 
-
+    local items = VFS.GetMaps()
+    table.insert(items, 1, "SB_Blank_Map")
+    local captions = SB.deepcopy(items)
+    captions[1] = "Blank"
     self:AddField(ChoiceField({
-        name = "mapType",
-        title = "Map type:",
-        items = {"Blank", "Existing map"},
-        width = 300,
-    }))
-
-    self:AddField(ChoiceField({
-        name = "existingMap",
+        name = "mapName",
         title = "Map:",
-        items = VFS.GetMaps(),
+        items = items,
+        captions = captions,
         width = 300,
     }))
 
@@ -94,14 +91,12 @@ function NewProjectDialog:init()
         width = 400,
         height = 200,
     })
-
-    self:SetInvisibleFields("existingMap")
 end
 
 function NewProjectDialog:OnFieldChange(name, value)
-    if name == "mapType" then
-        if value == "Blank" then
-            self:SetInvisibleFields("existingMap")
+    if name == "mapName" then
+        if value == "SB_Blank_Map" then
+            self:SetInvisibleFields()
         else
             self:SetInvisibleFields("sizeX", "sizeZ")
         end
@@ -157,6 +152,7 @@ end
 function NewProjectDialog:LoadEmptyMap()
     local sizeX, sizeZ = self.fields.sizeX.value, self.fields.sizeZ.value
     local participants = GenerateEmptyMapParticipants()
+
     local script = {
         game = {
             name = Game.gameName,
@@ -174,6 +170,7 @@ function NewProjectDialog:LoadEmptyMap()
         },
         modOptions = SB.GetPersistantModOptions(),
     }
+
     local scriptTxt = StartScript.GenerateScriptTxt(script)
     Spring.Echo(scriptTxt)
     Spring.Reload(scriptTxt)
@@ -186,7 +183,7 @@ function NewProjectDialog:LoadExistingMap()
             name = Game.gameName,
             version = Game.gameVersion,
         },
-        mapName = self.fields.existingMap.value,
+        mapName = self.fields.mapName.value,
         teams = participants.teams,
         players = participants.players,
         ais = participants.ais,
