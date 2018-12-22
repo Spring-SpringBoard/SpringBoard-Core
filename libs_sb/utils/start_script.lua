@@ -301,7 +301,7 @@ end
 function StartScript.ParseStartScript(scriptTxt)
     local parsed = {}
 
-    local lines = String.Explode('\n', scriptTxt)
+    local lines = String.Split(scriptTxt, '\n')
     local stack = {parsed}
     for _, line in ipairs(lines) do
         local result = {ParseTDFLine(line)}
@@ -364,7 +364,7 @@ function StartScript.ParseStartScript(scriptTxt)
     merged.mapName = merged.mapname
     merged.mapname = nil
 
-    local name, version = unpack(String.Explode(' ', merged.gametype))
+    local name, version = unpack(String.Split(merged.gametype, ' '))
     merged.game = {
         name = name,
         version = version

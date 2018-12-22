@@ -1,5 +1,5 @@
 function RecieveGadgetMessage(msg)
-    local msgParams = String.Explode('|', msg)
+    local msgParams = String.Split(msg, '|')
     if msgParams[1] ~= SB.messageManager.prefix then
         return
     end

@@ -21,7 +21,7 @@ function gadget:RecvLuaMsg(msg, playerID)
         return
     end
 
-    local msgParams = String.Explode( '|', msg)
+    local msgParams = String.Split(msg, '|')
     local op = msgParams[2]
     local par1 = msgParams[3]
 
