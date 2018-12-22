@@ -162,9 +162,8 @@ function NewProjectDialog:LoadEmptyMap()
             name = Game.gameName,
             version = Game.gameVersion,
         },
-        -- mapSeed = 1, -- value doesn't matter
-        mapSeed = sizeX * 1000 + sizeZ,
-        mapName = "SpringBlankTemplate_" .. tostring(sizeX) .. "x" .. tostring(sizeZ),
+        mapSeed = 1,
+        mapName = "SB_Blank_Template_" .. tostring(sizeX) .. "x" .. tostring(sizeZ),
         teams = participants.teams,
         players = participants.players,
         ais = participants.ais,
@@ -175,8 +174,6 @@ function NewProjectDialog:LoadEmptyMap()
         },
         modOptions = SB.GetPersistantModOptions(),
     }
-    script.modOptions.new_map_x = sizeX
-    script.modOptions.new_map_z = sizeZ
     local scriptTxt = StartScript.GenerateScriptTxt(script)
     Spring.Echo(scriptTxt)
     Spring.Reload(scriptTxt)
