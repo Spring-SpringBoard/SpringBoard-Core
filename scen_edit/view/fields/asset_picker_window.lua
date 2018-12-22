@@ -48,9 +48,13 @@ function AssetPickerWindow:init(opts)
         }
     )
     if opts.expand then
-        self:Finalize(children, {noCloseButton = true})
+        self:Finalize(children)
     else
-        self:Finalize(children, {notMainWindow = true, disposeOnClose = false})
+        self:Finalize(children, {
+            notMainWindow = true,
+            buttons = { "close" },
+            disposeOnClose = false
+        })
     end
 end
 

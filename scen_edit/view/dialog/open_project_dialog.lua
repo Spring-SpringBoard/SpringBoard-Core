@@ -6,7 +6,7 @@ function OpenProjectDialog:init(dir)
     self:super("init", dir, "Open project")
 end
 
-function OpenProjectDialog:confirmDialog()
+function OpenProjectDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()
 
     if not SB.DirIsProject(path) then

@@ -8,33 +8,6 @@ function VariableWindow:init(opts)
     self.variable = opts.variable
     self.OnConfirm = opts.OnConfirm or {}
 
-    local btnOK = Button:New {
-        caption = 'OK',
-        width = '40%',
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "option_button",
-        OnClick = {
-            function()
-                self:ConfirmDialog()
-            end
-        }
-    }
-    local btnCancel = Button:New {
-        caption = 'Cancel',
-        width = '40%',
-        x = '50%',
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "negative_button",
-        OnClick = {
-            function()
-                self.window:Dispose()
-            end
-        }
-    }
-
     self:AddField(StringField({
         name = "name",
         title = "Name:",
@@ -60,12 +33,7 @@ function VariableWindow:init(opts)
         padding = {0, 0, 0, 0}
     }
 
-    local children = {
-        btnOK,
-        btnCancel,
-        self.variablePanel
-    }
-
+    local children = { self.variablePanel }
     table.insert(children,
         ScrollPanel:New {
             x = 0,
@@ -80,7 +48,7 @@ function VariableWindow:init(opts)
 
     self:Finalize(children, {
         notMainWindow = true,
-        noCloseButton = true,
+        buttons = { "ok", "cancel" },
         x = tostring(math.random(30, 40)) .. "%",
         y = tostring(math.random(30, 40)) .. "%",
         width = 500,

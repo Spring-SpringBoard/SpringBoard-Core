@@ -25,37 +25,7 @@ function Dialog:init(opts)
         self:AddMessage(opts.message)
     end
 
-    local btnOK = Button:New {
-        width = '40%',
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        caption = "OK",
-        classname = "option_button",
-        OnClick = {
-            function()
-                self:ConfirmDialog()
-                self:__MaybeClose()
-            end
-        }
-    }
-
-    local btnCancel = Button:New {
-        width = '40%',
-        x = '50%',
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        caption = "Cancel",
-        classname = "negative_button",
-        OnClick = {
-            function()
-                self:__MaybeClose()
-            end
-        }
-    }
-
     local children = {
-        self.lblMessage,
         ScrollPanel:New {
             x = 0,
             bottom = SB.conf.B_HEIGHT + 10,
@@ -65,13 +35,14 @@ function Dialog:init(opts)
             horizontalScrollbar = false,
             children = { self.stackPanel },
         },
-        btnOK,
-        btnCancel,
     }
+    if self.lblMessage ~= nil then
+        table.insert(children, self.lblMessage)
+    end
 
     self:Finalize(children, {
         notMainWindow = true,
-        noCloseButton = true,
+        buttons = { 'ok', 'cancel' },
         x = 500,
         y = 200,
         width = 500,

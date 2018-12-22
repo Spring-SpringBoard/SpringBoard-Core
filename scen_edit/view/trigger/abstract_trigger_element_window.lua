@@ -24,28 +24,12 @@ function AbstractTriggerElementWindow:init(opts)
 
     self.OnConfirm = opts.OnConfirm or {}
 
-    self.btnOK = Button:New {
-        caption = "OK",
-        height = SB.conf.B_HEIGHT,
-        width = "40%",
-        x = 10,
-        y = 20,
-        classname = "option_button",
-    }
-    self.btnCancel = Button:New {
-        caption = "Cancel",
-        height = SB.conf.B_HEIGHT,
-        width = "40%",
-        x = "55%",
-        y = 20,
-        classname = "negative_button",
-    }
     self.elementPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
         y = 150,
         x = 0,
         right = 0,
-        bottom = 0,
+        bottom = 30,
         padding = {0, 0, 0, 0}
     }
 
@@ -63,21 +47,7 @@ function AbstractTriggerElementWindow:init(opts)
     end
     self:__RefreshElementType()
 
-    self.btnCancel.OnClick = {
-        function()
-            self.window:Dispose()
-        end
-    }
-
-    self.btnOK.OnClick = {
-        function()
-            self:ConfirmDialog()
-        end
-    }
-
     local children = {
-        self.btnOK,
-        self.btnCancel,
         self.elementPanel
     }
 
@@ -85,7 +55,7 @@ function AbstractTriggerElementWindow:init(opts)
         ScrollPanel:New {
             x = 0,
             y = 50,
-            bottom = 0,
+            bottom = 30,
             right = 0,
             borderColor = {0,0,0,0},
             horizontalScrollbar = false,
@@ -95,11 +65,11 @@ function AbstractTriggerElementWindow:init(opts)
 
     self:Finalize(children, {
         notMainWindow = true,
-        noCloseButton = true,
+        buttons = { "ok", "cancel" },
         x = tostring(math.random(30, 40)) .. "%",
         y = tostring(math.random(30, 40)) .. "%",
         width = opts.width or 500,
-        height = opts.height or 350,
+        height = opts.height or 450,
         classname = "sb_window",
     })
 

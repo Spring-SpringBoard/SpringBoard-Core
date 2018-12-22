@@ -20,7 +20,7 @@ function FileDialog:init(dir, caption, fileTypes)
         dir = self.dir,
         OnDblClickItem = {
             function()
-                if self:confirmDialog() then
+                if self:ConfirmDialog() then
                     self.window:Dispose()
                 end
             end
@@ -55,36 +55,6 @@ function FileDialog:init(dir, caption, fileTypes)
         self:AddField(StringField(fileNameField))
     end
 
-    local btnOK = Button:New {
-        width = '40%',
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        caption = "OK",
-        classname = "option_button",
-        OnClick = {
-            function()
-                if self:confirmDialog() then
-                    self.window:Dispose()
-                end
-            end
-        }
-    }
-
-    local btnCancel = Button:New {
-        width = '40%',
-        x = '50%',
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        caption = "Cancel",
-        classname = "negative_button",
-        OnClick = {
-            function()
-                self.window:Dispose()
-            end
-        }
-    }
-
     local children = {
         self.fileView:GetControl(),
         ScrollPanel:New {
@@ -95,39 +65,17 @@ function FileDialog:init(dir, caption, fileTypes)
             borderColor = {0,0,0,0},
             horizontalScrollbar = false,
             children = { self.stackPanel },
-        },
-        btnOK,
-        btnCancel,
+        }
     }
-
-    local keyListener = function(key)
-        if key == Spring.GetKeyCode("esc") then
-            self.window:Dispose()
-            return true
-        elseif key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
-            if self:confirmDialog() then
-                self.window:Dispose()
-            end
-            return true
-        end
-    end
-
-    SB.stateManager:AddGlobalKeyListener(keyListener)
 
     self:Finalize(children, {
         notMainWindow = true,
-        noCloseButton = true,
+        buttons = { "ok", "cancel" },
         x = 500,
         y = 200,
         width = 600,
         height = 650,
     })
-
-    self.window.OnDispose = {
-        function()
-            SB.stateManager:RemoveGlobalKeyListener(keyListener)
-        end
-    }
 
     self.fields.fileName:Focus()
 --    self:SetDir(self.dir)
@@ -141,7 +89,7 @@ function FileDialog:getSelectedFilePath()
     return self.fileView.dir .. self.fields.fileName.value
 end
 
-function FileDialog:confirmDialog()
+function FileDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()
     if self.confirmDialogCallback then
         return self.confirmDialogCallback(path)

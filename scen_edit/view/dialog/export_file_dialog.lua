@@ -73,7 +73,7 @@ function ExportFileDialog:GetHeightmapExtremes()
     end
 end
 
-function ExportFileDialog:confirmDialog()
+function ExportFileDialog:ConfirmDialog()
     local filePath = self:getSelectedFilePath()
     --TODO: create a dialog which prompts the user if they want to delete the existing file
     -- TODO: need to add/check extension first

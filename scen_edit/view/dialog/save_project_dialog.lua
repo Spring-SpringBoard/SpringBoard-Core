@@ -6,7 +6,7 @@ function SaveProjectDialog:init(dir)
     FileDialog.init(self, dir, "Save project")
 end
 
-function SaveProjectDialog:confirmDialog()
+function SaveProjectDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()
 
     if self.fields.fileName.value == "" then

@@ -114,7 +114,10 @@ function PlayerWindow:init(team)
         }
     )
 
-    self:Finalize(children, {notMainWindow = true})
+    self:Finalize(children, {
+        notMainWindow = true,
+        buttons = { "close" },
+    })
 
     table.insert(self.window.OnDispose, function()
         local newTeam = SB.deepcopy(team)

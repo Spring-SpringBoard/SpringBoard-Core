@@ -402,41 +402,6 @@ function NewRuleDialog:init(objectPropertyWindow)
     self.initializing = true
     self.objectPropertyWindow = objectPropertyWindow
 
-    local btnOK = Button:New {
-        caption = 'OK',
-        width = '40%',
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "option_button",
-        OnClick = {
-            function()
-                local ruleName = self.fields["ruleName"].value
-                local ruleType = self.fields["ruleType"].value
-                local value = 0
-                if ruleType == "String" then
-                    value = "empty"
-                end
-                self.objectPropertyWindow:OnFieldChange("rule_" .. ruleName, value)
-                self.objectPropertyWindow.__fullRefresh = true
-                self.window:Dispose()
-            end
-        }
-    }
-    local btnCancel = Button:New {
-        caption = 'Cancel',
-        width = '40%',
-        x = '50%',
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "negative_button",
-        OnClick = {
-            function()
-                self.window:Dispose()
-            end
-        }
-    }
-
     self:AddField(GroupField({
         StringField({
             name = "ruleName",
@@ -446,14 +411,12 @@ function NewRuleDialog:init(objectPropertyWindow)
         ChoiceField({
             name = "ruleType",
             title = "Type:",
-            width = 140,
+            width = 200,
             items = {"String", "Number"}
         })
     }))
 
     local children = {
-        btnOK,
-        btnCancel,
         ScrollPanel:New {
             x = 0,
             y = 0,
@@ -465,7 +428,27 @@ function NewRuleDialog:init(objectPropertyWindow)
         },
     }
 
-    self:Finalize(children, {notMainWindow=true, noCloseButton=true})
+    self:Finalize(children, {
+        notMainWindow = true,
+        buttons = { "ok", "cancel" },
+        width = 400,
+        height = 120,
+    })
+end
+
+function NewRuleDialog:ConfirmDialog()
+    local ruleName = self.fields["ruleName"].value
+    local ruleType = self.fields["ruleType"].value
+    if String.Trim(ruleName) == "" then
+        return false
+    end
+    local value = 0
+    if ruleType == "String" then
+        value = "empty"
+    end
+    self.objectPropertyWindow:OnFieldChange("rule_" .. ruleName, value)
+    self.objectPropertyWindow.__fullRefresh = true
+    return true
 end
 
 

@@ -5,41 +5,6 @@ NewProjectDialog = Editor:extends{}
 function NewProjectDialog:init()
     self:super("init")
 
-    self.initializing = true
-
-    local btnOK = Button:New {
-        caption = 'OK',
-        width = '40%',
-        x = 1,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "option_button",
-        OnClick = {
-            function()
-                if self.fields.mapName.value == "SB_Blank_Map" then
-                    if self.fields.sizeX.value > 0 and self.fields.sizeZ.value > 0 then
-                        self:LoadEmptyMap()
-                    end
-                else
-                    self:LoadExistingMap()
-                end
-            end
-        }
-    }
-    local btnCancel = Button:New {
-        caption = 'Cancel',
-        width = '40%',
-        x = '50%',
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "negative_button",
-        OnClick = {
-            function()
-                self.window:Dispose()
-            end
-        }
-    }
-
     local items = VFS.GetMaps()
     table.insert(items, 1, "SB_Blank_Map")
     local captions = SB.deepcopy(items)
@@ -72,8 +37,6 @@ function NewProjectDialog:init()
     }))
 
     local children = {
-        btnOK,
-        btnCancel,
         ScrollPanel:New {
             x = 0,
             y = 0,
@@ -87,10 +50,20 @@ function NewProjectDialog:init()
 
     self:Finalize(children, {
         notMainWindow = true,
-        noCloseButton = true,
+        buttons = { "ok", "cancel" },
         width = 400,
         height = 200,
     })
+end
+
+function NewProjectDialog:ConfirmDialog()
+    if self.fields.mapName.value == "SB_Blank_Map" then
+        if self.fields.sizeX.value > 0 and self.fields.sizeZ.value > 0 then
+            self:LoadEmptyMap()
+        end
+    else
+        self:LoadExistingMap()
+    end
 end
 
 function NewProjectDialog:OnFieldChange(name, value)

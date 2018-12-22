@@ -716,8 +716,7 @@ function SB.AskToRestart()
                 OnClick = {
                     function()
                         Spring.Reload(VFS.LoadFile("_script.txt"))
-
-                        -- window:Dispose()
+                        window:Dispose()
                         -- Spring.SendCommands("quit", "quitforce")
                     end
                 }

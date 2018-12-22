@@ -33,37 +33,8 @@ function TriggerWindow:init(trigger)
         resizeItems = false,
         padding = {0, 0, 0, 0}
     }
-    local btnOK = Button:New {
-        caption = 'OK',
-        width = 200,
-        x = 170,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "option_button",
-        OnClick = {
-            function()
-                self:ConfirmDialog()
-            end
-        }
-    }
-    local btnCancel = Button:New {
-        caption = 'Cancel',
-        width = 200,
-        x = 380,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        classname = "negative_button",
-        OnClick = {
-            function()
-                self.window:Dispose()
-            end
-        }
-    }
 
-    local children = {
-        btnOK,
-        btnCancel,
-    }
+    local children = {}
 
     table.insert(children,
         ScrollPanel:New {
@@ -89,7 +60,7 @@ function TriggerWindow:init(trigger)
     )
     self:Finalize(children, {
         notMainWindow = true,
-        noCloseButton = true,
+        buttons = { "ok", "cancel" },
         width = 610,
         height = 550,
         x = tostring(math.random(25, 35)) .. "%",

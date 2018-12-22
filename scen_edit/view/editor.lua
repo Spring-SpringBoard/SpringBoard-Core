@@ -19,21 +19,6 @@ function Editor:init()
     self.fields = {}
     self.fieldOrder = {}
 
-    self.btnClose = Button:New {
-        caption = 'Close',
-        width = 100,
-        right = 15,
-        bottom = 1,
-        height = SB.conf.B_HEIGHT,
-        OnClick = {
-            function()
-                self:__MaybeClose()
-                -- FIXME: should be resetting to the default state?
-                -- SB.stateManager:SetState(DefaultState())
-            end
-        },
-    }
-
     self.stackPanel = StackPanel:New {
         y = 0,
         x = 0,
@@ -105,19 +90,19 @@ end
 --   editor will not be added to the main panel (right side), but will instead be a floating window.
 -- @tparam[opt=550] boolean opts.width Specifies window width. Only applicable for floating windows.
 -- @tparam[opt=550] boolean opts.height Specifies window height. Only applicable for floating windows.
--- @tparam[opt=false] boolean opts.noCloseButton If true, there will be no close button.
+-- @tparam table opts.buttons Specifies what common buttons should be added to the bottom of the editor.
+--  Values include "ok", "cancel" and "close"
 -- @tparam boolean opts.disposeOnClose If true, the window will
 --   be disposed when closed. Defaults to true if opts.notMainWindow is true, otherwise it defaults to false.
 function Editor:Finalize(children, opts)
     if not self.__initializing then
         Log.Error("\"Editor.init(self)\" wasn't invoked properly.")
         Log.Error(debug.traceback())
+        assert(self.__initializing, "\"Editor.init(self)\" wasn't invoked properly.")
     end
 
     opts = opts or {}
-    if not opts.noCloseButton then
-        table.insert(children, self.btnClose)
-    end
+    self:_FinalizeButtons(children, opts)
 
     local OnShow = {function() self:__OnShow() end}
     local OnHide = {function() self:__OnHide() end}
@@ -151,8 +136,8 @@ function Editor:Finalize(children, opts)
         -- TODO: Make configurable
         self.window = Window:New {
             parent = screen0,
-            x = opts.x or "40%",
-            y = opts.y or "40%",
+            x = opts.x or "25%",
+            y = opts.y or "20%",
             width = opts.width or 550,
             height = opts.height or 500,
             resizable  = false,
@@ -177,7 +162,7 @@ function Editor:Finalize(children, opts)
                         self:__MaybeClose()
                     end
                     return true
-                elseif not opts.noCloseButton then
+                else
                     self:__MaybeClose()
                     return true
                 end
@@ -190,6 +175,74 @@ function Editor:Finalize(children, opts)
     self.stackPanel:Invalidate()
 
     self.__initializing = false
+end
+
+function Editor:_FinalizeButtons(children, opts)
+    if opts.buttons == nil then
+        assert(not opts.notMainWindow, "Dialogs should probably have some buttons so they can be closed")
+        return
+    end
+
+    local btnCount = #opts.buttons
+    -- atm we only support 'ok/cancel' or 'close'.
+    -- anything else is probably a mistake so we guard against it
+    assert(btnCount <= 2, "More than two buttons. This is probably a bug")
+    local btnTable = {
+        bottom = 0,
+        width = '40%',
+        height = SB.conf.B_HEIGHT,
+    }
+    local x = 0
+    for _, btnName in ipairs(opts.buttons) do
+        assert(type(btnName) == "string", "Editor buttons are specified as string")
+
+        if btnName == "ok" then
+            local btn = SB.deepcopy(btnTable)
+            Table.Merge(btn, {
+                caption = "OK",
+                classname = "option_button",
+                x = tostring(x) .. '%',
+                OnClick = {
+                    function()
+                        self:ConfirmDialog()
+                        self:__MaybeClose()
+                    end
+                }
+            })
+            table.echo(btn)
+            table.insert(children, Button:New(btn))
+        elseif btnName == "cancel" then
+            local btn = SB.deepcopy(btnTable)
+            Table.Merge(btn, {
+                caption = "Cancel",
+                classname = "negative_button",
+                x = tostring(x) .. '%',
+                OnClick = {
+                    function()
+                        self:__MaybeClose()
+                    end
+                }
+            })
+            table.insert(children, Button:New(btn))
+        elseif btnName == "close" then
+            local btn = SB.deepcopy(btnTable)
+            Table.Merge(btn, {
+                caption = 'Close',
+                right = '10%', -- close seems better on the right
+                OnClick = {
+                    function()
+                        self:__MaybeClose()
+                        -- FIXME: should be resetting to the default state?
+                        -- SB.stateManager:SetState(DefaultState())
+                    end
+                },
+            })
+            table.insert(children, Button:New(btn))
+        else
+            error("Unexpected button name: " .. tostring(btnName))
+        end
+        x = x + 50
+    end
 end
 
 -- Don't use this directly because ordering would be messed up.

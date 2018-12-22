@@ -77,9 +77,15 @@ function ColorPickerWindow:init(opts)
         }
     )
     if opts.expand then
-        self:Finalize(children, {noCloseButton = true})
+        self:Finalize(children)
     else
-        self:Finalize(children, {notMainWindow = true, disposeOnClose = false})
+        self:Finalize(children, {
+            notMainWindow = true,
+            buttons = { "close" },
+            disposeOnClose = false,
+            width = 500,
+            height = 300,
+        })
     end
 end
 

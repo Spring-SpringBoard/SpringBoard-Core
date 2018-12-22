@@ -6,7 +6,7 @@ function OpenFileDialog:init(dir)
     self:super("init", dir, "Open file")
 end
 
-function OpenFileDialog:confirmDialog()
+function OpenFileDialog:ConfirmDialog()
     local filePath = self:getSelectedFilePath()
     if not VFS.FileExists(filePath, VFS.RAW_ONLY) then
         return

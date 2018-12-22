@@ -1,20 +1,22 @@
 Table = Table or {}
 
-function Table:Merge(table2)
-    for k, v in pairs(table2) do
+-- Merge in place
+-- TODO: make a non inplace variant too
+function Table.Merge(originalTable, overrideTable)
+    for k, v in pairs(overrideTable) do
         if type(v) == 'table' then
-            local sv = type(self[k])
+            local sv = type(originalTable[k])
             if sv == 'table' or sv == 'nil' then
                 if sv == 'nil' then
-                    self[k] = {}
+                    originalTable[k] = {}
                 end
-                Table.Merge(self[k], v)
+                Table.Merge(originalTable[k], v)
             end
-        elseif self[k] == nil then
-            self[k] = v
+        elseif originalTable[k] == nil then
+            originalTable[k] = v
         end
     end
-    return self
+    return originalTable
 end
 
 -- Concatenates one or more array tables into a

@@ -6,7 +6,7 @@ function ImportFileDialog:init(dir, fileTypes)
     self:super("init", dir, "Import file", fileTypes)
 end
 
-function ImportFileDialog:confirmDialog()
+function ImportFileDialog:ConfirmDialog()
     local filePath = self:getSelectedFilePath()
 
     if not VFS.FileExists(filePath, VFS.RAW_ONLY) then

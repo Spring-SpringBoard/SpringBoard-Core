@@ -164,9 +164,13 @@ function ArrayFieldWindow:init(opts)
         }
     )
     if self.field.expand then
-        self:Finalize(children, {noCloseButton = true})
+        self:Finalize(children)
     else
-        self:Finalize(children, {notMainWindow = true, disposeOnClose = false})
+        self:Finalize(children, {
+            notMainWindow = true,
+            buttons = { "close" },
+            disposeOnClose = false
+        })
     end
 
     self:SetValue(self.field.value)
