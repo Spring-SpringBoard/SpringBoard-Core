@@ -453,20 +453,16 @@ end
 
 
 function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
-    local addedRule = false
+    self:AddControl("rule-sep", {
+        Label:New {
+            caption = "Rules",
+        },
+        Line:New {
+            x = 50,
+            width = self.VALUE_POS,
+        }
+    })
     for rule, value in pairs(bridge.s11n:Get(objectID, "rules")) do
-        if not addedRule then
-            addedRule = true
-            self:AddControl("rule-sep", {
-                Label:New {
-                    caption = "Rules",
-                },
-                Line:New {
-                    x = 50,
-                    width = self.VALUE_POS,
-                }
-            })
-        end
         local ruleName = "rule_" .. rule
         local fields = {}
 
