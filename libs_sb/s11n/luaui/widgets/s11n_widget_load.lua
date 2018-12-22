@@ -13,7 +13,7 @@ function widget:GetInfo()
         name      = "s11n widget",
         desc      = "Spring serialization library",
         author    = "gajop",
-        license   = "GPLv2",
+        license   = "MIT",
         layer     = -10000,
         enabled   = true,
         handler   = true,

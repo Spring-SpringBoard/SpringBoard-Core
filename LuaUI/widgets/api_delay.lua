@@ -6,7 +6,7 @@ function widget:GetInfo()
 		desc      = versionNumber .. " Allows delaying of widget calls.",
 		author    = "gajop",
 		date      = "future",
-		license   = "GNU LGPL, v2.1 or later",
+		license   = "MIT",
 		layer     = -10000,
 		enabled   = true  --  loaded by default?
 	}

@@ -1,15 +1,15 @@
 VFS.Include(KERNEL_FOLDER .. "kernel_utils.lua")
 
 function widget:GetInfo()
-return {
-	name    = "Spring kernel communicator and widget module",
-	desc    = "Creates a commlink between Spring kernel and Spring",
-	author  = "gajop",
-	date    = "after steam release",
-	license = "GNU GPL, v2 or later",
-	layer   = -10010,
-	enabled = true,
-}
+	return {
+		name    = "Spring kernel communicator and widget module",
+		desc    = "Creates a commlink between Spring kernel and Spring",
+		author  = "gajop",
+		date    = "after steam release",
+		license = "MIT",
+		layer   = -10010,
+		enabled = true,
+	}
 end
 
 __SK.CONFIG_FILE = KERNEL_FOLDER .. "kernel-config.json"

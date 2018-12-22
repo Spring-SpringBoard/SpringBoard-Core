@@ -5,8 +5,7 @@ function widget:GetInfo()
         name      = "HANDLER_SpringBoard_widget",
         desc      = "HANDLER_Game-independent editor (widget)",
         author    = "gajop",
-        date      = "in the future",
-        license   = "GPL-v2",
+        license   = "MIT",
 		layer     = -2000,
 		enabled   = true,  --  loaded by default?
 		handler   = true,

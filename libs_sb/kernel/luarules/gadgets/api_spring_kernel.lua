@@ -1,15 +1,14 @@
 VFS.Include(KERNEL_FOLDER .. "kernel_utils.lua")
 
 function gadget:GetInfo()
-return {
-	name    = "Spring kernel gadget",
-	desc    = "Spring kernel gadget executor (synced and unsynced)",
-	author  = "gajop",
-	date    = "after steam release",
-	license = "GNU GPL, v2 or later",
-	layer   = -10010,
-	enabled = true,
-}
+	return {
+		name    = "Spring kernel gadget",
+		desc    = "Spring kernel gadget executor (synced and unsynced)",
+		author  = "gajop",
+		license = "MIT",
+		layer   = -10010,
+		enabled = true,
+	}
 end
 
 -- SYNCED

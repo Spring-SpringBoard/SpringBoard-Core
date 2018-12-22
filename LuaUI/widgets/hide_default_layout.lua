@@ -1,13 +1,12 @@
 function widget:GetInfo()
-  return {
-    name      = "Hides the default interface",
-    desc      = "",
-    author    = "gajop",
-    date      = "in the future",
-    license   = "GPL-v2",
-    layer     = 1001,
-    enabled   = true,
-  }
+    return {
+        name      = "Hides the default interface",
+        desc      = "",
+        author    = "gajop",
+        license   = "MIT",
+        layer     = 1001,
+        enabled   = true,
+    }
 end
 
 local gameMode

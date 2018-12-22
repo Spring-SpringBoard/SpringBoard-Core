@@ -1,12 +1,11 @@
 local info = {
-  name      = "SpringBoard_widget",
-  desc      = "Game-independent editor (widget)",
-  author    = "gajop",
-  date      = "in the future",
-  license   = "GPL-v2",
-  layer     = 1001,
-  enabled   = true,
-  -- handler   = true,
+    name      = "SpringBoard_widget",
+    desc      = "Game-independent editor (widget)",
+    author    = "gajop",
+    license   = "MIT",
+    layer     = 1001,
+    enabled   = true,
+    -- handler   = true,
 }
 
 -- new addonhandler currently disabled

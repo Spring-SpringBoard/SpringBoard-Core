@@ -1,15 +1,14 @@
 function widget:GetInfo()
-return {
-    name      = "ChiliFX",
-    desc      = "Chili Effects library",
-    author    = "gajop",
-    date      = "in the future",
-    license   = "GPL-v2",
-    layer     = -999,
-    enabled   = true,
-    api       = true,
-    hidden    = true,
-}
+    return {
+        name      = "ChiliFX",
+        desc      = "Chili Effects library",
+        author    = "gajop",
+        license   = "MIT",
+        layer     = -999,
+        enabled   = true,
+        api       = true,
+        hidden    = true,
+    }
 end
 
 LCS = loadstring(VFS.LoadFile(WG.SB_LIBS_DIR .. "lcs/LCS.lua"))

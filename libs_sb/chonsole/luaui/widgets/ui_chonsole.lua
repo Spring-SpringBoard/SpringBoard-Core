@@ -1,13 +1,12 @@
 function widget:GetInfo()
-  return {
-    name      = "Chonsole",
-    desc      = "Chili Console",
-    author    = "gajop",
-    date      = "in the future",
-    license   = "GPL-v2",
-    layer     = 2000,
-    enabled   = true,
-  }
+	return {
+		name      = "Chonsole",
+		desc      = "Chili Console",
+		author    = "gajop",
+		license   = "MIT",
+		layer     = 2000,
+		enabled   = true,
+	}
 end
 
 VFS.Include(CHONSOLE_FOLDER .. "/luaui/config/globals.lua", nil, VFS.DEF_MODE)

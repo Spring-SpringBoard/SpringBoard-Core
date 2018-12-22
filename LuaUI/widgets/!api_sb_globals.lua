@@ -2,8 +2,7 @@ function widget:GetInfo()
     return {
         name      = "sb_globals",
         author    = "gajop",
-        date      = "in the future",
-        license   = "GPL-v2",
+        license   = "MIT",
         layer     = -9999999999,
         enabled   = true,
         api       = true,

@@ -3,7 +3,7 @@ function gadget:GetInfo()
         name    = "s11n map feature loader",
         desc    = "s11n gadget for loading map features",
         author  = "gajop",
-        license = "GPLv2",
+        license = "MIT",
         layer   = -10000,
         enabled = true,
     }

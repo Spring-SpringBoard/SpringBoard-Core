@@ -6,7 +6,6 @@ function widget:GetInfo()
 		name      = "i18n",
 		desc      = "Internationalization library for Spring",
 		author    = "gajop",
-		date      = "WIP",
 		license   = "GPLv2",
 		version   = "0.1",
 		layer     = -1000,

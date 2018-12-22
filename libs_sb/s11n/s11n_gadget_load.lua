@@ -15,7 +15,7 @@ function gadget:GetInfo()
         name    = "s11n gadget",
         desc    = "Spring serialization library gadget",
         author  = "gajop",
-        license = "GPLv2",
+        license = "MIT",
         layer   = -10000,
         enabled = true,
         handler = true,
