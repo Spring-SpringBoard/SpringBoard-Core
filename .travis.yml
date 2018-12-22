@@ -18,4 +18,4 @@ before_install:
 script:
   # '--enable 1' means 'global = true'
   # this allows us to use the same .luacheckrc for both travis and IDEs
-  - luacheck scen_edit libs_sb/utils savetable.lua --enable 1
+  - luacheck scen_edit triggers libs_sb/utils savetable.lua --enable 1

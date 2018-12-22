@@ -92,8 +92,8 @@ return {
                         Chili.TextBox:New {
                             x = 40,
                             right = 0,
-                    		y = 15,
-                    		bottom = 50,
+                            y = 15,
+                            bottom = 50,
                             text = text,
                         },
                         Chili.Button:New {

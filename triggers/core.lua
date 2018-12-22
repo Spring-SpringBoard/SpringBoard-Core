@@ -15,7 +15,7 @@ end
 return {
     actions = function()
         local variableAssignments = {}
-        allTypes = SB.metaModel:GetAllDataTypes()
+        local allTypes = SB.metaModel:GetAllDataTypes()
         for _, type in pairs(allTypes) do
             if CanBeVariable(type) then
                 local variableAssignment = {
