@@ -139,7 +139,7 @@ function TriggersWindow:Populate()
             },
             OnClick = {
                 function()
-                    local newTrigger = SB.deepcopy(trigger)
+                    local newTrigger = Table.DeepCopy(trigger)
                     newTrigger.id = nil
                     newTrigger.name = newTrigger.name .. " copy"
                     local cmd = AddTriggerCommand(newTrigger)
@@ -170,7 +170,7 @@ function TriggersWindow:Populate()
 end
 
 function TriggersWindow:MakeTriggerWindow(trigger, edit)
-    local triggerCopy = SB.deepcopy(trigger)
+    local triggerCopy = Table.DeepCopy(trigger)
     local triggerWindow = TriggerWindow(triggerCopy)
 
     local sw = self.window

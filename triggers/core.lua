@@ -35,7 +35,7 @@ return {
                         },
                     },
                     execute = function(input)
-                        local newValue = SB.deepcopy(input.variable)
+                        local newValue = Table.DeepCopy(input.variable)
                         newValue.value.value = input[type.name]
                         if type.name == "unit" then
                             newValue.value.value = unitBridge.s11n:GetModelID(newValue.value.value)

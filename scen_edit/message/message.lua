@@ -12,8 +12,11 @@ function Message:serialize()
     })
 end
 
+-- TODO: Use Table.DeepCopy for this too
 function Message:deepcopyLCS(t)
-    if type(t) ~= 'table' then return t end
+    if type(t) ~= 'table' then
+        return t
+    end
     local res = {}
     for k, v in pairs(t) do
         if type(v) ~= "function" and k ~= "__index" then

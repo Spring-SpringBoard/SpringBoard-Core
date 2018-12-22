@@ -114,7 +114,7 @@ end
 
 function MetaModel:SetCustomDataTypes(dataTypes)
     self.customDataTypes = dataTypes
-    self.allDataTypes = SB.deepcopy(SB.coreTypes())
+    self.allDataTypes = Table.DeepCopy(SB.coreTypes())
     for _, dataType in pairs(self.customDataTypes) do
         table.insert(self.allDataTypes, dataType)
     end

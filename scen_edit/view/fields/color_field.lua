@@ -78,7 +78,7 @@ function ColorField:init(field)
         },
     }
 
-    self.originalValue = SB.deepcopy(self.value)
+    self.originalValue = Table.DeepCopy(self.value)
     self.colorWindow = ColorFieldPickerWindow({
         expand = self.expand,
         value = self.originalValue,

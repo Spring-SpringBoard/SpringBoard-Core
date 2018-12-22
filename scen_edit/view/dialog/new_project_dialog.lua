@@ -7,7 +7,7 @@ function NewProjectDialog:init()
 
     local items = VFS.GetMaps()
     table.insert(items, 1, "SB_Blank_Map")
-    local captions = SB.deepcopy(items)
+    local captions = Table.DeepCopy(items)
     captions[1] = "Blank"
     self:AddField(ChoiceField({
         name = "mapName",

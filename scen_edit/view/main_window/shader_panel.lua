@@ -164,7 +164,7 @@ end
 
 function NodeEditor:NewNode(nodeClassName)
     local nodeClass = self.nodeClasses[nodeClassName]
-    local nodeInstance = SB.deepcopy(nodeClass)
+    local nodeInstance = Table.DeepCopy(nodeClass)
     return nodeInstance
 end
 

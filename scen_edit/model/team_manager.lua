@@ -68,7 +68,7 @@ end
 
 function TeamManager:serialize()
     local retVal = {}
-    local teams = SB.deepcopy(self.teams)
+    local teams = Table.DeepCopy(self.teams)
     for team1ID, team in pairs(teams) do
         team.allies = {}
         for team2ID, _ in pairs(teams) do

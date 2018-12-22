@@ -143,7 +143,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         return function(functionParams)
             local fParams = params
             if functionParams then
-                fParams = SB.deepcopy(params)
+                fParams = Table.DeepCopy(params)
                 for k, v in pairs(functionParams) do
                     fParams[k] = v
                 end
@@ -157,7 +157,7 @@ function FieldResolver:Resolve(field, type, rawVariable, params)
         return function(functionParams)
             local fParams = params
             if functionParams then
-                fParams = SB.deepcopy(params)
+                fParams = Table.DeepCopy(params)
                 for k, v in pairs(functionParams) do
                     fParams[k] = v
                 end

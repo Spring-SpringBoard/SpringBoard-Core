@@ -36,7 +36,7 @@ end
 function Clipboard:GeneratePasteObjectsCommands(delta, objects, bridge)
     local cmds = {}
     for _, object in pairs(objects) do
-        local oc = SB.deepcopy(object)
+        local oc = Table.DeepCopy(object)
         -- We maintain the same distance to ground as in the previous object
         -- This is probably the best default behavior, although in the future
         -- we may want to develop some additional ones:

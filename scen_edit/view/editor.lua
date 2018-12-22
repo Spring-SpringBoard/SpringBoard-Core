@@ -197,7 +197,7 @@ function Editor:_FinalizeButtons(children, opts)
         assert(type(btnName) == "string", "Editor buttons are specified as string")
 
         if btnName == "ok" then
-            local btn = SB.deepcopy(btnTable)
+            local btn = Table.DeepCopy(btnTable)
             Table.Merge(btn, {
                 caption = "OK",
                 classname = "option_button",
@@ -212,7 +212,7 @@ function Editor:_FinalizeButtons(children, opts)
             table.echo(btn)
             table.insert(children, Button:New(btn))
         elseif btnName == "cancel" then
-            local btn = SB.deepcopy(btnTable)
+            local btn = Table.DeepCopy(btnTable)
             Table.Merge(btn, {
                 caption = "Cancel",
                 classname = "negative_button",
@@ -225,7 +225,7 @@ function Editor:_FinalizeButtons(children, opts)
             })
             table.insert(children, Button:New(btn))
         elseif btnName == "close" then
-            local btn = SB.deepcopy(btnTable)
+            local btn = Table.DeepCopy(btnTable)
             Table.Merge(btn, {
                 caption = 'Close',
                 right = '10%', -- close seems better on the right

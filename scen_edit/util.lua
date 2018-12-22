@@ -254,7 +254,7 @@ end
 
 local function hintCtrlFunction(ctrl, startTime, timeout, color)
     local deltaTime = os.clock() - startTime
-    local newColor = SB.deepcopy(color)
+    local newColor = Table.DeepCopy(color)
     newColor[4] = 0.2 + math.abs(math.sin(deltaTime * 6) / 3.14)
 
     -- FIXME: checking for control type via .classname will cause skinning issues
@@ -291,9 +291,9 @@ function SB.HintEditor(editor, color, timeout)
         if ctrl._originalColor == nil then
             -- FIXME: checking for control type via .classname will cause skinning issues
             if ctrl.classname == "label" or ctrl.classname == "checkbox" or ctrl.classname == "editbox" then
-                ctrl._originalColor = SB.deepcopy(ctrl.font.color)
+                ctrl._originalColor = Table.DeepCopy(ctrl.font.color)
             else
-                ctrl._originalColor = SB.deepcopy(ctrl.backgroundColor)
+                ctrl._originalColor = Table.DeepCopy(ctrl.backgroundColor)
             end
             hintCtrlFunction(ctrl, startTime, timeout, color)
         end
@@ -305,20 +305,6 @@ function SB.SetClassName(class, className)
     if SB.commandManager:getCommandType(className) == nil then
         SB.commandManager:addCommandType(className, class)
     end
-end
-
-function SB.deepcopy(t)
-    if type(t) ~= 'table' then return t end
-    local mt = getmetatable(t)
-    local res = {}
-    for k,v in pairs(t) do
-        if type(v) == 'table' then
-            v = SB.deepcopy(v)
-        end
-        res[k] = v
-    end
-    setmetatable(res,mt)
-    return res
 end
 
 local __fieldTypeMapping

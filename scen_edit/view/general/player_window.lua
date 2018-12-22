@@ -120,7 +120,7 @@ function PlayerWindow:init(team)
     })
 
     table.insert(self.window.OnDispose, function()
-        local newTeam = SB.deepcopy(team)
+        local newTeam = Table.DeepCopy(team)
         newTeam.name        = self.fields["name"].value
         local clbColor      = self.fields["color"].value
         newTeam.color.r     = clbColor[1]

@@ -28,7 +28,7 @@ function ColorPickerWindow:init(opts)
             },
         },
         CalculateColor = function(obj, color)
-            local c = SB.deepcopy(color)
+            local c = Table.DeepCopy(color)
             c[1] = math.min(0.998, c[1])
             c[2] = math.max(0.001, c[2])
             c[3] = math.max(0.001, c[3])

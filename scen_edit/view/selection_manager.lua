@@ -13,7 +13,7 @@ end
 
 function SelectionManager:GetSelection()
     self:Update()
-    return SB.deepcopy(self.selected)
+    return Table.DeepCopy(self.selected)
 end
 
 function SelectionManager:GetSelectionCount()

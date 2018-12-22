@@ -66,7 +66,7 @@ function TriggerManager:getAllTriggers()
 end
 
 function TriggerManager:serialize()
-    return SB.deepcopy(self.triggers)
+    return Table.DeepCopy(self.triggers)
 --[[    local retVal = {}
     for _, trigger in pairs(self.triggers) do
         retVal[trigger.id] = trigger

@@ -89,7 +89,7 @@ end
 function BrushManager:Serialize()
     local brushes = {}
     for _, brush in pairs(self.brushes) do
-        local brushCopy = SB.deepcopy(brush)
+        local brushCopy = Table.DeepCopy(brush)
         brushCopy.image = nil
         brushes[brush.brushID] = brushCopy
     end

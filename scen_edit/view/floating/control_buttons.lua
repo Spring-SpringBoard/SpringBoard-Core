@@ -165,7 +165,7 @@ function ControlButtons:GameStarted()
     self.btnStartStop.backgroundColor = SB.conf.BTN_CANCEL_COLOR
     self.btnStartStop.Update = function(obj, ...)
         Chili.Button.Update(obj, ...)
-        obj.backgroundColor = SB.deepcopy(SB.conf.BTN_CANCEL_COLOR)
+        obj.backgroundColor = Table.DeepCopy(SB.conf.BTN_CANCEL_COLOR)
         obj.backgroundColor[4] = 0.5 + math.abs(2 * math.sin(os.clock())) / math.pi
         obj:Invalidate()
         obj:RequestUpdate()

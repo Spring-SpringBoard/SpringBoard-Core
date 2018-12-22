@@ -144,7 +144,7 @@ function AbstractTriggerElementWindow:__RefreshElementType()
         local params = self.params
         local extraSourcesFunction = self.elType.extraSources
         if extraSourcesFunction then
-            params = SB.deepcopy(params)
+            params = Table.DeepCopy(params)
             for _, es in pairs(extraSourcesFunction) do
                 table.insert(params, es)
             end
@@ -155,7 +155,7 @@ function AbstractTriggerElementWindow:__RefreshElementType()
             local paramsI = params
             local extraSourcesInput = dataType.extraSources
             if extraSourcesInput then
-                paramsI = SB.deepcopy(paramsI)
+                paramsI = Table.DeepCopy(paramsI)
                 for _, es in pairs(extraSourcesInput) do
                     table.insert(paramsI, es)
                 end
@@ -333,7 +333,7 @@ function AbstractTriggerElementWindow:UpdateModel()
 end
 
 function AbstractTriggerElementWindow:EditElement()
-    local _element = SB.deepcopy(self.element)
+    local _element = Table.DeepCopy(self.element)
     self.element.typeName = self.fields["elementType"].value
 
     local success, errorEditors = self:UpdateModel()
