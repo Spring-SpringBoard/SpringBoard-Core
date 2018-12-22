@@ -60,17 +60,22 @@ function ReloadFile(path)
 		return
 	end
 	Spring.Log(LOG_SECTION, LOG.NOTICE,	"Reloading addon: " .. tostring(addonName) .. "...")
-	if luaContextName == "LuaUI" then
-		if widgetHandler:DisableWidget(addonName) then
-			widgetHandler:EnableWidget(addonName)
-		else
-			widgetHandler:LoadWidget(path)
+	local success, err = pcall(function()
+		if luaContextName == "LuaUI" then
+			if widgetHandler:DisableWidget(addonName) then
+				widgetHandler:EnableWidget(addonName)
+			else
+				widgetHandler:LoadWidget(path)
+			end
+		elseif luaContextName == "LuaRules" then
+			if gadgetHandler:DisableGadget(addonName) then
+				gadgetHandler:EnableGadget(addonName)
+			else
+				gadgetHandler:EnableGadget(path)
+			end
 		end
-	elseif luaContextName == "LuaRules" then
-		if gadgetHandler:DisableGadget(addonName) then
-			gadgetHandler:EnableGadget(addonName)
-		else
-			gadgetHandler:EnableGadget(path)
-		end
+	end)
+	if not success then
+		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to reload widget: " .. tostring(addonName))
 	end
 end

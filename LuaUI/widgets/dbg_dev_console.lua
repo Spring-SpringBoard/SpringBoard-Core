@@ -5,7 +5,7 @@
 -- Better toggle (On/Off) buttons
 -- Put it on a repository, load it like other libs
 -- Fix fontsize changing on select
--- Pop up on new error/warning (option)
+-- Pop up on new warning (option)
 -- Button to upload log (using the connector)
 -- Scrollbar should have a constant height (it can be too small if there's a lot of text)
 
@@ -39,6 +39,8 @@ local cfg = {
 	reloadLines = 50000,
 	visible = true,
 	onlyErrorsAndWarnings = false,
+	popupOnError = true,
+	popupOnWarning = false, -- not configurable atm
 }
 local fontSize = 16
 
@@ -61,7 +63,6 @@ local function SetWindowVisibility(visible)
 	cfg.visible = visible
 	window:SetVisibility(visible)
 end
-
 local function ToggleWindowVisibility()
 	SetWindowVisibility(not cfg.visible)
 end
@@ -70,9 +71,15 @@ local function SetFilterMessages(onlyErrorsAndWarnings)
 	cfg.onlyErrorsAndWarnings = onlyErrorsAndWarnings
 	ReloadAllMessages()
 end
-
 local function ToggleFilterMessages()
 	SetFilterMessages(not cfg.onlyErrorsAndWarnings)
+end
+
+local function SetPopUpOnError(popupOnError)
+	cfg.popupOnError = popupOnError
+end
+local function TogglePopUpOnError()
+	SetPopUpOnError(not cfg.popupOnError)
 end
 
 function loadWindow()
@@ -333,6 +340,22 @@ function loadWindow()
 		width = widthStr,
 		height = heightStr,
 		tooltip = '',
+		caption = "Toggle Popup-on-Error",
+		fontSize = btnFontSize,
+		OnClick = {
+			function()
+				TogglePopUpOnError()
+			end
+		}
+	}
+	curr_x = curr_x + el_size + padding
+	Chili.Button:New {
+		parent = window,
+		x = ('%f%%'):format(curr_x),
+		bottom = 0,
+		width = widthStr,
+		height = heightStr,
+		tooltip = '',
 		caption = "Hide/Show (F8)",
 		fontSize = btnFontSize,
 		OnClick = {
@@ -470,6 +493,7 @@ local function processLine(line)
 	end
 	-------------------------------
 	local name = ''
+	local isError = false
 	local dedup = cfg.msgCap
 	--if (names[ssub(line,2,(sfind(line,"> ") or 1)-1)] ~= nil) then
 	--		-- Player Message
@@ -495,6 +519,7 @@ local function processLine(line)
 	local lowerLine = slower(line)
 	if sfind(lowerLine,"error") or sfind(lowerLine,"failed") then
 		textColor = color.error
+		isError = true
 	elseif sfind(lowerLine,"warning") then
 		textColor = color.warning
 	else
@@ -504,12 +529,12 @@ local function processLine(line)
 		end
 	end
 	line = textColor .. text
-	return line, false, dedup
+	return line, false, dedup, isError
 end
 
 function widget:AddConsoleLine(msg)
 	-- parse the new line
-	local text, ignore, dedup = processLine(msg)
+	local text, ignore, dedup, isError = processLine(msg)
 	if ignore then return end
 	-- check for duplicates
 	-- for i=0, dedup-1 do
@@ -525,6 +550,9 @@ function widget:AddConsoleLine(msg)
 	-- 	end
 	-- end
 	NewConsoleLine(text)
+	if isError and cfg.popupOnError and not cfg.visible then
+		ToggleWindowVisibility()
+	end
 end
 
 function CheckForLuaFilePath(text)
