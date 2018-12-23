@@ -2,7 +2,7 @@ uniform sampler2D mapTex;
 uniform sampler2D patternTexture;
 
 uniform mat3 kernel;
-uniform float blendFactor;
+uniform float strength;
 
 uniform float patternRotation;
 
@@ -62,5 +62,5 @@ void main(void)
     weightColor /= totalWeight;
 */
 
-	gl_FragColor = mix(weightColor, mapColor, 1.0 - patternColor.a * blendFactor);
+	gl_FragColor = mix(weightColor, mapColor, 1.0 - patternColor.a * strength);
 }

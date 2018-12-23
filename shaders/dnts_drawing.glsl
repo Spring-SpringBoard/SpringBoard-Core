@@ -4,7 +4,7 @@ uniform sampler2D mapTex;
 uniform sampler2D patternTexture;
 
 uniform float x1, x2, z1, z2;
-uniform float blendFactor;
+uniform float strength;
 // colorIndex: [1, 4] for adding and [-4, -1] for removing
 uniform int colorIndex;
 uniform int exclusive;
@@ -65,7 +65,7 @@ void main(void)
 			//color = 1.0 - value;
 			color = 0.0;
 		}
-		color = mix(mapColor[index], color, blendFactor * patternColor.a);
+		color = mix(mapColor[index], color, strength * patternColor.a);
 		vec4 outColor = mapColor;
 		outColor[index] = color;
 		gl_FragColor = outColor;
@@ -77,7 +77,7 @@ void main(void)
 			//color = vec4(1.0 - value);
 			color = vec4(0.0);
 		}
-		color = mix(mapColor, color, blendFactor * patternColor.a);
+		color = mix(mapColor, color, strength * patternColor.a);
 		if (colorIndex < 0) {
 			color = min(mapColor, color);
 		}

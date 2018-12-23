@@ -9,7 +9,7 @@ function TerrainChangeTextureState:init(editorView)
     self.mode           = self.editorView.fields["mode"].value
     self.dntsIndex      = self.editorView.fields["dntsIndex"].value
     self.kernelMode     = self.editorView.fields["kernelMode"].value
-    self.blendFactor    = self.editorView.fields["blendFactor"].value
+    self.strength    = self.editorView.fields["strength"].value
     self.falloffFactor  = self.editorView.fields["falloffFactor"].value
     self.featureFactor  = self.editorView.fields["featureFactor"].value
     self.diffuseColor   = self.editorView.fields["diffuseColor"].value
@@ -71,7 +71,7 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
         texScale = self.texScale,
         mode = self.mode,
         kernelMode = self.kernelMode,
-        blendFactor = self.blendFactor,
+        strength = self.strength,
         falloffFactor = self.falloffFactor,
         featureFactor = self.featureFactor,
         diffuseColor = self.diffuseColor,

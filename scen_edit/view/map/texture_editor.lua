@@ -221,7 +221,7 @@ function TextureEditor:init()
                 self:_EnterState("void")
                 self.savedBrushes:GetControl():Hide()
                 self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "blendFactor", "featureFactor",
+                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
                                         "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
                                         "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
                                         unpack(self.matFieldNames))
@@ -400,12 +400,12 @@ function TextureEditor:init()
     })
     self:AddField(GroupField({
         NumericField({
-            name = "blendFactor",
+            name = "strength",
             value = 1,
             minValue = 0.0,
             maxValue = 1,
-            title = "Blend:",
-            tooltip = "Proportion of texture to be applied",
+            title = "Strength:",
+            tooltip = "Application strength (use lower numbers for finer detail painting)",
             width = 140,
         }),
         NumericField({

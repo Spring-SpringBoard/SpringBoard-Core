@@ -3,7 +3,7 @@ uniform sampler2D patternTexture;
 uniform sampler2D brushTexture;
 
 uniform float x1, x2, z1, z2;
-uniform float blendFactor;
+uniform float strength;
 uniform float falloffFactor;
 uniform float featureFactor;
 uniform vec4 diffuseColor;
@@ -63,8 +63,8 @@ void main(void)
 	color = mix(min(color, (max(color,mapColor+ff)-ff)-ff)+ff,mapColor,color.a);
 
 	// apply only a percentage part of the texture
-	//blendFactor = blendFactor * blendFactor;
-	color = mix(color, mapColor, blendFactor);
+	//strength = strength * strength;
+	color = mix(color, mapColor, strength);
 
 	// calculate alpha (smaller the further away it is), used to draw circles
 	vec2 size = vec2(x2 - x1, z2 - z1);

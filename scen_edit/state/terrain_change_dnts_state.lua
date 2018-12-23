@@ -6,7 +6,7 @@ function TerrainChangeDNTSState:init(editorView)
     self.rotation = 0
     self.patternTexture = self.editorView.fields["patternTexture"].value
     self.dnts           = self.editorView.fields["dnts"].value
-    self.blendFactor    = self.editorView.fields["blendFactor"].value
+    self.strength    = self.editorView.fields["strength"].value
 
     self.updateDelay    = 0.2
     self.applyDelay     = 0.02
@@ -23,7 +23,7 @@ function TerrainChangeDNTSState:Apply(x, z, applyAction)
         z = z - self.size/2,
         size = self.size,
         patternTexture = self.patternTexture,
-        blendFactor = self.blendFactor,
+        strength = self.strength,
         colorIndex = colorIndex,
 
         paintMode = "dnts",

@@ -85,7 +85,7 @@ function getPenShader(mode)
                 z1ID = gl.GetUniformLocation(shader, "z1"),
                 z2ID = gl.GetUniformLocation(shader, "z2"),
                 patternRotationID = gl.GetUniformLocation(shader, "patternRotation"),
-                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                strengthID = gl.GetUniformLocation(shader, "strength"),
                 falloffFactorID = gl.GetUniformLocation(shader, "falloffFactor"),
                 featureFactorID = gl.GetUniformLocation(shader, "featureFactor"),
                 diffuseColorID = gl.GetUniformLocation(shader, "diffuseColor"),
@@ -145,7 +145,7 @@ function getBlurShader()
             shader = shader,
             uniforms = {
                 patternRotationID = gl.GetUniformLocation(shader, "patternRotation"),
-                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                strengthID = gl.GetUniformLocation(shader, "strength"),
                 kernelID = gl.GetUniformLocation(shader, "kernel"),
             },
         }
@@ -176,7 +176,7 @@ function getDNTSShader()
                 z1ID = gl.GetUniformLocation(shader, "z1"),
                 z2ID = gl.GetUniformLocation(shader, "z2"),
                 patternRotationID = gl.GetUniformLocation(shader, "patternRotation"),
-                blendFactorID = gl.GetUniformLocation(shader, "blendFactor"),
+                strengthID = gl.GetUniformLocation(shader, "strength"),
                 colorIndexID = gl.GetUniformLocation(shader, "colorIndex"),
                 exclusiveID = gl.GetUniformLocation(shader, "exclusive"),
                 valueID = gl.GetUniformLocation(shader, "value"),
@@ -314,7 +314,7 @@ function DrawDiffuse(opts, x, z, size)
     gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
     gl.Texture(2, SB.model.textureManager:GetTexture(opts.brushTexture.diffuse))
 
-    gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+    gl.Uniform(uniforms.strengthID, opts.strength)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
     opts.diffuseColor[4] = 1.0
@@ -389,7 +389,7 @@ function DrawBlur(opts, x, z, size)
         gl.UniformMatrix(uniforms.kernelID, 1, 2, 1, 0, 0, 0, -1, -2, -1)
     end
 
-    gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+    gl.Uniform(uniforms.strengthID, opts.strength)
     gl.Texture(1, SB.model.textureManager:GetTexture(opts.patternTexture))
     gl.Uniform(uniforms.patternRotationID, opts.patternRotation)
 
@@ -502,7 +502,7 @@ function DrawDNTS(opts, x, z, size)
     gl.Blending("disable")
     gl.UseShader(shader)
 
-    gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+    gl.Uniform(uniforms.strengthID, opts.strength)
     gl.UniformInt(uniforms.colorIndexID, opts.colorIndex)
     gl.UniformInt(uniforms.exclusiveID, opts.exclusive)
     gl.Uniform(uniforms.valueID, opts.value)
@@ -571,7 +571,7 @@ function DrawShadingTextures(opts, x, z, size)
     gl.Blending("disable")
     gl.UseShader(shader)
 
-    gl.Uniform(uniforms.blendFactorID, opts.blendFactor)
+    gl.Uniform(uniforms.strengthID, opts.strength)
     gl.Uniform(uniforms.falloffFactorID, opts.falloffFactor)
     gl.Uniform(uniforms.featureFactorID, opts.featureFactor)
     opts.diffuseColor[4] = 1.0

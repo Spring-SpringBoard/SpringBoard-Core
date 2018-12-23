@@ -123,7 +123,7 @@ function DNTSEditor:init()
     })
     self:AddField(GroupField({
         NumericField({
-            name = "blendFactor",
+            name = "strength",
             value = 1,
             minValue = 0.0,
             maxValue = 1,
