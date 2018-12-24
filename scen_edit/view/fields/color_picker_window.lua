@@ -5,33 +5,45 @@ ColorPickerWindow = Editor:extends{}
 function ColorPickerWindow:init(opts)
     self:super("init")
 
-    self.color = opts.color or {1, 1, 1, 1}
+    self.format = opts.format
+    self.color = opts.value or {1, 1, 1, 1}
     self.OnUpdate = opts.OnUpdate
     -- Listeners suffix is necessary as the self.On*Change methods exist
     self.OnStartChangeListeners = opts.OnStartChange
     self.OnEndChangeListeners = opts.OnEndChange
 
+    local hsvSliders = {
+        {
+            background = SB_IMG_DIR .. "color_picker/h_grad.png",
+            max        = 360,
+        },
+        {
+            background = SB_IMG_DIR .. "color_picker/ticks.png",
+            max        = 100,
+        },
+        {
+            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            max        = 100,
+        },
+    }
+    if self.format == 'rgba' then
+        table.insert(hsvSliders, {
+            background = SB_IMG_DIR .. "color_picker/ticks.png",
+            max        = 100,
+        })
+    end
+
     self:AddField(ColorPickerField({
         name = "hsvColor",
-        colorSliders = {
-            {
-                background = ":cl:bitmaps/ui/buckets/h_grad.png",
-                max        = 360,
-            },
-            {
-                background = ":cl:bitmaps/ui/buckets/ticks.png",
-                max        = 100,
-            },
-            {
-                background = ":cl:bitmaps/ui/buckets/bw_grad.png",
-                max        = 100,
-            },
-        },
+        colorSliders = hsvSliders,
         CalculateColor = function(obj, color)
             local c = Table.DeepCopy(color)
             c[1] = math.min(0.998, c[1])
             c[2] = math.max(0.001, c[2])
             c[3] = math.max(0.001, c[3])
+            if #c == 4 then
+                c[4] = math.max(0.001, c[4])
+            end
             return hsv2rgb(c)
         end,
         ApplyColor = function(obj, color)
@@ -39,28 +51,35 @@ function ColorPickerWindow:init(opts)
         end,
     }))
 
-    self:AddField(ColorPickerField({
-        name = "rgbColor",
-        colorSliders = {
-            {
-                background = ":cl:bitmaps/ui/buckets/bw_grad.png",
-                color      = {1, 0, 0, 1},
-                max        = 256,
-            },
-            {
-                background = ":cl:bitmaps/ui/buckets/bw_grad.png",
-                color      = {0, 1, 0, 1},
-                max        = 256,
-            },
-            {
-                background = ":cl:bitmaps/ui/buckets/bw_grad.png",
-                color      = {0, 0, 1, 1},
-                max        = 256,
-            },
+    local rgbSliders = {
+        {
+            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            color      = {1, 0, 0, 1},
+            max        = 256,
         },
+        {
+            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            color      = {0, 1, 0, 1},
+            max        = 256,
+        },
+        {
+            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            color      = {0, 0, 1, 1},
+            max        = 256,
+        },
+    }
+    if self.format == 'rgba' then
+        table.insert(rgbSliders, {
+            background = SB_IMG_DIR .. "color_picker/ticks.png",
+            max        = 100,
+        })
+    end
+    self:AddField(ColorPickerField({
+        name = "rgbaColor",
+        colorSliders = rgbSliders
     }))
 
-    self:Set("rgbColor", self.color)
+    self:Set("rgbaColor", self.color)
     self:Set("hsvColor", self.color)
 
     local children = {}
@@ -84,7 +103,8 @@ function ColorPickerWindow:init(opts)
             buttons = { "close" },
             disposeOnClose = false,
             width = 500,
-            height = 300,
+            -- height = 300,
+            height = 400,
         })
     end
 end
@@ -103,7 +123,7 @@ function rgb2hsv(value)
     else -- s = 0, v is undefined
         s = 0
         h = 0
-        return {h, s, v}
+        return {h, s, v, value[4]}
     end
 
     if r == maxC then
@@ -119,7 +139,7 @@ function rgb2hsv(value)
     end
     h = h / 360
 
-    return {h, s, v}
+    return {h, s, v, value[4]}
 end
 
 function hsv2rgb(value)
@@ -145,7 +165,7 @@ function hsv2rgb(value)
 
     local m = v - chroma
     r, g, b = r + m, g + m, b + m
-    return {r, g, b}
+    return {r, g, b, value[4]}
 end
 
 -- SB.Include(SB_VIEW_DIR .. "color_picker_window.lua")
@@ -158,10 +178,10 @@ function ColorFieldPickerWindow:OnFieldChange(name, value)
         return
     end
     self.updating = true
-    if name == "rgbColor" then
+    if name == "rgbaColor" then
         self:Set("hsvColor", value)
     elseif name == "hsvColor" then
-        self:Set("rgbColor", value)
+        self:Set("rgbaColor", value)
     end
     self.updating = false
 
@@ -187,6 +207,9 @@ function ColorPickerField:Update(source)
     local value = self.value
     if self.ApplyColor then
         value = self:ApplyColor(value)
+    end
+    if #value == 3 then
+        value[4] = 1
     end
     for i, tbSlider in pairs(self.sliders) do
         if tbSlider ~= source then
@@ -251,10 +274,20 @@ function ColorPickerField:init(field)
         height      = self.height - 10,
         width       = self.height - 10,
         keepAspect  = false,
-        file        = ":cl:bitmaps/ui/buckets/swatch.png",
+        file        = SB_IMG_DIR .. "color_picker/texture.png",
         color       = {1, 1, 1, 1},
     }
-    self.components = {self.imValue}
+    local bkg = Image:New {
+        color       = {1, 1, 1, 1},
+        x           = 5,
+        y           = 5,
+        height      = self.height - 10,
+        width       = self.height - 10,
+        keepAspect  = false,
+        file        = SB_IMG_DIR .. "color_picker/bkg_big.png",
+        color       = {1, 1, 1, 1},
+    }
+    self.components = { self.imValue, bkg }
     for _, tbSlider in pairs(self.sliders) do
         table.insert(self.components, tbSlider)
     end
@@ -263,7 +296,7 @@ end
 function ColorPickerField:AddColorImage(tbl)
     return Image:New(Table.Merge({
         parent    = self.window,
-        file      = ":cl:bitmaps/ui/buckets/swatch.png",
+        file      = SB_IMG_DIR .. "color_picker/texture.png",
         color     = {1, 1, 1, 1},
     }, tbl))
 end
@@ -272,7 +305,7 @@ function ColorPickerField:AddColorTrackbar(tbl)
     return Trackbar:New(Table.Merge({
         parent       = self.window,
         color        = tbl.color,
-        ThumbImage   = ":cl:bitmaps/ui/buckets/trackbar_thumb.png",
+        ThumbImage   = SB_IMG_DIR .. "color_picker/trackbar_thumb.png",
         children = {
             Image:New {
                 color       = tbl.color,

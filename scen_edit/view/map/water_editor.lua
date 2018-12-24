@@ -79,6 +79,7 @@ function WaterEditor:init()
             name = "diffuseColor",
             title = "Lacunarity:",
             width = 140,
+            format = 'rgb',
         }),
     }))
 
@@ -105,6 +106,7 @@ function WaterEditor:init()
             name = "specularColor",
             title = "Color:",
             width = 140,
+            format = 'rgb',
         }),
     }))
 
@@ -205,6 +207,7 @@ function WaterEditor:init()
             title = "Color:",
             width = 140,
             tooltip = "The WaterPlane is a single Quad beneath the map.\nIt should have the same color as the ocean floor to hide the map -> background boundary.",
+            format = 'rgb',
         }),
     }))
 

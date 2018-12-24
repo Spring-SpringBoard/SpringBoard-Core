@@ -293,7 +293,7 @@ function TextureEditor:init()
     local matFields = {}
     self.matFieldNames = {}
     for name, _ in pairs(SB.model.textureManager.materialTextures) do
-        if name ~= "normal" and name ~= "glow" then
+        if name ~= "normal" then
             local fname = name .. "Enabled"
             table.insert(matFields, BooleanField({
                 name = fname,
@@ -481,8 +481,9 @@ function TextureEditor:init()
     self:AddField(ColorField({
         name = "diffuseColor",
         title = "Color: ",
-        value = {1,1,1,1},
+        value = { 1, 1, 1, 1 },
         width = 140,
+        format = 'rgb',
     }))
 
     local children = {

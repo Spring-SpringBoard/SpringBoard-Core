@@ -69,18 +69,21 @@ function LightingEditor:init()
             title = "Diffuse:",
             tooltip = "Ground diffuse color",
             width = 100,
+            format = 'rgb',
         }),
         ColorField({
             name = "groundAmbientColor",
             title = "Ambient:",
             tooltip = "Ground ambient color",
             width = 100,
+            format = 'rgb',
         }),
         ColorField({
             name = "groundSpecularColor",
             title = "Specular:",
             tooltip = "Ground specular color",
             width = 100,
+            format = 'rgb',
         }),
         NumericField({
             name = "groundShadowDensity",
@@ -105,18 +108,21 @@ function LightingEditor:init()
             title = "Diffuse:",
             tooltip = "Unit diffuse color",
             width = 100,
+            format = 'rgb',
         }),
         ColorField({
             name = "unitAmbientColor",
             title = "Ambient:",
             tooltip = "Unit ambient color",
             width = 100,
+            format = 'rgb',
         }),
         ColorField({
             name = "unitSpecularColor",
             title = "Specular:",
             tooltip = "Unit specular color",
             width = 100,
+            format = 'rgb',
         }),
         NumericField({
             name = "modelShadowDensity",

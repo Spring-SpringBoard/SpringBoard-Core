@@ -287,25 +287,30 @@ function TextureManager:MakeShadingTexture(name, sizeX, sizeY)
     return tex
 end
 
-function TextureManager:MakeAndEnableMapShadingTexture(name, sizeX, sizeY)
+function TextureManager:MakeAndEnableMapShadingTexture(opts)
+    local name = opts.name
+    local sizeX = opts.sizeX
+    local sizeY = opts.sizeY
+    local color = opts.color
+    local texture = opts.texture
+
     -- gl.DeleteTexture(self.shadingTextureDefs[name].engineName)
     local tex = self:MakeShadingTexture(name, sizeX, sizeY)
+
     gl.Blending("enable")
-    if name == "splat_distr" then
-        gl.Color(1, 0, 0, 0)
-    elseif name:find("splat_normals") then
-        gl.Color(0.5, 0.5, 1, 0.5)
-    elseif name == "emission" then
-        -- gl.Color(0.5, 0.5, 0.5, 1.0)
-        gl.Color(0.0, 0.0, 0.0, 0.2)
-    elseif name == "refl" then
-        gl.Color(0.0, 0.0, 0.0, 1.0)
-    elseif name == "specular" then
-        gl.Color(0.0, 0.0, 0.0, 1.0)
+    if color then
+        gl.Color(unpack(color))
+    end
+    if texture then
+        gl.Texture(texture)
     end
     gl.RenderToTexture(tex, function()
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
     end)
+    if texture then
+        gl.Texture(texture, false)
+    end
+
     self:SetShadingTexture(name, tex)
     return tex
 end

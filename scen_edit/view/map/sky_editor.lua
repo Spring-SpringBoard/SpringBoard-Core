@@ -19,18 +19,21 @@ function SkyEditor:init()
             title = "Sun:",
             tooltip = "Sun color",
             width = 140,
+            format = 'rgb',
         }),
         ColorField({
             name = "skyColor",
             title = "Sky:",
             tooltip = "Sky color",
             width = 140,
+            format = 'rgb',
         }),
         ColorField({
             name = "cloudColor",
             title = "Cloud:",
             tooltip = "Cloud color (requires AdvSky)",
             width = 140,
+            format = 'rgb',
         }),
     }))
     self:AddField(AssetField({
@@ -54,6 +57,7 @@ function SkyEditor:init()
             title = "Color:",
             tooltip = "Fog color",
             width = 100,
+            format = 'rgb',
         }),
         NumericField({
             name = "fogStart",

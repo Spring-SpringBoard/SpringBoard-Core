@@ -72,9 +72,11 @@ function TerrainSettingsEditor:_AddMapTextureControls()
         }
     })
     self.mapTextures = {}
-    for name, def in pairs(SB.model.textureManager.shadingTextureDefs) do
+    local names = Table.GetKeys(SB.model.textureManager.shadingTextureDefs)
+    table.sort(names)
+    for _, name in ipairs(names) do
+        local def = SB.model.textureManager.shadingTextureDefs[name]
         local engineName = def.engineName
-        Spring.Echo(engineName)
         local texInfo = gl.TextureInfo(engineName)
         local exists = texInfo.xsize > 0 and texInfo.ysize > 0
 
@@ -264,22 +266,63 @@ function TerrainSettingsEditor:OnFieldChange(name, value)
         local cmd = SetMapRenderingParamsCommand(t)
         SB.commandManager:execute(cmd)
     elseif self.mapTextures ~= nil and self.mapTextures[name] ~= nil then
-        SB.delayGL(function()
-            if value then
-                -- Make configurable
-                local sizeX, sizeZ
-                if name:find("splat_normals") then
-                    sizeX, sizeZ = 512, 512
-                else
-                    sizeX, sizeZ = Game.mapSizeX / 4, Game.mapSizeZ / 4
-                end
+        if value then
+            -- Make configurable
+            local texName = self.mapTextures[name]
+            local sizeX, sizeY
 
-                local tex = SB.model.textureManager:MakeAndEnableMapShadingTexture(self.mapTextures[name],
-                    sizeX, sizeZ)
+            if texName:find("splat_normals") then
+                sizeX, sizeY = 512, 512
             else
-                SB.model.textureManager:ResetShadingTexture(self.mapTextures[name])
+                sizeX, sizeY = Game.mapSizeX / 4, Game.mapSizeZ / 4
             end
+
+            local color
+            if texName == "splat_distr" then
+                color = { 1, 0, 0, 0 }
+            elseif texName:find("splat_normals") then
+                color = { 0.5, 0.5, 1, 0.5 }
+            elseif texName == "emission" then
+                color = { 0.0, 0.0, 0.0, 0.2 }
+            elseif texName == "refl" then
+                color = { 0.0, 0.0, 0.0, 0.2 }
+            elseif texName == "specular" then
+                color = { 0.0, 0.0, 0.0, 1.0 }
+            end
+            NewEngineTextureDialog({
+                name = name,
+                engineName = self.mapTextures[name],
+                sizeX = sizeX,
+                sizeY = sizeY,
+                color = color,
+            })
+        else
+            SB.delayGL(function()
+                SB.model.textureManager:ResetShadingTexture(self.mapTextures[name])
+            end)
             SB.commandManager:execute(ClearUndoRedoCommand())
-        end)
+        end
     end
+end
+
+SB.Include(Path.Join(SB_VIEW_DIR, "new_texture_dialog.lua"))
+NewEngineTextureDialog = NewTextureDialog:extends{}
+
+function NewEngineTextureDialog:ConfirmDialog()
+    SB.delayGL(function()
+        local opts = {
+            name = self.engineName,
+            sizeX = self.fields["sizeX"].value,
+            sizeY = self.fields["sizeY"].value
+        }
+        if self.fields.source.value == 'New' then
+            opts.color = self.fields["color"].value
+        else
+            opts.texture = self.fields["texture"].value
+        end
+        local tex = SB.model.textureManager:MakeAndEnableMapShadingTexture(opts)
+
+        SB.commandManager:execute(ClearUndoRedoCommand())
+    end)
+    return true
 end

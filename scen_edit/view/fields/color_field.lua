@@ -10,7 +10,7 @@ function ColorField:Update(source)
     self.imValue:Invalidate()
 
     if source ~= self.colorWindow then
-        self.colorWindow:Set("rgbColor", self.value)
+        self.colorWindow:Set("rgbaColor", self.value)
         self.colorWindow:Set("hsvColor", self.value)
     end
 --     if source ~= self.colorbars then
@@ -23,6 +23,7 @@ end
 -- @see field.Field
 -- @tparam table opts Table
 -- @tparam string opts.title Title.
+-- @tparam string opts.format Color format. Possible values are 'rgba' (default) and rgb'
 -- @tparam[opt=false] boolean opts.expand Whether to expand the field in the Editor or open it with a button.
 -- @usage
 -- ColorField({
@@ -40,6 +41,7 @@ function ColorField:init(field)
 
     Field.init(self, field)
 
+    self.format = field.format or 'rgba'
     self.lblTitle = Label:New {
         caption = self.title,
         x = 10,
@@ -48,13 +50,34 @@ function ColorField:init(field)
     }
     self.imValue = Image:New {
         color       = {1, 1, 1, 1},
+        x           = 0,
+        y           = 0,
+        right       = 0,
+        bottom      = 0,
+        keepAspect  = false,
+        file        = SB_IMG_DIR .. "color_picker/texture.png",
+        color       = self.value,
+    }
+    local bkg = Image:New {
+        color       = {1, 1, 1, 1},
+        x           = 0,
+        y           = 0,
+        right       = 0,
+        bottom      = 0,
+        keepAspect  = false,
+        file        = SB_IMG_DIR .. "color_picker/bkg_small.png",
+        color       = {1, 1, 1, 1},
+    }
+    local imgWrapper = Control:New {
+        padding     = {0, 0, 0, 0},
         right       = 5,
         y           = 5,
         height      = self.height - 10,
         width       = self.height - 10,
-        keepAspect  = false,
-        file        = ":cl:bitmaps/ui/buckets/swatch.png",
-        color       = self.value,
+        children = {
+            self.imValue,
+            bkg
+        }
     }
     self.button = Button:New {
         caption = "",
@@ -73,7 +96,7 @@ function ColorField:init(field)
             end
         },
         children = {
-            self.imValue,
+            imgWrapper,
             self.lblTitle,
         },
     }
@@ -82,6 +105,7 @@ function ColorField:init(field)
     self.colorWindow = ColorFieldPickerWindow({
         expand = self.expand,
         value = self.originalValue,
+        format = self.format,
         OnUpdate = {
             function(value)
                 self:OnUpdate(value)
