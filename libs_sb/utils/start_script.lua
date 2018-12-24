@@ -194,23 +194,23 @@ function StartScript.GenerateScriptTxt(opts)
     assert(type(opts.allyTeams) == 'table')
 
     local script = {
-        MapName = opts.mapName,
-        GameType = opts.game.name .. " " .. opts.game.version,
+        mapName = opts.mapName,
+        gameType = opts.game.name .. " " .. opts.game.version,
 
-        MapSeed = opts.mapSeed,
+        mapSeed = opts.mapSeed,
 
-        IsHost = isHost,
-        HostIP = "127.0.0.1",
-        HostPort = opts.hostPort,
+        isHost = isHost,
+        hostIP = "127.0.0.1",
+        hostPort = opts.hostPort,
 
-        GameStartDelay = opts.startDelay,
-        StartPosType = opts.startPosType,
+        gameStartDelay = opts.startDelay,
+        startPosType = opts.startPosType,
 
-        NumPlayers = #opts.players,
-        NumUsers = #opts.players + #opts.ais,
+        numPlayers = #opts.players,
+        numUsers = #opts.players + #opts.ais,
 
-        ModOptions = opts.modOptions or {},
-        MapOptions = opts.mapOptions or {},
+        modOptions = opts.modOptions or {},
+        mapOptions = opts.mapOptions or {},
     }
 
     for i, ai in pairs(opts.ais) do
