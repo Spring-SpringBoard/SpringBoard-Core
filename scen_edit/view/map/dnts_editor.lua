@@ -7,7 +7,6 @@ SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
 DNTSEditor = Editor:extends{}
 
 function DNTSEditor:init()
-    self.initializing = true
     self:super("init")
     self:AddField(MaterialField({
         name = "brushTexture",
@@ -210,7 +209,6 @@ function DNTSEditor:init()
         },
     }
     self:Finalize(children)
-    self.initializing = false
 end
 
 function DNTSEditor:_UpdateDNTS()
@@ -249,10 +247,6 @@ function DNTSEditor:OnFieldChange(name, value)
 
             self.savedBrushes:UpdateBrushImage(brush.brushID, texturePath)
         end
-    end
-
-    if self.initializing then
-        return
     end
 
     if name == "dnts" then

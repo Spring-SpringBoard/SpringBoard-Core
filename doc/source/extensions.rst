@@ -42,8 +42,6 @@ Then in the init method, we will define the fields. We create two *NumericFields
     function ExampleEditor:init()
         self:super("init")
 
-        self.initializing = true
-
         self:AddField(NumericField({
             name = "example",
             title = "Example:",
@@ -77,7 +75,6 @@ Then in the init method, we will define the fields. We create two *NumericFields
         }
 
         self:Finalize(children)
-        self.initializing = false
     end
 
 To handle field changes, we will create an *OnFieldChange* method, and when fields change, we will create and execute appropriate *Commands*.

@@ -399,7 +399,6 @@ NewRuleDialog = Editor:extends{}
 function NewRuleDialog:init(objectPropertyWindow)
     self:super("init")
 
-    self.initializing = true
     self.objectPropertyWindow = objectPropertyWindow
 
     self:AddField(GroupField({

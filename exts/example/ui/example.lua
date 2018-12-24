@@ -13,8 +13,6 @@ ExampleEditor:Register({
 function ExampleEditor:init()
     self:super("init")
 
-    self.initializing = true
-
     self:AddField(NumericField({
         name = "example",
         title = "Example:",
@@ -48,7 +46,6 @@ function ExampleEditor:init()
     }
 
     self:Finalize(children)
-    self.initializing = false
 end
 
 function ExampleEditor:OnStartChange(name)

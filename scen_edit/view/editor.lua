@@ -209,7 +209,6 @@ function Editor:_FinalizeButtons(children, opts)
                     end
                 }
             })
-            table.echo(btn)
             table.insert(children, Button:New(btn))
         elseif btnName == "cancel" then
             local btn = Table.DeepCopy(btnTable)
