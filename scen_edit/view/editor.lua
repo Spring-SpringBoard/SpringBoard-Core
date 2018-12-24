@@ -204,8 +204,9 @@ function Editor:_FinalizeButtons(children, opts)
                 x = tostring(x) .. '%',
                 OnClick = {
                     function()
-                        self:ConfirmDialog()
-                        self:__MaybeClose()
+                        if self:ConfirmDialog() then
+                            self:__MaybeClose()
+                        end
                     end
                 }
             })

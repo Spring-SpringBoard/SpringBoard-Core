@@ -87,14 +87,14 @@ function TextureManager:init()
         -- NB: DISABLED below
         -- Would like to use it for parallax, but how?
         -- Maybe we can just forget about parallax without splats
-        height = {
-            suffix = "_height",
-            enabled = true,
-        },
-        glow = {
-            suffix = "_glow",
-            enabled = false,
-        }
+        -- height = {
+        --     suffix = "_height",
+        --     enabled = false,
+        -- },
+        -- glow = {
+        --     suffix = "_glow",
+        --     enabled = false,
+        -- }
     }
     self.shadingTextureNames = {}
     for name, texDef in pairs(self.shadingTextureDefs) do

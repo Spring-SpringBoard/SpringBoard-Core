@@ -50,7 +50,7 @@ function ImportAction:execute()
                 self:ImportHeightmap(path)
                 return true
             else
-                Log.Error("Error trying to export. Invalida fileType specified: " .. tostring(fileType))
+                Log.Error("Error trying to export. Invalid fileType specified: " .. tostring(fileType))
             end
         end
     )

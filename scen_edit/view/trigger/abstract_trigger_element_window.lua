@@ -103,7 +103,7 @@ function AbstractTriggerElementWindow:ConfirmDialog()
     if success then
         -- Close the form
         CallListeners(self.OnConfirm, self.element)
-        self.window:Dispose()
+        return true
     else
         -- Display errors
         if errorEditors ~= nil and #errorEditors > 0 then

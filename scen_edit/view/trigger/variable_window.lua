@@ -60,9 +60,7 @@ function VariableWindow:init(opts)
 end
 
 function VariableWindow:ConfirmDialog()
-    if self:UpdateModel(self.variable) then
-        self.window:Dispose()
-    end
+    return self:UpdateModel(self.variable)
 end
 
 function VariableWindow:__RefreshVariablePanel()

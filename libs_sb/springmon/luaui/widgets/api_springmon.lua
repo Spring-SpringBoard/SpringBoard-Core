@@ -9,7 +9,7 @@ local fileContextMap = {}
 
 -- We won't update listeners until at least WAIT_TIME has passed after the last change
 -- This can help prevent disasterous race conditions like reading a file that is being flushed to disk
-local WAIT_TIME = 0.5
+local WAIT_TIME = 0.3
 local fileChangedBuffer = {}
 local lastChange = nil
 
