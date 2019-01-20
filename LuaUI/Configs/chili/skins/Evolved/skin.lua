@@ -280,23 +280,23 @@ skin.combobox = {
 
 
 skin.combobox_window = {
-	clone     = "window";
-	TileImage = ":cl:combobox_wnd.png";
-	tiles     = {2, 2, 2, 2};
-	padding   = {4, 3, 3, 4};
+	clone     = "window",
+	TileImage = ":cl:combobox_wnd.png",
+	tiles     = {2, 2, 2, 2},
+	padding   = {4, 3, 3, 4},
 }
 
 
 skin.combobox_scrollpanel = {
-	clone       = "scrollpanel";
-	borderColor = {1, 1, 1, 0};
-	padding     = {0, 0, 0, 0};
+	clone       = "scrollpanel",
+	borderColor = {1, 1, 1, 0},
+	padding     = {0, 0, 0, 0},
 }
 
 
 skin.combobox_item = {
-	clone       = "button";
-	borderColor = {1, 1, 1, 0};
+	clone       = "button",
+  borderColor = {1, 1, 1, 0},
 }
 
 

@@ -116,12 +116,12 @@ function ComboBox:MouseDown(x, y)
             caption = item,
             width = '100%',
             height = self.itemHeight,
-			fontsize = self.itemFontSize,
+            fontsize = self.itemFontSize,
             state = {focused = (i == self.selected), selected = (i == self.selected)},
             OnMouseUp = { function()
               if selectByName then
                 self:Select(item)
-			  else
+              else
                 self:Select(i)
               end
               self:_CloseWindow()

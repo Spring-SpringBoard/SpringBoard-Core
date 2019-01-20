@@ -28,6 +28,7 @@ Control = Object:Inherit{
   borderColor2    = {0.0, 0.0, 0.0, 0.8},
   backgroundColor = {0.8, 0.8, 1.0, 0.4},
   focusColor      = {0.2, 0.2, 1.0, 0.6},
+  selectedColor   = {0.6, 0.6, 0.8, 0.8},
   disabledColor   = {0.4, 0.4, 0.4, 0.6},
 
   autosize        = false,
