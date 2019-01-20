@@ -255,7 +255,6 @@ end
 
 function HideConsole()
 	ebConsole:Hide()
-	screen0:FocusControl(nil)
 	ebConsole:SetText("")
 	ResetCurrentHistory()
 	currentSuggestion = 0

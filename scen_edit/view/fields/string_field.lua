@@ -137,7 +137,6 @@ function StringField:__OnClick()
     self.__originalValue = self.value
     self.button:Hide()
     self.editBox:SetText(self.lblValue.caption)
-    self.editBox:Show()
     self.editBox.cursor = #self.editBox.text + 1
     self.editBox:Select(1, #self.editBox.text + 1)
     screen0:FocusControl(self.editBox)

@@ -161,32 +161,39 @@ end
 -- TODO: use scream, in case the user forgets.
 -- nil -> nil
 function Object:Dispose(_internal)
-  if (not self.disposed) then
+  if self.disposed then
+    return
+  end
 
-    --// check if the control is still referenced (if so it would indicate a bug in chili's gc)
-    if _internal then
-      if self._hlinks and next(self._hlinks) then
-        local hlinks_cnt = table.size(self._hlinks)
-        local i,v = next(self._hlinks)
-        if hlinks_cnt > 1 or (v ~= self) then --// check if user called Dispose() directly
-          Spring.Log("Chili", "error", ("Tried to dispose \"%s\"! It's still referenced %i times!"):format(self.name, hlinks_cnt))
-        end
+  --// check if the control is still referenced (if so it would indicate a bug in chili's gc)
+  if _internal then
+    if self._hlinks and next(self._hlinks) then
+      local hlinks_cnt = table.size(self._hlinks)
+      local i,v = next(self._hlinks)
+      if hlinks_cnt > 1 or (v ~= self) then --// check if user called Dispose() directly
+        Spring.Log("Chili", "error", ("Tried to dispose \"%s\"! It's still referenced %i times!"):format(self.name, hlinks_cnt))
       end
     end
-
-    self:CallListeners(self.OnDispose)
-
-    self.disposed = true
-
-    TaskHandler.RemoveObject(self)
-    --DebugHandler:UnregisterObject(self) --// not needed
-
-    if (UnlinkSafe(self.parent)) then
-      self.parent:RemoveChild(self)
-    end
-    self:SetParent(nil)
-    self:ClearChildren()
   end
+
+  if self.state and self.state.focused then
+    local screenCtrl = self:FindParent("screen")
+    if screenCtrl then
+      screenCtrl:FocusControl(nil)
+    end
+  end
+
+  self:CallListeners(self.OnDispose)
+  self.disposed = true
+
+  TaskHandler.RemoveObject(self)
+  --DebugHandler:UnregisterObject(self) --// not needed
+
+  if UnlinkSafe(self.parent) then
+    self.parent:RemoveChild(self)
+  end
+  self:SetParent(nil)
+  self:ClearChildren()
 end
 
 
@@ -206,7 +213,7 @@ function Object:Inherit(class)
   class.inherited = self
 
   for i,v in pairs(self) do
-    if (class[i] == nil)and(i ~= "inherited")and(i ~= "__lowerkeys") then
+    if (class[i] == nil) and (i ~= "inherited") and (i ~= "__lowerkeys") then
       t = type(v)
       if (t == "table") --[[or(t=="metatable")--]] then
         class[i] = table.shallowcopy(v)
@@ -219,7 +226,7 @@ function Object:Inherit(class)
   local __lowerkeys = {}
   class.__lowerkeys = __lowerkeys
   for i,v in pairs(class) do
-    if (type(i)=="string") then
+    if type(i) == "string" then
       __lowerkeys[i:lower()] = i
     end
   end
@@ -228,8 +235,8 @@ function Object:Inherit(class)
 
   --// backward compability with old DrawControl gl state (change was done with v2.1)
   local w = DebugHandler.GetWidgetOrigin()
-  if (w ~= widget)and(w ~= Chili) then
-	class._hasCustomDrawControl = true
+  if (w ~= widget) and (w ~= Chili) then
+    class._hasCustomDrawControl = true
   end
 
   return class
@@ -243,7 +250,7 @@ function Object:SetParent(obj)
   obj = UnlinkSafe(obj)
   local typ = type(obj)
 
-  if (typ ~= "table") then
+  if typ ~= "table" then
     self.parent = nil
     self:CallListeners(self.OnOrphan, self)
     return
@@ -474,6 +481,13 @@ function Object:SetVisibility(visible)
   self.visible = visible
   self.hidden  = not visible
 
+  if not visible and self.state and self.state.focused then
+    local screenCtrl = self:FindParent("screen")
+    if screenCtrl then
+      screenCtrl:FocusControl(nil)
+    end
+  end
+
   if visible then
     self:CallListeners(self.OnShow, self)
   else
@@ -521,8 +535,8 @@ end
 
 
 function Object:SetLayer(layer)
-  if (self.parent) then
-    (self.parent):SetChildLayer(self, layer)
+  if self.parent ~= nil then
+    self.parent:SetChildLayer(self, layer)
   end
 end
 
@@ -537,7 +551,7 @@ end
 --//=============================================================================
 
 function Object:InheritsFrom(classname)
-  if (self.classname == classname) then
+  if self.classname == classname then
     return true
   elseif not self.inherited then
     return false
