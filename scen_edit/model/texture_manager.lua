@@ -14,7 +14,6 @@ function TextureManager:init()
     self.oldShadingTextures = {}
     self.stack = {}
     self.stackSize = 0
-    self.tmps = {}
 
     self.cachedTextures = {}
     self.cachedTexturesMapping = {}
@@ -357,17 +356,6 @@ function TextureManager:SetDNTS(dntsIndex, material)
     texObj.dirty = true
 end
 
-function TextureManager:GetTMPs(num)
-    for i = #self.tmps + 1, num do
-        table.insert(self.tmps, self:createMapTexture())
-    end
-    local tmps = {}
-    for i = 1, num do
-        table.insert(tmps, self.tmps[i])
-    end
-    return tmps
-end
-
 function TextureManager:ResetMapTextures()
     for i, v in pairs(self.mapFBOTextures) do
         for j, textureObj in pairs(v) do
@@ -381,36 +369,6 @@ end
 function TextureManager:getMapTexture(x, z)
     local i, j = math.floor(x / self.TEXTURE_SIZE), math.floor(z / self.TEXTURE_SIZE)
     return self.mapFBOTextures[i][j]
-end
-
-function TextureManager:backupMapShadingTexture(name)
-    self:getOldShadingTexture(name)
-end
-
-function TextureManager:getOldShadingTexture(name)
-    if self.oldShadingTextures[name] == nil then
-        local texObj = self.shadingTextures[name]
-        local texture = texObj.texture
-        local texInfo = gl.TextureInfo(texture)
-        local texSizeX, texSizeZ = texInfo.xsize, texInfo.ysize
-        local oldTexture = gl.CreateTexture(texSizeX, texSizeZ, {
-            border = false,
-            min_filter = GL.LINEAR,
-            mag_filter = GL.LINEAR,
-            wrap_s = GL.CLAMP_TO_EDGE,
-            wrap_t = GL.CLAMP_TO_EDGE,
-            fbo = true,
-        })
-        self:Blit(texture, oldTexture)
-
-        local oldTextureObj = {
-            texture = oldTexture,
-            dirty = texObj.dirty,
-        }
-        self.oldShadingTextures[name] = oldTextureObj
-    end
-
-    return self.oldShadingTextures[name]
 end
 
 function TextureManager:getOldMapTexture(i, j)
@@ -434,27 +392,56 @@ function TextureManager:getOldMapTexture(i, j)
     return self.oldMapFBOTextures[i][j]
 end
 
+-- automatically pushes textures on the undo stack
 function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     local textures = {}
     local textureSize = self.TEXTURE_SIZE
 
-    local i1 = math.max(0, math.floor(startX / textureSize))
+    local i1 = math.max(0, math.floor(startX))
     local i2 = math.min(math.floor(Game.mapSizeX / textureSize),
-                        math.floor(endX / textureSize))
-    local j1 = math.max(0, math.floor(startZ / textureSize))
+                        math.floor(endX))
+    local j1 = math.max(0, math.floor(startZ))
     local j2 = math.min(math.floor(Game.mapSizeZ / textureSize),
-                        math.floor(endZ / textureSize))
+                        math.floor(endZ))
 
     for i = i1, i2 do
         for j = j1, j2 do
+            self:getOldMapTexture(i, j)
             table.insert(textures, {
-                self.mapFBOTextures[i][j], self:getOldMapTexture(i, j),
-                { startX - i * textureSize, startZ - j * textureSize }
+                renderTexture = self.mapFBOTextures[i][j],
+                x = startX - i,
+                y = startZ - j
             })
         end
     end
 
     return textures
+end
+
+function TextureManager:BackupShadingTexture(name)
+    if self.oldShadingTextures[name] ~= nil then
+        return
+    end
+
+    local texObj = self.shadingTextures[name]
+    texObj.dirty = true
+    local texture = texObj.texture
+    local texInfo = gl.TextureInfo(texture)
+    local oldTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
+        border = false,
+        min_filter = GL.LINEAR,
+        mag_filter = GL.LINEAR,
+        wrap_s = GL.CLAMP_TO_EDGE,
+        wrap_t = GL.CLAMP_TO_EDGE,
+        fbo = true,
+    })
+    self:Blit(texture, oldTexture)
+
+    local oldTextureObj = {
+        texture = oldTexture,
+        dirty = texObj.dirty,
+    }
+    self.oldShadingTextures[name] = oldTextureObj
 end
 
 function TextureManager:Blit(tex1, tex2)

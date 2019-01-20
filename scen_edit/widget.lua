@@ -181,6 +181,8 @@ function widget:Initialize()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
         Spring.SendCommands('forcestart')
         SB.view = View()
+        SB.gfx = Graphics()
+        gfx = SB.gfx
 
         local viewAreaManagerListener = ViewAreaManagerListener()
         SB.model.areaManager:addListener(viewAreaManagerListener)

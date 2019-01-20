@@ -62,7 +62,7 @@ function GrassEditor:init()
         maxValue = 10000,
         step = 0.1,
         title = "Detail:",
-        tooltip = "`GrassDetail` engine parameter: controls how much grass is visible." ..
+        tooltip = "'GrassDetail' engine parameter: controls how much grass is visible." ..
             "This is unsynced and will not be saved.",
     }))
 

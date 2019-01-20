@@ -18,6 +18,7 @@ if WG then
     require("keysym.lua")
     SB.Include(Path.Join(SB_DIR, "state/state_manager.lua"))
     SB.Include(Path.Join(SB_DIR, "view/view.lua"))
+    SB.Include(Path.Join(SB_DIR, "gfx/graphics.lua"))
 
 -- Gadget include
 elseif GG then
