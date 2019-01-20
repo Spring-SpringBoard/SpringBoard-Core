@@ -35,7 +35,7 @@ globals = {
     -- Libs
     "LCS", "Path", "Table", "Log", "String", "Shaders", "Time", "Array", "StartScript",
     -- SB speciifc
-    "SB", "SB_DIR",
+    "SB", "SB_DIR", "gfx",
 
     -- SB view fields
     "UnitField", "FeatureField", "AreaField", "TriggerField", "UnitTypeField", "FeatureTypeField",
