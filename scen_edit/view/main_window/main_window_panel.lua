@@ -56,19 +56,34 @@ end
 function MainWindowPanel:init()
     self.control = LayoutPanel:New {
         x = 0,
+        width = "100%",
         y = 0,
         bottom = 0,
-        right = 0,
-        padding = { 5, 5, 0, 0},
-        itemPadding = {0, 0, 0, 0},
-        itemMargin = {0, 0, 0, 0},
+        padding = { 0, 0, 0, 0},
+        itemPadding = { 0, 0, 0, 0},
+        itemMargin = { 0, 0, 0, 0},
         children = {},
         centerItems = false,
     }
+    self.wrapper = ScrollPanel:New {
+        x = 0,
+        right = 0,
+        y = 0,
+        height = SB.conf.TOOLBOX_ITEM_HEIGHT + 10,
+        verticalScrollbar = false,
+        scrollbarSize = 7,
+        borderThickness = 0,
+        borderColor     = {0.0, 0.0, 0.0, 0.0},
+        padding = { 5, 5, 0, 0},
+        itemPadding = { 0, 0, 0, 0},
+        itemMargin = { 0, 0, 0, 0},
+        children = { self.control }
+    }
+    self._totalEditors = 0
 end
 
 function MainWindowPanel:getControl()
-    return self.control
+    return self.wrapper
 end
 
 function MainWindowPanel:AddElement(tbl)
@@ -103,7 +118,11 @@ function MainWindowPanel:AddElement(tbl)
         }
         SB.editors[name].window:Hide()
     end)
+    self._totalEditors = self._totalEditors + 1
+    local wantedWidth = SB.conf.TOOLBOX_ITEM_WIDTH * self._totalEditors + 10
+    -- Spring.Echo("CW:", self.control.width, #self.control.children)
     self.control:AddChild(btn)
+    self.control:SetPos(nil, nil, wantedWidth, nil)
 end
 
 function MainWindowPanel:AddElements(elements)

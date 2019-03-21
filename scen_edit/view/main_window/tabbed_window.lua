@@ -55,9 +55,11 @@ function TabbedWindow:init()
         right = 0,
         y = 10,
         bottom = 20,
+        scrollTabs = true,
         padding = {0, 0, 0, 0},
         tabs = self.tabs,
     }
+    self.__tabPanel.tabbar:SetPos(nil, nil, #self.tabs * self.__tabPanel.tabbar.children[1].width, nil)
     table.insert(controls, self.__tabPanel)
 
     table.insert(controls, Chili.Line:New {
@@ -167,7 +169,7 @@ function TabbedWindow:NextTab()
     local nextTab
     for i, tab in pairs(self.tabs) do
         local name = tab.name
-        if self.__tabPanel.children[1]:IsSelected(name) then
+        if self.__tabPanel.tabbar:IsSelected(name) then
             if i + 1 <= #self.tabs then
                 nextTab = self.tabs[i + 1]
             else
@@ -176,14 +178,14 @@ function TabbedWindow:NextTab()
             break
         end
     end
-    self.__tabPanel.children[1]:Select(nextTab.name)
+    self.__tabPanel.tabbar:Select(nextTab.name)
 end
 
 function TabbedWindow:PreviousTab()
     local prevTab
     for i, tab in pairs(self.tabs) do
         local name = tab.name
-        if self.__tabPanel.children[1]:IsSelected(name) then
+        if self.__tabPanel.tabbar:IsSelected(name) then
             if i - 1 >= 1 then
                 prevTab = self.tabs[i - 1]
             else
@@ -192,5 +194,5 @@ function TabbedWindow:PreviousTab()
             break
         end
     end
-    self.__tabPanel.children[1]:Select(prevTab.name)
+    self.__tabPanel.tabbar:Select(prevTab.name)
 end
