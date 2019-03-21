@@ -7,6 +7,14 @@ Action = LCS.class{}
 -- Registered action classes
 SB.actionRegistry = {}
 
+function Table.FindKey(tbl, value)
+    for k, v in pairs(tbl) do
+        if v == value then
+            return k
+        end
+    end
+end
+
 --- Register the action.
 -- @tparam table opts Table
 -- @tparam string opts.name Machine name of the action control. Built-in actions have the "sb_" prefix.
@@ -50,8 +58,10 @@ function Action:Register(opts)
         if opts.hotkey.shift then
             keyText = keyText .. "Shift "
         end
-        local keySymbol = Spring.GetKeySymbol(opts.hotkey.key) or ""
-        keySymbol = String.Capitalize(keySymbol)
+
+        -- local keySymbol = Spring.GetKeySymbol(opts.hotkey.key) or ""
+        -- keySymbol = String.Capitalize(keySymbol)
+        local keySymbol = Table.FindKey(KEYSYMS, opts.hotkey.key) or ""
         keyText = keyText .. keySymbol .. ")"
         opts.tooltip = opts.tooltip .. keyText
     end
