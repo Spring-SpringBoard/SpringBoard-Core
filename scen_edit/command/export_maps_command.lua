@@ -26,7 +26,7 @@ function SaveShadingTextures(path, toProject, prefix)
             local texDef = SB.model.textureManager.shadingTextureDefs[texType]
             local alpha = not not texDef.alpha
             gl.Blending("enable")
-            gl.RenderToTexture(texture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath, {alpha=alpha, yflip=true})
+            gl.RenderToTexture(texture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, texPath, {alpha=alpha, yflip=false})
 
             if toProject then
                 shadingTexObj.dirty = false
