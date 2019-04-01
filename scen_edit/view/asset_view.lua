@@ -192,11 +192,28 @@ function AssetView:AddFolder(folder)
             local sbInfoStr = VFS.LoadFile(sbInfoPath, VFS.RAW)
             local sbInfo = loadstring(sbInfoStr)()
             local game, mapName = sbInfo.game, sbInfo.mapName
+            local randomMapOptions = sbInfo.randomMapOptions
+            local mutators = sbInfo.mutators or {}
+
+            local mapStr = mapName
+            if randomMapOptions ~= nil then
+                mapStr = mapStr .. " (generated: " .. randomMapOptions.new_map_x ..
+                         "x" .. randomMapOptions.new_map_z .. ")"
+            end
+            if #mutators ~= 0 then
+                mapStr = mapStr .. "\nMutators: "
+                for i, mutator in ipairs(mutators) do
+                    mapStr = mapStr .. mutator
+                    if i ~= #mutators then
+                        mapStr = mapStr .. ", "
+                    end
+                end
+            end
 
             tooltip = string.format("Game: %s %s\nMap: %s",
                 game.name,
                 game.version,
-                mapName
+                mapStr
             )
         else
             Log.Warning("Missing sb_info.lua for project: " .. tostring(folder))

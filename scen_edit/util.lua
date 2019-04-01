@@ -710,3 +710,11 @@ function SB.AskToRestart()
         }
     }
 end
+
+function SB.GetLoadScript()
+    if SB.loadScript == nil then
+        local loadScriptTxt = VFS.LoadFile("_script.txt")
+        SB.loadScript = StartScript.ParseStartScript(loadScriptTxt) or {}
+    end
+    return SB.loadScript
+end

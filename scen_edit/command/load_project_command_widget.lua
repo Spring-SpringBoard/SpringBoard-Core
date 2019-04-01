@@ -97,6 +97,10 @@ function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
     local sbInfoStr = self:__LoadFile("sb_info.lua")
     local sbInfo = loadstring(sbInfoStr)()
     local game, mapName = sbInfo.game, sbInfo.mapName
+    local randomMapOptions = sbInfo.randomMapOptions
+    local mutators = sbInfo.mutators
+
+    local loadScript = SB.GetLoadScript()
 
 	local reload = false
     if game.name ~= Game.gameName then
@@ -104,51 +108,68 @@ function LoadProjectCommandWidget:__CheckCorrectEditorAndMap()
         reload = true
 	elseif mapName ~= Game.mapName then
 		Log.Notice("Different map (" .. mapName .. "). Reloading into project...")
-		reload = true
+        reload = true
+    elseif type(randomMapOptions) ~= type(loadScript.mapOptions) or
+           randomMapOptions.new_map_x ~= loadScript.mapOptions.new_map_x or
+           randomMapOptions.new_map_z ~= loadScript.mapOptions.new_map_z then
+            -- Spring.Echo(type(randomMapOptions) ~= type(loadScript.randomMapOptions),
+            -- randomMapOptions.new_map_x ~= loadScript.randomMapOptions.new_map_x,
+            -- randomMapOptions.new_map_z ~= loadScript.randomMapOptions.new_map_z)
+        Log.Notice("Different random map settings used. Reloading into project...")
+        reload = true
+    elseif not Table.Compare(mutators, loadScript.mutators) then
+        table.echo(mutators)
+        table.echo(loadScript.mutators)
+        Log.Notice("Different mutators used. Reloading into project...")
+        reload = true
     end
-    if reload then
-        -- We make a lowercase copy of the script.txt and parse it
-        -- This is necessary as it simplifies searching with case-sensitive tools
-        -- However we have to create the new script using the original case..
-        -- .. or we risk case sensitive elements (e.g. map name) being broken
-        local scriptTxt = self:__LoadFile("script-dev.txt")
-        local scriptObj = StartScript.ParseStartScript(scriptTxt)
-        for k, v in pairs(SB.GetPersistantModOptions()) do
-            scriptObj.modOptions[k] = v
+
+    if not reload then
+        return true
+    end
+
+
+    -- We make a lowercase copy of the script.txt and parse it
+    -- This is necessary as it simplifies searching with case-sensitive tools
+    -- However we have to create the new script using the original case..
+    -- .. or we risk case sensitive elements (e.g. map name) being broken
+    local scriptTxt = self:__LoadFile("script-dev.txt")
+    local scriptObj = StartScript.ParseStartScript(scriptTxt)
+    for k, v in pairs(SB.GetPersistantModOptions()) do
+        scriptObj.modOptions[k] = v
+    end
+
+    local scriptGame = scriptObj.modOptions._sb_game_name
+    local scriptVersion = scriptObj.modOptions._sb_game_version
+    if scriptGame == nil then
+        Log.Notice('Project saved with older editor.' ..
+            ' Please upgrade manually')
+    elseif scriptGame ~= Game.gameName then
+        Log.Warning("Trying to open project in incompatible editor: " ..
+            "Editor: " .. Game.gameName .. " Project: " .. scriptGame ..
+            ". Cannot run in appropriate version")
+    else
+        if scriptVersion ~= Game.gameVersion then
+            Log.Notice('Opening project saved with different game version: ' ..
+                'Editor: ' .. Game.gameVersion .. ' Project: ' .. scriptVersion)
         end
+        scriptObj.game = {
+            name = Game.gameName,
+            version = Game.gameVersion
+        }
+    end
+    scriptObj.modOptions._sb_game_name = nil
+    scriptObj.modOptions._sb_game_version = nil
+    scriptObj.players = scriptObj.players or {}
+    scriptObj.ais = scriptObj.ais or {}
 
-        local scriptGame = scriptObj.modOptions._sb_game_name
-        local scriptVersion = scriptObj.modOptions._sb_game_version
-        if scriptGame == nil then
-            Log.Notice('Project saved with older editor.' ..
-                ' Please upgrade manually')
-        elseif scriptGame ~= Game.gameName then
-            Log.Warning("Trying to open project in incompatible editor: " ..
-                "Editor: " .. Game.gameName .. " Project: " .. scriptGame ..
-                ". Cannot run in appropriate version")
-        else
-            if scriptVersion ~= Game.gameVersion then
-                Log.Notice('Opening project saved with different game version: ' ..
-                    'Editor: ' .. Game.gameVersion .. ' Project: ' .. scriptVersion)
-            end
-            scriptObj.game = {
-                name = Game.gameName,
-                version = Game.gameVersion
-            }
-        end
-        scriptObj.modOptions._sb_game_name = nil
-        scriptObj.modOptions._sb_game_version = nil
-        scriptObj.players = scriptObj.players or {}
-        scriptObj.ais = scriptObj.ais or {}
+    table.echo(scriptObj)
+    scriptTxt = StartScript.GenerateScriptTxt(scriptObj)
+    Log.Notice('Reloading with start script: ')
+    Log.Notice(scriptTxt)
+    Spring.Reload(scriptTxt)
 
-        table.echo(scriptObj)
-        scriptTxt = StartScript.GenerateScriptTxt(scriptObj)
-        Log.Notice('Reloading with start script: ')
-        Log.Notice(scriptTxt)
-        Spring.Reload(scriptTxt)
-	end
-
-    return not reload
+    return false
 end
 
 function LoadProjectCommandWidget:__LoadFile(fname)

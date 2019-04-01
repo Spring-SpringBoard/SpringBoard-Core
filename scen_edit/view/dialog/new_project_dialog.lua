@@ -17,6 +17,14 @@ function NewProjectDialog:init()
         width = 300,
     }))
 
+    self:AddField(StringField({
+        name = "newMapName",
+        title = "Map name:",
+        tooltip = "SB will generate a new map folder in maps/$MapName.sdd.\n" ..
+                      "This can be useful if you want to add custom feature defs or other map files.",
+        width = 300,
+    }))
+
     self:AddField(GroupField({
         NumericField({
             name = "sizeX",
@@ -58,6 +66,9 @@ end
 
 function NewProjectDialog:ConfirmDialog()
     if self.fields.mapName.value == "SB_Blank_Map" then
+        if self.fields.newMapName.value == "" then
+            return
+        end
         if self.fields.sizeX.value > 0 and self.fields.sizeZ.value > 0 then
             self:LoadEmptyMap()
         end
@@ -71,7 +82,7 @@ function NewProjectDialog:OnFieldChange(name, value)
         if value == "SB_Blank_Map" then
             self:SetInvisibleFields()
         else
-            self:SetInvisibleFields("sizeX", "sizeZ")
+            self:SetInvisibleFields("sizeX", "sizeZ", "newMapName")
         end
     end
 end
@@ -122,9 +133,39 @@ local function GenerateEmptyMapParticipants()
     }
 end
 
+function NewProjectDialog:GenerateArchiveStructure(archiveDir, projectName)
+    -- create project if it doesn't exist already
+    if SB.DirExists(archiveDir, VFS.RAW_ONLY) then
+        return
+    end
+
+    Spring.CreateDir(archiveDir)
+    -- Spring.CreateDir(Path.Join(archiveDir, "triggers"))
+
+    local mapInfo = [[
+local mapinfo = {
+    name = "$NAME",
+    version = "1.0",
+    description = "",
+    modtype = 3,
+    depend = {
+        "cursors.sdz",
+    }
+}
+
+return mapinfo
+]]
+    mapInfo = mapInfo:gsub("$NAME", projectName)
+    local file = assert(io.open(Path.Join(archiveDir, "mapinfo.lua"), "w"))
+    file:write(mapInfo)
+    file:close()
+end
+
 function NewProjectDialog:LoadEmptyMap()
     local sizeX, sizeZ = self.fields.sizeX.value, self.fields.sizeZ.value
     local participants = GenerateEmptyMapParticipants()
+
+    local projectName = self.fields.newMapName.value
 
     local script = {
         game = {
@@ -132,7 +173,7 @@ function NewProjectDialog:LoadEmptyMap()
             version = Game.gameVersion,
         },
         mapSeed = 1,
-        mapName = "SB_Blank_Template_" .. tostring(sizeX) .. "x" .. tostring(sizeZ),
+        mapName = "blank_" .. projectName .. " 1.0", --"SB_Blank_Template_" .. tostring(sizeX) .. "x" .. tostring(sizeZ),
         teams = participants.teams,
         players = participants.players,
         ais = participants.ais,
@@ -142,7 +183,12 @@ function NewProjectDialog:LoadEmptyMap()
             new_map_z = sizeZ,
         },
         modOptions = SB.GetPersistantModOptions(),
+        mutators = {
+            projectName .. " 1.0"
+        }
     }
+
+    self:GenerateArchiveStructure("maps/" .. projectName .. ".sdd", projectName)
 
     local scriptTxt = StartScript.GenerateScriptTxt(script)
     Spring.Echo(scriptTxt)

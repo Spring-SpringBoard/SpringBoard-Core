@@ -96,6 +96,17 @@ function SaveCommand.GenerateScript(dev)
         }
     end
 
+    local loadScript = SB.GetLoadScript()
+    local mapSeed = loadScript.mapSeed
+    local mapOptions
+    if mapSeed ~= nil then
+        mapOptions = {
+            new_map_x = loadScript.mapOptions.new_map_x,
+            new_map_z = loadScript.mapOptions.new_map_z,
+        }
+    end
+    local mutators = loadScript.mutators
+
     local modOptions = {
         deathmode = "neverend",
         has_scenario_file = not dev,
@@ -173,6 +184,9 @@ function SaveCommand.GenerateScript(dev)
     local scriptTxt = StartScript.GenerateScriptTxt({
         game = game,
         mapName = Game.mapName,
+        mapSeed = mapSeed,
+        mapOptions = mapOptions,
+        mutators = mutators,
         modOptions = modOptions,
         players = players,
         ais = ais,
@@ -217,12 +231,24 @@ local function GUIStateSave(path)
 end
 
 local function SBInfoSave(path)
+    -- TODO: Need to get map seed, size and mutator list from script txt?
+    local loadScript = SB.GetLoadScript()
+    local randomMapOptions
+    if loadScript.mapSeed ~= nil then
+        randomMapOptions = {
+            mapSeed = loadScript.mapSeed,
+            new_map_x = loadScript.mapOptions.new_map_x,
+            new_map_z = loadScript.mapOptions.new_map_z,
+        }
+    end
     local sbInfo = {
         game = {
             name = Game.gameName,
             version = Game.gameVersion,
         },
         mapName = Game.mapName,
+        randomMapOptions = randomMapOptions,
+        mutators = loadScript.mutators,
     }
 
     table.save(sbInfo, path)
