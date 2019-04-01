@@ -178,6 +178,7 @@ end
 -- @tparam number modOptions.minSpeed (optional, engine default: 0.3)
 -- @tparam number modOptions.maxSpeed (optional, engine default: 20.0)
 -- @tparam table mapOptions
+-- @tparam table mutators
 -- For details see https://github.com/spring/spring/blob/develop/rts/Game/GameSetup.cpp
 function StartScript.GenerateScriptTxt(opts)
     local isHost = opts.isHost
@@ -192,6 +193,8 @@ function StartScript.GenerateScriptTxt(opts)
     assert(type(opts.players) == 'table')
     assert(type(opts.teams) == 'table')
     assert(type(opts.allyTeams) == 'table')
+
+    opts.mutators = opts.mutators or {}
 
     local script = {
         mapName = opts.mapName,
@@ -213,17 +216,20 @@ function StartScript.GenerateScriptTxt(opts)
         mapOptions = opts.mapOptions or {},
     }
 
-    for i, ai in pairs(opts.ais) do
+    for i, ai in ipairs(opts.ais) do
         script["ai" .. i-1] = ai
     end
-    for i, player in pairs(opts.players) do
+    for i, player in ipairs(opts.players) do
         script["player" .. i-1] = player
     end
-    for i, team in pairs(opts.teams) do
+    for i, team in ipairs(opts.teams) do
         script["team" .. i-1] = team
     end
-    for i, allyTeam in pairs(opts.allyTeams) do
+    for i, allyTeam in ipairs(opts.allyTeams) do
         script["allyTeam" .. i-1] = allyTeam
+    end
+    for i, mutator in ipairs(opts.mutators) do
+        script["mutator" .. i-1] = mutator
     end
 
     local scriptTxt = StartScript.__WriteStartScript(script)
@@ -327,20 +333,16 @@ function StartScript.ParseStartScript(scriptTxt)
     local merged = {}
     local groups = {}
     for k, v in pairs(parsed) do
-        if type(v) == 'table' then
-            local num = k:match('%d+$')
-            if num then
-                local bare = k:sub(1, -#num - 1) .. 's'
-                if groups[bare] == nil then
-                    groups[bare] = {}
-                end
-                table.insert(groups[bare], {
-                    num = tonumber(num),
-                    v = v
-                })
-            else
-                merged[k] = v
+        local num = k:match('%d+$')
+        if num then
+            local bare = k:sub(1, -#num - 1) .. 's'
+            if groups[bare] == nil then
+                groups[bare] = {}
             end
+            table.insert(groups[bare], {
+                num = tonumber(num),
+                v = v
+            })
         else
             merged[k] = v
         end
@@ -363,6 +365,9 @@ function StartScript.ParseStartScript(scriptTxt)
 
     merged.mapName = merged.mapname
     merged.mapname = nil
+
+    merged.mapSeed = merged.mapseed
+    merged.mapseed = nil
 
     local name, version = unpack(String.Split(merged.gametype, ' '))
     merged.game = {
