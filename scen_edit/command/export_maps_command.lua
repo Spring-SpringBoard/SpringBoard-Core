@@ -277,9 +277,9 @@ function ExportMapsCommand:execute()
             WG.Connector.Send("TransformSBImage", {
                 inPath = VFS.GetFileAbsolutePath(Path.Join(projectDir, "grass.data"):lower()),
                 outPath = Path.Join(exportAbsDir, "grass.png"),
-                width = Game.mapSizeX / Game.squareSize,
-                height = Game.mapSizeZ / Game.squareSize,
-                multiplier = 256,
+                width = Game.mapSizeX / Game.squareSize + 1,
+                height = Game.mapSizeZ / Game.squareSize + 1,
+                multiplier = 255,
                 packSize = 'uint8'
             })
 
@@ -288,9 +288,9 @@ function ExportMapsCommand:execute()
             WG.Connector.Send("TransformSBImage", {
                 inPath = VFS.GetFileAbsolutePath(Path.Join(projectDir, "metal.data"):lower()),
                 outPath = Path.Join(exportAbsDir, "metal.png"),
-                width = Game.mapSizeX / METAL_RESOLUTION,
-                height = Game.mapSizeZ / METAL_RESOLUTION,
-                multiplier = 1,
+                width = Game.mapSizeX / METAL_RESOLUTION + 1,
+                height = Game.mapSizeZ / METAL_RESOLUTION + 1,
+                multiplier = 255,
                 packSize = 'float32'
             })
         end
