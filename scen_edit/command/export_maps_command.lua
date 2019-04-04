@@ -259,6 +259,7 @@ function ExportMapsCommand:execute()
         end)
         if WG.Connector then
             Log.Notice("Exporting grass with launcher...")
+            local projectDir = SB.projectDir
             WG.Connector.Send("TransformSBImage", {
                 inPath = Path.Join(projectDir, "grass.data"),
                 outPath = Path.Join(self.path, "grass.png"),
