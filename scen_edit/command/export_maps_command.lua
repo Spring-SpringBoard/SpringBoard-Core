@@ -231,13 +231,13 @@ function ExportMapsCommand:execute()
         end, function (elapsed)
             Log.Notice(("[%.4fs] Exported heightmap"):format(elapsed))
         end)
-        Time.MeasureTime(function()
-            Spring.ClearWatchDogTimer(nil, true)
-            self:ExportGrass()
-            Spring.ClearWatchDogTimer(nil, false)
-        end, function (elapsed)
-            Log.Notice(("[%.4fs] Exported grass"):format(elapsed))
-        end)
+        -- Time.MeasureTime(function()
+        --     Spring.ClearWatchDogTimer(nil, true)
+        --     self:ExportGrass()
+        --     Spring.ClearWatchDogTimer(nil, false)
+        -- end, function (elapsed)
+        --     Log.Notice(("[%.4fs] Exported grass"):format(elapsed))
+        -- end)
         Time.MeasureTime(function()
             Spring.ClearWatchDogTimer(nil, true)
             SaveShadingTextures(self.path, false, "")
@@ -257,5 +257,27 @@ function ExportMapsCommand:execute()
                 SB.editors["terrainSettings"]:UpdateCompilePaths(self.path)
             end
         end)
+        if WG.Connector then
+            Log.Notice("Exporting grass with launcher...")
+            WG.Connector.Send("TransformSBImage", {
+                inPath = Path.Join(projectDir, "grass.data"),
+                outPath = Path.Join(self.path, "grass.png"),
+                width = Game.mapSizeX,
+                height = Game.mapSizeZ,
+                multiplier = 256,
+                packSize = 'uint8'
+            })
+
+            Log.Notice("Exporting metal with launcher...")
+            local METAL_RESOLUTION = 16
+            WG.Connector.Send("TransformSBImage", {
+                inPath = Path.Join(projectDir, "metal.data"),
+                outPath = Path.Join(self.path, "metal.png"),
+                width = Game.mapSizeX / METAL_RESOLUTION,
+                height = Game.mapSizeZ / METAL_RESOLUTION,
+                multiplier = 1,
+                packSize = 'float32'
+            })
+        end
     end)
 end
