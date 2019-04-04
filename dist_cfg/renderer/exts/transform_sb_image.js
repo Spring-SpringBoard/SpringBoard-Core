@@ -20,7 +20,7 @@ ipcRenderer.on("TransformSBImage", (e, command) => {
 
 	  for(var y = 0; y < height; y++) {
 		for(var x = 0; x < width; x++) {
-			const idx = x * width + height;
+			const idx = y * width + x;
 			const pos = idx * 4;
 			if (packSize == 'float32') {
 			  buffer[pos  ] = view.getFloat32(idx * 4, true) * multiplier;
