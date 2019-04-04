@@ -24,7 +24,7 @@ ipcRenderer.on("TransformSBImage", (e, command) => {
 			if (packSize == 'float32') {
 			  buffer[pos  ] = view.getFloat32(x * height + y) * multiplier;
 			} else {
-			  buffer[pos  ] = buffer[x * height + y] * multiplier;
+			  buffer[pos  ] = data.buffer[x * height + y] * multiplier;
 			}
 			buffer[pos+1] = buffer[pos];
 			buffer[pos+2] = buffer[pos];

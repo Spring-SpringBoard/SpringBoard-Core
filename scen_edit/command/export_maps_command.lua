@@ -6,6 +6,17 @@ function ExportMapsCommand:init(path, heightmapExtremes)
     self.heightmapExtremes = heightmapExtremes
 end
 
+local registeredImageSave = false
+local function RegisterImageSave()
+    if registeredImageSave then
+        return
+    end
+    WG.Connector.Register("TransformSBImageFinished", function(command)
+        Log.Notice("Successfully exported to " .. command.path)
+    end)
+    registeredImageSave = true
+end
+
 function SaveShadingTextures(path, toProject, prefix)
     -- FIXME: Maybe totally get rid of this prefix thing?
     if not prefix then
@@ -258,13 +269,16 @@ function ExportMapsCommand:execute()
             end
         end)
         if WG.Connector then
+            RegisterImageSave()
+
             Log.Notice("Exporting grass with launcher...")
             local projectDir = SB.projectDir
+            local exportAbsDir = Path.GetParentDir(VFS.GetFileAbsolutePath(Path.Join(self.path, "diffuse.png"):lower()))
             WG.Connector.Send("TransformSBImage", {
-                inPath = Path.Join(projectDir, "grass.data"),
-                outPath = Path.Join(self.path, "grass.png"),
-                width = Game.mapSizeX,
-                height = Game.mapSizeZ,
+                inPath = VFS.GetFileAbsolutePath(Path.Join(projectDir, "grass.data"):lower()),
+                outPath = Path.Join(exportAbsDir, "grass.png"),
+                width = Game.mapSizeX / Game.squareSize,
+                height = Game.mapSizeZ / Game.squareSize,
                 multiplier = 256,
                 packSize = 'uint8'
             })
@@ -272,8 +286,8 @@ function ExportMapsCommand:execute()
             Log.Notice("Exporting metal with launcher...")
             local METAL_RESOLUTION = 16
             WG.Connector.Send("TransformSBImage", {
-                inPath = Path.Join(projectDir, "metal.data"),
-                outPath = Path.Join(self.path, "metal.png"),
+                inPath = VFS.GetFileAbsolutePath(Path.Join(projectDir, "metal.data"):lower()),
+                outPath = Path.Join(exportAbsDir, "metal.png"),
                 width = Game.mapSizeX / METAL_RESOLUTION,
                 height = Game.mapSizeZ / METAL_RESOLUTION,
                 multiplier = 1,
