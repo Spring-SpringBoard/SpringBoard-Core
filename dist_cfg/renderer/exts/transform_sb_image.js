@@ -11,26 +11,34 @@ ipcRenderer.on("TransformSBImage", (e, command) => {
 
 	fs.readFile(inPath, function (err, data) {
 	  if (err) {
-		ipcRenderer.send("TransformSBImage", err);
-		return;
-	  }
+			ipcRenderer.send("TransformSBImageFailed", err);
+			return;
+		}
+
+		if (data.length != width * height * packSize) {
+			ipcRenderer.send("TransformSBImageFailed",
+				`Incorrect parameters specified for image: ${inPath}, size: ${data.length} and ` +
+				`width: ${width}, height: ${height} and packSize: ${packSize}`);
+			return;
+		}
+
 
 	  var buffer = new Uint8ClampedArray(width * height * 4);
 	  var view = new DataView(data.buffer);
 
-	  for(var y = 0; y < height; y++) {
-		for(var x = 0; x < width; x++) {
-			const idx = y * width + x;
-			const pos = idx * 4;
-			if (packSize == 'float32') {
-			  buffer[pos  ] = view.getFloat32(idx * 4, true) * multiplier;
-			} else {
-			  buffer[pos  ] = data[idx] * multiplier;
+	  for (var y = 0; y < height; y++) {
+			for (var x = 0; x < width; x++) {
+				const idx = y * width + x;
+				const pos = idx * 4;
+				if (packSize == 'float32') {
+					buffer[pos  ] = view.getFloat32(idx * 4, true) * multiplier;
+				} else {
+					buffer[pos  ] = data[idx] * multiplier;
+				}
+				buffer[pos+1] = buffer[pos];
+				buffer[pos+2] = buffer[pos];
+				buffer[pos+3] = 255;
 			}
-			buffer[pos+1] = buffer[pos];
-			buffer[pos+2] = buffer[pos];
-			buffer[pos+3] = 255;
-		}
 	  }
 
 	  var canvas = document.createElement('canvas'),
