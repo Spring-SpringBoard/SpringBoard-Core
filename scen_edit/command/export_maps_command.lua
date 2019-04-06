@@ -14,6 +14,9 @@ local function RegisterImageSave()
     WG.Connector.Register("TransformSBImageFinished", function(command)
         Log.Notice("Successfully exported to " .. command.path)
     end)
+    WG.Connector.Register("TransformSBImageFailed", function(command)
+        Log.Notice("Export image failed. " .. command.error)
+    end)
     registeredImageSave = true
 end
 

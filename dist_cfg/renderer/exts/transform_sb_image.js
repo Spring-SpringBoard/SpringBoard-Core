@@ -15,10 +15,17 @@ ipcRenderer.on("TransformSBImage", (e, command) => {
 			return;
 		}
 
-		if (data.length != width * height * packSize) {
+		var packSizeBytes;
+		if (packSize == "float32") {
+			packSizeBytes = 4;
+		} else {
+			packSizeBytes = 1;
+		}
+
+		if (data.length != width * height * packSizeBytes) {
 			ipcRenderer.send("TransformSBImageFailed",
 				`Incorrect parameters specified for image: ${inPath}, size: ${data.length} and ` +
-				`width: ${width}, height: ${height} and packSize: ${packSize}`);
+				`width: ${width}, height: ${height} and packSize: ${packSize}: ${packSizeBytes} bytes`);
 			return;
 		}
 
