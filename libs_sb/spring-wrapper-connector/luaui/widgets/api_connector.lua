@@ -76,9 +76,9 @@ local function explode(div,str)
 	if div == '' then
 		return false
 	end
-	local pos,arr = 0, {}
+	local pos, arr = 0, {}
 	-- for each divider found
-	for st,sp in function() return string.find(str,div,pos,true) end do
+	for st, sp in function() return string.find(str,div,pos,true) end do
 		table.insert(arr,string.sub(str,pos,st-1)) -- Attach chars left of current divider
 		pos = sp + 1 -- Jump past current divider
 	end
@@ -87,10 +87,10 @@ local function explode(div,str)
 end
 
 local function SocketConnect()
-	client=socket.tcp()
+	client = socket.tcp()
 	client:settimeout(0)
-	res, err = client:connect(host, port)
-	if not res and not res=="timeout" then
+	local res, err = client:connect(host, port)
+	if not res and not res == "timeout" then
 		widgetHandler:RemoveWidget(self)
 		Spring.Log(LOG_SECTION, LOG.ERROR, "Error in connect wrapper: " .. err)
 		return false
