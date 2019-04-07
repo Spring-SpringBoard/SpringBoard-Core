@@ -36,6 +36,10 @@ function Connector.Register(name, callback)
 	table.insert(Connector.callbacks[name], callback)
 end
 
+Connector.Register("LoadExtensionFailed", function(command)
+	Spring.Log(LOG_SECTION, LOG.ERROR, command.error)
+end)
+
 function Connector.Unregister(name, callback)
 	if not Connector.callbacks[name] then
 		return
