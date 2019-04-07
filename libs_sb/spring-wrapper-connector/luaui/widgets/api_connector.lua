@@ -9,6 +9,7 @@ local client
 local isConnected = false
 local buffer = ""
 local commands = {} -- table with possible commands
+local sentDirInfo = false
 
 local Connector = {
 	callbacks = {}, -- name based callbacks
@@ -155,6 +156,12 @@ function widget:Update()
 	elseif client == nil then
 		SocketConnect(host, port)
 		return
+	end
+	if not sentDirInfo then
+		sentDirInfo = true
+		Connector.Send("SetArchivePath", {
+			archvePath = VFS.GetArchivePath(Game.gameName .. " " .. Game.gameVersion)
+		})
 	end
 	Connector._FlushCommandQueue()
 
