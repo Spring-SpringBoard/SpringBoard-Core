@@ -133,7 +133,8 @@ local function CommandReceived(command)
 	end
 
 	for _, callback in pairs(Connector.callbacks[name]) do
-		local success, err = pcall(function()
+		local err
+		success, err = pcall(function()
 			callback(params)
 		end)
 		if not success then
