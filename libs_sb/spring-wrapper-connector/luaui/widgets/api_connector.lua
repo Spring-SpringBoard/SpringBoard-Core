@@ -9,7 +9,6 @@ local client
 local isConnected = false
 local buffer = ""
 local commands = {} -- table with possible commands
-local sentDirInfo = false
 
 local Connector = {
 	callbacks = {}, -- name based callbacks
@@ -112,6 +111,10 @@ function widget:Initialize()
 		widgetHandler:RemoveWidget(self)
 		return
 	end
+	Connector.Send("LoadArchiveExtensions", {
+		archivePath = VFS.GetArchivePath(Game.gameName .. " " .. Game.gameVersion)
+	})
+
 	Spring.Log(LOG_SECTION, LOG.NOTICE, "Connecting to " ..
 		tostring(host) .. ":" .. tostring(port))
 	SocketConnect(host, port)
@@ -157,13 +160,9 @@ function widget:Update()
 		SocketConnect(host, port)
 		return
 	end
-	if not sentDirInfo then
-		sentDirInfo = true
-		Connector.Send("SetArchivePath", {
-			archvePath = VFS.GetArchivePath(Game.gameName .. " " .. Game.gameVersion)
-		})
+	if isConnected then
+		Connector._FlushCommandQueue()
 	end
-	Connector._FlushCommandQueue()
 
 	local readable, writeable, err = socket.select({client}, {client}, 0)
 	if err ~= nil and err ~= "timeout" then
