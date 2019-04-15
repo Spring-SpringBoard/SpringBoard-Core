@@ -1,6 +1,6 @@
 VFS.Include(JSON_LIB_PATH, nil, VFS.MOD)
 
-local LOG_SECTION = "connector"
+local LOG_SECTION = "spring-launcher"
 
 local socket = socket
 
@@ -170,7 +170,7 @@ function widget:Update()
 
 	local readable, writeable, err = socket.select({client}, {client}, 0)
 	if err ~= nil and err ~= "timeout" then
-		Spring.Log(LOG_SECTION, "warning", "connector error in select", err)
+		Spring.Log(LOG_SECTION, "warning", "spring-launcher error in select", err)
 		--Echo("Error in select: " .. err)
 	end
 	for _, input in ipairs(readable) do
