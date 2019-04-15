@@ -96,7 +96,7 @@ local function SocketConnect()
 	local res, err = client:connect(host, port)
 	if not res and not res == "timeout" then
 		widgetHandler:RemoveWidget(self)
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Error in connect wrapper: " .. err)
+		Spring.Log(LOG_SECTION, LOG.ERROR, "Error in connect launcher: " .. err)
 		return false
 	end
 	return true
