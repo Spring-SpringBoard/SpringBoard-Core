@@ -4,3 +4,6 @@
 [submodule "libs_sb/chiliui"]
 	path = libs_sb/chiliui
 	url = https://github.com/gajop/chiliui.git
+[submodule "libs_sb/chonsole"]
+	path = libs_sb/chonsole
+	url = https://github.com/gajop/chonsole.git
