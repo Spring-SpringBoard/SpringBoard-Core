@@ -7,3 +7,15 @@
 [submodule "libs_sb/chonsole"]
 	path = libs_sb/chonsole
 	url = https://github.com/gajop/chonsole.git
+[submodule "libs_sb/s11n"]
+	path = libs_sb/s11n
+	url = https://github.com/gajop/s11n.git
+[submodule "libs_sb/springmon"]
+	path = libs_sb/springmon
+	url = https://github.com/gajop/springmon.git
+[submodule "libs_sb/chotify"]
+	path = libs_sb/chotify
+	url = https://github.com/gajop/chotify.git
+[submodule "libs_sb/chilifx"]
+	path = libs_sb/chilifx
+	url = https://github.com/gajop/chilifx.git
