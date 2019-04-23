@@ -1,0 +1,3 @@
+[submodule "libs_sb/spring-launcher"]
+	path = libs_sb/spring-launcher
+	url = https://github.com/gajop/spring-wrapper-connector.git
