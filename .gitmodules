@@ -19,3 +19,9 @@
 [submodule "libs_sb/chilifx"]
 	path = libs_sb/chilifx
 	url = https://github.com/gajop/chilifx.git
+[submodule "libs_sb/lcs"]
+	path = libs_sb/lcs
+	url = https://github.com/gajop/Lua-Class-System.git
+[submodule "libs_sb/i18n"]
+	path = libs_sb/i18n
+	url = https://github.com/gajop/i18n.git
