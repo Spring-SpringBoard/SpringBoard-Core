@@ -2,7 +2,7 @@
 self = false
 unused = false
 -- unused_args = false
-global = false
+global = false --  IDEs tend to have issues with 'global = true', as they work on a per-file basis
 allow_defined_top = true
 max_line_length = false
 codes = true
