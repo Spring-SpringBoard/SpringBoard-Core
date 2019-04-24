@@ -228,11 +228,32 @@ function TextureEditor:init()
             end
         },
     })
+    self.btnHeight = TabbedPanelButton({
+        x = 280,
+        y = 0,
+        tooltip = "Draw height",
+        children = {
+            TabbedPanelImage({ file = SB_IMG_DIR .. "large-paint-brush.png" }),
+            TabbedPanelLabel({ caption = "Height" }),
+        },
+        OnClick = {
+            function()
+                self:_EnterState("height")
+                self.savedBrushes:GetControl():Hide()
+                self.savedDNTSBrushes:GetControl():Hide()
+                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
+                                        "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
+                                        "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
+                                        unpack(self.matFieldNames))
+            end
+        },
+    })
     self:AddDefaultKeybinding({
         self.btnPaint,
         self.btnFilter,
         self.btnDNTS,
-        self.btnVoid
+        self.btnVoid,
+        self.btnHeight
     })
 
     self:AddField(ChoiceField({
@@ -491,6 +512,7 @@ function TextureEditor:init()
         self.btnFilter,
         self.btnDNTS,
         self.btnVoid,
+        self.btnHeight,
         --self.patternTextureImages:GetControl(),
         self.savedBrushes:GetControl(),
         self.savedDNTSBrushes:GetControl(),

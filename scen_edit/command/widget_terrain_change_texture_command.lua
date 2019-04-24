@@ -50,6 +50,8 @@ function WidgetTerrainChangeTextureCommand:SetTexture(opts)
         DrawVoid(opts, x / texSize, z / texSize, size / texSize)
     elseif opts.paintMode == "blur" then
         DrawFilter(opts, x / texSize, z / texSize, size / texSize)
+    elseif opts.paintMode == "height" then
+        DrawHeight(opts, x / texSize, z / texSize, size / texSize)
     elseif opts.paintMode == "paint" then
         DrawDiffuse(opts, x / texSize, z / texSize, size / texSize)
         DrawShadingTextures(opts, x, z, size)
