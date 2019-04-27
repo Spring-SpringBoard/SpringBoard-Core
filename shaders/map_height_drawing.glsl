@@ -48,7 +48,22 @@ void main(void)
 	vec4 heightColor = texture2D(heightTexture, gl_TexCoord[3].st);
 	float height = heightColor.r;
 	float relativeHeight = (height - minHeight) / (maxHeight - minHeight);
-	vec4 heightValue = vec4(vec3(relativeHeight), 1.0);
+
+	vec4 heightValue = vec4(0.0);
+
+	const vec4 hill = vec4(0.53, 0.53, 0.45, 1.0);
+	const vec4 plain = vec4(0.7, 0.43, 0.5, 1.0);
+	const vec4 snow = vec4(0.9, 0.9, 0.9, 1.0);
+	if (relativeHeight < 0.5) {
+		heightValue = plain;
+	} else if (relativeHeight < 0.7) {
+		heightValue = mix(plain, hill, (relativeHeight - 0.5) / 0.2);
+	} else if (relativeHeight < 0.9) {
+		float factor = (relativeHeight - 0.7) / 0.2;
+		heightValue = mix(hill, snow, abs(sin(factor * 50.0)) / 3.14);
+	} else {
+		heightValue = snow;
+	}
 
 
 	gl_FragColor = mix(heightValue, mapColor, 1.0 - patternColor.a * strength);
