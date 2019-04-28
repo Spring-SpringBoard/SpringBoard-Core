@@ -1,0 +1,10 @@
+{
+    "HeightMapTexture": 1,
+    "LinkIncomingMaxPacketRate": 64000,
+    "LinkIncomingMaxWaitingPackets": 512000,
+    "LinkIncomingPeakBandwidth": 32768000,
+    "LinkIncomingSustainedBandwidth": 2048000,
+    "LinkOutgoingBandwidth": 65536000,
+    "TextureMemPoolSize": 600,
+    "SpringDataRoot": "springboard/projects"
+}
