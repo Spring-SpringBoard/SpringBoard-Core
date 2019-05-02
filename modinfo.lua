@@ -8,6 +8,7 @@ local modinfo = {
 	mutator			= "Official",
 	description		= "Core module of SpringBoard",
 	modtype			= 1,
+	onlyLocal		= true,
 	depend = {
 		"Spring Cursors",
 	}
