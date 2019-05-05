@@ -59,7 +59,7 @@ function TabbedWindow:init()
         padding = {0, 0, 0, 0},
         tabs = self.tabs,
     }
-    self.__tabPanel.tabbar:SetPos(nil, nil, #self.tabs * self.__tabPanel.tabbar.children[1].width, nil)
+    self.__tabPanel.tabbar:SetPos(nil, nil, #self.tabs * self.__tabPanel.tabbar.children[1].width + 4, nil)
     table.insert(controls, self.__tabPanel)
 
     table.insert(controls, Chili.Line:New {
