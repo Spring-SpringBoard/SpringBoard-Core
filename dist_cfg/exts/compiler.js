@@ -112,8 +112,10 @@ class Compiler extends EventEmitter {
       }
     });
 
+    var errorMsg = "";
     process.stderr.on('data', (data) => {
       console.log("stderr: ", data.toString());
+      errorMsg += data.toString() + "\n";
     });
 
     process.on('exit', (code) => {
@@ -123,6 +125,7 @@ class Compiler extends EventEmitter {
       } else {
         this.bridge.send("CompileMapError", {
             "code": code,
+            "msg": errorMsg
         });
       }
     });
