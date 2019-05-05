@@ -7,6 +7,7 @@ function SetProjectNamePathCommand:init(name, path)
 end
 
 function SetProjectNamePathCommand:execute()
+    -- Also modify the dependency mutator as necessary
     if SB.project.name ~= nil then
         for i = 1, #SB.project.mutators do
             local mutator = SB.project.mutators[i]
@@ -18,20 +19,4 @@ function SetProjectNamePathCommand:execute()
 
     SB.project.name = self.name
     SB.project:SetPath(self.path)
-end
-
-
-WidgetSetProjectDirCommand = Command:extends{}
-WidgetSetProjectDirCommand.className = "WidgetSetProjectDirCommand"
-
-function WidgetSetProjectDirCommand:init(projectDir)
-    self.projectDir = projectDir
-end
-
-function WidgetSetProjectDirCommand:execute()
-    SB.project:SetPath(self.projectDir)
-    SB.conf:initializeListOfMetaModelFiles()
-    local reloadMetaModelCommand = ReloadMetaModelCommand(SB.conf:GetMetaModelFiles())
-    SB.commandManager:execute(reloadMetaModelCommand)
-    SB.commandManager:execute(reloadMetaModelCommand, true)
 end

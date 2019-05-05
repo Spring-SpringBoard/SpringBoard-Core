@@ -1,25 +1,8 @@
 LoadProjectCommandWidget = Command:extends{}
 LoadProjectCommandWidget.className = "LoadProjectCommandWidget"
 
-function LoadProjectCommandWidget:init(path)
-    self.path = path
-end
-
--- function LoadProjectCommandWidget:__ReloadInto(game, mapName)
---     local scriptTxt = StartScript.GenerateScriptTxt({
---         game = game,
---         mapName = mapName,
---     })
---     Spring.Echo(scriptTxt)
---     Spring.Reload(scriptTxt)
--- end
-
 function LoadProjectCommandWidget:execute()
-    SB.project:SetPath(self.path)
-    Log.Notice("Set widget project path:", SB.project.path)
-    SB.commandManager:execute(WidgetSetProjectDirCommand(SB.project.path), true)
-
-    Log.Notice("Loading project: " .. self.path .. " ...")
+    Log.Notice("Loading project...")
 
     self:_LoadSynced()
     self:_LoadUnsynced()
@@ -60,7 +43,7 @@ function LoadProjectCommandWidget:_LoadSynced()
 end
 
 function LoadProjectCommandWidget:_LoadUnsynced()
-    local cmds = { LoadTextureCommand(Path.Join(self.path, "sb_texturemap/")) }
+    local cmds = { LoadTextureCommand("sb_texturemap/") }
 
     if VFS.FileExists("sb_gui.lua", VFS.ZIP) then
         table.insert(cmds, LoadGUIStateCommand(VFS.LoadFile("sb_gui.lua", VFS.ZIP)))

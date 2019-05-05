@@ -54,8 +54,7 @@ local projectLoaded = false
 local function MaybeLoad()
     if not hasScenarioFile and SB.project.path ~= nil and not projectLoaded then
         Log.Notice("Loading project (from widget)")
-        local cmd = LoadProjectCommandWidget(SB.project.path, false)
-        SB.commandManager:execute(cmd, true)
+        SB.commandManager:execute(LoadProjectCommandWidget(), true)
         projectLoaded = true
     end
 end
