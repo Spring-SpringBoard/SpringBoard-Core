@@ -6,5 +6,6 @@
     "LinkIncomingSustainedBandwidth": 2048000,
     "LinkOutgoingBandwidth": 65536000,
     "TextureMemPoolSize": 600,
-    "SpringDataRoot": "springboard/projects"
+    "SpringDataRoot": "springboard/projects",
+    "CamSpringLockCardinalDirections": false
 }
