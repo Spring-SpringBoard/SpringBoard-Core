@@ -1,7 +1,3 @@
-SB.classes = {}
--- include this dir
-SB.classes[SB_DIR .. "util.lua"] = true
-
 function MakeComponentPanel(parentPanel)
     local componentPanel = Control:New {
         parent = parentPanel,
@@ -14,51 +10,6 @@ function MakeComponentPanel(parentPanel)
         resizeItems = false,
     }
     return componentPanel
-end
-
---non recursive file include
-function SB.IncludeDir(dirPath)
-    local files = VFS.DirList(dirPath)
-    local context = Script.GetName()
-    for i = 1, #files do
-        local file = files[i]
-        -- don't load files ending in _gadget.lua in LuaUI nor _widget.lua in LuaRules
-        if file:sub(-string.len(".lua")) == ".lua" and
-            (context ~= "LuaRules" or file:sub(-string.len("_widget.lua")) ~= "_widget.lua") and
-            (context ~= "LuaUI" or file:sub(-string.len("_gadget.lua")) ~= "_gadget.lua") then
-
-            SB.Include(file)
-        end
-    end
-end
-
-function SB.Include(path)
-    if not SB.classes[path] then
-        -- mark it included before it's actually included to prevent circular inclusions
-        SB.classes[path] = true
-        VFS.Include(path)
-    end
-end
-
-function SB.ZlibCompress(str)
-    return tostring(#str) .. "|" .. VFS.ZlibCompress(str)
-end
-
-function SB.ZlibDecompress(str)
-    local compressedSize = 0
-    local strStart = 0
-    for i = 1, #str do
-        local substr = str:sub(1, i)
-        if str:sub(i,i) == '|' then
-            compressedSize = tonumber(str:sub(1, i - 1))
-            strStart = i + 1
-            break
-        end
-    end
-    if compressedSize == 0 then
-        error("string is not of valid format")
-    end
-    return VFS.ZlibDecompress(str:sub(strStart, #str), compressedSize)
 end
 
 function CallListeners(listeners, ...)
@@ -283,9 +234,13 @@ local function hintCtrlFunction(ctrl, startTime, timeout, color)
 end
 
 function SB.HintEditor(editor, color, timeout)
+    local ctrls = editor:GetAllControls()
+    SB.HintControls(ctrls, color, timeout)
+end
+
+function SB.HintControls(ctrls, color, timeout)
     timeout = timeout or 1
     color = color or {1, 0, 0, 1}
-    local ctrls = editor:GetAllControls()
     local startTime = os.clock()
     for _, ctrl in pairs(ctrls) do
         if ctrl._originalColor == nil then
@@ -600,12 +555,7 @@ function SB.DirIsProject(path)
         return false
     end
 
-    local modelExists = VFS.FileExists(Path.Join(path, "model.lua"),
-        VFS.RAW)
-    local heightMapExists = VFS.FileExists(Path.Join(path, "heightmap.data"),
-        VFS.RAW)
-
-    return modelExists and heightMapExists
+    return VFS.FileExists(Path.Join(path, "sb_project.lua"), VFS.RAW)
 end
 
 function SB.ExecuteEvent(eventName, params)

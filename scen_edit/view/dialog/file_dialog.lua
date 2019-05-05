@@ -1,14 +1,12 @@
 SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
 
-FileDialog = Editor:extends{}
+FileDialog = Editor:extends {
+    caption = "File dialog"
+}
 
-function FileDialog:init(dir, caption, fileTypes)
+function FileDialog:init()
     Editor.init(self)
-
-    self.dir = dir or nil
-    self.caption = caption or "File dialog"
     self.confirmDialogCallback = nil
-    self.fileTypes = fileTypes
 
     self.fileView = AssetView({
         ctrl = {
@@ -18,6 +16,7 @@ function FileDialog:init(dir, caption, fileTypes)
         },
         multiSelect = false,
         dir = self.dir,
+        rootDir = self.rootDir,
         OnDblClickItem = {
             function()
                 if self:ConfirmDialog() then

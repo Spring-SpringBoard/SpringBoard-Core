@@ -11,9 +11,6 @@ function ObjectTypeField:Update()
 end
 
 function ObjectTypeField:Validate(value)
-    if value == nil then
-        return Field.Validate(self, value)
-    end
     if self.bridge.ObjectDefs and self.bridge.ObjectDefs[value] then
         return true, value
     end

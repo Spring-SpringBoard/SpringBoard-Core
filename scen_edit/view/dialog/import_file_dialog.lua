@@ -1,9 +1,13 @@
 SB.Include(Path.Join(SB_VIEW_DIALOG_DIR, "file_dialog.lua"))
 
-ImportFileDialog = FileDialog:extends{}
+ImportFileDialog = FileDialog:extends {
+    caption = "Import"
+}
 
 function ImportFileDialog:init(dir, fileTypes)
-    self:super("init", dir, "Import file", fileTypes)
+    self.dir = dir
+    self.fileTypes = fileTypes
+    FileDialog.init(self)
 end
 
 function ImportFileDialog:ConfirmDialog()

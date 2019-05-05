@@ -275,10 +275,10 @@ function ExportMapsCommand:execute()
             RegisterImageSave()
 
             Log.Notice("Exporting grass with launcher...")
-            local projectDir = SB.projectDir
+            local projectPath = SB.project.path
             local exportAbsDir = Path.GetParentDir(VFS.GetFileAbsolutePath(Path.Join(self.path, "diffuse.png"):lower()))
             WG.Connector.Send("TransformSBImage", {
-                inPath = VFS.GetFileAbsolutePath(Path.Join(projectDir, "grass.data"):lower()),
+                inPath = VFS.GetFileAbsolutePath(Path.Join(projectPath, "grass.data"):lower()),
                 outPath = Path.Join(exportAbsDir, "grass.png"),
                 width = Game.mapSizeX / Game.squareSize + 1,
                 height = Game.mapSizeZ / Game.squareSize + 1,
@@ -289,7 +289,7 @@ function ExportMapsCommand:execute()
             Log.Notice("Exporting metal with launcher...")
             local METAL_RESOLUTION = 16
             WG.Connector.Send("TransformSBImage", {
-                inPath = VFS.GetFileAbsolutePath(Path.Join(projectDir, "metal.data"):lower()),
+                inPath = VFS.GetFileAbsolutePath(Path.Join(projectPath, "metal.data"):lower()),
                 outPath = Path.Join(exportAbsDir, "metal.png"),
                 width = Game.mapSizeX / METAL_RESOLUTION + 1,
                 height = Game.mapSizeZ / METAL_RESOLUTION + 1,

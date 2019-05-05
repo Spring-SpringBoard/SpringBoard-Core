@@ -1,9 +1,12 @@
 SB.Include(Path.Join(SB_VIEW_DIALOG_DIR, "file_dialog.lua"))
 
-OpenFileDialog = FileDialog:extends{}
+OpenFileDialog = FileDialog:extends{
+    caption = "Open file"
+}
 
 function OpenFileDialog:init(dir)
-    self:super("init", dir, "Open file")
+    self.dir = dir
+    FileDialog.init(self)
 end
 
 function OpenFileDialog:ConfirmDialog()

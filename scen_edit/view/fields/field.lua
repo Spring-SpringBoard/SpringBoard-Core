@@ -8,9 +8,11 @@ Field = LCS.class{}
 -- @function Field()
 -- @see editor.Editor
 -- @tparam table opts
+-- @tparam bool opts.isValid Field valid status.
 -- @tparam bool opts.allowNil Allow nil values.
 -- @tparam number opts.height Field height size.
 function Field:init(field)
+    self:__SetDefault("isValid", true)
     self:__SetDefault("allowNil", true)
     self:__SetDefault("height", 30)
     for k, v in pairs(field) do
@@ -49,16 +51,20 @@ function Field:_CompareValues(v1, v2)
     end
 end
 
---- Validate value. Can be overriden.
--- @param value Value to validate.
--- @return valid, validatedValue
-function Field:Validate(value)
-    if value == nil then
-        return self.allowNil, value
-    else
-        return true, value
+function Field:_Validate(value)
+    local oldIsValid = self.isValid
+
+    self.isValid = value ~= nil or self.allowNil
+    if self.isValid then
+        self.isValid, value = self:Validate(value)
     end
+
+    if oldIsValid ~= self.isValid then
+        self:UpdateValidStatus()
+    end
+    return self.isValid, value
 end
+
 
 --- Set value. Will not be set if it's invalid.
 -- @param value Value to set.
@@ -68,7 +74,8 @@ function Field:Set(value, source)
         return
     end
     self.__inUpdate = true
-    local valid, validatedValue = self:Validate(value)
+
+    local valid, validatedValue = self:_Validate(value)
     if valid and
         (self.__dontCheckIfSimilar or not self:_CompareValues(validatedValue, self.value)) then
         self.value = validatedValue
@@ -98,4 +105,15 @@ end
 
 -- HACK: see above
 function Field:_HackSetInvisibleFields(fields)
+end
+
+--- Validate value. Override.
+-- @param value Value to validate.
+-- @return valid, validatedValue
+function Field:Validate(value)
+    return true, value
+end
+
+-- Override
+function Field:UpdateValidStatus()
 end

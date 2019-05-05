@@ -187,7 +187,7 @@ function AssetView:AddFolder(folder)
     local image = self.imageFolder
 
     if SB.DirIsProject(folder) then
-        local sbInfoPath = Path.Join(folder, "sb_info.lua")
+        local sbInfoPath = Path.Join(folder, "sb_project.lua")
         if VFS.FileExists(sbInfoPath, VFS.RAW) then
             local sbInfoStr = VFS.LoadFile(sbInfoPath, VFS.RAW)
             local sbInfo = loadstring(sbInfoStr)()
@@ -216,7 +216,7 @@ function AssetView:AddFolder(folder)
                 mapStr
             )
         else
-            Log.Warning("Missing sb_info.lua for project: " .. tostring(folder))
+            Log.Warning("Missing sb_project.lua for project: " .. tostring(folder))
         end
 
         local imgPath = Path.Join(folder, SB_SCREENSHOT_FILE)

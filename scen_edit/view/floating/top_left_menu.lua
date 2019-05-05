@@ -195,10 +195,10 @@ function TopLeftMenu:AddProjectMenu()
 end
 
 function TopLeftMenu:Update()
-    if SB.projectDir == self.projectDir then
+    if SB.project.path == self.projectDir then
         return
     end
-    self.projectDir = SB.projectDir
+    self.projectDir = SB.project.path
 
     local projectCaption
     if self.projectDir then

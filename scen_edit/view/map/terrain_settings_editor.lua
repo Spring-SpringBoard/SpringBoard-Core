@@ -131,8 +131,8 @@ function TerrainSettingsEditor:_AddMapCompileControls()
                 diffusePath = VFS.GetFileAbsolutePath(diffusePath)
 
                 self.compileFolderPath = nil
-                if SB.projectDir ~= nil then
-                    self.compileFolderPath = Path.Join(SB_WRITE_PATH, SB.projectDir)
+                if SB.project.path ~= nil then
+                    self.compileFolderPath = Path.Join(SB_WRITE_PATH, SB.project.path)
                 else
                     self.compileFolderPath = SB_PROJECTS_ABS_DIR
                 end

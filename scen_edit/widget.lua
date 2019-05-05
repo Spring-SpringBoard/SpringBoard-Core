@@ -23,74 +23,6 @@ function RecieveGadgetMessage(msg)
     -- end
 end
 
-local springConfig = {
-    HeightMapTexture = { value = 1, type = 'int' },
-    LinkIncomingMaxPacketRate = { value = 64000, type = 'int' },
-    LinkIncomingMaxWaitingPackets = { value = 512000, type = 'int' },
-    LinkIncomingPeakBandwidth = { value = 32768000, type = 'int' },
-    LinkIncomingSustainedBandwidth = { value = 2048000, type = 'int' },
-    LinkOutgoingBandwidth = { value = 65536000, type = 'int' },
-    TextureMemPoolSize = { min = 600, value = 600, type = 'int' }
-}
-
-local function DumpConfig()
-    Log.Notice("Dump of relevant engine config:")
-    for name, _ in pairs(springConfig) do
-        Log.Notice(name .. " = " .. Spring.GetConfigString(name, ""))
-    end
-end
-
-local function CheckConfig()
-    if SB.IsSpringConfigValid(springConfig) then
-        return
-    end
-
-    local window
-    window = Window:New {
-        x = "25%",
-        y = "15%",
-        width = 450,
-        height = 150,
-        parent = screen0,
-        resizable = false,
-        children = {
-            Label:New {
-                x = "1%",
-                y = "1%",
-                width = "99%",
-                bottom = "50%",
-                caption = "SpringBoard needs to set correct Engine configuration.",
-            },
-            Button:New {
-                x = "5%",
-                height = 40,
-                bottom = 0,
-                width = 180,
-                caption = "Set config values",
-                OnClick = {
-                    function()
-                        SB.SetSpringConfig(springConfig)
-                        window:Dispose()
-                        SB.AskToRestart()
-                    end
-                }
-            },
-            Button:New {
-                right = "5%",
-                height = 40,
-                bottom = 0,
-                width = 180,
-                caption = "Continue without setting",
-                OnClick = {
-                    function()
-                        window:Dispose()
-                    end
-                }
-            },
-        },
-    }
-end
-
 local function CheckSpringBoardDir()
     -- Make the initial SB directory tree and
     -- add a README.txt file if it doesn't exist.
@@ -98,9 +30,12 @@ local function CheckSpringBoardDir()
     if not VFS.FileExists(SB_ROOT, VFS.RAW) then
         Log.Notice("Creating initial SpringBoard directory")
         Spring.CreateDir(SB_ROOT)
-        Spring.CreateDir(SB_PROJECTS_DIR)
-        Spring.CreateDir(SB_ASSETS_DIR)
-        Spring.CreateDir(SB_EXTS_DIR)
+    end
+    local defaultDirs = { SB_PROJECTS_DIR, SB_ASSETS_DIR, SB_EXTS_DIR, SB_EXPORTS_DIR }
+    for _, dir in ipairs(defaultDirs) do
+        if not VFS.FileExists(dir, VFS.RAW) then
+            Spring.CreateDir(dir)
+        end
     end
 
     local readmePath = Path.Join(SB_ROOT, 'README.txt')
@@ -115,22 +50,19 @@ local function CheckSpringBoardDir()
     end
 end
 
+local projectLoaded = false
 local function MaybeLoad()
-    if not hasScenarioFile and SB.projectDir ~= nil and not SB.projectLoaded then
+    if not hasScenarioFile and SB.project.path ~= nil and not projectLoaded then
         Log.Notice("Loading project (from widget)")
-        local cmd = LoadProjectCommandWidget(SB.projectDir, false)
+        local cmd = LoadProjectCommandWidget(SB.project.path, false)
         SB.commandManager:execute(cmd, true)
-        SB.projectLoaded = true
+        projectLoaded = true
     end
 end
 
 local RELOAD_GADGETS = true
 function widget:Initialize()
-    VFS.Include("scen_edit/exports.lua")
-    LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
-    LCS = LCS()
-    VFS.Include(SB_DIR .. "util.lua")
-    SB.Include(SB_DIR .. "utils/include.lua")
+    VFS.Include("scen_edit/include.lua")
 
     Log.Notice('SpringBoard directory path at: ' .. tostring(SB_ROOT_ABS))
 
@@ -159,18 +91,14 @@ function widget:Initialize()
         Spring.SendCommands("cheat")
     end
 
-    DumpConfig()
-    CheckConfig()
     CheckSpringBoardDir()
-
-    SB.displayUtil = DisplayUtil()
+    SB.project = Project.InitializeFromEnvironment()
 
     SB.conf = Conf()
     SB.metaModel = MetaModel()
 
     --TODO: relocate this
-    local metaModelLoader = MetaModelLoader()
-    metaModelLoader:Load()
+    MetaModelLoader.Load()
 
     SB.model = Model()
 
@@ -178,6 +106,7 @@ function widget:Initialize()
     SB.stateManager = StateManager()
     SB.messageManager = MessageManager()
 
+    SB.displayUtil = DisplayUtil()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
         Spring.SendCommands('forcestart')
         SB.view = View()

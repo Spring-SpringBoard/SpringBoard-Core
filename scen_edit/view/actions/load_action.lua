@@ -22,11 +22,9 @@ function LoadAction:canExecute()
 end
 
 function LoadAction:execute()
-    local ofd = OpenProjectDialog(SB_PROJECTS_DIR)
-    ofd:setConfirmDialogCallback(
+    OpenProjectDialog():setConfirmDialogCallback(
         function(path)
-            local cmd = LoadProjectCommandWidget(path)
-            SB.commandManager:execute(cmd, true)
+            SB.commandManager:execute(ReloadIntoProjectCommand(path), true)
         end
     )
 end

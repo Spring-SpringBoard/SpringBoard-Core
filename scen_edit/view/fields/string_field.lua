@@ -45,6 +45,8 @@ function StringField:init(field)
     self:__SetDefault("width", 200)
     self:__SetDefault("value", "")
     self:__SetDefault("allowNil", false)
+    self:__SetDefault("invalidColor", {0.8, 0.2, 0.2, 1.0})
+    self:__SetDefault("validColor", {1.0, 1.0, 1.0, 1.0})
     self:__SetDefault("__btnClassname", "button")
 
     Field.init(self, field)
@@ -77,6 +79,7 @@ function StringField:init(field)
                     self.editBox:Hide()
                     self.ev.stackPanel:Invalidate()
                     self.ev:_OnEndChange(self.name)
+                    self:_Validate(self.value)
                 end
             end
         },
@@ -141,4 +144,12 @@ function StringField:__OnClick()
     self.editBox:Select(1, #self.editBox.text + 1)
     screen0:FocusControl(self.editBox)
     self.ev:_OnStartChange(self.name)
+end
+
+function StringField:UpdateValidStatus()
+    if self.isValid then
+        self.editBox.font.color = self.validColor
+    else
+        self.editBox.font.color = self.invalidColor
+    end
 end

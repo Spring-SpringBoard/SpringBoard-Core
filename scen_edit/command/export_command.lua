@@ -23,7 +23,7 @@ function ExportCommand:execute()
     end
     assert(not VFS.FileExists(self.path), "File already exists")
 
-    local projectDir = SB.projectDir
+    local projectDir = SB.project.path
     ScriptTxtSave(SB.model.scenarioInfo.name .. "-script.txt")
     ScriptTxtSave(SB.model.scenarioInfo.name .. "-script-DEV.txt", true)
 

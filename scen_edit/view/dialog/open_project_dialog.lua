@@ -1,10 +1,9 @@
 SB.Include(Path.Join(SB_VIEW_DIALOG_DIR, "file_dialog.lua"))
 
-OpenProjectDialog = FileDialog:extends{}
-
-function OpenProjectDialog:init(dir)
-    self:super("init", dir, "Open project")
-end
+OpenProjectDialog = FileDialog:extends {
+    dir = SB_PROJECTS_DIR,
+    caption = "Open project"
+}
 
 function OpenProjectDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()

@@ -11,9 +11,6 @@ function ObjectField:Update()
 end
 
 function ObjectField:Validate(value)
-    if value == nil then
-        return Field.Validate(self, value)
-    end
     local springID = self.bridge.getObjectSpringID(value)
     if springID and self.bridge.ValidObject(springID) then
         return true, value

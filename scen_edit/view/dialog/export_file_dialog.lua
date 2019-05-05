@@ -1,9 +1,13 @@
 SB.Include(Path.Join(SB_VIEW_DIALOG_DIR, "file_dialog.lua"))
 
-ExportFileDialog = FileDialog:extends{}
+ExportFileDialog = FileDialog:extends {
+    caption = "Export"
+}
 
 function ExportFileDialog:init(dir, fileTypes)
-    self:super("init", dir, "Export file", fileTypes)
+    self.dir = dir
+    self.fileTypes = fileTypes
+    FileDialog.init(self)
 
     local minHeight, maxHeight = Spring.GetGroundExtremes()
     self:AddField(GroupField({

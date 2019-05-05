@@ -22,11 +22,9 @@ function SaveProjectAction:canExecute()
 end
 
 function SaveProjectAction:execute()
-    if SB.projectDir == nil then
+    if SB.project.path == nil then
         self:super("execute")
     else
-        local path = SB.projectDir
-        Log.Notice("Saving project: " .. path .. " ...")
-        self:Save(path)
+        SB.project:Save()
     end
 end

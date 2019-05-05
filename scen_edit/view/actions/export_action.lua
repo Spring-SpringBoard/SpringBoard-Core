@@ -24,7 +24,7 @@ function ExportAction:canExecute()
         Log.Warning("Cannot export while testing.")
         return false
     end
-    if SB.projectDir == nil then
+    if SB.project.path == nil then
         -- FIXME: this should probably be relaxed for most types of export
         Log.Warning("The project must be saved before exporting")
         return false
@@ -33,7 +33,7 @@ function ExportAction:canExecute()
 end
 
 function ExportAction:execute()
-    local sfd = ExportFileDialog(SB_PROJECTS_DIR, fileTypes)
+    local sfd = ExportFileDialog(SB_EXPORTS_DIR, fileTypes)
     sfd:setConfirmDialogCallback(
         function(path, fileType, heightmapExtremes)
             local baseName = Path.ExtractFileName(path)

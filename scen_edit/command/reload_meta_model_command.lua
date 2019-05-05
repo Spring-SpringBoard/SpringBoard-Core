@@ -9,8 +9,7 @@ end
 function ReloadMetaModelCommand:execute()
     Log.Notice("Reloading meta model...")
     SB.conf:SetMetaModelFiles(self.metaModelFiles)
-    local metaModelLoader = MetaModelLoader()
-    metaModelLoader:Load()
+    MetaModelLoader.Load()
     Log.Notice("Reload completed successfully")
     Log.Notice("Validating trggers...")
     for _, trigger in pairs(SB.model.triggerManager:getAllTriggers()) do

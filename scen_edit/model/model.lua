@@ -5,8 +5,6 @@ SB_MODEL_OBJECT_DIR = Path.Join(SB_MODEL_DIR, "object/")
 SB.IncludeDir(SB_MODEL_OBJECT_DIR)
 
 function Model:init()
-    self._lua_rules_pre = "scen_edit"
-
     self.areaManager = AreaManager()
     self.variableManager = VariableManager()
     self.triggerManager = TriggerManager()

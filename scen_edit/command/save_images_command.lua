@@ -42,7 +42,7 @@ function SaveImagesCommand:execute()
                     -- remove existing texture)
                     os.remove(mapTexturePath)
                     Log.Debug("Saving subtexture", i, j, mapTexturePath)
-                    gl.RenderToTexture(mapTexture, gl.SaveImage, 0, 0, texSize, texSize, mapTexturePath, {yflip=true})
+                    gl.RenderToTexture(mapTexture, gl.SaveImage, 0, 0, texSize, texSize, mapTexturePath, {yflip=false})
                     mapTextureObj.dirty = false
 
                     -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things

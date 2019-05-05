@@ -95,15 +95,15 @@ function ArrayField:__GetDisplayText()
     return retStr
 end
 
-function ArrayField:Validate(value)
-    -- Let fields do their own validation when they're created
-    -- for _, v in pairs(value) do
-    --     if not self.type.Validate(v) then
-    --         return false
-    --     end
-    -- end
-    return true, value
-end
+-- function ArrayField:Validate(value)
+--     -- Let fields do their own validation when they're created
+--     -- for _, v in pairs(value) do
+--     --     if not self.type.Validate(v) then
+--     --         return false
+--     --     end
+--     -- end
+--     return true, value
+-- end
 
 function ArrayField:Update(source)
     if source ~= self.arrayWindow then

@@ -18,6 +18,7 @@ SB_ROOT = "springboard/"
 SB_PROJECTS_DIR = SB_ROOT .. "projects/"
 SB_ASSETS_DIR = SB_ROOT .. "assets/"
 SB_EXTS_DIR = SB_ROOT .. "exts/"
+SB_EXPORTS_DIR = SB_ROOT .. "exports/"
 
 -- TODO: maybe some of these _sl_ modopts should be parsed into SL_ instead of SB_
 -- that said, having both SB_ and SL_ would be error prone
@@ -50,14 +51,6 @@ SB_IMG_EXTS = {'.jpg','.bmp','.png','.tga','.tif'}
 --mod opts
 local modOpts = Spring.GetModOptions()
 
-function SB.SetProjectDir(path)
-    SB.projectDir = path
-    if path ~= nil and
-        Script.GetName() == "LuaUI" then
-        Spring.SetWMCaption(path)
-    end
-end
-SB.SetProjectDir(modOpts.project_dir)
 hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 
 local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)

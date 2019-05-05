@@ -1,6 +1,6 @@
-MetaModelLoader = LCS.class{}
+MetaModelLoader = {}
 
-function MetaModelLoader:AttemptToLoadFile(metaModelFile)
+function MetaModelLoader.AttemptToLoadFile(metaModelFile)
     local dataStr = metaModelFile.data
     local success, data = pcall(function()
         return assert(loadstring(dataStr))()
@@ -14,14 +14,14 @@ function MetaModelLoader:AttemptToLoadFile(metaModelFile)
     return data
 end
 
-function MetaModelLoader:_LoadMetaModelFile(metaModelFile, metaTypes)
+function MetaModelLoader._LoadMetaModelFile(metaModelFile, metaTypes)
     local metaModel = {}
 
     for _, metaType in pairs(metaTypes) do
         metaModel[metaType] = {}
     end
 
-    local data = self:AttemptToLoadFile(metaModelFile)
+    local data = MetaModelLoader.AttemptToLoadFile(metaModelFile)
     if data == nil then
         return
     end
@@ -50,7 +50,7 @@ function MetaModelLoader:_LoadMetaModelFile(metaModelFile, metaTypes)
     return metaModel
 end
 
-function MetaModelLoader:_MergeMetaModels(metaModels, metaTypes)
+function MetaModelLoader._MergeMetaModels(metaModels, metaTypes)
     local mergedMetaModel = {}
     for _, metaType in pairs(metaTypes) do
         mergedMetaModel[metaType] = {}
@@ -66,37 +66,37 @@ function MetaModelLoader:_MergeMetaModels(metaModels, metaTypes)
     return mergedMetaModel
 end
 
-function MetaModelLoader:_LoadDataTypes(metaModelFiles)
+function MetaModelLoader._LoadDataTypes(metaModelFiles)
     local metaModels = {}
     -- load files
     for _, metaModelFile in pairs(metaModelFiles) do
         Log.Notice("Loading data types from meta-model file: " .. metaModelFile.name)
-        local metaModel = self:_LoadMetaModelFile(metaModelFile, {"dataTypes"})
+        local metaModel = MetaModelLoader._LoadMetaModelFile(metaModelFile, {"dataTypes"})
         if metaModel ~= nil then
             table.insert(metaModels, metaModel)
         end
     end
     -- merge meta models
-    local mergedMetaModel = self:_MergeMetaModels(metaModels, {"dataTypes"})
+    local mergedMetaModel = MetaModelLoader._MergeMetaModels(metaModels, {"dataTypes"})
     return mergedMetaModel.dataTypes
 end
 
-function MetaModelLoader:_LoadMetaModels(metaModelFiles, metaTypes)
+function MetaModelLoader._LoadMetaModels(metaModelFiles, metaTypes)
     local metaModels = {}
     -- load files
     for _, metaModelFile in pairs(metaModelFiles) do
         Log.Notice("Loading meta-model file: " .. metaModelFile.name)
-        local metaModel = self:_LoadMetaModelFile(metaModelFile, metaTypes)
+        local metaModel = MetaModelLoader._LoadMetaModelFile(metaModelFile, metaTypes)
         if metaModel ~= nil then
             table.insert(metaModels, metaModel)
         end
     end
     -- merge meta models
-    local mergedMetaModel = self:_MergeMetaModels(metaModels, metaTypes)
+    local mergedMetaModel = MetaModelLoader._MergeMetaModels(metaModels, metaTypes)
     return mergedMetaModel
 end
 
-function MetaModelLoader:Load()
+function MetaModelLoader.Load()
     local metaModelFiles = SB.conf:GetMetaModelFiles()
     local metaTypes = {"functions", "actions", "orders", "events"}
 
@@ -104,13 +104,13 @@ function MetaModelLoader:Load()
 
     -- We first load data types as they can be used in other meta-models
     Log.Notice("Loading data types...")
-    local dataTypes = self:_LoadDataTypes(metaModelFiles)
+    local dataTypes = MetaModelLoader._LoadDataTypes(metaModelFiles)
     Log.Notice("Data types: " .. #dataTypes)
     SB.metaModel:SetCustomDataTypes(dataTypes)
     SB.metaModel:GenerateVariableTypes()
 
     Log.Notice("Loading meta-triggers...")
-    local mergedMetaModel = self:_LoadMetaModels(metaModelFiles, metaTypes)
+    local mergedMetaModel = MetaModelLoader._LoadMetaModels(metaModelFiles, metaTypes)
 
     Log.Notice("Event types: " .. #mergedMetaModel.events)
     Log.Notice("Function types: " .. #mergedMetaModel.functions)

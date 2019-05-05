@@ -83,7 +83,7 @@ function gadget:RecvLuaMsg(msg, playerID)
             end
             local msgObj = Message(msgTable.tag, msgTable.data)
             if msgObj.tag == 'command' then
-                if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SB.projectDir ~= nil then
+                if Spring.GetGameRulesParam("sb_gameMode") ~= "play" or SB.project.path ~= nil then
                     SB.commandManager:HandleCommandMessage(msgObj)
                 else
                     Log.Warning("Command ignored: ", msgTable.data)
@@ -111,45 +111,26 @@ end
 
 function gadget:Initialize()
     --Spring.RevertHeightMap(0, 0, Game.mapSizeX, Game.mapSizeZ, 1)
-    VFS.Include("scen_edit/exports.lua")
-    LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
-    LCS = LCS()
-    VFS.Include(SB_DIR .. "util.lua")
-    SB.Include(SB_DIR .. "utils/include.lua")
+    VFS.Include("scen_edit/include.lua")
 
-    SB.displayUtil = DisplayUtil()
-
-    -- detect game mode
-    local modOpts = Spring.GetModOptions()
-    if modOpts.sb_game_mode == nil and modOpts.play_mode ~= nil then
-        -- Report outdated script.txt, and use "dev" mode to can update it
-        Log.Error("Outdated init script mod option 'play_mode'. " ..
-                  "Please, export your project again")
-    end
-    local sb_gameMode = (modOpts.sb_game_mode or "dev")
-    if sb_gameMode ~= "dev" and sb_gameMode ~= "test" and sb_gameMode ~= "play" then
-        Log.Error("Unexpected sb_game_mode value: " ..
-            sb_gameMode .. ". Defaulting to 'dev'.")
-        sb_gameMode = "dev"
-    end
-    Log.Notice("SpringBoard", "info", "Running SpringBoard in " .. sb_gameMode .. "  gameMode.")
-    Spring.SetGameRulesParam("sb_gameMode", sb_gameMode)
+    Project.ParseModOpts()
+    SB.project = Project.InitializeFromEnvironment()
 
     --FIXME: shouldn't be here(?)
     SB.conf = Conf()
     SB.metaModel = MetaModel()
 
     --TODO: relocate this
-    local metaModelLoader = MetaModelLoader()
-    metaModelLoader:Load()
+    MetaModelLoader.Load()
 
     SB.model = Model()
 
     SB.messageManager = MessageManager()
     SB.commandManager = CommandManager()
 
-    local rtModel = RuntimeModel()
-    SB.rtModel = rtModel
+    SB.rtModel = RuntimeModel()
+
+    SB.displayUtil = DisplayUtil()
 
     SB.executeDelayed("Initialize")
     --populate the managers now that the listeners are set
@@ -167,7 +148,7 @@ function Load()
         Log.Notice("Loading the scenario file...")
         local heightmapData = VFS.LoadFile("heightmap.data", VFS.MOD)
         local modelData = VFS.LoadFile("model.lua", VFS.MOD)
-        local texturePath = "texturemap/texture.png"
+        local texturePath = "sb_texturemap/texture.png"
 
         local cmds = { LoadModelCommand(modelData), LoadMapCommand(heightmapData)}
         SB.commandManager:execute(CompoundCommand(cmds))
