@@ -44,7 +44,7 @@
       },
       "auto_start" : false,
       "no_downloads" : true,
-      "load_dev_exts": true,
+      "load_dev_exts": false,
       "launch": {
         "game": "SpringBoard Core $VERSION",
         "map": "TitanDuel 2.2"
