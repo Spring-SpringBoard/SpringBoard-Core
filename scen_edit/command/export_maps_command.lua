@@ -269,6 +269,7 @@ function ExportMapsCommand:execute()
             -- TODO: Cleanup
             if SB.editors["terrainSettings"] ~= nil then
                 SB.editors["terrainSettings"]:UpdateCompilePaths(self.path)
+                ExportAction.NextStep()
             end
         end)
         if WG.Connector then

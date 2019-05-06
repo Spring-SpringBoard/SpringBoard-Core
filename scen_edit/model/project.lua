@@ -1,4 +1,6 @@
 Project = LCS.class.final {
+    FOLDER_PREFIX = "sb_project_files/",
+
     name = nil,
     path = nil,
 
@@ -10,6 +12,17 @@ Project = LCS.class.final {
     randomMapOptions = {},
     mutators = {},
 }
+
+Project.PROJECT_FILE = Path.Join(Project.FOLDER_PREFIX, "project.lua")
+Project.HEIGHTMAP_FILE = Path.Join(Project.FOLDER_PREFIX, "heightmap.data")
+Project.MODEL_FILE = Path.Join(Project.FOLDER_PREFIX, "model.lua")
+Project.GRASS_FILE = Path.Join(Project.FOLDER_PREFIX, "grass.data")
+Project.METAL_FILE = Path.Join(Project.FOLDER_PREFIX, "metal.data")
+Project.SCRIPT_FILE = Path.Join(Project.FOLDER_PREFIX, "script.txt")
+
+Project.GUI_FILE = Path.Join(Project.FOLDER_PREFIX, "gui.lua")
+Project.SCREENSHOT_FILE = Path.Join(Project.FOLDER_PREFIX, "screenshot.jpg")
+Project.TEXTURES_FOLDER = Path.Join(Project.FOLDER_PREFIX, "textures/")
 
 function Project:GetData()
     return {
@@ -24,7 +37,7 @@ function Project:GetData()
 end
 
 function Project:Save(name)
-    local isNewProject = self:__MaybeSetPathCommand(name)
+    local isNewProject = self:__MaybeSetNameCommand(name)
     assert(self.path ~= nil, "Project path is not specified")
     assert(self.name ~= nil, "Project name is not specified")
     if isNewProject then
@@ -51,28 +64,25 @@ function Project:Save(name)
     end)
 end
 
-function Project:SaveProjectInfo(name)
-    local isNewProject = self:__MaybeSetPathCommand(name)
-    assert(self.path ~= nil, "Project path is not specified")
-    assert(self.name ~= nil, "Project name is not specified")
-    if isNewProject then
-        SB.project:CreateProjectStructure(self.path)
-    end
+function Project:GenerateNewProjectInfo(name)
+    assert(name ~= nil, "Project path is not specified")
+    self.name = nil
+    self.path = nil
+    self:__MaybeSetNameCommand(name)
 
+    SB.project:CreateProjectStructure(self.path)
     Log.Notice("Saving project info: " .. self.path .. " ...")
-    local cmd = SaveProjectInfoCommand(self.name, self.path, isNewProject)
+    local cmd = SaveProjectInfoCommand(self.name, self.path, true)
     SB.commandManager:execute(cmd, true)
 end
 
-function Project:__MaybeSetPathCommand(name)
+function Project:__MaybeSetNameCommand(name)
     if name == nil then
         return false
     end
 
-    if String.Ends(name, ".sdd") then
-        name = name:sub(1, #name - #(".sdd"))
-    end
-    local path = Path.Join(SB_PROJECTS_DIR, name .. ".sdd")
+    local path
+    name, path = Project.GenerateNamePath(name)
     if path == self.path then
         return false
     end
@@ -84,6 +94,17 @@ function Project:__MaybeSetPathCommand(name)
     return true
 end
 
+function Project.GenerateNamePath(name)
+    assert(name ~= nil, "Project needs a name.")
+
+    if String.Ends(name, ".sdd") then
+        name = name:sub(1, #name - #(".sdd"))
+    end
+    local path = Path.Join(SB_PROJECTS_DIR, name .. ".sdd")
+
+    return name, path
+end
+
 function Project:CreateProjectStructure()
     -- create project if it doesn't exist already
     if SB.DirExists(self.path, VFS.RAW_ONLY) then
@@ -91,6 +112,7 @@ function Project:CreateProjectStructure()
 	end
 
     Spring.CreateDir(self.path)
+    Spring.CreateDir(Path.Join(self.path, Project.FOLDER_PREFIX))
     Spring.CreateDir(Path.Join(self.path, "triggers"))
 
     local myCustomTriggersLua = [[
@@ -123,11 +145,10 @@ function Project.InitializeFromEnvironment()
 end
 
 function Project:_LoadFromFile()
-    local success, sbProject = pcall(VFS.Include, "sb_project.lua", nil, VFS.ZIP)
+    local success, sbProject = pcall(VFS.Include, Project.PROJECT_FILE, nil, VFS.ZIP)
     if not success then
         return
     end
-    table.echo(sbProject)
     for k, v in pairs(sbProject) do
         self[k] = v
     end
@@ -165,3 +186,12 @@ function Project.ParseModOpts()
     Spring.SetGameRulesParam("sb_gameMode", sb_gameMode)
 end
 
+-- Checks whether directory is a SpringBoard project
+function Project.IsDirProject(path)
+    if not (VFS.FileExists(path, VFS.RAW_ONLY) or
+            SB.DirExists(path, VFS.RAW_ONLY)) then
+        return false
+    end
+
+    return VFS.FileExists(Path.Join(path, Project.PROJECT_FILE), VFS.RAW)
+end

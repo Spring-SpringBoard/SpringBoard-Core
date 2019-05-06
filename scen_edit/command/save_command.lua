@@ -77,7 +77,7 @@ function SaveCommand:execute()
 
     -- save files
     Time.MeasureTime(function()
-        ModelSave(Path.Join(projectDir, "sb_model.lua"))
+        ModelSave(Path.Join(projectDir, Project.MODEL_FILE))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved model"):format(elapsed))
     end)
@@ -89,25 +89,25 @@ function SaveCommand:execute()
     -- end)
 
     Time.MeasureTime(function()
-        SaveHeightMap(Path.Join(projectDir, "sb_heightmap.data"))
+        SaveHeightMap(Path.Join(projectDir, Project.HEIGHTMAP_FILE))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved heightmap"):format(elapsed))
     end)
 
     Time.MeasureTime(function()
-        SaveMetalMap(Path.Join(projectDir, "sb_metal.data"))
+        SaveMetalMap(Path.Join(projectDir, Project.METAL_FILE))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved metalmap"):format(elapsed))
     end)
 
     Time.MeasureTime(function()
-        SaveGrassMap(Path.Join(projectDir, "sb_grass.data"))
+        SaveGrassMap(Path.Join(projectDir, Project.GRASS_FILE))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved grass"):format(elapsed))
     end)
 
     Time.MeasureTime(function()
-        GUIStateSave(Path.Join(projectDir, "sb_gui.lua"))
+        GUIStateSave(Path.Join(projectDir, Project.GUI_FILE))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved GUI state"):format(elapsed))
     end)
@@ -116,11 +116,11 @@ function SaveCommand:execute()
     -- Spring.SendCommands("console 0")
 
     if #SB.model.textureManager.mapFBOTextures > 0 then
-        local texturemapDir = Path.Join(projectDir, "sb_texturemap")
+        local texturemapDir = Path.Join(projectDir, Project.TEXTURES_FOLDER)
         Spring.CreateDir(texturemapDir)
         local cmd = SaveImagesCommand(texturemapDir, self.isNewProject)
         cmd:execute()
     end
 
-    SB.RequestScreenshotPath = Path.Join(projectDir, SB_SCREENSHOT_FILE)
+    SB.RequestScreenshotPath = Path.Join(projectDir, Project.SCREENSHOT_FILE)
 end

@@ -10,7 +10,7 @@ function ReloadIntoProjectCommand:execute()
     -- This is necessary as it simplifies searching with case-sensitive tools
     -- However we have to create the new script using the original case..
     -- .. or we risk case sensitive elements (e.g. map name) being broken
-    local scriptTxt = VFS.LoadFile(Path.Join(self.path, "script-dev.txt"), VFS.RAW)
+    local scriptTxt = VFS.LoadFile(Path.Join(self.path, Project.SCRIPT_FILE), VFS.RAW)
     local scriptObj = StartScript.ParseStartScript(scriptTxt)
     for k, v in pairs(SB.GetPersistantModOptions()) do
         scriptObj.modOptions[k] = v

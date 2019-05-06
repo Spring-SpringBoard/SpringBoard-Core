@@ -127,22 +127,15 @@ function TerrainSettingsEditor:_AddMapCompileControls()
                     return
                 end
 
-                heightPath = VFS.GetFileAbsolutePath(heightPath)
-                diffusePath = VFS.GetFileAbsolutePath(diffusePath)
+                self.compileFolderPath = Path.Join(SB_WRITE_PATH, SB.project.path)
 
-                self.compileFolderPath = nil
-                if SB.project.path ~= nil then
-                    self.compileFolderPath = Path.Join(SB_WRITE_PATH, SB.project.path)
-                else
-                    self.compileFolderPath = SB_PROJECTS_ABS_DIR
-                end
-
-                local outputPath = Path.Join(self.compileFolderPath, "Compiled")
-                WG.Connector.Send("CompileMap", {
+                local cmd = CompileMapCommand({
                     heightPath = heightPath,
                     diffusePath = diffusePath,
-                    outputPath = outputPath,
+                    outputPath = Path.Join(self.compileFolderPath, "Compiled")
                 })
+
+                SB.commandManager:execute(cmd, true)
             end
         }
     })
@@ -189,9 +182,12 @@ function TerrainSettingsEditor:_AddMapCompileControls()
         self.progressBar:SetValue(100)
         self.progressBar:SetCaption("Finished")
 
-        WG.Connector.Send("OpenFile", {
-            path = "file://" .. self.compileFolderPath,
-        })
+        if ExportAction.NextStep then
+            ExportAction.NextStep()
+        end
+        -- WG.Connector.Send("OpenFile", {
+        --     path = "file://" .. self.compileFolderPath,
+        -- })
     end)
 
     WG.Connector.Register("CompileMapError", function(command)

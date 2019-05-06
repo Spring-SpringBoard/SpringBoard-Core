@@ -455,8 +455,20 @@ function SB.DirExists(path, ...)
     return (#VFS.SubDirs(path, "*", ...) + #VFS.DirList(path, "*", ...)) ~= 0
 end
 
-local warningsIssued = {}
+function SB.RemoveDirRecursively(path)
+    for _, subDir in ipairs(VFS.SubDirs(path, "*", VFS.RAW)) do
+        SB.RemoveDirRecursively(subDir)
+        os.remove(subDir)
+    end
 
+    for _, file in ipairs(VFS.DirList(path, "*", VFS.RAW)) do
+        os.remove(file)
+    end
+
+    os.remove(path)
+end
+
+local warningsIssued = {}
 function SB.MinVersion(versionNumber, feature)
     if Script.IsEngineMinVersion == nil or not Script.IsEngineMinVersion(versionNumber) then
         if warningsIssued[feature] == nil then
@@ -546,16 +558,6 @@ function SB.TraceScreenRay(x, y, opts)
     end
 
     return traceType, value
-end
-
--- Checks whether directory is a SpringBoard project
-function SB.DirIsProject(path)
-    if not (VFS.FileExists(path, VFS.RAW_ONLY) or
-            SB.DirExists(path, VFS.RAW_ONLY)) then
-        return false
-    end
-
-    return VFS.FileExists(Path.Join(path, "sb_project.lua"), VFS.RAW)
 end
 
 function SB.ExecuteEvent(eventName, params)

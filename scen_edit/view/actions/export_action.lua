@@ -13,11 +13,16 @@ ExportAction:Register({
     }
 })
 
-local EXPORT_SCENARIO_ARCHIVE = "Scenario archive"
-local EXPORT_MAP_TEXTURES = "Map textures"
-local EXPORT_MAP_INFO = "Map info"
-local EXPORT_S11N = "s11n object format"
-local fileTypes = {EXPORT_SCENARIO_ARCHIVE, EXPORT_MAP_TEXTURES, EXPORT_MAP_INFO, EXPORT_S11N}
+ExportAction.EXPORT_SPRING_ARCHIVE = "Spring archive"
+ExportAction.EXPORT_MAP_TEXTURES = "Map textures"
+ExportAction.EXPORT_MAP_INFO = "Map info"
+ExportAction.EXPORT_S11N = "s11n object format"
+local fileTypes = {
+    ExportAction.EXPORT_SPRING_ARCHIVE,
+    ExportAction.EXPORT_MAP_TEXTURES,
+    ExportAction.EXPORT_MAP_INFO,
+    ExportAction.EXPORT_S11N
+}
 
 function ExportAction:canExecute()
     if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
@@ -33,8 +38,7 @@ function ExportAction:canExecute()
 end
 
 function ExportAction:execute()
-    local sfd = ExportFileDialog(SB_EXPORTS_DIR, fileTypes)
-    sfd:setConfirmDialogCallback(
+    ExportFileDialog(SB_EXPORTS_DIR, fileTypes):setConfirmDialogCallback(
         function(path, fileType, heightmapExtremes)
             local baseName = Path.ExtractFileName(path)
             local isFile = VFS.FileExists(path, VFS.RAW_ONLY)
@@ -44,28 +48,28 @@ function ExportAction:execute()
                 return
             end
             local exportCommand
-            if fileType == EXPORT_SCENARIO_ARCHIVE then
+            if fileType == ExportAction.EXPORT_SPRING_ARCHIVE then
                 if isDir then
                     return false
                 end
 
-                Log.Notice("Exporting archive: " .. path .. " ...")
-                exportCommand = ExportCommand(path)
-            elseif fileType == EXPORT_MAP_TEXTURES then
+                self:ExportSpringArchive(path, heightmapExtremes)
+                return true
+            elseif fileType == ExportAction.EXPORT_MAP_TEXTURES then
                 if isFile then
                     return false
                 end
 
                 self:MaybeExportMapTextures(path, heightmapExtremes)
                 return true
-            elseif fileType == EXPORT_MAP_INFO then
+            elseif fileType == ExportAction.EXPORT_MAP_INFO then
                 if isDir then
                     return false
                 end
 
                 Log.Notice("Exporting map info...")
                 exportCommand = ExportMapInfoCommand(path)
-            elseif fileType == EXPORT_S11N then
+            elseif fileType == ExportAction.EXPORT_S11N then
                 if isDir then
                     return false
                 end
@@ -83,6 +87,107 @@ function ExportAction:execute()
             end
         end
     )
+end
+
+local function CopyRecursively(src, dest, opts)
+    opts = opts or {}
+    Path.Walk(src, function(srcPath)
+		local pathBase = srcPath:sub(#src + 2, #srcPath)
+
+		Log.Notice("Copying " .. pathBase .. "...")
+		local destPath = Path.Join(dest, pathBase)
+		local destDir = Path.GetParentDir(destPath)
+		Spring.CreateDir(destDir)
+
+		local srcFileContent = VFS.LoadFile(srcPath, opts.mode)
+		local destFile = assert(io.open(destPath, "w"))
+		destFile:write(srcFileContent)
+		destFile:close()
+	end, opts)
+end
+
+local function WriteToFile(path, content)
+    file = assert(io.open(path, "w"))
+    file:write(content)
+    file:close()
+end
+
+ExportAction.NextStep = nil
+function ExportAction:ExportSpringArchive(path, heightmapExtremes)
+    Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
+
+    local buildDir = self:__CreateBuildDir()
+    self:MaybeExportMapTextures(buildDir, heightmapExtremes)
+
+    local archiveDir = Path.Join(buildDir, "archive")
+    Spring.CreateDir(archiveDir)
+
+    local luaGaiaDir = Path.Join(archiveDir, "LuaGaia")
+    Spring.CreateDir(luaGaiaDir)
+
+    WriteToFile(Path.Join(luaGaiaDir, "main.lua"), [[VFS.Include("LuaGadgets/gadgets.lua",nil, VFS.BASE)]])
+    WriteToFile(Path.Join(luaGaiaDir, "draw.lua"), [[VFS.Include("LuaGadgets/gadgets.lua",nil, VFS.BASE)]])
+
+    local gadgetsDir = Path.Join(luaGaiaDir, "Gadgets")
+    Spring.CreateDir(gadgetsDir)
+
+    local mapconfigDir = Path.Join(archiveDir, "mapconfig")
+    Spring.CreateDir(mapconfigDir)
+
+    local mapsDir = Path.Join(archiveDir, "maps")
+    Spring.CreateDir(mapsDir)
+
+    CopyRecursively("libs_sb/lcs",  Path.Join(archiveDir, "libs/lcs"),  { mode = VFS.ZIP })
+    CopyRecursively("libs_sb/s11n", Path.Join(archiveDir, "libs/s11n"), { mode = VFS.ZIP })
+
+    WriteToFile(Path.Join(gadgetsDir, "s11n_gadget_load.lua"),
+        VFS.LoadFile("libs_sb/s11n/s11n_gadget_load.lua", VFS.ZIP))
+
+    WriteToFile(Path.Join(gadgetsDir, "s11n_load_map_features.lua"),
+        VFS.LoadFile("libs_sb/s11n/s11n_load_map_features.lua", VFS.ZIP):gsub(
+            "local modelPath = nil", "local modelPath = \"mapconfig/s11n_model.lua\""))
+
+    local cmds = {
+        CompileMapCommand({
+            heightPath = Path.Join(buildDir, "heightmap.png"),
+            diffusePath = Path.Join(buildDir, "diffuse.png"),
+            outputPath = Path.Join(SB_WRITE_PATH, mapsDir, SB.project.name)
+        }),
+        CopyCustomProjectFilesCommand(SB.project.path, archiveDir),
+        ExportMapInfoCommand(Path.Join(archiveDir, "mapinfo.lua")),
+        ExportS11NCommand(Path.Join(mapconfigDir, "s11n_model.lua")),
+    }
+
+    ExportAction.NextStep = function()
+        SB.commandManager:execute(CompoundCommand(cmds), true)
+
+        ExportAction.NextStep = function()
+            Log.Notice("Exporting archive: " .. path .. " ...")
+            SB.commandManager:execute(ExportProjectCommand(archiveDir, path), true)
+
+            Log.Notice("Deleting build directory...")
+            SB.RemoveDirRecursively(buildDir)
+
+            Log.Notice("Archive export complete")
+            WG.Connector.Send("OpenFile", {
+                path = "file://" .. Path.GetParentDir(VFS.GetFileAbsolutePath(path)),
+            })
+
+            ExportAction.NextStep = nil
+        end
+    end
+end
+
+function ExportAction:__CreateBuildDir()
+    local i = 0
+    local buildDir
+    repeat
+        i = i + 1
+        buildDir = Path.Join(SB_EXPORTS_DIR, "__buildir_" .. tostring(i))
+    until not SB.DirExists(buildDir)
+
+    Spring.CreateDir(buildDir)
+    return buildDir
 end
 
 function ExportAction:MaybeExportMapTextures(path, heightmapExtremes)

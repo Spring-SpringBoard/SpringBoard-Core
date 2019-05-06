@@ -186,14 +186,13 @@ function AssetView:AddFolder(folder)
     local tooltip
     local image = self.imageFolder
 
-    if SB.DirIsProject(folder) then
-        local sbInfoPath = Path.Join(folder, "sb_project.lua")
-        if VFS.FileExists(sbInfoPath, VFS.RAW) then
-            local sbInfoStr = VFS.LoadFile(sbInfoPath, VFS.RAW)
-            local sbInfo = loadstring(sbInfoStr)()
-            local game, mapName = sbInfo.game, sbInfo.mapName
-            local randomMapOptions = sbInfo.randomMapOptions
-            local mutators = sbInfo.mutators or {}
+    if Project.IsDirProject(folder) then
+        local projectInfoPath = Path.Join(folder, Project.PROJECT_FILE)
+        if VFS.FileExists(projectInfoPath, VFS.RAW) then
+            local projectInfo = VFS.Include(projectInfoPath, nil, VFS.RAW)
+            local game, mapName = projectInfo.game, projectInfo.mapName
+            local randomMapOptions = projectInfo.randomMapOptions
+            local mutators = projectInfo.mutators or {}
 
             local mapStr = mapName
             if randomMapOptions ~= nil and
@@ -218,10 +217,10 @@ function AssetView:AddFolder(folder)
                 mapStr
             )
         else
-            Log.Warning("Missing sb_project.lua for project: " .. tostring(folder))
+            Log.Warning("Missing \"" .. Project.PROJECT_FILE .. "\" for project: " .. tostring(folder))
         end
 
-        local imgPath = Path.Join(folder, SB_SCREENSHOT_FILE)
+        local imgPath = Path.Join(folder, Project.SCREENSHOT_FILE)
         if VFS.FileExists(imgPath, VFS.RAW) then
             image = imgPath
         end

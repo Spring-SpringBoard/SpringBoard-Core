@@ -37,21 +37,12 @@ if writePath then
 end
 SB_LAUNCHER_VERSION = modOpts._sl_launcher_version
 
---properties
-SB_FILE_EXT = ".sdz"
-SB_S11N_EXT = ".lua"
-SB_MAP_INFO_FILE_EXT = ".lua"
-
-SB_SCREENSHOT_FILE = "sb_screen.jpg"
-
 SB_USE_PLAY_PAUSE = false
 
 SB_IMG_EXTS = {'.jpg','.bmp','.png','.tga','.tif'}
 
 --mod opts
 local modOpts = Spring.GetModOptions()
-
-hasScenarioFile = (tonumber(modOpts.has_scenario_file) or 0) ~= 0
 
 local sb_gameMode = (tonumber(modOpts.sb_gameMode) or 0)
 SB.SyncModel = Script.GetSynced() and sb_gameMode ~= "play"

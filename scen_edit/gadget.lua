@@ -144,20 +144,6 @@ function Load()
 
     s11n:Populate()
     SB.__populated = true
-    if hasScenarioFile then
-        Log.Notice("Loading the scenario file...")
-        local heightmapData = VFS.LoadFile("heightmap.data", VFS.MOD)
-        local modelData = VFS.LoadFile("model.lua", VFS.MOD)
-        local texturePath = "sb_texturemap/texture.png"
-
-        local cmds = { LoadModelCommand(modelData), LoadMapCommand(heightmapData)}
-        SB.commandManager:execute(CompoundCommand(cmds))
-        SB.commandManager:execute(LoadTextureCommand(texturePath), true)
-
-        if Spring.GetGameRulesParam("sb_gameMode") == "play" then
-            StartCommand():execute()
-        end
-    end
 
     pcall(function()
         local OnStartEditingSynced = SB.model.game.OnStartEditingSynced

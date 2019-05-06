@@ -17,23 +17,23 @@ end
 function LoadProjectCommandWidget:_LoadSynced()
     local cmds = {}
 
-    if VFS.FileExists("sb_heightmap.data", VFS.ZIP) then
-        table.insert(cmds, LoadMapCommand(VFS.LoadFile("sb_heightmap.data", VFS.ZIP)))
+    if VFS.FileExists(Project.HEIGHTMAP_FILE, VFS.ZIP) then
+        table.insert(cmds, LoadMapCommand(VFS.LoadFile(Project.HEIGHTMAP_FILE, VFS.ZIP)))
     end
 
-    if VFS.FileExists("sb_model.lua", VFS.ZIP) then
-        table.insert(cmds, LoadModelCommand(VFS.LoadFile("sb_model.lua", VFS.ZIP)))
+    if VFS.FileExists(Project.MODEL_FILE, VFS.ZIP) then
+        table.insert(cmds, LoadModelCommand(VFS.LoadFile(Project.MODEL_FILE, VFS.ZIP)))
     end
 
-    if VFS.FileExists("sb_grass.data", VFS.ZIP) then
-        table.insert(cmds, LoadGrassMapCommand(VFS.LoadFile("sb_grass.data", VFS.ZIP)))
+    if VFS.FileExists(Project.GRASS_FILE, VFS.ZIP) then
+        table.insert(cmds, LoadGrassMapCommand(VFS.LoadFile(Project.GRASS_FILE, VFS.ZIP)))
     end
 
-    if VFS.LoadFile("sb_metal.data", VFS.ZIP) then
-        table.insert(cmds, LoadMetalMapCommand(VFS.LoadFile("sb_metal.data", VFS.ZIP)))
+    if VFS.LoadFile(Project.METAL_FILE, VFS.ZIP) then
+        table.insert(cmds, LoadMetalMapCommand(VFS.LoadFile(Project.METAL_FILE, VFS.ZIP)))
     end
 
-    if not hasScenarioFile and Spring.GetGameRulesParam("sb_gameMode") == "play" then
+    if Spring.GetGameRulesParam("sb_gameMode") == "play" then
         table.insert(cmds, StartCommand())
     end
 
@@ -43,10 +43,10 @@ function LoadProjectCommandWidget:_LoadSynced()
 end
 
 function LoadProjectCommandWidget:_LoadUnsynced()
-    local cmds = { LoadTextureCommand("sb_texturemap/") }
+    local cmds = { LoadTextureCommand(Project.TEXTURES_FOLDER) }
 
-    if VFS.FileExists("sb_gui.lua", VFS.ZIP) then
-        table.insert(cmds, LoadGUIStateCommand(VFS.LoadFile("sb_gui.lua", VFS.ZIP)))
+    if VFS.FileExists(Project.GUI_FILE, VFS.ZIP) then
+        table.insert(cmds, LoadGUIStateCommand(VFS.LoadFile(Project.GUI_FILE, VFS.ZIP)))
     end
 
     local cmd = CompoundCommand(cmds)

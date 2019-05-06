@@ -3,9 +3,8 @@ ExportMapInfoCommand.className = "ExportMapInfoCommand"
 
 function ExportMapInfoCommand:init(path)
     self.path = path
-    --add extension if it doesn't exist
-    if string.sub(self.path, -string.len(SB_MAP_INFO_FILE_EXT)) ~= SB_MAP_INFO_FILE_EXT then
-        self.path = self.path .. SB_MAP_INFO_FILE_EXT
+    if Path.GetExt(self.path) ~= ".lua" then
+        self.path = self.path .. ".lua"
     end
 end
 
@@ -183,11 +182,10 @@ function ExportMapInfoCommand:GetSMF()
         end
     end
 
-    local scenarioInfo = SB.model.scenarioInfo
     local tbl = {
         minheight = minH,
 		maxheight = maxH,
-		smtFileName0 = scenarioInfo.name .. ".smt",
+		smtFileName0 = SB.project.name .. ".smt",
     }
     return tbl
 end
@@ -323,9 +321,11 @@ function ExportMapInfoCommand:execute()
 
     local mapInfo = {
         -- Section: Global
-        name = scenarioInfo.name,
+        -- name = scenarioInfo.name,
+        name = SB.project.name,
         description = scenarioInfo.description,
-        version = scenarioInfo.version,
+        -- version = scenarioInfo.version,
+        version = "1.0",
         author = scenarioInfo.author,
 
         -- Constant (OK)

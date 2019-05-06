@@ -8,7 +8,7 @@ OpenProjectDialog = FileDialog:extends {
 function OpenProjectDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()
 
-    if not SB.DirIsProject(path) then
+    if not Project.IsDirProject(path) then
         return
     end
 

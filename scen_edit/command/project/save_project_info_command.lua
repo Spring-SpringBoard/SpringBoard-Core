@@ -37,37 +37,22 @@ return modinfo]]
     return modInfoTxt
 end
 
-function SaveCommand.GenerateScript(dev)
+function SaveCommand.GenerateScript()
     -- TODO: Use SB.GetPersistantModOptions
     local project = SB.project
 
-    local game
-    if dev then
-        game = {
-            name = project.game.name,
-            version = project.game.version
-        }
-    else
-        game = {
-            name = SB.model.scenarioInfo.name,
-            version = SB.model.scenarioInfo.version
-        }
-    end
+    local game = {
+        name = project.game.name,
+        version = project.game.version
+    }
 
     local modOptions = {
         deathmode = "neverend",
-        has_scenario_file = not dev,
         _sb_game_name = Game.gameName,
         _sb_game_version = Game.gameVersion,
+        sb_game_mode = "dev",
+        project_path = SB.project.path
     }
-    if dev then
-        modOptions.sb_game_mode = "dev"
-    else
-        modOptions.sb_game_mode = "play"
-    end
-    if dev and SB.project.path then
-        modOptions.project_path = SB.project.path
-    end
 
     local teams = {}
     local ais = {}
@@ -91,9 +76,6 @@ function SaveCommand.GenerateScript(dev)
             if team.ai then
                 local aiShortName = "NullAI"
                 local aiVersion = ""
-                -- if not dev then
-                    -- TODO: Support other AIs for non-dev scripts
-                -- end
 
                 table.insert(ais, {
                     name = team.name,
@@ -105,10 +87,7 @@ function SaveCommand.GenerateScript(dev)
                     host = 0,
                 })
             else
-                local spectator = false
-                if dev then
-                    spectator = true
-                end
+                local spectator = true
                 table.insert(players, {
                     name = team.name,
                     team = teamIDCount,
@@ -147,8 +126,8 @@ function SaveCommand.GenerateScript(dev)
     return StartScript.GenerateScriptTxt(script)
 end
 
-local function ScriptTxtSave(path, dev)
-    local scriptTxt = SaveCommand.GenerateScript(dev)
+local function ScriptTxtSave(path)
+    local scriptTxt = SaveCommand.GenerateScript()
     local file = assert(io.open(path, "w"))
     file:write(scriptTxt)
     file:close()
@@ -192,14 +171,13 @@ function SaveProjectInfoCommand:execute()
     end)
 
     Time.MeasureTime(function()
-        ScriptTxtSave(Path.Join(projectDir, "script.txt"))
-        ScriptTxtSave(Path.Join(projectDir, "script-dev.txt"), true)
+        ScriptTxtSave(Path.Join(projectDir, Project.SCRIPT_FILE))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved start scripts"):format(elapsed))
     end)
 
     Time.MeasureTime(function()
-        table.save(SB.project:GetData(), Path.Join(projectDir, "sb_project.lua"))
+        table.save(SB.project:GetData(), Path.Join(projectDir, Project.PROJECT_FILE))
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved SpringBoard info"):format(elapsed))
     end)

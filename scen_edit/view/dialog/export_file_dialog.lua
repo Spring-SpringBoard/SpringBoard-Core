@@ -38,13 +38,17 @@ function ExportFileDialog:init(dir, fileTypes)
         }),
     }))
     self:SetInvisibleFields("heightmapExtremes", "minh", "maxh")
+    self:OnFieldChange("fileType", fileTypes[1])
 end
 
--- FIXME: DRY
-local EXPORT_MAP_TEXTURES = "Map textures"
+local function IsHeightmapExport(fileType)
+    return fileType == ExportAction.EXPORT_MAP_TEXTURES or
+           fileType == ExportAction.EXPORT_SPRING_ARCHIVE
+end
+
 function ExportFileDialog:OnFieldChange(name, value)
     if name == "fileType" then
-        if value == EXPORT_MAP_TEXTURES then
+        if IsHeightmapExport(value) then
             if self.fields.heightmapExtremes.value == "Custom" then
                 self:SetInvisibleFields()
             else
@@ -63,7 +67,7 @@ function ExportFileDialog:OnFieldChange(name, value)
 end
 
 function ExportFileDialog:GetHeightmapExtremes()
-    if self.fields.fileType.value ~= EXPORT_MAP_TEXTURES then
+    if not IsHeightmapExport(self.fields.fileType.value) then
         return
     end
 
