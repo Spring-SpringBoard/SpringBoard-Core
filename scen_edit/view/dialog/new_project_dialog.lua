@@ -71,7 +71,14 @@ function NewProjectDialog:ConfirmDialog()
 
     SB.project.mutators = { projectName .. " 1.0" }
     if self.fields["mapName"].value == "SB_Blank_Map" then
-        SB.project.mapName = "blank_" .. projectName .. " 1.0"
+        -- We add a randomly generated name to the project prefix to avoid this bug
+        -- Caching of generated maps:
+        -- 1. Make a project named "test" of size 4x4
+        -- 2. Delete project while in same Spring
+        -- 3. Make a project named "test" of size 3x5
+        -- 4. Expected: New project of 3x5 will be loaded. Actual: Project of 4x4 will be loaded.
+        -- A. Quitting Spring after step 3. and loading test will properly load the 3x5 project.
+        SB.project.mapName = "blank_"  .. tostring(math.random(1, 1000000)) .. projectName .. " 1.0"
         SB.project.randomMapOptions = {
             mapSeed = 1,
             new_map_x = self.fields["sizeX"].value,
@@ -81,7 +88,14 @@ function NewProjectDialog:ConfirmDialog()
         SB.project.mapName = self.fields.mapName.value
     end
 
-    SB.project:SaveProjectInfo(projectName)
+    local _, path = Project.GenerateNamePath(projectName)
+    if SB.DirExists(path) then
+        SB.HintControls(self.fields["projectName"].components)
+        Log.Error("Project \"" .. tostring(projectName) .. "\" already exists.")
+        return
+    end
+
+    SB.project:GenerateNewProjectInfo(projectName)
     local cmd = ReloadIntoProjectCommand(SB.project.path, false)
     SB.commandManager:execute(cmd, true)
 end
