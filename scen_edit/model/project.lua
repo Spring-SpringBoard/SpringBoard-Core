@@ -123,11 +123,12 @@ function Project.InitializeFromEnvironment()
 end
 
 function Project:_LoadFromFile()
-    local success, sbInfo = pcall(VFS.Include, "sb_project.lua", nil, VFS.ZIP)
+    local success, sbProject = pcall(VFS.Include, "sb_project.lua", nil, VFS.ZIP)
     if not success then
         return
     end
-    for k, v in pairs(sbInfo) do
+    table.echo(sbProject)
+    for k, v in pairs(sbProject) do
         self[k] = v
     end
 end

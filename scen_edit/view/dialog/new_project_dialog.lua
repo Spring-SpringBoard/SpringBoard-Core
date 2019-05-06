@@ -69,15 +69,13 @@ function NewProjectDialog:ConfirmDialog()
         return
     end
 
+    SB.project.mutators = { projectName .. " 1.0" }
     if self.fields["mapName"].value == "SB_Blank_Map" then
         SB.project.mapName = "blank_" .. projectName .. " 1.0"
         SB.project.randomMapOptions = {
             mapSeed = 1,
             new_map_x = self.fields["sizeX"].value,
             new_map_z = self.fields["sizeZ"].value,
-        }
-        SB.project.mutators = {
-            projectName .. " 1.0"
         }
     else
         SB.project.mapName = self.fields.mapName.value
