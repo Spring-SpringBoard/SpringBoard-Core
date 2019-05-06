@@ -92,6 +92,19 @@ function Path.GetExt(path)
     end
 end
 
+function Path.Walk(path, f, opts)
+	opts = opts or {}
+	for _, file in pairs(VFS.DirList(path), "*", opts.mode) do
+		f(file)
+	end
+	for _, dir in pairs(VFS.SubDirs(path, "*", opts.mode)) do
+		if opts.apply_folders then
+			f(dir)
+		end
+		Path.Walk(dir, f, opts)
+	end
+end
+
 -- Tests
 local lu = luaunit
 if not lu then
