@@ -14,7 +14,12 @@ SaveProjectAsAction:Register({
     },
 })
 
+local ARBITRARY_TIME = Spring.GetGameFrame() + 30
 function SaveProjectAsAction:canExecute()
+    if Spring.GetGameFrame() < ARBITRARY_TIME then
+        Log.Warning("Cannot save project until it has been completely loaded")
+        return false
+    end
     if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
         Log.Warning("Cannot save while testing.")
         return false

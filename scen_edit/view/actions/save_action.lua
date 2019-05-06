@@ -13,14 +13,6 @@ SaveProjectAction:Register({
     },
 })
 
-function SaveProjectAction:canExecute()
-    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
-        Log.Warning("Cannot save while testing.")
-        return false
-    end
-    return true
-end
-
 function SaveProjectAction:execute()
     if SB.project.path == nil then
         self:super("execute")

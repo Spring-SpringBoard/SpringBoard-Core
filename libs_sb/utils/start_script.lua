@@ -382,8 +382,8 @@ function StartScript.ParseStartScript(scriptTxt)
     merged.hostIP = merged.hostip
     merged.hostip = nil
 
-    merged.startDelay = merged.startdelay
-    merged.startdelay = nil
+    merged.startDelay = merged.gamestartdelay
+    merged.gamestartdelay = nil
 
     merged.myPlayerName = merged.myplayername
     merged.myplayername = nil

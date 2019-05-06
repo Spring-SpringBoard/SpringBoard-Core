@@ -136,6 +136,7 @@ function SaveCommand.GenerateScript(dev)
             new_map_x = project.randomMapOptions.new_map_x,
             new_map_z = project.randomMapOptions.new_map_z
         },
+        startDelay = 0,
         mutators = project.mutators,
         modOptions = modOptions,
         players = players,
