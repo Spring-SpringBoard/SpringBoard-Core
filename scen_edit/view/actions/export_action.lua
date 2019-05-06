@@ -107,7 +107,7 @@ local function CopyRecursively(src, dest, opts)
 end
 
 local function WriteToFile(path, content)
-    file = assert(io.open(path, "w"))
+    local file = assert(io.open(path, "w"))
     file:write(content)
     file:close()
 end
