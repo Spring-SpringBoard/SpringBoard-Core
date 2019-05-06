@@ -170,7 +170,7 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
 
             Log.Notice("Archive export complete")
             WG.Connector.Send("OpenFile", {
-                path = "file://" .. Path.GetParentDir(VFS.GetFileAbsolutePath(path)),
+                path = "file://" .. Path.Join(SB_WRITE_PATH, Path.GetParentDir(path)),
             })
 
             ExportAction.NextStep = nil
