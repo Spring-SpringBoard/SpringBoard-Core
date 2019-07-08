@@ -98,7 +98,7 @@ local function ExportHeightmap(path, heightmapExtremes)
     if Platform.osFamily == "Windows" then
         useGrayscale16bit = false
     end
-    gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, path, {grayscale16bit = useGrayscale16bit})
+    gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 1, texInfo.xsize-1, texInfo.ysize, path, {grayscale16bit = useGrayscale16bit})
     gl.DeleteTexture(heightmapTexture)
 end
 
