@@ -60,7 +60,7 @@ function ExportAction:execute()
                     return false
                 end
 
-                self:MaybeExportMapTextures(path, heightmapExtremes)
+                self:TryToExportMapTextures(path, heightmapExtremes)
                 return true
             elseif fileType == ExportAction.EXPORT_MAP_INFO then
                 if isDir then
@@ -117,7 +117,10 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
 
     local buildDir = self:__CreateBuildDir()
-    self:MaybeExportMapTextures(buildDir, heightmapExtremes)
+    SB.commandManager:execute(ExportMapsCommand(buildDir, heightmapExtremes), true)
+    if not self:TryToExportMapTextures(buildDir, heightmapExtremes) then
+        return
+    end
 
     local archiveDir = Path.Join(buildDir, "archive")
     Spring.CreateDir(archiveDir)
@@ -190,9 +193,9 @@ function ExportAction:__CreateBuildDir()
     return buildDir
 end
 
-function ExportAction:MaybeExportMapTextures(path, heightmapExtremes)
-    -- At least 2x the necessary amount? Super arbitrary...
-    local wantedTexMemPoolSize = Game.mapSizeX / 1024 * Game.mapSizeZ / 1024 * 3 * 4
+function ExportAction:TryToExportMapTextures(path, heightmapExtremes)
+    -- At least 5x the necessary amount? Super arbitrary...
+    local wantedTexMemPoolSize = Game.mapSizeX / 1024 * Game.mapSizeZ / 1024 * 3 * 5
     local texMemPoolSize = Spring.GetConfigInt("TextureMemPoolSize", 0)
     if wantedTexMemPoolSize > texMemPoolSize then
         Dialog({
@@ -205,13 +208,9 @@ function ExportAction:MaybeExportMapTextures(path, heightmapExtremes)
                 SB.AskToRestart()
             end,
         })
-        return
+        return false
     end
 
-    self:ExportMapTextures(path, heightmapExtremes)
-end
-
-function ExportAction:ExportMapTextures(path, heightmapExtremes)
-    Log.Notice("Exporting map textures...")
     SB.commandManager:execute(ExportMapsCommand(path, heightmapExtremes), true)
+    return true
 end

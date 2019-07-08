@@ -670,3 +670,35 @@ function SB.GetLoadScript()
     end
     return SB.loadScript
 end
+
+function SB.WriteShadingTextureToFile(texType, path)
+    local shadingTexObj = SB.model.textureManager.shadingTextures[texType]
+
+    if VFS.FileExists(path, VFS.RAW) then
+        Log.Notice("Removing existing texture: " .. tostring(path))
+        os.remove(path)
+    end
+
+    Log.Notice("Saving " .. texType .. " to " .. path .. "...")
+    local texture = shadingTexObj.texture
+    local texInfo = gl.TextureInfo(texture)
+
+    local texDef = SB.model.textureManager.shadingTextureDefs[texType]
+    local alpha = not not texDef.alpha
+    gl.Blending("enable")
+    gl.RenderToTexture(texture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, path, {alpha=alpha, yflip=false})
+end
+
+SB.__registeredImageSave = false
+function SB.RegisterImageSave()
+    if SB.__registeredImageSave then
+        return
+    end
+    WG.Connector.Register("TransformSBImageFinished", function(command)
+        Log.Notice("Successfully exported to " .. command.path)
+    end)
+    WG.Connector.Register("TransformSBImageFailed", function(command)
+        Log.Notice("Export image failed. " .. command.error)
+    end)
+    SB.__registeredImageSave = true
+end

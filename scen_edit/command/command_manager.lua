@@ -6,6 +6,7 @@ SB.Include(Path.Join(SB_COMMAND_DIR, 'command.lua'))
 SB.IncludeDir(SB_COMMAND_DIR)
 SB.IncludeDir(Path.Join(SB_COMMAND_DIR, "sync/"))
 SB.IncludeDir(Path.Join(SB_COMMAND_DIR, "project/"))
+SB.IncludeDir(Path.Join(SB_COMMAND_DIR, "textures/"))
 
 --- CommandManager class
 -- @type CommandManager

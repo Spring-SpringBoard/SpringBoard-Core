@@ -10,6 +10,26 @@ function SaveImagesCommand:__GetTexturePath(i, j)
     return Path.Join(self.path, "texture-" .. tostring(i) .. "-" .. tostring(j) .. ".png")
 end
 
+local function SaveShadingTextures(path, prefix)
+    for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
+        if shadingTexObj.dirty then
+            SB.WriteShadingTextureToFile(texType, Path.Join(path, prefix .. texType .. ".png"))
+
+            shadingTexObj.dirty = false
+            -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things
+            for _, stackItem in pairs(SB.model.textureManager.stack) do
+                -- we only do this for the corresponding texture
+                local oldTextureObj = stackItem[texType]
+                if oldTextureObj then
+                    Log.Debug("Making shading texture dirty: " .. tostring(texType))
+                    oldTextureObj.dirty = true
+                end
+            end
+        end
+    end
+end
+
+
 function SaveImagesCommand:execute()
     SB.delayGL(function()
     Time.MeasureTime(function()
@@ -28,7 +48,7 @@ function SaveImagesCommand:execute()
             end
         end
 
-        SaveShadingTextures(self.path, true, "shading-")
+        SaveShadingTextures(self.path, "shading-")
 
         -- We're saving the map in parts
         for i = 0, sizeX do
