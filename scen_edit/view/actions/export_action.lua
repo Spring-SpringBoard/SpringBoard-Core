@@ -117,7 +117,6 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
 
     local buildDir = self:__CreateBuildDir()
-    SB.commandManager:execute(ExportMapsCommand(buildDir, heightmapExtremes), true)
     if not self:TryToExportMapTextures(buildDir, heightmapExtremes) then
         return
     end
@@ -162,6 +161,7 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     }
 
     ExportAction.NextStep = function()
+        Log.Notice("Do compound...")
         SB.commandManager:execute(CompoundCommand(cmds), true)
 
         ExportAction.NextStep = function()
