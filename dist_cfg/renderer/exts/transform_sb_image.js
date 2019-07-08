@@ -1,11 +1,15 @@
-const {ipcRenderer} = require('electron');
 const fs = require('fs');
+const path = require("path");
+
+const {ipcRenderer} = require('electron');
+
+const { writePath } = require('./spring_platform');
 
 ipcRenderer.on("TransformSBImage", (e, command) => {
 	const width = command.width;
 	const height = command.height;
 	const inPath = command.inPath;
-	const outPath = command.outPath;
+	const outPath = path.join(writePath, command.outPath);
 	const multiplier = command.multiplier;
 	const packSize = command.packSize;
 
