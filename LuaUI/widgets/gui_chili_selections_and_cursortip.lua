@@ -57,7 +57,6 @@ local abs						= math.abs
 local strFormat 				= string.format
 
 require("keysym.lua")
-VFS.Include("LuaRules/Configs/customcmds.h.lua")
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -2320,17 +2319,11 @@ function widget:Update(dt)
 													{{CMD.GUARD}, "Guard", {0.2,0,0.8,1}},
 													{{CMD.REPAIR}, "Repair",{0.2,0.8,1,1}},
 													--{{CMD.SELFD},  "Suicide"},
-													{{CMD.LOAD_UNITS, CMD_EXTENDED_LOAD},  "Load",{0,0.6,0.6,1}},
 													{{CMD.LOAD_ONTO}, "Load",{0,0.6,0.6,1}},
 													{{CMD.UNLOAD_UNITS, CMD.UNLOAD_UNIT}, "Unload", {0.6,0.6,0,1}},
 													{{CMD.RECLAIM}, "Reclaim",{0.6,0,0.4,1}},
 													{{CMD.RESURRECT},"Resurrect",{0.2,0,0.8,1}},
 													{{CMD.MANUALFIRE},"DGun",{1,1,1,1}},
-													{{CMD_ONECLICK_WEAPON},"Special",{0.8,0.6,0.0,1}},
-													{{CMD_JUMP},"Jump",{0,0.8,0,1}},
-													{{CMD_REARM},"Re-Arm",{0.2,0.8,1,1}},
-													{{CMD_PLACE_BEACON},"Bridge",{0.6,0.6,0,1}},
-													{{CMD_WAIT_AT_BEACON},"Teleport",{0,0.6,0.6,1}},
 												}
 							for i=1, #commandList, 1 do --iterate over the commandList so we could find a match with unit's current command.
 								if #commandList[i][1] == 1 then --if commandList don't have sub-table at first row
