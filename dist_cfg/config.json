@@ -16,7 +16,21 @@
         "map": "TitanDuel 2.2"
       }
     },
-
+    {
+      "package": {
+        "id": "test",
+        "display": "Test"
+      },
+      "downloads": {
+        "games" : ["sbc:test"],
+        "maps" : ["TitanDuel 2.2"],
+        "engines" : [ "104.0.1-1432-gba1702d maintenance" ]
+      },
+      "launch": {
+        "game": "rapid://sbc:test",
+        "map": "TitanDuel 2.2"
+      }
+    },
     {
       "package": {
         "id": "stable",
