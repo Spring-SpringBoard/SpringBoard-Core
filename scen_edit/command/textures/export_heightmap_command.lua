@@ -95,7 +95,7 @@ local function ExportHeightmap(path, heightmapExtremes)
     gl.UseShader(0)
 
     local useGrayscale16bit = true
-    if Platform.osFamily == "Windows" then
+    if Platform.osFamily == "Windows" and Engine.version ~= "104.0.1-1432-gba1702d maintenance" then
         useGrayscale16bit = false
     end
     gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, path, {grayscale16bit = useGrayscale16bit})
