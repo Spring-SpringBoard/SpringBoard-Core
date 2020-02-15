@@ -456,15 +456,25 @@ function SB.DirExists(path, ...)
 end
 
 function SB.RemoveDirRecursively(path)
-    for _, subDir in ipairs(VFS.SubDirs(path, "*", VFS.RAW)) do
-        SB.RemoveDirRecursively(subDir)
-        os.remove(subDir)
-    end
-
-    for _, file in ipairs(VFS.DirList(path, "*", VFS.RAW)) do
-        os.remove(file)
-    end
-
+    Path.Walk(path, function(file)
+        Log.Notice("Deleting: " .. file .. "...")
+        local success, err = os.remove(file)
+        if not success then
+            Log.Error('Failed to delete file: ' .. err)
+        end
+    end, {
+        mode = VFS.RAW
+    })
+    Path.Walk(path, function(folder)
+        Log.Notice("Deleting: " .. folder .. "...")
+        local success, err = os.remove(folder)
+        if not success then
+            Log.Error('Failed to delete folder: ' .. err)
+        end
+    end, {
+        mode = VFS.RAW,
+        apply_folders = true
+    })
     os.remove(path)
 end
 

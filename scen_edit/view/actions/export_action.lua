@@ -89,10 +89,19 @@ function ExportAction:execute()
     )
 end
 
+-- TODO: duplicate of copy_custom_project_files_command.lua
+local ignoredFiles = {
+	[".git"] = true
+}
+
 local function CopyRecursively(src, dest, opts)
     opts = opts or {}
     Path.Walk(src, function(srcPath)
-		local pathBase = srcPath:sub(#src + 2, #srcPath)
+        local pathBase = srcPath:sub(#src + 2, #srcPath)
+
+        if ignoredFiles[Path.ExtractFileName(pathBase)] then
+            return
+        end
 
 		Log.Notice("Copying " .. pathBase .. "...")
 		local destPath = Path.Join(dest, pathBase)
@@ -168,7 +177,7 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
             Log.Notice("Exporting archive: " .. path .. " ...")
             SB.commandManager:execute(ExportProjectCommand(archiveDir, path), true)
 
-            Log.Notice("Deleting build directory...")
+            Log.Notice("Deleting build directory: " .. buildDir .. "...")
             SB.RemoveDirRecursively(buildDir)
 
             Log.Notice("Archive export complete")

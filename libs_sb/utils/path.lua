@@ -94,10 +94,12 @@ end
 
 function Path.Walk(path, f, opts)
 	opts = opts or {}
-	for _, file in pairs(VFS.DirList(path), "*", opts.mode) do
+    for _, file in pairs(VFS.DirList(path), "*", opts.mode) do
+        file = file:gsub("\\", "/")
 		f(file)
 	end
-	for _, dir in pairs(VFS.SubDirs(path, "*", opts.mode)) do
+    for _, dir in pairs(VFS.SubDirs(path, "*", opts.mode)) do
+        dir = dir:gsub("\\", "/")
 		if opts.apply_folders then
 			f(dir)
 		end

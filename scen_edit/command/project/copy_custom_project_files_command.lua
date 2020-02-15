@@ -1,6 +1,11 @@
 CopyCustomProjectFilesCommand = Command:extends{}
 CopyCustomProjectFilesCommand.className = "CopyCustomProjectFilesCommand"
 
+local ignoredFiles = {
+	["mapinfo.lua"] = true,
+	[".git"] = true
+}
+
 function CopyCustomProjectFilesCommand:init(src, dest)
 	self.src = src
 	self.dest = dest
@@ -10,7 +15,8 @@ function CopyCustomProjectFilesCommand:execute()
 	Path.Walk(self.src, function(srcPath)
 		local pathBase = srcPath:sub(#self.src + 2, #srcPath)
 
-		if String.Starts(pathBase, Project.FOLDER_PREFIX) or pathBase == "mapinfo.lua" then
+		if String.Starts(pathBase, Project.FOLDER_PREFIX) or
+			ignoredFiles[Path.ExtractFileName(pathBase)] then
 			return
 		end
 
