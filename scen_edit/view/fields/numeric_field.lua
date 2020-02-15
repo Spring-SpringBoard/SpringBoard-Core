@@ -3,7 +3,7 @@ SB.Include(SB_VIEW_FIELDS_DIR .. "string_field.lua")
 
 --- NumericField class.
 -- @type NumericField
-NumericField = StringField:extends{}
+NumericField = StringField:extends {}
 
 function NumericField:Update(source)
     local v = self:__GetDisplayText()
@@ -83,6 +83,11 @@ function NumericField:init(field)
                 return
             end
 
+            if self.__ignoreNextMove then
+                self.__ignoreNextMove = false
+                return
+            end
+
             -- Save the initial state so it can be reverted back to
             local x, y = Spring.GetMouseState()
             if not self.__initX then
@@ -90,8 +95,7 @@ function NumericField:init(field)
                 self.__initY = y
             end
             -- Determine whether we are dragging the mouse
-            if not self.__isDragging and
-                math.abs(x - self.__initX) > self.__dragSensitivity then
+            if not self.__isDragging and math.abs(x - self.__initX) > self.__dragSensitivity then
                 -- Initialize the dragging state
                 self:__StartDragging()
             end
@@ -120,8 +124,8 @@ function NumericField:__StartDragging()
     self.__isDragging = true
 
     -- Set the controls
-    self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
-    self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
+    self.lblValue.font:SetColor(0.96, 0.83, 0.09, 1)
+    self.lblTitle.font:SetColor(0.96, 0.83, 0.09, 1)
     self.lblTitle:Invalidate()
 
     -- Hide the mouse cursor
@@ -168,19 +172,24 @@ function NumericField:__UpdateDragging(delta)
     self:Set(value, self.button)
 
     if self.value == self.minValue or self.value == self.maxValue then
-        if not self.__reachedExtreme  then
+        if not self.__reachedExtreme then
             self.lblValue.font:SetColor(0, 1.0, 0.1, 1)
             self.lblTitle.font:SetColor(0, 1.0, 0.1, 1)
             self.lblTitle:Invalidate()
             self.__reachedExtreme = true
         end
     elseif self.__reachedExtreme then
-        self.lblValue.font:SetColor(0.96,0.83,0.09, 1)
-        self.lblTitle.font:SetColor(0.96,0.83,0.09, 1)
+        self.lblValue.font:SetColor(0.96, 0.83, 0.09, 1)
+        self.lblTitle.font:SetColor(0.96, 0.83, 0.09, 1)
         self.lblTitle:Invalidate()
         self.__reachedExtreme = false
     end
 
+    -- Windows would register these Wrap movements as user movements
+    -- in the opposite direction, so we have to ignore them.
+    if Platform.osFamily == "Windows" then
+        self.__ignoreNextMove = true
+    end
     -- Make the mouse fixed
     Spring.WarpMouse(self.__initX, self.__initY)
 end
@@ -196,36 +205,37 @@ function NumericField:__DrawDisplayControl()
 
     local offy = -10
     if self.minValue then
-        self.__draggingFont:Draw(self.__minValueStr,
-            self.__leftStart, y - offy)
+        self.__draggingFont:Draw(self.__minValueStr, self.__leftStart, y - offy)
     end
     if self.maxValue then
-        self.__draggingFont:Draw(self.__maxValueStr,
-            x + w + self.__pdx + self.__ew / 2, y - offy)
+        self.__draggingFont:Draw(self.__maxValueStr, x + w + self.__pdx + self.__ew / 2, y - offy)
     end
 
     return true
 end
 
-local leftDisplay = Image:New {
+local leftDisplay =
+    Image:New {
     file = Path.Join(SB_IMG_DIR, "left-numeric.png"),
     parent = screen0,
-    keepAspect = false,
+    keepAspect = false
 }
-local rightDisplay = Image:New {
+local rightDisplay =
+    Image:New {
     file = Path.Join(SB_IMG_DIR, "right-numeric.png"),
     parent = screen0,
-    keepAspect = false,
+    keepAspect = false
 }
 leftDisplay:Hide()
 rightDisplay:Hide()
 function NumericField:__SetupDraggingControl()
     if not self.__draggingFont then
-        local _draggingColor = {0.76,0.63,0.06, 1}
-        self.__draggingFont = Chili.Font:New {
+        local _draggingColor = {0.76, 0.63, 0.06, 1}
+        self.__draggingFont =
+            Chili.Font:New {
             size = 12,
             color = _draggingColor,
-            shadow = true,
+            shadow = true
         }
     end
 
@@ -242,8 +252,7 @@ function NumericField:__SetupDraggingControl()
         w = w + self.__ew
 
         leftDisplay:Show()
-        leftDisplay:SetPos(x - w - self.__pdx, y - eh / 2 + 2,
-                           w, self.height + eh / 2)
+        leftDisplay:SetPos(x - w - self.__pdx, y - eh / 2 + 2, w, self.height + eh / 2)
         leftDisplay:SetLayer(1)
     end
     if self.maxValue then
@@ -253,13 +262,14 @@ function NumericField:__SetupDraggingControl()
         w = w + self.__ew
 
         rightDisplay:Show()
-        rightDisplay:SetPos(x + self.button.width + self.__pdx, y - eh / 2 + 2,
-                            w, self.height + eh / 2)
+        rightDisplay:SetPos(x + self.button.width + self.__pdx, y - eh / 2 + 2, w, self.height + eh / 2)
         rightDisplay:SetLayer(2)
     end
-    SB.SetGlobalRenderingFunction(function(...)
-        self:__DrawDisplayControl(...)
-    end)
+    SB.SetGlobalRenderingFunction(
+        function(...)
+            self:__DrawDisplayControl(...)
+        end
+    )
 end
 
 function NumericField:__HideDraggingControl()
