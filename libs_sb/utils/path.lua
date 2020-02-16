@@ -93,18 +93,26 @@ function Path.GetExt(path)
 end
 
 function Path.DirList(...)
-    local files = {}
+    local uniqueFiles = {}
     for _, file in ipairs(VFS.DirList(...)) do
         local file, _ = file:gsub("\\", "/")
+        uniqueFiles[file] = true
+    end
+    local files = {}
+    for file, _ in pairs(uniqueFiles) do
         table.insert(files, file)
     end
     return files
 end
 
 function Path.SubDirs(...)
-    local dirs = {}
+    local uniqueDirs = {}
     for _, dir in ipairs(VFS.SubDirs(...)) do
         local dir, _ = dir:gsub("\\", "/")
+        uniqueDirs[dir] = true
+    end
+    local dirs = {}
+    for dir, _ in pairs(uniqueDirs) do
         table.insert(dirs, dir)
     end
     return dirs
