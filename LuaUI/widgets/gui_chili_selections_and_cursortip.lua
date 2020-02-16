@@ -539,25 +539,6 @@ local function DrawScreenDrawTools()
 	drawing = lmb
 	erasing = rmb
 	addingPoint = mmb
-
-	local filefound
-
-	if erasing then
-		filefound = glTexture(LUAUI_DIRNAME .. 'Images/drawingcursors/eraser.png')
-	elseif addingPoint then
-		filefound = glTexture(LUAUI_DIRNAME .. 'Images/Crystal_Clear_action_flag.png')
-	else
-		filefound = glTexture(LUAUI_DIRNAME .. 'Images/drawingcursors/pencil.png')
-	end
-
-	if filefound then
-		--do teamcolor?
-		glColor(1,1,1,1)
-		Spring.SetMouseCursor('none')
-		glTexRect(x, y-cursor_size, x+cursor_size, y)
-		glTexture(false)
-		--glColor(1,1,1,1)
-	end
 end
 
 --get reload status for selected weapon
@@ -2036,10 +2017,9 @@ end
 local function MakeToolTip_Draw()
 	local tt_structure = {
 		main = {
-			{ name='lmb', 		icon = LUAUI_DIRNAME .. 'Images/drawingcursors/pencil.png', 		text = 'Left Mouse Button', },
-			{ name='rmb', 		icon = LUAUI_DIRNAME .. 'Images/drawingcursors/eraser.png', 		text = 'Right Mouse Button', },
-			{ name='mmb', 		icon = LUAUI_DIRNAME .. 'Images/Crystal_Clear_action_flag.png', 	text = 'Middle Mouse Button', },
-			{ name='dblclick', 	icon = LUAUI_DIRNAME .. 'Images/drawingcursors/flagtext.png', 		text = 'Double Click', },
+			{ name='lmb', 		text = 'Draw:  Left Mouse Button', },
+			{ name='rmb', 		text = 'Clear: Right Mouse Button', },
+			{ name='dblclick', 	text = 'Label: Double Click', },
 
 		},
 	}
