@@ -3,6 +3,62 @@ const path = require("path");
 
 const { ipcRenderer } = require('electron');
 
+const { PNG } = require("pngjs");
+
+const { ipcRenderer } = require('electron');
+
+function convertSBHeightmap(inPath, outPath, width, height, min, max) {
+	const data = fs.readFileSync(inPath);
+	const packSizeBytes = 4;
+
+	if (data.length != width * height * packSizeBytes) {
+		throw `Incorrect parameters specified for image, size: ${data.length} and ` +
+		`width: ${width}, height: ${height} and packSize: ${packSize}: ${packSizeBytes} bytes`;
+	}
+
+	const uint16Size = 2;
+	const inputView = new DataView(data.buffer);
+	var outBuffer = new Buffer(uint16Size * width * height);
+	var bitmap = new Uint16Array(outBuffer.buffer);
+	for (var y = 0; y < height; y++) {
+		for (var x = 0; x < width; x++) {
+			const idx = y * width + x;
+			const inputIndex = idx * 4;
+			const v = inputView.getFloat32(inputIndex, true);
+			const scaled = (inputView.getFloat32(inputIndex, true) - min) / (max - min);
+			bitmap[idx] = scaled * 65535;
+		}
+	}
+
+	const png = new PNG({
+		width: width,
+		height: height,
+		bitDepth: 16,
+		colorType: 0,
+		inputColorType: 0,
+		inputHasAlpha: false
+	});
+
+	png.data = outBuffer;
+	png.pack().pipe(fs.createWriteStream(outPath));
+}
+
+ipcRenderer.on("ConvertSBHeightmap", (e, command, writePath) => {
+	const width = command.width;
+	const height = command.height;
+	const inPath = command.inPath;
+	const outPath = path.join(writePath, command.outPath);
+	const min = command.min;
+	const max = command.max;
+	try {
+		convertSBHeightmap(inPath, outPath, width, height, min, max);
+	} catch(err) {
+		ipcRenderer.send("TransformSBImageFailed", err);
+		return;
+	}
+	ipcRenderer.send("TransformSBImageFinished", outPath);
+});
+
 ipcRenderer.on("TransformSBImage", (e, command, writePath) => {
 	const width = command.width;
 	const height = command.height;
@@ -12,7 +68,7 @@ ipcRenderer.on("TransformSBImage", (e, command, writePath) => {
 	const packSize = command.packSize;
 
 	fs.readFile(inPath, function (err, data) {
-	  if (err) {
+	    if (err) {
 			ipcRenderer.send("TransformSBImageFailed", err);
 			return;
 		}

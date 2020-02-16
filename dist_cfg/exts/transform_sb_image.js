@@ -19,3 +19,7 @@ ipcMain.on("TransformSBImageFailed", (e, error) => {
 		error: error
 	});
 });
+
+bridge.on("ConvertSBHeightmap", (command) => {
+	gui.send("ConvertSBHeightmap", command, writePath);
+});

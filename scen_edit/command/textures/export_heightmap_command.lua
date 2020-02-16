@@ -39,14 +39,7 @@ function ExportHeightmapCommand.GetShaderObj()
     return ExportHeightmapCommand.shaderObj
 end
 
-local function ExportHeightmap(path, heightmapExtremes)
-    Log.Notice("Saving the heightmap to " .. path .. "...")
-
-    if VFS.FileExists(path, VFS.RAW) then
-        Log.Notice("Removing the existing heightmap")
-        os.remove(path)
-    end
-
+local function ExportHeightmapWithSpring(path, minHeight, maxHeight)
     local texInfo = gl.TextureInfo("$heightmap")
     local GL_LUMINANCE32F_ARB = 0x8818
     if Platform.osFamily == "Windows" then
@@ -61,6 +54,45 @@ local function ExportHeightmap(path, heightmapExtremes)
         wrap_t = GL.CLAMP_TO_EDGE,
         fbo = true,
     })
+
+    local shaderObj = ExportHeightmapCommand.GetShaderObj()
+    gl.UseShader(shaderObj.shader)
+    gl.Uniform(shaderObj.uniforms.groundMaxID, maxHeight)
+    gl.Uniform(shaderObj.uniforms.groundMinID, minHeight)
+    gl.Texture(0, "$heightmap")
+    gl.RenderToTexture(heightmapTexture,
+    function()
+        gl.TexRect(-1,-1, 1, 1)
+    end)
+    gl.Texture(0, false)
+    gl.UseShader(0)
+
+    local useGrayscale16bit = true
+    if Platform.osFamily == "Windows" then
+        useGrayscale16bit = false
+    end
+    gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, path, {grayscale16bit = useGrayscale16bit})
+    gl.DeleteTexture(heightmapTexture)
+end
+
+local function ExportHeightmapWithLauncher(path, minHeight, maxHeight)
+    WG.Connector.Send("ConvertSBHeightmap", {
+        inPath = VFS.GetFileAbsolutePath(Path.Join(projectPath, "heightmap.data"):lower()),
+        outPath = path,
+        width = Game.mapSizeX,
+        height = Game.mapSizeZ,
+        min = minHeight,
+        max = maxHeight
+    })
+end
+
+local function ExportHeightmap(path, heightmapExtremes)
+    Log.Notice("Saving the heightmap to " .. path .. "...")
+
+    if VFS.FileExists(path, VFS.RAW) then
+        Log.Notice("Removing the existing heightmap")
+        os.remove(path)
+    end
 
     local minHeight, maxHeight
     if heightmapExtremes ~= nil then
@@ -82,24 +114,11 @@ local function ExportHeightmap(path, heightmapExtremes)
     Log.Notice("Exporting heightmap with extremes: " ..
                 tostring(minHeight) .. " and " .. tostring(maxHeight))
 
-    local shaderObj = ExportHeightmapCommand.GetShaderObj()
-    gl.UseShader(shaderObj.shader)
-    gl.Uniform(shaderObj.uniforms.groundMaxID, maxHeight)
-    gl.Uniform(shaderObj.uniforms.groundMinID, minHeight)
-    gl.Texture(0, "$heightmap")
-    gl.RenderToTexture(heightmapTexture,
-    function()
-        gl.TexRect(-1,-1, 1, 1)
-    end)
-    gl.Texture(0, false)
-    gl.UseShader(0)
-
-    local useGrayscale16bit = true
     if Platform.osFamily == "Windows" then
-        useGrayscale16bit = false
+        ExportHeightmapWithLauncher(path, minHeight, maxHeight)
+    else
+        ExportHeightmapWithSpring(path, minHeight, maxHeight)
     end
-    gl.RenderToTexture(heightmapTexture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, path, {grayscale16bit = useGrayscale16bit})
-    gl.DeleteTexture(heightmapTexture)
 end
 
 function ExportHeightmapCommand:execute()
