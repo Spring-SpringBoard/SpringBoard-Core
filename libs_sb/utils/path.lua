@@ -95,7 +95,7 @@ end
 function Path.DirList(...)
     local uniqueFiles = {}
     for _, file in ipairs(VFS.DirList(...)) do
-        local file, _ = file:gsub("\\", "/")
+        file, _ = file:gsub("\\", "/")
         uniqueFiles[file] = true
     end
     local files = {}
@@ -108,7 +108,7 @@ end
 function Path.SubDirs(...)
     local uniqueDirs = {}
     for _, dir in ipairs(VFS.SubDirs(...)) do
-        local dir, _ = dir:gsub("\\", "/")
+        dir, _ = dir:gsub("\\", "/")
         uniqueDirs[dir] = true
     end
     local dirs = {}
