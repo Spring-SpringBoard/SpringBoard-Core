@@ -151,7 +151,7 @@ function AssetView:_DirList()
     if self.rootDir then
         return SB.model.assetsManager:DirList(self.rootDir, self.dir, "*")
     else
-        return VFS.DirList(self.dir, "*")
+        return Path.DirList(self.dir, "*")
     end
 end
 
@@ -159,7 +159,7 @@ function AssetView:_SubDirs()
     if self.rootDir then
         return SB.model.assetsManager:SubDirs(self.rootDir, self.dir, "*")
     else
-        return VFS.SubDirs(self.dir, "*")
+        return Path.SubDirs(self.dir, "*")
     end
 end
 

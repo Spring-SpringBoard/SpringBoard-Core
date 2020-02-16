@@ -452,7 +452,7 @@ function SB.SetGlobalRenderingFunction(f)
 end
 
 function SB.DirExists(path, ...)
-    return (#VFS.SubDirs(path, "*", ...) + #VFS.DirList(path, "*", ...)) ~= 0
+    return #Path.SubDirs(path, "*", ...) + #Path.DirList(path, "*", ...) ~= 0
 end
 
 function SB.RemoveDirRecursively(path)

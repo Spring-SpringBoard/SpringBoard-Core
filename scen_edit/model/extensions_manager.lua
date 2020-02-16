@@ -7,7 +7,7 @@ end
 
 function ExtensionsManager:loadAll()
     self.extsFolders = {}
-    for _, subDir in ipairs(VFS.SubDirs(SB_EXTS_DIR)) do
+    for _, subDir in ipairs(Path.SubDirs(SB_EXTS_DIR)) do
         table.insert(self.extsFolders, {
             path = subDir,
             name = Path.ExtractFileName(subDir),
@@ -24,10 +24,10 @@ function ExtensionsManager:__SyncFile(path)
 end
 
 function ExtensionsManager:__SyncPathRecursive(path)
-    for _, fileName in ipairs(VFS.DirList(path)) do
+    for _, fileName in ipairs(Path.DirList(path)) do
         self:__SyncFile(fileName)
     end
-    for _, folderName in ipairs(VFS.SubDirs(path)) do
+    for _, folderName in ipairs(Path.SubDirs(path)) do
         self:__SyncPathRecursive(folderName)
     end
 end

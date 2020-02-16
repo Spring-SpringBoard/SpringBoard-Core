@@ -6,9 +6,8 @@ end
 
 function AssetsManager:loadAll()
     self.assetsFolders = {}
-    Log.Notice("Scanning asset dirs...")
-    for _, subDir in pairs(VFS.SubDirs(SB_ASSETS_DIR)) do
-        subDir = subDir:gsub("\\", "/")
+    Log.Notice("Scanning asset dirs at: " .. SB_ASSETS_DIR .. "...")
+    for _, subDir in ipairs(Path.SubDirs(SB_ASSETS_DIR)) do
         local name = Path.ExtractFileName(subDir)
         table.insert(self.assetsFolders, {
             path = subDir,
@@ -27,7 +26,6 @@ local function SplitPath(dir, assetFolderName)
 end
 
 function AssetsManager:ToSpringPath(rootDir, assetPath)
-
     local assetDir
     local assetRemaining = ""
     local fsplit = assetPath:find("/")
@@ -62,10 +60,9 @@ function AssetsManager:DirList(rootDir, dir, ...)
     for _, assetsFolder in pairs(self.assetsFolders) do
         local dirAsset, dirPath = SplitPath(dir, assetsFolder.name)
         if assetsFolder.name .. "/" == dirAsset then
-            local dirList = VFS.DirList(assetsFolder.path .. rootDir .. dirPath, ...)
+            local dirList = Path.DirList(assetsFolder.path .. rootDir .. dirPath, ...)
             -- FIXME: return asset path rather than true file path
-            for _, f in pairs(dirList) do
-                f = f:gsub("\\", "/")
+            for _, f in ipairs(dirList) do
                 table.insert(files, f)
                 Log.Debug("[assets_manager] :DirList() table.insert", f)
             end
@@ -75,25 +72,26 @@ function AssetsManager:DirList(rootDir, dir, ...)
 end
 
 function AssetsManager:SubDirs(rootDir, dir, ...)
-    local dirs = {}
     Log.Debug("[assets_manager] :SubDirs()", rootDir, dir, ...)
     if dir == '' then
-        for _, assetsFolder in pairs(self.assetsFolders) do
+        local dirs = {}
+        for _, assetsFolder in ipairs(self.assetsFolders) do
             table.insert(dirs, assetsFolder.name .. "/")
             Log.Debug("[assets_manager] :SubDirs() table.insert 1", assetsFolder.name .. "/")
         end
-    else
-        for _, assetsFolder in pairs(self.assetsFolders) do
-            local dirAsset, dirPath = SplitPath(dir, assetsFolder.name)
-            if assetsFolder.name .. "/" == dirAsset then
-                local subDirs = VFS.SubDirs(assetsFolder.path .. rootDir .. dirPath, ...)
-                for _, d in pairs(subDirs) do
-                    d = d:gsub("\\", "/")
-                    local assetPath = self:ToAssetPath(rootDir, d)
-                    local subDirAsset, subDirPath = SplitPath(assetPath, assetsFolder.name)
-                    table.insert(dirs, assetPath)
-                    Log.Debug("[assets_manager] :SubDirs() table.insert 2", assetPath)
-                end
+        return dirs
+    end
+
+    local dirs = {}
+    for _, assetsFolder in pairs(self.assetsFolders) do
+        local dirAsset, dirPath = SplitPath(dir, assetsFolder.name)
+        if assetsFolder.name .. "/" == dirAsset then
+            local subDirs = Path.SubDirs(assetsFolder.path .. rootDir .. dirPath, ...)
+            for _, d in ipairs(subDirs) do
+                local assetPath = self:ToAssetPath(rootDir, d)
+                local subDirAsset, subDirPath = SplitPath(assetPath, assetsFolder.name)
+                table.insert(dirs, assetPath)
+                Log.Debug("[assets_manager] :SubDirs() table.insert 2", assetPath)
             end
         end
     end

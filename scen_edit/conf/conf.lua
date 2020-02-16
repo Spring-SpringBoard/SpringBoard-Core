@@ -39,7 +39,7 @@ end
 function Conf:initializeListOfMetaModelFiles()
     self.metaModelFiles = {}
 
-    local files = VFS.DirList("triggers")
+    local files = Path.DirList("triggers")
     for i = 1, #files do
         local file = files[i]
         local data = self:LoadMetaModelFile(file)
@@ -53,7 +53,7 @@ function Conf:initializeListOfMetaModelFiles()
 
     Log.Notice("Project path:", SB.project.path)
     if SB.project.path ~= nil then
-        files = VFS.DirList(SB.project.path .. "/triggers/", "*", VFS.RAW)
+        files = Path.DirList(SB.project.path .. "/triggers/", "*", VFS.RAW)
         for i = 1, #files do
             local file = files[i]
             local data = self:LoadMetaModelFile(file)

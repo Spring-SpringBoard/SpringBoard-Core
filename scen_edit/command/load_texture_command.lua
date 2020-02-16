@@ -9,7 +9,7 @@ function LoadTextureCommand:execute()
     SB.delayGL(function()
         local tm = SB.model.textureManager
 
-        local files = VFS.DirList(self.texturePath)
+        local files = Path.DirList(self.texturePath)
 
         if #files == 0 then
             return

@@ -41,7 +41,7 @@ function SaveImagesCommand:execute()
 
         -- We clear all textures when it's a new project
         if self.isNewProject then
-            for _, file in pairs(VFS.DirList(self.path, "texture-*-*.png")) do
+            for _, file in ipairs(Path.DirList(self.path, "texture-*-*.png")) do
                 Log.Notice(("Removing %s.."):format(file))
                 -- remove existing texture)
                 os.remove(file)

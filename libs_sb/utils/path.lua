@@ -92,14 +92,30 @@ function Path.GetExt(path)
     end
 end
 
+function Path.DirList(...)
+    local files = {}
+    for _, file in ipairs(VFS.DirList(...)) do
+        local file, _ = file:gsub("\\", "/")
+        table.insert(files, file)
+    end
+    return files
+end
+
+function Path.SubDirs(...)
+    local dirs = {}
+    for _, dir in ipairs(VFS.SubDirs(...)) do
+        local dir, _ = dir:gsub("\\", "/")
+        table.insert(dirs, dir)
+    end
+    return dirs
+end
+
 function Path.Walk(path, f, opts)
 	opts = opts or {}
-    for _, file in pairs(VFS.DirList(path), "*", opts.mode) do
-        file = file:gsub("\\", "/")
+    for _, file in ipairs(Path.DirList(path, "*", opts.mode)) do
 		f(file)
 	end
-    for _, dir in pairs(VFS.SubDirs(path, "*", opts.mode)) do
-        dir = dir:gsub("\\", "/")
+    for _, dir in ipairs(Path.SubDirs(path, "*", opts.mode)) do
 		if opts.apply_folders then
 			f(dir)
 		end
