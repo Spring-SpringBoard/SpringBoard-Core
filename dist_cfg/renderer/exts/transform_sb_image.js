@@ -5,27 +5,24 @@ const { ipcRenderer } = require('electron');
 
 const { PNG } = require("pngjs");
 
-const { ipcRenderer } = require('electron');
-
 function convertSBHeightmap(inPath, outPath, width, height, min, max) {
 	const data = fs.readFileSync(inPath);
 	const packSizeBytes = 4;
 
 	if (data.length != width * height * packSizeBytes) {
 		throw `Incorrect parameters specified for image, size: ${data.length} and ` +
-		`width: ${width}, height: ${height} and packSize: ${packSize}: ${packSizeBytes} bytes`;
+		`width: ${width}, height: ${height} and packSizeBytes: ${packSizeBytes} bytes`;
 	}
 
 	const uint16Size = 2;
 	const inputView = new DataView(data.buffer);
 	var outBuffer = new Buffer(uint16Size * width * height);
 	var bitmap = new Uint16Array(outBuffer.buffer);
-	for (var y = 0; y < height; y++) {
-		for (var x = 0; x < width; x++) {
+	for (var x = 0; x < width; x++) {
+		for (var y = 0; y < height; y++) {
 			const idx = y * width + x;
-			const inputIndex = idx * 4;
-			const v = inputView.getFloat32(inputIndex, true);
-			const scaled = (inputView.getFloat32(inputIndex, true) - min) / (max - min);
+			const inputIndex = x * height + y;
+			const scaled = (inputView.getFloat32(inputIndex * 4, true) - min) / (max - min);
 			bitmap[idx] = scaled * 65535;
 		}
 	}
@@ -43,6 +40,11 @@ function convertSBHeightmap(inPath, outPath, width, height, min, max) {
 	png.pack().pipe(fs.createWriteStream(outPath));
 }
 
+// if (true) {
+// 	exports.convertSBHeightmap = convertSBHeightmap;
+// 	return;
+// }
+
 ipcRenderer.on("ConvertSBHeightmap", (e, command, writePath) => {
 	const width = command.width;
 	const height = command.height;
@@ -52,8 +54,10 @@ ipcRenderer.on("ConvertSBHeightmap", (e, command, writePath) => {
 	const max = command.max;
 	try {
 		convertSBHeightmap(inPath, outPath, width, height, min, max);
-	} catch(err) {
-		ipcRenderer.send("TransformSBImageFailed", err);
+	} catch (err) {
+		const msg = typeof(err) == "string" ? err : err.message;
+		ipcRenderer.send("TransformSBImageFailed",
+			`Failed to export heightmap with error: ${msg}`);
 		return;
 	}
 	ipcRenderer.send("TransformSBImageFinished", outPath);
