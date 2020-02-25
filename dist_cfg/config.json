@@ -1,5 +1,6 @@
 {
   "title" : "SpringBoard",
+
   "dependencies" : {
     "pngjs": "^3.4.0"
   },
