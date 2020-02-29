@@ -1,6 +1,7 @@
 TerrainSmoothState = AbstractHeightmapEditingState:extends{}
 
 function TerrainSmoothState:GetCommand(x, z, strength)
+    strength = math.abs(strength)
     self.sigma = math.max(math.min(math.sqrt(math.sqrt(strength)) / 2, 1.5), 0.20)
     return TerrainSmoothCommand({
         x = x + self.size/2,
