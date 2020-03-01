@@ -30,6 +30,8 @@ local Chili
 local screen
 local window
 local log
+local btnFilterProblems
+local totalErrors = 0
 
 local COMMAND_NAME = "toggleDevConsole"
 
@@ -41,6 +43,7 @@ local cfg = {
 	onlyErrorsAndWarnings = false,
 	popupOnError = true,
 	popupOnWarning = false, -- not configurable atm
+	onlySinceLastReload = true,
 }
 local fontSize = 16
 
@@ -80,6 +83,22 @@ local function SetPopUpOnError(popupOnError)
 end
 local function TogglePopUpOnError()
 	SetPopUpOnError(not cfg.popupOnError)
+end
+
+local function SetFilterSinceLastReload(onlySinceLastReload)
+	cfg.onlySinceLastReload = onlySinceLastReload
+	ReloadAllMessages()
+end
+local function ToggleFilterSinceLastReload()
+	SetFilterSinceLastReload(not cfg.onlySinceLastReload)
+end
+
+local function UpdateFilterProblems()
+	if totalErrors == 0 then
+		btnFilterProblems:SetCaption("Problems(" .. color.blue .. "0\b)")
+	else
+		btnFilterProblems:SetCaption("Problems(" .. color.error .. tostring(totalErrors) .. "\b)")
+	end
 end
 
 function loadWindow()
@@ -132,11 +151,11 @@ function loadWindow()
 			size = fontSize,
 		}
 	}
-	local el_size = 7
+	local el_size = 8.5
 	local curr_x = 0
 	local widthStr = ('%f%%'):format(el_size)
 	local heightStr = "12%"
-	local padding = 1
+	local padding = 0.5
 
 	local btnFontSize = 12
 
@@ -157,18 +176,22 @@ function loadWindow()
 	}
 
 	curr_x = curr_x + el_size + padding
-	Chili.Button:New {
+	btnFilterProblems = Chili.Button:New {
 		parent = window,
 		x = ('%f%%'):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
 		tooltip = "Toggles whether all messages should be displayed, or just warnings and errors.",
-		caption = "Filter: problems",
+		caption = "Problems",
 		fontSize = btnFontSize,
+		classname = 'toggle_button',
+		checked = cfg.onlyErrorsAndWarnings,
 		OnClick = {
-			function()
+			function(obj)
 				ToggleFilterMessages()
+				obj.checked = cfg.onlyErrorsAndWarnings
+				obj:Invalidate()
 			end
 		}
 	}
@@ -179,28 +202,16 @@ function loadWindow()
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
-		tooltip = 'show messages since the most recent luaui/luarules reload',
-		caption = "Filter: since reload",
+		tooltip = 'Show messages since the most recent luaui/luarules reload',
+		caption = "Current reload",
 		fontSize = btnFontSize,
+		classname = 'toggle_button',
+		checked = cfg.onlySinceLastReload,
 		OnClick = {
-			function()
-				ShowSinceReload()
-			end
-		}
-	}
-	curr_x = curr_x + el_size + padding
-	Chili.Button:New {
-		parent = window,
-		x = ('%f%%'):format(curr_x),
-		bottom = 0,
-		width = widthStr,
-		height = heightStr,
-		tooltip = 'show all messages',
-		caption = "Show all",
-		fontSize = btnFontSize,
-		OnClick = {
-			function()
-				ReloadAllMessages()
+			function(obj)
+				ToggleFilterSinceLastReload()
+				obj.checked = cfg.onlySinceLastReload
+				obj:Invalidate()
 			end
 		}
 	}
@@ -235,40 +246,6 @@ function loadWindow()
 			end
 		}
 	}
-	-- TODO: consider reintroducing these commands
-	-- right now they're just traps that'll break the UI/game completely
-
-	-- curr_x = curr_x + el_size + padding
-	-- Chili.Button:New {
-	-- 	parent = window,
-	-- 	x = ('%f%%'):format(curr_x),
-	-- 	bottom = 0,
-	-- 	width = widthStr,
-	-- 	height = heightStr,
-	-- 	caption = "luaui disable",
-	-- 	fontSize = btnFontSize,
-	-- 	OnClick = {
-	-- 		function()
-	-- 			Spring.SendCommands("luaui disable")
-	-- 		end
-	-- 	}
-	-- }
-	-- curr_x = curr_x + el_size + padding
-	-- Chili.Button:New {
-	-- 	parent = window,
-	-- 	x = ('%f%%'):format(curr_x),
-	-- 	bottom = 0,
-	-- 	width = widthStr,
-	-- 	height = heightStr,
-	-- 	caption = "luarules disable",
-	-- 	fontSize = btnFontSize,
-	-- 	OnClick = {
-	-- 		function()
-	-- 			CheatIfNeeded()
-	-- 			Spring.SendCommands("luarules disable")
-	-- 		end
-	-- 	}
-	-- }
 	curr_x = curr_x + el_size + padding
 	Chili.Button:New {
 		parent = window,
@@ -340,11 +317,15 @@ function loadWindow()
 		width = widthStr,
 		height = heightStr,
 		tooltip = '',
-		caption = "Toggle Popup-on-Error",
+		caption = "Popup on error",
 		fontSize = btnFontSize,
+		checked = cfg.popupOnError,
+		classname = 'toggle_button',
 		OnClick = {
-			function()
+			function(obj)
 				TogglePopUpOnError()
+				obj.checked = cfg.popupOnError
+				obj:Invalidate()
 			end
 		}
 	}
@@ -452,7 +433,6 @@ function widget:Initialize()
 		end
 		WG.Connector.Register("OpenFileFinished", self.openFileCallback)
 	end
-	loadWindow()
 	Spring.SendCommands('bind f8 ' .. COMMAND_NAME)
 	Spring.SendCommands('console 0')
 end
@@ -476,8 +456,10 @@ function widget:SetConfigData(data)
 		cfg[k] = v
 	end
 
+	loadWindow()
+
 	-- Initialization which depends on the content
-	ReloadAllMessages(true)
+	ReloadAllMessages()
 	if not cfg.visible then
 		window:SetVisibility(false)
 	end
@@ -517,7 +499,7 @@ local function processLine(line)
 		text = line
 	--end
 	local lowerLine = slower(line)
-	if sfind(lowerLine,"error") or sfind(lowerLine,"failed") then
+	if sfind(lowerLine, "error") or sfind(lowerLine, "failed") then
 		textColor = color.error
 		isError = true
 	elseif sfind(lowerLine,"warning") then
@@ -536,6 +518,9 @@ function widget:AddConsoleLine(msg)
 	-- parse the new line
 	local text, ignore, dedup, isError = processLine(msg)
 	if ignore then return end
+	if isError then
+		totalErrors = totalErrors + 1
+	end
 	-- check for duplicates
 	-- for i=0, dedup-1 do
 	-- 	local prevMsg = log.lines[#log.lines - i]
@@ -553,19 +538,21 @@ function widget:AddConsoleLine(msg)
 	if isError and cfg.popupOnError and not cfg.visible then
 		ToggleWindowVisibility()
 	end
+	return isError
 end
 
 function CheckForLuaFilePath(text)
-	local matched = string.match(text, "%w+/")
+	local matched = string.match(text, "%w+/-_")
 	if not matched then
 		return
 	end
+
 	local s, e = string.find(text, matched)
 	while e < #text do
 		e = e + 1
 		local current = text:sub(s, e)
 		if current:sub(-4) == ".lua" then
-		return current, nil, s, e
+			return current, nil, s, e
 		end
 	end
 end
@@ -576,52 +563,67 @@ function NewConsoleLine(text)
 		-- log:RemoveChild(log.children[1])
 	-- end
 	local filePath, lineNumber, s, e = CheckForLuaFilePath(text)
-	local OnTextClick
-	local tooltip
-	if filePath and WG.Connector and VFS.GetFileAbsolutePath then
-		filePath = filePath:lower()
-		local absPath = VFS.GetFileAbsolutePath(filePath)
-		local archiveName = VFS.GetArchiveContainingFile(filePath)
-		if archiveName == (Game.gameName .. " " .. Game.gameVersion) then
-			tooltip = {
-				startIndex = s + 3,
-				endIndex = e + 3,
-				tooltip = 'Open: ' .. text:sub(s, e)
-			}
-			text = text:sub(1, s-1) .. '\255\150\100\255' ..
-				   text:sub(s, e) .. '\b' .. text:sub(1, 4) .. text:sub(e+1)
-			OnTextClick = {
-				startIndex = s,
-				endIndex = e,
-				OnTextClick = {
-					function()
-						WG.Connector.Send("OpenFile", { path = absPath })
-					end
-				}
-			}
-		end
+	if not (filePath and WG.Connector and VFS.GetFileAbsolutePath) then
+		log:AddLine(text, {}, {})
+		return
 	end
+
+	filePath = filePath:lower()
+	local archiveName = VFS.GetArchiveContainingFile(filePath)
+	if archiveName ~= (Game.gameName .. " " .. Game.gameVersion) then
+		log:AddLine(text, {}, {})
+		return
+	end
+
+	local absPath = VFS.GetFileAbsolutePath(filePath)
+	local tooltip = {
+		startIndex = s + 3,
+		endIndex = e + 3,
+		tooltip = 'Open: ' .. text:sub(s, e)
+	}
+	text = text:sub(1, s-1) .. '\255\150\100\255' ..
+		   text:sub(s, e) .. '\b' .. text:sub(1, 4) .. text:sub(e+1)
+	local OnTextClick = {
+		startIndex = s,
+		endIndex = e,
+		OnTextClick = {
+			function()
+				WG.Connector.Send("OpenFile", { path = absPath })
+			end
+		}
+	}
 	log:AddLine(text, {tooltip}, {OnTextClick})
 end
 
 function RemoveAllMessages()
+	totalErrors = 0
 	log.text = nil
 	log:SetText("")
+	UpdateFilterProblems()
 end
 
-function ReloadAllMessages(initialLoad)
+function ReloadAllMessages()
 	RemoveAllMessages()
-	local reloadCount = 0
 	local buffer = Spring.GetConsoleBuffer(cfg.reloadLines)
-	for _,l in ipairs(buffer) do
-		if initialLoad and sfind(l.text, "LuaUI Entry Point") or sfind(l.text, "LuaRules Entry Point") then
-			reloadCount = reloadCount + 1
-			if reloadCount > 2 then -- allow one for initial luaui load, and one for initial luarules load; beyond that, on initial load, show only msgs since last reload; fails if we don't have enough buffer
-				RemoveAllMessages()
+	if cfg.onlySinceLastReload then
+		local reloadCount = 0
+		for _, l in ipairs(buffer) do
+			if sfind(l.text, "LuaUI Entry Point") or sfind(l.text, "LuaRules Entry Point") then
+				reloadCount = reloadCount + 1
+				-- allow one for initial luaui load, and one for initial luarules load;
+				-- beyond that, on initial load, show only msgs since last reload; fails if we don't have enough buffer
+				if reloadCount > 2 then
+					RemoveAllMessages()
+				end
 			end
+			widget:AddConsoleLine(l.text)
 		end
-		widget:AddConsoleLine(l.text)
+	else
+		for _, l in ipairs(buffer) do
+			widget:AddConsoleLine(l.text)
+		end
 	end
+	UpdateFilterProblems()
 end
 
 function ShowSinceReload()
