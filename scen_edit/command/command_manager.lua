@@ -113,8 +113,8 @@ function CommandManager:execute(cmd, widget)
     return self:__execute(cmd, self.__isWidget == widget)
 end
 
-function CommandManager:__execute(cmd, sameContext)
-    if not sameContext then
+function CommandManager:__execute(cmd, isSameContext)
+    if not isSameContext then
         return self:_SendCommand(cmd)
     end
 

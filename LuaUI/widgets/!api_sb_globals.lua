@@ -15,5 +15,5 @@ WG.SB = {}
 
 -- everything breaks unless this is also included (at least an .Echo), wtf?
 function widget:Initialize()
-    Spring.Echo("SpringBoard libs dir: ", WG.SB_LIBS_DIR)
+    Spring.Echo("SpringBoard libs dir: " .. tostring(WG.SB_LIBS_DIR))
 end

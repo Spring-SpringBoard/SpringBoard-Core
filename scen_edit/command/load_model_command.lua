@@ -19,4 +19,5 @@ end
 function LoadModelCommand:Load()
     Log.Notice("Loading model...")
     SB.model:Load(self.mission)
+    Log.Notice("Loading model finished")
 end
