@@ -514,7 +514,7 @@ local function processLine(line)
 	return line, false, dedup, isError
 end
 
-function widget:AddConsoleLine(msg)
+local function AddConsoleLine(msg)
 	-- parse the new line
 	local text, ignore, dedup, isError = processLine(msg)
 	if ignore then return end
@@ -538,7 +538,11 @@ function widget:AddConsoleLine(msg)
 	if isError and cfg.popupOnError and not cfg.visible then
 		ToggleWindowVisibility()
 	end
-	return isError
+end
+
+function widget:AddConsoleLine(msg)
+	AddConsoleLine(msg)
+	UpdateFilterProblems()
 end
 
 function CheckForLuaFilePath(text)
