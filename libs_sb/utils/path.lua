@@ -119,16 +119,27 @@ function Path.SubDirs(...)
 end
 
 function Path.Walk(path, f, opts)
-	opts = opts or {}
-    for _, file in ipairs(Path.DirList(path, "*", opts.mode)) do
-		f(file)
-	end
-    for _, dir in ipairs(Path.SubDirs(path, "*", opts.mode)) do
-		if opts.apply_folders then
-			f(dir)
-		end
-		Path.Walk(dir, f, opts)
-	end
+    opts = opts or {}
+    local WalkFiles = function()
+        for _, file in ipairs(Path.DirList(path, "*", opts.mode)) do
+            f(file)
+        end
+    end
+    local WalkDirs = function()
+        for _, dir in ipairs(Path.SubDirs(path, "*", opts.mode)) do
+            Path.Walk(dir, f, opts)
+            if opts.apply_folders then
+                f(dir)
+            end
+        end
+    end
+    if opts.dirs_first then
+        WalkDirs()
+        WalkFiles()
+    else
+        WalkFiles()
+        WalkDirs()
+    end
 end
 
 -- Tests

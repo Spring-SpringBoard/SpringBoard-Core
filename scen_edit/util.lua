@@ -460,20 +460,12 @@ function SB.RemoveDirRecursively(path)
         Log.Notice("Deleting: " .. file .. "...")
         local success, err = os.remove(file)
         if not success then
-            Log.Error('Failed to delete file: ' .. err)
-        end
-    end, {
-        mode = VFS.RAW
-    })
-    Path.Walk(path, function(folder)
-        Log.Notice("Deleting: " .. folder .. "...")
-        local success, err = os.remove(folder)
-        if not success then
-            Log.Error('Failed to delete folder: ' .. err)
+            Log.Error('Failed to delete: ' .. err)
         end
     end, {
         mode = VFS.RAW,
-        apply_folders = true
+        apply_folders = true,
+        dirs_first = true
     })
     os.remove(path)
 end
