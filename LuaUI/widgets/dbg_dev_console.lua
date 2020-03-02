@@ -619,6 +619,9 @@ function ReloadAllMessages()
 				if reloadCount > 2 then
 					RemoveAllMessages()
 				end
+			elseif sfind(l.text, "%[ReloadOrRestart%]") then
+				reloadCount = 0
+				RemoveAllMessages()
 			end
 			widget:AddConsoleLine(l.text)
 		end
