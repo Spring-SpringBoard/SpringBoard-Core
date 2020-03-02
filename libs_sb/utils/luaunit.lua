@@ -23,6 +23,24 @@ if os == nil then
     end
 end
 
+local print = function(s, ...)
+    if s == nil then
+        s = ""
+    end
+    Spring.Log("LuaUnit", LOG.NOTICE, s, ...)
+end
+local printError = function(...)
+    local orig = {...}
+    local parsed = {}
+    for _, v in ipairs(orig) do
+        table.insert(parsed, tostring(v))
+    end
+    if #parsed == 0 then
+        parsed = {""}
+    end
+    Spring.Log("LuaUnit", LOG.ERROR, unpack(parsed))
+end
+
 local M={}
 
 -- private exported functions (for testing)
@@ -114,9 +132,9 @@ local function pcall_or_abort(func, ...)
     local result = {pcall(func, ...)}
     if not result[1] then
         -- an error occurred
-        print(result[2]) -- error message
-        print()
-        print(M.USAGE)
+        printError(result[2]) -- error message
+        printError()
+        printError(M.USAGE)
     end
     return unpack(result, 2)
 end
@@ -1918,10 +1936,10 @@ JUnitOutput.__class__ = 'JUnitOutput'
 
     function JUnitOutput:addStatus( node )
         if node:isFailure() then
-            print( '#   Failure: ' .. prefixString( '#   ', node.msg ):sub(4, nil) )
+            printError( '#   Failure: ' .. prefixString( '#   ', node.msg ):sub(4, nil) )
             -- print('# ' .. node.stackTrace)
         elseif node:isError() then
-            print( '#   Error: ' .. prefixString( '#   '  , node.msg ):sub(4, nil) )
+            printError( '#   Error: ' .. prefixString( '#   '  , node.msg ):sub(4, nil) )
             -- print('# ' .. node.stackTrace)
         end
     end
@@ -2114,16 +2132,16 @@ TextOutput.__class__ = 'TextOutput'
     end
 
     function TextOutput:displayOneFailedTest( index, fail )
-        print(index..") "..fail.testName )
-        print( fail.msg )
-        print( fail.stackTrace )
-        print()
+        printError(index..") "..fail.testName )
+        printError( fail.msg )
+        printError( fail.stackTrace )
+        printError()
     end
 
     function TextOutput:displayFailedTests()
         if self.result.notPassedCount ~= 0 then
-            print("Failed tests:")
-            print("-------------")
+            printError("Failed tests:")
+            printError("-------------")
             for i, v in ipairs(self.result.notPassed) do
                 self:displayOneFailedTest(i, v)
             end
@@ -2581,7 +2599,7 @@ end
                 -- Runtime error - abort test execution as requested by
                 -- "--error" option. This is done by setting a special
                 -- flag that gets handled in runSuiteByInstances().
-                print("\nERROR during LuaUnit test execution:\n" .. node.msg)
+                printError("\nERROR during LuaUnit test execution:\n" .. node.msg)
                 self.result.aborted = true
             end
         elseif node:isFailure() then
@@ -2589,7 +2607,7 @@ end
                 -- Failure - abort test execution as requested by
                 -- "--failure" option. This is done by setting a special
                 -- flag that gets handled in runSuiteByInstances().
-                print("\nFailure during LuaUnit test execution:\n" .. node.msg)
+                printError("\nFailure during LuaUnit test execution:\n" .. node.msg)
                 self.result.aborted = true
             end
         end
@@ -2860,7 +2878,7 @@ end
         self:endSuite()
 
         if self.result.aborted then
-            print("LuaUnit ABORTED (as requested by --error or --failure option)")
+            printError("LuaUnit ABORTED (as requested by --error or --failure option)")
         end
     end
 
@@ -2954,7 +2972,7 @@ end
 
         if options.output then
             if options.output:lower() == 'junit' and options.fname == nil then
-                print('With junit output, a filename must be supplied with -n or --name')
+                printError('With junit output, a filename must be supplied with -n or --name')
             end
             pcall_or_abort(self.setOutputType, self, options.output)
         end
