@@ -12,7 +12,7 @@ local function ExportShadingTextures(path)
 end
 
 function ExportShadingTexturesCommand:execute()
-    SB.delayGL(function()
+    return SB.delayGL(function()
         Spring.CreateDir(Path.GetParentDir(self.path))
 
         Time.MeasureTime(function()

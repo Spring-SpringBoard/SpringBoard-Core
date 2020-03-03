@@ -181,10 +181,6 @@ function TerrainSettingsEditor:_AddMapCompileControls()
     WG.Connector.Register("CompileMapFinished", function()
         self.progressBar:SetValue(100)
         self.progressBar:SetCaption("Finished")
-
-        if ExportAction.NextStep then
-            ExportAction.NextStep()
-        end
         -- WG.Connector.Send("OpenFile", {
         --     path = "file://" .. self.compileFolderPath,
         -- })
@@ -211,8 +207,6 @@ function TerrainSettingsEditor:_AddMapCompileControls()
     -- SB.commandManager:addListener(self)
 end
 
---function TerrainSettingsEditor:OnCommandExecuted(cmdIDs, isUndo, isRedo, display)
--- if display == "ExportMapsCommand" and SB_EXPORTED_TO ~= nil then
 function TerrainSettingsEditor:UpdateCompilePaths(folderPath)
     self:Set("heightPath", Path.Join(folderPath, "heightmap.png"))
     self:Set("diffusePath", Path.Join(folderPath, "diffuse.png"))

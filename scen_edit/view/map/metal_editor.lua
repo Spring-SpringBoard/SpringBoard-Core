@@ -37,13 +37,13 @@ function MetalEditor:init()
             SB.model.terrainManager:generateShape(texture)
         end
     }))
-    self.btnAddMetal = TabbedPanelButton({
+    self.btnSetMetal = TabbedPanelButton({
         x = 0,
         y = 0,
-        tooltip = "Left Click to add metal. Right click to remove it.",
+        tooltip = "Left Click to set metal. Right click to remove it.",
         children = {
             TabbedPanelImage({ file = SB_IMG_DIR .. "metal-add.png" }),
-            TabbedPanelLabel({ caption = "Add" }),
+            TabbedPanelLabel({ caption = "Set" }),
         },
         OnClick = {
             function()
@@ -52,7 +52,7 @@ function MetalEditor:init()
         },
     })
     self:AddDefaultKeybinding({
-        self.btnAddMetal
+        self.btnSetMetal
     })
 
     self:AddControl("btn-show-metal", {
@@ -85,24 +85,17 @@ function MetalEditor:init()
         tooltip = "Rotation of the shape",
     }))
     self:AddField(NumericField({
-        name = "strength",
-        value = 50,
-        step = 0.1,
-        title = "Strength:",
-        tooltip = "Strength of the height map tool",
-    }))
-    self:AddField(NumericField({
         name = "amount",
-        value = 50,
+        value = 5,
         minValue = 0,
-        maxValue = 10000,
+        maxValue = 10,
         step = 0.01,
         title = "Amount:",
         tooltip = "Amount of metal",
     }))
 
     local children = {
-        self.btnAddMetal,
+        self.btnSetMetal,
         ScrollPanel:New {
             x = 0,
             y = 70,
@@ -121,11 +114,11 @@ function MetalEditor:IsValidState(state)
 end
 
 function MetalEditor:OnLeaveState(state)
-    for _, btn in pairs({self.btnAddMetal}) do
+    for _, btn in pairs({self.btnSetMetal}) do
         btn:SetPressedState(false)
     end
 end
 
 function MetalEditor:OnEnterState(state)
-    self.btnAddMetal:SetPressedState(true)
+    self.btnSetMetal:SetPressedState(true)
 end

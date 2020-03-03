@@ -52,7 +52,7 @@ local function ExportDiffuse(path)
 end
 
 function ExportDiffuseCommand:execute()
-    SB.delayGL(function()
+    return SB.delayGL(function()
         Spring.CreateDir(Path.GetParentDir(self.path))
 
         Time.MeasureTime(function()
@@ -66,9 +66,7 @@ function ExportDiffuseCommand:execute()
             if SB.editors["terrainSettings"] ~= nil then
                 SB.editors["terrainSettings"]:UpdateCompilePaths(self.path)
             end
-            if ExportAction.NextStep ~= nil then
-                ExportAction.NextStep()
-            end
+
         end)
     end)
 end

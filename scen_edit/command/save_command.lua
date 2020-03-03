@@ -24,8 +24,8 @@ end
 
 local function SaveGrassMap(path)
     Array.SaveFunc(path, function(arrayWriter)
-        for x = 0, gameMapSizeX, gameSquareSize do
-            for z = 0, gameMapSizeZ, gameSquareSize do
+        for x = 0, gameMapSizeX - 1, gameSquareSize * 4 do
+            for z = 0, gameMapSizeZ - 1, gameSquareSize * 4 do
                 arrayWriter.Write(spGetGrass(x, z))
             end
         end

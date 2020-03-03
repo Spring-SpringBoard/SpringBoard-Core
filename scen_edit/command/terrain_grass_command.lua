@@ -32,8 +32,8 @@ function TerrainGrassCommand:GenerateChanges(params)
 
     -- localized loop vars
     local d
-    for x = 0, size, Game.squareSize do
-        for z = 0, size, Game.squareSize do
+    for x = 0, size, Game.squareSize * 4 do
+        for z = 0, size, Game.squareSize * 4 do
             d = map[x + z * parts]
             if d >= 0.5 then
                 local old = Spring.GetGrass(startX + x, startZ + z)

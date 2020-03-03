@@ -121,73 +121,77 @@ local function WriteToFile(path, content)
     file:close()
 end
 
-ExportAction.NextStep = nil
 function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
 
     local buildDir = self:__CreateBuildDir()
-    if not self:TryToExportMapTextures(buildDir, heightmapExtremes) then
+    local promise = self:TryToExportMapTextures(buildDir, heightmapExtremes)
+
+    if not promise then
         return
     end
 
-    local archiveDir = Path.Join(buildDir, "archive")
-    Spring.CreateDir(archiveDir)
+    local archiveDir
+    local mapsDir
 
-    local luaGaiaDir = Path.Join(archiveDir, "LuaGaia")
-    Spring.CreateDir(luaGaiaDir)
+    promise:next(function()
+        archiveDir = Path.Join(buildDir, "archive")
+        Spring.CreateDir(archiveDir)
 
-    WriteToFile(Path.Join(luaGaiaDir, "main.lua"), [[VFS.Include("LuaGadgets/gadgets.lua",nil, VFS.BASE)]])
-    WriteToFile(Path.Join(luaGaiaDir, "draw.lua"), [[VFS.Include("LuaGadgets/gadgets.lua",nil, VFS.BASE)]])
+        local luaGaiaDir = Path.Join(archiveDir, "LuaGaia")
+        Spring.CreateDir(luaGaiaDir)
 
-    local gadgetsDir = Path.Join(luaGaiaDir, "Gadgets")
-    Spring.CreateDir(gadgetsDir)
+        WriteToFile(Path.Join(luaGaiaDir, "main.lua"), [[VFS.Include("LuaGadgets/gadgets.lua",nil, VFS.BASE)]])
+        WriteToFile(Path.Join(luaGaiaDir, "draw.lua"), [[VFS.Include("LuaGadgets/gadgets.lua",nil, VFS.BASE)]])
 
-    local mapconfigDir = Path.Join(archiveDir, "mapconfig")
-    Spring.CreateDir(mapconfigDir)
+        local gadgetsDir = Path.Join(luaGaiaDir, "Gadgets")
+        Spring.CreateDir(gadgetsDir)
 
-    local mapsDir = Path.Join(archiveDir, "maps")
-    Spring.CreateDir(mapsDir)
+        local mapconfigDir = Path.Join(archiveDir, "mapconfig")
+        Spring.CreateDir(mapconfigDir)
 
-    CopyRecursively("libs_sb/lcs",  Path.Join(archiveDir, "libs/lcs"),  { mode = VFS.ZIP })
-    CopyRecursively("libs_sb/s11n", Path.Join(archiveDir, "libs/s11n"), { mode = VFS.ZIP })
+        mapsDir = Path.Join(archiveDir, "maps")
+        Spring.CreateDir(mapsDir)
 
-    WriteToFile(Path.Join(gadgetsDir, "s11n_gadget_load.lua"),
-        VFS.LoadFile("libs_sb/s11n/s11n_gadget_load.lua", VFS.ZIP))
+        CopyRecursively("libs_sb/lcs",  Path.Join(archiveDir, "libs/lcs"),  { mode = VFS.ZIP })
+        CopyRecursively("libs_sb/s11n", Path.Join(archiveDir, "libs/s11n"), { mode = VFS.ZIP })
 
-    WriteToFile(Path.Join(gadgetsDir, "s11n_load_map_features.lua"),
-        VFS.LoadFile("libs_sb/s11n/s11n_load_map_features.lua", VFS.ZIP):gsub(
-            "local modelPath = nil", "local modelPath = \"mapconfig/s11n_model.lua\""))
+        WriteToFile(Path.Join(gadgetsDir, "s11n_gadget_load.lua"),
+            VFS.LoadFile("libs_sb/s11n/s11n_gadget_load.lua", VFS.ZIP))
 
-    local cmds = {
-        CompileMapCommand({
-            heightPath = Path.Join(buildDir, "heightmap.png"),
-            diffusePath = Path.Join(buildDir, "diffuse.png"),
-            outputPath = Path.Join(SB_WRITE_PATH, mapsDir, SB.project.name)
-        }),
-        CopyCustomProjectFilesCommand(SB.project.path, archiveDir),
-        ExportMapInfoCommand(Path.Join(archiveDir, "mapinfo.lua")),
-        ExportS11NCommand(Path.Join(mapconfigDir, "s11n_model.lua")),
-    }
+        WriteToFile(Path.Join(gadgetsDir, "s11n_load_map_features.lua"),
+            VFS.LoadFile("libs_sb/s11n/s11n_load_map_features.lua", VFS.ZIP):gsub(
+                "local modelPath = nil", "local modelPath = \"mapconfig/s11n_model.lua\""))
 
-    ExportAction.NextStep = function()
-        Log.Notice("Do compound...")
+        local cmds = {
+            CopyCustomProjectFilesCommand(SB.project.path, archiveDir),
+            ExportMapInfoCommand(Path.Join(archiveDir, "mapinfo.lua")),
+            ExportS11NCommand(Path.Join(mapconfigDir, "s11n_model.lua")),
+        }
         SB.commandManager:execute(CompoundCommand(cmds), true)
 
-        ExportAction.NextStep = function()
-            Log.Notice("Exporting archive: " .. path .. " ...")
-            SB.commandManager:execute(ExportProjectCommand(archiveDir, path), true)
+        return ExportGrassCommand(Path.Join(mapsDir, "grass.png")):execute()
+    end):next(function()
+        return CompileMapCommand({
+            heightPath = Path.Join(buildDir, "heightmap.png"),
+            diffusePath = Path.Join(buildDir, "diffuse.png"),
+            metalPath = Path.Join(buildDir, "metal.png"),
+            outputPath = Path.Join(SB_WRITE_PATH, mapsDir, SB.project.name)
+        }):execute()
+    end):next(function()
+        Log.Notice("Exporting archive: " .. path .. " ...")
+        SB.commandManager:execute(ExportProjectCommand(archiveDir, path), true)
 
-            Log.Notice("Deleting build directory: " .. buildDir .. "...")
-            SB.RemoveDirRecursively(buildDir)
+        Log.Notice("Deleting build directory: " .. buildDir .. "...")
+        SB.RemoveDirRecursively(buildDir)
 
-            Log.Notice("Archive export complete")
-            WG.Connector.Send("OpenFile", {
-                path = "file://" .. Path.Join(SB_WRITE_PATH, Path.GetParentDir(path)),
-            })
-
-            ExportAction.NextStep = nil
-        end
-    end
+        Log.Notice("Archive export complete")
+        WG.Connector.Send("OpenFile", {
+            path = "file://" .. Path.Join(SB_WRITE_PATH, Path.GetParentDir(path)),
+        })
+    end):catch(function(reason)
+        Log.Error("Export action failed: " .. tostring(reason))
+    end)
 end
 
 function ExportAction:__CreateBuildDir()
@@ -220,6 +224,5 @@ function ExportAction:TryToExportMapTextures(path, heightmapExtremes)
         return false
     end
 
-    SB.commandManager:execute(ExportMapsCommand(path, heightmapExtremes), true)
-    return true
+    return ExportMapsCommand(path, heightmapExtremes):execute()
 end

@@ -13,9 +13,7 @@ function MetalEditingState:GetCommand(x, z, applyAction)
         size = self.size,
         shapeName = self.patternTexture,
         rotation = self.rotation,
-        amount = self.amount * applyAction,
-
-        strength = self.strength,
+        amount = self.amount * applyAction
     })
 end
 

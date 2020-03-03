@@ -20,7 +20,7 @@ function LoadTextureCommand:execute()
         tm:GenerateMapTextures()
 
         local textures = {}
-        for _, file in pairs(files) do
+        for _, file in ipairs(files) do
             local _, i, j = file:match(".*(texture)-(%d+)-(%d+).png")
             if i ~= nil and j ~= nil then
                 table.insert(textures, {

@@ -525,7 +525,9 @@ function Editor:Load(tbl)
         end
     end
     for name, data in pairs(tbl) do
-        self.fields[name]:Load(data)
+        if self.fields[name] ~= nil then
+            self.fields[name]:Load(data)
+        end
     end
 end
 

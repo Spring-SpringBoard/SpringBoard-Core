@@ -6,13 +6,12 @@ function LoadGrassMapCommand:init(deltaMap)
 end
 
 function LoadGrassMapCommand:execute()
-    --Log.Notice("HEIGHTMAP LOAD")
     if self.deltaMap == nil or #self.deltaMap == 0 then
         return
     end
     Array.LoadFunc(self.deltaMap, function(arrayReader)
-        for x = 0, Game.mapSizeX, Game.squareSize do
-            for z = 0, Game.mapSizeZ, Game.squareSize do
+        for x = 0, Game.mapSizeX - 1, Game.squareSize * 4 do
+            for z = 0, Game.mapSizeZ - 1, Game.squareSize * 4 do
                 if arrayReader.Get() == 1 then
                     Spring.AddGrass(x, z)
                 else

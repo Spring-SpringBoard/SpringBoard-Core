@@ -185,7 +185,8 @@ function ExportMapInfoCommand:GetSMF()
     local tbl = {
         minheight = minH,
 		maxheight = maxH,
-		smtFileName0 = SB.project.name .. ".smt",
+        smtFileName0 = SB.project.name .. ".smt",
+        grassmapTex = "grass.png",
     }
     return tbl
 end

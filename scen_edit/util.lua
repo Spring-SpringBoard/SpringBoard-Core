@@ -351,25 +351,31 @@ SB.delayed = {
     Initialize = {},
 }
 function SB.delayGL(func, params)
-    SB.Delay("DrawWorld", func, params)
+    return SB.Delay("DrawWorld", func, params)
 end
 function SB.delay(func, params)
-    SB.Delay("GameFrame", func, params)
+    return SB.Delay("GameFrame", func, params)
 end
 function SB.OnInitialize(func, params)
-    SB.Delay("Initialize", func, params)
+    return SB.Delay("Initialize", func, params)
 end
 function SB.Delay(name, func, params)
+    local promise = Promise()
     local delayed = SB.delayed[name]
-    table.insert(delayed, {func, params or {}})
+    table.insert(delayed, {func, params or {}, promise})
+    return promise
 end
 
 function SB.executeDelayed(name)
     local delayed = SB.delayed[name]
     SB.delayed[name] = {}
     for i, call in pairs(delayed) do
-        xpcall(function() call[1](unpack(call[2])) end,
-              function(err) Log.Error(debug.traceback(err)) end )
+        xpcall(function()
+            call[1](unpack(call[2]))
+            call[3]:resolve()
+        end, function(err)
+            Log.Error(debug.traceback(err))
+        end)
     end
 end
 
@@ -689,18 +695,4 @@ function SB.WriteShadingTextureToFile(texType, path)
     local alpha = not not texDef.alpha
     gl.Blending("enable")
     gl.RenderToTexture(texture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, path, {alpha=alpha, yflip=false})
-end
-
-SB.__registeredImageSave = false
-function SB.RegisterImageSave()
-    if SB.__registeredImageSave then
-        return
-    end
-    WG.Connector.Register("TransformSBImageFinished", function(command)
-        Log.Notice("Successfully exported to " .. command.path)
-    end)
-    WG.Connector.Register("TransformSBImageFailed", function(command)
-        Log.Notice("Export image failed. " .. command.error)
-    end)
-    SB.__registeredImageSave = true
 end
