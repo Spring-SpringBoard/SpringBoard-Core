@@ -12,7 +12,7 @@ end
 
 local function SaveShadingTextures(path, prefix)
     for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
-        if shadingTexObj.dirty then
+        if shadingTexObj.dirty or self.isNewProject then
             SB.WriteShadingTextureToFile(texType, Path.Join(path, prefix .. texType .. ".png"))
 
             shadingTexObj.dirty = false
@@ -28,7 +28,6 @@ local function SaveShadingTextures(path, prefix)
         end
     end
 end
-
 
 function SaveImagesCommand:execute()
     SB.delayGL(function()
@@ -55,7 +54,7 @@ function SaveImagesCommand:execute()
             for j = 0, sizeZ do
                 local mapTextureObj = SB.model.textureManager.mapFBOTextures[i][j]
                 -- only write those textures that have changed since last save
-                if mapTextureObj.dirty then
+                if mapTextureObj.dirty or self.isNewProject then
                     local mapTexture = mapTextureObj.texture
 
                     local mapTexturePath = self:__GetTexturePath(i, j)

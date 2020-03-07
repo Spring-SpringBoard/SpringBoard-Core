@@ -118,8 +118,7 @@ function SaveCommand:execute()
     if #SB.model.textureManager.mapFBOTextures > 0 then
         local texturemapDir = Path.Join(projectDir, Project.TEXTURES_FOLDER)
         Spring.CreateDir(texturemapDir)
-        local cmd = SaveImagesCommand(texturemapDir, self.isNewProject)
-        cmd:execute()
+        SaveImagesCommand(texturemapDir, self.isNewProject):execute()
     end
 
     SB.RequestScreenshotPath = Path.Join(projectDir, Project.SCREENSHOT_FILE)
