@@ -85,12 +85,14 @@ end
 
 function SavedBrushes:_OnSelectItem(obj, itemIdx, selected)
     local item = self:_OnValidateSelectItem(obj, itemIdx, selected)
-    if item then
-        if selected then
-            self:_LoadBrush(item)
-        end
-        CallListeners(self.OnSelectItem, item, selected)
+    if not item then
+        return
     end
+
+    if selected then
+        self:_LoadBrush(item)
+    end
+    CallListeners(self.OnSelectItem, item, selected)
 end
 
 function SavedBrushes:_UpdateBrushes()

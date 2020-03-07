@@ -10,12 +10,6 @@ function LoadGUIStateCommand:init(guiState)
 end
 
 function LoadGUIStateCommand:execute()
-    local brushes = self.guiState.brushes or {}
-    for name, brushData in pairs(brushes) do
-        local brushManager = SB.model.brushManagers:GetBrushManager(name)
-        brushManager:Load(brushData)
-    end
-
     local editors = self.guiState.editors or {}
 
     SB.delay(function()
@@ -27,6 +21,15 @@ function LoadGUIStateCommand:execute()
                 SB.editors[name]:Load(editorData)
             end
         end
+
+        -- We also want to furher delay brush loading to ensure all necessary editors have been created
+        SB.delay(function()
+            local brushes = self.guiState.brushes or {}
+            for name, brushData in pairs(brushes) do
+                local brushManager = SB.model.brushManagers:GetBrushManager(name)
+                brushManager:Load(brushData)
+            end
+        end)
     end)
     end)
 end

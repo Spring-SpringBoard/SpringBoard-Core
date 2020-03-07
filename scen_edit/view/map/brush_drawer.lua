@@ -45,3 +45,15 @@ function BrushDrawer.UpdateLuaTexture(luaTex, texturePath, width, height, drawOp
 
     gl.MatrixMode(GL.MODELVIEW)
 end
+
+function BrushDrawer.GetBrushDrawOpts(brush)
+    return {
+        color = brush.opts.diffuseColor,
+        rotation = brush.opts.texRotation,
+        offset = {
+            brush.opts.texOffsetX,
+            brush.opts.texOffsetY,
+        },
+        scale = brush.opts.texScale,
+    }
+end

@@ -76,7 +76,7 @@ function TextureEditor:init()
                 texturePath,
                 self.savedBrushes.itemWidth,
                 self.savedBrushes.itemHeight,
-                self:__GetBrushDrawOpts())
+                BrushDrawer.GetBrushDrawOpts(brush))
 
             return texName
         end,
@@ -128,7 +128,7 @@ function TextureEditor:init()
                 texturePath,
                 self.savedBrushes.itemWidth,
                 self.savedBrushes.itemHeight,
-                self:__GetBrushDrawOpts())
+                BrushDrawer.GetBrushDrawOpts(brush))
 
             return texName
         end,
@@ -570,18 +570,6 @@ end
 
 function TextureEditor:_GetDNTSIndex()
     return self.fields["dntsIndex"].value
-end
-
-function TextureEditor:__GetBrushDrawOpts()
-    return {
-        color = self.fields["diffuseColor"].value,
-        rotation = self.fields["texRotation"].value,
-        offset = {
-            self.fields["texOffsetX"].value,
-            self.fields["texOffsetY"].value,
-        },
-        scale = self.fields["texScale"].value,
-    }
 end
 
 function TextureEditor:OnStartChange(name)
