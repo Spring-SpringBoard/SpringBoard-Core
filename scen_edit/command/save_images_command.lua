@@ -10,9 +10,9 @@ function SaveImagesCommand:__GetTexturePath(i, j)
     return Path.Join(self.path, "texture-" .. tostring(i) .. "-" .. tostring(j) .. ".png")
 end
 
-local function SaveShadingTextures(path, prefix)
+local function SaveShadingTextures(path, prefix, isNewProject)
     for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
-        if shadingTexObj.dirty or self.isNewProject then
+        if shadingTexObj.dirty or isNewProject then
             SB.WriteShadingTextureToFile(texType, Path.Join(path, prefix .. texType .. ".png"))
 
             shadingTexObj.dirty = false
@@ -47,7 +47,7 @@ function SaveImagesCommand:execute()
             end
         end
 
-        SaveShadingTextures(self.path, "shading-")
+        SaveShadingTextures(self.path, "shading-", self.isNewProject)
 
         -- We're saving the map in parts
         for i = 0, sizeX do
