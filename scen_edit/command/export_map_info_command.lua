@@ -322,11 +322,9 @@ function ExportMapInfoCommand:execute()
 
     local mapInfo = {
         -- Section: Global
-        -- name = scenarioInfo.name,
-        name = SB.project.name,
+        name = scenarioInfo.name,
         description = scenarioInfo.description,
-        -- version = scenarioInfo.version,
-        version = "1.0",
+        version = scenarioInfo.version,
         author = scenarioInfo.author,
 
         -- Constant (OK)

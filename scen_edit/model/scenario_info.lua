@@ -4,6 +4,9 @@ function ScenarioInfo:init()
     self:super('init')
     local playerName = Spring.GetPlayerInfo(0)
     self.name = playerName .. "'s Scenario"
+    if SB.project.name ~= nil then
+        self.name = SB.project.name
+    end
     self.description = ""
     self.version = "1"
     self.author = playerName
