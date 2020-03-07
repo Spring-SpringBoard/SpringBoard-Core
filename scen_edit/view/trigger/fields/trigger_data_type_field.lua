@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
 
 TriggerDataTypeField = Field:extends{}
 
@@ -69,7 +69,7 @@ end
 ------------------
 -- Window
 ------------------
-SB.Include(Path.Join(SB_VIEW_TRIGGER_DIR, "abstract_trigger_element_window.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/trigger/abstract_trigger_element_window.lua'))
 
 TriggerDataTypeWindow = AbstractTriggerElementWindow:extends{}
 

@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 WaterEditor = Editor:extends{}
 WaterEditor:Register({
@@ -6,7 +6,7 @@ WaterEditor:Register({
     tab = "Env",
     caption = "Water",
     tooltip = "Edit water",
-    image = SB_IMG_DIR .. "wave-crest.png",
+    image = Path.Join(SB.DIRS.IMG, 'wave-crest.png'),
     order = 2,
 })
 

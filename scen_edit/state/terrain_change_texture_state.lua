@@ -1,5 +1,6 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'model/texture_manager.lua'))
+
 TerrainChangeTextureState = AbstractMapEditingState:extends{}
-SB.Include("scen_edit/model/texture_manager.lua")
 
 function TerrainChangeTextureState:init(editorView)
     AbstractMapEditingState.init(self, editorView)
@@ -9,7 +10,7 @@ function TerrainChangeTextureState:init(editorView)
     self.mode           = self.editorView.fields["mode"].value
     self.dntsIndex      = self.editorView.fields["dntsIndex"].value
     self.kernelMode     = self.editorView.fields["kernelMode"].value
-    self.strength    = self.editorView.fields["strength"].value
+    self.strength       = self.editorView.fields["strength"].value
     self.falloffFactor  = self.editorView.fields["falloffFactor"].value
     self.featureFactor  = self.editorView.fields["featureFactor"].value
     self.diffuseColor   = self.editorView.fields["diffuseColor"].value

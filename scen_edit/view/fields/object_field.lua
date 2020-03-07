@@ -1,6 +1,7 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'state/select_object_state.lua'))
+
 --- ObjectField module
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
-SB.Include(SB_STATE_DIR .. "select_object_state.lua")
 
 --- ObjectField class. Used to represent various map objects (e.g. Unit).
 -- @type ObjectField
@@ -99,7 +100,7 @@ function ObjectField:init(field)
         padding = {2, 2, 2, 2},
         children = {
             Image:New {
-                file = SB_IMG_DIR .. "position-marker.png",
+                file = Path.Join(SB.DIRS.IMG, 'position-marker.png'),
                 height = "100%",
                 width = "100%",
             },

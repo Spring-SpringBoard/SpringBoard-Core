@@ -1,11 +1,11 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 ExportAction = Action:extends{}
 
 ExportAction:Register({
     name = "sb_export",
     tooltip = "Export",
-    image = SB_IMG_DIR .. "save.png",
+    image = Path.Join(SB.DIRS.IMG, 'save.png'),
     toolbar_order = 6,
     hotkey = {
         key = KEYSYMS.E,
@@ -38,7 +38,7 @@ function ExportAction:canExecute()
 end
 
 function ExportAction:execute()
-    ExportFileDialog(SB_EXPORTS_DIR, fileTypes):setConfirmDialogCallback(
+    ExportFileDialog(SB.DIRS.EXPORTS, fileTypes):setConfirmDialogCallback(
         function(path, fileType, heightmapExtremes)
             local baseName = Path.ExtractFileName(path)
             local isFile = VFS.FileExists(path, VFS.RAW_ONLY)
@@ -176,7 +176,7 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
             heightPath = Path.Join(buildDir, "heightmap.png"),
             diffusePath = Path.Join(buildDir, "diffuse.png"),
             metalPath = Path.Join(buildDir, "metal.png"),
-            outputPath = Path.Join(SB_WRITE_PATH, mapsDir, SB.project.name)
+            outputPath = Path.Join(SB.DIRS.WRITE_PATH, mapsDir, SB.project.name)
         }):execute()
     end):next(function()
         Log.Notice("Exporting archive: " .. path .. " ...")
@@ -187,7 +187,7 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
 
         Log.Notice("Archive export complete")
         WG.Connector.Send("OpenFile", {
-            path = "file://" .. Path.Join(SB_WRITE_PATH, Path.GetParentDir(path)),
+            path = "file://" .. Path.Join(SB.DIRS.WRITE_PATH, Path.GetParentDir(path)),
         })
     end):catch(function(reason)
         Log.Error("Export action failed: " .. tostring(reason))
@@ -199,7 +199,7 @@ function ExportAction:__CreateBuildDir()
     local buildDir
     repeat
         i = i + 1
-        buildDir = Path.Join(SB_EXPORTS_DIR, "__buildir_" .. tostring(i))
+        buildDir = Path.Join(SB.DIRS.EXPORTS, "__buildir_" .. tostring(i))
     until not SB.DirExists(buildDir)
 
     Spring.CreateDir(buildDir)

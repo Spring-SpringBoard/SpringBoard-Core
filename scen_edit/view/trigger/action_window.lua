@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_TRIGGER_DIR, "abstract_trigger_element_window.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/trigger/abstract_trigger_element_window.lua'))
 
 ActionWindow = AbstractTriggerElementWindow:extends{}
 

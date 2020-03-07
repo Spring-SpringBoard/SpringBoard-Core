@@ -551,7 +551,7 @@ SB.editors = {}
 --     tab = "MyTag",
 --     caption = "MyEditor",
 --     tooltip = "Edit something",
---     image = SB_IMG_DIR .. "my_icon.png",
+--     image = Path.Join(SB.DIRS.IMG, 'my_icon.png'),
 --     order = 42,
 -- })
 function Editor:Register(opts)
@@ -573,6 +573,10 @@ function Editor:Register(opts)
     opts.order = opts.order or math.huge
     opts.no_serialize = opts.no_serialize
 
+    for k, v in pairs(opts) do
+        self[k] = v
+    end
+
     SB.editorRegistry[opts.name] = opts
 end
 
@@ -591,5 +595,4 @@ function Editor:Deregister()
 end
 
 -- We load these fields last as they might be/contain subclasses of editor view
-SB_VIEW_FIELDS_DIR = SB_VIEW_DIR .. "fields/"
-SB.IncludeDir(SB_VIEW_FIELDS_DIR)
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))

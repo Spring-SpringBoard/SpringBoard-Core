@@ -1,11 +1,11 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 ImportAction = Action:extends{}
 
 ImportAction:Register({
     name = "sb_import",
     tooltip = "Import",
-    image = SB_IMG_DIR .. "open-folder.png",
+    image = SB.DIRS.IMG .. 'open-folder.png',
     toolbar_order = 3,
     hotkey = {
         key = KEYSYMS.I,
@@ -26,7 +26,7 @@ function ImportAction:canExecute()
 end
 
 function ImportAction:execute()
-    local sfd = ImportFileDialog(SB_PROJECTS_DIR, fileTypes)
+    local sfd = ImportFileDialog(SB.DIRS.PROJECTS, fileTypes)
     sfd:setConfirmDialogCallback(
         function(path, fileType)
             local ext = Path.GetExt(path)

@@ -1,11 +1,11 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 CopyAction = Action:extends{}
 
 CopyAction:Register({
     name = "sb_copy",
     tooltip = "Copy",
-    image = SB_IMG_DIR .. "copy.png",
+    image = Path.Join(SB.DIRS.IMG, 'copy.png'),
     toolbar_order = 103,
     hotkey = {
         key = KEYSYMS.C,

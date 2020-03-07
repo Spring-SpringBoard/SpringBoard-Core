@@ -1,29 +1,17 @@
-SB_VIEW_DIR = Path.Join(SB_DIR, "view/")
-
-SB_VIEW_MAIN_WINDOW_DIR = Path.Join(SB_VIEW_DIR, "main_window/")
-SB_VIEW_ACTIONS_DIR = Path.Join(SB_VIEW_DIR, "actions/")
-
-SB_VIEW_OBJECT_DIR = Path.Join(SB_VIEW_DIR, "object/")
-SB_VIEW_MAP_DIR = Path.Join(SB_VIEW_DIR, "map/")
-SB_VIEW_TRIGGER_DIR = Path.Join(SB_VIEW_DIR, "trigger/")
-SB_VIEW_GENERAL_DIR = Path.Join(SB_VIEW_DIR, "general/")
-SB_VIEW_FLOATING_DIR = Path.Join(SB_VIEW_DIR, "floating/")
-SB_VIEW_DIALOG_DIR = Path.Join(SB_VIEW_DIR, "dialog/")
-
 View = LCS.class{}
 
 function View:init()
-    SB.IncludeDir(SB_VIEW_DIR)
-    SB.Include(Path.Join(SB_VIEW_MAIN_WINDOW_DIR, "main_window_panel.lua"))
-    SB.IncludeDir(SB_VIEW_MAIN_WINDOW_DIR)
-    SB.IncludeDir(SB_VIEW_ACTIONS_DIR)
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/main_window/main_window_panel.lua'))
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/main_window'))
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/actions'))
 
-    SB.IncludeDir(SB_VIEW_OBJECT_DIR)
-    SB.IncludeDir(SB_VIEW_MAP_DIR)
-    SB.IncludeDir(SB_VIEW_TRIGGER_DIR)
-    SB.IncludeDir(SB_VIEW_GENERAL_DIR)
-    SB.IncludeDir(SB_VIEW_FLOATING_DIR)
-    SB.IncludeDir(SB_VIEW_DIALOG_DIR)
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/object'))
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/map'))
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/trigger'))
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/general'))
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/floating'))
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/dialog'))
 
     self.__visible = true
 

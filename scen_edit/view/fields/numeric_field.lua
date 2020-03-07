@@ -1,5 +1,5 @@
 --- NumericField module.
-SB.Include(SB_VIEW_FIELDS_DIR .. "string_field.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/string_field.lua'))
 
 --- NumericField class.
 -- @type NumericField
@@ -216,13 +216,13 @@ end
 
 local leftDisplay =
     Image:New {
-    file = Path.Join(SB_IMG_DIR, "left-numeric.png"),
+    file = Path.Join(SB.DIRS.IMG, "left-numeric.png"),
     parent = screen0,
     keepAspect = false
 }
 local rightDisplay =
     Image:New {
-    file = Path.Join(SB_IMG_DIR, "right-numeric.png"),
+    file = Path.Join(SB.DIRS.IMG, "right-numeric.png"),
     parent = screen0,
     keepAspect = false
 }

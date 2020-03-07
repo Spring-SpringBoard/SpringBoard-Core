@@ -1,4 +1,4 @@
-SB.Include(SB_MODEL_OBJECT_DIR .. 'object_bridge.lua')
+SB.Include(Path.Join(SB.DIRS.SRC, 'model/object/object_bridge.lua'))
 
 UnitBridge = ObjectBridge:extends{}
 UnitBridge.humanName                       = "Unit"

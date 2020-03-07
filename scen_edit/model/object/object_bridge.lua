@@ -1,13 +1,11 @@
 --- ObjectBridge module.
 
-SB_COMMAND_DIR = SB_DIR .. "command/"
-SB.Include(SB_COMMAND_DIR .. 'command.lua')
-SB.IncludeDir(SB_COMMAND_DIR)
+SB.Include(Path.Join(SB.DIRS.SRC, 'command/command.lua'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command'))
 
-SB_STATE_DIR = SB_DIR .. "state/"
-SB.Include(SB_STATE_DIR .. 'state_manager.lua')
-SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
-SB.IncludeDir(SB_STATE_DIR)
+SB.Include(Path.Join(SB.DIRS.SRC, 'state/state_manager.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'state/abstract_state.lua'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'state'))
 
 --- ObjectBridge class. Use to represent objects in the game world.
 -- It can use the s11n API to provide serialization support. Consult https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/libs/s11n for details.

@@ -1,8 +1,8 @@
 -- UNUSED (dnts is in texture_editor.lua)
 
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
-SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
-SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/map/material_browser.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/map/saved_brushes.lua'))
 
 DNTSEditor = Editor:extends{}
 
@@ -80,7 +80,7 @@ function DNTSEditor:init()
         y = 0,
         tooltip = "DNTS textures",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "paint-brush.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'paint-brush.png') }),
             TabbedPanelLabel({ caption = "DNTS" }),
         },
         OnClick = {

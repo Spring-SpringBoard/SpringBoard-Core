@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 HeightmapEditor = Editor:extends{}
 HeightmapEditor:Register({
@@ -6,7 +6,7 @@ HeightmapEditor:Register({
     tab = "Map",
     caption = "Terrain",
     tooltip = "Edit heightmap",
-    image = SB_IMG_DIR .. "peaks.png",
+    image = Path.Join(SB.DIRS.IMG, 'peaks.png'),
     order = 0,
 })
 
@@ -43,7 +43,7 @@ function HeightmapEditor:init()
         y = 0,
         tooltip = "Left Click to add height, Right Click to remove height",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "up-card.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'up-card.png') }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -58,7 +58,7 @@ function HeightmapEditor:init()
         y = 0,
         tooltip = "Left Click to set height. Right click to sample height",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-set.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'terrain-set.png') }),
             TabbedPanelLabel({ caption = "Set" }),
         },
         OnClick = {
@@ -73,7 +73,7 @@ function HeightmapEditor:init()
         y = 0,
         tooltip = "Click to smooth terrain",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "terrain-smooth.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'terrain-smooth.png') }),
             TabbedPanelLabel({ caption = "Smooth" }),
         },
         OnClick = {

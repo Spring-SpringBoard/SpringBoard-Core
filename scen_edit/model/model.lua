@@ -1,8 +1,6 @@
 Model = LCS.class{}
-SB_MODEL_DIR = Path.Join(SB_DIR, "model/")
-SB.IncludeDir(SB_MODEL_DIR)
-SB_MODEL_OBJECT_DIR = Path.Join(SB_MODEL_DIR, "object/")
-SB.IncludeDir(SB_MODEL_OBJECT_DIR)
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'model'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'model/object'))
 
 function Model:init()
     self.areaManager = AreaManager()

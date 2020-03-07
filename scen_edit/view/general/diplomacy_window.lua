@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "editor.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 DiplomacyWindow = Editor:extends{}
 DiplomacyWindow:Register({
@@ -6,7 +6,7 @@ DiplomacyWindow:Register({
     tab = "Misc",
     caption = "Alliances",
     tooltip = "Edit alliances",
-    image = SB_IMG_DIR .. "shaking-hands.png",
+    image = Path.Join(SB.DIRS.IMG, 'shaking-hands.png'),
     order = 2,
 })
 

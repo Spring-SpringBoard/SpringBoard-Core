@@ -5,7 +5,7 @@ function ShaderPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Map shader editor",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "peaks.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'peaks.png') }),
             TabbedPanelLabel({ caption = "Map" }),
         },
         OnClick = {
@@ -18,7 +18,7 @@ function ShaderPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "Unit shader editor",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "unit.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'unit.png') }),
             TabbedPanelLabel({ caption = "Unit"}),
         },
         OnClick = {
@@ -29,7 +29,7 @@ function ShaderPanel:init()
     self.control:AddChild(TabbedPanelButton({
         tooltip = "UI shader editor",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "computing.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'computing.png') }),
             TabbedPanelLabel({ caption = "UI"}),
         },
         OnClick = {

@@ -1,5 +1,5 @@
 --- ArrayField module.
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
 
 --- ArrayField class.
 -- @type ArrayField
@@ -118,7 +118,7 @@ end
 
 -- Popup window that allows modifying the array
 
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 ArrayFieldWindow = Editor:extends{}
 
@@ -136,7 +136,7 @@ function ArrayFieldWindow:init(opts)
             y = 0,
             tooltip = "Add",
             children = {
-                TabbedPanelImage({ file = SB_IMG_DIR .. "plus.png" }),
+                TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'plus.png') }),
                 TabbedPanelLabel({ caption = "Add" }),
             },
             OnClick = {
@@ -219,7 +219,7 @@ function ArrayFieldWindow:__AddElement(value, noCallback)
             classname = "negative_button",
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
+                    file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                     height = "100%",
                     width = "100%",
                 },

@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 ReloadAction = Action:extends{}
 
@@ -6,7 +6,7 @@ ReloadAction:Register({
     name = "sb_reload",
     tooltip = "Reload meta model",
     toolbar_order = 201,
-    image = SB_IMG_DIR .. "recycle.png"
+    image = Path.Join(SB.DIRS.IMG, 'recycle.png')
 })
 
 function ReloadAction:execute()

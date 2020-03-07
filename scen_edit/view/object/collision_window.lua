@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 CollisionView = Editor:extends{}
 CollisionView:Register({
@@ -6,7 +6,7 @@ CollisionView:Register({
     tab = "Objects",
     caption = "Collision",
     tooltip = "Edit collision volumes",
-    image = SB_IMG_DIR .. "boulder-dash.png",
+    image = Path.Join(SB.DIRS.IMG, 'boulder-dash.png'),
     no_serialize = true,
 })
 

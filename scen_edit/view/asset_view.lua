@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "grid_view.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/grid_view.lua'))
 
 AssetView = GridView:extends{}
 

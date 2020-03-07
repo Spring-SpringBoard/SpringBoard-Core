@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 ObjectDefsView = Editor:extends{}
 
@@ -10,7 +10,7 @@ function ObjectDefsView:init()
         y = 0,
         tooltip = "Add or remove objects by painting the map",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "object-brush-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'object-brush-add.png') }),
             TabbedPanelLabel({ caption = "Brush" }),
         },
         OnClick = {
@@ -25,7 +25,7 @@ function ObjectDefsView:init()
         y = 0,
         tooltip = "Add objects by clicking on the map",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "object-set-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'object-set-add.png') }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -228,7 +228,7 @@ UnitDefsView:Register({
     tab = "Objects",
     caption = "Units",
     tooltip = "Add units",
-    image = SB_IMG_DIR .. "meeple.png",
+    image = Path.Join(SB.DIRS.IMG, 'meeple.png'),
     order = 0,
 })
 
@@ -331,7 +331,7 @@ FeatureDefsView:Register({
     tab = "Objects",
     caption = "Features",
     tooltip = "Add features",
-    image = SB_IMG_DIR .. "beech.png",
+    image = Path.Join(SB.DIRS.IMG, 'beech.png'),
     order = 1,
 })
 

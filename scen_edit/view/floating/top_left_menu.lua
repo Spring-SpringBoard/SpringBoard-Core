@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "dialog/dialog.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/dialog/dialog.lua'))
 
 TopLeftMenu = LCS.class{}
 
@@ -136,12 +136,12 @@ function TopLeftMenu:UploadLog()
     self.btnUpload:SetCaption('Uploading...')
     self.btnUpload:SetEnabled(false)
     WG.Connector.Send('UploadLog', {
-        path = SB_ROOT_ABS
+        path = SB.DIRS.ROOT_ABS
     })
 end
 
 function TopLeftMenu:AddOpenDataDirButton()
-    if not WG.Connector or not SB_ROOT_ABS then
+    if not WG.Connector or not SB.DIRS.ROOT_ABS then
         return
     end
 
@@ -151,7 +151,7 @@ function TopLeftMenu:AddOpenDataDirButton()
         OnClick = {
             function()
                 WG.Connector.Send('OpenFile', {
-                    path = SB_ROOT_ABS
+                    path = SB.DIRS.ROOT_ABS
                 })
             end
         }
@@ -171,7 +171,7 @@ function TopLeftMenu:AddProjectMenu()
         caption = "",
     }
     table.insert(self.children, self.lblProject)
-    if WG.Connector and SB_ROOT_ABS then
+    if WG.Connector and SB.DIRS.ROOT_ABS then
         self.btnOpenProject = self:AddTopRightButton({
             caption = "Open project",
             tooltip = 'Open current project',
@@ -181,7 +181,7 @@ function TopLeftMenu:AddProjectMenu()
                         return
                     end
                     WG.Connector.Send('OpenFile', {
-                        path = Path.Join(SB_WRITE_PATH, self.projectDir)
+                        path = Path.Join(SB.DIRS.WRITE_PATH, self.projectDir)
                     })
                 end
             },

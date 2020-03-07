@@ -1,11 +1,11 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 CutAction = Action:extends{}
 
 CutAction:Register({
     name = "sb_cut",
     tooltip = "Cut",
-    image = SB_IMG_DIR .. "scissors-rotated.png",
+    image = Path.Join(SB.DIRS.IMG, 'scissors-rotated.png'),
     toolbar_order = 103,
     hotkey = {
         key = KEYSYMS.X,

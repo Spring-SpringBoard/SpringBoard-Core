@@ -1,5 +1,6 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/asset_field.lua'))
+
 --- MaterialField module.
-SB.Include(SB_VIEW_FIELDS_DIR .. "asset_field.lua")
 
 --- MaterialField class.
 -- @type MaterialField

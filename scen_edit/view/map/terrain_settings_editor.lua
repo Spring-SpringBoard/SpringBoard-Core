@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 TerrainSettingsEditor = Editor:extends{}
 TerrainSettingsEditor:Register({
@@ -6,7 +6,7 @@ TerrainSettingsEditor:Register({
     tab = "Map",
     caption = "Settings",
     tooltip = "Edit map settings",
-    image = SB_IMG_DIR .. "globe.png",
+    image = Path.Join(SB.DIRS.IMG, 'globe.png'),
     order = 5,
 })
 
@@ -127,7 +127,7 @@ function TerrainSettingsEditor:_AddMapCompileControls()
                     return
                 end
 
-                self.compileFolderPath = Path.Join(SB_WRITE_PATH, SB.project.path)
+                self.compileFolderPath = Path.Join(SB.DIRS.WRITE_PATH, SB.project.path)
 
                 local cmd = CompileMapCommand({
                     heightPath = heightPath,
@@ -153,14 +153,14 @@ function TerrainSettingsEditor:_AddMapCompileControls()
         title = "Height:",
         tooltip = "Path to height image. " .. tostring(exportTooltip),
         width = 300,
-        value = SB_PROJECTS_DIR,
+        value = SB.DIRS.PROJECTS,
     }))
     self:AddField(AssetField({
         name = "diffusePath",
         title = "Diffuse:",
         tooltip = "Path to diffuse image. " .. tostring(exportTooltip),
         width = 300,
-        value = SB_PROJECTS_DIR,
+        value = SB.DIRS.PROJECTS,
     }))
 
     self:AddField(Field({
@@ -295,7 +295,7 @@ function TerrainSettingsEditor:OnFieldChange(name, value)
     end
 end
 
-SB.Include(Path.Join(SB_VIEW_DIR, "new_texture_dialog.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/new_texture_dialog.lua'))
 NewEngineTextureDialog = NewTextureDialog:extends{}
 
 function NewEngineTextureDialog:ConfirmDialog()

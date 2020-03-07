@@ -1,5 +1,6 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/choice_field.lua'))
+
 --- TeamField module.
-SB.Include(SB_VIEW_FIELDS_DIR .. "choice_field.lua")
 
 --- TeamField class.
 -- @type TeamField

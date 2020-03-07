@@ -8,17 +8,16 @@ else
 	LIBS_DIR = GG.SB_LIBS_DIR
 	SB = GG.SB
 end
-LUAUI_DIR = "LuaUI/"
 
-SB_DIR = "scen_edit/"
-SB_COMMAND_DIR = SB_DIR .. "command/"
-SB_IMG_DIR = LUAUI_DIR .. "images/scenedit/"
-
-SB_ROOT = "springboard/"
-SB_PROJECTS_DIR = SB_ROOT .. "projects/"
-SB_ASSETS_DIR = SB_ROOT .. "assets/"
-SB_EXTS_DIR = SB_ROOT .. "exts/"
-SB_EXPORTS_DIR = SB_ROOT .. "exports/"
+SB.DIRS = {
+    IMG      = 'LuaUI/images/scenedit/',
+    SRC      = 'scen_edit/',
+    ROOT     = 'springboard/',
+    PROJECTS = 'springboard/projects/',
+    ASSETS   = 'springboard/assets/',
+    EXTS     = 'springboard/exts/',
+    EXPORTS  = 'springboard/exports/'
+}
 
 -- TODO: maybe some of these _sl_ modopts should be parsed into SL_ instead of SB_
 -- that said, having both SB_ and SL_ would be error prone
@@ -29,11 +28,11 @@ if writePath then
     if writePath:sub(-1) ~= '/' then
         writePath = writePath .. '/'
     end
-    SB_WRITE_PATH = writePath
-    SB_ROOT_ABS = SB_WRITE_PATH .. "springboard/"
-    SB_PROJECTS_ABS_DIR = SB_ROOT_ABS .. "projects/"
-    SB_ASSETS_ABS_DIR = SB_ROOT_ABS .. "assets/"
-    SB_EXTS_ABS_DIR = SB_ROOT_ABS .. "exts/"
+    SB.DIRS.WRITE_PATH = writePath
+    SB.DIRS.ROOT_ABS = SB.DIRS.WRITE_PATH .. "springboard/"
+    SB.DIRS.PROJECTS_ABS = SB.DIRS.ROOT_ABS .. "projects/"
+    SB.DIRS.ASSETS_ABS = SB.DIRS.ROOT_ABS .. "assets/"
+    SB.DIRS.EXTS_ABS = SB.DIRS.ROOT_ABS .. "exts/"
 end
 SB_LAUNCHER_VERSION = modOpts._sl_launcher_version
 

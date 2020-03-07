@@ -1,6 +1,6 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
-SB.Include(Path.Join(SB_VIEW_MAP_DIR, "material_browser.lua"))
-SB.Include(Path.Join(SB_VIEW_MAP_DIR, "saved_brushes.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/map/material_browser.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/map/saved_brushes.lua'))
 
 TextureEditor = Editor:extends{}
 TextureEditor:Register({
@@ -8,7 +8,7 @@ TextureEditor:Register({
     tab = "Map",
     caption = "Texture",
     tooltip = "Edit textures",
-    image = SB_IMG_DIR .. "palette.png",
+    image = Path.Join(SB.DIRS.IMG, 'palette.png'),
     order = 1,
 })
 
@@ -142,7 +142,7 @@ function TextureEditor:init()
         y = 0,
         tooltip = "Paint the terrain",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "large-paint-brush.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
             TabbedPanelLabel({ caption = "Paint" }),
         },
         OnClick = {
@@ -159,7 +159,7 @@ function TextureEditor:init()
         y = 0,
         tooltip = "Apply a filter",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "filter-brush.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'filter-brush.png') }),
             TabbedPanelLabel({ caption = "Filter" }),
         },
         OnClick = {
@@ -179,7 +179,7 @@ function TextureEditor:init()
         y = 0,
         tooltip = "DNTS textures",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "paint-brush.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'paint-brush.png') }),
             TabbedPanelLabel({ caption = "DNTS" }),
         },
         OnClick = {
@@ -213,7 +213,7 @@ function TextureEditor:init()
         y = 0,
         tooltip = "Make the terrain transparent",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "large-paint-brush.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
             TabbedPanelLabel({ caption = "Void" }),
         },
         OnClick = {
@@ -233,7 +233,7 @@ function TextureEditor:init()
         y = 0,
         tooltip = "Draw height",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "large-paint-brush.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
             TabbedPanelLabel({ caption = "Height" }),
         },
         OnClick = {

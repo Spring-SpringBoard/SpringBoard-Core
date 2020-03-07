@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_FIELDS_DIR, "asset_picker_window.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/asset_picker_window.lua'))
 
 MaterialPickerWindow = AssetPickerWindow:extends{}
 

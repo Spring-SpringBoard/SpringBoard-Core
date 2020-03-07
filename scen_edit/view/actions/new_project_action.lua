@@ -1,11 +1,11 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 NewProjectAction = Action:extends{}
 
 NewProjectAction:Register({
     name = "sb_new_project",
     tooltip = "New project",
-    image = SB_IMG_DIR .. "file.png",
+    image = Path.Join(SB.DIRS.IMG, 'file.png'),
     toolbar_order = 1,
     hotkey = {
         key = KEYSYMS.N,

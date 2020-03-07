@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_MODEL_DIR, "trigger_manager.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'model/trigger_manager.lua'))
 
 ----------------------------------------------------------
 -- Widget callback commands

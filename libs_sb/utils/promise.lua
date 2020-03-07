@@ -163,6 +163,7 @@ if not lu then
     return
 end
 
+-- luacheck:ignore
 function testImmediateResolving()
     local promise = Promise(function(resolve, reject)
         resolve(42)

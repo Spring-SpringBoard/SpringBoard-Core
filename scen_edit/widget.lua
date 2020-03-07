@@ -27,18 +27,18 @@ local function CheckSpringBoardDir()
     -- Make the initial SB directory tree and
     -- add a README.txt file if it doesn't exist.
     -- Also prints out the absolute directory path.
-    if not VFS.FileExists(SB_ROOT, VFS.RAW) then
+    if not VFS.FileExists(SB.DIRS.ROOT, VFS.RAW) then
         Log.Notice("Creating initial SpringBoard directory")
-        Spring.CreateDir(SB_ROOT)
+        Spring.CreateDir(SB.DIRS.ROOT)
     end
-    local defaultDirs = { SB_PROJECTS_DIR, SB_ASSETS_DIR, SB_EXTS_DIR, SB_EXPORTS_DIR }
+    local defaultDirs = { SB.DIRS.PROJECTS, SB.DIRS.ASSETS, SB.DIRS.EXTS, SB.DIRS.EXPORTS }
     for _, dir in ipairs(defaultDirs) do
         if not VFS.FileExists(dir, VFS.RAW) then
             Spring.CreateDir(dir)
         end
     end
 
-    local readmePath = Path.Join(SB_ROOT, 'README.txt')
+    local readmePath = Path.Join(SB.DIRS.ROOT, 'README.txt')
     if not VFS.FileExists(readmePath) then
         -- TODO: Maybe we should update the file if there's a change.
         -- Don't want to do it every time as it might be slow and annoying
@@ -63,7 +63,7 @@ local RELOAD_GADGETS = true
 function widget:Initialize()
     VFS.Include("scen_edit/include.lua")
 
-    Log.Notice('SpringBoard directory path at: ' .. tostring(SB_ROOT_ABS))
+    Log.Notice('SpringBoard directory path at: ' .. tostring(SB.DIRS.ROOT_ABS))
 
     -- we can't have handler=true because then RegisterGlobal doesn't work
     -- so we expose handler API to our widgetHandler

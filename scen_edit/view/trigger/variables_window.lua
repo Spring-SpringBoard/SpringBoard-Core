@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 VariablesWindow = Editor:extends{}
 VariablesWindow:Register({
@@ -6,7 +6,7 @@ VariablesWindow:Register({
     tab = "Logic",
     caption = "Variables",
     tooltip = "Edit variables",
-    image = SB_IMG_DIR .. "omega.png",
+    image = Path.Join(SB.DIRS.IMG, 'omega.png'),
     order = 2,
 })
 
@@ -18,7 +18,7 @@ function VariablesWindow:init()
         y = 0,
         tooltip = "Add variable",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "variable-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'variable-add.png') }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -129,7 +129,7 @@ function VariablesWindow:Populate()
             classname = "negative_button",
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
+                    file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                     height = "100%",
                     width = "100%",
                 },

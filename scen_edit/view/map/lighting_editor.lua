@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 LightingEditor = Editor:extends{}
 LightingEditor:Register({
@@ -6,7 +6,7 @@ LightingEditor:Register({
     tab = "Env",
     caption = "Lighting",
     tooltip = "Edit lighting",
-    image = SB_IMG_DIR .. "sunbeams.png",
+    image = Path.Join(SB.DIRS.IMG, 'sunbeams.png'),
     order = 0,
 })
 

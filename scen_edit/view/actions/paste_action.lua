@@ -1,11 +1,11 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 PasteAction = Action:extends{}
 
 PasteAction:Register({
     name = "sb_paste",
     tooltip = "Paste",
-    image = SB_IMG_DIR .. "stabbed-note.png",
+    image = Path.Join(SB.DIRS.IMG, 'stabbed-note.png'),
     toolbar_order = 103,
     hotkey = {
         key = KEYSYMS.V,

@@ -1,7 +1,5 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
-
-SB_VIEW_TRIGGER_FIELDS_DIR = Path.Join(SB_VIEW_TRIGGER_DIR, "fields/")
-SB.IncludeDir(SB_VIEW_TRIGGER_FIELDS_DIR)
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/trigger/fields'))
 
 TriggerWindow = Editor:extends{}
 
@@ -114,9 +112,9 @@ function TriggerWindow:_AddSection(opts)
 
     local imgFile
     if isCollapsed then
-        imgFile = SB_IMG_DIR .. "expand.png"
+        imgFile = Path.Join(SB.DIRS.IMG, 'expand.png')
     else
-        imgFile = SB_IMG_DIR .. "collapse.png"
+        imgFile = Path.Join(SB.DIRS.IMG, 'collapse.png')
     end
     local imgCollapsedState = Image:New {
         parent = headerPanel,
@@ -192,7 +190,7 @@ function TriggerWindow:Populate()
                     classname = "negative_button",
                     children = {
                         Image:New {
-                            file = SB_IMG_DIR .. "cancel.png",
+                            file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                             height = "100%",
                             width = "100%",
                         },
@@ -221,9 +219,9 @@ function TriggerWindow:Populate()
 
                 local imgFile
                 if self.openedConditionNodes[i] then
-                    imgFile = SB_IMG_DIR .. "collapse.png"
+                    imgFile = Path.Join(SB.DIRS.IMG, 'collapse.png')
                 else
-                    imgFile = SB_IMG_DIR .. "expand.png"
+                    imgFile = Path.Join(SB.DIRS.IMG, 'expand.png')
                 end
                 local btnOpenSubNodes = Button:New {
                     caption = '',
@@ -266,7 +264,7 @@ function TriggerWindow:Populate()
                     classname = "negative_button",
                     children = {
                         Image:New {
-                            file = SB_IMG_DIR .. "cancel.png",
+                            file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                             height = "100%",
                             width = "100%",
                         },
@@ -299,9 +297,9 @@ function TriggerWindow:Populate()
 
                 local imgFile
                 if self.openedActionNodes[i] then
-                    imgFile = SB_IMG_DIR .. "collapse.png"
+                    imgFile = Path.Join(SB.DIRS.IMG, 'collapse.png')
                 else
-                    imgFile = SB_IMG_DIR .. "expand.png"
+                    imgFile = Path.Join(SB.DIRS.IMG, 'expand.png')
                 end
                 local btnOpenSubNodes = Button:New {
                     caption = '',
@@ -344,7 +342,7 @@ function TriggerWindow:Populate()
                     classname = "negative_button",
                     children = {
                         Image:New {
-                            file = SB_IMG_DIR .. "cancel.png",
+                            file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                             height = "100%",
                             width = "100%",
                         },

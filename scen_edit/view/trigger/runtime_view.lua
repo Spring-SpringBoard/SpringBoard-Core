@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 RuntimeWindow = Editor:extends{}
 -- TODO: Unnecessary check?
@@ -8,7 +8,7 @@ if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
         tab = "Logic",
         caption = "Runtime",
         tooltip = "See runtime triggers and variables",
-        image = SB_IMG_DIR .. "trigger-inspect.png",
+        image = Path.Join(SB.DIRS.IMG, 'trigger-inspect.png'),
         order = 4,
     })
 end

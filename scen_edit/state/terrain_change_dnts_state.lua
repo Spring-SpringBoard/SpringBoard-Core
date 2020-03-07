@@ -1,5 +1,6 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'model/texture_manager.lua'))
+
 TerrainChangeDNTSState = AbstractMapEditingState:extends{}
-SB.Include("scen_edit/model/texture_manager.lua")
 
 function TerrainChangeDNTSState:init(editorView)
     AbstractMapEditingState.init(self, editorView)

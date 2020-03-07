@@ -1,6 +1,7 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
+
 --- BooleanField module.
 
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 --- BooleanField class.
 -- @type BooleanField

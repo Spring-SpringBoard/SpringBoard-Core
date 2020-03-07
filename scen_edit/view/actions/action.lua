@@ -29,7 +29,7 @@ end
 -- SaveAction:Register({
 --     name = "myAction",
 --     tooltip = "Do something",
---     image = SB_IMG_DIR .. "my_icon.png",
+--     image = Path.Join(SB.DIRS.IMG, 'my_icon.png'),
 --     toolbar_order = 42,
 -- })
 function Action:Register(opts)

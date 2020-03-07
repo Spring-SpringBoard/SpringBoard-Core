@@ -1,7 +1,7 @@
-SB.Include(Path.Join(SB_VIEW_DIALOG_DIR, "file_dialog.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/dialog/file_dialog.lua'))
 
 SaveProjectDialog = FileDialog:extends {
-    dir = SB_PROJECTS_DIR,
+    dir = SB.DIRS.PROJECTS,
     caption = "Save project"
 }
 

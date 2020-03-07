@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 MetalEditor = Editor:extends{}
 MetalEditor:Register({
@@ -6,7 +6,7 @@ MetalEditor:Register({
     tab = "Map",
     caption = "Metal",
     tooltip = "Edit metal map",
-    image = SB_IMG_DIR .. "minerals.png",
+    image = Path.Join(SB.DIRS.IMG, 'minerals.png'),
     order = 3,
 })
 
@@ -42,7 +42,7 @@ function MetalEditor:init()
         y = 0,
         tooltip = "Left Click to set metal. Right click to remove it.",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "metal-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'metal-add.png') }),
             TabbedPanelLabel({ caption = "Set" }),
         },
         OnClick = {

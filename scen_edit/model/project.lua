@@ -100,7 +100,7 @@ function Project.GenerateNamePath(name)
     if String.Ends(name, ".sdd") then
         name = name:sub(1, #name - #(".sdd"))
     end
-    local path = Path.Join(SB_PROJECTS_DIR, name .. ".sdd")
+    local path = Path.Join(SB.DIRS.PROJECTS, name .. ".sdd")
 
     return name, path
 end

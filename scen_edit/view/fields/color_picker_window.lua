@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 ColorPickerWindow = Editor:extends{}
 
@@ -14,21 +14,21 @@ function ColorPickerWindow:init(opts)
 
     local hsvSliders = {
         {
-            background = SB_IMG_DIR .. "color_picker/h_grad.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/h_grad.png'),
             max        = 360,
         },
         {
-            background = SB_IMG_DIR .. "color_picker/ticks.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/ticks.png'),
             max        = 100,
         },
         {
-            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/bw_grad.png'),
             max        = 100,
         },
     }
     if self.format == 'rgba' then
         table.insert(hsvSliders, {
-            background = SB_IMG_DIR .. "color_picker/ticks.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/ticks.png'),
             max        = 100,
         })
     end
@@ -53,24 +53,24 @@ function ColorPickerWindow:init(opts)
 
     local rgbSliders = {
         {
-            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/bw_grad.png'),
             color      = {1, 0, 0, 1},
             max        = 256,
         },
         {
-            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/bw_grad.png'),
             color      = {0, 1, 0, 1},
             max        = 256,
         },
         {
-            background = SB_IMG_DIR .. "color_picker/bw_grad.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/bw_grad.png'),
             color      = {0, 0, 1, 1},
             max        = 256,
         },
     }
     if self.format == 'rgba' then
         table.insert(rgbSliders, {
-            background = SB_IMG_DIR .. "color_picker/ticks.png",
+            background = Path.Join(SB.DIRS.IMG, 'color_picker/ticks.png'),
             max        = 100,
         })
     end
@@ -168,7 +168,7 @@ function hsv2rgb(value)
     return {r, g, b, value[4]}
 end
 
--- SB.Include(SB_VIEW_DIR .. "color_picker_window.lua")
+-- SB.Include(Path.Join(SB.DIRS.SRC, 'view/color_picker_window.lua'))
 -- not the best naming, but this component is a specific implementation/listener
 -- for the ColorPickerWindow used to set the color field's value
 ColorFieldPickerWindow = ColorPickerWindow:extends{}
@@ -197,7 +197,7 @@ function ColorFieldPickerWindow:OnEndChange(name)
 end
 
 
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
 
 ColorPickerField = Field:extends{}
 
@@ -274,7 +274,7 @@ function ColorPickerField:init(field)
         height      = self.height - 10,
         width       = self.height - 10,
         keepAspect  = false,
-        file        = SB_IMG_DIR .. "color_picker/texture.png",
+        file        = Path.Join(SB.DIRS.IMG, 'color_picker/texture.png'),
         color       = {1, 1, 1, 1},
     }
     local bkg = Image:New {
@@ -284,7 +284,7 @@ function ColorPickerField:init(field)
         height      = self.height - 10,
         width       = self.height - 10,
         keepAspect  = false,
-        file        = SB_IMG_DIR .. "color_picker/bkg_big.png",
+        file        = Path.Join(SB.DIRS.IMG, 'color_picker/bkg_big.png'),
         color       = {1, 1, 1, 1},
     }
     self.components = { self.imValue, bkg }
@@ -296,7 +296,7 @@ end
 function ColorPickerField:AddColorImage(tbl)
     return Image:New(Table.Merge({
         parent    = self.window,
-        file      = SB_IMG_DIR .. "color_picker/texture.png",
+        file      = Path.Join(SB.DIRS.IMG, 'color_picker/texture.png'),
         color     = {1, 1, 1, 1},
     }, tbl))
 end
@@ -305,7 +305,7 @@ function ColorPickerField:AddColorTrackbar(tbl)
     return Trackbar:New(Table.Merge({
         parent       = self.window,
         color        = tbl.color,
-        ThumbImage   = SB_IMG_DIR .. "color_picker/trackbar_thumb.png",
+        ThumbImage   = Path.Join(SB.DIRS.IMG, 'color_picker/trackbar_thumb.png'),
         children = {
             Image:New {
                 color       = tbl.color,

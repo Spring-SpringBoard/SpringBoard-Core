@@ -6,8 +6,8 @@ end
 
 function AssetsManager:loadAll()
     self.assetsFolders = {}
-    Log.Notice("Scanning asset dirs at: " .. SB_ASSETS_DIR .. "...")
-    for _, subDir in ipairs(Path.SubDirs(SB_ASSETS_DIR)) do
+    Log.Notice("Scanning asset dirs at: " .. SB.DIRS.ASSETS .. "...")
+    for _, subDir in ipairs(Path.SubDirs(SB.DIRS.ASSETS)) do
         local name = Path.ExtractFileName(subDir)
         table.insert(self.assetsFolders, {
             path = subDir,
@@ -36,14 +36,14 @@ function AssetsManager:ToSpringPath(rootDir, assetPath)
         assetRemaining = assetPath:sub(fsplit+2)
     end
 
-    local path = Path.Join(SB_ASSETS_DIR, assetDir, rootDir, assetRemaining)
+    local path = Path.Join(SB.DIRS.ASSETS, assetDir, rootDir, assetRemaining)
     Log.Debug("[assets_manager] :ToSpringPath()", rootDir, assetPath)
     return path
 end
 
 function AssetsManager:ToAssetPath(rootDir, springPath)
     Log.Debug("[assets_manager] :ToAssetPath()", rootDir, springPath)
-    local path = springPath:sub(#SB_ASSETS_DIR + 1)
+    local path = springPath:sub(#SB.DIRS.ASSETS + 1)
     local fsplit = path:find("/")
     if not fsplit then
         Log.Debug("[assets_manager] :ToAssetPath() return \"\"")

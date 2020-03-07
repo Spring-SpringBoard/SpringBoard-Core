@@ -1,5 +1,6 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
+
 --- StringField module.
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 --- StringField class.
 -- @type StringField

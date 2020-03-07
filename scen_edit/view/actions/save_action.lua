@@ -1,11 +1,11 @@
-SB.Include(SB_VIEW_ACTIONS_DIR .. "save_as_action.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/save_as_action.lua'))
 
 SaveProjectAction = SaveProjectAsAction:extends{}
 
 SaveProjectAction:Register({
     name = "sb_save_project",
     tooltip = "Save project",
-    image = SB_IMG_DIR .. "save.png",
+    image = Path.Join(SB.DIRS.IMG, 'save.png'),
     toolbar_order = 4,
     hotkey = {
         key = KEYSYMS.S,

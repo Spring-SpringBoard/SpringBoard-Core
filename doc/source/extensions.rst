@@ -19,7 +19,7 @@ At the top of the file, we will include the *Editor* class and make a new *Examp
 
 .. code-block:: lua
 
-    SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
     ExampleEditor = Editor:extends{}
 
@@ -32,7 +32,7 @@ We will then register the newly defined class to make it accessible in the Sprin
         tab = "Example",
         caption = "Example",
         tooltip = "Example editor",
-        image = SB_IMG_DIR .. "globe.png",
+        image = Path.Join(SB.DIRS.IMG, 'globe.png'),
     })
 
 Then in the init method, we will define the fields. We create two *NumericFields*: *example* and *undoable*, and we add them to the *Editor*.

@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 AreasWindow = Editor:extends{}
 AreasWindow:Register({
@@ -6,7 +6,7 @@ AreasWindow:Register({
     tab = "Logic",
     caption = "Area",
     tooltip = "Edit areas",
-    image = SB_IMG_DIR .. "bolivia.png",
+    image = Path.Join(SB.DIRS.IMG, 'bolivia.png'),
     order = 0,
 })
 
@@ -19,7 +19,7 @@ function AreasWindow:init()
         y = 0,
         tooltip = "Add area",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "area-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'area-add.png') }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -84,7 +84,7 @@ function AreasWindow:Populate()
             tooltip = "Center camera on area",
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "position-marker.png",
+                    file = Path.Join(SB.DIRS.IMG, 'position-marker.png'),
                     height = SB.conf.B_HEIGHT,
                     width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
@@ -114,7 +114,7 @@ function AreasWindow:Populate()
             classname = "negative_button",
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
+                    file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                     height = "100%",
                     width = "100%",
                 },

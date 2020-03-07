@@ -1,6 +1,7 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'state/select_object_type_state.lua'))
+
 --- ObjectTypeField module.
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
-SB.Include(SB_STATE_DIR .. "select_object_type_state.lua")
 
 --- ObjectTypeField class. Used to represent object types (UnitTypeField and FeatureTypeField).
 -- @type ObjectTypeField

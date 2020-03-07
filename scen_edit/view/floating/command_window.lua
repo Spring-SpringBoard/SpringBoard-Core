@@ -16,7 +16,7 @@ function CommandWindow:init(parent)
             },
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "anticlockwise-rotation.png",
+                    file = Path.Join(SB.DIRS.IMG, 'anticlockwise-rotation.png'),
                     height = 20,
                     width = 20,
                     margin = {0, 0, 0, 0},
@@ -38,7 +38,7 @@ function CommandWindow:init(parent)
             },
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "clockwise-rotation.png",
+                    file = Path.Join(SB.DIRS.IMG, 'clockwise-rotation.png'),
                     height = 20,
                     width = 20,
                     margin = {0, 0, 0, 0},
@@ -60,7 +60,7 @@ function CommandWindow:init(parent)
             },
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "cancel.png",
+                    file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                     height = 20,
                     width = 20,
                     margin = {0, 0, 0, 0},

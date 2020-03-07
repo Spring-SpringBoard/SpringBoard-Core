@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_FIELDS_DIR .. "choice_field.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/choice_field.lua'))
 
 TriggerField = ChoiceField:extends{}
 

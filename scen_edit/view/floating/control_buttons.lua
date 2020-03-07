@@ -46,7 +46,7 @@ function ControlButtons:init(parent)
         },
         children = {
             Image:New {
-                file = SB_IMG_DIR .. "trigger-inspect.png",
+                file = Path.Join(SB.DIRS.IMG, 'trigger-inspect.png'),
                 height = SB.conf.B_HEIGHT - 2 - 3,
                 width = SB.conf.B_HEIGHT - 2 - 3,
                 margin = {0, 0, 0, 0},
@@ -140,7 +140,7 @@ function ControlButtons:UpdateStartStopButton()
         self.btnStartStop.tooltip = "Start scenario"
         self.btnStartStop:AddChild(
             Image:New {
-                file = SB_IMG_DIR .. "play-button.png",
+                file = Path.Join(SB.DIRS.IMG, 'play-button.png'),
                 height = SB.conf.B_HEIGHT - 2,
                 width = SB.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},
@@ -150,7 +150,7 @@ function ControlButtons:UpdateStartStopButton()
         self.btnStartStop.tooltip = "Stop scenario"
         self.btnStartStop:AddChild(
             Image:New {
-                file = SB_IMG_DIR .. "stop-button.png",
+                file = Path.Join(SB.DIRS.IMG, 'stop-button.png'),
                 height = SB.conf.B_HEIGHT - 2,
                 width = SB.conf.B_HEIGHT - 2,
                 margin = {0, 0, 0, 0},

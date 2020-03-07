@@ -1,4 +1,8 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
+
+if ExampleEditor ~= nil then
+    ExampleEditor:Deregister()
+end
 
 ExampleEditor = Editor:extends{}
 ExampleEditor:Register({
@@ -7,7 +11,7 @@ ExampleEditor:Register({
     caption = "Example",
     tooltip = "Example editor",
     -- TODO: Fix image/path for extensions
-    image = SB_IMG_DIR .. "globe.png",
+    image = Path.Join(SB.DIRS.IMG, 'globe.png'),
 })
 
 function ExampleEditor:init()

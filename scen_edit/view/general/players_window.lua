@@ -1,4 +1,4 @@
-SB.Include(SB_VIEW_DIR .. "editor.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 PlayersWindow = Editor:extends{}
 PlayersWindow:Register({
@@ -6,7 +6,7 @@ PlayersWindow:Register({
     tab = "Misc",
     caption = "Teams",
     tooltip = "Edit teams",
-    image = SB_IMG_DIR .. "person.png",
+    image = Path.Join(SB.DIRS.IMG, 'person.png'),
     order = 1,
 })
 
@@ -29,7 +29,7 @@ function PlayersWindow:init()
         y = 0,
         tooltip = "Add team",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "team-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'team-add.png') }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -116,7 +116,7 @@ function PlayersWindow:Populate()
                 classname = "negative_button",
                 children = {
                     Image:New {
-                        file = SB_IMG_DIR .. "cancel.png",
+                        file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                         height = "100%",
                         width = "100%",
                     },

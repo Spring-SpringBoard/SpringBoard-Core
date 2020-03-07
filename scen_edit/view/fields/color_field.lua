@@ -1,5 +1,6 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
+
 --- ColorField module.
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 --- ColorField class.
 -- @type ColorField
@@ -55,7 +56,7 @@ function ColorField:init(field)
         right       = 0,
         bottom      = 0,
         keepAspect  = false,
-        file        = SB_IMG_DIR .. "color_picker/texture.png",
+        file        = Path.Join(SB.DIRS.IMG, 'color_picker/texture.png'),
         color       = self.value,
     }
     local bkg = Image:New {
@@ -65,7 +66,7 @@ function ColorField:init(field)
         right       = 0,
         bottom      = 0,
         keepAspect  = false,
-        file        = SB_IMG_DIR .. "color_picker/bkg_small.png",
+        file        = Path.Join(SB.DIRS.IMG, 'color_picker/bkg_small.png'),
         color       = {1, 1, 1, 1},
     }
     local imgWrapper = Control:New {

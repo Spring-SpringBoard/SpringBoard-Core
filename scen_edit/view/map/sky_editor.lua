@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 SkyEditor = Editor:extends{}
 SkyEditor:Register({
@@ -6,7 +6,7 @@ SkyEditor:Register({
     tab = "Env",
     caption = "Sky",
     tooltip = "Edit sky and fog",
-    image = SB_IMG_DIR .. "night-sky.png",
+    image = Path.Join(SB.DIRS.IMG, 'night-sky.png'),
     order = 1,
 })
 

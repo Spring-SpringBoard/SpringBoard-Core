@@ -1,4 +1,5 @@
-SB.Include("scen_edit/state/abstract_map_editing_state.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'state/abstract_map_editing_state.lua'))
+
 AbstractHeightmapEditingState = AbstractMapEditingState:extends{}
 
 function AbstractHeightmapEditingState:init(editorView)

@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 TriggersWindow = Editor:extends{}
 TriggersWindow:Register({
@@ -6,7 +6,7 @@ TriggersWindow:Register({
     tab = "Logic",
     caption = "Triggers",
     tooltip = "Edit triggers",
-    image = SB_IMG_DIR .. "cog.png",
+    image = Path.Join(SB.DIRS.IMG, 'cog.png'),
     order = 1,
 })
 
@@ -18,7 +18,7 @@ function TriggersWindow:init()
         y = 0,
         tooltip = "Add trigger",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "trigger-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'trigger-add.png') }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {
@@ -130,7 +130,7 @@ function TriggersWindow:Populate()
             tooltip = "Clone trigger",
             children = {
                 Image:New {
-                    file = SB_IMG_DIR .. "trigger-add.png",
+                    file = Path.Join(SB.DIRS.IMG, 'trigger-add.png'),
                     height = SB.conf.B_HEIGHT,
                     width = SB.conf.B_HEIGHT,
                     padding = {0, 0, 0, 0},
@@ -159,7 +159,7 @@ function TriggersWindow:Populate()
             children = {
                 Image:New {
                     tooltip = "Remove trigger",
-                    file = SB_IMG_DIR .. "cancel.png",
+                    file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                     height = "100%",
                     width = "100%",
                 },

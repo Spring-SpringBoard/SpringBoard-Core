@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 ObjectPropertyWindow = Editor:extends{}
 ObjectPropertyWindow:Register({
@@ -6,7 +6,7 @@ ObjectPropertyWindow:Register({
     tab = "Objects",
     caption = "Properties",
     tooltip = "Edit object properties",
-    image = SB_IMG_DIR .. "anatomy.png",
+    image = Path.Join(SB.DIRS.IMG, 'anatomy.png'),
     order = 2,
     no_serialize = true,
 })
@@ -493,7 +493,7 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
                     classname = "negative_button",
                     children = {
                         Image:New {
-                            file = SB_IMG_DIR .. "cancel.png",
+                            file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                             height = "100%",
                             width = "100%",
                         },

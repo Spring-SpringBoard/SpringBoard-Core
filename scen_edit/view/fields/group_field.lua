@@ -1,8 +1,9 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/fields/field.lua'))
+
 --- GroupField module
 
 --- GroupField class. Used to group multiple fields and display them in a single line.
 -- @type GroupField
-SB.Include(SB_VIEW_FIELDS_DIR .. "field.lua")
 
 GroupField = Field:extends{}
 local _GROUP_INDEX = 0

@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 GrassEditor = Editor:extends{}
 GrassEditor:Register({
@@ -6,7 +6,7 @@ GrassEditor:Register({
     tab = "Map",
     caption = "Grass",
     tooltip = "Edit grass",
-    image = SB_IMG_DIR .. "grass.png",
+    image = Path.Join(SB.DIRS.IMG, 'grass.png'),
     order = 4,
 })
 
@@ -42,7 +42,7 @@ function GrassEditor:init()
         y = 0,
         tooltip = "Left Click to add grass, Right Click to remove it.",
         children = {
-            TabbedPanelImage({ file = SB_IMG_DIR .. "grass-add.png" }),
+            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'grass-add.png') }),
             TabbedPanelLabel({ caption = "Add" }),
         },
         OnClick = {

@@ -1,5 +1,5 @@
---- StateManager module.
-SB_STATE_DIR = SB_DIR .. "state/"
+SB.Include(Path.Join(SB.DIRS.SRC, 'state/abstract_state.lua'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'state'))
 
 --- StateManager class.
 StateManager = LCS.class{}
@@ -56,9 +56,6 @@ end
 
 function StateManager:init()
     self.keyListeners = {}
-    SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
-    SB.Include(SB_STATE_DIR .. 'abstract_state.lua')
-    SB.IncludeDir(SB_STATE_DIR)
     self:SetState(DefaultState())
 end
 

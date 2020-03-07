@@ -1,9 +1,7 @@
-SB_MODEL_RUNTIME_DIR = SB_MODEL_DIR .. "runtime_model/"
-
 RuntimeModel = LCS.class{}
 
 function RuntimeModel:init()
-    SB.IncludeDir(SB_MODEL_RUNTIME_DIR)
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'model/runtime_model'))
     self.areaModels = {}
     self.lastFrameUnitIDs = {}
     self.fieldResolver = FieldResolver()

@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "editor.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 MapShadersEditor = Editor:extends{}
 MapShadersEditor:Register({
@@ -6,7 +6,7 @@ MapShadersEditor:Register({
     tab = "Map",
     caption = "Shaders",
     tooltip = "Edit map shaders",
-    image = SB_IMG_DIR .. "globe.png",
+    image = Path.Join(SB.DIRS.IMG, 'globe.png'),
     order = 5,
 })
 

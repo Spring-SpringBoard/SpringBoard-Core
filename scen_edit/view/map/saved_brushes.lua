@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_DIR, "grid_view.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/grid_view.lua'))
 
 SavedBrushes = GridView:extends{}
 
@@ -119,7 +119,7 @@ function SavedBrushes:_AddAddBrush()
                 children = {
                     Image:New {
                         x = 0, y = 0, right = 0, bottom = 15,
-                        file = Path.Join(SB_IMG_DIR, "plus.png"),
+                        file = Path.Join(SB.DIRS.IMG, "plus.png"),
                     },
                     Label:New {
                         x = 0, height = 10, right = 0, bottom = 0,
@@ -138,7 +138,7 @@ function SavedBrushes:_AddAddBrush()
             },
         }
     })
-    --local addBrush = self:AddItem("Add", Path.Join(SB_IMG_DIR, "add-plus-button.png"), "Add new brush")
+    --local addBrush = self:AddItem("Add", Path.Join(SB.DIRS.IMG, "add-plus-button.png"), "Add new brush")
     addBrush.__add_brush = true
     addBrush.__no_background = true
 end
@@ -155,7 +155,7 @@ function SavedBrushes:_MakeCloseButton(brushID)
         classname = "negative_button",
         children = {
             Image:New {
-                file = SB_IMG_DIR .. "cancel.png",
+                file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                 height = "100%",
                 width = "100%",
             },

@@ -1,12 +1,10 @@
 --- CommandManager module. Available globally as SB.commandManager.
 
-SB_COMMAND_DIR = Path.Join(SB_DIR, "command/")
-
-SB.Include(Path.Join(SB_COMMAND_DIR, 'command.lua'))
-SB.IncludeDir(SB_COMMAND_DIR)
-SB.IncludeDir(Path.Join(SB_COMMAND_DIR, "sync/"))
-SB.IncludeDir(Path.Join(SB_COMMAND_DIR, "project/"))
-SB.IncludeDir(Path.Join(SB_COMMAND_DIR, "textures/"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'command/command.lua'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command/sync'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command/project'))
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command/textures'))
 
 --- CommandManager class
 -- @type CommandManager

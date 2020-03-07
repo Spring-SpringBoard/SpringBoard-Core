@@ -1,4 +1,4 @@
-SB.Include(Path.Join(SB_VIEW_ACTIONS_DIR, "action.lua"))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
 
 -- NOTE: This currently filters based on def and additionally whether the object
 -- is in screen

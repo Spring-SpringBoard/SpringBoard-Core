@@ -1,4 +1,4 @@
-SB.Include(SB_STATE_DIR .. "abstract_state.lua")
+SB.Include(Path.Join(SB.DIRS.SRC, 'state/abstract_state.lua'))
 
 SelectObjectState = AbstractState:extends{}
 

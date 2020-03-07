@@ -1,8 +1,7 @@
 MetaModel = LCS.class{}
-SB_META_MODEL_DIR = SB_DIR .. "meta/"
 
 function MetaModel:init()
-    SB.IncludeDir(SB_META_MODEL_DIR)
+    SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'meta'))
 
     self.numericComparisonTypes = {"==", "~=", "<=", ">=", ">", "<"} -- maybe use more user friendly signs
     self.identityComparisonTypes = {"is", "is not"} -- maybe use more user friendly signs
