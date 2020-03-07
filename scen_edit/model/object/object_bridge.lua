@@ -8,7 +8,7 @@ SB.Include(Path.Join(SB.DIRS.SRC, 'state/abstract_state.lua'))
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'state'))
 
 --- ObjectBridge class. Use to represent objects in the game world.
--- It can use the s11n API to provide serialization support. Consult https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/libs/s11n for details.
+-- It can use the s11n API to provide serialization support. Consult https://github.com/gajop/s11n for details.
 -- @string humanName Human readable name.
 -- @bool NoHorizontalDrag If true, disables horizontal drag
 -- @tparam function ValidObject Function accepting objectID number. Returns true if objectID is valid.

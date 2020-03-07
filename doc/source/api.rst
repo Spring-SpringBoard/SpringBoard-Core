@@ -24,4 +24,4 @@ The Command API is split into three parts, the base `Command interface <./_stati
 Model
 -----
 
-The model API is given by the `ObjectBridge <./_static/modules/model.object.object_bridge.html>`_ interface. More detailed `s11n <https://github.com/Spring-SpringBoard/SpringBoard-Core/tree/master/libs/s11n>`_ serialization API is also included.
+The model API is given by the `ObjectBridge <./_static/modules/model.object.object_bridge.html>`_ interface. More detailed `s11n <https://github.com/gajop/s11n>`_ serialization API is also included.
