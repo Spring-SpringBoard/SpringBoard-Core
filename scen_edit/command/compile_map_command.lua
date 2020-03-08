@@ -9,10 +9,14 @@ end
 
 function CompileMapCommand:execute()
 	compileInProgress = Promise()
+	local metalAbsPath
+	if self.opts.metalPath ~= nil then
+		metalAbsPath = VFS.GetFileAbsolutePath(self.opts.metalPath)
+	end
 	WG.Connector.Send("CompileMap", {
 		heightPath = VFS.GetFileAbsolutePath(self.opts.heightPath),
 		diffusePath = VFS.GetFileAbsolutePath(self.opts.diffusePath),
-		metalPath = VFS.GetFileAbsolutePath(self.opts.metalPath),
+		metalPath = metalAbsPath,
 		outputPath = self.opts.outputPath,
 	})
 	return compileInProgress
