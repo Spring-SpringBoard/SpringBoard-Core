@@ -341,7 +341,7 @@ function SB.createNewPanel(opts)
     return TypePanel(opts)
 end
 
-local function executeOnError()
+local function executeOnError(err)
     Log.Error(debug.traceback(err))
 end
 
