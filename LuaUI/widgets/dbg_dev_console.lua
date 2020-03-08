@@ -203,7 +203,7 @@ function loadWindow()
 		width = widthStr,
 		height = heightStr,
 		tooltip = 'Show messages since the most recent luaui/luarules reload',
-		caption = "Current reload",
+		caption = "This session",
 		fontSize = btnFontSize,
 		classname = 'toggle_button',
 		checked = cfg.onlySinceLastReload,
@@ -610,17 +610,22 @@ function ReloadAllMessages()
 	RemoveAllMessages()
 	local buffer = Spring.GetConsoleBuffer(cfg.reloadLines)
 	if cfg.onlySinceLastReload then
-		local reloadCount = 0
+		local seenLuaUI = false
+		local seenLuaRules = false
 		for _, l in ipairs(buffer) do
-			if sfind(l.text, "LuaUI Entry Point") or sfind(l.text, "LuaRules Entry Point") then
-				reloadCount = reloadCount + 1
-				-- allow one for initial luaui load, and one for initial luarules load;
-				-- beyond that, on initial load, show only msgs since last reload; fails if we don't have enough buffer
-				if reloadCount > 2 then
+			if sfind(l.text, "LuaUI Entry Point") then
+				if seenLuaUI then
 					RemoveAllMessages()
 				end
+				seenLuaUI = true
+			elseif sfind(l.text, "LuaRules Entry Point") then
+				if seemLuaRules then
+					RemoveAllMessages()
+				end
+				seenLuaRules = true
 			elseif sfind(l.text, "%[ReloadOrRestart%]") then
-				reloadCount = 0
+				seenLuaUI = false
+				seenLuaRules = false
 				RemoveAllMessages()
 			end
 			widget:AddConsoleLine(l.text)
