@@ -64,7 +64,7 @@ function ExportDiffuseCommand:execute()
 
             -- TODO: Cleanup
             if SB.editors["terrainSettings"] ~= nil then
-                SB.editors["terrainSettings"]:UpdateCompilePaths(self.path)
+                SB.editors["terrainSettings"]:UpdateCompilePaths(Path.GetParentDir(self.path))
             end
 
         end)
