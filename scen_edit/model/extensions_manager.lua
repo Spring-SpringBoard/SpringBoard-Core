@@ -18,13 +18,7 @@ end
 function ExtensionsManager:LoadAllExtensions()
     Log.Notice("Loading " .. tostring(#self.extsFolders) .. " extensions...")
     for _, extFolder in ipairs(self.extsFolders) do
-        local success, err = pcall(function()
-            self:LoadExtension(extFolder)
-        end)
-        if not success then
-            Log.Error(string.format("Failed to load extension: %s", extFolder.name))
-            Log.Error(err)
-        end
+        self:LoadExtension(extFolder)
     end
 end
 
@@ -38,8 +32,10 @@ function ExtensionsManager:LoadExtension(extFolder)
     self:__ReloadExtension(extFolder)
 end
 
-local env
 function ExtensionsManager:__ReloadExtension(extFolder)
+    local env
+    -- TODO: Properly unload extensions: Right now we just pollute the global scope and leave things behind
+
     -- env = {
     --     SB = SB,
     --     Path = Path,
@@ -51,9 +47,15 @@ function ExtensionsManager:__ReloadExtension(extFolder)
     --     -- TODO: etc.
     -- }
     -- TODO: Use a custom environment so reloading extensions is done cleanly
-    SB.IncludeDir(Path.Join(extFolder.path, "ui"), env, VFS.RAW, true)
-    SB.IncludeDir(Path.Join(extFolder.path, "cmd"), env, VFS.RAW, true)
-    self:__SyncPathRecursive(Path.Join(extFolder.path, "cmd"))
+
+    xpcall(function()
+        SB.IncludeDir(Path.Join(extFolder.path, "ui"), env, VFS.RAW, true)
+        SB.IncludeDir(Path.Join(extFolder.path, "cmd"), env, VFS.RAW, true)
+        self:__SyncPathRecursive(Path.Join(extFolder.path, "cmd"))
+    end, function(err)
+        Log.Error(debug.traceback(err, 3))
+        Log.Error(string.format("Failed to load extension: %s", extFolder.name))
+    end)
 end
 
 function ExtensionsManager:__SyncFile(path)
@@ -65,7 +67,7 @@ function ExtensionsManager:__SyncFile(path)
 end
 
 function ExtensionsManager:__SyncPathRecursive(path)
-    for _, fileName in ipairs(Path.DirList(path)) do
+    for _, fileName in ipairs(Path.DirList(path, ".lua")) do
         self:__SyncFile(fileName)
     end
     for _, folderName in ipairs(Path.SubDirs(path)) do

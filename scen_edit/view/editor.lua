@@ -605,5 +605,8 @@ function Editor:Deregister()
     end
 end
 
+-- TODO: Add a scream that deregisters the Editor once it goes out of scope?
+-- We need to make sure unloaded extensions don't leave anything
+
 -- We load these fields last as they might be/contain subclasses of editor view
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))
