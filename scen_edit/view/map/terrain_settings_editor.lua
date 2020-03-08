@@ -118,12 +118,12 @@ function TerrainSettingsEditor:_AddMapCompileControls()
                 local diffusePath = self.fields["diffusePath"].value
 
                 if not VFS.FileExists(heightPath, VFS.RAW) then
-                    Log.Warn("Heightmap texture missing from: " .. tostring(heightPath))
+                    Log.Warning("Heightmap texture missing from: " .. tostring(heightPath))
                     return
                 end
 
                 if not VFS.FileExists(diffusePath, VFS.RAW) then
-                    Log.Warn("Diffuse texture missing from: " .. tostring(diffusePath))
+                    Log.Warning("Diffuse texture missing from: " .. tostring(diffusePath))
                     return
                 end
 
