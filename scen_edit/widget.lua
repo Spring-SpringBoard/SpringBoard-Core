@@ -128,6 +128,7 @@ function widget:Initialize()
         MaybeLoad()
     end
 
+    SB.executePeriodic("Initialize")
     SB.executeDelayed("Initialize")
 end
 
@@ -135,14 +136,17 @@ function widget:DrawScreen()
     if SB.view ~= nil then
         SB.stateManager:DrawScreen()
     end
+    SB.executePeriodic("DrawScreen")
     SB.executeDelayed("DrawScreen")
 end
 
 function widget:DrawScreenPost()
+    SB.executePeriodic("DrawScreenPost")
     SB.executeDelayed("DrawScreenPost")
 end
 
 function widget:DrawScreenEffects()
+    SB.executePeriodic("DrawScreenEffects")
     SB.executeDelayed("DrawScreenEffects")
 end
 
@@ -150,6 +154,7 @@ function widget:DrawWorld()
     if SB.view ~= nil then
         SB.stateManager:DrawWorld()
     end
+    SB.executePeriodic("DrawWorld")
     SB.executeDelayed("DrawWorld")
     SB.displayUtil:Draw()
     -- HACK
@@ -224,6 +229,7 @@ function widget:Update()
         SB.stateManager:Update()
         SB.view:Update()
     end
+    SB.executePeriodic("GameFrame")
     SB.executeDelayed("GameFrame")
     SB.displayUtil:Update()
 end

@@ -341,12 +341,23 @@ function SB.createNewPanel(opts)
     return TypePanel(opts)
 end
 
+local function executeOnError()
+    Log.Error(debug.traceback(err))
+end
+
+local function executeSafeDelayed(call)
+    xpcall(function()
+        call[1](unpack(call[2]))
+        call[3]:resolve()
+    end, executeOnError)
+end
+
 SB.delayed = {
 --     Update      = {},
-    GameFrame   = {},
-    DrawWorld   = {},
-    DrawScreen  = {},
-    DrawScreenPost  = {},
+    GameFrame = {},
+    DrawWorld = {},
+    DrawScreen = {},
+    DrawScreenPost = {},
     DrawScreenEffects = {},
     Initialize = {},
 }
@@ -369,14 +380,46 @@ end
 function SB.executeDelayed(name)
     local delayed = SB.delayed[name]
     SB.delayed[name] = {}
-    for i, call in pairs(delayed) do
-        xpcall(function()
-            call[1](unpack(call[2]))
-            call[3]:resolve()
-        end, function(err)
-            Log.Error(debug.traceback(err))
-        end)
+    for _, call in ipairs(delayed) do
+        executeSafeDelayed(call)
     end
+end
+
+SB.periodicExecution = {
+--     Update      = {},
+    GameFrame = {},
+    DrawWorld = {},
+    DrawScreen = {},
+    DrawScreenPost = {},
+    DrawScreenEffects = {},
+    Initialize = {},
+    __id_count = 0
+}
+
+local function executeSafePeriodic(call)
+    xpcall(function()
+        call[1](unpack(call[2]))
+    end, executeOnError)
+end
+
+function SB.executePeriodic(name)
+    for _, call in pairs(SB.periodicExecution[name]) do
+        executeSafePeriodic(call)
+    end
+end
+
+function SB.Periodic(name, func, params)
+    local id = SB.periodicExecution.__id_count + 1
+    SB.periodicExecution.__id_count = id
+    SB.periodicExecution[name][id] = {
+        func, params or {}
+    }
+    return id
+end
+
+function SB.RemovePeriodic(name, periodicID)
+    local periodic = SB.periodicExecution[name]
+    periodic[periodicID] = nil
 end
 
 function SB.glToFontColor(color)

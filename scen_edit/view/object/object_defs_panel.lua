@@ -143,9 +143,10 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
         drawIcon.drawTex = tex
         ctrl.imgCtrl.file = drawIcon.drawTex
     end)
+
     if not self.scheduleDraw then
         self.scheduleDraw = true
-        SB.Delay("DrawScreen", function()
+        SB.Periodic('DrawScreen', function()
             self:DrawIcons()
         end)
     end
@@ -154,14 +155,11 @@ end
 function ObjectDefsPanel:DrawIcons()
     self.rotate = self.rotate + 0.5
     local time = os.clock()
-    if (time - self.refresh) >= 1.1 then
-        self.refresh = time
-    else
-        SB.Delay("DrawScreen", function()
-            self:DrawIcons()
-        end)
+    if (time - self.refresh) < 1.1 then
         return
     end
+    self.refresh = time
+
     gl.PushMatrix()
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
@@ -174,9 +172,6 @@ function ObjectDefsPanel:DrawIcons()
     gl.Blending("alpha")
     gl.Texture(false)
     gl.PopMatrix()
-    SB.Delay("DrawScreen", function()
-        self:DrawIcons()
-    end)
 end
 
 function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius)
