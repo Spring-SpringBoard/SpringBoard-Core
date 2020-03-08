@@ -578,6 +578,10 @@ function Editor:Register(opts)
     end
 
     SB.editorRegistry[opts.name] = opts
+
+    if SB.view ~= nil and SB.view.tabbedWindow ~= nil then
+        SB.view.tabbedWindow:AddEditor(self)
+    end
 end
 
 --- Deregister the editor.
@@ -586,12 +590,19 @@ end
 -- -- alternatively
 -- Editor.Deregister("my-editor")
 function Editor:Deregister()
+    local editor
     if type(self) == "string" then
+        editor = SB.editorRegistry[self]
         SB.editorRegistry[self] = nil
     else
+        editor = SB.editorRegistry[self.name]
         SB.editorRegistry[self.name] = nil
     end
-    -- TODO: Remove the editor from the GUI?
+
+    if editor ~= nil then
+        SB.view.tabbedWindow:RemoveEditor(editor)
+        SB.editors[editor.name] = nil
+    end
 end
 
 -- We load these fields last as they might be/contain subclasses of editor view

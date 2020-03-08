@@ -11,7 +11,7 @@ function TabbedWindow:init()
         self.mainPanelY = self.mainPanelY + 45
     end
 
-    self.tabs = CreateTabsFromEditorRegistry()
+    self.tabs, self.mainPanels = CreateTabsFromEditorRegistry()
 
     self.__tabPanel = Chili.TabPanel:New {
         x = 0,
@@ -22,7 +22,7 @@ function TabbedWindow:init()
         padding = {0, 0, 0, 0},
         tabs = self.tabs,
     }
-    self.__tabPanel.tabbar:SetPos(nil, nil, #self.tabs * self.__tabPanel.tabbar.children[1].width + 4, nil)
+    self:__ResizeTabPanel()
     table.insert(controls, self.__tabPanel)
 
     table.insert(controls, Chili.Line:New {
@@ -58,6 +58,7 @@ end
 
 CreateTabsFromEditorRegistry = function()
     local tabs = {}
+    local mainPanels = {}
 
     -- Group editors by the tab they belong to
     local tabMapping = SB.GroupByField(SB.editorRegistry, "tab")
@@ -77,9 +78,6 @@ CreateTabsFromEditorRegistry = function()
     end)
     -- Create tab panels
     for _, editors in pairs(tabMapping) do
-        -- Order editors as specified in the 'order' key when registering them,
-        -- and in alphabetical order second
-        local tabName = editors[1].tab
         table.sort(editors, function(a, b)
             if a.order ~= b.order then
                 return a.order < b.order
@@ -87,17 +85,65 @@ CreateTabsFromEditorRegistry = function()
             return a.caption < b.caption
         end)
 
+        local tabName = editors[1].tab
         local panel = MainWindowPanel()
         panel:AddElements(editors)
         table.insert(tabs, {
             name = tabName,
             children = {
-                panel:getControl()
+                panel:GetControl()
             },
         })
+        mainPanels[tabName] = panel
     end
 
-    return tabs
+    return tabs, mainPanels
+end
+
+function TabbedWindow:AddEditor(editor)
+    local tabName = editor.tab
+    local mainPanel = self.mainPanels[tabName]
+    if mainPanel == nil then
+        mainPanel = MainWindowPanel()
+        local tab = {
+            name = tabName,
+            children = {
+                mainPanel:GetControl()
+            }
+        }
+        table.insert(self.tabs, tab)
+        self.__tabPanel:AddTab(tab)
+        self.mainPanels[tabName] = mainPanel
+        self:__ResizeTabPanel()
+    end
+
+    mainPanel:AddElement(editor)
+end
+
+function TabbedWindow:RemoveEditor(editor)
+    local tabName = editor.tab
+    local mainPanel = self.mainPanels[tabName]
+    if mainPanel == nil then
+        return
+    end
+
+    mainPanel:RemoveEditor(editor)
+
+    if mainPanel:IsEmpty() then
+        if self.__tabPanel.tabbar:IsSelected(tabName) then
+            self.__tabPanel.tabbar:Select(nil)
+        end
+        self.__tabPanel:RemoveTab(tabName)
+        self.mainPanels[tabName] = nil
+        for i, tab in ipairs(self.tabs) do
+            if tabName == tab.name then
+                table.remove(self.tabs, i)
+                break
+            end
+        end
+    end
+
+    self:__ResizeTabPanel()
 end
 
 function TabbedWindow:SetMainPanel(panel)
@@ -185,7 +231,13 @@ function TabbedWindow:NextTab()
             break
         end
     end
-    self.__tabPanel.tabbar:Select(nextTab.name)
+
+    if nextTab == nil then
+        nextTab = self.tabs[1]
+    end
+    if nextTab ~= nil then
+        self.__tabPanel.tabbar:Select(nextTab.name)
+    end
 end
 
 function TabbedWindow:PreviousTab()
@@ -201,5 +253,14 @@ function TabbedWindow:PreviousTab()
             break
         end
     end
-    self.__tabPanel.tabbar:Select(prevTab.name)
+    if prevTab == nil then
+        prevTab = self.tabs[1]
+    end
+    if prevTab ~= nil then
+        self.__tabPanel.tabbar:Select(prevTab.name)
+    end
+end
+
+function TabbedWindow:__ResizeTabPanel()
+    self.__tabPanel.tabbar:SetPos(nil, nil, #self.tabs * self.__tabPanel.tabbar.children[1].width + 4, nil)
 end

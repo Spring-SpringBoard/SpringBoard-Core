@@ -26,7 +26,6 @@ function ExtensionsManager:LoadAllExtensions()
             Log.Error(err)
         end
     end
-    -- SB.view.tabbedWindow:UpdateEditorRegistry()
 end
 
 function ExtensionsManager:ReloadExtension(extFolder)

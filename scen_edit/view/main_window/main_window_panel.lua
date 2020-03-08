@@ -1,5 +1,3 @@
-MainWindowPanel = LCS.class{}
-
 function TabbedPanelButton(tbl)
     return Button:New(Table.Merge({
         width = SB.conf.TOOLBOX_ITEM_WIDTH,
@@ -53,6 +51,8 @@ function TabbedPanelLabel(tbl)
     }, tbl))
 end
 
+MainWindowPanel = LCS.class{}
+
 function MainWindowPanel:init()
     self.control = LayoutPanel:New {
         x = 0,
@@ -80,9 +80,10 @@ function MainWindowPanel:init()
         children = { self.control }
     }
     self._totalEditors = 0
+    self.__editorMap = {}
 end
 
-function MainWindowPanel:getControl()
+function MainWindowPanel:GetControl()
     return self.wrapper
 end
 
@@ -121,6 +122,10 @@ function MainWindowPanel:AddElement(tbl)
     self._totalEditors = self._totalEditors + 1
     local wantedWidth = SB.conf.TOOLBOX_ITEM_WIDTH * self._totalEditors + 10
     -- Spring.Echo("CW:", self.control.width, #self.control.children)
+    self.__editorMap[name] = {
+        btn
+    }
+
     self.control:AddChild(btn)
     self.control:SetPos(nil, nil, wantedWidth, nil)
 end
@@ -129,4 +134,22 @@ function MainWindowPanel:AddElements(elements)
     for _, element in pairs(elements) do
         self:AddElement(element)
     end
+end
+
+function MainWindowPanel:RemoveEditor(editor)
+    local instance = SB.editors[editor.name]
+    if instance ~= nil and instance.window.hidden then
+        instance.window:Hide()
+    end
+
+    local children = self.__editorMap[editor.name]
+    if children ~= nil then
+        for _, child in pairs(children) do
+            self.control:RemoveChild(child)
+        end
+    end
+end
+
+function MainWindowPanel:IsEmpty()
+    return #self.control.children == 0
 end
