@@ -26,6 +26,7 @@ function TextureManager:init()
         },
         emission = {
             engineName = "$ssmf_emission",
+            alpha = true,
         },
         refl = {
             engineName = "$ssmf_sky_refl",
