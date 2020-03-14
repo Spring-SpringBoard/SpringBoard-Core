@@ -1,9 +1,7 @@
-local versionNumber = "v1.0"
-
 function widget:GetInfo()
 	return {
 		name      = "Delay API",
-		desc      = versionNumber .. " Allows delaying of widget calls.",
+		desc      = "Allows delaying of widget calls.",
 		author    = "gajop",
 		date      = "future",
 		license   = "MIT",
