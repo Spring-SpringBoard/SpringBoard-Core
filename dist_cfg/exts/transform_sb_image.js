@@ -1,24 +1,24 @@
 const fs = require('fs');
-const path = require("path");
+const path = require('path');
 
 const { bridge } = require('../spring_api');
 const { writePath } = require('../spring_platform');
 
-const { PNG } = require("pngjs");
+const { PNG } = require('pngjs');
 
 function OnConvertSBHeightmap(command) {
 	try {
 		convertSBHeightmap(command);
 	} catch (err) {
-		const msg = typeof(err) == "string" ? err : err.message;
-		bridge.send("TransformSBImageFailed", {
+		const msg = typeof(err) == 'string' ? err : err.message;
+		bridge.send('TransformSBImageFailed', {
 			error: `Failed to export heightmap with error: ${msg}`,
 			id: command.id
 		});
 		return;
 	}
 
-	bridge.send("TransformSBImageFinished", {
+	bridge.send('TransformSBImageFinished', {
 		path: path.join(writePath, command.outPath),
 		id: command.id
 	});
@@ -70,15 +70,15 @@ function OnTransformSBImage(command) {
 	try {
 		transformSBImage(command);
 	} catch (err) {
-		const msg = typeof(err) == "string" ? err : err.message;
-		bridge.send("TransformSBImageFailed", {
+		const msg = typeof(err) == 'string' ? err : err.message;
+		bridge.send('TransformSBImageFailed', {
 			error: `Failed to export image with error: ${msg}`,
 			id: command.id
 		});
 		return;
 	}
 
-	bridge.send("TransformSBImageFinished", {
+	bridge.send('TransformSBImageFinished', {
 		path: path.join(writePath, command.outPath),
 		id: command.id
 	});
@@ -108,11 +108,11 @@ function transformSBImage(command) {
 	const outputDataSize = bitDepth / 8;
 
 	const data = fs.readFileSync(inPath);
-	const packSizeBytes = packSize == "float32" ? 4 : 1;
+	const packSizeBytes = packSize == 'float32' ? 4 : 1;
 
 	if (data.length != width * height * packSizeBytes) {
 		throw `Incorrect parameters specified for image: ${inPath}, size: ${data.length} and ` +
-			   `width: ${width}, height: ${height} and packSize: ${packSize}: ${packSizeBytes} bytes`;
+			`width: ${width}, height: ${height} and packSize: ${packSize}: ${packSizeBytes} bytes`;
 	}
 
 	const inputView = new DataView(data.buffer);
@@ -141,10 +141,10 @@ function transformSBImage(command) {
 	png.pack().pipe(fs.createWriteStream(outPath));
 }
 
-bridge.on("ConvertSBHeightmap", (command) => {
+bridge.on('ConvertSBHeightmap', (command) => {
 	OnConvertSBHeightmap(command);
 });
 
-bridge.on("TransformSBImage", (command) => {
+bridge.on('TransformSBImage', (command) => {
 	OnTransformSBImage(command);
 });
