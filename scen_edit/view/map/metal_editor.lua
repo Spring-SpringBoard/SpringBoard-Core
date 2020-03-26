@@ -86,10 +86,9 @@ function MetalEditor:init()
     }))
     self:AddField(NumericField({
         name = "amount",
-        value = 5,
+        value = 50,
         minValue = 0,
-        maxValue = 10,
-        step = 0.01,
+        maxValue = 255,
         title = "Amount:",
         tooltip = "Amount of metal",
     }))
