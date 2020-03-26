@@ -1,22 +1,23 @@
 
 if addon.InGetInfo then
 	return {
-		name      = "UserWidgetBlocker";
-		desc      = "";
-		version   = 1.0;
-		author    = "jK";
-		date      = "2011";
-		license   = "GNU GPL, v2 or later";
-
-		layer     = math.huge;
-		hidden    = true; -- don't show in the widget selector
-		api       = true; -- load before all others?
-		before    = {"all"}; -- make it loaded before ALL other widgets (-> it must be the first widget that gets loaded!)
-
-		enabled   = true; -- loaded by default?
+		name      = "UserWidgetBlocker",
+		version   = 1.0,
+		author    = "jK, gajop",
+		date      = "2011",
+		license   = "GNU GPL, v2 or later",
+		layer     = math.huge,
+		hidden    = true, -- don't show in the widget selector
+		api       = true, -- load before all others?
+		before    = {"all"}, -- make it loaded before ALL other widgets (-> it must be the first widget that gets loaded!)
+		enabled   = true, -- loaded by default?
 	}
 end
 
+-- Expose SB globals
+-- SG = WG
+handler.SG.SB_LIBS_DIR = "libs_sb/"
+handler.SG.SB = {}
 
 function addon.Initialize()
 	--// how to handle local widgets
