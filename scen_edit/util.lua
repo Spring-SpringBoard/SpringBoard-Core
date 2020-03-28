@@ -504,35 +504,37 @@ function SB.DirExists(path, ...)
     return #Path.SubDirs(path, "*", ...) + #Path.DirList(path, "*", ...) ~= 0
 end
 
-function SB.RemoveDirRecursively(path)
-    local canDeleteFolders = Platform.osFamily ~= "Windows"
+if Script.GetName() == "LuaUI" then
+    function SB.RemoveDirRecursively(path)
+        local canDeleteFolders = Platform.osFamily ~= "Windows"
 
-    Path.Walk(path, function(file)
-        Log.Notice("Deleting: " .. file .. "...")
-        local success, err = os.remove(file)
-        if not success then
-            Log.Error('Failed to delete: ' .. err)
-        end
-    end, {
-        mode = VFS.RAW,
-        apply_folders = canDeleteFolders,
-        dirs_first = true
-    })
-    if canDeleteFolders then
-        os.remove(path)
-    end
-
-    if Platform.osFamily == "Windows" then
-        bridge.send("RemoveEmptyDirs", {
-            path = path
+        Path.Walk(path, function(file)
+            Log.Notice("Deleting: " .. file .. "...")
+            local success, err = os.remove(file)
+            if not success then
+                Log.Error('Failed to delete: ' .. err)
+            end
+        end, {
+            mode = VFS.RAW,
+            apply_folders = canDeleteFolders,
+            dirs_first = true
         })
+        if canDeleteFolders then
+            os.remove(path)
+        end
+
+        if Platform.osFamily == "Windows" then
+            WG.Connector.Send("RemoveEmptyDirs", {
+                path = path
+            })
+        end
     end
+    WG.Connector.Register("RemoveEmptyDirsFinished", function(command)
+    end)
+    WG.Connector.Register("RemoveEmptyDirsFailed", function(command)
+        Log.Error("Failed to delete empty dirs: " .. tostring(command.error))
+    end)
 end
-WG.Connector.Register("RemoveEmptyDirsFinished", function(command)
-end)
-WG.Connector.Register("RemoveEmptyDirsFailed", function(command)
-	Log.Error("Failed to delete empty dirs: " .. tostring(command.error))
-end)
 
 local warningsIssued = {}
 function SB.MinVersion(versionNumber, feature)
