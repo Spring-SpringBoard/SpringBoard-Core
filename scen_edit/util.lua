@@ -505,6 +505,8 @@ function SB.DirExists(path, ...)
 end
 
 function SB.RemoveDirRecursively(path)
+    local canDeleteFolders = Platform.osFamily ~= "Windows"
+
     Path.Walk(path, function(file)
         Log.Notice("Deleting: " .. file .. "...")
         local success, err = os.remove(file)
@@ -513,11 +515,24 @@ function SB.RemoveDirRecursively(path)
         end
     end, {
         mode = VFS.RAW,
-        apply_folders = true,
+        apply_folders = canDeleteFolders,
         dirs_first = true
     })
-    os.remove(path)
+    if canDeleteFolders then
+        os.remove(path)
+    end
+
+    if Platform.osFamily == "Windows" then
+        bridge.send("RemoveEmptyDirs", {
+            path = path
+        })
+    end
 end
+WG.Connector.Register("RemoveEmptyDirsFinished", function(command)
+end)
+WG.Connector.Register("RemoveEmptyDirsFailed", function(command)
+	Log.Error("Failed to delete empty dirs: " .. tostring(command.error))
+end)
 
 local warningsIssued = {}
 function SB.MinVersion(versionNumber, feature)
