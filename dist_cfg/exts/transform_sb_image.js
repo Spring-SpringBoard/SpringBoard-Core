@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { PNG } = require('pngjs');
+const { PNG } = require('pngjs3');
 
 const { bridge } = require('../spring_api');
 const { writePath } = require('../spring_platform');
@@ -31,7 +31,7 @@ function OnConvertSBHeightmap(command) {
 function convertSBHeightmap(command) {
 	const width = command.width;
 	const height = command.height;
-	const inPath = command.inPath;
+	const inPath = path.join(writePath, command.inPath);
 	const outPath = path.join(writePath, command.outPath);
 	const min = command.min;
 	const max = command.max;
@@ -95,7 +95,7 @@ function OnTransformSBImage(command) {
 function transformSBImage(command) {
 	const width = command.width;
 	const height = command.height;
-	const inPath = command.inPath;
+	const inPath = path.join(writePath, command.inPath);
 	const outPath = path.join(writePath, command.outPath);
 	const multiplier = command.multiplier;
 	const packSize = command.packSize;
@@ -148,3 +148,8 @@ function transformSBImage(command) {
 	png.data = outBuffer;
 	png.pack().pipe(fs.createWriteStream(outPath));
 }
+
+module.exports = {
+	convertSBHeightmap: convertSBHeightmap,
+	transformSBImage: transformSBImage
+};

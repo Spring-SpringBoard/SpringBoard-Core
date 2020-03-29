@@ -16,14 +16,14 @@ function RemoveEmptyDirs(command) {
 		}
 		fs.rmdirSync(absPath, { recursive: true });
 	} catch (err) {
-		bridge.send('RemoveEmptyDirsFailed', {
+		bridge.send('CommandFailed', {
 			id: command.id,
 			error: err
 		});
 		return;
 	}
 
-	bridge.send('RemoveEmptyDirsFinished', {
+	bridge.send('CommandFinished', {
 		id: command.id
 	});
 }

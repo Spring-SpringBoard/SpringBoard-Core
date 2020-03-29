@@ -1,3 +1,6 @@
+local ExportHeightmapWithLauncher
+local ExportHeightmap
+
 ExportHeightmapCommand = Command:extends{}
 ExportHeightmapCommand.className = "ExportHeightmapCommand"
 
@@ -5,9 +8,6 @@ function ExportHeightmapCommand:init(path, heightmapExtremes)
     self.path = path
     self.heightmapExtremes = heightmapExtremes
 end
-
-local ExportHeightmapWithLauncher
-local ExportHeightmap
 
 function ExportHeightmapCommand:execute()
     Spring.CreateDir(Path.GetParentDir(self.path))
@@ -47,7 +47,7 @@ end
 
 ExportHeightmapWithLauncher = function(path, minHeight, maxHeight)
     return WG.Connector.Send("ConvertSBHeightmap", {
-        inPath = VFS.GetFileAbsolutePath(Path.Join(SB.project.path, Project.HEIGHTMAP_FILE)),
+        inPath = Path.Join(SB.project.path, Project.HEIGHTMAP_FILE),
         outPath = path,
         width = Game.mapSizeX / Game.squareSize + 1,
         height = Game.mapSizeZ / Game.squareSize + 1,

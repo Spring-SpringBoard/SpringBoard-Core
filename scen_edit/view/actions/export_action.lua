@@ -124,7 +124,7 @@ end
 function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
 
-    local buildDir = self:__CreateBuildDir()
+    local buildDir = SB.CreateTemporaryDir("build")
     local promise = self:TryToExportMapTextures(buildDir, heightmapExtremes)
 
     if not promise then
@@ -192,18 +192,6 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     end):catch(function(reason)
         Log.Error("Export action failed: " .. tostring(reason))
     end)
-end
-
-function ExportAction:__CreateBuildDir()
-    local i = 0
-    local buildDir
-    repeat
-        i = i + 1
-        buildDir = Path.Join(SB.DIRS.EXPORTS, "__buildir_" .. tostring(i))
-    until not SB.DirExists(buildDir)
-
-    Spring.CreateDir(buildDir)
-    return buildDir
 end
 
 function ExportAction:TryToExportMapTextures(path, heightmapExtremes)

@@ -524,15 +524,20 @@ if Script.GetName() == "LuaUI" then
         end
 
         if Platform.osFamily == "Windows" then
-            WG.Connector.Send("RemoveEmptyDirs", {
+            return WG.Connector.Send("RemoveEmptyDirs", {
                 path = path
-            })
+            }, {
+                waitForResult = true
+            }):catch(function(error)
+                Log.Error("Failed to delete empty folder: " .. tostring(error))
+            end)
         end
     end
-    WG.Connector.Register("RemoveEmptyDirsFinished", function(command)
-    end)
-    WG.Connector.Register("RemoveEmptyDirsFailed", function(command)
-        Log.Error("Failed to delete empty dirs: " .. tostring(command.error))
+end
+
+if Script.GetName() == "LuaUI" then
+    WG.Connector.Register("CommandFailed", function(command)
+        Log.Error("Command failed: " .. tostring(command.error))
     end)
 end
 
@@ -755,4 +760,17 @@ function SB.WriteShadingTextureToFile(texType, path)
     local alpha = not not texDef.alpha
     gl.Blending("enable")
     gl.RenderToTexture(texture, gl.SaveImage, 0, 0, texInfo.xsize, texInfo.ysize, path, {alpha=alpha, yflip=false})
+end
+
+function SB.CreateTemporaryDir(name)
+    name = name or "tmpdir"
+    local i = 0
+    local dir
+    repeat
+        i = i + 1
+        dir = Path.Join(SB.DIRS.TMP, tostring(name) .. tostring(i))
+    until not SB.DirExists(dir)
+
+    Spring.CreateDir(dir)
+    return dir
 end

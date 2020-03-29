@@ -57,13 +57,14 @@ function ImportAction:execute()
 end
 
 function ImportAction:ImportHeightmap(path)
+    local minGroundExtreme, maxGroundExtreme = Spring.GetGroundExtremes()
     local ebMinHeight = EditBox:New {
         hint = "Min height: ",
-        text = ""
+        text = tostring(minGroundExtreme),
     }
     local ebMaxHeight = EditBox:New {
         hint = "Max height: ",
-        text = "",
+        text = tostring(maxGroundExtreme),
     }
     local window
     window = Window:New {
@@ -83,15 +84,14 @@ function ImportAction:ImportHeightmap(path)
                         caption = "OK",
                         OnClick = {
                             function()
-                                local maxHeight = tonumber(ebMaxHeight.text)
                                 local minHeight = tonumber(ebMinHeight.text)
-                                if maxHeight == nil or minHeight == nil then
+                                local maxHeight = tonumber(ebMaxHeight.text)
+                                if minHeight == nil or maxHeight == nil then
                                     return
                                 end
                                 Log.Notice("Importing heightmap: " .. path .. " ...")
-                                local importCommand = ImportHeightmapCommand(path, maxHeight, minHeight)
+                                local importCommand = ImportHeightmapCommand(path, minHeight, maxHeight)
                                 SB.commandManager:execute(importCommand, true)
-                                Log.Notice("Import complete.")
                                 window:Dispose()
                             end
                         },

@@ -5,6 +5,7 @@ const fs = require('fs');
 const log = require('electron-log');
 
 const { bridge } = require('../spring_api');
+const { writePath } = require('../spring_platform');
 
 class Compiler extends EventEmitter {
 	constructor(bridge) {
@@ -21,9 +22,6 @@ class Compiler extends EventEmitter {
 		} else {
 			const errMsg = `Unsupported platform: ${process.platform}, cannot compile`;
 			log.error(errMsg);
-			this.bridge.send('CompileMapError', {
-				'code': errMsg,
-			});
 			return;
 		}
 
@@ -33,18 +31,20 @@ class Compiler extends EventEmitter {
 		}
 	}
 
-	compile(opts) {
-		this.bridge.send('CompileMapStarted');
+	compile(command) {
+		this.bridge.send('CompileMapStarted', {
+			id: command.id
+		});
 		// do async
-		this.compileMap_SpringMapConvNG(opts);
+		this.compileMap_SpringMapConvNG(command);
 	}
 
-	compileMap_SpringMapConvNG(opts) {
+	compileMap_SpringMapConvNG(command) {
 		var callParams = [
-			'-t', opts['diffusePath'],
-			'-h', opts['heightPath'],
+			'-t', path.join(writePath, command['diffusePath']),
+			'-h', path.join(writePath, command['heightPath']),
 			'-ct', '1', // TODO: allow customization?
-			'-o', opts['outputPath']
+			'-o', path.join(writePath, command['outputPath'])
 		];
 		const extraParams = {
 			'metalPath' : '-m',
@@ -59,9 +59,13 @@ class Compiler extends EventEmitter {
 			// "-features [featurefile]"
 		};
 
-		for (var k in extraParams) {
-			if (k in opts) {
-				callParams.push(extraParams[k], opts[k]);
+		for (let k in extraParams) {
+			if (k in command) {
+				if (k == 'metalPath' || k == 'typePath') {
+					callParams.push(extraParams[k], path.join(writePath, command[k]));
+				} else {
+					callParams.push(extraParams[k], command[k]);
+				}
 			}
 		}
 
@@ -82,7 +86,8 @@ class Compiler extends EventEmitter {
 				total = parseInt(total);
 				this.bridge.send('CompileMapProgress', {
 					current: current,
-					total: total
+					total: total,
+					id: command.id
 				});
 			}
 		});
@@ -96,11 +101,14 @@ class Compiler extends EventEmitter {
 		compileProcess.on('exit', (code) => {
 			console.log(`Exited: ${code}`);
 			if (code == 0) {
-				this.bridge.send('CompileMapFinished');
+				this.bridge.send('CommandFinished', {
+					id: command.id
+				});
 			} else {
-				this.bridge.send('CompileMapError', {
-					'code': code,
-					'msg': errorMsg
+				errorMsg += `Code: ${code}`;
+				this.bridge.send('CommandFailed', {
+					error: errorMsg,
+					id: command.id
 				});
 			}
 		});

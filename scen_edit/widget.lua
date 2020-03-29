@@ -31,7 +31,7 @@ local function CheckSpringBoardDir()
         Log.Notice("Creating initial SpringBoard directory")
         Spring.CreateDir(SB.DIRS.ROOT)
     end
-    local defaultDirs = { SB.DIRS.PROJECTS, SB.DIRS.ASSETS, SB.DIRS.EXTS, SB.DIRS.EXPORTS }
+    local defaultDirs = { SB.DIRS.PROJECTS, SB.DIRS.ASSETS, SB.DIRS.EXTS, SB.DIRS.EXPORTS, SB.DIRS.TMP }
     for _, dir in ipairs(defaultDirs) do
         if not VFS.FileExists(dir, VFS.RAW) then
             Spring.CreateDir(dir)

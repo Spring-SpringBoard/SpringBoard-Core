@@ -16,7 +16,8 @@ SB.DIRS = {
     PROJECTS = 'springboard/projects/',
     ASSETS   = 'springboard/assets/',
     EXTS     = 'springboard/exts/',
-    EXPORTS  = 'springboard/exports/'
+    EXPORTS  = 'springboard/exports/',
+    TMP      = 'springboard/tmp/',
 }
 
 -- TODO: maybe some of these _sl_ modopts should be parsed into SL_ instead of SB_
