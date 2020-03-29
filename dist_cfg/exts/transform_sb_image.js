@@ -1,24 +1,28 @@
 const fs = require('fs');
 const path = require('path');
 
+const { PNG } = require('pngjs');
+
 const { bridge } = require('../spring_api');
 const { writePath } = require('../spring_platform');
 
-const { PNG } = require('pngjs');
+bridge.on('ConvertSBHeightmap', (command) => {
+	OnConvertSBHeightmap(command);
+});
 
 function OnConvertSBHeightmap(command) {
 	try {
 		convertSBHeightmap(command);
 	} catch (err) {
 		const msg = typeof(err) == 'string' ? err : err.message;
-		bridge.send('TransformSBImageFailed', {
+		bridge.send('CommandFailed', {
 			error: `Failed to export heightmap with error: ${msg}`,
 			id: command.id
 		});
 		return;
 	}
 
-	bridge.send('TransformSBImageFinished', {
+	bridge.send('CommandFinished', {
 		path: path.join(writePath, command.outPath),
 		id: command.id
 	});
@@ -66,19 +70,23 @@ function convertSBHeightmap(command) {
 	png.pack().pipe(fs.createWriteStream(outPath));
 }
 
+bridge.on('TransformSBImage', (command) => {
+	OnTransformSBImage(command);
+});
+
 function OnTransformSBImage(command) {
 	try {
 		transformSBImage(command);
 	} catch (err) {
 		const msg = typeof(err) == 'string' ? err : err.message;
-		bridge.send('TransformSBImageFailed', {
+		bridge.send('CommandFailed', {
 			error: `Failed to export image with error: ${msg}`,
 			id: command.id
 		});
 		return;
 	}
 
-	bridge.send('TransformSBImageFinished', {
+	bridge.send('CommandFinished', {
 		path: path.join(writePath, command.outPath),
 		id: command.id
 	});
@@ -140,11 +148,3 @@ function transformSBImage(command) {
 	png.data = outBuffer;
 	png.pack().pipe(fs.createWriteStream(outPath));
 }
-
-bridge.on('ConvertSBHeightmap', (command) => {
-	OnConvertSBHeightmap(command);
-});
-
-bridge.on('TransformSBImage', (command) => {
-	OnTransformSBImage(command);
-});

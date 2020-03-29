@@ -46,13 +46,15 @@ ExportHeightmap = function(path, heightmapExtremes)
 end
 
 ExportHeightmapWithLauncher = function(path, minHeight, maxHeight)
-    return LauncherImageExporter:Export("ConvertSBHeightmap", {
+    return WG.Connector.Send("ConvertSBHeightmap", {
         inPath = VFS.GetFileAbsolutePath(Path.Join(SB.project.path, Project.HEIGHTMAP_FILE)),
         outPath = path,
         width = Game.mapSizeX / Game.squareSize + 1,
         height = Game.mapSizeZ / Game.squareSize + 1,
         min = minHeight,
         max = maxHeight
+    }, {
+        waitForResult = true
     })
 end
 

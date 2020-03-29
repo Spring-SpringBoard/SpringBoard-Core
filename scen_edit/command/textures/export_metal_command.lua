@@ -11,7 +11,7 @@ function ExportMetalCommand:execute()
     local projectPath = SB.project.path
     local METAL_RESOLUTION = 16
     Log.Notice("Exporting metal with launcher...")
-    return LauncherImageExporter:Export("TransformSBImage", {
+    return WG.Connector.Send("TransformSBImage", {
         inPath = VFS.GetFileAbsolutePath(Path.Join(projectPath, Project.METAL_FILE)),
         outPath = self.path,
         width = Game.mapSizeX / METAL_RESOLUTION + 1,
@@ -20,5 +20,7 @@ function ExportMetalCommand:execute()
         packSize = 'float32',
         colorType = 'greyscale',
         bitDepth = 16
+    }, {
+        waitForResult = true
     })
 end

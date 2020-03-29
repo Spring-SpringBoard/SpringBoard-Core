@@ -10,7 +10,7 @@ function ExportGrassCommand:execute()
 
     local projectPath = SB.project.path
     Log.Notice("Exporting grass with launcher...")
-    return LauncherImageExporter:Export("TransformSBImage", {
+    return WG.Connector.Send("TransformSBImage", {
         inPath = VFS.GetFileAbsolutePath(Path.Join(projectPath, Project.GRASS_FILE)),
         outPath = self.path,
         width = Game.mapSizeX / Game.squareSize / 4,
@@ -19,5 +19,7 @@ function ExportGrassCommand:execute()
         packSize = 'uint8',
         colorType = 'rgb',
         bitDepth = 8
+    }, {
+        waitForResult = true
     })
 end
