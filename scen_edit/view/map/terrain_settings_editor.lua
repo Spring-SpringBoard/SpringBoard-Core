@@ -256,6 +256,10 @@ function TerrainSettingsEditor:OnFieldChange(name, value)
         local cmd = SetMapRenderingParamsCommand(t)
         SB.commandManager:execute(cmd)
     elseif self.mapTextures ~= nil and self.mapTextures[name] ~= nil then
+        if self.__isLoading then
+            return
+        end
+
         if value then
             -- Make configurable
             local texName = self.mapTextures[name]

@@ -9,7 +9,15 @@ end
 function LoadShadingTexture(texType, path, fromProject)
     local texObj = SB.model.textureManager.shadingTextures[texType]
     if not texObj then
-        Log.Error(("Type: %s isn't supported for this map"):format(tostring(texType)))
+        Log.Notice(("Creating and enabling new texture type: %s..."):format(tostring(texType)))
+        local texInfo = gl.TextureInfo(path)
+        local sizeX, sizeY = texInfo.xsize, texInfo.ysize
+        SB.model.textureManager:MakeAndEnableMapShadingTexture({
+            name = texType,
+            sizeX = sizeX,
+            sizeY = sizeY,
+            texture = path
+        })
         return
     end
 

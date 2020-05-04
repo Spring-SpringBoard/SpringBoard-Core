@@ -16,6 +16,8 @@ Editor = LCS.class{}
 function Editor:init()
     self.__initializing = true
 
+    self.__isLoading = false
+
     self.fields = {}
     self.fieldOrder = {}
 
@@ -517,6 +519,7 @@ end
 --- Load table into fields.
 -- @tparam table tbl Serialized table to load.
 function Editor:Load(tbl)
+    self.__isLoading = true
     -- set missing fields to nil
     for name, field in pairs(self.fields) do
         -- some fields (like separator) don't have .Set
@@ -529,6 +532,7 @@ function Editor:Load(tbl)
             self.fields[name]:Load(data)
         end
     end
+    self.__isLoading = false
 end
 
 -- Registered editor classes
