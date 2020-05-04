@@ -14,12 +14,13 @@ function ExportMetalCommand:execute()
     return WG.Connector.Send("TransformSBImage", {
         inPath = Path.Join(projectPath, Project.METAL_FILE),
         outPath = self.path,
-        width = Game.mapSizeX / METAL_RESOLUTION + 1,
-        height = Game.mapSizeZ / METAL_RESOLUTION + 1,
-        multiplier = 255,
+        width = Game.mapSizeX / METAL_RESOLUTION,
+        height = Game.mapSizeZ / METAL_RESOLUTION,
+        -- FIXME: No idea why we divide by 5 tbh. Experimentally deduced
+        multiplier = 1.0 / 5.0,
         packSize = 'float32',
-        colorType = 'greyscale',
-        bitDepth = 16
+        colorType = 'rgb',
+        bitDepth = 8
     }, {
         waitForResult = true
     })

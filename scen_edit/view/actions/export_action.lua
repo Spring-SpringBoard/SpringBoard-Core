@@ -169,14 +169,12 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
             ExportS11NCommand(Path.Join(mapconfigDir, "s11n_model.lua")),
         }
         SB.commandManager:execute(CompoundCommand(cmds), true)
-
-        return ExportGrassCommand(Path.Join(mapsDir, "grass.png")):execute()
     end):next(function()
         return CompileMapCommand({
             heightPath = Path.Join(buildDir, "heightmap.png"),
             diffusePath = Path.Join(buildDir, "diffuse.png"),
             metalPath = Path.Join(buildDir, "metal.png"),
-            outputPath = Path.Join(SB.DIRS.WRITE_PATH, mapsDir, SB.project.name)
+            outputPath = Path.Join(mapsDir, SB.project.name)
         }):execute()
     end):next(function()
         Log.Notice("Exporting archive: " .. path .. " ...")

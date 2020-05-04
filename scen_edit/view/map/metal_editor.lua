@@ -88,7 +88,7 @@ function MetalEditor:init()
         name = "amount",
         value = 50,
         minValue = 0,
-        maxValue = 255,
+        maxValue = 5.1,
         title = "Amount:",
         tooltip = "Amount of metal",
     }))
