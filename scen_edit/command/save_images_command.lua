@@ -17,12 +17,12 @@ local function SaveShadingTextures(path, prefix, isNewProject)
 
             shadingTexObj.dirty = false
             -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things
-            for _, stackItem in pairs(SB.model.textureManager.stack) do
+            for _, stackItem in pairs(SB.model.textureManager.stack:GetStack()) do
                 -- we only do this for the corresponding texture
-                local oldTextureObj = stackItem[texType]
-                if oldTextureObj then
+                local entry = stackItem[shadingTexObj.texture]
+                if entry ~= nil then
                     Log.Debug("Making shading texture dirty: " .. tostring(texType))
-                    oldTextureObj.dirty = true
+                    entry.dirty = true
                 end
             end
         end
@@ -65,13 +65,12 @@ function SaveImagesCommand:execute()
                     mapTextureObj.dirty = false
 
                     -- all other textures on the undo/redo stack need to be set "dirty" so undoing + saving would change things
-                    for _, stackItem in pairs(SB.model.textureManager.stack) do
+                    for _, stackItem in pairs(SB.model.textureManager.stack:GetStack()) do
                         -- we only do this for the corresponding textures
-                        local s = stackItem.diffuse
-                        if s[i] and s[i][j] then
+                        local entry = stackItem[mapTexture]
+                        if entry ~= nil then
                             Log.Debug("Making subtexture dirty", i, j)
-                            local oldTextureObj = s[i][j]
-                            oldTextureObj.dirty = true
+                            entry.dirty = true
                         end
                     end
                 end

@@ -1,3 +1,5 @@
+SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'model/rendering'))
+
 TextureManager = Observable:extends{}
 
 -- local smftTexAniso = Spring.GetConfigInt("SMFTexAniso")
@@ -10,10 +12,8 @@ function TextureManager:init()
     ssmfTexAniso = Spring.GetConfigInt("SSMFTexAniso")
 
     self.mapFBOTextures = {}
-    self.oldMapFBOTextures = {}
-    self.oldShadingTextures = {}
-    self.stack = {}
-    self.stackSize = 0
+    self.activeDrawing = ActiveDrawing()
+    self.stack = TextureUndoStack()
 
     self.cachedTextures = {}
     self.cachedTexturesMapping = {}
@@ -169,7 +169,7 @@ function TextureManager:GenerateMapTextures()
             local mapTexture = self:createMapTexture()
 
             Spring.GetMapSquareTexture(i, j, 0, oldMapTexture)
-            self:Blit(oldMapTexture, mapTexture)
+            gfx.Blit(oldMapTexture, mapTexture)
             --gl.GenerateMipmap(mapTexture)
 
             self.mapFBOTextures[i][j] = {
@@ -230,7 +230,7 @@ function TextureManager:AssignShadingTexture(name, opts)
 
     local tex = self:MakeShadingTexture(name, sizeX, sizeY)
 
-    self:Blit(source, tex)
+    gfx.Blit(source, tex)
     if name:find("splat_normals") then
         gl.GenerateMipmap(tex)
     end
@@ -372,27 +372,6 @@ function TextureManager:getMapTexture(x, z)
     return self.mapFBOTextures[i][j]
 end
 
-function TextureManager:getOldMapTexture(i, j)
-    if self.oldMapFBOTextures[i] == nil then
-        self.oldMapFBOTextures[i] = {}
-    end
-    if self.oldMapFBOTextures[i][j] == nil then
-        -- doesn't exist so we create it
-        local oldTexture = self:createMapTexture()
-
-        local mapTexture = self.mapFBOTextures[i][j].texture
-
-        self:Blit(mapTexture, oldTexture)
-        local oldTextureObj = {
-            texture = oldTexture,
-            dirty = mapTexture.dirty,
-        }
-        self.oldMapFBOTextures[i][j] = oldTextureObj
-    end
-
-    return self.oldMapFBOTextures[i][j]
-end
-
 -- automatically pushes textures on the undo stack
 function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     local textures = {}
@@ -407,7 +386,7 @@ function TextureManager:getMapTextures(startX, startZ, endX, endZ)
 
     for i = i1, i2 do
         for j = j1, j2 do
-            self:getOldMapTexture(i, j)
+            self:__SetActiveMapTexture(i, j)
             table.insert(textures, {
                 renderTexture = self.mapFBOTextures[i][j],
                 x = startX - i,
@@ -419,39 +398,8 @@ function TextureManager:getMapTextures(startX, startZ, endX, endZ)
     return textures
 end
 
-function TextureManager:BackupShadingTexture(name)
-    if self.oldShadingTextures[name] ~= nil then
-        return
-    end
-
-    local texObj = self.shadingTextures[name]
-    texObj.dirty = true
-    local texture = texObj.texture
-    local texInfo = gl.TextureInfo(texture)
-    local oldTexture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
-        border = false,
-        min_filter = GL.LINEAR,
-        mag_filter = GL.LINEAR,
-        wrap_s = GL.CLAMP_TO_EDGE,
-        wrap_t = GL.CLAMP_TO_EDGE,
-        fbo = true,
-    })
-    self:Blit(texture, oldTexture)
-
-    local oldTextureObj = {
-        texture = oldTexture,
-        dirty = texObj.dirty,
-    }
-    self.oldShadingTextures[name] = oldTextureObj
-end
-
 function TextureManager:Blit(tex1, tex2)
-    gl.Blending("disable")
-    gl.Texture(tex1)
-    gl.RenderToTexture(tex2, function()
-        gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
-    end)
-    gl.Texture(false)
+    gfx.Blit(tex1, tex2)
 end
 
 function TextureManager:CacheTexture(name)
@@ -471,7 +419,7 @@ function TextureManager:CacheTexture(name)
         local texture = gl.CreateTexture(texInfo.xsize, texInfo.ysize, {
             fbo = true,
         })
-        self:Blit(name, texture)
+        gfx.Blit(name, texture)
         local obj = { texture = texture, name = name }
         self.cachedTexturesMapping[name] = obj
         table.insert(self.cachedTextures, obj)
@@ -507,102 +455,28 @@ function TextureManager:GetTexture(name)
     end
 end
 
-function TextureManager:_CalculateTextureMemorySize(texture)
-    local texInfo = gl.TextureInfo(texture)
-    local size = texInfo.xsize * texInfo.ysize * 4
-    return size
+function TextureManager:__SetActiveMapTexture(i, j)
+    local mapTexture = self.mapFBOTextures[i][j]
+    self.activeDrawing:SetActiveTexture(mapTexture)
 end
+
+function TextureManager:BackupShadingTexture(name)
+    local texObj = self.shadingTextures[name]
+    self.activeDrawing:SetActiveTexture(texObj)
+end
+
 
 function TextureManager:PushStack()
-    local stackItem = {
-        diffuse = self.oldMapFBOTextures,
-    }
-    for name, textureObj in pairs(self.oldShadingTextures) do
-        stackItem[name] = textureObj
-        self.stackSize = self.stackSize + self:_CalculateTextureMemorySize(textureObj.texture)
-    end
-
-    for _, row in pairs(stackItem.diffuse) do
-        for _, textureObj in pairs(row) do
-            self.stackSize = self.stackSize + self:_CalculateTextureMemorySize(textureObj.texture)
-        end
-    end
-
-    table.insert(self.stack, stackItem)
-    self.oldMapFBOTextures = {}
-    self.oldShadingTextures = {}
-
-    self:PrintMemory()
-end
-
-function TextureManager:RemoveStackItem(stackItem)
-    if not stackItem then
-        return
-    end
-    for name, value in pairs(stackItem) do
-        if name == "diffuse" then
-            local oldTextures = value
-            for i, v in pairs(oldTextures) do
-                for j, oldTextureObj in pairs(v) do
-                    self.stackSize = self.stackSize - self:_CalculateTextureMemorySize(oldTextureObj.texture)
-
-                    gl.DeleteTexture(oldTextureObj.texture)
-                end
-            end
-        else
-            self.stackSize = self.stackSize - self:_CalculateTextureMemorySize(value.texture)
-            gl.DeleteTexture(value.texture)
-        end
-    end
-end
-
-function TextureManager:RestoreStackItem(stackItem)
-    for name, value in pairs(stackItem) do
-        if name == "diffuse" then
-            local oldTextures = value
-            for i, v in pairs(oldTextures) do
-                for j, oldTextureObj in pairs(v) do
-
-                    local mapTextureObj = self.mapFBOTextures[i][j]
-                    local mapTexture = mapTextureObj.texture
-                    self:Blit(oldTextureObj.texture, mapTexture)
-                    mapTextureObj.dirty = oldTextureObj.dirty
-                end
-            end
-        else
-            local oldObject = value
-
-            local shadingTexObj = self.shadingTextures[name]
-            local shadingTex = shadingTexObj.texture
-            self:Blit(oldObject.texture, shadingTex)
-            shadingTexObj.dirty = oldObject.dirty
-        end
-    end
+    local stackItem = self.activeDrawing:Get()
+    self.stack:PushStack(stackItem)
+    self.activeDrawing:Reset()
 end
 
 function TextureManager:RemoveFirst()
-    local stackItem = self.stack[1]
-
-    self:RemoveStackItem(stackItem)
-
-    table.remove(self.stack, 1)
-    self:PrintMemory()
+    self.stack:RemoveFirst()
 end
 
 function TextureManager:PopStack()
-    local stackItem = self.stack[#self.stack]
-
-    self:RestoreStackItem(stackItem)
-    self:RemoveStackItem(stackItem)
-
-    self.oldMapFBOTextures = {}
-    self.oldShadingTextures = {}
-
-    table.remove(self.stack, #self.stack)
-    self:PrintMemory()
-end
-
-function TextureManager:PrintMemory()
-    local mbSize = math.ceil(self.stackSize / 1024 / 1024)
-    Log.Debug("Memory: " .. tostring(mbSize) .. "MB")
+    self.stack:PopStack()
+    self.activeDrawing:Reset()
 end
