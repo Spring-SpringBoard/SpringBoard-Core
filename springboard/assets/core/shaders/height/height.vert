@@ -17,7 +17,7 @@ void main(void) {
     // vertexWorldPos.xy += (pos.g + pos.r + pos.b) * 1.0;
 
     // vertexWorldPos.y += sin(gl_Vertex.x * 20.0) * 100.0;
-    vertexWorldPos.y += ((pos.r + pos.g + pos.b) / 3.0 - 0.5) * 200.0;
+    vertexWorldPos.y += (pos.a - 0.5) * 300.0;
 
     texCoors = (floor(gl_Vertex.xz) / SMF_TEXSQR_SIZE) - vec2(texSquare);
 

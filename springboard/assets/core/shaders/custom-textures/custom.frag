@@ -1,14 +1,21 @@
 #version 110
 
-uniform sampler2D customSampler;
+uniform sampler2D texSampler;
+uniform sampler2D texSplatDistr;
+uniform sampler2D texSplatTexture;
+
 uniform vec2 customSamplerSize;
 
 varying vec4 vertexWorldPos;
+varying vec2 texCoors;
 
 void main(void) {
-    gl_FragColor = texture2D(customSampler, vertexWorldPos.xz / customSamplerSize);
+  vec4 color = texture2D(texSampler, texCoors);
+  vec4 splatDistr = texture2D(texSplatDistr, vertexWorldPos.xz / customSamplerSize);
+  vec4 splat = texture2D(texSplatTexture, texCoors) * splatDistr.r;
 
-    float heightFactor = max(0.5, vertexWorldPos.y / 100.0);
-    heightFactor = min(1.5, heightFactor);
-    gl_FragColor.rgb *= heightFactor;
+  // gl_FragColor = color + splat;
+  // gl_FragColor = splat;
+  gl_FragColor = splat;
+  // gl_FragColor = color + splat;
 }

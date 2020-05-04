@@ -61,7 +61,8 @@ end
 
 function MapShadersEditor:_ClearFields()
     for name, _ in pairs(self.fields) do
-        if name:find("uniform_") or name == "uniform-sep" then
+        if name:find("uniform_") or name == "uniform-sep" or
+           name:find("texture_") or name == 'texture-sep' then
             self:RemoveField(name)
         end
     end
@@ -85,28 +86,52 @@ function MapShadersEditor:LoadShader()
 
     if not success then
         Log.Error(msg)
-    else
-        self:_ClearFields()
-
-        if self.shaderDef.uniform then
-            self:AddControl("uniform-sep", {
-                Label:New {
-                    caption = "Uniforms",
-                },
-            })
-            for uName, value in pairs(self.shaderDef.uniform) do
-                local fieldName = "uniform_" .. uName
-                self:AddField(NumericField({
-                    name = fieldName,
-                    title = uName .. ":",
-                    value = value,
-                }))
-            end
-        end
-
-        self.stackPanel:EnableRealign()
-        self.stackPanel:Invalidate()
+        return
     end
+
+    self:_ClearFields()
+
+    if self.shaderDef.uniform then
+        self:AddControl("uniform-sep", {
+            Label:New {
+                caption = "Uniforms",
+            },
+        })
+        for uName, value in pairs(self.shaderDef.uniform) do
+            local fieldName = "uniform_" .. uName
+            self:AddField(NumericField({
+                name = fieldName,
+                title = uName .. ":",
+                value = value,
+            }))
+        end
+    end
+    if self.shaderDef.texture then
+        self:AddControl("texture-sep", {
+            Label:New {
+                caption = "Textures",
+            },
+        })
+        for tName, value in pairs(self.shaderDef.texture) do
+            local fieldName = "texture_" .. tName
+            self:AddControl('btn-' .. fieldName, {
+                Button:New {
+                    name = fieldName,
+                    caption = "Make active: " .. tName,
+                    OnClick = {
+                        function()
+                            Spring.Echo("Setting texture as active: ", value)
+                            Spring.Echo("Use DNTS painter to paint on it (WIP)")
+                            SB.drawTexture = value
+                        end
+                    }
+                }
+            })
+        end
+    end
+
+    self.stackPanel:EnableRealign()
+    self.stackPanel:Invalidate()
 end
 
 function MapShadersEditor:OnFieldChange(name, value)
@@ -118,7 +143,9 @@ function MapShadersEditor:OnFieldChange(name, value)
         end)
     elseif name == "shaderEnabled" then
         if value then
-            self:LoadShader()
+            SB.delayGL(function()
+                self:LoadShader()
+            end)
         else
             Spring.SetMapShader(nil, nil)
             self:_ClearFields()

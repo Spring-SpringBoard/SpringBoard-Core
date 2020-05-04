@@ -155,7 +155,7 @@ function TextureEditor:init()
         },
     })
     self.btnFilter = TabbedPanelButton({
-        x = 70,
+        x = SB.conf.TOOLBOX_ITEM_WIDTH,
         y = 0,
         tooltip = "Apply a filter",
         children = {
@@ -175,7 +175,7 @@ function TextureEditor:init()
         },
     })
     self.btnDNTS = TabbedPanelButton({
-        x = 140,
+        x = SB.conf.TOOLBOX_ITEM_WIDTH * 2,
         y = 0,
         tooltip = "DNTS textures",
         children = {
@@ -209,7 +209,7 @@ function TextureEditor:init()
         },
     })
     self.btnVoid = TabbedPanelButton({
-        x = 210,
+        x = SB.conf.TOOLBOX_ITEM_WIDTH * 3,
         y = 0,
         tooltip = "Make the terrain transparent",
         children = {
@@ -229,7 +229,7 @@ function TextureEditor:init()
         },
     })
     self.btnHeight = TabbedPanelButton({
-        x = 280,
+        x = SB.conf.TOOLBOX_ITEM_WIDTH * 4,
         y = 0,
         tooltip = "Draw height",
         children = {

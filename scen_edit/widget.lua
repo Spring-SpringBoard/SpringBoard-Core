@@ -172,8 +172,13 @@ end
 
 function widget:DrawGroundPreForward()
     -- HACK
-    if SB.DrawGroundPreForward ~= nil then
-        SB.DrawGroundPreForward()
+    local success, error = pcall(function()
+        if SB.DrawGroundPreForward ~= nil then
+            SB.DrawGroundPreForward()
+        end
+    end)
+    if not success then
+        Log.Error(error)
     end
 end
 
