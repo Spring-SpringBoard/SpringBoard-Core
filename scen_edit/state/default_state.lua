@@ -94,34 +94,37 @@ function DefaultState:MouseMove(x, y, dx, dy, button)
     if selCount == 0 then
         return
     end
+
     local _, ctrl, _, shift = Spring.GetModKeyState()
     if ctrl then
-        if shift then
-            local draggable = false
-            for selType, selected in pairs(selection) do
-                local bridge = ObjectBridge.GetObjectBridge(selType)
-                if not bridge.NoHorizontalDrag and not bridge.NoDrag then
-                    if next(selected) ~= nil then
-                        draggable = true
-                    end
-                end
-                if draggable then
-                    break
+        if not shift then
+            SB.stateManager:SetState(RotateObjectState())
+            return
+        end
+
+        local draggable = false
+        for selType, selected in pairs(selection) do
+            local bridge = ObjectBridge.GetObjectBridge(selType)
+            if not bridge.NoHorizontalDrag and not bridge.NoDrag then
+                if next(selected) ~= nil then
+                    draggable = true
                 end
             end
             if draggable then
-                SB.stateManager:SetState(DragHorizontalObjectState())
+                break
             end
-        else
-            SB.stateManager:SetState(RotateObjectState())
         end
-    else
-        if self.__clickedObjectID and self.__wasSelected then
-            SB.stateManager:SetState(DragObjectState(
-               self.__clickedObjectID, self.__clickedObjectBridge,
-               self.dragDiffX, self.dragDiffZ)
-            )
+        if draggable then
+            SB.stateManager:SetState(DragHorizontalObjectState())
         end
+        return
+    end
+
+    if self.__clickedObjectID and self.__wasSelected then
+        SB.stateManager:SetState(DragObjectState(
+            self.__clickedObjectID, self.__clickedObjectBridge,
+            self.dragDiffX, self.dragDiffZ)
+        )
     end
 end
 
@@ -155,6 +158,48 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
     if action then
         action:execute()
         return true
+    end
+    if key == KEYSYMS.M then
+        local selection = SB.view.selectionManager:GetSelection()
+        local moveObjectID = nil
+        local bridge = nil
+        for selType, selected in pairs(selection) do
+            _, moveObjectID = next(selected)
+            if moveObjectID ~= nil then
+                bridge = ObjectBridge.GetObjectBridge(selType)
+                break
+            end
+        end
+        if moveObjectID ~= nil then
+            local mx, my = Spring.GetMouseState()
+            local result, coords = Spring.TraceScreenRay(mx, my, true)
+            local x, z = 0, 0
+            if result == "ground" then
+                local objectPos = bridge.s11n:Get(moveObjectID, "pos")
+                x = objectPos.x - coords[1]
+                z = objectPos.z - coords[3]
+            end
+            SB.stateManager:SetState(DragObjectState(
+                moveObjectID, bridge,
+                x, z)
+            )
+        end
+        return true
+    elseif key == KEYSYMS.R then
+        -- TODO: Doesn't make sense to have rotation state possible with both R and ctrl-click
+        -- Get rid of ctrl-click?
+        local hasSelected = false
+        local selection = SB.view.selectionManager:GetSelection()
+        for selType, selected in pairs(selection) do
+            _, moveObjectID = next(selected)
+            if moveObjectID ~= nil then
+                hasSelected = true
+                break
+            end
+        end
+        if hasSelected then
+            SB.stateManager:SetState(RotateObjectState())
+        end
     end
     return false
 end

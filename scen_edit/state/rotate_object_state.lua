@@ -46,6 +46,27 @@ function RotateObjectState:GetRotatedObject(params, bridge)
     return object
 end
 
+function RotateObjectState:Update()
+    local mx, my, leftPressed = Spring.GetMouseState()
+    if leftPressed then
+        return
+    end
+    if self.__oldMx == nil then
+        self.__oldMx = mx
+        self.__oldMy = my
+    end
+    self:MouseMove(mx, my, self.__oldMx - mx, self.__oldMy - my)
+
+    self.__oldMx = mx
+    self.__oldMy = my
+end
+
+function RotateObjectState:MousePress(mx, my, button)
+    if button == 1 then
+        return true
+    end
+end
+
 function RotateObjectState:MouseMove(mx, my, ...)
     local result, coords = Spring.TraceScreenRay(mx, my, true)
     if result ~= "ground" then

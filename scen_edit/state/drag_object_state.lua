@@ -6,9 +6,12 @@ function DragObjectState:init(objectID, bridge, startDiffX, startDiffZ)
     self.objectID = objectID
     self.bridge = bridge
     self.dx = 0
+    self.dy = 0
     self.dz = 0
     self.startDiffX = startDiffX
     self.startDiffZ = startDiffZ
+
+    self.axis = nil
     SB.SetMouseCursor("drag")
 end
 
@@ -24,25 +27,80 @@ function DragObjectState:GetMovedObjects()
             pos.x = pos.x + self.dx
             pos.z = pos.z + self.dz
             pos.y = Spring.GetGroundHeight(pos.x, pos.z) + dy
+            -- pos.y = pos.y + self.dy
             objects[selType][objectID] = { pos = pos }
         end
     end
     return objects
 end
 
-function DragObjectState:MouseMove(mx, my, ...)
-    local result, coords = Spring.TraceScreenRay(mx, my, true)
-    if result ~= "ground" then
-        return
+function DragObjectState:KeyPress(key, mods, isRepeat, label, unicode)
+    if self:super("KeyPress", key, mods, isRepeat, label, unicode) then
+        return true
     end
 
+    -- TODO: Add proper axis movement support
+    -- local newAxis = nil
+    -- if key == KEYSYMS.X then
+    --     newAxis = 'x'
+    -- elseif key == KEYSYMS.Y then
+    --     newAxis = 'y'
+    -- elseif key == KEYSYMS.Z then
+    --     newAxis = 'z'
+    -- else
+    --     return
+    -- end
+
+    -- if self.axis == newAxis then
+    --     self.axis = nil
+    -- else
+    --     self.axis = newAxis
+    -- end
+    -- self.dx = 0
+    -- self.dy = 0
+    -- self.dz = 0
+    -- return true
+end
+
+function DragObjectState:Update()
+    local mx, my, leftPressed = Spring.GetMouseState()
+    if leftPressed then
+        return
+    end
+    if self.__oldMx == nil then
+        self.__oldMx = mx
+        self.__oldMy = my
+    end
+    self:MouseMove(mx, my, self.__oldMx - mx, self.__oldMy - my)
+
+    self.__oldMx = mx
+    self.__oldMy = my
+end
+
+function DragObjectState:MousePress(mx, my, button)
+    if button == 1 then
+        return true
+    end
+end
+
+function DragObjectState:MouseMove(mx, my, mdx, mdy)
     if not self.bridge.ValidObject(self.objectID) then -- or Spring.GetUnitIsDead(self.objectID)
         SB.stateManager:SetState(DefaultState())
         return false
     end
-    local pos = self.bridge.s11n:Get(self.objectID, "pos")
-    self.dx = coords[1] - pos.x + self.startDiffX
-    self.dz = coords[3] - pos.z + self.startDiffZ
+
+    if self.axis == nil then
+        local result, coords = Spring.TraceScreenRay(mx, my, true)
+        if result ~= "ground" then
+            return
+        end
+
+        local pos = self.bridge.s11n:Get(self.objectID, "pos")
+        self.dx = coords[1] - pos.x + self.startDiffX
+        self.dz = coords[3] - pos.z + self.startDiffZ
+    else
+        self['d' .. self.axis] = self['d' .. self.axis] + mdy
+    end
 
     self.ghostViews = self:GetMovedObjects()
 end
