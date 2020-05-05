@@ -11,7 +11,7 @@ function FileDialog:init()
     self.fileView = AssetView({
         ctrl = {
             width = "100%",
-            y = 10,
+            y = 30,
             bottom = 130 + SB.conf.B_HEIGHT + 10,
         },
         multiSelect = false,
@@ -53,8 +53,22 @@ function FileDialog:init()
         fileNameField.width = 500
         self:AddField(StringField(fileNameField))
     end
+    self.error = Label:New {
+        font = {
+            color = { 1, 0, 0, 1 },
+        },
+        caption = ""
+    }
+    self:AddControl('error', { self.error })
 
     local children = {
+        Label:New {
+            y = 0,
+            caption = self.caption,
+            font = {
+                color = { 0.7, 0.7, 0.7, 1.0 }
+            },
+        },
         self.fileView:GetControl(),
         ScrollPanel:New {
             x = 0,
@@ -88,9 +102,28 @@ function FileDialog:getSelectedFilePath()
     return self.fileView.dir .. self.fields.fileName.value
 end
 
+function FileDialog:SetDialogError(error)
+    if error ~= nil then
+        self.error:SetCaption(tostring(error))
+    else
+        self.error:SetCaption('Unknown error')
+    end
+end
+
 function FileDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()
     if self.confirmDialogCallback then
-        return self.confirmDialogCallback(path)
+        local success, error = self.confirmDialogCallback(path)
+        if not success then
+            self:SetDialogError(error)
+        end
+        return success
     end
+end
+
+function FileDialog:__ErrorCheck(success, error)
+    if not success then
+        self:SetDialogError(error)
+    end
+    return success
 end

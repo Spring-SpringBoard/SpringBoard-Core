@@ -42,6 +42,14 @@ function NewProjectDialog:init()
         })
     }))
 
+    self.error = Label:New {
+        font = {
+            color = { 1, 0, 0, 1 },
+        },
+        caption = ""
+    }
+    self:AddControl('error', { self.error })
+
     local children = {
         ScrollPanel:New {
             x = 0,
@@ -58,14 +66,24 @@ function NewProjectDialog:init()
         notMainWindow = true,
         buttons = { "ok", "cancel" },
         width = 400,
-        height = 200,
+        height = 300,
     })
 end
 
+function NewProjectDialog:SetDialogError(error)
+    if error ~= nil then
+        self.error:SetCaption(tostring(error))
+    else
+        self.error:SetCaption('Unknown error')
+    end
+end
+
 function NewProjectDialog:ConfirmDialog()
+    self:SetDialogError("")
     local projectName = self.fields["projectName"].value
     if String.Trim(projectName) == "" then
         SB.HintControls(self.fields["projectName"].components)
+        self:SetDialogError("Missing project name.")
         return
     end
 
@@ -91,7 +109,7 @@ function NewProjectDialog:ConfirmDialog()
     local _, path = Project.GenerateNamePath(projectName)
     if SB.DirExists(path) then
         SB.HintControls(self.fields["projectName"].components)
-        Log.Error("Project \"" .. tostring(projectName) .. "\" already exists.")
+        self:SetDialogError("Project \"" .. tostring(projectName) .. "\" already exists.")
         return
     end
 

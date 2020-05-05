@@ -9,6 +9,7 @@ function SaveProjectDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()
 
     if self.fields.fileName.value == "" then
+        self:SetDialogError("Missing project name")
         return false
     end
 
@@ -18,6 +19,6 @@ function SaveProjectDialog:ConfirmDialog()
     -- end
 
     if self.confirmDialogCallback then
-        return self.confirmDialogCallback(path)
+        return self:__ErrorCheck(self.confirmDialogCallback(path))
     end
 end

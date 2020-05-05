@@ -13,12 +13,14 @@ end
 function ImportFileDialog:ConfirmDialog()
     local filePath = self:getSelectedFilePath()
 
-    if not VFS.FileExists(filePath, VFS.RAW_ONLY) then
-        return
+    if not VFS.FileExists(filePath, VFS.RAW_FIRST) then
+        self:SetDialogError('"' .. tostring(filePath) .. '" is not a  file.')
+        return false
     end
 
     if self.confirmDialogCallback then
-        return self.confirmDialogCallback(filePath,
-                                          self.fields.fileType.value)
+        return self:__ErrorCheck(
+            self.confirmDialogCallback(filePath, self.fields.fileType.value)
+        )
     end
 end

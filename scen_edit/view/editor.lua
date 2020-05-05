@@ -40,6 +40,10 @@ function Editor:init()
     self.stackPanel:DisableRealign()
 end
 
+-------------------------------
+-- OVERRIDE METHODS START
+-------------------------------
+
 --- Called when a field starts to change.
 --- Override.
 -- @tparam string name Name of the field.
@@ -72,6 +76,10 @@ end
 -- @param name state State.
 function Editor:OnLeaveState(state)
 end
+
+-------------------------------
+-- OVERRIDE METHODS END
+-------------------------------
 
 function Editor:_OnEnterState(state)
     if self:IsValidState(state) then

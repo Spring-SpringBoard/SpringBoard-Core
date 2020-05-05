@@ -34,7 +34,7 @@ function ImportAction:execute()
 
             if fileType == IMPORT_DIFFUSE then
                 if not isImage then
-                    return
+                    return false, "Please select an image file"
                 end
 
                 Log.Notice("Importing diffuse: " .. path .. " ...")
@@ -44,13 +44,14 @@ function ImportAction:execute()
                 return true
             elseif fileType == IMPORT_HEIGHTMAP then
                 if not isImage then
-                    return
+                    return false, "Please select an image file"
                 end
 
                 self:ImportHeightmap(path)
                 return true
             else
                 Log.Error("Error trying to export. Invalid fileType specified: " .. tostring(fileType))
+                return false, "Internal error. Invalid fileType specified: " .. tostring(fileType)
             end
         end
     )

@@ -50,34 +50,35 @@ function ExportAction:execute()
             local exportCommand
             if fileType == ExportAction.EXPORT_SPRING_ARCHIVE then
                 if isDir then
-                    return false
+                    return false, "Please select a file"
                 end
 
                 self:ExportSpringArchive(path, heightmapExtremes)
                 return true
             elseif fileType == ExportAction.EXPORT_MAP_TEXTURES then
                 if isFile then
-                    return false
+                    return false, "Please select a directory"
                 end
 
                 self:TryToExportMapTextures(path, heightmapExtremes)
                 return true
             elseif fileType == ExportAction.EXPORT_MAP_INFO then
                 if isDir then
-                    return false
+                    return false, "Please select a file"
                 end
 
                 Log.Notice("Exporting map info...")
                 exportCommand = ExportMapInfoCommand(path)
             elseif fileType == ExportAction.EXPORT_S11N then
                 if isDir then
-                    return false
+                    return false, "Please select a file"
                 end
 
                 Log.Notice("Exporting s11n objects...")
                 exportCommand = ExportS11NCommand(path)
             else
                 Log.Error("Error trying to export. Invalid fileType specified: " .. tostring(fileType))
+                return false, "Internal error. Invalid fileType specified: " .. tostring(fileType)
             end
 
             if exportCommand then

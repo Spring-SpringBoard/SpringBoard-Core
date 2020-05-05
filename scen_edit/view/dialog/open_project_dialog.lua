@@ -9,12 +9,11 @@ function OpenProjectDialog:ConfirmDialog()
     local path = self:getSelectedFilePath()
 
     if not Project.IsDirProject(path) then
-        return
+        self:SetDialogError('Cannot open "' .. tostring(path) .. '" - not a SpringBoard project')
+        return false
     end
 
     if self.confirmDialogCallback then
-        self.confirmDialogCallback(path)
-        return true
+        return self:__ErrorCheck(self.confirmDialogCallback(path))
     end
-    return false
 end

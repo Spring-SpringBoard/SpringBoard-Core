@@ -89,8 +89,8 @@ function ExportFileDialog:ConfirmDialog()
 --         os.remove(filePath)
 --     end
     if self.confirmDialogCallback then
-        return self.confirmDialogCallback(filePath,
+        return self:__ErrorCheck(self.confirmDialogCallback(filePath,
                                           self.fields.fileType.value,
-                                          self:GetHeightmapExtremes())
+                                          self:GetHeightmapExtremes()))
     end
 end

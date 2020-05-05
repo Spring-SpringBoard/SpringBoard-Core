@@ -31,7 +31,7 @@ function SaveProjectAsAction:execute()
     SaveProjectDialog():setConfirmDialogCallback(
         function(path)
             if not String.Starts(path, SB.DIRS.PROJECTS) then
-                return false
+                return false, 'Project must be saved in the "springboard/projects" directory'
             end
 
             local name = path:sub(#SB.DIRS.PROJECTS + 1, #path)
