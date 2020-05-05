@@ -60,7 +60,13 @@ function ExportAction:execute()
                     return false, "Please select a directory"
                 end
 
-                self:TryToExportMapTextures(path, heightmapExtremes)
+                local progressID = SB.MakeUniqueActionProgressID()
+                SB.ActionProgress(progressID, 0.1, "Exporting maps textures...")
+                SB.delay(function()
+                    self:TryToExportMapTextures(path, heightmapExtremes):next(function()
+                        SB.ActionProgress(progressID, 1.0, "Exporting maps textures: Finished")
+                    end)
+                end)
                 return true
             elseif fileType == ExportAction.EXPORT_MAP_INFO then
                 if isDir then
@@ -123,6 +129,8 @@ local function WriteToFile(path, content)
 end
 
 function ExportAction:ExportSpringArchive(path, heightmapExtremes)
+    local progressID = SB.MakeUniqueActionProgressID()
+    SB.ActionProgress(progressID, 0.0, "Exporting archive: Exporting map textures...")
     Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
 
     local buildDir = SB.CreateTemporaryDir("build")
@@ -136,6 +144,8 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     local mapsDir
 
     promise:next(function()
+        SB.ActionProgress(progressID, 0.5, "Exporting archive: Copying files...")
+
         archiveDir = Path.Join(buildDir, "archive")
         Spring.CreateDir(archiveDir)
 
@@ -171,6 +181,7 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
         }
         SB.commandManager:execute(CompoundCommand(cmds), true)
     end):next(function()
+        SB.ActionProgress(progressID, 0.6, "Exporting archive: Compiling map...")
         return CompileMapCommand({
             heightPath = Path.Join(buildDir, "heightmap.png"),
             diffusePath = Path.Join(buildDir, "diffuse.png"),
@@ -178,6 +189,7 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
             outputPath = Path.Join(mapsDir, SB.project.name)
         }):execute()
     end):next(function()
+        SB.ActionProgress(progressID, 0.9, "Exporting archive: Zipping map...")
         Log.Notice("Exporting archive: " .. path .. " ...")
         SB.commandManager:execute(ExportProjectCommand(archiveDir, path), true)
 
@@ -188,6 +200,8 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
         WG.Connector.Send("OpenFile", {
             path = "file://" .. Path.Join(SB.DIRS.WRITE_PATH, Path.GetParentDir(path)),
         })
+
+        SB.ActionProgress(progressID, 1.0, "Exporting archive: Finished.")
     end):catch(function(reason)
         Log.Error("Export action failed: " .. tostring(reason))
     end)

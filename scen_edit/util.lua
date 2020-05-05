@@ -774,3 +774,68 @@ function SB.CreateTemporaryDir(name)
     Spring.CreateDir(dir)
     return dir
 end
+
+local activeActions = {}
+local activeActionsIDCounter = 0
+
+function SB.MakeUniqueActionProgressID()
+    activeActionsIDCounter = activeActionsIDCounter + 1
+    return activeActionsIDCounter
+end
+
+function SB.ActionProgress(actionName, progress, caption)
+    local active = activeActions[actionName]
+    if not active then
+        active = {
+            label = Label:New {
+                x = 0,
+                y = 5,
+                caption = caption
+            },
+            progress = Progressbar:New {
+                value = progress * 100.0,
+                x = 0,
+                right = 0
+            }
+        }
+        active.id = WG.Chotify:Post({
+            title = "Progress",
+            time = 3600,
+            body = StackPanel:New {
+                x = 0,
+                width = "100%",
+                y = 0,
+                height = "100%",
+                children = {
+                    active.label,
+                    active.progress,
+                },
+            }
+        })
+        activeActions[actionName] = active
+    end
+
+    active.progress:SetValue(progress * 100.0)
+    active.label:SetCaption(caption)
+
+    if progress == 1.0 then
+        WG.Chotify:CloseNotification(active.id)
+        activeActions[actionName] = nil
+
+        WG.Chotify:Post({
+            title = "Finished",
+            time = 3,
+            body = StackPanel:New {
+                x = 0,
+                width = "100%",
+                y = 0,
+                height = "100%",
+                children = {
+                    active.label,
+                    active.progress,
+                },
+            }
+        })
+        return
+    end
+end
