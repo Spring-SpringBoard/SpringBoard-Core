@@ -160,8 +160,16 @@ function GridView:DeselectAll()
     self.layoutPanel:DeselectAll()
 end
 
+-- FIXME: Cleanup double click handling hack
+local __gridItemCounter = 0
+local __previousClickedObject = nil
+local __previousClickedTime = nil
+
 function GridView:NewItem(tbl)
+    __gridItemCounter = __gridItemCounter + 1
+    local item
     local defaults = {
+        name = 'grid_item' .. tostring(__gridItemCounter),
         width  = self.itemWidth,
         height = self.itemHeight,
         padding = {0,0,0,0},
@@ -169,9 +177,29 @@ function GridView:NewItem(tbl)
         itemMargin = {0,0,0,0},
         useRTT = false,
         __nofont = true,
+        -- FIXME: Cleanup double click handling hack
+        OnMouseUp = {
+            function(obj, x, y, button)
+                if button ~= 1 then
+                    return
+                end
+
+                local now = Spring.GetTimer()
+                if __previousClickedObject ~= obj then
+                    __previousClickedObject = obj
+                    __previousClickedTime = now
+                    return
+                end
+
+                if Spring.DiffTimers(now, __previousClickedTime) < 0.45 then
+                    self:DoubleClickItem(item)
+                end
+                __previousClickedTime = now
+            end
+        }
     }
     tbl = Table.Merge(tbl, defaults)
-    local item = Control:New(tbl)
+    item = Control:New(tbl)
 
     self.layoutPanel:AddChild(item)
     table.insert(self.items, item)
@@ -230,6 +258,9 @@ function GridView:AddItem(caption, image, tooltip, __chiliName)
         name = __chiliCtrlName,
     })
     return item
+end
+
+function GridView:DoubleClickItem(item)
 end
 
 function GridView:ClearItems()

@@ -1,7 +1,8 @@
 SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 FileDialog = Editor:extends {
-    caption = "File dialog"
+    caption = "File dialog",
+    openProjectsAsFiles = false
 }
 
 function FileDialog:init()
@@ -17,6 +18,7 @@ function FileDialog:init()
         multiSelect = false,
         dir = self.dir,
         rootDir = self.rootDir,
+        openProjectsAsFiles = self.openProjectsAsFiles,
         OnDblClickItem = {
             function()
                 if self:ConfirmDialog() then

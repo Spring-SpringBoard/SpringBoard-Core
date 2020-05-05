@@ -19,6 +19,11 @@ function AssetView:init(tbl)
     self.showDirs = tbl.showDirs
     self.imageFolder = tbl.imageFolder or self._fakeControl.imageFolder
     self.imageFolderUp = tbl.imageFolderUp or self._fakeControl.imageFolderUp
+    self.openProjectsAsFiles = tbl.openProjectsAsFiles
+    self.OnDblClickItem = tbl.OnDblClickItem or { function() end }
+
+    -- FIXME: Cleanup double click handling hack
+    self.__previousDoubleClickTime = Spring.GetTimer()
 
     self.layoutPanel.MouseDblClick = function(ctrl, x, y, button, mods)
         if button ~= 1 then
@@ -30,13 +35,13 @@ function AssetView:init(tbl)
         if itemIdx < 0 then return end
 
         local item = self.items[itemIdx]
-        if item.isFolder then
-            self:SetDir(item.path)
-            return ctrl
-        else
-            ctrl:CallListeners(ctrl.OnDblClickItem, item, itemIdx)
-            return ctrl
+        if item == nil then
+            return
         end
+
+        self:DoubleClickItem(item)
+
+        return ctrl
     end
     if self.showPath then
         self.scrollPanel:SetPos(nil, 20)
@@ -90,6 +95,21 @@ function AssetView:init(tbl)
         end
     end
     self:SetDir(tbl.dir or '')
+end
+
+-- FIXME: Cleanup double click handling hack
+function AssetView:DoubleClickItem(item)
+    local now = Spring.GetTimer()
+    if Spring.DiffTimers(now, self.__previousDoubleClickTime) < 0.45 then
+        return
+    end
+    self.__previousDoubleClickTime = now
+
+    if item.isFolder and (not item.isProject or not self.openProjectsAsFiles) then
+        self:SetDir(item.path)
+    else
+        CallListeners(self.OnDblClickItem, item)
+    end
 end
 
 function AssetView:SetDir(directory)
@@ -186,7 +206,8 @@ function AssetView:AddFolder(folder)
     local tooltip
     local image = self.imageFolder
 
-    if Project.IsDirProject(folder) then
+    local isProject = Project.IsDirProject(folder)
+    if isProject then
         local projectInfoPath = Path.Join(folder, Project.PROJECT_FILE)
         if VFS.FileExists(projectInfoPath, VFS.RAW) then
             local projectInfo = VFS.Include(projectInfoPath, nil, VFS.RAW)
@@ -229,6 +250,7 @@ function AssetView:AddFolder(folder)
     local item = self:AddItem(Path.ExtractFileName(folder), image, tooltip)
     item.path = folder
     item.isFolder = true
+    item.isProject = isProject
 end
 
 function AssetView:AddFile(file)

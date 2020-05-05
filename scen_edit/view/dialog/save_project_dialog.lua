@@ -2,7 +2,8 @@ SB.Include(Path.Join(SB.DIRS.SRC, 'view/dialog/file_dialog.lua'))
 
 SaveProjectDialog = FileDialog:extends {
     dir = SB.DIRS.PROJECTS,
-    caption = "Save project"
+    caption = "Save project",
+    openProjectsAsFiles = true
 }
 
 function SaveProjectDialog:ConfirmDialog()
