@@ -159,7 +159,7 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         action:execute()
         return true
     end
-    if key == KEYSYMS.M then
+    if key == KEYSYMS.G then
         local selection = SB.view.selectionManager:GetSelection()
         local moveObjectID = nil
         local bridge = nil
