@@ -186,7 +186,7 @@ function ExportMapInfoCommand:GetSMF()
         minheight = minH,
 		maxheight = maxH,
         smtFileName0 = "maps/" .. SB.project.name .. ".smt",
-        grassShadingTex = "maps/" .. "grass.png",
+        grassmapTex = "maps/grass.png",
     }
     return tbl
 end
@@ -205,20 +205,18 @@ function ExportMapInfoCommand:GetResources()
         -- lightEmissionTex
         -- parallaxHeightTex
 
-    -- However, we ONLY support the following subset (code below)
-
     local tbl = {
         splatDetailNormalDiffuseAlpha = gl.GetMapRendering("splatDetailNormalDiffuseAlpha"),
     }
     for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
         local fileName = "maps/" .. texType .. ".png"
-        if texType == "specular" then
-            tbl["specularTex"] = fileName
-        elseif texType == "splat_distr" then
-            tbl["splatDistrTex"] = fileName
-        elseif texType:find("splat_normals") ~= nil then
-            local key = "splatDetailNormalTex" .. texType:sub(#"splat_normals" + 1)
-            tbl[key] = fileName
+        local texDef = SB.model.textureManager.shadingTextureDefs[texType]
+        if texDef == nil then
+            Log.Error("Cannot find texture def for texture: " .. tostring(texType))
+        elseif texDef.mapinfo_name == nil then
+            Log.Error("Missing mapinfo_name for shading texture: " .. tostring(texType))
+        else
+            tbl[texDef.mapinfo_name] = fileName
         end
     end
     return tbl

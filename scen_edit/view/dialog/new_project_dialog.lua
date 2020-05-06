@@ -148,8 +148,12 @@ GeMapsWithoutProjects = function()
     local maps = VFS.GetMaps()
     local filtered = {}
     local unique = {}
+    VFS.ScanAllDirs()
     for _, map in ipairs(maps) do
-        if not projectMaps[map] and not unique[map] then
+        -- FIXME: Spring doesn't properly detect when archives have been deleted
+        -- will return true even after deleting them. A restart is necessary
+        -- neither VFS.ScanAllDirs() nor manually checking with VFS.HasArchive helps
+        if not projectMaps[map] and not unique[map] and VFS.HasArchive(map) then
             table.insert(filtered, map)
             unique[map] = true
         end

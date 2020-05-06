@@ -23,19 +23,23 @@ function TextureManager:init()
     self.shadingTextureDefs = {
         specular = {
             engineName = "$ssmf_specular",
+            mapinfo_name = "specularTex",
         },
         emission = {
             engineName = "$ssmf_emission",
+            mapinfo_name = "lightEmissionTex",
             alpha = true,
         },
         refl = {
             engineName = "$ssmf_sky_refl",
+            mapinfo_name = "skyReflectModTex",
         },
         -- parallax = {
         --     engineName = "$ssmf_parallax",
         -- },
         splat_distr = {
             engineName = "$ssmf_splat_distr",
+            mapinfo_name = "splatDistrTex",
             alpha = true,
         },
         -- splat_detail = {
@@ -44,21 +48,25 @@ function TextureManager:init()
         splat_normals0 = {
             engineName = "$ssmf_splat_normals:0",
             _setParams = {"$ssmf_splat_normals", 0},
+            mapinfo_name = "splatDetailNormalTex0",
             alpha = true,
         },
         splat_normals1 = {
             engineName = "$ssmf_splat_normals:1",
             _setParams = {"$ssmf_splat_normals", 1},
+            mapinfo_name = "splatDetailNormalTex1",
             alpha = true,
         },
         splat_normals2 = {
             engineName = "$ssmf_splat_normals:2",
             _setParams = {"$ssmf_splat_normals", 2},
+            mapinfo_name = "splatDetailNormalTex2",
             alpha = true,
         },
         splat_normals3 = {
             engineName = "$ssmf_splat_normals:3",
             _setParams = {"$ssmf_splat_normals", 3},
+            mapinfo_name = "splatDetailNormalTex3",
             alpha = true,
         },
     }
