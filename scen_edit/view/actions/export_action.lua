@@ -101,6 +101,13 @@ local ignoredFiles = {
 	[".git"] = true
 }
 
+local function CopyFile(src, dest, mode)
+    local srcFileContent = VFS.LoadFile(src, mode)
+    local destFile = assert(io.open(dest, "w"))
+    destFile:write(srcFileContent)
+    destFile:close()
+end
+
 local function CopyRecursively(src, dest, opts)
     opts = opts or {}
     Path.Walk(src, function(srcPath)
@@ -115,10 +122,7 @@ local function CopyRecursively(src, dest, opts)
 		local destDir = Path.GetParentDir(destPath)
 		Spring.CreateDir(destDir)
 
-		local srcFileContent = VFS.LoadFile(srcPath, opts.mode)
-		local destFile = assert(io.open(destPath, "w"))
-		destFile:write(srcFileContent)
-		destFile:close()
+        CopyFile(srcPath, destPath, opts.mode)
 	end, opts)
 end
 
@@ -188,6 +192,13 @@ function ExportAction:ExportSpringArchive(path, heightmapExtremes)
             metalPath = Path.Join(buildDir, "metal.png"),
             outputPath = Path.Join(mapsDir, SB.project.name)
         }):execute()
+    end):next(function()
+        SB.ActionProgress(progressID, 0.8, "Exporting archive: Copying map textures...")
+        CopyFile(Path.Join(buildDir, "grass.png"), Path.Join(mapsDir, "grass.png"))
+        for texType, _ in pairs(SB.model.textureManager.shadingTextures) do
+            local fileName = texType .. ".png"
+            CopyFile(Path.Join(buildDir, fileName), Path.Join(mapsDir, fileName))
+        end
     end):next(function()
         SB.ActionProgress(progressID, 0.9, "Exporting archive: Zipping map...")
         Log.Notice("Exporting archive: " .. path .. " ...")

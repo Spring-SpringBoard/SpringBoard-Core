@@ -185,8 +185,8 @@ function ExportMapInfoCommand:GetSMF()
     local tbl = {
         minheight = minH,
 		maxheight = maxH,
-        smtFileName0 = SB.project.name .. ".smt",
-        grassmapTex = "grass.png",
+        smtFileName0 = "maps/" .. SB.project.name .. ".smt",
+        grassShadingTex = "maps/" .. "grass.png",
     }
     return tbl
 end
@@ -211,8 +211,7 @@ function ExportMapInfoCommand:GetResources()
         splatDetailNormalDiffuseAlpha = gl.GetMapRendering("splatDetailNormalDiffuseAlpha"),
     }
     for texType, shadingTexObj in pairs(SB.model.textureManager.shadingTextures) do
-        local fileName = texType .. ".png"
-        -- FIXME: HARDCODED
+        local fileName = "maps/" .. texType .. ".png"
         if texType == "specular" then
             tbl["specularTex"] = fileName
         elseif texType == "splat_distr" then

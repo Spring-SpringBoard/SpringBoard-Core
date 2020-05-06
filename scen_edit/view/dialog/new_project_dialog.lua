@@ -2,6 +2,8 @@ SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 NewProjectDialog = Editor:extends{}
 
+local GeMapsWithoutProjects
+
 function NewProjectDialog:init()
     self:super("init")
 
@@ -11,7 +13,7 @@ function NewProjectDialog:init()
         width = 300,
     }))
 
-    local items = VFS.GetMaps()
+    local items = GeMapsWithoutProjects()
     table.insert(items, 1, "SB_Blank_Map")
     local captions = Table.DeepCopy(items)
     captions[1] = "Blank"
@@ -126,4 +128,31 @@ function NewProjectDialog:OnFieldChange(name, value)
             self:SetInvisibleFields("sizeX", "sizeZ")
         end
     end
+end
+
+GeMapsWithoutProjects = function()
+    local projectMaps = {}
+    for _, folder in pairs(Path.SubDirs(SB.DIRS.PROJECTS, "*", VFS.RAW_ONLY)) do
+        if Project.IsDirProject(folder) then
+            local projectInfoPath = Path.Join(folder, Project.PROJECT_FILE)
+            if VFS.FileExists(projectInfoPath, VFS.RAW) then
+                local projectInfo = VFS.Include(projectInfoPath, nil, VFS.RAW)
+                local mutator = projectInfo.mutators[1]
+                if mutator ~= nil then
+                    projectMaps[mutator] = true
+                end
+            end
+        end
+    end
+
+    local maps = VFS.GetMaps()
+    local filtered = {}
+    local unique = {}
+    for _, map in ipairs(maps) do
+        if not projectMaps[map] and not unique[map] then
+            table.insert(filtered, map)
+            unique[map] = true
+        end
+    end
+    return filtered
 end

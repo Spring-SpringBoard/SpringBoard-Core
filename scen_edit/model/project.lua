@@ -188,6 +188,11 @@ end
 
 -- Checks whether directory is a SpringBoard project
 function Project.IsDirProject(path)
+    if not String.Ends(path, ".sdd") and
+       not String.Ends(path, ".sdd/") and
+       not String.Ends(path, ".sdd\\") then
+        return false
+    end
     if not (VFS.FileExists(path, VFS.RAW_ONLY) or
             SB.DirExists(path, VFS.RAW_ONLY)) then
         return false
