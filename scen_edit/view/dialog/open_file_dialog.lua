@@ -11,7 +11,7 @@ end
 
 function OpenFileDialog:ConfirmDialog()
     local filePath = self:getSelectedFilePath()
-    if not VFS.FileExists(filePath, VFS.RAW_ONLY) then
+    if not VFS.FileExists(filePath, VFS.RAW) then
         self:SetDialogError("Please select a valid file")
         return false
     end

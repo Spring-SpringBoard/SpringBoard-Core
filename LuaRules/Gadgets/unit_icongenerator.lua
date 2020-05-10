@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 --
 --  file:    unit_icongenerator.lua
---  brief:   
+--  brief:
 --  author:  jK
 --
 --  Copyright (C) 2007.
@@ -82,7 +82,7 @@ if (gadgetHandler:IsSyncedCode()) then
 
 		local env = Spring.UnitScript.GetScriptEnv(uid)
 		if env then lus = true end
-		
+
 		if lus then
 			if env.Activate then Spring.UnitScript.CallAsUnit(uid, env.Activate) end
         else Spring.CallCOBScript(uid,"Activate",0) end
@@ -195,8 +195,8 @@ local autoConfigs = {}
 scheme = "" --// global var!
 
 local function include(filedir,filename,env)
-  if (VFS.FileExists(filename,VFS.RAW_ONLY)) then
-    return VFS.Include(filename,env,VFS.RAW_ONLY)
+  if (VFS.FileExists(filename,VFS.RAW)) then
+    return VFS.Include(filename,env,VFS.RAW)
   else
     return VFS.Include(filedir .. filename,env,VFS.ZIP_ONLY)
   end

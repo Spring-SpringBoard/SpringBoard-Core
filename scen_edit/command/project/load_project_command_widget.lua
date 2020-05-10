@@ -17,20 +17,24 @@ end
 function LoadProjectCommandWidget:_LoadSynced()
     local cmds = {}
 
-    if VFS.FileExists(Project.HEIGHTMAP_FILE, VFS.ZIP) then
-        table.insert(cmds, LoadMapCommand(VFS.LoadFile(Project.HEIGHTMAP_FILE, VFS.ZIP)))
+    local file = Path.Join(SB.project.path, Project.HEIGHTMAP_FILE)
+    if VFS.FileExists(file, VFS.RAW) then
+        table.insert(cmds, LoadMapCommand(VFS.LoadFile(file, VFS.RAW)))
     end
 
-    if VFS.FileExists(Project.MODEL_FILE, VFS.ZIP) then
-        table.insert(cmds, LoadModelCommand(VFS.LoadFile(Project.MODEL_FILE, VFS.ZIP)))
+    file = Path.Join(SB.project.path, Project.MODEL_FILE)
+    if VFS.FileExists(file, VFS.RAW) then
+        table.insert(cmds, LoadModelCommand(VFS.LoadFile(file, VFS.RAW)))
     end
 
-    if VFS.FileExists(Project.GRASS_FILE, VFS.ZIP) then
-        table.insert(cmds, LoadGrassMapCommand(VFS.LoadFile(Project.GRASS_FILE, VFS.ZIP)))
+    file = Path.Join(SB.project.path, Project.GRASS_FILE)
+    if VFS.FileExists(file, VFS.RAW) then
+        table.insert(cmds, LoadGrassMapCommand(VFS.LoadFile(file, VFS.RAW)))
     end
 
-    if VFS.LoadFile(Project.METAL_FILE, VFS.ZIP) then
-        table.insert(cmds, LoadMetalMapCommand(VFS.LoadFile(Project.METAL_FILE, VFS.ZIP)))
+    file = Path.Join(SB.project.path, Project.METAL_FILE)
+    if VFS.LoadFile(file, VFS.RAW) then
+        table.insert(cmds, LoadMetalMapCommand(VFS.LoadFile(file, VFS.RAW)))
     end
 
     if Spring.GetGameRulesParam("sb_gameMode") == "play" then
@@ -43,10 +47,11 @@ function LoadProjectCommandWidget:_LoadSynced()
 end
 
 function LoadProjectCommandWidget:_LoadUnsynced()
-    local cmds = { LoadTextureCommand(Project.TEXTURES_FOLDER) }
+    local cmds = { LoadTextureCommand(Path.Join(SB.project.path, Project.TEXTURES_FOLDER)) }
 
-    if VFS.FileExists(Project.GUI_FILE, VFS.ZIP) then
-        table.insert(cmds, LoadGUIStateCommand(VFS.LoadFile(Project.GUI_FILE, VFS.ZIP)))
+    local file = Path.Join(SB.project.path, Project.GUI_FILE)
+    if VFS.FileExists(file, VFS.RAW) then
+        table.insert(cmds, LoadGUIStateCommand(VFS.LoadFile(file, VFS.RAW)))
     end
 
     local cmd = CompoundCommand(cmds)

@@ -10,7 +10,7 @@ function ImportHeightmapCommand:init(heightmapImage, minHeight, maxHeight)
 end
 
 function ImportHeightmapCommand:execute()
-    if not VFS.FileExists(self.heightmapImagePath) then
+    if not VFS.FileExists(self.heightmapImagePath, VFS.RAW) then
         Log.Error("Missing heightmap file: " .. tostring(self.heightmapImagePath))
         return
     end

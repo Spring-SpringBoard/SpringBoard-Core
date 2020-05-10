@@ -41,8 +41,8 @@ function ExportAction:execute()
     ExportFileDialog(SB.DIRS.EXPORTS, fileTypes):setConfirmDialogCallback(
         function(path, fileType, heightmapExtremes)
             local baseName = Path.ExtractFileName(path)
-            local isFile = VFS.FileExists(path, VFS.RAW_ONLY)
-            local isDir = SB.DirExists(path, VFS.RAW_ONLY)
+            local isFile = VFS.FileExists(path, VFS.RAW)
+            local isDir = SB.DirExists(path, VFS.RAW)
 
             if baseName == "" then
                 return

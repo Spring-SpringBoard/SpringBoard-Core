@@ -107,7 +107,7 @@ end
 
 function Project:CreateProjectStructure()
     -- create project if it doesn't exist already
-    if SB.DirExists(self.path, VFS.RAW_ONLY) then
+    if SB.DirExists(self.path, VFS.RAW) then
         return
 	end
 
@@ -193,8 +193,8 @@ function Project.IsDirProject(path)
        not String.Ends(path, ".sdd\\") then
         return false
     end
-    if not (VFS.FileExists(path, VFS.RAW_ONLY) or
-            SB.DirExists(path, VFS.RAW_ONLY)) then
+    if not (VFS.FileExists(path, VFS.RAW) or
+            SB.DirExists(path, VFS.RAW)) then
         return false
     end
 

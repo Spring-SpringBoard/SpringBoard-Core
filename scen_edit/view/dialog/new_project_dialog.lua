@@ -132,7 +132,7 @@ end
 
 GeMapsWithoutProjects = function()
     local projectMaps = {}
-    for _, folder in pairs(Path.SubDirs(SB.DIRS.PROJECTS, "*", VFS.RAW_ONLY)) do
+    for _, folder in pairs(Path.SubDirs(SB.DIRS.PROJECTS, "*", VFS.RAW)) do
         if Project.IsDirProject(folder) then
             local projectInfoPath = Path.Join(folder, Project.PROJECT_FILE)
             if VFS.FileExists(projectInfoPath, VFS.RAW) then

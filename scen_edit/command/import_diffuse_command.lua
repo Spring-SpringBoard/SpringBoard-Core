@@ -7,7 +7,7 @@ end
 
 function ImportDiffuseCommand:execute()
     SB.delayGL(function()
-        if not VFS.FileExists(self.texturePath) then
+        if not VFS.FileExists(self.texturePath, VFS.RAW) then
             Log.Error("Missing texture file: " .. tostring(self.texturePath))
             return
         end
