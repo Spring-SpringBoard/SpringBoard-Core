@@ -27,19 +27,19 @@ local function CheckSpringBoardDir()
     -- Make the initial SB directory tree and
     -- add a README.txt file if it doesn't exist.
     -- Also prints out the absolute directory path.
-    if not VFS.FileExists(SB.DIRS.ROOT, VFS.RAW) then
+    if not SB.DirExists(SB.DIRS.ROOT, VFS.RAW) then
         Log.Notice("Creating initial SpringBoard directory")
         Spring.CreateDir(SB.DIRS.ROOT)
     end
     local defaultDirs = { SB.DIRS.PROJECTS, SB.DIRS.ASSETS, SB.DIRS.EXTS, SB.DIRS.EXPORTS, SB.DIRS.TMP }
     for _, dir in ipairs(defaultDirs) do
-        if not VFS.FileExists(dir, VFS.RAW) then
+        if not SB.DirExists(dir, VFS.RAW) then
             Spring.CreateDir(dir)
         end
     end
 
     local readmePath = Path.Join(SB.DIRS.ROOT, 'README.txt')
-    if not VFS.FileExists(readmePath) then
+    if not VFS.FileExists(readmePath, VFS.RAW) then
         -- TODO: Maybe we should update the file if there's a change.
         -- Don't want to do it every time as it might be slow and annoying
         -- (updating file mtime unnecessarily).

@@ -56,6 +56,14 @@ function TabbedWindow:init()
     }
 end
 
+local blacklistedTabs = {
+    -- Objects = true,
+    -- Map = true,
+    -- Env = true,
+    -- Logic = true,
+    -- Misc = true
+}
+
 CreateTabsFromEditorRegistry = function()
     local tabs = {}
     local mainPanels = {}
@@ -86,15 +94,17 @@ CreateTabsFromEditorRegistry = function()
         end)
 
         local tabName = editors[1].tab
-        local panel = MainWindowPanel()
-        panel:AddElements(editors)
-        table.insert(tabs, {
-            name = tabName,
-            children = {
-                panel:GetControl()
-            },
-        })
-        mainPanels[tabName] = panel
+        if not blacklistedTabs[tabName] then
+            local panel = MainWindowPanel()
+            panel:AddElements(editors)
+            table.insert(tabs, {
+                name = tabName,
+                children = {
+                    panel:GetControl()
+                },
+            })
+            mainPanels[tabName] = panel
+        end
     end
 
     return tabs, mainPanels
@@ -262,5 +272,8 @@ function TabbedWindow:PreviousTab()
 end
 
 function TabbedWindow:__ResizeTabPanel()
+    if #self.__tabPanel.tabbar.children == 0 then
+        return
+    end
     self.__tabPanel.tabbar:SetPos(nil, nil, #self.tabs * self.__tabPanel.tabbar.children[1].width + 4, nil)
 end
