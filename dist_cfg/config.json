@@ -83,6 +83,21 @@
         "game": "SpringBoard Core $VERSION",
         "map": "TitanDuel 2.2"
       }
+    },
+    {
+      "package": {
+        "id": "asset-download",
+        "display": "Asset Download(~1.8GB)"
+      },
+      "downloads": {
+        "resources": [
+          {
+            "url": "https://spring-launcher.ams3.digitaloceanspaces.com/core_v1.zip",
+            "destination": "springboard/assets/core-v1",
+            "extract": true
+          }
+        ]
+      }
     }
   ]
 
