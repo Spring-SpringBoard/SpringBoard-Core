@@ -30,17 +30,21 @@ function NewProjectDialog:init()
             name = "sizeX",
             title = "Size X:",
             width = 140,
-            minValue = 1,
-            value = 5,
+            minValue = 2,
+            value = 10,
             maxValue = 32,
+            step = 2,
+            decimals = 0,
         }),
         NumericField({
-            name = "sizeZ",
-            title = "Size Z:",
+            name = "sizeY",
+            title = "Size Y:",
             width = 140,
             minValue = 1,
-            value = 5,
+            value = 10,
             maxValue = 32,
+            step = 2,
+            decimals = 0,
         })
     }))
 
@@ -91,6 +95,17 @@ function NewProjectDialog:ConfirmDialog()
 
     SB.project.mutators = { projectName .. " 1.0" }
     if self.fields["mapName"].value == "SB_Blank_Map" then
+        if self.fields["sizeX"].value % 2 ~= 0 then
+            SB.HintControls(self.fields["sizeX"].components)
+            self:SetDialogError("sizeX must be an even number.")
+            return
+        end
+
+        if self.fields["sizeY"].value % 2 ~= 0 then
+            SB.HintControls(self.fields["sizeY"].components)
+            self:SetDialogError("sizeY must be an even number.")
+            return
+        end
         -- We add a randomly generated name to the project prefix to avoid this bug
         -- Caching of generated maps:
         -- 1. Make a project named "test" of size 4x4
@@ -102,7 +117,7 @@ function NewProjectDialog:ConfirmDialog()
         SB.project.randomMapOptions = {
             mapSeed = 1,
             new_map_x = self.fields["sizeX"].value,
-            new_map_z = self.fields["sizeZ"].value,
+            new_map_y = self.fields["sizeY"].value,
         }
     else
         SB.project.mapName = self.fields.mapName.value
@@ -125,7 +140,7 @@ function NewProjectDialog:OnFieldChange(name, value)
         if value == "SB_Blank_Map" then
             self:SetInvisibleFields()
         else
-            self:SetInvisibleFields("sizeX", "sizeZ")
+            self:SetInvisibleFields("sizeX", "sizeY")
         end
     end
 end

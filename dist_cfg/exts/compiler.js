@@ -105,7 +105,7 @@ class Compiler extends EventEmitter {
 					id: command.id
 				});
 			} else {
-				errorMsg += `Code: ${code}`;
+				errorMsg += `Compilation failed with error code: ${code}`;
 				this.bridge.send('CommandFailed', {
 					error: errorMsg,
 					id: command.id

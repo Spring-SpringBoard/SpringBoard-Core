@@ -218,9 +218,9 @@ function AssetView:AddFolder(folder)
             local mapStr = mapName
             if randomMapOptions ~= nil and
                randomMapOptions.new_map_x ~= nil and
-               randomMapOptions.new_map_z ~= nil then
+               randomMapOptions.new_map_y ~= nil then
                 mapStr = mapStr .. " (generated: " .. randomMapOptions.new_map_x ..
-                         "x" .. randomMapOptions.new_map_z .. ")"
+                         "x" .. randomMapOptions.new_map_y .. ")"
             end
             if #mutators ~= 0 then
                 mapStr = mapStr .. "\nMutators: "

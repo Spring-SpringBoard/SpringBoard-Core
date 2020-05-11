@@ -113,7 +113,7 @@ function SaveCommand.GenerateScript()
         mapSeed = project.randomMapOptions.mapSeed,
         mapOptions = {
             new_map_x = project.randomMapOptions.new_map_x,
-            new_map_z = project.randomMapOptions.new_map_z
+            new_map_y = project.randomMapOptions.new_map_y
         },
         startDelay = 0,
         mutators = project.mutators,
