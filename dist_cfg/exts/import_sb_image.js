@@ -50,7 +50,10 @@ function importSBHeightmap(command) {
 				return;
 			}
 
+			log.info(`Importing heightmap of size: ${this.width}x${this.height}...`);
+			log.info(`Buffer size: ${this.data.length}`);
 			log.info(`PNG depth: ${this.store.depth}`);
+
 			const grayscaleData = this.grayscaleData();
 			let scaleBy = 1 / 255.0;
 			switch (this.store.depth) {
