@@ -25,3 +25,6 @@
 [submodule "libs_sb/i18n"]
 	path = libs_sb/i18n
 	url = https://github.com/gajop/i18n.git
+[submodule "libs_sb/utils"]
+	path = libs_sb/utils
+	url = https://github.com/gajop/spring-lua-utils.git
