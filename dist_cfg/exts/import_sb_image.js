@@ -42,26 +42,34 @@ function importSBHeightmap(command) {
 			let outBuffer = new Buffer(float32Size * this.width * this.height);
 			let bitmap = new Float32Array(outBuffer.buffer);
 
-			if (this.width != expectedWidth || this.height != expectedHeight) {	
+			if (this.width != expectedWidth || this.height != expectedHeight) {
 				bridge.send('CommandFailed', {
 					error: `Only images of exact heightmap size can be imported. Expected: ${expectedWidth}x${expectedHeight}. Actual: ${this.width}x${this.height}.`,
 					id: command.id
 				});
 				return;
 			}
-			
-			log.info(`Importing heightmap of size: ${this.width}x${this.height}...`);
-			log.info(`Buffer size: ${this.data.length}`);
+
+			log.info(`PNG depth: ${this.store.depth}`);
 			const grayscaleData = this.grayscaleData();
+			let scaleBy = 1 / 255.0;
+			switch (this.store.depth) {
+			case 8: scaleBy = 1 / 255.0;
+				break;
+			case 16: scaleBy = 1 / 65535.0;
+				break;
+			default:
+				log.warn(`Unexpected png bit depth: ${this.store.depth}. Treating as 8-bit`);
+			}
 			for (let x = 0; x < this.width; x++) {
 				for (let y = 0; y < this.height; y++) {
 					const idx = this.width * y + x;
 					const inputIndex = x * this.height + y;
-					const heightmap = grayscaleData[idx] / 65535.0;
+					const heightmap = grayscaleData[idx] * scaleBy;
 					bitmap[inputIndex] = min + heightmap * (max - min);
 				}
 			}
- 
+
 			fs.writeFileSync(outPath, outBuffer);
 
 			bridge.send('CommandFinished', {
