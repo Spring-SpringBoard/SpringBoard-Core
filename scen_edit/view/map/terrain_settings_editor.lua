@@ -244,10 +244,12 @@ function TerrainSettingsEditor:OnFieldChange(name, value)
 --                     gl.Texture(item)
 --             Log.Debug(texInfo.xsize, texInfo.ysize, item)
 --             SB.model.textureManager:Blit(item, tex)
-            -- local texInfo = gl.TextureInfo(value)
+            local texInfo = gl.TextureInfo(value)
+            if texInfo == nil or texInfo.xsize <= 0 then
+                return
+            end
             gl.DeleteTexture(value)
-            gl.Texture(value)
-            Spring.SetMapShadingTexture("$detail", value)
+            SB.model.textureManager:AssignShadingTexture("detail", value)
         end)
     elseif name == "voidWater" or name == "voidGround" or name == "splatDetailNormalDiffuseAlpha" then
         local t = {

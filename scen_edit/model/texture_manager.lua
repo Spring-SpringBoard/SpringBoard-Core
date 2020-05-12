@@ -69,6 +69,12 @@ function TextureManager:init()
             mapinfo_name = "splatDetailNormalTex3",
             alpha = true,
         },
+
+        detail = {
+            engineName = "$detail",
+            mapinfo_name = "detailTex",
+            alpha = false,
+        }
     }
     self.materialTextures = {
         diffuse = {
@@ -191,21 +197,7 @@ function TextureManager:GenerateMapTextures()
     self.shadingTextures = {}
     for name, texDef in pairs(self.shadingTextureDefs) do
         self:ResetShadingTexture(name)
-
-        local sizeX, sizeY
-        local texInfo = gl.TextureInfo(texDef.engineName)
-        if texInfo and texInfo.xsize > 0 then
-            sizeX, sizeY = texInfo.xsize, texInfo.ysize
-        end
-
-        if sizeX and sizeY then
-            self:AssignShadingTexture(name, {
-                tex = texDef.engineName,
-                sizeX = sizeX,
-                sizeY = sizeY,
-            })
-        end
-
+        self:AssignShadingTexture(name, texDef.engineName)
         Log.Notice("texture [" .. tostring(name) .. "] enabled: "
                    .. tostring(texDef.enabled))
     end
@@ -230,16 +222,20 @@ function TextureManager:ResetShadingTexture(name)
     end
 end
 
-function TextureManager:AssignShadingTexture(name, opts)
-    local source = opts.tex
-    local sizeX = opts.sizeX
-    local sizeY = opts.sizeY
+function TextureManager:AssignShadingTexture(name, source)
+    local texInfo = gl.TextureInfo(source)
+    if texInfo == nil then
+        return
+    end
+    local sizeX, sizeY = texInfo.xsize, texInfo.ysize
+    if sizeX <= 0 or sizeY <= 0 then
+        return
+    end
+
     local texDef = self.shadingTextureDefs[name]
-
     local tex = self:MakeShadingTexture(name, sizeX, sizeY)
-
     gfx.Blit(source, tex)
-    if name:find("splat_normals") then
+    if name:find("splat_normals") or name:find("detail") then
         gl.GenerateMipmap(tex)
     end
     self:SetShadingTexture(name, tex)
@@ -266,13 +262,8 @@ function TextureManager:SetShadingTexture(name, tex)
 end
 
 function TextureManager:MakeShadingTexture(name, sizeX, sizeY)
-    local min_filter = GL.LINEAR
-    -- if name == "splat_distr" then
-    --    min_filter = GL.LINEAR_MIPMAP_NEAREST
-    -- end
-    local tex
     if name:find("splat_normals") then
-        tex = gl.CreateTexture(sizeX, sizeY, {
+        return gl.CreateTexture(sizeX, sizeY, {
             border = false,
             min_filter = GL.LINEAR_MIPMAP_NEAREST,
             mag_filter = GL.LINEAR,
@@ -281,18 +272,27 @@ function TextureManager:MakeShadingTexture(name, sizeX, sizeY)
             aniso = ssmfTexAniso,
             fbo = true,
         })
-        --gl.GenerateMipmap(tex)
-    else
-        tex = gl.CreateTexture(sizeX, sizeY, {
+    elseif name:find("detail") then
+        -- TODO: merge with splat_normals?
+        return gl.CreateTexture(sizeX, sizeY, {
             border = false,
-            min_filter = min_filter,
+            min_filter = GL.LINEAR_MIPMAP_NEAREST,
+            mag_filter = GL.LINEAR,
+            wrap_s = GL.REPEAT,
+            wrap_t = GL.REPEAT,
+            aniso = ssmfTexAniso,
+            fbo = true,
+        })
+    else
+        return gl.CreateTexture(sizeX, sizeY, {
+            border = false,
+            min_filter = GL.LINEAR,
             mag_filter = GL.LINEAR,
             wrap_s = GL.CLAMP_TO_EDGE,
             wrap_t = GL.CLAMP_TO_EDGE,
             fbo = true,
         })
     end
-    return tex
 end
 
 function TextureManager:MakeAndEnableMapShadingTexture(opts)
