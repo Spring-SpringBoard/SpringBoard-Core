@@ -169,7 +169,7 @@ function TextureEditor:init()
                 self.savedDNTSBrushes:GetControl():Hide()
                 self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor",
                                         "mode", "texRotation", "splatTexScale", "splatTexMult", "offset-sep",
-                                        "splat-sep", "exclusive", "value",
+                                        "splat-sep", "exclusive", "value", "tex-sep",
                                         unpack(self.matFieldNames))
             end
         },
