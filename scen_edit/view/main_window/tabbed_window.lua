@@ -60,7 +60,7 @@ local blacklistedTabs = {
     -- Objects = true,
     -- Map = true,
     -- Env = true,
-    -- Logic = true,
+    Logic = true, -- Disabled for now
     -- Misc = true
 }
 

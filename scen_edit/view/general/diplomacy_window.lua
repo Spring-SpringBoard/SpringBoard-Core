@@ -1,14 +1,15 @@
 SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 DiplomacyWindow = Editor:extends{}
-DiplomacyWindow:Register({
-    name = "diplomacyWindow",
-    tab = "Misc",
-    caption = "Alliances",
-    tooltip = "Edit alliances",
-    image = Path.Join(SB.DIRS.IMG, 'shaking-hands.png'),
-    order = 2,
-})
+-- Disabled for now
+-- DiplomacyWindow:Register({
+--     name = "diplomacyWindow",
+--     tab = "Misc",
+--     caption = "Alliances",
+--     tooltip = "Edit alliances",
+--     image = Path.Join(SB.DIRS.IMG, 'shaking-hands.png'),
+--     order = 2,
+-- })
 
 function DiplomacyWindow:init(trigger)
     self:super("init")
