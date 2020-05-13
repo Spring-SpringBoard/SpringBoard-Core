@@ -31,6 +31,9 @@ local screen
 local window
 local log
 local btnFilterProblems
+local btnToggleCheating
+local btnToggleGlobalLOS
+local btnToggleGodMode
 local totalErrors = 0
 
 local COMMAND_NAME = "toggleDevConsole"
@@ -247,14 +250,16 @@ function loadWindow()
 		}
 	}
 	curr_x = curr_x + el_size + padding
-	Chili.Button:New {
+	btnToggleCheating = Chili.Button:New {
 		parent = window,
 		x = ('%f%%'):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
-		caption = "Toggle: Cheat",
+		caption = "Cheating",
 		fontSize = btnFontSize,
+		classname = 'toggle_button',
+		checked = Spring.IsCheatingEnabled(),
 		OnClick = {
 			function()
 				Spring.SendCommands("cheat")
@@ -262,14 +267,16 @@ function loadWindow()
 		}
 	}
 	curr_x = curr_x + el_size + padding
-	Chili.Button:New {
+	btnToggleGlobalLOS = Chili.Button:New {
 		parent = window,
 		x = ('%f%%'):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
-		caption = "Toggle: GlobalLos",
+		caption = "GlobalLos",
 		fontSize = btnFontSize,
+		classname = 'toggle_button',
+		checked = Spring.GetGlobalLos(Spring.GetMyAllyTeamID()),
 		OnClick = {
 			function()
 				CheatIfNeeded()
@@ -278,14 +285,16 @@ function loadWindow()
 		}
 	}
 	curr_x = curr_x + el_size + padding
-	Chili.Button:New {
+	btnToggleGodMode = Chili.Button:New {
 		parent = window,
 		x = ('%f%%'):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
-		caption = "Toggle: GodMode",
+		caption = "GodMode",
 		fontSize = btnFontSize,
+		classname = 'toggle_button',
+		checked = Spring.IsGodModeEnabled(),
 		OnClick = {
 			function()
 				CheatIfNeeded()
@@ -648,6 +657,14 @@ function ShowSinceReload()
 		widget:AddConsoleLine(l.text)
 	end
 end
+
+function widget:Update()
+	btnToggleCheating.checked = Spring.IsCheatingEnabled()
+	btnToggleGlobalLOS.checked = Spring.GetGlobalLos(Spring.GetMyAllyTeamID())
+	btnToggleGodMode.checked = Spring.IsGodModeEnabled()
+end
+
+
 
 --[[
 function widget:GameFrame(n)
