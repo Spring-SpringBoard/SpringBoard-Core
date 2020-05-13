@@ -208,52 +208,52 @@ function TextureEditor:init()
             end
         },
     })
-    self.btnVoid = TabbedPanelButton({
-        x = SB.conf.TOOLBOX_ITEM_WIDTH * 3,
-        y = 0,
-        tooltip = "Make the terrain transparent",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
-            TabbedPanelLabel({ caption = "Void" }),
-        },
-        OnClick = {
-            function()
-                self:_EnterState("void")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
-                                        "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
-                                        "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
-                                        unpack(self.matFieldNames))
-            end
-        },
-    })
-    self.btnHeight = TabbedPanelButton({
-        x = SB.conf.TOOLBOX_ITEM_WIDTH * 4,
-        y = 0,
-        tooltip = "Draw height",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
-            TabbedPanelLabel({ caption = "Height" }),
-        },
-        OnClick = {
-            function()
-                self:_EnterState("height")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
-                                        "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
-                                        "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
-                                        unpack(self.matFieldNames))
-            end
-        },
-    })
+    -- self.btnVoid = TabbedPanelButton({
+    --     x = SB.conf.TOOLBOX_ITEM_WIDTH * 3,
+    --     y = 0,
+    --     tooltip = "Make the terrain transparent",
+    --     children = {
+    --         TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
+    --         TabbedPanelLabel({ caption = "Void" }),
+    --     },
+    --     OnClick = {
+    --         function()
+    --             self:_EnterState("void")
+    --             self.savedBrushes:GetControl():Hide()
+    --             self.savedDNTSBrushes:GetControl():Hide()
+    --             self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
+    --                                     "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
+    --                                     "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
+    --                                     unpack(self.matFieldNames))
+    --         end
+    --     },
+    -- })
+    -- self.btnHeight = TabbedPanelButton({
+    --     x = SB.conf.TOOLBOX_ITEM_WIDTH * 4,
+    --     y = 0,
+    --     tooltip = "Draw height",
+    --     children = {
+    --         TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
+    --         TabbedPanelLabel({ caption = "Height" }),
+    --     },
+    --     OnClick = {
+    --         function()
+    --             self:_EnterState("height")
+    --             self.savedBrushes:GetControl():Hide()
+    --             self.savedDNTSBrushes:GetControl():Hide()
+    --             self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
+    --                                     "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
+    --                                     "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
+    --                                     unpack(self.matFieldNames))
+    --         end
+    --     },
+    -- })
     self:AddDefaultKeybinding({
         self.btnPaint,
         self.btnFilter,
         self.btnDNTS,
-        self.btnVoid,
-        self.btnHeight
+        -- self.btnVoid,
+        -- self.btnHeight
     })
 
     self:AddField(ChoiceField({
@@ -511,8 +511,8 @@ function TextureEditor:init()
         self.btnPaint,
         self.btnFilter,
         self.btnDNTS,
-        self.btnVoid,
-        self.btnHeight,
+        -- self.btnVoid,
+        -- self.btnHeight,
         --self.patternTextureImages:GetControl(),
         self.savedBrushes:GetControl(),
         self.savedDNTSBrushes:GetControl(),
@@ -640,7 +640,8 @@ function TextureEditor:IsValidState(state)
 end
 
 function TextureEditor:OnLeaveState(state)
-    for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS, self.btnVoid}) do
+    -- for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS, self.btnVoid, self.btnHeight}) do
+    for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS}) do
         btn:SetPressedState(false)
     end
 end
@@ -652,7 +653,9 @@ function TextureEditor:OnEnterState(state)
         self.btnFilter:SetPressedState(true)
     elseif state.paintMode == "dnts" then
         self.btnDNTS:SetPressedState(true)
-    elseif state.paintMode == "void" then
-        self.btnVoid:SetPressedState(true)
+    -- elseif state.paintMode == "void" then
+    --     self.btnVoid:SetPressedState(true)
+    -- elseif state.paintMode == "height" then
+    --     self.btnHeight:SetPressedState(true)
     end
 end
