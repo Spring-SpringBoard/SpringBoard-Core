@@ -68,31 +68,31 @@ function LightingEditor:init()
             name = "groundDiffuseColor",
             title = "Diffuse:",
             tooltip = "Ground diffuse color",
-            width = 100,
+            width = 140,
             format = 'rgb',
         }),
         ColorField({
             name = "groundAmbientColor",
             title = "Ambient:",
             tooltip = "Ground ambient color",
-            width = 100,
+            width = 140,
             format = 'rgb',
         }),
         ColorField({
             name = "groundSpecularColor",
             title = "Specular:",
             tooltip = "Ground specular color",
-            width = 100,
+            width = 140,
             format = 'rgb',
-        }),
-        NumericField({
-            name = "groundShadowDensity",
-            title = "Shadow density:",
-            tooltip = "Ground shadow density",
-            width = 100,
-            minValue = 0,
-            maxValue = 1,
-        }),
+        })
+    }))
+    self:AddField(NumericField({
+        name = "groundShadowDensity",
+        title = "Shadow density:",
+        tooltip = "Ground shadow density",
+        width = 200,
+        minValue = 0,
+        maxValue = 1,
     }))
     self:AddControl("sun-unit-sep", {
         Label:New {
@@ -107,31 +107,31 @@ function LightingEditor:init()
             name = "unitDiffuseColor",
             title = "Diffuse:",
             tooltip = "Unit diffuse color",
-            width = 100,
+            width = 140,
             format = 'rgb',
         }),
         ColorField({
             name = "unitAmbientColor",
             title = "Ambient:",
             tooltip = "Unit ambient color",
-            width = 100,
+            width = 140,
             format = 'rgb',
         }),
         ColorField({
             name = "unitSpecularColor",
             title = "Specular:",
             tooltip = "Unit specular color",
-            width = 100,
+            width = 140,
             format = 'rgb',
-        }),
-        NumericField({
-            name = "modelShadowDensity",
-            title = "Shadow density:",
-            tooltip = "Unit shadow density",
-            width = 100,
-            minValue = 0,
-            maxValue = 1,
-        }),
+        })
+    }))
+    self:AddField(NumericField({
+        name = "modelShadowDensity",
+        title = "Shadow density:",
+        tooltip = "Unit shadow density",
+        width = 200,
+        minValue = 0,
+        maxValue = 1,
     }))
 
     self:UpdateLighting()

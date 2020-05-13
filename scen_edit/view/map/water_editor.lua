@@ -18,20 +18,20 @@ function WaterEditor:init()
             name = "forceRendering",
             title = "Forced rendering:",
             tooltip = "Should the water be rendered even when minMapHeight>0.\nUse it to avoid the jumpin of the outside-map water rendering (BumpWater: endlessOcean option) when combat explosions reach groundwater.",
-            width = 140,
+            width = 200,
         }),
         NumericField({
             name = "numTiles",
             title = "Ambient:",
             tooltip = "How many Tiles does the `normalTexture` have?\nSuch Tiles are used when DynamicWaves are enabled in BumpWater, the more the better.\nCheck the example php script to generate such tiled bumpmaps.",
-            width = 140,
+            width = 200,
         }),
-        AssetField({
-            name = "normalTexture",
-            title = "Normal texture:",
-            tooltip = "The normal texture.",
-            width = 140,
-        }),
+    }))
+    self:AddField(AssetField({
+        name = "normalTexture",
+        title = "Normal texture:",
+        tooltip = "The normal texture.",
+        width = 250,
     }))
     self:AddControl("perlin-sep", {
         Label:New {
@@ -228,7 +228,7 @@ function WaterEditor:init()
         AssetField({
             name = "foamTexture",
             title = "Texture:",
-            width = 140,
+            width = 250,
             caption = "Used for Shorewaves.",
         }),
     }))
@@ -241,13 +241,13 @@ function WaterEditor:init()
             x = 150,
         }
     })
+    self:AddField(AssetField({
+        name = "texture",
+        title = "Texture:",
+        width = 250,
+        tooltip = "`water 0` texture",
+    }))
     self:AddField(GroupField({
-        AssetField({
-            name = "texture",
-            title = "Texture:",
-            width = 140,
-            tooltip = "`water 0` texture",
-        }),
         NumericField({
             name = "repeatX",
             title = "Repeat X:",

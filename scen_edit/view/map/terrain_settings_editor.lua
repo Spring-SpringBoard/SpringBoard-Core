@@ -42,6 +42,7 @@ function TerrainSettingsEditor:init()
         title = "Detail texture:",
         tooltip = "Detail texture",
         rootDir = "detail/",
+        width = 290,
     }))
 
     self:_AddMapTextureControls()
@@ -87,7 +88,7 @@ function TerrainSettingsEditor:_AddMapTextureControls()
             value = exists,
             title = String.Capitalize(name),
             tooltip = "Toggle texture enable: " .. tostring(engineName),
-            width = 140,
+            width = 200,
         }))
     end
 end
