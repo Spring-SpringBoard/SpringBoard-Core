@@ -11,27 +11,18 @@
       },
       "downloads": {
         "games" : ["sbc:test"],
-        "maps" : ["TitanDuel 2.2"],
         "engines" : [ "104.0.1-1510-g89bb8e3 maintenance" ]
       },
       "launch": {
         "game": "rapid://sbc:test",
-        "map": "TitanDuel 2.2"
-      }
-    },
-    {
-      "package": {
-        "id": "test",
-        "display": "Test"
-      },
-      "downloads": {
-        "games" : ["sbc:test"],
-        "maps" : ["TitanDuel 2.2"],
-        "engines" : [ "104.0.1-1510-g89bb8e3 maintenance" ]
-      },
-      "launch": {
-        "game": "rapid://sbc:test",
-        "map": "TitanDuel 2.2"
+        "map": "sb_initial_blank_10x8",
+        "map_options": {
+          "new_map_x": 10,
+          "new_map_y": 8
+        },
+        "game_options": {
+          "MapSeed": 42
+        }
       }
     },
 
@@ -73,7 +64,6 @@
         "display": "Development"
       },
       "downloads": {
-        "maps" : ["TitanDuel 2.2"],
         "engines" : [ "104.0.1-1510-g89bb8e3 maintenance" ]
       },
       "auto_start" : false,
@@ -81,7 +71,14 @@
       "load_dev_exts": false,
       "launch": {
         "game": "SpringBoard Core $VERSION",
-        "map": "TitanDuel 2.2"
+        "map": "sb_initial_blank_10x8",
+        "map_options": {
+          "new_map_x": 10,
+          "new_map_y": 8
+        },
+        "game_options": {
+          "MapSeed": 42
+        }
       }
     },
     {

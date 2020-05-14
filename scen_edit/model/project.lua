@@ -139,18 +139,19 @@ end
 
 function Project.InitializeFromEnvironment()
     local project = Project()
+    project:_LoadFromMapOpts()
     project:_LoadFromModOpts()
     project:_LoadFromFile()
     return project
 end
 
-function Project:_LoadFromFile()
-    local success, sbProject = pcall(VFS.Include, Project.PROJECT_FILE, nil, VFS.ZIP)
-    if not success then
-        return
-    end
-    for k, v in pairs(sbProject) do
-        self[k] = v
+function Project:_LoadFromMapOpts()
+    local mapOpts = Spring.GetMapOptions()
+    if mapOpts.new_map_x ~= nil and mapOpts.new_map_y ~= nil then
+        self.randomMapOptions.new_map_x = tonumber(mapOpts.new_map_x)
+        self.randomMapOptions.new_map_y = tonumber(mapOpts.new_map_y)
+        -- FIXME: Not the real mapseed but probably not an issue either as we don't use it directly in SB
+        self.randomMapOptions.mapSeed = 42
     end
 end
 
@@ -158,6 +159,22 @@ function Project:_LoadFromModOpts()
     local modOpts = Spring.GetModOptions()
     if modOpts.project_path ~= nil then
         self:SetPath(modOpts.project_path)
+    end
+end
+
+function Project:_LoadFromFile()
+    local success, sbProject
+    -- FIXME: We're using a different load path for LuaUI because Spring sometimes doesn't detect new files on Reload
+    if Script.GetName() == "LuaUI" and self.path then
+        success, sbProject = pcall(VFS.Include, Path.Join(self.path, Project.PROJECT_FILE), nil, VFS.RAW)
+    else
+        success, sbProject = pcall(VFS.Include, Project.PROJECT_FILE, nil, VFS.ZIP)
+    end
+    if not success then
+        return
+    end
+    for k, v in pairs(sbProject) do
+        self[k] = v
     end
 end
 
