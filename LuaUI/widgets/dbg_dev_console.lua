@@ -48,7 +48,7 @@ local cfg = {
 	popupOnWarning = false, -- not configurable atm
 	onlySinceLastReload = true,
 }
-local fontSize = 16
+local fontSize = 14
 
 ---------------------
 
@@ -152,7 +152,16 @@ function loadWindow()
 			outlineWidth = 4,
 			outlineWeight = 3,
 			size = fontSize,
-		}
+			color = {1.0, 1.0, 1.0, 0.7}
+		},
+		hintFont = {
+			outline = true,
+			autoOutlineColor = true,
+			outlineWidth = 4,
+			outlineWeight = 3,
+			size = fontSize,
+			color = {1.0, 1.0, 1.0, 0.7}
+		},
 	}
 	local el_size = 8.5
 	local curr_x = 0
