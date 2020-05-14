@@ -63,9 +63,9 @@ function ExportDiffuseCommand:execute()
             Log.Notice(("[%.4fs] Exported diffuse"):format(elapsed))
 
             -- TODO: Cleanup
-            if SB.editors["terrainSettings"] ~= nil then
-                SB.editors["terrainSettings"]:UpdateCompilePaths(Path.GetParentDir(self.path))
-            end
+            -- if SB.editors["terrainSettings"] ~= nil then
+            --     SB.editors["terrainSettings"]:UpdateCompilePaths(Path.GetParentDir(self.path))
+            -- end
 
         end)
     end)

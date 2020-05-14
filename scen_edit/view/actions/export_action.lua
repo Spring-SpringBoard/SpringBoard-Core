@@ -132,10 +132,24 @@ local function WriteToFile(path, content)
     file:close()
 end
 
+local activeProgressID
+WG.Connector.Register("CompileMapStarted", function()
+    SB.ActionProgress(activeProgressID, 0.62, "Exporting archive: Compiling map...")
+end)
+
+WG.Connector.Register("CompileMapProgress", function(command)
+    local current, total = command.current, command.total
+    local value = current / total
+    value = math.max(value, 0)
+    value = math.min(value, 1)
+    SB.ActionProgress(activeProgressID, 0.62 + (0.8 - 0.62) * value , "Exporting archive: Compiling map...")
+end)
+
 function ExportAction:ExportSpringArchive(path, heightmapExtremes)
     local progressID = SB.MakeUniqueActionProgressID()
     SB.ActionProgress(progressID, 0.0, "Exporting archive: Exporting map textures...")
     Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
+    activeProgressID = progressID
 
     local buildDir = SB.CreateTemporaryDir("build")
     local promise = self:TryToExportMapTextures(buildDir, heightmapExtremes)

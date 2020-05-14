@@ -46,7 +46,7 @@ function TerrainSettingsEditor:init()
     }))
 
     self:_AddMapTextureControls()
-    self:_AddMapCompileControls()
+    -- self:_AddMapCompileControls()
 
     local children = {
         ScrollPanel:New {
