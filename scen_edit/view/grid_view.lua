@@ -1,8 +1,12 @@
 GridView = LCS.class{}
 
+local __gridViewCounter = 0
 function GridView:init(tbl)
     -- Defaults
+    __gridViewCounter = __gridViewCounter + 1
     local layoutPanelSettings = {
+        name = "grid_view_" .. tostring(__gridViewCounter),
+        greedyHitText = true,
         selectable = true,
         multiSelect = false,
         autosize = true,
@@ -66,16 +70,6 @@ function GridView:init(tbl)
     self._fakeControl = ImageListView:New{}
 
     self.layoutPanel = LayoutPanel:New(layoutPanelSettings)
-    self.layoutPanel.HitTest = function(ctrl, x,y)
-        local cx,cy = ctrl:LocalToClient(x,y)
-        local obj = LayoutPanel.HitTest(ctrl,cx,cy)
-        if (obj) then return obj end
-        if ctrl._cells == nil then
-            return
-        end
-        local itemIdx = ctrl:GetItemIndexAt(cx,cy)
-        return (itemIdx>=0) and ctrl
-    end
 
     self.layoutPanel.DrawItemBkGnd = function(ctrl, index)
         local cell = ctrl._cells[index]
@@ -170,6 +164,7 @@ function GridView:NewItem(tbl)
     local item
     local defaults = {
         name = 'grid_item' .. tostring(__gridItemCounter),
+        greedyHitText = true,
         width  = self.itemWidth,
         height = self.itemHeight,
         padding = {0,0,0,0},
