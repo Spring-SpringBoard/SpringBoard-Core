@@ -6,16 +6,54 @@
   "setups" : [
     {
       "package": {
-        "id": "latest",
-        "display": "Latest"
+        "id": "latest-win",
+        "display": "Latest",
+        "platform": "win32"
       },
       "downloads": {
         "games" : ["sbc:test"],
-        "engines" : [ "104.0.1-1553-gd3c0012 maintenance" ]
+        "resources": [
+          {
+              "url": "https://springrts.com/dl/buildbot/default/maintenance/104.0.1-1553-gd3c0012/win32/spring_%7bmaintenance%7d104.0.1-1553-gd3c0012_win32-minimal-portable.7z",
+              "destination": "engine/104.0.1-1553-gd3c0012 maintenance",
+              "extract": true
+          }
+        ]
       },
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
+        "engine": "104.0.1-1553-gd3c0012 maintenance",
+        "map_options": {
+          "new_map_x": 10,
+          "new_map_y": 8
+        },
+        "game_options": {
+          "MapSeed": 42
+        }
+      }
+    },
+
+    {
+      "package": {
+        "id": "latest-linux",
+        "display": "Latest",
+        "platform": "linux"
+      },
+      "downloads": {
+        "games" : ["sbc:test"],
+        "resources": [
+          {
+              "url": "https://springrts.com/dl/buildbot/default/maintenance/104.0.1-1553-gd3c0012/linux64/spring_%7bmaintenance%7d104.0.1-1553-gd3c0012_minimal-portable-linux64-static.7z",
+              "destination": "engine/104.0.1-1553-gd3c0012 maintenance",
+              "extract": true
+          }
+      ]
+      },
+      "launch": {
+        "game": "rapid://sbc:test",
+        "map": "sb_initial_blank_10x8",
+        "engine": "104.0.1-1553-gd3c0012 maintenance",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
@@ -57,7 +95,6 @@
         "map": "TitanDuel 2.2"
       }
     },
-
 
     {
       "package": {
