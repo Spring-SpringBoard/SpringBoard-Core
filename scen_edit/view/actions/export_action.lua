@@ -103,7 +103,7 @@ local ignoredFiles = {
 
 local function CopyFile(src, dest, mode)
     local srcFileContent = VFS.LoadFile(src, mode)
-    local destFile = assert(io.open(dest, "w"))
+    local destFile = assert(io.open(dest, "wb"))
     destFile:write(srcFileContent)
     destFile:close()
 end
