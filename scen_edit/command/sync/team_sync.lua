@@ -106,7 +106,7 @@ function TeamManagerListenerWidget:onTeamAdded(teamID)
     -- use our unsynced color
     local r, g, b = Spring.GetTeamColor(teamID)
     team.color = {r=r, g=g, b=b}
-    local cmd = UpdateTeamCommand(team)
+    local cmd = UpdateTeamCommand(team, true)
     cmd.blockUndo = true
     SB.commandManager:execute(cmd)
 end

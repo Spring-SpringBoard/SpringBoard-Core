@@ -13,7 +13,9 @@ function TeamManager:addTeam(team, teamID)
         teamID = self.teamIDCount + 1
     end
     team.id = teamID
-    self.teamIDCount = teamID
+    if teamID > self.teamIDCount then
+        self.teamIDCount = teamID
+    end
 
     self.teams[teamID] = team
     self:callListeners("onTeamAdded", teamID)
@@ -24,15 +26,14 @@ function TeamManager:addTeam(team, teamID)
 end
 
 function TeamManager:removeTeam(teamID)
-    assert(self.teams[teamID])
-    if self.teams[teamID] ~= nil then
-        self.teams[teamID] = nil
-        self:callListeners("onTeamRemoved", teamID)
-    end
+    assert(self.teams[teamID] ~= nil)
+    self.teams[teamID] = nil
+    self:callListeners("onTeamRemoved", teamID)
 end
 
 function TeamManager:setTeam(teamID, team)
-    assert(self.teams[teamID])
+    assert(self.teams[teamID] ~= nil)
+
     self.teams[teamID] = team
     if team.color then
         Spring.SetTeamColor(teamID, team.color.r, team.color.g, team.color.b)
@@ -85,6 +86,7 @@ function TeamManager:serialize()
 end
 
 function TeamManager:load(data)
+    self:clear()
     for _, kv in pairs(data) do
         local team = kv.team
 

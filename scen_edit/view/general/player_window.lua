@@ -76,11 +76,12 @@ function PlayerWindow:init(team)
         tooltip = "Team color",
     }))
 
-    self:AddField(AreaField({
+    self:AddField(PositionField({
         name = "startPos",
-        title = "Start area:",
+        title = "Start position:",
         value = team.startPos,
         tooltip = "Team starting position",
+        width = 300,
     }))
 
     local sideNames, sideCaptions, i = {}, {}, 1

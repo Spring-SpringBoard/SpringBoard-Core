@@ -1,10 +1,8 @@
-local versionNumber = "v1.0"
-
 function gadget:GetInfo()
 	return {
 		name      = "Delay API",
-		desc      = versionNumber .. " Allows delaying of function calls.",
-		author    = "Evil4Zerggin",
+		desc      = "v1.1 Allows delaying of function calls.",
+		author    = "Evil4Zerggin, gajop",
 		date      = "21 March 2008",
 		license   = "GNU LGPL, v2.1 or later",
 		layer     = -10000,
@@ -45,19 +43,22 @@ local function DelayCall(f, args, delay)
 
 	local frameCalls = calls[targetFrame]
 
-	frameCalls[#frameCalls+1] = {f, args}
+	frameCalls[#frameCalls + 1] = { f, args }
 end
 
-function gadget:GameFrame(n)
-	currentFrame = n
-	local frameCalls = calls[n]
+function gadget:Initialize()
+	currentFrame = Spring.GetGameFrame()
+end
+
+function gadget:GameFrame()
+	currentFrame = Spring.GetGameFrame()
+	local frameCalls = calls[currentFrame]
 	if frameCalls then
-		for i=1,#frameCalls do
+		for i=1, #frameCalls do
 			local currCall = frameCalls[i]
 			currCall[1](unpack(currCall[2]))
 		end
-		--delete
-		calls[n] = nil
+		calls[currentFrame] = nil
 	end
 end
 

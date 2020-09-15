@@ -128,25 +128,17 @@ function ExportMapInfoCommand:GetTeams()
     local tbl = {}
     local counter = 0 -- teams start with 0
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
-        local areaID = team.startPos
-        local area
-        if areaID then
-            area = SB.model.areaManager:getArea(areaID)
-            if not area then
-                Log.Warning("No area for id: " .. tostring(areaID))
-            end
+        local startPos = team.startPos
+        local x = Game.mapSizeX / 2
+        local z = Game.mapSizeZ / 2
+        if startPos ~= nil and type(startPos) == "table" then
+            x = startPos.x
+            z = startPos.z
         end
-        if not area then
-            area = { -- if there's no area, we default to the entire map
-                0, 0, Game.mapSizeX, Game.mapSizeZ
-            }
-        end
-        -- FIXME: We're just taking the middle point of the area
-        -- Ugly but sue me ^_^
         tbl[counter] = {
             startPos = {
-                x = (area[1] + area[3]) / 2,
-                z = (area[1] + area[4]) / 2,
+                x = x,
+                z = z,
             }
         }
         counter = counter + 1
