@@ -56,10 +56,10 @@ local glTexRect 	= gl.TexRect
 local abs						= math.abs
 local strFormat 				= string.format
 
-if require ~= nil then
-	require("keysym.lua")
-else
+if Game.gameName:find("SpringBoard ZK") then
 	include("keysym.lua")
+else
+	require("keysym.lua")
 end
 
 --------------------------------------------------------------------------------
