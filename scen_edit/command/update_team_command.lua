@@ -7,14 +7,12 @@ function UpdateTeamCommand:init(team, onlyIfNoTeamColor)
 end
 
 function UpdateTeamCommand:execute()
+    if self.onlyIfNoTeamColor and SB.model.teamManager.__loaded_from_file then
+        return
+    end
+
     if not self.old then
         self.old = SB.model.teamManager:getTeam(self.team.id)
-
-        if self.onlyIfNoTeamColor then
-            if self.old.color then
-                return
-            end
-        end
     end
     SB.model.teamManager:setTeam(self.team.id, self.team)
 end

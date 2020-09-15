@@ -70,7 +70,7 @@ function SaveCommand.GenerateScript()
                 side = team.side,
             }
             teams[teamIDCount] = t
-            if String.Trim(team.side) == "" then
+            if team.side ~= nil and String.Trim(team.side) == "" then
                 t.side = nil
             end
             if team.ai then

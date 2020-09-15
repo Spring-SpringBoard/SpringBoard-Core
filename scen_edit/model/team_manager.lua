@@ -6,6 +6,9 @@ function TeamManager:init()
     self.teams = {}
 
     self.__isWidget = Script.GetName() == "LuaUI"
+
+    -- part of the hack to not update from widget during load
+    self.__loaded_from_file = false
 end
 
 function TeamManager:addTeam(team, teamID)
@@ -86,6 +89,7 @@ function TeamManager:serialize()
 end
 
 function TeamManager:load(data)
+    self.__loaded_from_file = true
     self:clear()
     for _, kv in pairs(data) do
         local team = kv.team
