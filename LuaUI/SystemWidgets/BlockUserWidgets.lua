@@ -16,7 +16,6 @@ end
 
 -- Expose SB globals
 -- SG = WG
-handler.SG.SB_LIBS_DIR = "libs_sb/"
 handler.SG.SB = {}
 
 function addon.Initialize()

@@ -3,7 +3,7 @@
 -- Copy this file to both the luaui/widgets and the luarules/gadgets folders
 
 -- Set this line to the Spring Kernel installation folder
-KERNEL_FOLDER = WG.SB_LIBS_DIR .. "kernel/"
+KERNEL_FOLDER = "libs_sb/kernel/"
 
 -- Do NOT modify the following lines
 if Script.GetName() == "LuaUI" or Script.GetName() == "LuaMenu" then

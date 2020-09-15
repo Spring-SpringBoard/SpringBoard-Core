@@ -11,10 +11,10 @@ function widget:GetInfo()
     }
 end
 
-LCS = loadstring(VFS.LoadFile(WG.SB_LIBS_DIR .. "lcs/LCS.lua"))
+LCS = loadstring(VFS.LoadFile("libs_sb/lcs/LCS.lua"))
 LCS = LCS()
 
-CHOTIFY_DIR = WG.SB_LIBS_DIR .. "chotify/chotify/"
+CHOTIFY_DIR = "libs_sb/chotify/chotify/"
 
 function widget:Initialize()
     if not WG.ChiliFX then

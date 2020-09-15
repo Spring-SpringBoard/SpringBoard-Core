@@ -55,7 +55,11 @@ SB.Include(Path.Join(SB.DIRS.SRC, 'command/command_manager.lua'))
 
 -- Widget include
 if WG then
-    require("keysym.lua")
+    if require ~= nil then
+        require("keysym.lua")
+    else
+        include("keysym.lua")
+    end
     SB.Include(Path.Join(SB.DIRS.SRC, 'state/state_manager.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/view.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'gfx/graphics.lua'))

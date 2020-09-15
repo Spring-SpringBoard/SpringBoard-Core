@@ -3,8 +3,8 @@
 -- Copy this file to the luaui/widgets folder
 
 -- Set this line to the s11n installation folder
-S11N_FOLDER = WG.SB_LIBS_DIR .. "s11n"
-LCS_FOLDER  = WG.SB_LIBS_DIR .. "lcs"
+S11N_FOLDER = "libs_sb/s11n"
+LCS_FOLDER  = "libs_sb/lcs"
 
 -- Do NOT modify the following lines
 

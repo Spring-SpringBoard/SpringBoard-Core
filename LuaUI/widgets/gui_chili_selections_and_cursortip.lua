@@ -56,7 +56,11 @@ local glTexRect 	= gl.TexRect
 local abs						= math.abs
 local strFormat 				= string.format
 
-require("keysym.lua")
+if require ~= nil then
+	require("keysym.lua")
+else
+	include("keysym.lua")
+end
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

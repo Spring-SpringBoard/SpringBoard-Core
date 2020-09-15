@@ -3,8 +3,8 @@
 -- Copy this file to the luarules/gadgets folder
 
 -- Set this line to the s11n installation folder
-S11N_FOLDER = GG.SB_LIBS_DIR .. "s11n"
-LCS_FOLDER  = GG.SB_LIBS_DIR .. "lcs"
+S11N_FOLDER = "libs_sb/s11n"
+LCS_FOLDER  = "libs_sb/lcs"
 
 -- Do NOT modify the following lines
 if not gadgetHandler:IsSyncedCode() then

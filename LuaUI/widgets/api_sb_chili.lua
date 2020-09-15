@@ -31,7 +31,7 @@ local tf
 --------------------------------------------------------------------------------
 -- Chili's location
 
-CHILI_DIRNAME = WG.SB_LIBS_DIR .. "chiliui/luaui/chili/chili/"
+CHILI_DIRNAME = "libs_sb/chiliui/luaui/chili/chili/"
 LUA_DIRNAME = LUA_DIRNAME or "LuaUI/"
 SKIN_DIRNAME  = LUA_DIRNAME .. "Configs/chili/skins/"
 THEME_DIRNAME = LUA_DIRNAME .. "Configs/chili/themes/"

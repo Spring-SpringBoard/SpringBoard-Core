@@ -16,7 +16,7 @@ function widget:GetInfo()
 	}
 end
 
-I18N_PATH = WG.SB_LIBS_DIR .. "i18n/i18nlib/i18n/"
+I18N_PATH = "libs_sb/i18n/i18nlib/i18n/"
 function widget:Initialize()
 	WG.i18n = VFS.Include(I18N_PATH .. "init.lua", nil, VFS.DEF_MODE)
 end

@@ -1,11 +1,11 @@
 --dir names
 if WG then
-	LIBS_DIR = WG.SB_LIBS_DIR
+	LIBS_DIR = "libs_sb/"
 	SB = WG.SB
 
 	-- Scene = WG.Scene
 else
-	LIBS_DIR = GG.SB_LIBS_DIR
+	LIBS_DIR = "libs_sb/"
 	SB = GG.SB
 end
 
