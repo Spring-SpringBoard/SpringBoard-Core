@@ -17,7 +17,7 @@ function ExportMetalCommand:execute()
         width = Game.mapSizeX / METAL_RESOLUTION,
         height = Game.mapSizeZ / METAL_RESOLUTION,
         -- FIXME: No idea why we divide by 5 tbh. Experimentally deduced
-        multiplier = 1.0 / 5.0,
+        multiplier = 1.0 / 5.1,
         packSize = 'float32',
         colorType = 'rgb',
         bitDepth = 8
