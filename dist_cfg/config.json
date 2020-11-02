@@ -127,7 +127,7 @@
       "downloads": {
         "resources": [
           {
-            "url": "https://spring-launcher.ams3.digitaloceanspaces.com/core_v1.zip",
+            "url": "https://content.spring-launcher.com/core_v1.zip",
             "destination": "springboard/assets/core-v1",
             "extract": true
           }
