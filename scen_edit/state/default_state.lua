@@ -161,10 +161,10 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
     end
     if key == KEYSYMS.G then
         local selection = SB.view.selectionManager:GetSelection()
-        local moveObjectID = nil
-        local bridge = nil
+        local moveObjectID
+        local bridge
         for selType, selected in pairs(selection) do
-            _, moveObjectID = next(selected)
+            moveObjectID = select(2, next(selected))
             if moveObjectID ~= nil then
                 bridge = ObjectBridge.GetObjectBridge(selType)
                 break
@@ -190,8 +190,9 @@ function DefaultState:KeyPress(key, mods, isRepeat, label, unicode)
         -- Get rid of ctrl-click?
         local hasSelected = false
         local selection = SB.view.selectionManager:GetSelection()
+        local moveObjectID
         for selType, selected in pairs(selection) do
-            _, moveObjectID = next(selected)
+            moveObjectID = select(2, next(selected))
             if moveObjectID ~= nil then
                 hasSelected = true
                 break
