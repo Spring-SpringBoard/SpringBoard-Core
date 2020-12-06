@@ -35,8 +35,8 @@ jobs:
 
       - name: Build Launcher
         run: cd spring-launcher-backend && node src/builder/run_build.js Spring-SpringBoard/SpringBoard-Core --no-generic-backend
-        with:
-          github_token: ${{ secrets.github_token }}
+        env:
+          GH_TOKEN: ${{ secrets.github_token }}
 
       # - name: Upload build results
       #   uses: actions/upload-artifact@v2
