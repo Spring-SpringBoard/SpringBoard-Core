@@ -348,7 +348,11 @@ function TextureManager:SetDNTS(dntsIndex, material)
     gl.UseShader(shader)
     gl.Blending("disable")
     gl.Texture(0, material.normal)
-    gl.Texture(1, material.diffuse)
+    if material.diffuse ~= nil then
+        gl.Texture(1, material.diffuse)
+    else
+        gl.Texture(1, material.normal)
+    end
     gl.RenderToTexture(texture, function()
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
     end)
