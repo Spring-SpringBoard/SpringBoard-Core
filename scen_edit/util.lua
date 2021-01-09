@@ -775,18 +775,18 @@ function SB.CreateTemporaryDir(name)
     return dir
 end
 
-local activeActions = {}
-local activeActionsIDCounter = 0
+local chotifyNotifications = {}
+local notificationIDs = 0
 
-function SB.MakeUniqueActionProgressID()
-    activeActionsIDCounter = activeActionsIDCounter + 1
-    return activeActionsIDCounter
+function SB.GenerateNotificationID()
+    notificationIDs = notificationIDs + 1
+    return notificationIDs
 end
 
-function SB.ActionProgress(actionName, progress, caption)
-    local active = activeActions[actionName]
-    if not active then
-        active = {
+function SB.ActionProgress(notificationName, progress, caption)
+    local notification = chotifyNotifications[notificationName]
+    if not notification then
+        notification = {
             label = Label:New {
                 x = 0,
                 y = 5,
@@ -798,7 +798,7 @@ function SB.ActionProgress(actionName, progress, caption)
                 right = 0
             }
         }
-        active.id = WG.Chotify:Post({
+        notification.id = WG.Chotify:Post({
             title = "Progress",
             time = 3600,
             body = StackPanel:New {
@@ -807,20 +807,20 @@ function SB.ActionProgress(actionName, progress, caption)
                 y = 0,
                 height = "100%",
                 children = {
-                    active.label,
-                    active.progress,
+                    notification.label,
+                    notification.progress,
                 },
             }
         })
-        activeActions[actionName] = active
+        chotifyNotifications[notificationName] = notification
     end
 
-    active.progress:SetValue(progress * 100.0)
-    active.label:SetCaption(caption)
+    notification.progress:SetValue(progress * 100.0)
+    notification.label:SetCaption(caption)
 
     if progress == 1.0 then
-        WG.Chotify:CloseNotification(active.id)
-        activeActions[actionName] = nil
+        WG.Chotify:CloseNotification(notification.id)
+        chotifyNotifications[notificationName] = nil
 
         WG.Chotify:Post({
             title = "Finished",
@@ -831,11 +831,28 @@ function SB.ActionProgress(actionName, progress, caption)
                 y = 0,
                 height = "100%",
                 children = {
-                    active.label,
-                    active.progress,
+                    notification.label,
+                    notification.progress,
                 },
             }
         })
         return
     end
+end
+
+function SB.NotifyWarn(notificationName, caption)
+    Log.Warning(caption)
+
+    local notification = chotifyNotifications[notificationName]
+    if not notification or WG.Chotify.notifications[notification.id] == nil then
+        notification = {}
+        notification.id = WG.Chotify:Post({
+            title = "\255\255\245\001Warning\b",
+            time = 3,
+            body = "\255\255\245\001" .. caption .. "\b"
+        })
+        chotifyNotifications[notificationName] = notification
+    end
+
+    WG.Chotify:Update(notification.id, caption)
 end

@@ -31,9 +31,27 @@ function ExportAction:canExecute()
     end
     if SB.project.path == nil then
         -- FIXME: this should probably be relaxed for most types of export
-        Log.Warning("The project must be saved before exporting")
+        SB.NotifyWarn("export_warn", "The project must be saved before exporting")
         return false
     end
+    return true
+end
+
+function ExportAction:CheckHasSaved()
+    local projectFiles = {
+        Path.Join(SB.project.path, Project.HEIGHTMAP_FILE),
+        Path.Join(SB.project.path, Project.MODEL_FILE),
+        Path.Join(SB.project.path, Project.GRASS_FILE),
+        Path.Join(SB.project.path, Project.METAL_FILE)
+    }
+
+    for _, projectFile in ipairs(projectFiles) do
+        if not VFS.FileExists(projectFile, VFS.RAW) then
+            SB.NotifyWarn("export_warn", "The project must be saved before exporting")
+            return false
+        end
+    end
+
     return true
 end
 
@@ -53,6 +71,10 @@ function ExportAction:execute()
                     return false, "Please select a file"
                 end
 
+                if not self:CheckHasSaved() then
+                    return false, "Project files missing. Save before exporting"
+                end
+
                 self:ExportSpringArchive(path, heightmapExtremes)
                 return true
             elseif fileType == ExportAction.EXPORT_MAP_TEXTURES then
@@ -60,7 +82,11 @@ function ExportAction:execute()
                     return false, "Please select a directory"
                 end
 
-                local progressID = SB.MakeUniqueActionProgressID()
+                if not self:CheckHasSaved() then
+                    return false, "Project files missing. Save before exporting"
+                end
+
+                local progressID = SB.GenerateNotificationID()
                 SB.ActionProgress(progressID, 0.1, "Exporting maps textures...")
                 SB.delay(function()
                     self:TryToExportMapTextures(path, heightmapExtremes):next(function()
@@ -146,7 +172,7 @@ WG.Connector.Register("CompileMapProgress", function(command)
 end)
 
 function ExportAction:ExportSpringArchive(path, heightmapExtremes)
-    local progressID = SB.MakeUniqueActionProgressID()
+    local progressID = SB.GenerateNotificationID()
     SB.ActionProgress(progressID, 0.0, "Exporting archive: Exporting map textures...")
     Log.Notice("Exporting archive: " .. path .. ". This might take a while...")
     activeProgressID = progressID
