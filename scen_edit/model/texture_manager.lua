@@ -262,8 +262,8 @@ function TextureManager:SetShadingTexture(name, tex)
 end
 
 function TextureManager:MakeShadingTexture(name, sizeX, sizeY)
-    if name:find("splat_normals") then
-        return gl.CreateTexture(sizeX, sizeY, {
+    if name:find("splat_normals") or name:find("detail") then
+        local texture = gl.CreateTexture(sizeX, sizeY, {
             border = false,
             min_filter = GL.LINEAR_MIPMAP_NEAREST,
             mag_filter = GL.LINEAR,
@@ -272,17 +272,8 @@ function TextureManager:MakeShadingTexture(name, sizeX, sizeY)
             aniso = ssmfTexAniso,
             fbo = true,
         })
-    elseif name:find("detail") then
-        -- TODO: merge with splat_normals?
-        return gl.CreateTexture(sizeX, sizeY, {
-            border = false,
-            min_filter = GL.LINEAR_MIPMAP_NEAREST,
-            mag_filter = GL.LINEAR,
-            wrap_s = GL.REPEAT,
-            wrap_t = GL.REPEAT,
-            aniso = ssmfTexAniso,
-            fbo = true,
-        })
+        gl.GenerateMipmap(texture)
+        return texture
     else
         return gl.CreateTexture(sizeX, sizeY, {
             border = false,
@@ -303,7 +294,7 @@ function TextureManager:MakeAndEnableMapShadingTexture(opts)
     local texture = opts.texture
 
     -- gl.DeleteTexture(self.shadingTextureDefs[name].engineName)
-    local tex = self:MakeShadingTexture(name, sizeX, sizeY)
+    local luaTex = self:MakeShadingTexture(name, sizeX, sizeY)
 
     gl.Blending("enable")
     if color then
@@ -312,15 +303,19 @@ function TextureManager:MakeAndEnableMapShadingTexture(opts)
     if texture then
         gl.Texture(texture)
     end
-    gl.RenderToTexture(tex, function()
+    gl.RenderToTexture(luaTex, function()
         gl.TexRect(-1,-1, 1, 1, 0, 0, 1, 1)
     end)
     if texture then
-        gl.Texture(texture, false)
+        gl.Texture(false)
     end
 
-    self:SetShadingTexture(name, tex)
-    return tex
+    if name:find("splat_normals") or name:find("detail") then
+        gl.GenerateMipmap(luaTex)
+    end
+
+    self:SetShadingTexture(name, luaTex)
+    return luaTex
 end
 
 local grayscaleShader
