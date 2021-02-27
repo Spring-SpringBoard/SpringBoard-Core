@@ -33,8 +33,7 @@ Some examples:
 Assets
 ------
 
-Core assets can be obtained from the following
-`link <https://drive.google.com/file/d/0B9FQjbVMFgL2LTM2Z1VVaGRZRDQ/view?usp=sharing>`_. Once downloaded, they should be extracted, with the resulting folder structure of "springboard/assets/core/".
+A set of core assets are available. You can download them either via the launcher's ``Asset Download`` option (recommended), or manually via a `direct link <https://content.spring-launcher.com/core_v1.zip>`_. In case of a manual download, you need to extract them to ``springboard/assets/core/``.
 
 Help
 ----

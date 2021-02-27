@@ -26,7 +26,7 @@ Some examples:
 
 All assets (texture files, skyboxes, etc.) should be placed in the `springboard/assets` folder, located inside the Spring data directory.
 
-A set of [core assets](https://drive.google.com/file/d/0B9FQjbVMFgL2LTM2Z1VVaGRZRDQ/view?usp=sharing) are available. To use, extract them to `springboard/assets/core/`.
+A set of core assets are available. You can download them either via the launcher's `Asset Download` option (recommended), or manually via a [direct link](https://content.spring-launcher.com/core_v1.zip). In case of a manual download, you need to extract them to `springboard/assets/core/`.
 
 ## Help
 
