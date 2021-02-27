@@ -10,11 +10,11 @@ SpringBoard doesn't come with any map features besides the engine-default geoven
 
 To import new features you need to perform the following steps:
 
-1. Find existing feature sets (e.g. `SpringFeatures<https://github.com/Spring-Helper-Projects/spring-features>`_) or make your own following the official `Spring docs<https://springrts.com/wiki/Gamedev:FeatureDefs>`_.
+1. Find existing feature sets (e.g. `SpringFeatures <https://github.com/Spring-Helper-Projects/spring-features>`_) or make your own following the official `Spring docs <https://springrts.com/wiki/Gamedev:FeatureDefs>`_.
 
 2. Copy features into your project and restart.
 
-Below is an example of how to copy ``SpringFeatures`` into a SpringBoard project.
+Below is an example of how to import ``SpringFeatures`` into a SpringBoard project.
 
 .. image:: img/features/features1.jpg
    :align: center
