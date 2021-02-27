@@ -20,10 +20,10 @@ Below is an example of how to copy ``SpringFeatures`` into a SpringBoard project
    :align: center
 
 .. image:: img/features/features2.jpg
-:align: center
+   :align: center
 
 .. image:: img/features/features3.jpg
-:align: center
+   :align: center
 
 Exporting as Spring archive (recommended)
 -----------------------------------------
