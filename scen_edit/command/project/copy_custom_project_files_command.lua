@@ -26,8 +26,15 @@ function CopyCustomProjectFilesCommand:execute()
 		Spring.CreateDir(destDir)
 
 		local srcFileContent = VFS.LoadFile(srcPath, VFS.RAW)
-		local destFile = assert(io.open(destPath, "w"))
-		destFile:write(srcFileContent)
-		destFile:close()
+
+		-- TODO: Do this in JS where this isn't a problem and no crappy workaround is necessary.
+		xpcall(function()
+			local destFile = assert(io.open(destPath, "w"))
+			destFile:write(srcFileContent)
+			destFile:close()
+		end, function(err)
+			Log.Error(debug.traceback(err, 3))
+			Log.Error("Error copying project file " .. destPath .. " . Consider including it manually")
+		end)
 	end)
 end
