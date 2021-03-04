@@ -16,6 +16,18 @@ To import new features you need to perform the following steps:
 
 Below is an example of how to import ``SpringFeatures`` into a SpringBoard project.
 
+1. Download SF from https://github.com/Spring-Helper-Projects/spring-features/archive/master.zip extract it and open the folder.
+
+2. Open an existing project or create a new one. Then, open its folder using the "Open Project" button.
+
+3. Copy features, objects3d and unittexture folder to your project. You might want to remove the features you don't need later.
+
+4. Press F8 for console window to show
+
+5. Restart
+
+6. You should now be able to use features in your project
+
 .. image:: img/features/features1.jpg
    :align: center
 
