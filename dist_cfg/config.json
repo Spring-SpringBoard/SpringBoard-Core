@@ -11,7 +11,7 @@
         "platform": "win32"
       },
       "downloads": {
-        "games" : ["sbc:test"],
+        "nextgen" : ["Spring-SpringBoard/SpringBoard-Core"],
         "resources": [
           {
               "url": "https://content.spring-launcher.com/engines/spring_%7Bmaintenance%7D104.0.1-1553-gd3c0012_win32-minimal-portable.7z",
@@ -41,7 +41,7 @@
         "platform": "linux"
       },
       "downloads": {
-        "games" : ["sbc:test"],
+        "nextgen" : ["Spring-SpringBoard/SpringBoard-Core"],
         "resources": [
           {
               "url": "https://content.spring-launcher.com/engines/spring_%7Bmaintenance%7D104.0.1-1553-gd3c0012_minimal-portable-linux64-static.7z",
