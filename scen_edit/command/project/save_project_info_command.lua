@@ -141,22 +141,19 @@ local function ModInfoSave(path)
 end
 
 local function MapInfoSave(name, path)
-    local mapInfo = [[
-local mapinfo = {
-    name = "$NAME",
-    version = "1.0",
-    description = "",
-    modtype = 3,
-    depend = {
-        "cursors.sdz",
+    local mapInfoTable = {
+        name = name,
+        version = "1.0",
+        description = "",
+        modtype = 3,
+        teams = ExportMapInfoCommand.GetTeams(),
+        depend = {
+            "cursors.sdz",
+        }
     }
-}
-
-return mapinfo
-]]
-    mapInfo = mapInfo:gsub("$NAME", name)
+    local mapInfoStr = table.show(mapInfoTable)
     local mapInfoFile = assert(io.open(path, "w"))
-    mapInfoFile:write(mapInfo)
+    mapInfoFile:write(mapInfoStr)
     mapInfoFile:close()
 end
 
