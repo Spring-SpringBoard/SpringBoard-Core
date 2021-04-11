@@ -61,7 +61,7 @@ function SaveCommand.GenerateScript()
     -- we ignore SB's teamIDs and make sure they make a no-gap array
     local teamIDCount = 1
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
-        if not team.gaia then
+        if not team.gaia and #players + #ais < 2 then
             local t = {
                 -- TeamID = team.id, ID is implicit as index-1
                 teamLeader = 0,
@@ -87,11 +87,10 @@ function SaveCommand.GenerateScript()
                     host = 0,
                 })
             else
-                local spectator = true
                 table.insert(players, {
                     name = team.name,
                     team = teamIDCount,
-                    spectator = spectator,
+                    spectator = true,
                     isFromDemo = true,
                 })
             end
@@ -141,7 +140,7 @@ local function ModInfoSave(path)
 end
 
 local function MapInfoSave(name, path)
-    local mapInfoTable = {
+    local mapInfo = {
         name = name,
         version = "1.0",
         description = "",
@@ -151,10 +150,9 @@ local function MapInfoSave(name, path)
             "cursors.sdz",
         }
     }
-    local mapInfoStr = table.show(mapInfoTable)
-    local mapInfoFile = assert(io.open(path, "w"))
-    mapInfoFile:write(mapInfoStr)
-    mapInfoFile:close()
+    local file = assert(io.open(path, "w"))
+    file:write(table.show(mapInfo))
+    file:close()
 end
 
 function SaveProjectInfoCommand:execute()
