@@ -61,7 +61,7 @@ function SaveCommand.GenerateScript()
     -- we ignore SB's teamIDs and make sure they make a no-gap array
     local teamIDCount = 1
     for _, team in pairs(SB.model.teamManager:getAllTeams()) do
-        if not team.gaia and #players + #ais < 2 then
+        if not team.gaia then
             local t = {
                 -- TeamID = team.id, ID is implicit as index-1
                 teamLeader = 0,
@@ -121,6 +121,7 @@ function SaveCommand.GenerateScript()
         ais = ais,
         teams = teams,
         allyTeams = allyTeams,
+        startPosType = 2,
     }
     return StartScript.GenerateScriptTxt(script)
 end
@@ -156,6 +157,10 @@ local function MapInfoSave(name, path)
 end
 
 function SaveProjectInfoCommand:execute()
+    if #SB.project.mutators == 0 then
+        SB.project.mutators = { SB.project.name .. " 1.0" }
+    end
+
     local projectDir = self.path
     local projectName = self.name
 

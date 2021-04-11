@@ -93,7 +93,6 @@ function NewProjectDialog:ConfirmDialog()
         return
     end
 
-    SB.project.mutators = { projectName .. " 1.0" }
     if self.fields["mapName"].value == "SB_Blank_Map" then
         if self.fields["sizeX"].value % 2 ~= 0 then
             SB.HintControls(self.fields["sizeX"].components)

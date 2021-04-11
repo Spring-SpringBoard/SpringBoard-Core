@@ -41,7 +41,7 @@ function Project:Save(name)
     assert(self.path ~= nil, "Project path is not specified")
     assert(self.name ~= nil, "Project name is not specified")
     if isNewProject then
-        SB.project:CreateProjectStructure(self.path)
+        self:GenerateNewProjectInfo(self.name)
     end
 
     Log.Notice("Saving project: " .. self.path .. " ...")
@@ -70,6 +70,7 @@ function Project:GenerateNewProjectInfo(name)
     self.path = nil
     self:__MaybeSetNameCommand(name)
 
+    SB.project.mutators = { SB.project.name .. " 1.0" }
     SB.project:CreateProjectStructure(self.path)
     Log.Notice("Saving project info: " .. self.path .. " ...")
     local cmd = SaveProjectInfoCommand(self.name, self.path, true)

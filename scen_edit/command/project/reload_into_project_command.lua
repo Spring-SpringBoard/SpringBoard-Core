@@ -41,6 +41,7 @@ function ReloadIntoProjectCommand:execute()
     scriptObj.modOptions._sb_game_version = nil
     scriptObj.players = scriptObj.players or {}
     scriptObj.ais = scriptObj.ais or {}
+    scriptObj.startPosType = 2
 
     table.echo(scriptObj)
     scriptTxt = StartScript.GenerateScriptTxt(scriptObj)
