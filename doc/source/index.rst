@@ -13,9 +13,9 @@ Installing
 
 The simplest way to download SpringBoard is by using one of the provided installers:
 
-- `Windows build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.exe>`_
+- `Windows build <https://content.spring-launcher.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.exe>`_
 
-- `Linux build <http://spring-launcher.ams3.digitaloceanspaces.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.AppImage>`_
+- `Linux build <https://content.spring-launcher.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.AppImage>`_
 
 For details refer to :ref:`installing`.
 

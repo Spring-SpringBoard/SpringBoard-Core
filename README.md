@@ -3,7 +3,7 @@
 
 # SpringBoard: Editor for Spring
 
-[Documentation](http://springboard-core.readthedocs.io/en/latest/)
+[Documentation](https://springboard-core.readthedocs.io/en/latest/)
 
 ## Installing
 
@@ -11,7 +11,7 @@ The simplest way to download SpringBoard is by using one of the provided install
 - [Windows build](https://content.spring-launcher.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.exe)
 - [Linux build ](https://content.spring-launcher.com/Spring-SpringBoard/SpringBoard-Core/SpringBoard.AppImage)
 
-See [detailed instructions](http://springboard-core.readthedocs.io/en/latest/installing.html)
+See [detailed instructions](https://springboard-core.readthedocs.io/en/latest/installing.html)
 
 ### Game-specific modules
 This is the core module, you may still want to get additional game-specific modules if you're making a scenario.
