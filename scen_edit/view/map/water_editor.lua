@@ -22,8 +22,8 @@ function WaterEditor:init()
         }),
         NumericField({
             name = "numTiles",
-            title = "Ambient:",
-            tooltip = "How many Tiles does the `normalTexture` have?\nSuch Tiles are used when DynamicWaves are enabled in BumpWater, the more the better.\nCheck the example php script to generate such tiled bumpmaps.",
+            title = "NumTiles:",
+            tooltip = "How many (squared) Tiles does the `normalTexture` have?\nSuch Tiles are used when DynamicWaves are enabled in BumpWater, the more the better.\nCheck the example php script to generate such tiled bumpmaps.",
             width = 200,
         }),
     }))
@@ -45,19 +45,19 @@ function WaterEditor:init()
         NumericField({
             name = "perlinStartFreq",
             title = "Start freq:",
-            tooltip = "Scales the normal texture.",
+            tooltip = "The initial frequency of the bump map repetetion rate. Larger numbers mean more tiles.",
             width = 140,
         }),
         NumericField({
             name = "perlinLacunarity",
             title = "Lacunarity:",
-            tooltip = "Scales the normal texture.",
+            tooltip = "How much smaller each additional repetion of the normal map should be. Larger numbers mean smaller.",
             width = 140,
         }),
         NumericField({
             name = "perlinAmplitude",
             title = "Amplitude:",
-            tooltip = "Scales the normal texture.",
+            tooltip = "How strong each additional repetetion of the normal map should be",
             width = 140,
         }),
     }))
@@ -73,11 +73,13 @@ function WaterEditor:init()
         NumericField({
             name = "diffuseFactor",
             title = "Factor:",
+            tooltip = "How strong the diffuse lighting should be on the water",
             width = 140,
         }),
         ColorField({
             name = "diffuseColor",
-            title = "Lacunarity:",
+            title = "Diffuse Color:",          
+            tooltip = "The color of the diffuse lighting of the water",
             width = 140,
             format = 'rgb',
         }),
@@ -95,16 +97,19 @@ function WaterEditor:init()
         NumericField({
             name = "specularFactor",
             title = "Factor:",
+            tooltip = "How much light should be reflected straight from the sun",
             width = 140,
         }),
         NumericField({
             name = "specularPower",
             title = "Power:",
+            tooltip = "How polished the surface of the water is",
             width = 140,
         }),
         ColorField({
             name = "specularColor",
             title = "Color:",
+            tooltip = "The color of the sun reflection from the water",
             width = 140,
             format = 'rgb',
         }),
@@ -181,7 +186,7 @@ function WaterEditor:init()
         }),
         NumericField({
             name = "blurExponent",
-            title = "Lacunarity:",
+            title = "Exponent",
             width = 140,
             tooltip = "How much should the reflection be blurred.",
         }),
