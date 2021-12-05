@@ -13,7 +13,13 @@ function PlayerWindow:init(team)
         tooltip = "Team name",
         value = team.name,
     }))
-
+	
+    self:AddField(StringField({
+        name = "short",
+        title = "Name(Short):",
+        tooltip = "Team name",
+        value = team.short or "",
+    }))
     self:AddField(BooleanField({
         name = "ai",
         title = "AI:",
@@ -123,6 +129,7 @@ function PlayerWindow:init(team)
     table.insert(self.window.OnDispose, function()
         local newTeam = Table.DeepCopy(team)
         newTeam.name        = self.fields["name"].value
+		newTeam.short	= self.fields["short"].value
         local clbColor      = self.fields["color"].value
         newTeam.color.r     = clbColor[1]
         newTeam.color.g     = clbColor[2]
