@@ -1,0 +1,22 @@
+name: Luacheck
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install luacheck
+        run: |
+          pip install hererocks
+          hererocks env --"lua 5.1" -rlatest
+          source env/bin/activate
+          luarocks install luacheck
+
+      - name: Run luacheck
+        run: |
+          luacheck scen_edit triggers libs_sb/utils libs_sb/savetable.lua --enable 1
+
