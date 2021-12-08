@@ -78,7 +78,7 @@ function WaterEditor:init()
         }),
         ColorField({
             name = "diffuseColor",
-            title = "Diffuse Color:",          
+            title = "Diffuse Color:",
             tooltip = "The color of the diffuse lighting of the water",
             width = 140,
             format = 'rgb',
