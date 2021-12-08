@@ -12,7 +12,7 @@ jobs:
       - name: Install luacheck
         run: |
           pip install hererocks
-          hererocks env --'lua 5.1' -rlatest
+          hererocks env --lua 5.1 -rlatest
           source env/bin/activate
           luarocks install luacheck
 
