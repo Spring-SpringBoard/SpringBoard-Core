@@ -18,5 +18,6 @@ jobs:
 
       - name: Run luacheck
         run: |
+          source env/bin/activate
           luacheck scen_edit triggers libs_sb/utils libs_sb/savetable.lua --enable 1
 
