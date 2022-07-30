@@ -38,7 +38,7 @@ function Model:Clear()
         Spring.SetProjectileCollision(projectileID)
     end
 
-    if not Script.GetName() == "LuaUI" then
+    if Script.GetName() ~= "LuaUI" then
         SB.commandManager:execute(ClearUndoRedoCommand())
     end
 end
