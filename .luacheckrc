@@ -19,6 +19,8 @@ codes = true
 -- Default is probably fine, but anyway
 std=lua51
 
+files["libs_sb/utils/luaunit.lua"] = { ignore = {"581"} }
+
 globals = {
     -- std extensions
     "math.round", "math.bit_or",

@@ -67,7 +67,7 @@ jobs:
       - name: Build
         run: |
           cd build
-          npm ci
+          npm install
           npm run ${{ matrix.build_cmd }} -- ${{ matrix.arch }} --publish always
         env:
           GH_TOKEN: ${{ secrets.github_token }}
