@@ -1,0 +1,73 @@
+name: Launcher
+
+on:
+  push:
+    paths:
+    - 'dist_cfg/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            build_cmd: "build-linux"
+            arch: "--x64"
+
+          - os: windows-latest
+            build_cmd: "build-win"
+            arch: "--x64"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # This should fix git rev-list --count HEAD
+          # https://stackoverflow.com/a/65056108
+          fetch-depth: 0
+          path: repo-folder
+
+      - uses: actions/checkout@v2
+        with:
+          repository: gajop/spring-launcher
+          path: spring-launcher
+
+      - name: Setup NodeJs
+        uses: actions/setup-node@v1
+        with:
+          node-version: '17.x'
+
+      - name: Prepare folder structure
+        run: |
+          mkdir build
+          cp spring-launcher/* -r build/
+          cp repo-folder/dist_cfg/* -r build/src/
+          mkdir -p build/{bin,files,build}
+          [ -d build/src/bin/ ] && mv build/src/bin/* build/bin/
+          [ -d build/src/files/ ] && mv build/src/files/* build/files/
+          [ -d build/src/build/ ] && mv build/src/build/* build/build/
+          rm -rf build/src/{bin,files,build}
+          exit 0
+
+      - name: Make package.json
+        run: |
+          cd repo-folder
+          export PACKAGE_VERSION=1.$(git rev-list --count HEAD).0
+          echo "Making build for version: $PACKAGE_VERSION"
+          cd ..
+          node ./repo-folder/build/make_package_json.js build/package.json repo-folder/dist_cfg/config.json Spring-SpringBoard/SpringBoard-Core $PACKAGE_VERSION
+
+      - name: Build
+        run: |
+          cd build
+          npm install
+          npm run ${{ matrix.build_cmd }} -- ${{ matrix.arch }} --publish always
+        env:
+          GH_TOKEN: ${{ secrets.github_token }}

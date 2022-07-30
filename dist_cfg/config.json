@@ -11,17 +11,17 @@
         "platform": "win32"
       },
       "downloads": {
-        "nextgen" : ["Spring-SpringBoard/SpringBoard-Core"],
+        "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://content.spring-launcher.com/engines/spring_%7Bmaintenance%7D104.0.1-1553-gd3c0012_win32-minimal-portable.7z",
+              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_.maintenance.104.0.1-1553-gd3c0012_win32-minimal-portable.7z",
               "destination": "engine/104.0.1-1553-gd3c0012 maintenance",
               "extract": true
           }
         ]
       },
       "launch": {
-        "game": "rapid://sbc:test",
+        "games": ["sbc:test"],
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1553-gd3c0012 maintenance",
         "map_options": {
@@ -41,17 +41,17 @@
         "platform": "linux"
       },
       "downloads": {
-        "nextgen" : ["Spring-SpringBoard/SpringBoard-Core"],
+        "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://content.spring-launcher.com/engines/spring_%7Bmaintenance%7D104.0.1-1553-gd3c0012_minimal-portable-linux64-static.7z",
+              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_.maintenance.104.0.1-1553-gd3c0012_minimal-portable-linux64-static.7z",
               "destination": "engine/104.0.1-1553-gd3c0012 maintenance",
               "extract": true
           }
       ]
       },
       "launch": {
-        "game": "rapid://sbc:test",
+        "games": ["sbc:test"],
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1553-gd3c0012 maintenance",
         "map_options": {
@@ -71,7 +71,7 @@
         "platform": "win32"
       },
       "downloads": {
-        "nextgen" : ["Spring-SpringBoard/SpringBoard-Core"],
+        "games": ["sbc:test"],
         "resources": [
           {
               "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR%7D104.0.1-1977-g12700e0/spring_bar_.BAR.104.0.1-1977-g12700e0_windows-64-minimal-portable.7z",
@@ -81,7 +81,7 @@
         ]
       },
       "launch": {
-        "game": "rapid://sbc:test",
+        "games": ["sbc:test"],
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1977-g12700e0 bar",
         "map_options": {
@@ -101,7 +101,7 @@
         "platform": "linux"
       },
       "downloads": {
-        "nextgen" : ["Spring-SpringBoard/SpringBoard-Core"],
+        "games": ["sbc:test"],
         "resources": [
           {
               "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR%7D104.0.1-1977-g12700e0/spring_bar_.BAR.104.0.1-1977-g12700e0_linux-64-minimal-portable.7z",
@@ -111,7 +111,7 @@
       ]
       },
       "launch": {
-        "game": "rapid://sbc:test",
+        "games": ["sbc:test"],
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1977-g12700e0 bar",
         "map_options": {
@@ -172,7 +172,7 @@
       "downloads": {
         "resources": [
           {
-            "url": "https://content.spring-launcher.com/core_v1.zip",
+            "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/core_v1.zip",
             "destination": "springboard/assets/core-v1",
             "extract": true
           }
