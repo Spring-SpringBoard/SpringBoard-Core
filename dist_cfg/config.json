@@ -21,7 +21,7 @@
         ]
       },
       "launch": {
-        "games": ["sbc:test"],
+        "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1553-gd3c0012 maintenance",
         "map_options": {
@@ -51,7 +51,7 @@
       ]
       },
       "launch": {
-        "games": ["sbc:test"],
+        "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1553-gd3c0012 maintenance",
         "map_options": {
@@ -81,7 +81,7 @@
         ]
       },
       "launch": {
-        "games": ["sbc:test"],
+        "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1977-g12700e0 bar",
         "map_options": {
@@ -111,7 +111,7 @@
       ]
       },
       "launch": {
-        "games": ["sbc:test"],
+        "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
         "engine": "104.0.1-1977-g12700e0 bar",
         "map_options": {
