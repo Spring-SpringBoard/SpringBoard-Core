@@ -74,8 +74,8 @@
         "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR%7D104.0.1-1977-g12700e0/spring_bar_.BAR.104.0.1-1977-g12700e0_windows-64-minimal-portable.7z",
-              "destination": "engine/104.0.1-1977-g12700e0 bar",
+              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_bar_.BAR105-BIGMEM.105.1.1-1101-g96d9a59_windows-64-minimal-portable.7z",
+              "destination": "engine/105.1.1-1101-g96d9a59-bar",
               "extract": true
           }
         ]
@@ -83,7 +83,7 @@
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
-        "engine": "104.0.1-1977-g12700e0 bar",
+        "engine": "105.1.1-1101-g96d9a59-bar",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
@@ -104,8 +104,8 @@
         "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR%7D104.0.1-1977-g12700e0/spring_bar_.BAR.104.0.1-1977-g12700e0_linux-64-minimal-portable.7z",
-              "destination": "engine/104.0.1-1977-g12700e0 bar",
+              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_bar_.BAR105-BIGMEM.105.1.1-1101-g96d9a59_linux-64-minimal-portable.7z",
+              "destination": "engine/105.1.1-1101-g96d9a59-bar",
               "extract": true
           }
       ]
@@ -113,7 +113,7 @@
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
-        "engine": "104.0.1-1977-g12700e0 bar",
+        "engine": "105.1.1-1101-g96d9a59-bar",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
