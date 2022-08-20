@@ -91,7 +91,11 @@ function StatusWindow:_UpdateMemory()
     -- We're detecting extensive memory usage here and exiting the current state if critical.
     -- TODO: Act on it a bit better and automatically clear the undo-redo stack instead of prompting the user to do stuff.
     local color = SB.conf.STATUS_TEXT_OK_COLOR
-    if memory > 500 then
+
+    -- If the BIGMEM BAR105 engine build is used, then we dont ever really need to warn the user. 
+    local memoryWarnLevel = 500
+    if string.find(Engine.versionFull,"BIGMEM", nil, true) then memoryWarnLevel = 16000 end
+    if memory > memoryWarnLevel  then
         color = SB.conf.STATUS_TEXT_DANGER_COLOR
         if not self.warnedTime or os.clock() - self.warnedTime > 10 then
             self.warnedTime = os.clock()
