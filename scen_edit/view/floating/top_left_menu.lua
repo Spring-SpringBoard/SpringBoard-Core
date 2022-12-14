@@ -99,7 +99,8 @@ function TopLeftMenu:AddUploadLogButton()
     end)
 
     WG.Connector.Register('UploadLogFailed', function(command)
-        local msg = command.msg
+        table.echo(command)
+        local msg = command.msg.name
         local txt = SB.conf.STATUS_TEXT_DANGER_COLOR .. "Upload failed\b: " .. msg ..  "\n\255\255\255\255Please upload the log manually\b"
         Log.Error(txt)
         WG.Chotify:Post({
