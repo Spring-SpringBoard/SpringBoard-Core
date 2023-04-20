@@ -18,9 +18,6 @@ end
 
 gl.Utilities = gl.Utilities or {}
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
 local min    = math.min
 local max    = math.max
 local sin    = math.sin
@@ -37,8 +34,8 @@ GL.INCR      = 0x1E02
 GL.DECR      = 0x1E03
 GL.INVERT    = 0x150A
 
--- local stencilBit1 = 0x01
--- local stencilBit2 = 0x10
+local stencilBit1 = 0x01
+local stencilBit2 = 0x10
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -71,6 +68,29 @@ function gl.Utilities.DrawMyBox(minX,minY,minZ, maxX,maxY,maxZ)
   end)
 end
 
+function gl.Utilities.DrawMy3DTriangle(x1,z1, x2, z2, x3,z3, minY, maxY)
+  gl.BeginEnd(GL.TRIANGLES, function()
+    --// top
+    glVertex(x1, maxY, z1)
+    glVertex(x2, maxY, z2)
+    glVertex(x3, maxY, z3)
+    --// bottom
+    glVertex(x1, minY, z1)
+    glVertex(x3, minY, z3)
+    glVertex(x2, minY, z2)
+  end)
+  gl.BeginEnd(GL.QUAD_STRIP, function()
+    --// sides
+    glVertex(x1, maxY, z1)
+    glVertex(x1, minY, z1)
+    glVertex(x2, maxY, z2)
+    glVertex(x2, minY, z2)
+    glVertex(x3, maxY, z3)
+    glVertex(x3, minY, z3)
+    glVertex(x1, maxY, z1)
+    glVertex(x1, minY, z1)
+  end)
+end
 
 local function CreateSinCosTable(divs)
   local sinTable = {}
@@ -128,6 +148,18 @@ function gl.Utilities.DrawMyCylinder(x,y,z, height,radius,divs)
       local rz = z + radius * cosTable[i]
       glVertex(rx, topY   , rz)
       glVertex(rx, bottomY, rz)
+    end
+  end)
+end
+
+
+function gl.Utilities.DrawMyCircle(x,y,radius,divs)
+  divs = divs or 25
+  local sinTable, cosTable = CreateSinCosTable(divs)
+
+  gl.BeginEnd(GL.LINE_LOOP, function()
+    for i = #sinTable, 1, -1 do
+      glVertex(x + radius*sinTable[i], y + radius*cosTable[i], 0)
     end
   end)
 end
@@ -195,12 +227,42 @@ function gl.Utilities.DrawGroundRectangle(x1,z1,x2,z2)
   gl.PopMatrix()
 end
 
+local triangles = {}
+function gl.Utilities.DrawGroundTriangle(args)
+	if not triangles[args] then
+		triangles[args] = gl.CreateList(gl.Utilities.DrawMy3DTriangle, args[1], args[2], args[3], args[4], args[5], args[6], -0.5, 0.5)
+	end
+	gl.PushMatrix()
+	gl.Translate(0, averageGroundHeight, 0)
+	gl.Scale(1, shapeHeight, 1)
+	gl.Utilities.DrawVolume(triangles[args])
+	gl.PopMatrix()
+end
+
 local cylinder = gl.CreateList(gl.Utilities.DrawMyCylinder,0,0,0,1,1,35)
 function gl.Utilities.DrawGroundCircle(x,z,radius)
   gl.PushMatrix()
   gl.Translate(x, averageGroundHeight, z)
   gl.Scale(radius, shapeHeight, radius)
   gl.Utilities.DrawVolume(cylinder)
+  gl.PopMatrix()
+end
+
+local circle = gl.CreateList(gl.Utilities.DrawMyCircle,0,0,1,35)
+function gl.Utilities.DrawCircle(x,y,radius)
+  gl.PushMatrix()
+  gl.Translate(x, y, 0)
+  gl.Scale(radius, radius, 1)
+  gl.Utilities.DrawVolume(circle)
+  gl.PopMatrix()
+end
+
+-- See comment in DrawMergedVolume
+function gl.Utilities.DrawMergedGroundCircle(x,z,radius)
+  gl.PushMatrix()
+  gl.Translate(x, averageGroundHeight, z)
+  gl.Scale(radius, shapeHeight, radius)
+  gl.Utilities.DrawMergedVolume(cylinder)
   gl.PopMatrix()
 end
 
@@ -244,8 +306,8 @@ function gl.Utilities.DrawVolume(vol_dlist)
   gl.ColorMask(false, false, false, false)
   gl.StencilOp(GL.KEEP, GL.INCR, GL.KEEP)
   --gl.StencilOp(GL.KEEP, GL.INVERT, GL.KEEP)
-  gl.StencilMask(0x11)
-  gl.StencilFunc(GL.ALWAYS, 0, 0)
+  gl.StencilMask(1)
+  gl.StencilFunc(GL.ALWAYS, 0, 1)
 
   gl.CallList(vol_dlist)
 
@@ -253,16 +315,51 @@ function gl.Utilities.DrawVolume(vol_dlist)
   gl.DepthTest(false)
   gl.ColorMask(true, true, true, true)
   gl.StencilOp(GL.ZERO, GL.ZERO, GL.ZERO)
-  gl.StencilMask(0x11)
-  gl.StencilFunc(GL.NOTEQUAL, 0, 0+1)
+  gl.StencilMask(1)
+  gl.StencilFunc(GL.NOTEQUAL, 0, 1)
 
   gl.CallList(vol_dlist)
 
   if (gl.DepthClamp) then gl.DepthClamp(false) end
   gl.StencilTest(false)
-  gl.DepthTest(true)
+  -- gl.DepthTest(true)
   gl.Culling(false)
 end
 
+-- Make sure that you start with a clear stencil and that you
+-- clear it using gl.Clear(GL.STENCIL_BUFFER_BIT, 0)
+-- after finishing all the merged volumes
+function gl.Utilities.DrawMergedVolume(vol_dlist)
+  gl.DepthMask(false)
+  if (gl.DepthClamp) then gl.DepthClamp(true) end
+  gl.StencilTest(true)
+
+  gl.Culling(false)
+  gl.DepthTest(true)
+  gl.ColorMask(false, false, false, false)
+  gl.StencilOp(GL.KEEP, GL.INVERT, GL.KEEP)
+  --gl.StencilOp(GL.KEEP, GL.INVERT, GL.KEEP)
+  gl.StencilMask(1)
+  gl.StencilFunc(GL.ALWAYS, 0, 1)
+
+  gl.CallList(vol_dlist)
+
+  gl.Culling(GL.FRONT)
+  gl.DepthTest(false)
+  gl.ColorMask(true, true, true, true)
+  gl.StencilOp(GL.KEEP, GL.INCR, GL.INCR)
+  gl.StencilMask(3)
+  gl.StencilFunc(GL.EQUAL, 1, 3)
+
+  gl.CallList(vol_dlist)
+
+  if (gl.DepthClamp) then gl.DepthClamp(false) end
+  gl.StencilTest(false)
+  -- gl.DepthTest(true)
+  gl.Culling(false)
+end
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

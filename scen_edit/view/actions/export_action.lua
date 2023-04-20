@@ -17,18 +17,24 @@ ExportAction.EXPORT_SPRING_ARCHIVE = "Spring archive"
 ExportAction.EXPORT_MAP_TEXTURES = "Map textures"
 ExportAction.EXPORT_MAP_INFO = "Map info"
 ExportAction.EXPORT_S11N = "s11n object format"
+ExportAction.EXPORT_HEIGHTMAP = "Heightmap only (fast)"
+ExportAction.EXPORT_METALSPOT_CONFIG = "Export Metal Map Config (ZK)"
+ExportAction.EXPORT_STARTBOX_CONFIG = "Export Start Box Config (ZK)"
 local fileTypes = {
     ExportAction.EXPORT_SPRING_ARCHIVE,
     ExportAction.EXPORT_MAP_TEXTURES,
     ExportAction.EXPORT_MAP_INFO,
-    ExportAction.EXPORT_S11N
+    ExportAction.EXPORT_S11N,
+	ExportAction.EXPORT_HEIGHTMAP,
+	ExportAction.EXPORT_METALSPOT_CONFIG,
+	ExportAction.EXPORT_STARTBOX_CONFIG
 }
 
 function ExportAction:canExecute()
-    if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
-        Log.Warning("Cannot export while testing.")
-        return false
-    end
+    -- --if Spring.GetGameRulesParam("sb_gameMode") ~= "dev" then
+        -- Log.Warning("Cannot export while testing.")
+        -- return false
+    -- end
     if SB.project.path == nil then
         -- FIXME: this should probably be relaxed for most types of export
         SB.NotifyWarn("export_warn", "The project must be saved before exporting")
@@ -94,6 +100,37 @@ function ExportAction:execute()
                     end)
                 end)
                 return true
+            elseif fileType == ExportAction.EXPORT_HEIGHTMAP then
+                if isFile then
+                    return false, "Please select a directory"
+                end
+
+                if not self:CheckHasSaved() then
+                    return false, "Project files missing. Save before exporting"
+                end
+
+                local progressID = SB.GenerateNotificationID()
+                SB.ActionProgress(progressID, 0.1, "Exporting maps textures...")
+                SB.delay(function()
+                    self:DoExportHeightMap(path, heightmapExtremes):next(function()
+                        SB.ActionProgress(progressID, 1.0, "Exporting Heightmap: Finished")
+                    end)
+                end)
+                return true
+            elseif fileType == ExportAction.EXPORT_METALSPOT_CONFIG then
+                if isDir then
+                    return false, "Please select a file"
+                end
+
+                Log.Notice("Exporting map metalspot config...")
+                exportCommand = ExportMetalSpotConfigCommand(path)
+			elseif fileType == ExportAction.EXPORT_STARTBOX_CONFIG then
+                if isDir then
+                    return false, "Please select a file"
+                end
+
+                Log.Notice("Exporting map startbox config...")
+                exportCommand = ExportStartBoxConfigCommand(path)
             elseif fileType == ExportAction.EXPORT_MAP_INFO then
                 if isDir then
                     return false, "Please select a file"
@@ -275,6 +312,20 @@ function ExportAction:TryToExportMapTextures(path, heightmapExtremes)
         })
         return false
     end
-
     return ExportMapsCommand(path, heightmapExtremes):execute()
+end
+
+function ExportAction:DoExportHeightMap(path, heightmapExtremes)
+    -- At least 5x the necessary amount? Super arbitrary...
+    local wantedTexMemPoolSize = Game.mapSizeX / 1024 * Game.mapSizeZ / 1024 * 3 * 5
+    local texMemPoolSize = Spring.GetConfigInt("TextureMemPoolSize", 0)
+	return ExportHeightmapCommand((path .. ".png"), heightmapExtremes):execute()
+end
+
+function ExportAction:ExportMetalSpotConfig(path)
+	return ExportMetalSpotConfigCommand((path .. ".lua")):execute()
+end
+
+function ExportAction:ExportStartBoxConfig(path)
+	return ExportStartBoxConfigCommand((path .. ".lua")):execute()
 end
