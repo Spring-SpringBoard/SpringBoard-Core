@@ -74,8 +74,8 @@
         "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_bar_.BAR105-BIGMEM.105.1.1-1101-g96d9a59_windows-64-minimal-portable.7z",
-              "destination": "engine/105.1.1-1101-g96d9a59-bar",
+              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1775-g441af87/spring_bar_.BAR105.105.1.1-1775-g441af87_windows-64-minimal-portable.7z",
+              "destination": "engine/105.1.1-1775-g441af87-bar",
               "extract": true
           }
         ]
@@ -83,7 +83,7 @@
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
-        "engine": "105.1.1-1101-g96d9a59-bar",
+        "engine": "105.1.1-1775-g441af87-bar",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
@@ -104,8 +104,8 @@
         "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_bar_.BAR105-BIGMEM.105.1.1-1101-g96d9a59_linux-64-minimal-portable.7z",
-              "destination": "engine/105.1.1-1101-g96d9a59-bar",
+              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1775-g441af87/spring_bar_.BAR105.105.1.1-1775-g441af87_linux-64-minimal-portable.7z",
+              "destination": "engine/105.1.1-1775-g441af87-bar",
               "extract": true
           }
       ]
@@ -113,7 +113,7 @@
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
-        "engine": "105.1.1-1101-g96d9a59-bar",
+        "engine": "105.1.1-1775-g441af87-bar",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
@@ -147,6 +147,30 @@
       },
       "downloads": {
         "engines" : [ "104.0.1-1553-gd3c0012 maintenance" ]
+      },
+      "auto_start" : false,
+      "no_downloads" : true,
+      "load_dev_exts": false,
+      "launch": {
+        "game": "SpringBoard Core $VERSION",
+        "map": "sb_initial_blank_10x8",
+        "map_options": {
+          "new_map_x": 10,
+          "new_map_y": 8
+        },
+        "game_options": {
+          "MapSeed": 42
+        }
+      }
+    },
+
+    {
+      "package": {
+        "id": "dev",
+        "display": "Development (BAR Engine)"
+      },
+      "downloads": {
+        "engines" : [ "105.1.1-1775-g441af87-bar" ]
       },
       "auto_start" : false,
       "no_downloads" : true,
