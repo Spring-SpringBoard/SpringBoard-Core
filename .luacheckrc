@@ -30,6 +30,7 @@ globals = {
     "UnitDefs", "UnitDefNames", "FeatureDefs", "FeatureDefNames",
     "WeaponDefs", "WeaponDefNames", "LOG", "KEYSYMS", "CMD", "Script",
     "SendToUnsynced", "Platform", "include",
+    "Engine",
     -- Gadgets
     "GG", "gadgetHandler", "gadget",
     -- Widgets

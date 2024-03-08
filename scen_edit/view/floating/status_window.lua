@@ -92,7 +92,7 @@ function StatusWindow:_UpdateMemory()
     -- TODO: Act on it a bit better and automatically clear the undo-redo stack instead of prompting the user to do stuff.
     local color = SB.conf.STATUS_TEXT_OK_COLOR
 
-    -- If the BIGMEM BAR105 engine build is used, then we dont ever really need to warn the user. 
+    -- If the BIGMEM BAR105 engine build is used, then we dont ever really need to warn the user.
     local memoryWarnLevel = 500
     if string.find(Engine.versionFull,"BIGMEM", nil, true) then memoryWarnLevel = 16000 end
     if memory > memoryWarnLevel  then
