@@ -54,6 +54,9 @@ jobs:
           [ -d build/src/files/ ] && mv build/src/files/* build/files/
           [ -d build/src/build/ ] && mv build/src/build/* build/build/
           rm -rf build/src/{bin,files,build}
+
+          find build/
+
           exit 0
 
       - name: Make package.json
@@ -63,6 +66,8 @@ jobs:
           echo "Making build for version: $PACKAGE_VERSION"
           cd ..
           node ./repo-folder/build/make_package_json.js build/package.json repo-folder/dist_cfg/config.json Spring-SpringBoard/SpringBoard-Core $PACKAGE_VERSION
+
+          cat build/package.json
 
       - name: Build
         run: |
