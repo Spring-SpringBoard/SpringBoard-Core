@@ -74,8 +74,8 @@
         "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1775-g441af87/spring_bar_.BAR105.105.1.1-1775-g441af87_windows-64-minimal-portable.7z",
-              "destination": "engine/105.1.1-1775-g441af87-bar",
+              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_windows-64-minimal-portable.7z",
+              "destination": "engine/105.1.1-2472-ga5aa45c-bar",
               "extract": true
           }
         ]
@@ -83,7 +83,7 @@
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
-        "engine": "105.1.1-1775-g441af87-bar",
+        "engine": "105.1.1-2472-ga5aa45c-bar",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
@@ -104,8 +104,8 @@
         "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-1775-g441af87/spring_bar_.BAR105.105.1.1-1775-g441af87_linux-64-minimal-portable.7z",
-              "destination": "engine/105.1.1-1775-g441af87-bar",
+              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z",
+              "destination": "engine/105.1.1-2472-ga5aa45c-bar",
               "extract": true
           }
       ]
@@ -113,7 +113,7 @@
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
-        "engine": "105.1.1-1775-g441af87-bar",
+        "engine": "105.1.1-2472-ga5aa45c-bar",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
@@ -166,11 +166,11 @@
 
     {
       "package": {
-        "id": "dev",
+        "id": "dev-bar-engine",
         "display": "Development (BAR Engine)"
       },
       "downloads": {
-        "engines" : [ "105.1.1-1775-g441af87-bar" ]
+        "engines" : [ "105.1.1-2472-ga5aa45c-bar" ]
       },
       "auto_start" : false,
       "no_downloads" : true,
