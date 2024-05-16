@@ -7,5 +7,13 @@
     "LinkOutgoingBandwidth": 65536000,
     "TextureMemPoolSize": 600,
     "SpringDataRoot": "springboard/projects",
-    "CamSpringLockCardinalDirections": false
+    "CamSpringLockCardinalDirections": false,
+    "MiddleClickScrollSpeed": -0.0015,
+    "MouseDragScrollThreshold": 0,
+    "EdgeMoveDynamic": 0,
+    "EdgeMoveWidth": 0.003,
+    "OverheadMaxHeightFactor": 1.39999998,
+    "OverheadScrollSpeed": 50,
+    "ScrollWheelSpeed": -35,
+    "CamMode": 1
 }
