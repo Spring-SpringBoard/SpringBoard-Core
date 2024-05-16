@@ -7,5 +7,9 @@
     "LinkOutgoingBandwidth": 65536000,
     "TextureMemPoolSize": 600,
     "SpringDataRoot": "springboard/projects",
-    "CamSpringLockCardinalDirections": false
+    "CamSpringLockCardinalDirections": false,
+    "GroundDetail": 180,
+    "FeatureDrawDistance": 99999,
+    "FeatureFadeDistance": 99999,
+    "ScrollWheelSpeed": -25
 }
