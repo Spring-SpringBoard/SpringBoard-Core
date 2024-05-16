@@ -16,9 +16,9 @@ class Compiler extends EventEmitter {
 
 		let executableBin;
 		if (process.platform === 'win32') {
-			executableBin = 'springMapConvNG.exe';
+			executableBin = 'windows/springMapConvNG.exe';
 		} else if (process.platform === 'linux') {
-			executableBin = 'mapcompile';
+			executableBin = 'linux/mapcompile';
 		} else {
 			const errMsg = `Unsupported platform: ${process.platform}, cannot compile`;
 			log.error(errMsg);
