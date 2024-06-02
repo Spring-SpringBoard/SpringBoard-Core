@@ -48,7 +48,19 @@ function ScenarioInfoView:init()
             value = SB.model.scenarioInfo.author,
         })
     )
-
+    self:AddControl("ZK-Config Import", {
+        Button:New {
+            caption = "Import MapConfig(ZK) from Map",
+            width = 300,
+            height = 80,
+            OnClick = {
+                function()
+					local cmd = LoadZKMapConfigCommand()
+					SB.commandManager:execute(cmd, true)
+                end
+            }
+        },
+    })
     local children = {
         ScrollPanel:New {
             x = 0,

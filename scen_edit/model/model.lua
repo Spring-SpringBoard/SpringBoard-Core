@@ -4,9 +4,11 @@ SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'model/object'))
 
 function Model:init()
     self.areaManager = AreaManager()
+	self.mexManager = MexManager()
     self.variableManager = VariableManager()
     self.triggerManager = TriggerManager()
     self.teamManager = TeamManager()
+	self.startboxManager = StartBoxManager()
     self.scenarioInfo = ScenarioInfo()
     self.terrainManager = TerrainManager()
     if Script.GetName() == "LuaUI" then
