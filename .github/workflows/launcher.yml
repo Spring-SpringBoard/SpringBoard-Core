@@ -2,9 +2,6 @@ name: Launcher
 
 on:
   push:
-    paths:
-    - 'dist_cfg/**'
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -14,16 +11,16 @@ defaults:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
-            build_cmd: "build-linux"
+          - runner: ubuntu-latest
+            os: "linux"
             arch: "--x64"
 
-          - os: windows-latest
-            build_cmd: "build-win"
+          - runner: windows-latest
+            os: "win"
             arch: "--x64"
 
     steps:
@@ -59,13 +56,16 @@ jobs:
 
           exit 0
 
-      - name: Make package.json
+      - name: Set package version
+        id: PACKAGE_VERSION
         run: |
           cd repo-folder
-          export PACKAGE_VERSION=1.$(git rev-list --count HEAD).0
-          echo "Making build for version: $PACKAGE_VERSION"
-          cd ..
-          node ./repo-folder/build/make_package_json.js build/package.json repo-folder/dist_cfg/config.json Spring-SpringBoard/SpringBoard-Core $PACKAGE_VERSION
+          echo "version=1.$(git rev-list --count HEAD).0" >> "$GITHUB_OUTPUT"
+
+      - name: Make package.json
+        run: |
+          echo "Making build for version: ${{ steps.PACKAGE_VERSION.outputs.version }}"
+          node ./repo-folder/build/make_package_json.js build/package.json repo-folder/dist_cfg/config.json ${{ github.repository }} ${{ steps.PACKAGE_VERSION.outputs.version }}
 
           cat build/package.json
 
@@ -73,6 +73,18 @@ jobs:
         run: |
           cd build
           npm install
-          npm run ${{ matrix.build_cmd }} -- ${{ matrix.arch }} --publish always
+          npm run build-${{ matrix.os }} -- ${{ matrix.arch }} --publish always
         env:
           GH_TOKEN: ${{ secrets.github_token }}
+
+      - name: Clean up unwanted build artifacts
+        run: |
+          rm -f build/dist/builder-debug.yml
+          rm -rf build/dist/linux-unpacked
+          rm -rf build/dist/win-unpacked
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpringBoard-${{ matrix.os }}-${{ steps.PACKAGE_VERSION.outputs.version }}
+          path: build/dist/**/*
