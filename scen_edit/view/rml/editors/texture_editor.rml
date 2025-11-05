@@ -1,0 +1,57 @@
+<rml>
+<head>
+    <title>Texture Editor</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="texture-editor" class="editor-panel">
+    <div class="editor-header">
+        <h2>Texture Editor</h2>
+        <div class="editor-toolbar">
+            <button id="btn-paint" class="toolbar-button">Paint</button>
+            <button id="btn-erase" class="toolbar-button">Erase</button>
+            <button id="btn-fill" class="toolbar-button">Fill</button>
+        </div>
+    </div>
+    <div class="editor-content">
+        <div class="editor-split-horizontal">
+            <!-- Texture palette -->
+            <div class="texture-palette">
+                <h4>Textures</h4>
+                <div id="texture-list" class="texture-grid">
+                    <!-- Textures populated dynamically -->
+                    <div class="texture-item selected" data-id="0">
+                        <img src="texture0.png" alt="Texture 0"/>
+                    </div>
+                </div>
+                <button id="btn-add-texture" class="full-width-button">Add Texture</button>
+            </div>
+
+            <!-- Settings -->
+            <div class="texture-settings">
+                <h4>Brush Settings</h4>
+                <div class="form-row">
+                    <label>Size:</label>
+                    <input type="range" id="brush-size" min="1" max="100" value="20" class="form-slider"/>
+                    <span id="brush-size-value">20</span>
+                </div>
+                <div class="form-row">
+                    <label>Opacity:</label>
+                    <input type="range" id="brush-opacity" min="0" max="100" value="100" class="form-slider"/>
+                    <span id="brush-opacity-value">100</span>
+                </div>
+                <div class="form-row">
+                    <label>Blending:</label>
+                    <select id="blend-mode" class="form-select">
+                        <option value="replace">Replace</option>
+                        <option value="blend">Blend</option>
+                    </select>
+                </div>
+
+                <h4>Actions</h4>
+                <button id="btn-import-diffuse" class="full-width-button">Import Diffuse</button>
+                <button id="btn-export-diffuse" class="full-width-button">Export Diffuse</button>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

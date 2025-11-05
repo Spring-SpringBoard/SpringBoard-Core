@@ -1,0 +1,59 @@
+<rml>
+<head>
+    <title>Heightmap Editor</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="heightmap-editor" class="editor-panel">
+    <div class="editor-header">
+        <h2>Heightmap Editor</h2>
+        <div class="editor-toolbar">
+            <button id="btn-raise" class="toolbar-button">Raise</button>
+            <button id="btn-lower" class="toolbar-button">Lower</button>
+            <button id="btn-smooth" class="toolbar-button">Smooth</button>
+            <button id="btn-level" class="toolbar-button">Level</button>
+        </div>
+    </div>
+    <div class="editor-content">
+        <div class="editor-settings">
+            <!-- Brush settings -->
+            <div class="settings-section">
+                <h4>Brush</h4>
+                <div class="form-row">
+                    <label>Size:</label>
+                    <input type="range" id="brush-size" min="1" max="100" value="20" class="form-slider"/>
+                    <span id="brush-size-value">20</span>
+                </div>
+                <div class="form-row">
+                    <label>Strength:</label>
+                    <input type="range" id="brush-strength" min="1" max="100" value="50" class="form-slider"/>
+                    <span id="brush-strength-value">50</span>
+                </div>
+                <div class="form-row">
+                    <label>Shape:</label>
+                    <select id="brush-shape" class="form-select">
+                        <option value="circle">Circle</option>
+                        <option value="square">Square</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Height settings -->
+            <div class="settings-section">
+                <h4>Height</h4>
+                <div class="form-row">
+                    <label>Target Height:</label>
+                    <input type="number" id="target-height" class="form-input-number" value="0"/>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="settings-section">
+                <h4>Tools</h4>
+                <button id="btn-import" class="full-width-button">Import Heightmap</button>
+                <button id="btn-export" class="full-width-button">Export Heightmap</button>
+                <button id="btn-reset" class="full-width-button">Reset to Flat</button>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

@@ -34,7 +34,18 @@ function View:init()
 end
 
 function View:InitializeRmlUi()
-    -- Load RML template
+    -- Load RmlUi dialogs
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/base_dialog.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/file_dialog.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/new_project_dialog.lua'))
+
+    -- Load RmlUi editors
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/trigger_editor.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/object_editor.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/heightmap_editor.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/texture_editor.lua'))
+
+    -- Load main UI template
     local rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/springboard_main.rml')
     self.mainDocument = SB.rmlui:LoadDocument(rmlPath, true)
 
@@ -45,10 +56,23 @@ function View:InitializeRmlUi()
         return
     end
 
+    -- Initialize editors (create instances but don't show)
+    self.triggerEditor = RmlUiTriggerEditor()
+    self.triggerEditor:Initialize()
+
+    self.objectEditor = RmlUiObjectEditor()
+    self.objectEditor:Initialize()
+
+    self.heightmapEditor = RmlUiHeightmapEditor()
+    self.heightmapEditor:Initialize()
+
+    self.textureEditor = RmlUiTextureEditor()
+    self.textureEditor:Initialize()
+
     -- Setup event handlers
     self:SetupRmlUiEvents()
 
-    Log.Notice("RmlUi UI initialized successfully")
+    Log.Notice("RmlUi UI initialized successfully with all dialogs and editors")
 end
 
 function View:SetupRmlUiEvents()
@@ -68,7 +92,14 @@ function View:SetupRmlUiEvents()
     local btnNew = self.mainDocument:GetElementById("btn-new-project")
     if btnNew then
         btnNew:AddEventListener("click", function()
-            Log.Notice("New Project clicked (not implemented yet)")
+            local dialog = RmlUiNewProjectDialog({
+                onConfirm = function(data)
+                    Log.Notice("Creating project: " .. (data.name or "unnamed"))
+                    -- TODO: Actually create project
+                    return true
+                end
+            })
+            dialog:Show()
         end)
     end
 
@@ -76,7 +107,16 @@ function View:SetupRmlUiEvents()
     local btnOpen = self.mainDocument:GetElementById("btn-open-project")
     if btnOpen then
         btnOpen:AddEventListener("click", function()
-            Log.Notice("Open Project clicked (not implemented yet)")
+            local dialog = RmlUiFileDialog({
+                title = "Open Project",
+                directory = SB.DIRS.PROJECTS or "/",
+                onConfirm = function(path)
+                    Log.Notice("Opening project: " .. (path or "none"))
+                    -- TODO: Actually open project
+                    return true
+                end
+            })
+            dialog:Show()
         end)
     end
 
@@ -84,7 +124,16 @@ function View:SetupRmlUiEvents()
     local btnSave = self.mainDocument:GetElementById("btn-save-project")
     if btnSave then
         btnSave:AddEventListener("click", function()
-            Log.Notice("Save Project clicked (not implemented yet)")
+            local dialog = RmlUiFileDialog({
+                title = "Save Project",
+                directory = SB.DIRS.PROJECTS or "/",
+                onConfirm = function(path)
+                    Log.Notice("Saving project: " .. (path or "none"))
+                    -- TODO: Actually save project
+                    return true
+                end
+            })
+            dialog:Show()
         end)
     end
 

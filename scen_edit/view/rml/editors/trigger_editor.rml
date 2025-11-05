@@ -1,0 +1,87 @@
+<rml>
+<head>
+    <title>Trigger Editor</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="trigger-editor" class="editor-panel">
+    <div class="editor-header">
+        <h2>Trigger Editor</h2>
+        <div class="editor-toolbar">
+            <button id="btn-new-trigger" class="toolbar-button">New Trigger</button>
+            <button id="btn-delete-trigger" class="toolbar-button">Delete</button>
+            <button id="btn-test-trigger" class="toolbar-button">Test</button>
+        </div>
+    </div>
+    <div class="editor-content">
+        <div class="editor-split">
+            <!-- Left: Trigger list -->
+            <div class="trigger-list-panel">
+                <div class="panel-header">
+                    <h3>Triggers</h3>
+                    <button id="btn-add-trigger" class="icon-button">+</button>
+                </div>
+                <div id="trigger-list" class="trigger-list">
+                    <!-- Triggers populated dynamically -->
+                    <div class="trigger-item" data-id="0">
+                        <span class="trigger-name">Sample Trigger</span>
+                        <span class="trigger-enabled">✓</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Trigger details -->
+            <div class="trigger-details-panel">
+                <div class="panel-header">
+                    <h3 id="trigger-title">Trigger Details</h3>
+                </div>
+                <div class="trigger-details-content">
+                    <!-- Trigger name -->
+                    <div class="form-row">
+                        <label>Name:</label>
+                        <input type="text" id="trigger-name-input" class="form-input"/>
+                    </div>
+
+                    <!-- Enabled checkbox -->
+                    <div class="form-row">
+                        <label>Enabled:</label>
+                        <input type="checkbox" id="trigger-enabled" checked="checked"/>
+                    </div>
+
+                    <!-- Events section -->
+                    <div class="trigger-section">
+                        <div class="section-header">
+                            <h4>Events</h4>
+                            <button id="btn-add-event" class="icon-button">+</button>
+                        </div>
+                        <div id="event-list" class="event-list">
+                            <!-- Events populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Conditions section -->
+                    <div class="trigger-section">
+                        <div class="section-header">
+                            <h4>Conditions</h4>
+                            <button id="btn-add-condition" class="icon-button">+</button>
+                        </div>
+                        <div id="condition-list" class="condition-list">
+                            <!-- Conditions populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Actions section -->
+                    <div class="trigger-section">
+                        <div class="section-header">
+                            <h4>Actions</h4>
+                            <button id="btn-add-action" class="icon-button">+</button>
+                        </div>
+                        <div id="action-list" class="action-list">
+                            <!-- Actions populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

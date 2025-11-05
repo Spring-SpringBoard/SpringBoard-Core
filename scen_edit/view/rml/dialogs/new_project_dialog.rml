@@ -1,0 +1,43 @@
+<rml>
+<head>
+    <title>New Project</title>
+    <link type="text/rcss" href="../dialog.rcss"/>
+</head>
+<body id="new-project-dialog" class="dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">New Project</span>
+        <button class="dialog-close" id="btn-close">×</button>
+    </div>
+    <div class="dialog-content">
+        <form class="dialog-form">
+            <div class="form-row">
+                <label>Project Name:</label>
+                <input type="text" id="project-name" class="form-input" placeholder="My Project"/>
+            </div>
+            <div class="form-row">
+                <label>Map:</label>
+                <select id="map-select" class="form-select">
+                    <option value="">Select map...</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Game:</label>
+                <select id="game-select" class="form-select">
+                    <option value="">Select game...</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Start from:</label>
+                <select id="start-type" class="form-select">
+                    <option value="blank">Blank</option>
+                    <option value="template">Template</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    <div class="dialog-footer">
+        <button id="btn-create" class="dialog-button primary">Create</button>
+        <button id="btn-cancel" class="dialog-button">Cancel</button>
+    </div>
+</body>
+</rml>
