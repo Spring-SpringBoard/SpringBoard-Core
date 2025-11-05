@@ -1,0 +1,14 @@
+<rml>
+<head>
+    <title>Diplomacy</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="diplomacy" class="editor-panel">
+    <div class="editor-header"><h2>Diplomacy</h2></div>
+    <div class="editor-content">
+        <div id="diplomacy-grid" class="property-grid">
+            <!-- Team relationships grid -->
+        </div>
+    </div>
+</body>
+</rml>

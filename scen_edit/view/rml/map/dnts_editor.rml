@@ -1,0 +1,19 @@
+<rml>
+<head>
+    <title>DNTS Editor</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="dnts-editor" class="editor-panel">
+    <div class="editor-header"><h2>Diffuse/Normal/Texture/Specular Editor</h2></div>
+    <div class="editor-content">
+        <div class="tab-buttons">
+            <button id="tab-diffuse" class="tab-button">Diffuse</button>
+            <button id="tab-normal" class="tab-button">Normal</button>
+            <button id="tab-specular" class="tab-button">Specular</button>
+        </div>
+        <div class="form-row"><label>Map:</label><select id="map-select"></select></div>
+        <button id="btn-import" class="toolbar-button">Import</button>
+        <button id="btn-export" class="toolbar-button">Export</button>
+    </div>
+</body>
+</rml>

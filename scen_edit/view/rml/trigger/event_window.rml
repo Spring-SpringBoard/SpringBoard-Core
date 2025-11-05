@@ -1,0 +1,22 @@
+<rml>
+<head>
+    <title>Edit Event</title>
+    <link type="text/rcss" href="../dialog.rcss"/>
+</head>
+<body id="event-window" class="dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">Edit Event</span>
+        <button class="dialog-close" id="btn-close">×</button>
+    </div>
+    <div class="dialog-content">
+        <div class="form-row"><label>Event Type:</label><select id="event-type"></select></div>
+        <div id="event-fields" class="form-fields">
+            <!-- Event-specific fields populated dynamically -->
+        </div>
+    </div>
+    <div class="dialog-footer">
+        <button id="btn-ok" class="dialog-button primary">OK</button>
+        <button id="btn-cancel" class="dialog-button">Cancel</button>
+    </div>
+</body>
+</rml>

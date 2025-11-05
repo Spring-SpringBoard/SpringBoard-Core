@@ -1,0 +1,15 @@
+<rml>
+<head>
+    <title>Grass Editor</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="grass-editor" class="editor-panel">
+    <div class="editor-header"><h2>Grass Editor</h2></div>
+    <div class="editor-content">
+        <div class="form-row"><label>Grass File:</label><input type="text" id="grass-file" class="form-input"/></div>
+        <button id="btn-load" class="toolbar-button">Load</button>
+        <button id="btn-save" class="toolbar-button">Save</button>
+        <button id="btn-clear" class="toolbar-button">Clear</button>
+    </div>
+</body>
+</rml>

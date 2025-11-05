@@ -1,0 +1,19 @@
+<rml>
+<head>
+    <title>Metal Editor</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="metal-editor" class="editor-panel">
+    <div class="editor-header"><h2>Metal Map Editor</h2></div>
+    <div class="editor-content">
+        <div class="tool-group">
+            <button id="btn-paint" class="tool-button">Paint</button>
+            <button id="btn-erase" class="tool-button">Erase</button>
+        </div>
+        <div class="form-row"><label>Brush Size:</label><input type="range" id="brush-size" min="1" max="100" value="10"/></div>
+        <div class="form-row"><label>Strength:</label><input type="range" id="strength" min="0" max="1" step="0.01" value="0.5"/></div>
+        <button id="btn-import" class="toolbar-button">Import</button>
+        <button id="btn-export" class="toolbar-button">Export</button>
+    </div>
+</body>
+</rml>

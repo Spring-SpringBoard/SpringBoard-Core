@@ -1,0 +1,16 @@
+<rml>
+<head>
+    <title>Terrain Settings</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="terrain-settings" class="editor-panel">
+    <div class="editor-header"><h2>Terrain Settings</h2></div>
+    <div class="editor-content">
+        <div class="form-row"><label>Min Height:</label><input type="number" id="min-height"/></div>
+        <div class="form-row"><label>Max Height:</label><input type="number" id="max-height"/></div>
+        <div class="form-row"><label>Hard Mod:</label><input type="checkbox" id="hard-mod"/></div>
+        <button id="btn-flatten" class="toolbar-button">Flatten Map</button>
+        <button id="btn-smooth-all" class="toolbar-button">Smooth All</button>
+    </div>
+</body>
+</rml>

@@ -1,0 +1,15 @@
+<rml>
+<head>
+    <title>Scenario Info</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="scenario-info" class="editor-panel">
+    <div class="editor-header"><h2>Scenario Info</h2></div>
+    <div class="editor-content">
+        <div class="form-row"><label>Name:</label><input type="text" id="name" class="form-input"/></div>
+        <div class="form-row"><label>Description:</label><input type="text" id="description" class="form-input"/></div>
+        <div class="form-row"><label>Version:</label><input type="text" id="version" class="form-input"/></div>
+        <div class="form-row"><label>Author:</label><input type="text" id="author" class="form-input"/></div>
+    </div>
+</body>
+</rml>

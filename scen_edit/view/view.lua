@@ -45,6 +45,15 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/heightmap_editor.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/texture_editor.lua'))
 
+    -- Load RmlUi floating windows
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/command_window.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/status_window.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/control_buttons.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/top_left_menu.lua'))
+
+    -- Load all other RmlUi components (general, map, object, trigger)
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_components.lua'))
+
     -- Load main UI template
     local rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/springboard_main.rml')
     self.mainDocument = SB.rmlui:LoadDocument(rmlPath, true)
@@ -55,6 +64,23 @@ function View:InitializeRmlUi()
         self:InitializeChili()
         return
     end
+
+    -- Initialize floating windows
+    self.commandWindow = RmlUiCommandWindow()
+    self.commandWindow:Initialize()
+    self.commandWindow:Show()
+
+    self.statusWindow = RmlUiStatusWindow()
+    self.statusWindow:Initialize()
+    self.statusWindow:Show()
+
+    self.controlButtons = RmlUiControlButtons()
+    self.controlButtons:Initialize()
+    self.controlButtons:Show()
+
+    self.topLeftMenu = RmlUiTopLeftMenu()
+    self.topLeftMenu:Initialize()
+    self.topLeftMenu:Show()
 
     -- Initialize editors (create instances but don't show)
     self.triggerEditor = RmlUiTriggerEditor()
@@ -69,10 +95,45 @@ function View:InitializeRmlUi()
     self.textureEditor = RmlUiTextureEditor()
     self.textureEditor:Initialize()
 
+    -- Initialize all additional editors (don't show by default)
+    self.grassEditor = RmlUiGrassEditor()
+    self.grassEditor:Initialize()
+
+    self.metalEditor = RmlUiMetalEditor()
+    self.metalEditor:Initialize()
+
+    self.waterEditor = RmlUiWaterEditor()
+    self.waterEditor:Initialize()
+
+    self.lightingEditor = RmlUiLightingEditor()
+    self.lightingEditor:Initialize()
+
+    self.skyEditor = RmlUiSkyEditor()
+    self.skyEditor:Initialize()
+
+    self.terrainSettingsEditor = RmlUiTerrainSettingsEditor()
+    self.terrainSettingsEditor:Initialize()
+
+    self.dntsEditor = RmlUiDNTSEditor()
+    self.dntsEditor:Initialize()
+
+    self.materialBrowser = RmlUiMaterialBrowser()
+    self.materialBrowser:Initialize()
+
+    -- Initialize general windows
+    self.scenarioInfoView = RmlUiScenarioInfoView()
+    self.scenarioInfoView:Initialize()
+
+    self.diplomacyWindow = RmlUiDiplomacyWindow()
+    self.diplomacyWindow:Initialize()
+
+    self.playersWindow = RmlUiPlayersWindow()
+    self.playersWindow:Initialize()
+
     -- Setup event handlers
     self:SetupRmlUiEvents()
 
-    Log.Notice("RmlUi UI initialized successfully with all dialogs and editors")
+    Log.Notice("RmlUi UI initialized successfully with all dialogs, editors, and floating windows")
 end
 
 function View:SetupRmlUiEvents()
@@ -229,6 +290,14 @@ function View:Update()
         self.teamSelector:Update()
         self.topLeftMenu:Update()
         self.bottomBar:Update()
+    else
+        -- RmlUi updates
+        if self.statusWindow then
+            self.statusWindow:Update()
+        end
+        if self.topLeftMenu then
+            self.topLeftMenu:Update()
+        end
     end
 
     -- Common updates

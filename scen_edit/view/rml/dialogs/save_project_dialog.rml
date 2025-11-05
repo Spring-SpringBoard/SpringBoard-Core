@@ -1,0 +1,31 @@
+<rml>
+<head>
+    <title>Save Project</title>
+    <link type="text/rcss" href="../dialog.rcss"/>
+</head>
+<body id="save-project-dialog" class="dialog large-dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">Save Project</span>
+        <button class="dialog-close" id="btn-close">×</button>
+    </div>
+    <div class="dialog-content">
+        <div class="file-browser">
+            <div class="path-bar">
+                <input type="text" id="path-input" class="path-input" value="/projects" readonly="readonly"/>
+                <button id="btn-up" class="path-button">↑</button>
+            </div>
+            <div class="file-list-container">
+                <div id="file-list" class="file-list"></div>
+            </div>
+            <div class="file-name-bar">
+                <label>Project name:</label>
+                <input type="text" id="file-name-input" class="file-name-input"/>
+            </div>
+        </div>
+    </div>
+    <div class="dialog-footer">
+        <button id="btn-ok" class="dialog-button primary">Save</button>
+        <button id="btn-cancel" class="dialog-button">Cancel</button>
+    </div>
+</body>
+</rml>

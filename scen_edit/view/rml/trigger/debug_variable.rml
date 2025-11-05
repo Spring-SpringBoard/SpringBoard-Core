@@ -1,0 +1,14 @@
+<rml>
+<head>
+    <title>Debug Variables</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="debug-variable" class="editor-panel">
+    <div class="editor-header"><h2>Debug Variables</h2></div>
+    <div class="editor-content">
+        <div id="variable-values" class="debug-panel">
+            <!-- Variable values populated dynamically -->
+        </div>
+    </div>
+</body>
+</rml>

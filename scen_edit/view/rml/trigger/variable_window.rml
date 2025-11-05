@@ -1,0 +1,21 @@
+<rml>
+<head>
+    <title>Edit Variable</title>
+    <link type="text/rcss" href="../dialog.rcss"/>
+</head>
+<body id="variable-window" class="dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">Edit Variable</span>
+        <button class="dialog-close" id="btn-close">×</button>
+    </div>
+    <div class="dialog-content">
+        <div class="form-row"><label>Name:</label><input type="text" id="var-name" class="form-input"/></div>
+        <div class="form-row"><label>Type:</label><select id="var-type"><option>number</option><option>string</option><option>boolean</option></select></div>
+        <div class="form-row"><label>Value:</label><input type="text" id="var-value" class="form-input"/></div>
+    </div>
+    <div class="dialog-footer">
+        <button id="btn-ok" class="dialog-button primary">OK</button>
+        <button id="btn-cancel" class="dialog-button">Cancel</button>
+    </div>
+</body>
+</rml>

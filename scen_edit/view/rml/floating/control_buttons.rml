@@ -1,0 +1,10 @@
+<rml>
+<head>
+    <title>Control Buttons</title>
+    <link type="text/rcss" href="../floating.rcss"/>
+</head>
+<body id="control-buttons" class="floating-panel">
+    <button id="btn-start-stop" class="control-button large" title="Start scenario">▶</button>
+    <button id="btn-toggle-ui" class="control-button" title="Toggle editor display">👁</button>
+</body>
+</rml>

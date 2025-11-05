@@ -1,0 +1,17 @@
+<rml>
+<head>
+    <title>Variables</title>
+    <link type="text/rcss" href="../editor.rcss"/>
+</head>
+<body id="variables" class="editor-panel">
+    <div class="editor-header">
+        <h2>Variables</h2>
+        <button id="btn-add-variable" class="toolbar-button">Add Variable</button>
+    </div>
+    <div class="editor-content">
+        <div id="variable-list" class="list-panel">
+            <!-- Variables populated dynamically -->
+        </div>
+    </div>
+</body>
+</rml>
