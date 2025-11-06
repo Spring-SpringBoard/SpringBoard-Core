@@ -51,6 +51,11 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/control_buttons.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/top_left_menu.lua'))
 
+    -- Load RmlUi field system (maintains original AddField API - implementation-agnostic!)
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editor_base.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_fields.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_field_compat.lua'))  -- Makes StringField() etc work
+
     -- Load all other RmlUi components (general, map, object, trigger)
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_components.lua'))
 
