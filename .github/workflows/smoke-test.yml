@@ -56,30 +56,6 @@ jobs:
           ln -s "$(pwd)" "games/SpringBoard Core.sdd"
           ls -lah games/
 
-      - name: Download test map
-        run: |
-          mkdir -p maps
-          cd maps
-          echo "Downloading Comet Catcher Redux map for testing..."
-          wget -q "http://springfiles.springrts.com/spring/spring-maps/Comet%20Catcher%20Redux%201.8.sd7" -O "Comet_Catcher_Redux_1.8.sd7" || {
-            echo "Map download failed, will try to use generated blank map"
-          }
-          cd ..
-
-      - name: Create ALSA null device configuration
-        run: |
-          # Create ALSA config to use null device (no sound card in CI)
-          mkdir -p ~/.config/alsa
-          cat > ~/.config/alsa/asoundrc << 'EOF'
-          pcm.!default {
-            type plug
-            slave.pcm "null"
-          }
-          pcm.null {
-            type null
-          }
-          EOF
-
       - name: Create Spring config to disable audio
         run: |
           # Create springsettings.cfg to disable audio (no sound card in CI)
@@ -94,41 +70,9 @@ jobs:
 
       - name: Create Spring script.txt
         run: |
-          # Try to use downloaded map, fallback to blank map
-          if [ -f maps/Comet_Catcher_Redux_1.8.sd7 ]; then
-            MAP_NAME="Comet Catcher Redux 1.8"
-            echo "Using downloaded map: $MAP_NAME"
-            cat > script.txt << 'SCRIPTEND'
-          [GAME]
-          {
-            GameType=SpringBoard Core;
-            MapName=Comet Catcher Redux 1.8;
-            IsHost=1;
-            MyPlayerName=TestPlayer;
-            [MODOPTIONS]
-            {
-              MapSeed=42;
-            }
-            [PLAYER0]
-            {
-              Name=TestPlayer;
-              Team=0;
-              IsFromDemo=0;
-              Spectator=1;
-            }
-            [TEAM0]
-            {
-              TeamLeader=0;
-              AllyTeam=0;
-            }
-            [ALLYTEAM0]
-            {
-            }
-          }
-          SCRIPTEND
-          else
-            echo "Using generated blank map"
-            cat > script.txt << 'SCRIPTEND'
+          # Use generated blank map (how SpringBoard editor normally starts)
+          echo "Using generated blank map (10x8)"
+          cat > script.txt << 'SCRIPTEND'
           [GAME]
           {
             GameType=SpringBoard Core;
@@ -158,7 +102,6 @@ jobs:
             }
           }
           SCRIPTEND
-          fi
 
           echo "=== Script contents ==="
           cat script.txt
