@@ -10,3 +10,8 @@ env/
 # don't track local (dev) file
 *.local
 *.7z
+
+# Test engine artifacts
+test-engine/games/
+test-engine/script.txt
+test-engine/test-data/

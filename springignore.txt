@@ -3,3 +3,6 @@ doc
 model
 issues
 dist_cfg
+test-engine
+.github
+build
