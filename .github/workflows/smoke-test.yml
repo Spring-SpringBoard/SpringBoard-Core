@@ -48,13 +48,16 @@ jobs:
           chmod +x spring-dedicated || true
           ls -lah | head -20
 
-      - name: Put SpringBoard in engine's games folder
+      - name: Create SpringBoard archive for engine
         run: |
-          # SpringBoard-Core is already a valid Spring archive
-          # Just symlink it into the engine's games/ folder
+          # Create .sdz archive instead of symlink (much faster to scan)
+          # Exclude unnecessary directories to keep archive small
           mkdir -p games
-          ln -s "$(pwd)" "games/SpringBoard Core.sdd"
+          zip -q -r "games/SpringBoard Core.sdz" . \
+            -x ".git/*" "test-engine/*" ".github/*" "build/*" \
+               "doc/*" "model/*" "issues/*" "dist_cfg/*"
           ls -lah games/
+          echo "SpringBoard archive size: $(du -h 'games/SpringBoard Core.sdz' | cut -f1)"
 
       - name: Create Spring config to disable audio
         run: |
@@ -68,22 +71,71 @@ jobs:
           cat test-data/springsettings.cfg
           echo "Sound subsystem disabled via Sound = 0 config"
 
+      - name: Create minimal test map
+        run: |
+          # Create a minimal 8x8 Spring map for testing
+          # Map downloads are blocked (403), so we create our own minimal map
+          mkdir -p maps/test_blank.sdd
+
+          # Create mapinfo.lua with minimal required fields
+          cat > maps/test_blank.sdd/mapinfo.lua << 'MAPINFOEOF'
+          local mapinfo = {
+            name        = "Test Blank 8x8",
+            shortname   = "test_blank_8x8",
+            description = "Minimal test map for CI",
+            author      = "CI Auto-generated",
+            version     = "v1",
+            mapfile     = "",
+            modtype     = 3,
+            depend      = {"Map Helper v1"},
+            replace     = {},
+
+            maphardness     = 100,
+            notDeformable   = true,
+            gravity         = 130,
+            tidalStrength   = 0,
+            maxMetal        = 0.02,
+            extractorRadius = 64.0,
+            voidWater       = false,
+            autoShowMetal   = true,
+
+            smf = {
+              minheight = 0,
+              maxheight = 200,
+              smtFileName0 = "",
+              smtFileName1 = "",
+              smtFileName2 = "",
+              smtFileName3 = "",
+              smtFileName4 = "",
+              smtFileName5 = "",
+              smtFileName6 = "",
+              smtFileName7 = "",
+            },
+
+            resources = {},
+            custom = {},
+            teams = {},
+          }
+          return mapinfo
+          MAPINFOEOF
+
+          # Spring can work with just mapinfo.lua for basic testing
+          ls -lah maps/test_blank.sdd/
+          echo "Minimal test map created"
+
       - name: Create Spring script.txt
         run: |
-          # Use generated blank map (how SpringBoard editor normally starts)
-          echo "Using generated blank map (10x8)"
+          # Use minimal test map created above
+          echo "Using test map: Test Blank 8x8"
           cat > script.txt << 'SCRIPTEND'
           [GAME]
           {
             GameType=SpringBoard Core;
-            MapName=sb_initial_blank_10x8;
+            MapName=Test Blank 8x8;
             IsHost=1;
             MyPlayerName=TestPlayer;
             [MODOPTIONS]
             {
-              MapSeed=42;
-              new_map_x=10;
-              new_map_y=8;
             }
             [PLAYER0]
             {
