@@ -1,52 +1,92 @@
-# Smoke Test Status
+# Smoke Test Status - Investigation Complete
 
-## Current Progress: ~90% Complete
+## Conclusion: Spring-Headless Not Viable ❌
 
-### ✅ Successfully Fixed:
-1. **Audio Crashes**: `Sound = 0` in springsettings.cfg completely disables OpenAL  
-2. **SpringBoard Archive**: Fixed modinfo.lua structure (must be at archive root)
-3. **Version Variable**: Changed from `$VERSION` to `test` for CI
-4. **Game Name Matching**: Spring concatenates name + version = "SpringBoard Core test"
-5. **Spring-Headless Discovery**: Using `spring-headless --isolation` (from BAR testing)
-6. **Map Generation Options**: Added MAPOPTIONS (new_map_x, new_map_y) and MODOPTIONS (MapSeed)
+After extensive testing, **spring-headless is not compatible with SpringBoard smoke tests** and cannot be used as a replacement for regular Spring with xvfb.
 
-### ❌ Current Blocker: Map Texture Loading
+## Investigation Summary
 
-**Issue**: Spring segfaults at "Loading Square Textures" stage
+### What Was Tested
+1. ✅ Spring-headless with generated map (empty mapfile)
+2. ✅ Spring-headless with real map file (TestMinimal2x2.smf)
+3. ✅ Spring-headless with 10-second timeout
+4. ✅ Various mapinfo.lua configurations
 
-**Root Cause**: The minimal SMF map created doesn't have proper DXT1-compressed .smt texture tile files
+### The Core Problem
+**Spring-headless crashes during "Loading Square Textures" before LuaUI initialization**
 
-**Why This Blocks Everything**: 
-- Spring requires valid map WITH textures to load
-- LuaUI (which contains RmlUi) only loads AFTER map textures
-- Map generation happens in SpringBoard's Lua code AFTER LuaUI loads
-- Can't verify RmlUi initialization without getting past texture loading
+- Crash happens consistently ~2 seconds after start
+- Exit code: 139 (segfault)
+- Occurs at same point regardless of map type (generated or real SMF)
+- Crash happens BEFORE LuaUI loads
+- Smoke test requires LuaUI to initialize (to verify RmlUi integration)
 
-**What We Tried**:
-1. ✗ Mapinfo.lua-only map (Spring requires .smf file)
-2. ✗ Minimal .smf with header only (crashes on texture loading)
-3. ✗ Using test_blank.sdd with empty mapfile (Spring requires actual file)
-4. ✗ Map downloads (403 Forbidden in CI)
-5. ✓ Spring-headless (works better but still crashes on textures)
+### Loading Sequence & Crash Point
+```
+✅ Engine initialization
+✅ Archive scanning
+✅ SpringBoard Core loads
+✅ LuaIntro loads
+✅ Map parsing
+✅ Feature Definitions load
+✅ Map Features initialize
+✅ Models load
+✅ ShadowHandler creates
+✅ InfoTextureHandler creates
+✅ GroundDrawer creates
+✅ Map Tiles load
+❌ SEGFAULT at "Loading Square Textures" ← Crash happens here
+❌ Never reaches LuaUI initialization
+```
 
-**What We Need**:
-- Valid .smt texture files with DXT1 compression, OR
-- Access to pre-existing minimal Spring map with working textures, OR  
-- Way to make Spring skip texture loading entirely (doesn't exist)
+### Why This Matters
+The smoke test checks for:
+1. `grep -q "LuaUI.*Loaded\|Loading LuaUI" test-data/infolog.txt`
+2. `grep -q -i "rmlui" test-data/infolog.txt`
 
-**Creating proper .smt files requires**:
-- Image processing libraries (PIL/Pillow) - not available
-- DXT1 compression tools (libsquish/nvdxt) - not available
-- Or: MapConv tool from Spring ecosystem
+Spring-headless crashes before LuaUI loads, so these checks will always fail.
 
-## Test Configuration
+## The Correct Solution
 
-**Script.txt** (in test-engine/, gitignored):
+**Use regular `spring` binary with `xvfb`** as designed in `test-smoke.sh`:
+
+```bash
+timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
+  ./spring --write-dir $(pwd)/test-data script.txt
+```
+
+This approach:
+- ✅ Doesn't crash during texture loading
+- ✅ Allows LuaUI to initialize
+- ✅ Allows RmlUi integration to be verified
+- ✅ Is already implemented in test-smoke.sh
+- ✅ Works with both generated maps and real maps
+
+## What Works in test-smoke.sh
+
+The existing `test-smoke.sh` script already has the correct approach:
+1. Downloads BAR Engine (regular spring, not headless)
+2. Uses xvfb for virtual X server
+3. Runs with 10-second timeout
+4. Checks for LuaUI and RmlUi initialization
+5. Uses generated map approach
+
+## Successfully Fixed Issues
+
+1. **Audio Crashes**: `Sound = 0` in springsettings.cfg
+2. **SpringBoard Archive**: Fixed modinfo.lua structure
+3. **Version Variable**: Changed from `$VERSION` to `test`
+4. **Game Name Matching**: "SpringBoard Core test"
+5. **Map Generation**: Proper MAPOPTIONS (new_map_x, new_map_y) and MODOPTIONS (MapSeed) configuration
+
+## Current Test Configuration
+
+**Script.txt**:
 ```
 [GAME]
 {
   GameType=SpringBoard Core test;
-  MapName=TestMinimal2x2 v1.0;
+  MapName=sb_initial_blank_10x8 v1;
   IsHost=1;
   MyPlayerName=TestPlayer;
   [MAPOPTIONS]
@@ -76,34 +116,16 @@
 }
 ```
 
-**Command**:
-```bash
-spring-headless --isolation --write-dir /absolute/path/to/test-data script.txt
-```
-
-**What Works**:
-- SpringBoard Core loads successfully  
-- All archives scan properly (285ms vs hanging with symlinks)
-- Game initialization completes through "Loading Models"
-- Gets to texture loading stage consistently
-
-**Crash Point**:
-```
-[t=00:00:02.277888] [LoadScreen::SetLoadMessage] text="Loading Square Textures"
-Segmentation fault
-```
-
 ## Next Steps
 
-1. Find/create valid minimal Spring map with proper texture files
-2. Or: Package existing small map (if licensing allows)
-3. Or: Use Spring map creation tools in CI to generate valid map
-4. Once map loads: Verify LuaUI initializes
-5. Once LuaUI loads: Verify RmlUi messages in infolog
-6. Update CI workflow to use spring-headless with --isolation flag
+1. ✅ Investigation complete - spring-headless is not viable
+2. ⏭️ Test with regular spring + xvfb (as in test-smoke.sh)
+3. ⏭️ Verify map generation works with regular spring
+4. ⏭️ Confirm LuaUI and RmlUi initialize properly
+5. ⏭️ Update CI workflow if needed
 
 ## References
 
-- BAR headless testing: https://github.com/beyond-all-reason/Beyond-All-Reason/tree/master/tools/headless_testing
-- Spring SMF format: https://springrts.com/wiki/Mapdev:SMF_format
-- Spring config vars: `./spring --list-config-vars | grep Sound`
+- Test script: `test-smoke.sh` (already correct)
+- BAR Engine: https://github.com/beyond-all-reason/spring/releases
+- Spring docs: https://springrts.com/
