@@ -53,26 +53,10 @@ jobs:
 
       - name: Prepare SpringBoard game package
         run: |
-          # Create SpringBoard game directory structure
+          # SpringBoard-Core is already a valid Spring archive, just symlink it
           mkdir -p games
-          cd games
-
-          # Create SpringBoard package
-          mkdir -p "SpringBoard Core.sdd"
-          cp -r ../scen_edit "SpringBoard Core.sdd/"
-          cp -r ../triggers "SpringBoard Core.sdd/"
-          cp -r ../libs_sb "SpringBoard Core.sdd/"
-          cp -r ../LuaUI "SpringBoard Core.sdd/"
-          cp -r ../LuaRules "SpringBoard Core.sdd/"
-          cp -r ../LuaHandler "SpringBoard Core.sdd/"
-          cp ../modinfo.lua "SpringBoard Core.sdd/"
-
-          # Copy optional directories if they exist
-          [ -d ../Gamedata ] && cp -r ../Gamedata "SpringBoard Core.sdd/" || true
-          [ -d ../model ] && cp -r ../model "SpringBoard Core.sdd/" || true
-          [ -d ../springboard ] && cp -r ../springboard "SpringBoard Core.sdd/" || true
-
-          cd ..
+          ln -s "$(pwd)" "games/SpringBoard Core.sdd"
+          ls -lah games/
 
       - name: Download test map
         run: |
