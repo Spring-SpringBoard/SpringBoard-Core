@@ -1,0 +1,56 @@
+name: Download Spring Engine for Local Testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to push engine to'
+        required: true
+        default: 'claude/springboard-rmlui-conversion-011CUooEurKLbWKUu8vygDUw'
+
+jobs:
+  download-and-commit-engine:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget p7zip-full
+
+      - name: Download BAR Engine
+        run: |
+          echo "Downloading BAR Engine 105.1.1-2472-ga5aa45c (supports RmlUi)..."
+          wget -q "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
+
+          echo "Extracting engine..."
+          mkdir -p test-engine
+          7z x -y -otest-engine "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
+          rm "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
+
+          echo "Engine downloaded and extracted to test-engine/"
+          ls -la test-engine/ | head -20
+
+      - name: Commit and push engine
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add test-engine/
+
+          git commit -m "Add Spring engine for local testing
+
+This engine is temporarily added to allow Claude to test the smoke test
+locally before running in CI. It can be removed once testing is complete.
+
+Engine: BAR 105.1.1-2472-ga5aa45c (with RmlUi support)"
+
+          git push origin ${{ github.event.inputs.branch }}
+
+          echo "✓ Engine committed and pushed to ${{ github.event.inputs.branch }}"
