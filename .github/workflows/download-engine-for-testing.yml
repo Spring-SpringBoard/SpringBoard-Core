@@ -25,13 +25,13 @@ jobs:
           fi
 
       - name: Install dependencies
-        if: steps.check_engine.outputs.exists == 'false'
+        if: steps.check_engine.outputs.exists != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y wget p7zip-full
 
       - name: Download BAR Engine
-        if: steps.check_engine.outputs.exists == 'false'
+        if: steps.check_engine.outputs.exists != 'true'
         run: |
           echo "Downloading BAR Engine 105.1.1-2472-ga5aa45c (supports RmlUi)..."
           wget -q "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
@@ -45,7 +45,7 @@ jobs:
           ls -la test-engine/ | head -20
 
       - name: Commit and push engine
-        if: steps.check_engine.outputs.exists == 'false'
+        if: steps.check_engine.outputs.exists != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
