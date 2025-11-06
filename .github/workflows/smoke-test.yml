@@ -41,11 +41,12 @@ jobs:
         run: |
           echo "Downloading BAR Engine 105.1.1-2472-ga5aa45c (supports RmlUi)..."
           wget -q "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
-          7z x "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
+          7z x -y "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
           rm *.7z
           chmod +x spring
           chmod +x spring-headless || true
           chmod +x spring-dedicated || true
+          ls -lah | head -20
 
       - name: Put SpringBoard in engine's games folder
         run: |
