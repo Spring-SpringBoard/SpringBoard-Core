@@ -162,6 +162,9 @@ jobs:
           timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
             ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
 
+          # Wait a moment for Spring to finish writing logs
+          sleep 2
+
           echo ""
           echo "=== Exit Code Analysis ==="
           echo "Spring exit code: ${EXIT_CODE:-0}"
@@ -181,9 +184,12 @@ jobs:
             exit 1
           fi
 
-          # Check for crash in infolog
-          if grep -q "CrashHandler.*Error.*Aborted\|CrashHandler.*Error.*Segmentation" test-data/infolog.txt; then
-            echo "✗ FAIL: Spring crashed (found crash in infolog)"
+          # Check for crash signatures in infolog
+          if grep -q "CrashHandler.*Error.*Aborted\|CrashHandler.*Error.*Segmentation\|XIO.*fatal.*error\|terminate called without an active exception" test-data/infolog.txt; then
+            echo "✗ FAIL: Spring crashed (found crash signature in infolog)"
+            echo ""
+            echo "=== Crash signatures found ==="
+            grep -E "CrashHandler.*Error|XIO.*fatal|terminate called" test-data/infolog.txt || true
             echo ""
             echo "=== Last 100 lines of infolog.txt ==="
             tail -100 test-data/infolog.txt
