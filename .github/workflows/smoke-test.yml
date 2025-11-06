@@ -35,7 +35,13 @@ jobs:
             libopenal1 \
             libcurl4 \
             libgl1 \
-            libglu1-mesa
+            libglu1-mesa \
+            pulseaudio
+
+          # Start PulseAudio with null sink for CI (no real audio hardware)
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=dummy
+          pactl set-default-sink dummy
 
       - name: Download BAR Engine (with RmlUi support)
         run: |
