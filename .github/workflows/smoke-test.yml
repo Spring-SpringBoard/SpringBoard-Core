@@ -120,11 +120,15 @@ jobs:
           echo "Starting SpringBoard smoke test with virtual display..."
           echo "Using Xvfb to run full spring binary (loads LuaUI + RmlUi)"
 
+          # IMPORTANT: Spring requires absolute path for --write-dir
+          WRITE_DIR="$(pwd)/test-data"
+          echo "Using write-dir: $WRITE_DIR"
+
           # Run Spring with Xvfb (virtual X11 display) so LuaUI loads
           # This actually tests RmlUi initialization!
           # Sound is disabled via Sound = 0 in springsettings.cfg
           timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
-            ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+            ./spring --write-dir "$WRITE_DIR" script.txt || EXIT_CODE=$?
 
           # Wait a moment for Spring to finish writing logs
           sleep 2
