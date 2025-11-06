@@ -52,12 +52,15 @@ jobs:
 
           git add test-engine/
 
-          git commit -m "Add Spring engine for local testing
+          git commit -m "$(cat <<'EOF'
+          Add Spring engine for local testing
 
-This engine is temporarily added to allow Claude to test the smoke test
-locally before running in CI. It can be removed once testing is complete.
+          This engine is temporarily added to allow Claude to test the smoke test
+          locally before running in CI. It can be removed once testing is complete.
 
-Engine: BAR 105.1.1-2472-ga5aa45c (with RmlUi support)"
+          Engine: BAR 105.1.1-2472-ga5aa45c (with RmlUi support)
+          EOF
+          )"
 
           git push
 
