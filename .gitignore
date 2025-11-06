@@ -13,5 +13,11 @@ env/
 
 # Test engine artifacts
 test-engine/games/
+test-engine/maps/
 test-engine/script.txt
+test-engine/infolog.txt
 test-engine/test-data/
+
+# Root-level test artifacts (accidentally created during testing)
+/games/
+/script.txt
