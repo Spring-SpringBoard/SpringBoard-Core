@@ -110,8 +110,10 @@ function RmlUiNewProjectDialog:OnFieldChange(name, value)
     if name == "mapName" then
         if value == "SB_Blank_Map" then
             -- TODO: Show sizeX/sizeY fields
+            Log.Debug("Show blank map size fields")
         else
             -- TODO: Hide sizeX/sizeY fields
+            Log.Debug("Hide blank map size fields")
         end
     end
 end
