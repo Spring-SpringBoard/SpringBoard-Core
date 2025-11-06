@@ -60,19 +60,17 @@ jobs:
             cp ../modinfo.lua "SpringBoard Core.sdd/"
           else
             # Create minimal modinfo.lua
-            cat > "SpringBoard Core.sdd/modinfo.lua" << 'EOF'
-local modinfo = {
-  name = "SpringBoard Core",
-  shortName = "SBC",
-  version = "dev-test",
-  game = "SpringBoard Core",
-  shortGame = "SBC",
-  mutator = "Official",
-  description = "SpringBoard scenario editor with RmlUi UI",
-  modtype = "5",
-}
-return modinfo
-EOF
+            echo 'local modinfo = {' > "SpringBoard Core.sdd/modinfo.lua"
+            echo '  name = "SpringBoard Core",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '  shortName = "SBC",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '  version = "dev-test",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '  game = "SpringBoard Core",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '  shortGame = "SBC",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '  mutator = "Official",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '  description = "SpringBoard scenario editor with RmlUi UI",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '  modtype = "5",' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo '}' >> "SpringBoard Core.sdd/modinfo.lua"
+            echo 'return modinfo' >> "SpringBoard Core.sdd/modinfo.lua"
           fi
 
           cd ..
@@ -87,136 +85,113 @@ EOF
           }
           cd ..
 
-      - name: Create start script
+      - name: Create Spring script.txt
         run: |
-          cat > start_test.sh << 'EOF'
-#!/bin/bash
-set -e
+          # Try to use downloaded map, fallback to blank map
+          if [ -f maps/Comet_Catcher_Redux_1.8.sd7 ]; then
+            MAP_NAME="Comet Catcher Redux 1.8"
+            echo "Using downloaded map: $MAP_NAME"
+            cat > script.txt << 'SCRIPTEND'
+          [GAME]
+          {
+            GameType=SpringBoard Core;
+            MapName=Comet Catcher Redux 1.8;
+            IsHost=1;
+            MyPlayerName=TestPlayer;
+            [MODOPTIONS]
+            {
+              MapSeed=42;
+            }
+            [PLAYER0]
+            {
+              Name=TestPlayer;
+              Team=0;
+              IsFromDemo=0;
+              Spectator=1;
+            }
+            [TEAM0]
+            {
+              TeamLeader=0;
+              AllyTeam=0;
+            }
+            [ALLYTEAM0]
+            {
+            }
+          }
+          SCRIPTEND
+          else
+            echo "Using generated blank map"
+            cat > script.txt << 'SCRIPTEND'
+          [GAME]
+          {
+            GameType=SpringBoard Core;
+            MapName=sb_initial_blank_10x8;
+            IsHost=1;
+            MyPlayerName=TestPlayer;
+            [MODOPTIONS]
+            {
+              MapSeed=42;
+              new_map_x=10;
+              new_map_y=8;
+            }
+            [PLAYER0]
+            {
+              Name=TestPlayer;
+              Team=0;
+              IsFromDemo=0;
+              Spectator=1;
+            }
+            [TEAM0]
+            {
+              TeamLeader=0;
+              AllyTeam=0;
+            }
+            [ALLYTEAM0]
+            {
+            }
+          }
+          SCRIPTEND
+          fi
 
-ENGINE_DIR="./engine/bar-105"
-GAME="SpringBoard Core"
-
-echo "Starting SpringBoard smoke test..."
-echo "Engine: $ENGINE_DIR"
-echo "Game: $GAME"
-
-# Try to find an available map
-if [ -f maps/Comet_Catcher_Redux_1.8.sd7 ]; then
-  MAP_NAME="Comet Catcher Redux 1.8"
-  echo "Using downloaded map: $MAP_NAME"
-
-  # Create script.txt with real map
-  cat > script.txt << 'SCRIPT'
-[GAME]
-{
-  GameType=SpringBoard Core;
-  MapName=Comet Catcher Redux 1.8;
-  IsHost=1;
-  MyPlayerName=TestPlayer;
-
-  [MODOPTIONS]
-  {
-    MapSeed=42;
-  }
-
-  [PLAYER0]
-  {
-    Name=TestPlayer;
-    Team=0;
-    IsFromDemo=0;
-    Spectator=1;
-  }
-
-  [TEAM0]
-  {
-    TeamLeader=0;
-    AllyTeam=0;
-  }
-
-  [ALLYTEAM0]
-  {
-  }
-}
-SCRIPT
-else
-  # Use blank map generator (from config.json pattern)
-  MAP_NAME="sb_initial_blank_10x8"
-  echo "Using generated blank map: $MAP_NAME"
-
-  cat > script.txt << 'SCRIPT'
-[GAME]
-{
-  GameType=SpringBoard Core;
-  MapName=sb_initial_blank_10x8;
-  IsHost=1;
-  MyPlayerName=TestPlayer;
-
-  [MODOPTIONS]
-  {
-    MapSeed=42;
-    new_map_x=10;
-    new_map_y=8;
-  }
-
-  [PLAYER0]
-  {
-    Name=TestPlayer;
-    Team=0;
-    IsFromDemo=0;
-    Spectator=1;
-  }
-
-  [TEAM0]
-  {
-    TeamLeader=0;
-    AllyTeam=0;
-  }
-
-  [ALLYTEAM0]
-  {
-  }
-}
-SCRIPT
-fi
-
-echo "=== Script contents ==="
-cat script.txt
-echo "======================="
-
-# Run Spring in headless mode for 10 seconds
-timeout 10s $ENGINE_DIR/spring-headless --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
-
-# Exit codes:
-# 0 = clean exit (unlikely in 10s)
-# 124 = timeout (expected - means it ran without crashing)
-# Other = crash/error
-
-if [ "${EXIT_CODE:-0}" -eq 124 ]; then
-  echo "✓ SpringBoard started successfully and ran for 10 seconds"
-  echo "✓ Smoke test PASSED"
-  exit 0
-elif [ "${EXIT_CODE:-0}" -eq 0 ]; then
-  echo "✓ SpringBoard exited cleanly"
-  echo "✓ Smoke test PASSED"
-  exit 0
-else
-  echo "✗ SpringBoard crashed with exit code: ${EXIT_CODE}"
-  echo "✗ Smoke test FAILED"
-
-  # Show infolog if available
-  if [ -f test-data/infolog.txt ]; then
-    echo "=== Last 50 lines of infolog.txt ==="
-    tail -50 test-data/infolog.txt
-  fi
-
-  exit 1
-fi
-EOF
-          chmod +x start_test.sh
+          echo "=== Script contents ==="
+          cat script.txt
+          echo "======================="
 
       - name: Run smoke test
         run: |
-          ./start_test.sh
+          ENGINE_DIR="./engine/bar-105"
+
+          echo "Starting SpringBoard smoke test..."
+          echo "Engine: $ENGINE_DIR"
+
+          # Run Spring in headless mode for 10 seconds
+          timeout 10s $ENGINE_DIR/spring-headless --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+
+          # Exit codes:
+          # 0 = clean exit (unlikely in 10s)
+          # 124 = timeout (expected - means it ran without crashing)
+          # Other = crash/error
+
+          if [ "${EXIT_CODE:-0}" -eq 124 ]; then
+            echo "✓ SpringBoard started successfully and ran for 10 seconds"
+            echo "✓ Smoke test PASSED"
+            exit 0
+          elif [ "${EXIT_CODE:-0}" -eq 0 ]; then
+            echo "✓ SpringBoard exited cleanly"
+            echo "✓ Smoke test PASSED"
+            exit 0
+          else
+            echo "✗ SpringBoard crashed with exit code: ${EXIT_CODE}"
+            echo "✗ Smoke test FAILED"
+
+            # Show infolog if available
+            if [ -f test-data/infolog.txt ]; then
+              echo "=== Last 50 lines of infolog.txt ==="
+              tail -50 test-data/infolog.txt
+            fi
+
+            exit 1
+          fi
 
       - name: Upload test artifacts on failure
         if: failure()
