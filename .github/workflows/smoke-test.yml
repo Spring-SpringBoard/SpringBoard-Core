@@ -66,6 +66,20 @@ jobs:
           }
           cd ..
 
+      - name: Create ALSA null device configuration
+        run: |
+          # Create ALSA config to use null device (no sound card in CI)
+          mkdir -p ~/.config/alsa
+          cat > ~/.config/alsa/asoundrc << 'EOF'
+          pcm.!default {
+            type plug
+            slave.pcm "null"
+          }
+          pcm.null {
+            type null
+          }
+          EOF
+
       - name: Create Spring config to disable audio
         run: |
           # Create springsettings.cfg to disable audio (no sound card in CI)
