@@ -63,8 +63,14 @@ jobs:
           cp -r ../triggers "SpringBoard Core.sdd/"
           cp -r ../libs_sb "SpringBoard Core.sdd/"
           cp -r ../LuaUI "SpringBoard Core.sdd/"
-          cp -r ../LuaMenu "SpringBoard Core.sdd/"
+          cp -r ../LuaRules "SpringBoard Core.sdd/"
+          cp -r ../LuaHandler "SpringBoard Core.sdd/"
           cp ../modinfo.lua "SpringBoard Core.sdd/"
+
+          # Copy optional directories if they exist
+          [ -d ../Gamedata ] && cp -r ../Gamedata "SpringBoard Core.sdd/" || true
+          [ -d ../model ] && cp -r ../model "SpringBoard Core.sdd/" || true
+          [ -d ../springboard ] && cp -r ../springboard "SpringBoard Core.sdd/" || true
 
           cd ..
 
