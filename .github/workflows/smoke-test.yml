@@ -1,0 +1,241 @@
+name: Smoke Test
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  smoke-test-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget p7zip-full xvfb libsdl2-2.0-0 libglew2.1 libopenal1 libcurl4
+
+      - name: Download BAR Engine (with RmlUi support)
+        run: |
+          mkdir -p engine
+          cd engine
+          echo "Downloading BAR Engine 105.1.1-2472-ga5aa45c (supports RmlUi)..."
+          wget -q "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
+          7z x "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z" -o"bar-105"
+          rm *.7z
+          chmod +x bar-105/spring-headless
+          chmod +x bar-105/spring-dedicated || true
+          ls -lah bar-105/
+          cd ..
+
+      - name: Prepare SpringBoard game package
+        run: |
+          # Create SpringBoard game directory structure
+          mkdir -p games
+          cd games
+
+          # Create SpringBoard package
+          mkdir -p "SpringBoard Core.sdd"
+          cp -r ../scen_edit "SpringBoard Core.sdd/"
+          cp -r ../triggers "SpringBoard Core.sdd/"
+          cp -r ../libs_sb "SpringBoard Core.sdd/"
+          cp -r ../LuaUI "SpringBoard Core.sdd/"
+          cp -r ../LuaMenu "SpringBoard Core.sdd/"
+
+          # Copy modinfo if exists
+          if [ -f ../modinfo.lua ]; then
+            cp ../modinfo.lua "SpringBoard Core.sdd/"
+          else
+            # Create minimal modinfo.lua
+            cat > "SpringBoard Core.sdd/modinfo.lua" << 'EOF'
+local modinfo = {
+  name = "SpringBoard Core",
+  shortName = "SBC",
+  version = "dev-test",
+  game = "SpringBoard Core",
+  shortGame = "SBC",
+  mutator = "Official",
+  description = "SpringBoard scenario editor with RmlUi UI",
+  modtype = "5",
+}
+return modinfo
+EOF
+          fi
+
+          cd ..
+
+      - name: Download test map
+        run: |
+          mkdir -p maps
+          cd maps
+          echo "Downloading Comet Catcher Redux map for testing..."
+          wget -q "http://springfiles.springrts.com/spring/spring-maps/Comet%20Catcher%20Redux%201.8.sd7" -O "Comet_Catcher_Redux_1.8.sd7" || {
+            echo "Map download failed, will try to use generated blank map"
+          }
+          cd ..
+
+      - name: Create start script
+        run: |
+          cat > start_test.sh << 'EOF'
+#!/bin/bash
+set -e
+
+ENGINE_DIR="./engine/bar-105"
+GAME="SpringBoard Core"
+
+echo "Starting SpringBoard smoke test..."
+echo "Engine: $ENGINE_DIR"
+echo "Game: $GAME"
+
+# Try to find an available map
+if [ -f maps/Comet_Catcher_Redux_1.8.sd7 ]; then
+  MAP_NAME="Comet Catcher Redux 1.8"
+  echo "Using downloaded map: $MAP_NAME"
+
+  # Create script.txt with real map
+  cat > script.txt << 'SCRIPT'
+[GAME]
+{
+  GameType=SpringBoard Core;
+  MapName=Comet Catcher Redux 1.8;
+  IsHost=1;
+  MyPlayerName=TestPlayer;
+
+  [MODOPTIONS]
+  {
+    MapSeed=42;
+  }
+
+  [PLAYER0]
+  {
+    Name=TestPlayer;
+    Team=0;
+    IsFromDemo=0;
+    Spectator=1;
+  }
+
+  [TEAM0]
+  {
+    TeamLeader=0;
+    AllyTeam=0;
+  }
+
+  [ALLYTEAM0]
+  {
+  }
+}
+SCRIPT
+else
+  # Use blank map generator (from config.json pattern)
+  MAP_NAME="sb_initial_blank_10x8"
+  echo "Using generated blank map: $MAP_NAME"
+
+  cat > script.txt << 'SCRIPT'
+[GAME]
+{
+  GameType=SpringBoard Core;
+  MapName=sb_initial_blank_10x8;
+  IsHost=1;
+  MyPlayerName=TestPlayer;
+
+  [MODOPTIONS]
+  {
+    MapSeed=42;
+    new_map_x=10;
+    new_map_y=8;
+  }
+
+  [PLAYER0]
+  {
+    Name=TestPlayer;
+    Team=0;
+    IsFromDemo=0;
+    Spectator=1;
+  }
+
+  [TEAM0]
+  {
+    TeamLeader=0;
+    AllyTeam=0;
+  }
+
+  [ALLYTEAM0]
+  {
+  }
+}
+SCRIPT
+fi
+
+echo "=== Script contents ==="
+cat script.txt
+echo "======================="
+
+# Run Spring in headless mode for 10 seconds
+timeout 10s $ENGINE_DIR/spring-headless --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+
+# Exit codes:
+# 0 = clean exit (unlikely in 10s)
+# 124 = timeout (expected - means it ran without crashing)
+# Other = crash/error
+
+if [ "${EXIT_CODE:-0}" -eq 124 ]; then
+  echo "✓ SpringBoard started successfully and ran for 10 seconds"
+  echo "✓ Smoke test PASSED"
+  exit 0
+elif [ "${EXIT_CODE:-0}" -eq 0 ]; then
+  echo "✓ SpringBoard exited cleanly"
+  echo "✓ Smoke test PASSED"
+  exit 0
+else
+  echo "✗ SpringBoard crashed with exit code: ${EXIT_CODE}"
+  echo "✗ Smoke test FAILED"
+
+  # Show infolog if available
+  if [ -f test-data/infolog.txt ]; then
+    echo "=== Last 50 lines of infolog.txt ==="
+    tail -50 test-data/infolog.txt
+  fi
+
+  exit 1
+fi
+EOF
+          chmod +x start_test.sh
+
+      - name: Run smoke test
+        run: |
+          ./start_test.sh
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: smoke-test-logs
+          path: |
+            test-data/infolog.txt
+            test-data/*.log
+          if-no-files-found: ignore
+
+      - name: Show engine info
+        if: always()
+        run: |
+          echo "=== Engine information ==="
+          ./engine/bar-105/spring-headless --version || true
+          echo "=== RmlUi check ==="
+          if strings ./engine/bar-105/spring-headless | grep -i rmlui; then
+            echo "✓ RmlUi support detected in engine"
+          else
+            echo "⚠ Could not detect RmlUi in engine binary"
+          fi
