@@ -34,8 +34,7 @@ jobs:
             libglew2.2 \
             libopenal1 \
             libcurl4 \
-            mesa-utils \
-            libgl1-mesa-glx \
+            libgl1 \
             libglu1-mesa
 
       - name: Download BAR Engine (with RmlUi support)
