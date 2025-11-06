@@ -39,21 +39,18 @@ jobs:
 
       - name: Download BAR Engine (with RmlUi support)
         run: |
-          mkdir -p engine
-          cd engine
           echo "Downloading BAR Engine 105.1.1-2472-ga5aa45c (supports RmlUi)..."
           wget -q "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
-          7z x "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z" -o"bar-105"
+          7z x "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
           rm *.7z
-          chmod +x bar-105/spring
-          chmod +x bar-105/spring-headless || true
-          chmod +x bar-105/spring-dedicated || true
-          ls -lah bar-105/
-          cd ..
+          chmod +x spring
+          chmod +x spring-headless || true
+          chmod +x spring-dedicated || true
 
-      - name: Prepare SpringBoard game package
+      - name: Put SpringBoard in engine's games folder
         run: |
-          # SpringBoard-Core is already a valid Spring archive, just symlink it
+          # SpringBoard-Core is already a valid Spring archive
+          # Just symlink it into the engine's games/ folder
           mkdir -p games
           ln -s "$(pwd)" "games/SpringBoard Core.sdd"
           ls -lah games/
@@ -142,16 +139,13 @@ jobs:
 
       - name: Run smoke test with Xvfb (tests LuaUI + RmlUi)
         run: |
-          ENGINE_DIR="./engine/bar-105"
-
           echo "Starting SpringBoard smoke test with virtual display..."
-          echo "Engine: $ENGINE_DIR"
           echo "Using Xvfb to run full spring binary (loads LuaUI + RmlUi)"
 
           # Run Spring with Xvfb (virtual X11 display) so LuaUI loads
           # This actually tests RmlUi initialization!
           timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
-            $ENGINE_DIR/spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+            ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
 
           # Exit codes:
           # 0 = clean exit (unlikely in 10s)
@@ -210,14 +204,14 @@ jobs:
         if: always()
         run: |
           echo "=== Engine information ==="
-          ./engine/bar-105/spring --version || true
+          ./spring --version || true
           echo ""
           echo "=== RmlUi check ==="
-          if strings ./engine/bar-105/spring | grep -i rmlui; then
+          if strings ./spring | grep -i rmlui; then
             echo "✓ RmlUi support detected in engine binary"
           else
             echo "⚠ Could not detect RmlUi in engine binary"
           fi
           echo ""
           echo "=== GL info ==="
-          ldd ./engine/bar-105/spring | grep -i "gl\|sdl" || true
+          ldd ./spring | grep -i "gl\|sdl" || true
