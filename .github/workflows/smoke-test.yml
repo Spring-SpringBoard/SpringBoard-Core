@@ -159,8 +159,9 @@ jobs:
 
           # Run Spring with Xvfb (virtual X11 display) so LuaUI loads
           # This actually tests RmlUi initialization!
+          # Use --nosound to disable audio completely (no sound card in CI)
           timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
-            ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+            ./spring --nosound --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
 
           # Wait a moment for Spring to finish writing logs
           sleep 2
