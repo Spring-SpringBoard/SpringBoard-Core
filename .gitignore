@@ -9,3 +9,4 @@ env/
 
 # don't track local (dev) file
 *.local
+*.7z
