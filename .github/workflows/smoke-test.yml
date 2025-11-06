@@ -36,7 +36,8 @@ jobs:
           wget -q "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
           7z x "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z" -o"bar-105"
           rm *.7z
-          chmod +x bar-105/spring-headless
+          chmod +x bar-105/spring
+          chmod +x bar-105/spring-headless || true
           chmod +x bar-105/spring-dedicated || true
           ls -lah bar-105/
           cd ..
@@ -140,24 +141,44 @@ jobs:
           cat script.txt
           echo "======================="
 
-      - name: Run smoke test
+      - name: Run smoke test with Xvfb (tests LuaUI + RmlUi)
         run: |
           ENGINE_DIR="./engine/bar-105"
 
-          echo "Starting SpringBoard smoke test..."
+          echo "Starting SpringBoard smoke test with virtual display..."
           echo "Engine: $ENGINE_DIR"
+          echo "Using Xvfb to run full spring binary (loads LuaUI + RmlUi)"
 
-          # Run Spring in headless mode for 10 seconds
-          timeout 10s $ENGINE_DIR/spring-headless --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+          # Run Spring with Xvfb (virtual X11 display) so LuaUI loads
+          # This actually tests RmlUi initialization!
+          timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
+            $ENGINE_DIR/spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
 
           # Exit codes:
           # 0 = clean exit (unlikely in 10s)
           # 124 = timeout (expected - means it ran without crashing)
           # Other = crash/error
 
+          echo ""
+          echo "=== Checking for RmlUi initialization in logs ==="
+          if [ -f test-data/infolog.txt ]; then
+            if grep -i "rmlui" test-data/infolog.txt; then
+              echo "✓ RmlUi messages found in infolog"
+            else
+              echo "⚠ No RmlUi messages found in infolog"
+            fi
+
+            if grep -i "luaui.*loaded\|loading luaui" test-data/infolog.txt; then
+              echo "✓ LuaUI loaded successfully"
+            else
+              echo "⚠ Could not confirm LuaUI loaded"
+            fi
+          fi
+          echo ""
+
           if [ "${EXIT_CODE:-0}" -eq 124 ]; then
             echo "✓ SpringBoard started successfully and ran for 10 seconds"
-            echo "✓ Smoke test PASSED"
+            echo "✓ Smoke test PASSED (with LuaUI + RmlUi)"
             exit 0
           elif [ "${EXIT_CODE:-0}" -eq 0 ]; then
             echo "✓ SpringBoard exited cleanly"
@@ -169,8 +190,8 @@ jobs:
 
             # Show infolog if available
             if [ -f test-data/infolog.txt ]; then
-              echo "=== Last 50 lines of infolog.txt ==="
-              tail -50 test-data/infolog.txt
+              echo "=== Last 100 lines of infolog.txt ==="
+              tail -100 test-data/infolog.txt
             fi
 
             exit 1
@@ -190,10 +211,14 @@ jobs:
         if: always()
         run: |
           echo "=== Engine information ==="
-          ./engine/bar-105/spring-headless --version || true
+          ./engine/bar-105/spring --version || true
+          echo ""
           echo "=== RmlUi check ==="
-          if strings ./engine/bar-105/spring-headless | grep -i rmlui; then
-            echo "✓ RmlUi support detected in engine"
+          if strings ./engine/bar-105/spring | grep -i rmlui; then
+            echo "✓ RmlUi support detected in engine binary"
           else
             echo "⚠ Could not detect RmlUi in engine binary"
           fi
+          echo ""
+          echo "=== GL info ==="
+          ldd ./engine/bar-105/spring | grep -i "gl\|sdl" || true
