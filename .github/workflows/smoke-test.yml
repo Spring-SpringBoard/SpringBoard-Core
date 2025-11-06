@@ -162,46 +162,68 @@ jobs:
           timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
             ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
 
+          echo ""
+          echo "=== Exit Code Analysis ==="
+          echo "Spring exit code: ${EXIT_CODE:-0}"
+
           # Exit codes:
-          # 0 = clean exit (unlikely in 10s)
-          # 124 = timeout (expected - means it ran without crashing)
-          # Other = crash/error
+          # 0 = clean exit
+          # 124 = timeout (expected - means it ran for 10s without crashing)
+          # 134 = SIGABRT (6+128) - crash!
+          # Other non-zero = various crashes
 
           echo ""
-          echo "=== Checking for RmlUi initialization in logs ==="
-          if [ -f test-data/infolog.txt ]; then
-            if grep -i "rmlui" test-data/infolog.txt; then
-              echo "✓ RmlUi messages found in infolog"
-            else
-              echo "⚠ No RmlUi messages found in infolog"
-            fi
+          echo "=== Validating Success Criteria ==="
 
-            if grep -i "luaui.*loaded\|loading luaui" test-data/infolog.txt; then
-              echo "✓ LuaUI loaded successfully"
-            else
-              echo "⚠ Could not confirm LuaUI loaded"
-            fi
+          # Check if infolog exists
+          if [ ! -f test-data/infolog.txt ]; then
+            echo "✗ FAIL: No infolog.txt generated - Spring didn't start"
+            exit 1
           fi
-          echo ""
 
+          # Check for crash in infolog
+          if grep -q "CrashHandler.*Error.*Aborted\|CrashHandler.*Error.*Segmentation" test-data/infolog.txt; then
+            echo "✗ FAIL: Spring crashed (found crash in infolog)"
+            echo ""
+            echo "=== Last 100 lines of infolog.txt ==="
+            tail -100 test-data/infolog.txt
+            exit 1
+          fi
+
+          # Check if LuaUI loaded
+          if ! grep -q "LuaUI.*Loaded\|Loading LuaUI" test-data/infolog.txt; then
+            echo "✗ FAIL: LuaUI did not load"
+            echo ""
+            echo "=== Last 100 lines of infolog.txt ==="
+            tail -100 test-data/infolog.txt
+            exit 1
+          fi
+          echo "✓ LuaUI loaded successfully"
+
+          # Check for RmlUi initialization (optional warning if missing)
+          if grep -q -i "rmlui" test-data/infolog.txt; then
+            echo "✓ RmlUi messages found in infolog"
+          else
+            echo "⚠ Warning: No RmlUi messages found (might not be fatal)"
+          fi
+
+          # Only accept exit codes 0 or 124 (timeout)
           if [ "${EXIT_CODE:-0}" -eq 124 ]; then
-            echo "✓ SpringBoard started successfully and ran for 10 seconds"
-            echo "✓ Smoke test PASSED (with LuaUI + RmlUi)"
+            echo ""
+            echo "✓ SpringBoard ran for full 10 seconds without crashing"
+            echo "✓ SMOKE TEST PASSED"
             exit 0
           elif [ "${EXIT_CODE:-0}" -eq 0 ]; then
+            echo ""
             echo "✓ SpringBoard exited cleanly"
-            echo "✓ Smoke test PASSED"
+            echo "✓ SMOKE TEST PASSED"
             exit 0
           else
-            echo "✗ SpringBoard crashed with exit code: ${EXIT_CODE}"
-            echo "✗ Smoke test FAILED"
-
-            # Show infolog if available
-            if [ -f test-data/infolog.txt ]; then
-              echo "=== Last 100 lines of infolog.txt ==="
-              tail -100 test-data/infolog.txt
-            fi
-
+            echo ""
+            echo "✗ FAIL: Spring exited with code ${EXIT_CODE} (expected 0 or 124)"
+            echo ""
+            echo "=== Last 100 lines of infolog.txt ==="
+            tail -100 test-data/infolog.txt
             exit 1
           fi
 
