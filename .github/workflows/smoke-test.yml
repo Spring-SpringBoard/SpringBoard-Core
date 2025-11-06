@@ -54,24 +54,7 @@ jobs:
           cp -r ../libs_sb "SpringBoard Core.sdd/"
           cp -r ../LuaUI "SpringBoard Core.sdd/"
           cp -r ../LuaMenu "SpringBoard Core.sdd/"
-
-          # Copy modinfo if exists
-          if [ -f ../modinfo.lua ]; then
-            cp ../modinfo.lua "SpringBoard Core.sdd/"
-          else
-            # Create minimal modinfo.lua
-            echo 'local modinfo = {' > "SpringBoard Core.sdd/modinfo.lua"
-            echo '  name = "SpringBoard Core",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '  shortName = "SBC",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '  version = "dev-test",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '  game = "SpringBoard Core",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '  shortGame = "SBC",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '  mutator = "Official",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '  description = "SpringBoard scenario editor with RmlUi UI",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '  modtype = "5",' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo '}' >> "SpringBoard Core.sdd/modinfo.lua"
-            echo 'return modinfo' >> "SpringBoard Core.sdd/modinfo.lua"
-          fi
+          cp ../modinfo.lua "SpringBoard Core.sdd/"
 
           cd ..
 
