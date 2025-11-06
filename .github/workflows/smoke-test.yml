@@ -71,67 +71,23 @@ jobs:
           cat test-data/springsettings.cfg
           echo "Sound subsystem disabled via Sound = 0 config"
 
-      - name: Create minimal test map
+      - name: Install test map fixture
         run: |
-          # Create a minimal 8x8 Spring map for testing
-          # Map downloads are blocked (403), so we create our own minimal map
-          mkdir -p maps/test_blank.sdd
-
-          # Create mapinfo.lua with minimal required fields
-          cat > maps/test_blank.sdd/mapinfo.lua << 'MAPINFOEOF'
-          local mapinfo = {
-            name        = "Test Blank 8x8",
-            shortname   = "test_blank_8x8",
-            description = "Minimal test map for CI",
-            author      = "CI Auto-generated",
-            version     = "v1",
-            mapfile     = "",
-            modtype     = 3,
-            depend      = {"Map Helper v1"},
-            replace     = {},
-
-            maphardness     = 100,
-            notDeformable   = true,
-            gravity         = 130,
-            tidalStrength   = 0,
-            maxMetal        = 0.02,
-            extractorRadius = 64.0,
-            voidWater       = false,
-            autoShowMetal   = true,
-
-            smf = {
-              minheight = 0,
-              maxheight = 200,
-              smtFileName0 = "",
-              smtFileName1 = "",
-              smtFileName2 = "",
-              smtFileName3 = "",
-              smtFileName4 = "",
-              smtFileName5 = "",
-              smtFileName6 = "",
-              smtFileName7 = "",
-            },
-
-            resources = {},
-            custom = {},
-            teams = {},
-          }
-          return mapinfo
-          MAPINFOEOF
-
-          # Spring can work with just mapinfo.lua for basic testing
-          ls -lah maps/test_blank.sdd/
-          echo "Minimal test map created"
+          # Use bundled minimal test map (downloads are blocked with 403)
+          # The test map is a minimal 2x2 Spring map with proper .smf format
+          cp -r test_fixtures/minimal_test_map.sdd games/
+          ls -lah games/minimal_test_map.sdd/
+          echo "Test map fixture installed"
 
       - name: Create Spring script.txt
         run: |
-          # Use minimal test map created above
-          echo "Using test map: Test Blank 8x8"
+          # Use bundled minimal test map
+          echo "Using test map: TestMinimal2x2"
           cat > script.txt << 'SCRIPTEND'
           [GAME]
           {
             GameType=SpringBoard Core;
-            MapName=Test Blank 8x8;
+            MapName=TestMinimal2x2;
             IsHost=1;
             MyPlayerName=TestPlayer;
             [MODOPTIONS]
