@@ -36,12 +36,9 @@ jobs:
             libcurl4 \
             libgl1 \
             libglu1-mesa \
-            pulseaudio
+            apulse
 
-          # Start PulseAudio with null sink for CI (no real audio hardware)
-          pulseaudio --start --exit-idle-time=-1
-          pactl load-module module-null-sink sink_name=dummy
-          pactl set-default-sink dummy
+          # apulse provides PulseAudio API with no actual audio hardware needed
 
       - name: Download BAR Engine (with RmlUi support)
         run: |
@@ -179,11 +176,9 @@ jobs:
 
           # Run Spring with Xvfb (virtual X11 display) so LuaUI loads
           # This actually tests RmlUi initialization!
-          # Disable audio by removing any audio backend devices
-          export SDL_AUDIODRIVER=dummy
-          export AUDIODEV=null
+          # Use apulse to emulate PulseAudio (no real audio hardware needed)
           timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
-            ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+            apulse ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
 
           # Wait a moment for Spring to finish writing logs
           sleep 2
