@@ -1,12 +1,56 @@
 -- RmlUi Base Editor Class
 -- Provides AddField() API for editors - implementation-agnostic!
--- Editors should never touch RML directly, only call AddField()
+-- ALL editors use ONE generic_editor.rml template that gets populated dynamically
 
 RmlUiEditorBase = LCS.class{}
 
 function RmlUiEditorBase:init()
     self.fields = {}
-    self.fieldContainer = nil  -- Will be set to DOM element where fields are rendered
+    self.document = nil
+    self.fieldContainer = nil
+    self.editorTitle = "Editor"  -- Override in subclass
+end
+
+function RmlUiEditorBase:Initialize()
+    -- Load the ONE generic editor template
+    local rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/generic_editor.rml')
+    self.document = SB.rmlui:LoadDocument(rmlPath, false)
+
+    if not self.document then
+        Log.Error("Failed to load generic editor template")
+        return false
+    end
+
+    -- Set title
+    local titleElement = self.document:GetElementById("editor-title")
+    if titleElement then
+        titleElement.inner_rml = self.editorTitle
+    end
+
+    -- Get field container where fields will be injected
+    self.fieldContainer = self.document:GetElementById("editor-content")
+
+    Log.Notice(self.editorTitle .. " initialized (programmatic)")
+    return true
+end
+
+function RmlUiEditorBase:Show()
+    if self.document then
+        self.document:Show()
+    end
+end
+
+function RmlUiEditorBase:Hide()
+    if self.document then
+        self.document:Hide()
+    end
+end
+
+function RmlUiEditorBase:Close()
+    if self.document then
+        self.document:Close()
+        self.document = nil
+    end
 end
 
 function RmlUiEditorBase:AddField(field)
