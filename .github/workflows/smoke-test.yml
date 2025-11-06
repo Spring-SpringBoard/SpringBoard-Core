@@ -66,6 +66,20 @@ jobs:
           }
           cd ..
 
+      - name: Create Spring config to disable audio
+        run: |
+          # Create springsettings.cfg to disable audio (no sound card in CI)
+          mkdir -p test-data
+          cat > test-data/springsettings.cfg << 'EOF'
+          snd_disable = 1
+          snd_volmaster = 0
+          snd_volgeneral = 0
+          snd_volunitreply = 0
+          snd_volbattle = 0
+          snd_volui = 0
+          EOF
+          cat test-data/springsettings.cfg
+
       - name: Create Spring script.txt
         run: |
           # Try to use downloaded map, fallback to blank map
