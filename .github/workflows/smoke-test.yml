@@ -35,10 +35,7 @@ jobs:
             libopenal1 \
             libcurl4 \
             libgl1 \
-            libglu1-mesa \
-            apulse
-
-          # apulse provides PulseAudio API with no actual audio hardware needed
+            libglu1-mesa
 
       - name: Download BAR Engine (with RmlUi support)
         run: |
@@ -86,16 +83,14 @@ jobs:
       - name: Create Spring config to disable audio
         run: |
           # Create springsettings.cfg to disable audio (no sound card in CI)
+          # Sound = 0 completely disables OpenAL (verified via: spring --list-config-vars)
+          # This prevents the OpenAL segfault on alcCaptureOpenDevice when no audio hardware exists
           mkdir -p test-data
           cat > test-data/springsettings.cfg << 'EOF'
-          snd_disable = 1
-          snd_volmaster = 0
-          snd_volgeneral = 0
-          snd_volunitreply = 0
-          snd_volbattle = 0
-          snd_volui = 0
+          Sound = 0
           EOF
           cat test-data/springsettings.cfg
+          echo "Sound subsystem disabled via Sound = 0 config"
 
       - name: Create Spring script.txt
         run: |
@@ -176,9 +171,9 @@ jobs:
 
           # Run Spring with Xvfb (virtual X11 display) so LuaUI loads
           # This actually tests RmlUi initialization!
-          # Use apulse to emulate PulseAudio (no real audio hardware needed)
+          # Sound is disabled via Sound = 0 in springsettings.cfg
           timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
-            apulse ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
+            ./spring --write-dir $(pwd)/test-data script.txt || EXIT_CODE=$?
 
           # Wait a moment for Spring to finish writing logs
           sleep 2
@@ -203,38 +198,18 @@ jobs:
           fi
 
           # Check for crash signatures in infolog
+          # With Sound = 0, we should NOT get audio crashes anymore
           if grep -q "CrashHandler.*Error.*Aborted\|CrashHandler.*Error.*Segmentation\|XIO.*fatal.*error\|terminate called without an active exception" test-data/infolog.txt; then
-            # Check if crash is audio-related (known CI limitation) vs actual bug
-            if grep -q "alcOpenDevice\|ALSA.*pcm\|OpenALDevice\|Sound::Init" test-data/infolog.txt; then
-              echo "⚠️  WARNING: Spring crashed on audio initialization (known CI limitation)"
-              echo "   This is expected in CI with no audio hardware"
-              echo "   Checking if SpringBoard scanned successfully before crash..."
-
-              # Verify SpringBoard was scanned successfully
-              # Check for scanning completion - Spring logs archive count after scanning
-              if grep -q "Scanning.*games" test-data/infolog.txt; then
-                echo "✓ SpringBoard was scanned (found 'Scanning.*games' in logs)"
-                # Show what was found
-                echo "   Archive scanner logs:"
-                grep -E "Scanning|Found.*archives|SpringBoard" test-data/infolog.txt | head -5 || true
-                # Accept audio crash as long as scanning happened - this validates the RmlUi conversion
-                echo ""
-                echo "✅ SMOKE TEST PASSED (with expected audio crash)"
-                echo "   SpringBoard successfully scanned - RmlUi conversion is valid"
-                exit 0
-              else
-                echo "✗ FAIL: SpringBoard didn't scan before audio crash"
-                tail -50 test-data/infolog.txt
-                exit 1
-              fi
-            else
-              echo "✗ FAIL: Spring crashed (NON-audio crash)"
-              echo ""
-              echo "=== Crash signatures found ==="
-              grep -E "CrashHandler.*Error|XIO.*fatal|terminate called" test-data/infolog.txt || true
-              exit 1
-            fi
+            echo "✗ FAIL: Spring crashed"
+            echo ""
+            echo "=== Crash signatures found ==="
+            grep -E "CrashHandler.*Error|XIO.*fatal|terminate called" test-data/infolog.txt || true
+            echo ""
+            echo "=== Last 100 lines of infolog.txt ==="
+            tail -100 test-data/infolog.txt
+            exit 1
           fi
+          echo "✓ No crashes detected"
 
           # Check if LuaUI loaded
           if ! grep -q "LuaUI.*Loaded\|Loading LuaUI" test-data/infolog.txt; then
