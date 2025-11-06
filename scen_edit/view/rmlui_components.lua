@@ -174,35 +174,33 @@ function RmlUiCustomWindow:init()
     self.editorTitle = "Custom Trigger Code"
 end
 
--- Dialog Variants (these DO have RML - they're modal dialogs with specific layouts)
-RmlUiImportFileDialog = RmlUiBaseDialog:extends{}
+-- Dialog Variants - all use RmlUiFileDialog (100% programmatic)
+RmlUiImportFileDialog = RmlUiFileDialog:extends{}
 function RmlUiImportFileDialog:init(opts)
     opts = opts or {}
-    opts.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/dialogs/import_file_dialog.rml')
-    opts.title = opts.title or "Import File"
-    RmlUiBaseDialog.init(self, opts)
+    opts.title = "Import File"
+    self:super("init", opts)
 end
 
-RmlUiExportFileDialog = RmlUiBaseDialog:extends{}
+RmlUiExportFileDialog = RmlUiFileDialog:extends{}
 function RmlUiExportFileDialog:init(opts)
     opts = opts or {}
-    opts.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/dialogs/export_file_dialog.rml')
-    opts.title = opts.title or "Export File"
-    RmlUiBaseDialog.init(self, opts)
+    opts.title = "Export File"
+    self:super("init", opts)
 end
 
-RmlUiOpenProjectDialog = RmlUiBaseDialog:extends{}
+RmlUiOpenProjectDialog = RmlUiFileDialog:extends{}
 function RmlUiOpenProjectDialog:init(opts)
     opts = opts or {}
-    opts.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/dialogs/open_project_dialog.rml')
-    opts.title = opts.title or "Open Project"
-    RmlUiBaseDialog.init(self, opts)
+    opts.title = "Open Project"
+    opts.directory = SB.DIRS.PROJECTS or "/"
+    self:super("init", opts)
 end
 
-RmlUiSaveProjectDialog = RmlUiBaseDialog:extends{}
+RmlUiSaveProjectDialog = RmlUiFileDialog:extends{}
 function RmlUiSaveProjectDialog:init(opts)
     opts = opts or {}
-    opts.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/dialogs/save_project_dialog.rml')
-    opts.title = opts.title or "Save Project"
-    RmlUiBaseDialog.init(self, opts)
+    opts.title = "Save Project"
+    opts.directory = SB.DIRS.PROJECTS or "/"
+    self:super("init", opts)
 end

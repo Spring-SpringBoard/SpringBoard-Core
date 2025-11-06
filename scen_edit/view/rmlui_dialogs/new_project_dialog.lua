@@ -1,4 +1,5 @@
 --- RmlUi New Project Dialog
+--- 100% programmatic using AddField() - matches original Chili architecture
 
 SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/base_dialog.lua'))
 
@@ -6,79 +7,111 @@ RmlUiNewProjectDialog = RmlUiBaseDialog:extends{}
 
 function RmlUiNewProjectDialog:init(opts)
     opts = opts or {}
-    opts.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/dialogs/new_project_dialog.rml')
     opts.title = "New Project"
-    RmlUiBaseDialog.init(self, opts)
+    self:super("init", opts)
+
+    -- Add fields programmatically (like original Chili version)
+    self:AddField(StringField({
+        name = "projectName",
+        title = "Project name:",
+        value = "",
+        width = 300,
+    }))
+
+    -- TODO: Get actual maps without projects
+    local items = {"SB_Blank_Map", "Example Map 1", "Example Map 2"}
+    local captions = {"Blank", "Example Map 1", "Example Map 2"}
+
+    self:AddField(ChoiceField({
+        name = "mapName",
+        title = "Map:",
+        items = items,
+        captions = captions,
+        width = 300,
+    }))
+
+    self:AddField(GroupField({
+        fields = {
+            NumericField({
+                name = "sizeX",
+                title = "Size X:",
+                width = 140,
+                min = 2,
+                max = 32,
+                step = 2,
+                value = 10,
+            }),
+            NumericField({
+                name = "sizeY",
+                title = "Size Y:",
+                width = 140,
+                min = 2,
+                max = 32,
+                step = 2,
+                value = 10,
+            })
+        }
+    }))
+
+    -- Error message field
+    self:AddField(StringField({
+        name = "error",
+        title = "",
+        value = "",
+        width = 400,
+    }))
 end
 
-function RmlUiNewProjectDialog:Show()
-    RmlUiBaseDialog.Show(self)
-
-    if self.document then
-        self:PopulateDropdowns()
-        self:BindNewProjectEvents()
+function RmlUiNewProjectDialog:SetDialogError(error)
+    if error ~= nil then
+        self:SetFieldValue("error", tostring(error))
+    else
+        self:SetFieldValue("error", "Unknown error")
     end
 end
 
-function RmlUiNewProjectDialog:PopulateDropdowns()
-    -- Populate map selector (stub)
-    local mapSelect = self.document:GetElementById("map-select")
-    if mapSelect then
-        -- TODO: Get actual map list
-        local mapsRml = [[
-            <option value="map1">Example Map 1</option>
-            <option value="map2">Example Map 2</option>
-        ]]
-        mapSelect.inner_rml = mapsRml
+function RmlUiNewProjectDialog:ConfirmDialog()
+    -- Validation logic (matching original Chili version)
+    self:SetDialogError("")
+
+    local projectName = self:GetFieldValue("projectName")
+    if not projectName or String.Trim(projectName) == "" then
+        self:SetDialogError("Missing project name.")
+        return false
     end
 
-    -- Populate game selector (stub)
-    local gameSelect = self.document:GetElementById("game-select")
-    if gameSelect then
-        -- TODO: Get actual game list
-        local gamesRml = [[
-            <option value="game1">Example Game 1</option>
-            <option value="game2">Example Game 2</option>
-        ]]
-        gameSelect.inner_rml = gamesRml
+    local mapName = self:GetFieldValue("mapName")
+    if mapName == "SB_Blank_Map" then
+        local sizeX = self:GetFieldValue("sizeX")
+        local sizeY = self:GetFieldValue("sizeY")
+
+        if sizeX % 2 ~= 0 then
+            self:SetDialogError("sizeX must be an even number.")
+            return false
+        end
+
+        if sizeY % 2 ~= 0 then
+            self:SetDialogError("sizeY must be an even number.")
+            return false
+        end
+
+        -- TODO: Set up blank map generation
+        Log.Notice("Creating blank map project: " .. projectName .. " (" .. sizeX .. "x" .. sizeY .. ")")
+    else
+        Log.Notice("Creating project: " .. projectName .. " with map: " .. mapName)
     end
-end
-
-function RmlUiNewProjectDialog:BindNewProjectEvents()
-    local btnCreate = self.document:GetElementById("btn-create")
-    if btnCreate then
-        btnCreate:AddEventListener("click", function()
-            self:CreateProject()
-        end)
-    end
-end
-
-function RmlUiNewProjectDialog:CreateProject()
-    local projectName = self.document:GetElementById("project-name")
-    local mapSelect = self.document:GetElementById("map-select")
-    local gameSelect = self.document:GetElementById("game-select")
-    local startType = self.document:GetElementById("start-type")
-
-    if not projectName or not projectName.value or projectName.value == "" then
-        Log.Warning("Project name is required")
-        return
-    end
-
-    -- Stub: Create project
-    Log.Notice("Creating project: " .. projectName.value)
-    Log.Notice("Map: " .. (mapSelect and mapSelect.value or "none"))
-    Log.Notice("Game: " .. (gameSelect and gameSelect.value or "none"))
-    Log.Notice("Start type: " .. (startType and startType.value or "blank"))
 
     -- TODO: Actually create project
-    if self.onConfirm then
-        self.onConfirm({
-            name = projectName.value,
-            map = mapSelect and mapSelect.value,
-            game = gameSelect and gameSelect.value,
-            startType = startType and startType.value
-        })
-    end
+    return true
+end
 
-    self:Close()
+function RmlUiNewProjectDialog:OnFieldChange(name, value)
+    -- Hide/show size fields based on map selection
+    if name == "mapName" then
+        if value == "SB_Blank_Map" then
+            -- TODO: Show sizeX/sizeY fields
+        else
+            -- TODO: Hide sizeX/sizeY fields
+        end
+    end
 end

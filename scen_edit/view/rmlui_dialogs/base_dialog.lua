@@ -1,97 +1,63 @@
 --- RmlUi Base Dialog
 --- Base class for all RmlUi dialogs
+--- Like Chili Dialog, this extends EditorBase to get AddField() support
 
-RmlUiBaseDialog = LCS.class{}
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editor_base.lua'))
+
+RmlUiBaseDialog = RmlUiEditorBase:extends{}
 
 function RmlUiBaseDialog:init(opts)
-    self.rmlPath = opts.rmlPath or Path.Join(SB.DIRS.SRC, 'view/rml/dialogs/base_dialog.rml')
-    self.title = opts.title or "Dialog"
-    self.document = nil
-    self.visible = false
+    self:super("init")
+
+    opts = opts or {}
+    self.editorTitle = opts.title or "Dialog"
     self.onConfirm = opts.onConfirm
     self.onCancel = opts.onCancel
+    self.visible = false
+
+    -- Dialogs can have custom validation/confirmation logic
+    if opts.ConfirmDialog then
+        assert(type(opts.ConfirmDialog) == 'function')
+        self.ConfirmDialog = opts.ConfirmDialog
+    end
 end
 
+-- Show/Hide/Close are inherited from RmlUiEditorBase
+
 function RmlUiBaseDialog:Show()
-    if not SB.rmlui or not SB.rmlui.initialized then
-        Log.Error("RmlUi not initialized")
-        return
-    end
-
-    -- Load document
-    self.document = SB.rmlui:LoadDocument(self.rmlPath, false)
+    -- Initialize if not already done
     if not self.document then
-        Log.Error("Failed to load dialog: " .. self.rmlPath)
-        return
+        self:Initialize()
     end
 
-    -- Set title
-    local titleElement = self.document:GetElementById("dialog-title")
-    if titleElement then
-        titleElement.inner_rml = self.title
-    end
+    -- Finalize fields (generate RML from AddField calls)
+    self:Finalize()
 
-    -- Setup event handlers
-    self:BindEvents()
-
-    -- Show
-    self.document:Show()
+    -- Show the dialog
+    self:super("Show")
     self.visible = true
 end
 
-function RmlUiBaseDialog:Hide()
-    if self.document then
-        self.document:Hide()
-        self.visible = false
-    end
-end
-
-function RmlUiBaseDialog:Close()
-    if self.document then
-        self.document:Close()
-        self.document = nil
-        self.visible = false
-    end
-end
-
-function RmlUiBaseDialog:BindEvents()
-    if not self.document then
-        return
-    end
-
-    -- OK button
-    local btnOk = self.document:GetElementById("btn-ok")
-    if btnOk then
-        btnOk:AddEventListener("click", function()
-            self:OnOK()
-        end)
-    end
-
-    -- Cancel button
-    local btnCancel = self.document:GetElementById("btn-cancel")
-    if btnCancel then
-        btnCancel:AddEventListener("click", function()
-            self:OnCancel()
-        end)
-    end
-
-    -- Close button
-    local btnClose = self.document:GetElementById("btn-close")
-    if btnClose then
-        btnClose:AddEventListener("click", function()
-            self:OnCancel()
-        end)
-    end
+function RmlUiBaseDialog:ConfirmDialog()
+    -- Default confirmation - override in subclasses for validation
+    -- Return true to close dialog, false to keep it open
+    return true
 end
 
 function RmlUiBaseDialog:OnOK()
-    if self.onConfirm then
-        local result = self.onConfirm()
-        if result ~= false then
+    -- Call custom confirmation logic
+    local canClose = self:ConfirmDialog()
+
+    if canClose then
+        if self.onConfirm then
+            -- Call the onConfirm callback if provided
+            local result = self.onConfirm(self:GetAllFieldValues())
+            if result ~= false then
+                self:Close()
+            end
+        else
             self:Close()
         end
-    else
-        self:Close()
     end
 end
 
@@ -100,4 +66,40 @@ function RmlUiBaseDialog:OnCancel()
         self.onCancel()
     end
     self:Close()
+end
+
+-- Override Finalize to add OK/Cancel buttons
+function RmlUiBaseDialog:Finalize(children, opts)
+    -- Call parent Finalize to render fields
+    self:super("Finalize", children, opts)
+
+    if not self.document then
+        return
+    end
+
+    -- Inject OK/Cancel buttons into footer
+    local footer = self.document:GetElementById("editor-footer")
+    if footer then
+        footer.inner_rml = [[
+            <button id="btn-ok" class="dialog-button primary">OK</button>
+            <button id="btn-cancel" class="dialog-button">Cancel</button>
+        ]]
+
+        -- Bind button events
+        local btnOk = self.document:GetElementById("btn-ok")
+        if btnOk then
+            btnOk:AddEventListener("click", function()
+                self:OnOK()
+            end)
+        end
+
+        local btnCancel = self.document:GetElementById("btn-cancel")
+        if btnCancel then
+            btnCancel:AddEventListener("click", function()
+                self:OnCancel()
+            end)
+        end
+    end
+
+    Log.Notice("Dialog finalized: " .. self.editorTitle)
 end

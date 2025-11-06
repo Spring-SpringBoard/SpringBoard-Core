@@ -1,5 +1,5 @@
 --- RmlUi File Dialog
---- File browser dialog
+--- File browser dialog - 100% programmatic using AddField()
 
 SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/base_dialog.lua'))
 
@@ -7,77 +7,74 @@ RmlUiFileDialog = RmlUiBaseDialog:extends{}
 
 function RmlUiFileDialog:init(opts)
     opts = opts or {}
-    opts.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/dialogs/file_dialog.rml')
     opts.title = opts.title or "Select File"
-    RmlUiBaseDialog.init(self, opts)
+    self:super("init", opts)
 
     self.directory = opts.directory or "/"
     self.filter = opts.filter
     self.allowDirectories = opts.allowDirectories or false
-    self.selectedPath = nil
+
+    -- Add fields programmatically
+    self:AddField(StringField({
+        name = "fileName",
+        title = "File name:",
+        value = "",
+        width = 500,
+    }))
+
+    -- TODO: Add file browser component (AssetView equivalent)
+    -- For now, just a simple path field
+    self:AddField(StringField({
+        name = "directory",
+        title = "Directory:",
+        value = self.directory,
+        width = 500,
+    }))
+
+    -- Error message field
+    self:AddField(StringField({
+        name = "error",
+        title = "",
+        value = "",
+        width = 500,
+    }))
 end
 
-function RmlUiFileDialog:Show()
-    RmlUiBaseDialog.Show(self)
-
-    if self.document then
-        self:PopulateFileList()
-        self:BindFileDialogEvents()
-    end
-end
-
-function RmlUiFileDialog:PopulateFileList()
-    -- Stub: Populate file list dynamically
-    -- TODO: Implement actual file browsing
-    local fileList = self.document:GetElementById("file-list")
-    if not fileList then
-        return
-    end
-
-    -- Example files (stub)
-    local filesRml = [[
-        <div class="file-item directory" data-path="/example">Example Directory</div>
-        <div class="file-item file" data-path="/example/file.txt">file.txt</div>
-    ]]
-
-    fileList.inner_rml = filesRml
-end
-
-function RmlUiFileDialog:BindFileDialogEvents()
-    -- Path input
-    local pathInput = self.document:GetElementById("path-input")
-    if pathInput then
-        pathInput.value = self.directory
-    end
-
-    -- Up button
-    local btnUp = self.document:GetElementById("btn-up")
-    if btnUp then
-        btnUp:AddEventListener("click", function()
-            -- TODO: Navigate up directory
-            Log.Notice("Navigate up (not implemented)")
-        end)
-    end
-
-    -- OK button override
-    local btnOk = self.document:GetElementById("btn-ok")
-    if btnOk then
-        btnOk.inner_rml = "Open"
-    end
-end
-
-function RmlUiFileDialog:OnOK()
-    local fileNameInput = self.document:GetElementById("file-name-input")
-    if fileNameInput then
-        self.selectedPath = fileNameInput.value
-    end
-
-    if self.onConfirm then
-        local result = self.onConfirm(self.selectedPath)
-        if result ~= false then
-            self:Close()
-        end
+function RmlUiFileDialog:SetDialogError(error)
+    if error ~= nil then
+        self:SetFieldValue("error", tostring(error))
     else
-        self:Close()
+        self:SetFieldValue("error", "Unknown error")
     end
+end
+
+function RmlUiFileDialog:getSelectedFilePath()
+    local dir = self:GetFieldValue("directory") or self.directory
+    local fileName = self:GetFieldValue("fileName") or ""
+    return Path.Join(dir, fileName)
+end
+
+function RmlUiFileDialog:ConfirmDialog()
+    -- Validation logic
+    local path = self:getSelectedFilePath()
+
+    if not path or path == "" then
+        self:SetDialogError("Please select a file.")
+        return false
+    end
+
+    -- Custom validation callback if provided
+    if self.confirmDialogCallback then
+        local success, error = self.confirmDialogCallback(path)
+        if not success then
+            self:SetDialogError(error)
+        end
+        return success
+    end
+
+    return true
+end
+
+function RmlUiFileDialog:setConfirmDialogCallback(func)
+    self.confirmDialogCallback = func
 end
