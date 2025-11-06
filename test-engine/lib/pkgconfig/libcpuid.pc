@@ -1,0 +1,11 @@
+prefix=/spring/build/install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include/libcpuid
+
+Name: libcpuid
+Description: libcpuid provides CPU identification for x86
+Requires:
+Version: 0.6.2
+Libs: -L${libdir} -lcpuid
+Cflags: -I${includedir}
