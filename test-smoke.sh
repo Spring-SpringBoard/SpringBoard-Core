@@ -65,6 +65,10 @@ cat > script.txt << 'EOF'
     new_map_x=10;
     new_map_y=8;
   }
+  [MODOPTIONS]
+  {
+    mapseed=1;
+  }
   [PLAYER0]
   {
     Name=TestPlayer;
