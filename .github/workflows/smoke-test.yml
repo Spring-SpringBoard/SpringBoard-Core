@@ -71,16 +71,49 @@ jobs:
           cat test-data/springsettings.cfg
           echo "Sound subsystem disabled via Sound = 0 config"
 
+      - name: Create map project directory for generation
+        run: |
+          # Create a .sdd directory that Spring will use as the map
+          # The mapinfo.lua without a mapfile field triggers map generation
+          mkdir -p games/sb_test_map.sdd
+
+          cat > games/sb_test_map.sdd/mapinfo.lua << 'MAPINFO'
+          local mapinfo = {
+            name        = "sb_test_map",
+            version     = "1.0",
+            description = "Test map for generation",
+            modtype     = 3,
+            depend      = {"Map Helper v1"},
+          }
+          return mapinfo
+          MAPINFO
+
+          cat > games/sb_test_map.sdd/modinfo.lua << 'MODINFO'
+          local modinfo = {
+            name          = "sb_test_map",
+            shortname     = "sb_test",
+            version       = "1.0",
+            mutator       = "Official",
+            description   = "Test project",
+            modtype       = 1,
+            depend        = {"SpringBoard Core $VERSION"},
+          }
+          return modinfo
+          MODINFO
+
+          ls -lah games/sb_test_map.sdd/
+          echo "Map project directory created"
+
       - name: Create Spring script.txt for map generation
         run: |
-          # Use map generation (no map files needed)
-          # SpringBoard generates terrain at runtime based on MAPOPTIONS
-          echo "Using map generation: sb_initial_blank_10x8"
+          # MapName MUST reference the .sdd directory we created
+          # MAPOPTIONS/MODOPTIONS tell SpringBoard how to generate
+          echo "Using map generation: sb_test_map 1.0"
           cat > script.txt << 'SCRIPTEND'
           [GAME]
           {
             GameType=SpringBoard Core;
-            MapName=sb_initial_blank_10x8;
+            MapName=sb_test_map 1.0;
             IsHost=1;
             MyPlayerName=TestPlayer;
             [MAPOPTIONS]

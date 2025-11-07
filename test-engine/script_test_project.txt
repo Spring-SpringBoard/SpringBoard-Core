@@ -1,0 +1,31 @@
+[GAME]
+{
+  GameType=SpringBoard Core test;
+  MapName=sb_test_project 1.0;
+  IsHost=1;
+  MyPlayerName=TestPlayer;
+  [MAPOPTIONS]
+  {
+    new_map_x=10;
+    new_map_y=8;
+  }
+  [MODOPTIONS]
+  {
+    mapseed=1;
+  }
+  [PLAYER0]
+  {
+    Name=TestPlayer;
+    Team=0;
+    IsFromDemo=0;
+    Spectator=1;
+  }
+  [TEAM0]
+  {
+    TeamLeader=0;
+    AllyTeam=0;
+  }
+  [ALLYTEAM0]
+  {
+  }
+}

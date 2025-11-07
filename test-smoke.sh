@@ -51,13 +51,44 @@ EOF
 echo "✓ Config created"
 echo ""
 
+# Create map project directory for generation
+echo "Creating map project directory..."
+mkdir -p games/sb_test_map.sdd
+
+cat > games/sb_test_map.sdd/mapinfo.lua << 'MAPINFO'
+local mapinfo = {
+  name        = "sb_test_map",
+  version     = "1.0",
+  description = "Test map for generation",
+  modtype     = 3,
+  depend      = {"Map Helper v1"},
+}
+return mapinfo
+MAPINFO
+
+cat > games/sb_test_map.sdd/modinfo.lua << 'MODINFO'
+local modinfo = {
+  name          = "sb_test_map",
+  shortname     = "sb_test",
+  version       = "1.0",
+  mutator       = "Official",
+  description   = "Test project",
+  modtype       = 1,
+  depend        = {"SpringBoard Core $VERSION"},
+}
+return modinfo
+MODINFO
+
+echo "✓ Map project directory created"
+echo ""
+
 # Create script.txt
 echo "Creating Spring script..."
 cat > script.txt << 'EOF'
 [GAME]
 {
   GameType=SpringBoard Core;
-  MapName=sb_initial_blank_10x8;
+  MapName=sb_test_map 1.0;
   IsHost=1;
   MyPlayerName=TestPlayer;
   [MAPOPTIONS]
