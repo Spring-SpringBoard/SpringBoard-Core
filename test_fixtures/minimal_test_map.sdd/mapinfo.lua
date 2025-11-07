@@ -1,8 +1,8 @@
 -- Auto-generated minimal test map
 local mapinfo = {
-  name        = "TestMinimal2x2",
-  shortname   = "test_minimal_2x2",
-  description = "Minimal 2x2 test map for CI smoke tests",
+  name        = "minimal_test_map",
+  shortname   = "minimal_test",
+  description = "Minimal test map with generated terrain",
   author      = "Auto-generated",
   version     = "v1.0",
   mapfile     = "",
