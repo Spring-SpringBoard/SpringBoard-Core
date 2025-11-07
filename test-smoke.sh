@@ -60,9 +60,8 @@ cat > script.txt << 'EOF'
   MapName=sb_initial_blank_10x8;
   IsHost=1;
   MyPlayerName=TestPlayer;
-  [MODOPTIONS]
+  [MAPOPTIONS]
   {
-    MapSeed=42;
     new_map_x=10;
     new_map_y=8;
   }
