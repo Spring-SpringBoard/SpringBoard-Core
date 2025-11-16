@@ -41,13 +41,13 @@ AssetPickerWindow = RmlUiAssetPickerWindow
 ColorPickerWindow = RmlUiColorPickerWindow
 MaterialPickerWindow = RmlUiMaterialPickerWindow
 
--- Button Compatibility Layer
--- Create button objects that can generate RML
+-- Button classes for RmlUi mode
+-- These are created by Editor:_FinalizeRmlUi() when converting Chili buttons to RmlUi
 
 -- Counter for auto-generating button IDs
 local _BUTTON_INDEX = 0
 
--- RmlUi Button (used for regular Button:New{} calls via AddControl)
+-- RmlUi Button (converted from Chili Button:New{} during finalization)
 RmlUiButton = LCS.class{}
 
 function RmlUiButton:init(opts)
@@ -67,15 +67,7 @@ function RmlUiButton:GenerateRml()
     )
 end
 
--- Override Button table for RmlUi mode
-Button = {
-    New = function(opts)
-        return RmlUiButton(opts)
-    end
-}
-
--- TabbedPanelButton for action buttons (e.g., "Add", "Set", "Smooth")
--- These store their caption, image, tooltip and click handler
+-- RmlUi TabbedPanelButton (converted from Chili TabbedPanelButton during finalization)
 RmlUiTabbedPanelButton = LCS.class{}
 
 function RmlUiTabbedPanelButton:init(opts)
@@ -86,19 +78,9 @@ function RmlUiTabbedPanelButton:init(opts)
     self.tooltip = opts.tooltip or ""
     self.OnClick = opts.OnClick or {}
     self.pressed = false
-
-    -- Extract caption and image from children
-    self.caption = ""
-    self.image = nil
-    if opts.children then
-        for _, child in ipairs(opts.children) do
-            if child.caption then
-                self.caption = child.caption
-            elseif child.file then
-                self.image = child.file
-            end
-        end
-    end
+    self.caption = opts.caption or ""
+    self.image = opts.image
+    self.children = opts.children
 end
 
 function RmlUiTabbedPanelButton:SetPressedState(pressed)
@@ -127,21 +109,6 @@ function RmlUiTabbedPanelButton:GenerateRml()
 
     html = html .. '</button>'
     return html
-end
-
--- Helper functions to match Chili API
-function TabbedPanelButton(opts)
-    return RmlUiTabbedPanelButton(opts)
-end
-
-function TabbedPanelImage(opts)
-    -- Just return the opts, they'll be extracted by TabbedPanelButton
-    return opts
-end
-
-function TabbedPanelLabel(opts)
-    -- Just return the opts, they'll be extracted by TabbedPanelButton
-    return opts
 end
 
 Log.Notice("RmlUi field compatibility layer loaded - original API maintained")

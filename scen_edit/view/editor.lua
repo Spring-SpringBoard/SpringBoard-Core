@@ -724,23 +724,70 @@ end
 -- We load these fields last as they might be/contain subclasses of editor view
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))
 
+-- Helper function to convert Chili button to RmlUi button
+local function ConvertChiliButtonToRmlUi(chiliButton)
+    if not chiliButton then
+        return nil
+    end
+
+    -- Check if it's a TabbedPanelButton (has SetPressedState and children with images/labels)
+    if chiliButton.SetPressedState and chiliButton.children then
+        -- Extract caption and image from children
+        local caption = ""
+        local image = nil
+        for _, child in pairs(chiliButton.children) do
+            if type(child) == "table" then
+                if child.classname == "label" and child.caption then
+                    caption = child.caption
+                elseif child.classname == "image" and child.file then
+                    image = child.file
+                end
+            end
+        end
+
+        -- Create RmlUi TabbedPanelButton
+        return RmlUiTabbedPanelButton({
+            x = chiliButton.x,
+            y = chiliButton.y,
+            tooltip = chiliButton.tooltip or "",
+            OnClick = chiliButton.OnClick or {},
+            caption = caption,
+            image = image,
+        })
+
+    -- Check if it's a regular Button (has caption and OnClick)
+    elseif chiliButton.caption and chiliButton.OnClick then
+        return RmlUiButton({
+            caption = chiliButton.caption,
+            OnClick = chiliButton.OnClick or {},
+            width = chiliButton.width,
+            height = chiliButton.height,
+            tooltip = chiliButton.tooltip,
+        })
+    end
+
+    return nil
+end
+
 -- RmlUi-specific finalization
 function Editor:_FinalizeRmlUi(children, opts)
     children = children or {}
     opts = opts or {}
 
-    -- Extract action buttons from children (TabbedPanelButton instances)
+    -- Convert Chili buttons to RmlUi buttons
     self.actionButtons = {}
     self.regularButtons = {}
 
     for _, child in ipairs(children) do
         if child and type(child) == "table" then
-            -- Check if it's an RmlUi button
-            if child.GenerateRml and child.OnClick then
-                if child.id and child.id:match("^action%-btn%-") then
-                    table.insert(self.actionButtons, child)
-                elseif child.id and child.id:match("^btn%-") then
-                    table.insert(self.regularButtons, child)
+            local rmlButton = ConvertChiliButtonToRmlUi(child)
+            if rmlButton then
+                -- TabbedPanelButtons become action buttons
+                if rmlButton.id and rmlButton.id:match("^action%-btn%-") then
+                    table.insert(self.actionButtons, rmlButton)
+                -- Regular buttons
+                elseif rmlButton.id and rmlButton.id:match("^btn%-") then
+                    table.insert(self.regularButtons, rmlButton)
                 end
             end
         end
@@ -765,11 +812,27 @@ function Editor:_FinalizeRmlUi(children, opts)
             if field.GenerateRml then
                 fieldsHtml = fieldsHtml .. field:GenerateRml()
             else
-                -- Check if it's a control with a button
-                if field.ctrl and field.ctrl.GenerateRml then
-                    fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
+                -- Check if it's a control with a button inside
+                if field.ctrl then
+                    -- Try to convert the ctrl's children to buttons
+                    local ctrlHtml = ''
+                    if field.ctrl.children then
+                        for _, btnChild in pairs(field.ctrl.children) do
+                            local rmlBtn = ConvertChiliButtonToRmlUi(btnChild)
+                            if rmlBtn then
+                                ctrlHtml = ctrlHtml .. rmlBtn:GenerateRml()
+                                table.insert(self.regularButtons, rmlBtn)
+                            end
+                        end
+                    end
+                    if ctrlHtml ~= '' then
+                        fieldsHtml = fieldsHtml .. ctrlHtml
+                    else
+                        -- Fallback for other controls
+                        fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
+                    end
                 else
-                    -- Fallback for other controls
+                    -- Fallback for fields without ctrl
                     fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
                 end
             end
