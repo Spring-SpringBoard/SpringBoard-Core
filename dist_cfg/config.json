@@ -166,13 +166,37 @@
 
     {
       "package": {
-        "id": "dev-bar-engine",
+        "id": "dev-bar",
         "display": "Development (BAR Engine)"
       },
       "downloads": {
         "engines" : [ "105.1.1-2472-ga5aa45c-bar" ]
       },
       "auto_start" : false,
+      "no_downloads" : true,
+      "load_dev_exts": false,
+      "launch": {
+        "game": "SpringBoard Core $VERSION",
+        "map": "sb_initial_blank_10x8",
+        "map_options": {
+          "new_map_x": 10,
+          "new_map_y": 8
+        },
+        "game_options": {
+          "MapSeed": 42
+        }
+      }
+    },
+
+    {
+      "package": {
+        "id": "dev-bar-dev",
+        "display": "Development (Dev BAR Engine)"
+      },
+      "downloads": {
+        "engines" : [ "local-build-v2" ]
+      },
+      "auto_start" : true,
       "no_downloads" : true,
       "load_dev_exts": false,
       "launch": {

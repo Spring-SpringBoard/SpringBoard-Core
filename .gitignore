@@ -9,3 +9,4 @@ env/
 
 # don't track local (dev) file
 *.local
+*.code-workspace

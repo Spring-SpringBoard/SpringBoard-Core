@@ -133,9 +133,8 @@ function AbstractMapEditingState:startChanging()
     end
 
     self._initialDelay = self.initialDelay
-    local cmd = SetMultipleCommandModeCommand(true)
-    SB.commandManager:execute(cmd)
     self.startedChanging = true
+    SB.commandManager:execute(SetMultipleCommandModeCommand(true))
 end
 
 function AbstractMapEditingState:stopChanging()
@@ -143,9 +142,8 @@ function AbstractMapEditingState:stopChanging()
         return
     end
 
-    local cmd = SetMultipleCommandModeCommand(false)
-    SB.commandManager:execute(cmd)
     self.startedChanging = false
+    SB.commandManager:execute(SetMultipleCommandModeCommand(false))
     self.lastTime = nil
 end
 

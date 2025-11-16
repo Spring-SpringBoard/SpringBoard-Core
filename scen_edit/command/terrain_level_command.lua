@@ -14,7 +14,6 @@ function TerrainLevelCommand:GenerateChanges(params)
     local startZ = params.startZ
     local parts  = params.parts
     local size   = params.size
-    local isUndo = params.isUndo
     local map    = params.map
 
     local canUpper = self.opts.applyDirID >= 0

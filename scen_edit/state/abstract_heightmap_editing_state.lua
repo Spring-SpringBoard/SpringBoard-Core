@@ -32,9 +32,10 @@ function AbstractHeightmapEditingState:GetApplyParams(x, z, button)
 end
 
 function AbstractHeightmapEditingState:CanApply()
-    local ss = self.size * self.size / 5000.0 / 5000.0
-    self.applyDelay = ss * 1.0
-    self.applyDelay = math.max(0.01, self.applyDelay)
+    -- local ss = self.size * self.size / 5000.0 / 5000.0
+    -- self.applyDelay = ss * 1.0
+    -- self.applyDelay = math.max(0.01, self.applyDelay)
+    self.applyDelay = 0.01
     return AbstractMapEditingState.CanApply(self)
 end
 
