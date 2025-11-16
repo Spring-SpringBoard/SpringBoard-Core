@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>Control Buttons</title>
-    <link type="text/rcss" href="../floating.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/floating.rcss"/>
 </head>
 <body id="control-buttons" class="floating-panel">
     <button id="btn-start-stop" class="control-button large" title="Start scenario">▶</button>

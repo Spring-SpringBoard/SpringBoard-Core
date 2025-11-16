@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>Asset Picker</title>
-    <link type="text/rcss" href="../dialog.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/dialog.rcss"/>
 </head>
 <body id="asset-picker" class="dialog large-dialog">
     <div class="dialog-header">

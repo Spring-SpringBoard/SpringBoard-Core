@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>Top Menu</title>
-    <link type="text/rcss" href="../floating.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/floating.rcss"/>
 </head>
 <body id="top-left-menu" class="floating-panel">
     <div id="project-label" class="project-label">Project not saved</div>

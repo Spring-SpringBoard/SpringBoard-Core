@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>Editor</title>
-    <link type="text/rcss" href="editor.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="common.css" />
+    <link type="text/rcss" href="../rcss/editor.rcss"/>
 </head>
 <body id="generic-editor" class="editor-panel">
     <div class="editor-header">

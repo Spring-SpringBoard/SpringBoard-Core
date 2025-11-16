@@ -1,6 +1,7 @@
 /* Floating Window Styles */
 
 .floating-panel {
+    font-family: Poppins;
     background-color: #2a2a2a;
     border: 1dp #555555;
     padding: 5dp;

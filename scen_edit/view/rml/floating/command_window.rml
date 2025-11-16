@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>Command Window</title>
-    <link type="text/rcss" href="../floating.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/floating.rcss"/>
 </head>
 <body id="command-window" class="floating-panel">
     <div class="command-toolbar">

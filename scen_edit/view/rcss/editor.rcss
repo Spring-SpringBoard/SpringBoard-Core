@@ -1,6 +1,7 @@
 /* Editor Panel Styles */
 
 .editor-panel {
+    font-family: Poppins;
     position: absolute;
     width: 100%;
     height: 100%;

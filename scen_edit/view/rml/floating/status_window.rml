@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>Status Window</title>
-    <link type="text/rcss" href="../floating.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/floating.rcss"/>
 </head>
 <body id="status-window" class="floating-panel">
     <div id="status-position" class="status-line">X: 0, Y: 0, Z: 0. No selection</div>

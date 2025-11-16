@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>SpringBoard</title>
-    <link type="text/rcss" href="springboard.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="common.css" />
+    <link type="text/rcss" href="../rcss/springboard.rcss"/>
 </head>
 <body id="springboard">
     <!-- Top menu bar -->

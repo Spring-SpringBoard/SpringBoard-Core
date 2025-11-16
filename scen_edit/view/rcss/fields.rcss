@@ -2,6 +2,7 @@
 
 /* Asset Picker */
 .asset-browser {
+    font-family: Poppins;
     display: flex;
     flex-direction: column;
     gap: 10dp;

@@ -1,7 +1,8 @@
 <rml>
 <head>
     <title>Material Picker</title>
-    <link type="text/rcss" href="../dialog.rcss"/>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/dialog.rcss"/>
 </head>
 <body id="material-picker" class="dialog large-dialog">
     <div class="dialog-header">
