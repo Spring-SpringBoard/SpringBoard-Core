@@ -115,6 +115,15 @@ function Editor:Finalize(children, opts)
     end
 
     opts = opts or {}
+
+    -- In RmlUi mode, generate RML from fields instead of creating Chili controls
+    if SB.view and SB.view.useRmlUi then
+        self:_FinalizeRmlUi(opts)
+        self.__initializing = false
+        return
+    end
+
+    -- Chili mode continues below
     self:_FinalizeButtons(children, opts)
 
     local OnShow = {function() self:__OnShow() end}
@@ -655,3 +664,44 @@ end
 
 -- We load these fields last as they might be/contain subclasses of editor view
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))
+
+-- RmlUi-specific finalization
+function Editor:_FinalizeRmlUi(opts)
+    -- Generate RML for all fields
+    local html = ''
+    
+    for _, fieldName in ipairs(self.fieldOrder) do
+        local field = self.fields[fieldName]
+        if field and field.GenerateRml then
+            html = html .. field:GenerateRml()
+        elseif field then
+            -- Fallback for fields without GenerateRml (like separators/controls)
+            html = html .. '<div class="field-separator"></div>'
+        end
+    end
+    
+    -- Store the generated RML for later use
+    self.generatedRml = html
+    
+    -- Mark as hidden by default
+    self.hidden = true
+end
+
+-- Show the editor in RmlUi mode
+function Editor:ShowRmlUi()
+    self.hidden = false
+    if SB.view and SB.view.OpenEditor then
+        -- Trigger view to display this editor
+        for name, editor in pairs(SB.editors) do
+            if editor == self then
+                SB.view:DisplayEditor(name)
+                break
+            end
+        end
+    end
+end
+
+-- Hide the editor in RmlUi mode
+function Editor:HideRmlUi()
+    self.hidden = true
+end

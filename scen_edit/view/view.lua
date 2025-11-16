@@ -440,19 +440,16 @@ function View:OpenEditor(editorName)
     local editor = SB.editors[editorName]
     local editorCfg = SB.editorRegistry[editorName]
     local mainContent = self.mainDocument:GetElementById("main-content")
-    if mainContent and editor then
-        -- Render all fields to RML
-        local html = '<div class="editor-container"><h3 class="editor-title">' .. (editorCfg and editorCfg.caption or editorName) .. '</h3>'
 
-        -- Generate RML for each field in order
-        for _, fieldName in ipairs(editor.fieldOrder) do
-            local field = editor.fields[fieldName]
-            if field and field.GenerateRml then
-                html = html .. field:GenerateRml()
-            elseif field then
-                -- Fallback for fields without GenerateRml (like separators)
-                html = html .. '<div class="field-separator"></div>'
-            end
+    if mainContent and editor then
+        -- Use pre-generated RML from Finalize()
+        local html = '<div class="editor-container"><h3 class="editor-title">' ..
+                     (editorCfg and editorCfg.caption or editorName) .. '</h3>'
+
+        if editor.generatedRml then
+            html = html .. editor.generatedRml
+        else
+            html = html .. '<p>Editor has no fields defined</p>'
         end
 
         html = html .. '</div>'
@@ -460,6 +457,9 @@ function View:OpenEditor(editorName)
 
         -- Bind field events
         self:BindFieldEvents(editor)
+
+        -- Mark editor as visible
+        editor.hidden = false
     end
 
     -- Highlight pressed button
