@@ -151,7 +151,7 @@ function Editor:Finalize(children, opts)
             classname = opts.classname,
         }
         -- Only set main panel in Chili mode
-        if not SB.view.useRmlUi and SB.view.tabbedWindow then
+        if SB.view and not SB.view.useRmlUi and SB.view.tabbedWindow then
             SB.view.tabbedWindow:SetMainPanel(self.window)
         end
     else
@@ -363,8 +363,10 @@ function Editor:AddField(field)
     end
     self:_AddField(field)
 
-    -- In RmlUi mode, register child fields of GroupField
-    if SB.view and SB.view.useRmlUi and field.fields then
+    -- Register child fields of GroupField
+    -- RmlUi GroupFields have .fields but no .Added method (handled here)
+    -- Chili GroupFields have .fields and .Added method (handled in Added())
+    if field.fields and not field.Added then
         for _, childField in ipairs(field.fields) do
             if childField.name then
                 self:_AddField(childField)
