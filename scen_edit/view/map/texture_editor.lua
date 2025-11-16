@@ -148,8 +148,16 @@ function TextureEditor:init()
         OnClick = {
             function()
                 self:_EnterState("paint")
-                self.savedBrushes:GetControl():Show()
-                self.savedDNTSBrushes:GetControl():Hide()
+                if not (SB.view and SB.view.useRmlUi) then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Show() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                end
                 self:SetInvisibleFields("kernelMode", "splatTexScale", "splatTexMult", "splat-sep", "exclusive", "value")
             end
         },
@@ -165,8 +173,16 @@ function TextureEditor:init()
         OnClick = {
             function()
                 self:_EnterState("blur")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
+                if not (SB.view and SB.view.useRmlUi) then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                end
                 self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor",
                                         "mode", "texRotation", "splatTexScale", "splatTexMult", "offset-sep",
                                         "splat-sep", "exclusive", "value", "tex-sep",
@@ -195,12 +211,22 @@ function TextureEditor:init()
                 -- if SB.dntsEditor.window.hidden then
                 --     SB.view:SetMainPanel(SB.dntsEditor.window)
                 -- end
-                if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
-                    return
+                if self.savedDNTSBrushes and self.savedDNTSBrushes.brushManager then
+                    if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
+                        return
+                    end
                 end
                 self:_EnterState("dnts")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Show()
+                if not (SB.view and SB.view.useRmlUi) then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Show() end
+                    end
+                end
                 self:SetInvisibleFields("kernelMode", "texScale", "texOffsetX", "texOffsetY",
                                         "featureFactor", "diffuseColor", "mode", "texRotation",
                                         "falloffFactor", "offset-sep", "voidFactor", "tex-sep",
@@ -219,8 +245,16 @@ function TextureEditor:init()
         OnClick = {
             function()
                 self:_EnterState("void")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
+                if not (SB.view and SB.view.useRmlUi) then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                end
                 self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
                                         "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
                                         "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
@@ -507,28 +541,32 @@ function TextureEditor:init()
         format = 'rgb',
     }))
 
-    local children = {
-        self.btnPaint,
-        self.btnFilter,
-        self.btnDNTS,
-        self.btnVoid,
-        -- self.btnHeight,
-        --self.patternTextureImages:GetControl(),
-        self.savedBrushes:GetControl(),
-        self.savedDNTSBrushes:GetControl(),
-        ScrollPanel:New {
-            x = 0,
-            --y = "55%",
-            y = "35%",
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = {
-                self.stackPanel
+    local children = {}
+    -- Only add Chili UI components in non-RmlUi mode
+    if not (SB.view and SB.view.useRmlUi) then
+        children = {
+            self.btnPaint,
+            self.btnFilter,
+            self.btnDNTS,
+            self.btnVoid,
+            -- self.btnHeight,
+            --self.patternTextureImages:GetControl(),
+            self.savedBrushes and self.savedBrushes:GetControl() or nil,
+            self.savedDNTSBrushes and self.savedDNTSBrushes:GetControl() or nil,
+            ScrollPanel:New {
+                x = 0,
+                --y = "55%",
+                y = "35%",
+                bottom = 30,
+                right = 0,
+                borderColor = {0,0,0,0},
+                horizontalScrollbar = false,
+                children = {
+                    self.stackPanel
+                },
             },
-        },
-    }
+        }
+    end
     SB.delay(function()
         for i = 0, 3 do
             local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
@@ -546,7 +584,13 @@ function TextureEditor:init()
 
     self:Finalize(children)
 
-    self.savedDNTSBrushes:GetControl():Hide()
+    -- Only manipulate Chili controls in non-RmlUi mode
+    if not (SB.view and SB.view.useRmlUi) and self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+        local ctrl = self.savedDNTSBrushes:GetControl()
+        if ctrl then
+            ctrl:Hide()
+        end
+    end
 end
 
 function TextureEditor:__AddEngineDNTSTexture(dntsIndex)
@@ -585,39 +629,48 @@ function TextureEditor:OnEndChange(name)
 end
 
 function TextureEditor:OnFieldChange(name, value)
-    if self.savedBrushes:GetControl().visible then
-        local brush = self.savedBrushes:GetSelectedBrush()
-        if brush then
-            self.savedBrushes:UpdateBrush(brush.brushID, name, value)
-            if name == "brushTexture" or name == "texOffsetX" or name == "texOffsetY"
-                or name == "diffuseColor" or name == "texRotation" or name == "texScale" then
-                if name == "brushTexture" then
-                    SB.commandManager:execute(CacheTextureCommand(value))
-                end
+    -- Skip brush UI logic in RmlUi mode
+    if not (SB.view and SB.view.useRmlUi) then
+        local savedBrushesCtrl = self.savedBrushes and self.savedBrushes:GetControl()
+        local savedDNTSBrushesCtrl = self.savedDNTSBrushes and self.savedDNTSBrushes:GetControl()
 
-                self.savedBrushes:RefreshBrushImage(brush.brushID)
+        if savedBrushesCtrl and savedBrushesCtrl.visible then
+            local brush = self.savedBrushes:GetSelectedBrush()
+            if brush then
+                self.savedBrushes:UpdateBrush(brush.brushID, name, value)
+                if name == "brushTexture" or name == "texOffsetX" or name == "texOffsetY"
+                    or name == "diffuseColor" or name == "texRotation" or name == "texScale" then
+                    if name == "brushTexture" then
+                        SB.commandManager:execute(CacheTextureCommand(value))
+                    end
+
+                    self.savedBrushes:RefreshBrushImage(brush.brushID)
+                end
+            end
+        elseif savedDNTSBrushesCtrl and savedDNTSBrushesCtrl.visible then
+            local brush = self.savedDNTSBrushes:GetSelectedBrush()
+            if brush then
+                self.savedDNTSBrushes:UpdateBrush(brush.brushID, name, value)
+                if name == "brushTexture" then
+                    --SB.commandManager:execute(CacheTextureCommand(value))
+                    self.savedDNTSBrushes:RefreshBrushImage(brush.brushID)
+                end
             end
         end
-    elseif self.savedDNTSBrushes:GetControl().visible then
-        local brush = self.savedDNTSBrushes:GetSelectedBrush()
-        if brush then
-            self.savedDNTSBrushes:UpdateBrush(brush.brushID, name, value)
-            if name == "brushTexture" then
-                --SB.commandManager:execute(CacheTextureCommand(value))
-                self.savedDNTSBrushes:RefreshBrushImage(brush.brushID)
+
+        if name == "brushTexture" and savedDNTSBrushesCtrl and savedDNTSBrushesCtrl.visible then
+            local dntsIndex = self:_GetDNTSIndex()
+            local material = self.fields["brushTexture"].value
+            if dntsIndex and material.normal then
+                SB.delayGL(function()
+                    SB.model.textureManager:SetDNTS(dntsIndex, material)
+                end)
             end
         end
     end
 
-    if name == "brushTexture" and self.savedDNTSBrushes:GetControl().visible then
-        local dntsIndex = self:_GetDNTSIndex()
-        local material = self.fields["brushTexture"].value
-        if dntsIndex and material.normal then
-            SB.delayGL(function()
-                SB.model.textureManager:SetDNTS(dntsIndex, material)
-            end)
-        end
-    elseif name == "splatTexScale" or name == "splatTexMult" then
+    -- Handle DNTS-related field changes (works in both modes)
+    if name == "splatTexScale" or name == "splatTexMult" then
         local index = self:_GetDNTSIndex()
         local tbl = {gl.GetMapRendering(name .. "s")}
         tbl[index+1] = value

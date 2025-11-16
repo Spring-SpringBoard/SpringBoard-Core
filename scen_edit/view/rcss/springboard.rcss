@@ -191,6 +191,11 @@ body#springboard {
     border: 1dp #555555;
 }
 
+.field-checkbox:checked {
+    background-color: #3a7ebf;
+    border-color: #2a5f8f;
+}
+
 .field-button {
     background-color: #3a7ebf;
     color: #ffffff;
