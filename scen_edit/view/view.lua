@@ -73,10 +73,28 @@ function View:InitializeRmlUi()
     self:BindTabEvents()
     self:PopulateEditorButtons(self.currentTab)
 
+    -- Pre-create ALL editors using SB.delay (matching Chili's approach)
+    -- This catches errors early while avoiding SB.view nil issues
+    self:PreCreateAllEditors()
+
     -- Setup event handlers
     self:SetupRmlUiEvents()
 
     Log.Notice("RmlUi UI initialized successfully - editors use field compatibility layer")
+end
+
+function View:PreCreateAllEditors()
+    -- Pre-create all registered editors using SB.delay
+    -- This matches the original Chili approach in main_window_panel.lua
+    -- Defers creation until after SB.view is assigned
+    for name, editorCfg in pairs(SB.editorRegistry) do
+        SB.delay(function()
+            if not SB.editors[name] and editorCfg.editor then
+                Log.Notice("Pre-creating editor: " .. name)
+                SB.editors[name] = editorCfg.editor()
+            end
+        end)
+    end
 end
 
 function View:SetupRmlUiEvents()
@@ -326,7 +344,7 @@ function View:PopulateEditorButtons(tabName)
     end
     
     editorPanel.inner_rml = buttonsHTML
-    
+
     -- Bind click events to editor buttons
     for _, editorCfg in ipairs(editors) do
         local btnId = "editor-btn-" .. editorCfg.name
@@ -342,19 +360,13 @@ end
 function View:OpenEditor(editorName)
     Log.Notice("Opening editor: " .. editorName)
 
-    -- Create editor lazily on first use
-    if not SB.editors[editorName] then
-        local editorCfg = SB.editorRegistry[editorName]
-        if editorCfg and editorCfg.editor then
-            Log.Notice("  Lazily creating editor: " .. editorName)
-            SB.editors[editorName] = editorCfg.editor()
-        else
-            Log.Error("Editor not found in registry: " .. editorName)
-            return
-        end
+    -- Editor should be pre-created by PreCreateAllEditors()
+    local editor = SB.editors[editorName]
+    if not editor then
+        Log.Error("Editor not yet created: " .. editorName .. " (still initializing?)")
+        return
     end
 
-    local editor = SB.editors[editorName]
     local editorCfg = SB.editorRegistry[editorName]
     local mainContent = self.mainDocument:GetElementById("main-content")
 
