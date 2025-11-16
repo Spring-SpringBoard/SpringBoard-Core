@@ -285,7 +285,12 @@ function Editor:_SetFieldVisible(name, visible)
         return
     end
 
+    -- Skip in RmlUi mode - fields don't have Chili controls
     local ctrl = field.ctrl
+    if not ctrl then
+        return
+    end
+
     --if ctrl.visible ~= visible then
     if ctrl._visible ~= visible then
         if visible then
