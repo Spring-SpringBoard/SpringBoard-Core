@@ -68,33 +68,19 @@ function View:InitializeRmlUi()
         SB.editors = {}
     end
 
+    -- Use existing TabbedWindow/MainWindowPanel infrastructure (works in both modes)
+    -- This handles editor creation via SB.delay automatically
+    self.tabbedWindow = TabbedWindow()
+
     -- Initialize tab system
     self.currentTab = "Objects"
     self:BindTabEvents()
     self:PopulateEditorButtons(self.currentTab)
 
-    -- Pre-create ALL editors using SB.delay (matching Chili's approach)
-    -- This catches errors early while avoiding SB.view nil issues
-    self:PreCreateAllEditors()
-
     -- Setup event handlers
     self:SetupRmlUiEvents()
 
     Log.Notice("RmlUi UI initialized successfully - editors use field compatibility layer")
-end
-
-function View:PreCreateAllEditors()
-    -- Pre-create all registered editors using SB.delay
-    -- This matches the original Chili approach in main_window_panel.lua
-    -- Defers creation until after SB.view is assigned
-    for name, editorCfg in pairs(SB.editorRegistry) do
-        SB.delay(function()
-            if not SB.editors[name] and editorCfg.editor then
-                Log.Notice("Pre-creating editor: " .. name)
-                SB.editors[name] = editorCfg.editor()
-            end
-        end)
-    end
 end
 
 function View:SetupRmlUiEvents()
@@ -360,7 +346,7 @@ end
 function View:OpenEditor(editorName)
     Log.Notice("Opening editor: " .. editorName)
 
-    -- Editor should be pre-created by PreCreateAllEditors()
+    -- Editor should be pre-created by TabbedWindow/MainWindowPanel
     local editor = SB.editors[editorName]
     if not editor then
         Log.Error("Editor not yet created: " .. editorName .. " (still initializing?)")

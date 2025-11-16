@@ -94,6 +94,18 @@ function MainWindowPanel:AddElement(tbl)
     local name = tbl.name
     local editor = tbl.editor
 
+    -- In RmlUi mode, skip Chili button creation but still create editors
+    if SB.view and SB.view.useRmlUi then
+        SB.delay(function()
+            if not SB.editors[name] then
+                SB.editors[name] = editor()
+            end
+        end)
+        self._totalEditors = self._totalEditors + 1
+        return
+    end
+
+    -- Chili mode: create button and editor
     local btn = TabbedPanelButton({
         tooltip = tooltip,
         children = {
