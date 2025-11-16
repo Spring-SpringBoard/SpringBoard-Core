@@ -37,7 +37,7 @@ function MetalEditor:init()
             SB.model.terrainManager:generateShape(texture)
         end
     }))
-    self.btnSetMetal = TabbedPanelButton({
+    self.btnSetMetal = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Left Click to set metal. Right click to remove it.",
@@ -56,7 +56,7 @@ function MetalEditor:init()
     })
 
     self:AddControl("btn-show-metal", {
-        Button:New {
+        EditorButton {
             caption = "Show metal map",
             width = 200,
             height = 40,
@@ -93,19 +93,9 @@ function MetalEditor:init()
         tooltip = "Amount of metal",
     }))
 
-    local children = {
-        self.btnSetMetal,
-        ScrollPanel:New {
-            x = 0,
-            y = 70,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-    self:Finalize(children)
+    self:Finalize({
+        actionButtons = { self.btnSetMetal }
+    })
 end
 
 function MetalEditor:IsValidState(state)

@@ -49,21 +49,9 @@ function ScenarioInfoView:init()
         })
     )
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-
     SB.model.scenarioInfo:addListener(ScenarioInfoListenerWidget(self))
 
-    self:Finalize(children)
+    self:Finalize()
 end
 
 function ScenarioInfoView:OnStartChange(name)

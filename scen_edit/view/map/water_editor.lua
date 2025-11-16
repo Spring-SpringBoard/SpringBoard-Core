@@ -269,21 +269,9 @@ function WaterEditor:init()
 
     self:UpdateWaterRendering()
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-
     SB.commandManager:addListener(self)
 
-    self:Finalize(children)
+    self:Finalize()
 end
 
 function WaterEditor:UpdateWaterRendering()
