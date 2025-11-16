@@ -94,8 +94,12 @@ function MainWindowPanel:AddElement(tbl)
     local name = tbl.name
     local editor = tbl.editor
 
+    -- Detect RmlUi mode - check if RmlUi field compat layer is loaded
+    -- (SB.view might not be set yet during initialization)
+    local useRmlUi = RmlUi ~= nil and RmlUiStringField ~= nil
+
     -- In RmlUi mode, skip Chili button creation but still create editors
-    if SB.view and SB.view.useRmlUi then
+    if useRmlUi then
         SB.delay(function()
             if not SB.editors[name] then
                 SB.editors[name] = editor()
