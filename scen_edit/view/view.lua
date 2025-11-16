@@ -397,7 +397,13 @@ function View:BindFieldEvents(editor)
         local inputElement = self.mainDocument:GetElementById("field-" .. fieldName)
         if inputElement then
             inputElement:AddEventListener("change", function(event)
-                local value = inputElement.value
+                -- Checkboxes use 'checked' property, other inputs use 'value'
+                local value
+                if inputElement:HasAttribute("type") and inputElement:GetAttribute("type") == "checkbox" then
+                    value = inputElement.checked
+                else
+                    value = inputElement.value
+                end
                 -- Update field value
                 field.value = value
                 -- Notify editor

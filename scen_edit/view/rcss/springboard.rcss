@@ -154,7 +154,7 @@ body#springboard {
 }
 
 .field-inline .field-label {
-    min-width: auto;
+    min-width: 60dp;
     margin-right: 5dp;
 }
 

@@ -103,6 +103,27 @@ function RmlUiBooleanField:init(opts)
     self:super("init", opts)
 end
 
+function RmlUiBooleanField:GetValue()
+    if self.element then
+        -- Checkboxes use 'checked' property, not 'value'
+        local input = self.element:GetElementById("field-" .. self.name)
+        if input then
+            return input.checked
+        end
+    end
+    return self.value
+end
+
+function RmlUiBooleanField:SetValue(value)
+    self.value = value
+    if self.element then
+        local input = self.element:GetElementById("field-" .. self.name)
+        if input then
+            input.checked = value
+        end
+    end
+end
+
 function RmlUiBooleanField:GenerateRml()
     local checked = self.value and 'checked="checked"' or ''
     -- Remove trailing colon from title if present
@@ -197,9 +218,17 @@ function RmlUiAssetField:init(opts)
 end
 
 function RmlUiAssetField:GenerateRml()
+    -- Convert value to string (might be table in some cases)
+    local valueStr = ""
+    if self.value then
+        valueStr = type(self.value) == "table" and (self.value.name or "") or tostring(self.value)
+    end
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
+
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="text" id="field-%s" class="field-input" value="%s" readonly="readonly"/><button id="btn-browse-%s" class="field-button">Browse</button></div>',
-        self.title, self.name, self.value or "", self.name
+        title, self.name, valueStr, self.name
     )
 end
 
@@ -222,9 +251,17 @@ function RmlUiMaterialField:init(opts)
 end
 
 function RmlUiMaterialField:GenerateRml()
+    -- Convert value to string (might be table in some cases)
+    local valueStr = ""
+    if self.value then
+        valueStr = type(self.value) == "table" and (self.value.name or "") or tostring(self.value)
+    end
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
+
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="text" id="field-%s" class="field-input" value="%s" readonly="readonly"/><button id="btn-browse-%s" class="field-button">Browse</button></div>',
-        self.title, self.name, self.value or "", self.name
+        title, self.name, valueStr, self.name
     )
 end
 
@@ -246,9 +283,17 @@ function RmlUiObjectField:init(opts)
 end
 
 function RmlUiObjectField:GenerateRml()
+    -- Convert value to string (might be table in some cases)
+    local valueStr = ""
+    if self.value then
+        valueStr = type(self.value) == "table" and (self.value.id or "") or tostring(self.value)
+    end
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
+
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="number" id="field-%s" class="field-input" value="%s"/><button id="btn-pick-%s" class="field-button">Pick</button></div>',
-        self.title, self.name, self.value or "", self.name
+        title, self.name, valueStr, self.name
     )
 end
 
@@ -260,9 +305,17 @@ function RmlUiObjectTypeField:init(opts)
 end
 
 function RmlUiObjectTypeField:GenerateRml()
+    -- Convert value to string (might be table in some cases)
+    local valueStr = ""
+    if self.value then
+        valueStr = type(self.value) == "table" and (self.value.name or "") or tostring(self.value)
+    end
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
+
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="text" id="field-%s" class="field-input" value="%s"/><button id="btn-browse-%s" class="field-button">Browse</button></div>',
-        self.title, self.name, self.value or "", self.name
+        title, self.name, valueStr, self.name
     )
 end
 
