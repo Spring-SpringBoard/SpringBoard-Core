@@ -473,12 +473,20 @@ function Editor:AddControl(name, children)
 end
 
 function Editor:_AddControl(name, children)
+    -- In RmlUi mode, don't create Chili controls
+    if SB.view and SB.view.useRmlUi then
+        -- Just store the children for later use in _FinalizeRmlUi
+        table.insert(self.fieldOrder, name)
+        -- Return a dummy object that holds the children
+        return { children = children, isRmlUiPlaceholder = true }
+    end
+
+    -- Chili mode - create actual Control
     local ctrl = Control:New {
         autosize = true,
         padding = {0, 0, 0, 0},
         children = children
     }
-    -- Only add to stackPanel in Chili mode
     if self.stackPanel then
         self.stackPanel:AddChild(ctrl)
     end
@@ -754,7 +762,7 @@ SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))
 
 -- Helper function to convert Chili button to RmlUi button
 local function ConvertChiliButtonToRmlUi(chiliButton)
-    if not chiliButton then
+    if not chiliButton or type(chiliButton) ~= "table" then
         return nil
     end
 
@@ -842,22 +850,33 @@ function Editor:_FinalizeRmlUi(children, opts)
             else
                 -- Check if it's a control with a button inside
                 if field.ctrl then
-                    -- Try to convert the ctrl's children to buttons
-                    local ctrlHtml = ''
-                    if field.ctrl.children then
-                        for _, btnChild in pairs(field.ctrl.children) do
-                            local rmlBtn = ConvertChiliButtonToRmlUi(btnChild)
-                            if rmlBtn then
-                                ctrlHtml = ctrlHtml .. rmlBtn:GenerateRml()
+                    -- Check if this is an RmlUi placeholder (from new EditorButton API)
+                    if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
+                        -- Children are already RmlUi buttons, use them directly
+                        for _, rmlBtn in ipairs(field.ctrl.children) do
+                            if rmlBtn and rmlBtn.GenerateRml then
+                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
                                 table.insert(self.regularButtons, rmlBtn)
                             end
                         end
-                    end
-                    if ctrlHtml ~= '' then
-                        fieldsHtml = fieldsHtml .. ctrlHtml
                     else
-                        -- Fallback for other controls
-                        fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
+                        -- Old path: try to convert Chili buttons to RmlUi buttons
+                        local ctrlHtml = ''
+                        if field.ctrl.children then
+                            for _, btnChild in pairs(field.ctrl.children) do
+                                local rmlBtn = ConvertChiliButtonToRmlUi(btnChild)
+                                if rmlBtn then
+                                    ctrlHtml = ctrlHtml .. rmlBtn:GenerateRml()
+                                    table.insert(self.regularButtons, rmlBtn)
+                                end
+                            end
+                        end
+                        if ctrlHtml ~= '' then
+                            fieldsHtml = fieldsHtml .. ctrlHtml
+                        else
+                            -- Fallback for other controls
+                            fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
+                        end
                     end
                 else
                     -- Fallback for fields without ctrl
@@ -897,10 +916,22 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
             if field.GenerateRml then
                 fieldsHtml = fieldsHtml .. field:GenerateRml()
             else
-                -- Check if it's a control with a button inside
-                if field.ctrl and field.ctrl.GenerateRml then
-                    fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
-                    table.insert(self.regularButtons, field.ctrl)
+                -- Check if it's a control with buttons inside
+                if field.ctrl then
+                    -- Check if this is an RmlUi placeholder (from new EditorButton API)
+                    if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
+                        -- Children are already RmlUi buttons, use them directly
+                        for _, rmlBtn in ipairs(field.ctrl.children) do
+                            if rmlBtn and rmlBtn.GenerateRml then
+                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
+                                table.insert(self.regularButtons, rmlBtn)
+                            end
+                        end
+                    elseif field.ctrl.GenerateRml then
+                        -- Single button with GenerateRml method
+                        fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
+                        table.insert(self.regularButtons, field.ctrl)
+                    end
                 end
             end
         end
