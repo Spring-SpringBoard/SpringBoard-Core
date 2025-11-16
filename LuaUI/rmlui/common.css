@@ -1,0 +1,41 @@
+/* Hide horizontal scrollbar entirely */
+scrollbarhorizontal,
+scrollbarhorizontal slidertrack,
+scrollbarhorizontal sliderbar,
+scrollbarhorizontal sliderarrowdec,
+scrollbarhorizontal sliderarrowinc {
+  display: none;
+}
+
+/* Vertical scrollbar container */
+scrollbarvertical {
+  width: 10dp;            /* visible gutter */
+  background-color: #1c1d20;
+}
+
+/* Remove arrow buttons (optional, keeps things minimal) */
+scrollbarvertical sliderarrowdec,
+scrollbarvertical sliderarrowinc {
+  width: 0dp;
+  height: 0dp;
+}
+
+/* Track + thumb (bar) */
+scrollbarvertical slidertrack {
+  margin-left: 1dp;       /* center the 8dp bar inside the 10dp gutter */
+  width: 8dp;
+  background-color: #121315;
+}
+
+scrollbarvertical sliderbar {
+  width: 8dp;
+  min-height: 20dp;       /* ensure it’s visible & draggable */
+  background-color: #44484e;
+  border: 1dp #2a2b2e;
+  cursor: pointer;
+}
+
+scrollbarvertical sliderbar:hover {
+  background-color: #5fc878;
+}
+
