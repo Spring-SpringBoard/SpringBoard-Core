@@ -5,15 +5,7 @@
     <link type="text/rcss" href="../rcss/springboard.rcss"/>
 </head>
 <body id="springboard">
-    <!-- Top menu bar -->
-    <div id="top-menu" class="menu-bar">
-        <button id="btn-exit" class="menu-button">Exit</button>
-        <button id="btn-new-project" class="menu-button">New</button>
-        <button id="btn-open-project" class="menu-button">Open</button>
-        <button id="btn-save-project" class="menu-button">Save</button>
-    </div>
-
-    <!-- Team selector -->
+    <!-- Team selector (top right) -->
     <div id="team-selector-container" class="team-selector">
         <label>Team:</label>
         <select id="team-selector">
@@ -22,19 +14,25 @@
         </select>
     </div>
 
-    <!-- Main content area (tabbed window placeholder) -->
-    <div id="main-content" class="main-content">
-        <div id="tab-bar" class="tab-bar"></div>
-        <div id="tab-content" class="tab-content">
-            <p>SpringBoard RmlUi UI - Ready</p>
+    <!-- Tab bar -->
+    <div id="tab-bar" class="tab-bar">
+        <button id="tab-objects" class="tab-button active" data-tab="Objects" onclick="widget:OnTabClick(event)">Objects</button>
+        <button id="tab-map" class="tab-button" data-tab="Map" onclick="widget:OnTabClick(event)">Map</button>
+        <button id="tab-env" class="tab-button" data-tab="Env" onclick="widget:OnTabClick(event)">Env</button>
+        <button id="tab-misc" class="tab-button" data-tab="Misc" onclick="widget:OnTabClick(event)">Misc</button>
+    </div>
+
+    <!-- Editor button panel (scrollable horizontal) -->
+    <div id="editor-panel-wrapper" class="editor-panel-wrapper">
+        <div id="editor-button-panel" class="editor-button-panel">
+            <!-- Editor buttons populated dynamically -->
         </div>
     </div>
 
-    <!-- Bottom bar -->
-    <div id="bottom-bar" class="bottom-bar">
-        <span id="status-text">Ready</span>
-        <button id="btn-play" class="control-button">Play</button>
-        <button id="btn-pause" class="control-button">Pause</button>
+    <!-- Main content area for editors -->
+    <div id="main-content" class="main-content">
+        <!-- Editor content populated dynamically -->
+        <p>Select an editor from the buttons above</p>
     </div>
 </body>
 </rml>

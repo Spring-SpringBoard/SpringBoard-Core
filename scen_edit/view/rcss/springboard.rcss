@@ -10,38 +10,10 @@ body#springboard {
     background-color: #1a1a1a;
 }
 
-.menu-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 30dp;
-    background-color: #2a2a2a;
-    padding: 5dp;
-    display: flex;
-    flex-direction: row;
-    gap: 5dp;
-}
-
-.menu-button {
-    background-color: #3a3a3a;
-    color: #cccccc;
-    border: 1dp #555555;
-    padding: 5dp 15dp;
-    border-radius: 3dp;
-}
-
-.menu-button:hover {
-    background-color: #4a4a4a;
-}
-
-.menu-button:active {
-    background-color: #555555;
-}
-
+/* Team selector (top right corner) */
 .team-selector {
     position: absolute;
-    top: 40dp;
+    top: 10dp;
     right: 10dp;
     padding: 5dp;
     background-color: #2a2a2a;
@@ -64,66 +36,111 @@ body#springboard {
     padding: 3dp;
 }
 
-.main-content {
-    position: absolute;
-    top: 80dp;
-    left: 10dp;
-    right: 10dp;
-    bottom: 50dp;
-    background-color: #222222;
-    border: 1dp #555555;
-    border-radius: 3dp;
-    display: flex;
-    flex-direction: column;
-}
-
+/* Tab bar */
 .tab-bar {
+    position: absolute;
+    top: 50dp;
+    left: 0dp;
+    right: 0dp;
     height: 30dp;
     background-color: #2a2a2a;
-    border-bottom: 1dp #555555;
     display: flex;
     flex-direction: row;
+    gap: 2dp;
+    padding: 2dp;
 }
 
-.tab-content {
-    flex-grow: 1;
+.tab-button {
+    flex: 1;
+    background-color: #3a3a3a;
+    color: #999999;
+    border: 1dp #555555;
+    padding: 5dp 10dp;
+    text-align: center;
+    cursor: pointer;
+}
+
+.tab-button:hover {
+    background-color: #4a4a4a;
+    color: #cccccc;
+}
+
+.tab-button.active {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border-bottom: 2dp #3a7ebf;
+}
+
+/* Editor button panel (scrollable horizontal) */
+.editor-panel-wrapper {
+    position: absolute;
+    top: 85dp;
+    left: 0dp;
+    right: 0dp;
+    height: 80dp;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background-color: #222222;
+    border-bottom: 1dp #555555;
+}
+
+.editor-button-panel {
+    display: flex;
+    flex-direction: row;
+    gap: 1dp;
+    padding: 5dp;
+    min-width: 100%;
+}
+
+.editor-button {
+    width: 70dp;
+    height: 70dp;
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5dp;
+}
+
+.editor-button:hover {
+    background-color: #3a3a3a;
+    border-color: #888888;
+}
+
+.editor-button.pressed {
+    background-color: #1a1a1a;
+    border-color: #00ff00;
+}
+
+.editor-button img {
+    width: 35dp;
+    height: 35dp;
+    margin-bottom: 5dp;
+}
+
+.editor-button-label {
+    font-size: 10dp;
+    color: #cccccc;
+    text-align: center;
+}
+
+.editor-button.pressed .editor-button-label {
+    color: #00ff00;
+}
+
+/* Main content area */
+.main-content {
+    position: absolute;
+    top: 170dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    background-color: #222222;
     padding: 10dp;
     color: #cccccc;
-}
-
-.bottom-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 40dp;
-    background-color: #2a2a2a;
-    border-top: 1dp #555555;
-    padding: 5dp;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.bottom-bar span {
-    color: #cccccc;
-    padding-left: 10dp;
-}
-
-.control-button {
-    background-color: #3a3a3a;
-    color: #cccccc;
-    border: 1dp #555555;
-    padding: 5dp 20dp;
-    border-radius: 3dp;
-    margin-left: 5dp;
-}
-
-.control-button:hover {
-    background-color: #4a4a4a;
-}
-
-.control-button:active {
-    background-color: #555555;
+    overflow-y: auto;
 }
