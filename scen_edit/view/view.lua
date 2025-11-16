@@ -172,16 +172,13 @@ function View:InitializeAllEditors()
     -- Instantiate all editors from editorRegistry
     -- This calls their init() which calls Finalize() which generates RML
     -- Doing this upfront catches field errors early instead of when users click buttons
-    -- Skip editors with no_serialize=true (utility windows created on-demand)
     Log.Notice("Initializing all editors from editorRegistry...")
     local count = 0
     for name, editorCfg in pairs(SB.editorRegistry) do
-        if editorCfg.editor and not editorCfg.no_serialize then
+        if editorCfg.editor then
             Log.Notice("  Creating editor: " .. name)
             SB.editors[name] = editorCfg.editor()
             count = count + 1
-        elseif editorCfg.no_serialize then
-            Log.Notice("  Skipping utility window: " .. name .. " (no_serialize)")
         else
             Log.Warning("  Editor " .. name .. " has no constructor function")
         end

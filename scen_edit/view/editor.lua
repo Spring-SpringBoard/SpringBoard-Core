@@ -387,6 +387,19 @@ function Editor:_AddField(field)
     end
     self.fields[field.name] = field
     field.ev = self
+
+    -- Add to fieldOrder if not already added (via _AddControl)
+    -- This is needed for RmlUi fields which don't have components
+    local alreadyInOrder = false
+    for _, name in ipairs(self.fieldOrder) do
+        if name == field.name then
+            alreadyInOrder = true
+            break
+        end
+    end
+    if not alreadyInOrder then
+        table.insert(self.fieldOrder, field.name)
+    end
 end
 
 function Editor:AddControl(name, children)
