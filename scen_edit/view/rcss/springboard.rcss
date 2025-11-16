@@ -120,3 +120,69 @@ body#springboard {
     color: #cccccc;
     overflow-y: auto;
 }
+
+/* Editor field styles */
+.editor-container {
+    padding: 10dp;
+}
+
+.editor-title {
+    font-size: 16dp;
+    color: #ffffff;
+    margin-bottom: 15dp;
+    padding-bottom: 5dp;
+    border-bottom: 1dp #555555;
+}
+
+.field-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10dp;
+    gap: 10dp;
+}
+
+.field-label {
+    min-width: 120dp;
+    color: #cccccc;
+    font-size: 13dp;
+}
+
+.field-input {
+    flex: 1;
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1dp #555555;
+    padding: 5dp;
+    font-size: 13dp;
+}
+
+.field-input:focus {
+    border-color: #3a7ebf;
+    background-color: #2a2a2a;
+}
+
+.field-button {
+    background-color: #3a7ebf;
+    color: #ffffff;
+    border: 1dp #2a5f8f;
+    padding: 5dp 10dp;
+    cursor: pointer;
+}
+
+.field-button:hover {
+    background-color: #4a8ecf;
+}
+
+.field-separator {
+    height: 1dp;
+    background-color: #555555;
+    margin: 15dp 0dp;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: row;
+    gap: 5dp;
+    margin-bottom: 10dp;
+}

@@ -421,12 +421,12 @@ end
 
 function View:OpenEditor(editorName)
     Log.Notice("Opening editor: " .. editorName)
-    
+
     -- Create editor instance if not exists
     if not SB.editors then
         SB.editors = {}
     end
-    
+
     if not SB.editors[editorName] then
         local editorCfg = SB.editorRegistry[editorName]
         if editorCfg and editorCfg.editor then
@@ -436,17 +436,56 @@ function View:OpenEditor(editorName)
             return
         end
     end
-    
+
     local editor = SB.editors[editorName]
+    local editorCfg = SB.editorRegistry[editorName]
     local mainContent = self.mainDocument:GetElementById("main-content")
     if mainContent and editor then
-        -- For now, just show a placeholder
-        -- TODO: Implement full editor rendering with fields
-        mainContent.inner_rml = "<h3>Editor: " .. editorName .. "</h3><p>Fields will be rendered here</p>"
+        -- Render all fields to RML
+        local html = '<div class="editor-container"><h3 class="editor-title">' .. (editorCfg and editorCfg.caption or editorName) .. '</h3>'
+
+        -- Generate RML for each field in order
+        for _, fieldName in ipairs(editor.fieldOrder) do
+            local field = editor.fields[fieldName]
+            if field and field.GenerateRml then
+                html = html .. field:GenerateRml()
+            elseif field then
+                -- Fallback for fields without GenerateRml (like separators)
+                html = html .. '<div class="field-separator"></div>'
+            end
+        end
+
+        html = html .. '</div>'
+        mainContent.inner_rml = html
+
+        -- Bind field events
+        self:BindFieldEvents(editor)
     end
-    
+
     -- Highlight pressed button
     self:UpdateEditorButtonStates(editorName)
+end
+
+function View:BindFieldEvents(editor)
+    if not self.mainDocument or not editor or not editor.fields then
+        return
+    end
+
+    -- Bind change events for each field
+    for fieldName, field in pairs(editor.fields) do
+        local inputElement = self.mainDocument:GetElementById("field-" .. fieldName)
+        if inputElement then
+            inputElement:AddEventListener("change", function(event)
+                local value = inputElement.value
+                -- Update field value
+                field.value = value
+                -- Notify editor
+                if editor.OnFieldChange then
+                    editor:OnFieldChange(fieldName, value)
+                end
+            end)
+        end
+    end
 end
 
 function View:UpdateEditorButtonStates(activeEditorName)
