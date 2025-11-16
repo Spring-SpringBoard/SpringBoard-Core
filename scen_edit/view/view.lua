@@ -346,13 +346,19 @@ end
 function View:OpenEditor(editorName)
     Log.Notice("Opening editor: " .. editorName)
 
-    -- Editor should be pre-created by TabbedWindow/MainWindowPanel
-    local editor = SB.editors[editorName]
-    if not editor then
-        Log.Error("Editor not yet created: " .. editorName .. " (still initializing?)")
-        return
+    -- Create editor on-demand if not yet created by SB.delay
+    if not SB.editors[editorName] then
+        local editorCfg = SB.editorRegistry[editorName]
+        if editorCfg and editorCfg.editor then
+            Log.Notice("Creating editor on-demand: " .. editorName)
+            SB.editors[editorName] = editorCfg.editor()
+        else
+            Log.Error("Editor not found in registry: " .. editorName)
+            return
+        end
     end
 
+    local editor = SB.editors[editorName]
     local editorCfg = SB.editorRegistry[editorName]
     local mainContent = self.mainDocument:GetElementById("main-content")
 

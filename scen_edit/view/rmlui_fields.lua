@@ -113,19 +113,32 @@ RmlUiChoiceField = RmlUiField:extends{}
 function RmlUiChoiceField:init(opts)
     self:super("init", opts)
     self.items = opts.items or {}
+    self.captions = opts.captions or self.items  -- Use items as captions if not provided
 end
 
 function RmlUiChoiceField:GenerateRml()
     local options = ""
-    for _, item in ipairs(self.items) do
-        local selected = (item == self.value) and ' selected="selected"' or ''
-        options = options .. string.format('<option value="%s"%s>%s</option>', item, selected, item)
+    for i, item in ipairs(self.items) do
+        local caption = self.captions[i] or tostring(item)
+        local selected = (tostring(item) == tostring(self.value)) and ' selected="selected"' or ''
+        options = options .. string.format('<option value="%s"%s>%s</option>', tostring(item), selected, caption)
     end
 
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><select id="field-%s" class="field-input">%s</select></div>',
         self.title, self.name, options
     )
+end
+
+function RmlUiChoiceField:GetCaption(id)
+    id = id or self.value
+    -- Find index of id in items
+    for i, item in ipairs(self.items) do
+        if tostring(item) == tostring(id) then
+            return self.captions[i]
+        end
+    end
+    return nil
 end
 
 -- Color Field
