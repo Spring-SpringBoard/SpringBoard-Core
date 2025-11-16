@@ -202,10 +202,67 @@ body#springboard {
     border: 1dp #2a5f8f;
     padding: 5dp 10dp;
     cursor: pointer;
+    margin-bottom: 10dp;
 }
 
 .field-button:hover {
     background-color: #4a8ecf;
+}
+
+/* Action buttons panel at top of editor */
+.action-buttons-panel {
+    display: flex;
+    flex-direction: row;
+    gap: 0dp;
+    margin-bottom: 15dp;
+    padding: 5dp;
+    background-color: #2a2a2a;
+    border-bottom: 1dp #555555;
+}
+
+.action-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 70dp;
+    height: 70dp;
+    background-color: #3a3a3a;
+    border: 1dp #555555;
+    padding: 5dp;
+    cursor: pointer;
+    margin-right: 0dp;
+}
+
+.action-button:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.action-button.pressed {
+    background-color: #2a5f2a;
+    border-color: #3a7f3a;
+}
+
+.action-button-icon {
+    width: 35dp;
+    height: 35dp;
+    margin-bottom: 3dp;
+}
+
+.action-button.pressed .action-button-icon {
+    decorator: image;
+    image-color: #00ff00;
+}
+
+.action-button-label {
+    font-size: 11dp;
+    color: #ffffff;
+    text-align: center;
+}
+
+.action-button.pressed .action-button-label {
+    color: #00ff00;
 }
 
 .field-separator {

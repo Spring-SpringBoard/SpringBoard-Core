@@ -388,29 +388,59 @@ function View:OpenEditor(editorName)
 end
 
 function View:BindFieldEvents(editor)
-    if not self.mainDocument or not editor or not editor.fields then
+    if not self.mainDocument or not editor then
         return
     end
 
-    -- Bind change events for each field
-    for fieldName, field in pairs(editor.fields) do
-        local inputElement = self.mainDocument:GetElementById("field-" .. fieldName)
-        if inputElement then
-            inputElement:AddEventListener("change", function(event)
-                -- Checkboxes use 'checked' property, other inputs use 'value'
-                local value
-                if inputElement:HasAttribute("type") and inputElement:GetAttribute("type") == "checkbox" then
-                    value = inputElement.checked
-                else
-                    value = inputElement.value
-                end
-                -- Update field value
-                field.value = value
-                -- Notify editor
-                if editor.OnFieldChange then
-                    editor:OnFieldChange(fieldName, value)
-                end
-            end)
+    -- Bind change events for fields
+    if editor.fields then
+        for fieldName, field in pairs(editor.fields) do
+            local inputElement = self.mainDocument:GetElementById("field-" .. fieldName)
+            if inputElement then
+                inputElement:AddEventListener("change", function(event)
+                    -- Checkboxes use 'checked' property, other inputs use 'value'
+                    local value
+                    if inputElement:HasAttribute("type") and inputElement:GetAttribute("type") == "checkbox" then
+                        value = inputElement.checked
+                    else
+                        value = inputElement.value
+                    end
+                    -- Update field value
+                    field.value = value
+                    -- Notify editor
+                    if editor.OnFieldChange then
+                        editor:OnFieldChange(fieldName, value)
+                    end
+                end)
+            end
+        end
+    end
+
+    -- Bind click events for action buttons
+    if editor.actionButtons then
+        for _, button in ipairs(editor.actionButtons) do
+            local btnElement = self.mainDocument:GetElementById(button.id)
+            if btnElement then
+                btnElement:AddEventListener("click", function(event)
+                    if button.OnClick then
+                        CallListeners(button.OnClick)
+                    end
+                end)
+            end
+        end
+    end
+
+    -- Bind click events for regular buttons (from AddControl)
+    if editor.regularButtons then
+        for _, button in ipairs(editor.regularButtons) do
+            local btnElement = self.mainDocument:GetElementById(button.id)
+            if btnElement then
+                btnElement:AddEventListener("click", function(event)
+                    if button.OnClick then
+                        CallListeners(button.OnClick)
+                    end
+                end)
+            end
         end
     end
 end

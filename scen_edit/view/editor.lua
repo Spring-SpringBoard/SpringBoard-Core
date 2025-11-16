@@ -118,7 +118,7 @@ function Editor:Finalize(children, opts)
 
     -- In RmlUi mode, generate RML from fields instead of creating Chili controls
     if SB.view and SB.view.useRmlUi then
-        self:_FinalizeRmlUi(opts)
+        self:_FinalizeRmlUi(children, opts)
         self.__initializing = false
         return
     end
@@ -725,25 +725,59 @@ end
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))
 
 -- RmlUi-specific finalization
-function Editor:_FinalizeRmlUi(opts)
-    -- Generate RML for all fields
-    local html = ''
+function Editor:_FinalizeRmlUi(children, opts)
+    children = children or {}
+    opts = opts or {}
 
+    -- Extract action buttons from children (TabbedPanelButton instances)
+    self.actionButtons = {}
+    self.regularButtons = {}
+
+    for _, child in ipairs(children) do
+        if child and type(child) == "table" then
+            -- Check if it's an RmlUi button
+            if child.GenerateRml and child.OnClick then
+                if child.id and child.id:match("^action%-btn%-") then
+                    table.insert(self.actionButtons, child)
+                elseif child.id and child.id:match("^btn%-") then
+                    table.insert(self.regularButtons, child)
+                end
+            end
+        end
+    end
+
+    -- Generate RML for action buttons (placed at top)
+    local buttonsHtml = ''
+    if #self.actionButtons > 0 then
+        buttonsHtml = '<div class="action-buttons-panel">'
+        for _, button in ipairs(self.actionButtons) do
+            buttonsHtml = buttonsHtml .. button:GenerateRml()
+        end
+        buttonsHtml = buttonsHtml .. '</div>'
+    end
+
+    -- Generate RML for all fields
+    local fieldsHtml = ''
     for _, fieldName in ipairs(self.fieldOrder) do
         local field = self.fields[fieldName]
         -- Skip fields that are children of GroupFields (they're rendered by the group)
         if field and not field._isGroupChild then
             if field.GenerateRml then
-                html = html .. field:GenerateRml()
+                fieldsHtml = fieldsHtml .. field:GenerateRml()
             else
-                -- Fallback for fields without GenerateRml (like separators/controls)
-                html = html .. '<div class="field-separator"></div>'
+                -- Check if it's a control with a button
+                if field.ctrl and field.ctrl.GenerateRml then
+                    fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
+                else
+                    -- Fallback for other controls
+                    fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
+                end
             end
         end
     end
 
-    -- Store the generated RML for later use
-    self.generatedRml = html
+    -- Combine buttons and fields
+    self.generatedRml = buttonsHtml .. fieldsHtml
 
     -- Mark as hidden by default
     self.hidden = true

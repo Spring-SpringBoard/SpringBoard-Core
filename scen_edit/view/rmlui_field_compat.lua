@@ -41,4 +41,107 @@ AssetPickerWindow = RmlUiAssetPickerWindow
 ColorPickerWindow = RmlUiColorPickerWindow
 MaterialPickerWindow = RmlUiMaterialPickerWindow
 
+-- Button Compatibility Layer
+-- Create button objects that can generate RML
+
+-- Counter for auto-generating button IDs
+local _BUTTON_INDEX = 0
+
+-- RmlUi Button (used for regular Button:New{} calls via AddControl)
+RmlUiButton = LCS.class{}
+
+function RmlUiButton:init(opts)
+    _BUTTON_INDEX = _BUTTON_INDEX + 1
+    self.id = "btn-" .. tostring(_BUTTON_INDEX)
+    self.caption = opts.caption or "Button"
+    self.OnClick = opts.OnClick or {}
+    self.width = opts.width
+    self.height = opts.height
+    self.tooltip = opts.tooltip
+end
+
+function RmlUiButton:GenerateRml()
+    return string.format(
+        '<button id="%s" class="field-button">%s</button>',
+        self.id, self.caption
+    )
+end
+
+-- Override Button table for RmlUi mode
+Button = {
+    New = function(opts)
+        return RmlUiButton(opts)
+    end
+}
+
+-- TabbedPanelButton for action buttons (e.g., "Add", "Set", "Smooth")
+-- These store their caption, image, tooltip and click handler
+RmlUiTabbedPanelButton = LCS.class{}
+
+function RmlUiTabbedPanelButton:init(opts)
+    _BUTTON_INDEX = _BUTTON_INDEX + 1
+    self.id = "action-btn-" .. tostring(_BUTTON_INDEX)
+    self.x = opts.x
+    self.y = opts.y
+    self.tooltip = opts.tooltip or ""
+    self.OnClick = opts.OnClick or {}
+    self.pressed = false
+
+    -- Extract caption and image from children
+    self.caption = ""
+    self.image = nil
+    if opts.children then
+        for _, child in ipairs(opts.children) do
+            if child.caption then
+                self.caption = child.caption
+            elseif child.file then
+                self.image = child.file
+            end
+        end
+    end
+end
+
+function RmlUiTabbedPanelButton:SetPressedState(pressed)
+    self.pressed = pressed
+    -- Update DOM if we have the button element
+    if SB.view and SB.view.mainDocument then
+        local btnElement = SB.view.mainDocument:GetElementById(self.id)
+        if btnElement then
+            btnElement:SetClass("pressed", pressed)
+        end
+    end
+end
+
+function RmlUiTabbedPanelButton:GenerateRml()
+    local pressedClass = self.pressed and " pressed" or ""
+    local html = string.format('<button id="%s" class="action-button%s" title="%s">',
+        self.id, pressedClass, self.tooltip)
+
+    if self.image then
+        html = html .. string.format('<img src="%s" class="action-button-icon"/>', self.image)
+    end
+
+    if self.caption and self.caption ~= "" then
+        html = html .. string.format('<span class="action-button-label">%s</span>', self.caption)
+    end
+
+    html = html .. '</button>'
+    return html
+end
+
+-- Helper functions to match Chili API
+function TabbedPanelButton(opts)
+    return RmlUiTabbedPanelButton(opts)
+end
+
+function TabbedPanelImage(opts)
+    -- Just return the opts, they'll be extracted by TabbedPanelButton
+    return opts
+end
+
+function TabbedPanelLabel(opts)
+    -- Just return the opts, they'll be extracted by TabbedPanelButton
+    return opts
+end
+
 Log.Notice("RmlUi field compatibility layer loaded - original API maintained")
