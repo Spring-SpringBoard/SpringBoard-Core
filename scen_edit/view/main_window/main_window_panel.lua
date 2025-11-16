@@ -31,12 +31,12 @@ function TabbedPanelButton(tbl)
 end
 
 function TabbedPanelImage(tbl)
-    -- In RmlUi mode, just return the table with file property for extraction
+    -- In RmlUi mode, return plain table (for ActionButton wrapper)
     if SB.view and SB.view.useRmlUi then
-        return tbl  -- Return plain table { file = "..." }
+        return tbl
     end
 
-    -- Chili mode - create actual Image object
+    -- In Chili mode, create Chili Image object
     return Image:New(Table.Merge({
         width = SB.conf.TOOLBOX_ITEM_WIDTH / 2,
         height = SB.conf.TOOLBOX_ITEM_HEIGHT / 2,
@@ -47,12 +47,12 @@ function TabbedPanelImage(tbl)
 end
 
 function TabbedPanelLabel(tbl)
-    -- In RmlUi mode, just return the table with caption property for extraction
+    -- In RmlUi mode, return plain table (for ActionButton wrapper)
     if SB.view and SB.view.useRmlUi then
-        return tbl  -- Return plain table { caption = "..." }
+        return tbl
     end
 
-    -- Chili mode - create actual Label object
+    -- In Chili mode, create Chili Label object
     return Label:New(Table.Merge({
         bottom = SB.conf.TOOLBOX_ITEM_HEIGHT / 8,
         width = SB.conf.TOOLBOX_ITEM_WIDTH,

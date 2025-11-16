@@ -137,7 +137,7 @@ function TextureEditor:init()
         name = "dntsIndex",
         value = 0,
     }))
-    self.btnPaint = TabbedPanelButton({
+    self.btnPaint = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Paint the terrain",
@@ -162,7 +162,7 @@ function TextureEditor:init()
             end
         },
     })
-    self.btnFilter = TabbedPanelButton({
+    self.btnFilter = ActionButton({
         x = SB.conf.TOOLBOX_ITEM_WIDTH,
         y = 0,
         tooltip = "Apply a filter",
@@ -190,7 +190,7 @@ function TextureEditor:init()
             end
         },
     })
-    self.btnDNTS = TabbedPanelButton({
+    self.btnDNTS = ActionButton({
         x = SB.conf.TOOLBOX_ITEM_WIDTH * 2,
         y = 0,
         tooltip = "DNTS textures",
@@ -234,7 +234,7 @@ function TextureEditor:init()
             end
         },
     })
-    self.btnVoid = TabbedPanelButton({
+    self.btnVoid = ActionButton({
         x = SB.conf.TOOLBOX_ITEM_WIDTH * 3,
         y = 0,
         tooltip = "Make the terrain transparent",
