@@ -21,23 +21,26 @@ function Editor:init()
     self.fields = {}
     self.fieldOrder = {}
 
-    self.stackPanel = StackPanel:New {
-        y = 0,
-        x = 0,
-        right = 0,
+    -- Only create stackPanel in Chili mode (not RmlUi)
+    if not SB.view or not SB.view.useRmlUi then
+        self.stackPanel = StackPanel:New {
+            y = 0,
+            x = 0,
+            right = 0,
 
-        centerItems = false,
+            centerItems = false,
 
-        autosize = true,
-        resizeItems = false,
-        preserveChildrenOrder = true,
+            autosize = true,
+            resizeItems = false,
+            preserveChildrenOrder = true,
 
-        itemPadding = {0,10,0,0},
-        padding = {0,0,0,0},
-        margin = {0,0,0,0},
-        itemMargin = {5,0,0,0},
-    }
-    self.stackPanel:DisableRealign()
+            itemPadding = {0,10,0,0},
+            padding = {0,0,0,0},
+            margin = {0,0,0,0},
+            itemMargin = {5,0,0,0},
+        }
+        self.stackPanel:DisableRealign()
+    end
 end
 
 -------------------------------
@@ -138,7 +141,10 @@ function Editor:Finalize(children, opts)
             OnOrphan = OnHide,
             classname = opts.classname,
         }
-        SB.view.tabbedWindow:SetMainPanel(self.window)
+        -- Only set main panel in Chili mode
+        if not SB.view.useRmlUi and SB.view.tabbedWindow then
+            SB.view.tabbedWindow:SetMainPanel(self.window)
+        end
     else
         if opts.disposeOnClose == nil then
             self.__disposeOnClose = true
@@ -181,8 +187,10 @@ function Editor:Finalize(children, opts)
         self:__AddKeyListener()
 
     end
-    self.stackPanel:EnableRealign()
-    self.stackPanel:Invalidate()
+    if self.stackPanel then
+        self.stackPanel:EnableRealign()
+        self.stackPanel:Invalidate()
+    end
 
     self.__initializing = false
 end
@@ -276,7 +284,7 @@ function Editor:_SetFieldVisible(name, visible)
             ctrl:Show()
             ctrl._visible = true
         else
-            -- self.stackPanel:RemoveChild(ctrl)
+            -- if self.stackPanel then self.stackPanel:RemoveChild(ctrl)
             ctrl:Hide()
             ctrl._visible = false
         end
@@ -286,7 +294,7 @@ end
 --- Sets fields which are to be made invisible.
 -- @tparam {string, ...} ... Field names to be set invisible
 function Editor:SetInvisibleFields(...)
-    self.stackPanel:DisableRealign()
+    if self.stackPanel then self.stackPanel:DisableRealign() end
 
     local fields = {...}
     for i = #self.fieldOrder, 1, -1 do
@@ -309,8 +317,8 @@ function Editor:SetInvisibleFields(...)
         end
     end
 
-    self.stackPanel:EnableRealign()
-    self.stackPanel:Invalidate()
+    if self.stackPanel then self.stackPanel:EnableRealign() end
+    if self.stackPanel then self.stackPanel:Invalidate() end
 end
 
 --- Remove field by name.
@@ -324,7 +332,9 @@ function Editor:RemoveField(name)
             break
         end
     end
-    self.stackPanel:RemoveChild(field.ctrl)
+    if self.stackPanel then
+        self.stackPanel:RemoveChild(field.ctrl)
+    end
     self.fields[name] = nil
 end
 --- Add field.
@@ -343,7 +353,10 @@ function Editor:AddField(field)
         field.ctrl = self:_AddControl(field.name, field.components)
     end
     self:_AddField(field)
-    field:Added()
+    -- Only call Added() if the method exists (Chili fields)
+    if field.Added then
+        field:Added()
+    end
 end
 
 function Editor:_AddField(field)
@@ -365,7 +378,10 @@ function Editor:_AddControl(name, children)
         padding = {0, 0, 0, 0},
         children = children
     }
-    self.stackPanel:AddChild(ctrl)
+    -- Only add to stackPanel in Chili mode
+    if self.stackPanel then
+        self.stackPanel:AddChild(ctrl)
+    end
     table.insert(self.fieldOrder, name)
     return ctrl
 end

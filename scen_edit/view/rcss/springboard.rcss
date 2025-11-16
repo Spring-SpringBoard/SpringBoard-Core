@@ -102,7 +102,6 @@ body#springboard {
     font-size: 9dp;
     color: #cccccc;
     text-align: center;
-    word-wrap: break-word;
 }
 
 .editor-button.pressed .editor-button-label {
