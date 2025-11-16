@@ -149,9 +149,23 @@ function RmlUiColorField:init(opts)
 end
 
 function RmlUiColorField:GenerateRml()
+    -- Convert color to hex string
+    local colorHex = "#FFFFFF"
+    if self.value then
+        if type(self.value) == "table" then
+            -- Chili format: {r, g, b, a} where values are 0-1
+            local r = math.floor((self.value[1] or self.value.r or 1) * 255)
+            local g = math.floor((self.value[2] or self.value.g or 1) * 255)
+            local b = math.floor((self.value[3] or self.value.b or 1) * 255)
+            colorHex = string.format("#%02X%02X%02X", r, g, b)
+        else
+            colorHex = tostring(self.value)
+        end
+    end
+
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="color" id="field-%s" class="field-input" value="%s"/><button id="btn-pick-%s" class="field-button">Pick</button></div>',
-        self.title, self.name, self.value or "#FFFFFF", self.name
+        self.title, self.name, colorHex, self.name
     )
 end
 

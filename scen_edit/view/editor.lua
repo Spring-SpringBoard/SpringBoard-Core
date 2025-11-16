@@ -308,6 +308,11 @@ end
 --- Sets fields which are to be made invisible.
 -- @tparam {string, ...} ... Field names to be set invisible
 function Editor:SetInvisibleFields(...)
+    -- Skip in RmlUi mode - field visibility is handled differently
+    if SB.view and SB.view.useRmlUi then
+        return
+    end
+
     if self.stackPanel then self.stackPanel:DisableRealign() end
 
     local fields = {...}
