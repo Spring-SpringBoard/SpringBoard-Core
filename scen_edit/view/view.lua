@@ -51,6 +51,7 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_component.lua'))  -- Base class for components
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_fields.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_field_compat.lua'))  -- Makes StringField() etc work
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/ui_controls.lua'))  -- ActionButton(), EditorButton()
 
     -- Load main UI template
     local rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/springboard_main.rml')
@@ -174,6 +175,9 @@ function View:SetupRmlUiEvents()
 end
 
 function View:InitializeChili()
+    -- Load UI controls abstraction (ActionButton, EditorButton)
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/ui_controls.lua'))
+
     self.tabbedWindow = TabbedWindow()
     self.bottomBar = BottomBar()
     self.teamSelector = TeamSelector()

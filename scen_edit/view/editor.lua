@@ -97,7 +97,7 @@ end
 
 --- Called at the end of :init(), to finalize the UI
 --- Override.
--- @tparam table children List of Chili controls.
+-- @tparam table layout Layout options (UI-agnostic) or old-style children array
 -- @tparam table opts Editor options
 -- @tparam[opt=false] boolean opts.notMainWindow If true,
 --   editor will not be added to the main panel (right side), but will instead be a floating window.
@@ -107,23 +107,51 @@ end
 --  Values include "ok", "cancel" and "close"
 -- @tparam boolean opts.disposeOnClose If true, the window will
 --   be disposed when closed. Defaults to true if opts.notMainWindow is true, otherwise it defaults to false.
-function Editor:Finalize(children, opts)
+function Editor:Finalize(layout, opts)
     if not self.__initializing then
         Log.Error("\"Editor.init(self)\" wasn't invoked properly.")
         Log.Error(debug.traceback())
         assert(self.__initializing, "\"Editor.init(self)\" wasn't invoked properly.")
     end
 
-    opts = opts or {}
+    -- Support old API: if layout is an array, treat it as old-style children array
+    local isOldAPI = layout and #layout > 0
+    if isOldAPI then
+        -- Old API compatibility: Finalize(children, opts)
+        local children = layout
+        opts = opts or {}
 
-    -- In RmlUi mode, generate RML from fields instead of creating Chili controls
-    if SB.view and SB.view.useRmlUi then
-        self:_FinalizeRmlUi(children, opts)
+        if SB.view and SB.view.useRmlUi then
+            self:_FinalizeRmlUi(children, opts)
+            self.__initializing = false
+            return
+        end
+
+        -- Continue with old Chili mode path
+        self:_FinalizeButtons(children, opts)
+        self:_FinalizeChiliWindow(children, opts)
         self.__initializing = false
         return
     end
 
-    -- Chili mode continues below
+    -- New API: Finalize({actionButtons = {...}}, opts)
+    layout = layout or {}
+    opts = opts or {}
+
+    -- In RmlUi mode, generate RML from fields and buttons
+    if SB.view and SB.view.useRmlUi then
+        self:_FinalizeRmlUiNew(layout, opts)
+        self.__initializing = false
+        return
+    end
+
+    -- New Chili mode path
+    self:_FinalizeChiliNew(layout, opts)
+    self.__initializing = false
+end
+
+-- Old Chili mode path (extracted for old API compatibility)
+function Editor:_FinalizeChiliWindow(children, opts)
     self:_FinalizeButtons(children, opts)
 
     local OnShow = {function() self:__OnShow() end}
@@ -844,6 +872,79 @@ function Editor:_FinalizeRmlUi(children, opts)
 
     -- Mark as hidden by default
     self.hidden = true
+end
+
+-- New RmlUi finalization (new API with layout options)
+function Editor:_FinalizeRmlUiNew(layout, opts)
+    self.actionButtons = layout.actionButtons or {}
+    self.regularButtons = {}
+
+    -- Generate RML for action buttons (placed at top)
+    local buttonsHtml = ''
+    if #self.actionButtons > 0 then
+        buttonsHtml = '<div class="action-buttons-panel">'
+        for _, button in ipairs(self.actionButtons) do
+            buttonsHtml = buttonsHtml .. button:GenerateRml()
+        end
+        buttonsHtml = buttonsHtml .. '</div>'
+    end
+
+    -- Generate RML for all fields
+    local fieldsHtml = ''
+    for _, fieldName in ipairs(self.fieldOrder) do
+        local field = self.fields[fieldName]
+        if field and not field._isGroupChild then
+            if field.GenerateRml then
+                fieldsHtml = fieldsHtml .. field:GenerateRml()
+            else
+                -- Check if it's a control with a button inside
+                if field.ctrl and field.ctrl.GenerateRml then
+                    fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
+                    table.insert(self.regularButtons, field.ctrl)
+                end
+            end
+        end
+    end
+
+    -- Combine buttons and fields
+    self.generatedRml = buttonsHtml .. fieldsHtml
+
+    -- Mark as hidden by default
+    self.hidden = true
+end
+
+-- New Chili finalization (new API with layout options)
+function Editor:_FinalizeChiliNew(layout, opts)
+    local actionButtons = layout.actionButtons or {}
+    local customControls = layout.customControls or {}
+
+    -- Build children array for Chili
+    local children = {}
+
+    -- Add action buttons first
+    for _, btn in ipairs(actionButtons) do
+        table.insert(children, btn)
+    end
+
+    -- Add custom controls if provided
+    for _, ctrl in ipairs(customControls) do
+        table.insert(children, ctrl)
+    end
+
+    -- Add ScrollPanel with fields
+    local yPos = #actionButtons > 0 and 70 or 0
+    table.insert(children, ScrollPanel:New {
+        x = 0,
+        y = yPos,
+        bottom = 30,
+        right = 0,
+        borderColor = {0,0,0,0},
+        horizontalScrollbar = false,
+        children = { self.stackPanel },
+    })
+
+    -- Use the old Chili window creation
+    self:_FinalizeChiliWindow(children, opts)
 end
 
 -- Show the editor in RmlUi mode
