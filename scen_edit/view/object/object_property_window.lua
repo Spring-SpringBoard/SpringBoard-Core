@@ -568,8 +568,10 @@ function ObjectPropertyWindow:OnSelectionChanged()
     end
 
     if not bridge then
-        self.stackPanel:EnableRealign()
-        self.stackPanel:Invalidate()
+        if self.stackPanel then
+            self.stackPanel:EnableRealign()
+            self.stackPanel:Invalidate()
+        end
         return
     end
 

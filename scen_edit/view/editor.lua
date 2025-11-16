@@ -360,6 +360,10 @@ function Editor:AddField(field)
 end
 
 function Editor:_AddField(field)
+    if not field or not field.name then
+        Log.Error("Attempted to add field without name")
+        return
+    end
     self.fields[field.name] = field
     field.ev = self
 end
@@ -416,13 +420,26 @@ end
 -- self:Set("myNumber", 15)
 function Editor:Set(name, value)
     local field = self.fields[name]
-    field:Set(value)
+    if not field then
+        Log.Warning("Attempted to set non-existent field: " .. tostring(name))
+        return
+    end
+    -- Only call Set if the method exists (Chili fields)
+    if field.Set then
+        field:Set(value)
+    else
+        -- For RmlUi fields, just set the value directly
+        field.value = value
+    end
 end
 function Editor:Update(name, _source)
     local field = self.fields[name]
     assert(field, "No such field to update: " .. tostring(name))
 
-    field:Update(_source)
+    -- Only call Update if the method exists (Chili fields)
+    if field.Update then
+        field:Update(_source)
+    end
 
     -- update listeners and current state
     if not self.__initializing then
