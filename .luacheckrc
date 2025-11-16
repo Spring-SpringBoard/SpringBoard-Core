@@ -43,5 +43,43 @@ globals = {
     -- SB view fields
     "UnitField", "FeatureField", "AreaField", "TriggerField", "UnitTypeField", "FeatureTypeField",
     "TeamField", "NumericField", "StringField", "BooleanField", "NumericComparisonField", "IdentityComparisonField",
-    "PositionField"
+    "PositionField",
+
+    -- RmlUi core
+    "RmlUiManager", "RmlUiBuilder", "RmlUiEditorBase", "RmlUiComponent",
+
+    -- RmlUi fields
+    "RmlUiField", "RmlUiStringField", "RmlUiNumericField", "RmlUiBooleanField", "RmlUiChoiceField",
+    "RmlUiColorField", "RmlUiAssetField", "RmlUiMaterialField", "RmlUiObjectField", "RmlUiObjectTypeField",
+    "RmlUiTeamField", "RmlUiArrayField", "RmlUiGroupField",
+
+    -- RmlUi field compat (overwrites StringField, etc.)
+    "ChoiceField", "ColorField", "AssetField", "MaterialField", "ObjectField", "ObjectTypeField", "ArrayField", "GroupField",
+
+    -- RmlUi pickers
+    "RmlUiAssetPickerWindow", "RmlUiColorPickerWindow", "RmlUiMaterialPickerWindow",
+    "AssetPickerWindow", "ColorPickerWindow", "MaterialPickerWindow",
+
+    -- RmlUi dialogs
+    "RmlUiBaseDialog", "RmlUiFileDialog", "RmlUiNewProjectDialog",
+    "RmlUiImportFileDialog", "RmlUiExportFileDialog", "RmlUiOpenProjectDialog", "RmlUiSaveProjectDialog",
+
+    -- RmlUi editors
+    "RmlUiTriggerEditor", "RmlUiObjectEditor", "RmlUiHeightmapEditor", "RmlUiTextureEditor",
+    "RmlUiGrassEditor", "RmlUiMetalEditor", "RmlUiWaterEditor", "RmlUiLightingEditor",
+    "RmlUiSkyEditor", "RmlUiTerrainSettingsEditor", "RmlUiDNTSEditor", "RmlUiMaterialBrowser",
+
+    -- RmlUi floating windows
+    "RmlUiCommandWindow", "RmlUiStatusWindow", "RmlUiControlButtons", "RmlUiTopLeftMenu",
+
+    -- RmlUi general windows
+    "RmlUiScenarioInfoView", "RmlUiDiplomacyWindow", "RmlUiPlayerWindow", "RmlUiPlayersWindow",
+
+    -- RmlUi object components
+    "RmlUiAnimationsView", "RmlUiCollisionWindow", "RmlUiObjectDefsPanel", "RmlUiObjectPropertyWindow",
+
+    -- RmlUi trigger components
+    "RmlUiTriggerWindow", "RmlUiEventWindow", "RmlUiConditionWindow", "RmlUiActionWindow",
+    "RmlUiAreasWindow", "RmlUiAreaView", "RmlUiVariablesWindow", "RmlUiVariableWindow",
+    "RmlUiDebugTriggerView", "RmlUiDebugVariableView", "RmlUiCustomWindow"
 }

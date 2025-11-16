@@ -170,7 +170,7 @@
         "display": "Development (BAR Engine)"
       },
       "downloads": {
-        "engines" : [ "105.1.1-2472-ga5aa45c-bar" ]
+        "engines" : [ "engine/105.1.1-2472-ga5aa45c-bar" ]
       },
       "auto_start" : false,
       "no_downloads" : true,

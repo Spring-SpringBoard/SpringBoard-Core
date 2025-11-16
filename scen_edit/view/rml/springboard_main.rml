@@ -1,0 +1,39 @@
+<rml>
+<head>
+    <title>SpringBoard</title>
+    <link type="text/rcss" href="springboard.rcss"/>
+</head>
+<body id="springboard">
+    <!-- Top menu bar -->
+    <div id="top-menu" class="menu-bar">
+        <button id="btn-exit" class="menu-button">Exit</button>
+        <button id="btn-new-project" class="menu-button">New</button>
+        <button id="btn-open-project" class="menu-button">Open</button>
+        <button id="btn-save-project" class="menu-button">Save</button>
+    </div>
+
+    <!-- Team selector -->
+    <div id="team-selector-container" class="team-selector">
+        <label>Team:</label>
+        <select id="team-selector">
+            <option value="0">Team 0</option>
+            <option value="1">Team 1</option>
+        </select>
+    </div>
+
+    <!-- Main content area (tabbed window placeholder) -->
+    <div id="main-content" class="main-content">
+        <div id="tab-bar" class="tab-bar"></div>
+        <div id="tab-content" class="tab-content">
+            <p>SpringBoard RmlUi UI - Ready</p>
+        </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div id="bottom-bar" class="bottom-bar">
+        <span id="status-text">Ready</span>
+        <button id="btn-play" class="control-button">Play</button>
+        <button id="btn-pause" class="control-button">Pause</button>
+    </div>
+</body>
+</rml>

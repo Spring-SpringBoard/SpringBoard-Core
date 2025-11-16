@@ -1,0 +1,228 @@
+name: Smoke Test
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  smoke-test-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            wget \
+            p7zip-full \
+            xvfb \
+            libsdl2-2.0-0 \
+            libglew2.2 \
+            libopenal1 \
+            libcurl4 \
+            libgl1 \
+            libglu1-mesa
+
+      - name: Download BAR Engine (with RmlUi support)
+        run: |
+          echo "Downloading BAR Engine 105.1.1-2472-ga5aa45c (supports RmlUi)..."
+          wget -q "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
+          7z x -y "spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z"
+          rm *.7z
+          chmod +x spring
+          chmod +x spring-headless || true
+          chmod +x spring-dedicated || true
+          ls -lah | head -20
+
+      - name: Create SpringBoard archive for engine
+        run: |
+          # Create .sdz archive instead of symlink (much faster to scan)
+          # Exclude unnecessary directories to keep archive small
+          mkdir -p games
+          zip -q -r "games/SpringBoard Core.sdz" . \
+            -x ".git/*" "test-engine/*" ".github/*" "build/*" \
+               "doc/*" "model/*" "issues/*" "dist_cfg/*"
+          ls -lah games/
+          echo "SpringBoard archive size: $(du -h 'games/SpringBoard Core.sdz' | cut -f1)"
+
+      - name: Create Spring config to disable audio
+        run: |
+          # Create springsettings.cfg to disable audio (no sound card in CI)
+          # Sound = 0 completely disables OpenAL (verified via: spring --list-config-vars)
+          # This prevents the OpenAL segfault on alcCaptureOpenDevice when no audio hardware exists
+          mkdir -p test-data
+          cat > test-data/springsettings.cfg << 'EOF'
+          Sound = 0
+          EOF
+          cat test-data/springsettings.cfg
+          echo "Sound subsystem disabled via Sound = 0 config"
+
+      - name: Create Spring script.txt for map generation
+        run: |
+          # Map generation - NO map files needed!
+          # Engine generates based on MAPOPTIONS parameters
+          cat > script.txt << 'SCRIPTEND'
+          [GAME]
+          {
+            GameType=SpringBoard Core;
+            MapName=generated_test_map;
+            IsHost=1;
+            MyPlayerName=TestPlayer;
+            [MAPOPTIONS]
+            {
+              new_map_x=10;
+              new_map_y=8;
+            }
+            [MODOPTIONS]
+            {
+              mapseed=1;
+            }
+            [PLAYER0]
+            {
+              Name=TestPlayer;
+              Team=0;
+              IsFromDemo=0;
+              Spectator=1;
+            }
+            [TEAM0]
+            {
+              TeamLeader=0;
+              AllyTeam=0;
+            }
+            [ALLYTEAM0]
+            {
+            }
+          }
+          SCRIPTEND
+
+          echo "=== Script contents ==="
+          cat script.txt
+          echo "======================="
+
+      - name: Run smoke test with Xvfb (tests LuaUI + RmlUi)
+        run: |
+          echo "Starting SpringBoard smoke test with virtual display..."
+          echo "Using Xvfb to run full spring binary (loads LuaUI + RmlUi)"
+
+          # IMPORTANT: Spring requires absolute path for --write-dir
+          WRITE_DIR="$(pwd)/test-data"
+          echo "Using write-dir: $WRITE_DIR"
+
+          # Run Spring with Xvfb (virtual X11 display) so LuaUI loads
+          # This actually tests RmlUi initialization!
+          # Sound is disabled via Sound = 0 in springsettings.cfg
+          timeout 10s xvfb-run -a -s "-screen 0 1024x768x24" \
+            ./spring --write-dir "$WRITE_DIR" script.txt || EXIT_CODE=$?
+
+          # Wait a moment for Spring to finish writing logs
+          sleep 2
+
+          echo ""
+          echo "=== Exit Code Analysis ==="
+          echo "Spring exit code: ${EXIT_CODE:-0}"
+
+          # Exit codes:
+          # 0 = clean exit
+          # 124 = timeout (expected - means it ran for 10s without crashing)
+          # 134 = SIGABRT (6+128) - crash!
+          # Other non-zero = various crashes
+
+          echo ""
+          echo "=== Validating Success Criteria ==="
+
+          # Check if infolog exists
+          if [ ! -f test-data/infolog.txt ]; then
+            echo "✗ FAIL: No infolog.txt generated - Spring didn't start"
+            exit 1
+          fi
+
+          # Check for crash signatures in infolog
+          # With Sound = 0, we should NOT get audio crashes anymore
+          if grep -q "CrashHandler.*Error.*Aborted\|CrashHandler.*Error.*Segmentation\|XIO.*fatal.*error\|terminate called without an active exception" test-data/infolog.txt; then
+            echo "✗ FAIL: Spring crashed"
+            echo ""
+            echo "=== Crash signatures found ==="
+            grep -E "CrashHandler.*Error|XIO.*fatal|terminate called" test-data/infolog.txt || true
+            echo ""
+            echo "=== Last 100 lines of infolog.txt ==="
+            tail -100 test-data/infolog.txt
+            exit 1
+          fi
+          echo "✓ No crashes detected"
+
+          # Check if LuaUI loaded
+          if ! grep -q "LuaUI.*Loaded\|Loading LuaUI" test-data/infolog.txt; then
+            echo "✗ FAIL: LuaUI did not load"
+            echo ""
+            echo "=== Last 100 lines of infolog.txt ==="
+            tail -100 test-data/infolog.txt
+            exit 1
+          fi
+          echo "✓ LuaUI loaded successfully"
+
+          # Check for RmlUi initialization (optional warning if missing)
+          if grep -q -i "rmlui" test-data/infolog.txt; then
+            echo "✓ RmlUi messages found in infolog"
+          else
+            echo "⚠ Warning: No RmlUi messages found (might not be fatal)"
+          fi
+
+          # Only accept exit codes 0 or 124 (timeout)
+          if [ "${EXIT_CODE:-0}" -eq 124 ]; then
+            echo ""
+            echo "✓ SpringBoard ran for full 10 seconds without crashing"
+            echo "✓ SMOKE TEST PASSED"
+            exit 0
+          elif [ "${EXIT_CODE:-0}" -eq 0 ]; then
+            echo ""
+            echo "✓ SpringBoard exited cleanly"
+            echo "✓ SMOKE TEST PASSED"
+            exit 0
+          else
+            echo ""
+            echo "✗ FAIL: Spring exited with code ${EXIT_CODE} (expected 0 or 124)"
+            echo ""
+            echo "=== Last 100 lines of infolog.txt ==="
+            tail -100 test-data/infolog.txt
+            exit 1
+          fi
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-logs
+          path: |
+            test-data/infolog.txt
+            test-data/*.log
+          if-no-files-found: ignore
+
+      - name: Show engine info
+        if: always()
+        run: |
+          echo "=== Engine information ==="
+          ./spring --version || true
+          echo ""
+          echo "=== RmlUi check ==="
+          if strings ./spring | grep -i rmlui; then
+            echo "✓ RmlUi support detected in engine binary"
+          else
+            echo "⚠ Could not detect RmlUi in engine binary"
+          fi
+          echo ""
+          echo "=== GL info ==="
+          ldd ./spring | grep -i "gl\|sdl" || true

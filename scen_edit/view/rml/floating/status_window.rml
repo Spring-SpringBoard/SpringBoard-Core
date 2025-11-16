@@ -1,0 +1,11 @@
+<rml>
+<head>
+    <title>Status Window</title>
+    <link type="text/rcss" href="../floating.rcss"/>
+</head>
+<body id="status-window" class="floating-panel">
+    <div id="status-position" class="status-line">X: 0, Y: 0, Z: 0. No selection</div>
+    <div id="status-memory" class="status-line">Memory 0 MB</div>
+    <div id="status-version" class="status-line">SpringBoard</div>
+</body>
+</rml>

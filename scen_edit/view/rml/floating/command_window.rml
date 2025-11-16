@@ -1,0 +1,16 @@
+<rml>
+<head>
+    <title>Command Window</title>
+    <link type="text/rcss" href="../floating.rcss"/>
+</head>
+<body id="command-window" class="floating-panel">
+    <div class="command-toolbar">
+        <button id="btn-undo" class="icon-button" title="Undo (Ctrl+Z)">↶</button>
+        <button id="btn-redo" class="icon-button" title="Redo (Ctrl+R)">↷</button>
+        <button id="btn-clear-history" class="icon-button" title="Clear undo-redo stack">✕</button>
+    </div>
+    <div id="command-list" class="command-list">
+        <!-- Command history populated dynamically -->
+    </div>
+</body>
+</rml>
