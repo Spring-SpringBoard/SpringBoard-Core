@@ -1,5 +1,5 @@
 body#springboard {
-    font-family: Liberation Sans;
+    font-family: Poppins;
     font-size: 14dp;
     color: #cccccc;
     width: 100%;
