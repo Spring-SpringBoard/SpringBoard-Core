@@ -63,10 +63,10 @@ function View:InitializeRmlUi()
         return
     end
 
-    -- Initialize ALL editors upfront from editorRegistry
-    -- This generates RML during init so we catch errors early
-    -- The field compat layer makes existing Chili editors work with RmlUi automatically
-    self:InitializeAllEditors()
+    -- Initialize SB.editors table for lazy creation
+    if not SB.editors then
+        SB.editors = {}
+    end
 
     -- Initialize tab system
     self.currentTab = "Objects"
@@ -77,29 +77,6 @@ function View:InitializeRmlUi()
     self:SetupRmlUiEvents()
 
     Log.Notice("RmlUi UI initialized successfully - editors use field compatibility layer")
-end
-
-function View:InitializeAllEditors()
-    -- Initialize SB.editors table if it doesn't exist
-    if not SB.editors then
-        SB.editors = {}
-    end
-
-    -- Instantiate all editors from editorRegistry
-    -- This calls their init() which calls Finalize() which generates RML
-    -- Doing this upfront catches field errors early instead of when users click buttons
-    Log.Notice("Initializing all editors from editorRegistry...")
-    local count = 0
-    for name, editorCfg in pairs(SB.editorRegistry) do
-        if editorCfg.editor then
-            Log.Notice("  Creating editor: " .. name)
-            SB.editors[name] = editorCfg.editor()
-            count = count + 1
-        else
-            Log.Warning("  Editor " .. name .. " has no constructor function")
-        end
-    end
-    Log.Notice("Initialized " .. count .. " editors")
 end
 
 function View:SetupRmlUiEvents()
@@ -365,13 +342,19 @@ end
 function View:OpenEditor(editorName)
     Log.Notice("Opening editor: " .. editorName)
 
-    -- Editor should already be initialized during View:InitializeAllEditors()
-    local editor = SB.editors and SB.editors[editorName]
-    if not editor then
-        Log.Error("Editor not initialized: " .. editorName)
-        return
+    -- Create editor lazily on first use
+    if not SB.editors[editorName] then
+        local editorCfg = SB.editorRegistry[editorName]
+        if editorCfg and editorCfg.editor then
+            Log.Notice("  Lazily creating editor: " .. editorName)
+            SB.editors[editorName] = editorCfg.editor()
+        else
+            Log.Error("Editor not found in registry: " .. editorName)
+            return
+        end
     end
 
+    local editor = SB.editors[editorName]
     local editorCfg = SB.editorRegistry[editorName]
     local mainContent = self.mainDocument:GetElementById("main-content")
 
