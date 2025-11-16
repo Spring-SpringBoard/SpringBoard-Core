@@ -363,8 +363,13 @@ function ObjectPropertyWindow:init()
     )
 
     self:Finalize(children)
-    SB.view.selectionManager:addListener(self)
-    self:OnSelectionChanged()
+
+    -- Defer listener registration if SB.view not set yet (during init)
+    -- This can happen when editors are pre-initialized in RmlUi mode
+    if SB.view then
+        SB.view.selectionManager:addListener(self)
+        self:OnSelectionChanged()
+    end
     SB.commandManager:addListener(self)
 end
 
