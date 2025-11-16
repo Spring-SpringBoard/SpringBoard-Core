@@ -10,44 +10,18 @@ body#springboard {
     background-color: #1a1a1a;
 }
 
-/* Team selector (top right corner) */
-.team-selector {
-    position: absolute;
-    top: 10dp;
-    right: 10dp;
-    padding: 5dp;
-    background-color: #2a2a2a;
-    border: 1dp #555555;
-    border-radius: 3dp;
-    display: flex;
-    flex-direction: row;
-    gap: 5dp;
-    align-items: center;
-}
-
-.team-selector label {
-    color: #cccccc;
-}
-
-.team-selector select {
-    background-color: #3a3a3a;
-    color: #cccccc;
-    border: 1dp #555555;
-    padding: 3dp;
-}
-
-/* Tab bar */
+/* Tab bar at top */
 .tab-bar {
     position: absolute;
-    top: 50dp;
+    top: 10dp;
     left: 0dp;
     right: 0dp;
-    height: 30dp;
-    background-color: #2a2a2a;
+    height: 25dp;
+    background-color: #222222;
     display: flex;
     flex-direction: row;
-    gap: 2dp;
-    padding: 2dp;
+    gap: 1dp;
+    padding: 1dp;
 }
 
 .tab-button {
@@ -55,8 +29,9 @@ body#springboard {
     background-color: #3a3a3a;
     color: #999999;
     border: 1dp #555555;
-    padding: 5dp 10dp;
+    padding: 3dp 8dp;
     text-align: center;
+    font-size: 12dp;
     cursor: pointer;
 }
 
@@ -71,10 +46,10 @@ body#springboard {
     border-bottom: 2dp #3a7ebf;
 }
 
-/* Editor button panel (scrollable horizontal) */
+/* Editor button panel (scrollable horizontal) - matches TOOLBOX_ITEM_HEIGHT (70dp) + padding */
 .editor-panel-wrapper {
     position: absolute;
-    top: 85dp;
+    top: 40dp;
     left: 0dp;
     right: 0dp;
     height: 80dp;
@@ -104,6 +79,7 @@ body#springboard {
     align-items: center;
     justify-content: center;
     padding: 5dp;
+    flex-shrink: 0;
 }
 
 .editor-button:hover {
@@ -119,23 +95,24 @@ body#springboard {
 .editor-button img {
     width: 35dp;
     height: 35dp;
-    margin-bottom: 5dp;
+    margin-bottom: 3dp;
 }
 
 .editor-button-label {
-    font-size: 10dp;
+    font-size: 9dp;
     color: #cccccc;
     text-align: center;
+    word-wrap: break-word;
 }
 
 .editor-button.pressed .editor-button-label {
     color: #00ff00;
 }
 
-/* Main content area */
+/* Main content area - starts after editor panel (40 + 80 = 120dp) */
 .main-content {
     position: absolute;
-    top: 170dp;
+    top: 125dp;
     left: 0dp;
     right: 0dp;
     bottom: 0dp;

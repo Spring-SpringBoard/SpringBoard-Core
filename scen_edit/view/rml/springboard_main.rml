@@ -5,21 +5,12 @@
     <link type="text/rcss" href="../rcss/springboard.rcss"/>
 </head>
 <body id="springboard">
-    <!-- Team selector (top right) -->
-    <div id="team-selector-container" class="team-selector">
-        <label>Team:</label>
-        <select id="team-selector">
-            <option value="0">Team 0</option>
-            <option value="1">Team 1</option>
-        </select>
-    </div>
-
     <!-- Tab bar -->
     <div id="tab-bar" class="tab-bar">
-        <button id="tab-objects" class="tab-button active" data-tab="Objects" onclick="widget:OnTabClick(event)">Objects</button>
-        <button id="tab-map" class="tab-button" data-tab="Map" onclick="widget:OnTabClick(event)">Map</button>
-        <button id="tab-env" class="tab-button" data-tab="Env" onclick="widget:OnTabClick(event)">Env</button>
-        <button id="tab-misc" class="tab-button" data-tab="Misc" onclick="widget:OnTabClick(event)">Misc</button>
+        <button id="tab-Objects" class="tab-button active">Objects</button>
+        <button id="tab-Map" class="tab-button">Map</button>
+        <button id="tab-Env" class="tab-button">Env</button>
+        <button id="tab-Misc" class="tab-button">Misc</button>
     </div>
 
     <!-- Editor button panel (scrollable horizontal) -->

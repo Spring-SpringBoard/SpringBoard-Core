@@ -83,6 +83,11 @@ function View:InitializeRmlUi()
         return
     end
 
+    -- Initialize tab system
+    self.currentTab = "Objects"
+    self:BindTabEvents()
+    self:PopulateEditorButtons(self.currentTab)
+
     -- Initialize floating windows (hidden by default)
     self.commandWindow = RmlUiCommandWindow()
     self.commandWindow:Initialize()
@@ -322,4 +327,134 @@ function View:DrawWorldPreUnit()
         self:__DrawAreas()
     end
     self.selectionManager:DrawWorldPreUnit()
+end
+
+-- RmlUi tab and editor button management
+function View:BindTabEvents()
+    if not self.mainDocument then return end
+    
+    -- Bind click events to all tab buttons
+    local tabs = {"Objects", "Map", "Env", "Misc"}
+    for _, tabName in ipairs(tabs) do
+        local tabButton = self.mainDocument:GetElementById("tab-" .. tabName)
+        if tabButton then
+            tabButton:AddEventListener("click", function()
+                self:SwitchTab(tabName)
+            end)
+        end
+    end
+end
+
+function View:SwitchTab(tabName)
+    if self.currentTab == tabName then return end
+    
+    -- Update tab button styles
+    local tabs = {"Objects", "Map", "Env", "Misc"}
+    for _, name in ipairs(tabs) do
+        local tabButton = self.mainDocument:GetElementById("tab-" .. name)
+        if tabButton then
+            if name == tabName then
+                tabButton:SetClass("active", true)
+            else
+                tabButton:SetClass("active", false)
+            end
+        end
+    end
+    
+    self.currentTab = tabName
+    self:PopulateEditorButtons(tabName)
+    
+    -- Clear main content area
+    local mainContent = self.mainDocument:GetElementById("main-content")
+    if mainContent then
+        mainContent.inner_rml = "<p>Select an editor from the buttons above</p>"
+    end
+end
+
+function View:PopulateEditorButtons(tabName)
+    local editorPanel = self.mainDocument:GetElementById("editor-button-panel")
+    if not editorPanel then return end
+    
+    -- Clear existing buttons
+    editorPanel.inner_rml = ""
+    
+    -- Get all editors for this tab from editorRegistry
+    local editors = {}
+    for name, editorCfg in pairs(SB.editorRegistry) do
+        if editorCfg.tab == tabName then
+            table.insert(editors, editorCfg)
+        end
+    end
+    
+    -- Sort by order
+    table.sort(editors, function(a, b)
+        if a.order ~= b.order then
+            return a.order < b.order
+        end
+        return a.caption < b.caption
+    end)
+    
+    -- Create button HTML for each editor
+    local buttonsHTML = ""
+    for _, editorCfg in ipairs(editors) do
+        local btnId = "editor-btn-" .. editorCfg.name
+        buttonsHTML = buttonsHTML .. string.format([[
+            <div id="%s" class="editor-button">
+                <div class="editor-button-label">%s</div>
+            </div>
+        ]], btnId, editorCfg.caption)
+    end
+    
+    editorPanel.inner_rml = buttonsHTML
+    
+    -- Bind click events to editor buttons
+    for _, editorCfg in ipairs(editors) do
+        local btnId = "editor-btn-" .. editorCfg.name
+        local btn = self.mainDocument:GetElementById(btnId)
+        if btn then
+            btn:AddEventListener("click", function()
+                self:OpenEditor(editorCfg.name)
+            end)
+        end
+    end
+end
+
+function View:OpenEditor(editorName)
+    Log.Notice("Opening editor: " .. editorName)
+    
+    -- Create editor instance if not exists
+    if not SB.editors then
+        SB.editors = {}
+    end
+    
+    if not SB.editors[editorName] then
+        local editorCfg = SB.editorRegistry[editorName]
+        if editorCfg and editorCfg.editor then
+            SB.editors[editorName] = editorCfg.editor()
+        else
+            Log.Error("Editor not found: " .. editorName)
+            return
+        end
+    end
+    
+    local editor = SB.editors[editorName]
+    local mainContent = self.mainDocument:GetElementById("main-content")
+    if mainContent and editor then
+        -- For now, just show a placeholder
+        -- TODO: Implement full editor rendering with fields
+        mainContent.inner_rml = "<h3>Editor: " .. editorName .. "</h3><p>Fields will be rendered here</p>"
+    end
+    
+    -- Highlight pressed button
+    self:UpdateEditorButtonStates(editorName)
+end
+
+function View:UpdateEditorButtonStates(activeEditorName)
+    -- Remove pressed state from all buttons
+    for name, _ in pairs(SB.editorRegistry) do
+        local btn = self.mainDocument:GetElementById("editor-btn-" .. name)
+        if btn then
+            btn:SetClass("pressed", name == activeEditorName)
+        end
+    end
 end
