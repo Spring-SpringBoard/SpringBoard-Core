@@ -230,7 +230,6 @@
 
 .form-input-number:focus {
     border-color: #3a7ebf;
-    outline: none;
 }
 
 /* Map Editor specific */
@@ -292,8 +291,8 @@
 }
 
 .texture-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(64dp, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 5dp;
     margin-bottom: 10dp;
 }
@@ -319,7 +318,6 @@
 .texture-item img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
 }
 
 .texture-settings {

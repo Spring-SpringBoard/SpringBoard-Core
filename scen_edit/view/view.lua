@@ -83,22 +83,22 @@ function View:InitializeRmlUi()
         return
     end
 
-    -- Initialize floating windows
+    -- Initialize floating windows (hidden by default)
     self.commandWindow = RmlUiCommandWindow()
     self.commandWindow:Initialize()
-    self.commandWindow:Show()
+    -- self.commandWindow:Show()  -- Hidden by default
 
     self.statusWindow = RmlUiStatusWindow()
     self.statusWindow:Initialize()
-    self.statusWindow:Show()
+    -- self.statusWindow:Show()  -- Hidden by default
 
     self.controlButtons = RmlUiControlButtons()
     self.controlButtons:Initialize()
-    self.controlButtons:Show()
+    -- self.controlButtons:Show()  -- Hidden by default
 
     self.topLeftMenu = RmlUiTopLeftMenu()
     self.topLeftMenu:Initialize()
-    self.topLeftMenu:Show()
+    -- self.topLeftMenu:Show()  -- Hidden by default
 
     -- Initialize editors (create instances but don't show)
     self.triggerEditor = RmlUiTriggerEditor()
