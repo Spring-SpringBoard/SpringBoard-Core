@@ -83,6 +83,10 @@ function View:InitializeRmlUi()
         return
     end
 
+    -- Initialize ALL editors upfront from editorRegistry
+    -- This generates RML during init so we catch errors early
+    self:InitializeAllEditors()
+
     -- Initialize tab system
     self.currentTab = "Objects"
     self:BindTabEvents()
@@ -157,6 +161,29 @@ function View:InitializeRmlUi()
     self:SetupRmlUiEvents()
 
     Log.Notice("RmlUi UI initialized successfully with all dialogs, editors, and floating windows")
+end
+
+function View:InitializeAllEditors()
+    -- Initialize SB.editors table if it doesn't exist
+    if not SB.editors then
+        SB.editors = {}
+    end
+
+    -- Instantiate all editors from editorRegistry
+    -- This calls their init() which calls Finalize() which generates RML
+    -- Doing this upfront catches field errors early instead of when users click buttons
+    Log.Notice("Initializing all editors from editorRegistry...")
+    local count = 0
+    for name, editorCfg in pairs(SB.editorRegistry) do
+        if editorCfg.editor then
+            Log.Notice("  Creating editor: " .. name)
+            SB.editors[name] = editorCfg.editor()
+            count = count + 1
+        else
+            Log.Warning("  Editor " .. name .. " has no constructor function")
+        end
+    end
+    Log.Notice("Initialized " .. count .. " editors")
 end
 
 function View:SetupRmlUiEvents()
@@ -422,22 +449,13 @@ end
 function View:OpenEditor(editorName)
     Log.Notice("Opening editor: " .. editorName)
 
-    -- Create editor instance if not exists
-    if not SB.editors then
-        SB.editors = {}
+    -- Editor should already be initialized during View:InitializeAllEditors()
+    local editor = SB.editors and SB.editors[editorName]
+    if not editor then
+        Log.Error("Editor not initialized: " .. editorName)
+        return
     end
 
-    if not SB.editors[editorName] then
-        local editorCfg = SB.editorRegistry[editorName]
-        if editorCfg and editorCfg.editor then
-            SB.editors[editorName] = editorCfg.editor()
-        else
-            Log.Error("Editor not found: " .. editorName)
-            return
-        end
-    end
-
-    local editor = SB.editors[editorName]
     local editorCfg = SB.editorRegistry[editorName]
     local mainContent = self.mainDocument:GetElementById("main-content")
 

@@ -40,6 +40,11 @@ function RmlUiField:SetValue(value)
     end
 end
 
+-- Alias for compatibility with Chili field API
+function RmlUiField:Set(value)
+    self:SetValue(value)
+end
+
 function RmlUiField:UpdateDisplay()
     -- Override in subclass
 end

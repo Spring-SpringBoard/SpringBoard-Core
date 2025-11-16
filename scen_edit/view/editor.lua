@@ -362,6 +362,16 @@ function Editor:AddField(field)
         field.ctrl = self:_AddControl(field.name, field.components)
     end
     self:_AddField(field)
+
+    -- In RmlUi mode, register child fields of GroupField
+    if SB.view and SB.view.useRmlUi and field.fields then
+        for _, childField in ipairs(field.fields) do
+            if childField.name then
+                self:_AddField(childField)
+            end
+        end
+    end
+
     -- Only call Added() if the method exists (Chili fields)
     if field.Added then
         field:Added()

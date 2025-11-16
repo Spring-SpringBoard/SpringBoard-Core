@@ -23,7 +23,18 @@ ObjectField = RmlUiObjectField
 ObjectTypeField = RmlUiObjectTypeField
 TeamField = RmlUiTeamField
 ArrayField = RmlUiArrayField
-GroupField = RmlUiGroupField
+
+-- GroupField wrapper that matches Chili's constructor pattern
+-- Auto-generates name like Chili does
+local _GROUP_INDEX = 0
+function GroupField(fields)
+    _GROUP_INDEX = _GROUP_INDEX + 1
+    local name = "_groupField" .. tostring(_GROUP_INDEX)
+    return RmlUiGroupField({
+        name = name,
+        fields = fields
+    })
+end
 
 -- Picker windows
 AssetPickerWindow = RmlUiAssetPickerWindow
