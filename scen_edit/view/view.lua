@@ -46,31 +46,11 @@ function View:init()
 end
 
 function View:InitializeRmlUi()
-    -- Load RmlUi dialogs
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/base_dialog.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/file_dialog.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_dialogs/new_project_dialog.lua'))
-
-    -- Load RmlUi editors
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/trigger_editor.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/object_editor.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/heightmap_editor.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/texture_editor.lua'))
-
-    -- Load RmlUi floating windows
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/command_window.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/status_window.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/control_buttons.lua'))
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/top_left_menu.lua'))
-
-    -- Load RmlUi field system (maintains original AddField API - implementation-agnostic!)
+    -- Load RmlUi field system first (maintains original AddField API - implementation-agnostic!)
+    -- This makes StringField(), NumericField(), etc. create RmlUi fields instead of Chili
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_component.lua'))  -- Base class for components
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editor_base.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_fields.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_field_compat.lua'))  -- Makes StringField() etc work
-
-    -- Load all other RmlUi components (general, map, object, trigger)
-    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_components.lua'))
 
     -- Load main UI template
     local rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/springboard_main.rml')
@@ -85,6 +65,7 @@ function View:InitializeRmlUi()
 
     -- Initialize ALL editors upfront from editorRegistry
     -- This generates RML during init so we catch errors early
+    -- The field compat layer makes existing Chili editors work with RmlUi automatically
     self:InitializeAllEditors()
 
     -- Initialize tab system
@@ -92,75 +73,10 @@ function View:InitializeRmlUi()
     self:BindTabEvents()
     self:PopulateEditorButtons(self.currentTab)
 
-    -- Initialize floating windows (hidden by default)
-    self.commandWindow = RmlUiCommandWindow()
-    self.commandWindow:Initialize()
-    -- self.commandWindow:Show()  -- Hidden by default
-
-    self.statusWindow = RmlUiStatusWindow()
-    self.statusWindow:Initialize()
-    -- self.statusWindow:Show()  -- Hidden by default
-
-    self.controlButtons = RmlUiControlButtons()
-    self.controlButtons:Initialize()
-    -- self.controlButtons:Show()  -- Hidden by default
-
-    self.topLeftMenu = RmlUiTopLeftMenu()
-    self.topLeftMenu:Initialize()
-    -- self.topLeftMenu:Show()  -- Hidden by default
-
-    -- Initialize editors (create instances but don't show)
-    self.triggerEditor = RmlUiTriggerEditor()
-    self.triggerEditor:Initialize()
-
-    self.objectEditor = RmlUiObjectEditor()
-    self.objectEditor:Initialize()
-
-    self.heightmapEditor = RmlUiHeightmapEditor()
-    self.heightmapEditor:Initialize()
-
-    self.textureEditor = RmlUiTextureEditor()
-    self.textureEditor:Initialize()
-
-    -- Initialize all additional editors (don't show by default)
-    self.grassEditor = RmlUiGrassEditor()
-    self.grassEditor:Initialize()
-
-    self.metalEditor = RmlUiMetalEditor()
-    self.metalEditor:Initialize()
-
-    self.waterEditor = RmlUiWaterEditor()
-    self.waterEditor:Initialize()
-
-    self.lightingEditor = RmlUiLightingEditor()
-    self.lightingEditor:Initialize()
-
-    self.skyEditor = RmlUiSkyEditor()
-    self.skyEditor:Initialize()
-
-    self.terrainSettingsEditor = RmlUiTerrainSettingsEditor()
-    self.terrainSettingsEditor:Initialize()
-
-    self.dntsEditor = RmlUiDNTSEditor()
-    self.dntsEditor:Initialize()
-
-    self.materialBrowser = RmlUiMaterialBrowser()
-    self.materialBrowser:Initialize()
-
-    -- Initialize general windows
-    self.scenarioInfoView = RmlUiScenarioInfoView()
-    self.scenarioInfoView:Initialize()
-
-    self.diplomacyWindow = RmlUiDiplomacyWindow()
-    self.diplomacyWindow:Initialize()
-
-    self.playersWindow = RmlUiPlayersWindow()
-    self.playersWindow:Initialize()
-
     -- Setup event handlers
     self:SetupRmlUiEvents()
 
-    Log.Notice("RmlUi UI initialized successfully with all dialogs, editors, and floating windows")
+    Log.Notice("RmlUi UI initialized successfully - editors use field compatibility layer")
 end
 
 function View:InitializeAllEditors()
