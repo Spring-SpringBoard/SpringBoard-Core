@@ -308,8 +308,30 @@ end
 --- Sets fields which are to be made invisible.
 -- @tparam {string, ...} ... Field names to be set invisible
 function Editor:SetInvisibleFields(...)
-    -- Skip in RmlUi mode - field visibility is handled differently
+    -- In RmlUi mode, set CSS display classes instead of manipulating Chili controls
     if SB.view and SB.view.useRmlUi then
+        local fieldsToHide = {...}
+        -- Hide all fields first
+        for _, fieldName in ipairs(self.fieldOrder) do
+            if SB.view.mainDocument then
+                local fieldElement = SB.view.mainDocument:GetElementById("field-" .. fieldName)
+                if fieldElement and fieldElement.parent_node then
+                    -- Hide the parent row
+                    fieldElement.parent_node:SetClass("hidden", true)
+                end
+            end
+        end
+        -- Show fields not in the hide list
+        for _, fieldName in ipairs(self.fieldOrder) do
+            if not table.ifind(fieldsToHide, fieldName) then
+                if SB.view.mainDocument then
+                    local fieldElement = SB.view.mainDocument:GetElementById("field-" .. fieldName)
+                    if fieldElement and fieldElement.parent_node then
+                        fieldElement.parent_node:SetClass("hidden", false)
+                    end
+                end
+            end
+        end
         return
     end
 
@@ -380,6 +402,8 @@ function Editor:AddField(field)
         for _, childField in ipairs(field.fields) do
             if childField.name then
                 self:_AddField(childField)
+                -- Mark child field as part of a group so it won't be rendered separately
+                childField._isGroupChild = true
             end
         end
     end
@@ -704,20 +728,23 @@ SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))
 function Editor:_FinalizeRmlUi(opts)
     -- Generate RML for all fields
     local html = ''
-    
+
     for _, fieldName in ipairs(self.fieldOrder) do
         local field = self.fields[fieldName]
-        if field and field.GenerateRml then
-            html = html .. field:GenerateRml()
-        elseif field then
-            -- Fallback for fields without GenerateRml (like separators/controls)
-            html = html .. '<div class="field-separator"></div>'
+        -- Skip fields that are children of GroupFields (they're rendered by the group)
+        if field and not field._isGroupChild then
+            if field.GenerateRml then
+                html = html .. field:GenerateRml()
+            else
+                -- Fallback for fields without GenerateRml (like separators/controls)
+                html = html .. '<div class="field-separator"></div>'
+            end
         end
     end
-    
+
     -- Store the generated RML for later use
     self.generatedRml = html
-    
+
     -- Mark as hidden by default
     self.hidden = true
 end

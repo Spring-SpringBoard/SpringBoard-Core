@@ -63,9 +63,11 @@ function RmlUiStringField:init(opts)
 end
 
 function RmlUiStringField:GenerateRml()
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="text" id="field-%s" class="field-input" value="%s"/></div>',
-        self.title, self.name, self.value or ""
+        title, self.name, self.value or ""
     )
 end
 
@@ -85,10 +87,12 @@ function RmlUiNumericField:GenerateRml()
     if self.min then attrs = attrs .. ' min="' .. self.min .. '"' end
     if self.max then attrs = attrs .. ' max="' .. self.max .. '"' end
     if self.step then attrs = attrs .. ' step="' .. self.step .. '"' end
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
 
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="number" %s/></div>',
-        self.title, attrs
+        title, attrs
     )
 end
 
@@ -101,9 +105,11 @@ end
 
 function RmlUiBooleanField:GenerateRml()
     local checked = self.value and 'checked="checked"' or ''
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
     return string.format(
-        '<div class="field-row"><label class="field-label">%s:</label><input type="checkbox" id="field-%s" %s/></div>',
-        self.title, self.name, checked
+        '<div class="field-row"><label class="field-label">%s:</label><input type="checkbox" id="field-%s" class="field-checkbox" %s/></div>',
+        title, self.name, checked
     )
 end
 
@@ -123,10 +129,12 @@ function RmlUiChoiceField:GenerateRml()
         local selected = (tostring(item) == tostring(self.value)) and ' selected="selected"' or ''
         options = options .. string.format('<option value="%s"%s>%s</option>', tostring(item), selected, caption)
     end
+    -- Remove trailing colon from title if present
+    local title = self.title:gsub(":$", "")
 
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><select id="field-%s" class="field-input">%s</select></div>',
-        self.title, self.name, options
+        title, self.name, options
     )
 end
 
@@ -310,13 +318,24 @@ function RmlUiGroupField:init(opts)
 end
 
 function RmlUiGroupField:GenerateRml()
+    -- Group fields display children inline without showing group name
     local html = '<div class="field-group">'
-    if self.title then
-        html = html .. '<label class="field-label">' .. self.title .. ':</label>'
+
+    -- Only show label if explicitly provided (not auto-generated "_groupField" names)
+    if self.title and not self.title:match("^_groupField%d+$") then
+        local title = self.title:gsub(":$", "")
+        html = html .. '<label class="field-label">' .. title .. ':</label>'
     end
 
     for _, field in ipairs(self.fields) do
-        html = html .. field:GenerateRml()
+        -- Generate inline field HTML (without the field-row wrapper)
+        if field.GenerateRml then
+            -- For group children, generate compact inline version
+            local fieldHtml = field:GenerateRml()
+            -- Remove the field-row wrapper for inline display
+            fieldHtml = fieldHtml:gsub('<div class="field%-row">', '<div class="field-inline">')
+            html = html .. fieldHtml
+        end
     end
 
     html = html .. '</div>'
