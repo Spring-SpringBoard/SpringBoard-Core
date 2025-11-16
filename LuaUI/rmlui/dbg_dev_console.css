@@ -1,0 +1,191 @@
+/* ================================
+   Developer Console Styles (RCSS-safe)
+================================ */
+
+body#dev-console-body {
+	position: absolute;
+	left: 0;
+	right: 500px;
+	bottom: 80px;
+	height: 300dp;
+	padding: 0dp;
+	font-family: Poppins;
+	color: #c8d0e0;
+	background-color: #1a1d219e;
+
+	/* border: 1dp solid #000000; */
+	border-width: 1dp;
+	border-color: #000000;
+}
+
+#console-root {
+	position: absolute;
+	left: 0dp;
+	right: 0dp;
+	bottom: 0dp;
+}
+
+.hidden { display: none; }
+.dev-console.hidden { display: none; }
+
+/* ================================
+   Header
+================================ */
+.header {
+	overflow: hidden;
+	margin-bottom: 8dp;
+}
+
+.header .title {
+	float: left;
+	font-size: 18dp;
+	font-weight: bold;
+	color: #eef1ff;
+}
+
+.dev-console::after {
+	display: block;
+	clear: both;
+}
+
+/* ================================
+   Toolbar
+================================ */
+.toolbar {
+	margin: 5dp;
+	gap: 5dp;
+	display: flex; /* If flex is unsupported in your RmlUi build, swap to inline-blocks. */
+}
+
+/* ================================
+   Buttons (base)
+================================ */
+.dev-console button {
+	flex: 1;
+	padding: 6dp 12dp;
+	text-align: center;
+	font-size: 13dp;
+	letter-spacing: 0.05em;
+	color: #b8bcc4;
+	background-color: #1c1d20;
+
+	/* border: 1dp solid #2a2b2e; */
+	border-width: 1dp;
+	border-color: #2a2b2e;
+
+	cursor: pointer;
+}
+
+.dev-console button:hover {
+	background-color: #2a2b2e;
+	color: #d4d8df;
+}
+
+.dev-console button:active {
+	background-color: #1a1b1e;
+}
+
+.dev-console button.ghost {
+	background-color: transparent;
+	color: #808590;
+}
+
+/* ================================
+   Toggle Buttons — DISTINCT LOOK
+   (green only when ON)
+================================ */
+
+/* OFF: different tint, rounded corners, bold+uppercase, permanent stripe */
+.dev-console button.toggle {
+	/* Permanent stripe (visible even when OFF) */
+	border-left-width: 6dp;
+	border-left-color: #2e2f32;
+
+	/* Different body tint so toggles stand out from other buttons */
+	background-color: #212528;
+	color: #cfd4db;
+
+	/* Slightly different shape and weight */
+	border-radius: 6dp;
+	font-weight: bold;
+	text-transform: uppercase;
+
+	/* Slight extra padding so stripe doesn’t crowd the label */
+	padding-left: 18dp;
+}
+
+/* OFF hover stays neutral (no green here) */
+.dev-console button.toggle:hover {
+	background-color: #2a2e32;
+	color: #e1e5eb;
+	/* Stripe gets a touch brighter but remains gray */
+	border-left-color: #4a4d52;
+}
+
+/* ON state (is-active): green palette + thicker stripe */
+.dev-console button.toggle.is-active {
+	background-color: #18241b;
+	color: #79e68c;
+
+	/* thicker left stripe: ON */
+	border-left-width: 6dp;
+	border-left-color: #397848;
+
+	/* top/bottom edging for depth */
+	border-top-width: 1dp;
+	border-top-color: #111512;
+	border-bottom-width: 1dp;
+	border-bottom-color: #0a0e0b;
+}
+
+/* ON hover: brighter, but clearly still ON */
+.dev-console button.toggle.is-active:hover {
+	background-color: #1f3425;
+	color: #9efca6;
+	border-left-color: #5fc878;
+}
+
+/* ================================
+   Log Container
+================================ */
+.log-container {
+	height: 240dp;
+	font-size: 11dp;
+	line-height: 12dp;
+	color: #c8d0e0;
+	overflow-y: scroll;   /* always show vertical scrollbar */
+	overflow-x: auto;
+	white-space: pre;
+	padding: 6dp;
+
+	/* remove if your build dislikes it */
+	box-sizing: border-box;
+}
+
+.log-container .log-line {
+	display: block;
+	margin-bottom: 2dp;
+}
+
+.log-container .log-line:last-child {
+	margin-bottom: 0dp;
+}
+
+.log-container .log-line.severity-info {
+	color: #c8d0e0;
+}
+
+.log-container .log-line.severity-warning {
+	color: #ffb84d;
+}
+
+.log-container .log-line.severity-error {
+	color: #ff6b6b;
+	font-weight: bold;
+}
+
+.log-container .log-link {
+	color: #6ba3ff;
+	text-decoration: underline;
+	cursor: pointer;
+}

@@ -1,0 +1,94 @@
+/* Floating Window Styles */
+
+.floating-panel {
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    padding: 5dp;
+}
+
+/* Command Window */
+.command-toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 5dp;
+    margin-bottom: 5dp;
+}
+
+.command-list {
+    max-height: 300dp;
+    overflow-y: auto;
+    background-color: #1a1a1a;
+    padding: 5dp;
+}
+
+.command-item {
+    padding: 5dp;
+    margin: 2dp 0;
+    background-color: #222222;
+}
+
+.command-item.undone {
+    color: #888888;
+}
+
+/* Status Window */
+.status-line {
+    padding: 3dp 5dp;
+    font-size: 12dp;
+    color: #cccccc;
+}
+
+/* Control Buttons */
+.control-button {
+    width: 35dp;
+    height: 35dp;
+    margin: 5dp;
+    font-size: 18dp;
+    background-color: #3a7ebf;
+}
+
+.control-button.large {
+    width: 45dp;
+    height: 45dp;
+    font-size: 24dp;
+}
+
+.control-button:hover {
+    background-color: #4a8ecf;
+}
+
+.control-button.stop {
+    background-color: #bf3a3a;
+}
+
+/* Top Menu */
+.project-label {
+    font-size: 18dp;
+    font-weight: bold;
+    padding: 8dp;
+    margin-bottom: 10dp;
+    color: #ffffff;
+}
+
+.menu-button {
+    width: 100dp;
+    height: 35dp;
+    margin: 3dp 5dp;
+    background-color: #333333;
+    font-size: 14dp;
+}
+
+.menu-button:hover {
+    background-color: #444444;
+}
+
+.icon-button {
+    width: 40dp;
+    height: 40dp;
+    font-size: 20dp;
+    background-color: #3a3a3a;
+}
+
+.icon-button:hover {
+    background-color: #4a4a4a;
+}

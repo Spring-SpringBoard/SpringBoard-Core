@@ -20,6 +20,8 @@ _G[("%s_VERSION"):format(LUA_NAME:upper())] = LUA_VERSION -- creates LUAUI_VERSI
 
 VFS.DEF_MODE = VFS.RAW_FIRST
 
+VFS.Include("LuaUI/rml_setup2.lua", nil, VFS.DEF_MODE)
+
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------

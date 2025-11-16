@@ -1,0 +1,33 @@
+<rml>
+<head>
+    <title>Asset Picker</title>
+    <link type="text/rcss" href="../dialog.rcss"/>
+</head>
+<body id="asset-picker" class="dialog large-dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">Select Asset</span>
+        <button class="dialog-close" id="btn-close">×</button>
+    </div>
+    <div class="dialog-content">
+        <div class="asset-browser">
+            <div class="asset-filters">
+                <label>Filter:</label>
+                <input type="text" id="filter-input" class="form-input" placeholder="Search..."/>
+                <select id="type-filter">
+                    <option value="">All Types</option>
+                    <option value="model">Models</option>
+                    <option value="texture">Textures</option>
+                    <option value="sound">Sounds</option>
+                </select>
+            </div>
+            <div id="asset-grid" class="asset-grid">
+                <!-- Assets populated dynamically -->
+            </div>
+        </div>
+    </div>
+    <div class="dialog-footer">
+        <button id="btn-ok" class="dialog-button primary">Select</button>
+        <button id="btn-cancel" class="dialog-button">Cancel</button>
+    </div>
+</body>
+</rml>

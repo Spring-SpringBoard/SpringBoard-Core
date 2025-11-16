@@ -27,20 +27,20 @@ jobs:
             arch: "--x64"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           # This should fix git rev-list --count HEAD
           # https://stackoverflow.com/a/65056108
           fetch-depth: 0
           path: repo-folder
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           repository: gajop/spring-launcher
           path: spring-launcher
 
       - name: Setup NodeJs
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: '17.x'
 
