@@ -396,6 +396,9 @@ function View:BindFieldEvents(editor)
         return
     end
 
+    -- Capture CallListeners in local scope for event listener callbacks
+    local callListeners = CallListeners
+
     -- Bind change events for fields
     if editor.fields then
         for fieldName, field in pairs(editor.fields) do
@@ -427,7 +430,7 @@ function View:BindFieldEvents(editor)
             if btnElement then
                 btnElement:AddEventListener("click", function(event)
                     if button.OnClick then
-                        CallListeners(button.OnClick)
+                        callListeners(button.OnClick)
                     end
                 end)
             end
@@ -441,7 +444,7 @@ function View:BindFieldEvents(editor)
             if btnElement then
                 btnElement:AddEventListener("click", function(event)
                     if button.OnClick then
-                        CallListeners(button.OnClick)
+                        callListeners(button.OnClick)
                     end
                 end)
             end
