@@ -458,19 +458,25 @@ function GridView:_UpdateRmlUiGrid()
             local imagePath = item.image
             -- Handle both file paths (strings) and texture IDs (numbers/tables)
             if type(imagePath) == "string" then
-                -- Regular file path
-                if imagePath:sub(1, 6) == "LuaUI/" then
-                    imagePath = "../../../" .. imagePath
+                -- Check if it's already a texture reference (!texID format)
+                if imagePath:sub(1, 1) == "!" then
+                    -- Already a texture reference from gl.CreateTexture, use <texture> tag
+                    html = html .. string.format('<texture src="%s" class="grid-item-image"/>', imagePath)
+                else
+                    -- Regular file path
+                    if imagePath:sub(1, 6) == "LuaUI/" then
+                        imagePath = "../../../" .. imagePath
+                    end
+                    html = html .. string.format('<img src="%s" class="grid-item-image"/>', imagePath)
                 end
-                html = html .. string.format('<img src="%s" class="grid-item-image"/>', imagePath)
             elseif type(imagePath) == "number" then
-                -- OpenGL texture ID - RmlUi should support this directly
-                -- Format: :t<textureID> for Spring texture references
-                html = html .. string.format('<img src=":t%d" class="grid-item-image"/>', imagePath)
+                -- OpenGL texture ID from gl.CreateTexture
+                -- Format: !<texID> for RmlUi texture references, use <texture> tag
+                html = html .. string.format('<texture src="!%d" class="grid-item-image"/>', imagePath)
             else
                 -- Texture table/object - try to extract ID or convert to string
                 local texId = imagePath.texID or imagePath.id or tostring(imagePath)
-                html = html .. string.format('<img src=":t%s" class="grid-item-image"/>', tostring(texId))
+                html = html .. string.format('<texture src="!%s" class="grid-item-image"/>', tostring(texId))
             end
         end
 
