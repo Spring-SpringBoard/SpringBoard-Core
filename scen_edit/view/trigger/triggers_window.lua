@@ -13,7 +13,7 @@ TriggersWindow:Register({
 function TriggersWindow:init()
     self:super("init")
 
-    self.btnAddTrigger = TabbedPanelButton({
+    self.btnAddTrigger = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Add trigger",

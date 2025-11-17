@@ -5,7 +5,7 @@ ObjectDefsView = Editor:extends{}
 function ObjectDefsView:init()
     self:super("init")
 
-    self.btnBrush = TabbedPanelButton({
+    self.btnBrush = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Add or remove objects by painting the map",
@@ -20,7 +20,7 @@ function ObjectDefsView:init()
             end
         },
     })
-    self.btnSet = TabbedPanelButton({
+    self.btnSet = ActionButton({
         x = 70,
         y = 0,
         tooltip = "Add objects by clicking on the map",

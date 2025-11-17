@@ -13,7 +13,7 @@ VariablesWindow:Register({
 function VariablesWindow:init()
     self:super("init")
 
-    self.btnAddVariable = TabbedPanelButton({
+    self.btnAddVariable = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Add variable",

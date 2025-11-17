@@ -75,7 +75,7 @@ function DNTSEditor:init()
         },
     })
 
-    self.btnDNTS = TabbedPanelButton({
+    self.btnDNTS = ActionButton({
         x = 140,
         y = 0,
         tooltip = "DNTS textures",

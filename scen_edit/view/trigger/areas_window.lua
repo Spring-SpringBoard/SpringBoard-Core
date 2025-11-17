@@ -14,7 +14,7 @@ AreasWindow:Register({
 function AreasWindow:init()
     self:super("init")
 
-    self.btnAddArea = TabbedPanelButton({
+    self.btnAddArea = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Add area",
