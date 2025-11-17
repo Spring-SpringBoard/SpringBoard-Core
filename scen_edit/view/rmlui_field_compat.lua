@@ -78,6 +78,7 @@ function RmlUiTabbedPanelButton:init(opts)
     self.tooltip = opts.tooltip or ""
     self.OnClick = opts.OnClick or {}
     self.pressed = false
+    self.enabled = true
     self.caption = opts.caption or ""
     self.image = opts.image
     self.children = opts.children
@@ -94,10 +95,26 @@ function RmlUiTabbedPanelButton:SetPressedState(pressed)
     end
 end
 
+function RmlUiTabbedPanelButton:SetEnabled(enabled)
+    self.enabled = enabled
+    -- Update DOM if we have the button element
+    if SB.view and SB.view.mainDocument then
+        local btnElement = SB.view.mainDocument:GetElementById(self.id)
+        if btnElement then
+            if enabled then
+                btnElement:RemoveAttribute("disabled")
+            else
+                btnElement:SetAttribute("disabled", "")
+            end
+        end
+    end
+end
+
 function RmlUiTabbedPanelButton:GenerateRml()
     local pressedClass = self.pressed and " pressed" or ""
-    local html = string.format('<button id="%s" class="action-button%s" title="%s">',
-        self.id, pressedClass, self.tooltip)
+    local disabledAttr = self.enabled and "" or ' disabled=""'
+    local html = string.format('<button id="%s" class="action-button%s" title="%s"%s>',
+        self.id, pressedClass, self.tooltip, disabledAttr)
 
     if self.image then
         html = html .. string.format('<img src="%s" class="action-button-icon"/>', self.image)

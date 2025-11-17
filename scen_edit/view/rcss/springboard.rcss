@@ -244,6 +244,13 @@ body#springboard {
     border-color: #3a7f3a;
 }
 
+.action-button:disabled {
+    background-color: #1a1a1a;
+    border-color: #333333;
+    opacity: 0.5;
+    cursor: default;
+}
+
 .action-button-icon {
     width: 35dp;
     height: 35dp;
