@@ -117,7 +117,13 @@ function RmlUiTabbedPanelButton:GenerateRml()
         self.id, pressedClass, self.tooltip, disabledAttr)
 
     if self.image then
-        html = html .. string.format('<img src="%s" class="action-button-icon"/>', self.image)
+        -- Make image path relative to RML document (scen_edit/view/rml/)
+        -- Icons are at LuaUI/images/scenedit/, so need to go up 3 levels
+        local imagePath = self.image
+        if imagePath:sub(1, 6) == "LuaUI/" then
+            imagePath = "../../../" .. imagePath
+        end
+        html = html .. string.format('<img src="%s" class="action-button-icon"/>', imagePath)
     end
 
     if self.caption and self.caption ~= "" then
