@@ -47,56 +47,70 @@ function AssetView:init(tbl)
         end
     end
     -- RmlUi mode: double-click is handled by GridView:_OnRmlUiItemClick
-    if self.showPath and self.layoutPanel then
-        -- Chili mode only
-        self.scrollPanel:SetPos(nil, 20)
-        self.lblPath = Label:New {
-            x = 35,
-            y = 3,
-            width = 100,
-            height = 20,
-            caption = "",
-            parent = self.holderControl,
-            font = {
-                color = {0.7, 0.7, 0.7, 1.0},
-            },
-        }
-        self.btnUp = Button:New {
-            x = 5,
-            y = 2,
-            width = 18,
-            height = 18,
-            caption = "",
-            parent = self.holderControl,
-            padding = {0, 0, 0, 0},
-            children = {
-                Image:New {
-                    x = 0,
-                    y = 0,
-                    width = "100%",
-                    height = "100%",
-                    margin = {0, 0, 0, 0},
-                    file = self.imageFolderUp,
-                }
-            },
-            OnClick = {
-                function()
-                    self:SetDir(Path.GetParentDir(self.dir))
-                end
-            },
-        }
-        if self.rootDir then
-            self.lblRootDir = Label:New {
-                right = 5,
+    if self.showPath then
+        if self.layoutPanel then
+            -- Chili mode
+            self.scrollPanel:SetPos(nil, 20)
+            self.lblPath = Label:New {
+                x = 35,
                 y = 3,
                 width = 100,
                 height = 20,
-                caption = "Root: " .. tostring(self.rootDir),
+                caption = "",
                 parent = self.holderControl,
                 font = {
                     color = {0.7, 0.7, 0.7, 1.0},
                 },
             }
+            self.btnUp = Button:New {
+                x = 5,
+                y = 2,
+                width = 18,
+                height = 18,
+                caption = "",
+                parent = self.holderControl,
+                padding = {0, 0, 0, 0},
+                children = {
+                    Image:New {
+                        x = 0,
+                        y = 0,
+                        width = "100%",
+                        height = "100%",
+                        margin = {0, 0, 0, 0},
+                        file = self.imageFolderUp,
+                    }
+                },
+                OnClick = {
+                    function()
+                        self:SetDir(Path.GetParentDir(self.dir))
+                    end
+                },
+            }
+            if self.rootDir then
+                self.lblRootDir = Label:New {
+                    right = 5,
+                    y = 3,
+                    width = 100,
+                    height = 20,
+                    caption = "Root: " .. tostring(self.rootDir),
+                    parent = self.holderControl,
+                    font = {
+                        color = {0.7, 0.7, 0.7, 1.0},
+                    },
+                }
+            end
+        else
+            -- RmlUi mode - create path navigation control
+            self.pathNav = RmlUiPathNav({
+                currentPath = tbl.dir or '',
+                rootDir = self.rootDir,
+                imageFolderUp = self.imageFolderUp,
+                OnUpClick = {
+                    function()
+                        self:SetDir(Path.GetParentDir(self.dir))
+                    end
+                }
+            })
         end
     end
     self:SetDir(tbl.dir or '')
@@ -122,6 +136,9 @@ function AssetView:SetDir(directory)
     self.dir = directory
     if self.lblPath then
         self.lblPath:SetCaption(self.dir)
+    elseif self.pathNav then
+        -- RmlUi mode
+        self.pathNav:SetPath(self.dir)
     end
 --     MaterialBrowser.lastDir = self.dir
     self:ScanDir()

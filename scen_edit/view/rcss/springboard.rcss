@@ -432,3 +432,116 @@ body#springboard {
     border-color: #3a7ebf;
     outline: none;
 }
+
+/* Path Navigation styles */
+.path-navigation {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10dp;
+    padding: 10dp;
+    background-color: #2a2a2a;
+    border-bottom: 1dp #555555;
+}
+
+.path-up-button {
+    width: 24dp;
+    height: 24dp;
+    background-color: #3a3a3a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 2dp;
+    cursor: pointer;
+}
+
+.path-up-button:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.path-up-button img {
+    width: 100%;
+    height: 100%;
+}
+
+.path-label {
+    color: #cccccc;
+    font-size: 12dp;
+    flex: 1;
+}
+
+.path-root-label {
+    color: #999999;
+    font-size: 11dp;
+    margin-left: auto;
+}
+
+/* Add Brush Button styles (for SavedBrushes) */
+.add-brush-button {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5dp;
+}
+
+.add-brush-button:hover {
+    opacity: 0.8;
+}
+
+.add-brush-icon {
+    width: 35dp;
+    height: 35dp;
+    margin-bottom: 3dp;
+}
+
+.add-brush-label {
+    font-size: 10dp;
+    color: #cccccc;
+    text-align: center;
+}
+
+/* Remove Brush Button styles (X button on brush items) */
+.remove-brush-button {
+    position: absolute;
+    width: 20dp;
+    height: 20dp;
+    right: 0dp;
+    top: 0dp;
+    background-color: #cc3333;
+    border: 1dp #aa2222;
+    border-radius: 3dp;
+    cursor: pointer;
+    padding: 2dp;
+    z-index: 10;
+}
+
+.remove-brush-button:hover {
+    background-color: #dd4444;
+    border-color: #bb3333;
+}
+
+.remove-brush-button img {
+    width: 100%;
+    height: 100%;
+}
+
+/* No background for special items (like add button) */
+.grid-item.no-background {
+    background-color: transparent;
+    border: 1dp #555555;
+}
+
+.grid-item.no-background:hover {
+    background-color: #2a2a2a;
+}
+
+.grid-item.no-background.selected {
+    background-color: transparent;
+    border-color: #555555;
+}

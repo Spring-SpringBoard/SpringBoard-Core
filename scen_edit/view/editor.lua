@@ -913,14 +913,20 @@ function Editor:_FinalizeRmlUi(children, opts)
         end
     end
 
+    -- Generate path navigation if gridView has it (AssetView)
+    local pathNavHtml = ''
+    if self.gridView and self.gridView.pathNav then
+        pathNavHtml = self.gridView.pathNav:GenerateRml()
+    end
+
     -- Generate grid container if editor has a gridView
     local gridHtml = ''
     if self.gridView then
         gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
     end
 
-    -- Combine buttons, filters, grid, and fields
-    self.generatedRml = buttonsHtml .. filtersHtml .. gridHtml .. fieldsHtml
+    -- Combine buttons, filters, path nav, grid, and fields
+    self.generatedRml = buttonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. fieldsHtml
 
     -- Mark as hidden by default
     self.hidden = true
@@ -983,14 +989,20 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
         end
     end
 
+    -- Generate path navigation if gridView has it (AssetView)
+    local pathNavHtml = ''
+    if self.gridView and self.gridView.pathNav then
+        pathNavHtml = self.gridView.pathNav:GenerateRml()
+    end
+
     -- Generate grid container if editor has a gridView
     local gridHtml = ''
     if self.gridView then
         gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
     end
 
-    -- Combine buttons, filters, grid, and fields
-    self.generatedRml = buttonsHtml .. filtersHtml .. gridHtml .. fieldsHtml
+    -- Combine buttons, filters, path nav, grid, and fields
+    self.generatedRml = buttonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. fieldsHtml
 
     -- Mark as hidden by default
     self.hidden = true

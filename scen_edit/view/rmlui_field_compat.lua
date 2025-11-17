@@ -214,4 +214,47 @@ function RmlUiEditBox:SetText(text)
     end
 end
 
+-- RmlUi PathNavigation - for AssetView directory navigation
+RmlUiPathNav = LCS.class{}
+
+function RmlUiPathNav:init(opts)
+    _BUTTON_INDEX = _BUTTON_INDEX + 1
+    self.id = "path-nav-" .. tostring(_BUTTON_INDEX)
+    self.currentPath = opts.currentPath or ""
+    self.rootDir = opts.rootDir
+    self.imageFolderUp = opts.imageFolderUp
+    self.OnUpClick = opts.OnUpClick or {}
+end
+
+function RmlUiPathNav:SetPath(path)
+    self.currentPath = path
+    -- Update DOM if element exists
+    if SB.view and SB.view.mainDocument then
+        local pathLabel = SB.view.mainDocument:GetElementById(self.id .. "-path")
+        if pathLabel then
+            pathLabel.inner_rml = path or ""
+        end
+    end
+end
+
+function RmlUiPathNav:GenerateRml()
+    local imagePath = self.imageFolderUp or "LuaUI/images/folder_up.png"
+    if imagePath:sub(1, 6) == "LuaUI/" then
+        imagePath = "../../../" .. imagePath
+    end
+
+    local html = '<div id="' .. self.id .. '" class="path-navigation">'
+    html = html .. '<button id="' .. self.id .. '-up" class="path-up-button" title="Go up one directory">'
+    html = html .. '<img src="' .. imagePath .. '"/>'
+    html = html .. '</button>'
+    html = html .. '<span id="' .. self.id .. '-path" class="path-label">' .. self.currentPath .. '</span>'
+
+    if self.rootDir then
+        html = html .. '<span class="path-root-label">Root: ' .. tostring(self.rootDir) .. '</span>'
+    end
+
+    html = html .. '</div>'
+    return html
+end
+
 Log.Notice("RmlUi field compatibility layer loaded - original API maintained")

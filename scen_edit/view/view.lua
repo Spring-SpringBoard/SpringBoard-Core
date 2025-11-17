@@ -548,6 +548,17 @@ function View:BindFieldEvents(editor)
             end
         end
     end
+
+    -- Bind events for path navigation (AssetView)
+    if editor.gridView and editor.gridView.pathNav then
+        local pathNav = editor.gridView.pathNav
+        local upButton = self.mainDocument:GetElementById(pathNav.id .. "-up")
+        if upButton and pathNav.OnUpClick then
+            upButton:AddEventListener("click", function(event)
+                callListeners(pathNav.OnUpClick)
+            end)
+        end
+    end
 end
 
 function View:UpdateEditorButtonStates(activeEditorName)

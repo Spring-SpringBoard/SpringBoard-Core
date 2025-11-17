@@ -110,35 +110,52 @@ function SavedBrushes:RemoveBrush(brushID)
 end
 
 function SavedBrushes:_AddAddBrush()
-    local addBrush = self:NewItem({
-        tooltip = "Add new brush",
-        children = {
-            Button:New {
-                x = 0, y = 0, right = 0, bottom = 0,
-                caption = "",
-                padding = {5, 5, 5, 5},
-                children = {
-                    Image:New {
-                        x = 0, y = 0, right = 0, bottom = 15,
-                        file = Path.Join(SB.DIRS.IMG, "plus.png"),
+    local addBrush
+    if self.layoutPanel then
+        -- Chili mode
+        addBrush = self:NewItem({
+            tooltip = "Add new brush",
+            children = {
+                Button:New {
+                    x = 0, y = 0, right = 0, bottom = 0,
+                    caption = "",
+                    padding = {5, 5, 5, 5},
+                    children = {
+                        Image:New {
+                            x = 0, y = 0, right = 0, bottom = 15,
+                            file = Path.Join(SB.DIRS.IMG, "plus.png"),
+                        },
+                        Label:New {
+                            x = 0, height = 10, right = 0, bottom = 0,
+                            align = 'center',
+                            autosize = false,
+                            caption = "Add",
+                        }
                     },
-                    Label:New {
-                        x = 0, height = 10, right = 0, bottom = 0,
-                        align = 'center',
-                        autosize = false,
-                        caption = "Add",
+                    OnClick = {
+                        function()
+                            local brush = self.GetNewBrush()
+                            local brushID = self:AddBrush(brush)
+                            self:SelectBrush(brushID)
+                        end
                     }
                 },
-                OnClick = {
-                    function()
-                        local brush = self.GetNewBrush()
-                        local brushID = self:AddBrush(brush)
-                        self:SelectBrush(brushID)
-                    end
-                }
-            },
+            }
+        })
+    else
+        -- RmlUi mode
+        addBrush = self:NewItem({
+            tooltip = "Add new brush",
+        })
+        addBrush.addIcon = Path.Join(SB.DIRS.IMG, "plus.png")
+        addBrush.OnAddClick = {
+            function()
+                local brush = self.GetNewBrush()
+                local brushID = self:AddBrush(brush)
+                self:SelectBrush(brushID)
+            end
         }
-    })
+    end
     --local addBrush = self:AddItem("Add", Path.Join(SB.DIRS.IMG, "add-plus-button.png"), "Add new brush")
     addBrush.__add_brush = true
     addBrush.__no_background = true
@@ -181,12 +198,24 @@ function SavedBrushes:PopulateItems()
         item.brushID = brush.brushID
 
         if not self.disableRemove then
-            local btnClose = self:_MakeCloseButton(brushID)
-            item:AddChild(btnClose)
-            item.btnClose = btnClose
+            if self.layoutPanel then
+                -- Chili mode
+                local btnClose = self:_MakeCloseButton(brushID)
+                item:AddChild(btnClose)
+                item.btnClose = btnClose
 
-            item:SetChildLayer(item.imgCtrl, 2)
-            item:SetChildLayer(item.btnClose, 1)
+                item:SetChildLayer(item.imgCtrl, 2)
+                item:SetChildLayer(item.btnClose, 1)
+            else
+                -- RmlUi mode
+                item.OnRemoveClick = {
+                    function()
+                        self:RemoveBrush(brushID)
+                        self:_UpdateBrushes()
+                    end
+                }
+                item.removeIcon = Path.Join(SB.DIRS.IMG, 'cancel.png')
+            end
         end
         item:Invalidate()
     end

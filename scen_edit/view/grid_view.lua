@@ -449,12 +449,26 @@ function GridView:_UpdateRmlUiGrid()
         local itemId = self.gridId .. "_item_" .. idx
         local selectedClass = self.selectedIndices[idx] and " selected" or ""
 
+        -- Check if this is a special "Add" button item (SavedBrushes)
+        local noBackground = item.__no_background and " no-background" or ""
         html = html .. string.format([[
-            <div id="%s" class="grid-item%s" style="width: %ddp; height: %ddp;">
-        ]], itemId, selectedClass, self.itemWidth, self.itemHeight)
+            <div id="%s" class="grid-item%s%s" style="width: %ddp; height: %ddp;">
+        ]], itemId, selectedClass, noBackground, self.itemWidth, self.itemHeight)
 
-        -- Add image if present
-        if item.image then
+        -- Handle special "Add brush" item
+        if item.__add_brush and item.OnAddClick then
+            local addIconPath = item.addIcon or "LuaUI/images/scenedit/plus.png"
+            if addIconPath:sub(1, 6) == "LuaUI/" then
+                addIconPath = "../../../" .. addIconPath
+            end
+            html = html .. string.format([[
+                <button id="%s-add-btn" class="add-brush-button">
+                    <img src="%s" class="add-brush-icon"/>
+                    <span class="add-brush-label">Add</span>
+                </button>
+            ]], itemId, addIconPath)
+        -- Normal grid item
+        elseif item.image then
             local imagePath = item.image
             -- Handle both file paths (strings) and texture IDs (numbers/tables)
             if type(imagePath) == "string" then
@@ -485,19 +499,59 @@ function GridView:_UpdateRmlUiGrid()
             html = html .. string.format('<div class="grid-item-label">%s</div>', item.caption)
         end
 
+        -- Add remove button if item has one (SavedBrushes)
+        if item.OnRemoveClick then
+            local removeIconPath = item.removeIcon or "LuaUI/images/scenedit/cancel.png"
+            if removeIconPath:sub(1, 6) == "LuaUI/" then
+                removeIconPath = "../../../" .. removeIconPath
+            end
+            html = html .. string.format([[
+                <button id="%s-remove-btn" class="remove-brush-button" title="Remove brush">
+                    <img src="%s"/>
+                </button>
+            ]], itemId, removeIconPath)
+        end
+
         html = html .. '</div>'
     end
 
     gridContainer.inner_rml = html
 
-    -- Bind click events for selection
+    -- Bind click events for selection and special buttons
+    local callListeners = CallListeners  -- Capture for closures
     for idx, item in ipairs(self.childItems) do
         local itemId = self.gridId .. "_item_" .. idx
-        local itemElement = SB.view.mainDocument:GetElementById(itemId)
-        if itemElement then
-            itemElement:AddEventListener("click", function()
-                self:_OnRmlUiItemClick(idx)
-            end)
+
+        -- Bind "Add" button click
+        if item.__add_brush and item.OnAddClick then
+            local addBtn = SB.view.mainDocument:GetElementById(itemId .. "-add-btn")
+            if addBtn then
+                addBtn:AddEventListener("click", function(event)
+                    callListeners(item.OnAddClick)
+                    event:StopPropagation()  -- Don't trigger item selection
+                end)
+            end
+        end
+
+        -- Bind "Remove" button click
+        if item.OnRemoveClick then
+            local removeBtn = SB.view.mainDocument:GetElementById(itemId .. "-remove-btn")
+            if removeBtn then
+                removeBtn:AddEventListener("click", function(event)
+                    callListeners(item.OnRemoveClick)
+                    event:StopPropagation()  -- Don't trigger item selection
+                end)
+            end
+        end
+
+        -- Bind item selection click (if not an add button)
+        if not item.__add_brush then
+            local itemElement = SB.view.mainDocument:GetElementById(itemId)
+            if itemElement then
+                itemElement:AddEventListener("click", function()
+                    self:_OnRmlUiItemClick(idx)
+                end)
+            end
         end
     end
 end
