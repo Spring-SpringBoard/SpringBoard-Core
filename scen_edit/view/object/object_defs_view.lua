@@ -167,6 +167,9 @@ function ObjectDefsView:init()
         }
     )
 
+    -- Store grid reference for RmlUi rendering
+    self.gridView = self.objectDefPanel
+
     self:Finalize(children)
     self:SetInvisibleFields(unpack(self.allFields))
     self.type = "brush"

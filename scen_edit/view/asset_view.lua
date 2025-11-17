@@ -25,25 +25,30 @@ function AssetView:init(tbl)
     -- FIXME: Cleanup double click handling hack
     self.__previousDoubleClickTime = Spring.GetTimer()
 
-    self.layoutPanel.MouseDblClick = function(ctrl, x, y, button, mods)
-        if button ~= 1 then
-            return
+    if self.layoutPanel then
+        -- Chili mode
+        self.layoutPanel.MouseDblClick = function(ctrl, x, y, button, mods)
+            if button ~= 1 then
+                return
+            end
+            local cx,cy = ctrl:LocalToClient(x,y)
+            local itemIdx = ctrl:GetItemIndexAt(cx,cy)
+
+            if itemIdx < 0 then return end
+
+            local item = self.items[itemIdx]
+            if item == nil then
+                return
+            end
+
+            self:DoubleClickItem(item)
+
+            return ctrl
         end
-        local cx,cy = ctrl:LocalToClient(x,y)
-        local itemIdx = ctrl:GetItemIndexAt(cx,cy)
-
-        if itemIdx < 0 then return end
-
-        local item = self.items[itemIdx]
-        if item == nil then
-            return
-        end
-
-        self:DoubleClickItem(item)
-
-        return ctrl
     end
-    if self.showPath then
+    -- RmlUi mode: double-click is handled by GridView:_OnRmlUiItemClick
+    if self.showPath and self.layoutPanel then
+        -- Chili mode only
         self.scrollPanel:SetPos(nil, 20)
         self.lblPath = Label:New {
             x = 35,
@@ -113,7 +118,7 @@ function AssetView:DoubleClickItem(item)
 end
 
 function AssetView:SetDir(directory)
-    self.layoutPanel:DeselectAll()
+    self:DeselectAll()
     self.dir = directory
     if self.lblPath then
         self.lblPath:SetCaption(self.dir)

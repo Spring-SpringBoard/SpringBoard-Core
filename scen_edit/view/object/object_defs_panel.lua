@@ -37,12 +37,12 @@ function ObjectDefsPanel:Refresh()
 end
 
 function ObjectDefsPanel:FilterItems()
-    self.layoutPanel:DeselectAll()
-    self.layoutPanel:ClearChildren()
+    self:DeselectAll()
+    self:ClearChildren()
     for _, item in pairs(self.items) do
         local objectDefID = item.objectDefID
         if self:FilterObject(objectDefID) then
-            self.layoutPanel:AddChild(item)
+            self:AddChildItem(item)
         end
     end
 end
@@ -77,7 +77,7 @@ function ObjectDefsPanel:SetSearchString(search)
 end
 
 function ObjectDefsPanel:GetObjectDefID(index)
-    local item = self.layoutPanel.children[index]
+    local item = self:GetChildItem(index)
     if item then
         return item.objectDefID
     else
@@ -141,7 +141,7 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
             fbo = true,
         })
         drawIcon.drawTex = tex
-        ctrl.imgCtrl.file = drawIcon.drawTex
+        ctrl:SetImage(drawIcon.drawTex)
     end)
 
     if not self.scheduleDraw then

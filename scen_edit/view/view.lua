@@ -437,6 +437,13 @@ function View:OpenEditor(editorName)
         -- Bind field events
         self:BindFieldEvents(editor)
 
+        -- Update grid if editor has a gridView
+        if editor.gridView then
+            SB.delay(function()
+                editor.gridView:_UpdateRmlUiGrid()
+            end)
+        end
+
         -- Mark editor as visible
         editor.hidden = false
     end

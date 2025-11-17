@@ -4,19 +4,51 @@ local __gridViewCounter = 0
 function GridView:init(tbl)
     -- Defaults
     __gridViewCounter = __gridViewCounter + 1
+
+    self.OnSelectItem = {}
+    self.items = {}
+
+    -- Store configuration
+    self.itemWidth = tbl.itemWidth or 88
+    self.itemHeight = tbl.itemHeight or 88
+    self.multiSelect = tbl.multiSelect or false
+
+    -- Copy all properties from tbl to self
+    for k, v in pairs(tbl) do
+        if k ~= "ctrl" then
+            self[k] = v
+        end
+    end
+
+    -- Check if we're in RmlUi mode
+    if SB.view and SB.view.useRmlUi then
+        self:_InitRmlUi(tbl)
+    else
+        self:_InitChili(tbl)
+    end
+end
+
+function GridView:_InitRmlUi(tbl)
+    -- In RmlUi mode, we don't create Chili controls
+    -- The grid will be rendered to RmlUi DOM by the View class
+    self.gridId = "grid_view_" .. tostring(__gridViewCounter)
+    self.selectedIndices = {}
+    self.childItems = {}  -- Stores items added via AddChildItem
+end
+
+function GridView:_InitChili(tbl)
     local layoutPanelSettings = {
         name = "grid_view_" .. tostring(__gridViewCounter),
         greedyHitText = true,
         selectable = true,
-        multiSelect = false,
+        multiSelect = self.multiSelect,
         autosize = true,
         autoArrangeH = false,
         autoArrangeV = false,
         centerItems  = false,
         itemMargin   = {1, 1, 1, 1},
-        iconX = 88,
-        iconY = 88,
-        --useRTT = true,
+        iconX = self.itemWidth,
+        iconY = self.itemHeight,
         useRTT = true,
 
         x = 0,
@@ -42,29 +74,9 @@ function GridView:init(tbl)
         children = {},
         classname = "panel",
     }
-    self.OnSelectItem = {}
-
-    self.itemWidth = layoutPanelSettings.iconX
-    self.itemHeight = layoutPanelSettings.iconY
-    if tbl.itemWidth then
-        layoutPanelSettings.iconX = tbl.itemWidth
-    end
-    if tbl.itemHeight then
-        layoutPanelSettings.iconY = tbl.itemHeight
-    end
-    if tbl.multiSelect then
-        layoutPanelSettings.multiSelect = tbl.multiSelect
-    end
 
     local ctrlOpt = tbl.ctrl
     ctrlOpt = Table.Merge(ctrlOpt, holderControlSettings)
-    tbl.ctrl = nil
-
-    for k, v in pairs(tbl) do
-        self[k] = v
-    end
-
-    self.items = {}
 
     -- we're using the fake control to handle skin-based rendering
     self._fakeControl = ImageListView:New{}
@@ -116,7 +128,12 @@ function GridView:_OnSelectItem(obj, itemIdx, selected)
 end
 
 function GridView:GetControl()
-    return self.holderControl
+    if self.holderControl then
+        return self.holderControl
+    else
+        -- RmlUi mode - return a placeholder that won't break code expecting it
+        return { _isRmlUiPlaceholder = true }
+    end
 end
 
 function GridView:GetAllItems()
@@ -124,18 +141,37 @@ function GridView:GetAllItems()
 end
 
 function GridView:GetSelectedItems()
-    local items = {}
-    for itemIdx, selected in pairs(self.layoutPanel.selectedItems) do
-        if selected then
-            local item = self.layoutPanel.children[itemIdx]
-            table.insert(items, item)
+    if self.layoutPanel then
+        local items = {}
+        for itemIdx, selected in pairs(self.layoutPanel.selectedItems) do
+            if selected then
+                local item = self.layoutPanel.children[itemIdx]
+                table.insert(items, item)
+            end
         end
+        return items
+    else
+        -- RmlUi mode
+        local items = {}
+        for itemIdx, selected in pairs(self.selectedIndices) do
+            if selected then
+                local item = self.childItems[itemIdx]
+                if item then
+                    table.insert(items, item)
+                end
+            end
+        end
+        return items
     end
-    return items
 end
 
 function GridView:GetItem(itemIdx)
-    return self.layoutPanel.children[itemIdx]
+    if self.layoutPanel then
+        return self.layoutPanel.children[itemIdx]
+    else
+        -- RmlUi mode
+        return self.childItems[itemIdx]
+    end
 end
 
 function GridView:GetItemIndex(item)
@@ -147,11 +183,27 @@ function GridView:GetItemIndex(item)
 end
 
 function GridView:SelectItem(itemIdx)
-    self.layoutPanel:SelectItem(itemIdx)
+    if self.layoutPanel then
+        self.layoutPanel:SelectItem(itemIdx)
+    else
+        -- RmlUi mode
+        if not self.multiSelect then
+            self.selectedIndices = {}
+        end
+        self.selectedIndices[itemIdx] = true
+        self:_UpdateRmlUiGrid()
+        self:_OnSelectItem(nil, itemIdx, true)
+    end
 end
 
 function GridView:DeselectAll()
-    self.layoutPanel:DeselectAll()
+    if self.layoutPanel then
+        self.layoutPanel:DeselectAll()
+    else
+        -- RmlUi mode
+        self.selectedIndices = {}
+        self:_UpdateRmlUiGrid()
+    end
 end
 
 -- FIXME: Cleanup double click handling hack
@@ -162,97 +214,139 @@ local __previousClickedTime = nil
 function GridView:NewItem(tbl)
     __gridItemCounter = __gridItemCounter + 1
     local item
-    local defaults = {
-        name = 'grid_item' .. tostring(__gridItemCounter),
-        greedyHitText = true,
-        width  = self.itemWidth,
-        height = self.itemHeight,
-        padding = {0,0,0,0},
-        itemPadding = {0,0,0,0},
-        itemMargin = {0,0,0,0},
-        useRTT = false,
-        __nofont = true,
-        -- FIXME: Cleanup double click handling hack
-        OnMouseUp = {
-            function(obj, x, y, button)
-                if button ~= 1 then
-                    return
-                end
 
-                local now = Spring.GetTimer()
-                if __previousClickedObject ~= obj then
-                    __previousClickedObject = obj
+    if self.layoutPanel then
+        -- Chili mode
+        local defaults = {
+            name = 'grid_item' .. tostring(__gridItemCounter),
+            greedyHitText = true,
+            width  = self.itemWidth,
+            height = self.itemHeight,
+            padding = {0,0,0,0},
+            itemPadding = {0,0,0,0},
+            itemMargin = {0,0,0,0},
+            useRTT = false,
+            __nofont = true,
+            -- FIXME: Cleanup double click handling hack
+            OnMouseUp = {
+                function(obj, x, y, button)
+                    if button ~= 1 then
+                        return
+                    end
+
+                    local now = Spring.GetTimer()
+                    if __previousClickedObject ~= obj then
+                        __previousClickedObject = obj
+                        __previousClickedTime = now
+                        return
+                    end
+
+                    if Spring.DiffTimers(now, __previousClickedTime) < 0.45 then
+                        self:DoubleClickItem(item)
+                    end
                     __previousClickedTime = now
-                    return
                 end
-
-                if Spring.DiffTimers(now, __previousClickedTime) < 0.45 then
-                    self:DoubleClickItem(item)
-                end
-                __previousClickedTime = now
-            end
+            }
         }
-    }
-    tbl = Table.Merge(tbl, defaults)
-    item = Control:New(tbl)
+        tbl = Table.Merge(tbl, defaults)
+        item = Control:New(tbl)
 
-    self.layoutPanel:AddChild(item)
+        -- Add wrapper method to items for setting images
+        item.SetImage = function(self, imagePath)
+            if self.imgCtrl then
+                self.imgCtrl.file = imagePath
+                self:Invalidate()
+            end
+        end
+
+        self.layoutPanel:AddChild(item)
+    else
+        -- RmlUi mode - create simple table item
+        item = {
+            name = 'grid_item' .. tostring(__gridItemCounter),
+            tooltip = tbl.tooltip,
+            children = tbl.children or {},
+        }
+
+        -- Add wrapper method for setting images
+        item.SetImage = function(self, imagePath)
+            self.image = imagePath
+        end
+
+        -- Stub methods that might be called
+        item.Invalidate = function() end
+        item.IsInView = function() return true end
+        item.AddChild = function() end
+        item.SetChildLayer = function() end
+    end
+
     table.insert(self.items, item)
     return item
 end
 
 function GridView:AddItem(caption, image, tooltip, __chiliName)
-    local children = {}
+    if self.layoutPanel then
+        -- Chili mode
+        local children = {}
 
-    local __chiliImgName
-    local __chiliCtrlName
-    local __chiliLabelName
-    if __chiliName then
-        __chiliImgName = __chiliName .. "_image"
-        __chiliCtrlName = __chiliName .. "_ctrl"
-        __chiliLabelName = __chiliName .. "_label"
-    end
-
-    local imgCtrl, lblCtrl
-    if image then
-        local bottom = 0
-        if caption then
-            bottom = bottom + 20
+        local __chiliImgName
+        local __chiliCtrlName
+        local __chiliLabelName
+        if __chiliName then
+            __chiliImgName = __chiliName .. "_image"
+            __chiliCtrlName = __chiliName .. "_ctrl"
+            __chiliLabelName = __chiliName .. "_label"
         end
-        imgCtrl = Image:New {
-            x = 0,
-            y = 0,
-            right = 0,
-            bottom = bottom,
-            file = image,
-            name = __chiliImgName,
-        }
-        table.insert(children, imgCtrl)
-    end
-    if caption then
-        lblCtrl = Label:New {
-            width = "100%",
-            x = 0,
-            height = 20,
-            right = 0,
-            bottom = 0,
-            align = 'center',
-            autosize = false,
-            caption = caption,
-            --fontsize = 12,
-            name = __chiliLabelName,
-        }
-        table.insert(children, lblCtrl)
-    end
 
-    local item = self:NewItem({
-        tooltip = tooltip,
-        children = children,
-        imgCtrl = imgCtrl,
-        lblCtrl = lblCtrl,
-        name = __chiliCtrlName,
-    })
-    return item
+        local imgCtrl, lblCtrl
+        if image then
+            local bottom = 0
+            if caption then
+                bottom = bottom + 20
+            end
+            imgCtrl = Image:New {
+                x = 0,
+                y = 0,
+                right = 0,
+                bottom = bottom,
+                file = image,
+                name = __chiliImgName,
+            }
+            table.insert(children, imgCtrl)
+        end
+        if caption then
+            lblCtrl = Label:New {
+                width = "100%",
+                x = 0,
+                height = 20,
+                right = 0,
+                bottom = 0,
+                align = 'center',
+                autosize = false,
+                caption = caption,
+                --fontsize = 12,
+                name = __chiliLabelName,
+            }
+            table.insert(children, lblCtrl)
+        end
+
+        local item = self:NewItem({
+            tooltip = tooltip,
+            children = children,
+            imgCtrl = imgCtrl,
+            lblCtrl = lblCtrl,
+            name = __chiliCtrlName,
+        })
+        return item
+    else
+        -- RmlUi mode
+        local item = self:NewItem({
+            tooltip = tooltip,
+        })
+        item.caption = caption
+        item.image = image
+        return item
+    end
 end
 
 function GridView:DoubleClickItem(item)
@@ -261,20 +355,165 @@ end
 function GridView:ClearItems()
     self.items = {}
     --self.layoutPanel:DeselectAll()
-    self.layoutPanel:ClearChildren()
+    self:ClearChildren()
+end
+
+-- Wrapper methods to hide layoutPanel access
+function GridView:ClearChildren()
+    if self.layoutPanel then
+        self.layoutPanel:ClearChildren()
+    else
+        -- RmlUi mode
+        self.childItems = {}
+        self:_UpdateRmlUiGrid()
+    end
+end
+
+function GridView:AddChildItem(item)
+    if self.layoutPanel then
+        self.layoutPanel:AddChild(item)
+    else
+        -- RmlUi mode
+        table.insert(self.childItems, item)
+        self:_UpdateRmlUiGrid()
+    end
+end
+
+function GridView:GetChildItem(idx)
+    if self.layoutPanel then
+        return self.layoutPanel.children[idx]
+    else
+        -- RmlUi mode
+        return self.childItems[idx]
+    end
+end
+
+function GridView:Invalidate()
+    if self.layoutPanel then
+        self.layoutPanel:Invalidate()
+    else
+        -- RmlUi mode
+        self:_UpdateRmlUiGrid()
+    end
+end
+
+function GridView:_UpdateRmlUiGrid()
+    -- Skip updates during batching
+    if self._batchingUpdates then
+        return
+    end
+
+    -- Update the RmlUi DOM to reflect current grid state
+    -- This will be called whenever the grid needs to refresh
+    if not SB.view or not SB.view.mainDocument then
+        return
+    end
+
+    local gridContainer = SB.view.mainDocument:GetElementById(self.gridId)
+    if not gridContainer then
+        return
+    end
+
+    -- Generate HTML for all child items
+    local html = ""
+    for idx, item in ipairs(self.childItems) do
+        local itemId = self.gridId .. "_item_" .. idx
+        local selectedClass = self.selectedIndices[idx] and " selected" or ""
+
+        html = html .. string.format([[
+            <div id="%s" class="grid-item%s" style="width: %ddp; height: %ddp;">
+        ]], itemId, selectedClass, self.itemWidth, self.itemHeight)
+
+        -- Add image if present
+        if item.image then
+            local imagePath = item.image
+            if imagePath:sub(1, 6) == "LuaUI/" then
+                imagePath = "../../../" .. imagePath
+            end
+            html = html .. string.format('<img src="%s" class="grid-item-image"/>', imagePath)
+        end
+
+        -- Add caption if present
+        if item.caption then
+            html = html .. string.format('<div class="grid-item-label">%s</div>', item.caption)
+        end
+
+        html = html .. '</div>'
+    end
+
+    gridContainer.inner_rml = html
+
+    -- Bind click events for selection
+    for idx, item in ipairs(self.childItems) do
+        local itemId = self.gridId .. "_item_" .. idx
+        local itemElement = SB.view.mainDocument:GetElementById(itemId)
+        if itemElement then
+            itemElement:AddEventListener("click", function()
+                self:_OnRmlUiItemClick(idx)
+            end)
+        end
+    end
+end
+
+function GridView:_OnRmlUiItemClick(itemIdx)
+    local item = self.childItems[itemIdx]
+    if not item then
+        return
+    end
+
+    -- Check for double-click
+    local now = Spring.GetTimer()
+    if self._lastClickedItemIdx == itemIdx then
+        if Spring.DiffTimers(now, self._lastClickTime) < 0.45 then
+            -- Double click
+            self:DoubleClickItem(item)
+            self._lastClickedItemIdx = nil
+            self._lastClickTime = nil
+            return
+        end
+    end
+    self._lastClickedItemIdx = itemIdx
+    self._lastClickTime = now
+
+    local selected = not self.selectedIndices[itemIdx]
+
+    if not self.multiSelect then
+        -- Clear all other selections
+        self.selectedIndices = {}
+    end
+
+    if selected then
+        self.selectedIndices[itemIdx] = true
+    else
+        self.selectedIndices[itemIdx] = nil
+    end
+
+    self:_UpdateRmlUiGrid()
+    self:_OnSelectItem(nil, itemIdx, selected)
 end
 
 function GridView:StartMultiModify()
-    self.layoutPanel:DisableRealign()
+    if self.layoutPanel then
+        self.layoutPanel:DisableRealign()
+    else
+        -- RmlUi mode - set flag to batch updates
+        self._batchingUpdates = true
+    end
 end
 
 function GridView:EndMultiModify()
-    self.layoutPanel:EnableRealign()
-    self.layoutPanel:RequestRealign()
-    if self.scrollPanel then
-        self.scrollPanel:RequestRealign()
-        self.scrollPanel:Invalidate()
+    if self.layoutPanel then
+        self.layoutPanel:EnableRealign()
+        self.layoutPanel:RequestRealign()
+        if self.scrollPanel then
+            self.scrollPanel:RequestRealign()
+            self.scrollPanel:Invalidate()
+        end
+        self.layoutPanel:UpdateLayout()
+        self.layoutPanel:Invalidate()
+    else
+        -- RmlUi mode - end batching and update once
+        self._batchingUpdates = false
+        self:_UpdateRmlUiGrid()
     end
-    self.layoutPanel:UpdateLayout()
-    self.layoutPanel:Invalidate()
 end

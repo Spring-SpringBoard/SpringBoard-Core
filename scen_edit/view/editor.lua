@@ -886,8 +886,14 @@ function Editor:_FinalizeRmlUi(children, opts)
         end
     end
 
-    -- Combine buttons and fields
-    self.generatedRml = buttonsHtml .. fieldsHtml
+    -- Generate grid container if editor has a gridView
+    local gridHtml = ''
+    if self.gridView then
+        gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
+    end
+
+    -- Combine buttons, grid, and fields
+    self.generatedRml = buttonsHtml .. gridHtml .. fieldsHtml
 
     -- Mark as hidden by default
     self.hidden = true
@@ -937,8 +943,14 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
         end
     end
 
-    -- Combine buttons and fields
-    self.generatedRml = buttonsHtml .. fieldsHtml
+    -- Generate grid container if editor has a gridView
+    local gridHtml = ''
+    if self.gridView then
+        gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
+    end
+
+    -- Combine buttons, grid, and fields
+    self.generatedRml = buttonsHtml .. gridHtml .. fieldsHtml
 
     -- Mark as hidden by default
     self.hidden = true

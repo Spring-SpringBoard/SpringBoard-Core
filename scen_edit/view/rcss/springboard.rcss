@@ -324,3 +324,53 @@ body#springboard {
     margin-bottom: 10dp;
     align-items: center;
 }
+
+/* Grid View styles */
+.grid-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 5dp;
+    padding: 10dp;
+    overflow-y: auto;
+    align-content: flex-start;
+}
+
+.grid-item {
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5dp;
+    position: relative;
+}
+
+.grid-item:hover {
+    background-color: #3a3a3a;
+    border-color: #777777;
+}
+
+.grid-item.selected {
+    background-color: #1a3a5a;
+    border-color: #3a7ebf;
+}
+
+.grid-item-image {
+    max-width: 100%;
+    max-height: calc(100% - 20dp);
+    object-fit: contain;
+}
+
+.grid-item-label {
+    font-size: 10dp;
+    color: #cccccc;
+    text-align: center;
+    margin-top: 3dp;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

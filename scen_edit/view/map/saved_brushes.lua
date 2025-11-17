@@ -61,8 +61,7 @@ end
 function SavedBrushes:OnBrushImageUpdated(brush, image)
     for itemIdx, item in pairs(self:GetAllItems()) do
         if item.brushID == brush.brushID then
-            item.imgCtrl.file = image
-            item:Invalidate()
+            item:SetImage(image)
             break
         end
     end
@@ -193,6 +192,6 @@ function SavedBrushes:PopulateItems()
     end
 
     SB.delay(function()
-        self.layoutPanel:Invalidate()
+        self:Invalidate()
     end)
 end
