@@ -297,8 +297,8 @@ body#springboard {
 }
 
 .action-button.pressed .action-button-icon {
-    decorator: image;
-    image-color: #00ff00;
+    /* Green tint for pressed state - using filter instead of decorator */
+    filter: brightness(1.2) sepia(0.5) hue-rotate(70deg);
 }
 
 .action-button-label {

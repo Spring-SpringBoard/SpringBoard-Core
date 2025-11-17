@@ -42,8 +42,13 @@ function AbstractState:KeyPress(key, mods, isRepeat, label, unicode)
     end
 
     local editor = self:__GetEditor()
-    if editor and not editor.window.__disabled then
-        if editor:KeyPress(key, mods, isRepeat, label, unicode) then
+    if editor then
+        -- In RmlUi mode, editors don't have a window property
+        local canProcessKey = true
+        if editor.window and editor.window.__disabled then
+            canProcessKey = false
+        end
+        if canProcessKey and editor:KeyPress(key, mods, isRepeat, label, unicode) then
             return true
         end
     end

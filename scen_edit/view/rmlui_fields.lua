@@ -45,6 +45,16 @@ function RmlUiField:Set(value)
     self:SetValue(value)
 end
 
+function RmlUiField:Focus()
+    -- Focus the input element (for dialogs)
+    if SB.view and SB.view.mainDocument then
+        local input = SB.view.mainDocument:GetElementById("field-" .. self.name)
+        if input and input.Focus then
+            input:Focus()
+        end
+    end
+end
+
 function RmlUiField:UpdateDisplay()
     -- Override in subclass
 end
