@@ -262,6 +262,7 @@ function GridView:NewItem(tbl)
         self.layoutPanel:AddChild(item)
     else
         -- RmlUi mode - create simple table item
+        local gridView = self  -- Capture reference to parent grid
         item = {
             name = 'grid_item' .. tostring(__gridItemCounter),
             tooltip = tbl.tooltip,
@@ -271,10 +272,19 @@ function GridView:NewItem(tbl)
         -- Add wrapper method for setting images
         item.SetImage = function(self, imagePath)
             self.image = imagePath
+            -- Trigger grid update when image changes (for RTT updates)
+            if gridView then
+                gridView:_UpdateRmlUiGrid()
+            end
         end
 
         -- Stub methods that might be called
-        item.Invalidate = function() end
+        item.Invalidate = function()
+            -- Trigger grid refresh when item is invalidated (e.g., RTT texture updated)
+            if gridView then
+                gridView:_UpdateRmlUiGrid()
+            end
+        end
         item.IsInView = function() return true end
         item.AddChild = function() end
         item.SetChildLayer = function() end
@@ -403,6 +413,25 @@ function GridView:_UpdateRmlUiGrid()
         return
     end
 
+    -- Throttle updates to avoid excessive DOM manipulation (e.g., from RTT invalidations)
+    -- Maximum 10 updates per second
+    local now = Spring.GetTimer()
+    if self._lastUpdateTime then
+        local elapsed = Spring.DiffTimers(now, self._lastUpdateTime)
+        if elapsed < 0.1 then
+            -- Too soon, schedule delayed update
+            if not self._updateScheduled then
+                self._updateScheduled = true
+                SB.delay(function()
+                    self._updateScheduled = false
+                    self:_UpdateRmlUiGrid()
+                end)
+            end
+            return
+        end
+    end
+    self._lastUpdateTime = now
+
     -- Update the RmlUi DOM to reflect current grid state
     -- This will be called whenever the grid needs to refresh
     if not SB.view or not SB.view.mainDocument then
@@ -427,10 +456,22 @@ function GridView:_UpdateRmlUiGrid()
         -- Add image if present
         if item.image then
             local imagePath = item.image
-            if imagePath:sub(1, 6) == "LuaUI/" then
-                imagePath = "../../../" .. imagePath
+            -- Handle both file paths (strings) and texture IDs (numbers/tables)
+            if type(imagePath) == "string" then
+                -- Regular file path
+                if imagePath:sub(1, 6) == "LuaUI/" then
+                    imagePath = "../../../" .. imagePath
+                end
+                html = html .. string.format('<img src="%s" class="grid-item-image"/>', imagePath)
+            elseif type(imagePath) == "number" then
+                -- OpenGL texture ID - RmlUi should support this directly
+                -- Format: :t<textureID> for Spring texture references
+                html = html .. string.format('<img src=":t%d" class="grid-item-image"/>', imagePath)
+            else
+                -- Texture table/object - try to extract ID or convert to string
+                local texId = imagePath.texID or imagePath.id or tostring(imagePath)
+                html = html .. string.format('<img src=":t%s" class="grid-item-image"/>', tostring(texId))
             end
-            html = html .. string.format('<img src="%s" class="grid-item-image"/>', imagePath)
         end
 
         -- Add caption if present
