@@ -46,10 +46,49 @@ body#springboard {
     border-bottom: 2dp #3a7ebf;
 }
 
+/* Action bar (Save, Load, etc.) */
+.action-bar {
+    position: absolute;
+    top: 40dp;
+    left: 0dp;
+    right: 0dp;
+    height: 45dp;
+    background-color: #222222;
+    border-bottom: 1dp #555555;
+    display: flex;
+    flex-direction: row;
+    gap: 1dp;
+    padding: 2dp 5dp;
+    align-items: center;
+}
+
+.toolbar-action-button {
+    width: 40dp;
+    height: 40dp;
+    background-color: #3a3a3a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    cursor: pointer;
+    padding: 0dp;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar-action-button:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.toolbar-action-button img {
+    width: 20dp;
+    height: 20dp;
+}
+
 /* Editor button panel (scrollable horizontal) - matches TOOLBOX_ITEM_HEIGHT (70dp) + padding */
 .editor-panel-wrapper {
     position: absolute;
-    top: 40dp;
+    top: 90dp;
     left: 0dp;
     right: 0dp;
     height: 80dp;
@@ -108,10 +147,10 @@ body#springboard {
     color: #00ff00;
 }
 
-/* Main content area - starts after editor panel (40 + 80 = 120dp) */
+/* Main content area - starts after editor panel (40 tab + 45 action + 80 editor = 165dp + 10 margin) */
 .main-content {
     position: absolute;
-    top: 125dp;
+    top: 175dp;
     left: 0dp;
     right: 0dp;
     bottom: 0dp;

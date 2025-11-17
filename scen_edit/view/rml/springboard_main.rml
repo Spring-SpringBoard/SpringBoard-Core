@@ -13,6 +13,11 @@
         <button id="tab-Misc" class="tab-button">Misc</button>
     </div>
 
+    <!-- Action buttons bar (Save, Load, etc.) -->
+    <div id="action-bar" class="action-bar">
+        <!-- Action buttons populated dynamically -->
+    </div>
+
     <!-- Editor button panel (scrollable horizontal) -->
     <div id="editor-panel-wrapper" class="editor-panel-wrapper">
         <div id="editor-button-panel" class="editor-button-panel">

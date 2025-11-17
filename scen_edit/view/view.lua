@@ -76,6 +76,7 @@ function View:InitializeRmlUi()
     -- Initialize tab system
     self.currentTab = "Objects"
     self:BindTabEvents()
+    self:PopulateActionButtons()
     self:PopulateEditorButtons(self.currentTab)
 
     -- Setup event handlers
@@ -296,6 +297,59 @@ function View:SwitchTab(tabName)
     local mainContent = self.mainDocument:GetElementById("main-content")
     if mainContent then
         mainContent.inner_rml = "<p>Select an editor from the buttons above</p>"
+    end
+end
+
+function View:PopulateActionButtons()
+    if not SB.conf.SHOW_BASIC_CONTROLS then
+        return
+    end
+
+    local actionBar = self.mainDocument:GetElementById("action-bar")
+    if not actionBar then return end
+
+    -- Filter and sort actions by toolbar_order
+    local actions = Table.Filter(SB.actionRegistry, function(v)
+        return v.toolbar_order ~= nil
+    end)
+    actions = Table.SortByAttr(actions, "toolbar_order")
+
+    -- Create button HTML for each action
+    local buttonsHTML = ""
+    for _, actionCfg in ipairs(actions) do
+        if actionCfg.image and actionCfg.tooltip then
+            local btnId = "toolbar-action-" .. (actionCfg.name or actionCfg.tooltip:gsub("%s+", "-"):lower())
+
+            -- Make image path relative to RML document
+            local imagePath = actionCfg.image
+            if imagePath:sub(1, 6) == "LuaUI/" then
+                imagePath = "../../../" .. imagePath
+            end
+
+            buttonsHTML = buttonsHTML .. string.format([[
+                <button id="%s" class="toolbar-action-button" title="%s">
+                    <img src="%s"/>
+                </button>
+            ]], btnId, actionCfg.tooltip, imagePath)
+        end
+    end
+
+    actionBar.inner_rml = buttonsHTML
+
+    -- Bind click events for action buttons
+    for _, actionCfg in ipairs(actions) do
+        if actionCfg.image and actionCfg.tooltip then
+            local btnId = "toolbar-action-" .. (actionCfg.name or actionCfg.tooltip:gsub("%s+", "-"):lower())
+            local btnElement = self.mainDocument:GetElementById(btnId)
+            if btnElement then
+                btnElement:AddEventListener("click", function()
+                    local action = actionCfg.action()
+                    if not action.canExecute or action:canExecute() then
+                        action:execute()
+                    end
+                end)
+            end
+        end
     end
 end
 
