@@ -55,4 +55,37 @@ function EditorButton(opts)
     end
 end
 
+-- FilterLabel - replacement for Label:New in filter UI
+-- Used for filter labels like "Type:", "Terrain:", "Search:", etc.
+function FilterLabel(opts)
+    if IsRmlUiMode() then
+        return RmlUiLabel(opts)
+    else
+        -- Chili mode - use original Label
+        return Label:New(opts)
+    end
+end
+
+-- FilterComboBox - replacement for ComboBox:New in filter UI
+-- Used for dropdown filters like terrain type, unit type, etc.
+function FilterComboBox(opts)
+    if IsRmlUiMode() then
+        return RmlUiComboBox(opts)
+    else
+        -- Chili mode - use original ComboBox
+        return ComboBox:New(opts)
+    end
+end
+
+-- FilterEditBox - replacement for EditBox:New in filter UI
+-- Used for search input fields
+function FilterEditBox(opts)
+    if IsRmlUiMode() then
+        return RmlUiEditBox(opts)
+    else
+        -- Chili mode - use original EditBox
+        return EditBox:New(opts)
+    end
+end
+
 Log.Notice("UI controls abstraction layer loaded")

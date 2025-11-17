@@ -167,8 +167,9 @@ function ObjectDefsView:init()
         }
     )
 
-    -- Store grid reference for RmlUi rendering
+    -- Store grid and filters reference for RmlUi rendering
     self.gridView = self.objectDefPanel
+    self.filterControls = self.filters  -- Store for event binding
 
     self:Finalize(children)
     self:SetInvisibleFields(unpack(self.allFields))
@@ -261,12 +262,12 @@ function UnitDefsView:EnterState()
 end
 function UnitDefsView:MakeFilters()
     self.filters = {
-        Label:New {
+        FilterLabel {
             x = 1,
             y = 8 + SB.conf.C_HEIGHT * 5,
             caption = "Type:",
         },
-        ComboBox:New {
+        FilterComboBox {
             height = SB.conf.B_HEIGHT,
             x = 40,
             y = 1 + SB.conf.C_HEIGHT * 5,
@@ -282,12 +283,12 @@ function UnitDefsView:MakeFilters()
                 end
             },
         },
-        Label:New {
+        FilterLabel {
             caption = "Terrain:",
             x = 140,
             y = 8 + SB.conf.C_HEIGHT * 5,
         },
-        ComboBox:New {
+        FilterComboBox {
             height = SB.conf.B_HEIGHT,
             x = 190,
             y = 1 + SB.conf.C_HEIGHT * 5,
@@ -303,12 +304,12 @@ function UnitDefsView:MakeFilters()
                 end
             },
         },
-        Label:New {
+        FilterLabel {
             x = 1,
             y = 8 + SB.conf.C_HEIGHT * 7,
             caption = "Search:",
         },
-        EditBox:New {
+        FilterEditBox {
             height = SB.conf.B_HEIGHT,
             x = 60,
             y = 1 + SB.conf.C_HEIGHT * 7,
@@ -364,12 +365,12 @@ function FeatureDefsView:EnterState()
 end
 function FeatureDefsView:MakeFilters()
     self.filters = {
-        Label:New {
+        FilterLabel {
             x = 1,
             y = 8 + SB.conf.C_HEIGHT * 5,
             caption = "Type:",
         },
-        ComboBox:New {
+        FilterComboBox {
             height = SB.conf.B_HEIGHT,
             x = 40,
             y = 1 + SB.conf.C_HEIGHT * 5,
@@ -385,12 +386,12 @@ function FeatureDefsView:MakeFilters()
                 end
             },
         },
-        Label:New {
+        FilterLabel {
             x = 140,
             y = 8 + SB.conf.C_HEIGHT * 5,
             caption = "Wreck:",
         },
-        ComboBox:New {
+        FilterComboBox {
             height = SB.conf.B_HEIGHT,
             x = 190,
             y = 1 + SB.conf.C_HEIGHT * 5,
@@ -406,12 +407,12 @@ function FeatureDefsView:MakeFilters()
                 end
             },
         },
-        Label:New {
+        FilterLabel {
             caption = "Terrain:",
             x = 290,
             y = 8 + SB.conf.C_HEIGHT * 5,
         },
-        ComboBox:New {
+        FilterComboBox {
             y = 1 + SB.conf.C_HEIGHT * 5,
             height = SB.conf.B_HEIGHT,
             items = {
@@ -427,12 +428,12 @@ function FeatureDefsView:MakeFilters()
                 end
             },
         },
-        Label:New {
+        FilterLabel {
             x = 1,
             y = 8 + SB.conf.C_HEIGHT * 7,
             caption = "Search:",
         },
-        EditBox:New {
+        FilterEditBox {
             height = SB.conf.B_HEIGHT,
             x = 60,
             y = 1 + SB.conf.C_HEIGHT * 7,

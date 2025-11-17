@@ -810,20 +810,35 @@ function Editor:_FinalizeRmlUi(children, opts)
     children = children or {}
     opts = opts or {}
 
-    -- Convert Chili buttons to RmlUi buttons
+    -- Convert Chili buttons to RmlUi buttons, and collect RmlUi filter controls
     self.actionButtons = {}
     self.regularButtons = {}
+    self.filterControls = self.filterControls or {}  -- May already be set by editor
 
     for _, child in ipairs(children) do
         if child and type(child) == "table" then
-            local rmlButton = ConvertChiliButtonToRmlUi(child)
-            if rmlButton then
-                -- TabbedPanelButtons become action buttons
-                if rmlButton.id and rmlButton.id:match("^action%-btn%-") then
-                    table.insert(self.actionButtons, rmlButton)
-                -- Regular buttons
-                elseif rmlButton.id and rmlButton.id:match("^btn%-") then
-                    table.insert(self.regularButtons, rmlButton)
+            -- Check if this is already an RmlUi control (has GenerateRml method)
+            if child.GenerateRml and type(child.GenerateRml) == "function" then
+                -- It's an RmlUi control (filter control, etc.)
+                if child.id and (child.id:match("^filter%-") or child.id:match("^action%-btn%-")) then
+                    if not Table.Contains(self.filterControls, child) then
+                        table.insert(self.filterControls, child)
+                    end
+                    if child.id:match("^action%-btn%-") then
+                        table.insert(self.actionButtons, child)
+                    end
+                end
+            else
+                -- Try to convert Chili control to RmlUi
+                local rmlButton = ConvertChiliButtonToRmlUi(child)
+                if rmlButton then
+                    -- TabbedPanelButtons become action buttons
+                    if rmlButton.id and rmlButton.id:match("^action%-btn%-") then
+                        table.insert(self.actionButtons, rmlButton)
+                    -- Regular buttons
+                    elseif rmlButton.id and rmlButton.id:match("^btn%-") then
+                        table.insert(self.regularButtons, rmlButton)
+                    end
                 end
             end
         end
@@ -837,6 +852,18 @@ function Editor:_FinalizeRmlUi(children, opts)
             buttonsHtml = buttonsHtml .. button:GenerateRml()
         end
         buttonsHtml = buttonsHtml .. '</div>'
+    end
+
+    -- Generate RML for filter controls
+    local filtersHtml = ''
+    if #self.filterControls > 0 then
+        filtersHtml = '<div class="filter-panel">'
+        for _, filter in ipairs(self.filterControls) do
+            if filter.GenerateRml and not filter.id:match("^action%-btn%-") then
+                filtersHtml = filtersHtml .. filter:GenerateRml()
+            end
+        end
+        filtersHtml = filtersHtml .. '</div>'
     end
 
     -- Generate RML for all fields
@@ -892,8 +919,8 @@ function Editor:_FinalizeRmlUi(children, opts)
         gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
     end
 
-    -- Combine buttons, grid, and fields
-    self.generatedRml = buttonsHtml .. gridHtml .. fieldsHtml
+    -- Combine buttons, filters, grid, and fields
+    self.generatedRml = buttonsHtml .. filtersHtml .. gridHtml .. fieldsHtml
 
     -- Mark as hidden by default
     self.hidden = true
@@ -903,6 +930,7 @@ end
 function Editor:_FinalizeRmlUiNew(layout, opts)
     self.actionButtons = layout.actionButtons or {}
     self.regularButtons = {}
+    self.filterControls = self.filterControls or {}  -- May already be set by editor
 
     -- Generate RML for action buttons (placed at top)
     local buttonsHtml = ''
@@ -912,6 +940,18 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
             buttonsHtml = buttonsHtml .. button:GenerateRml()
         end
         buttonsHtml = buttonsHtml .. '</div>'
+    end
+
+    -- Generate RML for filter controls
+    local filtersHtml = ''
+    if #self.filterControls > 0 then
+        filtersHtml = '<div class="filter-panel">'
+        for _, filter in ipairs(self.filterControls) do
+            if filter.GenerateRml then
+                filtersHtml = filtersHtml .. filter:GenerateRml()
+            end
+        end
+        filtersHtml = filtersHtml .. '</div>'
     end
 
     -- Generate RML for all fields
@@ -949,8 +989,8 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
         gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
     end
 
-    -- Combine buttons, grid, and fields
-    self.generatedRml = buttonsHtml .. gridHtml .. fieldsHtml
+    -- Combine buttons, filters, grid, and fields
+    self.generatedRml = buttonsHtml .. filtersHtml .. gridHtml .. fieldsHtml
 
     -- Mark as hidden by default
     self.hidden = true

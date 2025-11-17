@@ -511,6 +511,43 @@ function View:BindFieldEvents(editor)
             end
         end
     end
+
+    -- Bind events for filter controls (ComboBox, EditBox)
+    if editor.filterControls then
+        for _, filter in ipairs(editor.filterControls) do
+            local filterElement = self.mainDocument:GetElementById(filter.id)
+            if filterElement then
+                -- ComboBox: bind change event
+                if filter.id:match("^filter%-combo%-") and filter.OnSelect then
+                    filterElement:AddEventListener("change", function(event)
+                        local itemIdx = tonumber(filterElement.value)
+                        if itemIdx then
+                            filter.selected = itemIdx
+                            -- Call OnSelect with Chili-compatible signature
+                            callListeners(filter.OnSelect, filterElement, itemIdx, true)
+                        end
+                    end)
+                -- EditBox: bind input events
+                elseif filter.id:match("^filter%-edit%-") then
+                    if filter.OnTextInput then
+                        filterElement:AddEventListener("input", function(event)
+                            filter.text = filterElement.value
+                            -- Create obj with text property for Chili compatibility
+                            local obj = { text = filterElement.value }
+                            callListeners(filter.OnTextInput, obj)
+                        end)
+                    end
+                    if filter.OnKeyPress then
+                        filterElement:AddEventListener("keyup", function(event)
+                            filter.text = filterElement.value
+                            local obj = { text = filterElement.value }
+                            callListeners(filter.OnKeyPress, obj)
+                        end)
+                    end
+                end
+            end
+        end
+    end
 end
 
 function View:UpdateEditorButtonStates(activeEditorName)

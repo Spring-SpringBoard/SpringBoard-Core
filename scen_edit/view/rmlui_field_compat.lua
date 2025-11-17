@@ -134,4 +134,84 @@ function RmlUiTabbedPanelButton:GenerateRml()
     return html
 end
 
+-- RmlUi Label - for filter UI labels
+RmlUiLabel = LCS.class{}
+
+function RmlUiLabel:init(opts)
+    _BUTTON_INDEX = _BUTTON_INDEX + 1
+    self.id = "filter-label-" .. tostring(_BUTTON_INDEX)
+    self.caption = opts.caption or ""
+    self.x = opts.x
+    self.y = opts.y
+end
+
+function RmlUiLabel:GenerateRml()
+    return string.format('<span id="%s" class="filter-label">%s</span>', self.id, self.caption)
+end
+
+-- RmlUi ComboBox - for filter dropdowns
+RmlUiComboBox = LCS.class{}
+
+function RmlUiComboBox:init(opts)
+    _BUTTON_INDEX = _BUTTON_INDEX + 1
+    self.id = "filter-combo-" .. tostring(_BUTTON_INDEX)
+    self.items = opts.items or {}
+    self.OnSelect = opts.OnSelect or {}
+    self.selected = 1
+    self.width = opts.width
+    self.x = opts.x
+    self.y = opts.y
+end
+
+function RmlUiComboBox:GenerateRml()
+    local html = string.format('<select id="%s" class="filter-combo">', self.id)
+    for i, item in ipairs(self.items) do
+        local selected = (i == self.selected) and ' selected=""' or ''
+        html = html .. string.format('<option value="%d"%s>%s</option>', i, selected, item)
+    end
+    html = html .. '</select>'
+    return html
+end
+
+function RmlUiComboBox:Select(itemIdx)
+    self.selected = itemIdx
+    -- Update DOM if element exists
+    if SB.view and SB.view.mainDocument then
+        local element = SB.view.mainDocument:GetElementById(self.id)
+        if element then
+            element.value = tostring(itemIdx)
+        end
+    end
+end
+
+-- RmlUi EditBox - for search text input
+RmlUiEditBox = LCS.class{}
+
+function RmlUiEditBox:init(opts)
+    _BUTTON_INDEX = _BUTTON_INDEX + 1
+    self.id = "filter-edit-" .. tostring(_BUTTON_INDEX)
+    self.text = opts.text or ""
+    self.OnTextInput = opts.OnTextInput or {}
+    self.OnKeyPress = opts.OnKeyPress or {}
+    self.width = opts.width
+    self.x = opts.x
+    self.y = opts.y
+end
+
+function RmlUiEditBox:GenerateRml()
+    return string.format('<input type="text" id="%s" class="filter-edit" value="%s" placeholder="Search..."/>',
+        self.id, self.text)
+end
+
+function RmlUiEditBox:SetText(text)
+    self.text = text
+    -- Update DOM if element exists
+    if SB.view and SB.view.mainDocument then
+        local element = SB.view.mainDocument:GetElementById(self.id)
+        if element then
+            element.value = text
+        end
+    end
+end
+
 Log.Notice("RmlUi field compatibility layer loaded - original API maintained")

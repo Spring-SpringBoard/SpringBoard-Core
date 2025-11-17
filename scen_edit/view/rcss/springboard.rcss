@@ -374,3 +374,61 @@ body#springboard {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* Filter Panel styles */
+.filter-panel {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10dp;
+    padding: 10dp;
+    background-color: #2a2a2a;
+    border-bottom: 1dp #555555;
+    align-items: center;
+}
+
+.filter-label {
+    color: #cccccc;
+    font-size: 12dp;
+    margin-right: 5dp;
+}
+
+.filter-combo {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 4dp 8dp;
+    font-size: 12dp;
+    min-width: 90dp;
+    cursor: pointer;
+}
+
+.filter-combo:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.filter-combo:focus {
+    border-color: #3a7ebf;
+    outline: none;
+}
+
+.filter-edit {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 4dp 8dp;
+    font-size: 12dp;
+    min-width: 90dp;
+}
+
+.filter-edit:hover {
+    border-color: #777777;
+}
+
+.filter-edit:focus {
+    border-color: #3a7ebf;
+    outline: none;
+}
