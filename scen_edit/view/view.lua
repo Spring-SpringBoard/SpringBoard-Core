@@ -45,6 +45,13 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/heightmap_editor.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/texture_editor.lua'))
 
+    -- Load models (business logic, shared between Chili and RmlUi)
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/status_window_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/command_window_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/top_left_menu_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/control_buttons_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/team_selector_model.lua'))
+
     -- Load RmlUi floating windows
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/command_window.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/status_window.lua'))

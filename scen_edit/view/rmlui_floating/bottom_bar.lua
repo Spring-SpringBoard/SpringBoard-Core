@@ -1,11 +1,21 @@
 RmlUiBottomBar = LCS.class{}
 
-function RmlUiBottomBar:init()
-    self.commandWindow = RmlUiCommandWindow()
-    self.statusWindow = RmlUiStatusWindow()
-    self.topLeftMenu = RmlUiTopLeftMenu()
-    self.controlButtons = RmlUiControlButtons()
-    self.teamSelector = RmlUiTeamSelector()
+function RmlUiBottomBar:init(models)
+    -- Create or use provided models
+    self.models = models or {
+        statusWindow = StatusWindowModel(),
+        commandWindow = CommandWindowModel(),
+        topLeftMenu = TopLeftMenuModel(),
+        controlButtons = ControlButtonsModel(),
+        teamSelector = TeamSelectorModel(),
+    }
+
+    -- Create UI components with models
+    self.commandWindow = RmlUiCommandWindow(self.models.commandWindow)
+    self.statusWindow = RmlUiStatusWindow(self.models.statusWindow)
+    self.topLeftMenu = RmlUiTopLeftMenu(self.models.topLeftMenu)
+    self.controlButtons = RmlUiControlButtons(self.models.controlButtons)
+    self.teamSelector = RmlUiTeamSelector(self.models.teamSelector)
 end
 
 function RmlUiBottomBar:Initialize()

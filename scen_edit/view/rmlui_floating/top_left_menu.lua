@@ -1,77 +1,66 @@
-SB.Include(Path.Join(SB.DIRS.SRC, 'view/dialog/dialog.lua'))
-
 RmlUiTopLeftMenu = LCS.class{}
 
-function RmlUiTopLeftMenu:init()
+function RmlUiTopLeftMenu:init(model)
     self.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/floating/top_left_menu.rml')
-    self.projectDir = -1  -- initial invalid value to enforce updating the caption
+    self.model = model or TopLeftMenuModel()
 end
 
 function RmlUiTopLeftMenu:Initialize()
     self.document = SB.rmlui:LoadDocument(self.rmlPath, false)
     self:BindEvents()
-    self:SetupUploadLog()
-    self:CheckLobbyAvailability()
+    self.model:AddListener(self)
+    self.model:Initialize()
     self:HideUnavailableButtons()
-    self:Update()
     Log.Notice("Top Left Menu initialized (RmlUi)")
     return true
 end
 
-function RmlUiTopLeftMenu:SetupUploadLog()
-    if not WG.Connector then
-        return
+function RmlUiTopLeftMenu:BindEvents()
+    local btnExit = self.document:GetElementById("btn-exit")
+    if btnExit then
+        btnExit:AddEventListener("click", function()
+            self.model:OnExit()
+        end)
     end
 
-    WG.Connector.Register('UploadLogFinished', function(command)
-        local url = command.url
-        local txt = 'Log uploaded to: ' .. tostring(url) .. " (Copied to clipboard)"
-        Log.Notice(txt)
-        WG.Chotify:Post({
-            body = txt,
-            title = "Log Uploaded",
-            time = 15,
-        })
-        Spring.SetClipboard(url)
-        local btnUpload = self.document:GetElementById("btn-upload-log")
-        if btnUpload then
-            btnUpload.inner_rml = "Upload Log"
-            -- TODO: Re-enable button if we add disabled state
-        end
-    end)
+    local btnMenu = self.document:GetElementById("btn-menu")
+    if btnMenu then
+        btnMenu:AddEventListener("click", function()
+            self.model:OnMenu()
+        end)
+    end
 
-    WG.Connector.Register('UploadLogFailed', function(command)
-        local msg = command.msg
-        local txt = SB.conf.STATUS_TEXT_DANGER_COLOR .. "Upload failed\b: " .. msg ..  "\n\255\255\255\255Please upload the log manually\b"
-        Log.Error(txt)
-        WG.Chotify:Post({
-            body = txt,
-            title = "Log upload failed",
-            time = 20,
-        })
-        local btnUpload = self.document:GetElementById("btn-upload-log")
-        if btnUpload then
-            btnUpload.inner_rml = "Upload Log"
-            -- TODO: Re-enable button if we add disabled state
-        end
-    end)
+    local btnUploadLog = self.document:GetElementById("btn-upload-log")
+    if btnUploadLog then
+        btnUploadLog:AddEventListener("click", function()
+            self.model:OnUploadLog()
+        end)
+    end
+
+    local btnDataDir = self.document:GetElementById("btn-data-dir")
+    if btnDataDir then
+        btnDataDir:AddEventListener("click", function()
+            self.model:OnDataDir()
+        end)
+    end
+
+    local btnOpenProject = self.document:GetElementById("btn-open-project")
+    if btnOpenProject then
+        btnOpenProject:AddEventListener("click", function()
+            self.model:OnOpenProject()
+        end)
+    end
 end
 
-function RmlUiTopLeftMenu:CheckLobbyAvailability()
-    local luaMenu = Spring.GetMenuName and Spring.SendLuaMenuMsg and Spring.GetMenuName()
-    if luaMenu and luaMenu ~= "" then
-        Spring.SendLuaMenuMsg("disableLobbyButton")
-    else
-        -- Hide menu button if not available
+function RmlUiTopLeftMenu:HideUnavailableButtons()
+    if not self.model:HasLobby() then
         local btnMenu = self.document:GetElementById("btn-menu")
         if btnMenu then
             btnMenu.style.display = "none"
         end
     end
-end
 
-function RmlUiTopLeftMenu:HideUnavailableButtons()
-    if not WG.Connector then
+    if not self.model:HasConnector() then
         local btnUpload = self.document:GetElementById("btn-upload-log")
         if btnUpload then
             btnUpload.style.display = "none"
@@ -87,43 +76,6 @@ function RmlUiTopLeftMenu:HideUnavailableButtons()
     end
 end
 
-function RmlUiTopLeftMenu:BindEvents()
-    local btnExit = self.document:GetElementById("btn-exit")
-    if btnExit then
-        btnExit:AddEventListener("click", function()
-            self:OnExit()
-        end)
-    end
-
-    local btnMenu = self.document:GetElementById("btn-menu")
-    if btnMenu then
-        btnMenu:AddEventListener("click", function()
-            self:OnMenu()
-        end)
-    end
-
-    local btnUploadLog = self.document:GetElementById("btn-upload-log")
-    if btnUploadLog then
-        btnUploadLog:AddEventListener("click", function()
-            self:OnUploadLog()
-        end)
-    end
-
-    local btnDataDir = self.document:GetElementById("btn-data-dir")
-    if btnDataDir then
-        btnDataDir:AddEventListener("click", function()
-            self:OnDataDir()
-        end)
-    end
-
-    local btnOpenProject = self.document:GetElementById("btn-open-project")
-    if btnOpenProject then
-        btnOpenProject:AddEventListener("click", function()
-            self:OnOpenProject()
-        end)
-    end
-end
-
 function RmlUiTopLeftMenu:Show()
     if self.document then
         self.document:Show()
@@ -136,71 +88,35 @@ function RmlUiTopLeftMenu:Hide()
     end
 end
 
-function RmlUiTopLeftMenu:OnExit()
-    Dialog({
-        message = "Are you sure you want to exit?",
-        ConfirmDialog = function()
-            Spring.SendCommands("quit", "quitforce")
-        end,
-    })
+function RmlUiTopLeftMenu:Update()
+    self.model:Update()
 end
 
-function RmlUiTopLeftMenu:OnMenu()
-    Spring.SendLuaMenuMsg("showLobby")
+-- Model callbacks
+function RmlUiTopLeftMenu:OnProjectChanged(projectDir)
+    local projectLabel = self.document:GetElementById("project-label")
+    if projectLabel then
+        projectLabel.inner_rml = self.model:GetProjectCaption()
+    end
 end
 
-function RmlUiTopLeftMenu:OnUploadLog()
-    Dialog({
-        message = "Do you want to upload your log to http://logs.springrts.com ?" ..
-                  "\nAll data will be public.",
-        ConfirmDialog = function()
-            self:UploadLog()
-        end,
-    })
-end
-
-function RmlUiTopLeftMenu:UploadLog()
+function RmlUiTopLeftMenu:OnUploadStarted()
     local btnUpload = self.document:GetElementById("btn-upload-log")
     if btnUpload then
         btnUpload.inner_rml = "Uploading..."
-        -- TODO: Disable button if we add disabled state
     end
-    WG.Connector.Send('UploadLog', {
-        path = SB.DIRS.ROOT_ABS
-    })
 end
 
-function RmlUiTopLeftMenu:OnDataDir()
-    WG.Connector.Send('OpenFile', {
-        path = SB.DIRS.ROOT_ABS
-    })
+function RmlUiTopLeftMenu:OnUploadFinished()
+    local btnUpload = self.document:GetElementById("btn-upload-log")
+    if btnUpload then
+        btnUpload.inner_rml = "Upload Log"
+    end
 end
 
-function RmlUiTopLeftMenu:OnOpenProject()
-    if self.projectDir == nil or self.projectDir == -1 then
-        return
-    end
-    WG.Connector.Send('OpenFile', {
-        path = Path.Join(SB.DIRS.WRITE_PATH, self.projectDir)
-    })
-end
-
-function RmlUiTopLeftMenu:Update()
-    if not self.document then return end
-
-    if SB.project.path == self.projectDir then
-        return
-    end
-    self.projectDir = SB.project.path
-
-    local projectLabel = self.document:GetElementById("project-label")
-    if projectLabel then
-        local projectCaption
-        if self.projectDir then
-            projectCaption = "Project: " .. self.projectDir
-        else
-            projectCaption = "Project not saved"
-        end
-        projectLabel.inner_rml = projectCaption
+function RmlUiTopLeftMenu:OnUploadFailed()
+    local btnUpload = self.document:GetElementById("btn-upload-log")
+    if btnUpload then
+        btnUpload.inner_rml = "Upload Log"
     end
 end

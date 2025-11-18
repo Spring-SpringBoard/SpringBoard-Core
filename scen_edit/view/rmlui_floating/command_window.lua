@@ -1,16 +1,15 @@
 RmlUiCommandWindow = LCS.class{}
 
-function RmlUiCommandWindow:init()
+function RmlUiCommandWindow:init(model)
     self.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/floating/command_window.rml')
-    self.count = 0
-    self.removedCount = 0
-    self.undoCount = 0
+    self.model = model or CommandWindowModel()
 end
 
 function RmlUiCommandWindow:Initialize()
     self.document = SB.rmlui:LoadDocument(self.rmlPath, false)
     self:BindEvents()
-    SB.commandManager:addListener(self)
+    self.model:AddListener(self)
+    self.model:Initialize()
     Log.Notice("Command Window initialized (RmlUi)")
     return true
 end
@@ -19,21 +18,21 @@ function RmlUiCommandWindow:BindEvents()
     local btnUndo = self.document:GetElementById("btn-undo")
     if btnUndo then
         btnUndo:AddEventListener("click", function()
-            self:OnUndo()
+            self.model:ExecuteUndo()
         end)
     end
 
     local btnRedo = self.document:GetElementById("btn-redo")
     if btnRedo then
         btnRedo:AddEventListener("click", function()
-            self:OnRedo()
+            self.model:ExecuteRedo()
         end)
     end
 
     local btnClear = self.document:GetElementById("btn-clear-history")
     if btnClear then
         btnClear:AddEventListener("click", function()
-            self:OnClearHistory()
+            self.model:ExecuteClearHistory()
         end)
     end
 end
@@ -50,23 +49,8 @@ function RmlUiCommandWindow:Hide()
     end
 end
 
-function RmlUiCommandWindow:OnUndo()
-    SB.commandManager:execute(UndoCommand())
-end
-
-function RmlUiCommandWindow:OnRedo()
-    SB.commandManager:execute(RedoCommand())
-end
-
-function RmlUiCommandWindow:OnClearHistory()
-    SB.commandManager:execute(ClearUndoRedoCommand())
-end
-
-function RmlUiCommandWindow:PushCommand(display)
-    self.count = self.count + 1
-    local id = self.count
-    Log.Debug("do", id)
-
+-- UI update callbacks from model
+function RmlUiCommandWindow:OnPushCommand(id, display)
     local commandList = self.document:GetElementById("command-list")
     if commandList then
         local itemDiv = self.document:CreateElement("div")
@@ -80,65 +64,30 @@ function RmlUiCommandWindow:PushCommand(display)
     end
 end
 
-function RmlUiCommandWindow:UndoCommand()
-    Log.Debug("undo", self.count - self.undoCount)
-    local cmdItem = self.document:GetElementById("cmd-" .. (self.count - self.undoCount))
+function RmlUiCommandWindow:OnUndoCommand(cmdId)
+    local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
     if cmdItem then
         cmdItem:AddClass("undone")
     end
-    self.undoCount = self.undoCount + 1
 end
 
-function RmlUiCommandWindow:RedoCommand()
-    Log.Debug("redo", self.count - self.undoCount + 1)
-    local cmdItem = self.document:GetElementById("cmd-" .. (self.count - self.undoCount + 1))
+function RmlUiCommandWindow:OnRedoCommand(cmdId)
+    local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
     if cmdItem then
         cmdItem:RemoveClass("undone")
     end
-    self.undoCount = self.undoCount - 1
 end
 
-function RmlUiCommandWindow:OnCommandExecuted(cmdIDs, isUndo, isRedo, display)
-    if isUndo then
-        self:UndoCommand()
-    elseif isRedo then
-        self:RedoCommand()
-    else
-        self:PushCommand(display)
-    end
-end
-
-function RmlUiCommandWindow:OnRemoveFirstUndo()
-    Log.Debug("remundo", self.removedCount + 1)
-    self.removedCount = self.removedCount + 1
-    local cmdItem = self.document:GetElementById("cmd-" .. self.removedCount)
+function RmlUiCommandWindow:OnRemoveFirstUndo(cmdId)
+    local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
     if cmdItem then
         cmdItem.parent_node:RemoveChild(cmdItem)
     end
 end
 
-function RmlUiCommandWindow:OnRemoveFirstRedo()
-    Log.Debug(LOG.DEBUG, "remredo")
-    local cmdItem = self.document:GetElementById("cmd-" .. self.count)
+function RmlUiCommandWindow:OnRemoveFirstRedo(cmdId)
+    local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
     if cmdItem then
         cmdItem.parent_node:RemoveChild(cmdItem)
     end
-    self.count = self.count - 1
-    self.undoCount = self.undoCount - 1
-end
-
-function RmlUiCommandWindow:OnClearUndoStack()
-    Log.Debug("clearundostack")
-    while self.removedCount ~= self.count do
-        self:OnRemoveFirstUndo()
-    end
-    Log.Debug("clearundostackend")
-end
-
-function RmlUiCommandWindow:OnClearRedoStack()
-    Log.Debug("clearredostack")
-    while self.undoCount ~= 0 do
-        self:OnRemoveFirstRedo()
-    end
-    Log.Debug("clearredostackend")
 end
