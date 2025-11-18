@@ -10,130 +10,16 @@ LightingEditor:Register({
     order = 0,
 })
 
-function LightingEditor:init()
+function LightingEditor:init(model)
     self:super("init")
+    self.model = model or LightingEditorModel()
 
-    local shadowMode = Spring.GetConfigInt("Shadows")
-    self:AddField(ChoiceField({
-        name = "shadowMode",
-        title = "Shadows:",
-        tooltip = "Shadow mode. Unsynced (and unsaved) setting.",
-        items = { "Off", "Terrain", "Full" },
-        width = 200,
-    }))
-    if shadowMode == 0 then
-        self.fields["shadowMode"]:Set("Off")
-    elseif shadowMode == 1 then
-        self.fields["shadowMode"]:Set("Full")
-    elseif shadowMode == 2 then
-        self.fields["shadowMode"]:Set("Terrain")
+    local fieldDefs = self.model:GetFieldDefinitions()
+    for _, fieldDef in ipairs(fieldDefs) do
+        self:AddFieldFromDef(fieldDef)
     end
 
-    self:AddField(GroupField({
-        NumericField({
-            name = "sunDirX",
-            title = "Dir X:",
-            tooltip = "X dir",
-            value = 0,
-            step = 0.002,
-            width = 100,
-        }),
-        NumericField({
-            name = "sunDirY",
-            title = "Dir Y:",
-            tooltip = "Y dir",
-            value = 0,
-            step = 0.002,
-            width = 100,
-        }),
-        NumericField({
-            name = "sunDirZ",
-            title = "Dir Z:",
-            tooltip = "Z dir",
-            value = 0,
-            step = 0.002,
-            width = 100,
-        }),
-    }))
-    self:AddControl("sun-ground-sep", {
-        Label:New {
-            caption = "Sun ground color",
-        },
-        Line:New {
-            x = 150,
-        }
-    })
-    self:AddField(GroupField({
-        ColorField({
-            name = "groundDiffuseColor",
-            title = "Diffuse:",
-            tooltip = "Ground diffuse color",
-            width = 140,
-            format = 'rgb',
-        }),
-        ColorField({
-            name = "groundAmbientColor",
-            title = "Ambient:",
-            tooltip = "Ground ambient color",
-            width = 140,
-            format = 'rgb',
-        }),
-        ColorField({
-            name = "groundSpecularColor",
-            title = "Specular:",
-            tooltip = "Ground specular color",
-            width = 140,
-            format = 'rgb',
-        })
-    }))
-    self:AddField(NumericField({
-        name = "groundShadowDensity",
-        title = "Shadow density:",
-        tooltip = "Ground shadow density",
-        width = 200,
-        minValue = 0,
-        maxValue = 1,
-    }))
-    self:AddControl("sun-unit-sep", {
-        Label:New {
-            caption = "Sun unit color",
-        },
-        Line:New {
-            x = 150,
-        }
-    })
-    self:AddField(GroupField({
-        ColorField({
-            name = "unitDiffuseColor",
-            title = "Diffuse:",
-            tooltip = "Unit diffuse color",
-            width = 140,
-            format = 'rgb',
-        }),
-        ColorField({
-            name = "unitAmbientColor",
-            title = "Ambient:",
-            tooltip = "Unit ambient color",
-            width = 140,
-            format = 'rgb',
-        }),
-        ColorField({
-            name = "unitSpecularColor",
-            title = "Specular:",
-            tooltip = "Unit specular color",
-            width = 140,
-            format = 'rgb',
-        })
-    }))
-    self:AddField(NumericField({
-        name = "modelShadowDensity",
-        title = "Shadow density:",
-        tooltip = "Unit shadow density",
-        width = 200,
-        minValue = 0,
-        maxValue = 1,
-    }))
-
+    self.fields["shadowMode"]:Set(self.model:GetInitialShadowMode())
     self:UpdateLighting()
 
     local children = {
@@ -149,38 +35,70 @@ function LightingEditor:init()
     }
 
     SB.commandManager:addListener(self)
-
     self:Finalize(children)
+end
+
+function LightingEditor:AddFieldFromDef(fieldDef)
+    if fieldDef.type == "choice" then
+        self:AddField(ChoiceField({
+            name = fieldDef.name,
+            title = fieldDef.title,
+            tooltip = fieldDef.tooltip,
+            items = fieldDef.items,
+            width = fieldDef.width,
+        }))
+    elseif fieldDef.type == "numeric" then
+        self:AddField(NumericField({
+            name = fieldDef.name,
+            title = fieldDef.title,
+            tooltip = fieldDef.tooltip,
+            value = fieldDef.value,
+            minValue = fieldDef.min,
+            maxValue = fieldDef.max,
+            width = fieldDef.width,
+        }))
+    elseif fieldDef.type == "separator" then
+        self:AddControl(fieldDef.name, {
+            Label:New {
+                caption = fieldDef.caption,
+            },
+            Line:New {
+                x = 150,
+            }
+        })
+    elseif fieldDef.type == "group" then
+        local groupFields = {}
+        for _, subFieldDef in ipairs(fieldDef.fields) do
+            if subFieldDef.type == "numeric" then
+                table.insert(groupFields, NumericField({
+                    name = subFieldDef.name,
+                    title = subFieldDef.title,
+                    tooltip = subFieldDef.tooltip,
+                    value = subFieldDef.value,
+                    step = subFieldDef.step,
+                    width = subFieldDef.width,
+                }))
+            elseif subFieldDef.type == "color" then
+                table.insert(groupFields, ColorField({
+                    name = subFieldDef.name,
+                    title = subFieldDef.title,
+                    tooltip = subFieldDef.tooltip,
+                    width = subFieldDef.width,
+                    format = subFieldDef.format,
+                }))
+            end
+        end
+        self:AddField(GroupField(groupFields))
+    end
 end
 
 function LightingEditor:UpdateLighting()
     self.updating = true
 
-    local sunDirX, sunDirY, sunDirZ = gl.GetSun()
-    self:Set("sunDirX", sunDirX)
-    self:Set("sunDirY", sunDirY)
-    self:Set("sunDirZ", sunDirZ)
-
-    -- Color
-    local groundDiffuse = {gl.GetSun("diffuse")}
-    local groundAmbient = {gl.GetSun("ambient")}
-    local groundSpecular = {gl.GetSun("specular")}
-    local groundShadowDensity = gl.GetSun("shadowDensity")
-
-    self:Set("groundDiffuseColor",  groundDiffuse)
-    self:Set("groundAmbientColor",  groundAmbient)
-    self:Set("groundSpecularColor", groundSpecular)
-    self:Set("groundShadowDensity", groundShadowDensity)
-
-    local unitDiffuse = {gl.GetSun("diffuse", "unit")}
-    local unitAmbient = {gl.GetSun("ambient", "unit")}
-    local unitSpecular = {gl.GetSun("specular", "unit")}
-    local modelShadowDensity = gl.GetSun("shadowDensity", "unit")
-
-    self:Set("unitDiffuseColor",  unitDiffuse)
-    self:Set("unitAmbientColor",  unitAmbient)
-    self:Set("unitSpecularColor", unitSpecular)
-    self:Set("modelShadowDensity", modelShadowDensity)
+    local params = self.model:UpdateLighting()
+    for name, value in pairs(params) do
+        self:Set(name, value)
+    end
 
     self.updating = false
 end
@@ -192,11 +110,11 @@ function LightingEditor:OnCommandExecuted()
 end
 
 function LightingEditor:OnStartChange(name)
-    SB.commandManager:execute(SetMultipleCommandModeCommand(true))
+    self.model:OnStartChange()
 end
 
 function LightingEditor:OnEndChange(name)
-    SB.commandManager:execute(SetMultipleCommandModeCommand(false))
+    self.model:OnEndChange()
 end
 
 function LightingEditor:OnFieldChange(name, value)
@@ -204,26 +122,5 @@ function LightingEditor:OnFieldChange(name, value)
         return
     end
 
-    if name == "shadowMode" then
-        if value == "Off" then
-            Spring.SendCommands("shadows 0")
-        elseif value == "Terrain" then
-            Spring.SendCommands("shadows 2")
-        else
-            Spring.SendCommands("shadows 1")
-        end
-    elseif name == "sunDirX" or name == "sunDirY" or name == "sunDirZ" or name == "sunStartAngle" or name == "sunOrbitTime" or name == "sunDistance" then
-        value = { dirX = self.fields["sunDirX"].value,
-                  dirY = self.fields["sunDirY"].value,
-                  dirZ = self.fields["sunDirZ"].value,
-        }
-        local cmd = SetSunParametersCommand(value)
-        SB.commandManager:execute(cmd)
-
-    elseif name == "groundDiffuseColor" or name == "groundAmbientColor" or name == "groundSpecularColor" or name == "groundShadowDensity" or name == "unitAmbientColor" or name == "unitDiffuseColor" or name == "unitSunColor" or name == "modelShadowDensity" then
-        local t = {}
-        t[name] = value
-        local cmd = SetSunLightingCommand(t)
-        SB.commandManager:execute(cmd)
-    end
+    self.model:OnFieldChange(name, value, self.fields)
 end

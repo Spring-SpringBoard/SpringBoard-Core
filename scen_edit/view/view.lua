@@ -58,6 +58,8 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/metal_editor_model.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/grass_editor_model.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/sky_editor_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/lighting_editor_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/terrain_settings_editor_model.lua'))
 
     -- Load RmlUi floating windows
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/command_window.lua'))
