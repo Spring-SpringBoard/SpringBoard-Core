@@ -10,33 +10,39 @@ MetalEditor:Register({
     order = 3,
 })
 
-function MetalEditor:init()
+function MetalEditor:init(model)
     self:super("init")
+    self.model = model or MetalEditorModel()
 
-    self:AddField(AssetField({
-        name = "patternTexture",
-        title = "Pattern:",
-        rootDir = "brush_patterns/terrain/",
-        expand = true,
-        itemWidth = 65,
-        itemHeight = 65,
-        Validate = function(obj, value)
-            if value == nil then
-                return true
-            end
-            if not AssetField.Validate(obj, value) then
-                return false
-            end
-
-            local ext = Path.GetExt(value) or ""
-            return table.ifind(SB_IMG_EXTS, ext), value
-        end,
-        Update = function(...)
-            AssetField.Update(...)
-            local texture = self.fields["patternTexture"].value
-            SB.model.terrainManager:generateShape(texture)
+    local fieldDefs = self.model:GetFieldDefinitions()
+    for _, fieldDef in ipairs(fieldDefs) do
+        if fieldDef.type == "asset" then
+            self:AddField(AssetField({
+                name = fieldDef.name,
+                title = fieldDef.title,
+                rootDir = fieldDef.rootDir,
+                expand = fieldDef.expand,
+                itemWidth = fieldDef.itemWidth,
+                itemHeight = fieldDef.itemHeight,
+                Validate = fieldDef.validateFunc,
+                Update = function(...)
+                    AssetField.Update(...)
+                    local value = self.fields[fieldDef.name].value
+                    fieldDef.updateFunc(value)
+                end
+            }))
+        elseif fieldDef.type == "numeric" then
+            self:AddField(NumericField({
+                name = fieldDef.name,
+                value = fieldDef.value,
+                minValue = fieldDef.min,
+                maxValue = fieldDef.max,
+                title = fieldDef.title,
+                tooltip = fieldDef.tooltip,
+            }))
         end
-    }))
+    end
+
     self.btnSetMetal = TabbedPanelButton({
         x = 0,
         y = 0,
@@ -62,36 +68,11 @@ function MetalEditor:init()
             height = 40,
             OnClick = {
                 function()
-                    Spring.SendCommands('showmetalmap')
+                    self.model:ShowMetalMap()
                 end
             }
         },
     })
-
-    self:AddField(NumericField({
-        name = "size",
-        value = 100,
-        minValue = 40,
-        maxValue = 1000,
-        title = "Size:",
-        tooltip = "Size of the paint brush",
-    }))
-    self:AddField(NumericField({
-        name = "rotation",
-        value = 0,
-        minValue = -360,
-        maxValue = 360,
-        title = "Rotation:",
-        tooltip = "Rotation of the shape",
-    }))
-    self:AddField(NumericField({
-        name = "amount",
-        value = 50,
-        minValue = 0,
-        maxValue = 5.1,
-        title = "Amount:",
-        tooltip = "Amount of metal",
-    }))
 
     local children = {
         self.btnSetMetal,
@@ -109,13 +90,11 @@ function MetalEditor:init()
 end
 
 function MetalEditor:IsValidState(state)
-    return state:is_A(MetalEditingState)
+    return self.model:IsValidState(state)
 end
 
 function MetalEditor:OnLeaveState(state)
-    for _, btn in pairs({self.btnSetMetal}) do
-        btn:SetPressedState(false)
-    end
+    self.btnSetMetal:SetPressedState(false)
 end
 
 function MetalEditor:OnEnterState(state)

@@ -10,33 +10,40 @@ GrassEditor:Register({
     order = 4,
 })
 
-function GrassEditor:init()
+function GrassEditor:init(model)
     self:super("init")
+    self.model = model or GrassEditorModel()
 
-    self:AddField(AssetField({
-        name = "patternTexture",
-        title = "Pattern:",
-        rootDir = "brush_patterns/terrain/",
-        expand = true,
-        itemWidth = 65,
-        itemHeight = 65,
-        Validate = function(obj, value)
-            if value == nil then
-                return true
-            end
-            if not AssetField.Validate(obj, value) then
-                return false
-            end
-
-            local ext = Path.GetExt(value) or ""
-            return table.ifind(SB_IMG_EXTS, ext), value
-        end,
-        Update = function(...)
-            AssetField.Update(...)
-            local texture = self.fields["patternTexture"].value
-            SB.model.terrainManager:generateShape(texture)
+    local fieldDefs = self.model:GetFieldDefinitions()
+    for _, fieldDef in ipairs(fieldDefs) do
+        if fieldDef.type == "asset" then
+            self:AddField(AssetField({
+                name = fieldDef.name,
+                title = fieldDef.title,
+                rootDir = fieldDef.rootDir,
+                expand = fieldDef.expand,
+                itemWidth = fieldDef.itemWidth,
+                itemHeight = fieldDef.itemHeight,
+                Validate = fieldDef.validateFunc,
+                Update = function(...)
+                    AssetField.Update(...)
+                    local value = self.fields[fieldDef.name].value
+                    fieldDef.updateFunc(value)
+                end
+            }))
+        elseif fieldDef.type == "numeric" then
+            self:AddField(NumericField({
+                name = fieldDef.name,
+                value = fieldDef.value,
+                minValue = fieldDef.min,
+                maxValue = fieldDef.max,
+                step = fieldDef.step,
+                title = fieldDef.title,
+                tooltip = fieldDef.tooltip,
+            }))
         end
-    }))
+    end
+
     self.btnAddGrass = TabbedPanelButton({
         x = 0,
         y = 0,
@@ -55,34 +62,6 @@ function GrassEditor:init()
         self.btnAddGrass
     })
 
-    self:AddField(NumericField({
-        name = "grassDetail",
-        value = Spring.GetConfigInt("GrassDetail"),
-        minValue = 0,
-        maxValue = 10000,
-        step = 0.1,
-        title = "Detail:",
-        tooltip = "'GrassDetail' engine parameter: controls how much grass is visible." ..
-            "This is unsynced and will not be saved.",
-    }))
-
-    self:AddField(NumericField({
-        name = "size",
-        value = 100,
-        minValue = 40,
-        maxValue = 2000,
-        title = "Size:",
-        tooltip = "Size of the paint brush",
-    }))
-    self:AddField(NumericField({
-        name = "rotation",
-        value = 0,
-        minValue = -360,
-        maxValue = 360,
-        title = "Rotation:",
-        tooltip = "Rotation of the shape",
-    }))
-
     local children = {
         self.btnAddGrass,
         ScrollPanel:New {
@@ -99,20 +78,15 @@ function GrassEditor:init()
 end
 
 function GrassEditor:OnFieldChange(name, value)
-    if name == "grassDetail" then
-        --Spring.SendCommands('set GrassDetail ' .. tostring(math.ceil(value)))
-        Spring.SetConfigInt("GrassDetail", math.ceil(value), true)
-    end
+    self.model:OnFieldChange(name, value)
 end
 
 function GrassEditor:IsValidState(state)
-    return state:is_A(GrassEditingState)
+    return self.model:IsValidState(state)
 end
 
 function GrassEditor:OnLeaveState(state)
-    for _, btn in pairs({self.btnAddGrass}) do
-        btn:SetPressedState(false)
-    end
+    self.btnAddGrass:SetPressedState(false)
 end
 
 function GrassEditor:OnEnterState(state)
