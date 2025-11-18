@@ -10,82 +10,71 @@ HeightmapEditor:Register({
     order = 0,
 })
 
-function HeightmapEditor:init()
+function HeightmapEditor:init(model)
     self:super("init")
+    self.model = model or HeightmapEditorModel()
 
-    self:AddField(AssetField({
-        name = "patternTexture",
-        title = "Pattern:",
-        rootDir = "brush_patterns/terrain/",
-        expand = true,
-        itemWidth = 65,
-        itemHeight = 65,
-        Validate = function(obj, value)
-            if value == nil then
-                return true
-            end
-            if not AssetField.Validate(obj, value) then
-                return false
-            end
-
-            local ext = Path.GetExt(value) or ""
-            return table.ifind(SB_IMG_EXTS, ext), value
-        end,
-        Update = function(...)
-            AssetField.Update(...)
-            local texture = self.fields["patternTexture"].value
-            SB.model.terrainManager:generateShape(texture)
+    local fieldDefs = self.model:GetFieldDefinitions()
+    for _, fieldDef in ipairs(fieldDefs) do
+        if fieldDef.type == "asset" then
+            self:AddField(AssetField({
+                name = fieldDef.name,
+                title = fieldDef.title,
+                rootDir = fieldDef.rootDir,
+                expand = fieldDef.expand,
+                itemWidth = fieldDef.itemWidth,
+                itemHeight = fieldDef.itemHeight,
+                Validate = fieldDef.validateFunc,
+                Update = function(...)
+                    AssetField.Update(...)
+                    local value = self.fields[fieldDef.name].value
+                    fieldDef.updateFunc(value)
+                end
+            }))
+        elseif fieldDef.type == "numeric" then
+            self:AddField(NumericField({
+                name = fieldDef.name,
+                value = fieldDef.value,
+                minValue = fieldDef.min,
+                maxValue = fieldDef.max,
+                step = fieldDef.step,
+                title = fieldDef.title,
+                tooltip = fieldDef.tooltip,
+            }))
+        elseif fieldDef.type == "choice" then
+            self:AddField(ChoiceField({
+                name = fieldDef.name,
+                items = fieldDef.items,
+                tooltip = fieldDef.tooltip,
+            }))
         end
-    }))
+    end
 
-    self.btnAddState = TabbedPanelButton({
-        x = 0,
-        y = 0,
-        tooltip = "Left Click to add height, Right Click to remove height",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'up-card.png') }),
-            TabbedPanelLabel({ caption = "Add" }),
-        },
-        OnClick = {
-            function()
-                SB.stateManager:SetState(TerrainShapeModifyState(self))
-            end
-        },
-    })
+    local toolModes = self.model:GetToolModes()
+    self.toolButtons = {}
+    for i, toolMode in ipairs(toolModes) do
+        local x = (i - 1) * 70
+        local btn = TabbedPanelButton({
+            x = x,
+            y = 0,
+            tooltip = toolMode.tooltip,
+            children = {
+                TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, toolMode.icon) }),
+                TabbedPanelLabel({ caption = toolMode.caption }),
+            },
+            OnClick = {
+                function()
+                    self.model:ActivateTool(toolMode.id, self)
+                end
+            },
+        })
+        self.toolButtons[toolMode.id] = btn
+    end
 
-    self.btnSetState = TabbedPanelButton({
-        x = 70,
-        y = 0,
-        tooltip = "Left Click to set height. Right click to sample height",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'terrain-set.png') }),
-            TabbedPanelLabel({ caption = "Set" }),
-        },
-        OnClick = {
-            function()
-                SB.stateManager:SetState(TerrainSetState(self))
-            end
-        },
-    })
-
-    self.btnSmoothState = TabbedPanelButton({
-        x = 140,
-        y = 0,
-        tooltip = "Click to smooth terrain",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'terrain-smooth.png') }),
-            TabbedPanelLabel({ caption = "Smooth" }),
-        },
-        OnClick = {
-            function()
-                SB.stateManager:SetState(TerrainSmoothState(self))
-            end
-        },
-    })
     self:AddDefaultKeybinding({
-        self.btnAddState,
-        self.btnSetState,
-        self.btnSmoothState
+        self.toolButtons["add"],
+        self.toolButtons["set"],
+        self.toolButtons["smooth"]
     })
 
     self:AddControl("btn-show-elevation", {
@@ -95,54 +84,34 @@ function HeightmapEditor:init()
             height = 40,
             OnClick = {
                 function()
-                    Spring.SendCommands('showelevation')
+                    self.model:ShowElevation()
                 end
             }
         },
     })
 
-    self:AddField(NumericField({
-        name = "size",
-        value = 100,
-        minValue = 10,
-        maxValue = 5000,
-        title = "Size:",
-        tooltip = "Size of the height brush",
-    }))
-    self:AddField(NumericField({
-        name = "rotation",
-        value = 0,
-        minValue = -360,
-        maxValue = 360,
-        title = "Rotation:",
-        tooltip = "Rotation of the shape",
-    }))
-    self:AddField(NumericField({
-        name = "strength",
-        value = 10,
-        step = 0.1,
-        title = "Strength:",
-        tooltip = "Strength of the height map tool",
-    }))
-    self:AddField(NumericField({
-        name = "height",
-        value = 10,
-        step = 0.1,
-        title = "Height:",
-        tooltip = "Goal height",
-    }))
-    self:AddField(ChoiceField({
-        name = "applyDir",
-        items = {"Both", "Only Raise", "Only Lower"},
-        tooltip = "Whether terrain should be only lowered, raised or both.",
-    }))
     self:Update("size")
-    self:SetInvisibleFields("applyDir")
+    local visibleFields = self.model:GetVisibleFieldsForMode(self.model:GetCurrentMode())
+    local allFields = {"patternTexture", "size", "rotation", "strength", "height", "applyDir"}
+    local invisibleFields = {}
+    for _, field in ipairs(allFields) do
+        local isVisible = false
+        for _, vf in ipairs(visibleFields) do
+            if vf == field then
+                isVisible = true
+                break
+            end
+        end
+        if not isVisible then
+            table.insert(invisibleFields, field)
+        end
+    end
+    self:SetInvisibleFields(unpack(invisibleFields))
 
     local children = {
-        self.btnAddState,
-        self.btnSetState,
-        self.btnSmoothState,
+        self.toolButtons["add"],
+        self.toolButtons["set"],
+        self.toolButtons["smooth"],
         ScrollPanel:New {
             x = 0,
             y = 70,
@@ -158,26 +127,42 @@ function HeightmapEditor:init()
 end
 
 function HeightmapEditor:OnLeaveState(state)
-    for _, btn in pairs({self.btnAddState, self.btnSmoothState, self.btnSetState}) do
+    for _, btn in pairs(self.toolButtons) do
         btn:SetPressedState(false)
     end
 end
 
 function HeightmapEditor:OnEnterState(state)
-    local btn
+    local modeId
     if state:is_A(TerrainShapeModifyState) then
-        self:SetInvisibleFields("applyDir")
-        btn = self.btnAddState
+        modeId = "add"
     elseif state:is_A(TerrainSetState) then
-        self:SetInvisibleFields()
-        btn = self.btnSetState
+        modeId = "set"
     elseif state:is_A(TerrainSmoothState) then
-        self:SetInvisibleFields("applyDir")
-        btn = self.btnSmoothState
+        modeId = "smooth"
     end
-    btn:SetPressedState(true)
+
+    self.model:SetMode(modeId)
+    self.toolButtons[modeId]:SetPressedState(true)
+
+    local visibleFields = self.model:GetVisibleFieldsForMode(modeId)
+    local allFields = {"patternTexture", "size", "rotation", "strength", "height", "applyDir"}
+    local invisibleFields = {}
+    for _, field in ipairs(allFields) do
+        local isVisible = false
+        for _, vf in ipairs(visibleFields) do
+            if vf == field then
+                isVisible = true
+                break
+            end
+        end
+        if not isVisible then
+            table.insert(invisibleFields, field)
+        end
+    end
+    self:SetInvisibleFields(unpack(invisibleFields))
 end
 
 function HeightmapEditor:IsValidState(state)
-    return state:is_A(AbstractHeightmapEditingState)
+    return self.model:IsValidState(state)
 end
