@@ -92,3 +92,23 @@
 .icon-button:hover {
     background-color: #4a4a4a;
 }
+
+/* Team Selector */
+.team-select {
+    width: 200dp;
+    height: 40dp;
+    font-size: 16dp;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1dp #555555;
+    margin-bottom: 10dp;
+}
+
+#team-selector label {
+    font-size: 14dp;
+    color: #cccccc;
+}
+
+#team-selector input[type=checkbox] {
+    margin-right: 5dp;
+}

@@ -1,0 +1,15 @@
+<rml>
+<head>
+    <title>Team Selector</title>
+    <link type="text/rcss" href="../floating.rcss"/>
+</head>
+<body id="team-selector" class="floating-panel">
+    <select id="team-dropdown" class="team-select">
+        <option>Loading teams...</option>
+    </select>
+    <label>
+        <input type="checkbox" id="lock-team-checkbox"/>
+        Lock team
+    </label>
+</body>
+</rml>

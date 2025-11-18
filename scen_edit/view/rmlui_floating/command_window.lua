@@ -10,7 +10,8 @@ end
 function RmlUiCommandWindow:Initialize()
     self.document = SB.rmlui:LoadDocument(self.rmlPath, false)
     self:BindEvents()
-    Log.Notice("Command Window initialized (RmlUi stub)")
+    SB.commandManager:addListener(self)
+    Log.Notice("Command Window initialized (RmlUi)")
     return true
 end
 
@@ -50,33 +51,94 @@ function RmlUiCommandWindow:Hide()
 end
 
 function RmlUiCommandWindow:OnUndo()
-    Log.Notice("Undo command (not implemented)")
-    -- TODO: Execute UndoCommand
+    SB.commandManager:execute(UndoCommand())
 end
 
 function RmlUiCommandWindow:OnRedo()
-    Log.Notice("Redo command (not implemented)")
-    -- TODO: Execute RedoCommand
+    SB.commandManager:execute(RedoCommand())
 end
 
 function RmlUiCommandWindow:OnClearHistory()
-    Log.Notice("Clear history (not implemented)")
-    -- TODO: Execute ClearUndoRedoCommand
+    SB.commandManager:execute(ClearUndoRedoCommand())
 end
 
 function RmlUiCommandWindow:PushCommand(display)
     self.count = self.count + 1
-    Log.Notice("Command executed: " .. display)
-    -- TODO: Add command to list display
+    local id = self.count
+    Log.Debug("do", id)
+
+    local commandList = self.document:GetElementById("command-list")
+    if commandList then
+        local itemDiv = self.document:CreateElement("div")
+        itemDiv:SetAttribute("class", "command-item")
+        itemDiv:SetAttribute("id", "cmd-" .. id)
+        itemDiv.inner_rml = tostring(id) .. " " .. display
+        commandList:AppendChild(itemDiv)
+
+        -- Scroll to bottom
+        commandList.scroll_top = commandList.scroll_height
+    end
+end
+
+function RmlUiCommandWindow:UndoCommand()
+    Log.Debug("undo", self.count - self.undoCount)
+    local cmdItem = self.document:GetElementById("cmd-" .. (self.count - self.undoCount))
+    if cmdItem then
+        cmdItem:AddClass("undone")
+    end
+    self.undoCount = self.undoCount + 1
+end
+
+function RmlUiCommandWindow:RedoCommand()
+    Log.Debug("redo", self.count - self.undoCount + 1)
+    local cmdItem = self.document:GetElementById("cmd-" .. (self.count - self.undoCount + 1))
+    if cmdItem then
+        cmdItem:RemoveClass("undone")
+    end
+    self.undoCount = self.undoCount - 1
 end
 
 function RmlUiCommandWindow:OnCommandExecuted(cmdIDs, isUndo, isRedo, display)
-    -- Stub for command manager listener
     if isUndo then
-        self.undoCount = self.undoCount + 1
+        self:UndoCommand()
     elseif isRedo then
-        self.undoCount = self.undoCount - 1
+        self:RedoCommand()
     else
         self:PushCommand(display)
     end
+end
+
+function RmlUiCommandWindow:OnRemoveFirstUndo()
+    Log.Debug("remundo", self.removedCount + 1)
+    self.removedCount = self.removedCount + 1
+    local cmdItem = self.document:GetElementById("cmd-" .. self.removedCount)
+    if cmdItem then
+        cmdItem.parent_node:RemoveChild(cmdItem)
+    end
+end
+
+function RmlUiCommandWindow:OnRemoveFirstRedo()
+    Log.Debug(LOG.DEBUG, "remredo")
+    local cmdItem = self.document:GetElementById("cmd-" .. self.count)
+    if cmdItem then
+        cmdItem.parent_node:RemoveChild(cmdItem)
+    end
+    self.count = self.count - 1
+    self.undoCount = self.undoCount - 1
+end
+
+function RmlUiCommandWindow:OnClearUndoStack()
+    Log.Debug("clearundostack")
+    while self.removedCount ~= self.count do
+        self:OnRemoveFirstUndo()
+    end
+    Log.Debug("clearundostackend")
+end
+
+function RmlUiCommandWindow:OnClearRedoStack()
+    Log.Debug("clearredostack")
+    while self.undoCount ~= 0 do
+        self:OnRemoveFirstRedo()
+    end
+    Log.Debug("clearredostackend")
 end

@@ -50,6 +50,8 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/status_window.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/control_buttons.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/top_left_menu.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/team_selector.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/bottom_bar.lua'))
 
     -- Load RmlUi field system (maintains original AddField API - implementation-agnostic!)
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_component.lua'))  -- Base class for components
@@ -71,22 +73,16 @@ function View:InitializeRmlUi()
         return
     end
 
-    -- Initialize floating windows
-    self.commandWindow = RmlUiCommandWindow()
-    self.commandWindow:Initialize()
-    self.commandWindow:Show()
+    -- Initialize floating windows (all panels managed by bottom bar)
+    self.bottomBar = RmlUiBottomBar()
+    self.bottomBar:Initialize()
 
-    self.statusWindow = RmlUiStatusWindow()
-    self.statusWindow:Initialize()
-    self.statusWindow:Show()
-
-    self.controlButtons = RmlUiControlButtons()
-    self.controlButtons:Initialize()
-    self.controlButtons:Show()
-
-    self.topLeftMenu = RmlUiTopLeftMenu()
-    self.topLeftMenu:Initialize()
-    self.topLeftMenu:Show()
+    -- Keep references for easy access
+    self.commandWindow = self.bottomBar.commandWindow
+    self.statusWindow = self.bottomBar.statusWindow
+    self.controlButtons = self.bottomBar.controlButtons
+    self.topLeftMenu = self.bottomBar.topLeftMenu
+    self.teamSelector = self.bottomBar.teamSelector
 
     -- Initialize editors (create instances but don't show)
     self.triggerEditor = RmlUiTriggerEditor()
@@ -298,11 +294,8 @@ function View:Update()
         self.bottomBar:Update()
     else
         -- RmlUi updates
-        if self.statusWindow then
-            self.statusWindow:Update()
-        end
-        if self.topLeftMenu then
-            self.topLeftMenu:Update()
+        if self.bottomBar then
+            self.bottomBar:Update()
         end
     end
 

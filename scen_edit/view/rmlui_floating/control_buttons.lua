@@ -2,14 +2,16 @@ RmlUiControlButtons = LCS.class{}
 
 function RmlUiControlButtons:init()
     self.rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/floating/control_buttons.rml')
-    self.started = false
+    self.started = false  -- FIXME: check instead of assuming
+    self.__lastFrame = nil
 end
 
 function RmlUiControlButtons:Initialize()
     self.document = SB.rmlui:LoadDocument(self.rmlPath, false)
     self:BindEvents()
     self:UpdateStartStopButton()
-    Log.Notice("Control Buttons initialized (RmlUi stub)")
+    self:UpdateGameDrawing()
+    Log.Notice("Control Buttons initialized (RmlUi)")
     return true
 end
 
@@ -42,20 +44,27 @@ function RmlUiControlButtons:Hide()
 end
 
 function RmlUiControlButtons:OnStartStop()
+    local frame = Spring.GetGameFrame()
+    if self.__lastFrame then
+        if frame - self.__lastFrame < 15 then
+            return
+        end
+    end
+    self.__lastFrame = frame
+
     if not self.started then
-        Log.Notice("Starting scenario (not implemented)")
+        local cmd = StartCommand()
+        SB.commandManager:execute(cmd)
         self:GameStarted()
-        -- TODO: Execute StartCommand
     else
-        Log.Notice("Stopping scenario (not implemented)")
+        local cmd = StopCommand()
+        SB.commandManager:execute(cmd)
         self:GameStopped()
-        -- TODO: Execute StopCommand
     end
 end
 
 function RmlUiControlButtons:OnToggleUI()
-    Log.Notice("Toggle UI visibility (not implemented)")
-    -- TODO: SB.view:SetVisible(not SB.view.__visible)
+    SB.view:SetVisible(not SB.view.__visible)
 end
 
 function RmlUiControlButtons:UpdateStartStopButton()
@@ -73,14 +82,54 @@ function RmlUiControlButtons:UpdateStartStopButton()
     end
 end
 
+-- All this better belongs to some command/model
+function RmlUiControlButtons:UpdateGameDrawing()
+    -- show/hide SB GUI
+    if SB.view then
+        if not self.started then
+            SB.view:SetVisible(true)
+        else
+            SB.view:SetVisible(false)
+        end
+    end
+
+    if self.started then
+        SB.delay(function()
+            local success, msg = pcall(function()
+                local OnStopEditingUnsynced = SB.model.game.OnStopEditingUnsynced
+                if OnStopEditingUnsynced then
+                    OnStopEditingUnsynced()
+                end
+            end)
+            if not success then
+                Log.Error(msg)
+                Log.Error("Error in custom OnStopEditingUnsynced")
+            end
+        end)
+    else
+        SB.delay(function()
+            local success, msg = pcall(function()
+                local OnStartEditingUnsynced = SB.model.game.OnStartEditingUnsynced
+                if OnStartEditingUnsynced then
+                    OnStartEditingUnsynced()
+                end
+            end)
+            if not success then
+                Log.Error(msg)
+                Log.Error("Error in custom OnStartEditingUnsynced")
+            end
+        end)
+    end
+end
+
 function RmlUiControlButtons:GameStarted()
     self.started = true
     self:UpdateStartStopButton()
-    Log.Notice("Game started")
+    self:UpdateGameDrawing()
 end
 
 function RmlUiControlButtons:GameStopped()
     self.started = false
     self:UpdateStartStopButton()
-    Log.Notice("Game stopped")
+    self:UpdateGameDrawing()
 end
