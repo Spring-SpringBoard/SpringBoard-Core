@@ -10,8 +10,9 @@ PlayersWindow:Register({
     order = 1,
 })
 
-function PlayersWindow:init()
+function PlayersWindow:init(model)
     self:super("init")
+    self.model = model or PlayersWindowModel()
 
     self.teamsPanel = StackPanel:New {
         itemMargin = {0, 0, 0, 0},
@@ -21,7 +22,7 @@ function PlayersWindow:init()
         autosize = true,
         resizeItems = false,
     }
-    SB.model.teamManager:addListener(self)
+    self.model:AddTeamListener(self)
     self:Populate()
 
     self.btnAddPlayer = TabbedPanelButton({
@@ -34,12 +35,7 @@ function PlayersWindow:init()
         },
         OnClick = {
             function()
-                local name = "New team: " .. tostring(#SB.model.teamManager:getAllTeams())
-                local color = { r=math.random(), g=math.random(), b=math.random(), a=1}
-                local allyTeam = 1
-                local side = Spring.GetSideData(1)
-                local cmd = AddTeamCommand(name, color, allyTeam, side)
-                SB.commandManager:execute(cmd)
+                self.model:AddTeam()
             end
         },
     })
@@ -66,7 +62,6 @@ end
 
 function PlayersWindow:Populate()
     self.teamsPanel:ClearChildren()
-    --titles
     local titlesPanel = MakeComponentPanel(self.teamsPanel)
     local lblTeams = Label:New {
         caption = "Teams",
@@ -74,8 +69,8 @@ function PlayersWindow:Populate()
         width = 150,
         parent = titlesPanel,
     }
-    --teams
-    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
+
+    for _, team in pairs(self.model:GetAllTeams()) do
         local stackTeamPanel = MakeComponentPanel(self.teamsPanel)
         local fontColor = SB.glToFontColor(team.color or {r=1, g=1, b=1})
         local aiPrefix = "(Player) "
@@ -123,8 +118,7 @@ function PlayersWindow:Populate()
                 },
                 OnClick = {
                     function()
-                        local cmd = RemoveTeamCommand(team.id)
-                        SB.commandManager:execute(cmd)
+                        self.model:RemoveTeam(team.id)
                     end
                 }
             }

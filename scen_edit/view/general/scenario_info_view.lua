@@ -10,44 +10,19 @@ ScenarioInfoView:Register({
     order = 0,
 })
 
-function ScenarioInfoView:init()
+function ScenarioInfoView:init(model)
     self:super("init")
+    self.model = model or ScenarioInfoModel()
 
-    self:AddField(
-        StringField({
-            name = "name",
-            title = "Name:",
-            width = 200,
-            value = SB.model.scenarioInfo.name,
-        })
-    )
-
-    self:AddField(
-        StringField({
-            name = "description",
-            title = "Description:",
-            width = 200,
-            value = SB.model.scenarioInfo.description,
-        })
-    )
-
-    self:AddField(
-        StringField({
-            name = "version",
-            title = "Version:",
-            width = 200,
-            value = tostring(SB.model.scenarioInfo.version),
-        })
-    )
-
-    self:AddField(
-        StringField({
-            name = "author",
-            title = "Author:",
-            width = 200,
-            value = SB.model.scenarioInfo.author,
-        })
-    )
+    local fieldDefs = self.model:GetFieldDefinitions()
+    for _, fieldDef in ipairs(fieldDefs) do
+        self:AddField(StringField({
+            name = fieldDef.name,
+            title = fieldDef.title,
+            width = fieldDef.width,
+            value = fieldDef.value,
+        }))
+    end
 
     local children = {
         ScrollPanel:New {
@@ -61,31 +36,23 @@ function ScenarioInfoView:init()
         },
     }
 
-    SB.model.scenarioInfo:addListener(ScenarioInfoListenerWidget(self))
-
+    self.model:AddListener(ScenarioInfoListenerWidget(self))
     self:Finalize(children)
 end
 
 function ScenarioInfoView:OnStartChange(name)
-    SB.commandManager:execute(SetMultipleCommandModeCommand(true))
+    self.model:OnStartChange()
 end
 
 function ScenarioInfoView:OnEndChange(name)
-    SB.commandManager:execute(SetMultipleCommandModeCommand(false))
+    self.model:OnEndChange()
 end
 
 function ScenarioInfoView:OnFieldChange(name, value)
     if self.updatingInfo then
         return
     end
-
-    local cmd = SetScenarioInfoCommand({
-        name = self.fields['name'].value,
-        description = self.fields['description'].value,
-        version = self.fields['version'].value,
-        author = self.fields['author'].value,
-    })
-    SB.commandManager:execute(cmd)
+    self.model:OnFieldChange(self.fields)
 end
 
 function ScenarioInfoView:UpdateInfo(update)

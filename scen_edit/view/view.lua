@@ -50,6 +50,10 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/sky_editor.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/lighting_editor.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_editors/terrain_settings_editor.lua'))
+    
+    -- Load RmlUi general windows
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_general/players_window.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_general/scenario_info_view.lua'))
 
     -- Load models (business logic, shared between Chili and RmlUi)
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/status_window_model.lua'))
@@ -66,6 +70,8 @@ function View:InitializeRmlUi()
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/sky_editor_model.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/lighting_editor_model.lua'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/terrain_settings_editor_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/players_window_model.lua'))
+    SB.Include(Path.Join(SB.DIRS.SRC, 'view/models/scenario_info_model.lua'))
 
     -- Load RmlUi floating windows
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_floating/command_window.lua'))
