@@ -12,51 +12,48 @@ TextureEditor:Register({
     order = 1,
 })
 
-function TextureEditor:init()
+function TextureEditor:init(model)
     self:super("init")
+    self.model = model or TextureEditorModel()
+    self.matFieldNames = {}
 
-    self:AddField(AssetField({
-        name = "patternTexture",
-        title = "Pattern:",
-        rootDir = "brush_patterns/terrain/",
-        expand = true,
-        itemWidth = 65,
-        itemHeight = 65,
-        Validate = function(obj, value)
-            if not AssetField.Validate(obj, value) then
-                return false
-            end
+    local fieldDefs = self.model:GetFieldDefinitions()
+    for _, fieldDef in ipairs(fieldDefs) do
+        self:AddFieldFromDef(fieldDef)
+    end
 
-            if value == nil then
-                return true
-            end
-            local ext = Path.GetExt(value) or ""
-            return table.ifind(SB_IMG_EXTS, ext), value
+    local matFields = self.model:GetMaterialTextureFields()
+    local matFieldsGroup = {}
+    for _, fieldDef in ipairs(matFields) do
+        table.insert(matFieldsGroup, BooleanField({
+            name = fieldDef.name,
+            value = fieldDef.value,
+            title = fieldDef.title,
+            tooltip = fieldDef.tooltip,
+            width = fieldDef.width,
+        }))
+        table.insert(self.matFieldNames, fieldDef.name)
+        if #matFieldsGroup == 3 then
+            self:AddField(GroupField(matFieldsGroup))
+            matFieldsGroup = {}
         end
-    }))
-    self:AddField(MaterialField({
-        name = "brushTexture",
-        title = "Texture:",
-        value = {},
-        rootDir = "brush_textures/",
-        width = 200,
-    }))
+    end
+    if #matFieldsGroup ~= 0 then
+        self:AddField(GroupField(matFieldsGroup))
+    end
+
     self.savedBrushes = SavedBrushes({
         ctrl = {
             x = 0,
             right = 0,
-            --y = "30%",
-            --bottom = "45%", -- 100 - 55
             y = 70,
-            bottom = "65%", -- 100 - 55
+            bottom = "65%",
         },
         editor = self,
         name = "mapMaterials",
         GetNewBrush = function()
             local tbl = self:Serialize()
-            -- invoke the UI dialog to pick the paint texture
             CallListeners(self.fields["brushTexture"].button.OnClick)
-
             return {
                 opts = tbl,
                 caption = nil,
@@ -77,7 +74,6 @@ function TextureEditor:init()
                 self.savedBrushes.itemWidth,
                 self.savedBrushes.itemHeight,
                 BrushDrawer.GetBrushDrawOpts(brush))
-
             return texName
         end,
     })
@@ -86,10 +82,8 @@ function TextureEditor:init()
         ctrl = {
             x = 0,
             right = 0,
-            --y = "30%",
-            --bottom = "45%", -- 100 - 55
             y = 70,
-            bottom = "65%", -- 100 - 55
+            bottom = "65%",
         },
         editor = self,
         disableAdd = true,
@@ -97,10 +91,7 @@ function TextureEditor:init()
         name = "mapDNTS",
         GetNewBrush = function()
             local tbl = self:Serialize()
-
-            -- invoke the UI dialog to pick the paint texture
             CallListeners(self.fields["brushTexture"].button.OnClick)
-
             return {
                 opts = tbl,
                 caption = nil,
@@ -118,7 +109,6 @@ function TextureEditor:init()
             end
             local texturePath = texObj.texture
             local texName = brush.image
-
             if texName == nil or texName == "" or texName:sub(1, 1) == "$" then
                 texName = BrushDrawer.GetBrushTexture(
                     self.savedBrushes.itemWidth,
@@ -129,396 +119,47 @@ function TextureEditor:init()
                 self.savedBrushes.itemWidth,
                 self.savedBrushes.itemHeight,
                 BrushDrawer.GetBrushDrawOpts(brush))
-
             return texName
         end,
     })
-    self:AddField(Field({
-        name = "dntsIndex",
-        value = 0,
-    }))
-    self.btnPaint = TabbedPanelButton({
-        x = 0,
-        y = 0,
-        tooltip = "Paint the terrain",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
-            TabbedPanelLabel({ caption = "Paint" }),
-        },
-        OnClick = {
-            function()
-                self:_EnterState("paint")
-                self.savedBrushes:GetControl():Show()
-                self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("kernelMode", "splatTexScale", "splatTexMult", "splat-sep", "exclusive", "value")
-            end
-        },
-    })
-    self.btnFilter = TabbedPanelButton({
-        x = SB.conf.TOOLBOX_ITEM_WIDTH,
-        y = 0,
-        tooltip = "Apply a filter",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'filter-brush.png') }),
-            TabbedPanelLabel({ caption = "Filter" }),
-        },
-        OnClick = {
-            function()
-                self:_EnterState("blur")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor",
-                                        "mode", "texRotation", "splatTexScale", "splatTexMult", "offset-sep",
-                                        "splat-sep", "exclusive", "value", "tex-sep",
-                                        unpack(self.matFieldNames))
-            end
-        },
-    })
-    self.btnDNTS = TabbedPanelButton({
-        x = SB.conf.TOOLBOX_ITEM_WIDTH * 2,
-        y = 0,
-        tooltip = "DNTS textures",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'paint-brush.png') }),
-            TabbedPanelLabel({ caption = "DNTS" }),
-        },
-        OnClick = {
-            function(obj)
-                -- if SB.dntsEditor == nil then
-                --     SB.dntsEditor = DNTSEditor()
-                --     SB.dntsEditor.window.OnHide = {
-                --         function()
-                --             obj:SetPressedState(false)
-                --         end
-                --     }
-                -- end
-                -- if SB.dntsEditor.window.hidden then
-                --     SB.view:SetMainPanel(SB.dntsEditor.window)
-                -- end
-                if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
-                    return
+
+    local toolModes = self.model:GetToolModes()
+    self.toolButtons = {}
+    for i, toolMode in ipairs(toolModes) do
+        local x = (i - 1) * SB.conf.TOOLBOX_ITEM_WIDTH
+        local btn = TabbedPanelButton({
+            x = x,
+            y = 0,
+            tooltip = toolMode.tooltip,
+            children = {
+                TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, toolMode.icon) }),
+                TabbedPanelLabel({ caption = toolMode.caption }),
+            },
+            OnClick = {
+                function()
+                    self:EnterToolMode(toolMode.id)
                 end
-                self:_EnterState("dnts")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Show()
-                self:SetInvisibleFields("kernelMode", "texScale", "texOffsetX", "texOffsetY",
-                                        "featureFactor", "diffuseColor", "mode", "texRotation",
-                                        "falloffFactor", "offset-sep", "voidFactor", "tex-sep",
-                                        unpack(self.matFieldNames))
-            end
-        },
-    })
-    self.btnVoid = TabbedPanelButton({
-        x = SB.conf.TOOLBOX_ITEM_WIDTH * 3,
-        y = 0,
-        tooltip = "Make the terrain transparent",
-        children = {
-            TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
-            TabbedPanelLabel({ caption = "Void" }),
-        },
-        OnClick = {
-            function()
-                self:_EnterState("void")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
-                self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
-                                        "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
-                                        "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
-                                        unpack(self.matFieldNames))
-            end
-        },
-    })
-    -- self.btnHeight = TabbedPanelButton({
-    --     x = SB.conf.TOOLBOX_ITEM_WIDTH * 4,
-    --     y = 0,
-    --     tooltip = "Draw height",
-    --     children = {
-    --         TabbedPanelImage({ file = Path.Join(SB.DIRS.IMG, 'large-paint-brush.png') }),
-    --         TabbedPanelLabel({ caption = "Height" }),
-    --     },
-    --     OnClick = {
-    --         function()
-    --             self:_EnterState("height")
-    --             self.savedBrushes:GetControl():Hide()
-    --             self.savedDNTSBrushes:GetControl():Hide()
-    --             self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
-    --                                     "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
-    --                                     "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
-    --                                     unpack(self.matFieldNames))
-    --         end
-    --     },
-    -- })
+            },
+        })
+        self.toolButtons[toolMode.id] = btn
+    end
+
     self:AddDefaultKeybinding({
-        self.btnPaint,
-        self.btnFilter,
-        self.btnDNTS,
-        self.btnVoid,
-        -- self.btnHeight
+        self.toolButtons["paint"],
+        self.toolButtons["blur"],
+        self.toolButtons["dnts"],
+        self.toolButtons["void"],
     })
-
-    self:AddField(ChoiceField({
-        name = "mode",
-        items = {
-            "Normal",
-            "Darken",
-            "Lighten",
-            "SoftLight",
-            "HardLight",
-            "Luminance",
-            "Multiply",
-            "Premultiplied",
-            "Overlay",
-            "Screen",
-            "Add",
-            "Subtract",
-            "Difference",
-            "InverseDifference",
-            "Exclusion",
-            "Color",
-            "ColorBurn",
-            "ColorDodge",
-        },
-        title = "Mode:"
-    }))
-    self:AddField(ChoiceField({
-        name = "kernelMode",
-        items = {
-            "blur",
-            "bottom_sobel",
-            "emboss",
-            "left_sobel",
-            "outline",
-            "right_sobel",
-            "sharpen",
-            "top sobel",
-        },
-        title = "Filter:"
-    }))
-    self:AddField(BooleanField({
-        name = "exclusive",
-        title = "Exclusive: ",
-        value = false,
-    }))
-
-    self:AddControl("offset-sep", {
-        Label:New {
-            caption = "Pattern",
-        },
-        Line:New {
-            x = 50,
-            y = 4,
-            width = self.VALUE_POS,
-        }
-    })
-
-    local matFields = {}
-    self.matFieldNames = {}
-    for name, _ in pairs(SB.model.textureManager.materialTextures) do
-        if name ~= "normal" then
-            local fname = name .. "Enabled"
-            table.insert(matFields, BooleanField({
-                name = fname,
-                value = true,
-                title = String.Capitalize(name) .. ":",
-                tooltip = String.Capitalize(name) .. " texture",
-                width = 140,
-            }))
-            table.insert(self.matFieldNames, fname)
-            if #matFields == 3 then
-                self:AddField(GroupField(matFields))
-                matFields = {}
-            end
-        end
-    end
-    if #matFields ~= 0 then
-        self:AddField(GroupField(matFields))
-        matFields = {}
-    end
-
-
-    self:AddField(GroupField({
-        NumericField({
-            name = "size",
-            value = 100,
-            minValue = 1,
-            maxValue = 5000,
-            title = "Size:",
-            tooltip = "Size of the paint brush",
-            width = 140,
-        }),
-        NumericField({
-            name = "rotation",
-            value = 0,
-            minValue = -360,
-            maxValue = 360,
-            title = "Rotation:",
-            tooltip = "Rotation of the paint brush",
-            width = 140,
-        }),
-        NumericField({
-            name = "texScale",
-            value = 2,
-            minValue = 0.01,
-            step = 0.05,
-            title = "Scale:",
-            tooltip = "Texture sampling rate (larger number means higher frequency)",
-            width = 140,
-        })
-    }))
-
-    self:AddControl("tex-sep", {
-        Label:New {
-            caption = "Material",
-        },
-        Line:New {
-            x = 55,
-            y = 4,
-            width = self.VALUE_POS,
-        }
-    })
-
-    self:AddField(GroupField({
-        NumericField({
-            name = "texRotation",
-            value = 0,
-            minValue = -360,
-            maxValue = 360,
-            title = "Tex rotation:",
-            tooltip = "Rotation of the texture",
-            width = 140,
-        }),
-        NumericField({
-            name = "texOffsetX",
-            value = 0,
-            minValue = -1,
-            maxValue = 1,
-            step = 0.001,
-            title = "X:",
-            tooltip = "Texture offset X",
-            width = 140,
-        }),
-        NumericField({
-            name = "texOffsetY",
-            value = 0,
-            minValue = -1,
-            maxValue = 1,
-            step = 0.001,
-            title = "Y:",
-            tooltip = "Texture offset Y",
-            width = 140,
-        })
-    }))
-
-    self:AddControl("blending-sep", {
-        Label:New {
-            caption = "Blending",
-        },
-        Line:New {
-            x = 50,
-            y = 4,
-            width = self.VALUE_POS,
-        }
-    })
-    self:AddField(GroupField({
-        NumericField({
-            name = "strength",
-            value = 1,
-            minValue = 0.0,
-            maxValue = 1,
-            title = "Strength:",
-            tooltip = "Application strength (use lower numbers for finer detail painting)",
-            width = 140,
-        }),
-        NumericField({
-            name = "falloffFactor",
-            value = 0.3,
-            minValue = 0.0,
-            maxValue = 1,
-            title = "Falloff:",
-            tooltip = "Texture painting fade out (1 means crisp)",
-            width = 140,
-        }),
-        NumericField({
-            name = "featureFactor",
-            value = 1,
-            minValue = 0.0,
-            maxValue = 1,
-            title = "Feature:",
-            tooltip = "Feature filtering (1 means no filter filtering)",
-            width = 140,
-        })
-    }))
-
-    self:AddField(NumericField({
-        name = "value",
-        value = 1,
-        minValue = 0.0,
-        maxValue = 1,
-        title = "Value:",
-        tooltip = "Goal value to be set for DNTS textures when painting.",
-        width = 140,
-    }))
-
-    self:AddField(NumericField({
-        name = "voidFactor",
-        value = 1,
-        minValue = 0.0,
-        maxValue = 1,
-        title = "Transparency:",
-        tooltip = "The greater the value, the more transparent it will be.",
-        width = 140,
-    }))
-
-    self:AddControl("splat-sep", {
-        Label:New {
-            caption = "Splat",
-        },
-        Line:New {
-            x = 55,
-            y = 4,
-            width = self.VALUE_POS,
-        }
-    })
-    self:AddField(GroupField({
-        NumericField({
-            name = "splatTexScale",
-            value = 1,
-            step = 0.000001,
-            decimals = 6,
-            title = "Scale:",
-            tooltip = "Splat texture multiplier",
-            width = 140,
-        }),
-        NumericField({
-            name = "splatTexMult",
-            value = 0.5,
-            step = 0.01,
-            title = "Mult:",
-            tooltip = "Splat texture multiplier",
-            width = 140,
-        }),
-    }))
-
-    self:AddField(ColorField({
-        name = "diffuseColor",
-        title = "Color: ",
-        value = { 1, 1, 1, 1 },
-        width = 140,
-        format = 'rgb',
-    }))
 
     local children = {
-        self.btnPaint,
-        self.btnFilter,
-        self.btnDNTS,
-        self.btnVoid,
-        -- self.btnHeight,
-        --self.patternTextureImages:GetControl(),
+        self.toolButtons["paint"],
+        self.toolButtons["blur"],
+        self.toolButtons["dnts"],
+        self.toolButtons["void"],
         self.savedBrushes:GetControl(),
         self.savedDNTSBrushes:GetControl(),
         ScrollPanel:New {
             x = 0,
-            --y = "55%",
             y = "35%",
             bottom = 30,
             right = 0,
@@ -529,6 +170,7 @@ function TextureEditor:init()
             },
         },
     }
+
     SB.delay(function()
         for i = 0, 3 do
             local texturePath = SB.model.textureManager.shadingTextures["splat_normals" ..
@@ -539,19 +181,160 @@ function TextureEditor:init()
         end
         self.savedDNTSBrushes:DeselectAll()
         if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
-            self.btnDNTS:SetEnabled(false)
-            self.btnDNTS.tooltip = "\255\255\1\1(DISABLED)\b\255\255\255\255No DNTS textures detected for current map.\b"
+            self.toolButtons["dnts"]:SetEnabled(false)
+            self.toolButtons["dnts"].tooltip = "\255\255\1\1(DISABLED)\b\255\255\255\255No DNTS textures detected for current map.\b"
         end
     end)
 
     self:Finalize(children)
-
     self.savedDNTSBrushes:GetControl():Hide()
+end
+
+function TextureEditor:AddFieldFromDef(fieldDef)
+    if fieldDef.type == "asset" then
+        self:AddField(AssetField({
+            name = fieldDef.name,
+            title = fieldDef.title,
+            rootDir = fieldDef.rootDir,
+            expand = fieldDef.expand,
+            itemWidth = fieldDef.itemWidth,
+            itemHeight = fieldDef.itemHeight,
+            Validate = fieldDef.validateFunc,
+        }))
+    elseif fieldDef.type == "material" then
+        self:AddField(MaterialField({
+            name = fieldDef.name,
+            title = fieldDef.title,
+            value = fieldDef.value,
+            rootDir = fieldDef.rootDir,
+            width = fieldDef.width,
+        }))
+    elseif fieldDef.type == "choice" then
+        self:AddField(ChoiceField({
+            name = fieldDef.name,
+            items = fieldDef.items,
+            title = fieldDef.title,
+        }))
+    elseif fieldDef.type == "boolean" then
+        self:AddField(BooleanField({
+            name = fieldDef.name,
+            title = fieldDef.title,
+            value = fieldDef.value,
+        }))
+    elseif fieldDef.type == "numeric" then
+        self:AddField(NumericField({
+            name = fieldDef.name,
+            value = fieldDef.value,
+            minValue = fieldDef.min,
+            maxValue = fieldDef.max,
+            step = fieldDef.step,
+            decimals = fieldDef.decimals,
+            title = fieldDef.title,
+            tooltip = fieldDef.tooltip,
+            width = fieldDef.width,
+        }))
+    elseif fieldDef.type == "color" then
+        self:AddField(ColorField({
+            name = fieldDef.name,
+            title = fieldDef.title,
+            value = fieldDef.value,
+            width = fieldDef.width,
+            format = fieldDef.format,
+        }))
+    elseif fieldDef.type == "hidden" then
+        self:AddField(Field({
+            name = fieldDef.name,
+            value = fieldDef.value,
+        }))
+    elseif fieldDef.type == "separator" then
+        self:AddControl(fieldDef.name, {
+            Label:New {
+                caption = fieldDef.caption,
+            },
+            Line:New {
+                x = 50,
+                y = 4,
+                width = self.VALUE_POS,
+            }
+        })
+    elseif fieldDef.type == "group" then
+        local groupFields = {}
+        for _, subFieldDef in ipairs(fieldDef.fields) do
+            if subFieldDef.type == "numeric" then
+                table.insert(groupFields, NumericField({
+                    name = subFieldDef.name,
+                    value = subFieldDef.value,
+                    minValue = subFieldDef.min,
+                    maxValue = subFieldDef.max,
+                    step = subFieldDef.step,
+                    decimals = subFieldDef.decimals,
+                    title = subFieldDef.title,
+                    tooltip = subFieldDef.tooltip,
+                    width = subFieldDef.width,
+                }))
+            end
+        end
+        self:AddField(GroupField(groupFields))
+    end
+end
+
+function TextureEditor:EnterToolMode(modeId)
+    self.model:SetMode(modeId)
+
+    if modeId == "paint" then
+        self:_EnterState("paint")
+        self.savedBrushes:GetControl():Show()
+        self.savedDNTSBrushes:GetControl():Hide()
+    elseif modeId == "blur" then
+        self:_EnterState("blur")
+        self.savedBrushes:GetControl():Hide()
+        self.savedDNTSBrushes:GetControl():Hide()
+    elseif modeId == "dnts" then
+        if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
+            return
+        end
+        self:_EnterState("dnts")
+        self.savedBrushes:GetControl():Hide()
+        self.savedDNTSBrushes:GetControl():Show()
+    elseif modeId == "void" then
+        self:_EnterState("void")
+        self.savedBrushes:GetControl():Hide()
+        self.savedDNTSBrushes:GetControl():Hide()
+    end
+
+    self:UpdateFieldVisibility()
+end
+
+function TextureEditor:UpdateFieldVisibility()
+    local visibleFields = self.model:GetVisibleFieldsForMode(self.model:GetCurrentMode())
+    local allFields = {"patternTexture", "brushTexture", "mode", "kernelMode", "exclusive",
+                      "size", "rotation", "texScale", "texRotation", "texOffsetX", "texOffsetY",
+                      "strength", "falloffFactor", "featureFactor", "value", "voidFactor",
+                      "splatTexScale", "splatTexMult", "diffuseColor",
+                      "offset-sep", "tex-sep", "blending-sep", "splat-sep"}
+
+    for _, matFieldName in ipairs(self.matFieldNames) do
+        table.insert(allFields, matFieldName)
+    end
+
+    local invisibleFields = {}
+    for _, field in ipairs(allFields) do
+        local isVisible = false
+        for _, vf in ipairs(visibleFields) do
+            if vf == field then
+                isVisible = true
+                break
+            end
+        end
+        if not isVisible then
+            table.insert(invisibleFields, field)
+        end
+    end
+    self:SetInvisibleFields(unpack(invisibleFields))
 end
 
 function TextureEditor:__AddEngineDNTSTexture(dntsIndex)
     local tbl = self:Serialize()
-
     tbl.dntsIndex = dntsIndex
 
     if gl.GetMapRendering then
@@ -568,65 +351,16 @@ function TextureEditor:__AddEngineDNTSTexture(dntsIndex)
     })
 end
 
-function TextureEditor:_GetDNTSIndex()
-    return self.fields["dntsIndex"].value
-end
-
 function TextureEditor:OnStartChange(name)
-    if name == "splatTexScale" or name == "splatTexMult" then
-        SB.commandManager:execute(SetMultipleCommandModeCommand(true))
-    end
+    self.model:OnStartChange(name)
 end
 
 function TextureEditor:OnEndChange(name)
-    if name == "splatTexScale" or name == "splatTexMult" then
-        SB.commandManager:execute(SetMultipleCommandModeCommand(false))
-    end
+    self.model:OnEndChange(name)
 end
 
 function TextureEditor:OnFieldChange(name, value)
-    if self.savedBrushes:GetControl().visible then
-        local brush = self.savedBrushes:GetSelectedBrush()
-        if brush then
-            self.savedBrushes:UpdateBrush(brush.brushID, name, value)
-            if name == "brushTexture" or name == "texOffsetX" or name == "texOffsetY"
-                or name == "diffuseColor" or name == "texRotation" or name == "texScale" then
-                if name == "brushTexture" then
-                    SB.commandManager:execute(CacheTextureCommand(value))
-                end
-
-                self.savedBrushes:RefreshBrushImage(brush.brushID)
-            end
-        end
-    elseif self.savedDNTSBrushes:GetControl().visible then
-        local brush = self.savedDNTSBrushes:GetSelectedBrush()
-        if brush then
-            self.savedDNTSBrushes:UpdateBrush(brush.brushID, name, value)
-            if name == "brushTexture" then
-                --SB.commandManager:execute(CacheTextureCommand(value))
-                self.savedDNTSBrushes:RefreshBrushImage(brush.brushID)
-            end
-        end
-    end
-
-    if name == "brushTexture" and self.savedDNTSBrushes:GetControl().visible then
-        local dntsIndex = self:_GetDNTSIndex()
-        local material = self.fields["brushTexture"].value
-        if dntsIndex and material.normal then
-            SB.delayGL(function()
-                SB.model.textureManager:SetDNTS(dntsIndex, material)
-            end)
-        end
-    elseif name == "splatTexScale" or name == "splatTexMult" then
-        local index = self:_GetDNTSIndex()
-        local tbl = {gl.GetMapRendering(name .. "s")}
-        tbl[index+1] = value
-        local t = {
-            [name .. "s"] = tbl,
-        }
-        local cmd = SetMapRenderingParamsCommand(t)
-        SB.commandManager:execute(cmd)
-    end
+    self.model:HandleFieldChange(name, value, self.savedBrushes, self.savedDNTSBrushes, self.fields)
 end
 
 function TextureEditor:_EnterState(paintMode)
@@ -636,26 +370,17 @@ function TextureEditor:_EnterState(paintMode)
 end
 
 function TextureEditor:IsValidState(state)
-    return state:is_A(TerrainChangeTextureState)
+    return self.model:IsValidState(state)
 end
 
 function TextureEditor:OnLeaveState(state)
-    -- for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS, self.btnVoid, self.btnHeight}) do
-    for _, btn in pairs({self.btnPaint, self.btnFilter, self.btnDNTS, self.btnVoid}) do
+    for _, btn in pairs(self.toolButtons) do
         btn:SetPressedState(false)
     end
 end
 
 function TextureEditor:OnEnterState(state)
-    if state.paintMode == "paint" then
-        self.btnPaint:SetPressedState(true)
-    elseif state.paintMode == "blur" then
-        self.btnFilter:SetPressedState(true)
-    elseif state.paintMode == "dnts" then
-        self.btnDNTS:SetPressedState(true)
-    elseif state.paintMode == "void" then
-        self.btnVoid:SetPressedState(true)
-    -- elseif state.paintMode == "height" then
-    --     self.btnHeight:SetPressedState(true)
-    end
+    local modeId = state.paintMode
+    self.model:SetMode(modeId)
+    self.toolButtons[modeId]:SetPressedState(true)
 end
