@@ -16,37 +16,24 @@ function RmlUiControlButtons:Initialize()
 end
 
 function RmlUiControlButtons:BindEvents()
-    local btnStartStop = self.document:GetElementById("btn-start-stop")
-    if btnStartStop then
-        btnStartStop:AddEventListener("click", function()
-            self.model:OnStartStop()
-        end)
-    end
-
-    local btnToggleUI = self.document:GetElementById("btn-toggle-ui")
-    if btnToggleUI then
-        btnToggleUI:AddEventListener("click", function()
-            self.model:OnToggleUI()
-        end)
-    end
+    self.document:GetElementById("btn-start-stop"):AddEventListener("click", function()
+        self.model:OnStartStop()
+    end)
+    self.document:GetElementById("btn-toggle-ui"):AddEventListener("click", function()
+        self.model:OnToggleUI()
+    end)
 end
 
 function RmlUiControlButtons:Show()
-    if self.document then
-        self.document:Show()
-    end
+    self.document:Show()
 end
 
 function RmlUiControlButtons:Hide()
-    if self.document then
-        self.document:Hide()
-    end
+    self.document:Hide()
 end
 
 function RmlUiControlButtons:UpdateStartStopButton()
     local btn = self.document:GetElementById("btn-start-stop")
-    if not btn then return end
-
     if not self.model:IsStarted() then
         btn.inner_rml = "▶"
         btn:SetAttribute("title", "Start scenario")

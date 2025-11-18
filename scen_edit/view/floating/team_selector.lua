@@ -1,9 +1,8 @@
 TeamSelector = LCS.class{}
 
-function TeamSelector:init()
-    self:PopulateTeams()
+function TeamSelector:init(model)
+    self.model = model or TeamSelectorModel()
 
-    SB.lockTeam = false
     self.cbLockTeam = Checkbox:New {
         parent = screen0,
         right = 501 + 10,
@@ -13,30 +12,28 @@ function TeamSelector:init()
         caption = "Lock team",
         checked = false,
         OnChange = { function(_, value)
-            SB.lockTeam = value
+            self.model:SetLockTeam(value)
         end}
     }
 
-    SB.model.teamManager:addListener(self)
+    self.model:AddListener(self)
+    self.model:Initialize()
 end
 
-function TeamSelector:PopulateTeams()
-    local teamIDs = {}
-    local teamCaptions = {}
-    for _, team in pairs(SB.model.teamManager:getAllTeams()) do
-        if not team.gaia then
-            local teamCaption = "Team " .. team.name
-            if team.color then
-                teamCaption = SB.glToFontColor(team.color) .. teamCaption .. "\b"
-            end
-            table.insert(teamCaptions, teamCaption)
-            table.insert(teamIDs, team.id)
-        end
-    end
-    table.insert(teamCaptions, "Spectator")
+function TeamSelector:Update()
+    local currentSelection = self.model:GetCurrentSelection()
+    local OnSelect = self.cmbTeamSelector.OnSelect
+    self.cmbTeamSelector.OnSelect = nil
+    self.cmbTeamSelector:Select(currentSelection)
+    self.cmbTeamSelector.OnSelect = OnSelect
+end
+
+-- Model callbacks
+function TeamSelector:OnTeamsPopulated(teamIDs, teamCaptions)
     if self.cmbTeamSelector then
         self.cmbTeamSelector:Dispose()
     end
+
     self.cmbTeamSelector = ComboBox:New {
         parent = screen0,
         right = 501,
@@ -49,51 +46,7 @@ function TeamSelector:PopulateTeams()
     }
     self.cmbTeamSelector.OnSelect = {
         function(_, itemIdx)
-            if itemIdx <= #teamIDs then
-                local teamID = teamIDs[itemIdx]
-                if Spring.GetMyTeamID() ~= teamID or Spring.GetSpectatingState() then
-                    if SB.FunctionExists(Spring.AssignPlayerToTeam, "Player change") then
-                        local cmd = ChangePlayerTeamCommand(Spring.GetMyPlayerID(), teamID)
-                        SB.commandManager:execute(cmd)
-                    end
-                end
-            else
-                if not Spring.GetSpectatingState() then
-                    Spring.SendCommands("spectator")
-                end
-            end
+            self.model:OnTeamSelected(itemIdx)
         end
     }
-end
-
-function TeamSelector:onTeamAdded(teamID)
-    self:PopulateTeams()
-end
-
-function TeamSelector:onTeamRemoved(teamID)
-    self:PopulateTeams()
-end
-
-function TeamSelector:onTeamChange(teamID, team)
-    self:PopulateTeams()
-end
-
-function TeamSelector:Update()
-    local selectedTeamID = self.cmbTeamSelector.teamIDs[self.cmbTeamSelector.selected]
-    if not Spring.GetSpectatingState() and Spring.GetMyTeamID() ~= selectedTeamID then
-        local OnSelect = self.cmbTeamSelector.OnSelect
-        self.cmbTeamSelector.OnSelect = nil
-        for i, teamID in pairs(self.cmbTeamSelector.teamIDs) do
-            if teamID == Spring.GetMyTeamID() then
-                self.cmbTeamSelector:Select(i)
-                break
-            end
-        end
-        self.cmbTeamSelector.OnSelect = OnSelect
-    elseif Spring.GetSpectatingState() and selectedTeamID ~= nil then
-        local OnSelect = self.cmbTeamSelector.OnSelect
-        self.cmbTeamSelector.OnSelect = nil
-        self.cmbTeamSelector:Select(#self.cmbTeamSelector.items)
-        self.cmbTeamSelector.OnSelect = OnSelect
-    end
 end

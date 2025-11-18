@@ -13,37 +13,20 @@ function RmlUiStatusWindow:Initialize()
 end
 
 function RmlUiStatusWindow:Show()
-    if self.document then
-        self.document:Show()
-    end
+    self.document:Show()
 end
 
 function RmlUiStatusWindow:Hide()
-    if self.document then
-        self.document:Hide()
-    end
+    self.document:Hide()
 end
 
 function RmlUiStatusWindow:Update()
-    if not self.document then return end
-
     self.model:Update()
     self:UpdateUI()
 end
 
 function RmlUiStatusWindow:UpdateUI()
-    local posElement = self.document:GetElementById("status-position")
-    if posElement then
-        posElement.inner_rml = self.model:GetStatusText()
-    end
-
-    local memElement = self.document:GetElementById("status-memory")
-    if memElement then
-        memElement.inner_rml = self.model:GetMemoryText()
-    end
-
-    local versionElement = self.document:GetElementById("status-version")
-    if versionElement then
-        versionElement.inner_rml = self.model:GetVersionText()
-    end
+    self.document:GetElementById("status-position").inner_rml = self.model:GetStatusText()
+    self.document:GetElementById("status-memory").inner_rml = self.model:GetMemoryText()
+    self.document:GetElementById("status-version").inner_rml = self.model:GetVersionText()
 end

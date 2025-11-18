@@ -16,76 +16,41 @@ function RmlUiTopLeftMenu:Initialize()
 end
 
 function RmlUiTopLeftMenu:BindEvents()
-    local btnExit = self.document:GetElementById("btn-exit")
-    if btnExit then
-        btnExit:AddEventListener("click", function()
-            self.model:OnExit()
-        end)
-    end
-
-    local btnMenu = self.document:GetElementById("btn-menu")
-    if btnMenu then
-        btnMenu:AddEventListener("click", function()
-            self.model:OnMenu()
-        end)
-    end
-
-    local btnUploadLog = self.document:GetElementById("btn-upload-log")
-    if btnUploadLog then
-        btnUploadLog:AddEventListener("click", function()
-            self.model:OnUploadLog()
-        end)
-    end
-
-    local btnDataDir = self.document:GetElementById("btn-data-dir")
-    if btnDataDir then
-        btnDataDir:AddEventListener("click", function()
-            self.model:OnDataDir()
-        end)
-    end
-
-    local btnOpenProject = self.document:GetElementById("btn-open-project")
-    if btnOpenProject then
-        btnOpenProject:AddEventListener("click", function()
-            self.model:OnOpenProject()
-        end)
-    end
+    self.document:GetElementById("btn-exit"):AddEventListener("click", function()
+        self.model:OnExit()
+    end)
+    self.document:GetElementById("btn-menu"):AddEventListener("click", function()
+        self.model:OnMenu()
+    end)
+    self.document:GetElementById("btn-upload-log"):AddEventListener("click", function()
+        self.model:OnUploadLog()
+    end)
+    self.document:GetElementById("btn-data-dir"):AddEventListener("click", function()
+        self.model:OnDataDir()
+    end)
+    self.document:GetElementById("btn-open-project"):AddEventListener("click", function()
+        self.model:OnOpenProject()
+    end)
 end
 
 function RmlUiTopLeftMenu:HideUnavailableButtons()
     if not self.model:HasLobby() then
-        local btnMenu = self.document:GetElementById("btn-menu")
-        if btnMenu then
-            btnMenu.style.display = "none"
-        end
+        self.document:GetElementById("btn-menu").style.display = "none"
     end
 
     if not self.model:HasConnector() then
-        local btnUpload = self.document:GetElementById("btn-upload-log")
-        if btnUpload then
-            btnUpload.style.display = "none"
-        end
-        local btnDataDir = self.document:GetElementById("btn-data-dir")
-        if btnDataDir then
-            btnDataDir.style.display = "none"
-        end
-        local btnOpenProject = self.document:GetElementById("btn-open-project")
-        if btnOpenProject then
-            btnOpenProject.style.display = "none"
-        end
+        self.document:GetElementById("btn-upload-log").style.display = "none"
+        self.document:GetElementById("btn-data-dir").style.display = "none"
+        self.document:GetElementById("btn-open-project").style.display = "none"
     end
 end
 
 function RmlUiTopLeftMenu:Show()
-    if self.document then
-        self.document:Show()
-    end
+    self.document:Show()
 end
 
 function RmlUiTopLeftMenu:Hide()
-    if self.document then
-        self.document:Hide()
-    end
+    self.document:Hide()
 end
 
 function RmlUiTopLeftMenu:Update()
@@ -94,29 +59,17 @@ end
 
 -- Model callbacks
 function RmlUiTopLeftMenu:OnProjectChanged(projectDir)
-    local projectLabel = self.document:GetElementById("project-label")
-    if projectLabel then
-        projectLabel.inner_rml = self.model:GetProjectCaption()
-    end
+    self.document:GetElementById("project-label").inner_rml = self.model:GetProjectCaption()
 end
 
 function RmlUiTopLeftMenu:OnUploadStarted()
-    local btnUpload = self.document:GetElementById("btn-upload-log")
-    if btnUpload then
-        btnUpload.inner_rml = "Uploading..."
-    end
+    self.document:GetElementById("btn-upload-log").inner_rml = "Uploading..."
 end
 
 function RmlUiTopLeftMenu:OnUploadFinished()
-    local btnUpload = self.document:GetElementById("btn-upload-log")
-    if btnUpload then
-        btnUpload.inner_rml = "Upload Log"
-    end
+    self.document:GetElementById("btn-upload-log").inner_rml = "Upload Log"
 end
 
 function RmlUiTopLeftMenu:OnUploadFailed()
-    local btnUpload = self.document:GetElementById("btn-upload-log")
-    if btnUpload then
-        btnUpload.inner_rml = "Upload Log"
-    end
+    self.document:GetElementById("btn-upload-log").inner_rml = "Upload Log"
 end

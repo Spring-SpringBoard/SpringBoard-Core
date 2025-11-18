@@ -1,20 +1,25 @@
-SB.Include(Path.Join(SB.DIRS.SRC, 'view/dialog/dialog.lua'))
-
 TopLeftMenu = LCS.class{}
 
-function TopLeftMenu:init()
+function TopLeftMenu:init(model)
+    self.model = model or TopLeftMenuModel()
     self.y = 35
     self.item_h = 35
     self.item_fontSize = 16
     self.item_padding = 7
-
     self.children = {}
 
     self:AddExitButton()
-    self:AddLobbyButton()
-    self:AddUploadLogButton()
-    self:AddOpenDataDirButton()
+    if self.model:HasLobby() then
+        self:AddLobbyButton()
+    end
+    if self.model:HasConnector() then
+        self:AddUploadLogButton()
+        self:AddOpenDataDirButton()
+    end
     self:AddProjectMenu()
+
+    self.model:AddListener(self)
+    self.model:Initialize()
 end
 
 function TopLeftMenu:Show()
@@ -51,108 +56,42 @@ function TopLeftMenu:AddExitButton()
         caption = "Exit",
         OnClick = {
             function()
-                Dialog({
-                    message = "Are you sure you want to exit?",
-                    ConfirmDialog = function()
-                        Spring.SendCommands("quit", "quitforce")
-                    end,
-                })
+                self.model:OnExit()
             end
         }
     })
 end
 
 function TopLeftMenu:AddLobbyButton()
-    local luaMenu = Spring.GetMenuName and Spring.SendLuaMenuMsg and Spring.GetMenuName()
-    if not luaMenu or luaMenu == "" then
-        return
-    end
-
-    Spring.SendLuaMenuMsg("disableLobbyButton")
     self:AddTopRightButton({
         caption = "Menu",
         OnClick = {
             function()
-                Spring.SendLuaMenuMsg("showLobby")
+                self.model:OnMenu()
             end
         }
     })
 end
 
 function TopLeftMenu:AddUploadLogButton()
-    if not WG.Connector then
-        return
-    end
-
-    WG.Connector.Register('UploadLogFinished', function(command)
-        local url = command.url
-        local txt = 'Log uploaded to: ' .. tostring(url) .. " (Copied to clipboard)"
-        Log.Notice(txt)
-        WG.Chotify:Post({
-            body = txt,
-            title = "Log Uploaded",
-            time = 15,
-        })
-        Spring.SetClipboard(url)
-        self.btnUpload:SetEnabled(true)
-        self.btnUpload:SetCaption('Upload Log')
-    end)
-
-    WG.Connector.Register('UploadLogFailed', function(command)
-        local msg = command.msg
-        local txt = SB.conf.STATUS_TEXT_DANGER_COLOR .. "Upload failed\b: " .. msg ..  "\n\255\255\255\255Please upload the log manually\b"
-        Log.Error(txt)
-        WG.Chotify:Post({
-            body = txt,
-            title = "Log upload failed",
-            time = 20,
-        })
-        self.btnUpload:SetEnabled(true)
-        self.btnUpload:SetCaption('Upload Log')
-    end)
-
     self.btnUpload = self:AddTopRightButton({
         caption = "Upload Log",
         tooltip = 'Upload the entire log. Do this if you want to report bugs.',
         OnClick = {
             function()
-                Dialog({
-                    message = "Do you want to upload your log to http://logs.springrts.com ?" ..
-                              "\nAll data will be public.",
-                    ConfirmDialog = function()
-                        self:UploadLog()
-                    end,
-                })
+                self.model:OnUploadLog()
             end
         }
     })
 end
 
-function TopLeftMenu:UploadLog()
-    -- FIXME: Chili shouldn't allow this to be invoked if disabled
-    if not self.btnUpload.state.enabled then
-        return
-    end
-    self.btnUpload:SetCaption('Uploading...')
-    self.btnUpload:SetEnabled(false)
-    WG.Connector.Send('UploadLog', {
-        path = SB.DIRS.ROOT_ABS
-    })
-end
-
 function TopLeftMenu:AddOpenDataDirButton()
-    if not WG.Connector or not SB.DIRS.ROOT_ABS then
-        return
-    end
-
     self:AddTopRightButton({
         caption = "Data dir",
         tooltip = 'Open the springboard data directory in the OS file explorer.',
         OnClick = {
             function()
-                WG.Connector.Send('OpenFile', {
-                    path = SB.DIRS.ROOT_ABS
-                })
+                self.model:OnDataDir()
             end
         }
     })
@@ -171,49 +110,46 @@ function TopLeftMenu:AddProjectMenu()
         caption = "",
     }
     table.insert(self.children, self.lblProject)
-    if WG.Connector and SB.DIRS.ROOT_ABS then
+
+    if self.model:HasConnector() then
         self.btnOpenProject = self:AddTopRightButton({
             caption = "Open project",
             tooltip = 'Open current project',
             OnClick = {
                 function()
-                    if self.projectDir == nil then
-                        return
-                    end
-                    WG.Connector.Send('OpenFile', {
-                        path = Path.Join(SB.DIRS.WRITE_PATH, self.projectDir)
-                    })
+                    self.model:OnOpenProject()
                 end
             },
         })
     end
-
-    -- initial, invalid value to enforce updating the caption
-    self.projectDir = -1
-
-    self:Update()
 end
 
 function TopLeftMenu:Update()
-    if SB.project.path == self.projectDir then
-        return
-    end
-    self.projectDir = SB.project.path
+    self.model:Update()
+end
 
-    local projectCaption
-    if self.projectDir then
-        projectCaption = "Project: " .. self.projectDir
-        if self.btnOpenProject ~= nil then
-            self.btnOpenProject:SetEnabled(true)
-        end
-    else
-        projectCaption = "Project not saved"
-        if self.btnOpenProject ~= nil then
-            self.btnOpenProject:SetEnabled(false)
-        end
+-- Model callbacks
+function TopLeftMenu:OnProjectChanged(projectDir)
+    local projectCaption = self.model:GetProjectCaption()
+    if self.btnOpenProject then
+        self.btnOpenProject:SetEnabled(projectDir and projectDir ~= -1)
     end
     if self.lblProject.caption ~= projectCaption then
         self.lblProject:SetCaption(projectCaption)
     end
 end
 
+function TopLeftMenu:OnUploadStarted()
+    self.btnUpload:SetCaption('Uploading...')
+    self.btnUpload:SetEnabled(false)
+end
+
+function TopLeftMenu:OnUploadFinished()
+    self.btnUpload:SetEnabled(true)
+    self.btnUpload:SetCaption('Upload Log')
+end
+
+function TopLeftMenu:OnUploadFailed()
+    self.btnUpload:SetEnabled(true)
+    self.btnUpload:SetCaption('Upload Log')
+end

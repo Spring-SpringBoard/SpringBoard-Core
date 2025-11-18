@@ -15,79 +15,50 @@ function RmlUiCommandWindow:Initialize()
 end
 
 function RmlUiCommandWindow:BindEvents()
-    local btnUndo = self.document:GetElementById("btn-undo")
-    if btnUndo then
-        btnUndo:AddEventListener("click", function()
-            self.model:ExecuteUndo()
-        end)
-    end
-
-    local btnRedo = self.document:GetElementById("btn-redo")
-    if btnRedo then
-        btnRedo:AddEventListener("click", function()
-            self.model:ExecuteRedo()
-        end)
-    end
-
-    local btnClear = self.document:GetElementById("btn-clear-history")
-    if btnClear then
-        btnClear:AddEventListener("click", function()
-            self.model:ExecuteClearHistory()
-        end)
-    end
+    self.document:GetElementById("btn-undo"):AddEventListener("click", function()
+        self.model:ExecuteUndo()
+    end)
+    self.document:GetElementById("btn-redo"):AddEventListener("click", function()
+        self.model:ExecuteRedo()
+    end)
+    self.document:GetElementById("btn-clear-history"):AddEventListener("click", function()
+        self.model:ExecuteClearHistory()
+    end)
 end
 
 function RmlUiCommandWindow:Show()
-    if self.document then
-        self.document:Show()
-    end
+    self.document:Show()
 end
 
 function RmlUiCommandWindow:Hide()
-    if self.document then
-        self.document:Hide()
-    end
+    self.document:Hide()
 end
 
 -- UI update callbacks from model
 function RmlUiCommandWindow:OnPushCommand(id, display)
     local commandList = self.document:GetElementById("command-list")
-    if commandList then
-        local itemDiv = self.document:CreateElement("div")
-        itemDiv:SetAttribute("class", "command-item")
-        itemDiv:SetAttribute("id", "cmd-" .. id)
-        itemDiv.inner_rml = tostring(id) .. " " .. display
-        commandList:AppendChild(itemDiv)
-
-        -- Scroll to bottom
-        commandList.scroll_top = commandList.scroll_height
-    end
+    local itemDiv = self.document:CreateElement("div")
+    itemDiv:SetAttribute("class", "command-item")
+    itemDiv:SetAttribute("id", "cmd-" .. id)
+    itemDiv.inner_rml = tostring(id) .. " " .. display
+    commandList:AppendChild(itemDiv)
+    commandList.scroll_top = commandList.scroll_height
 end
 
 function RmlUiCommandWindow:OnUndoCommand(cmdId)
-    local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
-    if cmdItem then
-        cmdItem:AddClass("undone")
-    end
+    self.document:GetElementById("cmd-" .. cmdId):AddClass("undone")
 end
 
 function RmlUiCommandWindow:OnRedoCommand(cmdId)
-    local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
-    if cmdItem then
-        cmdItem:RemoveClass("undone")
-    end
+    self.document:GetElementById("cmd-" .. cmdId):RemoveClass("undone")
 end
 
 function RmlUiCommandWindow:OnRemoveFirstUndo(cmdId)
     local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
-    if cmdItem then
-        cmdItem.parent_node:RemoveChild(cmdItem)
-    end
+    cmdItem.parent_node:RemoveChild(cmdItem)
 end
 
 function RmlUiCommandWindow:OnRemoveFirstRedo(cmdId)
     local cmdItem = self.document:GetElementById("cmd-" .. cmdId)
-    if cmdItem then
-        cmdItem.parent_node:RemoveChild(cmdItem)
-    end
+    cmdItem.parent_node:RemoveChild(cmdItem)
 end

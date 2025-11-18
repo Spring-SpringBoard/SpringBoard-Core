@@ -1,6 +1,13 @@
 BottomBar = LCS.class{}
 
-function BottomBar:init()
+function BottomBar:init(models)
+    -- Create or use provided models
+    self.models = models or {
+        statusWindow = StatusWindowModel(),
+        commandWindow = CommandWindowModel(),
+        controlButtons = ControlButtonsModel(),
+    }
+
     self.window = Window:New {
         parent = screen0,
         caption = "",
@@ -15,11 +22,9 @@ function BottomBar:init()
         classname = 'sb_window',
     }
 
-    self.commandWindow = CommandWindow(self.window)
-    self.statusWindow = StatusWindow(self.window)
-
-
-    self.controlButtons = ControlButtons()
+    self.commandWindow = CommandWindow(self.window, self.models.commandWindow)
+    self.statusWindow = StatusWindow(self.window, self.models.statusWindow)
+    self.controlButtons = ControlButtons(nil, self.models.controlButtons)
 end
 
 function BottomBar:Update()
