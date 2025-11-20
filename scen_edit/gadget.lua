@@ -239,11 +239,11 @@ end
 else --unsynced
 
 local function UnsyncedToWidget(_, data)
-    if not Script.LuaUI('RecieveGadgetMessage') then
+    if Script.LuaUI.RecieveGadgetMessage then
+        Script.LuaUI.RecieveGadgetMessage(data)
+    else
         Spring.Log("SpringBoard", LOG.ERROR, "Missing RecieveGadgetMessage in LuaUI")
-        return
     end
-    Script.LuaUI.RecieveGadgetMessage(data)
 end
 
 function gadget:Initialize()

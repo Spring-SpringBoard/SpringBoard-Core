@@ -70,6 +70,7 @@ function NewProjectDialog:init()
 
     self:Finalize(children, {
         notMainWindow = true,
+        caption = "New Project",
         buttons = { "ok", "cancel" },
         width = 400,
         height = 300,

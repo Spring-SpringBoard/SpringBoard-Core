@@ -14,14 +14,8 @@ function RecieveGadgetMessage(msg)
         end
         return
     end
-
-    -- local tbl = loadstring(msg)()
-    -- local data = tbl.data
-    -- local tag = tbl.tag
-    -- if tag == "msg" then
-    --     model:InvokeCallback(data.msgID, data.result)
-    -- end
 end
+
 
 local function CheckSpringBoardDir()
     -- Make the initial SB directory tree and

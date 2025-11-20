@@ -41,6 +41,8 @@ function ReloadIntoProjectCommand:execute()
     scriptObj.modOptions._sb_game_version = nil
     scriptObj.players = scriptObj.players or {}
     scriptObj.ais = scriptObj.ais or {}
+    scriptObj.teams = scriptObj.teams or {}
+    scriptObj.allyTeams = scriptObj.allyTeams or {}
     scriptObj.startPosType = 2
 
     table.echo(scriptObj)

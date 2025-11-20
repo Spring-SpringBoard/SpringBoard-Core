@@ -1,4 +1,5 @@
 SB.Include(Path.Join(SB.DIRS.SRC, 'view/dialog/dialog.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/floating/top_left_menu_model.lua'))
 
 TopLeftMenu = LCS.class{}
 
@@ -9,6 +10,7 @@ function TopLeftMenu:init()
     self.item_padding = 7
 
     self.children = {}
+    self.model = TopLeftMenuModel()
 
     self:AddExitButton()
     self:AddLobbyButton()
@@ -54,7 +56,7 @@ function TopLeftMenu:AddExitButton()
                 Dialog({
                     message = "Are you sure you want to exit?",
                     ConfirmDialog = function()
-                        Spring.SendCommands("quit", "quitforce")
+                        self.model:Exit()
                     end,
                 })
             end
@@ -63,53 +65,25 @@ function TopLeftMenu:AddExitButton()
 end
 
 function TopLeftMenu:AddLobbyButton()
-    local luaMenu = Spring.GetMenuName and Spring.SendLuaMenuMsg and Spring.GetMenuName()
-    if not luaMenu or luaMenu == "" then
+    if not self.model:IsLuaMenuAvailable() then
         return
     end
 
-    Spring.SendLuaMenuMsg("disableLobbyButton")
+    self.model:DisableLobbyButton()
     self:AddTopRightButton({
         caption = "Menu",
         OnClick = {
             function()
-                Spring.SendLuaMenuMsg("showLobby")
+                self.model:ShowMenu()
             end
         }
     })
 end
 
 function TopLeftMenu:AddUploadLogButton()
-    if not WG.Connector then
+    if not self.model:IsConnectorAvailable() then
         return
     end
-
-    WG.Connector.Register('UploadLogFinished', function(command)
-        local url = command.url
-        local txt = 'Log uploaded to: ' .. tostring(url) .. " (Copied to clipboard)"
-        Log.Notice(txt)
-        WG.Chotify:Post({
-            body = txt,
-            title = "Log Uploaded",
-            time = 15,
-        })
-        Spring.SetClipboard(url)
-        self.btnUpload:SetEnabled(true)
-        self.btnUpload:SetCaption('Upload Log')
-    end)
-
-    WG.Connector.Register('UploadLogFailed', function(command)
-        local msg = command.msg
-        local txt = SB.conf.STATUS_TEXT_DANGER_COLOR .. "Upload failed\b: " .. msg ..  "\n\255\255\255\255Please upload the log manually\b"
-        Log.Error(txt)
-        WG.Chotify:Post({
-            body = txt,
-            title = "Log upload failed",
-            time = 20,
-        })
-        self.btnUpload:SetEnabled(true)
-        self.btnUpload:SetCaption('Upload Log')
-    end)
 
     self.btnUpload = self:AddTopRightButton({
         caption = "Upload Log",
@@ -120,7 +94,16 @@ function TopLeftMenu:AddUploadLogButton()
                     message = "Do you want to upload your log to http://logs.springrts.com ?" ..
                               "\nAll data will be public.",
                     ConfirmDialog = function()
-                        self:UploadLog()
+                        self.model:UploadLog(
+                            function()
+                                self.btnUpload:SetCaption('Uploading...')
+                                self.btnUpload:SetEnabled(false)
+                            end,
+                            function(success, msg)
+                                self.btnUpload:SetCaption('Upload Log')
+                                self.btnUpload:SetEnabled(true)
+                            end
+                        )
                     end,
                 })
             end
@@ -128,20 +111,8 @@ function TopLeftMenu:AddUploadLogButton()
     })
 end
 
-function TopLeftMenu:UploadLog()
-    -- FIXME: Chili shouldn't allow this to be invoked if disabled
-    if not self.btnUpload.state.enabled then
-        return
-    end
-    self.btnUpload:SetCaption('Uploading...')
-    self.btnUpload:SetEnabled(false)
-    WG.Connector.Send('UploadLog', {
-        path = SB.DIRS.ROOT_ABS
-    })
-end
-
 function TopLeftMenu:AddOpenDataDirButton()
-    if not WG.Connector or not SB.DIRS.ROOT_ABS then
+    if not self.model:IsConnectorAvailable() then
         return
     end
 
@@ -150,9 +121,7 @@ function TopLeftMenu:AddOpenDataDirButton()
         tooltip = 'Open the springboard data directory in the OS file explorer.',
         OnClick = {
             function()
-                WG.Connector.Send('OpenFile', {
-                    path = SB.DIRS.ROOT_ABS
-                })
+                self.model:OpenDataDir()
             end
         }
     })
@@ -171,49 +140,36 @@ function TopLeftMenu:AddProjectMenu()
         caption = "",
     }
     table.insert(self.children, self.lblProject)
-    if WG.Connector and SB.DIRS.ROOT_ABS then
+
+    if self.model:IsConnectorAvailable() then
         self.btnOpenProject = self:AddTopRightButton({
             caption = "Open project",
             tooltip = 'Open current project',
             OnClick = {
                 function()
-                    if self.projectDir == nil then
-                        return
-                    end
-                    WG.Connector.Send('OpenFile', {
-                        path = Path.Join(SB.DIRS.WRITE_PATH, self.projectDir)
-                    })
+                    self.model:OpenProject()
                 end
             },
         })
     end
 
-    -- initial, invalid value to enforce updating the caption
-    self.projectDir = -1
-
     self:Update()
 end
 
 function TopLeftMenu:Update()
-    if SB.project.path == self.projectDir then
+    if not self.model:Update() then
         return
     end
-    self.projectDir = SB.project.path
 
-    local projectCaption
-    if self.projectDir then
-        projectCaption = "Project: " .. self.projectDir
-        if self.btnOpenProject ~= nil then
-            self.btnOpenProject:SetEnabled(true)
-        end
-    else
-        projectCaption = "Project not saved"
-        if self.btnOpenProject ~= nil then
-            self.btnOpenProject:SetEnabled(false)
-        end
-    end
+    -- Update project label
+    local projectCaption = self.model:GetProjectCaption()
     if self.lblProject.caption ~= projectCaption then
         self.lblProject:SetCaption(projectCaption)
+    end
+
+    -- Update open project button
+    if self.btnOpenProject then
+        self.btnOpenProject:SetEnabled(self.model:HasProjectPath())
     end
 end
 

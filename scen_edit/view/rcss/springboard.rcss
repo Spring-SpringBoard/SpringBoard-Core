@@ -1,0 +1,620 @@
+body#springboard {
+    font-family: Poppins;
+    font-size: 14dp;
+    color: #cccccc;
+    position: absolute;
+    right: 0dp;
+    top: 0dp;
+    width: 500px;
+    height: 100%;
+	background-color: #1a1d219e;
+}
+
+/* Tab bar at top */
+.tab-bar {
+    position: absolute;
+    top: 10dp;
+    left: 0dp;
+    right: 0dp;
+    height: 25dp;
+    background-color: #222222;
+    display: flex;
+    flex-direction: row;
+    gap: 1dp;
+    padding: 1dp;
+}
+
+.tab-button {
+    flex: 1;
+    background-color: #3a3a3a;
+    color: #999999;
+    border-color: #555555;
+    padding: 3dp 8dp;
+    font-size: 12dp;
+}
+
+.tab-button:hover {
+    background-color: #4a4a4a;
+    color: #cccccc;
+}
+
+.tab-button.active {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border-bottom: 2dp #3a7ebf;
+}
+
+/* Action bar (Save, Load, etc.) */
+.action-bar {
+    position: absolute;
+    top: 40dp;
+    left: 0dp;
+    right: 0dp;
+    height: 45dp;
+    background-color: #222222;
+    border-bottom: 1dp #555555;
+    display: flex;
+    flex-direction: row;
+    gap: 1dp;
+    padding: 2dp 5dp;
+    align-items: center;
+}
+
+.toolbar-action-button {
+    width: 40dp;
+    height: 40dp;
+    background-color: #3a3a3a;
+    border-color: #555555;
+    border-radius: 3dp;
+    padding: 0dp;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toolbar-action-button:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.toolbar-action-button img {
+    width: 20dp;
+    height: 20dp;
+}
+
+/* Editor button panel (scrollable horizontal) - smaller buttons */
+.editor-panel-wrapper {
+    position: absolute;
+    top: 90dp;
+    left: 0dp;
+    right: 0dp;
+    height: 60dp;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background-color: #222222;
+    border-bottom: 1dp #555555;
+}
+
+.editor-button-panel {
+    display: flex;
+    flex-direction: row;
+    gap: 1dp;
+    padding: 5dp;
+    min-width: 100%;
+}
+
+.editor-button {
+    width: 50dp;
+    height: 50dp;
+    background-color: #2a2a2a;
+    border-color: #555555;
+    border-radius: 3dp;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3dp;
+    flex-shrink: 0;
+}
+
+.editor-button:hover {
+    background-color: #3a3a3a;
+    border-color: #888888;
+}
+
+.editor-button.pressed {
+    background-color: #1a1a1a;
+    border-color: #00ff00;
+}
+
+.editor-button img {
+    width: 24dp;
+    height: 24dp;
+    margin-bottom: 2dp;
+}
+
+.editor-button-label {
+    font-size: 8dp;
+    color: #cccccc;
+    text-align: center;
+}
+
+.editor-button.pressed .editor-button-label {
+    color: #00ff00;
+}
+
+/* Main content area - starts after editor panel (40 tab + 45 action + 60 editor = 145dp + 10 margin) */
+.main-content {
+    position: absolute;
+    top: 155dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    background-color: #1a1d219e;
+    padding: 10dp;
+    color: #cccccc;
+    overflow-y: auto;
+}
+
+/* Editor field styles */
+.editor-container {
+    padding: 10dp;
+}
+
+.editor-title {
+    font-size: 16dp;
+    color: #ffffff;
+    margin-bottom: 15dp;
+    padding-bottom: 5dp;
+    border-bottom: 1dp #555555;
+}
+
+.field-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10dp;
+    gap: 10dp;
+}
+
+.field-row.hidden {
+    display: none;
+}
+
+.field-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5dp;
+}
+
+.field-inline .field-label {
+    min-width: 60dp;
+    margin-right: 5dp;
+}
+
+.field-inline .field-input {
+    flex: 0 0 auto;
+    min-width: 80dp;
+    width: 100dp;
+}
+
+.field-label {
+    min-width: 120dp;
+    color: #cccccc;
+    font-size: 13dp;
+}
+
+.field-input {
+    flex: 1;
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1dp #555555;
+    padding: 5dp;
+    font-size: 13dp;
+}
+
+.field-input:focus {
+    border-color: #3a7ebf;
+    background-color: #2a2a2a;
+}
+
+.field-checkbox {
+    width: 20dp;
+    height: 20dp;
+    background-color: #3a3a3a;
+    border: 1dp #555555;
+}
+
+.field-checkbox:checked {
+    background-color: #3a7ebf;
+    border-color: #2a5f8f;
+}
+
+.field-button {
+    background-color: #3a7ebf;
+    color: #ffffff;
+    border-color: #2a5f8f;
+    padding: 5dp 10dp;
+    margin-bottom: 10dp;
+}
+
+.field-button:hover {
+    background-color: #4a8ecf;
+}
+
+/* Action buttons panel at top of editor - smaller buttons */
+.action-buttons-panel {
+    display: flex;
+    flex-direction: row;
+    gap: 0dp;
+    margin-bottom: 15dp;
+    padding: 5dp;
+    background-color: #2a2a2a;
+    border-bottom: 1dp #555555;
+}
+
+.action-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50dp;
+    height: 50dp;
+    background-color: #3a3a3a;
+    border-color: #555555;
+    padding: 3dp;
+    margin-right: 0dp;
+}
+
+.action-button:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.action-button.pressed {
+    background-color: #2a5f2a;
+    border-color: #3a7f3a;
+}
+
+.action-button:disabled {
+    background-color: #1a1a1a;
+    border-color: #333333;
+}
+
+.action-button-icon {
+    width: 24dp;
+    height: 24dp;
+    margin-bottom: 2dp;
+}
+
+.action-button.pressed .action-button-icon {
+    /* Green tint for pressed state - using filter instead of decorator */
+    filter: brightness(1.2) sepia(0.5) hue-rotate(70deg);
+}
+
+.action-button-label {
+    font-size: 9dp;
+    color: #ffffff;
+    text-align: center;
+}
+
+.action-button.pressed .action-button-label {
+    color: #00ff00;
+}
+
+.field-separator {
+    height: 1dp;
+    background-color: #555555;
+    margin: 15dp 0dp;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10dp;
+    margin-bottom: 10dp;
+    align-items: center;
+}
+
+/* Grid View styles */
+.grid-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 5dp;
+    padding: 10dp;
+    overflow-y: auto;
+    align-content: flex-start;
+}
+
+.grid-item {
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5dp;
+    position: relative;
+}
+
+.grid-item:hover {
+    background-color: #3a3a3a;
+    border-color: #777777;
+}
+
+.grid-item.selected {
+    background-color: #1a3a5a;
+    border-color: #3a7ebf;
+}
+
+.grid-item-image-container {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.grid-item-image {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.grid-item-label {
+    font-size: 9dp;
+    color: #cccccc;
+    text-align: center;
+    margin-top: 3dp;
+    width: 100%;
+    height: 20dp;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Filter Panel styles */
+.filter-panel {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10dp;
+    padding: 10dp;
+    background-color: #2a2a2a;
+    border-bottom: 1dp #555555;
+    align-items: center;
+}
+
+.filter-label {
+    color: #cccccc;
+    font-size: 12dp;
+    margin-right: 5dp;
+}
+
+.filter-combo {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 4dp 8dp;
+    font-size: 12dp;
+    min-width: 90dp;
+    cursor: pointer;
+}
+
+.filter-combo:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.filter-combo:focus {
+    border-color: #3a7ebf;
+}
+
+/* Dropdown (select) element styling */
+select {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 4dp 8dp;
+    font-size: 12dp;
+    cursor: pointer;
+}
+
+select:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+select:focus {
+    border-color: #3a7ebf;
+}
+
+/* Dropdown value (the clickable part) */
+selectvalue {
+    background-color: transparent;
+    color: #ffffff;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Dropdown arrow - RmlUi adds a selectarrow decorator automatically */
+selectarrow {
+    width: 15dp;
+    height: 15dp;
+    display: inline-block;
+}
+
+/* Dropdown box (the popup containing options) */
+selectbox {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 4dp;
+    margin-top: 2dp;
+    box-shadow: 0 4dp 12dp rgba(0,0,0,0.6);
+    max-height: 300dp;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+/* Individual dropdown options */
+selectoption {
+    background-color: transparent;
+    color: #ffffff;
+    padding: 8dp 12dp;
+    cursor: pointer;
+    display: block;
+    border-radius: 2dp;
+    margin: 1dp 0;
+}
+
+/* Use both hover and focus for option highlighting */
+selectoption:hover,
+selectoption:focus {
+    background-color: #3a7ebf;
+    color: #ffffff;
+}
+
+selectoption:active {
+    background-color: #2a5f9f;
+}
+
+/* Selected option in dropdown */
+selectoption.selected {
+    background-color: #4a4a4a;
+}
+
+.filter-edit {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 4dp 8dp;
+    font-size: 12dp;
+    min-width: 90dp;
+}
+
+.filter-edit:hover {
+    border-color: #777777;
+}
+
+.filter-edit:focus {
+    border-color: #3a7ebf;
+}
+
+/* Path Navigation styles */
+.path-navigation {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10dp;
+    padding: 10dp;
+    background-color: #2a2a2a;
+    border-bottom: 1dp #555555;
+}
+
+.path-up-button {
+    width: 24dp;
+    height: 24dp;
+    background-color: #3a3a3a;
+    border-color: #555555;
+    border-radius: 3dp;
+    padding: 2dp;
+}
+
+.path-up-button:hover {
+    background-color: #4a4a4a;
+    border-color: #777777;
+}
+
+.path-up-button img {
+    width: 100%;
+    height: 100%;
+}
+
+.path-label {
+    color: #cccccc;
+    font-size: 12dp;
+    flex: 1;
+}
+
+.path-root-label {
+    color: #999999;
+    font-size: 11dp;
+    margin-left: auto;
+}
+
+/* Add Brush Button styles (for SavedBrushes) */
+.add-brush-button {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    border-width: 0dp;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5dp;
+}
+
+.add-brush-button:hover {
+    opacity: 0.8;
+}
+
+.add-brush-icon {
+    width: 35dp;
+    height: 35dp;
+    margin-bottom: 3dp;
+}
+
+.add-brush-label {
+    font-size: 10dp;
+    color: #cccccc;
+    text-align: center;
+}
+
+/* Remove Brush Button styles (X button on brush items) */
+.remove-brush-button {
+    position: absolute;
+    width: 20dp;
+    height: 20dp;
+    right: 0dp;
+    top: 0dp;
+    background-color: #cc3333;
+    border-color: #aa2222;
+    border-radius: 3dp;
+    padding: 2dp;
+    z-index: 10;
+}
+
+.remove-brush-button:hover {
+    background-color: #dd4444;
+    border-color: #bb3333;
+}
+
+.remove-brush-button img {
+    width: 100%;
+    height: 100%;
+}
+
+/* No background for special items (like add button) */
+.grid-item.no-background {
+    background-color: transparent;
+    border: 1dp #555555;
+}
+
+.grid-item.no-background:hover {
+    background-color: #2a2a2a;
+}
+
+.grid-item.no-background.selected {
+    background-color: transparent;
+    border-color: #555555;
+}

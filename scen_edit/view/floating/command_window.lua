@@ -1,6 +1,10 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/floating/command_window_model.lua'))
+
 CommandWindow = LCS.class{}
 
 function CommandWindow:init(parent)
+    self.model = CommandWindowModel()
+
     local children = {
         Button:New {
             x = 10,
@@ -11,7 +15,7 @@ function CommandWindow:init(parent)
             tooltip = "Undo (Ctrl+Z)",
             OnClick = {
                 function()
-                    SB.commandManager:execute(UndoCommand())
+                    self.model:ExecuteUndo()
                 end
             },
             children = {
@@ -33,7 +37,7 @@ function CommandWindow:init(parent)
             tooltip = "Redo (Ctrl+R)",
             OnClick = {
                 function()
-                    SB.commandManager:execute(RedoCommand())
+                    self.model:ExecuteRedo()
                 end
             },
             children = {
@@ -55,7 +59,7 @@ function CommandWindow:init(parent)
             tooltip = "Clear undo-redo stack",
             OnClick = {
                 function()
-                    SB.commandManager:execute(ClearUndoRedoCommand())
+                    self.model:ExecuteClearHistory()
                 end
             },
             children = {
@@ -89,27 +93,25 @@ function CommandWindow:init(parent)
     }
     self.list.ctrl:SetPos(140, nil, 400 - 140 - 10)
 
-    self.count = 0
-    self.removedCount = 0
-    self.undoCount = 0
-
-    SB.commandManager:addListener(self)
-end
-
-function CommandWindow:OnCommandExecuted(cmdIDs, isUndo, isRedo, display)
-    if isUndo then
-        self:UndoCommand()
-    elseif isRedo then
-        self:RedoCommand()
-    else
-        self:PushCommand(display)
+    -- Register view callbacks with model
+    self.model.onPushCommand = function(id, display)
+        self:OnPushCommand(id, display)
+    end
+    self.model.onUndoCommand = function(id)
+        self:OnUndoCommand(id)
+    end
+    self.model.onRedoCommand = function(id)
+        self:OnRedoCommand(id)
+    end
+    self.model.onRemoveFirstUndo = function(removedCount)
+        self:OnRemoveFirstUndo(removedCount)
+    end
+    self.model.onRemoveFirstRedo = function(count)
+        self:OnRemoveFirstRedo(count)
     end
 end
 
-function CommandWindow:PushCommand(display)
-    self.count = self.count + 1
-    local id = self.count
-    Log.Debug("do", id)
+function CommandWindow:OnPushCommand(id, display)
     local lblVariableName = Label:New {
         caption = tostring(id) .. " " .. display,
         y = 0,
@@ -123,53 +125,26 @@ function CommandWindow:PushCommand(display)
     self.list:AddRow({lblVariableName}, id)
 end
 
-function CommandWindow:UndoCommand()
-    Log.Debug("undo", self.count - self.undoCount)
-    local row = self.list:GetRowItems(self.count - self.undoCount)
+function CommandWindow:OnUndoCommand(id)
+    local row = self.list:GetRowItems(id)
     local lbl = row[1]
     lbl._oldcaption = lbl.caption
     lbl:SetCaption("\255\88\143\143" .. lbl.caption .. "\b")
     lbl:Invalidate()
-
-    self.undoCount = self.undoCount + 1
 end
 
-function CommandWindow:RedoCommand()
-    Log.Debug("redo", self.count - self.undoCount + 1)
-    local row = self.list:GetRowItems(self.count - self.undoCount + 1)
+function CommandWindow:OnRedoCommand(id)
+    local row = self.list:GetRowItems(id)
     local lbl = row[1]
     lbl:SetCaption(lbl._oldcaption)
     lbl:Invalidate()
     lbl._oldcaption = nil
-
-    self.undoCount = self.undoCount - 1
 end
 
-function CommandWindow:OnRemoveFirstUndo()
-    Log.Debug("remundo", self.removedCount + 1)
-    self.removedCount = self.removedCount + 1
-    self.list:RemoveRow(self.removedCount)
+function CommandWindow:OnRemoveFirstUndo(removedCount)
+    self.list:RemoveRow(removedCount)
 end
 
-function CommandWindow:OnRemoveFirstRedo()
-    Log.Debug(LOG.DEBUG, "remredo")
-    self.list:RemoveRow(self.count)
-    self.count = self.count - 1
-    self.undoCount= self.undoCount - 1
-end
-
-function CommandWindow:OnClearUndoStack()
-    Log.Debug("clearundostack")
-    while self.removedCount ~= self.count do
-        self:OnRemoveFirstUndo()
-    end
-    Log.Debug("clearundostackend")
-end
-
-function CommandWindow:OnClearRedoStack()
-    Log.Debug("clearredostack")
-    while self.undoCount ~= 0 do
-        self:OnRemoveFirstRedo()
-    end
-    Log.Debug("clearredostackend")
+function CommandWindow:OnRemoveFirstRedo(count)
+    self.list:RemoveRow(count)
 end

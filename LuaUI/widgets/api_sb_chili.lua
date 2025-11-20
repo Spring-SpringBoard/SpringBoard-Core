@@ -231,6 +231,10 @@ function widget:KeyPress(key, mods, isRepeat, label, unicode)
 		return false
 	end
 
+	if WG.SB and WG.SB.useRmlUi then
+		return false
+	end
+
 	keyPressed = screen0:KeyPress(key, mods, isRepeat, label, unicode)
 	return keyPressed
 end
@@ -238,6 +242,10 @@ end
 
 function widget:KeyRelease()
 	if Spring.IsGUIHidden() or totalHideInterface then
+		return false
+	end
+
+	if WG.SB and WG.SB.useRmlUi then
 		return false
 	end
 
@@ -251,11 +259,19 @@ function widget:TextInput(utf8, ...)
 		return false
 	end
 
+	if WG.SB and WG.SB.useRmlUi then
+		return false
+	end
+
 	return screen0:TextInput(utf8, ...)
 end
 
 function widget:TextEditing(utf8, start, length, ...)
 	if Spring.IsGUIHidden() or totalHideInterface then
+		return false
+	end
+
+	if WG.SB and WG.SB.useRmlUi then
 		return false
 	end
 

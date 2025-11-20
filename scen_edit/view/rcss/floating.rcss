@@ -1,0 +1,228 @@
+/* Floating Window Styles */
+
+.floating-panel {
+    position: absolute;
+    font-family: Poppins;
+}
+
+/* Position each floating window to match Chili layout */
+/* Bottom bar windows - span the bottom area up to the editor panel (right 500px) */
+/* Status window on the left side of bottom bar */
+body#status-window {
+    left: 0px;
+    bottom: 0px;
+    width: 400px;
+    height: 80px;
+    padding: 5px;
+    background-color: #2a2a2a;
+    border: 1px #555555;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* Command window continues from status window to just before editor panel */
+body#command-window {
+    left: 400px;
+    right: 500px;
+    bottom: 0px;
+    height: 80px;
+    padding: 5px;
+    background-color: #2a2a2a;
+    border: 1px #555555;
+    position: absolute;
+}
+
+body#control-buttons {
+    left: 45%;
+    top: 10px;
+    width: 150px;
+    height: 70px;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    align-items: flex-start;
+    padding: 0px;
+    background-color: transparent;
+    border-width: 0px;
+}
+
+body#top-left-menu {
+    left: 5px;
+    top: 35px;
+    width: 300px;
+    height: auto;
+    background-color: transparent;
+    border-width: 0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+/* Command Window */
+/* Buttons positioned on right side of command window */
+.command-toolbar {
+    position: absolute;
+    right: 260px;
+    top: 18px;
+    display: flex;
+    flex-direction: row;
+    gap: 0px;
+    align-items: center;
+    height: 40px;
+}
+
+.command-toolbar button:nth-child(1) {
+    margin-left: 0px;
+}
+
+.command-toolbar button:nth-child(2) {
+    margin-left: 10px;
+}
+
+.command-toolbar button:nth-child(3) {
+    margin-left: 10px;
+}
+
+.command-list {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    width: 240px;
+    bottom: 5px;
+    overflow-y: auto;
+    background-color: #1a1a1a;
+    padding: 5dp;
+    display: flex;
+    flex-direction: column;
+    gap: 2dp;
+}
+
+.command-item {
+    padding: 5dp;
+    background-color: #222222;
+    display: block;
+    min-height: 20dp;
+}
+
+.command-item.undone {
+    color: #888888;
+}
+
+/* Status Window */
+.status-line {
+    padding: 3px 5px;
+    font-size: 12px;
+    color: #cccccc;
+}
+
+/* Control Buttons */
+.control-button {
+    width: 35px;
+    height: 35px;
+    margin: 0px;
+    padding: 0px;
+    background-color: #444444;
+    border-color: #555555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-button.large {
+    width: 45px;
+    height: 45px;
+    padding: 0px;
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-button:hover {
+    background-color: #555555;
+}
+
+.control-button.large:hover {
+    background-color: #6cc76c;
+}
+
+.control-button.stop {
+    background-color: #d64f4e;
+}
+
+.control-button.stop:hover {
+    background-color: #e65f5e;
+}
+
+.control-button img {
+    width: 80%;
+    height: 80%;
+}
+
+.control-button.large img {
+    width: 85%;
+    height: 85%;
+}
+
+/* Top Menu */
+.project-label {
+    font-size: 22px;
+    font-weight: bold;
+    padding: 0px;
+    margin-bottom: 0px;
+    color: #ffffff;
+}
+
+.menu-button {
+    width: 150px;
+    height: 35px;
+    line-height: 35px;
+    background-color: #333333;
+    border-color: #555555;
+    font-size: 16px;
+}
+
+.menu-button:hover {
+    background-color: #444444;
+}
+
+.menu-button:disabled {
+    background-color: #222222;
+    color: #666666;
+}
+
+.menu-button:disabled:hover {
+    background-color: #222222;
+}
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+    padding: 0px;
+    background-color: #3a3a3a;
+    border-color: #555555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-button:hover {
+    background-color: #4a4a4a;
+}
+
+.icon-button.disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.icon-button.disabled:hover {
+    background-color: #3a3a3a;
+}
+
+.icon-button img {
+    width: 20px;
+    height: 20px;
+}

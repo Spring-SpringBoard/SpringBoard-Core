@@ -34,6 +34,12 @@ function FileDialog:init()
             end
         }
     })
+    -- Set editor reference so GridView knows which document to use
+    self.fileView:SetEditor(self)
+    -- In RmlUi mode, set gridView so Editor knows to generate grid HTML
+    if SB.useRmlUi then
+        self.gridView = self.fileView
+    end
 
     local fileNameField = {
         name = "fileName",
@@ -85,6 +91,7 @@ function FileDialog:init()
 
     self:Finalize(children, {
         notMainWindow = true,
+        caption = self.caption or "File Dialog",
         buttons = { "ok", "cancel" },
         x = 500,
         y = 200,

@@ -131,7 +131,7 @@ function ArrayFieldWindow:init(opts)
     self.OnUpdateItem = opts.OnUpdateItem
 
     if self.field.canAdd then
-        self.btnAddItem = TabbedPanelButton({
+        self.btnAddItem = ActionButton({
             x = 0,
             y = 0,
             tooltip = "Add",

@@ -1,0 +1,29 @@
+<rml>
+<head>
+    <title>Color Picker</title>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/dialog.rcss"/>
+</head>
+<body id="color-picker" class="dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">Pick Color</span>
+        <button class="dialog-close" id="btn-close">×</button>
+    </div>
+    <div class="dialog-content">
+        <div class="color-picker-panel">
+            <div class="color-preview" id="color-preview"></div>
+            <div class="color-inputs">
+                <div class="form-row"><label>R:</label><input type="range" id="r-slider" min="0" max="255" value="255"/><input type="number" id="r-value" min="0" max="255" value="255"/></div>
+                <div class="form-row"><label>G:</label><input type="range" id="g-slider" min="0" max="255" value="255"/><input type="number" id="g-value" min="0" max="255" value="255"/></div>
+                <div class="form-row"><label>B:</label><input type="range" id="b-slider" min="0" max="255" value="255"/><input type="number" id="b-value" min="0" max="255" value="255"/></div>
+                <div class="form-row"><label>A:</label><input type="range" id="a-slider" min="0" max="255" value="255"/><input type="number" id="a-value" min="0" max="255" value="255"/></div>
+            </div>
+            <div class="form-row"><label>Hex:</label><input type="text" id="hex-input" class="form-input" value="#FFFFFF"/></div>
+        </div>
+    </div>
+    <div class="dialog-footer">
+        <button id="btn-ok" class="dialog-button primary">OK</button>
+        <button id="btn-cancel" class="dialog-button">Cancel</button>
+    </div>
+</body>
+</rml>

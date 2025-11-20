@@ -17,84 +17,112 @@ function AssetView:init(tbl)
 
     self.rootDir = tbl.rootDir
     self.showDirs = tbl.showDirs
-    self.imageFolder = tbl.imageFolder or self._fakeControl.imageFolder
-    self.imageFolderUp = tbl.imageFolderUp or self._fakeControl.imageFolderUp
+    self.imageFolder = tbl.imageFolder or (self._fakeControl and self._fakeControl.imageFolder)
+    self.imageFolderUp = tbl.imageFolderUp or (self._fakeControl and self._fakeControl.imageFolderUp)
     self.openProjectsAsFiles = tbl.openProjectsAsFiles
     self.OnDblClickItem = tbl.OnDblClickItem or { function() end }
 
     -- FIXME: Cleanup double click handling hack
     self.__previousDoubleClickTime = Spring.GetTimer()
 
-    self.layoutPanel.MouseDblClick = function(ctrl, x, y, button, mods)
-        if button ~= 1 then
-            return
+    if self.layoutPanel then
+        -- Chili mode
+        self.layoutPanel.MouseDblClick = function(ctrl, x, y, button, mods)
+            if button ~= 1 then
+                return
+            end
+            local cx,cy = ctrl:LocalToClient(x,y)
+            local itemIdx = ctrl:GetItemIndexAt(cx,cy)
+
+            if itemIdx < 0 then return end
+
+            local item = self.items[itemIdx]
+            if item == nil then
+                return
+            end
+
+            self:DoubleClickItem(item)
+
+            return ctrl
         end
-        local cx,cy = ctrl:LocalToClient(x,y)
-        local itemIdx = ctrl:GetItemIndexAt(cx,cy)
-
-        if itemIdx < 0 then return end
-
-        local item = self.items[itemIdx]
-        if item == nil then
-            return
-        end
-
-        self:DoubleClickItem(item)
-
-        return ctrl
     end
+    -- RmlUi mode: double-click is handled by GridView:_OnRmlUiItemClick
     if self.showPath then
-        self.scrollPanel:SetPos(nil, 20)
-        self.lblPath = Label:New {
-            x = 35,
-            y = 3,
-            width = 100,
-            height = 20,
-            caption = "",
-            parent = self.holderControl,
-            font = {
-                color = {0.7, 0.7, 0.7, 1.0},
-            },
-        }
-        self.btnUp = Button:New {
-            x = 5,
-            y = 2,
-            width = 18,
-            height = 18,
-            caption = "",
-            parent = self.holderControl,
-            padding = {0, 0, 0, 0},
-            children = {
-                Image:New {
-                    x = 0,
-                    y = 0,
-                    width = "100%",
-                    height = "100%",
-                    margin = {0, 0, 0, 0},
-                    file = self.imageFolderUp,
-                }
-            },
-            OnClick = {
-                function()
-                    self:SetDir(Path.GetParentDir(self.dir))
-                end
-            },
-        }
-        if self.rootDir then
-            self.lblRootDir = Label:New {
-                right = 5,
+        if self.layoutPanel then
+            -- Chili mode
+            self.scrollPanel:SetPos(nil, 20)
+            self.lblPath = Label:New {
+                x = 35,
                 y = 3,
                 width = 100,
                 height = 20,
-                caption = "Root: " .. tostring(self.rootDir),
+                caption = "",
                 parent = self.holderControl,
                 font = {
                     color = {0.7, 0.7, 0.7, 1.0},
                 },
             }
+            self.btnUp = Button:New {
+                x = 5,
+                y = 2,
+                width = 18,
+                height = 18,
+                caption = "",
+                parent = self.holderControl,
+                padding = {0, 0, 0, 0},
+                children = {
+                    Image:New {
+                        x = 0,
+                        y = 0,
+                        width = "100%",
+                        height = "100%",
+                        margin = {0, 0, 0, 0},
+                        file = self.imageFolderUp,
+                    }
+                },
+                OnClick = {
+                    function()
+                        self:SetDir(Path.GetParentDir(self.dir))
+                    end
+                },
+            }
+            if self.rootDir then
+                self.lblRootDir = Label:New {
+                    right = 5,
+                    y = 3,
+                    width = 100,
+                    height = 20,
+                    caption = "Root: " .. tostring(self.rootDir),
+                    parent = self.holderControl,
+                    font = {
+                        color = {0.7, 0.7, 0.7, 1.0},
+                    },
+                }
+            end
+        else
+            -- RmlUi mode - create path navigation control
+            self.pathNav = RmlUiPathNav({
+                currentPath = tbl.dir or '',
+                rootDir = self.rootDir,
+                imageFolderUp = self.imageFolderUp,
+                editor = self.editor,  -- Pass editor reference if available
+                OnUpClick = {
+                    function()
+                        self:SetDir(Path.GetParentDir(self.dir))
+                    end
+                }
+            })
         end
     end
     self:SetDir(tbl.dir or '')
+end
+
+function AssetView:SetEditor(editor)
+    self.editor = editor
+    -- Update pathNav's editor reference if it exists
+    if self.pathNav then
+        self.pathNav.editor = editor
+    end
 end
 
 -- FIXME: Cleanup double click handling hack
@@ -113,10 +141,13 @@ function AssetView:DoubleClickItem(item)
 end
 
 function AssetView:SetDir(directory)
-    self.layoutPanel:DeselectAll()
+    self:DeselectAll()
     self.dir = directory
     if self.lblPath then
         self.lblPath:SetCaption(self.dir)
+    elseif self.pathNav then
+        -- RmlUi mode
+        self.pathNav:SetPath(self.dir)
     end
 --     MaterialBrowser.lastDir = self.dir
     self:ScanDir()
@@ -256,8 +287,18 @@ end
 function AssetView:AddFile(file)
     local ext = (Path.GetExt(file) or ""):lower()
 
+    -- Only show image files in AssetView
+    if not table.ifind(SB_IMG_EXTS, ext) then
+        return
+    end
+
     local texturePath
-    if table.ifind(SB_IMG_EXTS, ext) then
+    if SB.useRmlUi then
+        -- RmlUi mode - use plain file path
+        -- RML files are in scen_edit/view/rml/, so we need to go up 3 levels to root
+        texturePath = "../../../" .. file
+    else
+        -- Chili mode - use texture decoration for scaling
         texturePath = ':clr' .. self.itemWidth .. ',' .. self.itemHeight .. ':' .. tostring(file)
         -- FIXME: why not just use the file directly? it works
         -- What is the performance/caching difference, if any?

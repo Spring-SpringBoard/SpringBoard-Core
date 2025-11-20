@@ -37,12 +37,12 @@ function ObjectDefsPanel:Refresh()
 end
 
 function ObjectDefsPanel:FilterItems()
-    self.layoutPanel:DeselectAll()
-    self.layoutPanel:ClearChildren()
+    self:DeselectAll()
+    self:ClearChildren()
     for _, item in pairs(self.items) do
         local objectDefID = item.objectDefID
         if self:FilterObject(objectDefID) then
-            self.layoutPanel:AddChild(item)
+            self:AddChildItem(item)
         end
     end
 end
@@ -77,7 +77,7 @@ function ObjectDefsPanel:SetSearchString(search)
 end
 
 function ObjectDefsPanel:GetObjectDefID(index)
-    local item = self.layoutPanel.children[index]
+    local item = self:GetChildItem(index)
     if item then
         return item.objectDefID
     else
@@ -141,7 +141,7 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
             fbo = true,
         })
         drawIcon.drawTex = tex
-        ctrl.imgCtrl.file = drawIcon.drawTex
+        ctrl:SetImage(drawIcon.drawTex)
     end)
 
     if not self.scheduleDraw then
@@ -176,6 +176,9 @@ end
 
 function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius)
     -- local objectDef = bridge.ObjectDefs[objectDefID]
+    if radius == 0 or radius == nil or radius ~= radius then -- check for 0, nil, or NaN
+        return
+    end
     local scale = -1 / radius--math.sqrt(radius)
     gl.Texture("LuaUI/images/scenedit/background.png")
     gl.RenderToTexture(tex, function()
@@ -393,5 +396,5 @@ function FeatureDefsPanel:GetObjectDefRadius(objectDefID)
     local dz = objectDef.model.maxz - objectDef.model.minz
     -- magic
     radius = math.max(dx, dy, dz) / 2 * math.sqrt(2) * 1.2
-    return radius
+    return math.max(10, radius) -- ensure minimum radius of 10
 end

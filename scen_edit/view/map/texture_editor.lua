@@ -137,7 +137,7 @@ function TextureEditor:init()
         name = "dntsIndex",
         value = 0,
     }))
-    self.btnPaint = TabbedPanelButton({
+    self.btnPaint = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Paint the terrain",
@@ -148,13 +148,21 @@ function TextureEditor:init()
         OnClick = {
             function()
                 self:_EnterState("paint")
-                self.savedBrushes:GetControl():Show()
-                self.savedDNTSBrushes:GetControl():Hide()
+                if not SB.useRmlUi then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Show() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                end
                 self:SetInvisibleFields("kernelMode", "splatTexScale", "splatTexMult", "splat-sep", "exclusive", "value")
             end
         },
     })
-    self.btnFilter = TabbedPanelButton({
+    self.btnFilter = ActionButton({
         x = SB.conf.TOOLBOX_ITEM_WIDTH,
         y = 0,
         tooltip = "Apply a filter",
@@ -165,8 +173,16 @@ function TextureEditor:init()
         OnClick = {
             function()
                 self:_EnterState("blur")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
+                if not SB.useRmlUi then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                end
                 self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "featureFactor", "diffuseColor",
                                         "mode", "texRotation", "splatTexScale", "splatTexMult", "offset-sep",
                                         "splat-sep", "exclusive", "value", "tex-sep",
@@ -174,7 +190,7 @@ function TextureEditor:init()
             end
         },
     })
-    self.btnDNTS = TabbedPanelButton({
+    self.btnDNTS = ActionButton({
         x = SB.conf.TOOLBOX_ITEM_WIDTH * 2,
         y = 0,
         tooltip = "DNTS textures",
@@ -195,12 +211,22 @@ function TextureEditor:init()
                 -- if SB.dntsEditor.window.hidden then
                 --     SB.view:SetMainPanel(SB.dntsEditor.window)
                 -- end
-                if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
-                    return
+                if self.savedDNTSBrushes and self.savedDNTSBrushes.brushManager then
+                    if #self.savedDNTSBrushes.brushManager:GetBrushIDs() == 0 then
+                        return
+                    end
                 end
                 self:_EnterState("dnts")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Show()
+                if not SB.useRmlUi then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Show() end
+                    end
+                end
                 self:SetInvisibleFields("kernelMode", "texScale", "texOffsetX", "texOffsetY",
                                         "featureFactor", "diffuseColor", "mode", "texRotation",
                                         "falloffFactor", "offset-sep", "voidFactor", "tex-sep",
@@ -208,7 +234,7 @@ function TextureEditor:init()
             end
         },
     })
-    self.btnVoid = TabbedPanelButton({
+    self.btnVoid = ActionButton({
         x = SB.conf.TOOLBOX_ITEM_WIDTH * 3,
         y = 0,
         tooltip = "Make the terrain transparent",
@@ -219,8 +245,16 @@ function TextureEditor:init()
         OnClick = {
             function()
                 self:_EnterState("void")
-                self.savedBrushes:GetControl():Hide()
-                self.savedDNTSBrushes:GetControl():Hide()
+                if not SB.useRmlUi then
+                    if self.savedBrushes and self.savedBrushes.GetControl then
+                        local ctrl = self.savedBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                    if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+                        local ctrl = self.savedDNTSBrushes:GetControl()
+                        if ctrl then ctrl:Hide() end
+                    end
+                end
                 self:SetInvisibleFields("texScale", "texOffsetX", "texOffsetY", "strength", "featureFactor",
                                         "diffuseColor", "mode", "texRotation", "kernelMode", "splatTexScale",
                                         "splatTexMult", "offset-sep", "splat-sep", "exclusive", "value",
@@ -507,15 +541,17 @@ function TextureEditor:init()
         format = 'rgb',
     }))
 
-    local children = {
+    local children = {}
+    -- Only add Chili UI components in non-RmlUi mode
+    children = {
         self.btnPaint,
         self.btnFilter,
         self.btnDNTS,
         self.btnVoid,
         -- self.btnHeight,
         --self.patternTextureImages:GetControl(),
-        self.savedBrushes:GetControl(),
-        self.savedDNTSBrushes:GetControl(),
+        self.savedBrushes and self.savedBrushes:GetControl() or nil,
+        self.savedDNTSBrushes and self.savedDNTSBrushes:GetControl() or nil,
         ScrollPanel:New {
             x = 0,
             --y = "55%",
@@ -546,7 +582,13 @@ function TextureEditor:init()
 
     self:Finalize(children)
 
-    self.savedDNTSBrushes:GetControl():Hide()
+    -- Only manipulate Chili controls in non-RmlUi mode
+    if not SB.useRmlUi and self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
+        local ctrl = self.savedDNTSBrushes:GetControl()
+        if ctrl then
+            ctrl:Hide()
+        end
+    end
 end
 
 function TextureEditor:__AddEngineDNTSTexture(dntsIndex)
@@ -585,7 +627,11 @@ function TextureEditor:OnEndChange(name)
 end
 
 function TextureEditor:OnFieldChange(name, value)
-    if self.savedBrushes:GetControl().visible then
+    -- Skip brush UI logic in RmlUi mode
+    local savedBrushesCtrl = self.savedBrushes and self.savedBrushes:GetControl()
+    local savedDNTSBrushesCtrl = self.savedDNTSBrushes and self.savedDNTSBrushes:GetControl()
+
+    if savedBrushesCtrl and savedBrushesCtrl.visible then
         local brush = self.savedBrushes:GetSelectedBrush()
         if brush then
             self.savedBrushes:UpdateBrush(brush.brushID, name, value)
@@ -598,7 +644,7 @@ function TextureEditor:OnFieldChange(name, value)
                 self.savedBrushes:RefreshBrushImage(brush.brushID)
             end
         end
-    elseif self.savedDNTSBrushes:GetControl().visible then
+    elseif savedDNTSBrushesCtrl and savedDNTSBrushesCtrl.visible then
         local brush = self.savedDNTSBrushes:GetSelectedBrush()
         if brush then
             self.savedDNTSBrushes:UpdateBrush(brush.brushID, name, value)
@@ -609,7 +655,7 @@ function TextureEditor:OnFieldChange(name, value)
         end
     end
 
-    if name == "brushTexture" and self.savedDNTSBrushes:GetControl().visible then
+    if name == "brushTexture" and savedDNTSBrushesCtrl and savedDNTSBrushesCtrl.visible then
         local dntsIndex = self:_GetDNTSIndex()
         local material = self.fields["brushTexture"].value
         if dntsIndex and material.normal then
@@ -617,7 +663,10 @@ function TextureEditor:OnFieldChange(name, value)
                 SB.model.textureManager:SetDNTS(dntsIndex, material)
             end)
         end
-    elseif name == "splatTexScale" or name == "splatTexMult" then
+    end
+
+    -- Handle DNTS-related field changes (works in both modes)
+    if name == "splatTexScale" or name == "splatTexMult" then
         local index = self:_GetDNTSIndex()
         local tbl = {gl.GetMapRendering(name .. "s")}
         tbl[index+1] = value

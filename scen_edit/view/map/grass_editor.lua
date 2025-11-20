@@ -37,7 +37,7 @@ function GrassEditor:init()
             SB.model.terrainManager:generateShape(texture)
         end
     }))
-    self.btnAddGrass = TabbedPanelButton({
+    self.btnAddGrass = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Left Click to add grass, Right Click to remove it.",
@@ -83,23 +83,14 @@ function GrassEditor:init()
         tooltip = "Rotation of the shape",
     }))
 
-    local children = {
-        self.btnAddGrass,
-        ScrollPanel:New {
-            x = 0,
-            y = 70,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-    self:Finalize(children)
+    self:Finalize({
+        actionButtons = { self.btnAddGrass }
+    })
 end
 
 function GrassEditor:OnFieldChange(name, value)
     if name == "grassDetail" then
+        assert(value ~= nil, "grassDetail value cannot be nil")
         --Spring.SendCommands('set GrassDetail ' .. tostring(math.ceil(value)))
         Spring.SetConfigInt("GrassDetail", math.ceil(value), true)
     end

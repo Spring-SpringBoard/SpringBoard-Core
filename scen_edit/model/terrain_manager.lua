@@ -13,6 +13,7 @@ function TerrainManager:getShape(name)
 end
 
 function TerrainManager:generateShape(name)
+    assert(name ~= nil, "shape name cannot be nil")
     if self:getShape(name) then
         return
     end

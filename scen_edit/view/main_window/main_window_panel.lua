@@ -31,6 +31,12 @@ function TabbedPanelButton(tbl)
 end
 
 function TabbedPanelImage(tbl)
+    -- In RmlUi mode, return plain table (for ActionButton wrapper)
+    if SB.useRmlUi then
+        return tbl
+    end
+
+    -- In Chili mode, create Chili Image object
     return Image:New(Table.Merge({
         width = SB.conf.TOOLBOX_ITEM_WIDTH / 2,
         height = SB.conf.TOOLBOX_ITEM_HEIGHT / 2,
@@ -41,6 +47,12 @@ function TabbedPanelImage(tbl)
 end
 
 function TabbedPanelLabel(tbl)
+    -- In RmlUi mode, return plain table (for ActionButton wrapper)
+    if SB.useRmlUi then
+        return tbl
+    end
+
+    -- In Chili mode, create Chili Label object
     return Label:New(Table.Merge({
         bottom = SB.conf.TOOLBOX_ITEM_HEIGHT / 8,
         width = SB.conf.TOOLBOX_ITEM_WIDTH,
@@ -94,6 +106,18 @@ function MainWindowPanel:AddElement(tbl)
     local name = tbl.name
     local editor = tbl.editor
 
+    -- In RmlUi mode, skip Chili button creation but still create editors
+    if SB.useRmlUi then
+        SB.delay(function()
+            if not SB.editors[name] then
+                SB.editors[name] = editor()
+            end
+        end)
+        self._totalEditors = self._totalEditors + 1
+        return
+    end
+
+    -- Chili mode: create button and editor
     local btn = TabbedPanelButton({
         tooltip = tooltip,
         children = {
