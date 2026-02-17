@@ -1,0 +1,32 @@
+[project]
+name = "sbc-packager"
+version = "0.1.0"
+description = "CI packaging helpers for SpringBoard Core"
+requires-python = ">=3.13,<3.14"
+dependencies = ["pydantic>=2.12.5", "typer>=0.23.1"]
+
+[project.scripts]
+sbc-packager = "sbc_packager.cli:main"
+sbc-packager-prepare = "sbc_packager.cli_prepare:main"
+sbc-packager-download-engine = "sbc_packager.cli_download_engine:main"
+sbc-packager-make-package-json = "sbc_packager.cli_make_package_json:main"
+sbc-packager-package = "sbc_packager.cli_package:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["pyright>=1.1.408", "ruff>=0.15.1"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"
+reportMissingTypeStubs = false

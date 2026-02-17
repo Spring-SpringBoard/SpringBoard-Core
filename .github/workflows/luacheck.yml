@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
-          submodules: 'true'
+          submodules: true
 
 
       - name: Install luacheck
@@ -23,4 +23,3 @@ jobs:
         run: |
           source env/bin/activate
           luacheck scen_edit triggers libs_sb/utils libs_sb/savetable.lua --enable 1
-
