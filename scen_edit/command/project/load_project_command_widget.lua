@@ -54,6 +54,11 @@ function LoadProjectCommandWidget:_LoadUnsynced()
         table.insert(cmds, LoadGUIStateCommand(VFS.LoadFile(file, VFS.RAW)))
     end
 
+    local file = Path.Join(SB.project.path, Project.ZKCONFIG_FILE)
+    if VFS.FileExists(file, VFS.RAW) then
+        table.insert(cmds, LoadZKMapConfigCommand(VFS.LoadFile(file, VFS.RAW)))
+    end
+
     local cmd = CompoundCommand(cmds)
     SB.commandManager:execute(cmd, true)
 end

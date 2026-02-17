@@ -72,6 +72,23 @@ local function GUIStateSave(path)
     table.save(guiState, path)
 end
 
+local function ZKconfigSave(path)
+    local tbl = {}
+	local teamList = {}
+    local boxes = SB.model.startboxManager:getAllStartBoxes()
+	for boxID, _ in pairs(boxes) do
+		local teamID = SB.model.startboxManager:getTeam(boxID)
+		local team = SB.model.teamManager:getTeam(teamID)
+		if not teamList[teamID] then
+			teamList[teamID] = {name = team.name, short = team.short, x = team.x or nil, z = team.z or nil, boxes = {}}
+		end
+		table.insert(teamList[teamID].boxes, boxID)
+    end
+	local mexes = SB.model.mexManager:getAllMexes()
+	tbl.mexes, tbl.boxes, tbl.teamList = mexes, boxes, teamList
+    table.save(tbl, path)
+end
+
 function SaveCommand:execute()
     local projectDir = self.path
 
@@ -111,7 +128,12 @@ function SaveCommand:execute()
     end, function(elapsed)
         Log.Notice(("[%.4fs] Saved GUI state"):format(elapsed))
     end)
-
+	
+    Time.MeasureTime(function()
+        ZKconfigSave(Path.Join(projectDir, Project.ZKCONFIG_FILE))
+    end, function(elapsed)
+        Log.Notice(("[%.4fs] Saved GUI state"):format(elapsed))
+    end)
     -- Hide the console (FIXME: game agnostic way)
     -- Spring.SendCommands("console 0")
 

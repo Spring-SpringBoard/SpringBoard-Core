@@ -21,6 +21,7 @@ Project.METAL_FILE = Path.Join(Project.FOLDER_PREFIX, "metal.data")
 Project.SCRIPT_FILE = Path.Join(Project.FOLDER_PREFIX, "script.txt")
 
 Project.GUI_FILE = Path.Join(Project.FOLDER_PREFIX, "gui.lua")
+Project.ZKCONFIG_FILE = Path.Join(Project.FOLDER_PREFIX, "zkconfig.lua")
 Project.SCREENSHOT_FILE = Path.Join(Project.FOLDER_PREFIX, "screenshot.jpg")
 Project.TEXTURES_FOLDER = Path.Join(Project.FOLDER_PREFIX, "textures/")
 

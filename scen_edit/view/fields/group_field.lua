@@ -27,11 +27,15 @@ local _GROUP_INDEX = 0
 --         width = 70,
 --     }),
 -- })
-function GroupField:init(fields)
+function GroupField:init(fields, param)
     Field.init(self, {})
 
     _GROUP_INDEX = _GROUP_INDEX + 1
-    self.name = "_groupField" .. tostring(_GROUP_INDEX)
+	if param then
+		self.name = param.name
+	else
+		self.name = "_groupField" .. tostring(_GROUP_INDEX)
+	end
     self.fields = fields
     self.components = {}
     self.autoSize = true
