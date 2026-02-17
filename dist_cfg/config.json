@@ -1,9 +1,9 @@
 {
-  "title" : "SpringBoard",
-  "dependencies" : {
+  "title": "SpringBoard",
+  "dependencies": {
     "pngjs3": "^5.1.3"
   },
-  "setups" : [
+  "setups": [
     {
       "package": {
         "id": "latest-win",
@@ -11,19 +11,18 @@
         "platform": "win32"
       },
       "downloads": {
-        "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_.maintenance.104.0.1-1553-gd3c0012_win32-minimal-portable.7z",
-              "destination": "engine/104.0.1-1553-gd3c0012 maintenance",
-              "extract": true
+            "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_windows-64-minimal-portable.7z",
+            "destination": "engine/105.1.1-2472-ga5aa45c-bar",
+            "extract": true
           }
         ]
       },
       "launch": {
         "game": "rapid://sbc:test",
         "map": "sb_initial_blank_10x8",
-        "engine": "104.0.1-1553-gd3c0012 maintenance",
+        "engine": "105.1.1-2472-ga5aa45c-bar",
         "map_options": {
           "new_map_x": 10,
           "new_map_y": 8
@@ -33,7 +32,6 @@
         }
       }
     },
-
     {
       "package": {
         "id": "latest-linux",
@@ -41,42 +39,11 @@
         "platform": "linux"
       },
       "downloads": {
-        "games": ["sbc:test"],
         "resources": [
           {
-              "url": "https://github.com/Spring-SpringBoard/SpringBoard-Resources/releases/download/resources/spring_.maintenance.104.0.1-1553-gd3c0012_minimal-portable-linux64-static.7z",
-              "destination": "engine/104.0.1-1553-gd3c0012 maintenance",
-              "extract": true
-          }
-      ]
-      },
-      "launch": {
-        "game": "rapid://sbc:test",
-        "map": "sb_initial_blank_10x8",
-        "engine": "104.0.1-1553-gd3c0012 maintenance",
-        "map_options": {
-          "new_map_x": 10,
-          "new_map_y": 8
-        },
-        "game_options": {
-          "MapSeed": 42
-        }
-      }
-    },
-
-    {
-      "package": {
-        "id": "latest-win-bar",
-        "display": "Latest (BAR Engine)",
-        "platform": "win32"
-      },
-      "downloads": {
-        "games": ["sbc:test"],
-        "resources": [
-          {
-              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_windows-64-minimal-portable.7z",
-              "destination": "engine/105.1.1-2472-ga5aa45c-bar",
-              "extract": true
+            "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z",
+            "destination": "engine/105.1.1-2472-ga5aa45c-bar",
+            "extract": true
           }
         ]
       },
@@ -93,63 +60,18 @@
         }
       }
     },
-
-    {
-      "package": {
-        "id": "latest-linux-bar",
-        "display": "Latest (BAR Engine)",
-        "platform": "linux"
-      },
-      "downloads": {
-        "games": ["sbc:test"],
-        "resources": [
-          {
-              "url": "https://github.com/beyond-all-reason/spring/releases/download/spring_bar_%7BBAR105%7D105.1.1-2472-ga5aa45c/spring_bar_.BAR105.105.1.1-2472-ga5aa45c_linux-64-minimal-portable.7z",
-              "destination": "engine/105.1.1-2472-ga5aa45c-bar",
-              "extract": true
-          }
-      ]
-      },
-      "launch": {
-        "game": "rapid://sbc:test",
-        "map": "sb_initial_blank_10x8",
-        "engine": "105.1.1-2472-ga5aa45c-bar",
-        "map_options": {
-          "new_map_x": 10,
-          "new_map_y": 8
-        },
-        "game_options": {
-          "MapSeed": 42
-        }
-      }
-    },
-
-    {
-      "package": {
-        "id": "stable",
-        "display": "Stable"
-      },
-      "downloads": {
-        "games" : ["sbc:stable"],
-        "maps" : ["TitanDuel 2.2"],
-        "engines" : [ "104.0.1-1553-gd3c0012 maintenance" ]
-      },
-      "launch": {
-        "game": "rapid://sbc:stable",
-        "map": "TitanDuel 2.2"
-      }
-    },
-
     {
       "package": {
         "id": "dev",
         "display": "Development"
       },
       "downloads": {
-        "engines" : [ "104.0.1-1553-gd3c0012 maintenance" ]
+        "engines": [
+          "105.1.1-2472-ga5aa45c-bar"
+        ]
       },
-      "auto_start" : false,
-      "no_downloads" : true,
+      "auto_start": false,
+      "no_downloads": true,
       "load_dev_exts": false,
       "launch": {
         "game": "SpringBoard Core $VERSION",
@@ -163,31 +85,6 @@
         }
       }
     },
-
-    {
-      "package": {
-        "id": "dev-bar-engine",
-        "display": "Development (BAR Engine)"
-      },
-      "downloads": {
-        "engines" : [ "105.1.1-2472-ga5aa45c-bar" ]
-      },
-      "auto_start" : false,
-      "no_downloads" : true,
-      "load_dev_exts": false,
-      "launch": {
-        "game": "SpringBoard Core $VERSION",
-        "map": "sb_initial_blank_10x8",
-        "map_options": {
-          "new_map_x": 10,
-          "new_map_y": 8
-        },
-        "game_options": {
-          "MapSeed": 42
-        }
-      }
-    },
-
     {
       "package": {
         "id": "asset-download",
@@ -204,6 +101,4 @@
       }
     }
   ]
-
-
 }

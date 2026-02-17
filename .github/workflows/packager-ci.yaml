@@ -1,0 +1,33 @@
+name: Packager CI
+
+on:
+  push:
+    paths:
+      - "build/**"
+      - ".github/workflows/packager-ci.yaml"
+  pull_request:
+    paths:
+      - "build/**"
+      - ".github/workflows/packager-ci.yaml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+
+      - name: Ruff
+        run: uv run --project ./build --locked ruff check ./build/sbc_packager
+
+      - name: Pyright
+        run: uv run --project ./build --locked pyright ./build/sbc_packager
