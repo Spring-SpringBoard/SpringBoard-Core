@@ -110,6 +110,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Validate Linux launcher wrapper
+        if: matrix.platform == 'linux'
+        run: |
+          launcher_path=build/dist/linux-unpacked/SpringBoard
+          test -f "$launcher_path"
+          sh -n "$launcher_path"
+          if grep -q '\\\\"' "$launcher_path"; then
+            echo "Invalid escaped quotes found in launcher wrapper: $launcher_path"
+            exit 1
+          fi
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
         with:

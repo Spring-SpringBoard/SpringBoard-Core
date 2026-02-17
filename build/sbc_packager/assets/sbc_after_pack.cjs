@@ -21,7 +21,7 @@ module.exports = async function sbcAfterPack(context) {
 
   const wrapper = `#!/bin/sh
 set -eu
-APPDIR="$(CDPATH= cd -- \\"$(dirname -- \\"$0\\")\\" && pwd)"
+APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 exec "$APPDIR/${executableName}-bin" --no-sandbox --disable-setuid-sandbox "$@"
 `;
 
