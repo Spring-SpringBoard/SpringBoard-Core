@@ -63,11 +63,15 @@ def merge_dependencies(package_template: JsonMap, dependencies: dict[str, str] |
 
 
 def ensure_packaged_files(build: JsonMap) -> None:
-    append_if_missing(ensure_list(build, "extraFiles"), "files/**")
+    canonical_files_glob = "files/**"
+    append_if_missing(ensure_list(build, "extraFiles"), canonical_files_glob)
+
+    # Keep a single canonical inclusion path to avoid electron-builder trying
+    # to copy/link the same file multiple times (EEXIST).
     linux = ensure_dict(build, "linux")
-    append_if_missing(ensure_list(linux, "extraFiles"), "files/**")
+    remove_string_entry(ensure_list(linux, "extraFiles"), canonical_files_glob)
     win = ensure_dict(build, "win")
-    append_if_missing(ensure_list(win, "extraFiles"), "files/**")
+    remove_string_entry(ensure_list(win, "extraFiles"), canonical_files_glob)
 
 
 def ensure_dict(parent: JsonMap, key: str) -> JsonMap:
@@ -89,6 +93,21 @@ def ensure_list(parent: JsonMap, key: str) -> list[Any]:
 def append_if_missing(values: list[Any], value: str) -> None:
     if value not in values:
         values.append(value)
+
+
+def remove_string_entry(values: list[Any], target: str) -> None:
+    normalized_target = normalize_path_glob(target)
+    values[:] = [
+        value
+        for value in values
+        if not (isinstance(value, str) and normalize_path_glob(value) == normalized_target)
+    ]
+
+
+def normalize_path_glob(value: str) -> str:
+    while value.startswith("./"):
+        value = value[2:]
+    return value
 
 
 def copy_after_pack_hook(path: Path) -> None:
