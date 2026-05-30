@@ -1,0 +1,18 @@
+[project]
+name = "sbc-smoke"
+version = "0.1.0"
+description = "Smoke tests for SBC: boot SBC against the dev engine and assert log invariants"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.uv]
+exclude-newer = "7d"
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+addopts = "-ra"

@@ -5,6 +5,45 @@ description: How the Lua → Rust port is carried out — process, structure, qu
 
 # Conventions
 
+## Two-directory workflow (wip + stable)
+
+The work happens in **two side-by-side directories**, both checkouts of this repo:
+
+- **wip** — `/home/gajop/projects/spring-projects/SBC.sdd` (this dir, branch `rust`). Claude works here. Permanent dirty tree, fat and growing. **Claude never commits here, ever.** Loses no work because nothing gets trimmed away.
+- **stable** — `/home/gajop/worktrees/SBC.sdd/SBC-rust-stable.sdd` (git worktree, branch `SBC-rust-stable.sdd`). User reviews and tests here. Only the slimmed-down, review-ready slice exists here. All commits happen here. User pushes from here.
+
+Both share the same `.git`. Sync runs two directions:
+
+- **wip → stable**: `cp`, one file at a time. The normal forward flow — a finished slice is copied into stable and trimmed there.
+- **stable → wip**: `git rebase`. Review-time edits (rename, reorder, fix) are committed in stable, and wip rebases `rust` onto `SBC-rust-stable.sdd` to absorb them. Never `cp` backwards — the rebase is what carries reviewed edits home, so they survive the next forward `cp`.
+
+### The loop
+
+For each review item:
+
+1. **Build & test in wip** — full fat tree. `cargo check`, `cargo test`, and the integration tests (`uv run pytest` in `tools/smoke/`).
+2. **Copy → trim in stable** — `cp` the files in (one at a time, no wildcards), trim to the minimal version for this slice. Never trim in wip.
+3. **Test in stable** — same suite, run inside stable.
+4. **Review** — add a row to [review-queue.md](review-queue.md). User reviews → tests → authorizes; the user may edit files in stable during review. Claude commits in stable, user pushes.
+5. **Rebase wip onto stable** — before the next slice, see [Rebasing wip onto stable](#rebasing-wip-onto-stable).
+
+### Rules
+
+- **Never commit in wip.** All commits happen in stable; wip only rebases onto stable's history.
+- **Never trim in wip.** wip stays fat — the full version is the safety net.
+- **Forward (wip → stable) is `cp`; back (stable → wip) is `rebase`.** No `git mv` / `cherry-pick` between dirs (cherry-pick drags along the rest of the commit; we want slice-sized control).
+- **Test on both sides every slice** — even a no-op scaffolding slice, to prove the native lib loads and inits.
+
+### Rebasing wip onto stable
+
+wip has no commits of its own, just a dirty tree, so park it across the rebase:
+
+1. `git stash --include-untracked`
+2. `git rebase SBC-rust-stable.sdd`
+3. `git stash pop`, then resolve conflicts toward stable's reviewed version.
+
+Between slices only, never mid-slice. If the tree won't stash cleanly, finish or discard the local change first.
+
 ## Process
 
 **Parallel implementations.** Lua stays the active path until the Rust replacement is reviewed and manually tested. Both impls live side-by-side; the dispatch layer chooses which runs. Don't delete Lua before Rust is verified.
@@ -16,9 +55,9 @@ description: How the Lua → Rust port is carried out — process, structure, qu
 1. **Review** — user reads the Rust code.
 2. **Manual test** — user runs SBC, exercises the feature.
 
-Claude does lint (`cargo fmt`, `cargo clippy -D warnings`), unit tests, and the smoke harness. Claude never marks anything done.
+Claude does lint (`cargo fmt`, `cargo clippy -D warnings`), unit tests, and the integration tests. Claude never marks anything done.
 
-**Commits.** Only the user authorizes commits — Claude runs `git commit -m` only when told. Small commits: one port (or a small batch of related ports) per commit. The dispatch flip can ride along or come in a follow-up.
+**Commits.** All commits happen in **stable**, never in wip. Claude runs `git commit -m` in stable, only after user authorizes. Small commits: one port (or a small batch of related ports) per commit. The dispatch flip can ride along or come in a follow-up.
 
 ## Async review pipeline
 
@@ -78,7 +117,9 @@ If `inventory` becomes problematic (e.g. platforms where life-before-`main` link
 
 ## Build invariant
 
-`cargo check` in `native/` must pass at every commit. The Lua app must still run at every commit. Both halves of the parallel impl exist; only flip one at a time. If a port needs an unfinished dependency, gate behind `cfg`, don't break the build.
+`cargo check` in `native/` must pass at every commit (in **stable**). The Lua app must still run at every commit. Both halves of the parallel impl exist; only flip one at a time. If a port needs an unfinished dependency, gate behind `cfg`, don't break the build.
+
+The wip dir has no commit invariant — it builds when it builds. If wip is temporarily broken because a refactor is mid-flight, that's fine; the stable side is unaffected.
 
 ## Quality bar — pre-handoff
 
@@ -87,7 +128,7 @@ Target: user review + manual test under 2 minutes per item. To get there, every 
 - `cargo fmt --check` clean
 - `cargo clippy --all-targets -- -D warnings` zero output (warnings fixed or `#[allow]`-ed with a one-line reason)
 - `cargo test` green, including new tests for new logic
-- Smoke harness green (once it exists — see Tests below)
+- Integration tests green (`uv run pytest` in `tools/smoke/`)
 - Self-review: re-read the diff as if reviewing it; cut dead code, fix bad names
 - No `unwrap()`/`panic!()` outside tests; use `?` or `expect("specific reason")`
 - No leftover `TODO`s
@@ -108,11 +149,48 @@ If any check fails, fix it. **Don't pad the queue.** Three clean items beat ten 
 ## Tests
 
 - **Unit tests** (every item with non-trivial logic): co-located, cover happy path + error paths + edge cases (empty, boundary, large). Skip trivial getters.
-- **Smoke harness** (Phase 0): a scripted Spring run that boots SBC under Xvfb and fails on crash signatures or missing LuaUI init. Mandatory before any command ships.
-- **CI** (Phase 0): fmt + clippy + test + cross-Windows check + smoke on every push.
-- **Per-command smoke** (each Phase 1 port): scripted command + grep on infolog. Added as each command lands.
+- **Integration tests** (`tools/smoke/`, pytest): boot SBC against the dev engine once, then run multiple test files asserting on the resulting infolog. New ports add new test files; common assertions (no errors, no warnings, no crashes) are shared fixtures. Mandatory before any slice is handed off to review.
+- **CI** (Phase 0): fmt + clippy + test + cross-Windows check + integration tests on every push.
+- **Per-command tests** (each Phase 1 port): a test file that boots SBC (sharing the session boot when possible), drives the command, and asserts on resulting state via infolog or other observable side effect.
 - **E2E UI tests** (Phase 4/5): visual regression + a thin RmlUi test driver. Not built yet — RmlUi document IDs should be deterministic so this is buildable later.
 - **Benchmarks**: at the very end, once everything is ported. If a user-visible regression appears mid-port, benchmark that one thing; otherwise hold.
+
+### Verifying the bridge end-to-end
+
+The smoke suite boots SBC headless with no input. It proves the native plugin
+**compiles, loads, and inits with zero errors/warnings** — it does *not* prove
+that a command ever reaches Rust, because nothing fires a command during a
+passive boot. `handle_message`'s receive log is at `debug`, and the root logger
+is `info`, so a command round-trip is invisible by default. A bridge that
+silently dropped every message would still pass all the baseline + plugin tests.
+
+To confirm a command actually crosses the bridge into the native plugin:
+
+1. In [native/log4rs.yaml](../../native/log4rs.yaml), set the `rust_plugin::sbc`
+   logger to `level: debug` (the existing commented-out `command_runner` logger
+   names a module that doesn't exist — `rust_plugin::sbc` is the right target).
+2. Rebuild: `cd native && cargo build --release`.
+3. Boot SBC and exercise *any* command (e.g. one terrain brush stroke):
+   `cd tools/smoke && uv run python -m run_sbc` prints the write dir, or launch
+   the editor manually.
+4. Grep the infolog in that write dir for `HandleLuaCall(` — one line per
+   command sent. Its payload is the `{tag,data}` JSON the Lua bridge
+   ([scen_edit/command/command_manager.lua](../../scen_edit/command/command_manager.lua)
+   line ~132) serialized.
+5. During the parallel period, commands with no Rust handler log
+   `Unknown command class: …` at error level — expected for anything not yet
+   ported. Once a class is flipped to Rust-only, that line must disappear.
+
+**This recipe is the precondition for slice 1's per-command tests.** Those tests
+("fire the command, assert observable state changed") need a way to drive a
+known command into the headless boot — a small autoexec Lua fixture or a synced
+call — which does not exist yet. Build that driver before/with slice 1.
+
+### Rules — what tests assert
+
+- **Zero errors and zero warnings, always. No allowlists.** Tests assert exactly this and never weaken it. If something fires, the fix is to fix it at the source — SBC code, dev engine config, missing assets in the test environment — never to exclude the line.
+- **Never `git stash` to determine whether a bug pre-exists.** Whether a bug came from this slice or earlier is irrelevant — the test fails, the bug gets fixed.
+- **Never bring pre-existing issues up for discussion** — not in commit messages, review-queue rows, or status updates. Surface them by letting the test fail; that's enough signal. Don't write "but this was already there" anywhere.
 
 ## Review-queue row format
 

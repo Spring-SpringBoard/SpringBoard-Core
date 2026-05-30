@@ -9,9 +9,9 @@ Items Claude has finished implementing, awaiting human gates. Top of the list = 
 
 Each row has: link to the Rust file, the Lua file it replaces, a one-line description, and what to verify when testing. Claude appends; user moves items off as they're reviewed → tested → committed.
 
-| # | Item | Rust file | Replaces | State | What to test |
-|--:|------|-----------|----------|-------|--------------|
-|   | *(empty — no items in review yet)* | | | | |
+| # | Item | Files | State | What to test |
+|--:|------|-------|-------|--------------|
+| _(empty)_ | | | | |
 
 ## States
 

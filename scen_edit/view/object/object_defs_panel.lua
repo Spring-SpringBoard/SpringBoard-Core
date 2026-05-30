@@ -387,11 +387,10 @@ function FeatureDefsPanel:SelectFeatureTypesID(featureTypeID)
 end
 function FeatureDefsPanel:GetObjectDefRadius(objectDefID)
     local objectDef = self.bridge.ObjectDefs[objectDefID]
-    local radius = 10
     local dx = objectDef.model.maxx - objectDef.model.minx
     local dy = objectDef.model.maxy - objectDef.model.miny
     local dz = objectDef.model.maxz - objectDef.model.minz
     -- magic
-    radius = math.max(dx, dy, dz) / 2 * math.sqrt(2) * 1.2
-    return radius
+    local radius = math.max(dx, dy, dz) / 2 * math.sqrt(2) * 1.2
+    return math.max(10, radius)
 end

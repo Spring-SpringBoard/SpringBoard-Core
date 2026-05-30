@@ -9,3 +9,6 @@ env/
 
 # don't track local (dev) file
 *.local
+
+# Rust build artifacts
+native/target/

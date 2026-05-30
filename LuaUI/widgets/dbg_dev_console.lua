@@ -97,6 +97,9 @@ local function ToggleFilterSinceLastReload()
 end
 
 local function UpdateFilterProblems()
+	if not btnFilterProblems then
+		return
+	end
 	if totalErrors == 0 then
 		btnFilterProblems:SetCaption("Problems(" .. color.blue .. "0\b)")
 	else
@@ -580,6 +583,9 @@ function CheckForLuaFilePath(text)
 end
 
 function NewConsoleLine(text)
+	if not log then
+		return
+	end
 	-- avoid creating insane numbers of children (chili can't handle it)
 	-- if #log.children > cfg.msgCap then
 		-- log:RemoveChild(log.children[1])
@@ -668,6 +674,9 @@ function ShowSinceReload()
 end
 
 function widget:Update()
+	if not btnToggleCheating then
+		return
+	end
 	btnToggleCheating.checked = Spring.IsCheatingEnabled()
 	btnToggleGlobalLOS.checked = Spring.GetGlobalLos(Spring.GetMyAllyTeamID())
 	btnToggleGodMode.checked = Spring.IsGodModeEnabled()

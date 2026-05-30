@@ -15,23 +15,23 @@ No deadline.
 
 | Phase | Area | Status | Doc |
 |------:|------|--------|-----|
-| 0 | Baseline (native crate + CI + smoke + Lua→Rust bridge) | todo | — |
-| 1 | Commands (78 files) | todo | [01-commands.md](01-commands.md) |
-| 2 | State (21 files) | todo | [02-state.md](02-state.md) |
-| 3 | Model (24 files) | todo | [03-model.md](03-model.md) |
-| 4 | View — Chili → RmlUi (Lua-side first) | in progress (pre-port) | [04-view.md](04-view.md) |
-| 5 | View logic → Rust (drive RmlUi from native) | todo | [05-view-rust.md](05-view-rust.md) |
-| 6 | Final cleanup (delete remaining Lua) | todo | [06-cleanup.md](06-cleanup.md) |
-| 7 | Libraries (libs_sb + spring-launcher) | todo | [07-libraries.md](07-libraries.md) |
+| 0 | Baseline (native crate + CI + integration tests + Lua→Rust bridge) | partly done | — |
+| 1 | Command execution slices — model + commands ported together, one feature at a time | in progress | [01-slices.md](01-slices.md) |
+| 2 | View — Chili → RmlUi (Lua-side first) | in progress (pre-port) | [02-view.md](02-view.md) |
+| 3 | View logic → Rust (drive RmlUi from native) | todo | [03-view-rust.md](03-view-rust.md) |
+| 4 | Final cleanup (delete remaining Lua) | todo | [04-cleanup.md](04-cleanup.md) |
+| 5 | Libraries (libs_sb + spring-launcher) | todo | [05-libraries.md](05-libraries.md) |
 
-Phase 4 is in progress independently of the Rust port (some Chili→RmlUi work landed earlier).
+Phase 1 ports the model and command layers together in slices (one feature end-to-end at a time) instead of layer-by-layer. State (editor state classes like brush/drag/selection) is UI-side and lives under Phase 2/3.
+
+Phase 2 is in progress independently of the Rust port (some Chili→RmlUi work landed earlier).
 
 Pending review items: [review-queue.md](review-queue.md). Rules: [conventions.md](conventions.md).
 
 ## Where things live
 
 - Lua source: [scen_edit/](../../scen_edit/)
-- Rust source: will live under `native/` (Phase 0)
+- Rust source: [native/](../../native/)
 - Engine API (sibling repo): `spring-bar/rust/crates/spring-native`
 
 ## Status terms

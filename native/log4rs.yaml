@@ -1,0 +1,19 @@
+# Embedded at build time; rebuild the native module after editing.
+refresh_rate: 30 seconds
+
+appenders:
+  spring:
+    kind: spring_echo
+    encoder:
+      pattern: "{d(%H:%M:%S)} [{l}] {M}: {m}{n}"
+
+root:
+  level: info
+  appenders:
+    - spring
+
+loggers:
+  # Uncomment to trace every command crossing the bridge (the `route(...)` line
+  # in sbc.rs) plus command-manager dispatch.
+  # rust_plugin::sbc:
+  #   level: debug

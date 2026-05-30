@@ -1,0 +1,5 @@
+[jobs.build]
+command = ["cargo", "build"]
+
+[jobs.build-release]
+command = ["cargo", "build", "--release"]

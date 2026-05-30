@@ -6,6 +6,8 @@ SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command/sync'))
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command/project'))
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'command/textures'))
 
+VFS.Include("libs_sb/json.lua", nil, VFS.ZIP)
+
 --- CommandManager class
 -- @type CommandManager
 CommandManager = Observable:extends{maxUndoSize = 30, maxRedoSize = 30}
@@ -24,6 +26,8 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.idCount = 0
 
     self.__isWidget = Script.GetName() == "LuaUI"
+
+    self.nativeCommandsOnly = {}
 end
 
 function CommandManager:_SafeCall(func)
@@ -120,7 +124,11 @@ function CommandManager:__execute(cmd, isSameContext)
         if cmd._execute_unsynced and not self.__isWidget then
             self:_SendCommand(cmd)
         else
-            cmd:execute()
+            local msg = Message("command", cmd)
+            Spring.InvokeNativeModule(json.encode(msg:serialize()))
+            if not self.nativeCommandsOnly[cmd.className] then
+                cmd:execute()
+            end
         end
         if cmd.unexecute and not cmd.blockUndo then
             if self.multipleCommandMode then
