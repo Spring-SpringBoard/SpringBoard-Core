@@ -30,7 +30,7 @@ spread across the slices they belong to, not deferred as a catch-all.
 | # | Slice | Status |
 |--:|-------|--------|
 | 0 | [Command infrastructure](#0-command-infrastructure) — trait + dispatch + undo/redo + compound + bridge + widget-notify | done (stable) |
-| 1 | [Terrain](#1-terrain) — shape / level / smooth / metal brushes | done (wip; flipped to Rust-only) |
+| 1 | [Terrain](#1-terrain) — shape / level / smooth / metal brushes | review (in stable; flipped to Rust-only; heightmap recalc fixed via `set_height_map_func`) |
 | 2 | [Heightmap](#2-heightmap) — load (sync) + import / export (async IO) | todo |
 | 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | todo (setters bound; undo needs gl getters) |
 | 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | blocked (texture-atlas GL) |
@@ -67,9 +67,9 @@ This slice delivered it.
 control commands). Transport (`{tag, data}` decode) lives at the `SBC` boundary
 in [sbc.rs](../../native/src/sbc/sbc.rs).
 
-Convention: each slice is a directory; `mod.rs` files only wire submodules, never
-hold code. Feature-slice managers (e.g. terrain's `TerrainManager`) construct
-through `sbc.rs`.
+Tree-layout conventions (slice = directory, thin `mod.rs`, etc.) are in
+[conventions.md](conventions.md#code-structure). Feature-slice managers (e.g.
+terrain's `TerrainManager`) construct through `sbc.rs`.
 
 **Lua files**:
 - [scen_edit/command/command.lua](../../scen_edit/command/command.lua) — base class
@@ -78,12 +78,18 @@ through `sbc.rs`.
 
 The bridge sends every command to Rust via `Spring.InvokeNativeModule(json.encode(msg:serialize()))`. Lua execution **also** runs (parallel) unless the class name appears in `nativeCommandsOnly`. Slice 0 leaves that allowlist empty — feature slices populate it as they land.
 
-**Deferred to slice 1 (first feature slice that flips a command to Rust-only):**
+**Still open — required for full 1:1 once Rust is the *only* executor of undo/redo:**
 
-These exist on the Lua side and are required for full 1:1 parity once Rust is the only executor. Until then Lua handles them; slice 0 leaves them out by design, not by omission.
+These exist on the Lua side and are needed once Rust owns the undo stack. They
+are **not** yet ported. Slice 1 did not need them: flipping a command via
+`nativeCommandsOnly` only suppresses Lua's `cmd:execute()`
+([command_manager.lua](../../scen_edit/command/command_manager.lua) line ~129) —
+the `undoListAdd` / `notify` path (line ~133) is **not** gated, so during the
+parallel period Lua still owns undo/redo bookkeeping and the widget notify. These
+land with the slice that first moves the undo stack itself to Rust.
 
 - `__cmd_id` allocation on every executed command (Rust counterpart to Lua's `idCount`).
-- Widget notify after `execute` / `undo` / `redo` / `clear_*` / `undo_list_add` (when it pops oldest) — Lua dispatches `WidgetCommandExecuted` / `WidgetCommandUndo` / `WidgetCommandRedo` / `WidgetCommandClearUndoStack` / `WidgetCommandClearRedoStack` / `WidgetCommandRemoveFirstUndo` to the widget. Rust needs the equivalent via `send_lua_uimsg`, matching `scen_edit/message/message_manager.lua`'s prefix-framed wire format.
+- Widget notify after `execute` / `undo` / `redo` / `clear_*` / `undo_list_add` (when it pops oldest) — Lua dispatches `WidgetCommandExecuted` / `WidgetCommandUndo` / `WidgetCommandRedo` / `WidgetCommandClearUndoStack` / `WidgetCommandClearRedoStack` / `WidgetCommandRemoveFirstUndo` to the widget. Rust needs the equivalent via `send_lua_uimsg` (a `lua_bridge` module — exists in wip, not yet in stable), matching `scen_edit/message/message_manager.lua`'s prefix-framed wire format.
 - `display()` method on commands (Lua returns `self.className`; `CompoundCommand` returns the first sub-command's display). Required for the `display` field of `WidgetCommandExecuted`.
 
 **Out of scope for slice 0** (handled by their feature slices):
@@ -96,20 +102,26 @@ These exist on the Lua side and are required for full 1:1 parity once Rust is th
 
 Brush-based heightmap and metal-map editing. Engine-side via `Spring.SetHeightMap` / `Spring.SetMetalAmount` / `Spring.AddHeightMap`, all bound natively.
 
-**Status:** done in wip — 4 brush commands + brush-settings, flipped to Rust-only via `nativeCommandsOnly`. Needs in-game verification (the slice-0 widget-notify path is exercised here).
+**Status:** in stable, awaiting review — four brush commands + brush-settings,
+flipped to Rust-only. Also lands shared infra: the IO-worker shell (no job types
+yet), the in-engine test harness, and the Lua `poll_io` driver.
+
+The three heightmap brushes wrap their writes in `TerrainControl::set_height_map_func`
+so the engine recalcs (without it, heights change in data but the terrain doesn't
+move) — see `SBC_PORT_MISSING_BINDINGS.md`. Metal needs no recalc.
 
 **Model:**
 - [scen_edit/model/terrain_manager.lua](../../scen_edit/model/terrain_manager.lua) — brush state, listeners, generated metadata
 - [scen_edit/model/heightmap.lua](../../scen_edit/model/heightmap.lua)
 - [scen_edit/model/rendering/texture_undo_stack.lua](../../scen_edit/model/rendering/texture_undo_stack.lua) (also used by textures)
 
-**Commands:**
-- [abstract_terrain_modify_command.lua](../../scen_edit/command/abstract_terrain_modify_command.lua) — shared base
-- [terrain_shape_modify_command.lua](../../scen_edit/command/terrain_shape_modify_command.lua)
-- [terrain_level_command.lua](../../scen_edit/command/terrain_level_command.lua)
-- [terrain_smooth_command.lua](../../scen_edit/command/terrain_smooth_command.lua)
-- [terrain_metal_command.lua](../../scen_edit/command/terrain_metal_command.lua)
-- [set_heightmap_brush_command.lua](../../scen_edit/command/set_heightmap_brush_command.lua)
+**Commands (Lua source → Rust):**
+- [abstract_terrain_modify_command.lua](../../scen_edit/command/abstract_terrain_modify_command.lua) — shared base; its brush-stamp logic became [brush_modify.rs](../../native/src/sbc/commands/heightmap/brush_modify.rs) (composition via closures, not inheritance) + [brush_filter_generator.rs](../../native/src/sbc/commands/heightmap/brush_filter_generator.rs)
+- [terrain_shape_modify_command.lua](../../scen_edit/command/terrain_shape_modify_command.lua) → [terrain_shape_modify_command.rs](../../native/src/sbc/commands/heightmap/terrain_shape_modify_command.rs)
+- [terrain_level_command.lua](../../scen_edit/command/terrain_level_command.lua) → [terrain_level_command.rs](../../native/src/sbc/commands/heightmap/terrain_level_command.rs)
+- [terrain_smooth_command.lua](../../scen_edit/command/terrain_smooth_command.lua) → [terrain_smooth_command.rs](../../native/src/sbc/commands/heightmap/terrain_smooth_command.rs)
+- [terrain_metal_command.lua](../../scen_edit/command/terrain_metal_command.lua) → [terrain_metal_command.rs](../../native/src/sbc/commands/heightmap/terrain_metal_command.rs)
+- [set_heightmap_brush_command.lua](../../scen_edit/command/set_heightmap_brush_command.lua) → [set_heightmap_brush_command.rs](../../native/src/sbc/commands/set_heightmap_brush_command.rs) (registers the greyscale brush shape in [terrain_manager.rs](../../native/src/sbc/commands/heightmap/terrain_manager.rs); **not** flipped to Rust-only — Lua still needs the shape for its own preview)
 
 ---
 
@@ -126,8 +138,10 @@ crate), replacing what the spring-launcher used to do over IPC.
   thread. Port directly.
 - **Import / export (async IO):** decode/encode an image file. File IO + image
   work runs on a background worker thread (must not touch the engine); the engine
-  thread applies/reads heights. Needs the IO-worker + `widget:Update` poll (see
-  "Async IO" below).
+  thread applies/reads heights. The IO-worker shell + the `widget:Update` poll
+  already exist (landed with slice 1 as common infra) — this slice just adds the
+  first concrete `IoJob`/`IoOutcome` types (and the `image` crate dep). See
+  [docs/design/async-io.md](../design/async-io.md).
 
 **Model:**
 - [scen_edit/model/heightmap.lua](../../scen_edit/model/heightmap.lua) (shared with slice 1)
@@ -323,44 +337,9 @@ pure project logic (no engine API).
 
 ---
 
-## Widget commands — not a slice
+The async-IO model (heightmap import/export, compile, image export) is a design
+concern, not a slice — see [docs/design/async-io.md](../design/async-io.md). The
+worker shell landed with slice 1; the first job types land with slice 2.
 
-Widget commands aren't deferred as a catch-all. Each is part of the feature slice
-it serves and is listed there:
-
-- `widget_terrain_change_texture_command` → slice 4 (textures)
-- `widget_follow_unit_command` → slice 5 (objects); genuinely widget-only, stays Lua
-- `widget_command_executed` / undo / redo / clear / remove-first → slice 0
-  (the command-system widget-notify path; already handled)
-
-The remaining genuinely widget-only ones (display text, unit say, draw texture,
-execute-unsynced-action) are unsynced UI helpers; they stay Lua until the view
-layer moves to Rust (Phase 2/3). Listed for completeness:
-- [widget_display_text.lua](../../scen_edit/command/widget_display_text.lua)
-- [widget_unit_say_command.lua](../../scen_edit/command/widget_unit_say_command.lua)
-- [widget_draw_texture_command.lua](../../scen_edit/command/widget_draw_texture_command.lua)
-- [widget_execute_unsynced_action_command.lua](../../scen_edit/command/widget_execute_unsynced_action_command.lua)
-
-## Async IO (heightmap import/export, compile, image export)
-
-Import/export/compile do file IO + image decode/encode. Rule: **the background
-thread never touches the engine; the engine thread never does file IO.**
-
-- Engine thread (on command dispatch): read engine data into an owned buffer
-  (export) — fast memory read, no IO. Hand the buffer to the worker.
-- Background worker thread: file read/write + image decode/encode on owned
-  buffers only. No engine access.
-- Engine thread (on drain): apply results (e.g. `set_height_map` for import).
-
-Drain point: there's no native per-frame callin (see the engine note, Category 0),
-so a throttled `widget:Update` pokes the plugin via
-`InvokeNativeModule(json.encode({tag="poll_io"}))` and the plugin drains completed
-jobs on that call. `widget:Update` (not `gadget:GameFrame`) because GameFrame
-doesn't fire while paused and SBC is effectively always paused.
-
-## Where things go in Rust
-
-- Per-command Rust file: [native/src/sbc/commands/](../../native/src/sbc/commands/)`<slice>/`. Each file owns its serde struct, the `inventory::submit!` registration, and the execute/unexecute logic.
-- Per-manager Rust file: a per-slice `model`/manager module.
-- The command-system internals + the single public `commands_api` surface live under [native/src/sbc/commands/command_system/](../../native/src/sbc/commands/command_system/).
-- Cross-slice managers (texture undo stack, heightmap) live where the first slice that needs them puts them; later slices reuse.
+Where ported code lives in the tree is a porting convention — see
+[conventions.md](conventions.md#code-structure).

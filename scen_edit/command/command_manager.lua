@@ -27,7 +27,12 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
 
     self.__isWidget = Script.GetName() == "LuaUI"
 
-    self.nativeCommandsOnly = {}
+    self.nativeCommandsOnly = {
+        TerrainShapeModifyCommand = true,
+        TerrainLevelCommand = true,
+        TerrainSmoothCommand = true,
+        TerrainMetalCommand = true,
+    }
 end
 
 function CommandManager:_SafeCall(func)
@@ -124,8 +129,18 @@ function CommandManager:__execute(cmd, isSameContext)
         if cmd._execute_unsynced and not self.__isWidget then
             self:_SendCommand(cmd)
         else
-            local msg = Message("command", cmd)
-            Spring.InvokeNativeModule(json.encode(msg:serialize()))
+            -- Drive the (single, shared) native module from the gadget only.
+            -- Every command worth porting reaches the gadget (synced) first, so
+            -- the native module sees it here; the widget pass stays Lua-only
+            -- bookkeeping. (Pure widget-only commands — display text, unit say,
+            -- draw — never reach the gadget, but they stay Lua anyway.) Sending
+            -- from both states (e.g. SetMultipleCommandModeCommand, which re-runs
+            -- in the widget) would hit the one native manager twice and desync
+            -- its streaming/undo state.
+            if not self.__isWidget then
+                local msg = Message("command", cmd)
+                Spring.InvokeNativeModule(json.encode(msg:serialize()))
+            end
             if not self.nativeCommandsOnly[cmd.className] then
                 cmd:execute()
             end
@@ -191,7 +206,14 @@ function CommandManager:undo()
 
     local cmd = table.remove(self.undoList, #self.undoList)
     self:_SafeCall(function()
-        if not cmd._execute_unsynced or self.__isWidget then
+        if self.nativeCommandsOnly[cmd.className] then
+            -- Rust owns this command's execution and its undo stack; pop there
+            -- (from the gadget only, as in the execute path). Lua's
+            -- cmd:unexecute() would be a no-op (Lua never executed it).
+            if not self.__isWidget then
+                Spring.InvokeNativeModule(json.encode(Message("command", UndoCommand()):serialize()))
+            end
+        elseif not cmd._execute_unsynced or self.__isWidget then
             cmd:unexecute()
         else
             local msg = Message("command", UndoCommand())
@@ -212,7 +234,13 @@ function CommandManager:redo()
 
     local cmd = table.remove(self.redoList, #self.redoList)
     self:_SafeCall(function()
-        if not cmd._execute_unsynced or self.__isWidget then
+        if self.nativeCommandsOnly[cmd.className] then
+            -- Rust owns this command; replay from its redo stack (gadget only,
+            -- as above).
+            if not self.__isWidget then
+                Spring.InvokeNativeModule(json.encode(Message("command", RedoCommand()):serialize()))
+            end
+        elseif not cmd._execute_unsynced or self.__isWidget then
             cmd:execute()
         else
             --self:_SendCommand(cmd)

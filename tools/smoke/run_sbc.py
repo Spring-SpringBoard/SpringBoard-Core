@@ -9,10 +9,14 @@ Library use:
     (write_dir / "infolog.txt").read_text()
 """
 
+from __future__ import annotations
+
+import json
 import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from textwrap import dedent
 
@@ -21,14 +25,25 @@ SBC_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_ENGINE_DIR = Path("/home/gajop/projects/spring-projects/spring-bar/build-linux/install")
 DEFAULT_TIMEOUT_S = 45
 
+# If the heartbeat file goes this long without an update while in-engine tests
+# run, treat the run as hung and kill it. Generous vs the per-test 5s internal
+# timeouts.
+HEARTBEAT_STALE_S = 20.0
+
 
 def boot(
     *,
     engine_dir: Path = DEFAULT_ENGINE_DIR,
     timeout_s: int = DEFAULT_TIMEOUT_S,
     sbc_root: Path = SBC_ROOT,
+    tests: list[str] | None = None,
 ) -> Path:
     """Boot SBC for `timeout_s` seconds, return the write dir (containing infolog.txt).
+
+    If `tests` is set, the in-engine test framework runs those tests (via the
+    `SBC_TEST_SPEC` env var); the plugin self-quits when done, and a heartbeat
+    watchdog kills the run if it goes stale (a real hang) without waiting out
+    the hard timeout.
 
     Raises RuntimeError if the engine binary or native plugin is missing.
     Does NOT raise on engine exit code — timeout-kill is the normal path.
@@ -52,6 +67,8 @@ def boot(
         "Sound = 0\nFullscreen = 0\nXResolution = 800\nYResolution = 600\n"
     )
 
+    # Two teams in two ally-teams so team/alliance integration tests have
+    # something to act on (set_ally, change_player_team, get_team_info).
     (write_dir / "script.txt").write_text(
         dedent(
             """\
@@ -66,7 +83,9 @@ def boot(
               [MAPOPTIONS] { new_map_x=10; new_map_y=8; }
               [PLAYER0] { Name=Smoke; Team=0; Spectator=1; }
               [TEAM0]   { TeamLeader=0; AllyTeam=0; }
+              [TEAM1]   { TeamLeader=0; AllyTeam=1; }
               [ALLYTEAM0] { NumAllies=0; }
+              [ALLYTEAM1] { NumAllies=0; }
             }
             """
         )
@@ -75,23 +94,71 @@ def boot(
     env = os.environ.copy()
     env["SPRING_NATIVE_MODULE"] = str(native_plugin)
 
-    try:
-        subprocess.run(
-            [
-                str(spring_bin),
-                "--isolation",
-                "--write-dir",
-                str(write_dir),
-                str(write_dir / "script.txt"),
-            ],
-            env=env,
-            timeout=timeout_s,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        pass
+    heartbeat: Path | None = None
+    if tests:
+        spec_path = write_dir / "sbc_test_spec.json"
+        spec_path.write_text(json.dumps({"tests": tests}))
+        env["SBC_TEST_SPEC"] = str(spec_path)
+        env["SBC_TEST_RESULTS"] = str(write_dir / "sbc_test_results.json")
+        heartbeat = write_dir / "sbc_test_heartbeat"
+        env["SBC_TEST_HEARTBEAT"] = str(heartbeat)
+
+    cmd = [
+        str(spring_bin),
+        "--isolation",
+        "--write-dir",
+        str(write_dir),
+        str(write_dir / "script.txt"),
+    ]
+
+    if tests:
+        # The in-engine framework quits the engine when tests finish, so the
+        # normal path exits fast. The heartbeat watchdog kills a real hang
+        # (plugin stuck / crashed mid-test) without waiting out timeout_s.
+        _run_with_heartbeat(cmd, env, heartbeat, timeout_s)
+    else:
+        try:
+            subprocess.run(cmd, env=env, timeout=timeout_s, check=False)
+        except subprocess.TimeoutExpired:
+            pass
 
     return write_dir
+
+
+def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:
+    """Run the engine, killing it if the heartbeat goes stale or hard timeout.
+
+    The in-engine test framework quits the engine itself when tests finish, so
+    the usual exit is the process ending on its own. This only force-kills on a
+    genuine hang.
+    """
+    proc = subprocess.Popen(cmd, env=env)
+    start = time.monotonic()
+    try:
+        while True:
+            try:
+                proc.wait(timeout=1.0)
+                return  # engine exited (normal: it self-quit after tests)
+            except subprocess.TimeoutExpired:
+                pass
+
+            now = time.monotonic()
+            if now - start > hard_timeout_s:
+                break
+
+            if heartbeat.is_file():
+                age = time.time() - heartbeat.stat().st_mtime
+                if age > HEARTBEAT_STALE_S:
+                    break
+            # Before the first heartbeat, rely on the hard timeout (the game
+            # takes ~25s to load before tests run).
+    finally:
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
 
 
 def main() -> int:
