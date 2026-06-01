@@ -117,6 +117,34 @@ If `inventory` becomes problematic (e.g. platforms where life-before-`main` link
 | Model managers | one file per manager | direct construction in model root (~13 managers, low churn) |
 | View handlers (Phase 5) | one file per RmlUi document | `inventory` keyed by document id |
 
+### Slice-owned additions
+
+Feature slices should add files under the slice they belong to instead of
+growing shared "everything" files. Shared files are allowed only for stable
+infrastructure seams that do not need per-feature edits after the seam lands.
+
+Preferred pattern:
+
+- Rust implementation: `native/src/sbc/commands/<slice>/<thing>.rs`
+- Rust in-engine tests: `native/src/sbc/commands/<slice>/tests.rs` or
+  `native/src/sbc/commands/<slice>/<thing>_tests.rs`
+- Pytest smoke entry: `tools/smoke/test_<slice>_integration.py`
+- Shared pytest helper only: `tools/smoke/integration_runner.py`
+
+Avoid:
+
+- Adding every slice's integration tests to `native/src/sbc/tests/mod.rs`.
+  That module is the harness owner; it should not become a feature list.
+- Adding every in-engine test name to one `tools/smoke/test_integration.py`.
+  Each slice gets its own pytest file that calls `run_named_tests([...])`.
+- Adding later-slice managers, commands, or tests to a stable slice just because
+  wip has them in a shared file.
+
+When a slice needs one line in a parent `mod.rs`, keep it local to that slice
+directory (`commands/heightmap/mod.rs`, `commands/teams/mod.rs`, etc.). The root
+module should only change when introducing a new slice directory or a genuinely
+new shared subsystem.
+
 **Other anti-patterns to avoid:**
 
 - Central error enum with a variant per command. Use one `CommandError` with a string or `Box<dyn Error>`, or per-command structured errors.

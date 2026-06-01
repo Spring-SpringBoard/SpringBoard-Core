@@ -71,8 +71,17 @@ pub(crate) use register_command;
 /// `register_command!`-generated handlers.
 pub fn from_value<T: serde::de::DeserializeOwned>(
     class_name: &'static str,
-    value: serde_json::Value,
+    mut value: serde_json::Value,
 ) -> Result<T, CommandParseError> {
+    // Strip wire-only fields before deserializing so command structs do not
+    // model them. Empty maps become null so unit structs can deserialize.
+    if let serde_json::Value::Object(map) = &mut value {
+        map.remove("className");
+        map.remove("__cmd_id");
+        if map.is_empty() {
+            value = serde_json::Value::Null;
+        }
+    }
     serde_json::from_value(value).map_err(|source| CommandParseError {
         class: class_name.to_string(),
         source,

@@ -1,4 +1,4 @@
-use super::tests_api::{IntegrationTest, TestCtx};
+use crate::sbc::tests::tests_api::{IntegrationTest, TestCtx};
 
 const SQUARE_SIZE: f32 = 8.0;
 

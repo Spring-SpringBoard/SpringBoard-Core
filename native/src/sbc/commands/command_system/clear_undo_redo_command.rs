@@ -4,10 +4,8 @@ use super::command::Command;
 use super::context::{CommandManagerIntent, Context};
 use super::registry::register_command;
 
-// Braced (not unit) struct so it deserializes from the `{className: ...}`
-// payload — serde can't build a unit struct from a JSON map.
 #[derive(Deserialize)]
-pub struct ClearUndoRedoCommand {}
+pub struct ClearUndoRedoCommand;
 
 impl Command for ClearUndoRedoCommand {
     fn execute(&mut self, ctx: &mut Context) {

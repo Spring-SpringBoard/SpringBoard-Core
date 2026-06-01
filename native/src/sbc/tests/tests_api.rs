@@ -1,28 +1,3 @@
-//! In-engine integration test framework (dev-mode, env-gated).
-//!
-//! These tests run *inside* a live Spring boot: they mutate engine state through
-//! the real command path and verify it by querying the engine. That's the only
-//! way to prove a command actually works — pure Rust unit tests can't reach
-//! Spring.
-//!
-//! # How it runs
-//!
-//! Gated by the `SBC_TEST_SPEC` env var (a path to a JSON spec). When unset
-//! (normal runs) the framework does nothing, so the same `.so` is safe in
-//! production. When set, the framework runs once on the first `update` callin
-//! (the game is fully loaded by then) and writes results to the path in
-//! `SBC_TEST_RESULTS`.
-//!
-//! # Spec / results format
-//!
-//! Spec: `{ "tests": ["heightmap_import", ...] }` — names selecting registered
-//! tests. Results: `{ "results": [{ "name", "passed", "message" }, ...] }`.
-//!
-//! # Writing a test
-//!
-//! Register an `IntegrationTest` via `inventory::submit!`. The test gets a
-//! `&mut SBC` (full engine access) and returns `Ok(())` / `Err(reason)`.
-
 use serde::{Deserialize, Serialize};
 
 use crate::sbc::sbc::SBC;
@@ -36,14 +11,10 @@ pub struct IntegrationTest {
 
 inventory::collect!(IntegrationTest);
 
-/// Per-test context: engine access.
 pub struct TestCtx<'a> {
     pub sbc: &'a mut SBC,
 }
 
-/// Touch the heartbeat file (if `SBC_TEST_HEARTBEAT` is set). The harness
-/// watches its mtime and kills the run if it goes stale — distinguishing a
-/// hung/crashed plugin from one still doing work.
 fn beat_heartbeat() {
     if let Ok(path) = std::env::var("SBC_TEST_HEARTBEAT") {
         if !path.is_empty() {
@@ -69,7 +40,6 @@ struct TestResults {
     results: Vec<TestResult>,
 }
 
-/// Run the tests named in `SBC_TEST_SPEC` (if set), once. Returns true if it ran.
 pub fn run_if_requested(sbc: &mut SBC) -> bool {
     let spec_path = match std::env::var("SBC_TEST_SPEC") {
         Ok(p) if !p.is_empty() => p,
@@ -142,8 +112,6 @@ pub fn run_if_requested(sbc: &mut SBC) -> bool {
         Err(err) => log::error!("serialize test results: {err}"),
     }
 
-    // Tests are done — quit the engine instead of idling until the harness
-    // timeout. The harness reads the results file after the process exits.
     log::info!("[sbc-test] done; quitting engine");
     let _ = sbc.interface().system_control().quit();
 
