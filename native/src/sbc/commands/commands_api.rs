@@ -5,3 +5,5 @@
 pub use crate::sbc::commands::command_system::command_manager::CommandManager;
 pub use crate::sbc::commands::command_system::context::Context;
 pub use crate::sbc::commands::command_system::registry::parse_json_command;
+
+pub use crate::sbc::commands::heightmap::terrain_manager::TerrainManager;

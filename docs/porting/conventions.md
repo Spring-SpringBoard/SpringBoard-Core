@@ -102,6 +102,14 @@ The registry is built at startup from `inventory::iter`. Adding a command = one 
 
 If `inventory` becomes problematic (e.g. platforms where life-before-`main` link sections misbehave), the fallback is a `build.rs` that scans `commands/*.rs` and generates the registry. Same property: command files stay self-contained.
 
+**Where ported code lives in the tree:**
+
+- Per-command file under [native/src/sbc/commands/](../../native/src/sbc/commands/)`<slice>/` — owns its serde struct, its `inventory::submit!` registration, and its execute/unexecute logic.
+- Per-manager file: a per-slice `model`/manager module.
+- The command-system internals + the single public `commands_api` surface live under [native/src/sbc/commands/command_system/](../../native/src/sbc/commands/command_system/).
+- Cross-slice managers (texture undo stack, heightmap) live where the first slice that needs them puts them; later slices reuse.
+- Each slice is a directory; `mod.rs` files only wire submodules, never hold code.
+
 | Layer | Self-contained unit | Registration |
 |-------|--------------------|--------------|
 | Commands | one file per command | `inventory` keyed by class name |
@@ -142,9 +150,39 @@ If any check fails, fix it. **Don't pad the queue.** Three clean items beat ten 
 - **Imports grouped**: std → external crates → crate-local, separated by blank lines.
 - **Errors carry context.** Never bare `?` that drops meaning.
 - **Tests live next to code**: `#[cfg(test)] mod tests` at the bottom of the file.
-- **No WHAT-comments.** Only WHY-comments survive review.
 - **Public surface minimal.** `pub(crate)` over `pub` when in doubt.
 - **Short functions.** If you scroll to read it, split it.
+
+### Stepdown ordering
+
+Write each file **top-down in call order**: the public entry point first, then
+the things it calls, then their callees, with private leaf helpers last. A reader
+scrolling top-to-bottom meets each function *before* the helpers it depends on —
+the file reads like a newspaper (headline first, detail below).
+
+- In a command file: the `impl Command` block (`execute` / `unexecute` — what the
+  framework calls) goes first, then its `stamp`/private methods, then leaf helpers
+  (`brush`, `generate_*`), then free functions, then the `register_command!` line.
+- Keep one `impl` block per type — don't split a type's methods across several
+  `impl` blocks to satisfy ordering; order the methods *within* the block instead.
+- Free helper functions go below the code that calls them; a leaf used by several
+  callers goes after the last of them.
+
+### Comments
+
+Comment the **why**, not the **what**. The code already says what it does; a
+comment earns its place only by explaining something the code can't: a non-obvious
+reason, a constraint, a surprising interaction, a deliberate deviation.
+
+- **No WHAT-comments.** `// loop over the points` above a `for` loop is noise.
+- **Write WHY-comments** for: why this approach over the obvious one, why an engine
+  call is wrapped a certain way, why a value is what it is, what invariant must
+  hold. (Example: the `set_height_map_func` wrapper comment explaining the recalc.)
+- **Doc-comments (`///`, `//!`)** state a contract — what a caller must know to use
+  the item correctly — not a restatement of the body.
+- **Keep them true.** A stale comment is worse than none; update or delete it when
+  the code moves. Design narrative belongs in `docs/design/`, not in long module
+  headers that drift.
 
 ## Tests
 

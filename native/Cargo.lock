@@ -137,6 +137,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
+name = "ctrl_macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a40233e3b46b0f67b829820fcf6d51336c395582b228f1d0f1056fc71d6d762"
+
+[[package]]
 name = "derive_more"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -585,6 +591,7 @@ name = "rust_plugin"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "ctrl_macros",
  "inventory",
  "log",
  "log4rs",
