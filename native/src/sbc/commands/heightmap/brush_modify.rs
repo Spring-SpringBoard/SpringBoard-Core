@@ -64,6 +64,17 @@ impl BrushModify {
         generate: impl FnOnce(Params) -> HashMap<usize, f32>,
         apply: impl Fn(f32, f32, f32),
     ) {
+        self.run_with_step(is_undo, terrain_manager, SQUARE_SIZE, generate, apply);
+    }
+
+    pub fn run_with_step(
+        &mut self,
+        is_undo: bool,
+        terrain_manager: &TerrainManager,
+        step: usize,
+        generate: impl FnOnce(Params) -> HashMap<usize, f32>,
+        apply: impl Fn(f32, f32, f32),
+    ) {
         if self.can_execute.is_none() {
             self.can_execute = Some(terrain_manager.get_shape(&self.opts.shape_name).is_some());
         }
@@ -118,8 +129,8 @@ impl BrushModify {
             return;
         };
         let sign = if is_undo { -1.0 } else { 1.0 };
-        for x in (0..=size as usize).step_by(SQUARE_SIZE) {
-            for z in (0..=size as usize).step_by(SQUARE_SIZE) {
+        for x in (0..=size as usize).step_by(step) {
+            for z in (0..=size as usize).step_by(step) {
                 if let Some(delta) = changes.get(&(x + z * parts)) {
                     apply(
                         x as f32 + start_x as f32,
