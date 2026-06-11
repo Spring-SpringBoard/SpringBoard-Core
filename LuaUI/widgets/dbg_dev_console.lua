@@ -66,6 +66,10 @@ local color = {
 }
 
 local function SetWindowVisibility(visible)
+	if not window then
+		loadWindow()
+		ReloadAllMessages()
+	end
 	cfg.visible = visible
 	window:SetVisibility(visible)
 end
@@ -456,6 +460,10 @@ function widget:Initialize()
 	end
 	Spring.SendCommands('bind f8 ' .. COMMAND_NAME)
 	Spring.SendCommands('console 0')
+	if not window then
+		loadWindow()
+		ReloadAllMessages()
+	end
 end
 
 function widget:Shutdown()
