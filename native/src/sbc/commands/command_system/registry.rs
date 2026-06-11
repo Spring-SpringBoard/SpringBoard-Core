@@ -4,22 +4,32 @@ use std::sync::OnceLock;
 use log::debug;
 use serde::Deserialize;
 
-use super::command::Command;
+use super::command::{Command, CommandId};
+
+pub type ParsedCommand = (Box<dyn Command>, CommandId);
 
 /// Resolve a payload into a command, or `None` if no handler is registered —
 /// during the port, unhandled classes still run in Lua, so that's expected.
 pub fn parse_json_command(
     value: serde_json::Value,
-) -> Result<Option<Box<dyn Command>>, CommandParseError> {
+) -> Result<Option<ParsedCommand>, CommandParseError> {
     let class_name = serde_json::from_value::<ClassPeek>(value.clone())
         .map_err(|source| CommandParseError {
             class: "<unknown>".to_string(),
             source,
         })?
         .class_name;
+    // Native history/resource tracking is keyed by Lua's command id; direct
+    // native routes must provide the same field.
+    let cmd_id = serde_json::from_value::<CommandIdPeek>(value.clone()).map_err(|source| {
+        CommandParseError {
+            class: class_name.clone(),
+            source,
+        }
+    })?;
 
     match registry().get(class_name.as_str()).copied() {
-        Some(handler) => handler(value),
+        Some(handler) => handler(value).map(|cmd| cmd.map(|cmd| (cmd, cmd_id.cmd_id))),
         None => {
             debug!("no Rust handler for {class_name}; left to Lua");
             Ok(None)
@@ -110,6 +120,12 @@ struct ClassPeek {
     class_name: String,
 }
 
+#[derive(Deserialize)]
+struct CommandIdPeek {
+    #[serde(rename = "__cmd_id")]
+    cmd_id: CommandId,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -124,6 +140,7 @@ mod tests {
     fn class_peek_extracts_class_name() {
         let value = serde_json::json!({
             "className": "TerrainLevelCommand",
+            "__cmd_id": 1,
             "opts": { "extra": "stuff" }
         });
         let peeked: ClassPeek = serde_json::from_value(value).unwrap();
@@ -156,7 +173,7 @@ mod tests {
 
     #[test]
     fn dispatch_round_trip_resolves_handler_for_real_payload() {
-        let raw = r#"{ "className": "UndoCommand" }"#;
+        let raw = r#"{ "className": "UndoCommand", "__cmd_id": 1 }"#;
         let value: serde_json::Value = serde_json::from_str(raw).unwrap();
         let peeked: ClassPeek = serde_json::from_value(value).unwrap();
         assert_eq!(peeked.class_name, "UndoCommand");

@@ -85,6 +85,11 @@ function CommandManager:leaveMultipleCommandMode()
     end
     self.multipleCommandStack = {}
     self:undoListAdd(cmd)
+    -- Only the gadget sends merged commands to the single native manager; the
+    -- widget may replay the same command for UI state.
+    if not self.__isWidget and self.nativeCommandsOnly[cmd.className] then
+        self:invokeNativeCommand(cmd)
+    end
     if not self.__isWidget then
         self:notify(cmd, cmdIDs)
     end
@@ -97,12 +102,25 @@ function CommandManager:notify(cmd, cmdIDs)
     self:execute(WidgetCommandExecuted(display, cmdIDs), true)
 end
 
+function CommandManager:issueCommandID(cmd)
+    assert(cmd.className, "Command instance lacks className value")
+    if not cmd.__cmd_id then
+        self.idCount = self.idCount + 1
+        cmd.__cmd_id = self.idCount
+    end
+    return cmd.__cmd_id
+end
+
+function CommandManager:invokeNativeCommand(cmd)
+    self:issueCommandID(cmd)
+    local msg = Message("command", cmd)
+    Spring.InvokeNativeModule(json.encode(msg:serialize()))
+end
+
 -- Sends the command to the other state (gadget <-> widget)
 -- also returns the new command ID which can be used to track when it gets executed
 function CommandManager:_SendCommand(cmd)
-    assert(cmd.className, "Command instance lacks className value")
-    self.idCount = self.idCount + 1
-    cmd.__cmd_id = self.idCount
+    self:issueCommandID(cmd)
     local msg = Message("command", cmd)
     SB.messageManager:sendMessage(msg)
     return cmd.__cmd_id
@@ -127,7 +145,7 @@ function CommandManager:__execute(cmd, isSameContext)
     end
 
     self:_SafeCall(function()
-        if cmd._execute_unsynced and not self.__isWidget then
+        if cmd._execute_unsynced and not self.__isWidget and not self.nativeCommandsOnly[cmd.className] then
             self:_SendCommand(cmd)
         else
             -- Drive the (single, shared) native module from the gadget only.
@@ -139,8 +157,7 @@ function CommandManager:__execute(cmd, isSameContext)
             -- in the widget) would hit the one native manager twice and desync
             -- its streaming/undo state.
             if not self.__isWidget then
-                local msg = Message("command", cmd)
-                Spring.InvokeNativeModule(json.encode(msg:serialize()))
+                self:invokeNativeCommand(cmd)
             end
             if not self.nativeCommandsOnly[cmd.className] then
                 cmd:execute()
@@ -212,7 +229,7 @@ function CommandManager:undo()
             -- (from the gadget only, as in the execute path). Lua's
             -- cmd:unexecute() would be a no-op (Lua never executed it).
             if not self.__isWidget then
-                Spring.InvokeNativeModule(json.encode(Message("command", UndoCommand()):serialize()))
+                self:invokeNativeCommand(UndoCommand())
             end
         elseif not cmd._execute_unsynced or self.__isWidget then
             cmd:unexecute()
@@ -239,7 +256,7 @@ function CommandManager:redo()
             -- Rust owns this command; replay from its redo stack (gadget only,
             -- as above).
             if not self.__isWidget then
-                Spring.InvokeNativeModule(json.encode(Message("command", RedoCommand()):serialize()))
+                self:invokeNativeCommand(RedoCommand())
             end
         elseif not cmd._execute_unsynced or self.__isWidget then
             cmd:execute()

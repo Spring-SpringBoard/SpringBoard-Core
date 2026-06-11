@@ -1,6 +1,7 @@
 use log::{error, warn};
 
-use super::command::Command;
+use super::command::{Command, CommandId};
+use super::history::{HistoryEntry, HistoryEvent};
 
 /// Guards against streaming started but never stopped.
 const MAX_STREAM_SIZE: usize = 100_000;
@@ -10,7 +11,12 @@ const MAX_STREAM_SIZE: usize = 100_000;
 #[derive(Default)]
 pub struct StreamingCommands {
     streaming: bool,
-    buffer: Vec<Box<dyn Command>>,
+    buffer: Vec<HistoryEntry>,
+}
+
+pub(super) struct StoppedStream {
+    pub entry: HistoryEntry,
+    pub source_cmd_ids: Vec<CommandId>,
 }
 
 impl StreamingCommands {
@@ -26,15 +32,17 @@ impl StreamingCommands {
         self.streaming = true;
     }
 
-    pub fn push(&mut self, cmd: Box<dyn Command>) {
+    pub(super) fn push(&mut self, entry: HistoryEntry) -> Vec<HistoryEvent> {
         if self.buffer.len() < MAX_STREAM_SIZE {
-            self.buffer.push(cmd);
+            self.buffer.push(entry);
+            Vec::new()
         } else {
             warn!("stream hit cap {MAX_STREAM_SIZE}; dropping command");
+            vec![HistoryEvent::Dropped { cmd_id: entry.id }]
         }
     }
 
-    pub fn stop(&mut self) -> Option<Box<dyn Command>> {
+    pub(super) fn stop(&mut self) -> Option<StoppedStream> {
         if !self.streaming {
             error!("not streaming");
             return None;
@@ -42,7 +50,14 @@ impl StreamingCommands {
         self.streaming = false;
 
         let buffered = std::mem::take(&mut self.buffer);
-        let merger = buffered.first()?.merger();
-        Some(merger(buffered))
+        let id = buffered.first()?.id;
+        let source_cmd_ids = buffered.iter().map(|entry| entry.id).collect();
+        let mut commands: Vec<Box<dyn Command>> =
+            buffered.into_iter().map(|entry| entry.command).collect();
+        let merger = commands.first()?.merger();
+        Some(StoppedStream {
+            entry: HistoryEntry::new(id, merger(std::mem::take(&mut commands))),
+            source_cmd_ids,
+        })
     }
 }

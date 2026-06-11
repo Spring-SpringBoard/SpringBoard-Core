@@ -87,13 +87,14 @@ impl SBC {
 
     fn run_command(&mut self, data: serde_json::Value) {
         match parse_json_command(data) {
-            Ok(Some(cmd)) => {
+            Ok(Some((cmd, command_id))) => {
                 let mut ctx = Context {
                     interface: &self.interface,
                     command_manager_intents: Vec::new(),
                     terrain_manager: &mut self.terrain_manager,
+                    current_command_id: command_id,
                 };
-                self.command_manager.execute(cmd, &mut ctx);
+                let _ = self.command_manager.execute(cmd, command_id, &mut ctx);
             }
             Ok(None) => {}
             Err(err) => error!("{err}"),

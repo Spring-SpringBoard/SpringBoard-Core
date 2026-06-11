@@ -1,5 +1,12 @@
 use super::context::Context;
 
+/// Stable id for one command history entry.
+///
+/// Lua assigns `__cmd_id` before sending commands to Rust. Resource-owning
+/// systems can use this id to associate external state with the command history
+/// entry and release it when history evicts or clears that entry.
+pub type CommandId = u64;
+
 /// Folds a stream's commands into the single one that lands on the undo stack.
 pub type Merger = fn(Vec<Box<dyn Command>>) -> Box<dyn Command>;
 

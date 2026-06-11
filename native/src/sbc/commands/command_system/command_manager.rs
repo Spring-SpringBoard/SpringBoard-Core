@@ -2,9 +2,9 @@
 
 use log::warn;
 
-use super::command::Command;
+use super::command::{Command, CommandId};
 use super::context::{CommandManagerIntent, Context};
-use super::history::CommandHistory;
+use super::history::{CommandHistory, HistoryEntry, HistoryEvent};
 use super::streaming_commands::StreamingCommands;
 
 pub struct CommandManager {
@@ -20,23 +20,31 @@ impl CommandManager {
         }
     }
 
-    pub fn execute(&mut self, mut cmd: Box<dyn Command>, ctx: &mut Context) {
-        cmd.execute(ctx);
+    pub fn execute(
+        &mut self,
+        mut command: Box<dyn Command>,
+        command_id: CommandId,
+        ctx: &mut Context,
+    ) -> Vec<HistoryEvent> {
+        let mut events = Vec::new();
+        self.execute_with_current_id(command.as_mut(), command_id, ctx);
 
-        if cmd.undoable() {
+        if command.undoable() {
+            let entry = HistoryEntry::new(command_id, command);
             if self.stream.is_streaming() {
-                self.stream.push(cmd);
+                events.extend(self.stream.push(entry));
             } else {
-                self.history.push_undo(cmd);
+                events.extend(self.history.push_undo(entry));
             }
         }
 
         for intent in std::mem::take(&mut ctx.command_manager_intents) {
-            self.apply(intent, ctx);
+            events.extend(self.apply(intent, ctx));
         }
+        events
     }
 
-    fn apply(&mut self, intent: CommandManagerIntent, ctx: &mut Context) {
+    fn apply(&mut self, intent: CommandManagerIntent, ctx: &mut Context) -> Vec<HistoryEvent> {
         match intent {
             CommandManagerIntent::Undo => self.undo(ctx),
             CommandManagerIntent::Redo => self.redo(ctx),
@@ -44,32 +52,68 @@ impl CommandManager {
             CommandManagerIntent::SetMultipleCommandMode(on) => {
                 if on {
                     self.stream.start();
-                } else if let Some(cmd) = self.stream.stop() {
-                    self.history.push_undo(cmd);
+                    Vec::new()
+                } else if let Some(stopped) = self.stream.stop() {
+                    // Tell resource trackers which per-command state now
+                    // belongs to the single merged history entry.
+                    let mut events = vec![HistoryEvent::Merged {
+                        cmd_id: stopped.entry.id,
+                        source_cmd_ids: stopped.source_cmd_ids,
+                    }];
+                    events.extend(self.history.push_undo(stopped.entry));
+                    events
+                } else {
+                    Vec::new()
                 }
             }
         }
     }
 
-    fn undo(&mut self, ctx: &mut Context) {
+    fn undo(&mut self, ctx: &mut Context) -> Vec<HistoryEvent> {
         if self.stream.is_streaming() {
             warn!("ignoring undo while streaming");
-            return;
+            return Vec::new();
         }
-        if let Some(mut cmd) = self.history.pop_undo() {
-            cmd.unexecute(ctx);
-            self.history.push_redo(cmd);
+        if let Some(mut entry) = self.history.pop_undo() {
+            self.unexecute_with_current_id(entry.command.as_mut(), entry.id, ctx);
+            self.history.push_redo(entry);
         }
+        Vec::new()
     }
 
-    fn redo(&mut self, ctx: &mut Context) {
+    fn redo(&mut self, ctx: &mut Context) -> Vec<HistoryEvent> {
         if self.stream.is_streaming() {
             warn!("ignoring redo while streaming");
-            return;
+            return Vec::new();
         }
-        if let Some(mut cmd) = self.history.pop_redo() {
-            cmd.execute(ctx);
-            self.history.push_undo(cmd);
+        if let Some(mut entry) = self.history.pop_redo() {
+            self.execute_with_current_id(entry.command.as_mut(), entry.id, ctx);
+            return self.history.push_undo_from_redo(entry);
         }
+        Vec::new()
+    }
+
+    fn execute_with_current_id(
+        &mut self,
+        command: &mut dyn Command,
+        command_id: CommandId,
+        ctx: &mut Context,
+    ) {
+        let previous = ctx.current_command_id;
+        ctx.current_command_id = command_id;
+        command.execute(ctx);
+        ctx.current_command_id = previous;
+    }
+
+    fn unexecute_with_current_id(
+        &mut self,
+        command: &mut dyn Command,
+        command_id: CommandId,
+        ctx: &mut Context,
+    ) {
+        let previous = ctx.current_command_id;
+        ctx.current_command_id = command_id;
+        command.unexecute(ctx);
+        ctx.current_command_id = previous;
     }
 }
