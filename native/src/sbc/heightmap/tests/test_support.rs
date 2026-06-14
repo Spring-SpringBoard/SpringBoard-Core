@@ -8,16 +8,10 @@ pub fn register_full_brush(ctx: &mut TestCtx, name: &str) -> (usize, usize) {
     for i in 0..(sx * sz) {
         res.insert(i.to_string(), serde_json::json!(1.0));
     }
-    ctx.sbc.route(
-        &serde_json::json!({
-            "tag": "command",
-            "data": {
-                "className": "SetHeightmapBrushCommand",
-                "greyscale": { "res": res, "sizeX": sx, "sizeZ": sz, "name": name }
-            }
-        })
-        .to_string(),
-    );
+    ctx.route_command(serde_json::json!({
+        "className": "SetHeightmapBrushCommand",
+        "greyscale": { "res": res, "sizeX": sx, "sizeZ": sz, "name": name }
+    }));
     (sx, sz)
 }
 

@@ -4,11 +4,11 @@ use log::debug;
 use serde::Deserialize;
 use spring_native::prelude::*;
 
-use super::brush_modify::{BrushModify, BrushOptions, Params};
-use super::terrain_manager::TerrainManager;
-use crate::sbc::commands::command_system::command::Command;
-use crate::sbc::commands::command_system::context::Context;
-use crate::sbc::commands::command_system::registry::register_command;
+use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
+use crate::sbc::heightmap::model::terrain_manager::TerrainManager;
+use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::context::Context;
+use crate::sbc::command_system::registry::register_command;
 
 const SQUARE_SIZE: usize = 8;
 
@@ -47,7 +47,7 @@ impl Command for TerrainLevelCommand {
 impl TerrainLevelCommand {
     fn stamp(&mut self, is_undo: bool, ctx: &mut Context) {
         let interface = *ctx.interface;
-        let terrain_manager: &TerrainManager = ctx.terrain_manager;
+        let terrain_manager: &TerrainManager = ctx.model::<TerrainManager>();
         let height = self.opts.height;
         let apply_dir_id = self.opts.apply_dir_id;
         // One set_height_map_func batch so the engine recalcs the touched area

@@ -1,4 +1,9 @@
+use std::any::Any;
 use std::collections::HashMap;
+
+use crate::sbc::command_system::model::{Model, ModelFactory};
+
+inventory::submit! { ModelFactory { make: |_| Box::new(TerrainManager::new()) } }
 
 pub struct GreyscaleShape {
     pub size_x: usize,
@@ -8,6 +13,12 @@ pub struct GreyscaleShape {
 
 pub struct TerrainManager {
     pub shapes: HashMap<String, GreyscaleShape>,
+}
+
+impl Model for TerrainManager {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }
 
 impl TerrainManager {

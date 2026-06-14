@@ -1,6 +1,4 @@
-use super::test_support::{
-    ground_height, register_full_brush, seed_flat, SQUARE_SIZE,
-};
+use super::test_support::{ground_height, register_full_brush, seed_flat, SQUARE_SIZE};
 use crate::sbc::tests::tests_api::{IntegrationTest, TestCtx};
 
 fn terrain_drag_stroke(ctx: &mut TestCtx) -> Result<(), String> {
@@ -14,31 +12,21 @@ fn terrain_drag_stroke(ctx: &mut TestCtx) -> Result<(), String> {
     let before = ground_height(ctx, cx, cz, "before")?;
 
     let set_mode = |ctx: &mut TestCtx, on: bool| {
-        ctx.sbc.route(
-            &serde_json::json!({
-                "tag": "command",
-                "data": { "className": "SetMultipleCommandModeCommand", "state": on }
-            })
-            .to_string(),
+        ctx.route_command(
+            serde_json::json!({ "className": "SetMultipleCommandModeCommand", "state": on }),
         );
     };
     let stamp = |ctx: &mut TestCtx| {
-        ctx.sbc.route(
-            &serde_json::json!({
-                "tag": "command",
-                "data": {
-                    "className": "TerrainShapeModifyCommand",
-                    "opts": {
-                        "x": 256.0, "z": 256.0,
-                        "size": (sx - 1) as f32 * SQUARE_SIZE,
-                        "rotation": 0.0,
-                        "strength": 100.0,
-                        "shapeName": "drag_brush"
-                    }
-                }
-            })
-            .to_string(),
-        );
+        ctx.route_command(serde_json::json!({
+            "className": "TerrainShapeModifyCommand",
+            "opts": {
+                "x": 256.0, "z": 256.0,
+                "size": (sx - 1) as f32 * SQUARE_SIZE,
+                "rotation": 0.0,
+                "strength": 100.0,
+                "shapeName": "drag_brush"
+            }
+        }));
     };
 
     set_mode(ctx, true);
@@ -53,10 +41,7 @@ fn terrain_drag_stroke(ctx: &mut TestCtx) -> Result<(), String> {
         ));
     }
 
-    ctx.sbc.route(
-        &serde_json::json!({ "tag": "command", "data": { "className": "UndoCommand" } })
-            .to_string(),
-    );
+    ctx.route_command(serde_json::json!({ "className": "UndoCommand" }));
     let undone = ground_height(ctx, cx, cz, "after undo")?;
     if (undone - before).abs() > 1.0 {
         return Err(format!(

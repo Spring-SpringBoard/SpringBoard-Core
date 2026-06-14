@@ -1,9 +1,9 @@
 use serde::Deserialize;
 
-use crate::sbc::commands::command_system::registry::register_command;
+use crate::sbc::command_system::registry::register_command;
 
-use super::command::Command;
-use super::context::{CommandManagerIntent, Context};
+use super::super::command::Command;
+use super::super::context::{CommandManagerIntent, Context};
 
 #[derive(Deserialize)]
 pub struct RedoCommand;

@@ -1,14 +1,15 @@
+use crate::sbc::heightmap::TerrainManager;
 use std::collections::HashMap;
 
 use ctrl_macros::ok_or;
 use log::{debug, error};
 use serde::Deserialize;
 
-use crate::sbc::commands::command_system::command::Command;
-use crate::sbc::commands::command_system::context::Context;
-use crate::sbc::commands::command_system::registry::register_command;
-use crate::sbc::commands::hashmap_to_vector::hashmap_to_vector;
-use crate::sbc::commands::heightmap::terrain_manager::GreyscaleShape;
+use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::context::Context;
+use crate::sbc::command_system::registry::register_command;
+use crate::sbc::command_system::hashmap_to_vector::hashmap_to_vector;
+use crate::sbc::heightmap::model::terrain_manager::GreyscaleShape;
 
 // TODO: Load directly in Rust so we don't need to pass these large arrays
 #[derive(Deserialize, Debug)]
@@ -35,7 +36,7 @@ impl Command for SetHeightmapBrushCommand {
             return;
         });
 
-        ctx.terrain_manager.shapes.insert(
+        ctx.model::<TerrainManager>().shapes.insert(
             std::mem::take(&mut self.greyscale.name),
             GreyscaleShape {
                 size_x: self.greyscale.size_x,

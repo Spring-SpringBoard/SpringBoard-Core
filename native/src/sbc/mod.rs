@@ -1,4 +1,7 @@
-mod commands;
+mod command_system;
+pub mod commands_api;
+mod heightmap;
+
 mod hashable_float;
 mod io;
 mod log;

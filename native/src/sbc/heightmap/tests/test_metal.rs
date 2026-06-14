@@ -16,32 +16,23 @@ fn terrain_metal_brush(ctx: &mut TestCtx) -> Result<(), String> {
         return Err(format!("metal setup failed: sample starts at {before}"));
     }
 
-    ctx.sbc.route(
-        &serde_json::json!({
-            "tag": "command",
-            "data": {
-                "className": "TerrainMetalCommand",
-                "opts": {
-                    "x": click, "z": click,
-                    "size": (sx - 1) as f32 * SQUARE_SIZE,
-                    "rotation": 0.0,
-                    "shapeName": "metal_brush",
-                    "amount": 3.0
-                }
-            }
-        })
-        .to_string(),
-    );
+    ctx.route_command(serde_json::json!({
+        "className": "TerrainMetalCommand",
+        "opts": {
+            "x": click, "z": click,
+            "size": (sx - 1) as f32 * SQUARE_SIZE,
+            "rotation": 0.0,
+            "shapeName": "metal_brush",
+            "amount": 3.0
+        }
+    }));
 
     let after = metal_at(ctx, sample_x, sample_z)?;
     if (after - 3.0).abs() > 0.01 {
         return Err(format!("metal brush expected 3.0, got {after}"));
     }
 
-    ctx.sbc.route(
-        &serde_json::json!({ "tag": "command", "data": { "className": "UndoCommand" } })
-            .to_string(),
-    );
+    ctx.route_command(serde_json::json!({ "className": "UndoCommand" }));
     let undone = metal_at(ctx, sample_x, sample_z)?;
     if undone.abs() > 0.01 {
         return Err(format!("undo did not restore metal: sample={undone}"));

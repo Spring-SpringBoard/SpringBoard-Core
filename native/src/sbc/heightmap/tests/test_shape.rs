@@ -14,22 +14,16 @@ fn terrain_shape_brush(ctx: &mut TestCtx) -> Result<(), String> {
 
     let before = ground_height(ctx, cx, cz, "before")?;
 
-    ctx.sbc.route(
-        &serde_json::json!({
-            "tag": "command",
-            "data": {
-                "className": "TerrainShapeModifyCommand",
-                "opts": {
-                    "x": click, "z": click,
-                    "size": (sx - 1) as f32 * SQUARE_SIZE,
-                    "rotation": 0.0,
-                    "strength": 100.0,
-                    "shapeName": "shape_brush"
-                }
-            }
-        })
-        .to_string(),
-    );
+    ctx.route_command(serde_json::json!({
+        "className": "TerrainShapeModifyCommand",
+        "opts": {
+            "x": click, "z": click,
+            "size": (sx - 1) as f32 * SQUARE_SIZE,
+            "rotation": 0.0,
+            "strength": 100.0,
+            "shapeName": "shape_brush"
+        }
+    }));
 
     let after = ground_height(ctx, cx, cz, "after")?;
     if after <= before + 1.0 {
@@ -46,10 +40,7 @@ fn terrain_shape_brush(ctx: &mut TestCtx) -> Result<(), String> {
         ));
     }
 
-    ctx.sbc.route(
-        &serde_json::json!({ "tag": "command", "data": { "className": "UndoCommand" } })
-            .to_string(),
-    );
+    ctx.route_command(serde_json::json!({ "className": "UndoCommand" }));
     let undone = ground_height(ctx, cx, cz, "after undo")?;
     if (undone - before).abs() > 1.0 {
         return Err(format!(

@@ -1,8 +1,8 @@
 use serde::Deserialize;
 
-use super::command::Command;
-use super::context::{CommandManagerIntent, Context};
-use super::registry::register_command;
+use super::super::command::Command;
+use super::super::context::{CommandManagerIntent, Context};
+use super::super::registry::register_command;
 
 #[derive(Deserialize)]
 pub struct SetMultipleCommandModeCommand {

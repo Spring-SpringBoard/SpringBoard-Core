@@ -1,13 +1,14 @@
+use crate::sbc::heightmap::TerrainManager;
 use std::collections::HashMap;
 
 use log::debug;
 use serde::Deserialize;
 use spring_native::prelude::*;
 
-use super::brush_modify::{BrushModify, BrushOptions, Params};
-use crate::sbc::commands::command_system::command::Command;
-use crate::sbc::commands::command_system::context::Context;
-use crate::sbc::commands::command_system::registry::register_command;
+use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
+use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::context::Context;
+use crate::sbc::command_system::registry::register_command;
 
 const GRASS_STEP: usize = 8 * 4;
 
@@ -46,7 +47,7 @@ impl TerrainGrassCommand {
         let amount = self.opts.amount.max(0.0);
         self.brush().run_with_step(
             is_undo,
-            ctx.terrain_manager,
+            ctx.model::<TerrainManager>(),
             GRASS_STEP,
             Self::generate_fn(interface, amount),
             move |x, z, delta| {

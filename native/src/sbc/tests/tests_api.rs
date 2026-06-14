@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::sbc::sbc::SBC;
 
@@ -13,6 +15,21 @@ inventory::collect!(IntegrationTest);
 
 pub struct TestCtx<'a> {
     pub sbc: &'a mut SBC,
+}
+
+static NEXT_TEST_COMMAND_ID: AtomicU64 = AtomicU64::new(1_000_000);
+
+impl TestCtx<'_> {
+    /// Route a command payload the way Lua does: wrapped and carrying `__cmd_id`.
+    pub fn route_command(&mut self, mut data: Value) {
+        if let Some(obj) = data.as_object_mut() {
+            obj.entry("__cmd_id").or_insert_with(|| {
+                Value::from(NEXT_TEST_COMMAND_ID.fetch_add(1, Ordering::Relaxed))
+            });
+        }
+        self.sbc
+            .route(&serde_json::json!({ "tag": "command", "data": data }).to_string());
+    }
 }
 
 fn beat_heartbeat() {

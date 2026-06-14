@@ -15,24 +15,18 @@ fn terrain_level_brush(ctx: &mut TestCtx) -> Result<(), String> {
     let target = 123.0_f32;
     let before = ground_height(ctx, cx, cz, "before")?;
 
-    ctx.sbc.route(
-        &serde_json::json!({
-            "tag": "command",
-            "data": {
-                "className": "TerrainLevelCommand",
-                "opts": {
-                    "x": click, "z": click,
-                    "size": (sx - 1) as f32 * SQUARE_SIZE,
-                    "rotation": 0.0,
-                    "strength": 1000.0,
-                    "shapeName": "level_brush",
-                    "height": target,
-                    "applyDirID": 1
-                }
-            }
-        })
-        .to_string(),
-    );
+    ctx.route_command(serde_json::json!({
+        "className": "TerrainLevelCommand",
+        "opts": {
+            "x": click, "z": click,
+            "size": (sx - 1) as f32 * SQUARE_SIZE,
+            "rotation": 0.0,
+            "strength": 1000.0,
+            "shapeName": "level_brush",
+            "height": target,
+            "applyDirID": 1
+        }
+    }));
 
     let after = ground_height(ctx, cx, cz, "after")?;
     if !(after > before + 10.0 && after <= target + 1.0) {

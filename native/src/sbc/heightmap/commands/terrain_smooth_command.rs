@@ -5,11 +5,11 @@ use log::debug;
 use serde::Deserialize;
 use spring_native::prelude::*;
 
-use super::brush_modify::{BrushModify, BrushOptions, Params};
-use super::terrain_manager::TerrainManager;
-use crate::sbc::commands::command_system::command::Command;
-use crate::sbc::commands::command_system::context::Context;
-use crate::sbc::commands::command_system::registry::register_command;
+use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
+use crate::sbc::heightmap::model::terrain_manager::TerrainManager;
+use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::context::Context;
+use crate::sbc::command_system::registry::register_command;
 
 const SQUARE_SIZE: usize = 8;
 
@@ -46,7 +46,7 @@ impl Command for TerrainSmoothCommand {
 impl TerrainSmoothCommand {
     fn stamp(&mut self, is_undo: bool, ctx: &mut Context) {
         let interface = *ctx.interface;
-        let terrain_manager: &TerrainManager = ctx.terrain_manager;
+        let terrain_manager: &TerrainManager = ctx.model::<TerrainManager>();
         let sigma = self.opts.sigma;
         // One set_height_map_func batch so the engine recalcs the touched area
         // on return (see terrain_shape_modify_command.rs for why).

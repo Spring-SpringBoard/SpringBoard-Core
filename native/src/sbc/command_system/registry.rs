@@ -63,11 +63,11 @@ inventory::collect!(CommandRegistration);
 macro_rules! register_command {
     ($ty:ty, $class_name:literal) => {
         inventory::submit! {
-            $crate::sbc::commands::command_system::registry::CommandRegistration {
+            $crate::sbc::command_system::registry::CommandRegistration {
                 class_name: $class_name,
                 handler: |value| {
                     let cmd: $ty =
-                        $crate::sbc::commands::command_system::registry::from_value($class_name, value)?;
+                        $crate::sbc::command_system::registry::from_value($class_name, value)?;
                     Ok(Some(Box::new(cmd)))
                 },
             }

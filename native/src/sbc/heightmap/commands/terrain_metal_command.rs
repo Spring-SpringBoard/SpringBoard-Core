@@ -1,13 +1,14 @@
+use crate::sbc::heightmap::TerrainManager;
 use std::collections::HashMap;
 
 use log::debug;
 use serde::Deserialize;
 use spring_native::prelude::*;
 
-use super::brush_modify::{BrushModify, BrushOptions, Params};
-use crate::sbc::commands::command_system::command::Command;
-use crate::sbc::commands::command_system::context::Context;
-use crate::sbc::commands::command_system::registry::register_command;
+use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
+use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::context::Context;
+use crate::sbc::command_system::registry::register_command;
 
 const METAL_RESOLUTION: usize = 16;
 
@@ -48,7 +49,7 @@ impl TerrainMetalCommand {
         let amount = self.opts.amount;
         self.brush().run(
             is_undo,
-            ctx.terrain_manager,
+            ctx.model::<TerrainManager>(),
             Self::generate_fn(interface, amount),
             move |x, z, amount| {
                 let rx = (x / METAL_RESOLUTION as f32).round() as i32;

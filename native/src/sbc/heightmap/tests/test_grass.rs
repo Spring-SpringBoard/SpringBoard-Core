@@ -14,32 +14,23 @@ fn terrain_grass_brush(ctx: &mut TestCtx) -> Result<(), String> {
         return Err(format!("grass setup failed: sample starts at {before}"));
     }
 
-    ctx.sbc.route(
-        &serde_json::json!({
-            "tag": "command",
-            "data": {
-                "className": "TerrainGrassCommand",
-                "opts": {
-                    "x": click, "z": click,
-                    "size": (sx - 1) as f32 * SQUARE_SIZE,
-                    "rotation": 0.0,
-                    "shapeName": "grass_brush",
-                    "amount": 1.0
-                }
-            }
-        })
-        .to_string(),
-    );
+    ctx.route_command(serde_json::json!({
+        "className": "TerrainGrassCommand",
+        "opts": {
+            "x": click, "z": click,
+            "size": (sx - 1) as f32 * SQUARE_SIZE,
+            "rotation": 0.0,
+            "shapeName": "grass_brush",
+            "amount": 1.0
+        }
+    }));
 
     let after = grass_at(ctx, sample_x, sample_z)?;
     if after <= 0.0 {
         return Err(format!("grass brush did not add grass: sample={after}"));
     }
 
-    ctx.sbc.route(
-        &serde_json::json!({ "tag": "command", "data": { "className": "UndoCommand" } })
-            .to_string(),
-    );
+    ctx.route_command(serde_json::json!({ "className": "UndoCommand" }));
     let undone = grass_at(ctx, sample_x, sample_z)?;
     if undone > 0.0 {
         return Err(format!("undo did not remove grass: sample={undone}"));

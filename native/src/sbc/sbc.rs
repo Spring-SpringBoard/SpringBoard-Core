@@ -3,9 +3,8 @@ use serde::Deserialize;
 
 use spring_native::prelude::*;
 
-use crate::sbc::commands::commands_api::{
-    parse_json_command, CommandManager, Context, TerrainManager,
-};
+use crate::sbc::command_system::model::{Model, Models};
+use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::io::io_api::IoWorker;
 
 const MAX_UNDO_SIZE: usize = 100;
@@ -13,9 +12,7 @@ const MAX_UNDO_SIZE: usize = 100;
 pub struct SBC {
     interface: NativeInterfaceRef,
     command_manager: CommandManager,
-
-    pub terrain_manager: TerrainManager, // pub: in-engine tests read it directly
-
+    models: Models,
     io_worker: IoWorker,
     tests_ran: bool,
 }
@@ -37,7 +34,7 @@ impl NativeModule for SBC {
         SBC {
             interface,
             command_manager: CommandManager::new(MAX_UNDO_SIZE),
-            terrain_manager: TerrainManager::new(),
+            models: Models::build(interface),
             io_worker: IoWorker::new(),
             tests_ran: false,
         }
@@ -64,6 +61,12 @@ impl SBC {
         &self.interface
     }
 
+    /// The domain model of type `T`. Used by the in-engine tests to read model
+    /// state directly.
+    pub fn model<T: Model>(&mut self) -> &mut T {
+        self.models.get::<T>()
+    }
+
     /// Decode the envelope and route by tag. Public so the in-engine test
     /// framework can drive commands the same way Lua does.
     pub fn route(&mut self, msg: &str) {
@@ -88,13 +91,11 @@ impl SBC {
     fn run_command(&mut self, data: serde_json::Value) {
         match parse_json_command(data) {
             Ok(Some((cmd, command_id))) => {
-                let mut ctx = Context {
-                    interface: &self.interface,
-                    command_manager_intents: Vec::new(),
-                    terrain_manager: &mut self.terrain_manager,
-                    current_command_id: command_id,
+                let history_events = {
+                    let mut ctx = Context::new(&self.interface, command_id, &mut self.models);
+                    self.command_manager.execute(cmd, command_id, &mut ctx)
                 };
-                let _ = self.command_manager.execute(cmd, command_id, &mut ctx);
+                self.models.on_history_events(&history_events);
             }
             Ok(None) => {}
             Err(err) => error!("{err}"),

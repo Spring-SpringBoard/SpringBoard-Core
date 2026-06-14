@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use log::debug;
 use serde::Deserialize;
 
-use super::brush_modify::{BrushModify, BrushOptions, Params};
-use super::terrain_manager::TerrainManager;
-use crate::sbc::commands::command_system::command::Command;
-use crate::sbc::commands::command_system::context::Context;
-use crate::sbc::commands::command_system::registry::register_command;
+use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
+use crate::sbc::heightmap::model::terrain_manager::TerrainManager;
+use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::context::Context;
+use crate::sbc::command_system::registry::register_command;
 
 const SQUARE_SIZE: usize = 8;
 
@@ -43,7 +43,7 @@ impl Command for TerrainShapeModifyCommand {
 impl TerrainShapeModifyCommand {
     fn stamp(&mut self, is_undo: bool, ctx: &mut Context) {
         let interface = *ctx.interface;
-        let terrain_manager: &TerrainManager = ctx.terrain_manager;
+        let terrain_manager: &TerrainManager = ctx.model::<TerrainManager>();
         // Wrap the per-point writes in one set_height_map_func batch: the engine
         // recalcs the touched area on return (UpdateFaceNormals + LOS/pathing),
         // so the change becomes visible and affects simulation. Raw
