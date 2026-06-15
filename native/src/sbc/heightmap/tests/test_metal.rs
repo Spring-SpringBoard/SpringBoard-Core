@@ -1,5 +1,5 @@
 use super::test_support::{register_full_brush, SQUARE_SIZE};
-use crate::sbc::tests::tests_api::{IntegrationTest, TestCtx};
+use crate::sbc::tests::tests_api::TestCtx;
 
 const METAL_RESOLUTION: i32 = 16;
 
@@ -61,6 +61,4 @@ fn metal_at(ctx: &mut TestCtx, x: f32, z: f32) -> Result<f32, String> {
         .map_err(|e| format!("get_metal_amount: {e:?}"))
 }
 
-inventory::submit! {
-    IntegrationTest { name: "terrain_metal_brush", run: terrain_metal_brush }
-}
+crate::integration_test!("terrain_metal_brush", terrain_metal_brush);

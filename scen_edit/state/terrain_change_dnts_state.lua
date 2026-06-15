@@ -26,11 +26,20 @@ function TerrainChangeDNTSState:Apply(x, z, applyAction)
         patternTexture = self.patternTexture,
         strength = self.strength,
         colorIndex = colorIndex,
+        shadingTexture = self:GetShadingTextures(),
 
         paintMode = "dnts",
     }
     local command = TerrainChangeTextureCommand(opts)
     SB.commandManager:execute(command)
+end
+
+function TerrainChangeDNTSState:GetShadingTextures()
+    local textures = {}
+    for name, texObj in pairs(SB.model.textureManager.shadingTextures) do
+        textures[name] = texObj.texture
+    end
+    return textures
 end
 
 function TerrainChangeDNTSState:DrawWorld()

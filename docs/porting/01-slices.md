@@ -33,7 +33,7 @@ spread across the slices they belong to, not deferred as a catch-all.
 | 1 | [Terrain](#1-terrain) — shape / level / smooth / metal brushes | review (in stable; flipped to Rust-only; heightmap recalc fixed via `set_height_map_func`) |
 | 2 | [Heightmap](#2-heightmap) — load (sync) + import / export (async IO) | todo |
 | 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | todo (setters bound; undo needs gl getters) |
-| 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | blocked (texture-atlas GL) |
+| 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | review (in stable; Rust owns paint + cache + stroke close + undo/redo) |
 | 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | todo (large) |
 | 6 | [Areas](#6-areas) | todo |
 | 7 | [Teams & diplomacy](#7-teams--diplomacy) | todo |
@@ -61,15 +61,17 @@ How the command system works (states, native bridge, dispatch, undo/redo,
 intents) is described in [docs/design/command-system.md](../design/command-system.md).
 This slice delivered it.
 
-**Rust files** (under [native/src/sbc/commands/](../../native/src/sbc/commands/)):
-`commands_api.rs` (public surface) + `command_system/` (`command.rs`,
-`context.rs`, `command_manager.rs`, `registry.rs`, `ignored.rs`, and the four
-control commands). Transport (`{tag, data}` decode) lives at the `SBC` boundary
-in [sbc.rs](../../native/src/sbc/sbc.rs).
+**Rust files**: [commands_api.rs](../../native/src/sbc/commands_api.rs) (public
+surface) + [command_system/](../../native/src/sbc/command_system/) (`command.rs`,
+`context.rs`, `command_manager.rs`, `registry.rs`, `model.rs`, and a `commands/`
+subfolder with the four control commands). Transport (`{tag, data}` decode) lives
+at the `SBC` boundary in [sbc.rs](../../native/src/sbc/sbc.rs).
 
-Tree-layout conventions (slice = directory, thin `mod.rs`, etc.) are in
-[conventions.md](conventions.md#code-structure). Feature-slice managers (e.g.
-terrain's `TerrainManager`) construct through `sbc.rs`.
+Tree-layout conventions (feature = directory, thin `mod.rs`, etc.) are in
+[conventions.md](conventions.md#code-structure). `command_system` is
+domain-agnostic: feature models (e.g. terrain's `TerrainManager`) self-register
+via an `inventory` `ModelFactory` and `Context` reaches them type-erased through
+`ctx.model::<T>()` — see [model.rs](../../native/src/sbc/command_system/model.rs).
 
 **Lua files**:
 - [scen_edit/command/command.lua](../../scen_edit/command/command.lua) — base class
@@ -116,12 +118,12 @@ move) — see `SBC_PORT_MISSING_BINDINGS.md`. Metal needs no recalc.
 - [scen_edit/model/rendering/texture_undo_stack.lua](../../scen_edit/model/rendering/texture_undo_stack.lua) (also used by textures)
 
 **Commands (Lua source → Rust):**
-- [abstract_terrain_modify_command.lua](../../scen_edit/command/abstract_terrain_modify_command.lua) — shared base; its brush-stamp logic became [brush_modify.rs](../../native/src/sbc/commands/heightmap/brush_modify.rs) (composition via closures, not inheritance) + [brush_filter_generator.rs](../../native/src/sbc/commands/heightmap/brush_filter_generator.rs)
-- [terrain_shape_modify_command.lua](../../scen_edit/command/terrain_shape_modify_command.lua) → [terrain_shape_modify_command.rs](../../native/src/sbc/commands/heightmap/terrain_shape_modify_command.rs)
-- [terrain_level_command.lua](../../scen_edit/command/terrain_level_command.lua) → [terrain_level_command.rs](../../native/src/sbc/commands/heightmap/terrain_level_command.rs)
-- [terrain_smooth_command.lua](../../scen_edit/command/terrain_smooth_command.lua) → [terrain_smooth_command.rs](../../native/src/sbc/commands/heightmap/terrain_smooth_command.rs)
-- [terrain_metal_command.lua](../../scen_edit/command/terrain_metal_command.lua) → [terrain_metal_command.rs](../../native/src/sbc/commands/heightmap/terrain_metal_command.rs)
-- [set_heightmap_brush_command.lua](../../scen_edit/command/set_heightmap_brush_command.lua) → [set_heightmap_brush_command.rs](../../native/src/sbc/commands/set_heightmap_brush_command.rs) (registers the greyscale brush shape in [terrain_manager.rs](../../native/src/sbc/commands/heightmap/terrain_manager.rs); **not** flipped to Rust-only — Lua still needs the shape for its own preview)
+- [abstract_terrain_modify_command.lua](../../scen_edit/command/abstract_terrain_modify_command.lua) — shared base; its brush-stamp logic became [brush_modify.rs](../../native/src/sbc/heightmap/model/brush_modify.rs) (composition via closures, not inheritance) + [brush_filter_generator.rs](../../native/src/sbc/heightmap/model/brush_filter_generator.rs)
+- [terrain_shape_modify_command.lua](../../scen_edit/command/terrain_shape_modify_command.lua) → [terrain_shape_modify_command.rs](../../native/src/sbc/heightmap/commands/terrain_shape_modify_command.rs)
+- [terrain_level_command.lua](../../scen_edit/command/terrain_level_command.lua) → [terrain_level_command.rs](../../native/src/sbc/heightmap/commands/terrain_level_command.rs)
+- [terrain_smooth_command.lua](../../scen_edit/command/terrain_smooth_command.lua) → [terrain_smooth_command.rs](../../native/src/sbc/heightmap/commands/terrain_smooth_command.rs)
+- [terrain_metal_command.lua](../../scen_edit/command/terrain_metal_command.lua) → [terrain_metal_command.rs](../../native/src/sbc/heightmap/commands/terrain_metal_command.rs)
+- [set_heightmap_brush_command.lua](../../scen_edit/command/set_heightmap_brush_command.lua) → [set_heightmap_brush_command.rs](../../native/src/sbc/heightmap/commands/set_heightmap_brush_command.rs) (registers the greyscale brush shape in [terrain_manager.rs](../../native/src/sbc/heightmap/model/terrain_manager.rs); **not** flipped to Rust-only — Lua still needs the shape for its own preview)
 
 ---
 
@@ -183,11 +185,55 @@ the widget). Net: defer this slice until the engine structs are fleshed out.
 
 ## 4. Textures
 
-Map texturing (terrain texture, diffuse, shading, grass, DNTS). **Blocked** on
-the GL texture-atlas operations (`gl.RenderToTexture` / `ReadPixels` / `CreateTexture`
-/ shaders), which have no native binding and need a GL context — see the engine
-note, Category B. Grass/metal *export* is doable (read via bound APIs + encode in
-Rust) but the diffuse/shading atlas read/write is the real blocker.
+Map texturing (terrain texture, diffuse, shading, grass, DNTS). The GL
+binding gap is gone: the engine exposes texture creation, render-to-texture,
+readback, image save, texture blits, and shaders through native `Gfx`.
+
+**Status:** in stable for review. Rust owns the texture paint workflow:
+paint, cache, stroke close, and undo/redo. The paint/cache/stroke commands are
+`nativeCommandsOnly`. Optional shading texture creation still uses the existing
+editor path; Rust lazily mirrors newly enabled shading textures from handles
+carried by the paint command.
+
+`Gfx` render-to-texture works directly from the command path (no `DrawScreen`
+deferral needed), confirmed headless by in-engine tests:
+- `engine_gfx_render_readback` — create FBO texture, clear, then `read_pixels` back
+  while the FBO is bound.
+- `engine_gfx_blit` — fill a source FBO, blit to a destination FBO, read back.
+- `engine_gfx_shader_pass` — compile a fragment shader, draw a quad through it
+  into an FBO, read back.
+
+**Built + in-engine tested** (feature under `native/src/sbc/textures/{commands,model}`):
+- `textures/model/graphics.rs` — `create_fbo_texture` + `blit`; returns a
+  `Texture` newtype handle.
+- `textures/model/texture_model/` — `TextureModel`, a container of components:
+  `tiles` (1024² diffuse FBO tiles seeded from `get_map_square_texture`,
+  registered back with `set_map_square_texture`), `cache` (brush/pattern FBO
+  cache), `shading` (editable shading-texture FBO mirrors — `$ssmf_specular` /
+  `$ssmf_emission` / `$ssmf_sky_refl` / `$ssmf_splat_distr` / `$detail` /
+  `$ssmf_splat_normals:0..3` — bound through `SetMapShadingTexture`), `shaders`
+  (the shader cache), and `history` (the active stroke + copy-on-write
+  tile/shading undo/redo).
+- `textures/model/texture_drawing.rs` — rotated/offset texture-coordinate
+  generation and the quad render pass used by the paint shaders.
+- `textures/model/shader_cache.rs` — VFS shader loading, blend-mode
+  substitution, compile/cache, and sampler uniform binding.
+- `textures/model/draw/` — all paint modes (`paint`, `void`, `blur`, `height`,
+  `dnts`) plus the shading-texture sister pass.
+- `textures/commands/terrain_change_texture_command.rs` — lazily initializes the
+  atlas, computes the brush region, and dispatches by `paintMode`.
+- `textures/commands/terrain_change_texture_merged_command.rs` — closes one
+  stroke into one native undo group; undo/redo route through the native command
+  manager.
+- `textures/commands/cache_texture_command.rs` — `CacheTextureCommand`.
+- Optional shading textures created by the editor are picked up lazily by Rust
+  before painting the enabled channel.
+
+**Also deferred:** load / import / export commands (`LoadTextureCommand`,
+`ImportDiffuseCommand`, `LoadGrassMapCommand`, `LoadMetalMapCommand`,
+`ImportShadingImageCommand`, `ExportDiffuseCommand`,
+`ExportShadingTexturesCommand`, `ExportGrassCommand`, `ExportMetalCommand`).
+These are project save/load IO and belong with the project-load pipeline.
 
 **Model:**
 - [scen_edit/model/texture_manager.lua](../../scen_edit/model/texture_manager.lua)
@@ -197,19 +243,19 @@ Rust) but the diffuse/shading atlas read/write is the real blocker.
 - [scen_edit/model/brush_manager.lua](../../scen_edit/model/brush_manager.lua)
 
 **Commands:**
-- [terrain_change_texture_command.lua](../../scen_edit/command/terrain_change_texture_command.lua) — blocked (atlas)
-- [widget_terrain_change_texture_command.lua](../../scen_edit/command/widget_terrain_change_texture_command.lua) — blocked (atlas, unsynced)
+- [terrain_change_texture_command.lua](../../scen_edit/command/terrain_change_texture_command.lua) — Rust-owned (`nativeCommandsOnly`)
+- [widget_terrain_change_texture_command.lua](../../scen_edit/command/widget_terrain_change_texture_command.lua) — legacy fallback; dormant for Rust-owned texture strokes
 - [terrain_grass_command.lua](../../scen_edit/command/terrain_grass_command.lua)
-- [cache_texture_command.lua](../../scen_edit/command/cache_texture_command.lua)
-- [import_diffuse_command.lua](../../scen_edit/command/import_diffuse_command.lua) — blocked (atlas)
-- [import_shading_image_command.lua](../../scen_edit/command/import_shading_image_command.lua) — blocked (atlas)
-- [load_texture_command.lua](../../scen_edit/command/load_texture_command.lua) — blocked (atlas)
+- [cache_texture_command.lua](../../scen_edit/command/cache_texture_command.lua) — Rust-owned (`nativeCommandsOnly`)
+- [import_diffuse_command.lua](../../scen_edit/command/import_diffuse_command.lua) — deferred to project-load IO
+- [import_shading_image_command.lua](../../scen_edit/command/import_shading_image_command.lua) — deferred to project-load IO
+- [load_texture_command.lua](../../scen_edit/command/load_texture_command.lua) — deferred to project-load IO
 - [load_grass_map_command.lua](../../scen_edit/command/load_grass_map_command.lua)
 - [load_metal_map_command.lua](../../scen_edit/command/load_metal_map_command.lua)
-- [export_diffuse_command.lua](../../scen_edit/command/textures/export_diffuse_command.lua) — blocked (atlas read)
-- [export_shading_textures_command.lua](../../scen_edit/command/textures/export_shading_textures_command.lua) — blocked (atlas read)
-- [export_grass_command.lua](../../scen_edit/command/textures/export_grass_command.lua) — async IO, doable
-- [export_metal_command.lua](../../scen_edit/command/textures/export_metal_command.lua) — async IO, doable
+- [export_diffuse_command.lua](../../scen_edit/command/textures/export_diffuse_command.lua) — deferred to project-save IO
+- [export_shading_textures_command.lua](../../scen_edit/command/textures/export_shading_textures_command.lua) — deferred to project-save IO
+- [export_grass_command.lua](../../scen_edit/command/textures/export_grass_command.lua) — deferred to project-save IO
+- [export_metal_command.lua](../../scen_edit/command/textures/export_metal_command.lua) — deferred to project-save IO
 
 ---
 

@@ -1,7 +1,7 @@
 use super::test_support::{
     ground_height, min_normal_y_across, register_full_brush, seed_flat, SQUARE_SIZE,
 };
-use crate::sbc::tests::tests_api::{IntegrationTest, TestCtx};
+use crate::sbc::tests::tests_api::TestCtx;
 
 fn terrain_shape_brush(ctx: &mut TestCtx) -> Result<(), String> {
     let (sx, _) = register_full_brush(ctx, "shape_brush");
@@ -56,6 +56,4 @@ fn terrain_shape_brush(ctx: &mut TestCtx) -> Result<(), String> {
     Ok(())
 }
 
-inventory::submit! {
-    IntegrationTest { name: "terrain_shape_brush", run: terrain_shape_brush }
-}
+crate::integration_test!("terrain_shape_brush", terrain_shape_brush);

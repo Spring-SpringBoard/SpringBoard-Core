@@ -33,6 +33,9 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         TerrainSmoothCommand = true,
         TerrainMetalCommand = true,
         TerrainGrassCommand = true,
+        TerrainChangeTextureCommand = true,
+        TerrainChangeTextureMergedCommand = true,
+        CacheTextureCommand = true,
     }
 end
 

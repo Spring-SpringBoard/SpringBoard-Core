@@ -8,10 +8,28 @@ pub type TestFn = fn(&mut TestCtx) -> Result<(), String>;
 
 pub struct IntegrationTest {
     pub name: &'static str,
+    /// The test's slice, taken from its module path (e.g. `..::textures::..`).
+    /// Callers filter on a substring of this; see [`integration_test`].
+    pub tag: &'static str,
     pub run: TestFn,
 }
 
 inventory::collect!(IntegrationTest);
+
+/// Register an in-engine integration test, tagging it with its module path so the
+/// runner can filter by slice without anyone maintaining a list.
+#[macro_export]
+macro_rules! integration_test {
+    ($name:expr, $run:expr) => {
+        inventory::submit! {
+            $crate::sbc::tests::tests_api::IntegrationTest {
+                name: $name,
+                tag: module_path!(),
+                run: $run,
+            }
+        }
+    };
+}
 
 pub struct TestCtx<'a> {
     pub sbc: &'a mut SBC,
@@ -40,9 +58,12 @@ fn beat_heartbeat() {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 struct TestSpec {
-    tests: Vec<String>,
+    /// Optional slice filter: run tests whose tag contains any of these
+    /// substrings. Absent (or empty) runs every registered test.
+    #[serde(default)]
+    tags: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -70,51 +91,41 @@ pub fn run_if_requested(sbc: &mut SBC) -> bool {
             return true;
         }
     };
-    let spec: TestSpec = match serde_json::from_str(&spec_raw) {
-        Ok(s) => s,
-        Err(err) => {
-            log::error!("test spec parse: {err}");
-            return true;
-        }
-    };
+    let spec: TestSpec = serde_json::from_str(&spec_raw).unwrap_or_default();
+    let filters: Vec<&str> = spec
+        .tags
+        .iter()
+        .map(String::as_str)
+        .filter(|t| !t.is_empty())
+        .collect();
 
     beat_heartbeat();
 
+    let mut tests: Vec<&IntegrationTest> = inventory::iter::<IntegrationTest>
+        .into_iter()
+        .filter(|t| filters.is_empty() || filters.iter().any(|f| t.tag.contains(f)))
+        .collect();
+    tests.sort_by_key(|t| (t.tag, t.name));
+
     let mut results = Vec::new();
-    for name in &spec.tests {
+    for test in tests {
         beat_heartbeat();
-        let test = inventory::iter::<IntegrationTest>
-            .into_iter()
-            .find(|t| t.name == name);
-        let result = match test {
-            None => TestResult {
-                name: name.clone(),
-                passed: false,
-                message: "no such registered test".to_string(),
-            },
-            Some(test) => {
-                log::info!("[sbc-test] running {name}");
-                let mut ctx = TestCtx { sbc };
-                match (test.run)(&mut ctx) {
-                    Ok(()) => TestResult {
-                        name: name.clone(),
-                        passed: true,
-                        message: String::new(),
-                    },
-                    Err(msg) => TestResult {
-                        name: name.clone(),
-                        passed: false,
-                        message: msg,
-                    },
-                }
-            }
+        log::info!("[sbc-test] running {}", test.name);
+        let mut ctx = TestCtx { sbc };
+        let (passed, message) = match (test.run)(&mut ctx) {
+            Ok(()) => (true, String::new()),
+            Err(msg) => (false, msg),
         };
         log::info!(
             "[sbc-test] {} {}",
-            result.name,
-            if result.passed { "PASS" } else { "FAIL" }
+            test.name,
+            if passed { "PASS" } else { "FAIL" }
         );
-        results.push(result);
+        results.push(TestResult {
+            name: test.name.to_string(),
+            passed,
+            message,
+        });
     }
 
     let out = TestResults { results };

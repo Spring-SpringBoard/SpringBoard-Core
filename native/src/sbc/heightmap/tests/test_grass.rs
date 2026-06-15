@@ -1,5 +1,5 @@
 use super::test_support::{register_full_brush, SQUARE_SIZE};
-use crate::sbc::tests::tests_api::{IntegrationTest, TestCtx};
+use crate::sbc::tests::tests_api::TestCtx;
 
 fn terrain_grass_brush(ctx: &mut TestCtx) -> Result<(), String> {
     let (sx, _) = register_full_brush(ctx, "grass_brush");
@@ -60,6 +60,4 @@ fn grass_at(ctx: &mut TestCtx, x: f32, z: f32) -> Result<f32, String> {
         .map_err(|e| format!("get_grass: {e:?}"))
 }
 
-inventory::submit! {
-    IntegrationTest { name: "terrain_grass_brush", run: terrain_grass_brush }
-}
+crate::integration_test!("terrain_grass_brush", terrain_grass_brush);

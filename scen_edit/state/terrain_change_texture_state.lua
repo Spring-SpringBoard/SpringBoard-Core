@@ -84,6 +84,7 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
         colorIndex = colorIndex,
         exclusive = exclusive,
         value = self.value,
+        shadingTexture = self:GetShadingTextures(),
     }
     for _, fname in pairs(self.editorView.matFieldNames) do
         opts[fname] = self[fname]
@@ -91,6 +92,14 @@ function TerrainChangeTextureState:Apply(x, z, applyAction)
 
     local command = TerrainChangeTextureCommand(opts)
     SB.commandManager:execute(command)
+end
+
+function TerrainChangeTextureState:GetShadingTextures()
+    local textures = {}
+    for name, texObj in pairs(SB.model.textureManager.shadingTextures) do
+        textures[name] = texObj.texture
+    end
+    return textures
 end
 
 function TerrainChangeTextureState:GetApplyParams(x, z, button)

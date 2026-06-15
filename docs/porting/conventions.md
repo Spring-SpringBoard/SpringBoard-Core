@@ -125,18 +125,20 @@ infrastructure seams that do not need per-feature edits after the seam lands.
 
 Preferred pattern:
 
-- Rust implementation: `native/src/sbc/commands/<slice>/<thing>.rs`
-- Rust in-engine tests: `native/src/sbc/commands/<slice>/tests.rs` or
-  `native/src/sbc/commands/<slice>/<thing>_tests.rs`
-- Pytest smoke entry: `tools/smoke/test_<slice>_integration.py`
-- Shared pytest helper only: `tools/smoke/integration_runner.py`
+- Rust implementation: `native/src/sbc/<feature>/<thing>.rs`
+- Rust in-engine tests: `native/src/sbc/<feature>/tests/`, each test registered
+  with `crate::integration_test!("name", func)` (tagged by module path).
+- Pytest smoke: the single `tools/smoke/test_integration.py` runs every
+  registered test in one boot — no per-slice file, no name list. Filter a slice
+  with `SBC_TEST_TAGS=<substring>` (e.g. `textures`, `heightmap`).
 
 Avoid:
 
 - Adding every slice's integration tests to `native/src/sbc/tests/mod.rs`.
   That module is the harness owner; it should not become a feature list.
-- Adding every in-engine test name to one `tools/smoke/test_integration.py`.
-  Each slice gets its own pytest file that calls `run_named_tests([...])`.
+- Enumerating in-engine test names — or their output artifacts — in Python. The
+  Rust `integration_test!` registry is the single source of truth; Python only
+  asserts over whatever results come back.
 - Adding later-slice managers, commands, or tests to a stable slice just because
   wip has them in a shared file.
 

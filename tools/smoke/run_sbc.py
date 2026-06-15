@@ -36,14 +36,16 @@ def boot(
     engine_dir: Path = DEFAULT_ENGINE_DIR,
     timeout_s: int = DEFAULT_TIMEOUT_S,
     sbc_root: Path = SBC_ROOT,
-    tests: list[str] | None = None,
+    run_tests: bool = False,
+    tags: list[str] | None = None,
 ) -> Path:
     """Boot SBC for `timeout_s` seconds, return the write dir (containing infolog.txt).
 
-    If `tests` is set, the in-engine test framework runs those tests (via the
-    `SBC_TEST_SPEC` env var); the plugin self-quits when done, and a heartbeat
-    watchdog kills the run if it goes stale (a real hang) without waiting out
-    the hard timeout.
+    If `run_tests` is set, the in-engine test framework runs every registered
+    test (via the `SBC_TEST_SPEC` env var), or only those whose tag contains any
+    substring in `tags`; the plugin self-quits when done, and a heartbeat
+    watchdog kills the run if it goes stale (a real hang) without waiting out the
+    hard timeout.
 
     Raises RuntimeError if the engine binary or native plugin is missing.
     Does NOT raise on engine exit code — timeout-kill is the normal path.
@@ -95,9 +97,9 @@ def boot(
     env["SPRING_NATIVE_MODULE"] = str(native_plugin)
 
     heartbeat: Path | None = None
-    if tests:
+    if run_tests:
         spec_path = write_dir / "sbc_test_spec.json"
-        spec_path.write_text(json.dumps({"tests": tests}))
+        spec_path.write_text(json.dumps({"tags": tags} if tags else {}))
         env["SBC_TEST_SPEC"] = str(spec_path)
         env["SBC_TEST_RESULTS"] = str(write_dir / "sbc_test_results.json")
         heartbeat = write_dir / "sbc_test_heartbeat"
@@ -111,7 +113,7 @@ def boot(
         str(write_dir / "script.txt"),
     ]
 
-    if tests:
+    if run_tests:
         # The in-engine framework quits the engine when tests finish, so the
         # normal path exits fast. The heartbeat watchdog kills a real hang
         # (plugin stuck / crashed mid-test) without waiting out timeout_s.
