@@ -91,7 +91,9 @@ fn terrain_paint_diffuse_stays_in_radius(ctx: &mut TestCtx) -> Result<(), String
     for (&(x, y), before) in edges.iter().zip(&edge_before) {
         let after = read_pixel(ctx, &tile, x, y).ok_or("read edge after")?;
         if !approx_eq(after, *before) {
-            return Err(format!("paint bled to edge ({x},{y}): {after:?} vs {before:?}"));
+            return Err(format!(
+                "paint bled to edge ({x},{y}): {after:?} vs {before:?}"
+            ));
         }
     }
     Ok(())
@@ -146,8 +148,9 @@ fn terrain_paint_live_assets_color(ctx: &mut TestCtx) -> Result<(), String> {
     let interface = *ctx.sbc.interface();
     let pattern_name = "springboard/assets/core/brush_patterns/terrain/circle1.png";
     let brush_name = "springboard/assets/core/brush_textures/snow_diffuse.png";
-    let brush_copy = graphics::copy_texture(&interface, &graphics::Texture::from(brush_name.to_string()))
-        .ok_or("copy live brush texture into native FBO failed")?;
+    let brush_copy =
+        graphics::copy_texture(&interface, &graphics::Texture::from(brush_name.to_string()))
+            .ok_or("copy live brush texture into native FBO failed")?;
     let brush_center = read_pixel(ctx, &brush_copy, 512, 512).ok_or("read brush copy center")?;
     let _ = interface.gfx().delete_texture(&brush_copy);
     ctx.route_command(serde_json::json!({
@@ -204,13 +207,21 @@ fn terrain_paint_get_map_textures_preserves_tile(ctx: &mut TestCtx) -> Result<()
         .ok_or("no tile (0,0)")?;
     fill(ctx, &tile_name, [0.0, 0.0, 1.0, 1.0]);
     let baseline = read_pixel(ctx, &tile_name, 512, 512).ok_or("read baseline")?;
-    let tiles = back_up_region(ctx, 462.0 / 1024.0, 462.0 / 1024.0, 562.0 / 1024.0, 562.0 / 1024.0);
+    let tiles = back_up_region(
+        ctx,
+        462.0 / 1024.0,
+        462.0 / 1024.0,
+        562.0 / 1024.0,
+        562.0 / 1024.0,
+    );
     if tiles.len() != 1 {
         return Err(format!("expected one region tile, got {}", tiles.len()));
     }
     let after = read_pixel(ctx, &tile_name, 512, 512).ok_or("read after get_map_textures")?;
     if !approx_eq(after, baseline) {
-        return Err(format!("get_map_textures changed tile pixel: {after:?} vs {baseline:?}"));
+        return Err(format!(
+            "get_map_textures changed tile pixel: {after:?} vs {baseline:?}"
+        ));
     }
     Ok(())
 }
@@ -224,7 +235,10 @@ crate::integration_test!(
     "terrain_paint_diffuse_transparent_noop",
     terrain_paint_diffuse_transparent_noop
 );
-crate::integration_test!("terrain_paint_live_assets_color", terrain_paint_live_assets_color);
+crate::integration_test!(
+    "terrain_paint_live_assets_color",
+    terrain_paint_live_assets_color
+);
 crate::integration_test!(
     "terrain_paint_get_map_textures_preserves_tile",
     terrain_paint_get_map_textures_preserves_tile

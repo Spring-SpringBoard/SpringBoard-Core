@@ -1,9 +1,9 @@
 //! `CacheTextureCommand`: a cached name resolves to a different (FBO copy) name,
 //! so the draw passes sample the cached copy instead of whatever's bound at unit 0.
 
-use crate::sbc::textures::TextureModel;
 use super::test_support::make_filled_texture;
 use crate::sbc::tests::tests_api::TestCtx;
+use crate::sbc::textures::TextureModel;
 
 fn cache_texture_roundtrip(ctx: &mut TestCtx) -> Result<(), String> {
     let synthetic = make_filled_texture(ctx, [1.0, 0.5, 0.25, 1.0]).ok_or("synthetic")?;

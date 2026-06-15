@@ -4,11 +4,11 @@ use log::debug;
 use serde::Deserialize;
 use spring_native::prelude::*;
 
-use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
-use crate::sbc::heightmap::model::terrain_manager::TerrainManager;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
+use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
+use crate::sbc::heightmap::model::terrain_manager::TerrainManager;
 
 const SQUARE_SIZE: usize = 8;
 

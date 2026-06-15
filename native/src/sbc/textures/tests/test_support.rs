@@ -5,9 +5,9 @@ use std::cell::Cell;
 
 use spring_native::prelude::constants;
 
+use crate::sbc::tests::tests_api::TestCtx;
 use crate::sbc::textures::model::graphics::{self, Texture};
 use crate::sbc::textures::model::texture_model::{RegionTile, TextureModel};
-use crate::sbc::tests::tests_api::TestCtx;
 
 /// Generate the editable tiles + shading textures (idempotent).
 pub(crate) fn generate(ctx: &mut TestCtx) {

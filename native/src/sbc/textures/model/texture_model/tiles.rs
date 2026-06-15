@@ -60,7 +60,8 @@ impl TileStore {
         self.tiles_z = num_squares_z - 1;
 
         let vfs = self.interface.vfs();
-        let Some(scratch) = graphics::create_fbo_texture(&self.interface, texture_size, texture_size)
+        let Some(scratch) =
+            graphics::create_fbo_texture(&self.interface, texture_size, texture_size)
         else {
             log::error!("texture_model: failed to create scratch texture");
             return false;
@@ -76,7 +77,9 @@ impl TileStore {
                 match vfs.get_map_square_texture(i, j, 0, &scratch, 0) {
                     Ok(true) => {}
                     other => {
-                        log::error!("texture_model: get_map_square_texture({i}, {j}) failed: {other:?}");
+                        log::error!(
+                            "texture_model: get_map_square_texture({i}, {j}) failed: {other:?}"
+                        );
                         let _ = self.interface.gfx().delete_texture(&tile);
                         continue;
                     }
@@ -85,7 +88,9 @@ impl TileStore {
                 match vfs.set_map_square_texture(i, j, &tile) {
                     Ok(true) => {}
                     other => {
-                        log::error!("texture_model: set_map_square_texture({i}, {j}) failed: {other:?}");
+                        log::error!(
+                            "texture_model: set_map_square_texture({i}, {j}) failed: {other:?}"
+                        );
                         let _ = self.interface.gfx().delete_texture(&tile);
                         continue;
                     }
@@ -103,7 +108,9 @@ impl TileStore {
     }
 
     pub(crate) fn dirty(&self, i: i32, j: i32) -> bool {
-        self.surface(i, j).map(|s| s.borrow().dirty).unwrap_or(false)
+        self.surface(i, j)
+            .map(|s| s.borrow().dirty)
+            .unwrap_or(false)
     }
 
     pub(crate) fn mark_dirty(&mut self, i: i32, j: i32) {
@@ -112,7 +119,13 @@ impl TileStore {
         }
     }
 
-    pub(super) fn region_bounds(&self, start_x: f32, start_z: f32, end_x: f32, end_z: f32) -> (i32, i32, i32, i32) {
+    pub(super) fn region_bounds(
+        &self,
+        start_x: f32,
+        start_z: f32,
+        end_x: f32,
+        end_z: f32,
+    ) -> (i32, i32, i32, i32) {
         let i1 = start_x.floor().max(0.0) as i32;
         let i2 = (end_x.floor() as i32).min(self.tiles_x);
         let j1 = start_z.floor().max(0.0) as i32;

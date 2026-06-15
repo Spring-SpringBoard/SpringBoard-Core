@@ -196,7 +196,10 @@ impl TextureUndoStack {
         let mut insert_at = None;
         let mut i = 0;
         while i < stack.len() {
-            if stack[i].cmd_id.is_some_and(|id| source_cmd_ids.contains(&id)) {
+            if stack[i]
+                .cmd_id
+                .is_some_and(|id| source_cmd_ids.contains(&id))
+            {
                 let stroke = stack.remove(i);
                 insert_at.get_or_insert(i);
                 merged.extend(stroke.entries);

@@ -24,7 +24,9 @@ pub fn paint_filter(
 
     let size = end_x - start_x;
     let t_coord = generate_texture_coords(start_x, start_z, size, size, &opts.tex_coord_opts());
-    let tiles = tm.history.back_up_region(&tm.tiles, start_x, start_z, end_x, end_z);
+    let tiles = tm
+        .history
+        .back_up_region(&tm.tiles, start_x, start_z, end_x, end_z);
     let mut jobs = Vec::new();
     for tile in tiles {
         let (m_coord, v_coord) = generate_map_coords(tile.offset_x, tile.offset_z, size, size);

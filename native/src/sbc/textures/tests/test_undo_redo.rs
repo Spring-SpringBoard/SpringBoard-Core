@@ -4,13 +4,12 @@
 //! Tests share one engine boot, so each starts from a known slate
 //! (`clear_undo_redo` or a `push_stack` to close leftovers) and asserts deltas.
 
-use crate::sbc::textures::TextureModel;
 use super::test_support::{
-    back_up_region, generate,
-    approx_eq, artifact_dir, buffers_differ, fill, fill_stroke, make_filled_texture,
-    read_first_pixel, read_pixel, read_texture_rgba, save_texture_png,
+    approx_eq, artifact_dir, back_up_region, buffers_differ, fill, fill_stroke, generate,
+    make_filled_texture, read_first_pixel, read_pixel, read_texture_rgba, save_texture_png,
 };
 use crate::sbc::tests::tests_api::TestCtx;
+use crate::sbc::textures::TextureModel;
 
 fn route(ctx: &mut TestCtx, data: serde_json::Value) {
     ctx.route_command(data);
@@ -59,7 +58,8 @@ fn texture_undo_redo_ladder(ctx: &mut TestCtx) -> Result<(), String> {
     let tile = ctx
         .sbc
         .model::<TextureModel>()
-        .tiles.texture(0, 0)
+        .tiles
+        .texture(0, 0)
         .ok_or("no tile (0,0)")?;
 
     fill(ctx, &tile, [0.0, 0.0, 1.0, 1.0]);
@@ -88,7 +88,9 @@ fn texture_undo_redo_ladder(ctx: &mut TestCtx) -> Result<(), String> {
             return Err(format!("{label}: tile {got:?}, expected {want:?}"));
         }
     }
-    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 0 || ctx.sbc.model::<TextureModel>().history.redo_depth() != 3 {
+    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 0
+        || ctx.sbc.model::<TextureModel>().history.redo_depth() != 3
+    {
         return Err(format!(
             "after full undo: undo={} redo={}, expected 0/3",
             ctx.sbc.model::<TextureModel>().history.undo_depth(),
@@ -103,7 +105,9 @@ fn texture_undo_redo_ladder(ctx: &mut TestCtx) -> Result<(), String> {
             return Err(format!("{label}: tile {got:?}, expected {want:?}"));
         }
     }
-    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 3 || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0 {
+    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 3
+        || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0
+    {
         return Err(format!(
             "after full redo: undo={} redo={}, expected 3/0",
             ctx.sbc.model::<TextureModel>().history.undo_depth(),
@@ -121,7 +125,8 @@ fn texture_redo_fork(ctx: &mut TestCtx) -> Result<(), String> {
     let tile = ctx
         .sbc
         .model::<TextureModel>()
-        .tiles.texture(0, 0)
+        .tiles
+        .texture(0, 0)
         .ok_or("no tile (0,0)")?;
 
     fill(ctx, &tile, [0.0, 0.0, 1.0, 1.0]);
@@ -161,7 +166,8 @@ fn texture_clear_undo_redo(ctx: &mut TestCtx) -> Result<(), String> {
     let tile = ctx
         .sbc
         .model::<TextureModel>()
-        .tiles.texture(0, 0)
+        .tiles
+        .texture(0, 0)
         .ok_or("no tile (0,0)")?;
 
     fill(ctx, &tile, [0.0, 0.0, 1.0, 1.0]);
@@ -175,7 +181,9 @@ fn texture_clear_undo_redo(ctx: &mut TestCtx) -> Result<(), String> {
     let frozen = read_first_pixel(ctx, &tile).ok_or("read before clear")?;
 
     ctx.sbc.model::<TextureModel>().history.clear();
-    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 0 || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0 {
+    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 0
+        || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0
+    {
         return Err(format!(
             "clear left state: undo={} redo={}",
             ctx.sbc.model::<TextureModel>().history.undo_depth(),
@@ -201,7 +209,8 @@ fn texture_history_clear_event(ctx: &mut TestCtx) -> Result<(), String> {
     let tile = ctx
         .sbc
         .model::<TextureModel>()
-        .tiles.texture(0, 0)
+        .tiles
+        .texture(0, 0)
         .ok_or("no tile (0,0)")?;
     let brush = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("brush")?;
     let pattern = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("pattern")?;
@@ -242,7 +251,9 @@ fn texture_history_clear_event(ctx: &mut TestCtx) -> Result<(), String> {
         serde_json::json!({ "className": "ClearUndoRedoCommand" }),
     );
 
-    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 0 || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0 {
+    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 0
+        || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0
+    {
         return Err(format!(
             "history clear event left texture state: undo={} redo={}",
             ctx.sbc.model::<TextureModel>().history.undo_depth(),
@@ -259,7 +270,8 @@ fn texture_command_stroke_undo_redo(ctx: &mut TestCtx) -> Result<(), String> {
     let tile = ctx
         .sbc
         .model::<TextureModel>()
-        .tiles.texture(0, 0)
+        .tiles
+        .texture(0, 0)
         .ok_or("no tile (0,0)")?;
     let brush = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("brush")?;
     let pattern = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("pattern")?;
@@ -322,7 +334,9 @@ fn texture_command_stroke_undo_redo(ctx: &mut TestCtx) -> Result<(), String> {
     }
 
     route(ctx, serde_json::json!({ "className": "UndoCommand" }));
-    if ctx.sbc.model::<TextureModel>().history.undo_depth() != undo0 || ctx.sbc.model::<TextureModel>().history.redo_depth() != 1 {
+    if ctx.sbc.model::<TextureModel>().history.undo_depth() != undo0
+        || ctx.sbc.model::<TextureModel>().history.redo_depth() != 1
+    {
         return Err(format!(
             "after undo: undo={} (want {undo0}) redo={} (want 1)",
             ctx.sbc.model::<TextureModel>().history.undo_depth(),
@@ -367,7 +381,8 @@ fn texture_command_multi_stroke_redo(ctx: &mut TestCtx) -> Result<(), String> {
     let tile = ctx
         .sbc
         .model::<TextureModel>()
-        .tiles.texture(0, 0)
+        .tiles
+        .texture(0, 0)
         .ok_or("no tile (0,0)")?;
     let brush = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("brush")?;
     let pattern = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("pattern")?;
@@ -443,7 +458,9 @@ fn texture_command_multi_stroke_redo(ctx: &mut TestCtx) -> Result<(), String> {
         }
     }
 
-    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 3 || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0 {
+    if ctx.sbc.model::<TextureModel>().history.undo_depth() != 3
+        || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0
+    {
         return Err(format!(
             "after redo ladder: undo={} redo={}, expected 3/0",
             ctx.sbc.model::<TextureModel>().history.undo_depth(),
@@ -462,7 +479,8 @@ fn tile_undo_pixel_roundtrip(ctx: &mut TestCtx) -> Result<(), String> {
     let tile_name = ctx
         .sbc
         .model::<TextureModel>()
-        .tiles.texture(0, 0)
+        .tiles
+        .texture(0, 0)
         .ok_or("no tile (0,0)")?;
     let pattern = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("pattern")?;
 
@@ -520,6 +538,12 @@ crate::integration_test!("texture_undo_redo_ladder", texture_undo_redo_ladder);
 crate::integration_test!("texture_redo_fork", texture_redo_fork);
 crate::integration_test!("texture_clear_undo_redo", texture_clear_undo_redo);
 crate::integration_test!("texture_history_clear_event", texture_history_clear_event);
-crate::integration_test!("texture_command_stroke_undo_redo", texture_command_stroke_undo_redo);
-crate::integration_test!("texture_command_multi_stroke_redo", texture_command_multi_stroke_redo);
+crate::integration_test!(
+    "texture_command_stroke_undo_redo",
+    texture_command_stroke_undo_redo
+);
+crate::integration_test!(
+    "texture_command_multi_stroke_redo",
+    texture_command_multi_stroke_redo
+);
 crate::integration_test!("tile_undo_pixel_roundtrip", tile_undo_pixel_roundtrip);

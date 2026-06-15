@@ -10,7 +10,12 @@ use super::test_support::{buffers_differ, generate, make_filled_texture, read_te
 /// `$ssmf_splat_distr`.
 fn terrain_paint_dnts(ctx: &mut TestCtx) -> Result<(), String> {
     generate(ctx);
-    let Some(splat) = ctx.sbc.model::<TextureModel>().shading.texture("splat_distr") else {
+    let Some(splat) = ctx
+        .sbc
+        .model::<TextureModel>()
+        .shading
+        .texture("splat_distr")
+    else {
         log::info!("terrain_paint_dnts: skipped, no splat_distr shading texture");
         return Ok(());
     };

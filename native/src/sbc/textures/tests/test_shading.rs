@@ -1,13 +1,12 @@
 //! Shading texture paint and undo behavior.
 
-use crate::sbc::textures::model::graphics::Texture;
-use crate::sbc::textures::TextureModel;
 use super::test_support::{
-    generate,
-    artifact_dir, bind_engine_shading_texture, buffers_differ, make_filled_texture, read_pixel_rgba,
-    read_texture_rgba, save_texture_png,
+    artifact_dir, bind_engine_shading_texture, buffers_differ, generate, make_filled_texture,
+    read_pixel_rgba, read_texture_rgba, save_texture_png,
 };
 use crate::sbc::tests::tests_api::TestCtx;
+use crate::sbc::textures::model::graphics::Texture;
+use crate::sbc::textures::TextureModel;
 
 fn route(ctx: &mut TestCtx, data: serde_json::Value) {
     ctx.route_command(data);
@@ -170,7 +169,13 @@ fn shading_mirror_paint_undo(ctx: &mut TestCtx) -> Result<(), String> {
 
     ctx.sbc.model::<TextureModel>().history.push_stack(None);
     ctx.sbc.model::<TextureModel>().history.pop_stack(None);
-    if ctx.sbc.model::<TextureModel>().shading.texture("specular").is_none() {
+    if ctx
+        .sbc
+        .model::<TextureModel>()
+        .shading
+        .texture("specular")
+        .is_none()
+    {
         return Err("specular tex lost after paint+undo".to_string());
     }
     Ok(())

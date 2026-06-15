@@ -95,7 +95,10 @@ impl TextureHistory {
     }
 
     pub(crate) fn on_history_events(&mut self, events: &[HistoryEvent]) {
-        if events.iter().any(|e| matches!(e, HistoryEvent::Cleared { .. })) {
+        if events
+            .iter()
+            .any(|e| matches!(e, HistoryEvent::Cleared { .. }))
+        {
             self.active.discard();
         }
         self.undo.on_history_events(events);

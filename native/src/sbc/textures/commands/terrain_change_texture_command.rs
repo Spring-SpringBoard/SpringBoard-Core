@@ -185,7 +185,9 @@ impl TerrainChangeTextureCommand {
                     if k == "diffuse" {
                         paint.brush_diffuse = Some(Texture::from(s.to_string()));
                     } else {
-                        paint.brush_shading.push((k.clone(), Texture::from(s.to_string())));
+                        paint
+                            .brush_shading
+                            .push((k.clone(), Texture::from(s.to_string())));
                     }
                 }
             }
@@ -193,7 +195,9 @@ impl TerrainChangeTextureCommand {
         if let Some(obj) = o.shading_texture.as_object() {
             for (k, v) in obj {
                 if let Some(s) = v.as_str() {
-                    paint.shading_textures.push((k.clone(), Texture::from(s.to_string())));
+                    paint
+                        .shading_textures
+                        .push((k.clone(), Texture::from(s.to_string())));
                 }
             }
         }

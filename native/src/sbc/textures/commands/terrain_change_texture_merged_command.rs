@@ -13,7 +13,9 @@ pub struct TerrainChangeTextureMergedCommand;
 impl Command for TerrainChangeTextureMergedCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let id = ctx.current_command_id;
-        ctx.model::<TextureModel>().history.close_or_redo_stroke(Some(id));
+        ctx.model::<TextureModel>()
+            .history
+            .close_or_redo_stroke(Some(id));
     }
 
     fn unexecute(&mut self, ctx: &mut Context) {

@@ -7,7 +7,9 @@ use crate::sbc::textures::model::texture_drawing::{
 use crate::sbc::textures::model::texture_model::TextureModel;
 
 use super::options::{PaintOptions, Region};
-use super::shared::{blend_mode_expr, set_diffuse_uniforms, set_region_uniforms, SHADER_PATH_DIFFUSE};
+use super::shared::{
+    blend_mode_expr, set_diffuse_uniforms, set_region_uniforms, SHADER_PATH_DIFFUSE,
+};
 
 pub fn paint_diffuse(
     interface: &NativeInterfaceRef,
@@ -22,7 +24,8 @@ pub fn paint_diffuse(
         return;
     };
     let Some(shader) =
-        tm.shaders.get_or_compile(interface, SHADER_PATH_DIFFUSE, blend_mode_expr(opts.mode))
+        tm.shaders
+            .get_or_compile(interface, SHADER_PATH_DIFFUSE, blend_mode_expr(opts.mode))
     else {
         return;
     };
@@ -32,7 +35,13 @@ pub fn paint_diffuse(
     let size = region.size;
     let t_coord = generate_texture_coords(region.x, region.z, size, size, &opts.tex_coord_opts());
 
-    let tiles = tm.history.back_up_region(&tm.tiles, region.x, region.z, region.end_x(), region.end_z());
+    let tiles = tm.history.back_up_region(
+        &tm.tiles,
+        region.x,
+        region.z,
+        region.end_x(),
+        region.end_z(),
+    );
     let mut jobs = Vec::new();
     for tile in tiles {
         let (m_coord, v_coord) = generate_map_coords(tile.offset_x, tile.offset_z, size, size);

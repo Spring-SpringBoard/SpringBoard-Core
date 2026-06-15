@@ -1,11 +1,15 @@
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::textures::model::graphics::{self, Texture};
-use crate::sbc::textures::model::texture_drawing::{apply_texture, generate_map_coords, generate_texture_coords};
+use crate::sbc::textures::model::texture_drawing::{
+    apply_texture, generate_map_coords, generate_texture_coords,
+};
 use crate::sbc::textures::model::texture_model::TextureModel;
 
 use super::options::{PaintOptions, Region};
-use super::shared::{blend_mode_expr, map_size, set_diffuse_uniforms, set_region_uniforms, SHADER_PATH_DIFFUSE};
+use super::shared::{
+    blend_mode_expr, map_size, set_diffuse_uniforms, set_region_uniforms, SHADER_PATH_DIFFUSE,
+};
 
 /// Paint the enabled shading textures (specular / emission / … ) under the
 /// brush. These cover the whole map, so the pass works in world-space.
@@ -16,7 +20,9 @@ pub fn paint_shading_textures(
     opts: &PaintOptions,
 ) {
     let (x, z, size) = (region.x, region.z, region.size);
-    let Some(shader) = tm.shaders.get_or_compile(interface, SHADER_PATH_DIFFUSE, blend_mode_expr(opts.mode))
+    let Some(shader) =
+        tm.shaders
+            .get_or_compile(interface, SHADER_PATH_DIFFUSE, blend_mode_expr(opts.mode))
     else {
         return;
     };

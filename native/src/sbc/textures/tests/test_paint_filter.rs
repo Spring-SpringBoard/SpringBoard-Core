@@ -44,7 +44,9 @@ fn terrain_paint_filter(ctx: &mut TestCtx) -> Result<(), String> {
         && (after.1 - before.1).abs() < 0.05
         && (after.2 - before.2).abs() < 0.05
     {
-        return Err(format!("outline filter left pixel unchanged: {after:?} vs {before:?}"));
+        return Err(format!(
+            "outline filter left pixel unchanged: {after:?} vs {before:?}"
+        ));
     }
     Ok(())
 }

@@ -21,7 +21,11 @@ impl ActiveDrawing {
 
     /// Back `surface` up once per stroke (no-op if already backed up).
     pub(super) fn set_active(&mut self, surface: &Surface) {
-        if self.entries.iter().any(|e| Rc::ptr_eq(&e.original, surface)) {
+        if self
+            .entries
+            .iter()
+            .any(|e| Rc::ptr_eq(&e.original, surface))
+        {
             return;
         }
         let (src, dirty) = {

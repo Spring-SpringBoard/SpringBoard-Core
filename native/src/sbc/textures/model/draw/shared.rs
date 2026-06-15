@@ -54,7 +54,11 @@ pub(super) fn set_diffuse_uniforms(
         let _ = gfx.uniform(u.diffuse_color, c, 4);
     }
     if u.pattern_rotation >= 0 {
-        let _ = gfx.uniform(u.pattern_rotation, [opts.pattern_rotation, 0.0, 0.0, 0.0], 1);
+        let _ = gfx.uniform(
+            u.pattern_rotation,
+            [opts.pattern_rotation, 0.0, 0.0, 0.0],
+            1,
+        );
     }
 }
 

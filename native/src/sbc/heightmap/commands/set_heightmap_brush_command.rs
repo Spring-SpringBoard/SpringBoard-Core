@@ -7,8 +7,8 @@ use serde::Deserialize;
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
-use crate::sbc::command_system::registry::register_command;
 use crate::sbc::command_system::hashmap_to_vector::hashmap_to_vector;
+use crate::sbc::command_system::registry::register_command;
 use crate::sbc::heightmap::model::terrain_manager::GreyscaleShape;
 
 // TODO: Load directly in Rust so we don't need to pass these large arrays

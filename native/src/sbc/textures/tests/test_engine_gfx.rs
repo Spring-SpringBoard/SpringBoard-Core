@@ -7,8 +7,8 @@ use std::cell::Cell;
 use spring_native::prelude::{constants, sys};
 
 use super::test_support::read_first_pixel;
-use crate::sbc::textures::model::graphics;
 use crate::sbc::tests::tests_api::TestCtx;
+use crate::sbc::textures::model::graphics;
 
 fn engine_gfx_render_readback(ctx: &mut TestCtx) -> Result<(), String> {
     let gfx = ctx.sbc.interface().gfx();
