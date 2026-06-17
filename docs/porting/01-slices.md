@@ -30,15 +30,15 @@ spread across the slices they belong to, not deferred as a catch-all.
 | # | Slice | Status |
 |--:|-------|--------|
 | 0 | [Command infrastructure](#0-command-infrastructure) — trait + dispatch + undo/redo + compound + bridge + widget-notify | done (stable) |
-| 1 | [Terrain](#1-terrain) — shape / level / smooth / metal brushes | review (in stable; flipped to Rust-only; heightmap recalc fixed via `set_height_map_func`) |
-| 2 | [Heightmap](#2-heightmap) — load (sync) + import / export (async IO) | todo |
-| 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | todo (setters bound; undo needs gl getters) |
+| 1 | [Terrain](#1-terrain) — shape / level / smooth / metal brushes | done (stable; flipped to Rust-only; heightmap recalc fixed via `set_height_map_func`) |
+| 2 | [Heightmap](#2-heightmap) — load (sync) + import / export (async IO) | review (in stable; first `IoJob` types + command IO seam; dispatch parallel) |
+| 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | wip (not in stable) |
 | 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | review (in stable; Rust owns paint + cache + stroke close + undo/redo) |
-| 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | todo (large) |
-| 6 | [Areas](#6-areas) | todo |
-| 7 | [Teams & diplomacy](#7-teams--diplomacy) | todo |
-| 8 | [Project lifecycle](#8-project-lifecycle) — save / load / export / sync / start / stop + scenario-info | todo |
-| 9 | [Triggers + Variables](#9-triggers--variables) — depends on areas, teams | todo (last) |
+| 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | wip (not in stable) |
+| 6 | [Areas](#6-areas) | wip (not in stable) |
+| 7 | [Teams & diplomacy](#7-teams--diplomacy) | wip (not in stable) |
+| 8 | [Project lifecycle](#8-project-lifecycle) — save / load / export / sync / start / stop + scenario-info | wip — core (not in stable) |
+| 9 | [Triggers + Variables](#9-triggers--variables) — depends on areas, teams | wip (not in stable) |
 
 Notes from review:
 - **Map settings** (sun/lighting/atmosphere/water/map-rendering) are general map
@@ -80,23 +80,10 @@ via an `inventory` `ModelFactory` and `Context` reaches them type-erased through
 
 The bridge sends every command to Rust via `Spring.InvokeNativeModule(json.encode(msg:serialize()))`. Lua execution **also** runs (parallel) unless the class name appears in `nativeCommandsOnly`. Slice 0 leaves that allowlist empty — feature slices populate it as they land.
 
-**Still open — required for full 1:1 once Rust is the *only* executor of undo/redo:**
-
-These exist on the Lua side and are needed once Rust owns the undo stack. They
-are **not** yet ported. Slice 1 did not need them: flipping a command via
-`nativeCommandsOnly` only suppresses Lua's `cmd:execute()`
-([command_manager.lua](../../scen_edit/command/command_manager.lua) line ~129) —
-the `undoListAdd` / `notify` path (line ~133) is **not** gated, so during the
-parallel period Lua still owns undo/redo bookkeeping and the widget notify. These
-land with the slice that first moves the undo stack itself to Rust.
-
-- `__cmd_id` allocation on every executed command (Rust counterpart to Lua's `idCount`).
-- Widget notify after `execute` / `undo` / `redo` / `clear_*` / `undo_list_add` (when it pops oldest) — Lua dispatches `WidgetCommandExecuted` / `WidgetCommandUndo` / `WidgetCommandRedo` / `WidgetCommandClearUndoStack` / `WidgetCommandClearRedoStack` / `WidgetCommandRemoveFirstUndo` to the widget. Rust needs the equivalent via `send_lua_uimsg` (a `lua_bridge` module — exists in wip, not yet in stable), matching `scen_edit/message/message_manager.lua`'s prefix-framed wire format.
-- `display()` method on commands (Lua returns `self.className`; `CompoundCommand` returns the first sub-command's display). Required for the `display` field of `WidgetCommandExecuted`.
-
-**Out of scope for slice 0** (handled by their feature slices):
-- [merge_command.lua](../../scen_edit/command/merge_command.lua) — depends on `SetWaterParams` / `SetAtmosphere` / `SetSunParameters` inner commands; lands with slice 3 (map settings).
-- [resend_command.lua](../../scen_edit/command/resend_command.lua) — depends on s11n libs; lands with slice 8 (project lifecycle).
+During the parallel period Lua still owns undo/redo bookkeeping + widget notify
+(`nativeCommandsOnly` only suppresses Lua's `cmd:execute()`). Moving the undo
+stack itself to Rust — `__cmd_id`, widget-notify via `lua_bridge`, command
+`display()` — lands with the first slice that needs Rust-owned undo.
 
 ---
 
@@ -104,9 +91,9 @@ land with the slice that first moves the undo stack itself to Rust.
 
 Brush-based heightmap and metal-map editing. Engine-side via `Spring.SetHeightMap` / `Spring.SetMetalAmount` / `Spring.AddHeightMap`, all bound natively.
 
-**Status:** in stable, awaiting review — four brush commands + brush-settings,
-flipped to Rust-only. Also lands shared infra: the IO-worker shell (no job types
-yet), the in-engine test harness, and the Lua `poll_io` driver.
+**Status:** done (stable) — four brush commands + brush-settings, flipped to
+Rust-only. Also landed shared infra: the IO-worker shell, the in-engine test
+harness, and the Lua `poll_io` driver.
 
 The three heightmap brushes wrap their writes in `TerrainControl::set_height_map_func`
 so the engine recalcs (without it, heights change in data but the terrain doesn't
@@ -129,29 +116,20 @@ move) — see `SBC_PORT_MISSING_BINDINGS.md`. Metal needs no recalc.
 
 ## 2. Heightmap
 
-Whole-map heightmap load + image import/export. **Not GL-blocked** — see
-`spring-bar/rust/crates/spring-native/SBC_PORT_MISSING_BINDINGS.md`. Load uses
-bound `set_height_map`; import/export do image decode/encode in Rust (the `image`
-crate), replacing what the spring-launcher used to do over IPC.
-
-**Two parts:**
-- **Load (synchronous):** `LoadMapCommand` is a `Spring.SetHeightMap` loop over a
-  raw float array that arrives in the command payload. No file IO, no background
-  thread. Port directly.
-- **Import / export (async IO):** decode/encode an image file. File IO + image
-  work runs on a background worker thread (must not touch the engine); the engine
-  thread applies/reads heights. The IO-worker shell + the `widget:Update` poll
-  already exist (landed with slice 1 as common infra) — this slice just adds the
-  first concrete `IoJob`/`IoOutcome` types (and the `image` crate dep). See
-  [docs/design/async-io.md](../design/async-io.md).
+Whole-map load + 16-bit-greyscale image import/export, all Rust-only. Load reads
+the `.data` file (LE `f32`) by **path** — Lua passes the path, not the bytes, so
+the heightmap never crosses the bridge. Import/export decode/encode on the
+background IO worker (the first concrete `IoJob`/`IoOutcome` types, via the
+`image` crate), replacing the spring-launcher round-trip; the engine thread
+applies/reads heights. See [docs/design/async-io.md](../design/async-io.md).
 
 **Model:**
 - [scen_edit/model/heightmap.lua](../../scen_edit/model/heightmap.lua) (shared with slice 1)
 
-**Commands:**
-- [load_map_command.lua](../../scen_edit/command/load_map_command.lua) — synchronous
-- [import_heightmap_command.lua](../../scen_edit/command/import_heightmap_command.lua) — async (image decode in Rust; was launcher `ImportSBHeightmap`)
-- [export_heightmap_command.lua](../../scen_edit/command/textures/export_heightmap_command.lua) — async (read heights via `get_ground_height`, encode image in Rust; was launcher `ConvertSBHeightmap`)
+**Commands** (all → Rust-only):
+- [load_map_command.lua](../../scen_edit/command/load_map_command.lua) — passes the heightmap file path; Rust reads the LE-`f32` `.data` and applies. (Driven by project load — [load_project_command_widget.lua](../../scen_edit/command/project/load_project_command_widget.lua) now passes the path.)
+- [import_heightmap_command.lua](../../scen_edit/command/import_heightmap_command.lua) — image decode in Rust; was launcher `ImportSBHeightmap`
+- [export_heightmap_command.lua](../../scen_edit/command/textures/export_heightmap_command.lua) — read live heights via `get_ground_height`, encode 16-bit PNG; was launcher `ConvertSBHeightmap`
 
 ---
 
@@ -161,16 +139,11 @@ General map rendering config: sun lighting, atmosphere, water, map-rendering
 params. These are **map-wide config**, distinct from scenario *info* (project
 metadata, which is in slice 8). Should land early.
 
-**Status / blocker:** mostly engine-blocked. The setters are bound but their
-param structs (`AtmosphereParams`, `SunLightingParams`, `WaterParams`,
-`MapRenderingParams`) are `_unused: u8` stubs in the generated bindings — calling
-them carries no data (no-ops) until the engine defines the struct fields + wires
-the apply. See the engine note, Category A. The one exception that ports today is
-`set_sun_parameters_command.lua` (`Spring.SetSunDirection` → bound
-`set_sun_direction(Float3, intensity)`). Undo for any of these additionally needs
-the `gl.*` getters (also unbound). These commands are `_execute_unsynced`, so the
-bridge would also need to route them to native (currently they go cross-state to
-the widget). Net: defer this slice until the engine structs are fleshed out.
+**Status:** implemented in wip, not yet in stable — all setters with partial-opts,
+undo snapshots via the `Gfx` getters. These are `_execute_unsynced`: they reach
+the single native module from the widget side (where `Gfx` is valid), so no bridge
+change is needed. `merge_command.lua` (coalesces successive edits into one undo
+step) lands here.
 
 **Commands:**
 - [set_sun_lighting_command.lua](../../scen_edit/command/set_sun_lighting_command.lua)
@@ -185,51 +158,16 @@ the widget). Net: defer this slice until the engine structs are fleshed out.
 
 ## 4. Textures
 
-Map texturing (terrain texture, diffuse, shading, grass, DNTS). The GL
-binding gap is gone: the engine exposes texture creation, render-to-texture,
-readback, image save, texture blits, and shaders through native `Gfx`.
+Map texturing (terrain texture, diffuse, shading, grass, DNTS), via native `Gfx`
+(texture creation, render-to-texture, readback, image save, blits, shaders).
 
-**Status:** in stable for review. Rust owns the texture paint workflow:
-paint, cache, stroke close, and undo/redo. The paint/cache/stroke commands are
-`nativeCommandsOnly`. Optional shading texture creation still uses the existing
-editor path; Rust lazily mirrors newly enabled shading textures from handles
-carried by the paint command.
+**Status:** in stable for review. Rust owns the paint workflow — paint, cache,
+stroke close, undo/redo (`nativeCommandsOnly`); `Gfx` render-to-texture runs
+directly from the command path (no `DrawScreen` deferral). Optional shading
+textures created by the editor are mirrored lazily before painting. Feature lives
+under `native/src/sbc/textures/{commands,model}`.
 
-`Gfx` render-to-texture works directly from the command path (no `DrawScreen`
-deferral needed), confirmed headless by in-engine tests:
-- `engine_gfx_render_readback` — create FBO texture, clear, then `read_pixels` back
-  while the FBO is bound.
-- `engine_gfx_blit` — fill a source FBO, blit to a destination FBO, read back.
-- `engine_gfx_shader_pass` — compile a fragment shader, draw a quad through it
-  into an FBO, read back.
-
-**Built + in-engine tested** (feature under `native/src/sbc/textures/{commands,model}`):
-- `textures/model/graphics.rs` — `create_fbo_texture` + `blit`; returns a
-  `Texture` newtype handle.
-- `textures/model/texture_model/` — `TextureModel`, a container of components:
-  `tiles` (1024² diffuse FBO tiles seeded from `get_map_square_texture`,
-  registered back with `set_map_square_texture`), `cache` (brush/pattern FBO
-  cache), `shading` (editable shading-texture FBO mirrors — `$ssmf_specular` /
-  `$ssmf_emission` / `$ssmf_sky_refl` / `$ssmf_splat_distr` / `$detail` /
-  `$ssmf_splat_normals:0..3` — bound through `SetMapShadingTexture`), `shaders`
-  (the shader cache), and `history` (the active stroke + copy-on-write
-  tile/shading undo/redo).
-- `textures/model/texture_drawing.rs` — rotated/offset texture-coordinate
-  generation and the quad render pass used by the paint shaders.
-- `textures/model/shader_cache.rs` — VFS shader loading, blend-mode
-  substitution, compile/cache, and sampler uniform binding.
-- `textures/model/draw/` — all paint modes (`paint`, `void`, `blur`, `height`,
-  `dnts`) plus the shading-texture sister pass.
-- `textures/commands/terrain_change_texture_command.rs` — lazily initializes the
-  atlas, computes the brush region, and dispatches by `paintMode`.
-- `textures/commands/terrain_change_texture_merged_command.rs` — closes one
-  stroke into one native undo group; undo/redo route through the native command
-  manager.
-- `textures/commands/cache_texture_command.rs` — `CacheTextureCommand`.
-- Optional shading textures created by the editor are picked up lazily by Rust
-  before painting the enabled channel.
-
-**Also deferred:** load / import / export commands (`LoadTextureCommand`,
+**Deferred:** load / import / export commands (`LoadTextureCommand`,
 `ImportDiffuseCommand`, `LoadGrassMapCommand`, `LoadMetalMapCommand`,
 `ImportShadingImageCommand`, `ExportDiffuseCommand`,
 `ExportShadingTexturesCommand`, `ExportGrassCommand`, `ExportMetalCommand`).

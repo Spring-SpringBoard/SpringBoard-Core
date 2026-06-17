@@ -4,3 +4,4 @@ pub mod terrain_manager;
 // Shared within the heightmap feature only.
 pub(crate) mod brush_filter_generator;
 pub(crate) mod brush_modify;
+pub(crate) mod heightmap_io;

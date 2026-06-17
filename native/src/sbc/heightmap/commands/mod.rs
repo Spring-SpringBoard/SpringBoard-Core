@@ -1,3 +1,7 @@
+mod export_heightmap_command;
+mod import_heightmap_command;
+mod load_map_command;
+mod save_map_command;
 mod set_heightmap_brush_command;
 mod terrain_grass_command;
 mod terrain_level_command;

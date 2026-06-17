@@ -46,9 +46,7 @@ impl NativeModule for SBC {
     }
 
     fn update(&mut self) -> Result<(), Error> {
-        for outcome in self.io_worker.drain() {
-            outcome.apply(self);
-        }
+        self.drain_io();
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
         }
@@ -59,6 +57,14 @@ impl NativeModule for SBC {
 impl SBC {
     pub fn interface(&self) -> &NativeInterfaceRef {
         &self.interface
+    }
+
+    /// Apply any finished background-IO outcomes on the engine thread. Called
+    /// each tick; also driven by the in-engine tests while they block the tick.
+    pub(crate) fn drain_io(&mut self) {
+        for outcome in self.io_worker.drain() {
+            outcome.apply(self);
+        }
     }
 
     /// The domain model of type `T`. Used by the in-engine tests to read model
@@ -91,10 +97,14 @@ impl SBC {
     fn run_command(&mut self, data: serde_json::Value) {
         match parse_json_command(data) {
             Ok(Some((cmd, command_id))) => {
-                let history_events = {
+                let (history_events, io_jobs) = {
                     let mut ctx = Context::new(&self.interface, command_id, &mut self.models);
-                    self.command_manager.execute(cmd, command_id, &mut ctx)
+                    let events = self.command_manager.execute(cmd, command_id, &mut ctx);
+                    (events, std::mem::take(&mut ctx.io_jobs))
                 };
+                for job in io_jobs {
+                    self.io_worker.submit(job);
+                }
                 self.models.on_history_events(&history_events);
             }
             Ok(None) => {}

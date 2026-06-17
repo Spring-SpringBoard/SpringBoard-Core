@@ -92,7 +92,9 @@ function ImportAction:ImportHeightmap(path)
                                 end
                                 Log.Notice("Importing heightmap: " .. path .. " ...")
                                 local importCommand = ImportHeightmapCommand(path, minHeight, maxHeight)
-                                SB.commandManager:execute(importCommand, true)
+                                -- Gadget dispatch (not widget): the native command reads the
+                                -- image and applies the heightmap synced-side.
+                                SB.commandManager:execute(importCommand)
                                 window:Dispose()
                             end
                         },

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant};
 
 use crate::sbc::sbc::SBC;
 
@@ -47,6 +48,35 @@ impl TestCtx<'_> {
         }
         self.sbc
             .route(&serde_json::json!({ "tag": "command", "data": data }).to_string());
+    }
+
+    /// Block until `path` exists or `timeout` elapses, pumping background IO.
+    pub fn wait_for_file(&mut self, path: &std::path::Path, timeout: Duration) -> bool {
+        self.wait_for_io(timeout, |_| path.is_file())
+    }
+
+    /// Block until `done` observes the wanted state or `timeout` elapses,
+    /// draining background-IO outcomes each poll (the synced tick is blocked
+    /// while a test runs, so the test pumps IO itself).
+    pub fn wait_for_io(
+        &mut self,
+        timeout: Duration,
+        mut done: impl FnMut(&mut SBC) -> bool,
+    ) -> bool {
+        let deadline = Instant::now() + timeout;
+        loop {
+            self.sbc.drain_io();
+            if done(self.sbc) {
+                return true;
+            }
+            if Instant::now() >= deadline {
+                return false;
+            }
+            // Keep the heartbeat fresh while a test blocks the engine tick, so
+            // the external harness doesn't mistake a working test for a hang.
+            beat_heartbeat();
+            std::thread::sleep(Duration::from_millis(20));
+        }
     }
 }
 

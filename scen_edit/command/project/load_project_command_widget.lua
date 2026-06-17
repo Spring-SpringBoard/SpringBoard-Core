@@ -15,12 +15,16 @@ function LoadProjectCommandWidget:execute()
 end
 
 function LoadProjectCommandWidget:_LoadSynced()
-    local cmds = {}
-
+    -- Heightmap: native (Rust) reads the .data file by path and applies it
+    -- (dispatched on its own so it reaches the native handler, not buried in the
+    -- bulk compound below).
     local file = Path.Join(SB.project.path, Project.HEIGHTMAP_FILE)
     if VFS.FileExists(file, VFS.RAW) then
-        table.insert(cmds, LoadMapCommand(VFS.LoadFile(file, VFS.RAW)))
+        SB.commandManager:execute(LoadMapCommand(nil, file))
     end
+
+    -- The rest stay Lua: raw byte blobs kept off the native bridge (noNative).
+    local cmds = {}
 
     file = Path.Join(SB.project.path, Project.MODEL_FILE)
     if VFS.FileExists(file, VFS.RAW) then

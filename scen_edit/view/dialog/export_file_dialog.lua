@@ -43,7 +43,8 @@ end
 
 local function IsHeightmapExport(fileType)
     return fileType == ExportAction.EXPORT_MAP_TEXTURES or
-           fileType == ExportAction.EXPORT_SPRING_ARCHIVE
+           fileType == ExportAction.EXPORT_SPRING_ARCHIVE or
+           fileType == ExportAction.EXPORT_HEIGHTMAP
 end
 
 function ExportFileDialog:OnFieldChange(name, value)

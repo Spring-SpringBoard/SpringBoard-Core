@@ -33,6 +33,13 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         TerrainSmoothCommand = true,
         TerrainMetalCommand = true,
         TerrainGrassCommand = true,
+        -- Heightmap IO (slice 2): Rust-only. Lua reads the project heightmap
+        -- file unsynced and passes its path; native reads the file and applies.
+        -- Import/export also drop the redundant spring-launcher round-trip.
+        LoadMapCommand = true,
+        SaveMapCommand = true,
+        ImportHeightmapCommand = true,
+        ExportHeightmapCommand = true,
         TerrainChangeTextureCommand = true,
         TerrainChangeTextureMergedCommand = true,
         CacheTextureCommand = true,

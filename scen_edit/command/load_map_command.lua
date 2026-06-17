@@ -1,8 +1,12 @@
 LoadMapCommand = Command:extends{}
 LoadMapCommand.className = "LoadMapCommand"
 
-function LoadMapCommand:init(heightmap)
+-- Native-only (see nativeCommandsOnly): the Rust module reads the .data file at
+-- `path` itself. The Lua execute() below is kept as the original reference/
+-- fallback (it does not run while the command is native-only).
+function LoadMapCommand:init(heightmap, path)
     self.heightmap = heightmap
+    self.path = path
 end
 
 function LoadMapCommand:execute()

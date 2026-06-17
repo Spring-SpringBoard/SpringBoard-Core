@@ -15,11 +15,13 @@ ExportAction:Register({
 
 ExportAction.EXPORT_SPRING_ARCHIVE = "Spring archive"
 ExportAction.EXPORT_MAP_TEXTURES = "Map textures"
+ExportAction.EXPORT_HEIGHTMAP = "Heightmap (16-bit PNG)"
 ExportAction.EXPORT_MAP_INFO = "Map info"
 ExportAction.EXPORT_S11N = "s11n object format"
 local fileTypes = {
     ExportAction.EXPORT_SPRING_ARCHIVE,
     ExportAction.EXPORT_MAP_TEXTURES,
+    ExportAction.EXPORT_HEIGHTMAP,
     ExportAction.EXPORT_MAP_INFO,
     ExportAction.EXPORT_S11N
 }
@@ -93,6 +95,27 @@ function ExportAction:execute()
                         SB.ActionProgress(progressID, 1.0, "Exporting maps textures: Finished")
                     end)
                 end)
+                return true
+            elseif fileType == ExportAction.EXPORT_HEIGHTMAP then
+                if isDir then
+                    return false, "Please select a file"
+                end
+
+                -- The image crate infers the format from the extension; default
+                -- to .png when none is given. (Path.GetExt returns the whole name
+                -- for extensionless paths, so test the filename for a dot.)
+                if not string.find(Path.ExtractFileName(path), "%.") then
+                    path = path .. ".png"
+                end
+
+                Log.Notice("Exporting heightmap to " .. path .. " ...")
+                -- Native (Rust) command: dispatch to the gadget (not widget) so
+                -- the native module runs it. It reads the live heightmap and
+                -- writes the 16-bit PNG directly — no launcher, no saved project.
+                -- min/max come from the dialog's "Heightmap extremes" so the
+                -- range matches what you enter on import.
+                SB.commandManager:execute(ExportHeightmapCommand(path, heightmapExtremes))
+                Log.Notice("Export complete.")
                 return true
             elseif fileType == ExportAction.EXPORT_MAP_INFO then
                 if isDir then

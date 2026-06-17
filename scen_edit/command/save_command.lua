@@ -12,6 +12,8 @@ local spGetGroundHeight = Spring.GetGroundHeight
 local spGetGrass = Spring.GetGrass
 local spGetMetalAmount = Spring.GetMetalAmount
 
+-- Original Lua heightmap writer. Heightmap save now goes through the native
+-- SaveMapCommand (below); kept here as reference.
 local function SaveHeightMap(path)
     Array.SaveFunc(path, function(arrayWriter)
         for x = 0, gameMapSizeX, gameSquareSize do
@@ -88,11 +90,8 @@ function SaveCommand:execute()
     --     Log.Notice(("[%.4fs] Saved modinfo"):format(elapsed))
     -- end)
 
-    Time.MeasureTime(function()
-        SaveHeightMap(Path.Join(projectDir, Project.HEIGHTMAP_FILE))
-    end, function(elapsed)
-        Log.Notice(("[%.4fs] Saved heightmap"):format(elapsed))
-    end)
+    -- Native (Rust): the module reads the live heightmap and writes the .data.
+    SB.commandManager:execute(SaveMapCommand(Path.Join(projectDir, Project.HEIGHTMAP_FILE)))
 
     Time.MeasureTime(function()
         SaveMetalMap(Path.Join(projectDir, Project.METAL_FILE))

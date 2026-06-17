@@ -322,17 +322,55 @@ function decode_scanWhitespace(s,startPos)
 	return startPos
 end
 
---- Encodes a string to be JSON-compatible.
--- This just involves back-quoting inverted commas, back-quotes and newlines, I think ;-)
--- @param s The string to return as a JSON encoded (i.e. backquoted string)
--- @return The string appropriately escaped.
+--- Encodes a Lua (byte) string into a valid JSON string body.
+-- `"`, `\` and control chars are escaped; valid UTF-8 is passed through so text
+-- round-trips; any byte that is not part of a valid UTF-8 sequence (i.e. binary
+-- data) is escaped as \u00XX so the output is always valid JSON.
+local jsonShortEscapes = {
+	[0x22] = '\\"', [0x5C] = '\\\\',
+	[0x08] = '\\b', [0x09] = '\\t', [0x0A] = '\\n', [0x0C] = '\\f', [0x0D] = '\\r',
+}
+-- Expected continuation bytes for a UTF-8 lead byte (0 = not a valid lead).
+local function utf8SeqLen(b)
+	if b >= 0xF0 and b <= 0xF4 then return 4 end
+	if b >= 0xE0 and b <= 0xEF then return 3 end
+	if b >= 0xC2 and b <= 0xDF then return 2 end
+	return 0
+end
 function encodeString(s)
-	s = string.gsub(s,'\\','\\\\')
-	s = string.gsub(s,'"','\\"')
-	s = string.gsub(s,"'","\\'")
-	s = string.gsub(s,'\n','\\n')
-	s = string.gsub(s,'\t','\\t')
-	return s 
+	local parts = {}
+	local i, n = 1, #s
+	while i <= n do
+		local b = string.byte(s, i)
+		if jsonShortEscapes[b] then
+			parts[#parts + 1] = jsonShortEscapes[b]
+			i = i + 1
+		elseif b < 0x20 then
+			parts[#parts + 1] = string.format('\\u%04x', b)
+			i = i + 1
+		elseif b < 0x80 then
+			parts[#parts + 1] = string.char(b)
+			i = i + 1
+		else
+			local seqLen = utf8SeqLen(b)
+			local valid = seqLen > 0 and i + seqLen - 1 <= n
+			for k = 1, (valid and seqLen - 1 or 0) do
+				local cont = string.byte(s, i + k)
+				if cont < 0x80 or cont > 0xBF then
+					valid = false
+					break
+				end
+			end
+			if valid then
+				parts[#parts + 1] = string.sub(s, i, i + seqLen - 1)
+				i = i + seqLen
+			else
+				parts[#parts + 1] = string.format('\\u%04x', b)
+				i = i + 1
+			end
+		end
+	end
+	return table.concat(parts)
 end
 
 -- Determines whether the given Lua type is an array or a table / dictionary.

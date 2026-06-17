@@ -17,3 +17,4 @@ anyhow = "1.0.102"
 inventory = "0.3.24"
 thiserror = "2.0.18"
 ctrl_macros = "0.1.0"
+image = { version = "0.25", default-features = false, features = ["png", "bmp", "jpeg", "tga"] }

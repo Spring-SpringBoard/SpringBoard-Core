@@ -9,6 +9,11 @@ function ImportHeightmapCommand:init(heightmapImage, minHeight, maxHeight)
     self.maxHeight = maxHeight
 end
 
+-- Native restores the pre-import heightmap; defining this marks the command
+-- undoable so the manager routes undo to native.
+function ImportHeightmapCommand:unexecute()
+end
+
 function ImportHeightmapCommand:execute()
     if not VFS.FileExists(self.heightmapImagePath, VFS.RAW) then
         Log.Error("Missing heightmap file: " .. tostring(self.heightmapImagePath))
