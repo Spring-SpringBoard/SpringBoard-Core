@@ -1,0 +1,15 @@
+[GAME]
+{
+  GameType=SpringBoard Core $VERSION;
+  MapName=sb_initial_blank_10x8;
+  MapSeed=1;
+  IsHost=1;
+  MyPlayerName=Manual;
+  NumPlayers=1;
+  [MAPOPTIONS] { new_map_x=10; new_map_y=8; }
+  [PLAYER0] { Name=Manual; Team=0; Spectator=1; }
+  [TEAM0]   { TeamLeader=0; AllyTeam=0; }
+  [TEAM1]   { TeamLeader=0; AllyTeam=1; }
+  [ALLYTEAM0] { NumAllies=0; }
+  [ALLYTEAM1] { NumAllies=0; }
+}

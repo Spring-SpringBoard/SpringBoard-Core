@@ -9,19 +9,19 @@ description: How the Lua → Rust port is carried out — process, structure, qu
 
 The work happens in **two side-by-side directories**, both checkouts of this repo:
 
-- **wip** — `/home/gajop/projects/spring-projects/SBC.sdd` (this dir, branch `rust`). Claude works here. Permanent dirty tree, fat and growing. **Claude never commits here, ever.** Loses no work because nothing gets trimmed away.
-- **stable** — `/home/gajop/worktrees/SBC.sdd/SBC-rust-stable.sdd` (git worktree, branch `SBC-rust-stable.sdd`). User reviews and tests here. Only the slimmed-down, review-ready slice exists here. All commits happen here. User pushes from here.
+- **wip** — `/home/gajop/projects/spring-projects/SBC.sdd` (this dir, branch `rust-wip`). Claude works here. Permanent dirty tree, fat and growing. **Claude never commits here, ever.** Loses no work because nothing gets trimmed away.
+- **stable** — `/home/gajop/worktrees/SBC.sdd/SBC-rust-stable.sdd` (git worktree, branch `rust-stable`). User reviews and tests here. Only the slimmed-down, review-ready slice exists here. All commits happen here. User pushes from here.
 
 Both share the same `.git`. Sync runs two directions:
 
 - **wip → stable**: `cp`, one file at a time. The normal forward flow — a finished slice is copied into stable and trimmed there.
-- **stable → wip**: `git rebase`. Review-time edits (rename, reorder, fix) are committed in stable, and wip rebases `rust` onto `SBC-rust-stable.sdd` to absorb them. Never `cp` backwards — the rebase is what carries reviewed edits home, so they survive the next forward `cp`.
+- **stable → wip**: `git rebase`. Review-time edits (rename, reorder, fix) are committed in stable, and wip rebases `rust-wip` onto `rust-stable` to absorb them. Never `cp` backwards — the rebase is what carries reviewed edits home, so they survive the next forward `cp`.
 
 ### The loop
 
 For each review item:
 
-1. **Build & test in wip** — full fat tree. `cargo check`, `cargo test`, and the integration tests (`uv run pytest` in `tools/smoke/`).
+1. **Build & test in wip** — full fat tree. `just check`, `just test-unit`, and `just test-integration`.
 2. **Copy → trim in stable** — `cp` the files in (one at a time, no wildcards), trim to the minimal version for this slice. Never trim in wip.
 3. **Test in stable** — same suite, run inside stable.
 4. **Review** — add a row to [review-queue.md](review-queue.md). User reviews → tests → authorizes; the user may edit files in stable during review. Claude commits in stable, user pushes.
@@ -39,7 +39,7 @@ For each review item:
 wip has no commits of its own, just a dirty tree, so park it across the rebase:
 
 1. `git stash --include-untracked`
-2. `git rebase SBC-rust-stable.sdd`
+2. `git rebase rust-stable`
 3. `git stash pop`, then resolve conflicts toward stable's reviewed version.
 
 Between slices only, never mid-slice. If the tree won't stash cleanly, finish or discard the local change first.
@@ -55,7 +55,7 @@ Between slices only, never mid-slice. If the tree won't stash cleanly, finish or
 1. **Review** — user reads the Rust code.
 2. **Manual test** — user runs SBC, exercises the feature.
 
-Claude does lint (`cargo fmt`, `cargo clippy -D warnings`), unit tests, and the integration tests. Claude never marks anything done.
+Claude does `just lint`, `just test-unit`, and `just test-integration`. Claude never marks anything done.
 
 **Commits.** All commits happen in **stable**, never in wip. Claude runs `git commit -m` in stable, only after user authorizes. Small commits: one port (or a small batch of related ports) per commit. The dispatch flip can ride along or come in a follow-up.
 
@@ -104,11 +104,14 @@ If `inventory` becomes problematic (e.g. platforms where life-before-`main` link
 
 **Where ported code lives in the tree:**
 
-- Per-command file under [native/src/sbc/commands/](../../native/src/sbc/commands/)`<slice>/` — owns its serde struct, its `inventory::submit!` registration, and its execute/unexecute logic.
-- Per-manager file: a per-slice `model`/manager module.
-- The command-system internals + the single public `commands_api` surface live under [native/src/sbc/commands/command_system/](../../native/src/sbc/commands/command_system/).
-- Cross-slice managers (texture undo stack, heightmap) live where the first slice that needs them puts them; later slices reuse.
-- Each slice is a directory; `mod.rs` files only wire submodules, never hold code.
+The layout is **feature-first**: each slice is a directory `native/src/sbc/<slice>/`
+holding its own `commands/`, `model/`, and `tests/`.
+
+- Per-command file under [native/src/sbc/](../../native/src/sbc/)`<slice>/commands/` — owns its serde struct, its `register_command!` registration, and its execute/unexecute logic.
+- Per-manager/model file: under `<slice>/model/`, self-registered as a `ModelFactory` (`inventory`) and reached type-erased via `ctx.model::<T>()`.
+- The command-system internals + the single public `commands_api` surface live under [native/src/sbc/command_system/](../../native/src/sbc/command_system/) (domain-agnostic — no per-feature edits).
+- Cross-slice models (texture undo stack, heightmap/terrain) live in the slice that first needs them; later slices reuse.
+- `mod.rs` files only wire submodules, never hold code.
 
 | Layer | Self-contained unit | Registration |
 |-------|--------------------|--------------|
@@ -155,7 +158,7 @@ new shared subsystem.
 
 ## Build invariant
 
-`cargo check` in `native/` must pass at every commit (in **stable**). The Lua app must still run at every commit. Both halves of the parallel impl exist; only flip one at a time. If a port needs an unfinished dependency, gate behind `cfg`, don't break the build.
+`just check` must pass at every commit (in **stable**). The Lua app must still run at every commit. Both halves of the parallel impl exist; only flip one at a time. If a port needs an unfinished dependency, gate behind `cfg`, don't break the build.
 
 The wip dir has no commit invariant — it builds when it builds. If wip is temporarily broken because a refactor is mid-flight, that's fine; the stable side is unaffected.
 
@@ -163,10 +166,9 @@ The wip dir has no commit invariant — it builds when it builds. If wip is temp
 
 Target: user review + manual test under 2 minutes per item. To get there, every item passes these *before* entering the queue. No "I'll add tests later."
 
-- `cargo fmt --check` clean
-- `cargo clippy --all-targets -- -D warnings` zero output (warnings fixed or `#[allow]`-ed with a one-line reason)
-- `cargo test` green, including new tests for new logic
-- Integration tests green (`uv run pytest` in `tools/smoke/`)
+- `just lint` clean — fmt, clippy (`-D warnings`; fix or `#[allow]` with a one-line reason), lua, and `check`
+- `just test-unit` green, including new tests for new logic
+- `just test-integration` green
 - Self-review: re-read the diff as if reviewing it; cut dead code, fix bad names
 - No `unwrap()`/`panic!()` outside tests; use `?` or `expect("specific reason")`
 - No leftover `TODO`s
@@ -190,9 +192,12 @@ the things it calls, then their callees, with private leaf helpers last. A reade
 scrolling top-to-bottom meets each function *before* the helpers it depends on —
 the file reads like a newspaper (headline first, detail below).
 
-- In a command file: the `impl Command` block (`execute` / `unexecute` — what the
-  framework calls) goes first, then its `stamp`/private methods, then leaf helpers
-  (`brush`, `generate_*`), then free functions, then the `register_command!` line.
+- In a command file: the public command (its struct + `impl Command`, the
+  `execute` / `unexecute` the framework calls) goes first; everything it leans on —
+  `stamp`/private methods, support types (`Atmosphere`, `Water`), leaf helpers
+  (`brush`, `generate_*`), free functions — goes below it. Put `register_command!`
+  wherever reads cleanly (top with the command or bottom of the file); it carries no
+  ordering meaning. The rule is only: the public command on top, helpers underneath.
 - Keep one `impl` block per type — don't split a type's methods across several
   `impl` blocks to satisfy ordering; order the methods *within* the block instead.
 - Free helper functions go below the code that calls them; a leaf used by several
@@ -237,7 +242,7 @@ To confirm a command actually crosses the bridge into the native plugin:
 1. In [native/log4rs.yaml](../../native/log4rs.yaml), set the `rust_plugin::sbc`
    logger to `level: debug` (the existing commented-out `command_runner` logger
    names a module that doesn't exist — `rust_plugin::sbc` is the right target).
-2. Rebuild: `cd native && cargo build --release`.
+2. Rebuild: `just build`.
 3. Boot SBC and exercise *any* command (e.g. one terrain brush stroke):
    `cd tools/smoke && uv run python -m run_sbc` prints the write dir, or launch
    the editor manually.

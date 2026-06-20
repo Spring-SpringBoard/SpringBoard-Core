@@ -10,5 +10,8 @@ env/
 # don't track local (dev) file
 *.local
 
+# local dev config (engine path etc.); .env.example is the tracked template
+.env
+
 # Rust build artifacts
 native/target/

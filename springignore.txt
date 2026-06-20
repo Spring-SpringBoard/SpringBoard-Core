@@ -3,3 +3,9 @@ doc
 model
 issues
 dist_cfg
+# Dev-only trees added for the Rust port — not game content, kept out of the VFS
+# scan/hash (native/target alone is multi-GB). The native plugin loads by
+# absolute path (SPRING_NATIVE_MODULE), not from the archive.
+native
+tools
+docs

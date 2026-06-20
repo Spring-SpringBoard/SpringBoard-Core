@@ -338,6 +338,9 @@ local function utf8SeqLen(b)
 	return 0
 end
 function encodeString(s)
+	-- Callers pass numeric table keys here too (JSON object keys must be strings);
+	-- coerce so `#s` / string.byte below work, matching the old implicit coercion.
+	s = tostring(s)
 	local parts = {}
 	local i, n = 1, #s
 	while i <= n do

@@ -79,6 +79,7 @@ impl SBC {
         // Every command crossing the bridge logs here — set `rust_plugin::sbc`
         // to `debug` (log4rs.yaml) to trace the Lua → Rust path.
         debug!("route({msg})");
+        log_command(msg);
 
         let envelope: Envelope = match serde_json::from_str(msg) {
             Ok(e) => e,
@@ -110,5 +111,25 @@ impl SBC {
             Ok(None) => {}
             Err(err) => error!("{err}"),
         }
+    }
+}
+
+/// Append every raw command received from Lua to the file named by
+/// `$SBC_COMMAND_LOG`, one per line as `HH:MM:SS.mmm <raw json>`. This is a debug
+/// trace of exactly what the editor sends (independent of the infolog), useful
+/// when a command fails to deserialize. No-op unless the env var is set; the dev
+/// launcher points it at `<write_dir>/commands.jsonl`.
+fn log_command(msg: &str) {
+    use std::io::Write;
+
+    static LOG_PATH: std::sync::OnceLock<Option<std::path::PathBuf>> = std::sync::OnceLock::new();
+    let Some(path) = LOG_PATH.get_or_init(|| std::env::var_os("SBC_COMMAND_LOG").map(Into::into))
+    else {
+        return;
+    };
+
+    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        let now = chrono::Local::now().format("%H:%M:%S%.3f");
+        let _ = writeln!(file, "{now} {msg}");
     }
 }

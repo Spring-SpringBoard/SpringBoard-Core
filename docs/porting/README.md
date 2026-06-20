@@ -26,7 +26,7 @@ Phase 1 ports the model and command layers together in slices (one feature end-t
 
 Phase 2 is in progress independently of the Rust port (some Chili→RmlUi work landed earlier).
 
-Pending review items: [review-queue.md](review-queue.md). Rules: [conventions.md](conventions.md). Deferred improvements: [todo.md](todo.md).
+Pending review items: [review-queue.md](review-queue.md). Rules: [conventions.md](conventions.md). Commands: [commands.md](../commands.md). Deferred improvements: [todo.md](todo.md).
 
 ## Design docs
 

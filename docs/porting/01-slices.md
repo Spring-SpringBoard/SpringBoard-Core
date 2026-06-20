@@ -31,8 +31,8 @@ spread across the slices they belong to, not deferred as a catch-all.
 |--:|-------|--------|
 | 0 | [Command infrastructure](#0-command-infrastructure) — trait + dispatch + undo/redo + compound + bridge + widget-notify | done (stable) |
 | 1 | [Terrain](#1-terrain) — shape / level / smooth / metal brushes | done (stable; flipped to Rust-only; heightmap recalc fixed via `set_height_map_func`) |
-| 2 | [Heightmap](#2-heightmap) — load (sync) + import / export (async IO) | review (in stable; first `IoJob` types + command IO seam; dispatch parallel) |
-| 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | wip (not in stable) |
+| 2 | [Heightmap](#2-heightmap) — load + save + import / export (async IO) | done (stable; native IO seam, 16-bit PNG, raw-f32 save/load by path, import undoable) |
+| 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | review (in stable; all setters Rust-only with `Gfx`-snapshot undo) |
 | 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | review (in stable; Rust owns paint + cache + stroke close + undo/redo) |
 | 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | wip (not in stable) |
 | 6 | [Areas](#6-areas) | wip (not in stable) |
@@ -139,11 +139,14 @@ General map rendering config: sun lighting, atmosphere, water, map-rendering
 params. These are **map-wide config**, distinct from scenario *info* (project
 metadata, which is in slice 8). Should land early.
 
-**Status:** implemented in wip, not yet in stable — all setters with partial-opts,
-undo snapshots via the `Gfx` getters. These are `_execute_unsynced`: they reach
-the single native module from the widget side (where `Gfx` is valid), so no bridge
-change is needed. `merge_command.lua` (coalesces successive edits into one undo
-step) lands here.
+**Status:** review (in stable) — all six setters Rust-only, partial-opts, with
+`Gfx`-getter-snapshot undo (map-rendering & global-LOS have no undo, matching
+their Lua). Dispatched to the gadget like every other command (`commandManager:
+execute(cmd)`); native does the `Gfx`/`unsynced_ctrl` work from the gadget-invoked
+main thread, where `Gfx` is valid — same as the textures slice — so the Lua
+`_execute_unsynced` flag is bypassed for these (native-only) and no bridge change
+is needed. Water re-selects the current water mode after applying so the renderer
+reloads. Lua command files unchanged — only the `nativeCommandsOnly` flip.
 
 **Commands:**
 - [set_sun_lighting_command.lua](../../scen_edit/command/set_sun_lighting_command.lua)

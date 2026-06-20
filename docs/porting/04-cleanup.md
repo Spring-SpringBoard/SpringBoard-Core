@@ -28,4 +28,4 @@ Everything else — `scen_edit/`, the libraries under `libs_sb/` that we no long
 
 ## Exit criteria
 
-`find . -name "*.lua" | wc -l` is small (entry stubs + Spring-required files only). `cargo check && cargo clippy` clean. App still works end-to-end.
+`find . -name "*.lua" | wc -l` is small (entry stubs + Spring-required files only). `just lint` clean. App still works end-to-end.

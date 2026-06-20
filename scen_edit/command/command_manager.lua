@@ -33,6 +33,7 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         TerrainSmoothCommand = true,
         TerrainMetalCommand = true,
         TerrainGrassCommand = true,
+        SetHeightmapBrushCommand = true,
         -- Heightmap IO (slice 2): Rust-only. Lua reads the project heightmap
         -- file unsynced and passes its path; native reads the file and applies.
         -- Import/export also drop the redundant spring-launcher round-trip.
@@ -40,19 +41,34 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         SaveMapCommand = true,
         ImportHeightmapCommand = true,
         ExportHeightmapCommand = true,
+        -- Map settings (slice 3): sun / lighting / atmosphere / water /
+        -- map-rendering / global-LOS, all Rust-only.
+        SetSunParametersCommand = true,
+        SetSunLightingCommand = true,
+        SetAtmosphereCommand = true,
+        SetWaterParamsCommand = true,
+        SetMapRenderingParamsCommand = true,
+        SetGlobalLosCommand = true,
         TerrainChangeTextureCommand = true,
         TerrainChangeTextureMergedCommand = true,
         CacheTextureCommand = true,
     }
 end
 
-function CommandManager:_SafeCall(func)
+function CommandManager:_SafeCall(func, label)
     local succ, result = xpcall(func, function(err)
-        Log.Error("[" .. Script.GetName() .. "] Error executing command.")
-        if debug then
-            Log.Error(debug.traceback(err, 2))
-        else
-            Log.Error(err)
+        -- Report the actual error (and which command) instead of a generic line.
+        local context = label and (": " .. tostring(label)) or "."
+        local errText = tostring(err)
+        Log.Error("[" .. Script.GetName() .. "] Error executing command" .. context)
+        Log.Error(errText)
+        -- On a C stack overflow the traceback itself recurses ("error in error
+        -- handling"), so skip it; guard the rest in pcall for the same reason.
+        if debug and errText ~= "C stack overflow" then
+            local ok, trace = pcall(debug.traceback, err, 2)
+            if ok and trace then
+                Log.Error(trace)
+            end
         end
     end)
     if succ then
@@ -88,7 +104,7 @@ function CommandManager:leaveMultipleCommandMode()
         if cmd.onMerge then
             self:_SafeCall(function()
                 cmd:onMerge()
-            end)
+            end, cmd.className .. ":onMerge")
         end
     else
         cmd = CompoundCommand(self.multipleCommandStack)
@@ -183,7 +199,7 @@ function CommandManager:__execute(cmd, isSameContext)
                 end
             end
         end
-    end)
+    end, cmd.className)
 end
 
 function CommandManager:clearUndoStack()
@@ -251,7 +267,7 @@ function CommandManager:undo()
         if not self.__isWidget then
             self:execute(WidgetCommandUndo(), true)
         end
-    end)
+    end, cmd.className .. ":undo")
 end
 
 function CommandManager:redo()
@@ -279,7 +295,7 @@ function CommandManager:redo()
             self:execute(WidgetCommandRedo(), true)
         end
         table.insert(self.undoList, cmd)
-    end)
+    end, cmd.className .. ":redo")
 end
 
 function CommandManager:HandleCommandMessage(msg, widget)
