@@ -15,3 +15,6 @@ env/
 
 # Rust build artifacts
 native/target/
+
+# local dev config (engine path etc.); .env.example is the tracked template
+.env

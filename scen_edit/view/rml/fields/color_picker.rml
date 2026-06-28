@@ -1,0 +1,32 @@
+<rml>
+<head>
+    <title>Color Picker</title>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/fields.rcss"/>
+    <link type="text/rcss" href="../../rcss/dialog.rcss"/>
+</head>
+<body id="color-picker" class="dialog-backdrop">
+    <div class="dialog">
+        <div class="dialog-header">
+            <span class="dialog-title">Pick Color</span>
+            <button class="dialog-close" id="btn-close">×</button>
+        </div>
+        <div class="dialog-content">
+            <div class="color-picker-panel">
+                <div class="color-preview" id="color-preview"></div>
+                <div class="color-inputs">
+                    <div class="form-row"><label>R:</label><input type="text" id="r-value" class="form-input" value="255"/></div>
+                    <div class="form-row"><label>G:</label><input type="text" id="g-value" class="form-input" value="255"/></div>
+                    <div class="form-row"><label>B:</label><input type="text" id="b-value" class="form-input" value="255"/></div>
+                    <div class="form-row"><label>A:</label><input type="text" id="a-value" class="form-input" value="255"/></div>
+                </div>
+                <div class="form-row"><label>Hex:</label><input type="text" id="hex-input" class="form-input" value="#FFFFFF"/></div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button id="btn-ok" class="dialog-button primary">OK</button>
+            <button id="btn-cancel" class="dialog-button">Cancel</button>
+        </div>
+    </div>
+</body>
+</rml>

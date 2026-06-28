@@ -11,7 +11,7 @@ Splitting it in two stages keeps each step small:
 1. Chili → RmlUi while the logic is still Lua (easier to verify visually, no FFI to debug).
 2. Then Lua RmlUi handlers → Rust, one panel at a time.
 
-Some RmlUi work exists in side branches and may be cherry-picked in once this phase opens.
+Some RmlUi work exists in side branches and may be cherry-picked in once this phase opens. See [rmlui-side-branches.md](rmlui-side-branches.md) for an inventory of what those branches contain and how they relate.
 
 ## Approach
 

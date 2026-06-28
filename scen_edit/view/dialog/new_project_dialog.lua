@@ -6,6 +6,7 @@ local GeMapsWithoutProjects
 
 function NewProjectDialog:init()
     self:super("init")
+    self.editorTitle = "New Project"
 
     self:AddField(StringField({
         name = "projectName",
@@ -56,20 +57,9 @@ function NewProjectDialog:init()
     }
     self:AddControl('error', { self.error })
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-
-    self:Finalize(children, {
+    self:Finalize({}, {
         notMainWindow = true,
+        caption = "New Project",
         buttons = { "ok", "cancel" },
         width = 400,
         height = 300,

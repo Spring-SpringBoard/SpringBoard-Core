@@ -1,0 +1,23 @@
+<rml>
+<head>
+    <title>Command Window</title>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/floating.rcss"/>
+</head>
+<body id="command-window" class="floating-panel">
+    <div class="command-toolbar">
+        <button id="btn-undo" class="icon-button" title="Undo (Ctrl+Z)">
+            <img src="../../../../LuaUI/images/scenedit/anticlockwise-rotation.png"/>
+        </button>
+        <button id="btn-redo" class="icon-button" title="Redo (Ctrl+R)">
+            <img src="../../../../LuaUI/images/scenedit/clockwise-rotation.png"/>
+        </button>
+        <button id="btn-clear-history" class="icon-button" title="Clear undo-redo stack">
+            <img src="../../../../LuaUI/images/scenedit/cancel.png"/>
+        </button>
+    </div>
+    <div id="command-list" class="command-list">
+        <!-- Command history populated dynamically -->
+    </div>
+</body>
+</rml>

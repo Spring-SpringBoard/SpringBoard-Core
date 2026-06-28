@@ -1,0 +1,337 @@
+/* Dialog Styles */
+
+/* Full-screen backdrop */
+body.dialog-backdrop {
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 10000;
+}
+
+/* Dialog window box */
+.dialog {
+    font-family: Poppins;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    background-color: #2a2a2a;
+    border: 2px #555555;
+    border-radius: 5px;
+    width: 400px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+}
+
+.dialog.large-dialog {
+    width: 600px;
+    height: 500px;
+}
+
+.dialog-header {
+    background-color: #333333;
+    padding: 10px;
+    border-bottom: 1px #555555;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dialog-title {
+    color: #eeeeee;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.dialog-close {
+    background-color: #444444;
+    color: #eeeeee;
+    border-width: 0px;
+    border-radius: 3px;
+    width: 25px;
+    height: 25px;
+    font-size: 20px;
+    line-height: 20px;
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.dialog-close:hover {
+    background-color: #cc4444;
+}
+
+.dialog-content {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dialog-footer {
+    padding: 10px;
+    border-top: 1px #555555;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dialog-button {
+    background-color: #444444;
+    color: #eeeeee;
+    border: 1px #666666;
+    border-radius: 3px;
+    padding: 8px 20px;
+    cursor: pointer;
+    text-align: center;
+    min-height: 30px;
+    line-height: 1.5;
+}
+
+.dialog-button:hover {
+    background-color: #555555;
+}
+
+.dialog-button:active {
+    background-color: #333333;
+}
+
+.dialog-button.primary {
+    background-color: #3a7ebf;
+}
+
+.dialog-button.primary:hover {
+    background-color: #4a8ecf;
+}
+
+/* Dialog Form Styles */
+
+.dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-row label {
+    color: #cccccc;
+    min-width: 120px;
+    text-align: right;
+}
+
+.form-input,
+.form-select {
+    flex-grow: 1;
+    background-color: #1a1a1a;
+    color: #eeeeee;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 6px 10px;
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: #3a7ebf;
+}
+
+/* File Browser Styles */
+
+.file-browser {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+}
+
+.path-bar {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.path-input {
+    flex-grow: 1;
+    background-color: #1a1a1a;
+    color: #eeeeee;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 6px 10px;
+}
+
+.path-button {
+    background-color: #444444;
+    color: #eeeeee;
+    border: 1px #666666;
+    border-radius: 3px;
+    width: 40px;
+    padding: 6px;
+}
+
+.path-button:hover {
+    background-color: #555555;
+}
+
+.file-list-container {
+    flex-grow: 1;
+    border: 1px #555555;
+    border-radius: 3px;
+    background-color: #1a1a1a;
+    overflow-y: auto;
+}
+
+.file-list {
+    padding: 5px;
+}
+
+.file-item {
+    padding: 8px;
+    color: #cccccc;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.file-item:hover {
+    background-color: #333333;
+}
+
+.file-item.selected {
+    background-color: #3a7ebf;
+    color: #ffffff;
+}
+
+/* Note: ::before pseudo-elements with content not fully supported in RmlUi */
+.file-item.directory {
+    /* Will need to add icon via HTML instead */
+}
+
+.file-item.file {
+    /* Will need to add icon via HTML instead */
+}
+
+.file-name-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.file-name-bar label {
+    color: #cccccc;
+}
+
+.file-name-input {
+    flex-grow: 1;
+    background-color: #1a1a1a;
+    color: #eeeeee;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 6px 10px;
+}
+
+/* Material Browser Styles */
+
+.material-browser {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+}
+
+.material-filters {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.material-filters label {
+    color: #cccccc;
+    min-width: 60px;
+    line-height: 1.5;
+}
+
+.material-grid {
+    flex-grow: 1;
+}
+
+/* Color Picker Styles */
+
+.color-picker-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.color-preview {
+    width: 100%;
+    height: 60px;
+    border: 2px #555555;
+    border-radius: 3px;
+    /* Background color is set dynamically by the color picker */
+}
+
+.color-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.color-inputs .form-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-inputs .form-row label {
+    width: 30px;
+    color: #cccccc;
+}
+
+.color-inputs .form-row .form-input {
+    flex-grow: 1;
+}
+
+/* Asset Browser Styles */
+
+.asset-browser {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+}
+
+.asset-filters {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.asset-filters label {
+    color: #cccccc;
+    min-width: 50px;
+}
+
+.asset-grid {
+    flex-grow: 1;
+}

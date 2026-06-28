@@ -21,23 +21,26 @@ function Editor:init()
     self.fields = {}
     self.fieldOrder = {}
 
-    self.stackPanel = StackPanel:New {
-        y = 0,
-        x = 0,
-        right = 0,
+    -- Only create stackPanel in Chili mode (not RmlUi)
+    if not SB.useRmlUi then
+        self.stackPanel = StackPanel:New {
+            y = 0,
+            x = 0,
+            right = 0,
 
-        centerItems = false,
+            centerItems = false,
 
-        autosize = true,
-        resizeItems = false,
-        preserveChildrenOrder = true,
+            autosize = true,
+            resizeItems = false,
+            preserveChildrenOrder = true,
 
-        itemPadding = {0,10,0,0},
-        padding = {0,0,0,0},
-        margin = {0,0,0,0},
-        itemMargin = {5,0,0,0},
-    }
-    self.stackPanel:DisableRealign()
+            itemPadding = {0,10,0,0},
+            padding = {0,0,0,0},
+            margin = {0,0,0,0},
+            itemMargin = {5,0,0,0},
+        }
+        self.stackPanel:DisableRealign()
+    end
 end
 
 -------------------------------
@@ -94,7 +97,7 @@ end
 
 --- Called at the end of :init(), to finalize the UI
 --- Override.
--- @tparam table children List of Chili controls.
+-- @tparam table layout Layout options (UI-agnostic) or old-style children array
 -- @tparam table opts Editor options
 -- @tparam[opt=false] boolean opts.notMainWindow If true,
 --   editor will not be added to the main panel (right side), but will instead be a floating window.
@@ -104,14 +107,51 @@ end
 --  Values include "ok", "cancel" and "close"
 -- @tparam boolean opts.disposeOnClose If true, the window will
 --   be disposed when closed. Defaults to true if opts.notMainWindow is true, otherwise it defaults to false.
-function Editor:Finalize(children, opts)
+function Editor:Finalize(layout, opts)
     if not self.__initializing then
         Log.Error("\"Editor.init(self)\" wasn't invoked properly.")
         Log.Error(debug.traceback())
         assert(self.__initializing, "\"Editor.init(self)\" wasn't invoked properly.")
     end
 
+    -- Support old API: if layout is an array, treat it as old-style children array
+    local isOldAPI = layout and #layout > 0
+    if isOldAPI then
+        -- Old API compatibility: Finalize(children, opts)
+        local children = layout
+        opts = opts or {}
+
+        if SB.useRmlUi then
+            self:_FinalizeRmlUi(children, opts)
+            self.__initializing = false
+            return
+        end
+
+        -- Continue with old Chili mode path
+        self:_FinalizeButtons(children, opts)
+        self:_FinalizeChiliWindow(children, opts)
+        self.__initializing = false
+        return
+    end
+
+    -- New API: Finalize({actionButtons = {...}}, opts)
+    layout = layout or {}
     opts = opts or {}
+
+    -- In RmlUi mode, generate RML from fields and buttons
+    if SB.useRmlUi then
+        self:_FinalizeRmlUiNew(layout, opts)
+        self.__initializing = false
+        return
+    end
+
+    -- New Chili mode path
+    self:_FinalizeChiliNew(layout, opts)
+    self.__initializing = false
+end
+
+-- Old Chili mode path (extracted for old API compatibility)
+function Editor:_FinalizeChiliWindow(children, opts)
     self:_FinalizeButtons(children, opts)
 
     local OnShow = {function() self:__OnShow() end}
@@ -138,12 +178,16 @@ function Editor:Finalize(children, opts)
             OnOrphan = OnHide,
             classname = opts.classname,
         }
-        SB.view.tabbedWindow:SetMainPanel(self.window)
+        -- Only set main panel in Chili mode
+        if not SB.useRmlUi and SB.view.tabbedWindow then
+            SB.view.tabbedWindow:SetMainPanel(self.window)
+        end
     else
         if opts.disposeOnClose == nil then
             self.__disposeOnClose = true
         end
-        -- TODO: Make configurable
+
+        -- This code path is only for Chili mode (RmlUI dialogs are handled in _FinalizeRmlUi)
         self.window = Window:New {
             parent = screen0,
             x = opts.x or "25%",
@@ -157,6 +201,7 @@ function Editor:Finalize(children, opts)
             OnOrphan = OnHide,
             classname = opts.classname,
         }
+
         self.keyListener = function(key)
             local currentState = SB.stateManager:GetCurrentState()
             if not currentState:is_A(DefaultState) then
@@ -181,8 +226,10 @@ function Editor:Finalize(children, opts)
         self:__AddKeyListener()
 
     end
-    self.stackPanel:EnableRealign()
-    self.stackPanel:Invalidate()
+    if self.stackPanel then
+        self.stackPanel:EnableRealign()
+        self.stackPanel:Invalidate()
+    end
 
     self.__initializing = false
 end
@@ -268,7 +315,12 @@ function Editor:_SetFieldVisible(name, visible)
         return
     end
 
+    -- Skip in RmlUi mode - fields don't have Chili controls
     local ctrl = field.ctrl
+    if not ctrl then
+        return
+    end
+
     --if ctrl.visible ~= visible then
     if ctrl._visible ~= visible then
         if visible then
@@ -276,7 +328,7 @@ function Editor:_SetFieldVisible(name, visible)
             ctrl:Show()
             ctrl._visible = true
         else
-            -- self.stackPanel:RemoveChild(ctrl)
+            -- if self.stackPanel then self.stackPanel:RemoveChild(ctrl)
             ctrl:Hide()
             ctrl._visible = false
         end
@@ -286,7 +338,29 @@ end
 --- Sets fields which are to be made invisible.
 -- @tparam {string, ...} ... Field names to be set invisible
 function Editor:SetInvisibleFields(...)
-    self.stackPanel:DisableRealign()
+    -- In RmlUi mode, set CSS display classes instead of manipulating Chili controls
+    if SB.useRmlUi then
+        local fieldsToHide = {...}
+        -- Hide all fields first
+        for _, fieldName in ipairs(self.fieldOrder) do
+            local fieldElement = SB.view.mainDocument:GetElementById("field-" .. fieldName)
+            if fieldElement and fieldElement.parent_node then
+                fieldElement.parent_node:SetClass("hidden", true)
+            end
+        end
+        -- Show fields not in the hide list
+        for _, fieldName in ipairs(self.fieldOrder) do
+            if not table.ifind(fieldsToHide, fieldName) then
+                local fieldElement = SB.view.mainDocument:GetElementById("field-" .. fieldName)
+                if fieldElement and fieldElement.parent_node then
+                    fieldElement.parent_node:SetClass("hidden", false)
+                end
+            end
+        end
+        return
+    end
+
+    if self.stackPanel then self.stackPanel:DisableRealign() end
 
     local fields = {...}
     for i = #self.fieldOrder, 1, -1 do
@@ -309,8 +383,8 @@ function Editor:SetInvisibleFields(...)
         end
     end
 
-    self.stackPanel:EnableRealign()
-    self.stackPanel:Invalidate()
+    if self.stackPanel then self.stackPanel:EnableRealign() end
+    if self.stackPanel then self.stackPanel:Invalidate() end
 end
 
 --- Remove field by name.
@@ -324,7 +398,9 @@ function Editor:RemoveField(name)
             break
         end
     end
-    self.stackPanel:RemoveChild(field.ctrl)
+    if self.stackPanel then
+        self.stackPanel:RemoveChild(field.ctrl)
+    end
     self.fields[name] = nil
 end
 --- Add field.
@@ -343,12 +419,46 @@ function Editor:AddField(field)
         field.ctrl = self:_AddControl(field.name, field.components)
     end
     self:_AddField(field)
-    field:Added()
+
+    -- Register child fields of GroupField
+    -- RmlUi GroupFields have .fields but no .Added method (handled here)
+    -- Chili GroupFields have .fields and .Added method (handled in Added())
+    if field.fields and not field.Added then
+        for _, childField in ipairs(field.fields) do
+            if childField.name then
+                self:_AddField(childField)
+                -- Mark child field as part of a group so it won't be rendered separately
+                childField._isGroupChild = true
+            end
+        end
+    end
+
+    -- Only call Added() if the method exists (Chili fields)
+    if field.Added then
+        field:Added()
+    end
 end
 
 function Editor:_AddField(field)
+    if not field or not field.name then
+        Log.Error("Attempted to add field without name")
+        return
+    end
     self.fields[field.name] = field
     field.ev = self
+
+    -- Add to fieldOrder if not already added (via _AddControl)
+    -- This is needed for RmlUi fields which don't have components
+    local alreadyInOrder = false
+    for _, name in ipairs(self.fieldOrder) do
+        if name == field.name then
+            alreadyInOrder = true
+            break
+        end
+    end
+    if not alreadyInOrder then
+        table.insert(self.fieldOrder, field.name)
+    end
 end
 
 function Editor:AddControl(name, children)
@@ -360,12 +470,23 @@ function Editor:AddControl(name, children)
 end
 
 function Editor:_AddControl(name, children)
+    -- In RmlUi mode, don't create Chili controls
+    if SB.useRmlUi then
+        -- Just store the children for later use in _FinalizeRmlUi
+        table.insert(self.fieldOrder, name)
+        -- Return a dummy object that holds the children
+        return { children = children, isRmlUiPlaceholder = true }
+    end
+
+    -- Chili mode - create actual Control
     local ctrl = Control:New {
         autosize = true,
         padding = {0, 0, 0, 0},
         children = children
     }
-    self.stackPanel:AddChild(ctrl)
+    if self.stackPanel then
+        self.stackPanel:AddChild(ctrl)
+    end
     table.insert(self.fieldOrder, name)
     return ctrl
 end
@@ -400,13 +521,26 @@ end
 -- self:Set("myNumber", 15)
 function Editor:Set(name, value)
     local field = self.fields[name]
-    field:Set(value)
+    if not field then
+        Log.Warning("Attempted to set non-existent field: " .. tostring(name))
+        return
+    end
+    -- Only call Set if the method exists (Chili fields)
+    if field.Set then
+        field:Set(value)
+    else
+        -- For RmlUi fields, just set the value directly
+        field.value = value
+    end
 end
 function Editor:Update(name, _source)
     local field = self.fields[name]
     assert(field, "No such field to update: " .. tostring(name))
 
-    field:Update(_source)
+    -- Only call Update if the method exists (Chili fields)
+    if field.Update then
+        field:Update(_source)
+    end
 
     -- update listeners and current state
     if not self.__initializing then
@@ -506,9 +640,18 @@ function Editor:__OnHide()
 end
 
 function Editor:__MaybeClose()
-    self.window:Hide()
-    if self.__disposeOnClose then
-        self.window:Dispose()
+    if SB.useRmlUi and self.document then
+        -- RmlUI mode
+        self.document:Hide()
+        if self.__disposeOnClose then
+            self.document:Close()
+        end
+    elseif self.window then
+        -- Chili mode
+        self.window:Hide()
+        if self.__disposeOnClose then
+            self.window:Dispose()
+        end
     end
 end
 
@@ -536,8 +679,10 @@ function Editor:Load(tbl)
         end
     end
     for name, data in pairs(tbl) do
-        if self.fields[name] ~= nil then
-            self.fields[name]:Load(data)
+        local field = self.fields[name]
+        if field ~= nil then
+            assert(field.Load, "Field " .. name .. " missing Load method")
+            field:Load(data)
         end
     end
     self.__isLoading = false
@@ -622,3 +767,595 @@ end
 
 -- We load these fields last as they might be/contain subclasses of editor view
 SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view/fields'))
+
+-- Helper function to convert Chili button to RmlUi button
+local function ConvertChiliButtonToRmlUi(chiliButton)
+    if not chiliButton or type(chiliButton) ~= "table" then
+        return nil
+    end
+
+    -- Check if it's a TabbedPanelButton (has SetPressedState and children with images/labels)
+    if chiliButton.SetPressedState and chiliButton.children then
+        -- Extract caption and image from children
+        local caption = ""
+        local image = nil
+        for _, child in pairs(chiliButton.children) do
+            if type(child) == "table" then
+                if child.classname == "label" and child.caption then
+                    caption = child.caption
+                elseif child.classname == "image" and child.file then
+                    image = child.file
+                end
+            end
+        end
+
+        -- Create RmlUi TabbedPanelButton
+        return RmlUiTabbedPanelButton({
+            x = chiliButton.x,
+            y = chiliButton.y,
+            tooltip = chiliButton.tooltip or "",
+            OnClick = chiliButton.OnClick or {},
+            caption = caption,
+            image = image,
+        })
+
+    -- Check if it's a regular Button (has caption and OnClick)
+    elseif chiliButton.caption and chiliButton.OnClick then
+        return RmlUiButton({
+            caption = chiliButton.caption,
+            OnClick = chiliButton.OnClick or {},
+            width = chiliButton.width,
+            height = chiliButton.height,
+            tooltip = chiliButton.tooltip,
+        })
+    end
+
+    return nil
+end
+
+-- RmlUi-specific finalization
+function Editor:_FinalizeRmlUi(children, opts)
+    children = children or {}
+    opts = opts or {}
+
+    -- Set dialog title from caption option
+    if opts.caption then
+        self.editorTitle = opts.caption
+    end
+
+    -- Convert Chili buttons to RmlUi buttons, and collect RmlUi filter controls
+    self.actionButtons = {}
+    self.regularButtons = {}
+    self.filterControls = self.filterControls or {}  -- May already be set by editor
+
+    for _, child in ipairs(children) do
+        if child and type(child) == "table" then
+            -- Check if this is already an RmlUi control (has GenerateRml method)
+            if child.GenerateRml and type(child.GenerateRml) == "function" then
+                -- It's an RmlUi control (filter control, etc.)
+                if child.id and (child.id:match("^filter%-") or child.id:match("^action%-btn%-")) then
+                    if not Table.Contains(self.filterControls, child) then
+                        table.insert(self.filterControls, child)
+                    end
+                    if child.id:match("^action%-btn%-") then
+                        table.insert(self.actionButtons, child)
+                    end
+                end
+            else
+                -- Try to convert Chili control to RmlUi
+                local rmlButton = ConvertChiliButtonToRmlUi(child)
+                if rmlButton then
+                    -- TabbedPanelButtons become action buttons
+                    if rmlButton.id and rmlButton.id:match("^action%-btn%-") then
+                        table.insert(self.actionButtons, rmlButton)
+                    -- Regular buttons
+                    elseif rmlButton.id and rmlButton.id:match("^btn%-") then
+                        table.insert(self.regularButtons, rmlButton)
+                    end
+                end
+            end
+        end
+    end
+
+    -- Generate RML for action buttons (placed at top)
+    local buttonsHtml = ''
+    if #self.actionButtons > 0 then
+        buttonsHtml = '<div class="action-buttons-panel">'
+        for _, button in ipairs(self.actionButtons) do
+            buttonsHtml = buttonsHtml .. button:GenerateRml()
+        end
+        buttonsHtml = buttonsHtml .. '</div>'
+    end
+
+    -- Generate RML for filter controls
+    local filtersHtml = ''
+    if #self.filterControls > 0 then
+        filtersHtml = '<div class="filter-panel">'
+        for _, filter in ipairs(self.filterControls) do
+            if filter.GenerateRml and not filter.id:match("^action%-btn%-") then
+                filtersHtml = filtersHtml .. filter:GenerateRml()
+            end
+        end
+        filtersHtml = filtersHtml .. '</div>'
+    end
+
+    -- Generate RML for all fields
+    local fieldsHtml = ''
+    for _, fieldName in ipairs(self.fieldOrder) do
+        local field = self.fields[fieldName]
+        -- Skip fields that are children of GroupFields (they're rendered by the group)
+        if field and not field._isGroupChild then
+            if field.GenerateRml then
+                fieldsHtml = fieldsHtml .. field:GenerateRml()
+            else
+                -- Check if it's a control with a button inside
+                if field.ctrl then
+                    -- Check if this is an RmlUi placeholder (from new EditorButton API)
+                    if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
+                        -- Children are already RmlUi buttons, use them directly
+                        for _, rmlBtn in ipairs(field.ctrl.children) do
+                            if rmlBtn and rmlBtn.GenerateRml then
+                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
+                                table.insert(self.regularButtons, rmlBtn)
+                            end
+                        end
+                    else
+                        -- Old path: try to convert Chili buttons to RmlUi buttons
+                        local ctrlHtml = ''
+                        if field.ctrl.children then
+                            for _, btnChild in pairs(field.ctrl.children) do
+                                local rmlBtn = ConvertChiliButtonToRmlUi(btnChild)
+                                if rmlBtn then
+                                    ctrlHtml = ctrlHtml .. rmlBtn:GenerateRml()
+                                    table.insert(self.regularButtons, rmlBtn)
+                                end
+                            end
+                        end
+                        if ctrlHtml ~= '' then
+                            fieldsHtml = fieldsHtml .. ctrlHtml
+                        else
+                            -- Fallback for other controls
+                            fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
+                        end
+                    end
+                else
+                    -- Fallback for fields without ctrl
+                    fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
+                end
+            end
+        end
+    end
+
+    -- Generate path navigation if gridView has it (AssetView)
+    local pathNavHtml = ''
+    if self.gridView and self.gridView.pathNav then
+        pathNavHtml = self.gridView.pathNav:GenerateRml()
+    end
+
+    -- Generate grid container if editor has a gridView
+    local gridHtml = ''
+    if self.gridView then
+        gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
+    end
+
+    -- Generate multiple grid containers if editor has gridViews
+    local gridsHtml = ''
+    if self.gridViews then
+        for name, gridView in pairs(self.gridViews) do
+            if gridView and gridView.gridId then
+                -- Start hidden by default (TextureEditor will show them when entering appropriate state)
+                gridsHtml = gridsHtml .. string.format('<div id="%s" class="grid-container hidden" data-grid-name="%s"></div>', gridView.gridId, name)
+            end
+        end
+    end
+
+    -- Combine buttons, filters, path nav, grid, and fields
+    self.generatedRml = buttonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. gridsHtml .. fieldsHtml
+
+    -- If this is a dialog (notMainWindow), create the dialog document
+    if opts.notMainWindow then
+        self:_CreateRmlUiDialog(opts)
+    else
+        -- Mark as hidden by default (will be shown when opened in main window)
+        self.hidden = true
+    end
+end
+
+-- Create RmlUI dialog window (for notMainWindow editors)
+function Editor:_CreateRmlUiDialog(opts)
+    Log.Notice("Creating RmlUI dialog: " .. (self.editorTitle or "Dialog"))
+    local rmlPath = Path.Join(SB.DIRS.SRC, 'view/rml/generic_dialog.rml')
+    self.document = SB.rmlui:LoadDocument(rmlPath, false)
+    Log.Notice("Document loaded: " .. tostring(self.document ~= nil))
+
+    if not self.document then
+        Log.Error("Failed to load dialog document")
+        return
+    end
+
+    -- Set dialog title
+    local titleElement = self.document:GetElementById("dialog-title")
+    if titleElement then
+        titleElement.inner_rml = self.editorTitle or "Dialog"
+    end
+
+    -- Inject content (generated RML from fields)
+    local contentElement = self.document:GetElementById("dialog-content")
+    if contentElement and self.generatedRml then
+        Log.Notice("Injecting RML into dialog, length: " .. tostring(#self.generatedRml))
+        Spring.Echo("=== DIALOG GENERATED RML ===")
+        Spring.Echo(self.generatedRml)
+        Spring.Echo("=== END DIALOG RML ===")
+        contentElement.inner_rml = self.generatedRml
+        Log.Notice("RML injected successfully")
+    else
+        Log.Warning("contentElement: " .. tostring(contentElement ~= nil) .. ", generatedRml: " .. tostring(self.generatedRml ~= nil))
+    end
+
+    -- Add buttons to footer
+    local footerElement = self.document:GetElementById("dialog-footer")
+    if footerElement and opts.buttons then
+        local buttonsHtml = ""
+        for _, btnName in ipairs(opts.buttons) do
+            if btnName == "ok" then
+                buttonsHtml = buttonsHtml .. '<button id="dialog-btn-ok" class="dialog-button primary">OK</button>'
+            elseif btnName == "cancel" then
+                buttonsHtml = buttonsHtml .. '<button id="dialog-btn-cancel" class="dialog-button">Cancel</button>'
+            elseif btnName == "close" then
+                buttonsHtml = buttonsHtml .. '<button id="dialog-btn-close" class="dialog-button">Close</button>'
+            end
+        end
+        footerElement.inner_rml = buttonsHtml
+
+        -- Bind button events
+        local btnOk = self.document:GetElementById("dialog-btn-ok")
+        if btnOk then
+            btnOk:AddEventListener("click", function()
+                if self:ConfirmDialog() then
+                    self:__MaybeClose()
+                end
+            end)
+        end
+
+        local btnCancel = self.document:GetElementById("dialog-btn-cancel")
+        if btnCancel then
+            btnCancel:AddEventListener("click", function()
+                self:__MaybeClose()
+            end)
+        end
+
+        local btnCloseFooter = self.document:GetElementById("dialog-btn-close")
+        if btnCloseFooter then
+            btnCloseFooter:AddEventListener("click", function()
+                self:__MaybeClose()
+            end)
+        end
+    end
+
+    -- Set dialog size via style attribute (position is handled by CSS centering)
+    local dialogBody = self.document:GetElementById("dialog-window")
+    if dialogBody then
+        local width = opts.width or 550
+        local height = opts.height or 500
+
+        local style = string.format("width: %dpx; height: %dpx;", width, height)
+        dialogBody:SetAttribute("style", style)
+    end
+
+    -- Bind close button in header
+    local btnClose = self.document:GetElementById("btn-close")
+    if btnClose then
+        btnClose:AddEventListener("click", function()
+            self:__MaybeClose()
+        end)
+    end
+
+    -- Bind fields to document elements
+    if self.fields then
+        for _, field in pairs(self.fields) do
+            if field.BindToDocument then
+                field:BindToDocument()
+            end
+        end
+    end
+
+    -- Bind field events
+    if SB.view and SB.view.BindFieldEvents then
+        SB.view:BindFieldEvents(self)
+    end
+
+    -- Show the dialog
+    self.document:Show()
+    self:__OnShow()
+
+    -- Log ALL available properties and methods on the document
+    Spring.Echo("=== DOCUMENT OBJECT INSPECTION ===")
+    Spring.Echo("Document type: " .. tostring(type(self.document)))
+
+    -- Try various properties
+    local props = {"title", "source_url", "context", "inner_rml", "outer_rml", "tag_name", "id", "class_name"}
+    for _, prop in ipairs(props) do
+        local val = self.document[prop]
+        Spring.Echo("document." .. prop .. " = " .. tostring(val))
+    end
+
+    -- Get body element and check its properties
+    local bodyElement = self.document:GetElementById("dialog-window")
+    if bodyElement then
+        Spring.Echo("\nBody element properties:")
+        for _, prop in ipairs(props) do
+            local val = bodyElement[prop]
+            Spring.Echo("body." .. prop .. " = " .. tostring(val))
+        end
+
+        -- Try to get parent
+        if bodyElement.parent_node then
+            Spring.Echo("\nBody has parent_node!")
+            local parent = bodyElement.parent_node
+            Spring.Echo("parent.tag_name = " .. tostring(parent.tag_name))
+            if parent.inner_rml then
+                Spring.Echo("PARENT INNER RML:")
+                Spring.Echo(parent.inner_rml)
+            end
+        end
+    end
+    Spring.Echo("=== END DOCUMENT INSPECTION ===")
+
+    -- Update grid view if this editor has one (e.g., FileDialog with AssetView)
+    if self.gridView and self.gridView._UpdateRmlUiGrid then
+        Log.Notice("Updating grid view for dialog")
+        self.gridView:_UpdateRmlUiGrid()
+    end
+
+    Log.Notice("Dialog shown")
+end
+
+-- New RmlUi finalization (new API with layout options)
+function Editor:_FinalizeRmlUiNew(layout, opts)
+    self.actionButtons = layout.actionButtons or {}
+    self.regularButtons = {}
+    self.filterControls = layout.filterControls or {}
+    self.gridView = layout.gridView
+    self.gridViews = layout.gridViews
+
+    -- Generate RML for action buttons (placed at top)
+    local buttonsHtml = ''
+    if #self.actionButtons > 0 then
+        buttonsHtml = '<div class="action-buttons-panel">'
+        for _, button in ipairs(self.actionButtons) do
+            buttonsHtml = buttonsHtml .. button:GenerateRml()
+        end
+        buttonsHtml = buttonsHtml .. '</div>'
+    end
+
+    -- Generate RML for filter controls
+    local filtersHtml = ''
+    if #self.filterControls > 0 then
+        filtersHtml = '<div class="filter-panel">'
+        for _, filter in ipairs(self.filterControls) do
+            if filter.GenerateRml then
+                filtersHtml = filtersHtml .. filter:GenerateRml()
+            end
+        end
+        filtersHtml = filtersHtml .. '</div>'
+    end
+
+    -- Generate RML for all fields
+    local fieldsHtml = ''
+    for _, fieldName in ipairs(self.fieldOrder) do
+        local field = self.fields[fieldName]
+        if field and not field._isGroupChild then
+            if field.GenerateRml then
+                fieldsHtml = fieldsHtml .. field:GenerateRml()
+            else
+                -- Check if it's a control with buttons inside
+                if field.ctrl then
+                    -- Check if this is an RmlUi placeholder (from new EditorButton API)
+                    if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
+                        -- Children are already RmlUi buttons, use them directly
+                        for _, rmlBtn in ipairs(field.ctrl.children) do
+                            if rmlBtn and rmlBtn.GenerateRml then
+                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
+                                table.insert(self.regularButtons, rmlBtn)
+                            end
+                        end
+                    elseif field.ctrl.GenerateRml then
+                        -- Single button with GenerateRml method
+                        fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
+                        table.insert(self.regularButtons, field.ctrl)
+                    end
+                end
+            end
+        end
+    end
+
+    -- Generate path navigation if gridView has it (AssetView)
+    local pathNavHtml = ''
+    if self.gridView and self.gridView.pathNav then
+        pathNavHtml = self.gridView.pathNav:GenerateRml()
+    end
+
+    -- Generate grid container if editor has a gridView
+    local gridHtml = ''
+    if self.gridView then
+        gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
+    end
+
+    -- Generate multiple grid containers if editor has gridViews
+    local gridsHtml = ''
+    if self.gridViews then
+        for name, gridView in pairs(self.gridViews) do
+            if gridView and gridView.gridId then
+                -- Start hidden by default (TextureEditor will show them when entering appropriate state)
+                gridsHtml = gridsHtml .. string.format('<div id="%s" class="grid-container hidden" data-grid-name="%s"></div>', gridView.gridId, name)
+            end
+        end
+    end
+
+    -- Combine buttons, filters, path nav, grid, and fields
+    self.generatedRml = buttonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. gridsHtml .. fieldsHtml
+
+    -- If this is a dialog (notMainWindow), create the dialog document
+    if opts.notMainWindow then
+        self:_CreateRmlUiDialog(opts)
+    else
+        -- Mark as hidden by default (will be shown when opened in main window)
+        self.hidden = true
+    end
+end
+
+-- Refresh the RmlUi content area after dynamically adding/removing fields
+-- This regenerates the RML and updates the DOM
+function Editor:RefreshContent()
+    if not SB.useRmlUi then
+        return
+    end
+
+    -- Regenerate fields HTML
+    local fieldsHtml = ''
+    for _, fieldName in ipairs(self.fieldOrder) do
+        local field = self.fields[fieldName]
+        if field and not field._isGroupChild then
+            if field.GenerateRml then
+                fieldsHtml = fieldsHtml .. field:GenerateRml()
+            else
+                -- Check if it's a control with buttons inside
+                if field.ctrl then
+                    -- Check if this is an RmlUi placeholder (from new EditorButton API)
+                    if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
+                        -- Children are already RmlUi buttons, use them directly
+                        for _, rmlBtn in ipairs(field.ctrl.children) do
+                            if rmlBtn and rmlBtn.GenerateRml then
+                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
+                            end
+                        end
+                    elseif field.ctrl.GenerateRml then
+                        -- Single button with GenerateRml method
+                        fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
+                    end
+                end
+            end
+        end
+    end
+
+    -- Rebuild generatedRml (keep buttons, filters, path nav, and grid from original, update fields)
+    local actionButtonsHtml = ''
+    if self.actionButtons and #self.actionButtons > 0 then
+        actionButtonsHtml = '<div class="action-buttons-panel">'
+        for _, button in ipairs(self.actionButtons) do
+            actionButtonsHtml = actionButtonsHtml .. button:GenerateRml()
+        end
+        actionButtonsHtml = actionButtonsHtml .. '</div>'
+    end
+
+    local filtersHtml = ''
+    if self.filterControls and #self.filterControls > 0 then
+        filtersHtml = '<div class="filter-panel">'
+        for _, filter in ipairs(self.filterControls) do
+            if filter.GenerateRml then
+                filtersHtml = filtersHtml .. filter:GenerateRml()
+            end
+        end
+        filtersHtml = filtersHtml .. '</div>'
+    end
+
+    local pathNavHtml = ''
+    if self.gridView and self.gridView.pathNav then
+        pathNavHtml = self.gridView.pathNav:GenerateRml()
+    end
+
+    local gridHtml = ''
+    if self.gridView then
+        gridHtml = string.format('<div id="%s" class="grid-container"></div>', self.gridView.gridId)
+    end
+
+    local gridsHtml = ''
+    if self.gridViews then
+        for name, gridView in pairs(self.gridViews) do
+            if gridView and gridView.gridId then
+                gridsHtml = gridsHtml .. string.format('<div id="%s" class="grid-container hidden" data-grid-name="%s"></div>', gridView.gridId, name)
+            end
+        end
+    end
+
+    self.generatedRml = actionButtonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. gridsHtml .. fieldsHtml
+
+    -- Update the DOM if this editor is currently visible
+    if not self.hidden and SB.view and SB.view.mainDocument then
+        local mainContent = SB.view.mainDocument:GetElementById("main-content")
+        if mainContent then
+            local html = '<div class="editor-container">' .. self.generatedRml .. '</div>'
+            mainContent.inner_rml = html
+
+            -- Rebind all fields to their new DOM elements
+            for _, field in pairs(self.fields) do
+                if field.BindToDocument then
+                    field:BindToDocument()
+                end
+            end
+
+            -- Rebind all field events
+            SB.view:BindFieldEvents(self)
+
+            -- Update grid if present
+            if self.gridView then
+                SB.delay(function()
+                    self.gridView:_UpdateRmlUiGrid()
+                end)
+            end
+        end
+    end
+end
+
+-- New Chili finalization (new API with layout options)
+function Editor:_FinalizeChiliNew(layout, opts)
+    local actionButtons = layout.actionButtons or {}
+    local customControls = layout.customControls or {}
+
+    -- Build children array for Chili
+    local children = {}
+
+    -- Add action buttons first
+    for _, btn in ipairs(actionButtons) do
+        table.insert(children, btn)
+    end
+
+    -- Add custom controls if provided
+    for _, ctrl in ipairs(customControls) do
+        table.insert(children, ctrl)
+    end
+
+    -- Add ScrollPanel with fields
+    local yPos = #actionButtons > 0 and 70 or 0
+    table.insert(children, ScrollPanel:New {
+        x = 0,
+        y = yPos,
+        bottom = 30,
+        right = 0,
+        borderColor = {0,0,0,0},
+        horizontalScrollbar = false,
+        children = { self.stackPanel },
+    })
+
+    -- Use the old Chili window creation
+    self:_FinalizeChiliWindow(children, opts)
+end
+
+-- Show the editor in RmlUi mode
+function Editor:ShowRmlUi()
+    self.hidden = false
+    if SB.view and SB.view.OpenEditor then
+        -- Trigger view to display this editor
+        for name, editor in pairs(SB.editors) do
+            if editor == self then
+                SB.view:DisplayEditor(name)
+                break
+            end
+        end
+    end
+end
+
+-- Hide the editor in RmlUi mode
+function Editor:HideRmlUi()
+    self.hidden = true
+end

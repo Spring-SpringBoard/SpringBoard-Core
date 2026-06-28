@@ -48,19 +48,7 @@ function TerrainSettingsEditor:init()
     self:_AddMapTextureControls()
     -- self:_AddMapCompileControls()
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-
-    self:Finalize(children)
+    self:Finalize({})
 end
 
 function TerrainSettingsEditor:_AddMapTextureControls()
@@ -292,6 +280,10 @@ function NewEngineTextureDialog:ConfirmDialog()
             opts.texture = self.fields["texture"].value
         end
         local tex = SB.model.textureManager:MakeAndEnableMapShadingTexture(opts)
+
+        -- Hand ownership to Rust. Issued after the Lua call so the synced command
+        -- reaches the gadget next frame and Rust binds last (the rendered copy).
+        SB.commandManager:execute(MakeShadingTextureCommand(opts))
 
         SB.commandManager:execute(ClearUndoRedoCommand())
     end)

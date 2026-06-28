@@ -348,21 +348,8 @@ function ObjectPropertyWindow:init()
     self:super("init")
     self.__avgPosValue = true
 
-    local children = {}
+    self:Finalize({})
 
-    table.insert(children,
-        ScrollPanel:New {
-            x = 0,
-            y = "0%",
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        }
-    )
-
-    self:Finalize(children)
     SB.view.selectionManager:addListener(self)
     self:OnSelectionChanged()
     SB.commandManager:addListener(self)
@@ -568,8 +555,10 @@ function ObjectPropertyWindow:OnSelectionChanged()
     end
 
     if not bridge then
-        self.stackPanel:EnableRealign()
-        self.stackPanel:Invalidate()
+        if self.stackPanel then
+            self.stackPanel:EnableRealign()
+            self.stackPanel:Invalidate()
+        end
         return
     end
 
@@ -578,8 +567,15 @@ function ObjectPropertyWindow:OnSelectionChanged()
     self:AddObjectFields(bridge, objectID)
 
     self:__UpdateFields()
-    self.stackPanel:EnableRealign()
-    self.stackPanel:Invalidate()
+    if self.stackPanel then
+        self.stackPanel:EnableRealign()
+        self.stackPanel:Invalidate()
+    end
+
+    -- Refresh RmlUi content after dynamically adding fields
+    if SB.useRmlUi then
+        self:RefreshContent()
+    end
 
     self.selectionChanging = false
 end

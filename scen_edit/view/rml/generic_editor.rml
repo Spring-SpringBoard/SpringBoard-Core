@@ -1,0 +1,20 @@
+<rml>
+<head>
+    <title>Editor</title>
+    <link rel="stylesheet" type="text/rcss" href="common.css" />
+    <link type="text/rcss" href="../rcss/editor.rcss"/>
+</head>
+<body id="generic-editor" class="editor-panel">
+    <div class="editor-header">
+        <div id="editor-toolbar" class="editor-toolbar">
+            <!-- Toolbar buttons added dynamically -->
+        </div>
+    </div>
+    <div id="editor-content" class="editor-content">
+        <!-- Fields added dynamically here -->
+    </div>
+    <div id="editor-footer" class="editor-footer">
+        <!-- Footer buttons added dynamically -->
+    </div>
+</body>
+</rml>

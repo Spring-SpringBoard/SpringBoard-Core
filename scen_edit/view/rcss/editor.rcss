@@ -1,0 +1,328 @@
+/* Editor Panel Styles */
+
+.editor-panel {
+    font-family: Poppins;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #222222;
+    display: flex;
+    flex-direction: column;
+    color: #cccccc;
+}
+
+.editor-header {
+    background-color: #2a2a2a;
+    border-bottom: 1dp #555555;
+    padding: 10dp;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.editor-header h2 {
+    color: #eeeeee;
+    font-size: 18dp;
+    margin: 0;
+}
+
+.editor-toolbar {
+    display: flex;
+    flex-direction: row;
+    gap: 5dp;
+}
+
+.toolbar-button {
+    background-color: #444444;
+    color: #eeeeee;
+    border: 1dp #666666;
+    border-radius: 3dp;
+    padding: 6dp 12dp;
+    cursor: pointer;
+}
+
+.toolbar-button:hover {
+    background-color: #555555;
+}
+
+.toolbar-button:active,
+.toolbar-button.active {
+    background-color: #3a7ebf;
+}
+
+.icon-button {
+    background-color: #444444;
+    color: #eeeeee;
+    border: 1dp #666666;
+    border-radius: 3dp;
+    width: 28dp;
+    height: 28dp;
+    font-size: 18dp;
+    cursor: pointer;
+}
+
+.icon-button:hover {
+    background-color: #555555;
+}
+
+.editor-content {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 10dp;
+}
+
+/* Split layouts */
+
+.editor-split {
+    display: flex;
+    flex-direction: row;
+    gap: 10dp;
+    height: 100%;
+}
+
+.editor-split-horizontal {
+    display: flex;
+    flex-direction: column;
+    gap: 10dp;
+    height: 100%;
+}
+
+/* Panels */
+
+.panel-header {
+    background-color: #333333;
+    padding: 8dp;
+    border-bottom: 1dp #555555;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3,
+.panel-header h4 {
+    color: #eeeeee;
+    font-size: 14dp;
+    margin: 0;
+}
+
+/* Trigger Editor specific */
+
+.trigger-list-panel {
+    width: 250dp;
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    display: flex;
+    flex-direction: column;
+}
+
+.trigger-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 5dp;
+}
+
+.trigger-item {
+    padding: 8dp;
+    margin-bottom: 3dp;
+    background-color: #333333;
+    border-radius: 3dp;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.trigger-item:hover {
+    background-color: #3a3a3a;
+}
+
+.trigger-item.selected {
+    background-color: #3a7ebf;
+}
+
+.trigger-name {
+    color: #eeeeee;
+}
+
+.trigger-enabled {
+    color: #4ade80;
+    font-size: 16dp;
+}
+
+.trigger-details-panel {
+    flex-grow: 1;
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    display: flex;
+    flex-direction: column;
+}
+
+.trigger-details-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10dp;
+}
+
+.trigger-section {
+    margin-bottom: 20dp;
+}
+
+.section-header {
+    background-color: #333333;
+    padding: 8dp;
+    border-radius: 3dp;
+    margin-bottom: 10dp;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-header h4 {
+    color: #eeeeee;
+    margin: 0;
+}
+
+.event-list,
+.condition-list,
+.action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5dp;
+}
+
+/* Object Editor specific */
+
+.property-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15dp;
+}
+
+.property-section {
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 15dp;
+}
+
+.property-section h4 {
+    color: #eeeeee;
+    margin-top: 0;
+    margin-bottom: 15dp;
+    border-bottom: 1dp #555555;
+    padding-bottom: 8dp;
+}
+
+.form-input-number {
+    background-color: #1a1a1a;
+    color: #eeeeee;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 6dp 10dp;
+    width: 100dp;
+}
+
+.form-input-number:focus {
+    border-color: #3a7ebf;
+}
+
+/* Map Editor specific */
+
+.editor-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 20dp;
+}
+
+.settings-section {
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 15dp;
+}
+
+.settings-section h4 {
+    color: #eeeeee;
+    margin-top: 0;
+    margin-bottom: 15dp;
+    border-bottom: 1dp #555555;
+    padding-bottom: 8dp;
+}
+
+.form-slider {
+    flex-grow: 1;
+    margin-right: 10dp;
+}
+
+.form-slider + span {
+    color: #eeeeee;
+    min-width: 40dp;
+    text-align: right;
+}
+
+.full-width-button {
+    width: 100%;
+    background-color: #444444;
+    color: #eeeeee;
+    border: 1dp #666666;
+    border-radius: 3dp;
+    padding: 8dp;
+    margin-top: 5dp;
+    cursor: pointer;
+}
+
+.full-width-button:hover {
+    background-color: #555555;
+}
+
+/* Texture Editor specific */
+
+.texture-palette {
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 10dp;
+}
+
+.texture-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5dp;
+    margin-bottom: 10dp;
+}
+
+.texture-item {
+    width: 64dp;
+    height: 64dp;
+    border: 2dp #555555;
+    border-radius: 3dp;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.texture-item:hover {
+    border-color: #888888;
+}
+
+.texture-item.selected {
+    border-color: #3a7ebf;
+    border-width: 3dp;
+}
+
+.texture-item img {
+    width: 100%;
+    height: 100%;
+}
+
+.texture-settings {
+    background-color: #2a2a2a;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    padding: 15dp;
+}

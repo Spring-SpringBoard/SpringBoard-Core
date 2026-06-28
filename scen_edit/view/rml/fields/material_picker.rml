@@ -1,0 +1,31 @@
+<rml>
+<head>
+    <title>Material Picker</title>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/fields.rcss"/>
+    <link type="text/rcss" href="../../rcss/dialog.rcss"/>
+    <link type="text/rcss" href="../../rcss/springboard.rcss"/>
+</head>
+<body id="material-picker" class="dialog-backdrop">
+    <div class="dialog large-dialog">
+        <div class="dialog-header">
+            <span class="dialog-title">Select Material</span>
+            <button class="dialog-close" id="btn-close">×</button>
+        </div>
+        <div class="dialog-content">
+            <div class="material-browser">
+                <div id="path-nav-container">
+                    <!-- Path navigation injected here -->
+                </div>
+                <div id="material-grid" class="grid-container material-grid">
+                    <!-- Materials populated dynamically -->
+                </div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button id="btn-ok" class="dialog-button primary">Select</button>
+            <button id="btn-cancel" class="dialog-button">Cancel</button>
+        </div>
+    </div>
+</body>
+</rml>

@@ -38,7 +38,7 @@ function HeightmapEditor:init()
         end
     }))
 
-    self.btnAddState = TabbedPanelButton({
+    self.btnAddState = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Left Click to add height, Right Click to remove height",
@@ -53,7 +53,7 @@ function HeightmapEditor:init()
         },
     })
 
-    self.btnSetState = TabbedPanelButton({
+    self.btnSetState = ActionButton({
         x = 70,
         y = 0,
         tooltip = "Left Click to set height. Right click to sample height",
@@ -68,7 +68,7 @@ function HeightmapEditor:init()
         },
     })
 
-    self.btnSmoothState = TabbedPanelButton({
+    self.btnSmoothState = ActionButton({
         x = 140,
         y = 0,
         tooltip = "Click to smooth terrain",
@@ -89,7 +89,7 @@ function HeightmapEditor:init()
     })
 
     self:AddControl("btn-show-elevation", {
-        Button:New {
+        EditorButton {
             caption = "Show elevation",
             width = 200,
             height = 40,
@@ -139,22 +139,13 @@ function HeightmapEditor:init()
     self:Update("size")
     self:SetInvisibleFields("applyDir")
 
-    local children = {
-        self.btnAddState,
-        self.btnSetState,
-        self.btnSmoothState,
-        ScrollPanel:New {
-            x = 0,
-            y = 70,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-
-    self:Finalize(children)
+    self:Finalize({
+        actionButtons = {
+            self.btnAddState,
+            self.btnSetState,
+            self.btnSmoothState,
+        }
+    })
 end
 
 function HeightmapEditor:OnLeaveState(state)

@@ -7,6 +7,7 @@ FileDialog = Editor:extends {
 
 function FileDialog:init()
     Editor.init(self)
+    self.editorTitle = self.caption
     self.confirmDialogCallback = nil
 
     self.fileView = AssetView({
@@ -34,6 +35,12 @@ function FileDialog:init()
             end
         }
     })
+    -- Set editor reference so GridView knows which document to use
+    self.fileView:SetEditor(self)
+    -- In RmlUi mode, set gridView so Editor knows to generate grid HTML
+    if SB.useRmlUi then
+        self.gridView = self.fileView
+    end
 
     local fileNameField = {
         name = "fileName",
@@ -63,28 +70,11 @@ function FileDialog:init()
     }
     self:AddControl('error', { self.error })
 
-    local children = {
-        Label:New {
-            y = 0,
-            caption = self.caption,
-            font = {
-                color = { 0.7, 0.7, 0.7, 1.0 }
-            },
-        },
-        self.fileView:GetControl(),
-        ScrollPanel:New {
-            x = 0,
-            bottom = SB.conf.B_HEIGHT + 10,
-            height = 120,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        }
-    }
-
-    self:Finalize(children, {
+    self:Finalize({
+        gridView = self.fileView,
+    }, {
         notMainWindow = true,
+        caption = self.caption or "File Dialog",
         buttons = { "ok", "cancel" },
         x = 500,
         y = 200,

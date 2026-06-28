@@ -24,7 +24,7 @@ function PlayersWindow:init()
     SB.model.teamManager:addListener(self)
     self:Populate()
 
-    self.btnAddPlayer = TabbedPanelButton({
+    self.btnAddPlayer = ActionButton({
         x = 0,
         y = 0,
         tooltip = "Add team",
@@ -47,21 +47,11 @@ function PlayersWindow:init()
         self.btnAddPlayer
     })
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            y = 80,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = {
-                self.teamsPanel
-            },
+    self:Finalize({
+        actionButtons = {
+            self.btnAddPlayer,
         },
-        self.btnAddPlayer,
-    }
-    self:Finalize(children)
+    })
 end
 
 function PlayersWindow:Populate()

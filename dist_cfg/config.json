@@ -87,6 +87,30 @@
     },
     {
       "package": {
+        "id": "dev-bar-dev",
+        "display": "Development (Dev BAR Engine)"
+      },
+      "downloads": {
+        "engines" : [ "local-build-v2" ]
+      },
+      "auto_start" : true,
+      "no_downloads" : true,
+      "load_dev_exts": false,
+      "launch": {
+        "game": "SpringBoard Core $VERSION",
+        "map": "sb_initial_blank_10x8",
+        "map_options": {
+          "new_map_x": 10,
+          "new_map_y": 8
+        },
+        "game_options": {
+          "MapSeed": 42
+        }
+      }
+    },
+
+    {
+      "package": {
         "id": "asset-download",
         "display": "Asset Download(~1.8GB)"
       },

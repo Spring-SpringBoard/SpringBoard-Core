@@ -1,7 +1,10 @@
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/floating/control_buttons_model.lua'))
+
 ControlButtons = LCS.class{}
 
 function ControlButtons:init(parent)
-    self.started = false --FIXME: check instead of assuming
+    self.model = ControlButtonsModel()
+
     self.btnStartStop = Button:New {
         caption='',
         y = 0,
@@ -11,23 +14,7 @@ function ControlButtons:init(parent)
         backgroundColor = SB.conf.BTN_ADD_COLOR,
         OnClick = {
             function()
-                local frame = Spring.GetGameFrame()
-                if self.__lastFrame then
-                    if frame - self.__lastFrame < 15 then
-                        return
-                    end
-                end
-                self.__lastFrame = frame
-
-                if not self.started then
-                    local cmd = StartCommand()
-                    SB.commandManager:execute(cmd)
-                    self:GameStarted()
-                else
-                    local cmd = StopCommand()
-                    SB.commandManager:execute(cmd)
-                    self:GameStopped()
-                end
+                self.model:ToggleStartStop()
             end
         }
     }
@@ -41,7 +28,7 @@ function ControlButtons:init(parent)
         -- backgroundColor = SB.conf.BTN_ADD_COLOR,
         OnClick = {
             function()
-                SB.view:SetVisible(not SB.view.__visible)
+                self.model:ToggleUIVisibility()
             end
         },
         children = {
@@ -53,6 +40,15 @@ function ControlButtons:init(parent)
             }
         },
     }
+
+    -- Register view callbacks with model
+    self.model.onGameStarted = function()
+        self:OnGameStarted()
+    end
+    self.model.onGameStopped = function()
+        self:OnGameStopped()
+    end
+
     self:UpdateStartStopButton()
 
     local x
@@ -90,53 +86,11 @@ function ControlButtons:init(parent)
             self.btnShowToggle
         }
     }
-
-    self:UpdateGameDrawing()
-end
-
--- All this better belongs to some command/model
-function ControlButtons:UpdateGameDrawing()
-    -- show/hide SB GUI
-    if SB.view then
-        if not self.started then
-            SB.view:SetVisible(true)
-        else
-            SB.view:SetVisible(false)
-        end
-    end
-
-    if self.started then
-        SB.delay(function()
-            local success, msg = pcall(function()
-                local OnStopEditingUnsynced = SB.model.game.OnStopEditingUnsynced
-                if OnStopEditingUnsynced then
-                    OnStopEditingUnsynced()
-                end
-            end)
-            if not success then
-                Log.Error(msg)
-                Log.Error("Error in custom OnStopEditingUnsynced")
-            end
-        end)
-    else
-        SB.delay(function()
-            local success, msg = pcall(function()
-                local OnStartEditingUnsynced = SB.model.game.OnStartEditingUnsynced
-                if OnStartEditingUnsynced then
-                    OnStartEditingUnsynced()
-                end
-            end)
-            if not success then
-                Log.Error(msg)
-                Log.Error("Error in custom OnStartEditingUnsynced")
-            end
-        end)
-    end
 end
 
 function ControlButtons:UpdateStartStopButton()
     self.btnStartStop:ClearChildren()
-    if not self.started then
+    if not self.model:IsStarted() then
         self.btnStartStop.tooltip = "Start scenario"
         self.btnStartStop:AddChild(
             Image:New {
@@ -159,8 +113,7 @@ function ControlButtons:UpdateStartStopButton()
     end
 end
 
-function ControlButtons:GameStarted()
-    self.started = true
+function ControlButtons:OnGameStarted()
     self:UpdateStartStopButton()
     self.btnStartStop.backgroundColor = SB.conf.BTN_CANCEL_COLOR
     self.btnStartStop.Update = function(obj, ...)
@@ -170,15 +123,10 @@ function ControlButtons:GameStarted()
         obj:Invalidate()
         obj:RequestUpdate()
     end
-
-    self:UpdateGameDrawing()
 end
 
-function ControlButtons:GameStopped()
-    self.started = false
+function ControlButtons:OnGameStopped()
     self:UpdateStartStopButton()
     self.btnStartStop.backgroundColor = SB.conf.BTN_ADD_COLOR
     self.btnStartStop.Update = Chili.Button.Update
-
-    self:UpdateGameDrawing()
 end

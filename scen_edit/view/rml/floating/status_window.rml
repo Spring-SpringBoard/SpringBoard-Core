@@ -1,0 +1,12 @@
+<rml>
+<head>
+    <title>Status Window</title>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/floating.rcss"/>
+</head>
+<body id="status-window" class="floating-panel" data-model="status_window">
+    <div id="status-position" class="status-line" data-bind="inner_rml position"></div>
+    <div id="status-memory" class="status-line" data-bind="inner_rml memory"></div>
+    <div id="status-version" class="status-line" data-bind="inner_rml version"></div>
+</body>
+</rml>

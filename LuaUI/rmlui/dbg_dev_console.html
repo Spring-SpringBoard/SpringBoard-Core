@@ -1,0 +1,38 @@
+<rml>
+	<head>
+		<title>Developer Console</title>
+		<link rel="stylesheet" type="text/rcss" href="common.css" />
+		<link rel="stylesheet" type="text/rcss" href="dbg_dev_console.css" />
+	</head>
+	<body id="dev-console-body" data-model="dbg_dev_console">
+		<div id="console-root">
+			<div id="console" class="dev-console">
+				<div class="header">
+					<div class="title"></div>
+				</div>
+
+				<div id="log-container" class="log-container" readonly="readonly">
+					<div class="log-line" data-for="line, i : lines">{{ line.text }}</div>
+				</div>
+
+				<div class="toolbar">
+					<button id="btn-clear" onclick="widget:OnClearClicked(event)">Clear</button>
+					<button id="btn-filter-problems" class="toggle" onclick="widget:OnFilterProblemsClicked(event)">Problems</button>
+					<button id="btn-session" class="toggle" onclick="widget:OnSessionFilterClicked(event)">This session</button>
+					<button id="btn-reload-luaui" onclick="widget:OnReloadLuaUIClicked(event)">LuaUI Reload</button>
+					<button id="btn-reload-luarules" onclick="widget:OnReloadLuaRulesClicked(event)">LuaRules Reload</button>
+					<button id="btn-cheating" class="toggle" onclick="widget:OnToggleCheating(event)">Cheating</button>
+					<button id="btn-globallos" class="toggle" onclick="widget:OnToggleGlobalLos(event)">Global LOS</button>
+					<button id="btn-godmode" class="toggle" onclick="widget:OnToggleGodMode(event)">GodMode</button>
+					<button id="btn-restart" onclick="widget:OnRestartClicked(event)">Restart</button>
+					<button id="btn-popup" class="toggle" onclick="widget:OnTogglePopupClicked(event)">Popup on error</button>
+					<button id="btn-visibility" class="toggle" onclick="widget:OnToggleVisibilityClicked(event)">Hide (F8)</button>
+					<button id="btn-debug-mode" class="toggle hidden" onclick="widget:OnToggleDebugMode(event)">Debug Mode</button>
+					<button id="btn-profiler" class="toggle hidden" onclick="widget:OnToggleProfiler(event)">Toggle profiling</button>
+				</div>
+			</div>
+		</div>
+	</body>
+
+
+</rml>

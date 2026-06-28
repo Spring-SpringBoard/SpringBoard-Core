@@ -23,3 +23,8 @@ jobs:
         run: |
           source env/bin/activate
           luacheck scen_edit triggers libs_sb/utils libs_sb/savetable.lua --enable 1
+
+      - name: Run Lua command-bridge tests
+        run: |
+          source env/bin/activate
+          lua tools/lua_tests/command_bridge_test.lua

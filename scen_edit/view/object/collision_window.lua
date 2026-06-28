@@ -13,8 +13,6 @@ CollisionView:Register({
 function CollisionView:init()
     self:super("init")
 
-    local children = {}
-
     self:AddControl("btn-show-vol", {
         Button:New {
             caption = "Show volume",
@@ -271,19 +269,7 @@ function CollisionView:init()
         tooltip = "Blocks height changes",
     }))
 
-    table.insert(children,
-        ScrollPanel:New {
-            x = 0,
-            y = "0%",
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        }
-    )
-
-    self:Finalize(children)
+    self:Finalize({})
     SB.view.selectionManager:addListener(self)
     self:OnSelectionChanged()
     SB.commandManager:addListener(self)

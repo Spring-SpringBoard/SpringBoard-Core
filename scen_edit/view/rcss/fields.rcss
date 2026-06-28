@@ -1,0 +1,146 @@
+/* Common Field Styles - used across dialogs, editors, and floating windows */
+
+.field-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.field-row.hidden {
+    display: none;
+}
+
+.field-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
+.field-inline .field-label {
+    width: 60px;
+    flex-shrink: 0;
+    color: #cccccc;
+    font-size: 12px;
+}
+
+.field-inline .field-input {
+    width: 80px;
+    flex-shrink: 0;
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1px #555555;
+    padding: 4px;
+    font-size: 12px;
+}
+
+.field-label {
+    width: 150px;
+    flex-shrink: 0;
+    color: #cccccc;
+    font-size: 12px;
+}
+
+.field-input {
+    width: 180px;
+    flex-shrink: 0;
+    background-color: #3a3a3a;
+    color: #ffffff;
+    border: 1px #555555;
+    padding: 4px;
+    font-size: 12px;
+}
+
+.field-input:focus {
+    border-color: #3a7ebf;
+    background-color: #2a2a2a;
+}
+
+.field-checkbox {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    background-color: #3a3a3a;
+    border: 1px #555555;
+}
+
+.field-checkbox:checked {
+    background-color: #3a7ebf;
+    border-color: #2a5f8f;
+}
+
+.field-button {
+    width: 120px;
+    min-height: 18px;
+    flex-shrink: 0;
+    background-color: #3a7ebf;
+    color: #ffffff;
+    border-color: #2a5f8f;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.field-button:hover {
+    background-color: #4a8ecf;
+}
+
+.field-button:active {
+    background-color: #3a7ebf;
+    border-color: #2a5f8f;
+}
+
+.field-color-button {
+    width: 70px;
+    flex-shrink: 0;
+    color: #ffffff;
+    border: 2px #555555;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.field-color-button:hover {
+    border-color: #777777;
+}
+
+.field-color-button:active {
+    border-color: #999999;
+}
+
+/* Grid Container - for asset/material browsers */
+.grid-container {
+    border: 1px #555555;
+    border-radius: 3px;
+    background-color: #1a1a1a;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    padding: 5px;
+    gap: 5px;
+}
+
+.grid-container.hidden {
+    display: none;
+}
+
+/* Grid Item */
+.grid-item {
+    width: 64px;
+    height: 64px;
+    border: 1px #444444;
+    border-radius: 2px;
+    cursor: pointer;
+    background-color: #2a2a2a;
+}
+
+.grid-item:hover {
+    border-color: #777777;
+}
+
+.grid-item.selected {
+    border-color: #3a7ebf;
+    border-width: 2px;
+}

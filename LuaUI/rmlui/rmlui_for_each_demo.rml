@@ -1,0 +1,74 @@
+<rml>
+<head>
+	<title>RmlUi For-Each Demo</title>
+	<style>
+		body {
+			width: 440dp;
+			min-height: 300dp;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			margin: 0;
+			margin-left: -220dp; /* half of width to center horizontally */
+			margin-top: -180dp;  /* approx half of typical height for vertical centering */
+			background-color: #1f1f1f;
+			color: #f5f5f5;
+			font-family: Poppins;
+			padding: 20dp;
+			border: 1dp #444;
+			box-shadow: rgba(0, 0, 0, 0.35) 0 6dp 12dp;
+		}
+
+		h1 {
+			margin-bottom: 8dp;
+		}
+
+		p {
+			color: #cfd1d4;
+		}
+
+		.card {
+			padding: 10dp;
+			margin-top: 12dp;
+			background-color: #2a2a2a;
+			border: 1dp #383838;
+			border-radius: 6dp;
+		}
+
+		.row {
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			gap: 6dp;
+			padding: 4dp 0;
+		}
+
+		.tag {
+			padding: 2dp 6dp;
+			border-radius: 4dp;
+			background-color: #404040;
+			color: #f5f5f5;
+			font-size: 12dp;
+		}
+	</style>
+</head>
+<body>
+	<div data-model="rmlui_for_each_demo">
+		<h1>For-Each Binding</h1>
+		<p>Simple data-for loops showing Lua tables rendered by RmlUi.</p>
+
+		<div class="card">
+			<p>Available Themes:</p>
+			<div class="row" data-for="theme : dataBindingExamples.availableThemes">
+				<div>{{theme.name}}</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="row" data-for="note : notes">
+				<div>{{note}}</div>
+			</div>
+		</div>
+	</div>
+</body>
+</rml>

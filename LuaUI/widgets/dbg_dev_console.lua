@@ -11,12 +11,12 @@
 
 function widget:GetInfo()
 	return {
-		name    = 'Developer Console',
-		desc    = 'Displays useful information for developers',
-		author  = 'Bluestone, gajop, GoogleFrog',
-		date    = '2016+',
-		license = 'GNU GPL v2',
-		layer   = 5000,
+		name = "Developer Console",
+		desc = "Displays useful information for developers",
+		author = "Bluestone, gajop, GoogleFrog",
+		date = "2016+",
+		license = "GNU GPL v2",
+		layer = 5000,
 		enabled = true
 	}
 end
@@ -40,13 +40,13 @@ local COMMAND_NAME = "toggleDevConsole"
 
 -- Config --
 local cfg = {
-	msgCap      = 50,
+	msgCap = 50,
 	reloadLines = 50000,
 	visible = true,
 	onlyErrorsAndWarnings = false,
 	popupOnError = true,
 	popupOnWarning = false, -- not configurable atm
-	onlySinceLastReload = true,
+	onlySinceLastReload = true
 }
 local fontSize = 14
 
@@ -54,23 +54,22 @@ local fontSize = 14
 
 -- Text Colour Config --
 local color = {
-	oAlly  = '\255\255\128\128', --enemy ally messages (seen only when spectating)
-	misc   = '\255\200\200\200', --everything else
-	game   = '\255\102\255\255', --server (autohost) chat
-	other  = '\255\255\255\255', --normal chat color
-	ally   = '\255\001\255\001', --ally chat
-	spec   = '\255\255\255\001', --spectator chat
-	error  = '\255\255\001\001',
-	warning= '\255\255\245\001',
-	blue   = '\255\001\255\255',
+	oAlly = "\255\255\128\128", --enemy ally messages (seen only when spectating)
+	misc = "\255\200\200\200", --everything else
+	game = "\255\102\255\255", --server (autohost) chat
+	other = "\255\255\255\255", --normal chat color
+	ally = "\255\001\255\001", --ally chat
+	spec = "\255\255\255\001", --spectator chat
+	error = "\255\255\001\001",
+	warning = "\255\255\245\001",
+	blue = "\255\001\255\255"
 }
 
 local function SetWindowVisibility(visible)
-	if not window then
-		loadWindow()
-		ReloadAllMessages()
-	end
 	cfg.visible = visible
+	if not (window and window.parent) then
+		return
+	end
 	window:SetVisibility(visible)
 end
 local function ToggleWindowVisibility()
@@ -112,41 +111,46 @@ local function UpdateFilterProblems()
 end
 
 function loadWindow()
+	Chili = Chili or WG.SBChili or WG.Chili
+	screen = screen or Chili.Screen0
 	local wBottom = 0
 	local wRight = 0
 	local classname
 	if WG.SB and WG.SB.conf then
 		wBottom = WG.SB.conf.BOTTOM_BAR_HEIGHT
 		wRight = WG.SB.conf.RIGHT_PANEL_WIDTH
-		classname = 'sb_window'
+		classname = "sb_window"
 	end
 	-- parent
-	window = Chili.Window:New {
-		parent    = screen,
+	window =
+		Chili.Window:New {
+		parent = screen,
 		draggable = false,
 		resizable = false,
 		x = 0,
 		right = wRight,
 		bottom = wBottom,
 		height = 400,
-		itemPadding = {5,5,10,10},
-		classname = classname,
+		itemPadding = {5, 5, 10, 10},
+		classname = classname
 	}
 	-- chat box
-	local msgWindow = Chili.ScrollPanel:New {
+	local msgWindow =
+		Chili.ScrollPanel:New {
 		verticalSmartScroll = true,
 		parent = window,
 		x = 0,
 		y = 0,
 		right = 0,
-		height = '82%',
-		padding = {0,0,0,0},
-		borderColor = {0,0,0,0},
+		height = "82%",
+		padding = {0, 0, 0, 0},
+		borderColor = {0, 0, 0, 0}
 	}
-	log = Chili.TextBox:New {
+	log =
+		Chili.TextBox:New {
 		parent = msgWindow,
-		width = '100%',
-		padding = {0,0,0,0},
+		width = "100%",
+		padding = {0, 0, 0, 0},
 		align = "left",
 		valign = "ascender",
 		selectable = true,
@@ -168,11 +172,11 @@ function loadWindow()
 			outlineWeight = 3,
 			size = fontSize,
 			color = {1.0, 1.0, 1.0, 0.7}
-		},
+		}
 	}
 	local el_size = 8.5
 	local curr_x = 0
-	local widthStr = ('%f%%'):format(el_size)
+	local widthStr = ("%f%%"):format(el_size)
 	local heightStr = "12%"
 	local padding = 0.5
 
@@ -180,7 +184,7 @@ function loadWindow()
 
 	Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
@@ -195,16 +199,17 @@ function loadWindow()
 	}
 
 	curr_x = curr_x + el_size + padding
-	btnFilterProblems = Chili.Button:New {
+	btnFilterProblems =
+		Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
 		tooltip = "Toggles whether all messages should be displayed, or just warnings and errors.",
 		caption = "Problems",
 		fontSize = btnFontSize,
-		classname = 'toggle_button',
+		classname = "toggle_button",
 		checked = cfg.onlyErrorsAndWarnings,
 		OnClick = {
 			function(obj)
@@ -217,14 +222,14 @@ function loadWindow()
 	curr_x = curr_x + el_size + padding
 	Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
-		tooltip = 'Show messages since the most recent luaui/luarules reload',
+		tooltip = "Show messages since the most recent luaui/luarules reload",
 		caption = "This session",
 		fontSize = btnFontSize,
-		classname = 'toggle_button',
+		classname = "toggle_button",
 		checked = cfg.onlySinceLastReload,
 		OnClick = {
 			function(obj)
@@ -237,7 +242,7 @@ function loadWindow()
 	curr_x = curr_x + el_size + padding
 	Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
@@ -252,7 +257,7 @@ function loadWindow()
 	curr_x = curr_x + el_size + padding
 	Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
@@ -266,15 +271,16 @@ function loadWindow()
 		}
 	}
 	curr_x = curr_x + el_size + padding
-	btnToggleCheating = Chili.Button:New {
+	btnToggleCheating =
+		Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
 		caption = "Cheating",
 		fontSize = btnFontSize,
-		classname = 'toggle_button',
+		classname = "toggle_button",
 		checked = Spring.IsCheatingEnabled(),
 		OnClick = {
 			function()
@@ -283,15 +289,16 @@ function loadWindow()
 		}
 	}
 	curr_x = curr_x + el_size + padding
-	btnToggleGlobalLOS = Chili.Button:New {
+	btnToggleGlobalLOS =
+		Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
 		caption = "GlobalLos",
 		fontSize = btnFontSize,
-		classname = 'toggle_button',
+		classname = "toggle_button",
 		checked = Spring.GetGlobalLos(Spring.GetMyAllyTeamID()),
 		OnClick = {
 			function()
@@ -301,15 +308,16 @@ function loadWindow()
 		}
 	}
 	curr_x = curr_x + el_size + padding
-	btnToggleGodMode = Chili.Button:New {
+	btnToggleGodMode =
+		Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
 		caption = "GodMode",
 		fontSize = btnFontSize,
-		classname = 'toggle_button',
+		classname = "toggle_button",
 		checked = Spring.IsGodModeEnabled(),
 		OnClick = {
 			function()
@@ -321,7 +329,7 @@ function loadWindow()
 	curr_x = curr_x + el_size + padding
 	Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
@@ -337,15 +345,15 @@ function loadWindow()
 	curr_x = curr_x + el_size + padding
 	Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
-		tooltip = '',
+		tooltip = "",
 		caption = "Popup on error",
 		fontSize = btnFontSize,
 		checked = cfg.popupOnError,
-		classname = 'toggle_button',
+		classname = "toggle_button",
 		OnClick = {
 			function(obj)
 				TogglePopUpOnError()
@@ -357,11 +365,11 @@ function loadWindow()
 	curr_x = curr_x + el_size + padding
 	Chili.Button:New {
 		parent = window,
-		x = ('%f%%'):format(curr_x),
+		x = ("%f%%"):format(curr_x),
 		bottom = 0,
 		width = widthStr,
 		height = heightStr,
-		tooltip = '',
+		tooltip = "",
 		caption = "Hide/Show (F8)",
 		fontSize = btnFontSize,
 		OnClick = {
@@ -374,13 +382,14 @@ function loadWindow()
 	if not WG.SB then
 		curr_x = curr_x + el_size + padding
 		local dbgBtn
-		dbgBtn = Chili.Button:New {
+		dbgBtn =
+			Chili.Button:New {
 			parent = window,
-			x = ('%f%%'):format(curr_x),
+			x = ("%f%%"):format(curr_x),
 			bottom = 0,
 			width = widthStr,
 			height = heightStr,
-			tooltip = '',
+			tooltip = "",
 			caption = "Debug ",
 			fontSize = btnFontSize,
 			OnClick = {
@@ -405,30 +414,32 @@ function loadWindow()
 	if WG.Profiler then
 		curr_x = curr_x + el_size + padding
 		local btnProf
-		btnProf = Chili.Button:New {
+		btnProf =
+			Chili.Button:New {
 			parent = window,
-			x = ('%f%%'):format(curr_x),
+			x = ("%f%%"):format(curr_x),
 			bottom = 0,
 			width = widthStr,
 			height = heightStr,
-			tooltip = '',
+			tooltip = "",
 			caption = "Toggle profiling",
-			OnClick = {function()
-				if WG.Profiler.IsStarted() then
-					WG.Profiler.Stop()
-					-- btnProf:SetCaption("Stop profiling")
-				else
-					WG.Profiler.Start()
-					-- btnProf:SetCaption("Start profiling")
+			OnClick = {
+				function()
+					if WG.Profiler.IsStarted() then
+						-- btnProf:SetCaption("Stop profiling")
+						WG.Profiler.Stop()
+					else
+						-- btnProf:SetCaption("Start profiling")
+						WG.Profiler.Start()
+					end
 				end
-			end
 			}
 		}
-		-- if WG.Profiler.IsStarted() then
-		-- 	btnProf:SetCaption("Stop profiling")
-		-- else
-		-- 	btnProf:SetCaption("Start profiling")
-		-- end
+	-- if WG.Profiler.IsStarted() then
+	-- 	btnProf:SetCaption("Stop profiling")
+	-- else
+	-- 	btnProf:SetCaption("Start profiling")
+	-- end
 	end
 end
 
@@ -444,30 +455,30 @@ function widget:TextCommand(command)
 	end
 end
 
+local function enabled()
+	return Spring.GetGameRulesParam("gameMode") ~= "play" and Spring.GetGameRulesParam("useRml") ~= "true"
+end
+
 function widget:Initialize()
-	Spring.SendCommands('console 0')
-	if Spring.GetGameRulesParam("gameMode") == "play" then
+	if not enabled() then
 		widgetHandler:RemoveWidget(self)
 		return
 	end
+	Spring.SendCommands("console 0")
 	Chili = WG.SBChili or WG.Chili
 	screen = Chili.Screen0
 	if WG.Connector then
 		self.openFileCallback = function(cmd)
-			Spring.Echo('Opened in editor: ' .. tostring(cmd.path))
+			Spring.Echo("Opened in editor: " .. tostring(cmd.path))
 		end
 		WG.Connector.Register("OpenFileFinished", self.openFileCallback)
 	end
-	Spring.SendCommands('bind f8 ' .. COMMAND_NAME)
-	Spring.SendCommands('console 0')
-	if not window then
-		loadWindow()
-		ReloadAllMessages()
-	end
+	Spring.SendCommands("bind f8 " .. COMMAND_NAME)
+	Spring.SendCommands("console 0")
 end
 
 function widget:Shutdown()
-	Spring.SendCommands('unbind f8 ' .. COMMAND_NAME)
+	Spring.SendCommands("unbind f8 " .. COMMAND_NAME)
 	if window then
 		window:Dispose()
 	end
@@ -481,6 +492,10 @@ function widget:GetConfigData()
 end
 
 function widget:SetConfigData(data)
+	if not enabled() then
+		return
+	end
+
 	for k, v in pairs(data) do
 		cfg[k] = v
 	end
@@ -494,16 +509,15 @@ function widget:SetConfigData(data)
 	end
 end
 
-
 local function processLine(line)
 	-- get data from player roster
 	local roster = Spring.GetPlayerRoster()
 	local names = {}
-	for i=1,#roster do
+	for i = 1, #roster do
 		names[roster[i][1]] = true
 	end
 	-------------------------------
-	local name = ''
+	local name = ""
 	local isError = false
 	local dedup = cfg.msgCap
 	--if (names[ssub(line,2,(sfind(line,"> ") or 1)-1)] ~= nil) then
@@ -525,13 +539,13 @@ local function processLine(line)
 	--				return _, true, _ --ignore
 	--		end
 	--else
-		text = line
+	text = line
 	--end
 	local lowerLine = slower(line)
 	if sfind(lowerLine, "error") or sfind(lowerLine, "failed") then
 		textColor = color.error
 		isError = true
-	elseif sfind(lowerLine,"warning") then
+	elseif sfind(lowerLine, "warning") then
 		textColor = color.warning
 	else
 		textColor = color.other
@@ -546,7 +560,9 @@ end
 local function AddConsoleLine(msg)
 	-- parse the new line
 	local text, ignore, dedup, isError = processLine(msg)
-	if ignore then return end
+	if ignore then
+		return
+	end
 	if isError then
 		totalErrors = totalErrors + 1
 	end
@@ -596,7 +612,7 @@ function NewConsoleLine(text)
 	end
 	-- avoid creating insane numbers of children (chili can't handle it)
 	-- if #log.children > cfg.msgCap then
-		-- log:RemoveChild(log.children[1])
+	-- log:RemoveChild(log.children[1])
 	-- end
 	local filePath, lineNumber, s, e = CheckForLuaFilePath(text)
 	if not (filePath and WG.Connector and VFS.GetFileAbsolutePath) then
@@ -615,16 +631,15 @@ function NewConsoleLine(text)
 	local tooltip = {
 		startIndex = s + 3,
 		endIndex = e + 3,
-		tooltip = 'Open: ' .. text:sub(s, e)
+		tooltip = "Open: " .. text:sub(s, e)
 	}
-	text = text:sub(1, s-1) .. '\255\150\100\255' ..
-		   text:sub(s, e) .. '\b' .. text:sub(1, 4) .. text:sub(e+1)
+	text = text:sub(1, s - 1) .. "\255\150\100\255" .. text:sub(s, e) .. "\b" .. text:sub(1, 4) .. text:sub(e + 1)
 	local OnTextClick = {
 		startIndex = s,
 		endIndex = e,
 		OnTextClick = {
 			function()
-				WG.Connector.Send("OpenFile", { path = absPath })
+				WG.Connector.Send("OpenFile", {path = absPath})
 			end
 		}
 	}
@@ -673,8 +688,8 @@ end
 function ShowSinceReload()
 	RemoveAllMessages()
 	local buffer = Spring.GetConsoleBuffer(cfg.reloadLines)
-	for _,l in ipairs(buffer) do
-		if sfind(l.text,"LuaUI Entry Point") or sfind(l.text,"LuaRules Entry Point") then
+	for _, l in ipairs(buffer) do
+		if sfind(l.text, "LuaUI Entry Point") or sfind(l.text, "LuaRules Entry Point") then
 			RemoveAllMessages()
 		end
 		widget:AddConsoleLine(l.text)
@@ -690,15 +705,12 @@ function widget:Update()
 	btnToggleGodMode.checked = Spring.IsGodModeEnabled()
 end
 
-
-
 --[[
 function widget:GameFrame(n)
 	n = n + math.floor(2-4*math.random())
 	Spring.Echo("Error "..n)
 end
 ]]
-
 WG.DevConsole = {
 	SetVisibility = SetWindowVisibility
 }

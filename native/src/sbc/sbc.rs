@@ -100,6 +100,12 @@ impl SBC {
         }
     }
 
+    /// Queue an IO job from a non-command message handler (commands use
+    /// [`Context::submit_io`]).
+    pub(crate) fn submit_io_job(&mut self, job: Box<dyn crate::sbc::io::io_api::IoJob>) {
+        self.io_worker.submit(job);
+    }
+
     fn run_command(&mut self, data: serde_json::Value) {
         match parse_json_command(data) {
             Ok(Some((cmd, command_id))) => {

@@ -1,0 +1,24 @@
+<rml>
+<head>
+    <title>Dialog</title>
+    <link rel="stylesheet" type="text/rcss" href="common.css" />
+    <link type="text/rcss" href="../rcss/dialog.rcss"/>
+    <link type="text/rcss" href="../rcss/editor.rcss"/>
+    <link type="text/rcss" href="../rcss/springboard.rcss"/>
+    <link type="text/rcss" href="../rcss/fields.rcss"/>
+</head>
+<body id="dialog-backdrop" class="dialog-backdrop">
+    <div id="dialog-window" class="dialog">
+        <div class="dialog-header">
+            <span class="dialog-title" id="dialog-title">Dialog</span>
+            <button class="dialog-close" id="btn-close">×</button>
+        </div>
+        <div class="dialog-content" id="dialog-content">
+            <!-- Content will be injected here -->
+        </div>
+        <div class="dialog-footer" id="dialog-footer">
+            <!-- Buttons will be injected here -->
+        </div>
+    </div>
+</body>
+</rml>

@@ -102,20 +102,7 @@ function PlayerWindow:init(team)
         }))
     end
 
-    local children = {}
-    table.insert(children,
-        ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 0,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        }
-    )
-
-    self:Finalize(children, {
+    self:Finalize({}, {
         notMainWindow = true,
         buttons = { "close" },
     })

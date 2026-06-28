@@ -38,21 +38,47 @@ function DNTSEditor:init()
             iconY = 64,
         },
         editor = self,
-        GetNewBrush = function()
-            local tbl = self:Serialize()
-
-            local diffuse = tbl.brushTexture.diffuse
-            local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
-
-            -- invoke the UI dialog to pick the paint texture
-            CallListeners(self.fields["brushTexture"].button.OnClick)
-
-            return {
-                opts = tbl,
-                caption = nil,
-                image = texturePath,
-                tooltip = nil,
-            }
+        GetNewBrush = function(onBrushCreated)
+            if SB.useRmlUi then
+                -- Show picker first, then create brush with selected material
+                local field = self.fields["brushTexture"]
+                local picker = RmlUiMaterialPickerWindow({
+                    rootDir = field.rootDir,
+                    path = field.value and field.value.diffuse,
+                    onConfirm = function(material)
+                        -- Update field first
+                        field:SetValue(material)
+                        -- Then serialize and create brush
+                        local tbl = self:Serialize()
+                        local diffuse = tbl.brushTexture.diffuse
+                        local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
+                        local brush = {
+                            opts = tbl,
+                            caption = nil,
+                            image = texturePath,
+                            tooltip = nil,
+                        }
+                        if onBrushCreated then
+                            onBrushCreated(brush)
+                        end
+                        return true
+                    end
+                })
+                picker:Show()
+                return nil  -- Brush will be created in onConfirm callback
+            else
+                -- Chili mode: synchronous
+                local tbl = self:Serialize()
+                local diffuse = tbl.brushTexture.diffuse
+                local texturePath = ':clr' .. self.savedBrushes.iconX .. ',' .. self.savedBrushes.iconY .. ':' .. tostring(diffuse)
+                CallListeners(self.fields["brushTexture"].button.OnClick)
+                return {
+                    opts = tbl,
+                    caption = nil,
+                    image = texturePath,
+                    tooltip = nil,
+                }
+            end
         end,
     })
 
@@ -75,7 +101,7 @@ function DNTSEditor:init()
         },
     })
 
-    self.btnDNTS = TabbedPanelButton({
+    self.btnDNTS = ActionButton({
         x = 140,
         y = 0,
         tooltip = "DNTS textures",

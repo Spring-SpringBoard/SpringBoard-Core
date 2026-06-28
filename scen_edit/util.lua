@@ -239,6 +239,9 @@ function SB.HintEditor(editor, color, timeout)
 end
 
 function SB.HintControls(ctrls, color, timeout)
+    if not ctrls then
+        return
+    end
     timeout = timeout or 1
     color = color or {1, 0, 0, 1}
     local startTime = os.clock()
