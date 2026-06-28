@@ -226,12 +226,12 @@ end
 
 
 local keyPressed = true
-function widget:KeyPress(key, mods, isRepeat, label, unicode)
+function widget:KeyPress(key, keyMods, isRepeat, label, unicode)
 	if Spring.IsGUIHidden() or totalHideInterface then
 		return false
 	end
 
-	keyPressed = screen0:KeyPress(key, mods, isRepeat, label, unicode)
+	keyPressed = screen0:KeyPress(key, keyMods, isRepeat, label, unicode)
 	return keyPressed
 end
 

@@ -94,7 +94,20 @@ def prepare(
 
     write_dir = Path(tempfile.mkdtemp(prefix=prefix))
     (write_dir / "games").mkdir()
-    (write_dir / "games" / "SpringBoard Core.sdd").symlink_to(sbc_root)
+    game_dir = write_dir / "games" / "SpringBoard Core.sdd"
+    shutil.copytree(
+        sbc_root,
+        game_dir,
+        symlinks=True,
+        ignore=shutil.ignore_patterns(
+            ".git",
+            ".mypy_cache",
+            ".pytest_cache",
+            ".ruff_cache",
+            "target",
+            "__pycache__",
+        ),
+    )
 
     # The engine builds its fontconfig cache under <write_dir>/fontcache. Each
     # run uses a fresh temp dir, so without a persistent cache every launch pays a

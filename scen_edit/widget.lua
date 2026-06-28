@@ -13,6 +13,14 @@ function RecieveGadgetMessage(msg)
             SB.commandManager:HandleCommandMessage(msgObj, true)
         end
         return
+    elseif op == 'native' then
+        local msgParsed = string.sub(msg, #(SB.messageManager.prefix .. "|native|") + 1)
+        local msgTable = json.decode(msgParsed)
+        if msgTable.tag == 'command' then
+            local msgObj = Message(msgTable.tag, msgTable.data)
+            SB.commandManager:HandleCommandMessage(msgObj, true)
+        end
+        return
     end
 
     -- local tbl = loadstring(msg)()
@@ -21,6 +29,13 @@ function RecieveGadgetMessage(msg)
     -- if tag == "msg" then
     --     model:InvokeCallback(data.msgID, data.result)
     -- end
+end
+
+function widget:RecvLuaMsg(msg, playerID)
+    if msg:sub(1, #SB.messageManager.prefix) ~= SB.messageManager.prefix then
+        return
+    end
+    RecieveGadgetMessage(msg)
 end
 
 local function CheckSpringBoardDir()

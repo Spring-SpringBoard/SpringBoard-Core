@@ -13,23 +13,32 @@ pub type ParsedCommand = (Box<dyn Command>, CommandId);
 pub fn parse_json_command(
     value: serde_json::Value,
 ) -> Result<Option<ParsedCommand>, CommandParseError> {
+    // Native history/resource tracking is keyed by Lua's command id; direct
+    // native routes must provide the same field.
+    let cmd_id = serde_json::from_value::<CommandIdPeek>(value.clone()).map_err(|source| {
+        CommandParseError {
+            class: "<unknown>".to_string(),
+            source,
+        }
+    })?;
+    Ok(parse_command(value)?.map(|cmd| (cmd, cmd_id.cmd_id)))
+}
+
+/// Resolve a payload into a command by `className`, ignoring `__cmd_id`. Used for
+/// top-level commands (via [`parse_json_command`]) and for the inner commands a
+/// `CompoundCommand` groups.
+pub(crate) fn parse_command(
+    value: serde_json::Value,
+) -> Result<Option<Box<dyn Command>>, CommandParseError> {
     let class_name = serde_json::from_value::<ClassPeek>(value.clone())
         .map_err(|source| CommandParseError {
             class: "<unknown>".to_string(),
             source,
         })?
         .class_name;
-    // Native history/resource tracking is keyed by Lua's command id; direct
-    // native routes must provide the same field.
-    let cmd_id = serde_json::from_value::<CommandIdPeek>(value.clone()).map_err(|source| {
-        CommandParseError {
-            class: class_name.clone(),
-            source,
-        }
-    })?;
 
     match registry().get(class_name.as_str()).copied() {
-        Some(handler) => handler(value).map(|cmd| cmd.map(|cmd| (cmd, cmd_id.cmd_id))),
+        Some(handler) => handler(value),
         None => {
             debug!("no Rust handler for {class_name}; left to Lua");
             Ok(None)

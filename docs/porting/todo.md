@@ -12,7 +12,39 @@ stable mid-review.
 
 ---
 
-## 1. Unit-struct commands are a registration gotcha
+## 1. Objects commands: make them concrete and fully typed
+
+**What.** The three object commands are generic over `objType` and still carry
+`serde_json::Value` (`AddObjectCommand.params`, `SetObjectParamCommand.key`/`value`).
+Split them into concrete per-kind commands whose struct fields *are* the object's
+fields — typed, deserialized straight from the wire, no `serde_json::Value`:
+
+- Add:    `AddAreaCommand`, `AddFeatureCommand`, `AddUnitCommand`
+- Remove: `RemoveAreaCommand`, `RemoveFeatureCommand`, `RemoveUnitCommand`
+- Set:    `SetAreaParamCommand`, `SetFeatureParamCommand`, `SetUnitParamCommand`
+
+Each `Add*`/`Set*` lists every field of its kind explicitly (`Set*` all
+`Option<_>`; `Add*` requires the create params). Field names/types/ranges live in
+`native/src/sbc/objects/model/<kind>_s11n/fields.rs` — keep in sync.
+
+- **Area:** pos, size
+- **Feature:** defName, pos, rot, vel, dir, mass, midAimPos, blocking,
+  radiusHeight, collision, team, health, resources, rules
+- **Unit:** defName, pos, rot, vel, dir, mass, midAimPos, maxRange, blocking,
+  radiusHeight, collision, team, health, maxHealth, paralyze, capture, build,
+  tooltip, stockpile, experience, neutral, fuel, movectrl, gravity,
+  harvestStorage, resources, armored, crashing, rules, states, commands
+
+**Why.** Compile-time field validation, no per-command JSON parse, undo state
+already typed. Removes the last JSON from the objects command path, so the codec's
+`json_to_object`/`parse_named_field` fall away.
+
+**How.** One concrete command per kind via `register_command!`; serde derives do
+the parsing. `ObjectManager`'s `ObjectKind` dispatch stays as-is.
+
+---
+
+## 2. Unit-struct commands are a registration gotcha
 
 **What.** A control command with no payload is written as a braced struct with an
 empty body specifically so it deserializes:
@@ -79,7 +111,7 @@ in place and commented at each site
 
 ---
 
-## 2. In-engine tests bypass the Lua command_manager (dispatch bugs invisible to CI)
+## 3. In-engine tests bypass the Lua command_manager (dispatch bugs invisible to CI)
 
 **What.** The in-engine integration tests
 ([native/src/sbc/tests/](../../native/src/sbc/tests/)) drive Rust **directly**
@@ -110,7 +142,7 @@ and only caught by hand.
 
 ---
 
-## 3. Brush data structures: ditch nested HashMaps for vectors
+## 4. Brush data structures: ditch nested HashMaps for vectors
 
 [brush_filter_generator.rs](../../native/src/sbc/commands/heightmap/brush_filter_generator.rs)
 ports SpringBoard's brush-filter cache verbatim as
@@ -120,9 +152,17 @@ around) is a mechanical port of the Lua; vectors / a flat keyed struct would be
 far more efficient and readable. Refactor the whole brush system off nested
 HashMaps once the behavior is locked in.
 
-## 4. Load the brush greyscale directly in Rust
+## 5. Load the brush greyscale directly in Rust
 
 [set_heightmap_brush_command.rs](../../native/src/sbc/commands/set_heightmap_brush_command.rs)
 receives the greyscale shape as a large array marshalled from Lua on every
 `SetHeightmapBrushCommand`. Load the brush image directly in Rust so the big
 array doesn't cross the bridge (ties into the async-IO image work in slice 2).
+
+## 6. Object field descriptors allocate on every lookup
+
+`ObjectHandler::descriptors()` currently returns `Vec<ObjectFieldDescriptor>` by
+collecting each kind's `inventory` entries. This keeps field registration simple,
+but `ObjectManager::descriptor()` and command parsing can allocate repeatedly for
+what is effectively static metadata. Cache per-kind descriptor slices/maps once,
+or generate static descriptor arrays alongside the field registry.

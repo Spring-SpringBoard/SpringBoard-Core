@@ -52,7 +52,29 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         TerrainChangeTextureCommand = true,
         TerrainChangeTextureMergedCommand = true,
         CacheTextureCommand = true,
+        -- Objects (slice 5): units, features, and areas all have a native s11n.
+        AddObjectCommand = true,
+        RemoveObjectCommand = true,
+        SetObjectParamCommand = true,
     }
+end
+
+-- Whether the native module owns this command's execution and undo/redo. A
+-- CompoundCommand runs natively only when every command it groups does, so the
+-- native side can execute and undo the whole group as one entry.
+function CommandManager:runsNative(cmd)
+    if cmd.className == "CompoundCommand" then
+        if #cmd.commands == 0 then
+            return false
+        end
+        for _, inner in ipairs(cmd.commands) do
+            if not self:runsNative(inner) then
+                return false
+            end
+        end
+        return true
+    end
+    return self.nativeCommandsOnly[cmd.className] == true
 end
 
 function CommandManager:_SafeCall(func, label)
@@ -96,10 +118,12 @@ function CommandManager:leaveMultipleCommandMode()
         table.insert(cmdIDs, cmd.__cmd_id)
     end
     local cmd
+    local isMergeCommand = false
     if self.multipleCommandStack[1].mergeCommand then
         -- there is a special command for merging
         local env = getfenv(1)
         cmd = env[self.multipleCommandStack[1].mergeCommand](self.multipleCommandStack)
+        isMergeCommand = true
 
         if cmd.onMerge then
             self:_SafeCall(function()
@@ -111,9 +135,11 @@ function CommandManager:leaveMultipleCommandMode()
     end
     self.multipleCommandStack = {}
     self:undoListAdd(cmd)
-    -- Only the gadget sends merged commands to the single native manager; the
-    -- widget may replay the same command for UI state.
-    if not self.__isWidget and self.nativeCommandsOnly[cmd.className] then
+    -- A plain CompoundCommand's inner commands already streamed to the native
+    -- manager, which folds them into one history entry when the stream stops, so
+    -- re-sending the group here would double-execute it. A merge command (e.g. the
+    -- texture push-stack) drives native grouping itself, so it must be sent.
+    if not self.__isWidget and isMergeCommand and self:runsNative(cmd) then
         self:invokeNativeCommand(cmd)
     end
     if not self.__isWidget then
@@ -171,7 +197,7 @@ function CommandManager:__execute(cmd, isSameContext)
     end
 
     self:_SafeCall(function()
-        if cmd._execute_unsynced and not self.__isWidget and not self.nativeCommandsOnly[cmd.className] then
+        if cmd._execute_unsynced and not self.__isWidget and not self:runsNative(cmd) then
             self:_SendCommand(cmd)
         else
             -- Drive the (single, shared) native module from the gadget only.
@@ -185,11 +211,13 @@ function CommandManager:__execute(cmd, isSameContext)
             if not self.__isWidget then
                 self:invokeNativeCommand(cmd)
             end
-            if not self.nativeCommandsOnly[cmd.className] then
+            if not self:runsNative(cmd) then
                 cmd:execute()
             end
         end
-        if cmd.unexecute and not cmd.blockUndo then
+        -- Undoable if it defines a Lua :unexecute, or runs natively (Rust owns its
+        -- undo stack; Lua only tracks the entry to drive native undo/redo).
+        if (cmd.unexecute or self:runsNative(cmd)) and not cmd.blockUndo then
             if self.multipleCommandMode then
                 table.insert(self.multipleCommandStack, cmd)
             else
@@ -250,7 +278,7 @@ function CommandManager:undo()
 
     local cmd = table.remove(self.undoList, #self.undoList)
     self:_SafeCall(function()
-        if self.nativeCommandsOnly[cmd.className] then
+        if self:runsNative(cmd) then
             -- Rust owns this command's execution and its undo stack; pop there
             -- (from the gadget only, as in the execute path). Lua's
             -- cmd:unexecute() would be a no-op (Lua never executed it).
@@ -278,7 +306,7 @@ function CommandManager:redo()
 
     local cmd = table.remove(self.redoList, #self.redoList)
     self:_SafeCall(function()
-        if self.nativeCommandsOnly[cmd.className] then
+        if self:runsNative(cmd) then
             -- Rust owns this command; replay from its redo stack (gadget only,
             -- as above).
             if not self.__isWidget then

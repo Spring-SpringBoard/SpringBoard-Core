@@ -6,6 +6,7 @@ use spring_native::prelude::*;
 use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::io::io_api::IoWorker;
+use crate::sbc::objects::{event_bridge, ObjectManager};
 
 const MAX_UNDO_SIZE: usize = 100;
 
@@ -106,6 +107,10 @@ impl SBC {
                 for job in io_jobs {
                     self.io_worker.submit(job);
                 }
+                event_bridge::emit(
+                    &self.interface,
+                    self.models.get::<ObjectManager>().drain_events(),
+                );
                 self.models.on_history_events(&history_events);
             }
             Ok(None) => {}
@@ -128,7 +133,11 @@ fn log_command(msg: &str) {
         return;
     };
 
-    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    {
         let now = chrono::Local::now().format("%H:%M:%S%.3f");
         let _ = writeln!(file, "{now} {msg}");
     }

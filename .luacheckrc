@@ -21,6 +21,30 @@ std=lua51
 
 files["libs_sb/utils/luaunit.lua"] = { ignore = {"581"} }
 
+-- Third-party code bundled into the tree (git submodules, vendored libraries,
+-- Chili UI skins, engine widgets/gadgets). Not SBC editor source, so not linted.
+exclude_files = {
+    "libs_sb/chiliui/**",
+    "libs_sb/chonsole/**",
+    "libs_sb/s11n/**",
+    "libs_sb/spring-launcher/**",
+    "libs_sb/i18n/**",
+    "libs_sb/kernel/**",
+    "libs_sb/lcs/**",
+    "libs_sb/springmon/**",
+    "libs_sb/chilifx/**",
+    "libs_sb/chotify/**",
+    "libs_sb/json.lua",
+    "libs_sb/MessagePack.lua",
+    "libs_sb/savetable.lua",
+    "LuaUI/Configs/chili/**",
+    "LuaUI/Configs/chilitip_conf.lua",
+    "LuaUI/widgets/gui_chili_selections_and_cursortip.lua",
+    "LuaUI/widgets/hide_default_layout.lua",
+    "LuaRules/Configs/icon_generator.lua",
+    "LuaRules/Gadgets/unit_icongenerator.lua",
+}
+
 globals = {
     -- std extensions
     "math.round", "math.bit_or",

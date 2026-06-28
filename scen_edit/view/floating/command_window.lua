@@ -30,7 +30,7 @@ function CommandWindow:init(parent)
             height = 40,
             width = 40,
             caption = '',
-            tooltip = "Redo (Ctrl+R)",
+            tooltip = "Redo (Ctrl+Y)",
             OnClick = {
                 function()
                     SB.commandManager:execute(RedoCommand())

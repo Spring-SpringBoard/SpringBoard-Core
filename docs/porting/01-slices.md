@@ -34,7 +34,7 @@ spread across the slices they belong to, not deferred as a catch-all.
 | 2 | [Heightmap](#2-heightmap) — load + save + import / export (async IO) | done (stable; native IO seam, 16-bit PNG, raw-f32 save/load by path, import undoable) |
 | 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | review (in stable; all setters Rust-only with `Gfx`-snapshot undo) |
 | 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | review (in stable; Rust owns paint + cache + stroke close + undo/redo) |
-| 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | wip (not in stable) |
+| 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | review (in stable) |
 | 6 | [Areas](#6-areas) | wip (not in stable) |
 | 7 | [Teams & diplomacy](#7-teams--diplomacy) | wip (not in stable) |
 | 8 | [Project lifecycle](#8-project-lifecycle) — save / load / export / sync / start / stop + scenario-info | wip — core (not in stable) |

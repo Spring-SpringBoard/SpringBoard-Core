@@ -310,6 +310,8 @@ function CollisionView:OnSelectionChanged()
         self:Set("offsetZ", collision.offsetZ)
 --         self:Set("enabled", not collision.disabled)
         self:Set("vType", collision.vType)
+        self:Set("axis", collision.axis)
+        self.__collisionTestType = collision.testType or 1
 
         local radiusHeight = bridge.s11n:Get(objectID, "radiusHeight")
         self:Set("radius", radiusHeight.radius)
@@ -452,6 +454,7 @@ function CollisionView:OnFieldChange(name, value)
             offsetY                   = self.fields["offsetY"].value,
             offsetZ                   = self.fields["offsetZ"].value,
             vType                     = self.fields["vType"].value,
+            testType                  = self.__collisionTestType,
             axis                      = self.fields["axis"].value,
         }
         name = "collision"

@@ -145,7 +145,9 @@ fn set_water_texture(ctx: &mut TestCtx) -> Result<(), String> {
     ctx.route_command(serde_json::json!({ "className": "UndoCommand" }));
     let restored = water_texture(ctx, "normalTexture")?;
     if restored != before {
-        return Err(format!("normalTexture not restored: {before:?} vs {restored:?}"));
+        return Err(format!(
+            "normalTexture not restored: {before:?} vs {restored:?}"
+        ));
     }
     Ok(())
 }
