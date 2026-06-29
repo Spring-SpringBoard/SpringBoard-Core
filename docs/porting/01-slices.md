@@ -36,8 +36,8 @@ spread across the slices they belong to, not deferred as a catch-all.
 | 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | review (in stable; Rust owns paint + cache + stroke close + undo/redo) |
 | 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | review (in stable) |
 | 6 | [Areas](#6-areas) | wip (not in stable) |
-| 7 | [Teams & diplomacy](#7-teams--diplomacy) | review (in stable) |
-| 8 | [Project lifecycle](#8-project-lifecycle) — save / load / export / sync / start / stop + scenario-info | wip — core (not in stable) |
+| 7 | [Teams & diplomacy](#7-teams--diplomacy) | done (stable) |
+| 8 | [Project lifecycle](#8-project-lifecycle) — save / load / export / sync / start / stop + scenario-info | review (scenario info in stable) |
 | 9 | [Triggers + Variables](#9-triggers--variables) — depends on areas, teams | wip (not in stable) |
 
 Notes from review:
@@ -248,7 +248,7 @@ Map regions used by triggers and editor tools.
 Teams, allyteams, player-team assignment. Engine team ops bound via the `teams` /
 `synced_ctrl` APIs.
 
-**Status:** review (in stable) — add / remove / update team, set ally state, and
+**Status:** done (stable) — add / remove / update team, set ally state, and
 change-player-team are Rust-only, backed by a native `TeamManager` snapshot for
 undo/redo.
 
@@ -271,6 +271,10 @@ Save / load / export / sync / start / stop + scenario *info* (project metadata).
 Touches filesystem and project state; export commands that read engine pixel data
 are gated on the same atlas GL gap as slice 4. `resend_command.lua` (deferred from
 slice 0) lands here — it depends on s11n.
+
+**Status:** review (scenario info in stable) — `SetScenarioInfoCommand` is
+Rust-only with native undo/redo and widget-side model sync. Broader project
+save/load/export remains wip.
 
 **Model:**
 - [scen_edit/model/project.lua](../../scen_edit/model/project.lua)

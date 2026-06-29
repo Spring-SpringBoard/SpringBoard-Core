@@ -3,6 +3,7 @@ pub mod commands_api;
 mod heightmap;
 mod map_settings;
 mod objects;
+mod project;
 mod teams;
 mod textures;
 

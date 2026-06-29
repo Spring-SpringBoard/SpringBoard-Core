@@ -92,14 +92,14 @@ impl TeamManager {
             self.team_id_count = id;
         }
         self.teams.insert(id, team.clone());
-        self.notify("onTeamAdded", vec![serde_json::json!(id)]);
-        self.set_team(id, team);
+        self.apply_team_to_engine(id, &team);
+        self.widget_add_team(id, &team);
         id
     }
 
     pub fn remove_team(&mut self, team_id: i32) {
         if self.teams.remove(&team_id).is_some() {
-            self.notify("onTeamRemoved", vec![serde_json::json!(team_id)]);
+            self.widget_remove_team(team_id);
         }
     }
 
@@ -109,20 +109,9 @@ impl TeamManager {
         }
         self.teams.insert(team_id, team.clone());
 
-        let c = team.color;
-        let _ = self.interface.display().set_team_color(
-            team_id,
-            TeamColor {
-                r: c.r,
-                g: c.g,
-                b: c.b,
-                a: 1.0,
-            },
-        );
-        self.set_team_resources(team_id, &team);
+        self.apply_team_to_engine(team_id, &team);
 
-        let team_json = serde_json::to_value(&team).unwrap_or(serde_json::Value::Null);
-        self.notify("onTeamChange", vec![serde_json::json!(team_id), team_json]);
+        self.widget_update_team(team_id, &team);
     }
 
     pub fn get_team(&self, team_id: i32) -> Option<&Team> {
@@ -134,6 +123,20 @@ impl TeamManager {
         self.team_id_count
     }
 
+    fn apply_team_to_engine(&self, team_id: i32, team: &Team) {
+        let c = team.color;
+        let _ = self.interface.display().set_team_color(
+            team_id,
+            TeamColor {
+                r: c.r,
+                g: c.g,
+                b: c.b,
+                a: 1.0,
+            },
+        );
+        self.set_team_resources(team_id, team);
+    }
+
     fn set_team_resources(&self, team_id: i32, team: &Team) {
         let ctrl = self.interface.synced_ctrl();
         let team_ctrl = ctrl.team();
@@ -143,7 +146,35 @@ impl TeamManager {
         let _ = team_ctrl.set_team_resource(team_id, "es", team.energy_max);
     }
 
-    fn notify(&self, event: &str, args: Vec<serde_json::Value>) {
-        lua_bridge::notify_model(&self.interface, "teamManager", event, args);
+    fn widget_add_team(&self, team_id: i32, team: &Team) {
+        lua_bridge::widget_command(
+            &self.interface,
+            serde_json::json!({
+                "className": "WidgetAddTeamCommand",
+                "id": team_id,
+                "value": team,
+            }),
+        );
+    }
+
+    fn widget_remove_team(&self, team_id: i32) {
+        lua_bridge::widget_command(
+            &self.interface,
+            serde_json::json!({
+                "className": "WidgetRemoveTeamCommand",
+                "id": team_id,
+            }),
+        );
+    }
+
+    fn widget_update_team(&self, team_id: i32, team: &Team) {
+        lua_bridge::widget_command(
+            &self.interface,
+            serde_json::json!({
+                "className": "WidgetUpdateTeamCommand",
+                "teamID": team_id,
+                "team": team,
+            }),
+        );
     }
 }

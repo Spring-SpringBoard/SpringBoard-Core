@@ -1,5 +1,32 @@
 SB.Include(Path.Join(SB.DIRS.SRC, 'model/team_manager.lua'))
 
+local function NormalizeTeamForWidget(team, teamID)
+    team = team or {}
+    team.id = team.id or teamID
+    team.name = team.name or ('Team ' .. tostring(teamID))
+    team.metal = team.metal or 0
+    team.metalMax = team.metalMax or 0
+    team.energy = team.energy or 0
+    team.energyMax = team.energyMax or 0
+
+    if team.color == nil then
+        local r, g, b = Spring.GetTeamColor(teamID)
+        team.color = {
+            r = r or 1,
+            g = g or 1,
+            b = b or 1,
+            a = 1,
+        }
+    else
+        team.color.r = team.color.r or 1
+        team.color.g = team.color.g or 1
+        team.color.b = team.color.b or 1
+        team.color.a = team.color.a or 1
+    end
+
+    return team
+end
+
 ----------------------------------------------------------
 -- Widget callback commands
 ----------------------------------------------------------
@@ -12,7 +39,7 @@ function WidgetAddTeamCommand:init(id, value)
 end
 
 function WidgetAddTeamCommand:execute()
-    SB.model.teamManager:addTeam(self.value, self.id)
+    SB.model.teamManager:addTeam(NormalizeTeamForWidget(self.value, self.id), self.id)
 end
 ----------------------------------------------------------
 ----------------------------------------------------------
@@ -37,7 +64,7 @@ function WidgetUpdateTeamCommand:init(teamID, team)
 end
 
 function WidgetUpdateTeamCommand:execute()
-    SB.model.teamManager:setTeam(self.teamID, self.team)
+    SB.model.teamManager:setTeam(self.teamID, NormalizeTeamForWidget(self.team, self.teamID))
 end
 ----------------------------------------------------------
 -- END Widget callback commands
@@ -78,6 +105,10 @@ end)
 
 function TeamManagerListenerWidget:onTeamAdded(teamID)
     local team = SB.model.teamManager:getTeam(teamID)
+    if team == nil then
+        return
+    end
+
     -- Generate values from unsynced only once
     if team.color then
         return

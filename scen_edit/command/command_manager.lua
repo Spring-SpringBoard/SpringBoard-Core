@@ -62,6 +62,8 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         UpdateTeamCommand = true,
         SetAllyCommand = true,
         ChangePlayerTeamCommand = true,
+        -- Project lifecycle (slice 8): scenario metadata.
+        SetScenarioInfoCommand = true,
     }
 end
 
@@ -81,6 +83,13 @@ function CommandManager:runsNative(cmd)
         return true
     end
     return self.nativeCommandsOnly[cmd.className] == true
+end
+
+function CommandManager:shouldInvokeNativeOnExecute(cmd)
+    if cmd.className == "UndoCommand" or cmd.className == "RedoCommand" then
+        return false
+    end
+    return true
 end
 
 function CommandManager:_SafeCall(func, label)
@@ -214,7 +223,7 @@ function CommandManager:__execute(cmd, isSameContext)
             -- from both states (e.g. SetMultipleCommandModeCommand, which re-runs
             -- in the widget) would hit the one native manager twice and desync
             -- its streaming/undo state.
-            if not self.__isWidget then
+            if not self.__isWidget and self:shouldInvokeNativeOnExecute(cmd) then
                 self:invokeNativeCommand(cmd)
             end
             if not self:runsNative(cmd) then

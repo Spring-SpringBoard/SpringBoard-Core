@@ -9,15 +9,18 @@ Items Claude has finished implementing, awaiting human gates. Top of the list = 
 
 Each item is a one-line description and the steps to verify it in-game (read the diff for the code). Claude appends; user removes items as they're reviewed → tested → committed. Oldest first.
 
-## Teams & diplomacy (slice 7) — add / remove / update teams, alliances, player assignment — *review*
+## Project lifecycle (slice 8) — scenario info metadata — *review*
 
-`just test-integration teams` → team integration tests pass. In-editor:
+`just build-native && just test-integration project` → scenario-info integration
+test passes. In-editor:
 
-1. Add a team with a visible color/name and confirm it appears in the players window.
-2. Update that team's color/name and confirm the UI and engine state follow it.
-3. Toggle diplomacy between two allyteams and confirm the alliance state changes.
-4. Move a player to another team if a test player is available.
-5. **Ctrl+Z / Ctrl+Y** each change — undo restores, redo re-applies.
+1. Open **Misc → Info**.
+2. Edit name, description, version, and author.
+3. Confirm the fields update without Lua-side execution errors.
+4. **Ctrl+Z / Ctrl+Y** the edit group — undo restores the previous metadata,
+   redo reapplies it.
+5. Save/export once if convenient and confirm the metadata shown in the UI is
+   the edited value.
 
 ## Objects (slice 5) — units, features & areas add / remove / move / set-param — *review*
 
