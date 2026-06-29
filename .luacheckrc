@@ -60,7 +60,7 @@ globals = {
     -- Widgets
     "WG", "widgetHandler", "widget",
     -- Libs
-    "LCS", "Path", "Table", "Log", "String", "Shaders", "Time", "Array", "StartScript",
+    "LCS", "Path", "Table", "Log", "String", "Shaders", "Time", "Array", "StartScript", "json",
     -- SB speciifc
     "SB", "gfx",
 
