@@ -35,7 +35,7 @@ spread across the slices they belong to, not deferred as a catch-all.
 | 3 | [Map settings](#3-map-settings) — sun / atmosphere / water / map-rendering | review (in stable; all setters Rust-only with `Gfx`-snapshot undo) |
 | 4 | [Textures](#4-textures) — diffuse / shading / terrain texture / cache + grass + DNTS | review (in stable; Rust owns paint + cache + stroke close + undo/redo) |
 | 5 | [Objects](#5-objects) — units & features add / remove / set / move (needs s11n) | review (in stable) |
-| 6 | [Areas](#6-areas) | wip (not in stable) |
+| 6 | [Areas](#6-areas) | done (stable) |
 | 7 | [Teams & diplomacy](#7-teams--diplomacy) | done (stable) |
 | 8 | [Project lifecycle](#8-project-lifecycle) — save / load / export / sync / start / stop + scenario-info | review (scenario info in stable) |
 | 9 | [Triggers + Variables](#9-triggers--variables) — depends on areas, teams | wip (not in stable) |
@@ -232,6 +232,10 @@ s11n's per-field get/set.
 ## 6. Areas
 
 Map regions used by triggers and editor tools.
+
+**Status:** done (stable) — `ResizeAreaCommand` is
+Rust-only, applies through the native area object model, and undo/redo restores
+the previous `pos` / `size` fields.
 
 **Model:**
 - [scen_edit/model/area_manager.lua](../../scen_edit/model/area_manager.lua)

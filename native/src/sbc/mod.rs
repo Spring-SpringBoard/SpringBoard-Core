@@ -1,3 +1,4 @@
+mod areas;
 mod command_system;
 pub mod commands_api;
 mod heightmap;
