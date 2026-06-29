@@ -177,11 +177,16 @@ impl TypedField<UnitModel> for MidAim {
         })
     }
     fn set(s: &mut UnitModel, id: i32, mid_aim: &MidAimPos) {
+        let Some(pos) = Pos::get(s, id) else {
+            return;
+        };
+        let mid = vec3_add(&pos, &mid_aim.mid);
+        let aim = vec3_add(&pos, &mid_aim.aim);
         let _ = s.interface.synced_ctrl().unit().set_unit_mid_and_aim_pos(
             id,
-            mid_aim.mid.into(),
-            mid_aim.aim.into(),
-            true,
+            mid.into(),
+            aim.into(),
+            false,
         );
     }
 }
@@ -765,3 +770,11 @@ impl TypedField<UnitModel> for Commands {
     }
 }
 inventory::submit! { FieldEntry::of::<Commands>() }
+
+fn vec3_add(a: &Vec3, b: &Vec3) -> Vec3 {
+    Vec3 {
+        x: a.x + b.x,
+        y: a.y + b.y,
+        z: a.z + b.z,
+    }
+}

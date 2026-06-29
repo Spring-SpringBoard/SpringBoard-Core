@@ -161,8 +161,8 @@ impl ObjectHandler for FeatureModel {
         }
     }
 
-    /// Apply a set of fields. Mirrors Lua `_SetAllFields`: rotation goes in
-    /// before the loop (and again inside it), then is restored after a move.
+    /// Apply a set of fields. Rotation and position affect how mid/aim offsets
+    /// are interpreted, so restore them first and apply `midAimPos` last.
     fn set_fields(&mut self, model_id: i32, fields: &[FieldValue]) {
         let Some(spring_id) = self.ids.spring_id(model_id) else {
             return;
@@ -176,12 +176,22 @@ impl ObjectHandler for FeatureModel {
         if let Some(rot) = field_dyn(fields, "rot") {
             self.apply_one(spring_id, "rot", rot);
         }
-        for field in fields {
-            self.apply_one(spring_id, field.name, &*field.value);
+        if let Some(pos) = field_dyn(fields, "pos") {
+            self.apply_one(spring_id, "pos", pos);
         }
 
         if let Some(rot) = restore_rot {
             self.apply_rotation(spring_id, rot);
+        }
+
+        for field in fields {
+            if matches!(field.name, "pos" | "rot" | "midAimPos") {
+                continue;
+            }
+            self.apply_one(spring_id, field.name, &*field.value);
+        }
+        if let Some(mid_aim) = field_dyn(fields, "midAimPos") {
+            self.apply_one(spring_id, "midAimPos", mid_aim);
         }
     }
 

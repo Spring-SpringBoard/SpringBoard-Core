@@ -6,10 +6,9 @@ function RemoveTeamCommand:init(teamID)
 end
 
 function RemoveTeamCommand:execute()
-    self.team = SB.model.teamManager:getTeam(self.teamID)
-    SB.model.teamManager:removeTeam(self.teamID)
+    error("RemoveTeamCommand is native-only; Lua execute should not run")
 end
 
 function RemoveTeamCommand:unexecute()
-    self.teamID = SB.model.teamManager:addTeam(self.team, self.teamID)
+    error("RemoveTeamCommand is native-only; Lua unexecute should not run")
 end

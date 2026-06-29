@@ -9,15 +9,9 @@ function AddTeamCommand:init(name, color, allyTeam, side)
 end
 
 function AddTeamCommand:execute()
-    local team = {
-        name = self.name,
-        color = self.color,
-        allyTeam = self.allyTeam,
-        side = self.side,
-    }
-    self.newTeamID = SB.model.teamManager:addTeam(team)
+    error("AddTeamCommand is native-only; Lua execute should not run")
 end
 
 function AddTeamCommand:unexecute()
-    SB.model.teamManager:removeTeam(self.newTeamID)
+    error("AddTeamCommand is native-only; Lua unexecute should not run")
 end

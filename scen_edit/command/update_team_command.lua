@@ -7,16 +7,9 @@ function UpdateTeamCommand:init(team, onlyIfNoTeamColor)
 end
 
 function UpdateTeamCommand:execute()
-    if self.onlyIfNoTeamColor and SB.model.teamManager.__loaded_from_file then
-        return
-    end
-
-    if not self.old then
-        self.old = SB.model.teamManager:getTeam(self.team.id)
-    end
-    SB.model.teamManager:setTeam(self.team.id, self.team)
+    error("UpdateTeamCommand is native-only; Lua execute should not run")
 end
 
 function UpdateTeamCommand:unexecute()
-    SB.model.teamManager:setTeam(self.team.id, self.old)
+    error("UpdateTeamCommand is native-only; Lua unexecute should not run")
 end

@@ -17,9 +17,18 @@ pub fn values_for_descriptors(
 ) -> Vec<FieldMutation> {
     descriptors
         .iter()
-        .map(|descriptor| FieldMutation {
-            field: descriptor.name,
-            value: value_for_descriptor(descriptor, current.get(descriptor.name), seed),
+        .filter_map(|descriptor| {
+            let current_value = current.get(descriptor.name)?;
+            if descriptor.name == "health"
+                || descriptor.name == "midAimPos"
+                || descriptor.name == "team"
+            {
+                return None;
+            }
+            Some(FieldMutation {
+                field: descriptor.name,
+                value: value_for_descriptor(descriptor, Some(current_value), seed),
+            })
         })
         .collect()
 }
@@ -53,6 +62,9 @@ fn value_for_descriptor(
             "native_set_param_label": format!("case-{seed}")
         }),
         FieldValueType::String => serde_json::json!(format!("native-set-param-{seed}")),
+        FieldValueType::Vec3 if descriptor.name == "rot" => {
+            vec3_offset(current, 0.1 + n % 3.0 * 0.01, 0.2 + n % 5.0 * 0.01, 0.3)
+        }
         FieldValueType::Vec3 => vec3_offset(current, 7.0 + n % 11.0, 3.0, 5.0 + n % 13.0),
     }
 }
@@ -155,17 +167,17 @@ fn blocking(current: Option<&Value>, seed: u64) -> Value {
     })
 }
 
-fn collision(current: Option<&Value>, seed: u64) -> Value {
+fn collision(current: Option<&Value>, _seed: u64) -> Value {
     serde_json::json!({
-        "scaleX": positive_child(current, "scaleX", 8.0) + 1.0,
-        "scaleY": positive_child(current, "scaleY", 16.0) + 2.0,
-        "scaleZ": positive_child(current, "scaleZ", 8.0) + 3.0,
+        "scaleX": positive_child(current, "scaleX", 8.0),
+        "scaleY": positive_child(current, "scaleY", 16.0),
+        "scaleZ": positive_child(current, "scaleZ", 8.0),
         "offsetX": child_number(current, "offsetX").unwrap_or(0.0) + 0.5,
         "offsetY": child_number(current, "offsetY").unwrap_or(0.0) + 0.25,
         "offsetZ": child_number(current, "offsetZ").unwrap_or(0.0) + 0.75,
         "vType": child_number(current, "vType").unwrap_or(1.0) as i32,
-        "testType": 1 + (seed % 2) as i32,
-        "axis": 1 + (seed % 3) as i32
+        "testType": child_number(current, "testType").unwrap_or(1.0) as i32,
+        "axis": child_number(current, "axis").unwrap_or(1.0) as i32
     })
 }
 

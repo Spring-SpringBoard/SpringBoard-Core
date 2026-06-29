@@ -8,5 +8,5 @@ function SetAllyCommand:init(firstAllyTeamID, secondAllyTeamID, ally)
 end
 
 function SetAllyCommand:execute()
-    Spring.SetAlly(self.firstAllyTeamID, self.secondAllyTeamID, self.ally)
+    error("SetAllyCommand is native-only; Lua execute should not run")
 end

@@ -56,6 +56,12 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         AddObjectCommand = true,
         RemoveObjectCommand = true,
         SetObjectParamCommand = true,
+        -- Teams & diplomacy (slice 7).
+        AddTeamCommand = true,
+        RemoveTeamCommand = true,
+        UpdateTeamCommand = true,
+        SetAllyCommand = true,
+        ChangePlayerTeamCommand = true,
     }
 end
 

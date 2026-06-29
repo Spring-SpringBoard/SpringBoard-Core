@@ -178,11 +178,16 @@ impl TypedField<FeatureModel> for MidAim {
         })
     }
     fn set(s: &mut FeatureModel, id: i32, mid_aim: &MidAimPos) {
+        let Some(pos) = Pos::get(s, id) else {
+            return;
+        };
+        let mid = vec3_add(&pos, &mid_aim.mid);
+        let aim = vec3_add(&pos, &mid_aim.aim);
         let _ = s
             .interface
             .synced_ctrl()
             .feature()
-            .set_feature_mid_and_aim_pos(id, mid_aim.mid.into(), mid_aim.aim.into(), true);
+            .set_feature_mid_and_aim_pos(id, mid.into(), aim.into(), false);
     }
 }
 inventory::submit! { FieldEntry::of::<MidAim>() }
@@ -407,3 +412,11 @@ impl TypedField<FeatureModel> for Rules {
     }
 }
 inventory::submit! { FieldEntry::of::<Rules>() }
+
+fn vec3_add(a: &Vec3, b: &Vec3) -> Vec3 {
+    Vec3 {
+        x: a.x + b.x,
+        y: a.y + b.y,
+        z: a.z + b.z,
+    }
+}

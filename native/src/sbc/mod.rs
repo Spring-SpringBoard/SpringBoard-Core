@@ -3,6 +3,7 @@ pub mod commands_api;
 mod heightmap;
 mod map_settings;
 mod objects;
+mod teams;
 mod textures;
 
 mod hashable_float;
