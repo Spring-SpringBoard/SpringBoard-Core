@@ -89,6 +89,27 @@ function gadget:RecvLuaMsg(msg, playerID)
                     Log.Warning("Command ignored: ", msgTable.data)
                 end
             end
+        elseif op == 'native' then
+            local msgParsed = msg:sub(#(SB.messageManager.prefix .. "|" .. op .. "|") + 1)
+            local success, msgTable = pcall(function()
+                return json.decode(msgParsed)
+            end)
+            if not success then
+                Log.Error("Failed to decode native command: ")
+                Log.Error(msgTable)
+                Log.Error(msgParsed)
+                return
+            end
+            if msgTable.tag == 'command' then
+                local cmd = SB.commandManager:_resolveCommand(msgTable.data)
+                cmd:execute()
+            elseif msgTable.tag == 'bridge_test' and msgTable.data and msgTable.data.name then
+                Spring.SetGameRulesParam(msgTable.data.name, msgTable.data.value)
+            elseif msgTable.tag == 'bridge_test_variable' and msgTable.data and msgTable.data.name then
+                local variable = SB.model.variableManager:getVariable(msgTable.data.variableID)
+                local value = variable and variable.value and variable.value.value
+                Spring.SetGameRulesParam(msgTable.data.name, value)
+            end
         elseif op == 'startMsgPart' then
             msgPartsSize = tonumber(par1)
         elseif op == "msgPart" then
@@ -239,11 +260,11 @@ end
 else --unsynced
 
 local function UnsyncedToWidget(_, data)
-    if not Script.LuaUI('RecieveGadgetMessage') then
+    if Script.LuaUI.RecieveGadgetMessage then
+        Script.LuaUI.RecieveGadgetMessage(data)
+    else
         Spring.Log("SpringBoard", LOG.ERROR, "Missing RecieveGadgetMessage in LuaUI")
-        return
     end
-    Script.LuaUI.RecieveGadgetMessage(data)
 end
 
 function gadget:Initialize()

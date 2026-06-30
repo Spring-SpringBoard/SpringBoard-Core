@@ -7,10 +7,14 @@ mod objects;
 mod project;
 mod teams;
 mod textures;
+mod triggers;
+mod variables;
 
 mod hashable_float;
 mod io;
 mod log;
 mod lua_bridge;
+mod lua_bridge_tests;
+mod message_handler;
 pub mod sbc;
 mod tests;

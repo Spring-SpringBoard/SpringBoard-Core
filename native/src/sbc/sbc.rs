@@ -92,7 +92,11 @@ impl SBC {
 
         match envelope.tag.as_str() {
             "command" => self.run_command(envelope.data),
-            other => error!("Not a command (tag: {other})"),
+            other => {
+                if !crate::sbc::message_handler::dispatch(self, other, envelope.data) {
+                    error!("Not a command (tag: {other})");
+                }
+            }
         }
     }
 

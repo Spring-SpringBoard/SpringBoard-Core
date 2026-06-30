@@ -6,9 +6,9 @@ function AddVariableCommand:init(variable)
 end
 
 function AddVariableCommand:execute()
-    self.variableID = SB.model.variableManager:addVariable(self.variable)
+    error("AddVariableCommand is native-only; Lua execute should not run")
 end
 
 function AddVariableCommand:unexecute()
-    SB.model.variableManager:removeVariable(self.variableID)
+    error("AddVariableCommand is native-only; Lua unexecute should not run")
 end

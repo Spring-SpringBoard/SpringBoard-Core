@@ -6,10 +6,9 @@ function UpdateVariableCommand:init(variable)
 end
 
 function UpdateVariableCommand:execute()
-    self.old = SB.model.variableManager:getVariable(self.variable.id)
-    SB.model.variableManager:setVariable(self.variable.id, self.variable)
+    error("UpdateVariableCommand is native-only; Lua execute should not run")
 end
 
 function UpdateVariableCommand:unexecute()
-    SB.model.variableManager:setVariable(self.variable.id, self.old)
+    error("UpdateVariableCommand is native-only; Lua unexecute should not run")
 end

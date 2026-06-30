@@ -6,10 +6,9 @@ function UpdateTriggerCommand:init(trigger)
 end
 
 function UpdateTriggerCommand:execute()
-    self.old = SB.model.triggerManager:getTrigger(self.trigger.id)
-    SB.model.triggerManager:setTrigger(self.trigger.id, self.trigger)
+    error("UpdateTriggerCommand is native-only; Lua execute should not run")
 end
 
 function UpdateTriggerCommand:unexecute()
-    SB.model.triggerManager:setTrigger(self.trigger.id, self.old)
+    error("UpdateTriggerCommand is native-only; Lua unexecute should not run")
 end

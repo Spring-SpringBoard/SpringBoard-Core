@@ -6,10 +6,9 @@ function RemoveTriggerCommand:init(triggerID)
 end
 
 function RemoveTriggerCommand:execute()
-    self.trigger = SB.model.triggerManager:getTrigger(self.triggerID)
-    SB.model.triggerManager:removeTrigger(self.triggerID)
+    error("RemoveTriggerCommand is native-only; Lua execute should not run")
 end
 
 function RemoveTriggerCommand:unexecute()
-    SB.model.triggerManager:addTrigger(self.trigger)
+    error("RemoveTriggerCommand is native-only; Lua unexecute should not run")
 end

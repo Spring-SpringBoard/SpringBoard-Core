@@ -38,7 +38,7 @@ spread across the slices they belong to, not deferred as a catch-all.
 | 6 | [Areas](#6-areas) | done (stable) |
 | 7 | [Teams & diplomacy](#7-teams--diplomacy) | done (stable) |
 | 8 | [Project lifecycle](#8-project-lifecycle) — save / load / export / sync / start / stop + scenario-info | review (scenario info in stable) |
-| 9 | [Triggers + Variables](#9-triggers--variables) — depends on areas, teams | wip (not in stable) |
+| 9 | [Triggers + Variables](#9-triggers--variables) — depends on areas, teams | done (stable) |
 
 Notes from review:
 - **Map settings** (sun/lighting/atmosphere/water/map-rendering) are general map
@@ -315,6 +315,13 @@ Bookkeeping, done last. Triggers depend on areas / teams. Variables are
 project-scoped values triggers reference. Trigger conditions/actions are
 polymorphic nested data — the heaviest serialization shape in the codebase, but
 pure project logic (no engine API).
+
+**Status:** done (stable) — add / remove / update for variables and triggers
+are Rust-only, backed by native managers. Native mirrors trigger/variable state
+into LuaRules because the existing Lua `RuntimeModel` still executes trigger
+actions. Integration tests cover LuaRules and LuaUI bridge delivery independently,
+plus both runtime execute paths: `ExecuteTriggerCommand` and
+`ExecuteTriggerActionsCommand`.
 
 **Model:**
 - [scen_edit/model/variable_manager.lua](../../scen_edit/model/variable_manager.lua)

@@ -6,10 +6,9 @@ function RemoveVariableCommand:init(variableID)
 end
 
 function RemoveVariableCommand:execute()
-    self.variable = SB.model.variableManager:getVariable(self.variableID)
-    SB.model.variableManager:removeVariable(self.variableID)
+    error("RemoveVariableCommand is native-only; Lua execute should not run")
 end
 
 function RemoveVariableCommand:unexecute()
-    SB.model.variableManager:newVariable(self.variable)
+    error("RemoveVariableCommand is native-only; Lua unexecute should not run")
 end

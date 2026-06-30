@@ -19,6 +19,11 @@ function RecieveGadgetMessage(msg)
         if msgTable.tag == 'command' then
             local msgObj = Message(msgTable.tag, msgTable.data)
             SB.commandManager:HandleCommandMessage(msgObj, true)
+        elseif msgTable.tag == 'bridge_test' then
+            Spring.InvokeNativeModule(json.encode({
+                tag = "bridge_test_ack",
+                data = msgTable.data,
+            }))
         end
         return
     end

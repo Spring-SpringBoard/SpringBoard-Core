@@ -66,6 +66,13 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
         ChangePlayerTeamCommand = true,
         -- Project lifecycle (slice 8): scenario metadata.
         SetScenarioInfoCommand = true,
+        -- Triggers + variables (slice 9): model CRUD, not trigger runtime.
+        AddVariableCommand = true,
+        RemoveVariableCommand = true,
+        UpdateVariableCommand = true,
+        AddTriggerCommand = true,
+        RemoveTriggerCommand = true,
+        UpdateTriggerCommand = true,
     }
 end
 
