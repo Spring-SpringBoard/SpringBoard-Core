@@ -1,15 +1,5 @@
-//! Native → Lua message channel.
-//!
-//! The native plugin pushes messages to Lua as
-//! `springboard|native|<json>`. LuaUI receives messages via
-//! `Spring.SendLuaUIMsg`; LuaRules receives messages via `SendLuaRulesMsg`.
-//! Both sides decode JSON and route by `tag`:
-//!
-//! - `tag: "command"` -> reconstruct + execute a `Widget*Command` mirror update.
-//! - `tag: "notify"` -> fire a model-manager listener on LuaUI.
-//!
-//! Everything goes through one channel + one widget router, so adding a new
-//! notification is just another `{tag, ...}` shape — no per-manager plumbing.
+//! Native → Lua message channel: pushes `springboard|native|<json>` envelopes
+//! to LuaUI (`SendLuaUIMsg`) and LuaRules (`SendLuaRulesMsg`).
 
 use spring_native::prelude::NativeInterfaceRef;
 

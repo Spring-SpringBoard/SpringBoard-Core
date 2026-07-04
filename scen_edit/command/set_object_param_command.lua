@@ -1,5 +1,4 @@
--- Executed and undone natively (Rust ObjectManager); see nativeCommandsOnly.
-SetObjectParamCommand = Command:extends{}
+SetObjectParamCommand = NativeCommand:extends{}
 SetObjectParamCommand.className = "SetObjectParamCommand"
 
 function SetObjectParamCommand:init(objType, modelID, key, value)

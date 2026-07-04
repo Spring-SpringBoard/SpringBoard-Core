@@ -31,3 +31,14 @@ end
 -- Specify the onMerge command to execute for multipleCommandMode
 -- function Command:onMerge()
 -- end
+
+NativeCommand = Command:extends{}
+NativeCommand.__is_native = true
+
+function NativeCommand:execute()
+    error(tostring(self.className) .. " is native-only; Lua execute should not run")
+end
+
+function NativeCommand:unexecute()
+    error(tostring(self.className) .. " is native-only; Lua unexecute should not run")
+end

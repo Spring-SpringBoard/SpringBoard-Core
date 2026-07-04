@@ -2,6 +2,7 @@ pub mod command;
 pub mod command_manager;
 pub mod context;
 pub mod history;
+pub mod io_completion;
 pub mod model;
 pub mod registry;
 pub mod streaming_commands;

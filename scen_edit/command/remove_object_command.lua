@@ -1,5 +1,4 @@
--- Executed and undone natively (Rust ObjectManager); see nativeCommandsOnly.
-RemoveObjectCommand = Command:extends{}
+RemoveObjectCommand = NativeCommand:extends{}
 RemoveObjectCommand.className = "RemoveObjectCommand"
 
 function RemoveObjectCommand:init(objType, modelID)

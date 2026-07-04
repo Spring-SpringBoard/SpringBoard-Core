@@ -1,11 +1,6 @@
-SetGlobalLosCommand = Command:extends{}
+SetGlobalLosCommand = NativeCommand:extends{}
 SetGlobalLosCommand.className = "SetGlobalLosCommand"
 
 function SetGlobalLosCommand:init(opts)
     self.opts = opts
-end
-
-function SetGlobalLosCommand:execute()
-    Log.Notice(("Set global LOS=%s for allyTeam:%d"):format(tostring(self.opts.value), self.opts.allyTeamID))
-    Spring.SetGlobalLos(self.opts.allyTeamID, self.opts.value)
 end

@@ -1,5 +1,4 @@
--- Executed and undone natively (Rust ObjectManager); see nativeCommandsOnly.
-AddObjectCommand = Command:extends{}
+AddObjectCommand = NativeCommand:extends{}
 AddObjectCommand.className = "AddObjectCommand"
 
 function AddObjectCommand:init(objType, params)

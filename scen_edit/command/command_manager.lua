@@ -26,54 +26,7 @@ function CommandManager:init(maxUndoSize, maxRedoSize)
     self.idCount = 0
 
     self.__isWidget = Script.GetName() == "LuaUI"
-
-    self.nativeCommandsOnly = {
-        TerrainShapeModifyCommand = true,
-        TerrainLevelCommand = true,
-        TerrainSmoothCommand = true,
-        TerrainMetalCommand = true,
-        TerrainGrassCommand = true,
-        SetHeightmapBrushCommand = true,
-        -- Heightmap IO (slice 2): Rust-only. Lua reads the project heightmap
-        -- file unsynced and passes its path; native reads the file and applies.
-        -- Import/export also drop the redundant spring-launcher round-trip.
-        LoadMapCommand = true,
-        SaveMapCommand = true,
-        ImportHeightmapCommand = true,
-        ExportHeightmapCommand = true,
-        -- Map settings (slice 3): sun / lighting / atmosphere / water /
-        -- map-rendering / global-LOS, all Rust-only.
-        SetSunParametersCommand = true,
-        SetSunLightingCommand = true,
-        SetAtmosphereCommand = true,
-        SetWaterParamsCommand = true,
-        SetMapRenderingParamsCommand = true,
-        SetGlobalLosCommand = true,
-        TerrainChangeTextureCommand = true,
-        TerrainChangeTextureMergedCommand = true,
-        CacheTextureCommand = true,
-        -- Objects (slice 5): units, features, and areas all have a native s11n.
-        AddObjectCommand = true,
-        RemoveObjectCommand = true,
-        SetObjectParamCommand = true,
-        -- Areas (slice 6).
-        ResizeAreaCommand = true,
-        -- Teams & diplomacy (slice 7).
-        AddTeamCommand = true,
-        RemoveTeamCommand = true,
-        UpdateTeamCommand = true,
-        SetAllyCommand = true,
-        ChangePlayerTeamCommand = true,
-        -- Project lifecycle (slice 8): scenario metadata.
-        SetScenarioInfoCommand = true,
-        -- Triggers + variables (slice 9): model CRUD, not trigger runtime.
-        AddVariableCommand = true,
-        RemoveVariableCommand = true,
-        UpdateVariableCommand = true,
-        AddTriggerCommand = true,
-        RemoveTriggerCommand = true,
-        UpdateTriggerCommand = true,
-    }
+    self.nativeCommandPromises = {}
 end
 
 -- Whether the native module owns this command's execution and undo/redo. A
@@ -91,7 +44,7 @@ function CommandManager:runsNative(cmd)
         end
         return true
     end
-    return self.nativeCommandsOnly[cmd.className] == true
+    return cmd.__is_native == true or (cmd.is_A and cmd:is_A(NativeCommand))
 end
 
 function CommandManager:shouldInvokeNativeOnExecute(cmd)
@@ -191,6 +144,27 @@ function CommandManager:invokeNativeCommand(cmd)
     self:issueCommandID(cmd)
     local msg = Message("command", cmd)
     Spring.InvokeNativeModule(json.encode(msg:serialize()))
+end
+
+function CommandManager:executeNativeAsync(cmd, widget)
+    assert(self.__isWidget, "executeNativeAsync must be called from LuaUI")
+    assert(self:runsNative(cmd), "executeNativeAsync requires a native command: " .. tostring(cmd.className))
+
+    self:issueCommandID(cmd)
+    local promise = Promise()
+    self.nativeCommandPromises[cmd.__cmd_id] = promise
+    self:execute(cmd, widget)
+    return promise
+end
+
+function CommandManager:completeNativeCommand(cmdID)
+    local promise = self.nativeCommandPromises[cmdID]
+    if not promise then
+        Log.Debug("No pending native command promise for command id: " .. tostring(cmdID))
+        return
+    end
+    self.nativeCommandPromises[cmdID] = nil
+    promise:resolve(cmdID)
 end
 
 -- Sends the command to the other state (gadget <-> widget)

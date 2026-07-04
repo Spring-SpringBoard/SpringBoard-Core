@@ -7,6 +7,14 @@ local function _InitShaders()
     end
 end
 
+function CheckGLSL(shader)
+    local errors = gl.GetShaderLog(shader)
+    if errors ~= "" then
+        Log.Error("Shader error!")
+        Log.Error(errors)
+    end
+end
+
 function getPenShader(mode)
     _InitShaders()
     if shaders.diffuse[mode] == nil then
