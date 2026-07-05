@@ -41,9 +41,11 @@ fn terrain_grass_brush(ctx: &mut TestCtx) -> Result<(), String> {
 fn clear_grass(ctx: &mut TestCtx, cx: f32, cz: f32, reach: f32) {
     let synced = ctx.sbc.interface().synced_ctrl();
     let terrain = synced.terrain();
-    let mut x = cx - reach;
+    // The engine asserts grass coords are in-bounds (>= 0), so clamp the swept
+    // region to the map rather than reaching into negative coordinates.
+    let mut x = (cx - reach).max(0.0);
     while x <= cx + reach {
-        let mut z = cz - reach;
+        let mut z = (cz - reach).max(0.0);
         while z <= cz + reach {
             let _ = terrain.remove_grass(x, z);
             z += SQUARE_SIZE * 4.0;

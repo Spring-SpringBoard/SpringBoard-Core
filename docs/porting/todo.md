@@ -166,3 +166,36 @@ collecting each kind's `inventory` entries. This keeps field registration simple
 but `ObjectManager::descriptor()` and command parsing can allocate repeatedly for
 what is effectively static metadata. Cache per-kind descriptor slices/maps once,
 or generate static descriptor arrays alongside the field registry.
+
+## 7. Feature s11n registers the same modelID twice (accepted warning)
+
+**What.** The integration suite's only remaining red is a single Lua warning (not
+an error, not a failed test — every test passes):
+
+```
+[s11n] Warning: [LuaUI] Trying to register featureS11N with existing modelID.
+```
+
+It fires during the feature add/remove tests. `_ObjectS11N:__Added`
+([libs_sb/s11n/object_s11n.lua:73](../../libs_sb/s11n/object_s11n.lua)) warns and
+bails when a modelID is already in `__m2s`, i.e. the gadget→widget mirror
+(`S11NGadgetListener:OnCreateObject` → `WidgetAddObjectCommand`, in
+[scen_edit/command/sync/object_sync.lua](../../scen_edit/command/sync/object_sync.lua))
+re-registers a feature the widget side already holds.
+
+**Why (suspected).** Same class as [#3](#3-in-engine-tests-bypass-the-lua-command_manager-dispatch-bugs-invisible-to-ci):
+the objects Rust cutover and the still-Lua gadget/widget id mirroring can diverge
+on who owns a modelID (see the "objects cutover: id authority diverges on redo"
+finding). The direct-route tests don't exercise the Lua dispatch layer, so this
+only shows up as an infolog warning, never a test failure.
+
+**Status: accepted for now.** It is a benign duplicate-registration warning; the
+mirror bails cleanly (`return` before double-inserting). Fixing it correctly means
+tracing the gadget/widget feature-mirror + redo id-authority path, which belongs
+with a proper objects-slice review, not a blind patch to the s11n registrar.
+Revisit when reviewing the objects slice.
+
+> Note: items #7 (run tests with `SYNCCHECK` on) and #8 (run tests with FP
+> `Signal-NaNs` traps on) were written into the `SBC-rust-stable.sdd` worktree's
+> copy of this file during the same session — consolidate the two worktrees'
+> `todo.md` so all items live together (this entry may need renumbering).

@@ -1,4 +1,3 @@
-use crate::sbc::heightmap::TerrainManager;
 use std::collections::HashMap;
 
 use log::debug;
@@ -8,7 +7,8 @@ use spring_native::prelude::*;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
-use crate::sbc::heightmap::model::brush_modify::{BrushModify, BrushOptions, Params};
+use crate::sbc::heightmap::TerrainManager;
+use crate::sbc::terrain_cpu::brush_modify::{BrushModify, BrushOptions, Params};
 
 const GRASS_STEP: usize = 8 * 4;
 

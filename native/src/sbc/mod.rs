@@ -1,11 +1,14 @@
 mod areas;
 mod command_system;
 pub mod commands_api;
-mod heightmap;
+pub(crate) mod grass;
+pub(crate) mod heightmap;
 mod map_settings;
+pub(crate) mod metal;
 mod objects;
 mod project;
 mod teams;
+mod terrain_cpu;
 mod textures;
 mod triggers;
 mod variables;

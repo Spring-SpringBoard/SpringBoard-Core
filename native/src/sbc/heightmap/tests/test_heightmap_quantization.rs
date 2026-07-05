@@ -1,8 +1,6 @@
 use std::path::Path;
 
-use crate::sbc::heightmap::model::heightmap_io::{
-    export_heightmap, import_heightmap, HeightmapOutcome,
-};
+use crate::sbc::heightmap::ops::{export, import, Heightmap};
 
 // A PNG export followed by an import recovers the original heights within the
 // 16-bit quantization step. Pure (no engine), unlike the in-engine roundtrip.
@@ -39,24 +37,18 @@ fn ramp(width: usize, height: usize, min: f32, max: f32) -> Vec<f32> {
 }
 
 fn write_png(path: &Path, width: usize, height: usize, min: f32, max: f32, heights: &[f32]) {
-    match export_heightmap(path, width, height, min, max, heights) {
-        HeightmapOutcome::Exported { .. } => {}
-        other => panic!("export failed: {}", outcome_kind(&other)),
-    }
+    let map = Heightmap {
+        width,
+        height,
+        heights: heights.to_vec(),
+    };
+    export::export(&map, min, max)
+        .save(path)
+        .expect("heightmap export should succeed");
 }
 
 fn read_png(path: &Path, width: usize, height: usize, min: f32, max: f32) -> Vec<f32> {
-    match import_heightmap(path, width, height, min, max) {
-        HeightmapOutcome::Loaded { heights, .. } => heights,
-        other => panic!("import failed: {}", outcome_kind(&other)),
-    }
-}
-
-fn outcome_kind(outcome: &HeightmapOutcome) -> &'static str {
-    match outcome {
-        HeightmapOutcome::Loaded { .. } => "Loaded",
-        HeightmapOutcome::Exported { .. } => "Exported",
-        HeightmapOutcome::Saved { .. } => "Saved",
-        HeightmapOutcome::Failed { .. } => "Failed",
-    }
+    import::import(path, width, height, min, max)
+        .expect("heightmap import should succeed")
+        .heights
 }

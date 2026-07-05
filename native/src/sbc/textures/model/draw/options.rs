@@ -71,14 +71,15 @@ pub(crate) enum KernelMode {
 impl KernelMode {
     pub(crate) fn from_name(name: &str) -> Self {
         match name {
-            "blur" => Self::Blur,
+            // An absent/empty kernel means "use the default", not an error.
+            "" | "blur" => Self::Blur,
             "bottom_sobel" => Self::BottomSobel,
             "emboss" => Self::Emboss,
             "left_sobel" => Self::LeftSobel,
             "outline" => Self::Outline,
             "right_sobel" => Self::RightSobel,
             "sharpen" => Self::Sharpen,
-            "top sobel" => Self::TopSobel,
+            "top_sobel" => Self::TopSobel,
             other => {
                 log::warn!("unknown kernel mode {other}, using blur");
                 Self::Blur

@@ -1,8 +1,6 @@
 use std::path::Path;
 
-use crate::sbc::heightmap::model::heightmap_io::{
-    load_heightmap, save_heightmap, HeightmapOutcome,
-};
+use crate::sbc::heightmap::ops::{load, save};
 
 // Saving heights to a `.data` file and loading them back returns every value
 // bit-for-bit (raw `f32`, no quantization). Pure — no engine — so it covers the
@@ -36,24 +34,12 @@ fn sample_heights(width: usize, height: usize) -> Vec<f32> {
 }
 
 fn write_data(path: &Path, heights: &[f32]) {
-    match save_heightmap(path, heights) {
-        HeightmapOutcome::Saved { .. } => {}
-        other => panic!("save failed: {}", outcome_kind(&other)),
-    }
+    std::fs::write(path, save::save(heights)).expect("write .data file");
 }
 
 fn read_data(path: &Path, width: usize, height: usize) -> Vec<f32> {
-    match load_heightmap(path, width, height) {
-        HeightmapOutcome::Loaded { heights, .. } => heights,
-        other => panic!("load failed: {}", outcome_kind(&other)),
-    }
-}
-
-fn outcome_kind(outcome: &HeightmapOutcome) -> &'static str {
-    match outcome {
-        HeightmapOutcome::Loaded { .. } => "Loaded",
-        HeightmapOutcome::Exported { .. } => "Exported",
-        HeightmapOutcome::Saved { .. } => "Saved",
-        HeightmapOutcome::Failed { .. } => "Failed",
-    }
+    let bytes = std::fs::read(path).expect("read .data file");
+    load::load(&bytes, width, height)
+        .expect("heightmap load should succeed")
+        .heights
 }

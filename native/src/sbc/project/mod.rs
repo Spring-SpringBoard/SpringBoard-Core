@@ -1,4 +1,5 @@
 mod commands;
+pub(crate) mod io_registries;
 pub(crate) mod model;
 mod tests;
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::sbc::hashable_float::HashableFloat;
 
-use super::terrain_manager::GreyscaleShape;
+use crate::sbc::heightmap::model::terrain_manager::GreyscaleShape;
 
 // Convoluted legacy Springboard behavior.
 // TODO:

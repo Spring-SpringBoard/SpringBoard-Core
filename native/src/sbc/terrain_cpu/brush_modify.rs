@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ctrl_macros::some_or_return;
 
 use super::brush_filter_generator::{get_map, Maps};
-use super::terrain_manager::TerrainManager;
+use crate::sbc::heightmap::model::terrain_manager::TerrainManager;
 
 const SQUARE_SIZE: usize = 8;
 

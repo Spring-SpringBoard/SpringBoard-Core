@@ -22,6 +22,11 @@ pub fn values_for_descriptors(
             if descriptor.name == "health"
                 || descriptor.name == "midAimPos"
                 || descriptor.name == "team"
+                // The engine masks a grounded feature's velocity to the vertical
+                // axis (`CFeature::SetVelocity` applies a Y-only `velocityMask`
+                // for non-tree features), so a full `{x,y,z}` set cannot
+                // round-trip — x/z always read back as 0.
+                || descriptor.name == "vel"
             {
                 return None;
             }

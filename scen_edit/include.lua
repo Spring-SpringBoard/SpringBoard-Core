@@ -42,7 +42,8 @@ SB.Include(LIBS_DIR .. 'savetable.lua')
 SB.IncludeDir(LIBS_DIR .. 'utils')
 
 Log.SetLogSection("SpringBoard")
-Log.DebugWithInfo(true)
+-- Log.DebugWithInfo(true)  -- promotes every Log.Debug to LOG.INFO; leave off so
+-- per-command dispatch traces don't flood the log
 
 SB.Include(Path.Join(SB.DIRS.SRC, 'observable.lua'))
 SB.Include(Path.Join(SB.DIRS.SRC, 'display_util.lua'))
