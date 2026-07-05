@@ -46,11 +46,10 @@ function Project:Save(name)
 
     Log.Notice("Saving project: " .. self.path .. " ...")
 
-    local cmds = CompoundCommand({
-        SaveProjectInfoCommand(self.name, self.path, isNewProject),
-        SaveCommand(self.path, isNewProject)
-    })
-    SB.commandManager:execute(cmds, true)
+    -- Native SaveCommand can't be nested in a CompoundCommand, so dispatch each
+    -- separately. SaveProjectInfoCommand runs widget-side (unsynced calls).
+    SB.commandManager:execute(SaveProjectInfoCommand(self.name, self.path, isNewProject), true)
+    SB.commandManager:execute(SaveCommand(self.path, isNewProject))
 
     -- We delay this notice twice to ensure texture map and screenshot is taken
     SB.delayGL(function()

@@ -74,7 +74,7 @@ local projectLoaded = false
 local function MaybeLoad()
     if SB.project.path ~= nil and not projectLoaded then
         Log.Notice("Loading project (from widget)")
-        SB.commandManager:execute(LoadProjectCommandWidget(), true)
+        SB.commandManager:execute(LoadProjectCommand(SB.project.path))
         projectLoaded = true
     end
 end
