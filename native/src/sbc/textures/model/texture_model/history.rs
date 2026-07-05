@@ -94,6 +94,10 @@ impl TextureHistory {
         self.undo.redo_depth()
     }
 
+    pub(crate) fn mark_backups_dirty_for(&mut self, surface: &Surface) {
+        self.undo.mark_backups_dirty_for(surface);
+    }
+
     pub(crate) fn on_history_events(&mut self, events: &[HistoryEvent]) {
         if events
             .iter()

@@ -20,12 +20,8 @@ fn mirror_shading_texture(
 ) -> Result<(Texture, i32, i32), String> {
     let source = bind_engine_shading_texture(ctx, bind_type, slot, [0.0, 0.0, 0.0, 1.0])
         .ok_or_else(|| format!("failed to bind engine shading texture {bind_type}"))?;
-    if !ctx
-        .sbc
-        .model::<TextureModel>()
-        .shading
-        .ensure(name, Some(&source))
-    {
+    let shading = &mut ctx.sbc.model::<TextureModel>().shading;
+    if !shading.set_from_source(name, &source, false) && !shading.ensure(name, Some(&source)) {
         return Err(format!("failed to mirror shading texture {name}"));
     }
     ctx.sbc

@@ -46,7 +46,9 @@ fn map_layers_project_save_load_roundtrip(ctx: &mut TestCtx) -> Result<(), Strin
         (&metal_data, "metal.data"),
     ] {
         if !ctx.wait_for_file(file, Duration::from_secs(5)) {
-            return Err(format!("SaveCommand did not write sb_project_files/{label}"));
+            return Err(format!(
+                "SaveCommand did not write sb_project_files/{label}"
+            ));
         }
     }
 

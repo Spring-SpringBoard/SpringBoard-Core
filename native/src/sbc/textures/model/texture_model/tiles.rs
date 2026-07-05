@@ -41,6 +41,56 @@ impl TileStore {
         self.texture_size
     }
 
+    /// The tile grid: `(tile_size, tiles_x, tiles_z)`. Generates the tiles first
+    /// if needed; `None` only on failure.
+    pub(crate) fn grid(&mut self) -> Option<(i32, i32, i32)> {
+        if !self.generated && !self.generate() {
+            return None;
+        }
+        Some((self.texture_size, self.tiles_x, self.tiles_z))
+    }
+
+    /// Iterate the tiles as `(i, j, &Surface)`. Call [`grid`](Self::grid) first
+    /// to ensure they exist; this borrows immutably and does not generate.
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (i32, i32, &Surface)> {
+        self.tiles.iter().map(|((i, j), surface)| (*i, *j, surface))
+    }
+
+    pub(crate) fn clear(&mut self) {
+        for (_, surface) in self.tiles.drain(..) {
+            let _ = self
+                .interface
+                .gfx()
+                .delete_texture(&surface.borrow().texture);
+        }
+        self.generated = false;
+    }
+
+    /// Replace tile `(i, j)`'s contents with `source` and push it to the engine's
+    /// map square. Returns whether it succeeded.
+    pub(crate) fn set_tile(&mut self, i: i32, j: i32, source: &Texture, dirty: bool) -> bool {
+        if !self.generated && !self.generate() {
+            return false;
+        }
+        let Some(surface) = self.surface(i, j).cloned() else {
+            return false;
+        };
+        let texture = surface.borrow().texture.clone();
+        graphics::blit(&self.interface, source, &texture);
+        if self
+            .interface
+            .vfs()
+            .set_map_square_texture(i, j, &texture)
+            .ok()
+            != Some(true)
+        {
+            log::error!("texture_model: set_map_square_texture({i}, {j}) failed during load");
+            return false;
+        }
+        surface.borrow_mut().dirty = dirty;
+        true
+    }
+
     /// Create the editable tiles from the map's square textures (idempotent).
     /// Returns whether tiles now exist (false only on failure).
     pub(crate) fn generate(&mut self) -> bool {

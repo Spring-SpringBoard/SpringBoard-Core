@@ -64,34 +64,6 @@ pub fn generate_texture_coords(
     t_coord
 }
 
-fn offset_coords(t: &mut [f32; 8], dx: f32, dy: f32) {
-    for i in (0..8).step_by(2) {
-        t[i] += dx;
-        t[i + 1] += dy;
-    }
-}
-
-fn scale_coords(t: &mut [f32; 8], sx: f32, sy: f32) {
-    for i in (0..8).step_by(2) {
-        t[i] *= sx;
-        t[i + 1] *= sy;
-    }
-}
-
-/// Rotate around the rectangle's centre while preserving the existing corner
-/// offset convention.
-fn rotate_coords(t: &mut [f32; 8], angle: f32) {
-    let (s, c) = (angle.sin(), angle.cos());
-    let tdx = t[4] - t[0];
-    let tdz = t[3] - t[1];
-    for i in (0..8).step_by(2) {
-        let x = t[i] - tdx;
-        let y = t[i + 1] - tdz;
-        t[i] = x * c - y * s + tdx;
-        t[i + 1] = x * s + y * c + tdz;
-    }
-}
-
 /// Issue a QUADS draw with MultiTexCoord channels 0..2 set per corner. Channel
 /// 1 is the brush-local UV `(0,0) (0,1) (1,1) (1,0)`.
 pub fn apply_texture(interface: &NativeInterfaceRef, m: &[f32; 8], t: &[f32; 8], v: &[f32; 8]) {
@@ -146,6 +118,34 @@ pub fn apply_texture_dnts(interface: &NativeInterfaceRef, m: &[f32; 8], v: &[f32
         let _ = gfx.multi_tex_coord(1, 1.0, 0.0, 0.0, 0.0, 2);
         let _ = gfx.vertex(v[6], v[7], 0.0, 1.0, 2);
     });
+}
+
+fn offset_coords(t: &mut [f32; 8], dx: f32, dy: f32) {
+    for i in (0..8).step_by(2) {
+        t[i] += dx;
+        t[i + 1] += dy;
+    }
+}
+
+fn scale_coords(t: &mut [f32; 8], sx: f32, sy: f32) {
+    for i in (0..8).step_by(2) {
+        t[i] *= sx;
+        t[i + 1] *= sy;
+    }
+}
+
+/// Rotate around the rectangle's centre while preserving the existing corner
+/// offset convention.
+fn rotate_coords(t: &mut [f32; 8], angle: f32) {
+    let (s, c) = (angle.sin(), angle.cos());
+    let tdx = t[4] - t[0];
+    let tdz = t[3] - t[1];
+    for i in (0..8).step_by(2) {
+        let x = t[i] - tdx;
+        let y = t[i + 1] - tdz;
+        t[i] = x * c - y * s + tdx;
+        t[i + 1] = x * s + y * c + tdz;
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -1,3 +1,4 @@
 mod cache_texture_command;
+mod import_diffuse_command;
 mod terrain_change_texture_command;
 mod terrain_change_texture_merged_command;

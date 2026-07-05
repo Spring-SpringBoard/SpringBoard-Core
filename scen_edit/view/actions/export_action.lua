@@ -299,5 +299,5 @@ function ExportAction:TryToExportMapTextures(path, heightmapExtremes)
         return false
     end
 
-    return ExportMapsCommand(path, heightmapExtremes):execute()
+    return SB.commandManager:executeNativeAsync(ExportMapsCommand(path, heightmapExtremes))
 end

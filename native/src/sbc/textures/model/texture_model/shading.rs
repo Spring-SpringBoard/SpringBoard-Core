@@ -5,9 +5,11 @@ use super::surface::{new_surface, Surface};
 
 /// A snapshot of one shading texture's current state.
 pub(crate) struct ShadingTexture {
+    pub name: String,
     pub texture: Texture,
     pub width: i32,
     pub height: i32,
+    pub dirty: bool,
 }
 
 struct ShadingDef {
@@ -133,6 +135,32 @@ impl ShadingStore {
         self.surface(name).is_some()
     }
 
+    pub(crate) fn names() -> impl Iterator<Item = &'static str> {
+        SHADING_DEFS.iter().map(|def| def.name)
+    }
+
+    pub(crate) fn set_from_source(&mut self, name: &str, source: &Texture, dirty: bool) -> bool {
+        if let Some((_, slot)) = self.shading.iter().find(|(n, _)| n == name) {
+            let texture = slot.surface.borrow().texture.clone();
+            graphics::blit(&self.interface, source, &texture);
+            let mut obj = slot.surface.borrow_mut();
+            obj.dirty = dirty;
+            if obj.needs_mipmap {
+                graphics::generate_mipmap(&self.interface, &obj.texture);
+            }
+            return true;
+        }
+        let Some(def) = SHADING_DEFS.iter().find(|def| def.name == name) else {
+            log::debug!("set_from_source: unknown shading texture {name}");
+            return false;
+        };
+        self.assign(def, source);
+        if let Some(surface) = self.surface(name) {
+            surface.borrow_mut().dirty = dirty;
+        }
+        self.surface(name).is_some()
+    }
+
     pub(crate) fn surface(&self, name: &str) -> Option<&Surface> {
         self.shading
             .iter()
@@ -145,10 +173,28 @@ impl ShadingStore {
             .iter()
             .find(|(n, _)| n == name)
             .map(|(_, slot)| ShadingTexture {
+                name: name.to_string(),
                 texture: slot.surface.borrow().texture.clone(),
                 width: slot.width,
                 height: slot.height,
+                dirty: slot.surface.borrow().dirty,
             })
+    }
+
+    pub(crate) fn textures(&self) -> Vec<ShadingTexture> {
+        self.shading
+            .iter()
+            .map(|(name, slot)| {
+                let obj = slot.surface.borrow();
+                ShadingTexture {
+                    name: name.clone(),
+                    texture: obj.texture.clone(),
+                    width: slot.width,
+                    height: slot.height,
+                    dirty: obj.dirty,
+                }
+            })
+            .collect()
     }
 
     pub(crate) fn dirty(&self, name: &str) -> bool {
@@ -161,6 +207,12 @@ impl ShadingStore {
         if let Some(surface) = self.surface(name) {
             surface.borrow_mut().dirty = true;
         }
+    }
+
+    pub(crate) fn mark_clean(&mut self, name: &str) -> Option<Surface> {
+        let surface = self.surface(name)?.clone();
+        surface.borrow_mut().dirty = false;
+        Some(surface)
     }
 
     pub(crate) fn refresh_mipmap(&self, name: &str) {

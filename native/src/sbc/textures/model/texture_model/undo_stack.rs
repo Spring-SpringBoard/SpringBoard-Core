@@ -95,6 +95,16 @@ impl TextureUndoStack {
         self.redo.len()
     }
 
+    pub(super) fn mark_backups_dirty_for(&mut self, surface: &super::surface::Surface) {
+        for stroke in self.undo.iter_mut().chain(self.redo.iter_mut()) {
+            for entry in &mut stroke.entries {
+                if Rc::ptr_eq(&entry.original, surface) {
+                    entry.dirty = true;
+                }
+            }
+        }
+    }
+
     // --- internals ---
 
     /// Blit each backup onto its surface, returning the pre-restore contents as

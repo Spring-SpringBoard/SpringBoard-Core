@@ -121,3 +121,65 @@ pub fn copy_texture(interface: &NativeInterfaceRef, src: &Texture) -> Option<Tex
     blit(interface, src, &dst);
     Some(dst)
 }
+
+/// Write a texture to a PNG (renders it into an FBO, then reads it back).
+pub fn save_texture_png(
+    interface: &NativeInterfaceRef,
+    texture: &Texture,
+    width: i32,
+    height: i32,
+    path: &std::path::Path,
+) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|err| format!("create {}: {err}", parent.display()))?;
+    }
+    let path_s = path
+        .to_str()
+        .ok_or_else(|| format!("non-utf8 path {}", path.display()))?;
+    let gfx = interface.gfx();
+    let mut err = None;
+    gfx.render_to_texture(texture, || {
+        match gfx.save_image(0, 0, width, height, path_s, true, false, false, 0) {
+            Ok(true) => {}
+            Ok(false) => err = Some(format!("save_image returned false for {}", path.display())),
+            Err(e) => err = Some(format!("save_image {}: {e:?}", path.display())),
+        }
+    })
+    .map_err(|e| format!("render_to_texture {}: {e:?}", path.display()))?;
+    if let Some(err) = err {
+        return Err(err);
+    }
+    Ok(())
+}
+
+/// Load a PNG into a new texture.
+pub fn load_image_texture(
+    interface: &NativeInterfaceRef,
+    path: &std::path::Path,
+) -> Result<Texture, String> {
+    let img = image::open(path).map_err(|err| format!("open {}: {err}", path.display()))?;
+    let rgba = img.to_rgba8();
+    let (width, height) = rgba.dimensions();
+    let Some(texture) = create_fbo_texture(interface, width as i32, height as i32) else {
+        return Err(format!("create texture for {} failed", path.display()));
+    };
+    interface
+        .gfx()
+        .upload_texture(
+            &texture,
+            constants::GL_TEXTURE_2D,
+            0,
+            0,
+            0,
+            0,
+            width as i32,
+            height as i32,
+            1,
+            constants::GL_RGBA,
+            constants::GL_UNSIGNED_BYTE,
+            rgba.as_raw(),
+        )
+        .map_err(|err| format!("upload {}: {err:?}", path.display()))?;
+    Ok(texture)
+}

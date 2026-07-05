@@ -195,7 +195,152 @@ tracing the gadget/widget feature-mirror + redo id-authority path, which belongs
 with a proper objects-slice review, not a blind patch to the s11n registrar.
 Revisit when reviewing the objects slice.
 
-> Note: items #7 (run tests with `SYNCCHECK` on) and #8 (run tests with FP
-> `Signal-NaNs` traps on) were written into the `SBC-rust-stable.sdd` worktree's
-> copy of this file during the same session — consolidate the two worktrees'
-> `todo.md` so all items live together (this entry may need renumbering).
+## 8. Run SBC and its tests with engine sync checks ON
+
+**What.** The engine is currently built with `SYNCCHECK=OFF` for SBC development
+(binary reports `Sync-Check-Disabled`; recipe in the engine's
+`SBC_PORT_MISSING_BINDINGS.md`). This was necessary because SBC's in-engine tests
+abort under sync checks: `feature_add_remove`
+([native/src/sbc/objects/tests/test_add_remove.rs](../../native/src/sbc/objects/tests/test_add_remove.rs))
+constructs a synced object (`CreateFeature` → `CFeature`) from a context where
+`CSyncChecker::InSyncedCode()` is false, tripping
+`assert(InSyncedCode())` at `SyncedPrimitiveBase.h:47` (SIGABRT).
+
+**Why it happens.** Synced-object construction is only legal inside synced code
+(the counter Lua's synced callins raise). The engine fix `6408f57` wraps the
+**Lua→native** path (`HandleLuaCall`) in `EnterSyncedCode`/`LeaveSyncedCode`, so
+real SBC command dispatch via `Spring.InvokeNativeModule` is fine. But the
+integration tests call `SBC::route(...)` **directly from the plugin's `update()`
+tick** ([sbc.rs](../../native/src/sbc/sbc.rs) `run_if_requested`), which is an
+*unsynced* callin — so the guard never runs and the assert fires. This is the same
+"tests bypass the real dispatch path" gap as [#3](#3-in-engine-tests-bypass-the-lua-command_manager-dispatch-bugs-invisible-to-ci).
+
+**Why fix it.** Turning sync checks off is fine for a map editor (SBC is not an
+online deterministic client), but it removes a real safety net: a genuine desync
+bug in a native synced mutator (bad ordering, unsynced input into synced state)
+would now go undetected in CI. We want to be able to run the suite with the check
+**on** so those bugs stay visible.
+
+**How (not decided — needs the right seam, do NOT just fake `InSyncedCode()`):**
+The honest fix is to make the tests exercise synced commands through the same
+synced context real SBC uses, not to assert a synced flag while running unsynced.
+Options to evaluate:
+- Drive synced test commands from a genuinely-synced native callin (a `GameFrame`
+  equivalent) instead of the unsynced `update()` tick — requires such a callin to
+  exist/be wired for the plugin.
+- Route synced tests through the Lua `command_manager` path (ties into [#3](#3-in-engine-tests-bypass-the-lua-command_manager-dispatch-bugs-invisible-to-ci)'s
+  Lua-side test driver), so they inherit the `HandleLuaCall` synced scope.
+- Add an engine seam that establishes synced context around native synced-ctrl
+  mutators generally (engine-side design call).
+
+Until then, SBC builds/tests run with `SYNCCHECK=OFF`.
+
+## 9. Run SBC and its tests with FP signalling-NaN traps ON
+
+**What.** Related to [#8](#8-run-sbc-and-its-tests-with-engine-sync-checks-on): the
+debug engine also builds with signalling-NaN / FP-exception trapping (version
+string `... Signal-NaNs`), which raises `SIGFPE` on `FE_INVALID`/`FE_DIVBYZERO`/
+`FE_OVERFLOW` instead of producing inf/NaN. That trap is now **disabled** for the
+SBC editor/testing build, because it aborts the plugin on benign floating-point
+results.
+
+**Why it happens.** `terrain_paint_diffuse` → `paint_shading_textures`
+([native/src/sbc/textures/model/draw/shading.rs](../../native/src/sbc/textures/model/draw/shading.rs))
+SIGFPEs in an optimized (`--release`) build. The map size is valid (5120×4096) and
+the math is correct; the Rust optimizer auto-vectorizes the two
+`region / map_size_{x,z}` divisions into a packed `divps` over
+`[map_size_x, map_size_z, 0, 0]`, and the dead upper lanes compute `1.0/0.0 = inf`
+— fatal only because the engine unmasks FP exceptions. A **debug** plugin build
+(no vectorization) does not crash, confirming it's a codegen dead-lane artifact,
+not a real div-by-zero.
+
+**Why fix it.** Same trade as #8: keeping the trap off removes a real safety net
+(a genuine NaN/inf from bad paint math would go undetected). We'd like to run with
+it on.
+
+**How (not decided — do NOT just hand-scalarize every divide):** source rewrites
+(reciprocal-multiply, `f32::recip`) get re-vectorized into the same dead-lane
+`divps`, and there are many vectorizable float-divides across the textures paint
+code. The clean fix is engine-side: mask FP exceptions around the native plugin
+`Update` callin (mirroring how `ENTER_SYNCED_CODE` scoping was proposed in #8), so
+plugin SIMD dead-lane NaNs don't fault while engine sim code keeps the trap.
+Details + the confirmed disassembly are in the engine's
+`SBC_PORT_MISSING_BINDINGS.md` ("FP signalling-NaN traps disabled").
+
+Until then, SBC builds/tests run with FP signalling-NaN traps off (no
+`Signal-NaNs` in the engine version string).
+
+## 10. Run texture/rendering IO on a background thread
+
+**What.** Texture IO (save/load/export) currently runs synchronously on the
+engine thread — the ops in `native/src/sbc/textures/ops/` do GPU work
+(render-to-texture, readback, PNG encode/write) inline. Saving a project's
+textures to disk can be heavy, and doing it on the main thread **freezes the
+editor UI** while it runs.
+
+**Why it matters.** Unlike grass/metal/heightmap IO — which reads the layer into
+bytes on the engine thread then writes the file off-thread via the `jobs` /
+`IoJob` seam — texture IO can't currently offload because it's tied to the
+engine's GL context (GPU calls must run where the context is current). So the
+expensive part (encode + file write) blocks the UI. A large map's diffuse export
+in particular can stall the editor for a noticeable time.
+
+**How (sketch).** Split the GPU part from the CPU part: do the minimal on-thread
+GL work to get the pixels off the GPU (readback into a CPU buffer), then hand the
+CPU-side encode + file write to a background worker (the same off-thread IO path
+grass/metal/heightmap use). Needs a way to read a texture's pixels into a plain
+buffer on the engine thread, after which the ops become "readback (on-thread) →
+encode+write (off-thread)". Investigate whether a shared background
+rendering/IO context is feasible for the readback itself.
+
+## 11. Texture model uses `RefCell` — remove the runtime-panic surface
+
+**What.** The texture model shares tile/shading surfaces as
+`Rc<RefCell<TextureObj>>` ([surface.rs](../../native/src/sbc/textures/model/texture_model/surface.rs)),
+so reads/writes go through `.borrow()` / `.borrow_mut()`. Those are **runtime**
+borrow checks: a conflicting overlap panics at runtime instead of failing to
+compile. The surfaces are `Rc`-shared between the tile store and the history/backup
+system (two owners mutate the same surface), which is why interior mutability is
+there.
+
+**Why fix it.** We don't want any path where the editor can panic at runtime from a
+double-borrow. Today the ops keep borrows tightly scoped (read fields into locals,
+drop the guard before any call that might re-borrow), so there's no known live
+overlap — but nothing at compile time *guarantees* it; a future change could
+reintroduce one.
+
+**How (not decided).** Rework the ownership so the surfaces don't need
+`Rc<RefCell>` — e.g. a single owner (the store) hands out short-lived `&`/`&mut`,
+with the history/backup side referring to surfaces by key `(i, j)` / name instead
+of holding an `Rc` into them. Then the borrow checking is compile-time and the
+panic surface is gone. Larger change to the model's sharing design; do it as its
+own effort, not folded into an IO slice.
+
+## 12. Bug: specular painting effect not visible
+
+**What.** Painting specular does not produce the expected visual result in the
+editor — the effect isn't showing up. Not yet root-caused; needs confirming
+whether the specular shading texture is actually being written/applied, or whether
+it's applied but not rendered (engine binding / material slot), or a UI/param
+issue.
+
+**Where to start.** The shading paint path
+([native/src/sbc/textures/model/draw/shading.rs](../../native/src/sbc/textures/model/draw/shading.rs))
+and how shading textures reach the engine's material (see the specular-race note
+in the engine's `SBC_PORT_MISSING_BINDINGS.md`). Verify end-to-end: paint →
+shading surface updated → pushed to the engine's specular slot → visible.
+
+## 13. Bug: project load doesn't restore painted textures (brushes)
+
+**What.** After save + load of a project, the map's painted textures are missing —
+the loaded map has no brushes/paint. Save writes the tiles/shading to disk (the IO
+ops run), but on load the painted result isn't showing on the map.
+
+**Where to start.** The texture load path
+([native/src/sbc/textures/ops/load.rs](../../native/src/sbc/textures/ops/load.rs)):
+confirm the `texture-{i}-{j}.png` / `shading-{name}.png` files are found and read,
+that `set_tile` actually blits them onto the engine map squares
+(`set_map_square_texture`), and that load runs at the right time in project load
+(the `ProjectLoadRegistration` fires, tiles are generated first, etc.). Likely
+candidates: files not written where load looks, tile store not generated before
+load, or the loaded textures not pushed to the live map.

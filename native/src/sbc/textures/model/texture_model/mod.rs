@@ -7,5 +7,6 @@ mod texture_model;
 mod tiles;
 mod undo_stack;
 
+pub(crate) use shading::ShadingStore;
 pub(crate) use texture_model::TextureModel;
 pub(crate) use tiles::RegionTile;
