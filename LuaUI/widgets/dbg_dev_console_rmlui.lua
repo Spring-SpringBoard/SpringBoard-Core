@@ -520,6 +520,10 @@ function widget:Initialize()
 
 	CacheElements()
 
+	-- In RmlUi mode the Chili dev console removes itself and never binds
+	-- F8, so bind it here to keep the toggle working.
+	Spring.SendCommands("bind f8 " .. COMMAND_NAME)
+
 	if rml.elements["btn-debug-mode"] then
 		debugButtonEnabled = not WG.SB
 		rml.elements["btn-debug-mode"]:SetClass("hidden", not debugButtonEnabled)
@@ -537,6 +541,7 @@ function widget:Initialize()
 end
 
 function widget:Shutdown()
+	Spring.SendCommands("unbind f8 " .. COMMAND_NAME)
 	if rml.document then
 		rml.document:Close()
 	end
