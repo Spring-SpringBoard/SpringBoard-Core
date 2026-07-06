@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use log::{error, info};
 use serde_json::Value;
 
+use super::save_model::MODEL_FILE;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::io::io_api::{IoJob, IoOutcome};
 use crate::sbc::project::io_registries::load::ProjectLoadRegistration;
 use crate::sbc::project::ops::model_codec::load_model;
-use super::save_model::MODEL_FILE;
 use crate::sbc::project::paths::ProjectPaths;
 use crate::sbc::sbc::SBC;
 

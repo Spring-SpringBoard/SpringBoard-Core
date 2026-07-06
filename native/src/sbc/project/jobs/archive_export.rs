@@ -25,21 +25,23 @@ impl IoJob for ExportSpringArchiveJob {
     fn run(self: Box<Self>) -> Box<dyn IoOutcome> {
         let job = *self;
         let output_path = job.output_path.clone();
-        Box::new(match spring_archive::build(Spec {
-            build_dir: job.build_dir,
-            archive_dir: job.archive_dir,
-            maps_dir: job.maps_dir,
-            project_path: job.project_path,
-            project_name: job.project_name,
-            output_path: job.output_path,
-            compiler_path: job.compiler_path,
-            map_info: job.map_info,
-            s11n_model: job.s11n_model,
-            assets: job.assets,
-        }) {
-            Ok(()) => ExportSpringArchiveOutcome::Done { output_path },
-            Err(reason) => ExportSpringArchiveOutcome::Failed { reason },
-        })
+        Box::new(
+            match spring_archive::build(Spec {
+                build_dir: job.build_dir,
+                archive_dir: job.archive_dir,
+                maps_dir: job.maps_dir,
+                project_path: job.project_path,
+                project_name: job.project_name,
+                output_path: job.output_path,
+                compiler_path: job.compiler_path,
+                map_info: job.map_info,
+                s11n_model: job.s11n_model,
+                assets: job.assets,
+            }) {
+                Ok(()) => ExportSpringArchiveOutcome::Done { output_path },
+                Err(reason) => ExportSpringArchiveOutcome::Failed { reason },
+            },
+        )
     }
 }
 

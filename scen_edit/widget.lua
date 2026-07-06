@@ -131,8 +131,6 @@ function widget:Initialize()
         })
         SB.commandManager:execute(cmd)
     end
-    self._START_TIME = os.clock()
-
     if Spring.GetGameFrame() > 10 then
         MaybeLoad()
     end
@@ -233,12 +231,6 @@ function widget:GameFrame(frameNum)
 end
 
 function widget:Update()
-    if self._START_TIME and os.clock() - self._START_TIME >= 1 then
-        if not RELOAD_GADGETS then
-            SB.commandManager:execute(ResendCommand())
-        end
-        self._START_TIME = nil
-    end
     if SB.view ~= nil then
         SB.stateManager:Update()
         SB.view:Update()

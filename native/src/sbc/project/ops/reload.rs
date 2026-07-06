@@ -16,7 +16,10 @@ pub(crate) fn start_script(
     let mut game = parse_start_script_game(saved_script)?;
     // A start script with no teams makes the engine abort in
     // CTeamHandler::LoadFromSetup, so refuse the reload rather than crash.
-    if !game.keys().any(|key| key.to_lowercase().starts_with("team")) {
+    if !game
+        .keys()
+        .any(|key| key.to_lowercase().starts_with("team"))
+    {
         return Err("saved start script has no teams; refusing to reload".to_string());
     }
     update_start_script_game(&mut game, persistent_options, game_name, game_version)?;
@@ -205,8 +208,14 @@ mod tests {
         let script = "[GAME]\n{\n[TEAM0] { AllyTeam=0; }\n[TEAM1] { AllyTeam=1; }\n}\n";
         let game = parse_start_script_game(script).expect("game");
         let rebuilt = lua_writer::start_script_table("GAME", &Value::Object(game), 0);
-        assert!(rebuilt.contains("[TEAM0]"), "rebuilt lost TEAM0:\n{rebuilt}");
-        assert!(rebuilt.contains("[TEAM1]"), "rebuilt lost TEAM1:\n{rebuilt}");
+        assert!(
+            rebuilt.contains("[TEAM0]"),
+            "rebuilt lost TEAM0:\n{rebuilt}"
+        );
+        assert!(
+            rebuilt.contains("[TEAM1]"),
+            "rebuilt lost TEAM1:\n{rebuilt}"
+        );
     }
 
     #[test]

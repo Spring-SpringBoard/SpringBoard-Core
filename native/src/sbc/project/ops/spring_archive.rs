@@ -35,7 +35,10 @@ pub(crate) fn build(spec: Spec) -> Result<(), String> {
     for asset in &spec.assets {
         write_bytes(&spec.archive_dir.join(&asset.path), &asset.bytes)?;
     }
-    write_bytes(&spec.archive_dir.join("mapinfo.lua"), spec.map_info.as_bytes())?;
+    write_bytes(
+        &spec.archive_dir.join("mapinfo.lua"),
+        spec.map_info.as_bytes(),
+    )?;
     write_bytes(
         &spec.archive_dir.join("mapconfig").join("s11n_model.lua"),
         spec.s11n_model.as_bytes(),
