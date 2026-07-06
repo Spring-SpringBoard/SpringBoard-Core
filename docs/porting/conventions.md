@@ -150,7 +150,15 @@ directory (`commands/heightmap/mod.rs`, `commands/teams/mod.rs`, etc.). The root
 module should only change when introducing a new slice directory or a genuinely
 new shared subsystem.
 
-**Other anti-patterns to avoid:**
+## Native Commands
+
+Adding a Rust-owned command is a Lua payload wrapper (`extends NativeCommand`,
+`className`, payload fields, `blockUndo` where relevant, no behavior) plus a Rust
+`register_command!` entry. The rule, the `error(...)` guards, `executeNativeAsync`
+/ `submit_native_command_completed`, and the cross-cutting project-IO registry are
+design, documented in [`../design/command-system.md`](../design/command-system.md).
+
+**Anti-patterns to avoid:**
 
 - Central error enum with a variant per command. Use one `CommandError` with a string or `Box<dyn Error>`, or per-command structured errors.
 - Central `mod.rs` re-exports listing every command's public types. Keep visibility scoped — commands shouldn't need to expose types outside their own module.

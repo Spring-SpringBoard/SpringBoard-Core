@@ -51,6 +51,11 @@ function WidgetRemoveTeamCommand:init(id)
 end
 
 function WidgetRemoveTeamCommand:execute()
+    if SB.model.teamManager:getTeam(self.id) == nil then
+        Log.Warning("WidgetRemoveTeamCommand: team " .. tostring(self.id)
+            .. " not found (widget/gadget team state out of sync)")
+        return
+    end
     SB.model.teamManager:removeTeam(self.id)
 end
 ----------------------------------------------------------

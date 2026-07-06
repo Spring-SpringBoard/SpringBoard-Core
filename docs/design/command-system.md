@@ -96,3 +96,13 @@ manager while the manager is mid-execute running it. Instead it records an
 **intent**, which the manager applies once the command returns. This expresses
 the reentrant manager-calls-command-calls-manager relationship without shared-mutability
 wrappers, and keeps ownership flat. Ordinary commands record no intent.
+
+## Native (Rust-owned) commands
+
+The Lua file is a `NativeCommand` stub (className + payload fields); the behavior
+lives in the Rust `register_command!` handler.
+
+Await IO-bound ones with `SB.commandManager:executeNativeAsync(Command(...))`.
+
+Save/load/export register per-domain participants via the project IO registries;
+`SaveCommand`/`LoadProjectCommand`/`ExportMapsCommand` just run the registry.

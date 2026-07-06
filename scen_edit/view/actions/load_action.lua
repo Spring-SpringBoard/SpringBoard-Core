@@ -24,7 +24,7 @@ end
 function LoadAction:execute()
     OpenProjectDialog():setConfirmDialogCallback(
         function(path)
-            SB.commandManager:execute(ReloadIntoProjectCommand(path), true)
+            SB.commandManager:execute(ReloadIntoProjectCommand(path))
         end
     )
 end

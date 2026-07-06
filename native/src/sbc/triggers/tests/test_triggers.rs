@@ -1,14 +1,13 @@
+use crate::sbc::teams::{Team, TeamManager};
 use crate::sbc::tests::tests_api::TestCtx;
 use crate::sbc::triggers::TriggerManager;
-use spring_native::RulesParamValue;
 
 const LIFECYCLE_TRIGGER_ID: i32 = 1;
 const RUNTIME_VARIABLE_ID: i32 = 9001;
 const RUNTIME_TRIGGER_ID: i32 = 9002;
-const RUNTIME_RESULT_PARAM: &str = "sbc_trigger_runtime_variable_value";
 const ACTIONS_VARIABLE_ID: i32 = 9011;
 const ACTIONS_TRIGGER_ID: i32 = 9012;
-const ACTIONS_RESULT_PARAM: &str = "sbc_trigger_actions_runtime_variable_value";
+const RUNTIME_TEAM_ID: i32 = 0;
 
 fn undo(ctx: &mut TestCtx) {
     ctx.route_command(serde_json::json!({ "className": "UndoCommand" }));
@@ -102,29 +101,23 @@ fn send_lua_rules_command(ctx: &mut TestCtx, data: serde_json::Value) -> Result<
     }
 }
 
-fn read_game_rules_param(ctx: &mut TestCtx, name: &str) -> Result<f32, String> {
-    let (value, _, exists) = ctx
-        .sbc
-        .interface()
-        .rules_params()
-        .get_game_rules_param(name)
-        .map_err(|err| format!("GetGameRulesParam({name}) failed: {err:?}"))?;
-    if !exists {
-        return Err(format!("{name} was not set"));
-    }
-    let RulesParamValue::Float(value) = value else {
-        return Err(format!("{name} came back as {value:?}, expected float"));
-    };
-    Ok(value)
-}
-
 fn add_runtime_variable_and_trigger(
     ctx: &mut TestCtx,
     variable_id: i32,
     trigger_id: i32,
     initial: f32,
     assigned: f32,
-) {
+) -> i32 {
+    let team_id = RUNTIME_TEAM_ID;
+    ctx.sbc.model::<TeamManager>().add_team(
+        Team {
+            name: "Runtime Trigger Team".to_string(),
+            metal_max: 1000.0,
+            energy_max: 1000.0,
+            ..Default::default()
+        },
+        Some(team_id),
+    );
     ctx.route_command(serde_json::json!({
         "className": "AddVariableCommand",
         "variable": {
@@ -143,52 +136,53 @@ fn add_runtime_variable_and_trigger(
             "events": [],
             "conditions": [],
             "actions": [{
-                "typeName": "number_VARIABLE_ASSIGN",
-                "variable": { "type": "var", "value": variable_id },
-                "number": { "type": "const", "value": assigned }
+                "typeName": "SET_TEAM_RESOURCES",
+                "team": { "type": "const", "value": team_id },
+                "string": { "type": "const", "value": "metal" },
+                "number": { "type": "var", "value": variable_id }
             }]
         }
     }));
+    ctx.route_command(serde_json::json!({
+        "className": "UpdateVariableCommand",
+        "variable": {
+            "id": variable_id,
+            "type": "number",
+            "name": "runtime_bonus",
+            "value": { "type": "const", "value": assigned }
+        }
+    }));
+    set_runtime_team_metal(ctx, team_id, 0.0).expect("reset trigger test team metal");
+    team_id
 }
 
-fn read_runtime_variable(
-    ctx: &mut TestCtx,
-    variable_id: i32,
-    result_param: &str,
-) -> Result<f32, String> {
-    let msg = serde_json::json!({
-        "tag": "bridge_test_variable",
-        "data": {
-            "name": result_param,
-            "variableID": variable_id,
-        },
-    });
-    let payload = format!("springboard|native|{msg}");
-    match ctx.sbc.interface().messages().send_lua_rules_msg(&payload) {
-        Ok(true) => {}
-        Ok(false) => return Err(format!("LuaRules rejected variable probe: {payload}")),
-        Err(err) => return Err(format!("SendLuaRulesMsg variable probe failed: {err:?}")),
-    }
-    read_game_rules_param(ctx, result_param)
+fn set_runtime_team_metal(ctx: &mut TestCtx, team_id: i32, amount: f32) -> Result<(), String> {
+    let synced = ctx.sbc.interface().synced_ctrl();
+    let team = synced.team();
+    team.set_team_resource(team_id, "metal", amount)
+        .map_err(|err| format!("set metal current: {err:?}"))?;
+    Ok(())
 }
 
-fn assert_runtime_variable(
-    ctx: &mut TestCtx,
-    variable_id: i32,
-    result_param: &str,
-    expected: f32,
-) -> Result<(), String> {
-    let actual = read_runtime_variable(ctx, variable_id, result_param)?;
+fn assert_runtime_team_metal(ctx: &mut TestCtx, team_id: i32, expected: f32) -> Result<(), String> {
+    let actual = ctx
+        .sbc
+        .interface()
+        .teams()
+        .get_team_resources(team_id, "metal")
+        .map_err(|err| format!("get team metal: {err:?}"))?
+        .metalCurrent;
     if (actual - expected).abs() > 0.01 {
         return Err(format!(
-            "Lua runtime did not consume native trigger/variable mirror; variable value={actual}"
+            "Lua runtime did not consume native trigger/variable mirror; team metal={actual}"
         ));
     }
     Ok(())
 }
 
 fn trigger_runtime_sees_native_models(ctx: &mut TestCtx) -> Result<(), String> {
-    add_runtime_variable_and_trigger(ctx, RUNTIME_VARIABLE_ID, RUNTIME_TRIGGER_ID, 17.0, 23.0);
+    let team_id =
+        add_runtime_variable_and_trigger(ctx, RUNTIME_VARIABLE_ID, RUNTIME_TRIGGER_ID, 17.0, 23.0);
 
     send_lua_rules_command(ctx, serde_json::json!({ "className": "StartCommand" }))?;
     send_lua_rules_command(
@@ -198,13 +192,14 @@ fn trigger_runtime_sees_native_models(ctx: &mut TestCtx) -> Result<(), String> {
             "triggerID": RUNTIME_TRIGGER_ID,
         }),
     )?;
-    assert_runtime_variable(ctx, RUNTIME_VARIABLE_ID, RUNTIME_RESULT_PARAM, 23.0)?;
+    assert_runtime_team_metal(ctx, team_id, 23.0)?;
 
     Ok(())
 }
 
 fn trigger_actions_runtime_sees_native_models(ctx: &mut TestCtx) -> Result<(), String> {
-    add_runtime_variable_and_trigger(ctx, ACTIONS_VARIABLE_ID, ACTIONS_TRIGGER_ID, 31.0, 47.0);
+    let team_id =
+        add_runtime_variable_and_trigger(ctx, ACTIONS_VARIABLE_ID, ACTIONS_TRIGGER_ID, 31.0, 47.0);
 
     send_lua_rules_command(ctx, serde_json::json!({ "className": "StartCommand" }))?;
     send_lua_rules_command(
@@ -214,7 +209,7 @@ fn trigger_actions_runtime_sees_native_models(ctx: &mut TestCtx) -> Result<(), S
             "triggerID": ACTIONS_TRIGGER_ID,
         }),
     )?;
-    assert_runtime_variable(ctx, ACTIONS_VARIABLE_ID, ACTIONS_RESULT_PARAM, 47.0)?;
+    assert_runtime_team_metal(ctx, team_id, 47.0)?;
 
     Ok(())
 }

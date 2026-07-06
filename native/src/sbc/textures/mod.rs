@@ -1,6 +1,6 @@
 mod commands;
 mod model;
-mod ops;
+pub(crate) mod ops;
 mod project;
 mod tests;
 

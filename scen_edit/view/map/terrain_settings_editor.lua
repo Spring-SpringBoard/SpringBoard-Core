@@ -136,7 +136,10 @@ function TerrainSettingsEditor:_AddMapCompileControls()
                     outputPath = Path.Join(self.compileFolderPath, "Compiled")
                 })
 
-                SB.commandManager:execute(cmd, true)
+                SB.commandManager:executeNativeAsync(cmd):next(function()
+                    self.progressBar:SetValue(100)
+                    self.progressBar:SetCaption("Finished")
+                end)
             end
         }
     })
@@ -175,37 +178,8 @@ function TerrainSettingsEditor:_AddMapCompileControls()
     }))
 
 
-    WG.Connector.Register("CompileMapStarted", function()
-        self.progressBar:SetCaption("Starting...")
-    end)
-
-    WG.Connector.Register("CompileMapFinished", function()
-        self.progressBar:SetValue(100)
-        self.progressBar:SetCaption("Finished")
-        -- WG.Connector.Send("OpenFile", {
-        --     path = "file://" .. self.compileFolderPath,
-        -- })
-    end)
-
-    WG.Connector.Register("CompileMapError", function(command)
-        self.progressBar:SetCaption("Error")
-        Log.Warning("Failed to compile: " .. tostring(command.msg))
-        self.progressBar.tooltip = tostring(command.msg)
-    end)
-
-    WG.Connector.Register("CompileMapProgress", function(command)
-        local current, total = command.current, command.total
-        local value = current * 100 / total
-        value = math.max(value, 0)
-        value = math.min(value, 100)
-        self.progressBar:SetValue(value)
-        if self.progressBar.caption ~= "Compiling" then
-            self.progressBar:SetCaption("Compiling")
-        end
-    end)
-
-    -- TODO: listen on commands
-    -- SB.commandManager:addListener(self)
+    -- Native CompileMapStarted/Finished/Error commands drive this progress bar.
+    SB.compileMapProgressBar = self.progressBar
 end
 
 function TerrainSettingsEditor:UpdateCompilePaths(folderPath)

@@ -13,20 +13,30 @@ pub struct IntegrationTest {
     /// Callers filter on a substring of this; see [`integration_test`].
     pub tag: &'static str,
     pub run: TestFn,
+    /// Opt-in tests are skipped by the default (unfiltered) run and only execute
+    /// when a filter explicitly selects their tag. Use for slow tests (e.g. a
+    /// full map compile) that shouldn't tax every suite run.
+    pub opt_in: bool,
 }
 
 inventory::collect!(IntegrationTest);
 
 /// Register an in-engine integration test, tagging it with its module path so the
-/// runner can filter by slice without anyone maintaining a list.
+/// runner can filter by slice without anyone maintaining a list. The optional
+/// `opt_in` form registers a test that only runs when its tag is explicitly
+/// requested.
 #[macro_export]
 macro_rules! integration_test {
     ($name:expr, $run:expr) => {
+        $crate::integration_test!($name, $run, opt_in = false);
+    };
+    ($name:expr, $run:expr, opt_in = $opt_in:expr) => {
         inventory::submit! {
             $crate::sbc::tests::tests_api::IntegrationTest {
                 name: $name,
                 tag: module_path!(),
                 run: $run,
+                opt_in: $opt_in,
             }
         }
     };
@@ -48,6 +58,13 @@ impl TestCtx<'_> {
         }
         self.sbc
             .route(&serde_json::json!({ "tag": "command", "data": data }).to_string());
+    }
+
+    /// Route a non-command message (e.g. `save_model`) under an explicit tag.
+    #[allow(dead_code)]
+    pub fn route_message(&mut self, tag: &str, data: Value) {
+        self.sbc
+            .route(&serde_json::json!({ "tag": tag, "data": data }).to_string());
     }
 
     /// Block until `path` exists or `timeout` elapses, pumping background IO.
@@ -76,14 +93,6 @@ impl TestCtx<'_> {
             // the external harness doesn't mistake a working test for a hang.
             beat_heartbeat();
             std::thread::sleep(Duration::from_millis(20));
-        }
-    }
-}
-
-fn beat_heartbeat() {
-    if let Ok(path) = std::env::var("SBC_TEST_HEARTBEAT") {
-        if !path.is_empty() {
-            let _ = std::fs::write(&path, b"1");
         }
     }
 }
@@ -131,9 +140,24 @@ pub fn run_if_requested(sbc: &mut SBC) -> bool {
 
     beat_heartbeat();
 
+    // Deep run (`SBC_TEST_DEEP=1`, via `just test-deep`) includes opt-in tests
+    // even without an explicit tag filter.
+    let include_opt_in = matches!(
+        std::env::var("SBC_TEST_DEEP").as_deref(),
+        Ok("1") | Ok("true")
+    );
+
     let mut tests: Vec<&IntegrationTest> = inventory::iter::<IntegrationTest>
         .into_iter()
-        .filter(|t| filters.is_empty() || filters.iter().any(|f| t.tag.contains(f)))
+        .filter(|t| {
+            if filters.is_empty() {
+                // Default run: everything except opt-in (slow) tests, unless deep.
+                include_opt_in || !t.opt_in
+            } else {
+                // Explicit filter: run matches, including opt-in tests.
+                filters.iter().any(|f| t.tag.contains(f))
+            }
+        })
         .collect();
     tests.sort_by_key(|t| (t.tag, t.name));
 
@@ -174,4 +198,12 @@ pub fn run_if_requested(sbc: &mut SBC) -> bool {
     let _ = sbc.interface().system_control().quit();
 
     true
+}
+
+fn beat_heartbeat() {
+    if let Ok(path) = std::env::var("SBC_TEST_HEARTBEAT") {
+        if !path.is_empty() {
+            let _ = std::fs::write(&path, b"1");
+        }
+    }
 }

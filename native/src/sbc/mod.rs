@@ -1,6 +1,7 @@
 mod areas;
 mod command_system;
 pub mod commands_api;
+pub(crate) mod compile;
 pub(crate) mod grass;
 pub(crate) mod heightmap;
 mod map_settings;

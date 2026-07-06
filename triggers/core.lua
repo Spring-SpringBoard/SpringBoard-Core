@@ -12,6 +12,15 @@ local function CanBeVariable(type)
     return false
 end
 
+local function NormalizeResourceName(name)
+    if name == "metal" then
+        return "m"
+    elseif name == "energy" then
+        return "e"
+    end
+    return name
+end
+
 return {
     actions = function()
         local variableAssignments = {}
@@ -180,7 +189,7 @@ return {
                 input = {"team", "string", "number"},
                 tags = {"Resources"},
                 execute = function (input)
-                    Spring.AddTeamResources(input.team, input.string, input.number)
+                    Spring.AddTeamResources(input.team, NormalizeResourceName(input.string), input.number)
                 end
             },
             {
@@ -189,7 +198,7 @@ return {
                 input = {"team", "string", "number"},
                 tags = {"Resources"},
                 execute = function (input)
-                    Spring.UseTeamResources(input.team, input.string, input.number)
+                    Spring.UseTeamResources(input.team, NormalizeResourceName(input.string), input.number)
                 end
             },
             {
@@ -198,7 +207,7 @@ return {
                 input = {"team", "string", "number"},
                 tags = {"Resources"},
                 execute = function (input)
-                    Spring.SetTeamResources(input.team, input.string, input.number)
+                    Spring.SetTeamResource(input.team, NormalizeResourceName(input.string), input.number)
                 end
             },
             {

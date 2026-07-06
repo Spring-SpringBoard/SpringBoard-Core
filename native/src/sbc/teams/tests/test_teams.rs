@@ -33,8 +33,8 @@ fn set_ally(ctx: &mut TestCtx) -> Result<(), String> {
     Ok(())
 }
 
-/// AddTeamCommand applies the requested team color in the engine.
-fn add_team_sets_color(ctx: &mut TestCtx) -> Result<(), String> {
+/// AddTeamCommand stores the requested team color in the native project model.
+fn add_team_stores_color(ctx: &mut TestCtx) -> Result<(), String> {
     let (r, g, b) = (0.25_f32, 0.5_f32, 0.75_f32);
     ctx.route_command(serde_json::json!({
         "className": "AddTeamCommand",
@@ -42,27 +42,18 @@ fn add_team_sets_color(ctx: &mut TestCtx) -> Result<(), String> {
         "color": { "r": r, "g": g, "b": b },
         "allyTeam": 1,
     }));
-
-    let info = ctx
+    let id = ctx.sbc.model::<TeamManager>().latest_id();
+    let color = ctx
         .sbc
-        .interface()
-        .teams()
-        .get_team_info(1, false)
-        .map_err(|e| format!("get_team_info(1): {e:?}"))?;
+        .model::<TeamManager>()
+        .get_team(id)
+        .ok_or_else(|| format!("added team {id} missing from model"))?
+        .color;
 
-    // Engine packs team color as (r<<24)|(g<<16)|(b<<8)|a, each channel
-    // float*255 truncated (rts/NativeInterface/api/Teams.cpp).
-    let packed = info.color;
-    let got_r = (packed >> 24) & 0xff;
-    let got_g = (packed >> 16) & 0xff;
-    let got_b = (packed >> 8) & 0xff;
-    let exp = |f: f32| (f * 255.0) as u32;
-    if got_r != exp(r) || got_g != exp(g) || got_b != exp(b) {
+    if color.r != r || color.g != g || color.b != b {
         return Err(format!(
-            "team 1 color not applied: expected rgb ({},{},{}), got ({got_r},{got_g},{got_b})",
-            exp(r),
-            exp(g),
-            exp(b)
+            "team {id} color not stored: expected ({r},{g},{b}), got ({},{},{})",
+            color.r, color.g, color.b
         ));
     }
     Ok(())
@@ -141,7 +132,27 @@ fn update_team_undo_redo(ctx: &mut TestCtx) -> Result<(), String> {
     Ok(())
 }
 
+/// Native team state is seeded from the engine at model construction, so a fresh
+/// project has teams to save (an empty team set aborts the engine on reload).
+/// The booted map has at least the two player teams + gaia.
+fn native_teams_start_populated(ctx: &mut TestCtx) -> Result<(), String> {
+    let teams = ctx.sbc.model::<TeamManager>().all_teams();
+    if teams.len() < 2 {
+        return Err(format!(
+            "native model started with too few teams: {} ({:?})",
+            teams.len(),
+            teams.iter().map(|t| t.id).collect::<Vec<_>>()
+        ));
+    }
+    // Ally teams should come from the engine (not all-zero), and ids preserved.
+    if teams.iter().all(|t| t.ally_team == teams[0].ally_team) {
+        return Err("all populated teams share one ally team (engine reads failed)".to_string());
+    }
+    Ok(())
+}
+
 crate::integration_test!("set_ally", set_ally);
-crate::integration_test!("add_team_sets_color", add_team_sets_color);
+crate::integration_test!("add_team_stores_color", add_team_stores_color);
 crate::integration_test!("remove_team_roundtrip", remove_team_roundtrip);
 crate::integration_test!("update_team_undo_redo", update_team_undo_redo);
+crate::integration_test!("native_teams_start_populated", native_teams_start_populated);

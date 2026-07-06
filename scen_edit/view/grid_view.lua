@@ -44,8 +44,6 @@ function GridView:init(tbl)
     }
     self.OnSelectItem = {}
 
-    self.itemWidth = layoutPanelSettings.iconX
-    self.itemHeight = layoutPanelSettings.iconY
     if tbl.itemWidth then
         layoutPanelSettings.iconX = tbl.itemWidth
     end
@@ -55,6 +53,8 @@ function GridView:init(tbl)
     if tbl.multiSelect then
         layoutPanelSettings.multiSelect = tbl.multiSelect
     end
+    self.itemWidth = layoutPanelSettings.iconX
+    self.itemHeight = layoutPanelSettings.iconY
 
     local ctrlOpt = tbl.ctrl
     ctrlOpt = Table.Merge(ctrlOpt, holderControlSettings)

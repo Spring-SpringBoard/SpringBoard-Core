@@ -131,7 +131,7 @@ function NewProjectDialog:ConfirmDialog()
 
     SB.project:GenerateNewProjectInfo(projectName)
     local cmd = ReloadIntoProjectCommand(SB.project.path, false)
-    SB.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd)
 end
 
 function NewProjectDialog:OnFieldChange(name, value)

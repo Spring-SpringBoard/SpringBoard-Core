@@ -12,11 +12,6 @@ import pytest
 from integration_runner import RunOutput, assert_clean_infolog, run_tests
 
 
-def _tags() -> list[str] | None:
-    raw = os.environ.get("SBC_TEST_TAGS", "")
-    return [t.strip() for t in raw.split(",") if t.strip()] or None
-
-
 @pytest.fixture(scope="module")
 def integration_run() -> RunOutput:
     return run_tests(_tags())
@@ -33,3 +28,8 @@ def test_all_tests_passed(integration_run: RunOutput) -> None:
 
 def test_infolog_clean(integration_run: RunOutput) -> None:
     assert_clean_infolog(integration_run.infolog, context="integration")
+
+
+def _tags() -> list[str] | None:
+    raw = os.environ.get("SBC_TEST_TAGS", "")
+    return [t.strip() for t in raw.split(",") if t.strip()] or None

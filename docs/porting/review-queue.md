@@ -9,22 +9,28 @@ Items Claude has finished implementing, awaiting human gates. Top of the list = 
 
 Each item is a one-line description and the steps to verify it in-game (read the diff for the code). Claude appends; user removes items as they're reviewed → tested → committed. Oldest first.
 
-## Project lifecycle (slice 8) — scenario info metadata — *review*
+## Project lifecycle (slice 8) — native project save/load/export — *review*
 
-`just build-native && just test-integration project` → scenario-info integration
-test passes. In-editor:
+`just test-all` runs the whole suite (unit + build + every integration test in
+one engine boot) and must pass; it covers project model IO, model/map/texture
+save-load-export, and the texture GL paths. To iterate on just this slice, filter
+with `just test-integration project` (or `textures`). In-editor:
 
-1. Open **Misc → Info**.
-2. Edit name, description, version, and author.
-3. Confirm the fields update without Lua-side execution errors.
-4. **Ctrl+Z / Ctrl+Y** the edit group — undo restores the previous metadata,
-   redo reapplies it.
-5. Save/export once if convenient and confirm the metadata shown in the UI is
-   the edited value.
+1. Make heavyweight project data changes: paint visible grass and metal
+   patches, import a diffuse texture, and import or edit shading textures.
+2. Save the project, reload it, and confirm those grass, metal, diffuse, and
+   shading changes are still visible.
+3. Export maps and confirm diffuse, shading, grass, and metal PNG outputs are
+   written and reflect the saved project state.
+4. Optional sanity check only: edit **Misc → Info** metadata and add the
+   smallest possible model/variable/trigger data needed to prove the project
+   model file still round-trips. Do not spend review time retesting object or
+   team/player editing here; those belong to their own slices.
 
 ## Objects (slice 5) — units, features & areas add / remove / move / set-param — *review*
 
-`just test-integration objects` → 4 tests pass. In-editor:
+`just test-all` (or `just test-integration objects` to filter) → object tests
+pass. In-editor:
 
 1. Place a **unit** and a **feature**; drag to move, rotate, edit a property (health/mass) in the property window — each change shows in the engine.
 2. Add an **area** (rect); drag to move and resize it.

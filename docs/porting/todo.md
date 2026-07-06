@@ -344,3 +344,32 @@ that `set_tile` actually blits them onto the engine map squares
 (the `ProjectLoadRegistration` fires, tiles are generated first, etc.). Likely
 candidates: files not written where load looks, tile store not generated before
 load, or the loaded textures not pushed to the live map.
+
+## 14. Avoid extracting/copying the map compiler binary
+
+**What.** [native/src/sbc/compile/ops/compiler.rs](../../native/src/sbc/compile/ops/compiler.rs)
+`compiler_path` execs the bundled `mapcompile` in place when SBC runs from a
+directory (`.sdd`), but falls back to reading the whole binary out of the VFS and
+writing a temp copy (+ chmod) when it lives inside a zipped/rapid archive. That
+extract-and-copy dance is wasteful; find a way to exec the compiler without
+copying the binary (e.g. have the engine expose the archive's real path, or a
+proper VFS extract-to-cache), and drop `extract_executable`.
+
+## 15. Untangle the `project` slice: utility vs. feature
+
+**What.** `native/src/sbc/project/` currently mixes two things: (a) an
+**SBC-wide utility** used by every feature slice — `ProjectPaths`
+([paths.rs](../../native/src/sbc/project/paths.rs)) plus the save / load / export
+registries ([io_registries/](../../native/src/sbc/project/io_registries/)) that
+grass/metal/heightmap/textures all register into — and (b) the **project feature
+itself** (project info, spring-archive export, reload, s11n, map-info, the
+editor model IO). Those are different concerns living in one slice.
+
+**Where to start.** Consider splitting the cross-cutting utility (paths +
+io_registries, the "how a project is saved/loaded/exported" plumbing) out from
+the project *feature* commands/jobs/ops, so feature slices depend only on the
+utility and not on the whole project slice. While there, move some files out of
+`project/ops/` to a better home and tighten naming — several `ops/` modules
+(`lua_writer`, `model_codec`, `map_info`, `project_info`, `spring_archive`,
+`archive`/`archive_assets`) are a grab-bag; group/rename them so each reads as
+what it does.

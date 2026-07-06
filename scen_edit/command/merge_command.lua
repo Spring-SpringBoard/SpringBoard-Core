@@ -15,15 +15,20 @@ function MergedCommand:onMerge()
     end
 
     self.cmd.opts = self.cmds[#self.cmds].opts
-    self.cmd.old = self.cmds[1].old
     for i = #self.cmds, 2, -1 do
         local c = self.cmds[i]
         Table.Merge(self.cmd.opts, c.opts)
     end
-    for i = 2, #self.cmds do
-        local c = self.cmds[i]
-        -- Spring.Echo(not not self.cmd.old, not not c.opts.old, i)
-        Table.Merge(self.cmd.old, c.old)
+
+    -- Native commands leave their undo to Rust and carry no `.old` snapshot;
+    -- only the merged opts matter. Lua commands still need their `.old` states
+    -- merged so a single undo reverts the whole group.
+    if not SB.commandManager:runsNative(self.cmd) then
+        self.cmd.old = self.cmds[1].old
+        for i = 2, #self.cmds do
+            local c = self.cmds[i]
+            Table.Merge(self.cmd.old, c.old)
+        end
     end
 end
 

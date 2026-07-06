@@ -5,7 +5,7 @@ use crate::sbc::metal::jobs;
 use crate::sbc::project::io_registries::export::{MapExportOptions, MapExportRegistration};
 use crate::sbc::project::io_registries::load::ProjectLoadRegistration;
 use crate::sbc::project::io_registries::save::ProjectSaveRegistration;
-use crate::sbc::project::model::paths::ProjectPaths;
+use crate::sbc::project::paths::ProjectPaths;
 
 const METAL_FILE: &str = "metal.data";
 

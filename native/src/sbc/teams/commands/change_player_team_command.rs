@@ -41,8 +41,8 @@ impl Command for ChangePlayerTeamCommand {
         let new_ally_team = ctx
             .interface
             .teams()
-            .get_team_info(self.team_id, false)
-            .map(|info| info.allyTeamID)
+            .get_team_info_owned(self.team_id, false)
+            .map(|info| info.ally_team_id)
             .unwrap_or(-1);
         if new_ally_team >= 0 {
             let _ = team_ctrl.set_global_los(new_ally_team, true);

@@ -1,4 +1,12 @@
+mod copy_custom_project_files_command;
+mod export_map_info_command;
 mod export_maps_command;
+mod export_project_command;
+mod export_s11n_command;
+mod export_spring_archive_command;
 mod load_project_command;
+mod reload_into_project_command;
 mod save_command;
+mod save_project_info_command;
+mod set_project_name_path_command;
 mod set_scenario_info_command;

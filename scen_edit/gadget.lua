@@ -14,7 +14,6 @@ if (gadgetHandler:IsSyncedCode()) then
 
 local msgParts = {}
 local msgPartsSize = 0
-local __populatedTeam = false
 
 function gadget:RecvLuaMsg(msg, playerID)
     if #msg < #SB.messageManager.prefix or msg:sub(1, #SB.messageManager.prefix) ~= SB.messageManager.prefix then
@@ -103,12 +102,6 @@ function gadget:RecvLuaMsg(msg, playerID)
             if msgTable.tag == 'command' then
                 local cmd = SB.commandManager:_resolveCommand(msgTable.data)
                 cmd:execute()
-            elseif msgTable.tag == 'bridge_test' and msgTable.data and msgTable.data.name then
-                Spring.SetGameRulesParam(msgTable.data.name, msgTable.data.value)
-            elseif msgTable.tag == 'bridge_test_variable' and msgTable.data and msgTable.data.name then
-                local variable = SB.model.variableManager:getVariable(msgTable.data.variableID)
-                local value = variable and variable.value and variable.value.value
-                Spring.SetGameRulesParam(msgTable.data.name, value)
             end
         elseif op == 'startMsgPart' then
             msgPartsSize = tonumber(par1)
@@ -180,11 +173,6 @@ function gadget:GamePreload()
 end
 
 function gadget:GameFrame(frameNum)
-    if SB.__populated and not __populatedTeam then
-        SB.model.teamManager:populate()
-        __populatedTeam = true
-    end
-
     SB.executeDelayed("GameFrame")
     SB.rtModel:GameFrame(frameNum)
 

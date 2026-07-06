@@ -19,22 +19,11 @@ function RecieveGadgetMessage(msg)
         if msgTable.tag == 'command' then
             local msgObj = Message(msgTable.tag, msgTable.data)
             SB.commandManager:HandleCommandMessage(msgObj, true)
-        elseif msgTable.tag == 'bridge_test' then
-            Spring.InvokeNativeModule(json.encode({
-                tag = "bridge_test_ack",
-                data = msgTable.data,
-            }))
         end
         return
     end
-
-    -- local tbl = loadstring(msg)()
-    -- local data = tbl.data
-    -- local tag = tbl.tag
-    -- if tag == "msg" then
-    --     model:InvokeCallback(data.msgID, data.result)
-    -- end
 end
+
 
 function widget:RecvLuaMsg(msg, playerID)
     if msg:sub(1, #SB.messageManager.prefix) ~= SB.messageManager.prefix then

@@ -46,9 +46,10 @@ function Project:Save(name)
 
     Log.Notice("Saving project: " .. self.path .. " ...")
 
-    -- Native SaveCommand can't be nested in a CompoundCommand, so dispatch each
-    -- separately. SaveProjectInfoCommand runs widget-side (unsynced calls).
-    SB.commandManager:execute(SaveProjectInfoCommand(self.name, self.path, isNewProject), true)
+    -- Both are native commands (they run on the gadget / Rust, so no widget
+    -- flag). SaveCommand can't be nested in a CompoundCommand, so dispatch each
+    -- separately rather than grouping them.
+    SB.commandManager:execute(SaveProjectInfoCommand(self.name, self.path, isNewProject))
     SB.commandManager:execute(SaveCommand(self.path, isNewProject))
 
     -- We delay this notice twice to ensure texture map and screenshot is taken
@@ -57,7 +58,7 @@ function Project:Save(name)
             Log.Notice("Saved project.")
 
             if isNewProject then
-                SB.commandManager:execute(ReloadIntoProjectCommand(self.path), true)
+                SB.commandManager:execute(ReloadIntoProjectCommand(self.path))
             end
         end)
     end)
@@ -73,7 +74,7 @@ function Project:GenerateNewProjectInfo(name)
     SB.project:CreateProjectStructure(self.path)
     Log.Notice("Saving project info: " .. self.path .. " ...")
     local cmd = SaveProjectInfoCommand(self.name, self.path, true)
-    SB.commandManager:execute(cmd, true)
+    SB.commandManager:execute(cmd)
 end
 
 function Project:__MaybeSetNameCommand(name)
@@ -86,6 +87,13 @@ function Project:__MaybeSetNameCommand(name)
     if path == self.path then
         return false
     end
+
+    -- Set our own name/path synchronously so the caller (e.g. Save) sees them
+    -- right away. The native command runs asynchronously (gadget -> Rust ->
+    -- notify) and can't satisfy a synchronous read; it mirrors this state to
+    -- Rust and the other Lua state, and rewrites the name-prefixed mutators.
+    self.name = name
+    self:SetPath(path)
 
 	local cmd = SetProjectNamePathCommand(name, path)
 	SB.commandManager:execute(cmd)

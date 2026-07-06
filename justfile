@@ -25,9 +25,24 @@ clippy:
 lint-lua:
     luacheck .
 
+# Check simple Rust file ordering conventions.
+[group('lint')]
+lint-rust-step-down:
+    python3 tools/lint/rust_step_down.py
+
+# Check Python step-down ordering (public functions before private `_` helpers).
+[group('lint')]
+lint-py-step-down:
+    python3 tools/lint/py_step_down.py
+
+# Fail on commands defined but never instantiated (dead port leftovers).
+[group('lint')]
+lint-no-dead-commands:
+    python3 tools/lint/no_dead_commands.py --fail
+
 # Run all lints + native type-check (the one command to run before review).
 [group('lint')]
-lint: fmt clippy lint-lua check
+lint: fmt clippy lint-lua lint-rust-step-down lint-py-step-down lint-no-dead-commands check
 
 # Type-check the native crate.
 [group('build')]
@@ -63,9 +78,10 @@ test-unit:
 test-integration tags="":
     if [ -n "{{tags}}" ]; then cd tools/smoke && SBC_TEST_TAGS="{{tags}}" uv run pytest; else cd tools/smoke && uv run pytest; fi
 
-# Run unit tests and the integration suite.
+# Complete run: unit tests, native rebuild, and ALL integration tests incl. slow opt-in ones.
 [group('test')]
-test-all: test-unit test-integration
+test-all: test-unit build-native
+    cd tools/smoke && SBC_TEST_DEEP="1" SBC_TEST_TIMEOUT="300" uv run pytest
 
 # Run the native verification chain (lint already covers check).
 [group('test')]

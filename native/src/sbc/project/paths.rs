@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-const PROJECT_FOLDER_PREFIX: &str = "sb_project_files";
+pub(crate) const PROJECT_FOLDER_PREFIX: &str = "sb_project_files";
 
 /// Resolves per-feature file paths inside a project. Handed to save/load
 /// registrations so features name their file (`"heightmap.data"`) without

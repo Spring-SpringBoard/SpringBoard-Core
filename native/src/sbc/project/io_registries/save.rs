@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::sbc::command_system::context::Context;
-use crate::sbc::project::model::paths::ProjectPaths;
+use crate::sbc::project::paths::ProjectPaths;
 
 pub(crate) struct ProjectSaveRegistration {
     pub save: fn(&mut Context, &ProjectPaths, bool),

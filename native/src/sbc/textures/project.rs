@@ -6,7 +6,7 @@ use crate::sbc::command_system::context::Context;
 use crate::sbc::project::io_registries::export::{MapExportOptions, MapExportRegistration};
 use crate::sbc::project::io_registries::load::ProjectLoadRegistration;
 use crate::sbc::project::io_registries::save::ProjectSaveRegistration;
-use crate::sbc::project::model::paths::ProjectPaths;
+use crate::sbc::project::paths::ProjectPaths;
 use crate::sbc::textures::model::TextureModel;
 use crate::sbc::textures::ops::{export, load, save};
 

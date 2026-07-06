@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 
-from run_sbc import boot
+from run_sbc import DEFAULT_TIMEOUT_S, boot
 
 
 class RunOutput(NamedTuple):
@@ -32,7 +33,7 @@ def run_tests(tags: list[str] | None = None) -> RunOutput:
     fired into -- otherwise the only infolog under scrutiny is the baseline
     test_no_warnings boot, which doesn't see anything paint commands log.
     """
-    write_dir = boot(run_tests=True, tags=tags)
+    write_dir = boot(tags=tags, timeout_s=_timeout_s())
     results_path = write_dir / "sbc_test_results.json"
     infolog_path = write_dir / "infolog.txt"
     infolog = infolog_path.read_text(errors="replace") if infolog_path.is_file() else ""
@@ -70,6 +71,12 @@ def assert_clean_infolog(infolog: str, *, context: str) -> None:
     assert not errors, (
         f"[{context}] errors ({len(errors)}):\n" + "\n".join(errors[:40])
     )
+
+
+def _timeout_s() -> int:
+    """Boot timeout, overridable via SBC_TEST_TIMEOUT for slow opt-in tests."""
+    raw = os.environ.get("SBC_TEST_TIMEOUT", "")
+    return int(raw) if raw.strip().isdigit() else DEFAULT_TIMEOUT_S
 
 
 def _missing_results_message(results_path: Path, infolog: Path) -> str:

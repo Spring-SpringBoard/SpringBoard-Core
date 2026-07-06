@@ -39,7 +39,7 @@ function ImportAction:execute()
 
                 Log.Notice("Importing diffuse: " .. path .. " ...")
                 local importCommand = ImportDiffuseCommand(path)
-                SB.commandManager:execute(importCommand, true)
+                SB.commandManager:execute(importCommand)
                 Log.Notice("Import complete.")
                 return true
             elseif fileType == IMPORT_HEIGHTMAP then

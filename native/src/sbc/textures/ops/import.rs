@@ -42,3 +42,20 @@ pub(crate) fn import_diffuse(
     let _ = interface.gfx().delete_texture(&source);
     Ok(())
 }
+
+/// Loads one external image into a named shading texture.
+pub(crate) fn import_shading(
+    interface: &NativeInterfaceRef,
+    tm: &mut TextureModel,
+    name: &str,
+    path: &Path,
+) -> Result<(), String> {
+    let source = load_image_texture(interface, path)?;
+    let ok = tm.shading.set_from_source(name, &source, true);
+    let _ = interface.gfx().delete_texture(&source);
+    if ok {
+        Ok(())
+    } else {
+        Err(format!("import shading: unknown texture type {name}"))
+    }
+}

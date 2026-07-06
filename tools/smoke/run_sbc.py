@@ -37,28 +37,55 @@ DEFAULT_TIMEOUT_S = 45
 HEARTBEAT_STALE_S = 20.0
 
 
-def _load_env_file(path: Path) -> None:
-    """Populate os.environ from a KEY=VALUE .env file (real env vars win)."""
-    if not path.is_file():
-        return
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if "--manual" in argv:
+        return launch_manual()
+    write_dir = boot(tags=["__startup_only__"])
+    print(write_dir)
+    return 0
 
 
-def _resolve_engine_dir() -> Path:
-    """Engine install dir from SBC_ENGINE_DIR (env or .env). No hardcoded path."""
-    _load_env_file(SBC_ROOT / ".env")
-    raw = os.environ.get("SBC_ENGINE_DIR")
-    if not raw:
-        raise RuntimeError(
-            "SBC_ENGINE_DIR is not set. Copy .env.example to .env and point it at "
-            "your spring engine install dir."
-        )
-    return Path(raw).expanduser()
+def launch_manual() -> int:
+    """Set up an isolated write dir and run SBC in the foreground until quit.
+
+    The interactive twin of `boot()` — no timeout, no test spec. This is the whole
+    body of the old tools/dev/launch.sh; that script now just calls it.
+    """
+    write_dir, env, cmd = prepare(prefix="sbc-manual-")
+    print(f"write dir: {write_dir}")
+    print(f"infolog:   {write_dir / 'infolog.txt'}")
+    return subprocess.run(cmd, env=env, check=False).returncode
+
+
+def boot(
+    *,
+    engine_dir: Path | None = None,
+    timeout_s: int = DEFAULT_TIMEOUT_S,
+    sbc_root: Path = SBC_ROOT,
+    tags: list[str] | None = None,
+) -> Path:
+    """Boot SBC, run the requested tests, and return the write dir (with infolog.txt).
+
+    Every boot goes through the in-engine test framework so the engine ALWAYS
+    quits itself from the Rust side (`system_control().quit()`) the moment it is
+    done -- Python never waits out a timeout or has to SIGKILL. `tags` filters
+    which tests run (a tag substring); `None` runs the full suite, and a tag that
+    matches nothing (e.g. `["__startup_only__"]`) runs zero tests so the engine
+    quits as soon as startup finishes. The heartbeat watchdog only fires on a
+    genuine hang.
+    """
+    write_dir, env, cmd = prepare(
+        engine_dir=engine_dir,
+        sbc_root=sbc_root,
+        run_tests=True,
+        tags=tags,
+        prefix="sbc-smoke-",
+    )
+    # The framework quits the engine when it finishes (0 or more tests), so the
+    # process exits on its own; the heartbeat watchdog only kills a real hang.
+    _run_with_heartbeat(cmd, env, write_dir / "sbc_test_heartbeat", timeout_s)
+    return write_dir
 
 
 def prepare(
@@ -112,9 +139,9 @@ def prepare(
     # The engine builds its fontconfig cache under <write_dir>/fontcache. Each
     # run uses a fresh temp dir, so without a persistent cache every launch pays a
     # ~20s font rescan. Point it at a shared dir, built once and reused.
-    fontcache = Path(
-        os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")
-    ) / "sbc-fontcache"
+    fontcache = (
+        Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sbc-fontcache"
+    )
     fontcache.mkdir(parents=True, exist_ok=True)
     (write_dir / "fontcache").symlink_to(fontcache)
 
@@ -143,58 +170,6 @@ def prepare(
         str(write_dir / "script.txt"),
     ]
     return write_dir, env, cmd
-
-
-def boot(
-    *,
-    engine_dir: Path | None = None,
-    timeout_s: int = DEFAULT_TIMEOUT_S,
-    sbc_root: Path = SBC_ROOT,
-    run_tests: bool = False,
-    tags: list[str] | None = None,
-) -> Path:
-    """Boot SBC for `timeout_s` seconds, return the write dir (containing infolog.txt).
-
-    If `run_tests` is set, the in-engine test framework runs every registered
-    test (via the `SBC_TEST_SPEC` env var), or only those whose tag contains any
-    substring in `tags`; the plugin self-quits when done, and a heartbeat
-    watchdog kills the run if it goes stale (a real hang) without waiting out the
-    hard timeout.
-
-    Does NOT raise on engine exit code — timeout-kill is the normal path.
-    """
-    write_dir, env, cmd = prepare(
-        engine_dir=engine_dir,
-        sbc_root=sbc_root,
-        run_tests=run_tests,
-        tags=tags,
-        prefix="sbc-smoke-",
-    )
-
-    if run_tests:
-        # The in-engine framework quits the engine when tests finish, so the
-        # normal path exits fast. The heartbeat watchdog kills a real hang
-        # (plugin stuck / crashed mid-test) without waiting out timeout_s.
-        _run_with_heartbeat(cmd, env, write_dir / "sbc_test_heartbeat", timeout_s)
-    else:
-        try:
-            subprocess.run(cmd, env=env, timeout=timeout_s, check=False)
-        except subprocess.TimeoutExpired:
-            pass
-
-    return write_dir
-
-
-def launch_manual() -> int:
-    """Set up an isolated write dir and run SBC in the foreground until quit.
-
-    The interactive twin of `boot()` — no timeout, no test spec. This is the whole
-    body of the old tools/dev/launch.sh; that script now just calls it.
-    """
-    write_dir, env, cmd = prepare(prefix="sbc-manual-")
-    print(f"write dir: {write_dir}")
-    print(f"infolog:   {write_dir / 'infolog.txt'}")
-    return subprocess.run(cmd, env=env, check=False).returncode
 
 
 def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:
@@ -233,13 +208,28 @@ def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:
                 proc.kill()
 
 
-def main(argv: list[str] | None = None) -> int:
-    argv = sys.argv[1:] if argv is None else argv
-    if "--manual" in argv:
-        return launch_manual()
-    write_dir = boot()
-    print(write_dir)
-    return 0
+def _load_env_file(path: Path) -> None:
+    """Populate os.environ from a KEY=VALUE .env file (real env vars win)."""
+    if not path.is_file():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+
+
+def _resolve_engine_dir() -> Path:
+    """Engine install dir from SBC_ENGINE_DIR (env or .env). No hardcoded path."""
+    _load_env_file(SBC_ROOT / ".env")
+    raw = os.environ.get("SBC_ENGINE_DIR")
+    if not raw:
+        raise RuntimeError(
+            "SBC_ENGINE_DIR is not set. Copy .env.example to .env and point it at "
+            "your spring engine install dir."
+        )
+    return Path(raw).expanduser()
 
 
 if __name__ == "__main__":
