@@ -463,8 +463,9 @@ end
 		UpdateVisibilityState()
 		if not visible then
 			mouseCaptured = false
-			assert(rml.context, "Dev console context missing during hide")
-			rml.context:ProcessMouseLeave()
+			if rml.context and rml.context.ProcessMouseLeave then
+				rml.context:ProcessMouseLeave()
+			end
 		end
 	end
 
@@ -502,6 +503,7 @@ end
 -- ---------- Widget lifecycle ----------
 function widget:Initialize()
 	if Spring.GetGameRulesParam("useRml") ~= "true" then
+		widgetHandler:RemoveWidget(self)
 		return
 	end
 	Spring.SendCommands('console 0')
