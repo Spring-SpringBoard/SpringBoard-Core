@@ -278,3 +278,12 @@ function GridView:EndMultiModify()
     self.layoutPanel:UpdateLayout()
     self.layoutPanel:Invalidate()
 end
+
+function GridView:Invalidate()
+    if self.scrollPanel then
+        self.scrollPanel:Invalidate()
+    end
+    if self.layoutPanel then
+        self.layoutPanel:Invalidate()
+    end
+end
