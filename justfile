@@ -91,3 +91,9 @@ verify-native: lint test-unit build-native
 [group('run')]
 run: build-native
     bash tools/dev/launch.sh
+
+# Drive the native chonsole in the currently running editor window.
+# Defaults to enter-only; typing scenarios must be requested explicitly.
+[group('run')]
+smoke-chonsole scenario="enter":
+    python3 tools/dev/chonsole_smoke.py "{{scenario}}"

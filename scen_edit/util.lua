@@ -527,21 +527,14 @@ if Script.GetName() == "LuaUI" then
         end
 
         if Platform.osFamily == "Windows" then
-            return WG.Connector.Send("RemoveEmptyDirs", {
-                path = path
-            }, {
-                waitForResult = true
-            }):catch(function(error)
-                Log.Error("Failed to delete empty folder: " .. tostring(error))
-            end)
+            Spring.InvokeNativeModule(json.encode({
+                tag = "remove_dir_recursively",
+                data = {
+                    path = path,
+                },
+            }))
         end
     end
-end
-
-if Script.GetName() == "LuaUI" then
-    WG.Connector.Register("CommandFailed", function(command)
-        Log.Error("Command failed: " .. tostring(command.error))
-    end)
 end
 
 local warningsIssued = {}

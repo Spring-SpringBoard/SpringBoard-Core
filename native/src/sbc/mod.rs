@@ -1,4 +1,5 @@
 mod areas;
+mod chonsole;
 mod command_system;
 pub mod commands_api;
 pub(crate) mod compile;
@@ -7,6 +8,7 @@ pub(crate) mod heightmap;
 mod map_settings;
 pub(crate) mod metal;
 mod objects;
+mod port_flags;
 mod project;
 mod teams;
 mod terrain_cpu;

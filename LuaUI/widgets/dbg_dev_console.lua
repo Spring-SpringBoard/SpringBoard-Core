@@ -6,7 +6,7 @@
 -- Put it on a repository, load it like other libs
 -- Fix fontsize changing on select
 -- Pop up on new warning (option)
--- Button to upload log (using the connector)
+-- Button to show the current log path.
 -- Scrollbar should have a constant height (it can be too small if there's a lot of text)
 
 function widget:GetInfo()
@@ -467,12 +467,6 @@ function widget:Initialize()
 	Spring.SendCommands("console 0")
 	Chili = WG.SBChili or WG.Chili
 	screen = Chili.Screen0
-	if WG.Connector then
-		self.openFileCallback = function(cmd)
-			Spring.Echo("Opened in editor: " .. tostring(cmd.path))
-		end
-		WG.Connector.Register("OpenFileFinished", self.openFileCallback)
-	end
 	Spring.SendCommands("bind f8 " .. COMMAND_NAME)
 	Spring.SendCommands("console 0")
 end
@@ -481,9 +475,6 @@ function widget:Shutdown()
 	Spring.SendCommands("unbind f8 " .. COMMAND_NAME)
 	if window then
 		window:Dispose()
-	end
-	if WG.Connector then
-		WG.Connector.Unregister("OpenFileFinished", self.openFileCallback)
 	end
 end
 
@@ -615,7 +606,7 @@ function NewConsoleLine(text)
 	-- log:RemoveChild(log.children[1])
 	-- end
 	local filePath, lineNumber, s, e = CheckForLuaFilePath(text)
-	if not (filePath and WG.Connector and VFS.GetFileAbsolutePath) then
+	if not (filePath and VFS.GetFileAbsolutePath) then
 		log:AddLine(text, {}, {})
 		return
 	end
@@ -627,23 +618,13 @@ function NewConsoleLine(text)
 		return
 	end
 
-	local absPath = VFS.GetFileAbsolutePath(filePath)
 	local tooltip = {
 		startIndex = s + 3,
 		endIndex = e + 3,
-		tooltip = "Open: " .. text:sub(s, e)
+		tooltip = text:sub(s, e)
 	}
 	text = text:sub(1, s - 1) .. "\255\150\100\255" .. text:sub(s, e) .. "\b" .. text:sub(1, 4) .. text:sub(e + 1)
-	local OnTextClick = {
-		startIndex = s,
-		endIndex = e,
-		OnTextClick = {
-			function()
-				WG.Connector.Send("OpenFile", {path = absPath})
-			end
-		}
-	}
-	log:AddLine(text, {tooltip}, {OnTextClick})
+	log:AddLine(text, {tooltip}, {})
 end
 
 function RemoveAllMessages()

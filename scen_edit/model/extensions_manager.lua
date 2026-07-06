@@ -51,7 +51,6 @@ function ExtensionsManager:__ReloadExtension(extFolder)
     xpcall(function()
         SB.IncludeDir(Path.Join(extFolder.path, "ui"), env, VFS.RAW, true)
         SB.IncludeDir(Path.Join(extFolder.path, "cmd"), env, VFS.RAW, true)
-        self:__SyncPathRecursive(Path.Join(extFolder.path, "cmd"))
     end, function(err)
         Log.Error(debug.traceback(err, 3))
         Log.Error(string.format("Failed to load extension: %s", extFolder.name))
@@ -60,9 +59,7 @@ end
 
 function ExtensionsManager:__SyncFile(path)
     SB.delay(function()
-        local fileData = VFS.LoadFile(path, VFS.RAW)
-        local cmd = SyncFileCommand(fileData)
-        SB.commandManager:execute(cmd)
+        Log.Warning("Ignoring synced extension command file after Rust command port: " .. path)
     end)
 end
 

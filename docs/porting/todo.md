@@ -142,7 +142,47 @@ and only caught by hand.
 
 ---
 
-## 4. Brush data structures: ditch nested HashMaps for vectors
+## 4. Add command-by-command test coverage
+
+**What.** Build a coverage matrix for native commands and add focused tests for
+each command's expected behavior. This is command coverage, not necessarily line
+coverage: every ported command should have at least one test proving it can be
+dispatched and that its important state changes happen.
+
+**Why.** A command can compile, register, and even pass broad smoke tests while
+still missing its actual contract: undo/redo shape, widget notification,
+save/load persistence, Lua bridge forwarding, or engine-side side effects. The
+port is easier to trust if each command has a small test that names the behavior
+it owns.
+
+**How.** Add a table near the porting docs or test helpers listing every native
+command, with columns for `dispatch`, `execute`, `undo/redo`, `save/load`,
+`LuaUI bridge`, `LuaRules bridge`, and `engine side effect` as applicable. Fill
+the matrix with focused Rust integration tests first, then add Lua bridge tests
+for commands whose bugs would only appear through `command_manager:execute()`.
+
+---
+
+## 5. Add a SpringBoard test unit fixture
+
+**What.** Add at least one tiny unit definition to SpringBoard's test/game data
+so smoke and integration boots always have a real `UnitDef` available.
+
+**Why.** The current object tests can cover areas and features in a blank smoke
+boot, but unit behavior depends on the game exposing at least one unit. Without a
+known SpringBoard-owned unit fixture, CI cannot reliably exercise the full unit
+path: create/destroy, set params, undo/redo, save/load, trigger references, and
+runtime-facing unit IDs. That leaves part of the object command port effectively
+manual-only.
+
+**How.** Add a minimal inert unit that is cheap to spawn and has enough fields to
+exercise the unit bridge/model code. Then update the native object integration
+tests to require that fixture instead of skipping/failing with "no unit defs in
+this engine boot".
+
+---
+
+## 6. Brush data structures: ditch nested HashMaps for vectors
 
 [brush_filter_generator.rs](../../native/src/sbc/commands/heightmap/brush_filter_generator.rs)
 ports SpringBoard's brush-filter cache verbatim as
@@ -152,14 +192,14 @@ around) is a mechanical port of the Lua; vectors / a flat keyed struct would be
 far more efficient and readable. Refactor the whole brush system off nested
 HashMaps once the behavior is locked in.
 
-## 5. Load the brush greyscale directly in Rust
+## 7. Load the brush greyscale directly in Rust
 
 [set_heightmap_brush_command.rs](../../native/src/sbc/commands/set_heightmap_brush_command.rs)
 receives the greyscale shape as a large array marshalled from Lua on every
 `SetHeightmapBrushCommand`. Load the brush image directly in Rust so the big
 array doesn't cross the bridge (ties into the async-IO image work in slice 2).
 
-## 6. Object field descriptors allocate on every lookup
+## 8. Object field descriptors allocate on every lookup
 
 `ObjectHandler::descriptors()` currently returns `Vec<ObjectFieldDescriptor>` by
 collecting each kind's `inventory` entries. This keeps field registration simple,

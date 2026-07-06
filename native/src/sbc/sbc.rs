@@ -3,6 +3,7 @@ use serde::Deserialize;
 
 use spring_native::prelude::*;
 
+use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::io::io_api::IoWorker;
@@ -48,10 +49,46 @@ impl NativeModule for SBC {
 
     fn update(&mut self) -> Result<(), Error> {
         self.drain_io();
+        self.model::<ChonsoleManager>().update()?;
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
         }
         Ok(())
+    }
+
+    fn draw_screen(&mut self) -> Result<(), Error> {
+        self.model::<ChonsoleManager>().draw_screen()
+    }
+
+    fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {
+        self.model::<ChonsoleManager>()
+            .key_press(key_code, scan_code, is_repeat)
+    }
+
+    fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {
+        self.model::<ChonsoleManager>()
+            .key_release(key_code, scan_code)
+    }
+
+    fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
+        self.model::<ChonsoleManager>().text_input(utf8)
+    }
+
+    fn mouse_move(&mut self, x: i32, y: i32, dx: i32, dy: i32, button: i32) -> Result<bool, Error> {
+        self.model::<ChonsoleManager>()
+            .mouse_move(x, y, dx, dy, button)
+    }
+
+    fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
+        self.model::<ChonsoleManager>().mouse_press(x, y, button)
+    }
+
+    fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
+        self.model::<ChonsoleManager>().mouse_release(x, y, button)
+    }
+
+    fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
+        self.model::<ChonsoleManager>().mouse_wheel(up, value)
     }
 }
 
@@ -98,12 +135,6 @@ impl SBC {
                 }
             }
         }
-    }
-
-    /// Queue an IO job from a non-command message handler (commands use
-    /// [`Context::submit_io`]).
-    pub(crate) fn submit_io_job(&mut self, job: Box<dyn crate::sbc::io::io_api::IoJob>) {
-        self.io_worker.submit(job);
     }
 
     fn run_command(&mut self, data: serde_json::Value) {

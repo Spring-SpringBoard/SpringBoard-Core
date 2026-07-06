@@ -1,0 +1,171 @@
+body {
+    position: absolute;
+    left: 26%;
+    top: 24.5%;
+    width: 41%;
+    height: 40%;
+    font-family: Poppins;
+    color: #dce3ea;
+    background-color: transparent;
+    border-width: 0dp;
+}
+
+#native-chonsole {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    top: 0dp;
+    bottom: 0dp;
+    padding: 0dp;
+}
+
+.lines {
+    display: none;
+    height: 0dp;
+    padding: 0dp;
+    font-family: Poppins;
+    font-size: 0dp;
+    line-height: 0dp;
+}
+
+.line {
+    display: block;
+    margin-bottom: 2dp;
+}
+
+.input-line {
+    color: #eef4fb;
+}
+
+.output-line {
+    color: #c9d4df;
+}
+
+.error-line {
+    color: #ff6f6f;
+}
+
+.suggestions {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    top: 38dp;
+    height: 286dp;
+    padding: 4dp 0dp 0dp 0dp;
+    font-size: 14dp;
+    line-height: 24dp;
+    color: #cfd8e3;
+    background-color: #00000030;
+    border-width: 0dp;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.suggestion {
+    display: block;
+    position: relative;
+    height: 24dp;
+    padding: 0dp;
+    background-color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.selected-suggestion {
+    background-color: #7bc7ff33;
+}
+
+.suggestion-command {
+    position: absolute;
+    left: 8dp;
+    top: 0dp;
+    width: 38%;
+    height: 24dp;
+    line-height: 24dp;
+    white-space: nowrap;
+    overflow: hidden;
+    color: #eef6ff;
+}
+
+.suggestion-description {
+    position: absolute;
+    right: 18dp;
+    top: 0dp;
+    width: 58%;
+    height: 24dp;
+    line-height: 24dp;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    color: #adb8c5;
+}
+
+scrollbarhorizontal,
+scrollbarhorizontal slidertrack,
+scrollbarhorizontal sliderbar,
+scrollbarhorizontal sliderarrowdec,
+scrollbarhorizontal sliderarrowinc {
+    display: none;
+}
+
+scrollbarvertical {
+    width: 10dp;
+    background-color: #00000020;
+}
+
+scrollbarvertical sliderarrowdec,
+scrollbarvertical sliderarrowinc {
+    width: 0dp;
+    height: 0dp;
+}
+
+scrollbarvertical slidertrack {
+    margin-left: 2dp;
+    width: 6dp;
+    background-color: #00000018;
+}
+
+scrollbarvertical sliderbar {
+    width: 6dp;
+    min-height: 22dp;
+    background-color: #dce3ea55;
+}
+
+.input-row {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    top: 0dp;
+    height: 36dp;
+    padding: 5dp 8dp;
+    font-family: Poppins;
+    font-size: 22dp;
+    line-height: 26dp;
+    color: #eef4fb;
+    background-color: #00000030;
+    border-width: 0dp;
+    white-space: pre;
+    overflow: hidden;
+}
+
+.prompt {
+    color: #dce3ea;
+    margin-right: 6dp;
+}
+
+.input {
+    color: #f3f7fb;
+}
+
+.selection {
+    color: #ffffff;
+    background-color: #6aa8ff88;
+}
+
+.cursor {
+    display: inline-block;
+    width: 2dp;
+    height: 22dp;
+    color: #e6e6e6aa;
+    background-color: #e6e6e6aa;
+}

@@ -1,11 +1,12 @@
 ---
-name: Phase 7 — Libraries (libs_sb + spring-launcher)
-description: Reimplement / drop the Lua + JS libraries under libs_sb/ and the spring-launcher
+name: Phase 7 — Libraries
+description: Remove obsolete Lua + JS libraries under libs_sb
 ---
 
 # Phase 7 — Libraries
 
-Once Phases 1–6 are far enough along that we know what's still consumed, deal with the dependencies under [libs_sb/](../../libs_sb/) and the JS-based [spring-launcher](../../libs_sb/spring-launcher/).
+Once Phases 1–6 are far enough along that we know what's still consumed, deal
+with obsolete dependencies under [libs_sb/](../../libs_sb/).
 
 Goal: same as the rest — leave only the bare minimum Lua needed for Spring to load the project.
 
@@ -20,23 +21,33 @@ Goal: same as the rest — leave only the bare minimum Lua needed for Spring to 
 | [i18n](../../libs_sb/i18n/) | reimplement in Rust | Localisation. Pick a Rust-friendly format (Fluent, gettext, or simple key-value JSON) |
 | [s11n](../../libs_sb/s11n/) | drop / replace with serde | Lua serialization — serde covers this in Rust |
 | [lcs](../../libs_sb/lcs/) | drop | Not needed in Rust |
-| [springmon](../../libs_sb/springmon/) | maybe drop | We have other Rust monitors; check what's still wired |
-| [spring-launcher](../../libs_sb/spring-launcher/) | reimplement in Rust | **JS launcher → Rust**. Significant. See below. |
+| springmon | dropped | Removed with the launcher connector; live-reload/watch-file support is no longer part of SBC. |
+| spring-launcher connector | dropped | Export/import/compile/file operations moved to Rust/native IO; open-file/upload-log support removed. |
 | [utils](../../libs_sb/utils/) | reimplement in Rust | General-purpose Lua helpers; port what's still used |
 | [kernel](../../libs_sb/kernel/) | TBD | Inspect — probably partly drop, partly port |
 | [json.lua, MessagePack.lua, savetable.lua](../../libs_sb/) | drop | One-file Lua libs; serde + bincode/msgpack-rust handle equivalents |
 
-## spring-launcher (Rust rewrite)
+## Launcher Connector
 
-The Electron/JS launcher is its own large project — separate codebase, separate UI, separate update mechanism. Replacing it in Rust is genuinely a major undertaking and should not be conflated with the SBC port.
+The in-engine editor no longer depends on the JS launcher connector. The command
+features SBC depended on were either moved to Rust/native IO (`CompileMap`,
+heightmap import/export, texture/map exports, recursive delete, archive zip) or
+removed from the UI (`OpenFile`, upload-log, springmon watch-file integration).
 
-Open questions to resolve before opening this phase:
-- Target framework? (tauri, iced, egui, slint — or RmlUi too?)
-- Reuse the Rust engine bindings from the port, or keep launcher fully independent?
-- Update channel handling — does the new launcher self-update?
-- Cross-platform: Linux + Windows at minimum, Mac if feasible
+## chonsole
 
-This phase doesn't open until the SBC core port (1–6) is at least mostly done. Otherwise we'd be rewriting two big systems in parallel without either being usable.
+The console implementation is controlled by [port_flags.json](../../port_flags.json):
+set `"chonsole": "rust"` to use the native console, or `"chonsole": "lua"` to
+leave the legacy Lua/Chili loader active. Both sides read the flag during load,
+so this is a restart-time switch rather than a live toggle.
+
+The native replacement lives under
+[native/src/sbc/chonsole/](../../native/src/sbc/chonsole/) and is fully native:
+Rust owns the command model, prefix-filtered history, fuzzy completion, RmlUi
+document, draw callback, and input callbacks. It deliberately does not port
+arbitrary Lua execution or the old Lua extension loader; unknown slash commands
+are forwarded to the Spring engine, while chat and basic native commands are
+handled directly.
 
 ## utils
 

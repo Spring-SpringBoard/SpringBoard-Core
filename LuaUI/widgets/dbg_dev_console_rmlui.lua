@@ -304,7 +304,7 @@ local function BuildLogMarkup(text, severity, fileInfo)
 end
 
 local function DetectLuaFilePath(text)
-	if not (WG.Connector and VFS.GetFileAbsolutePath) then
+	if not VFS.GetFileAbsolutePath then
 		return nil
 	end
 
@@ -720,14 +720,9 @@ end
 
 function widget:OnLogLinkClicked(event)
 	local element = event.current_element
-	if not element or not WG.Connector then return end
+	if not element then return end
 	local path = element:GetAttribute("data-path")
 	if not path then return end
-	local lineAttr = element:GetAttribute("data-line")
-	local line = tonumber(lineAttr)
-	local payload = { path = path }
-	if line then payload.line = line end
-	WG.Connector.Send("OpenFile", payload)
 end
 
 WG.DevConsole = {

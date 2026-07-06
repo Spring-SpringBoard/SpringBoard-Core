@@ -15,4 +15,5 @@ function MakeShadingTextureCommand:init(opts)
 end
 
 function MakeShadingTextureCommand:execute()
+    error("MakeShadingTextureCommand is native-only; Lua execute should not run")
 end

@@ -8,8 +8,5 @@
     <div id="project-label" class="project-label">Project not saved</div>
     <button id="btn-exit" class="menu-button">Exit</button>
     <button id="btn-menu" class="menu-button">Menu</button>
-    <button id="btn-upload-log" class="menu-button">Upload Log</button>
-    <button id="btn-data-dir" class="menu-button">Data dir</button>
-    <button id="btn-open-project" class="menu-button">Open project</button>
 </body>
 </rml>

@@ -14,7 +14,6 @@ function Model:init()
         self.assetsManager = AssetsManager()
         self.brushManagers = BrushManagers()
         self.extensionsManager = ExtensionsManager()
-        self.springmonManager = SpringmonManager()
     end
 
     self:LoadGameSettings()

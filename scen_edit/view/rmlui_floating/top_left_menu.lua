@@ -13,9 +13,6 @@ function RmlUiTopLeftMenu:init()
     self.elements = {
         btnExit = self.document:GetElementById("btn-exit"),
         btnMenu = self.document:GetElementById("btn-menu"),
-        btnUploadLog = self.document:GetElementById("btn-upload-log"),
-        btnDataDir = self.document:GetElementById("btn-data-dir"),
-        btnOpenProject = self.document:GetElementById("btn-open-project"),
         projectLabel = self.document:GetElementById("project-label"),
     }
 
@@ -35,29 +32,10 @@ function RmlUiTopLeftMenu:SetupButtonVisibility()
         self.elements.btnMenu:SetClass("hidden", true)
     end
 
-    if not self.model:IsConnectorAvailable() then
-        self.elements.btnUploadLog:SetClass("hidden", true)
-        self.elements.btnDataDir:SetClass("hidden", true)
-        self.elements.btnOpenProject:SetClass("hidden", true)
-    else
-        -- Start with Open Project button disabled (will be enabled by Update if project exists)
-        self.elements.btnOpenProject:SetClass("disabled", true)
-    end
-end
-
-function RmlUiTopLeftMenu:SetUploadButtonState(caption, enabled)
-    self.elements.btnUploadLog.inner_rml = caption
-    self.elements.btnUploadLog:SetClass("disabled", not enabled)
 end
 
 function RmlUiTopLeftMenu:UpdateProjectDisplay()
     self.elements.projectLabel.inner_rml = self.model:GetProjectCaption()
-
-    if self.model:HasProjectPath() then
-        self.elements.btnOpenProject:SetClass("disabled", false)
-    else
-        self.elements.btnOpenProject:SetClass("disabled", true)
-    end
 end
 
 function RmlUiTopLeftMenu:BindEvents()
@@ -75,30 +53,6 @@ function RmlUiTopLeftMenu:BindEvents()
         end)
     end
 
-    -- Upload log button
-    if self.model:IsConnectorAvailable() then
-        self.elements.btnUploadLog:AddEventListener("click", function()
-            -- TODO: Add confirmation dialog
-            self.model:UploadLog(
-                function() self:SetUploadButtonState("Uploading...", false) end,
-                function(success) self:SetUploadButtonState("Upload Log", true) end
-            )
-        end)
-    end
-
-    -- Data dir button
-    if self.model:IsConnectorAvailable() then
-        self.elements.btnDataDir:AddEventListener("click", function()
-            self.model:OpenDataDir()
-        end)
-    end
-
-    -- Open project button
-    if self.model:IsConnectorAvailable() then
-        self.elements.btnOpenProject:AddEventListener("click", function()
-            self.model:OpenProject()
-        end)
-    end
 end
 
 function RmlUiTopLeftMenu:Show()
@@ -120,6 +74,5 @@ function RmlUiTopLeftMenu:Update()
 end
 
 function RmlUiTopLeftMenu:Dispose()
-    self.model:UnregisterConnectorCallbacks()
     self.document:Close()
 end
