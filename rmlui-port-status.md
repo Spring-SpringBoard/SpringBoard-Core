@@ -98,6 +98,25 @@ now raises instead of silently building an invisible control:
   the Add-texture dialog looked empty (O7).
 - `Editor:SetInvisibleFields` always searched `SB.view.mainDocument`, so it never
   found a dialog's own fields.
+- `new_project_dialog` / `file_dialog` built their error line with `Label:New`, so
+  opening New Project crashed. `EditorLabel` replaces it; an `RmlUiLabel` resolves
+  its element through the editor that owns it, since a dialog renders into its own
+  document.
+- The generic `Dialog` (Export's texture-pool prompt, `SB.AskToRestart`) built a
+  `ScrollPanel` and a `TextBox`. `SB.AskToRestart` built a raw Chili `Window`.
+- `DisplayUtil` parented an `Image`/`TextBox` per unit-say speech bubble to
+  `screen0`; they are drawn with gl from `widget:DrawScreen` now.
+- `SB.SetGlobalRenderingFunction` hung its drawing off a Chili `Control`, and the
+  select-object / add-rect overlays used `Chili.Font`.
+
+Still Chili-only, and unreachable in RmlUi mode: the `view/fields/*` and
+`view/floating/*` Chili implementations, `MakeComponentPanel`/`MakeSeparator`
+(trigger + diplomacy windows; the Logic tab is disabled and Diplomacy is not
+registered), `list.lua`, and `asset_picker_window` (RmlUi has
+`RmlUiAssetPickerWindow`).
+
+Known gaps: `RmlUiObjectField` has no pick-from-map (`SelectObjectState`), and
+`chonsole: "lua"` + `ui: "rmlui"` leaves no console — use `chonsole: "rust"`.
 
 ## Known engine constraints (learned the hard way)
 
