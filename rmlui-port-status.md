@@ -121,6 +121,12 @@ Still Chili-only, and unreachable in RmlUi mode: the `view/fields/*` and
 registered), `list.lua`, and `asset_picker_window` (RmlUi has
 `RmlUiAssetPickerWindow`).
 
+Coverage: `all-editors` opens every registered editor in every tab (they are
+created lazily, so a broken one only appears when its button is clicked), and
+`heightmap` drags the raise brush and undoes it, asserting the commands reach the
+bridge. Note `AbstractState:KeyPress` drops hotkeys while a mouse button still
+reads as down, so a `ctrl+z` fired straight after a drag is silently swallowed.
+
 Known gaps: `RmlUiObjectField` has no pick-from-map (`SelectObjectState`), and
 `chonsole: "lua"` + `ui: "rmlui"` leaves no console — use `chonsole: "rust"`.
 
