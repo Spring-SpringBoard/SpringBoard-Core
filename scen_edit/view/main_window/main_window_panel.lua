@@ -66,6 +66,15 @@ end
 MainWindowPanel = LCS.class{}
 
 function MainWindowPanel:init()
+    self._totalEditors = 0
+    self.__editorMap = {}
+
+    if SB.useRmlUi then
+        -- The editor buttons live in springboard_main.rml; this panel only
+        -- tracks which editors belong to the tab.
+        return
+    end
+
     self.control = LayoutPanel:New {
         x = 0,
         width = "100%",
@@ -91,8 +100,6 @@ function MainWindowPanel:init()
         itemMargin = { 0, 0, 0, 0},
         children = { self.control }
     }
-    self._totalEditors = 0
-    self.__editorMap = {}
 end
 
 function MainWindowPanel:GetControl()

@@ -14,7 +14,7 @@ function CollisionView:init()
     self:super("init")
 
     self:AddControl("btn-show-vol", {
-        Button:New {
+        EditorButton {
             caption = "Show volume",
             width = 200,
             height = 40,

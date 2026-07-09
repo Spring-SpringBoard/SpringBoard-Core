@@ -5,6 +5,13 @@ local CreateTabsFromEditorRegistry
 function TabbedWindow:init()
     self.mainPanelY = 130
 
+    if SB.useRmlUi then
+        -- The right panel is springboard_main.rml; only the editor registry
+        -- bookkeeping below is shared.
+        self.tabs, self.mainPanels = CreateTabsFromEditorRegistry()
+        return
+    end
+
     local controls = {}
     if SB.conf.SHOW_BASIC_CONTROLS then
         controls = self:MakeActionButtons(SB.actionRegistry)
@@ -122,7 +129,9 @@ function TabbedWindow:AddEditor(editor)
             }
         }
         table.insert(self.tabs, tab)
-        self.__tabPanel:AddTab(tab)
+        if not SB.useRmlUi then
+            self.__tabPanel:AddTab(tab)
+        end
         self.mainPanels[tabName] = mainPanel
         self:__ResizeTabPanel()
     end
@@ -140,10 +149,12 @@ function TabbedWindow:RemoveEditor(editor)
     mainPanel:RemoveEditor(editor)
 
     if mainPanel:IsEmpty() then
-        if self.__tabPanel.tabbar:IsSelected(tabName) then
-            self.__tabPanel.tabbar:Select(nil)
+        if not SB.useRmlUi then
+            if self.__tabPanel.tabbar:IsSelected(tabName) then
+                self.__tabPanel.tabbar:Select(nil)
+            end
+            self.__tabPanel:RemoveTab(tabName)
         end
-        self.__tabPanel:RemoveTab(tabName)
         self.mainPanels[tabName] = nil
         for i, tab in ipairs(self.tabs) do
             if tabName == tab.name then
@@ -228,50 +239,63 @@ function TabbedWindow:MakeActionButtons(actions)
 end
 
 
+-- Returns the tab list index of the tab currently shown, in either UI.
+function TabbedWindow:__SelectedTabIndex()
+    for i, tab in pairs(self.tabs) do
+        if self:__IsTabSelected(tab.name) then
+            return i
+        end
+    end
+end
+
+function TabbedWindow:__IsTabSelected(name)
+    if SB.useRmlUi then
+        return SB.view.currentTab == name
+    end
+    return self.__tabPanel.tabbar:IsSelected(name)
+end
+
+function TabbedWindow:__SelectTab(name)
+    if SB.useRmlUi then
+        SB.view:SwitchTab(name)
+    else
+        self.__tabPanel.tabbar:Select(name)
+    end
+end
+
 function TabbedWindow:NextTab()
     local nextTab
-    for i, tab in pairs(self.tabs) do
-        local name = tab.name
-        if self.__tabPanel.tabbar:IsSelected(name) then
-            if i + 1 <= #self.tabs then
-                nextTab = self.tabs[i + 1]
-            else
-                nextTab = self.tabs[1]
-            end
-            break
-        end
+    local i = self:__SelectedTabIndex()
+    if i then
+        nextTab = self.tabs[i + 1] or self.tabs[1]
     end
 
     if nextTab == nil then
         nextTab = self.tabs[1]
     end
     if nextTab ~= nil then
-        self.__tabPanel.tabbar:Select(nextTab.name)
+        self:__SelectTab(nextTab.name)
     end
 end
 
 function TabbedWindow:PreviousTab()
     local prevTab
-    for i, tab in pairs(self.tabs) do
-        local name = tab.name
-        if self.__tabPanel.tabbar:IsSelected(name) then
-            if i - 1 >= 1 then
-                prevTab = self.tabs[i - 1]
-            else
-                prevTab = self.tabs[#self.tabs]
-            end
-            break
-        end
+    local i = self:__SelectedTabIndex()
+    if i then
+        prevTab = self.tabs[i - 1] or self.tabs[#self.tabs]
     end
     if prevTab == nil then
         prevTab = self.tabs[1]
     end
     if prevTab ~= nil then
-        self.__tabPanel.tabbar:Select(prevTab.name)
+        self:__SelectTab(prevTab.name)
     end
 end
 
 function TabbedWindow:__ResizeTabPanel()
+    if SB.useRmlUi then
+        return
+    end
     if #self.__tabPanel.tabbar.children == 0 then
         return
     end

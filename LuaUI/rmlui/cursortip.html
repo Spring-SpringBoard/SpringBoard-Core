@@ -1,0 +1,13 @@
+<rml>
+	<head>
+		<title>Cursor Tooltip</title>
+		<link rel="stylesheet" type="text/rcss" href="common.css" />
+		<link rel="stylesheet" type="text/rcss" href="cursortip.css" />
+	</head>
+	<body id="cursortip-body" data-model="cursortip">
+		<div id="cursortip" class="cursortip hidden">
+			<div class="cursortip-title">{{title}}</div>
+			<div class="cursortip-row" data-for="row : rows">{{row.text}}</div>
+		</div>
+	</body>
+</rml>

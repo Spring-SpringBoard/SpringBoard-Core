@@ -129,6 +129,14 @@ def target_cases(target: str, case: str) -> list[Case]:
                 crop="right-panel",
             ),
         ]
+    if target == "cursortip":
+        return [
+            Case(
+                name="cursortip-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="cursortip",
+            ),
+        ]
     if target == "settings-panel":
         return [
             Case(

@@ -1,0 +1,45 @@
+/* ================================
+   Cursor tooltip (RmlUi replacement for the Chili cursortip widget)
+================================ */
+
+body#cursortip-body {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	font-family: Poppins;
+
+	/* Covers the whole screen; must never take a click away from the map. */
+	pointer-events: none;
+}
+
+.cursortip {
+	display: block;
+	position: absolute;
+	left: 0dp;
+	top: 0dp;
+	max-width: 320dp;
+	padding: 6dp 8dp;
+	background-color: #1a1d21e0;
+	border-width: 1dp;
+	border-color: #000000;
+	color: #c8d0e0;
+}
+
+.cursortip.hidden {
+	display: none;
+}
+
+.cursortip-title {
+	display: block;
+	color: #ffffff;
+	font-size: 15dp;
+	margin-bottom: 3dp;
+}
+
+.cursortip-row {
+	display: block;
+	color: #a8b0c0;
+	font-size: 13dp;
+}

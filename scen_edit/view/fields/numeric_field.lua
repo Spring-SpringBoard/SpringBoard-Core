@@ -214,20 +214,23 @@ function NumericField:__DrawDisplayControl()
     return true
 end
 
-local leftDisplay =
-    Image:New {
-    file = Path.Join(SB.DIRS.IMG, "left-numeric.png"),
-    parent = screen0,
-    keepAspect = false
-}
-local rightDisplay =
-    Image:New {
-    file = Path.Join(SB.DIRS.IMG, "right-numeric.png"),
-    parent = screen0,
-    keepAspect = false
-}
-leftDisplay:Hide()
-rightDisplay:Hide()
+local leftDisplay, rightDisplay
+if not SB.useRmlUi then
+    leftDisplay =
+        Image:New {
+        file = Path.Join(SB.DIRS.IMG, "left-numeric.png"),
+        parent = screen0,
+        keepAspect = false
+    }
+    rightDisplay =
+        Image:New {
+        file = Path.Join(SB.DIRS.IMG, "right-numeric.png"),
+        parent = screen0,
+        keepAspect = false
+    }
+    leftDisplay:Hide()
+    rightDisplay:Hide()
+end
 function NumericField:__SetupDraggingControl()
     if not self.__draggingFont then
         local _draggingColor = {0.76, 0.63, 0.06, 1}

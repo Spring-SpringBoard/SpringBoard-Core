@@ -2407,6 +2407,13 @@ function widget:Initialize()
 		return
 	end
 
+	-- gui_rmlui_cursortip.lua takes over in RmlUi mode. WG.SB does not exist
+	-- yet at this point, so read the flag the port_flags gadget published.
+	if Spring.GetGameRulesParam("useRml") == "true" then
+		widgetHandler:RemoveWidget(widget)
+		return
+	end
+
 	widget:UpdateCallIns(options.showDrawTools.value)
 
 	SetupTerraTips()

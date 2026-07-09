@@ -29,6 +29,8 @@ def run_scenario(run_state: E2ERun) -> None:
         settings_panel(run_state)
     elif run_state.case.scenario == "props_panel":
         props_panel(run_state)
+    elif run_state.case.scenario == "cursortip":
+        cursortip(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -99,6 +101,34 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def cursortip(run_state: E2ERun) -> None:
+    """Place a feature, then hover it. The RmlUi cursor tooltip must appear next
+    to the cursor (the Chili cursortip widget is disabled in RmlUi mode)."""
+    run_state.focus()
+    assert run_state.window is not None
+    width, height = window_geometry(run_state.window)
+    panel_left = width - 500
+
+    run_state.click(panel_left + 42, 35, delay=0.2)      # Objects tab
+    run_state.click(panel_left + 110, 88, delay=0.5)     # Features
+
+    # The first unfiltered def is `geovent`, which has no model and so cannot be
+    # hit by a screen ray. Filter to trees and take the first of those.
+    run_state.click(panel_left + 180, 400, delay=0.15)
+    run_state.type_text("tree")
+    run_state.click(panel_left + 55, 470, delay=0.4)
+
+    spot_x, spot_y = width // 3, height // 2
+    run_state.click(spot_x, spot_y, delay=0.6)           # place it
+    run_state.move(spot_x + 200, spot_y + 200, delay=0.3)
+    run_state.screenshot("placed")
+
+    # The model sits slightly up-left of the click point on screen; probe a few
+    # offsets so the ray lands on the trunk.
+    run_state.move(spot_x - 20, spot_y, delay=0.6)       # hover the tree
+    run_state.screenshot("hover-tooltip")
 
 
 def props_panel(run_state: E2ERun) -> None:
