@@ -38,6 +38,17 @@ end
 function DisplayUtil:AddUnitSay(text, unitID, time)
     local height = Spring.GetUnitHeight(unitID)
 
+    if SB.useRmlUi then
+        -- Drawn in DrawScreen; see DisplayUtil:DrawScreen.
+        table.insert(self.unitSays, {
+            text = text,
+            unitID = unitID,
+            time = time,
+            height = height,
+        })
+        return
+    end
+
     local textWidth, textHeight, x, y = GetTipDimensions(unitID, text, height)
 
     local img = Image:New {
@@ -121,6 +132,10 @@ function DisplayUtil:OnFrame()
         table.remove(self.unitSays, i)
     end
 
+    if SB.useRmlUi then
+        return
+    end
+
     -- chili code
     for _, unitSay in pairs(self.unitSays) do
         if Spring.IsUnitInView(unitSay.unitID) then
@@ -152,6 +167,37 @@ function DisplayUtil:Draw()
         gl.Color(text.color.r, text.color.g, text.color.b, 1)
         gl.Text(text.text, 0, 300 - text.time, 12)
         gl.PopMatrix()
+    end
+end
+
+local SPEECH_BUBBLE = "LuaUI/images/scenedit/speechbubble.png"
+
+-- Chili drew the speech bubbles as Image/TextBox children of screen0. RmlUi mode
+-- has no Chili, so draw them directly.
+function DisplayUtil:DrawScreen()
+    if not SB.useRmlUi or #self.unitSays == 0 then
+        return
+    end
+
+    for _, unitSay in pairs(self.unitSays) do
+        if Spring.IsUnitInView(unitSay.unitID) then
+            local textWidth, textHeight, x, y = GetTipDimensions(unitSay.unitID, unitSay.text, unitSay.height, true)
+            if x ~= -1 and y ~= -1 then
+                local left = x - (textWidth + 8) / 2
+                local bottom = y + 4
+                local width = textWidth + 8
+                local height = textHeight + 8 + fontSize
+
+                gl.Color(1, 1, 1, 1)
+                gl.Texture(SPEECH_BUBBLE)
+                gl.TexRect(left, bottom, left + width, bottom + height)
+                gl.Texture(false)
+
+                gl.Color(0, 0, 0, 1)
+                gl.Text(unitSay.text, left + 4, bottom + height - fontSize - 4, fontSize)
+                gl.Color(1, 1, 1, 1)
+            end
+        end
     end
 end
 

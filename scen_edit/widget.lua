@@ -143,6 +143,7 @@ function widget:DrawScreen()
     if SB.view ~= nil then
         SB.stateManager:DrawScreen()
     end
+    SB.displayUtil:DrawScreen()
     SB.executePeriodic("DrawScreen")
     SB.executeDelayed("DrawScreen")
 end
