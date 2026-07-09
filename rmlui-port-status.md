@@ -59,9 +59,31 @@ Note `self.items` and Chili's `layoutPanel.children` were *different object sets
 which caused a string of bugs; RmlUi now filters by predicate (`_RmlUiItemVisible`)
 and routes selection by the item object, never by layout-panel membership.
 
-Remaining Chili usage in RmlUi mode is the framework itself (`api_sb_chili.lua`
-still creates `Chili.Screen0`, but it stays empty, so it neither draws nor takes
-input) and the Chili class definitions that the shared editors still reference.
+**Zero Chili controls are constructed in RmlUi mode**, verified rather than assumed:
+wrapping every Chili class' `New` in `exports.lua` and replaying all e2e targets
+reports no constructions. That audit found five leftovers, now fixed:
+
+| Where | What it built |
+|---|---|
+| `TabbedWindow` / `MainWindowPanel` | the whole Chili right panel, alongside `springboard_main.rml` |
+| `libs_sb/chonsole` `ui_chonsole.lua` | `RemoveWidget` without `return`, so it built its EditBox/ScrollPanel/Label anyway |
+| `numeric_field.lua` | drag-overlay `Image`s at file scope |
+| `collision_window.lua` | `Button:New` instead of `EditorButton` |
+| `gui_chili_selections_and_cursortip.lua` | no RmlUi guard at all |
+
+The cursortip is now `LuaUI/widgets/gui_rmlui_cursortip.lua` (target: `cursortip`).
+It picks with `Spring.GetUnitsInScreenRectangle` / `GetFeaturesInScreenRectangle`,
+*not* `TraceScreenRay`: the engine's GUI ray never reports SpringBoard's features
+(`Spring.GetCurrentTooltip()` reads "No tooltip defined" while hovering a tree), so
+the Chili tooltip never showed them either. Its document covers the screen, so it
+sets `pointer-events: none` to keep map clicks working.
+
+Widget-level guards must read `Spring.GetGameRulesParam("useRml")`, not
+`WG.SB.useRmlUi` — `WG.SB` does not exist yet when a layer-0 widget initializes.
+
+What is left is the framework itself: `api_sb_chili.lua` still creates
+`Chili.Screen0`, but it stays empty, so it neither draws nor takes input, and the
+Chili class definitions the shared editors reference for their Chili branch.
 
 ## Known engine constraints (learned the hard way)
 
@@ -69,6 +91,10 @@ input) and the Chili class definitions that the shared editors still reference.
   Translucent PNGs must store `RGB = colour × alpha`. A *black* overlay works either
   way (`0 × a == 0`); a *white* one paints opaque white everywhere. This was the
   colour-picker SV square bug.
+- **A data model only re-evaluates its bindings on the next context update.** A
+  `data-if` therefore lags a frame or more; for something that must appear the frame
+  the cursor lands on it (the cursor tooltip), toggle a CSS class with
+  `Element:SetClass` instead.
 - **`Spring.GetMouseState()`'s button flags read as released while RmlUi holds the
   mouse capture.** Any drag must take pressed-state from RmlUi's own
   `mousedown`/`mouseup` and use `Spring.GetMouseState` only for the cursor position.
