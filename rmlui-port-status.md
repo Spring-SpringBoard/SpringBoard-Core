@@ -47,7 +47,7 @@ Numbers are stable ids; add new ones at the end.
 | O6 | Misc → Info: stray colour after editing text | **Not reproduced.** The `info-panel` e2e target does exactly this (pick a colour in Lighting → Misc → Info → type) and shows no colour. The grey box that does appear is the *engine's* tooltip console (`InputReceiver::GetTooltip` → "No tooltip defined"), not SBC. Reopen with a repro. |
 | O7 | No FPS / memory status in RmlUi | **Fixed.** The template used `data-bind`, which is not an RmlUi data view (valid: `attr attrif class if visible rml style text value checked alias for`). Now `data-rml`, and it shows `FPS n \| Memory n MB \| Video memory: n/n MB`. |
 | O8 | RTT thumbnail framing | Cosmetic, left at `×1.5` scale as agreed. |
-| O9 | The generic texture dialog is cramped | Fields overlap the footer at the fixed 400×400 `.dialog` size, and its title reads "Dialog". Cosmetic. |
+| O9 | The generic texture dialog is cramped | **Fixed.** `.dialog` centred with `top/bottom: 0; margin: auto`, which needs a fixed height, so the Chili-tuned `height` opts clipped Color/Texture behind the footer. It centres with a `transform` now and takes those opts as `min-height`; `_FinalizeRmlUiNew` applies `opts.caption`, so the title is no longer "Dialog". |
 
 ## Chili in RmlUi mode
 
@@ -81,9 +81,23 @@ sets `pointer-events: none` to keep map clicks working.
 Widget-level guards must read `Spring.GetGameRulesParam("useRml")`, not
 `WG.SB.useRmlUi` — `WG.SB` does not exist yet when a layer-0 widget initializes.
 
-What is left is the framework itself: `api_sb_chili.lua` still creates
-`Chili.Screen0`, but it stays empty, so it neither draws nor takes input, and the
-Chili class definitions the shared editors reference for their Chili branch.
+**The Chili framework is not loaded at all when `ui=rmlui`.** `api_sb_chili.lua`
+pulls in only chili's `headers/util.lua` — that file is not UI, it patches `table`
+with `ifind`/`merge`/`clear`, which scen_edit and the widgets rely on — and then
+removes itself. `api_chotify.lua` removes itself too.
+
+Not loading Chili is what surfaced the last hiding places, since a missing global
+now raises instead of silently building an invisible control:
+
+- `SB.ActionProgress` / `SB.NotifyWarn` built Chili `Label`/`Progressbar`/`StackPanel`
+  through Chotify on every call — a path no e2e target had exercised. Replaced by
+  `RmlUiNotifications` (`scen_edit/view/rmlui_floating/notifications.lua`, target
+  `notifications`). Expiry runs off wall clock, not game seconds: the editor is paused.
+  The timer userdata must live outside the data model, which cannot bind it.
+- `new_texture_dialog.lua` built a Chili `ScrollPanel` unconditionally. That is why
+  the Add-texture dialog looked empty (O7).
+- `Editor:SetInvisibleFields` always searched `SB.view.mainDocument`, so it never
+  found a dialog's own fields.
 
 ## Known engine constraints (learned the hard way)
 
