@@ -604,9 +604,13 @@ function ObjectPropertyWindow:__UpdateFields()
             if dtype == "table" then
                 for _, tkey in pairs(Table.GetKeys(v)) do
                     tkey = tostring(tkey)
+                    -- The field is named k .. tkey ("vely"), but the value lives
+                    -- under the sub-key ("y"). Reading v[name] always yielded
+                    -- nil, so nothing populated -- and RmlUi's numeric Validate
+                    -- rejects nil where Chili silently ignored it.
                     local name = k .. tkey
                     if self.fields[name] then
-                        self:Set(name, v[name])
+                        self:Set(name, v[tkey])
                     end
                 end
             elseif self.fields[k] then

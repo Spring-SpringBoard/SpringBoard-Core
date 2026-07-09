@@ -1278,8 +1278,16 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
         end
     end
 
-    -- Combine buttons, filters, path nav, grid, and fields
-    self.generatedRml = buttonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. gridsHtml .. fieldsHtml
+    -- Editors whose content is neither fields nor a grid (e.g. the teams list)
+    -- declare a container id; they fill it from RefreshRmlUiContent(), which the
+    -- view calls once the RML is in the document.
+    local customHtml = ''
+    if self.rmlUiContentId then
+        customHtml = string.format('<div id="%s" class="editor-custom-content"></div>', self.rmlUiContentId)
+    end
+
+    -- Combine buttons, filters, path nav, grid, custom content, and fields
+    self.generatedRml = buttonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. gridsHtml .. customHtml .. fieldsHtml
     -- If this is a dialog (notMainWindow), create the dialog document
     if opts.notMainWindow then
         self:_CreateRmlUiDialog(opts)
@@ -1394,6 +1402,12 @@ function Editor:RefreshContent()
             if self.gridView then
                 SB.delay(function()
                     self.gridView:_UpdateRmlUiGrid()
+                end)
+            end
+
+            if self.RefreshRmlUiContent then
+                SB.delay(function()
+                    self:RefreshRmlUiContent()
                 end)
             end
         end

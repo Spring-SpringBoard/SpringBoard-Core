@@ -572,3 +572,74 @@ selectbox option:checked:hover {
     background-color: transparent;
     border-color: #555555;
 }
+
+/* Editor custom content (e.g. the teams list) */
+.editor-custom-content {
+    display: block;
+    margin-top: 6dp;
+}
+
+.team-list-header {
+    color: #d7d7d7;
+    font-size: 12dp;
+    margin-bottom: 6dp;
+}
+
+.team-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8dp;
+    padding: 4dp 6dp;
+    margin-bottom: 4dp;
+    background-color: #1a1a1a;
+    border: 1dp #3a3a3a;
+    border-radius: 3dp;
+}
+
+.team-row:hover {
+    border-color: #5a5a5a;
+}
+
+.team-swatch {
+    width: 16dp;
+    height: 16dp;
+    flex-shrink: 0;
+    border: 1dp #050706;
+    border-radius: 2dp;
+}
+
+.team-name {
+    flex: 1;
+    color: #eeeeee;
+    font-size: 12dp;
+}
+
+.team-edit,
+.team-remove {
+    flex-shrink: 0;
+    height: 24dp;
+    padding: 0dp 10dp;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1dp #555555;
+    border-radius: 3dp;
+    cursor: pointer;
+    text-align: center;
+    line-height: 22dp;
+}
+
+.team-edit:hover {
+    background-color: #3a7ebf;
+    border-color: #5a9edf;
+}
+
+.team-remove {
+    width: 24dp;
+    padding: 0dp;
+}
+
+.team-remove:hover {
+    background-color: #a33;
+    border-color: #d55;
+}

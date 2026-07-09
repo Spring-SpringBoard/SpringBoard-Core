@@ -464,6 +464,13 @@ function View:OpenEditor(editorName)
             end
         end
 
+        -- Let editors with custom (non-field, non-grid) content fill it in.
+        if editor.RefreshRmlUiContent then
+            SB.delay(function()
+                editor:RefreshRmlUiContent()
+            end)
+        end
+
         -- Mark editor as visible
         editor.hidden = false
     end
