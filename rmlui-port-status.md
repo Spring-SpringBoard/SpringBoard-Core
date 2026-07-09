@@ -127,6 +127,16 @@ created lazily, so a broken one only appears when its button is clicked), and
 bridge. Note `AbstractState:KeyPress` drops hotkeys while a mouse button still
 reads as down, so a `ctrl+z` fired straight after a drag is silently swallowed.
 
+Engine fix (2026-07-10): `SolLuaEventListener::ProcessEvent` dereferenced `this`
+after calling into Lua. A handler may destroy its own element (rebuilding a
+parent's `inner_rml` does), the element detaches its listeners, `OnDetach` does
+`delete this`, and then sol2's `invoke()` reads the function's `lua_state()` again
+to compute `poststacksize` — a use-after-free reported as `use-after-poison` at
+`sol.hpp:10244` from `Context::ProcessMouseButtonUp`. ProcessEvent copies the
+function, element and `lua_State*` onto the stack before calling. The failing
+example is in `test/engine/Rml/TestSolLuaPluginShutdown.cpp` ("survives a handler
+that destroys its own element"); it aborts under ASAN without the fix.
+
 Known gaps: `RmlUiObjectField` has no pick-from-map (`SelectObjectState`), and
 `chonsole: "lua"` + `ui: "rmlui"` leaves no console — use `chonsole: "rust"`.
 
