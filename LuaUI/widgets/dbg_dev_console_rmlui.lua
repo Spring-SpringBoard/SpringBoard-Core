@@ -159,6 +159,131 @@ local function CacheElements()
 	end
 end
 
+-- ---------- Multi-line selection ----------
+-- RmlUi has no text selection across elements, and each log line is its own
+-- element. So select whole lines: drag across them, Ctrl+A for all, Ctrl+C to
+-- copy the selected text to the clipboard.
+local selection = { anchor = nil, extent = nil, dragging = false }
+
+local function LogLineElements()
+	local container = rml.elements and rml.elements["log-container"]
+	if not container then
+		return {}
+	end
+	return container.child_nodes or {}
+end
+
+-- Hit-test by cursor position rather than comparing elements: two Lua handles
+-- to the same Rml::Element are not necessarily ==, so identity comparison is
+-- unreliable.
+local function IndexOfLineAt(mouseY)
+	if not mouseY then
+		return nil
+	end
+	for index, child in ipairs(LogLineElements()) do
+		local top = child.absolute_top
+		local height = child.offset_height or 0
+		if top and mouseY >= top and mouseY <= top + height then
+			return index
+		end
+	end
+end
+
+local function SelectionRange()
+	if not (selection.anchor and selection.extent) then
+		return nil, nil
+	end
+	local from, to = selection.anchor, selection.extent
+	if from > to then
+		from, to = to, from
+	end
+	return from, to
+end
+
+local function ApplySelectionClasses()
+	local from, to = SelectionRange()
+	for index, child in ipairs(LogLineElements()) do
+		child:SetClass("selected", from ~= nil and index >= from and index <= to)
+	end
+end
+
+local function ClearSelection()
+	selection.anchor, selection.extent, selection.dragging = nil, nil, false
+	ApplySelectionClasses()
+end
+
+local function SelectAllLines()
+	local lines = LogLineElements()
+	if #lines == 0 then
+		return
+	end
+	selection.anchor, selection.extent = 1, #lines
+	ApplySelectionClasses()
+end
+
+local function UnescapeRml(text)
+	text = text:gsub("&lt;", "<"):gsub("&gt;", ">")
+	text = text:gsub("&quot;", '"'):gsub("&apos;", "'")
+	return (text:gsub("&amp;", "&"))
+end
+
+local function CopySelectionToClipboard()
+	local from, to = SelectionRange()
+	if not from then
+		return false
+	end
+	local lines = LogLineElements()
+	local parts = {}
+	for index = from, to do
+		local child = lines[index]
+		if child then
+			parts[#parts + 1] = UnescapeRml(tostring(child.inner_rml or ""))
+		end
+	end
+	if #parts == 0 then
+		return false
+	end
+	if Spring.SetClipboard then
+		Spring.SetClipboard(table.concat(parts, "\n"))
+	end
+	return true
+end
+
+local selectionBound = false
+
+local function BindLogSelection()
+	local container = rml.elements and rml.elements["log-container"]
+	if not container or selectionBound then
+		return
+	end
+	selectionBound = true
+
+	container:AddEventListener("mousedown", function(event)
+		local index = IndexOfLineAt(event.parameters and event.parameters.mouse_y)
+		if not index then
+			ClearSelection()
+			return
+		end
+		selection.anchor, selection.extent, selection.dragging = index, index, true
+		ApplySelectionClasses()
+	end)
+
+	container:AddEventListener("mousemove", function(event)
+		if not selection.dragging then
+			return
+		end
+		local index = IndexOfLineAt(event.parameters and event.parameters.mouse_y)
+		if index then
+			selection.extent = index
+			ApplySelectionClasses()
+		end
+	end)
+
+	container:AddEventListener("mouseup", function()
+		selection.dragging = false
+	end)
+end
+
 -- ---------- UI helpers ----------
 local function SetButtonToggle(element, active)
 	if not element then return end
@@ -197,6 +322,8 @@ RefreshLogElement = function()
 	if container then
 		container.scroll_top = container.scroll_height
 	end
+	-- data-for rebuilds the line elements, so any selection no longer maps.
+	ClearSelection()
 end
 
 local function ClearLog()
@@ -493,6 +620,7 @@ function widget:Initialize()
 	end
 
 	CacheElements()
+	BindLogSelection()
 
 	-- In RmlUi mode the Chili dev console removes itself and never binds
 	-- F8, so bind it here to keep the toggle working.
@@ -550,6 +678,27 @@ function widget:DrawScreen()
 	if rml.context then
 		rml.context:Render()
 	end
+end
+
+-- ---------- Keyboard ----------
+-- Ctrl+A selects every log line, Ctrl+C copies the selection. Only while the
+-- cursor is over the console, so the shortcuts stay out of the way elsewhere.
+function widget:KeyPress(key, mods, isRepeat)
+	if not IsInteractive() or not mods.ctrl then
+		return false
+	end
+	local mx, my = Spring.GetMouseState()
+	if not ConsoleContains(mx, my) then
+		return false
+	end
+	if key == KEYSYMS.A then
+		SelectAllLines()
+		return true
+	end
+	if key == KEYSYMS.C then
+		return CopySelectionToClipboard()
+	end
+	return false
 end
 
 -- ---------- Mouse / input ----------

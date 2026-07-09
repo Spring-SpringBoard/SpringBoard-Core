@@ -189,3 +189,10 @@ body#dev-console-body {
 	text-decoration: underline;
 	cursor: pointer;
 }
+
+/* Line-range selection: RmlUi cannot select text across elements, so whole
+   lines are selected (drag, or Ctrl+A) and Ctrl+C copies them. */
+.log-container .log-line.selected {
+	background-color: #2a4a6a;
+	color: #ffffff;
+}

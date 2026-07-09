@@ -142,8 +142,11 @@ def teams_panel(run_state: E2ERun) -> None:
 
 def dev_console(run_state: E2ERun) -> None:
     run_state.focus()
-    # The console is visible by default; capture it, then F8 toggles it away.
+    # The console is visible by default; capture it.
     run_state.screenshot("dev-console-open")
+    # Drag across several log lines: they must highlight (multi-line selection).
+    run_state.drag(100, 965, 600, 1010, steps=10)
+    run_state.screenshot("dev-console-selection")
     run_state.key("F8", delay=0.6)
     run_state.screenshot("dev-console-hidden")
 
