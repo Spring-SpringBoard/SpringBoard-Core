@@ -137,6 +137,15 @@ function, element and `lua_State*` onto the stack before calling. The failing
 example is in `test/engine/Rml/TestSolLuaPluginShutdown.cpp` ("survives a handler
 that destroys its own element"); it aborts under ASAN without the fix.
 
+Dev console Ctrl+C (2026-07-10): fixed. `ConsoleContains` hit-tested `#console`,
+which has no height of its own (~14px), so every hit test failed — console clicks
+were also falling through to the map. `KeyPress` additionally fed it a
+bottom-origin y. And SpringBoard binds Ctrl+C to Copy, its widget running first
+(layer 1001 vs 5000), so `StateManager:KeyPress` yields while the cursor is over
+the console. A selection now survives incoming log lines (entries carry a stable
+id). `xdotool key --window ... ctrl+c` clears the modifier before the base key,
+so `runner.key` holds chords down against the focused window.
+
 Known gaps: `RmlUiObjectField` has no pick-from-map (`SelectObjectState`), and
 `chonsole: "lua"` + `ui: "rmlui"` leaves no console — use `chonsole: "rust"`.
 
