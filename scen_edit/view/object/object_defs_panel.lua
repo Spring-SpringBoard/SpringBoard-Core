@@ -37,6 +37,13 @@ function ObjectDefsPanel:Refresh()
 end
 
 function ObjectDefsPanel:FilterItems()
+    if SB.useRmlUi then
+        -- RmlUi filters by predicate (_RmlUiItemVisible); there is no Chili
+        -- layout panel to repopulate. Force the RTT icon loop to repaint on the
+        -- next tick so re-rendered <texture> cells don't briefly show blank.
+        self.refresh = 0
+        return
+    end
     self.layoutPanel:DeselectAll()
     self.layoutPanel:ClearChildren()
     for _, item in pairs(self.items) do
@@ -44,11 +51,6 @@ function ObjectDefsPanel:FilterItems()
         if self:FilterObject(objectDefID) then
             self.layoutPanel:AddChild(item)
         end
-    end
-    -- Force the RTT icon loop to repaint on the next tick so freshly re-rendered
-    -- <texture> cells don't briefly show blank after filtering.
-    if SB.useRmlUi then
-        self.refresh = 0
     end
 end
 
@@ -107,12 +109,11 @@ function ObjectDefsPanel:SetSearchString(search)
 end
 
 function ObjectDefsPanel:GetObjectDefID(index)
-    local item = self.layoutPanel.children[index]
+    local item = self:GetItem(index)
     if item then
         return item.objectDefID
-    else
-        return nil
     end
+    return nil
 end
 
 function ObjectDefsPanel:_OnValidateSelectItem(obj, itemIdx, selected)

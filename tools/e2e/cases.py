@@ -110,6 +110,16 @@ def target_cases(target: str, case: str) -> list[Case]:
         if case == "rust":
             return cases[1:]
         return cases
+    if target == "info-panel":
+        cases = [
+            Case(
+                name="info-panel-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="info_panel",
+                crop="right-panel",
+            ),
+        ]
+        return cases
     if target == "dev-console":
         cases = [
             Case(

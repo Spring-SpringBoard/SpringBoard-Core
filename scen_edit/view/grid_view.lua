@@ -67,6 +67,14 @@ function GridView:init(tbl)
 
     self.items = {}
 
+    if SB.useRmlUi then
+        -- RmlUi renders the grid itself (see _UpdateRmlUiGrid). Building the
+        -- Chili LayoutPanel/ScrollPanel here would be dead weight, and its
+        -- children are a different object set from self.items, which has caused
+        -- real bugs. Everything below is Chili-only.
+        return
+    end
+
     -- we're using the fake control to handle skin-based rendering
     self._fakeControl = ImageListView:New{}
 
@@ -105,8 +113,10 @@ function GridView:_OnValidateSelectItem(obj, itemIdx, selected)
     if itemIdx == 0 then
         return
     end
-    local item = self.layoutPanel.children[itemIdx]
-    return item
+    if not self.layoutPanel then
+        return self.items[itemIdx]
+    end
+    return self.layoutPanel.children[itemIdx]
 end
 
 function GridView:_OnSelectItem(obj, itemIdx, selected)
@@ -143,16 +153,19 @@ function GridView:GetSelectedItems()
     return items
 end
 
-function GridView:GetItem(itemIdx)
-    return self.layoutPanel.children[itemIdx]
-end
-
 function GridView:GetItemIndex(item)
     for itemIdx, child in pairs(self.contrl.children) do
         if child == item then
             return itemIdx
         end
     end
+end
+
+function GridView:GetItem(itemIdx)
+    if not self.layoutPanel then
+        return self.items[itemIdx]
+    end
+    return self.layoutPanel.children[itemIdx]
 end
 
 function GridView:SelectItem(itemIdx)
@@ -232,9 +245,14 @@ function GridView:NewItem(tbl)
         }
     }
     tbl = Table.Merge(tbl, defaults)
-    item = Control:New(tbl)
-
-    self.layoutPanel:AddChild(item)
+    if SB.useRmlUi then
+        -- No Chili control: the RmlUi grid renders from the item's plain data.
+        tbl.OnMouseUp = nil
+        item = tbl
+    else
+        item = Control:New(tbl)
+        self.layoutPanel:AddChild(item)
+    end
     table.insert(self.items, item)
     -- Bump the item-set version so the RmlUi grid knows to do a full rebuild
     -- (rather than just a visibility toggle) next time it renders.
@@ -255,6 +273,17 @@ function GridView:AddItem(caption, image, tooltip, __chiliName)
     end
 
     local imgCtrl, lblCtrl
+    if SB.useRmlUi then
+        -- The RmlUi renderer builds its own markup from __caption/__image, so
+        -- no Chili Image/Label children are needed.
+        local item = self:NewItem({
+            tooltip = tooltip,
+            name = __chiliCtrlName,
+        })
+        item.__caption = caption
+        item.__image = image
+        return item
+    end
     if image then
         local bottom = 0
         if caption then
@@ -307,15 +336,22 @@ function GridView:ClearItems()
     self.items = {}
     self._rmlSelected = {}
     self._itemsVersion = (self._itemsVersion or 0) + 1
-    --self.layoutPanel:DeselectAll()
-    self.layoutPanel:ClearChildren()
+    if self.layoutPanel then
+        self.layoutPanel:ClearChildren()
+    end
 end
 
 function GridView:StartMultiModify()
-    self.layoutPanel:DisableRealign()
+    if self.layoutPanel then
+        self.layoutPanel:DisableRealign()
+    end
 end
 
 function GridView:EndMultiModify()
+    if SB.useRmlUi then
+        self:_UpdateRmlUiGrid()
+        return
+    end
     self.layoutPanel:EnableRealign()
     self.layoutPanel:RequestRealign()
     if self.scrollPanel then
@@ -324,9 +360,6 @@ function GridView:EndMultiModify()
     end
     self.layoutPanel:UpdateLayout()
     self.layoutPanel:Invalidate()
-    if SB.useRmlUi then
-        self:_UpdateRmlUiGrid()
-    end
 end
 
 function GridView:Invalidate()
@@ -475,9 +508,9 @@ function GridView:_UpdateRmlUiGrid()
         -- label over the cell is not reliable here: RmlUi did not treat the
         -- cell as a containing block, so the label escaped to the bottom of the
         -- dialog. Sizes are px (not dp) so the panel dp-ratio cannot shrink them.
-        -- display:block inline: some stylesheet gives .grid-item a flex row, which
-        -- would place the label beside the thumbnail instead of under it.
-        local cellStyle = string.format(' style="width:%dpx;display:block;"', self.itemWidth)
+        -- Only width inline: an inline `display` would beat `.grid-item.hidden`,
+        -- so filtered-out cells could no longer be hidden.
+        local cellStyle = string.format(' style="width:%dpx;"', self.itemWidth)
         local boxStyle = string.format(' style="width:%dpx;height:%dpx;"', self.itemWidth, self.itemHeight)
         html = html .. string.format('<div id="%s" class="%s"%s%s>', item.__rmlId, classes, cellStyle, tooltip)
         html = html .. '<div class="grid-item-image-box"' .. boxStyle .. '>'

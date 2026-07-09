@@ -212,11 +212,11 @@ function TextureEditor:init()
                 if not SB.useRmlUi then
                     if self.savedBrushes and self.savedBrushes.GetControl then
                         local ctrl = self.savedBrushes:GetControl()
-                        if ctrl then ctrl:Show() end
+                        if ctrl and ctrl.parent then ctrl:Show() end
                     end
                     if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
                         local ctrl = self.savedDNTSBrushes:GetControl()
-                        if ctrl then ctrl:Hide() end
+                        if ctrl and ctrl.parent then ctrl:Hide() end
                     end
                 else
                     -- RmlUi mode: show savedBrushes, hide savedDNTSBrushes
@@ -241,11 +241,11 @@ function TextureEditor:init()
                 if not SB.useRmlUi then
                     if self.savedBrushes and self.savedBrushes.GetControl then
                         local ctrl = self.savedBrushes:GetControl()
-                        if ctrl then ctrl:Hide() end
+                        if ctrl and ctrl.parent then ctrl:Hide() end
                     end
                     if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
                         local ctrl = self.savedDNTSBrushes:GetControl()
-                        if ctrl then ctrl:Hide() end
+                        if ctrl and ctrl.parent then ctrl:Hide() end
                     end
                 else
                     -- RmlUi mode: hide both grids
@@ -289,11 +289,11 @@ function TextureEditor:init()
                 if not SB.useRmlUi then
                     if self.savedBrushes and self.savedBrushes.GetControl then
                         local ctrl = self.savedBrushes:GetControl()
-                        if ctrl then ctrl:Hide() end
+                        if ctrl and ctrl.parent then ctrl:Hide() end
                     end
                     if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
                         local ctrl = self.savedDNTSBrushes:GetControl()
-                        if ctrl then ctrl:Show() end
+                        if ctrl and ctrl.parent then ctrl:Show() end
                     end
                 else
                     -- RmlUi mode: hide savedBrushes, show savedDNTSBrushes
@@ -321,11 +321,11 @@ function TextureEditor:init()
                 if not SB.useRmlUi then
                     if self.savedBrushes and self.savedBrushes.GetControl then
                         local ctrl = self.savedBrushes:GetControl()
-                        if ctrl then ctrl:Hide() end
+                        if ctrl and ctrl.parent then ctrl:Hide() end
                     end
                     if self.savedDNTSBrushes and self.savedDNTSBrushes.GetControl then
                         local ctrl = self.savedDNTSBrushes:GetControl()
-                        if ctrl then ctrl:Hide() end
+                        if ctrl and ctrl.parent then ctrl:Hide() end
                     end
                 else
                     -- RmlUi mode: hide both grids

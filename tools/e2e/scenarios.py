@@ -23,6 +23,8 @@ def run_scenario(run_state: E2ERun) -> None:
         dev_console(run_state)
     elif run_state.case.scenario == "teams_panel":
         teams_panel(run_state)
+    elif run_state.case.scenario == "info_panel":
+        info_panel(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -93,6 +95,31 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def info_panel(run_state: E2ERun) -> None:
+    """Repro for the colour leaking into Misc -> Info (O6).
+
+    Pick a colour in Env -> Lighting, then switch to Misc -> Info and type.
+    """
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+    # Env -> Lighting, open the Diffuse colour swatch and confirm a colour.
+    run_state.click(panel_left + 180, 35, delay=0.2)
+    run_state.click(panel_left + 38, 88, delay=0.4)
+    run_state.click(panel_left + 110, 310, delay=0.4)
+    run_state.click_root(1160, 690, delay=0.2)
+    run_state.click_root(1319, 899, delay=0.4)
+    run_state.screenshot("after-color-pick")
+    # Misc -> Info, then edit a text field.
+    run_state.click(panel_left + 300, 35, delay=0.3)
+    run_state.click(panel_left + 38, 88, delay=0.5)
+    run_state.screenshot("info-open")
+    run_state.click(panel_left + 200, 200, delay=0.2)
+    run_state.type_text("hello")
+    run_state.screenshot("info-typed")
 
 
 def teams_panel(run_state: E2ERun) -> None:
