@@ -477,6 +477,8 @@ function Editor:AddControl(name, children)
                 elseif child and child.__sectionLabel then
                     html = html .. string.format('<div class="field-section-label">%s</div>', tostring(child.caption or ""))
                 elseif child and child.GenerateRml then
+                    -- So the control can find the editor's document later.
+                    child.owner = self
                     html = html .. child:GenerateRml()
                 elseif child and (child.classname == "line" or child.classname == "Line" or child.style == "horizontal" or child.caption == "line") then
                     html = html .. '<div class="field-section-line"></div>'

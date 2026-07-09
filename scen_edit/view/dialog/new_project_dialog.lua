@@ -49,7 +49,7 @@ function NewProjectDialog:init()
         })
     }))
 
-    self.error = Label:New {
+    self.error = EditorLabel {
         font = {
             color = { 1, 0, 0, 1 },
         },

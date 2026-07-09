@@ -62,7 +62,7 @@ function FileDialog:init()
         fileNameField.width = 500
         self:AddField(StringField(fileNameField))
     end
-    self.error = Label:New {
+    self.error = EditorLabel {
         font = {
             color = { 1, 0, 0, 1 },
         },

@@ -210,6 +210,7 @@ function ExportAction:TryToExportMapTextures(path, heightmapExtremes)
     local texMemPoolSize = Spring.GetConfigInt("TextureMemPoolSize", 0)
     if wantedTexMemPoolSize > texMemPoolSize then
         Dialog({
+            caption = "Texture pool size",
             message = "Texture pool size (" .. tostring(texMemPoolSize) ..
                        ") is too small to save the diffuse texture." ..
                       "\nDo you want to increase the pool size (to " ..

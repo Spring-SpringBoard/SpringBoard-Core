@@ -147,6 +147,14 @@ def target_cases(target: str, case: str) -> list[Case]:
         if case == "rust":
             return cases[:1]
         return cases
+    if target == "dialogs":
+        return [
+            Case(
+                name="dialogs-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="dialogs",
+            ),
+        ]
     if target == "cursortip":
         return [
             Case(

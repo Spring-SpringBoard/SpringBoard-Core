@@ -50,6 +50,15 @@ function EditorButton(opts)
     end
 end
 
+-- EditorLabel - a Label whose caption is updated later (dialog error lines).
+function EditorLabel(opts)
+    opts = opts or {}
+    if SB.useRmlUi then
+        return RmlUiLabel({ caption = opts.caption })
+    end
+    return Label:New(opts)
+end
+
 -- SectionLabel / SectionLine - replacements for Label:New / Line:New used as
 -- section separators inside Editor:AddControl. In RmlUi these are plain
 -- descriptors, so no Chili control is constructed; ConvertPlaceholderChildToRmlUi

@@ -25,23 +25,27 @@ function Dialog:init(opts)
         self:AddMessage(opts.message)
     end
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            bottom = SB.conf.B_HEIGHT + 10,
-            height = 120,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
-    if self.lblMessage ~= nil then
-        table.insert(children, self.lblMessage)
+    local children = {}
+    if not SB.useRmlUi then
+        children = {
+            ScrollPanel:New {
+                x = 0,
+                bottom = SB.conf.B_HEIGHT + 10,
+                height = 120,
+                right = 0,
+                borderColor = {0,0,0,0},
+                horizontalScrollbar = false,
+                children = { self.stackPanel },
+            },
+        }
+        if self.lblMessage ~= nil then
+            table.insert(children, self.lblMessage)
+        end
     end
 
     self:Finalize(children, {
         notMainWindow = true,
+        caption = opts.caption or "Confirm",
         buttons = { 'ok', 'cancel' },
         x = 500,
         y = 200,
@@ -52,6 +56,10 @@ end
 
 function Dialog:AddMessage(message)
     assert(type(message) == 'string')
+    if SB.useRmlUi then
+        self:AddControl('message', { SectionLabel({ caption = message }) })
+        return
+    end
     self.lblMessage = TextBox:New {
         text = message,
         x = 0,

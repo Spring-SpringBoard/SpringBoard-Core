@@ -697,6 +697,17 @@ function SB.SetSpringConfig(springConfig)
 end
 
 function SB.AskToRestart()
+    if SB.useRmlUi then
+        Dialog({
+            caption = "Reload required",
+            message = "Spring needs to reload for changes to take effect.",
+            ConfirmDialog = function()
+                Spring.Reload(VFS.LoadFile("_script.txt"))
+            end,
+        })
+        return
+    end
+
     local window
     window = Window:New {
         x = "25%",

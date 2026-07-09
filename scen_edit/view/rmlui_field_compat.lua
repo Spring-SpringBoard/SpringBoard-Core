@@ -73,6 +73,35 @@ function RmlUiButton:GenerateRml()
     )
 end
 
+-- A label whose caption changes after the document exists (dialog error lines).
+local _LABEL_INDEX = 0
+RmlUiLabel = LCS.class{}
+
+function RmlUiLabel:init(opts)
+    _LABEL_INDEX = _LABEL_INDEX + 1
+    self.id = "label-" .. tostring(_LABEL_INDEX)
+    self.caption = opts.caption or ""
+end
+
+function RmlUiLabel:GenerateRml()
+    return string.format('<div id="%s" class="field-section-label">%s</div>', self.id, self.caption)
+end
+
+function RmlUiLabel:__Document()
+    -- `owner` is the editor that took this control; a dialog renders into its
+    -- own document, not the main one.
+    return (self.owner and self.owner.document) or SB.view.mainDocument
+end
+
+function RmlUiLabel:SetCaption(caption)
+    self.caption = tostring(caption or "")
+    local document = self:__Document()
+    local element = document and document:GetElementById(self.id)
+    if element then
+        element.inner_rml = self.caption
+    end
+end
+
 -- RmlUi TabbedPanelButton (converted from Chili TabbedPanelButton during finalization)
 RmlUiTabbedPanelButton = LCS.class{}
 

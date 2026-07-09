@@ -33,6 +33,8 @@ def run_scenario(run_state: E2ERun) -> None:
         cursortip(run_state)
     elif run_state.case.scenario == "notifications":
         notifications(run_state)
+    elif run_state.case.scenario == "dialogs":
+        dialogs(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -103,6 +105,23 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def dialogs(run_state: E2ERun) -> None:
+    """Editors and dialogs that build Chili controls outside the panel: Misc ->
+    Diplomacy (MakeComponentPanel) and the New Project dialog (error Label)."""
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+
+    run_state.click(panel_left + 300, 35, delay=0.2)   # Misc tab
+    run_state.click(panel_left + 110, 88, delay=0.8)   # Diplomacy (order 2)
+    run_state.screenshot("diplomacy")
+
+    run_state.click(panel_left + 24, 150, delay=1.0)   # toolbar: New Project
+    run_state.screenshot_root("new-project")
+    run_state.key("Escape", delay=0.3)
 
 
 def notifications(run_state: E2ERun) -> None:
