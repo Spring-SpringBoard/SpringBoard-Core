@@ -88,24 +88,29 @@
     border-color: #2a5f8f;
 }
 
+/* Asset/material picker buttons. Styled like the other field buttons rather
+   than as a blue primary button, which read as a bare blue bar when empty. */
 .field-button {
-    width: 110px;
-    min-height: 26px;
+    width: 140px;
+    min-height: 31px;
     flex-shrink: 0;
-    background-color: #3a7ebf;
-    color: #ffffff;
-    border-color: #2a5f8f;
-    padding: 3px 7px;
+    background-color: #111411;
+    color: #eeeeee;
+    border: 2px #050706;
+    border-radius: 4px;
+    padding: 0px 8px;
     font-size: 12px;
+    text-align: left;
+    line-height: 27px;
 }
 
 .field-button:hover {
-    background-color: #4a8ecf;
+    background-color: #1d241f;
+    border-color: #4f5c52;
 }
 
 .field-button:active {
-    background-color: #3a7ebf;
-    border-color: #2a5f8f;
+    border-color: #999999;
 }
 
 .field-color-button {

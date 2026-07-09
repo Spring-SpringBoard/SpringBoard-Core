@@ -18,7 +18,7 @@ just test-e2e <target>               # both
 ```
 
 E2E targets: `chonsole`, `main-panel`, `units-panel`, `texture-panel`,
-`lighting-panel`, `dev-console`, `teams-panel`.
+`lighting-panel`, `dev-console`, `teams-panel`, `settings-panel`, `info-panel`.
 
 The harness (`tools/e2e/`) drives the real window with xdotool and writes
 screenshots + logs to `artifacts/ui-e2e/<run>/`. **Screenshots are the source of
@@ -37,16 +37,31 @@ cd ../spring-bar
 
 Numbers are stable ids; add new ones at the end.
 
-| # | Issue | Notes |
+| # | Issue | Status |
 |---|---|---|
-| O1 | **Dialogs cannot be dragged.** They should be. | Needs a titlebar drag handler on the RmlUi dialog documents. |
-| O2 | **Dev console multi-line selection doesn't work.** | Important. May not be supported by RmlUi's text elements at all — investigate whether an engine change is needed. Tracked, not yet attempted. |
-| O3 | **Texture paint "Add" gives no material selection.** | Clicking Add to add a new paint texture shows nothing to select from. The add flow reaches `GetNewBrush`, but the material picker list is empty. |
-| O4 | **Map Settings texture options are plain checkboxes.** | e.g. `specular` should let you *specify a texture* when enabled, not just toggle a bool. |
-| O5 | **Colour picker OK breaks the editor's colour control.** | After confirming a colour, the editor's colour swatch button can no longer be clicked. Almost certainly the dialog leaves a stale element / unremoved listener, or the modal isn't fully torn down. |
-| O6 | **Misc → Info: editing text shows a stray colour** from a previous step (lighting colour?). | Some colour state is leaking across editors. |
-| O7 | **No FPS / memory / status readout in RmlUi mode.** | The status window is not ported. |
-| O8 | RTT thumbnails: model framing inside the preview could be tighter. | Cosmetic; scale is currently `×1.5`. |
+| O1 | Dialogs cannot be dragged | **Fixed.** `.dialog-header` has `drag: drag`; `RmlUiComponent` moves the box. |
+| O2 | Dev console multi-line selection | **Fixed** (line-range). RmlUi cannot select text across elements and each log line is its own element, so whole lines are selected: drag to highlight, Ctrl+A all, Ctrl+C copies via `Spring.SetClipboard`. Character-level selection would need the log to be one text element (losing per-line colour). |
+| O3 | Texture paint "Add" showed no materials | **Fixed.** Three stacked bugs: the picker's grid rendered into the *main* document; item tooltips injected raw Spring colour codes into the `title` attribute and truncated the DOM after the first cell; the label needed normal flow. |
+| O4 | Map Settings texture options were inert checkboxes | **Fixed.** RmlUi marks a checkbox checked by the *presence* of the `checked` attribute (set to `""` on click); the handler compared it to `"checked"`, so every checkbox read false. Enabling e.g. Specular now opens the texture dialog. |
+| O5 | Colour picker OK breaks the colour control | **Not reproducible** on the current build (see `lighting-panel` e2e: OK, then the swatch re-opens the picker). It was most likely a symptom of the stale-element crash path, now guarded engine-side. Reopen with a repro if it recurs. |
+| O6 | Misc → Info: stray colour after editing text | **Not reproduced.** The `info-panel` e2e target does exactly this (pick a colour in Lighting → Misc → Info → type) and shows no colour. The grey box that does appear is the *engine's* tooltip console (`InputReceiver::GetTooltip` → "No tooltip defined"), not SBC. Reopen with a repro. |
+| O7 | No FPS / memory status in RmlUi | **Fixed.** The template used `data-bind`, which is not an RmlUi data view (valid: `attr attrif class if visible rml style text value checked alias for`). Now `data-rml`, and it shows `FPS n \| Memory n MB \| Video memory: n/n MB`. |
+| O8 | RTT thumbnail framing | Cosmetic, left at `×1.5` scale as agreed. |
+| O9 | The generic texture dialog is cramped | Fields overlap the footer at the fixed 400×400 `.dialog` size, and its title reads "Dialog". Cosmetic. |
+
+## Chili in RmlUi mode
+
+`GridView` no longer builds any Chili controls when `SB.useRmlUi`: no `LayoutPanel`,
+`ScrollPanel`, holder `Control`, `ImageListView`, and no `Control`/`Image`/`Label`
+per cell — items are plain tables. `PlayersWindow` likewise builds no `StackPanel`.
+
+Note `self.items` and Chili's `layoutPanel.children` were *different object sets*,
+which caused a string of bugs; RmlUi now filters by predicate (`_RmlUiItemVisible`)
+and routes selection by the item object, never by layout-panel membership.
+
+Remaining Chili usage in RmlUi mode is the framework itself (`api_sb_chili.lua`
+still creates `Chili.Screen0`, but it stays empty, so it neither draws nor takes
+input) and the Chili class definitions that the shared editors still reference.
 
 ## Known engine constraints (learned the hard way)
 
@@ -73,6 +88,19 @@ Numbers are stable ids; add new ones at the end.
   truthy (`GridView.init` always builds it), so they were dead. Gate on `SB.useRmlUi`.
 - Directly-registered RmlUi event callbacks run with a stripped environment: globals
   like `SB` are not visible. Reference only upvalues, or call a method.
+- A checkbox is checked when the `checked` attribute is **present** (RmlUi sets it to
+  `""`). Use `HasAttribute("checked")`, never `GetAttribute(...) == "checked"`.
+- Data views are `attr attrif class if visible rml style text value checked alias
+  for`. There is no `data-bind`; a wrong name silently binds nothing.
+- Never put raw Spring markup (colour codes `\255rgb`, `\b`, newlines) into an
+  attribute: it corrupts the tag and RmlUi terminates the element early.
+- Two Lua handles to the same `Rml::Element` are not necessarily `==`. Do not compare
+  elements for identity; hit-test by geometry or compare ids.
+- Lua has no `Element:SetProperty`; use `element.style["left"] = "10px"`.
+- An inline `style` beats stylesheets, so an inline `display` will defeat
+  `.something.hidden { display: none }`.
+- A drag warps the cursor, so the mouse release usually lands on a *different*
+  element than the one that started the drag. Bind a document-level `mouseup`.
 
 ## Engine changes made for this port (`spring-bar`)
 
@@ -84,6 +112,11 @@ Numbers are stable ids; add new ones at the end.
   dangling pointer.
 - Earlier fixes carried in this work stream: `SolLuaPlugin` shutdown iteration,
   GL3 renderer `PopLayer`, `Element:SetAttribute` string ownership.
+
+## Verified
+
+All targets run clean in **both** modes (`--case rust` = RmlUi, `--case lua` = Chili):
+0 errors, 0 ASAN crashes, no leaked `/tmp/sbc-*` write dirs.
 
 ## Done
 
@@ -100,6 +133,12 @@ Numbers are stable ids; add new ones at the end.
   field was reading `nil`).
 - Crashes fixed: grid `_UpdateRmlUiGrid`, search `self.search` nil, add-teams
   use-after-free, `SetClass`/`inner_rml` on stale elements.
+- Numeric drag no longer sticks: the release lands on a *different* numeric button,
+  whose handler used to steal and clear the shared active-drag slot, freezing the
+  value and leaving the `.dragging` outline on screen.
+- Dialogs draggable; dev console line selection + copy; status window (FPS/memory);
+  checkboxes toggle; material picker lists materials; asset buttons restyled.
+- Grids build no Chili controls in RmlUi mode.
 
 ## Harness / disk
 
