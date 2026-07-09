@@ -44,10 +44,10 @@ function SkyEditor:init()
     }))
 
     self:AddControl("atmosphere-fog-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Fog",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })

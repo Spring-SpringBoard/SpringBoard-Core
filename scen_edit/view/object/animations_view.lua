@@ -16,10 +16,10 @@ function AnimationsView:init()
         -- nodes = nodes,
     }
     self:AddControl("pos-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Position",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -59,10 +59,10 @@ function AnimationsView:init()
     }))
 
     self:AddControl("angle-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Angle",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }

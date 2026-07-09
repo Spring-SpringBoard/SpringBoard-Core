@@ -137,10 +137,10 @@ function DNTSEditor:init()
         width = 150,
     }))
     self:AddControl("blending-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Blending",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             y = 4,
             width = self.VALUE_POS,
@@ -168,10 +168,10 @@ function DNTSEditor:init()
     }))
 
     self:AddControl("splat-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Splat",
         },
-        Line:New {
+        SectionLine {
             x = 55,
             y = 4,
             width = self.VALUE_POS,

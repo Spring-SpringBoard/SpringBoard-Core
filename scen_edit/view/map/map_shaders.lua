@@ -15,10 +15,10 @@ function MapShadersEditor:init()
     self:super("init")
 
     self:AddControl("shader-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Load shader",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -94,7 +94,7 @@ function MapShadersEditor:LoadShader()
 
     if self.shaderDef.uniform then
         self:AddControl("uniform-sep", {
-            Label:New {
+            SectionLabel {
                 caption = "Uniforms",
             },
         })
@@ -109,7 +109,7 @@ function MapShadersEditor:LoadShader()
     end
     if self.shaderDef.texture then
         self:AddControl("texture-sep", {
-            Label:New {
+            SectionLabel {
                 caption = "Textures",
             },
         })

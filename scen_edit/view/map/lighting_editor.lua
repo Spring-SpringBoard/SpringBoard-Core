@@ -56,10 +56,10 @@ function LightingEditor:init()
         }),
     }))
     self:AddControl("sun-ground-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Sun ground color",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -95,10 +95,10 @@ function LightingEditor:init()
         maxValue = 1,
     }))
     self:AddControl("sun-unit-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Sun unit color",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })

@@ -53,10 +53,10 @@ end
 
 function TerrainSettingsEditor:_AddMapTextureControls()
     self:AddControl("map-textures-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Map textures",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -87,10 +87,10 @@ function TerrainSettingsEditor:_AddMapCompileControls()
     end
 
     self:AddControl("compile-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Compile map",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })

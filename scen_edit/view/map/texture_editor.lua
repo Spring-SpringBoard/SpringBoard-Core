@@ -412,10 +412,10 @@ function TextureEditor:init()
     }))
 
     self:AddControl("offset-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Pattern",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             y = 4,
             width = self.VALUE_POS,
@@ -478,10 +478,10 @@ function TextureEditor:init()
     }))
 
     self:AddControl("tex-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Material",
         },
-        Line:New {
+        SectionLine {
             x = 55,
             y = 4,
             width = self.VALUE_POS,
@@ -521,10 +521,10 @@ function TextureEditor:init()
     }))
 
     self:AddControl("blending-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Blending",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             y = 4,
             width = self.VALUE_POS,
@@ -581,10 +581,10 @@ function TextureEditor:init()
     }))
 
     self:AddControl("splat-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Splat",
         },
-        Line:New {
+        SectionLine {
             x = 55,
             y = 4,
             width = self.VALUE_POS,

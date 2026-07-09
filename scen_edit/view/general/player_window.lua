@@ -41,10 +41,10 @@ function PlayerWindow:init(team)
     }))
 
     self:AddControl("energy-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Energy",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }

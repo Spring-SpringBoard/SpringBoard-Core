@@ -466,7 +466,12 @@ function Editor:AddControl(name, children)
         local function generateControlRml()
             local html = ''
             for _, child in pairs(children or {}) do
-                if child and child.GenerateRml then
+                if child and child.__sectionLine then
+                    -- UI-agnostic descriptor (SectionLine); no Chili control exists.
+                    html = html .. '<div class="field-section-line"></div>'
+                elseif child and child.__sectionLabel then
+                    html = html .. string.format('<div class="field-section-label">%s</div>', tostring(child.caption or ""))
+                elseif child and child.GenerateRml then
                     html = html .. child:GenerateRml()
                 elseif child and (child.classname == "line" or child.classname == "Line" or child.style == "horizontal" or child.caption == "line") then
                     html = html .. '<div class="field-section-line"></div>'
@@ -842,6 +847,15 @@ end
 local function ConvertPlaceholderChildToRmlUi(child)
     if not child or type(child) ~= "table" then
         return nil
+    end
+
+    -- UI-agnostic section descriptors (see SectionLabel/SectionLine): no Chili
+    -- control was ever built for these.
+    if child.__sectionLine then
+        return '<div class="field-section-line"></div>'
+    end
+    if child.__sectionLabel then
+        return string.format('<div class="field-section-label">%s</div>', tostring(child.caption or ""))
     end
 
     if child.GenerateRml and type(child.GenerateRml) == "function" then

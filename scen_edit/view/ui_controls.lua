@@ -50,6 +50,26 @@ function EditorButton(opts)
     end
 end
 
+-- SectionLabel / SectionLine - replacements for Label:New / Line:New used as
+-- section separators inside Editor:AddControl. In RmlUi these are plain
+-- descriptors, so no Chili control is constructed; ConvertPlaceholderChildToRmlUi
+-- turns them into markup.
+function SectionLabel(opts)
+    opts = opts or {}
+    if SB.useRmlUi then
+        return { __sectionLabel = true, caption = opts.caption }
+    end
+    return Label:New(opts)
+end
+
+function SectionLine(opts)
+    opts = opts or {}
+    if SB.useRmlUi then
+        return { __sectionLine = true }
+    end
+    return Line:New(opts)
+end
+
 -- FilterLabel - replacement for Label:New in filter UI
 -- Used for filter labels like "Type:", "Terrain:", "Search:", etc.
 function FilterLabel(opts)

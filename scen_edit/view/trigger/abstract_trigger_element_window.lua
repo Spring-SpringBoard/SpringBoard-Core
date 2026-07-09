@@ -177,10 +177,10 @@ function AbstractTriggerElementWindow:__RefreshElementType()
                             humanName = String.Capitalize(humanName)
                         end
                         obj:AddControl(dataType.name .. "-sep", {
-                            Label:New {
+                            SectionLabel {
                                 caption = humanName,
                             },
-                            Line:New {
+                            SectionLine {
                                 x = 150,
                             }
                         })

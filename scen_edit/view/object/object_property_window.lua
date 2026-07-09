@@ -17,10 +17,10 @@ end
 
 function ObjectPropertyWindow:AddPosField()
     self:AddControl("pos-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Position",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -76,10 +76,10 @@ end
 
 function ObjectPropertyWindow:AddAngleField()
     self:AddControl("rot-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Angle",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -148,10 +148,10 @@ end
 
 function ObjectPropertyWindow:AddStateField()
     self:AddControl("state-sep", {
-        Label:New {
+        SectionLabel {
             caption = "State",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -272,10 +272,10 @@ function ObjectPropertyWindow:AddS11NField(name, value, s11nField)
             }))
         elseif dtype == "table" then
             self:AddControl(name .. "-sep", {
-                Label:New {
+                SectionLabel {
                     caption = humanName,
                 },
-                Line:New {
+                SectionLine {
                     x = 50,
                     width = self.VALUE_POS,
                 }
@@ -440,10 +440,10 @@ end
 
 function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
     self:AddControl("rule-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Rules",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }

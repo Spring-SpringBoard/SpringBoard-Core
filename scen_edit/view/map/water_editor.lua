@@ -34,10 +34,10 @@ function WaterEditor:init()
         width = 250,
     }))
     self:AddControl("perlin-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - perlin noise",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -62,10 +62,10 @@ function WaterEditor:init()
         }),
     }))
     self:AddControl("water-diffuse-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - diffuse",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -86,10 +86,10 @@ function WaterEditor:init()
     }))
 
     self:AddControl("specular-diffuse-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - specular",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -124,10 +124,10 @@ function WaterEditor:init()
     }))
 
     self:AddControl("fresnel-diffuse-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - fresnel",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -170,10 +170,10 @@ function WaterEditor:init()
     }))
 
     self:AddControl("water-blur-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - blur",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -193,10 +193,10 @@ function WaterEditor:init()
     }))
 
     self:AddControl("water-plane-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - plane",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -217,10 +217,10 @@ function WaterEditor:init()
     }))
 
     self:AddControl("water-waves-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - waves",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })
@@ -239,10 +239,10 @@ function WaterEditor:init()
     }))
 
     self:AddControl("water-texture-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Water - texture",
         },
-        Line:New {
+        SectionLine {
             x = 150,
         }
     })

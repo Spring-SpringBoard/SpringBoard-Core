@@ -44,10 +44,10 @@ function CollisionView:init()
         title = "Axis:"
     }))
     self:AddControl("scale-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Scale",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -83,10 +83,10 @@ function CollisionView:init()
     }))
 
     self:AddControl("offset-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Offset",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -118,10 +118,10 @@ function CollisionView:init()
         }),
     }))
     self:AddControl("rad-height-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Radius",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -148,10 +148,10 @@ function CollisionView:init()
         })
     }))
     self:AddControl("center-height-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Center",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -183,10 +183,10 @@ function CollisionView:init()
         })
     }))
     self:AddControl("ap-height-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Aim",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
@@ -218,10 +218,10 @@ function CollisionView:init()
         })
     }))
     self:AddControl("blocking-height-sep", {
-        Label:New {
+        SectionLabel {
             caption = "Blocking",
         },
-        Line:New {
+        SectionLine {
             x = 50,
             width = self.VALUE_POS,
         }
