@@ -24,8 +24,11 @@
     gap: 7px;
 }
 
+/* Size to the label text: a fixed 44px clipped longer captions ("Emission"). */
 .field-inline .field-label {
-    width: 44px;
+    width: auto;
+    min-width: 44px;
+    margin-right: 4px;
     flex-shrink: 0;
     color: #cccccc;
     font-size: 12px;
@@ -69,8 +72,15 @@
     width: 18px;
     height: 18px;
     flex-shrink: 0;
+    margin-right: 6px;
+    cursor: pointer;
     background-color: #3a3a3a;
     border: 1px #555555;
+    border-radius: 3px;
+}
+
+.field-checkbox:hover {
+    border-color: #8a8a8a;
 }
 
 .field-checkbox:checked {

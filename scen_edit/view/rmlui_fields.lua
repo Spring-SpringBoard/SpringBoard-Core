@@ -19,6 +19,15 @@ function RmlUiUpdateNumericDrag()
     end
 end
 
+-- Field titles are declared with a trailing colon ("Team:") and the markup adds
+-- its own, so it has to be stripped. Titles that end with colon-plus-space
+-- ("Team: ") slipped through a plain ":$" match and rendered as "Team: :".
+local function StripTitleColon(title)
+    title = tostring(title or "")
+    title = title:gsub("%s*:%s*$", "")
+    return (title:gsub("%s+$", ""))
+end
+
 -- Base Field Class
 RmlUiField = LCS.class{}
 
@@ -102,7 +111,7 @@ end
 
 function RmlUiStringField:GenerateRml()
     -- Remove trailing colon from title if present
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
     local widthStyle = self.width and string.format(' style="width: %dpx;"', self.width) or ''
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="text" id="field-%s" class="field-input"%s value="%s"/></div>',
@@ -157,7 +166,7 @@ function RmlUiNumericField:__GetDisplayText()
 end
 
 function RmlUiNumericField:__GetButtonRml()
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
     return string.format(
         '<span class="field-button-title">%s:</span><span class="field-button-value">%s</span>',
         title, self:__GetDisplayText()
@@ -376,7 +385,7 @@ end
 function RmlUiBooleanField:GenerateRml()
     local checked = self.value and 'checked="checked"' or ''
     -- Remove trailing colon from title if present
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="checkbox" id="field-%s" class="field-checkbox" %s/></div>',
         title, self.name, checked
@@ -400,7 +409,7 @@ function RmlUiChoiceField:GenerateRml()
         options = options .. string.format('<option value="%s"%s>%s</option>', tostring(item), selected, caption)
     end
     -- Remove trailing colon from title if present
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
     local wrapperStyle = self.width and string.format(' style="width: %dpx;"', self.width) or ''
 
     return string.format(
@@ -458,7 +467,7 @@ function RmlUiColorField:__ToHex(value)
 end
 
 function RmlUiColorField:__GetButtonRml()
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
     local colorHex = self:__ToHex(self.value)
     return string.format(
         '<span class="field-button-title">%s:</span><span class="field-swatch" style="background-color: %s;"></span>',
@@ -601,7 +610,7 @@ function RmlUiAssetField:GenerateRml()
             valueStr = type(self.value) == "table" and (self.value.name or "") or tostring(self.value)
         end
         -- Remove trailing colon from title if present
-        local title = self.title:gsub(":$", "")
+        local title = StripTitleColon(self.title)
 
         return string.format(
             '<div class="field-row"><label class="field-label">%s:</label><button id="field-%s" class="field-button">%s</button></div>',
@@ -681,7 +690,7 @@ function RmlUiMaterialField:GenerateRml()
         end
     end
     -- Remove trailing colon from title if present
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
 
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><button id="field-%s" class="field-button">%s</button></div>',
@@ -764,7 +773,7 @@ function RmlUiObjectField:GenerateRml()
         valueStr = type(self.value) == "table" and (self.value.id or "") or tostring(self.value)
     end
     -- Remove trailing colon from title if present
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
 
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="number" id="field-%s" class="field-input" value="%s"/><button id="btn-pick-%s" class="field-button">Pick</button></div>',
@@ -786,7 +795,7 @@ function RmlUiObjectTypeField:GenerateRml()
         valueStr = type(self.value) == "table" and (self.value.name or "") or tostring(self.value)
     end
     -- Remove trailing colon from title if present
-    local title = self.title:gsub(":$", "")
+    local title = StripTitleColon(self.title)
 
     return string.format(
         '<div class="field-row"><label class="field-label">%s:</label><input type="text" id="field-%s" class="field-input" value="%s"/><button id="btn-browse-%s" class="field-button">Browse</button></div>',
@@ -865,7 +874,7 @@ function RmlUiGroupField:GenerateRml()
 
     -- Only show label if explicitly provided (not auto-generated "_groupField" names)
     if self.title and not self.title:match("^_groupField%d+$") then
-        local title = self.title:gsub(":$", "")
+        local title = StripTitleColon(self.title)
         html = html .. '<label class="field-label">' .. title .. ':</label>'
     end
 
