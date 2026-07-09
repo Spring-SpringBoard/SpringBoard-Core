@@ -173,3 +173,9 @@ def lighting_panel(run_state: E2ERun) -> None:
     # Drag across the SV square: the marker and colour must follow the cursor.
     run_state.drag_root(1160, 690, 1240, 620)
     run_state.screenshot_root("color-picker-map-drag-root")
+    # Confirm with OK, then re-open the swatch: after OK the editor's colour
+    # control must still be clickable (O5).
+    run_state.click_root(1319, 899, delay=0.4)
+    run_state.screenshot("after-color-ok")
+    run_state.click(panel_left + 110, 310, delay=0.4)
+    run_state.screenshot_root("color-picker-reopen-root")

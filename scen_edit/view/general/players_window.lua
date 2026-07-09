@@ -13,18 +13,20 @@ PlayersWindow:Register({
 function PlayersWindow:init()
     self:super("init")
 
-    -- The RmlUi teams list is rendered into this container by
-    -- RefreshRmlUiContent(); the Chili path uses self.teamsPanel below.
-    self.rmlUiContentId = "teams-list"
-
-    self.teamsPanel = StackPanel:New {
-        itemMargin = {0, 0, 0, 0},
-        x = 1,
-        y = 1,
-        right = 1,
-        autosize = true,
-        resizeItems = false,
-    }
+    if SB.useRmlUi then
+        -- RmlUi renders the teams list into this container from
+        -- RefreshRmlUiContent(). No Chili controls are built.
+        self.rmlUiContentId = "teams-list"
+    else
+        self.teamsPanel = StackPanel:New {
+            itemMargin = {0, 0, 0, 0},
+            x = 1,
+            y = 1,
+            right = 1,
+            autosize = true,
+            resizeItems = false,
+        }
+    end
     SB.model.teamManager:addListener(self)
     self:Populate()
 

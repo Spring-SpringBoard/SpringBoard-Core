@@ -19,6 +19,34 @@ function RmlUiUpdateNumericDrag()
     end
 end
 
+-- Bind a document-level mouseup once per document, so a numeric drag always
+-- ends even when the release happens away from the button (the drag warps the
+-- cursor, so that is the common case).
+local numericReleaseBound = setmetatable({}, { __mode = "k" })
+
+function EnsureNumericDragRelease(document)
+    if not document or numericReleaseBound[document] then
+        return
+    end
+    numericReleaseBound[document] = true
+    document:AddEventListener("mouseup", function()
+        local field = activeNumericDragField
+        if not field then
+            return
+        end
+        -- The button's own mouseup already handled a release over the button
+        -- (it clears activeNumericDragField). Reaching here means the release
+        -- happened elsewhere: end a drag, otherwise just cancel the press --
+        -- releasing off the button must not open the editor.
+        if field.__isDragging then
+            field:__StopDragging()
+        else
+            field.__mouseDown = false
+        end
+        activeNumericDragField = nil
+    end)
+end
+
 -- Field titles are declared with a trailing colon ("Team:") and the markup adds
 -- its own, so it has to be stripped. Titles that end with colon-plus-space
 -- ("Team: ") slipped through a plain ":$" match and rendered as "Team: :".
@@ -188,7 +216,29 @@ function RmlUiNumericField:BindToDocument()
     self.element = document:GetElementById("field-" .. self.name)
     self.inputElement = document:GetElementById("field-" .. self.name .. "-input")
     assert(self.element and self.inputElement, "Failed to find numeric field elements: " .. self.name)
+    -- A rebuild replaces the elements, so no drag or edit can survive it.
+    self.__isDragging = false
+    self.__mouseDown = false
+    self.__editing = false
+    if activeNumericDragField == self then
+        activeNumericDragField = nil
+    end
     self:SetValue(self.value)
+end
+
+-- Setting a value during a drag fires ev:Update -> RefreshContent, which
+-- rebuilds the DOM and invalidates self.element. Re-resolve by id before
+-- touching it, otherwise style updates land on a freed element and are lost
+-- (e.g. the ".dragging" outline would stay on screen forever).
+function RmlUiNumericField:_ResolveElement()
+    local document = (self.ev and self.ev.document) or SB.view.mainDocument
+    if document then
+        local element = document:GetElementById("field-" .. self.name)
+        if element then
+            self.element = element
+        end
+    end
+    return self.element
 end
 
 function RmlUiNumericField:SetValue(value)
@@ -243,7 +293,10 @@ function RmlUiNumericField:__StartDragging()
         return
     end
     self.__isDragging = true
-    self.element:SetClass("dragging", true)
+    local element = self:_ResolveElement()
+    if element then
+        element:SetClass("dragging", true)
+    end
     SB.SetMouseCursor("empty")
     if self.ev then
         self.ev:_OnStartChange(self.name)
@@ -256,8 +309,9 @@ function RmlUiNumericField:__StopDragging()
     end
     self.__isDragging = false
     self.__mouseDown = false
-    if self.element then
-        self.element:SetClass("dragging", false)
+    local element = self:_ResolveElement()
+    if element then
+        element:SetClass("dragging", false)
     end
     SB.SetMouseCursor()
     if self.ev then
@@ -302,10 +356,25 @@ function RmlUiNumericField:UpdateActiveDrag()
     end
 end
 
+-- Ends the press that started on a numeric button: a drag stops, a plain click
+-- enters edit mode.
+function RmlUiNumericField:_FinishMousePress()
+    if self.__isDragging then
+        self:__StopDragging()
+    elseif self.__mouseDown then
+        self.__mouseDown = false
+        self:__StartEditing()
+    end
+    if activeNumericDragField == self then
+        activeNumericDragField = nil
+    end
+end
+
 function RmlUiNumericField:BindEvents()
     if not self.element then
         return
     end
+    local document = (self.ev and self.ev.document) or SB.view.mainDocument
 
     self.element:AddEventListener("mousedown", function(event)
         if event.parameters and event.parameters.button ~= 0 then
@@ -325,14 +394,20 @@ function RmlUiNumericField:BindEvents()
     end)
 
     self.element:AddEventListener("mouseup", function(event)
-        if self.__isDragging then
-            self:__StopDragging()
-        elseif self.__mouseDown then
-            self.__mouseDown = false
-            self:__StartEditing()
+        -- A drag warps the cursor, so the release often lands on a different
+        -- numeric button. Only the field that owns the press may finish it;
+        -- otherwise this handler would clear the active drag and the real
+        -- owner would never stop (value frozen, ".dragging" outline stuck).
+        if activeNumericDragField ~= nil and activeNumericDragField ~= self then
+            return
         end
-        activeNumericDragField = nil
+        self:_FinishMousePress()
     end)
+
+    -- Dragging warps the cursor, so the release often lands outside the button
+    -- and its mouseup never fires: the drag would stay active (value keeps
+    -- changing, ".dragging" style stuck). Catch the release at document level.
+    EnsureNumericDragRelease(document)
 
     if self.inputElement then
         self.inputElement:AddEventListener("change", function()
