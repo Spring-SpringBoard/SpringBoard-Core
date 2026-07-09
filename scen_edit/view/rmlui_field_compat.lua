@@ -233,12 +233,13 @@ function RmlUiPathNav:init(opts)
     self.imageFolderUp = opts.imageFolderUp
     self.OnUpClick = opts.OnUpClick or {}
     self.editor = opts.editor  -- Optional reference to parent editor for finding document
+    self.document = opts.document  -- Pickers render into their own dialog document
     self.documentDepth = opts.documentDepth or 3  -- Default to 3 levels (scen_edit/view/rml/)
 end
 
 function RmlUiPathNav:SetPath(path)
     self.currentPath = path
-    local document = self.editor and self.editor.document or SB.view.mainDocument
+    local document = self.document or (self.editor and self.editor.document) or SB.view.mainDocument
     assert(document, "RmlUiPathNav:SetPath - no document available")
 
     local pathLabel = document:GetElementById(self.id .. "-path")

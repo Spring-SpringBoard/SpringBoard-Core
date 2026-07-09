@@ -272,7 +272,6 @@ body#springboard {
     cursor: pointer;
     display: block;
     padding: 0;
-    position: relative;
     overflow: hidden;
 }
 
@@ -290,21 +289,26 @@ body#springboard {
     display: none;
 }
 
+/* Box that holds the thumbnail. Sized inline from itemWidth/itemHeight. */
+.grid-item-image-box {
+    display: block;
+    overflow: hidden;
+}
+
 .grid-item-image {
     display: block;
     margin: auto;
 }
 
+/* Normal flow, directly under the image box. Absolute positioning is not used:
+   RmlUi did not treat the cell as a containing block, so the label escaped the
+   grid and rendered at the bottom of the enclosing dialog. */
 .grid-item-label {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    display: block;
     font-size: 9dp;
-    color: #ffffff;
+    color: #dddddd;
     text-align: center;
     padding: 1dp 2dp;
-    background-color: rgba(0, 0, 0, 160);
     overflow: hidden;
     white-space: nowrap;
 }

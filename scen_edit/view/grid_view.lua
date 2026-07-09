@@ -355,7 +355,25 @@ local function _EscapeRml(text)
     return text
 end
 
+-- Tooltips carry Spring colour codes ("\255rgb" plus "\b" to reset) and
+-- newlines. Those raw control bytes corrupt the `title` attribute and made
+-- RmlUi terminate the element early, so the label ended up as a sibling of the
+-- cell instead of a child.
+local function _EscapeAttribute(text)
+    text = tostring(text or "")
+    text = text:gsub("\255...", "")   -- colour code: marker + 3 bytes
+    text = text:gsub("[\1-\31]", " ") -- control chars, incl. \b and newlines
+    text = _EscapeRml(text)
+    text = text:gsub('"', "&quot;")
+    return text
+end
+
 function GridView:_GetRmlUiDocument()
+    -- Pickers hand us their own dialog document. Without this the grid rendered
+    -- into the main document instead, so the picker dialog came up empty.
+    if self.document then
+        return self.document
+    end
     local editor = self.editor or (self.pathNav and self.pathNav.editor)
     return (editor and editor.document) or SB.view.mainDocument
 end
@@ -452,19 +470,24 @@ function GridView:_UpdateRmlUiGrid()
         if not self:_RmlUiItemVisible(item) then
             classes = classes .. " hidden"
         end
-        local tooltip = item.tooltip and (' title="' .. _EscapeRml(item.tooltip) .. '"') or ''
-        -- The cell is a fixed px square (px, not dp, so the panel dp-ratio does
-        -- not shrink it). The image fills the whole cell and the label is
-        -- overlaid along the bottom, so no space is wasted.
-        local cellStyle = string.format(' style="width:%dpx;height:%dpx;"', self.itemWidth, self.itemHeight)
+        local tooltip = item.tooltip and (' title="' .. _EscapeAttribute(item.tooltip) .. '"') or ''
+        -- Image box then label, both in normal flow. Absolutely positioning the
+        -- label over the cell is not reliable here: RmlUi did not treat the
+        -- cell as a containing block, so the label escaped to the bottom of the
+        -- dialog. Sizes are px (not dp) so the panel dp-ratio cannot shrink them.
+        -- display:block inline: some stylesheet gives .grid-item a flex row, which
+        -- would place the label beside the thumbnail instead of under it.
+        local cellStyle = string.format(' style="width:%dpx;display:block;"', self.itemWidth)
+        local boxStyle = string.format(' style="width:%dpx;height:%dpx;"', self.itemWidth, self.itemHeight)
         html = html .. string.format('<div id="%s" class="%s"%s%s>', item.__rmlId, classes, cellStyle, tooltip)
+        html = html .. '<div class="grid-item-image-box"' .. boxStyle .. '>'
 
         -- Item images are either a live Lua RTT texture (3D object previews,
         -- rendered via the <texture> element) or a file-backed thumbnail (<img>).
         if item.__luaTexture then
-            -- RTT previews are square, so fill the cell.
+            -- RTT previews are square, so fill the box.
             html = html .. string.format(
-                '<texture class="grid-item-image" src="%s" style="width:100%%;height:100%%;"/>',
+                '<texture class="grid-item-image" src="%s" style="width:100%%;height:100%%;"></texture>',
                 _EscapeRml(tostring(item.__luaTexture)))
         else
             local src = self:_ResolveRmlUiImage(item.__image)
@@ -472,10 +495,11 @@ function GridView:_UpdateRmlUiGrid()
                 -- File thumbnails have varied aspect ratios: fit preserving
                 -- aspect rather than stretching.
                 html = html .. string.format(
-                    '<img class="grid-item-image" src="%s" style="max-width:100%%;max-height:100%%;"/>',
+                    '<img class="grid-item-image" src="%s" style="max-width:100%%;max-height:100%%;"></img>',
                     _EscapeRml(src))
             end
         end
+        html = html .. '</div>'
         if item.__caption then
             html = html .. '<div class="grid-item-label">' .. _EscapeRml(item.__caption) .. '</div>'
         end

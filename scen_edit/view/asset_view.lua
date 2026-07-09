@@ -108,6 +108,7 @@ function AssetView:init(tbl)
                 rootDir = self.rootDir,
                 imageFolderUp = self.imageFolderUp,
                 editor = self.editor,  -- Pass editor reference if available
+                document = self.document,  -- Pickers use their own dialog document
                 documentDepth = tbl.documentDepth,  -- Pass through document depth if provided
                 OnUpClick = {
                     function()

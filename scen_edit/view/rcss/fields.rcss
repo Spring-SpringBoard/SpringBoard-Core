@@ -234,14 +234,14 @@
     display: none;
 }
 
-/* Grid Item */
+/* Grid Item. Width/height come from the renderer (itemWidth/itemHeight) as
+   inline styles; the cell itself is image box + label in normal flow. */
 .grid-item {
-    width: 64px;
-    height: 64px;
     border: 1px #444444;
     border-radius: 2px;
     cursor: pointer;
     background-color: #2a2a2a;
+    overflow: hidden;
 }
 
 .grid-item:hover {

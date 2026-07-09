@@ -133,6 +133,16 @@ def texture_panel(run_state: E2ERun) -> None:
     # Texture editor is toolbox order 1 (second button).
     run_state.click(panel_left + 110, toolbox_y, delay=0.5)
     run_state.screenshot("texture-open")
+    # Paint mode reveals the saved-brushes ("mapMaterials") grid with its "+"
+    # add item; clicking it must open the material picker with materials in it.
+    run_state.click(panel_left + 44, 217, delay=0.5)
+    run_state.screenshot("paint-mode")
+    run_state.click(panel_left + 40, 300, delay=0.8)
+    run_state.screenshot_root("material-picker-root")
+    # Double-click the first folder to descend into it: materials must appear.
+    run_state.click_root(1032, 662, delay=0.15)
+    run_state.click_root(1032, 662, delay=0.8)
+    run_state.screenshot_root("material-picker-folder-root")
 
 
 def lighting_panel(run_state: E2ERun) -> None:
