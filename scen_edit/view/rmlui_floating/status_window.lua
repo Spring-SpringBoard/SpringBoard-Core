@@ -32,7 +32,7 @@ function RmlUiStatusWindow:init()
             self.dataModel:__SetDirty("position")
         end
     end
-    self.model.onMemoryUpdate = function(memoryStr, memory, color)
+    self.model.onMemoryUpdate = function(memoryStr, memory, color, fps, videoMemoryStr)
         -- Convert Chili color codes to HTML color
         local htmlColor = "#01b414"  -- Green (OK)
         if memory > 500 then
@@ -40,7 +40,11 @@ function RmlUiStatusWindow:init()
         elseif memory > 300 then
             htmlColor = "#96960a"  -- Yellow (WARN)
         end
-        local formatted = string.format('Memory <span style="color: %s;">%.0f MB</span>', htmlColor, memory)
+        local formatted = string.format('FPS %d | Memory <span style="color: %s;">%.0f MB</span>',
+            fps or 0, htmlColor, memory)
+        if videoMemoryStr then
+            formatted = formatted .. " | " .. videoMemoryStr
+        end
         if formatted ~= self.data.memory then
             self.data.memory = formatted
             self.dataModel:__SetDirty("memory")

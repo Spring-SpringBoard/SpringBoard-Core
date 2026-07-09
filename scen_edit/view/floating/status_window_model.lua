@@ -4,6 +4,8 @@ function StatusWindowModel:init()
     self.posStr = ""
     self.selectionStr = ""
     self.memoryStr = ""
+    self.fps = 0
+    self.videoMemoryStr = nil
     self.versionStr = ""
     self.update = 0
     self.warnedTime = nil
@@ -62,6 +64,8 @@ function StatusWindowModel:_UpdateMemory()
         local vram, vramMax = Spring.GetVidMemUsage()
         videoMemoryStr = ("Video memory: %.0f/%.0f MB"):format(vram, vramMax)
     end
+    self.videoMemoryStr = videoMemoryStr
+    self.fps = Spring.GetFPS and Spring.GetFPS() or 0
 
     local memory
     if Spring.GetLuaMemUsage then
@@ -101,7 +105,7 @@ function StatusWindowModel:_UpdateMemory()
     self.memoryStr = memoryStr
 
     if self.onMemoryUpdate then
-        self.onMemoryUpdate(memoryStr, memory, color)
+        self.onMemoryUpdate(memoryStr, memory, color, self.fps, videoMemoryStr)
     end
 end
 
