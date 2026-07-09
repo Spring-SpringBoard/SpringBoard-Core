@@ -90,6 +90,26 @@ def target_cases(target: str, case: str) -> list[Case]:
         if case == "rust":
             return cases[1:]
         return cases
+    if target == "teams-panel":
+        cases = [
+            Case(
+                name="teams-panel-lua-chili",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "chili"},
+                scenario="teams_panel",
+                crop="right-panel",
+            ),
+            Case(
+                name="teams-panel-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="teams_panel",
+                crop="right-panel",
+            ),
+        ]
+        if case == "lua":
+            return cases[:1]
+        if case == "rust":
+            return cases[1:]
+        return cases
     if target == "dev-console":
         cases = [
             Case(

@@ -17,7 +17,7 @@ def main(argv: list[str] | None = None) -> int:
         "target",
         nargs="?",
         default="chonsole",
-        choices=("chonsole", "main-panel", "lighting-panel", "units-panel", "texture-panel", "dev-console"),
+        choices=("chonsole", "main-panel", "lighting-panel", "units-panel", "texture-panel", "dev-console", "teams-panel"),
         help="E2E target to run.",
     )
     parser.add_argument(

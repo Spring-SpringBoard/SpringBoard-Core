@@ -21,6 +21,8 @@ def run_scenario(run_state: E2ERun) -> None:
         texture_panel(run_state)
     elif run_state.case.scenario == "dev_console":
         dev_console(run_state)
+    elif run_state.case.scenario == "teams_panel":
+        teams_panel(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -60,7 +62,7 @@ def main_panel_tabs(run_state: E2ERun) -> None:
         ("objects", 42),
         ("map", 110),
         ("env", 180),
-        ("misc", 252),
+        ("misc", 300),
     )
     for name, offset_x in tabs:
         run_state.click(panel_left + offset_x, 35, delay=0.18)
@@ -91,6 +93,24 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def teams_panel(run_state: E2ERun) -> None:
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+    toolbox_y = 88
+    run_state.click(panel_left + 300, 35, delay=0.2)  # Misc tab
+    run_state.screenshot("misc-tab")
+    run_state.click(panel_left + 110, toolbox_y, delay=0.5)  # Teams (order 1)
+    run_state.screenshot("teams-open")
+    # "Add" action button (the action row sits below the toolbox+action bar,
+    # around y=217). Adding repeatedly rebuilds the team list DOM, which is
+    # where the use-after-free on stale elements showed up.
+    for _ in range(3):
+        run_state.click(panel_left + 38, 217, delay=0.4)
+    run_state.screenshot("teams-added")
 
 
 def dev_console(run_state: E2ERun) -> None:
