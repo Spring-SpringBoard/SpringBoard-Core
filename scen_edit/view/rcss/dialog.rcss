@@ -43,6 +43,10 @@ body#color-picker .dialog {
 }
 
 .dialog-header {
+    /* `drag: drag` makes RmlUi emit dragstart/drag/dragend on this element,
+       which RmlUiComponent uses to move the dialog. */
+    drag: drag;
+    cursor: move;
     background-color: #333333;
     padding: 10px;
     border-bottom: 1px #555555;

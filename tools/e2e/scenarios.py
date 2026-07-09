@@ -179,3 +179,6 @@ def lighting_panel(run_state: E2ERun) -> None:
     run_state.screenshot("after-color-ok")
     run_state.click(panel_left + 110, 310, delay=0.4)
     run_state.screenshot_root("color-picker-reopen-root")
+    # Drag the dialog by its header: it must move (O1).
+    run_state.drag_root(1150, 565, 1000, 470)
+    run_state.screenshot_root("color-picker-dragged-root")

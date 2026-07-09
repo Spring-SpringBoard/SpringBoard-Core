@@ -25,7 +25,57 @@ function RmlUiComponent:init(rmlPath, title)
         titleElement.inner_rml = self.title
     end
 
+    self:_EnableHeaderDragging()
+
     Log.Notice(self.title .. " component initialized")
+end
+
+local function FirstByClass(document, className)
+    if not document.GetElementsByClassName then
+        return nil
+    end
+    local elements = document:GetElementsByClassName(className)
+    return elements and elements[1] or nil
+end
+
+-- Make dialogs draggable by their header. `.dialog-header` carries `drag: drag`
+-- so RmlUi emits dragstart/drag; the dialog box is centred with
+-- left/right/top/bottom + margin:auto, so the first drag pins it to explicit
+-- left/top coordinates before moving it.
+function RmlUiComponent:_EnableHeaderDragging()
+    local document = self.document
+    local header = FirstByClass(document, "dialog-header")
+    local dialog = FirstByClass(document, "dialog")
+    if not (header and dialog) then
+        return
+    end
+
+    local startLeft, startTop, startMouseX, startMouseY
+
+    header:AddEventListener("dragstart", function(event)
+        startLeft = dialog.absolute_left
+        startTop = dialog.absolute_top
+        startMouseX = event.parameters.mouse_x
+        startMouseY = event.parameters.mouse_y
+        -- Stop the centring rules from fighting the explicit position.
+        dialog.style["right"] = "auto"
+        dialog.style["bottom"] = "auto"
+        dialog.style["margin"] = "0px"
+    end)
+
+    header:AddEventListener("drag", function(event)
+        if not startLeft then
+            return
+        end
+        local dx = event.parameters.mouse_x - startMouseX
+        local dy = event.parameters.mouse_y - startMouseY
+        dialog.style["left"] = tostring(math.floor(startLeft + dx)) .. "px"
+        dialog.style["top"] = tostring(math.floor(startTop + dy)) .. "px"
+    end)
+
+    header:AddEventListener("dragend", function()
+        startLeft, startTop = nil, nil
+    end)
 end
 
 function RmlUiComponent:Show()
