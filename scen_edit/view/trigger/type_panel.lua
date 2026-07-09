@@ -177,7 +177,7 @@ function TypePanel:MakeExpressionOpt()
         -- FIXME: it seems that similarity check doesn't always work well in field.lua
         __dontCheckIfSimilar = true,
         components = {
-            Button:New {
+            EditorButton {
                 caption = 'Select...',
                 width = self.valueWidth,
                 height = 30,

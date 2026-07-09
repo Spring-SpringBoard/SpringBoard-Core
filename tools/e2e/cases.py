@@ -120,6 +120,15 @@ def target_cases(target: str, case: str) -> list[Case]:
             ),
         ]
         return cases
+    if target == "props-panel":
+        return [
+            Case(
+                name="props-panel-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="props_panel",
+                crop="right-panel",
+            ),
+        ]
     if target == "settings-panel":
         return [
             Case(

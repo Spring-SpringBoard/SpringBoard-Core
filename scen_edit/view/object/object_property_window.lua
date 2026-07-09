@@ -113,7 +113,7 @@ function ObjectPropertyWindow:AddAngleField()
             name = "btn-align-ground",
             width = 150,
             components = {
-                Button:New {
+                EditorButton {
                     caption = "Align",
                     x = 0,
                     width = 135,
@@ -471,7 +471,7 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
             name = "rem_" .. ruleName,
             width = SB.conf.B_HEIGHT,
             components = {
-                Button:New {
+                EditorButton {
                     caption = "",
                     width = SB.conf.B_HEIGHT,
                     height = SB.conf.B_HEIGHT,
@@ -501,7 +501,7 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
         name = "btn-add-rule",
         width = 150,
         components = {
-            Button:New {
+            EditorButton {
                 caption = "Add rule",
                 x = 0,
                 width = 135,

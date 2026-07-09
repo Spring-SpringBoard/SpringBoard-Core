@@ -27,6 +27,8 @@ def run_scenario(run_state: E2ERun) -> None:
         info_panel(run_state)
     elif run_state.case.scenario == "settings_panel":
         settings_panel(run_state)
+    elif run_state.case.scenario == "props_panel":
+        props_panel(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -97,6 +99,20 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def props_panel(run_state: E2ERun) -> None:
+    """Objects -> Properties, and Collision. Exercises the editors whose Field
+    components used to build Chili buttons (now EditorButton)."""
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+    run_state.click(panel_left + 42, 35, delay=0.2)    # Objects tab
+    run_state.click(panel_left + 197, 88, delay=0.6)   # Properties (order 2)
+    run_state.screenshot("props-open")
+    run_state.click(panel_left + 270, 88, delay=0.6)   # Collision (order 3)
+    run_state.screenshot("collision-open")
 
 
 def settings_panel(run_state: E2ERun) -> None:
