@@ -1,0 +1,16 @@
+<rml>
+<head>
+    <title>Notifications</title>
+    <link rel="stylesheet" type="text/rcss" href="../common.css" />
+    <link type="text/rcss" href="../../rcss/floating.rcss"/>
+</head>
+<body id="notifications" class="floating-panel" data-model="notifications">
+    <div class="notification" data-for="n : notifications">
+        <div class="notification-title" data-class-warning="n.warning">{{n.title}}</div>
+        <div class="notification-body">{{n.body}}</div>
+        <div class="notification-progress" data-if="n.hasProgress">
+            <div class="notification-progress-fill" data-style-width="n.progressWidth"></div>
+        </div>
+    </div>
+</body>
+</rml>

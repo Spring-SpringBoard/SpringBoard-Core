@@ -31,6 +31,8 @@ def run_scenario(run_state: E2ERun) -> None:
         props_panel(run_state)
     elif run_state.case.scenario == "cursortip":
         cursortip(run_state)
+    elif run_state.case.scenario == "notifications":
+        notifications(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -101,6 +103,24 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def notifications(run_state: E2ERun) -> None:
+    """Export with no saved project posts a warning notification (SB.NotifyWarn).
+    In RmlUi that must come from RmlUiNotifications, not Chotify (which is Chili)."""
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+
+    run_state.screenshot("before")
+    # Toolbar action buttons, 6th is Export.
+    run_state.click(panel_left + 239, 150, delay=1.0)
+    run_state.screenshot("warning")
+    # time=3, so it must be gone a few seconds later (the editor runs paused, so
+    # expiry cannot be driven off game seconds).
+    run_state.move(panel_left - 200, 400, delay=4.0)
+    run_state.screenshot("expired")
 
 
 def cursortip(run_state: E2ERun) -> None:

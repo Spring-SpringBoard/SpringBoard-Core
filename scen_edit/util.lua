@@ -779,7 +779,29 @@ function SB.GenerateNotificationID()
     return notificationIDs
 end
 
+local function RmlUiNotificationsPanel()
+    return SB.useRmlUi and SB.view and SB.view.notifications
+end
+
 function SB.ActionProgress(notificationName, progress, caption)
+    local panel = RmlUiNotificationsPanel()
+    if panel then
+        local notification = chotifyNotifications[notificationName]
+        if not notification or not panel:Exists(notification.id) then
+            notification = { id = panel:Post({ title = "Progress", body = caption, progress = progress }) }
+            chotifyNotifications[notificationName] = notification
+        else
+            panel:Update(notification.id, caption, progress)
+        end
+
+        if progress == 1.0 then
+            panel:Close(notification.id)
+            chotifyNotifications[notificationName] = nil
+            panel:Post({ title = "Finished", body = caption, time = 3 })
+        end
+        return
+    end
+
     local notification = chotifyNotifications[notificationName]
     if not notification then
         notification = {
@@ -838,6 +860,18 @@ end
 
 function SB.NotifyWarn(notificationName, caption)
     Log.Warning(caption)
+
+    local panel = RmlUiNotificationsPanel()
+    if panel then
+        local notification = chotifyNotifications[notificationName]
+        if not notification or not panel:Exists(notification.id) then
+            notification = { id = panel:Post({ title = "Warning", body = caption, time = 3, warning = true }) }
+            chotifyNotifications[notificationName] = notification
+        else
+            panel:Update(notification.id, caption)
+        end
+        return
+    end
 
     local notification = chotifyNotifications[notificationName]
     if not notification or WG.Chotify.notifications[notification.id] == nil then

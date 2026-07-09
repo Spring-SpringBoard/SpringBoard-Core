@@ -129,6 +129,24 @@ def target_cases(target: str, case: str) -> list[Case]:
                 crop="right-panel",
             ),
         ]
+    if target == "notifications":
+        cases = [
+            Case(
+                name="notifications-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="notifications",
+            ),
+            Case(
+                name="notifications-lua-chili",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "chili"},
+                scenario="notifications",
+            ),
+        ]
+        if case == "lua":
+            return cases[1:]
+        if case == "rust":
+            return cases[:1]
+        return cases
     if target == "cursortip":
         return [
             Case(

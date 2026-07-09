@@ -93,6 +93,8 @@ function View:InitializeRmlUi()
     self.controlButtons:Show()
     self.topLeftMenu = RmlUiTopLeftMenu()
     self.topLeftMenu:Show()
+    self.notifications = RmlUiNotifications()
+    self.notifications:Show()
 end
 
 function View:SetupRmlUiEvents()
@@ -223,6 +225,7 @@ function View:Update()
         self.statusWindow:Update()
         self.topLeftMenu:Update()
         self.commandWindow:Update()
+        self.notifications:Tick()
         if RmlUiUpdateNumericDrag then
             RmlUiUpdateNumericDrag()
         end

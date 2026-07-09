@@ -39,9 +39,9 @@ local function FirstByClass(document, className)
 end
 
 -- Make dialogs draggable by their header. `.dialog-header` carries `drag: drag`
--- so RmlUi emits dragstart/drag; the dialog box is centred with
--- left/right/top/bottom + margin:auto, so the first drag pins it to explicit
--- left/top coordinates before moving it.
+-- so RmlUi emits dragstart/drag; the dialog box is centred with a
+-- `translate(-50%, -50%)`, so the first drag drops the transform and pins it to
+-- explicit left/top coordinates before moving it.
 function RmlUiComponent:_EnableHeaderDragging()
     local document = self.document
     local header = FirstByClass(document, "dialog-header")
@@ -58,6 +58,7 @@ function RmlUiComponent:_EnableHeaderDragging()
         startMouseX = event.parameters.mouse_x
         startMouseY = event.parameters.mouse_y
         -- Stop the centring rules from fighting the explicit position.
+        dialog.style["transform"] = "none"
         dialog.style["right"] = "auto"
         dialog.style["bottom"] = "auto"
         dialog.style["margin"] = "0px"

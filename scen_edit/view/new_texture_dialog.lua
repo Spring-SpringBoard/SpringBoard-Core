@@ -47,20 +47,24 @@ function NewTextureDialog:init(opts)
         title = "Texture:",
     }))
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 30,
-            right = 0,
-            borderColor = {0, 0, 0, 0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
+    local children = {}
+    if not SB.useRmlUi then
+        children = {
+            ScrollPanel:New {
+                x = 0,
+                y = 0,
+                bottom = 30,
+                right = 0,
+                borderColor = {0, 0, 0, 0},
+                horizontalScrollbar = false,
+                children = { self.stackPanel },
+            },
+        }
+    end
 
     self:Finalize(children, {
         notMainWindow = true,
+        caption = "New Texture",
         buttons = { "ok", "cancel" },
         width = 400,
         height = 200,

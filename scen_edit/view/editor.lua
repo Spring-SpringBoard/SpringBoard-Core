@@ -341,9 +341,14 @@ function Editor:SetInvisibleFields(...)
     -- In RmlUi mode, set CSS display classes instead of manipulating Chili controls
     if SB.useRmlUi then
         local fieldsToHide = {...}
+        -- A dialog's fields live in its own document, not the main one.
+        local document = self.document or SB.view.mainDocument
+        if not document then
+            return
+        end
         -- Hide all fields first
         for _, fieldName in ipairs(self.fieldOrder) do
-            local fieldElement = SB.view.mainDocument:GetElementById("field-" .. fieldName)
+            local fieldElement = document:GetElementById("field-" .. fieldName)
             if fieldElement and fieldElement.parent_node then
                 fieldElement.parent_node:SetClass("hidden", true)
             end
@@ -351,7 +356,7 @@ function Editor:SetInvisibleFields(...)
         -- Show fields not in the hide list
         for _, fieldName in ipairs(self.fieldOrder) do
             if not table.ifind(fieldsToHide, fieldName) then
-                local fieldElement = SB.view.mainDocument:GetElementById("field-" .. fieldName)
+                local fieldElement = document:GetElementById("field-" .. fieldName)
                 if fieldElement and fieldElement.parent_node then
                     fieldElement.parent_node:SetClass("hidden", false)
                 end
@@ -1113,7 +1118,7 @@ function Editor:_CreateRmlUiDialog(opts)
         local width = opts.width or 550
         local height = opts.height or 500
 
-        local style = string.format("width: %dpx; height: %dpx;", width, height)
+        local style = string.format("width: %dpx; min-height: %dpx;", width, height)
         dialogBody:SetAttribute("style", style)
     end
 
@@ -1187,6 +1192,9 @@ end
 
 -- New RmlUi finalization (new API with layout options)
 function Editor:_FinalizeRmlUiNew(layout, opts)
+    if opts.caption then
+        self.editorTitle = opts.caption
+    end
     self.actionButtons = layout.actionButtons or {}
     self.regularButtons = {}
     self.filterControls = layout.filterControls or {}

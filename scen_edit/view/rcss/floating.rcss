@@ -240,3 +240,57 @@ body#top-left-menu {
     width: 20px;
     height: 20px;
 }
+
+/* Notifications: the RmlUi replacement for Chotify (Chili). The document spans
+   the top-centre strip; `pointer-events: none` keeps map clicks working. */
+body#notifications {
+    left: 25%;
+    /* Below the top control buttons. */
+    top: 70px;
+    width: 30%;
+    height: 40%;
+    padding: 0px;
+    background-color: transparent;
+    pointer-events: none;
+}
+
+.notification {
+    display: block;
+    margin-bottom: 6px;
+    padding: 8px 10px;
+    background-color: #2a2a2ae0;
+    border-width: 1px;
+    border-color: #555555;
+}
+
+.notification-title {
+    display: block;
+    color: #ffffff;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.notification-title.warning {
+    color: #fff501;
+}
+
+.notification-body {
+    display: block;
+    color: #c8d0e0;
+    font-size: 13px;
+}
+
+.notification-progress {
+    display: block;
+    height: 8px;
+    margin-top: 6px;
+    background-color: #1a1a1a;
+    border-width: 1px;
+    border-color: #555555;
+}
+
+.notification-progress-fill {
+    display: block;
+    height: 100%;
+    background-color: #01b414;
+}

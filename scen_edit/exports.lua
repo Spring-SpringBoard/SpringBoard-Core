@@ -79,7 +79,8 @@ end
 
 s11n = SB.s11n
 
-if WG then
+-- Chotify is Chili; RmlUiNotifications replaces it when SB.useRmlUi.
+if WG and WG.Chotify then
     WG.Chotify.spawn.direction = "down"
     WG.Chotify.spawn.leftRatio = 0.25
     WG.Chotify.spawn.rightRatio = nil
