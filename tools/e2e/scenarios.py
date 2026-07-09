@@ -35,6 +35,10 @@ def run_scenario(run_state: E2ERun) -> None:
         notifications(run_state)
     elif run_state.case.scenario == "dialogs":
         dialogs(run_state)
+    elif run_state.case.scenario == "all_editors":
+        all_editors(run_state)
+    elif run_state.case.scenario == "heightmap":
+        heightmap(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -105,6 +109,52 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def heightmap(run_state: E2ERun) -> None:
+    """Map -> Terrain: pick the raise brush and drag on the map, then undo.
+    Checks the brush actually reaches the command bridge, not just that the
+    panel renders."""
+    run_state.focus()
+    assert run_state.window is not None
+    width, height = window_geometry(run_state.window)
+    panel_left = width - 500
+
+    run_state.click(panel_left + 110, 35, delay=0.3)   # Map tab
+    run_state.click(panel_left + 38, 88, delay=0.8)    # Terrain (order 0)
+    run_state.screenshot("terrain-open")
+
+    run_state.click(panel_left + 42, 217, delay=0.4)   # brush action: Add
+    run_state.screenshot("brush-add")
+
+    run_state.drag(width // 3, height // 2, width // 3 + 160, height // 2 + 90, steps=8)
+    run_state.screenshot("painted")
+
+    # AbstractState:KeyPress drops hotkeys while a mouse button still reads as
+    # down, so let the drag's release land before undoing.
+    run_state.move(width // 3, height // 2, delay=1.0)
+    run_state.key("ctrl+z", delay=0.9)
+    run_state.screenshot("undone")
+
+
+# Every registered editor, so none of them is left untried. Tab -> how many
+# editor buttons that tab has.
+_TABS = (("objects", 42, 4), ("map", 110, 5), ("env", 180, 3), ("misc", 300, 2))
+
+
+def all_editors(run_state: E2ERun) -> None:
+    """Open every editor in every tab. Editors are lazily created, so a broken
+    one only shows up when its button is clicked."""
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+
+    for tab_name, tab_x, editor_count in _TABS:
+        run_state.click(panel_left + tab_x, 35, delay=0.3)
+        for i in range(editor_count):
+            run_state.click(panel_left + 38 + 72 * i, 88, delay=0.7)
+            run_state.screenshot(f"{tab_name}-{i}")
 
 
 def dialogs(run_state: E2ERun) -> None:

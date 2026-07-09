@@ -147,6 +147,33 @@ def target_cases(target: str, case: str) -> list[Case]:
         if case == "rust":
             return cases[:1]
         return cases
+    if target == "heightmap":
+        cases = [
+            Case(
+                name="heightmap-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="heightmap",
+            ),
+            Case(
+                name="heightmap-lua-chili",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "chili"},
+                scenario="heightmap",
+            ),
+        ]
+        if case == "lua":
+            return cases[1:]
+        if case == "rust":
+            return cases[:1]
+        return cases
+    if target == "all-editors":
+        return [
+            Case(
+                name="all-editors-lua-rmlui",
+                flags={"chonsole": "lua", "env_panel": "lua", "ui": "rmlui"},
+                scenario="all_editors",
+                crop="right-panel",
+            ),
+        ]
     if target == "dialogs":
         return [
             Case(
