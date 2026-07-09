@@ -58,6 +58,7 @@ function RmlUiButton:init(opts)
     self.width = opts.width
     self.height = opts.height
     self.tooltip = opts.tooltip
+    self.image = opts.image
     self.element = nil
 end
 
@@ -67,10 +68,63 @@ function RmlUiButton:BindToDocument()
 end
 
 function RmlUiButton:GenerateRml()
+    local title = self.tooltip and string.format(' title="%s"', self.tooltip) or ''
+    if self.image then
+        -- Documents live in scen_edit/view/rml/, icons in LuaUI/images/scenedit/.
+        local imagePath = self.image
+        if imagePath:sub(1, 6) == "LuaUI/" then
+            imagePath = "../../../" .. imagePath
+        end
+        return string.format(
+            '<button id="%s" class="field-button field-icon-button"%s><img src="%s"/></button>',
+            self.id, title, imagePath
+        )
+    end
     return string.format(
-        '<button id="%s" class="field-button">%s</button>',
-        self.id, self.caption
+        '<button id="%s" class="field-button"%s>%s</button>',
+        self.id, title, self.caption
     )
+end
+
+-- A progress bar whose value/caption change after the document exists.
+local _PROGRESS_INDEX = 0
+RmlUiProgressBar = LCS.class{}
+
+function RmlUiProgressBar:init(opts)
+    _PROGRESS_INDEX = _PROGRESS_INDEX + 1
+    self.id = "progress-" .. tostring(_PROGRESS_INDEX)
+    self.value = opts.value or 0
+    self.caption = ""
+end
+
+function RmlUiProgressBar:GenerateRml()
+    return string.format(
+        '<div id="%s" class="field-progress">' ..
+        '<div id="%s-fill" class="field-progress-fill" style="width: %d%%;"></div>' ..
+        '<div id="%s-caption" class="field-progress-caption"></div></div>',
+        self.id, self.id, math.floor(self.value), self.id
+    )
+end
+
+function RmlUiProgressBar:__Element(suffix)
+    local document = (self.owner and self.owner.document) or SB.view.mainDocument
+    return document and document:GetElementById(self.id .. suffix)
+end
+
+function RmlUiProgressBar:SetValue(value)
+    self.value = value
+    local fill = self:__Element("-fill")
+    if fill then
+        fill.style["width"] = tostring(math.floor(value)) .. "%"
+    end
+end
+
+function RmlUiProgressBar:SetCaption(caption)
+    self.caption = tostring(caption or "")
+    local element = self:__Element("-caption")
+    if element then
+        element.inner_rml = self.caption
+    end
 end
 
 -- A label whose caption changes after the document exists (dialog error lines).

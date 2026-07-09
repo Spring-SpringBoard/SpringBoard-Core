@@ -402,20 +402,24 @@ function NewRuleDialog:init(objectPropertyWindow)
         })
     }))
 
-    local children = {
-        ScrollPanel:New {
-            x = 0,
-            y = 0,
-            bottom = 30,
-            right = 0,
-            borderColor = {0,0,0,0},
-            horizontalScrollbar = false,
-            children = { self.stackPanel },
-        },
-    }
+    local children = {}
+    if not SB.useRmlUi then
+        children = {
+            ScrollPanel:New {
+                x = 0,
+                y = 0,
+                bottom = 30,
+                right = 0,
+                borderColor = {0,0,0,0},
+                horizontalScrollbar = false,
+                children = { self.stackPanel },
+            },
+        }
+    end
 
     self:Finalize(children, {
         notMainWindow = true,
+        caption = "New Rule",
         buttons = { "ok", "cancel" },
         width = 400,
         height = 120,
@@ -478,13 +482,7 @@ function ObjectPropertyWindow:AddObjectRules(objectID, bridge)
                     padding = {2, 2, 2, 2},
                     tooltip = "Remove rule",
                     classname = "negative_button",
-                    children = {
-                        Image:New {
-                            file = Path.Join(SB.DIRS.IMG, 'cancel.png'),
-                            height = "100%",
-                            width = "100%",
-                        },
-                    },
+                    image = Path.Join(SB.DIRS.IMG, 'cancel.png'),
                     OnClick = {
                         function()
                             self:OnFieldChange(ruleName, false)

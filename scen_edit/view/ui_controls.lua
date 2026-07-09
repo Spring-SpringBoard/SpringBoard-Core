@@ -43,11 +43,32 @@ function EditorButton(opts)
             width = opts.width,
             height = opts.height,
             tooltip = opts.tooltip,
+            image = opts.image,
         })
-    else
-        -- Chili mode - use original Button
-        return Button:New(opts)
     end
+
+    -- Chili mode - use original Button. An icon is a child Image.
+    if opts.image then
+        opts = Table.Merge({}, opts)
+        opts.children = {
+            Image:New {
+                file = opts.image,
+                height = "100%",
+                width = "100%",
+            },
+        }
+        opts.image = nil
+    end
+    return Button:New(opts)
+end
+
+-- EditorProgressBar - a progress bar updated after creation (map compile).
+function EditorProgressBar(opts)
+    opts = opts or {}
+    if SB.useRmlUi then
+        return RmlUiProgressBar({ value = opts.value })
+    end
+    return Progressbar:New(opts)
 end
 
 -- EditorLabel - a Label whose caption is updated later (dialog error lines).

@@ -94,7 +94,7 @@ function TerrainSettingsEditor:_AddMapCompileControls()
             x = 150,
         }
     })
-    self.btnCompile = Button:New ({
+    self.btnCompile = EditorButton {
         caption = "Start",
         height = 30,
         width = 140,
@@ -130,13 +130,13 @@ function TerrainSettingsEditor:_AddMapCompileControls()
                 end)
             end
         }
-    })
-    self.progressBar = Progressbar:New ({
+    }
+    self.progressBar = EditorProgressBar {
         x = 145,
         height = 30,
         width = 160,
         value = 0,
-    })
+    }
 
     local exportTooltip = "You may want to export maps first."
 

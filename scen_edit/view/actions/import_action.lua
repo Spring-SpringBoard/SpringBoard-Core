@@ -1,4 +1,5 @@
 SB.Include(Path.Join(SB.DIRS.SRC, 'view/actions/action.lua'))
+SB.Include(Path.Join(SB.DIRS.SRC, 'view/editor.lua'))
 
 ImportAction = Action:extends{}
 
@@ -57,8 +58,59 @@ function ImportAction:execute()
     )
 end
 
+-- Chili built a bare Window here; RmlUi mode goes through the shared Editor
+-- dialog machinery instead.
+ImportHeightmapDialog = Editor:extends{}
+
+function ImportHeightmapDialog:init(path, minHeight, maxHeight)
+    Editor.init(self)
+
+    self.path = path
+
+    self:AddField(NumericField({
+        name = "minHeight",
+        title = "Min height:",
+        value = minHeight,
+        width = 300,
+    }))
+    self:AddField(NumericField({
+        name = "maxHeight",
+        title = "Max height:",
+        value = maxHeight,
+        width = 300,
+    }))
+
+    self:Finalize({}, {
+        notMainWindow = true,
+        caption = "Import heightmap",
+        buttons = { "ok", "cancel" },
+        width = 400,
+        height = 160,
+    })
+end
+
+function ImportHeightmapDialog:ConfirmDialog()
+    local minHeight = self.fields["minHeight"].value
+    local maxHeight = self.fields["maxHeight"].value
+    if minHeight == nil or maxHeight == nil then
+        return false
+    end
+
+    Log.Notice("Importing heightmap: " .. self.path .. " ...")
+    -- Gadget dispatch (not widget): the native command reads the image and
+    -- applies the heightmap synced-side.
+    SB.commandManager:execute(ImportHeightmapCommand(self.path, minHeight, maxHeight))
+    return true
+end
+
 function ImportAction:ImportHeightmap(path)
     local minGroundExtreme, maxGroundExtreme = Spring.GetGroundExtremes()
+
+    if SB.useRmlUi then
+        ImportHeightmapDialog(path, minGroundExtreme, maxGroundExtreme)
+        return
+    end
+
     local ebMinHeight = EditBox:New {
         hint = "Min height: ",
         text = tostring(minGroundExtreme),
