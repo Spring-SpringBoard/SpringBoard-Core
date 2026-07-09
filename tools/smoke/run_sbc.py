@@ -7,6 +7,7 @@ and returns the spring command; everything else builds on it.
 Standalone use:
     python -m run_sbc           # boot once (timed), print the write-dir path
     python -m run_sbc --manual  # interactive editor session (replaces launch.sh)
+    python -m run_sbc --manual --config config/luaui-rmlui.json
 
 Library use:
     from run_sbc import boot
@@ -18,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import argparse
 import shutil
 import subprocess
 import sys
@@ -38,23 +40,32 @@ HEARTBEAT_STALE_S = 20.0
 
 
 def main(argv: list[str] | None = None) -> int:
-    argv = sys.argv[1:] if argv is None else argv
-    if "--manual" in argv:
-        return launch_manual()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--manual", action="store_true")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        help="Port-flags JSON preset to copy into the isolated game as port_flags.json.",
+    )
+    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    if args.manual:
+        return launch_manual(config=args.config)
     write_dir = boot(tags=["__startup_only__"])
     print(write_dir)
     return 0
 
 
-def launch_manual() -> int:
+def launch_manual(config: Path | None = None) -> int:
     """Set up an isolated write dir and run SBC in the foreground until quit.
 
     The interactive twin of `boot()` — no timeout, no test spec. This is the whole
     body of the old tools/dev/launch.sh; that script now just calls it.
     """
-    write_dir, env, cmd = prepare(prefix="sbc-manual-")
+    write_dir, env, cmd = prepare(prefix="sbc-manual-", port_flags_config=config)
     print(f"write dir: {write_dir}")
     print(f"infolog:   {write_dir / 'infolog.txt'}")
+    if config is not None:
+        print(f"config:    {config}")
     return subprocess.run(cmd, env=env, check=False).returncode
 
 
@@ -95,6 +106,7 @@ def prepare(
     run_tests: bool = False,
     tags: list[str] | None = None,
     prefix: str = "sbc-",
+    port_flags_config: Path | None = None,
 ) -> tuple[Path, dict[str, str], list[str]]:
     """Set up an isolated write dir and return (write_dir, env, spring command).
 
@@ -133,6 +145,11 @@ def prepare(
             ".ruff_cache",
             "target",
             "__pycache__",
+            # e2e output lives in the repo and grows without bound (raw .xwd
+            # captures). Copying it into every run's game dir made each temp
+            # write dir ~8-11GB and compounded run over run.
+            "artifacts",
+            ".venv",
         ),
     )
 
@@ -150,6 +167,13 @@ def prepare(
     # change_player_team, get_team_info).
     shutil.copyfile(DEV_DIR / "springsettings.cfg", write_dir / "springsettings.cfg")
     shutil.copyfile(DEV_DIR / "script.txt", write_dir / "script.txt")
+    if port_flags_config is not None:
+        port_flags_config = port_flags_config.expanduser()
+        if not port_flags_config.is_absolute():
+            port_flags_config = sbc_root / port_flags_config
+        flags = _read_port_flags_config(port_flags_config)
+        flags_path = game_dir / "port_flags.json"
+        flags_path.write_text(json.dumps(flags, indent=2, sort_keys=True) + "\n")
 
     env = os.environ.copy()
     env["SPRING_NATIVE_MODULE"] = str(native_plugin)
@@ -170,6 +194,28 @@ def prepare(
         str(write_dir / "script.txt"),
     ]
     return write_dir, env, cmd
+
+
+def _read_port_flags_config(path: Path) -> dict[str, str]:
+    if not path.is_file():
+        raise RuntimeError(f"run config does not exist: {path}")
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as err:
+        raise RuntimeError(f"invalid run config JSON at {path}: {err}") from err
+    if not isinstance(data, dict):
+        raise RuntimeError(f"run config must be a JSON object: {path}")
+    allowed = {
+        "chonsole": {"lua", "rust"},
+        "env_panel": {"lua", "rust"},
+        "ui": {"chili", "rmlui"},
+    }
+    for key, values in allowed.items():
+        value = data.get(key)
+        if value not in values:
+            expected = ", ".join(sorted(values))
+            raise RuntimeError(f"{path}: {key} must be one of: {expected}")
+    return {key: str(data[key]) for key in allowed}
 
 
 def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:

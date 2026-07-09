@@ -13,12 +13,25 @@
         </div>
         <div class="dialog-content">
             <div class="color-picker-panel">
-                <div class="color-preview" id="color-preview"></div>
-                <div class="color-inputs">
-                    <div class="form-row"><label>R:</label><input type="text" id="r-value" class="form-input" value="255"/></div>
-                    <div class="form-row"><label>G:</label><input type="text" id="g-value" class="form-input" value="255"/></div>
-                    <div class="form-row"><label>B:</label><input type="text" id="b-value" class="form-input" value="255"/></div>
-                    <div class="form-row"><label>A:</label><input type="text" id="a-value" class="form-input" value="255"/></div>
+                <div class="color-picker-main">
+                    <button id="color-map" class="color-map">
+                        <img class="color-map-white" src="../../../../LuaUI/images/scenedit/color_picker/generated/sv_white.png"/>
+                        <img class="color-map-black" src="../../../../LuaUI/images/scenedit/color_picker/generated/sv_black.png"/>
+                        <div id="color-map-cursor" class="color-map-cursor"></div>
+                    </button>
+                    <button id="hue-map" class="hue-map">
+                        <img src="../../../../LuaUI/images/scenedit/color_picker/H_grad.png"/>
+                        <div id="hue-cursor" class="hue-cursor"></div>
+                    </button>
+                    <div class="color-side">
+                        <div class="color-preview" id="color-preview"></div>
+                        <div class="color-inputs">
+                            <div class="form-row"><label>R:</label><input type="text" id="r-value" class="form-input" value="255"/></div>
+                            <div class="form-row"><label>G:</label><input type="text" id="g-value" class="form-input" value="255"/></div>
+                            <div class="form-row"><label>B:</label><input type="text" id="b-value" class="form-input" value="255"/></div>
+                            <div class="form-row"><label>A:</label><input type="text" id="a-value" class="form-input" value="255"/></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-row"><label>Hex:</label><input type="text" id="hex-input" class="form-input" value="#FFFFFF"/></div>
             </div>

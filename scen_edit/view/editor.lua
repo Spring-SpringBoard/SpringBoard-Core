@@ -462,6 +462,32 @@ function Editor:_AddField(field)
 end
 
 function Editor:AddControl(name, children)
+    if SB.useRmlUi then
+        local function generateControlRml()
+            local html = ''
+            for _, child in pairs(children or {}) do
+                if child and child.GenerateRml then
+                    html = html .. child:GenerateRml()
+                elseif child and (child.classname == "line" or child.classname == "Line" or child.style == "horizontal" or child.caption == "line") then
+                    html = html .. '<div class="field-section-line"></div>'
+                elseif child and child.caption and child.caption ~= "" then
+                    html = html .. string.format('<div class="field-section-label">%s</div>', child.caption)
+                end
+            end
+            if html == '' then
+                return ''
+            end
+            return '<div class="field-section">' .. html .. '</div>'
+        end
+
+        self.fields[name] = {
+            name = name,
+            GenerateRml = generateControlRml,
+        }
+        table.insert(self.fieldOrder, name)
+        return self.fields[name]
+    end
+
     self.fields[name] = {
         ctrl = self:_AddControl(name, children),
         name = name,
@@ -813,6 +839,28 @@ local function ConvertChiliButtonToRmlUi(chiliButton)
     return nil
 end
 
+local function ConvertPlaceholderChildToRmlUi(child)
+    if not child or type(child) ~= "table" then
+        return nil
+    end
+
+    if child.GenerateRml and type(child.GenerateRml) == "function" then
+        return child:GenerateRml()
+    end
+
+    local className = child.classname and string.lower(child.classname) or nil
+
+    if className == "line" or child.style == "horizontal" or child.caption == "line" then
+        return '<div class="field-section-line"></div>'
+    end
+
+    if child.caption and child.caption ~= "" then
+        return string.format('<div class="field-section-label">%s</div>', child.caption)
+    end
+
+    return nil
+end
+
 -- RmlUi-specific finalization
 function Editor:_FinalizeRmlUi(children, opts)
     children = children or {}
@@ -892,12 +940,20 @@ function Editor:_FinalizeRmlUi(children, opts)
                 if field.ctrl then
                     -- Check if this is an RmlUi placeholder (from new EditorButton API)
                     if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
-                        -- Children are already RmlUi buttons, use them directly
-                        for _, rmlBtn in ipairs(field.ctrl.children) do
-                            if rmlBtn and rmlBtn.GenerateRml then
-                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
-                                table.insert(self.regularButtons, rmlBtn)
+                        local ctrlHtml = ''
+                        for _, child in pairs(field.ctrl.children) do
+                            if child and child.GenerateRml then
+                                ctrlHtml = ctrlHtml .. child:GenerateRml()
+                                table.insert(self.regularButtons, child)
+                            else
+                                local convertedHtml = ConvertPlaceholderChildToRmlUi(child)
+                                if convertedHtml then
+                                    ctrlHtml = ctrlHtml .. convertedHtml
+                                end
                             end
+                        end
+                        if ctrlHtml ~= '' then
+                            fieldsHtml = fieldsHtml .. '<div class="field-section">' .. ctrlHtml .. '</div>'
                         end
                     else
                         -- Old path: try to convert Chili buttons to RmlUi buttons
@@ -908,11 +964,16 @@ function Editor:_FinalizeRmlUi(children, opts)
                                 if rmlBtn then
                                     ctrlHtml = ctrlHtml .. rmlBtn:GenerateRml()
                                     table.insert(self.regularButtons, rmlBtn)
+                                else
+                                    local convertedHtml = ConvertPlaceholderChildToRmlUi(btnChild)
+                                    if convertedHtml then
+                                        ctrlHtml = ctrlHtml .. convertedHtml
+                                    end
                                 end
                             end
                         end
                         if ctrlHtml ~= '' then
-                            fieldsHtml = fieldsHtml .. ctrlHtml
+                            fieldsHtml = fieldsHtml .. '<div class="field-section">' .. ctrlHtml .. '</div>'
                         else
                             -- Fallback for other controls
                             fieldsHtml = fieldsHtml .. '<div class="field-separator"></div>'
@@ -1152,17 +1213,42 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
                 if field.ctrl then
                     -- Check if this is an RmlUi placeholder (from new EditorButton API)
                     if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
-                        -- Children are already RmlUi buttons, use them directly
-                        for _, rmlBtn in ipairs(field.ctrl.children) do
-                            if rmlBtn and rmlBtn.GenerateRml then
-                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
-                                table.insert(self.regularButtons, rmlBtn)
+                        local ctrlHtml = ''
+                        for _, child in pairs(field.ctrl.children) do
+                            if child and child.GenerateRml then
+                                ctrlHtml = ctrlHtml .. child:GenerateRml()
+                                table.insert(self.regularButtons, child)
+                            else
+                                local convertedHtml = ConvertPlaceholderChildToRmlUi(child)
+                                if convertedHtml then
+                                    ctrlHtml = ctrlHtml .. convertedHtml
+                                end
                             end
+                        end
+                        if ctrlHtml ~= '' then
+                            fieldsHtml = fieldsHtml .. '<div class="field-section">' .. ctrlHtml .. '</div>'
                         end
                     elseif field.ctrl.GenerateRml then
                         -- Single button with GenerateRml method
                         fieldsHtml = fieldsHtml .. field.ctrl:GenerateRml()
                         table.insert(self.regularButtons, field.ctrl)
+                    elseif field.ctrl.children then
+                        local ctrlHtml = ''
+                        for _, child in pairs(field.ctrl.children) do
+                            local rmlBtn = ConvertChiliButtonToRmlUi(child)
+                            if rmlBtn then
+                                ctrlHtml = ctrlHtml .. rmlBtn:GenerateRml()
+                                table.insert(self.regularButtons, rmlBtn)
+                            else
+                                local convertedHtml = ConvertPlaceholderChildToRmlUi(child)
+                                if convertedHtml then
+                                    ctrlHtml = ctrlHtml .. convertedHtml
+                                end
+                            end
+                        end
+                        if ctrlHtml ~= '' then
+                            fieldsHtml = fieldsHtml .. '<div class="field-section">' .. ctrlHtml .. '</div>'
+                        end
                     end
                 end
             end
@@ -1194,7 +1280,6 @@ function Editor:_FinalizeRmlUiNew(layout, opts)
 
     -- Combine buttons, filters, path nav, grid, and fields
     self.generatedRml = buttonsHtml .. filtersHtml .. pathNavHtml .. gridHtml .. gridsHtml .. fieldsHtml
-
     -- If this is a dialog (notMainWindow), create the dialog document
     if opts.notMainWindow then
         self:_CreateRmlUiDialog(opts)
@@ -1223,11 +1308,19 @@ function Editor:RefreshContent()
                 if field.ctrl then
                     -- Check if this is an RmlUi placeholder (from new EditorButton API)
                     if field.ctrl.isRmlUiPlaceholder and field.ctrl.children then
-                        -- Children are already RmlUi buttons, use them directly
-                        for _, rmlBtn in ipairs(field.ctrl.children) do
-                            if rmlBtn and rmlBtn.GenerateRml then
-                                fieldsHtml = fieldsHtml .. rmlBtn:GenerateRml()
+                        local ctrlHtml = ''
+                        for _, child in pairs(field.ctrl.children) do
+                            if child and child.GenerateRml then
+                                ctrlHtml = ctrlHtml .. child:GenerateRml()
+                            else
+                                local convertedHtml = ConvertPlaceholderChildToRmlUi(child)
+                                if convertedHtml then
+                                    ctrlHtml = ctrlHtml .. convertedHtml
+                                end
                             end
+                        end
+                        if ctrlHtml ~= '' then
+                            fieldsHtml = fieldsHtml .. '<div class="field-section">' .. ctrlHtml .. '</div>'
                         end
                     elseif field.ctrl.GenerateRml then
                         -- Single button with GenerateRml method

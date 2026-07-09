@@ -89,11 +89,17 @@ verify-native: lint test-unit build-native
 
 # Build and run a long-lived isolated Spring editor session.
 [group('run')]
-run: build-native
-    bash tools/dev/launch.sh
+run config="config/luaui-chili.json": build-native
+    bash tools/dev/launch.sh --config "{{config}}"
 
 # Drive the native chonsole in the currently running editor window.
 # Defaults to enter-only; typing scenarios must be requested explicitly.
 [group('run')]
 smoke-chonsole scenario="enter":
     python3 tools/dev/chonsole_smoke.py "{{scenario}}"
+
+# Run black-box UI E2E tests. Does not rebuild native code; run `just build`
+# first when testing Rust UI changes.
+[group('test')]
+test-e2e target="chonsole" args="":
+    python3 tools/e2e/ui_driver.py "{{target}}" {{args}}

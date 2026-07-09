@@ -1,140 +1,146 @@
 body#springboard {
     font-family: Poppins;
-    font-size: 14dp;
+    font-size: 12px;
     color: #cccccc;
     position: absolute;
-    right: 0dp;
-    top: 0dp;
+    right: 0px;
+    top: 0px;
     width: 500px;
     height: 100%;
-	background-color: #1a1d219e;
+    background-color: #1f26219e;
 }
 
 /* Tab bar at top */
 .tab-bar {
     position: absolute;
-    top: 10dp;
-    left: 0dp;
-    right: 0dp;
-    height: 25dp;
-    background-color: #222222;
+    top: 10px;
+    left: 0px;
+    right: 0px;
+    height: 40px;
+    background-color: #1c211e;
     display: flex;
     flex-direction: row;
-    gap: 1dp;
-    padding: 1dp;
+    gap: 2px;
+    padding: 0px 0px 0px 0px;
 }
 
 .tab-button {
-    flex: 1;
-    background-color: #3a3a3a;
+    width: 70px;
+    height: 40px;
+    flex-shrink: 0;
+    background-color: #111411;
     color: #999999;
     border-color: #555555;
-    padding: 3dp 8dp;
-    font-size: 12dp;
+    padding: 2px 6px;
+    font-size: 12px;
+    /* Centre the label. Do not use flex here: RmlUi will not render the raw
+       text node inside a flex container. */
+    text-align: center;
+    line-height: 36px;
 }
 
 .tab-button:hover {
-    background-color: #4a4a4a;
+    background-color: #202820;
     color: #cccccc;
 }
 
 .tab-button.active {
-    background-color: #1a1a1a;
+    background-color: #050705;
     color: #ffffff;
-    border-bottom: 2dp #3a7ebf;
+    border-color: #5d7190;
 }
 
 /* Action bar (Save, Load, etc.) */
 .action-bar {
     position: absolute;
-    top: 40dp;
-    left: 0dp;
-    right: 0dp;
-    height: 45dp;
-    background-color: #222222;
-    border-bottom: 1dp #555555;
+    top: 130px;
+    left: 0px;
+    right: 0px;
+    height: 40px;
+    background-color: transparent;
+    border-bottom: 0px transparent;
     display: flex;
     flex-direction: row;
-    gap: 1dp;
-    padding: 2dp 5dp;
+    gap: 1px;
+    padding: 0px 5px;
     align-items: center;
 }
 
 .toolbar-action-button {
-    width: 40dp;
-    height: 40dp;
-    background-color: #3a3a3a;
-    border-color: #555555;
-    border-radius: 3dp;
-    padding: 0dp;
+    width: 40px;
+    height: 40px;
+    background-color: #111411;
+    border-color: #2e342f;
+    padding: 0px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .toolbar-action-button:hover {
-    background-color: #4a4a4a;
-    border-color: #777777;
+    background-color: #202820;
+    border-color: #4d5a50;
 }
 
 .toolbar-action-button img {
-    width: 20dp;
-    height: 20dp;
+    width: 20px;
+    height: 20px;
 }
 
 /* Editor button panel (scrollable horizontal) - smaller buttons */
 .editor-panel-wrapper {
     position: absolute;
-    top: 90dp;
-    left: 0dp;
-    right: 0dp;
-    height: 60dp;
+    top: 55px;
+    left: 0px;
+    right: 0px;
+    height: 80px;
     overflow-x: auto;
     overflow-y: hidden;
-    background-color: #222222;
-    border-bottom: 1dp #555555;
+    background-color: transparent;
+    border-bottom: 0px transparent;
 }
 
 .editor-button-panel {
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
     gap: 1dp;
     padding: 5px 5px 5px 5px;
     min-width: 100%;
 }
 
 .editor-button {
-    width: 50dp;
-    height: 50dp;
-    background-color: #2a2a2a;
-    border-color: #555555;
-    border-radius: 3dp;
+    width: 70px;
+    height: 70px;
+    background-color: #111411;
+    border-color: #2e342f;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3dp;
+    padding: 3px;
     flex-shrink: 0;
 }
 
 .editor-button:hover {
-    background-color: #3a3a3a;
-    border-color: #888888;
+    background-color: #202820;
+    border-color: #4d5a50;
 }
 
 .editor-button.pressed {
-    background-color: #1a1a1a;
+    background-color: #050705;
     border-color: #00ff00;
 }
 
 .editor-button img {
-    width: 24dp;
-    height: 24dp;
-    margin-bottom: 2dp;
+    width: 35px;
+    height: 35px;
+    margin-bottom: 4px;
 }
 
 .editor-button-label {
-    font-size: 8dp;
+    font-size: 11px;
     color: #cccccc;
     text-align: center;
 }
@@ -146,11 +152,11 @@ body#springboard {
 /* Main content area - starts after editor panel (40 tab + 45 action + 60 editor = 145dp + 10 margin) */
 .main-content {
     position: absolute;
-    top: 155dp;
-    left: 0dp;
-    right: 0dp;
-    bottom: 0dp;
-    background-color: #1a1d219e;
+    top: 175px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    background-color: #1f26219e;
     padding: 0px 10px 0px 10px;
     color: #cccccc;
     overflow-y: auto;
@@ -162,22 +168,22 @@ body#springboard {
 }
 
 .editor-title {
-    font-size: 16dp;
+    font-size: 16px;
     color: #ffffff;
     margin-bottom: 15dp;
     padding-bottom: 5dp;
-    border-bottom: 1dp #555555;
+    border-bottom: 1px #555555;
 }
 
 /* Action buttons panel at top of editor - smaller buttons */
 .action-buttons-panel {
     display: flex;
     flex-direction: row;
-    gap: 0dp;
+    gap: 0px;
     margin-bottom: 15dp;
     padding: 0px 5px 5px 5px;
     background-color: #2a2a2a;
-    border-bottom: 1dp #555555;
+    border-bottom: 1px #555555;
 }
 
 .action-button {
@@ -185,19 +191,19 @@ body#springboard {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 50dp;
-    height: 50dp;
+    width: 50px;
+    height: 50px;
     background-color: #3a3a3a;
     border-color: #555555;
-    padding: 3dp;
-    margin-right: 0dp;
+    padding: 3px;
+    margin-right: 0px;
 }
 
 .action-button:disabled,
 .action-button.disabled {
     background-color: #1a1a1a;
     border-color: #333333;
-    opacity: 0.5;
+    color: #777777;
     cursor: default;
 }
 
@@ -218,18 +224,13 @@ body#springboard {
 }
 
 .action-button-icon {
-    width: 24dp;
-    height: 24dp;
-    margin-bottom: 2dp;
-}
-
-.action-button.pressed .action-button-icon {
-    /* Green tint for pressed state - using filter instead of decorator */
-    filter: brightness(1.2) sepia(0.5) hue-rotate(70deg);
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
 }
 
 .action-button-label {
-    font-size: 9dp;
+    font-size: 9px;
     color: #ffffff;
     text-align: center;
 }
@@ -239,16 +240,16 @@ body#springboard {
 }
 
 .field-separator {
-    height: 1dp;
+    height: 1px;
     background-color: #555555;
-    margin: 15dp 0dp;
+    margin: 15px 0px;
 }
 
 .field-group {
     display: flex;
     flex-direction: row;
-    gap: 10dp;
-    margin-bottom: 10dp;
+    gap: 10px;
+    margin-bottom: 8px;
     align-items: center;
 }
 
@@ -269,12 +270,10 @@ body#springboard {
     border: 1dp #555555;
     border-radius: 3dp;
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 5dp;
+    display: block;
+    padding: 0;
     position: relative;
+    overflow: hidden;
 }
 
 .grid-item:hover {
@@ -287,27 +286,25 @@ body#springboard {
     border-color: #3a7ebf;
 }
 
-.grid-item-image-container {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+.grid-item.hidden {
+    display: none;
 }
 
 .grid-item-image {
-    max-width: 100%;
-    max-height: 100%;
+    display: block;
+    margin: auto;
 }
 
 .grid-item-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     font-size: 9dp;
-    color: #cccccc;
+    color: #ffffff;
     text-align: center;
-    margin-top: 3dp;
-    width: 100%;
-    height: 20dp;
+    padding: 1dp 2dp;
+    background-color: rgba(0, 0, 0, 160);
     overflow: hidden;
     white-space: nowrap;
 }
@@ -333,11 +330,11 @@ body#springboard {
 .filter-combo {
     background-color: #3a3a3a;
     color: #ffffff;
-    border: 1dp #555555;
-    border-radius: 3dp;
-    padding: 4dp 8dp;
-    font-size: 12dp;
-    min-width: 90dp;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 90px;
     cursor: pointer;
 }
 
@@ -352,22 +349,24 @@ body#springboard {
 
 /* Dropdown (select) element styling */
 select {
-    background-color: #3a3a3a;
+    background-color: #111411;
     color: #ffffff;
-    border: 1dp #555555;
-    border-radius: 3dp;
-    padding: 4dp 8dp;
-    font-size: 12dp;
+    border: 1px #2e342f;
+    border-radius: 2px;
+    padding: 3px 7px;
+    font-size: 12px;
+    min-height: 26px;
     cursor: pointer;
 }
 
+.select-wrapper:hover select,
 select:hover {
-    background-color: #4a4a4a;
-    border-color: #777777;
+    background-color: #202820;
+    border-color: #6f806d;
 }
 
 select:focus {
-    border-color: #3a7ebf;
+    border-color: #5d7190;
 }
 
 /* Dropdown value (the clickable part) */
@@ -383,20 +382,21 @@ selectvalue {
 /* Select wrapper to position arrow */
 .select-wrapper {
     display: flex;
-    flex: 1;
     align-items: center;
+    flex-shrink: 0;
+    min-height: 26px;
 }
 
 .select-wrapper select {
-    flex: 1;
+    width: 100%;
 }
 
 /* Dropdown arrow */
 .select-arrow {
-    width: 20px;
-    margin-left: -20px;
+    width: 16px;
+    margin-left: -16px;
     color: #ffffff;
-    font-size: 14px;
+    font-size: 12px;
     text-align: center;
     pointer-events: none;
 }
@@ -405,42 +405,44 @@ selectvalue {
 selectbox {
     background-color: #0a0a0a;
     color: #ffffff;
-    border: 2dp #666666;
-    border-radius: 3dp;
+    border: 1px #666666;
+    border-radius: 3px;
     padding: 0;
-    margin-top: 2dp;
-    max-height: 300dp;
+    margin-top: 2px;
+    max-height: 300px;
     overflow-y: auto;
     z-index: 1000;
 }
 
-/* Individual dropdown options */
-selectoption {
+/* Individual dropdown options. RmlUi builds the popup from real <option>
+   elements inside <selectbox> -- there is no `selectoption` element, so the
+   old rules matched nothing (no padding, no hover feedback). */
+selectbox option {
     background-color: #1a1a1a;
     color: #ffffff;
-    padding: 10dp 15dp;
+    padding: 6px 10px;
     cursor: pointer;
     display: block;
     margin: 0;
-    border: 2dp transparent;
-    min-height: 30dp;
-    line-height: 1.5;
+    border: 1px transparent;
+    min-height: 24px;
+    line-height: 24px;
 }
 
-/* Hover state for dropdown options - use focus since RmlUi might not support hover properly */
-selectoption:hover,
-selectoption:focus,
-selectoption:active {
+selectbox option:hover {
     background-color: #3a7ebf;
     color: #ffffff;
     border-color: #5a9edf;
 }
 
-/* Currently selected option in dropdown */
-selectoption.selected {
-    background-color: #2a2a2a;
+/* RmlUi marks the current option with the :checked pseudo class. */
+selectbox option:checked {
+    background-color: #2a4a6a;
     color: #ffffff;
-    border-left: 3dp #4a8ecf;
+}
+
+selectbox option:checked:hover {
+    background-color: #3a7ebf;
 }
 
 .filter-edit {
@@ -517,7 +519,7 @@ selectoption.selected {
 }
 
 .add-brush-button:hover {
-    opacity: 0.8;
+    background-color: #202820;
 }
 
 .add-brush-icon {

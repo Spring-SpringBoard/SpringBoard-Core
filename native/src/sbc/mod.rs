@@ -8,6 +8,7 @@ pub(crate) mod heightmap;
 mod map_settings;
 pub(crate) mod metal;
 mod objects;
+mod panels;
 mod port_flags;
 mod project;
 mod teams;

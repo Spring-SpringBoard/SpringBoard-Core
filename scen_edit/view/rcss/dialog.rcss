@@ -37,6 +37,11 @@ body.dialog-backdrop {
     height: 500px;
 }
 
+body#color-picker .dialog {
+    left: auto;
+    right: 50px;
+}
+
 .dialog-header {
     background-color: #333333;
     padding: 10px;
@@ -278,12 +283,84 @@ body.dialog-backdrop {
 .color-picker-panel {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
+}
+
+.color-picker-main {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.color-map {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    padding: 0px;
+    border: 1px #555555;
+    background-color: #ff0000;
+}
+
+.color-map:hover {
+    border-color: #8a8a8a;
+}
+
+.color-map-white,
+.color-map-black {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 180px;
+    height: 180px;
+}
+
+.color-map-cursor {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    margin-top: -4px;
+    border: 2px #ffffff;
+    background-color: transparent;
+}
+
+.hue-map {
+    position: relative;
+    width: 24px;
+    height: 180px;
+    padding: 0px;
+    border: 1px #555555;
+    background-color: #111111;
+}
+
+.hue-map:hover {
+    border-color: #8a8a8a;
+}
+
+.hue-map img {
+    width: 24px;
+    height: 180px;
+}
+
+.hue-cursor {
+    position: absolute;
+    left: -3px;
+    width: 30px;
+    height: 3px;
+    background-color: #ffffff;
+}
+
+.color-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 130px;
 }
 
 .color-preview {
     width: 100%;
-    height: 60px;
+    height: 42px;
     border: 2px #555555;
     border-radius: 3px;
     /* Background color is set dynamically by the color picker */
@@ -292,7 +369,7 @@ body.dialog-backdrop {
 .color-inputs {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .color-inputs .form-row {
@@ -303,8 +380,10 @@ body.dialog-backdrop {
 }
 
 .color-inputs .form-row label {
-    width: 30px;
+    width: 26px;
     color: #cccccc;
+    min-width: 26px;
+    text-align: left;
 }
 
 .color-inputs .form-row .form-input {

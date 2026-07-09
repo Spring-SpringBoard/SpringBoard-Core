@@ -45,6 +45,36 @@ function ObjectDefsPanel:FilterItems()
             self.layoutPanel:AddChild(item)
         end
     end
+    -- Force the RTT icon loop to repaint on the next tick so freshly re-rendered
+    -- <texture> cells don't briefly show blank after filtering.
+    if SB.useRmlUi then
+        self.refresh = 0
+    end
+end
+
+-- RmlUi visibility predicate: an item is shown when it passes the current
+-- type/terrain/search filter (the same test FilterItems uses for Chili).
+function ObjectDefsPanel:_RmlUiItemVisible(item)
+    return self:FilterObject(item.objectDefID) and true or false
+end
+
+-- RmlUi selection: mirror _OnSelectItem's state logic but keyed off the item
+-- object directly (self.items objects carry .objectDefID).
+function ObjectDefsPanel:_OnRmlUiSelectionChanged(item, selected)
+    local objectDefID = item.objectDefID
+    local currentState = SB.stateManager:GetCurrentState()
+    if currentState.SelectObjectType and selected then
+        currentState:SelectObjectType(objectDefID)
+    end
+    if not selected then
+        self:_UnselectItem(objectDefID)
+    else
+        table.insert(self.selectedObjectDefIDs, objectDefID)
+    end
+    if currentState.SelectObjectType then
+        return
+    end
+    CallListeners(self.OnSelectItem, item, selected)
 end
 
 function ObjectDefsPanel:_UnselectItem(objectDefID)
@@ -72,7 +102,7 @@ function ObjectDefsPanel:SelectTeamID(teamID)
 end
 
 function ObjectDefsPanel:SetSearchString(search)
-    self.search = search
+    self.search = search or ""
     self:Refresh()
 end
 
@@ -141,7 +171,15 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
             fbo = true,
         })
         drawIcon.drawTex = tex
-        ctrl.imgCtrl.file = drawIcon.drawTex
+        if ctrl.imgCtrl then
+            ctrl.imgCtrl.file = drawIcon.drawTex
+        end
+        if SB.useRmlUi then
+            -- Expose the RTT handle to the RmlUi grid (<texture src="!..">) and
+            -- schedule a single grid refresh once the batch of icons exists.
+            ctrl.__luaTexture = tex
+            self:_ScheduleRmlUiIconRefresh()
+        end
     end)
 
     if not self.scheduleDraw then
@@ -150,6 +188,19 @@ function ObjectDefsPanel:AddDrawIcon(ctrl)
             self:DrawIcons()
         end)
     end
+end
+
+-- Coalesce the many async per-icon texture creations into one RmlUi grid
+-- refresh, so the <texture> elements appear once handles exist.
+function ObjectDefsPanel:_ScheduleRmlUiIconRefresh()
+    if self._rmlIconRefreshScheduled then
+        return
+    end
+    self._rmlIconRefreshScheduled = true
+    SB.Delay("DrawScreen", function()
+        self._rmlIconRefreshScheduled = false
+        self:_UpdateRmlUiGrid()
+    end)
 end
 
 function ObjectDefsPanel:DrawIcons()
@@ -164,9 +215,14 @@ function ObjectDefsPanel:DrawIcons()
     gl.DepthTest(GL.LEQUAL)
     gl.DepthMask(true)
     for objectDefID, drawIcon in pairs(self.drawIcons) do
-        if drawIcon.ctrl:IsInView() and drawIcon.drawTex ~= nil then
+        -- In RmlUi there is no Chili control to cull against, so redraw any
+        -- icon that has a texture. (Visibility culling can be added later.)
+        local visible = SB.useRmlUi or (drawIcon.ctrl.IsInView and drawIcon.ctrl:IsInView())
+        if visible and drawIcon.drawTex ~= nil then
             self:PeriodicDraw(drawIcon.drawTex, objectDefID, self.bridge, self.rotate, drawIcon.radius)
-            drawIcon.ctrl:Invalidate()
+            if drawIcon.ctrl.Invalidate then
+                drawIcon.ctrl:Invalidate()
+            end
         end
     end
     gl.Blending("alpha")
@@ -177,6 +233,9 @@ end
 function ObjectDefsPanel:PeriodicDraw(tex, objectDefID, bridge, rotation, radius)
     -- local objectDef = bridge.ObjectDefs[objectDefID]
     local scale = -1 / radius--math.sqrt(radius)
+    if SB.useRmlUi then
+        scale = scale * 1.5
+    end
     gl.Texture("LuaUI/images/scenedit/background.png")
     gl.RenderToTexture(tex, function()
         -- FIXME: this is awful code and should be fixed
@@ -274,7 +333,7 @@ function UnitDefsPanel:PopulateItems()
         local ctrl = self:AddItem(item[1], item[2], item[3], ("unitDefsPanel[%d]"):format(i))
         ctrl.objectDefID = item[4]
         --if item[2] == "" or true then
-        if item[2] == "" then
+        if item[2] == "" or SB.useRmlUi then
             self:AddDrawIcon(ctrl)
         end
     end
@@ -376,7 +435,7 @@ function FeatureDefsPanel:PopulateItems()
         local item = items[i]
         local ctrl = self:AddItem(item[1], item[2], item[3], ("featureDefsPanel[%d]"):format(i))
         ctrl.objectDefID = item[4]
-        if item[2] == "" then
+        if item[2] == "" or SB.useRmlUi then
             self:AddDrawIcon(ctrl)
         end
     end

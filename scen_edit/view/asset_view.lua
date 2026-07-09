@@ -47,8 +47,10 @@ function AssetView:init(tbl)
         end
     end
     -- RmlUi mode: double-click is handled by GridView:_OnRmlUiItemClick
+    -- documentDepth controls how item image paths are resolved for RmlUi <img>.
+    self.documentDepth = tbl.documentDepth
     if self.showPath then
-        if self.layoutPanel then
+        if not SB.useRmlUi then
             -- Chili mode
             self.scrollPanel:SetPos(nil, 20)
             self.lblPath = Label:New {

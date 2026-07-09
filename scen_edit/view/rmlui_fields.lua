@@ -11,6 +11,14 @@ end
 -- Load dependencies for picker windows
 SB.Include(Path.Join(SB.DIRS.SRC, 'view/map/material_browser.lua'))
 
+local activeNumericDragField
+
+function RmlUiUpdateNumericDrag()
+    if activeNumericDragField then
+        activeNumericDragField:UpdateActiveDrag()
+    end
+end
+
 -- Base Field Class
 RmlUiField = LCS.class{}
 
@@ -107,33 +115,232 @@ RmlUiNumericField = RmlUiField:extends{}
 
 function RmlUiNumericField:init(opts)
     self:super("init", opts)
-    self.min = opts.min
-    self.max = opts.max
+    self.min = opts.minValue or opts.min
+    self.max = opts.maxValue or opts.max
+    self.decimals = opts.decimals or 2
+    self.format = "%." .. tostring(self.decimals) .. "f"
     self.step = opts.step
+    if self.step == nil then
+        self.step = 1
+        if self.min and self.max then
+            self.step = (self.max - self.min) / 200
+        end
+    end
+    self.__dragSensitivity = 3
+    self.__shiftMultiplier = 0.1
 end
 
 function RmlUiNumericField:Serialize()
     return self.value
 end
 
+function RmlUiNumericField:Validate(value)
+    local numeric = tonumber(value)
+    if not numeric then
+        return false, value
+    end
+    if self.min and numeric < self.min then
+        numeric = self.min
+    end
+    if self.max and numeric > self.max then
+        numeric = self.max
+    end
+    return true, numeric
+end
+
 function RmlUiNumericField:Load(data)
     self:Set(data)
 end
 
-function RmlUiNumericField:GenerateRml()
-    local attrs = string.format('id="field-%s" class="field-input" value="%s"',
-        self.name, self.value or 0)
-    if self.min then attrs = attrs .. ' min="' .. self.min .. '"' end
-    if self.max then attrs = attrs .. ' max="' .. self.max .. '"' end
-    if self.step then attrs = attrs .. ' step="' .. self.step .. '"' end
-    if self.width then attrs = attrs .. string.format(' style="width: %dpx;"', self.width) end
-    -- Remove trailing colon from title if present
+function RmlUiNumericField:__GetDisplayText()
+    return string.format(self.format, tonumber(self.value) or 0)
+end
+
+function RmlUiNumericField:__GetButtonRml()
     local title = self.title:gsub(":$", "")
+    return string.format(
+        '<span class="field-button-title">%s:</span><span class="field-button-value">%s</span>',
+        title, self:__GetDisplayText()
+    )
+end
+
+function RmlUiNumericField:GenerateRml()
+    local widthStyle = self.width and string.format(' style="width: %dpx;"', self.width) or ''
 
     return string.format(
-        '<div class="field-row"><label class="field-label">%s:</label><input type="number" %s/></div>',
-        title, attrs
+        '<div class="field-row"><button id="field-%s" class="field-composite-button field-numeric-button"%s>%s</button><input type="text" id="field-%s-input" class="field-input field-numeric-input hidden"%s value="%s"/></div>',
+        self.name, widthStyle, self:__GetButtonRml(), self.name, widthStyle, self:__GetDisplayText()
     )
+end
+
+function RmlUiNumericField:BindToDocument()
+    local document = (self.ev and self.ev.document) or SB.view.mainDocument
+    assert(document, "No document available for field: " .. self.name)
+    self.element = document:GetElementById("field-" .. self.name)
+    self.inputElement = document:GetElementById("field-" .. self.name .. "-input")
+    assert(self.element and self.inputElement, "Failed to find numeric field elements: " .. self.name)
+    self:SetValue(self.value)
+end
+
+function RmlUiNumericField:SetValue(value)
+    self.value = value
+    local display = self:__GetDisplayText()
+    if self.element then
+        self.element.inner_rml = self:__GetButtonRml()
+        self.element:SetAttribute("value", display)
+    end
+    if self.inputElement then
+        self.inputElement:SetAttribute("value", display)
+    end
+end
+
+function RmlUiNumericField:__StartEditing()
+    if not self.element or not self.inputElement then
+        return
+    end
+    self.__editing = true
+    self.__originalValue = self.value
+    self.element:SetClass("hidden", true)
+    self.inputElement:SetClass("hidden", false)
+    self.inputElement:SetAttribute("value", self:__GetDisplayText())
+    self.inputElement:Focus(true)
+    if self.inputElement.Select then
+        self.inputElement:Select()
+    end
+    if self.ev then
+        self.ev:_OnStartChange(self.name)
+    end
+end
+
+function RmlUiNumericField:__StopEditing(commit)
+    if not self.__editing then
+        return
+    end
+    if commit and self.inputElement then
+        self:Set(self.inputElement.value or self.inputElement:GetAttribute("value"))
+    elseif not commit then
+        self:SetValue(self.__originalValue)
+    end
+    self.__editing = false
+    self.element:SetClass("hidden", false)
+    self.inputElement:SetClass("hidden", true)
+    if self.ev then
+        self.ev:_OnEndChange(self.name)
+    end
+end
+
+function RmlUiNumericField:__StartDragging()
+    if self.__isDragging then
+        return
+    end
+    self.__isDragging = true
+    self.element:SetClass("dragging", true)
+    SB.SetMouseCursor("empty")
+    if self.ev then
+        self.ev:_OnStartChange(self.name)
+    end
+end
+
+function RmlUiNumericField:__StopDragging()
+    if not self.__isDragging then
+        return
+    end
+    self.__isDragging = false
+    self.__mouseDown = false
+    if self.element then
+        self.element:SetClass("dragging", false)
+    end
+    SB.SetMouseCursor()
+    if self.ev then
+        self.ev:_OnEndChange(self.name)
+    end
+    if self.__initX and self.__initY then
+        Spring.WarpMouse(self.__initX, self.__initY)
+    end
+    self.__initX, self.__initY, self.__lastX = nil, nil, nil
+end
+
+function RmlUiNumericField:__UpdateDragging(delta)
+    local _, _, _, shift = Spring.GetModKeyState()
+    if shift then
+        delta = delta * self.__shiftMultiplier
+    end
+    self:Set((tonumber(self.value) or 0) + delta * self.step, self.element)
+end
+
+function RmlUiNumericField:UpdateActiveDrag()
+    if not self.__mouseDown then
+        return
+    end
+
+    -- Button state comes from RmlUi's mousedown/mouseup (which capture the
+    -- mouse); Spring.GetMouseState is only trusted for the cursor position.
+    -- Its button flags read as released while RmlUi holds capture, which used
+    -- to abort every drag on the first frame.
+    local mx = Spring.GetMouseState()
+
+    if not self.__isDragging then
+        if math.abs(mx - self.__initX) <= self.__dragSensitivity then
+            return
+        end
+        self:__StartDragging()
+    end
+
+    local dx = mx - self.__initX
+    if dx ~= 0 then
+        self:__UpdateDragging(dx)
+        Spring.WarpMouse(self.__initX, self.__initY)
+    end
+end
+
+function RmlUiNumericField:BindEvents()
+    if not self.element then
+        return
+    end
+
+    self.element:AddEventListener("mousedown", function(event)
+        if event.parameters and event.parameters.button ~= 0 then
+            return
+        end
+        self.__mouseDown = true
+        self.__isDragging = false
+        local mx, my = Spring.GetMouseState()
+        self.__initX = mx
+        self.__initY = my
+        self.__lastX = mx
+        activeNumericDragField = self
+    end)
+
+    self.element:AddEventListener("mousemove", function(event)
+        self:UpdateActiveDrag()
+    end)
+
+    self.element:AddEventListener("mouseup", function(event)
+        if self.__isDragging then
+            self:__StopDragging()
+        elseif self.__mouseDown then
+            self.__mouseDown = false
+            self:__StartEditing()
+        end
+        activeNumericDragField = nil
+    end)
+
+    if self.inputElement then
+        self.inputElement:AddEventListener("change", function()
+            self:__StopEditing(true)
+        end)
+        self.inputElement:AddEventListener("blur", function()
+            self:__StopEditing(true)
+        end)
+        self.inputElement:AddEventListener("keydown", function(event)
+            local key = event.parameters and event.parameters.key_identifier
+            if key == "enter" or key == "numpad_enter" then
+                self:__StopEditing(true)
+            elseif key == "escape" then
+                self:__StopEditing(false)
+            end
+        end)
+    end
 end
 
 -- Boolean Field
@@ -213,6 +420,13 @@ function RmlUiChoiceField:GetCaption(id)
     return nil
 end
 
+function RmlUiChoiceField:SetValue(value)
+    self.value = value
+    if self.element then
+        self.element:SetAttribute("value", tostring(value or ""))
+    end
+end
+
 function RmlUiChoiceField:Serialize()
     return self.value
 end
@@ -228,32 +442,7 @@ function RmlUiColorField:init(opts)
     self:super("init", opts)
 end
 
-function RmlUiColorField:GenerateRml()
-    -- Convert color to hex string
-    local colorHex = "#FFFFFF"
-    if self.value then
-        if type(self.value) == "table" then
-            -- Chili format: {r, g, b, a} where values are 0-1
-            local r = math.floor((self.value[1] or self.value.r or 1) * 255)
-            local g = math.floor((self.value[2] or self.value.g or 1) * 255)
-            local b = math.floor((self.value[3] or self.value.b or 1) * 255)
-            colorHex = string.format("#%02X%02X%02X", r, g, b)
-        else
-            colorHex = tostring(self.value)
-        end
-    end
-    -- Remove trailing colon from title if present
-    local title = self.title:gsub(":$", "")
-
-    return string.format(
-        '<div class="field-row"><label class="field-label">%s:</label><button id="field-%s" class="field-color-button" style="background-color: %s;">%s</button></div>',
-        title, self.name, colorHex, colorHex
-    )
-end
-
-function RmlUiColorField:SetValue(value)
-    self.value = value
-    -- Convert color to hex string for display
+function RmlUiColorField:__ToHex(value)
     local colorHex = "#FFFFFF"
     if value then
         if type(value) == "table" then
@@ -265,17 +454,38 @@ function RmlUiColorField:SetValue(value)
             colorHex = tostring(value)
         end
     end
-    -- Update element if bound
+    return colorHex
+end
+
+function RmlUiColorField:__GetButtonRml()
+    local title = self.title:gsub(":$", "")
+    local colorHex = self:__ToHex(self.value)
+    return string.format(
+        '<span class="field-button-title">%s:</span><span class="field-swatch" style="background-color: %s;"></span>',
+        title, colorHex
+    )
+end
+
+function RmlUiColorField:GenerateRml()
+    local widthStyle = self.width and string.format(' style="width: %dpx;"', self.width) or ''
+
+    return string.format(
+        '<div class="field-row"><button id="field-%s" class="field-composite-button field-color-button"%s>%s</button></div>',
+        self.name, widthStyle, self:__GetButtonRml()
+    )
+end
+
+function RmlUiColorField:SetValue(value)
+    self.value = value
     if self.element then
-        self.element:SetAttribute("style", "background-color: " .. colorHex .. ";")
-        self.element.inner_rml = colorHex
+        self.element.inner_rml = self:__GetButtonRml()
     end
 end
 
 function RmlUiColorField:BindEvents()
     local document = (self.ev and self.ev.document) or SB.view.mainDocument
     assert(document, "No document available for field: " .. self.name)
-    self.element:AddEventListener("click", function()
+    self.element:AddEventListener("mousedown", function()
         self:ShowColorPicker()
     end)
 end
@@ -760,6 +970,72 @@ function RmlUiAssetPickerWindow:init(opts)
     end)
 end
 
+local function __ClampColorValue(value, minValue, maxValue)
+    value = tonumber(value) or minValue
+    if value < minValue then
+        return minValue
+    end
+    if value > maxValue then
+        return maxValue
+    end
+    return value
+end
+
+local function __RgbToHsv(color)
+    local r, g, b = color[1], color[2], color[3]
+    local minC = math.min(r, g, b)
+    local maxC = math.max(r, g, b)
+    local delta = maxC - minC
+    local h = 0
+    local s = 0
+    local v = maxC
+
+    if maxC ~= 0 then
+        s = delta / maxC
+    end
+    if delta ~= 0 then
+        if r == maxC then
+            h = (g - b) / delta
+        elseif g == maxC then
+            h = 2 + (b - r) / delta
+        else
+            h = 4 + (r - g) / delta
+        end
+        h = h * 60
+        if h < 0 then
+            h = h + 360
+        end
+        h = h / 360
+    end
+
+    return {h, s, v, color[4] or 1}
+end
+
+local function __HsvToRgb(color)
+    local h, s, v = (color[1] or 0) * 360, color[2] or 0, color[3] or 1
+    local chroma = v * s
+    local h1 = h / 60
+    local x = chroma * (1 - math.abs(h1 % 2 - 1))
+
+    local r, g, b = 0, 0, 0
+    if h1 >= 0 and h1 < 1 then
+        r, g, b = chroma, x, 0
+    elseif h1 < 2 then
+        r, g, b = x, chroma, 0
+    elseif h1 < 3 then
+        r, g, b = 0, chroma, x
+    elseif h1 < 4 then
+        r, g, b = 0, x, chroma
+    elseif h1 < 5 then
+        r, g, b = x, 0, chroma
+    elseif h1 < 6 then
+        r, g, b = chroma, 0, x
+    end
+
+    local m = v - chroma
+    return {r + m, g + m, b + m, color[4] or 1}
+end
+
 RmlUiColorPickerWindow = RmlUiComponent:extends{}
 function RmlUiColorPickerWindow:init(opts)
     -- Call parent init to load document
@@ -773,6 +1049,7 @@ function RmlUiColorPickerWindow:init(opts)
     local g = math.floor((self.color[2] or self.color.g or 1) * 255)
     local b = math.floor((self.color[3] or self.color.b or 1) * 255)
     local a = math.floor((self.color[4] or self.color.a or 1) * 255)
+    local hsv = __RgbToHsv({r / 255, g / 255, b / 255, a / 255})
 
     -- Get all elements
     local rValue = self.document:GetElementById("r-value")
@@ -781,9 +1058,14 @@ function RmlUiColorPickerWindow:init(opts)
     local aValue = self.document:GetElementById("a-value")
     local hexInput = self.document:GetElementById("hex-input")
     local colorPreview = self.document:GetElementById("color-preview")
+    local colorMap = self.document:GetElementById("color-map")
+    local hueMap = self.document:GetElementById("hue-map")
+    local colorMapCursor = self.document:GetElementById("color-map-cursor")
+    local hueCursor = self.document:GetElementById("hue-cursor")
 
     assert(rValue and gValue and bValue and aValue, "Failed to find color value inputs")
     assert(hexInput and colorPreview, "Failed to find hex input or color preview")
+    assert(colorMap and hueMap, "Failed to find color picker image controls")
 
     -- Set initial values
     rValue:SetAttribute("value", tostring(r))
@@ -792,21 +1074,101 @@ function RmlUiColorPickerWindow:init(opts)
     aValue:SetAttribute("value", tostring(a))
     hexInput:SetAttribute("value", string.format("#%02X%02X%02X", r, g, b))
 
-    -- Update preview
-    local function updatePreview()
-        local cr = tonumber(rValue:GetAttribute("value")) or 255
-        local cg = tonumber(gValue:GetAttribute("value")) or 255
-        local cb = tonumber(bValue:GetAttribute("value")) or 255
+    local function setRgbFromHsv()
+        local rgb = __HsvToRgb(hsv)
+        rValue:SetAttribute("value", tostring(math.floor(rgb[1] * 255 + 0.5)))
+        gValue:SetAttribute("value", tostring(math.floor(rgb[2] * 255 + 0.5)))
+        bValue:SetAttribute("value", tostring(math.floor(rgb[3] * 255 + 0.5)))
+        aValue:SetAttribute("value", tostring(math.floor((rgb[4] or 1) * 255 + 0.5)))
+    end
+
+    local function updatePreview(syncHsvFromRgb)
+        local cr = __ClampColorValue(rValue:GetAttribute("value"), 0, 255)
+        local cg = __ClampColorValue(gValue:GetAttribute("value"), 0, 255)
+        local cb = __ClampColorValue(bValue:GetAttribute("value"), 0, 255)
+        local ca = __ClampColorValue(aValue:GetAttribute("value"), 0, 255)
+        if syncHsvFromRgb then
+            hsv = __RgbToHsv({cr / 255, cg / 255, cb / 255, ca / 255})
+        end
         local hexColor = string.format("#%02X%02X%02X", cr, cg, cb)
         colorPreview:SetAttribute("style", "background-color: " .. hexColor)
         hexInput:SetAttribute("value", hexColor)
+        local hueRgb = __HsvToRgb({hsv[1], 1, 1, 1})
+        colorMap:SetAttribute("style", "background-color: " .. string.format(
+            "#%02X%02X%02X",
+            math.floor(hueRgb[1] * 255 + 0.5),
+            math.floor(hueRgb[2] * 255 + 0.5),
+            math.floor(hueRgb[3] * 255 + 0.5)
+        ))
+        if colorMapCursor then
+            colorMapCursor:SetAttribute("style", string.format("left: %dpx; top: %dpx;", math.floor(hsv[2] * 179), math.floor((1 - hsv[3]) * 179)))
+        end
+        if hueCursor then
+            hueCursor:SetAttribute("style", string.format("top: %dpx;", math.floor(hsv[1] * 179)))
+        end
     end
-    updatePreview()
+    updatePreview(false)
+
+    local function getEventMouse(event)
+        if event and event.parameters and event.parameters.mouse_x and event.parameters.mouse_y then
+            return event.parameters.mouse_x, event.parameters.mouse_y
+        end
+        return Spring.GetMouseState()
+    end
+
+    local function updateFromColorMap(event)
+        local mx, my = getEventMouse(event)
+        local left, top = colorMap.absolute_left, colorMap.absolute_top
+        local width = math.max(1, colorMap.offset_width or 180)
+        local height = math.max(1, colorMap.offset_height or 180)
+        hsv[2] = __ClampColorValue((mx - left) / width, 0, 1)
+        hsv[3] = 1 - __ClampColorValue((my - top) / height, 0, 1)
+        setRgbFromHsv()
+        updatePreview(false)
+    end
+
+    local function updateFromHueMap(event)
+        local mx, my = getEventMouse(event)
+        local top = hueMap.absolute_top
+        local height = math.max(1, hueMap.offset_height or 180)
+        hsv[1] = __ClampColorValue((my - top) / height, 0, 1)
+        setRgbFromHsv()
+        updatePreview(false)
+    end
 
     -- Bind input events
-    rValue:AddEventListener("change", updatePreview)
-    gValue:AddEventListener("change", updatePreview)
-    bValue:AddEventListener("change", updatePreview)
+    rValue:AddEventListener("change", function() updatePreview(true) end)
+    gValue:AddEventListener("change", function() updatePreview(true) end)
+    bValue:AddEventListener("change", function() updatePreview(true) end)
+    aValue:AddEventListener("change", function() updatePreview(true) end)
+
+    -- Click-and-drag on the SV square / hue strip. The pressed state is tracked
+    -- from RmlUi's own mousedown/mouseup: Spring.GetMouseState's button flags
+    -- read as released while RmlUi holds the mouse capture, which is why
+    -- dragging previously did nothing. Movement is handled at document level so
+    -- the drag keeps tracking (clamped) once the cursor leaves the control.
+    local draggingColorMap, draggingHueMap = false, false
+
+    colorMap:AddEventListener("mousedown", function(event)
+        draggingColorMap = true
+        updateFromColorMap(event)
+    end)
+    hueMap:AddEventListener("mousedown", function(event)
+        draggingHueMap = true
+        updateFromHueMap(event)
+    end)
+
+    self.document:AddEventListener("mousemove", function(event)
+        if draggingColorMap then
+            updateFromColorMap(event)
+        elseif draggingHueMap then
+            updateFromHueMap(event)
+        end
+    end)
+    self.document:AddEventListener("mouseup", function()
+        draggingColorMap = false
+        draggingHueMap = false
+    end)
 
     -- Bind button events
     local btnOk = self.document:GetElementById("btn-ok")

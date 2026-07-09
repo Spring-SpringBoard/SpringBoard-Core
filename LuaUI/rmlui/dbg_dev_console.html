@@ -12,7 +12,10 @@
 				</div>
 
 				<div id="log-container" class="log-container" readonly="readonly">
-					<div class="log-line" data-for="line, i : lines">{{ line.text }}</div>
+					<div class="log-line" data-for="line, i : lines"
+						data-class-severity-error="line.isError"
+						data-class-severity-warning="line.isWarning"
+						data-class-severity-info="line.isInfo">{{ line.text }}</div>
 				</div>
 
 				<div class="toolbar">

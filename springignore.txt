@@ -9,3 +9,7 @@ dist_cfg
 native
 tools
 docs
+# e2e screenshot/log output. Multi-GB and not game content; scanning it added
+# seconds to every launch.
+artifacts
+.venv

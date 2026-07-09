@@ -223,6 +223,9 @@ function View:Update()
         self.statusWindow:Update()
         self.topLeftMenu:Update()
         self.commandWindow:Update()
+        if RmlUiUpdateNumericDrag then
+            RmlUiUpdateNumericDrag()
+        end
     end
 
     -- Common updates
@@ -279,10 +282,10 @@ function View:SwitchTab(tabName)
     self.currentTab = tabName
     self:PopulateEditorButtons(tabName)
 
-    -- Clear main content area
+    -- Match Chili: changing tabs closes the current main editor content.
     local mainContent = self.mainDocument:GetElementById("main-content")
     if mainContent then
-        mainContent.inner_rml = "<p>Select an editor from the buttons above</p>"
+        mainContent.inner_rml = ""
     end
 end
 
@@ -494,7 +497,10 @@ function View:BindFieldEvents(editor)
                     if inputElement:HasAttribute("type") and inputElement:GetAttribute("type") == "checkbox" then
                         value = inputElement:GetAttribute("checked") == "checked"
                     else
-                        value = inputElement:GetAttribute("value")
+                        value = inputElement.value
+                        if value == nil then
+                            value = inputElement:GetAttribute("value")
+                        end
                     end
                     -- Use Set() method to properly update field and trigger validation/callbacks
                     field:Set(value)
@@ -548,18 +554,19 @@ function View:BindFieldEvents(editor)
                 end)
             -- EditBox: bind input events
             elseif filter.id:match("^filter%-edit%-") then
+                local function readValue()
+                    return filter.element.value or filter.element:GetAttribute("value") or ""
+                end
                 if filter.OnTextInput then
                     filter.element:AddEventListener("input", function(event)
-                        filter.text = filter.element.value
-                        local obj = { text = filter.element.value }
-                        callListeners(filter.OnTextInput, obj)
+                        filter.text = readValue()
+                        callListeners(filter.OnTextInput, { text = filter.text })
                     end)
                 end
                 if filter.OnKeyPress then
                     filter.element:AddEventListener("keyup", function(event)
-                        filter.text = filter.element.value
-                        local obj = { text = filter.element.value }
-                        callListeners(filter.OnKeyPress, obj)
+                        filter.text = readValue()
+                        callListeners(filter.OnKeyPress, { text = filter.text })
                     end)
                 end
             end

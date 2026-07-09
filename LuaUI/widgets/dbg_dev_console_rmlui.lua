@@ -24,11 +24,6 @@ local cfg = {
 	onlySinceLastReload = true,
 }
 
-local severityClass = {
-	error = "severity-error",
-	warning = "severity-warning",
-	info = "severity-info",
-}
 
 local debugButtonEnabled = false
 local profilerButtonEnabled = false
@@ -38,11 +33,7 @@ local VFS       = VFS
 local Game      = Game
 
 local consoleData = {
-	lines = {
-		{ text = "Test line 1" },
-		{ text = "Test line 2" },
-		{ text = "Test line 3" }
-	}
+	lines = {}
 }
 
 local rml = {
@@ -62,6 +53,7 @@ local UpdateFilterProblems
 local RemoveAllMessages
 local ProcessLine
 local AppendLogLine
+local RefreshLogElement
 
 -- -------- Performance helpers (use locals above) --------
 local batching = { depth = 0, dirty = false }   -- DOM batching guard
@@ -76,12 +68,7 @@ local function EndBatch()
 		batching.depth = 0
 		if batching.dirty then
 			batching.dirty = false
-			-- Disabled - using data bindings
-			-- local container = rml.elements["log-container"]
-			-- if container then
-			-- 	container.inner_rml = table.concat(logEntries)
-			-- 	container.scroll_top = container.scroll_height
-			-- end
+			if RefreshLogElement then RefreshLogElement() end
 			if UpdateFilterProblems then UpdateFilterProblems() end
 		end
 	end
@@ -193,17 +180,23 @@ local function UpdateVisibilityState()
 	end
 end
 
--- Repaint log once unless not allowed by batching
-local function RefreshLogElement(prebuilt_html)
-	-- Disabled - using data bindings
-	-- local container = rml.elements["log-container"]
-	-- if not container then return end
-	-- if batching.depth > 0 then
-	-- 	batching.dirty = true
-	-- 	return
-	-- end
-	-- container.inner_rml = prebuilt_html or table.concat(logEntries)
-	-- container.scroll_top = container.scroll_height
+-- Repaint log once unless not allowed by batching. The log is rendered by the
+-- RmlUi data model (data-for over `lines`), so "repainting" means handing the
+-- current entries to the data model.
+RefreshLogElement = function()
+	if batching.depth > 0 then
+		batching.dirty = true
+		return
+	end
+	if not rml.dataModel then
+		return
+	end
+	rml.dataModel.lines = logEntries
+
+	local container = rml.elements["log-container"]
+	if container then
+		container.scroll_top = container.scroll_height
+	end
 end
 
 local function ClearLog()
@@ -218,10 +211,9 @@ UpdateFilterProblems = function()
 		return
 	end
 
-	-- Count warnings (scan markup; cheap since only ~200 lines)
 	local warningCount = 0
-	for _, line in ipairs(logEntries) do
-		if line:find("severity%-warning") then
+	for _, entry in ipairs(logEntries) do
+		if entry.severity == "warning" then
 			warningCount = warningCount + 1
 		end
 	end
@@ -276,32 +268,6 @@ local function UpdateOptionalButtons()
 	end
 end
 
--- ---------- Log line building ----------
-local function BuildLogMarkup(text, severity, fileInfo)
-	local className = severityClass[severity or "info"] or severityClass.info
-	if not text or text == "" then return "" end
-
-	if fileInfo then
-		local before = text:sub(1, fileInfo.startIdx - 1)
-		local target = text:sub(fileInfo.startIdx, fileInfo.endIdx)
-		local after  = text:sub(fileInfo.endIdx + 1)
-
-		local dataPath = EscapeAttribute(fileInfo.absPath or fileInfo.path)
-		local dataLine = fileInfo.line and tostring(fileInfo.line) or ""
-
-		return string.format(
-			'<div class="log-line %s">%s<span class="log-link" data-path="%s" data-line="%s" onclick="widget:OnLogLinkClicked(event)">%s</span>%s</div>',
-			className,
-			EscapeForRml(before),
-			dataPath,
-			EscapeAttribute(dataLine),
-			EscapeForRml(target),
-			EscapeForRml(after)
-		)
-	end
-
-	return string.format('<div class="log-line %s">%s</div>', className, EscapeForRml(text))
-end
 
 local function DetectLuaFilePath(text)
 	if not VFS.GetFileAbsolutePath then
@@ -361,11 +327,19 @@ ProcessLine = function(msg)
 		fileInfo = DetectLuaFilePath(cleanText)
 	end
 
-	local markup = BuildLogMarkup(cleanText, severity, fileInfo)
-	if not markup or markup == "" then
-		return nil, true, isError
-	end
-	return markup, false, isError
+	-- The log is rendered through the RmlUi data model (data-for over `lines`),
+	-- so produce a structured entry rather than markup. The severity booleans
+	-- drive the data-class bindings in dbg_dev_console.html.
+	local entry = {
+		text = cleanText,
+		severity = severity,
+		isError = isError,
+		isWarning = severity == "warning",
+		isInfo = severity == "info",
+		path = fileInfo and (fileInfo.absPath or fileInfo.path) or nil,
+		line = fileInfo and fileInfo.line or nil,
+	}
+	return entry, false, isError
 end
 
 -- Append without repaint; compact occasionally
@@ -650,13 +624,8 @@ function widget:OnToggleVisibilityClicked()
 end
 
 function widget:OnClearClicked()
-	-- Test updating the data model directly (BAR pattern)
-	rml.dataModel.lines = {
-		{ text = "Updated line 1" },
-		{ text = "Updated line 2" },
-		{ text = "New line at " .. os.time() }
-	}
-	Spring.Echo("[DevConsole] Updated lines via data model")
+	RemoveAllMessages()
+	RefreshLogElement()
 end
 
 function widget:OnFilterProblemsClicked()

@@ -111,7 +111,7 @@ end
 
 function SavedBrushes:_AddAddBrush()
     local addBrush
-    if self.layoutPanel then
+    if not SB.useRmlUi then
         -- Chili mode
         addBrush = self:NewItem({
             tooltip = "Add new brush",
@@ -155,6 +155,9 @@ function SavedBrushes:_AddAddBrush()
             tooltip = "Add new brush",
         })
         addBrush.addIcon = Path.Join(SB.DIRS.IMG, "plus.png")
+        -- Make the RmlUi grid render it like a normal item (plus icon + label).
+        addBrush.__image = addBrush.addIcon
+        addBrush.__caption = "Add"
         addBrush.OnAddClick = {
             function()
                 local brush = self.GetNewBrush(function(createdBrush)

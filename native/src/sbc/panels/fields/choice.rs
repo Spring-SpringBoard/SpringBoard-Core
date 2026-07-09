@@ -1,0 +1,108 @@
+use spring_native::prelude::{Error, NativeInterfaceRef};
+
+use crate::sbc::panels::field::{
+    element_by_id, escape_rml, on_change, ChangeQueue, Field, FieldValue, InteractionQueue,
+};
+
+/// Dropdown select field.
+pub(crate) struct ChoiceField {
+    name: String,
+    title: String,
+    value: String,
+    items: Vec<String>,
+    element: Option<u64>,
+}
+
+impl ChoiceField {
+    pub(crate) fn new(
+        name: impl Into<String>,
+        title: impl Into<String>,
+        items: Vec<String>,
+    ) -> Self {
+        ChoiceField {
+            name: name.into(),
+            title: title.into(),
+            value: items.first().cloned().unwrap_or_default(),
+            items,
+            element: None,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn get(&self) -> &str {
+        &self.value
+    }
+}
+
+impl Field for ChoiceField {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn generate_rml(&self) -> String {
+        let title = escape_rml(self.title.trim_end_matches(':'));
+        let options: String = self
+            .items
+            .iter()
+            .map(|item| {
+                let sel = if *item == self.value { " selected" } else { "" };
+                format!(
+                    r#"<option value="{}"{}>{}</option>"#,
+                    escape_rml(item),
+                    sel,
+                    escape_rml(item)
+                )
+            })
+            .collect();
+        format!(r#"<div class="field-row"><span class="field-label">{title}:</span>"#)
+            + &format!(
+                r#"<div class="select-wrapper"><select id="field-{n}" class="field-input">{opts}</select>"#,
+                n = self.name,
+                opts = options,
+            )
+            + r#"<span class="select-arrow">&#9660;</span></div></div>"#
+    }
+
+    fn bind(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        changes: &ChangeQueue,
+        _interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
+        let id = format!("field-{}", self.name);
+        if let Some(elem) = element_by_id(interface, document, &id) {
+            self.element = Some(elem);
+            on_change(interface, elem, self.name.clone(), changes)?;
+        }
+        Ok(())
+    }
+
+    fn read_from_dom(&mut self, interface: &NativeInterfaceRef) -> Result<FieldValue, Error> {
+        if let Some(e) = self.element {
+            if let Ok(Some(v)) = interface.rml_ui().element_get_value(e) {
+                self.value = v;
+            }
+        }
+        Ok(FieldValue::Text(self.value.clone()))
+    }
+
+    fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if let Some(e) = self.element {
+            interface
+                .rml_ui()
+                .element_set_attribute(e, "value", &self.value)?;
+        }
+        Ok(())
+    }
+
+    fn set_value(&mut self, value: &FieldValue) {
+        if let FieldValue::Text(v) = value {
+            self.value = v.clone();
+        }
+    }
+
+    fn value(&self) -> FieldValue {
+        FieldValue::Text(self.value.clone())
+    }
+}

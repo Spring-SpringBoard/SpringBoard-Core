@@ -203,7 +203,6 @@ body#top-left-menu {
 .menu-button.disabled {
     background-color: #222222;
     color: #666666;
-    opacity: 0.5;
     cursor: default;
 }
 
@@ -228,7 +227,8 @@ body#top-left-menu {
 }
 
 .icon-button.disabled {
-    opacity: 0.5;
+    background-color: #222222;
+    border-color: #333333;
     cursor: default;
 }
 

@@ -1,5 +1,5 @@
 {
   "chonsole": "rust",
-  "env_panel": "rust",
+  "env_panel": "lua",
   "ui": "rmlui"
 }

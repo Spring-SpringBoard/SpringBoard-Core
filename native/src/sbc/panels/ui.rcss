@@ -1,0 +1,312 @@
+body {
+    font-family: Poppins;
+    font-size: 12dp;
+    color: #cccccc;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+}
+
+#native-panel {
+    position: absolute;
+    left: 0dp;
+    top: 40dp;
+    width: 320dp;
+    bottom: 0dp;
+    background-color: #12141ada;
+    border-right: 1dp #333333;
+    padding: 0dp;
+}
+
+#panel-header {
+    display: block;
+    font-size: 14dp;
+    font-weight: bold;
+    color: #ffffff;
+    padding: 8dp 12dp;
+    border-bottom: 1dp #3a3a3a;
+    background-color: #1a1d21;
+}
+
+#panel-content {
+    display: block;
+    padding: 6dp 10dp;
+    overflow-y: auto;
+    bottom: 0dp;
+}
+
+/* --- Section headers --- */
+.section {
+    display: block;
+    font-size: 11dp;
+    color: #6a9fd8;
+    text-transform: uppercase;
+    letter-spacing: 0.5dp;
+    margin-top: 10dp;
+    margin-bottom: 5dp;
+    padding-bottom: 2dp;
+    border-bottom: 1dp #2a2a2a;
+}
+
+.section:first-child {
+    margin-top: 0dp;
+}
+
+/* --- Field layout --- */
+.field-row {
+    display: block;
+    margin-bottom: 4dp;
+}
+
+.field-label {
+    display: inline-block;
+    width: 100dp;
+    color: #999999;
+    font-size: 11dp;
+}
+
+.field-label-small {
+    display: inline-block;
+    width: 14dp;
+    color: #888888;
+    font-size: 11dp;
+}
+
+.field-group {
+    display: block;
+    margin-bottom: 4dp;
+}
+
+.field-inline {
+    display: inline-block;
+    margin-right: 6dp;
+}
+
+/* --- Numeric fields (button display + hidden edit input) --- */
+.numeric-display {
+    display: inline-block;
+    width: 150dp;
+    background-color: #2a2a2a;
+    color: #ddeeff;
+    border: 1dp #444444;
+    padding: 3dp 6dp;
+    font-size: 12dp;
+    text-align: center;
+    cursor: ew-resize;
+}
+
+.numeric-display.compact {
+    width: 60dp;
+    padding: 3dp 4dp;
+    font-size: 11dp;
+}
+
+.numeric-display:hover {
+    background-color: #333344;
+    border-color: #555566;
+}
+
+.numeric-edit {
+    display: inline-block;
+    width: 150dp;
+    background-color: #1a1a2a;
+    color: #ffffff;
+    border: 1dp #3a7ebf;
+    padding: 3dp 6dp;
+    font-size: 12dp;
+}
+
+/* --- Color fields (swatch button + expandable RGB editor) --- */
+.color-field {
+    display: inline-block;
+}
+
+.color-swatch {
+    display: inline-block;
+    width: 150dp;
+    height: 22dp;
+    border: 2dp #555555;
+    cursor: pointer;
+}
+
+.color-swatch:hover {
+    border-color: #888888;
+}
+
+.color-editor {
+    display: inline-block;
+    padding: 2dp;
+}
+
+.color-hex {
+    display: inline-block;
+    width: 70dp;
+    background-color: #1a1a2a;
+    color: #ffffff;
+    border: 1dp #3a7ebf;
+    padding: 2dp 4dp;
+    font-size: 11dp;
+    margin-right: 4dp;
+}
+
+.color-channels {
+    display: inline-block;
+}
+
+.channel-label {
+    display: inline-block;
+    width: 12dp;
+    font-size: 10dp;
+    text-align: center;
+}
+
+.channel-label.r {
+    color: #ff6a6a;
+}
+
+.channel-label.g {
+    color: #6aff6a;
+}
+
+.channel-label.b {
+    color: #6a9aff;
+}
+
+.numeric-display.color-channel {
+    width: 44dp;
+    font-size: 10dp;
+}
+
+.numeric-edit.compact {
+    width: 44dp;
+    font-size: 10dp;
+    padding: 2dp 3dp;
+}
+
+.color-edit {
+    display: inline-block;
+    width: 150dp;
+    background-color: #1a1a2a;
+    color: #ffffff;
+    border: 1dp #3a7ebf;
+    padding: 3dp 6dp;
+    font-size: 12dp;
+}
+
+/* --- Choice / Select --- */
+.field-input {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1dp #444444;
+    padding: 3dp 6dp;
+    font-size: 12dp;
+}
+
+.select-wrapper {
+    display: inline-block;
+    position: relative;
+}
+
+.select-wrapper select {
+    width: 150dp;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1dp #444444;
+    padding: 3dp 22dp 3dp 6dp;
+    font-size: 12dp;
+    cursor: pointer;
+}
+
+.select-wrapper select:hover {
+    border-color: #666677;
+}
+
+.select-arrow {
+    display: inline-block;
+    position: absolute;
+    right: 4dp;
+    top: 2dp;
+    width: 14dp;
+    color: #888888;
+    font-size: 8dp;
+    pointer-events: none;
+}
+
+selectvalue {
+    background-color: transparent;
+    color: #ffffff;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+selectbox {
+    background-color: #0a0a0f;
+    color: #ffffff;
+    border: 2dp #444444;
+    padding: 0dp;
+    margin-top: 2dp;
+    max-height: 200dp;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+selectoption {
+    background-color: #1a1a1f;
+    color: #ffffff;
+    padding: 6dp 10dp;
+    cursor: pointer;
+    display: block;
+    border: 1dp transparent;
+    min-height: 24dp;
+}
+
+selectoption:hover,
+selectoption:focus {
+    background-color: #2a4a6a;
+    color: #ffffff;
+    border-color: #3a6a9a;
+}
+
+selectoption.selected {
+    background-color: #1a2a3a;
+    color: #8ab4ff;
+    border-left: 3dp #4a8ecf;
+}
+
+/* --- Scrollbars --- */
+scrollbarhorizontal,
+scrollbarhorizontal slidertrack,
+scrollbarhorizontal sliderbar,
+scrollbarhorizontal sliderarrowdec,
+scrollbarhorizontal sliderarrowinc {
+    display: none;
+}
+
+scrollbarvertical {
+    width: 8dp;
+    background-color: #1a1a1a;
+}
+
+scrollbarvertical sliderarrowdec,
+scrollbarvertical sliderarrowinc {
+    width: 0dp;
+    height: 0dp;
+}
+
+scrollbarvertical slidertrack {
+    margin-left: 1dp;
+    width: 6dp;
+    background-color: #121315;
+}
+
+scrollbarvertical sliderbar {
+    width: 6dp;
+    min-height: 20dp;
+    background-color: #44484e;
+    cursor: pointer;
+}
+
+scrollbarvertical sliderbar:hover {
+    background-color: #5fc878;
+}

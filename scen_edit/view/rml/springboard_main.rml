@@ -29,7 +29,6 @@
     <!-- Main content area for editors -->
     <div id="main-content" class="main-content">
         <!-- Editor content populated dynamically -->
-        <p>Select an editor from the buttons above</p>
     </div>
 </body>
 </rml>

@@ -1,0 +1,4 @@
+<div id="native-panel" class="panel-container">
+    <div id="panel-header" class="panel-header">Panel</div>
+    <div id="panel-content" class="panel-content"></div>
+</div>

@@ -8,6 +8,8 @@ const PORT_FLAGS_PATH: &str = "port_flags.json";
 struct PortFlags {
     #[serde(default)]
     chonsole: PortImpl,
+    #[serde(default)]
+    env_panel: PortImpl,
 }
 
 #[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
@@ -19,6 +21,18 @@ pub(crate) enum PortImpl {
 }
 
 pub(crate) fn chonsole_impl(interface: &NativeInterfaceRef) -> PortImpl {
+    read_flag(interface, "chonsole", |f| f.chonsole)
+}
+
+pub(crate) fn env_panel_impl(interface: &NativeInterfaceRef) -> PortImpl {
+    read_flag(interface, "env_panel", |f| f.env_panel)
+}
+
+fn read_flag(
+    interface: &NativeInterfaceRef,
+    name: &str,
+    extract: fn(&PortFlags) -> PortImpl,
+) -> PortImpl {
     let bytes = match interface.vfs().load_file(PORT_FLAGS_PATH, "") {
         Ok(bytes) if !bytes.is_empty() => bytes,
         Ok(_) => return PortImpl::Lua,
@@ -34,6 +48,7 @@ pub(crate) fn chonsole_impl(interface: &NativeInterfaceRef) -> PortImpl {
             return PortImpl::Lua;
         }
     };
-    debug!("{PORT_FLAGS_PATH}: chonsole={:?}", flags.chonsole);
-    flags.chonsole
+    let value = extract(&flags);
+    debug!("{PORT_FLAGS_PATH}: {name}={value:?}");
+    value
 }

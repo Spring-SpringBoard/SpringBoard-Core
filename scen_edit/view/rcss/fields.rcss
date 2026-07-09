@@ -5,10 +5,15 @@
     flex-direction: row;
     align-items: center;
     margin-bottom: 8px;
-    gap: 8px;
+    gap: 10px;
+    min-height: 31px;
 }
 
 .field-row.hidden {
+    display: none;
+}
+
+.hidden {
     display: none;
 }
 
@@ -16,46 +21,48 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
 }
 
 .field-inline .field-label {
-    width: 60px;
+    width: 44px;
     flex-shrink: 0;
     color: #cccccc;
     font-size: 12px;
 }
 
 .field-inline .field-input {
-    width: 80px;
+    width: 66px;
+    height: 26px;
     flex-shrink: 0;
-    background-color: #3a3a3a;
+    background-color: #111411;
     color: #ffffff;
-    border: 1px #555555;
-    padding: 4px;
+    border: 1px #2e342f;
+    padding: 3px 6px;
     font-size: 12px;
 }
 
 .field-label {
-    width: 150px;
+    width: 112px;
     flex-shrink: 0;
     color: #cccccc;
     font-size: 12px;
 }
 
 .field-input {
-    width: 180px;
+    width: 126px;
+    height: 26px;
     flex-shrink: 0;
-    background-color: #3a3a3a;
+    background-color: #111411;
     color: #ffffff;
-    border: 1px #555555;
-    padding: 4px;
+    border: 1px #2e342f;
+    padding: 3px 6px;
     font-size: 12px;
 }
 
 .field-input:focus {
-    border-color: #3a7ebf;
-    background-color: #2a2a2a;
+    border-color: #5d7190;
+    background-color: #151a16;
 }
 
 .field-checkbox {
@@ -72,13 +79,13 @@
 }
 
 .field-button {
-    width: 120px;
-    min-height: 18px;
+    width: 110px;
+    min-height: 26px;
     flex-shrink: 0;
     background-color: #3a7ebf;
     color: #ffffff;
     border-color: #2a5f8f;
-    padding: 4px 8px;
+    padding: 3px 7px;
     font-size: 12px;
 }
 
@@ -92,20 +99,111 @@
 }
 
 .field-color-button {
-    width: 70px;
+    width: 140px;
+    height: 31px;
     flex-shrink: 0;
     color: #ffffff;
-    border: 2px #555555;
-    padding: 4px 8px;
+    border: 2px #050706;
+    border-radius: 4px;
+    padding: 0px 5px;
     font-size: 12px;
 }
 
 .field-color-button:hover {
-    border-color: #777777;
+    background-color: #1d241f;
+    border-color: #4f5c52;
 }
 
 .field-color-button:active {
     border-color: #999999;
+}
+
+.field-numeric-button,
+.field-numeric-input {
+    background-color: #111411;
+    border: 2px #050706;
+    border-radius: 4px;
+    color: #ffffff;
+}
+
+.field-numeric-button {
+    height: 31px;
+    padding: 0px 8px;
+}
+
+.field-numeric-button:hover {
+    background-color: #202820;
+    border-color: #4d5a50;
+}
+
+.field-numeric-button:active,
+.field-numeric-button.dragging {
+    color: #f5d316;
+    border-color: #b19c24;
+    background-color: #171a12;
+}
+
+.field-numeric-input {
+    padding: 3px 8px;
+    text-align: right;
+}
+
+.field-composite-button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    background-color: #111411;
+    color: #eeeeee;
+    border: 2px #050706;
+    border-radius: 4px;
+    padding: 0px 8px;
+    min-height: 31px;
+}
+
+.field-composite-button:hover {
+    background-color: #1d241f;
+    border-color: #4f5c52;
+}
+
+.field-button-title {
+    color: #eeeeee;
+    font-size: 12px;
+    text-align: left;
+}
+
+.field-button-value {
+    color: #d9d9d9;
+    font-size: 12px;
+    text-align: right;
+}
+
+.field-swatch {
+    width: 18px;
+    height: 18px;
+    border: 2px #050706;
+    flex-shrink: 0;
+}
+
+.field-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0px 7px 0px;
+}
+
+.field-section-label {
+    color: #d7d7d7;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.field-section-line {
+    width: 100px;
+    height: 1px;
+    background-color: #377987;
 }
 
 /* Grid Container - for asset/material browsers */
@@ -140,7 +238,20 @@
     border-color: #777777;
 }
 
+/* Colour only: changing border-width on selection resizes the cell and
+   reflows/shifts the whole grid. */
 .grid-item.selected {
     border-color: #3a7ebf;
-    border-width: 2px;
+}
+
+/* RCSS has no !important, and `.hidden` (one class) ties with the rules above
+   that set `display` (e.g. .field-composite-button { display: flex }), which
+   then win by declaration order. These compound selectors raise specificity so
+   hiding actually hides -- notably the numeric field's button, which otherwise
+   stays visible next to its edit box. */
+.field-composite-button.hidden,
+.field-numeric-button.hidden,
+.field-numeric-input.hidden,
+.field-input.hidden {
+    display: none;
 }

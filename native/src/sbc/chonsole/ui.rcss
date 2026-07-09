@@ -164,8 +164,12 @@ scrollbarvertical sliderbar {
 
 .cursor {
     display: inline-block;
+    position: relative;
     width: 2dp;
     height: 22dp;
+    margin-right: -2dp;
+    overflow: hidden;
+    vertical-align: middle;
     color: #e6e6e6aa;
     background-color: #e6e6e6aa;
 }
