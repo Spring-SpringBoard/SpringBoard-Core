@@ -108,6 +108,14 @@ function StateManager:MouseWheel(up, value)
 end
 
 function StateManager:KeyPress(key, mods, isRepeat, label, unicode)
+    -- The dev console owns its shortcuts (Ctrl+A / Ctrl+C) while the cursor is
+    -- over it. SpringBoard's widget runs first (layer 1001 vs 5000), Copy is
+    -- bound to Ctrl+C, and an editor's global key listener would swallow the
+    -- rest before the state ever sees them.
+    if WG.DevConsole and WG.DevConsole.CursorOverConsole and WG.DevConsole.CursorOverConsole() then
+        return false
+    end
+
     --Spring.Echo(#self.keyListeners)
     for i = #self.keyListeners, 1, -1 do
         local keyListener = self.keyListeners[i]

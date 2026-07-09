@@ -300,6 +300,14 @@ def dev_console(run_state: E2ERun) -> None:
     # Drag across several log lines: they must highlight (multi-line selection).
     run_state.drag(100, 965, 600, 1010, steps=10)
     run_state.screenshot("dev-console-selection")
+    # Ctrl+C over the console copies the selected lines to the clipboard, and
+    # Ctrl+A selects every line first. SpringBoard binds Ctrl+C to Copy, so this
+    # also checks it yields to the console.
+    run_state.move(300, 985, delay=0.6)
+    run_state.key("ctrl+c", delay=0.5)
+    run_state.key("ctrl+a", delay=0.4)
+    run_state.key("ctrl+c", delay=0.5)
+    run_state.screenshot("dev-console-select-all")
     run_state.key("F8", delay=0.6)
     run_state.screenshot("dev-console-hidden")
 

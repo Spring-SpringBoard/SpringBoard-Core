@@ -103,12 +103,23 @@ local function StripColorCodes(text)
 end
 
 
+-- `x, y` are RmlUi coordinates (origin top-left), which is what the mouse
+-- call-ins give us. Hit-test the document body, not `#console`: that div has no
+-- height of its own (its children are positioned), so it reports ~14px tall and
+-- every hit test against it failed.
 local function ConsoleContains(x, y)
-	local console = rml.elements and rml.elements["console"]
-	if not (console and rml.context) then
+	if not (rml.document and rml.context) then
 		return false
 	end
-	return console:IsPointWithinElement(RmlUi.Vector2f.new(x, y))
+	return rml.document:IsPointWithinElement(RmlUi.Vector2f.new(x, y))
+end
+
+-- Spring.GetMouseState is bottom-origin, so it needs flipping before it can be
+-- handed to ConsoleContains. Getting this wrong made Ctrl+C a no-op.
+local function CursorOverConsole()
+	local mx, my = Spring.GetMouseState()
+	local _, viewHeight = Spring.GetViewGeometry()
+	return ConsoleContains(mx, viewHeight - my)
 end
 
 -- ---------- Rml init ----------
@@ -164,6 +175,22 @@ end
 -- element. So select whole lines: drag across them, Ctrl+A for all, Ctrl+C to
 -- copy the selected text to the clipboard.
 local selection = { anchor = nil, extent = nil, dragging = false }
+-- Every entry carries a stable id so a selection survives the data-model
+-- rebuild that a new log line triggers. Without it, one incoming line between
+-- selecting and pressing Ctrl+C dropped the selection on the floor.
+local nextLineUid = 0
+local selectionDirty = false
+
+local function IndexOfUid(uid)
+	if not uid then
+		return nil
+	end
+	for index, entry in ipairs(logEntries) do
+		if entry.uid == uid then
+			return index
+		end
+	end
+end
 
 local function LogLineElements()
 	local container = rml.elements and rml.elements["log-container"]
@@ -209,7 +236,31 @@ end
 
 local function ClearSelection()
 	selection.anchor, selection.extent, selection.dragging = nil, nil, false
+	selection.anchorUid, selection.extentUid = nil, nil
 	ApplySelectionClasses()
+end
+
+-- Pin the current selection to line ids, so it can be found again after the
+-- data model rebuilds the line elements.
+local function RememberSelection()
+	selection.anchorUid = selection.anchor and logEntries[selection.anchor] and logEntries[selection.anchor].uid
+	selection.extentUid = selection.extent and logEntries[selection.extent] and logEntries[selection.extent].uid
+end
+
+-- The log rebuilt: map the remembered ids back to indices. A line that scrolled
+-- past the cap is gone, and so is the selection.
+local function ReanchorSelection()
+	if not selection.anchorUid then
+		return
+	end
+	local anchor = IndexOfUid(selection.anchorUid)
+	local extent = IndexOfUid(selection.extentUid)
+	if anchor and extent then
+		selection.anchor, selection.extent = anchor, extent
+	else
+		selection.anchor, selection.extent, selection.dragging = nil, nil, false
+		selection.anchorUid, selection.extentUid = nil, nil
+	end
 end
 
 local function SelectAllLines()
@@ -218,6 +269,7 @@ local function SelectAllLines()
 		return
 	end
 	selection.anchor, selection.extent = 1, #lines
+	RememberSelection()
 	ApplySelectionClasses()
 end
 
@@ -243,9 +295,11 @@ local function CopySelectionToClipboard()
 	if #parts == 0 then
 		return false
 	end
-	if Spring.SetClipboard then
-		Spring.SetClipboard(table.concat(parts, "\n"))
+	if not Spring.SetClipboard then
+		return false
 	end
+	Spring.SetClipboard(table.concat(parts, "\n"))
+	Spring.Echo("[DevConsole] Copied " .. tostring(#parts) .. " line(s) to clipboard")
 	return true
 end
 
@@ -265,6 +319,7 @@ local function BindLogSelection()
 			return
 		end
 		selection.anchor, selection.extent, selection.dragging = index, index, true
+		RememberSelection()
 		ApplySelectionClasses()
 	end)
 
@@ -275,6 +330,7 @@ local function BindLogSelection()
 		local index = IndexOfLineAt(event.parameters and event.parameters.mouse_y)
 		if index then
 			selection.extent = index
+			RememberSelection()
 			ApplySelectionClasses()
 		end
 	end)
@@ -322,8 +378,10 @@ RefreshLogElement = function()
 	if container then
 		container.scroll_top = container.scroll_height
 	end
-	-- data-for rebuilds the line elements, so any selection no longer maps.
-	ClearSelection()
+	-- data-for rebuilds the line elements, so the selection has to be mapped back
+	-- onto them, and the classes re-applied once RmlUi has rebuilt them.
+	ReanchorSelection()
+	selectionDirty = true
 end
 
 local function ClearLog()
@@ -471,6 +529,8 @@ end
 
 -- Append without repaint; compact occasionally
 AppendLogLine = function(markup, isError)
+	nextLineUid = nextLineUid + 1
+	markup.uid = nextLineUid
 	logEntries[#logEntries + 1] = markup
 
 	-- burst-compact: avoid O(n) table.remove(1)
@@ -663,6 +723,10 @@ function widget:Update()
 	if rml.context then
 		rml.context:Update()
 	end
+	if selectionDirty then
+		selectionDirty = false
+		ApplySelectionClasses()
+	end
 	UpdateToolbarState()
 	UpdateOptionalButtons()
 	if first_load then
@@ -687,8 +751,7 @@ function widget:KeyPress(key, mods, isRepeat)
 	if not IsInteractive() or not mods.ctrl then
 		return false
 	end
-	local mx, my = Spring.GetMouseState()
-	if not ConsoleContains(mx, my) then
+	if not CursorOverConsole() then
 		return false
 	end
 	if key == KEYSYMS.A then
@@ -852,4 +915,7 @@ end
 
 WG.DevConsole = {
 	SetVisibility = SetWindowVisibility,
+	-- SpringBoard binds Ctrl+C/Ctrl+A to Copy/Select-all and its widget runs
+	-- first (layer 1001 vs 5000), so it asks whether the console wants them.
+	CursorOverConsole = CursorOverConsole,
 }

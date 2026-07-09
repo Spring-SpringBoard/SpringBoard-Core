@@ -193,7 +193,19 @@ class E2ERun:
     def key(self, name: str, delay: float = 0.06) -> None:
         self.require_window()
         self.event("key", key=name)
-        run("xdotool", "key", "--window", self.window, name)
+        if "+" in name:
+            # `xdotool key --window <win> ctrl+c` delivers the `c` press with the
+            # modifier already cleared, so the engine reports ctrl=false. Send the
+            # chord to the focused window instead, holding the modifiers down.
+            self.focus()
+            *modifiers, base = name.split("+")
+            for modifier in modifiers:
+                run("xdotool", "keydown", modifier)
+            run("xdotool", "key", base)
+            for modifier in reversed(modifiers):
+                run("xdotool", "keyup", modifier)
+        else:
+            run("xdotool", "key", "--window", self.window, name)
         time.sleep(delay)
 
     def key_chord(self, modifiers: tuple[str, ...], name: str, delay: float = 0.08) -> None:
