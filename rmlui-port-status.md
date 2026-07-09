@@ -108,6 +108,12 @@ now raises instead of silently building an invisible control:
   `screen0`; they are drawn with gl from `widget:DrawScreen` now.
 - `SB.SetGlobalRenderingFunction` hung its drawing off a Chili `Control`, and the
   select-object / add-rect overlays used `Chili.Font`.
+- `ImportAction:ImportHeightmap` built a bare Chili `Window` with two `EditBox`es.
+  Toolbar Import reaches it; it is an `Editor` dialog now.
+- `NewRuleDialog` built a `ScrollPanel`, so adding an object rule crashed, and the
+  remove-rule button passed a Chili `Image` child. `EditorButton` takes an `image`
+  now and renders an `<img>` in RmlUi.
+- `EditorProgressBar` / `RmlUiProgressBar` back the map-compile progress bar.
 
 Still Chili-only, and unreachable in RmlUi mode: the `view/fields/*` and
 `view/floating/*` Chili implementations, `MakeComponentPanel`/`MakeSeparator`
