@@ -25,6 +25,8 @@ def run_scenario(run_state: E2ERun) -> None:
         teams_panel(run_state)
     elif run_state.case.scenario == "info_panel":
         info_panel(run_state)
+    elif run_state.case.scenario == "settings_panel":
+        settings_panel(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -95,6 +97,22 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def settings_panel(run_state: E2ERun) -> None:
+    """Map -> Settings: enabling a shading texture must open a texture dialog."""
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+    run_state.click(panel_left + 110, 35, delay=0.2)   # Map tab
+    run_state.click(panel_left + 326, 88, delay=0.6)   # Settings (order 5)
+    run_state.screenshot("settings-open")
+    # Specular checkbox: disable, then re-enable -> must open a texture dialog.
+    run_state.click(panel_left + 142, 453, delay=0.5)
+    run_state.screenshot("specular-off")
+    run_state.click(panel_left + 142, 453, delay=0.9)
+    run_state.screenshot_root("specular-on-root")
 
 
 def info_panel(run_state: E2ERun) -> None:

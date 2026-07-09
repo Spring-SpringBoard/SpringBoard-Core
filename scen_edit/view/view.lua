@@ -499,10 +499,13 @@ function View:BindFieldEvents(editor)
             local inputElement = document:GetElementById("field-" .. fieldName)
             if inputElement then
                 local function updateField()
-                    -- Checkboxes use 'checked' attribute, other inputs use 'value'
+                    -- Checkboxes use 'checked' attribute, other inputs use 'value'.
+                    -- RmlUi treats the checkbox as checked when the attribute is
+                    -- *present* and sets it to "" on click, so comparing the value
+                    -- to "checked" always read false after a user toggle.
                     local value
                     if inputElement:HasAttribute("type") and inputElement:GetAttribute("type") == "checkbox" then
-                        value = inputElement:GetAttribute("checked") == "checked"
+                        value = inputElement:HasAttribute("checked")
                     else
                         value = inputElement.value
                         if value == nil then

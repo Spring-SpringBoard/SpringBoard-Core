@@ -435,7 +435,10 @@ function RmlUiBooleanField:init(opts)
 end
 
 function RmlUiBooleanField:GetValue()
-    return self.element.checked
+    if self.element then
+        return self.element:HasAttribute("checked")
+    end
+    return self.value
 end
 
 function RmlUiBooleanField:SetValue(value)
