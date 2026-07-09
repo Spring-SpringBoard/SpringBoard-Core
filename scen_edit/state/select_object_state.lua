@@ -47,7 +47,7 @@ end
 
 local _displayColor = {1.0, 0.7, 0.1, 0.8}
 function SelectObjectState:__DrawInfo()
-    if not self.__displayFont then
+    if not SB.useRmlUi and not self.__displayFont then
         self.__displayFont = Chili.Font:New {
             size = 12,
             color = _displayColor,
@@ -65,7 +65,12 @@ function SelectObjectState:__DrawInfo()
 
     local x = mx
     local y = vsy - my - 30
-    self.__displayFont:Draw(self:__GetInfoText(), x, y)
+    if SB.useRmlUi then
+        -- Chili's control space is top-origin; gl.Text in DrawScreen is not.
+        SB.DrawOverlayText(self:__GetInfoText(), x, my - 30, 12, _displayColor)
+    else
+        self.__displayFont:Draw(self:__GetInfoText(), x, y)
+    end
 
     -- return true to keep redrawing
     return true

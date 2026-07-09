@@ -43,6 +43,14 @@ function SB.SetMouseCursor(name)
     Spring.SetMouseCursor(name)
 end
 
+-- Chili.Font does not exist in RmlUi mode; the state overlays only need a text
+-- draw at a screen position.
+function SB.DrawOverlayText(text, x, y, size, color)
+    gl.Color(color[1], color[2], color[3], color[4] or 1)
+    gl.Text(text, x, y, size or 12, "o")
+    gl.Color(1, 1, 1, 1)
+end
+
 function SB.MakeSeparator(panel)
     local lblSeparator = Line:New {
         parent = panel,
@@ -481,7 +489,22 @@ end
 -- it makes it easier to properly order rendering, so it stays
 -- on top of other controls
 local __displayControl
+local __globalRenderingFunction
+
+-- Called from widget:DrawScreen in RmlUi mode, where there is no Chili control
+-- to hang the drawing off.
+function SB.DrawGlobalRenderingFunction()
+    if __globalRenderingFunction then
+        __globalRenderingFunction()
+    end
+end
+
 function SB.SetGlobalRenderingFunction(f)
+    if SB.useRmlUi then
+        __globalRenderingFunction = f
+        return
+    end
+
     if not __displayControl then
         __displayControl = Control:New {
             parent = screen0,

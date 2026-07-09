@@ -144,6 +144,7 @@ function widget:DrawScreen()
         SB.stateManager:DrawScreen()
     end
     SB.displayUtil:DrawScreen()
+    SB.DrawGlobalRenderingFunction()
     SB.executePeriodic("DrawScreen")
     SB.executeDelayed("DrawScreen")
 end
