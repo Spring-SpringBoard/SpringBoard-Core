@@ -4,6 +4,26 @@ Port the editor UI to the native Rust plugin, rendering through the engine's
 RmlUi. The result must be functionally identical to, and completely independent
 of, the two Lua UIs.
 
+## The mandate
+
+**Port the Lua UIs (Chili, and notably RmlUi) to Rust, fully. Do not stop until
+it is all done.**
+
+- **No quick hacks.** If the engine is missing something, add the binding
+  properly, with a test that fails without it. `ElementGetRect` is the model:
+  header + impl + vtable entry + `test/engine/Rml/TestNativeElementRect.cpp`.
+- **Fix crashes properly**, at the cause, never by working around them.
+- **Code must be properly modular.** One file per view; shared plumbing in
+  `editor_base.rs`; nothing view-specific in the shell.
+- **Then actually check everything.** Do a careful visual inspection yourself,
+  and verify the *behaviour* of every control type:
+  numbers, text, checkboxes, colour pickers, material pickers,
+  unit/feature pickers, grids, dialogs.
+- **Every tab must work, and every tab must be tested**: Objects, Map, Env, Misc.
+
+A control is not "done" because it renders. It is done when a test asserts the
+command it emits, and a human-inspected reference image shows it.
+
 ## Ground rules
 
 1. **Scope is Rust + RmlUi.** Do not work on the Lua UIs. Open them only to
@@ -88,6 +108,23 @@ python3 tools/e2e/ui_driver.py all --tag ui:rust
 python3 tools/e2e/ui_driver.py native-panel --update-golden   # re-capture refs
 python3 tools/e2e/approve_goldens.py native-panel-rust        # human OK
 ```
+
+## Control-type checklist
+
+Each must render, behave, emit the right command, and have a reference image.
+
+| control | native status |
+|---|---|
+| numeric (click-to-edit) | done — commits once, on Enter or blur |
+| numeric (drag)          | done — polled cursor; engine reports no mouse_move |
+| choice / select         | renders; **behaviour untested** |
+| colour picker           | done — modal, SV+hue drag, OK/Cancel |
+| checkbox / boolean      | **not ported** |
+| text / string           | **not ported** |
+| asset / material picker | **not ported** |
+| unit / feature picker   | **not ported** (grid + RTT thumbnails) |
+| grid view               | **not ported** |
+| dialogs                 | picker only |
 
 ## TODO
 
