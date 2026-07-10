@@ -180,6 +180,20 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.golden("water-checkbox")
     run_state.assert_command("SetWaterParamsCommand", forceRendering=True)
 
+    # Misc -> Info: text fields, backed by the project model rather than the engine.
+    run_state.click(panel_left + 300, 35, delay=0.4)    # Misc tab
+    run_state.golden("shell-misc-tab")
+    run_state.click(panel_left + 38, 88, delay=0.7)     # Info
+    run_state.golden("info-open")
+
+    run_state.click(panel_left + 200, 190, delay=0.3)   # Name field
+    run_state.key("ctrl+a", delay=0.15)
+    run_state.type_text("Ported")
+    run_state.key("Return", delay=0.6)
+    run_state.golden("info-name-typed")
+
+    run_state.assert_command("SetScenarioInfoCommand")
+
 
 def heightmap(run_state: E2ERun) -> None:
     """Map -> Terrain: pick the raise brush and drag on the map, then undo.

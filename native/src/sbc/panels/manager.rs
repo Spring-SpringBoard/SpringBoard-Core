@@ -3,7 +3,7 @@ use std::any::Any;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::history::HistoryEvent;
-use crate::sbc::command_system::model::{Model, ModelFactory};
+use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
@@ -33,6 +33,9 @@ pub(crate) struct PanelManager {
     /// commit to exactly one command: the DOM would otherwise fire "change" on
     /// every keystroke.
     editing: Option<String>,
+    /// The last field committed by Enter or a select change; the `blur` it
+    /// triggers is swallowed.
+    just_committed: Option<String>,
 }
 
 impl Model for PanelManager {
@@ -72,10 +75,11 @@ impl PanelManager {
             next_cmd_id: 1_000_000,
             picker: ColorPicker::default(),
             editing: None,
+            just_committed: None,
         }
     }
 
-    pub fn update(&mut self) -> Result<(), Error> {
+    pub fn update(&mut self, models: &mut Models) -> Result<(), Error> {
         if !self.enabled {
             return Ok(());
         }
@@ -125,15 +129,16 @@ impl PanelManager {
         self.input
             .tick_drag(&self.interface, self.editor.as_deref_mut());
 
-        // Commit requests: a select's "change", or a text field losing focus.
-        for name in self.input.drain_changes() {
-            self.commit_field(&name);
+        // Commit requests: a select's "change", Enter in a text field, or a
+        // field losing focus.
+        for request in self.input.drain_changes() {
+            self.commit_field(&request.field, request.from_blur);
         }
 
         // Refresh from engine if needed (undo/redo, or the editor just opened)
         if self.needs_refresh {
             if let Some(ed) = self.editor.as_mut() {
-                ed.refresh_from_engine(&self.interface);
+                ed.refresh_from_engine(&self.interface, models);
             }
             self.write_field_values();
             // Writing a value back into the DOM makes RmlUi fire `change` for
@@ -225,20 +230,18 @@ impl PanelManager {
         Ok(())
     }
 
-    /// Commit a field once. A blur that arrives after the value was already
-    /// committed (hiding the edit element fires one) is a no-op.
-    fn commit_field(&mut self, name: &str) {
-        let was_editing = self.editing.as_deref() == Some(name);
-        if was_editing {
+    /// Commit a field once. Committing on Enter hides the input, which fires a
+    /// `blur`; that second request must not dispatch another command.
+    fn commit_field(&mut self, name: &str, from_blur: bool) {
+        if self.editing.as_deref() == Some(name) {
             self.editing = None;
-        } else if self
-            .editor
-            .as_deref()
-            .is_some_and(|ed| ed.field_is_text_edit(name))
-        {
-            // A blur fired by hiding the input we just committed.
+        }
+        if from_blur && self.just_committed.as_deref() == Some(name) {
+            self.just_committed = None;
             return;
         }
+        self.just_committed = (!from_blur).then(|| name.to_string());
+
         if let Some(ed) = self.editor.as_deref_mut() {
             self.pending_envelopes
                 .extend(ed.process_change(name, &self.interface, &mut self.next_cmd_id));
@@ -290,7 +293,7 @@ impl PanelManager {
             return Ok(false);
         };
         if key == RETURN {
-            self.commit_field(&name);
+            self.commit_field(&name, false);
             return Ok(true);
         }
         if key == ESCAPE {

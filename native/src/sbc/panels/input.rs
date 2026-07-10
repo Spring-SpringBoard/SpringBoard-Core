@@ -1,7 +1,7 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::field::{ChangeQueue, InteractionEvent, InteractionQueue};
+use crate::sbc::panels::field::{ChangeQueue, CommitRequest, InteractionEvent, InteractionQueue};
 use crate::sbc::panels::view::PanelView;
 
 const DRAG_THRESHOLD: f32 = 3.0;
@@ -143,8 +143,8 @@ impl PanelInput {
         actions
     }
 
-    /// Drain change events and return the list of changed field names.
-    pub(crate) fn drain_changes(&mut self) -> Vec<String> {
+    /// Drain commit requests.
+    pub(crate) fn drain_changes(&mut self) -> Vec<CommitRequest> {
         self.changes.borrow_mut().drain(..).collect()
     }
 

@@ -1,5 +1,6 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{envelope, group_rml, resolve_base, section_rml, FieldSet};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
@@ -165,7 +166,7 @@ impl Editor for WaterEditor {
         self.water(&base, &value, next)
     }
 
-    fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef) {
+    fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, _models: &mut Models) {
         let gfx = interface.gfx();
 
         for name in [

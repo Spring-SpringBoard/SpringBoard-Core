@@ -1,5 +1,7 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::model::Models;
+
 use crate::sbc::panels::field::{ChangeQueue, InteractionQueue};
 
 /// An editor panel. Each concrete editor owns its fields, generates its RML
@@ -32,8 +34,10 @@ pub(crate) trait Editor {
     /// updated during drag). Does NOT read from DOM.
     fn process_drag_end(&mut self, name: &str, next_cmd_id: &mut u64) -> Vec<String>;
 
-    /// Read engine state into field values.
-    fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef);
+    /// Read current state into field values. `models` gives access to the
+    /// project models for views backed by project state rather than the engine
+    /// (scenario info, teams).
+    fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, models: &mut Models);
 
     /// Find a field by name and drag it. Returns true if the field exists.
     fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool;

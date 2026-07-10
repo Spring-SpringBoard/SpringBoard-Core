@@ -386,6 +386,10 @@ class E2ERun:
             for entry in self.commands()
             if entry.get("data", {}).get("className") == class_name
             and all(key in entry["data"].get("opts", {}) for key in expected)
+        ] or [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("className") == class_name and not expected
         ]
         if len(matches) != 1:
             sent = [

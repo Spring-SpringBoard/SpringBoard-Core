@@ -51,7 +51,8 @@ impl NativeModule for SBC {
     fn update(&mut self) -> Result<(), Error> {
         self.drain_io();
         self.model::<ChonsoleManager>().update()?;
-        self.model::<PanelManager>().update()?;
+        self.models
+            .with::<PanelManager, _>(|panel, models| panel.update(models))?;
         self.drain_panel_envelopes();
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);

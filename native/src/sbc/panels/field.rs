@@ -3,9 +3,17 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-/// Shared queue of changed field names. Field event listeners push their name
-/// here when the DOM fires a "change" event; the panel drains it each tick.
-pub type ChangeQueue = Rc<RefCell<Vec<String>>>;
+/// Why a field wants committing. A `blur` that arrives right after an Enter is
+/// the input being hidden, not the user leaving the field.
+#[derive(Debug, Clone)]
+pub struct CommitRequest {
+    pub field: String,
+    pub from_blur: bool,
+}
+
+/// Shared queue of fields asking to be committed. Field event listeners push
+/// here; the panel drains it each tick.
+pub type ChangeQueue = Rc<RefCell<Vec<CommitRequest>>>;
 /// Shared queue of pointer interactions (mousedown/mouseup) for drag support.
 pub type InteractionQueue = Rc<RefCell<Vec<InteractionEvent>>>;
 
@@ -44,7 +52,10 @@ pub(crate) fn on_change(
     interface
         .rml_ui()
         .element_add_event_listener(element, "change", false, move || {
-            cq.borrow_mut().push(name.clone());
+            cq.borrow_mut().push(CommitRequest {
+                field: name.clone(),
+                from_blur: false,
+            });
         })?;
     Ok(())
 }
@@ -62,7 +73,10 @@ pub(crate) fn on_blur(
     interface
         .rml_ui()
         .element_add_event_listener(element, "blur", false, move || {
-            cq.borrow_mut().push(name.clone());
+            cq.borrow_mut().push(CommitRequest {
+                field: name.clone(),
+                from_blur: true,
+            });
         })?;
     Ok(())
 }
@@ -96,7 +110,10 @@ pub(crate) fn on_enter(
                 return;
             };
             if found && (key == KI_RETURN || key == KI_NUMPADENTER) {
-                cq.borrow_mut().push(name.clone());
+                cq.borrow_mut().push(CommitRequest {
+                    field: name.clone(),
+                    from_blur: false,
+                });
             }
         })?;
     Ok(())

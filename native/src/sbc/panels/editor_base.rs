@@ -20,6 +20,27 @@ pub(crate) fn envelope(class: &str, next: &mut u64, opts: serde_json::Value) -> 
     .to_string()
 }
 
+/// An envelope whose command takes its payload under a key other than `opts`
+/// (`SetScenarioInfoCommand` deserializes a `data` object, for instance).
+pub(crate) fn envelope_with(
+    class: &str,
+    next: &mut u64,
+    key: &str,
+    payload: serde_json::Value,
+) -> String {
+    let id = *next;
+    *next += 1;
+    serde_json::json!({
+        "tag": "command",
+        "data": {
+            "className": class,
+            "__cmd_id": id,
+            key: payload,
+        }
+    })
+    .to_string()
+}
+
 /// Resolve a change-event name to its base field name. Colour sub-fields like
 /// `"fogColor-r"` map to `"fogColor"`.
 pub(crate) fn resolve_base(name: &str) -> &str {
