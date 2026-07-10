@@ -98,10 +98,6 @@ impl Field for AssetField {
         FieldValue::Text(self.value.clone())
     }
 
-    fn is_asset(&self) -> bool {
-        true
-    }
-
     fn asset_info(&self) -> Option<(String, Vec<String>)> {
         Some((self.root.clone(), self.extensions.clone()))
     }

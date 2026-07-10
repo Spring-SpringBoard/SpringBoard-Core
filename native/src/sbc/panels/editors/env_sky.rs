@@ -158,10 +158,6 @@ impl Editor for SkyEditor {
         self.fields.cancel_edit(name, interface)
     }
 
-    fn field_is_text_edit(&self, name: &str) -> bool {
-        self.fields.is_text_edit(name)
-    }
-
     fn field_color(&self, name: &str) -> Option<[f32; 4]> {
         self.fields.color(name)
     }

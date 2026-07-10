@@ -19,6 +19,7 @@ TARGETS = (
     "all-editors",
     "heightmap",
     "native-panel",
+    "native-dev-console",
 )
 
 
@@ -211,6 +212,15 @@ def target_cases(target: str, case: str) -> list[Case]:
         if case == "rust":
             return cases[:1]
         return cases
+    if target == "native-dev-console":
+        return [
+            Case(
+                name="native-dev-console-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="native_dev_console",
+                crop="dev-console",
+            ),
+        ]
     if target == "native-panel":
         return [
             Case(

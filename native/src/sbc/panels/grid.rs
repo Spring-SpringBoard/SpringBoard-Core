@@ -49,10 +49,6 @@ impl GridView {
         }
     }
 
-    pub(crate) fn items(&self) -> &[GridItem] {
-        &self.items
-    }
-
     pub(crate) fn selected(&self) -> Option<&str> {
         self.selected.as_deref()
     }
@@ -157,11 +153,7 @@ pub(crate) fn list_assets(
             continue;
         }
         let path = join_entry(dir, &name);
-        let caption = path
-            .rsplit('/')
-            .next()
-            .unwrap_or(&path)
-            .to_string();
+        let caption = path.rsplit('/').next().unwrap_or(&path).to_string();
 
         if entry.isDirectory {
             dirs.push(GridItem {
@@ -192,6 +184,18 @@ pub(crate) fn list_assets(
     dirs
 }
 
+/// The parent of a VFS directory, or None at the root.
+pub(crate) fn parent_dir(dir: &str) -> Option<String> {
+    let trimmed = dir.trim_end_matches('/');
+    if trimmed.is_empty() {
+        return None;
+    }
+    match trimmed.rsplit_once('/') {
+        Some((parent, _)) => Some(parent.to_string()),
+        None => Some(String::new()),
+    }
+}
+
 /// Join a directory with an entry the engine returned.
 ///
 /// The engine hands back entries already prefixed with the directory, so
@@ -202,18 +206,6 @@ fn join_entry(dir: &str, name: &str) -> String {
         name.trim_end_matches('/').to_string()
     } else {
         format!("{}/{}", dir.trim_end_matches('/'), name)
-    }
-}
-
-/// The parent of a VFS directory, or None at the root.
-pub(crate) fn parent_dir(dir: &str) -> Option<String> {
-    let trimmed = dir.trim_end_matches('/');
-    if trimmed.is_empty() {
-        return None;
-    }
-    match trimmed.rsplit_once('/') {
-        Some((parent, _)) => Some(parent.to_string()),
-        None => Some(String::new()),
     }
 }
 

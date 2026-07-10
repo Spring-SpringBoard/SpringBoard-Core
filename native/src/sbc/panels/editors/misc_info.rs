@@ -115,10 +115,6 @@ impl Editor for ScenarioInfoView {
 
     fn cancel_edit_field(&mut self, _name: &str, _interface: &NativeInterfaceRef) {}
 
-    fn field_is_text_edit(&self, name: &str) -> bool {
-        self.fields.is_text_edit(name)
-    }
-
     fn field_color(&self, _name: &str) -> Option<[f32; 4]> {
         None
     }
@@ -130,5 +126,4 @@ impl Editor for ScenarioInfoView {
     }
 
     fn set_field_text(&mut self, _name: &str, _value: &str, _interface: &NativeInterfaceRef) {}
-
 }

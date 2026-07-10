@@ -37,6 +37,11 @@ pub(crate) struct ColorPicker {
     field: Option<String>,
     hsv: [f32; 3],
     alpha: f32,
+    /// The colour the picker opened with. The live preview moves the engine off
+    /// it, so both Accept and Cancel have to be able to put it back.
+    original: [f32; 4],
+    /// Whether the engine currently shows a previewed colour.
+    previewing: bool,
     grab: Grab,
     bound: bool,
     events: PickerQueue,
@@ -49,6 +54,8 @@ impl Default for ColorPicker {
             field: None,
             hsv: [0.0, 0.0, 1.0],
             alpha: 1.0,
+            original: [1.0, 1.0, 1.0, 1.0],
+            previewing: false,
             grab: Grab::None,
             bound: false,
             events: Rc::new(RefCell::new(Vec::new())),
@@ -69,6 +76,15 @@ impl ColorPicker {
     pub(crate) fn rgba(&self) -> [f32; 4] {
         let [r, g, b] = hsv_to_rgb(self.hsv);
         [r, g, b, self.alpha]
+    }
+
+    pub(crate) fn original(&self) -> [f32; 4] {
+        self.original
+    }
+
+    /// True once a drag has pushed a preview colour at the engine.
+    pub(crate) fn is_previewing(&self) -> bool {
+        self.previewing
     }
 
     pub(crate) fn markup() -> String {
@@ -152,6 +168,8 @@ impl ColorPicker {
         self.field = Some(field.to_string());
         self.hsv = rgb_to_hsv([rgba[0], rgba[1], rgba[2]]);
         self.alpha = rgba[3];
+        self.original = rgba;
+        self.previewing = false;
         self.grab = Grab::None;
         self.set_visible(interface, document, true)?;
         self.sync(interface, document);
@@ -165,6 +183,7 @@ impl ColorPicker {
     ) -> Result<(), Error> {
         self.field = None;
         self.grab = Grab::None;
+        self.previewing = false;
         self.set_visible(interface, document, false)
     }
 
@@ -175,7 +194,9 @@ impl ColorPicker {
         visible: bool,
     ) -> Result<(), Error> {
         if let Some(e) = element_by_id(interface, document, "color-picker") {
-            interface.rml_ui().element_set_class(e, "hidden", !visible)?;
+            interface
+                .rml_ui()
+                .element_set_class(e, "hidden", !visible)?;
         }
         Ok(())
     }
@@ -191,7 +212,7 @@ impl ColorPicker {
             self.grab_queue.borrow_mut().clear();
             return false;
         }
-        if let Some(grab) = self.grab_queue.borrow_mut().drain(..).last() {
+        if let Some(grab) = self.grab_queue.borrow_mut().drain(..).next_back() {
             self.grab = grab;
         }
         if self.grab == Grab::None {
@@ -237,6 +258,7 @@ impl ColorPicker {
             Grab::None => return false,
         }
         self.sync(interface, document);
+        self.previewing = true;
         true
     }
 
@@ -247,11 +269,8 @@ impl ColorPicker {
         // The saturation/value square is tinted by the pure hue behind it.
         let pure = hsv_to_rgb([self.hsv[0], 1.0, 1.0]);
         if let Some(e) = element_by_id(interface, document, "color-map") {
-            let _ = rml.element_set_attribute(
-                e,
-                "style",
-                &format!("background-color: {};", css(pure)),
-            );
+            let _ =
+                rml.element_set_attribute(e, "style", &format!("background-color: {};", css(pure)));
             if let Ok((_, _, w, h)) = rml.element_get_rect(e) {
                 if let Some(cursor) = element_by_id(interface, document, "color-map-cursor") {
                     let _ = rml.element_set_attribute(

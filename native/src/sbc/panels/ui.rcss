@@ -1,5 +1,8 @@
 /* The panel is positioned against the body, so the body must span the screen;
-   with an auto-sized body an absolutely-positioned child collapses. */
+   with an auto-sized body an absolutely-positioned child collapses.
+   A screen-sized body would then swallow every click in the game view (and in
+   the dev console's context), so it takes no pointer events -- only the panel
+   and the modals do. */
 body {
     font-family: Poppins;
     font-size: 12dp;
@@ -12,6 +15,7 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
+    pointer-events: none;
 }
 
 /* Geometry mirrors scen_edit/view/rcss/springboard.rcss so the native panel is
@@ -23,6 +27,7 @@ body {
     width: 500dp;
     height: 100%;
     background-color: #1f26219e;
+    pointer-events: auto;
 }
 
 /* --- Tab bar --- */
@@ -572,6 +577,9 @@ scrollbarvertical sliderbar:hover {
     right: 0px;
     bottom: 0px;
     z-index: 10000;
+    /* Modal: while open it covers the screen and takes every click, which is
+       also how the colour picker sees the mouseup that ends a drag. */
+    pointer-events: auto;
 }
 
 .picker-backdrop.hidden {
@@ -580,9 +588,11 @@ scrollbarvertical sliderbar:hover {
 
 .picker-dialog {
     position: absolute;
-    /* The backdrop spans the screen, so anchor the dialog to the panel edge:
-       at `left: 10px` it lands on the far side of the display. */
-    right: 10px;
+    /* Centred in the area left of the 500dp panel, so a colour is never judged
+       against the swatch the dialog covers: with a 480dp dialog this puts its
+       centre at 50% - 250dp, which is exactly the centre of that free area. */
+    left: 50%;
+    margin-left: -490dp;
     top: 200px;
     width: 480px;
     background-color: #2a2a2a;

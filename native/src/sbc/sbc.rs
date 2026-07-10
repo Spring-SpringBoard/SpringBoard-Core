@@ -6,6 +6,7 @@ use spring_native::prelude::*;
 use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
+use crate::sbc::devconsole::DevConsoleManager;
 use crate::sbc::io::io_api::IoWorker;
 use crate::sbc::objects::{event_bridge, ObjectManager};
 use crate::sbc::panels::PanelManager;
@@ -53,6 +54,8 @@ impl NativeModule for SBC {
         self.model::<ChonsoleManager>().update()?;
         self.models
             .with::<PanelManager, _>(|panel, models| panel.update(models))?;
+        self.models
+            .with::<DevConsoleManager, _>(|console, models| console.update(models))?;
         self.drain_panel_envelopes();
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
@@ -75,8 +78,21 @@ impl NativeModule for SBC {
         {
             return Ok(true);
         }
+        if self.model::<DevConsoleManager>().key_press(key_code)? {
+            return Ok(true);
+        }
         self.model::<ChonsoleManager>()
             .key_press(key_code, scan_code, is_repeat)
+    }
+
+    fn add_console_line(
+        &mut self,
+        message: &str,
+        _section: &str,
+        _level: i32,
+    ) -> Result<bool, Error> {
+        self.model::<DevConsoleManager>().add_console_line(message);
+        Ok(false)
     }
 
     fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {

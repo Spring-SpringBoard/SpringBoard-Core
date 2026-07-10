@@ -77,7 +77,7 @@ impl PanelInput {
         let Ok(mouse) = interface.input().get_mouse_state() else {
             return;
         };
-        let x = mouse.x as f32;
+        let x = mouse.x;
 
         if let DragState::Pending { field, start_x } = &self.drag {
             if (x - *start_x).abs() > DRAG_THRESHOLD {
@@ -110,7 +110,7 @@ impl PanelInput {
     /// Cache the cursor position each tick; a press event carries no coordinates.
     pub(crate) fn set_cursor(&mut self, interface: &NativeInterfaceRef) {
         if let Ok(mouse) = interface.input().get_mouse_state() {
-            self.cursor_x = mouse.x as f32;
+            self.cursor_x = mouse.x;
         }
     }
 
@@ -189,10 +189,11 @@ impl PanelInput {
         if let DragState::Dragging { ref field } = &self.drag {
             let dx = x as f32 - self.last_mouse_x;
             self.last_mouse_x = x as f32;
-            let mult = self
-                .fine_drag_multiplier(interface)
-                .then_some(FINE_DRAG_MULT)
-                .unwrap_or(1.0);
+            let mult = if self.fine_drag_multiplier(interface) {
+                FINE_DRAG_MULT
+            } else {
+                1.0
+            };
             if let Some(ed) = editor {
                 ed.drag_field(field, dx * mult, interface);
             }

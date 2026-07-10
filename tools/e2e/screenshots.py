@@ -22,6 +22,12 @@ def convert_screenshot_file(shot: Screenshot) -> tuple[Screenshot, int]:
         width, height = identify_size(shot.raw_path)
         crop_width = min(500, width)
         cmd += ["-crop", f"{crop_width}x{height}+{width - crop_width}+0", "+repage"]
+    elif shot.crop == "dev-console":
+        # The console spans everything left of the 500dp panel, 300dp tall and
+        # 80dp off the bottom -- see devconsole/ui.rcss.
+        width, height = identify_size(shot.raw_path)
+        crop_width = max(1, width - 500)
+        cmd += ["-crop", f"{crop_width}x300+0+{height - 380}", "+repage"]
     cmd.append(str(shot.png_path))
     result = run(*cmd, check=False)
     if result.returncode != 0:

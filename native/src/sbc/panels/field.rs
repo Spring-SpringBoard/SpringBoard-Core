@@ -98,7 +98,7 @@ pub(crate) fn on_enter(
     changes: &ChangeQueue,
 ) -> Result<(), Error> {
     let cq = changes.clone();
-    let iface = interface.clone();
+    let iface = *interface;
     interface
         .rml_ui()
         .element_add_event_listener(element, "keydown", false, move || {
@@ -148,21 +148,7 @@ pub(crate) fn on_pointer(
 
 // ── DOM helpers ────────────────────────────────────────────────────
 
-/// Look up an element by id within a document or element.
-pub(crate) fn element_by_id(interface: &NativeInterfaceRef, root: u64, id: &str) -> Option<u64> {
-    interface
-        .rml_ui()
-        .element_get_element_by_id(root, id)
-        .ok()
-        .and_then(|(handle, exists)| exists.then_some(handle))
-}
-
-/// Escape text for safe inclusion in RML.
-pub(crate) fn escape_rml(text: &str) -> String {
-    text.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-}
+pub(crate) use crate::sbc::rml::{element_by_id, escape_rml};
 
 /// Format a float for display with a fixed number of decimals.
 pub(crate) fn format_number(value: f32, decimals: usize) -> String {
@@ -199,11 +185,6 @@ pub trait Field {
     /// Set context before a drag (e.g., which color channel "r"/"g"/"b").
     fn prepare_drag(&mut self, _context: &str) {}
 
-    /// True for fields whose click opens the asset picker.
-    fn is_asset(&self) -> bool {
-        false
-    }
-
     /// The asset root and accepted extensions, for an asset field.
     fn asset_info(&self) -> Option<(String, Vec<String>)> {
         None
@@ -211,11 +192,6 @@ pub trait Field {
 
     /// True for fields that commit from a text input (Enter or focus loss).
     /// Hiding that input fires a second, stale `blur`, which must not dispatch
-    /// another command.
-    fn is_text_edit(&self) -> bool {
-        false
-    }
-
     /// Click without drag — enter edit mode.
     fn begin_edit(&mut self, _interface: &NativeInterfaceRef) {}
 

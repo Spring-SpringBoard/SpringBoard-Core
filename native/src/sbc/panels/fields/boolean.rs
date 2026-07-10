@@ -29,7 +29,11 @@ impl Field for BooleanField {
     }
 
     fn generate_rml(&self) -> String {
-        let checked = if self.value { r#" checked="checked""# } else { "" };
+        let checked = if self.value {
+            r#" checked="checked""#
+        } else {
+            ""
+        };
         format!(
             concat!(
                 r#"<div class="field-row">"#,

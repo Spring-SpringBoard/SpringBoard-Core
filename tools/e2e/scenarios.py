@@ -21,6 +21,8 @@ def run_scenario(run_state: E2ERun) -> None:
         texture_panel(run_state)
     elif run_state.case.scenario == "dev_console":
         dev_console(run_state)
+    elif run_state.case.scenario == "native_dev_console":
+        native_dev_console(run_state)
     elif run_state.case.scenario == "teams_panel":
         teams_panel(run_state)
     elif run_state.case.scenario == "info_panel":
@@ -124,6 +126,18 @@ def native_panel(run_state: E2ERun) -> None:
     assert run_state.window is not None
     width, _height = window_geometry(run_state.window)
     panel_left = width - 500
+    # Modals are 480dp wide, centred in the area left of the panel.
+    dialog_left = width // 2 - 490
+
+    # Top-right of the saturation/value square is full saturation and value, so
+    # the colour there is the pure hue under the cursor: red.
+    def is_red(rgba: object) -> bool:
+        return (
+            isinstance(rgba, list)
+            and rgba[0] > 0.9
+            and rgba[1] < 0.1
+            and rgba[2] < 0.1
+        )
 
     # Objects is the default tab and has no native editors registered yet.
     run_state.golden("shell-objects-tab")
@@ -148,28 +162,24 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.golden("lighting-density-committed")
 
     # Clicking a colour field opens the picker modal, not an inline editor.
+    # The modal sits clear of the panel, so its captures are full-frame.
     run_state.click(panel_left + 90, 331, delay=0.6)
-    run_state.golden("picker-open")
+    run_state.golden("picker-open", crop=None)
 
     # Drag to the top-right of the saturation/value square: full saturation,
     # full value, so the colour becomes the pure hue under the cursor.
-    sv_left, sv_top = panel_left + 20, 252
+    sv_left, sv_top = dialog_left + 10, 252
     run_state.drag(sv_left + 10, sv_top + 170, sv_left + 175, sv_top + 5, steps=6)
-    run_state.golden("picker-dragged")
+    run_state.golden("picker-dragged", crop=None)
 
-    run_state.click(panel_left + 354, 472, delay=0.6)   # OK
+    # Dragging previews live: the engine has already taken the colour before OK
+    # is pressed. Previews never reach the undo history.
+    run_state.assert_previews("SetSunLightingCommand", groundDiffuseColor=is_red)
+
+    run_state.click(dialog_left + 344, 472, delay=0.6)   # OK
     run_state.golden("picker-accepted")
 
-    # Top-right of the square is full saturation and value, so the accepted
-    # colour must be the pure hue that was under the cursor: red.
-    def is_red(rgba: object) -> bool:
-        return (
-            isinstance(rgba, list)
-            and rgba[0] > 0.9
-            and rgba[1] < 0.1
-            and rgba[2] < 0.1
-        )
-
+    # Accepting commits exactly one undoable command with the same colour.
     run_state.assert_command("SetSunLightingCommand", groundDiffuseColor=is_red)
 
     # Env -> Water: checkbox + numerics, all through SetWaterParamsCommand.
@@ -199,18 +209,18 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 110, 88, delay=0.7)   # Sky
     run_state.golden("sky-open")
     run_state.click(panel_left + 64, 280, delay=0.8)   # Skybox field
-    run_state.golden("asset-picker-open")
-    run_state.click(panel_left + 440, 603, delay=0.6)  # Cancel
+    run_state.golden("asset-picker-open", crop=None)
+    run_state.click(dialog_left + 430, 603, delay=0.6)  # Cancel
 
     # Env -> Water: the normal-texture field browses bitmaps/ and picking a file
     # must emit SetWaterParamsCommand carrying its VFS path.
     run_state.click(panel_left + 182, 88, delay=0.7)   # Water
     run_state.click(panel_left + 87, 873, delay=0.8)   # Normal texture
-    run_state.golden("asset-picker-bitmaps")
+    run_state.golden("asset-picker-bitmaps", crop=None)
 
-    run_state.click(panel_left + 60, 335, delay=0.5)   # first file cell
-    run_state.golden("asset-picker-selected")
-    run_state.click(panel_left + 353, 603, delay=0.8)  # OK
+    run_state.click(dialog_left + 50, 335, delay=0.5)   # first file cell
+    run_state.golden("asset-picker-selected", crop=None)
+    run_state.click(dialog_left + 343, 603, delay=0.8)  # OK
 
     def is_bitmap(path: object) -> bool:
         return isinstance(path, str) and path.startswith("bitmaps/") and "bitmaps/bitmaps" not in path
@@ -418,6 +428,37 @@ def dev_console(run_state: E2ERun) -> None:
     run_state.screenshot("dev-console-select-all")
     run_state.key("F8", delay=0.6)
     run_state.screenshot("dev-console-hidden")
+
+
+def native_dev_console(run_state: E2ERun) -> None:
+    """The native (Rust) developer console.
+
+    Log content varies run to run, so every golden is taken after `Clear`: an
+    empty log is the deterministic state. The toolbar and the F8 toggle are
+    what these goldens actually pin down.
+    """
+    run_state.focus()
+    assert run_state.window is not None
+    _width, height = window_geometry(run_state.window)
+    # The console is 300dp tall and floats 80dp off the bottom; its toolbar row
+    # centres 108px above the window's bottom edge.
+    toolbar_y = height - 108
+
+    run_state.click(30, toolbar_y, delay=0.5)          # Clear
+    run_state.golden("console-cleared")
+
+    run_state.click(100, toolbar_y, delay=0.5)         # Problems
+    run_state.golden("console-problems-on")
+
+    run_state.click(100, toolbar_y, delay=0.5)         # Problems (off again)
+    run_state.golden("console-problems-off")
+
+    # F8 hides the console, and brings it back.
+    run_state.key("F8", delay=0.6)
+    run_state.golden("console-hidden")
+
+    run_state.key("F8", delay=0.6)
+    run_state.golden("console-shown")
 
 
 def texture_panel(run_state: E2ERun) -> None:

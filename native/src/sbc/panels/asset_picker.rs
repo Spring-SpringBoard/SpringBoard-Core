@@ -52,10 +52,6 @@ impl AssetPicker {
         self.field.as_deref()
     }
 
-    pub(crate) fn selected(&self) -> Option<&str> {
-        self.grid.selected()
-    }
-
     pub(crate) fn markup(&self) -> String {
         format!(
             concat!(
@@ -136,7 +132,9 @@ impl AssetPicker {
         visible: bool,
     ) -> Result<(), Error> {
         if let Some(e) = element_by_id(interface, document, "asset-picker") {
-            interface.rml_ui().element_set_class(e, "hidden", !visible)?;
+            interface
+                .rml_ui()
+                .element_set_class(e, "hidden", !visible)?;
         }
         Ok(())
     }

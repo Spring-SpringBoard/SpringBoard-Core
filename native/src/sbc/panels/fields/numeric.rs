@@ -170,7 +170,9 @@ impl Field for NumericField {
     fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         let val = self.display_text();
         if let Some(e) = self.display_elem {
-            interface.rml_ui().element_set_inner_rml(e, &self.button_rml())?;
+            interface
+                .rml_ui()
+                .element_set_inner_rml(e, &self.button_rml())?;
         }
         if let Some(e) = self.edit_elem {
             interface.rml_ui().element_set_attribute(e, "value", &val)?;
@@ -204,10 +206,6 @@ impl Field for NumericField {
             let _ = interface.rml_ui().element_set_class(e, "dragging", false);
         }
         Some(FieldValue::Number(self.value))
-    }
-
-    fn is_text_edit(&self) -> bool {
-        true
     }
 
     fn begin_edit(&mut self, interface: &NativeInterfaceRef) {

@@ -3,6 +3,7 @@ mod chonsole;
 mod command_system;
 pub mod commands_api;
 pub(crate) mod compile;
+mod devconsole;
 pub(crate) mod grass;
 pub(crate) mod heightmap;
 mod map_settings;
@@ -19,8 +20,10 @@ mod variables;
 
 mod hashable_float;
 mod io;
+mod keys;
 mod log;
 mod lua_bridge;
 mod message_handler;
+mod rml;
 pub mod sbc;
 mod tests;

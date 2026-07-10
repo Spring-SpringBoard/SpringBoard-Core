@@ -32,6 +32,28 @@ pub trait Command {
     }
 }
 
+/// A command run for its live effect only: it applies to the engine and never
+/// reaches the undo history.
+///
+/// The colour picker sends one per drag frame so the scene follows the cursor
+/// without burying the undo stack; the committed value arrives afterwards as a
+/// normal command. A previewing caller must restore the original value (as a
+/// preview) before committing, or the committed command captures the previewed
+/// state as the value undo would restore.
+pub struct PreviewCommand {
+    pub inner: Box<dyn Command>,
+}
+
+impl Command for PreviewCommand {
+    fn execute(&mut self, ctx: &mut Context) {
+        self.inner.execute(ctx);
+    }
+
+    fn undoable(&self) -> bool {
+        false
+    }
+}
+
 pub struct CompoundCommand {
     pub commands: Vec<Box<dyn Command>>,
 }

@@ -2,6 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use super::core::ChonsoleCore;
 use super::view::ChonsoleView;
+use crate::sbc::keys::is_key;
 
 pub(super) enum KeyOutcome {
     Unhandled,
@@ -208,34 +209,8 @@ impl ChonsoleEvents {
     }
 }
 
-fn is_key(interface: &NativeInterfaceRef, key_code: i32, key_name: &str) -> bool {
-    interface
-        .input()
-        .get_key_code(key_name)
-        .is_ok_and(|expected| expected == key_code)
-        || sdl2_key_code(key_name).is_some_and(|expected| expected == key_code)
-}
-
 fn printable_text(text: &str) -> String {
     text.chars().filter(|ch| !ch.is_control()).collect()
-}
-
-fn sdl2_key_code(key_name: &str) -> Option<i32> {
-    Some(match key_name {
-        "f10" => 1_073_741_891,
-        "numpad_enter" => 1_073_741_912,
-        "up" => 1_073_741_906,
-        "down" => 1_073_741_905,
-        "right" => 1_073_741_903,
-        "left" => 1_073_741_904,
-        "home" => 1_073_741_898,
-        "end" => 1_073_741_901,
-        "pageup" => 1_073_741_899,
-        "pagedown" => 1_073_741_902,
-        "shift" => 1_073_742_049,
-        "ctrl" => 1_073_742_048,
-        _ => return None,
-    })
 }
 
 #[derive(Copy, Clone, Default)]
@@ -339,7 +314,7 @@ impl HistoryCursor {
 
 #[cfg(test)]
 mod tests {
-    use super::{printable_text, sdl2_key_code, HistoryCursor};
+    use super::{printable_text, HistoryCursor};
 
     fn history(items: &[&str]) -> Vec<String> {
         items.iter().map(|item| item.to_string()).collect()
@@ -369,14 +344,5 @@ mod tests {
         let mut cursor = HistoryCursor::default();
         assert_eq!(cursor.prev(&items, "").as_deref(), Some("/water 1"));
         assert_eq!(cursor.prev(&items, "/water 1").as_deref(), Some("/help"));
-    }
-
-    #[test]
-    fn non_printable_keys_have_sdl2_fallback_codes() {
-        assert_eq!(sdl2_key_code("ctrl"), Some(1_073_742_048));
-        assert_eq!(sdl2_key_code("left"), Some(1_073_741_904));
-        assert_eq!(sdl2_key_code("home"), Some(1_073_741_898));
-        assert_eq!(sdl2_key_code("pagedown"), Some(1_073_741_902));
-        assert_eq!(sdl2_key_code("a"), None);
     }
 }

@@ -114,7 +114,9 @@ impl ColorField {
 
     fn sync_swatch(&self, interface: &NativeInterfaceRef) {
         if let Some(e) = self.swatch {
-            let _ = interface.rml_ui().element_set_inner_rml(e, &self.button_rml());
+            let _ = interface
+                .rml_ui()
+                .element_set_inner_rml(e, &self.button_rml());
         }
     }
 
@@ -197,13 +199,15 @@ impl Field for ColorField {
         // Same shape as RmlUiColorField in scen_edit/view/rmlui_fields.lua: a
         // composite button carrying the title and the swatch. The inline RGB
         // editor below it is native-only (Lua opens a picker dialog instead).
-        format!(r#"<div class="field-row"><div class="color-field">"#)
+        r#"<div class="field-row"><div class="color-field">"#.to_string()
             + &format!(
                 r#"<button id="field-{n}-swatch" class="field-composite-button field-color-button">{button}</button>"#,
                 button = self.button_rml(),
             )
             + &format!(r#"<div id="field-{n}-editor" class="color-editor hidden">"#,)
-            + &format!(r#"<input type="text" id="field-{n}-hex" class="field-input color-hex" value="{hex}"/>"#,)
+            + &format!(
+                r#"<input type="text" id="field-{n}-hex" class="field-input color-hex" value="{hex}"/>"#,
+            )
             + &format!(r#"<div class="color-channels">{channels}</div>"#)
             + "</div></div></div>"
     }

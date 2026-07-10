@@ -21,6 +21,9 @@ sys.path.insert(0, str(TOOLS_SMOKE))
 from run_sbc import prepare  # noqa: E402
 
 
+# Distinguishes "no crop override" from an explicit `crop=None` (full frame).
+_CASE_CROP = "<case>"
+
 MODIFIERS = (
     "Control_L",
     "Control_R",
@@ -340,14 +343,20 @@ class E2ERun:
         run("xdotool", "mousemove", "--window", self.window, str(width // 2), str(height - 4))
         time.sleep(0.25)
 
-    def golden(self, name: str) -> None:
-        """Capture, then compare pixel-exactly against the checked-in golden."""
+    def golden(self, name: str, crop: str | None = _CASE_CROP) -> None:
+        """Capture, then compare pixel-exactly against the checked-in golden.
+
+        `crop` defaults to the case's crop; pass it explicitly for a shot whose
+        subject sits outside that region (a modal beside the panel, say).
+        """
         self.park_cursor()
         stem = f"{len(self.screenshots):02d}-{name}"
         raw_path = self.screenshot_dir / f"{stem}.xwd"
         png_path = self.screenshot_dir / f"{stem}.png"
         run("xwd", "-silent", "-id", self.window, "-out", str(raw_path))
-        shot = Screenshot(name=name, raw_path=raw_path, png_path=png_path, crop=self.case.crop)
+        if crop is _CASE_CROP:
+            crop = self.case.crop
+        shot = Screenshot(name=name, raw_path=raw_path, png_path=png_path, crop=crop)
         convert_screenshot_file(shot)
         self.screenshots.append(shot)
         raw_path.unlink(missing_ok=True)
@@ -374,22 +383,31 @@ class E2ERun:
         return entries
 
     def assert_command(self, class_name: str, **expected: object) -> dict:
-        """Assert exactly one command of `class_name` carrying every key in
-        `expected` was sent, and that those values match.
+        """Assert exactly one committed command of `class_name` carrying every
+        key in `expected` was sent, and that those values match.
 
         A value may be a callable predicate, for things like a colour that is
         "red enough" rather than an exact float. Matching on the keys as well as
         the class lets one editor emit several commands of the same class.
+
+        Previews (`__preview`) are excluded: they apply to the engine but never
+        reach the undo history, and a drag emits a stream of them. Use
+        `assert_previews` for those.
         """
+        committed = [
+            entry["data"]
+            for entry in self.commands()
+            if not entry.get("data", {}).get("__preview")
+        ]
         matches = [
-            entry["data"]
-            for entry in self.commands()
-            if entry.get("data", {}).get("className") == class_name
-            and all(key in entry["data"].get("opts", {}) for key in expected)
+            data
+            for data in committed
+            if data.get("className") == class_name
+            and all(key in data.get("opts", {}) for key in expected)
         ] or [
-            entry["data"]
-            for entry in self.commands()
-            if entry.get("data", {}).get("className") == class_name and not expected
+            data
+            for data in committed
+            if data.get("className") == class_name and not expected
         ]
         if len(matches) != 1:
             sent = [
@@ -409,6 +427,35 @@ class E2ERun:
                 raise AssertionError(f"{class_name}.{key}: expected {want!r}, got {got!r}")
         self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
+
+    def assert_previews(self, class_name: str, **expected: object) -> int:
+        """Assert at least one *preview* of `class_name` matched `expected`.
+
+        A live drag emits one per frame, so the count is timing-dependent; that
+        any arrived, carrying the right value, is the deterministic part.
+        """
+        matches = [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("__preview")
+            and entry["data"].get("className") == class_name
+            and all(key in entry["data"].get("opts", {}) for key in expected)
+        ]
+        good = []
+        for data in matches:
+            opts = data.get("opts", data)
+            if all(
+                want(opts.get(key)) if callable(want) else opts.get(key) == want
+                for key, want in expected.items()
+            ):
+                good.append(data)
+        if not good:
+            raise AssertionError(
+                f"expected at least one {class_name} preview matching "
+                f"{sorted(expected)}, got {len(matches)} previews of that class"
+            )
+        self.event("assert_previews", className=class_name, count=len(good))
+        return len(good)
 
     def screenshot_root(self, name: str) -> Path:
         stem = f"{len(self.screenshots):02d}-{name}"

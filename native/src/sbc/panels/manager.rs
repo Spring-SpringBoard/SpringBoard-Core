@@ -7,6 +7,7 @@ use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::editor::Editor;
+use crate::sbc::panels::editor_base::as_preview;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
 use crate::sbc::panels::input::{PanelInput, PendingAction};
 use crate::sbc::panels::registry::editor_by_name;
@@ -62,10 +63,7 @@ impl Drop for PanelManager {
 impl PanelManager {
     pub fn new(interface: NativeInterfaceRef) -> Self {
         let enabled = port_flags::ui_impl(&interface) == UiImpl::Rust;
-        log::info!(
-            "native UI {}",
-            if enabled { "enabled" } else { "disabled" }
-        );
+        log::info!("native UI {}", if enabled { "enabled" } else { "disabled" });
         PanelManager {
             interface,
             enabled,
@@ -112,10 +110,8 @@ impl PanelManager {
                     }
                 }
                 PendingAction::ClickEdit(field) => {
-                    if let Some((root, extensions)) = self
-                        .editor
-                        .as_deref()
-                        .and_then(|ed| ed.field_asset(&field))
+                    if let Some((root, extensions)) =
+                        self.editor.as_deref().and_then(|ed| ed.field_asset(&field))
                     {
                         if let Some(doc) = self.view.document_handle() {
                             let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
@@ -124,10 +120,7 @@ impl PanelManager {
                         }
                         continue;
                     }
-                    if let Some(rgba) = self
-                        .editor
-                        .as_deref()
-                        .and_then(|ed| ed.field_color(&field))
+                    if let Some(rgba) = self.editor.as_deref().and_then(|ed| ed.field_color(&field))
                     {
                         if let Some(doc) = self.view.document_handle() {
                             self.picker.open(&self.interface, doc, &field, rgba)?;
@@ -260,34 +253,66 @@ impl PanelManager {
         self.just_committed = (!from_blur).then(|| name.to_string());
 
         if let Some(ed) = self.editor.as_deref_mut() {
-            self.pending_envelopes
-                .extend(ed.process_change(name, &self.interface, &mut self.next_cmd_id));
+            self.pending_envelopes.extend(ed.process_change(
+                name,
+                &self.interface,
+                &mut self.next_cmd_id,
+            ));
         }
     }
 
-    /// Advance a picker drag and handle OK/Cancel. Accepting writes the colour
-    /// back into the field and dispatches exactly one command.
+    /// Advance a picker drag and handle OK/Cancel.
+    ///
+    /// Dragging previews the colour on the engine every frame so the scene
+    /// shows what is being picked; previews stay out of the undo history.
+    /// Accepting dispatches exactly one undoable command, and cancelling
+    /// dispatches none.
     fn process_picker(&mut self) -> Result<(), Error> {
         let Some(doc) = self.view.document_handle() else {
             return Ok(());
         };
-        self.picker.tick(&self.interface, doc);
+        if self.picker.tick(&self.interface, doc) {
+            if let Some(field) = self.picker.field().map(str::to_string) {
+                let rgba = self.picker.rgba();
+                self.apply_picker_color(&field, rgba, true);
+            }
+        }
 
         for event in self.picker.drain_events() {
             let Some(field) = self.picker.field().map(str::to_string) else {
                 continue;
             };
+            let original = self.picker.original();
+
+            // The preview left the engine on some dragged colour. Undo has to
+            // restore the colour the picker opened with, and the committed
+            // command captures whatever it finds -- so put the original back
+            // (as a preview, off-history) before committing.
+            if self.picker.is_previewing() {
+                self.apply_picker_color(&field, original, true);
+            }
             if let PickerEvent::Accept = event {
                 let rgba = self.picker.rgba();
-                if let Some(ed) = self.editor.as_deref_mut() {
-                    ed.set_field_color(&field, rgba, &self.interface);
-                    self.pending_envelopes
-                        .extend(ed.process_drag_end(&field, &mut self.next_cmd_id));
-                }
+                self.apply_picker_color(&field, rgba, false);
             }
             self.picker.close(&self.interface, doc)?;
         }
         Ok(())
+    }
+
+    /// Push a colour into the field and dispatch its command, either as an
+    /// off-history preview or as a committed, undoable change.
+    fn apply_picker_color(&mut self, field: &str, rgba: [f32; 4], preview: bool) {
+        let Some(ed) = self.editor.as_deref_mut() else {
+            return;
+        };
+        ed.set_field_color(field, rgba, &self.interface);
+        let envelopes = ed.process_drag_end(field, &mut self.next_cmd_id);
+        self.pending_envelopes.extend(if preview {
+            as_preview(envelopes)
+        } else {
+            envelopes
+        });
     }
 
     /// Drive the asset picker; an accepted path is written into the field and

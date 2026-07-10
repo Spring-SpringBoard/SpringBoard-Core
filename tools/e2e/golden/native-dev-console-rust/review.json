@@ -1,0 +1,27 @@
+{
+  "console-cleared": {
+    "notes": "Console renders bottom-left, clear of the 500dp panel. 'Clear' emptied the log (deterministic empty state); header shows 'Developer Console' with no error count. Toolbar: Clear/Problems/LuaUI Reload/LuaRules Reload/Cheating/Global LOS/GodMode/Popup on error/Hide (F8). 'Popup on error' and 'Global LOS' read pressed, which matches engine state (SB enables global LOS).",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T21:59:36"
+  },
+  "console-hidden": {
+    "notes": "F8 hides the console: the cropped region contains only the map, no console chrome at all. Confirms the plugin still receives key_press even though the engine feeds keys straight to its RmlUi contexts.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T21:59:36"
+  },
+  "console-problems-off": {
+    "notes": "Problems un-pressed again; pixel-identical to console-cleared. The toggle is symmetric.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T21:59:36"
+  },
+  "console-problems-on": {
+    "notes": "Identical to console-cleared except the 'Problems' button is now pressed (green). Proves the toggle round-trips through the manager and back into the DOM.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T21:59:36"
+  },
+  "console-shown": {
+    "notes": "F8 brings the console back, identical to console-problems-off. Toggle is stable across hide/show.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T21:59:36"
+  }
+}

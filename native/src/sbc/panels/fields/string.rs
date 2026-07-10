@@ -24,11 +24,6 @@ impl StringField {
             element: None,
         }
     }
-
-    pub(crate) fn width(mut self, width: u32) -> Self {
-        self.width = width;
-        self
-    }
 }
 
 impl Field for StringField {
@@ -93,11 +88,5 @@ impl Field for StringField {
 
     fn value(&self) -> FieldValue {
         FieldValue::Text(self.value.clone())
-    }
-
-    /// A text input has no separate display element: it is always editable, so
-    /// a stale blur after Enter must not commit twice.
-    fn is_text_edit(&self) -> bool {
-        true
     }
 }

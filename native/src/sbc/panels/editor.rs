@@ -52,9 +52,6 @@ pub(crate) trait Editor {
     fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef);
 
     /// Whether the field commits from a text input, so a stale `blur` after the
-    /// value was already committed can be ignored.
-    fn field_is_text_edit(&self, name: &str) -> bool;
-
     /// The field's colour, if it is a colour field: the manager opens the
     /// picker on it instead of entering edit mode.
     fn field_color(&self, name: &str) -> Option<[f32; 4]>;

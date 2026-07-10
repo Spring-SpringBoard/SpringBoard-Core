@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 use log::debug;
 use serde::Deserialize;
 
-use super::command::{Command, CommandId};
+use super::command::{Command, CommandId, PreviewCommand};
 
 pub type ParsedCommand = (Box<dyn Command>, CommandId);
 
@@ -21,7 +21,21 @@ pub fn parse_json_command(
             source,
         }
     })?;
-    Ok(parse_command(value)?.map(|cmd| (cmd, cmd_id.cmd_id)))
+
+    // A `__preview` command applies to the engine but stays out of history, so
+    // a drag can update the scene every frame.
+    let preview = serde_json::from_value::<PreviewPeek>(value.clone())
+        .map(|p| p.preview)
+        .unwrap_or(false);
+
+    Ok(parse_command(value)?.map(|cmd| {
+        let cmd: Box<dyn Command> = if preview {
+            Box::new(PreviewCommand { inner: cmd })
+        } else {
+            cmd
+        };
+        (cmd, cmd_id.cmd_id)
+    }))
 }
 
 /// Resolve a payload into a command by `className`, ignoring `__cmd_id`. Used for
@@ -135,6 +149,12 @@ struct CommandIdPeek {
     cmd_id: CommandId,
 }
 
+#[derive(Deserialize)]
+struct PreviewPeek {
+    #[serde(rename = "__preview", default)]
+    preview: bool,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,6 +198,28 @@ mod tests {
     #[test]
     fn registry_lookup_unknown_class_returns_none() {
         assert!(registry().get("DefinitelyNotARealCommand").is_none());
+    }
+
+    fn water_params(preview: bool) -> serde_json::Value {
+        serde_json::json!({
+            "className": "SetWaterParamsCommand",
+            "__cmd_id": 7,
+            "__preview": preview,
+            "opts": { "diffuseColor": [1.0, 0.0, 0.0] },
+        })
+    }
+
+    #[test]
+    fn preview_flag_makes_a_command_non_undoable() {
+        let (cmd, id) = parse_json_command(water_params(true)).unwrap().unwrap();
+        assert_eq!(id, 7, "a preview keeps its command id");
+        assert!(!cmd.undoable(), "a preview must stay out of the history");
+    }
+
+    #[test]
+    fn the_same_command_is_undoable_without_the_preview_flag() {
+        let (cmd, _) = parse_json_command(water_params(false)).unwrap().unwrap();
+        assert!(cmd.undoable());
     }
 
     #[test]

@@ -139,6 +139,15 @@ Each must render, behave, emit the right command, and have a reference image.
 | Misc | Info | done, asserted |
 | Misc | Teams | not started |
 
+The **developer console** (F8) is ported too, as `native/src/sbc/devconsole/`.
+It is not an editor view: it owns its own RmlUi context and is enabled only when
+`ui: rust`, exactly as the Chili and RmlUi consoles gate on their own UI. Log
+lines arrive through the `add_console_line` callin, are classified by text
+(`error`/`failed` → error, `warning` → warning) and rendered once per tick
+rather than once per line. `Restart`, `Debug Mode` and `Toggle profiling` are
+deliberately absent: the first needs `Spring.Reload`, the others drive Lua-side
+state the native UI does not own.
+
 ## Known blockers
 
 ~~The panel cannot reach the project models.~~ Fixed: `Models::with` lifts the
@@ -146,11 +155,13 @@ panel out of the registry for its update, so `refresh_from_engine` takes
 `&mut Models`. Views backed by project state (Info, Teams, object properties)
 can now be ported.
 
-**Reference-image determinism is not yet proven.** A rerun of an unchanged
-`native-panel` reported ~108k differing pixels on `shell-objects-tab`, with only
-10 of them in the panel chrome: the map behind the translucent panel is not
-identical frame to frame. Either crop to opaque panel regions, or render the
-panel over a fixed backdrop for capture, before treating a diff as a failure.
+~~Reference-image determinism is not yet proven.~~ Fixed. The differing pixels
+were never the map: they were the engine's own `InfoConsole` overlay, which
+prints a Lua state **pointer address** that changes every run. The native dev
+console now sends `console 0` (correctly -- see the `send_commands` note below),
+which hides that overlay. Two consecutive `native-panel` runs are now
+pixel-identical across all 16 reference images, and `native-dev-console` across
+all 5, so any diff is a real regression.
 
 ## TODO
 
@@ -167,26 +178,46 @@ panel over a fixed backdrop for capture, before treating a diff as a failure.
       assert the console action instead.
 - [ ] Undo/redo: `on_history_events` marks the panel dirty, but only the open
       editor refreshes. Assert an undo of a lighting change restores the field.
-- [ ] Toolbar action buttons; `#action-bar` is still an empty placeholder.
-- [ ] Objects → Units, Objects → Features (grid view + 3D RTT thumbnails via
-      `<texture src>`).
-- [ ] Objects → Properties, Collision.
-- [ ] Map → Settings, then the remaining Map views.
-- [ ] Toolbar action buttons (new/open/save/export); currently `#action-bar` is
-      an empty placeholder.
-- [ ] Undo/redo refresh path: `on_history_events` sets `needs_refresh`, but only
-      the open editor is refreshed. Verify against an undo of a lighting change.
+- [ ] Toolbar action buttons (new/open/save/export); `#action-bar` is still an
+      empty placeholder.
 - [ ] Native chonsole: remove its dead `context_render` call.
+- [ ] Dev console: no line-selection or Ctrl+C copy yet (the Lua one has both),
+      and no `Restart` button.
 - [ ] Visual parity gaps against Lua RmlUi, visible in the reference images:
       the `shadowMode` select is narrower and sits high; the toolbar action bar
       is an empty placeholder, so content starts ~30px higher.
 - [ ] Field widths: Lua sizes numeric/colour buttons per-field (`width = 140`);
       the native fields hardcode 78/140.
 
+## Live preview (`__preview`)
+
+A drag should show its effect while it is happening, but must not bury the undo
+stack under one command per frame. A command envelope carrying `"__preview":
+true` is wrapped in `PreviewCommand`, whose `undoable()` is `false`: the command
+manager executes it and never pushes it onto the history.
+
+The colour picker uses this. Two things are easy to get wrong:
+
+- Committing straight after previewing captures the *previewed* value as the
+  "old" value, so undo would restore the previewed colour. The picker therefore
+  re-applies the original (as a preview) before it commits.
+- Cancelling must restore the original the same way, and emit no command at all.
+
+`assert_previews()` in the e2e harness asserts the preview stream; the
+`assert_command()` "exactly one" contract ignores previews entirely.
+
 ## Engine notes
 
 - The engine renders every RmlUi context in `RmlGui::RenderFrame`, between
   `BeginFrame` and `PresentFrame`. A plugin must **not** call `context_render`.
+- `messages().send_commands(command, rest)`: `rest` is a **second command**,
+  joined to the first with a newline — it is *not* an argument. Arguments belong
+  in the first string: `send_commands("console 0", "")`, never
+  `send_commands("console", "0")` (which silently runs `console` and then `0`).
+- A plugin document whose `body` spans the screen (needed to anchor an
+  absolutely-positioned panel) will swallow every click on the map *and* in any
+  other plugin context. Give such a body `pointer-events: none` and re-enable it
+  (`pointer-events: auto`) on the widgets that should take input.
 - The engine also feeds keyboard/text input straight to its RmlUi contexts, so a
   plugin never sees those keys through its own `key_press` call-in. Listen on
   the element and read `key_identifier` off `event_get_current()`.

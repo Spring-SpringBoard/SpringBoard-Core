@@ -233,7 +233,12 @@ impl Editor for LightingEditor {
         for (key, mode, ground, unit) in [
             ("diffuse", "unit", "groundDiffuseColor", "unitDiffuseColor"),
             ("ambient", "unit", "groundAmbientColor", "unitAmbientColor"),
-            ("specular", "unit", "groundSpecularColor", "unitSpecularColor"),
+            (
+                "specular",
+                "unit",
+                "groundSpecularColor",
+                "unitSpecularColor",
+            ),
         ] {
             if let Ok((v, ..)) = gfx.get_sun(key, "") {
                 self.fields.set(ground, FieldValue::Color(v));
@@ -277,10 +282,6 @@ impl Editor for LightingEditor {
 
     fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
         self.fields.cancel_edit(name, interface)
-    }
-
-    fn field_is_text_edit(&self, name: &str) -> bool {
-        self.fields.is_text_edit(name)
     }
 
     fn field_color(&self, name: &str) -> Option<[f32; 4]> {

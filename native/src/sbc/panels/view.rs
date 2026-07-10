@@ -118,7 +118,11 @@ impl PanelView {
 
         let mut html = String::new();
         for tab in Tab::ALL {
-            let active = if tab == self.current_tab { " active" } else { "" };
+            let active = if tab == self.current_tab {
+                " active"
+            } else {
+                ""
+            };
             html.push_str(&format!(
                 r#"<button id="tab-{name}" class="tab-button{active}">{name}</button>"#,
                 name = tab.as_str(),
@@ -192,7 +196,11 @@ impl PanelView {
 
     /// Switch tab: restyle the tab buttons, rebuild the strip, clear content.
     /// Matches Chili, where changing tabs closes the open editor.
-    pub(crate) fn set_tab(&mut self, interface: &NativeInterfaceRef, tab: Tab) -> Result<(), Error> {
+    pub(crate) fn set_tab(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        tab: Tab,
+    ) -> Result<(), Error> {
         if self.current_tab == tab {
             return Ok(());
         }
