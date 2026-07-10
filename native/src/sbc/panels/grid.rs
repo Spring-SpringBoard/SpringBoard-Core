@@ -107,7 +107,14 @@ impl GridView {
                 size = self.item_size,
             ));
             if let Some(image) = &item.image {
-                html.push_str(&format!(r#"<img src="{image}"/>"#));
+                // Engine textures (`!nativeN` RTT thumbnails, `%`/`#`/`$` names)
+                // resolve through RmlUi's `<texture>` element; plain file paths
+                // are `<img>`.
+                if image.starts_with(['!', '%', '#', '$']) {
+                    html.push_str(&format!(r#"<texture src="{image}"/>"#));
+                } else {
+                    html.push_str(&format!(r#"<img src="{image}"/>"#));
+                }
             }
             html.push_str("</div>");
             html.push_str(&format!(

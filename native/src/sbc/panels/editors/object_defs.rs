@@ -20,6 +20,7 @@ use crate::sbc::panels::editor_base::{group_rml, resolve_base, section_rml, Fiel
 use crate::sbc::panels::field::{escape_rml, ChangeQueue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField};
 use crate::sbc::panels::grid::{GridItem, GridView};
+use crate::sbc::panels::thumbnails::{ThumbKind, ThumbnailRenderer};
 use crate::sbc::rml::element_by_id;
 use crate::sbc::states::{PlacementConfig, StateRequest};
 use crate::sbc::teams::TeamManager;
@@ -64,6 +65,8 @@ pub(crate) struct ObjectDefsView {
     teams_revision: usize,
     /// The field set or mode changed, so the markup must be regenerated.
     needs_rebuild: bool,
+    /// Renders each def's model into a texture for its grid cell.
+    thumbnails: ThumbnailRenderer,
 }
 
 impl ObjectDefsView {
@@ -115,7 +118,13 @@ impl ObjectDefsView {
             teams: Vec::new(),
             teams_revision: usize::MAX,
             needs_rebuild: false,
+            thumbnails: ThumbnailRenderer::default(),
         }
+    }
+
+    /// Create/redraw the def thumbnails. Runs on the draw thread.
+    pub(crate) fn draw_thumbnails(&mut self, interface: &NativeInterfaceRef) {
+        self.thumbnails.draw(interface);
     }
 
     pub(crate) fn mark_search_dirty(&mut self) {
@@ -312,11 +321,37 @@ impl ObjectDefsView {
         document: u64,
     ) -> Result<(), Error> {
         if !self.loaded {
-            self.all = match self.kind {
-                DefKind::Unit => unit_defs(interface),
-                DefKind::Feature => feature_defs(interface),
+            let (loaded, thumb_kind) = match self.kind {
+                DefKind::Unit => (unit_defs(interface), ThumbKind::Unit),
+                DefKind::Feature => (feature_defs(interface), ThumbKind::Feature),
             };
+            for (item, def_id) in &loaded {
+                self.thumbnails.request(&item.id, *def_id, thumb_kind);
+            }
+            self.all = loaded.into_iter().map(|(item, _)| item).collect();
             self.loaded = true;
+            self.apply_filter(interface, document)?;
+        }
+
+        // Thumbnails are created on the draw thread; when their names appear,
+        // point each grid cell at its texture and re-render.
+        if self.thumbnails.take_names_dirty() {
+            let names: Vec<(String, Option<String>)> = self
+                .all
+                .iter()
+                .filter(|item| item.image.is_none())
+                .map(|item| {
+                    (
+                        item.id.clone(),
+                        self.thumbnails.texture_for(&item.id).map(str::to_string),
+                    )
+                })
+                .collect();
+            for (id, texture) in names {
+                if let Some(item) = self.all.iter_mut().find(|i| i.id == id) {
+                    item.image = texture;
+                }
+            }
             self.apply_filter(interface, document)?;
         }
 
@@ -336,6 +371,11 @@ impl ObjectDefsView {
             self.grid.set_selected(Some(&id));
             self.request_dirty = true;
             self.grid.render(interface, document)?;
+        }
+
+        // Keep the thumbnails tinted for the chosen team.
+        if let Some(team) = self.selected_team() {
+            self.thumbnails.set_team(team);
         }
 
         let mode_change = self.mode_clicks.borrow_mut().drain(..).next_back();
@@ -518,13 +558,17 @@ macro_rules! object_defs_editor {
             fn field_asset(&self, _name: &str) -> Option<(String, Vec<String>)> {
                 None
             }
+            fn draw_thumbnails(&mut self, interface: &NativeInterfaceRef) {
+                self.defs.draw_thumbnails(interface)
+            }
         }
     };
 }
 
 pub(crate) use object_defs_editor;
 
-fn unit_defs(interface: &NativeInterfaceRef) -> Vec<GridItem> {
+/// Each grid item paired with its engine def id, for the thumbnail renderer.
+fn unit_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
     let defs = interface.unit_defs();
     let count = defs.get_unit_def_count().unwrap_or(0);
     let mut items = Vec::new();
@@ -537,18 +581,21 @@ fn unit_defs(interface: &NativeInterfaceRef) -> Vec<GridItem> {
             .ok()
             .flatten()
             .unwrap_or_else(|| name.clone());
-        items.push(GridItem {
-            id: name,
-            caption: escape_rml(&caption),
-            image: None,
-            is_directory: false,
-        });
+        items.push((
+            GridItem {
+                id: name,
+                caption: escape_rml(&caption),
+                image: None,
+                is_directory: false,
+            },
+            id,
+        ));
     }
-    items.sort_by(|a, b| a.caption.cmp(&b.caption));
+    items.sort_by(|a, b| a.0.caption.cmp(&b.0.caption));
     items
 }
 
-fn feature_defs(interface: &NativeInterfaceRef) -> Vec<GridItem> {
+fn feature_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
     let defs = interface.feature_defs();
     let Ok(ids) = defs.get_feature_def_ids() else {
         return Vec::new();
@@ -564,13 +611,16 @@ fn feature_defs(interface: &NativeInterfaceRef) -> Vec<GridItem> {
         if name.is_empty() {
             continue;
         }
-        items.push(GridItem {
-            id: name.clone(),
-            caption: escape_rml(&name),
-            image: None,
-            is_directory: false,
-        });
+        items.push((
+            GridItem {
+                id: name.clone(),
+                caption: escape_rml(&name),
+                image: None,
+                is_directory: false,
+            },
+            id,
+        ));
     }
-    items.sort_by(|a, b| a.caption.cmp(&b.caption));
+    items.sort_by(|a, b| a.0.caption.cmp(&b.0.caption));
     items
 }

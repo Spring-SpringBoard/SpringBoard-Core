@@ -226,6 +226,11 @@ impl PanelManager {
         if !self.enabled {
             return Ok(());
         }
+        // The def grids render their thumbnails here, where the GL context is
+        // current (creating and drawing to FBO textures).
+        if let Some(ed) = self.editor.as_deref_mut() {
+            ed.draw_thumbnails(&self.interface);
+        }
         self.view.draw(&self.interface)
     }
 

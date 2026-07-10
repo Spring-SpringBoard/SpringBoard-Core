@@ -35,6 +35,12 @@ pub(crate) trait Editor {
     /// updated during drag). Does NOT read from DOM.
     fn process_drag_end(&mut self, name: &str, next_cmd_id: &mut u64) -> Vec<String>;
 
+    /// Draw-thread work: an editor that renders models to textures (the def
+    /// grids' thumbnails) does it here, from `draw_screen`, where GL is current.
+    fn draw_thumbnails(&mut self, interface: &NativeInterfaceRef) {
+        let _ = interface;
+    }
+
     /// Per-tick work for editors that own something other than fields — a grid
     /// drains its queued clicks here, outside the RmlUi event dispatch.
     fn tick(

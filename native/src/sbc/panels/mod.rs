@@ -9,6 +9,7 @@ mod grid;
 mod input;
 mod manager;
 mod registry;
+mod thumbnails;
 mod view;
 
 pub(crate) use manager::PanelManager;
