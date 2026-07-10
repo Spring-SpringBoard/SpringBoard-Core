@@ -53,6 +53,21 @@ pub(crate) trait Editor {
         None
     }
 
+    /// A cheap per-tick check for views that follow external state (Properties
+    /// tracks the selection). Returning true makes the manager refresh and
+    /// rebuild this editor. Must be cheap: it runs every tick.
+    fn wants_refresh(&mut self, models: &mut Models) -> bool {
+        let _ = models;
+        false
+    }
+
+    /// Whether regenerating the markup (not just the values) is needed on the
+    /// next refresh: the Properties view's layout depends on whether anything is
+    /// selected.
+    fn wants_rebuild(&self) -> bool {
+        false
+    }
+
     /// Push field values into the shared brush, so the active state paints with
     /// what the panel shows. Only the Map tab's brush editors do anything here.
     fn write_brush(&self, brush: &mut BrushSettings) {

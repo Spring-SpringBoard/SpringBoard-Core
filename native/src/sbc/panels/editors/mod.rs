@@ -14,4 +14,5 @@ mod misc_info;
 mod misc_teams;
 mod object_defs;
 mod objects_features;
+mod objects_properties;
 mod objects_units;

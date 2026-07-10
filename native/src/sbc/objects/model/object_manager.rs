@@ -94,6 +94,32 @@ impl ObjectManager {
         self.handler(&kind)?.spring_id(model_id)
     }
 
+    /// The modelID an engine springID maps to; used to select a clicked object.
+    pub fn model_id_for_spring(&self, kind: ObjectKind, spring_id: i32) -> Option<i32> {
+        self.handler(&kind)?.model_id_for_spring(spring_id)
+    }
+
+    /// An object's world position, if it has one.
+    pub fn object_pos(&self, kind: ObjectKind, model_id: i32) -> Option<super::object_data::Vec3> {
+        let value = self.field_value(kind, model_id, "pos")?;
+        value
+            .downcast::<super::object_data::Vec3>()
+            .ok()
+            .map(|v| *v)
+    }
+
+    /// One field's current value as JSON, for the property editor to render.
+    pub fn field_json(
+        &self,
+        kind: ObjectKind,
+        model_id: i32,
+        name: &str,
+    ) -> Option<serde_json::Value> {
+        let descriptor = self.descriptor(kind, name)?;
+        let value = self.field_value(kind, model_id, name)?;
+        super::super::codec::field_to_json(descriptor.value_type, &*value)
+    }
+
     pub fn latest_model_id(&self, kind: ObjectKind) -> i32 {
         self.handler(&kind)
             .map(|handler| handler.latest_model_id())

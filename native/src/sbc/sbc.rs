@@ -62,7 +62,7 @@ impl NativeModule for SBC {
         self.models
             .with::<StateManager, _>(|states, models| -> Result<(), Error> {
                 states.sync_brush(models);
-                states.update()
+                states.update(models)
             })?;
         self.drain_panel_envelopes();
         self.drain_state_envelopes();
@@ -97,7 +97,11 @@ impl NativeModule for SBC {
             return Ok(true);
         }
         // Escape leaves the active editing state.
-        self.model::<StateManager>().key_press(key_code)
+        let handled = self
+            .models
+            .with::<StateManager, _>(|s, m| s.key_press(m, key_code))?;
+        self.drain_state_envelopes();
+        Ok(handled)
     }
 
     fn add_console_line(
@@ -135,8 +139,18 @@ impl NativeModule for SBC {
         {
             return Ok(true);
         }
-        self.model::<PanelManager>()
-            .mouse_move(x, y, dx, dy, button)
+        if self
+            .model::<PanelManager>()
+            .mouse_move(x, y, dx, dy, button)?
+        {
+            return Ok(true);
+        }
+        // A drag on the map (moving a selected object) is the state's.
+        let handled = self
+            .models
+            .with::<StateManager, _>(|s, m| s.mouse_move(m, x, y, button))?;
+        self.drain_state_envelopes();
+        Ok(handled)
     }
 
     fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
@@ -148,7 +162,9 @@ impl NativeModule for SBC {
         }
         // Last: a click that reached neither console nor panel is a click on
         // the map, which is the editing state's to interpret.
-        let handled = self.model::<StateManager>().mouse_press(x, y, button)?;
+        let handled = self
+            .models
+            .with::<StateManager, _>(|s, m| s.mouse_press(m, x, y, button))?;
         self.drain_state_envelopes();
         Ok(handled)
     }
@@ -157,7 +173,8 @@ impl NativeModule for SBC {
         self.model::<ChonsoleManager>()
             .mouse_release(x, y, button)?;
         self.model::<PanelManager>().mouse_release(x, y, button)?;
-        self.model::<StateManager>().mouse_release(x, y, button)?;
+        self.models
+            .with::<StateManager, _>(|s, m| s.mouse_release(m, x, y, button))?;
         self.drain_state_envelopes();
         Ok(())
     }
@@ -169,7 +186,8 @@ impl NativeModule for SBC {
         if self.model::<PanelManager>().mouse_wheel(up, value)? {
             return Ok(true);
         }
-        self.model::<StateManager>().mouse_wheel(up, value)
+        self.models
+            .with::<StateManager, _>(|s, m| s.mouse_wheel(m, up, value))
     }
 }
 

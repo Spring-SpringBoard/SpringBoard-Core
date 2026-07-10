@@ -34,6 +34,12 @@ pub trait ObjectHandler {
         None
     }
 
+    /// The modelID an engine springID maps to, the reverse of [`spring_id`].
+    /// Used to turn a click on a unit into a modelID the editor can select.
+    fn model_id_for_spring(&self, _spring_id: i32) -> Option<i32> {
+        None
+    }
+
     fn descriptor(&self, name: &str) -> Option<ObjectFieldDescriptor> {
         self.descriptors().into_iter().find(|d| d.name == name)
     }

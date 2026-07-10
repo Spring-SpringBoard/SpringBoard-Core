@@ -235,6 +235,10 @@ impl ObjectHandler for FeatureModel {
     fn spring_id(&self, model_id: i32) -> Option<i32> {
         self.ids.spring_id(model_id)
     }
+
+    fn model_id_for_spring(&self, spring_id: i32) -> Option<i32> {
+        self.ids.model_id(spring_id)
+    }
 }
 
 fn field_dyn<'a>(fields: &'a [FieldValue], name: &str) -> Option<&'a dyn Any> {

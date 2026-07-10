@@ -183,6 +183,15 @@ impl PanelManager {
             self.commit_field(&request.field, request.from_blur);
         }
 
+        // A view that follows external state (Properties tracking the selection)
+        // asks to refresh here, cheaply, every tick.
+        if let Some(ed) = self.editor.as_mut() {
+            if ed.wants_refresh(models) {
+                self.needs_refresh = true;
+                self.needs_rebuild |= ed.wants_rebuild();
+            }
+        }
+
         // Refresh from engine if needed (undo/redo, or the editor just opened)
         if self.needs_refresh {
             if let Some(ed) = self.editor.as_mut() {
