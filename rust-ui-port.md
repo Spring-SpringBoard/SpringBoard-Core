@@ -119,7 +119,7 @@ Each must render, behave, emit the right command, and have a reference image.
 | numeric (drag)          | done — polled cursor; engine reports no mouse_move |
 | colour picker           | done — modal, SV+hue drag, OK/Cancel; asserted |
 | checkbox / boolean      | done — `has_attribute`, one command; asserted |
-| text / string           | written, **not yet used by a view** |
+| text / string           | done — Enter/blur commit once; asserted |
 | choice / select         | renders; **behaviour untested** |
 | asset / material picker | **not ported** |
 | unit / feature picker   | **not ported** (grid + RTT thumbnails) |
@@ -135,21 +135,15 @@ Each must render, behave, emit the right command, and have a reference image.
 | Env | Water | done, asserted; texture asset fields missing |
 | Objects | Units / Features / Properties / Collision | not started |
 | Map | all | not started |
-| Misc | Info / Teams | blocked, see below |
+| Misc | Info | done, asserted |
+| Misc | Teams | not started |
 
 ## Known blockers
 
-**The panel cannot reach the project models.** `Misc → Info` edits
-`ScenarioInfoManager` (name/description/version/author) and `Misc → Teams` edits
-the team model — neither is engine state, so `refresh_from_engine(interface)`
-cannot read them. `PanelManager` is itself a `Model`, so it cannot borrow another
-model out of the registry while `SBC::update` holds it.
-
-The fix is to pass the model registry (or a `Context`) into the editor's refresh
-and dispatch, rather than only `NativeInterfaceRef`. Do this before porting
-Misc, Objects → Properties, or anything else backed by project state. It is a
-real design change, not a workaround — do not cache a copy behind the model's
-back.
+~~The panel cannot reach the project models.~~ Fixed: `Models::with` lifts the
+panel out of the registry for its update, so `refresh_from_engine` takes
+`&mut Models`. Views backed by project state (Info, Teams, object properties)
+can now be ported.
 
 **Reference-image determinism is not yet proven.** A rerun of an unchanged
 `native-panel` reported ~108k differing pixels on `shell-objects-tab`, with only
@@ -159,9 +153,21 @@ panel over a fixed backdrop for capture, before treating a diff as a failure.
 
 ## TODO
 
-- [ ] Pass the model registry into editors (blocker above).
-- [ ] Env → Sky's skybox texture field (needs an asset picker).
-- [ ] Asset / material picker (grid of textures, used by Sky, Water, Map).
+- [ ] **Next:** grid view + asset/material picker. Blocks Sky's skybox, Water's
+      three texture fields, all of Map, and Objects' unit/feature pickers. This is
+      the single biggest remaining piece; do it before more editors.
+- [ ] Objects → Units / Features: grid + 3D RTT thumbnails. Lua renders these
+      with `<texture src="!N">` (a Lua dynamic texture); the native path needs an
+      equivalent, and may need a new binding. Check before designing.
+- [ ] Map → Settings / Terrain / Texture / Metal / Grass.
+- [ ] Misc → Teams (project model; now unblocked).
+- [ ] Objects → Properties, Collision (project model; now unblocked).
+- [ ] Choice/select: renders, but no test asserts that changing it emits a
+      command. `shadowMode` is an engine console action, so it emits none —
+      assert the console action instead.
+- [ ] Undo/redo: `on_history_events` marks the panel dirty, but only the open
+      editor refreshes. Assert an undo of a lighting change restores the field.
+- [ ] Toolbar action buttons; `#action-bar` is still an empty placeholder.
 - [ ] Objects → Units, Objects → Features (grid view + 3D RTT thumbnails via
       `<texture src>`).
 - [ ] Objects → Properties, Collision.
