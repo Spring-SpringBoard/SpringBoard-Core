@@ -702,3 +702,85 @@ scrollbarvertical sliderbar:hover {
     height: 60px;
     border: 1px #555555;
 }
+
+/* --- Asset picker + grid (ports .grid-container/.grid-item) --- */
+.asset-dialog {
+    width: 480px;
+}
+
+.asset-path-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.asset-path-nav .dialog-button {
+    width: 50px;
+    min-width: 50px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.asset-path {
+    color: #a8b0c0;
+    font-size: 12px;
+}
+
+.grid-container {
+    /* A flex item's `height` can be overridden by the container; the grid must
+       keep its box even when empty. */
+    min-height: 260px;
+    height: 260px;
+    border: 1px #555555;
+    border-radius: 3px;
+    background-color: #1a1a1a;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    padding: 5px;
+    gap: 5px;
+}
+
+.grid-item {
+    background-color: #2a2a2a;
+    border: 1px #555555;
+    border-radius: 3px;
+    display: block;
+    padding: 0px;
+    overflow: hidden;
+}
+
+.grid-item:hover {
+    background-color: #3a3a3a;
+    border-color: #777777;
+}
+
+.grid-item.selected {
+    border-color: #3a7ebf;
+    background-color: #24313d;
+}
+
+.grid-item.folder {
+    background-color: #23291f;
+}
+
+.grid-item-image {
+    display: block;
+    width: 100%;
+}
+
+.grid-item-image img {
+    width: 100%;
+    height: 100%;
+}
+
+.grid-item-label {
+    display: block;
+    font-size: 10px;
+    color: #cccccc;
+    text-align: center;
+    overflow: hidden;
+}

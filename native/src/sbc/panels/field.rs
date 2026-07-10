@@ -199,6 +199,16 @@ pub trait Field {
     /// Set context before a drag (e.g., which color channel "r"/"g"/"b").
     fn prepare_drag(&mut self, _context: &str) {}
 
+    /// True for fields whose click opens the asset picker.
+    fn is_asset(&self) -> bool {
+        false
+    }
+
+    /// The asset root and accepted extensions, for an asset field.
+    fn asset_info(&self) -> Option<(String, Vec<String>)> {
+        None
+    }
+
     /// True for fields that commit from a text input (Enter or focus loss).
     /// Hiding that input fires a second, stale `blur`, which must not dispatch
     /// another command.

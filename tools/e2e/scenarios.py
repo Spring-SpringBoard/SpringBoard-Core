@@ -194,6 +194,30 @@ def native_panel(run_state: E2ERun) -> None:
 
     run_state.assert_command("SetScenarioInfoCommand")
 
+    # Env -> Sky: the Skybox asset field opens the VFS asset picker.
+    run_state.click(panel_left + 180, 35, delay=0.4)   # Env tab
+    run_state.click(panel_left + 110, 88, delay=0.7)   # Sky
+    run_state.golden("sky-open")
+    run_state.click(panel_left + 64, 280, delay=0.8)   # Skybox field
+    run_state.golden("asset-picker-open")
+    run_state.click(panel_left + 440, 603, delay=0.6)  # Cancel
+
+    # Env -> Water: the normal-texture field browses bitmaps/ and picking a file
+    # must emit SetWaterParamsCommand carrying its VFS path.
+    run_state.click(panel_left + 182, 88, delay=0.7)   # Water
+    run_state.click(panel_left + 87, 873, delay=0.8)   # Normal texture
+    run_state.golden("asset-picker-bitmaps")
+
+    run_state.click(panel_left + 60, 335, delay=0.5)   # first file cell
+    run_state.golden("asset-picker-selected")
+    run_state.click(panel_left + 353, 603, delay=0.8)  # OK
+
+    def is_bitmap(path: object) -> bool:
+        return isinstance(path, str) and path.startswith("bitmaps/") and "bitmaps/bitmaps" not in path
+
+    run_state.assert_command("SetWaterParamsCommand", normalTexture=is_bitmap)
+    run_state.golden("asset-picked")
+
 
 def heightmap(run_state: E2ERun) -> None:
     """Map -> Terrain: pick the raise brush and drag on the map, then undo.

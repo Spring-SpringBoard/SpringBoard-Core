@@ -291,4 +291,13 @@ impl Editor for LightingEditor {
         self.fields.set(name, FieldValue::Color(rgba));
         let _ = self.fields.write_values(interface);
     }
+
+    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
+        self.fields.asset_info(name)
+    }
+
+    fn set_field_text(&mut self, name: &str, value: &str, interface: &NativeInterfaceRef) {
+        self.fields.set(name, FieldValue::Text(value.to_string()));
+        let _ = self.fields.write_values(interface);
+    }
 }

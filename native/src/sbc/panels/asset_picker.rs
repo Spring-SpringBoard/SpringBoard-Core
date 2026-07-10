@@ -1,0 +1,208 @@
+//! Asset picker modal: browse the VFS under a root directory and pick a file.
+//!
+//! A port of `RmlUiAssetPickerWindow`. The material and unit/feature pickers are
+//! the same grid with a different item source.
+
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use spring_native::prelude::{Error, NativeInterfaceRef};
+
+use crate::sbc::panels::field::{element_by_id, escape_rml};
+use crate::sbc::panels::grid::{list_assets, parent_dir, GridView};
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum PickerEvent {
+    Accept,
+    Cancel,
+    Up,
+}
+
+pub(crate) struct AssetPicker {
+    /// The field being edited, and the root it browses.
+    field: Option<String>,
+    root: String,
+    dir: String,
+    extensions: Vec<String>,
+    grid: GridView,
+    events: Rc<RefCell<Vec<PickerEvent>>>,
+    bound: bool,
+}
+
+impl Default for AssetPicker {
+    fn default() -> Self {
+        AssetPicker {
+            field: None,
+            root: String::new(),
+            dir: String::new(),
+            extensions: Vec::new(),
+            grid: GridView::new("asset-grid", 64),
+            events: Rc::new(RefCell::new(Vec::new())),
+            bound: false,
+        }
+    }
+}
+
+impl AssetPicker {
+    pub(crate) fn is_open(&self) -> bool {
+        self.field.is_some()
+    }
+
+    pub(crate) fn field(&self) -> Option<&str> {
+        self.field.as_deref()
+    }
+
+    pub(crate) fn selected(&self) -> Option<&str> {
+        self.grid.selected()
+    }
+
+    pub(crate) fn markup(&self) -> String {
+        format!(
+            concat!(
+                r#"<div id="asset-picker" class="picker-backdrop hidden">"#,
+                r#"<div class="dialog picker-dialog asset-dialog">"#,
+                r#"<div class="dialog-header"><span class="dialog-title">Pick Asset</span></div>"#,
+                r#"<div class="dialog-content">"#,
+                r#"<div class="asset-path-nav">"#,
+                r#"<button id="asset-up" class="dialog-button">Up</button>"#,
+                r#"<span id="asset-path" class="asset-path"></span></div>"#,
+                r#"{grid}"#,
+                r#"</div>"#,
+                r#"<div class="dialog-footer">"#,
+                r#"<button id="asset-ok" class="dialog-button primary">OK</button>"#,
+                r#"<button id="asset-cancel" class="dialog-button">Cancel</button>"#,
+                r#"</div></div></div>"#,
+            ),
+            grid = self.grid.container_rml(),
+        )
+    }
+
+    pub(crate) fn bind(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        if self.bound {
+            return Ok(());
+        }
+        let rml = interface.rml_ui();
+        for (id, event) in [
+            ("asset-ok", PickerEvent::Accept),
+            ("asset-cancel", PickerEvent::Cancel),
+            ("asset-up", PickerEvent::Up),
+        ] {
+            let Some(e) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let q = self.events.clone();
+            rml.element_add_event_listener(e, "click", false, move || {
+                q.borrow_mut().push(event);
+            })?;
+        }
+        self.bound = true;
+        Ok(())
+    }
+
+    pub(crate) fn open(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        field: &str,
+        root: &str,
+        extensions: &[&str],
+    ) -> Result<(), Error> {
+        self.field = Some(field.to_string());
+        self.root = root.trim_end_matches('/').to_string();
+        self.dir = self.root.clone();
+        self.extensions = extensions.iter().map(|e| e.to_string()).collect();
+        self.grid.set_selected(None);
+        self.populate(interface, document)?;
+        self.set_visible(interface, document, true)
+    }
+
+    pub(crate) fn close(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        self.field = None;
+        self.set_visible(interface, document, false)
+    }
+
+    fn set_visible(
+        &self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        visible: bool,
+    ) -> Result<(), Error> {
+        if let Some(e) = element_by_id(interface, document, "asset-picker") {
+            interface.rml_ui().element_set_class(e, "hidden", !visible)?;
+        }
+        Ok(())
+    }
+
+    fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
+        let extensions: Vec<&str> = self.extensions.iter().map(String::as_str).collect();
+        self.grid
+            .set_items(list_assets(interface, &self.dir, &extensions));
+        self.grid.render(interface, document)?;
+        if let Some(e) = element_by_id(interface, document, "asset-path") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(e, &escape_rml(&self.dir))?;
+        }
+        Ok(())
+    }
+
+    /// Handle queued clicks and buttons. Returns the accepted asset path.
+    pub(crate) fn tick(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<Option<String>, Error> {
+        if !self.is_open() {
+            self.grid.drain_clicks();
+            self.events.borrow_mut().clear();
+            return Ok(None);
+        }
+
+        // Clicking a directory navigates; clicking a file selects it.
+        for id in self.grid.drain_clicks() {
+            let is_dir = self.grid.item(&id).is_some_and(|i| i.is_directory);
+            if is_dir {
+                self.dir = id;
+                self.grid.set_selected(None);
+                self.populate(interface, document)?;
+            } else {
+                self.grid.set_selected(Some(&id));
+                self.grid.render(interface, document)?;
+            }
+        }
+
+        let events: Vec<PickerEvent> = self.events.borrow_mut().drain(..).collect();
+        for event in events {
+            match event {
+                PickerEvent::Up => {
+                    // Never navigate above the root the field was opened with.
+                    if self.dir != self.root {
+                        if let Some(parent) = parent_dir(&self.dir) {
+                            self.dir = parent;
+                            self.grid.set_selected(None);
+                            self.populate(interface, document)?;
+                        }
+                    }
+                }
+                PickerEvent::Cancel => {
+                    self.close(interface, document)?;
+                    return Ok(None);
+                }
+                PickerEvent::Accept => {
+                    let picked = self.grid.selected().map(str::to_string);
+                    self.close(interface, document)?;
+                    return Ok(picked);
+                }
+            }
+        }
+        Ok(None)
+    }
+}

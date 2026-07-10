@@ -4,6 +4,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
+use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
@@ -29,6 +30,7 @@ pub(crate) struct PanelManager {
     pending_envelopes: Vec<String>,
     next_cmd_id: u64,
     picker: ColorPicker,
+    asset_picker: AssetPicker,
     /// The field currently in text-edit mode. Owning this here is what keeps a
     /// commit to exactly one command: the DOM would otherwise fire "change" on
     /// every keystroke.
@@ -74,6 +76,7 @@ impl PanelManager {
             pending_envelopes: Vec::new(),
             next_cmd_id: 1_000_000,
             picker: ColorPicker::default(),
+            asset_picker: AssetPicker::default(),
             editing: None,
             just_committed: None,
         }
@@ -89,10 +92,12 @@ impl PanelManager {
         }
         if let Some(doc) = self.view.document_handle() {
             self.picker.bind(&self.interface, doc)?;
+            self.asset_picker.bind(&self.interface, doc)?;
         }
 
         self.process_shell_events()?;
         self.process_picker()?;
+        self.process_asset_picker()?;
 
         self.input.set_cursor(&self.interface);
 
@@ -107,6 +112,18 @@ impl PanelManager {
                     }
                 }
                 PendingAction::ClickEdit(field) => {
+                    if let Some((root, extensions)) = self
+                        .editor
+                        .as_deref()
+                        .and_then(|ed| ed.field_asset(&field))
+                    {
+                        if let Some(doc) = self.view.document_handle() {
+                            let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
+                            self.asset_picker
+                                .open(&self.interface, doc, &field, &root, &exts)?;
+                        }
+                        continue;
+                    }
                     if let Some(rgba) = self
                         .editor
                         .as_deref()
@@ -269,6 +286,24 @@ impl PanelManager {
                 }
             }
             self.picker.close(&self.interface, doc)?;
+        }
+        Ok(())
+    }
+
+    /// Drive the asset picker; an accepted path is written into the field and
+    /// dispatched as one command.
+    fn process_asset_picker(&mut self) -> Result<(), Error> {
+        let Some(doc) = self.view.document_handle() else {
+            return Ok(());
+        };
+        let field = self.asset_picker.field().map(str::to_string);
+        let picked = self.asset_picker.tick(&self.interface, doc)?;
+        if let (Some(field), Some(path)) = (field, picked) {
+            if let Some(ed) = self.editor.as_deref_mut() {
+                ed.set_field_text(&field, &path, &self.interface);
+                self.pending_envelopes
+                    .extend(ed.process_drag_end(&field, &mut self.next_cmd_id));
+            }
         }
         Ok(())
     }

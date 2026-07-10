@@ -4,7 +4,7 @@ use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{envelope, group_rml, resolve_base, section_rml, FieldSet};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
-use crate::sbc::panels::fields::{BooleanField, ColorField, NumericField};
+use crate::sbc::panels::fields::{AssetField, BooleanField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 
 // Mirrors WaterEditor:Register in scen_edit/view/map/water_editor.lua.
@@ -23,14 +23,22 @@ inventory::submit! {
 /// Every field here is a key of `SetWaterParamsCommand`'s options, so the
 /// dispatch is uniform: send the one field that changed.
 ///
-/// The texture fields (`normalTexture`, `foamTexture`, `texture`) are not
-/// ported yet: they need the asset picker.
+/// Texture fields pick a path from the VFS with the asset picker; the command
+/// applies them through the engine's dedicated water-texture binding.
 pub(crate) struct WaterEditor {
     fields: FieldSet,
 }
 
 fn num(name: &'static str, title: &'static str) -> Box<NumericField> {
     Box::new(NumericField::new(name, title, 0.0).decimals(2))
+}
+
+/// Water textures live under `bitmaps/`, as in `water_editor.lua`.
+fn tex(name: &'static str, title: &'static str) -> Box<AssetField> {
+    Box::new(
+        AssetField::new(name, title, "bitmaps")
+            .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
+    )
 }
 
 impl WaterEditor {
@@ -62,6 +70,9 @@ impl WaterEditor {
                 Box::new(ColorField::new("planeColor", "Color")),
                 num("repeatX", "Repeat X"),
                 num("repeatY", "Repeat Y"),
+                tex("normalTexture", "Normal texture"),
+                tex("foamTexture", "Foam texture"),
+                tex("texture", "Texture"),
             ]),
         }
     }
@@ -128,6 +139,9 @@ impl Editor for WaterEditor {
         ]));
 
         h.push_str(&section_rml("Water - texture"));
+        h.push_str(&self.fields.rml("normalTexture"));
+        h.push_str(&self.fields.rml("foamTexture"));
+        h.push_str(&self.fields.rml("texture"));
         h.push_str(&group_rml(&[
             self.fields.rml("repeatX"),
             self.fields.rml("repeatY"),
@@ -235,6 +249,15 @@ impl Editor for WaterEditor {
 
     fn set_field_color(&mut self, name: &str, rgba: [f32; 4], interface: &NativeInterfaceRef) {
         self.fields.set(name, FieldValue::Color(rgba));
+        let _ = self.fields.write_values(interface);
+    }
+
+    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
+        self.fields.asset_info(name)
+    }
+
+    fn set_field_text(&mut self, name: &str, value: &str, interface: &NativeInterfaceRef) {
+        self.fields.set(name, FieldValue::Text(value.to_string()));
         let _ = self.fields.write_values(interface);
     }
 }

@@ -121,9 +121,10 @@ Each must render, behave, emit the right command, and have a reference image.
 | checkbox / boolean      | done — `has_attribute`, one command; asserted |
 | text / string           | done — Enter/blur commit once; asserted |
 | choice / select         | renders; **behaviour untested** |
-| asset / material picker | **not ported** |
+| asset picker            | done — VFS grid, navigate, select, OK; asserted |
+| grid view               | done — reusable; clicks queued out of dispatch |
+| material picker         | **not ported** (grid + material model) |
 | unit / feature picker   | **not ported** (grid + RTT thumbnails) |
-| grid view               | **not ported** |
 | dialogs                 | picker only |
 
 ### Views
@@ -131,8 +132,8 @@ Each must render, behave, emit the right command, and have a reference image.
 | tab | view | status |
 |---|---|---|
 | Env | Lighting | done, asserted |
-| Env | Sky | ported; skybox asset field missing |
-| Env | Water | done, asserted; texture asset fields missing |
+| Env | Sky | done — skybox picks from the VFS |
+| Env | Water | done, asserted; three texture fields pick from bitmaps/ |
 | Objects | Units / Features / Properties / Collision | not started |
 | Map | all | not started |
 | Misc | Info | done, asserted |
@@ -153,9 +154,8 @@ panel over a fixed backdrop for capture, before treating a diff as a failure.
 
 ## TODO
 
-- [ ] **Next:** grid view + asset/material picker. Blocks Sky's skybox, Water's
-      three texture fields, all of Map, and Objects' unit/feature pickers. This is
-      the single biggest remaining piece; do it before more editors.
+- [ ] Material picker (Map's texture brushes): the grid is reusable; it needs a
+      material model, not more UI.
 - [ ] Objects → Units / Features: grid + 3D RTT thumbnails. Lua renders these
       with `<texture src="!N">` (a Lua dynamic texture); the native path needs an
       equivalent, and may need a new binding. Check before designing.

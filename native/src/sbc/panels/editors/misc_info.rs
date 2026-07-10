@@ -124,4 +124,11 @@ impl Editor for ScenarioInfoView {
     }
 
     fn set_field_color(&mut self, _name: &str, _rgba: [f32; 4], _interface: &NativeInterfaceRef) {}
+
+    fn field_asset(&self, _name: &str) -> Option<(String, Vec<String>)> {
+        None
+    }
+
+    fn set_field_text(&mut self, _name: &str, _value: &str, _interface: &NativeInterfaceRef) {}
+
 }

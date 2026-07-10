@@ -61,4 +61,11 @@ pub(crate) trait Editor {
 
     /// Write a colour back into the field and the DOM (picker accepted).
     fn set_field_color(&mut self, name: &str, rgba: [f32; 4], interface: &NativeInterfaceRef);
+
+    /// The field's asset root and accepted extensions, if it is an asset field:
+    /// the manager opens the asset picker on it.
+    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)>;
+
+    /// Write a text value back into the field and the DOM (asset picked).
+    fn set_field_text(&mut self, name: &str, value: &str, interface: &NativeInterfaceRef);
 }

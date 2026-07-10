@@ -1,8 +1,10 @@
+mod asset_picker;
 mod color_picker;
 mod editor;
 mod editor_base;
 mod editors;
 mod field;
+mod grid;
 mod fields;
 mod input;
 mod manager;

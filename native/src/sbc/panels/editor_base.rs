@@ -100,6 +100,14 @@ impl FieldSet {
         }
     }
 
+    pub(crate) fn is_asset(&self, name: &str) -> bool {
+        self.get(resolve_base(name)).is_some_and(|f| f.is_asset())
+    }
+
+    pub(crate) fn asset_info(&self, name: &str) -> Option<(String, Vec<String>)> {
+        self.get(resolve_base(name)).and_then(|f| f.asset_info())
+    }
+
     pub(crate) fn is_text_edit(&self, name: &str) -> bool {
         self.get(resolve_base(name)).is_some_and(|f| f.is_text_edit())
     }

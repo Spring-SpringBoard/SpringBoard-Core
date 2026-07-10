@@ -4,7 +4,7 @@ use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{envelope, group_rml, resolve_base, section_rml, FieldSet};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
-use crate::sbc::panels::fields::{ColorField, NumericField};
+use crate::sbc::panels::fields::{AssetField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 
 // Mirrors SkyEditor:Register in scen_edit/view/map/sky_editor.lua.
@@ -20,9 +20,8 @@ inventory::submit! {
     }
 }
 
-/// Sky and fog. Every field is an atmosphere key, so one command class covers
-/// the lot. The skybox texture field is not ported yet: it needs an asset
-/// picker.
+/// Sky and fog. Every atmosphere field goes through one command class; the
+/// skybox is a texture path applied by its own engine call, as in Lua.
 const ATMOSPHERE_FIELDS: &[&str] = &[
     "sunColor",
     "skyColor",
@@ -56,6 +55,10 @@ impl SkyEditor {
                         .max(1.0)
                         .decimals(2),
                 ),
+                Box::new(
+                    AssetField::new("skyboxTexture", "Skybox", "skyboxes")
+                        .extensions(&[".dds", ".png", ".jpg", ".tga"]),
+                ),
             ]),
         }
     }
@@ -78,6 +81,7 @@ impl Editor for SkyEditor {
             self.fields.rml("skyColor"),
             self.fields.rml("cloudColor"),
         ]));
+        h.push_str(&self.fields.rml("skyboxTexture"));
         h.push_str(&section_rml("Fog"));
         h.push_str(&group_rml(&[
             self.fields.rml("fogColor"),
@@ -165,5 +169,19 @@ impl Editor for SkyEditor {
     fn set_field_color(&mut self, name: &str, rgba: [f32; 4], interface: &NativeInterfaceRef) {
         self.fields.set(name, FieldValue::Color(rgba));
         let _ = self.fields.write_values(interface);
+    }
+
+    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
+        self.fields.asset_info(name)
+    }
+
+    fn set_field_text(&mut self, name: &str, value: &str, interface: &NativeInterfaceRef) {
+        self.fields.set(name, FieldValue::Text(value.to_string()));
+        let _ = self.fields.write_values(interface);
+        if name == "skyboxTexture" {
+            // Lua applies the skybox straight to the engine rather than through
+            // a command, so there is nothing to undo. Mirror that.
+            let _ = interface.unsynced_ctrl().set_sky_box_texture(value);
+        }
     }
 }

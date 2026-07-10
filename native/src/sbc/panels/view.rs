@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::ColorPicker;
 use crate::sbc::panels::field::{element_by_id, escape_rml};
 use crate::sbc::panels::registry::{editors_for, Tab};
@@ -96,7 +97,8 @@ impl PanelView {
         self.content = element_by_id(interface, doc, "main-content");
 
         if let Some(modal) = element_by_id(interface, doc, "modal-root") {
-            rml.element_set_inner_rml(modal, &ColorPicker::markup())?;
+            let markup = ColorPicker::markup() + &AssetPicker::default().markup();
+            rml.element_set_inner_rml(modal, &markup)?;
         }
 
         self.build_tab_bar(interface)?;
