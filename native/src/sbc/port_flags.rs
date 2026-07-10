@@ -9,7 +9,7 @@ struct PortFlags {
     #[serde(default)]
     chonsole: PortImpl,
     #[serde(default)]
-    env_panel: PortImpl,
+    ui: UiImpl,
 }
 
 #[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
@@ -20,32 +20,43 @@ pub(crate) enum PortImpl {
     Rust,
 }
 
+/// Which implementation owns the editor UI. The three are independent: exactly
+/// one of them builds a UI, the other two build nothing.
+#[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum UiImpl {
+    #[default]
+    Chili,
+    RmlUi,
+    Rust,
+}
+
 pub(crate) fn chonsole_impl(interface: &NativeInterfaceRef) -> PortImpl {
     read_flag(interface, "chonsole", |f| f.chonsole)
 }
 
-pub(crate) fn env_panel_impl(interface: &NativeInterfaceRef) -> PortImpl {
-    read_flag(interface, "env_panel", |f| f.env_panel)
+pub(crate) fn ui_impl(interface: &NativeInterfaceRef) -> UiImpl {
+    read_flag(interface, "ui", |f| f.ui)
 }
 
-fn read_flag(
+fn read_flag<T: std::fmt::Debug + Default>(
     interface: &NativeInterfaceRef,
     name: &str,
-    extract: fn(&PortFlags) -> PortImpl,
-) -> PortImpl {
+    extract: fn(&PortFlags) -> T,
+) -> T {
     let bytes = match interface.vfs().load_file(PORT_FLAGS_PATH, "") {
         Ok(bytes) if !bytes.is_empty() => bytes,
-        Ok(_) => return PortImpl::Lua,
+        Ok(_) => return T::default(),
         Err(err) => {
             warn!("failed to read {PORT_FLAGS_PATH}: {err:?}");
-            return PortImpl::Lua;
+            return T::default();
         }
     };
     let flags = match serde_json::from_slice::<PortFlags>(&bytes) {
         Ok(flags) => flags,
         Err(err) => {
             warn!("failed to parse {PORT_FLAGS_PATH}: {err}");
-            return PortImpl::Lua;
+            return T::default();
         }
     };
     let value = extract(&flags);

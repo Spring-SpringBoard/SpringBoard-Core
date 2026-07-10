@@ -2407,9 +2407,10 @@ function widget:Initialize()
 		return
 	end
 
-	-- gui_rmlui_cursortip.lua takes over in RmlUi mode. WG.SB does not exist
-	-- yet at this point, so read the flag the port_flags gadget published.
-	if Spring.GetGameRulesParam("useRml") == "true" then
+	-- gui_rmlui_cursortip.lua takes over in RmlUi mode; the native UI brings its
+	-- own. WG.SB does not exist yet here, so read the flag the port_flags gadget
+	-- published.
+	if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
 		widgetHandler:RemoveWidget(widget)
 		return
 	end

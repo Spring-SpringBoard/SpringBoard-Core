@@ -5,19 +5,19 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory};
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::env::LightingEditor;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
 use crate::sbc::panels::input::{PanelInput, PendingAction};
-use crate::sbc::panels::view::PanelView;
-use crate::sbc::port_flags::{self, PortImpl};
+use crate::sbc::panels::registry::editor_by_name;
+use crate::sbc::panels::view::{PanelView, ShellEvent};
+use crate::sbc::port_flags::{self, UiImpl};
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(PanelManager::new(iface)) }
 }
 
-/// Coordinates the panel's view (RmlUi lifecycle), input (drag + handlers),
-/// and editor (field logic). Implements `Model` so the command system can
-/// notify it of history changes (undo/redo → refresh fields).
+/// Coordinates the native panel's view (RmlUi lifecycle + shell chrome), input
+/// (drag + handlers), and the active editor. Implements `Model` so the command
+/// system can notify it of history changes (undo/redo → refresh fields).
 pub(crate) struct PanelManager {
     interface: NativeInterfaceRef,
     enabled: bool,
@@ -27,6 +27,10 @@ pub(crate) struct PanelManager {
     needs_refresh: bool,
     pending_envelopes: Vec<String>,
     next_cmd_id: u64,
+    /// The field currently in text-edit mode. Owning this here is what keeps a
+    /// commit to exactly one command: the DOM would otherwise fire "change" on
+    /// every keystroke.
+    editing: Option<String>,
 }
 
 impl Model for PanelManager {
@@ -50,9 +54,9 @@ impl Drop for PanelManager {
 
 impl PanelManager {
     pub fn new(interface: NativeInterfaceRef) -> Self {
-        let enabled = port_flags::env_panel_impl(&interface) == PortImpl::Rust;
+        let enabled = port_flags::ui_impl(&interface) == UiImpl::Rust;
         log::info!(
-            "native env panel {}",
+            "native UI {}",
             if enabled { "enabled" } else { "disabled" }
         );
         PanelManager {
@@ -60,10 +64,11 @@ impl PanelManager {
             enabled,
             view: PanelView::default(),
             input: PanelInput::new(new_change_queue(), new_interaction_queue()),
-            editor: Some(Box::new(LightingEditor::new())),
-            needs_refresh: true,
+            editor: None,
+            needs_refresh: false,
             pending_envelopes: Vec::new(),
             next_cmd_id: 1_000_000,
+            editing: None,
         }
     }
 
@@ -71,16 +76,15 @@ impl PanelManager {
         if !self.enabled {
             return Ok(());
         }
-        if self.view.ensure(&self.interface)? {
-            self.rebuild_editor()?;
-        }
+        self.view.ensure(&self.interface)?;
         if !self.view.is_ready() {
             return Ok(());
         }
 
-        // Process interaction events (pointer down/up → drag or click-to-edit)
-        let actions = self.input.process_interactions();
-        for action in actions {
+        self.process_shell_events()?;
+
+        // Pointer interactions (pointer down/up → drag or click-to-edit)
+        for action in self.input.process_interactions() {
             match action {
                 PendingAction::DragEnd(field) => {
                     if let Some(ed) = self.editor.as_deref_mut() {
@@ -93,22 +97,17 @@ impl PanelManager {
                     if let Some(ed) = self.editor.as_deref_mut() {
                         ed.begin_edit_field(&field, &self.interface);
                     }
+                    self.editing = Some(field);
                 }
             }
         }
 
-        // Process value changes (edit input "change" events)
+        // Commit requests: a select's "change", or a text field losing focus.
         for name in self.input.drain_changes() {
-            if let Some(ed) = self.editor.as_deref_mut() {
-                self.pending_envelopes.extend(ed.process_change(
-                    &name,
-                    &self.interface,
-                    &mut self.next_cmd_id,
-                ));
-            }
+            self.commit_field(&name);
         }
 
-        // Refresh from engine if needed (undo/redo or startup)
+        // Refresh from engine if needed (undo/redo, or the editor just opened)
         if self.needs_refresh {
             if let Some(ed) = self.editor.as_mut() {
                 ed.refresh_from_engine(&self.interface);
@@ -131,24 +130,135 @@ impl PanelManager {
         std::mem::take(&mut self.pending_envelopes)
     }
 
+    // ── Shell ──────────────────────────────────────────────────────
+
+    /// Tab and editor-button clicks are queued by the listeners and handled
+    /// here, one tick later: rebuilding the DOM while RmlUi is dispatching the
+    /// click frees the element it is dispatching to.
+    fn process_shell_events(&mut self) -> Result<(), Error> {
+        for event in self.view.drain_events() {
+            match event {
+                ShellEvent::TabClicked(tab) => {
+                    self.view.set_tab(&self.interface, tab)?;
+                    self.editor = None;
+                }
+                ShellEvent::EditorClicked(name) => self.open_editor(name)?,
+            }
+        }
+        Ok(())
+    }
+
+    /// Toggle an editor: clicking the open one closes it, as in Chili.
+    fn open_editor(&mut self, name: &'static str) -> Result<(), Error> {
+        if self.view.active_editor() == Some(name) {
+            self.editor = None;
+            self.view.set_active_editor(&self.interface, None)?;
+            return self.view.clear_content(&self.interface);
+        }
+
+        let Some(spec) = editor_by_name(name) else {
+            log::warn!("no native editor registered as {name}");
+            return Ok(());
+        };
+        self.editor = Some((spec.make)());
+        self.view.set_active_editor(&self.interface, Some(name))?;
+        self.rebuild_editor()?;
+        self.needs_refresh = true;
+        Ok(())
+    }
+
+    fn rebuild_editor(&mut self) -> Result<(), Error> {
+        let Some(content) = self.view.content_handle() else {
+            return Ok(());
+        };
+        let document = self
+            .view
+            .document_handle()
+            .expect("document must exist if content exists");
+
+        let body = self
+            .editor
+            .as_ref()
+            .map(|e| e.generate_rml())
+            .unwrap_or_default();
+        self.interface
+            .rml_ui()
+            .element_set_inner_rml(content, &body)?;
+
+        if let Some(ed) = self.editor.as_mut() {
+            ed.bind_fields(
+                &self.interface,
+                document,
+                self.input.changes(),
+                self.input.interactions(),
+            )?;
+        }
+        self.write_field_values();
+        Ok(())
+    }
+
+    /// Commit a field once. A blur that arrives after the value was already
+    /// committed (hiding the edit element fires one) is a no-op.
+    fn commit_field(&mut self, name: &str) {
+        let was_editing = self.editing.as_deref() == Some(name);
+        if was_editing {
+            self.editing = None;
+        } else if self
+            .editor
+            .as_deref()
+            .is_some_and(|ed| ed.field_is_text_edit(name))
+        {
+            // A blur fired by hiding the input we just committed.
+            return;
+        }
+        if let Some(ed) = self.editor.as_deref_mut() {
+            self.pending_envelopes
+                .extend(ed.process_change(name, &self.interface, &mut self.next_cmd_id));
+        }
+    }
+
+    fn write_field_values(&self) {
+        if let Some(ed) = &self.editor {
+            let _ = ed.write_field_values(&self.interface);
+        }
+    }
+
     // ── Input delegation ──
 
     pub fn key_press(&mut self, key: i32, _scan: i32, _repeat: bool) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
+        const RETURN: i32 = 13;
+        const ESCAPE: i32 = 27;
+        // Keys are only ours while a field is being edited; anything else stays
+        // available to the chonsole and the engine.
+        let Some(name) = self.editing.clone() else {
+            return Ok(false);
+        };
+        if key == RETURN {
+            self.commit_field(&name);
+            return Ok(true);
+        }
+        if key == ESCAPE {
+            self.editing = None;
+            if let Some(ed) = self.editor.as_deref_mut() {
+                ed.cancel_edit_field(&name, &self.interface);
+            }
+            return Ok(true);
+        }
         self.input.key_press(&self.interface, &self.view, key)
     }
 
     pub fn key_release(&mut self, key: i32, _scan: i32) -> Result<bool, Error> {
-        if !self.enabled {
+        if !self.enabled || self.editing.is_none() {
             return Ok(false);
         }
         self.input.key_release(&self.interface, &self.view, key)
     }
 
     pub fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
-        if !self.enabled {
+        if !self.enabled || self.editing.is_none() {
             return Ok(false);
         }
         self.input.text_input(&self.interface, &self.view, utf8)
@@ -196,48 +306,5 @@ impl PanelManager {
         }
         self.input
             .mouse_wheel(&self.interface, &self.view, up, value)
-    }
-
-    // ── Internal ──
-
-    fn rebuild_editor(&mut self) -> Result<(), Error> {
-        let Some(content) = self.view.content_handle() else {
-            return Ok(());
-        };
-        let document = self
-            .view
-            .document_handle()
-            .expect("document must exist if content exists");
-
-        if let Some(header) = self.view.header_element(&self.interface) {
-            let title = self.editor.as_ref().map(|e| e.title()).unwrap_or("Panel");
-            let _ = self.interface.rml_ui().element_set_inner_rml(header, title);
-        }
-
-        let body = self
-            .editor
-            .as_ref()
-            .map(|e| e.generate_rml())
-            .unwrap_or_default();
-        self.interface
-            .rml_ui()
-            .element_set_inner_rml(content, &body)?;
-
-        if let Some(ed) = self.editor.as_mut() {
-            ed.bind_fields(
-                &self.interface,
-                document,
-                self.input.changes(),
-                self.input.interactions(),
-            )?;
-        }
-        self.write_field_values();
-        Ok(())
-    }
-
-    fn write_field_values(&self) {
-        if let Some(ed) = &self.editor {
-            let _ = ed.write_field_values(&self.interface);
-        }
     }
 }

@@ -48,6 +48,59 @@ pub(crate) fn on_change(
     Ok(())
 }
 
+/// Register a "blur" listener that asks for the field to be committed when it
+/// loses focus. Text inputs fire "change" on every keystroke, so a numeric field
+/// must not commit on that: it would dispatch a command per character.
+pub(crate) fn on_blur(
+    interface: &NativeInterfaceRef,
+    element: u64,
+    name: String,
+    changes: &ChangeQueue,
+) -> Result<(), Error> {
+    let cq = changes.clone();
+    interface
+        .rml_ui()
+        .element_add_event_listener(element, "blur", false, move || {
+            cq.borrow_mut().push(name.clone());
+        })?;
+    Ok(())
+}
+
+/// RmlUi key identifiers (`Rml::Input::KeyIdentifier`).
+const KI_NUMPADENTER: i32 = 61;
+const KI_RETURN: i32 = 72;
+
+/// Commit a text field when Enter is pressed inside it.
+///
+/// The engine feeds keyboard input straight to its RmlUi contexts, so a plugin
+/// never sees the key through its own `key_press` call-in: the listener has to
+/// be on the element. The event's key identifier is read back through
+/// `event_get_current`.
+pub(crate) fn on_enter(
+    interface: &NativeInterfaceRef,
+    element: u64,
+    name: String,
+    changes: &ChangeQueue,
+) -> Result<(), Error> {
+    let cq = changes.clone();
+    let iface = interface.clone();
+    interface
+        .rml_ui()
+        .element_add_event_listener(element, "keydown", false, move || {
+            let rml = iface.rml_ui();
+            let Ok((event, ..)) = rml.event_get_current() else {
+                return;
+            };
+            let Ok((key, found)) = rml.event_get_parameter_int(event, "key_identifier") else {
+                return;
+            };
+            if found && (key == KI_RETURN || key == KI_NUMPADENTER) {
+                cq.borrow_mut().push(name.clone());
+            }
+        })?;
+    Ok(())
+}
+
 /// Register mousedown + mouseup listeners for drag support. Pushes
 /// `InteractionEvent`s into the interaction queue.
 pub(crate) fn on_pointer(
@@ -128,6 +181,13 @@ pub trait Field {
     /// Set context before a drag (e.g., which color channel "r"/"g"/"b").
     fn prepare_drag(&mut self, _context: &str) {}
 
+    /// True for fields that commit from a text input (Enter or focus loss).
+    /// Hiding that input fires a second, stale `blur`, which must not dispatch
+    /// another command.
+    fn is_text_edit(&self) -> bool {
+        false
+    }
+
     /// Click without drag — enter edit mode.
     fn begin_edit(&mut self, _interface: &NativeInterfaceRef) {}
 
@@ -143,7 +203,6 @@ pub trait Field {
         None
     }
 
-    /// End edit mode — switch back to display.
-    #[allow(dead_code)]
+    /// End edit mode — switch back to display, without committing.
     fn end_edit(&mut self, _interface: &NativeInterfaceRef) {}
 }

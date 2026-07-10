@@ -17,8 +17,8 @@ LCS = LCS()
 CHOTIFY_DIR = "libs_sb/chotify/chotify/"
 
 function widget:Initialize()
-    -- Chotify is Chili; RmlUiNotifications replaces it in RmlUi mode.
-    if Spring.GetGameRulesParam("useRml") == "true" then
+    -- Chotify is Chili; the other UIs bring their own notifications.
+    if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
         widgetHandler:RemoveWidget(widget)
         return
     end

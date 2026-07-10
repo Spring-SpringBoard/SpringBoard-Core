@@ -41,10 +41,10 @@ THEME_DIRNAME = LUA_DIRNAME .. "Configs/chili/themes/"
 --------------------------------------------------------------------------------
 
 function widget:Initialize()
-	-- Nothing in RmlUi mode uses Chili controls, so do not load the framework.
-	-- Its util header is not UI: it patches `table` with ifind/merge/clear,
-	-- which scen_edit and the widgets rely on.
-	if Spring.GetGameRulesParam("useRml") == "true" then
+	-- Only the Chili UI uses Chili controls, so do not load the framework
+	-- otherwise. Its util header is not UI: it patches `table` with
+	-- ifind/merge/clear, which scen_edit and the widgets rely on.
+	if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
 		VFS.Include(CHILI_DIRNAME .. "headers/util.lua", widget, VFS.RAW_FIRST)
 		widgetHandler:RemoveWidget(widget)
 		return

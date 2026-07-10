@@ -1,0 +1,27 @@
+{
+  "lighting-density-committed": {
+    "notes": "Ground shadow density now reads 0.25, the input is gone and the button is back. Unit shadow density untouched at 0.80. Matches the asserted single SetSunLightingCommand{groundShadowDensity:0.25}.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T08:58:54"
+  },
+  "lighting-density-editing": {
+    "notes": "Ground 'Shadow density' swapped its composite button for the text input, focused (blue border), pre-filled 0.80. Every other row unchanged; unit shadow density still shows its button. Confirms edit mode targets exactly one field.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T08:58:52"
+  },
+  "lighting-open": {
+    "notes": "Lighting pressed (green border + green caption). Sections Shadows / Sun ground color / Sun unit color with label+line. Dir X/Y/Z grouped on one row; Diffuse+Ambient paired. Values read live from the engine: dir 0.00/0.45/0.89, shadow density 0.80, shadowMode 'Terrain'. Deviation from Lua: the select is narrower and sits higher; the toolbar action bar is not ported, so content starts ~30px higher.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T08:58:51"
+  },
+  "shell-env-tab": {
+    "notes": "Active tab moved to Env. Strip shows the two registered Env views in registry order: Lighting (order 0), Sky (order 1), each with icon + caption. Content host cleared, as when Chili switches tabs.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T08:58:50"
+  },
+  "shell-objects-tab": {
+    "notes": "Tab bar renders 4 tabs, Objects active (dark, blue border). Editor strip empty: no Objects views registered yet. Panel is right-aligned, 500dp, translucent over the map.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T08:58:49"
+  }
+}

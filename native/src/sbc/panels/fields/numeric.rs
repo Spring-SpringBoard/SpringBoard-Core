@@ -1,7 +1,7 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::field::{
-    element_by_id, escape_rml, format_number, on_change, on_pointer, ChangeQueue, Field,
+    element_by_id, escape_rml, format_number, on_blur, on_enter, on_pointer, ChangeQueue, Field,
     FieldValue, InteractionQueue,
 };
 
@@ -75,30 +75,40 @@ impl NumericField {
         format_number(self.value, self.decimals)
     }
 
+    fn button_rml(&self) -> String {
+        format!(
+            r#"<span class="field-button-title">{title}:</span><span class="field-button-value">{val}</span>"#,
+            title = escape_rml(self.title.trim_end_matches(':')),
+            val = self.display_text(),
+        )
+    }
+
+    /// Visibility is a `hidden` class, as in the Lua RmlUi fields. An inline
+    /// `style` would beat the stylesheet and leave the input unstyled (it
+    /// rendered invisible).
     fn show_edit(&mut self, interface: &NativeInterfaceRef) {
         self.editing = true;
         let text = self.display_text();
+        let rml = interface.rml_ui();
         if let Some(e) = self.display_elem {
-            let _ = interface
-                .rml_ui()
-                .element_set_attribute(e, "style", "display: none;");
+            let _ = rml.element_set_class(e, "hidden", true);
         }
         if let Some(e) = self.edit_elem {
-            let _ = interface.rml_ui().element_set_attribute(e, "style", "");
-            let _ = interface.rml_ui().element_set_attribute(e, "value", &text);
-            let _ = interface.rml_ui().element_focus(e);
+            let _ = rml.element_set_class(e, "hidden", false);
+            let _ = rml.element_set_attribute(e, "value", &text);
+            let _ = rml.element_focus(e);
         }
     }
 
     fn show_display(&mut self, interface: &NativeInterfaceRef) {
         self.editing = false;
+        let rml = interface.rml_ui();
         if let Some(e) = self.display_elem {
-            let _ = interface.rml_ui().element_set_attribute(e, "style", "");
+            let _ = rml.element_set_class(e, "hidden", false);
+            let _ = rml.element_set_inner_rml(e, &self.button_rml());
         }
         if let Some(e) = self.edit_elem {
-            let _ = interface
-                .rml_ui()
-                .element_set_attribute(e, "style", "display: none;");
+            let _ = rml.element_set_class(e, "hidden", true);
         }
     }
 }
@@ -109,24 +119,19 @@ impl Field for NumericField {
     }
 
     fn generate_rml(&self) -> String {
-        let title = escape_rml(self.title.trim_end_matches(':'));
-        let val = self.display_text();
-        let display_cls = if self.compact {
-            "numeric-display compact"
-        } else {
-            "numeric-display"
-        };
-        let row_open = if self.compact {
-            format!(r#"<div class="field-inline"><span class="field-label-small">{title}</span>"#)
-        } else {
-            format!(r#"<div class="field-row"><span class="field-label">{title}:</span>"#)
-        };
+        // Same markup as RmlUiNumericField in scen_edit/view/rmlui_fields.lua.
+        let width = if self.compact { 78 } else { 140 };
         format!(
-            r#"{row_open}<button id="field-{n}-display" class="{cls}">{val}</button><input type="text" id="field-{n}-edit" class="numeric-edit" value="{val}" style="display: none;"/></div>"#,
-            row_open = row_open,
+            concat!(
+                r#"<div class="field-row">"#,
+                r#"<button id="field-{n}" class="field-composite-button field-numeric-button" style="width: {width}px;">{button}</button>"#,
+                r#"<input type="text" id="field-{n}-input" class="field-input field-numeric-input hidden" style="width: {width}px;" value="{val}"/>"#,
+                r#"</div>"#,
+            ),
             n = self.name,
-            cls = display_cls,
-            val = val,
+            width = width,
+            button = self.button_rml(),
+            val = self.display_text(),
         )
     }
 
@@ -137,15 +142,17 @@ impl Field for NumericField {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        self.display_elem =
-            element_by_id(interface, document, &format!("field-{}-display", self.name));
-        self.edit_elem = element_by_id(interface, document, &format!("field-{}-edit", self.name));
+        self.display_elem = element_by_id(interface, document, &format!("field-{}", self.name));
+        self.edit_elem = element_by_id(interface, document, &format!("field-{}-input", self.name));
 
         if let Some(e) = self.display_elem {
             on_pointer(interface, e, self.name.clone(), interactions)?;
         }
         if let Some(e) = self.edit_elem {
-            on_change(interface, e, self.name.clone(), changes)?;
+            // Commit on Enter or on losing focus, never on "change": that
+            // fires once per keystroke, dispatching a command per character.
+            on_enter(interface, e, self.name.clone(), changes)?;
+            on_blur(interface, e, self.name.clone(), changes)?;
         }
         Ok(())
     }
@@ -163,7 +170,7 @@ impl Field for NumericField {
     fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         let val = self.display_text();
         if let Some(e) = self.display_elem {
-            interface.rml_ui().element_set_inner_rml(e, &val)?;
+            interface.rml_ui().element_set_inner_rml(e, &self.button_rml())?;
         }
         if let Some(e) = self.edit_elem {
             interface.rml_ui().element_set_attribute(e, "value", &val)?;
@@ -192,6 +199,10 @@ impl Field for NumericField {
 
     fn drag_end(&mut self, _interface: &NativeInterfaceRef) -> Option<FieldValue> {
         Some(FieldValue::Number(self.value))
+    }
+
+    fn is_text_edit(&self) -> bool {
+        true
     }
 
     fn begin_edit(&mut self, interface: &NativeInterfaceRef) {

@@ -1,5 +1,4 @@
 {
   "chonsole": "lua",
-  "env_panel": "lua",
   "ui": "chili"
 }

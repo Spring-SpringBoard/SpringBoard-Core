@@ -3,7 +3,10 @@ View = LCS.class{}
 function View:init()
     -- Determine which UI system to use BEFORE including any files
     -- This must be done first so all includes can check SB.useRmlUi
-    SB.useRmlUi = Spring.GetGameRulesParam("useRml") == "true"
+    SB.uiMode = Spring.GetGameRulesParam("sb_ui") or "chili"
+    SB.useRmlUi = SB.uiMode == "rmlui"
+    SB.useNativeUi = SB.uiMode == "rust"
+    SB.useChili = SB.uiMode == "chili"
 
     SB.IncludeDir(Path.Join(SB.DIRS.SRC, 'view'))
     SB.Include(Path.Join(SB.DIRS.SRC, 'view/main_window/main_window_panel.lua'))
@@ -19,7 +22,11 @@ function View:init()
 
     -- Initialize the appropriate UI system
     self.useRmlUi = SB.useRmlUi
-    if SB.useRmlUi then
+    if SB.useNativeUi then
+        -- The native plugin owns the panel; Lua builds no UI at all. The common
+        -- non-UI initialisation below still runs.
+        Log.Notice("View: Using the native UI")
+    elseif SB.useRmlUi then
         -- Load RmlUi infrastructure
         SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_manager.lua'))
         SB.Include(Path.Join(SB.DIRS.SRC, 'view/rmlui_builder.lua'))
@@ -171,6 +178,9 @@ function View:InitializeChili()
 end
 
 function View:SetVisible(visible)
+    if SB.useNativeUi then
+        return
+    end
     if self.__visible == visible then
         return
     end
@@ -215,6 +225,10 @@ function View:SetVisible(visible)
 end
 
 function View:Update()
+    if SB.useNativeUi then
+        self.selectionManager:Update()
+        return
+    end
     if not self.useRmlUi then
         -- Chili updates
         self.teamSelector:Update()

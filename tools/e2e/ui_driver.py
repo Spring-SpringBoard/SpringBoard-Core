@@ -7,7 +7,7 @@ import argparse
 import os
 import sys
 
-from cases import target_cases
+from cases import TARGETS, select_cases, target_cases
 from runner import E2ERun
 
 
@@ -17,14 +17,30 @@ def main(argv: list[str] | None = None) -> int:
         "target",
         nargs="?",
         default="chonsole",
-        choices=("chonsole", "main-panel", "lighting-panel", "units-panel", "texture-panel", "dev-console", "teams-panel", "info-panel", "settings-panel", "props-panel", "cursortip", "notifications", "dialogs", "all-editors", "heightmap"),
-        help="E2E target to run.",
+        choices=(*TARGETS, "all"),
+        help="E2E target to run, or `all` to select purely by tag.",
+    )
+    parser.add_argument(
+        "--tag",
+        action="append",
+        default=[],
+        metavar="TAG",
+        help=(
+            "Only run cases carrying this tag; repeat for AND. "
+            "Tags: target:<name>, ui:chili|rmlui|rust, chonsole:lua|rust. "
+            "Example: --tag ui:rust"
+        ),
     )
     parser.add_argument(
         "--case",
         choices=("all", "lua", "rust"),
         default="all",
-        help="Run one implementation or both.",
+        help="Legacy alias: pick one implementation of a single target.",
+    )
+    parser.add_argument(
+        "--update-golden",
+        action="store_true",
+        help="Rewrite golden images from this run. Look at the diff before committing.",
     )
     parser.add_argument(
         "--keep-open",
@@ -50,13 +66,22 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    if args.tag or args.target == "all":
+        cases = select_cases([args.target], args.tag)
+        if not cases:
+            print(f"no cases match {args.target} {args.tag}", file=sys.stderr)
+            return 1
+    else:
+        cases = target_cases(args.target, args.case)
+
     failures = 0
-    for case in target_cases(args.target, args.case):
+    for case in cases:
         run = E2ERun(
             case,
             capture=args.capture,
             review_images=not args.no_review_images,
             image_workers=max(1, args.image_workers),
+            update_golden=args.update_golden,
         )
         print(f"run.md: {run.run_md}", flush=True)
         try:

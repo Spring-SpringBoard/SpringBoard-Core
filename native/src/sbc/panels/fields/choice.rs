@@ -54,13 +54,13 @@ impl Field for ChoiceField {
                 )
             })
             .collect();
-        format!(r#"<div class="field-row"><span class="field-label">{title}:</span>"#)
+        format!(r#"<div class="field-row"><label class="field-label">{title}:</label>"#)
             + &format!(
                 r#"<div class="select-wrapper"><select id="field-{n}" class="field-input">{opts}</select>"#,
                 n = self.name,
                 opts = options,
             )
-            + r#"<span class="select-arrow">&#9660;</span></div></div>"#
+            + r#"<div class="select-arrow">v</div></div></div>"#
     }
 
     fn bind(

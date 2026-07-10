@@ -65,32 +65,35 @@ impl NativeModule for SBC {
     }
 
     fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {
+        // The panel gets first refusal: while a field is being edited it owns
+        // Enter and Escape, which the chonsole would otherwise take (Enter opens
+        // it). It consumes nothing else.
         if self
-            .model::<ChonsoleManager>()
+            .model::<PanelManager>()
             .key_press(key_code, scan_code, is_repeat)?
         {
             return Ok(true);
         }
-        self.model::<PanelManager>()
+        self.model::<ChonsoleManager>()
             .key_press(key_code, scan_code, is_repeat)
     }
 
     fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {
         if self
-            .model::<ChonsoleManager>()
+            .model::<PanelManager>()
             .key_release(key_code, scan_code)?
         {
             return Ok(true);
         }
-        self.model::<PanelManager>()
+        self.model::<ChonsoleManager>()
             .key_release(key_code, scan_code)
     }
 
     fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
-        if self.model::<ChonsoleManager>().text_input(utf8)? {
+        if self.model::<PanelManager>().text_input(utf8)? {
             return Ok(true);
         }
-        self.model::<PanelManager>().text_input(utf8)
+        self.model::<ChonsoleManager>().text_input(utf8)
     }
 
     fn mouse_move(&mut self, x: i32, y: i32, dx: i32, dy: i32, button: i32) -> Result<bool, Error> {

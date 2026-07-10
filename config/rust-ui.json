@@ -1,4 +1,4 @@
 {
   "chonsole": "rust",
-  "ui": "chili"
+  "ui": "rust"
 }

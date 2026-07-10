@@ -215,7 +215,8 @@ function NumericField:__DrawDisplayControl()
 end
 
 local leftDisplay, rightDisplay
-if not SB.useRmlUi then
+-- Only the Chili UI has a screen0 to parent these to.
+if SB.useChili then
     leftDisplay =
         Image:New {
         file = Path.Join(SB.DIRS.IMG, "left-numeric.png"),

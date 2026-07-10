@@ -104,13 +104,17 @@ impl ColorField {
 
     // ── DOM sync helpers ──
 
+    fn button_rml(&self) -> String {
+        format!(
+            r#"<span class="field-button-title">{title}:</span><span class="field-swatch" style="background-color: {bg};"></span>"#,
+            title = escape_rml(self.title.trim_end_matches(':')),
+            bg = Self::to_css(self.value),
+        )
+    }
+
     fn sync_swatch(&self, interface: &NativeInterfaceRef) {
         if let Some(e) = self.swatch {
-            let _ = interface.rml_ui().element_set_attribute(
-                e,
-                "style",
-                &format!("background-color: {};", Self::to_css(self.value)),
-            );
+            let _ = interface.rml_ui().element_set_inner_rml(e, &self.button_rml());
         }
     }
 
@@ -137,8 +141,7 @@ impl ColorField {
     fn set_expanded(&mut self, interface: &NativeInterfaceRef, on: bool) {
         self.expanded = on;
         if let Some(e) = self.editor {
-            let style = if on { "" } else { "display: none;" };
-            let _ = interface.rml_ui().element_set_attribute(e, "style", style);
+            let _ = interface.rml_ui().element_set_class(e, "hidden", !on);
         }
     }
 
@@ -148,12 +151,10 @@ impl ColorField {
             if let Ok(Some(text)) = interface.rml_ui().element_get_value(e) {
                 self.value[idx] = text.parse().unwrap_or(self.value[idx]).clamp(0.0, 1.0);
             }
-            let _ = interface
-                .rml_ui()
-                .element_set_attribute(e, "style", "display: none;");
+            let _ = interface.rml_ui().element_set_class(e, "hidden", true);
         }
         if let Some(e) = self.channels[idx].display {
-            let _ = interface.rml_ui().element_set_attribute(e, "style", "");
+            let _ = interface.rml_ui().element_set_class(e, "hidden", false);
         }
         self.sync_swatch(interface);
         self.sync_channels(interface);
@@ -176,8 +177,6 @@ impl Field for ColorField {
     }
 
     fn generate_rml(&self) -> String {
-        let title = escape_rml(self.title.trim_end_matches(':'));
-        let bg = Self::to_css(self.value);
         let hex = Self::to_hex(self.value);
         let n = &self.name;
         let channels: String = ['r', 'g', 'b']
@@ -186,21 +185,25 @@ impl Field for ColorField {
             .map(|(i, &ch)| {
                 let val = format!("{:.2}", self.value[i]);
                 format!(
-                    r#"<div class="field-inline"><span class="channel-label {ch}">{ch}</span>"#
+                    r#"<div class="field-inline"><span class="field-label channel-label {ch}">{ch}</span>"#
                 ) + &format!(
-                    r#"<button id="field-{n}-{ch}-display" class="numeric-display compact color-channel">{val}</button>"#,
+                    r#"<button id="field-{n}-{ch}-display" class="field-composite-button field-numeric-button color-channel">{val}</button>"#,
                 ) + &format!(
-                    r#"<input type="text" id="field-{n}-{ch}-edit" class="numeric-edit compact" value="{val}" style="display: none;"/></div>"#,
+                    r#"<input type="text" id="field-{n}-{ch}-edit" class="field-input field-numeric-input color-channel hidden" value="{val}"/></div>"#,
                 )
             })
             .collect();
 
-        format!(
-            r#"<div class="field-row"><span class="field-label">{title}:</span><div class="color-field">"#
-        ) + &format!(
-            r#"<button id="field-{n}-swatch" class="color-swatch" style="background-color: {bg};"></button>"#,
-        ) + &format!(r#"<div id="field-{n}-editor" class="color-editor" style="display: none;">"#,)
-            + &format!(r#"<input type="text" id="field-{n}-hex" class="color-hex" value="{hex}"/>"#,)
+        // Same shape as RmlUiColorField in scen_edit/view/rmlui_fields.lua: a
+        // composite button carrying the title and the swatch. The inline RGB
+        // editor below it is native-only (Lua opens a picker dialog instead).
+        format!(r#"<div class="field-row"><div class="color-field">"#)
+            + &format!(
+                r#"<button id="field-{n}-swatch" class="field-composite-button field-color-button">{button}</button>"#,
+                button = self.button_rml(),
+            )
+            + &format!(r#"<div id="field-{n}-editor" class="color-editor hidden">"#,)
+            + &format!(r#"<input type="text" id="field-{n}-hex" class="field-input color-hex" value="{hex}"/>"#,)
             + &format!(r#"<div class="color-channels">{channels}</div>"#)
             + "</div></div></div>"
     }
@@ -302,12 +305,10 @@ impl Field for ColorField {
         };
         let val = format!("{:.2}", self.value[idx]);
         if let Some(e) = self.channels[idx].display {
-            let _ = interface
-                .rml_ui()
-                .element_set_attribute(e, "style", "display: none;");
+            let _ = interface.rml_ui().element_set_class(e, "hidden", true);
         }
         if let Some(e) = self.channels[idx].edit {
-            let _ = interface.rml_ui().element_set_attribute(e, "style", "");
+            let _ = interface.rml_ui().element_set_class(e, "hidden", false);
             let _ = interface.rml_ui().element_set_attribute(e, "value", &val);
             let _ = interface.rml_ui().element_focus(e);
         }

@@ -39,6 +39,8 @@ def run_scenario(run_state: E2ERun) -> None:
         all_editors(run_state)
     elif run_state.case.scenario == "heightmap":
         heightmap(run_state)
+    elif run_state.case.scenario == "native_panel":
+        native_panel(run_state)
     else:
         raise ValueError(f"unknown scenario: {run_state.case.scenario}")
 
@@ -109,6 +111,41 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 180, 400, delay=0.15)
     run_state.type_text("tree")
     run_state.screenshot("features-search")
+
+
+def native_panel(run_state: E2ERun) -> None:
+    """The native (Rust) right-hand panel.
+
+    Every capture is a golden compared pixel-exactly, and the field edit has to
+    prove itself by emitting the command the engine would act on. `SB` boots
+    paused with a fixed camera, so the frame is deterministic.
+    """
+    run_state.focus()
+    assert run_state.window is not None
+    width, _height = window_geometry(run_state.window)
+    panel_left = width - 500
+
+    # Objects is the default tab and has no native editors registered yet.
+    run_state.golden("shell-objects-tab")
+
+    run_state.click(panel_left + 180, 35, delay=0.5)   # Env tab
+    run_state.golden("shell-env-tab")
+
+    run_state.click(panel_left + 38, 88, delay=0.7)    # Env -> Lighting
+    run_state.golden("lighting-open")
+
+    # Click the Shadow Density display to enter edit mode, replace the value,
+    # and commit. This must reach the command bridge as SetSunLightingCommand
+    # carrying exactly the value we typed.
+    run_state.click(panel_left + 90, 419, delay=0.4)
+    run_state.golden("lighting-density-editing")
+
+    run_state.key("ctrl+a", delay=0.15)
+    run_state.type_text("0.25")
+    run_state.key("Return", delay=0.6)
+
+    run_state.assert_command("SetSunLightingCommand", groundShadowDensity=0.25)
+    run_state.golden("lighting-density-committed")
 
 
 def heightmap(run_state: E2ERun) -> None:

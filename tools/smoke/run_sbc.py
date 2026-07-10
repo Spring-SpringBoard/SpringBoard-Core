@@ -207,8 +207,8 @@ def _read_port_flags_config(path: Path) -> dict[str, str]:
         raise RuntimeError(f"run config must be a JSON object: {path}")
     allowed = {
         "chonsole": {"lua", "rust"},
-        "env_panel": {"lua", "rust"},
-        "ui": {"chili", "rmlui"},
+        # The three UI implementations are independent: exactly one builds a UI.
+        "ui": {"chili", "rmlui", "rust"},
     }
     for key, values in allowed.items():
         value = data.get(key)

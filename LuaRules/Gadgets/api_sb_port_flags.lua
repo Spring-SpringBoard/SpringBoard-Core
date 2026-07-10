@@ -29,7 +29,14 @@ end
 
 -- Must run in Initialize, not GamePreload: SB's view.lua and the RmlUi/Chili
 -- widgets read this param during LuaUI load, which happens before GamePreload.
+-- The three UI implementations are independent: exactly one builds a UI.
+-- `sb_ui` names it; `useRml` stays for the RmlUi-vs-Chili checks that predate it.
 function gadget:Initialize()
 	local config = LoadPortFlags()
-	Spring.SetGameRulesParam("useRml", (config.ui == "rmlui") and "true" or "false")
+	local ui = config.ui
+	if ui ~= "rmlui" and ui ~= "rust" then
+		ui = "chili"
+	end
+	Spring.SetGameRulesParam("sb_ui", ui)
+	Spring.SetGameRulesParam("useRml", (ui == "rmlui") and "true" or "false")
 end

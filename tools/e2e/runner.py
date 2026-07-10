@@ -11,10 +11,11 @@ from datetime import datetime
 from pathlib import Path
 
 from cases import Case
+from golden import GoldenMismatch, compare as compare_golden
 from paths import ARTIFACT_ROOT, GAME_DIRNAME, TOOLS_SMOKE
 from process import run
 from screenshots import Screenshot, convert_screenshot_file
-from x11 import find_windows, spring_processes, window_pid
+from x11 import find_windows, spring_processes, window_geometry, window_pid
 
 sys.path.insert(0, str(TOOLS_SMOKE))
 from run_sbc import prepare  # noqa: E402
@@ -46,9 +47,12 @@ class E2ERun:
         capture: str,
         review_images: bool,
         image_workers: int,
+        update_golden: bool = False,
     ):
         self.case = case
         self.capture = capture
+        self.update_golden = update_golden
+        self.golden_results: list[tuple[str, str]] = []
         self.review_images = review_images
         self.image_workers = image_workers
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -325,6 +329,71 @@ class E2ERun:
             capture=self.capture,
         )
         return png_path
+
+    # ── Golden images ──────────────────────────────────────────────
+
+    def park_cursor(self) -> None:
+        """Move the cursor somewhere harmless before a capture: the engine draws
+        it, so wherever it rests becomes part of the image."""
+        assert self.window is not None
+        width, height = window_geometry(self.window)
+        run("xdotool", "mousemove", "--window", self.window, str(width // 2), str(height - 4))
+        time.sleep(0.25)
+
+    def golden(self, name: str) -> None:
+        """Capture, then compare pixel-exactly against the checked-in golden."""
+        self.park_cursor()
+        stem = f"{len(self.screenshots):02d}-{name}"
+        raw_path = self.screenshot_dir / f"{stem}.xwd"
+        png_path = self.screenshot_dir / f"{stem}.png"
+        run("xwd", "-silent", "-id", self.window, "-out", str(raw_path))
+        shot = Screenshot(name=name, raw_path=raw_path, png_path=png_path, crop=self.case.crop)
+        convert_screenshot_file(shot)
+        self.screenshots.append(shot)
+        raw_path.unlink(missing_ok=True)
+
+        status = compare_golden(
+            self.case.name, name, png_path, update=self.update_golden
+        )
+        self.golden_results.append((name, status))
+        self.event("golden", name=name, status=status, path=str(png_path))
+
+    # ── Command-log assertions ─────────────────────────────────────
+
+    def commands(self) -> list[dict]:
+        """Every command envelope the UI sent to the command bridge."""
+        assert self.write_dir is not None
+        path = self.write_dir / "commands.jsonl"
+        if not path.is_file():
+            return []
+        entries = []
+        for line in path.read_text().splitlines():
+            _stamp, _, payload = line.partition(" ")
+            if payload:
+                entries.append(json.loads(payload))
+        return entries
+
+    def assert_command(self, class_name: str, **expected: object) -> dict:
+        """Assert exactly one command of `class_name` was sent, and that the
+        listed fields of its `opts` match. Returns the command's data."""
+        matches = [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("className") == class_name
+        ]
+        if len(matches) != 1:
+            raise AssertionError(
+                f"expected exactly one {class_name}, got {len(matches)}: "
+                f"{[e.get('data', {}).get('className') for e in self.commands()]}"
+            )
+        data = matches[0]
+        opts = data.get("opts", data)
+        for key, want in expected.items():
+            got = opts.get(key)
+            if got != want:
+                raise AssertionError(f"{class_name}.{key}: expected {want!r}, got {got!r}")
+        self.event("assert_command", className=class_name, expected=expected)
+        return data
 
     def screenshot_root(self, name: str) -> Path:
         stem = f"{len(self.screenshots):02d}-{name}"

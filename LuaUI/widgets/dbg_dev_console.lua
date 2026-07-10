@@ -456,7 +456,9 @@ function widget:TextCommand(command)
 end
 
 local function enabled()
-	return Spring.GetGameRulesParam("gameMode") ~= "play" and Spring.GetGameRulesParam("useRml") ~= "true"
+	-- The Chili dev console; the other UIs have their own.
+	return Spring.GetGameRulesParam("gameMode") ~= "play"
+		and Spring.GetGameRulesParam("sb_ui") == "chili"
 end
 
 function widget:Initialize()
