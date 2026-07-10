@@ -2,6 +2,7 @@
 
 mod add_object;
 pub(crate) mod brush_settings;
+pub(crate) mod highlight;
 mod manager;
 mod manipulate;
 mod map_editing;

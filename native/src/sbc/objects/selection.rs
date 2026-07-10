@@ -53,6 +53,15 @@ impl SelectionManager {
         self.units.len() + self.features.len() + self.areas.len()
     }
 
+    /// Every selected object as `(kind, modelID)`, across all kinds.
+    pub(crate) fn all(&self) -> Vec<(ObjectKind, i32)> {
+        let mut out = Vec::new();
+        for kind in [ObjectKind::Unit, ObjectKind::Feature, ObjectKind::Area] {
+            out.extend(self.get(kind).into_iter().map(move |id| (kind, id)));
+        }
+        out
+    }
+
     pub(crate) fn revision(&self) -> u64 {
         self.revision
     }

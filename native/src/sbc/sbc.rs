@@ -8,7 +8,7 @@ use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::devconsole::DevConsoleManager;
 use crate::sbc::io::io_api::IoWorker;
-use crate::sbc::objects::{event_bridge, ObjectManager};
+use crate::sbc::objects::{event_bridge, ObjectKind, ObjectManager, SelectionManager};
 use crate::sbc::panels::PanelManager;
 use crate::sbc::states::StateManager;
 
@@ -75,6 +75,23 @@ impl NativeModule for SBC {
     fn draw_screen(&mut self) -> Result<(), Error> {
         self.model::<ChonsoleManager>().draw_screen()?;
         self.model::<PanelManager>().draw_screen()
+    }
+
+    /// Draw a ground ring under each selected feature/area. Units glow through
+    /// the engine's own selection, so they are skipped.
+    fn draw_world(&mut self) -> Result<(), Error> {
+        let selected = self.model::<SelectionManager>().all();
+        let positions: Vec<(f32, f32, f32)> = selected
+            .into_iter()
+            .filter(|(kind, _)| *kind != ObjectKind::Unit)
+            .filter_map(|(kind, id)| {
+                self.model::<ObjectManager>()
+                    .object_pos(kind, id)
+                    .map(|p| (p.x, p.y, p.z))
+            })
+            .collect();
+        crate::sbc::states::highlight::draw_selection(&self.interface, &positions);
+        Ok(())
     }
 
     fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {

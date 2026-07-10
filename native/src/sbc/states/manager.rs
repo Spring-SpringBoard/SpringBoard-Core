@@ -59,6 +59,8 @@ pub(crate) struct StateManager {
     state: ActiveState,
     pending_envelopes: Vec<String>,
     next_cmd_id: u64,
+    /// The one-time editor setup (full spectator view) has been sent.
+    editor_view_set: bool,
 }
 
 impl Model for StateManager {
@@ -76,7 +78,25 @@ impl StateManager {
             pending_envelopes: Vec::new(),
             // Disjoint from the panel's id range, so history entries never collide.
             next_cmd_id: 2_000_000,
+            editor_view_set: false,
         }
+    }
+
+    /// The editor is a spectator; enable full view + full select so every
+    /// object is visible and clickable (a plain spectator sees only its team's
+    /// LOS, and `GuiTraceRay` then skips features the editor just placed). Lua's
+    /// editor relies on the same. Sent once, on the first live tick.
+    fn ensure_editor_view(&mut self) {
+        if self.editor_view_set {
+            return;
+        }
+        // `specfullview 3` = fullview + fullselect (the action's documented
+        // default), so the whole map is revealed and selectable.
+        let _ = self
+            .interface
+            .messages()
+            .send_commands("specfullview 3", "");
+        self.editor_view_set = true;
     }
 
     pub fn drain_envelopes(&mut self) -> Vec<String> {
@@ -170,6 +190,7 @@ impl StateManager {
         if !self.enabled {
             return Ok(());
         }
+        self.ensure_editor_view();
         self.with_context(models, |state, ctx| state.update(ctx));
         Ok(())
     }
