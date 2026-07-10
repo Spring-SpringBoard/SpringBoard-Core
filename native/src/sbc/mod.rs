@@ -12,12 +12,14 @@ mod objects;
 mod panels;
 mod port_flags;
 mod project;
+mod states;
 mod teams;
 mod terrain_cpu;
 mod textures;
 mod triggers;
 mod variables;
 
+mod envelope;
 mod hashable_float;
 mod io;
 mod keys;

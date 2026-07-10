@@ -3,10 +3,11 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::FieldSet;
-use crate::sbc::panels::editors::brush::pattern_field;
+use crate::sbc::panels::editors::brush::{non_empty, pattern_field, BrushAction, BrushActions};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::NumericField;
 use crate::sbc::panels::registry::{EditorSpec, Tab};
+use crate::sbc::states::{BrushKind, BrushSettings, StateRequest};
 
 // Mirrors GrassEditor:Register in scen_edit/view/map/grass_editor.lua.
 inventory::submit! {
@@ -21,10 +22,16 @@ inventory::submit! {
     }
 }
 
+const ACTIONS: &[BrushAction] = &[BrushAction {
+    caption: "Add",
+    kind: BrushKind::Grass,
+}];
+
 /// The grass brush. `grassDetail` is an engine config value rather than brush
 /// state, so it is applied straight away, as Lua does with `SetConfigInt`.
 pub(crate) struct GrassEditor {
     fields: FieldSet,
+    actions: BrushActions,
 }
 
 impl GrassEditor {
@@ -48,6 +55,7 @@ impl GrassEditor {
                         .max(360.0),
                 ),
             ]),
+            actions: BrushActions::new(ACTIONS),
         }
     }
 
@@ -62,10 +70,11 @@ impl GrassEditor {
 
 impl Editor for GrassEditor {
     fn generate_rml(&self) -> String {
-        ["patternTexture", "grassDetail", "size", "rotation"]
-            .iter()
-            .map(|n| self.fields.rml(n))
-            .collect()
+        let mut h = self.actions.generate_rml();
+        for name in ["patternTexture", "grassDetail", "size", "rotation"] {
+            h.push_str(&self.fields.rml(name));
+        }
+        h
     }
 
     fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, _models: &mut Models) {
@@ -73,6 +82,19 @@ impl Editor for GrassEditor {
             self.fields
                 .set("grassDetail", FieldValue::Number(detail as f32));
         }
+    }
+
+    fn write_brush(&self, brush: &mut BrushSettings) {
+        brush.size = self.fields.number("size");
+        brush.rotation = self.fields.number("rotation");
+        brush.pattern_texture = non_empty(self.fields.text("patternTexture"));
+    }
+
+    fn read_brush(&mut self, brush: &BrushSettings, interface: &NativeInterfaceRef) {
+        self.fields.set("size", FieldValue::Number(brush.size));
+        self.fields
+            .set("rotation", FieldValue::Number(brush.rotation));
+        let _ = self.fields.write_values(interface);
     }
 
     fn process_change(
@@ -95,6 +117,7 @@ impl Editor for GrassEditor {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
+        self.actions.bind(interface, document)?;
         self.fields.bind(interface, document, changes, interactions)
     }
 
@@ -102,10 +125,21 @@ impl Editor for GrassEditor {
         self.fields.write_values(interface)
     }
 
-    fn process_drag_end(&mut self, name: &str, _next: &mut u64) -> Vec<String> {
-        if name == "grassDetail" {
-            // Applied on release; a config write per drag step is wasteful.
-        }
+    fn tick(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        _next: &mut u64,
+    ) -> Vec<String> {
+        self.actions.tick(interface, document);
+        vec![]
+    }
+
+    fn take_state_request(&mut self) -> Option<StateRequest> {
+        self.actions.take_request()
+    }
+
+    fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
         vec![]
     }
 
@@ -113,6 +147,7 @@ impl Editor for GrassEditor {
         self.fields.drag(name, dx, interface)
     }
 
+    /// The config write happens on release; one per drag step would be wasteful.
     fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
         let handled = self.fields.drag_end(name, interface);
         if name == "grassDetail" {

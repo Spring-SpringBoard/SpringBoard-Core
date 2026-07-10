@@ -3,6 +3,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::command_system::model::Models;
 
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
+use crate::sbc::states::{BrushSettings, StateRequest};
 
 /// An editor panel. Each concrete editor owns its fields, generates its RML
 /// body, and processes field changes into command envelopes.
@@ -44,6 +45,24 @@ pub(crate) trait Editor {
     ) -> Vec<String> {
         let _ = (interface, document, next_cmd_id);
         vec![]
+    }
+
+    /// The editing state this view wants the editor to enter, if it changed.
+    /// Drained by the manager and handed to the `StateManager`.
+    fn take_state_request(&mut self) -> Option<StateRequest> {
+        None
+    }
+
+    /// Push field values into the shared brush, so the active state paints with
+    /// what the panel shows. Only the Map tab's brush editors do anything here.
+    fn write_brush(&self, brush: &mut BrushSettings) {
+        let _ = brush;
+    }
+
+    /// Take values a state changed (wheel resize, picked height) back into the
+    /// fields.
+    fn read_brush(&mut self, brush: &BrushSettings, interface: &NativeInterfaceRef) {
+        let _ = (brush, interface);
     }
 
     /// Read current state into field values. `models` gives access to the

@@ -4,16 +4,17 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
+use crate::sbc::envelope::as_preview;
 use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::as_preview;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
 use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
 use crate::sbc::panels::registry::editor_by_name;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
+use crate::sbc::states::{BrushSettings, StateManager};
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(PanelManager::new(iface)) }
@@ -46,6 +47,9 @@ pub(crate) struct PanelManager {
     /// The value a numeric drag started from, so the committed command captures
     /// it as the state undo returns to.
     drag_original: Option<(String, FieldValue)>,
+    /// The brush revision the fields last showed; a bump means a state changed
+    /// the brush and the fields should follow.
+    brush_revision: u64,
 }
 
 impl Model for PanelManager {
@@ -86,6 +90,7 @@ impl PanelManager {
             editing: None,
             just_committed: None,
             drag_original: None,
+            brush_revision: 0,
         }
     }
 
@@ -196,12 +201,14 @@ impl PanelManager {
             self.needs_refresh = false;
         }
 
-        // Editors that own more than fields (the def grids) do their work here,
-        // outside the RmlUi event dispatch.
+        // Editors that own more than fields (the def grids, the brush action
+        // buttons) do their work here, outside the RmlUi event dispatch.
         if let (Some(doc), Some(ed)) = (self.view.document_handle(), self.editor.as_deref_mut()) {
             let envelopes = ed.tick(&self.interface, doc, &mut self.next_cmd_id);
             self.pending_envelopes.extend(envelopes);
         }
+        self.sync_brush(models);
+        self.dispatch_state_request(models);
 
         self.view.update(&self.interface)
     }
@@ -410,6 +417,35 @@ impl PanelManager {
         if let Some(ed) = &self.editor {
             let _ = ed.write_field_values(&self.interface);
         }
+    }
+
+    /// Keep the panel's fields and the shared brush in step. A state bumps the
+    /// brush's revision when the wheel resizes it or a right-click picks a
+    /// height, and then the fields follow; otherwise the fields lead.
+    fn sync_brush(&mut self, models: &mut Models) {
+        let Some(ed) = self.editor.as_deref_mut() else {
+            return;
+        };
+        let brush = models.get::<BrushSettings>();
+        if brush.revision != self.brush_revision {
+            self.brush_revision = brush.revision;
+            let brush = brush.clone();
+            ed.read_brush(&brush, &self.interface);
+            return;
+        }
+        ed.write_brush(brush);
+    }
+
+    /// A view asked to enter or leave an editing state.
+    fn dispatch_state_request(&mut self, models: &mut Models) {
+        let Some(request) = self
+            .editor
+            .as_deref_mut()
+            .and_then(|e| e.take_state_request())
+        else {
+            return;
+        };
+        models.with::<StateManager, _>(|states, models| states.set_state(request, models));
     }
 
     // ── Input delegation ──

@@ -33,6 +33,8 @@ pub(crate) struct ObjectDefsView {
     /// The search box fired `change`; re-filter on the next tick, where the
     /// document handle is available and RmlUi is not mid-dispatch.
     search_dirty: bool,
+    /// A definition was just clicked; the view turns this into a placement state.
+    selection_change: Option<String>,
 }
 
 impl ObjectDefsView {
@@ -45,6 +47,7 @@ impl ObjectDefsView {
             search_element: None,
             loaded: false,
             search_dirty: false,
+            selection_change: None,
         }
     }
 
@@ -54,6 +57,11 @@ impl ObjectDefsView {
 
     pub(crate) fn selected(&self) -> Option<&str> {
         self.grid.selected()
+    }
+
+    /// The definition picked since this was last called.
+    pub(crate) fn take_selection_change(&mut self) -> Option<String> {
+        self.selection_change.take()
     }
 
     pub(crate) fn generate_rml(&self) -> String {
@@ -121,6 +129,7 @@ impl ObjectDefsView {
 
         for id in self.grid.drain_clicks() {
             self.grid.set_selected(Some(&id));
+            self.selection_change = Some(id);
             self.grid.render(interface, document)?;
         }
         Ok(())

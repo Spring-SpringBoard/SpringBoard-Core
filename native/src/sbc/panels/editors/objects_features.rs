@@ -5,6 +5,7 @@ use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editors::object_defs::{DefKind, ObjectDefsView};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
+use crate::sbc::states::StateRequest;
 
 // Mirrors FeatureDefsView:Register in scen_edit/view/object/object_defs_view.lua.
 inventory::submit! {
@@ -58,6 +59,13 @@ impl Editor for FeatureDefsView {
     ) -> Vec<String> {
         let _ = self.defs.tick(interface, document);
         vec![]
+    }
+
+    /// Picking a definition arms the next map click to place it.
+    fn take_state_request(&mut self) -> Option<StateRequest> {
+        self.defs
+            .take_selection_change()
+            .map(StateRequest::AddFeature)
     }
 
     fn process_change(

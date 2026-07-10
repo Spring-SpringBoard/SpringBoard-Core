@@ -569,6 +569,34 @@ scrollbarvertical sliderbar:hover {
     background-color: #5fc878;
 }
 
+/* --- Brush action buttons (Lua's TabbedPanelLabel strip) --- */
+.brush-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.brush-action {
+    padding: 5px 12px;
+    background-color: #111411;
+    color: #cccccc;
+    border: 2px #050706;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.brush-action:hover {
+    background-color: #202820;
+    border-color: #4d5a50;
+}
+
+.brush-action.pressed {
+    background-color: #050705;
+    border-color: #00ff00;
+    color: #00ff00;
+}
+
 /* --- Colour picker modal (port of scen_edit/view/rcss/dialog.rcss) --- */
 .picker-backdrop {
     position: absolute;

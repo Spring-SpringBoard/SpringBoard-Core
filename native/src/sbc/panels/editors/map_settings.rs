@@ -44,8 +44,12 @@ impl MapSettingsEditor {
                     false,
                 )),
                 Box::new(
-                    AssetField::new("detailTexture", "Detail texture", "detail")
-                        .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
+                    AssetField::new(
+                        "detailTexture",
+                        "Detail texture",
+                        "springboard/assets/core/detail",
+                    )
+                    .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
                 ),
             ]),
         }

@@ -10,6 +10,7 @@ use crate::sbc::devconsole::DevConsoleManager;
 use crate::sbc::io::io_api::IoWorker;
 use crate::sbc::objects::{event_bridge, ObjectManager};
 use crate::sbc::panels::PanelManager;
+use crate::sbc::states::StateManager;
 
 const MAX_UNDO_SIZE: usize = 100;
 
@@ -56,7 +57,15 @@ impl NativeModule for SBC {
             .with::<PanelManager, _>(|panel, models| panel.update(models))?;
         self.models
             .with::<DevConsoleManager, _>(|console, models| console.update(models))?;
+        // The brush the panel edits and the brush the active state paints with
+        // are the same; reconcile them before the state paints this tick.
+        self.models
+            .with::<StateManager, _>(|states, models| -> Result<(), Error> {
+                states.sync_brush(models);
+                states.update()
+            })?;
         self.drain_panel_envelopes();
+        self.drain_state_envelopes();
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
         }
@@ -81,8 +90,14 @@ impl NativeModule for SBC {
         if self.model::<DevConsoleManager>().key_press(key_code)? {
             return Ok(true);
         }
-        self.model::<ChonsoleManager>()
-            .key_press(key_code, scan_code, is_repeat)
+        if self
+            .model::<ChonsoleManager>()
+            .key_press(key_code, scan_code, is_repeat)?
+        {
+            return Ok(true);
+        }
+        // Escape leaves the active editing state.
+        self.model::<StateManager>().key_press(key_code)
     }
 
     fn add_console_line(
@@ -128,20 +143,33 @@ impl NativeModule for SBC {
         if self.model::<ChonsoleManager>().mouse_press(x, y, button)? {
             return Ok(true);
         }
-        self.model::<PanelManager>().mouse_press(x, y, button)
+        if self.model::<PanelManager>().mouse_press(x, y, button)? {
+            return Ok(true);
+        }
+        // Last: a click that reached neither console nor panel is a click on
+        // the map, which is the editing state's to interpret.
+        let handled = self.model::<StateManager>().mouse_press(x, y, button)?;
+        self.drain_state_envelopes();
+        Ok(handled)
     }
 
     fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
         self.model::<ChonsoleManager>()
             .mouse_release(x, y, button)?;
-        self.model::<PanelManager>().mouse_release(x, y, button)
+        self.model::<PanelManager>().mouse_release(x, y, button)?;
+        self.model::<StateManager>().mouse_release(x, y, button)?;
+        self.drain_state_envelopes();
+        Ok(())
     }
 
     fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
         if self.model::<ChonsoleManager>().mouse_wheel(up, value)? {
             return Ok(true);
         }
-        self.model::<PanelManager>().mouse_wheel(up, value)
+        if self.model::<PanelManager>().mouse_wheel(up, value)? {
+            return Ok(true);
+        }
+        self.model::<StateManager>().mouse_wheel(up, value)
     }
 }
 
@@ -162,6 +190,15 @@ impl SBC {
     /// the command system (gives them undo/redo, history events, etc.).
     fn drain_panel_envelopes(&mut self) {
         for envelope in self.model::<PanelManager>().drain_envelopes() {
+            self.route(&envelope);
+        }
+    }
+
+    /// Route what the active editing state queued. Drained right after each
+    /// callin that can produce commands, so a brush stroke's `SetMultipleCommand
+    /// ModeCommand(true)` reaches the command manager before the strokes do.
+    fn drain_state_envelopes(&mut self) {
+        for envelope in self.model::<StateManager>().drain_envelopes() {
             self.route(&envelope);
         }
     }
