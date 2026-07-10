@@ -2,6 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use super::core::ChonsoleCore;
 use super::types::{ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, ChonsoleSuggestion};
+use crate::sbc::rml::{self, element_by_id};
 
 const MAX_UI_LINES: usize = 200;
 const UI_CONTEXT: &str = "sbc_native_chonsole";
@@ -47,12 +48,29 @@ impl Default for ChonsoleView {
 }
 
 impl ChonsoleView {
+    pub(super) fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
+        rml::context_is_alive(interface, UI_CONTEXT, self.context)
+    }
+
+    /// Drop the handles without touching them: the engine already freed them.
+    fn forget(&mut self) {
+        self.context = None;
+        self.document = None;
+        self.root = None;
+        self.lines = None;
+    }
+
     pub(super) fn ensure(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         if !self.rml_enabled {
             return Ok(());
         }
         if self.context.is_some() && self.document.is_some() {
-            return Ok(());
+            if self.context_is_alive(interface) {
+                return Ok(());
+            }
+            // `luaui reload` destroyed every RmlUi context, ours included.
+            // Drop the handles untouched and build a fresh document below.
+            self.forget();
         }
         let rml = interface.rml_ui();
         if !rml.is_ready()? {
@@ -122,6 +140,10 @@ impl ChonsoleView {
     }
 
     pub(super) fn dispose(&mut self, interface: &NativeInterfaceRef) {
+        if !self.context_is_alive(interface) {
+            self.forget();
+            return;
+        }
         let rml = interface.rml_ui();
         if let Some(document) = self.document.take() {
             let _ = rml.document_close(document);
@@ -658,14 +680,6 @@ impl ChonsoleView {
         self.selected_suggestion = None;
         true
     }
-}
-
-fn element_by_id(interface: &NativeInterfaceRef, document: u64, id: &str) -> Option<u64> {
-    interface
-        .rml_ui()
-        .element_get_element_by_id(document, id)
-        .ok()
-        .and_then(|(handle, exists)| exists.then_some(handle))
 }
 
 fn escape_rml(text: &str) -> String {

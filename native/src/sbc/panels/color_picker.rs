@@ -87,6 +87,16 @@ impl ColorPicker {
         self.previewing
     }
 
+    /// The listeners were bound to elements the engine has since freed.
+    pub(crate) fn forget_bindings(&mut self) {
+        self.bound = false;
+        self.field = None;
+        self.grab = Grab::None;
+        self.previewing = false;
+        self.events.borrow_mut().clear();
+        self.grab_queue.borrow_mut().clear();
+    }
+
     pub(crate) fn markup() -> String {
         format!(
             concat!(

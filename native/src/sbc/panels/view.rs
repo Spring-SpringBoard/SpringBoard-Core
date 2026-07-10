@@ -7,6 +7,7 @@ use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::ColorPicker;
 use crate::sbc::panels::field::{element_by_id, escape_rml};
 use crate::sbc::panels::registry::{editors_for, Tab};
+use crate::sbc::rml;
 
 const UI_CONTEXT: &str = "sbc_native_ui";
 const UI_BODY: &str = include_str!("ui.rml");
@@ -62,11 +63,27 @@ impl PanelView {
         self.events.borrow_mut().drain(..).collect()
     }
 
+    fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
+        rml::context_is_alive(interface, UI_CONTEXT, self.context)
+    }
+
+    /// Drop the handles without touching them: the engine already freed them.
+    fn forget(&mut self) {
+        self.context = None;
+        self.document = None;
+        self.root = None;
+        self.content = None;
+        self.events.borrow_mut().clear();
+    }
+
     /// Create the context + document if the engine is ready. Returns `true` if
-    /// newly created.
+    /// newly created -- including a re-creation after RmlUi was torn down.
     pub(crate) fn ensure(&mut self, interface: &NativeInterfaceRef) -> Result<bool, Error> {
         if self.is_ready() {
-            return Ok(false);
+            if self.context_is_alive(interface) {
+                return Ok(false);
+            }
+            self.forget();
         }
         let rml = interface.rml_ui();
         if !rml.is_ready()? {
@@ -259,6 +276,10 @@ impl PanelView {
     }
 
     pub(crate) fn dispose(&mut self, interface: &NativeInterfaceRef) {
+        if !self.context_is_alive(interface) {
+            self.forget();
+            return;
+        }
         let rml = interface.rml_ui();
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);

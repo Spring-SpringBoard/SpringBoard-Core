@@ -7,7 +7,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::devconsole::actions::Action;
 use crate::sbc::devconsole::log::LogLine;
-use crate::sbc::rml::{element_by_id, escape_rml};
+use crate::sbc::rml::{self, element_by_id, escape_rml};
 
 const UI_CONTEXT: &str = "sbc_dev_console";
 const UI_BODY: &str = include_str!("ui.rml");
@@ -77,11 +77,18 @@ impl DevConsoleView {
         self.actions.borrow_mut().drain(..).collect()
     }
 
+    pub(crate) fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
+        rml::context_is_alive(interface, UI_CONTEXT, self.context)
+    }
+
     /// Create the context + document once RmlUi is up. Returns `true` the tick
-    /// it is created, so the caller can backfill the console buffer.
+    /// it is created, so the caller can rebuild what it owns.
     pub(crate) fn ensure(&mut self, interface: &NativeInterfaceRef) -> Result<bool, Error> {
         if self.is_ready() {
-            return Ok(false);
+            if self.context_is_alive(interface) {
+                return Ok(false);
+            }
+            self.forget();
         }
         let rml = interface.rml_ui();
         if !rml.is_ready()? {
@@ -110,6 +117,9 @@ impl DevConsoleView {
         self.log = element_by_id(interface, doc, "log-container");
 
         self.build_toolbar(interface)?;
+        // A rebuild after a reload must not silently reopen a hidden console.
+        let visible = self.visible;
+        self.set_visible(interface, visible)?;
         Ok(true)
     }
 
@@ -236,7 +246,20 @@ impl DevConsoleView {
         Ok(())
     }
 
+    /// Drop the handles without touching them: the engine already freed them.
+    pub(crate) fn forget(&mut self) {
+        self.context = None;
+        self.document = None;
+        self.root = None;
+        self.log = None;
+        self.actions.borrow_mut().clear();
+    }
+
     pub(crate) fn dispose(&mut self, interface: &NativeInterfaceRef) {
+        if !self.context_is_alive(interface) {
+            self.forget();
+            return;
+        }
         let rml = interface.rml_ui();
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);

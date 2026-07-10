@@ -84,7 +84,18 @@ impl PanelManager {
         if !self.enabled {
             return Ok(());
         }
-        self.view.ensure(&self.interface)?;
+        if self.view.ensure(&self.interface)? {
+            // A fresh context: every element handle the editor, the pickers and
+            // the input layer cached belongs to a document that no longer
+            // exists. Start over rather than touch any of them.
+            self.editor = None;
+            self.editing = None;
+            self.just_committed = None;
+            self.picker.forget_bindings();
+            self.asset_picker.forget_bindings();
+            self.input.reset();
+            self.view.set_active_editor(&self.interface, None)?;
+        }
         if !self.view.is_ready() {
             return Ok(());
         }

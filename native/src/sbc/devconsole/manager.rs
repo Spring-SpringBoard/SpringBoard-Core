@@ -34,6 +34,9 @@ pub(crate) struct DevConsoleManager {
     /// Set whenever the rendered log would change; the DOM is rewritten once
     /// per tick rather than once per line, so a burst stays cheap.
     dirty: bool,
+    /// The engine's console buffer is only worth reading once; after a `luaui
+    /// reload` rebuilds the view, our own buffer already holds those lines.
+    backfilled: bool,
 }
 
 impl Model for DevConsoleManager {
@@ -61,6 +64,7 @@ impl DevConsoleManager {
             problems_only: false,
             popup_on_error: true,
             dirty: false,
+            backfilled: false,
         }
     }
 
@@ -73,7 +77,10 @@ impl DevConsoleManager {
             // `send_commands`' second argument is a *further command*, joined
             // with a newline -- not an argument. Arguments go in the first.
             let _ = self.interface.messages().send_commands("console 0", "");
-            self.backfill();
+            if !self.backfilled {
+                self.backfill();
+                self.backfilled = true;
+            }
             self.refresh_toggles()?;
             self.dirty = true;
         }
@@ -82,6 +89,9 @@ impl DevConsoleManager {
         }
 
         self.process_actions()?;
+        if !self.view.is_ready() {
+            return Ok(());
+        }
 
         if self.dirty {
             self.view
@@ -140,6 +150,13 @@ impl DevConsoleManager {
             return Ok(());
         }
         for action in actions {
+            // `luaui reload` tears RmlUi down *synchronously*, freeing this
+            // document mid-loop. Nothing below may touch the DOM afterwards;
+            // `ensure` rebuilds on the next tick.
+            if !self.view.context_is_alive(&self.interface) {
+                self.view.forget();
+                return Ok(());
+            }
             match action {
                 Action::Clear => {
                     self.buffer.clear();
@@ -176,6 +193,10 @@ impl DevConsoleManager {
                     let _ = self.interface.messages().send_commands("godmode", "");
                 }
             }
+        }
+        if !self.view.context_is_alive(&self.interface) {
+            self.view.forget();
+            return Ok(());
         }
         self.refresh_toggles()
     }

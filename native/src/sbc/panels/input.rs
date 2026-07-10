@@ -54,6 +54,15 @@ impl PanelInput {
         }
     }
 
+    /// Forget in-flight input. The elements a drag or a queued event referred
+    /// to are gone once RmlUi has been torn down and rebuilt.
+    pub(crate) fn reset(&mut self) {
+        self.drag = DragState::Idle;
+        self.mouse_captured = false;
+        self.changes.borrow_mut().clear();
+        self.interactions.borrow_mut().clear();
+    }
+
     pub(crate) fn changes(&self) -> &ChangeQueue {
         &self.changes
     }

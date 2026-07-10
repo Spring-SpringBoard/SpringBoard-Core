@@ -52,6 +52,14 @@ impl AssetPicker {
         self.field.as_deref()
     }
 
+    /// The listeners were bound to elements the engine has since freed.
+    pub(crate) fn forget_bindings(&mut self) {
+        self.bound = false;
+        self.field = None;
+        self.events.borrow_mut().clear();
+        self.grid.drain_clicks();
+    }
+
     pub(crate) fn markup(&self) -> String {
         format!(
             concat!(
