@@ -115,21 +115,53 @@ Each must render, behave, emit the right command, and have a reference image.
 
 | control | native status |
 |---|---|
-| numeric (click-to-edit) | done — commits once, on Enter or blur |
+| numeric (click-to-edit) | done — commits once, on Enter or blur; asserted |
 | numeric (drag)          | done — polled cursor; engine reports no mouse_move |
+| colour picker           | done — modal, SV+hue drag, OK/Cancel; asserted |
+| checkbox / boolean      | done — `has_attribute`, one command; asserted |
+| text / string           | written, **not yet used by a view** |
 | choice / select         | renders; **behaviour untested** |
-| colour picker           | done — modal, SV+hue drag, OK/Cancel |
-| checkbox / boolean      | **not ported** |
-| text / string           | **not ported** |
 | asset / material picker | **not ported** |
 | unit / feature picker   | **not ported** (grid + RTT thumbnails) |
 | grid view               | **not ported** |
 | dialogs                 | picker only |
 
+### Views
+
+| tab | view | status |
+|---|---|---|
+| Env | Lighting | done, asserted |
+| Env | Sky | ported; skybox asset field missing |
+| Env | Water | done, asserted; texture asset fields missing |
+| Objects | Units / Features / Properties / Collision | not started |
+| Map | all | not started |
+| Misc | Info / Teams | blocked, see below |
+
+## Known blockers
+
+**The panel cannot reach the project models.** `Misc → Info` edits
+`ScenarioInfoManager` (name/description/version/author) and `Misc → Teams` edits
+the team model — neither is engine state, so `refresh_from_engine(interface)`
+cannot read them. `PanelManager` is itself a `Model`, so it cannot borrow another
+model out of the registry while `SBC::update` holds it.
+
+The fix is to pass the model registry (or a `Context`) into the editor's refresh
+and dispatch, rather than only `NativeInterfaceRef`. Do this before porting
+Misc, Objects → Properties, or anything else backed by project state. It is a
+real design change, not a workaround — do not cache a copy behind the model's
+back.
+
+**Reference-image determinism is not yet proven.** A rerun of an unchanged
+`native-panel` reported ~108k differing pixels on `shell-objects-tab`, with only
+10 of them in the panel chrome: the map behind the translucent panel is not
+identical frame to frame. Either crop to opaque panel regions, or render the
+panel over a fixed backdrop for capture, before treating a diff as a failure.
+
 ## TODO
 
-- [ ] Env → Water (many fields, needs BooleanField + AssetField).
+- [ ] Pass the model registry into editors (blocker above).
 - [ ] Env → Sky's skybox texture field (needs an asset picker).
+- [ ] Asset / material picker (grid of textures, used by Sky, Water, Map).
 - [ ] Objects → Units, Objects → Features (grid view + 3D RTT thumbnails via
       `<texture src>`).
 - [ ] Objects → Properties, Collision.
