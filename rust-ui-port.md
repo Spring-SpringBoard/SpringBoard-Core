@@ -80,11 +80,19 @@ but drew nothing. `PanelView::draw` is a no-op. The native chonsole still calls
 `context_render`; its RmlUi content has therefore never actually been visible
 (it draws its text through `interface.gfx()`), and should be cleaned up.
 
+## Running it
+
+```
+just run config/rust-ui.json                  # native UI
+python3 tools/e2e/ui_driver.py all --tag ui:rust
+python3 tools/e2e/ui_driver.py native-panel --update-golden   # re-capture refs
+python3 tools/e2e/approve_goldens.py native-panel-rust        # human OK
+```
+
 ## TODO
 
-- [ ] Golden-screenshot harness (`--update-golden`, pixel-exact compare, cursor
-      parking) and deterministic command assertions; port `native-panel` to it.
-- [ ] Env → Sky, Env → Water.
+- [ ] Env → Water (many fields, needs BooleanField + AssetField).
+- [ ] Env → Sky's skybox texture field (needs an asset picker).
 - [ ] Objects → Units, Objects → Features (grid view + 3D RTT thumbnails via
       `<texture src>`).
 - [ ] Objects → Properties, Collision.
@@ -94,3 +102,17 @@ but drew nothing. `PanelView::draw` is a no-op. The native chonsole still calls
 - [ ] Undo/redo refresh path: `on_history_events` sets `needs_refresh`, but only
       the open editor is refreshed. Verify against an undo of a lighting change.
 - [ ] Native chonsole: remove its dead `context_render` call.
+- [ ] Visual parity gaps against Lua RmlUi, visible in the reference images:
+      the `shadowMode` select is narrower and sits high; the toolbar action bar
+      is an empty placeholder, so content starts ~30px higher.
+- [ ] Field widths: Lua sizes numeric/colour buttons per-field (`width = 140`);
+      the native fields hardcode 78/140.
+
+## Engine notes
+
+- The engine renders every RmlUi context in `RmlGui::RenderFrame`, between
+  `BeginFrame` and `PresentFrame`. A plugin must **not** call `context_render`.
+- The engine also feeds keyboard/text input straight to its RmlUi contexts, so a
+  plugin never sees those keys through its own `key_press` call-in. Listen on
+  the element and read `key_identifier` off `event_get_current()`.
+- RmlUi fires `change` on a text input per keystroke. Commit on Enter or blur.
