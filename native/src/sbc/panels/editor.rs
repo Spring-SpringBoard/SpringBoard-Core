@@ -2,7 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 
-use crate::sbc::panels::field::{ChangeQueue, InteractionQueue};
+use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 
 /// An editor panel. Each concrete editor owns its fields, generates its RML
 /// body, and processes field changes into command envelopes.
@@ -34,6 +34,18 @@ pub(crate) trait Editor {
     /// updated during drag). Does NOT read from DOM.
     fn process_drag_end(&mut self, name: &str, next_cmd_id: &mut u64) -> Vec<String>;
 
+    /// Per-tick work for editors that own something other than fields — a grid
+    /// drains its queued clicks here, outside the RmlUi event dispatch.
+    fn tick(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        next_cmd_id: &mut u64,
+    ) -> Vec<String> {
+        let _ = (interface, document, next_cmd_id);
+        vec![]
+    }
+
     /// Read current state into field values. `models` gives access to the
     /// project models for views backed by project state rather than the engine
     /// (scenario info, teams).
@@ -51,18 +63,15 @@ pub(crate) trait Editor {
     /// Leave edit mode without committing (Escape).
     fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef);
 
-    /// Whether the field commits from a text input, so a stale `blur` after the
-    /// The field's colour, if it is a colour field: the manager opens the
-    /// picker on it instead of entering edit mode.
-    fn field_color(&self, name: &str) -> Option<[f32; 4]>;
+    /// The field's current value. The manager decides how to interact with a
+    /// field from this: a colour opens the picker, anything else edits inline.
+    fn field_value(&self, name: &str) -> FieldValue;
 
-    /// Write a colour back into the field and the DOM (picker accepted).
-    fn set_field_color(&mut self, name: &str, rgba: [f32; 4], interface: &NativeInterfaceRef);
+    /// Write a value back into the field and the DOM (picker accepted, asset
+    /// picked, a drag restored).
+    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef);
 
     /// The field's asset root and accepted extensions, if it is an asset field:
     /// the manager opens the asset picker on it.
     fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)>;
-
-    /// Write a text value back into the field and the DOM (asset picked).
-    fn set_field_text(&mut self, name: &str, value: &str, interface: &NativeInterfaceRef);
 }

@@ -29,6 +29,15 @@ pub(crate) enum PendingAction {
     ClickEdit(String),
 }
 
+/// What one `tick_drag` did.
+pub(crate) enum DragTick {
+    Idle,
+    /// A drag just crossed the threshold; the field still holds its old value.
+    Started(String),
+    /// The field's value moved and should be previewed.
+    Moved(String),
+}
+
 /// Handles all engine input callbacks (mouse, keyboard, text) for the panel.
 /// Owns the drag state machine and the shared event queues.
 pub(crate) struct PanelInput {
@@ -78,13 +87,17 @@ impl PanelInput {
     /// never sees `mouse_move` while RmlUi holds the press. Lua's RmlUi fields
     /// have the same problem and solve it the same way: take the pressed state
     /// from RmlUi's mousedown/mouseup, and the position from the engine.
+    /// Step an in-progress drag from the polled cursor position.
+    ///
+    /// Returns what happened, so the manager can capture the pre-drag value on
+    /// `Started` and preview the new one on `Moved`.
     pub(crate) fn tick_drag(
         &mut self,
         interface: &NativeInterfaceRef,
         editor: Option<&mut (dyn Editor + '_)>,
-    ) {
+    ) -> DragTick {
         let Ok(mouse) = interface.input().get_mouse_state() else {
-            return;
+            return DragTick::Idle;
         };
         let x = mouse.x;
 
@@ -92,16 +105,21 @@ impl PanelInput {
             if (x - *start_x).abs() > DRAG_THRESHOLD {
                 let field = field.clone();
                 self.last_mouse_x = *start_x;
-                self.drag = DragState::Dragging { field };
+                self.drag = DragState::Dragging {
+                    field: field.clone(),
+                };
+                // Report the start before moving: the manager has to record the
+                // value the drag began from, so undo can return to it.
+                return DragTick::Started(field);
             }
         }
 
         let DragState::Dragging { field } = &self.drag else {
-            return;
+            return DragTick::Idle;
         };
         let dx = x - self.last_mouse_x;
         if dx == 0.0 {
-            return;
+            return DragTick::Idle;
         }
         self.last_mouse_x = x;
         let mult = if self.fine_drag_multiplier(interface) {
@@ -109,8 +127,14 @@ impl PanelInput {
         } else {
             1.0
         };
-        if let Some(ed) = editor {
-            ed.drag_field(field, dx * mult, interface);
+        let field = field.clone();
+        let Some(ed) = editor else {
+            return DragTick::Idle;
+        };
+        if ed.drag_field(&field, dx * mult, interface) {
+            DragTick::Moved(field)
+        } else {
+            DragTick::Idle
         }
     }
 

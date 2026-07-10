@@ -8,8 +8,9 @@ use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::as_preview;
+use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
-use crate::sbc::panels::input::{PanelInput, PendingAction};
+use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
 use crate::sbc::panels::registry::editor_by_name;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
@@ -28,6 +29,9 @@ pub(crate) struct PanelManager {
     input: PanelInput,
     editor: Option<Box<dyn Editor>>,
     needs_refresh: bool,
+    /// The open editor's markup has not been generated yet; it is built after
+    /// the first refresh, since a model-backed editor has no fields before it.
+    needs_rebuild: bool,
     pending_envelopes: Vec<String>,
     next_cmd_id: u64,
     picker: ColorPicker,
@@ -39,6 +43,9 @@ pub(crate) struct PanelManager {
     /// The last field committed by Enter or a select change; the `blur` it
     /// triggers is swallowed.
     just_committed: Option<String>,
+    /// The value a numeric drag started from, so the committed command captures
+    /// it as the state undo returns to.
+    drag_original: Option<(String, FieldValue)>,
 }
 
 impl Model for PanelManager {
@@ -71,12 +78,14 @@ impl PanelManager {
             input: PanelInput::new(new_change_queue(), new_interaction_queue()),
             editor: None,
             needs_refresh: false,
+            needs_rebuild: false,
             pending_envelopes: Vec::new(),
             next_cmd_id: 1_000_000,
             picker: ColorPicker::default(),
             asset_picker: AssetPicker::default(),
             editing: None,
             just_committed: None,
+            drag_original: None,
         }
     }
 
@@ -91,6 +100,7 @@ impl PanelManager {
             self.editor = None;
             self.editing = None;
             self.just_committed = None;
+            self.drag_original = None;
             self.picker.forget_bindings();
             self.asset_picker.forget_bindings();
             self.input.reset();
@@ -116,9 +126,8 @@ impl PanelManager {
                 PendingAction::DragEnd(field) => {
                     if let Some(ed) = self.editor.as_deref_mut() {
                         ed.drag_end_field(&field, &self.interface);
-                        self.pending_envelopes
-                            .extend(ed.process_drag_end(&field, &mut self.next_cmd_id));
                     }
+                    self.commit_drag(&field);
                 }
                 PendingAction::ClickEdit(field) => {
                     if let Some((root, extensions)) =
@@ -131,7 +140,8 @@ impl PanelManager {
                         }
                         continue;
                     }
-                    if let Some(rgba) = self.editor.as_deref().and_then(|ed| ed.field_color(&field))
+                    if let Some(FieldValue::Color(rgba)) =
+                        self.editor.as_deref().map(|ed| ed.field_value(&field))
                     {
                         if let Some(doc) = self.view.document_handle() {
                             self.picker.open(&self.interface, doc, &field, rgba)?;
@@ -146,9 +156,21 @@ impl PanelManager {
             }
         }
 
-        // Advance an in-progress drag from the polled cursor.
-        self.input
-            .tick_drag(&self.interface, self.editor.as_deref_mut());
+        // Advance an in-progress drag from the polled cursor. Each step previews
+        // on the engine, so a dragged number is visible before the mouse is
+        // released; the undoable command lands on release.
+        match self
+            .input
+            .tick_drag(&self.interface, self.editor.as_deref_mut())
+        {
+            DragTick::Started(field) => {
+                if let Some(ed) = self.editor.as_deref() {
+                    self.drag_original = Some((field.clone(), ed.field_value(&field)));
+                }
+            }
+            DragTick::Moved(field) => self.preview_field(&field),
+            DragTick::Idle => {}
+        }
 
         // Commit requests: a select's "change", Enter in a text field, or a
         // field losing focus.
@@ -161,6 +183,10 @@ impl PanelManager {
             if let Some(ed) = self.editor.as_mut() {
                 ed.refresh_from_engine(&self.interface, models);
             }
+            if self.needs_rebuild {
+                self.needs_rebuild = false;
+                self.rebuild_editor()?;
+            }
             self.write_field_values();
             // Writing a value back into the DOM makes RmlUi fire `change` for
             // our own write (a checkbox dispatches one when its attribute moves).
@@ -168,6 +194,13 @@ impl PanelManager {
             // command back. Lua guards the same way, with an `updating` flag.
             self.input.drain_changes();
             self.needs_refresh = false;
+        }
+
+        // Editors that own more than fields (the def grids) do their work here,
+        // outside the RmlUi event dispatch.
+        if let (Some(doc), Some(ed)) = (self.view.document_handle(), self.editor.as_deref_mut()) {
+            let envelopes = ed.tick(&self.interface, doc, &mut self.next_cmd_id);
+            self.pending_envelopes.extend(envelopes);
         }
 
         self.view.update(&self.interface)
@@ -216,8 +249,10 @@ impl PanelManager {
         };
         self.editor = Some((spec.make)());
         self.view.set_active_editor(&self.interface, Some(name))?;
-        self.rebuild_editor()?;
+        // The markup is built after the first refresh, not before: an editor
+        // whose fields come from a model (Teams) has none until it has read it.
         self.needs_refresh = true;
+        self.needs_rebuild = true;
         Ok(())
     }
 
@@ -285,7 +320,7 @@ impl PanelManager {
         if self.picker.tick(&self.interface, doc) {
             if let Some(field) = self.picker.field().map(str::to_string) {
                 let rgba = self.picker.rgba();
-                self.apply_picker_color(&field, rgba, true);
+                self.apply_field_value(&field, FieldValue::Color(rgba), true);
             }
         }
 
@@ -300,11 +335,11 @@ impl PanelManager {
             // command captures whatever it finds -- so put the original back
             // (as a preview, off-history) before committing.
             if self.picker.is_previewing() {
-                self.apply_picker_color(&field, original, true);
+                self.apply_field_value(&field, FieldValue::Color(original), true);
             }
             if let PickerEvent::Accept = event {
                 let rgba = self.picker.rgba();
-                self.apply_picker_color(&field, rgba, false);
+                self.apply_field_value(&field, FieldValue::Color(rgba), false);
             }
             self.picker.close(&self.interface, doc)?;
         }
@@ -313,17 +348,48 @@ impl PanelManager {
 
     /// Push a colour into the field and dispatch its command, either as an
     /// off-history preview or as a committed, undoable change.
-    fn apply_picker_color(&mut self, field: &str, rgba: [f32; 4], preview: bool) {
+    fn apply_field_value(&mut self, field: &str, value: FieldValue, preview: bool) {
         let Some(ed) = self.editor.as_deref_mut() else {
             return;
         };
-        ed.set_field_color(field, rgba, &self.interface);
+        ed.set_field_value(field, value, &self.interface);
         let envelopes = ed.process_drag_end(field, &mut self.next_cmd_id);
         self.pending_envelopes.extend(if preview {
             as_preview(envelopes)
         } else {
             envelopes
         });
+    }
+
+    /// Dispatch the field's current value as an off-history preview.
+    fn preview_field(&mut self, field: &str) {
+        let Some(ed) = self.editor.as_deref_mut() else {
+            return;
+        };
+        let envelopes = ed.process_drag_end(field, &mut self.next_cmd_id);
+        self.pending_envelopes.extend(as_preview(envelopes));
+    }
+
+    /// End a drag with exactly one undoable command.
+    ///
+    /// The previews already moved the engine off the value the drag began from,
+    /// and the committed command captures whatever it finds as the state undo
+    /// restores -- so put the original back (off-history) before committing.
+    fn commit_drag(&mut self, field: &str) {
+        let original = self
+            .drag_original
+            .take()
+            .filter(|(name, _)| name == field)
+            .map(|(_, value)| value);
+
+        let Some(ed) = self.editor.as_deref() else {
+            return;
+        };
+        let current = ed.field_value(field);
+        if let Some(original) = original {
+            self.apply_field_value(field, original, true);
+        }
+        self.apply_field_value(field, current, false);
     }
 
     /// Drive the asset picker; an accepted path is written into the field and
@@ -335,11 +401,7 @@ impl PanelManager {
         let field = self.asset_picker.field().map(str::to_string);
         let picked = self.asset_picker.tick(&self.interface, doc)?;
         if let (Some(field), Some(path)) = (field, picked) {
-            if let Some(ed) = self.editor.as_deref_mut() {
-                ed.set_field_text(&field, &path, &self.interface);
-                self.pending_envelopes
-                    .extend(ed.process_drag_end(&field, &mut self.next_cmd_id));
-            }
+            self.apply_field_value(&field, FieldValue::Text(path), false);
         }
         Ok(())
     }

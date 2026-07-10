@@ -117,14 +117,6 @@ impl FieldSet {
         self.get(name).map(|f| f.generate_rml()).unwrap_or_default()
     }
 
-    /// The field's colour, if it is one. Used to open the picker on it.
-    pub(crate) fn color(&self, name: &str) -> Option<[f32; 4]> {
-        match self.get(resolve_base(name)).map(|f| f.value()) {
-            Some(FieldValue::Color(c)) => Some(c),
-            _ => None,
-        }
-    }
-
     pub(crate) fn asset_info(&self, name: &str) -> Option<(String, Vec<String>)> {
         self.get(resolve_base(name)).and_then(|f| f.asset_info())
     }

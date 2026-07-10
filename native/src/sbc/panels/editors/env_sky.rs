@@ -158,26 +158,16 @@ impl Editor for SkyEditor {
         self.fields.cancel_edit(name, interface)
     }
 
-    fn field_color(&self, name: &str) -> Option<[f32; 4]> {
-        self.fields.color(name)
+    fn field_value(&self, name: &str) -> FieldValue {
+        self.fields.value(name)
     }
 
-    fn set_field_color(&mut self, name: &str, rgba: [f32; 4], interface: &NativeInterfaceRef) {
-        self.fields.set(name, FieldValue::Color(rgba));
+    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
+        self.fields.set(resolve_base(name), value);
         let _ = self.fields.write_values(interface);
     }
 
     fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
         self.fields.asset_info(name)
-    }
-
-    fn set_field_text(&mut self, name: &str, value: &str, interface: &NativeInterfaceRef) {
-        self.fields.set(name, FieldValue::Text(value.to_string()));
-        let _ = self.fields.write_values(interface);
-        if name == "skyboxTexture" {
-            // Lua applies the skybox straight to the engine rather than through
-            // a command, so there is nothing to undo. Mirror that.
-            let _ = interface.unsynced_ctrl().set_sky_box_texture(value);
-        }
     }
 }

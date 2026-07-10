@@ -115,15 +115,16 @@ impl Editor for ScenarioInfoView {
 
     fn cancel_edit_field(&mut self, _name: &str, _interface: &NativeInterfaceRef) {}
 
-    fn field_color(&self, _name: &str) -> Option<[f32; 4]> {
-        None
+    fn field_value(&self, name: &str) -> FieldValue {
+        self.fields.value(name)
     }
 
-    fn set_field_color(&mut self, _name: &str, _rgba: [f32; 4], _interface: &NativeInterfaceRef) {}
-
-    fn field_asset(&self, _name: &str) -> Option<(String, Vec<String>)> {
-        None
+    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
+        self.fields.set(resolve_base(name), value);
+        let _ = self.fields.write_values(interface);
     }
 
-    fn set_field_text(&mut self, _name: &str, _value: &str, _interface: &NativeInterfaceRef) {}
+    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
+        self.fields.asset_info(name)
+    }
 }
