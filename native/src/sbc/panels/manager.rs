@@ -136,6 +136,11 @@ impl PanelManager {
                 ed.refresh_from_engine(&self.interface);
             }
             self.write_field_values();
+            // Writing a value back into the DOM makes RmlUi fire `change` for
+            // our own write (a checkbox dispatches one when its attribute moves).
+            // Those are not user input, and dispatching them would echo the
+            // command back. Lua guards the same way, with an `updating` flag.
+            self.input.drain_changes();
             self.needs_refresh = false;
         }
 

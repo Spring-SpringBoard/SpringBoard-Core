@@ -2,41 +2,51 @@
   "lighting-density-committed": {
     "notes": "Ground shadow density now reads 0.25, the input is gone and the button is back. Unit shadow density untouched at 0.80. Matches the asserted single SetSunLightingCommand{groundShadowDensity:0.25}.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:28:28"
+    "updated": "2026-07-10T09:36:38"
   },
   "lighting-density-editing": {
     "notes": "Ground 'Shadow density' swapped its composite button for the text input, focused (blue border), pre-filled 0.80. Every other row unchanged; unit shadow density still shows its button. Confirms edit mode targets exactly one field.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:28:26"
+    "updated": "2026-07-10T09:36:36"
   },
   "lighting-open": {
     "notes": "Lighting pressed (green border + green caption). Sections Shadows / Sun ground color / Sun unit color with label+line. Dir X/Y/Z grouped on one row; Diffuse+Ambient paired. Values read live from the engine: dir 0.00/0.45/0.89, shadow density 0.80, shadowMode 'Terrain'. Deviation from Lua: the select is narrower and sits higher; the toolbar action bar is not ported, so content starts ~30px higher.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:28:25"
+    "updated": "2026-07-10T09:36:36"
   },
   "picker-accepted": {
     "notes": "OK closes the modal and the ground Diffuse swatch is red. Ambient/Specular and the unit colours are untouched, and ground shadow density still reads the 0.25 committed earlier.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:29:16"
+    "updated": "2026-07-10T09:36:41"
   },
   "picker-dragged": {
     "notes": "Dragged to the top-right of the SV square. The white cursor marker tracks to that corner and the preview turns pure red -- cursor->saturation/value mapping through the new ElementGetRect binding is correct.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:29:16"
+    "updated": "2026-07-10T09:36:40"
   },
   "picker-open": {
     "notes": "Clicking the ground Diffuse swatch opens the colour picker modal anchored inside the panel: SV square tinted by the current hue, hue strip, preview showing the current grey, OK/Cancel. No inline RGB row any more.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:29:16"
+    "updated": "2026-07-10T09:36:39"
   },
   "shell-env-tab": {
     "notes": "Active tab moved to Env. Strip shows the two registered Env views in registry order: Lighting (order 0), Sky (order 1), each with icon + caption. Content host cleared, as when Chili switches tabs.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:28:24"
+    "updated": "2026-07-10T09:36:34"
   },
   "shell-objects-tab": {
     "notes": "Tab bar renders 4 tabs, Objects active (dark, blue border). Editor strip empty: no Objects views registered yet. Panel is right-aligned, 500dp, translucent over the map.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T09:28:23"
+    "updated": "2026-07-10T09:36:33"
+  },
+  "water-checkbox": {
+    "notes": "'Forced rendering' is checked (blue fill) after one click, and stays checked -- the engine value is read back from the result's boolValue. Exactly one SetWaterParamsCommand{forceRendering:true} was emitted.",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T09:37:12"
+  },
+  "water-open": {
+    "notes": "Env -> Water renders all sections (perlin, diffuse, specular, fresnel, blur, plane, texture) with live engine values matching the Lua panel: NumTiles 4, start freq 8, lacunarity 3, amplitude 0.90, specular power 20, fresnel 0.20/0.80/4.00, blur 2.00/1.50, plane colour green. Two checkboxes render unchecked. Texture asset fields are absent (not ported).",
+    "status": "ai-reviewed",
+    "updated": "2026-07-10T09:37:12"
   }
 }

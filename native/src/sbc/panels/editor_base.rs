@@ -83,6 +83,17 @@ impl FieldSet {
         self.get(resolve_base(name)).is_some_and(|f| f.is_text_edit())
     }
 
+    pub(crate) fn boolean(&self, name: &str) -> bool {
+        matches!(self.get(name).map(|f| f.value()), Some(FieldValue::Bool(true)))
+    }
+
+    pub(crate) fn text(&self, name: &str) -> String {
+        match self.get(name).map(|f| f.value()) {
+            Some(FieldValue::Text(t)) => t,
+            _ => String::new(),
+        }
+    }
+
     pub(crate) fn number(&self, name: &str) -> f32 {
         match self.get(name).map(|f| f.value()) {
             Some(FieldValue::Number(n)) => n,

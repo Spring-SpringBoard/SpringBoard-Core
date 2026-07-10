@@ -172,6 +172,14 @@ def native_panel(run_state: E2ERun) -> None:
 
     run_state.assert_command("SetSunLightingCommand", groundDiffuseColor=is_red)
 
+    # Env -> Water: checkbox + numerics, all through SetWaterParamsCommand.
+    run_state.click(panel_left + 182, 88, delay=0.7)
+    run_state.golden("water-open")
+
+    run_state.click(panel_left + 138, 192, delay=0.5)   # "Forced rendering" checkbox
+    run_state.golden("water-checkbox")
+    run_state.assert_command("SetWaterParamsCommand", forceRendering=True)
+
 
 def heightmap(run_state: E2ERun) -> None:
     """Map -> Terrain: pick the raise brush and drag on the map, then undo.

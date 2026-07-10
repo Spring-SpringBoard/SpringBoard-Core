@@ -27,6 +27,7 @@ pub enum FieldValue {
     Number(f32),
     Color([f32; 4]),
     Text(String),
+    Bool(bool),
 }
 
 // ── Shared event-registration helpers ──────────────────────────────
