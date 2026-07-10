@@ -191,13 +191,18 @@ impl Field for NumericField {
     fn drag(&mut self, dx: f32, interface: &NativeInterfaceRef) {
         self.value = self.clamp(self.value + dx * self.step);
         if let Some(e) = self.display_elem {
-            let _ = interface
-                .rml_ui()
-                .element_set_inner_rml(e, &self.display_text());
+            let rml = interface.rml_ui();
+            // Rewrite the whole button: it carries a title span and a value
+            // span, and replacing its markup with the bare number loses both.
+            let _ = rml.element_set_inner_rml(e, &self.button_rml());
+            let _ = rml.element_set_class(e, "dragging", true);
         }
     }
 
-    fn drag_end(&mut self, _interface: &NativeInterfaceRef) -> Option<FieldValue> {
+    fn drag_end(&mut self, interface: &NativeInterfaceRef) -> Option<FieldValue> {
+        if let Some(e) = self.display_elem {
+            let _ = interface.rml_ui().element_set_class(e, "dragging", false);
+        }
         Some(FieldValue::Number(self.value))
     }
 

@@ -7,7 +7,7 @@ and returns the spring command; everything else builds on it.
 Standalone use:
     python -m run_sbc           # boot once (timed), print the write-dir path
     python -m run_sbc --manual  # interactive editor session (replaces launch.sh)
-    python -m run_sbc --manual --config config/luaui-rmlui.json
+    python -m run_sbc --manual --config config/ui-rmlui.json
 
 Library use:
     from run_sbc import boot

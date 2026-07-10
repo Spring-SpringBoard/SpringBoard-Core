@@ -1,3 +1,4 @@
+mod color_picker;
 mod editor;
 mod editor_base;
 mod editors;

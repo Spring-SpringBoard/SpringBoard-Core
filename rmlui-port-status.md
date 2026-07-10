@@ -10,8 +10,8 @@ rebuilt — not worked around.
 ## How to run
 
 ```bash
-just run config/luaui-chili.json     # Chili (baseline)
-just run config/luaui-rmlui.json     # RmlUi (the port)
+just run config/ui-chili.json     # Chili (baseline)
+just run config/ui-rmlui.json     # RmlUi (the port)
 
 just test-e2e <target> '--case rust' # RmlUi only ("lua" = Chili baseline)
 just test-e2e <target>               # both

@@ -89,7 +89,7 @@ verify-native: lint test-unit build-native
 
 # Build and run a long-lived isolated Spring editor session.
 [group('run')]
-run config="config/luaui-chili.json": build-native
+run config="config/ui-chili.json": build-native
     bash tools/dev/launch.sh --config "{{config}}"
 
 # Drive the native chonsole in the currently running editor window.

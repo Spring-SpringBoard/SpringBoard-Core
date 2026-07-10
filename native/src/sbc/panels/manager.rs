@@ -4,6 +4,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory};
+use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
 use crate::sbc::panels::input::{PanelInput, PendingAction};
@@ -27,6 +28,7 @@ pub(crate) struct PanelManager {
     needs_refresh: bool,
     pending_envelopes: Vec<String>,
     next_cmd_id: u64,
+    picker: ColorPicker,
     /// The field currently in text-edit mode. Owning this here is what keeps a
     /// commit to exactly one command: the DOM would otherwise fire "change" on
     /// every keystroke.
@@ -68,6 +70,7 @@ impl PanelManager {
             needs_refresh: false,
             pending_envelopes: Vec::new(),
             next_cmd_id: 1_000_000,
+            picker: ColorPicker::default(),
             editing: None,
         }
     }
@@ -80,8 +83,14 @@ impl PanelManager {
         if !self.view.is_ready() {
             return Ok(());
         }
+        if let Some(doc) = self.view.document_handle() {
+            self.picker.bind(&self.interface, doc)?;
+        }
 
         self.process_shell_events()?;
+        self.process_picker()?;
+
+        self.input.set_cursor(&self.interface);
 
         // Pointer interactions (pointer down/up → drag or click-to-edit)
         for action in self.input.process_interactions() {
@@ -94,6 +103,16 @@ impl PanelManager {
                     }
                 }
                 PendingAction::ClickEdit(field) => {
+                    if let Some(rgba) = self
+                        .editor
+                        .as_deref()
+                        .and_then(|ed| ed.field_color(&field))
+                    {
+                        if let Some(doc) = self.view.document_handle() {
+                            self.picker.open(&self.interface, doc, &field, rgba)?;
+                        }
+                        continue;
+                    }
                     if let Some(ed) = self.editor.as_deref_mut() {
                         ed.begin_edit_field(&field, &self.interface);
                     }
@@ -101,6 +120,10 @@ impl PanelManager {
                 }
             }
         }
+
+        // Advance an in-progress drag from the polled cursor.
+        self.input
+            .tick_drag(&self.interface, self.editor.as_deref_mut());
 
         // Commit requests: a select's "change", or a text field losing focus.
         for name in self.input.drain_changes() {
@@ -215,6 +238,31 @@ impl PanelManager {
             self.pending_envelopes
                 .extend(ed.process_change(name, &self.interface, &mut self.next_cmd_id));
         }
+    }
+
+    /// Advance a picker drag and handle OK/Cancel. Accepting writes the colour
+    /// back into the field and dispatches exactly one command.
+    fn process_picker(&mut self) -> Result<(), Error> {
+        let Some(doc) = self.view.document_handle() else {
+            return Ok(());
+        };
+        self.picker.tick(&self.interface, doc);
+
+        for event in self.picker.drain_events() {
+            let Some(field) = self.picker.field().map(str::to_string) else {
+                continue;
+            };
+            if let PickerEvent::Accept = event {
+                let rgba = self.picker.rgba();
+                if let Some(ed) = self.editor.as_deref_mut() {
+                    ed.set_field_color(&field, rgba, &self.interface);
+                    self.pending_envelopes
+                        .extend(ed.process_drag_end(&field, &mut self.next_cmd_id));
+                }
+            }
+            self.picker.close(&self.interface, doc)?;
+        }
+        Ok(())
     }
 
     fn write_field_values(&self) {

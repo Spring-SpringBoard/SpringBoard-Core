@@ -83,7 +83,7 @@ but drew nothing. `PanelView::draw` is a no-op. The native chonsole still calls
 ## Running it
 
 ```
-just run config/rust-ui.json                  # native UI
+just run config/ui-rust.json                  # native UI
 python3 tools/e2e/ui_driver.py all --tag ui:rust
 python3 tools/e2e/ui_driver.py native-panel --update-golden   # re-capture refs
 python3 tools/e2e/approve_goldens.py native-panel-rust        # human OK

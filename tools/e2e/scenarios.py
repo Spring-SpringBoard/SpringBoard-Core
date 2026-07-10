@@ -147,6 +147,31 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.assert_command("SetSunLightingCommand", groundShadowDensity=0.25)
     run_state.golden("lighting-density-committed")
 
+    # Clicking a colour field opens the picker modal, not an inline editor.
+    run_state.click(panel_left + 90, 331, delay=0.6)
+    run_state.golden("picker-open")
+
+    # Drag to the top-right of the saturation/value square: full saturation,
+    # full value, so the colour becomes the pure hue under the cursor.
+    sv_left, sv_top = panel_left + 20, 252
+    run_state.drag(sv_left + 10, sv_top + 170, sv_left + 175, sv_top + 5, steps=6)
+    run_state.golden("picker-dragged")
+
+    run_state.click(panel_left + 354, 472, delay=0.6)   # OK
+    run_state.golden("picker-accepted")
+
+    # Top-right of the square is full saturation and value, so the accepted
+    # colour must be the pure hue that was under the cursor: red.
+    def is_red(rgba: object) -> bool:
+        return (
+            isinstance(rgba, list)
+            and rgba[0] > 0.9
+            and rgba[1] < 0.1
+            and rgba[2] < 0.1
+        )
+
+    run_state.assert_command("SetSunLightingCommand", groundDiffuseColor=is_red)
+
 
 def heightmap(run_state: E2ERun) -> None:
     """Map -> Terrain: pick the raise brush and drag on the map, then undo.

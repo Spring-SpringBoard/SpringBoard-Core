@@ -140,6 +140,9 @@ body {
     left: 0dp;
     right: 0dp;
     bottom: 0dp;
+    /* Same translucent fill as the panel behind it: the Lua UI layers the two,
+       and a single layer reads much lighter over the map. */
+    background-color: #1f26219e;
     padding: 0dp 10dp;
     color: #cccccc;
     overflow-y: auto;
@@ -559,4 +562,143 @@ scrollbarvertical sliderbar {
 
 scrollbarvertical sliderbar:hover {
     background-color: #5fc878;
+}
+
+/* --- Colour picker modal (port of scen_edit/view/rcss/dialog.rcss) --- */
+.picker-backdrop {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    z-index: 10000;
+}
+
+.picker-backdrop.hidden {
+    display: none;
+}
+
+.picker-dialog {
+    position: absolute;
+    /* The backdrop spans the screen, so anchor the dialog to the panel edge:
+       at `left: 10px` it lands on the far side of the display. */
+    right: 10px;
+    top: 200px;
+    width: 480px;
+    background-color: #2a2a2a;
+    border: 2px #555555;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+}
+
+.dialog-header {
+    background-color: #333333;
+    padding: 10px;
+    border-bottom: 1px #555555;
+}
+
+.dialog-title {
+    color: #eeeeee;
+    font-size: 14px;
+}
+
+.dialog-content {
+    padding: 12px;
+}
+
+.dialog-footer {
+    padding: 10px;
+    border-top: 1px #555555;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dialog-button {
+    min-width: 74px;
+    height: 30px;
+    background-color: #3a3a3a;
+    color: #eeeeee;
+    border: 1px #555555;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 28px;
+}
+
+.dialog-button.primary {
+    background-color: #3a7ebf;
+    border-color: #2a5f8f;
+}
+
+.color-picker-main {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.color-map {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    padding: 0px;
+    border: 1px #555555;
+    background-color: #ff0000;
+}
+
+.color-map-white,
+.color-map-black {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 180px;
+    height: 180px;
+}
+
+.color-map-cursor {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    margin-top: -4px;
+    border: 2px #ffffff;
+    background-color: transparent;
+}
+
+.hue-map {
+    position: relative;
+    width: 24px;
+    height: 180px;
+    padding: 0px;
+    border: 1px #555555;
+    background-color: #111111;
+}
+
+.hue-map img {
+    width: 24px;
+    height: 180px;
+}
+
+.hue-cursor {
+    position: absolute;
+    left: -3px;
+    width: 30px;
+    height: 3px;
+    background-color: #ffffff;
+}
+
+.color-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 130px;
+}
+
+.color-preview {
+    width: 130px;
+    height: 60px;
+    border: 1px #555555;
 }

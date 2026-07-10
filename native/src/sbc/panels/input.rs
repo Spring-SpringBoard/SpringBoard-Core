@@ -36,6 +36,7 @@ pub(crate) struct PanelInput {
     mouse_captured: bool,
     last_mouse_x: f32,
     last_mouse_y: f32,
+    cursor_x: f32,
     changes: ChangeQueue,
     interactions: InteractionQueue,
 }
@@ -47,6 +48,7 @@ impl PanelInput {
             mouse_captured: false,
             last_mouse_x: 0.0,
             last_mouse_y: 0.0,
+            cursor_x: 0.0,
             changes,
             interactions,
         }
@@ -61,8 +63,57 @@ impl PanelInput {
 
     // ── Per-tick processing (called from manager) ──────────────────
 
+    /// Step an in-progress drag from the polled cursor position.
+    ///
+    /// The engine feeds mouse input straight to its RmlUi contexts, so a plugin
+    /// never sees `mouse_move` while RmlUi holds the press. Lua's RmlUi fields
+    /// have the same problem and solve it the same way: take the pressed state
+    /// from RmlUi's mousedown/mouseup, and the position from the engine.
+    pub(crate) fn tick_drag(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        editor: Option<&mut (dyn Editor + '_)>,
+    ) {
+        let Ok(mouse) = interface.input().get_mouse_state() else {
+            return;
+        };
+        let x = mouse.x as f32;
+
+        if let DragState::Pending { field, start_x } = &self.drag {
+            if (x - *start_x).abs() > DRAG_THRESHOLD {
+                let field = field.clone();
+                self.last_mouse_x = *start_x;
+                self.drag = DragState::Dragging { field };
+            }
+        }
+
+        let DragState::Dragging { field } = &self.drag else {
+            return;
+        };
+        let dx = x - self.last_mouse_x;
+        if dx == 0.0 {
+            return;
+        }
+        self.last_mouse_x = x;
+        let mult = if self.fine_drag_multiplier(interface) {
+            FINE_DRAG_MULT
+        } else {
+            1.0
+        };
+        if let Some(ed) = editor {
+            ed.drag_field(field, dx * mult, interface);
+        }
+    }
+
     /// Drain interaction events and update drag state. Returns actions to
     /// execute on the editor (drag-end or click-to-edit).
+    /// Cache the cursor position each tick; a press event carries no coordinates.
+    pub(crate) fn set_cursor(&mut self, interface: &NativeInterfaceRef) {
+        if let Ok(mouse) = interface.input().get_mouse_state() {
+            self.cursor_x = mouse.x as f32;
+        }
+    }
+
     pub(crate) fn process_interactions(&mut self) -> Vec<PendingAction> {
         let events: Vec<InteractionEvent> = self.interactions.borrow_mut().drain(..).collect();
         let mut actions = Vec::new();
@@ -71,8 +122,9 @@ impl PanelInput {
                 InteractionEvent::PointerDown { field } => {
                     self.drag = DragState::Pending {
                         field,
-                        start_x: self.last_mouse_x,
+                        start_x: self.cursor_x,
                     };
+                    self.last_mouse_x = self.cursor_x;
                 }
                 InteractionEvent::PointerUp { field } => {
                     let was_dragging = matches!(self.drag, DragState::Dragging { .. });

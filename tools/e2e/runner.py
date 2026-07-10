@@ -374,25 +374,36 @@ class E2ERun:
         return entries
 
     def assert_command(self, class_name: str, **expected: object) -> dict:
-        """Assert exactly one command of `class_name` was sent, and that the
-        listed fields of its `opts` match. Returns the command's data."""
+        """Assert exactly one command of `class_name` carrying every key in
+        `expected` was sent, and that those values match.
+
+        A value may be a callable predicate, for things like a colour that is
+        "red enough" rather than an exact float. Matching on the keys as well as
+        the class lets one editor emit several commands of the same class.
+        """
         matches = [
             entry["data"]
             for entry in self.commands()
             if entry.get("data", {}).get("className") == class_name
+            and all(key in entry["data"].get("opts", {}) for key in expected)
         ]
         if len(matches) != 1:
+            sent = [
+                (e["data"].get("className"), sorted(e["data"].get("opts", {})))
+                for e in self.commands()
+            ]
             raise AssertionError(
-                f"expected exactly one {class_name}, got {len(matches)}: "
-                f"{[e.get('data', {}).get('className') for e in self.commands()]}"
+                f"expected exactly one {class_name} with keys {sorted(expected)}, "
+                f"got {len(matches)}. Sent: {sent}"
             )
         data = matches[0]
         opts = data.get("opts", data)
         for key, want in expected.items():
             got = opts.get(key)
-            if got != want:
+            ok = want(got) if callable(want) else got == want
+            if not ok:
                 raise AssertionError(f"{class_name}.{key}: expected {want!r}, got {got!r}")
-        self.event("assert_command", className=class_name, expected=expected)
+        self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
 
     def screenshot_root(self, name: str) -> Path:
