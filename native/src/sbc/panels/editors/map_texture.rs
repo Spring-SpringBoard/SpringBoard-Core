@@ -113,17 +113,31 @@ fn toggle_channels() -> impl Iterator<Item = &'static str> {
         .map(|(channel, _, _)| *channel)
 }
 
-/// One material: a base name under `brush_textures/` and the channel textures
-/// that exist for it.
+/// One material: its name, and the channel textures that exist for it.
 #[derive(Clone)]
 struct Material {
+    /// The bare material name (`dirt1`), which is what the picker shows.
     name: String,
     channels: BTreeMap<String, String>,
 }
 
-/// Group the files under `brush_textures/` into materials by stripping the
-/// channel suffix. A material exists if it has a diffuse; the other channels are
-/// optional, which is why the picker shows which ones were found.
+/// The material a texture belongs to: its file name with the channel suffix
+/// stripped, and without the directory. `.../brush_textures/dirt1_diffuse.png`
+/// is the `diffuse` of `dirt1`.
+fn material_of(path: &str) -> Option<(String, &'static str)> {
+    let file = path.rsplit('/').next()?;
+    let stem = file.rsplit_once('.').map(|(s, _)| s).unwrap_or(file);
+    for (channel, _, _) in CHANNELS {
+        if let Some(base) = stem.strip_suffix(&format!("_{channel}")) {
+            return Some((base.to_string(), channel));
+        }
+    }
+    None
+}
+
+/// Group the files under `brush_textures/` into materials. A material exists if
+/// it has a diffuse; the other channels are optional, which is why the picker
+/// shows which ones were found.
 fn list_materials(interface: &NativeInterfaceRef) -> Vec<Material> {
     let root = format!("{ASSETS}/brush_textures");
     let mut found: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
@@ -132,16 +146,11 @@ fn list_materials(interface: &NativeInterfaceRef) -> Vec<Material> {
         if item.is_directory {
             continue;
         }
-        let stem = item.id.rsplit_once('.').map(|(s, _)| s).unwrap_or(&item.id);
-        for (channel, _, _) in CHANNELS {
-            let suffix = format!("_{channel}");
-            if let Some(base) = stem.strip_suffix(&suffix) {
-                found
-                    .entry(base.to_string())
-                    .or_default()
-                    .insert((*channel).to_string(), item.id.clone());
-                break;
-            }
+        if let Some((name, channel)) = material_of(&item.id) {
+            found
+                .entry(name)
+                .or_default()
+                .insert(channel.to_string(), item.id.clone());
         }
     }
 
@@ -562,35 +571,24 @@ fn enabled_name(channel: &str) -> String {
 mod tests {
     use super::*;
 
+    /// The VFS hands back full paths, so the material's name is the file's, not
+    /// the path's -- every material was captioned "springboard" until it was.
     #[test]
-    fn a_material_gathers_its_channels_and_needs_a_diffuse() {
-        // list_materials needs the VFS, so exercise the grouping rule it applies.
-        let files = [
-            "dirt1_diffuse.png",
-            "dirt1_normal.png",
-            "dirt1_specular.png",
-            "orphan_specular.png",
-        ];
-        let mut found: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
-        for file in files {
-            let stem = file.rsplit_once('.').unwrap().0;
-            for (channel, _, _) in CHANNELS {
-                if let Some(base) = stem.strip_suffix(&format!("_{channel}")) {
-                    found
-                        .entry(base.to_string())
-                        .or_default()
-                        .insert((*channel).to_string(), file.to_string());
-                    break;
-                }
-            }
-        }
-        found.retain(|_, channels| channels.contains_key("diffuse"));
+    fn a_material_is_named_after_its_file_not_its_path() {
+        let (name, channel) =
+            material_of("springboard/assets/core/brush_textures/dirt1_diffuse.png").unwrap();
+        assert_eq!(name, "dirt1");
+        assert_eq!(channel, "diffuse");
 
-        assert_eq!(found.len(), 1, "a specular with no diffuse is not a material");
-        let dirt = &found["dirt1"];
-        assert_eq!(dirt.len(), 3);
-        assert_eq!(dirt["diffuse"], "dirt1_diffuse.png");
-        assert_eq!(dirt["normal"], "dirt1_normal.png");
+        let (name, channel) =
+            material_of("springboard/assets/core/brush_textures/cement_normal.png").unwrap();
+        assert_eq!(name, "cement");
+        assert_eq!(channel, "normal");
+    }
+
+    #[test]
+    fn a_texture_with_no_channel_suffix_belongs_to_no_material() {
+        assert!(material_of("brush_textures/readme.png").is_none());
     }
 
     #[test]
