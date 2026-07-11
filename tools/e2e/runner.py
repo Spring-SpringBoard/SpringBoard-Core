@@ -458,11 +458,21 @@ class E2ERun:
         return len(good)
 
     def screenshot_root(self, name: str) -> Path:
+        """A full-frame capture, for a subject that sits outside the case's crop
+        (a modal beside the panel).
+
+        This captures the *engine window*, not the X root. Modals are RmlUi drawn
+        inside that window, so there is nothing on the root to see -- and grabbing
+        the whole desktop wrote ~29MB per shot through a separate, flakier path
+        that intermittently failed mid-run (`xwd -root` returning 1). Capturing by
+        window id is the same call every other screenshot already makes.
+        """
+        self.require_window()
         stem = f"{len(self.screenshots):02d}-{name}"
         raw_path = self.screenshot_dir / f"{stem}.xwd"
         png_path = self.screenshot_dir / f"{stem}.png"
         start = time.monotonic()
-        run("xwd", "-silent", "-root", "-out", str(raw_path))
+        run("xwd", "-silent", "-id", self.window, "-out", str(raw_path))
         if self.capture == "png":
             self.convert_screenshot(raw_path, png_path)
         elapsed_ms = int((time.monotonic() - start) * 1000)
