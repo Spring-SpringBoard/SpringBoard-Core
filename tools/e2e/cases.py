@@ -91,11 +91,17 @@ def target_cases(target: str, case: str) -> list[Case]:
                 scenario="main_panel_tabs",
                 crop="right-panel",
             ),
+            Case(
+                name="main-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="main_panel_tabs",
+                crop="right-panel",
+            ),
         ]
         if case == "lua":
             return cases[:1]
         if case == "rust":
-            return cases[1:]
+            return cases[1:2]
         return cases
     if target == "lighting-panel":
         cases = [
@@ -111,11 +117,17 @@ def target_cases(target: str, case: str) -> list[Case]:
                 scenario="lighting_panel",
                 crop="right-panel",
             ),
+            Case(
+                name="lighting-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="lighting_panel",
+                crop="right-panel",
+            ),
         ]
         if case == "lua":
             return cases[:1]
         if case == "rust":
-            return cases[1:]
+            return cases[1:2]
         return cases
     if target == "units-panel":
         cases = [
@@ -131,11 +143,17 @@ def target_cases(target: str, case: str) -> list[Case]:
                 scenario="units_panel",
                 crop="right-panel",
             ),
+            Case(
+                name="units-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="units_panel",
+                crop="right-panel",
+            ),
         ]
         if case == "lua":
             return cases[:1]
         if case == "rust":
-            return cases[1:]
+            return cases[1:2]
         return cases
     if target == "teams-panel":
         cases = [
@@ -151,17 +169,29 @@ def target_cases(target: str, case: str) -> list[Case]:
                 scenario="teams_panel",
                 crop="right-panel",
             ),
+            Case(
+                name="teams-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="teams_panel",
+                crop="right-panel",
+            ),
         ]
         if case == "lua":
             return cases[:1]
         if case == "rust":
-            return cases[1:]
+            return cases[1:2]
         return cases
     if target == "info-panel":
         cases = [
             Case(
                 name="info-panel-lua-rmlui",
                 flags={"chonsole": "lua", "ui": "rmlui"},
+                scenario="info_panel",
+                crop="right-panel",
+            ),
+            Case(
+                name="info-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
                 scenario="info_panel",
                 crop="right-panel",
             ),
@@ -172,6 +202,12 @@ def target_cases(target: str, case: str) -> list[Case]:
             Case(
                 name="props-panel-lua-rmlui",
                 flags={"chonsole": "lua", "ui": "rmlui"},
+                scenario="props_panel",
+                crop="right-panel",
+            ),
+            Case(
+                name="props-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
                 scenario="props_panel",
                 crop="right-panel",
             ),
@@ -206,9 +242,14 @@ def target_cases(target: str, case: str) -> list[Case]:
                 flags={"chonsole": "lua", "ui": "chili"},
                 scenario="heightmap",
             ),
+            Case(
+                name="heightmap-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="heightmap",
+            ),
         ]
         if case == "lua":
-            return cases[1:]
+            return cases[1:2]
         if case == "rust":
             return cases[:1]
         return cases
@@ -238,6 +279,12 @@ def target_cases(target: str, case: str) -> list[Case]:
                 scenario="all_editors",
                 crop="right-panel",
             ),
+            Case(
+                name="all-editors-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="all_editors",
+                crop="right-panel",
+            ),
         ]
     if target == "dialogs":
         return [
@@ -260,6 +307,11 @@ def target_cases(target: str, case: str) -> list[Case]:
             Case(
                 name="settings-panel-lua-rmlui",
                 flags={"chonsole": "lua", "ui": "rmlui"},
+                scenario="settings_panel",
+            ),
+            Case(
+                name="settings-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
                 scenario="settings_panel",
             ),
         ]
@@ -295,10 +347,16 @@ def target_cases(target: str, case: str) -> list[Case]:
                 scenario="texture_panel",
                 crop="right-panel",
             ),
+            Case(
+                name="texture-panel-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="texture_panel",
+                crop="right-panel",
+            ),
         ]
         if case == "lua":
             return cases[:1]
         if case == "rust":
-            return cases[1:]
+            return cases[1:2]
         return cases
     raise ValueError(f"unknown target: {target}")

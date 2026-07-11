@@ -1,3 +1,8 @@
+---
+name: Phase 2 status — Chili → RmlUi (Lua-side)
+description: Status of the Lua-side Chili→RmlUi port, and how to run the E2E harness
+---
+
 # SpringBoard RmlUi port — status
 
 Goal: make the **Lua + RmlUi** UI functionally equivalent and visually close to the
@@ -11,14 +16,26 @@ rebuilt — not worked around.
 
 ```bash
 just run config/ui-chili.json     # Chili (baseline)
-just run config/ui-rmlui.json     # RmlUi (the port)
+just run config/ui-rmlui.json     # RmlUi (the Lua-side port)
+just run config/ui-rust.json      # the native UI
 
-just test-e2e <target> '--case rust' # RmlUi only ("lua" = Chili baseline)
-just test-e2e <target>               # both
+# Pick cases by tag; a target's scenario is shared by every UI that runs it.
+python3 tools/e2e/ui_driver.py <target> --tag ui:rust    # the native UI
+python3 tools/e2e/ui_driver.py <target> --tag ui:rmlui   # the Lua RmlUi UI
+python3 tools/e2e/ui_driver.py <target>                  # every UI
+python3 tools/e2e/ui_driver.py all --tag ui:rust         # every native case
 ```
 
 E2E targets: `chonsole`, `main-panel`, `units-panel`, `texture-panel`,
-`lighting-panel`, `dev-console`, `teams-panel`, `settings-panel`, `info-panel`.
+`lighting-panel`, `dev-console`, `teams-panel`, `settings-panel`, `info-panel`,
+`props-panel`, `heightmap`, `all-editors`, `dialogs`, `cursortip`,
+`notifications`, `native-panel`, `native-dev-console`.
+
+The native UI is not a separate suite: it reuses the same scenarios, because it
+is meant to look and behave exactly like the Lua UI. Every panel target carries
+a `ui:rust` case (`cases.py`). Where a native capture is golden-compared, the
+golden lives in `tools/e2e/golden/<case>/`; approve a new one only after looking
+at the diff in `artifacts/ui-e2e/<run>/screens/golden-failures/`.
 
 The harness (`tools/e2e/`) drives the real window with xdotool and writes
 screenshots + logs to `artifacts/ui-e2e/<run>/`. **Screenshots are the source of

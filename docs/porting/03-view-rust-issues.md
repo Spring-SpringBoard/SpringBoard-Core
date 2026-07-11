@@ -1,23 +1,31 @@
+---
+name: Native UI — known issues
+description: Defects found in the Rust/RmlUi editor UI, and the working agreement for fixing them
+---
+
 # Native UI — known issues
 
-Reported by the user, 2026-07-10. Ordered by kind, not priority. Fix these
-*iteratively, after the breadth-first port lands* — the port is the priority,
-not polish on the four views that exist.
+Reported by the user, 2026-07-10. Ordered by kind, not priority.
+
+The live defect list the user maintains while testing is
+[user-testing-issues.md](user-testing-issues.md) — that file is the source of
+truth for what is actually broken. Only the user marks anything `[DONE]` there.
 
 Working agreement for this port:
 
-- **Breadth before depth.** Port every view first, then fix.
-- **Do not** re-run the pixel-exact golden suite as a matter of course. It is
-  slow and it only covers a sliver of the editor. Reach for it when a visual
-  change needs pinning down.
+- **The e2e suite is the safety net, and it is expected to be run.** The Rust UI
+  is meant to look and behave exactly like the Lua one, so it reuses the *same*
+  scenarios: every panel target carries a `ui:rust` case
+  (`python3 tools/e2e/ui_driver.py <target> --tag ui:rust`). A change is not
+  done until its scenario drives it and the captures have been looked at.
+  Screenshots are golden-compared; approve a new golden only after inspecting
+  the diff.
 - **ASAN must stay on** (`USE_ASAN=ON`). RmlUi's bindings — Lua *and* native —
   are fragile; without ASAN a use-after-free reads as a bare SIGSEGV and costs
   hours. Check `nm -D <spring> | grep -c __asan` if in doubt: `0` means it is
   off and any "no errors" result is meaningless.
-- The wanted safety net is a **fast, broad smoke test** that opens every tab and
-  every editor and clicks the controls, asserting nothing broke. Not a
-  screenshot comparison. Breakage = crash, ASAN report, Lua/RmlUi error, or a
-  command that fails to dispatch.
+- A control is not done because it renders. It is done when a scenario asserts
+  the command it emits and a human has looked at the capture.
 
 ## Fixed
 
@@ -62,10 +70,10 @@ Working agreement for this port:
 
 | Tab | View | State |
 |-----|------|-------|
-| Objects | Units | ported — grid + search; **no thumbnails** |
-| Objects | Features | ported — grid + search; **no thumbnails** |
-| Objects | Properties | not started (needs the selection model) |
-| Objects | Collision | not started (needs the selection model) |
+| Objects | Units | ported — grid + search + RTT thumbnails (silhouette only) |
+| Objects | Features | ported — grid + search + RTT thumbnails (silhouette only) |
+| Objects | Properties | ported — follows selection, edits pos/heading/health |
+| Objects | Collision | ported — follows selection, scale sync + field visibility |
 | Map | Settings | ported |
 | Map | Terrain | ported — Add / Set / Smooth all paint |
 | Map | Texture | ported — Paint only; no material picker (diffuse channel) |
@@ -74,7 +82,7 @@ Working agreement for this port:
 | Env | Lighting / Sky / Water | ported |
 | Misc | Info | ported |
 | Misc | Teams | ported |
-| — | Toolbar action buttons | `#action-bar` is an empty placeholder |
+| — | Toolbar action buttons | ported — bar + hotkeys + file/new-project dialogs (not ASAN-run yet) |
 
 ## Editing states (`native/src/sbc/states/`)
 
@@ -90,9 +98,10 @@ free — press opens a `SetMultipleCommandMode` group, release closes it.
 | `terrain_shape_modify` / `terrain_smooth` / `terrain_set` | yes |
 | `metal_editing_state`, `grass_editing_state` | yes |
 | `terrain_change_texture_state` | partly: `paint` mode, diffuse channel only |
-| `add_object_state` | partly: one object per click, no scatter, no ghost |
-| `select_object_state`, `drag_object_state`, `rotate_object_state` | **no** |
-| `rectangle_select_state`, `add_rect_state`, `resize_area_state` | **no** |
+| `add_object_state` | yes: Set + Brush (scatter) modes; ghost ring, no 3D model |
+| `select_object_state`, `drag_object_state`, `rotate_object_state` | yes (`state.rs`, `manipulate.rs`) |
+| `rectangle_select_state` | yes (`rectangle_select.rs`) — world-space box (drag empty ground); shift toggles |
+| `add_rect_state`, `resize_area_state` | **no** (area editing, tied to triggers) |
 | `brush_object_state`, `terrain_change_dnts_state` | **no** |
 
 Notes on what is there:
@@ -102,8 +111,10 @@ Notes on what is there:
   does. It works before the first frame and needs no GL.
 - **Mouse wheel**: Shift resizes the brush, Alt rotates it, and the panel's
   fields follow (shared `BrushSettings` model, reconciled each tick).
-- **No brush outline is drawn under the cursor.** Lua's `DrawWorld` renders the
-  pattern on the ground with a shader. There is no native world-draw binding.
+- **Brush outline under the cursor**: a reach ring is drawn (`draw_cursor_ring`
+  in each state's `draw_world`). Lua renders the pattern itself with a shader;
+  the ring is the immediate-mode stand-in (the engine world-draw renders
+  immediate primitives, not the shader pass).
 
 Caveats on the views marked ported:
 

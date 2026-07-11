@@ -17,8 +17,8 @@ No deadline.
 |------:|------|--------|-----|
 | 0 | Baseline (native crate + CI + integration tests + Lua→Rust bridge) | partly done | — |
 | 1 | Command execution slices — model + commands ported together, one feature at a time | in progress | [01-slices.md](01-slices.md) |
-| 2 | View — Chili → RmlUi (Lua-side first) | in progress (pre-port) | [02-view.md](02-view.md) |
-| 3 | View logic → Rust (drive RmlUi from native) | todo | [03-view-rust.md](03-view-rust.md) |
+| 2 | View — Chili → RmlUi (Lua-side first) | in progress (pre-port) | [02-view.md](02-view.md), [status](02-view-status.md) |
+| 3 | View logic → Rust (drive RmlUi from native) | in progress | [03-view-rust.md](03-view-rust.md), [issues](03-view-rust-issues.md) |
 | 4 | Final cleanup (delete remaining Lua) | todo | [04-cleanup.md](04-cleanup.md) |
 | 5 | Libraries (libs_sb + spring-launcher) | todo | [05-libraries.md](05-libraries.md) |
 
@@ -26,7 +26,23 @@ Phase 1 ports the model and command layers together in slices (one feature end-t
 
 Phase 2 is in progress independently of the Rust port (some Chili→RmlUi work landed earlier).
 
+Phase 3 is the current focus: the native UI. What the user has found broken while
+testing it lives in [user-testing-issues.md](user-testing-issues.md) — that is the
+working list, and only the user marks a line `[DONE]`.
+
 Pending review items: [review-queue.md](review-queue.md). Rules: [conventions.md](conventions.md). Commands: [commands.md](../commands.md). Deferred improvements: [todo.md](todo.md).
+
+## Testing
+
+The E2E harness (`tools/e2e/`) drives the real editor window and screenshots it.
+The native UI reuses the *same* scenarios as the Lua UIs, since it is meant to
+behave identically:
+
+```bash
+python3 tools/e2e/ui_driver.py <target> --tag ui:rust
+```
+
+See [02-view-status.md](02-view-status.md) for targets and the golden workflow.
 
 ## Design docs
 
