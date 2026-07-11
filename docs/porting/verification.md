@@ -49,8 +49,8 @@ Objects first (the user's priority), then Map, then Env, then Misc.
 
 | # | Tab → Editor | Source | Stage | Evidence |
 |---|---|---|---|---|
-| 1 | Objects → Units | `editors/objects_units.rs` (+ `object_defs.rs`) | TODO | |
-| 2 | Objects → Features | `editors/objects_features.rs` (+ `object_defs.rs`) | TODO | |
+| 1 | Objects → Units | `editors/objects_units.rs` (+ `object_defs.rs`) | TODO | Present: Add/Brush buttons, team, amount, size, spread, noise, min/max rot per axis, search, def grid with RTT thumbnails. **Missing: the Type and Terrain filters.** Blocked on unit-def bindings — see below. |
+| 2 | Objects → Features | `editors/objects_features.rs` (+ `object_defs.rs`) | TODO | Same body as Units. **Missing: the Type / Wreck / Terrain filters.** Lua decides "is a wreck" by stripping `_heap`/`_dead` from the feature name and looking up the unit def; the Wreck/Terrain filters then read *that unit def's* flags. Blocked on the same bindings. |
 | 3 | Objects → Properties | `editors/objects_properties.rs` | TODO | |
 | 4 | Objects → Collision | `editors/objects_collision.rs` | TODO | |
 | 5 | Map → Terrain | `editors/map_terrain.rs` | TODO | |
@@ -99,6 +99,29 @@ Cross-cutting behaviour, not tied to one tab. These need scenarios of their own.
 | 41 | Status panel (memory/CPU + recent commands) | not ported | TODO | Not ported at all. |
 
 ---
+
+## Blocked on engine bindings
+
+The Objects def filters (items 1 and 2) cannot be finished without these. Lua
+reads them straight off `UnitDefs`; `spring-native` does not expose them.
+
+Already exposed on `UnitDefPhysics`: `canFly`, `canMove`, `canHover`,
+`floatOnWater`.
+
+Missing, and needed:
+
+| Field | Used by | For |
+|---|---|---|
+| `isBuilding` | Units "Type", Features "Wreck" | Units vs Buildings |
+| `canSubmerge` | Units/Features "Terrain" | the Ground test |
+| `waterline` | Units/Features "Terrain" | Ground vs Water |
+| `minWaterDepth` | Units/Features "Terrain" | Ground vs Water |
+
+The port mandate ([03-view-rust.md](03-view-rust.md)) says a missing engine
+feature is added as a proper binding with a test that fails without it — not
+worked around. `canMove` is *not* a stand-in for `isBuilding`, and there is no
+substitute at all for the waterline pair, so the Terrain filter cannot be
+approximated.
 
 ## Verification log
 
