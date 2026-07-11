@@ -6,6 +6,7 @@ use crate::sbc::panels::editor_base::{FieldSet, Layout};
 use crate::sbc::panels::editors::brush::{non_empty, pattern_field, BrushAction, BrushActions};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::NumericField;
+use crate::sbc::panels::grid::GridView;
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::states::{BrushKind, BrushSettings, StateRequest};
 
@@ -34,6 +35,7 @@ const ACTIONS: &[BrushAction] = &[BrushAction {
 pub(crate) struct GrassEditor {
     fields: FieldSet,
     actions: BrushActions,
+    pattern_grid: GridView,
 }
 
 impl GrassEditor {
@@ -58,7 +60,26 @@ impl GrassEditor {
                 ),
             ]),
             actions: BrushActions::new(ACTIONS),
+            pattern_grid: {
+                let mut grid = GridView::new("grass-pattern-grid", 64);
+                grid.configure_navigation(
+                    "springboard/assets/core/brush_patterns/terrain",
+                    &[".png", ".jpg", ".tga", ".dds", ".bmp"],
+                );
+                grid
+            },
         }
+    }
+
+    fn render_pattern_grid(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        let selected = self.fields.text("patternTexture");
+        self.pattern_grid
+            .set_selected((!selected.is_empty()).then_some(selected.as_str()));
+        self.pattern_grid.render(interface, document)
     }
 
     fn apply_grass_detail(&self, interface: &NativeInterfaceRef) {
@@ -74,7 +95,8 @@ impl Editor for GrassEditor {
     fn generate_rml(&self) -> String {
         let mut h = self.actions.generate_rml();
         h.push_str(&self.fields.generate_rml(&[
-            Layout::Field("patternTexture"),
+            Layout::Section("Pattern"),
+            Layout::Raw(self.pattern_grid.container_rml()),
             Layout::Field("grassDetail"),
             Layout::Field("size"),
             Layout::Field("rotation"),
@@ -123,7 +145,9 @@ impl Editor for GrassEditor {
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         self.actions.bind(interface, document)?;
-        self.fields.bind(interface, document, changes, interactions)
+        self.fields.bind(interface, document, changes, interactions)?;
+        self.pattern_grid.refresh_navigation(interface, document)?;
+        self.render_pattern_grid(interface, document)
     }
 
     fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
@@ -137,11 +161,24 @@ impl Editor for GrassEditor {
         _next: &mut u64,
     ) -> Vec<String> {
         self.actions.tick(interface, document);
+        for id in self
+            .pattern_grid
+            .drain_asset_clicks(interface, document)
+            .unwrap_or_default()
+        {
+            self.fields.set("patternTexture", FieldValue::Text(id));
+            let _ = self.fields.write_values(interface);
+            let _ = self.render_pattern_grid(interface, document);
+        }
         vec![]
     }
 
     fn take_state_request(&mut self) -> Option<StateRequest> {
         self.actions.take_request()
+    }
+
+    fn clear_state_selection(&mut self, interface: &NativeInterfaceRef, document: u64) {
+        self.actions.clear(interface, document);
     }
 
     fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {

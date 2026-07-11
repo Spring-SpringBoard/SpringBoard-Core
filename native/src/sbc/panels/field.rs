@@ -157,7 +157,27 @@ pub(crate) fn bind_tooltip(
     element: u64,
     text: impl Into<String>,
 ) -> Result<(), Error> {
-    let text = text.into();
+    bind_tooltip_inner(interface, document, element, text.into(), true)
+}
+
+/// Attach tooltip markup that already contains safe RML, such as coloured
+/// material-channel availability indicators.
+pub(crate) fn bind_tooltip_markup(
+    interface: &NativeInterfaceRef,
+    document: u64,
+    element: u64,
+    markup: impl Into<String>,
+) -> Result<(), Error> {
+    bind_tooltip_inner(interface, document, element, markup.into(), false)
+}
+
+fn bind_tooltip_inner(
+    interface: &NativeInterfaceRef,
+    document: u64,
+    element: u64,
+    text: String,
+    escape: bool,
+) -> Result<(), Error> {
     if text.trim().is_empty() {
         return Ok(());
     }
@@ -178,7 +198,12 @@ pub(crate) fn bind_tooltip(
             };
             let y = geom.viewSizeY as f32 - mouse.y;
             let rml = iface.rml_ui();
-            let _ = rml.element_set_inner_rml(tooltip, &escape_rml(&show_text));
+            let rendered = if escape {
+                escape_rml(&show_text)
+            } else {
+                show_text.clone()
+            };
+            let _ = rml.element_set_inner_rml(tooltip, &rendered);
             let _ = rml.element_set_attribute(
                 tooltip,
                 "style",

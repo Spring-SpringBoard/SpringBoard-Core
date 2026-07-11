@@ -6,7 +6,7 @@ use crate::sbc::panels::editor_base::{FieldSet, Layout};
 use crate::sbc::panels::editors::brush::{non_empty, pattern_field, BrushAction, BrushActions};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField};
-use crate::sbc::panels::grid::{list_assets, GridView};
+use crate::sbc::panels::grid::GridView;
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::states::{ApplyDir, BrushKind, BrushSettings};
 
@@ -88,7 +88,14 @@ impl TerrainEditor {
                 )),
             ]),
             actions: BrushActions::new(ACTIONS),
-            pattern_grid: GridView::new("terrain-pattern-grid", 64),
+            pattern_grid: {
+                let mut grid = GridView::new("terrain-pattern-grid", 64);
+                grid.configure_navigation(
+                    "springboard/assets/core/brush_patterns/terrain",
+                    &[".png", ".jpg", ".tga", ".dds", ".bmp"],
+                );
+                grid
+            },
         }
     }
 
@@ -98,25 +105,17 @@ impl TerrainEditor {
         document: u64,
     ) -> Result<(), Error> {
         let selected = self.fields.text("patternTexture");
-        self.pattern_grid.set_items(list_assets(
-            interface,
-            &format!(
-                "{}/brush_patterns/terrain",
-                crate::sbc::panels::editors::brush::ASSETS
-            ),
-            &[".png", ".jpg", ".tga", ".dds", ".bmp"],
-        ));
         self.pattern_grid
             .set_selected((!selected.is_empty()).then_some(selected.as_str()));
         self.pattern_grid.render(interface, document)
     }
+
 }
 
 impl Editor for TerrainEditor {
     fn generate_rml(&self) -> String {
         let mut h = self.actions.generate_rml();
         h.push_str(&self.fields.generate_rml(&[
-            Layout::Field("patternTexture"),
             Layout::Raw(self.pattern_grid.container_rml()),
             Layout::Field("size"),
             Layout::Field("rotation"),
@@ -139,6 +138,7 @@ impl Editor for TerrainEditor {
         self.actions.bind(interface, document)?;
         self.fields
             .bind(interface, document, changes, interactions)?;
+        self.pattern_grid.refresh_navigation(interface, document)?;
         self.render_pattern_grid(interface, document)
     }
 
@@ -167,18 +167,24 @@ impl Editor for TerrainEditor {
         _next: &mut u64,
     ) -> Vec<String> {
         self.actions.tick(interface, document);
-        for id in self.pattern_grid.drain_clicks() {
-            if self.pattern_grid.item(&id).is_some_and(|i| !i.is_directory) {
-                self.fields.set("patternTexture", FieldValue::Text(id));
-                let _ = self.fields.write_values(interface);
-                let _ = self.render_pattern_grid(interface, document);
-            }
+        for id in self
+            .pattern_grid
+            .drain_asset_clicks(interface, document)
+            .unwrap_or_default()
+        {
+            self.fields.set("patternTexture", FieldValue::Text(id));
+            let _ = self.fields.write_values(interface);
+            let _ = self.render_pattern_grid(interface, document);
         }
         vec![]
     }
 
     fn take_state_request(&mut self) -> Option<crate::sbc::states::StateRequest> {
         self.actions.take_request()
+    }
+
+    fn clear_state_selection(&mut self, interface: &NativeInterfaceRef, document: u64) {
+        self.actions.clear(interface, document);
     }
 
     fn write_brush(&self, brush: &mut BrushSettings) {

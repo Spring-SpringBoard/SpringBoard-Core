@@ -68,6 +68,7 @@ impl WaterEditor {
                 num("blurExponent", "Exponent"),
                 Box::new(BooleanField::new("hasWaterPlane", "Enabled", false)),
                 Box::new(ColorField::new("planeColor", "Color")),
+                Box::new(BooleanField::new("shoreWaves", "Enabled", false)),
                 num("repeatX", "Repeat X"),
                 num("repeatY", "Repeat Y"),
                 tex("normalTexture", "Normal texture"),
@@ -93,6 +94,7 @@ impl Editor for WaterEditor {
     fn generate_rml(&self) -> String {
         self.fields.generate_rml(&[
             Layout::Group(&["forceRendering", "numTiles"]),
+            Layout::Field("normalTexture"),
             Layout::Section("Water - perlin noise"),
             Layout::Group(&["perlinStartFreq", "perlinLacunarity"]),
             Layout::Group(&["perlinAmplitude"]),
@@ -110,9 +112,9 @@ impl Editor for WaterEditor {
             Layout::Group(&["blurBase", "blurExponent"]),
             Layout::Section("Water - plane"),
             Layout::Group(&["hasWaterPlane", "planeColor"]),
+            Layout::Section("Water - waves"),
+            Layout::Group(&["shoreWaves", "foamTexture"]),
             Layout::Section("Water - texture"),
-            Layout::Field("normalTexture"),
-            Layout::Field("foamTexture"),
             Layout::Field("texture"),
             Layout::Group(&["repeatX", "repeatY"]),
         ])
@@ -183,7 +185,7 @@ impl Editor for WaterEditor {
 
         // Boolean water params come back in the result's `boolValue`, flagged by
         // `hasBool` -- not in the float array, which stays zero for them.
-        for name in ["forceRendering", "hasWaterPlane"] {
+        for name in ["forceRendering", "hasWaterPlane", "shoreWaves"] {
             if let Ok((_, _, bool_value, has_bool, _)) = gfx.get_water_rendering(name, "") {
                 if has_bool {
                     self.fields.set(name, FieldValue::Bool(bool_value));

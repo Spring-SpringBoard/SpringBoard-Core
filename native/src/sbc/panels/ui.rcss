@@ -388,6 +388,25 @@ body {
     border-color: #4f5c52;
 }
 
+.shading-texture-button {
+    width: 290px;
+}
+
+.shading-enabled {
+    color: #63d483;
+}
+
+.shading-disabled {
+    color: #ef6b6b;
+}
+
+.shading-dialog-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
 .field-button-title {
     color: #eeeeee;
     font-size: 12px;
@@ -473,6 +492,7 @@ body {
 .field-composite-button.hidden,
 .field-numeric-button.hidden,
 .field-numeric-input.hidden,
+.field-section.hidden,
 .field-inline.hidden,
 .field-group.hidden,
 .field-input.hidden {
@@ -724,6 +744,44 @@ scrollbarvertical sliderbar:hover {
     padding: 12px;
 }
 
+.team-dialog {
+    width: 520px;
+    max-height: 820px;
+}
+
+.team-list-header {
+    color: #d7d7d7;
+    font-size: 12px;
+    margin: 8px 0px 6px 0px;
+}
+
+.team-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    margin-bottom: 4px;
+    background-color: #1a1a1a;
+    border: 1px #3a3a3a;
+    border-radius: 3px;
+}
+
+.team-row:hover { border-color: #5a5a5a; }
+.team-swatch { width: 16px; height: 16px; border: 1px #050706; }
+.team-name { flex-grow: 1; color: #eeeeee; font-size: 12px; }
+.team-edit, .team-remove {
+    height: 26px;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 0px 10px;
+}
+.team-edit:hover { background-color: #3a7ebf; border-color: #5a9edf; }
+.team-remove { width: 26px; padding: 0px; }
+.team-remove:hover { background-color: #993333; border-color: #cc5555; }
+
 /* --- File / New-project dialog rows --- */
 .fd-row {
     display: flex;
@@ -781,6 +839,60 @@ scrollbarvertical sliderbar:hover {
 .dialog-button.primary {
     background-color: #3a7ebf;
     border-color: #2a5f8f;
+}
+
+.dialog-button:hover {
+    background-color: #4a4a4a;
+    border-color: #7d8a82;
+}
+
+.dialog-button.primary:hover {
+    background-color: #4c9bd1;
+    border-color: #74b8df;
+}
+
+.dialog-button:active {
+    background-color: #242424;
+    border-color: #9aaa9e;
+}
+
+.dialog-button.disabled {
+    background-color: #242424;
+    border-color: #353535;
+    color: #777777;
+}
+
+.dialog-button.disabled:hover,
+.dialog-button.disabled:active {
+    background-color: #242424;
+    border-color: #353535;
+}
+
+.grid-picker {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.grid-navigation {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.grid-navigation .dialog-button {
+    min-width: 54px;
+    height: 26px;
+    line-height: 24px;
+}
+
+.grid-navigation .asset-path {
+    flex-grow: 1;
+    overflow: hidden;
+    color: #aaaaaa;
+    line-height: 26px;
 }
 
 .color-picker-main {

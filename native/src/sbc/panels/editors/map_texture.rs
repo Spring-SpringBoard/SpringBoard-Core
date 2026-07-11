@@ -1,11 +1,13 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::rc::Rc;
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{FieldSet, Layout};
-use crate::sbc::rml::element_by_id;
+use crate::sbc::rml::{element_by_id, escape_rml};
 use crate::sbc::panels::editors::brush::{
     non_empty, pattern_field, BrushAction, BrushActions, ASSETS,
 };
@@ -121,6 +123,14 @@ struct Material {
     channels: BTreeMap<String, String>,
 }
 
+struct SavedBrush {
+    id: String,
+    material: String,
+    brush: BrushSettings,
+}
+
+const ADD_BRUSH_ID: &str = "__add_saved_brush__";
+
 /// The material a texture belongs to: its file name with the channel suffix
 /// stripped, and without the directory. `.../brush_textures/dirt1_diffuse.png`
 /// is the `diffuse` of `dirt1`.
@@ -161,17 +171,70 @@ fn list_materials(interface: &NativeInterfaceRef) -> Vec<Material> {
         .collect()
 }
 
+fn material_tooltip(material: &Material) -> String {
+    let channel = |name: &str, title: &str| {
+        let (color, mark) = if material.channels.contains_key(name) {
+            ("#63d483", "&#10003;")
+        } else {
+            ("#ef6b6b", "&#10007;")
+        };
+        format!(
+            "<div>{title}: <span style=\"color: {color};\">{mark}</span></div>",
+            title = escape_rml(title),
+        )
+    };
+    format!(
+        "<div>{}</div>{}{}{}",
+        escape_rml(&material.name),
+        channel("diffuse", "Diffuse"),
+        channel("normal", "Normal"),
+        channel("specular", "Specular"),
+    )
+}
+
+fn section_markup(id: &str, caption: &str) -> String {
+    format!(
+        r#"<div id="{id}" class="field-section"><div class="field-section-label">{caption}</div><div class="field-section-line"></div></div>"#,
+        id = escape_rml(id),
+        caption = escape_rml(caption),
+    )
+}
+
+fn material_dialog_markup(material_grid: &GridView) -> String {
+    format!(
+        concat!(
+            r#"<div id="texture-material-dialog" class="picker-backdrop hidden">"#,
+            r#"<div class="dialog picker-dialog asset-dialog">"#,
+            r#"<div class="dialog-header"><span class="dialog-title">Select material for new brush</span></div>"#,
+            r#"<div class="dialog-content">{grid}</div>"#,
+            r#"<div class="dialog-footer"><button id="texture-material-cancel" class="dialog-button">Cancel</button></div>"#,
+            r#"</div></div>"#,
+        ),
+        grid = material_grid.container_rml(),
+    )
+}
+
+#[derive(Debug, Clone, Copy)]
+enum MaterialPickerEvent {
+    Cancel,
+}
+
 /// The texture brush: a pattern, a material, and how it is blended in.
 pub(crate) struct TextureEditor {
     fields: FieldSet,
     actions: BrushActions,
     pattern_grid: GridView,
+    saved_brush_grid: GridView,
     material_grid: GridView,
     materials: Vec<Material>,
     /// The picked material: its name (what the grid highlights) and its channel
     /// textures, which the brush carries whole.
     selected_material: Option<String>,
     selected: BTreeMap<String, String>,
+    saved_brushes: Vec<SavedBrush>,
+    selected_brush: Option<String>,
+    material_picker_open: bool,
+    material_picker_events: Rc<RefCell<Vec<MaterialPickerEvent>>>,
     /// Which DNTS channels the map actually has. Lua disables the button when
     /// there are none.
     dnts_available: Vec<i32>,
@@ -289,11 +352,23 @@ impl TextureEditor {
         TextureEditor {
             actions: BrushActions::new(ACTIONS),
             fields: FieldSet::new(fields),
-            pattern_grid: GridView::new("texture-pattern-grid", 64),
+            pattern_grid: {
+                let mut grid = GridView::new("texture-pattern-grid", 64);
+                grid.configure_navigation(
+                    "springboard/assets/core/brush_patterns/terrain",
+                    IMAGE_EXTS,
+                );
+                grid
+            },
+            saved_brush_grid: GridView::new("texture-saved-brush-grid", 64),
             material_grid: GridView::new("texture-material-grid", 64),
             materials: Vec::new(),
             selected_material: None,
             selected: BTreeMap::new(),
+            saved_brushes: Vec::new(),
+            selected_brush: None,
+            material_picker_open: false,
+            material_picker_events: Rc::new(RefCell::new(Vec::new())),
             dnts_available: Vec::new(),
             document: None,
         }
@@ -307,11 +382,6 @@ impl TextureEditor {
 
     fn render_grids(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
         let pattern = self.fields.text("patternTexture");
-        self.pattern_grid.set_items(list_assets(
-            interface,
-            &format!("{ASSETS}/brush_patterns/terrain"),
-            IMAGE_EXTS,
-        ));
         self.pattern_grid
             .set_selected((!pattern.is_empty()).then_some(pattern.as_str()));
         self.pattern_grid.render(interface, document)?;
@@ -319,6 +389,31 @@ impl TextureEditor {
         if self.materials.is_empty() {
             self.materials = list_materials(interface);
         }
+
+        let mut saved_items = vec![GridItem {
+            id: ADD_BRUSH_ID.to_string(),
+            caption: "Add".to_string(),
+            image: Some("LuaUI/images/scenedit/plus.png".to_string()),
+            is_directory: false,
+            tooltip: Some("Add new saved brush".to_string()),
+            tooltip_markup: None,
+        }];
+        for saved in &self.saved_brushes {
+            let material = self.materials.iter().find(|m| m.name == saved.material);
+            saved_items.push(GridItem {
+                id: saved.id.clone(),
+                caption: saved.material.clone(),
+                image: material.and_then(|m| m.channels.get("diffuse").cloned()),
+                is_directory: false,
+                tooltip: material.map(|m| format!("Saved brush: {}", m.name)),
+                tooltip_markup: material.map(material_tooltip),
+            });
+        }
+        self.saved_brush_grid.set_items(saved_items);
+        self.saved_brush_grid
+            .set_selected(self.selected_brush.as_deref());
+        self.saved_brush_grid.render(interface, document)?;
+
         // Show the diffuse, and say which channels the material actually ships --
         // Lua's material tooltip.
         let items: Vec<GridItem> = self
@@ -329,16 +424,8 @@ impl TextureEditor {
                 caption: material.name.clone(),
                 image: material.channels.get("diffuse").cloned(),
                 is_directory: false,
-                tooltip: Some(format!(
-                    "{}: {}",
-                    material.name,
-                    material
-                        .channels
-                        .keys()
-                        .cloned()
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                )),
+                tooltip: None,
+                tooltip_markup: Some(material_tooltip(material)),
             })
             .collect();
         self.material_grid.set_items(items);
@@ -388,32 +475,129 @@ impl TextureEditor {
                     .element_set_class(elem, "hidden", !material);
             }
         }
-        // The material picker only means anything while painting a material.
-        for id in ["texture-material-grid"] {
+        for (id, visible) in [
+            ("texture-saved-brush-section", material),
+            ("texture-saved-brush-grid", material),
+            ("texture-material-dialog", material && self.material_picker_open),
+            ("texture-splat-section", mode == "dnts"),
+        ] {
             if let Some(elem) = element_by_id(interface, doc, id) {
-                let _ = interface
-                    .rml_ui()
-                    .element_set_class(elem, "hidden", !material);
+                let _ = interface.rml_ui().element_set_class(elem, "hidden", !visible);
             }
         }
     }
 
-    fn take_grid_clicks(&mut self) -> bool {
+    fn take_grid_clicks(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<bool, Error> {
         let mut changed = false;
-        for id in self.pattern_grid.drain_clicks() {
-            if self.pattern_grid.item(&id).is_some_and(|i| !i.is_directory) {
-                self.fields.set("patternTexture", FieldValue::Text(id));
+        for id in self.saved_brush_grid.drain_clicks() {
+            if id == ADD_BRUSH_ID && self.paint_mode() == "paint" {
+                self.material_picker_open = true;
+                changed = true;
+            } else if self.saved_brushes.iter().any(|brush| brush.id == id) {
+                self.load_saved_brush(&id, interface);
                 changed = true;
             }
+        }
+        for event in self.material_picker_events.borrow_mut().drain(..) {
+            match event {
+                MaterialPickerEvent::Cancel => {
+                    self.material_picker_open = false;
+                    changed = true;
+                }
+            }
+        }
+        for id in self.pattern_grid.drain_asset_clicks(interface, document)? {
+            self.fields.set("patternTexture", FieldValue::Text(id));
+            changed = true;
         }
         for id in self.material_grid.drain_clicks() {
-            if let Some(material) = self.materials.iter().find(|m| m.name == id) {
-                self.selected = material.channels.clone();
-                self.selected_material = Some(id);
+            if let Some((material_name, channels)) = self
+                .materials
+                .iter()
+                .find(|m| m.name == id)
+                .map(|material| (material.name.clone(), material.channels.clone()))
+            {
+                self.selected = channels;
+                self.selected_material = Some(material_name.clone());
+                if self.material_picker_open {
+                    self.create_saved_brush(material_name);
+                    self.material_picker_open = false;
+                }
                 changed = true;
             }
         }
-        changed
+        Ok(changed)
+    }
+
+    fn create_saved_brush(&mut self, material: String) {
+        let id = format!("saved-brush-{}", self.saved_brushes.len() + 1);
+        let mut brush = self.brush_from_fields();
+        brush.brush_textures = self.selected.clone();
+        brush.brush_texture = self.selected.get("diffuse").cloned();
+        self.saved_brushes.push(SavedBrush {
+            id: id.clone(),
+            material,
+            brush,
+        });
+        self.selected_brush = Some(id);
+    }
+
+    fn brush_from_fields(&self) -> BrushSettings {
+        let mut brush = BrushSettings::default();
+        self.write_brush(&mut brush);
+        brush
+    }
+
+    fn load_saved_brush(
+        &mut self,
+        id: &str,
+        interface: &NativeInterfaceRef,
+    ) {
+        let Some(saved) = self.saved_brushes.iter().find(|brush| brush.id == id) else {
+            return;
+        };
+        let brush = saved.brush.clone();
+        self.selected_brush = Some(id.to_string());
+        self.selected_material = Some(saved.material.clone());
+        self.selected = brush.brush_textures.clone();
+        self.fields.set("patternTexture", FieldValue::Text(
+            brush.pattern_texture.clone().unwrap_or_default(),
+        ));
+        self.fields.set("size", FieldValue::Number(brush.size));
+        self.fields.set("rotation", FieldValue::Number(brush.rotation));
+        self.fields.set("texScale", FieldValue::Number(brush.tex_scale));
+        self.fields.set("texRotation", FieldValue::Number(brush.tex_rotation));
+        self.fields.set("texOffsetX", FieldValue::Number(brush.tex_offset_x));
+        self.fields.set("texOffsetY", FieldValue::Number(brush.tex_offset_y));
+        self.fields.set("mode", FieldValue::Text(brush.mode));
+        self.fields.set("kernelMode", FieldValue::Text(brush.kernel_mode));
+        self.fields.set("strength", FieldValue::Number(brush.strength));
+        self.fields.set("falloffFactor", FieldValue::Number(brush.falloff_factor));
+        self.fields.set("featureFactor", FieldValue::Number(brush.feature_factor));
+        self.fields.set("value", FieldValue::Number(brush.value));
+        self.fields.set("voidFactor", FieldValue::Number(brush.void_factor));
+        self.fields.set("splatTexScale", FieldValue::Number(brush.splat_tex_scale));
+        self.fields.set("splatTexMult", FieldValue::Number(brush.splat_tex_mult));
+        self.fields.set("exclusive", FieldValue::Bool(brush.exclusive));
+        self.fields.set("diffuseColor", FieldValue::Color(brush.diffuse_color));
+        self.fields.set("dntsIndex", FieldValue::Number((brush.color_index - 1) as f32));
+        for channel in toggle_channels() {
+            self.fields.set(
+                &enabled_name(channel),
+                FieldValue::Bool(brush.texture_enabled.get(channel).copied().unwrap_or(true)),
+            );
+        }
+        let _ = self.fields.write_values(interface);
+    }
+
+    fn update_selected_saved_brush(&mut self) {
+        let Some(id) = self.selected_brush.as_deref() else {
+            return;
+        };
+        let brush = self.brush_from_fields();
+        if let Some(saved) = self.saved_brushes.iter_mut().find(|saved| saved.id == id) {
+            saved.brush = brush;
+        }
     }
 }
 
@@ -422,12 +606,11 @@ impl Editor for TextureEditor {
         let channel_toggles: Vec<String> = toggle_channels().map(enabled_name).collect();
         self.fields.generate_rml(&[
             Layout::Raw(self.actions.generate_rml()),
-            Layout::Section("Pattern"),
-            Layout::Field("patternTexture"),
+            Layout::Raw(section_markup("texture-saved-brush-section", "Saved brushes")),
+            Layout::Raw(self.saved_brush_grid.container_rml()),
+            Layout::Raw(section_markup("texture-pattern-section", "Pattern")),
             Layout::Raw(self.pattern_grid.container_rml()),
             Layout::IdentifiedGroup(&["size", "rotation", "texScale"]),
-            Layout::Section("Material"),
-            Layout::Raw(self.material_grid.container_rml()),
             Layout::IdentifiedGroup(&channel_toggles.iter().map(String::as_str).collect::<Vec<_>>()),
             Layout::IdentifiedGroup(&["texRotation", "texOffsetX", "texOffsetY"]),
             Layout::IdentifiedField("diffuseColor"),
@@ -437,7 +620,7 @@ impl Editor for TextureEditor {
             Layout::IdentifiedGroup(&["strength", "falloffFactor", "featureFactor"]),
             Layout::IdentifiedField("value"),
             Layout::IdentifiedField("voidFactor"),
-            Layout::Section("Splat"),
+            Layout::Raw(section_markup("texture-splat-section", "Splat")),
             Layout::IdentifiedGroup(&["splatTexScale", "splatTexMult"]),
             Layout::IdentifiedField("dntsIndex"),
             Layout::IdentifiedField("exclusive"),
@@ -465,11 +648,23 @@ impl Editor for TextureEditor {
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         self.document = Some(document);
-        self.actions.bind(interface, document)?;
         self.actions
             .set_enabled(interface, document, "DNTS", !self.dnts_available.is_empty());
+        self.actions.bind(interface, document)?;
         self.fields
             .bind(interface, document, changes, interactions)?;
+        self.pattern_grid.refresh_navigation(interface, document)?;
+        if let Some(host) = element_by_id(interface, document, "texture-material-modal") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(host, &material_dialog_markup(&self.material_grid))?;
+        }
+        if let Some(cancel) = element_by_id(interface, document, "texture-material-cancel") {
+            let events = self.material_picker_events.clone();
+            interface.rml_ui().element_add_event_listener(cancel, "click", false, move || {
+                events.borrow_mut().push(MaterialPickerEvent::Cancel);
+            })?;
+        }
         self.render_grids(interface, document)?;
         self.apply_visibility(interface);
         Ok(())
@@ -501,18 +696,36 @@ impl Editor for TextureEditor {
     ) -> Vec<String> {
         let mode_before = self.paint_mode().to_string();
         self.actions.tick(interface, document);
-        if self.take_grid_clicks() {
+        if self.paint_mode() != "paint" && self.material_picker_open {
+            self.material_picker_open = false;
+        }
+        if self
+            .take_grid_clicks(interface, document)
+            .unwrap_or(false)
+        {
             let _ = self.fields.write_values(interface);
             let _ = self.render_grids(interface, document);
+            self.apply_visibility(interface);
         }
         if self.paint_mode() != mode_before {
             self.apply_visibility(interface);
+        }
+        if !self.material_picker_open {
+            self.update_selected_saved_brush();
         }
         vec![]
     }
 
     fn take_state_request(&mut self) -> Option<crate::sbc::states::StateRequest> {
         self.actions.take_request()
+    }
+
+    fn clear_state_selection(&mut self, interface: &NativeInterfaceRef, document: u64) {
+        self.actions.clear(interface, document);
+    }
+
+    fn has_open_modal(&self) -> bool {
+        self.material_picker_open
     }
 
     fn write_brush(&self, brush: &mut BrushSettings) {

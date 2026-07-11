@@ -17,7 +17,7 @@ use crate::sbc::panels::new_project_dialog::NewProjectDialog;
 use crate::sbc::panels::registry::editor_by_name;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
-use crate::sbc::states::{BrushSettings, StateManager};
+use crate::sbc::states::{BrushSettings, StateManager, StateRequest};
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(PanelManager::new(iface)) }
@@ -250,6 +250,7 @@ impl PanelManager {
         }
         self.sync_brush(models);
         self.dispatch_state_request(models);
+        self.sync_state_selection(models);
 
         self.view.update(&self.interface)
     }
@@ -279,14 +280,24 @@ impl PanelManager {
         for event in self.view.drain_events() {
             match event {
                 ShellEvent::Tab(tab) => {
+                    self.reset_state(models);
                     self.view.set_tab(&self.interface, tab)?;
                     self.editor = None;
                 }
-                ShellEvent::Editor(name) => self.open_editor(name)?,
+                ShellEvent::Editor(name) => {
+                    self.reset_state(models);
+                    self.open_editor(name)?;
+                }
                 ShellEvent::Action(action) => self.run_action(action, models)?,
             }
         }
         Ok(())
+    }
+
+    fn reset_state(&mut self, models: &mut Models) {
+        models.with::<StateManager, _>(|states, models| {
+            states.set_state(StateRequest::Default, models)
+        });
     }
 
     /// Match a key + current modifiers against the action hotkeys, queueing the
@@ -615,6 +626,19 @@ impl PanelManager {
         models.with::<StateManager, _>(|states, models| states.set_state(request, models));
     }
 
+    fn sync_state_selection(&mut self, models: &mut Models) {
+        let state_is_default = models.get::<StateManager>().is_default();
+        if !state_is_default {
+            return;
+        }
+        let Some(document) = self.view.document_handle() else {
+            return;
+        };
+        if let Some(editor) = self.editor.as_deref_mut() {
+            editor.clear_state_selection(&self.interface, document);
+        }
+    }
+
     // ── Input delegation ──
 
     pub fn key_press(&mut self, key: i32, _scan: i32, _repeat: bool) -> Result<bool, Error> {
@@ -671,17 +695,19 @@ impl PanelManager {
         if !self.enabled {
             return Ok(false);
         }
-        self.input.mouse_move(
-            &self.interface,
-            &self.view,
-            self.editor.as_deref_mut(),
-            x,
-            y,
-        )
+        self.input.mouse_move(&self.interface, &self.view, x, y)
     }
 
     pub fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
         if !self.enabled {
+            return Ok(false);
+        }
+        let modal_open = self.picker.is_open()
+            || self.asset_picker.is_open()
+            || self.file_dialog.is_open()
+            || self.new_project.is_open()
+            || self.editor.as_deref().is_some_and(Editor::has_open_modal);
+        if !self.view.contains(&self.interface, x, y) && !modal_open {
             return Ok(false);
         }
         self.input

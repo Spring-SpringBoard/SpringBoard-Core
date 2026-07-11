@@ -219,55 +219,29 @@ impl PanelInput {
 
     // ── Input callbacks ────────────────────────────────────────────
 
+    /// The engine's mouse-move callback. It does **not** touch the drag: a drag
+    /// is stepped from the polled cursor in `tick_drag`, which owns
+    /// `last_mouse_x` as the point the delta is measured from.
+    ///
+    /// This used to keep a second copy of the drag state machine here, and set
+    /// `last_mouse_x = x` on every callback. That reset the reference point to
+    /// wherever the cursor already was, so `tick_drag` always measured a delta of
+    /// zero and a dragged number never moved.
     pub(crate) fn mouse_move(
         &mut self,
         interface: &NativeInterfaceRef,
         view: &PanelView,
-        editor: Option<&mut (dyn Editor + '_)>,
         x: i32,
         y: i32,
     ) -> Result<bool, Error> {
-        self.last_mouse_x = x as f32;
         self.last_mouse_y = y as f32;
 
-        // Check drag threshold transition (extract data before mutating)
-        let transition = match &self.drag {
-            DragState::Pending { field, start_x } => {
-                let dx = x as f32 - *start_x;
-                if dx.abs() > DRAG_THRESHOLD {
-                    Some((field.clone(), *start_x))
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        };
-        if let Some((field, start_x)) = transition {
-            self.drag = DragState::Dragging { field };
-            self.last_mouse_x = start_x;
-        }
-
-        // Active drag: adjust value, consume event
-        if let DragState::Dragging { ref field } = &self.drag {
-            let dx = x as f32 - self.last_mouse_x;
-            self.last_mouse_x = x as f32;
-            let mult = if self.fine_drag_multiplier(interface) {
-                FINE_DRAG_MULT
-            } else {
-                1.0
-            };
-            if let Some(ed) = editor {
-                ed.drag_field(field, dx * mult, interface);
-            }
+        // A drag owns the cursor: swallow the move so RmlUi does not also act on
+        // it (hovering another field, starting a text selection).
+        if !matches!(self.drag, DragState::Idle) {
             return Ok(true);
         }
 
-        // Pending (below threshold): consume but don't adjust
-        if matches!(self.drag, DragState::Pending { .. }) {
-            return Ok(true);
-        }
-
-        // Normal mouse move — forward to RmlUi if inside panel
         self.forward_mouse_move(interface, view, x, y)
     }
 
@@ -290,8 +264,9 @@ impl PanelInput {
             return Ok(false);
         };
         let inside = view.contains(interface, x, y);
+        let modal = view.contains_modal(interface, x, y);
         let interacting = interface.rml_ui().context_is_mouse_interacting(ctx)?;
-        if !inside && !interacting {
+        if !inside && !modal && !interacting {
             if self.mouse_captured {
                 let _ = interface.rml_ui().context_process_mouse_leave(ctx);
             }
@@ -301,7 +276,7 @@ impl PanelInput {
         interface
             .rml_ui()
             .context_process_mouse_move(ctx, x as f32, y as f32, 0)?;
-        self.mouse_captured = inside || interacting;
+        self.mouse_captured = inside || modal || interacting;
         Ok(self.mouse_captured)
     }
 
@@ -318,7 +293,15 @@ impl PanelInput {
         let Some(ctx) = view.context_handle() else {
             return Ok(false);
         };
-        if !view.contains(interface, x, y) && !self.mouse_captured {
+        // `mouse_captured` records where the previous move was routed. It can
+        // remain set after a modal closes, so it must not make an unrelated
+        // fresh press over the map belong to RmlUi. Live field drags are the
+        // only interaction that intentionally keeps a press outside the UI.
+        if !view.contains(interface, x, y)
+            && !view.contains_modal(interface, x, y)
+            && self.drag_field().is_none()
+        {
+            self.mouse_captured = false;
             return Ok(false);
         }
         interface

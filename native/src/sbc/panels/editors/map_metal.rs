@@ -3,13 +3,12 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{FieldSet, Layout};
-use crate::sbc::panels::editors::brush::{
-    brush_editor_boilerplate, non_empty, pattern_field, BrushAction, BrushActions,
-};
+use crate::sbc::panels::editors::brush::{non_empty, pattern_field, BrushAction, BrushActions};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::NumericField;
+use crate::sbc::panels::grid::GridView;
 use crate::sbc::panels::registry::{EditorSpec, Tab};
-use crate::sbc::states::{BrushKind, BrushSettings};
+use crate::sbc::states::{BrushKind, BrushSettings, StateRequest};
 
 // Mirrors MetalEditor:Register in scen_edit/view/map/metal_editor.lua.
 inventory::submit! {
@@ -35,6 +34,7 @@ const ACTIONS: &[BrushAction] = &[BrushAction {
 pub(crate) struct MetalEditor {
     fields: FieldSet,
     actions: BrushActions,
+    pattern_grid: GridView,
 }
 
 impl MetalEditor {
@@ -60,7 +60,26 @@ impl MetalEditor {
                 ),
             ]),
             actions: BrushActions::new(ACTIONS),
+            pattern_grid: {
+                let mut grid = GridView::new("metal-pattern-grid", 64);
+                grid.configure_navigation(
+                    "springboard/assets/core/brush_patterns/terrain",
+                    &[".png", ".jpg", ".tga", ".dds", ".bmp"],
+                );
+                grid
+            },
         }
+    }
+
+    fn render_pattern_grid(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        let selected = self.fields.text("patternTexture");
+        self.pattern_grid
+            .set_selected((!selected.is_empty()).then_some(selected.as_str()));
+        self.pattern_grid.render(interface, document)
     }
 }
 
@@ -68,7 +87,8 @@ impl Editor for MetalEditor {
     fn generate_rml(&self) -> String {
         let mut h = self.actions.generate_rml();
         h.push_str(&self.fields.generate_rml(&[
-            Layout::Field("patternTexture"),
+            Layout::Section("Pattern"),
+            Layout::Raw(self.pattern_grid.container_rml()),
             Layout::Field("size"),
             Layout::Field("rotation"),
             Layout::Field("amount"),
@@ -92,5 +112,63 @@ impl Editor for MetalEditor {
         let _ = self.fields.write_values(interface);
     }
 
-    brush_editor_boilerplate!();
+    fn bind_fields(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        changes: &ChangeQueue,
+        interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
+        self.actions.bind(interface, document)?;
+        self.fields.bind(interface, document, changes, interactions)?;
+        self.pattern_grid.refresh_navigation(interface, document)?;
+        self.render_pattern_grid(interface, document)
+    }
+
+    fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        self.fields.write_values(interface)
+    }
+
+    fn process_change(
+        &mut self,
+        name: &str,
+        interface: &NativeInterfaceRef,
+        _next: &mut u64,
+    ) -> Vec<String> {
+        self.fields.read(name, interface);
+        vec![]
+    }
+
+    fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
+        vec![]
+    }
+
+    fn tick(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        _next: &mut u64,
+    ) -> Vec<String> {
+        self.actions.tick(interface, document);
+        for id in self
+            .pattern_grid
+            .drain_asset_clicks(interface, document)
+            .unwrap_or_default()
+        {
+            self.fields.set("patternTexture", FieldValue::Text(id));
+            let _ = self.fields.write_values(interface);
+            let _ = self.render_pattern_grid(interface, document);
+        }
+        vec![]
+    }
+
+    fn take_state_request(&mut self) -> Option<StateRequest> {
+        self.actions.take_request()
+    }
+
+    fn clear_state_selection(&mut self, interface: &NativeInterfaceRef, document: u64) {
+        self.actions.clear(interface, document);
+    }
+
+    crate::sb_field_editor_methods!();
 }

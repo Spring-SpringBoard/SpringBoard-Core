@@ -105,6 +105,14 @@ impl Editor for SkyEditor {
     ) -> Vec<String> {
         let base = resolve_base(name).to_string();
         let value = self.fields.read(name, interface);
+        if base == "skyboxTexture" {
+            if let FieldValue::Text(path) = value {
+                if let Err(err) = interface.unsynced_ctrl().set_sky_box_texture(&path) {
+                    log::warn!("setting skybox texture {path} failed: {err:?}");
+                }
+            }
+            return vec![];
+        }
         if ATMOSPHERE_FIELDS.contains(&base.as_str()) {
             return self.atmosphere(&base, &value, next);
         }

@@ -1,11 +1,18 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use std::cell::RefCell;
+use std::collections::BTreeMap;
+use std::rc::Rc;
+
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
+use crate::sbc::envelope::envelope_fields;
 use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, Field, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
+use crate::sbc::panels::grid::{list_assets, GridItem, GridView};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
+use crate::sbc::rml::{element_by_id, escape_rml};
 use crate::sbc::textures::TextureModel;
 
 // Mirrors TerrainSettingsEditor:Register in scen_edit/view/map/terrain_settings_editor.lua.
@@ -46,6 +53,15 @@ const SHADING_TOGGLES: &[(&str, &str, &str)] = &[
     ("tex_detail", "detail", "Detail"),
 ];
 
+#[derive(Debug, Clone)]
+enum ShadingEvent {
+    Open(String),
+    New,
+    Existing,
+    Disable,
+    Cancel,
+}
+
 /// Map rendering flags and the detail texture. Every field is a key of
 /// `SetMapRenderingParamsCommand`'s options except `detailTexture`, which the
 /// engine takes through its own map-texture binding.
@@ -54,11 +70,16 @@ const SHADING_TOGGLES: &[(&str, &str, &str)] = &[
 /// preview: a change applies immediately and stays applied.
 pub(crate) struct MapSettingsEditor {
     fields: FieldSet,
+    shading_grid: GridView,
+    shading_events: Rc<RefCell<Vec<ShadingEvent>>>,
+    shading_enabled: BTreeMap<String, bool>,
+    dialog: Option<String>,
+    document: Option<u64>,
 }
 
 impl MapSettingsEditor {
     pub(crate) fn new() -> Self {
-        let mut fields: Vec<Box<dyn Field>> = vec![
+        let fields: Vec<Box<dyn Field>> = vec![
             Box::new(BooleanField::new("voidWater", "Void water", false)),
             Box::new(BooleanField::new("voidGround", "Void ground", false)),
             Box::new(BooleanField::new(
@@ -115,12 +136,113 @@ impl MapSettingsEditor {
                 .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
             ),
         ];
-        for (field, _, caption) in SHADING_TOGGLES {
-            fields.push(Box::new(BooleanField::new(*field, *caption, false)));
-        }
         MapSettingsEditor {
             fields: FieldSet::new(fields),
+            shading_grid: GridView::new("map-shading-texture-grid", 64),
+            shading_events: Rc::new(RefCell::new(Vec::new())),
+            shading_enabled: BTreeMap::new(),
+            dialog: None,
+            document: None,
         }
+    }
+
+    fn shading_markup(&self) -> String {
+        let mut html = String::new();
+        for (field, _, caption) in SHADING_TOGGLES {
+            html.push_str(&format!(
+                r#"<div class="field-row"><button id="shading-{field}" class="field-composite-button shading-texture-button"><span>{caption}</span><span id="shading-status-{field}"></span></button></div>"#,
+                field = escape_rml(field),
+                caption = escape_rml(caption),
+            ));
+        }
+        html
+    }
+
+    fn dialog_markup(&self) -> String {
+        format!(
+            r#"<div id="shading-texture-dialog" class="picker-backdrop hidden">
+                <div class="dialog picker-dialog asset-dialog">
+                    <div class="dialog-header"><span id="shading-dialog-title" class="dialog-title">Map texture</span></div>
+                    <div class="dialog-content">
+                        <div class="shading-dialog-actions">
+                            <button id="shading-new" class="dialog-button primary">New texture</button>
+                            <button id="shading-existing" class="dialog-button">Choose existing</button>
+                            <button id="shading-disable" class="dialog-button">Disable</button>
+                        </div>
+                        <div id="shading-existing-grid" class="hidden">{}</div>
+                    </div>
+                    <div class="dialog-footer"><button id="shading-cancel" class="dialog-button">Cancel</button></div>
+                </div>
+            </div>"#,
+            self.shading_grid.container_rml()
+        )
+    }
+
+    fn render_shading_fields(&self, interface: &NativeInterfaceRef, document: u64) {
+        for (field, _, caption) in SHADING_TOGGLES {
+            let Some(button) = element_by_id(interface, document, &format!("shading-{field}"))
+            else {
+                continue;
+            };
+            let enabled = self.shading_enabled.get(*field).copied().unwrap_or(false);
+            let status = if enabled {
+                "<span class=\"shading-enabled\">enabled</span>"
+            } else {
+                "<span class=\"shading-disabled\">not set</span>"
+            };
+            let markup = format!(
+                "<span>{}</span><span id=\"shading-status-{}\">{}</span>",
+                escape_rml(caption),
+                escape_rml(field),
+                status,
+            );
+            let _ = interface.rml_ui().element_set_inner_rml(button, &markup);
+        }
+    }
+
+    fn render_dialog(&self, interface: &NativeInterfaceRef, document: u64) {
+        let Some(dialog) = element_by_id(interface, document, "shading-texture-dialog") else {
+            return;
+        };
+        let open = self.dialog.is_some();
+        let _ = interface.rml_ui().element_set_class(dialog, "hidden", !open);
+        if let Some(name) = &self.dialog {
+            if let Some(title) = element_by_id(interface, document, "shading-dialog-title") {
+                let caption = SHADING_TOGGLES
+                    .iter()
+                    .find(|(_, shading, _)| shading == name)
+                    .map(|(_, _, caption)| *caption)
+                    .unwrap_or(name.as_str());
+                let _ = interface
+                    .rml_ui()
+                    .element_set_inner_rml(title, &format!("{} texture", escape_rml(caption)));
+            }
+        }
+        if let Some(existing) = element_by_id(interface, document, "shading-existing-grid") {
+            let _ = interface
+                .rml_ui()
+                .element_set_class(existing, "hidden", !open);
+        }
+    }
+
+    fn render_existing_grid(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        let items = list_assets(
+            interface,
+            "springboard/assets/core/detail",
+            &[".png", ".jpg", ".tga", ".dds", ".bmp"],
+        )
+        .into_iter()
+        .map(|mut item| {
+            item.tooltip = Some("Choose this existing texture".to_string());
+            item
+        })
+        .collect::<Vec<GridItem>>();
+        self.shading_grid.set_items(items);
+        self.shading_grid.render(interface, document)
     }
 
     fn rendering(&self, name: &str, value: &FieldValue, next: &mut u64) -> Vec<String> {
@@ -160,6 +282,10 @@ impl MapSettingsEditor {
 }
 
 impl Editor for MapSettingsEditor {
+    fn has_open_modal(&self) -> bool {
+        self.dialog.is_some()
+    }
+
     fn generate_rml(&self) -> String {
         self.fields.generate_rml(&[
             Layout::Group(&["voidWater", "voidGround"]),
@@ -169,11 +295,7 @@ impl Editor for MapSettingsEditor {
             Layout::Group(SPLAT_MULT_FIELDS),
             Layout::Section("Map textures"),
             Layout::Field("detailTexture"),
-            Layout::Group(&["tex_specular", "tex_emission"]),
-            Layout::Group(&["tex_refl", "tex_splat_distr"]),
-            Layout::Group(&["tex_splat_normals0", "tex_splat_normals1"]),
-            Layout::Group(&["tex_splat_normals2", "tex_splat_normals3"]),
-            Layout::Field("tex_detail"),
+            Layout::Raw(self.shading_markup()),
         ])
     }
 
@@ -184,7 +306,46 @@ impl Editor for MapSettingsEditor {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        self.fields.bind(interface, document, changes, interactions)
+        self.document = Some(document);
+        self.fields.bind(interface, document, changes, interactions)?;
+        if let Some(host) = element_by_id(interface, document, "map-shading-modal") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(host, &self.dialog_markup())?;
+        }
+        for (field, shading, _) in SHADING_TOGGLES {
+            let Some(button) = element_by_id(interface, document, &format!("shading-{field}"))
+            else {
+                continue;
+            };
+            let events = self.shading_events.clone();
+            let name = (*shading).to_string();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    events.borrow_mut().push(ShadingEvent::Open(name.clone()));
+                })?;
+        }
+        for (id, event) in [
+            ("shading-new", ShadingEvent::New),
+            ("shading-existing", ShadingEvent::Existing),
+            ("shading-disable", ShadingEvent::Disable),
+            ("shading-cancel", ShadingEvent::Cancel),
+        ] {
+            let Some(button) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let events = self.shading_events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    events.borrow_mut().push(event.clone());
+                })?;
+        }
+        self.render_existing_grid(interface, document)?;
+        self.render_shading_fields(interface, document);
+        self.render_dialog(interface, document);
+        Ok(())
     }
 
     fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
@@ -208,6 +369,67 @@ impl Editor for MapSettingsEditor {
         self.rendering(&base, &value, next)
     }
 
+    fn tick(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        next: &mut u64,
+    ) -> Vec<String> {
+        let mut envelopes = Vec::new();
+        for event in self.shading_events.borrow_mut().drain(..) {
+            match event {
+                ShadingEvent::Open(name) => self.dialog = Some(name),
+                ShadingEvent::Existing => {}
+                ShadingEvent::Cancel => self.dialog = None,
+                ShadingEvent::New | ShadingEvent::Disable => {
+                    if let Some(name) = self.dialog.take() {
+                        let enabled = matches!(event, ShadingEvent::New);
+                        let Some((field, _, _)) = SHADING_TOGGLES
+                            .iter()
+                            .find(|(_, shading, _)| *shading == name)
+                        else {
+                            continue;
+                        };
+                        self.shading_enabled.insert((*field).to_string(), enabled);
+                        envelopes.push(envelope(
+                            "SetMapShadingTextureEnabledCommand",
+                            next,
+                            serde_json::json!({ "name": name, "value": enabled }),
+                        ));
+                    }
+                }
+            }
+        }
+        if self.dialog.is_some() {
+            for id in self.shading_grid.drain_clicks() {
+                if self.shading_grid.item(&id).is_some_and(|item| !item.is_directory) {
+                    if let Some(name) = self.dialog.take() {
+                        let Some((field, _, _)) = SHADING_TOGGLES
+                            .iter()
+                            .find(|(_, shading, _)| *shading == name)
+                        else {
+                            continue;
+                        };
+                        self.shading_enabled.insert((*field).to_string(), true);
+                        envelopes.push(envelope_fields(
+                            "ImportShadingImageCommand",
+                            next,
+                            serde_json::json!({
+                                "texType": name,
+                                "texturePath": id,
+                            }),
+                        ));
+                    }
+                }
+            }
+        } else {
+            self.shading_grid.drain_clicks();
+        }
+        self.render_shading_fields(interface, document);
+        self.render_dialog(interface, document);
+        envelopes
+    }
+
     fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, models: &mut Models) {
         let gfx = interface.gfx();
         for name in BOOLEANS {
@@ -229,8 +451,8 @@ impl Editor for MapSettingsEditor {
         }
         let textures = &models.get::<TextureModel>().shading;
         for (field, shading, _) in SHADING_TOGGLES {
-            self.fields
-                .set(field, FieldValue::Bool(textures.texture(shading).is_some()));
+            self.shading_enabled
+                .insert((*field).to_string(), textures.texture(shading).is_some());
         }
     }
 

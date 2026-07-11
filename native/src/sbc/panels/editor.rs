@@ -59,6 +59,17 @@ pub(crate) trait Editor {
         None
     }
 
+    /// Clear a brush action when the shared state leaves the editor because of
+    /// an external event such as Escape.
+    fn clear_state_selection(&mut self, interface: &NativeInterfaceRef, document: u64) {
+        let _ = (interface, document);
+    }
+
+    /// Whether this editor currently owns a modal rendered outside the panel.
+    fn has_open_modal(&self) -> bool {
+        false
+    }
+
     /// A cheap per-tick check for views that follow external state (Properties
     /// tracks the selection). Returning true makes the manager refresh and
     /// rebuild this editor. Must be cheap: it runs every tick.

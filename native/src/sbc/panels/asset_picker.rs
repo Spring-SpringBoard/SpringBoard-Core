@@ -169,6 +169,11 @@ impl AssetPicker {
                 .rml_ui()
                 .element_set_inner_rml(e, &escape_rml(&self.dir))?;
         }
+        if let Some(up) = element_by_id(interface, document, "asset-up") {
+            interface
+                .rml_ui()
+                .element_set_class(up, "disabled", self.dir == self.root)?;
+        }
         Ok(())
     }
 

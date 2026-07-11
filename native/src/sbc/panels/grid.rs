@@ -8,12 +8,14 @@
 //! click to, so a click is queued and acted on a tick later (this is the same
 //! use-after-free the Lua port hit).
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::panels::field::{bind_tooltip, element_by_id, escape_rml};
+use crate::sbc::panels::field::{
+    bind_tooltip, bind_tooltip_markup, element_by_id, escape_rml,
+};
 
 /// One cell.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,9 +29,20 @@ pub(crate) struct GridItem {
     pub is_directory: bool,
     /// Hover text, when the cell has more to say than its caption.
     pub tooltip: Option<String>,
+    /// RML tooltip content for rich, deliberately-authored tooltips.
+    pub tooltip_markup: Option<String>,
 }
 
 pub(crate) type ClickQueue = Rc<RefCell<Vec<String>>>;
+
+#[derive(Debug, Clone)]
+struct GridNavigation {
+    root: String,
+    dir: String,
+    extensions: Vec<String>,
+    up_clicks: Rc<RefCell<u32>>,
+    bound: Cell<bool>,
+}
 
 pub(crate) struct GridView {
     /// Element id of the container this grid renders into.
@@ -38,6 +51,7 @@ pub(crate) struct GridView {
     selected: Option<String>,
     clicks: ClickQueue,
     item_size: u32,
+    navigation: Option<GridNavigation>,
 }
 
 impl GridView {
@@ -48,6 +62,7 @@ impl GridView {
             selected: None,
             clicks: Rc::new(RefCell::new(Vec::new())),
             item_size,
+            navigation: None,
         }
     }
 
@@ -69,7 +84,114 @@ impl GridView {
         self.clicks.borrow_mut().drain(..).collect()
     }
 
+    /// Make this grid browse a directory tree inline. Directory clicks and the
+    /// Up button are handled by `drain_asset_clicks`, while file clicks are
+    /// returned to the owning editor as selected asset paths.
+    pub(crate) fn configure_navigation(&mut self, root: &str, extensions: &[&str]) {
+        let root = root.trim_end_matches('/').to_string();
+        self.navigation = Some(GridNavigation {
+            root: root.clone(),
+            dir: root,
+            extensions: extensions.iter().map(|ext| ext.to_string()).collect(),
+            up_clicks: Rc::new(RefCell::new(0)),
+            bound: Cell::new(false),
+        });
+    }
+
+    /// Drain inline navigation and selection clicks. A directory changes the
+    /// listing and is not returned; files are returned exactly like the old
+    /// flat grid API.
+    pub(crate) fn drain_asset_clicks(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<Vec<String>, Error> {
+        if self.navigation.is_none() {
+            return Ok(self.drain_clicks());
+        }
+
+        let up = self
+            .navigation
+            .as_ref()
+            .map(|navigation| {
+                let mut clicks = navigation.up_clicks.borrow_mut();
+                let count = *clicks;
+                *clicks = 0;
+                count
+            })
+            .unwrap_or_default();
+        let mut navigate = false;
+        if up > 0 {
+            let parent = self
+                .navigation
+                .as_ref()
+                .and_then(|navigation| {
+                    (navigation.dir != navigation.root)
+                        .then(|| parent_dir(&navigation.dir))
+                        .flatten()
+                });
+            if let Some(parent) = parent {
+                if let Some(navigation) = self.navigation.as_mut() {
+                    navigation.dir = parent;
+                }
+                navigate = true;
+            }
+        }
+
+        let clicks = self.drain_clicks();
+        let mut selected = Vec::new();
+        for id in clicks {
+            let is_dir = self.item(&id).is_some_and(|item| item.is_directory);
+            if is_dir {
+                if let Some(navigation) = self.navigation.as_mut() {
+                    navigation.dir = id;
+                }
+                navigate = true;
+            } else {
+                selected.push(id);
+            }
+        }
+
+        if navigate {
+            self.refresh_navigation(interface, document)?;
+        }
+        Ok(selected)
+    }
+
+    /// Populate the current inline directory. This is public to the owning
+    /// editor only because the initial render happens after its RML is bound.
+    pub(crate) fn refresh_navigation(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        let Some((dir, extensions)) = self.navigation.as_ref().map(|navigation| {
+            (
+                navigation.dir.clone(),
+                navigation.extensions.clone(),
+            )
+        }) else {
+            return Ok(());
+        };
+        let extensions: Vec<&str> = extensions.iter().map(String::as_str).collect();
+        self.set_items(list_assets(interface, &dir, &extensions));
+        self.set_selected(None);
+        self.render(interface, document)
+    }
+
     pub(crate) fn container_rml(&self) -> String {
+        if self.navigation.is_some() {
+            return format!(
+                r#"<div id="{id}-picker" class="grid-picker">
+                    <div class="grid-navigation">
+                        <button id="{id}-up" class="dialog-button">Up</button>
+                        <span id="{id}-path" class="asset-path"></span>
+                    </div>
+                    <div id="{id}" class="grid-container"></div>
+                </div>"#,
+                id = self.container_id,
+            );
+        }
         format!(
             r#"<div id="{}" class="grid-container"></div>"#,
             self.container_id
@@ -90,6 +212,24 @@ impl GridView {
             return Ok(());
         };
         let rml = interface.rml_ui();
+
+        if let Some(navigation) = self.navigation.as_ref() {
+            if let Some(path) = element_by_id(interface, document, &format!("{}-path", self.container_id)) {
+                rml.element_set_inner_rml(path, &escape_rml(&navigation.dir))?;
+            }
+            if let Some(up) = element_by_id(interface, document, &format!("{}-up", self.container_id)) {
+                rml.element_set_class(up, "disabled", navigation.dir == navigation.root)?;
+            }
+            if !navigation.bound.get() {
+                if let Some(up) = element_by_id(interface, document, &format!("{}-up", self.container_id)) {
+                    let clicks = navigation.up_clicks.clone();
+                    rml.element_add_event_listener(up, "click", false, move || {
+                        *clicks.borrow_mut() += 1;
+                    })?;
+                }
+                navigation.bound.set(true);
+            }
+        }
 
         let mut html = String::new();
         for (index, item) in self.items.iter().enumerate() {
@@ -131,7 +271,9 @@ impl GridView {
             let Some(cell) = element_by_id(interface, document, &id) else {
                 continue;
             };
-            if let Some(tooltip) = &item.tooltip {
+            if let Some(tooltip) = &item.tooltip_markup {
+                bind_tooltip_markup(interface, document, cell, tooltip)?;
+            } else if let Some(tooltip) = &item.tooltip {
                 bind_tooltip(interface, document, cell, tooltip)?;
             }
             let queue = self.clicks.clone();
@@ -174,6 +316,7 @@ pub(crate) fn list_assets(
                 image: None,
                 is_directory: true,
                 tooltip: None,
+                tooltip_markup: None,
             });
         } else {
             let matches = extensions.is_empty()
@@ -187,6 +330,7 @@ pub(crate) fn list_assets(
                     caption,
                     is_directory: false,
                     tooltip: None,
+                    tooltip_markup: None,
                 });
             }
         }

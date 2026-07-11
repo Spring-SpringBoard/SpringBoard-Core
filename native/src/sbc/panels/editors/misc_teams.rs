@@ -5,13 +5,13 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, envelope_with, resolve_base, FieldSet, Layout};
-use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
-use crate::sbc::panels::fields::{ColorField, NumericField, StringField};
+use crate::sbc::envelope::envelope_fields;
+use crate::sbc::panels::editor_base::{envelope_with, FieldSet, Layout};
+use crate::sbc::panels::field::{element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue};
+use crate::sbc::panels::fields::{BooleanField, ChoiceField, ColorField, NumericField, StringField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::teams::{Color, Team, TeamManager};
 
-// Mirrors the players/teams window in scen_edit/view/general/players_window.lua.
 inventory::submit! {
     EditorSpec {
         name: "teamsView",
@@ -24,33 +24,44 @@ inventory::submit! {
     }
 }
 
-/// One row of fields per team. Field names carry the team id (`name_3`), which
-/// `resolve_base` leaves alone, so the id is parsed back out on commit.
-///
-/// `UpdateTeamCommand` deserializes a whole `Team` and none of its fields have
-/// defaults, so a partial payload is rejected. The loaded records are kept and
-/// the edited field patched into a clone.
-pub(crate) struct TeamsView {
-    fields: FieldSet,
-    teams: Vec<Team>,
-    clicks: Rc<RefCell<Vec<TeamClick>>>,
-}
-
 #[derive(Clone, Copy)]
 enum TeamClick {
     Add,
+    Edit(i32),
     Remove(i32),
+    Close,
 }
 
-/// `resolve_base` only strips colour sub-fields (`-r`/`-g`/`-b`/`-hex`), so a
-/// team field name survives it intact and can be split here.
-fn split_field(name: &str) -> Option<(&str, i32)> {
-    let (base, id) = name.rsplit_once('_')?;
-    Some((base, id.parse().ok()?))
+pub(crate) struct TeamsView {
+    fields: FieldSet,
+    teams: Vec<Team>,
+    editing: Option<i32>,
+    roster_changed: bool,
+    fields_ready: bool,
+    clicks: Rc<RefCell<Vec<TeamClick>>>,
 }
 
-fn team_field(base: &str, id: i32) -> String {
-    format!("{base}_{id}")
+fn extra_bool(team: &Team, name: &str) -> bool {
+    team.extra.get(name).and_then(serde_json::Value::as_bool).unwrap_or(false)
+}
+
+fn extra_number(team: &Team, object: &str, name: &str) -> f32 {
+    team.extra
+        .get(object)
+        .and_then(serde_json::Value::as_object)
+        .and_then(|value| value.get(name))
+        .and_then(serde_json::Value::as_f64)
+        .unwrap_or_default() as f32
+}
+
+fn prefix(team: &Team) -> &'static str {
+    if extra_bool(team, "gaia") {
+        "(Gaia)"
+    } else if extra_bool(team, "ai") {
+        "(AI)"
+    } else {
+        "(Player)"
+    }
 }
 
 impl TeamsView {
@@ -58,86 +69,154 @@ impl TeamsView {
         TeamsView {
             fields: FieldSet::new(Vec::new()),
             teams: Vec::new(),
+            editing: None,
+            roster_changed: false,
+            fields_ready: false,
             clicks: Rc::new(RefCell::new(Vec::new())),
         }
     }
 
-    /// Rebuild the field set from the model. Teams are added and removed, so
-    /// the fields cannot be fixed at construction like the Env views'.
-    fn rebuild_fields(&mut self) {
-        let mut fields: Vec<Box<dyn crate::sbc::panels::field::Field>> = Vec::new();
-        for team in &self.teams {
-            let id = team.id;
-            fields.push(Box::new(StringField::new(
-                &team_field("name", id),
-                "Name",
-                &team.name,
-            )));
-            fields.push(Box::new(ColorField::new(team_field("color", id), "Color")));
-            fields.push(Box::new(
-                NumericField::new(
-                    team_field("allyTeam", id),
-                    "Ally team",
-                    team.ally_team as f32,
-                )
-                .min(0.0),
-            ));
-            fields.push(Box::new(StringField::new(
-                &team_field("side", id),
-                "Side",
-                &team.side.0,
-            )));
-            for (base, title, value) in [
-                ("metal", "Metal", team.metal),
-                ("metalMax", "Metal max", team.metal_max),
-                ("energy", "Energy", team.energy),
-                ("energyMax", "Energy max", team.energy_max),
-            ] {
-                fields.push(Box::new(
-                    NumericField::new(team_field(base, id), title, value).min(0.0),
-                ));
+    fn build_fields(&mut self, interface: &NativeInterfaceRef) {
+        let count = interface.game().get_side_data_count().unwrap_or_default();
+        let mut sides = Vec::new();
+        for index in 0..count {
+            let Ok(side) = interface.game().get_side_data_by_index(index) else {
+                continue;
+            };
+            let name = unsafe {
+                side.sideName
+                    .as_ref()
+                    .map(|ptr| std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned())
+                    .unwrap_or_default()
+            };
+            if !name.is_empty() {
+                sides.push(name);
             }
         }
-        self.fields = FieldSet::new(fields);
+        // A project can carry a custom/legacy side even when the engine reports
+        // no sides. Keep the control usable in that case.
+        if sides.is_empty() {
+            sides.push(String::new());
+        }
+        self.fields = FieldSet::new(vec![
+            Box::new(StringField::new("teamName", "Name", "")),
+            Box::new(BooleanField::new("teamAi", "AI", false)),
+            Box::new(NumericField::new("teamMetal", "Metal", 0.0).min(0.0)),
+            Box::new(NumericField::new("teamMetalMax", "Storage", 0.0).min(0.0)),
+            Box::new(NumericField::new("teamEnergy", "Energy", 0.0).min(0.0)),
+            Box::new(NumericField::new("teamEnergyMax", "Storage", 0.0).min(0.0)),
+            Box::new(ColorField::new("teamColor", "Color")),
+            Box::new(NumericField::new("teamStartX", "Start X", 0.0)),
+            Box::new(NumericField::new("teamStartZ", "Start Z", 0.0)),
+            Box::new(ChoiceField::new("teamSide", "Side", sides)),
+        ]);
+        self.fields_ready = true;
     }
 
-    /// Patch the edited values into the loaded record and send it whole.
-    fn team_envelope(&self, id: i32, next: &mut u64) -> Vec<String> {
-        let Some(team) = self.teams.iter().find(|t| t.id == id) else {
-            return vec![];
-        };
-        let mut team = team.clone();
-        team.name = self.fields.text(&team_field("name", id));
-        if let FieldValue::Color(c) = self.fields.value(&team_field("color", id)) {
-            team.color = Color {
-                r: c[0],
-                g: c[1],
-                b: c[2],
-            };
-        }
-        if let FieldValue::Number(n) = self.fields.value(&team_field("allyTeam", id)) {
-            team.ally_team = n as i32;
-        }
-        team.side.0 = self.fields.text(&team_field("side", id));
-        team.metal = self.fields.number(&team_field("metal", id));
-        team.metal_max = self.fields.number(&team_field("metalMax", id));
-        team.energy = self.fields.number(&team_field("energy", id));
-        team.energy_max = self.fields.number(&team_field("energyMax", id));
-        let Ok(payload) = serde_json::to_value(&team) else {
-            return vec![];
-        };
-        vec![envelope_with("UpdateTeamCommand", next, "team", payload)]
+    fn dialog_rml(&self) -> String {
+        format!(
+            concat!(
+                r#"<div id="team-edit-dialog" class="picker-backdrop hidden">"#,
+                r#"<div class="picker-dialog team-dialog"><div class="dialog-header"><span class="dialog-title">Edit team</span></div>"#,
+                r#"<div class="dialog-content">{fields}</div>"#,
+                r#"<div class="dialog-footer"><button id="team-edit-close" class="dialog-button primary">Close</button></div>"#,
+                r#"</div></div>"#,
+            ),
+            fields = self.fields.generate_rml(&[
+                Layout::Field("teamName"),
+                Layout::Field("teamAi"),
+                Layout::Group(&["teamMetal", "teamMetalMax"]),
+                Layout::Section("Energy"),
+                Layout::Group(&["teamEnergy", "teamEnergyMax"]),
+                Layout::Field("teamColor"),
+                Layout::Group(&["teamStartX", "teamStartZ"]),
+                Layout::Field("teamSide"),
+            ]),
+        )
     }
 
-    fn add_team_envelope(&self, next: &mut u64) -> String {
-        let next_id = self.teams.iter().map(|t| t.id).max().unwrap_or(0) + 1;
-        let ally_team = self.teams.iter().map(|t| t.ally_team).max().unwrap_or(0) + 1;
-        envelope(
+    fn show_dialog(&self, interface: &NativeInterfaceRef, document: u64) {
+        if let Some(dialog) = element_by_id(interface, document, "team-edit-dialog") {
+            let _ = interface
+                .rml_ui()
+                .element_set_class(dialog, "hidden", self.editing.is_none());
+        }
+    }
+
+    fn begin_edit(&mut self, id: i32, interface: &NativeInterfaceRef, document: u64) {
+        let Some(team) = self.teams.iter().find(|team| team.id == id) else {
+            return;
+        };
+        self.fields.set("teamName", FieldValue::Text(team.name.clone()));
+        self.fields.set("teamAi", FieldValue::Bool(extra_bool(team, "ai")));
+        self.fields.set("teamMetal", FieldValue::Number(team.metal));
+        self.fields.set("teamMetalMax", FieldValue::Number(team.metal_max));
+        self.fields.set("teamEnergy", FieldValue::Number(team.energy));
+        self.fields.set("teamEnergyMax", FieldValue::Number(team.energy_max));
+        self.fields.set(
+            "teamColor",
+            FieldValue::Color([team.color.r, team.color.g, team.color.b, 1.0]),
+        );
+        self.fields.set(
+            "teamStartX",
+            FieldValue::Number(extra_number(team, "startPos", "x")),
+        );
+        self.fields.set(
+            "teamStartZ",
+            FieldValue::Number(extra_number(team, "startPos", "z")),
+        );
+        self.fields.set("teamSide", FieldValue::Text(team.side.0.clone()));
+        self.editing = Some(id);
+        let _ = self.fields.write_values(interface);
+        self.show_dialog(interface, document);
+    }
+
+    fn finish_edit(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        next: &mut u64,
+    ) -> Option<String> {
+        let id = self.editing.take()?;
+        for name in [
+            "teamName", "teamAi", "teamMetal", "teamMetalMax", "teamEnergy",
+            "teamEnergyMax", "teamStartX", "teamStartZ", "teamSide",
+        ] {
+            self.fields.read(name, interface);
+        }
+        self.show_dialog(interface, document);
+        let mut team = self.teams.iter().find(|team| team.id == id)?.clone();
+        team.name = self.fields.text("teamName");
+        team.metal = self.fields.number("teamMetal");
+        team.metal_max = self.fields.number("teamMetalMax");
+        team.energy = self.fields.number("teamEnergy");
+        team.energy_max = self.fields.number("teamEnergyMax");
+        team.side.0 = self.fields.text("teamSide");
+        if let FieldValue::Color(color) = self.fields.value("teamColor") {
+            team.color = Color { r: color[0], g: color[1], b: color[2] };
+        }
+        team.extra.insert("ai".into(), serde_json::json!(self.fields.boolean("teamAi")));
+        team.extra.insert(
+            "startPos".into(),
+            serde_json::json!({
+                "x": self.fields.number("teamStartX"),
+                "z": self.fields.number("teamStartZ"),
+            }),
+        );
+        let payload = serde_json::to_value(team).ok()?;
+        Some(envelope_with("UpdateTeamCommand", next, "team", payload))
+    }
+
+    fn add_team(&self, next: &mut u64) -> String {
+        let count = self.teams.iter().filter(|team| !extra_bool(team, "gaia")).count();
+        envelope_fields(
             "AddTeamCommand",
             next,
             serde_json::json!({
-                "name": format!("Team {next_id}"),
-                "allyTeam": ally_team,
+                "name": format!("New team: {count}"),
+                "color": { "r": 0.35, "g": 0.65, "b": 0.95 },
+                "allyTeam": 1,
+                "side": "",
             }),
         )
     }
@@ -145,25 +224,30 @@ impl TeamsView {
 
 impl Editor for TeamsView {
     fn generate_rml(&self) -> String {
-        let mut h = String::from(
-            r#"<div class="brush-actions"><button id="teams-add" class="brush-action"><span class="brush-action-label">Add Team</span></button></div>"#,
+        let mut html = String::from(
+            r#"<div class="brush-actions"><button id="teams-add" class="brush-action"><img class="brush-action-image" src="LuaUI/images/scenedit/team-add.png"/><span class="brush-action-label">Add</span></button></div><div class="team-list-header">Teams</div>"#,
         );
         for team in &self.teams {
-            let id = team.id;
-            h.push_str(&format!(
-                r#"<div class="brush-actions"><button id="teams-remove-{id}" class="brush-action"><span class="brush-action-label">Remove Team {id}</span></button></div>"#
+            let color = format!(
+                "#{:02X}{:02X}{:02X}",
+                (team.color.r.clamp(0.0, 1.0) * 255.0).round() as u8,
+                (team.color.g.clamp(0.0, 1.0) * 255.0).round() as u8,
+                (team.color.b.clamp(0.0, 1.0) * 255.0).round() as u8,
+            );
+            html.push_str(&format!(
+                r#"<div class="team-row"><div class="team-swatch" style="background-color: {color};"></div><span class="team-name">{prefix} Team: {name}</span>"#,
+                prefix = prefix(team),
+                name = escape_rml(&team.name),
             ));
-            h.push_str(&self.fields.generate_rml(&[
-                Layout::SectionOwned(format!("Team {id}")),
-                Layout::Field(&team_field("name", id)),
-                Layout::Field(&team_field("color", id)),
-                Layout::Field(&team_field("allyTeam", id)),
-                Layout::Field(&team_field("side", id)),
-                Layout::GroupOwned(vec![team_field("metal", id), team_field("metalMax", id)]),
-                Layout::GroupOwned(vec![team_field("energy", id), team_field("energyMax", id)]),
-            ]));
+            if !extra_bool(team, "gaia") {
+                html.push_str(&format!(
+                    r#"<button id="team-edit-{id}" class="team-edit">Edit</button><button id="team-remove-{id}" class="team-remove">x</button>"#,
+                    id = team.id,
+                ));
+            }
+            html.push_str("</div>");
         }
-        h
+        html
     }
 
     fn bind_fields(
@@ -173,31 +257,30 @@ impl Editor for TeamsView {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        self.fields
-            .bind(interface, document, changes, interactions)?;
-        if let Some(button) = element_by_id(interface, document, "teams-add") {
-            let clicks = self.clicks.clone();
+        if let Some(host) = element_by_id(interface, document, "team-edit-modal") {
             interface
                 .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    clicks.borrow_mut().push(TeamClick::Add);
-                })?;
+                .element_set_inner_rml(host, &self.dialog_rml())?;
         }
-        for team in &self.teams {
-            let id = team.id;
-            if let Some(button) = element_by_id(interface, document, &format!("teams-remove-{id}"))
-            {
+        self.fields.bind(interface, document, changes, interactions)?;
+        let bind = |id: &str, click: TeamClick| -> Result<(), Error> {
+            if let Some(button) = element_by_id(interface, document, id) {
                 let clicks = self.clicks.clone();
-                interface.rml_ui().element_add_event_listener(
-                    button,
-                    "click",
-                    false,
-                    move || {
-                        clicks.borrow_mut().push(TeamClick::Remove(id));
-                    },
-                )?;
+                interface.rml_ui().element_add_event_listener(button, "click", false, move || {
+                    clicks.borrow_mut().push(click);
+                })?;
+            }
+            Ok(())
+        };
+        bind("teams-add", TeamClick::Add)?;
+        bind("team-edit-close", TeamClick::Close)?;
+        for team in &self.teams {
+            if !extra_bool(team, "gaia") {
+                bind(&format!("team-edit-{}", team.id), TeamClick::Edit(team.id))?;
+                bind(&format!("team-remove-{}", team.id), TeamClick::Remove(team.id))?;
             }
         }
+        self.show_dialog(interface, document);
         Ok(())
     }
 
@@ -209,85 +292,63 @@ impl Editor for TeamsView {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
+        _next: &mut u64,
     ) -> Vec<String> {
-        let base = resolve_base(name);
-        self.fields.read(base, interface);
-        match split_field(base) {
-            Some((_, id)) => self.team_envelope(id, next),
-            None => vec![],
-        }
+        self.fields.read(name, interface);
+        vec![]
     }
 
-    fn process_drag_end(&mut self, name: &str, next: &mut u64) -> Vec<String> {
-        match split_field(resolve_base(name)) {
-            Some((_, id)) => self.team_envelope(id, next),
-            None => vec![],
-        }
+    fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
+        vec![]
     }
 
     fn tick(
         &mut self,
-        _interface: &NativeInterfaceRef,
-        _document: u64,
+        interface: &NativeInterfaceRef,
+        document: u64,
         next: &mut u64,
     ) -> Vec<String> {
         let clicks: Vec<_> = self.clicks.borrow_mut().drain(..).collect();
-        clicks
-            .into_iter()
-            .map(|click| match click {
-                TeamClick::Add => self.add_team_envelope(next),
-                TeamClick::Remove(id) => envelope(
+        let mut commands = Vec::new();
+        for click in clicks {
+            match click {
+                TeamClick::Add => commands.push(self.add_team(next)),
+                TeamClick::Edit(id) => self.begin_edit(id, interface, document),
+                TeamClick::Remove(id) => commands.push(envelope_fields(
                     "RemoveTeamCommand",
                     next,
                     serde_json::json!({ "teamID": id }),
-                ),
-            })
-            .collect()
+                )),
+                TeamClick::Close => {
+                    if let Some(command) = self.finish_edit(interface, document, next) {
+                        commands.push(command);
+                    }
+                }
+            }
+        }
+        commands
     }
 
-    fn refresh_from_engine(&mut self, _interface: &NativeInterfaceRef, models: &mut Models) {
+    fn has_open_modal(&self) -> bool {
+        self.editing.is_some()
+    }
+
+    fn wants_refresh(&mut self, models: &mut Models) -> bool {
         let teams = models.get::<TeamManager>().all_teams();
-        // Only rebuild the fields when the roster changed; otherwise the DOM is
-        // rewritten under the user's cursor on every refresh.
-        let roster_changed = teams
-            .iter()
-            .map(|t| t.id)
-            .ne(self.teams.iter().map(|t| t.id));
-        self.teams = teams;
-        if roster_changed {
-            self.rebuild_fields();
+        self.roster_changed = serde_json::to_value(&teams).ok() != serde_json::to_value(&self.teams).ok();
+        self.roster_changed
+    }
+
+    fn wants_rebuild(&self) -> bool {
+        self.roster_changed
+    }
+
+    fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, models: &mut Models) {
+        if !self.fields_ready {
+            self.build_fields(interface);
         }
-        let teams = self.teams.clone();
-        for team in &teams {
-            let id = team.id;
-            self.fields
-                .set(&team_field("name", id), FieldValue::Text(team.name.clone()));
-            self.fields.set(
-                &team_field("color", id),
-                FieldValue::Color([team.color.r, team.color.g, team.color.b, 1.0]),
-            );
-            self.fields.set(
-                &team_field("allyTeam", id),
-                FieldValue::Number(team.ally_team as f32),
-            );
-            self.fields.set(
-                &team_field("side", id),
-                FieldValue::Text(team.side.0.clone()),
-            );
-            self.fields
-                .set(&team_field("metal", id), FieldValue::Number(team.metal));
-            self.fields.set(
-                &team_field("metalMax", id),
-                FieldValue::Number(team.metal_max),
-            );
-            self.fields
-                .set(&team_field("energy", id), FieldValue::Number(team.energy));
-            self.fields.set(
-                &team_field("energyMax", id),
-                FieldValue::Number(team.energy_max),
-            );
-        }
+        self.teams = models.get::<TeamManager>().all_teams();
+        self.teams.sort_by_key(|team| team.id);
     }
 
     crate::sb_field_editor_methods!();

@@ -246,6 +246,14 @@ impl ObjectDefsView {
                 )?;
             }
         }
+
+        // Binding follows a rebuild, and a rebuild is a *new* grid container --
+        // empty until it is filled again. Switching Add/Brush regenerates the
+        // markup, so without this the definitions vanish the moment the mode
+        // changes, and nothing can be placed.
+        if self.loaded {
+            self.apply_filter(interface, document)?;
+        }
         Ok(())
     }
 
@@ -577,38 +585,40 @@ fn placement_fields(teams: Vec<String>) -> Vec<Box<dyn Field>> {
                 .max(100.0)
                 .decimals(0),
         ),
+        // Named as Lua names them ("Min rot x"), not pitch/yaw/roll: the two UIs
+        // are meant to read the same.
         Box::new(
-            NumericField::new("rotXMin", "Min pitch", 0.0)
+            NumericField::new("rotXMin", "Min rot x", 0.0)
                 .min(-360.0)
                 .max(360.0)
                 .decimals(0),
         ),
         Box::new(
-            NumericField::new("rotXMax", "Max pitch", 0.0)
+            NumericField::new("rotXMax", "Max rot x", 0.0)
                 .min(-360.0)
                 .max(360.0)
                 .decimals(0),
         ),
         Box::new(
-            NumericField::new("rotYMin", "Min yaw", -180.0)
+            NumericField::new("rotYMin", "Min rot y", -180.0)
                 .min(-360.0)
                 .max(360.0)
                 .decimals(0),
         ),
         Box::new(
-            NumericField::new("rotYMax", "Max yaw", 180.0)
+            NumericField::new("rotYMax", "Max rot y", 180.0)
                 .min(-360.0)
                 .max(360.0)
                 .decimals(0),
         ),
         Box::new(
-            NumericField::new("rotZMin", "Min roll", 0.0)
+            NumericField::new("rotZMin", "Min rot z", 0.0)
                 .min(-360.0)
                 .max(360.0)
                 .decimals(0),
         ),
         Box::new(
-            NumericField::new("rotZMax", "Max roll", 0.0)
+            NumericField::new("rotZMax", "Max rot z", 0.0)
                 .min(-360.0)
                 .max(360.0)
                 .decimals(0),

@@ -48,6 +48,12 @@ def units_panel(run_state: E2ERun) -> None:
     # engine's model shader.
     run_state.screenshot("features-open")
 
+    # Brush mode swaps the placement fields: Lua hides `amount` and shows size,
+    # spread, noise and the min/max rotation of all three axes.
+    run_state.click(left + 134, ACTION_Y, delay=0.6)
+    run_state.screenshot("features-brush-fields")
+    run_state.click(left + 54, ACTION_Y, delay=0.6)    # back to Add
+
     # Arm the first def and place it. The command must reach the bridge *and*
     # the feature must actually appear on the map -- so these two are captured
     # full-frame, where the map is visible.
@@ -111,6 +117,16 @@ def props_panel(run_state: E2ERun) -> None:
         value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1500) < 1.0,
     )
     run_state.assert_screenshot_pixels(before, after, min_changed=400)
+
+    # Dragging a numeric field changes it without ever entering text mode, and
+    # commits once on release.
+    run_state.drag(left + 58, 223, left + 178, 223, steps=8)
+    run_state.screenshot("props-pos-dragged")
+    run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key="pos",
+        value=lambda v: isinstance(v, dict) and v.get("x", 0) > 1500.5,
+    )
 
     # A sub-object: Blocking's booleans are one table, so toggling one must send
     # the table under `blocking`, not a bare boolean.

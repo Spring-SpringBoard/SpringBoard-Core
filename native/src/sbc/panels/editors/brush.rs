@@ -56,6 +56,7 @@ pub(crate) struct BrushActions {
     active: Option<usize>,
     /// Actions the current map cannot support; they render greyed and ignore clicks.
     disabled: Vec<usize>,
+    disabled_tooltips: Vec<Option<String>>,
     clicks: Rc<RefCell<Vec<usize>>>,
     request: Option<StateRequest>,
 }
@@ -66,6 +67,7 @@ impl BrushActions {
             actions,
             active: None,
             disabled: Vec::new(),
+            disabled_tooltips: vec![None; actions.len()],
             clicks: Rc::new(RefCell::new(Vec::new())),
             request: None,
         }
@@ -101,7 +103,10 @@ impl BrushActions {
             let Some(button) = element_by_id(interface, document, &id) else {
                 continue;
             };
-            bind_tooltip(interface, document, button, action.caption)?;
+            let tooltip = self.disabled_tooltips[index]
+                .as_deref()
+                .unwrap_or(action.caption);
+            bind_tooltip(interface, document, button, tooltip)?;
             let queue = self.clicks.clone();
             interface
                 .rml_ui()
@@ -155,6 +160,14 @@ impl BrushActions {
         self.request.take()
     }
 
+    /// Keep the visual toggle in sync when StateManager leaves the brush
+    /// without going through this action strip (for example, Escape).
+    pub(crate) fn clear(&mut self, interface: &NativeInterfaceRef, document: u64) {
+        self.active = None;
+        self.request = None;
+        self.render(interface, document);
+    }
+
     /// The active action's paint mode, or none when no brush is active.
     pub(crate) fn selected_paint_mode(&self) -> Option<&'static str> {
         self.active
@@ -172,6 +185,20 @@ impl BrushActions {
         caption: &str,
         enabled: bool,
     ) {
+        let reason = (!enabled && caption == "DNTS").then_some(
+            "DNTS unavailable: splat textures are not available on this map.",
+        );
+        self.set_enabled_with_reason(interface, document, caption, enabled, reason);
+    }
+
+    pub(crate) fn set_enabled_with_reason(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        caption: &str,
+        enabled: bool,
+        reason: Option<&str>,
+    ) {
         let Some(index) = self
             .actions
             .iter()
@@ -180,8 +207,10 @@ impl BrushActions {
             return;
         };
         self.disabled.retain(|i| *i != index);
+        self.disabled_tooltips[index] = None;
         if !enabled {
             self.disabled.push(index);
+            self.disabled_tooltips[index] = reason.map(str::to_string);
         }
         let id = format!("brush-action-{}", caption.to_lowercase().replace(' ', "-"));
         if let Some(button) = element_by_id(interface, document, &id) {
@@ -191,58 +220,3 @@ impl BrushActions {
         }
     }
 }
-
-/// The `Editor` methods every brush editor implements identically: fields are
-/// local state, so a change dispatches nothing.
-macro_rules! brush_editor_boilerplate {
-    () => {
-        fn bind_fields(
-            &mut self,
-            interface: &NativeInterfaceRef,
-            document: u64,
-            changes: &ChangeQueue,
-            interactions: &InteractionQueue,
-        ) -> Result<(), Error> {
-            self.actions.bind(interface, document)?;
-            self.fields.bind(interface, document, changes, interactions)
-        }
-
-        fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-            self.fields.write_values(interface)
-        }
-
-        /// Brush state: read the DOM so the field holds the new value, and emit
-        /// nothing. The brush reads it when it paints.
-        fn process_change(
-            &mut self,
-            name: &str,
-            interface: &NativeInterfaceRef,
-            _next: &mut u64,
-        ) -> Vec<String> {
-            self.fields.read(name, interface);
-            vec![]
-        }
-
-        fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
-            vec![]
-        }
-
-        fn tick(
-            &mut self,
-            interface: &NativeInterfaceRef,
-            document: u64,
-            _next: &mut u64,
-        ) -> Vec<String> {
-            self.actions.tick(interface, document);
-            vec![]
-        }
-
-        fn take_state_request(&mut self) -> Option<$crate::sbc::states::StateRequest> {
-            self.actions.take_request()
-        }
-
-        $crate::sb_field_editor_methods!();
-    };
-}
-
-pub(crate) use brush_editor_boilerplate;

@@ -351,6 +351,35 @@ impl PanelView {
             .unwrap_or(false)
     }
 
+    /// Modals live alongside `native-panel` so they can cover the map while a
+    /// picker is open. They still share this RmlUi context, so input must be
+    /// forwarded to the context when the pointer is over one of them.
+    pub(crate) fn contains_modal(&self, interface: &NativeInterfaceRef, x: i32, y: i32) -> bool {
+        let Some(document) = self.document else {
+            return false;
+        };
+        [
+            "color-picker",
+            "asset-picker",
+            "file-dialog",
+            "new-project",
+            "texture-material-dialog",
+            "shading-texture-dialog",
+            "team-edit-dialog",
+        ]
+        .iter()
+        .any(|id| {
+            crate::sbc::panels::field::element_by_id(interface, document, id)
+                .and_then(|element| {
+                    interface
+                        .rml_ui()
+                        .element_is_point_within_element(element, x as f32, y as f32)
+                        .ok()
+                })
+                .unwrap_or(false)
+        })
+    }
+
     pub(crate) fn context_handle(&self) -> Option<u64> {
         self.context
     }
