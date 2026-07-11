@@ -103,21 +103,14 @@ impl PanelInput {
         };
         let x = mouse.x;
 
-        // RmlUi only delivers `mouseup` to the element under the cursor, so a
-        // release that happens off the field never reaches its listener; end an
-        // active drag from the button state, which cannot be missed.
+        // A drag is *not* ended from `mouse.left`. The panel consumes the press,
+        // so the engine never registers the button as held and `left` reads
+        // false for the whole drag -- ending it here killed the drag on the tick
+        // it started, before it could move.
         //
-        // Only a live drag is ended this way. A `Pending` press is left alone:
-        // it is still waiting for its `mouseup` to become a click-to-edit, and
-        // tearing it down here would swallow the click.
-        if matches!(self.drag, DragState::Dragging { .. }) && !mouse.left {
-            if let DragState::Dragging { field } =
-                std::mem::replace(&mut self.drag, DragState::Idle)
-            {
-                return DragTick::Released(field);
-            }
-        }
-
+        // The release arrives either as RmlUi's `mouseup` on the field, or (when
+        // the cursor left the field) as the engine's mouse-release callback,
+        // which the manager turns into `force_drag_release`.
         if let DragState::Pending { field, start_x } = &self.drag {
             if (x - *start_x).abs() > DRAG_THRESHOLD {
                 let field = field.clone();
@@ -177,15 +170,22 @@ impl PanelInput {
                     self.last_mouse_x = self.cursor_x;
                 }
                 InteractionEvent::PointerUp { field } => {
-                    let was_dragging = matches!(self.drag, DragState::Dragging { .. });
-                    let field_matches = self.drag_field() == Some(&field);
-                    self.drag = DragState::Idle;
-                    if field_matches {
-                        actions.push(if was_dragging {
-                            PendingAction::DragEnd(field)
-                        } else {
-                            PendingAction::ClickEdit(field)
-                        });
+                    // A drag ends wherever the button comes up. The cursor has
+                    // usually left the field by then, so the `mouseup` RmlUi
+                    // delivers names a *different* element -- requiring it to
+                    // match the dragged field left the drag stuck, and never
+                    // committed.
+                    let dragged = match std::mem::replace(&mut self.drag, DragState::Idle) {
+                        DragState::Dragging { field } => Some(field),
+                        DragState::Pending { field: pending, .. } if pending == field => {
+                            // Never crossed the threshold: it was a click.
+                            actions.push(PendingAction::ClickEdit(pending));
+                            None
+                        }
+                        _ => None,
+                    };
+                    if let Some(dragged) = dragged {
+                        actions.push(PendingAction::DragEnd(dragged));
                     }
                 }
             }
