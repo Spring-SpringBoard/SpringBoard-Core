@@ -125,6 +125,19 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.click(left + 270, EDITOR_BUTTON_Y, delay=0.9)   # Collision
     run_state.screenshot("collision-open")
 
+    # The collision volume is its own sub-object: editing a scale axis must send
+    # the whole volume table, and the field must hold the new value after.
+    run_state.click(left + 60, 339, delay=0.4)                # Scale X
+    run_state.key("ctrl+a", delay=0.15)
+    run_state.type_text("45")
+    run_state.key("Return", delay=0.8)
+    run_state.screenshot("collision-scale-edited")
+    run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key="collision",
+        value=lambda v: isinstance(v, dict),
+    )
+
 
 def cursortip(run_state: E2ERun) -> None:
     """Place a feature, then hover it. The RmlUi cursor tooltip must appear next

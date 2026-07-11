@@ -49,20 +49,20 @@ Objects first (the user's priority), then Map, then Env, then Misc.
 
 | # | Tab → Editor | Source | Stage | Evidence |
 |---|---|---|---|---|
-| 1 | Objects → Units | `editors/objects_units.rs` (+ `object_defs.rs`) | TODO | Present: Add/Brush buttons, team, amount, size, spread, noise, min/max rot per axis, search, def grid with RTT thumbnails. **Missing: the Type and Terrain filters.** Blocked on unit-def bindings — see below. |
-| 2 | Objects → Features | `editors/objects_features.rs` (+ `object_defs.rs`) | TODO | Same body as Units. **Missing: the Type / Wreck / Terrain filters.** Lua decides "is a wreck" by stripping `_heap`/`_dead` from the feature name and looking up the unit def; the Wreck/Terrain filters then read *that unit def's* flags. Blocked on the same bindings. |
-| 3 | Objects → Properties | `editors/objects_properties.rs` | TODO | |
-| 4 | Objects → Collision | `editors/objects_collision.rs` | TODO | |
-| 5 | Map → Terrain | `editors/map_terrain.rs` | TODO | |
-| 6 | Map → Texture (Paint) | `editors/map_texture.rs` | TODO | |
-| 7 | Map → Metal | `editors/map_metal.rs` | TODO | |
-| 8 | Map → Grass | `editors/map_grass.rs` | TODO | |
-| 9 | Map → Settings | `editors/map_settings.rs` | TODO | |
-| 10 | Env → Lighting | `editors/env_lighting.rs` | TODO | |
-| 11 | Env → Sky | `editors/env_sky.rs` | TODO | |
-| 12 | Env → Water | `editors/env_water.rs` | TODO | |
-| 13 | Misc → Info | `editors/misc_info.rs` | TODO | |
-| 14 | Misc → Teams | `editors/misc_teams.rs` | TODO | Structurally wrong: Lua is a compact list (swatch + name + Edit + x) with Add in the action strip, and Edit opens a **dialog**. The port inlines every team's fields. Needs rewrite. |
+| 1 | Objects → Units | `editors/objects_units.rs` (+ `object_defs.rs`) | DONE | Add/Brush, team, amount, size, spread, noise, min/max rot per axis, search, def grid, **and the Type + Terrain filters** (no Wreck, as in Lua). Confirmed rendering in `units_panel` screen 01. **Not VERIFIED:** the engine's standalone boot ships *no unit defs*, so the grid is empty and placement/thumbnails cannot be exercised here. Needs a boot with a game's units. |
+| 2 | Objects → Features | `editors/objects_features.rs` (+ `object_defs.rs`) | VERIFIED | Type/Wreck/Terrain filters + search + def grid + placement. Thumbnails render the **real textured models** (were flat white silhouettes; the model shader was missing). Type=Wreckage empties the grid — correct, this map has no wrecks — which is the filter proving it filters. Placing emits `AddObjectCommand{objType:feature}` **and the tree appears on the map** (pixel-diff asserted). E2E `units_panel`, 5 screens, all inspected. |
+| 3 | Objects → Properties | `editors/objects_properties.rs` | VERIFIED | Follows the selection. Sections + fields for pos, rot, dir, vel, health, mass, blocking, radius/height, collision, team, resources — the sub-objects that used to be dropped entirely. Editing Pos X emits `SetObjectParamCommand{key:pos}` carrying the **whole vector**, the field reads 1500 afterwards, and **the object moves on the map** (pixel-diff asserted). Toggling a Blocking flag sends the **table** under `key:blocking`, and the change shows up in the Collision view. E2E `props_panel`, 6 screens, all inspected. |
+| 4 | Objects → Collision | `editors/objects_collision.rs` | VERIFIED | Complete against Lua's collision window: Show volume, Type, Axis, Scale/Offset/Center/Aim XYZ, Radius+Height, six blocking booleans — which reflect a change made in Properties. Editing Scale X emits `SetObjectParamCommand{key:collision}` carrying the **whole volume table**, and X **and Z** both read 45 after: the cylinder's linked axes, as in Lua's `sync_linked_scales`. E2E `props_panel`, 7 screens, all inspected. |
+| 5 | Map → Terrain | `editors/map_terrain.rs` | VERIFIED | Pattern, size/rotation/strength/height/direction, Add/Set/Smooth; final run screens 01–05. |
+| 6 | Map → Texture (Paint) | `editors/map_texture.rs` | VERIFIED | Saved-brush Add opens a material dialog, rich channel tooltips, Paint/Filter/DNTS/Void views; Splat is DNTS-only; final run screens 06–12. |
+| 7 | Map → Metal | `editors/map_metal.rs` | VERIFIED | Expanded inline pattern grid, size/rotation/amount, working Set paint; final run screens 13–14. |
+| 8 | Map → Grass | `editors/map_grass.rs` | VERIFIED | Expanded inline pattern grid, Detail/size/rotation, working Add paint; final run screens 15–16. |
+| 9 | Map → Settings | `editors/map_settings.rs` | VERIFIED | Flags, splat arrays, detail texture, and texture-map dialogs with New/Choose Existing; final run screens 17–20. |
+| 10 | Env → Lighting | `editors/env_lighting.rs` | VERIFIED | Shadow mode, XYZ direction, all six colors, and both densities; focused run screens 01–02. |
+| 11 | Env → Sky | `editors/env_sky.rs` | VERIFIED | All four atmosphere colors, both fog bounds, and Skybox picker/native binding; focused run screens 01–03. |
+| 12 | Env → Water | `editors/env_water.rs` | VERIFIED | Visible below-zero basin with water 4; every scalar, boolean, color, and all three textures; screens 01–03. |
+| 13 | Misc → Info | `editors/misc_info.rs` | VERIFIED | All four metadata fields commit the complete scenario record; final run screen 03. |
+| 14 | Misc → Teams | `editors/misc_teams.rs` | VERIFIED | Compact roster, Add/remove, modal fields, committed color, engine Side choice, complete update and row refresh; screens 02–09. |
 
 ## Editor behaviours
 
@@ -127,8 +127,27 @@ approximated.
 
 Filled in as each item reaches VERIFIED. Newest last.
 
-*(nothing verified yet — the entries below are the harness fixes that made
-verification possible, not feature verification)*
+### 2026-07-11 — Map editors 5–9
+
+- **5 — Map → Terrain: VERIFIED.** Confirmed the pattern grid, Size 140,
+  Rotation 15, Strength 8.5, Height 25, Direction Only Raise, and Add/Set/
+  Smooth command emission.
+- **6 — Map → Texture (Paint): VERIFIED.** Confirmed the Saved brushes `+`
+  flow opens a modal material chooser, creates/selects a saved brush, shows
+  rich Diffuse/Normal/Specular availability tooltips, emits the Paint command,
+  hides material controls outside Paint, and shows Splat controls only in DNTS.
+- **7 — Map → Metal: VERIFIED.** Confirmed the expanded inline pattern grid,
+  Size 180, Rotation 20, Amount 3.25, and `TerrainMetalCommand` emission.
+- **8 — Map → Grass: VERIFIED.** Confirmed the expanded inline pattern grid,
+  Detail 7, Size 160, Rotation 30, and `TerrainGrassCommand` emission.
+- **9 — Map → Settings: VERIFIED.** Confirmed all three flags, all four Splat
+  Scale and Mult fields, detail texture selection, and texture-map dialogs
+  that offer New texture and Choose existing; both paths emitted successfully.
+- E2E: `python3 tools/e2e/ui_driver.py map-editors --case rust --capture png`
+  completed successfully, including a successful VFS-backed shading import.
+  Artifact: `artifacts/ui-e2e/20260711-201750-map-editors-rust`.
+
+The entries below are the harness fixes that made verification possible:
 
 - The E2E harness now runs the native UI through the **same** scenarios as the
   Lua UIs (`--tag ui:rust`), on the premise that the port must behave
@@ -138,3 +157,30 @@ verification possible, not feature verification)*
 - The modal goldens compared full-frame, which included the dev console's boot
   log — and that log prints pointer addresses that change every run, so those
   goldens could never pass. They now crop to `no-console`.
+
+### 2026-07-12 — Env implementation and Misc verification
+
+- **10 — Env → Lighting: VERIFIED.** Confirmed shadow selection, all three sun
+  direction components, all ground/unit diffuse/ambient/specular colors, and
+  both shadow densities with committed commands. E2E: `lighting_panel`;
+  artifact `20260712-070415-lighting-panel-rust`.
+- **11 — Env → Sky: VERIFIED.** Confirmed all four atmosphere colors, Fog Start
+  and End, and the Skybox picker. Skybox selection uses the native
+  `set_sky_box_texture` binding; this test environment exposes no Skybox assets,
+  so the verified picker state is empty. E2E: `sky_panel`; artifact
+  `20260712-070435-sky-panel-rust`.
+- **12 — Env → Water: VERIFIED.** Restored Shore waves and corrected Normal
+  texture placement. The focused test first levels a size-3000 basin to -300
+  with strength 1000, enables `/water 4`, then verifies every scalar, boolean,
+  color, and Normal/Foam/base texture selection with the map visible. E2E:
+  `water_panel`; artifact `20260712-071944-water-panel-rust`.
+- **13 — Misc → Info: VERIFIED.** Name, Description, Version, and Author were
+  edited independently; the final complete `SetScenarioInfoCommand` matched.
+  E2E: `info_panel`; artifact `20260712-062711-info-panel-rust`.
+- **14 — Misc → Teams: VERIFIED.** Replaced inline per-team forms with Lua's
+  compact swatch/name/Edit/remove rows and Add action. Edit uses a modal with
+  name, AI, resources/storage, color, start position, and side; Close emitted a
+  complete update, including a committed picker color, and refreshed the row to
+  `(AI) Team: Blue Team`; Add/remove were asserted. Side is populated from
+  engine side data. E2E: `teams_panel`; artifact
+  `20260712-071925-teams-panel-rust`.
