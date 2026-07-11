@@ -142,6 +142,35 @@ fn team_color(interface: &NativeInterfaceRef, team_id: i32) -> [f32; 4] {
         .unwrap_or([1.0, 1.0, 1.0, 1.0])
 }
 
+/// Lua scales up by this in RmlUi mode, where the cell is bigger.
+const RMLUI_FIT: f32 = 1.5;
+
+/// The radius the model is framed against, as `ObjectDefsPanel:GetObjectDefRadius`
+/// computes it: a unit uses its model radius, a feature its model bounds. Never
+/// below 10, or a tiny model would be scaled up to fill the cell with noise.
+fn def_radius(interface: &NativeInterfaceRef, def_id: i32, kind: ThumbKind) -> f32 {
+    let dims = match kind {
+        ThumbKind::Unit => interface.utils().get_unit_def_dimensions(def_id).ok(),
+        ThumbKind::Feature => interface.utils().get_feature_def_dimensions(def_id).ok(),
+    };
+    let Some(dims) = dims else {
+        return MIN_RADIUS;
+    };
+    let radius = match kind {
+        ThumbKind::Unit => dims.radius,
+        // Lua's "magic": half the largest extent, on the diagonal, with a margin.
+        ThumbKind::Feature => {
+            let dx = dims.maxx - dims.minx;
+            let dy = dims.maxy - dims.miny;
+            let dz = dims.maxz - dims.minz;
+            dx.max(dy).max(dz) / 2.0 * std::f32::consts::SQRT_2 * 1.2
+        }
+    };
+    radius.max(MIN_RADIUS)
+}
+
+const MIN_RADIUS: f32 = 10.0;
+
 /// Draw one model into the bound FBO. Mirrors Lua's `PeriodicDraw`: a tinted
 /// background quad, then the model under a fixed tilt plus the running spin.
 fn draw_model(
@@ -162,12 +191,12 @@ fn draw_model(
     let _ = gfx.matrix_mode(GL_MODELVIEW);
     let _ = gfx.load_identity();
 
-    // Approximate fit: models run ~30-90 world units; 1/65 keeps most inside
-    // the [-1, 1] clip box with headroom for tall models. The negative sign
-    // flips the model upright in this bottom-origin projection, as Lua's
-    // -1/radius does. Per-def radius scaling would need a def-radius binding.
-    let scale = -0.0155;
-    let _ = gfx.translate(0.0, -0.15, 0.0);
+    // Lua's framing: the model is scaled to *its own* radius, so a tree and a
+    // tank both fill the cell. A single fixed scale draws every model at the
+    // same size, which overflows the big ones and loses the small ones. The
+    // negative sign flips the model upright in this bottom-origin projection.
+    let scale = -1.0 / def_radius(interface, def_id, kind) * RMLUI_FIT;
+    let _ = gfx.translate(0.0, 0.5, 0.0);
     let _ = gfx.rotate(60.0, -1.0, 1.0, -0.5);
     let _ = gfx.rotate(rotation, 0.0, 1.0, 0.0);
     let _ = gfx.scale(scale, scale, scale);
