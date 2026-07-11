@@ -131,6 +131,41 @@ fn an_unknown_unit_def_param_is_an_error(ctx: &mut TestCtx) -> Result<(), String
     Ok(())
 }
 
+/// A feature def's model bounds. The def thumbnails scale each model to its own
+/// radius, which is derived from these; if they come back zero every model is
+/// drawn at the floor radius and the big ones overflow their cell.
+fn feature_def_dimensions_are_real(ctx: &mut TestCtx) -> Result<(), String> {
+    let interface = ctx.sbc.interface();
+    let ids = interface
+        .feature_defs()
+        .get_feature_def_ids()
+        .map_err(|e| format!("get_feature_def_ids: {e:?}"))?;
+
+    // A def with a model must report a non-empty box. `geovent` has none, so the
+    // check is that *some* def does.
+    let mut sized = 0;
+    for id in ids {
+        let dims = interface
+            .utils()
+            .get_feature_def_dimensions(id)
+            .map_err(|e| format!("get_feature_def_dimensions({id}): {e:?}"))?;
+        let dx = dims.maxx - dims.minx;
+        let dy = dims.maxy - dims.miny;
+        if dx > 0.0 && dy > 0.0 && dims.radius > 0.0 {
+            sized += 1;
+        }
+    }
+    if sized == 0 {
+        return Err("no feature def reported model dimensions; they are all zero".to_string());
+    }
+    Ok(())
+}
+
+crate::integration_test!(
+    "feature_def_dimensions_are_real",
+    feature_def_dimensions_are_real
+);
+
 crate::integration_test!(
     "unit_def_params_expose_the_whole_table",
     unit_def_params_expose_the_whole_table

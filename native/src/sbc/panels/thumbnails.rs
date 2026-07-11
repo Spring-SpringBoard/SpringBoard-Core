@@ -24,6 +24,7 @@ const GL_RGBA8: u32 = 0x8058;
 const GL_LINEAR: u32 = 0x2601;
 const GL_CLAMP_TO_EDGE: u32 = 0x812F;
 const GL_MODELVIEW: u32 = 0x1700;
+const GL_PROJECTION: u32 = 0x1701;
 const GL_LEQUAL: u32 = 0x0203;
 const GL_COLOR_BUFFER_BIT: u32 = 0x0000_4000;
 const GL_DEPTH_BUFFER_BIT: u32 = 0x0000_0100;
@@ -142,20 +143,29 @@ fn team_color(interface: &NativeInterfaceRef, team_id: i32) -> [f32; 4] {
         .unwrap_or([1.0, 1.0, 1.0, 1.0])
 }
 
-/// Lua scales up by this in RmlUi mode, where the cell is bigger.
-const RMLUI_FIT: f32 = 1.5;
+/// How much of the cell the model fills. The model is centred on its own
+/// midpoint, so its half-extent maps to this: at 1.0 it would touch the edges,
+/// so leave a margin. (Lua's 1.5 works only because it does not centre -- the
+/// model hangs off its origin and half of it lands outside the cell, which is
+/// exactly the clipping this was showing.)
+const RMLUI_FIT: f32 = 0.75;
+
+fn def_dimensions(
+    interface: &NativeInterfaceRef,
+    def_id: i32,
+    kind: ThumbKind,
+) -> sys::UnitDefDimensions {
+    let dims = match kind {
+        ThumbKind::Unit => interface.utils().get_unit_def_dimensions(def_id),
+        ThumbKind::Feature => interface.utils().get_feature_def_dimensions(def_id),
+    };
+    dims.unwrap_or_default()
+}
 
 /// The radius the model is framed against, as `ObjectDefsPanel:GetObjectDefRadius`
 /// computes it: a unit uses its model radius, a feature its model bounds. Never
 /// below 10, or a tiny model would be scaled up to fill the cell with noise.
-fn def_radius(interface: &NativeInterfaceRef, def_id: i32, kind: ThumbKind) -> f32 {
-    let dims = match kind {
-        ThumbKind::Unit => interface.utils().get_unit_def_dimensions(def_id).ok(),
-        ThumbKind::Feature => interface.utils().get_feature_def_dimensions(def_id).ok(),
-    };
-    let Some(dims) = dims else {
-        return MIN_RADIUS;
-    };
+fn def_radius(dims: &sys::UnitDefDimensions, kind: ThumbKind) -> f32 {
     let radius = match kind {
         ThumbKind::Unit => dims.radius,
         // Lua's "magic": half the largest extent, on the diagonal, with a margin.
@@ -188,22 +198,34 @@ fn draw_model(
     let _ = gfx.clear(GL_DEPTH_BUFFER_BIT, [1.0, 0.0, 0.0, 0.0], 1);
     let _ = gfx.depth_test(true, true, GL_LEQUAL);
     let _ = gfx.depth_mask(true);
+    // The projection is whatever the UI pass left bound -- an ortho over the
+    // whole window, which is not square. Drawing the model through it skews it
+    // off to one side of the cell. The identity projection is the [-1,1] cube
+    // the scale below is expressed in.
+    let _ = gfx.matrix_mode(GL_PROJECTION);
+    let _ = gfx.push_matrix();
+    let _ = gfx.load_identity();
     let _ = gfx.matrix_mode(GL_MODELVIEW);
+    let _ = gfx.push_matrix();
     let _ = gfx.load_identity();
 
-    // Lua's framing: the model is scaled to *its own* radius, so a tree and a
-    // tank both fill the cell. A single fixed scale draws every model at the
-    // same size, which overflows the big ones and loses the small ones. The
-    // negative sign flips the model upright in this bottom-origin projection.
-    let scale = -1.0 / def_radius(interface, def_id, kind) * RMLUI_FIT;
-    let _ = gfx.translate(0.0, 0.5, 0.0);
+    // The model is scaled to *its own* radius, so a tree and a tank both fill
+    // the cell; one fixed scale draws every model the same size, which overflows
+    // the big ones. The negative sign flips it upright in this bottom-origin
+    // projection.
+    let dims = def_dimensions(interface, def_id, kind);
+    let scale = -1.0 / def_radius(&dims, kind) * RMLUI_FIT;
     let _ = gfx.rotate(60.0, -1.0, 1.0, -0.5);
     let _ = gfx.rotate(rotation, 0.0, 1.0, 0.0);
     let _ = gfx.scale(scale, scale, scale);
+    // A model's origin is not its centre -- for a tree it is the foot of the
+    // trunk -- so drawing it at the origin puts it off to one side of the cell.
+    // Centre it on its own midpoint.
+    let _ = gfx.translate(-dims.midx, -dims.midy, -dims.midz);
 
-    // rawState = true: the engine binds no shader, so the model draws through
-    // the fixed-function matrices we set here (as Lua's raw path does), rather
-    // than the in-world unit shader tied to the game camera.
+    // rawState = true: the model draws through the fixed-function matrices set
+    // here (as Lua's raw path does) rather than the in-world unit shader tied to
+    // the game camera. What textures it is the model shader the caller bound.
     match kind {
         ThumbKind::Unit => {
             let _ = gfx.unit_shape_textures(def_id, true);
@@ -216,6 +238,12 @@ fn draw_model(
             let _ = gfx.feature_shape_textures(def_id, false);
         }
     }
+
+    // Hand the UI back the matrices it was drawing with.
+    let _ = gfx.pop_matrix();
+    let _ = gfx.matrix_mode(GL_PROJECTION);
+    let _ = gfx.pop_matrix();
+    let _ = gfx.matrix_mode(GL_MODELVIEW);
 }
 
 /// A 128x128 RGBA FBO texture with a depth buffer, like Lua's `gl.CreateTexture`
