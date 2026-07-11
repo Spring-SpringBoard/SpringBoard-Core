@@ -18,6 +18,7 @@ TARGETS = (
     "dialogs",
     "all-editors",
     "heightmap",
+    "map-editors",
     "native-panel",
     "native-dev-console",
 )
@@ -268,6 +269,15 @@ def target_cases(target: str, case: str) -> list[Case]:
                 name="native-panel-rust",
                 flags={"chonsole": "rust", "ui": "rust"},
                 scenario="native_panel",
+                crop="right-panel",
+            ),
+        ]
+    if target == "map-editors":
+        return [
+            Case(
+                name="map-editors-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="map_editors",
                 crop="right-panel",
             ),
         ]

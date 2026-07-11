@@ -428,6 +428,33 @@ class E2ERun:
         self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
 
+    def assert_any_command(self, class_name: str, **expected: object) -> dict:
+        """Assert at least one committed command matched `expected`.
+
+        Brush scenarios often exercise several modes of the same command class;
+        this keeps the assertion about the specific mode/property rather than
+        requiring the scenario to isolate every click in a fresh process.
+        """
+        for entry in self.commands():
+            data = entry.get("data", {})
+            if data.get("__preview") or data.get("className") != class_name:
+                continue
+            opts = data.get("opts", data)
+            if all(key in opts for key in expected) and all(
+                want(opts.get(key)) if callable(want) else opts.get(key) == want
+                for key, want in expected.items()
+            ):
+                self.event("assert_any_command", className=class_name, keys=sorted(expected))
+                return data
+        sent = [
+            (e["data"].get("className"), e["data"].get("opts", {}))
+            for e in self.commands()
+            if e.get("data", {}).get("className") == class_name
+        ]
+        raise AssertionError(
+            f"expected at least one {class_name} matching {expected}, got {sent}"
+        )
+
     def assert_previews(self, class_name: str, **expected: object) -> int:
         """Assert at least one *preview* of `class_name` matched `expected`.
 
