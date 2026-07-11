@@ -28,6 +28,13 @@ def convert_screenshot_file(shot: Screenshot) -> tuple[Screenshot, int]:
         width, height = identify_size(shot.raw_path)
         crop_width = max(1, width - 500)
         cmd += ["-crop", f"{crop_width}x300+0+{height - 380}", "+repage"]
+    elif shot.crop == "no-console":
+        # Everything above the console. A modal has to be captured full-width,
+        # but the console below it prints the engine's boot log -- which carries
+        # pointer addresses that differ every run, so including it makes any
+        # golden flaky. Drop the bottom 380dp the console occupies.
+        width, height = identify_size(shot.raw_path)
+        cmd += ["-crop", f"{width}x{max(1, height - 380)}+0+0", "+repage"]
     cmd.append(str(shot.png_path))
     result = run(*cmd, check=False)
     if result.returncode != 0:

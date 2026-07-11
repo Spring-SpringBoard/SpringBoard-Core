@@ -161,16 +161,18 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.assert_command("SetSunLightingCommand", groundShadowDensity=0.25)
     run_state.golden("lighting-density-committed")
 
-    # Clicking a colour field opens the picker modal, not an inline editor.
-    # The modal sits clear of the panel, so its captures are full-frame.
+    # Clicking a colour field opens the picker modal, not an inline editor. The
+    # modal sits clear of the panel, so its captures span the frame -- but not
+    # the console strip, whose boot log prints pointer addresses that change
+    # every run.
     run_state.click(panel_left + 90, 331, delay=0.6)
-    run_state.golden("picker-open", crop=None)
+    run_state.golden("picker-open", crop="no-console")
 
     # Drag to the top-right of the saturation/value square: full saturation,
     # full value, so the colour becomes the pure hue under the cursor.
     sv_left, sv_top = dialog_left + 10, 252
     run_state.drag(sv_left + 10, sv_top + 170, sv_left + 175, sv_top + 5, steps=6)
-    run_state.golden("picker-dragged", crop=None)
+    run_state.golden("picker-dragged", crop="no-console")
 
     # Dragging previews live: the engine has already taken the colour before OK
     # is pressed. Previews never reach the undo history.
@@ -209,17 +211,17 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.click(panel_left + 110, 88, delay=0.7)   # Sky
     run_state.golden("sky-open")
     run_state.click(panel_left + 64, 280, delay=0.8)   # Skybox field
-    run_state.golden("asset-picker-open", crop=None)
+    run_state.golden("asset-picker-open", crop="no-console")
     run_state.click(dialog_left + 430, 603, delay=0.6)  # Cancel
 
     # Env -> Water: the normal-texture field browses bitmaps/ and picking a file
     # must emit SetWaterParamsCommand carrying its VFS path.
     run_state.click(panel_left + 182, 88, delay=0.7)   # Water
     run_state.click(panel_left + 87, 873, delay=0.8)   # Normal texture
-    run_state.golden("asset-picker-bitmaps", crop=None)
+    run_state.golden("asset-picker-bitmaps", crop="no-console")
 
     run_state.click(dialog_left + 50, 335, delay=0.5)   # first file cell
-    run_state.golden("asset-picker-selected", crop=None)
+    run_state.golden("asset-picker-selected", crop="no-console")
     run_state.click(dialog_left + 343, 603, delay=0.8)  # OK
 
     def is_bitmap(path: object) -> bool:

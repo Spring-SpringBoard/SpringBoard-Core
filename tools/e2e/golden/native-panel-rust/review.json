@@ -1,92 +1,92 @@
 {
   "asset-picked": {
-    "notes": "OK closes the picker and the Normal texture button reads 'armsilo1.bmp'. Foam texture and Texture still read '(none)'. One SetWaterParamsCommand carried normalTexture='bitmaps/armsilo1.bmp'.",
+    "notes": "Picked asset lands back in the field.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:25"
+    "updated": "2026-07-11T15:33:13"
   },
   "asset-picker-bitmaps": {
-    "notes": "Water's Normal texture browses bitmaps/ with real thumbnails, sorted, scrollbar present.",
+    "notes": "Asset picker navigates into a folder.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:59:36"
+    "updated": "2026-07-11T15:33:10"
   },
   "asset-picker-open": {
-    "notes": "Sky's Skybox field opens the asset picker, also centred left of the panel now.",
+    "notes": "Asset picker modal opens.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:59:36"
+    "updated": "2026-07-11T15:33:07"
   },
   "asset-picker-selected": {
-    "notes": "armsilo1.bmp is highlighted as the selection; directories would navigate instead.",
+    "notes": "An asset cell shows as selected.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:59:36"
+    "updated": "2026-07-11T15:33:12"
   },
   "info-name-typed": {
-    "notes": "Name reads 'Ported' after ctrl+a and typing; the field keeps focus (blue border). Exactly one SetScenarioInfoCommand was emitted, carrying all four fields with name='Ported'.",
+    "notes": "Typing in the name field commits.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:13"
+    "updated": "2026-07-11T15:33:03"
   },
   "info-open": {
-    "notes": "Misc -> Info renders four text fields. Version pre-filled with '1' straight from ScenarioInfoManager, proving the panel can now read project models, not just engine state.",
+    "notes": "Misc -> Info editor renders.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:11"
+    "updated": "2026-07-11T15:33:01"
   },
   "lighting-density-committed": {
-    "notes": "Ground shadow density now reads 0.25, the input is gone and the button is back. Unit shadow density untouched at 0.80. Matches the asserted single SetSunLightingCommand{groundShadowDensity:0.25}.",
+    "notes": "Typed 0.25 + Return commits: field reads 0.25 and SetSunLightingCommand{groundShadowDensity:0.25} reached the command bridge (asserted).",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:02"
+    "updated": "2026-07-11T15:32:52"
   },
   "lighting-density-editing": {
-    "notes": "Ground 'Shadow density' swapped its composite button for the text input, focused (blue border), pre-filled 0.80. Every other row unchanged; unit shadow density still shows its button. Confirms edit mode targets exactly one field.",
+    "notes": "Click on Shadow density enters inline edit: field becomes a focused text input showing 0.80. Proves click-to-edit works (it had regressed).",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:00"
+    "updated": "2026-07-11T15:32:51"
   },
   "lighting-open": {
-    "notes": "Lighting pressed (green border + green caption). Sections Shadows / Sun ground color / Sun unit color with label+line. Dir X/Y/Z grouped on one row; Diffuse+Ambient paired. Values read live from the engine: dir 0.00/0.45/0.89, shadow density 0.80, shadowMode 'Terrain'. Deviation from Lua: the select is narrower and sits higher; the toolbar action bar is not ported, so content starts ~30px higher.",
+    "notes": "Lighting editor renders; toolbar icon centring is the only diff.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:56:59"
+    "updated": "2026-07-11T15:32:50"
   },
   "picker-accepted": {
-    "notes": "Picker closed; Diffuse committed red; Shadow density still 0.25 from the earlier edit. Exactly one non-preview SetSunLightingCommand carried the red colour, so undo has a single entry.",
+    "notes": "OK applies the colour and closes the modal.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:59:36"
+    "updated": "2026-07-11T15:32:57"
   },
   "picker-dragged": {
-    "notes": "Dragging to the top-right of the SV square turns the preview red AND the panel's Diffuse swatch is already red -- the live preview has reached the engine before OK was pressed. 5 __preview SetSunLightingCommands were emitted during the drag.",
+    "notes": "Dragging the SV square previews live; SetSunLightingCommand preview carries a red groundDiffuseColor (asserted).",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:59:36"
+    "updated": "2026-07-11T15:32:56"
   },
   "picker-open": {
-    "notes": "Colour picker now opens centred in the area LEFT of the panel (left:50%, margin-left:-490dp), so it no longer covers the swatch being edited. Preview square shows the original grey. The engine's own console overlay is gone (we now send 'console 0' correctly), which is what made this frame reproducible.",
+    "notes": "Colour picker modal opens from the Diffuse swatch.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:59:36"
+    "updated": "2026-07-11T15:32:54"
   },
   "shell-env-tab": {
-    "notes": "Active tab moved to Env. Strip shows the two registered Env views in registry order: Lighting (order 0), Sky (order 1), each with icon + caption. Content host cleared, as when Chili switches tabs.",
+    "notes": "Env tab strip unchanged; toolbar icon centring is the only diff.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:56:58"
+    "updated": "2026-07-11T15:32:49"
   },
   "shell-misc-tab": {
     "notes": "Misc tab active; strip shows the one registered Misc view (Info). Content cleared on tab switch.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:10"
+    "updated": "2026-07-11T15:33:00"
   },
   "shell-objects-tab": {
-    "notes": "Tab bar renders 4 tabs, Objects active (dark, blue border). Editor strip empty: no Objects views registered yet. Panel is right-aligned, 500dp, translucent over the map.",
+    "notes": "Objects tab now registers 4 editors (Units/Features/Properties/Collision) where the golden had none. Toolbar icons are centred in their buttons: .action-button is now a flex box, and .editor-button-panel no longer overlaps the toolbar's top 5dp (it was swallowing clicks there).",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:56:57"
+    "updated": "2026-07-11T15:32:48"
   },
   "sky-open": {
     "notes": "Env -> Sky renders Sun/Sky/Cloud swatches with live atmosphere colours (sun white, sky blue), the new Skybox asset button reading '(none)', and Fog colour/start/end (0.10/1.00).",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:15"
+    "updated": "2026-07-11T15:33:05"
   },
   "water-checkbox": {
     "notes": "'Forced rendering' is checked (blue fill) after one click, and stays checked -- the engine value is read back from the result's boolValue. Exactly one SetWaterParamsCommand{forceRendering:true} was emitted.",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:09"
+    "updated": "2026-07-11T15:32:59"
   },
   "water-open": {
     "notes": "Env -> Water renders all sections (perlin, diffuse, specular, fresnel, blur, plane, texture) with live engine values matching the Lua panel: NumTiles 4, start freq 8, lacunarity 3, amplitude 0.90, specular power 20, fresnel 0.20/0.80/4.00, blur 2.00/1.50, plane colour green. Two checkboxes render unchecked. Texture asset fields are absent (not ported).",
     "status": "ai-reviewed",
-    "updated": "2026-07-10T21:57:08"
+    "updated": "2026-07-11T15:32:58"
   }
 }
