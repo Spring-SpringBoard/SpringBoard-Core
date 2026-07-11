@@ -179,8 +179,50 @@ def cursortip(run_state: E2ERun) -> None:
     run_state.screenshot("hover-tooltip")
 
 
+def selection(run_state: E2ERun) -> None:
+    """Rectangle select: drag a box on empty ground over a placed feature.
+
+    The box must appear while dragging, and the feature must end up selected --
+    which is proved by editing it in Properties afterwards.
+    """
+    run_state.focus()
+    left = _open(run_state, 110)                      # Features
+    run_state.click(left + 55, GRID_Y, delay=0.5)     # arm the first def
+
+    width, height = window_size(run_state)
+    spot_x, spot_y = width // 3, height // 2
+    run_state.wheel(spot_x, spot_y, clicks=8, up=True)
+    run_state.click(spot_x, spot_y, delay=0.8)        # place it
+    run_state.key("Escape", delay=0.4)                # leave placement mode
+
+    # Drag a box on empty ground, from up-left of the feature to down-right of
+    # it. Captured mid-drag: the selection rectangle has to be visible.
+    run_state.press(spot_x - 220, spot_y - 200)
+    run_state.move(spot_x + 120, spot_y + 60, delay=0.3)
+    run_state.move(spot_x + 200, spot_y + 160, delay=0.4)
+    run_state.screenshot_root("box-dragging")
+    run_state.release(spot_x + 200, spot_y + 160)
+    run_state.move(spot_x + 400, spot_y + 300, delay=0.5)
+    run_state.screenshot_root("box-selected")
+
+    # Properties edits the *selected* object. If the box selected nothing, there
+    # is nothing to edit and no command is emitted.
+    run_state.click(left + 197, EDITOR_BUTTON_Y, delay=0.9)
+    run_state.screenshot("props-after-box-select")
+    run_state.click(left + 58, 223, delay=0.4)        # Pos X
+    run_state.key("ctrl+a", delay=0.15)
+    run_state.type_text("1800")
+    run_state.key("Return", delay=0.8)
+    run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key="pos",
+        value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1800) < 1.0,
+    )
+
+
 SCENARIOS = {
     "units_panel": units_panel,
     "props_panel": props_panel,
+    "selection": selection,
     "cursortip": cursortip,
 }

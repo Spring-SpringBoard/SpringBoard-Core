@@ -317,6 +317,23 @@ class E2ERun:
         run("xdotool", "mouseup", str(button))
         time.sleep(0.12)
 
+    def press(self, x: int, y: int, button: int = 1, delay: float = 0.15) -> None:
+        """Hold the button down. Pair with `move` + `release` when the scenario
+        has to capture something that only exists *during* the drag, like the
+        selection rectangle."""
+        self.require_window()
+        self.event("press", x=x, y=y, button=button)
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        run("xdotool", "mousedown", str(button))
+        time.sleep(delay)
+
+    def release(self, x: int, y: int, button: int = 1, delay: float = 0.3) -> None:
+        self.require_window()
+        self.event("release", x=x, y=y, button=button)
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        run("xdotool", "mouseup", str(button))
+        time.sleep(delay)
+
     def drag(
         self,
         x1: int,

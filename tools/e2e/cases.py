@@ -6,6 +6,8 @@ TARGETS = (
     "chonsole",
     "main-panel",
     "lighting-panel",
+    "sky-panel",
+    "water-panel",
     "units-panel",
     "texture-panel",
     "dev-console",
@@ -13,6 +15,7 @@ TARGETS = (
     "info-panel",
     "settings-panel",
     "props-panel",
+    "selection",
     "cursortip",
     "notifications",
     "dialogs",
@@ -130,6 +133,16 @@ def target_cases(target: str, case: str) -> list[Case]:
         if case == "rust":
             return cases[1:2]
         return cases
+    if target in ("sky-panel", "water-panel"):
+        scenario = target.replace("-", "_")
+        return [
+            Case(
+                name=f"{target}-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario=scenario,
+                crop=None if target == "water-panel" else "right-panel",
+            )
+        ]
     if target == "units-panel":
         cases = [
             Case(
@@ -198,6 +211,14 @@ def target_cases(target: str, case: str) -> list[Case]:
             ),
         ]
         return cases
+    if target == "selection":
+        return [
+            Case(
+                name="selection-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="selection",
+            ),
+        ]
     if target == "props-panel":
         return [
             Case(

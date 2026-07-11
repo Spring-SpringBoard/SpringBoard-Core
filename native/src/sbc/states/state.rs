@@ -285,11 +285,15 @@ impl EditorState for DefaultState {
         let trace = trace_object(ctx.interface, x as f32, y as f32);
         let Some((kind, model_id, hit)) = Self::resolve_hit(ctx, trace) else {
             // A press on empty ground arms a box-select: a drag from here selects
-            // what it covers, a release without a drag clears the selection. The
-            // engine keeps the camera in the meantime.
+            // what it covers, a release without a drag clears the selection.
+            //
+            // This must claim the press. The engine only delivers `mouse_move`
+            // to whoever took the press, and `mouse_move` is what starts the
+            // box-select -- refusing it here handed the drag to the camera and
+            // the box never appeared.
             self.empty_press = Some((x, y));
             self.empty_start = trace_ground(ctx.interface, x as f32, y as f32).map(|h| (h.x, h.z));
-            return false;
+            return true;
         };
 
         // Remember the object-to-cursor offset so a drag keeps the grab point.
