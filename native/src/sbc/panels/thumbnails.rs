@@ -13,6 +13,8 @@ use std::collections::HashMap;
 
 use spring_native::prelude::{sys, NativeInterfaceRef};
 
+use crate::sbc::panels::model_shader::ModelShader;
+
 /// Matches the Lua icon size.
 const SIZE: i32 = 128;
 
@@ -46,6 +48,8 @@ pub(crate) struct ThumbnailRenderer {
     rotation: f32,
     /// A texture was created since the grid last read the names.
     names_dirty: bool,
+    /// What actually textures the models.
+    shader: ModelShader,
 }
 
 impl Default for ThumbnailRenderer {
@@ -55,6 +59,7 @@ impl Default for ThumbnailRenderer {
             team_id: 0,
             rotation: 0.0,
             names_dirty: false,
+            shader: ModelShader::default(),
         }
     }
 }
@@ -108,6 +113,10 @@ impl ThumbnailRenderer {
 
         let team_id = self.team_id;
         let rotation = self.rotation;
+        // S3O models are textured by the engine's model shader; without it they
+        // draw as flat white silhouettes.
+        let team_color = team_color(interface, team_id);
+        let shaded = self.shader.bind(interface, team_color);
         for thumb in self.thumbs.values() {
             let Some(texture) = thumb.texture.as_deref() else {
                 continue;
@@ -118,7 +127,19 @@ impl ThumbnailRenderer {
                 draw_model(interface, def_id, kind, team_id, rotation);
             });
         }
+        if shaded {
+            self.shader.unbind(interface);
+        }
     }
+}
+
+/// The team's colour, which the model shader tints the team-coloured texels with.
+fn team_color(interface: &NativeInterfaceRef, team_id: i32) -> [f32; 4] {
+    interface
+        .display()
+        .get_team_color(team_id)
+        .map(|c| [c.r, c.g, c.b, c.a])
+        .unwrap_or([1.0, 1.0, 1.0, 1.0])
 }
 
 /// Draw one model into the bound FBO. Mirrors Lua's `PeriodicDraw`: a tinted

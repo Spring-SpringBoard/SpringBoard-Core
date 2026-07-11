@@ -43,15 +43,12 @@ enum PlaceMode {
     Brush,
 }
 
-/// Set-mode fields, then brush-mode fields; the ones for the inactive mode are
-/// hidden, as Lua does with `SetInvisibleFields`.
 /// The grid filters. Changing one re-filters rather than re-arming placement.
 const FILTER_FIELDS: &[&str] = &["typeFilter", "wreckFilter", "terrainFilter"];
 
+/// Set-mode fields. The brush-mode ones are listed in `mode_fields`; the
+/// inactive mode's are hidden, as Lua does with `SetInvisibleFields`.
 const SET_FIELDS: &[&str] = &["amount"];
-const BRUSH_FIELDS: &[&str] = &[
-    "size", "spread", "noise", "rotXMin", "rotXMax", "rotYMin", "rotYMax", "rotZMin", "rotZMax",
-];
 
 pub(crate) struct ObjectDefsView {
     kind: DefKind,
@@ -202,9 +199,10 @@ impl ObjectDefsView {
         }
     }
 
-    pub(crate) fn is_placement_field(&self, name: &str) -> bool {
-        let base = resolve_base(name);
-        base == "team" || SET_FIELDS.contains(&base) || BRUSH_FIELDS.contains(&base)
+    /// Whether the name belongs to one of this view's fields. The search box is
+    /// raw markup rather than a field, so it is the one thing that is not.
+    pub(crate) fn is_field(&self, name: &str) -> bool {
+        self.fields.get(resolve_base(name)).is_some()
     }
 
     pub(crate) fn bind(
@@ -668,14 +666,16 @@ macro_rules! object_defs_editor {
             ) {
                 self.defs.refresh_teams(models);
             }
-            /// A search commit re-filters; a placement field commit re-arms.
+            /// A field commit re-filters (a filter) or re-arms placement (a
+            /// setting); either way its new value has to be read out of the DOM
+            /// first. Only the search box is not a field.
             fn process_change(
                 &mut self,
                 name: &str,
                 interface: &NativeInterfaceRef,
                 _next: &mut u64,
             ) -> Vec<String> {
-                if self.defs.is_placement_field(name) {
+                if self.defs.is_field(name) {
                     self.defs.note_field_change(name, interface);
                 } else {
                     self.defs.mark_search_dirty();
@@ -716,6 +716,7 @@ fn unit_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
                 image: None,
                 is_directory: false,
                 tooltip: None,
+                tooltip_markup: None,
             },
             id,
         ));
@@ -753,6 +754,7 @@ fn feature_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
                 image: None,
                 is_directory: false,
                 tooltip: None,
+                tooltip_markup: None,
             },
             id,
         ));

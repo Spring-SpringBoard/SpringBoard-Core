@@ -141,10 +141,10 @@ impl PropertiesView {
                     let Some(entries) = value.as_object() else {
                         continue;
                     };
-                    if entries.is_empty() {
-                        continue;
-                    }
-                    layout.push(PropertyLayout::Section(title(name)));
+                    // Build the rows first: a sub-object whose keys are all of a
+                    // shape we cannot edit (a nested table) contributes nothing,
+                    // and must not leave a bare section heading behind.
+                    let mut rows: Vec<PropertyLayout> = Vec::new();
                     let mut row: Vec<String> = Vec::new();
                     for (key, value) in entries {
                         let field_name = sub_name(name, key);
@@ -155,12 +155,17 @@ impl PropertiesView {
                         row.push(field_name);
                         // Lua lays a table's keys out three to a row.
                         if row.len() == 3 {
-                            layout.push(PropertyLayout::Group(std::mem::take(&mut row)));
+                            rows.push(PropertyLayout::Group(std::mem::take(&mut row)));
                         }
                     }
                     if !row.is_empty() {
-                        layout.push(PropertyLayout::Group(row));
+                        rows.push(PropertyLayout::Group(row));
                     }
+                    if rows.is_empty() {
+                        continue;
+                    }
+                    layout.push(PropertyLayout::Section(title(name)));
+                    layout.extend(rows);
                 }
                 // A unit's command queue is not editable as a field.
                 FieldValueType::CommandList => {}

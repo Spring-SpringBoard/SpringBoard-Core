@@ -8,6 +8,7 @@
 use std::time::Instant;
 
 use crate::sbc::objects::{ObjectKind, ObjectManager};
+use crate::sbc::panels::ModelShader;
 use crate::sbc::states::state::{cursor, EditorState, GroundHit, StateContext, Transition};
 
 const LEFT: i32 = 1;
@@ -69,6 +70,8 @@ pub(crate) struct AddObjectState {
     last_apply: Option<Instant>,
     /// A tiny PRNG for scatter; deterministic per state, seeded from the clock.
     rng: u64,
+    /// Textures the placement ghost; without it the model is a white silhouette.
+    shader: ModelShader,
 }
 
 impl AddObjectState {
@@ -88,6 +91,7 @@ impl AddObjectState {
             erasing: false,
             last_apply: None,
             rng: 0x2545_F491_4F6C_DD1D,
+            shader: ModelShader::default(),
         }
     }
 
@@ -365,6 +369,7 @@ impl EditorState for AddObjectState {
         if self.def_id > 0 {
             crate::sbc::states::highlight::draw_object_ghost(
                 interface,
+                &mut self.shader,
                 self.kind,
                 self.def_id,
                 self.config.team,

@@ -9,9 +9,11 @@ mod file_dialog;
 mod grid;
 mod input;
 mod manager;
+mod model_shader;
 mod new_project_dialog;
 mod registry;
 mod thumbnails;
 mod view;
 
 pub(crate) use manager::PanelManager;
+pub(crate) use model_shader::ModelShader;

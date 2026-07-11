@@ -9,6 +9,7 @@
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::objects::ObjectKind;
+use crate::sbc::panels::ModelShader;
 
 const GL_LINE_LOOP: u32 = 0x0002;
 const GL_LINES: u32 = 0x0001;
@@ -196,10 +197,12 @@ pub(crate) fn draw_cursor_ring(
 }
 
 /// Draw the model currently armed for placement. Mirrors Lua's `DrawObject`:
-/// push a world transform, tint, and render the def shape through the engine's
-/// raw fixed-function path.
+/// push a world transform, tint, and render the def shape under the model
+/// shader -- which is what textures it. Without the shader an S3O model draws as
+/// a flat white silhouette.
 pub(crate) fn draw_object_ghost(
     interface: &NativeInterfaceRef,
+    shader: &mut ModelShader,
     kind: ObjectKind,
     def_id: i32,
     team_id: i32,
@@ -216,7 +219,11 @@ pub(crate) fn draw_object_ghost(
     let _ = gfx.push_matrix();
     let _ = gfx.translate(x, y, z);
     let _ = gfx.rotate(yaw.to_degrees(), 0.0, 1.0, 0.0);
-    let _ = gfx.color(0.4, 1.0, 0.4, 0.8);
+
+    // Lua's ghost tint: the model shows through, greened and translucent.
+    let tint = [0.4, 1.0, 0.4, 0.8];
+    let shaded = shader.bind(interface, tint);
+    let _ = gfx.color(tint[0], tint[1], tint[2], tint[3]);
 
     match kind {
         ObjectKind::Unit => {
@@ -232,6 +239,9 @@ pub(crate) fn draw_object_ghost(
         ObjectKind::Area => {}
     }
 
+    if shaded {
+        shader.unbind(interface);
+    }
     let _ = gfx.pop_matrix();
     reset(interface);
 }

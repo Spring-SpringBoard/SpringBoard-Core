@@ -24,6 +24,22 @@ from run_sbc import prepare  # noqa: E402
 # Distinguishes "no crop override" from an explicit `crop=None` (full frame).
 _CASE_CROP = "<case>"
 
+# Envelope bookkeeping, not command fields.
+_ENVELOPE_KEYS = frozenset({"className", "__cmd_id", "__preview"})
+
+
+def command_fields(data: dict) -> dict:
+    """A command's fields, whichever envelope shape it used.
+
+    There are two, and they are not interchangeable: `envelope()` nests the
+    fields under `opts`, while `envelope_fields()` puts them flat on the command
+    (SetObjectParamCommand, AddObjectCommand). Reading only `opts` makes a
+    flat command look like it carries nothing at all.
+    """
+    if isinstance(data.get("opts"), dict):
+        return data["opts"]
+    return {key: value for key, value in data.items() if key not in _ENVELOPE_KEYS}
+
 MODIFIERS = (
     "Control_L",
     "Control_R",
@@ -226,7 +242,16 @@ class E2ERun:
     def type_text(self, text: str, delay_ms: int = 10) -> None:
         self.require_window()
         self.event("type", text=text)
-        run("xdotool", "type", "--window", self.window, "--delay", str(delay_ms), text)
+        run(
+            "xdotool",
+            "type",
+            "--window",
+            self.window,
+            "--delay",
+            str(delay_ms),
+            "--",
+            text,
+        )
         time.sleep(0.06)
 
     def click(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
@@ -248,6 +273,20 @@ class E2ERun:
         self.require_window()
         self.event("move", x=x, y=y)
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        time.sleep(delay)
+
+    def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
+        """Scroll the wheel over a point. Over the map this zooms the camera,
+        which is the only way to get close enough to *see* what a scenario placed
+        -- the default camera is so far out that a feature is a few pixels.
+        """
+        self.require_window()
+        self.event("wheel", x=x, y=y, clicks=clicks, up=up)
+        button = "4" if up else "5"
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        for _ in range(clicks):
+            run("xdotool", "click", "--window", self.window, button)
+            time.sleep(0.05)
         time.sleep(delay)
 
     def click_root(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
@@ -333,6 +372,57 @@ class E2ERun:
         )
         return png_path
 
+    def assert_screenshot_pixels(
+        self,
+        before: Path,
+        after: Path,
+        *,
+        min_changed: int = 0,
+        max_changed: int | None = None,
+    ) -> int:
+        """Assert an exact changed-pixel range between two captured frames.
+
+        Compare the immediate XWD captures so this works with both deferred
+        `raw` conversion and immediate `png` capture modes.
+        """
+        by_png = {shot.png_path: shot.raw_path for shot in self.screenshots}
+        try:
+            before_raw = by_png[before]
+            after_raw = by_png[after]
+        except KeyError as exc:
+            raise AssertionError(f"unknown screenshot {exc.args[0]}") from exc
+
+        result = subprocess.run(
+            ["compare", "-metric", "AE", str(before_raw), str(after_raw), "null:"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode not in (0, 1):
+            raise AssertionError(f"ImageMagick compare failed: {result.stderr.strip()}")
+        try:
+            changed = int(float(result.stderr.strip()))
+        except ValueError as exc:
+            raise AssertionError(f"invalid compare metric: {result.stderr!r}") from exc
+
+        if changed < min_changed or (max_changed is not None and changed > max_changed):
+            expected = f">= {min_changed}"
+            if max_changed is not None:
+                expected += f" and <= {max_changed}"
+            raise AssertionError(
+                f"expected changed pixels {expected}, got {changed}: "
+                f"{before.name} -> {after.name}"
+            )
+        self.event(
+            "assert_screenshot_pixels",
+            before=before.name,
+            after=after.name,
+            changed=changed,
+            min=min_changed,
+            max=max_changed,
+        )
+        return changed
+
     # ── Golden images ──────────────────────────────────────────────
 
     def park_cursor(self) -> None:
@@ -403,7 +493,7 @@ class E2ERun:
             data
             for data in committed
             if data.get("className") == class_name
-            and all(key in data.get("opts", {}) for key in expected)
+            and all(key in command_fields(data) for key in expected)
         ] or [
             data
             for data in committed
@@ -411,7 +501,7 @@ class E2ERun:
         ]
         if len(matches) != 1:
             sent = [
-                (e["data"].get("className"), sorted(e["data"].get("opts", {})))
+                (e["data"].get("className"), sorted(command_fields(e["data"])))
                 for e in self.commands()
             ]
             raise AssertionError(
@@ -419,7 +509,7 @@ class E2ERun:
                 f"got {len(matches)}. Sent: {sent}"
             )
         data = matches[0]
-        opts = data.get("opts", data)
+        opts = command_fields(data)
         for key, want in expected.items():
             got = opts.get(key)
             ok = want(got) if callable(want) else got == want
@@ -439,7 +529,7 @@ class E2ERun:
             data = entry.get("data", {})
             if data.get("__preview") or data.get("className") != class_name:
                 continue
-            opts = data.get("opts", data)
+            opts = command_fields(data)
             if all(key in opts for key in expected) and all(
                 want(opts.get(key)) if callable(want) else opts.get(key) == want
                 for key, want in expected.items()
@@ -447,7 +537,7 @@ class E2ERun:
                 self.event("assert_any_command", className=class_name, keys=sorted(expected))
                 return data
         sent = [
-            (e["data"].get("className"), e["data"].get("opts", {}))
+            (e["data"].get("className"), sorted(command_fields(e["data"])))
             for e in self.commands()
             if e.get("data", {}).get("className") == class_name
         ]
