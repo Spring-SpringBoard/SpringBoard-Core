@@ -77,33 +77,68 @@ body {
 	color: #f2686c;
 }
 
+.log-line.selected {
+	background-color: #335f78;
+	color: #ffffff;
+}
+
 .toolbar {
 	display: flex;
 	flex-direction: row;
-	flex-wrap: wrap;
-	gap: 4dp;
-	padding: 6dp 8dp;
+	gap: 5dp;
+	padding: 7dp 8dp;
 	border-top-width: 1dp;
 	border-top-color: #000000;
 }
 
+/* `flex: 1` is what makes the buttons share the toolbar's width evenly, as the
+   Lua console's do; without it they shrink to their text and read as cramped. */
 .toolbar button {
-	padding: 4dp 8dp;
-	font-size: 12dp;
+	flex: 1;
+	min-height: 30dp;
+	padding: 6dp 12dp;
+	text-align: center;
+	letter-spacing: 0.05em;
+	font-size: 13dp;
 	color: #c8d0e0;
-	background-color: #2a2f36;
+	background-color: #1c1d20;
 	border-width: 1dp;
-	border-color: #454b54;
-	border-radius: 3dp;
+	border-color: #2a2b2e;
+	border-radius: 2dp;
 }
 
 .toolbar button:hover {
-	background-color: #3a4049;
+	background-color: #2a2b2e;
+	color: #d4d8df;
+}
+
+.toolbar button.toggle {
+	padding-left: 16dp;
+	background-color: #212528;
+	color: #cfd4db;
+	border-left-width: 6dp;
+	border-left-color: #2e2f32;
+	border-radius: 5dp;
+	font-weight: bold;
+}
+
+.toolbar button.toggle:hover {
+	background-color: #2a2e32;
+	color: #e1e5eb;
+	border-left-color: #4a4d52;
 }
 
 .toolbar button.pressed {
-	background-color: #5fc878;
-	color: #10140f;
+	background-color: #18241b;
+	color: #79e68c;
+	border-left-width: 6dp;
+	border-left-color: #397848;
+}
+
+.toolbar button.toggle.pressed:hover {
+	background-color: #1f3425;
+	color: #9efca6;
+	border-left-color: #5fc878;
 }
 
 scrollbarvertical {

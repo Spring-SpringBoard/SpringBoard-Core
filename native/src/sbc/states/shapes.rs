@@ -58,14 +58,14 @@ pub(crate) fn load_shape(interface: &NativeInterfaceRef, path: &str) -> Option<S
 /// The `greyscale` payload of `SetHeightmapBrushCommand`, which takes it at the
 /// top level of the envelope rather than under `opts`.
 ///
-/// `res` is a sparse map keyed by index, which is how the Lua command shaped it;
-/// zeroes are dropped, since a brush pattern is mostly transparent.
+/// `res` is a map keyed by index. It must cover every texel: the command rebuilds
+/// a dense array from it and rejects a map whose keys have holes, so a
+/// transparent texel has to be sent as a zero rather than left out.
 pub(crate) fn upload_payload(name: &str, shape: &Shape) -> serde_json::Value {
     let res: serde_json::Map<String, serde_json::Value> = shape
         .res
         .iter()
         .enumerate()
-        .filter(|(_, value)| **value > 0.0)
         .map(|(index, value)| (index.to_string(), serde_json::Value::from(*value)))
         .collect();
     serde_json::json!({
@@ -80,15 +80,18 @@ pub(crate) fn upload_payload(name: &str, shape: &Shape) -> serde_json::Value {
 mod tests {
     use super::*;
 
+    /// The command rebuilds a dense array and rejects keys with holes, so a
+    /// transparent texel has to be sent rather than dropped.
     #[test]
-    fn upload_drops_transparent_texels_and_keeps_the_rest() {
+    fn upload_sends_every_texel_including_the_transparent_ones() {
         let shape = Shape {
             size: 2,
             res: vec![0.0, 0.5, 0.0, 1.0],
         };
         let payload = upload_payload("brush", &shape);
-        let res = &payload["res"];
-        assert!(res.get("0").is_none(), "a zero texel is not uploaded");
+        let res = payload["res"].as_object().unwrap();
+        assert_eq!(res.len(), 4, "every texel is uploaded");
+        assert_eq!(res["0"], 0.0);
         assert_eq!(res["1"], 0.5);
         assert_eq!(res["3"], 1.0);
         assert_eq!(payload["sizeX"], 2);

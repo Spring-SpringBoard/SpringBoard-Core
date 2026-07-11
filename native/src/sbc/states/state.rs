@@ -34,6 +34,11 @@ pub(crate) enum Transition {
         diff_z: f32,
     },
     Rotate,
+    /// Start a box-select from a ground corner the drag began on.
+    RectangleSelect {
+        start_x: f32,
+        start_z: f32,
+    },
 }
 
 impl<'a> StateContext<'a> {
@@ -132,36 +137,36 @@ pub(crate) enum Trace {
     Feature { spring_id: i32, hit: GroundHit },
 }
 
-/// Trace the cursor against units, features and the ground.
-fn trace(interface: &NativeInterfaceRef, x: f32, y: f32) -> Trace {
-    let Ok((hit_type, hit_id, coords)) = interface
-        .camera()
-        .trace_screen_ray(x, y, false, false, false, true, 0.0)
-    else {
-        return Trace::Sky;
-    };
-    let hit = GroundHit {
-        x: coords.x,
-        y: coords.y,
-        z: coords.z,
-    };
-    match hit_type {
-        HIT_UNIT => Trace::Unit {
-            spring_id: hit_id,
-            hit,
-        },
-        HIT_FEATURE => Trace::Feature {
-            spring_id: hit_id,
-            hit,
-        },
-        HIT_GROUND => Trace::Ground(hit),
-        _ => Trace::Sky,
-    }
-}
-
 /// The full trace, for selecting whatever is under the cursor.
 pub(crate) fn trace_object(interface: &NativeInterfaceRef, x: f32, y: f32) -> Trace {
     trace(interface, x, y)
+}
+
+/// The polled cursor, in the space the traces below expect.
+///
+/// `get_mouse_state` measures y from the *top* of the window, while the engine's
+/// mouse callbacks -- and `trace_screen_ray` -- measure it from the bottom. A
+/// press therefore traces correctly straight from its callback, but anything
+/// that polls the cursor instead (a held brush, a preview under the cursor) must
+/// flip y first, or it traces to the mirrored point.
+pub(crate) fn cursor(interface: &NativeInterfaceRef) -> Option<Cursor> {
+    let mouse = interface.input().get_mouse_state().ok()?;
+    let height = interface.display().get_view_geometry().ok()?.viewSizeY as f32;
+    Some(Cursor {
+        x: mouse.x,
+        y: height - 1.0 - mouse.y,
+        left: mouse.left,
+        right: mouse.right,
+    })
+}
+
+/// The cursor position, ready to trace with.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Cursor {
+    pub x: f32,
+    pub y: f32,
+    pub left: bool,
+    pub right: bool,
 }
 
 /// Trace the cursor onto the ground. `None` when it points at the sky.
@@ -208,6 +213,11 @@ pub(crate) trait EditorState {
 
     /// Called every tick, so a held button keeps painting.
     fn update(&mut self, ctx: &mut StateContext) {}
+
+    /// Draw a world-space cursor overlay (a placement ghost, a brush outline).
+    /// Runs in the engine's `draw_world`, where only immediate-mode primitives
+    /// render — not the engine model drawer.
+    fn draw_world(&mut self, interface: &NativeInterfaceRef) {}
 }
 
 /// The state the editor sits in when nothing else is active: click to select,
@@ -222,6 +232,11 @@ pub(crate) struct DefaultState {
     /// Whether the pressed object was already selected: only then does a move
     /// drag it, matching Lua.
     was_selected: bool,
+    /// A press that landed on empty ground: its screen point and the ground
+    /// corner under it. A drag from here box-selects; a release without a drag
+    /// clears the selection.
+    empty_press: Option<(i32, i32)>,
+    empty_start: Option<(f32, f32)>,
 }
 
 #[derive(Clone, Copy)]
@@ -261,18 +276,19 @@ impl EditorState for DefaultState {
         use crate::sbc::objects::{ObjectManager, SelectionManager};
         self.clicked = None;
         self.was_selected = false;
+        self.empty_press = None;
+        self.empty_start = None;
         if button != 1 {
             return false;
         }
 
         let trace = trace_object(ctx.interface, x as f32, y as f32);
         let Some((kind, model_id, hit)) = Self::resolve_hit(ctx, trace) else {
-            // A press on empty ground clears the selection, leaving the camera
-            // to the engine. (Rectangle select is a separate, unported state.)
-            let sel = ctx.models.get::<SelectionManager>();
-            if sel.count() > 0 {
-                sel.clear();
-            }
+            // A press on empty ground arms a box-select: a drag from here selects
+            // what it covers, a release without a drag clears the selection. The
+            // engine keeps the camera in the meantime.
+            self.empty_press = Some((x, y));
+            self.empty_start = trace_ground(ctx.interface, x as f32, y as f32).map(|h| (h.x, h.z));
             return false;
         };
 
@@ -298,8 +314,18 @@ impl EditorState for DefaultState {
         true
     }
 
-    /// Moving the mouse with an already-selected object held begins a drag.
-    fn mouse_move(&mut self, ctx: &mut StateContext, _x: i32, _y: i32, _button: i32) -> bool {
+    /// Moving the mouse with an already-selected object held begins a drag; from
+    /// an empty-ground press, a move past a small threshold begins a box-select.
+    fn mouse_move(&mut self, ctx: &mut StateContext, x: i32, y: i32, _button: i32) -> bool {
+        if let (Some((sx, sy)), Some((start_x, start_z))) = (self.empty_press, self.empty_start) {
+            const DRAG_THRESHOLD: i32 = 4;
+            if (x - sx).abs() > DRAG_THRESHOLD || (y - sy).abs() > DRAG_THRESHOLD {
+                self.empty_press = None;
+                ctx.request(Transition::RectangleSelect { start_x, start_z });
+                return true;
+            }
+            return false;
+        }
         let Some(clicked) = self.clicked else {
             return false;
         };
@@ -317,6 +343,15 @@ impl EditorState for DefaultState {
 
     fn mouse_release(&mut self, ctx: &mut StateContext, _x: i32, _y: i32, _button: i32) -> bool {
         use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager};
+        // An empty-ground press that never became a drag clears the selection.
+        if self.empty_press.take().is_some() {
+            self.empty_start = None;
+            let sel = ctx.models.get::<SelectionManager>();
+            if sel.count() > 0 {
+                sel.clear();
+            }
+            return false;
+        }
         let Some(clicked) = self.clicked.take() else {
             return false;
         };
@@ -347,9 +382,18 @@ impl EditorState for DefaultState {
         false
     }
 
-    /// R begins a rotate on the current selection, matching Lua.
+    /// R begins a rotate on the current selection and Escape drops it, matching Lua.
     fn key_press(&mut self, ctx: &mut StateContext, key_code: i32) -> bool {
         use crate::sbc::objects::SelectionManager;
+        if crate::sbc::keys::is_key(ctx.interface, key_code, "esc") {
+            let sel = ctx.models.get::<SelectionManager>();
+            if sel.count() == 0 {
+                return false;
+            }
+            sel.clear();
+            let _ = ctx.interface.selection().select_unit_array(&[], false);
+            return true;
+        }
         if !crate::sbc::keys::is_key(ctx.interface, key_code, "r") {
             return false;
         }
@@ -370,5 +414,32 @@ pub(crate) fn mod_state(interface: &NativeInterfaceRef) -> ModState {
     let bits = interface.input().get_mod_key_state().unwrap_or(0);
     ModState {
         shift: bits & (1 << 0) != 0,
+    }
+}
+
+/// Trace the cursor against units, features and the ground.
+fn trace(interface: &NativeInterfaceRef, x: f32, y: f32) -> Trace {
+    let Ok((hit_type, hit_id, coords)) = interface
+        .camera()
+        .trace_screen_ray(x, y, false, false, false, true, 0.0)
+    else {
+        return Trace::Sky;
+    };
+    let hit = GroundHit {
+        x: coords.x,
+        y: coords.y,
+        z: coords.z,
+    };
+    match hit_type {
+        HIT_UNIT => Trace::Unit {
+            spring_id: hit_id,
+            hit,
+        },
+        HIT_FEATURE => Trace::Feature {
+            spring_id: hit_id,
+            hit,
+        },
+        HIT_GROUND => Trace::Ground(hit),
+        _ => Trace::Sky,
     }
 }

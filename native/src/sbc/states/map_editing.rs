@@ -7,9 +7,12 @@
 use std::collections::HashSet;
 use std::time::Instant;
 
+use spring_native::prelude::NativeInterfaceRef;
+
 use crate::sbc::states::brush_settings::BrushSettings;
+use crate::sbc::states::highlight::BrushPreview;
 use crate::sbc::states::shapes::{load_shape, upload_payload};
-use crate::sbc::states::state::{trace_ground, EditorState, StateContext};
+use crate::sbc::states::state::{cursor, trace_ground, EditorState, StateContext};
 
 const LEFT: i32 = 1;
 const RIGHT: i32 = 3;
@@ -59,6 +62,7 @@ pub(crate) struct MapEditingState {
     last: Option<(f32, f32)>,
     last_apply: Option<Instant>,
     initial_delay_left: f32,
+    preview: BrushPreview,
 }
 
 impl MapEditingState {
@@ -71,6 +75,7 @@ impl MapEditingState {
             last: None,
             last_apply: None,
             initial_delay_left: kind.initial_delay(),
+            preview: BrushPreview::new(),
         }
     }
 
@@ -195,24 +200,42 @@ impl MapEditingState {
                 "amount": if button == RIGHT { 0.0 } else { 1.0 },
             }),
             // The texture brush takes the *corner*, not the centre, and its
-            // rotations are radians. `brushTexture` is a material: a map of
-            // channel -> texture. Without a material model only the diffuse
-            // channel is painted.
+            // rotations are radians. `brushTexture` is a material map of
+            // channel -> texture.
             BrushKind::Texture => {
-                let Some(texture) = self.brush.brush_texture.clone() else {
+                if self.brush.texture_paint_mode == "paint" && self.brush.brush_textures.is_empty()
+                {
                     return;
-                };
+                }
+                let enabled = &self.brush.texture_enabled;
+                let action = if button == RIGHT { -1.0 } else { 1.0 };
                 serde_json::json!({
                     "x": x - size / 2.0,
                     "z": z - size / 2.0,
                     "size": size,
-                    "paintMode": "paint",
+                    "paintMode": self.brush.texture_paint_mode,
                     "patternTexture": pattern,
                     "patternRotation": rotation.to_radians(),
-                    "brushTexture": { "diffuse": texture },
+                    "brushTexture": self.brush.brush_textures,
+                    "diffuseEnabled": enabled.get("diffuse").copied().unwrap_or(false),
+                    "specularEnabled": enabled.get("specular").copied().unwrap_or(false),
+                    "emissionEnabled": enabled.get("emission").copied().unwrap_or(false),
+                    "reflEnabled": enabled.get("refl").copied().unwrap_or(false),
                     "mode": self.brush.mode,
+                    "kernelMode": self.brush.kernel_mode,
                     "texScale": self.brush.tex_scale,
+                    // The command takes the material's own rotation in radians.
+                    "rotation": self.brush.tex_rotation.to_radians(),
+                    "texOffsetX": self.brush.tex_offset_x,
+                    "texOffsetY": self.brush.tex_offset_y,
+                    "diffuseColor": self.brush.diffuse_color,
+                    "falloffFactor": self.brush.falloff_factor,
+                    "featureFactor": self.brush.feature_factor,
                     "strength": self.brush.strength,
+                    "value": self.brush.value,
+                    "voidFactor": self.brush.void_factor * action,
+                    "colorIndex": (self.brush.color_index as f32 * action) as i32,
+                    "exclusive": if self.brush.exclusive { 1 } else { 0 },
                 })
             }
         };
@@ -296,7 +319,7 @@ impl EditorState for MapEditingState {
         if !self.painting {
             return;
         }
-        let Ok(mouse) = ctx.interface.input().get_mouse_state() else {
+        let Some(mouse) = cursor(ctx.interface) else {
             return;
         };
         let button = if mouse.left {
@@ -313,5 +336,38 @@ impl EditorState for MapEditingState {
         };
         self.last = Some((hit.x, hit.z));
         self.apply(ctx, hit.x, hit.z, button);
+    }
+
+    /// Show the brush's actual alpha footprint on the ground under the cursor.
+    fn draw_world(&mut self, interface: &NativeInterfaceRef) {
+        let Some(mouse) = cursor(interface) else {
+            return;
+        };
+        let Some(hit) = trace_ground(interface, mouse.x, mouse.y) else {
+            return;
+        };
+        let size = self.brush.size;
+        // A pattern that has no texture (or a shader that would not compile)
+        // still needs some cursor, so fall back to the plain ring.
+        if let Some(pattern) = self.brush.pattern_texture.clone() {
+            if self.preview.draw(
+                interface,
+                &pattern,
+                hit.x,
+                hit.z,
+                size,
+                self.brush.rotation,
+            ) {
+                return;
+            }
+        }
+        crate::sbc::states::highlight::draw_cursor_ring(
+            interface,
+            hit.x,
+            hit.z,
+            size * 0.5,
+            None,
+            (0.9, 0.9, 0.3, 0.8),
+        );
     }
 }

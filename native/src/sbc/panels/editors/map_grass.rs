@@ -2,7 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::FieldSet;
+use crate::sbc::panels::editor_base::{FieldSet, Layout};
 use crate::sbc::panels::editors::brush::{non_empty, pattern_field, BrushAction, BrushActions};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::NumericField;
@@ -24,7 +24,9 @@ inventory::submit! {
 
 const ACTIONS: &[BrushAction] = &[BrushAction {
     caption: "Add",
+    image: "LuaUI/images/scenedit/grass-add.png",
     kind: BrushKind::Grass,
+    paint_mode: "",
 }];
 
 /// The grass brush. `grassDetail` is an engine config value rather than brush
@@ -71,9 +73,12 @@ impl GrassEditor {
 impl Editor for GrassEditor {
     fn generate_rml(&self) -> String {
         let mut h = self.actions.generate_rml();
-        for name in ["patternTexture", "grassDetail", "size", "rotation"] {
-            h.push_str(&self.fields.rml(name));
-        }
+        h.push_str(&self.fields.generate_rml(&[
+            Layout::Field("patternTexture"),
+            Layout::Field("grassDetail"),
+            Layout::Field("size"),
+            Layout::Field("rotation"),
+        ]));
         h
     }
 

@@ -146,6 +146,58 @@ pub(crate) fn on_pointer(
     Ok(())
 }
 
+/// Attach a simple tooltip to an element with a known label.
+///
+/// RmlUi's `title` attribute is useful metadata but the native context does not
+/// draw it for us. The shell owns one `#native-tooltip` element; hover listeners
+/// fill and position it.
+pub(crate) fn bind_tooltip(
+    interface: &NativeInterfaceRef,
+    document: u64,
+    element: u64,
+    text: impl Into<String>,
+) -> Result<(), Error> {
+    let text = text.into();
+    if text.trim().is_empty() {
+        return Ok(());
+    }
+
+    let iface = *interface;
+    let show_text = text.clone();
+    interface
+        .rml_ui()
+        .element_add_event_listener(element, "mouseover", false, move || {
+            let Some(tooltip) = element_by_id(&iface, document, "native-tooltip") else {
+                return;
+            };
+            let Ok(mouse) = iface.input().get_mouse_state() else {
+                return;
+            };
+            let Ok(geom) = iface.display().get_view_geometry() else {
+                return;
+            };
+            let y = geom.viewSizeY as f32 - mouse.y;
+            let rml = iface.rml_ui();
+            let _ = rml.element_set_inner_rml(tooltip, &escape_rml(&show_text));
+            let _ = rml.element_set_attribute(
+                tooltip,
+                "style",
+                &format!("left: {}px; top: {}px;", mouse.x as i32 + 12, y as i32 + 18),
+            );
+            let _ = rml.element_set_class(tooltip, "hidden", false);
+        })?;
+
+    let iface = *interface;
+    interface
+        .rml_ui()
+        .element_add_event_listener(element, "mouseout", false, move || {
+            if let Some(tooltip) = element_by_id(&iface, document, "native-tooltip") {
+                let _ = iface.rml_ui().element_set_class(tooltip, "hidden", true);
+            }
+        })?;
+    Ok(())
+}
+
 // ── DOM helpers ────────────────────────────────────────────────────
 
 pub(crate) use crate::sbc::rml::{element_by_id, escape_rml};

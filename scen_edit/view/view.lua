@@ -261,6 +261,11 @@ function View:DrawWorldPreUnit()
     if self.displayDevelop then
         self:__DrawAreas()
     end
+    -- The native UI owns the selection and draws it itself; drawing here too
+    -- would show a second, stale marker on every selected object.
+    if SB.useNativeUi then
+        return
+    end
     self.selectionManager:DrawWorldPreUnit()
 end
 

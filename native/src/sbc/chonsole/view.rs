@@ -131,11 +131,10 @@ impl ChonsoleView {
             let _ = gfx.text(input, 60.0, 166.0, 18.0, "o");
             let _ = gfx.end_text();
         }
-        if self.visible {
-            if let Some(context) = self.context {
-                interface.rml_ui().context_render(context)?;
-            }
-        }
+        // The engine renders every RmlUi context itself in `RmlGui::RenderFrame`;
+        // a plugin calling `context_render` here submits geometry outside that
+        // frame, where it is silently dropped. So there is nothing to do for the
+        // RmlUi path — only the gfx-text fallback above draws.
         Ok(())
     }
 

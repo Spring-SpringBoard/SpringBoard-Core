@@ -13,6 +13,7 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::panels::field::bind_tooltip;
 use crate::sbc::panels::fields::AssetField;
 use crate::sbc::rml::{element_by_id, escape_rml};
 use crate::sbc::states::{BrushKind, StateRequest};
@@ -39,19 +40,23 @@ pub(crate) fn pattern_field() -> Box<AssetField> {
     )
 }
 
-/// One action button: a caption and the brush it activates.
+/// One action button: a caption, the image icon, and the brush it activates.
 #[derive(Clone, Copy)]
 pub(crate) struct BrushAction {
     pub caption: &'static str,
+    pub image: &'static str,
     pub kind: BrushKind,
+    pub paint_mode: &'static str,
 }
 
 /// The action-button strip an editor renders above its fields.
 pub(crate) struct BrushActions {
     actions: &'static [BrushAction],
     /// The active brush, or none when the editor is not painting.
-    active: Option<BrushKind>,
-    clicks: Rc<RefCell<Vec<BrushKind>>>,
+    active: Option<usize>,
+    /// Actions the current map cannot support; they render greyed and ignore clicks.
+    disabled: Vec<usize>,
+    clicks: Rc<RefCell<Vec<usize>>>,
     request: Option<StateRequest>,
 }
 
@@ -60,6 +65,7 @@ impl BrushActions {
         BrushActions {
             actions,
             active: None,
+            disabled: Vec::new(),
             clicks: Rc::new(RefCell::new(Vec::new())),
             request: None,
         }
@@ -69,8 +75,12 @@ impl BrushActions {
         let mut html = String::from(r#"<div class="brush-actions">"#);
         for action in self.actions {
             html.push_str(&format!(
-                r#"<button id="brush-action-{id}" class="brush-action">{caption}</button>"#,
+                r#"<button id="brush-action-{id}" class="brush-action">
+                    <img src="{image}" class="brush-action-icon"/>
+                    <span class="brush-action-label">{caption}</span>
+                </button>"#,
                 id = action.caption.to_lowercase().replace(' ', "-"),
+                image = action.image,
                 caption = escape_rml(action.caption),
             ));
         }
@@ -83,7 +93,7 @@ impl BrushActions {
         interface: &NativeInterfaceRef,
         document: u64,
     ) -> Result<(), Error> {
-        for action in self.actions {
+        for (index, action) in self.actions.iter().enumerate() {
             let id = format!(
                 "brush-action-{}",
                 action.caption.to_lowercase().replace(' ', "-")
@@ -91,12 +101,12 @@ impl BrushActions {
             let Some(button) = element_by_id(interface, document, &id) else {
                 continue;
             };
+            bind_tooltip(interface, document, button, action.caption)?;
             let queue = self.clicks.clone();
-            let kind = action.kind;
             interface
                 .rml_ui()
                 .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(kind);
+                    queue.borrow_mut().push(index);
                 })?;
         }
         Ok(())
@@ -104,20 +114,29 @@ impl BrushActions {
 
     /// Handle queued clicks. Toggling: the active button turns the brush off.
     pub(crate) fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) {
-        for kind in self.clicks.borrow_mut().drain(..) {
-            if self.active == Some(kind) {
+        for index in self.clicks.borrow_mut().drain(..) {
+            let Some(action) = self.actions.get(index) else {
+                continue;
+            };
+            if self.disabled.contains(&index) {
+                continue;
+            }
+            if self.active == Some(index) {
                 self.active = None;
                 self.request = Some(StateRequest::Default);
             } else {
-                self.active = Some(kind);
-                self.request = Some(StateRequest::Brush(kind));
+                self.active = Some(index);
+                self.request = Some(StateRequest::Brush(
+                    action.kind,
+                    action.paint_mode.to_string(),
+                ));
             }
         }
         self.render(interface, document);
     }
 
     fn render(&self, interface: &NativeInterfaceRef, document: u64) {
-        for action in self.actions {
+        for (index, action) in self.actions.iter().enumerate() {
             let id = format!(
                 "brush-action-{}",
                 action.caption.to_lowercase().replace(' ', "-")
@@ -126,7 +145,7 @@ impl BrushActions {
                 let _ = interface.rml_ui().element_set_class(
                     button,
                     "pressed",
-                    self.active == Some(action.kind),
+                    self.active == Some(index),
                 );
             }
         }
@@ -134,6 +153,42 @@ impl BrushActions {
 
     pub(crate) fn take_request(&mut self) -> Option<StateRequest> {
         self.request.take()
+    }
+
+    /// The active action's paint mode, or none when no brush is active.
+    pub(crate) fn selected_paint_mode(&self) -> Option<&'static str> {
+        self.active
+            .and_then(|index| self.actions.get(index))
+            .map(|action| action.paint_mode)
+    }
+
+    /// Grey out an action the map cannot support, as Lua disables the DNTS
+    /// button on a map with no splat normals. A disabled action also ignores
+    /// clicks, so it cannot enter a state that has nothing to paint.
+    pub(crate) fn set_enabled(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        caption: &str,
+        enabled: bool,
+    ) {
+        let Some(index) = self
+            .actions
+            .iter()
+            .position(|action| action.caption == caption)
+        else {
+            return;
+        };
+        self.disabled.retain(|i| *i != index);
+        if !enabled {
+            self.disabled.push(index);
+        }
+        let id = format!("brush-action-{}", caption.to_lowercase().replace(' ', "-"));
+        if let Some(button) = element_by_id(interface, document, &id) {
+            let _ = interface
+                .rml_ui()
+                .element_set_class(button, "disabled", !enabled);
+        }
     }
 }
 
@@ -186,40 +241,7 @@ macro_rules! brush_editor_boilerplate {
             self.actions.take_request()
         }
 
-        fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {
-            self.fields.drag(name, dx, interface)
-        }
-
-        fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
-            self.fields.drag_end(name, interface)
-        }
-
-        fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-            self.fields.begin_edit(name, interface)
-        }
-
-        fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-            self.fields.cancel_edit(name, interface)
-        }
-
-        fn field_value(&self, name: &str) -> FieldValue {
-            self.fields.value(name)
-        }
-
-        fn set_field_value(
-            &mut self,
-            name: &str,
-            value: FieldValue,
-            interface: &NativeInterfaceRef,
-        ) {
-            self.fields
-                .set($crate::sbc::panels::editor_base::resolve_base(name), value);
-            let _ = self.fields.write_values(interface);
-        }
-
-        fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
-            self.fields.asset_info(name)
-        }
+        $crate::sb_field_editor_methods!();
     };
 }
 

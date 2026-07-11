@@ -5,3 +5,4 @@
     <div id="main-content" class="main-content"></div>
 </div>
 <div id="modal-root"></div>
+<div id="native-tooltip" class="native-tooltip hidden"></div>

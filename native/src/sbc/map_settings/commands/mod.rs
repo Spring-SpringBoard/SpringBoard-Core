@@ -1,6 +1,7 @@
 mod set_atmosphere_command;
 mod set_global_los_command;
 mod set_map_rendering_params_command;
+mod set_map_shading_texture_enabled_command;
 mod set_sun_lighting_command;
 mod set_sun_parameters_command;
 mod set_water_params_command;

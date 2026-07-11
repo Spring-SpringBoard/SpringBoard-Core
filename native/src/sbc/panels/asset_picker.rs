@@ -133,6 +133,18 @@ impl AssetPicker {
         self.set_visible(interface, document, false)
     }
 
+    pub(crate) fn cancel_if_open(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<bool, Error> {
+        if !self.is_open() {
+            return Ok(false);
+        }
+        self.close(interface, document)?;
+        Ok(true)
+    }
+
     fn set_visible(
         &self,
         interface: &NativeInterfaceRef,

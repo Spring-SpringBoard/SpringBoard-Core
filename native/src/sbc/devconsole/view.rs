@@ -14,6 +14,14 @@ const UI_BODY: &str = include_str!("ui.rml");
 const UI_STYLE: &str = include_str!("ui.rcss");
 
 pub(crate) type ActionQueue = Rc<RefCell<Vec<Action>>>;
+type SelectionQueue = Rc<RefCell<Vec<SelectionEvent>>>;
+
+#[derive(Debug, Clone, Copy)]
+enum SelectionEvent {
+    Start(usize),
+    Extend(usize),
+    End,
+}
 
 /// Which toggles are lit. Read from the engine where it owns the state
 /// (cheating, LOS, god mode) and from the console where it does not.
@@ -48,7 +56,28 @@ pub(crate) struct DevConsoleView {
     root: Option<u64>,
     log: Option<u64>,
     actions: ActionQueue,
+    selection_events: SelectionQueue,
+    selection: SelectionState,
     visible: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct SelectionState {
+    anchor: Option<usize>,
+    extent: Option<usize>,
+    dragging: bool,
+}
+
+impl SelectionState {
+    fn range(self) -> Option<(usize, usize)> {
+        let (a, b) = (self.anchor?, self.extent?);
+        Some(if a <= b { (a, b) } else { (b, a) })
+    }
+
+    fn contains(self, index: usize) -> bool {
+        self.range()
+            .is_some_and(|(start, end)| index >= start && index <= end)
+    }
 }
 
 impl Default for DevConsoleView {
@@ -59,6 +88,8 @@ impl Default for DevConsoleView {
             root: None,
             log: None,
             actions: Rc::new(RefCell::new(Vec::new())),
+            selection_events: Rc::new(RefCell::new(Vec::new())),
+            selection: SelectionState::default(),
             visible: true,
         }
     }
@@ -75,6 +106,20 @@ impl DevConsoleView {
 
     pub(crate) fn drain_actions(&self) -> Vec<Action> {
         self.actions.borrow_mut().drain(..).collect()
+    }
+
+    pub(crate) fn selected_range(&self) -> Option<(usize, usize)> {
+        self.selection.range()
+    }
+
+    pub(crate) fn select_all(&mut self, count: usize) {
+        if count == 0 {
+            self.selection = SelectionState::default();
+            return;
+        }
+        self.selection.anchor = Some(0);
+        self.selection.extent = Some(count - 1);
+        self.selection.dragging = false;
     }
 
     pub(crate) fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
@@ -133,9 +178,15 @@ impl DevConsoleView {
 
         let mut html = String::new();
         for action in Action::ALL {
+            let class = if action.is_toggle() {
+                "toggle"
+            } else {
+                "command"
+            };
             html.push_str(&format!(
-                r#"<button id="{id}">{caption}</button>"#,
+                r#"<button id="{id}" class="{class}">{caption}</button>"#,
                 id = action.id(),
+                class = class,
                 caption = escape_rml(action.caption()),
             ));
         }
@@ -172,23 +223,98 @@ impl DevConsoleView {
     }
 
     pub(crate) fn render_log<'a>(
-        &self,
+        &mut self,
         interface: &NativeInterfaceRef,
         lines: impl Iterator<Item = &'a LogLine>,
+        scroll_to_bottom: bool,
     ) -> Result<(), Error> {
         let Some(log) = self.log else {
             return Ok(());
         };
         let mut html = String::new();
-        for line in lines {
+        let mut count = 0usize;
+        for (index, line) in lines.enumerate() {
+            count = index + 1;
+            let selected = if self.selection.contains(index) {
+                " selected"
+            } else {
+                ""
+            };
             html.push_str(&format!(
-                r#"<div class="log-line {class}">{text}</div>"#,
+                r#"<div id="log-line-{index}" class="log-line {class}{selected}">{text}</div>"#,
                 class = line.severity.css_class(),
+                selected = selected,
                 text = escape_rml(&line.text),
             ));
         }
+        if let Some((_, end)) = self.selection.range() {
+            if end >= count {
+                self.selection = SelectionState::default();
+            }
+        }
         interface.rml_ui().element_set_inner_rml(log, &html)?;
+        self.bind_log_selection(interface, count)?;
+        if scroll_to_bottom {
+            let _ = interface.rml_ui().element_set_scroll_top(log, 1_000_000);
+        }
         Ok(())
+    }
+
+    fn bind_log_selection(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        count: usize,
+    ) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        for index in 0..count {
+            let Some(line) = element_by_id(interface, doc, &format!("log-line-{index}")) else {
+                continue;
+            };
+            let queue = self.selection_events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(line, "mousedown", false, move || {
+                    queue.borrow_mut().push(SelectionEvent::Start(index))
+                })?;
+            let queue = self.selection_events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(line, "mouseover", false, move || {
+                    queue.borrow_mut().push(SelectionEvent::Extend(index))
+                })?;
+        }
+        if let Some(log) = self.log {
+            let queue = self.selection_events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(log, "mouseup", false, move || {
+                    queue.borrow_mut().push(SelectionEvent::End);
+                })?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn process_selection(&mut self) -> bool {
+        let mut changed = false;
+        for event in self.selection_events.borrow_mut().drain(..) {
+            match event {
+                SelectionEvent::Start(index) => {
+                    self.selection.anchor = Some(index);
+                    self.selection.extent = Some(index);
+                    self.selection.dragging = true;
+                    changed = true;
+                }
+                SelectionEvent::Extend(index) if self.selection.dragging => {
+                    self.selection.extent = Some(index);
+                    changed = true;
+                }
+                SelectionEvent::Extend(_) => {}
+                SelectionEvent::End => self.selection.dragging = false,
+            }
+        }
+        changed
     }
 
     /// Errors since the last clear, including lines the buffer has evicted.

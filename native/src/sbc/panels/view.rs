@@ -3,9 +3,12 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::actions::Action;
 use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::ColorPicker;
-use crate::sbc::panels::field::{element_by_id, escape_rml};
+use crate::sbc::panels::field::{bind_tooltip, element_by_id, escape_rml};
+use crate::sbc::panels::file_dialog::FileDialog;
+use crate::sbc::panels::new_project_dialog::NewProjectDialog;
 use crate::sbc::panels::registry::{editors_for, Tab};
 use crate::sbc::rml;
 
@@ -18,8 +21,9 @@ const UI_STYLE: &str = include_str!("ui.rcss");
 /// elements RmlUi is still dispatching to.
 #[derive(Debug, Clone)]
 pub(crate) enum ShellEvent {
-    TabClicked(Tab),
-    EditorClicked(&'static str),
+    Tab(Tab),
+    Editor(&'static str),
+    Action(Action),
 }
 
 pub(crate) type ShellQueue = Rc<RefCell<Vec<ShellEvent>>>;
@@ -114,13 +118,57 @@ impl PanelView {
         self.content = element_by_id(interface, doc, "main-content");
 
         if let Some(modal) = element_by_id(interface, doc, "modal-root") {
-            let markup = ColorPicker::markup() + &AssetPicker::default().markup();
+            let markup = ColorPicker::markup()
+                + &AssetPicker::default().markup()
+                + &FileDialog::default().markup()
+                + &NewProjectDialog::markup();
             rml.element_set_inner_rml(modal, &markup)?;
         }
 
         self.build_tab_bar(interface)?;
+        self.build_action_bar(interface)?;
         self.build_editor_buttons(interface)?;
         Ok(true)
+    }
+
+    /// The toolbar of project/clipboard actions (New/Load/Import/Save/…). Icon
+    /// buttons, whose clicks queue an `ActionClicked` handled by the manager.
+    fn build_action_bar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        let Some(bar) = element_by_id(interface, doc, "action-bar") else {
+            return Ok(());
+        };
+
+        let mut html = String::new();
+        for action in Action::TOOLBAR {
+            html.push_str(&format!(
+                r#"<button id="action-{idx}" class="action-button" title="{tip}">"#,
+                idx = action as usize,
+                tip = escape_rml(action.tooltip()),
+            ));
+            if let Some(icon) = action.icon() {
+                html.push_str(&format!(r#"<img src="{icon}"/>"#));
+            }
+            html.push_str("</button>");
+        }
+        interface.rml_ui().element_set_inner_rml(bar, &html)?;
+
+        for action in Action::TOOLBAR {
+            let id = format!("action-{}", action as usize);
+            let Some(button) = element_by_id(interface, doc, &id) else {
+                continue;
+            };
+            bind_tooltip(interface, doc, button, action.tooltip())?;
+            let queue = self.events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    queue.borrow_mut().push(ShellEvent::Action(action));
+                })?;
+        }
+        Ok(())
     }
 
     // ── Shell chrome ───────────────────────────────────────────────
@@ -156,7 +204,7 @@ impl PanelView {
             interface
                 .rml_ui()
                 .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::TabClicked(tab));
+                    queue.borrow_mut().push(ShellEvent::Tab(tab));
                 })?;
         }
         Ok(())
@@ -200,12 +248,13 @@ impl PanelView {
             let Some(button) = element_by_id(interface, doc, &id) else {
                 continue;
             };
+            bind_tooltip(interface, doc, button, spec.tooltip)?;
             let queue = self.events.clone();
             let name = spec.name;
             interface
                 .rml_ui()
                 .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::EditorClicked(name));
+                    queue.borrow_mut().push(ShellEvent::Editor(name));
                 })?;
         }
         Ok(())

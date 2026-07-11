@@ -2,7 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::FieldSet;
+use crate::sbc::panels::editor_base::{FieldSet, Layout};
 use crate::sbc::panels::editors::brush::{
     brush_editor_boilerplate, non_empty, pattern_field, BrushAction, BrushActions,
 };
@@ -26,7 +26,9 @@ inventory::submit! {
 
 const ACTIONS: &[BrushAction] = &[BrushAction {
     caption: "Set",
+    image: "LuaUI/images/scenedit/metal-add.png",
     kind: BrushKind::Metal,
+    paint_mode: "",
 }];
 
 /// The metal brush.
@@ -65,9 +67,12 @@ impl MetalEditor {
 impl Editor for MetalEditor {
     fn generate_rml(&self) -> String {
         let mut h = self.actions.generate_rml();
-        for name in ["patternTexture", "size", "rotation", "amount"] {
-            h.push_str(&self.fields.rml(name));
-        }
+        h.push_str(&self.fields.generate_rml(&[
+            Layout::Field("patternTexture"),
+            Layout::Field("size"),
+            Layout::Field("rotation"),
+            Layout::Field("amount"),
+        ]));
         h
     }
 

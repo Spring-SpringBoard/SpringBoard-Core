@@ -104,6 +104,17 @@ impl SelectionManager {
         self.revision += 1;
     }
 
+    /// Replace the entire selection (select-all, select-same-type).
+    pub(crate) fn set_selection(&mut self, items: Vec<(ObjectKind, i32)>) {
+        self.units.clear();
+        self.features.clear();
+        self.areas.clear();
+        for (kind, id) in items {
+            self.set_for(kind).insert(id);
+        }
+        self.revision += 1;
+    }
+
     /// Toggle one object's membership, keeping the rest (shift-click).
     pub(crate) fn toggle(&mut self, kind: ObjectKind, model_id: i32) {
         let set = self.set_for(kind);

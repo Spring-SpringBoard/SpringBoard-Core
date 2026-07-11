@@ -13,6 +13,8 @@ use crate::sbc::panels::PanelManager;
 use crate::sbc::states::StateManager;
 
 const MAX_UNDO_SIZE: usize = 100;
+/// Used when the engine will not report a feature's radius.
+const DEFAULT_SELECTION_RADIUS: f32 = 40.0;
 
 pub struct SBC {
     interface: NativeInterfaceRef,
@@ -77,20 +79,34 @@ impl NativeModule for SBC {
         self.model::<PanelManager>().draw_screen()
     }
 
-    /// Draw a ground ring under each selected feature/area. Units glow through
-    /// the engine's own selection, so they are skipped.
-    fn draw_world(&mut self) -> Result<(), Error> {
+    /// Outline each selected feature. Units glow through the engine's own
+    /// selection, and areas draw their own shape, so neither is boxed.
+    ///
+    /// This is the pre-unit pass so the box is drawn *under* the models, as in
+    /// `SelectionManager:DrawWorldPreUnit`.
+    fn draw_world_pre_unit(&mut self) -> Result<(), Error> {
         let selected = self.model::<SelectionManager>().all();
-        let positions: Vec<(f32, f32, f32)> = selected
+        let boxes: Vec<(f32, f32, f32, f32)> = selected
             .into_iter()
-            .filter(|(kind, _)| *kind != ObjectKind::Unit)
+            .filter(|(kind, _)| *kind == ObjectKind::Feature)
             .filter_map(|(kind, id)| {
-                self.model::<ObjectManager>()
-                    .object_pos(kind, id)
-                    .map(|p| (p.x, p.y, p.z))
+                let objects = self.model::<ObjectManager>();
+                let pos = objects.object_pos(kind, id)?;
+                let spring_id = objects.spring_id(kind, id)?;
+                let radius = self
+                    .interface
+                    .features()
+                    .get_feature_radius(spring_id)
+                    .unwrap_or(DEFAULT_SELECTION_RADIUS);
+                Some((pos.x, pos.y, pos.z, radius))
             })
             .collect();
-        crate::sbc::states::highlight::draw_selection(&self.interface, &positions);
+        crate::sbc::states::highlight::draw_selected_features(&self.interface, &boxes);
+        Ok(())
+    }
+
+    fn draw_world(&mut self) -> Result<(), Error> {
+        self.model::<StateManager>().draw_world();
         Ok(())
     }
 
@@ -242,6 +258,12 @@ impl SBC {
     /// state directly.
     pub fn model<T: Model>(&mut self) -> &mut T {
         self.models.get::<T>()
+    }
+
+    /// The whole model registry. In-engine tests use this to drive the action
+    /// layer, which operates on several models at once.
+    pub(crate) fn models_mut(&mut self) -> &mut Models {
+        &mut self.models
     }
 
     /// Decode the envelope and route by tag. Public so the in-engine test

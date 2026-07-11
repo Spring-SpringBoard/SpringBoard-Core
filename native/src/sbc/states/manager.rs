@@ -4,12 +4,13 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::keys::is_key;
-use crate::sbc::objects::ObjectKind;
+use crate::sbc::objects::{ObjectKind, SelectionManager};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::states::add_object::{AddObjectState, PlacementConfig};
 use crate::sbc::states::brush_settings::BrushSettings;
 use crate::sbc::states::manipulate::{DragObjectState, RotateObjectState};
 use crate::sbc::states::map_editing::{BrushKind, MapEditingState};
+use crate::sbc::states::rectangle_select::RectangleSelectState;
 use crate::sbc::states::state::{DefaultState, EditorState, StateContext, Transition};
 
 inventory::submit! {
@@ -20,9 +21,9 @@ inventory::submit! {
 #[derive(Debug, Clone)]
 pub(crate) enum StateRequest {
     Default,
-    Brush(BrushKind),
-    AddUnit(String, PlacementConfig),
-    AddFeature(String, PlacementConfig),
+    Brush(BrushKind, String),
+    AddUnit(String, i32, PlacementConfig),
+    AddFeature(String, i32, PlacementConfig),
 }
 
 /// The active state. An enum rather than a boxed trait object so the brush a
@@ -34,6 +35,7 @@ enum ActiveState {
     AddObject(AddObjectState),
     Drag(DragObjectState),
     Rotate(RotateObjectState),
+    RectangleSelect(RectangleSelectState),
 }
 
 impl ActiveState {
@@ -44,6 +46,7 @@ impl ActiveState {
             ActiveState::AddObject(s) => s,
             ActiveState::Drag(s) => s,
             ActiveState::Rotate(s) => s,
+            ActiveState::RectangleSelect(s) => s,
         }
     }
 }
@@ -103,6 +106,16 @@ impl StateManager {
         std::mem::take(&mut self.pending_envelopes)
     }
 
+    /// Draw the active state's world-space cursor overlay (placement ghost, brush
+    /// outline). Needs no models, so the plugin can call it straight from
+    /// `draw_world`.
+    pub fn draw_world(&mut self) {
+        if !self.enabled {
+            return;
+        }
+        self.state.as_state().draw_world(&self.interface);
+    }
+
     /// Run `f` against a context, collect what it queued, and apply any state
     /// transition it requested (a drag ending, R starting a rotate).
     fn with_context<R>(
@@ -133,6 +146,9 @@ impl StateManager {
                 diff_z,
             } => ActiveState::Drag(DragObjectState::new(kind, model_id, diff_x, diff_z)),
             Transition::Rotate => ActiveState::Rotate(RotateObjectState::new()),
+            Transition::RectangleSelect { start_x, start_z } => {
+                ActiveState::RectangleSelect(RectangleSelectState::new(start_x, start_z))
+            }
         };
         self.enter(&mut next, models);
         self.state = next;
@@ -152,16 +168,21 @@ impl StateManager {
         }
         self.with_context(models, |state, ctx| state.leave(ctx));
 
-        let brush = models.get::<BrushSettings>().clone();
+        let mut brush = models.get::<BrushSettings>().clone();
         let mut state = match request {
             StateRequest::Default => ActiveState::Default(DefaultState::default()),
-            StateRequest::Brush(kind) => ActiveState::Brush(MapEditingState::new(kind, brush)),
-            StateRequest::AddUnit(def, config) => {
-                ActiveState::AddObject(AddObjectState::new(ObjectKind::Unit, def, config))
+            StateRequest::Brush(kind, paint_mode) => {
+                if !paint_mode.is_empty() {
+                    brush.texture_paint_mode = paint_mode;
+                }
+                ActiveState::Brush(MapEditingState::new(kind, brush))
             }
-            StateRequest::AddFeature(def, config) => {
-                ActiveState::AddObject(AddObjectState::new(ObjectKind::Feature, def, config))
+            StateRequest::AddUnit(def, def_id, config) => {
+                ActiveState::AddObject(AddObjectState::new(ObjectKind::Unit, def, def_id, config))
             }
+            StateRequest::AddFeature(def, def_id, config) => ActiveState::AddObject(
+                AddObjectState::new(ObjectKind::Feature, def, def_id, config),
+            ),
         };
         self.enter(&mut state, models);
         self.state = state;
@@ -254,7 +275,13 @@ impl StateManager {
         }
         if is_key(&self.interface, key_code, "esc") {
             if matches!(self.state, ActiveState::Default(_)) {
-                return Ok(false);
+                let selection = models.get::<SelectionManager>();
+                if selection.count() == 0 {
+                    return Ok(false);
+                }
+                selection.clear();
+                let _ = self.interface.selection().select_unit_array(&[], false);
+                return Ok(true);
             }
             self.with_context(models, |state, ctx| state.leave(ctx));
             self.state = ActiveState::Default(DefaultState::default());

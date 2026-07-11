@@ -27,6 +27,7 @@ fn sdl2_key_code(key_name: &str) -> Option<i32> {
         "pagedown" => 1_073_741_902,
         "shift" => 1_073_742_049,
         "ctrl" => 1_073_742_048,
+        "esc" => 27,
         _ => return None,
     })
 }

@@ -139,6 +139,37 @@ impl ShadingStore {
         SHADING_DEFS.iter().map(|def| def.name)
     }
 
+    pub(crate) fn set_enabled(&mut self, name: &str, enabled: bool) -> bool {
+        if enabled {
+            return self.ensure(name, None);
+        }
+        let Some(def) = SHADING_DEFS.iter().find(|def| def.name == name) else {
+            log::debug!("disable_shading_texture: unknown shading texture {name}");
+            return false;
+        };
+        if let Some(index) = self.shading.iter().position(|(n, _)| n == name) {
+            let (_, slot) = self.shading.remove(index);
+            let texture = slot.surface.borrow().texture.clone();
+            let _ = self.interface.gfx().delete_texture(&texture);
+        }
+        match self.interface.unsynced_ctrl().set_map_shading_texture(
+            def.bind_type,
+            def.engine_name,
+            def.slot,
+        ) {
+            Ok(true) => true,
+            other => {
+                log::debug!(
+                    "shading {}: reset SetMapShadingTexture({}, slot={}) returned {other:?}",
+                    def.name,
+                    def.bind_type,
+                    def.slot
+                );
+                false
+            }
+        }
+    }
+
     pub(crate) fn set_from_source(&mut self, name: &str, source: &Texture, dirty: bool) -> bool {
         if let Some((_, slot)) = self.shading.iter().find(|(n, _)| n == name) {
             let texture = slot.surface.borrow().texture.clone();

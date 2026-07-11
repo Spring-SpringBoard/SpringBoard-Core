@@ -11,13 +11,14 @@
 //! thumbnail substitute — many games have none.
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
-use crate::sbc::panels::editor_base::{group_rml, resolve_base, section_rml, FieldSet};
-use crate::sbc::panels::field::{escape_rml, ChangeQueue, InteractionQueue};
+use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
+use crate::sbc::panels::field::{escape_rml, ChangeQueue, Field, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField};
 use crate::sbc::panels::grid::{GridItem, GridView};
 use crate::sbc::panels::thumbnails::{ThumbKind, ThumbnailRenderer};
@@ -42,13 +43,17 @@ enum PlaceMode {
 /// Set-mode fields, then brush-mode fields; the ones for the inactive mode are
 /// hidden, as Lua does with `SetInvisibleFields`.
 const SET_FIELDS: &[&str] = &["amount"];
-const BRUSH_FIELDS: &[&str] = &["size", "spread", "rotYMin", "rotYMax"];
+const BRUSH_FIELDS: &[&str] = &[
+    "size", "spread", "noise", "rotXMin", "rotXMax", "rotYMin", "rotYMax", "rotZMin", "rotZMax",
+];
 
 pub(crate) struct ObjectDefsView {
     kind: DefKind,
     grid: GridView,
     /// Every definition, unfiltered; the grid holds the filtered subset.
     all: Vec<GridItem>,
+    /// Engine definition id by grid id, used by thumbnails and placement ghosting.
+    def_ids: HashMap<String, i32>,
     search: String,
     search_element: Option<u64>,
     loaded: bool,
@@ -75,44 +80,13 @@ impl ObjectDefsView {
             kind,
             grid: GridView::new("object-defs-grid", 64),
             all: Vec::new(),
+            def_ids: HashMap::new(),
             search: String::new(),
             search_element: None,
             loaded: false,
             search_dirty: false,
             request_dirty: false,
-            fields: FieldSet::new(vec![
-                Box::new(ChoiceField::new("team", "Team", vec![])),
-                Box::new(
-                    NumericField::new("amount", "Amount", 1.0)
-                        .min(1.0)
-                        .max(100.0)
-                        .decimals(0),
-                ),
-                Box::new(
-                    NumericField::new("size", "Size", 100.0)
-                        .min(10.0)
-                        .max(5000.0)
-                        .decimals(0),
-                ),
-                Box::new(
-                    NumericField::new("spread", "Spread", 100.0)
-                        .min(1.0)
-                        .max(500.0)
-                        .decimals(0),
-                ),
-                Box::new(
-                    NumericField::new("rotYMin", "Min yaw", 0.0)
-                        .min(-180.0)
-                        .max(180.0)
-                        .decimals(0),
-                ),
-                Box::new(
-                    NumericField::new("rotYMax", "Max yaw", 0.0)
-                        .min(-180.0)
-                        .max(180.0)
-                        .decimals(0),
-                ),
-            ]),
+            fields: FieldSet::new(placement_fields(vec![])),
             mode: PlaceMode::Set,
             mode_clicks: Rc::new(RefCell::new(Vec::new())),
             teams: Vec::new(),
@@ -139,7 +113,18 @@ impl ObjectDefsView {
 
     pub(crate) fn generate_rml(&self) -> String {
         let mut h = String::from(r#"<div class="brush-actions">"#);
-        for (mode, caption) in [(PlaceMode::Set, "Add"), (PlaceMode::Brush, "Brush")] {
+        for (mode, caption, image) in [
+            (
+                PlaceMode::Set,
+                "Add",
+                "LuaUI/images/scenedit/object-set-add.png",
+            ),
+            (
+                PlaceMode::Brush,
+                "Brush",
+                "LuaUI/images/scenedit/object-brush-add.png",
+            ),
+        ] {
             let pressed = if mode == self.mode { " pressed" } else { "" };
             let id = if mode == PlaceMode::Set {
                 "objectdef-mode-add"
@@ -147,24 +132,28 @@ impl ObjectDefsView {
                 "objectdef-mode-brush"
             };
             h.push_str(&format!(
-                r#"<button id="{id}" class="brush-action{pressed}">{caption}</button>"#,
+                r#"<button id="{id}" class="brush-action{pressed}">
+                    <img src="{image}" class="brush-action-icon"/>
+                    <span class="brush-action-label">{caption}</span>
+                </button>"#,
             ));
         }
         h.push_str("</div>");
 
-        h.push_str(&self.fields.rml("team"));
+        h.push_str(&self.fields.generate_rml(&[Layout::Field("team")]));
         // Only the active mode's fields.
         for name in self.mode_fields() {
-            h.push_str(&self.fields.rml(name));
+            h.push_str(&self.fields.generate_rml(&[Layout::Field(name)]));
         }
         if self.mode == PlaceMode::Brush {
-            h.push_str(&group_rml(&[
-                self.fields.rml("rotYMin"),
-                self.fields.rml("rotYMax"),
+            h.push_str(&self.fields.generate_rml(&[
+                Layout::Group(&["rotXMin", "rotXMax"]),
+                Layout::Group(&["rotYMin", "rotYMax"]),
+                Layout::Group(&["rotZMin", "rotZMax"]),
             ]));
         }
 
-        h.push_str(&section_rml("Definitions"));
+        h.push_str(&self.fields.generate_rml(&[Layout::Section("Definitions")]));
         h.push_str(&format!(
             concat!(
                 r#"<div class="field-row">"#,
@@ -180,8 +169,8 @@ impl ObjectDefsView {
     fn mode_fields(&self) -> &'static [&'static str] {
         match self.mode {
             PlaceMode::Set => SET_FIELDS,
-            // rotY fields render in their own group, not the flat list.
-            PlaceMode::Brush => &["size", "spread"],
+            // Rotation min/max fields render in grouped rows.
+            PlaceMode::Brush => &["size", "spread", "noise"],
         }
     }
 
@@ -256,39 +245,7 @@ impl ObjectDefsView {
     /// which changes, so the field cannot be fixed at construction.
     fn rebuild_fields(&mut self) {
         let captions: Vec<String> = self.teams.iter().map(|(_, c)| c.clone()).collect();
-        self.fields = FieldSet::new(vec![
-            Box::new(ChoiceField::new("team", "Team", captions)),
-            Box::new(
-                NumericField::new("amount", "Amount", 1.0)
-                    .min(1.0)
-                    .max(100.0)
-                    .decimals(0),
-            ),
-            Box::new(
-                NumericField::new("size", "Size", 100.0)
-                    .min(10.0)
-                    .max(5000.0)
-                    .decimals(0),
-            ),
-            Box::new(
-                NumericField::new("spread", "Spread", 100.0)
-                    .min(1.0)
-                    .max(500.0)
-                    .decimals(0),
-            ),
-            Box::new(
-                NumericField::new("rotYMin", "Min yaw", 0.0)
-                    .min(-180.0)
-                    .max(180.0)
-                    .decimals(0),
-            ),
-            Box::new(
-                NumericField::new("rotYMax", "Max yaw", 0.0)
-                    .min(-180.0)
-                    .max(180.0)
-                    .decimals(0),
-            ),
-        ]);
+        self.fields = FieldSet::new(placement_fields(captions));
     }
 
     /// The placement config from the current fields.
@@ -301,8 +258,18 @@ impl ObjectDefsView {
             brush: self.mode == PlaceMode::Brush,
             amount: self.fields.number("amount").max(1.0) as u32,
             size: self.fields.number("size"),
-            yaw_min: self.fields.number("rotYMin").to_radians(),
-            yaw_max: self.fields.number("rotYMax").to_radians(),
+            spread: self.fields.number("spread").max(1.0),
+            noise: self.fields.number("noise").max(0.0),
+            rot_min: [
+                self.fields.number("rotXMin").to_radians(),
+                self.fields.number("rotYMin").to_radians(),
+                self.fields.number("rotZMin").to_radians(),
+            ],
+            rot_max: [
+                self.fields.number("rotXMax").to_radians(),
+                self.fields.number("rotYMax").to_radians(),
+                self.fields.number("rotZMax").to_radians(),
+            ],
         }
     }
 
@@ -328,6 +295,10 @@ impl ObjectDefsView {
             for (item, def_id) in &loaded {
                 self.thumbnails.request(&item.id, *def_id, thumb_kind);
             }
+            self.def_ids = loaded
+                .iter()
+                .map(|(item, def_id)| (item.id.clone(), *def_id))
+                .collect();
             self.all = loaded.into_iter().map(|(item, _)| item).collect();
             self.loaded = true;
             self.apply_filter(interface, document)?;
@@ -438,10 +409,11 @@ impl ObjectDefsView {
         let Some(def) = self.grid.selected().map(str::to_string) else {
             return Some(StateRequest::Default);
         };
+        let def_id = self.def_ids.get(&def).copied().unwrap_or(0);
         let config = self.config();
         Some(match self.kind {
-            DefKind::Unit => StateRequest::AddUnit(def, config),
-            DefKind::Feature => StateRequest::AddFeature(def, config),
+            DefKind::Unit => StateRequest::AddUnit(def, def_id, config),
+            DefKind::Feature => StateRequest::AddFeature(def, def_id, config),
         })
     }
 
@@ -463,6 +435,72 @@ impl ObjectDefsView {
         self.grid.set_items(matches);
         self.grid.render(interface, document)
     }
+}
+
+fn placement_fields(teams: Vec<String>) -> Vec<Box<dyn Field>> {
+    vec![
+        Box::new(ChoiceField::new("team", "Team", teams)),
+        Box::new(
+            NumericField::new("amount", "Amount", 1.0)
+                .min(1.0)
+                .max(100.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("size", "Size", 100.0)
+                .min(10.0)
+                .max(5000.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("spread", "Spread", 100.0)
+                .min(1.0)
+                .max(1000.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("noise", "Noise", 0.0)
+                .min(0.0)
+                .max(100.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("rotXMin", "Min pitch", 0.0)
+                .min(-360.0)
+                .max(360.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("rotXMax", "Max pitch", 0.0)
+                .min(-360.0)
+                .max(360.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("rotYMin", "Min yaw", -180.0)
+                .min(-360.0)
+                .max(360.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("rotYMax", "Max yaw", 180.0)
+                .min(-360.0)
+                .max(360.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("rotZMin", "Min roll", 0.0)
+                .min(-360.0)
+                .max(360.0)
+                .decimals(0),
+        ),
+        Box::new(
+            NumericField::new("rotZMax", "Max roll", 0.0)
+                .min(-360.0)
+                .max(360.0)
+                .decimals(0),
+        ),
+    ]
 }
 
 /// The `Editor` impl shared by the Units and Features wrappers: both are a thin
@@ -532,32 +570,7 @@ macro_rules! object_defs_editor {
             fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
                 vec![]
             }
-            fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {
-                self.defs.drag_field(name, dx, interface)
-            }
-            fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
-                self.defs.drag_end_field(name, interface)
-            }
-            fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-                self.defs.begin_edit_field(name, interface)
-            }
-            fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-                self.defs.cancel_edit_field(name, interface)
-            }
-            fn field_value(&self, name: &str) -> crate::sbc::panels::field::FieldValue {
-                self.defs.field_value(name)
-            }
-            fn set_field_value(
-                &mut self,
-                name: &str,
-                value: crate::sbc::panels::field::FieldValue,
-                interface: &NativeInterfaceRef,
-            ) {
-                self.defs.set_field_value(name, value, interface)
-            }
-            fn field_asset(&self, _name: &str) -> Option<(String, Vec<String>)> {
-                None
-            }
+            $crate::sb_delegate_editor_methods!(defs);
             fn draw_thumbnails(&mut self, interface: &NativeInterfaceRef) {
                 self.defs.draw_thumbnails(interface)
             }
@@ -587,6 +600,7 @@ fn unit_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
                 caption: escape_rml(&caption),
                 image: None,
                 is_directory: false,
+                tooltip: None,
             },
             id,
         ));
@@ -611,16 +625,34 @@ fn feature_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
         if name.is_empty() {
             continue;
         }
+        let caption = ["displayName", "humanName", "name"]
+            .into_iter()
+            .find_map(|key| defs.get_feature_def_custom_param(id, key).ok().flatten())
+            .filter(|value| !value.trim().is_empty())
+            .or_else(|| cstr(info.description).filter(|value| !value.trim().is_empty()))
+            .unwrap_or_else(|| name.clone());
         items.push((
             GridItem {
                 id: name.clone(),
-                caption: escape_rml(&name),
+                caption: escape_rml(&caption),
                 image: None,
                 is_directory: false,
+                tooltip: None,
             },
             id,
         ));
     }
     items.sort_by(|a, b| a.0.caption.cmp(&b.0.caption));
     items
+}
+
+fn cstr(ptr: *const std::ffi::c_char) -> Option<String> {
+    if ptr.is_null() {
+        return None;
+    }
+    Some(
+        unsafe { std::ffi::CStr::from_ptr(ptr) }
+            .to_string_lossy()
+            .into_owned(),
+    )
 }

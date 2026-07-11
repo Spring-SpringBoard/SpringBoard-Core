@@ -1,3 +1,4 @@
+mod actions;
 mod areas;
 mod chonsole;
 mod command_system;

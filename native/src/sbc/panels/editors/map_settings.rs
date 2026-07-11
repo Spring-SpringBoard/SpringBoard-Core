@@ -2,17 +2,18 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, group_rml, resolve_base, section_rml, FieldSet};
-use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
-use crate::sbc::panels::fields::{AssetField, BooleanField};
+use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
+use crate::sbc::panels::field::{ChangeQueue, Field, FieldValue, InteractionQueue};
+use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
+use crate::sbc::textures::TextureModel;
 
 // Mirrors TerrainSettingsEditor:Register in scen_edit/view/map/terrain_settings_editor.lua.
 inventory::submit! {
     EditorSpec {
         name: "terrainSettingsEditor",
         tab: Tab::Map,
-        order: 0,
+        order: 99,
         caption: "Settings",
         tooltip: "Map settings",
         image: "LuaUI/images/scenedit/globe.png",
@@ -21,6 +22,29 @@ inventory::submit! {
 }
 
 const BOOLEANS: &[&str] = &["voidWater", "voidGround", "splatDetailNormalDiffuseAlpha"];
+const SPLAT_SCALE_FIELDS: &[&str] = &[
+    "splatTexScale0",
+    "splatTexScale1",
+    "splatTexScale2",
+    "splatTexScale3",
+];
+const SPLAT_MULT_FIELDS: &[&str] = &[
+    "splatTexMult0",
+    "splatTexMult1",
+    "splatTexMult2",
+    "splatTexMult3",
+];
+const SHADING_TOGGLES: &[(&str, &str, &str)] = &[
+    ("tex_specular", "specular", "Specular"),
+    ("tex_emission", "emission", "Emission"),
+    ("tex_refl", "refl", "Reflection"),
+    ("tex_splat_distr", "splat_distr", "Splat distribution"),
+    ("tex_splat_normals0", "splat_normals0", "Splat normals 1"),
+    ("tex_splat_normals1", "splat_normals1", "Splat normals 2"),
+    ("tex_splat_normals2", "splat_normals2", "Splat normals 3"),
+    ("tex_splat_normals3", "splat_normals3", "Splat normals 4"),
+    ("tex_detail", "detail", "Detail"),
+];
 
 /// Map rendering flags and the detail texture. Every field is a key of
 /// `SetMapRenderingParamsCommand`'s options except `detailTexture`, which the
@@ -34,49 +58,123 @@ pub(crate) struct MapSettingsEditor {
 
 impl MapSettingsEditor {
     pub(crate) fn new() -> Self {
+        let mut fields: Vec<Box<dyn Field>> = vec![
+            Box::new(BooleanField::new("voidWater", "Void water", false)),
+            Box::new(BooleanField::new("voidGround", "Void ground", false)),
+            Box::new(BooleanField::new(
+                "splatDetailNormalDiffuseAlpha",
+                "DNTS diffuse alpha",
+                false,
+            )),
+            Box::new(
+                NumericField::new("splatTexScale0", "Scale 1", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                NumericField::new("splatTexScale1", "Scale 2", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                NumericField::new("splatTexScale2", "Scale 3", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                NumericField::new("splatTexScale3", "Scale 4", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                NumericField::new("splatTexMult0", "Mult 1", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                NumericField::new("splatTexMult1", "Mult 2", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                NumericField::new("splatTexMult2", "Mult 3", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                NumericField::new("splatTexMult3", "Mult 4", 1.0)
+                    .min(0.0)
+                    .max(1000.0),
+            ),
+            Box::new(
+                AssetField::new(
+                    "detailTexture",
+                    "Detail texture",
+                    "springboard/assets/core/detail",
+                )
+                .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
+            ),
+        ];
+        for (field, _, caption) in SHADING_TOGGLES {
+            fields.push(Box::new(BooleanField::new(*field, *caption, false)));
+        }
         MapSettingsEditor {
-            fields: FieldSet::new(vec![
-                Box::new(BooleanField::new("voidWater", "Void water", false)),
-                Box::new(BooleanField::new("voidGround", "Void ground", false)),
-                Box::new(BooleanField::new(
-                    "splatDetailNormalDiffuseAlpha",
-                    "DNTS diffuse alpha",
-                    false,
-                )),
-                Box::new(
-                    AssetField::new(
-                        "detailTexture",
-                        "Detail texture",
-                        "springboard/assets/core/detail",
-                    )
-                    .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
-                ),
-            ]),
+            fields: FieldSet::new(fields),
         }
     }
 
     fn rendering(&self, name: &str, value: &FieldValue, next: &mut u64) -> Vec<String> {
-        let opts = match value {
-            FieldValue::Bool(b) => serde_json::json!({ name: b }),
-            FieldValue::Text(t) => serde_json::json!({ name: t }),
-            FieldValue::Number(n) => serde_json::json!({ name: n }),
-            FieldValue::Color(c) => serde_json::json!({ name: c }),
+        if let Some((_, shading, _)) = SHADING_TOGGLES.iter().find(|(field, _, _)| *field == name) {
+            return vec![envelope(
+                "SetMapShadingTextureEnabledCommand",
+                next,
+                serde_json::json!({
+                    "name": shading,
+                    "value": matches!(value, FieldValue::Bool(true)),
+                }),
+            )];
+        }
+        let opts = if SPLAT_SCALE_FIELDS.contains(&name) {
+            serde_json::json!({ "splatTexScales": self.splat_values(SPLAT_SCALE_FIELDS) })
+        } else if SPLAT_MULT_FIELDS.contains(&name) {
+            serde_json::json!({ "splatTexMults": self.splat_values(SPLAT_MULT_FIELDS) })
+        } else {
+            match value {
+                FieldValue::Bool(b) => serde_json::json!({ name: b }),
+                FieldValue::Text(t) => serde_json::json!({ name: t }),
+                FieldValue::Number(n) => serde_json::json!({ name: n }),
+                FieldValue::Color(c) => serde_json::json!({ name: c }),
+            }
         };
         vec![envelope("SetMapRenderingParamsCommand", next, opts)]
+    }
+
+    fn splat_values(&self, fields: &[&str]) -> [f32; 4] {
+        [
+            self.fields.number(fields[0]),
+            self.fields.number(fields[1]),
+            self.fields.number(fields[2]),
+            self.fields.number(fields[3]),
+        ]
     }
 }
 
 impl Editor for MapSettingsEditor {
     fn generate_rml(&self) -> String {
-        let mut h = String::new();
-        h.push_str(&group_rml(&[
-            self.fields.rml("voidWater"),
-            self.fields.rml("voidGround"),
-        ]));
-        h.push_str(&self.fields.rml("splatDetailNormalDiffuseAlpha"));
-        h.push_str(&section_rml("Map textures"));
-        h.push_str(&self.fields.rml("detailTexture"));
-        h
+        self.fields.generate_rml(&[
+            Layout::Group(&["voidWater", "voidGround"]),
+            Layout::Field("splatDetailNormalDiffuseAlpha"),
+            Layout::Section("Splat mapping"),
+            Layout::Group(SPLAT_SCALE_FIELDS),
+            Layout::Group(SPLAT_MULT_FIELDS),
+            Layout::Section("Map textures"),
+            Layout::Field("detailTexture"),
+            Layout::Group(&["tex_specular", "tex_emission"]),
+            Layout::Group(&["tex_refl", "tex_splat_distr"]),
+            Layout::Group(&["tex_splat_normals0", "tex_splat_normals1"]),
+            Layout::Group(&["tex_splat_normals2", "tex_splat_normals3"]),
+            Layout::Field("tex_detail"),
+        ])
     }
 
     fn bind_fields(
@@ -110,7 +208,7 @@ impl Editor for MapSettingsEditor {
         self.rendering(&base, &value, next)
     }
 
-    fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, _models: &mut Models) {
+    fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, models: &mut Models) {
         let gfx = interface.gfx();
         for name in BOOLEANS {
             if let Ok((_, _, bool_value, has_bool, _)) = gfx.get_map_rendering(name, "") {
@@ -119,34 +217,22 @@ impl Editor for MapSettingsEditor {
                 }
             }
         }
+        if let Ok((values, ..)) = gfx.get_map_rendering("splatTexScales", "") {
+            for (name, value) in SPLAT_SCALE_FIELDS.iter().zip(values) {
+                self.fields.set(name, FieldValue::Number(value));
+            }
+        }
+        if let Ok((values, ..)) = gfx.get_map_rendering("splatTexMults", "") {
+            for (name, value) in SPLAT_MULT_FIELDS.iter().zip(values) {
+                self.fields.set(name, FieldValue::Number(value));
+            }
+        }
+        let textures = &models.get::<TextureModel>().shading;
+        for (field, shading, _) in SHADING_TOGGLES {
+            self.fields
+                .set(field, FieldValue::Bool(textures.texture(shading).is_some()));
+        }
     }
 
-    fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag(name, dx, interface)
-    }
-
-    fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag_end(name, interface)
-    }
-
-    fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.begin_edit(name, interface)
-    }
-
-    fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.cancel_edit(name, interface)
-    }
-
-    fn field_value(&self, name: &str) -> FieldValue {
-        self.fields.value(name)
-    }
-
-    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
-        self.fields.set(resolve_base(name), value);
-        let _ = self.fields.write_values(interface);
-    }
-
-    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
-        self.fields.asset_info(name)
-    }
+    crate::sb_field_editor_methods!();
 }

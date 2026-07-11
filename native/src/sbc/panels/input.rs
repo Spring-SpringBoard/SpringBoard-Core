@@ -36,6 +36,8 @@ pub(crate) enum DragTick {
     Started(String),
     /// The field's value moved and should be previewed.
     Moved(String),
+    /// The button came up while the drag was live; finish and commit it.
+    Released(String),
 }
 
 /// Handles all engine input callbacks (mouse, keyboard, text) for the panel.
@@ -100,6 +102,21 @@ impl PanelInput {
             return DragTick::Idle;
         };
         let x = mouse.x;
+
+        // RmlUi only delivers `mouseup` to the element under the cursor, so a
+        // release that happens off the field never reaches its listener; end an
+        // active drag from the button state, which cannot be missed.
+        //
+        // Only a live drag is ended this way. A `Pending` press is left alone:
+        // it is still waiting for its `mouseup` to become a click-to-edit, and
+        // tearing it down here would swallow the click.
+        if matches!(self.drag, DragState::Dragging { .. }) && !mouse.left {
+            if let DragState::Dragging { field } =
+                std::mem::replace(&mut self.drag, DragState::Idle)
+            {
+                return DragTick::Released(field);
+            }
+        }
 
         if let DragState::Pending { field, start_x } = &self.drag {
             if (x - *start_x).abs() > DRAG_THRESHOLD {
@@ -179,6 +196,18 @@ impl PanelInput {
     /// Drain commit requests.
     pub(crate) fn drain_changes(&mut self) -> Vec<CommitRequest> {
         self.changes.borrow_mut().drain(..).collect()
+    }
+
+    /// End an active drag from the engine mouse-release callback. RmlUi only
+    /// sends the field's `mouseup` when the pointer is still over that element;
+    /// releasing outside must still finish the drag.
+    pub(crate) fn force_drag_release(&mut self) -> Option<String> {
+        let field = match &self.drag {
+            DragState::Dragging { field } => Some(field.clone()),
+            DragState::Pending { .. } | DragState::Idle => None,
+        };
+        self.drag = DragState::Idle;
+        field
     }
 
     fn drag_field(&self) -> Option<&str> {

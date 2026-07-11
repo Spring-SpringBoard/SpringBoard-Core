@@ -6,6 +6,7 @@ use spring_native::prelude::NativeInterfaceRef;
 pub(crate) enum Action {
     Clear,
     FilterProblems,
+    Restart,
     ReloadLuaUi,
     ReloadLuaRules,
     ToggleCheating,
@@ -16,12 +17,13 @@ pub(crate) enum Action {
 }
 
 impl Action {
-    /// Toolbar order, mirroring `dbg_dev_console.html`. `Restart`, `Debug Mode`
-    /// and `Toggle profiling` are omitted: the first needs `Spring.Reload` and
-    /// the others drive Lua-side state that the native UI does not own.
-    pub(crate) const ALL: [Action; 9] = [
+    /// Toolbar order, mirroring `dbg_dev_console.html`. `Debug Mode` and
+    /// `Toggle profiling` are omitted: they drive Lua-side state that the
+    /// native UI does not own.
+    pub(crate) const ALL: [Action; 10] = [
         Action::Clear,
         Action::FilterProblems,
+        Action::Restart,
         Action::ReloadLuaUi,
         Action::ReloadLuaRules,
         Action::ToggleCheating,
@@ -35,6 +37,7 @@ impl Action {
         match self {
             Action::Clear => "btn-clear",
             Action::FilterProblems => "btn-filter-problems",
+            Action::Restart => "btn-restart",
             Action::ReloadLuaUi => "btn-reload-luaui",
             Action::ReloadLuaRules => "btn-reload-luarules",
             Action::ToggleCheating => "btn-cheating",
@@ -49,6 +52,7 @@ impl Action {
         match self {
             Action::Clear => "Clear",
             Action::FilterProblems => "Problems",
+            Action::Restart => "Restart",
             Action::ReloadLuaUi => "LuaUI Reload",
             Action::ReloadLuaRules => "LuaRules Reload",
             Action::ToggleCheating => "Cheating",
@@ -63,7 +67,7 @@ impl Action {
     pub(crate) fn is_toggle(self) -> bool {
         !matches!(
             self,
-            Action::Clear | Action::ReloadLuaUi | Action::ReloadLuaRules
+            Action::Clear | Action::Restart | Action::ReloadLuaUi | Action::ReloadLuaRules
         )
     }
 }

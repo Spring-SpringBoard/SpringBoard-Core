@@ -1,9 +1,12 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope_with, resolve_base, section_rml, FieldSet};
-use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
+use crate::sbc::panels::editor_base::{envelope, envelope_with, resolve_base, FieldSet, Layout};
+use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ColorField, NumericField, StringField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::teams::{Color, Team, TeamManager};
@@ -30,6 +33,13 @@ inventory::submit! {
 pub(crate) struct TeamsView {
     fields: FieldSet,
     teams: Vec<Team>,
+    clicks: Rc<RefCell<Vec<TeamClick>>>,
+}
+
+#[derive(Clone, Copy)]
+enum TeamClick {
+    Add,
+    Remove(i32),
 }
 
 /// `resolve_base` only strips colour sub-fields (`-r`/`-g`/`-b`/`-hex`), so a
@@ -48,6 +58,7 @@ impl TeamsView {
         TeamsView {
             fields: FieldSet::new(Vec::new()),
             teams: Vec::new(),
+            clicks: Rc::new(RefCell::new(Vec::new())),
         }
     }
 
@@ -71,6 +82,21 @@ impl TeamsView {
                 )
                 .min(0.0),
             ));
+            fields.push(Box::new(StringField::new(
+                &team_field("side", id),
+                "Side",
+                &team.side.0,
+            )));
+            for (base, title, value) in [
+                ("metal", "Metal", team.metal),
+                ("metalMax", "Metal max", team.metal_max),
+                ("energy", "Energy", team.energy),
+                ("energyMax", "Energy max", team.energy_max),
+            ] {
+                fields.push(Box::new(
+                    NumericField::new(team_field(base, id), title, value).min(0.0),
+                ));
+            }
         }
         self.fields = FieldSet::new(fields);
     }
@@ -92,22 +118,50 @@ impl TeamsView {
         if let FieldValue::Number(n) = self.fields.value(&team_field("allyTeam", id)) {
             team.ally_team = n as i32;
         }
+        team.side.0 = self.fields.text(&team_field("side", id));
+        team.metal = self.fields.number(&team_field("metal", id));
+        team.metal_max = self.fields.number(&team_field("metalMax", id));
+        team.energy = self.fields.number(&team_field("energy", id));
+        team.energy_max = self.fields.number(&team_field("energyMax", id));
         let Ok(payload) = serde_json::to_value(&team) else {
             return vec![];
         };
         vec![envelope_with("UpdateTeamCommand", next, "team", payload)]
     }
+
+    fn add_team_envelope(&self, next: &mut u64) -> String {
+        let next_id = self.teams.iter().map(|t| t.id).max().unwrap_or(0) + 1;
+        let ally_team = self.teams.iter().map(|t| t.ally_team).max().unwrap_or(0) + 1;
+        envelope(
+            "AddTeamCommand",
+            next,
+            serde_json::json!({
+                "name": format!("Team {next_id}"),
+                "allyTeam": ally_team,
+            }),
+        )
+    }
 }
 
 impl Editor for TeamsView {
     fn generate_rml(&self) -> String {
-        let mut h = String::new();
+        let mut h = String::from(
+            r#"<div class="brush-actions"><button id="teams-add" class="brush-action"><span class="brush-action-label">Add Team</span></button></div>"#,
+        );
         for team in &self.teams {
             let id = team.id;
-            h.push_str(&section_rml(&format!("Team {id}")));
-            h.push_str(&self.fields.rml(&team_field("name", id)));
-            h.push_str(&self.fields.rml(&team_field("color", id)));
-            h.push_str(&self.fields.rml(&team_field("allyTeam", id)));
+            h.push_str(&format!(
+                r#"<div class="brush-actions"><button id="teams-remove-{id}" class="brush-action"><span class="brush-action-label">Remove Team {id}</span></button></div>"#
+            ));
+            h.push_str(&self.fields.generate_rml(&[
+                Layout::SectionOwned(format!("Team {id}")),
+                Layout::Field(&team_field("name", id)),
+                Layout::Field(&team_field("color", id)),
+                Layout::Field(&team_field("allyTeam", id)),
+                Layout::Field(&team_field("side", id)),
+                Layout::GroupOwned(vec![team_field("metal", id), team_field("metalMax", id)]),
+                Layout::GroupOwned(vec![team_field("energy", id), team_field("energyMax", id)]),
+            ]));
         }
         h
     }
@@ -119,7 +173,32 @@ impl Editor for TeamsView {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        self.fields.bind(interface, document, changes, interactions)
+        self.fields
+            .bind(interface, document, changes, interactions)?;
+        if let Some(button) = element_by_id(interface, document, "teams-add") {
+            let clicks = self.clicks.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    clicks.borrow_mut().push(TeamClick::Add);
+                })?;
+        }
+        for team in &self.teams {
+            let id = team.id;
+            if let Some(button) = element_by_id(interface, document, &format!("teams-remove-{id}"))
+            {
+                let clicks = self.clicks.clone();
+                interface.rml_ui().element_add_event_listener(
+                    button,
+                    "click",
+                    false,
+                    move || {
+                        clicks.borrow_mut().push(TeamClick::Remove(id));
+                    },
+                )?;
+            }
+        }
+        Ok(())
     }
 
     fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
@@ -147,6 +226,26 @@ impl Editor for TeamsView {
         }
     }
 
+    fn tick(
+        &mut self,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
+        next: &mut u64,
+    ) -> Vec<String> {
+        let clicks: Vec<_> = self.clicks.borrow_mut().drain(..).collect();
+        clicks
+            .into_iter()
+            .map(|click| match click {
+                TeamClick::Add => self.add_team_envelope(next),
+                TeamClick::Remove(id) => envelope(
+                    "RemoveTeamCommand",
+                    next,
+                    serde_json::json!({ "teamID": id }),
+                ),
+            })
+            .collect()
+    }
+
     fn refresh_from_engine(&mut self, _interface: &NativeInterfaceRef, models: &mut Models) {
         let teams = models.get::<TeamManager>().all_teams();
         // Only rebuild the fields when the roster changed; otherwise the DOM is
@@ -172,35 +271,24 @@ impl Editor for TeamsView {
                 &team_field("allyTeam", id),
                 FieldValue::Number(team.ally_team as f32),
             );
+            self.fields.set(
+                &team_field("side", id),
+                FieldValue::Text(team.side.0.clone()),
+            );
+            self.fields
+                .set(&team_field("metal", id), FieldValue::Number(team.metal));
+            self.fields.set(
+                &team_field("metalMax", id),
+                FieldValue::Number(team.metal_max),
+            );
+            self.fields
+                .set(&team_field("energy", id), FieldValue::Number(team.energy));
+            self.fields.set(
+                &team_field("energyMax", id),
+                FieldValue::Number(team.energy_max),
+            );
         }
     }
 
-    fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag(name, dx, interface)
-    }
-
-    fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag_end(name, interface)
-    }
-
-    fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.begin_edit(name, interface)
-    }
-
-    fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.cancel_edit(name, interface)
-    }
-
-    fn field_value(&self, name: &str) -> FieldValue {
-        self.fields.value(name)
-    }
-
-    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
-        self.fields.set(resolve_base(name), value);
-        let _ = self.fields.write_values(interface);
-    }
-
-    fn field_asset(&self, _name: &str) -> Option<(String, Vec<String>)> {
-        None
-    }
+    crate::sb_field_editor_methods!();
 }

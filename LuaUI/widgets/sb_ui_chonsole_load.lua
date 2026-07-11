@@ -5,6 +5,18 @@
 -- Set this line to the Chonsole installation folder
 CHONSOLE_FOLDER = "libs_sb/chonsole"
 
+-- Present so the widget handler accepts this loader even when it bails early
+-- (the Rust chonsole is active); the real Chonsole include redefines it.
+function widget:GetInfo()
+	return {
+		name = "Chonsole Loader",
+		desc = "Loads the Lua Chonsole unless the Rust chonsole is active",
+		author = "SpringBoard",
+		layer = 0,
+		enabled = true,
+	}
+end
+
 local function UseRustChonsole()
 	local flags = VFS.LoadFile("port_flags.json", VFS.DEF_MODE)
 	if not flags then

@@ -146,6 +146,35 @@ impl ObjectManager {
         self.events.extend(events);
     }
 
+    /// Full object data as JSON (all modeled fields), for clipboard / export.
+    pub fn object_json(&self, kind: ObjectKind, model_id: i32) -> Option<serde_json::Value> {
+        let handler = self.handler(&kind)?;
+        let data = handler.read(model_id)?;
+        Some(crate::sbc::objects::codec::object_to_json(&data))
+    }
+
+    /// Every existing model id of this kind, for select-all and clipboard.
+    pub fn all_model_ids(&self, kind: ObjectKind) -> Vec<i32> {
+        let Some(handler) = self.handler(&kind) else {
+            return Vec::new();
+        };
+        let latest = handler.latest_model_id();
+        (1..=latest).filter(|&id| handler.exists(id)).collect()
+    }
+
+    /// The defName of an object, if it has one (units, features).
+    pub fn def_name(&self, kind: ObjectKind, model_id: i32) -> Option<String> {
+        let handler = self.handler(&kind)?;
+        match handler.def(model_id)? {
+            super::object_data::DefRef::Name(s) => Some(s),
+            super::object_data::DefRef::Id(_) => {
+                // Fall back to the defName field if the def is an id.
+                self.field_json(kind, model_id, "defName")
+                    .and_then(|v| v.as_str().map(String::from))
+            }
+        }
+    }
+
     fn handler(&self, kind: &ObjectKind) -> Option<&(dyn ObjectHandler + '_)> {
         self.handlers.get(kind).map(|handler| handler.as_ref())
     }

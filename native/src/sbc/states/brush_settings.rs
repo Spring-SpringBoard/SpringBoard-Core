@@ -5,6 +5,7 @@
 //! resizes the brush shows up in the panel and a field edit reaches the brush.
 
 use std::any::Any;
+use std::collections::BTreeMap;
 
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory};
@@ -51,8 +52,26 @@ pub(crate) struct BrushSettings {
     pub pattern_texture: Option<String>,
     /// Texture brush only.
     pub brush_texture: Option<String>,
+    pub brush_textures: BTreeMap<String, String>,
+    pub texture_enabled: BTreeMap<String, bool>,
+    pub texture_paint_mode: String,
+    pub kernel_mode: String,
+    pub exclusive: bool,
+    pub void_factor: f32,
+    pub color_index: i32,
     pub mode: String,
     pub tex_scale: f32,
+    /// How the material itself is sampled, independent of the brush pattern.
+    pub tex_rotation: f32,
+    pub tex_offset_x: f32,
+    pub tex_offset_y: f32,
+    pub falloff_factor: f32,
+    pub feature_factor: f32,
+    pub diffuse_color: [f32; 4],
+    /// The level a DNTS channel is painted towards.
+    pub value: f32,
+    pub splat_tex_scale: f32,
+    pub splat_tex_mult: f32,
     /// Bumped whenever a state changes a value, so the open editor refreshes.
     pub revision: u64,
 }
@@ -68,8 +87,24 @@ impl Default for BrushSettings {
             apply_dir: ApplyDir::Both,
             pattern_texture: None,
             brush_texture: None,
+            brush_textures: BTreeMap::new(),
+            texture_enabled: BTreeMap::new(),
+            texture_paint_mode: "paint".to_string(),
+            kernel_mode: "blur".to_string(),
+            exclusive: false,
+            void_factor: 1.0,
+            color_index: 1,
             mode: "Normal".to_string(),
             tex_scale: 2.0,
+            tex_rotation: 0.0,
+            tex_offset_x: 0.0,
+            tex_offset_y: 0.0,
+            falloff_factor: 0.3,
+            feature_factor: 1.0,
+            diffuse_color: [1.0, 1.0, 1.0, 1.0],
+            value: 1.0,
+            splat_tex_scale: 1.0,
+            splat_tex_mult: 0.5,
             revision: 0,
         }
     }

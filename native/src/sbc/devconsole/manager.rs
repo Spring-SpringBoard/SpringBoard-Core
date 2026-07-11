@@ -34,6 +34,12 @@ pub(crate) struct DevConsoleManager {
     /// Set whenever the rendered log would change; the DOM is rewritten once
     /// per tick rather than once per line, so a burst stays cheap.
     dirty: bool,
+    /// The current dirty render should land at the newest line. Selection-only
+    /// redraws leave the user's scroll alone.
+    pin_log_bottom: bool,
+    /// Engine console commands apply after `send_commands`; refresh toolbar
+    /// pressed states on the following tick so cheating/god/LOS read back live.
+    toggle_refresh_pending: bool,
     /// The engine's console buffer is only worth reading once; after a `luaui
     /// reload` rebuilds the view, our own buffer already holds those lines.
     backfilled: bool,
@@ -64,6 +70,8 @@ impl DevConsoleManager {
             problems_only: false,
             popup_on_error: true,
             dirty: false,
+            pin_log_bottom: false,
+            toggle_refresh_pending: false,
             backfilled: false,
         }
     }
@@ -83,19 +91,32 @@ impl DevConsoleManager {
             }
             self.refresh_toggles()?;
             self.dirty = true;
+            self.pin_log_bottom = true;
         }
         if !self.view.is_ready() {
             return Ok(());
+        }
+
+        if self.toggle_refresh_pending {
+            self.toggle_refresh_pending = false;
+            self.refresh_toggles()?;
         }
 
         self.process_actions()?;
         if !self.view.is_ready() {
             return Ok(());
         }
+        if self.view.process_selection() {
+            self.dirty = true;
+        }
 
         if self.dirty {
-            self.view
-                .render_log(&self.interface, self.buffer.visible(self.problems_only))?;
+            let pin_log_bottom = std::mem::take(&mut self.pin_log_bottom);
+            self.view.render_log(
+                &self.interface,
+                self.buffer.visible(self.problems_only),
+                pin_log_bottom,
+            )?;
             self.view
                 .render_error_count(&self.interface, self.buffer.error_count())?;
             self.dirty = false;
@@ -125,6 +146,7 @@ impl DevConsoleManager {
         }
         let severity = self.buffer.push(message.trim_end());
         self.dirty = true;
+        self.pin_log_bottom = true;
 
         if severity == Severity::Error && self.popup_on_error && !self.view.visible() {
             let _ = self.view.set_visible(&self.interface, true);
@@ -141,7 +163,42 @@ impl DevConsoleManager {
             self.refresh_toggles()?;
             return Ok(true);
         }
+        if !self.view.visible() {
+            return Ok(false);
+        }
+        let ctrl = self
+            .interface
+            .input()
+            .get_mod_key_state()
+            .is_ok_and(|bits| bits & (1 << 1) != 0);
+        if ctrl && is_key(&self.interface, key_code, "a") {
+            let count = self.buffer.visible(self.problems_only).count();
+            self.view.select_all(count);
+            self.dirty = true;
+            return Ok(true);
+        }
+        if ctrl && is_key(&self.interface, key_code, "c") {
+            self.copy_selection();
+            return Ok(true);
+        }
         Ok(false)
+    }
+
+    fn copy_selection(&self) {
+        let Some((start, end)) = self.view.selected_range() else {
+            return;
+        };
+        let text = self
+            .buffer
+            .visible(self.problems_only)
+            .enumerate()
+            .filter(|(index, _)| *index >= start && *index <= end)
+            .map(|(_, line)| line.text.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+        if !text.is_empty() {
+            let _ = self.interface.unsynced_ctrl().set_clipboard(&text);
+        }
     }
 
     fn process_actions(&mut self) -> Result<(), Error> {
@@ -161,15 +218,25 @@ impl DevConsoleManager {
                 Action::Clear => {
                     self.buffer.clear();
                     self.dirty = true;
+                    self.pin_log_bottom = true;
                 }
                 Action::FilterProblems => {
                     self.problems_only = !self.problems_only;
                     self.dirty = true;
+                    self.pin_log_bottom = true;
+                    self.toggle_refresh_pending = true;
                 }
-                Action::TogglePopupOnError => self.popup_on_error = !self.popup_on_error,
+                Action::Restart => {
+                    let _ = self.interface.system_control().restart("", "");
+                }
+                Action::TogglePopupOnError => {
+                    self.popup_on_error = !self.popup_on_error;
+                    self.toggle_refresh_pending = true;
+                }
                 Action::ToggleVisibility => {
                     let visible = !self.view.visible();
                     self.view.set_visible(&self.interface, visible)?;
+                    self.toggle_refresh_pending = true;
                 }
                 Action::ReloadLuaUi => {
                     let _ = self.interface.messages().send_commands("luaui reload", "");
@@ -183,14 +250,17 @@ impl DevConsoleManager {
                 }
                 Action::ToggleCheating => {
                     let _ = self.interface.messages().send_commands("cheat", "");
+                    self.toggle_refresh_pending = true;
                 }
                 Action::ToggleGlobalLos => {
                     cheat_if_needed(&self.interface);
                     let _ = self.interface.messages().send_commands("globallos", "");
+                    self.toggle_refresh_pending = true;
                 }
                 Action::ToggleGodMode => {
                     cheat_if_needed(&self.interface);
                     let _ = self.interface.messages().send_commands("godmode", "");
+                    self.toggle_refresh_pending = true;
                 }
             }
         }
@@ -198,7 +268,7 @@ impl DevConsoleManager {
             self.view.forget();
             return Ok(());
         }
-        self.refresh_toggles()
+        Ok(())
     }
 
     fn refresh_toggles(&mut self) -> Result<(), Error> {

@@ -6,6 +6,7 @@ pub(crate) mod highlight;
 mod manager;
 mod manipulate;
 mod map_editing;
+mod rectangle_select;
 mod shapes;
 mod state;
 
@@ -13,3 +14,4 @@ pub(crate) use add_object::PlacementConfig;
 pub(crate) use brush_settings::{ApplyDir, BrushSettings};
 pub(crate) use manager::{StateManager, StateRequest};
 pub(crate) use map_editing::BrushKind;
+pub(crate) use state::trace_ground;

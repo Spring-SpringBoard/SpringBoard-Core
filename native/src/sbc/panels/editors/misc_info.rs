@@ -2,7 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope_with, resolve_base, FieldSet};
+use crate::sbc::panels::editor_base::{envelope_with, resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::StringField;
 use crate::sbc::panels::registry::{EditorSpec, Tab};
@@ -59,7 +59,12 @@ impl ScenarioInfoView {
 
 impl Editor for ScenarioInfoView {
     fn generate_rml(&self) -> String {
-        FIELDS.iter().map(|n| self.fields.rml(n)).collect()
+        self.fields.generate_rml(&[
+            Layout::Field("name"),
+            Layout::Field("description"),
+            Layout::Field("version"),
+            Layout::Field("author"),
+        ])
     }
 
     fn bind_fields(
@@ -103,28 +108,5 @@ impl Editor for ScenarioInfoView {
         self.fields.set("author", FieldValue::Text(info.author));
     }
 
-    fn drag_field(&mut self, _name: &str, _dx: f32, _interface: &NativeInterfaceRef) -> bool {
-        false
-    }
-
-    fn drag_end_field(&mut self, _name: &str, _interface: &NativeInterfaceRef) -> bool {
-        false
-    }
-
-    fn begin_edit_field(&mut self, _name: &str, _interface: &NativeInterfaceRef) {}
-
-    fn cancel_edit_field(&mut self, _name: &str, _interface: &NativeInterfaceRef) {}
-
-    fn field_value(&self, name: &str) -> FieldValue {
-        self.fields.value(name)
-    }
-
-    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
-        self.fields.set(resolve_base(name), value);
-        let _ = self.fields.write_values(interface);
-    }
-
-    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
-        self.fields.asset_info(name)
-    }
+    crate::sb_field_editor_methods!();
 }

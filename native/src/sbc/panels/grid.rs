@@ -13,7 +13,7 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::panels::field::{element_by_id, escape_rml};
+use crate::sbc::panels::field::{bind_tooltip, element_by_id, escape_rml};
 
 /// One cell.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,6 +25,8 @@ pub(crate) struct GridItem {
     pub image: Option<String>,
     /// Directories navigate rather than select.
     pub is_directory: bool,
+    /// Hover text, when the cell has more to say than its caption.
+    pub tooltip: Option<String>,
 }
 
 pub(crate) type ClickQueue = Rc<RefCell<Vec<String>>>;
@@ -129,6 +131,9 @@ impl GridView {
             let Some(cell) = element_by_id(interface, document, &id) else {
                 continue;
             };
+            if let Some(tooltip) = &item.tooltip {
+                bind_tooltip(interface, document, cell, tooltip)?;
+            }
             let queue = self.clicks.clone();
             let item_id = item.id.clone();
             rml.element_add_event_listener(cell, "click", false, move || {
@@ -168,6 +173,7 @@ pub(crate) fn list_assets(
                 caption,
                 image: None,
                 is_directory: true,
+                tooltip: None,
             });
         } else {
             let matches = extensions.is_empty()
@@ -180,6 +186,7 @@ pub(crate) fn list_assets(
                     id: path,
                     caption,
                     is_directory: false,
+                    tooltip: None,
                 });
             }
         }

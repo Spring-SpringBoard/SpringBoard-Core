@@ -2,7 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, group_rml, resolve_base, section_rml, FieldSet};
+use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
@@ -128,32 +128,19 @@ impl LightingEditor {
 
 impl Editor for LightingEditor {
     fn generate_rml(&self) -> String {
-        let mut h = String::new();
-        h.push_str(&section_rml("Shadows"));
-        h.push_str(&self.fields.rml("shadowMode"));
-
-        h.push_str(&group_rml(&[
-            self.fields.rml("sunDirX"),
-            self.fields.rml("sunDirY"),
-            self.fields.rml("sunDirZ"),
-        ]));
-
-        h.push_str(&section_rml("Sun ground color"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("groundDiffuseColor"),
-            self.fields.rml("groundAmbientColor"),
-        ]));
-        h.push_str(&group_rml(&[self.fields.rml("groundSpecularColor")]));
-        h.push_str(&self.fields.rml("groundShadowDensity"));
-
-        h.push_str(&section_rml("Sun unit color"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("unitDiffuseColor"),
-            self.fields.rml("unitAmbientColor"),
-        ]));
-        h.push_str(&group_rml(&[self.fields.rml("unitSpecularColor")]));
-        h.push_str(&self.fields.rml("modelShadowDensity"));
-        h
+        self.fields.generate_rml(&[
+            Layout::Section("Shadows"),
+            Layout::Field("shadowMode"),
+            Layout::Group(&["sunDirX", "sunDirY", "sunDirZ"]),
+            Layout::Section("Sun ground color"),
+            Layout::Group(&["groundDiffuseColor", "groundAmbientColor"]),
+            Layout::Group(&["groundSpecularColor"]),
+            Layout::Field("groundShadowDensity"),
+            Layout::Section("Sun unit color"),
+            Layout::Group(&["unitDiffuseColor", "unitAmbientColor"]),
+            Layout::Group(&["unitSpecularColor"]),
+            Layout::Field("modelShadowDensity"),
+        ])
     }
 
     fn bind_fields(
@@ -268,32 +255,5 @@ impl Editor for LightingEditor {
         }
     }
 
-    fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag(name, dx, interface)
-    }
-
-    fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag_end(name, interface)
-    }
-
-    fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.begin_edit(name, interface)
-    }
-
-    fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.cancel_edit(name, interface)
-    }
-
-    fn field_value(&self, name: &str) -> FieldValue {
-        self.fields.value(name)
-    }
-
-    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
-        self.fields.set(resolve_base(name), value);
-        let _ = self.fields.write_values(interface);
-    }
-
-    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
-        self.fields.asset_info(name)
-    }
+    crate::sb_field_editor_methods!();
 }

@@ -83,13 +83,55 @@ body {
     align-items: center;
 }
 
+/* The icon is centred by the flex box, not by line-height: an inline img is
+   aligned to the baseline and drawn low, leaving the visible icon offset from
+   the button's box -- which is what is hit-tested. The button bears no text, so
+   flex is safe here. */
+.action-button {
+    width: 38dp;
+    height: 38dp;
+    background-color: #111411;
+    border-color: #2e342f;
+    border-width: 1dp;
+    padding: 0dp;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-button:hover {
+    background-color: #1c221d;
+}
+
+.action-button img {
+    width: 22dp;
+    height: 22dp;
+}
+
+.native-tooltip {
+    position: absolute;
+    z-index: 20000;
+    max-width: 260dp;
+    min-height: 20dp;
+    background-color: #0b0d0c;
+    color: #eeeeee;
+    border: 1dp #67706a;
+    padding: 5dp 7dp;
+    font-size: 12dp;
+    line-height: 16dp;
+    pointer-events: none;
+}
+
 /* --- Editor button strip --- */
+/* Stops at 130dp, where the action bar begins. Overlapping it would put this
+   scroll container over the toolbar's top edge and swallow clicks there. */
 .editor-button-panel {
     position: absolute;
     top: 55dp;
     left: 0dp;
     right: 0dp;
-    height: 80dp;
+    height: 75dp;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -431,6 +473,8 @@ body {
 .field-composite-button.hidden,
 .field-numeric-button.hidden,
 .field-numeric-input.hidden,
+.field-inline.hidden,
+.field-group.hidden,
 .field-input.hidden {
     display: none;
 }
@@ -573,17 +617,24 @@ scrollbarvertical sliderbar:hover {
 .brush-actions {
     display: flex;
     flex-direction: row;
-    gap: 4px;
-    margin-bottom: 8px;
+    gap: 2dp;
+    margin-bottom: 15dp;
+    padding: 5dp;
+    background-color: #2a2a2a;
+    border-bottom: 1px #555555;
 }
 
 .brush-action {
-    padding: 5px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 68dp;
+    height: 68dp;
     background-color: #111411;
-    color: #cccccc;
-    border: 2px #050706;
+    border: 2dp #2e342f;
     border-radius: 4px;
-    font-size: 12px;
+    padding: 3dp;
 }
 
 .brush-action:hover {
@@ -594,6 +645,33 @@ scrollbarvertical sliderbar:hover {
 .brush-action.pressed {
     background-color: #050705;
     border-color: #00ff00;
+}
+
+/* An action the map cannot support (DNTS on a map with no splat normals). */
+.brush-action.disabled {
+    background-color: #141414;
+    border-color: #2a2a2a;
+    image-color: #ffffff60;
+}
+
+.brush-action.disabled .brush-action-label {
+    color: #6a6a6a;
+}
+
+.brush-action-icon,
+.brush-action img {
+    width: 32dp;
+    height: 32dp;
+    margin-bottom: 4dp;
+}
+
+.brush-action-label {
+    font-size: 11dp;
+    color: #cccccc;
+    text-align: center;
+}
+
+.brush-action.pressed .brush-action-label {
     color: #00ff00;
 }
 
@@ -644,6 +722,40 @@ scrollbarvertical sliderbar:hover {
 
 .dialog-content {
     padding: 12px;
+}
+
+/* --- File / New-project dialog rows --- */
+.fd-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.fd-row.hidden {
+    display: none;
+}
+
+.fd-label {
+    width: 60px;
+    color: #cccccc;
+    font-size: 13px;
+}
+
+.fd-input {
+    flex-grow: 1;
+    height: 26px;
+    background-color: #1a1a1a;
+    color: #eeeeee;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 0px 6px;
+}
+
+.fd-input.fd-size {
+    flex-grow: 0;
+    width: 70px;
 }
 
 .dialog-footer {

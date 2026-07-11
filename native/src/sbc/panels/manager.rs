@@ -2,6 +2,7 @@ use std::any::Any;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::actions::{self, Action, ActionResult, FileAcceptFn};
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::envelope::as_preview;
@@ -10,7 +11,9 @@ use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
+use crate::sbc::panels::file_dialog::FileDialog;
 use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
+use crate::sbc::panels::new_project_dialog::NewProjectDialog;
 use crate::sbc::panels::registry::editor_by_name;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
@@ -37,6 +40,14 @@ pub(crate) struct PanelManager {
     next_cmd_id: u64,
     picker: ColorPicker,
     asset_picker: AssetPicker,
+    file_dialog: FileDialog,
+    new_project: NewProjectDialog,
+    /// The callback the open file dialog will run against its accepted result,
+    /// set when a toolbar action opens the dialog.
+    pending_accept: Option<FileAcceptFn>,
+    /// Hotkey-matched actions queued in `key_press`, run in `update` where the
+    /// models are borrowable.
+    pending_actions: Vec<Action>,
     /// The field currently in text-edit mode. Owning this here is what keeps a
     /// commit to exactly one command: the DOM would otherwise fire "change" on
     /// every keystroke.
@@ -87,6 +98,10 @@ impl PanelManager {
             next_cmd_id: 1_000_000,
             picker: ColorPicker::default(),
             asset_picker: AssetPicker::default(),
+            file_dialog: FileDialog::default(),
+            new_project: NewProjectDialog::default(),
+            pending_accept: None,
+            pending_actions: Vec::new(),
             editing: None,
             just_committed: None,
             drag_original: None,
@@ -108,6 +123,10 @@ impl PanelManager {
             self.drag_original = None;
             self.picker.forget_bindings();
             self.asset_picker.forget_bindings();
+            self.file_dialog.forget_bindings();
+            self.new_project.forget_bindings();
+            self.pending_accept = None;
+            self.pending_actions.clear();
             self.input.reset();
             self.view.set_active_editor(&self.interface, None)?;
         }
@@ -117,11 +136,18 @@ impl PanelManager {
         if let Some(doc) = self.view.document_handle() {
             self.picker.bind(&self.interface, doc)?;
             self.asset_picker.bind(&self.interface, doc)?;
+            self.file_dialog.bind(&self.interface, doc)?;
+            self.new_project.bind(&self.interface, doc)?;
         }
 
-        self.process_shell_events()?;
+        self.process_shell_events(models)?;
+        for action in std::mem::take(&mut self.pending_actions) {
+            self.run_action(action, models)?;
+        }
         self.process_picker()?;
         self.process_asset_picker()?;
+        self.process_file_dialog()?;
+        self.process_new_project()?;
 
         self.input.set_cursor(&self.interface);
 
@@ -174,6 +200,12 @@ impl PanelManager {
                 }
             }
             DragTick::Moved(field) => self.preview_field(&field),
+            DragTick::Released(field) => {
+                if let Some(ed) = self.editor.as_deref_mut() {
+                    ed.drag_end_field(&field, &self.interface);
+                }
+                self.commit_drag(&field);
+            }
             DragTick::Idle => {}
         }
 
@@ -243,17 +275,138 @@ impl PanelManager {
     /// Tab and editor-button clicks are queued by the listeners and handled
     /// here, one tick later: rebuilding the DOM while RmlUi is dispatching the
     /// click frees the element it is dispatching to.
-    fn process_shell_events(&mut self) -> Result<(), Error> {
+    fn process_shell_events(&mut self, models: &mut Models) -> Result<(), Error> {
         for event in self.view.drain_events() {
             match event {
-                ShellEvent::TabClicked(tab) => {
+                ShellEvent::Tab(tab) => {
                     self.view.set_tab(&self.interface, tab)?;
                     self.editor = None;
                 }
-                ShellEvent::EditorClicked(name) => self.open_editor(name)?,
+                ShellEvent::Editor(name) => self.open_editor(name)?,
+                ShellEvent::Action(action) => self.run_action(action, models)?,
             }
         }
         Ok(())
+    }
+
+    /// Match a key + current modifiers against the action hotkeys, queueing the
+    /// match to run next tick. Returns whether a hotkey was claimed.
+    fn match_hotkey(&mut self, key: i32) -> bool {
+        const SHIFT: u32 = 1 << 0;
+        const CTRL: u32 = 1 << 1;
+        let mods = self.interface.input().get_mod_key_state().unwrap_or(0);
+        let (ctrl, shift) = (mods & CTRL != 0, mods & SHIFT != 0);
+
+        for action in Action::ALL {
+            let Some(hk) = action.hotkey() else { continue };
+            if hk.ctrl == ctrl
+                && hk.shift == shift
+                && crate::sbc::keys::is_key(&self.interface, key, hk.key)
+            {
+                self.pending_actions.push(action);
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Run a toolbar action or hotkey. Actions either dispatch commands directly,
+    /// or ask to open a dialog whose result the manager feeds back.
+    pub(crate) fn run_action(&mut self, action: Action, models: &mut Models) -> Result<(), Error> {
+        if !actions::can_execute(action, models) {
+            return Ok(());
+        }
+        match actions::execute(action, &self.interface, models, &mut self.next_cmd_id) {
+            ActionResult::None => {}
+            ActionResult::Commands(envelopes) => self.pending_envelopes.extend(envelopes),
+            ActionResult::OpenFileDialog { config, on_accept } => {
+                if let Some(doc) = self.view.document_handle() {
+                    self.pending_accept = Some(on_accept);
+                    self.file_dialog.open(&self.interface, doc, config)?;
+                }
+            }
+            ActionResult::OpenNewProject => {
+                if let Some(doc) = self.view.document_handle() {
+                    self.new_project.open(&self.interface, doc)?;
+                }
+            }
+        }
+        // Paste needs the cursor's ground position, which the action layer can't
+        // reach; run it here where the mouse state is available.
+        if action == Action::Paste {
+            self.run_paste(models);
+        }
+        Ok(())
+    }
+
+    /// Paste the clipboard at the cursor's ground hit.
+    fn run_paste(&mut self, models: &mut Models) {
+        let Ok(mouse) = self.interface.input().get_mouse_state() else {
+            return;
+        };
+        let Some(hit) = crate::sbc::states::trace_ground(&self.interface, mouse.x, mouse.y) else {
+            return;
+        };
+        let envelopes =
+            actions::execute_paste(&self.interface, models, hit.x, hit.z, &mut self.next_cmd_id);
+        self.pending_envelopes.extend(envelopes);
+    }
+
+    /// Feed a completed file-dialog result to the action that opened it.
+    fn process_file_dialog(&mut self) -> Result<(), Error> {
+        let Some(doc) = self.view.document_handle() else {
+            return Ok(());
+        };
+        if let Some(result) = self.file_dialog.tick(&self.interface, doc)? {
+            if let Some(on_accept) = self.pending_accept.take() {
+                let envelopes = on_accept(&result, &self.interface, &mut self.next_cmd_id);
+                self.pending_envelopes.extend(envelopes);
+            }
+        } else if !self.file_dialog.is_open() {
+            // The dialog closed (cancel); drop any pending callback.
+            self.pending_accept = None;
+        }
+        Ok(())
+    }
+
+    /// Feed a completed new-project result to the action layer.
+    fn process_new_project(&mut self) -> Result<(), Error> {
+        let Some(doc) = self.view.document_handle() else {
+            return Ok(());
+        };
+        if let Some(result) = self.new_project.tick(&self.interface, doc)? {
+            let envelopes = actions::commit_new_project(
+                &result.name,
+                &result.map_name,
+                result.size_x,
+                result.size_y,
+                &self.interface,
+                &mut self.next_cmd_id,
+            );
+            self.pending_envelopes.extend(envelopes);
+        }
+        Ok(())
+    }
+
+    fn close_top_modal(&mut self) -> Result<bool, Error> {
+        let Some(doc) = self.view.document_handle() else {
+            return Ok(false);
+        };
+        if self.picker.is_open() {
+            self.picker.close(&self.interface, doc)?;
+            return Ok(true);
+        }
+        if self.asset_picker.cancel_if_open(&self.interface, doc)? {
+            return Ok(true);
+        }
+        if self.file_dialog.cancel_if_open(&self.interface, doc)? {
+            self.pending_accept = None;
+            return Ok(true);
+        }
+        if self.new_project.cancel_if_open(&self.interface, doc)? {
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     /// Toggle an editor: clicking the open one closes it, as in Chili.
@@ -470,10 +623,14 @@ impl PanelManager {
         }
         const RETURN: i32 = 13;
         const ESCAPE: i32 = 27;
+        if key == ESCAPE && self.close_top_modal()? {
+            return Ok(true);
+        }
         // Keys are only ours while a field is being edited; anything else stays
-        // available to the chonsole and the engine.
+        // available to the chonsole and the engine — except a toolbar/clipboard
+        // hotkey, which we claim here and run next tick (where models borrow).
         let Some(name) = self.editing.clone() else {
-            return Ok(false);
+            return Ok(self.match_hotkey(key));
         };
         if key == RETURN {
             self.commit_field(&name, false);
@@ -536,7 +693,14 @@ impl PanelManager {
             return Ok(());
         }
         self.input
-            .mouse_release(&self.interface, &self.view, x, y, button)
+            .mouse_release(&self.interface, &self.view, x, y, button)?;
+        if let Some(field) = self.input.force_drag_release() {
+            if let Some(ed) = self.editor.as_deref_mut() {
+                ed.drag_end_field(&field, &self.interface);
+            }
+            self.commit_drag(&field);
+        }
+        Ok(())
     }
 
     pub fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {

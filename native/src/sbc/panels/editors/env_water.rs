@@ -2,7 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, group_rml, resolve_base, section_rml, FieldSet};
+use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{AssetField, BooleanField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
@@ -91,62 +91,31 @@ impl WaterEditor {
 
 impl Editor for WaterEditor {
     fn generate_rml(&self) -> String {
-        let mut h = String::new();
-        h.push_str(&group_rml(&[
-            self.fields.rml("forceRendering"),
-            self.fields.rml("numTiles"),
-        ]));
-
-        h.push_str(&section_rml("Water - perlin noise"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("perlinStartFreq"),
-            self.fields.rml("perlinLacunarity"),
-        ]));
-        h.push_str(&group_rml(&[self.fields.rml("perlinAmplitude")]));
-
-        h.push_str(&section_rml("Water - diffuse"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("diffuseFactor"),
-            self.fields.rml("diffuseColor"),
-        ]));
-
-        h.push_str(&section_rml("Water - specular"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("specularFactor"),
-            self.fields.rml("specularPower"),
-        ]));
-        h.push_str(&group_rml(&[self.fields.rml("specularColor")]));
-        h.push_str(&group_rml(&[self.fields.rml("ambientFactor")]));
-
-        h.push_str(&section_rml("Water - fresnel"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("fresnelMin"),
-            self.fields.rml("fresnelMax"),
-        ]));
-        h.push_str(&group_rml(&[self.fields.rml("fresnelPower")]));
-        h.push_str(&group_rml(&[self.fields.rml("reflectionDistortion")]));
-
-        h.push_str(&section_rml("Water - blur"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("blurBase"),
-            self.fields.rml("blurExponent"),
-        ]));
-
-        h.push_str(&section_rml("Water - plane"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("hasWaterPlane"),
-            self.fields.rml("planeColor"),
-        ]));
-
-        h.push_str(&section_rml("Water - texture"));
-        h.push_str(&self.fields.rml("normalTexture"));
-        h.push_str(&self.fields.rml("foamTexture"));
-        h.push_str(&self.fields.rml("texture"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("repeatX"),
-            self.fields.rml("repeatY"),
-        ]));
-        h
+        self.fields.generate_rml(&[
+            Layout::Group(&["forceRendering", "numTiles"]),
+            Layout::Section("Water - perlin noise"),
+            Layout::Group(&["perlinStartFreq", "perlinLacunarity"]),
+            Layout::Group(&["perlinAmplitude"]),
+            Layout::Section("Water - diffuse"),
+            Layout::Group(&["diffuseFactor", "diffuseColor"]),
+            Layout::Section("Water - specular"),
+            Layout::Group(&["specularFactor", "specularPower"]),
+            Layout::Group(&["specularColor"]),
+            Layout::Group(&["ambientFactor"]),
+            Layout::Section("Water - fresnel"),
+            Layout::Group(&["fresnelMin", "fresnelMax"]),
+            Layout::Group(&["fresnelPower"]),
+            Layout::Group(&["reflectionDistortion"]),
+            Layout::Section("Water - blur"),
+            Layout::Group(&["blurBase", "blurExponent"]),
+            Layout::Section("Water - plane"),
+            Layout::Group(&["hasWaterPlane", "planeColor"]),
+            Layout::Section("Water - texture"),
+            Layout::Field("normalTexture"),
+            Layout::Field("foamTexture"),
+            Layout::Field("texture"),
+            Layout::Group(&["repeatX", "repeatY"]),
+        ])
     }
 
     fn bind_fields(
@@ -223,32 +192,5 @@ impl Editor for WaterEditor {
         }
     }
 
-    fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag(name, dx, interface)
-    }
-
-    fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag_end(name, interface)
-    }
-
-    fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.begin_edit(name, interface)
-    }
-
-    fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.cancel_edit(name, interface)
-    }
-
-    fn field_value(&self, name: &str) -> FieldValue {
-        self.fields.value(name)
-    }
-
-    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
-        self.fields.set(resolve_base(name), value);
-        let _ = self.fields.write_values(interface);
-    }
-
-    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
-        self.fields.asset_info(name)
-    }
+    crate::sb_field_editor_methods!();
 }

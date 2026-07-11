@@ -2,7 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, group_rml, resolve_base, section_rml, FieldSet};
+use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{AssetField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
@@ -75,20 +75,12 @@ impl SkyEditor {
 
 impl Editor for SkyEditor {
     fn generate_rml(&self) -> String {
-        let mut h = String::new();
-        h.push_str(&group_rml(&[
-            self.fields.rml("sunColor"),
-            self.fields.rml("skyColor"),
-            self.fields.rml("cloudColor"),
-        ]));
-        h.push_str(&self.fields.rml("skyboxTexture"));
-        h.push_str(&section_rml("Fog"));
-        h.push_str(&group_rml(&[
-            self.fields.rml("fogColor"),
-            self.fields.rml("fogStart"),
-            self.fields.rml("fogEnd"),
-        ]));
-        h
+        self.fields.generate_rml(&[
+            Layout::Group(&["sunColor", "skyColor", "cloudColor"]),
+            Layout::Field("skyboxTexture"),
+            Layout::Section("Fog"),
+            Layout::Group(&["fogColor", "fogStart", "fogEnd"]),
+        ])
     }
 
     fn bind_fields(
@@ -142,32 +134,5 @@ impl Editor for SkyEditor {
         }
     }
 
-    fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag(name, dx, interface)
-    }
-
-    fn drag_end_field(&mut self, name: &str, interface: &NativeInterfaceRef) -> bool {
-        self.fields.drag_end(name, interface)
-    }
-
-    fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.begin_edit(name, interface)
-    }
-
-    fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.cancel_edit(name, interface)
-    }
-
-    fn field_value(&self, name: &str) -> FieldValue {
-        self.fields.value(name)
-    }
-
-    fn set_field_value(&mut self, name: &str, value: FieldValue, interface: &NativeInterfaceRef) {
-        self.fields.set(resolve_base(name), value);
-        let _ = self.fields.write_values(interface);
-    }
-
-    fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {
-        self.fields.asset_info(name)
-    }
+    crate::sb_field_editor_methods!();
 }
