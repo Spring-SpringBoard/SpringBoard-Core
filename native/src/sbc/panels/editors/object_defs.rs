@@ -18,7 +18,10 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
-use crate::sbc::panels::field::{escape_rml, ChangeQueue, Field, InteractionQueue};
+use crate::sbc::panels::editors::def_filters::{
+    DefTraits, FEATURE_TYPES, TERRAINS, UNIT_TYPES,
+};
+use crate::sbc::panels::field::{escape_rml, ChangeQueue, Field, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField};
 use crate::sbc::panels::grid::{GridItem, GridView};
 use crate::sbc::panels::thumbnails::{ThumbKind, ThumbnailRenderer};
@@ -42,6 +45,9 @@ enum PlaceMode {
 
 /// Set-mode fields, then brush-mode fields; the ones for the inactive mode are
 /// hidden, as Lua does with `SetInvisibleFields`.
+/// The grid filters. Changing one re-filters rather than re-arming placement.
+const FILTER_FIELDS: &[&str] = &["typeFilter", "wreckFilter", "terrainFilter"];
+
 const SET_FIELDS: &[&str] = &["amount"];
 const BRUSH_FIELDS: &[&str] = &[
     "size", "spread", "noise", "rotXMin", "rotXMax", "rotYMin", "rotYMax", "rotZMin", "rotZMax",
@@ -54,6 +60,8 @@ pub(crate) struct ObjectDefsView {
     all: Vec<GridItem>,
     /// Engine definition id by grid id, used by thumbnails and placement ghosting.
     def_ids: HashMap<String, i32>,
+    /// What each definition is, for the Type/Wreck/Terrain filters.
+    traits: HashMap<String, DefTraits>,
     search: String,
     search_element: Option<u64>,
     loaded: bool,
@@ -81,12 +89,17 @@ impl ObjectDefsView {
             grid: GridView::new("object-defs-grid", 64),
             all: Vec::new(),
             def_ids: HashMap::new(),
+            traits: HashMap::new(),
             search: String::new(),
             search_element: None,
             loaded: false,
             search_dirty: false,
             request_dirty: false,
-            fields: FieldSet::new(placement_fields(vec![])),
+            fields: FieldSet::new({
+                let mut fields = placement_fields(vec![]);
+                fields.extend(filter_fields(kind));
+                fields
+            }),
             mode: PlaceMode::Set,
             mode_clicks: Rc::new(RefCell::new(Vec::new())),
             teams: Vec::new(),
@@ -105,10 +118,16 @@ impl ObjectDefsView {
         self.search_dirty = true;
     }
 
-    /// A placement field committed; re-arm placement with the new setting.
+    /// A field committed. A filter re-filters the grid; anything else is a
+    /// placement setting, so re-arm placement with it.
     pub(crate) fn note_field_change(&mut self, name: &str, interface: &NativeInterfaceRef) {
-        self.fields.read(resolve_base(name), interface);
-        self.request_dirty = true;
+        let base = resolve_base(name);
+        self.fields.read(base, interface);
+        if FILTER_FIELDS.contains(&base) {
+            self.search_dirty = true;
+        } else {
+            self.request_dirty = true;
+        }
     }
 
     pub(crate) fn generate_rml(&self) -> String {
@@ -154,6 +173,15 @@ impl ObjectDefsView {
         }
 
         h.push_str(&self.fields.generate_rml(&[Layout::Section("Definitions")]));
+        // The filters over the grid, as in Lua's MakeFilters: Units get Type +
+        // Terrain, Features get Type + Wreck + Terrain.
+        h.push_str(&self.fields.generate_rml(&match self.kind {
+            DefKind::Unit => vec![Layout::Group(&["typeFilter", "terrainFilter"])],
+            DefKind::Feature => vec![
+                Layout::Group(&["typeFilter", "wreckFilter"]),
+                Layout::Field("terrainFilter"),
+            ],
+        }));
         h.push_str(&format!(
             concat!(
                 r#"<div class="field-row">"#,
@@ -244,8 +272,30 @@ impl ObjectDefsView {
     /// Rebuild the field set: the team choice's options come from the roster,
     /// which changes, so the field cannot be fixed at construction.
     fn rebuild_fields(&mut self) {
+        // The roster changing must not silently reset the grid's filters.
+        let filters: Vec<(String, String)> = FILTER_FIELDS
+            .iter()
+            .filter(|name| self.fields.get(name).is_some())
+            .map(|name| ((*name).to_string(), self.fields.text(name)))
+            .collect();
+
         let captions: Vec<String> = self.teams.iter().map(|(_, c)| c.clone()).collect();
-        self.fields = FieldSet::new(placement_fields(captions));
+        let mut fields = placement_fields(captions);
+        fields.extend(filter_fields(self.kind));
+        self.fields = FieldSet::new(fields);
+
+        for (name, value) in filters {
+            self.fields.set(&name, FieldValue::Text(value));
+        }
+    }
+
+    /// The filter choice, or its default when the field is not built yet.
+    fn filter(&self, name: &str, default: &str) -> String {
+        let value = self.fields.text(name);
+        if value.is_empty() {
+            return default.to_string();
+        }
+        value
     }
 
     /// The placement config from the current fields.
@@ -298,6 +348,18 @@ impl ObjectDefsView {
             self.def_ids = loaded
                 .iter()
                 .map(|(item, def_id)| (item.id.clone(), *def_id))
+                .collect();
+            // Read once: a unit's traits come from its own def, a feature's from
+            // the unit it is the wreck of (if any).
+            self.traits = loaded
+                .iter()
+                .map(|(item, def_id)| {
+                    let traits = match self.kind {
+                        DefKind::Unit => DefTraits::of_unit(interface, *def_id),
+                        DefKind::Feature => DefTraits::of_feature(interface, &item.id),
+                    };
+                    (item.id.clone(), traits)
+                })
                 .collect();
             self.all = loaded.into_iter().map(|(item, _)| item).collect();
             self.loaded = true;
@@ -422,19 +484,72 @@ impl ObjectDefsView {
     }
 
     fn apply_filter(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
+        let terrain = self.filter("terrainFilter", TERRAINS[0]);
+        let type_filter = self.filter(
+            "typeFilter",
+            match self.kind {
+                DefKind::Unit => UNIT_TYPES[0],
+                DefKind::Feature => FEATURE_TYPES[0],
+            },
+        );
+        let wreck = self.filter("wreckFilter", UNIT_TYPES[0]);
+        let kind = self.kind;
+
         let matches: Vec<GridItem> = self
             .all
             .iter()
             .filter(|item| {
-                self.search.is_empty()
+                let searched = self.search.is_empty()
                     || item.caption.to_lowercase().contains(&self.search)
-                    || item.id.to_lowercase().contains(&self.search)
+                    || item.id.to_lowercase().contains(&self.search);
+                if !searched {
+                    return false;
+                }
+                let traits = self.traits.get(&item.id).copied().unwrap_or_default();
+                match kind {
+                    DefKind::Unit => traits.passes_unit_filters(&type_filter, &terrain),
+                    DefKind::Feature => {
+                        traits.passes_feature_filters(&type_filter, &wreck, &terrain)
+                    }
+                }
             })
             .cloned()
             .collect();
         self.grid.set_items(matches);
         self.grid.render(interface, document)
     }
+}
+
+fn items(values: &[&str]) -> Vec<String> {
+    values.iter().map(|value| (*value).to_string()).collect()
+}
+
+/// The grid's filters. Lua defaults every one of them to its first item, so the
+/// grid opens showing non-building ground units / non-wreck features.
+fn filter_fields(kind: DefKind) -> Vec<Box<dyn Field>> {
+    let types = match kind {
+        DefKind::Unit => UNIT_TYPES,
+        DefKind::Feature => FEATURE_TYPES,
+    };
+    let mut fields: Vec<Box<dyn Field>> = vec![Box::new(ChoiceField::new(
+        "typeFilter",
+        "Type",
+        items(types),
+    ))];
+    if kind == DefKind::Feature {
+        // Which kind of unit the wreck came from.
+        fields.push(Box::new(ChoiceField::new(
+            "wreckFilter",
+            "Wreck",
+            items(UNIT_TYPES),
+        )));
+    }
+    fields.push(Box::new(ChoiceField::new(
+        "terrainFilter",
+        "Terrain",
+        items(TERRAINS),
+    )));
+    fields
 }
 
 fn placement_fields(teams: Vec<String>) -> Vec<Box<dyn Field>> {

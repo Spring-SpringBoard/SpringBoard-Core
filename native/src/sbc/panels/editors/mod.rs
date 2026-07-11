@@ -2,6 +2,7 @@
 //! registry, so adding (or merging) a view touches nothing else.
 
 mod brush;
+mod def_filters;
 mod env_lighting;
 mod env_sky;
 mod env_water;
