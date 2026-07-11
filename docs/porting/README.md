@@ -42,6 +42,10 @@ behave identically:
 python3 tools/e2e/ui_driver.py <target> --tag ui:rust
 ```
 
+**[verification.md](verification.md) is the ledger**: every editor tab and every
+editor behaviour, each at TODO → DONE → VERIFIED → APPROVED. Claude sets the
+first three; only the user sets APPROVED.
+
 See [02-view-status.md](02-view-status.md) for targets and the golden workflow.
 
 ## Design docs
