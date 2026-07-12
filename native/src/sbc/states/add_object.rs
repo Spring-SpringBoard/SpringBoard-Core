@@ -70,6 +70,9 @@ pub(crate) struct AddObjectState {
     last_apply: Option<Instant>,
     /// A tiny PRNG for scatter; deterministic per state, seeded from the clock.
     rng: u64,
+    /// The seed the set-mode scatter is generated from. Fixed between clicks, so
+    /// the preview and the placement agree; advanced after each click.
+    scatter_seed: u64,
     /// Textures the placement ghost; without it the model is a white silhouette.
     shader: ModelShader,
 }
@@ -91,6 +94,7 @@ impl AddObjectState {
             erasing: false,
             last_apply: None,
             rng: 0x2545_F491_4F6C_DD1D,
+            scatter_seed: 0x9E37_79B9_7F4A_7C15,
             shader: ModelShader::default(),
         }
     }
@@ -101,6 +105,36 @@ impl AddObjectState {
         self.rng ^= self.rng >> 7;
         self.rng ^= self.rng << 17;
         (self.rng >> 40) as f32 / (1u64 << 24) as f32
+    }
+
+    /// Where the `amount` objects of one set-mode click land: the first under
+    /// the cursor, the rest scattered around it (Lua's
+    /// `(random() - 0.5) * 100 * sqrt(amount)` per axis).
+    ///
+    /// Seeded from `scatter_seed`, so it is the *same* answer every frame. The
+    /// preview draws these and the click places these -- otherwise the ghosts
+    /// show one thing and the engine gets another.
+    fn scatter(&self, x: f32, z: f32) -> Vec<(f32, f32)> {
+        let count = self.config.amount.max(1);
+        let mut rng = self.scatter_seed;
+        let mut next = || {
+            rng ^= rng << 13;
+            rng ^= rng >> 7;
+            rng ^= rng << 17;
+            (rng >> 40) as f32 / (1u64 << 24) as f32
+        };
+        let spread = 100.0 * (count as f32).sqrt();
+        (0..count)
+            .map(|i| {
+                if i == 0 {
+                    return (x, z);
+                }
+                (
+                    x + (next() - 0.5) * spread,
+                    z + (next() - 0.5) * spread,
+                )
+            })
+            .collect()
     }
 
     fn random_in_range(&mut self, axis: usize) -> f32 {
@@ -136,30 +170,21 @@ impl AddObjectState {
     }
 
     fn apply_set(&mut self, ctx: &mut StateContext, hit: GroundHit) {
-        let count = self.config.amount.max(1);
-        let grouped = count > 1;
+        let spots = self.scatter(hit.x, hit.z);
+        let grouped = spots.len() > 1;
         if grouped {
             ctx.set_multiple_command_mode(true);
         }
-        self.place_one(ctx, hit.x, hit.y, hit.z, [0.0, self.angle, 0.0]);
-        for _ in 1..count {
-            let angle = self.next_rand() * std::f32::consts::TAU;
-            let radius = self.next_rand().sqrt() * (count as f32).sqrt() * 100.0;
-            let px = hit.x + radius * angle.cos();
-            let pz = hit.z + radius * angle.sin();
-            if let Some(scattered) = ground(ctx, px, pz) {
-                self.place_one(
-                    ctx,
-                    scattered.0,
-                    scattered.1,
-                    scattered.2,
-                    [0.0, self.angle, 0.0],
-                );
+        for (x, z) in spots {
+            if let Some((px, py, pz)) = ground(ctx, x, z) {
+                self.place_one(ctx, px, py, pz, [0.0, self.angle, 0.0]);
             }
         }
         if grouped {
             ctx.set_multiple_command_mode(false);
         }
+        // A fresh scatter for the next click, as Lua re-seeds after placing.
+        self.scatter_seed = self.scatter_seed.wrapping_mul(6364136223846793005).wrapping_add(1);
     }
 
     /// One dab: density-based scatter in brush mode.
@@ -366,17 +391,26 @@ impl EditorState for AddObjectState {
             );
             return;
         }
-        if self.def_id > 0 {
+        if self.def_id <= 0 {
+            return;
+        }
+        // One ghost per object the click will place, at the very spots it will
+        // place them -- a single ghost for an amount of 5 shows you one thing
+        // and gives you another.
+        let (kind, def_id, team, angle) =
+            (self.kind, self.def_id, self.config.team, self.angle);
+        for (x, z) in self.scatter(hit.x, hit.z) {
+            let y = interface.terrain().get_ground_height(x, z).unwrap_or(hit.y);
             crate::sbc::states::highlight::draw_object_ghost(
                 interface,
                 &mut self.shader,
-                self.kind,
-                self.def_id,
-                self.config.team,
-                hit.x,
-                hit.y,
-                hit.z,
-                self.angle,
+                kind,
+                def_id,
+                team,
+                x,
+                y,
+                z,
+                angle,
             );
         }
     }

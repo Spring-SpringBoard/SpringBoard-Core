@@ -15,12 +15,16 @@ from scenarios.geometry import EDITOR_BUTTON_Y, TAB_X, TAB_Y, panel_left, window
 if TYPE_CHECKING:
     from runner import E2ERun
 
-# Rows inside the Objects editors, measured from the panel's left/top.
+# Rows inside the Objects editors, measured from the panel's left/top. The
+# definitions come first (filters, search, grid); the placement settings sit
+# below the grid, as they do in the Lua UI.
 ACTION_Y = 217          # Add / Brush
-FILTER_Y = 403          # Type / Wreck
-TERRAIN_Y = 445         # Terrain (features; units put it beside Type)
-SEARCH_Y = 487
-GRID_Y = 555            # first row of definition cells
+FILTER_Y = 316          # Type / Wreck
+TERRAIN_Y = 358         # Terrain (features; units put it beside Type)
+SEARCH_Y = 400
+GRID_Y = 470            # first row of definition cells
+TEAM_Y = 714            # below the grid
+AMOUNT_Y = 757
 
 
 def _open(run_state: E2ERun, editor_x: int) -> int:
@@ -71,6 +75,23 @@ def units_panel(run_state: E2ERun) -> None:
 
     run_state.assert_command("AddObjectCommand", objType="feature")
     run_state.assert_screenshot_pixels(before, after, min_changed=400)
+
+    # Amount places that many objects, and the ghosts preview exactly where they
+    # will land: the preview and the placement must not disagree.
+    run_state.click(left + 55, GRID_Y, delay=0.4)      # re-arm (Escape dropped it)
+    run_state.click(left + 120, AMOUNT_Y, delay=0.3)
+    run_state.key("ctrl+a", delay=0.12)
+    run_state.type_text("5")
+    run_state.key("Return", delay=0.5)
+    run_state.move(spot_x - 260, spot_y, delay=0.6)
+    run_state.screenshot_root("amount-5-preview")      # five ghosts
+    before5 = run_state.screenshot_root("before-amount-5")
+    run_state.click(spot_x - 260, spot_y, delay=1.0)
+    run_state.key("Escape", delay=0.4)
+    run_state.move(spot_x + 400, spot_y + 300, delay=0.5)
+    after5 = run_state.screenshot_root("amount-5-placed")
+    run_state.assert_screenshot_pixels(before5, after5, min_changed=800)
+    run_state.assert_command_count("AddObjectCommand", 6)   # 1 earlier + 5 now
 
     # Type = Wreckage. None of this map's features are wrecks, so the grid must
     # empty -- the filter proving it filters, not merely that it renders.

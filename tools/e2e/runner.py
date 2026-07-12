@@ -535,6 +535,24 @@ class E2ERun:
         self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
 
+    def assert_command_count(self, class_name: str, count: int) -> None:
+        """Assert exactly `count` committed commands of this class were sent.
+
+        For things whose whole point is *how many*: placing with an amount of 5
+        must emit five adds, not one.
+        """
+        sent = [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("className") == class_name
+            and not entry.get("data", {}).get("__preview")
+        ]
+        if len(sent) != count:
+            raise AssertionError(
+                f"expected {count} committed {class_name}, got {len(sent)}"
+            )
+        self.event("assert_command_count", className=class_name, count=count)
+
     def assert_any_command(self, class_name: str, **expected: object) -> dict:
         """Assert at least one committed command matched `expected`.
 

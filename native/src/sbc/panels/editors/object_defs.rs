@@ -156,19 +156,9 @@ impl ObjectDefsView {
         }
         h.push_str("</div>");
 
-        h.push_str(&self.fields.generate_rml(&[Layout::Field("team")]));
-        // Only the active mode's fields.
-        for name in self.mode_fields() {
-            h.push_str(&self.fields.generate_rml(&[Layout::Field(name)]));
-        }
-        if self.mode == PlaceMode::Brush {
-            h.push_str(&self.fields.generate_rml(&[
-                Layout::Group(&["rotXMin", "rotXMax"]),
-                Layout::Group(&["rotYMin", "rotYMax"]),
-                Layout::Group(&["rotZMin", "rotZMax"]),
-            ]));
-        }
-
+        // The definitions come first -- filters, search, then the grid -- and the
+        // placement settings sit *below* it, as they do in the Lua UI. Picking
+        // what to place is the first thing you do; how to place it is the second.
         h.push_str(&self.fields.generate_rml(&[Layout::Section("Definitions")]));
         // The filters over the grid, as in Lua's MakeFilters: Units get Type +
         // Terrain, Features get Type + Wreck + Terrain.
@@ -188,6 +178,19 @@ impl ObjectDefsView {
             ),
             grid = self.grid.container_rml(),
         ));
+
+        h.push_str(&self.fields.generate_rml(&[Layout::Field("team")]));
+        // Only the active mode's fields.
+        for name in self.mode_fields() {
+            h.push_str(&self.fields.generate_rml(&[Layout::Field(name)]));
+        }
+        if self.mode == PlaceMode::Brush {
+            h.push_str(&self.fields.generate_rml(&[
+                Layout::Group(&["rotXMin", "rotXMax"]),
+                Layout::Group(&["rotYMin", "rotYMax"]),
+                Layout::Group(&["rotZMin", "rotZMax"]),
+            ]));
+        }
         h
     }
 
@@ -731,7 +734,14 @@ fn unit_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
             id,
         ));
     }
-    items.sort_by(|a, b| a.0.caption.cmp(&b.0.caption));
+    // Alphabetical, ignoring case: a plain byte compare puts every lowercase
+    // name after every capitalised one ("geovent" after "Tree").
+    items.sort_by(|a, b| {
+        a.0.caption
+            .to_lowercase()
+            .cmp(&b.0.caption.to_lowercase())
+            .then_with(|| a.0.caption.cmp(&b.0.caption))
+    });
     items
 }
 
@@ -769,7 +779,14 @@ fn feature_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
             id,
         ));
     }
-    items.sort_by(|a, b| a.0.caption.cmp(&b.0.caption));
+    // Alphabetical, ignoring case: a plain byte compare puts every lowercase
+    // name after every capitalised one ("geovent" after "Tree").
+    items.sort_by(|a, b| {
+        a.0.caption
+            .to_lowercase()
+            .cmp(&b.0.caption.to_lowercase())
+            .then_with(|| a.0.caption.cmp(&b.0.caption))
+    });
     items
 }
 
