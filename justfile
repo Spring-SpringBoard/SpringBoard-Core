@@ -105,16 +105,16 @@ run config="config/ui-chili.json": build-native
 test-e2e target="chonsole" args="":
     python3 tools/e2e/ui_driver.py "{{target}}" {{args}}
 
-# Approve a case's reference images (the human OK): `just approve-goldens rotation-rust`.
-# Optionally name individual shots. Only a human runs this.
-[group('test')]
-approve-goldens case *shots:
-    cd tools/e2e && python3 approve_goldens.py "{{case}}" {{shots}}
-
 # List every reference image and whether it is approved or still ai-reviewed.
 [group('test')]
-goldens:
+goldens-status:
     @python3 tools/e2e/list_goldens.py
+
+# Approve a case's reference images (the human OK): `just goldens-approve rotation-rust`.
+# Optionally name individual shots. Only a human runs this.
+[group('test')]
+goldens-approve case *shots:
+    cd tools/e2e && python3 approve_goldens.py "{{case}}" {{shots}}
 
 # Path of the most recent e2e run, optionally for one target: `just e2e-dir rotation`.
 [group('test')]

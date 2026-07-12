@@ -8,8 +8,8 @@ is a bug or an improvement.
 Provenance: an image captured by the agent is `ai-reviewed` (see `review.json`
 beside it). It becomes `approved` only when a human says so:
 
-    just goldens                    # what exists, and what still awaits approval
-    just approve-goldens <case>     # the human OK; the agent never runs this
+    just goldens-status             # what exists, and what still awaits approval
+    just goldens-approve <case>     # the human OK; the agent never runs this
 
 ## What a golden can and cannot catch
 

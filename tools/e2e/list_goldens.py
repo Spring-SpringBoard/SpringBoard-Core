@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """What reference images exist, and which are still waiting on a human.
 
-Run through `just goldens`.
+Run through `just goldens-status`.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ def main() -> int:
     if pending:
         print(
             f"\n{pending} image(s) awaiting approval."
-            "\nInspect them, then: just approve-goldens <case>"
+            "\nInspect them, then: just goldens-approve <case>"
         )
     return 0
 

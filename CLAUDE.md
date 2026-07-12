@@ -21,8 +21,8 @@ plain `cargo` from the repo root does not even find a `Cargo.toml`).
 | Everything, incl. slow tests | `just test-all` |
 | Native verification chain | `just verify-native` |
 | UI e2e (build native first!) | `just test-e2e <target> "<args>"` |
-| Golden status (what awaits approval) | `just goldens` |
-| Approve goldens (human only) | `just approve-goldens <case>` |
+| Golden status (what awaits approval) | `just goldens-status` |
+| Approve goldens (human only) | `just goldens-approve <case>` |
 | Latest e2e run: dir / log / screens | `just e2e-dir <t>`, `just e2e-log <t> <pat>`, `just e2e-shots <t>` |
 | Long-lived editor session | `just run config/ui-chili.json` |
 
