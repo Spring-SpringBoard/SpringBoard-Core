@@ -62,13 +62,22 @@ impl Drop for DevConsoleManager {
 impl DevConsoleManager {
     pub fn new(interface: NativeInterfaceRef) -> Self {
         let enabled = port_flags::ui_impl(&interface) == UiImpl::Rust;
+        // The log is uncontrollable text -- timestamps, ids, whatever the engine
+        // felt like saying -- so a screenshot with it in shot can never be a
+        // stable reference. The harness starts it hidden (F8 still shows it).
+        let hidden = std::env::var("SBC_HIDE_CONSOLE").is_ok();
+        let mut view = DevConsoleView::default();
+        if hidden {
+            view.set_hidden_at_startup();
+        }
         DevConsoleManager {
             interface,
             enabled,
-            view: DevConsoleView::default(),
+            view,
             buffer: LogBuffer::new(MSG_CAP),
             problems_only: false,
-            popup_on_error: true,
+            // An error would otherwise pop the console open mid-scenario.
+            popup_on_error: !hidden,
             dirty: false,
             pin_log_bottom: false,
             toggle_refresh_pending: false,
@@ -153,6 +162,34 @@ impl DevConsoleManager {
         }
     }
 
+    /// Ctrl+C and Ctrl+A while the console owns them. Runs before the panel,
+    /// whose toolbar binds both to Copy and Select All and would swallow them.
+    /// The console owns Ctrl+C whenever it has a selection, and Ctrl+A while the
+    /// pointer is over it.
+    pub fn text_key(&mut self, key_code: i32) -> Result<bool, Error> {
+        if !self.enabled || !self.view.is_ready() || !self.view.visible() || !self.ctrl_held() {
+            return Ok(false);
+        }
+        if is_key(&self.interface, key_code, "c") && self.view.selected_range().is_some() {
+            self.copy_selection();
+            return Ok(true);
+        }
+        if is_key(&self.interface, key_code, "a") && self.view.hovered(&self.interface) {
+            let count = self.buffer.visible(self.problems_only).count();
+            self.view.select_all(count);
+            self.dirty = true;
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    fn ctrl_held(&self) -> bool {
+        self.interface
+            .input()
+            .get_mod_key_state()
+            .is_ok_and(|bits| bits & (1 << 1) != 0)
+    }
+
     pub fn key_press(&mut self, key_code: i32) -> Result<bool, Error> {
         if !self.enabled || !self.view.is_ready() {
             return Ok(false);
@@ -166,11 +203,7 @@ impl DevConsoleManager {
         if !self.view.visible() {
             return Ok(false);
         }
-        let ctrl = self
-            .interface
-            .input()
-            .get_mod_key_state()
-            .is_ok_and(|bits| bits & (1 << 1) != 0);
+        let ctrl = self.ctrl_held();
         if ctrl && is_key(&self.interface, key_code, "a") {
             let count = self.buffer.visible(self.problems_only).count();
             self.view.select_all(count);

@@ -1,0 +1,22 @@
+{
+  "collision-fields": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:46:39"
+  },
+  "volume-hidden": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:46:28"
+  },
+  "volume-scaled": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:46:35"
+  },
+  "volume-shown": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:46:31"
+  },
+  "volume-type-changed": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:46:38"
+  }
+}

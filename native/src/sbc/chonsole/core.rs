@@ -1,159 +1,13 @@
+use super::completion::CompletionCatalog;
+pub(super) use super::completion::ConsoleCommand;
 use super::types::{ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, ChonsoleSuggestion};
 
 const MAX_HISTORY: usize = 100;
 
-#[derive(Debug, Clone)]
-struct ConsoleCommand {
-    name: &'static str,
-    description: &'static str,
-    native: bool,
-    requires_cheat: bool,
-}
-
-const COMMANDS: &[ConsoleCommand] = &[
-    ConsoleCommand {
-        name: "help",
-        description: "List native chonsole commands.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "echo",
-        description: "Echo text through the native console.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "history",
-        description: "Show native chonsole input history.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "clear",
-        description: "Clear native chonsole history.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "autocheat",
-        description: "Toggle automatic /cheat wrapping for cheat-only commands.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "a",
-        description: "Send public chat.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "s",
-        description: "Send spectator chat.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "t",
-        description: "Send ally chat.",
-        native: true,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "cheat",
-        description: "Forward cheat toggle to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "give",
-        description: "Forward unit spawn command to the Spring engine.",
-        native: false,
-        requires_cheat: true,
-    },
-    ConsoleCommand {
-        name: "gamerules",
-        description: "Forward game rules-param command to the Spring engine.",
-        native: false,
-        requires_cheat: true,
-    },
-    ConsoleCommand {
-        name: "globallos",
-        description: "Forward global line-of-sight toggle to the Spring engine.",
-        native: false,
-        requires_cheat: true,
-    },
-    ConsoleCommand {
-        name: "godmode",
-        description: "Forward god mode toggle to the Spring engine.",
-        native: false,
-        requires_cheat: true,
-    },
-    ConsoleCommand {
-        name: "luarules",
-        description: "Forward LuaRules command to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "luaui",
-        description: "Forward LuaUI command to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "nocost",
-        description: "Forward no-cost toggle to the Spring engine.",
-        native: false,
-        requires_cheat: true,
-    },
-    ConsoleCommand {
-        name: "set",
-        description: "Forward config command to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "spectator",
-        description: "Forward spectator command to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "team",
-        description: "Forward team switch command to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "teamrules",
-        description: "Forward team rules-param command to the Spring engine.",
-        native: false,
-        requires_cheat: true,
-    },
-    ConsoleCommand {
-        name: "unitrules",
-        description: "Forward unit rules-param command to the Spring engine.",
-        native: false,
-        requires_cheat: true,
-    },
-    ConsoleCommand {
-        name: "water",
-        description: "Forward water rendering command to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-    ConsoleCommand {
-        name: "w",
-        description: "Forward chat message command to the Spring engine.",
-        native: false,
-        requires_cheat: false,
-    },
-];
-
 pub(super) struct ChonsoleCore {
     history: Vec<String>,
     auto_cheat: bool,
+    catalog: CompletionCatalog,
 }
 
 impl Default for ChonsoleCore {
@@ -161,6 +15,7 @@ impl Default for ChonsoleCore {
         ChonsoleCore {
             history: Vec::new(),
             auto_cheat: true,
+            catalog: CompletionCatalog::default(),
         }
     }
 }
@@ -206,7 +61,7 @@ impl ChonsoleCore {
         let parsed = ParsedInput::parse(input);
         match parsed.command.as_str() {
             "help" => {
-                for builtin in COMMANDS.iter().filter(|cmd| cmd.native) {
+                for builtin in self.catalog.commands() {
                     lines.push(line(
                         ChonsoleLineKind::Output,
                         format!("/{:<8} {}", builtin.name, builtin.description),
@@ -214,7 +69,7 @@ impl ChonsoleCore {
                 }
                 lines.push(line(
                     ChonsoleLineKind::Output,
-                    "Other slash commands are passed through to the Spring engine.".to_string(),
+                    "Commands are discovered from the running Spring engine.".to_string(),
                 ));
             }
             "echo" => {
@@ -269,7 +124,9 @@ impl ChonsoleCore {
             }
             _ => {
                 if parsed.is_slash {
-                    let requires_cheat = command_requires_cheat(&parsed);
+                    let requires_cheat = parsed.command == "luarules"
+                        && parsed.args.first().is_some_and(|arg| arg == "reload")
+                        || self.catalog.command_requires_cheat(&parsed.command);
                     effects.push(ChonsoleEffect::EngineCommand {
                         command: parsed.command.clone(),
                         args: parsed.args.join(" "),
@@ -290,30 +147,7 @@ impl ChonsoleCore {
     }
 
     pub(super) fn suggestions(&self, input: &str) -> Vec<ChonsoleSuggestion> {
-        let trimmed = input.trim_start();
-        let prefix = trimmed
-            .strip_prefix('/')
-            .unwrap_or(trimmed)
-            .split_whitespace()
-            .next()
-            .unwrap_or("");
-        let prefix = prefix.to_ascii_lowercase();
-        let mut scored = COMMANDS
-            .iter()
-            .filter_map(|cmd| {
-                let score = suggestion_score(cmd.name, &prefix)?;
-                Some((score, cmd))
-            })
-            .collect::<Vec<_>>();
-        scored.sort_by_key(|(score, cmd)| (*score, cmd.name));
-        scored
-            .into_iter()
-            .map(|(_, cmd)| ChonsoleSuggestion {
-                command: format!("/{}", cmd.name),
-                text: cmd.name.to_string(),
-                description: cmd.description.to_string(),
-            })
-            .collect()
+        self.catalog.suggestions(input)
     }
 
     pub(super) fn history(&self) -> &[String] {
@@ -322,6 +156,42 @@ impl ChonsoleCore {
 
     pub(super) fn clear(&mut self) {
         self.history.clear();
+    }
+
+    pub(super) fn replace_catalog(&mut self, commands: Vec<ConsoleCommand>) {
+        self.catalog.replace_commands(commands);
+    }
+
+    pub(super) fn set_game_rules(&mut self, rules: Vec<(String, String)>) {
+        self.catalog.set_game_rules(rules);
+    }
+
+    pub(super) fn set_textures(&mut self, textures: Vec<String>) {
+        self.catalog.set_textures(textures);
+    }
+
+    pub(super) fn set_team_rules(&mut self, rules: BTreeMap<i32, Vec<(String, String)>>) {
+        self.catalog.set_team_rules(rules);
+    }
+
+    pub(super) fn set_unit_rules(&mut self, rules: Vec<(String, String)>) {
+        self.catalog.set_unit_rules(rules);
+    }
+
+    pub(super) fn set_teams(&mut self, teams: Vec<i32>) {
+        self.catalog.set_teams(teams);
+    }
+
+    pub(super) fn set_unit_defs(&mut self, definitions: Vec<(String, String)>) {
+        self.catalog.set_unit_defs(definitions);
+    }
+
+    pub(super) fn set_config_params(&mut self, params: Vec<(String, String)>) {
+        self.catalog.set_config_params(params);
+    }
+
+    pub(super) fn set_players(&mut self, players: Vec<String>) {
+        self.catalog.set_players(players);
     }
 
     fn push_history(&mut self, input: &str) {
@@ -375,34 +245,4 @@ fn line(kind: ChonsoleLineKind, text: impl Into<String>) -> ChonsoleLine {
     }
 }
 
-fn suggestion_score(command: &str, query: &str) -> Option<(u8, usize)> {
-    if query.is_empty() {
-        return Some((0, command.len()));
-    }
-    if command.starts_with(query) {
-        return Some((0, command.len() - query.len()));
-    }
-    if let Some(pos) = command.find(query) {
-        return Some((1, pos));
-    }
-
-    let mut last = 0usize;
-    let mut gap_score = 0usize;
-    let mut chars = command.char_indices();
-    for q in query.chars() {
-        let (idx, _) = chars.find(|(_, c)| *c == q)?;
-        gap_score += idx.saturating_sub(last);
-        last = idx + q.len_utf8();
-    }
-    Some((2, gap_score))
-}
-
-fn command_requires_cheat(parsed: &ParsedInput) -> bool {
-    if parsed.command == "luarules" && parsed.args.first().is_some_and(|arg| arg == "reload") {
-        return true;
-    }
-    COMMANDS
-        .iter()
-        .find(|cmd| cmd.name == parsed.command)
-        .is_some_and(|cmd| cmd.requires_cheat)
-}
+use std::collections::BTreeMap;

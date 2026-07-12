@@ -1,0 +1,26 @@
+{
+  "box-selected": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:40:25"
+  },
+  "box-selected-empty": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:40:28"
+  },
+  "feature-deselected": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:40:21"
+  },
+  "feature-escaped": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:40:17"
+  },
+  "feature-selected": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:40:14"
+  },
+  "feature-unselected": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:40:11"
+  }
+}

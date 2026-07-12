@@ -27,6 +27,19 @@ GRID_Y = 470            # first row of definition cells
 TEAM_Y = 714            # below the grid
 AMOUNT_Y = 757
 
+# Differing pixels forgiven when a capture includes the map.
+#
+# The panel is bit-stable; the map is not. The engine's tree render shimmers
+# between runs -- the diff is a fringe around each tree's silhouette, ~700 px per
+# tree, and a frame here holds up to four (two objects and their two ghosts).
+#
+# So a map golden is a *gross* regression check: it catches a ghost that stopped
+# drawing or an object that never got placed (many thousands of pixels), and it
+# deliberately cannot see a few-hundred-pixel change. The fine detail on the map
+# is asserted exactly instead, and without pixels: `count_color` for the green
+# selection box, and the command log for what was actually sent.
+MAP_TOLERANCE = 4000
+
 
 def _open(run_state: E2ERun, editor_x: int) -> int:
     """Objects tab, then one of its editors. Returns the panel's left edge."""
@@ -57,7 +70,7 @@ def def_grid(run_state: E2ERun) -> None:
     """
     run_state.focus()
     _open(run_state, 110)                             # Features
-    run_state.screenshot("def-grid")
+    run_state.golden("def-grid")
 
 
 @scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
@@ -70,18 +83,18 @@ def units_panel(run_state: E2ERun) -> None:
     """
     run_state.focus()
     left = _open(run_state, 38)                       # Units
-    run_state.screenshot("units-open")
+    run_state.golden("units-open")
 
     left = _open(run_state, 110)                      # Features
     # Default filters (Type=Other) show the non-wreck defs: the trees and the
     # geovent. Their thumbnails are the real models, rendered through the
     # engine's model shader.
-    run_state.screenshot("features-open")
+    run_state.golden("features-open")
 
     # Brush mode swaps the placement fields: Lua hides `amount` and shows size,
     # spread, noise and the min/max rotation of all three axes.
     run_state.click(left + 134, ACTION_Y, delay=0.6)
-    run_state.screenshot("features-brush-fields")
+    run_state.golden("features-brush-fields")
     run_state.click(left + 54, ACTION_Y, delay=0.6)    # back to Add
 
     # Arm a tree and place it. The command must reach the bridge *and* the
@@ -94,11 +107,11 @@ def units_panel(run_state: E2ERun) -> None:
     # The default camera is far enough out that a tree is a few pixels; zoom in
     # so the placed feature can actually be seen in the capture.
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
-    before = run_state.screenshot_root("before-place")
+    before = run_state.golden("before-place", crop=None, tolerance=MAP_TOLERANCE)
     run_state.click(spot_x, spot_y, delay=0.8)
     run_state.key("Escape", delay=0.4)                 # leave placement mode
     run_state.move(spot_x + 260, spot_y + 220, delay=0.5)
-    after = run_state.screenshot_root("feature-placed")
+    after = run_state.golden("feature-placed", crop=None, tolerance=MAP_TOLERANCE)
 
     run_state.assert_command("AddObjectCommand", objType="feature")
     run_state.assert_screenshot_pixels(before, after, min_changed=400)
@@ -111,12 +124,16 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.type_text("5")
     run_state.key("Return", delay=0.5)
     run_state.move(spot_x - 260, spot_y, delay=0.6)
-    run_state.screenshot_root("amount-5-preview")      # five ghosts
-    before5 = run_state.screenshot_root("before-amount-5")
+    # park=False: the ghosts follow the cursor, so moving it out of shot would
+    # move the very thing being captured.
+    run_state.golden(
+        "amount-5-preview", crop=None, tolerance=MAP_TOLERANCE, park=False
+    )
+    before5 = run_state.golden("before-amount-5", crop=None, tolerance=MAP_TOLERANCE)
     run_state.click(spot_x - 260, spot_y, delay=1.0)
     run_state.key("Escape", delay=0.4)
     run_state.move(spot_x + 400, spot_y + 300, delay=0.5)
-    after5 = run_state.screenshot_root("amount-5-placed")
+    after5 = run_state.golden("amount-5-placed", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_screenshot_pixels(before5, after5, min_changed=800)
     run_state.assert_command_count("AddObjectCommand", 6)   # 1 earlier + 5 now
 
@@ -125,7 +142,7 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.click(left + 104, FILTER_Y, delay=0.4)
     run_state.key("Down", delay=0.2)
     run_state.key("Return", delay=0.7)                 # commit and close the list
-    run_state.screenshot("features-wreckage-empty")
+    run_state.golden("features-wreckage-empty")
 
 
 @scenario(uis=("rmlui", "rust"), crop="right-panel")
@@ -149,27 +166,30 @@ def props_panel(run_state: E2ERun) -> None:
     # sits at its foot, so this is the point the ray actually hits.
     run_state.click(spot_x, spot_y, delay=0.8)
     run_state.move(spot_x + 260, spot_y + 220, delay=0.4)
-    run_state.screenshot("feature-selected")
+    run_state.golden("feature-selected")
     run_state.assert_command("AddObjectCommand", objType="feature")
 
     run_state.click(left + 197, EDITOR_BUTTON_Y, delay=0.9)   # Properties
-    run_state.screenshot("props-open")
+    run_state.golden("props-open")
 
     # Pos X. The whole vector is sent, not the one axis, and the object must
     # actually move on the map.
-    before = run_state.screenshot("before-move")
+    before = run_state.golden("before-move")
     run_state.click(left + 58, 223, delay=0.4)
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("1500")
     run_state.key("Return", delay=0.8)
     run_state.move(spot_x + 260, spot_y + 220, delay=0.4)
-    after = run_state.screenshot("props-pos-edited")
+    after = run_state.golden("props-pos-edited")
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
         value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1500) < 1.0,
     )
-    run_state.assert_screenshot_pixels(before, after, min_changed=400)
+    # The panel redraws the field with the new value. Only ~300 px: the shots are
+    # cropped to the panel and the cursor is parked out of both, so this measures
+    # the text changing and nothing else.
+    run_state.assert_screenshot_pixels(before, after, min_changed=200)
 
     # Dragging a numeric field changes it without ever entering text mode, and
     # commits once on release. The drag pins the pointer and warps it back after
@@ -178,10 +198,11 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.press(left + 58, 223)
     run_state.move_relative(120)
     # Mid-drag: the pointer is pinned to where the drag began and drawn as the
-    # empty cursor, so nothing follows the mouse across the panel.
-    run_state.screenshot("props-pos-dragging")
+    # empty cursor, so nothing follows the mouse across the panel. park=False --
+    # moving the pointer now would fight the drag's own warp and end it.
+    run_state.golden("props-pos-dragging", park=False)
     run_state.release(left + 58, 223)
-    run_state.screenshot("props-pos-dragged")
+    run_state.golden("props-pos-dragged")
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
@@ -203,12 +224,12 @@ def props_panel(run_state: E2ERun) -> None:
     # Now moving the mouse must not keep changing it: the drag is over.
     run_state.move(left - 600, 500, delay=0.4)
     run_state.assert_no_command_after(dragged, "SetObjectParamCommand", key="pos")
-    run_state.screenshot("props-drag-released-outside")
+    run_state.golden("props-drag-released-outside")
 
     # A sub-object: Blocking's booleans are one table, so toggling one must send
     # the table under `blocking`, not a bare boolean.
     run_state.click(left + 164, 567, delay=0.6)   # "Block Enemy Pushing"
-    run_state.screenshot("props-blocking-toggled")
+    run_state.golden("props-blocking-toggled")
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="blocking",
@@ -223,7 +244,7 @@ def props_panel(run_state: E2ERun) -> None:
     # RmlUi had already destroyed. It must survive, and clear the selection.
     for dx, dy in ((-300, -150), (250, 120), (-120, 260), (380, -220)):
         run_state.click(spot_x + dx, spot_y + dy, delay=0.4)
-    run_state.screenshot("props-after-map-clicks")
+    run_state.golden("props-after-map-clicks")
     run_state.assert_running()
 
 
@@ -248,11 +269,11 @@ def collision(run_state: E2ERun) -> None:
     run_state.click(spot_x, spot_y, delay=0.8)        # select it
 
     run_state.click(left + 270, EDITOR_BUTTON_Y, delay=0.9)   # Collision
-    hidden = run_state.screenshot_root("volume-hidden")
+    hidden = run_state.golden("volume-hidden", crop=None, tolerance=MAP_TOLERANCE)
 
     # Show volume: the collision shape is drawn over the object.
     run_state.click(left + 110, 190, delay=0.8)
-    shown = run_state.screenshot_root("volume-shown")
+    shown = run_state.golden("volume-shown", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_screenshot_pixels(hidden, shown, min_changed=300)
 
     # Scaling the volume must redraw it bigger, not merely emit a command.
@@ -260,7 +281,7 @@ def collision(run_state: E2ERun) -> None:
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("120")
     run_state.key("Return", delay=0.9)
-    scaled = run_state.screenshot_root("volume-scaled")
+    scaled = run_state.golden("volume-scaled", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="collision",
@@ -272,9 +293,11 @@ def collision(run_state: E2ERun) -> None:
     run_state.click(left + 200, 231, delay=0.4)       # Type
     run_state.key("Down", delay=0.2)
     run_state.key("Return", delay=0.9)
-    typed = run_state.screenshot_root("volume-type-changed")
+    typed = run_state.golden("volume-type-changed", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_screenshot_pixels(scaled, typed, min_changed=200)
-    run_state.screenshot("collision-fields")
+    # The fields live in the panel, so crop to it: a full-frame shot would drag
+    # the map's render noise into a comparison that is about a form.
+    run_state.golden("collision-fields", crop="right-panel")
 
 
 @scenario(uis=("rmlui",))
@@ -295,11 +318,11 @@ def cursortip(run_state: E2ERun) -> None:
     run_state.click(spot_x, spot_y, delay=0.6)        # place it
     run_state.key("Escape", delay=0.3)
     run_state.move(spot_x + 200, spot_y + 200, delay=0.3)
-    run_state.screenshot("placed")
+    run_state.golden("placed")
 
     # The model sits slightly up-left of the click point on screen.
     run_state.move(spot_x - 20, spot_y, delay=0.6)    # hover the tree
-    run_state.screenshot("hover-tooltip")
+    run_state.golden("hover-tooltip")
 
 
 def _placed(run_state: E2ERun, since: int = 0) -> list[dict]:
@@ -333,7 +356,7 @@ def brush_size(run_state: E2ERun) -> None:
     left = _open(run_state, 110)                      # Features
     run_state.click(left + 134, ACTION_Y, delay=0.6)  # Brush mode
     _arm_tree(run_state, left)
-    run_state.screenshot("brush-size-default")
+    run_state.golden("brush-size-default")
 
     width, height = window_size(run_state)
     cx, cy = width // 3, height // 2
@@ -352,7 +375,7 @@ def brush_size(run_state: E2ERun) -> None:
     with run_state.modifier("shift"):
         run_state.wheel_root(cx, cy, clicks=5, up=True)
     # The Size field follows the wheel; the screenshot is here to be looked at.
-    run_state.screenshot("brush-size-enlarged")
+    run_state.golden("brush-size-enlarged")
 
     # A dab with the enlarged brush drops more objects, over more ground: the
     # count is `size^2 / (spread * 100)`, so 100 -> 264 takes it from 1 to 7.
@@ -394,25 +417,29 @@ def deselect(run_state: E2ERun) -> None:
     # Park the cursor away from the feature: every frame is captured with it
     # here, so the pointer itself never shows up in the comparisons.
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    unselected = run_state.screenshot_root("feature-unselected")
+    unselected = run_state.golden(
+        "feature-unselected", crop=None, tolerance=MAP_TOLERANCE
+    )
 
     # The box is drawn in pure green, and nothing else on the map is: counting
     # those pixels says whether the box is there, where comparing whole frames
-    # would just measure the trees swaying and the thumbnails spinning.
+    # would just measure the map's own render noise.
     around_feature = (cx - 160, cy - 160, 320, 320)
     if run_state.count_color(unselected, around_feature) != 0:
         raise AssertionError("a selection box before anything was selected")
 
     run_state.click(cx - 20, cy, delay=0.6)           # select it
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    selected = run_state.screenshot_root("feature-selected")
+    selected = run_state.golden(
+        "feature-selected", crop=None, tolerance=MAP_TOLERANCE
+    )
     box = run_state.count_color(selected, around_feature)
     if box < 100:
         raise AssertionError(f"clicking the feature drew no selection box ({box} px)")
 
     # Escape drops the selection.
     run_state.key("Escape", delay=0.6)
-    escaped = run_state.screenshot_root("feature-escaped")
+    escaped = run_state.golden("feature-escaped", crop=None, tolerance=MAP_TOLERANCE)
     left = run_state.count_color(escaped, around_feature)
     if left != 0:
         raise AssertionError(f"Escape left the selection box behind ({left} px)")
@@ -423,7 +450,9 @@ def deselect(run_state: E2ERun) -> None:
     run_state.move(cx + 450, cy - 250, delay=0.5)
     run_state.click(cx + 450, cy - 250, delay=0.6)
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    cleared = run_state.screenshot_root("feature-deselected")
+    cleared = run_state.golden(
+        "feature-deselected", crop=None, tolerance=MAP_TOLERANCE
+    )
     left = run_state.count_color(cleared, around_feature)
     if left != 0:
         raise AssertionError(f"clicking empty ground left the box behind ({left} px)")
@@ -435,7 +464,7 @@ def deselect(run_state: E2ERun) -> None:
     run_state.move(cx + 200, cy + 160, delay=0.3)
     run_state.release(cx + 200, cy + 160)
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    boxed = run_state.screenshot_root("box-selected")
+    boxed = run_state.golden("box-selected", crop=None, tolerance=MAP_TOLERANCE)
     box = run_state.count_color(boxed, around_feature)
     if box < 100:
         raise AssertionError(f"the box-select selected nothing ({box} px)")
@@ -444,7 +473,9 @@ def deselect(run_state: E2ERun) -> None:
     run_state.move(cx + 600, cy + 380, delay=0.3)
     run_state.release(cx + 600, cy + 380)
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    empty_boxed = run_state.screenshot_root("box-selected-empty")
+    empty_boxed = run_state.golden(
+        "box-selected-empty", crop=None, tolerance=MAP_TOLERANCE
+    )
     left = run_state.count_color(empty_boxed, around_feature)
     if left != 0:
         raise AssertionError(
@@ -469,42 +500,68 @@ def rotation(run_state: E2ERun) -> None:
     cx, cy = width // 3, height // 2
     run_state.wheel(cx, cy, clicks=8, up=True)        # zoom in on the spot
 
-    # Two trees, well apart, so the pair has a real extent to rotate.
-    run_state.click(cx - 90, cy, delay=0.7)
-    run_state.click(cx + 90, cy, delay=0.7)
+    # Two trees, far apart: rotating a *pair* swings each one around the midpoint
+    # between them, and the further apart they are the further they travel. Close
+    # together, the ghosts land on top of the originals and the capture shows
+    # nothing -- the screen has to make the feature visible, not merely contain it.
+    run_state.click(cx - 240, cy, delay=0.7)
+    run_state.click(cx + 240, cy, delay=0.7)
     run_state.key("Escape", delay=0.4)                # leave placement mode
 
     # Box-select both.
-    run_state.press(cx - 260, cy - 200)
-    run_state.move(cx + 260, cy + 180, delay=0.3)
-    run_state.release(cx + 260, cy + 180)
-    run_state.move(cx + 500, cy + 320, delay=0.5)
-    run_state.screenshot_root("before-rotate")
+    run_state.press(cx - 330, cy - 200)
+    run_state.move(cx + 330, cy + 180, delay=0.3)
+    run_state.release(cx + 330, cy + 180)
+    run_state.move(cx + 560, cy + 320, delay=0.5)
+    run_state.golden("before-rotate", crop=None, tolerance=MAP_TOLERANCE)
 
     # Ctrl held, the cursor swings about the centre with the button down: the
     # objects follow it as a preview, and the release commits. The button has to
     # be held -- the engine only delivers mouse-move to the plugin during a drag.
     with run_state.modifier("ctrl"):
         run_state.press(cx + 200, cy)
+        # Three moves, and the capture only after the third. The first is consumed
+        # by the default state (it is what enters the rotate), and the second only
+        # seeds the rotate's baseline angle -- by definition a zero rotation, whose
+        # ghosts sit exactly on the originals. Capturing there shows nothing and
+        # would have frozen an empty frame as the reference.
         run_state.move(cx + 140, cy - 140, delay=0.3)
-        run_state.move(cx, cy - 200, delay=0.4)
-        run_state.screenshot_root("rotating")
+        run_state.move(cx + 40, cy - 190, delay=0.3)
+        run_state.move(cx - 190, cy - 60, delay=0.4)
+        # park=False: the button is down and the ghosts track the cursor -- moving
+        # it would rotate them somewhere else and end the drag off target.
+        run_state.golden(
+            "rotating", crop=None, tolerance=MAP_TOLERANCE, park=False
+        )
         run_state.move(cx - 200, cy, delay=0.4)
         run_state.release(cx - 200, cy)
 
-    run_state.screenshot_root("rotated")
+    run_state.golden("rotated", crop=None, tolerance=MAP_TOLERANCE)
     # Both objects are committed, once each: `key` carries the whole pose (the
     # command's many-fields form, as Lua's rotate state sends it).
     run_state.assert_command_count("SetObjectParamCommand", 2)
-    # And they really turned: the facing is no longer the +z it was placed with.
-    run_state.assert_any_command(
-        "SetObjectParamCommand",
-        key=lambda k: (
-            isinstance(k, dict)
-            and "pos" in k
-            and abs(k.get("dir", {}).get("z", 1.0) - 1.0) > 0.1
-        ),
-    )
+
+    # And they really swung around the midpoint. Asserted on the *positions*, not
+    # the facing: the trees are placed with a random yaw, so "dir is not +z" was
+    # already true before the drag -- that assertion passed without the rotation
+    # doing anything at all.
+    placed = [(pos["x"], pos["z"]) for pos in _placed(run_state)]
+    moved = [
+        (entry["data"]["key"]["pos"]["x"], entry["data"]["key"]["pos"]["z"])
+        for entry in run_state.commands()
+        if entry["data"].get("className") == "SetObjectParamCommand"
+        and not entry["data"].get("__preview")
+        and isinstance(entry["data"].get("key"), dict)
+    ]
+    if len(placed) != 2 or len(moved) != 2:
+        raise AssertionError(f"expected 2 placed and 2 moved, got {placed} {moved}")
+    # The pair was placed level (same z); a rotation has to break that.
+    spread_before = abs(placed[0][1] - placed[1][1])
+    spread_after = abs(moved[0][1] - moved[1][1])
+    if spread_after <= spread_before + 100:
+        raise AssertionError(
+            f"the pair did not rotate: z-spread {spread_before:.0f} -> {spread_after:.0f}"
+        )
 
 
 @scenario()
@@ -529,15 +586,16 @@ def selection(run_state: E2ERun) -> None:
     run_state.press(spot_x - 220, spot_y - 200)
     run_state.move(spot_x + 120, spot_y + 60, delay=0.3)
     run_state.move(spot_x + 200, spot_y + 160, delay=0.4)
-    run_state.screenshot_root("box-dragging")
+    # park=False: the box is drawn to the cursor, so it *is* the cursor position.
+    run_state.golden("box-dragging", crop=None, tolerance=MAP_TOLERANCE, park=False)
     run_state.release(spot_x + 200, spot_y + 160)
     run_state.move(spot_x + 400, spot_y + 300, delay=0.5)
-    run_state.screenshot_root("box-selected")
+    run_state.golden("box-selected", crop=None, tolerance=MAP_TOLERANCE)
 
     # Properties edits the *selected* object. If the box selected nothing, there
     # is nothing to edit and no command is emitted.
     run_state.click(left + 197, EDITOR_BUTTON_Y, delay=0.9)
-    run_state.screenshot("props-after-box-select")
+    run_state.golden("props-after-box-select", crop="right-panel")
     run_state.click(left + 58, 223, delay=0.4)        # Pos X
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("1800")

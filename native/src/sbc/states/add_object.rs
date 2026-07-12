@@ -378,8 +378,7 @@ impl EditorState for AddObjectState {
         let Some(hit) = trace_object_ground(interface, mouse.x, mouse.y) else {
             return;
         };
-        // Brush mode shows the scatter reach as a ring; set mode shows the object
-        // itself, and nothing else -- a ring on top of the model would hide it.
+        // The brush also shows its reach, since the scatter does not fill it.
         if self.config.brush {
             crate::sbc::states::highlight::draw_cursor_ring(
                 interface,
@@ -389,16 +388,27 @@ impl EditorState for AddObjectState {
                 None,
                 (0.3, 0.9, 0.4, 0.9),
             );
-            return;
         }
         if self.def_id <= 0 {
             return;
         }
         // One ghost per object the click will place, at the very spots it will
         // place them -- a single ghost for an amount of 5 shows you one thing
-        // and gives you another.
+        // and gives you another. The brush's noise is not previewed: it is drawn
+        // fresh on each dab, so the ghost would jitter under a still cursor.
         let (kind, def_id, team_id, yaw) = (self.kind, self.def_id, self.config.team, self.angle);
-        for (x, z) in self.scatter(hit.x, hit.z) {
+        let spots: Vec<(f32, f32)> = if self.config.brush {
+            let count = brush_count(self.config.size, self.config.spread);
+            (0..count)
+                .map(|i| {
+                    let (ox, oz) = sunflower_point(i, count, self.config.size);
+                    (hit.x + ox, hit.z + oz)
+                })
+                .collect()
+        } else {
+            self.scatter(hit.x, hit.z)
+        };
+        for (x, z) in spots {
             let y = interface.terrain().get_ground_height(x, z).unwrap_or(hit.y);
             crate::sbc::states::highlight::draw_object_ghost(
                 interface,

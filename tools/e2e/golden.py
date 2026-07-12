@@ -86,12 +86,26 @@ def write_diff(golden: Path, actual: Path, out: Path) -> None:
     run("compare", str(golden), str(actual), str(out), check=False)
 
 
-def compare(case_name: str, shot_name: str, actual: Path, *, update: bool) -> str:
+def compare(
+    case_name: str,
+    shot_name: str,
+    actual: Path,
+    *,
+    update: bool,
+    tolerance: int = 0,
+) -> str:
     """Compare `actual` against its golden.
 
-    Returns a short status string. Raises GoldenMismatch on any pixel diff, so a
-    run fails loudly rather than leaving the difference in an artifact nobody
-    opens.
+    Returns a short status string. Raises GoldenMismatch on any pixel diff beyond
+    `tolerance`, so a run fails loudly rather than leaving the difference in an
+    artifact nobody opens.
+
+    `tolerance` exists for one reason: the engine's map render is not bit-stable
+    between runs -- something in the tree draw varies by a few dozen pixels frame
+    to frame (measured 10-137 px over the full window; not wind, that was ruled
+    out). A capture that includes the map cannot be pixel-exact. Panel-only crops
+    *are* exact and must stay at 0. Keep any tolerance far below the size of a
+    real regression: a missing ghost, box or panel is thousands of pixels.
     """
     golden = golden_path(case_name, shot_name)
 
@@ -109,6 +123,8 @@ def compare(case_name: str, shot_name: str, actual: Path, *, update: bool) -> st
     diff = differing_pixels(golden, actual)
     if diff == 0:
         return "match"
+    if diff is not None and diff <= tolerance:
+        return f"match ({diff} px within {tolerance} tolerance)"
 
     failed_dir = actual.parent / "golden-failures"
     failed_dir.mkdir(parents=True, exist_ok=True)

@@ -111,6 +111,10 @@ impl NativeModule for SBC {
     }
 
     fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {
+        // The dev console owns Ctrl+C/Ctrl+A over its text, ahead of the toolbar.
+        if self.model::<DevConsoleManager>().text_key(key_code)? {
+            return Ok(true);
+        }
         // The panel gets first refusal: while a field is being edited it owns
         // Enter and Escape, which the chonsole would otherwise take (Enter opens
         // it). It consumes nothing else.

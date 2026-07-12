@@ -119,6 +119,7 @@ impl StateManager {
         if !self.enabled {
             return;
         }
+        crate::sbc::states::cursor::reassert(&self.interface);
         self.state.as_state().draw_world(&self.interface);
     }
 
@@ -161,10 +162,11 @@ impl StateManager {
     }
 
     fn enter(&mut self, state: &mut ActiveState, models: &mut Models) {
+        crate::sbc::states::cursor::set(&self.interface, state.as_state().cursor());
         let mut ctx = StateContext::new(&self.interface, models, &mut self.next_cmd_id);
         state.as_state().enter(&mut ctx);
         self.pending_envelopes.extend(ctx.take_envelopes());
-        log::info!("editor state: {}", state.as_state().name());
+        log::debug!("editor state: {}", state.as_state().name());
     }
 
     /// Swap states from a panel request, letting the old one close its stream.
@@ -294,7 +296,9 @@ impl StateManager {
                 return Ok(true);
             }
             self.with_context(models, |state, ctx| state.leave(ctx));
-            self.state = ActiveState::Default(DefaultState::default());
+            // Through apply_transition, so the default state is *entered*: that is
+            // what puts the mouse cursor back.
+            self.apply_transition(Transition::Default, models);
             return Ok(true);
         }
         Ok(self.with_context(models, |state, ctx| state.key_press(ctx, key_code)))

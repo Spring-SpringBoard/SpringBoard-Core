@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::sbc::chonsole::core::{ChonsoleCore, ChonsoleEffect};
+    use crate::sbc::chonsole::core::{ChonsoleCore, ChonsoleEffect, ConsoleCommand};
 
     fn core() -> ChonsoleCore {
         ChonsoleCore::default()
@@ -64,5 +64,66 @@ mod tests {
             }
             _ => panic!("expected engine command effect"),
         }
+    }
+
+    #[test]
+    fn live_catalog_replaces_enumerated_engine_commands() {
+        let mut core = core();
+        core.replace_catalog(vec![ConsoleCommand {
+            name: "texture".into(),
+            description: "Displays engine textures".into(),
+            requires_cheat: false,
+        }]);
+        assert!(core
+            .suggestions("/tex")
+            .iter()
+            .any(|item| item.command == "/texture"));
+    }
+
+    #[test]
+    fn engine_texture_and_rule_suggestions_are_runtime_data() {
+        let mut core = core();
+        core.set_textures(vec!["$ssmf_specular".into(), "$heightmap".into()]);
+        core.set_game_rules(vec![("windStrength".into(), "10".into())]);
+
+        let textures = core.suggestions("/texture $ssmf");
+        assert_eq!(textures[0].command, "/texture $ssmf_specular");
+        assert_eq!(textures[0].description, "Engine texture");
+
+        let rules = core.suggestions("/gamerules wind");
+        assert_eq!(rules[0].command, "/gamerules windStrength");
+        assert_eq!(rules[0].description, "10");
+    }
+
+    #[test]
+    fn team_and_selected_unit_rule_suggestions_use_live_values() {
+        let mut core = core();
+        core.set_teams(vec![3]);
+        core.set_team_rules(std::collections::BTreeMap::from([(
+            3,
+            vec![("income".into(), "12".into())],
+        )]));
+        core.set_unit_rules(vec![("health".into(), "?".into())]);
+
+        assert_eq!(
+            core.suggestions("/teamrules 3")[0].command,
+            "/teamrules 3 income"
+        );
+        assert_eq!(core.suggestions("/unitrules hea")[0].description, "?");
+    }
+
+    #[test]
+    fn original_extension_completion_sources_are_native_runtime_catalogs() {
+        let mut core = core();
+        core.set_unit_defs(vec![("armcom".into(), ". Commander".into())]);
+        core.set_config_params(vec![("Shadows".into(), "Shadow quality".into())]);
+        core.set_players(vec!["Alice".into()]);
+
+        assert_eq!(core.suggestions("/give arm")[0].command, "/give armcom");
+        assert_eq!(
+            core.suggestions("/set Sha")[0].description,
+            "Shadow quality"
+        );
+        assert_eq!(core.suggestions("/w Al")[0].command, "/w Alice");
     }
 }

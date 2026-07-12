@@ -1,14 +1,15 @@
 //! Moving and rotating the selected objects, ports of `drag_object_state.lua`
 //! and `rotate_object_state.lua`.
 //!
-//! Lua draws a translucent ghost of the moved object and only commits on
-//! release. There is no native model-draw binding, so instead the move is
-//! *previewed on the live object* every frame (off-history) and committed as one
-//! undoable group on release — the object itself is the feedback.
+//! The object itself does not move until the button comes up: a ghost of it is
+//! drawn where it would land, and the original stays put. Only the release
+//! commits, as one undoable group.
 
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager, Vec3};
+use crate::sbc::panels::ModelShader;
+use crate::sbc::states::highlight::{draw_object_ghost, ObjectGhost};
 use crate::sbc::states::state::{trace_ground, EditorState, StateContext, Transition};
 
 /// A selected object and where it started, captured when manipulation began.
@@ -16,24 +17,78 @@ struct Grabbed {
     kind: ObjectKind,
     model_id: i32,
     origin: Vec3,
+    /// What the ghost needs to draw the same model the object is.
+    def_id: i32,
+    team_id: i32,
+    yaw: f32,
 }
 
 fn grab_selection(ctx: &mut StateContext) -> Vec<Grabbed> {
     let mut grabbed = Vec::new();
     for kind in [ObjectKind::Unit, ObjectKind::Feature, ObjectKind::Area] {
         let ids = ctx.models.get::<SelectionManager>().get(kind);
-        let objects = ctx.models.get::<ObjectManager>();
         for model_id in ids {
-            if let Some(origin) = objects.object_pos(kind, model_id) {
-                grabbed.push(Grabbed {
-                    kind,
-                    model_id,
-                    origin,
-                });
-            }
+            let objects = ctx.models.get::<ObjectManager>();
+            let Some(origin) = objects.object_pos(kind, model_id) else {
+                continue;
+            };
+            let spring_id = objects.spring_id(kind, model_id);
+            let (def_id, team_id, yaw) = spring_id
+                .map(|id| shape_of(ctx.interface, kind, id))
+                .unwrap_or((0, 0, 0.0));
+            grabbed.push(Grabbed {
+                kind,
+                model_id,
+                origin,
+                def_id,
+                team_id,
+                yaw,
+            });
         }
     }
     grabbed
+}
+
+impl Grabbed {
+    fn ghost_at(&self, pos: Vec3, yaw: f32) -> ObjectGhost {
+        ObjectGhost {
+            kind: self.kind,
+            def_id: self.def_id,
+            team_id: self.team_id,
+            x: pos.x,
+            y: pos.y,
+            z: pos.z,
+            yaw,
+        }
+    }
+}
+
+/// The def, team and facing of a live object, for drawing its ghost.
+fn shape_of(interface: &NativeInterfaceRef, kind: ObjectKind, spring_id: i32) -> (i32, i32, f32) {
+    match kind {
+        ObjectKind::Unit => {
+            let units = interface.units_info();
+            (
+                units.get_unit_def_id(spring_id).unwrap_or(0),
+                units.get_unit_team(spring_id).unwrap_or(0),
+                units.get_unit_heading(spring_id, true).unwrap_or(0.0),
+            )
+        }
+        ObjectKind::Feature => {
+            let features = interface.features();
+            // Feature headings come as the engine's 16-bit turns, unlike units'.
+            let heading = features.get_feature_heading(spring_id).unwrap_or(0) as f32;
+            // A feature's team is often gaia's, or none at all; the shape draw
+            // wants a real one.
+            let team = features.get_feature_team(spring_id).unwrap_or(0).max(0);
+            (
+                features.get_feature_def_id(spring_id).unwrap_or(0),
+                team,
+                heading * std::f32::consts::TAU / 65536.0,
+            )
+        }
+        ObjectKind::Area => (0, 0, 0.0),
+    }
 }
 
 /// One `SetObjectParamCommand` moving an object's `pos`.
@@ -90,7 +145,9 @@ pub(crate) struct DragObjectState {
     diff_z: f32,
     /// The object the drag was started on, whose motion the rest follow.
     anchor: (ObjectKind, i32),
-    previewing: bool,
+    /// Where the objects would land: drawn as ghosts, applied on release.
+    ghosts: Vec<ObjectGhost>,
+    shader: ModelShader,
 }
 
 impl DragObjectState {
@@ -100,7 +157,8 @@ impl DragObjectState {
             diff_x,
             diff_z,
             anchor: (kind, model_id),
-            previewing: false,
+            ghosts: Vec::new(),
+            shader: ModelShader::default(),
         }
     }
 
@@ -138,41 +196,46 @@ impl EditorState for DragObjectState {
         "drag-object"
     }
 
+    fn cursor(&self) -> Option<&'static str> {
+        Some("drag")
+    }
+
     fn enter(&mut self, ctx: &mut StateContext) {
         self.grabbed = grab_selection(ctx);
-        let _ = ctx.interface.unsynced_ctrl().set_mouse_cursor("drag", 1.0);
     }
 
     fn mouse_move(&mut self, ctx: &mut StateContext, x: i32, y: i32, _button: i32) -> bool {
         let Some((dx, dz)) = self.cursor_delta(ctx, x, y) else {
             return true;
         };
-        let moved = self.moved(ctx.interface, dx, dz);
-        for (i, pos) in moved {
-            let g = &self.grabbed[i];
-            ctx.command_fields_preview("SetObjectParamCommand", set_pos(g.kind, g.model_id, pos));
-        }
-        self.previewing = true;
+        self.ghosts = self
+            .moved(ctx.interface, dx, dz)
+            .into_iter()
+            .map(|(i, pos)| self.grabbed[i].ghost_at(pos, self.grabbed[i].yaw))
+            .collect();
         true
     }
 
     /// The drag started mid-press (a move in DefaultState), so it ends when the
     /// button comes up.
     fn mouse_release(&mut self, ctx: &mut StateContext, x: i32, y: i32, _button: i32) -> bool {
-        let finals = self
+        let finals: Vec<(ObjectKind, i32, Vec3)> = self
             .cursor_delta(ctx, x, y)
             .map(|(dx, dz)| self.moved(ctx.interface, dx, dz))
-            .unwrap_or_default();
-        let finals: Vec<(ObjectKind, i32, Vec3)> = finals
+            .unwrap_or_default()
             .into_iter()
             .map(|(i, pos)| {
                 let g = &self.grabbed[i];
                 (g.kind, g.model_id, pos)
             })
             .collect();
-        commit_positions(ctx, &self.grabbed, self.previewing, &finals);
+        commit_positions(ctx, &finals);
         ctx.request(Transition::Default);
         false
+    }
+
+    fn draw_world(&mut self, interface: &NativeInterfaceRef) {
+        draw_ghosts(interface, &mut self.shader, &self.ghosts);
     }
 }
 
@@ -184,8 +247,9 @@ pub(crate) struct RotateObjectState {
     /// Cursor angle about the centre when the rotate began; subtracted so the
     /// object does not jump on the first move.
     start_angle: Option<f32>,
-    previewing: bool,
     last_angle: f32,
+    ghosts: Vec<ObjectGhost>,
+    shader: ModelShader,
 }
 
 impl RotateObjectState {
@@ -194,8 +258,9 @@ impl RotateObjectState {
             grabbed: Vec::new(),
             centre: (0.0, 0.0),
             start_angle: None,
-            previewing: false,
             last_angle: 0.0,
+            ghosts: Vec::new(),
+            shader: ModelShader::default(),
         }
     }
 
@@ -238,6 +303,10 @@ impl EditorState for RotateObjectState {
         "rotate-object"
     }
 
+    fn cursor(&self) -> Option<&'static str> {
+        Some("resize-x")
+    }
+
     fn enter(&mut self, ctx: &mut StateContext) {
         self.grabbed = grab_selection(ctx);
         let count = self.grabbed.len().max(1) as f32;
@@ -246,51 +315,44 @@ impl EditorState for RotateObjectState {
             .iter()
             .fold((0.0, 0.0), |(sx, sz), g| (sx + g.origin.x, sz + g.origin.z));
         self.centre = (sum.0 / count, sum.1 / count);
-        let _ = ctx
-            .interface
-            .unsynced_ctrl()
-            .set_mouse_cursor("resize-x", 1.0);
     }
 
     fn mouse_move(&mut self, ctx: &mut StateContext, x: i32, y: i32, _button: i32) -> bool {
         let Some(cursor) = self.cursor_angle(ctx, x, y) else {
+            log::debug!("rotate: no ground under ({x}, {y})");
             return true;
         };
         let start = *self.start_angle.get_or_insert(cursor);
         let angle = cursor - start;
         self.last_angle = angle;
 
-        let mut envelopes = Vec::new();
-        for g in &self.grabbed {
-            let (pos, a) = self.rotated(ctx.interface, g, angle);
-            envelopes.push(set_pos_dir(g.kind, g.model_id, pos, a));
-        }
-        for value in envelopes {
-            ctx.command_fields_preview("SetObjectParamCommand", value);
-        }
-        self.previewing = true;
+        self.ghosts = self
+            .grabbed
+            .iter()
+            .map(|g| {
+                let (pos, yaw) = self.rotated(ctx.interface, g, angle);
+                g.ghost_at(pos, g.yaw + yaw)
+            })
+            .collect();
+        // The first move only seeds the baseline, so its angle is 0 and the ghosts
+        // land on the originals -- worth being able to see when a rotate looks
+        // like it did nothing.
+        log::debug!(
+            "rotate: centre={:?} angle={angle} ghosts={:?}",
+            self.centre,
+            self.ghosts.iter().map(|g| (g.x, g.z)).collect::<Vec<_>>()
+        );
         true
     }
 
     fn mouse_release(&mut self, ctx: &mut StateContext, _x: i32, _y: i32, _button: i32) -> bool {
         let angle = self.last_angle;
-        // Restore, then commit the rotated pose as one undo group.
-        if self.previewing {
-            let restore: Vec<serde_json::Value> = self
-                .grabbed
-                .iter()
-                .map(|g| set_pos(g.kind, g.model_id, g.origin))
-                .collect();
-            for value in restore {
-                ctx.command_fields_preview("SetObjectParamCommand", value);
-            }
-        }
         let finals: Vec<serde_json::Value> = self
             .grabbed
             .iter()
             .map(|g| {
                 let (pos, a) = self.rotated(ctx.interface, g, angle);
-                set_pos_dir(g.kind, g.model_id, pos, a)
+                set_pos_dir(g.kind, g.model_id, pos, g.yaw + a)
             })
             .collect();
         ctx.set_multiple_command_mode(true);
@@ -301,33 +363,26 @@ impl EditorState for RotateObjectState {
         ctx.request(Transition::Default);
         false
     }
+
+    fn draw_world(&mut self, interface: &NativeInterfaceRef) {
+        draw_ghosts(interface, &mut self.shader, &self.ghosts);
+    }
 }
 
-/// Restore the grabbed objects to their origins (as previews), then commit the
-/// final positions as one undoable group.
-fn commit_positions(
-    ctx: &mut StateContext,
-    grabbed: &[Grabbed],
-    previewing: bool,
-    finals: &[(ObjectKind, i32, Vec3)],
-) {
+/// Commit the final positions as one undoable group.
+fn commit_positions(ctx: &mut StateContext, finals: &[(ObjectKind, i32, Vec3)]) {
     if finals.is_empty() {
         return;
-    }
-    // The previews moved the live objects; undo must return to the origins, and
-    // the committed command captures whatever it finds -- so restore first.
-    if previewing {
-        let restore: Vec<serde_json::Value> = grabbed
-            .iter()
-            .map(|g| set_pos(g.kind, g.model_id, g.origin))
-            .collect();
-        for value in restore {
-            ctx.command_fields_preview("SetObjectParamCommand", value);
-        }
     }
     ctx.set_multiple_command_mode(true);
     for (kind, model_id, pos) in finals {
         ctx.command_fields("SetObjectParamCommand", set_pos(*kind, *model_id, *pos));
     }
     ctx.set_multiple_command_mode(false);
+}
+
+fn draw_ghosts(interface: &NativeInterfaceRef, shader: &mut ModelShader, ghosts: &[ObjectGhost]) {
+    for ghost in ghosts {
+        draw_object_ghost(interface, shader, ghost);
+    }
 }

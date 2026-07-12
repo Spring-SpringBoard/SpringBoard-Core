@@ -46,6 +46,56 @@ def chonsole_editing(run_state: E2ERun) -> None:
     run_state.screenshot("execute-help")
 
 
+NATIVE_CHONSOLE_CASE = {
+    "chonsole-native-smoke": {"chonsole": "rust", "ui": "chili"},
+}
+
+
+@scenario(target="chonsole-native-input", cases=NATIVE_CHONSOLE_CASE)
+def chonsole_native_input(run_state: E2ERun) -> None:
+    """The deterministic keyboard cases formerly in tools/dev/chonsole_smoke.py."""
+    run_state.focus()
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.18)
+    run_state.screenshot("open")
+    run_state.type_text("alpha beta gamma")
+    run_state.key_chord(("ctrl",), "Left")
+    run_state.key_chord(("ctrl",), "Left")
+    run_state.type_text("_")
+    run_state.key("End")
+    run_state.type_text("!")
+    run_state.screenshot("navigation")
+    run_state.key_chord(("ctrl", "shift"), "Left")
+    run_state.screenshot("select-word")
+    run_state.type_text("WORLD")
+    run_state.key_chord(("ctrl",), "a")
+    run_state.screenshot("select-all")
+
+
+@scenario(target="chonsole-native-commands", cases=NATIVE_CHONSOLE_CASE)
+def chonsole_native_commands(run_state: E2ERun) -> None:
+    """Native command discovery, argument completion, texture preview, and rules reads."""
+    run_state.focus()
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.18)
+    opened = run_state.screenshot("open")
+    run_state.type_text("/")
+    commands = run_state.screenshot("all-engine-commands")
+    width, height = window_size(run_state)
+    run_state.assert_region_pixels(opened, commands, (width // 4, height // 4, width // 2, height // 2), min_changed=100)
+    run_state.key_chord(("ctrl",), "a")
+    run_state.type_text("/texture ")
+    textures = run_state.screenshot("texture-values")
+    run_state.assert_region_pixels(commands, textures, (width // 4, height // 4, width // 2, height // 2), min_changed=100)
+    run_state.type_text("$ssmf_specular")
+    preview = run_state.screenshot("texture-preview")
+    run_state.assert_region_pixels(textures, preview, (0, 0, width // 2, height), min_changed=100)
+    run_state.key_chord(("ctrl",), "a")
+    run_state.type_text("/gamerules ")
+    rules = run_state.screenshot("gamerule-values")
+    run_state.assert_region_pixels(preview, rules, (width // 4, height // 4, width // 2, height // 2), min_changed=100)
+
+
 @scenario(uis=("chili", "rmlui"))
 def dev_console(run_state: E2ERun) -> None:
     run_state.focus()
@@ -80,6 +130,7 @@ def native_dev_console(run_state: E2ERun) -> None:
     # centres 108px above the window's bottom edge.
     toolbar_y = height - 108
 
+    run_state.key("F8", delay=0.6)                     # the harness starts it hidden
     run_state.click(30, toolbar_y, delay=0.5)          # Clear
     run_state.golden("console-cleared")
 
@@ -97,3 +148,34 @@ def native_dev_console(run_state: E2ERun) -> None:
     run_state.golden("console-shown")
 
 
+@scenario()
+def native_dev_console_copy(run_state: E2ERun) -> None:
+    """Selecting log lines and copying them with Ctrl+C.
+
+    The clipboard is read back: the panel's toolbar binds Ctrl+C to Copy, so this
+    is also what proves the console wins the key when it has a selection.
+    """
+    run_state.focus()
+    run_state.key("F8", delay=0.6)                     # the harness starts it hidden
+    _width, height = window_size(run_state)
+    # The log sits above the toolbar row (108px off the bottom).
+    top, bottom = height - 290, height - 140
+
+    # So a stale clipboard from an earlier run cannot pass this.
+    run_state.set_clipboard("SENTINEL-NOTHING-WAS-COPIED")
+
+    run_state.drag(60, top, 700, bottom, steps=10)
+    run_state.screenshot("lines-selected")
+
+    run_state.key("ctrl+c", delay=0.5)
+    copied = run_state.clipboard()
+    if not copied.strip() or copied.startswith("SENTINEL"):
+        raise AssertionError("Ctrl+C over a console selection copied nothing")
+
+    run_state.key("ctrl+a", delay=0.4)
+    run_state.key("ctrl+c", delay=0.5)
+    everything = run_state.clipboard()
+    if len(everything) <= len(copied):
+        raise AssertionError(
+            f"Ctrl+A did not widen the selection ({len(everything)} <= {len(copied)} chars)"
+        )

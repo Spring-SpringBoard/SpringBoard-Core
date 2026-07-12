@@ -1,0 +1,136 @@
+# Golden images
+
+Reference screenshots, compared against every run. A golden only means something
+if a human knows what it is *supposed* to show, so each one is listed below with
+the thing it pins down. If a golden changes, this file says whether that change
+is a bug or an improvement.
+
+Provenance: an image captured by the agent is `ai-reviewed` (see `review.json`
+beside it). It becomes `approved` only when a human says so:
+
+    just goldens                    # what exists, and what still awaits approval
+    just approve-goldens <case>     # the human OK; the agent never runs this
+
+## What a golden can and cannot catch
+
+The **panel renders bit-stably** — two runs produce identical pixels — so panel
+crops are compared near-exactly (`PANEL_TOLERANCE`, 20px, absorbs an antialiased
+edge). Any real UI change is hundreds of pixels.
+
+The **map does not**. The engine's tree render shimmers between runs: a fringe
+around each tree's silhouette, ~700px per tree, and a frame can hold four trees
+(two objects plus their two ghosts). Map goldens therefore run at a deliberately
+coarse `MAP_TOLERANCE` (4000px) and are a **gross** regression check — they catch
+a ghost that stopped drawing or an object that never got placed, and they cannot
+see a few-hundred-pixel change.
+
+The fine detail on the map is asserted *without* pixels, which is exact and noise
+free:
+- `count_color` — the selection box is pure `#00FF00` and nothing else on the map
+  is, so counting those pixels says exactly whether it is drawn;
+- the command log — what the UI actually sent to the bridge.
+
+Two things are forced still so captures repeat at all (see `runner.py`):
+`SBC_STILL_MODELS` freezes the spinning def thumbnails, and `SBC_HIDE_CONSOLE`
+starts the dev console hidden — its log text is uncontrollable (timestamps, ids)
+and would break every frame it appeared in.
+
+---
+
+## def-grid-rust
+
+The fastest look at thumbnail rendering: open Objects → Features, capture, stop.
+
+| screen | what it pins down |
+| --- | --- |
+| `def-grid` | The def grid: every tree model rendered upright, full crown, filling its cell, on the tinted background. Catches the whole thumbnail pipeline — RTT, the model shader, the framing, and the alphabetical, stable ordering. |
+
+## units-panel-rust
+
+Units and Features: the grid, its filters, and placement.
+
+| screen | what it pins down |
+| --- | --- |
+| `units-open` | The Units view and *its* filters (Type + Terrain, no Wreck). |
+| `features-open` | The Features view: Type/Wreck/Terrain filters, search, grid. |
+| `features-brush-fields` | Brush mode swaps the placement fields — `amount` goes, size/spread/noise and the rotation ranges appear. |
+| `before-place` / `feature-placed` | The tree really lands on the map. The pair is diffed, so the command reaching the bridge is not taken as proof. |
+| `amount-5-preview` | Amount 5 ghosts **five** trees, at the exact spots the click will use — the preview and the placement must not disagree. Captured with the cursor in place (`park=False`), since the ghosts follow it. |
+| `before-amount-5` / `amount-5-placed` | Five more trees actually appear. |
+| `features-wreckage-empty` | Type = Wreckage empties the grid: the filter filters, rather than merely rendering. |
+
+## props-panel-rust
+
+Properties: editing the selected object.
+
+| screen | what it pins down |
+| --- | --- |
+| `feature-selected` | A placed feature can be selected (Add mode left first, or every click would keep placing). |
+| `props-open` | The whole Properties form: Pos/Rot/Dir/Vel, Health, Mass, Blocking, Radius, Collision, Team, Resources. |
+| `before-move` / `props-pos-edited` | Typing into Pos X changes the field *and* sends the whole vector. |
+| `props-pos-dragging` | Mid-drag on a numeric field: the pointer is pinned to where the drag began and drawn as the empty cursor — nothing follows the mouse across the panel. `park=False`, or moving the pointer would fight the drag's own warp. |
+| `props-pos-dragged` | The drag committed a value. |
+| `props-drag-released-outside` | A drag released far outside the panel still ends. This is the one RmlUi drag-capture actually delivers; the engine never hands the plugin a release for a press RmlUi consumed. |
+| `props-blocking-toggled` | A checkbox commits. |
+| `props-after-map-clicks` | Clicking the map afterwards does not re-enter placement. |
+
+## collision-rust
+
+The collision volume, which is the point of the editor — so it is shown, not just commanded.
+
+| screen | what it pins down |
+| --- | --- |
+| `volume-hidden` | Before "Show volume": no volume drawn. |
+| `volume-shown` | The debug volume appears over the object. |
+| `volume-scaled` | Scaling an axis **redraws it bigger**. A command reaching the bridge would not show that. |
+| `volume-type-changed` | A different volume type is a different shape on screen. |
+| `collision-fields` | The Collision form itself. |
+
+## selection-rust
+
+Rectangle select.
+
+| screen | what it pins down |
+| --- | --- |
+| `box-dragging` | The selection rectangle is drawn while dragging. `park=False` — the box is drawn *to* the cursor, so the cursor position is the subject. |
+| `box-selected` | The feature ends up selected (green box). |
+| `props-after-box-select` | Proof it is really selected: Properties can edit it. Nothing to edit means nothing was selected. |
+
+## deselect-rust
+
+Deselecting has to clear the box, not just the selection — a box left behind is an
+object the editor thinks it still has.
+
+| screen | what it pins down |
+| --- | --- |
+| `feature-unselected` | Baseline: no box. |
+| `feature-selected` | Clicking the feature draws the box. |
+| `feature-escaped` | Escape clears it. |
+| `feature-deselected` | Clicking empty ground clears it. |
+| `box-selected` | A box-select selects. |
+| `box-selected-empty` | A box-select over empty ground **drops** the previous selection. |
+
+## rotation-rust
+
+Ctrl-drag rotates the selection about its midpoint.
+
+| screen | what it pins down |
+| --- | --- |
+| `before-rotate` | Two trees, far apart, both selected. Far apart on purpose: rotating a pair swings each around the midpoint, and close together the ghosts land on the originals and the frame shows nothing. |
+| `rotating` | **The ghosts.** Two extra trees at the would-be positions while the originals stay put — the object does not move until the button comes up, exactly as the Lua state behaves. Captured after the *third* move: the first enters the rotate and the second only seeds the baseline angle (a zero rotation, whose ghosts sit on the originals). |
+| `rotated` | The pair has actually swung. |
+
+## brush-size-rust
+
+Shift+wheel resizes the object brush.
+
+| screen | what it pins down |
+| --- | --- |
+| `brush-size-default` | Brush mode, Size 100. |
+| `brush-size-enlarged` | Shift+wheel raised it to 264 — the panel's Size field follows the wheel. That it really is a bigger brush is asserted from the paint: one object at the default size, seven after. |
+
+## native-panel-rust / native-dev-console-rust
+
+Predate this file. The panel walk-through and the dev console (cleared first, so an
+empty log is the deterministic state; its toolbar and F8 toggle are what the
+goldens pin down).

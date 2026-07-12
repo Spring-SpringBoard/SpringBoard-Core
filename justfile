@@ -58,10 +58,17 @@ build-native:
 [group('build')]
 build: build-native
 
-# Build the local engine.
+# Build the local engine, through its Docker toolchain (see the engine's
+# AGENTS.md). A host `cmake --build` of the build dir cannot work: that dir is
+# configured with the container's paths (`/build/src/...`), so ninja tries to
+# mkdir /build and fails. Writes the ready-to-use install to
+# <engine>/build-amd64-linux/install, which is what .env points at.
+#
+# `jobs` is capped rather than left to ninja: unbounded, the container takes the
+# whole machine down. Raise it if you have the cores to spare.
 [group('build')]
-build-engine:
-    cmake --build "{{engine_build_dir}}"
+build-engine jobs="8" args="-DUSE_ASAN=ON":
+    cd "$(dirname "{{engine_build_dir}}")" && ./docker-build-v2/build.sh -j {{jobs}} linux {{args}}
 
 # Build the engine-side spring-native crate after binding changes.
 [group('build')]
@@ -92,14 +99,34 @@ verify-native: lint test-unit build-native
 run config="config/ui-chili.json": build-native
     bash tools/dev/launch.sh --config "{{config}}"
 
-# Drive the native chonsole in the currently running editor window.
-# Defaults to enter-only; typing scenarios must be requested explicitly.
-[group('run')]
-smoke-chonsole scenario="enter":
-    python3 tools/dev/chonsole_smoke.py "{{scenario}}"
-
 # Run black-box UI E2E tests. Does not rebuild native code; run `just build`
 # first when testing Rust UI changes.
 [group('test')]
 test-e2e target="chonsole" args="":
     python3 tools/e2e/ui_driver.py "{{target}}" {{args}}
+
+# Approve a case's reference images (the human OK): `just approve-goldens rotation-rust`.
+# Optionally name individual shots. Only a human runs this.
+[group('test')]
+approve-goldens case *shots:
+    cd tools/e2e && python3 approve_goldens.py "{{case}}" {{shots}}
+
+# List every reference image and whether it is approved or still ai-reviewed.
+[group('test')]
+goldens:
+    @python3 tools/e2e/list_goldens.py
+
+# Path of the most recent e2e run, optionally for one target: `just e2e-dir rotation`.
+[group('test')]
+e2e-dir target="":
+    @ls -dt artifacts/ui-e2e/*{{target}}* | head -1
+
+# Grep the most recent run's engine log: `just e2e-log rotation "editor state"`.
+[group('test')]
+e2e-log target pattern:
+    @grep -o ".\{0,20\}{{pattern}}.\{0,120\}" "$(ls -dt artifacts/ui-e2e/*{{target}}* | head -1)/infolog.txt" || echo "no match"
+
+# Open the most recent run's screenshots dir: `just e2e-shots rotation`.
+[group('test')]
+e2e-shots target="":
+    @ls "$(ls -dt artifacts/ui-e2e/*{{target}}* | head -1)/screens"

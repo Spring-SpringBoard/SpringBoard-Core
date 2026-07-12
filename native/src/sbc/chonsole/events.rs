@@ -311,38 +311,3 @@ impl HistoryCursor {
         self.pos = None;
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{printable_text, HistoryCursor};
-
-    fn history(items: &[&str]) -> Vec<String> {
-        items.iter().map(|item| item.to_string()).collect()
-    }
-
-    #[test]
-    fn prefix_history_walks_matching_items_and_restores_input() {
-        let items = history(&["/echo one", "/water 1", "/echo two"]);
-        let mut cursor = HistoryCursor::default();
-        assert_eq!(cursor.prev(&items, "/e").as_deref(), Some("/echo two"));
-        assert_eq!(
-            cursor.prev(&items, "/echo two").as_deref(),
-            Some("/echo one")
-        );
-        assert_eq!(cursor.next(&items).as_deref(), Some("/echo two"));
-        assert_eq!(cursor.next(&items).as_deref(), Some("/e"));
-    }
-
-    #[test]
-    fn text_input_ignores_control_characters() {
-        assert_eq!(printable_text("\u{17}hello\u{1b}"), "hello");
-    }
-
-    #[test]
-    fn empty_prefix_history_walks_all_items() {
-        let items = history(&["/help", "/water 1"]);
-        let mut cursor = HistoryCursor::default();
-        assert_eq!(cursor.prev(&items, "").as_deref(), Some("/water 1"));
-        assert_eq!(cursor.prev(&items, "/water 1").as_deref(), Some("/help"));
-    }
-}

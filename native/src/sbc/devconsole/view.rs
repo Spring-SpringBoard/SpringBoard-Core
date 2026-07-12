@@ -104,6 +104,22 @@ impl DevConsoleView {
         self.visible
     }
 
+    /// Start hidden. `ensure` applies this when the document first binds.
+    pub(crate) fn set_hidden_at_startup(&mut self) {
+        self.visible = false;
+    }
+
+    /// Whether the pointer is over the console, which is what makes its keys its
+    /// own rather than the panel's.
+    pub(crate) fn hovered(&self, interface: &NativeInterfaceRef) -> bool {
+        self.context.is_some_and(|context| {
+            interface
+                .rml_ui()
+                .context_is_mouse_interacting(context)
+                .unwrap_or(false)
+        })
+    }
+
     pub(crate) fn drain_actions(&self) -> Vec<Action> {
         self.actions.borrow_mut().drain(..).collect()
     }

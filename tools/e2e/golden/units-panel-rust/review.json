@@ -1,0 +1,38 @@
+{
+  "amount-5-placed": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:59"
+  },
+  "amount-5-preview": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:53"
+  },
+  "before-amount-5": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:55"
+  },
+  "before-place": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:45"
+  },
+  "feature-placed": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:49"
+  },
+  "features-brush-fields": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:40"
+  },
+  "features-open": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:39"
+  },
+  "features-wreckage-empty": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:01"
+  },
+  "units-open": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:41:37"
+  }
+}

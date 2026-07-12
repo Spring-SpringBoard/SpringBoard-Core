@@ -21,6 +21,9 @@ plain `cargo` from the repo root does not even find a `Cargo.toml`).
 | Everything, incl. slow tests | `just test-all` |
 | Native verification chain | `just verify-native` |
 | UI e2e (build native first!) | `just test-e2e <target> "<args>"` |
+| Golden status (what awaits approval) | `just goldens` |
+| Approve goldens (human only) | `just approve-goldens <case>` |
+| Latest e2e run: dir / log / screens | `just e2e-dir <t>`, `just e2e-log <t> <pat>`, `just e2e-shots <t>` |
 | Long-lived editor session | `just run config/ui-chili.json` |
 
 E2E examples — `just build` first, `test-e2e` does not rebuild:
@@ -37,6 +40,14 @@ Read files with **Read**; change them with **Edit**/**Write**. Do not use `sed`,
 `head`, `tail`, or python one-liners to read or edit a file, and do not use `grep` as a
 substitute for opening it. Searching to *locate* a file is fine — once located, Read it.
 Partial views are how bugs get misread and invented.
+
+## Keep comments minimal
+
+Write code, not literature. A comment earns its place only when it states a
+constraint the code cannot: an engine quirk, a non-obvious ordering requirement,
+a "this looks wrong but isn't". Never narrate what the next line does, never
+explain the port's history, never leave a paragraph where a clause would do —
+and usually, leave nothing at all.
 
 ## Never run destructive git
 

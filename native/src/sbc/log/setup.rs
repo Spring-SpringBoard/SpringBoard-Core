@@ -57,10 +57,25 @@ fn init_log4rs_from_embedded() -> Result<(), String> {
         return Err(format!("log4rs appenders error: {errors:?}"));
     }
 
+    // `SBC_LOG_LEVEL=debug` raises the root level without a rebuild. The e2e
+    // harness sets it: the debug lines are what explain a failure after the fact,
+    // and a run nobody can explain is a run nobody trusts.
+    let root = match std::env::var("SBC_LOG_LEVEL").ok().as_deref() {
+        Some(level) => {
+            let level: LevelFilter = level
+                .parse()
+                .map_err(|_| format!("bad SBC_LOG_LEVEL: {level}"))?;
+            log4rs::config::Root::builder()
+                .appenders(raw.root().appenders().to_vec())
+                .build(level)
+        }
+        None => raw.root(),
+    };
+
     let config = log4rs::config::Config::builder()
         .appenders(appenders)
         .loggers(raw.loggers())
-        .build(raw.root())
+        .build(root)
         .map_err(|err| err.to_string())?;
 
     log4rs::config::init_config(config)

@@ -395,7 +395,52 @@ extract-and-copy dance is wasteful; find a way to exec the compiler without
 copying the binary (e.g. have the engine expose the archive's real path, or a
 proper VFS extract-to-cache), and drop `extract_executable`.
 
-## 15. Untangle the `project` slice: utility vs. feature
+## 15. E2E tests steal the system mouse cursor
+
+**What.** `tools/e2e/` drives the editor with `xdotool` against the user's live X
+session: it warps the real pointer, sends real clicks, and focuses the engine
+window. While a suite runs, **the machine cannot be used** — the cursor jumps
+around, keystrokes land in the engine, and any stray input corrupts the run.
+
+**Why fix it.** The suite is the main verification tool for the port, so it gets
+run constantly; making it un-runnable-in-the-background costs real time. It also
+makes the tests fragile: a human touching the mouse mid-run breaks them.
+
+**Options (sketch, in rough order of cost):**
+
+1. **Give the engine its own X display.** Run it under `DISPLAY=:99` and point
+   `xdotool` at that display; the pointer it warps is virtual, so the real one is
+   untouched, and `xwd` still captures. The harness (window ids, clicks, goldens)
+   works essentially unchanged — this is mostly a `DISPLAY` addition to the same
+   isolation the write dir already has. The question is GL:
+   - **Xvfb + llvmpipe** — trivial, but software GL: fine for panel/RmlUi
+     scenarios, likely too slow for terrain/shader work, and goldens would differ
+     from the GPU's output.
+   - **Xephyr** — nested server, still renders on the real GPU. Cheap and fast,
+     but it lives in the session: isolates the *pointer*, not the machine.
+   - **Headless Xorg (`dummy` driver / NVIDIA headless)** — real GPU, no monitor.
+     What CI does; more setup, but the honest answer.
+
+2. **Inject input into the plugin.** A test-only channel where the driver sends
+   "press at (x,y)" / "move" / "wheel" and the plugin feeds them straight into its
+   own `mouse_press` / `mouse_move` / `mouse_wheel`. No pointer, no focus, far
+   faster and fully deterministic (no `delay=` guessing). **Cost:** it bypasses the
+   engine's input routing — which is exactly where two real bugs lived (RmlUi
+   consuming clicks before the plugin; `xdotool --window` clearing modifiers so
+   ctrl/shift never arrived). An injected scenario would have been blind to both.
+
+3. **Both, split by purpose (recommended).** Most scenarios only care that
+   clicking Features arms a tree or that a field commits — run those on the
+   injected channel: fast, hermetic, no cursor. Keep a small suite on the real X
+   path for the cases whose whole point is that a real event reaches the right
+   consumer (panel vs map vs console, modifiers, wheel, drag capture), and run
+   *that* on a separate display. Fast inner loop, thin honest outer loop.
+
+**First step.** Probe whether the engine runs acceptably under Xephyr on the dev
+GPU — a quick yes/no that decides whether option 1 is a five-minute change or a
+project.
+
+## 16. Untangle the `project` slice: utility vs. feature
 
 **What.** `native/src/sbc/project/` currently mixes two things: (a) an
 **SBC-wide utility** used by every feature slice — `ProjectPaths`

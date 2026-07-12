@@ -8,7 +8,7 @@
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::command_system::model::Models;
-use crate::sbc::envelope::{as_preview, envelope, envelope_fields, envelope_with};
+use crate::sbc::envelope::{envelope, envelope_fields, envelope_with};
 
 /// What a state may do to the world, and the envelopes it produced this tick.
 ///
@@ -83,13 +83,6 @@ impl<'a> StateContext<'a> {
     pub(crate) fn command_fields(&mut self, class: &str, fields: serde_json::Value) {
         let e = envelope_fields(class, self.next_cmd_id, fields);
         self.envelopes.push(e);
-    }
-
-    /// Like [`command_fields`], but off-history: the command applies to the
-    /// engine and never reaches undo. Used to preview a drag on the live object.
-    pub(crate) fn command_fields_preview(&mut self, class: &str, fields: serde_json::Value) {
-        let e = envelope_fields(class, self.next_cmd_id, fields);
-        self.envelopes.extend(as_preview(vec![e]));
     }
 
     /// Open or close a streaming group: everything between the two lands on the
@@ -190,6 +183,12 @@ pub(crate) fn trace_ground(interface: &NativeInterfaceRef, x: f32, y: f32) -> Op
 pub(crate) trait EditorState {
     /// Human-readable, for logging and for the state a view wants to be in.
     fn name(&self) -> &'static str;
+
+    /// The mouse cursor this state wants; `None` leaves the engine's own. The
+    /// manager applies it on entry, so no state can leave another's behind.
+    fn cursor(&self) -> Option<&'static str> {
+        None
+    }
 
     fn enter(&mut self, ctx: &mut StateContext) {}
     fn leave(&mut self, ctx: &mut StateContext) {}
@@ -398,25 +397,24 @@ impl EditorState for DefaultState {
         false
     }
 
-    /// R begins a rotate on the current selection and Escape drops it, matching Lua.
+    /// Escape drops the selection.
+    ///
+    /// Rotation is Ctrl-drag, and only Ctrl-drag. Lua also binds R to it, but the
+    /// keyboard entry has no drag to end it: the engine only delivers mouse-move
+    /// while a button is held, so a rotate begun from the keyboard sits there
+    /// with nothing to drive or finish it. Lua's own comment beside the binding
+    /// says the two entries should not both exist.
     fn key_press(&mut self, ctx: &mut StateContext, key_code: i32) -> bool {
         use crate::sbc::objects::SelectionManager;
-        if crate::sbc::keys::is_key(ctx.interface, key_code, "esc") {
-            let sel = ctx.models.get::<SelectionManager>();
-            if sel.count() == 0 {
-                return false;
-            }
-            sel.clear();
-            let _ = ctx.interface.selection().select_unit_array(&[], false);
-            return true;
-        }
-        if !crate::sbc::keys::is_key(ctx.interface, key_code, "r") {
+        if !crate::sbc::keys::is_key(ctx.interface, key_code, "esc") {
             return false;
         }
-        if ctx.models.get::<SelectionManager>().count() == 0 {
+        let sel = ctx.models.get::<SelectionManager>();
+        if sel.count() == 0 {
             return false;
         }
-        ctx.request(Transition::Rotate);
+        sel.clear();
+        let _ = ctx.interface.selection().select_unit_array(&[], false);
         true
     }
 }

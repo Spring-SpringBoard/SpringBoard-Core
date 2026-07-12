@@ -108,8 +108,11 @@ impl ThumbnailRenderer {
             }
         }
 
-        // Slowly spin the models, as Lua does.
-        self.rotation += 0.5;
+        // Slowly spin the models, as Lua does -- unless the harness asked for a
+        // still image, since a spinning model can never match a golden.
+        if !still_models() {
+            self.rotation += 0.5;
+        }
 
         // The state Lua's DrawIcons sets around the whole batch.
         let _ = gfx.push_matrix();
@@ -140,6 +143,12 @@ impl ThumbnailRenderer {
         let _ = gfx.bind_texture("", 0, false);
         let _ = gfx.pop_matrix();
     }
+}
+
+/// Whether to hold the thumbnails still, for reproducible screenshots.
+fn still_models() -> bool {
+    static STILL: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *STILL.get_or_init(|| std::env::var("SBC_STILL_MODELS").is_ok())
 }
 
 /// The team's colour, which the model shader tints the team-coloured texels with.

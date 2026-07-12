@@ -1,0 +1,38 @@
+{
+  "before-move": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:17"
+  },
+  "feature-selected": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:15"
+  },
+  "props-after-map-clicks": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:26"
+  },
+  "props-blocking-toggled": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:24"
+  },
+  "props-drag-released-outside": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:23"
+  },
+  "props-open": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:17"
+  },
+  "props-pos-dragged": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:21"
+  },
+  "props-pos-dragging": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:21"
+  },
+  "props-pos-edited": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-13T08:42:20"
+  }
+}

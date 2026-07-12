@@ -25,6 +25,12 @@ from run_sbc import prepare  # noqa: E402
 # Distinguishes "no crop override" from an explicit `crop=None` (full frame).
 _CASE_CROP = "<case>"
 
+# Differing pixels a golden forgives by default. The panel renders bit-stably, so
+# this only absorbs the odd antialiased edge -- a real UI change is hundreds of
+# pixels at least. Captures that include the *map* need far more; see the
+# scenarios' MAP_TOLERANCE.
+PANEL_TOLERANCE = 20
+
 # Envelope bookkeeping, not command fields.
 _ENVELOPE_KEYS = frozenset({"className", "__cmd_id", "__preview"})
 
@@ -102,6 +108,15 @@ class E2ERun:
 
     def launch(self) -> None:
         write_dir, env, cmd = prepare(prefix="sbc-ui-e2e-")
+        # Two things move on their own and would make every capture unrepeatable:
+        # the def thumbnails spin, and the dev console prints whatever the engine
+        # feels like saying (timestamps, ids). Hold the models still and start the
+        # console hidden -- a scenario that wants it presses F8.
+        env["SBC_STILL_MODELS"] = "1"
+        env["SBC_HIDE_CONSOLE"] = "1"
+        # Debug lines land in the run's infolog, so a failure can be explained
+        # afterwards from the artifact rather than by re-running with printfs.
+        env["SBC_LOG_LEVEL"] = "debug"
         self.write_dir = write_dir
         self.command = cmd
         game_dir = write_dir / "games" / GAME_DIRNAME
@@ -443,6 +458,40 @@ class E2ERun:
         )
         return png_path
 
+    def set_clipboard(self, text: str) -> None:
+        """Put text on the clipboard, so a copy assertion cannot pass on what a
+        previous run left there."""
+        self.event("set_clipboard", text=text)
+        subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import sys,tkinter;r=tkinter.Tk();r.withdraw();r.clipboard_clear();"
+                "r.clipboard_append(sys.argv[1]);r.update();r.after(200,r.destroy);"
+                "r.mainloop()",
+                text,
+            ],
+            check=False,
+        )
+
+    def clipboard(self) -> str:
+        """The X clipboard's text. No xclip/xsel here, so Tk reads it."""
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import tkinter;r=tkinter.Tk();r.withdraw();"
+                "print(r.clipboard_get(), end='')",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return ""
+        self.event("clipboard", length=len(result.stdout))
+        return result.stdout
+
     def count_color(
         self,
         shot: Path,
@@ -457,11 +506,7 @@ class E2ERun:
         in the wind and the panel animates, so "how many pixels changed" is mostly
         noise, while "is the green box there" is exact.
         """
-        by_png = {captured.png_path: captured.raw_path for captured in self.screenshots}
-        try:
-            raw = by_png[shot]
-        except KeyError as exc:
-            raise AssertionError(f"unknown screenshot {exc.args[0]}") from exc
+        raw = self._source_image(shot)
 
         x, y, width, height = region
         result = subprocess.run(
@@ -500,15 +545,9 @@ class E2ERun:
         tested. Compare the patch of screen the assertion is actually about.
         """
         x, y, width, height = region
-        # The raw captures, as `assert_screenshot_pixels` does: in `raw` mode the
-        # PNGs are not written until the run ends.
-        by_png = {shot.png_path: shot.raw_path for shot in self.screenshots}
         crops = []
         for shot in (before, after):
-            try:
-                raw = by_png[shot]
-            except KeyError as exc:
-                raise AssertionError(f"unknown screenshot {exc.args[0]}") from exc
+            raw = self._source_image(shot)
             cropped = raw.with_name(f"{raw.stem}-crop.png")
             run(
                 "convert",
@@ -534,13 +573,26 @@ class E2ERun:
         Compare the immediate XWD captures so this works with both deferred
         `raw` conversion and immediate `png` capture modes.
         """
-        by_png = {shot.png_path: shot.raw_path for shot in self.screenshots}
-        try:
-            before_raw = by_png[before]
-            after_raw = by_png[after]
-        except KeyError as exc:
-            raise AssertionError(f"unknown screenshot {exc.args[0]}") from exc
-        return self._compare(before_raw, after_raw, min_changed, max_changed)
+        return self._compare(
+            self._source_image(before),
+            self._source_image(after),
+            min_changed,
+            max_changed,
+        )
+
+    def _source_image(self, shot: Path) -> Path:
+        """The image to measure for a captured shot.
+
+        The raw XWD where it survives (in `raw` mode the PNGs are not written
+        until the run ends), otherwise the PNG -- `golden` converts and deletes
+        its raw immediately.
+        """
+        for captured in self.screenshots:
+            if captured.png_path == shot:
+                if captured.raw_path.exists():
+                    return captured.raw_path
+                return captured.png_path
+        raise AssertionError(f"unknown screenshot {shot}")
 
     def _compare(
         self,
@@ -590,13 +642,30 @@ class E2ERun:
         run("xdotool", "mousemove", "--window", self.window, str(width // 2), str(height - 4))
         time.sleep(0.25)
 
-    def golden(self, name: str, crop: str | None = _CASE_CROP) -> None:
-        """Capture, then compare pixel-exactly against the checked-in golden.
+    def golden(
+        self,
+        name: str,
+        crop: str | None = _CASE_CROP,
+        tolerance: int = PANEL_TOLERANCE,
+        park: bool = True,
+    ) -> Path:
+        """Capture, then compare against the checked-in golden.
 
         `crop` defaults to the case's crop; pass it explicitly for a shot whose
         subject sits outside that region (a modal beside the panel, say).
+
+        `tolerance` is the number of differing pixels to forgive. Leave it at 0
+        for anything cropped to the panel -- those are bit-stable. A capture that
+        includes the **map** is not: the engine's tree render varies by a few
+        dozen pixels between runs, so those need a small budget. See `golden.py`.
+
+        `park=False` keeps the cursor where it is. The default moves it out of
+        shot, which would destroy any frame whose *subject* is cursor-dependent:
+        a placement preview follows the cursor, and a mid-drag capture would end
+        the drag somewhere else entirely.
         """
-        self.park_cursor()
+        if park:
+            self.park_cursor()
         stem = f"{len(self.screenshots):02d}-{name}"
         raw_path = self.screenshot_dir / f"{stem}.xwd"
         png_path = self.screenshot_dir / f"{stem}.png"
@@ -609,10 +678,15 @@ class E2ERun:
         raw_path.unlink(missing_ok=True)
 
         status = compare_golden(
-            self.case.name, name, png_path, update=self.update_golden
+            self.case.name,
+            name,
+            png_path,
+            update=self.update_golden,
+            tolerance=tolerance,
         )
         self.golden_results.append((name, status))
         self.event("golden", name=name, status=status, path=str(png_path))
+        return png_path
 
     # ── Command-log assertions ─────────────────────────────────────
 
