@@ -157,8 +157,15 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.assert_screenshot_pixels(before, after, min_changed=400)
 
     # Dragging a numeric field changes it without ever entering text mode, and
-    # commits once on release.
-    run_state.drag(left + 58, 223, left + 178, 223, steps=8)
+    # commits once on release. The drag pins the pointer and warps it back after
+    # every move (as content-creation tools do), so the motion has to be
+    # relative -- absolute moves would fight the warp.
+    run_state.press(left + 58, 223)
+    run_state.move_relative(120)
+    # Mid-drag: the pointer is pinned to where the drag began and drawn as the
+    # empty cursor, so nothing follows the mouse across the panel.
+    run_state.screenshot("props-pos-dragging")
+    run_state.release(left + 58, 223)
     run_state.screenshot("props-pos-dragged")
     run_state.assert_any_command(
         "SetObjectParamCommand",
@@ -166,20 +173,17 @@ def props_panel(run_state: E2ERun) -> None:
         value=lambda v: isinstance(v, dict) and v.get("x", 0) > 1500.5,
     )
 
-    # Releasing a drag *outside* the panel must still end it. RmlUi never sees
-    # that mouseup, so the drag can only be ended by the engine's release
-    # callback -- and if that never arrives the field stays latched to the mouse
-    # forever, which is the bug this pins down.
-    # This drag ends up left of where it started, so the value comes down; the
-    # previous one left it at ~1620, so only this drag's commit can be below.
+    # Releasing a drag with the pointer far outside the panel must still end it:
+    # RmlUi's drag capture delivers `dragend` wherever the button comes up, and
+    # nothing else can (the engine never hands the plugin a release for a press
+    # the panel's RmlUi consumed).
     run_state.press(left + 58, 223)
-    run_state.move(left + 150, 223, delay=0.15)
-    run_state.move(left - 300, 500, delay=0.2)        # out over the map
+    run_state.move_relative(-400, 260)               # out over the map
     run_state.release(left - 300, 500)
     dragged = run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
-        value=lambda v: isinstance(v, dict) and v.get("x", 9999) < 1400.0,
+        value=lambda v: isinstance(v, dict) and v.get("x", 9999) < 1500.0,
     )
     # Now moving the mouse must not keep changing it: the drag is over.
     run_state.move(left - 600, 500, delay=0.4)
@@ -196,22 +200,9 @@ def props_panel(run_state: E2ERun) -> None:
         value=lambda v: isinstance(v, dict),
     )
 
-    run_state.click(left + 270, EDITOR_BUTTON_Y, delay=0.9)   # Collision
-    run_state.screenshot("collision-open")
-
-    # The collision volume is its own sub-object: editing a scale axis must send
-    # the whole volume table, and the field must hold the new value after.
-    run_state.click(left + 60, 339, delay=0.4)                # Scale X
-    run_state.key("ctrl+a", delay=0.15)
-    run_state.type_text("45")
-    run_state.key("Return", delay=0.8)
-    run_state.screenshot("collision-scale-edited")
-    run_state.assert_any_command(
-        "SetObjectParamCommand",
-        key="collision",
-        value=lambda v: isinstance(v, dict),
-    )
-
+    # Collision has its own scenario (`collision`), where the volume it edits can
+    # actually be seen.
+    #
     # Last, because it deselects: clicking empty ground with an object editor
     # open used to abort the engine -- the panel wrote through element handles
     # RmlUi had already destroyed. It must survive, and clear the selection.
@@ -219,6 +210,55 @@ def props_panel(run_state: E2ERun) -> None:
         run_state.click(spot_x + dx, spot_y + dy, delay=0.4)
     run_state.screenshot("props-after-map-clicks")
     run_state.assert_running()
+
+
+def collision(run_state: E2ERun) -> None:
+    """Objects -> Collision, on its own so it is quick and focused.
+
+    The point of the editor is the *volume*, so the volume is what gets checked:
+    turn on the debug rendering and prove that each edit visibly changes the
+    shape drawn on the object. A command reaching the bridge would not tell us
+    the volume actually moved.
+    """
+    run_state.focus()
+    left = _open(run_state, 110)                      # Features
+    _arm_tree(run_state, left)
+
+    width, height = window_size(run_state)
+    spot_x, spot_y = width // 3, height // 2
+    run_state.wheel(spot_x, spot_y, clicks=8, up=True)
+    run_state.click(spot_x, spot_y, delay=0.8)        # place
+    run_state.click(left + 54, ACTION_Y, delay=0.6)   # leave Add mode
+    run_state.click(spot_x, spot_y, delay=0.8)        # select it
+
+    run_state.click(left + 270, EDITOR_BUTTON_Y, delay=0.9)   # Collision
+    hidden = run_state.screenshot_root("volume-hidden")
+
+    # Show volume: the collision shape is drawn over the object.
+    run_state.click(left + 110, 190, delay=0.8)
+    shown = run_state.screenshot_root("volume-shown")
+    run_state.assert_screenshot_pixels(hidden, shown, min_changed=300)
+
+    # Scaling the volume must redraw it bigger, not merely emit a command.
+    run_state.click(left + 60, 339, delay=0.4)        # Scale X
+    run_state.key("ctrl+a", delay=0.15)
+    run_state.type_text("120")
+    run_state.key("Return", delay=0.9)
+    scaled = run_state.screenshot_root("volume-scaled")
+    run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key="collision",
+        value=lambda v: isinstance(v, dict),
+    )
+    run_state.assert_screenshot_pixels(shown, scaled, min_changed=300)
+
+    # A different volume type is a different shape on screen.
+    run_state.click(left + 200, 231, delay=0.4)       # Type
+    run_state.key("Down", delay=0.2)
+    run_state.key("Return", delay=0.9)
+    typed = run_state.screenshot_root("volume-type-changed")
+    run_state.assert_screenshot_pixels(scaled, typed, min_changed=200)
+    run_state.screenshot("collision-fields")
 
 
 def cursortip(run_state: E2ERun) -> None:
@@ -289,6 +329,7 @@ def selection(run_state: E2ERun) -> None:
 SCENARIOS = {
     "units_panel": units_panel,
     "props_panel": props_panel,
+    "collision": collision,
     "selection": selection,
     "cursortip": cursortip,
 }

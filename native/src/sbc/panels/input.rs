@@ -1,5 +1,6 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::panels::drag_cursor::DragCursor;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{ChangeQueue, CommitRequest, InteractionEvent, InteractionQueue};
 use crate::sbc::panels::view::PanelView;
@@ -41,6 +42,8 @@ pub(crate) struct PanelInput {
     cursor_x: f32,
     changes: ChangeQueue,
     interactions: InteractionQueue,
+    /// Pins and hides the pointer while a field is being dragged.
+    cursor: DragCursor,
 }
 
 impl PanelInput {
@@ -53,6 +56,7 @@ impl PanelInput {
             cursor_x: 0.0,
             changes,
             interactions,
+            cursor: DragCursor::default(),
         }
     }
 
@@ -99,21 +103,30 @@ impl PanelInput {
         let DragState::Dragging { field } = &self.drag else {
             return DragTick::Idle;
         };
-        let dx = x - self.last_mouse_x;
-        if dx == 0.0 {
+        // The pointer is pinned to where the drag began and warped back after
+        // every move, so the movement to consume is its distance from that
+        // anchor -- not from wherever it was last tick.
+        let Some(anchor_x) = self.cursor.anchor_x() else {
             return DragTick::Idle;
-        }
-        self.last_mouse_x = x;
+        };
+        let dx = x - anchor_x;
+        let field = field.clone();
         let mult = if self.fine_drag_multiplier(interface) {
             FINE_DRAG_MULT
         } else {
             1.0
         };
-        let field = field.clone();
-        let Some(ed) = editor else {
-            return DragTick::Idle;
+
+        let moved = match editor {
+            Some(ed) if dx != 0.0 => ed.drag_field(&field, dx * mult, interface),
+            _ => false,
         };
-        if ed.drag_field(&field, dx * mult, interface) {
+        // Hold the pointer every tick of the drag, not only when it moved: the
+        // engine re-asserts its own cursor each frame, so a still mouse would
+        // get the arrow back.
+        self.cursor.hold(interface);
+
+        if moved {
             DragTick::Moved(field)
         } else {
             DragTick::Idle
@@ -134,7 +147,10 @@ impl PanelInput {
     /// RmlUi decides what is a drag: it captures the pointer on `dragstart` and
     /// delivers `dragend` wherever the button is released, even off the panel.
     /// A press that never became a drag is a click, and opens the inline editor.
-    pub(crate) fn process_interactions(&mut self) -> Vec<PendingAction> {
+    pub(crate) fn process_interactions(
+        &mut self,
+        interface: &NativeInterfaceRef,
+    ) -> Vec<PendingAction> {
         let events: Vec<InteractionEvent> = self.interactions.borrow_mut().drain(..).collect();
         let mut actions = Vec::new();
         for event in events {
@@ -144,7 +160,8 @@ impl PanelInput {
                     self.last_mouse_x = self.cursor_x;
                 }
                 InteractionEvent::DragStart { field } => {
-                    self.last_mouse_x = self.cursor_x;
+                    // Pin and hide the pointer for the length of the drag.
+                    self.cursor.begin(interface);
                     self.drag = DragState::Dragging {
                         field: field.clone(),
                     };
@@ -153,6 +170,7 @@ impl PanelInput {
                     actions.push(PendingAction::DragStart(field));
                 }
                 InteractionEvent::DragEnd { field } => {
+                    self.cursor.end(interface);
                     self.drag = DragState::Idle;
                     actions.push(PendingAction::DragEnd(field));
                 }

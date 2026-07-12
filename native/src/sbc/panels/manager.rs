@@ -152,7 +152,7 @@ impl PanelManager {
         self.input.set_cursor(&self.interface);
 
         // Pointer interactions: RmlUi's drag, or a click that opens the editor.
-        for action in self.input.process_interactions() {
+        for action in self.input.process_interactions(&self.interface) {
             match action {
                 PendingAction::DragStart(field) => {
                     // Remember what the drag began from, so undo returns to it.

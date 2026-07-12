@@ -15,6 +15,7 @@ TARGETS = (
     "info-panel",
     "settings-panel",
     "props-panel",
+    "collision",
     "selection",
     "cursortip",
     "notifications",
@@ -211,6 +212,14 @@ def target_cases(target: str, case: str) -> list[Case]:
             ),
         ]
         return cases
+    if target == "collision":
+        return [
+            Case(
+                name="collision-rust",
+                flags={"chonsole": "rust", "ui": "rust"},
+                scenario="collision",
+            ),
+        ]
     if target == "selection":
         return [
             Case(

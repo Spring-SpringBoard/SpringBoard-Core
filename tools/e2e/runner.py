@@ -275,6 +275,27 @@ class E2ERun:
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
         time.sleep(delay)
 
+    def move_relative(self, dx: int, dy: int = 0, steps: int = 6, delay: float = 0.06) -> None:
+        """Move the mouse *by* an offset, the way a real mouse reports motion.
+
+        A field drag pins the pointer and warps it back after every move, so what
+        it consumes is relative motion. Absolute `mousemove` fights that: the
+        pointer is put back on its anchor and the next absolute move re-applies
+        the whole offset from it.
+        """
+        self.require_window()
+        self.event("move_relative", dx=dx, dy=dy, steps=steps)
+        for _ in range(steps):
+            run(
+                "xdotool",
+                "mousemove_relative",
+                "--sync",
+                "--",
+                str(round(dx / steps)),
+                str(round(dy / steps)),
+            )
+            time.sleep(delay)
+
     def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
         """Scroll the wheel over a point. Over the map this zooms the camera,
         which is the only way to get close enough to *see* what a scenario placed
