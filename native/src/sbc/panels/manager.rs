@@ -210,7 +210,8 @@ impl PanelManager {
         }
 
         // Commit requests: a select's "change", Enter in a text field, or a
-        // field losing focus.
+        // field losing focus. `commit_field` drops the ones that changed nothing,
+        // which is what the editor's own writes echo back as.
         for request in self.input.drain_changes() {
             self.commit_field(&request.field, request.from_blur);
         }
@@ -234,11 +235,6 @@ impl PanelManager {
                 self.rebuild_editor()?;
             }
             self.write_field_values();
-            // Writing a value back into the DOM makes RmlUi fire `change` for
-            // our own write (a checkbox dispatches one when its attribute moves).
-            // Those are not user input, and dispatching them would echo the
-            // command back. Lua guards the same way, with an `updating` flag.
-            self.input.drain_changes();
             self.needs_refresh = false;
         }
 
@@ -468,16 +464,21 @@ impl PanelManager {
             )?;
         }
         self.write_field_values();
-        // Same guard as the refresh path: seeding a freshly built DOM with the
-        // current values makes RmlUi fire `change` for every checkbox and select
-        // we touch. Those are our own writes, not user input -- dispatching them
-        // echoed a burst of commands back at the engine on every rebuild.
-        self.input.drain_changes();
         Ok(())
     }
 
     /// Commit a field once. Committing on Enter hides the input, which fires a
     /// `blur`; that second request must not dispatch another command.
+    /// Commit a field once, *if the value actually changed*.
+    ///
+    /// The fields are a projection of the model: the editor writes the model's
+    /// values into the DOM, and RmlUi answers by firing `change` for each one it
+    /// was handed. Those events carry the value we just wrote, so an edit is
+    /// only an edit when the value that comes back differs from the one that
+    /// went out. Anything else is our own write echoing, and emits nothing.
+    ///
+    /// This is why there is no "am I currently writing?" flag: the question is
+    /// not *when* the event arrived, it is *whether it changed anything*.
     fn commit_field(&mut self, name: &str, from_blur: bool) {
         if self.editing.as_deref() == Some(name) {
             self.editing = None;
@@ -488,13 +489,15 @@ impl PanelManager {
         }
         self.just_committed = (!from_blur).then(|| name.to_string());
 
-        if let Some(ed) = self.editor.as_deref_mut() {
-            self.pending_envelopes.extend(ed.process_change(
-                name,
-                &self.interface,
-                &mut self.next_cmd_id,
-            ));
+        let Some(ed) = self.editor.as_deref_mut() else {
+            return;
+        };
+        let before = ed.field_value(name);
+        let envelopes = ed.process_change(name, &self.interface, &mut self.next_cmd_id);
+        if ed.field_value(name) == before {
+            return;
         }
+        self.pending_envelopes.extend(envelopes);
     }
 
     /// Advance a picker drag and handle OK/Cancel.

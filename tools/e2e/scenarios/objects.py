@@ -70,10 +70,11 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.screenshot("features-brush-fields")
     run_state.click(left + 54, ACTION_Y, delay=0.6)    # back to Add
 
-    # Arm the first def and place it. The command must reach the bridge *and*
-    # the feature must actually appear on the map -- so these two are captured
-    # full-frame, where the map is visible.
-    run_state.click(left + 55, GRID_Y, delay=0.5)
+    # Arm a tree and place it. The command must reach the bridge *and* the
+    # feature must actually appear on the map -- so these two are captured
+    # full-frame, where the map is visible. A tree rather than the first cell
+    # (`geovent`), because a tree is recognisably a tree in the capture.
+    _arm_tree(run_state, left)
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     # The default camera is far enough out that a tree is a few pixels; zoom in

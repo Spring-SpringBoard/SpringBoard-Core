@@ -1034,7 +1034,12 @@ scrollbarvertical sliderbar:hover {
     width: 100%;
 }
 
-.grid-item-image img {
+/* `texture` as well as `img`: an RTT thumbnail is a <texture>, and without a
+   size it renders at its intrinsic resolution (128px) inside a 64px cell, which
+   crops it to one quadrant -- the model then looks half-missing and shoved into
+   a corner. */
+.grid-item-image img,
+.grid-item-image texture {
     width: 100%;
     height: 100%;
 }

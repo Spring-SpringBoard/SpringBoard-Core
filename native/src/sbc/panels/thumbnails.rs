@@ -143,12 +143,10 @@ fn team_color(interface: &NativeInterfaceRef, team_id: i32) -> [f32; 4] {
         .unwrap_or([1.0, 1.0, 1.0, 1.0])
 }
 
-/// How much of the cell the model fills. The model is centred on its own
-/// midpoint, so its half-extent maps to this: at 1.0 it would touch the edges,
-/// so leave a margin. (Lua's 1.5 works only because it does not centre -- the
-/// model hangs off its origin and half of it lands outside the cell, which is
-/// exactly the clipping this was showing.)
-const RMLUI_FIT: f32 = 0.75;
+/// How much of the cell the model fills, as Lua's `scale * 1.5` does. The model
+/// is centred on its bounding box, so its half-extent maps to roughly this; a
+/// little under 1.5 keeps a margin.
+const RMLUI_FIT: f32 = 1.4;
 
 fn def_dimensions(
     interface: &NativeInterfaceRef,
@@ -198,6 +196,23 @@ fn draw_model(
     let _ = gfx.clear(GL_DEPTH_BUFFER_BIT, [1.0, 0.0, 0.0, 0.0], 1);
     let _ = gfx.depth_test(true, true, GL_LEQUAL);
     let _ = gfx.depth_mask(true);
+    // An identity projection only keeps z in [-1, 1], and a model tilted into
+    // the view is far deeper than that -- it was being clipped away, leaving the
+    // thin surviving sliver that looked like an off-centre model. Give the cell
+    // a real depth range: x/y stay [-1, 1] (what the scale below is expressed
+    // in), z spans [-DEPTH, DEPTH].
+    const DEPTH: f32 = 100.0;
+    #[rustfmt::skip]
+    let ortho: [f32; 16] = [
+        1.0, 0.0, 0.0,           0.0,
+        0.0, 1.0, 0.0,           0.0,
+        0.0, 0.0, -1.0 / DEPTH,  0.0,
+        0.0, 0.0, 0.0,           1.0,
+    ];
+    let _ = gfx.matrix_mode(GL_PROJECTION);
+    let _ = gfx.push_matrix();
+    let _ = gfx.load_matrix(ortho);
+
     let _ = gfx.matrix_mode(GL_MODELVIEW);
     let _ = gfx.push_matrix();
     let _ = gfx.load_identity();
@@ -213,8 +228,13 @@ fn draw_model(
     let _ = gfx.scale(scale, scale, scale);
     // A model's origin is not its centre -- for a tree it is the foot of the
     // trunk -- so drawing it at the origin puts it off to one side of the cell.
-    // Centre it on its own midpoint.
-    let _ = gfx.translate(-dims.midx, -dims.midy, -dims.midz);
+    // Centre it on the middle of its bounding box: `relMidPos` is the model's
+    // *aim* point, which is not the same thing and does not centre it.
+    let _ = gfx.translate(
+        -(dims.minx + dims.maxx) * 0.5,
+        -(dims.miny + dims.maxy) * 0.5,
+        -(dims.minz + dims.maxz) * 0.5,
+    );
 
     // rawState = true: the model draws through the fixed-function matrices set
     // here (as Lua's raw path does) rather than the in-world unit shader tied to
@@ -232,8 +252,11 @@ fn draw_model(
         }
     }
 
-    // Hand the UI back the matrix it was drawing with.
+    // Hand the UI back the matrices it was drawing with.
     let _ = gfx.pop_matrix();
+    let _ = gfx.matrix_mode(GL_PROJECTION);
+    let _ = gfx.pop_matrix();
+    let _ = gfx.matrix_mode(GL_MODELVIEW);
     let _ = gfx.matrix_mode(GL_MODELVIEW);
 }
 

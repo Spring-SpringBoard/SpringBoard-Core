@@ -30,7 +30,7 @@ pub enum InteractionEvent {
     PointerUp { field: String },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FieldValue {
     Number(f32),
     Color([f32; 4]),
