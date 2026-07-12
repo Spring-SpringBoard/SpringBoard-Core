@@ -308,10 +308,17 @@ impl PanelInput {
             .rml_ui()
             .context_process_mouse_move(ctx, x as f32, y as f32, 0)?;
         self.mouse_captured = true;
-        let consumed = interface
+        let _ = interface
             .rml_ui()
             .context_process_mouse_button_down(ctx, button - 1, 0)?;
-        Ok(consumed || self.drag_field().is_some())
+
+        // The press is inside the panel, so the panel owns it -- always. The
+        // engine only sends `mouse_release` to whoever claimed the press, and
+        // RmlUi's return value is not "I consumed it" (it reports the opposite),
+        // so reporting it here meant a press on a field was disowned: no release
+        // ever came back, and a drag released outside the panel stayed stuck in
+        // drag mode forever.
+        Ok(true)
     }
 
     pub(crate) fn mouse_release(

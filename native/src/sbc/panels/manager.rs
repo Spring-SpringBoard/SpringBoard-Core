@@ -468,6 +468,11 @@ impl PanelManager {
             )?;
         }
         self.write_field_values();
+        // Same guard as the refresh path: seeding a freshly built DOM with the
+        // current values makes RmlUi fire `change` for every checkbox and select
+        // we touch. Those are our own writes, not user input -- dispatching them
+        // echoed a burst of commands back at the engine on every rebuild.
+        self.input.drain_changes();
         Ok(())
     }
 

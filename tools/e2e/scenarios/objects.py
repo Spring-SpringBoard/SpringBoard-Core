@@ -35,6 +35,18 @@ def _open(run_state: E2ERun, editor_x: int) -> int:
     return left
 
 
+def _arm_tree(run_state: E2ERun, left: int) -> None:
+    """Arm a tree, specifically.
+
+    The first cell is `geovent`, which has no model: it cannot be hit by a screen
+    ray, so anything that places it and then clicks it selects nothing. Search
+    for a tree instead of trusting the grid order.
+    """
+    run_state.click(left + 180, SEARCH_Y, delay=0.2)
+    run_state.type_text("tree")
+    run_state.click(left + 55, GRID_Y, delay=0.5)
+
+
 def units_panel(run_state: E2ERun) -> None:
     """Objects -> Units and Features: the def grid, its filters, and placement.
 
@@ -109,13 +121,15 @@ def props_panel(run_state: E2ERun) -> None:
     """
     run_state.focus()
     left = _open(run_state, 110)                      # Features
-    run_state.click(left + 55, GRID_Y, delay=0.4)     # arm the first def
+    _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.click(spot_x, spot_y, delay=0.8)        # place
     run_state.key("Escape", delay=0.4)                # leave placement mode
-    run_state.click(spot_x, spot_y, delay=0.8)        # select it
+    # Clicking where it was placed selects it: the feature's collision volume
+    # sits at its foot, so this is the point the ray actually hits.
+    run_state.click(spot_x, spot_y, delay=0.8)
     run_state.move(spot_x + 260, spot_y + 220, delay=0.4)
     run_state.screenshot("feature-selected")
     run_state.assert_command("AddObjectCommand", objType="feature")
@@ -175,6 +189,14 @@ def props_panel(run_state: E2ERun) -> None:
         value=lambda v: isinstance(v, dict),
     )
 
+    # Last, because it deselects: clicking empty ground with an object editor
+    # open used to abort the engine -- the panel wrote through element handles
+    # RmlUi had already destroyed. It must survive, and clear the selection.
+    for dx, dy in ((-300, -150), (250, 120), (-120, 260), (380, -220)):
+        run_state.click(spot_x + dx, spot_y + dy, delay=0.4)
+    run_state.screenshot("props-after-map-clicks")
+    run_state.assert_running()
+
 
 def cursortip(run_state: E2ERun) -> None:
     """Place a feature, then hover it. The RmlUi cursor tooltip must appear next
@@ -208,7 +230,7 @@ def selection(run_state: E2ERun) -> None:
     """
     run_state.focus()
     left = _open(run_state, 110)                      # Features
-    run_state.click(left + 55, GRID_Y, delay=0.5)     # arm the first def
+    _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2

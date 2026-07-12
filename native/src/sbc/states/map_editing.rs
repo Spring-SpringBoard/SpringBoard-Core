@@ -144,6 +144,25 @@ impl MapEditingState {
         self.last_apply = None;
     }
 
+    /// Validate everything a stroke needs before opening a grouped command.
+    /// This prevents empty undo entries when no pattern/material is selected or
+    /// when the selected heightmap pattern cannot be decoded.
+    fn prepare_paint(&mut self, ctx: &mut StateContext) -> bool {
+        let Some(pattern) = self.brush.pattern_texture.clone() else {
+            log::warn!("{} brush cannot paint: no pattern selected", self.name());
+            return false;
+        };
+        if self.kind == BrushKind::Texture {
+            let ready = self.brush.texture_paint_mode != "paint"
+                || !self.brush.brush_textures.is_empty();
+            if !ready {
+                log::warn!("texture brush cannot paint: no saved material selected");
+            }
+            return ready;
+        }
+        self.ensure_shape(ctx, &pattern)
+    }
+
     /// One dab of the brush at world `(x, z)`.
     fn apply(&mut self, ctx: &mut StateContext, x: f32, z: f32, button: i32) {
         let Some(pattern) = self.brush.pattern_texture.clone() else {
@@ -280,8 +299,12 @@ impl EditorState for MapEditingState {
             return true;
         }
         let Some(hit) = trace_ground(ctx.interface, x as f32, y as f32) else {
+            log::warn!("{} brush cannot paint: cursor did not hit the ground", self.name());
             return true;
         };
+        if !self.prepare_paint(ctx) {
+            return true;
+        }
         self.start_painting(ctx);
         self.last = Some((hit.x, hit.z));
         self.apply(ctx, hit.x, hit.z, button);
@@ -340,6 +363,13 @@ impl EditorState for MapEditingState {
 
     /// Show the brush's actual alpha footprint on the ground under the cursor.
     fn draw_world(&mut self, interface: &NativeInterfaceRef) {
+        let Some(pattern) = self.brush.pattern_texture.clone() else {
+            return;
+        };
+        // Texture Paint is not armed until a saved material has been chosen.
+        if self.kind == BrushKind::Texture && self.brush.brush_textures.is_empty() {
+            return;
+        }
         let Some(mouse) = cursor(interface) else {
             return;
         };
@@ -347,27 +377,15 @@ impl EditorState for MapEditingState {
             return;
         };
         let size = self.brush.size;
-        // A pattern that has no texture (or a shader that would not compile)
-        // still needs some cursor, so fall back to the plain ring.
-        if let Some(pattern) = self.brush.pattern_texture.clone() {
-            if self.preview.draw(
-                interface,
-                &pattern,
-                hit.x,
-                hit.z,
-                size,
-                self.brush.rotation,
-            ) {
-                return;
-            }
-        }
-        crate::sbc::states::highlight::draw_cursor_ring(
+        // Lua draws only the selected pattern. If its texture or shader cannot
+        // be used, draw nothing rather than inventing a misleading brush.
+        let _ = self.preview.draw(
             interface,
+            &pattern,
             hit.x,
             hit.z,
-            size * 0.5,
-            None,
-            (0.9, 0.9, 0.3, 0.8),
+            size,
+            self.brush.rotation,
         );
     }
 }

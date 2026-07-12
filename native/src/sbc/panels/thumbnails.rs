@@ -198,13 +198,6 @@ fn draw_model(
     let _ = gfx.clear(GL_DEPTH_BUFFER_BIT, [1.0, 0.0, 0.0, 0.0], 1);
     let _ = gfx.depth_test(true, true, GL_LEQUAL);
     let _ = gfx.depth_mask(true);
-    // The projection is whatever the UI pass left bound -- an ortho over the
-    // whole window, which is not square. Drawing the model through it skews it
-    // off to one side of the cell. The identity projection is the [-1,1] cube
-    // the scale below is expressed in.
-    let _ = gfx.matrix_mode(GL_PROJECTION);
-    let _ = gfx.push_matrix();
-    let _ = gfx.load_identity();
     let _ = gfx.matrix_mode(GL_MODELVIEW);
     let _ = gfx.push_matrix();
     let _ = gfx.load_identity();
@@ -239,9 +232,7 @@ fn draw_model(
         }
     }
 
-    // Hand the UI back the matrices it was drawing with.
-    let _ = gfx.pop_matrix();
-    let _ = gfx.matrix_mode(GL_PROJECTION);
+    // Hand the UI back the matrix it was drawing with.
     let _ = gfx.pop_matrix();
     let _ = gfx.matrix_mode(GL_MODELVIEW);
 }

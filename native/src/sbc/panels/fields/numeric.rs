@@ -14,6 +14,8 @@ pub(crate) struct NumericField {
     title: String,
     value: f32,
     step: f32,
+    /// Whether the caller chose the step, or it is still the default.
+    step_set: bool,
     min: Option<f32>,
     max: Option<f32>,
     decimals: usize,
@@ -30,6 +32,7 @@ impl NumericField {
             title: title.into(),
             value,
             step: 0.01,
+            step_set: false,
             min: None,
             max: None,
             decimals: DEFAULT_DECIMALS,
@@ -42,7 +45,23 @@ impl NumericField {
 
     pub(crate) fn step(mut self, step: f32) -> Self {
         self.step = step;
+        self.step_set = true;
         self
+    }
+
+    /// How much one pixel of drag moves the value.
+    ///
+    /// Lua's rule (`NumericField:init`): a bounded field crosses its whole range
+    /// in ~200px, so a 10..5000 size field moves ~25 per pixel. A fixed 1-per-
+    /// pixel makes those fields crawl.
+    fn drag_step(&self) -> f32 {
+        if self.step_set {
+            return self.step;
+        }
+        match (self.min, self.max) {
+            (Some(min), Some(max)) if max > min => (max - min) / 200.0,
+            _ => 1.0,
+        }
     }
     pub(crate) fn min(mut self, min: f32) -> Self {
         self.min = Some(min);
@@ -191,7 +210,7 @@ impl Field for NumericField {
     }
 
     fn drag(&mut self, dx: f32, interface: &NativeInterfaceRef) {
-        self.value = self.clamp(self.value + dx * self.step);
+        self.value = self.clamp(self.value + dx * self.drag_step());
         if let Some(e) = self.display_elem {
             let rml = interface.rml_ui();
             // Rewrite the whole button: it carries a title span and a value

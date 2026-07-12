@@ -85,6 +85,10 @@ impl StateManager {
         }
     }
 
+    pub(crate) fn is_default(&self) -> bool {
+        matches!(self.state, ActiveState::Default(_))
+    }
+
     /// The editor is a spectator; enable full view + full select so every
     /// object is visible and clickable (a plain spectator sees only its team's
     /// LOS, and `GuiTraceRay` then skips features the editor just placed). Lua's
@@ -173,7 +177,11 @@ impl StateManager {
             StateRequest::Default => ActiveState::Default(DefaultState::default()),
             StateRequest::Brush(kind, paint_mode) => {
                 if !paint_mode.is_empty() {
-                    brush.texture_paint_mode = paint_mode;
+                    brush.texture_paint_mode = paint_mode.clone();
+                    // Keep the shared model in sync with the mode carried by
+                    // the panel request; otherwise the next brush sync can
+                    // overwrite Filter/DNTS/Void with the previous mode.
+                    models.get::<BrushSettings>().texture_paint_mode = paint_mode;
                 }
                 ActiveState::Brush(MapEditingState::new(kind, brush))
             }
