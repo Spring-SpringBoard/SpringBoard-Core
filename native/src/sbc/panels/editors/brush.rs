@@ -185,9 +185,8 @@ impl BrushActions {
         caption: &str,
         enabled: bool,
     ) {
-        let reason = (!enabled && caption == "DNTS").then_some(
-            "DNTS unavailable: splat textures are not available on this map.",
-        );
+        let reason = (!enabled && caption == "DNTS")
+            .then_some("DNTS unavailable: splat textures are not available on this map.");
         self.set_enabled_with_reason(interface, document, caption, enabled, reason);
     }
 

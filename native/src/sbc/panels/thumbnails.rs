@@ -9,7 +9,7 @@
 //! Texture creation and drawing must happen on the draw thread (they touch GL),
 //! so this runs from `draw_screen`, not from the per-tick update.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use spring_native::prelude::{sys, NativeInterfaceRef};
 
@@ -23,11 +23,7 @@ const GL_TEXTURE_2D: u32 = 0x0DE1;
 const GL_RGBA8: u32 = 0x8058;
 const GL_LINEAR: u32 = 0x2601;
 const GL_CLAMP_TO_EDGE: u32 = 0x812F;
-const GL_MODELVIEW: u32 = 0x1700;
-const GL_PROJECTION: u32 = 0x1701;
 const GL_LEQUAL: u32 = 0x0203;
-const GL_COLOR_BUFFER_BIT: u32 = 0x0000_4000;
-const GL_DEPTH_BUFFER_BIT: u32 = 0x0000_0100;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ThumbKind {
@@ -43,8 +39,11 @@ struct Thumb {
 }
 
 pub(crate) struct ThumbnailRenderer {
-    /// Keyed by def name, matching the grid item id.
-    thumbs: HashMap<String, Thumb>,
+    /// Keyed by def name, matching the grid item id. Ordered, not a HashMap: the
+    /// thumbnails are drawn in iteration order, and a HashMap's order is
+    /// randomised per process, which made the defects below land on a different
+    /// def every launch.
+    thumbs: BTreeMap<String, Thumb>,
     team_id: i32,
     rotation: f32,
     /// A texture was created since the grid last read the names.
@@ -56,7 +55,7 @@ pub(crate) struct ThumbnailRenderer {
 impl Default for ThumbnailRenderer {
     fn default() -> Self {
         ThumbnailRenderer {
-            thumbs: HashMap::new(),
+            thumbs: BTreeMap::new(),
             team_id: 0,
             rotation: 0.0,
             names_dirty: false,
@@ -110,27 +109,36 @@ impl ThumbnailRenderer {
         }
 
         // Slowly spin the models, as Lua does.
-        self.rotation += 0.7;
+        self.rotation += 0.5;
+
+        // The state Lua's DrawIcons sets around the whole batch.
+        let _ = gfx.push_matrix();
+        let _ = gfx.depth_test(true, true, GL_LEQUAL);
+        let _ = gfx.depth_mask(true);
 
         let team_id = self.team_id;
         let rotation = self.rotation;
-        // S3O models are textured by the engine's model shader; without it they
-        // draw as flat white silhouettes.
         let team_color = team_color(interface, team_id);
-        let shaded = self.shader.bind(interface, team_color);
         for thumb in self.thumbs.values() {
             let Some(texture) = thumb.texture.as_deref() else {
                 continue;
             };
             let def_id = thumb.def_id;
             let kind = thumb.kind;
+            // The background quad is textured, so the texture is bound outside
+            // the render target, as Lua does.
+            let _ = gfx.bind_texture(BACKGROUND, 0, true);
+            let shader = &mut self.shader;
             let _ = gfx.render_to_texture(texture, || {
-                draw_model(interface, def_id, kind, team_id, rotation);
+                draw_model(
+                    interface, shader, def_id, kind, team_id, rotation, team_color,
+                );
             });
         }
-        if shaded {
-            self.shader.unbind(interface);
-        }
+
+        let _ = gfx.blending(true);
+        let _ = gfx.bind_texture("", 0, false);
+        let _ = gfx.pop_matrix();
     }
 }
 
@@ -143,31 +151,29 @@ fn team_color(interface: &NativeInterfaceRef, team_id: i32) -> [f32; 4] {
         .unwrap_or([1.0, 1.0, 1.0, 1.0])
 }
 
-/// How much of the cell the model fills, as Lua's `scale * 1.5` does. The model
-/// is centred on its bounding box, so its half-extent maps to roughly this; a
-/// little under 1.5 keeps a margin.
-const RMLUI_FIT: f32 = 1.4;
+/// What Lua scales by in RmlUi mode (`scale = scale * 1.5`).
+const RMLUI_FIT: f32 = 1.5;
 
-fn def_dimensions(
-    interface: &NativeInterfaceRef,
-    def_id: i32,
-    kind: ThumbKind,
-) -> sys::UnitDefDimensions {
-    let dims = match kind {
-        ThumbKind::Unit => interface.utils().get_unit_def_dimensions(def_id),
-        ThumbKind::Feature => interface.utils().get_feature_def_dimensions(def_id),
-    };
-    dims.unwrap_or_default()
-}
+/// The VFS path of the background Lua draws behind each model.
+const BACKGROUND: &str = "LuaUI/images/scenedit/background.png";
 
-/// The radius the model is framed against, as `ObjectDefsPanel:GetObjectDefRadius`
-/// computes it: a unit uses its model radius, a feature its model bounds. Never
-/// below 10, or a tiny model would be scaled up to fill the cell with noise.
-fn def_radius(dims: &sys::UnitDefDimensions, kind: ThumbKind) -> f32 {
+/// The radius the model is framed against, exactly as `GetObjectDefRadius` does
+/// it: a unit uses its model radius, a feature the "magic" formula over its
+/// model bounds. Never below 10.
+fn def_radius(interface: &NativeInterfaceRef, def_id: i32, kind: ThumbKind) -> f32 {
     let radius = match kind {
-        ThumbKind::Unit => dims.radius,
-        // Lua's "magic": half the largest extent, on the diagonal, with a margin.
+        ThumbKind::Unit => {
+            interface
+                .utils()
+                .get_unit_def_dimensions(def_id)
+                .unwrap_or_default()
+                .radius
+        }
         ThumbKind::Feature => {
+            let dims = interface
+                .utils()
+                .get_feature_def_dimensions(def_id)
+                .unwrap_or_default();
             let dx = dims.maxx - dims.minx;
             let dy = dims.maxy - dims.miny;
             let dz = dims.maxz - dims.minz;
@@ -179,66 +185,41 @@ fn def_radius(dims: &sys::UnitDefDimensions, kind: ThumbKind) -> f32 {
 
 const MIN_RADIUS: f32 = 10.0;
 
-/// Draw one model into the bound FBO. Mirrors Lua's `PeriodicDraw`: a tinted
-/// background quad, then the model under a fixed tilt plus the running spin.
+/// Draw one model into the bound render target. A straight port of Lua's
+/// `ObjectDefsPanel:PeriodicDraw`, which is what renders these same models
+/// correctly in the Chili and RmlUi UIs: the background quad, the model shader,
+/// a fixed tilt, the running spin, and the model at its own scale. No projection
+/// of our own, no depth clear, no alpha test -- none of that is in the original,
+/// and the original is what works.
 fn draw_model(
     interface: &NativeInterfaceRef,
+    shader: &mut ModelShader,
     def_id: i32,
     kind: ThumbKind,
     team_id: i32,
     rotation: f32,
+    team_color: [f32; 4],
 ) {
     let gfx = interface.gfx();
-    // Two clears, as Lua does: the engine's Clear only sets the clear colour
-    // when the bit is exactly COLOR_BUFFER_BIT, and only sets clear depth for a
-    // lone DEPTH_BUFFER_BIT with count 1.
-    let _ = gfx.clear(GL_COLOR_BUFFER_BIT, [0.2, 0.3, 0.3, 1.0], 4);
-    let _ = gfx.clear(GL_DEPTH_BUFFER_BIT, [1.0, 0.0, 0.0, 0.0], 1);
-    let _ = gfx.depth_test(true, true, GL_LEQUAL);
-    let _ = gfx.depth_mask(true);
-    // An identity projection only keeps z in [-1, 1], and a model tilted into
-    // the view is far deeper than that -- it was being clipped away, leaving the
-    // thin surviving sliver that looked like an off-centre model. Give the cell
-    // a real depth range: x/y stay [-1, 1] (what the scale below is expressed
-    // in), z spans [-DEPTH, DEPTH].
-    const DEPTH: f32 = 100.0;
-    #[rustfmt::skip]
-    let ortho: [f32; 16] = [
-        1.0, 0.0, 0.0,           0.0,
-        0.0, 1.0, 0.0,           0.0,
-        0.0, 0.0, -1.0 / DEPTH,  0.0,
-        0.0, 0.0, 0.0,           1.0,
-    ];
-    let _ = gfx.matrix_mode(GL_PROJECTION);
-    let _ = gfx.push_matrix();
-    let _ = gfx.load_matrix(ortho);
 
-    let _ = gfx.matrix_mode(GL_MODELVIEW);
-    let _ = gfx.push_matrix();
-    let _ = gfx.load_identity();
+    // The background: a quad over the whole target, tinted. This is what fills
+    // the cell -- there is no clear.
+    let _ = gfx.color(0.2, 0.3, 0.3, 1.0);
+    let _ = gfx.tex_rect(-1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0);
+    let _ = gfx.translate(0.0, 0.5, 0.0);
 
-    // The model is scaled to *its own* radius, so a tree and a tank both fill
-    // the cell; one fixed scale draws every model the same size, which overflows
-    // the big ones. The negative sign flips it upright in this bottom-origin
-    // projection.
-    let dims = def_dimensions(interface, def_id, kind);
-    let scale = -1.0 / def_radius(&dims, kind) * RMLUI_FIT;
+    // S3O models are textured *by* the engine's model shader; without it they
+    // draw as flat white silhouettes.
+    let shaded = shader.bind(interface, team_color);
+
+    let scale = -RMLUI_FIT / def_radius(interface, def_id, kind);
     let _ = gfx.rotate(60.0, -1.0, 1.0, -0.5);
     let _ = gfx.rotate(rotation, 0.0, 1.0, 0.0);
     let _ = gfx.scale(scale, scale, scale);
-    // A model's origin is not its centre -- for a tree it is the foot of the
-    // trunk -- so drawing it at the origin puts it off to one side of the cell.
-    // Centre it on the middle of its bounding box: `relMidPos` is the model's
-    // *aim* point, which is not the same thing and does not centre it.
-    let _ = gfx.translate(
-        -(dims.minx + dims.maxx) * 0.5,
-        -(dims.miny + dims.maxy) * 0.5,
-        -(dims.minz + dims.maxz) * 0.5,
-    );
 
     // rawState = true: the model draws through the fixed-function matrices set
     // here (as Lua's raw path does) rather than the in-world unit shader tied to
-    // the game camera. What textures it is the model shader the caller bound.
+    // the game camera.
     match kind {
         ThumbKind::Unit => {
             let _ = gfx.unit_shape_textures(def_id, true);
@@ -252,16 +233,13 @@ fn draw_model(
         }
     }
 
-    // Hand the UI back the matrices it was drawing with.
-    let _ = gfx.pop_matrix();
-    let _ = gfx.matrix_mode(GL_PROJECTION);
-    let _ = gfx.pop_matrix();
-    let _ = gfx.matrix_mode(GL_MODELVIEW);
-    let _ = gfx.matrix_mode(GL_MODELVIEW);
+    if shaded {
+        shader.unbind(interface);
+    }
 }
 
-/// A 128x128 RGBA FBO texture with a depth buffer, like Lua's `gl.CreateTexture`
-/// with `fbo = true`.
+/// A 128x128 RGBA FBO texture, exactly as Lua's `gl.CreateTexture` with
+/// `fbo = true` makes it. No depth attachment -- Lua asks for none.
 fn fbo_params() -> sys::GfxTextureParams {
     sys::GfxTextureParams {
         target: GL_TEXTURE_2D,
@@ -277,6 +255,6 @@ fn fbo_params() -> sys::GfxTextureParams {
         aniso: 0.0,
         samples: 0,
         fbo: true,
-        fboDepth: true,
+        fboDepth: false,
     }
 }

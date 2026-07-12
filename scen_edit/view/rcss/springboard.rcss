@@ -175,13 +175,13 @@ body#springboard {
     border-bottom: 1px #555555;
 }
 
-/* Action buttons panel at top of editor - smaller buttons */
+/* Action buttons panel at top of editor */
 .action-buttons-panel {
     display: flex;
     flex-direction: row;
-    gap: 0px;
+    gap: 2px;
     margin-bottom: 15dp;
-    padding: 0px 5px 5px 5px;
+    padding: 5px 5px 5px 5px;
     background-color: #2a2a2a;
     border-bottom: 1px #555555;
 }
@@ -191,10 +191,10 @@ body#springboard {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 50px;
-    height: 50px;
-    background-color: #3a3a3a;
-    border-color: #555555;
+    width: 68px;
+    height: 68px;
+    background-color: #111411;
+    border-color: #2e342f;
     padding: 3px;
     margin-right: 0px;
 }
@@ -214,24 +214,25 @@ body#springboard {
 }
 
 .action-button:not(.disabled):not(:disabled):hover {
-    background-color: #4a4a4a;
-    border-color: #777777;
+    background-color: #202820;
+    border-color: #4d5a50;
 }
 
 .action-button.pressed {
-    background-color: #2a5f2a;
-    border-color: #3a7f3a;
+    background-color: #050705;
+    border-color: #00ff00;
 }
 
-.action-button-icon {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 2px;
+.action-button-icon,
+.action-button img {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 4px;
 }
 
 .action-button-label {
-    font-size: 9px;
-    color: #ffffff;
+    font-size: 11px;
+    color: #cccccc;
     text-align: center;
 }
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from scenarios.geometry import EDITOR_BUTTON_Y, TAB_X, TAB_Y, panel_left, window_size
+from scenarios.registry import scenario
 
 if TYPE_CHECKING:
     from runner import E2ERun
@@ -47,6 +48,19 @@ def _arm_tree(run_state: E2ERun, left: int) -> None:
     run_state.click(left + 55, GRID_Y, delay=0.5)
 
 
+@scenario(crop="right-panel")
+def def_grid(run_state: E2ERun) -> None:
+    """Only the Features def grid: the fastest look at thumbnail rendering.
+
+    No placement, no filters, no field edits -- iterating on how the models are
+    drawn should not cost a full editor scenario.
+    """
+    run_state.focus()
+    _open(run_state, 110)                             # Features
+    run_state.screenshot("def-grid")
+
+
+@scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
 def units_panel(run_state: E2ERun) -> None:
     """Objects -> Units and Features: the def grid, its filters, and placement.
 
@@ -114,6 +128,7 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.screenshot("features-wreckage-empty")
 
 
+@scenario(uis=("rmlui", "rust"), crop="right-panel")
 def props_panel(run_state: E2ERun) -> None:
     """Objects -> Properties and Collision.
 
@@ -212,6 +227,7 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.assert_running()
 
 
+@scenario()
 def collision(run_state: E2ERun) -> None:
     """Objects -> Collision, on its own so it is quick and focused.
 
@@ -261,6 +277,7 @@ def collision(run_state: E2ERun) -> None:
     run_state.screenshot("collision-fields")
 
 
+@scenario(uis=("rmlui",))
 def cursortip(run_state: E2ERun) -> None:
     """Place a feature, then hover it. The RmlUi cursor tooltip must appear next
     to the cursor (the Chili cursortip widget is disabled in RmlUi mode)."""
@@ -285,6 +302,212 @@ def cursortip(run_state: E2ERun) -> None:
     run_state.screenshot("hover-tooltip")
 
 
+def _placed(run_state: E2ERun, since: int = 0) -> list[dict]:
+    """The objects actually added since `since` (previews excluded)."""
+    return [
+        entry["data"]["params"]["pos"]
+        for entry in run_state.commands()[since:]
+        if entry["data"].get("className") == "AddObjectCommand"
+        and not entry["data"].get("__preview")
+    ]
+
+
+def _spread(placed: list[dict]) -> float:
+    """How far apart the objects landed, in world units."""
+    if len(placed) < 2:
+        return 0.0
+    xs = [pos["x"] for pos in placed]
+    zs = [pos["z"] for pos in placed]
+    return max(max(xs) - min(xs), max(zs) - min(zs))
+
+
+@scenario(crop="right-panel")
+def brush_size(run_state: E2ERun) -> None:
+    """Shift+wheel resizes the object brush, and the panel's Size field follows.
+
+    Proved by painting: a dab with the enlarged brush must scatter its objects
+    over a visibly wider area than a dab with the original one. A command
+    reaching the bridge would not show that the brush itself grew.
+    """
+    run_state.focus()
+    left = _open(run_state, 110)                      # Features
+    run_state.click(left + 134, ACTION_Y, delay=0.6)  # Brush mode
+    _arm_tree(run_state, left)
+    run_state.screenshot("brush-size-default")
+
+    width, height = window_size(run_state)
+    cx, cy = width // 3, height // 2
+    run_state.wheel(cx, cy, clicks=8, up=True)        # zoom in on the map
+
+    # One dab at the default size. A tap, not a hold: the brush repeats every
+    # 0.1s while the button is down, so holding it would make the count a
+    # stopwatch reading rather than something to assert on.
+    mark = len(run_state.commands())
+    run_state.press(cx - 260, cy, delay=0.02)
+    run_state.release(cx - 260, cy)
+    small = _placed(run_state, mark)
+
+    # Shift+wheel over the map enlarges the brush. Through the root window: a
+    # modifier does not survive `xdotool --window`.
+    with run_state.modifier("shift"):
+        run_state.wheel_root(cx, cy, clicks=5, up=True)
+    # The Size field follows the wheel; the screenshot is here to be looked at.
+    run_state.screenshot("brush-size-enlarged")
+
+    # A dab with the enlarged brush drops more objects, over more ground: the
+    # count is `size^2 / (spread * 100)`, so 100 -> 264 takes it from 1 to 7.
+    mark = len(run_state.commands())
+    run_state.press(cx + 200, cy, delay=0.02)
+    run_state.release(cx + 200, cy)
+    large = _placed(run_state, mark)
+
+    if len(small) != 1:
+        raise AssertionError(f"default brush placed {len(small)} objects, want 1")
+    if len(large) != 7:
+        raise AssertionError(f"enlarged brush placed {len(large)} objects, want 7")
+    if _spread(large) <= 150:
+        raise AssertionError(f"brush did not grow: spread {_spread(large):.0f} world units")
+    # Everything on the map is accounted for by those two dabs.
+    if len(_placed(run_state)) != len(small) + len(large):
+        raise AssertionError(
+            f"placed {len(_placed(run_state))} objects, want {len(small) + len(large)}"
+        )
+
+
+@scenario()
+def deselect(run_state: E2ERun) -> None:
+    """Deselecting has to clear the selection box, not just the selection.
+
+    Three frames of the same camera: the feature alone, the feature selected, and
+    the feature after clicking empty ground. The last must look like the first --
+    a box still drawn there is a selection the editor thinks it still has.
+    """
+    run_state.focus()
+    left = _open(run_state, 110)                      # Features
+    _arm_tree(run_state, left)
+
+    width, height = window_size(run_state)
+    cx, cy = width // 3, height // 2
+    run_state.wheel(cx, cy, clicks=8, up=True)
+    run_state.click(cx, cy, delay=0.8)                # place it
+    run_state.key("Escape", delay=0.5)                # leave placement mode
+    # Park the cursor away from the feature: every frame is captured with it
+    # here, so the pointer itself never shows up in the comparisons.
+    run_state.move(cx + 450, cy - 250, delay=0.5)
+    unselected = run_state.screenshot_root("feature-unselected")
+
+    # The box is drawn in pure green, and nothing else on the map is: counting
+    # those pixels says whether the box is there, where comparing whole frames
+    # would just measure the trees swaying and the thumbnails spinning.
+    around_feature = (cx - 160, cy - 160, 320, 320)
+    if run_state.count_color(unselected, around_feature) != 0:
+        raise AssertionError("a selection box before anything was selected")
+
+    run_state.click(cx - 20, cy, delay=0.6)           # select it
+    run_state.move(cx + 450, cy - 250, delay=0.5)
+    selected = run_state.screenshot_root("feature-selected")
+    box = run_state.count_color(selected, around_feature)
+    if box < 100:
+        raise AssertionError(f"clicking the feature drew no selection box ({box} px)")
+
+    # Escape drops the selection.
+    run_state.key("Escape", delay=0.6)
+    escaped = run_state.screenshot_root("feature-escaped")
+    left = run_state.count_color(escaped, around_feature)
+    if left != 0:
+        raise AssertionError(f"Escape left the selection box behind ({left} px)")
+
+    # And so does clicking empty ground -- well clear of the panel and of the dev
+    # console along the bottom, since a click on either is not a click on the map.
+    run_state.click(cx - 20, cy, delay=0.6)           # select it again
+    run_state.move(cx + 450, cy - 250, delay=0.5)
+    run_state.click(cx + 450, cy - 250, delay=0.6)
+    run_state.move(cx + 450, cy - 250, delay=0.5)
+    cleared = run_state.screenshot_root("feature-deselected")
+    left = run_state.count_color(cleared, around_feature)
+    if left != 0:
+        raise AssertionError(f"clicking empty ground left the box behind ({left} px)")
+
+    # A box-select, and then a box-select over empty ground: the second one
+    # selects nothing, so it must drop what the first one selected. This is the
+    # path that leaves a screen full of boxes for objects that are not selected.
+    run_state.press(cx - 220, cy - 200)
+    run_state.move(cx + 200, cy + 160, delay=0.3)
+    run_state.release(cx + 200, cy + 160)
+    run_state.move(cx + 450, cy - 250, delay=0.5)
+    boxed = run_state.screenshot_root("box-selected")
+    box = run_state.count_color(boxed, around_feature)
+    if box < 100:
+        raise AssertionError(f"the box-select selected nothing ({box} px)")
+
+    run_state.press(cx + 350, cy + 200)
+    run_state.move(cx + 600, cy + 380, delay=0.3)
+    run_state.release(cx + 600, cy + 380)
+    run_state.move(cx + 450, cy - 250, delay=0.5)
+    empty_boxed = run_state.screenshot_root("box-selected-empty")
+    left = run_state.count_color(empty_boxed, around_feature)
+    if left != 0:
+        raise AssertionError(
+            f"a box-select over empty ground kept the old selection ({left} px)"
+        )
+
+
+@scenario()
+def rotation(run_state: E2ERun) -> None:
+    """Ctrl-drag rotates the selection about its centre, as the Lua state does.
+
+    Two features, placed apart and both selected: rotating the pair swings them
+    around the midpoint between them, so the rotation is plainly visible on the
+    map as well as provable from the commands. One object alone would only change
+    its facing, which a tree barely shows.
+    """
+    run_state.focus()
+    left = _open(run_state, 110)                      # Features
+    _arm_tree(run_state, left)
+
+    width, height = window_size(run_state)
+    cx, cy = width // 3, height // 2
+    run_state.wheel(cx, cy, clicks=8, up=True)        # zoom in on the spot
+
+    # Two trees, well apart, so the pair has a real extent to rotate.
+    run_state.click(cx - 90, cy, delay=0.7)
+    run_state.click(cx + 90, cy, delay=0.7)
+    run_state.key("Escape", delay=0.4)                # leave placement mode
+
+    # Box-select both.
+    run_state.press(cx - 260, cy - 200)
+    run_state.move(cx + 260, cy + 180, delay=0.3)
+    run_state.release(cx + 260, cy + 180)
+    run_state.move(cx + 500, cy + 320, delay=0.5)
+    run_state.screenshot_root("before-rotate")
+
+    # Ctrl held, the cursor swings about the centre with the button down: the
+    # objects follow it as a preview, and the release commits. The button has to
+    # be held -- the engine only delivers mouse-move to the plugin during a drag.
+    with run_state.modifier("ctrl"):
+        run_state.press(cx + 200, cy)
+        run_state.move(cx + 140, cy - 140, delay=0.3)
+        run_state.move(cx, cy - 200, delay=0.4)
+        run_state.screenshot_root("rotating")
+        run_state.move(cx - 200, cy, delay=0.4)
+        run_state.release(cx - 200, cy)
+
+    run_state.screenshot_root("rotated")
+    # Both objects are committed, once each: `key` carries the whole pose (the
+    # command's many-fields form, as Lua's rotate state sends it).
+    run_state.assert_command_count("SetObjectParamCommand", 2)
+    # And they really turned: the facing is no longer the +z it was placed with.
+    run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key=lambda k: (
+            isinstance(k, dict)
+            and "pos" in k
+            and abs(k.get("dir", {}).get("z", 1.0) - 1.0) > 0.1
+        ),
+    )
+
+
+@scenario()
 def selection(run_state: E2ERun) -> None:
     """Rectangle select: drag a box on empty ground over a placed feature.
 
@@ -326,10 +549,3 @@ def selection(run_state: E2ERun) -> None:
     )
 
 
-SCENARIOS = {
-    "units_panel": units_panel,
-    "props_panel": props_panel,
-    "collision": collision,
-    "selection": selection,
-    "cursortip": cursortip,
-}

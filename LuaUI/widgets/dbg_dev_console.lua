@@ -471,6 +471,7 @@ function widget:Initialize()
 	screen = Chili.Screen0
 	Spring.SendCommands("bind f8 " .. COMMAND_NAME)
 	Spring.SendCommands("console 0")
+	EnsureWindow()
 end
 
 function widget:Shutdown()
@@ -484,13 +485,12 @@ function widget:GetConfigData()
 	return cfg
 end
 
-function widget:SetConfigData(data)
-	if not enabled() then
+-- Build the console once, whether or not the user has saved config for it.
+-- SetConfigData only runs when there *is* saved config, so a fresh profile (an
+-- isolated e2e run, a clean checkout) used to end up with no console at all.
+function EnsureWindow()
+	if window then
 		return
-	end
-
-	for k, v in pairs(data) do
-		cfg[k] = v
 	end
 
 	loadWindow()
@@ -500,6 +500,18 @@ function widget:SetConfigData(data)
 	if not cfg.visible then
 		window:SetVisibility(false)
 	end
+end
+
+function widget:SetConfigData(data)
+	if not enabled() then
+		return
+	end
+
+	for k, v in pairs(data) do
+		cfg[k] = v
+	end
+
+	EnsureWindow()
 end
 
 local function processLine(line)

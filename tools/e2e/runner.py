@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import json
+from contextlib import contextmanager
 import shutil
 import subprocess
 import sys
@@ -231,6 +232,23 @@ class E2ERun:
             run("xdotool", "key", "--window", self.window, name)
         time.sleep(delay)
 
+    @contextmanager
+    def modifier(self, name: str):
+        """Hold a modifier down across other input, for a chord like Ctrl-drag.
+
+        Sent to the focused window rather than with `--window`: as with `key`,
+        `xdotool --window` delivers the event with the modifier already cleared,
+        and the engine then reports the modifier as up.
+        """
+        self.focus()
+        self.event("modifier_down", modifier=name)
+        run("xdotool", "keydown", name)
+        try:
+            yield
+        finally:
+            run("xdotool", "keyup", name)
+            self.event("modifier_up", modifier=name)
+
     def key_chord(self, modifiers: tuple[str, ...], name: str, delay: float = 0.08) -> None:
         self.require_window()
         normalized = tuple(MODIFIER_NAMES.get(mod, mod) for mod in modifiers)
@@ -307,6 +325,21 @@ class E2ERun:
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
         for _ in range(clicks):
             run("xdotool", "click", "--window", self.window, button)
+            time.sleep(0.05)
+        time.sleep(delay)
+
+    def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
+        """Scroll the wheel with the real pointer, so a held modifier applies.
+
+        `xdotool click --window` synthesises the event with the modifier state
+        cleared -- the engine then reports shift as up -- so a Shift+wheel chord
+        has to go through the root window, as `key` does for the same reason.
+        """
+        self.event("wheel_root", x=x, y=y, clicks=clicks, up=up)
+        button = "4" if up else "5"
+        run("xdotool", "mousemove", str(x), str(y))
+        for _ in range(clicks):
+            run("xdotool", "click", button)
             time.sleep(0.05)
         time.sleep(delay)
 
@@ -410,6 +443,84 @@ class E2ERun:
         )
         return png_path
 
+    def count_color(
+        self,
+        shot: Path,
+        region: tuple[int, int, int, int],
+        color: str = "#00FF00",
+        fuzz: str = "12%",
+    ) -> int:
+        """Pixels of one colour inside an `(x, y, w, h)` box.
+
+        For overlays the editor draws in a flat colour -- the selection box is
+        pure green -- this is worth far more than comparing frames: the map sways
+        in the wind and the panel animates, so "how many pixels changed" is mostly
+        noise, while "is the green box there" is exact.
+        """
+        by_png = {captured.png_path: captured.raw_path for captured in self.screenshots}
+        try:
+            raw = by_png[shot]
+        except KeyError as exc:
+            raise AssertionError(f"unknown screenshot {exc.args[0]}") from exc
+
+        x, y, width, height = region
+        result = subprocess.run(
+            [
+                "convert", str(raw),
+                "-crop", f"{width}x{height}+{x}+{y}", "+repage",
+                "-fuzz", fuzz,
+                "-fill", "black", "+opaque", color,
+                "-fill", "white", "-opaque", color,
+                "-format", "%[fx:int(mean*w*h)]", "info:",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise AssertionError(f"ImageMagick failed: {result.stderr.strip()}")
+        count = int(result.stdout.strip())
+        self.event("count_color", shot=shot.name, color=color, count=count)
+        return count
+
+    def assert_region_pixels(
+        self,
+        before: Path,
+        after: Path,
+        region: tuple[int, int, int, int],
+        *,
+        min_changed: int = 0,
+        max_changed: int | None = None,
+    ) -> int:
+        """`assert_screenshot_pixels`, restricted to one `(x, y, w, h)` box.
+
+        Whole-frame comparisons are close to useless in this UI: the dev console
+        prints a line or two every second and the definition thumbnails spin, so
+        any two frames differ by thousands of pixels no matter what is being
+        tested. Compare the patch of screen the assertion is actually about.
+        """
+        x, y, width, height = region
+        # The raw captures, as `assert_screenshot_pixels` does: in `raw` mode the
+        # PNGs are not written until the run ends.
+        by_png = {shot.png_path: shot.raw_path for shot in self.screenshots}
+        crops = []
+        for shot in (before, after):
+            try:
+                raw = by_png[shot]
+            except KeyError as exc:
+                raise AssertionError(f"unknown screenshot {exc.args[0]}") from exc
+            cropped = raw.with_name(f"{raw.stem}-crop.png")
+            run(
+                "convert",
+                str(raw),
+                "-crop",
+                f"{width}x{height}+{x}+{y}",
+                "+repage",
+                str(cropped),
+            )
+            crops.append(cropped)
+        return self._compare(crops[0], crops[1], min_changed, max_changed)
+
     def assert_screenshot_pixels(
         self,
         before: Path,
@@ -429,9 +540,17 @@ class E2ERun:
             after_raw = by_png[after]
         except KeyError as exc:
             raise AssertionError(f"unknown screenshot {exc.args[0]}") from exc
+        return self._compare(before_raw, after_raw, min_changed, max_changed)
 
+    def _compare(
+        self,
+        before: Path,
+        after: Path,
+        min_changed: int,
+        max_changed: int | None,
+    ) -> int:
         result = subprocess.run(
-            ["compare", "-metric", "AE", str(before_raw), str(after_raw), "null:"],
+            ["compare", "-metric", "AE", str(before), str(after), "null:"],
             capture_output=True,
             text=True,
             check=False,
@@ -452,7 +571,7 @@ class E2ERun:
                 f"{before.name} -> {after.name}"
             )
         self.event(
-            "assert_screenshot_pixels",
+            "assert_pixels",
             before=before.name,
             after=after.name,
             changed=changed,
@@ -498,7 +617,13 @@ class E2ERun:
     # ── Command-log assertions ─────────────────────────────────────
 
     def commands(self) -> list[dict]:
-        """Every command envelope the UI sent to the command bridge."""
+        """Every command envelope the UI sent to the command bridge.
+
+        A `CompoundCommand` is unwrapped into the commands it carries, and kept
+        as well. The Lua UI groups a placement into one compound for undo while
+        the native UI sends the command on its own, and a scenario should be able
+        to assert the same thing of both.
+        """
         assert self.write_dir is not None
         path = self.write_dir / "commands.jsonl"
         if not path.is_file():
@@ -506,8 +631,14 @@ class E2ERun:
         entries = []
         for line in path.read_text().splitlines():
             _stamp, _, payload = line.partition(" ")
-            if payload:
-                entries.append(json.loads(payload))
+            if not payload:
+                continue
+            entry = json.loads(payload)
+            entries.append(entry)
+            data = entry.get("data", {})
+            if data.get("className") == "CompoundCommand":
+                for inner in data.get("commands", []):
+                    entries.append({**entry, "data": inner})
         return entries
 
     def assert_command(self, class_name: str, **expected: object) -> dict:

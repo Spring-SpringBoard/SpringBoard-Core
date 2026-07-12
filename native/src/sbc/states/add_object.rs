@@ -129,10 +129,7 @@ impl AddObjectState {
                 if i == 0 {
                     return (x, z);
                 }
-                (
-                    x + (next() - 0.5) * spread,
-                    z + (next() - 0.5) * spread,
-                )
+                (x + (next() - 0.5) * spread, z + (next() - 0.5) * spread)
             })
             .collect()
     }
@@ -184,7 +181,10 @@ impl AddObjectState {
             ctx.set_multiple_command_mode(false);
         }
         // A fresh scatter for the next click, as Lua re-seeds after placing.
-        self.scatter_seed = self.scatter_seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+        self.scatter_seed = self
+            .scatter_seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1);
     }
 
     /// One dab: density-based scatter in brush mode.
@@ -397,34 +397,45 @@ impl EditorState for AddObjectState {
         // One ghost per object the click will place, at the very spots it will
         // place them -- a single ghost for an amount of 5 shows you one thing
         // and gives you another.
-        let (kind, def_id, team, angle) =
-            (self.kind, self.def_id, self.config.team, self.angle);
+        let (kind, def_id, team_id, yaw) = (self.kind, self.def_id, self.config.team, self.angle);
         for (x, z) in self.scatter(hit.x, hit.z) {
             let y = interface.terrain().get_ground_height(x, z).unwrap_or(hit.y);
             crate::sbc::states::highlight::draw_object_ghost(
                 interface,
                 &mut self.shader,
-                kind,
-                def_id,
-                team,
-                x,
-                y,
-                z,
-                angle,
+                &crate::sbc::states::highlight::ObjectGhost {
+                    kind,
+                    def_id,
+                    team_id,
+                    x,
+                    y,
+                    z,
+                    yaw,
+                },
             );
         }
     }
 
-    /// Alt + wheel turns the object being placed (set mode).
+    /// Shift + wheel resizes the brush, Alt + wheel turns the object being placed.
+    /// Anything else falls through, so the camera keeps zooming.
     fn mouse_wheel(&mut self, ctx: &mut StateContext, up: bool, _value: f32) -> bool {
+        const SHIFT: u32 = 1 << 0;
         const ALT: u32 = 1 << 2;
         let Ok(mods) = ctx.interface.input().get_mod_key_state() else {
             return false;
         };
-        if mods & ALT == 0 {
-            return false;
+        if mods & SHIFT != 0 {
+            // Through the shared brush, so the view's `size` field follows the
+            // wheel -- the same channel the map brushes resize on.
+            let brush = ctx.models.get::<crate::sbc::states::BrushSettings>();
+            brush.scale_size(up);
+            self.config.size = brush.size;
+            return true;
         }
-        self.angle += if up { 0.1 } else { -0.1 };
-        true
+        if mods & ALT != 0 {
+            self.angle += if up { 0.1 } else { -0.1 };
+            return true;
+        }
+        false
     }
 }

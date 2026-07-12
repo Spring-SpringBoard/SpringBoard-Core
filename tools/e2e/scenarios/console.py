@@ -5,11 +5,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from scenarios.geometry import window_size
+from scenarios.registry import scenario
 
 if TYPE_CHECKING:
     from runner import E2ERun
 
 
+# The one scenario whose cases vary the *chonsole* rather than the UI, so it
+# names them itself.
+@scenario(
+    target="chonsole",
+    cases={
+        "chonsole-lua-baseline": {"chonsole": "lua", "ui": "chili"},
+        "chonsole-rust-port": {"chonsole": "rust", "ui": "chili"},
+    },
+)
 def chonsole_editing(run_state: E2ERun) -> None:
     run_state.focus()
     run_state.key("Escape", delay=0.08)
@@ -36,6 +46,7 @@ def chonsole_editing(run_state: E2ERun) -> None:
     run_state.screenshot("execute-help")
 
 
+@scenario(uis=("chili", "rmlui"))
 def dev_console(run_state: E2ERun) -> None:
     run_state.focus()
     # The console is visible by default; capture it.
@@ -55,6 +66,7 @@ def dev_console(run_state: E2ERun) -> None:
     run_state.screenshot("dev-console-hidden")
 
 
+@scenario(crop="dev-console")
 def native_dev_console(run_state: E2ERun) -> None:
     """The native (Rust) developer console.
 
@@ -85,8 +97,3 @@ def native_dev_console(run_state: E2ERun) -> None:
     run_state.golden("console-shown")
 
 
-SCENARIOS = {
-    "chonsole_editing": chonsole_editing,
-    "dev_console": dev_console,
-    "native_dev_console": native_dev_console,
-}

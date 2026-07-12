@@ -18,9 +18,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
-use crate::sbc::panels::editors::def_filters::{
-    DefTraits, FEATURE_TYPES, TERRAINS, UNIT_TYPES,
-};
+use crate::sbc::panels::editors::def_filters::{DefTraits, FEATURE_TYPES, TERRAINS, UNIT_TYPES};
 use crate::sbc::panels::field::{escape_rml, ChangeQueue, Field, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField};
 use crate::sbc::panels::grid::{GridItem, GridView};
@@ -42,6 +40,10 @@ enum PlaceMode {
     Set,
     Brush,
 }
+
+/// Cell size for the def grid. The thumbnails are rendered at 128px, so this is
+/// still a downscale.
+const ICON_SIZE: u32 = 96;
 
 /// The grid filters. Changing one re-filters rather than re-arming placement.
 const FILTER_FIELDS: &[&str] = &["typeFilter", "wreckFilter", "terrainFilter"];
@@ -86,7 +88,9 @@ impl ObjectDefsView {
     pub(crate) fn new(kind: DefKind) -> Self {
         ObjectDefsView {
             kind,
-            grid: GridView::new("object-defs-grid", 64),
+            // Bigger than the file/asset grids: these cells hold a rendered
+            // model, not an icon, and at 64px a tree is unreadable.
+            grid: GridView::new("object-defs-grid", ICON_SIZE),
             all: Vec::new(),
             def_ids: HashMap::new(),
             traits: HashMap::new(),
@@ -490,6 +494,26 @@ impl ObjectDefsView {
     pub(crate) fn field_value(&self, name: &str) -> crate::sbc::panels::field::FieldValue {
         self.fields.value(name)
     }
+
+    /// The brush radius is shared with the placement state, so Shift+wheel can
+    /// resize the brush mid-stroke and the field shows the new size.
+    pub(crate) fn write_brush(&self, brush: &mut crate::sbc::states::BrushSettings) {
+        brush.size = self.fields.number("size");
+    }
+
+    pub(crate) fn read_brush(
+        &mut self,
+        brush: &crate::sbc::states::BrushSettings,
+        interface: &NativeInterfaceRef,
+    ) {
+        self.fields.set(
+            "size",
+            crate::sbc::panels::field::FieldValue::Number(brush.size),
+        );
+        let _ = self.fields.write_values(interface);
+        // Re-arm placement so the stroke uses the size that is now on screen.
+        self.request_dirty = true;
+    }
     pub(crate) fn set_field_value(
         &mut self,
         name: &str,
@@ -612,13 +636,16 @@ fn placement_fields(teams: Vec<String>) -> Vec<Box<dyn Field>> {
         Box::new(
             NumericField::new("spread", "Spread", 100.0)
                 .min(1.0)
-                .max(1000.0)
+                .max(500.0)
                 .decimals(0),
         ),
+        // Lua's range and default. At the 0 it defaulted to, a brush held over
+        // one spot dropped every object of every repeat dab on exactly the same
+        // points -- the scatter is a fixed sunflower, and noise is what jitters it.
         Box::new(
-            NumericField::new("noise", "Noise", 0.0)
-                .min(0.0)
-                .max(100.0)
+            NumericField::new("noise", "Noise", 100.0)
+                .min(1.0)
+                .max(2000.0)
                 .decimals(0),
         ),
         // Named as Lua names them ("Min rot x"), not pitch/yaw/roll: the two UIs
@@ -731,6 +758,19 @@ macro_rules! object_defs_editor {
             fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
                 vec![]
             }
+            /// The object brush is a brush: Shift+wheel resizes it while placing,
+            /// exactly as it does for the map brushes, and the `size` field has to
+            /// follow the wheel (and lead it, when typed into).
+            fn write_brush(&self, brush: &mut crate::sbc::states::BrushSettings) {
+                self.defs.write_brush(brush);
+            }
+            fn read_brush(
+                &mut self,
+                brush: &crate::sbc::states::BrushSettings,
+                interface: &NativeInterfaceRef,
+            ) {
+                self.defs.read_brush(brush, interface);
+            }
             $crate::sb_delegate_editor_methods!(defs);
             fn draw_thumbnails(&mut self, interface: &NativeInterfaceRef) {
                 self.defs.draw_thumbnails(interface)
@@ -767,14 +807,7 @@ fn unit_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
             id,
         ));
     }
-    // Alphabetical, ignoring case: a plain byte compare puts every lowercase
-    // name after every capitalised one ("geovent" after "Tree").
-    items.sort_by(|a, b| {
-        a.0.caption
-            .to_lowercase()
-            .cmp(&b.0.caption.to_lowercase())
-            .then_with(|| a.0.caption.cmp(&b.0.caption))
-    });
+    sort_by_caption(&mut items);
     items
 }
 
@@ -803,24 +836,34 @@ fn feature_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
         items.push((
             GridItem {
                 id: name.clone(),
+                // Dozens of defs share the caption "Tree"; the def name is the
+                // only thing that tells them apart.
+                tooltip: Some(escape_rml(&name)),
                 caption: escape_rml(&caption),
                 image: None,
                 is_directory: false,
-                tooltip: None,
                 tooltip_markup: None,
             },
             id,
         ));
     }
-    // Alphabetical, ignoring case: a plain byte compare puts every lowercase
-    // name after every capitalised one ("geovent" after "Tree").
+    sort_by_caption(&mut items);
+    items
+}
+
+/// Alphabetical by what the user reads, ignoring case: a plain byte compare puts
+/// every lowercase name after every capitalised one ("geovent" after "Tree").
+///
+/// The def name breaks ties. Many defs share a display name ("Tree"), and the
+/// engine hands out def ids in no guaranteed order, so a tie left unbroken lets
+/// the grid come out shuffled from one open to the next.
+fn sort_by_caption(items: &mut [(GridItem, i32)]) {
     items.sort_by(|a, b| {
         a.0.caption
             .to_lowercase()
             .cmp(&b.0.caption.to_lowercase())
-            .then_with(|| a.0.caption.cmp(&b.0.caption))
+            .then_with(|| a.0.id.cmp(&b.0.id))
     });
-    items
 }
 
 fn cstr(ptr: *const std::ffi::c_char) -> Option<String> {

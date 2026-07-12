@@ -1011,13 +1011,24 @@ scrollbarvertical sliderbar:hover {
     gap: 5px;
 }
 
+/* Cells grow to share out the slack in their row, so the grid has no dead
+   column on the right. `flex-basis` comes from the item's inline style. */
 .grid-item {
     background-color: #2a2a2a;
     border: 1px #555555;
     border-radius: 3px;
     display: block;
+    flex-grow: 1;
+    flex-shrink: 0;
     padding: 0px;
     overflow: hidden;
+}
+
+/* Soaks up the slack on a short last row (see `FILLERS`). */
+.grid-filler {
+    flex-grow: 1;
+    flex-shrink: 0;
+    height: 0px;
 }
 
 .grid-item:hover {
@@ -1040,13 +1051,14 @@ scrollbarvertical sliderbar:hover {
 }
 
 /* `texture` as well as `img`: an RTT thumbnail is a <texture>, and without a
-   size it renders at its intrinsic resolution (128px) inside a 64px cell, which
-   crops it to one quadrant -- the model then looks half-missing and shoved into
-   a corner. */
+   size it renders at its intrinsic resolution (128px), which crops it to one
+   quadrant of a smaller cell -- the model then looks half-missing and shoved
+   into a corner. The size itself is inline (square, in px); this centres it in
+   a cell that has grown wider than the image. */
 .grid-item-image img,
 .grid-item-image texture {
-    width: 100%;
-    height: 100%;
+    display: block;
+    margin: 0px auto;
 }
 
 .grid-item-label {

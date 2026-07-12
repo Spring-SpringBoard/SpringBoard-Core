@@ -29,8 +29,14 @@ impl UnitTraits {
     /// Read the traits the filters need straight off the engine's UnitDef table.
     pub(crate) fn read(interface: &NativeInterfaceRef, unit_def_id: i32) -> UnitTraits {
         let defs = interface.unit_defs();
-        let flag = |key: &str| defs.get_unit_def_param_bool(unit_def_id, key).unwrap_or(false);
-        let number = |key: &str| defs.get_unit_def_param_float(unit_def_id, key).unwrap_or(0.0);
+        let flag = |key: &str| {
+            defs.get_unit_def_param_bool(unit_def_id, key)
+                .unwrap_or(false)
+        };
+        let number = |key: &str| {
+            defs.get_unit_def_param_float(unit_def_id, key)
+                .unwrap_or(0.0)
+        };
 
         UnitTraits {
             is_building: flag("isBuilding"),
@@ -153,7 +159,10 @@ mod tests {
 
         let mut floater = ground_unit();
         floater.float_on_water = true;
-        assert!(!floater.matches_terrain("Ground"), "a floater is not ground");
+        assert!(
+            !floater.matches_terrain("Ground"),
+            "a floater is not ground"
+        );
         assert!(floater.matches_terrain("Water"));
 
         let mut deep = ground_unit();

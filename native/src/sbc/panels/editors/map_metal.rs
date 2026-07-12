@@ -120,7 +120,8 @@ impl Editor for MetalEditor {
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         self.actions.bind(interface, document)?;
-        self.fields.bind(interface, document, changes, interactions)?;
+        self.fields
+            .bind(interface, document, changes, interactions)?;
         self.pattern_grid.refresh_navigation(interface, document)?;
         self.render_pattern_grid(interface, document)
     }

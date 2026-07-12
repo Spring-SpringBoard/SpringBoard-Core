@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from scenarios.geometry import ACTION_Y, EDITOR_BUTTON_Y, TAB_X, TAB_Y, dialog_left, panel_left
+from scenarios.registry import scenario
 
 if TYPE_CHECKING:
     from runner import E2ERun
 
 
+@scenario(uis=("rmlui", "rust"), crop="right-panel")
 def info_panel(run_state: E2ERun) -> None:
     """Repro for the colour leaking into Misc -> Info (O6).
 
@@ -52,6 +54,7 @@ def info_panel(run_state: E2ERun) -> None:
     run_state.screenshot("info-edited")
 
 
+@scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
 def teams_panel(run_state: E2ERun) -> None:
     run_state.focus()
     left = panel_left(run_state)
@@ -107,7 +110,3 @@ def teams_panel(run_state: E2ERun) -> None:
     run_state.screenshot("team-removed")
 
 
-SCENARIOS = {
-    "info_panel": info_panel,
-    "teams_panel": teams_panel,
-}

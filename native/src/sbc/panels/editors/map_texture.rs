@@ -7,7 +7,6 @@ use std::rc::Rc;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{FieldSet, Layout};
-use crate::sbc::rml::{element_by_id, escape_rml};
 use crate::sbc::panels::editors::brush::{
     non_empty, pattern_field, BrushAction, BrushActions, ASSETS,
 };
@@ -15,6 +14,7 @@ use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{BooleanField, ChoiceField, ColorField, NumericField};
 use crate::sbc::panels::grid::{list_assets, GridItem, GridView};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
+use crate::sbc::rml::{element_by_id, escape_rml};
 use crate::sbc::states::{BrushKind, BrushSettings};
 
 // Mirrors TextureEditor:Register in scen_edit/view/map/texture_editor.lua.
@@ -478,16 +478,25 @@ impl TextureEditor {
         for (id, visible) in [
             ("texture-saved-brush-section", material),
             ("texture-saved-brush-grid", material),
-            ("texture-material-dialog", material && self.material_picker_open),
+            (
+                "texture-material-dialog",
+                material && self.material_picker_open,
+            ),
             ("texture-splat-section", mode == "dnts"),
         ] {
             if let Some(elem) = element_by_id(interface, doc, id) {
-                let _ = interface.rml_ui().element_set_class(elem, "hidden", !visible);
+                let _ = interface
+                    .rml_ui()
+                    .element_set_class(elem, "hidden", !visible);
             }
         }
     }
 
-    fn take_grid_clicks(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<bool, Error> {
+    fn take_grid_clicks(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<bool, Error> {
         let mut changed = false;
         for id in self.saved_brush_grid.drain_clicks() {
             if id == ADD_BRUSH_ID && self.paint_mode() == "paint" {
@@ -548,11 +557,7 @@ impl TextureEditor {
         brush
     }
 
-    fn load_saved_brush(
-        &mut self,
-        id: &str,
-        interface: &NativeInterfaceRef,
-    ) {
+    fn load_saved_brush(&mut self, id: &str, interface: &NativeInterfaceRef) {
         let Some(saved) = self.saved_brushes.iter().find(|brush| brush.id == id) else {
             return;
         };
@@ -560,27 +565,45 @@ impl TextureEditor {
         self.selected_brush = Some(id.to_string());
         self.selected_material = Some(saved.material.clone());
         self.selected = brush.brush_textures.clone();
-        self.fields.set("patternTexture", FieldValue::Text(
-            brush.pattern_texture.clone().unwrap_or_default(),
-        ));
+        self.fields.set(
+            "patternTexture",
+            FieldValue::Text(brush.pattern_texture.clone().unwrap_or_default()),
+        );
         self.fields.set("size", FieldValue::Number(brush.size));
-        self.fields.set("rotation", FieldValue::Number(brush.rotation));
-        self.fields.set("texScale", FieldValue::Number(brush.tex_scale));
-        self.fields.set("texRotation", FieldValue::Number(brush.tex_rotation));
-        self.fields.set("texOffsetX", FieldValue::Number(brush.tex_offset_x));
-        self.fields.set("texOffsetY", FieldValue::Number(brush.tex_offset_y));
+        self.fields
+            .set("rotation", FieldValue::Number(brush.rotation));
+        self.fields
+            .set("texScale", FieldValue::Number(brush.tex_scale));
+        self.fields
+            .set("texRotation", FieldValue::Number(brush.tex_rotation));
+        self.fields
+            .set("texOffsetX", FieldValue::Number(brush.tex_offset_x));
+        self.fields
+            .set("texOffsetY", FieldValue::Number(brush.tex_offset_y));
         self.fields.set("mode", FieldValue::Text(brush.mode));
-        self.fields.set("kernelMode", FieldValue::Text(brush.kernel_mode));
-        self.fields.set("strength", FieldValue::Number(brush.strength));
-        self.fields.set("falloffFactor", FieldValue::Number(brush.falloff_factor));
-        self.fields.set("featureFactor", FieldValue::Number(brush.feature_factor));
+        self.fields
+            .set("kernelMode", FieldValue::Text(brush.kernel_mode));
+        self.fields
+            .set("strength", FieldValue::Number(brush.strength));
+        self.fields
+            .set("falloffFactor", FieldValue::Number(brush.falloff_factor));
+        self.fields
+            .set("featureFactor", FieldValue::Number(brush.feature_factor));
         self.fields.set("value", FieldValue::Number(brush.value));
-        self.fields.set("voidFactor", FieldValue::Number(brush.void_factor));
-        self.fields.set("splatTexScale", FieldValue::Number(brush.splat_tex_scale));
-        self.fields.set("splatTexMult", FieldValue::Number(brush.splat_tex_mult));
-        self.fields.set("exclusive", FieldValue::Bool(brush.exclusive));
-        self.fields.set("diffuseColor", FieldValue::Color(brush.diffuse_color));
-        self.fields.set("dntsIndex", FieldValue::Number((brush.color_index - 1) as f32));
+        self.fields
+            .set("voidFactor", FieldValue::Number(brush.void_factor));
+        self.fields
+            .set("splatTexScale", FieldValue::Number(brush.splat_tex_scale));
+        self.fields
+            .set("splatTexMult", FieldValue::Number(brush.splat_tex_mult));
+        self.fields
+            .set("exclusive", FieldValue::Bool(brush.exclusive));
+        self.fields
+            .set("diffuseColor", FieldValue::Color(brush.diffuse_color));
+        self.fields.set(
+            "dntsIndex",
+            FieldValue::Number((brush.color_index - 1) as f32),
+        );
         for channel in toggle_channels() {
             self.fields.set(
                 &enabled_name(channel),
@@ -606,12 +629,20 @@ impl Editor for TextureEditor {
         let channel_toggles: Vec<String> = toggle_channels().map(enabled_name).collect();
         self.fields.generate_rml(&[
             Layout::Raw(self.actions.generate_rml()),
-            Layout::Raw(section_markup("texture-saved-brush-section", "Saved brushes")),
+            Layout::Raw(section_markup(
+                "texture-saved-brush-section",
+                "Saved brushes",
+            )),
             Layout::Raw(self.saved_brush_grid.container_rml()),
             Layout::Raw(section_markup("texture-pattern-section", "Pattern")),
             Layout::Raw(self.pattern_grid.container_rml()),
             Layout::IdentifiedGroup(&["size", "rotation", "texScale"]),
-            Layout::IdentifiedGroup(&channel_toggles.iter().map(String::as_str).collect::<Vec<_>>()),
+            Layout::IdentifiedGroup(
+                &channel_toggles
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<Vec<_>>(),
+            ),
             Layout::IdentifiedGroup(&["texRotation", "texOffsetX", "texOffsetY"]),
             Layout::IdentifiedField("diffuseColor"),
             Layout::IdentifiedField("mode"),
@@ -661,9 +692,11 @@ impl Editor for TextureEditor {
         }
         if let Some(cancel) = element_by_id(interface, document, "texture-material-cancel") {
             let events = self.material_picker_events.clone();
-            interface.rml_ui().element_add_event_listener(cancel, "click", false, move || {
-                events.borrow_mut().push(MaterialPickerEvent::Cancel);
-            })?;
+            interface
+                .rml_ui()
+                .element_add_event_listener(cancel, "click", false, move || {
+                    events.borrow_mut().push(MaterialPickerEvent::Cancel);
+                })?;
         }
         self.render_grids(interface, document)?;
         self.apply_visibility(interface);
@@ -699,10 +732,7 @@ impl Editor for TextureEditor {
         if self.paint_mode() != "paint" && self.material_picker_open {
             self.material_picker_open = false;
         }
-        if self
-            .take_grid_clicks(interface, document)
-            .unwrap_or(false)
-        {
+        if self.take_grid_clicks(interface, document).unwrap_or(false) {
             let _ = self.fields.write_values(interface);
             let _ = self.render_grids(interface, document);
             self.apply_visibility(interface);

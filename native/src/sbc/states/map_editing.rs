@@ -153,8 +153,8 @@ impl MapEditingState {
             return false;
         };
         if self.kind == BrushKind::Texture {
-            let ready = self.brush.texture_paint_mode != "paint"
-                || !self.brush.brush_textures.is_empty();
+            let ready =
+                self.brush.texture_paint_mode != "paint" || !self.brush.brush_textures.is_empty();
             if !ready {
                 log::warn!("texture brush cannot paint: no saved material selected");
             }
@@ -299,7 +299,10 @@ impl EditorState for MapEditingState {
             return true;
         }
         let Some(hit) = trace_ground(ctx.interface, x as f32, y as f32) else {
-            log::warn!("{} brush cannot paint: cursor did not hit the ground", self.name());
+            log::warn!(
+                "{} brush cannot paint: cursor did not hit the ground",
+                self.name()
+            );
             return true;
         };
         if !self.prepare_paint(ctx) {
@@ -379,13 +382,8 @@ impl EditorState for MapEditingState {
         let size = self.brush.size;
         // Lua draws only the selected pattern. If its texture or shader cannot
         // be used, draw nothing rather than inventing a misleading brush.
-        let _ = self.preview.draw(
-            interface,
-            &pattern,
-            hit.x,
-            hit.z,
-            size,
-            self.brush.rotation,
-        );
+        let _ = self
+            .preview
+            .draw(interface, &pattern, hit.x, hit.z, size, self.brush.rotation);
     }
 }

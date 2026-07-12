@@ -13,9 +13,13 @@ const SHIFT_BIT: u32 = 1;
 enum DragState {
     Idle,
     /// Pressed. Becomes a drag if RmlUi says so, a click if it does not.
-    Pending { field: String },
+    Pending {
+        field: String,
+    },
     /// RmlUi is dragging: the value follows the cursor until `dragend`.
-    Dragging { field: String },
+    Dragging {
+        field: String,
+    },
 }
 
 /// Action to perform after processing interaction events.

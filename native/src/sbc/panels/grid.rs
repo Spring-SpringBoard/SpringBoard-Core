@@ -13,9 +13,11 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::panels::field::{
-    bind_tooltip, bind_tooltip_markup, element_by_id, escape_rml,
-};
+use crate::sbc::panels::field::{bind_tooltip, bind_tooltip_markup, element_by_id, escape_rml};
+
+/// Enough empty cells to fill out the widest row the panel can hold, so a short
+/// last row keeps its items at their natural size.
+const FILLERS: usize = 8;
 
 /// One cell.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -122,14 +124,11 @@ impl GridView {
             .unwrap_or_default();
         let mut navigate = false;
         if up > 0 {
-            let parent = self
-                .navigation
-                .as_ref()
-                .and_then(|navigation| {
-                    (navigation.dir != navigation.root)
-                        .then(|| parent_dir(&navigation.dir))
-                        .flatten()
-                });
+            let parent = self.navigation.as_ref().and_then(|navigation| {
+                (navigation.dir != navigation.root)
+                    .then(|| parent_dir(&navigation.dir))
+                    .flatten()
+            });
             if let Some(parent) = parent {
                 if let Some(navigation) = self.navigation.as_mut() {
                     navigation.dir = parent;
@@ -165,12 +164,11 @@ impl GridView {
         interface: &NativeInterfaceRef,
         document: u64,
     ) -> Result<(), Error> {
-        let Some((dir, extensions)) = self.navigation.as_ref().map(|navigation| {
-            (
-                navigation.dir.clone(),
-                navigation.extensions.clone(),
-            )
-        }) else {
+        let Some((dir, extensions)) = self
+            .navigation
+            .as_ref()
+            .map(|navigation| (navigation.dir.clone(), navigation.extensions.clone()))
+        else {
             return Ok(());
         };
         let extensions: Vec<&str> = extensions.iter().map(String::as_str).collect();
@@ -214,14 +212,20 @@ impl GridView {
         let rml = interface.rml_ui();
 
         if let Some(navigation) = self.navigation.as_ref() {
-            if let Some(path) = element_by_id(interface, document, &format!("{}-path", self.container_id)) {
+            if let Some(path) =
+                element_by_id(interface, document, &format!("{}-path", self.container_id))
+            {
                 rml.element_set_inner_rml(path, &escape_rml(&navigation.dir))?;
             }
-            if let Some(up) = element_by_id(interface, document, &format!("{}-up", self.container_id)) {
+            if let Some(up) =
+                element_by_id(interface, document, &format!("{}-up", self.container_id))
+            {
                 rml.element_set_class(up, "disabled", navigation.dir == navigation.root)?;
             }
             if !navigation.bound.get() {
-                if let Some(up) = element_by_id(interface, document, &format!("{}-up", self.container_id)) {
+                if let Some(up) =
+                    element_by_id(interface, document, &format!("{}-up", self.container_id))
+                {
                     let clicks = navigation.up_clicks.clone();
                     rml.element_add_event_listener(up, "click", false, move || {
                         *clicks.borrow_mut() += 1;
@@ -239,8 +243,12 @@ impl GridView {
                 ""
             };
             let folder = if item.is_directory { " folder" } else { "" };
+            // The cell grows past `item_size` to share out whatever the row has
+            // left over, so the grid has no dead column down its right edge. The
+            // image inside keeps its square shape (see the RCSS), so a wider cell
+            // just means more margin around the model, not a stretched one.
             html.push_str(&format!(
-                r#"<div id="{cid}-{index}" class="grid-item{selected}{folder}" style="width: {size}px;">"#,
+                r#"<div id="{cid}-{index}" class="grid-item{selected}{folder}" style="flex-basis: {size}px;">"#,
                 cid = self.container_id,
                 size = self.item_size,
             ));
@@ -252,16 +260,33 @@ impl GridView {
                 // Engine textures (`!nativeN` RTT thumbnails, `%`/`#`/`$` names)
                 // resolve through RmlUi's `<texture>` element; plain file paths
                 // are `<img>`.
+                // Sized in px rather than as a percentage of the cell: the cell
+                // stretches to fill its row, and a percentage would stretch the
+                // image with it.
+                let square = format!(
+                    r#"style="width: {size}px; height: {size}px;""#,
+                    size = self.item_size
+                );
                 if image.starts_with(['!', '%', '#', '$']) {
-                    html.push_str(&format!(r#"<texture src="{image}"/>"#));
+                    html.push_str(&format!(r#"<texture src="{image}" {square}/>"#));
                 } else {
-                    html.push_str(&format!(r#"<img src="{image}"/>"#));
+                    html.push_str(&format!(r#"<img src="{image}" {square}/>"#));
                 }
             }
             html.push_str("</div>");
             html.push_str(&format!(
                 r#"<div class="grid-item-label">{}</div></div>"#,
                 escape_rml(&item.caption),
+            ));
+        }
+        // Without these, the items on a short last row would grow to swallow the
+        // whole row -- one lone result would be a cell the width of the grid. The
+        // fillers take that slack instead, and being empty and flat they cost a
+        // row of nothing. Any that don't fit wrap away invisibly.
+        for _ in 0..FILLERS {
+            html.push_str(&format!(
+                r#"<div class="grid-filler" style="flex-basis: {size}px;"></div>"#,
+                size = self.item_size,
             ));
         }
         rml.element_set_inner_rml(container, &html)?;

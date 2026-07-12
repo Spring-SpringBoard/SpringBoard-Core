@@ -321,6 +321,18 @@ impl EditorState for DefaultState {
     /// Moving the mouse with an already-selected object held begins a drag; from
     /// an empty-ground press, a move past a small threshold begins a box-select.
     fn mouse_move(&mut self, ctx: &mut StateContext, x: i32, y: i32, _button: i32) -> bool {
+        use crate::sbc::objects::SelectionManager;
+        // Ctrl-drag rotates the selection, as it does in Lua, and takes priority
+        // over dragging or box-selecting. R does the same thing from the keyboard.
+        if ctx.models.get::<SelectionManager>().count() > 0 {
+            let mods = mod_state(ctx.interface);
+            if mods.ctrl && !mods.shift {
+                self.clicked = None;
+                self.empty_press = None;
+                ctx.request(Transition::Rotate);
+                return true;
+            }
+        }
         if let (Some((sx, sy)), Some((start_x, start_z))) = (self.empty_press, self.empty_start) {
             const DRAG_THRESHOLD: i32 = 4;
             if (x - sx).abs() > DRAG_THRESHOLD || (y - sy).abs() > DRAG_THRESHOLD {
@@ -409,15 +421,18 @@ impl EditorState for DefaultState {
     }
 }
 
-/// Modifier-key state, read from the engine.
+/// Modifier-key state, read from the engine. The engine packs it as
+/// `shift | ctrl | alt | meta`.
 pub(crate) struct ModState {
     pub shift: bool,
+    pub ctrl: bool,
 }
 
 pub(crate) fn mod_state(interface: &NativeInterfaceRef) -> ModState {
     let bits = interface.input().get_mod_key_state().unwrap_or(0);
     ModState {
         shift: bits & (1 << 0) != 0,
+        ctrl: bits & (1 << 1) != 0,
     }
 }
 

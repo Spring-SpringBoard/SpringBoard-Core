@@ -13,11 +13,13 @@ from scenarios.geometry import (
     editor_button_x,
     panel_left,
 )
+from scenarios.registry import scenario
 
 if TYPE_CHECKING:
     from runner import E2ERun
 
 
+@scenario(uis=("chili", "rmlui", "rust"), target="main-panel", crop="right-panel")
 def main_panel_tabs(run_state: E2ERun) -> None:
     run_state.focus()
     left = panel_left(run_state)
@@ -31,6 +33,7 @@ def main_panel_tabs(run_state: E2ERun) -> None:
 _TABS = (("objects", 4), ("map", 5), ("env", 3), ("misc", 2))
 
 
+@scenario(uis=("rmlui", "rust"), crop="right-panel")
 def all_editors(run_state: E2ERun) -> None:
     """Open every editor in every tab. Editors are lazily created, so a broken
     one only shows up when its button is clicked."""
@@ -44,6 +47,7 @@ def all_editors(run_state: E2ERun) -> None:
             run_state.screenshot(f"{tab_name}-{i}")
 
 
+@scenario(uis=("rmlui",))
 def dialogs(run_state: E2ERun) -> None:
     """Editors and dialogs that build controls outside the panel: Misc ->
     Diplomacy and the New Project dialog."""
@@ -59,6 +63,7 @@ def dialogs(run_state: E2ERun) -> None:
     run_state.key("Escape", delay=0.3)
 
 
+@scenario(uis=("chili", "rmlui"))
 def notifications(run_state: E2ERun) -> None:
     """Export with no saved project posts a warning notification (SB.NotifyWarn).
     In RmlUi that must come from RmlUiNotifications, not Chotify (which is Chili)."""
@@ -75,6 +80,7 @@ def notifications(run_state: E2ERun) -> None:
     run_state.screenshot("expired")
 
 
+@scenario(crop="right-panel")
 def native_panel(run_state: E2ERun) -> None:
     """The native (Rust) right-hand panel.
 
@@ -191,10 +197,3 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.golden("asset-picked")
 
 
-SCENARIOS = {
-    "main_panel_tabs": main_panel_tabs,
-    "all_editors": all_editors,
-    "dialogs": dialogs,
-    "notifications": notifications,
-    "native_panel": native_panel,
-}

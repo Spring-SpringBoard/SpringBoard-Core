@@ -26,7 +26,10 @@ const SEGMENTS: usize = 32;
 /// box lands under the model rather than over it.
 ///
 /// Each entry is the object's centre and its radius.
-pub(crate) fn draw_selected_features(interface: &NativeInterfaceRef, boxes: &[(f32, f32, f32, f32)]) {
+pub(crate) fn draw_selected_features(
+    interface: &NativeInterfaceRef,
+    boxes: &[(f32, f32, f32, f32)],
+) {
     if boxes.is_empty() {
         return;
     }
@@ -40,12 +43,7 @@ pub(crate) fn draw_selected_features(interface: &NativeInterfaceRef, boxes: &[(f
         // still visible.
         let half = radius.max(10.0);
         let _ = gfx.begin_end(GL_LINE_LOOP, || {
-            for (dx, dz) in [
-                (-half, -half),
-                (half, -half),
-                (half, half),
-                (-half, half),
-            ] {
+            for (dx, dz) in [(-half, -half), (half, -half), (half, half), (-half, half)] {
                 let _ = gfx.vertex(cx + dx, cy, cz + dz, 1.0, 3);
             }
         });
@@ -143,11 +141,7 @@ impl BrushPreview {
         let _ = gfx.culling(false);
 
         let half = size * 0.5;
-        let y = interface
-            .terrain()
-            .get_ground_height(cx, cz)
-            .unwrap_or(0.0)
-            - 1.0;
+        let y = interface.terrain().get_ground_height(cx, cz).unwrap_or(0.0) - 1.0;
         let _ = gfx.matrix_mode(GL_MODELVIEW);
         let _ = gfx.push_matrix();
         // Rotate about the rect's centre, then draw the unit quad in its corner.
@@ -196,6 +190,17 @@ pub(crate) fn draw_cursor_ring(
     reset(interface);
 }
 
+/// One object about to be placed: what it is, and where it would land.
+pub(crate) struct ObjectGhost {
+    pub kind: ObjectKind,
+    pub def_id: i32,
+    pub team_id: i32,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub yaw: f32,
+}
+
 /// Draw the model currently armed for placement. Mirrors Lua's `DrawObject`:
 /// push a world transform, tint, and render the def shape under the model
 /// shader -- which is what textures it. Without the shader an S3O model draws as
@@ -203,14 +208,18 @@ pub(crate) fn draw_cursor_ring(
 pub(crate) fn draw_object_ghost(
     interface: &NativeInterfaceRef,
     shader: &mut ModelShader,
-    kind: ObjectKind,
-    def_id: i32,
-    team_id: i32,
-    x: f32,
-    y: f32,
-    z: f32,
-    yaw: f32,
+    ghost: &ObjectGhost,
 ) {
+    let &ObjectGhost {
+        kind,
+        def_id,
+        team_id,
+        x,
+        y,
+        z,
+        yaw,
+    } = ghost;
+
     let gfx = interface.gfx();
     let _ = gfx.depth_test(true, true, GL_LEQUAL);
     let _ = gfx.depth_mask(true);

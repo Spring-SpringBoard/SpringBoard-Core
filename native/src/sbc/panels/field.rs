@@ -26,12 +26,20 @@ pub(crate) fn new_interaction_queue() -> InteractionQueue {
 
 #[derive(Debug, Clone)]
 pub enum InteractionEvent {
-    PointerDown { field: String },
-    PointerUp { field: String },
+    PointerDown {
+        field: String,
+    },
+    PointerUp {
+        field: String,
+    },
     /// RmlUi's drag, which captures the pointer: `DragEnd` arrives wherever the
     /// button comes up, including outside the panel.
-    DragStart { field: String },
-    DragEnd { field: String },
+    DragStart {
+        field: String,
+    },
+    DragEnd {
+        field: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -189,6 +197,15 @@ pub(crate) fn bind_tooltip_markup(
     bind_tooltip_inner(interface, document, element, markup.into(), false)
 }
 
+// ── DOM helpers ────────────────────────────────────────────────────
+
+pub(crate) use crate::sbc::rml::{element_by_id, escape_rml};
+
+/// Format a float for display with a fixed number of decimals.
+pub(crate) fn format_number(value: f32, decimals: usize) -> String {
+    format!("{:.*}", decimals, value)
+}
+
 fn bind_tooltip_inner(
     interface: &NativeInterfaceRef,
     document: u64,
@@ -239,15 +256,6 @@ fn bind_tooltip_inner(
             }
         })?;
     Ok(())
-}
-
-// ── DOM helpers ────────────────────────────────────────────────────
-
-pub(crate) use crate::sbc::rml::{element_by_id, escape_rml};
-
-/// Format a float for display with a fixed number of decimals.
-pub(crate) fn format_number(value: f32, decimals: usize) -> String {
-    format!("{:.*}", decimals, value)
 }
 
 // ── Field trait ────────────────────────────────────────────────────

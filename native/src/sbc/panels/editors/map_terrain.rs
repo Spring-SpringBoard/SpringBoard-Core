@@ -109,7 +109,6 @@ impl TerrainEditor {
             .set_selected((!selected.is_empty()).then_some(selected.as_str()));
         self.pattern_grid.render(interface, document)
     }
-
 }
 
 impl Editor for TerrainEditor {

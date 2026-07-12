@@ -13,6 +13,7 @@ from scenarios.geometry import (
     panel_left,
     window_size,
 )
+from scenarios.registry import scenario
 
 if TYPE_CHECKING:
     from runner import E2ERun
@@ -43,6 +44,7 @@ def _commit_color(
     )
 
 
+@scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
 def lighting_panel(run_state: E2ERun) -> None:
     """Lighting only: shadow mode, sun vector, colors, and densities."""
     run_state.focus()
@@ -87,6 +89,7 @@ def lighting_panel(run_state: E2ERun) -> None:
     run_state.screenshot("lighting-all-fields")
 
 
+@scenario(crop="right-panel")
 def sky_panel(run_state: E2ERun) -> None:
     """Sky/Fog only: all atmosphere colors, fog bounds, and skybox picker."""
     run_state.focus()
@@ -120,6 +123,7 @@ def sky_panel(run_state: E2ERun) -> None:
     run_state.screenshot("sky-all-fields")
 
 
+@scenario()
 def water_panel(run_state: E2ERun) -> None:
     """Water only, after making a broad below-zero basin and enabling water 4."""
     run_state.focus()
@@ -207,8 +211,3 @@ def water_panel(run_state: E2ERun) -> None:
     run_state.screenshot("water-all-fields-visible")
 
 
-SCENARIOS = {
-    "lighting_panel": lighting_panel,
-    "sky_panel": sky_panel,
-    "water_panel": water_panel,
-}

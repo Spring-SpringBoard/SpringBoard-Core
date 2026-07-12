@@ -34,10 +34,8 @@ impl Command for ImportShadingImageCommand {
                             .file_name()
                             .and_then(|name| name.to_str())
                             .unwrap_or("shading-texture.png");
-                        let path = std::env::temp_dir().join(format!(
-                            "sbc-shading-{}-{filename}",
-                            std::process::id()
-                        ));
+                        let path = std::env::temp_dir()
+                            .join(format!("sbc-shading-{}-{filename}", std::process::id()));
                         if let Err(err) = std::fs::write(&path, bytes) {
                             error!(
                                 "materialize VFS shading {} at {} failed: {err}",

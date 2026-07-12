@@ -4,11 +4,15 @@ use std::rc::Rc;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
-use crate::sbc::panels::editor::Editor;
 use crate::sbc::envelope::envelope_fields;
+use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{envelope_with, FieldSet, Layout};
-use crate::sbc::panels::field::{element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue};
-use crate::sbc::panels::fields::{BooleanField, ChoiceField, ColorField, NumericField, StringField};
+use crate::sbc::panels::field::{
+    element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
+};
+use crate::sbc::panels::fields::{
+    BooleanField, ChoiceField, ColorField, NumericField, StringField,
+};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::teams::{Color, Team, TeamManager};
 
@@ -42,7 +46,10 @@ pub(crate) struct TeamsView {
 }
 
 fn extra_bool(team: &Team, name: &str) -> bool {
-    team.extra.get(name).and_then(serde_json::Value::as_bool).unwrap_or(false)
+    team.extra
+        .get(name)
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
 }
 
 fn extra_number(team: &Team, object: &str, name: &str) -> f32 {
@@ -147,12 +154,17 @@ impl TeamsView {
         let Some(team) = self.teams.iter().find(|team| team.id == id) else {
             return;
         };
-        self.fields.set("teamName", FieldValue::Text(team.name.clone()));
-        self.fields.set("teamAi", FieldValue::Bool(extra_bool(team, "ai")));
+        self.fields
+            .set("teamName", FieldValue::Text(team.name.clone()));
+        self.fields
+            .set("teamAi", FieldValue::Bool(extra_bool(team, "ai")));
         self.fields.set("teamMetal", FieldValue::Number(team.metal));
-        self.fields.set("teamMetalMax", FieldValue::Number(team.metal_max));
-        self.fields.set("teamEnergy", FieldValue::Number(team.energy));
-        self.fields.set("teamEnergyMax", FieldValue::Number(team.energy_max));
+        self.fields
+            .set("teamMetalMax", FieldValue::Number(team.metal_max));
+        self.fields
+            .set("teamEnergy", FieldValue::Number(team.energy));
+        self.fields
+            .set("teamEnergyMax", FieldValue::Number(team.energy_max));
         self.fields.set(
             "teamColor",
             FieldValue::Color([team.color.r, team.color.g, team.color.b, 1.0]),
@@ -165,7 +177,8 @@ impl TeamsView {
             "teamStartZ",
             FieldValue::Number(extra_number(team, "startPos", "z")),
         );
-        self.fields.set("teamSide", FieldValue::Text(team.side.0.clone()));
+        self.fields
+            .set("teamSide", FieldValue::Text(team.side.0.clone()));
         self.editing = Some(id);
         let _ = self.fields.write_values(interface);
         self.show_dialog(interface, document);
@@ -179,8 +192,15 @@ impl TeamsView {
     ) -> Option<String> {
         let id = self.editing.take()?;
         for name in [
-            "teamName", "teamAi", "teamMetal", "teamMetalMax", "teamEnergy",
-            "teamEnergyMax", "teamStartX", "teamStartZ", "teamSide",
+            "teamName",
+            "teamAi",
+            "teamMetal",
+            "teamMetalMax",
+            "teamEnergy",
+            "teamEnergyMax",
+            "teamStartX",
+            "teamStartZ",
+            "teamSide",
         ] {
             self.fields.read(name, interface);
         }
@@ -193,9 +213,16 @@ impl TeamsView {
         team.energy_max = self.fields.number("teamEnergyMax");
         team.side.0 = self.fields.text("teamSide");
         if let FieldValue::Color(color) = self.fields.value("teamColor") {
-            team.color = Color { r: color[0], g: color[1], b: color[2] };
+            team.color = Color {
+                r: color[0],
+                g: color[1],
+                b: color[2],
+            };
         }
-        team.extra.insert("ai".into(), serde_json::json!(self.fields.boolean("teamAi")));
+        team.extra.insert(
+            "ai".into(),
+            serde_json::json!(self.fields.boolean("teamAi")),
+        );
         team.extra.insert(
             "startPos".into(),
             serde_json::json!({
@@ -208,7 +235,11 @@ impl TeamsView {
     }
 
     fn add_team(&self, next: &mut u64) -> String {
-        let count = self.teams.iter().filter(|team| !extra_bool(team, "gaia")).count();
+        let count = self
+            .teams
+            .iter()
+            .filter(|team| !extra_bool(team, "gaia"))
+            .count();
         envelope_fields(
             "AddTeamCommand",
             next,
@@ -262,13 +293,19 @@ impl Editor for TeamsView {
                 .rml_ui()
                 .element_set_inner_rml(host, &self.dialog_rml())?;
         }
-        self.fields.bind(interface, document, changes, interactions)?;
+        self.fields
+            .bind(interface, document, changes, interactions)?;
         let bind = |id: &str, click: TeamClick| -> Result<(), Error> {
             if let Some(button) = element_by_id(interface, document, id) {
                 let clicks = self.clicks.clone();
-                interface.rml_ui().element_add_event_listener(button, "click", false, move || {
-                    clicks.borrow_mut().push(click);
-                })?;
+                interface.rml_ui().element_add_event_listener(
+                    button,
+                    "click",
+                    false,
+                    move || {
+                        clicks.borrow_mut().push(click);
+                    },
+                )?;
             }
             Ok(())
         };
@@ -277,7 +314,10 @@ impl Editor for TeamsView {
         for team in &self.teams {
             if !extra_bool(team, "gaia") {
                 bind(&format!("team-edit-{}", team.id), TeamClick::Edit(team.id))?;
-                bind(&format!("team-remove-{}", team.id), TeamClick::Remove(team.id))?;
+                bind(
+                    &format!("team-remove-{}", team.id),
+                    TeamClick::Remove(team.id),
+                )?;
             }
         }
         self.show_dialog(interface, document);
@@ -335,7 +375,8 @@ impl Editor for TeamsView {
 
     fn wants_refresh(&mut self, models: &mut Models) -> bool {
         let teams = models.get::<TeamManager>().all_teams();
-        self.roster_changed = serde_json::to_value(&teams).ok() != serde_json::to_value(&self.teams).ok();
+        self.roster_changed =
+            serde_json::to_value(&teams).ok() != serde_json::to_value(&self.teams).ok();
         self.roster_changed
     }
 

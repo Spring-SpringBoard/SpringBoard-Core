@@ -1442,6 +1442,8 @@ end
 function Editor:_FinalizeChiliNew(layout, opts)
     local actionButtons = layout.actionButtons or {}
     local customControls = layout.customControls or {}
+    local filterControls = layout.filterControls or {}
+    local gridView = layout.gridView
 
     -- Build children array for Chili
     local children = {}
@@ -1456,11 +1458,23 @@ function Editor:_FinalizeChiliNew(layout, opts)
         table.insert(children, ctrl)
     end
 
-    -- Add ScrollPanel with fields
+    -- The filters and the grid are part of the layout in both modes (the RmlUi
+    -- path renders them from the same two keys). Chili was dropping them, which
+    -- is why the Units/Features editors came up with no grid and no filters.
+    for _, filter in ipairs(filterControls) do
+        table.insert(children, filter)
+    end
+    if gridView then
+        table.insert(children, gridView:GetControl())
+    end
+
+    -- Add ScrollPanel with fields. Below the grid when there is one: the grid
+    -- control ends at 65% of the height (its `bottom = "35%"`), and the fields
+    -- take the rest.
     local yPos = #actionButtons > 0 and 70 or 0
     table.insert(children, ScrollPanel:New {
         x = 0,
-        y = yPos,
+        y = gridView and "65%" or yPos,
         bottom = 30,
         right = 0,
         borderColor = {0,0,0,0},

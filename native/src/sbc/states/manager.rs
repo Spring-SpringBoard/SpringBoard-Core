@@ -31,7 +31,9 @@ pub(crate) enum StateRequest {
 /// to show the new size.
 enum ActiveState {
     Default(DefaultState),
-    Brush(MapEditingState),
+    /// Boxed: a brush carries its whole payload, dwarfing every other state, and
+    /// the enum would otherwise be that size no matter which state is active.
+    Brush(Box<MapEditingState>),
     AddObject(AddObjectState),
     Drag(DragObjectState),
     Rotate(RotateObjectState),
@@ -42,7 +44,7 @@ impl ActiveState {
     fn as_state(&mut self) -> &mut dyn EditorState {
         match self {
             ActiveState::Default(s) => s,
-            ActiveState::Brush(s) => s,
+            ActiveState::Brush(s) => s.as_mut(),
             ActiveState::AddObject(s) => s,
             ActiveState::Drag(s) => s,
             ActiveState::Rotate(s) => s,
@@ -183,7 +185,7 @@ impl StateManager {
                     // overwrite Filter/DNTS/Void with the previous mode.
                     models.get::<BrushSettings>().texture_paint_mode = paint_mode;
                 }
-                ActiveState::Brush(MapEditingState::new(kind, brush))
+                ActiveState::Brush(Box::new(MapEditingState::new(kind, brush)))
             }
             StateRequest::AddUnit(def, def_id, config) => {
                 ActiveState::AddObject(AddObjectState::new(ObjectKind::Unit, def, def_id, config))

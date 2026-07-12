@@ -32,12 +32,6 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
-        "--case",
-        choices=("all", "lua", "rust"),
-        default="all",
-        help="Legacy alias: pick one implementation of a single target.",
-    )
-    parser.add_argument(
         "--update-golden",
         action="store_true",
         help="Rewrite golden images from this run. Look at the diff before committing.",
@@ -72,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"no cases match {args.target} {args.tag}", file=sys.stderr)
             return 1
     else:
-        cases = target_cases(args.target, args.case)
+        cases = target_cases(args.target)
 
     failures = 0
     for case in cases:

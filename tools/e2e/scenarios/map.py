@@ -14,11 +14,13 @@ from scenarios.geometry import (
     panel_left,
     window_size,
 )
+from scenarios.registry import scenario
 
 if TYPE_CHECKING:
     from runner import E2ERun
 
 
+@scenario(uis=("chili", "rmlui", "rust"))
 def heightmap(run_state: E2ERun) -> None:
     """Map -> Terrain: pick the raise brush and drag on the map, then undo.
     Checks the brush actually reaches the command bridge, not just that the
@@ -65,6 +67,7 @@ def heightmap(run_state: E2ERun) -> None:
         run_state.assert_any_command(command)
 
 
+@scenario(crop="right-panel")
 def map_editors(run_state: E2ERun) -> None:
     """Map editors 5-9: open every Map editor, exercise each brush action, and
     assert that brush/settings changes reach the native command bridge."""
@@ -220,6 +223,7 @@ def map_editors(run_state: E2ERun) -> None:
     )
 
 
+@scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
 def texture_panel(run_state: E2ERun) -> None:
     run_state.focus()
     left = panel_left(run_state)
@@ -260,6 +264,7 @@ def texture_panel(run_state: E2ERun) -> None:
     run_state.screenshot("map-brushes-after-texture")
 
 
+@scenario(uis=("rmlui", "rust"))
 def settings_panel(run_state: E2ERun) -> None:
     """Map -> Settings: enabling a shading texture must open a texture dialog."""
     run_state.focus()
@@ -274,9 +279,3 @@ def settings_panel(run_state: E2ERun) -> None:
     run_state.screenshot_root("specular-on-root")
 
 
-SCENARIOS = {
-    "heightmap": heightmap,
-    "map_editors": map_editors,
-    "texture_panel": texture_panel,
-    "settings_panel": settings_panel,
-}

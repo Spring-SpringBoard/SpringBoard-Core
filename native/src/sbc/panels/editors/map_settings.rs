@@ -5,8 +5,8 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use crate::sbc::command_system::model::Models;
-use crate::sbc::panels::editor::Editor;
 use crate::sbc::envelope::envelope_fields;
+use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, Field, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
@@ -205,7 +205,9 @@ impl MapSettingsEditor {
             return;
         };
         let open = self.dialog.is_some();
-        let _ = interface.rml_ui().element_set_class(dialog, "hidden", !open);
+        let _ = interface
+            .rml_ui()
+            .element_set_class(dialog, "hidden", !open);
         if let Some(name) = &self.dialog {
             if let Some(title) = element_by_id(interface, document, "shading-dialog-title") {
                 let caption = SHADING_TOGGLES
@@ -307,7 +309,8 @@ impl Editor for MapSettingsEditor {
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         self.document = Some(document);
-        self.fields.bind(interface, document, changes, interactions)?;
+        self.fields
+            .bind(interface, document, changes, interactions)?;
         if let Some(host) = element_by_id(interface, document, "map-shading-modal") {
             interface
                 .rml_ui()
@@ -402,7 +405,11 @@ impl Editor for MapSettingsEditor {
         }
         if self.dialog.is_some() {
             for id in self.shading_grid.drain_clicks() {
-                if self.shading_grid.item(&id).is_some_and(|item| !item.is_directory) {
+                if self
+                    .shading_grid
+                    .item(&id)
+                    .is_some_and(|item| !item.is_directory)
+                {
                     if let Some(name) = self.dialog.take() {
                         let Some((field, _, _)) = SHADING_TOGGLES
                             .iter()
