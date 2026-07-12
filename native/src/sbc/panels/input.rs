@@ -4,27 +4,22 @@ use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{ChangeQueue, CommitRequest, InteractionEvent, InteractionQueue};
 use crate::sbc::panels::view::PanelView;
 
-const DRAG_THRESHOLD: f32 = 3.0;
 const FINE_DRAG_MULT: f32 = 0.1;
 /// Mask bit for Shift in `get_mod_key_state`.
 const SHIFT_BIT: u32 = 1;
 
-/// Three-state drag tracker.
+/// Which field the pointer is on, and whether RmlUi has called it a drag yet.
 enum DragState {
     Idle,
-    /// Mouse pressed but threshold not yet exceeded.
-    Pending {
-        field: String,
-        start_x: f32,
-    },
-    /// Dragging is active; value updates every mouse-move.
-    Dragging {
-        field: String,
-    },
+    /// Pressed. Becomes a drag if RmlUi says so, a click if it does not.
+    Pending { field: String },
+    /// RmlUi is dragging: the value follows the cursor until `dragend`.
+    Dragging { field: String },
 }
 
 /// Action to perform after processing interaction events.
 pub(crate) enum PendingAction {
+    DragStart(String),
     DragEnd(String),
     ClickEdit(String),
 }
@@ -32,12 +27,8 @@ pub(crate) enum PendingAction {
 /// What one `tick_drag` did.
 pub(crate) enum DragTick {
     Idle,
-    /// A drag just crossed the threshold; the field still holds its old value.
-    Started(String),
     /// The field's value moved and should be previewed.
     Moved(String),
-    /// The button came up while the drag was live; finish and commit it.
-    Released(String),
 }
 
 /// Handles all engine input callbacks (mouse, keyboard, text) for the panel.
@@ -103,27 +94,8 @@ impl PanelInput {
         };
         let x = mouse.x;
 
-        // A drag is *not* ended from `mouse.left`. The panel consumes the press,
-        // so the engine never registers the button as held and `left` reads
-        // false for the whole drag -- ending it here killed the drag on the tick
-        // it started, before it could move.
-        //
-        // The release arrives either as RmlUi's `mouseup` on the field, or (when
-        // the cursor left the field) as the engine's mouse-release callback,
-        // which the manager turns into `force_drag_release`.
-        if let DragState::Pending { field, start_x } = &self.drag {
-            if (x - *start_x).abs() > DRAG_THRESHOLD {
-                let field = field.clone();
-                self.last_mouse_x = *start_x;
-                self.drag = DragState::Dragging {
-                    field: field.clone(),
-                };
-                // Report the start before moving: the manager has to record the
-                // value the drag began from, so undo can return to it.
-                return DragTick::Started(field);
-            }
-        }
-
+        // Starting and ending a drag is RmlUi's business (`dragstart`/`dragend`,
+        // see `on_pointer`); this only moves the value while one is live.
         let DragState::Dragging { field } = &self.drag else {
             return DragTick::Idle;
         };
@@ -157,35 +129,43 @@ impl PanelInput {
         }
     }
 
+    /// Turn the field's pointer events into drag/click actions.
+    ///
+    /// RmlUi decides what is a drag: it captures the pointer on `dragstart` and
+    /// delivers `dragend` wherever the button is released, even off the panel.
+    /// A press that never became a drag is a click, and opens the inline editor.
     pub(crate) fn process_interactions(&mut self) -> Vec<PendingAction> {
         let events: Vec<InteractionEvent> = self.interactions.borrow_mut().drain(..).collect();
         let mut actions = Vec::new();
         for event in events {
             match event {
                 InteractionEvent::PointerDown { field } => {
-                    self.drag = DragState::Pending {
-                        field,
-                        start_x: self.cursor_x,
-                    };
+                    self.drag = DragState::Pending { field };
                     self.last_mouse_x = self.cursor_x;
                 }
-                InteractionEvent::PointerUp { field } => {
-                    // A drag ends wherever the button comes up. The cursor has
-                    // usually left the field by then, so the `mouseup` RmlUi
-                    // delivers names a *different* element -- requiring it to
-                    // match the dragged field left the drag stuck, and never
-                    // committed.
-                    let dragged = match std::mem::replace(&mut self.drag, DragState::Idle) {
-                        DragState::Dragging { field } => Some(field),
-                        DragState::Pending { field: pending, .. } if pending == field => {
-                            // Never crossed the threshold: it was a click.
-                            actions.push(PendingAction::ClickEdit(pending));
-                            None
-                        }
-                        _ => None,
+                InteractionEvent::DragStart { field } => {
+                    self.last_mouse_x = self.cursor_x;
+                    self.drag = DragState::Dragging {
+                        field: field.clone(),
                     };
-                    if let Some(dragged) = dragged {
-                        actions.push(PendingAction::DragEnd(dragged));
+                    // The manager records the value the drag began from, so undo
+                    // can return to it.
+                    actions.push(PendingAction::DragStart(field));
+                }
+                InteractionEvent::DragEnd { field } => {
+                    self.drag = DragState::Idle;
+                    actions.push(PendingAction::DragEnd(field));
+                }
+                InteractionEvent::PointerUp { field } => {
+                    // Only a press that never became a drag is a click. RmlUi
+                    // sends `mouseup` after `dragend` too, and that must not
+                    // reopen the editor on the field just dragged.
+                    if let DragState::Pending { field: pending } =
+                        std::mem::replace(&mut self.drag, DragState::Idle)
+                    {
+                        if pending == field {
+                            actions.push(PendingAction::ClickEdit(pending));
+                        }
                     }
                 }
             }
@@ -196,18 +176,6 @@ impl PanelInput {
     /// Drain commit requests.
     pub(crate) fn drain_changes(&mut self) -> Vec<CommitRequest> {
         self.changes.borrow_mut().drain(..).collect()
-    }
-
-    /// End an active drag from the engine mouse-release callback. RmlUi only
-    /// sends the field's `mouseup` when the pointer is still over that element;
-    /// releasing outside must still finish the drag.
-    pub(crate) fn force_drag_release(&mut self) -> Option<String> {
-        let field = match &self.drag {
-            DragState::Dragging { field } => Some(field.clone()),
-            DragState::Pending { .. } | DragState::Idle => None,
-        };
-        self.drag = DragState::Idle;
-        field
     }
 
     fn drag_field(&self) -> Option<&str> {

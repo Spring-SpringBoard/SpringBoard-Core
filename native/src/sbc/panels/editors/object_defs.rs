@@ -69,6 +69,9 @@ pub(crate) struct ObjectDefsView {
 
     fields: FieldSet,
     mode: PlaceMode,
+    /// Whether the map click places an object. The Add/Brush buttons toggle it;
+    /// with it off the map behaves normally and objects can be selected.
+    placing: bool,
     mode_clicks: Rc<RefCell<Vec<PlaceMode>>>,
     /// Team captions in the choice, paired with their ids.
     teams: Vec<(i32, String)>,
@@ -98,6 +101,8 @@ impl ObjectDefsView {
                 fields
             }),
             mode: PlaceMode::Set,
+            // Add is the mode the view opens in, and the button renders pressed.
+            placing: true,
             mode_clicks: Rc::new(RefCell::new(Vec::new())),
             teams: Vec::new(),
             teams_revision: usize::MAX,
@@ -117,9 +122,18 @@ impl ObjectDefsView {
 
     /// A field committed. A filter re-filters the grid; anything else is a
     /// placement setting, so re-arm placement with it.
+    ///
+    /// Only if the value actually moved. RmlUi fires `change` for the values the
+    /// editor writes back into the DOM, and re-arming on those dropped the user
+    /// out of whatever they were doing -- a refresh mid-drag re-entered placement
+    /// and started previewing ghosts over the object being moved.
     pub(crate) fn note_field_change(&mut self, name: &str, interface: &NativeInterfaceRef) {
         let base = resolve_base(name);
+        let before = self.fields.value(base);
         self.fields.read(base, interface);
+        if self.fields.value(base) == before {
+            return;
+        }
         if FILTER_FIELDS.contains(&base) {
             self.search_dirty = true;
         } else {
@@ -141,7 +155,13 @@ impl ObjectDefsView {
                 "LuaUI/images/scenedit/object-brush-add.png",
             ),
         ] {
-            let pressed = if mode == self.mode { " pressed" } else { "" };
+            // Pressed only while placement is actually armed: toggling the mode
+            // off must not leave the button looking active.
+            let pressed = if self.placing && mode == self.mode {
+                " pressed"
+            } else {
+                ""
+            };
             let id = if mode == PlaceMode::Set {
                 "objectdef-mode-add"
             } else {
@@ -411,6 +431,8 @@ impl ObjectDefsView {
 
         for id in self.grid.drain_clicks() {
             self.grid.set_selected(Some(&id));
+            // Picking a definition is a request to place it.
+            self.placing = true;
             self.request_dirty = true;
             self.grid.render(interface, document)?;
         }
@@ -424,6 +446,14 @@ impl ObjectDefsView {
         if let Some(mode) = mode_change {
             if mode != self.mode {
                 self.mode = mode;
+                self.needs_rebuild = true;
+                self.placing = true;
+            } else {
+                // Clicking the active button leaves placement, as Lua's action
+                // buttons toggle. Without this there is no way out of Add mode:
+                // every click on the map keeps placing, and objects can never be
+                // selected or dragged.
+                self.placing = !self.placing;
                 self.needs_rebuild = true;
             }
             self.request_dirty = true;
@@ -476,6 +506,9 @@ impl ObjectDefsView {
     pub(crate) fn take_state_request(&mut self) -> Option<StateRequest> {
         if !std::mem::take(&mut self.request_dirty) {
             return None;
+        }
+        if !self.placing {
+            return Some(StateRequest::Default);
         }
         let Some(def) = self.grid.selected().map(str::to_string) else {
             return Some(StateRequest::Default);

@@ -151,9 +151,15 @@ impl PanelManager {
 
         self.input.set_cursor(&self.interface);
 
-        // Pointer interactions (pointer down/up → drag or click-to-edit)
+        // Pointer interactions: RmlUi's drag, or a click that opens the editor.
         for action in self.input.process_interactions() {
             match action {
+                PendingAction::DragStart(field) => {
+                    // Remember what the drag began from, so undo returns to it.
+                    if let Some(ed) = self.editor.as_deref() {
+                        self.drag_original = Some((field.clone(), ed.field_value(&field)));
+                    }
+                }
                 PendingAction::DragEnd(field) => {
                     if let Some(ed) = self.editor.as_deref_mut() {
                         ed.drag_end_field(&field, &self.interface);
@@ -189,23 +195,12 @@ impl PanelManager {
 
         // Advance an in-progress drag from the polled cursor. Each step previews
         // on the engine, so a dragged number is visible before the mouse is
-        // released; the undoable command lands on release.
+        // released; the undoable command lands on `dragend`.
         match self
             .input
             .tick_drag(&self.interface, self.editor.as_deref_mut())
         {
-            DragTick::Started(field) => {
-                if let Some(ed) = self.editor.as_deref() {
-                    self.drag_original = Some((field.clone(), ed.field_value(&field)));
-                }
-            }
             DragTick::Moved(field) => self.preview_field(&field),
-            DragTick::Released(field) => {
-                if let Some(ed) = self.editor.as_deref_mut() {
-                    ed.drag_end_field(&field, &self.interface);
-                }
-                self.commit_drag(&field);
-            }
             DragTick::Idle => {}
         }
 
@@ -722,19 +717,16 @@ impl PanelManager {
             .mouse_press(&self.interface, &self.view, x, y, button)
     }
 
+    /// The engine hands mouse input to its RmlUi contexts before its event
+    /// clients, so a press over the panel never reaches here -- the panel never
+    /// becomes the engine's mouse owner and no release is delivered for it. A
+    /// field drag is therefore ended by RmlUi's own `dragend`, not from here.
     pub fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
         if !self.enabled {
             return Ok(());
         }
         self.input
-            .mouse_release(&self.interface, &self.view, x, y, button)?;
-        if let Some(field) = self.input.force_drag_release() {
-            if let Some(ed) = self.editor.as_deref_mut() {
-                ed.drag_end_field(&field, &self.interface);
-            }
-            self.commit_drag(&field);
-        }
-        Ok(())
+            .mouse_release(&self.interface, &self.view, x, y, button)
     }
 
     pub fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {

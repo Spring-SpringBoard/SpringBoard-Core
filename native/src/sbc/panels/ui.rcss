@@ -350,6 +350,11 @@ body {
 .field-numeric-button {
     height: 31px;
     padding: 0px 8px;
+    /* Opt into RmlUi's drag: it captures the pointer, so `dragend` arrives
+       wherever the button is released -- including outside the panel, where the
+       engine never tells us anything (its RmlUi consumes the press before the
+       event clients, so no mouse_release is ever delivered for a field). */
+    drag: drag;
 }
 
 .field-numeric-button:hover {

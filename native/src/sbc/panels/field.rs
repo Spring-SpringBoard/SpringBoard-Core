@@ -28,6 +28,10 @@ pub(crate) fn new_interaction_queue() -> InteractionQueue {
 pub enum InteractionEvent {
     PointerDown { field: String },
     PointerUp { field: String },
+    /// RmlUi's drag, which captures the pointer: `DragEnd` arrives wherever the
+    /// button comes up, including outside the panel.
+    DragStart { field: String },
+    DragEnd { field: String },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -119,30 +123,44 @@ pub(crate) fn on_enter(
     Ok(())
 }
 
-/// Register mousedown + mouseup listeners for drag support. Pushes
-/// `InteractionEvent`s into the interaction queue.
+/// Listen for the events a field drag is made of.
+///
+/// The drag is bracketed by RmlUi's own `dragstart`/`dragend`, not by the
+/// engine's mouse callbacks. The engine hands mouse input to its RmlUi contexts
+/// *before* its event clients, and RmlUi consumes a press over the panel -- so
+/// the plugin's `mouse_press` is never called for a click on a field, never
+/// becomes the engine's mouse owner, and never receives `mouse_release`. A drag
+/// released outside the panel could not be ended at all.
+///
+/// RmlUi captures the pointer for a drag, so `dragend` arrives wherever the
+/// button comes up, on or off the element. That is the signal to use. (The
+/// element must opt in with `drag: drag` in RCSS.)
+///
+/// `mousedown`/`mouseup` still bracket a *click*, which is what opens the inline
+/// editor when the pointer never moved far enough to become a drag.
 pub(crate) fn on_pointer(
     interface: &NativeInterfaceRef,
     element: u64,
     name: String,
     interactions: &InteractionQueue,
 ) -> Result<(), Error> {
-    let iq = interactions.clone();
-    let n = name.clone();
-    interface
-        .rml_ui()
-        .element_add_event_listener(element, "mousedown", false, move || {
-            iq.borrow_mut()
-                .push(InteractionEvent::PointerDown { field: n.clone() });
-        })?;
-    let iq2 = interactions.clone();
-    let n2 = name.clone();
-    interface
-        .rml_ui()
-        .element_add_event_listener(element, "mouseup", false, move || {
-            iq2.borrow_mut()
-                .push(InteractionEvent::PointerUp { field: n2.clone() });
-        })?;
+    for (event, make) in [
+        (
+            "mousedown",
+            (|field| InteractionEvent::PointerDown { field }) as fn(String) -> InteractionEvent,
+        ),
+        ("mouseup", |field| InteractionEvent::PointerUp { field }),
+        ("dragstart", |field| InteractionEvent::DragStart { field }),
+        ("dragend", |field| InteractionEvent::DragEnd { field }),
+    ] {
+        let queue = interactions.clone();
+        let field = name.clone();
+        interface
+            .rml_ui()
+            .element_add_event_listener(element, event, false, move || {
+                queue.borrow_mut().push(make(field.clone()));
+            })?;
+    }
     Ok(())
 }
 

@@ -535,6 +535,26 @@ class E2ERun:
         self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
 
+    def assert_no_command_after(self, marker: dict, class_name: str, **expected: object) -> None:
+        """Assert nothing more of this kind was sent after `marker`.
+
+        For proving something *stopped*: a drag that was released must not keep
+        emitting as the mouse moves on.
+        """
+        seen_marker = False
+        for entry in self.commands():
+            data = entry.get("data", {})
+            if data is marker or data.get("__cmd_id") == marker.get("__cmd_id"):
+                seen_marker = True
+                continue
+            if not seen_marker or data.get("className") != class_name:
+                continue
+            fields = command_fields(data)
+            if all(fields.get(key) == want for key, want in expected.items() if not callable(want)):
+                raise AssertionError(
+                    f"{class_name} was still being sent after the drag ended: {fields}"
+                )
+
     def assert_command_count(self, class_name: str, count: int) -> None:
         """Assert exactly `count` committed commands of this class were sent.
 

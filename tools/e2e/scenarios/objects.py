@@ -127,8 +127,10 @@ def props_panel(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.click(spot_x, spot_y, delay=0.8)        # place
-    run_state.key("Escape", delay=0.4)                # leave placement mode
-    # Clicking where it was placed selects it: the feature's collision volume
+    # Clicking the active Add button leaves placement -- otherwise every click on
+    # the map keeps placing and nothing can ever be selected or dragged.
+    run_state.click(left + 54, ACTION_Y, delay=0.6)
+    # Clicking where it was placed now selects it: the feature's collision volume
     # sits at its foot, so this is the point the ray actually hits.
     run_state.click(spot_x, spot_y, delay=0.8)
     run_state.move(spot_x + 260, spot_y + 220, delay=0.4)
@@ -163,6 +165,26 @@ def props_panel(run_state: E2ERun) -> None:
         key="pos",
         value=lambda v: isinstance(v, dict) and v.get("x", 0) > 1500.5,
     )
+
+    # Releasing a drag *outside* the panel must still end it. RmlUi never sees
+    # that mouseup, so the drag can only be ended by the engine's release
+    # callback -- and if that never arrives the field stays latched to the mouse
+    # forever, which is the bug this pins down.
+    # This drag ends up left of where it started, so the value comes down; the
+    # previous one left it at ~1620, so only this drag's commit can be below.
+    run_state.press(left + 58, 223)
+    run_state.move(left + 150, 223, delay=0.15)
+    run_state.move(left - 300, 500, delay=0.2)        # out over the map
+    run_state.release(left - 300, 500)
+    dragged = run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key="pos",
+        value=lambda v: isinstance(v, dict) and v.get("x", 9999) < 1400.0,
+    )
+    # Now moving the mouse must not keep changing it: the drag is over.
+    run_state.move(left - 600, 500, delay=0.4)
+    run_state.assert_no_command_after(dragged, "SetObjectParamCommand", key="pos")
+    run_state.screenshot("props-drag-released-outside")
 
     # A sub-object: Blocking's booleans are one table, so toggling one must send
     # the table under `blocking`, not a bare boolean.
