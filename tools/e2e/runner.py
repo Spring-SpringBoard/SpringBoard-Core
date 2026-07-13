@@ -700,6 +700,19 @@ class E2ERun:
 
     # ── Command-log assertions ─────────────────────────────────────
 
+    def engine_log(self) -> list[str]:
+        """The engine's infolog for this run, a line at a time.
+
+        The plugin logs what it did (a gallery control reporting its value, a
+        state reporting its angle), so a scenario can assert on behaviour that
+        never reaches the command bridge.
+        """
+        assert self.write_dir is not None
+        path = self.write_dir / "infolog.txt"
+        if not path.is_file():
+            return []
+        return path.read_text(errors="replace").splitlines()
+
     def commands(self) -> list[dict]:
         """Every command envelope the UI sent to the command bridge.
 

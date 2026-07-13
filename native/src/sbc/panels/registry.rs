@@ -8,10 +8,19 @@ pub(crate) enum Tab {
     Map,
     Env,
     Misc,
+    /// The control gallery. Off unless `SBC_DEV_PANEL=1`, so it neither ships in
+    /// the editor's tab bar nor changes any other screenshot.
+    Dev,
 }
 
 impl Tab {
-    pub(crate) const ALL: [Tab; 4] = [Tab::Objects, Tab::Map, Tab::Env, Tab::Misc];
+    pub(crate) fn all() -> Vec<Tab> {
+        let mut tabs = vec![Tab::Objects, Tab::Map, Tab::Env, Tab::Misc];
+        if dev_panel() {
+            tabs.push(Tab::Dev);
+        }
+        tabs
+    }
 
     pub(crate) fn as_str(self) -> &'static str {
         match self {
@@ -19,8 +28,14 @@ impl Tab {
             Tab::Map => "Map",
             Tab::Env => "Env",
             Tab::Misc => "Misc",
+            Tab::Dev => "Dev",
         }
     }
+}
+
+pub(crate) fn dev_panel() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| matches!(std::env::var("SBC_DEV_PANEL").as_deref(), Ok("1")))
 }
 
 /// One editor view, registered from its own module. Adding a view means adding

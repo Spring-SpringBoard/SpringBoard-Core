@@ -182,7 +182,7 @@ impl PanelView {
         };
 
         let mut html = String::new();
-        for tab in Tab::ALL {
+        for tab in Tab::all() {
             let active = if tab == self.current_tab {
                 " active"
             } else {
@@ -195,7 +195,7 @@ impl PanelView {
         }
         interface.rml_ui().element_set_inner_rml(bar, &html)?;
 
-        for tab in Tab::ALL {
+        for tab in Tab::all() {
             let id = format!("tab-{}", tab.as_str());
             let Some(button) = element_by_id(interface, doc, &id) else {
                 continue;
@@ -276,7 +276,7 @@ impl PanelView {
         self.current_tab = tab;
         self.active_editor = None;
 
-        for candidate in Tab::ALL {
+        for candidate in Tab::all() {
             let id = format!("tab-{}", candidate.as_str());
             if let Some(button) = element_by_id(interface, doc, &id) {
                 let _ = interface

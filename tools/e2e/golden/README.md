@@ -129,6 +129,25 @@ Shift+wheel resizes the object brush.
 | `brush-size-default` | Brush mode, Size 100. |
 | `brush-size-enlarged` | Shift+wheel raised it to 264 — the panel's Size field follows the wheel. That it really is a bigger brush is asserted from the paint: one object at the default size, seven after. |
 
+## gallery-rust / gallery-pickers-rust
+
+The Dev tab's **control gallery** — a kitchen sink holding every field type. It is
+behind `SBC_DEV_PANEL=1`, so it neither ships in the tab bar nor appears in any
+other scenario's screenshots (`just dev-panel` opens it by hand).
+
+Each control reports the value it produced (`dev-fields: <field> = <value>` in the
+log) and the scenario asserts on that. It has to: a **drag never fires a DOM
+change**, so there is nothing else to observe.
+
+| screen | what it pins down |
+| --- | --- |
+| `fields-at-rest` | One image of the **whole control set**: string (and empty string), numeric plain/bounded/3-decimal, boolean on and off, choice, colour, asset, and a group on one row. The cheapest way to see what everything looks like, and what a restyle would change. |
+| `numeric-dragging` | Mid-drag on a numeric: the value moves (50 → 88) without the field ever entering text mode, and the pointer is pinned and hidden. |
+| `choice-open` | The choice list, open, showing its items. |
+| `fields-after-input` | After driving every control: string typed, numeric typed, bounded dragged, boolean toggled off, choice on "Second". |
+| `colour-picker` | The colour modal the colour field opens (gradient, hue strip, preview, OK/Cancel). Full-frame — the modal is drawn beside the panel, outside this case's crop. |
+| `colour-picker-closed` | Escape closes it. |
+
 ## cursortip-rust
 
 Hovering a unit or feature shows a tooltip describing it.

@@ -94,6 +94,12 @@ test-all: test-unit build-native
 [group('test')]
 verify-native: lint test-unit build-native
 
+# Run the editor with the Dev tab's control gallery: every field control in one
+# place, to look at or drive by hand. Off in a normal session.
+[group('run')]
+dev-panel config="config/ui-rust.json": build-native
+    SBC_DEV_PANEL=1 bash tools/dev/launch.sh --config "{{config}}"
+
 # Build and run a long-lived isolated Spring editor session.
 [group('run')]
 run config="config/ui-chili.json": build-native

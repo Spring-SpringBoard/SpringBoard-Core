@@ -66,7 +66,10 @@ Objects first (the user's priority), then Map, then Env, then Misc.
 
 ## Editor behaviours
 
-Cross-cutting behaviour, not tied to one tab. These need scenarios of their own.
+Cross-cutting behaviour, not tied to one tab. The **controls and dialogs**
+themselves have moved to their own section below: they belong to no editor, and
+are exercised in one place (the Dev tab's control gallery) rather than
+incidentally, inside whichever editor happens to use one.
 
 | # | Behaviour | Where | Stage | Evidence |
 |---|---|---|---|---|
@@ -83,21 +86,41 @@ Cross-cutting behaviour, not tied to one tab. These need scenarios of their own.
 | 25 | Copy / Cut / Paste | `actions/clipboard.rs` | TODO | |
 | 26 | Undo / Redo | `command_system/history.rs` | TODO | |
 | 27 | Toolbar — New / Load / Save / Save As / Import / Export | `actions/` | TODO | |
-| 28 | Dialogs — New Project | `panels/new_project_dialog.rs` | TODO | |
-| 29 | Dialogs — File (load/save) | `panels/file_dialog.rs` | TODO | |
-| 30 | Numeric field — click to edit, type, commit | `panels/fields/numeric.rs`, `panels/input.rs` | TODO | |
-| 31 | Numeric field — drag to change; release outside still ends the drag; Shift = fine | `panels/input.rs` | VERIFIED | The drag is RmlUi's (`drag: drag` + pointer capture), which is the only thing that delivers a `dragend` when the button comes up outside the panel — the engine never hands the plugin a release for a press RmlUi consumed. The pointer is pinned to the drag anchor and drawn as the empty cursor, as the Chili version does. E2E `props_panel` (`props-pos-dragging`, `props-drag-released-outside`, then asserting no further command as the mouse keeps moving). |
-| 32 | Colour field — picker modal, live preview, OK/Cancel | `panels/color_picker.rs` | TODO | |
-| 33 | Asset field — picker modal, folder navigation, pick | `panels/asset_picker.rs` | TODO | |
-| 34 | Choice / Boolean / String fields | `panels/fields/` | TODO | |
-| 35 | Grid view — selection, folder navigation, thumbnails | `panels/grid.rs` | TODO | |
-| 36 | Tooltips on every control | `panels/field.rs` (`bind_tooltip`) | TODO | |
 | 36b | Cursor tooltip — hovering a unit/feature on the map | `panels/cursortip.rs` | VERIFIED | A port of `gui_rmlui_cursortip.lua`: name + health (features), plus def name, team and experience (units). Picks with a 16px **screen rectangle**, not a ray — the engine's GUI ray does not report SpringBoard's features — and matches the object's *drawPos* (a tree's base, not its crown). Hidden while a button is down or over the panel. E2E `cursortip`: no tip over empty ground, tip present over the feature, asserted by counting the tip's near-black pixels. Suppressed in every other scenario (`SBC_HIDE_CURSORTIP`), since a tip that follows the cursor lands in the middle of every map capture. |
 | 37 | Brush preview on the map (pattern texture under cursor) | `states/highlight.rs` | TODO | |
 | 38 | Ray-trace correctness (click, drag and preview agree) | `states/state.rs` (`cursor`) | TODO | |
 | 39 | Dev console | `devconsole/` | TODO | |
 | 40 | Chonsole | `chonsole/` | TODO | |
 | 41 | Status panel (memory/CPU + recent commands) | not ported | TODO | Not ported at all. |
+
+---
+
+## Common controls and dialogs
+
+The controls themselves, independent of any editor that happens to use one. They
+are exercised in the **Dev tab's control gallery** (`panels/editors/dev_fields.rs`),
+a kitchen sink holding every field type. It is behind `SBC_DEV_PANEL=1`, so it
+neither ships in the tab bar nor appears in any other scenario's screenshots.
+
+`fields-at-rest` is one image of the entire control set — the cheapest way to see
+what everything looks like. Each control also *reports the value it produced*
+(`dev-fields: <field> = <value>` in the log), which is what the scenario asserts
+on: a drag, for one, never fires a DOM change, so there is nothing else to see.
+
+| # | Control | Where | Stage | Evidence |
+|---|---|---|---|---|
+| C1 | String field — click, type, commit | `panels/fields/string.rs` | VERIFIED | Reports `text = "typed"`. E2E `gallery`. |
+| C2 | Numeric field — click to edit, type, commit | `panels/fields/numeric.rs` | VERIFIED | Reports `number = 7.5`. E2E `gallery`. |
+| C3 | Numeric field — drag to change; release outside still ends the drag | `panels/input.rs` | VERIFIED | The drag is RmlUi's (`drag: drag` + pointer capture), which is the only thing that delivers a `dragend` when the button comes up outside the panel — the engine never hands the plugin a release for a press RmlUi consumed. The pointer is pinned to the drag anchor and drawn as the empty cursor, as the Chili version does. E2E `gallery` (`numeric-dragging`, and the value moves 50 → 80 without the field ever entering text mode) and `props_panel` (`props-drag-released-outside`, then asserting no further command as the mouse keeps moving). |
+| C4 | Boolean field — toggle | `panels/fields/boolean.rs` | VERIFIED | Reports `flag_on = false` after the click. E2E `gallery`. |
+| C5 | Choice field — open the list, pick an item | `panels/fields/choice.rs` | VERIFIED | The open list is a golden (`choice-open`); picking reports `choice = "Second"`. E2E `gallery`. |
+| C6 | Colour field — picker modal, OK/Cancel | `panels/color_picker.rs` | DONE | The modal opens from the field and closes on Escape (goldens `colour-picker`, `colour-picker-closed`). **Not VERIFIED:** picking a colour and asserting the value it commits is not driven yet. |
+| C7 | Asset field — picker modal, folder navigation, pick | `panels/asset_picker.rs` | TODO | In the gallery at rest; no scenario drives the modal. |
+| C8 | Group layout (XYZ on one row) | `panels/editor_base.rs` | VERIFIED | Visible in `fields-at-rest`. |
+| C9 | Grid view — selection, folder navigation, thumbnails | `panels/grid.rs` | DONE | The def grid (selection + thumbnails) is verified by `def_grid` and `units_panel`; the asset grid's folder navigation is not driven by any scenario. |
+| C10 | Tooltips on every control | `panels/field.rs` (`bind_tooltip`) | TODO | |
+| C11 | Dialogs — New Project | `panels/new_project_dialog.rs` | TODO | |
+| C12 | Dialogs — File (load/save) | `panels/file_dialog.rs` | TODO | |
 
 ---
 

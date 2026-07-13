@@ -22,7 +22,7 @@ images are already filed under.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable
 
 #: The UI implementation each case drives, and the chonsole that goes with it.

@@ -3,6 +3,7 @@
 
 mod brush;
 mod def_filters;
+mod dev_fields;
 mod env_lighting;
 mod env_sky;
 mod env_water;

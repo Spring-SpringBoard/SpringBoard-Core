@@ -12,7 +12,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from scenarios import console, env, map, misc, objects, shell  # noqa: F401 -- registers
+from scenarios import (  # noqa: F401 -- importing the modules registers them
+    console,
+    env,
+    gallery,
+    map,
+    misc,
+    objects,
+    shell,
+)
 from scenarios.registry import REGISTERED
 
 if TYPE_CHECKING:

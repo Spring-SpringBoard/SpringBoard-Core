@@ -1,0 +1,18 @@
+{
+  "choice-open": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T07:50:56"
+  },
+  "fields-after-input": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T07:50:57"
+  },
+  "fields-at-rest": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T07:50:52"
+  },
+  "numeric-dragging": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T07:50:55"
+  }
+}
