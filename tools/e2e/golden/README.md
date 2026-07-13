@@ -129,6 +129,20 @@ Shift+wheel resizes the object brush.
 | `brush-size-default` | Brush mode, Size 100. |
 | `brush-size-enlarged` | Shift+wheel raised it to 264 — the panel's Size field follows the wheel. That it really is a bigger brush is asserted from the paint: one object at the default size, seven after. |
 
+## cursortip-rust
+
+Hovering a unit or feature shows a tooltip describing it.
+
+| screen | what it pins down |
+| --- | --- |
+| `no-tooltip` | Empty ground: no tip. |
+| `hover-tooltip` | Hovering the feature: the tip appears next to the cursor with its name and health. Asserted by counting the tip's near-black pixels, not by diffing — the map shimmers. |
+
+The tip follows the cursor, so it would land in the middle of every other map
+capture: the harness hides it (`SBC_HIDE_CURSORTIP`) and this scenario is the one
+that asks for it back (`env=` on `@scenario`). Both frames are `park=False` — the
+tip is drawn *at* the pointer, so parking it out of shot takes the subject away.
+
 ## native-panel-rust / native-dev-console-rust
 
 Predate this file. The panel walk-through and the dev console (cleared first, so an

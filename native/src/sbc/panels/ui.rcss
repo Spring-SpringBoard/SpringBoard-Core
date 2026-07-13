@@ -123,6 +123,19 @@ body {
     pointer-events: none;
 }
 
+/* The cursor tip over a unit/feature: a title, then one row per fact. Block, or
+   RmlUi runs them together on one line. */
+.tip-title {
+    display: block;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.tip-row {
+    display: block;
+    color: #cfd6d0;
+}
+
 /* --- Editor button strip --- */
 /* Stops at 130dp, where the action bar begins. Overlapping it would put this
    scroll container over the toolbar's top edge and swallow clicks there. */

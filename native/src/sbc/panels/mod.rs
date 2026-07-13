@@ -1,5 +1,6 @@
 mod asset_picker;
 mod color_picker;
+mod cursortip;
 mod drag_cursor;
 mod editor;
 mod editor_base;

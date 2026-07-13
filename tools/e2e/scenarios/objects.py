@@ -40,6 +40,10 @@ AMOUNT_Y = 757
 # selection box, and the command log for what was actually sent.
 MAP_TOLERANCE = 4000
 
+# The cursor tooltip's background (`.native-tooltip` in ui.rcss). Near-black, and
+# nothing on the map is, so counting these pixels says whether the tip is drawn.
+TOOLTIP_COLOR = "#0b0d0c"
+
 
 def _open(run_state: E2ERun, editor_x: int) -> int:
     """Objects tab, then one of its editors. Returns the panel's left edge."""
@@ -300,29 +304,56 @@ def collision(run_state: E2ERun) -> None:
     run_state.golden("collision-fields", crop="right-panel")
 
 
-@scenario(uis=("rmlui",))
+def _tip_box(cursor_x: int, cursor_y: int) -> tuple[int, int, int, int]:
+    """Where the cursor tooltip is drawn, excluding the pointer itself.
+
+    The tip is offset (16, 12) from the cursor; the pointer arrow occupies about
+    20px from it. Start the box past the arrow, or its black pixels get counted
+    as a tooltip and one is "found" wherever the cursor is.
+    """
+    return (cursor_x + 40, cursor_y + 30, 320, 90)
+
+
+@scenario(uis=("rmlui", "rust"), env={"SBC_HIDE_CURSORTIP": "0"})
 def cursortip(run_state: E2ERun) -> None:
-    """Place a feature, then hover it. The RmlUi cursor tooltip must appear next
-    to the cursor (the Chili cursortip widget is disabled in RmlUi mode)."""
+    """Hovering a feature shows a tooltip describing it, next to the cursor.
+
+    The tip is near-black on green grass and nothing else on the map is, so its
+    pixels are counted rather than diffed: that says exactly whether it is on
+    screen, where a frame comparison would just measure the trees shimmering.
+    """
     run_state.focus()
     left = _open(run_state, 110)                      # Features
-
-    # The first unfiltered def is `geovent`, which has no model and so cannot be
-    # hit by a screen ray. Filter to trees and take the first of those.
-    run_state.click(left + 180, SEARCH_Y, delay=0.15)
-    run_state.type_text("tree")
-    run_state.click(left + 55, GRID_Y, delay=0.4)
+    _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
+    run_state.wheel(spot_x, spot_y, clicks=8, up=True)
     run_state.click(spot_x, spot_y, delay=0.6)        # place it
     run_state.key("Escape", delay=0.3)
-    run_state.move(spot_x + 200, spot_y + 200, delay=0.3)
-    run_state.golden("placed")
 
-    # The model sits slightly up-left of the click point on screen.
-    run_state.move(spot_x - 20, spot_y, delay=0.6)    # hover the tree
-    run_state.golden("hover-tooltip")
+    # Empty ground: no tip. `park=False` throughout -- the tip is drawn *at* the
+    # cursor, so parking it out of shot would take the subject with it.
+    run_state.move(spot_x + 320, spot_y - 260, delay=0.6)
+    empty = run_state.golden(
+        "no-tooltip", crop=None, tolerance=MAP_TOLERANCE, park=False
+    )
+    # The box where the tip is drawn: down-right of the cursor, and clear of the
+    # cursor itself -- the pointer is a black arrow, and counting it as tooltip
+    # would find one everywhere.
+    if run_state.count_color(empty, _tip_box(spot_x + 320, spot_y - 260), TOOLTIP_COLOR):
+        raise AssertionError("a tooltip over empty ground")
+
+    # Hover the point the tree was placed on. The pick projects the object's
+    # *drawPos* -- a tree's base, not its crown -- and matches within 16px of the
+    # cursor, so hovering the foliage up-left of it finds nothing.
+    run_state.move(spot_x, spot_y, delay=0.8)
+    hovered = run_state.golden(
+        "hover-tooltip", crop=None, tolerance=MAP_TOLERANCE, park=False
+    )
+    tip = run_state.count_color(hovered, _tip_box(spot_x, spot_y), TOOLTIP_COLOR)
+    if tip < 500:
+        raise AssertionError(f"hovering the feature showed no tooltip ({tip} px)")
 
 
 def _placed(run_state: E2ERun, since: int = 0) -> list[dict]:

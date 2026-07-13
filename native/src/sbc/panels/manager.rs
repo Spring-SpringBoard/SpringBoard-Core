@@ -8,6 +8,7 @@ use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::envelope::as_preview;
 use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
+use crate::sbc::panels::cursortip::CursorTip;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
@@ -42,6 +43,8 @@ pub(crate) struct PanelManager {
     asset_picker: AssetPicker,
     file_dialog: FileDialog,
     new_project: NewProjectDialog,
+    /// The unit/feature tooltip under the cursor.
+    cursor_tip: CursorTip,
     /// The callback the open file dialog will run against its accepted result,
     /// set when a toolbar action opens the dialog.
     pending_accept: Option<FileAcceptFn>,
@@ -100,6 +103,7 @@ impl PanelManager {
             asset_picker: AssetPicker::default(),
             file_dialog: FileDialog::default(),
             new_project: NewProjectDialog::default(),
+            cursor_tip: CursorTip::default(),
             pending_accept: None,
             pending_actions: Vec::new(),
             editing: None,
@@ -242,6 +246,7 @@ impl PanelManager {
         self.sync_brush(models);
         self.dispatch_state_request(models);
         self.sync_state_selection(models);
+        self.update_cursor_tip()?;
 
         self.view.update(&self.interface)
     }
@@ -627,6 +632,25 @@ impl PanelManager {
             return;
         };
         models.with::<StateManager, _>(|states, models| states.set_state(request, models));
+    }
+
+    /// The hover tooltip for whatever unit or feature is under the cursor. Not
+    /// shown while the cursor is over the panel, which owns its own tooltips.
+    fn update_cursor_tip(&mut self) -> Result<(), Error> {
+        let Some(document) = self.view.document_handle() else {
+            return Ok(());
+        };
+        // The panel is `width: 500dp` against the right edge (see ui.rcss).
+        const PANEL_WIDTH: f32 = 500.0;
+        let over_panel = match (
+            self.interface.input().get_mouse_state(),
+            self.interface.display().get_view_geometry(),
+        ) {
+            (Ok(mouse), Ok(geometry)) => mouse.x >= geometry.viewSizeX as f32 - PANEL_WIDTH,
+            _ => true,
+        };
+        self.cursor_tip
+            .update(&self.interface, document, over_panel)
     }
 
     fn sync_state_selection(&mut self, models: &mut Models) {

@@ -1,19 +1,19 @@
 *CRITICAL* Instructions for AI: When editing this file, you can _ONLY_ mark things as [DONE] at the left-most part of the line. You can also remove [DONE] if you realize that any of the things listed as DONE actually isn't done. You cannot alter any text outside of that.
 
 Basic controls:
-[NOT FIXED]- Numeric: if I click and drag, and release the mouse button outside of the control, it doesn't seem to actually release it. If I keep dragging after I released the mouse button, it will still keep changing values, as if I'm in the click+drag mode still.
+[DONE][NOT FIXED]- Numeric: if I click and drag, and release the mouse button outside of the control, it doesn't seem to actually release it. If I keep dragging after I released the mouse button, it will still keep changing values, as if I'm in the click+drag mode still.
 [PARTIALLY FIXED]- Tooltips appear but I think you didn't add all the tooltips we had originally
 
 Object->Properties
 [NOT FIXED - missing a lot of separators original had]- Object properties are missing a LOT of fields. I won't even bother enumerating all the stuff that's missing, as there's a ton. You must look at how Lua does it.
 
 Object->Unit/Features issues:
-[NOT FIXED]- Add/Brush is missing numerous numeric settings, see original chili
+[DONE][NOT FIXED]- Add/Brush is missing numerous numeric settings, see original chili
 - This is still a problem and it affects most brushes (terrain too). Features add is not correctly ray-tracing. It's almost as if mouse Y is inverse?
-[NOT FIXED - poor preview, doesn't have feature texture]- Features add is not actually previewing the to-be-placed feature; It's rendering some strange green circle. The green circle might be an OK addition to the ChiliUI one, and would help with geovents and similar features with no preview - but it's not OK to replace the actual feature rendering.
-[NOT FIXED]- Seems like there are two selection systems going on. If I click on the feature directly, there's this new yellow-ish circle, but if I do a drag select there's a green rectangle (potentially some Chili relic? I can't tell)
-[NOT FIXED]  - There should be only one selection active. If Chili/Lua still has something going on, that should be disabled when in rust mode. Likewise, I don't think you need to reinvent this, rendering it behind the feature as a rectangle was fine. The orange one is a different color (needlessly) and most importantly, doesn't even render right (needs to render _below_, not above units/features). The orange one also doesn't seem to work with multi-select, and I can't seem to deselect things by clicking ESC
-[NOT FIXED]  - With that in mind, make sure you implement proper object selection in rust. I assume you didn't do this right.
+[DONE][NOT FIXED - poor preview, doesn't have feature texture]- Features add is not actually previewing the to-be-placed feature; It's rendering some strange green circle. The green circle might be an OK addition to the ChiliUI one, and would help with geovents and similar features with no preview - but it's not OK to replace the actual feature rendering.
+[DONE][NOT FIXED]- Seems like there are two selection systems going on. If I click on the feature directly, there's this new yellow-ish circle, but if I do a drag select there's a green rectangle (potentially some Chili relic? I can't tell)
+[DONE][NOT FIXED]  - There should be only one selection active. If Chili/Lua still has something going on, that should be disabled when in rust mode. Likewise, I don't think you need to reinvent this, rendering it behind the feature as a rectangle was fine. The orange one is a different color (needlessly) and most importantly, doesn't even render right (needs to render _below_, not above units/features). The orange one also doesn't seem to work with multi-select, and I can't seem to deselect things by clicking ESC
+[DONE][NOT FIXED]  - With that in mind, make sure you implement proper object selection in rust. I assume you didn't do this right.
 
 Map->Settings
 [NOT FIXED - texture settings aren't just check boxes.. they are meant to allow you to choose/create textures]- Settings are probably missing a TON of fields too, this is also half-assed. See Lua.

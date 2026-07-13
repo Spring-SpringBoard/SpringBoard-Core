@@ -19,6 +19,8 @@ class Case:
     scenario: str
     crop: str | None = None
     tags: frozenset[str] = field(default_factory=frozenset)
+    #: Overrides the harness's engine environment for this case.
+    env: dict[str, str] = field(default_factory=dict)
 
 
 def targets() -> tuple[str, ...]:
@@ -54,6 +56,7 @@ def target_cases(target: str) -> list[Case]:
             scenario=registered.scenario,
             crop=registered.crop,
             tags=_tags_for(target, flags),
+            env=registered.env,
         )
         for name, flags in registered.cases.items()
     ]

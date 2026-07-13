@@ -38,6 +38,9 @@ class Registered:
     #: Case name -> engine flags. One entry per implementation the scenario runs.
     cases: dict[str, dict[str, str]]
     crop: str | None = None
+    #: Environment overriding the harness defaults, for a scenario that needs one
+    #: of the things the harness normally holds still (the cursor tooltip).
+    env: dict[str, str] = field(default_factory=dict)
 
 
 REGISTERED: dict[str, Registered] = {}
@@ -49,6 +52,7 @@ def scenario(
     crop: str | None = None,
     target: str | None = None,
     cases: dict[str, dict[str, str]] | None = None,
+    env: dict[str, str] | None = None,
 ) -> Callable[[Callable], Callable]:
     """Register the decorated function as a scenario, and as its own e2e target.
 
@@ -67,6 +71,7 @@ def scenario(
             func=func,
             cases=cases if cases is not None else _cases_for(name, uis),
             crop=crop,
+            env=env or {},
         )
         return func
 

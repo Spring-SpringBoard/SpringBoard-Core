@@ -70,15 +70,15 @@ Cross-cutting behaviour, not tied to one tab. These need scenarios of their own.
 
 | # | Behaviour | Where | Stage | Evidence |
 |---|---|---|---|---|
-| 15 | Selection — click to select a unit/feature/area | `states/state.rs` (DefaultState) | TODO | |
-| 16 | Selection — shift-click toggles (multi-select) | `states/state.rs` | TODO | |
-| 17 | Selection — box/rectangle select by drag | `states/rectangle_select.rs` | TODO | |
-| 18 | Selection — click empty ground clears; Escape clears | `states/state.rs` | TODO | |
-| 19 | Selection — the marker renders under the object, green, features only | `states/highlight.rs`, `sbc.rs` | TODO | |
-| 20 | Object drag (move) | `states/manipulate.rs` | TODO | |
-| 21 | Object rotate (R) | `states/manipulate.rs` | TODO | |
-| 22 | Object placement — Set mode (model ghost at cursor) | `states/add_object.rs` | TODO | |
-| 23 | Object placement — Brush/scatter mode | `states/add_object.rs` | TODO | |
+| 15 | Selection — click to select a unit/feature/area | `states/state.rs` (DefaultState) | VERIFIED | Clicking a feature selects it and draws the box. E2E `deselect` (goldens `feature-selected`), and `props_panel` proves it is *really* selected by editing it afterwards. |
+| 16 | Selection — shift-click toggles (multi-select) | `states/state.rs` | DONE | Multi-select via box-select is verified (two trees selected and rotated as a pair, E2E `rotation`). The **shift-click** toggle itself has no scenario yet. |
+| 17 | Selection — box/rectangle select by drag | `states/rectangle_select.rs` | VERIFIED | The rectangle is drawn while dragging and the covered feature ends up selected. E2E `selection` (goldens `box-dragging`, `box-selected`, then Properties edits it — nothing selected would mean nothing to edit). |
+| 18 | Selection — click empty ground clears; Escape clears | `states/state.rs` | VERIFIED | Both, plus a box-select over empty ground dropping the previous selection. Asserted by counting the box's pure-green pixels (0 / present / 0), which is exact where a frame diff would just measure the map shimmering. E2E `deselect`, 6 screens. |
+| 19 | Selection — the marker renders under the object, green, features only | `states/highlight.rs`, `sbc.rs` | VERIFIED | Drawn in the pre-unit pass, so it sits *under* the model, as `SelectionManager:DrawWorldPreUnit` does. Green box, features only; units glow through the engine's own selection. Visible in every `deselect` golden. |
+| 20 | Object drag (move) | `states/manipulate.rs` | DONE | The object no longer moves during the drag: a **ghost** is drawn where it would land and only the release commits (as `drag_object_state.lua` does). The `drag` cursor is applied. **Not VERIFIED:** no scenario drives an object drag yet. |
+| 21 | Object rotate (Ctrl-drag) | `states/manipulate.rs` | VERIFIED | Ctrl-drag rotates the selection about its midpoint; ghosts show the would-be pose while the originals stay put; release commits both objects in one undo group. R is deliberately **not** bound (a keyboard-started rotate has no drag to drive it and no release to end it, and Lua's own comment says the two entries should not coexist). E2E `rotation`, 3 screens; asserted on the *positions* (the pair's z-spread must grow) — the old facing assertion passed on the trees' random placement yaw without the rotation doing anything. |
+| 22 | Object placement — Set mode (model ghost at cursor) | `states/add_object.rs` | VERIFIED | The real textured model is ghosted at the cursor, one per object the click will place (amount 5 → five ghosts, at the exact spots used). E2E `units_panel` (`amount-5-preview`, `amount-5-placed`). |
+| 23 | Object placement — Brush/scatter mode | `states/add_object.rs` | VERIFIED | Brush ghosts what it will place, and Shift+wheel resizes it through the shared brush settings so the panel's Size field follows. Proved by painting: 1 object at size 100, 7 at 264, spread 415 world units. E2E `brush_size`. (`noise` defaulted to 0 where Lua's is 100, so repeat dabs stacked on identical points — fixed.) |
 | 24 | Object delete | `states/`, object commands | TODO | |
 | 25 | Copy / Cut / Paste | `actions/clipboard.rs` | TODO | |
 | 26 | Undo / Redo | `command_system/history.rs` | TODO | |
@@ -86,12 +86,13 @@ Cross-cutting behaviour, not tied to one tab. These need scenarios of their own.
 | 28 | Dialogs — New Project | `panels/new_project_dialog.rs` | TODO | |
 | 29 | Dialogs — File (load/save) | `panels/file_dialog.rs` | TODO | |
 | 30 | Numeric field — click to edit, type, commit | `panels/fields/numeric.rs`, `panels/input.rs` | TODO | |
-| 31 | Numeric field — drag to change; release outside still ends the drag; Shift = fine | `panels/input.rs` | TODO | |
+| 31 | Numeric field — drag to change; release outside still ends the drag; Shift = fine | `panels/input.rs` | VERIFIED | The drag is RmlUi's (`drag: drag` + pointer capture), which is the only thing that delivers a `dragend` when the button comes up outside the panel — the engine never hands the plugin a release for a press RmlUi consumed. The pointer is pinned to the drag anchor and drawn as the empty cursor, as the Chili version does. E2E `props_panel` (`props-pos-dragging`, `props-drag-released-outside`, then asserting no further command as the mouse keeps moving). |
 | 32 | Colour field — picker modal, live preview, OK/Cancel | `panels/color_picker.rs` | TODO | |
 | 33 | Asset field — picker modal, folder navigation, pick | `panels/asset_picker.rs` | TODO | |
 | 34 | Choice / Boolean / String fields | `panels/fields/` | TODO | |
 | 35 | Grid view — selection, folder navigation, thumbnails | `panels/grid.rs` | TODO | |
 | 36 | Tooltips on every control | `panels/field.rs` (`bind_tooltip`) | TODO | |
+| 36b | Cursor tooltip — hovering a unit/feature on the map | `panels/cursortip.rs` | VERIFIED | A port of `gui_rmlui_cursortip.lua`: name + health (features), plus def name, team and experience (units). Picks with a 16px **screen rectangle**, not a ray — the engine's GUI ray does not report SpringBoard's features — and matches the object's *drawPos* (a tree's base, not its crown). Hidden while a button is down or over the panel. E2E `cursortip`: no tip over empty ground, tip present over the feature, asserted by counting the tip's near-black pixels. Suppressed in every other scenario (`SBC_HIDE_CURSORTIP`), since a tip that follows the cursor lands in the middle of every map capture. |
 | 37 | Brush preview on the map (pattern texture under cursor) | `states/highlight.rs` | TODO | |
 | 38 | Ray-trace correctness (click, drag and preview agree) | `states/state.rs` (`cursor`) | TODO | |
 | 39 | Dev console | `devconsole/` | TODO | |

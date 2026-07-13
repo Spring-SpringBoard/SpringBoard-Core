@@ -114,9 +114,13 @@ class E2ERun:
         # console hidden -- a scenario that wants it presses F8.
         env["SBC_STILL_MODELS"] = "1"
         env["SBC_HIDE_CONSOLE"] = "1"
+        # The cursor tooltip follows the pointer, so it lands in the middle of any
+        # map capture. Off unless the scenario is about it (`env=` on @scenario).
+        env["SBC_HIDE_CURSORTIP"] = "1"
         # Debug lines land in the run's infolog, so a failure can be explained
         # afterwards from the artifact rather than by re-running with printfs.
         env["SBC_LOG_LEVEL"] = "debug"
+        env.update(self.case.env)
         self.write_dir = write_dir
         self.command = cmd
         game_dir = write_dir / "games" / GAME_DIRNAME
@@ -510,12 +514,18 @@ class E2ERun:
 
         x, y, width, height = region
         result = subprocess.run(
+            # Mark the matches white, *then* blacken everything that is not white
+            # with the fuzz switched off. The obvious order -- blacken the
+            # non-matches first -- is a trap: for a near-black target colour the
+            # black it just painted is itself within fuzz of the target, so every
+            # pixel comes back a match.
             [
                 "convert", str(raw),
                 "-crop", f"{width}x{height}+{x}+{y}", "+repage",
                 "-fuzz", fuzz,
-                "-fill", "black", "+opaque", color,
                 "-fill", "white", "-opaque", color,
+                "-fuzz", "0%",
+                "-fill", "black", "+opaque", "white",
                 "-format", "%[fx:int(mean*w*h)]", "info:",
             ],
             capture_output=True,
