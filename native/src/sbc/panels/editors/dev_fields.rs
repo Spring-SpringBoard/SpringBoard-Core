@@ -85,14 +85,13 @@ impl DevFieldsView {
                     ColorField::new("colour", "Colour")
                         .with_tooltip("Opens the colour picker modal."),
                 ),
-                // `bitmaps/` because it is one of the few roots the VFS actually
-                // lists (LuaUI/ and the VFS root both come back empty). It is flat,
-                // so the picker's *folder* navigation is shown by the file dialog
-                // instead -- the same GridView code drives both.
+                // A root *within* an asset pack, as every Lua asset field uses
+                // (`brush_textures/`, `detail/`, `shaders/`). The picker opens on
+                // the pack list, not on a directory.
                 Box::new(
-                    AssetField::new("asset", "Asset", "bitmaps/")
+                    AssetField::new("asset", "Asset", "brush_textures/")
                         .extensions(&["png", "jpg"])
-                        .with_tooltip("Opens the asset picker: browse folders, pick a file."),
+                        .with_tooltip("Opens the asset picker: browse packs, pick a file."),
                 ),
                 // A group renders its fields on one row, as the XYZ vectors do.
                 Box::new(NumericField::new("vec_x", "X", 1.0)),

@@ -146,7 +146,12 @@ change**, so there is nothing else to observe.
 | `choice-open` | The choice list, open, showing its items. |
 | `fields-after-input` | After driving every control: string typed, numeric typed, bounded dragged, boolean toggled off, choice on "Second". |
 | `colour-picker` | The colour modal the colour field opens (gradient, hue strip, preview, OK/Cancel). Full-frame — the modal is drawn beside the panel, outside this case's crop. |
-| `colour-picker-closed` | Escape closes it. |
+| `colour-picked` / `colour-committed` | The gradient is **grabbed**, not clicked (mousedown starts it and the colour follows the pointer per tick), and OK commits a real value. |
+| `asset-packs` | The asset picker opens on SpringBoard's **asset packs** (`core/`), not on a directory: a field's root is a place *inside* a pack. |
+| `asset-in-pack` / `asset-back-at-packs` | Into the pack and back out with Up — each asserted to have actually redrawn the listing. Cells show the texture itself. |
+| `asset-selected` / `asset-committed` | Picking commits an **asset path** (`core/cement_diffuse.png`), which is what a project stores — not a filesystem path. |
+| `new-project`, `file-dialog` (+ `-closed`) | The two dialogs the toolbar opens, and Escape closing them. The file dialog's Up at its root does nothing, which is the bound it should have. |
+| `no-tooltip` / `numeric-tooltip` / `tooltip-gone` | Hovering a control shows its tooltip, and moving away removes it. The only scenario with tooltips on — they follow the pointer, so every other run hides them (`SBC_HIDE_TOOLTIPS`). |
 
 ## cursortip-rust
 

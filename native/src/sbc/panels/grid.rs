@@ -394,9 +394,12 @@ pub(crate) fn list_asset_tree(
     for name in vfs_files(interface, &real, extensions) {
         let asset_path = format!("{}{name}", ensure_slash(dir));
         items.push(GridItem {
+            // The cell shows the texture itself, as the Lua asset view does. The
+            // *id* stays the asset path (what the field commits); the image is the
+            // real VFS path, which is the only thing RmlUi can load.
+            image: Some(format!("{real}/{name}")),
             id: asset_path,
             caption: name,
-            image: None,
             is_directory: false,
             tooltip: None,
             tooltip_markup: None,

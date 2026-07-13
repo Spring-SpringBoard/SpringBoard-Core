@@ -21,6 +21,11 @@ if TYPE_CHECKING:
 
 DEV_PANEL = {"SBC_DEV_PANEL": "1"}
 
+# Frames captured with `park=False` have the pointer in shot, and the engine's
+# cursor does not render bit-identically between runs (~60px of difference). The
+# panel behind it does, so the budget stays far below any real UI change.
+CURSOR_IN_SHOT = 200
+
 # The Dev tab is appended after Misc (at 300), one tab-width further right.
 DEV_TAB_X = 376
 
@@ -55,8 +60,14 @@ TOOLTIP_COLOR = "#0b0d0c"
 COLOUR_SQUARE = (900, 350)   # inside the saturation/value gradient
 COLOUR_OK = (1140, 473)
 
-ASSET_FILE_CELL = (993, 333)   # grass3.jpg, the third cell
+ASSET_FIRST_CELL = (842, 333)  # the first cell of the picker's grid
+ASSET_UP = (830, 267)          # the "Up" button
 ASSET_OK = (1137, 602)
+
+# The file dialog: same layout, its own modal. It opens on the projects dir, which
+# is empty in an isolated boot, so navigation is shown by going *up* out of it.
+FILE_UP = (828, 267)
+FILE_FIRST_CELL = (847, 333)
 
 
 def _values(run_state: E2ERun) -> dict[str, str]:
@@ -101,7 +112,7 @@ def gallery(run_state: E2ERun) -> None:
     # to be relative.
     run_state.press(left + NARROW_X, BOUNDED_Y)
     run_state.move_relative(90)
-    dragging = run_state.golden("numeric-dragging", park=False)
+    dragging = run_state.golden("numeric-dragging", park=False, tolerance=CURSOR_IN_SHOT)
     run_state.release(left + NARROW_X, BOUNDED_Y)
 
     # Boolean: toggled.
@@ -109,7 +120,7 @@ def gallery(run_state: E2ERun) -> None:
 
     # Choice: opened and a different item picked.
     run_state.click(left + WIDE_X, CHOICE_Y, delay=0.3)
-    run_state.golden("choice-open", park=False)
+    run_state.golden("choice-open", park=False, tolerance=CURSOR_IN_SHOT)
     run_state.key("Down", delay=0.2)
     run_state.key("Return", delay=0.5)
 
@@ -175,22 +186,35 @@ def gallery_pickers(run_state: E2ERun) -> None:
     if colour is None or colour == "[1.0, 1.0, 1.0, 1.0]":
         raise AssertionError(f"the picker committed no new colour (got {colour})")
 
-    # Asset: browse the grid, pick a file, OK. The picker's *folder* navigation is
-    # shown by the file dialog (`gallery_dialogs`) -- the same GridView drives
-    # both, and this root is flat.
+    # Asset. The picker opens on the **asset packs**, not on a directory: the
+    # field's root (`brush_textures/`) is a place *inside* a pack. So the first
+    # screen lists `core/`, and going into it lists that pack's brush textures.
     run_state.click(left + ASSET_X, ASSET_Y, delay=1.0)
-    run_state.golden("asset-picker", crop=None)
+    packs = run_state.golden("asset-packs", crop=None)
 
-    run_state.click(*ASSET_FILE_CELL, delay=0.6)       # a file in the grid
+    run_state.click(*ASSET_FIRST_CELL, delay=0.9)      # into the `core` pack
+    inside = run_state.golden("asset-in-pack", crop=None)
+    # Navigating changed the listing: a grid that never redrew never navigated.
+    run_state.assert_screenshot_pixels(packs, inside, min_changed=500)
+
+    run_state.click(*ASSET_UP, delay=0.9)              # and back out to the packs
+    back = run_state.golden("asset-back-at-packs", crop=None)
+    run_state.assert_screenshot_pixels(inside, back, min_changed=500)
+
+    # In again, pick a texture, OK.
+    run_state.click(*ASSET_FIRST_CELL, delay=0.9)
+    run_state.click(*ASSET_FIRST_CELL, delay=0.6)      # the first texture
     run_state.golden("asset-selected", crop=None)
     run_state.click(*ASSET_OK, delay=0.8)
     run_state.golden("asset-committed")
 
+    # An *asset path* -- `core/...` -- which is what a project stores, not a
+    # filesystem path.
     asset = _values(run_state).get("asset", "").strip('"')
-    if not asset:
-        raise AssertionError("picking an asset committed nothing")
+    if not asset.startswith("core/"):
+        raise AssertionError(f"the asset field committed {asset!r}, not an asset path")
     if not asset.lower().endswith((".png", ".jpg")):
-        raise AssertionError(f"the asset field committed {asset!r}, not a file path")
+        raise AssertionError(f"the asset field committed {asset!r}, not a file")
 
 
 @scenario(crop="right-panel", env={**DEV_PANEL, "SBC_HIDE_TOOLTIPS": "0"})
@@ -243,13 +267,13 @@ def gallery_dialogs(run_state: E2ERun) -> None:
     run_state.click(left + TOOLBAR_X + TOOLBAR_STEP, TOOLBAR_Y, delay=1.0)
     run_state.golden("file-dialog")
 
+    # Up at the root does nothing: the dialog never browses above the directory it
+    # was opened on. (Navigating *into* a folder is driven by the asset picker,
+    # which has one; the projects dir is empty in an isolated boot.)
+    opened = run_state.golden("file-dialog-open")
     run_state.click(*FILE_UP, delay=0.9)
     up = run_state.golden("file-dialog-up")
-    run_state.click(*FILE_FIRST_CELL, delay=0.9)
-    into = run_state.golden("file-dialog-in-folder")
-    # Navigating changed the listing: a grid that never redrew is a grid that
-    # never navigated.
-    run_state.assert_screenshot_pixels(up, into, min_changed=500)
+    run_state.assert_screenshot_pixels(opened, up, max_changed=200)
 
     run_state.key("Escape", delay=0.6)
     run_state.golden("file-dialog-closed")
