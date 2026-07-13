@@ -9,7 +9,7 @@ use std::rc::Rc;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::field::{element_by_id, escape_rml};
-use crate::sbc::panels::grid::{list_assets, parent_dir, GridView};
+use crate::sbc::panels::grid::{list_asset_tree, parent_dir, GridView};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum PickerEvent {
@@ -116,8 +116,10 @@ impl AssetPicker {
         extensions: &[&str],
     ) -> Result<(), Error> {
         self.field = Some(field.to_string());
-        self.root = root.trim_end_matches('/').to_string();
-        self.dir = self.root.clone();
+        // `root` is the field's directory *within* an asset pack (`brush_textures/`),
+        // not a place on disk. Browsing starts above the packs, listing them.
+        self.root = root.to_string();
+        self.dir = String::new();
         self.extensions = extensions.iter().map(|e| e.to_string()).collect();
         self.grid.set_selected(None);
         self.populate(interface, document)?;
@@ -161,8 +163,12 @@ impl AssetPicker {
 
     fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
         let extensions: Vec<&str> = self.extensions.iter().map(String::as_str).collect();
-        self.grid
-            .set_items(list_assets(interface, &self.dir, &extensions));
+        self.grid.set_items(list_asset_tree(
+            interface,
+            &self.root,
+            &self.dir,
+            &extensions,
+        ));
         self.grid.render(interface, document)?;
         if let Some(e) = element_by_id(interface, document, "asset-path") {
             interface
@@ -170,9 +176,10 @@ impl AssetPicker {
                 .element_set_inner_rml(e, &escape_rml(&self.dir))?;
         }
         if let Some(up) = element_by_id(interface, document, "asset-up") {
+            // The top of the tree is the pack list; there is nothing above it.
             interface
                 .rml_ui()
-                .element_set_class(up, "disabled", self.dir == self.root)?;
+                .element_set_class(up, "disabled", self.dir.is_empty())?;
         }
         Ok(())
     }
@@ -206,13 +213,13 @@ impl AssetPicker {
         for event in events {
             match event {
                 PickerEvent::Up => {
-                    // Never navigate above the root the field was opened with.
-                    if self.dir != self.root {
-                        if let Some(parent) = parent_dir(&self.dir) {
-                            self.dir = parent;
-                            self.grid.set_selected(None);
-                            self.populate(interface, document)?;
-                        }
+                    // Above the pack list there is nothing; `parent_dir` of a
+                    // top-level pack ("core/") gives the empty string, which *is*
+                    // the pack list.
+                    if !self.dir.is_empty() {
+                        self.dir = parent_dir(&self.dir).unwrap_or_default();
+                        self.grid.set_selected(None);
+                        self.populate(interface, document)?;
                     }
                 }
                 PickerEvent::Cancel => {

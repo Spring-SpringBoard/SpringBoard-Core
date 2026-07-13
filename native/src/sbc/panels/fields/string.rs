@@ -9,6 +9,7 @@ use crate::sbc::panels::field::{
 pub(crate) struct StringField {
     name: String,
     title: String,
+    tooltip: Option<String>,
     value: String,
     width: u32,
     element: Option<u64>,
@@ -21,14 +22,24 @@ impl StringField {
             title: title.to_string(),
             value: value.to_string(),
             width: 200,
+            tooltip: None,
             element: None,
         }
+    }
+
+    pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
+        self.tooltip = Some(tooltip.to_string());
+        self
     }
 }
 
 impl Field for StringField {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    fn tooltip(&self) -> Option<&str> {
+        self.tooltip.as_deref()
     }
 
     fn generate_rml(&self) -> String {

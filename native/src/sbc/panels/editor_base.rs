@@ -284,6 +284,16 @@ impl FieldSet {
     ) -> Result<(), Error> {
         for field in &mut self.fields {
             field.bind(interface, document, changes, interactions)?;
+            // Every field renders as `field-<name>`, so one place can give them
+            // all hover text -- no field type has to know about tooltips.
+            if let Some(tooltip) = field.tooltip() {
+                let id = format!("field-{}", field.name());
+                if let Some(element) =
+                    crate::sbc::panels::field::element_by_id(interface, document, &id)
+                {
+                    crate::sbc::panels::field::bind_tooltip(interface, document, element, tooltip)?;
+                }
+            }
         }
         Ok(())
     }

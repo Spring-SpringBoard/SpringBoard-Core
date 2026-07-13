@@ -9,6 +9,7 @@ use crate::sbc::panels::field::{
 pub(crate) struct AssetField {
     name: String,
     title: String,
+    tooltip: Option<String>,
     value: String,
     root: String,
     extensions: Vec<String>,
@@ -23,8 +24,14 @@ impl AssetField {
             value: String::new(),
             root: root.to_string(),
             extensions: Vec::new(),
+            tooltip: None,
             element: None,
         }
+    }
+
+    pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
+        self.tooltip = Some(tooltip.to_string());
+        self
     }
 
     pub(crate) fn extensions(mut self, extensions: &[&str]) -> Self {
@@ -51,6 +58,10 @@ impl AssetField {
 impl Field for AssetField {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    fn tooltip(&self) -> Option<&str> {
+        self.tooltip.as_deref()
     }
 
     fn generate_rml(&self) -> String {

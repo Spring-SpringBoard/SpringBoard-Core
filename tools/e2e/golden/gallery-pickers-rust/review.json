@@ -1,7 +1,35 @@
 {
+  "asset-committed": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T08:20:10"
+  },
+  "asset-in-folder": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T08:18:36"
+  },
+  "asset-picker": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T08:20:07"
+  },
+  "asset-selected": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T08:20:09"
+  },
+  "asset-up-again": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T08:18:38"
+  },
+  "colour-committed": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T08:20:04"
+  },
+  "colour-picked": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T08:20:03"
+  },
   "colour-picker": {
     "status": "ai-reviewed",
-    "updated": "2026-07-14T07:51:38"
+    "updated": "2026-07-14T08:20:01"
   },
   "colour-picker-closed": {
     "status": "ai-reviewed",

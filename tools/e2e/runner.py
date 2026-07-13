@@ -114,9 +114,10 @@ class E2ERun:
         # console hidden -- a scenario that wants it presses F8.
         env["SBC_STILL_MODELS"] = "1"
         env["SBC_HIDE_CONSOLE"] = "1"
-        # The cursor tooltip follows the pointer, so it lands in the middle of any
-        # map capture. Off unless the scenario is about it (`env=` on @scenario).
-        env["SBC_HIDE_CURSORTIP"] = "1"
+        # Tooltips -- the field ones and the cursor tip alike -- follow the pointer,
+        # so they land in the middle of whatever is being captured. Off unless the
+        # scenario is about them (`env=` on @scenario).
+        env["SBC_HIDE_TOOLTIPS"] = "1"
         # Debug lines land in the run's infolog, so a failure can be explained
         # afterwards from the artifact rather than by re-running with printfs.
         env["SBC_LOG_LEVEL"] = "debug"

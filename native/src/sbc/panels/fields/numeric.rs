@@ -12,6 +12,7 @@ const DEFAULT_DECIMALS: usize = 3;
 pub(crate) struct NumericField {
     name: String,
     title: String,
+    tooltip: Option<String>,
     value: f32,
     step: f32,
     /// Whether the caller chose the step, or it is still the default.
@@ -40,7 +41,13 @@ impl NumericField {
             display_elem: None,
             edit_elem: None,
             editing: false,
+            tooltip: None,
         }
+    }
+
+    pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
+        self.tooltip = Some(tooltip.to_string());
+        self
     }
 
     pub(crate) fn step(mut self, step: f32) -> Self {
@@ -135,6 +142,10 @@ impl NumericField {
 impl Field for NumericField {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    fn tooltip(&self) -> Option<&str> {
+        self.tooltip.as_deref()
     }
 
     fn generate_rml(&self) -> String {

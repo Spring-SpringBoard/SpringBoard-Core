@@ -314,7 +314,7 @@ def _tip_box(cursor_x: int, cursor_y: int) -> tuple[int, int, int, int]:
     return (cursor_x + 40, cursor_y + 30, 320, 90)
 
 
-@scenario(uis=("rmlui", "rust"), env={"SBC_HIDE_CURSORTIP": "0"})
+@scenario(uis=("rmlui", "rust"), env={"SBC_HIDE_TOOLTIPS": "0"})
 def cursortip(run_state: E2ERun) -> None:
     """Hovering a feature shows a tooltip describing it, next to the cursor.
 

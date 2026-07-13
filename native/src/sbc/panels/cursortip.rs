@@ -16,13 +16,6 @@ const PICK_RADIUS: f32 = 16.0;
 const OFFSET_X: i32 = 16;
 const OFFSET_Y: i32 = 12;
 
-fn suppressed() -> bool {
-    static OFF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    // The value, not just the name: a scenario that *wants* the tip sets it to 0
-    // rather than trying to unset an inherited variable.
-    *OFF.get_or_init(|| matches!(std::env::var("SBC_HIDE_CURSORTIP").as_deref(), Ok("1")))
-}
-
 #[derive(Default)]
 pub(crate) struct CursorTip {
     /// What is currently described, so the markup is only rewritten when the
@@ -37,9 +30,7 @@ impl CursorTip {
         document: u64,
         over_panel: bool,
     ) -> Result<(), Error> {
-        // A tip that follows the cursor lands in the middle of any screenshot the
-        // harness takes of the map, so scenarios that are not about it turn it off.
-        if suppressed() {
+        if crate::sbc::panels::field::tooltips_hidden() {
             return Ok(());
         }
         let Some(element) = element_by_id(interface, document, "native-tooltip") else {

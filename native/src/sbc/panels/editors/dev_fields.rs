@@ -39,30 +39,61 @@ impl DevFieldsView {
     pub(crate) fn new() -> Self {
         DevFieldsView {
             fields: FieldSet::new(vec![
-                Box::new(StringField::new("text", "String", "hello")),
-                Box::new(StringField::new("empty", "String (empty)", "")),
-                Box::new(NumericField::new("number", "Numeric", 42.0)),
+                Box::new(
+                    StringField::new("text", "String", "hello")
+                        .with_tooltip("Single-line text. Enter commits, Escape reverts."),
+                ),
+                Box::new(
+                    StringField::new("empty", "String (empty)", "")
+                        .with_tooltip("The same control with no value."),
+                ),
+                Box::new(
+                    NumericField::new("number", "Numeric", 42.0)
+                        .with_tooltip("Click to type a value, or drag to change it."),
+                ),
                 Box::new(
                     NumericField::new("bounded", "Numeric 0-100", 50.0)
                         .min(0.0)
                         .max(100.0)
-                        .decimals(0),
+                        .decimals(0)
+                        .with_tooltip("Bounded 0-100: a drag crosses the range in ~200px."),
                 ),
                 Box::new(
                     NumericField::new("precise", "Numeric (3 dp)", 0.125)
                         .min(-1.0)
                         .max(1.0)
-                        .decimals(3),
+                        .decimals(3)
+                        .with_tooltip("Three decimals, bounded -1..1."),
                 ),
-                Box::new(BooleanField::new("flag_on", "Boolean (on)", true)),
-                Box::new(BooleanField::new("flag_off", "Boolean (off)", false)),
-                Box::new(ChoiceField::new(
-                    "choice",
-                    "Choice",
-                    vec!["First".into(), "Second".into(), "Third".into()],
-                )),
-                Box::new(ColorField::new("colour", "Colour")),
-                Box::new(AssetField::new("asset", "Asset", "bitmaps/").extensions(&["png", "jpg"])),
+                Box::new(
+                    BooleanField::new("flag_on", "Boolean (on)", true)
+                        .with_tooltip("A checkbox, on."),
+                ),
+                Box::new(
+                    BooleanField::new("flag_off", "Boolean (off)", false)
+                        .with_tooltip("A checkbox, off."),
+                ),
+                Box::new(
+                    ChoiceField::new(
+                        "choice",
+                        "Choice",
+                        vec!["First".into(), "Second".into(), "Third".into()],
+                    )
+                    .with_tooltip("A drop-down of fixed items."),
+                ),
+                Box::new(
+                    ColorField::new("colour", "Colour")
+                        .with_tooltip("Opens the colour picker modal."),
+                ),
+                // `bitmaps/` because it is one of the few roots the VFS actually
+                // lists (LuaUI/ and the VFS root both come back empty). It is flat,
+                // so the picker's *folder* navigation is shown by the file dialog
+                // instead -- the same GridView code drives both.
+                Box::new(
+                    AssetField::new("asset", "Asset", "bitmaps/")
+                        .extensions(&["png", "jpg"])
+                        .with_tooltip("Opens the asset picker: browse folders, pick a file."),
+                ),
                 // A group renders its fields on one row, as the XYZ vectors do.
                 Box::new(NumericField::new("vec_x", "X", 1.0)),
                 Box::new(NumericField::new("vec_y", "Y", 2.0)),

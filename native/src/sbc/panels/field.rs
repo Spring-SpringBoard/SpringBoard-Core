@@ -206,6 +206,14 @@ pub(crate) fn format_number(value: f32, decimals: usize) -> String {
     format!("{:.*}", decimals, value)
 }
 
+/// Whether tooltips are turned off. The e2e harness does that by default: a tip
+/// follows the cursor, so it lands in the middle of whatever a scenario is
+/// capturing. The scenarios that are *about* tooltips ask for them back.
+pub(crate) fn tooltips_hidden() -> bool {
+    static OFF: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *OFF.get_or_init(|| matches!(std::env::var("SBC_HIDE_TOOLTIPS").as_deref(), Ok("1")))
+}
+
 fn bind_tooltip_inner(
     interface: &NativeInterfaceRef,
     document: u64,
@@ -213,6 +221,9 @@ fn bind_tooltip_inner(
     text: String,
     escape: bool,
 ) -> Result<(), Error> {
+    if tooltips_hidden() {
+        return Ok(());
+    }
     if text.trim().is_empty() {
         return Ok(());
     }
@@ -265,6 +276,13 @@ fn bind_tooltip_inner(
 pub trait Field {
     fn name(&self) -> &str;
     fn generate_rml(&self) -> String;
+
+    /// Hover text. Bound by the `FieldSet` against the field's own element, so a
+    /// field type does not have to do anything to have one.
+    fn tooltip(&self) -> Option<&str> {
+        None
+    }
+
     fn bind(
         &mut self,
         interface: &NativeInterfaceRef,

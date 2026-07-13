@@ -8,6 +8,7 @@ use crate::sbc::panels::field::{
 pub(crate) struct ChoiceField {
     name: String,
     title: String,
+    tooltip: Option<String>,
     value: String,
     items: Vec<String>,
     element: Option<u64>,
@@ -24,8 +25,14 @@ impl ChoiceField {
             title: title.into(),
             value: items.first().cloned().unwrap_or_default(),
             items,
+            tooltip: None,
             element: None,
         }
+    }
+
+    pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
+        self.tooltip = Some(tooltip.to_string());
+        self
     }
 
     #[allow(dead_code)]
@@ -37,6 +44,10 @@ impl ChoiceField {
 impl Field for ChoiceField {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    fn tooltip(&self) -> Option<&str> {
+        self.tooltip.as_deref()
     }
 
     fn generate_rml(&self) -> String {

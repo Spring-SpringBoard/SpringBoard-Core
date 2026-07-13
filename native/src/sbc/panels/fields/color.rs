@@ -12,6 +12,7 @@ const CHANNEL_STEP: f32 = 0.005; // 1/200 per pixel, matches original
 pub(crate) struct ColorField {
     name: String,
     title: String,
+    tooltip: Option<String>,
     value: [f32; 4],
     swatch: Option<u64>,
     editor: Option<u64>,
@@ -51,7 +52,13 @@ impl ColorField {
             ],
             expanded: false,
             drag_channel: None,
+            tooltip: None,
         }
+    }
+
+    pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
+        self.tooltip = Some(tooltip.to_string());
+        self
     }
 
     #[allow(dead_code)]
@@ -176,6 +183,10 @@ impl ColorField {
 impl Field for ColorField {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    fn tooltip(&self) -> Option<&str> {
+        self.tooltip.as_deref()
     }
 
     fn generate_rml(&self) -> String {

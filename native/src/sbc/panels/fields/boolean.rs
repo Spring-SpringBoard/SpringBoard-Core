@@ -8,6 +8,7 @@ use crate::sbc::panels::field::{
 pub(crate) struct BooleanField {
     name: String,
     title: String,
+    tooltip: Option<String>,
     value: bool,
     element: Option<u64>,
 }
@@ -18,14 +19,24 @@ impl BooleanField {
             name: name.to_string(),
             title: title.to_string(),
             value,
+            tooltip: None,
             element: None,
         }
+    }
+
+    pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
+        self.tooltip = Some(tooltip.to_string());
+        self
     }
 }
 
 impl Field for BooleanField {
     fn name(&self) -> &str {
         &self.name
+    }
+
+    fn tooltip(&self) -> Option<&str> {
+        self.tooltip.as_deref()
     }
 
     fn generate_rml(&self) -> String {

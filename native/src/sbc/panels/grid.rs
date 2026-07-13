@@ -42,6 +42,9 @@ struct GridNavigation {
     root: String,
     dir: String,
     extensions: Vec<String>,
+    /// Set when the grid browses SpringBoard's assets rather than a directory:
+    /// the field's root *within* an asset pack. See `configure_asset_navigation`.
+    assets_root: Option<String>,
     up_clicks: Rc<RefCell<u32>>,
     bound: Cell<bool>,
 }
@@ -95,6 +98,27 @@ impl GridView {
             root: root.clone(),
             dir: root,
             extensions: extensions.iter().map(|ext| ext.to_string()).collect(),
+            assets_root: None,
+            up_clicks: Rc::new(RefCell::new(0)),
+            bound: Cell::new(false),
+        });
+    }
+
+    /// Browse SpringBoard's **assets**, which are not a plain directory.
+    ///
+    /// A port of `AssetsManager` + `AssetView`: `springboard/assets/` holds one
+    /// folder per asset pack (`core/`, plus whatever extensions add). A field
+    /// names a `root_dir` *within* a pack (`brush_textures/`), and the browser
+    /// walks the packs, not the filesystem: the top level lists the packs
+    /// themselves, and inside one, `assets/<pack>/<root_dir><rest>` is listed.
+    /// A picked file comes back as an **asset path** (`core/foo.png`), not a
+    /// filesystem path -- that is what a project stores.
+    pub(crate) fn configure_asset_navigation(&mut self, root_dir: &str, extensions: &[&str]) {
+        self.navigation = Some(GridNavigation {
+            root: String::new(),
+            dir: String::new(),
+            extensions: extensions.iter().map(|ext| ext.to_string()).collect(),
+            assets_root: Some(root_dir.trim_start_matches('/').to_string()),
             up_clicks: Rc::new(RefCell::new(0)),
             bound: Cell::new(false),
         });
@@ -164,15 +188,21 @@ impl GridView {
         interface: &NativeInterfaceRef,
         document: u64,
     ) -> Result<(), Error> {
-        let Some((dir, extensions)) = self
-            .navigation
-            .as_ref()
-            .map(|navigation| (navigation.dir.clone(), navigation.extensions.clone()))
-        else {
+        let Some((dir, extensions, assets_root)) = self.navigation.as_ref().map(|navigation| {
+            (
+                navigation.dir.clone(),
+                navigation.extensions.clone(),
+                navigation.assets_root.clone(),
+            )
+        }) else {
             return Ok(());
         };
         let extensions: Vec<&str> = extensions.iter().map(String::as_str).collect();
-        self.set_items(list_assets(interface, &dir, &extensions));
+        let items = match assets_root.as_deref() {
+            Some(root) => list_asset_tree(interface, root, &dir, &extensions),
+            None => list_assets(interface, &dir, &extensions),
+        };
+        self.set_items(items);
         self.set_selected(None);
         self.render(interface, document)
     }
@@ -312,6 +342,118 @@ impl GridView {
 }
 
 /// VFS listing for the asset picker: directories first, then files, both sorted.
+/// Where SpringBoard's asset packs live (`SB.DIRS.ASSETS`).
+const ASSETS_DIR: &str = "springboard/assets";
+
+/// One level of the assets tree, as `AssetView` walks it.
+///
+/// At the top there is no directory to list: the entries are the asset *packs*
+/// (the subfolders of `springboard/assets/`). Inside a pack, the field's
+/// `root_dir` is spliced in -- `assets/<pack>/<root_dir><rest>` -- and what comes
+/// back is reported as an asset path (`core/rest/file.png`), which is what the
+/// project stores and what the field commits.
+pub(crate) fn list_asset_tree(
+    interface: &NativeInterfaceRef,
+    root_dir: &str,
+    dir: &str,
+    extensions: &[&str],
+) -> Vec<GridItem> {
+    if dir.is_empty() {
+        return vfs_sub_dirs(interface, ASSETS_DIR)
+            .into_iter()
+            .map(|name| GridItem {
+                id: format!("{name}/"),
+                caption: name,
+                image: None,
+                is_directory: true,
+                tooltip: None,
+                tooltip_markup: None,
+            })
+            .collect();
+    }
+
+    // `core/` or `core/sub/dir/` -> the pack, then the rest.
+    let (pack, rest) = dir.split_once('/').unwrap_or((dir, ""));
+    let real = format!(
+        "{ASSETS_DIR}/{pack}/{root}{rest}",
+        root = root_dir.trim_start_matches('/'),
+    );
+
+    let mut items: Vec<GridItem> = vfs_sub_dirs(interface, &real)
+        .into_iter()
+        .map(|name| GridItem {
+            id: format!("{}{name}/", ensure_slash(dir)),
+            caption: name,
+            image: None,
+            is_directory: true,
+            tooltip: None,
+            tooltip_markup: None,
+        })
+        .collect();
+
+    for name in vfs_files(interface, &real, extensions) {
+        let asset_path = format!("{}{name}", ensure_slash(dir));
+        items.push(GridItem {
+            id: asset_path,
+            caption: name,
+            image: None,
+            is_directory: false,
+            tooltip: None,
+            tooltip_markup: None,
+        });
+    }
+    items
+}
+
+fn ensure_slash(dir: &str) -> String {
+    if dir.is_empty() || dir.ends_with('/') {
+        dir.to_string()
+    } else {
+        format!("{dir}/")
+    }
+}
+
+/// Subdirectory names directly under `dir`. The VFS's own `SubDirs`, as Lua's
+/// `Path.SubDirs` uses.
+fn vfs_sub_dirs(interface: &NativeInterfaceRef, dir: &str) -> Vec<String> {
+    let Ok(paths) = interface.vfs().sub_dirs(dir, "*", "", false) else {
+        return Vec::new();
+    };
+    let mut names: Vec<String> = paths.iter().filter_map(|path| leaf(path)).collect();
+    names.sort();
+    names.dedup();
+    names
+}
+
+/// File names directly under `dir`, matching one of `extensions`. The VFS's own
+/// `DirList`, as Lua's `Path.DirList` uses.
+fn vfs_files(interface: &NativeInterfaceRef, dir: &str, extensions: &[&str]) -> Vec<String> {
+    let Ok(paths) = interface.vfs().dir_list_names(dir, "*", "", false) else {
+        return Vec::new();
+    };
+    let mut names: Vec<String> = paths
+        .iter()
+        .filter_map(|path| {
+            let name = leaf(path)?;
+            let matches = extensions.is_empty()
+                || extensions.iter().any(|ext| {
+                    name.to_lowercase()
+                        .ends_with(&format!(".{}", ext.to_lowercase()))
+                });
+            matches.then_some(name)
+        })
+        .collect();
+    names.sort();
+    names.dedup();
+    names
+}
+
+/// The last component of a VFS path, with any trailing slash dropped.
+fn leaf(path: &str) -> Option<String> {
+    let name = path.trim_end_matches('/').rsplit('/').next()?.to_string();
+    (!name.is_empty()).then_some(name)
+}
+
 pub(crate) fn list_assets(
     interface: &NativeInterfaceRef,
     dir: &str,

@@ -3,6 +3,7 @@ use std::any::Any;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::{self, Action, ActionResult, FileAcceptFn};
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::envelope::as_preview;
@@ -38,6 +39,9 @@ pub(crate) struct PanelManager {
     /// the first refresh, since a model-backed editor has no fields before it.
     needs_rebuild: bool,
     pending_envelopes: Vec<String>,
+    /// Commands produced natively (typed, no JSON envelope). Drained and
+    /// submitted directly by `SBC::drain_panel_commands`.
+    pending_commands: Vec<Box<dyn Command>>,
     next_cmd_id: u64,
     picker: ColorPicker,
     asset_picker: AssetPicker,
@@ -98,6 +102,7 @@ impl PanelManager {
             needs_refresh: false,
             needs_rebuild: false,
             pending_envelopes: Vec::new(),
+            pending_commands: Vec::new(),
             next_cmd_id: 1_000_000,
             picker: ColorPicker::default(),
             asset_picker: AssetPicker::default(),
@@ -267,6 +272,11 @@ impl PanelManager {
         std::mem::take(&mut self.pending_envelopes)
     }
 
+    /// Typed commands queued by native producers (no JSON envelope).
+    pub fn drain_commands(&mut self) -> Vec<Box<dyn Command>> {
+        std::mem::take(&mut self.pending_commands)
+    }
+
     // ── Shell ──────────────────────────────────────────────────────
 
     /// Tab and editor-button clicks are queued by the listeners and handled
@@ -326,6 +336,7 @@ impl PanelManager {
         match actions::execute(action, &self.interface, models, &mut self.next_cmd_id) {
             ActionResult::None => {}
             ActionResult::Commands(envelopes) => self.pending_envelopes.extend(envelopes),
+            ActionResult::NativeCommands(commands) => self.pending_commands.extend(commands),
             ActionResult::OpenFileDialog { config, on_accept } => {
                 if let Some(doc) = self.view.document_handle() {
                     self.pending_accept = Some(on_accept);
