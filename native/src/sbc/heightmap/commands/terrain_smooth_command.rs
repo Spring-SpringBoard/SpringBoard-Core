@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::f32::consts::PI;
 
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spring_native::prelude::*;
 
 use crate::sbc::command_system::command::Command;
@@ -13,23 +13,29 @@ use crate::sbc::terrain_cpu::brush_modify::{BrushModify, BrushOptions, Params};
 
 const SQUARE_SIZE: usize = 8;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TerrainSmoothCommand {
     opts: Opts,
     #[serde(skip)]
     brush: Option<BrushModify>,
 }
 
-#[derive(Deserialize, Debug)]
-struct Opts {
-    rotation: f32,
-    x: f32,
-    z: f32,
+#[derive(Deserialize, Serialize, Debug)]
+pub(crate) struct Opts {
+    pub(crate) rotation: f32,
+    pub(crate) x: f32,
+    pub(crate) z: f32,
     #[serde(rename = "shapeName")]
-    shape_name: String,
-    strength: f32,
-    size: f32,
-    sigma: f32,
+    pub(crate) shape_name: String,
+    pub(crate) strength: f32,
+    pub(crate) size: f32,
+    pub(crate) sigma: f32,
+}
+
+impl TerrainSmoothCommand {
+    pub(crate) fn new(opts: Opts) -> Self {
+        Self { opts, brush: None }
+    }
 }
 
 impl Command for TerrainSmoothCommand {

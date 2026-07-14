@@ -26,6 +26,9 @@ DEV_PANEL = {"SBC_DEV_PANEL": "1"}
 # panel behind it does, so the budget stays far below any real UI change.
 CURSOR_IN_SHOT = 200
 
+# A shot showing the dragged numeric: its digits vary run to run (see below).
+DRAGGED_DIGIT = 200
+
 # The Dev tab is appended after Misc (at 300), one tab-width further right.
 DEV_TAB_X = 376
 
@@ -33,13 +36,21 @@ DEV_TAB_X = 376
 # much as the y: a numeric's box is narrow (it ends around x=170) while a string's
 # runs to x=345, so one shared click column would miss half the controls.
 STRING_Y = 222
+EMPTY_Y = 264
 NUMBER_Y = 331
 BOUNDED_Y = 374
+PRECISE_Y = 417
 BOOL_ON_Y = 475
+BOOL_OFF_Y = 515
 CHOICE_Y = 583
 COLOUR_Y = 650
 
 ASSET_Y = 692
+
+# The group's fields: X and Y share a row, Z is on the next one.
+GROUP_XY_Y = 760
+GROUP_Z_Y = 804
+GROUP_SECOND_X = 250  # the second column (Y)
 
 WIDE_X = 200      # string, choice: their boxes reach this far
 NARROW_X = 80     # numeric: its box does not
@@ -124,14 +135,61 @@ def gallery(run_state: E2ERun) -> None:
     run_state.key("Down", delay=0.2)
     run_state.key("Return", delay=0.5)
 
-    run_state.golden("fields-after-input")
+    # The dragged field's value lands a digit or two either side of the same
+    # number between runs (the drag ends on whichever tick the release meets), so
+    # the glyphs in that one box differ. Its *value* is asserted below.
+    run_state.golden("fields-after-input", tolerance=DRAGGED_DIGIT)
+
+    # The rest of the control set, driven after the shots above so those keep
+    # showing one change at a time.
+    #
+    # The empty string field takes a value like any other.
+    run_state.click(left + WIDE_X, EMPTY_Y, delay=0.3)
+    run_state.type_text("filled")
+    run_state.key("Return", delay=0.4)
+
+    # A bounded field clamps what is typed into it: 5 is outside -1..1.
+    run_state.click(left + NARROW_X, PRECISE_Y, delay=0.3)
+    run_state.key("ctrl+a", delay=0.1)
+    run_state.type_text("5")
+    run_state.key("Return", delay=0.4)
+
+    # The other checkbox, off -> on.
+    run_state.click(left + CHECK_X, BOOL_OFF_Y, delay=0.4)
+
+    # A grouped field is a field: the ones sharing a row commit independently.
+    for x, y, value in (
+        (NARROW_X, GROUP_XY_Y, "11"),
+        (GROUP_SECOND_X, GROUP_XY_Y, "22"),
+        (NARROW_X, GROUP_Z_Y, "33"),
+    ):
+        run_state.click(left + x, y, delay=0.3)
+        run_state.key("ctrl+a", delay=0.1)
+        run_state.type_text(value)
+        run_state.key("Return", delay=0.4)
+
+    # Still shows the dragged field, so still carries its wandering digits.
+    run_state.golden("fields-rest-of-set", tolerance=DRAGGED_DIGIT)
+
+    # Escape reverts an edit instead of committing it: the field keeps the value
+    # it had, and the control reports nothing new.
+    run_state.click(left + WIDE_X, STRING_Y, delay=0.3)
+    run_state.key("ctrl+a", delay=0.1)
+    run_state.type_text("discarded")
+    run_state.key("Escape", delay=0.4)
+    run_state.golden("string-escape-reverted")
 
     values = _values(run_state)
     expected = {
         "text": '"typed"',
+        "empty": '"filled"',
         "number": "7.5",
         "flag_on": "false",
+        "flag_off": "true",
         "choice": '"Second"',
+        "vec_x": "11",
+        "vec_y": "22",
+        "vec_z": "33",
     }
     for name, want in expected.items():
         got = values.get(name)
@@ -144,6 +202,13 @@ def gallery(run_state: E2ERun) -> None:
     bounded = float(values.get("bounded", "50"))
     if bounded <= 50.0:
         raise AssertionError(f"dragging the numeric did not raise it: {bounded}")
+    if bounded > 100.0:
+        raise AssertionError(f"the drag pushed the field past its max: {bounded}")
+
+    # 5 typed into a -1..1 field is held at the bound, not taken literally.
+    precise = float(values.get("precise", "0.125"))
+    if precise != 1.0:
+        raise AssertionError(f"typing 5 into a -1..1 field gave {precise}, not its max 1.0")
     _ = dragging
 
 

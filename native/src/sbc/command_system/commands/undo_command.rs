@@ -1,10 +1,10 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::super::command::Command;
 use super::super::context::{CommandManagerIntent, Context};
 use super::super::registry::register_command;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct UndoCommand;
 
 impl Command for UndoCommand {

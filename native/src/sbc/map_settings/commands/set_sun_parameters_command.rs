@@ -15,6 +15,17 @@ pub struct SetSunParametersCommand {
     old_dir: Option<[f32; 3]>,
 }
 
+impl SetSunParametersCommand {
+    /// Construct from a partial opts payload (the dir vector). Transitional:
+    /// the opts DTO becomes fully typed per docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_opts(opts: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(opts).ok().map(|opts| Self {
+            opts,
+            old_dir: None,
+        })
+    }
+}
+
 #[derive(Deserialize, Debug)]
 struct Opts {
     #[serde(rename = "dirX")]

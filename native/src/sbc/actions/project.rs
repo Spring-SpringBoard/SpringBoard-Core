@@ -6,21 +6,22 @@ use spring_native::prelude::NativeInterfaceRef;
 
 use super::helpers::{game_id, rand_u32};
 use super::paths::PROJECTS_DIR;
-use crate::sbc::envelope::envelope_fields;
+use crate::sbc::command_system::command::Command;
+use crate::sbc::project::commands::{ReloadIntoProjectCommand, SaveProjectInfoCommand};
+use crate::sbc::project::ProjectData;
 
 /// The blank map's archive name; its size comes from `randomMapOptions`.
 const BLANK_MAP: &str = "SB_Blank_Map";
 
-/// Build the command envelopes for creating a new project, called by the
-/// manager after the NewProject dialog completes.
+/// Build the commands for creating a new project, called by the manager after
+/// the NewProject dialog completes.
 pub fn commit_new_project(
     name: &str,
     map_name: &str,
     size_x: Option<f32>,
     size_y: Option<f32>,
     interface: &NativeInterfaceRef,
-    next: &mut u64,
-) -> Vec<String> {
+) -> Vec<Box<dyn Command>> {
     let project_name = name.trim().trim_end_matches(".sdd");
     let path = format!("{PROJECTS_DIR}{project_name}.sdd");
     let (game_name, game_version) = game_id(interface);
@@ -28,49 +29,34 @@ pub fn commit_new_project(
     // For the blank map, the size is carried in randomMapOptions and the engine
     // generates a fresh map; a seed keeps the archive out of a stale cache.
     let random_map_options = if map_name == BLANK_MAP {
-        serde_json::json!({
+        Some(serde_json::json!({
             "mapSeed": rand_u32(),
             "new_map_x": size_x.unwrap_or(10.0),
             "new_map_y": size_y.unwrap_or(10.0),
-        })
+        }))
     } else {
-        serde_json::Value::Null
+        None
     };
 
     // The full project record, so the chosen map and target game are saved into
     // the start script the reload reads back.
-    let mut project = serde_json::json!({
-        "name": project_name,
-        "path": path,
-        "mapName": map_name,
-        "game": { "name": game_name, "version": game_version },
-        "mutators": [format!("{project_name} 1.0")],
-    });
-    if !random_map_options.is_null() {
-        project["randomMapOptions"] = random_map_options;
-    }
+    let project = ProjectData {
+        name: Some(project_name.to_string()),
+        path: Some(path.clone()),
+        map_name: Some(map_name.to_string()),
+        game: Some(serde_json::json!({ "name": game_name, "version": game_version })),
+        random_map_options,
+        mutators: vec![format!("{project_name} 1.0")],
+    };
 
     vec![
-        envelope_fields(
-            "SaveProjectInfoCommand",
-            next,
-            serde_json::json!({
-                "name": project_name,
-                "path": path,
-                "isNewProject": true,
-                "project": project,
-            }),
-        ),
-        envelope_fields(
-            "ReloadIntoProjectCommand",
-            next,
-            serde_json::json!({
-                "path": path,
-                "modOptions": serde_json::json!({}),
-                "gameName": game_name,
-                "gameVersion": game_version,
-            }),
-        ),
+        Box::new(SaveProjectInfoCommand::new(
+            project_name.to_string(),
+            path.clone(),
+            true,
+            Some(project),
+        )),
+        Box::new(ReloadIntoProjectCommand::new(path, game_name, game_version)),
     ]
 }
 

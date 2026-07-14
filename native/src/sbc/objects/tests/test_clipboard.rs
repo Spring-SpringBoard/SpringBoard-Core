@@ -25,22 +25,21 @@ fn clipboard_copy_paste(ctx: &mut TestCtx) -> Result<(), String> {
         .select_one(ObjectKind::Feature, mine);
 
     let iface = *ctx.sbc.interface();
-    let mut next = 5_000_000u64;
     {
         let models = ctx.sbc.models_mut();
-        let _ = execute(Action::Copy, &iface, models, &mut next);
+        let _ = execute(Action::Copy, &iface, models);
     }
 
     let before_paste = feature_ids(ctx);
-    let envelopes = {
+    let commands = {
         let models = ctx.sbc.models_mut();
-        execute_paste(&iface, models, 900.0, 700.0, &mut next)
+        execute_paste(&iface, models, 900.0, 700.0)
     };
-    if envelopes.is_empty() {
-        return Err("paste produced no command envelopes".to_string());
+    if commands.is_empty() {
+        return Err("paste produced no commands".to_string());
     }
-    for env in &envelopes {
-        ctx.sbc.route(env);
+    for command in commands {
+        ctx.sbc.submit_command(command);
     }
 
     let pasted = single_new_id(&before_paste, &feature_ids(ctx))
@@ -66,16 +65,15 @@ fn delete_selection(ctx: &mut TestCtx) -> Result<(), String> {
         .select_one(ObjectKind::Feature, mine);
 
     let iface = *ctx.sbc.interface();
-    let mut next = 6_000_000u64;
     let result = {
         let models = ctx.sbc.models_mut();
-        execute(Action::Delete, &iface, models, &mut next)
+        execute(Action::Delete, &iface, models)
     };
-    let ActionResult::Commands(envelopes) = result else {
+    let ActionResult::NativeCommands(commands) = result else {
         return Err("Delete did not produce commands".to_string());
     };
-    for env in &envelopes {
-        ctx.sbc.route(env);
+    for command in commands {
+        ctx.sbc.submit_command(command);
     }
 
     if ctx

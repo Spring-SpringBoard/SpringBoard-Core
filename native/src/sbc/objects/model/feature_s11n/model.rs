@@ -28,6 +28,14 @@ impl FeatureModel {
         }
     }
 
+    pub(super) fn apply_rotation(&self, spring_id: i32, rot: Vec3) {
+        let _ = self
+            .interface
+            .synced_ctrl()
+            .feature()
+            .set_feature_rotation(spring_id, rot.into());
+    }
+
     /// Create a feature and register its id. Fields are applied separately.
     fn create(
         &mut self,
@@ -101,14 +109,6 @@ impl FeatureModel {
                 y: rot.yaw,
                 z: rot.roll,
             })
-    }
-
-    pub(super) fn apply_rotation(&self, spring_id: i32, rot: Vec3) {
-        let _ = self
-            .interface
-            .synced_ctrl()
-            .feature()
-            .set_feature_rotation(spring_id, rot.into());
     }
 }
 

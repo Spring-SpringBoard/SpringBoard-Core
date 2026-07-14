@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::sbc::command_system::command::Command;
@@ -14,7 +14,7 @@ use crate::sbc::objects::ObjectManager;
 /// can't match a descriptor, leaving them Lua-side.
 // TODO(concrete-commands): replace with SetAreaParamCommand/SetFeatureParamCommand/
 // SetUnitParamCommand with typed optional fields, no JSON. See docs/porting/todo.md.
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct SetObjectParamCommand {
     #[serde(rename = "objType")]
     kind: ObjectKind,
@@ -29,7 +29,25 @@ pub struct SetObjectParamCommand {
     old: Option<Vec<FieldValue>>,
 }
 
+impl SetObjectParamCommand {
+    /// Construct directly for native dispatch. `key`/`value` are still
+    /// JSON-typed here — see the concrete-commands TODO.
+    pub(crate) fn new(kind: ObjectKind, model_id: i32, key: Value, value: Value) -> Self {
+        Self {
+            kind,
+            model_id,
+            key,
+            value,
+            old: None,
+        }
+    }
+}
+
 impl Command for SetObjectParamCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         if self.old.is_none() {
             self.old = Some(self.capture_old(ctx.model::<ObjectManager>()));

@@ -3,7 +3,6 @@
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-pub(crate) use crate::sbc::envelope::{envelope, envelope_with};
 use crate::sbc::panels::field::{ChangeQueue, Field, FieldValue, InteractionQueue};
 
 #[macro_export]

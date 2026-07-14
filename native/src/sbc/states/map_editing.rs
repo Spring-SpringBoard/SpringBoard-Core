@@ -9,9 +9,11 @@ use std::time::Instant;
 
 use spring_native::prelude::NativeInterfaceRef;
 
+use crate::sbc::command_system::command::Command;
+use crate::sbc::heightmap::commands::set_heightmap_brush_command::SetHeightmapBrushCommand;
 use crate::sbc::states::brush_settings::BrushSettings;
 use crate::sbc::states::highlight::BrushPreview;
-use crate::sbc::states::shapes::{load_shape, upload_payload};
+use crate::sbc::states::shapes::{brush_opts, load_shape};
 use crate::sbc::states::state::{cursor, trace_ground, EditorState, StateContext};
 
 const LEFT: i32 = 1;
@@ -31,17 +33,6 @@ pub(crate) enum BrushKind {
 }
 
 impl BrushKind {
-    fn command(self) -> &'static str {
-        match self {
-            BrushKind::ShapeModify => "TerrainShapeModifyCommand",
-            BrushKind::Smooth => "TerrainSmoothCommand",
-            BrushKind::Level => "TerrainLevelCommand",
-            BrushKind::Metal => "TerrainMetalCommand",
-            BrushKind::Grass => "TerrainGrassCommand",
-            BrushKind::Texture => "TerrainChangeTextureCommand",
-        }
-    }
-
     /// Lua's `initialDelay`: a beat before a held brush starts repeating, so a
     /// click is a single dab. The metal and grass brushes have none.
     fn initial_delay(self) -> f32 {
@@ -120,8 +111,9 @@ impl MapEditingState {
             log::warn!("brush pattern {pattern} could not be loaded");
             return false;
         };
-        let payload = upload_payload(pattern, &shape);
-        ctx.command_with("SetHeightmapBrushCommand", "greyscale", payload);
+        ctx.command(Box::new(SetHeightmapBrushCommand::new(brush_opts(
+            pattern, &shape,
+        ))));
         self.uploaded.insert(pattern.to_string());
         true
     }
@@ -183,41 +175,83 @@ impl MapEditingState {
         let rotation = self.brush.rotation;
 
         // Right-click inverts a height brush, erases metal and grass.
-        let opts = match self.kind {
+        let command: Box<dyn Command> = match self.kind {
             BrushKind::ShapeModify => {
-                let strength = self.signed_strength(button);
-                serde_json::json!({
-                    "x": cx, "z": cz, "size": size, "rotation": rotation,
-                    "shapeName": pattern, "strength": strength,
-                })
+                use crate::sbc::heightmap::commands::terrain_shape_modify_command::{
+                    Opts, TerrainShapeModifyCommand,
+                };
+                Box::new(TerrainShapeModifyCommand::new(Opts {
+                    rotation,
+                    x: cx,
+                    z: cz,
+                    shape_name: pattern,
+                    strength: self.signed_strength(button),
+                    size,
+                }))
             }
             BrushKind::Smooth => {
+                use crate::sbc::heightmap::commands::terrain_smooth_command::{
+                    Opts, TerrainSmoothCommand,
+                };
                 let strength = self.signed_strength(button).abs();
                 // Lua's sigma curve, clamped the same way.
                 let sigma = (strength.sqrt().sqrt() / 2.0).clamp(0.20, 1.5);
-                serde_json::json!({
-                    "x": cx, "z": cz, "size": size, "rotation": rotation,
-                    "shapeName": pattern, "strength": strength, "sigma": sigma,
-                })
+                Box::new(TerrainSmoothCommand::new(Opts {
+                    rotation,
+                    x: cx,
+                    z: cz,
+                    shape_name: pattern,
+                    strength,
+                    size,
+                    sigma,
+                }))
             }
-            BrushKind::Level => serde_json::json!({
-                "x": cx, "z": cz, "size": size, "rotation": rotation,
-                "shapeName": pattern,
-                "strength": self.signed_strength(button),
-                "height": self.brush.height,
-                "applyDirID": self.brush.apply_dir.id(),
-            }),
-            BrushKind::Metal => serde_json::json!({
-                "x": cx, "z": cz, "size": size, "rotation": rotation,
-                "shapeName": pattern,
+            BrushKind::Level => {
+                use crate::sbc::heightmap::commands::terrain_level_command::{
+                    Opts, TerrainLevelCommand,
+                };
+                Box::new(TerrainLevelCommand::new(Opts {
+                    rotation,
+                    x: cx,
+                    z: cz,
+                    shape_name: pattern,
+                    strength: self.signed_strength(button),
+                    size,
+                    height: self.brush.height,
+                    apply_dir_id: self.brush.apply_dir.id(),
+                }))
+            }
+            BrushKind::Metal => {
+                use crate::sbc::metal::commands::terrain_metal_command::{
+                    Opts, TerrainMetalCommand,
+                };
                 // Right-click erases: Lua multiplies the amount by 0.
-                "amount": if button == RIGHT { 0.0 } else { self.brush.amount },
-            }),
-            BrushKind::Grass => serde_json::json!({
-                "x": cx, "z": cz, "size": size, "rotation": rotation,
-                "shapeName": pattern,
-                "amount": if button == RIGHT { 0.0 } else { 1.0 },
-            }),
+                Box::new(TerrainMetalCommand::new(Opts {
+                    rotation,
+                    x: cx,
+                    z: cz,
+                    shape_name: pattern,
+                    amount: if button == RIGHT {
+                        0.0
+                    } else {
+                        self.brush.amount
+                    },
+                    size,
+                }))
+            }
+            BrushKind::Grass => {
+                use crate::sbc::grass::commands::terrain_grass_command::{
+                    Opts, TerrainGrassCommand,
+                };
+                Box::new(TerrainGrassCommand::new(Opts {
+                    rotation,
+                    x: cx,
+                    z: cz,
+                    shape_name: pattern,
+                    amount: if button == RIGHT { 0.0 } else { 1.0 },
+                    size,
+                }))
+            }
             // The texture brush takes the *corner*, not the centre, and its
             // rotations are radians. `brushTexture` is a material map of
             // channel -> texture.
@@ -226,39 +260,46 @@ impl MapEditingState {
                 {
                     return;
                 }
+                use crate::sbc::textures::commands::terrain_change_texture_command::{
+                    Opts, TerrainChangeTextureCommand,
+                };
                 let enabled = &self.brush.texture_enabled;
                 let action = if button == RIGHT { -1.0 } else { 1.0 };
-                serde_json::json!({
-                    "x": x - size / 2.0,
-                    "z": z - size / 2.0,
-                    "size": size,
-                    "paintMode": self.brush.texture_paint_mode,
-                    "patternTexture": pattern,
-                    "patternRotation": rotation.to_radians(),
-                    "brushTexture": self.brush.brush_textures,
-                    "diffuseEnabled": enabled.get("diffuse").copied().unwrap_or(false),
-                    "specularEnabled": enabled.get("specular").copied().unwrap_or(false),
-                    "emissionEnabled": enabled.get("emission").copied().unwrap_or(false),
-                    "reflEnabled": enabled.get("refl").copied().unwrap_or(false),
-                    "mode": self.brush.mode,
-                    "kernelMode": self.brush.kernel_mode,
-                    "texScale": self.brush.tex_scale,
+                Box::new(TerrainChangeTextureCommand::new(Opts {
+                    x: x - size / 2.0,
+                    z: z - size / 2.0,
+                    size,
+                    paint_mode: self.brush.texture_paint_mode.clone(),
+                    pattern_texture: pattern.into(),
+                    pattern_rotation: rotation.to_radians(),
+                    brush_texture: serde_json::to_value(&self.brush.brush_textures)
+                        .unwrap_or_default(),
+                    extra: serde_json::json!({
+                        "diffuseEnabled": enabled.get("diffuse").copied().unwrap_or(false),
+                        "specularEnabled": enabled.get("specular").copied().unwrap_or(false),
+                        "emissionEnabled": enabled.get("emission").copied().unwrap_or(false),
+                        "reflEnabled": enabled.get("refl").copied().unwrap_or(false),
+                    }),
+                    mode: self.brush.mode.clone(),
+                    kernel_mode: self.brush.kernel_mode.clone(),
+                    tex_scale: self.brush.tex_scale,
                     // The command takes the material's own rotation in radians.
-                    "rotation": self.brush.tex_rotation.to_radians(),
-                    "texOffsetX": self.brush.tex_offset_x,
-                    "texOffsetY": self.brush.tex_offset_y,
-                    "diffuseColor": self.brush.diffuse_color,
-                    "falloffFactor": self.brush.falloff_factor,
-                    "featureFactor": self.brush.feature_factor,
-                    "strength": self.brush.strength,
-                    "value": self.brush.value,
-                    "voidFactor": self.brush.void_factor * action,
-                    "colorIndex": (self.brush.color_index as f32 * action) as i32,
-                    "exclusive": if self.brush.exclusive { 1 } else { 0 },
-                })
+                    rotation: self.brush.tex_rotation.to_radians(),
+                    tex_offset_x: self.brush.tex_offset_x,
+                    tex_offset_y: self.brush.tex_offset_y,
+                    diffuse_color: self.brush.diffuse_color,
+                    falloff_factor: self.brush.falloff_factor,
+                    feature_factor: self.brush.feature_factor,
+                    strength: self.brush.strength,
+                    value: self.brush.value,
+                    void_factor: self.brush.void_factor * action,
+                    color_index: (self.brush.color_index as f32 * action) as i32,
+                    exclusive: if self.brush.exclusive { 1 } else { 0 },
+                    ..Default::default()
+                }))
             }
         };
-        ctx.command(self.kind.command(), opts);
+        ctx.command(command);
     }
 
     fn signed_strength(&self, button: i32) -> f32 {
@@ -357,6 +398,9 @@ impl EditorState for MapEditingState {
             self.stop_painting(ctx);
             return;
         };
+        // Raising ground far enough can put the surface above the camera, and the
+        // ray then starts inside it: the stroke simply stops painting until the
+        // cursor is over ground again.
         let Some(hit) = trace_ground(ctx.interface, mouse.x, mouse.y) else {
             return;
         };

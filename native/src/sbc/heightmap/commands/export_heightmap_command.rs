@@ -14,6 +14,15 @@ pub struct ExportHeightmapCommand {
     heightmap_extremes: Option<Vec<f32>>,
 }
 
+impl ExportHeightmapCommand {
+    pub(crate) fn new(path: String) -> Self {
+        Self {
+            path,
+            heightmap_extremes: None,
+        }
+    }
+}
+
 impl Command for ExportHeightmapCommand {
     fn execute(&mut self, ctx: &mut Context) {
         jobs::export::submit(

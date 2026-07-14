@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use ctrl_macros::ok_or;
 use log::{debug, error};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
@@ -12,12 +12,18 @@ use crate::sbc::command_system::registry::register_command;
 use crate::sbc::heightmap::model::terrain_manager::GreyscaleShape;
 
 // TODO: Load directly in Rust so we don't need to pass these large arrays
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SetHeightmapBrushCommand {
     greyscale: SetHeightmapBrushCommandOpts,
 }
 
-#[derive(Deserialize, Debug)]
+impl SetHeightmapBrushCommand {
+    pub(crate) fn new(greyscale: SetHeightmapBrushCommandOpts) -> Self {
+        Self { greyscale }
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SetHeightmapBrushCommandOpts {
     pub res: HashMap<usize, f32>,
     #[serde(rename = "sizeX")]

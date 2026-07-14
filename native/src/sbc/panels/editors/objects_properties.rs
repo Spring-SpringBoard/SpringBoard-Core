@@ -1,9 +1,10 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
-use crate::sbc::envelope::envelope_fields;
 use crate::sbc::objects::{
     FieldRange, FieldValueType, ObjectFieldDescriptor, ObjectKind, ObjectManager, SelectionManager,
+    SetObjectParamCommand,
 };
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
@@ -178,12 +179,12 @@ impl PropertiesView {
     }
 
     /// The command setting one field on the selected object.
-    fn commit(&self, base: &str, next: &mut u64) -> Vec<String> {
+    fn commit(&self, base: &str) -> Vec<Box<dyn Command>> {
         let Some((kind, model_id)) = self.selected else {
             return vec![];
         };
 
-        let (key, value) = if let Some((field, _)) = component(base) {
+        let (key, value): (&str, serde_json::Value) = if let Some((field, _)) = component(base) {
             // A vector is set whole, from its three axis fields.
             let axis = |axis: &str| {
                 let value = self.fields.number(&component_name(field, axis));
@@ -228,16 +229,12 @@ impl PropertiesView {
             (base, value)
         };
 
-        vec![envelope_fields(
-            "SetObjectParamCommand",
-            next,
-            serde_json::json!({
-                "objType": kind_wire(kind),
-                "modelID": model_id,
-                "key": key,
-                "value": value,
-            }),
-        )]
+        vec![Box::new(SetObjectParamCommand::new(
+            kind,
+            model_id,
+            serde_json::Value::String(key.to_string()),
+            value,
+        ))]
     }
 
     fn sub_fields_of(&self, parent: &str) -> Vec<String> {
@@ -285,14 +282,6 @@ impl PropertiesView {
     }
 }
 
-fn kind_wire(kind: ObjectKind) -> &'static str {
-    match kind {
-        ObjectKind::Unit => "unit",
-        ObjectKind::Feature => "feature",
-        ObjectKind::Area => "area",
-    }
-}
-
 impl Editor for PropertiesView {
     fn generate_rml(&self) -> String {
         if self.selected.is_none() {
@@ -329,16 +318,15 @@ impl Editor for PropertiesView {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         self.fields.read(&base, interface);
-        self.commit(&base, next)
+        self.commit(&base)
     }
 
-    fn process_drag_end(&mut self, name: &str, next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
-        self.commit(&base, next)
+        self.commit(&base)
     }
 
     /// Whether the selection changed since the last look: cheap, runs each tick.

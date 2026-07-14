@@ -33,14 +33,6 @@ impl Model for SelectionManager {
 }
 
 impl SelectionManager {
-    fn set_for(&mut self, kind: ObjectKind) -> &mut BTreeSet<i32> {
-        match kind {
-            ObjectKind::Unit => &mut self.units,
-            ObjectKind::Feature => &mut self.features,
-            ObjectKind::Area => &mut self.areas,
-        }
-    }
-
     pub(crate) fn get(&self, kind: ObjectKind) -> Vec<i32> {
         match kind {
             ObjectKind::Unit => self.units.iter().copied().collect(),
@@ -75,14 +67,6 @@ impl SelectionManager {
             }
         }
         None
-    }
-
-    fn set_ref(&self, kind: ObjectKind) -> &BTreeSet<i32> {
-        match kind {
-            ObjectKind::Unit => &self.units,
-            ObjectKind::Feature => &self.features,
-            ObjectKind::Area => &self.areas,
-        }
     }
 
     pub(crate) fn clear(&mut self) {
@@ -122,6 +106,22 @@ impl SelectionManager {
             set.insert(model_id);
         }
         self.revision += 1;
+    }
+
+    fn set_for(&mut self, kind: ObjectKind) -> &mut BTreeSet<i32> {
+        match kind {
+            ObjectKind::Unit => &mut self.units,
+            ObjectKind::Feature => &mut self.features,
+            ObjectKind::Area => &mut self.areas,
+        }
+    }
+
+    fn set_ref(&self, kind: ObjectKind) -> &BTreeSet<i32> {
+        match kind {
+            ObjectKind::Unit => &self.units,
+            ObjectKind::Feature => &self.features,
+            ObjectKind::Area => &self.areas,
+        }
     }
 }
 

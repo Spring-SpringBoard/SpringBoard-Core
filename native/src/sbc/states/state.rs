@@ -7,8 +7,9 @@
 
 use spring_native::prelude::NativeInterfaceRef;
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
-use crate::sbc::envelope::{envelope, envelope_fields, envelope_with};
+use crate::sbc::command_system::SetMultipleCommandModeCommand;
 
 /// What a state may do to the world, and the envelopes it produced this tick.
 ///
@@ -18,8 +19,7 @@ use crate::sbc::envelope::{envelope, envelope_fields, envelope_with};
 pub(crate) struct StateContext<'a> {
     pub interface: &'a NativeInterfaceRef,
     pub models: &'a mut Models,
-    envelopes: Vec<String>,
-    next_cmd_id: &'a mut u64,
+    commands: Vec<Box<dyn Command>>,
     transition: Option<Transition>,
 }
 
@@ -42,16 +42,11 @@ pub(crate) enum Transition {
 }
 
 impl<'a> StateContext<'a> {
-    pub(crate) fn new(
-        interface: &'a NativeInterfaceRef,
-        models: &'a mut Models,
-        next_cmd_id: &'a mut u64,
-    ) -> Self {
+    pub(crate) fn new(interface: &'a NativeInterfaceRef, models: &'a mut Models) -> Self {
         StateContext {
             interface,
             models,
-            envelopes: Vec::new(),
-            next_cmd_id,
+            commands: Vec::new(),
             transition: None,
         }
     }
@@ -66,45 +61,19 @@ impl<'a> StateContext<'a> {
     }
 
     /// Queue a command. Executed in order, after the state returns.
-    pub(crate) fn command(&mut self, class: &str, opts: serde_json::Value) {
-        let e = envelope(class, self.next_cmd_id, opts);
-        self.envelopes.push(e);
-    }
-
-    /// Queue a command whose payload sits under a key other than `opts`
-    /// (`SetHeightmapBrushCommand` takes a `greyscale` object).
-    pub(crate) fn command_with(&mut self, class: &str, key: &str, payload: serde_json::Value) {
-        let e = envelope_with(class, self.next_cmd_id, key, payload);
-        self.envelopes.push(e);
-    }
-
-    /// Queue a command whose fields live directly on `data`, with no wrapper
-    /// key at all (`AddObjectCommand` takes `objType` and `params`).
-    pub(crate) fn command_fields(&mut self, class: &str, fields: serde_json::Value) {
-        let e = envelope_fields(class, self.next_cmd_id, fields);
-        self.envelopes.push(e);
+    pub(crate) fn command(&mut self, command: Box<dyn Command>) {
+        self.commands.push(command);
     }
 
     /// Open or close a streaming group: everything between the two lands on the
     /// undo stack as a single entry, which is what makes a brush stroke one undo.
     pub(crate) fn set_multiple_command_mode(&mut self, on: bool) {
-        let id = *self.next_cmd_id;
-        *self.next_cmd_id += 1;
-        self.envelopes.push(
-            serde_json::json!({
-                "tag": "command",
-                "data": {
-                    "className": "SetMultipleCommandModeCommand",
-                    "__cmd_id": id,
-                    "state": on,
-                }
-            })
-            .to_string(),
-        );
+        self.commands
+            .push(Box::new(SetMultipleCommandModeCommand { state: on }));
     }
 
-    pub(crate) fn take_envelopes(&mut self) -> Vec<String> {
-        std::mem::take(&mut self.envelopes)
+    pub(crate) fn take_commands(&mut self) -> Vec<Box<dyn Command>> {
+        std::mem::take(&mut self.commands)
     }
 }
 

@@ -253,6 +253,7 @@ impl ObjectDefsView {
                         .push(crate::sbc::panels::field::CommitRequest {
                             field: "search".to_string(),
                             from_blur: false,
+                            revert: false,
                         });
                 })?;
         }
@@ -713,8 +714,7 @@ macro_rules! object_defs_editor {
                 &mut self,
                 interface: &NativeInterfaceRef,
                 document: u64,
-                _next: &mut u64,
-            ) -> Vec<String> {
+            ) -> Vec<Box<dyn crate::sbc::command_system::command::Command>> {
                 let _ = self.defs.tick(interface, document);
                 vec![]
             }
@@ -746,8 +746,7 @@ macro_rules! object_defs_editor {
                 &mut self,
                 name: &str,
                 interface: &NativeInterfaceRef,
-                _next: &mut u64,
-            ) -> Vec<String> {
+            ) -> Vec<Box<dyn crate::sbc::command_system::command::Command>> {
                 if self.defs.is_field(name) {
                     self.defs.note_field_change(name, interface);
                 } else {
@@ -755,7 +754,10 @@ macro_rules! object_defs_editor {
                 }
                 vec![]
             }
-            fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
+            fn process_drag_end(
+                &mut self,
+                _name: &str,
+            ) -> Vec<Box<dyn crate::sbc::command_system::command::Command>> {
                 vec![]
             }
             /// The object brush is a brush: Shift+wheel resizes it while placing,

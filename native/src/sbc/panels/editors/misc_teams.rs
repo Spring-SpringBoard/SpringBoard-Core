@@ -3,10 +3,10 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
-use crate::sbc::envelope::envelope_fields;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope_with, FieldSet, Layout};
+use crate::sbc::panels::editor_base::{FieldSet, Layout};
 use crate::sbc::panels::field::{
     element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
 };
@@ -14,6 +14,7 @@ use crate::sbc::panels::fields::{
     BooleanField, ChoiceField, ColorField, NumericField, StringField,
 };
 use crate::sbc::panels::registry::{EditorSpec, Tab};
+use crate::sbc::teams::commands::{AddTeamCommand, RemoveTeamCommand, UpdateTeamCommand};
 use crate::sbc::teams::{Color, Team, TeamManager};
 
 inventory::submit! {
@@ -188,8 +189,7 @@ impl TeamsView {
         &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
-        next: &mut u64,
-    ) -> Option<String> {
+    ) -> Option<Box<dyn Command>> {
         let id = self.editing.take()?;
         for name in [
             "teamName",
@@ -231,25 +231,22 @@ impl TeamsView {
             }),
         );
         let payload = serde_json::to_value(team).ok()?;
-        Some(envelope_with("UpdateTeamCommand", next, "team", payload))
+        UpdateTeamCommand::from_team(payload).map(|c| Box::new(c) as Box<dyn Command>)
     }
 
-    fn add_team(&self, next: &mut u64) -> String {
+    fn add_team(&self) -> Option<Box<dyn Command>> {
         let count = self
             .teams
             .iter()
             .filter(|team| !extra_bool(team, "gaia"))
             .count();
-        envelope_fields(
-            "AddTeamCommand",
-            next,
-            serde_json::json!({
-                "name": format!("New team: {count}"),
-                "color": { "r": 0.35, "g": 0.65, "b": 0.95 },
-                "allyTeam": 1,
-                "side": "",
-            }),
-        )
+        let fields = serde_json::json!({
+            "name": format!("New team: {count}"),
+            "color": { "r": 0.35, "g": 0.65, "b": 0.95 },
+            "allyTeam": 1,
+            "side": "",
+        });
+        AddTeamCommand::from_fields(fields).map(|c| Box::new(c) as Box<dyn Command>)
     }
 }
 
@@ -332,35 +329,31 @@ impl Editor for TeamsView {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        _next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         self.fields.read(name, interface);
         vec![]
     }
 
-    fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, _name: &str) -> Vec<Box<dyn Command>> {
         vec![]
     }
 
-    fn tick(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        next: &mut u64,
-    ) -> Vec<String> {
+    fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) -> Vec<Box<dyn Command>> {
         let clicks: Vec<_> = self.clicks.borrow_mut().drain(..).collect();
         let mut commands = Vec::new();
         for click in clicks {
             match click {
-                TeamClick::Add => commands.push(self.add_team(next)),
+                TeamClick::Add => {
+                    if let Some(command) = self.add_team() {
+                        commands.push(command);
+                    }
+                }
                 TeamClick::Edit(id) => self.begin_edit(id, interface, document),
-                TeamClick::Remove(id) => commands.push(envelope_fields(
-                    "RemoveTeamCommand",
-                    next,
-                    serde_json::json!({ "teamID": id }),
-                )),
+                TeamClick::Remove(id) => {
+                    commands.push(Box::new(RemoveTeamCommand::new(id)));
+                }
                 TeamClick::Close => {
-                    if let Some(command) = self.finish_edit(interface, document, next) {
+                    if let Some(command) = self.finish_edit(interface, document) {
                         commands.push(command);
                     }
                 }

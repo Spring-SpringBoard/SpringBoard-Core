@@ -1,11 +1,11 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sbc::command_system::registry::register_command;
 
 use super::super::command::Command;
 use super::super::context::{CommandManagerIntent, Context};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct RedoCommand;
 
 impl Command for RedoCommand {

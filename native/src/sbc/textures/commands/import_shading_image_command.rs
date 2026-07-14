@@ -17,6 +17,14 @@ pub struct ImportShadingImageCommand {
     texture_path: String,
 }
 
+impl ImportShadingImageCommand {
+    /// Construct from a fields payload (`texType`, `texturePath`). Transitional:
+    /// becomes a typed constructor per docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_fields(fields: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(fields).ok()
+    }
+}
+
 impl Command for ImportShadingImageCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let interface = *ctx.interface;

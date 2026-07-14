@@ -7,7 +7,7 @@
 
 use std::time::Instant;
 
-use crate::sbc::objects::{ObjectKind, ObjectManager};
+use crate::sbc::objects::{AddObjectCommand, ObjectKind, ObjectManager, RemoveObjectCommand};
 use crate::sbc::panels::ModelShader;
 use crate::sbc::states::state::{cursor, EditorState, GroundHit, StateContext, Transition};
 
@@ -44,15 +44,6 @@ impl Default for PlacementConfig {
             rot_min: [0.0, -std::f32::consts::PI, 0.0],
             rot_max: [0.0, std::f32::consts::PI, 0.0],
         }
-    }
-}
-
-/// `AddObjectCommand`'s `objType`, lower-case in the wire format.
-fn kind_wire(kind: ObjectKind) -> &'static str {
-    match kind {
-        ObjectKind::Unit => "unit",
-        ObjectKind::Feature => "feature",
-        ObjectKind::Area => "area",
     }
 }
 
@@ -152,18 +143,13 @@ impl AddObjectState {
     }
 
     fn place_one(&mut self, ctx: &mut StateContext, x: f32, y: f32, z: f32, rot: [f32; 3]) {
-        ctx.command_fields(
-            "AddObjectCommand",
-            serde_json::json!({
-                "objType": kind_wire(self.kind),
-                "params": {
-                    "defName": self.def_name,
-                    "pos": { "x": x, "y": y, "z": z },
-                    "rot": { "x": rot[0], "y": rot[1], "z": rot[2] },
-                    "team": self.config.team,
-                },
-            }),
-        );
+        let params = serde_json::json!({
+            "defName": self.def_name,
+            "pos": { "x": x, "y": y, "z": z },
+            "rot": { "x": rot[0], "y": rot[1], "z": rot[2] },
+            "team": self.config.team,
+        });
+        ctx.command(Box::new(AddObjectCommand::new(self.kind, params)));
     }
 
     fn apply_set(&mut self, ctx: &mut StateContext, hit: GroundHit) {
@@ -230,10 +216,7 @@ impl AddObjectState {
         }
         ctx.set_multiple_command_mode(true);
         for id in ids {
-            ctx.command_fields(
-                "RemoveObjectCommand",
-                serde_json::json!({ "objType": kind_wire(self.kind), "modelID": id }),
-            );
+            ctx.command(Box::new(RemoveObjectCommand::new(self.kind, id)));
         }
         ctx.set_multiple_command_mode(false);
     }

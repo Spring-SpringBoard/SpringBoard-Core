@@ -1,1 +1,1 @@
-mod terrain_grass_command;
+pub(crate) mod terrain_grass_command;

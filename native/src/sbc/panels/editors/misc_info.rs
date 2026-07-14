@@ -1,11 +1,13 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope_with, resolve_base, FieldSet, Layout};
+use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::StringField;
 use crate::sbc::panels::registry::{EditorSpec, Tab};
+use crate::sbc::project::commands::SetScenarioInfoCommand;
 use crate::sbc::project::ScenarioInfoManager;
 
 // Mirrors ScenarioInfoView:Register in scen_edit/view/general/scenario_info_view.lua.
@@ -42,18 +44,17 @@ impl ScenarioInfoView {
         }
     }
 
-    fn info_envelope(&self, next: &mut u64) -> Vec<String> {
-        vec![envelope_with(
-            "SetScenarioInfoCommand",
-            next,
-            "data",
-            serde_json::json!({
-                "name": self.fields.text("name"),
-                "description": self.fields.text("description"),
-                "version": self.fields.text("version"),
-                "author": self.fields.text("author"),
-            }),
-        )]
+    fn info_command(&self) -> Vec<Box<dyn Command>> {
+        let data = serde_json::json!({
+            "name": self.fields.text("name"),
+            "description": self.fields.text("description"),
+            "version": self.fields.text("version"),
+            "author": self.fields.text("author"),
+        });
+        match SetScenarioInfoCommand::from_data(data) {
+            Some(c) => vec![Box::new(c)],
+            None => vec![],
+        }
     }
 }
 
@@ -85,17 +86,16 @@ impl Editor for ScenarioInfoView {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         if !FIELDS.contains(&base.as_str()) {
             return vec![];
         }
         self.fields.read(&base, interface);
-        self.info_envelope(next)
+        self.info_command()
     }
 
-    fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, _name: &str) -> Vec<Box<dyn Command>> {
         vec![]
     }
 

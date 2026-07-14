@@ -31,6 +31,17 @@ fn lua_map<'de, D: Deserializer<'de>>(de: D) -> Result<Map<String, Value>, D::Er
     }
 }
 
+impl ReloadIntoProjectCommand {
+    pub(crate) fn new(path: String, game_name: String, game_version: String) -> Self {
+        Self {
+            path,
+            mod_options: Map::new(),
+            game_name,
+            game_version,
+        }
+    }
+}
+
 impl Command for ReloadIntoProjectCommand {
     fn execute(&mut self, ctx: &mut Context) {
         if let Err(reason) = self.run(ctx) {

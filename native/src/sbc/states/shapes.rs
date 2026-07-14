@@ -61,19 +61,23 @@ pub(crate) fn load_shape(interface: &NativeInterfaceRef, path: &str) -> Option<S
 /// `res` is a map keyed by index. It must cover every texel: the command rebuilds
 /// a dense array from it and rejects a map whose keys have holes, so a
 /// transparent texel has to be sent as a zero rather than left out.
-pub(crate) fn upload_payload(name: &str, shape: &Shape) -> serde_json::Value {
-    let res: serde_json::Map<String, serde_json::Value> = shape
+pub(crate) fn brush_opts(
+    name: &str,
+    shape: &Shape,
+) -> crate::sbc::heightmap::commands::set_heightmap_brush_command::SetHeightmapBrushCommandOpts {
+    use crate::sbc::heightmap::commands::set_heightmap_brush_command::SetHeightmapBrushCommandOpts;
+    let res: std::collections::HashMap<usize, f32> = shape
         .res
         .iter()
         .enumerate()
-        .map(|(index, value)| (index.to_string(), serde_json::Value::from(*value)))
+        .map(|(index, value)| (index, *value))
         .collect();
-    serde_json::json!({
-        "res": res,
-        "sizeX": shape.size,
-        "sizeZ": shape.size,
-        "name": name,
-    })
+    SetHeightmapBrushCommandOpts {
+        res,
+        size_x: shape.size,
+        size_z: shape.size,
+        name: name.to_string(),
+    }
 }
 
 #[cfg(test)]
@@ -88,13 +92,12 @@ mod tests {
             size: 2,
             res: vec![0.0, 0.5, 0.0, 1.0],
         };
-        let payload = upload_payload("brush", &shape);
-        let res = payload["res"].as_object().unwrap();
-        assert_eq!(res.len(), 4, "every texel is uploaded");
-        assert_eq!(res["0"], 0.0);
-        assert_eq!(res["1"], 0.5);
-        assert_eq!(res["3"], 1.0);
-        assert_eq!(payload["sizeX"], 2);
-        assert_eq!(payload["name"], "brush");
+        let opts = brush_opts("brush", &shape);
+        assert_eq!(opts.res.len(), 4, "every texel is uploaded");
+        assert_eq!(opts.res[&0], 0.0);
+        assert_eq!(opts.res[&1], 0.5);
+        assert_eq!(opts.res[&3], 1.0);
+        assert_eq!(opts.size_x, 2);
+        assert_eq!(opts.name, "brush");
     }
 }

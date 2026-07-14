@@ -25,6 +25,22 @@ pub struct SaveProjectInfoCommand {
     project: Option<ProjectData>,
 }
 
+impl SaveProjectInfoCommand {
+    pub(crate) fn new(
+        name: String,
+        path: String,
+        is_new_project: bool,
+        project: Option<ProjectData>,
+    ) -> Self {
+        Self {
+            name,
+            path,
+            _is_new_project: is_new_project,
+            project,
+        }
+    }
+}
+
 impl Command for SaveProjectInfoCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let mut project = self

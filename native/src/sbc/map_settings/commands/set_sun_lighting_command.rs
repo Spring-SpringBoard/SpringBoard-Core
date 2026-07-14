@@ -1,19 +1,33 @@
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spring_native::prelude::sys;
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SetSunLightingCommand {
     opts: SunLighting,
     #[serde(skip)]
     old: Option<SunLighting>,
 }
 
+impl SetSunLightingCommand {
+    /// Construct from a partial opts payload (one or few fields). Transitional:
+    /// the opts DTO becomes fully typed per docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_opts(opts: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(opts)
+            .ok()
+            .map(|opts| Self { opts, old: None })
+    }
+}
+
 impl Command for SetSunLightingCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         debug!("SetSunLightingCommand: {:?}", self.opts);
         if self.old.is_none() {
@@ -36,7 +50,7 @@ impl Command for SetSunLightingCommand {
 /// via `Spring.SetSunLighting`. Partial opts; undo snapshots via `Gfx::GetSun`
 /// (`""` = ground, `"unit"` = model). Wire `unit*` names map to engine `model*`.
 /// Runs unsynced (widget state) where `Gfx` is valid.
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 struct SunLighting {
     #[serde(default, rename = "groundAmbientColor")]
     ground_ambient: Option<[f32; 4]>,

@@ -1,12 +1,13 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::states::{BrushSettings, StateRequest};
 
 /// An editor panel. Each concrete editor owns its fields, generates its RML
-/// body, and processes field changes into command envelopes.
+/// body, and processes field changes into typed commands.
 pub(crate) trait Editor {
     /// Generate the full RML body for this editor (field rows, section headers).
     fn generate_rml(&self) -> String;
@@ -28,12 +29,11 @@ pub(crate) trait Editor {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next_cmd_id: &mut u64,
-    ) -> Vec<String>;
+    ) -> Vec<Box<dyn Command>>;
 
     /// Process a field change from drag-end: uses the internal value (already
     /// updated during drag). Does NOT read from DOM.
-    fn process_drag_end(&mut self, name: &str, next_cmd_id: &mut u64) -> Vec<String>;
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>>;
 
     /// Draw-thread work: an editor that renders models to textures (the def
     /// grids' thumbnails) does it here, from `draw_screen`, where GL is current.
@@ -43,13 +43,8 @@ pub(crate) trait Editor {
 
     /// Per-tick work for editors that own something other than fields — a grid
     /// drains its queued clicks here, outside the RmlUi event dispatch.
-    fn tick(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        next_cmd_id: &mut u64,
-    ) -> Vec<String> {
-        let _ = (interface, document, next_cmd_id);
+    fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) -> Vec<Box<dyn Command>> {
+        let _ = (interface, document);
         vec![]
     }
 

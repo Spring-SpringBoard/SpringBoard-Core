@@ -11,7 +11,7 @@ pub type CommandId = u64;
 /// Folds a stream's commands into the single one that lands on the undo stack.
 pub type Merger = fn(Vec<Box<dyn Command>>) -> Box<dyn Command>;
 
-pub trait Command {
+pub trait Command: 'static {
     fn execute(&mut self, ctx: &mut Context);
 
     /// Only called when `undoable()`.
@@ -29,6 +29,29 @@ pub trait Command {
     /// [`CompoundCommand`]; override to fold more cheaply.
     fn merger(&self) -> Merger {
         |group| Box::new(CompoundCommand { commands: group })
+    }
+
+    /// The concrete type's id, so the registry can resolve a `Box<dyn Command>`
+    /// back to its registered `className` for the command log / e2e assertions
+    /// without per-command boilerplate. See `registry::class_name_of`.
+    fn type_id(&self) -> std::any::TypeId {
+        std::any::TypeId::of::<Self>()
+    }
+
+    /// The command's fields as JSON, for the command log / e2e assertions.
+    /// Default `Null` (className-only log); commands that `#[derive(Serialize)]`
+    /// override this to forward to `serde_json::to_value`. A trait method (rather
+    /// than serializing `&dyn Command` directly) is the bridge from the erased
+    /// trait object to the concrete `Serialize` impl.
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::Value::Null
+    }
+
+    /// Whether this command is an off-history preview (a drag frame). The
+    /// command log stamps `__preview` on these so the e2e suite can tell
+    /// committed commands from transient previews.
+    fn is_preview(&self) -> bool {
+        false
     }
 }
 
@@ -51,6 +74,20 @@ impl Command for PreviewCommand {
 
     fn undoable(&self) -> bool {
         false
+    }
+
+    /// Log as the inner command it wraps, so the e2e log shows the real
+    /// className + fields with `__preview` stamped on.
+    fn type_id(&self) -> std::any::TypeId {
+        self.inner.type_id()
+    }
+
+    fn serialize_log(&self) -> serde_json::Value {
+        self.inner.serialize_log()
+    }
+
+    fn is_preview(&self) -> bool {
+        true
     }
 }
 
@@ -82,6 +119,7 @@ inventory::submit! {
     CommandRegistration {
         class_name: "CompoundCommand",
         handler: parse_compound_command,
+        type_id_fn: std::any::TypeId::of::<CompoundCommand>,
     }
 }
 

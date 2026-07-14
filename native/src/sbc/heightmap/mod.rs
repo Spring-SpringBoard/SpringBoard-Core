@@ -1,4 +1,4 @@
-mod commands;
+pub(crate) mod commands;
 pub(crate) mod jobs;
 pub(crate) mod model;
 pub(crate) mod ops;

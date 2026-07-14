@@ -31,6 +31,10 @@ _CASE_CROP = "<case>"
 # scenarios' MAP_TOLERANCE.
 PANEL_TOLERANCE = 20
 
+# How long a pointer move is given to reach the engine before a button goes down
+# on top of it.
+SETTLE = 0.12
+
 # Envelope bookkeeping, not command fields.
 _ENVELOPE_KEYS = frozenset({"className", "__cmd_id", "__preview"})
 
@@ -381,6 +385,7 @@ class E2ERun:
         # Root-coordinate drag for modal dialogs, stepped like drag().
         self.event("drag_root", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
         run("xdotool", "mousemove", str(x1), str(y1))
+        time.sleep(SETTLE)  # see drag()
         run("xdotool", "mousedown", str(button))
         time.sleep(step_delay)
         for i in range(1, steps + 1):
@@ -398,6 +403,7 @@ class E2ERun:
         self.require_window()
         self.event("press", x=x, y=y, button=button)
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        time.sleep(SETTLE)  # the move must land before the press; see drag()
         run("xdotool", "mousedown", str(button))
         time.sleep(delay)
 
@@ -424,6 +430,11 @@ class E2ERun:
         self.require_window()
         self.event("drag", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
         run("xdotool", "mousemove", "--window", self.window, str(x1), str(y1))
+        # Let the move land before the press. The editor traces the ground from
+        # where it last saw the pointer, so a press that overtakes its own move
+        # traces from the *previous* spot -- off the map, if that was a parked
+        # screenshot -- and the brush refuses to paint.
+        time.sleep(SETTLE)
         run("xdotool", "mousedown", str(button))
         time.sleep(step_delay)
         for i in range(1, steps + 1):
@@ -822,6 +833,25 @@ class E2ERun:
                 f"expected {count} committed {class_name}, got {len(sent)}"
             )
         self.event("assert_command_count", className=class_name, count=count)
+
+    def assert_command_at_least(self, class_name: str, count: int) -> int:
+        """Assert at least `count` committed commands of this class were sent.
+
+        A held brush stroke is a stream of dabs, not one: how many depends on how
+        long the button was down, so the floor is what can be asserted.
+        """
+        sent = [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("className") == class_name
+            and not entry.get("data", {}).get("__preview")
+        ]
+        if len(sent) < count:
+            raise AssertionError(
+                f"expected at least {count} committed {class_name}, got {len(sent)}"
+            )
+        self.event("assert_command_at_least", className=class_name, count=len(sent))
+        return len(sent)
 
     def assert_any_command(self, class_name: str, **expected: object) -> dict:
         """Assert at least one committed command matched `expected`.

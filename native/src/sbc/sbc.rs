@@ -4,6 +4,8 @@ use serde::Deserialize;
 use spring_native::prelude::*;
 
 use crate::sbc::chonsole::ChonsoleManager;
+use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::command::CommandId;
 use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::devconsole::DevConsoleManager;
@@ -66,8 +68,8 @@ impl NativeModule for SBC {
                 states.sync_brush(models);
                 states.update(models)
             })?;
-        self.drain_panel_envelopes();
-        self.drain_state_envelopes();
+        self.drain_panel_commands();
+        self.drain_state_commands();
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
         }
@@ -137,7 +139,7 @@ impl NativeModule for SBC {
         let handled = self
             .models
             .with::<StateManager, _>(|s, m| s.key_press(m, key_code))?;
-        self.drain_state_envelopes();
+        self.drain_state_commands();
         Ok(handled)
     }
 
@@ -186,7 +188,7 @@ impl NativeModule for SBC {
         let handled = self
             .models
             .with::<StateManager, _>(|s, m| s.mouse_move(m, x, y, button))?;
-        self.drain_state_envelopes();
+        self.drain_state_commands();
         Ok(handled)
     }
 
@@ -202,7 +204,7 @@ impl NativeModule for SBC {
         let handled = self
             .models
             .with::<StateManager, _>(|s, m| s.mouse_press(m, x, y, button))?;
-        self.drain_state_envelopes();
+        self.drain_state_commands();
         Ok(handled)
     }
 
@@ -212,7 +214,7 @@ impl NativeModule for SBC {
         self.model::<PanelManager>().mouse_release(x, y, button)?;
         self.models
             .with::<StateManager, _>(|s, m| s.mouse_release(m, x, y, button))?;
-        self.drain_state_envelopes();
+        self.drain_state_commands();
         Ok(())
     }
 
@@ -241,20 +243,20 @@ impl SBC {
         }
     }
 
-    /// Drain queued command envelopes from native panels and route them through
-    /// the command system (gives them undo/redo, history events, etc.).
-    fn drain_panel_envelopes(&mut self) {
-        for envelope in self.model::<PanelManager>().drain_envelopes() {
-            self.route(&envelope);
+    /// Drain typed commands queued by native producers and submit them directly
+    /// as `Box<dyn Command>` rather than a JSON envelope.
+    fn drain_panel_commands(&mut self) {
+        for command in self.model::<PanelManager>().drain_commands() {
+            self.submit_command(command);
         }
     }
 
-    /// Route what the active editing state queued. Drained right after each
+    /// Submit what the active editing state queued. Drained right after each
     /// callin that can produce commands, so a brush stroke's `SetMultipleCommand
     /// ModeCommand(true)` reaches the command manager before the strokes do.
-    fn drain_state_envelopes(&mut self) {
-        for envelope in self.model::<StateManager>().drain_envelopes() {
-            self.route(&envelope);
+    fn drain_state_commands(&mut self) {
+        for command in self.model::<StateManager>().drain_commands() {
+            self.submit_command(command);
         }
     }
 
@@ -317,6 +319,56 @@ impl SBC {
             Err(err) => error!("{err}"),
         }
     }
+
+    /// Submit a command produced natively (no JSON envelope, no `className`).
+    /// The command manager allocates the id; this is the typed counterpart to
+    /// `run_command`, which serves the Lua/envelope path. Logging is centralized
+    /// here so the e2e command log captures native commands without each
+    /// producer building JSON for it.
+    pub(crate) fn submit_command(&mut self, command: Box<dyn Command>) {
+        let id = self.command_manager.allocate_command_id();
+        log_native_command(&*command, id);
+        let (history_events, io_jobs) = {
+            let mut ctx = Context::new(&self.interface, id, &mut self.models);
+            let events = self.command_manager.execute(command, id, &mut ctx);
+            (events, std::mem::take(&mut ctx.io_jobs))
+        };
+        for job in io_jobs {
+            self.io_worker.submit(job);
+        }
+        event_bridge::emit(
+            &self.interface,
+            self.models.get::<ObjectManager>().drain_events(),
+        );
+        self.models.on_history_events(&history_events);
+    }
+}
+
+/// Log a native command to `commands.jsonl` in the envelope shape the e2e suite
+/// parses: `{data: {className, __cmd_id, ...serialized fields}}`. The className
+/// comes from the registry's `TypeId` map; the fields come from `Serialize`.
+fn log_native_command(command: &dyn Command, id: CommandId) {
+    let Some(class_name) = crate::sbc::command_system::registry::class_name_of(command) else {
+        return;
+    };
+    let mut data = command.serialize_log();
+    if let serde_json::Value::Object(map) = &mut data {
+        map.insert("className".to_string(), class_name.into());
+        map.insert("__cmd_id".to_string(), id.into());
+        if command.is_preview() {
+            map.insert("__preview".to_string(), true.into());
+        }
+    } else {
+        // Unit structs / default `Null`: log className + id with no fields.
+        let mut preview = serde_json::Map::new();
+        preview.insert("className".to_string(), class_name.into());
+        preview.insert("__cmd_id".to_string(), id.into());
+        if command.is_preview() {
+            preview.insert("__preview".to_string(), true.into());
+        }
+        data = serde_json::Value::Object(preview);
+    }
+    log_command(&serde_json::json!({ "data": data }).to_string());
 }
 
 /// Append every raw command received from Lua to the file named by

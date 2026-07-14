@@ -10,6 +10,7 @@
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
@@ -148,8 +149,7 @@ impl Editor for DevFieldsView {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        _next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name);
         self.fields.read(base, interface);
         log::info!("dev-fields: {base} = {}", describe(self.fields.value(base)));
@@ -158,7 +158,7 @@ impl Editor for DevFieldsView {
 
     /// A drag changes the value without the DOM ever firing `change`, so the
     /// value is reported here or it is never reported at all.
-    fn process_drag_end(&mut self, name: &str, _next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name);
         log::info!(
             "dev-fields: {base} = {} (dragged)",

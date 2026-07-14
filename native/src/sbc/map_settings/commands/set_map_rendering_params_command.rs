@@ -1,17 +1,29 @@
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spring_native::prelude::sys;
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SetMapRenderingParamsCommand {
     opts: MapRendering,
 }
 
+impl SetMapRenderingParamsCommand {
+    /// Construct from a partial opts payload (one or few fields). Transitional:
+    /// the opts DTO becomes fully typed per docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_opts(opts: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(opts).ok().map(|opts| Self { opts })
+    }
+}
+
 impl Command for SetMapRenderingParamsCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         debug!("SetMapRenderingParamsCommand: {:?}", self.opts);
         let _ = ctx
@@ -28,7 +40,7 @@ impl Command for SetMapRenderingParamsCommand {
 /// Sets map-rendering params (splat scales/mults, void water/ground) via
 /// `Spring.SetMapRenderingParams`. Partial opts. No undo — the Lua command's undo
 /// is a FIXME stub, so adding one here would diverge. Runs unsynced (widget state).
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 struct MapRendering {
     #[serde(default, rename = "splatTexScales")]
     splat_tex_scales: Option<[f32; 4]>,

@@ -20,7 +20,6 @@ mod textures;
 mod triggers;
 mod variables;
 
-mod envelope;
 mod hashable_float;
 mod io;
 mod keys;

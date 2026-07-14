@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::sbc::command_system::command::Command;
@@ -10,7 +10,7 @@ use crate::sbc::objects::ObjectManager;
 
 // TODO(concrete-commands): replace with AddAreaCommand/AddFeatureCommand/
 // AddUnitCommand carrying typed fields, no JSON. See docs/porting/todo.md.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct AddObjectCommand {
     #[serde(rename = "objType")]
     kind: ObjectKind,
@@ -19,7 +19,23 @@ pub struct AddObjectCommand {
     model_id: Option<i32>,
 }
 
+impl AddObjectCommand {
+    /// Construct directly for native dispatch. `params` is the object's field
+    /// payload (still JSON-typed here — see the concrete-commands TODO).
+    pub(crate) fn new(kind: ObjectKind, params: Value) -> Self {
+        Self {
+            kind,
+            params,
+            model_id: None,
+        }
+    }
+}
+
 impl Command for AddObjectCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         let descriptors = ctx
             .model::<ObjectManager>()

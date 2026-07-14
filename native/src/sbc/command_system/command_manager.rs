@@ -10,6 +10,10 @@ use super::streaming_commands::StreamingCommands;
 pub struct CommandManager {
     history: CommandHistory,
     stream: StreamingCommands,
+    /// Source of command ids for native-produced commands, which don't carry a
+    /// Lua-assigned `__cmd_id`. Seeded above Lua's `idCount` range so history
+    /// entries (which resource trackers key by id) never collide.
+    next_command_id: CommandId,
 }
 
 impl CommandManager {
@@ -17,7 +21,17 @@ impl CommandManager {
         CommandManager {
             history: CommandHistory::new(max_history_size),
             stream: StreamingCommands::default(),
+            next_command_id: 1_000_000,
         }
+    }
+
+    /// Allocate a command id for a native-produced command. Producers that build
+    /// a `Box<dyn Command>` directly (no JSON envelope) call this instead of
+    /// threading their own `&mut u64` counter.
+    pub fn allocate_command_id(&mut self) -> CommandId {
+        let id = self.next_command_id;
+        self.next_command_id += 1;
+        id
     }
 
     pub fn execute(

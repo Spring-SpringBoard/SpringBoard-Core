@@ -13,6 +13,16 @@ pub struct SetAtmosphereCommand {
     old: Option<Atmosphere>,
 }
 
+impl SetAtmosphereCommand {
+    /// Construct from a partial opts payload (one or few fields). Transitional:
+    /// the opts DTO becomes fully typed per docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_opts(opts: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(opts)
+            .ok()
+            .map(|opts| Self { opts, old: None })
+    }
+}
+
 impl Command for SetAtmosphereCommand {
     fn execute(&mut self, ctx: &mut Context) {
         debug!("SetAtmosphereCommand: {:?}", self.opts);

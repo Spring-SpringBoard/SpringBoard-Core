@@ -167,15 +167,17 @@ def prepare(
     # change_player_team, get_team_info).
     shutil.copyfile(DEV_DIR / "springsettings.cfg", write_dir / "springsettings.cfg")
     shutil.copyfile(DEV_DIR / "script.txt", write_dir / "script.txt")
+    config_env: dict[str, str] = {}
     if port_flags_config is not None:
         port_flags_config = port_flags_config.expanduser()
         if not port_flags_config.is_absolute():
             port_flags_config = sbc_root / port_flags_config
-        flags = _read_port_flags_config(port_flags_config)
+        flags, config_env = _read_port_flags_config(port_flags_config)
         flags_path = game_dir / "port_flags.json"
         flags_path.write_text(json.dumps(flags, indent=2, sort_keys=True) + "\n")
 
     env = os.environ.copy()
+    env.update(config_env)
     env["SPRING_NATIVE_MODULE"] = str(native_plugin)
     # Trace every command Lua sends to Rust (one per line), next to the infolog.
     env["SBC_COMMAND_LOG"] = str(write_dir / "commands.jsonl")
@@ -196,7 +198,7 @@ def prepare(
     return write_dir, env, cmd
 
 
-def _read_port_flags_config(path: Path) -> dict[str, str]:
+def _read_port_flags_config(path: Path) -> tuple[dict[str, str], dict[str, str]]:
     if not path.is_file():
         raise RuntimeError(f"run config does not exist: {path}")
     try:
@@ -215,7 +217,11 @@ def _read_port_flags_config(path: Path) -> dict[str, str]:
         if value not in values:
             expected = ", ".join(sorted(values))
             raise RuntimeError(f"{path}: {key} must be one of: {expected}")
-    return {key: str(data[key]) for key in allowed}
+    config_env = data.get("env", {})
+    if not isinstance(config_env, dict):
+        raise RuntimeError(f"{path}: env must be a JSON object of name -> value")
+    flags = {key: str(data[key]) for key in allowed}
+    return flags, {str(k): str(v) for k, v in config_env.items()}
 
 
 def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:

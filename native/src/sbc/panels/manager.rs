@@ -3,10 +3,9 @@ use std::any::Any;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::{self, Action, ActionResult, FileAcceptFn};
-use crate::sbc::command_system::command::Command;
+use crate::sbc::command_system::command::{Command, PreviewCommand};
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
-use crate::sbc::envelope::as_preview;
 use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::cursortip::CursorTip;
@@ -38,11 +37,9 @@ pub(crate) struct PanelManager {
     /// The open editor's markup has not been generated yet; it is built after
     /// the first refresh, since a model-backed editor has no fields before it.
     needs_rebuild: bool,
-    pending_envelopes: Vec<String>,
     /// Commands produced natively (typed, no JSON envelope). Drained and
     /// submitted directly by `SBC::drain_panel_commands`.
     pending_commands: Vec<Box<dyn Command>>,
-    next_cmd_id: u64,
     picker: ColorPicker,
     asset_picker: AssetPicker,
     file_dialog: FileDialog,
@@ -101,9 +98,7 @@ impl PanelManager {
             editor: None,
             needs_refresh: false,
             needs_rebuild: false,
-            pending_envelopes: Vec::new(),
             pending_commands: Vec::new(),
-            next_cmd_id: 1_000_000,
             picker: ColorPicker::default(),
             asset_picker: AssetPicker::default(),
             file_dialog: FileDialog::default(),
@@ -217,7 +212,11 @@ impl PanelManager {
         // field losing focus. `commit_field` drops the ones that changed nothing,
         // which is what the editor's own writes echo back as.
         for request in self.input.drain_changes() {
-            self.commit_field(&request.field, request.from_blur);
+            if request.revert {
+                self.revert_field(&request.field);
+            } else {
+                self.commit_field(&request.field, request.from_blur);
+            }
         }
 
         // A view that follows external state (Properties tracking the selection)
@@ -245,8 +244,8 @@ impl PanelManager {
         // Editors that own more than fields (the def grids, the brush action
         // buttons) do their work here, outside the RmlUi event dispatch.
         if let (Some(doc), Some(ed)) = (self.view.document_handle(), self.editor.as_deref_mut()) {
-            let envelopes = ed.tick(&self.interface, doc, &mut self.next_cmd_id);
-            self.pending_envelopes.extend(envelopes);
+            let commands = ed.tick(&self.interface, doc);
+            self.pending_commands.extend(commands);
         }
         self.sync_brush(models);
         self.dispatch_state_request(models);
@@ -268,13 +267,19 @@ impl PanelManager {
         self.view.draw(&self.interface)
     }
 
-    pub fn drain_envelopes(&mut self) -> Vec<String> {
-        std::mem::take(&mut self.pending_envelopes)
-    }
-
     /// Typed commands queued by native producers (no JSON envelope).
     pub fn drain_commands(&mut self) -> Vec<Box<dyn Command>> {
         std::mem::take(&mut self.pending_commands)
+    }
+
+    /// Wrap commands as off-history previews (apply to the engine, stay out of
+    /// the undo stack). The typed counterpart of the old `as_preview` envelope
+    /// re-write.
+    fn preview(commands: Vec<Box<dyn Command>>) -> Vec<Box<dyn Command>> {
+        commands
+            .into_iter()
+            .map(|c| Box::new(PreviewCommand { inner: c }) as Box<dyn Command>)
+            .collect()
     }
 
     // ── Shell ──────────────────────────────────────────────────────
@@ -333,9 +338,8 @@ impl PanelManager {
         if !actions::can_execute(action, models) {
             return Ok(());
         }
-        match actions::execute(action, &self.interface, models, &mut self.next_cmd_id) {
+        match actions::execute(action, &self.interface, models) {
             ActionResult::None => {}
-            ActionResult::Commands(envelopes) => self.pending_envelopes.extend(envelopes),
             ActionResult::NativeCommands(commands) => self.pending_commands.extend(commands),
             ActionResult::OpenFileDialog { config, on_accept } => {
                 if let Some(doc) = self.view.document_handle() {
@@ -365,9 +369,8 @@ impl PanelManager {
         let Some(hit) = crate::sbc::states::trace_ground(&self.interface, mouse.x, mouse.y) else {
             return;
         };
-        let envelopes =
-            actions::execute_paste(&self.interface, models, hit.x, hit.z, &mut self.next_cmd_id);
-        self.pending_envelopes.extend(envelopes);
+        let commands = actions::execute_paste(&self.interface, models, hit.x, hit.z);
+        self.pending_commands.extend(commands);
     }
 
     /// Feed a completed file-dialog result to the action that opened it.
@@ -377,8 +380,8 @@ impl PanelManager {
         };
         if let Some(result) = self.file_dialog.tick(&self.interface, doc)? {
             if let Some(on_accept) = self.pending_accept.take() {
-                let envelopes = on_accept(&result, &self.interface, &mut self.next_cmd_id);
-                self.pending_envelopes.extend(envelopes);
+                let commands = on_accept(&result, &self.interface);
+                self.pending_commands.extend(commands);
             }
         } else if !self.file_dialog.is_open() {
             // The dialog closed (cancel); drop any pending callback.
@@ -393,15 +396,14 @@ impl PanelManager {
             return Ok(());
         };
         if let Some(result) = self.new_project.tick(&self.interface, doc)? {
-            let envelopes = actions::commit_new_project(
+            let commands = actions::commit_new_project(
                 &result.name,
                 &result.map_name,
                 result.size_x,
                 result.size_y,
                 &self.interface,
-                &mut self.next_cmd_id,
             );
-            self.pending_envelopes.extend(envelopes);
+            self.pending_commands.extend(commands);
         }
         Ok(())
     }
@@ -490,6 +492,21 @@ impl PanelManager {
     ///
     /// This is why there is no "am I currently writing?" flag: the question is
     /// not *when* the event arrived, it is *whether it changed anything*.
+    /// Escape in a field: the edit is discarded, so the value the editor holds
+    /// goes back on screen. The blur that follows is suppressed the same way an
+    /// Enter's is -- otherwise it would commit the text still sitting in the box.
+    fn revert_field(&mut self, name: &str) {
+        if self.editing.as_deref() == Some(name) {
+            self.editing = None;
+        }
+        self.just_committed = Some(name.to_string());
+        if let Some(ed) = self.editor.as_deref_mut() {
+            if let Err(err) = ed.write_field_values(&self.interface) {
+                log::warn!("reverting {name}: {err:?}");
+            }
+        }
+    }
+
     fn commit_field(&mut self, name: &str, from_blur: bool) {
         if self.editing.as_deref() == Some(name) {
             self.editing = None;
@@ -504,11 +521,11 @@ impl PanelManager {
             return;
         };
         let before = ed.field_value(name);
-        let envelopes = ed.process_change(name, &self.interface, &mut self.next_cmd_id);
+        let commands = ed.process_change(name, &self.interface);
         if ed.field_value(name) == before {
             return;
         }
-        self.pending_envelopes.extend(envelopes);
+        self.pending_commands.extend(commands);
     }
 
     /// Advance a picker drag and handle OK/Cancel.
@@ -557,11 +574,11 @@ impl PanelManager {
             return;
         };
         ed.set_field_value(field, value, &self.interface);
-        let envelopes = ed.process_drag_end(field, &mut self.next_cmd_id);
-        self.pending_envelopes.extend(if preview {
-            as_preview(envelopes)
+        let commands = ed.process_drag_end(field);
+        self.pending_commands.extend(if preview {
+            Self::preview(commands)
         } else {
-            envelopes
+            commands
         });
     }
 
@@ -570,8 +587,8 @@ impl PanelManager {
         let Some(ed) = self.editor.as_deref_mut() else {
             return;
         };
-        let envelopes = ed.process_drag_end(field, &mut self.next_cmd_id);
-        self.pending_envelopes.extend(as_preview(envelopes));
+        let commands = ed.process_drag_end(field);
+        self.pending_commands.extend(Self::preview(commands));
     }
 
     /// End a drag with exactly one undoable command.

@@ -4,13 +4,15 @@
 use spring_native::prelude::NativeInterfaceRef;
 
 use super::paths::PROJECTS_DIR;
+use crate::sbc::command_system::command::Command;
 
 /// What an action wants the manager to do.
 pub enum ActionResult {
     /// Nothing to do (not executable, or handled internally like selection ops).
     None,
-    /// Route these command envelopes through the command system.
-    Commands(Vec<String>),
+    /// Submit these typed commands directly — no JSON envelope, no `className`,
+    /// no producer-assigned id (the command manager allocates one on execute).
+    NativeCommands(Vec<Box<dyn Command>>),
     /// Open the file browser. `on_accept` is called with the picked path.
     OpenFileDialog {
         config: FileDialogConfig,
@@ -55,6 +57,6 @@ pub struct FileDialogResult {
     pub file_type: Option<String>,
 }
 
-/// A type-erased callback that produces command envelopes from a dialog result.
+/// A type-erased callback that produces typed commands from a dialog result.
 pub type FileAcceptFn =
-    Box<dyn FnOnce(&FileDialogResult, &NativeInterfaceRef, &mut u64) -> Vec<String>>;
+    Box<dyn FnOnce(&FileDialogResult, &NativeInterfaceRef) -> Vec<Box<dyn Command>>>;

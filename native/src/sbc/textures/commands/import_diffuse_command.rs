@@ -15,6 +15,12 @@ pub struct ImportDiffuseCommand {
     texture_path: String,
 }
 
+impl ImportDiffuseCommand {
+    pub(crate) fn new(texture_path: String) -> Self {
+        Self { texture_path }
+    }
+}
+
 impl Command for ImportDiffuseCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let path = PathBuf::from(&self.texture_path);

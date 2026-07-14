@@ -19,6 +19,15 @@ pub struct AddTeamCommand {
     new_team_id: Option<i32>,
 }
 
+impl AddTeamCommand {
+    /// Construct from a fields payload built by the editor (`name`, `color`,
+    /// `allyTeam`, `side`). Transitional: becomes a typed constructor per
+    /// docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_fields(fields: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(fields).ok()
+    }
+}
+
 impl Command for AddTeamCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let team = Team {

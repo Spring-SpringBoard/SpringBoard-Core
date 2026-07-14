@@ -42,9 +42,8 @@ struct GridNavigation {
     root: String,
     dir: String,
     extensions: Vec<String>,
-    /// Set when the grid browses SpringBoard's assets rather than a directory:
-    /// the field's root *within* an asset pack. See `configure_asset_navigation`.
-    assets_root: Option<String>,
+    /// The field's root *within* an asset pack. See `configure_asset_navigation`.
+    assets_root: String,
     up_clicks: Rc<RefCell<u32>>,
     bound: Cell<bool>,
 }
@@ -89,21 +88,6 @@ impl GridView {
         self.clicks.borrow_mut().drain(..).collect()
     }
 
-    /// Make this grid browse a directory tree inline. Directory clicks and the
-    /// Up button are handled by `drain_asset_clicks`, while file clicks are
-    /// returned to the owning editor as selected asset paths.
-    pub(crate) fn configure_navigation(&mut self, root: &str, extensions: &[&str]) {
-        let root = root.trim_end_matches('/').to_string();
-        self.navigation = Some(GridNavigation {
-            root: root.clone(),
-            dir: root,
-            extensions: extensions.iter().map(|ext| ext.to_string()).collect(),
-            assets_root: None,
-            up_clicks: Rc::new(RefCell::new(0)),
-            bound: Cell::new(false),
-        });
-    }
-
     /// Browse SpringBoard's **assets**, which are not a plain directory.
     ///
     /// A port of `AssetsManager` + `AssetView`: `springboard/assets/` holds one
@@ -117,8 +101,8 @@ impl GridView {
         self.navigation = Some(GridNavigation {
             root: String::new(),
             dir: String::new(),
-            extensions: extensions.iter().map(|ext| ext.to_string()).collect(),
-            assets_root: Some(root_dir.trim_start_matches('/').to_string()),
+            extensions: normalize_extensions(extensions),
+            assets_root: root_dir.trim_start_matches('/').to_string(),
             up_clicks: Rc::new(RefCell::new(0)),
             bound: Cell::new(false),
         });
@@ -198,10 +182,7 @@ impl GridView {
             return Ok(());
         };
         let extensions: Vec<&str> = extensions.iter().map(String::as_str).collect();
-        let items = match assets_root.as_deref() {
-            Some(root) => list_asset_tree(interface, root, &dir, &extensions),
-            None => list_assets(interface, &dir, &extensions),
-        };
+        let items = list_asset_tree(interface, &assets_root, &dir, &extensions);
         self.set_items(items);
         self.set_selected(None);
         self.render(interface, document)
@@ -429,8 +410,19 @@ fn vfs_sub_dirs(interface: &NativeInterfaceRef, dir: &str) -> Vec<String> {
 }
 
 /// File names directly under `dir`, matching one of `extensions`. The VFS's own
+/// Extensions are matched as `.ext`, so a field may write either `png` or `.png`
+/// and both listers agree. They disagreed before, and a dotted list silently
+/// matched nothing.
+fn normalize_extensions(extensions: &[&str]) -> Vec<String> {
+    extensions
+        .iter()
+        .map(|ext| ext.trim_start_matches('.').to_lowercase())
+        .collect()
+}
+
 /// `DirList`, as Lua's `Path.DirList` uses.
 fn vfs_files(interface: &NativeInterfaceRef, dir: &str, extensions: &[&str]) -> Vec<String> {
+    let extensions = normalize_extensions(extensions);
     let Ok(paths) = interface.vfs().dir_list_names(dir, "*", "", false) else {
         return Vec::new();
     };
@@ -462,6 +454,7 @@ pub(crate) fn list_assets(
     dir: &str,
     extensions: &[&str],
 ) -> Vec<GridItem> {
+    let extensions = normalize_extensions(extensions);
     // Non-recursive listing across every VFS mode, as Lua's Path.DirList does.
     let Ok(entries) = interface.vfs().list_dir(dir, "*", "", false) else {
         return Vec::new();
@@ -490,9 +483,11 @@ pub(crate) fn list_assets(
             });
         } else {
             let matches = extensions.is_empty()
-                || extensions
-                    .iter()
-                    .any(|ext| caption.to_lowercase().ends_with(ext));
+                || extensions.iter().any(|ext| {
+                    caption
+                        .to_lowercase()
+                        .ends_with(&format!(".{}", ext.to_lowercase()))
+                });
             if matches {
                 files.push(GridItem {
                     image: Some(path.clone()),

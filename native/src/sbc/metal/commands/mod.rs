@@ -1,1 +1,1 @@
-mod terrain_metal_command;
+pub(crate) mod terrain_metal_command;

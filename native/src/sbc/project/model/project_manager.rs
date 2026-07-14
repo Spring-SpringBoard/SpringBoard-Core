@@ -67,20 +67,6 @@ impl ProjectManager {
         self.notify_project();
     }
 
-    /// Push name/path/mutators to the Lua `SB.project` in both states (the synced
-    /// gadget model and the unsynced widget UI), mirroring what the old Lua
-    /// `SetProjectNamePathCommand` set directly in each state.
-    fn notify_project(&self) {
-        let data = serde_json::json!({
-            "className": "WidgetSetProjectCommand",
-            "name": self.project.name,
-            "path": self.project.path,
-            "mutators": self.project.mutators,
-        });
-        lua_bridge::widget_command(&self.interface, data.clone());
-        lua_bridge::rules_command(&self.interface, data);
-    }
-
     /// The project data, for the project-info save (still to land).
     #[allow(dead_code)]
     pub fn serialize(&self) -> &ProjectData {
@@ -99,5 +85,19 @@ impl ProjectManager {
     #[allow(dead_code)]
     pub fn path(&self) -> Option<&str> {
         self.project.path.as_deref()
+    }
+
+    /// Push name/path/mutators to the Lua `SB.project` in both states (the synced
+    /// gadget model and the unsynced widget UI), mirroring what the old Lua
+    /// `SetProjectNamePathCommand` set directly in each state.
+    fn notify_project(&self) {
+        let data = serde_json::json!({
+            "className": "WidgetSetProjectCommand",
+            "name": self.project.name,
+            "path": self.project.path,
+            "mutators": self.project.mutators,
+        });
+        lua_bridge::widget_command(&self.interface, data.clone());
+        lua_bridge::rules_command(&self.interface, data);
     }
 }

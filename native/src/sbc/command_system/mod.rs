@@ -9,3 +9,5 @@ pub mod streaming_commands;
 
 mod commands;
 pub(crate) mod hashmap_to_vector;
+
+pub(crate) use commands::{RedoCommand, SetMultipleCommandModeCommand, UndoCommand};

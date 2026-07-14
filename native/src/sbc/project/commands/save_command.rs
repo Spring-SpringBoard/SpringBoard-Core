@@ -14,6 +14,15 @@ pub struct SaveCommand {
     is_new_project: bool,
 }
 
+impl SaveCommand {
+    pub(crate) fn new(path: String, is_new_project: bool) -> Self {
+        Self {
+            path,
+            is_new_project,
+        }
+    }
+}
+
 impl Command for SaveCommand {
     fn execute(&mut self, ctx: &mut Context) {
         save::save_project(ctx, &PathBuf::from(&self.path), self.is_new_project);

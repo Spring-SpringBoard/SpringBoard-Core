@@ -138,14 +138,6 @@ impl ObjectManager {
         std::mem::take(&mut self.events)
     }
 
-    fn collect_events(&mut self, kind: ObjectKind) {
-        let events = self
-            .handler_mut(&kind)
-            .map(ObjectHandler::drain_events)
-            .unwrap_or_default();
-        self.events.extend(events);
-    }
-
     /// Full object data as JSON (all modeled fields), for clipboard / export.
     pub fn object_json(&self, kind: ObjectKind, model_id: i32) -> Option<serde_json::Value> {
         let handler = self.handler(&kind)?;
@@ -173,6 +165,14 @@ impl ObjectManager {
                     .and_then(|v| v.as_str().map(String::from))
             }
         }
+    }
+
+    fn collect_events(&mut self, kind: ObjectKind) {
+        let events = self
+            .handler_mut(&kind)
+            .map(ObjectHandler::drain_events)
+            .unwrap_or_default();
+        self.events.extend(events);
     }
 
     fn handler(&self, kind: &ObjectKind) -> Option<&(dyn ObjectHandler + '_)> {

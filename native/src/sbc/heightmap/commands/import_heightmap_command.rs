@@ -21,6 +21,17 @@ pub struct ImportHeightmapCommand {
     before: Option<Heightmap>,
 }
 
+impl ImportHeightmapCommand {
+    pub(crate) fn new(heightmap_image_path: String, min_height: f32, max_height: f32) -> Self {
+        Self {
+            heightmap_image_path,
+            min_height,
+            max_height,
+            before: None,
+        }
+    }
+}
+
 impl Command for ImportHeightmapCommand {
     fn execute(&mut self, ctx: &mut Context) {
         // Import overwrites absolute heights, so snapshot the current map once

@@ -1,3 +1,4 @@
+use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
@@ -74,6 +75,9 @@ pub struct CommandParseError {
 pub struct CommandRegistration {
     pub class_name: &'static str,
     pub handler: HandlerFn,
+    /// Resolves the registered type's `TypeId`, so a `Box<dyn Command>` can be
+    /// mapped back to its `className` for logging without per-command impls.
+    pub type_id_fn: fn() -> TypeId,
 }
 
 /// Turns a command's JSON payload into the command, keyed in the registry by
@@ -81,6 +85,11 @@ pub struct CommandRegistration {
 pub type HandlerFn = fn(serde_json::Value) -> Result<Option<Box<dyn Command>>, CommandParseError>;
 
 inventory::collect!(CommandRegistration);
+
+/// Resolve a typed command's registered `className`, for the command log.
+pub fn class_name_of(command: &dyn Command) -> Option<&'static str> {
+    type_id_map().get(&command.type_id()).copied()
+}
 
 /// Register a `Deserialize` command: deserializes its payload, then runs it.
 macro_rules! register_command {
@@ -93,6 +102,7 @@ macro_rules! register_command {
                         $crate::sbc::command_system::registry::from_value($class_name, value)?;
                     Ok(Some(Box::new(cmd)))
                 },
+                type_id_fn: std::any::TypeId::of::<$ty>,
             }
         }
     };
@@ -131,6 +141,17 @@ fn registry() -> &'static HashMap<&'static str, HandlerFn> {
             if map.insert(reg.class_name, reg.handler).is_some() {
                 panic!("duplicate command registration for {}", reg.class_name);
             }
+        }
+        map
+    })
+}
+
+fn type_id_map() -> &'static HashMap<TypeId, &'static str> {
+    static CELL: OnceLock<HashMap<TypeId, &'static str>> = OnceLock::new();
+    CELL.get_or_init(|| {
+        let mut map = HashMap::new();
+        for reg in inventory::iter::<CommandRegistration> {
+            map.insert((reg.type_id_fn)(), reg.class_name);
         }
         map
     })

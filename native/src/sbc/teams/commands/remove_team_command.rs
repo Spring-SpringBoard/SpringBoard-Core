@@ -16,6 +16,15 @@ pub struct RemoveTeamCommand {
     saved: Option<Team>,
 }
 
+impl RemoveTeamCommand {
+    pub(crate) fn new(team_id: i32) -> Self {
+        Self {
+            team_id,
+            saved: None,
+        }
+    }
+}
+
 impl Command for RemoveTeamCommand {
     fn execute(&mut self, ctx: &mut Context) {
         self.saved = ctx.model::<TeamManager>().get_team(self.team_id).cloned();

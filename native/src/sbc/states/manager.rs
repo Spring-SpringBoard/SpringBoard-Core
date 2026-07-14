@@ -2,6 +2,7 @@ use std::any::Any;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::keys::is_key;
 use crate::sbc::objects::{ObjectKind, SelectionManager};
@@ -55,15 +56,13 @@ impl ActiveState {
 
 /// Owns the one active editing state and drives it from the engine's callins.
 ///
-/// States never touch the command system: they queue envelopes, which the
-/// plugin routes exactly as it routes the panel's, so a brush stroke gets undo
-/// for free.
+/// States never touch the command system: they queue typed commands, which the
+/// plugin submits directly, so a brush stroke gets undo for free.
 pub(crate) struct StateManager {
     interface: NativeInterfaceRef,
     enabled: bool,
     state: ActiveState,
-    pending_envelopes: Vec<String>,
-    next_cmd_id: u64,
+    pending_commands: Vec<Box<dyn Command>>,
     /// The one-time editor setup (full spectator view) has been sent.
     editor_view_set: bool,
 }
@@ -80,9 +79,7 @@ impl StateManager {
             interface,
             enabled: port_flags::ui_impl(&interface) == UiImpl::Rust,
             state: ActiveState::Default(DefaultState::default()),
-            pending_envelopes: Vec::new(),
-            // Disjoint from the panel's id range, so history entries never collide.
-            next_cmd_id: 2_000_000,
+            pending_commands: Vec::new(),
             editor_view_set: false,
         }
     }
@@ -108,8 +105,8 @@ impl StateManager {
         self.editor_view_set = true;
     }
 
-    pub fn drain_envelopes(&mut self) -> Vec<String> {
-        std::mem::take(&mut self.pending_envelopes)
+    pub fn drain_commands(&mut self) -> Vec<Box<dyn Command>> {
+        std::mem::take(&mut self.pending_commands)
     }
 
     /// Draw the active state's world-space cursor overlay (placement ghost, brush
@@ -131,10 +128,10 @@ impl StateManager {
         f: impl FnOnce(&mut dyn EditorState, &mut StateContext) -> R,
     ) -> R {
         let (result, transition) = {
-            let mut ctx = StateContext::new(&self.interface, models, &mut self.next_cmd_id);
+            let mut ctx = StateContext::new(&self.interface, models);
             let result = f(self.state.as_state(), &mut ctx);
             let transition = ctx.take_transition();
-            self.pending_envelopes.extend(ctx.take_envelopes());
+            self.pending_commands.extend(ctx.take_commands());
             (result, transition)
         };
         if let Some(transition) = transition {
@@ -163,9 +160,9 @@ impl StateManager {
 
     fn enter(&mut self, state: &mut ActiveState, models: &mut Models) {
         crate::sbc::states::cursor::set(&self.interface, state.as_state().cursor());
-        let mut ctx = StateContext::new(&self.interface, models, &mut self.next_cmd_id);
+        let mut ctx = StateContext::new(&self.interface, models);
         state.as_state().enter(&mut ctx);
-        self.pending_envelopes.extend(ctx.take_envelopes());
+        self.pending_commands.extend(ctx.take_commands());
         log::debug!("editor state: {}", state.as_state().name());
     }
 

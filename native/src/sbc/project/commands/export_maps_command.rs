@@ -13,6 +13,15 @@ pub struct ExportMapsCommand {
     heightmap_extremes: Option<Vec<f32>>,
 }
 
+impl ExportMapsCommand {
+    pub(crate) fn new(path: String) -> Self {
+        Self {
+            path,
+            heightmap_extremes: None,
+        }
+    }
+}
+
 impl Command for ExportMapsCommand {
     fn execute(&mut self, ctx: &mut Context) {
         export::export_maps(

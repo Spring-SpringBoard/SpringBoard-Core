@@ -28,6 +28,69 @@ impl UnitModel {
         }
     }
 
+    /// Set any subset of the health family in one engine call, reading current
+    /// values for whatever the caller left unset.
+    pub(super) fn set_health_amounts(
+        &self,
+        spring_id: i32,
+        health: Option<f32>,
+        max_health: Option<f32>,
+        paralyze: Option<f32>,
+        capture: Option<f32>,
+        build: Option<f32>,
+    ) {
+        let synced = self.interface.synced_ctrl();
+        let unit = synced.unit();
+        if let Some(max_health) = max_health {
+            let _ = unit.set_unit_max_health(spring_id, max_health);
+        }
+
+        let has_amounts = paralyze.is_some() || capture.is_some() || build.is_some();
+        if !has_amounts {
+            if let Some(health) = health {
+                let _ = unit.set_unit_health(
+                    spring_id,
+                    sys::UnitHealthValue {
+                        health,
+                        capture: 0.0,
+                        paralyze: 0.0,
+                        build: 0.0,
+                        useAmounts: false,
+                    },
+                );
+            }
+            return;
+        }
+
+        let current = self.interface.units_info().get_unit_health(spring_id).ok();
+        let _ = unit.set_unit_health(
+            spring_id,
+            sys::UnitHealthValue {
+                health: health
+                    .or_else(|| current.as_ref().map(|h| h.health))
+                    .unwrap_or(0.0),
+                capture: capture
+                    .or_else(|| current.as_ref().map(|h| h.captureProgress))
+                    .unwrap_or(0.0),
+                paralyze: paralyze
+                    .or_else(|| current.as_ref().map(|h| h.paralyzeDamage))
+                    .unwrap_or(0.0),
+                build: build
+                    .or_else(|| current.as_ref().map(|h| h.buildProgress))
+                    .unwrap_or(0.0),
+                useAmounts: true,
+            },
+        );
+    }
+
+    pub(super) fn apply_rotation(&self, spring_id: i32, rot: Vec3) {
+        let _ = self
+            .interface
+            .synced_ctrl()
+            .unit()
+            .set_unit_rotation(spring_id, rot.into());
+    }
+
     fn create(
         &mut self,
         def: &DefRef,
@@ -88,61 +151,6 @@ impl UnitModel {
         }
     }
 
-    /// Set any subset of the health family in one engine call, reading current
-    /// values for whatever the caller left unset.
-    pub(super) fn set_health_amounts(
-        &self,
-        spring_id: i32,
-        health: Option<f32>,
-        max_health: Option<f32>,
-        paralyze: Option<f32>,
-        capture: Option<f32>,
-        build: Option<f32>,
-    ) {
-        let synced = self.interface.synced_ctrl();
-        let unit = synced.unit();
-        if let Some(max_health) = max_health {
-            let _ = unit.set_unit_max_health(spring_id, max_health);
-        }
-
-        let has_amounts = paralyze.is_some() || capture.is_some() || build.is_some();
-        if !has_amounts {
-            if let Some(health) = health {
-                let _ = unit.set_unit_health(
-                    spring_id,
-                    sys::UnitHealthValue {
-                        health,
-                        capture: 0.0,
-                        paralyze: 0.0,
-                        build: 0.0,
-                        useAmounts: false,
-                    },
-                );
-            }
-            return;
-        }
-
-        let current = self.interface.units_info().get_unit_health(spring_id).ok();
-        let _ = unit.set_unit_health(
-            spring_id,
-            sys::UnitHealthValue {
-                health: health
-                    .or_else(|| current.as_ref().map(|h| h.health))
-                    .unwrap_or(0.0),
-                capture: capture
-                    .or_else(|| current.as_ref().map(|h| h.captureProgress))
-                    .unwrap_or(0.0),
-                paralyze: paralyze
-                    .or_else(|| current.as_ref().map(|h| h.paralyzeDamage))
-                    .unwrap_or(0.0),
-                build: build
-                    .or_else(|| current.as_ref().map(|h| h.buildProgress))
-                    .unwrap_or(0.0),
-                useAmounts: true,
-            },
-        );
-    }
-
     fn current_rotation(&self, spring_id: i32) -> Option<Vec3> {
         self.interface
             .units_info()
@@ -153,14 +161,6 @@ impl UnitModel {
                 y: rot.yaw,
                 z: rot.roll,
             })
-    }
-
-    pub(super) fn apply_rotation(&self, spring_id: i32, rot: Vec3) {
-        let _ = self
-            .interface
-            .synced_ctrl()
-            .unit()
-            .set_unit_rotation(spring_id, rot.into());
     }
 }
 

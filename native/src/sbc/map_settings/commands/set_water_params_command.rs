@@ -1,19 +1,33 @@
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spring_native::prelude::sys;
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SetWaterParamsCommand {
     opts: Water,
     #[serde(skip)]
     old: Option<Water>,
 }
 
+impl SetWaterParamsCommand {
+    /// Construct from a partial opts payload (one or few fields). Transitional:
+    /// the opts DTO becomes fully typed per docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_opts(opts: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(opts)
+            .ok()
+            .map(|opts| Self { opts, old: None })
+    }
+}
+
 impl Command for SetWaterParamsCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         debug!("SetWaterParamsCommand: {:?}", self.opts);
         if self.old.is_none() {
@@ -132,7 +146,7 @@ fn snapshot(ctx: &Context, opts: &Water) -> Water {
 /// `Gfx::GetWaterRendering`. Texture-name keys (`texture`/`foamTexture`/
 /// `normalTexture`) aren't in `WaterParams`; they apply via the `SetWaterTexture`
 /// binding instead. Runs unsynced (widget state) where `Gfx` is valid.
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 struct Water {
     #[serde(default, deserialize_with = "de_color")]
     absorb: Option<[f32; 3]>,

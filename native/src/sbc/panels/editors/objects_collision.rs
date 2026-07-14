@@ -3,9 +3,9 @@ use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
-use crate::sbc::envelope::envelope_fields;
-use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager};
+use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager, SetObjectParamCommand};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
@@ -199,9 +199,9 @@ impl CollisionView {
         }
     }
 
-    /// Build the command envelope for a field change, bundling scalar fields
-    /// back into the composite objects the engine expects.
-    fn commit(&self, base: &str, next: &mut u64) -> Vec<String> {
+    /// Build the command for a field change, bundling scalar fields back into
+    /// the composite objects the engine expects.
+    fn commit(&self, base: &str) -> Vec<Box<dyn Command>> {
         let Some((kind, model_id)) = self.selected else {
             return vec![];
         };
@@ -262,16 +262,12 @@ impl CollisionView {
             return vec![];
         };
 
-        vec![envelope_fields(
-            "SetObjectParamCommand",
-            next,
-            serde_json::json!({
-                "objType": kind_wire(kind),
-                "modelID": model_id,
-                "key": key,
-                "value": value,
-            }),
-        )]
+        vec![Box::new(SetObjectParamCommand::new(
+            kind,
+            model_id,
+            serde_json::Value::String(key.to_string()),
+            value,
+        ))]
     }
 }
 
@@ -341,8 +337,7 @@ impl Editor for CollisionView {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         self.fields.read(&base, interface);
 
@@ -356,21 +351,16 @@ impl Editor for CollisionView {
             let _ = self.fields.write_values(interface);
         }
 
-        self.commit(&base, next)
+        self.commit(&base)
     }
 
-    fn process_drag_end(&mut self, name: &str, next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         self.sync_linked_scales(&base);
-        self.commit(&base, next)
+        self.commit(&base)
     }
 
-    fn tick(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        _document: u64,
-        _next: &mut u64,
-    ) -> Vec<String> {
+    fn tick(&mut self, interface: &NativeInterfaceRef, _document: u64) -> Vec<Box<dyn Command>> {
         if std::mem::take(&mut *self.show_vol_clicked.borrow_mut()) {
             let _ = interface.messages().send_commands("debugcolvol", "");
         }
@@ -559,14 +549,6 @@ fn axis_from_int(v: i32) -> &'static str {
 
 fn bool_field(fields: &FieldSet, name: &str) -> bool {
     matches!(fields.value(name), FieldValue::Bool(true))
-}
-
-fn kind_wire(kind: ObjectKind) -> &'static str {
-    match kind {
-        ObjectKind::Unit => "unit",
-        ObjectKind::Feature => "feature",
-        ObjectKind::Area => "area",
-    }
 }
 
 fn number(value: &serde_json::Value) -> FieldValue {

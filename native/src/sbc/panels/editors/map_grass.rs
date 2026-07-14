@@ -1,5 +1,6 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{FieldSet, Layout};
@@ -62,9 +63,9 @@ impl GrassEditor {
             actions: BrushActions::new(ACTIONS),
             pattern_grid: {
                 let mut grid = GridView::new("grass-pattern-grid", 64);
-                grid.configure_navigation(
-                    "springboard/assets/core/brush_patterns/terrain",
-                    &[".png", ".jpg", ".tga", ".dds", ".bmp"],
+                grid.configure_asset_navigation(
+                    "brush_patterns/terrain/",
+                    &["png", "jpg", "tga", "dds", "bmp"],
                 );
                 grid
             },
@@ -128,8 +129,7 @@ impl Editor for GrassEditor {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        _next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         self.fields.read(name, interface);
         if name == "grassDetail" {
             self.apply_grass_detail(interface);
@@ -155,12 +155,7 @@ impl Editor for GrassEditor {
         self.fields.write_values(interface)
     }
 
-    fn tick(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        _next: &mut u64,
-    ) -> Vec<String> {
+    fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) -> Vec<Box<dyn Command>> {
         self.actions.tick(interface, document);
         for id in self
             .pattern_grid
@@ -182,7 +177,7 @@ impl Editor for GrassEditor {
         self.actions.clear(interface, document);
     }
 
-    fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, _name: &str) -> Vec<Box<dyn Command>> {
         vec![]
     }
 

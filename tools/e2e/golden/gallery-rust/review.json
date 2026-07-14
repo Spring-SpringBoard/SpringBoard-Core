@@ -11,8 +11,16 @@
     "status": "ai-reviewed",
     "updated": "2026-07-14T08:48:17"
   },
+  "fields-rest-of-set": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T13:02:40"
+  },
   "numeric-dragging": {
     "status": "ai-reviewed",
     "updated": "2026-07-14T08:48:20"
+  },
+  "string-escape-reverted": {
+    "status": "ai-reviewed",
+    "updated": "2026-07-14T13:08:50"
   }
 }

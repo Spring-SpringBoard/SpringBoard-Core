@@ -15,6 +15,12 @@ pub struct SetProjectNamePathCommand {
     path: String,
 }
 
+impl SetProjectNamePathCommand {
+    pub(crate) fn new(name: String, path: String) -> Self {
+        Self { name, path }
+    }
+}
+
 impl Command for SetProjectNamePathCommand {
     fn execute(&mut self, ctx: &mut Context) {
         debug!(

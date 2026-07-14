@@ -1,8 +1,10 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
+use crate::sbc::map_settings::commands::SetWaterParamsCommand;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
+use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{AssetField, BooleanField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
@@ -78,7 +80,7 @@ impl WaterEditor {
         }
     }
 
-    fn water(&self, name: &str, value: &FieldValue, next: &mut u64) -> Vec<String> {
+    fn water(&self, name: &str, value: &FieldValue) -> Vec<Box<dyn Command>> {
         let opts = match value {
             // The engine's water colours are RGB; the picker carries an alpha.
             FieldValue::Color(c) => serde_json::json!({ name: [c[0], c[1], c[2]] }),
@@ -86,7 +88,10 @@ impl WaterEditor {
             FieldValue::Bool(b) => serde_json::json!({ name: b }),
             FieldValue::Text(t) => serde_json::json!({ name: t }),
         };
-        vec![envelope("SetWaterParamsCommand", next, opts)]
+        match SetWaterParamsCommand::from_opts(opts) {
+            Some(c) => vec![Box::new(c)],
+            None => vec![],
+        }
     }
 }
 
@@ -138,17 +143,16 @@ impl Editor for WaterEditor {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         let value = self.fields.read(name, interface);
-        self.water(&base, &value, next)
+        self.water(&base, &value)
     }
 
-    fn process_drag_end(&mut self, name: &str, next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         let value = self.fields.value(name);
-        self.water(&base, &value, next)
+        self.water(&base, &value)
     }
 
     fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, _models: &mut Models) {

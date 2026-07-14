@@ -14,6 +14,12 @@ pub struct ExportS11NCommand {
     path: String,
 }
 
+impl ExportS11NCommand {
+    pub(crate) fn new(path: String) -> Self {
+        Self { path }
+    }
+}
+
 impl Command for ExportS11NCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let path = lua_path(&self.path);

@@ -9,6 +9,9 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 pub struct CommitRequest {
     pub field: String,
     pub from_blur: bool,
+    /// Escape: throw the edit away and put the held value back on screen. The
+    /// blur that follows must not then commit what is still typed in the box.
+    pub revert: bool,
 }
 
 /// Shared queue of fields asking to be committed. Field event listeners push
@@ -67,6 +70,7 @@ pub(crate) fn on_change(
             cq.borrow_mut().push(CommitRequest {
                 field: name.clone(),
                 from_blur: false,
+                revert: false,
             });
         })?;
     Ok(())
@@ -88,6 +92,7 @@ pub(crate) fn on_blur(
             cq.borrow_mut().push(CommitRequest {
                 field: name.clone(),
                 from_blur: true,
+                revert: false,
             });
         })?;
     Ok(())
@@ -96,8 +101,9 @@ pub(crate) fn on_blur(
 /// RmlUi key identifiers (`Rml::Input::KeyIdentifier`).
 const KI_NUMPADENTER: i32 = 61;
 const KI_RETURN: i32 = 72;
+const KI_ESCAPE: i32 = 81;
 
-/// Commit a text field when Enter is pressed inside it.
+/// Commit a text field on Enter, or throw the edit away on Escape.
 ///
 /// The engine feeds keyboard input straight to its RmlUi contexts, so a plugin
 /// never sees the key through its own `key_press` call-in: the listener has to
@@ -121,10 +127,20 @@ pub(crate) fn on_enter(
             let Ok((key, found)) = rml.event_get_parameter_int(event, "key_identifier") else {
                 return;
             };
-            if found && (key == KI_RETURN || key == KI_NUMPADENTER) {
+            if !found {
+                return;
+            }
+            if key == KI_RETURN || key == KI_NUMPADENTER {
                 cq.borrow_mut().push(CommitRequest {
                     field: name.clone(),
                     from_blur: false,
+                    revert: false,
+                });
+            } else if key == KI_ESCAPE {
+                cq.borrow_mut().push(CommitRequest {
+                    field: name.clone(),
+                    from_blur: false,
+                    revert: true,
                 });
             }
         })?;

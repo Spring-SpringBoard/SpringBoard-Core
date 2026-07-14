@@ -4,15 +4,19 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
-use crate::sbc::envelope::envelope_fields;
+use crate::sbc::map_settings::commands::{
+    SetMapRenderingParamsCommand, SetMapShadingTextureEnabledCommand,
+};
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
+use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, Field, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
 use crate::sbc::panels::grid::{list_assets, GridItem, GridView};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::rml::{element_by_id, escape_rml};
+use crate::sbc::textures::commands::ImportShadingImageCommand;
 use crate::sbc::textures::TextureModel;
 
 // Mirrors TerrainSettingsEditor:Register in scen_edit/view/map/terrain_settings_editor.lua.
@@ -128,12 +132,10 @@ impl MapSettingsEditor {
                     .max(1000.0),
             ),
             Box::new(
-                AssetField::new(
-                    "detailTexture",
-                    "Detail texture",
-                    "springboard/assets/core/detail",
-                )
-                .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
+                // A root *inside* an asset pack, not a VFS path: the picker walks
+                // the packs and lists `assets/<pack>/detail/`.
+                AssetField::new("detailTexture", "Detail texture", "detail/")
+                    .extensions(&["png", "jpg", "tga", "dds", "bmp"]),
             ),
         ];
         MapSettingsEditor {
@@ -247,16 +249,12 @@ impl MapSettingsEditor {
         self.shading_grid.render(interface, document)
     }
 
-    fn rendering(&self, name: &str, value: &FieldValue, next: &mut u64) -> Vec<String> {
+    fn rendering(&self, name: &str, value: &FieldValue) -> Vec<Box<dyn Command>> {
         if let Some((_, shading, _)) = SHADING_TOGGLES.iter().find(|(field, _, _)| *field == name) {
-            return vec![envelope(
-                "SetMapShadingTextureEnabledCommand",
-                next,
-                serde_json::json!({
-                    "name": shading,
-                    "value": matches!(value, FieldValue::Bool(true)),
-                }),
-            )];
+            return vec![Box::new(SetMapShadingTextureEnabledCommand::new(
+                *shading,
+                matches!(value, FieldValue::Bool(true)),
+            ))];
         }
         let opts = if SPLAT_SCALE_FIELDS.contains(&name) {
             serde_json::json!({ "splatTexScales": self.splat_values(SPLAT_SCALE_FIELDS) })
@@ -270,7 +268,10 @@ impl MapSettingsEditor {
                 FieldValue::Color(c) => serde_json::json!({ name: c }),
             }
         };
-        vec![envelope("SetMapRenderingParamsCommand", next, opts)]
+        match SetMapRenderingParamsCommand::from_opts(opts) {
+            Some(c) => vec![Box::new(c)],
+            None => vec![],
+        }
     }
 
     fn splat_values(&self, fields: &[&str]) -> [f32; 4] {
@@ -359,26 +360,20 @@ impl Editor for MapSettingsEditor {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         let value = self.fields.read(name, interface);
-        self.rendering(&base, &value, next)
+        self.rendering(&base, &value)
     }
 
-    fn process_drag_end(&mut self, name: &str, next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         let value = self.fields.value(name);
-        self.rendering(&base, &value, next)
+        self.rendering(&base, &value)
     }
 
-    fn tick(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        next: &mut u64,
-    ) -> Vec<String> {
-        let mut envelopes = Vec::new();
+    fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) -> Vec<Box<dyn Command>> {
+        let mut commands: Vec<Box<dyn Command>> = Vec::new();
         for event in self.shading_events.borrow_mut().drain(..) {
             match event {
                 ShadingEvent::Open(name) => self.dialog = Some(name),
@@ -394,11 +389,9 @@ impl Editor for MapSettingsEditor {
                             continue;
                         };
                         self.shading_enabled.insert((*field).to_string(), enabled);
-                        envelopes.push(envelope(
-                            "SetMapShadingTextureEnabledCommand",
-                            next,
-                            serde_json::json!({ "name": name, "value": enabled }),
-                        ));
+                        commands.push(Box::new(SetMapShadingTextureEnabledCommand::new(
+                            name, enabled,
+                        )));
                     }
                 }
             }
@@ -418,14 +411,12 @@ impl Editor for MapSettingsEditor {
                             continue;
                         };
                         self.shading_enabled.insert((*field).to_string(), true);
-                        envelopes.push(envelope_fields(
-                            "ImportShadingImageCommand",
-                            next,
-                            serde_json::json!({
-                                "texType": name,
-                                "texturePath": id,
-                            }),
-                        ));
+                        if let Some(c) = ImportShadingImageCommand::from_fields(serde_json::json!({
+                            "texType": name,
+                            "texturePath": id,
+                        })) {
+                            commands.push(Box::new(c));
+                        }
                     }
                 }
             }
@@ -434,7 +425,7 @@ impl Editor for MapSettingsEditor {
         }
         self.render_shading_fields(interface, document);
         self.render_dialog(interface, document);
-        envelopes
+        commands
     }
 
     fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, models: &mut Models) {

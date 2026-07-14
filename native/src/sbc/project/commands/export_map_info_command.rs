@@ -14,6 +14,12 @@ pub struct ExportMapInfoCommand {
     path: String,
 }
 
+impl ExportMapInfoCommand {
+    pub(crate) fn new(path: String) -> Self {
+        Self { path }
+    }
+}
+
 impl Command for ExportMapInfoCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let text = map_info::export_text(ctx);

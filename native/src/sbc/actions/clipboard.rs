@@ -8,8 +8,9 @@ use std::any::Any;
 
 use spring_native::prelude::NativeInterfaceRef;
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::{Model, ModelFactory};
-use crate::sbc::objects::ObjectKind;
+use crate::sbc::objects::{AddObjectCommand, ObjectKind};
 
 inventory::submit! {
     ModelFactory { make: |_iface| Box::new(Clipboard::default()) }
@@ -44,16 +45,15 @@ impl Clipboard {
         }
     }
 
-    /// Build AddObjectCommand envelopes for every copied object, offset so the
+    /// Build `AddObjectCommand`s for every copied object, offset so the
     /// centroid lands at `(ground_x, ground_z)`. Each object's Y maintains its
     /// original height-above-ground, queried live from the terrain.
-    pub fn paste_envelopes(
+    pub fn paste_commands(
         &self,
         interface: &NativeInterfaceRef,
         ground_x: f32,
         ground_z: f32,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         if self.copied.is_empty() {
             return vec![];
         }
@@ -76,7 +76,7 @@ impl Clipboard {
         let dz = ground_z - cz / count as f32;
 
         let terrain = interface.terrain();
-        let mut envelopes = Vec::new();
+        let mut commands = Vec::new();
         for (kind, json) in &self.copied {
             let mut obj = json.clone();
             if let serde_json::Value::Object(map) = &mut obj {
@@ -95,16 +95,9 @@ impl Clipboard {
                     pos["z"] = serde_json::json!(nz);
                 }
             }
-            envelopes.push(crate::sbc::envelope::envelope_fields(
-                "AddObjectCommand",
-                next,
-                serde_json::json!({
-                    "objType": kind,
-                    "params": obj,
-                }),
-            ));
+            commands.push(Box::new(AddObjectCommand::new(*kind, obj)) as Box<dyn Command>);
         }
-        envelopes
+        commands
     }
 }
 

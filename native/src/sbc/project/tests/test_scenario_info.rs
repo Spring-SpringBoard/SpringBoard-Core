@@ -25,7 +25,12 @@ fn scenario_info_lifecycle(ctx: &mut TestCtx) -> Result<(), String> {
     // reset, not a tracked command, so undo still pops only this test's sets).
     ctx.sbc
         .model::<ScenarioInfoManager>()
-        .restore(ScenarioInfo::default());
+        .restore(ScenarioInfo {
+            name: String::new(),
+            description: String::new(),
+            version: String::new(),
+            author: String::new(),
+        });
 
     set_info(
         ctx,

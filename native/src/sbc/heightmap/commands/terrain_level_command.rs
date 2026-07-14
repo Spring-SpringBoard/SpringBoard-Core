@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spring_native::prelude::*;
 
 use crate::sbc::command_system::command::Command;
@@ -12,28 +12,38 @@ use crate::sbc::terrain_cpu::brush_modify::{BrushModify, BrushOptions, Params};
 
 const SQUARE_SIZE: usize = 8;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TerrainLevelCommand {
     opts: Opts,
     #[serde(skip)]
     brush: Option<BrushModify>,
 }
 
-#[derive(Deserialize, Debug)]
-struct Opts {
-    rotation: f32,
-    x: f32,
-    z: f32,
+#[derive(Deserialize, Serialize, Debug)]
+pub(crate) struct Opts {
+    pub(crate) rotation: f32,
+    pub(crate) x: f32,
+    pub(crate) z: f32,
     #[serde(rename = "shapeName")]
-    shape_name: String,
-    strength: f32,
-    size: f32,
-    height: f32,
+    pub(crate) shape_name: String,
+    pub(crate) strength: f32,
+    pub(crate) size: f32,
+    pub(crate) height: f32,
     #[serde(rename = "applyDirID")]
-    apply_dir_id: i32,
+    pub(crate) apply_dir_id: i32,
+}
+
+impl TerrainLevelCommand {
+    pub(crate) fn new(opts: Opts) -> Self {
+        Self { opts, brush: None }
+    }
 }
 
 impl Command for TerrainLevelCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         debug!("Command opts: {:?}", self.opts);
         self.stamp(false, ctx);

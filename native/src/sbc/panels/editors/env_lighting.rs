@@ -1,8 +1,10 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
+use crate::sbc::map_settings::commands::{SetSunLightingCommand, SetSunParametersCommand};
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
+use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
@@ -80,15 +82,14 @@ impl LightingEditor {
         }
     }
 
-    /// Turn a committed field value into command envelopes. `shadowMode` is not
-    /// a command: it is an engine console action, as in Lua.
+    /// Turn a committed field value into commands. `shadowMode` is not a command:
+    /// it is an engine console action, as in Lua.
     fn dispatch(
         &mut self,
         base: &str,
         value: &FieldValue,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         if base == "shadowMode" {
             if let FieldValue::Text(mode) = value {
                 let arg = match mode.as_str() {
@@ -102,15 +103,14 @@ impl LightingEditor {
         }
 
         if SUN_DIR_FIELDS.contains(&base) {
-            return vec![envelope(
-                "SetSunParametersCommand",
-                next,
-                serde_json::json!({
-                    "dirX": self.fields.number("sunDirX"),
-                    "dirY": self.fields.number("sunDirY"),
-                    "dirZ": self.fields.number("sunDirZ"),
-                }),
-            )];
+            if let Some(c) = SetSunParametersCommand::from_opts(serde_json::json!({
+                "dirX": self.fields.number("sunDirX"),
+                "dirY": self.fields.number("sunDirY"),
+                "dirZ": self.fields.number("sunDirZ"),
+            })) {
+                return vec![Box::new(c)];
+            }
+            return vec![];
         }
 
         if SUN_LIGHTING_FIELDS.contains(&base) {
@@ -119,7 +119,10 @@ impl LightingEditor {
                 FieldValue::Number(n) => serde_json::json!({ base: n }),
                 _ => return vec![],
             };
-            return vec![envelope("SetSunLightingCommand", next, opts)];
+            match SetSunLightingCommand::from_opts(opts) {
+                Some(c) => return vec![Box::new(c)],
+                None => return vec![],
+            }
         }
 
         vec![]
@@ -161,8 +164,7 @@ impl Editor for LightingEditor {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
 
         // A colour sub-field commits only that channel.
@@ -173,15 +175,15 @@ impl Editor for LightingEditor {
                 .get_mut(&base)
                 .and_then(|f| f.read_sub_field(&sub, interface))
             {
-                return self.dispatch(&base, &value, interface, next);
+                return self.dispatch(&base, &value, interface);
             }
         }
 
         let value = self.fields.read(name, interface);
-        self.dispatch(&base, &value, interface, next)
+        self.dispatch(&base, &value, interface)
     }
 
-    fn process_drag_end(&mut self, name: &str, next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>> {
         // The drag already updated the value; do not consult the DOM.
         let base = resolve_base(name).to_string();
         let value = self.fields.value(name);
@@ -192,18 +194,19 @@ impl Editor for LightingEditor {
                 FieldValue::Number(n) => serde_json::json!({ base: n }),
                 _ => return vec![],
             };
-            return vec![envelope("SetSunLightingCommand", next, opts)];
+            match SetSunLightingCommand::from_opts(opts) {
+                Some(c) => return vec![Box::new(c)],
+                None => return vec![],
+            }
         }
         if SUN_DIR_FIELDS.contains(&base.as_str()) {
-            return vec![envelope(
-                "SetSunParametersCommand",
-                next,
-                serde_json::json!({
-                    "dirX": self.fields.number("sunDirX"),
-                    "dirY": self.fields.number("sunDirY"),
-                    "dirZ": self.fields.number("sunDirZ"),
-                }),
-            )];
+            if let Some(c) = SetSunParametersCommand::from_opts(serde_json::json!({
+                "dirX": self.fields.number("sunDirX"),
+                "dirY": self.fields.number("sunDirY"),
+                "dirZ": self.fields.number("sunDirZ"),
+            })) {
+                return vec![Box::new(c)];
+            }
         }
         vec![]
     }

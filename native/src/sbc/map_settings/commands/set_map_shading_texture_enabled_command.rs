@@ -10,6 +10,17 @@ pub struct SetMapShadingTextureEnabledCommand {
     opts: ShadingTextureEnabled,
 }
 
+impl SetMapShadingTextureEnabledCommand {
+    pub(crate) fn new(name: impl Into<String>, value: bool) -> Self {
+        Self {
+            opts: ShadingTextureEnabled {
+                name: name.into(),
+                value,
+            },
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 struct ShadingTextureEnabled {
     name: String,

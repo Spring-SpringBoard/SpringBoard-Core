@@ -14,10 +14,17 @@ use super::clipboard::Clipboard;
 use super::dialog::{ActionResult, FileDialogConfig};
 use super::helpers::{game_id, ground_extremes};
 use super::paths::{EXPORTS_DIR, PROJECTS_DIR};
+use crate::sbc::command_system::command::{Command, CompoundCommand};
 use crate::sbc::command_system::model::Models;
-use crate::sbc::envelope::envelope_fields;
-use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager};
+use crate::sbc::command_system::{RedoCommand, UndoCommand};
+use crate::sbc::heightmap::commands::{ExportHeightmapCommand, ImportHeightmapCommand};
+use crate::sbc::objects::{ObjectKind, ObjectManager, RemoveObjectCommand, SelectionManager};
+use crate::sbc::project::commands::{
+    ExportMapInfoCommand, ExportMapsCommand, ExportS11NCommand, ExportSpringArchiveCommand,
+    ReloadIntoProjectCommand, SaveCommand, SaveProjectInfoCommand, SetProjectNamePathCommand,
+};
 use crate::sbc::project::model::project_manager::ProjectManager;
+use crate::sbc::textures::commands::ImportDiffuseCommand;
 
 /// Whether an action can run right now. Toolbar buttons could grey out; hotkeys
 /// silently no-op when this returns false.
@@ -36,16 +43,15 @@ pub fn execute(
     action: Action,
     _interface: &NativeInterfaceRef,
     models: &mut Models,
-    next: &mut u64,
 ) -> ActionResult {
     match action {
-        Action::Undo => simple_command("UndoCommand", next),
-        Action::Redo => simple_command("RedoCommand", next),
+        Action::Undo => ActionResult::NativeCommands(vec![Box::new(UndoCommand)]),
+        Action::Redo => ActionResult::NativeCommands(vec![Box::new(RedoCommand)]),
 
         Action::Save => {
             let pm = models.get::<ProjectManager>();
             if pm.path().is_some() {
-                ActionResult::Commands(save_envelopes(pm, next))
+                ActionResult::NativeCommands(save_commands(pm))
             } else {
                 // No path known — fall through to Save As.
                 open_save_as()
@@ -64,18 +70,13 @@ pub fn execute(
             };
             ActionResult::OpenFileDialog {
                 config,
-                on_accept: Box::new(|result, interface, next| {
+                on_accept: Box::new(|result, interface| {
                     let (game_name, game_version) = game_id(interface);
-                    vec![envelope_fields(
-                        "ReloadIntoProjectCommand",
-                        next,
-                        serde_json::json!({
-                            "path": result.path,
-                            "modOptions": serde_json::json!({}),
-                            "gameName": game_name,
-                            "gameVersion": game_version,
-                        }),
-                    )]
+                    vec![Box::new(ReloadIntoProjectCommand::new(
+                        result.path.clone(),
+                        game_name,
+                        game_version,
+                    ))]
                 }),
             }
         }
@@ -93,29 +94,20 @@ pub fn execute(
             };
             ActionResult::OpenFileDialog {
                 config,
-                on_accept: Box::new(|result, interface, next| {
-                    let cmd = match result.file_type.as_deref() {
+                on_accept: Box::new(|result, interface| {
+                    match result.file_type.as_deref() {
+                        // A follow-up could open a sub-dialog for custom
+                        // min/max; for now use the engine's ground extremes.
                         Some("Heightmap") => {
-                            // A follow-up could open a sub-dialog for custom
-                            // min/max; for now use the engine's ground extremes.
                             let (min_h, max_h) = ground_extremes(interface);
-                            envelope_fields(
-                                "ImportHeightmapCommand",
-                                next,
-                                serde_json::json!({
-                                    "heightmapImage": result.path,
-                                    "minHeight": min_h,
-                                    "maxHeight": max_h,
-                                }),
-                            )
+                            vec![Box::new(ImportHeightmapCommand::new(
+                                result.path.clone(),
+                                min_h,
+                                max_h,
+                            ))]
                         }
-                        _ => envelope_fields(
-                            "ImportDiffuseCommand",
-                            next,
-                            serde_json::json!({ "texturePath": result.path }),
-                        ),
-                    };
-                    vec![cmd]
+                        _ => vec![Box::new(ImportDiffuseCommand::new(result.path.clone()))],
+                    }
                 }),
             }
         }
@@ -139,34 +131,18 @@ pub fn execute(
             };
             ActionResult::OpenFileDialog {
                 config,
-                on_accept: Box::new(|result, _interface, next| {
+                on_accept: Box::new(|result, _interface| {
                     let path = &result.path;
-                    let cmd = match result.file_type.as_deref().unwrap_or("") {
-                        "Spring archive" => envelope_fields(
-                            "ExportSpringArchiveCommand",
-                            next,
-                            serde_json::json!({ "path": path }),
-                        ),
-                        "Map textures" => envelope_fields(
-                            "ExportMapsCommand",
-                            next,
-                            serde_json::json!({ "path": path }),
-                        ),
-                        "Heightmap (16-bit PNG)" => envelope_fields(
-                            "ExportHeightmapCommand",
-                            next,
-                            serde_json::json!({ "path": path }),
-                        ),
-                        "Map info" => envelope_fields(
-                            "ExportMapInfoCommand",
-                            next,
-                            serde_json::json!({ "path": format!("{path}.lua") }),
-                        ),
-                        "s11n object format" => envelope_fields(
-                            "ExportS11NCommand",
-                            next,
-                            serde_json::json!({ "path": format!("{path}.lua") }),
-                        ),
+                    let cmd: Box<dyn Command> = match result.file_type.as_deref().unwrap_or("") {
+                        "Spring archive" => Box::new(ExportSpringArchiveCommand::new(path.clone())),
+                        "Map textures" => Box::new(ExportMapsCommand::new(path.clone())),
+                        "Heightmap (16-bit PNG)" => {
+                            Box::new(ExportHeightmapCommand::new(path.clone()))
+                        }
+                        "Map info" => Box::new(ExportMapInfoCommand::new(format!("{path}.lua"))),
+                        "s11n object format" => {
+                            Box::new(ExportS11NCommand::new(format!("{path}.lua")))
+                        }
                         _ => return vec![],
                     };
                     vec![cmd]
@@ -177,7 +153,7 @@ pub fn execute(
         Action::NewProject => ActionResult::OpenNewProject,
 
         // ── Selection / clipboard ──
-        Action::Delete => remove_selected(models, next),
+        Action::Delete => remove_selected(models),
 
         Action::Copy => {
             let items = copy_selection(models);
@@ -188,7 +164,7 @@ pub fn execute(
         Action::Cut => {
             let items = copy_selection(models);
             models.get::<Clipboard>().copy(&items);
-            remove_selected(models, next)
+            remove_selected(models)
         }
 
         // Paste needs the cursor's ground hit, so the manager runs it directly.
@@ -215,46 +191,19 @@ pub fn execute_paste(
     models: &mut Models,
     ground_x: f32,
     ground_z: f32,
-    next: &mut u64,
-) -> Vec<String> {
+) -> Vec<Box<dyn Command>> {
     let cb = models.get::<Clipboard>();
     if cb.is_empty() {
         return vec![];
     }
-    let envelopes = cb.paste_envelopes(interface, ground_x, ground_z, next);
-    if envelopes.is_empty() {
+    let commands = cb.paste_commands(interface, ground_x, ground_z);
+    if commands.is_empty() {
         return vec![];
     }
-    vec![compound(envelopes, next)]
+    vec![Box::new(CompoundCommand { commands })]
 }
 
 // ── Command builders ─────────────────────────────────────────────
-
-fn simple_command(class: &str, next: &mut u64) -> ActionResult {
-    ActionResult::Commands(vec![envelope_fields(class, next, serde_json::json!({}))])
-}
-
-/// Fold several command envelopes into one `CompoundCommand` — a single undo
-/// entry. The compound's `commands` array holds each inner command's `data`
-/// object (what `parse_command` consumes), not the `{tag, data}` envelope.
-fn compound(commands: Vec<String>, next: &mut u64) -> String {
-    let id = *next;
-    *next += 1;
-    let inner: Vec<serde_json::Value> = commands
-        .iter()
-        .filter_map(|c| serde_json::from_str::<serde_json::Value>(c).ok())
-        .filter_map(|mut v| v.get_mut("data").map(serde_json::Value::take))
-        .collect();
-    serde_json::json!({
-        "tag": "command",
-        "data": {
-            "className": "CompoundCommand",
-            "__cmd_id": id,
-            "commands": inner,
-        }
-    })
-    .to_string()
-}
 
 fn open_save_as() -> ActionResult {
     let config = FileDialogConfig {
@@ -267,7 +216,7 @@ fn open_save_as() -> ActionResult {
     };
     ActionResult::OpenFileDialog {
         config,
-        on_accept: Box::new(|result, _iface, next| {
+        on_accept: Box::new(|result, _iface| {
             let name = result
                 .path
                 .strip_prefix(PROJECTS_DIR)
@@ -276,62 +225,38 @@ fn open_save_as() -> ActionResult {
                 .to_string();
             let path = result.path.clone();
             vec![
-                envelope_fields(
-                    "SetProjectNamePathCommand",
-                    next,
-                    serde_json::json!({ "name": name, "path": path }),
-                ),
-                envelope_fields(
-                    "SaveProjectInfoCommand",
-                    next,
-                    serde_json::json!({ "name": name, "path": path, "isNewProject": true }),
-                ),
-                envelope_fields(
-                    "SaveCommand",
-                    next,
-                    serde_json::json!({ "path": path, "isNewProject": true }),
-                ),
+                Box::new(SetProjectNamePathCommand::new(name.clone(), path.clone())),
+                Box::new(SaveProjectInfoCommand::new(name, path.clone(), true, None)),
+                Box::new(SaveCommand::new(path, true)),
             ]
         }),
     }
 }
 
-fn save_envelopes(pm: &ProjectManager, next: &mut u64) -> Vec<String> {
+fn save_commands(pm: &ProjectManager) -> Vec<Box<dyn Command>> {
     let path = pm.path().unwrap_or_default().to_string();
     let name = pm.name().unwrap_or_default().to_string();
     vec![
-        envelope_fields(
-            "SaveProjectInfoCommand",
-            next,
-            serde_json::json!({ "name": name, "path": path, "isNewProject": false }),
-        ),
-        envelope_fields(
-            "SaveCommand",
-            next,
-            serde_json::json!({ "path": path, "isNewProject": false }),
-        ),
+        Box::new(SaveProjectInfoCommand::new(name, path.clone(), false, None)),
+        Box::new(SaveCommand::new(path, false)),
     ]
 }
 
 // ── Selection ────────────────────────────────────────────────────
 
 /// Remove the current selection as one undo group.
-fn remove_selected(models: &mut Models, next: &mut u64) -> ActionResult {
+fn remove_selected(models: &mut Models) -> ActionResult {
     let selection = models.get::<SelectionManager>().all();
-    let commands: Vec<String> = selection
-        .iter()
+    let commands: Vec<Box<dyn Command>> = selection
+        .into_iter()
         .map(|(kind, model_id)| {
-            envelope_fields(
-                "RemoveObjectCommand",
-                next,
-                serde_json::json!({ "objType": *kind, "modelID": *model_id }),
-            )
+            Box::new(RemoveObjectCommand::new(kind, model_id)) as Box<dyn Command>
         })
         .collect();
     if commands.is_empty() {
         ActionResult::None
     } else {
-        ActionResult::Commands(vec![compound(commands, next)])
+        ActionResult::NativeCommands(vec![Box::new(CompoundCommand { commands })])
     }
 }
 

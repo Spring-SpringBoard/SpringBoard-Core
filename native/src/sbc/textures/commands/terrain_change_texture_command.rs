@@ -1,5 +1,5 @@
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
@@ -14,69 +14,79 @@ use crate::sbc::textures::TextureModel;
 /// Paints the map diffuse texture (and, for `paint` mode, the shading textures)
 /// under the brush. Not undoable itself; a stroke is closed/undone/redone as one
 /// unit by the merged texture command.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TerrainChangeTextureCommand {
     opts: Opts,
 }
 
-#[derive(Deserialize, Debug, Default)]
-struct Opts {
-    x: f32,
-    z: f32,
-    size: f32,
+#[derive(Deserialize, Serialize, Debug, Default)]
+pub(crate) struct Opts {
+    pub(crate) x: f32,
+    pub(crate) z: f32,
+    pub(crate) size: f32,
 
     #[serde(rename = "paintMode", default)]
-    paint_mode: String,
+    pub(crate) paint_mode: String,
     #[serde(default)]
-    mode: String,
+    pub(crate) mode: String,
     #[serde(rename = "kernelMode", default)]
-    kernel_mode: String,
+    pub(crate) kernel_mode: String,
 
     #[serde(rename = "patternRotation", default)]
-    pattern_rotation: f32,
+    pub(crate) pattern_rotation: f32,
     #[serde(rename = "diffuseColor", default = "default_color")]
-    diffuse_color: [f32; 4],
+    pub(crate) diffuse_color: [f32; 4],
     #[serde(default = "default_strength")]
-    strength: f32,
+    pub(crate) strength: f32,
     #[serde(rename = "falloffFactor", default)]
-    falloff_factor: f32,
+    pub(crate) falloff_factor: f32,
     #[serde(rename = "featureFactor", default)]
-    feature_factor: f32,
+    pub(crate) feature_factor: f32,
     #[serde(rename = "voidFactor", default)]
-    void_factor: f32,
+    pub(crate) void_factor: f32,
 
     #[serde(rename = "patternTexture", default)]
-    pattern_texture: Texture,
+    pub(crate) pattern_texture: Texture,
     /// Brush-texture paths keyed by channel name (`diffuse`, `specular`, ...).
     #[serde(rename = "brushTexture", default)]
-    brush_texture: serde_json::Value,
+    pub(crate) brush_texture: serde_json::Value,
     #[serde(rename = "shadingTexture", default)]
-    shading_texture: serde_json::Value,
+    pub(crate) shading_texture: serde_json::Value,
 
     /// `<channel>Enabled` flags (`diffuseEnabled`, ...), collected via the
     /// catch-all to avoid enumerating every shading-tex name here.
     #[serde(default, flatten)]
-    extra: serde_json::Value,
+    pub(crate) extra: serde_json::Value,
 
     #[serde(rename = "texOffsetX", default)]
-    tex_offset_x: f32,
+    pub(crate) tex_offset_x: f32,
     #[serde(rename = "texOffsetY", default)]
-    tex_offset_y: f32,
+    pub(crate) tex_offset_y: f32,
     #[serde(rename = "texScale", default = "default_one")]
-    tex_scale: f32,
+    pub(crate) tex_scale: f32,
     /// Already in radians.
     #[serde(default)]
-    rotation: f32,
+    pub(crate) rotation: f32,
 
     #[serde(rename = "colorIndex", default)]
-    color_index: i32,
+    pub(crate) color_index: i32,
     #[serde(default)]
-    exclusive: i32,
+    pub(crate) exclusive: i32,
     #[serde(default)]
-    value: f32,
+    pub(crate) value: f32,
+}
+
+impl TerrainChangeTextureCommand {
+    pub(crate) fn new(opts: Opts) -> Self {
+        Self { opts }
+    }
 }
 
 impl Command for TerrainChangeTextureCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         let o = &self.opts;
         debug!(

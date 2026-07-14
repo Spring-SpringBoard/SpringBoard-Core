@@ -33,7 +33,7 @@ impl Default for ScenarioInfo {
 
 /// Partial-update payload: any field omitted leaves the current value untouched
 /// (mirrors Lua's `data.x or self.x` merge in `ScenarioInfo:Set`).
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct ScenarioInfoPatch {
     pub name: Option<String>,
     pub description: Option<String>,

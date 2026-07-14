@@ -1,8 +1,10 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
+use crate::sbc::map_settings::commands::SetAtmosphereCommand;
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::editor_base::{envelope, resolve_base, FieldSet, Layout};
+use crate::sbc::panels::editor_base::{resolve_base, FieldSet, Layout};
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{AssetField, ColorField, NumericField};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
@@ -63,13 +65,16 @@ impl SkyEditor {
         }
     }
 
-    fn atmosphere(&self, name: &str, value: &FieldValue, next: &mut u64) -> Vec<String> {
+    fn atmosphere(&self, name: &str, value: &FieldValue) -> Vec<Box<dyn Command>> {
         let opts = match value {
             FieldValue::Color(c) => serde_json::json!({ name: c }),
             FieldValue::Number(n) => serde_json::json!({ name: n }),
             _ => return vec![],
         };
-        vec![envelope("SetAtmosphereCommand", next, opts)]
+        match SetAtmosphereCommand::from_opts(opts) {
+            Some(c) => vec![Box::new(c)],
+            None => vec![],
+        }
     }
 }
 
@@ -101,8 +106,7 @@ impl Editor for SkyEditor {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         let value = self.fields.read(name, interface);
         if base == "skyboxTexture" {
@@ -114,16 +118,16 @@ impl Editor for SkyEditor {
             return vec![];
         }
         if ATMOSPHERE_FIELDS.contains(&base.as_str()) {
-            return self.atmosphere(&base, &value, next);
+            return self.atmosphere(&base, &value);
         }
         vec![]
     }
 
-    fn process_drag_end(&mut self, name: &str, next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>> {
         let base = resolve_base(name).to_string();
         let value = self.fields.value(name);
         if ATMOSPHERE_FIELDS.contains(&base.as_str()) {
-            return self.atmosphere(&base, &value, next);
+            return self.atmosphere(&base, &value);
         }
         vec![]
     }

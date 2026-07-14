@@ -208,6 +208,8 @@ the file reads like a newspaper (headline first, detail below).
   ordering meaning. The rule is only: the public command on top, helpers underneath.
 - Keep one `impl` block per type — don't split a type's methods across several
   `impl` blocks to satisfy ordering; order the methods *within* the block instead.
+- Within each `impl` block, put every `pub`/`pub(...)` method before its private
+  methods. The Rust step-down lint enforces this independently for each block.
 - Free helper functions go below the code that calls them; a leaf used by several
   callers goes after the last of them.
 

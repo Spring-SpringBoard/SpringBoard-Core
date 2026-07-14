@@ -56,20 +56,6 @@ impl NumericField {
         self
     }
 
-    /// How much one pixel of drag moves the value.
-    ///
-    /// Lua's rule (`NumericField:init`): a bounded field crosses its whole range
-    /// in ~200px, so a 10..5000 size field moves ~25 per pixel. A fixed 1-per-
-    /// pixel makes those fields crawl.
-    fn drag_step(&self) -> f32 {
-        if self.step_set {
-            return self.step;
-        }
-        match (self.min, self.max) {
-            (Some(min), Some(max)) if max > min => (max - min) / 200.0,
-            _ => 1.0,
-        }
-    }
     pub(crate) fn min(mut self, min: f32) -> Self {
         self.min = Some(min);
         self
@@ -90,6 +76,21 @@ impl NumericField {
     #[allow(dead_code)]
     pub(crate) fn get(&self) -> f32 {
         self.value
+    }
+
+    /// How much one pixel of drag moves the value.
+    ///
+    /// Lua's rule (`NumericField:init`): a bounded field crosses its whole range
+    /// in ~200px, so a 10..5000 size field moves ~25 per pixel. A fixed 1-per-
+    /// pixel makes those fields crawl.
+    fn drag_step(&self) -> f32 {
+        if self.step_set {
+            return self.step;
+        }
+        match (self.min, self.max) {
+            (Some(min), Some(max)) if max > min => (max - min) / 200.0,
+            _ => 1.0,
+        }
     }
 
     fn clamp(&self, v: f32) -> f32 {

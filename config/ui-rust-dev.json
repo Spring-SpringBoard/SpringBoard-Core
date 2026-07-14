@@ -1,0 +1,8 @@
+{
+  "chonsole": "rust",
+  "ui": "rust",
+  "env": {
+    "SBC_DEV_PANEL": "1",
+    "SBC_LOG_LEVEL": "debug"
+  }
+}

@@ -20,6 +20,16 @@ pub struct UpdateTeamCommand {
     old: Option<Team>,
 }
 
+impl UpdateTeamCommand {
+    /// Construct from a serialized `team` payload. Transitional: the team DTO
+    /// becomes a typed constructor per docs/porting/todo.md (concrete-commands).
+    pub(crate) fn from_team(team: serde_json::Value) -> Option<Self> {
+        serde_json::from_value(team)
+            .ok()
+            .map(|team| Self { team, old: None })
+    }
+}
+
 impl Command for UpdateTeamCommand {
     fn execute(&mut self, ctx: &mut Context) {
         // Snapshot once: redo re-runs this same instance, so re-capturing here

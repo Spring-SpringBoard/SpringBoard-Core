@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{FieldSet, Layout};
@@ -354,10 +355,7 @@ impl TextureEditor {
             fields: FieldSet::new(fields),
             pattern_grid: {
                 let mut grid = GridView::new("texture-pattern-grid", 64);
-                grid.configure_navigation(
-                    "springboard/assets/core/brush_patterns/terrain",
-                    IMAGE_EXTS,
-                );
+                grid.configure_asset_navigation("brush_patterns/terrain/", IMAGE_EXTS);
                 grid
             },
             saved_brush_grid: GridView::new("texture-saved-brush-grid", 64),
@@ -711,22 +709,16 @@ impl Editor for TextureEditor {
         &mut self,
         name: &str,
         interface: &NativeInterfaceRef,
-        _next: &mut u64,
-    ) -> Vec<String> {
+    ) -> Vec<Box<dyn Command>> {
         self.fields.read(name, interface);
         vec![]
     }
 
-    fn process_drag_end(&mut self, _name: &str, _next: &mut u64) -> Vec<String> {
+    fn process_drag_end(&mut self, _name: &str) -> Vec<Box<dyn Command>> {
         vec![]
     }
 
-    fn tick(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        _next: &mut u64,
-    ) -> Vec<String> {
+    fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) -> Vec<Box<dyn Command>> {
         let mode_before = self.paint_mode().to_string();
         self.actions.tick(interface, document);
         if self.paint_mode() != "paint" && self.material_picker_open {

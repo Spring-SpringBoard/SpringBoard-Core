@@ -25,6 +25,18 @@ pub struct ExportSpringArchiveCommand {
     write_path: Option<String>,
 }
 
+impl ExportSpringArchiveCommand {
+    pub(crate) fn new(path: String) -> Self {
+        Self {
+            path,
+            heightmap_extremes: None,
+            project_path: None,
+            project_name: None,
+            write_path: None,
+        }
+    }
+}
+
 impl Command for ExportSpringArchiveCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let Some(project_path) = self.project_path(ctx) else {
