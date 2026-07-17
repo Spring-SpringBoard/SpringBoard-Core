@@ -245,29 +245,6 @@ impl SBC {
         }
     }
 
-    /// Drain typed commands queued by native producers and submit them directly
-    /// as `Box<dyn Command>` rather than a JSON envelope.
-    fn drain_panel_commands(&mut self) {
-        for command in self.model::<PanelManager>().drain_commands() {
-            self.submit_command(command);
-        }
-    }
-
-    /// Submit what the active editing state queued. Drained right after each
-    /// callin that can produce commands, so a brush stroke's `SetMultipleCommand
-    /// ModeCommand(true)` reaches the command manager before the strokes do.
-    fn drain_state_commands(&mut self) {
-        for command in self.model::<StateManager>().drain_commands() {
-            self.submit_command(command);
-        }
-    }
-
-    fn drain_console_commands(&mut self) {
-        for command in self.model::<DevConsoleManager>().drain_commands() {
-            self.submit_command(command);
-        }
-    }
-
     /// The domain model of type `T`. Used by the in-engine tests to read model
     /// state directly.
     pub fn model<T: Model>(&mut self) -> &mut T {
@@ -306,6 +283,58 @@ impl SBC {
         }
     }
 
+    /// Submit a command produced natively (no JSON envelope, no `className`).
+    /// The command manager allocates the id; this is the typed counterpart to
+    /// `run_command`, which serves the Lua/envelope path. Logging is centralized
+    /// here so the e2e command log captures native commands without each
+    /// producer building JSON for it.
+    pub(crate) fn submit_command(&mut self, command: Box<dyn Command>) {
+        let id = self.command_manager.allocate_command_id();
+        let display = crate::sbc::command_system::registry::class_name_of(&*command)
+            .unwrap_or("NativeCommand")
+            .to_string();
+        log_native_command(&*command, id);
+        self.model::<DevConsoleManager>()
+            .record_command(id, display);
+        let (history_events, io_jobs) = {
+            let mut ctx = Context::new(&self.interface, id, &mut self.models);
+            let events = self.command_manager.execute(command, id, &mut ctx);
+            (events, std::mem::take(&mut ctx.io_jobs))
+        };
+        for job in io_jobs {
+            self.io_worker.submit(job);
+        }
+        event_bridge::emit(
+            &self.interface,
+            self.models.get::<ObjectManager>().drain_events(),
+        );
+        self.models.on_history_events(&history_events);
+        self.sync_devconsole_command_history();
+    }
+
+    /// Drain typed commands queued by native producers and submit them directly
+    /// as `Box<dyn Command>` rather than a JSON envelope.
+    fn drain_panel_commands(&mut self) {
+        for command in self.model::<PanelManager>().drain_commands() {
+            self.submit_command(command);
+        }
+    }
+
+    /// Submit what the active editing state queued. Drained right after each
+    /// callin that can produce commands, so a brush stroke's `SetMultipleCommand
+    /// ModeCommand(true)` reaches the command manager before the strokes do.
+    fn drain_state_commands(&mut self) {
+        for command in self.model::<StateManager>().drain_commands() {
+            self.submit_command(command);
+        }
+    }
+
+    fn drain_console_commands(&mut self) {
+        for command in self.model::<DevConsoleManager>().drain_commands() {
+            self.submit_command(command);
+        }
+    }
+
     fn run_command(&mut self, data: serde_json::Value) {
         let display = data
             .get("className")
@@ -334,34 +363,6 @@ impl SBC {
             Ok(None) => {}
             Err(err) => error!("{err}"),
         }
-    }
-
-    /// Submit a command produced natively (no JSON envelope, no `className`).
-    /// The command manager allocates the id; this is the typed counterpart to
-    /// `run_command`, which serves the Lua/envelope path. Logging is centralized
-    /// here so the e2e command log captures native commands without each
-    /// producer building JSON for it.
-    pub(crate) fn submit_command(&mut self, command: Box<dyn Command>) {
-        let id = self.command_manager.allocate_command_id();
-        let display = crate::sbc::command_system::registry::class_name_of(&*command)
-            .unwrap_or("NativeCommand")
-            .to_string();
-        log_native_command(&*command, id);
-        self.model::<DevConsoleManager>().record_command(id, display);
-        let (history_events, io_jobs) = {
-            let mut ctx = Context::new(&self.interface, id, &mut self.models);
-            let events = self.command_manager.execute(command, id, &mut ctx);
-            (events, std::mem::take(&mut ctx.io_jobs))
-        };
-        for job in io_jobs {
-            self.io_worker.submit(job);
-        }
-        event_bridge::emit(
-            &self.interface,
-            self.models.get::<ObjectManager>().drain_events(),
-        );
-        self.models.on_history_events(&history_events);
-        self.sync_devconsole_command_history();
     }
 
     fn sync_devconsole_command_history(&mut self) {

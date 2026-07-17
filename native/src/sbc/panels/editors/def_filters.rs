@@ -109,10 +109,6 @@ impl DefTraits {
         DefTraits::of_unit(interface, unit_def_id)
     }
 
-    fn is_wreck(&self) -> bool {
-        self.unit.is_some()
-    }
-
     /// Does this unit def pass the Units view's filters?
     pub(crate) fn passes_unit_filters(&self, unit_type: &str, terrain: &str) -> bool {
         let Some(unit) = self.unit else {
@@ -142,6 +138,10 @@ impl DefTraits {
             return true;
         }
         self.passes_unit_filters(wreck_type, terrain)
+    }
+
+    fn is_wreck(&self) -> bool {
+        self.unit.is_some()
     }
 }
 

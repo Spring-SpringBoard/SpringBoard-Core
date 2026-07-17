@@ -4,7 +4,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import ACTION_Y, EDITOR_BUTTON_Y, TAB_X, TAB_Y, dialog_left, panel_left
+from scenarios.geometry import (
+    DIALOG,
+    COLOR_PICKER,
+    ENV_LIGHTING_COLORS,
+    MISC,
+    MISC_INFO_FIELDS,
+    TAB_X,
+    TAB_Y,
+    TEAM_NUMBERS,
+    dialog_point,
+    editor_point,
+    panel_left,
+    panel_point,
+)
 from scenarios.registry import scenario
 
 if TYPE_CHECKING:
@@ -21,22 +34,17 @@ def info_panel(run_state: E2ERun) -> None:
     left = panel_left(run_state)
     # Env -> Lighting, open the Diffuse colour swatch and confirm a colour.
     run_state.click(left + TAB_X["env"], TAB_Y, delay=0.2)
-    run_state.click(left + 38, EDITOR_BUTTON_Y, delay=0.4)
-    run_state.click(left + 110, 310, delay=0.4)
-    run_state.click(900, 300, delay=0.2)
-    run_state.click(1138, 473, delay=0.4)
+    run_state.click(*editor_point(left, "env", "lighting"), delay=0.4)
+    run_state.click(*panel_point(left, ENV_LIGHTING_COLORS[0][1]), delay=0.4)
+    run_state.click(ENV_LIGHTING_COLORS[0][2], COLOR_PICKER["sample_y"], delay=0.2)
+    run_state.click(*dialog_point(run_state, DIALOG["color_ok_compact"]), delay=0.4)
     run_state.screenshot("after-color-pick")
     # Misc -> Info, then edit a text field.
     run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.3)
-    run_state.click(left + 38, EDITOR_BUTTON_Y, delay=0.5)
+    run_state.click(*editor_point(left, "misc", "info"), delay=0.5)
     run_state.screenshot("info-open")
-    for y, value in (
-        (190, "Verified Scenario"),
-        (233, "All metadata fields"),
-        (276, "2.5"),
-        (318, "Native UI"),
-    ):
-        run_state.click(left + 200, y, delay=0.15)
+    for point, value in MISC_INFO_FIELDS:
+        run_state.click(*panel_point(left, point), delay=0.15)
         run_state.key("ctrl+a", delay=0.08)
         run_state.type_text(value)
         run_state.key("Return", delay=0.3)
@@ -60,40 +68,32 @@ def teams_panel(run_state: E2ERun) -> None:
     left = panel_left(run_state)
     run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.2)
     run_state.screenshot("misc-tab")
-    run_state.click(left + 110, EDITOR_BUTTON_Y, delay=0.5)   # Teams (order 1)
+    run_state.click(*editor_point(left, "misc", "teams"), delay=0.5)
     run_state.screenshot("teams-open")
-    run_state.click(left + 38, ACTION_Y, delay=0.8)
+    run_state.click(*panel_point(left, MISC["team_add"]), delay=0.8)
     run_state.assert_any_command(
         "AddTeamCommand",
         name=lambda value: isinstance(value, str) and value.startswith("New team:"),
     )
     run_state.screenshot("team-added")
     # Edit the first player team. Fields live in a modal, not in every row.
-    run_state.click(left + 425, 313, delay=0.8)
+    run_state.click(*panel_point(left, MISC["team_edit_first"]), delay=0.8)
     run_state.screenshot_root("team-edit-dialog")
-    modal = dialog_left(run_state)
-    run_state.click(modal + 292, 269, delay=0.2)
+    run_state.click(*dialog_point(run_state, DIALOG["team_name"]), delay=0.2)
     run_state.key("ctrl+a", delay=0.1)
     run_state.type_text("Blue Team")
-    run_state.click(modal + 150, 304, delay=0.2)       # AI
-    for x, y, value in (
-        (120, 350, "125"),
-        (260, 350, "500"),
-        (120, 416, "250"),
-        (260, 416, "750"),
-        (120, 501, "100"),
-        (260, 501, "200"),
-    ):
-        run_state.click(modal + x, y, delay=0.1)
+    run_state.click(*dialog_point(run_state, DIALOG["team_ai"]), delay=0.2)
+    for point, value in TEAM_NUMBERS:
+        run_state.click(*dialog_point(run_state, point), delay=0.1)
         run_state.key("ctrl+a", delay=0.08)
         run_state.type_text(value)
-    run_state.click(modal + 153, 459, delay=0.3)
+    run_state.click(*dialog_point(run_state, DIALOG["team_color"]), delay=0.3)
     run_state.screenshot_root("team-color-picker-open")
-    run_state.click(1010, 255, delay=0.12)
-    run_state.click(900, 300, delay=0.15)
-    run_state.click(1138, 473, delay=0.5)
+    run_state.click(*dialog_point(run_state, COLOR_PICKER["team_hue"]), delay=0.12)
+    run_state.click(COLOR_PICKER["team_sample_x"], COLOR_PICKER["sample_y"], delay=0.15)
+    run_state.click(*dialog_point(run_state, DIALOG["color_ok_compact"]), delay=0.5)
     run_state.screenshot_root("team-color-picker-closed")
-    run_state.click(modal + 472, 609, delay=0.8)
+    run_state.click(*dialog_point(run_state, DIALOG["team_ok"]), delay=0.8)
     run_state.assert_any_command(
         "UpdateTeamCommand",
         team=lambda value: isinstance(value, dict)
@@ -105,8 +105,6 @@ def teams_panel(run_state: E2ERun) -> None:
         and value["color"].get("r", 0) > 0.2,
     )
     run_state.screenshot("team-updated")
-    run_state.click(left + 468, 347, delay=0.8)
+    run_state.click(*panel_point(left, MISC["team_remove_first"]), delay=0.8)
     run_state.assert_any_command("RemoveTeamCommand")
     run_state.screenshot("team-removed")
-
-

@@ -218,14 +218,6 @@ impl ObjectDefsView {
         h
     }
 
-    fn mode_fields(&self) -> &'static [&'static str] {
-        match self.mode {
-            PlaceMode::Set => SET_FIELDS,
-            // Rotation min/max fields render in grouped rows.
-            PlaceMode::Brush => &["size", "spread", "noise"],
-        }
-    }
-
     /// Whether the name belongs to one of this view's fields. The search box is
     /// raw markup rather than a field, so it is the one thing that is not.
     pub(crate) fn is_field(&self, name: &str) -> bool {
@@ -301,68 +293,6 @@ impl ObjectDefsView {
         self.rebuild_fields();
         self.needs_rebuild = true;
         true
-    }
-
-    /// Rebuild the field set: the team choice's options come from the roster,
-    /// which changes, so the field cannot be fixed at construction.
-    fn rebuild_fields(&mut self) {
-        // The roster changing must not silently reset the grid's filters.
-        let filters: Vec<(String, String)> = FILTER_FIELDS
-            .iter()
-            .filter(|name| self.fields.get(name).is_some())
-            .map(|name| ((*name).to_string(), self.fields.text(name)))
-            .collect();
-
-        let captions: Vec<String> = self.teams.iter().map(|(_, c)| c.clone()).collect();
-        let mut fields = placement_fields(captions);
-        fields.extend(filter_fields(self.kind));
-        self.fields = FieldSet::new(fields);
-
-        for (name, value) in filters {
-            self.fields.set(&name, FieldValue::Text(value));
-        }
-    }
-
-    /// The filter choice, or its default when the field is not built yet.
-    fn filter(&self, name: &str, default: &str) -> String {
-        let value = self.fields.text(name);
-        if value.is_empty() {
-            return default.to_string();
-        }
-        value
-    }
-
-    /// The placement config from the current fields.
-    fn config(&self) -> PlacementConfig {
-        let team = self
-            .selected_team()
-            .unwrap_or_else(|| self.teams.first().map(|(id, _)| *id).unwrap_or(0));
-        PlacementConfig {
-            team,
-            brush: self.mode == PlaceMode::Brush,
-            amount: self.fields.number("amount").max(1.0) as u32,
-            size: self.fields.number("size"),
-            spread: self.fields.number("spread").max(1.0),
-            noise: self.fields.number("noise").max(0.0),
-            rot_min: [
-                self.fields.number("rotXMin").to_radians(),
-                self.fields.number("rotYMin").to_radians(),
-                self.fields.number("rotZMin").to_radians(),
-            ],
-            rot_max: [
-                self.fields.number("rotXMax").to_radians(),
-                self.fields.number("rotYMax").to_radians(),
-                self.fields.number("rotZMax").to_radians(),
-            ],
-        }
-    }
-
-    fn selected_team(&self) -> Option<i32> {
-        let caption = self.fields.text("team");
-        self.teams
-            .iter()
-            .find(|(_, c)| *c == caption)
-            .map(|(id, _)| *id)
     }
 
     /// Load defs, handle search + grid + mode clicks, and re-arm placement.
@@ -548,6 +478,76 @@ impl ObjectDefsView {
 
     pub(crate) fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         self.fields.write_values(interface)
+    }
+
+    fn mode_fields(&self) -> &'static [&'static str] {
+        match self.mode {
+            PlaceMode::Set => SET_FIELDS,
+            // Rotation min/max fields render in grouped rows.
+            PlaceMode::Brush => &["size", "spread", "noise"],
+        }
+    }
+
+    /// Rebuild the field set: the team choice's options come from the roster,
+    /// which changes, so the field cannot be fixed at construction.
+    fn rebuild_fields(&mut self) {
+        // The roster changing must not silently reset the grid's filters.
+        let filters: Vec<(String, String)> = FILTER_FIELDS
+            .iter()
+            .filter(|name| self.fields.get(name).is_some())
+            .map(|name| ((*name).to_string(), self.fields.text(name)))
+            .collect();
+
+        let captions: Vec<String> = self.teams.iter().map(|(_, c)| c.clone()).collect();
+        let mut fields = placement_fields(captions);
+        fields.extend(filter_fields(self.kind));
+        self.fields = FieldSet::new(fields);
+
+        for (name, value) in filters {
+            self.fields.set(&name, FieldValue::Text(value));
+        }
+    }
+
+    /// The filter choice, or its default when the field is not built yet.
+    fn filter(&self, name: &str, default: &str) -> String {
+        let value = self.fields.text(name);
+        if value.is_empty() {
+            return default.to_string();
+        }
+        value
+    }
+
+    /// The placement config from the current fields.
+    fn config(&self) -> PlacementConfig {
+        let team = self
+            .selected_team()
+            .unwrap_or_else(|| self.teams.first().map(|(id, _)| *id).unwrap_or(0));
+        PlacementConfig {
+            team,
+            brush: self.mode == PlaceMode::Brush,
+            amount: self.fields.number("amount").max(1.0) as u32,
+            size: self.fields.number("size"),
+            spread: self.fields.number("spread").max(1.0),
+            noise: self.fields.number("noise").max(0.0),
+            rot_min: [
+                self.fields.number("rotXMin").to_radians(),
+                self.fields.number("rotYMin").to_radians(),
+                self.fields.number("rotZMin").to_radians(),
+            ],
+            rot_max: [
+                self.fields.number("rotXMax").to_radians(),
+                self.fields.number("rotYMax").to_radians(),
+                self.fields.number("rotZMax").to_radians(),
+            ],
+        }
+    }
+
+    fn selected_team(&self) -> Option<i32> {
+        let caption = self.fields.text("team");
+        self.teams
+            .iter()
+            .find(|(_, c)| *c == caption)
+            .map(|(id, _)| *id)
     }
 
     fn apply_filter(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {

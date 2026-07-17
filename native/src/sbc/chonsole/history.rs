@@ -1,4 +1,7 @@
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use spring_native::prelude::NativeInterfaceRef;
 
@@ -97,14 +100,19 @@ mod tests {
             std::env::temp_dir().join(format!("sbc_chonsole_history_cap_{}", std::process::id()));
         let _ = fs::remove_file(&path);
         let store = HistoryStore { path: path.clone() };
-        let entries = (0..101).map(|index| format!("/{index}")).collect::<Vec<_>>();
+        let entries = (0..101)
+            .map(|index| format!("/{index}"))
+            .collect::<Vec<_>>();
         store.rewrite(&entries);
 
         let loaded = store.load();
         assert_eq!(loaded.len(), super::MAX_HISTORY);
         assert_eq!(loaded.first(), Some(&"/1".to_string()));
         assert_eq!(loaded.last(), Some(&"/100".to_string()));
-        assert_eq!(fs::read_to_string(&path).unwrap().lines().count(), super::MAX_HISTORY);
+        assert_eq!(
+            fs::read_to_string(&path).unwrap().lines().count(),
+            super::MAX_HISTORY
+        );
         let _ = fs::remove_file(&path);
     }
 }

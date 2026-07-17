@@ -6,12 +6,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from scenarios.geometry import (
-    EDITOR_BUTTON_Y,
+    DIALOG,
+    EDITORS,
+    ENV,
+    MISC,
+    SHELL,
     TAB_X,
     TAB_Y,
-    dialog_left,
-    editor_button_x,
+    TOOLBAR,
+    dialog_point,
+    editor_point,
     panel_left,
+    panel_point,
 )
 from scenarios.registry import scenario
 
@@ -35,7 +41,7 @@ def main_panel_tabs(run_state: E2ERun) -> None:
 
 # Every registered editor, so none of them is left untried. Tab -> how many
 # editor buttons that tab has.
-_TABS = (("objects", 4), ("map", 5), ("env", 3), ("misc", 2))
+_TABS = (("objects",), ("map",), ("env",), ("misc",))
 
 
 @scenario(uis=("rmlui", "rust"), crop="right-panel")
@@ -45,11 +51,11 @@ def all_editors(run_state: E2ERun) -> None:
     run_state.focus()
     left = panel_left(run_state)
 
-    for tab_name, editor_count in _TABS:
+    for (tab_name,) in _TABS:
         run_state.click(left + TAB_X[tab_name], TAB_Y, delay=0.3)
-        for i in range(editor_count):
-            run_state.click(left + editor_button_x(i), EDITOR_BUTTON_Y, delay=0.7)
-            run_state.screenshot(f"{tab_name}-{i}")
+        for editor_name in EDITORS[tab_name]:
+            run_state.click(*editor_point(left, tab_name, editor_name), delay=0.7)
+            run_state.screenshot(f"{tab_name}-{editor_name}")
 
 
 @scenario(uis=("rmlui",))
@@ -60,10 +66,10 @@ def dialogs(run_state: E2ERun) -> None:
     left = panel_left(run_state)
 
     run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.2)
-    run_state.click(left + 110, EDITOR_BUTTON_Y, delay=0.8)   # Diplomacy (order 2)
+    run_state.click(*editor_point(left, "misc", "diplomacy"), delay=0.8)
     run_state.screenshot("diplomacy")
 
-    run_state.click(left + 24, 150, delay=1.0)   # toolbar: New Project
+    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=1.0)
     run_state.screenshot_root("new-project")
     run_state.key("Escape", delay=0.3)
 
@@ -77,7 +83,7 @@ def notifications(run_state: E2ERun) -> None:
 
     run_state.screenshot("before")
     # Toolbar action buttons, 6th is Export.
-    run_state.click(left + 239, 150, delay=1.0)
+    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=1.0)
     run_state.screenshot("warning")
     # time=3, so it must be gone a few seconds later (the editor runs paused, so
     # expiry cannot be driven off game seconds).
@@ -95,7 +101,6 @@ def native_panel(run_state: E2ERun) -> None:
     """
     run_state.focus()
     left = panel_left(run_state)
-    modal_left = dialog_left(run_state)
 
     # Top-right of the saturation/value square is full saturation and value, so
     # the colour there is the pure hue under the cursor: red.
@@ -112,13 +117,13 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.click(left + TAB_X["env"], TAB_Y, delay=0.5)
     run_state.golden("shell-env-tab")
 
-    run_state.click(left + 38, EDITOR_BUTTON_Y, delay=0.7)    # Env -> Lighting
+    run_state.click(*editor_point(left, "env", "lighting"), delay=0.7)
     run_state.golden("lighting-open")
 
     # Click the Shadow Density display to enter edit mode, replace the value,
     # and commit. This must reach the command bridge as SetSunLightingCommand
     # carrying exactly the value we typed.
-    run_state.click(left + 90, 419, delay=0.4)
+    run_state.click(*panel_point(left, SHELL["lighting_shadow_density"]), delay=0.4)
     run_state.golden("lighting-density-editing")
 
     run_state.key("ctrl+a", delay=0.15)
@@ -132,40 +137,43 @@ def native_panel(run_state: E2ERun) -> None:
     # modal sits clear of the panel, so its captures span the frame -- but not
     # the console strip, whose boot log prints pointer addresses that change
     # every run.
-    run_state.click(left + 90, 331, delay=0.6)
+    run_state.click(*panel_point(left, SHELL["lighting_ground_diffuse"]), delay=0.6)
     run_state.golden("picker-open", crop="no-console", tolerance=FULL_FRAME_TOLERANCE)
 
     # Drag to the top-right of the saturation/value square: full saturation,
     # full value, so the colour becomes the pure hue under the cursor.
-    sv_left, sv_top = modal_left + 10, 252
-    run_state.drag(sv_left + 10, sv_top + 170, sv_left + 175, sv_top + 5, steps=6)
+    run_state.drag(
+        *dialog_point(run_state, DIALOG["color_gradient_start"]),
+        *dialog_point(run_state, DIALOG["color_gradient_end"]),
+        steps=6,
+    )
     run_state.golden("picker-dragged", crop="no-console", tolerance=FULL_FRAME_TOLERANCE)
 
     # Dragging previews live: the engine has already taken the colour before OK
     # is pressed. Previews never reach the undo history.
     run_state.assert_previews("SetSunLightingCommand", groundDiffuseColor=is_red)
 
-    run_state.click(modal_left + 344, 472, delay=0.6)   # OK
+    run_state.click(*dialog_point(run_state, DIALOG["color_ok_native"]), delay=0.6)
     run_state.golden("picker-accepted")
 
     # Accepting commits exactly one undoable command with the same colour.
     run_state.assert_command("SetSunLightingCommand", groundDiffuseColor=is_red)
 
     # Env -> Water: checkbox + numerics, all through SetWaterParamsCommand.
-    run_state.click(left + 182, EDITOR_BUTTON_Y, delay=0.7)
+    run_state.click(*editor_point(left, "env", "water"), delay=0.7)
     run_state.golden("water-open")
 
-    run_state.click(left + 138, 192, delay=0.5)   # "Forced rendering" checkbox
+    run_state.click(*panel_point(left, ENV["water_forced_rendering"]), delay=0.5)
     run_state.golden("water-checkbox")
     run_state.assert_command("SetWaterParamsCommand", forceRendering=True)
 
     # Misc -> Info: text fields, backed by the project model rather than the engine.
     run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.4)
     run_state.golden("shell-misc-tab")
-    run_state.click(left + 38, EDITOR_BUTTON_Y, delay=0.7)     # Info
+    run_state.click(*editor_point(left, "misc", "info"), delay=0.7)
     run_state.golden("info-open")
 
-    run_state.click(left + 200, 190, delay=0.3)   # Name field
+    run_state.click(*panel_point(left, MISC["info_name"]), delay=0.3)
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("Ported")
     run_state.key("Return", delay=0.6)
@@ -175,26 +183,26 @@ def native_panel(run_state: E2ERun) -> None:
 
     # Env -> Sky: the Skybox asset field opens the VFS asset picker.
     run_state.click(left + TAB_X["env"], TAB_Y, delay=0.4)
-    run_state.click(left + 110, EDITOR_BUTTON_Y, delay=0.7)   # Sky
+    run_state.click(*editor_point(left, "env", "sky"), delay=0.7)
     run_state.golden("sky-open")
-    run_state.click(left + 64, 280, delay=0.8)   # Skybox field
+    run_state.click(*panel_point(left, ENV["sky_skybox"]), delay=0.8)
     run_state.golden("asset-picker-open", crop="no-console", tolerance=FULL_FRAME_TOLERANCE)
-    run_state.click(modal_left + 430, 603, delay=0.6)  # Cancel
+    run_state.click(*dialog_point(run_state, DIALOG["skybox_cancel"]), delay=0.6)
 
     # Env -> Water: the normal-texture field browses bitmaps/ and picking a file
     # must emit SetWaterParamsCommand carrying its VFS path.
-    run_state.click(left + 182, EDITOR_BUTTON_Y, delay=0.7)   # Water
+    run_state.click(*editor_point(left, "env", "water"), delay=0.7)
     # Normal texture now sits directly below NumTiles, before the perlin group.
-    run_state.click(left + 87, 236, delay=0.8)
+    run_state.click(*panel_point(left, SHELL["water_normal_texture"]), delay=0.8)
     run_state.golden(
         "asset-picker-bitmaps", crop="no-console", tolerance=FULL_FRAME_TOLERANCE
     )
 
-    run_state.click(modal_left + 50, 335, delay=0.5)   # first file cell
+    run_state.click(*dialog_point(run_state, DIALOG["asset_first_cell"]), delay=0.5)
     run_state.golden(
         "asset-picker-selected", crop="no-console", tolerance=FULL_FRAME_TOLERANCE
     )
-    run_state.click(modal_left + 343, 603, delay=0.8)  # OK
+    run_state.click(*dialog_point(run_state, DIALOG["asset_ok"]), delay=0.8)
 
     def is_bitmap(path: object) -> bool:
         return (

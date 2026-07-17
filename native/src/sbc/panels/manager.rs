@@ -279,6 +279,130 @@ impl PanelManager {
         std::mem::take(&mut self.pending_commands)
     }
 
+    /// Run a toolbar action or hotkey. Actions either dispatch commands directly,
+    /// or ask to open a dialog whose result the manager feeds back.
+    pub(crate) fn run_action(&mut self, action: Action, models: &mut Models) -> Result<(), Error> {
+        if !actions::can_execute(action, models) {
+            return Ok(());
+        }
+        match actions::execute(action, &self.interface, models) {
+            ActionResult::None => {}
+            ActionResult::NativeCommands(commands) => self.pending_commands.extend(commands),
+            ActionResult::OpenFileDialog { config, on_accept } => {
+                if let Some(doc) = self.view.document_handle() {
+                    self.pending_accept = Some(on_accept);
+                    self.file_dialog.open(&self.interface, doc, config)?;
+                }
+            }
+            ActionResult::OpenNewProject => {
+                if let Some(doc) = self.view.document_handle() {
+                    self.new_project.open(&self.interface, doc)?;
+                }
+            }
+        }
+        // Paste needs the cursor's ground position, which the action layer can't
+        // reach; run it here where the mouse state is available.
+        if action == Action::Paste {
+            self.run_paste(models);
+        }
+        Ok(())
+    }
+
+    // ── Input delegation ──
+
+    pub fn key_press(&mut self, key: i32, _scan: i32, _repeat: bool) -> Result<bool, Error> {
+        if !self.enabled {
+            return Ok(false);
+        }
+        const RETURN: i32 = 13;
+        const ESCAPE: i32 = 27;
+        if key == ESCAPE && self.close_top_modal()? {
+            return Ok(true);
+        }
+        // Keys are only ours while a field is being edited; anything else stays
+        // available to the chonsole and the engine — except a toolbar/clipboard
+        // hotkey, which we claim here and run next tick (where models borrow).
+        let Some(name) = self.editing.clone() else {
+            return Ok(self.match_hotkey(key));
+        };
+        if key == RETURN {
+            self.commit_field(&name, false);
+            return Ok(true);
+        }
+        if key == ESCAPE {
+            self.editing = None;
+            if let Some(ed) = self.editor.as_deref_mut() {
+                ed.cancel_edit_field(&name, &self.interface);
+            }
+            return Ok(true);
+        }
+        self.input.key_press(&self.interface, &self.view, key)
+    }
+
+    pub fn key_release(&mut self, key: i32, _scan: i32) -> Result<bool, Error> {
+        if !self.enabled || self.editing.is_none() {
+            return Ok(false);
+        }
+        self.input.key_release(&self.interface, &self.view, key)
+    }
+
+    pub fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
+        if !self.enabled || self.editing.is_none() {
+            return Ok(false);
+        }
+        self.input.text_input(&self.interface, &self.view, utf8)
+    }
+
+    pub fn mouse_move(
+        &mut self,
+        x: i32,
+        y: i32,
+        _dx: i32,
+        _dy: i32,
+        _button: i32,
+    ) -> Result<bool, Error> {
+        if !self.enabled {
+            return Ok(false);
+        }
+        self.input.mouse_move(&self.interface, &self.view, x, y)
+    }
+
+    pub fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
+        if !self.enabled {
+            return Ok(false);
+        }
+        let modal_open = self.picker.is_open()
+            || self.asset_picker.is_open()
+            || self.file_dialog.is_open()
+            || self.new_project.is_open()
+            || self.editor.as_deref().is_some_and(Editor::has_open_modal);
+        if !self.view.contains(&self.interface, x, y) && !modal_open {
+            return Ok(false);
+        }
+        self.input
+            .mouse_press(&self.interface, &self.view, x, y, button)
+    }
+
+    /// The engine hands mouse input to its RmlUi contexts before its event
+    /// clients, so a press over the panel never reaches here -- the panel never
+    /// becomes the engine's mouse owner and no release is delivered for it. A
+    /// field drag is therefore ended by RmlUi's own `dragend`, not from here.
+    pub fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
+        if !self.enabled {
+            return Ok(());
+        }
+        self.input
+            .mouse_release(&self.interface, &self.view, x, y, button)
+    }
+
+    pub fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
+        if !self.enabled {
+            return Ok(false);
+        }
+        self.input
+            .mouse_wheel(&self.interface, &self.view, up, value)
+    }
+
     /// Wrap commands as off-history previews (apply to the engine, stay out of
     /// the undo stack). The typed counterpart of the old `as_preview` envelope
     /// re-write.
@@ -337,35 +461,6 @@ impl PanelManager {
             }
         }
         false
-    }
-
-    /// Run a toolbar action or hotkey. Actions either dispatch commands directly,
-    /// or ask to open a dialog whose result the manager feeds back.
-    pub(crate) fn run_action(&mut self, action: Action, models: &mut Models) -> Result<(), Error> {
-        if !actions::can_execute(action, models) {
-            return Ok(());
-        }
-        match actions::execute(action, &self.interface, models) {
-            ActionResult::None => {}
-            ActionResult::NativeCommands(commands) => self.pending_commands.extend(commands),
-            ActionResult::OpenFileDialog { config, on_accept } => {
-                if let Some(doc) = self.view.document_handle() {
-                    self.pending_accept = Some(on_accept);
-                    self.file_dialog.open(&self.interface, doc, config)?;
-                }
-            }
-            ActionResult::OpenNewProject => {
-                if let Some(doc) = self.view.document_handle() {
-                    self.new_project.open(&self.interface, doc)?;
-                }
-            }
-        }
-        // Paste needs the cursor's ground position, which the action layer can't
-        // reach; run it here where the mouse state is available.
-        if action == Action::Paste {
-            self.run_paste(models);
-        }
-        Ok(())
     }
 
     /// Paste the clipboard at the cursor's ground hit.
@@ -698,100 +793,5 @@ impl PanelManager {
         if let Some(editor) = self.editor.as_deref_mut() {
             editor.clear_state_selection(&self.interface, document);
         }
-    }
-
-    // ── Input delegation ──
-
-    pub fn key_press(&mut self, key: i32, _scan: i32, _repeat: bool) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        const RETURN: i32 = 13;
-        const ESCAPE: i32 = 27;
-        if key == ESCAPE && self.close_top_modal()? {
-            return Ok(true);
-        }
-        // Keys are only ours while a field is being edited; anything else stays
-        // available to the chonsole and the engine — except a toolbar/clipboard
-        // hotkey, which we claim here and run next tick (where models borrow).
-        let Some(name) = self.editing.clone() else {
-            return Ok(self.match_hotkey(key));
-        };
-        if key == RETURN {
-            self.commit_field(&name, false);
-            return Ok(true);
-        }
-        if key == ESCAPE {
-            self.editing = None;
-            if let Some(ed) = self.editor.as_deref_mut() {
-                ed.cancel_edit_field(&name, &self.interface);
-            }
-            return Ok(true);
-        }
-        self.input.key_press(&self.interface, &self.view, key)
-    }
-
-    pub fn key_release(&mut self, key: i32, _scan: i32) -> Result<bool, Error> {
-        if !self.enabled || self.editing.is_none() {
-            return Ok(false);
-        }
-        self.input.key_release(&self.interface, &self.view, key)
-    }
-
-    pub fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
-        if !self.enabled || self.editing.is_none() {
-            return Ok(false);
-        }
-        self.input.text_input(&self.interface, &self.view, utf8)
-    }
-
-    pub fn mouse_move(
-        &mut self,
-        x: i32,
-        y: i32,
-        _dx: i32,
-        _dy: i32,
-        _button: i32,
-    ) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        self.input.mouse_move(&self.interface, &self.view, x, y)
-    }
-
-    pub fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        let modal_open = self.picker.is_open()
-            || self.asset_picker.is_open()
-            || self.file_dialog.is_open()
-            || self.new_project.is_open()
-            || self.editor.as_deref().is_some_and(Editor::has_open_modal);
-        if !self.view.contains(&self.interface, x, y) && !modal_open {
-            return Ok(false);
-        }
-        self.input
-            .mouse_press(&self.interface, &self.view, x, y, button)
-    }
-
-    /// The engine hands mouse input to its RmlUi contexts before its event
-    /// clients, so a press over the panel never reaches here -- the panel never
-    /// becomes the engine's mouse owner and no release is delivered for it. A
-    /// field drag is therefore ended by RmlUi's own `dragend`, not from here.
-    pub fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
-        if !self.enabled {
-            return Ok(());
-        }
-        self.input
-            .mouse_release(&self.interface, &self.view, x, y, button)
-    }
-
-    pub fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        self.input
-            .mouse_wheel(&self.interface, &self.view, up, value)
     }
 }

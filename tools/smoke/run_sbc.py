@@ -75,12 +75,6 @@ def launch_manual(config: Path | None = None) -> int:
     return subprocess.run(cmd, env=env, check=False).returncode
 
 
-def _manual_history_path() -> Path:
-    """Return the durable XDG state path for interactive Chonsole history."""
-    state_home = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
-    return state_home / "springboard" / "chonsole-history"
-
-
 def boot(
     *,
     engine_dir: Path | None = None,
@@ -208,6 +202,12 @@ def prepare(
         str(write_dir / "script.txt"),
     ]
     return write_dir, env, cmd
+
+
+def _manual_history_path() -> Path:
+    """Return the durable XDG state path for interactive Chonsole history."""
+    state_home = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
+    return state_home / "springboard" / "chonsole-history"
 
 
 def _read_port_flags_config(path: Path) -> tuple[dict[str, str], dict[str, str]]:

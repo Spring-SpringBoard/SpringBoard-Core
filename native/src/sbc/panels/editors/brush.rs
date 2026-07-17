@@ -135,22 +135,6 @@ impl BrushActions {
         self.render(interface, document);
     }
 
-    fn render(&self, interface: &NativeInterfaceRef, document: u64) {
-        for (index, action) in self.actions.iter().enumerate() {
-            let id = format!(
-                "brush-action-{}",
-                action.caption.to_lowercase().replace(' ', "-")
-            );
-            if let Some(button) = element_by_id(interface, document, &id) {
-                let _ = interface.rml_ui().element_set_class(
-                    button,
-                    "pressed",
-                    self.active == Some(index),
-                );
-            }
-        }
-    }
-
     pub(crate) fn take_request(&mut self) -> Option<StateRequest> {
         self.request.take()
     }
@@ -211,6 +195,22 @@ impl BrushActions {
             let _ = interface
                 .rml_ui()
                 .element_set_class(button, "disabled", !enabled);
+        }
+    }
+
+    fn render(&self, interface: &NativeInterfaceRef, document: u64) {
+        for (index, action) in self.actions.iter().enumerate() {
+            let id = format!(
+                "brush-action-{}",
+                action.caption.to_lowercase().replace(' ', "-")
+            );
+            if let Some(button) = element_by_id(interface, document, &id) {
+                let _ = interface.rml_ui().element_set_class(
+                    button,
+                    "pressed",
+                    self.active == Some(index),
+                );
+            }
         }
     }
 }

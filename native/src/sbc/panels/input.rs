@@ -200,13 +200,6 @@ impl PanelInput {
         self.changes.borrow_mut().drain(..).collect()
     }
 
-    fn drag_field(&self) -> Option<&str> {
-        match &self.drag {
-            DragState::Pending { field, .. } | DragState::Dragging { field } => Some(field),
-            DragState::Idle => None,
-        }
-    }
-
     // ── Input callbacks ────────────────────────────────────────────
 
     /// The engine's mouse-move callback. It does **not** touch the drag: a drag
@@ -233,41 +226,6 @@ impl PanelInput {
         }
 
         self.forward_mouse_move(interface, view, x, y)
-    }
-
-    fn fine_drag_multiplier(&self, interface: &NativeInterfaceRef) -> bool {
-        interface
-            .input()
-            .get_mod_key_state()
-            .map(|s| s & SHIFT_BIT != 0)
-            .unwrap_or(false)
-    }
-
-    fn forward_mouse_move(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        view: &PanelView,
-        x: i32,
-        y: i32,
-    ) -> Result<bool, Error> {
-        let Some(ctx) = view.context_handle() else {
-            return Ok(false);
-        };
-        let inside = view.contains(interface, x, y);
-        let modal = view.contains_modal(interface, x, y);
-        let interacting = interface.rml_ui().context_is_mouse_interacting(ctx)?;
-        if !inside && !modal && !interacting {
-            if self.mouse_captured {
-                let _ = interface.rml_ui().context_process_mouse_leave(ctx);
-            }
-            self.mouse_captured = false;
-            return Ok(false);
-        }
-        interface
-            .rml_ui()
-            .context_process_mouse_move(ctx, x as f32, y as f32, 0)?;
-        self.mouse_captured = inside || modal || interacting;
-        Ok(self.mouse_captured)
     }
 
     pub(crate) fn mouse_press(
@@ -393,5 +351,47 @@ impl PanelInput {
             return interface.rml_ui().context_process_text_input(ctx, utf8);
         }
         Ok(false)
+    }
+
+    fn drag_field(&self) -> Option<&str> {
+        match &self.drag {
+            DragState::Pending { field, .. } | DragState::Dragging { field } => Some(field),
+            DragState::Idle => None,
+        }
+    }
+
+    fn fine_drag_multiplier(&self, interface: &NativeInterfaceRef) -> bool {
+        interface
+            .input()
+            .get_mod_key_state()
+            .map(|s| s & SHIFT_BIT != 0)
+            .unwrap_or(false)
+    }
+
+    fn forward_mouse_move(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        view: &PanelView,
+        x: i32,
+        y: i32,
+    ) -> Result<bool, Error> {
+        let Some(ctx) = view.context_handle() else {
+            return Ok(false);
+        };
+        let inside = view.contains(interface, x, y);
+        let modal = view.contains_modal(interface, x, y);
+        let interacting = interface.rml_ui().context_is_mouse_interacting(ctx)?;
+        if !inside && !modal && !interacting {
+            if self.mouse_captured {
+                let _ = interface.rml_ui().context_process_mouse_leave(ctx);
+            }
+            self.mouse_captured = false;
+            return Ok(false);
+        }
+        interface
+            .rml_ui()
+            .context_process_mouse_move(ctx, x as f32, y as f32, 0)?;
+        self.mouse_captured = inside || modal || interacting;
+        Ok(self.mouse_captured)
     }
 }

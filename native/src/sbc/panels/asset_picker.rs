@@ -148,43 +148,6 @@ impl AssetPicker {
         Ok(true)
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "asset-picker") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
-    }
-
-    fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
-        let extensions: Vec<&str> = self.extensions.iter().map(String::as_str).collect();
-        self.grid.set_items(list_asset_tree(
-            interface,
-            &self.root,
-            &self.dir,
-            &extensions,
-        ));
-        self.grid.render(interface, document)?;
-        if let Some(e) = element_by_id(interface, document, "asset-path") {
-            interface
-                .rml_ui()
-                .element_set_inner_rml(e, &escape_rml(&self.dir))?;
-        }
-        if let Some(up) = element_by_id(interface, document, "asset-up") {
-            // The top of the tree is the pack list; there is nothing above it.
-            interface
-                .rml_ui()
-                .element_set_class(up, "disabled", self.dir.is_empty())?;
-        }
-        Ok(())
-    }
-
     /// Handle queued clicks and buttons. Returns the accepted asset path.
     pub(crate) fn tick(
         &mut self,
@@ -235,5 +198,42 @@ impl AssetPicker {
             }
         }
         Ok(None)
+    }
+
+    fn set_visible(
+        &self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        visible: bool,
+    ) -> Result<(), Error> {
+        if let Some(e) = element_by_id(interface, document, "asset-picker") {
+            interface
+                .rml_ui()
+                .element_set_class(e, "hidden", !visible)?;
+        }
+        Ok(())
+    }
+
+    fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
+        let extensions: Vec<&str> = self.extensions.iter().map(String::as_str).collect();
+        self.grid.set_items(list_asset_tree(
+            interface,
+            &self.root,
+            &self.dir,
+            &extensions,
+        ));
+        self.grid.render(interface, document)?;
+        if let Some(e) = element_by_id(interface, document, "asset-path") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(e, &escape_rml(&self.dir))?;
+        }
+        if let Some(up) = element_by_id(interface, document, "asset-up") {
+            // The top of the tree is the pack list; there is nothing above it.
+            interface
+                .rml_ui()
+                .element_set_class(up, "disabled", self.dir.is_empty())?;
+        }
+        Ok(())
     }
 }

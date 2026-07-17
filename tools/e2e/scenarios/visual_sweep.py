@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import EDITOR_BUTTON_Y, TAB_X, TAB_Y, panel_left
+from scenarios.geometry import EDITORS, TAB_X, TAB_Y, editor_point, panel_left
 from scenarios.registry import scenario
 
 if TYPE_CHECKING:
@@ -30,9 +30,9 @@ def rust_ui_sweep(run_state: E2ERun) -> None:
     # Four shipped tabs, then every registered editor button in their display
     # order. Keep this intentionally quick: it is a rendering smoke pass, not a
     # substitute for the focused interaction scenarios.
-    for tab, count in (("objects", 4), ("map", 5), ("env", 3), ("misc", 2)):
+    for tab in ("objects", "map", "env", "misc"):
         run_state.click(left + TAB_X[tab], TAB_Y, delay=0.12)
         run_state.screenshot(f"tab-{tab}")
-        for index in range(count):
-            run_state.click(left + 38 + 72 * index, EDITOR_BUTTON_Y, delay=0.12)
-            run_state.screenshot(f"{tab}-{index}")
+        for editor in EDITORS[tab]:
+            run_state.click(*editor_point(left, tab, editor), delay=0.12)
+            run_state.screenshot(f"{tab}-{editor}")

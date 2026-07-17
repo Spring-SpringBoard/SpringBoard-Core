@@ -4,7 +4,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import EDITOR_BUTTON_Y, window_size
+from scenarios.geometry import (
+    DEV_CONSOLE,
+    OBJECTS,
+    CHONSOLE,
+    chonsole_header_point,
+    chonsole_row_point,
+    chonsole_scrollbar_point,
+    chonsole_suggestion_box,
+    dev_console_toolbar_y,
+    editor_point,
+    panel_point,
+    status_button_point,
+    window_size,
+)
 from scenarios.objects import _arm_tree, _open
 from scenarios.registry import scenario
 
@@ -68,7 +81,7 @@ def reload_native_modules(run_state: E2ERun) -> None:
     original feature instead of treating it as unknown scenery.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     _arm_tree(run_state, left)
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
@@ -92,8 +105,8 @@ def reload_native_modules(run_state: E2ERun) -> None:
     # it forces the replacement instance to recreate its springID -> modelID
     # mapping; Properties then proves the selection is a live editable object.
     run_state.click(spot_x, spot_y, delay=0.4)
-    run_state.click(left + 197, EDITOR_BUTTON_Y, delay=0.5)  # Properties
-    run_state.click(left + 58, 241, delay=0.2)               # Pos X
+    run_state.click(*editor_point(left, "objects", "properties"), delay=0.5)
+    run_state.click(*panel_point(left, OBJECTS["property_pos_x"]), delay=0.2)
     run_state.key("ctrl+a", delay=0.1)
     run_state.type_text("1800")
     run_state.key("Return", delay=0.5)
@@ -134,18 +147,13 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
     original query, rather than completing the first match and losing the list.
     """
     run_state.focus()
-    _open(run_state, 110)                            # Features, with search input
+    _open(run_state, "features")                     # Features, with search input
     run_state.key("Escape")
     run_state.key("Return", delay=0.18)
     run_state.type_text("/h")
     matches = run_state.screenshot("matches")
     width, height = window_size(run_state)
-    suggestion_box = (
-        int(width * 0.26),
-        int(height * 0.245),
-        int(width * 0.41),
-        int(height * 0.4),
-    )
+    suggestion_box = chonsole_suggestion_box(width, height)
 
     run_state.key("Tab")
     first = run_state.screenshot("first-selected")
@@ -155,8 +163,7 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
     second = run_state.screenshot("second-selected")
     run_state.assert_region_pixels(first, second, suggestion_box, min_changed=100)
 
-    row_x = int(width * 0.26) + 40
-    third_row_y = int(height * 0.245) + 38 + 4 + 12 + 2 * 27
+    row_x, third_row_y = chonsole_row_point(width, height, 2)
     run_state.move(row_x, third_row_y, delay=0.25)
     hovered = run_state.screenshot("third-row-hovered")
     run_state.assert_region_pixels(second, hovered, suggestion_box, min_changed=100)
@@ -172,21 +179,25 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
     run_state.key("Escape")
     run_state.key("Return", delay=0.18)
     run_state.type_text("/set ")
-    run_state.move(row_x, int(height * 0.245) + 18)
+    run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start")
-    scrollbar_x = int(width * (0.26 + 0.41)) - 5
-    scrollbar_y = int(height * 0.245) + 38 + 80
+    scrollbar_x, scrollbar_y = chonsole_scrollbar_point(width, height)
     run_state.move(scrollbar_x, scrollbar_y)
     scrollbar_hovered = run_state.screenshot("scrollbar-hovered")
-    scrollbar = (scrollbar_x - 6, int(height * 0.245) + 38, 12, 380)
+    scrollbar = (
+        scrollbar_x - CHONSOLE["scrollbar_width"] // 2,
+        suggestion_box[1] + CHONSOLE["header_height"],
+        CHONSOLE["scrollbar_width"],
+        CHONSOLE["scrollbar_height"],
+    )
     run_state.assert_region_pixels(unhovered, scrollbar_hovered, scrollbar, min_changed=40)
     # Hover must colour the scrollbar without changing the suggestions' layout.
     suggestion_content = (*suggestion_box[:2], suggestion_box[2] - 24, suggestion_box[3])
     suggestion_rows = (
         suggestion_content[0],
-        suggestion_content[1] + 38,
+        suggestion_content[1] + CHONSOLE["header_height"],
         suggestion_content[2],
-        suggestion_content[3] - 38,
+        suggestion_content[3] - CHONSOLE["header_height"],
     )
     # Captures include the engine cursor; its edge can spill a few pixels into
     # the first row, but a layout reflow would alter thousands of text pixels.
@@ -199,7 +210,7 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
     run_state.wheel(row_x, third_row_y, clicks=6, up=False)
     scroll_down = run_state.screenshot("wheel-scroll-down")
     run_state.assert_region_pixels(scroll_start, scroll_down, suggestion_box, min_changed=100)
-    run_state.move(int(width * 0.70), third_row_y)
+    run_state.move(int(width * (CHONSOLE["left_fraction"] + CHONSOLE["width_fraction"] + 0.03)), third_row_y)
     run_state.move(row_x, third_row_y)
     scroll_reentered = run_state.screenshot("wheel-scroll-reentered")
     run_state.assert_region_pixels(scroll_down, scroll_reentered, suggestion_box, max_changed=0)
@@ -212,12 +223,16 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
     drag_start = run_state.screenshot("drag-scroll-start")
     # The track begins at `scrollbar_x`; its thumb is inset by the track's
     # margin, so drag its centre rather than the track beside it.
-    thumb_x = scrollbar_x + 7
-    run_state.drag(thumb_x, int(height * 0.245) + 38 + 12, thumb_x,
-                   int(height * 0.245) + 38 + 300)
+    thumb_x = scrollbar_x + CHONSOLE["scrollbar_thumb_inset"]
+    run_state.drag(
+        thumb_x,
+        suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_thumb_start_y"],
+        thumb_x,
+        suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_drag_end_y"],
+    )
     drag_down = run_state.screenshot("drag-scroll-down")
     run_state.assert_region_pixels(drag_start, drag_down, suggestion_box, min_changed=100)
-    run_state.move(int(width * 0.70), third_row_y)
+    run_state.move(int(width * (CHONSOLE["left_fraction"] + CHONSOLE["width_fraction"] + 0.03)), third_row_y)
     run_state.move(scrollbar_x, scrollbar_y)
     drag_reentered = run_state.screenshot("drag-scroll-reentered")
     run_state.assert_region_pixels(drag_down, drag_reentered, suggestion_content, max_changed=0)
@@ -254,12 +269,12 @@ def dev_console(run_state: E2ERun) -> None:
     # The console is visible by default; capture it.
     run_state.screenshot("dev-console-open")
     # Drag across several log lines: they must highlight (multi-line selection).
-    run_state.drag(100, 965, 600, 1010, steps=10)
+    run_state.drag(DEV_CONSOLE["selection_drag_start"][0], DEV_CONSOLE["selection_drag_start"][1], DEV_CONSOLE["selection_drag_end"][0], DEV_CONSOLE["selection_drag_end"][1], steps=10)
     run_state.screenshot("dev-console-selection")
     # Ctrl+C over the console copies the selected lines to the clipboard, and
     # Ctrl+A selects every line first. SpringBoard binds Ctrl+C to Copy, so this
     # also checks it yields to the console.
-    run_state.move(300, 985, delay=0.6)
+    run_state.move(*DEV_CONSOLE["selection_cursor"], delay=0.6)
     run_state.key("ctrl+c", delay=0.5)
     run_state.key("ctrl+a", delay=0.4)
     run_state.key("ctrl+c", delay=0.5)
@@ -280,10 +295,10 @@ def native_dev_console(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
     # The console is 300dp tall and floats 92dp off the bottom; its toolbar row
     # centres 108px above the window's bottom edge.
-    toolbar_y = height - 108
+    toolbar_y = dev_console_toolbar_y(height)
 
     run_state.key("F8", delay=0.6)                     # the harness starts it hidden
-    run_state.click(30, toolbar_y, delay=0.5)          # Clear
+    run_state.click(DEV_CONSOLE["clear_x"], toolbar_y, delay=0.5)
     run_state.golden("console-cleared")
 
     # The status strip is not part of the console, but it is positioned directly
@@ -292,20 +307,18 @@ def native_dev_console(run_state: E2ERun) -> None:
     # RmlUi applies the 34dp icon width to the button's content box; 5dp padding
     # and 1dp borders make its actual hit target 46dp, followed by a 10dp gap.
     # Derive the centres from that real geometry at every E2E resolution.
-    status_toolbar_left = round((width - 500) * 0.55) + 10
-    status_button_x = [status_toolbar_left + 23 + 56 * index for index in range(3)]
-    run_state.click(status_button_x[0], height - 40, delay=0.4)
+    run_state.click(*status_button_point(width, height, 0), delay=0.4)
     run_state.assert_any_command("UndoCommand")
-    run_state.click(status_button_x[1], height - 40, delay=0.4)
+    run_state.click(*status_button_point(width, height, 1), delay=0.4)
     run_state.assert_any_command("RedoCommand")
-    run_state.click(status_button_x[2], height - 40, delay=0.4)
+    run_state.click(*status_button_point(width, height, 2), delay=0.4)
     run_state.assert_any_command("ClearUndoRedoCommand")
     run_state.golden("status-bar")
 
-    run_state.click(300, toolbar_y, delay=0.5)         # Problems
+    run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=0.5)
     run_state.golden("console-problems-on")
 
-    run_state.click(300, toolbar_y, delay=0.5)         # Problems (off again)
+    run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=0.5)
     run_state.golden("console-problems-off")
 
     # F8 hides the console, and brings it back.
@@ -332,7 +345,11 @@ def native_dev_console_copy(run_state: E2ERun) -> None:
     # So a stale clipboard from an earlier run cannot pass this.
     run_state.set_clipboard("SENTINEL-NOTHING-WAS-COPIED")
 
-    run_state.drag(60, top, 700, bottom, steps=10)
+    run_state.drag(
+        DEV_CONSOLE["copy_drag_start_x"], top,
+        DEV_CONSOLE["copy_drag_end_x"], bottom,
+        steps=10,
+    )
     run_state.screenshot("lines-selected")
 
     run_state.key("ctrl+c", delay=0.5)

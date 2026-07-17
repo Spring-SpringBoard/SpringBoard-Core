@@ -61,9 +61,11 @@ impl Field for BooleanField {
         // A two-column toggle has room for roughly 23 Poppins characters plus
         // its switch. Long object-property captions need their own row rather
         // than becoming an accidental two-line button.
-        let long = (self.title.chars().count() >= 24)
-            .then_some(" field-boolean-long")
-            .unwrap_or("");
+        let long = if self.title.chars().count() >= 24 {
+            " field-boolean-long"
+        } else {
+            ""
+        };
         format!(
             concat!(
                 r#"<div class="field-row field-boolean{long}">"#,

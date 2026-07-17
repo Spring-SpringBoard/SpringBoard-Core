@@ -176,16 +176,77 @@ impl DevConsoleManager {
 
     /// Rebuild the visual history from the source of truth. Undo/redo controls
     /// never add rows: they only move existing entries across the cursor.
-    pub(crate) fn sync_command_history(
-        &mut self,
-        undo_ids: &[CommandId],
-        redo_ids: &[CommandId],
-    ) {
+    pub(crate) fn sync_command_history(&mut self, undo_ids: &[CommandId], redo_ids: &[CommandId]) {
         self.command_log = project_command_history(&self.command_captions, undo_ids, redo_ids);
     }
 
     pub(crate) fn drain_commands(&mut self) -> Vec<Box<dyn Command>> {
         std::mem::take(&mut self.pending_commands)
+    }
+
+    /// A line the engine just logged.
+    pub fn add_console_line(&mut self, message: &str) {
+        if !self.enabled {
+            return;
+        }
+        if !show_console_line(message) {
+            return;
+        }
+        let severity = self.buffer.push(message.trim_end());
+        self.dirty = true;
+        self.pin_log_bottom = true;
+
+        if severity == Severity::Error && self.popup_on_error && !self.view.visible() {
+            let _ = self.view.set_visible(&self.interface, true);
+        }
+    }
+
+    /// Ctrl+C and Ctrl+A while the console owns them. Runs before the panel,
+    /// whose toolbar binds both to Copy and Select All and would swallow them.
+    /// The console owns Ctrl+C whenever it has a selection, and Ctrl+A while the
+    /// pointer is over it.
+    pub fn text_key(&mut self, key_code: i32) -> Result<bool, Error> {
+        if !self.enabled || !self.view.is_ready() || !self.view.visible() || !self.ctrl_held() {
+            return Ok(false);
+        }
+        if is_key(&self.interface, key_code, "c") && self.view.selected_range().is_some() {
+            self.copy_selection();
+            return Ok(true);
+        }
+        if is_key(&self.interface, key_code, "a") && self.view.hovered(&self.interface) {
+            let count = self.buffer.visible(self.problems_only).count();
+            self.view.select_all(count);
+            self.dirty = true;
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    pub fn key_press(&mut self, key_code: i32) -> Result<bool, Error> {
+        if !self.enabled || !self.view.is_ready() {
+            return Ok(false);
+        }
+        if is_key(&self.interface, key_code, "f8") {
+            let visible = !self.view.visible();
+            self.view.set_visible(&self.interface, visible)?;
+            self.refresh_toggles()?;
+            return Ok(true);
+        }
+        if !self.view.visible() {
+            return Ok(false);
+        }
+        let ctrl = self.ctrl_held();
+        if ctrl && is_key(&self.interface, key_code, "a") {
+            let count = self.buffer.visible(self.problems_only).count();
+            self.view.select_all(count);
+            self.dirty = true;
+            return Ok(true);
+        }
+        if ctrl && is_key(&self.interface, key_code, "c") {
+            self.copy_selection();
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     fn process_status_actions(&mut self) {
@@ -240,76 +301,11 @@ impl DevConsoleManager {
         }
     }
 
-    /// A line the engine just logged.
-    pub fn add_console_line(&mut self, message: &str) {
-        if !self.enabled {
-            return;
-        }
-        if !show_console_line(message) {
-            return;
-        }
-        let severity = self.buffer.push(message.trim_end());
-        self.dirty = true;
-        self.pin_log_bottom = true;
-
-        if severity == Severity::Error && self.popup_on_error && !self.view.visible() {
-            let _ = self.view.set_visible(&self.interface, true);
-        }
-    }
-
-    /// Ctrl+C and Ctrl+A while the console owns them. Runs before the panel,
-    /// whose toolbar binds both to Copy and Select All and would swallow them.
-    /// The console owns Ctrl+C whenever it has a selection, and Ctrl+A while the
-    /// pointer is over it.
-    pub fn text_key(&mut self, key_code: i32) -> Result<bool, Error> {
-        if !self.enabled || !self.view.is_ready() || !self.view.visible() || !self.ctrl_held() {
-            return Ok(false);
-        }
-        if is_key(&self.interface, key_code, "c") && self.view.selected_range().is_some() {
-            self.copy_selection();
-            return Ok(true);
-        }
-        if is_key(&self.interface, key_code, "a") && self.view.hovered(&self.interface) {
-            let count = self.buffer.visible(self.problems_only).count();
-            self.view.select_all(count);
-            self.dirty = true;
-            return Ok(true);
-        }
-        Ok(false)
-    }
-
     fn ctrl_held(&self) -> bool {
         self.interface
             .input()
             .get_mod_key_state()
             .is_ok_and(|bits| bits & (1 << 1) != 0)
-    }
-
-    pub fn key_press(&mut self, key_code: i32) -> Result<bool, Error> {
-        if !self.enabled || !self.view.is_ready() {
-            return Ok(false);
-        }
-        if is_key(&self.interface, key_code, "f8") {
-            let visible = !self.view.visible();
-            self.view.set_visible(&self.interface, visible)?;
-            self.refresh_toggles()?;
-            return Ok(true);
-        }
-        if !self.view.visible() {
-            return Ok(false);
-        }
-        let ctrl = self.ctrl_held();
-        if ctrl && is_key(&self.interface, key_code, "a") {
-            let count = self.buffer.visible(self.problems_only).count();
-            self.view.select_all(count);
-            self.dirty = true;
-            return Ok(true);
-        }
-        if ctrl && is_key(&self.interface, key_code, "c") {
-            self.copy_selection();
-            return Ok(true);
-        }
-        Ok(false)
     }
 
     fn copy_selection(&self) {
@@ -520,7 +516,11 @@ fn fps_tone(fps: f32) -> &'static str {
 }
 
 fn ratio(used: f32, total: f32) -> f32 {
-    (total > 0.0).then_some(used / total).unwrap_or_default()
+    if total > 0.0 {
+        used / total
+    } else {
+        0.0
+    }
 }
 
 /// The command registry uses Rust/JSON type names; status history is for a
@@ -558,10 +558,12 @@ fn project_command_history(
 ) -> Vec<HistoryCommand> {
     undo_ids
         .iter()
-        .filter_map(|id| captions.get(id).map(|caption| HistoryCommand {
-            caption: caption.clone(),
-            undone: false,
-        }))
+        .filter_map(|id| {
+            captions.get(id).map(|caption| HistoryCommand {
+                caption: caption.clone(),
+                undone: false,
+            })
+        })
         // Redo stores the next command at the back; reverse it to retain the
         // chronological list Chili showed, with the undone suffix greyed out.
         .chain(redo_ids.iter().rev().filter_map(|id| {
@@ -606,14 +608,15 @@ fn game_version(interface: &NativeInterfaceRef) -> String {
 mod tests {
     use std::collections::HashMap;
 
-    use super::{
-        command_caption, is_history_navigation, project_command_history, HistoryCommand,
-    };
+    use super::{command_caption, is_history_navigation, project_command_history, HistoryCommand};
 
     #[test]
     fn edit_history_excludes_undo_cursor_navigation() {
         for command in ["UndoCommand", "RedoCommand", "ClearUndoRedoCommand"] {
-            assert!(is_history_navigation(command), "{command} must stay out of edit history");
+            assert!(
+                is_history_navigation(command),
+                "{command} must stay out of edit history"
+            );
         }
         assert!(!is_history_navigation("AddObjectCommand"));
         assert_eq!(command_caption("AddObjectCommand"), "Add Object");

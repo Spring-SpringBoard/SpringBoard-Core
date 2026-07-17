@@ -153,6 +153,11 @@ impl TeamManager {
         }
     }
 
+    /// The most recently allocated team id (`0` before any team exists).
+    pub fn latest_id(&self) -> i32 {
+        self.team_id_count
+    }
+
     fn read_engine_team(&self, id: i32, gaia_id: i32) -> Team {
         let teams = self.interface.teams();
         let ally_team = teams.get_team_ally_team_id(id).unwrap_or(0);
@@ -197,11 +202,6 @@ impl TeamManager {
             energy_max,
             extra,
         }
-    }
-
-    /// The most recently allocated team id (`0` before any team exists).
-    pub fn latest_id(&self) -> i32 {
-        self.team_id_count
     }
 
     fn apply_team_to_engine(&self, team_id: i32, team: &Team) {

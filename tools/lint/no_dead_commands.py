@@ -108,7 +108,9 @@ def collect_uses(files: list[Path], commands: dict[str, CommandInfo]) -> None:
         return
 
     command_alt = "|".join(re.escape(name) for name in sorted(commands, key=len, reverse=True))
-    constructor = re.compile(rf"\b({command_alt})\s*\(")
+    # Lua constructs commands as `CommandName(...)`; Rust conventionally uses
+    # the associated constructor, `CommandName::new(...)`.
+    constructor = re.compile(rf"\b({command_alt})(?:\s*\(|\s*::\s*new\s*\()")
     lua_class_name = re.compile(
         rf"\b[A-Za-z_][A-Za-z0-9_]*\.className\s*=\s*[\"']({command_alt})[\"']"
     )

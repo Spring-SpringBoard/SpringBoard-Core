@@ -75,44 +75,6 @@ impl BrushPreview {
         BrushPreview { shader: None }
     }
 
-    /// Compiled on first draw: there is no GL context to compile against until
-    /// the first frame is drawn.
-    fn shader(&mut self, interface: &NativeInterfaceRef) -> Option<u32> {
-        if self.shader.is_none() {
-            let gfx = interface.gfx();
-            let (id, _) = gfx
-                .create_shader(
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    BRUSH_FRAGMENT,
-                    "",
-                    false,
-                    0,
-                    false,
-                    0,
-                    false,
-                    0,
-                )
-                .ok()?;
-            if id == 0 {
-                if let Ok(Some(log)) = gfx.get_shader_log() {
-                    log::warn!("brush preview shader failed to compile: {log}");
-                }
-                return None;
-            }
-            if let Ok(location) = gfx.get_uniform_location(id, "brushTex") {
-                let _ = gfx.use_shader(id);
-                let _ = gfx.uniform_int(location, [0, 0, 0, 0], 1);
-                let _ = gfx.use_shader(0);
-            }
-            self.shader = Some(id);
-        }
-        self.shader
-    }
-
     /// `pattern` is a VFS path, which the engine resolves as a texture.
     pub(crate) fn draw(
         &mut self,
@@ -163,6 +125,44 @@ impl BrushPreview {
         let _ = gfx.depth_mask(true);
         reset(interface);
         true
+    }
+
+    /// Compiled on first draw: there is no GL context to compile against until
+    /// the first frame is drawn.
+    fn shader(&mut self, interface: &NativeInterfaceRef) -> Option<u32> {
+        if self.shader.is_none() {
+            let gfx = interface.gfx();
+            let (id, _) = gfx
+                .create_shader(
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    BRUSH_FRAGMENT,
+                    "",
+                    false,
+                    0,
+                    false,
+                    0,
+                    false,
+                    0,
+                )
+                .ok()?;
+            if id == 0 {
+                if let Ok(Some(log)) = gfx.get_shader_log() {
+                    log::warn!("brush preview shader failed to compile: {log}");
+                }
+                return None;
+            }
+            if let Ok(location) = gfx.get_uniform_location(id, "brushTex") {
+                let _ = gfx.use_shader(id);
+                let _ = gfx.uniform_int(location, [0, 0, 0, 0], 1);
+                let _ = gfx.use_shader(0);
+            }
+            self.shader = Some(id);
+        }
+        self.shader
     }
 }
 
@@ -252,42 +252,6 @@ pub(crate) fn draw_object_ghost(
         shader.unbind(interface);
     }
     let _ = gfx.pop_matrix();
-    reset(interface);
-}
-
-/// Outline a ground-aligned rectangle between two world corners, for the
-/// box-select drag. Traced along the terrain so it hugs slopes.
-pub(crate) fn draw_ground_rect(
-    interface: &NativeInterfaceRef,
-    x0: f32,
-    z0: f32,
-    x1: f32,
-    z1: f32,
-    rgba: (f32, f32, f32, f32),
-) {
-    let gfx = interface.gfx();
-    let terrain = interface.terrain();
-    let _ = gfx.depth_test(false, false, 0);
-    let _ = gfx.line_width(2.0);
-    let _ = gfx.color(rgba.0, rgba.1, rgba.2, rgba.3);
-
-    // Walk the perimeter, subdividing each edge so it follows the terrain.
-    const PER_EDGE: usize = 12;
-    let corners = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)];
-    let _ = gfx.begin_end(GL_LINE_LOOP, || {
-        for c in 0..4 {
-            let (ax, az) = corners[c];
-            let (bx, bz) = corners[(c + 1) % 4];
-            for s in 0..PER_EDGE {
-                let t = s as f32 / PER_EDGE as f32;
-                let x = ax + (bx - ax) * t;
-                let z = az + (bz - az) * t;
-                let y = terrain.get_ground_height(x, z).unwrap_or(0.0) + 2.0;
-                let _ = gfx.vertex(x, y, z, 1.0, 3);
-            }
-        }
-    });
-
     reset(interface);
 }
 

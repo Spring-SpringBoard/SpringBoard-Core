@@ -139,20 +139,6 @@ impl NewProjectDialog {
         Ok(true)
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "new-project") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
-    }
-
     /// Drive the dialog. Returns the collected fields on OK.
     pub(crate) fn tick(
         &mut self,
@@ -208,6 +194,20 @@ impl NewProjectDialog {
             }
         }
         Ok(None)
+    }
+
+    fn set_visible(
+        &self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        visible: bool,
+    ) -> Result<(), Error> {
+        if let Some(e) = element_by_id(interface, document, "new-project") {
+            interface
+                .rml_ui()
+                .element_set_class(e, "hidden", !visible)?;
+        }
+        Ok(())
     }
 }
 

@@ -10,22 +10,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import EDITOR_BUTTON_Y, TAB_X, TAB_Y, panel_left, window_size
+from scenarios.geometry import OBJECTS, TAB_X, TAB_Y, editor_point, panel_left, panel_point, window_size
 from scenarios.registry import scenario
 
 if TYPE_CHECKING:
     from runner import E2ERun
-
-# Rows inside the Objects editors, measured from the panel's left/top. The
-# definitions come first (filters, search, grid); the placement settings sit
-# below the grid, as they do in the Lua UI.
-ACTION_Y = 217          # Add / Brush
-FILTER_Y = 316          # Type / Wreck
-TERRAIN_Y = 358         # Terrain (features; units put it beside Type)
-SEARCH_Y = 400
-GRID_Y = 470            # first row of definition cells
-TEAM_Y = 714            # below the grid
-AMOUNT_Y = 757
 
 # Differing pixels forgiven when a capture includes the map.
 #
@@ -45,11 +34,11 @@ MAP_TOLERANCE = 4000
 TOOLTIP_COLOR = "#0b0d0c"
 
 
-def _open(run_state: E2ERun, editor_x: int) -> int:
+def _open(run_state: E2ERun, editor: str) -> int:
     """Objects tab, then one of its editors. Returns the panel's left edge."""
     left = panel_left(run_state)
     run_state.click(left + TAB_X["objects"], TAB_Y, delay=0.25)
-    run_state.click(left + editor_x, EDITOR_BUTTON_Y, delay=0.7)
+    run_state.click(*editor_point(left, "objects", editor), delay=0.7)
     return left
 
 
@@ -60,9 +49,9 @@ def _arm_tree(run_state: E2ERun, left: int) -> None:
     ray, so anything that places it and then clicks it selects nothing. Search
     for a tree instead of trusting the grid order.
     """
-    run_state.click(left + 180, SEARCH_Y, delay=0.2)
+    run_state.click(*panel_point(left, OBJECTS["feature_search"]), delay=0.2)
     run_state.type_text("tree")
-    run_state.click(left + 55, GRID_Y, delay=0.5)
+    run_state.click(*panel_point(left, OBJECTS["feature_first_tree"]), delay=0.5)
 
 
 @scenario(crop="right-panel")
@@ -73,7 +62,7 @@ def def_grid(run_state: E2ERun) -> None:
     drawn should not cost a full editor scenario.
     """
     run_state.focus()
-    _open(run_state, 110)                             # Features
+    _open(run_state, "features")
     run_state.golden("def-grid")
 
 
@@ -86,10 +75,10 @@ def units_panel(run_state: E2ERun) -> None:
     its own filters (Type + Terrain, no Wreck).
     """
     run_state.focus()
-    left = _open(run_state, 38)                       # Units
+    left = _open(run_state, "units")
     run_state.golden("units-open")
 
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     # Default filters (Type=Other) show the non-wreck defs: the trees and the
     # geovent. Their thumbnails are the real models, rendered through the
     # engine's model shader.
@@ -97,10 +86,10 @@ def units_panel(run_state: E2ERun) -> None:
 
     # Brush mode swaps the placement fields: Lua hides `amount` and shows size,
     # spread, noise and the min/max rotation of all three axes.
-    run_state.click(left + 134, ACTION_Y, delay=0.6)
+    run_state.click(*panel_point(left, OBJECTS["brush"]), delay=0.6)
     # The transparent shell exposes a few map pixels behind the panel.
     run_state.golden("features-brush-fields", tolerance=30)
-    run_state.click(left + 54, ACTION_Y, delay=0.6)    # back to Add
+    run_state.click(*panel_point(left, OBJECTS["add"]), delay=0.6)
 
     # Arm a tree and place it. The command must reach the bridge *and* the
     # feature must actually appear on the map -- so these two are captured
@@ -123,8 +112,8 @@ def units_panel(run_state: E2ERun) -> None:
 
     # Amount places that many objects, and the ghosts preview exactly where they
     # will land: the preview and the placement must not disagree.
-    run_state.click(left + 55, GRID_Y, delay=0.4)      # re-arm (Escape dropped it)
-    run_state.click(left + 120, AMOUNT_Y, delay=0.3)
+    run_state.click(*panel_point(left, OBJECTS["feature_first_tree"]), delay=0.4)
+    run_state.click(*panel_point(left, OBJECTS["feature_amount"]), delay=0.3)
     run_state.key("ctrl+a", delay=0.12)
     run_state.type_text("5")
     run_state.key("Return", delay=0.5)
@@ -144,7 +133,7 @@ def units_panel(run_state: E2ERun) -> None:
 
     # Type = Wreckage. None of this map's features are wrecks, so the grid must
     # empty -- the filter proving it filters, not merely that it renders.
-    run_state.click(left + 104, FILTER_Y, delay=0.4)
+    run_state.click(*panel_point(left, OBJECTS["feature_type"]), delay=0.4)
     run_state.key("Down", delay=0.2)
     run_state.key("Return", delay=0.7)                 # commit and close the list
     run_state.golden("features-wreckage-empty")
@@ -158,7 +147,7 @@ def props_panel(run_state: E2ERun) -> None:
     opening the tab with an empty selection proves nothing.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
@@ -166,7 +155,7 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.click(spot_x, spot_y, delay=0.8)        # place
     # Clicking the active Add button leaves placement -- otherwise every click on
     # the map keeps placing and nothing can ever be selected or dragged.
-    run_state.click(left + 54, ACTION_Y, delay=0.6)
+    run_state.click(*panel_point(left, OBJECTS["add"]), delay=0.6)
     # Clicking where it was placed now selects it: the feature's collision volume
     # sits at its foot, so this is the point the ray actually hits.
     run_state.click(spot_x, spot_y, delay=0.8)
@@ -174,13 +163,13 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.golden("feature-selected")
     run_state.assert_command("AddObjectCommand", objType="feature")
 
-    run_state.click(left + 197, EDITOR_BUTTON_Y, delay=0.9)   # Properties
+    run_state.click(*editor_point(left, "objects", "properties"), delay=0.9)
     run_state.golden("props-open")
 
     # Pos X. The whole vector is sent, not the one axis, and the object must
     # actually move on the map.
     before = run_state.golden("before-move")
-    run_state.click(left + 58, 223, delay=0.4)
+    run_state.click(*panel_point(left, OBJECTS["property_health"]), delay=0.4)
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("1500")
     run_state.key("Return", delay=0.8)
@@ -200,13 +189,13 @@ def props_panel(run_state: E2ERun) -> None:
     # commits once on release. The drag pins the pointer and warps it back after
     # every move (as content-creation tools do), so the motion has to be
     # relative -- absolute moves would fight the warp.
-    run_state.press(left + 58, 223)
+    run_state.press(*panel_point(left, OBJECTS["property_health"]))
     run_state.move_relative(120)
     # Mid-drag: the pointer is pinned to where the drag began and drawn as the
     # empty cursor, so nothing follows the mouse across the panel. park=False --
     # moving the pointer now would fight the drag's own warp and end it.
     run_state.golden("props-pos-dragging", park=False)
-    run_state.release(left + 58, 223)
+    run_state.release(*panel_point(left, OBJECTS["property_health"]))
     # The pinned relative drag may land within one input packet of its nominal
     # value (for example 1580 vs. 1600); the command assertion below owns the
     # behavioural bound, while this frame still catches layout regressions.
@@ -221,7 +210,7 @@ def props_panel(run_state: E2ERun) -> None:
     # RmlUi's drag capture delivers `dragend` wherever the button comes up, and
     # nothing else can (the engine never hands the plugin a release for a press
     # the panel's RmlUi consumed).
-    run_state.press(left + 58, 223)
+    run_state.press(*panel_point(left, OBJECTS["property_health"]))
     run_state.move_relative(-400, 260)               # out over the map
     run_state.release(left - 300, 500)
     dragged = run_state.assert_any_command(
@@ -239,7 +228,7 @@ def props_panel(run_state: E2ERun) -> None:
 
     # A sub-object: Blocking's booleans are one table, so toggling one must send
     # the table under `blocking`, not a bare boolean.
-    run_state.click(left + 100, 953, delay=0.6)   # "Block Enemy Pushing"
+    run_state.click(*panel_point(left, OBJECTS["collision_blocking"]), delay=0.6)
     run_state.golden("props-blocking-toggled", tolerance=220)
     run_state.assert_any_command(
         "SetObjectParamCommand",
@@ -269,26 +258,26 @@ def collision(run_state: E2ERun) -> None:
     the volume actually moved.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
     run_state.click(spot_x, spot_y, delay=0.8)        # place
-    run_state.click(left + 54, ACTION_Y, delay=0.6)   # leave Add mode
+    run_state.click(*panel_point(left, OBJECTS["add"]), delay=0.6)
     run_state.click(spot_x, spot_y, delay=0.8)        # select it
 
-    run_state.click(left + 270, EDITOR_BUTTON_Y, delay=0.9)   # Collision
+    run_state.click(*editor_point(left, "objects", "collision"), delay=0.9)
     hidden = run_state.golden("volume-hidden", crop=None, tolerance=MAP_TOLERANCE)
 
     # Show volume: the collision shape is drawn over the object.
-    run_state.click(left + 110, 190, delay=0.8)
+    run_state.click(*panel_point(left, OBJECTS["collision_shape"]), delay=0.8)
     shown = run_state.golden("volume-shown", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_screenshot_pixels(hidden, shown, min_changed=300)
 
     # Scaling the volume must redraw it bigger, not merely emit a command.
-    run_state.click(left + 60, 339, delay=0.4)        # Scale X
+    run_state.click(*panel_point(left, OBJECTS["collision_scale_x"]), delay=0.4)
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("120")
     run_state.key("Return", delay=0.9)
@@ -301,7 +290,7 @@ def collision(run_state: E2ERun) -> None:
     run_state.assert_screenshot_pixels(shown, scaled, min_changed=300)
 
     # A different volume type is a different shape on screen.
-    run_state.click(left + 200, 231, delay=0.4)       # Type
+    run_state.click(*panel_point(left, OBJECTS["collision_type"]), delay=0.4)
     run_state.key("Down", delay=0.2)
     run_state.key("Return", delay=0.9)
     typed = run_state.golden("volume-type-changed", crop=None, tolerance=MAP_TOLERANCE)
@@ -329,7 +318,7 @@ def cursortip(run_state: E2ERun) -> None:
     defined" overlay: it describes the actual unit or feature under the cursor.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
@@ -387,8 +376,8 @@ def brush_size(run_state: E2ERun) -> None:
     reaching the bridge would not show that the brush itself grew.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
-    run_state.click(left + 134, ACTION_Y, delay=0.6)  # Brush mode
+    left = _open(run_state, "features")
+    run_state.click(*panel_point(left, OBJECTS["brush"]), delay=0.6)
     _arm_tree(run_state, left)
     run_state.golden("brush-size-default")
 
@@ -442,7 +431,7 @@ def deselect(run_state: E2ERun) -> None:
     a box still drawn there is a selection the editor thinks it still has.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
@@ -529,7 +518,7 @@ def rotation(run_state: E2ERun) -> None:
     its facing, which a tree barely shows.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
@@ -602,13 +591,15 @@ def rotation(run_state: E2ERun) -> None:
 
 @scenario()
 def selection(run_state: E2ERun) -> None:
-    """Rectangle select: drag a box on empty ground over a placed feature.
+    """Rectangle select: drag from sky over a placed feature.
 
-    The box must appear while dragging, and the feature must end up selected --
-    which is proved by editing it in Properties afterwards.
+    Starting outside terrain matters: Chili permits the first corner over the
+    sky, then selects objects by their screen positions. The box must appear
+    while dragging, and the feature must end up selected -- which is proved by
+    editing it in Properties afterwards.
     """
     run_state.focus()
-    left = _open(run_state, 110)                      # Features
+    left = _open(run_state, "features")
     _arm_tree(run_state, left)
 
     width, height = window_size(run_state)
@@ -617,9 +608,10 @@ def selection(run_state: E2ERun) -> None:
     run_state.click(spot_x, spot_y, delay=0.8)        # place it
     run_state.key("Escape", delay=0.4)                # leave placement mode
 
-    # Drag a box on empty ground, from up-left of the feature to down-right of
-    # it. Captured mid-drag: the selection rectangle has to be visible.
-    run_state.press(spot_x - 220, spot_y - 200)
+    # Start in the sky, well above the map polygon, then sweep down-right over
+    # the feature. This used to fail in the Rust port because it required the
+    # first corner to trace to ground.
+    run_state.press(spot_x - 220, 80)
     run_state.move(spot_x + 120, spot_y + 60, delay=0.3)
     run_state.move(spot_x + 200, spot_y + 160, delay=0.4)
     # park=False: the box is drawn to the cursor, so it *is* the cursor position.
@@ -630,9 +622,9 @@ def selection(run_state: E2ERun) -> None:
 
     # Properties edits the *selected* object. If the box selected nothing, there
     # is nothing to edit and no command is emitted.
-    run_state.click(left + 197, EDITOR_BUTTON_Y, delay=0.9)
+    run_state.click(*editor_point(left, "objects", "properties"), delay=0.9)
     run_state.golden("props-after-box-select", crop="right-panel")
-    run_state.click(left + 58, 223, delay=0.4)        # Pos X
+    run_state.click(*panel_point(left, OBJECTS["property_pos_x"]), delay=0.4)
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("1800")
     run_state.key("Return", delay=0.8)

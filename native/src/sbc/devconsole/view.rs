@@ -222,115 +222,6 @@ impl DevConsoleView {
         Ok(true)
     }
 
-    /// The scen_edit-style status bar intentionally has a dedicated RmlUi
-    /// context. A document has one layout root in this engine; putting it next
-    /// to the F8 console made the strip depend on that console's containing
-    /// block and could leave it unpainted. Its own context makes it a genuine
-    /// screen-edge surface and lets it stay up while F8 hides the console.
-    fn ensure_status(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(context) = self.status_context {
-            if rml::context_is_alive(interface, STATUS_CONTEXT, Some(context)) {
-                return Ok(());
-            }
-            self.status_context = None;
-            self.status_document = None;
-            self.rendered_command_log = None;
-        }
-
-        let rml = interface.rml_ui();
-        let (context, created) = rml.create_context(STATUS_CONTEXT)?;
-        if !created {
-            return Ok(());
-        }
-        let geometry = interface.display().get_view_geometry()?;
-        let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
-        let (document, created) = rml.context_create_document(context, "body")?;
-        if !created {
-            let _ = rml.remove_context(context);
-            return Ok(());
-        }
-        rml.document_set_title(document, "Editor status")?;
-        rml.document_append_to_style_sheet(document, UI_STYLE)?;
-        rml.element_set_inner_rml(document, STATUS_BODY)?;
-        rml.document_show(document, None, None)?;
-        self.status_context = Some(context);
-        self.status_document = Some(document);
-        self.rendered_command_log = None;
-        self.bind_status_actions(interface)
-    }
-
-    fn build_toolbar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(bar) = element_by_id(interface, doc, "toolbar") else {
-            return Ok(());
-        };
-
-        let mut html = String::new();
-        for action in Action::ALL {
-            let class = if action.is_toggle() {
-                "toggle"
-            } else {
-                "command"
-            };
-            let caption = escape_rml(action.caption());
-            let content = if action.is_toggle() {
-                format!(
-                    r#"<span class="toggle-label">{caption}</span><span class="toggle-switch"><span class="toggle-thumb"></span></span>"#
-                )
-            } else {
-                // RmlUi drops a raw text node inside a flex button. Commands
-                // need the same explicit text element as toggle labels.
-                format!(r#"<span class="command-label">{caption}</span>"#)
-            };
-            html.push_str(&format!(
-                r#"<button id="{id}" class="{class}">{content}</button>"#,
-                id = action.id(),
-                class = class,
-                content = content,
-            ));
-        }
-        interface.rml_ui().element_set_inner_rml(bar, &html)?;
-
-        // Clicks are queued: clearing the log inside the listener would free
-        // the element RmlUi is dispatching to.
-        for action in Action::ALL {
-            let Some(button) = element_by_id(interface, doc, action.id()) else {
-                continue;
-            };
-            let queue = self.actions.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(action);
-                })?;
-        }
-        Ok(())
-    }
-
-    fn bind_status_actions(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.status_document else {
-            return Ok(());
-        };
-        for (id, action) in [
-            ("status-undo", StatusAction::Undo),
-            ("status-redo", StatusAction::Redo),
-            ("status-clear", StatusAction::ClearHistory),
-        ] {
-            let Some(button) = element_by_id(interface, doc, id) else {
-                continue;
-            };
-            let queue = self.status_actions.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(action);
-                })?;
-        }
-        Ok(())
-    }
-
     pub(crate) fn render_status(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -456,42 +347,6 @@ impl DevConsoleView {
         Ok(())
     }
 
-    fn bind_log_selection(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        count: usize,
-    ) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        for index in 0..count {
-            let Some(line) = element_by_id(interface, doc, &format!("log-line-{index}")) else {
-                continue;
-            };
-            let queue = self.selection_events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(line, "mousedown", false, move || {
-                    queue.borrow_mut().push(SelectionEvent::Start(index))
-                })?;
-            let queue = self.selection_events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(line, "mouseover", false, move || {
-                    queue.borrow_mut().push(SelectionEvent::Extend(index))
-                })?;
-        }
-        if let Some(log) = self.log {
-            let queue = self.selection_events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(log, "mouseup", false, move || {
-                    queue.borrow_mut().push(SelectionEvent::End);
-                })?;
-        }
-        Ok(())
-    }
-
     pub(crate) fn process_selection(&mut self) -> bool {
         let mut changed = false;
         for event in self.selection_events.borrow_mut().drain(..) {
@@ -610,5 +465,150 @@ impl DevConsoleView {
         }
         self.root = None;
         self.log = None;
+    }
+
+    /// The scen_edit-style status bar intentionally has a dedicated RmlUi
+    /// context. A document has one layout root in this engine; putting it next
+    /// to the F8 console made the strip depend on that console's containing
+    /// block and could leave it unpainted. Its own context makes it a genuine
+    /// screen-edge surface and lets it stay up while F8 hides the console.
+    fn ensure_status(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if let Some(context) = self.status_context {
+            if rml::context_is_alive(interface, STATUS_CONTEXT, Some(context)) {
+                return Ok(());
+            }
+            self.status_context = None;
+            self.status_document = None;
+            self.rendered_command_log = None;
+        }
+
+        let rml = interface.rml_ui();
+        let (context, created) = rml.create_context(STATUS_CONTEXT)?;
+        if !created {
+            return Ok(());
+        }
+        let geometry = interface.display().get_view_geometry()?;
+        let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
+        let (document, created) = rml.context_create_document(context, "body")?;
+        if !created {
+            let _ = rml.remove_context(context);
+            return Ok(());
+        }
+        rml.document_set_title(document, "Editor status")?;
+        rml.document_append_to_style_sheet(document, UI_STYLE)?;
+        rml.element_set_inner_rml(document, STATUS_BODY)?;
+        rml.document_show(document, None, None)?;
+        self.status_context = Some(context);
+        self.status_document = Some(document);
+        self.rendered_command_log = None;
+        self.bind_status_actions(interface)
+    }
+
+    fn build_toolbar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        let Some(bar) = element_by_id(interface, doc, "toolbar") else {
+            return Ok(());
+        };
+
+        let mut html = String::new();
+        for action in Action::ALL {
+            let class = if action.is_toggle() {
+                "toggle"
+            } else {
+                "command"
+            };
+            let caption = escape_rml(action.caption());
+            let content = if action.is_toggle() {
+                format!(
+                    r#"<span class="toggle-label">{caption}</span><span class="toggle-switch"><span class="toggle-thumb"></span></span>"#
+                )
+            } else {
+                // RmlUi drops a raw text node inside a flex button. Commands
+                // need the same explicit text element as toggle labels.
+                format!(r#"<span class="command-label">{caption}</span>"#)
+            };
+            html.push_str(&format!(
+                r#"<button id="{id}" class="{class}">{content}</button>"#,
+                id = action.id(),
+                class = class,
+                content = content,
+            ));
+        }
+        interface.rml_ui().element_set_inner_rml(bar, &html)?;
+
+        // Clicks are queued: clearing the log inside the listener would free
+        // the element RmlUi is dispatching to.
+        for action in Action::ALL {
+            let Some(button) = element_by_id(interface, doc, action.id()) else {
+                continue;
+            };
+            let queue = self.actions.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    queue.borrow_mut().push(action);
+                })?;
+        }
+        Ok(())
+    }
+
+    fn bind_status_actions(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(doc) = self.status_document else {
+            return Ok(());
+        };
+        for (id, action) in [
+            ("status-undo", StatusAction::Undo),
+            ("status-redo", StatusAction::Redo),
+            ("status-clear", StatusAction::ClearHistory),
+        ] {
+            let Some(button) = element_by_id(interface, doc, id) else {
+                continue;
+            };
+            let queue = self.status_actions.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    queue.borrow_mut().push(action);
+                })?;
+        }
+        Ok(())
+    }
+
+    fn bind_log_selection(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        count: usize,
+    ) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        for index in 0..count {
+            let Some(line) = element_by_id(interface, doc, &format!("log-line-{index}")) else {
+                continue;
+            };
+            let queue = self.selection_events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(line, "mousedown", false, move || {
+                    queue.borrow_mut().push(SelectionEvent::Start(index))
+                })?;
+            let queue = self.selection_events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(line, "mouseover", false, move || {
+                    queue.borrow_mut().push(SelectionEvent::Extend(index))
+                })?;
+        }
+        if let Some(log) = self.log {
+            let queue = self.selection_events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(log, "mouseup", false, move || {
+                    queue.borrow_mut().push(SelectionEvent::End);
+                })?;
+        }
+        Ok(())
     }
 }

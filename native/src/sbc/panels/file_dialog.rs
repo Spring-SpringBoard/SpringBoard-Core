@@ -167,51 +167,6 @@ impl FileDialog {
         Ok(true)
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "file-dialog") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
-    }
-
-    fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
-        let extensions: Vec<&str> = self
-            .config
-            .as_ref()
-            .map(|c| c.extensions.iter().map(String::as_str).collect())
-            .unwrap_or_default();
-        self.grid
-            .set_items(list_assets(interface, &self.dir, &extensions));
-        self.grid.render(interface, document)?;
-        if let Some(e) = element_by_id(interface, document, "fd-path") {
-            interface
-                .rml_ui()
-                .element_set_inner_rml(e, &escape_rml(&self.dir))?;
-        }
-        Ok(())
-    }
-
-    /// True when a directory is a selectable item (e.g. a `.sdd` project folder)
-    /// rather than something to navigate into.
-    fn dir_is_item(&self, config: &FileDialogConfig, id: &str) -> bool {
-        if !config.dirs_as_items {
-            return false;
-        }
-        let name = id.rsplit('/').next().unwrap_or(id).to_lowercase();
-        config.extensions.is_empty()
-            || config
-                .extensions
-                .iter()
-                .any(|ext| name.ends_with(&ext.to_lowercase()))
-    }
-
     /// Handle queued clicks and buttons; returns a result on OK.
     pub(crate) fn tick(
         &mut self,
@@ -277,6 +232,51 @@ impl FileDialog {
             }
         }
         Ok(None)
+    }
+
+    fn set_visible(
+        &self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        visible: bool,
+    ) -> Result<(), Error> {
+        if let Some(e) = element_by_id(interface, document, "file-dialog") {
+            interface
+                .rml_ui()
+                .element_set_class(e, "hidden", !visible)?;
+        }
+        Ok(())
+    }
+
+    fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
+        let extensions: Vec<&str> = self
+            .config
+            .as_ref()
+            .map(|c| c.extensions.iter().map(String::as_str).collect())
+            .unwrap_or_default();
+        self.grid
+            .set_items(list_assets(interface, &self.dir, &extensions));
+        self.grid.render(interface, document)?;
+        if let Some(e) = element_by_id(interface, document, "fd-path") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(e, &escape_rml(&self.dir))?;
+        }
+        Ok(())
+    }
+
+    /// True when a directory is a selectable item (e.g. a `.sdd` project folder)
+    /// rather than something to navigate into.
+    fn dir_is_item(&self, config: &FileDialogConfig, id: &str) -> bool {
+        if !config.dirs_as_items {
+            return false;
+        }
+        let name = id.rsplit('/').next().unwrap_or(id).to_lowercase();
+        config.extensions.is_empty()
+            || config
+                .extensions
+                .iter()
+                .any(|ext| name.ends_with(&ext.to_lowercase()))
     }
 
     /// Resolve the picked path + type from the current selection, name input and

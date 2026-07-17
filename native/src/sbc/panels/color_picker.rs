@@ -197,20 +197,6 @@ impl ColorPicker {
         self.set_visible(interface, document, false)
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "color-picker") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
-    }
-
     /// Drain OK/Cancel clicks.
     pub(crate) fn drain_events(&self) -> Vec<PickerEvent> {
         self.events.borrow_mut().drain(..).collect()
@@ -270,6 +256,20 @@ impl ColorPicker {
         self.sync(interface, document);
         self.previewing = true;
         true
+    }
+
+    fn set_visible(
+        &self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        visible: bool,
+    ) -> Result<(), Error> {
+        if let Some(e) = element_by_id(interface, document, "color-picker") {
+            interface
+                .rml_ui()
+                .element_set_class(e, "hidden", !visible)?;
+        }
+        Ok(())
     }
 
     /// Push the current colour into the DOM: hue backdrop, cursors, preview.

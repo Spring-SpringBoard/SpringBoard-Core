@@ -67,19 +67,6 @@ impl PanelView {
         self.events.borrow_mut().drain(..).collect()
     }
 
-    fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
-        rml::context_is_alive(interface, UI_CONTEXT, self.context)
-    }
-
-    /// Drop the handles without touching them: the engine already freed them.
-    fn forget(&mut self) {
-        self.context = None;
-        self.document = None;
-        self.root = None;
-        self.content = None;
-        self.events.borrow_mut().clear();
-    }
-
     /// Create the context + document if the engine is ready. Returns `true` if
     /// newly created -- including a re-creation after RmlUi was torn down.
     pub(crate) fn ensure(&mut self, interface: &NativeInterfaceRef) -> Result<bool, Error> {
@@ -132,85 +119,6 @@ impl PanelView {
         self.build_action_bar(interface)?;
         self.build_editor_buttons(interface)?;
         Ok(true)
-    }
-
-    /// The toolbar of project/clipboard actions (New/Load/Import/Save/…). Icon
-    /// buttons, whose clicks queue an `ActionClicked` handled by the manager.
-    fn build_action_bar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(bar) = element_by_id(interface, doc, "action-bar") else {
-            return Ok(());
-        };
-
-        let mut html = String::new();
-        for action in Action::TOOLBAR {
-            html.push_str(&format!(
-                r#"<button id="action-{idx}" class="action-button" title="{tip}">"#,
-                idx = action as usize,
-                tip = escape_rml(action.tooltip()),
-            ));
-            if let Some(icon) = action.icon() {
-                html.push_str(&format!(r#"<img src="{icon}"/>"#));
-            }
-            html.push_str("</button>");
-        }
-        interface.rml_ui().element_set_inner_rml(bar, &html)?;
-
-        for action in Action::TOOLBAR {
-            let id = format!("action-{}", action as usize);
-            let Some(button) = element_by_id(interface, doc, &id) else {
-                continue;
-            };
-            bind_tooltip(interface, doc, button, action.tooltip())?;
-            let queue = self.events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::Action(action));
-                })?;
-        }
-        Ok(())
-    }
-
-    // ── Shell chrome ───────────────────────────────────────────────
-
-    fn build_tab_bar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(bar) = element_by_id(interface, doc, "tab-bar") else {
-            return Ok(());
-        };
-
-        let mut html = String::new();
-        for tab in Tab::all() {
-            let active = if tab == self.current_tab {
-                " active"
-            } else {
-                ""
-            };
-            html.push_str(&format!(
-                r#"<button id="tab-{name}" class="tab-button{active}">{name}</button>"#,
-                name = tab.as_str(),
-            ));
-        }
-        interface.rml_ui().element_set_inner_rml(bar, &html)?;
-
-        for tab in Tab::all() {
-            let id = format!("tab-{}", tab.as_str());
-            let Some(button) = element_by_id(interface, doc, &id) else {
-                continue;
-            };
-            let queue = self.events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::Tab(tab));
-                })?;
-        }
-        Ok(())
     }
 
     /// Rebuild the editor button strip for the current tab.
@@ -391,5 +299,97 @@ impl PanelView {
     }
     pub(crate) fn content_handle(&self) -> Option<u64> {
         self.content
+    }
+
+    fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
+        rml::context_is_alive(interface, UI_CONTEXT, self.context)
+    }
+
+    /// Drop the handles without touching them: the engine already freed them.
+    fn forget(&mut self) {
+        self.context = None;
+        self.document = None;
+        self.root = None;
+        self.content = None;
+        self.events.borrow_mut().clear();
+    }
+
+    /// The toolbar of project/clipboard actions (New/Load/Import/Save/…). Icon
+    /// buttons, whose clicks queue an `ActionClicked` handled by the manager.
+    fn build_action_bar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        let Some(bar) = element_by_id(interface, doc, "action-bar") else {
+            return Ok(());
+        };
+
+        let mut html = String::new();
+        for action in Action::TOOLBAR {
+            html.push_str(&format!(
+                r#"<button id="action-{idx}" class="action-button" title="{tip}">"#,
+                idx = action as usize,
+                tip = escape_rml(action.tooltip()),
+            ));
+            if let Some(icon) = action.icon() {
+                html.push_str(&format!(r#"<img src="{icon}"/>"#));
+            }
+            html.push_str("</button>");
+        }
+        interface.rml_ui().element_set_inner_rml(bar, &html)?;
+
+        for action in Action::TOOLBAR {
+            let id = format!("action-{}", action as usize);
+            let Some(button) = element_by_id(interface, doc, &id) else {
+                continue;
+            };
+            bind_tooltip(interface, doc, button, action.tooltip())?;
+            let queue = self.events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    queue.borrow_mut().push(ShellEvent::Action(action));
+                })?;
+        }
+        Ok(())
+    }
+
+    // ── Shell chrome ───────────────────────────────────────────────
+
+    fn build_tab_bar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        let Some(bar) = element_by_id(interface, doc, "tab-bar") else {
+            return Ok(());
+        };
+
+        let mut html = String::new();
+        for tab in Tab::all() {
+            let active = if tab == self.current_tab {
+                " active"
+            } else {
+                ""
+            };
+            html.push_str(&format!(
+                r#"<button id="tab-{name}" class="tab-button{active}">{name}</button>"#,
+                name = tab.as_str(),
+            ));
+        }
+        interface.rml_ui().element_set_inner_rml(bar, &html)?;
+
+        for tab in Tab::all() {
+            let id = format!("tab-{}", tab.as_str());
+            let Some(button) = element_by_id(interface, doc, &id) else {
+                continue;
+            };
+            let queue = self.events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    queue.borrow_mut().push(ShellEvent::Tab(tab));
+                })?;
+        }
+        Ok(())
     }
 }

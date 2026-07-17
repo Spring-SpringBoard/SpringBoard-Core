@@ -1,6 +1,6 @@
 use super::completion::CompletionCatalog;
-use super::history::MAX_HISTORY;
 pub(super) use super::completion::ConsoleCommand;
+use super::history::MAX_HISTORY;
 use super::types::{ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, ChonsoleSuggestion};
 
 pub(super) struct ChonsoleCore {
