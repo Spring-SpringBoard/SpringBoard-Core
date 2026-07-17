@@ -34,11 +34,6 @@ impl SuggestionView {
         }
     }
 
-    pub(super) fn complete_first(&mut self, core: &ChonsoleCore, input: &mut TextInput) {
-        self.refresh(core, input);
-        self.complete(self.selected.unwrap_or(0), input);
-    }
-
     pub(super) fn select_previous(
         &mut self,
         core: &ChonsoleCore,
@@ -49,8 +44,14 @@ impl SuggestionView {
         if !input.value().starts_with('/') || self.entries.is_empty() {
             return false;
         }
-        let current = self.selected.unwrap_or(0);
-        self.apply(current.saturating_sub(steps.max(1)), input);
+        let index = match self.selected {
+            Some(current) => {
+                (current + self.entries.len() - steps.max(1) % self.entries.len())
+                    % self.entries.len()
+            }
+            None => self.entries.len() - 1,
+        };
+        self.apply(index, input);
         true
     }
 
@@ -68,7 +69,7 @@ impl SuggestionView {
         let index = if current == usize::MAX {
             0
         } else {
-            (current + steps.max(1)).min(self.entries.len() - 1)
+            (current + steps.max(1)) % self.entries.len()
         };
         self.apply(index, input);
         true
@@ -132,14 +133,6 @@ impl SuggestionView {
         input.set(&suggestion.command);
         self.selected = Some(index);
     }
-
-    fn complete(&mut self, index: usize, input: &mut TextInput) {
-        let Some(suggestion) = self.entries.get(index) else {
-            return;
-        };
-        input.set(format!("{} ", suggestion.command));
-        self.reset();
-    }
 }
 
 pub(super) fn escape_rml(text: &str) -> String {
@@ -186,6 +179,27 @@ mod tests {
         assert_eq!(suggestions.entries, entries);
         assert_eq!(suggestions.selected, Some(1));
         assert_eq!(input.value(), entries[1].command);
+    }
+
+    #[test]
+    fn next_selection_wraps_while_preserving_the_original_query() {
+        let core = ChonsoleCore::default();
+        let mut input = TextInput::default();
+        input.set("/h");
+        let mut suggestions = SuggestionView::default();
+
+        assert!(suggestions.select_next(&core, &mut input, 1));
+        let entries = suggestions.entries.clone();
+        assert!(entries.len() > 1);
+        for _ in 1..entries.len() {
+            assert!(suggestions.select_next(&core, &mut input, 1));
+        }
+        assert_eq!(suggestions.selected, Some(entries.len() - 1));
+
+        assert!(suggestions.select_next(&core, &mut input, 1));
+        assert_eq!(suggestions.selected, Some(0));
+        assert_eq!(input.value(), entries[0].command);
+        assert_eq!(suggestions.entries, entries);
     }
 
     #[test]

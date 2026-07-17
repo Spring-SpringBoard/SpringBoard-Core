@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import window_size
+from scenarios.geometry import EDITOR_BUTTON_Y, window_size
+from scenarios.objects import _arm_tree, _open
 from scenarios.registry import scenario
 
 if TYPE_CHECKING:
@@ -60,9 +61,21 @@ NATIVE_RELOAD_CASE = {
 
 @scenario(target="e2e-reloadnativemodules", cases=NATIVE_RELOAD_CASE)
 def reload_native_modules(run_state: E2ERun) -> None:
-    """Native reload: /reloadnativemodules returns safely and the replacement module accepts input."""
+    """Native reload preserves input and can re-adopt pre-reload engine features.
+
+    The engine feature survives while Rust's in-memory model is recreated. The
+    replacement module must therefore accept Chonsole input and select/edit the
+    original feature instead of treating it as unknown scenery.
+    """
     run_state.focus()
-    run_state.key("Escape")
+    left = _open(run_state, 110)                      # Features
+    _arm_tree(run_state, left)
+    width, height = window_size(run_state)
+    spot_x, spot_y = width // 3, height // 2
+    run_state.wheel(spot_x, spot_y, clicks=8, up=True)
+    run_state.click(spot_x, spot_y, delay=0.8)        # place before reload
+    run_state.key("Escape", delay=0.2)                # leave placement mode
+
     run_state.key("Return", delay=0.18)
     run_state.type_text("/reloadnativemodules")
     # Reload is deliberately deferred by the engine until all event callbacks
@@ -73,6 +86,22 @@ def reload_native_modules(run_state: E2ERun) -> None:
     run_state.key("Return", delay=0.18)
     run_state.type_text("/h")
     run_state.assert_running()
+    run_state.key("Escape", delay=0.2)
+
+    # The feature was created by the module instance we just unloaded. Clicking
+    # it forces the replacement instance to recreate its springID -> modelID
+    # mapping; Properties then proves the selection is a live editable object.
+    run_state.click(spot_x, spot_y, delay=0.4)
+    run_state.click(left + 197, EDITOR_BUTTON_Y, delay=0.5)  # Properties
+    run_state.click(left + 58, 241, delay=0.2)               # Pos X
+    run_state.key("ctrl+a", delay=0.1)
+    run_state.type_text("1800")
+    run_state.key("Return", delay=0.5)
+    run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key="pos",
+        value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1800) < 1.0,
+    )
 
 
 @scenario(target="chonsole-native-input", cases=NATIVE_CHONSOLE_CASE)
@@ -98,8 +127,14 @@ def chonsole_native_input(run_state: E2ERun) -> None:
 
 @scenario(target="chonsole-native-suggestions", cases=NATIVE_CHONSOLE_CASE)
 def chonsole_native_suggestions(run_state: E2ERun) -> None:
-    """Native suggestions keep their list while navigating, hovering, and selecting by click."""
+    """Native suggestions keep their list while Tab-cycling, hovering, and clicking.
+
+    Tab must reach Chonsole before RmlUi can move focus to the editor's search
+    field or toolbar. Repeated presses select successive matches from the
+    original query, rather than completing the first match and losing the list.
+    """
     run_state.focus()
+    _open(run_state, 110)                            # Features, with search input
     run_state.key("Escape")
     run_state.key("Return", delay=0.18)
     run_state.type_text("/h")
@@ -112,11 +147,11 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
         int(height * 0.4),
     )
 
-    run_state.key("Down")
+    run_state.key("Tab")
     first = run_state.screenshot("first-selected")
     run_state.assert_region_pixels(matches, first, suggestion_box, min_changed=100)
 
-    run_state.key("Down")
+    run_state.key("Tab")
     second = run_state.screenshot("second-selected")
     run_state.assert_region_pixels(first, second, suggestion_box, min_changed=100)
 

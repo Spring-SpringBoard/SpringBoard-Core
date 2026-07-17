@@ -34,10 +34,11 @@ pub(crate) enum Transition {
         diff_z: f32,
     },
     Rotate,
-    /// Start a box-select from a ground corner the drag began on.
+    /// Start a box-select from the screen point where the drag began. This can
+    /// be over the sky as well as terrain, matching Chili's selection box.
     RectangleSelect {
-        start_x: f32,
-        start_z: f32,
+        start_x: i32,
+        start_y: i32,
     },
 }
 
@@ -104,13 +105,11 @@ pub(crate) fn trace_object(interface: &NativeInterfaceRef, x: f32, y: f32) -> Tr
     trace(interface, x, y)
 }
 
-/// The polled cursor, in the space the traces below expect.
+/// The polled cursor, normalized to the mouse callback and ray-tracing space.
 ///
-/// `get_mouse_state` measures y from the *top* of the window, while the engine's
-/// mouse callbacks -- and `trace_screen_ray` -- measure it from the bottom. A
-/// press therefore traces correctly straight from its callback, but anything
-/// that polls the cursor instead (a held brush, a preview under the cursor) must
-/// flip y first, or it traces to the mirrored point.
+/// `get_mouse_state` exposes Lua's bottom-origin screen coordinate, whereas
+/// mouse callbacks and `trace_screen_ray` use a top-origin coordinate. Flip it
+/// here so held tools and press-driven tools point at the same map position.
 pub(crate) fn cursor(interface: &NativeInterfaceRef) -> Option<Cursor> {
     let mouse = interface.input().get_mouse_state().ok()?;
     let height = interface.display().get_view_geometry().ok()?.viewSizeY as f32;
@@ -186,6 +185,10 @@ pub(crate) trait EditorState {
     /// Runs in the engine's `draw_world`, where only immediate-mode primitives
     /// render — not the engine model drawer.
     fn draw_world(&mut self, interface: &NativeInterfaceRef) {}
+
+    /// Draw a screen-space overlay after the world. Rectangle selection uses
+    /// this rather than requiring both drag corners to land on terrain.
+    fn draw_screen(&mut self, interface: &NativeInterfaceRef) {}
 }
 
 /// The state the editor sits in when nothing else is active: click to select,
@@ -200,11 +203,9 @@ pub(crate) struct DefaultState {
     /// Whether the pressed object was already selected: only then does a move
     /// drag it, matching Lua.
     was_selected: bool,
-    /// A press that landed on empty ground: its screen point and the ground
-    /// corner under it. A drag from here box-selects; a release without a drag
-    /// clears the selection.
+    /// A press that landed on empty map/sky. A drag from here box-selects; a
+    /// release without a drag clears the selection.
     empty_press: Option<(i32, i32)>,
-    empty_start: Option<(f32, f32)>,
 }
 
 #[derive(Clone, Copy)]
@@ -245,7 +246,6 @@ impl EditorState for DefaultState {
         self.clicked = None;
         self.was_selected = false;
         self.empty_press = None;
-        self.empty_start = None;
         if button != 1 {
             return false;
         }
@@ -260,7 +260,6 @@ impl EditorState for DefaultState {
             // box-select -- refusing it here handed the drag to the camera and
             // the box never appeared.
             self.empty_press = Some((x, y));
-            self.empty_start = trace_ground(ctx.interface, x as f32, y as f32).map(|h| (h.x, h.z));
             return true;
         };
 
@@ -301,11 +300,11 @@ impl EditorState for DefaultState {
                 return true;
             }
         }
-        if let (Some((sx, sy)), Some((start_x, start_z))) = (self.empty_press, self.empty_start) {
+        if let Some((start_x, start_y)) = self.empty_press {
             const DRAG_THRESHOLD: i32 = 4;
-            if (x - sx).abs() > DRAG_THRESHOLD || (y - sy).abs() > DRAG_THRESHOLD {
+            if (x - start_x).abs() > DRAG_THRESHOLD || (y - start_y).abs() > DRAG_THRESHOLD {
                 self.empty_press = None;
-                ctx.request(Transition::RectangleSelect { start_x, start_z });
+                ctx.request(Transition::RectangleSelect { start_x, start_y });
                 return true;
             }
             return false;
@@ -329,7 +328,6 @@ impl EditorState for DefaultState {
         use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager};
         // An empty-ground press that never became a drag clears the selection.
         if self.empty_press.take().is_some() {
-            self.empty_start = None;
             let sel = ctx.models.get::<SelectionManager>();
             if sel.count() > 0 {
                 sel.clear();

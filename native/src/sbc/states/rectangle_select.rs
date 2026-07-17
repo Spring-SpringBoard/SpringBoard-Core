@@ -1,57 +1,88 @@
-//! Box-selecting objects by dragging on empty ground, a port of
+//! Box-selecting objects by dragging over the map or sky, a port of
 //! `rectangle_select_state.lua`.
 //!
-//! Lua tests membership in *screen* space (project each object, compare to the
-//! screen rectangle). This native port works in *world* space instead: the drag
-//! defines a ground rectangle and objects whose position falls inside it are
-//! selected. That keeps the whole interaction on the proven world-draw path (the
-//! same immediate primitives the selection ring uses) and avoids a screen
-//! projection that cannot be verified without a live camera.
+//! Chili tests membership in *screen* space (project each object, compare to
+//! the screen rectangle). Keeping that behavior is important: a drag may begin
+//! over the sky, where a world-space ground corner does not exist.
 
-use spring_native::prelude::NativeInterfaceRef;
+use spring_native::{prelude::NativeInterfaceRef, sys::Float3};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager};
-use crate::sbc::states::state::{
-    cursor, mod_state, trace_ground, EditorState, GroundHit, StateContext, Transition,
-};
+use crate::sbc::states::state::{mod_state, EditorState, StateContext, Transition};
 
 const KINDS: [ObjectKind; 3] = [ObjectKind::Unit, ObjectKind::Feature, ObjectKind::Area];
+const GL_LINE_LOOP: u32 = 0x0002;
+const GL_MODELVIEW: u32 = 0x1700;
+const GL_PROJECTION: u32 = 0x1701;
 
 pub(crate) struct RectangleSelectState {
-    /// The ground corner the drag started from.
-    start: (f32, f32),
-    /// The current ground corner, updated while the button is held.
-    end: (f32, f32),
+    /// The screen corner the drag started from, in the mouse callback's
+    /// top-origin coordinate space.
+    start: (i32, i32),
+    /// The current screen corner, updated while the button is held.
+    end: (i32, i32),
     /// The selection when the drag began, for shift-modified selects.
     original: Vec<(ObjectKind, i32)>,
 }
 
 impl RectangleSelectState {
-    pub(crate) fn new(start_x: f32, start_z: f32) -> Self {
+    pub(crate) fn new(start_x: i32, start_y: i32) -> Self {
         RectangleSelectState {
-            start: (start_x, start_z),
-            end: (start_x, start_z),
+            start: (start_x, start_y),
+            end: (start_x, start_y),
             original: Vec::new(),
         }
     }
 
-    /// The axis-aligned bounds of the drag, as `(x0, z0, x1, z1)`.
-    fn bounds(&self) -> (f32, f32, f32, f32) {
+    /// The axis-aligned bounds in the mouse callback's top-origin space.
+    fn pointer_bounds(&self) -> (i32, i32, i32, i32) {
         let (x0, x1) = min_max(self.start.0, self.end.0);
-        let (z0, z1) = min_max(self.start.1, self.end.1);
-        (x0, z0, x1, z1)
+        let (y0, y1) = min_max(self.start.1, self.end.1);
+        (x0, y0, x1, y1)
     }
 
-    /// Objects whose position falls inside the drag rectangle.
-    fn objects_in_box(&self, models: &mut Models) -> Vec<(ObjectKind, i32)> {
-        let (x0, z0, x1, z1) = self.bounds();
+    /// Convert the pointer rectangle to camera projection space. Mouse events
+    /// use a top-left origin; `world_to_screen_coords` and our OpenGL overlay
+    /// use a bottom-left origin.
+    fn camera_bounds(&self, view_height: i32) -> (i32, i32, i32, i32) {
+        let (left, top, right, bottom) = self.pointer_bounds();
+        (
+            left,
+            flip_y(bottom, view_height),
+            right,
+            flip_y(top, view_height),
+        )
+    }
+
+    /// Objects whose projected position falls inside the drag rectangle.
+    fn objects_in_box(
+        &self,
+        interface: &NativeInterfaceRef,
+        models: &mut Models,
+    ) -> Vec<(ObjectKind, i32)> {
+        let Ok(geometry) = interface.display().get_view_geometry() else {
+            return Vec::new();
+        };
+        let (left, bottom, right, top) = self.camera_bounds(geometry.viewSizeY);
         let objects = models.get::<ObjectManager>();
         let mut hits = Vec::new();
         for kind in KINDS {
             for id in objects.all_model_ids(kind) {
                 if let Some(pos) = objects.object_pos(kind, id) {
-                    if pos.x >= x0 && pos.x <= x1 && pos.z >= z0 && pos.z <= z1 {
+                    let Ok((screen, valid)) = interface.camera().world_to_screen_coords(Float3 {
+                        x: pos.x,
+                        y: pos.y,
+                        z: pos.z,
+                    }) else {
+                        continue;
+                    };
+                    if valid
+                        && screen.x >= left as f32
+                        && screen.x <= right as f32
+                        && screen.y >= bottom as f32
+                        && screen.y <= top as f32
+                    {
                         hits.push((kind, id));
                     }
                 }
@@ -63,7 +94,7 @@ impl RectangleSelectState {
     /// Resolve the final selection and hand it to the manager.
     fn finalize(&mut self, ctx: &mut StateContext) {
         let shift = mod_state(ctx.interface).shift;
-        let boxed = self.objects_in_box(ctx.models);
+        let boxed = self.objects_in_box(ctx.interface, ctx.models);
         let selection = if shift {
             symmetric_difference(&self.original, &boxed)
         } else {
@@ -86,30 +117,60 @@ impl EditorState for RectangleSelectState {
         self.original = ctx.models.get::<SelectionManager>().all();
     }
 
-    /// Track the far corner each tick; when the button is up, finalize and leave.
-    fn update(&mut self, ctx: &mut StateContext) {
-        let Some(mouse) = cursor(ctx.interface) else {
-            return;
-        };
-        if let Some(GroundHit { x, z, .. }) = trace_ground(ctx.interface, mouse.x, mouse.y) {
-            self.end = (x, z);
-        }
-        if !mouse.left {
-            self.finalize(ctx);
-            ctx.request(Transition::Default);
-        }
+    /// Do not poll `get_mouse_state` here: it has a different coordinate
+    /// convention from the callback that supplied `start`. Both corners must
+    /// come from the same event stream or the overlay tears vertically.
+    fn mouse_move(&mut self, _ctx: &mut StateContext, x: i32, y: i32, _button: i32) -> bool {
+        self.end = (x, y);
+        true
     }
 
-    fn draw_world(&mut self, interface: &NativeInterfaceRef) {
-        let (x0, z0, x1, z1) = self.bounds();
-        crate::sbc::states::highlight::draw_ground_rect(
-            interface,
-            x0,
-            z0,
-            x1,
-            z1,
-            (0.3, 0.7, 1.0, 0.9),
+    fn mouse_release(&mut self, ctx: &mut StateContext, x: i32, y: i32, button: i32) -> bool {
+        if button == 1 {
+            self.end = (x, y);
+            self.finalize(ctx);
+            ctx.request(Transition::Default);
+            return true;
+        }
+        false
+    }
+
+    fn draw_screen(&mut self, interface: &NativeInterfaceRef) {
+        let Ok(geometry) = interface.display().get_view_geometry() else {
+            return;
+        };
+        let (left, bottom, right, top) = self.camera_bounds(geometry.viewSizeY);
+        let gfx = interface.gfx();
+        // `draw_screen` has no guaranteed projection matrix. Establish a local
+        // pixel-space projection, then restore both matrix stacks before RmlUi
+        // renders its panels above the selection outline.
+        let _ = gfx.matrix_mode(GL_PROJECTION);
+        let _ = gfx.push_matrix();
+        let _ = gfx.load_identity();
+        let _ = gfx.ortho(
+            0.0,
+            geometry.viewSizeX as f32,
+            0.0,
+            geometry.viewSizeY as f32,
+            -1.0,
+            1.0,
         );
+        let _ = gfx.matrix_mode(GL_MODELVIEW);
+        let _ = gfx.push_matrix();
+        let _ = gfx.load_identity();
+        let _ = gfx.depth_test(false, false, 0);
+        let _ = gfx.line_width(2.0);
+        let _ = gfx.color(0.3, 0.7, 1.0, 0.9);
+        let _ = gfx.begin_end(GL_LINE_LOOP, || {
+            for (x, y) in [(left, bottom), (right, bottom), (right, top), (left, top)] {
+                let _ = gfx.vertex(x as f32, y as f32, 0.0, 1.0, 3);
+            }
+        });
+        let _ = gfx.matrix_mode(GL_MODELVIEW);
+        let _ = gfx.pop_matrix();
+        let _ = gfx.matrix_mode(GL_PROJECTION);
+        let _ = gfx.pop_matrix();
+        let _ = gfx.matrix_mode(GL_MODELVIEW);
     }
 }
 
@@ -127,12 +188,18 @@ fn mirror_units_to_engine(ctx: &mut StateContext) {
         .select_unit_array(&spring_ids, false);
 }
 
-fn min_max(a: f32, b: f32) -> (f32, f32) {
+fn min_max<T: Ord>(a: T, b: T) -> (T, T) {
     if a <= b {
         (a, b)
     } else {
         (b, a)
     }
+}
+
+/// Translate a top-origin input y coordinate to the bottom-origin camera and
+/// OpenGL coordinate space.
+fn flip_y(y: i32, view_height: i32) -> i32 {
+    view_height - 1 - y
 }
 
 /// The symmetric difference of two selections: everything in exactly one of
@@ -152,8 +219,20 @@ mod tests {
 
     #[test]
     fn min_max_orders_the_pair() {
-        assert_eq!(min_max(3.0, 1.0), (1.0, 3.0));
-        assert_eq!(min_max(1.0, 3.0), (1.0, 3.0));
+        assert_eq!(min_max(3, 1), (1, 3));
+        assert_eq!(min_max(1, 3), (1, 3));
+    }
+
+    #[test]
+    fn camera_bounds_flip_pointer_y_without_moving_x() {
+        let state = RectangleSelectState {
+            start: (120, 80),
+            end: (640, 420),
+            original: Vec::new(),
+        };
+        // A drag from (120, 80) to (640, 420) in a 1,000px-high window is
+        // drawn and tested from (120, 919) to (640, 579) in camera space.
+        assert_eq!(state.camera_bounds(1000), (120, 579, 640, 919));
     }
 
     #[test]

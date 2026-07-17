@@ -78,6 +78,7 @@ impl NativeModule for SBC {
     }
 
     fn draw_screen(&mut self) -> Result<(), Error> {
+        self.model::<StateManager>().draw_screen();
         self.model::<ChonsoleManager>().draw_screen()?;
         self.model::<PanelManager>().draw_screen()
     }

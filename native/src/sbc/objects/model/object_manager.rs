@@ -95,8 +95,8 @@ impl ObjectManager {
     }
 
     /// The modelID an engine springID maps to; used to select a clicked object.
-    pub fn model_id_for_spring(&self, kind: ObjectKind, spring_id: i32) -> Option<i32> {
-        self.handler(&kind)?.model_id_for_spring(spring_id)
+    pub fn model_id_for_spring(&mut self, kind: ObjectKind, spring_id: i32) -> Option<i32> {
+        self.handler_mut(&kind)?.model_id_for_spring(spring_id)
     }
 
     /// An object's world position, if it has one.

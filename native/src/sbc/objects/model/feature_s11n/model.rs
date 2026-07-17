@@ -236,8 +236,15 @@ impl ObjectHandler for FeatureModel {
         self.ids.spring_id(model_id)
     }
 
-    fn model_id_for_spring(&self, spring_id: i32) -> Option<i32> {
-        self.ids.model_id(spring_id)
+    fn model_id_for_spring(&mut self, spring_id: i32) -> Option<i32> {
+        // A native hot-reload creates a fresh editor model while the engine's
+        // features remain alive. Adopt a feature on first click so reload does
+        // not turn it into permanently unselectable scenery.
+        Some(
+            self.ids
+                .model_id(spring_id)
+                .unwrap_or_else(|| self.ids.register(spring_id, None)),
+        )
     }
 }
 

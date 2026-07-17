@@ -291,8 +291,14 @@ impl ObjectHandler for UnitModel {
         self.ids.spring_id(model_id)
     }
 
-    fn model_id_for_spring(&self, spring_id: i32) -> Option<i32> {
-        self.ids.model_id(spring_id)
+    fn model_id_for_spring(&mut self, spring_id: i32) -> Option<i32> {
+        // See FeatureModel: engine objects outlive a native module reload, so
+        // reconstruct their editor-side mapping lazily when the user clicks.
+        Some(
+            self.ids
+                .model_id(spring_id)
+                .unwrap_or_else(|| self.ids.register(spring_id, None)),
+        )
     }
 }
 

@@ -88,23 +88,6 @@ impl StateManager {
         matches!(self.state, ActiveState::Default(_))
     }
 
-    /// The editor is a spectator; enable full view + full select so every
-    /// object is visible and clickable (a plain spectator sees only its team's
-    /// LOS, and `GuiTraceRay` then skips features the editor just placed). Lua's
-    /// editor relies on the same. Sent once, on the first live tick.
-    fn ensure_editor_view(&mut self) {
-        if self.editor_view_set {
-            return;
-        }
-        // `specfullview 3` = fullview + fullselect (the action's documented
-        // default), so the whole map is revealed and selectable.
-        let _ = self
-            .interface
-            .messages()
-            .send_commands("specfullview 3", "");
-        self.editor_view_set = true;
-    }
-
     pub fn drain_commands(&mut self) -> Vec<Box<dyn Command>> {
         std::mem::take(&mut self.pending_commands)
     }
@@ -118,55 +101,6 @@ impl StateManager {
         }
         crate::sbc::states::cursor::reassert(&self.interface);
         self.state.as_state().draw_world(&self.interface);
-    }
-
-    /// Run `f` against a context, collect what it queued, and apply any state
-    /// transition it requested (a drag ending, R starting a rotate).
-    fn with_context<R>(
-        &mut self,
-        models: &mut Models,
-        f: impl FnOnce(&mut dyn EditorState, &mut StateContext) -> R,
-    ) -> R {
-        let (result, transition) = {
-            let mut ctx = StateContext::new(&self.interface, models);
-            let result = f(self.state.as_state(), &mut ctx);
-            let transition = ctx.take_transition();
-            self.pending_commands.extend(ctx.take_commands());
-            (result, transition)
-        };
-        if let Some(transition) = transition {
-            self.apply_transition(transition, models);
-        }
-        result
-    }
-
-    fn apply_transition(&mut self, transition: Transition, models: &mut Models) {
-        let mut next = match transition {
-            Transition::Default => ActiveState::Default(DefaultState::default()),
-            Transition::Drag {
-                kind,
-                model_id,
-                diff_x,
-                diff_z,
-            } => ActiveState::Drag(DragObjectState::new(kind, model_id, diff_x, diff_z)),
-            Transition::Rotate => ActiveState::Rotate(RotateObjectState::new()),
-            Transition::RectangleSelect { start_x, start_z } => {
-                ActiveState::RectangleSelect(RectangleSelectState::new(start_x, start_z))
-            }
-        };
-        self.enter(&mut next, models);
-        self.state = next;
-    }
-
-    fn enter(&mut self, state: &mut ActiveState, models: &mut Models) {
-        crate::sbc::states::cursor::set(&self.interface, state.as_state().cursor());
-        let mut ctx = StateContext::new(&self.interface, models);
-        state.as_state().enter(&mut ctx);
-        self.pending_commands.extend(ctx.take_commands());
-        // State changes are normal editor interaction, and this path can run
-        // repeatedly while a panel is active. Keep it available for deep
-        // diagnostics without flooding the developer console at debug level.
-        log::trace!("editor state: {}", state.as_state().name());
     }
 
     /// Swap states from a panel request, letting the old one close its stream.
@@ -226,6 +160,12 @@ impl StateManager {
         self.ensure_editor_view();
         self.with_context(models, |state, ctx| state.update(ctx));
         Ok(())
+    }
+
+    pub fn draw_screen(&mut self) {
+        if self.enabled {
+            self.state.as_state().draw_screen(&self.interface);
+        }
     }
 
     pub fn mouse_press(
@@ -302,5 +242,71 @@ impl StateManager {
             return Ok(true);
         }
         Ok(self.with_context(models, |state, ctx| state.key_press(ctx, key_code)))
+    }
+
+    /// The editor is a spectator; enable full view + full select so every
+    /// object is visible and clickable (a plain spectator sees only its team's
+    /// LOS, and `GuiTraceRay` then skips features the editor just placed). Lua's
+    /// editor relies on the same. Sent once, on the first live tick.
+    fn ensure_editor_view(&mut self) {
+        if self.editor_view_set {
+            return;
+        }
+        // `specfullview 3` = fullview + fullselect (the action's documented
+        // default), so the whole map is revealed and selectable.
+        let _ = self
+            .interface
+            .messages()
+            .send_commands("specfullview 3", "");
+        self.editor_view_set = true;
+    }
+
+    /// Run `f` against a context, collect what it queued, and apply any state
+    /// transition it requested (a drag ending, R starting a rotate).
+    fn with_context<R>(
+        &mut self,
+        models: &mut Models,
+        f: impl FnOnce(&mut dyn EditorState, &mut StateContext) -> R,
+    ) -> R {
+        let (result, transition) = {
+            let mut ctx = StateContext::new(&self.interface, models);
+            let result = f(self.state.as_state(), &mut ctx);
+            let transition = ctx.take_transition();
+            self.pending_commands.extend(ctx.take_commands());
+            (result, transition)
+        };
+        if let Some(transition) = transition {
+            self.apply_transition(transition, models);
+        }
+        result
+    }
+
+    fn apply_transition(&mut self, transition: Transition, models: &mut Models) {
+        let mut next = match transition {
+            Transition::Default => ActiveState::Default(DefaultState::default()),
+            Transition::Drag {
+                kind,
+                model_id,
+                diff_x,
+                diff_z,
+            } => ActiveState::Drag(DragObjectState::new(kind, model_id, diff_x, diff_z)),
+            Transition::Rotate => ActiveState::Rotate(RotateObjectState::new()),
+            Transition::RectangleSelect { start_x, start_y } => {
+                ActiveState::RectangleSelect(RectangleSelectState::new(start_x, start_y))
+            }
+        };
+        self.enter(&mut next, models);
+        self.state = next;
+    }
+
+    fn enter(&mut self, state: &mut ActiveState, models: &mut Models) {
+        crate::sbc::states::cursor::set(&self.interface, state.as_state().cursor());
+        let mut ctx = StateContext::new(&self.interface, models);
+        state.as_state().enter(&mut ctx);
+        self.pending_commands.extend(ctx.take_commands());
+        // State changes are normal editor interaction, and this path can run
+        // repeatedly while a panel is active. Keep it available for deep
+        // diagnostics without flooding the developer console at debug level.
+        log::trace!("editor state: {}", state.as_state().name());
     }
 }

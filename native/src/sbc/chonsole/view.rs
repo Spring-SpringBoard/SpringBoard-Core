@@ -183,11 +183,6 @@ impl ChonsoleView {
         self.suggestions.refresh(core, &self.input);
     }
 
-    pub(super) fn complete_first_suggestion(&mut self, core: &ChonsoleCore) {
-        self.suggestions.complete_first(core, &mut self.input);
-        self.reset_suggestion_scroll = true;
-    }
-
     pub(super) fn select_prev_suggestion(&mut self, core: &ChonsoleCore, steps: usize) -> bool {
         self.suggestions
             .select_previous(core, &mut self.input, steps)
@@ -238,11 +233,6 @@ impl ChonsoleView {
             self.suggestion_clicks.clone(),
             self.suggestion_hovers.clone(),
         )
-    }
-
-    fn reset_suggestions(&mut self) {
-        self.suggestions.reset();
-        self.reset_suggestion_scroll = true;
     }
 
     pub(super) fn process_key_up(
@@ -298,5 +288,10 @@ impl ChonsoleView {
         value: f32,
     ) -> Result<bool, Error> {
         self.rml.mouse_wheel(interface, self.visible, up, value)
+    }
+
+    fn reset_suggestions(&mut self) {
+        self.suggestions.reset();
+        self.reset_suggestion_scroll = true;
     }
 }

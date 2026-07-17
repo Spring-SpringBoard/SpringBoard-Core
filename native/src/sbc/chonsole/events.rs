@@ -148,7 +148,11 @@ impl ChonsoleEvents {
         }
         if is_key(interface, key_code, "tab") {
             self.reset_history_cursor();
-            view.complete_first_suggestion(core);
+            if mods.shift {
+                let _ = view.select_prev_suggestion(core, 1);
+            } else {
+                let _ = view.select_next_suggestion(core, 1);
+            }
             view.refresh(interface, core)?;
             return Ok(KeyOutcome::Handled);
         }
