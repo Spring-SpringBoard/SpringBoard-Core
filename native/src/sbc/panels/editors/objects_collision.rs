@@ -348,10 +348,16 @@ impl Editor for CollisionView {
             Layout::Group(&[
                 "isBlocking",
                 "isSolidObjectCollidable",
+            ]),
+            Layout::Group(&[
                 "isProjectileCollidable",
                 "isRaySegmentCollidable",
+            ]),
+            Layout::Group(&[
                 "crushable",
                 "blockEnemyPushing",
+            ]),
+            Layout::Group(&[
                 "blockHeightChanges",
             ]),
         ])
