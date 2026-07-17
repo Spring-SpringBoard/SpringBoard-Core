@@ -8,6 +8,12 @@ use super::view_rml::{ChonsoleRml, SuggestionClickQueue, SuggestionHoverQueue};
 use super::view_suggestions::SuggestionView;
 
 const MAX_UI_LINES: usize = 200;
+// Keep in sync with `.suggestions` and `.suggestion` in `ui.rcss`. RmlUi does
+// not expose an element's client height through the native bridge, so keyboard
+// navigation uses the same fixed geometry the stylesheet does.
+const SUGGESTION_TOP_PADDING: i32 = 4;
+const SUGGESTION_ROW_HEIGHT: i32 = 27;
+const SUGGESTION_VIEWPORT_HEIGHT: i32 = 380;
 
 #[derive(Default)]
 pub(super) struct ChonsoleView {
@@ -223,6 +229,11 @@ impl ChonsoleView {
         let scroll_top = (!self.reset_suggestion_scroll)
             .then(|| self.rml.suggestion_scroll_top(interface))
             .flatten();
+        let scroll_top = self
+            .suggestions
+            .selected_index()
+            .map(|selected| reveal_suggestion_scroll_top(scroll_top.unwrap_or_default(), selected))
+            .or(scroll_top);
         self.rml.refresh(interface, &body, scroll_top)?;
         self.reset_suggestion_scroll = false;
         self.hovered_suggestion = None;
@@ -293,5 +304,45 @@ impl ChonsoleView {
     fn reset_suggestions(&mut self) {
         self.suggestions.reset();
         self.reset_suggestion_scroll = true;
+    }
+}
+
+/// Return the least scroll offset that makes `selected` fully visible.
+///
+/// The selected row may have changed while the list's old DOM still holds the
+/// previous offset. `refresh` carries this target over to the replacement DOM,
+/// so repeated Tab, Up/Down, and Page Up/Down navigation never leaves the
+/// active completion outside the viewport.
+fn reveal_suggestion_scroll_top(current: i32, selected: usize) -> i32 {
+    let row_top = SUGGESTION_TOP_PADDING.saturating_add(
+        i32::try_from(selected)
+            .unwrap_or(i32::MAX)
+            .saturating_mul(SUGGESTION_ROW_HEIGHT),
+    );
+    let row_bottom = row_top.saturating_add(SUGGESTION_ROW_HEIGHT);
+    if row_top < current {
+        row_top
+    } else if row_bottom > current.saturating_add(SUGGESTION_VIEWPORT_HEIGHT) {
+        row_bottom.saturating_sub(SUGGESTION_VIEWPORT_HEIGHT)
+    } else {
+        current
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::reveal_suggestion_scroll_top;
+
+    #[test]
+    fn selection_scrolls_down_only_after_leaving_the_viewport() {
+        assert_eq!(reveal_suggestion_scroll_top(0, 12), 0);
+        assert_eq!(reveal_suggestion_scroll_top(0, 13), 2);
+        assert_eq!(reveal_suggestion_scroll_top(0, 14), 29);
+    }
+
+    #[test]
+    fn selection_scrolls_up_only_far_enough_to_reveal_the_row() {
+        assert_eq!(reveal_suggestion_scroll_top(191, 7), 191);
+        assert_eq!(reveal_suggestion_scroll_top(191, 6), 166);
     }
 }

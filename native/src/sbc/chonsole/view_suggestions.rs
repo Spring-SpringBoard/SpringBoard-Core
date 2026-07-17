@@ -93,6 +93,10 @@ impl SuggestionView {
         self.entries.len()
     }
 
+    pub(super) fn selected_index(&self) -> Option<usize> {
+        self.selected
+    }
+
     /// The full text for the fixed detail strip. Hover takes precedence over a
     /// keyboard selection, and leaving a row falls back to that selection.
     pub(super) fn detail(&self, hovered: Option<usize>) -> Option<(&str, &str)> {

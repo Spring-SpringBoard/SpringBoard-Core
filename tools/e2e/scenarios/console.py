@@ -181,6 +181,28 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
     run_state.type_text("/set ")
     run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start")
+    # Two page jumps select the twentieth command. That row is outside the
+    # 380dp viewport at the top, so keyboard navigation must scroll the list to
+    # reveal it rather than merely changing an invisible selected class.
+    run_state.key("Page_Down")
+    run_state.key("Page_Down")
+    keyboard_scrolled = run_state.screenshot("keyboard-selection-revealed")
+    suggestion_rows_at_top = (
+        suggestion_box[0],
+        suggestion_box[1] + CHONSOLE["header_height"],
+        suggestion_box[2],
+        suggestion_box[3] - CHONSOLE["header_height"],
+    )
+    run_state.assert_region_pixels(
+        unhovered, keyboard_scrolled, suggestion_rows_at_top, min_changed=500
+    )
+
+    # Reopen from the top for the independent mouse-wheel/scrollbar checks.
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.18)
+    run_state.type_text("/set ")
+    run_state.move(*chonsole_header_point(width, height))
+    unhovered = run_state.screenshot("scroll-start-reset")
     scrollbar_x, scrollbar_y = chonsole_scrollbar_point(width, height)
     run_state.move(scrollbar_x, scrollbar_y)
     scrollbar_hovered = run_state.screenshot("scrollbar-hovered")
