@@ -1,9 +1,11 @@
 //! Box-selecting objects by dragging over the map or sky, a port of
 //! `rectangle_select_state.lua`.
 //!
-//! Chili tests membership in *screen* space (project each object, compare to
-//! the screen rectangle). Keeping that behavior is important: a drag may begin
-//! over the sky, where a world-space ground corner does not exist.
+//! Chili tests membership in *screen* space. The engine exposes the same query
+//! for units and features, which also lets a fresh module instance discover
+//! objects that survived `/reloadnativemodules`; areas remain editor-only and
+//! are projected locally. A drag may begin over the sky, where a world-space
+//! ground corner does not exist.
 
 use spring_native::{prelude::NativeInterfaceRef, sys::Float3};
 
@@ -11,7 +13,6 @@ use crate::sbc::command_system::model::Models;
 use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager};
 use crate::sbc::states::state::{mod_state, EditorState, StateContext, Transition};
 
-const KINDS: [ObjectKind; 3] = [ObjectKind::Unit, ObjectKind::Feature, ObjectKind::Area];
 const GL_LINE_LOOP: u32 = 0x0002;
 const GL_MODELVIEW: u32 = 0x1700;
 const GL_PROJECTION: u32 = 0x1701;
@@ -65,26 +66,51 @@ impl RectangleSelectState {
             return Vec::new();
         };
         let (left, bottom, right, top) = self.camera_bounds(geometry.viewSizeY);
+        // These screen-rectangle APIs use bottom-origin coordinates, like the
+        // camera. Query engine objects directly instead of the editor model: a
+        // hot reload deliberately recreates that model while its units/features
+        // stay alive in the engine.
+        let unsynced = interface.unsynced_read();
+        let rendering = unsynced.unit_rendering();
+        let units = rendering
+            .get_units_in_screen_rectangle(left as f32, top as f32, right as f32, bottom as f32, -1)
+            .unwrap_or_default();
+        let features = rendering
+            .get_features_in_screen_rectangle(left as f32, top as f32, right as f32, bottom as f32)
+            .unwrap_or_default();
         let objects = models.get::<ObjectManager>();
-        let mut hits = Vec::new();
-        for kind in KINDS {
-            for id in objects.all_model_ids(kind) {
-                if let Some(pos) = objects.object_pos(kind, id) {
-                    let Ok((screen, valid)) = interface.camera().world_to_screen_coords(Float3 {
-                        x: pos.x,
-                        y: pos.y,
-                        z: pos.z,
-                    }) else {
-                        continue;
-                    };
-                    if valid
-                        && screen.x >= left as f32
-                        && screen.x <= right as f32
-                        && screen.y >= bottom as f32
-                        && screen.y <= top as f32
-                    {
-                        hits.push((kind, id));
-                    }
+        let mut hits = units
+            .into_iter()
+            .filter_map(|spring_id| {
+                objects
+                    .model_id_for_spring(ObjectKind::Unit, spring_id)
+                    .map(|model_id| (ObjectKind::Unit, model_id))
+            })
+            .collect::<Vec<_>>();
+        hits.extend(features.into_iter().filter_map(|spring_id| {
+            objects
+                .model_id_for_spring(ObjectKind::Feature, spring_id)
+                .map(|model_id| (ObjectKind::Feature, model_id))
+        }));
+
+        // Areas have no engine representation, so retain Chili's local
+        // projection path for them.
+        for id in objects.all_model_ids(ObjectKind::Area) {
+            if let Some(pos) = objects.object_pos(ObjectKind::Area, id) {
+                let Ok((screen, valid)) = interface.camera().world_to_screen_coords(Float3 {
+                    x: pos.x,
+                    y: pos.y,
+                    z: pos.z,
+                }) else {
+                    continue;
+                };
+                if valid
+                    && screen.x >= left as f32
+                    && screen.x <= right as f32
+                    && screen.y >= bottom as f32
+                    && screen.y <= top as f32
+                {
+                    hits.push((ObjectKind::Area, id));
                 }
             }
         }

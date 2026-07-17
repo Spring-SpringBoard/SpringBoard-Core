@@ -169,7 +169,7 @@ def props_panel(run_state: E2ERun) -> None:
     # Pos X. The whole vector is sent, not the one axis, and the object must
     # actually move on the map.
     before = run_state.golden("before-move")
-    run_state.click(*panel_point(left, OBJECTS["property_health"]), delay=0.4)
+    run_state.click(*panel_point(left, OBJECTS["property_pos_x"]), delay=0.4)
     run_state.key("ctrl+a", delay=0.15)
     run_state.type_text("1500")
     run_state.key("Return", delay=0.8)
@@ -189,13 +189,13 @@ def props_panel(run_state: E2ERun) -> None:
     # commits once on release. The drag pins the pointer and warps it back after
     # every move (as content-creation tools do), so the motion has to be
     # relative -- absolute moves would fight the warp.
-    run_state.press(*panel_point(left, OBJECTS["property_health"]))
+    run_state.press(*panel_point(left, OBJECTS["property_pos_x"]))
     run_state.move_relative(120)
     # Mid-drag: the pointer is pinned to where the drag began and drawn as the
     # empty cursor, so nothing follows the mouse across the panel. park=False --
     # moving the pointer now would fight the drag's own warp and end it.
     run_state.golden("props-pos-dragging", park=False)
-    run_state.release(*panel_point(left, OBJECTS["property_health"]))
+    run_state.release(*panel_point(left, OBJECTS["property_pos_x"]))
     # The pinned relative drag may land within one input packet of its nominal
     # value (for example 1580 vs. 1600); the command assertion below owns the
     # behavioural bound, while this frame still catches layout regressions.
@@ -210,7 +210,7 @@ def props_panel(run_state: E2ERun) -> None:
     # RmlUi's drag capture delivers `dragend` wherever the button comes up, and
     # nothing else can (the engine never hands the plugin a release for a press
     # the panel's RmlUi consumed).
-    run_state.press(*panel_point(left, OBJECTS["property_health"]))
+    run_state.press(*panel_point(left, OBJECTS["property_pos_x"]))
     run_state.move_relative(-400, 260)               # out over the map
     run_state.release(left - 300, 500)
     dragged = run_state.assert_any_command(
@@ -226,18 +226,8 @@ def props_panel(run_state: E2ERun) -> None:
     # the released visual state without requiring one exact numeric delta.
     run_state.golden("props-drag-released-outside", tolerance=220)
 
-    # A sub-object: Blocking's booleans are one table, so toggling one must send
-    # the table under `blocking`, not a bare boolean.
-    run_state.click(*panel_point(left, OBJECTS["collision_blocking"]), delay=0.6)
-    run_state.golden("props-blocking-toggled", tolerance=220)
-    run_state.assert_any_command(
-        "SetObjectParamCommand",
-        key="blocking",
-        value=lambda v: isinstance(v, dict),
-    )
-
-    # Collision has its own scenario (`collision`), where the volume it edits can
-    # actually be seen.
+    # Collision fields, including the blocking toggles, belong exclusively to
+    # the Collision scenario rather than being duplicated in Properties.
     #
     # Last, because it deselects: clicking empty ground with an object editor
     # open used to abort the engine -- the panel wrote through element handles
@@ -298,6 +288,15 @@ def collision(run_state: E2ERun) -> None:
     # The fields live in the panel, so crop to it: a full-frame shot would drag
     # the map's render noise into a comparison that is about a form.
     run_state.golden("collision-fields", crop="right-panel")
+
+    # Blocking is a Collision-owned composite. One toggle must submit the whole
+    # table, not a bare boolean; Properties deliberately has no duplicate copy.
+    run_state.click(*panel_point(left, OBJECTS["collision_blocking"]), delay=0.5)
+    run_state.assert_any_command(
+        "SetObjectParamCommand",
+        key="blocking",
+        value=lambda v: isinstance(v, dict),
+    )
 
 
 def _tip_box(cursor_x: int, cursor_y: int) -> tuple[int, int, int, int]:

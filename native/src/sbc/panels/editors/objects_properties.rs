@@ -135,6 +135,16 @@ fn sends_single_key(parent: &str) -> bool {
     matches!(parent, "states" | "rules")
 }
 
+/// These composites have a dedicated Collision editor. Chili deliberately hid
+/// them from Properties so the generic editor did not duplicate the collision
+/// volume controls and, especially, its blocking toggles.
+fn belongs_to_collision_editor(name: &str) -> bool {
+    matches!(
+        name,
+        "collision" | "blocking" | "radiusHeight" | "midAimPos"
+    )
+}
+
 impl PropertiesView {
     pub(crate) fn new() -> Self {
         PropertiesView {
@@ -151,9 +161,10 @@ impl PropertiesView {
 
     /// Build the fields for one object.
     ///
-    /// Sub-objects (`states`, `resources`, `collision`, ...) and the rules map
-    /// have no fixed shape, so their keys are discovered from the object's own
-    /// value, exactly as Lua walks the s11n table. Each becomes its own section.
+    /// Generic sub-objects (`states`, `resources`, ...) and the rules map have
+    /// no fixed shape, so their keys are discovered from the object's own
+    /// value, exactly as Lua walks the s11n table. Collision composites belong
+    /// exclusively to Collision and are skipped below.
     fn rebuild_fields(
         &mut self,
         kind: ObjectKind,
@@ -169,6 +180,9 @@ impl PropertiesView {
 
         for descriptor in descriptors {
             let name = descriptor.name;
+            if belongs_to_collision_editor(name) {
+                continue;
+            }
             match descriptor.value_type {
                 FieldValueType::Bool => {
                     fields.push(Box::new(BooleanField::new(name, &title(name), false)));
@@ -696,4 +710,17 @@ fn descriptor_order(name: &str) -> usize {
     .iter()
     .position(|candidate| *candidate == name)
     .unwrap_or(usize::MAX)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::belongs_to_collision_editor;
+
+    #[test]
+    fn collision_composites_do_not_belong_in_properties() {
+        for name in ["collision", "blocking", "radiusHeight", "midAimPos"] {
+            assert!(belongs_to_collision_editor(name));
+        }
+        assert!(!belongs_to_collision_editor("states"));
+    }
 }

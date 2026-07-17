@@ -101,10 +101,13 @@ def reload_native_modules(run_state: E2ERun) -> None:
     run_state.assert_running()
     run_state.key("Escape", delay=0.2)
 
-    # The feature was created by the module instance we just unloaded. Clicking
-    # it forces the replacement instance to recreate its springID -> modelID
-    # mapping; Properties then proves the selection is a live editable object.
-    run_state.click(spot_x, spot_y, delay=0.4)
+    # The feature was created by the module instance we just unloaded. Box
+    # selection must discover it from the engine, then make it editable through
+    # the replacement instance's new springID -> modelID mapping. Direct-click
+    # selection alone would not cover this: it has its own lazy adoption path.
+    run_state.press(spot_x - 220, 80)
+    run_state.move(spot_x + 120, spot_y + 60, delay=0.2)
+    run_state.release(spot_x + 200, spot_y + 160, delay=0.4)
     run_state.click(*editor_point(left, "objects", "properties"), delay=0.5)
     run_state.click(*panel_point(left, OBJECTS["property_pos_x"]), delay=0.2)
     run_state.key("ctrl+a", delay=0.1)
