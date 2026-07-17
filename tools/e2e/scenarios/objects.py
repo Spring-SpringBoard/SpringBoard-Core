@@ -369,11 +369,12 @@ def _spread(placed: list[dict]) -> float:
 
 @scenario(crop="right-panel")
 def brush_size(run_state: E2ERun) -> None:
-    """Shift+wheel resizes the object brush, and the panel's Size field follows.
+    """Feature brushing fills free space, and Shift+wheel resizes its reach.
 
-    Proved by painting: a dab with the enlarged brush must scatter its objects
-    over a visibly wider area than a dab with the original one. A command
-    reaching the bridge would not show that the brush itself grew.
+    A brush is a density tool, not an unconditional object count: a repeat dab
+    over an existing selected feature must add nothing. Then an enlarged brush
+    must still scatter several features over a wider area. This proves both the
+    occupancy check inherited from Chili and the shared Size field.
     """
     run_state.focus()
     left = _open(run_state, "features")
@@ -393,6 +394,14 @@ def brush_size(run_state: E2ERun) -> None:
     run_state.release(cx - 260, cy)
     small = _placed(run_state, mark)
 
+    # The small default brush has exactly one candidate at its centre. Repeating
+    # it must see the feature that is already there and leave it alone. This is
+    # the important distinction from a fixed-count stamp brush.
+    mark = len(run_state.commands())
+    run_state.press(cx - 260, cy, delay=0.02)
+    run_state.release(cx - 260, cy)
+    occupied = _placed(run_state, mark)
+
     # Shift+wheel over the map enlarges the brush. Through the root window: a
     # modifier does not survive `xdotool --window`.
     with run_state.modifier("shift"):
@@ -402,8 +411,9 @@ def brush_size(run_state: E2ERun) -> None:
     # layout itself is stable, while those pixels can vary by a couple dozen.
     run_state.golden("brush-size-enlarged", tolerance=30)
 
-    # A dab with the enlarged brush drops more objects, over more ground: the
-    # count is `size^2 / (spread * 100)`, so 100 -> 264 takes it from 1 to 7.
+    # A dab with the enlarged brush covers more ground. Occupancy filtering is
+    # deliberately allowed to reject candidates, so this is not a brittle fixed
+    # count assertion.
     mark = len(run_state.commands())
     run_state.press(cx + 200, cy, delay=0.02)
     run_state.release(cx + 200, cy)
@@ -411,11 +421,13 @@ def brush_size(run_state: E2ERun) -> None:
 
     if len(small) != 1:
         raise AssertionError(f"default brush placed {len(small)} objects, want 1")
-    if len(large) != 7:
-        raise AssertionError(f"enlarged brush placed {len(large)} objects, want 7")
+    if occupied:
+        raise AssertionError(f"brush added {len(occupied)} feature(s) to an occupied dab")
+    if len(large) < 2:
+        raise AssertionError(f"enlarged brush placed {len(large)} objects, want at least 2")
     if _spread(large) <= 150:
         raise AssertionError(f"brush did not grow: spread {_spread(large):.0f} world units")
-    # Everything on the map is accounted for by those two dabs.
+    # Everything on the map is accounted for by the two non-empty dabs.
     if len(_placed(run_state)) != len(small) + len(large):
         raise AssertionError(
             f"placed {len(_placed(run_state))} objects, want {len(small) + len(large)}"

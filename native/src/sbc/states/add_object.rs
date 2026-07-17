@@ -179,6 +179,14 @@ impl AddObjectState {
             return;
         }
         let count = brush_count(self.config.size, self.config.spread);
+        // This is Lua's `spreadSqrt - tolerance`. A brush is a density tool:
+        // it fills unoccupied candidates, rather than blindly adding `count`
+        // features on every dab over the same ground.
+        let spacing = feature_spacing(self.config.spread);
+        // State commands execute after this callback returns, so the engine has
+        // not seen earlier candidates in this dab yet. Keep the equivalent of
+        // Lua's temporary waitList locally to avoid overlapping those too.
+        let mut pending_features = Vec::new();
         // Wrap the scatter in one undo group.
         ctx.set_multiple_command_mode(true);
         for i in 0..count {
@@ -188,8 +196,17 @@ impl AddObjectState {
             let px = cx + ox + noise_radius * noise_angle.cos();
             let pz = cz + oz + noise_radius * noise_angle.sin();
             let rot = self.random_rot();
+            if self.kind == ObjectKind::Feature
+                && (feature_exists_near(ctx, self.def_id, px, pz, spacing)
+                    || pending_feature_conflict(&pending_features, px, pz, spacing))
+            {
+                continue;
+            }
             if let Some(hit) = ground(ctx, px, pz) {
                 self.place_one(ctx, hit.0, hit.1, hit.2, rot);
+                if self.kind == ObjectKind::Feature {
+                    pending_features.push((hit.0, hit.2));
+                }
             }
         }
         ctx.set_multiple_command_mode(false);
@@ -239,6 +256,42 @@ fn brush_count(size: f32, spread: f32) -> u32 {
     ((size.max(1.0) * size.max(1.0)) / density_area)
         .ceil()
         .max(1.0) as u32
+}
+
+/// Lua's `sqrt(spread * 100) - tolerance`, with an empty radius treated as no
+/// exclusion rather than accidentally querying a negative cylinder radius.
+fn feature_spacing(spread: f32) -> f32 {
+    ((spread.max(0.0) * 100.0).sqrt() - 5.0).max(0.0)
+}
+
+fn feature_exists_near(ctx: &StateContext, def_id: i32, x: f32, z: f32, distance: f32) -> bool {
+    if def_id <= 0 || distance <= 0.0 {
+        return false;
+    }
+    let features = ctx.interface.features();
+    features
+        .get_features_in_cylinder(x, z, distance, f32::MAX)
+        .ok()
+        .into_iter()
+        .flatten()
+        .any(|feature_id| {
+            features
+                .get_feature_def_id(feature_id)
+                .is_ok_and(|existing_def| existing_def == def_id)
+        })
+}
+
+/// Lua checks its not-yet-executed wait list at twice the engine query radius.
+/// It prevents candidates from the same scatter landing too close together even
+/// though the engine feature query cannot see queued commands yet.
+fn pending_feature_conflict(pending: &[(f32, f32)], x: f32, z: f32, distance: f32) -> bool {
+    let min_distance = distance * 2.0;
+    let min_distance_sq = min_distance * min_distance;
+    pending.iter().any(|(other_x, other_z)| {
+        let dx = other_x - x;
+        let dz = other_z - z;
+        dx * dx + dz * dz < min_distance_sq
+    })
 }
 
 fn sunflower_point(index: u32, count: u32, radius: f32) -> (f32, f32) {
@@ -430,5 +483,23 @@ impl EditorState for AddObjectState {
             return true;
         }
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{feature_spacing, pending_feature_conflict};
+
+    #[test]
+    fn feature_spacing_matches_luas_tolerance() {
+        assert!((feature_spacing(100.0) - 95.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn pending_features_keep_luas_double_spacing() {
+        let pending = [(0.0, 0.0)];
+        // Lua uses a strict `< 4 * distance^2` check.
+        assert!(pending_feature_conflict(&pending, 189.9, 0.0, 95.0));
+        assert!(!pending_feature_conflict(&pending, 190.0, 0.0, 95.0));
     }
 }

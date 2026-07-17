@@ -122,12 +122,12 @@ Ctrl-drag rotates the selection about its midpoint.
 
 ## brush-size-rust
 
-Shift+wheel resizes the object brush.
+Feature brushing fills unoccupied space, and Shift+wheel resizes its reach.
 
 | screen | what it pins down |
 | --- | --- |
 | `brush-size-default` | Brush mode, Size 100. |
-| `brush-size-enlarged` | Shift+wheel raised it to 264 — the panel's Size field follows the wheel. That it really is a bigger brush is asserted from the paint: one object at the default size, seven after. |
+| `brush-size-enlarged` | Shift+wheel raised it to 264 — the panel's Size field follows the wheel. The scenario asserts a repeat default-size dab adds nothing over its existing feature, then checks the enlarged brush still produces a wider multi-feature scatter. |
 
 ## gallery-rust / gallery-pickers-rust
 
