@@ -26,18 +26,23 @@ body {
     top: 0dp;
     width: 500dp;
     height: 100%;
-    background-color: #1f26219e;
+    /* Shared outer surface: keep native panels visually related even when
+       they are hosted in separate RmlUi contexts. */
+    background-color: #151b20d9;
     pointer-events: auto;
 }
 
 /* --- Tab bar --- */
 .tab-bar {
     position: absolute;
-    top: 10dp;
+    top: 6dp;
     left: 0dp;
     right: 0dp;
-    height: 40dp;
-    background-color: #1c211e;
+    height: 48dp;
+    padding: 4dp 5dp;
+    box-sizing: border-box;
+    background-color: #171b18;
+    border-bottom: 1dp #313a33;
     display: flex;
     flex-direction: row;
     gap: 2dp;
@@ -46,6 +51,7 @@ body {
 .tab-button {
     width: 70dp;
     height: 40dp;
+    box-sizing: border-box;
     flex-shrink: 0;
     background-color: #111411;
     color: #999999;
@@ -64,15 +70,15 @@ body {
 }
 
 .tab-button.active {
-    background-color: #050705;
+    background-color: #193b24;
     color: #ffffff;
-    border-color: #5d7190;
+    border-color: #63b779;
 }
 
 /* --- Action bar (toolbar) --- */
 .action-bar {
     position: absolute;
-    top: 130dp;
+    top: 145dp;
     left: 0dp;
     right: 0dp;
     height: 40dp;
@@ -137,14 +143,14 @@ body {
 }
 
 /* --- Editor button strip --- */
-/* Stops at 130dp, where the action bar begins. Overlapping it would put this
-   scroll container over the toolbar's top edge and swallow clicks there. */
+/* Its height includes padding, then Actions starts after a clear 10dp gap. */
 .editor-button-panel {
     position: absolute;
-    top: 55dp;
+    top: 60dp;
     left: 0dp;
     right: 0dp;
     height: 75dp;
+    box-sizing: border-box;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -173,8 +179,8 @@ body {
 }
 
 .editor-button.pressed {
-    background-color: #050705;
-    border-color: #00ff00;
+    background-color: #173a23;
+    border-color: #65bd7b;
 }
 
 .editor-button img {
@@ -190,13 +196,13 @@ body {
 }
 
 .editor-button.pressed .editor-button-label {
-    color: #00ff00;
+    color: #c4f2cf;
 }
 
 /* --- Editor content host --- */
 .main-content {
     position: absolute;
-    top: 175dp;
+    top: 195dp;
     left: 0dp;
     right: 0dp;
     bottom: 0dp;
@@ -225,6 +231,7 @@ body {
     margin-bottom: 8px;
     gap: 10px;
     min-height: 31px;
+    width: 100%;
 }
 
 .field-row.hidden {
@@ -280,6 +287,18 @@ body {
     border: 1px #2e342f;
     padding: 3px 6px;
     font-size: 12px;
+    box-sizing: border-box;
+}
+
+/* A normal row is a two-column form, not a 60%-wide collection of widgets.
+   Grouped rows are converted to `.field-inline` below, where both the display
+   button and edit input occupy the same X/Y/Z column. */
+.field-row > .field-input,
+.field-row > .field-composite-button,
+.field-row > .field-button,
+.field-row > .select-wrapper,
+.field-row > .field-toggle {
+    flex-grow: 1;
 }
 
 .field-input:focus {
@@ -287,24 +306,91 @@ body {
     background-color: #151a16;
 }
 
-.field-checkbox {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-    margin-right: 6px;
-    cursor: pointer;
-    background-color: #3a3a3a;
-    border: 1px #555555;
-    border-radius: 3px;
+.field-toggle {
+	width: 200dp;
+	min-height: 31px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 10px;
+	padding: 0px 11px;
+	cursor: pointer;
+	text-align: left;
+	background-color: #212528;
+	color: #cfd4db;
+    border: 2px #050706;
+    border-left-width: 6px;
+    border-left-color: #2e2f32;
+    border-radius: 5px;
+	font-size: 13px;
+    box-sizing: border-box;
 }
 
-.field-checkbox:hover {
-    border-color: #8a8a8a;
+.field-toggle:hover {
+    background-color: #2a2e32;
+    color: #e1e5eb;
+    border-color: #4a4d52;
+    border-left-color: #4a4d52;
 }
 
-.field-checkbox:checked {
-    background-color: #3a7ebf;
-    border-color: #2a5f8f;
+.field-toggle.pressed {
+    background-color: #18241b;
+    color: #79e68c;
+    border-left-color: #397848;
+}
+
+.field-toggle.pressed:hover {
+    background-color: #1f3425;
+    color: #9efca6;
+    border-left-color: #5fc878;
+}
+
+
+.field-toggle-label {
+	flex-grow: 1;
+	font-weight: bold;
+}
+
+.field-toggle-switch {
+	position: relative;
+	width: 34dp;
+	height: 18dp;
+	flex-shrink: 0;
+	background-color: #101315;
+	border: 1dp #78838d;
+	/* Match the button language without reverting to a blurry pill shape. */
+	border-radius: 4dp;
+	box-sizing: border-box;
+}
+
+.field-toggle-thumb {
+	position: absolute;
+	left: 1dp;
+	top: 1dp;
+	width: 14dp;
+	height: 14dp;
+	background-color: #9aa4ad;
+	border: 1dp #c1c9d0;
+	border-radius: 3dp;
+	box-sizing: border-box;
+}
+
+.field-toggle.pressed .field-toggle-switch {
+	background-color: #285b35;
+	border-color: #73d487;
+}
+
+.field-toggle.pressed .field-toggle-thumb {
+	left: 17dp;
+	background-color: #a5f6b2;
+}
+
+/* Chili's BooleanField is a balanced 200px toggle button. It is not a full
+   form row; only a group deliberately spreads controls across the row. */
+.field-row.field-boolean > .field-toggle {
+	flex: 0 0 200dp;
+	width: 200dp;
 }
 
 /* Asset/material picker buttons. Styled like the other field buttons rather
@@ -321,6 +407,7 @@ body {
     font-size: 12px;
     text-align: left;
     line-height: 27px;
+    box-sizing: border-box;
 }
 
 .field-button:hover {
@@ -333,14 +420,18 @@ body {
 }
 
 .field-color-button {
-    width: 140px;
+    /* A colour field is a proper form control, not a fixed-width swatch. This
+       lets a standalone picker use the form width and lets grouped pickers
+       share their column evenly with numeric fields and toggles. */
+    width: 100%;
     height: 31px;
-    flex-shrink: 0;
+    min-width: 0dp;
     color: #ffffff;
     border: 2px #050706;
     border-radius: 4px;
     padding: 0px 5px;
     font-size: 12px;
+    box-sizing: border-box;
 }
 
 .field-color-button:hover {
@@ -399,6 +490,7 @@ body {
     border-radius: 4px;
     padding: 0px 8px;
     min-height: 31px;
+    box-sizing: border-box;
 }
 
 .field-composite-button:hover {
@@ -437,11 +529,16 @@ body {
     text-align: right;
 }
 
+/* The colour is conveyed by a consistently sized swatch, so compact grouped
+   pickers still read as colour controls rather than ordinary text buttons. */
 .field-swatch {
-    width: 18px;
+    display: block;
+    width: 20px;
     height: 18px;
+    flex: 0 0 20px;
     border: 2px #050706;
-    flex-shrink: 0;
+    border-radius: 3px;
+    box-sizing: border-box;
 }
 
 .field-section {
@@ -480,6 +577,16 @@ body {
 
 .grid-container.hidden {
     display: none;
+}
+
+/* Brush pattern pickers are followed immediately by brush parameters. Give
+   that transition a consistent visual break without adding empty space to
+   file/material grids elsewhere in the editor. */
+#terrain-pattern-grid-picker,
+#texture-pattern-grid-picker,
+#metal-pattern-grid-picker,
+#grass-pattern-grid-picker {
+    margin-bottom: 12dp;
 }
 
 /* Grid Item. Width/height come from the renderer (itemWidth/itemHeight) as
@@ -552,7 +659,8 @@ body {
 .field-group {
     display: flex;
     flex-direction: row;
-    /* Wrap instead of clipping: grouped fields can be wider than the panel. */
+    /* Three compact X/Y/Z fields fit on one line; unusually wide entries may
+       still wrap rather than clipping. */
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 8px;
@@ -564,20 +672,98 @@ body {
     margin-bottom: 0px;
 }
 
+.field-group .field-inline.field-boolean {
+    /* In a group, a toggle is a peer of the other controls: a numeric/toggle
+       or colour/toggle pair therefore has two equal, aligned columns. */
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    width: 100%;
+}
+
+.field-group .field-inline.field-boolean-long {
+    flex-basis: 100%;
+}
+
+/* Property/collision vector groups use the available panel width evenly;
+   three X/Y/Z controls no longer huddle in the first 60% of the row. */
+.field-group .field-inline {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+}
+
+.field-group .field-inline .field-input,
+.field-group .field-inline .field-composite-button,
+.field-group .field-inline .select-wrapper,
+.field-group .field-inline.field-boolean > .field-toggle {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    width: 100%;
+}
+
+.field-row > .color-field,
+.field-group .field-inline > .color-field {
+    flex: 1 1 0dp;
+    min-width: 0dp;
+    width: 100%;
+}
+
 /* --- Select popup (RmlUi has no `selectoption` element: options are `option`
    inside `selectbox`, and the selected one carries :checked) --- */
 .select-wrapper {
-    position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
+    min-height: 31px;
+    box-sizing: border-box;
+}
+
+/* Standalone selects are concise controls. Grouped selects override this below
+   and share the row equally with their peers. */
+.field-row > .select-wrapper {
+    flex: 0 1 260dp;
+    min-width: 0dp;
+}
+
+.select-wrapper.field-choice {
+    gap: 7px;
+    padding: 0px 8px 0px 10px;
+    background-color: #111411;
+    border: 2px #050706;
+    border-radius: 4px;
+}
+
+.select-wrapper.field-choice:hover {
+    background-color: #1d241f;
+    border-color: #4f5c52;
+}
+
+.select-label {
+    flex-shrink: 0;
+    color: #eeeeee;
+    font-size: 12px;
+}
+
+.select-wrapper > select {
+    flex: 1 1 0dp;
+    width: auto;
+    min-width: 0dp;
+}
+
+.select-wrapper > .field-select {
+    height: 27px;
+    background-color: transparent;
+    border-width: 0px;
+    padding: 0px;
 }
 
 .select-arrow {
-    position: absolute;
-    right: 6px;
-    color: #888888;
-    font-size: 8px;
+    width: 0px;
+    height: 0px;
+    flex: 0 0 0px;
+    border-left: 5px transparent;
+    border-right: 5px transparent;
+    border-top: 6px #d4d8df;
+    pointer-events: none;
 }
 
 selectvalue {
@@ -585,6 +771,9 @@ selectvalue {
     color: #ffffff;
     overflow: hidden;
     white-space: nowrap;
+    line-height: 27px;
+    padding: 0px 3px;
+    text-align: right;
 }
 
 selectbox {
@@ -681,8 +870,8 @@ scrollbarvertical sliderbar:hover {
 }
 
 .brush-action.pressed {
-    background-color: #050705;
-    border-color: #00ff00;
+    background-color: #173a23;
+    border-color: #65bd7b;
 }
 
 /* An action the map cannot support (DNTS on a map with no splat normals). */
@@ -710,7 +899,7 @@ scrollbarvertical sliderbar:hover {
 }
 
 .brush-action.pressed .brush-action-label {
-    color: #00ff00;
+    color: #c4f2cf;
 }
 
 /* --- Colour picker modal (port of scen_edit/view/rcss/dialog.rcss) --- */
@@ -790,6 +979,9 @@ scrollbarvertical sliderbar:hover {
 .team-name { flex-grow: 1; color: #eeeeee; font-size: 12px; }
 .team-edit, .team-remove {
     height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: #2a2a2a;
     color: #ffffff;
     border: 1px #555555;
@@ -797,7 +989,9 @@ scrollbarvertical sliderbar:hover {
     padding: 0px 10px;
 }
 .team-edit:hover { background-color: #3a7ebf; border-color: #5a9edf; }
+.team-edit span { display: block; line-height: 26px; }
 .team-remove { width: 26px; padding: 0px; }
+.team-remove img { width: 14px; height: 14px; }
 .team-remove:hover { background-color: #993333; border-color: #cc5555; }
 
 /* --- File / New-project dialog rows --- */

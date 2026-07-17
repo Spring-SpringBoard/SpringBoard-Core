@@ -168,6 +168,12 @@ local function Show(title, rows, key, mx, my)
 end
 
 function widget:Initialize()
+	-- The native UI owns its own cursor tip. `useRml` is false for Rust today,
+	-- but keep this explicit so a stale compatibility flag cannot load both.
+	if Spring.GetGameRulesParam("sb_ui") ~= "rmlui" then
+		widgetHandler:RemoveWidget(widget)
+		return
+	end
 	if Spring.GetGameRulesParam("useRml") ~= "true" then
 		widgetHandler:RemoveWidget(widget)
 		return

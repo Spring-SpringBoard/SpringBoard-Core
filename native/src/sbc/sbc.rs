@@ -61,6 +61,7 @@ impl NativeModule for SBC {
             .with::<PanelManager, _>(|panel, models| panel.update(models))?;
         self.models
             .with::<DevConsoleManager, _>(|console, models| console.update(models))?;
+        self.drain_console_commands();
         // The brush the panel edits and the brush the active state paints with
         // are the same; reconcile them before the state paints this tick.
         self.models
@@ -260,6 +261,12 @@ impl SBC {
         }
     }
 
+    fn drain_console_commands(&mut self) {
+        for command in self.model::<DevConsoleManager>().drain_commands() {
+            self.submit_command(command);
+        }
+    }
+
     /// The domain model of type `T`. Used by the in-engine tests to read model
     /// state directly.
     pub fn model<T: Model>(&mut self) -> &mut T {
@@ -299,8 +306,15 @@ impl SBC {
     }
 
     fn run_command(&mut self, data: serde_json::Value) {
+        let display = data
+            .get("className")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("Command")
+            .to_string();
         match parse_json_command(data) {
             Ok(Some((cmd, command_id))) => {
+                self.model::<DevConsoleManager>()
+                    .record_command(command_id, display);
                 let (history_events, io_jobs) = {
                     let mut ctx = Context::new(&self.interface, command_id, &mut self.models);
                     let events = self.command_manager.execute(cmd, command_id, &mut ctx);
@@ -314,6 +328,7 @@ impl SBC {
                     self.models.get::<ObjectManager>().drain_events(),
                 );
                 self.models.on_history_events(&history_events);
+                self.sync_devconsole_command_history();
             }
             Ok(None) => {}
             Err(err) => error!("{err}"),
@@ -327,7 +342,11 @@ impl SBC {
     /// producer building JSON for it.
     pub(crate) fn submit_command(&mut self, command: Box<dyn Command>) {
         let id = self.command_manager.allocate_command_id();
+        let display = crate::sbc::command_system::registry::class_name_of(&*command)
+            .unwrap_or("NativeCommand")
+            .to_string();
         log_native_command(&*command, id);
+        self.model::<DevConsoleManager>().record_command(id, display);
         let (history_events, io_jobs) = {
             let mut ctx = Context::new(&self.interface, id, &mut self.models);
             let events = self.command_manager.execute(command, id, &mut ctx);
@@ -341,6 +360,13 @@ impl SBC {
             self.models.get::<ObjectManager>().drain_events(),
         );
         self.models.on_history_events(&history_events);
+        self.sync_devconsole_command_history();
+    }
+
+    fn sync_devconsole_command_history(&mut self) {
+        let (undo_ids, redo_ids) = self.command_manager.history_command_ids();
+        self.model::<DevConsoleManager>()
+            .sync_command_history(&undo_ids, &redo_ids);
     }
 }
 

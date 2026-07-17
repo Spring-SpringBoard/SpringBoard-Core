@@ -156,37 +156,58 @@ fn section_rml(caption: &str) -> String {
 /// container and so would take a whole line. Lua rewrites those to
 /// `field-inline` when grouping; do the same.
 fn group_rml(fields: &[String]) -> String {
-    let inner: String = fields
-        .iter()
-        .map(|f| {
-            f.replacen(
-                r#"<div class="field-row">"#,
-                r#"<div class="field-inline">"#,
-                1,
-            )
-        })
-        .collect();
+    let inner: String = fields.iter().map(|f| grouped_field_rml(f, None)).collect();
     format!(r#"<div class="field-group">{inner}</div>"#)
 }
 
+fn grouped_field_rml(field: &str, id: Option<&str>) -> String {
+    let target = match id {
+        Some(id) => format!(r#"<div class="field-inline" id="row-{id}">"#),
+        None => r#"<div class="field-inline">"#.to_string(),
+    };
+    field
+        .replacen(
+            r#"<div class="field-row field-boolean field-boolean-long">"#,
+            &target.replacen(
+                "field-inline",
+                "field-inline field-boolean field-boolean-long",
+                1,
+            ),
+            1,
+        )
+        .replacen(
+            r#"<div class="field-row field-boolean">"#,
+            &target.replacen("field-inline", "field-inline field-boolean", 1),
+            1,
+        )
+        .replacen(r#"<div class="field-row">"#, &target, 1)
+}
+
 fn identified_field_rml(field: String, name: &str) -> String {
-    field.replacen(
-        r#"<div class="field-row">"#,
-        &format!(r#"<div class="field-row" id="row-{name}">"#),
-        1,
-    )
+    field
+        .replacen(
+            r#"<div class="field-row field-boolean field-boolean-long">"#,
+            &format!(
+                r#"<div class="field-inline field-boolean field-boolean-long" id="row-{name}">"#
+            ),
+            1,
+        )
+        .replacen(
+            r#"<div class="field-row field-boolean">"#,
+            &format!(r#"<div class="field-row field-boolean" id="row-{name}">"#),
+            1,
+        )
+        .replacen(
+            r#"<div class="field-row">"#,
+            &format!(r#"<div class="field-row" id="row-{name}">"#),
+            1,
+        )
 }
 
 fn identified_group_rml(fields: &[(&str, String)]) -> String {
     let inner: String = fields
         .iter()
-        .map(|(name, field)| {
-            field.replacen(
-                r#"<div class="field-row">"#,
-                &format!(r#"<div class="field-inline" id="row-{name}">"#),
-                1,
-            )
-        })
+        .map(|(name, field)| grouped_field_rml(field, Some(name)))
         .collect();
     format!(r#"<div class="field-group">{inner}</div>"#)
 }

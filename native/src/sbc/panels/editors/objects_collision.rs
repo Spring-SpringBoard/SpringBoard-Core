@@ -70,24 +70,42 @@ impl CollisionView {
                     NumericField::new("scaleX", "X", 1.0)
                         .decimals(0)
                         .step(1.0)
-                        .min(0.0),
+                        .min(0.0)
+                        .compact(),
                 ),
                 Box::new(
                     NumericField::new("scaleY", "Y", 1.0)
                         .decimals(0)
                         .step(1.0)
-                        .min(0.0),
+                        .min(0.0)
+                        .compact(),
                 ),
                 Box::new(
                     NumericField::new("scaleZ", "Z", 1.0)
                         .decimals(0)
                         .step(1.0)
-                        .min(0.0),
+                        .min(0.0)
+                        .compact(),
                 ),
                 // Offset
-                Box::new(NumericField::new("offsetX", "X", 0.0).decimals(0).step(1.0)),
-                Box::new(NumericField::new("offsetY", "Y", 0.0).decimals(0).step(1.0)),
-                Box::new(NumericField::new("offsetZ", "Z", 0.0).decimals(0).step(1.0)),
+                Box::new(
+                    NumericField::new("offsetX", "X", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
+                Box::new(
+                    NumericField::new("offsetY", "Y", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
+                Box::new(
+                    NumericField::new("offsetZ", "Z", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
                 // Radius / Height
                 Box::new(
                     NumericField::new("radius", "Radius", 0.0)
@@ -103,13 +121,43 @@ impl CollisionView {
                         .max(256.0),
                 ),
                 // Center (mid pos)
-                Box::new(NumericField::new("mpx", "X", 0.0).decimals(0).step(1.0)),
-                Box::new(NumericField::new("mpy", "Y", 0.0).decimals(0).step(1.0)),
-                Box::new(NumericField::new("mpz", "Z", 0.0).decimals(0).step(1.0)),
+                Box::new(
+                    NumericField::new("mpx", "X", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
+                Box::new(
+                    NumericField::new("mpy", "Y", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
+                Box::new(
+                    NumericField::new("mpz", "Z", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
                 // Aim pos
-                Box::new(NumericField::new("apx", "X", 0.0).decimals(0).step(1.0)),
-                Box::new(NumericField::new("apy", "Y", 0.0).decimals(0).step(1.0)),
-                Box::new(NumericField::new("apz", "Z", 0.0).decimals(0).step(1.0)),
+                Box::new(
+                    NumericField::new("apx", "X", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
+                Box::new(
+                    NumericField::new("apy", "Y", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
+                Box::new(
+                    NumericField::new("apz", "Z", 0.0)
+                        .decimals(0)
+                        .step(1.0)
+                        .compact(),
+                ),
                 // Blocking
                 Box::new(BooleanField::new("isBlocking", "Blocking", true)),
                 Box::new(BooleanField::new(
@@ -295,13 +343,17 @@ impl Editor for CollisionView {
             Layout::Section("Aim"),
             Layout::IdentifiedGroup(&["apx", "apy", "apz"]),
             Layout::Section("Blocking"),
-            Layout::Field("isBlocking"),
-            Layout::Field("isSolidObjectCollidable"),
-            Layout::Field("isProjectileCollidable"),
-            Layout::Field("isRaySegmentCollidable"),
-            Layout::Field("crushable"),
-            Layout::Field("blockEnemyPushing"),
-            Layout::Field("blockHeightChanges"),
+            // These are one cohesive set of flags. The group keeps the panel
+            // compact without squeezing a toggle caption into a third column.
+            Layout::Group(&[
+                "isBlocking",
+                "isSolidObjectCollidable",
+                "isProjectileCollidable",
+                "isRaySegmentCollidable",
+                "crushable",
+                "blockEnemyPushing",
+                "blockHeightChanges",
+            ]),
         ])
     }
 

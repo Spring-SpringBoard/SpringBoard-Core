@@ -109,7 +109,10 @@ impl PanelView {
         rml.document_append_to_style_sheet(doc, UI_STYLE)?;
         rml.element_set_inner_rml(doc, UI_BODY)?;
         rml.document_show(doc, None, None)?;
-        let _ = rml.context_enable_mouse_cursor(ctx, true);
+        // RmlUi must receive mouse events, but it must not replace the editor
+        // cursor while hovering a button (its `pointer` alias used to select
+        // Spring's animated Move command cursor).
+        let _ = rml.context_enable_mouse_cursor(ctx, false);
         let _ = rml.context_pull_document_to_front(ctx, doc);
 
         self.context = Some(ctx);

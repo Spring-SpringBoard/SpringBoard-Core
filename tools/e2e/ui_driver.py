@@ -37,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Rewrite golden images from this run. Look at the diff before committing.",
     )
     parser.add_argument(
+        "--stage-golden",
+        action="store_true",
+        help="Capture golden candidates without comparing or writing references.",
+    )
+    parser.add_argument(
         "--keep-open",
         action="store_true",
         help="Leave the editor running after the scripted scenario.",
@@ -59,6 +64,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Parallel workers for converting raw screenshots to PNG review images.",
     )
     args = parser.parse_args(argv)
+    if args.update_golden and args.stage_golden:
+        parser.error("--update-golden and --stage-golden are mutually exclusive")
 
     if args.tag or args.target == "all":
         cases = select_cases([args.target], args.tag)
@@ -76,6 +83,7 @@ def main(argv: list[str] | None = None) -> int:
             review_images=not args.no_review_images,
             image_workers=max(1, args.image_workers),
             update_golden=args.update_golden,
+            stage_goldens=args.stage_golden,
         )
         print(f"run.md: {run.run_md}", flush=True)
         try:

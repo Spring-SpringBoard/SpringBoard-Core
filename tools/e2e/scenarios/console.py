@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     },
 )
 def chonsole_editing(run_state: E2ERun) -> None:
+    """Lua/Rust editing parity: opening, completions, word editing, and /help."""
     run_state.focus()
     run_state.key("Escape", delay=0.08)
     run_state.key("Return", delay=0.18)
@@ -47,13 +48,36 @@ def chonsole_editing(run_state: E2ERun) -> None:
 
 
 NATIVE_CHONSOLE_CASE = {
-    "chonsole-native-smoke": {"chonsole": "rust", "ui": "chili"},
+    # Run native Chonsole with the Rust UI too: it prevents the legacy Lua
+    # cursor tooltip from affecting interaction assertions.
+    "chonsole-native-smoke": {"chonsole": "rust", "ui": "rust"},
 }
+
+NATIVE_RELOAD_CASE = {
+    "e2e-reloadnativemodules-rust": {"chonsole": "rust", "ui": "rust"},
+}
+
+
+@scenario(target="e2e-reloadnativemodules", cases=NATIVE_RELOAD_CASE)
+def reload_native_modules(run_state: E2ERun) -> None:
+    """Native reload: /reloadnativemodules returns safely and the replacement module accepts input."""
+    run_state.focus()
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.18)
+    run_state.type_text("/reloadnativemodules")
+    # Reload is deliberately deferred by the engine until all event callbacks
+    # have returned. The delay covers that next update; assert_running catches
+    # ASAN aborts from unloading a module on its own Chonsole callback stack.
+    run_state.key("Return", delay=0.7)
+    run_state.assert_running()
+    run_state.key("Return", delay=0.18)
+    run_state.type_text("/h")
+    run_state.assert_running()
 
 
 @scenario(target="chonsole-native-input", cases=NATIVE_CHONSOLE_CASE)
 def chonsole_native_input(run_state: E2ERun) -> None:
-    """The deterministic keyboard cases formerly in tools/dev/chonsole_smoke.py."""
+    """Native input editing: Ctrl+word navigation, selection replacement, and Ctrl+A."""
     run_state.focus()
     run_state.key("Escape")
     run_state.key("Return", delay=0.18)
@@ -72,9 +96,101 @@ def chonsole_native_input(run_state: E2ERun) -> None:
     run_state.screenshot("select-all")
 
 
+@scenario(target="chonsole-native-suggestions", cases=NATIVE_CHONSOLE_CASE)
+def chonsole_native_suggestions(run_state: E2ERun) -> None:
+    """Native suggestions keep their list while navigating, hovering, and selecting by click."""
+    run_state.focus()
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.18)
+    run_state.type_text("/h")
+    matches = run_state.screenshot("matches")
+    width, height = window_size(run_state)
+    suggestion_box = (
+        int(width * 0.26),
+        int(height * 0.245),
+        int(width * 0.41),
+        int(height * 0.4),
+    )
+
+    run_state.key("Down")
+    first = run_state.screenshot("first-selected")
+    run_state.assert_region_pixels(matches, first, suggestion_box, min_changed=100)
+
+    run_state.key("Down")
+    second = run_state.screenshot("second-selected")
+    run_state.assert_region_pixels(first, second, suggestion_box, min_changed=100)
+
+    row_x = int(width * 0.26) + 40
+    third_row_y = int(height * 0.245) + 38 + 4 + 12 + 2 * 27
+    run_state.move(row_x, third_row_y, delay=0.25)
+    hovered = run_state.screenshot("third-row-hovered")
+    run_state.assert_region_pixels(second, hovered, suggestion_box, min_changed=100)
+
+    run_state.click(row_x, third_row_y)
+    clicked = run_state.screenshot("third-row-clicked")
+    run_state.assert_region_pixels(hovered, clicked, suggestion_box, min_changed=100)
+
+    # `/set` exposes the engine configuration catalogue, which is long enough
+    # to exercise a real scrollbar in the deterministic test map.
+    # Escape clears Chonsole's input; reopening avoids relying on selection
+    # ownership just after the click assertion above.
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.18)
+    run_state.type_text("/set ")
+    run_state.move(row_x, int(height * 0.245) + 18)
+    unhovered = run_state.screenshot("scroll-start")
+    scrollbar_x = int(width * (0.26 + 0.41)) - 5
+    scrollbar_y = int(height * 0.245) + 38 + 80
+    run_state.move(scrollbar_x, scrollbar_y)
+    scrollbar_hovered = run_state.screenshot("scrollbar-hovered")
+    scrollbar = (scrollbar_x - 6, int(height * 0.245) + 38, 12, 380)
+    run_state.assert_region_pixels(unhovered, scrollbar_hovered, scrollbar, min_changed=40)
+    # Hover must colour the scrollbar without changing the suggestions' layout.
+    suggestion_content = (*suggestion_box[:2], suggestion_box[2] - 24, suggestion_box[3])
+    suggestion_rows = (
+        suggestion_content[0],
+        suggestion_content[1] + 38,
+        suggestion_content[2],
+        suggestion_content[3] - 38,
+    )
+    # Captures include the engine cursor; its edge can spill a few pixels into
+    # the first row, but a layout reflow would alter thousands of text pixels.
+    run_state.assert_region_pixels(unhovered, scrollbar_hovered, suggestion_rows, max_changed=50)
+
+    # Leaving and re-entering the list must not reset either wheel or thumb
+    # scrolling. This used to happen because hover rebuilt the suggestion DOM.
+    run_state.move(row_x, third_row_y, delay=0.25)
+    scroll_start = run_state.screenshot("wheel-scroll-start")
+    run_state.wheel(row_x, third_row_y, clicks=6, up=False)
+    scroll_down = run_state.screenshot("wheel-scroll-down")
+    run_state.assert_region_pixels(scroll_start, scroll_down, suggestion_box, min_changed=100)
+    run_state.move(int(width * 0.70), third_row_y)
+    run_state.move(row_x, third_row_y)
+    scroll_reentered = run_state.screenshot("wheel-scroll-reentered")
+    run_state.assert_region_pixels(scroll_down, scroll_reentered, suggestion_box, max_changed=0)
+
+    # Restart at the top, drag the thumb, then prove that re-entering still
+    # leaves the dragged position alone.
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.18)
+    run_state.type_text("/set ")
+    drag_start = run_state.screenshot("drag-scroll-start")
+    # The track begins at `scrollbar_x`; its thumb is inset by the track's
+    # margin, so drag its centre rather than the track beside it.
+    thumb_x = scrollbar_x + 7
+    run_state.drag(thumb_x, int(height * 0.245) + 38 + 12, thumb_x,
+                   int(height * 0.245) + 38 + 300)
+    drag_down = run_state.screenshot("drag-scroll-down")
+    run_state.assert_region_pixels(drag_start, drag_down, suggestion_box, min_changed=100)
+    run_state.move(int(width * 0.70), third_row_y)
+    run_state.move(scrollbar_x, scrollbar_y)
+    drag_reentered = run_state.screenshot("drag-scroll-reentered")
+    run_state.assert_region_pixels(drag_down, drag_reentered, suggestion_content, max_changed=0)
+
+
 @scenario(target="chonsole-native-commands", cases=NATIVE_CHONSOLE_CASE)
 def chonsole_native_commands(run_state: E2ERun) -> None:
-    """Native command discovery, argument completion, texture preview, and rules reads."""
+    """Native command completion: engine commands, texture preview, and game-rule values."""
     run_state.focus()
     run_state.key("Escape")
     run_state.key("Return", delay=0.18)
@@ -98,6 +214,7 @@ def chonsole_native_commands(run_state: E2ERun) -> None:
 
 @scenario(uis=("chili", "rmlui"))
 def dev_console(run_state: E2ERun) -> None:
+    """Lua developer consoles: line selection, Ctrl+C/Ctrl+A ownership, and F8 hiding."""
     run_state.focus()
     # The console is visible by default; capture it.
     run_state.screenshot("dev-console-open")
@@ -121,12 +238,12 @@ def native_dev_console(run_state: E2ERun) -> None:
     """The native (Rust) developer console.
 
     Log content varies run to run, so every golden is taken after `Clear`: an
-    empty log is the deterministic state. The toolbar and the F8 toggle are
-    what these goldens actually pin down.
+    empty log is the deterministic state. The toolbar, F8 visibility, and the
+    scen_edit status/command strip below it are what these goldens pin down.
     """
     run_state.focus()
-    _width, height = window_size(run_state)
-    # The console is 300dp tall and floats 80dp off the bottom; its toolbar row
+    width, height = window_size(run_state)
+    # The console is 300dp tall and floats 92dp off the bottom; its toolbar row
     # centres 108px above the window's bottom edge.
     toolbar_y = height - 108
 
@@ -134,10 +251,26 @@ def native_dev_console(run_state: E2ERun) -> None:
     run_state.click(30, toolbar_y, delay=0.5)          # Clear
     run_state.golden("console-cleared")
 
-    run_state.click(100, toolbar_y, delay=0.5)         # Problems
+    # The status strip is not part of the console, but it is positioned directly
+    # below it. Its undo/redo/clear controls must enter the same native command
+    # path as their editor hotkeys, even when history is empty.
+    # RmlUi applies the 34dp icon width to the button's content box; 5dp padding
+    # and 1dp borders make its actual hit target 46dp, followed by a 10dp gap.
+    # Derive the centres from that real geometry at every E2E resolution.
+    status_toolbar_left = round((width - 500) * 0.55) + 10
+    status_button_x = [status_toolbar_left + 23 + 56 * index for index in range(3)]
+    run_state.click(status_button_x[0], height - 40, delay=0.4)
+    run_state.assert_any_command("UndoCommand")
+    run_state.click(status_button_x[1], height - 40, delay=0.4)
+    run_state.assert_any_command("RedoCommand")
+    run_state.click(status_button_x[2], height - 40, delay=0.4)
+    run_state.assert_any_command("ClearUndoRedoCommand")
+    run_state.golden("status-bar")
+
+    run_state.click(300, toolbar_y, delay=0.5)         # Problems
     run_state.golden("console-problems-on")
 
-    run_state.click(100, toolbar_y, delay=0.5)         # Problems (off again)
+    run_state.click(300, toolbar_y, delay=0.5)         # Problems (off again)
     run_state.golden("console-problems-off")
 
     # F8 hides the console, and brings it back.

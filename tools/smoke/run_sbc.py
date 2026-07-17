@@ -62,11 +62,23 @@ def launch_manual(config: Path | None = None) -> int:
     body of the old tools/dev/launch.sh; that script now just calls it.
     """
     write_dir, env, cmd = prepare(prefix="sbc-manual-", port_flags_config=config)
+    # Manual sessions intentionally use a fresh isolated engine write-dir, but
+    # command history is user state rather than run output. Keep it outside the
+    # temporary directory so restarting `just run` restores it. Honour an
+    # explicit path for people who want a separate history while testing.
+    history_path = Path(env.setdefault("SBC_CHONSOLE_HISTORY", str(_manual_history_path())))
     print(f"write dir: {write_dir}")
     print(f"infolog:   {write_dir / 'infolog.txt'}")
+    print(f"history:   {history_path}")
     if config is not None:
         print(f"config:    {config}")
     return subprocess.run(cmd, env=env, check=False).returncode
+
+
+def _manual_history_path() -> Path:
+    """Return the durable XDG state path for interactive Chonsole history."""
+    state_home = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
+    return state_home / "springboard" / "chonsole-history"
 
 
 def boot(

@@ -71,9 +71,9 @@ impl ChonsoleManager {
                 history: self.core.history().to_vec(),
             };
         }
-        let before_history_len = self.core.history().len();
+        let previous_history = self.core.history().to_vec();
         let (response, effects) = self.core.execute(input);
-        self.persist_history_change(before_history_len);
+        self.persist_history_change(&previous_history);
         for effect in effects {
             self.executor.apply(&self.interface, effect);
         }
@@ -92,6 +92,10 @@ impl ChonsoleManager {
 
     pub fn history(&self) -> &[String] {
         self.core.history()
+    }
+
+    pub fn visible(&self) -> bool {
+        self.enabled && self.view.visible()
     }
 
     pub fn clear(&mut self) {
@@ -113,6 +117,10 @@ impl ChonsoleManager {
         }
         self.catalogs.refresh(&self.interface, &mut self.core);
         self.view.ensure(&self.interface)?;
+        if self.view.process_suggestion_clicks(&self.core) {
+            self.view.refresh(&self.interface, &self.core)?;
+        }
+        self.view.process_suggestion_hovers(&self.interface);
         self.view.update(&self.interface)
     }
 
@@ -203,17 +211,17 @@ impl ChonsoleManager {
         self.view.mouse_wheel(&self.interface, up, value)
     }
 
-    fn persist_history_change(&self, before_history_len: usize) {
+    fn persist_history_change(&self, previous_history: &[String]) {
         let Some(store) = &self.history_store else {
             return;
         };
         let history = self.core.history();
-        if history.is_empty() && before_history_len != 0 {
+        // Rewriting a maximum of 100 short entries keeps the on-disk history
+        // exactly aligned with the capped in-memory list. Appending based only
+        // on length missed the important case where a new entry evicts the
+        // oldest one, because the length remains unchanged.
+        if history != previous_history {
             store.rewrite(history);
-            return;
-        }
-        if history.len() > before_history_len {
-            store.append(&history[before_history_len..]);
         }
     }
 }

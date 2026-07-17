@@ -26,16 +26,85 @@ inventory::submit! {
     }
 }
 
-/// Edits the primary selected object, following the selection as it changes.
+/// Edits the primary selected object, applying compatible changes to the whole
+/// selection. Position is displayed as the selection's average and edited as a
+/// shared offset, matching Chili's ObjectPropertyWindow.
 pub(crate) struct PropertiesView {
     fields: FieldSet,
     layout: Vec<PropertyLayout>,
     selected: Option<(ObjectKind, i32)>,
+    selection: Vec<SelectedObject>,
+    average_position: Option<Position>,
     selection_revision: u64,
     /// The object the current fields were built for; a different object may have
     /// different sub-object keys.
     fields_for: Option<(ObjectKind, i32)>,
     teams: Vec<(i32, String)>,
+}
+
+#[derive(Clone, Copy)]
+struct Position {
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+struct SelectedObject {
+    kind: ObjectKind,
+    model_id: i32,
+    position: Option<Position>,
+}
+
+impl Position {
+    fn from_json(value: &serde_json::Value) -> Option<Self> {
+        value.as_object().map(|_| Self {
+            x: number_f(&value["x"]),
+            y: number_f(&value["y"]),
+            z: number_f(&value["z"]),
+        })
+    }
+
+    fn average(selection: &[SelectedObject], kind: ObjectKind) -> Option<Self> {
+        let positions: Vec<_> = selection
+            .iter()
+            .filter(|object| object.kind == kind)
+            .filter_map(|object| object.position)
+            .collect();
+        let count = positions.len() as f32;
+        (count > 0.0).then(|| Self {
+            x: positions.iter().map(|position| position.x).sum::<f32>() / count,
+            y: positions.iter().map(|position| position.y).sum::<f32>() / count,
+            z: positions.iter().map(|position| position.z).sum::<f32>() / count,
+        })
+    }
+
+    fn from_fields(fields: &FieldSet, field: &str) -> Self {
+        Self {
+            x: fields.number(&component_name(field, "x")),
+            y: fields.number(&component_name(field, "y")),
+            z: fields.number(&component_name(field, "z")),
+        }
+    }
+
+    fn plus(self, delta: Self) -> Self {
+        Self {
+            x: self.x + delta.x,
+            y: self.y + delta.y,
+            z: self.z + delta.z,
+        }
+    }
+
+    fn minus(self, other: Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+
+    fn json(self) -> serde_json::Value {
+        serde_json::json!({ "x": self.x, "y": self.y, "z": self.z })
+    }
 }
 
 #[derive(Clone)]
@@ -72,6 +141,8 @@ impl PropertiesView {
             fields: FieldSet::new(Vec::new()),
             layout: Vec::new(),
             selected: None,
+            selection: Vec::new(),
+            average_position: None,
             selection_revision: u64::MAX,
             fields_for: None,
             teams: Vec::new(),
@@ -178,11 +249,37 @@ impl PropertiesView {
         self.fields_for = Some((kind, model_id));
     }
 
-    /// The command setting one field on the selected object.
+    /// Commands setting one field on every selected object of the primary
+    /// object's kind. A position component is special: its displayed value is
+    /// the selection average, so changing it translates each selected object
+    /// by the same delta instead of stacking every object on one coordinate.
     fn commit(&self, base: &str) -> Vec<Box<dyn Command>> {
         let Some((kind, model_id)) = self.selected else {
             return vec![];
         };
+
+        if let Some((field, _)) = component(base) {
+            if field == "pos" {
+                let desired = Position::from_fields(&self.fields, field);
+                let average = self.average_position.unwrap_or(desired);
+                let delta = desired.minus(average);
+                return self
+                    .selection
+                    .iter()
+                    .filter(|object| object.kind == kind)
+                    .filter_map(|object| {
+                        object.position.map(|position| {
+                            Box::new(SetObjectParamCommand::new(
+                                object.kind,
+                                object.model_id,
+                                serde_json::Value::String(field.to_string()),
+                                position.plus(delta).json(),
+                            )) as Box<dyn Command>
+                        })
+                    })
+                    .collect();
+            }
+        }
 
         let (key, value): (&str, serde_json::Value) = if let Some((field, _)) = component(base) {
             // A vector is set whole, from its three axis fields.
@@ -229,12 +326,30 @@ impl PropertiesView {
             (base, value)
         };
 
-        vec![Box::new(SetObjectParamCommand::new(
-            kind,
-            model_id,
-            serde_json::Value::String(key.to_string()),
-            value,
-        ))]
+        let targets: Vec<_> = self
+            .selection
+            .iter()
+            .filter(|object| object.kind == kind)
+            .collect();
+        if targets.is_empty() {
+            return vec![Box::new(SetObjectParamCommand::new(
+                kind,
+                model_id,
+                serde_json::Value::String(key.to_string()),
+                value,
+            ))];
+        }
+        targets
+            .into_iter()
+            .map(|object| {
+                Box::new(SetObjectParamCommand::new(
+                    object.kind,
+                    object.model_id,
+                    serde_json::Value::String(key.to_string()),
+                    value.clone(),
+                )) as Box<dyn Command>
+            })
+            .collect()
     }
 
     fn sub_fields_of(&self, parent: &str) -> Vec<String> {
@@ -340,10 +455,14 @@ impl Editor for PropertiesView {
         true
     }
 
-    /// Follow the primary selection and read the object's current values.
+    /// Follow the selection and read the primary object's fields. Position is
+    /// the average over matching selected objects, as in Chili's `avgPos`.
     fn refresh_from_engine(&mut self, _interface: &NativeInterfaceRef, models: &mut Models) {
         self.selection_revision = models.get::<SelectionManager>().revision();
-        self.selected = models.get::<SelectionManager>().primary();
+        let selected = models.get::<SelectionManager>().all();
+        self.selected = selected.first().copied();
+        self.selection.clear();
+        self.average_position = None;
 
         let Some((kind, model_id)) = self.selected else {
             return;
@@ -357,6 +476,17 @@ impl Editor for PropertiesView {
 
         let teams = self.teams.clone();
         let objects = models.get::<ObjectManager>();
+        self.selection = selected
+            .into_iter()
+            .map(|(kind, model_id)| SelectedObject {
+                kind,
+                model_id,
+                position: objects
+                    .field_json(kind, model_id, "pos")
+                    .and_then(|value| Position::from_json(&value)),
+            })
+            .collect();
+        self.average_position = Position::average(&self.selection, kind);
         // A sub-object's keys come from the object itself, so the fields are
         // rebuilt for a new object, not just for a new kind.
         if self.fields_for != Some((kind, model_id)) {
@@ -375,7 +505,12 @@ impl Editor for PropertiesView {
                 }
                 PropertyLayout::Group(names) => {
                     if let Some((field, _)) = names.first().and_then(|name| component(name)) {
-                        if let Some(value) = objects.field_json(kind, model_id, field) {
+                        let value = if field == "pos" {
+                            self.average_position.map(Position::json)
+                        } else {
+                            objects.field_json(kind, model_id, field)
+                        };
+                        if let Some(value) = value {
                             for axis in ["x", "y", "z"] {
                                 let mut component = number_f(&value[axis]);
                                 if is_angle(field) {

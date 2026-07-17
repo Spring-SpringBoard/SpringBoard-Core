@@ -136,12 +136,14 @@ impl Editor for LightingEditor {
             Layout::Field("shadowMode"),
             Layout::Group(&["sunDirX", "sunDirY", "sunDirZ"]),
             Layout::Section("Sun ground color"),
-            Layout::Group(&["groundDiffuseColor", "groundAmbientColor"]),
-            Layout::Group(&["groundSpecularColor"]),
+            Layout::Group(&[
+                "groundDiffuseColor",
+                "groundAmbientColor",
+                "groundSpecularColor",
+            ]),
             Layout::Field("groundShadowDensity"),
             Layout::Section("Sun unit color"),
-            Layout::Group(&["unitDiffuseColor", "unitAmbientColor"]),
-            Layout::Group(&["unitSpecularColor"]),
+            Layout::Group(&["unitDiffuseColor", "unitAmbientColor", "unitSpecularColor"]),
             Layout::Field("modelShadowDensity"),
         ])
     }

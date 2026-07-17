@@ -109,6 +109,11 @@ const IMAGE_EXTS: &[&str] = &[".png", ".jpg", ".tga", ".dds", ".bmp"];
 /// The engine exposes at most four DNTS (splat normal) channels.
 const DNTS_COUNT: i32 = 4;
 
+/// Texture-channel toggles are intentionally two balanced rows. Four toggles
+/// in one row made their captions and switches cramped in the 500dp panel.
+const CHANNEL_TOGGLE_ROW_ONE: &[&str] = &["diffuseEnabled", "specularEnabled"];
+const CHANNEL_TOGGLE_ROW_TWO: &[&str] = &["emissionEnabled", "reflEnabled"];
+
 fn toggle_channels() -> impl Iterator<Item = &'static str> {
     CHANNELS
         .iter()
@@ -624,7 +629,6 @@ impl TextureEditor {
 
 impl Editor for TextureEditor {
     fn generate_rml(&self) -> String {
-        let channel_toggles: Vec<String> = toggle_channels().map(enabled_name).collect();
         self.fields.generate_rml(&[
             Layout::Raw(self.actions.generate_rml()),
             Layout::Raw(section_markup(
@@ -635,12 +639,8 @@ impl Editor for TextureEditor {
             Layout::Raw(section_markup("texture-pattern-section", "Pattern")),
             Layout::Raw(self.pattern_grid.container_rml()),
             Layout::IdentifiedGroup(&["size", "rotation", "texScale"]),
-            Layout::IdentifiedGroup(
-                &channel_toggles
-                    .iter()
-                    .map(String::as_str)
-                    .collect::<Vec<_>>(),
-            ),
+            Layout::IdentifiedGroup(CHANNEL_TOGGLE_ROW_ONE),
+            Layout::IdentifiedGroup(CHANNEL_TOGGLE_ROW_TWO),
             Layout::IdentifiedGroup(&["texRotation", "texOffsetX", "texOffsetY"]),
             Layout::IdentifiedField("diffuseColor"),
             Layout::IdentifiedField("mode"),

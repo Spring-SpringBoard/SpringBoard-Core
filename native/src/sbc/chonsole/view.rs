@@ -4,7 +4,7 @@ use super::core::ChonsoleCore;
 use super::text_input::TextInput;
 use super::types::{ChonsoleLine, ChonsoleLineKind, ChonsoleResponse};
 use super::view_render::{draw_texture_preview, render_body};
-use super::view_rml::ChonsoleRml;
+use super::view_rml::{ChonsoleRml, SuggestionClickQueue, SuggestionHoverQueue};
 use super::view_suggestions::SuggestionView;
 
 const MAX_UI_LINES: usize = 200;
@@ -16,6 +16,10 @@ pub(super) struct ChonsoleView {
     input: TextInput,
     output: Vec<ChonsoleLine>,
     suggestions: SuggestionView,
+    suggestion_clicks: SuggestionClickQueue,
+    suggestion_hovers: SuggestionHoverQueue,
+    hovered_suggestion: Option<usize>,
+    reset_suggestion_scroll: bool,
 }
 
 impl ChonsoleView {
@@ -98,52 +102,52 @@ impl ChonsoleView {
     }
 
     pub(super) fn take_input(&mut self) -> String {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.take()
     }
 
     pub(super) fn set_input(&mut self, input: impl Into<String>) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.set(input);
     }
 
     pub(super) fn clear_input(&mut self) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.clear();
     }
 
     pub(super) fn push_input(&mut self, text: &str) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.insert(text);
     }
 
     pub(super) fn pop_input(&mut self) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.backspace();
     }
 
     pub(super) fn delete_input(&mut self) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.delete();
     }
 
     pub(super) fn delete_prev_word(&mut self) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.delete_previous_word();
     }
 
     pub(super) fn delete_next_word(&mut self) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.delete_next_word();
     }
 
     pub(super) fn delete_to_start(&mut self) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.delete_to_start();
     }
 
     pub(super) fn delete_to_end(&mut self) {
-        self.suggestions.reset();
+        self.reset_suggestions();
         self.input.delete_to_end();
     }
 
@@ -181,6 +185,7 @@ impl ChonsoleView {
 
     pub(super) fn complete_first_suggestion(&mut self, core: &ChonsoleCore) {
         self.suggestions.complete_first(core, &mut self.input);
+        self.reset_suggestion_scroll = true;
     }
 
     pub(super) fn select_prev_suggestion(&mut self, core: &ChonsoleCore, steps: usize) -> bool {
@@ -192,6 +197,27 @@ impl ChonsoleView {
         self.suggestions.select_next(core, &mut self.input, steps)
     }
 
+    pub(super) fn process_suggestion_clicks(&mut self, core: &ChonsoleCore) -> bool {
+        let index = self.suggestion_clicks.borrow_mut().pop();
+        index.is_some_and(|index| self.suggestions.select(core, &mut self.input, index))
+    }
+
+    pub(super) fn process_suggestion_hovers(&mut self, interface: &NativeInterfaceRef) {
+        let hovered = self.suggestion_hovers.borrow_mut().pop();
+        self.suggestion_hovers.borrow_mut().clear();
+        let Some(hovered) = hovered else {
+            return;
+        };
+        if hovered == self.hovered_suggestion {
+            return;
+        }
+        self.rml
+            .set_suggestion_hovered(interface, self.hovered_suggestion, hovered);
+        self.hovered_suggestion = hovered;
+        self.rml
+            .set_suggestion_details(interface, self.suggestions.detail(hovered));
+    }
+
     pub(super) fn refresh(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -199,7 +225,24 @@ impl ChonsoleView {
     ) -> Result<(), Error> {
         self.refresh_suggestions(core);
         let body = render_body(&self.input, &self.output, &self.suggestions);
-        self.rml.refresh(interface, &body)
+        let scroll_top = (!self.reset_suggestion_scroll)
+            .then(|| self.rml.suggestion_scroll_top(interface))
+            .flatten();
+        self.rml.refresh(interface, &body, scroll_top)?;
+        self.reset_suggestion_scroll = false;
+        self.hovered_suggestion = None;
+        self.suggestion_hovers.borrow_mut().clear();
+        self.rml.bind_suggestion_events(
+            interface,
+            self.suggestions.len(),
+            self.suggestion_clicks.clone(),
+            self.suggestion_hovers.clone(),
+        )
+    }
+
+    fn reset_suggestions(&mut self) {
+        self.suggestions.reset();
+        self.reset_suggestion_scroll = true;
     }
 
     pub(super) fn process_key_up(

@@ -65,13 +65,18 @@ impl Field for ChoiceField {
                 )
             })
             .collect();
-        format!(r#"<div class="field-row"><label class="field-label">{title}:</label>"#)
+        // Like numeric and colour fields, the caption belongs to the control
+        // itself. Keeping it inside the border makes a compact ChoiceField a
+        // single visual unit rather than a loose label plus a wide select.
+        format!(r#"<div class="field-row"><div class="select-wrapper field-choice"><span class="select-label">{title}:</span>"#)
             + &format!(
-                r#"<div class="select-wrapper"><select id="field-{n}" class="field-input">{opts}</select>"#,
+                r#"<select id="field-{n}" class="field-input field-select">{opts}</select>"#,
                 n = self.name,
                 opts = options,
             )
-            + r#"<div class="select-arrow">v</div></div></div>"#
+            // The arrow is drawn by CSS as a triangle so it is independent of
+            // the installed font's Unicode glyph coverage.
+            + r#"<span class="select-arrow"></span></div></div>"#
     }
 
     fn bind(

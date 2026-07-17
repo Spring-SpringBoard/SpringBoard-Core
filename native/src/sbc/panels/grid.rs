@@ -42,8 +42,6 @@ struct GridNavigation {
     root: String,
     dir: String,
     extensions: Vec<String>,
-    /// The field's root *within* an asset pack. See `configure_asset_navigation`.
-    assets_root: String,
     up_clicks: Rc<RefCell<u32>>,
     bound: Cell<bool>,
 }
@@ -88,21 +86,15 @@ impl GridView {
         self.clicks.borrow_mut().drain(..).collect()
     }
 
-    /// Browse SpringBoard's **assets**, which are not a plain directory.
-    ///
-    /// A port of `AssetsManager` + `AssetView`: `springboard/assets/` holds one
-    /// folder per asset pack (`core/`, plus whatever extensions add). A field
-    /// names a `root_dir` *within* a pack (`brush_textures/`), and the browser
-    /// walks the packs, not the filesystem: the top level lists the packs
-    /// themselves, and inside one, `assets/<pack>/<root_dir><rest>` is listed.
-    /// A picked file comes back as an **asset path** (`core/foo.png`), not a
-    /// filesystem path -- that is what a project stores.
+    /// Browse the shipped asset directory directly. Brush textures are usable
+    /// immediately, and their selected id remains the full VFS path the brush
+    /// commands consume.
     pub(crate) fn configure_asset_navigation(&mut self, root_dir: &str, extensions: &[&str]) {
+        let root = default_asset_root(root_dir);
         self.navigation = Some(GridNavigation {
-            root: String::new(),
-            dir: String::new(),
+            root: root.clone(),
+            dir: root,
             extensions: normalize_extensions(extensions),
-            assets_root: root_dir.trim_start_matches('/').to_string(),
             up_clicks: Rc::new(RefCell::new(0)),
             bound: Cell::new(false),
         });
@@ -172,17 +164,15 @@ impl GridView {
         interface: &NativeInterfaceRef,
         document: u64,
     ) -> Result<(), Error> {
-        let Some((dir, extensions, assets_root)) = self.navigation.as_ref().map(|navigation| {
-            (
-                navigation.dir.clone(),
-                navigation.extensions.clone(),
-                navigation.assets_root.clone(),
-            )
-        }) else {
+        let Some((dir, extensions)) = self
+            .navigation
+            .as_ref()
+            .map(|navigation| (navigation.dir.clone(), navigation.extensions.clone()))
+        else {
             return Ok(());
         };
         let extensions: Vec<&str> = extensions.iter().map(String::as_str).collect();
-        let items = list_asset_tree(interface, &assets_root, &dir, &extensions);
+        let items = list_asset_directory(interface, &dir, &extensions);
         self.set_items(items);
         self.set_selected(None);
         self.render(interface, document)
@@ -325,6 +315,54 @@ impl GridView {
 /// VFS listing for the asset picker: directories first, then files, both sorted.
 /// Where SpringBoard's asset packs live (`SB.DIRS.ASSETS`).
 const ASSETS_DIR: &str = "springboard/assets";
+const DEFAULT_ASSET_PACK: &str = "core";
+
+fn default_asset_root(root_dir: &str) -> String {
+    format!(
+        "{ASSETS_DIR}/{DEFAULT_ASSET_PACK}/{}",
+        root_dir.trim_matches('/')
+    )
+}
+
+/// One directory in the default asset pack, with full VFS paths as item ids.
+///
+/// `Vfs::list_dir` is intentionally broad and starts at mounted archive roots;
+/// the direct `sub_dirs`/`dir_list_names` calls below preserve the requested
+/// nested directory instead.
+fn list_asset_directory(
+    interface: &NativeInterfaceRef,
+    dir: &str,
+    extensions: &[&str],
+) -> Vec<GridItem> {
+    let dir = dir.trim_end_matches('/');
+    let mut items: Vec<GridItem> = vfs_sub_dirs(interface, dir)
+        .into_iter()
+        .map(|name| GridItem {
+            id: format!("{dir}/{name}"),
+            caption: name,
+            image: None,
+            is_directory: true,
+            tooltip: None,
+            tooltip_markup: None,
+        })
+        .collect();
+    items.extend(
+        vfs_files(interface, dir, extensions)
+            .into_iter()
+            .map(|name| {
+                let path = format!("{dir}/{name}");
+                GridItem {
+                    id: path.clone(),
+                    caption: name,
+                    image: Some(path),
+                    is_directory: false,
+                    tooltip: None,
+                    tooltip_markup: None,
+                }
+            }),
+    );
+    items
+}
 
 /// One level of the assets tree, as `AssetView` walks it.
 ///
@@ -552,5 +590,13 @@ mod tests {
         assert_eq!(parent_dir("a"), Some(String::new()));
         assert_eq!(parent_dir(""), None);
         assert_eq!(parent_dir("/"), None);
+    }
+
+    #[test]
+    fn inline_asset_navigation_uses_the_default_pack_vfs_root() {
+        assert_eq!(
+            default_asset_root("brush_patterns/terrain/"),
+            "springboard/assets/core/brush_patterns/terrain"
+        );
     }
 }

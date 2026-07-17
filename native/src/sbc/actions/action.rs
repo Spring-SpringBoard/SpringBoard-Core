@@ -1,8 +1,6 @@
 //! [`Action`] — the pure metadata of every toolbar/hotkey action (caption,
 //! icon, shortcut). The logic that runs each one lives in [`super::run`].
 
-const IMG_DIR: &str = "LuaUI/images/scenedit/";
-
 /// Every action the editor knows about. Some appear as toolbar buttons (listed
 /// in [`Action::TOOLBAR`]); the rest are hotkey-only.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -79,19 +77,22 @@ impl Action {
 
     pub fn icon(&self) -> Option<&'static str> {
         let name = match self {
-            Action::NewProject => "file.png",
-            Action::Load => "open-folder.png",
-            Action::Import => "open-folder.png",
-            Action::Save => "save.png",
-            Action::SaveAs => "save.png",
-            Action::Export => "save.png",
-            Action::Copy => "copy.png",
-            Action::Cut => "scissors-rotated.png",
-            Action::Paste => "stabbed-note.png",
+            Action::NewProject => "LuaUI/images/scenedit/file.png",
+            Action::Load => "LuaUI/images/scenedit/open-folder.png",
+            Action::Import => "LuaUI/images/scenedit/open-folder.png",
+            Action::Save => "LuaUI/images/scenedit/save.png",
+            Action::SaveAs => "LuaUI/images/scenedit/save.png",
+            Action::Export => "LuaUI/images/scenedit/save.png",
+            Action::Copy => "LuaUI/images/scenedit/copy.png",
+            // The toolbar variant has the opaque, high-contrast glyph. The
+            // root image is mostly transparent at toolbar scale and read as a
+            // missing Cut icon in RmlUi.
+            Action::Cut => "LuaUI/images/scenedit/modifications/scissors-rotated.png",
+            Action::Paste => "LuaUI/images/scenedit/stabbed-note.png",
             // Undo/Redo have no icon in Lua either (filtered from toolbar).
             _ => return None,
         };
-        Some(Box::leak(format!("{IMG_DIR}{name}").into_boxed_str()))
+        Some(name)
     }
 
     pub fn hotkey(&self) -> Option<Hotkey> {

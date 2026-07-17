@@ -80,13 +80,13 @@
     "updated": "2026-07-11T15:33:05"
   },
   "water-checkbox": {
-    "notes": "'Forced rendering' is checked (blue fill) after one click, and stays checked -- the engine value is read back from the result's boolValue. Exactly one SetWaterParamsCommand{forceRendering:true} was emitted.",
+    "notes": "Reviewed: Forced rendering is checked (blue fill) after one click, with the regrouped texture and waves controls still visible. SetWaterParamsCommand{forceRendering:true} is asserted.",
     "status": "ai-reviewed",
-    "updated": "2026-07-11T15:32:59"
+    "updated": "2026-07-16T08:35:54"
   },
   "water-open": {
-    "notes": "Env -> Water renders all sections (perlin, diffuse, specular, fresnel, blur, plane, texture) with live engine values matching the Lua panel: NumTiles 4, start freq 8, lacunarity 3, amplitude 0.90, specular power 20, fresnel 0.20/0.80/4.00, blur 2.00/1.50, plane colour green. Two checkboxes render unchecked. Texture asset fields are absent (not ported).",
+    "notes": "Reviewed: Water fields are grouped by purpose—normal texture first, waves beside their enable toggle, and repeat values under Water texture—while preserving the live NumTiles, noise, lighting, fresnel, blur, and plane values.",
     "status": "ai-reviewed",
-    "updated": "2026-07-11T15:32:58"
+    "updated": "2026-07-16T08:34:01"
   }
 }

@@ -34,6 +34,13 @@ impl CommandManager {
         id
     }
 
+    /// The applied entries, followed by the undone entries. The redo deque is
+    /// stored with its next-to-redo entry at the back; callers that render a
+    /// chronological history should therefore reverse that second vector.
+    pub(crate) fn history_command_ids(&self) -> (Vec<CommandId>, Vec<CommandId>) {
+        self.history.command_ids()
+    }
+
     pub fn execute(
         &mut self,
         mut command: Box<dyn Command>,

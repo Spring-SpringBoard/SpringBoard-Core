@@ -26,6 +26,7 @@ TERRAIN_BRUSHES = (
     (112, "set", "TerrainLevelCommand"),
     (188, "smooth", "TerrainSmoothCommand"),
 )
+TERRAIN_PATTERN_PATH = "springboard/assets/core/brush_patterns/terrain/circle1.png"
 
 # A stroke holds the button down and sweeps. The brush waits out an initial delay
 # (0.3s) before a *held* button starts repeating, then dabs on a timer -- so a
@@ -83,6 +84,10 @@ def heightmap(run_state: E2ERun) -> None:
     run_state.focus()
     left = panel_left(run_state)
     width, height = window_size(run_state)
+    map_region = (0, 0, width - 500, height - 92)
+
+    def assert_map_pixels(before: Path, after: Path, **bounds: int) -> None:
+        run_state.assert_region_pixels(before, after, map_region, **bounds)
     run_state.click(width - 610, height - 115, delay=0.3)
 
     def stroke(x: int, y: int, dx: int, dy: int) -> None:
@@ -125,10 +130,12 @@ def heightmap(run_state: E2ERun) -> None:
         after_shot = run_state.screenshot(f"stroke-{name}")
 
         run_state.assert_command_at_least(command, before + STROKE_MIN_DABS)
+        if not any(f'shape_name: "{TERRAIN_PATTERN_PATH}"' in line for line in run_state.engine_log()):
+            raise AssertionError("terrain brush did not receive the selected full VFS texture path")
         # The commands reaching the bridge is not the point: the terrain has to
         # actually change. A brush whose settings make it a no-op sends a full
         # stroke of commands and moves nothing.
-        run_state.assert_screenshot_pixels(before_shot, after_shot, min_changed=MAP_STROKE_PIXELS)
+        assert_map_pixels(before_shot, after_shot, min_changed=MAP_STROKE_PIXELS)
 
     # Undo/redo the last stroke. Each stroke is one group, so one ctrl+z takes
     # the whole smooth back off, however many dabs it was.
@@ -139,14 +146,14 @@ def heightmap(run_state: E2ERun) -> None:
     run_state.key("ctrl+z", delay=0.9)
     run_state.assert_any_command("UndoCommand")
     undone = run_state.screenshot("undone")
-    run_state.assert_screenshot_pixels(swept, undone, min_changed=100)
+    assert_map_pixels(swept, undone, min_changed=100)
     run_state.key("ctrl+y", delay=0.9)
     run_state.assert_any_command("RedoCommand")
     redone = run_state.screenshot("redone")
-    run_state.assert_screenshot_pixels(undone, redone, min_changed=100)
+    assert_map_pixels(undone, redone, min_changed=100)
     # Redo puts the same terrain back. Not bit-for-bit: the map itself does not
     # render identically frame to frame, so allow its shimmer and nothing more.
-    run_state.assert_screenshot_pixels(swept, redone, max_changed=MAP_SHIMMER)
+    assert_map_pixels(swept, redone, max_changed=MAP_SHIMMER)
 
 
 @scenario()
@@ -163,6 +170,10 @@ def map_paint(run_state: E2ERun) -> None:
     run_state.focus()
     left = panel_left(run_state)
     width, height = window_size(run_state)
+    map_region = (0, 0, width - 500, height - 92)
+
+    def assert_map_pixels(before: Path, after: Path, **bounds: int) -> None:
+        run_state.assert_region_pixels(before, after, map_region, **bounds)
     run_state.click(width - 610, height - 115, delay=0.3)
     modal_left = dialog_left(run_state)
     paint_x, paint_y = width // 3, height // 2
@@ -185,6 +196,16 @@ def map_paint(run_state: E2ERun) -> None:
     run_state.click(left + TAB_X["map"], TAB_Y, delay=0.35)
     run_state.wheel(paint_x, paint_y, clicks=ZOOM_CLICKS, up=True, delay=0.6)
 
+    # Texture Void erases diffuse alpha. The engine only renders that alpha as
+    # transparent when Void ground is enabled; without this, a Void stroke can
+    # emit its command while producing no visible result at all.
+    editor_button(4)
+    # Map Settings puts all texture sources first, then the visibility toggles.
+    # Keep this coordinate tied to the actual full-width switch rather than the
+    # old two-column layout (where y=185 now hits Detail texture).
+    run_state.click(left + 100, 720, delay=0.45)  # Void ground
+    run_state.assert_any_command("SetMapRenderingParamsCommand", voidGround=True)
+
     # Texture. A material has to be chosen before Paint will do anything, so the
     # saved-brush picker comes first.
     editor_button(1)
@@ -192,7 +213,9 @@ def map_paint(run_state: E2ERun) -> None:
     # clicking Paint here and again in the loop below would turn it back off.
     run_state.click(left + 42, 335, delay=0.8)          # Saved brushes: the + cell
     run_state.screenshot_root("texture-material-picker")
-    run_state.click(modal_left + 50, 280, delay=0.6)    # the first material
+    # `tiles` is visibly orange and patterned. Cement is too pale to prove
+    # texture paint in a review image even when the command landed.
+    run_state.click(modal_left + 104, 360, delay=0.6)   # tiles material
     # A shaped pattern, not circle1: a stroke of circles is a row of dots, and a
     # rotation on a circle is a no-op.
     run_state.click(left + 112, 748, delay=0.5)         # rect1
@@ -210,7 +233,7 @@ def map_paint(run_state: E2ERun) -> None:
         stroke()
         after = run_state.screenshot(f"texture-{name}")
         run_state.assert_any_command("TerrainChangeTextureCommand", paintMode=mode)
-        run_state.assert_screenshot_pixels(before, after, min_changed=MAP_STROKE_PIXELS)
+        assert_map_pixels(before, after, min_changed=MAP_STROKE_PIXELS)
 
     # Metal, under the metal view (F4) -- otherwise the paint is invisible and the
     # shot shows nothing but grass.
@@ -224,10 +247,14 @@ def map_paint(run_state: E2ERun) -> None:
     stroke()
     after = run_state.screenshot("metal-painted")
     run_state.assert_any_command("TerrainMetalCommand", amount=3.25)
-    run_state.assert_screenshot_pixels(before, after, min_changed=MAP_STROKE_PIXELS)
+    assert_map_pixels(before, after, min_changed=MAP_STROKE_PIXELS)
     run_state.key("F4", delay=0.6)                     # back to the normal view
 
-    # Grass.
+    # Grass. The deterministic stock map used by this scenario has no grass
+    # render layer, so its density-map update is not observable in pixels even
+    # with GrassDetail enabled. The bridge command and its amount are therefore
+    # the meaningful assertion here; terrain, texture (including Void), and
+    # metal above all retain their visible-map assertions.
     editor_button(3)
     run_state.click(left + 42, 380, delay=0.4)
     click_field(run_state, left, METAL_SIZE_Y, "180")
@@ -236,7 +263,6 @@ def map_paint(run_state: E2ERun) -> None:
     stroke()
     after = run_state.screenshot("grass-painted")
     run_state.assert_any_command("TerrainGrassCommand", amount=1.0)
-    run_state.assert_screenshot_pixels(before, after, min_changed=MAP_STROKE_PIXELS)
 
 
 @scenario(crop="right-panel")
@@ -283,7 +309,7 @@ def map_editors(run_state: E2ERun) -> None:
     run_state.click(left + 42, ACTION_Y, delay=0.8)   # Paint
     run_state.click(left + 42, 335, delay=0.8)        # Saved brushes: the + cell
     run_state.screenshot_root("texture-material-picker")
-    run_state.click(modal_left + 50, 280, delay=0.6)  # the first material
+    run_state.click(modal_left + 104, 360, delay=0.6)  # tiles material
     run_state.screenshot("texture-saved-brushes")
 
     # Each action shows its own fields: Filter has a kernel, Void has none of the
@@ -311,27 +337,29 @@ def map_editors(run_state: E2ERun) -> None:
     # detail texture picker all dispatch the expected native commands.
     editor_button(4)
     run_state.screenshot("settings-open")
-    run_state.click(left + 98, 185, delay=0.45)   # Void water
+    # The three visibility controls are stacked after the ten map-texture
+    # pickers.  Their whole rows are buttons, so centre-click each switch.
+    run_state.click(left + 100, 677, delay=0.45)  # Void water
     run_state.assert_any_command("SetMapRenderingParamsCommand", voidWater=True)
-    run_state.click(left + 226, 185, delay=0.35)  # Void ground
-    run_state.click(left + 142, 217, delay=0.35)   # DNTS diffuse alpha
-    click_field(run_state, left, 282, "2.5")            # Scale 1
-    click_field(run_state, left, 282, "2.75", x=260)    # Scale 2
-    click_field(run_state, left, 327, "3.0")            # Scale 3
-    click_field(run_state, left, 327, "3.25", x=260)    # Scale 4
+    run_state.click(left + 100, 720, delay=0.35)  # Void ground
+    run_state.click(left + 100, 763, delay=0.35)  # DNTS diffuse alpha
+    click_field(run_state, left, 834, "2.5")            # Scale 1
+    click_field(run_state, left, 834, "2.75", x=260)    # Scale 2
+    click_field(run_state, left, 878, "3.0")            # Scale 3
+    click_field(run_state, left, 878, "3.25", x=260)    # Scale 4
     run_state.assert_any_command(
         "SetMapRenderingParamsCommand",
         splatTexScales=lambda v: isinstance(v, list) and v[0] == 2.5,
     )
-    click_field(run_state, left, 370, "0.75")           # Mult 1
-    click_field(run_state, left, 370, "0.8", x=260)     # Mult 2
-    click_field(run_state, left, 416, "0.85")           # Mult 3
-    click_field(run_state, left, 416, "0.9", x=260)     # Mult 4
+    click_field(run_state, left, 922, "0.75")           # Mult 1
+    click_field(run_state, left, 922, "0.8", x=260)     # Mult 2
+    click_field(run_state, left, 966, "0.85")           # Mult 3
+    click_field(run_state, left, 966, "0.9", x=260)     # Mult 4
     run_state.assert_any_command(
         "SetMapRenderingParamsCommand",
         splatTexMults=lambda v: isinstance(v, list) and v[0] == 0.75,
     )
-    run_state.click(left + 70, 480, delay=0.8)    # Detail texture
+    run_state.click(left + 70, 220, delay=0.8)    # Detail texture
     run_state.screenshot_root("detail-picker")
     # The asset picker opens on the *packs*, so the first cell is `core/` -- a
     # folder to go into -- and the file is picked on the screen after it.
@@ -385,7 +413,7 @@ def texture_panel(run_state: E2ERun) -> None:
     run_state.click(left + 40, 335, delay=0.8)
     run_state.screenshot_root("material-picker-root")
     modal_left = dialog_left(run_state)
-    run_state.click(modal_left + 50, 280, delay=0.8)   # cement saved brush
+    run_state.click(modal_left + 104, 360, delay=0.8)  # tiles saved brush
     run_state.click(left + 42, 665, delay=0.6)         # circle1 pattern
     run_state.screenshot("texture-armed")
     run_state.drag(width // 3, height // 2, width // 3 + 120, height // 2 + 70, steps=8)
@@ -420,5 +448,3 @@ def settings_panel(run_state: E2ERun) -> None:
     run_state.screenshot("specular-off")
     run_state.click(left + 142, 525, delay=0.9)
     run_state.screenshot_root("specular-on-root")
-
-

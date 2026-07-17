@@ -91,7 +91,6 @@ impl CursorTip {
         // within PICK_RADIUS, so a hover that finds nothing is usually a hover on
         // the wrong part of the model.
         let features = rendering.get_features_in_screen_rectangle(left, top, right, bottom);
-        log::debug!("cursortip: pick at ({x}, {y}) -> {features:?}");
         describe_feature(interface, *features.ok()?.first()?)
     }
 }

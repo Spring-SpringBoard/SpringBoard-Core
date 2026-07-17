@@ -16,7 +16,7 @@ use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
 use crate::sbc::panels::grid::{list_assets, GridItem, GridView};
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::rml::{element_by_id, escape_rml};
-use crate::sbc::textures::commands::ImportShadingImageCommand;
+use crate::sbc::textures::commands::{CreateShadingTextureCommand, ImportShadingImageCommand};
 use crate::sbc::textures::TextureModel;
 
 // Mirrors TerrainSettingsEditor:Register in scen_edit/view/map/terrain_settings_editor.lua.
@@ -39,12 +39,16 @@ const SPLAT_SCALE_FIELDS: &[&str] = &[
     "splatTexScale2",
     "splatTexScale3",
 ];
+const SPLAT_SCALE_ROW_ONE: &[&str] = &["splatTexScale0", "splatTexScale1"];
+const SPLAT_SCALE_ROW_TWO: &[&str] = &["splatTexScale2", "splatTexScale3"];
 const SPLAT_MULT_FIELDS: &[&str] = &[
     "splatTexMult0",
     "splatTexMult1",
     "splatTexMult2",
     "splatTexMult3",
 ];
+const SPLAT_MULT_ROW_ONE: &[&str] = &["splatTexMult0", "splatTexMult1"];
+const SPLAT_MULT_ROW_TWO: &[&str] = &["splatTexMult2", "splatTexMult3"];
 const SHADING_TOGGLES: &[(&str, &str, &str)] = &[
     ("tex_specular", "specular", "Specular"),
     ("tex_emission", "emission", "Emission"),
@@ -60,10 +64,17 @@ const SHADING_TOGGLES: &[(&str, &str, &str)] = &[
 #[derive(Debug, Clone)]
 enum ShadingEvent {
     Open(String),
+    ShowNew,
     New,
     Existing,
     Disable,
     Cancel,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ShadingSource {
+    New,
+    Existing,
 }
 
 /// Map rendering flags and the detail texture. Every field is a key of
@@ -78,6 +89,7 @@ pub(crate) struct MapSettingsEditor {
     shading_events: Rc<RefCell<Vec<ShadingEvent>>>,
     shading_enabled: BTreeMap<String, bool>,
     dialog: Option<String>,
+    shading_source: Option<ShadingSource>,
     document: Option<u64>,
 }
 
@@ -144,6 +156,7 @@ impl MapSettingsEditor {
             shading_events: Rc::new(RefCell::new(Vec::new())),
             shading_enabled: BTreeMap::new(),
             dialog: None,
+            shading_source: None,
             document: None,
         }
     }
@@ -166,10 +179,16 @@ impl MapSettingsEditor {
                 <div class="dialog picker-dialog asset-dialog">
                     <div class="dialog-header"><span id="shading-dialog-title" class="dialog-title">Map texture</span></div>
                     <div class="dialog-content">
-                        <div class="shading-dialog-actions">
+                        <div id="shading-source-choice" class="shading-dialog-actions">
                             <button id="shading-new" class="dialog-button primary">New texture</button>
                             <button id="shading-existing" class="dialog-button">Choose existing</button>
                             <button id="shading-disable" class="dialog-button">Disable</button>
+                        </div>
+                        <div id="shading-new-form" class="hidden">
+                            <div class="field-row"><label class="field-label">Width:</label><input id="shading-width" class="field-input" value="1024"/></div>
+                            <div class="field-row"><label class="field-label">Height:</label><input id="shading-height" class="field-input" value="1024"/></div>
+                            <div class="dialog-hint">Creates a blank texture using this channel's sensible default colour.</div>
+                            <button id="shading-create" class="dialog-button primary">Create texture</button>
                         </div>
                         <div id="shading-existing-grid" class="hidden">{}</div>
                     </div>
@@ -222,10 +241,26 @@ impl MapSettingsEditor {
                     .element_set_inner_rml(title, &format!("{} texture", escape_rml(caption)));
             }
         }
+        if let Some(choice) = element_by_id(interface, document, "shading-source-choice") {
+            let _ = interface.rml_ui().element_set_class(
+                choice,
+                "hidden",
+                !open || self.shading_source.is_some(),
+            );
+        }
+        if let Some(new_form) = element_by_id(interface, document, "shading-new-form") {
+            let _ = interface.rml_ui().element_set_class(
+                new_form,
+                "hidden",
+                !open || self.shading_source != Some(ShadingSource::New),
+            );
+        }
         if let Some(existing) = element_by_id(interface, document, "shading-existing-grid") {
-            let _ = interface
-                .rml_ui()
-                .element_set_class(existing, "hidden", !open);
+            let _ = interface.rml_ui().element_set_class(
+                existing,
+                "hidden",
+                !open || self.shading_source != Some(ShadingSource::Existing),
+            );
         }
     }
 
@@ -291,14 +326,22 @@ impl Editor for MapSettingsEditor {
 
     fn generate_rml(&self) -> String {
         self.fields.generate_rml(&[
-            Layout::Group(&["voidWater", "voidGround"]),
-            Layout::Field("splatDetailNormalDiffuseAlpha"),
-            Layout::Section("Splat mapping"),
-            Layout::Group(SPLAT_SCALE_FIELDS),
-            Layout::Group(SPLAT_MULT_FIELDS),
             Layout::Section("Map textures"),
             Layout::Field("detailTexture"),
             Layout::Raw(self.shading_markup()),
+            Layout::Section("Terrain visibility"),
+            // A switch button needs room for its label, track and clear state;
+            // stack these rather than squeezing two into checkbox-sized cells.
+            Layout::Field("voidWater"),
+            Layout::Field("voidGround"),
+            Layout::Field("splatDetailNormalDiffuseAlpha"),
+            Layout::Section("Splat mapping"),
+            // Four label/value controls across 500dp leave the values clipped.
+            // Two even columns retain a comfortable numeric editing target.
+            Layout::Group(SPLAT_SCALE_ROW_ONE),
+            Layout::Group(SPLAT_SCALE_ROW_TWO),
+            Layout::Group(SPLAT_MULT_ROW_ONE),
+            Layout::Group(SPLAT_MULT_ROW_TWO),
         ])
     }
 
@@ -331,8 +374,9 @@ impl Editor for MapSettingsEditor {
                 })?;
         }
         for (id, event) in [
-            ("shading-new", ShadingEvent::New),
+            ("shading-new", ShadingEvent::ShowNew),
             ("shading-existing", ShadingEvent::Existing),
+            ("shading-create", ShadingEvent::New),
             ("shading-disable", ShadingEvent::Disable),
             ("shading-cancel", ShadingEvent::Cancel),
         ] {
@@ -376,9 +420,16 @@ impl Editor for MapSettingsEditor {
         let mut commands: Vec<Box<dyn Command>> = Vec::new();
         for event in self.shading_events.borrow_mut().drain(..) {
             match event {
-                ShadingEvent::Open(name) => self.dialog = Some(name),
-                ShadingEvent::Existing => {}
-                ShadingEvent::Cancel => self.dialog = None,
+                ShadingEvent::Open(name) => {
+                    self.dialog = Some(name);
+                    self.shading_source = None;
+                }
+                ShadingEvent::ShowNew => self.shading_source = Some(ShadingSource::New),
+                ShadingEvent::Existing => self.shading_source = Some(ShadingSource::Existing),
+                ShadingEvent::Cancel => {
+                    self.dialog = None;
+                    self.shading_source = None;
+                }
                 ShadingEvent::New | ShadingEvent::Disable => {
                     if let Some(name) = self.dialog.take() {
                         let enabled = matches!(event, ShadingEvent::New);
@@ -389,14 +440,26 @@ impl Editor for MapSettingsEditor {
                             continue;
                         };
                         self.shading_enabled.insert((*field).to_string(), enabled);
-                        commands.push(Box::new(SetMapShadingTextureEnabledCommand::new(
-                            name, enabled,
-                        )));
+                        if enabled {
+                            let width = dialog_dimension(interface, document, "shading-width");
+                            let height = dialog_dimension(interface, document, "shading-height");
+                            commands.push(Box::new(CreateShadingTextureCommand::new(
+                                name.clone(),
+                                width,
+                                height,
+                                default_shading_color(&name),
+                            )));
+                        } else {
+                            commands.push(Box::new(SetMapShadingTextureEnabledCommand::new(
+                                name, false,
+                            )));
+                        }
+                        self.shading_source = None;
                     }
                 }
             }
         }
-        if self.dialog.is_some() {
+        if self.dialog.is_some() && self.shading_source == Some(ShadingSource::Existing) {
             for id in self.shading_grid.drain_clicks() {
                 if self
                     .shading_grid
@@ -411,6 +474,7 @@ impl Editor for MapSettingsEditor {
                             continue;
                         };
                         self.shading_enabled.insert((*field).to_string(), true);
+                        self.shading_source = None;
                         if let Some(c) = ImportShadingImageCommand::from_fields(serde_json::json!({
                             "texType": name,
                             "texturePath": id,
@@ -455,4 +519,21 @@ impl Editor for MapSettingsEditor {
     }
 
     crate::sb_field_editor_methods!();
+}
+
+fn dialog_dimension(interface: &NativeInterfaceRef, document: u64, id: &str) -> i32 {
+    element_by_id(interface, document, id)
+        .and_then(|element| interface.rml_ui().element_get_value(element).ok().flatten())
+        .and_then(|value| value.parse().ok())
+        .filter(|value: &i32| *value > 0)
+        .unwrap_or(1024)
+}
+
+fn default_shading_color(name: &str) -> [f32; 4] {
+    match name {
+        "splat_distr" => [1.0, 0.0, 0.0, 0.0],
+        name if name.starts_with("splat_normals") => [0.5, 0.5, 1.0, 0.5],
+        "emission" | "refl" => [0.0, 0.0, 0.0, 0.2],
+        _ => [0.0, 0.0, 0.0, 1.0],
+    }
 }

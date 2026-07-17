@@ -15,6 +15,11 @@ from scenarios.geometry import (
 )
 from scenarios.registry import scenario
 
+# Modal captures include the map behind them. Its terrain render varies by a
+# few thousand pixels between otherwise identical paused runs; panel-only
+# captures stay pixel-exact.
+FULL_FRAME_TOLERANCE = 15_000
+
 if TYPE_CHECKING:
     from runner import E2ERun
 
@@ -128,13 +133,13 @@ def native_panel(run_state: E2ERun) -> None:
     # the console strip, whose boot log prints pointer addresses that change
     # every run.
     run_state.click(left + 90, 331, delay=0.6)
-    run_state.golden("picker-open", crop="no-console")
+    run_state.golden("picker-open", crop="no-console", tolerance=FULL_FRAME_TOLERANCE)
 
     # Drag to the top-right of the saturation/value square: full saturation,
     # full value, so the colour becomes the pure hue under the cursor.
     sv_left, sv_top = modal_left + 10, 252
     run_state.drag(sv_left + 10, sv_top + 170, sv_left + 175, sv_top + 5, steps=6)
-    run_state.golden("picker-dragged", crop="no-console")
+    run_state.golden("picker-dragged", crop="no-console", tolerance=FULL_FRAME_TOLERANCE)
 
     # Dragging previews live: the engine has already taken the colour before OK
     # is pressed. Previews never reach the undo history.
@@ -173,17 +178,22 @@ def native_panel(run_state: E2ERun) -> None:
     run_state.click(left + 110, EDITOR_BUTTON_Y, delay=0.7)   # Sky
     run_state.golden("sky-open")
     run_state.click(left + 64, 280, delay=0.8)   # Skybox field
-    run_state.golden("asset-picker-open", crop="no-console")
+    run_state.golden("asset-picker-open", crop="no-console", tolerance=FULL_FRAME_TOLERANCE)
     run_state.click(modal_left + 430, 603, delay=0.6)  # Cancel
 
     # Env -> Water: the normal-texture field browses bitmaps/ and picking a file
     # must emit SetWaterParamsCommand carrying its VFS path.
     run_state.click(left + 182, EDITOR_BUTTON_Y, delay=0.7)   # Water
-    run_state.click(left + 87, 873, delay=0.8)   # Normal texture
-    run_state.golden("asset-picker-bitmaps", crop="no-console")
+    # Normal texture now sits directly below NumTiles, before the perlin group.
+    run_state.click(left + 87, 236, delay=0.8)
+    run_state.golden(
+        "asset-picker-bitmaps", crop="no-console", tolerance=FULL_FRAME_TOLERANCE
+    )
 
     run_state.click(modal_left + 50, 335, delay=0.5)   # first file cell
-    run_state.golden("asset-picker-selected", crop="no-console")
+    run_state.golden(
+        "asset-picker-selected", crop="no-console", tolerance=FULL_FRAME_TOLERANCE
+    )
     run_state.click(modal_left + 343, 603, delay=0.8)  # OK
 
     def is_bitmap(path: object) -> bool:
@@ -195,5 +205,3 @@ def native_panel(run_state: E2ERun) -> None:
 
     run_state.assert_command("SetWaterParamsCommand", normalTexture=is_bitmap)
     run_state.golden("asset-picked")
-
-

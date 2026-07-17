@@ -91,9 +91,8 @@ impl TerrainEditor {
             actions: BrushActions::new(ACTIONS),
             pattern_grid: {
                 let mut grid = GridView::new("terrain-pattern-grid", 64);
-                // A root *within* an asset pack: the grid lists the packs, then
-                // `assets/<pack>/brush_patterns/terrain/` inside one, so patterns
-                // added by any pack show up -- not only `core`'s.
+                // Start in the shipped terrain-pattern directory. A click must
+                // select the texture itself, with its full VFS path.
                 grid.configure_asset_navigation(
                     "brush_patterns/terrain/",
                     &["png", "jpg", "tga", "dds", "bmp"],

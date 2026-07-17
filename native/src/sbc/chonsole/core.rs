@@ -1,8 +1,7 @@
 use super::completion::CompletionCatalog;
+use super::history::MAX_HISTORY;
 pub(super) use super::completion::ConsoleCommand;
 use super::types::{ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, ChonsoleSuggestion};
-
-const MAX_HISTORY: usize = 100;
 
 pub(super) struct ChonsoleCore {
     history: Vec<String>,

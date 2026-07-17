@@ -136,7 +136,10 @@ impl CompletionCatalog {
             .iter()
             .filter_map(|command| score(&command.name, &prefix).map(|score| (score, command)))
             .collect::<Vec<_>>();
-        scored.sort_by_key(|(score, command)| (*score, command.name.as_str()));
+        // Once a command matches, present the command catalogue in a stable
+        // alphabetical order. Ranking fuzzy matches ahead of one another made
+        // the list jump around and obscured where a command lives.
+        scored.sort_by(|(_, left), (_, right)| left.name.cmp(&right.name));
         scored
             .into_iter()
             .map(|(_, command)| ChonsoleSuggestion {

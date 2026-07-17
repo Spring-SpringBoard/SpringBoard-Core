@@ -90,6 +90,13 @@ impl CommandHistory {
         }
     }
 
+    pub(super) fn command_ids(&self) -> (Vec<CommandId>, Vec<CommandId>) {
+        (
+            self.undo.iter().map(|entry| entry.id).collect(),
+            self.redo.iter().map(|entry| entry.id).collect(),
+        )
+    }
+
     fn push_undo_impl(&mut self, entry: HistoryEntry, clear_redo: bool) -> Vec<HistoryEvent> {
         self.undo.push_back(entry);
         let mut events = Vec::new();

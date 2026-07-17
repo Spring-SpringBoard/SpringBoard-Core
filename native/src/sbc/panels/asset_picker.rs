@@ -117,9 +117,10 @@ impl AssetPicker {
     ) -> Result<(), Error> {
         self.field = Some(field.to_string());
         // `root` is the field's directory *within* an asset pack (`brush_textures/`),
-        // not a place on disk. Browsing starts above the packs, listing them.
+        // not a place on disk. `core` is SpringBoard's shipped/default pack, so
+        // start there instead of making every picker require an extra click.
         self.root = root.to_string();
-        self.dir = String::new();
+        self.dir = "core/".to_string();
         self.extensions = extensions.iter().map(|e| e.to_string()).collect();
         self.grid.set_selected(None);
         self.populate(interface, document)?;

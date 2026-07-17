@@ -23,20 +23,15 @@ pub(crate) fn non_empty(value: String) -> Option<String> {
     (!value.is_empty()).then_some(value)
 }
 
-/// Where SpringBoard's shipped assets live. Lua resolves an editor's `rootDir`
-/// against the folders `AssetsManager` registers; this is the only one, so the
-/// full VFS path is spelled out rather than reinventing that indirection.
+/// The direct thumbnail grids use full VFS paths. Asset fields instead pass a
+/// relative root to `AssetPicker`, which now defaults to this pack itself.
 pub(crate) const ASSETS: &str = "springboard/assets/core";
 
 /// Every brush is shaped by a pattern from the same directory.
 pub(crate) fn pattern_field() -> Box<AssetField> {
     Box::new(
-        AssetField::new(
-            "patternTexture",
-            "Pattern",
-            &format!("{ASSETS}/brush_patterns/terrain"),
-        )
-        .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
+        AssetField::new("patternTexture", "Pattern", "brush_patterns/terrain/")
+            .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
     )
 }
 

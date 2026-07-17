@@ -269,7 +269,7 @@ impl Editor for TeamsView {
             ));
             if !extra_bool(team, "gaia") {
                 html.push_str(&format!(
-                    r#"<button id="team-edit-{id}" class="team-edit">Edit</button><button id="team-remove-{id}" class="team-remove">x</button>"#,
+                    r#"<button id="team-edit-{id}" class="team-edit"><span>Edit</span></button><button id="team-remove-{id}" class="team-remove" title="Remove team"><img src="LuaUI/images/scenedit/cancel.png"/></button>"#,
                     id = team.id,
                 ));
             }

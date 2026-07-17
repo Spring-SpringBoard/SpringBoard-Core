@@ -17,10 +17,12 @@ body {
 	position: absolute;
 	left: 0dp;
 	right: 500dp;
-	bottom: 80dp;
+	bottom: 92dp;
 	height: 300dp;
 	color: #c8d0e0;
-	background-color: #1a1d219e;
+	/* Same translucent charcoal surface as Chonsole, the editor panel, and
+	   the persistent editor-status bar. */
+	background-color: #151b20d9;
 	border-width: 1dp;
 	border-color: #000000;
 	display: flex;
@@ -30,6 +32,133 @@ body {
 
 #dev-console.hidden {
 	display: none;
+}
+
+/* The scen_edit floating status and command windows live directly beneath the
+   console. They are editor status, not console output, so F8 only hides the
+   console and leaves these always-useful coordinates/history visible. */
+#editor-status {
+	position: absolute;
+	left: 0dp;
+	right: 500dp;
+	bottom: 0dp;
+	height: 92dp;
+	display: flex;
+	flex-direction: row;
+	pointer-events: auto;
+	font-size: 13dp;
+	color: #e3e9ef;
+	/* The children own the surface. Keeping this transparent avoids blending
+	   the same translucent colour twice across the status bar. */
+	background-color: transparent;
+}
+
+#status-info {
+	width: 60%;
+	box-sizing: border-box;
+	padding: 5dp;
+	/* Slightly lighter than the major panels, while still reading as one
+	   shared charcoal surface. */
+	background-color: #151b20c4;
+	border-width: 1dp;
+	border-color: #000000;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+}
+
+.status-line {
+	padding: 2dp 5dp;
+	min-height: 15dp;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.status-metric {
+	display: inline-block;
+	min-width: 146dp;
+	margin-right: 8dp;
+	white-space: nowrap;
+}
+
+.metric-label {
+	color: #8fa0af;
+	margin-right: 4dp;
+}
+
+.metric-value { color: #e8eef4; }
+.status-metric.healthy .metric-value { color: #7ed99a; }
+.status-metric.warning .metric-value { color: #efc96a; }
+.status-metric.critical .metric-value { color: #f07979; }
+
+#command-status {
+	position: relative;
+	flex: 1 1 auto;
+	min-width: 0dp;
+	box-sizing: border-box;
+	padding: 5dp;
+	background-color: #151b20c4;
+	border-width: 1dp;
+	border-color: #000000;
+}
+
+.command-toolbar {
+	position: absolute;
+	right: 255dp;
+	top: 18dp;
+	display: flex;
+	flex-direction: row;
+	gap: 10dp;
+	align-items: center;
+}
+
+.status-icon-button {
+	width: 34dp;
+	min-width: 34dp;
+	max-width: 34dp;
+	height: 34dp;
+	padding: 5dp;
+	background-color: #22272b;
+	border: 1dp #4b545d;
+	border-radius: 3dp;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.status-icon-button:hover { background-color: #303940; border-color: #74818d; }
+.status-icon-button img { width: 19dp; height: 19dp; }
+.status-icon-button.disabled {
+	opacity: 0.35;
+	border-color: #000000;
+}
+
+.command-list {
+	position: absolute;
+	right: 5dp;
+	top: 5dp;
+	width: 240dp;
+	bottom: 5dp;
+	overflow-y: auto;
+	background-color: #1a1a1a;
+	padding: 5dp;
+	display: flex;
+	flex-direction: column;
+	gap: 2dp;
+}
+
+.command-item {
+	padding: 4dp 5dp;
+	background-color: #222222;
+	color: #c8d0e0;
+	display: block;
+	min-height: 17dp;
+}
+
+/* Retain undone edits in-place, matching the original floating command
+   window: their muted appearance is the visible undo/redo cursor. */
+.command-item.undone {
+	color: #81909b;
 }
 
 .header {
@@ -85,6 +214,7 @@ body {
 .toolbar {
 	display: flex;
 	flex-direction: row;
+	align-items: stretch;
 	gap: 5dp;
 	padding: 7dp 8dp;
 	border-top-width: 1dp;
@@ -95,8 +225,13 @@ body {
    Lua console's do; without it they shrink to their text and read as cramped. */
 .toolbar button {
 	flex: 1;
-	min-height: 30dp;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 34dp;
+	height: 34dp;
 	padding: 6dp 12dp;
+	box-sizing: border-box;
 	text-align: center;
 	letter-spacing: 0.05em;
 	font-size: 13dp;
@@ -113,13 +248,22 @@ body {
 }
 
 .toolbar button.toggle {
-	padding-left: 16dp;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 9dp;
+	padding: 6dp 12dp;
 	background-color: #212528;
 	color: #cfd4db;
 	border-left-width: 6dp;
 	border-left-color: #2e2f32;
 	border-radius: 5dp;
 	font-weight: bold;
+}
+
+.command-label {
+    display: block;
+    text-align: center;
 }
 
 .toolbar button.toggle:hover {
@@ -139,6 +283,42 @@ body {
 	background-color: #1f3425;
 	color: #9efca6;
 	border-left-color: #5fc878;
+}
+
+.toggle-label { flex: 1 1 auto; }
+
+.toggle-switch {
+	position: relative;
+	width: 34dp;
+	height: 18dp;
+	flex-shrink: 0;
+	background-color: #101315;
+	border: 1dp #78838d;
+	/* Match panel toggles: rounded controls without a blurry pill silhouette. */
+	border-radius: 4dp;
+	box-sizing: border-box;
+}
+
+.toggle-thumb {
+	position: absolute;
+	left: 1dp;
+	top: 1dp;
+	width: 14dp;
+	height: 14dp;
+	background-color: #9aa4ad;
+	border: 1dp #c1c9d0;
+	border-radius: 3dp;
+	box-sizing: border-box;
+}
+
+.toolbar button.toggle.pressed .toggle-switch {
+	background-color: #285b35;
+	border-color: #73d487;
+}
+
+.toolbar button.toggle.pressed .toggle-thumb {
+	left: 17dp;
+	background-color: #a5f6b2;
 }
 
 scrollbarvertical {

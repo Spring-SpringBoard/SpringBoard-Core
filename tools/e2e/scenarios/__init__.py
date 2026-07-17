@@ -20,6 +20,7 @@ from scenarios import (  # noqa: F401 -- importing the modules registers them
     misc,
     objects,
     shell,
+    visual_sweep,
 )
 from scenarios.registry import REGISTERED
 

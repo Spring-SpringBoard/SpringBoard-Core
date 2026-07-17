@@ -413,8 +413,13 @@ impl EditorState for MapEditingState {
         let Some(pattern) = self.brush.pattern_texture.clone() else {
             return;
         };
-        // Texture Paint is not armed until a saved material has been chosen.
-        if self.kind == BrushKind::Texture && self.brush.brush_textures.is_empty() {
+        // Only material paint needs a saved material. Filter, Void and DNTS use
+        // just the selected pattern and were incorrectly hidden until Paint had
+        // happened once.
+        if self.kind == BrushKind::Texture
+            && self.brush.texture_paint_mode == "paint"
+            && self.brush.brush_textures.is_empty()
+        {
             return;
         }
         let Some(mouse) = cursor(interface) else {

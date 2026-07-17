@@ -27,6 +27,7 @@ local cfg = {
 
 local debugButtonEnabled = false
 local profilerButtonEnabled = false
+local engineConsoleHidden = false
 
 local Spring    = Spring
 local VFS       = VFS
@@ -663,11 +664,19 @@ end
 
 -- ---------- Widget lifecycle ----------
 function widget:Initialize()
+	-- Rust owns the developer console in its UI mode. Keep this guard separate
+	-- from the legacy `useRml` flag so this widget never changes engine-console
+	-- state while removing itself for Rust.
+	if Spring.GetGameRulesParam("sb_ui") ~= "rmlui" then
+		widgetHandler:RemoveWidget(self)
+		return
+	end
 	if Spring.GetGameRulesParam("useRml") ~= "true" then
 		widgetHandler:RemoveWidget(self)
 		return
 	end
 	Spring.SendCommands('console 0')
+	engineConsoleHidden = true
 	if Spring.GetGameRulesParam("gameMode") == "play" then
 		widgetHandler:RemoveWidget(self)
 		return
@@ -716,7 +725,9 @@ function widget:Shutdown()
 	rml.dataModel = nil
 	mouseCaptured = false
 	WG.DevConsole = nil
-	Spring.SendCommands('console 1')
+	if engineConsoleHidden then
+		Spring.SendCommands('console 1')
+	end
 end
 
 function widget:Update()

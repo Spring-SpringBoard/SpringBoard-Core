@@ -1,10 +1,8 @@
-use std::{
-    fs::{self, OpenOptions},
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::{Path, PathBuf}};
 
 use spring_native::prelude::NativeInterfaceRef;
+
+pub(super) const MAX_HISTORY: usize = 100;
 
 pub(super) struct HistoryStore {
     path: PathBuf,
@@ -26,40 +24,17 @@ impl HistoryStore {
                 return Vec::new();
             }
         };
-        raw.lines()
+        let mut history = raw
+            .lines()
             .map(str::trim)
             .filter(|line| !line.is_empty())
             .map(ToOwned::to_owned)
-            .collect()
-    }
-
-    pub(super) fn append(&self, entries: &[String]) {
-        if entries.is_empty() {
-            return;
+            .collect::<Vec<_>>();
+        if history.len() > MAX_HISTORY {
+            history.drain(..history.len() - MAX_HISTORY);
+            self.rewrite(&history);
         }
-        if let Some(parent) = self.path.parent() {
-            if let Err(err) = fs::create_dir_all(parent) {
-                log::warn!("create chonsole history dir {}: {err}", parent.display());
-                return;
-            }
-        }
-        let mut file = match OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&self.path)
-        {
-            Ok(file) => file,
-            Err(err) => {
-                log::warn!("open chonsole history {}: {err}", self.path.display());
-                return;
-            }
-        };
-        for entry in entries {
-            if let Err(err) = writeln!(file, "{entry}") {
-                log::warn!("append chonsole history {}: {err}", self.path.display());
-                return;
-            }
-        }
+        history
     }
 
     pub(super) fn rewrite(&self, history: &[String]) {
@@ -104,15 +79,32 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn history_store_appends_loads_and_clears() {
+    fn history_store_rewrites_loads_and_clears() {
         let path =
             std::env::temp_dir().join(format!("sbc_chonsole_history_{}", std::process::id()));
         let _ = fs::remove_file(&path);
         let store = HistoryStore { path: path.clone() };
-        store.append(&["/help".to_string(), "plain chat".to_string()]);
+        store.rewrite(&["/help".to_string(), "plain chat".to_string()]);
         assert_eq!(store.load(), vec!["/help", "plain chat"]);
         store.rewrite(&[]);
         assert_eq!(fs::read_to_string(&path).unwrap(), "");
+        let _ = fs::remove_file(&path);
+    }
+
+    #[test]
+    fn history_store_load_keeps_the_most_recent_hundred_entries() {
+        let path =
+            std::env::temp_dir().join(format!("sbc_chonsole_history_cap_{}", std::process::id()));
+        let _ = fs::remove_file(&path);
+        let store = HistoryStore { path: path.clone() };
+        let entries = (0..101).map(|index| format!("/{index}")).collect::<Vec<_>>();
+        store.rewrite(&entries);
+
+        let loaded = store.load();
+        assert_eq!(loaded.len(), super::MAX_HISTORY);
+        assert_eq!(loaded.first(), Some(&"/1".to_string()));
+        assert_eq!(loaded.last(), Some(&"/100".to_string()));
+        assert_eq!(fs::read_to_string(&path).unwrap().lines().count(), super::MAX_HISTORY);
         let _ = fs::remove_file(&path);
     }
 }

@@ -3,9 +3,10 @@ body {
     left: 26%;
     top: 24.5%;
     width: 41%;
-    height: 40%;
+    height: 47%;
     font-family: Poppins;
-    color: #dce3ea;
+    color: #f2f7fc;
+    font-effect: shadow(1px 1px #000000);
     background-color: transparent;
     border-width: 0dp;
 }
@@ -50,12 +51,14 @@ body {
     left: 0dp;
     right: 0dp;
     top: 38dp;
-    height: 286dp;
+    height: 380dp;
     padding: 4dp 0dp 0dp 0dp;
-    font-size: 14dp;
-    line-height: 24dp;
-    color: #cfd8e3;
-    background-color: #00000030;
+    font-size: 16dp;
+    line-height: 27dp;
+    color: #e5eef7;
+    /* One shared outer surface with the developer console, status bar, and
+       editor panel. Selection and hover still provide the blue emphasis. */
+    background-color: #151b20d9;
     border-width: 0dp;
     overflow-y: auto;
     overflow-x: hidden;
@@ -64,7 +67,7 @@ body {
 .suggestion {
     display: block;
     position: relative;
-    height: 24dp;
+    height: 27dp;
     padding: 0dp;
     background-color: transparent;
     white-space: nowrap;
@@ -72,32 +75,62 @@ body {
 }
 
 .selected-suggestion {
-    background-color: #7bc7ff33;
+    background-color: #4f9ed1c0;
+}
+
+.hovered-suggestion {
+    background-color: #2b5878d8;
 }
 
 .suggestion-command {
     position: absolute;
     left: 8dp;
+    right: 50%;
     top: 0dp;
-    width: 38%;
-    height: 24dp;
-    line-height: 24dp;
+    height: 27dp;
+    line-height: 27dp;
     white-space: nowrap;
     overflow: hidden;
-    color: #eef6ff;
+    color: #ffffff;
 }
 
 .suggestion-description {
     position: absolute;
-    right: 18dp;
+    left: 51%;
+    right: 14dp;
     top: 0dp;
-    width: 58%;
-    height: 24dp;
-    line-height: 24dp;
+    height: 27dp;
+    line-height: 27dp;
     text-align: right;
     white-space: nowrap;
     overflow: hidden;
-    color: #adb8c5;
+    color: #d5e3f0;
+}
+
+.suggestion-details {
+    position: absolute;
+    left: 0dp;
+    right: 0dp;
+    top: 424dp;
+    height: 54dp;
+    padding: 5dp 10dp;
+    font-size: 14dp;
+    line-height: 18dp;
+    color: #dce8f3;
+    background-color: #151b20d9;
+    border-top-width: 1dp;
+    border-top-color: #29465f;
+    white-space: normal;
+    overflow: hidden;
+}
+
+.suggestion-details-command {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.suggestion-details-text {
+    color: #d5e3f0;
 }
 
 scrollbarhorizontal,
@@ -110,7 +143,7 @@ scrollbarhorizontal sliderarrowinc {
 
 scrollbarvertical {
     width: 10dp;
-    background-color: #00000020;
+    background-color: #151b20d9;
 }
 
 scrollbarvertical sliderarrowdec,
@@ -122,13 +155,21 @@ scrollbarvertical sliderarrowinc {
 scrollbarvertical slidertrack {
     margin-left: 2dp;
     width: 6dp;
-    background-color: #00000018;
+    background-color: #152638;
 }
 
 scrollbarvertical sliderbar {
     width: 6dp;
     min-height: 22dp;
-    background-color: #dce3ea55;
+    background-color: #7595ad;
+}
+
+scrollbarvertical slidertrack:hover {
+    background-color: #29465f;
+}
+
+scrollbarvertical sliderbar:hover {
+    background-color: #a8dcff;
 }
 
 .input-row {
@@ -141,8 +182,8 @@ scrollbarvertical sliderbar {
     font-family: Poppins;
     font-size: 22dp;
     line-height: 26dp;
-    color: #eef4fb;
-    background-color: #00000030;
+    color: #ffffff;
+    background-color: #151b20d9;
     border-width: 0dp;
     white-space: pre;
     overflow: hidden;

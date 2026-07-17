@@ -1,16 +1,25 @@
+use std::cell::Cell;
+use std::rc::Rc;
+
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::field::{
-    element_by_id, escape_rml, on_change, ChangeQueue, Field, FieldValue, InteractionQueue,
+    element_by_id, escape_rml, ChangeQueue, CommitRequest, Field, FieldValue, InteractionQueue,
 };
 
-/// Checkbox, mirroring `RmlUiBooleanField` in `scen_edit/view/rmlui_fields.lua`.
+/// A full-width toggle button, mirroring `RmlUiBooleanField` in
+/// `scen_edit/view/rmlui_fields.lua`.
+///
+/// RmlUi's stock checkbox is small and visually indistinguishable from a
+/// browser control. A button lets it share the native Chonsole's selected
+/// action treatment and gives the entire control a reliable click target.
 pub(crate) struct BooleanField {
     name: String,
     title: String,
     tooltip: Option<String>,
     value: bool,
     element: Option<u64>,
+    clicked: Rc<Cell<bool>>,
 }
 
 impl BooleanField {
@@ -21,12 +30,20 @@ impl BooleanField {
             value,
             tooltip: None,
             element: None,
+            clicked: Rc::new(Cell::new(false)),
         }
     }
 
     pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
         self.tooltip = Some(tooltip.to_string());
         self
+    }
+
+    fn button_rml(&self) -> String {
+        format!(
+            r#"<span class="field-toggle-label">{}</span><span class="field-toggle-switch"><span class="field-toggle-thumb"></span></span>"#,
+            escape_rml(self.title.trim_end_matches(':')),
+        )
     }
 }
 
@@ -40,21 +57,23 @@ impl Field for BooleanField {
     }
 
     fn generate_rml(&self) -> String {
-        let checked = if self.value {
-            r#" checked="checked""#
-        } else {
-            ""
-        };
+        let pressed = if self.value { " pressed" } else { "" };
+        // A two-column toggle has room for roughly 23 Poppins characters plus
+        // its switch. Long object-property captions need their own row rather
+        // than becoming an accidental two-line button.
+        let long = (self.title.chars().count() >= 24)
+            .then_some(" field-boolean-long")
+            .unwrap_or("");
         format!(
             concat!(
-                r#"<div class="field-row">"#,
-                r#"<label class="field-label">{title}:</label>"#,
-                r#"<input type="checkbox" id="field-{n}" class="field-checkbox"{checked}/>"#,
+                r#"<div class="field-row field-boolean{long}">"#,
+                r#"<button id="field-{n}" class="field-toggle{pressed}">{button}</button>"#,
                 r#"</div>"#,
             ),
-            title = escape_rml(self.title.trim_end_matches(':')),
             n = self.name,
-            checked = checked,
+            pressed = pressed,
+            button = self.button_rml(),
+            long = long,
         )
     }
 
@@ -67,20 +86,28 @@ impl Field for BooleanField {
     ) -> Result<(), Error> {
         self.element = element_by_id(interface, document, &format!("field-{}", self.name));
         if let Some(e) = self.element {
-            on_change(interface, e, self.name.clone(), changes)?;
+            let clicked = self.clicked.clone();
+            let changes = changes.clone();
+            let name = self.name.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(e, "click", false, move || {
+                    clicked.set(true);
+                    changes.borrow_mut().push(CommitRequest {
+                        field: name.clone(),
+                        from_blur: false,
+                        revert: false,
+                    });
+                })?;
         }
         Ok(())
     }
 
-    /// RmlUi marks a checkbox by the *presence* of the `checked` attribute (it
-    /// sets it to ""), so comparing its value to "checked" always reads false.
     fn read_from_dom(&mut self, interface: &NativeInterfaceRef) -> Result<FieldValue, Error> {
-        if let Some(e) = self.element {
-            self.value = interface
-                .rml_ui()
-                .element_has_attribute(e, "checked")
-                .unwrap_or(false);
+        if self.clicked.replace(false) {
+            self.value = !self.value;
         }
+        self.write_to_dom(interface)?;
         Ok(FieldValue::Bool(self.value))
     }
 
@@ -89,11 +116,8 @@ impl Field for BooleanField {
             return Ok(());
         };
         let rml = interface.rml_ui();
-        if self.value {
-            rml.element_set_attribute(e, "checked", "")?;
-        } else {
-            rml.element_remove_attribute(e, "checked")?;
-        }
+        rml.element_set_class(e, "pressed", self.value)?;
+        rml.element_set_inner_rml(e, &self.button_rml())?;
         Ok(())
     }
 

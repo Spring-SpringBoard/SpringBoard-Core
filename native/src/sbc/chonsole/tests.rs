@@ -53,6 +53,42 @@ mod tests {
     }
 
     #[test]
+    fn matching_slash_commands_are_alphabetical() {
+        let mut core = core();
+        core.replace_catalog(vec![
+            ConsoleCommand {
+                name: "zulu".into(),
+                description: String::new(),
+                requires_cheat: false,
+            },
+            ConsoleCommand {
+                name: "alpha".into(),
+                description: String::new(),
+                requires_cheat: false,
+            },
+        ]);
+
+        let commands = core
+            .suggestions("/")
+            .into_iter()
+            .map(|suggestion| suggestion.command)
+            .collect::<Vec<_>>();
+        assert!(commands.windows(2).all(|pair| pair[0] <= pair[1]));
+    }
+
+    #[test]
+    fn history_keeps_the_most_recent_hundred_entries() {
+        let mut core = core();
+        for index in 0..101 {
+            core.execute(&format!("/echo {index}"));
+        }
+
+        assert_eq!(core.history().len(), 100);
+        assert_eq!(core.history().first(), Some(&"/echo 1".to_string()));
+        assert_eq!(core.history().last(), Some(&"/echo 100".to_string()));
+    }
+
+    #[test]
     fn slash_commands_are_forwarded_as_engine_effects() {
         let mut core = core();
         let (_, effects) = core.execute("/water 1");

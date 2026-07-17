@@ -1,27 +1,27 @@
 {
   "console-cleared": {
-    "notes": "Clear empties the log. Same toolbar width/centring change as above.",
+    "notes": "Reviewed: Clear leaves an empty console. The harness starts hidden, so Popup on error is off; the engine's deterministic Global LOS state is shown on.",
     "status": "ai-reviewed",
-    "updated": "2026-07-11T15:35:37"
+    "updated": "2026-07-16T09:59:03"
   },
   "console-hidden": {
-    "notes": "Hide (F8) closes the console.",
+    "notes": "Reviewed: F8 removes the native console while leaving the map unobscured.",
     "status": "ai-reviewed",
-    "updated": "2026-07-11T15:35:37"
+    "updated": "2026-07-16T08:27:14"
   },
   "console-problems-off": {
-    "notes": "Problems filter toggles back off.",
+    "notes": "Reviewed: the Problems button returns to its unpressed state after the second click.",
     "status": "ai-reviewed",
-    "updated": "2026-07-11T15:35:37"
+    "updated": "2026-07-16T08:27:12"
   },
   "console-problems-on": {
-    "notes": "Problems filter toggles on (pressed styling).",
+    "notes": "Reviewed: the Problems button is visibly pressed after its correctly targeted toolbar click.",
     "status": "ai-reviewed",
-    "updated": "2026-07-11T15:35:37"
+    "updated": "2026-07-16T08:27:11"
   },
   "console-shown": {
-    "notes": "Dev console opens. Toolbar buttons now share the width evenly with centred text (.toolbar button { flex: 1; text-align: center }), matching the Lua console; they were shrink-to-text and misaligned.",
+    "notes": "Reviewed: F8 reopens the native console with its evenly sized, legible toolbar.",
     "status": "ai-reviewed",
-    "updated": "2026-07-11T15:35:37"
+    "updated": "2026-07-16T08:27:15"
   }
 }

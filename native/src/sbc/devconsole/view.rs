@@ -11,10 +11,29 @@ use crate::sbc::rml::{self, element_by_id, escape_rml};
 
 const UI_CONTEXT: &str = "sbc_dev_console";
 const UI_BODY: &str = include_str!("ui.rml");
+const STATUS_CONTEXT: &str = "sbc_editor_status";
+const STATUS_BODY: &str = include_str!("status.rml");
 const UI_STYLE: &str = include_str!("ui.rcss");
 
 pub(crate) type ActionQueue = Rc<RefCell<Vec<Action>>>;
 type SelectionQueue = Rc<RefCell<Vec<SelectionEvent>>>;
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum StatusAction {
+    Undo,
+    Redo,
+    ClearHistory,
+}
+
+/// One row in the undo/redo history strip. `undone` is the visual undo cursor:
+/// it stays in the list but is muted until Redo restores it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct HistoryCommand {
+    pub caption: String,
+    pub undone: bool,
+}
+
+type StatusActionQueue = Rc<RefCell<Vec<StatusAction>>>;
 
 #[derive(Debug, Clone, Copy)]
 enum SelectionEvent {
@@ -53,9 +72,18 @@ impl ToggleState {
 pub(crate) struct DevConsoleView {
     context: Option<u64>,
     document: Option<u64>,
+    /// Kept in a separate context from the F8 console so it has its own
+    /// viewport-sized document and remains visible when the console is hidden.
+    status_context: Option<u64>,
+    status_document: Option<u64>,
+    /// Last history rendered into the command list. Metrics refresh regularly,
+    /// but rebuilding this scroll container each frame would steal its scroll
+    /// position from someone reading older edits.
+    rendered_command_log: Option<Vec<HistoryCommand>>,
     root: Option<u64>,
     log: Option<u64>,
     actions: ActionQueue,
+    status_actions: StatusActionQueue,
     selection_events: SelectionQueue,
     selection: SelectionState,
     visible: bool,
@@ -85,9 +113,13 @@ impl Default for DevConsoleView {
         DevConsoleView {
             context: None,
             document: None,
+            status_context: None,
+            status_document: None,
+            rendered_command_log: None,
             root: None,
             log: None,
             actions: Rc::new(RefCell::new(Vec::new())),
+            status_actions: Rc::new(RefCell::new(Vec::new())),
             selection_events: Rc::new(RefCell::new(Vec::new())),
             selection: SelectionState::default(),
             visible: true,
@@ -124,6 +156,10 @@ impl DevConsoleView {
         self.actions.borrow_mut().drain(..).collect()
     }
 
+    pub(crate) fn drain_status_actions(&self) -> Vec<StatusAction> {
+        self.status_actions.borrow_mut().drain(..).collect()
+    }
+
     pub(crate) fn selected_range(&self) -> Option<(usize, usize)> {
         self.selection.range()
     }
@@ -147,6 +183,7 @@ impl DevConsoleView {
     pub(crate) fn ensure(&mut self, interface: &NativeInterfaceRef) -> Result<bool, Error> {
         if self.is_ready() {
             if self.context_is_alive(interface) {
+                self.ensure_status(interface)?;
                 return Ok(false);
             }
             self.forget();
@@ -178,10 +215,48 @@ impl DevConsoleView {
         self.log = element_by_id(interface, doc, "log-container");
 
         self.build_toolbar(interface)?;
+        self.ensure_status(interface)?;
         // A rebuild after a reload must not silently reopen a hidden console.
         let visible = self.visible;
         self.set_visible(interface, visible)?;
         Ok(true)
+    }
+
+    /// The scen_edit-style status bar intentionally has a dedicated RmlUi
+    /// context. A document has one layout root in this engine; putting it next
+    /// to the F8 console made the strip depend on that console's containing
+    /// block and could leave it unpainted. Its own context makes it a genuine
+    /// screen-edge surface and lets it stay up while F8 hides the console.
+    fn ensure_status(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if let Some(context) = self.status_context {
+            if rml::context_is_alive(interface, STATUS_CONTEXT, Some(context)) {
+                return Ok(());
+            }
+            self.status_context = None;
+            self.status_document = None;
+            self.rendered_command_log = None;
+        }
+
+        let rml = interface.rml_ui();
+        let (context, created) = rml.create_context(STATUS_CONTEXT)?;
+        if !created {
+            return Ok(());
+        }
+        let geometry = interface.display().get_view_geometry()?;
+        let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
+        let (document, created) = rml.context_create_document(context, "body")?;
+        if !created {
+            let _ = rml.remove_context(context);
+            return Ok(());
+        }
+        rml.document_set_title(document, "Editor status")?;
+        rml.document_append_to_style_sheet(document, UI_STYLE)?;
+        rml.element_set_inner_rml(document, STATUS_BODY)?;
+        rml.document_show(document, None, None)?;
+        self.status_context = Some(context);
+        self.status_document = Some(document);
+        self.rendered_command_log = None;
+        self.bind_status_actions(interface)
     }
 
     fn build_toolbar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
@@ -199,11 +274,21 @@ impl DevConsoleView {
             } else {
                 "command"
             };
+            let caption = escape_rml(action.caption());
+            let content = if action.is_toggle() {
+                format!(
+                    r#"<span class="toggle-label">{caption}</span><span class="toggle-switch"><span class="toggle-thumb"></span></span>"#
+                )
+            } else {
+                // RmlUi drops a raw text node inside a flex button. Commands
+                // need the same explicit text element as toggle labels.
+                format!(r#"<span class="command-label">{caption}</span>"#)
+            };
             html.push_str(&format!(
-                r#"<button id="{id}" class="{class}">{caption}</button>"#,
+                r#"<button id="{id}" class="{class}">{content}</button>"#,
                 id = action.id(),
                 class = class,
-                caption = escape_rml(action.caption()),
+                content = content,
             ));
         }
         interface.rml_ui().element_set_inner_rml(bar, &html)?;
@@ -220,6 +305,101 @@ impl DevConsoleView {
                 .element_add_event_listener(button, "click", false, move || {
                     queue.borrow_mut().push(action);
                 })?;
+        }
+        Ok(())
+    }
+
+    fn bind_status_actions(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(doc) = self.status_document else {
+            return Ok(());
+        };
+        for (id, action) in [
+            ("status-undo", StatusAction::Undo),
+            ("status-redo", StatusAction::Redo),
+            ("status-clear", StatusAction::ClearHistory),
+        ] {
+            let Some(button) = element_by_id(interface, doc, id) else {
+                continue;
+            };
+            let queue = self.status_actions.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(button, "click", false, move || {
+                    queue.borrow_mut().push(action);
+                })?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn render_status(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        position: &str,
+        performance: &str,
+        system: &str,
+        version: &str,
+        commands: &[HistoryCommand],
+    ) -> Result<(), Error> {
+        let Some(doc) = self.status_document else {
+            return Ok(());
+        };
+        for (id, text) in [("status-position", position), ("status-version", version)] {
+            if let Some(element) = element_by_id(interface, doc, id) {
+                interface
+                    .rml_ui()
+                    .element_set_inner_rml(element, &escape_rml(text))?;
+            }
+        }
+        // These strings are built exclusively from numeric measurements and
+        // fixed labels in `manager`; render their metric spans intentionally so
+        // CSS can give each cell a stable width and a semantic colour.
+        for (id, markup) in [
+            ("status-performance", performance),
+            ("status-system", system),
+        ] {
+            if let Some(element) = element_by_id(interface, doc, id) {
+                interface.rml_ui().element_set_inner_rml(element, markup)?;
+            }
+        }
+        let can_undo = commands.iter().any(|command| !command.undone);
+        let can_redo = commands.iter().any(|command| command.undone);
+        let can_clear = can_undo || can_redo;
+        for (id, enabled) in [
+            ("status-undo", can_undo),
+            ("status-redo", can_redo),
+            ("status-clear", can_clear),
+        ] {
+            if let Some(button) = element_by_id(interface, doc, id) {
+                interface
+                    .rml_ui()
+                    .element_set_class(button, "disabled", !enabled)?;
+            }
+        }
+        if self.rendered_command_log.as_deref() != Some(commands) {
+            if let Some(list) = element_by_id(interface, doc, "command-list") {
+                let html: String = commands
+                    .iter()
+                    .rev()
+                    .take(12)
+                    .rev()
+                    .map(|command| {
+                        let class = if command.undone {
+                            "command-item undone"
+                        } else {
+                            "command-item"
+                        };
+                        format!(
+                            r#"<div class="{class}">{}</div>"#,
+                            escape_rml(&command.caption)
+                        )
+                    })
+                    .collect();
+                interface.rml_ui().element_set_inner_rml(list, &html)?;
+                // A newly executed edit should be visible, but no periodic
+                // metric update is allowed to reset a manual scroll.
+                let _ = interface.rml_ui().element_set_scroll_top(list, 1_000_000);
+            }
+            self.rendered_command_log = Some(commands.to_vec());
         }
         Ok(())
     }
@@ -385,6 +565,15 @@ impl DevConsoleView {
                 .context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
             interface.rml_ui().context_update(ctx)?;
         }
+        if let Some(context) = self.status_context {
+            let geometry = interface.display().get_view_geometry()?;
+            let _ = interface.rml_ui().context_set_dimensions(
+                context,
+                geometry.viewSizeX,
+                geometry.viewSizeY,
+            );
+            interface.rml_ui().context_update(context)?;
+        }
         Ok(())
     }
 
@@ -392,9 +581,13 @@ impl DevConsoleView {
     pub(crate) fn forget(&mut self) {
         self.context = None;
         self.document = None;
+        self.status_context = None;
+        self.status_document = None;
+        self.rendered_command_log = None;
         self.root = None;
         self.log = None;
         self.actions.borrow_mut().clear();
+        self.status_actions.borrow_mut().clear();
     }
 
     pub(crate) fn dispose(&mut self, interface: &NativeInterfaceRef) {
@@ -403,6 +596,12 @@ impl DevConsoleView {
             return;
         }
         let rml = interface.rml_ui();
+        if let Some(document) = self.status_document.take() {
+            let _ = rml.document_close(document);
+        }
+        if let Some(context) = self.status_context.take() {
+            let _ = rml.remove_context(context);
+        }
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);
         }

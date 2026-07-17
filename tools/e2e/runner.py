@@ -78,10 +78,12 @@ class E2ERun:
         review_images: bool,
         image_workers: int,
         update_golden: bool = False,
+        stage_goldens: bool = False,
     ):
         self.case = case
         self.capture = capture
         self.update_golden = update_golden
+        self.stage_goldens = stage_goldens
         self.golden_results: list[tuple[str, str]] = []
         self.review_images = review_images
         self.image_workers = image_workers
@@ -118,10 +120,10 @@ class E2ERun:
         # console hidden -- a scenario that wants it presses F8.
         env["SBC_STILL_MODELS"] = "1"
         env["SBC_HIDE_CONSOLE"] = "1"
-        # Tooltips -- the field ones and the cursor tip alike -- follow the pointer,
-        # so they land in the middle of whatever is being captured. Off unless the
-        # scenario is about them (`env=` on @scenario).
-        env["SBC_HIDE_TOOLTIPS"] = "1"
+        # Run every E2E with field and map tooltips enabled. A scenario parks the
+        # pointer before a stable golden when it is not testing a tooltip; this
+        # way every interaction also exercises the native/Lua tooltip paths.
+        env["SBC_HIDE_TOOLTIPS"] = "0"
         # Debug lines land in the run's infolog, so a failure can be explained
         # afterwards from the artifact rather than by re-running with printfs.
         env["SBC_LOG_LEVEL"] = "debug"
@@ -284,16 +286,23 @@ class E2ERun:
     def type_text(self, text: str, delay_ms: int = 10) -> None:
         self.require_window()
         self.event("type", text=text)
-        run(
-            "xdotool",
-            "type",
-            "--window",
-            self.window,
-            "--delay",
-            str(delay_ms),
-            "--",
-            text,
-        )
+        for index, fragment in enumerate(text.split("/")):
+            if fragment:
+                run(
+                    "xdotool",
+                    "type",
+                    "--window",
+                    self.window,
+                    "--delay",
+                    str(delay_ms),
+                    "--",
+                    fragment,
+                )
+            if index < text.count("/"):
+                # Spring consumes physical scancodes while xdotool resolves a
+                # keysym through the active X layout; keycode 61 is slash in
+                # the engine's fixed layout even when that layout maps it to &.
+                run("xdotool", "key", "--window", self.window, "keycode", "61")
         time.sleep(0.06)
 
     def click(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
@@ -699,13 +708,15 @@ class E2ERun:
         self.screenshots.append(shot)
         raw_path.unlink(missing_ok=True)
 
-        status = compare_golden(
-            self.case.name,
-            name,
-            png_path,
-            update=self.update_golden,
-            tolerance=tolerance,
-        )
+        status = "candidate (not written)"
+        if not self.stage_goldens:
+            status = compare_golden(
+                self.case.name,
+                name,
+                png_path,
+                update=self.update_golden,
+                tolerance=tolerance,
+            )
         self.golden_results.append((name, status))
         self.event("golden", name=name, status=status, path=str(png_path))
         return png_path
@@ -771,7 +782,15 @@ class E2ERun:
             data
             for data in committed
             if data.get("className") == class_name
-            and all(key in command_fields(data) for key in expected)
+            and all(
+                key in command_fields(data)
+                and (
+                    want(command_fields(data)[key])
+                    if callable(want)
+                    else command_fields(data)[key] == want
+                )
+                for key, want in expected.items()
+            )
         ] or [
             data
             for data in committed
@@ -787,12 +806,6 @@ class E2ERun:
                 f"got {len(matches)}. Sent: {sent}"
             )
         data = matches[0]
-        opts = command_fields(data)
-        for key, want in expected.items():
-            got = opts.get(key)
-            ok = want(got) if callable(want) else got == want
-            if not ok:
-                raise AssertionError(f"{class_name}.{key}: expected {want!r}, got {got!r}")
         self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
 

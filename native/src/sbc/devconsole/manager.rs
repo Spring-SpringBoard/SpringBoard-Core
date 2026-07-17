@@ -1,15 +1,22 @@
 use std::any::Any;
+use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
+use crate::sbc::command_system::command::{Command, CommandId};
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
+use crate::sbc::command_system::{ClearUndoRedoCommand, RedoCommand, UndoCommand};
 use crate::sbc::devconsole::actions::{
     cheat_if_needed, is_cheating, is_global_los, is_god_mode, Action,
 };
 use crate::sbc::devconsole::log::{LogBuffer, Severity};
-use crate::sbc::devconsole::view::{DevConsoleView, ToggleState};
+use crate::sbc::devconsole::metrics::SystemMetrics;
+use crate::sbc::devconsole::view::{DevConsoleView, HistoryCommand, StatusAction, ToggleState};
 use crate::sbc::keys::is_key;
+use crate::sbc::objects::SelectionManager;
 use crate::sbc::port_flags::{self, UiImpl};
+use crate::sbc::states::{cursor, trace_ground};
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(DevConsoleManager::new(iface)) }
@@ -43,6 +50,18 @@ pub(crate) struct DevConsoleManager {
     /// The engine's console buffer is only worth reading once; after a `luaui
     /// reload` rebuilds the view, our own buffer already holds those lines.
     backfilled: bool,
+    /// Performance collection is deliberately slow: querying the engine and
+    /// the OS every UI update is noisy and makes numbers visually flicker.
+    last_metrics_refresh: Option<Instant>,
+    performance: String,
+    system_performance: String,
+    system_metrics: SystemMetrics,
+    version: String,
+    /// Captions are registered as commands arrive, then projected onto the
+    /// command manager's actual undo/redo deques.
+    command_captions: HashMap<CommandId, String>,
+    command_log: Vec<HistoryCommand>,
+    pending_commands: Vec<Box<dyn Command>>,
 }
 
 impl Model for DevConsoleManager {
@@ -82,10 +101,18 @@ impl DevConsoleManager {
             pin_log_bottom: false,
             toggle_refresh_pending: false,
             backfilled: false,
+            last_metrics_refresh: None,
+            performance: String::new(),
+            system_performance: String::new(),
+            system_metrics: SystemMetrics::new(),
+            version: game_version(&interface),
+            command_captions: HashMap::new(),
+            command_log: Vec::new(),
+            pending_commands: Vec::new(),
         }
     }
 
-    pub fn update(&mut self, _models: &mut Models) -> Result<(), Error> {
+    pub fn update(&mut self, models: &mut Models) -> Result<(), Error> {
         if !self.enabled {
             return Ok(());
         }
@@ -112,6 +139,7 @@ impl DevConsoleManager {
         }
 
         self.process_actions()?;
+        self.process_status_actions();
         if !self.view.is_ready() {
             return Ok(());
         }
@@ -130,7 +158,69 @@ impl DevConsoleManager {
                 .render_error_count(&self.interface, self.buffer.error_count())?;
             self.dirty = false;
         }
+        self.render_status(models)?;
         self.view.update(&self.interface)
+    }
+
+    /// Called by SBC once a command has actually crossed the native bridge.
+    pub(crate) fn record_command(&mut self, id: CommandId, name: impl Into<String>) {
+        let name = name.into();
+        // These commands merely move (or empty) the undo/redo cursor. The
+        // status list is an edit journal, so it must keep showing the edits
+        // being traversed rather than narrating cursor movement.
+        if is_history_navigation(&name) {
+            return;
+        }
+        self.command_captions.insert(id, command_caption(&name));
+    }
+
+    /// Rebuild the visual history from the source of truth. Undo/redo controls
+    /// never add rows: they only move existing entries across the cursor.
+    pub(crate) fn sync_command_history(
+        &mut self,
+        undo_ids: &[CommandId],
+        redo_ids: &[CommandId],
+    ) {
+        self.command_log = project_command_history(&self.command_captions, undo_ids, redo_ids);
+    }
+
+    pub(crate) fn drain_commands(&mut self) -> Vec<Box<dyn Command>> {
+        std::mem::take(&mut self.pending_commands)
+    }
+
+    fn process_status_actions(&mut self) {
+        for action in self.view.drain_status_actions() {
+            let command: Box<dyn Command> = match action {
+                StatusAction::Undo => Box::new(UndoCommand),
+                StatusAction::Redo => Box::new(RedoCommand),
+                StatusAction::ClearHistory => Box::new(ClearUndoRedoCommand),
+            };
+            self.pending_commands.push(command);
+        }
+    }
+
+    fn render_status(&mut self, models: &mut Models) -> Result<(), Error> {
+        let position = status_position(&self.interface, models.get::<SelectionManager>());
+        let now = Instant::now();
+        if self.performance.is_empty()
+            || self
+                .last_metrics_refresh
+                .is_none_or(|last| now.duration_since(last) >= Duration::from_secs(2))
+        {
+            let (performance, system_performance) =
+                performance(&self.interface, &mut self.system_metrics);
+            self.performance = performance;
+            self.system_performance = system_performance;
+            self.last_metrics_refresh = Some(now);
+        }
+        self.view.render_status(
+            &self.interface,
+            &position,
+            &self.performance,
+            &self.system_performance,
+            &self.version,
+            &self.command_log,
+        )
     }
 
     /// Seed the console with what the engine logged before RmlUi was up,
@@ -144,13 +234,18 @@ impl DevConsoleManager {
                 continue;
             }
             let text = unsafe { std::ffi::CStr::from_ptr(entry.text) }.to_string_lossy();
-            self.buffer.push(text.trim_end());
+            if show_console_line(&text) {
+                self.buffer.push(text.trim_end());
+            }
         }
     }
 
     /// A line the engine just logged.
     pub fn add_console_line(&mut self, message: &str) {
         if !self.enabled {
+            return;
+        }
+        if !show_console_line(message) {
             return;
         }
         let severity = self.buffer.push(message.trim_end());
@@ -314,5 +409,241 @@ impl DevConsoleManager {
             god_mode: is_god_mode(&self.interface),
         };
         self.view.render_toggles(&self.interface, state)
+    }
+}
+
+fn status_position(interface: &NativeInterfaceRef, selection: &SelectionManager) -> String {
+    let ground = cursor(interface)
+        .and_then(|mouse| trace_ground(interface, mouse.x, mouse.y))
+        .map(|hit| format!("X: {:.0}, Y: {:.0}, Z: {:.0}", hit.x, hit.y, hit.z))
+        .unwrap_or_else(|| "Off-screen".to_string());
+    match selection.count() {
+        0 => format!("{ground}. No selection"),
+        1 => selection
+            .primary()
+            .map(|(_, id)| format!("{ground}. Selected: 1 (ID={id})"))
+            .unwrap_or_else(|| format!("{ground}. Selected: 1")),
+        count => format!("{ground}. Selected: {count}"),
+    }
+}
+
+fn performance(
+    interface: &NativeInterfaceRef,
+    system_metrics: &mut SystemMetrics,
+) -> (String, String) {
+    let fps = interface.display().get_fps().unwrap_or_default();
+    let memory = interface
+        .profiling()
+        .get_lua_mem_usage()
+        .map(|(_, _, global, ..)| global / 1024.0)
+        .unwrap_or_default();
+    let (video_used, video_available) = interface
+        .profiling()
+        .get_vid_mem_usage()
+        .unwrap_or_default();
+    let system = system_metrics.sample();
+    let vram_ratio = ratio(video_used, video_available);
+    let ram_ratio = ratio(
+        system.system_used_memory as f32,
+        system.system_total_memory as f32,
+    );
+    let process_cpus = system.process_cpu / 100.0;
+    let system_cpus = system.system_cpu / 100.0 * system.logical_cpus.max(1) as f32;
+    (
+        metric_markup(&[
+            ("FPS", format!("{fps}"), fps_tone(fps as f32)),
+            (
+                "Process CPU",
+                format!("{process_cpus:.1} CPUs"),
+                usage_tone(process_cpus / system.logical_cpus.max(1) as f32),
+            ),
+            (
+                "System CPU",
+                format!("{system_cpus:.1} / {} CPUs", system.logical_cpus.max(1)),
+                usage_tone(system.system_cpu / 100.0),
+            ),
+        ]),
+        metric_markup(&[
+            ("Lua", format!("{memory:.0} MiB"), "normal"),
+            (
+                "VRAM",
+                format!("{video_used:.0} / {video_available:.0} MiB"),
+                usage_tone(vram_ratio),
+            ),
+            (
+                "RAM",
+                format!(
+                    "{:.1} / {:.1} GiB",
+                    bytes_to_gib(system.system_used_memory),
+                    bytes_to_gib(system.system_total_memory)
+                ),
+                usage_tone(ram_ratio),
+            ),
+            (
+                "Process RAM",
+                format!("{} MiB", bytes_to_mib(system.process_memory)),
+                "normal",
+            ),
+        ]),
+    )
+}
+
+fn metric_markup(metrics: &[(&str, String, &str)]) -> String {
+    metrics
+        .iter()
+        .map(|(label, value, tone)| {
+            format!(
+                r#"<span class="status-metric {tone}"><span class="metric-label">{label}</span><span class="metric-value">{value}</span></span>"#
+            )
+        })
+        .collect()
+}
+
+fn usage_tone(used: f32) -> &'static str {
+    if used >= 0.90 {
+        "critical"
+    } else if used >= 0.70 {
+        "warning"
+    } else {
+        "healthy"
+    }
+}
+
+fn fps_tone(fps: f32) -> &'static str {
+    if fps < 30.0 {
+        "critical"
+    } else if fps < 55.0 {
+        "warning"
+    } else {
+        "healthy"
+    }
+}
+
+fn ratio(used: f32, total: f32) -> f32 {
+    (total > 0.0).then_some(used / total).unwrap_or_default()
+}
+
+/// The command registry uses Rust/JSON type names; status history is for a
+/// person scanning recent work.  Drop the implementation suffix and split
+/// words so `AddObjectCommand` becomes `Add Object`.
+fn command_caption(name: &str) -> String {
+    let name = name.strip_suffix("Command").unwrap_or(name);
+    let mut caption = String::with_capacity(name.len() + 4);
+    let mut previous: Option<char> = None;
+    let chars: Vec<char> = name.chars().collect();
+    for (index, current) in chars.iter().copied().enumerate() {
+        let next = chars.get(index + 1).copied();
+        if current.is_uppercase()
+            && previous.is_some_and(|before| before.is_lowercase() || before.is_ascii_digit())
+            || current.is_uppercase()
+                && previous.is_some_and(|before| before.is_uppercase())
+                && next.is_some_and(char::is_lowercase)
+        {
+            caption.push(' ');
+        }
+        caption.push(current);
+        previous = Some(current);
+    }
+    caption
+}
+
+fn is_history_navigation(name: &str) -> bool {
+    matches!(name, "UndoCommand" | "RedoCommand" | "ClearUndoRedoCommand")
+}
+
+fn project_command_history(
+    captions: &HashMap<CommandId, String>,
+    undo_ids: &[CommandId],
+    redo_ids: &[CommandId],
+) -> Vec<HistoryCommand> {
+    undo_ids
+        .iter()
+        .filter_map(|id| captions.get(id).map(|caption| HistoryCommand {
+            caption: caption.clone(),
+            undone: false,
+        }))
+        // Redo stores the next command at the back; reverse it to retain the
+        // chronological list Chili showed, with the undone suffix greyed out.
+        .chain(redo_ids.iter().rev().filter_map(|id| {
+            captions.get(id).map(|caption| HistoryCommand {
+                caption: caption.clone(),
+                undone: true,
+            })
+        }))
+        .collect()
+}
+
+/// `get_game_mod_info` reports these hashes through the engine console. They
+/// are archive bookkeeping, not developer diagnostics, and repeat whenever a
+/// caller refreshes mod metadata.
+fn show_console_line(message: &str) -> bool {
+    !message.contains("[CAS::GASCB] Archive file=")
+}
+
+fn bytes_to_mib(bytes: u64) -> u64 {
+    bytes / (1024 * 1024)
+}
+
+fn bytes_to_gib(bytes: u64) -> f64 {
+    bytes as f64 / (1024.0 * 1024.0 * 1024.0)
+}
+
+fn game_version(interface: &NativeInterfaceRef) -> String {
+    let Ok(info) = interface.game().get_game_mod_info() else {
+        return "SpringBoard".to_string();
+    };
+    unsafe {
+        let string = |ptr: *const std::ffi::c_char| {
+            (!ptr.is_null()).then(|| std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned())
+        };
+        let name = string(info.gameName).unwrap_or_else(|| "SpringBoard".to_string());
+        let version = string(info.gameVersion).unwrap_or_default();
+        format!("{name} {version}").trim().to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::{
+        command_caption, is_history_navigation, project_command_history, HistoryCommand,
+    };
+
+    #[test]
+    fn edit_history_excludes_undo_cursor_navigation() {
+        for command in ["UndoCommand", "RedoCommand", "ClearUndoRedoCommand"] {
+            assert!(is_history_navigation(command), "{command} must stay out of edit history");
+        }
+        assert!(!is_history_navigation("AddObjectCommand"));
+        assert_eq!(command_caption("AddObjectCommand"), "Add Object");
+    }
+
+    #[test]
+    fn history_projection_moves_existing_rows_across_the_undo_cursor() {
+        let captions = HashMap::from([
+            (1, "Add Object".to_string()),
+            (2, "Paint Texture".to_string()),
+            (3, "Move Object".to_string()),
+        ]);
+        let rows = project_command_history(&captions, &[1], &[3, 2]);
+        assert_eq!(
+            rows,
+            vec![
+                HistoryCommand {
+                    caption: "Add Object".to_string(),
+                    undone: false,
+                },
+                HistoryCommand {
+                    caption: "Paint Texture".to_string(),
+                    undone: true,
+                },
+                HistoryCommand {
+                    caption: "Move Object".to_string(),
+                    undone: true,
+                },
+            ]
+        );
+        assert!(project_command_history(&captions, &[], &[]).is_empty());
     }
 }

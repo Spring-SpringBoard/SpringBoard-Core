@@ -19,3 +19,9 @@ The old names (`rust-rmlui.json`, `mixed-rust-*`) named the *chonsole*, not the
 UI, so `rust-rmlui` was the Lua UI. They are renamed above.
 
     just run config/ui-rust.json
+
+Manual Rust-Chonsole sessions use a stable history file at
+`$XDG_STATE_HOME/springboard/chonsole-history` (or
+`~/.local/state/springboard/chonsole-history`). Set `SBC_CHONSOLE_HISTORY` to
+use a different file while testing. Smoke and E2E runs deliberately keep their
+history inside their disposable isolated write directory.

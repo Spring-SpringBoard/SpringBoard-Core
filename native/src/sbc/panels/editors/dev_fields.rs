@@ -86,18 +86,17 @@ impl DevFieldsView {
                     ColorField::new("colour", "Colour")
                         .with_tooltip("Opens the colour picker modal."),
                 ),
-                // A root *within* an asset pack, as every Lua asset field uses
-                // (`brush_textures/`, `detail/`, `shaders/`). The picker opens on
-                // the pack list, not on a directory.
+                // A root inside the default `core` asset pack. The picker opens
+                // directly on that usable directory, not on a pack chooser.
                 Box::new(
                     AssetField::new("asset", "Asset", "brush_textures/")
                         .extensions(&["png", "jpg"])
                         .with_tooltip("Opens the asset picker: browse packs, pick a file."),
                 ),
                 // A group renders its fields on one row, as the XYZ vectors do.
-                Box::new(NumericField::new("vec_x", "X", 1.0)),
-                Box::new(NumericField::new("vec_y", "Y", 2.0)),
-                Box::new(NumericField::new("vec_z", "Z", 3.0)),
+                Box::new(NumericField::new("vec_x", "X", 1.0).compact()),
+                Box::new(NumericField::new("vec_y", "Y", 2.0).compact()),
+                Box::new(NumericField::new("vec_z", "Z", 3.0).compact()),
             ]),
         }
     }

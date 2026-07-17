@@ -74,7 +74,10 @@ end
 
 -- when "cursor: normal" is set via RCSS, "cursornormal" will be sent to the engine... and so on for the rest
 RmlUi.SetMouseCursorAlias("default", 'cursornormal')
-RmlUi.SetMouseCursorAlias("pointer", 'Move') -- command cursors use the command name. TODO: replace with actual pointer cursor?
+-- A CSS pointer is UI affordance, not the engine's animated Move-command
+-- cursor. Keeping the normal cursor avoids a distracting cursor swap for
+-- every button, grid item, and dropdown.
+RmlUi.SetMouseCursorAlias("pointer", 'cursornormal')
 RmlUi.SetMouseCursorAlias("move", 'uimove')
 RmlUi.SetMouseCursorAlias("nesw-resize", 'uiresized2')
 RmlUi.SetMouseCursorAlias("nwse-resize", 'uiresized1')

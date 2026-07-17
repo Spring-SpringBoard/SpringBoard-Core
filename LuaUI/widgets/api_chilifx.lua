@@ -17,11 +17,12 @@ LCS = LCS()
 CHILILFX_DIR = "libs_sb/chilifx/chilifx/"
 
 function widget:Initialize()
-    -- if not WG.Chili then
-    --     Spring.Log("ChiliFX", LOG.ERROR, "Missing chiliui.")
-    --     widgetHandler:RemoveWidget(widget)
-    --     return
-    -- end
+    -- ChiliFX only backs Chili/Chotify. Native and RmlUi own their effects, so
+    -- do not even construct this legacy effect library in those UI modes.
+    if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+        widgetHandler:RemoveWidget(widget)
+        return
+    end
 
     ChiliFX = VFS.Include(CHILILFX_DIR .. "core.lua", nil)
 

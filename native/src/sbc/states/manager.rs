@@ -163,7 +163,10 @@ impl StateManager {
         let mut ctx = StateContext::new(&self.interface, models);
         state.as_state().enter(&mut ctx);
         self.pending_commands.extend(ctx.take_commands());
-        log::debug!("editor state: {}", state.as_state().name());
+        // State changes are normal editor interaction, and this path can run
+        // repeatedly while a panel is active. Keep it available for deep
+        // diagnostics without flooding the developer console at debug level.
+        log::trace!("editor state: {}", state.as_state().name());
     }
 
     /// Swap states from a panel request, letting the old one close its stream.

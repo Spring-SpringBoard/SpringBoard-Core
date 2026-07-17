@@ -1,0 +1,16 @@
+<div id="editor-status">
+	<div id="status-info">
+		<div id="status-position" class="status-line"></div>
+		<div id="status-performance" class="status-line"></div>
+		<div id="status-system" class="status-line"></div>
+		<div id="status-version" class="status-line"></div>
+	</div>
+	<div id="command-status">
+		<div id="command-toolbar" class="command-toolbar">
+			<button id="status-undo" class="status-icon-button" title="Undo (Ctrl+Z)"><img src="LuaUI/images/scenedit/anticlockwise-rotation.png"/></button>
+			<button id="status-redo" class="status-icon-button" title="Redo (Ctrl+Y)"><img src="LuaUI/images/scenedit/clockwise-rotation.png"/></button>
+			<button id="status-clear" class="status-icon-button" title="Clear undo-redo stack"><img src="LuaUI/images/scenedit/cancel.png"/></button>
+		</div>
+		<div id="command-list" class="command-list"></div>
+	</div>
+</div>

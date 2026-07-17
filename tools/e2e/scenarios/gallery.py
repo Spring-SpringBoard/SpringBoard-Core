@@ -47,10 +47,10 @@ COLOUR_Y = 650
 
 ASSET_Y = 692
 
-# The group's fields: X and Y share a row, Z is on the next one.
-GROUP_XY_Y = 760
-GROUP_Z_Y = 804
-GROUP_SECOND_X = 250  # the second column (Y)
+# Compact X/Y/Z controls deliberately share one row at panel width.
+GROUP_XYZ_Y = 760
+GROUP_SECOND_X = 220
+GROUP_THIRD_X = 385
 
 WIDE_X = 200      # string, choice: their boxes reach this far
 NARROW_X = 80     # numeric: its box does not
@@ -159,9 +159,9 @@ def gallery(run_state: E2ERun) -> None:
 
     # A grouped field is a field: the ones sharing a row commit independently.
     for x, y, value in (
-        (NARROW_X, GROUP_XY_Y, "11"),
-        (GROUP_SECOND_X, GROUP_XY_Y, "22"),
-        (NARROW_X, GROUP_Z_Y, "33"),
+        (NARROW_X, GROUP_XYZ_Y, "11"),
+        (GROUP_SECOND_X, GROUP_XYZ_Y, "22"),
+        (GROUP_THIRD_X, GROUP_XYZ_Y, "33"),
     ):
         run_state.click(left + x, y, delay=0.3)
         run_state.key("ctrl+a", delay=0.1)
@@ -338,7 +338,9 @@ def gallery_dialogs(run_state: E2ERun) -> None:
     opened = run_state.golden("file-dialog-open")
     run_state.click(*FILE_UP, delay=0.9)
     up = run_state.golden("file-dialog-up")
-    run_state.assert_screenshot_pixels(opened, up, max_changed=200)
+    # The status strip is live telemetry, so compare the dialog it is meant to
+    # keep unchanged rather than every changing CPU/RAM glyph at screen bottom.
+    run_state.assert_region_pixels(opened, up, (790, 200, 485, 430), max_changed=200)
 
     run_state.key("Escape", delay=0.6)
     run_state.golden("file-dialog-closed")

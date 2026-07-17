@@ -39,17 +39,34 @@ pub(super) fn render_body(
     output: &[ChonsoleLine],
     suggestions: &SuggestionView,
 ) -> String {
-    let suggestions = suggestions.render();
-    let suggestions = if suggestions.is_empty() {
+    let rendered_suggestions = suggestions.render();
+    let suggestions = if rendered_suggestions.is_empty() {
         String::new()
     } else {
-        format!(r#"<div class="suggestions">{suggestions}</div>"#)
+        format!(
+            r#"<div id="native-chonsole-suggestions" class="suggestions">{rendered_suggestions}</div><div id="native-chonsole-suggestion-details" class="suggestion-details">{}</div>"#,
+            render_suggestion_details(suggestions.detail(None)),
+        )
     };
     format!(
-        r#"<div id="native-chonsole-lines" class="lines">{}</div>{}<div class="input-row"><span class="prompt">&gt;</span>{}</div>"#,
+        r#"<div id="native-chonsole-lines" class="lines">{}</div>{}<div id="native-chonsole-input" class="input-row"><span class="prompt">&gt;</span>{}</div>"#,
         render_lines(output),
         suggestions,
         render_input(input),
+    )
+}
+
+/// Render the full command description separately from its compact list row.
+/// This strip has a fixed footprint, so selecting or hovering a command never
+/// shifts the suggestion list or its scrollbar.
+pub(super) fn render_suggestion_details(details: Option<(&str, &str)>) -> String {
+    let Some((command, description)) = details else {
+        return String::new();
+    };
+    format!(
+        r#"<span class="suggestion-details-command">{}</span><span class="suggestion-details-text"> {}</span>"#,
+        escape_rml(command),
+        escape_rml(description),
     )
 }
 

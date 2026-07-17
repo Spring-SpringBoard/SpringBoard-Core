@@ -1,4 +1,4 @@
-use spring_native::prelude::NativeInterfaceRef;
+use spring_native::prelude::{constants, NativeInterfaceRef};
 
 use super::super::graphics::{self, Texture};
 use super::surface::{new_surface, Surface};
@@ -190,6 +190,31 @@ impl ShadingStore {
             surface.borrow_mut().dirty = dirty;
         }
         self.surface(name).is_some()
+    }
+
+    /// Replace a shading texture with a blank, editor-owned surface.
+    ///
+    /// This is the native equivalent of Chili's `MakeShadingTextureCommand`:
+    /// the temporary FBO is filled first, then copied into the correctly bound
+    /// shading slot (which also chooses the required mipmap/wrap settings).
+    pub(crate) fn create(&mut self, name: &str, width: i32, height: i32, color: [f32; 4]) -> bool {
+        if width <= 0 || height <= 0 || !SHADING_DEFS.iter().any(|def| def.name == name) {
+            return false;
+        }
+        let _ = self.set_enabled(name, false);
+        let Some(source) = graphics::create_fbo_texture(&self.interface, width, height) else {
+            log::error!("shading {name}: create blank FBO failed ({width}x{height})");
+            return false;
+        };
+        {
+            let gfx = self.interface.gfx();
+            let _ = gfx.render_to_texture(&source, || {
+                let _ = gfx.clear(constants::GL_COLOR_BUFFER_BIT, color, 4);
+            });
+        }
+        let created = self.set_from_source(name, &source, true);
+        let _ = self.interface.gfx().delete_texture(&source);
+        created
     }
 
     pub(crate) fn surface(&self, name: &str) -> Option<&Surface> {

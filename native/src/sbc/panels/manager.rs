@@ -3,6 +3,7 @@ use std::any::Any;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::{self, Action, ActionResult, FileAcceptFn};
+use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::command_system::command::{Command, PreviewCommand};
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
@@ -44,7 +45,7 @@ pub(crate) struct PanelManager {
     asset_picker: AssetPicker,
     file_dialog: FileDialog,
     new_project: NewProjectDialog,
-    /// The unit/feature tooltip under the cursor.
+    /// The useful native replacement for the engine's "No tooltip defined" box.
     cursor_tip: CursorTip,
     /// The callback the open file dialog will run against its accepted result,
     /// set when a toolbar action opens the dialog.
@@ -90,6 +91,13 @@ impl PanelManager {
     pub fn new(interface: NativeInterfaceRef) -> Self {
         let enabled = port_flags::ui_impl(&interface) == UiImpl::Rust;
         log::info!("native UI {}", if enabled { "enabled" } else { "disabled" });
+        if enabled {
+            match interface.unsynced_ctrl().set_draw_selection_info(false) {
+                Ok(true) => {}
+                Ok(false) => log::warn!("could not disable the engine selection tooltip"),
+                Err(err) => log::warn!("disable engine selection tooltip: {err:?}"),
+            }
+        }
         PanelManager {
             interface,
             enabled,
@@ -250,8 +258,7 @@ impl PanelManager {
         self.sync_brush(models);
         self.dispatch_state_request(models);
         self.sync_state_selection(models);
-        self.update_cursor_tip()?;
-
+        self.update_cursor_tip(models.get::<ChonsoleManager>().visible())?;
         self.view.update(&self.interface)
     }
 
@@ -662,13 +669,12 @@ impl PanelManager {
         models.with::<StateManager, _>(|states, models| states.set_state(request, models));
     }
 
-    /// The hover tooltip for whatever unit or feature is under the cursor. Not
-    /// shown while the cursor is over the panel, which owns its own tooltips.
-    fn update_cursor_tip(&mut self) -> Result<(), Error> {
+    /// The native tooltip is shown over map objects, but never over the panel
+    /// or Chonsole, which each own their own UI tooltips.
+    fn update_cursor_tip(&mut self, chonsole_open: bool) -> Result<(), Error> {
         let Some(document) = self.view.document_handle() else {
             return Ok(());
         };
-        // The panel is `width: 500dp` against the right edge (see ui.rcss).
         const PANEL_WIDTH: f32 = 500.0;
         let over_panel = match (
             self.interface.input().get_mouse_state(),
@@ -678,7 +684,7 @@ impl PanelManager {
             _ => true,
         };
         self.cursor_tip
-            .update(&self.interface, document, over_panel)
+            .update(&self.interface, document, over_panel || chonsole_open)
     }
 
     fn sync_state_selection(&mut self, models: &mut Models) {
