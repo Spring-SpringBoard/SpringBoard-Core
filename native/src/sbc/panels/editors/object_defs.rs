@@ -71,8 +71,9 @@ pub(crate) struct ObjectDefsView {
 
     fields: FieldSet,
     mode: PlaceMode,
-    /// Whether the map click places an object. The Add/Brush buttons toggle it;
-    /// with it off the map behaves normally and objects can be selected.
+    /// Whether the map click places an object. Add/Brush choose a placement
+    /// mode; Escape (or a tab/editor change) returns the map to normal
+    /// selection, never a second click on the active action.
     placing: bool,
     mode_clicks: Rc<RefCell<Vec<PlaceMode>>>,
     /// Team captions in the choice, paired with their ids.
@@ -159,8 +160,7 @@ impl ObjectDefsView {
                 "LuaUI/images/scenedit/object-brush-add.png",
             ),
         ] {
-            // Pressed only while placement is actually armed: toggling the mode
-            // off must not leave the button looking active.
+            // Pressed while this placement mode is armed.
             let pressed = if self.placing && mode == self.mode {
                 " pressed"
             } else {
@@ -383,14 +383,11 @@ impl ObjectDefsView {
                 self.mode = mode;
                 self.needs_rebuild = true;
                 self.placing = true;
-            } else {
-                // Clicking the active button leaves placement, as Lua's action
-                // buttons toggle. Without this there is no way out of Add mode:
-                // every click on the map keeps placing, and objects can never be
-                // selected or dragged.
-                self.placing = !self.placing;
-                self.needs_rebuild = true;
             }
+            // Re-selecting the current action is deliberately a no-op from the
+            // user's perspective, but re-arm its state in case Escape had
+            // returned the map to selection while the panel stayed open.
+            self.placing = true;
             self.request_dirty = true;
         }
         Ok(())
@@ -478,6 +475,19 @@ impl ObjectDefsView {
 
     pub(crate) fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         self.fields.write_values(interface)
+    }
+
+    /// The shared editor state left placement (normally through Escape). Keep
+    /// the action strip truthful: a mode is chosen only while it is armed.
+    pub(crate) fn clear_state_selection(
+        &mut self,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
+    ) {
+        if self.placing {
+            self.placing = false;
+            self.needs_rebuild = true;
+        }
     }
 
     fn mode_fields(&self) -> &'static [&'static str] {
@@ -720,6 +730,9 @@ macro_rules! object_defs_editor {
             }
             fn take_state_request(&mut self) -> Option<crate::sbc::states::StateRequest> {
                 self.defs.take_state_request()
+            }
+            fn clear_state_selection(&mut self, interface: &NativeInterfaceRef, document: u64) {
+                self.defs.clear_state_selection(interface, document);
             }
             fn wants_refresh(
                 &mut self,

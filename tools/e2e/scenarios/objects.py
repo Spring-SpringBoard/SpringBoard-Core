@@ -45,12 +45,11 @@ def _open(run_state: E2ERun, editor: str) -> int:
 def _arm_tree(run_state: E2ERun, left: int) -> None:
     """Arm a tree, specifically.
 
-    The first cell is `geovent`, which has no model: it cannot be hit by a screen
-    ray, so anything that places it and then clicks it selects nothing. Search
-    for a tree instead of trusting the grid order.
+    The first cell is `geovent`, which has no selectable model: it cannot be hit
+    by a screen ray, so anything that places it and then clicks it selects
+    nothing. The second unfiltered cell is a tree; use the semantic coordinate
+    from ``geometry.py`` instead of depending on search-field focus.
     """
-    run_state.click(*panel_point(left, OBJECTS["feature_search"]), delay=0.2)
-    run_state.type_text("tree")
     run_state.click(*panel_point(left, OBJECTS["feature_first_tree"]), delay=0.5)
 
 
@@ -64,6 +63,33 @@ def def_grid(run_state: E2ERun) -> None:
     run_state.focus()
     _open(run_state, "features")
     run_state.golden("def-grid")
+
+
+@scenario(crop="right-panel")
+def feature_placement_actions(run_state: E2ERun) -> None:
+    """Features Add/Brush are persistent choices, even before a def is picked.
+
+    The Brush-only placement controls are a stronger signal than the pressed
+    colour alone: a repeated Brush click used to return the editor to its empty
+    state when no feature definition was selected.
+    """
+    run_state.focus()
+    left = _open(run_state, "features")
+
+    add = run_state.screenshot("add-selected")
+    run_state.click(*panel_point(left, OBJECTS["brush"]), delay=0.5)
+    brush = run_state.screenshot("brush-selected")
+    # Only the placement controls below the definition grid: thumbnails redraw
+    # continuously, so including their area would make this visual assertion
+    # flaky for no benefit.
+    placement_controls = (left, 650, 500, 753)
+    run_state.assert_region_pixels(add, brush, placement_controls, min_changed=300)
+
+    run_state.click(*panel_point(left, OBJECTS["brush"]), delay=0.35)
+    brush_again = run_state.screenshot("brush-reselected")
+    run_state.assert_region_pixels(
+        brush, brush_again, placement_controls, max_changed=3_000
+    )
 
 
 @scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
@@ -153,9 +179,9 @@ def props_panel(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.click(spot_x, spot_y, delay=0.8)        # place
-    # Clicking the active Add button leaves placement -- otherwise every click on
-    # the map keeps placing and nothing can ever be selected or dragged.
-    run_state.click(*panel_point(left, OBJECTS["add"]), delay=0.6)
+    # Escape, rather than re-clicking Add, leaves placement for normal map
+    # selection. Add/Brush are choice actions, not on/off toggles.
+    run_state.key("Escape", delay=0.6)
     # Clicking where it was placed now selects it: the feature's collision volume
     # sits at its foot, so this is the point the ray actually hits.
     run_state.click(spot_x, spot_y, delay=0.8)
@@ -255,7 +281,7 @@ def collision(run_state: E2ERun) -> None:
     spot_x, spot_y = width // 3, height // 2
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
     run_state.click(spot_x, spot_y, delay=0.8)        # place
-    run_state.click(*panel_point(left, OBJECTS["add"]), delay=0.6)
+    run_state.key("Escape", delay=0.6)
     run_state.click(spot_x, spot_y, delay=0.8)        # select it
 
     run_state.click(*editor_point(left, "objects", "collision"), delay=0.9)
@@ -345,6 +371,40 @@ def cursortip(run_state: E2ERun) -> None:
     tip = run_state.count_color(hovered, _tip_box(spot_x, spot_y), TOOLTIP_COLOR)
     if tip < 500:
         raise AssertionError(f"hovering the feature showed no tooltip ({tip} px)")
+
+
+@scenario(env={"SBC_HIDE_TOOLTIPS": "0"})
+def feature_grid_tooltip_after_cursortip(run_state: E2ERun) -> None:
+    """A map tooltip must not hide the next Feature-grid tooltip.
+
+    The map picker and panel controls used to share one RML element. Moving from
+    a placed tree to its definition cell therefore made the map-picker update
+    race the cell's mouseover handler and intermittently hide its tooltip.
+    """
+    run_state.focus()
+    left = _open(run_state, "features")
+    _arm_tree(run_state, left)
+
+    width, height = window_size(run_state)
+    spot_x, spot_y = width // 3, height // 2
+    run_state.wheel(spot_x, spot_y, clicks=8, up=True)
+    run_state.click(spot_x, spot_y, delay=0.6)
+    run_state.key("Escape", delay=0.3)
+
+    # First show the world-object tooltip, then cross straight into the grid.
+    run_state.move(spot_x, spot_y, delay=0.7)
+    world_tip = run_state.screenshot("world-tooltip")
+    if run_state.count_color(world_tip, _tip_box(spot_x, spot_y), TOOLTIP_COLOR) < 500:
+        raise AssertionError("placed feature did not show its world tooltip")
+
+    grid_tip_x, grid_tip_y = panel_point(left, OBJECTS["feature_first_tree"])
+    run_state.move(grid_tip_x, grid_tip_y, delay=0.7)
+    grid_tip = run_state.screenshot("grid-tooltip-after-world")
+    # The panel tooltip starts 12px right and 18px below the pointer. This box
+    # excludes the thumbnail itself, so its near-black background is decisive.
+    grid_tip_box = (grid_tip_x + 12, grid_tip_y + 18, 280, 90)
+    if run_state.count_color(grid_tip, grid_tip_box, TOOLTIP_COLOR) < 300:
+        raise AssertionError("Feature grid tooltip disappeared after world tooltip")
 
 
 def _placed(run_state: E2ERun, since: int = 0) -> list[dict]:
@@ -598,6 +658,161 @@ def rotation(run_state: E2ERun) -> None:
         raise AssertionError(
             f"the pair did not rotate: z-spread {spread_before:.0f} -> {spread_after:.0f}"
         )
+
+
+@scenario()
+def selection_drag(run_state: E2ERun) -> None:
+    """Shift-click extends selection and a plain drag moves the whole set.
+
+    This is intentionally separate from Ctrl-drag rotation: it exercises the
+    default state's click modifier path and the move state that follows it. Two
+    selected trees make both facts observable: one property edit and one drag
+    must each commit two positions, while the in-progress drag has visible
+    textured ghosts before the release.
+    """
+    run_state.focus()
+    left = _open(run_state, "features")
+    _arm_tree(run_state, left)
+
+    width, height = window_size(run_state)
+    cx, cy = width // 3, height // 2
+    first = (cx - 190, cy)
+    second = (cx + 190, cy)
+    run_state.wheel(cx, cy, clicks=8, up=True)
+    run_state.click(*first, delay=0.7)
+    run_state.click(*second, delay=0.7)
+    run_state.key("Escape", delay=0.4)
+
+    # A plain click replaces the selection; Shift-click extends it. Hold Shift
+    # physically across the click -- `xdotool --window shift+click` loses the
+    # modifier state before Spring receives the mouse event.
+    run_state.click(*first, delay=0.5)
+    with run_state.modifier("shift"):
+        run_state.click(*second, delay=0.7)
+    run_state.move(cx + 440, cy + 250, delay=0.4)
+    selected = run_state.screenshot("shift-two-selected")
+    both_boxes = run_state.count_color(selected, (cx - 300, cy - 170, 600, 340))
+    if both_boxes < 200:
+        raise AssertionError(f"Shift-click did not visibly select both features ({both_boxes} px)")
+
+    # Drag while the objects are still at their known placement hit points. The
+    # drag state moves the complete selection by the anchor's cursor delta.
+    mark = len(run_state.commands())
+    run_state.press(*first)
+    run_state.move(first[0] - 100, first[1] - 120, delay=0.25)
+    run_state.move(first[0] - 180, first[1] - 150, delay=0.3)
+    # The ghosts follow the pointer. Do not park it: that would change the
+    # preview we are trying to capture.
+    run_state.screenshot("dragging-two-features")
+    run_state.release(first[0] - 180, first[1] - 150, delay=0.7)
+    run_state.move(cx + 440, cy + 250, delay=0.4)
+    run_state.screenshot("dragged-two-features")
+    moved_by_drag = [
+        entry for entry in run_state.commands()[mark:]
+        if entry["data"].get("className") == "SetObjectParamCommand"
+        and entry["data"].get("key") == "pos"
+        and not entry["data"].get("__preview")
+    ]
+    if len(moved_by_drag) != 2:
+        raise AssertionError(f"drag moved {len(moved_by_drag)} objects, want 2")
+
+    # Properties fan a shared Pos edit out to every selected object. A numeric
+    # drag avoids relying on synthetic text input here, while still exercising
+    # the same average-position delta semantics used by a typed value.
+    run_state.click(*editor_point(left, "objects", "properties"), delay=0.8)
+    run_state.screenshot("properties-multiselected")
+    mark = len(run_state.commands())
+    pos_x = panel_point(left, OBJECTS["property_pos_x"])
+    run_state.press(*pos_x)
+    run_state.move_relative(120)
+    run_state.screenshot("properties-pos-dragging")
+    run_state.release(*pos_x, delay=0.7)
+    moved_by_field = [
+        entry for entry in run_state.commands()[mark:]
+        if entry["data"].get("className") == "SetObjectParamCommand"
+        and entry["data"].get("key") == "pos"
+        and not entry["data"].get("__preview")
+    ]
+    if len(moved_by_field) != 2:
+        raise AssertionError(
+            f"shared Pos X edit affected {len(moved_by_field)} objects, want 2"
+        )
+
+
+@scenario()
+def object_actions(run_state: E2ERun) -> None:
+    """Copy, Paste, Cut, Delete, and Undo/Redo drive live selected features.
+
+    The action layer has direct integration tests, but this scenario owns the
+    native hotkey path and the observable engine result. Every destructive step
+    is followed by undo/redo or paste, so a command merely reaching the bridge
+    cannot satisfy it.
+    """
+    run_state.focus()
+    left = _open(run_state, "features")
+    _arm_tree(run_state, left)
+
+    width, height = window_size(run_state)
+    cx, cy = width // 3, height // 2
+    source = (cx - 160, cy)
+    target = (cx + 240, cy + 110)
+    run_state.wheel(cx, cy, clicks=8, up=True)
+    run_state.click(*source, delay=0.8)
+    run_state.key("Escape", delay=0.4)
+    run_state.click(*source, delay=0.6)
+
+    # Copy does not mutate the map; Paste at a different ground point must add
+    # an actual feature there. The bridge records an action's grouped children
+    # as one CompoundCommand, so the map frame is the engine-facing proof.
+    run_state.key("ctrl+c", delay=0.4)
+    mark = len(run_state.commands())
+    before_paste = run_state.screenshot("copy-source")
+    run_state.move(*target, delay=0.3)
+    run_state.key("ctrl+v", delay=0.8)
+    pasted = run_state.screenshot("copied-and-pasted")
+    if not any(
+        entry["data"].get("className") == "CompoundCommand"
+        for entry in run_state.commands()[mark:]
+    ):
+        raise AssertionError("Paste did not dispatch its grouped native command")
+    run_state.assert_screenshot_pixels(before_paste, pasted, min_changed=400)
+
+    # The original selection remains active after Paste. Cut must remove it,
+    # Undo restore it, and Redo remove it again. The final undo leaves it in the
+    # world so Delete can exercise the same action separately.
+    mark = len(run_state.commands())
+    run_state.key("ctrl+x", delay=0.7)
+    cut = run_state.screenshot("cut")
+    if not any(
+        entry["data"].get("className") == "CompoundCommand"
+        for entry in run_state.commands()[mark:]
+    ):
+        raise AssertionError("Cut did not dispatch its grouped native command")
+    run_state.key("ctrl+z", delay=0.8)
+    run_state.assert_any_command("UndoCommand")
+    restored = run_state.screenshot("cut-undone")
+    run_state.assert_screenshot_pixels(cut, restored, min_changed=400)
+    run_state.key("ctrl+y", delay=0.8)
+    run_state.assert_any_command("RedoCommand")
+    redone = run_state.screenshot("cut-redone")
+    run_state.assert_screenshot_pixels(restored, redone, min_changed=400)
+    run_state.key("ctrl+z", delay=0.8)
+
+    # Undo restores the source but not its UI selection. Select it again, then
+    # Delete and undo it once more: Delete is a distinct hotkey/action, not an
+    # alias for Cut with an empty clipboard.
+    run_state.click(*source, delay=0.6)
+    mark = len(run_state.commands())
+    run_state.key("Delete", delay=0.7)
+    deleted = run_state.screenshot("deleted")
+    if not any(
+        entry["data"].get("className") == "CompoundCommand"
+        for entry in run_state.commands()[mark:]
+    ):
+        raise AssertionError("Delete did not dispatch its grouped native command")
+    run_state.key("ctrl+z", delay=0.8)
+    undeleted = run_state.screenshot("delete-undone")
+    run_state.assert_screenshot_pixels(deleted, undeleted, min_changed=400)
 
 
 @scenario()

@@ -328,7 +328,8 @@ def native_dev_console(run_state: E2ERun) -> None:
 
     # The status strip is not part of the console, but it is positioned directly
     # below it. Its undo/redo/clear controls must enter the same native command
-    # path as their editor hotkeys, even when history is empty.
+    # path as their editor hotkeys, even when history is empty. Its metrics are
+    # deliberately live, so golden only the fixed command half of the strip.
     # RmlUi applies the 34dp icon width to the button's content box; 5dp padding
     # and 1dp borders make its actual hit target 46dp, followed by a 10dp gap.
     # Derive the centres from that real geometry at every E2E resolution.
@@ -338,7 +339,7 @@ def native_dev_console(run_state: E2ERun) -> None:
     run_state.assert_any_command("RedoCommand")
     run_state.click(*status_button_point(width, height, 2), delay=0.4)
     run_state.assert_any_command("ClearUndoRedoCommand")
-    run_state.golden("status-bar")
+    run_state.golden("status-bar", crop="status-commands")
 
     run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=0.5)
     run_state.golden("console-problems-on")

@@ -291,7 +291,7 @@ def gallery_dialogs(run_state: E2ERun) -> None:
     # opens on the projects dir, which is empty in an isolated boot -- so folder
     # navigation is shown by going *up* from it, into a directory that has some.
     # This is the same GridView the asset picker browses with.
-    run_state.click(*panel_point(left, (GALLERY["toolbar_new"][0] + GALLERY["toolbar_step"], GALLERY["toolbar_new"][1])), delay=1.0)
+    run_state.click(*panel_point(left, TOOLBAR["load"]), delay=1.0)
     run_state.golden("file-dialog")
 
     # Up at the root does nothing: the dialog never browses above the directory it

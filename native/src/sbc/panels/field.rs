@@ -191,8 +191,8 @@ pub(crate) fn on_pointer(
 /// Attach a simple tooltip to an element with a known label.
 ///
 /// RmlUi's `title` attribute is useful metadata but the native context does not
-/// draw it for us. The shell owns one `#native-tooltip` element; hover listeners
-/// fill and position it.
+/// draw it for us. The shell owns `#native-panel-tooltip`; hover listeners fill
+/// and position it independently of the map-object cursor tooltip.
 pub(crate) fn bind_tooltip(
     interface: &NativeInterfaceRef,
     document: u64,
@@ -249,7 +249,7 @@ fn bind_tooltip_inner(
     interface
         .rml_ui()
         .element_add_event_listener(element, "mouseover", false, move || {
-            let Some(tooltip) = element_by_id(&iface, document, "native-tooltip") else {
+            let Some(tooltip) = element_by_id(&iface, document, "native-panel-tooltip") else {
                 return;
             };
             let Ok(mouse) = iface.input().get_mouse_state() else {
@@ -278,7 +278,7 @@ fn bind_tooltip_inner(
     interface
         .rml_ui()
         .element_add_event_listener(element, "mouseout", false, move || {
-            if let Some(tooltip) = element_by_id(&iface, document, "native-tooltip") {
+            if let Some(tooltip) = element_by_id(&iface, document, "native-panel-tooltip") {
                 let _ = iface.rml_ui().element_set_class(tooltip, "hidden", true);
             }
         })?;

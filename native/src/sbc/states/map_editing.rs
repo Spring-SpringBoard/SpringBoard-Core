@@ -49,8 +49,12 @@ pub(crate) struct MapEditingState {
     /// Patterns already uploaded as greyscale shapes this session.
     uploaded: HashSet<String>,
     painting: bool,
-    /// Last position painted, so a jump does not smear the brush.
-    last: Option<(f32, f32)>,
+    /// The last valid ground hit, retained only to keep a stationary stroke
+    /// alive across a transient trace miss (for example after raising terrain
+    /// into the camera). A moved cursor never paints at this stale position.
+    last_hit: Option<crate::sbc::states::state::GroundHit>,
+    /// Screen position paired with `last_hit`, in the ray-trace convention.
+    last_screen: Option<(f32, f32)>,
     last_apply: Option<Instant>,
     initial_delay_left: f32,
     preview: BrushPreview,
@@ -63,7 +67,8 @@ impl MapEditingState {
             brush,
             uploaded: HashSet::new(),
             painting: false,
-            last: None,
+            last_hit: None,
+            last_screen: None,
             last_apply: None,
             initial_delay_left: kind.initial_delay(),
             preview: BrushPreview::new(),
@@ -350,7 +355,8 @@ impl EditorState for MapEditingState {
             return true;
         }
         self.start_painting(ctx);
-        self.last = Some((hit.x, hit.z));
+        self.last_hit = Some(hit);
+        self.last_screen = Some((x as f32, y as f32));
         self.apply(ctx, hit.x, hit.z, button);
         true
     }
@@ -398,13 +404,22 @@ impl EditorState for MapEditingState {
             self.stop_painting(ctx);
             return;
         };
-        // Raising ground far enough can put the surface above the camera, and the
-        // ray then starts inside it: the stroke simply stops painting until the
-        // cursor is over ground again.
-        let Some(hit) = trace_ground(ctx.interface, mouse.x, mouse.y) else {
+        let traced = trace_ground(ctx.interface, mouse.x, mouse.y);
+        let cursor_has_not_moved = self
+            .last_screen
+            .is_some_and(|(x, y)| (mouse.x - x).abs() < 0.5 && (mouse.y - y).abs() < 0.5);
+        // A stroke begins only on a real ground hit. If the pointer has stayed
+        // still, retain that exact hit through a transient ray miss instead of
+        // making a click-and-hold randomly stop. Once the pointer moves, a
+        // current hit is mandatory: painting the old location would be worse.
+        let Some(hit) = traced.or_else(|| cursor_has_not_moved.then_some(self.last_hit).flatten())
+        else {
             return;
         };
-        self.last = Some((hit.x, hit.z));
+        if traced.is_some() {
+            self.last_hit = Some(hit);
+            self.last_screen = Some((mouse.x, mouse.y));
+        }
         self.apply(ctx, hit.x, hit.z, button);
     }
 
@@ -425,7 +440,17 @@ impl EditorState for MapEditingState {
         let Some(mouse) = cursor(interface) else {
             return;
         };
-        let Some(hit) = trace_ground(interface, mouse.x, mouse.y) else {
+        let traced = trace_ground(interface, mouse.x, mouse.y);
+        let cursor_has_not_moved = self
+            .last_screen
+            .is_some_and(|(x, y)| (mouse.x - x).abs() < 0.5 && (mouse.y - y).abs() < 0.5);
+        // While a stationary stroke is active, show the same retained target
+        // that `update` keeps painting through a one-frame trace miss.
+        let Some(hit) = traced.or_else(|| {
+            (self.painting && cursor_has_not_moved)
+                .then_some(self.last_hit)
+                .flatten()
+        }) else {
             return;
         };
         let size = self.brush.size;

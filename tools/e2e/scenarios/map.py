@@ -59,6 +59,61 @@ def click_field(run_state: E2ERun, left: int, point: tuple[int, int], text: str)
     run_state.key("Return", delay=0.35)
 
 
+@scenario()
+def pattern_preview(run_state: E2ERun) -> None:
+    """A selected Terrain/Add pattern is visibly projected under the cursor.
+
+    The test does not paint. It arms Add with no pattern, then selects one and
+    checks that the active brush gains its textured ground footprint. Zooming
+    comes first so the wheel remains camera zoom, not brush resize.
+    """
+    run_state.focus()
+    left = panel_left(run_state)
+    width, height = window_size(run_state)
+    map_region = (0, 0, width - 500, height - 92)
+    point = (width // 3, height // 2)
+
+    run_state.click(left + TAB_X["map"], TAB_Y, delay=0.3)
+    run_state.click(*editor_point(left, "map", "terrain"), delay=0.7)
+    run_state.wheel(*point, clicks=ZOOM_CLICKS * 2, up=True, delay=0.6)
+    run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=0.45)
+    run_state.move(*point, delay=0.4)
+    before = run_state.screenshot("armed-without-pattern")
+    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.55)
+    run_state.move(*point, delay=0.3)
+    preview = run_state.screenshot("pattern-preview")
+    run_state.assert_region_pixels(before, preview, map_region, min_changed=1_000)
+
+
+@scenario()
+def terrain_stationary_hold(run_state: E2ERun) -> None:
+    """Terrain Add keeps dabbing while held at one grounded cursor position.
+
+    This is deliberately not a sweep: a moving pointer can mask a failed held
+    update. A press waits through the inherited initial delay while remaining at
+    the same point, then must produce several terrain commands in one stroke.
+    """
+    run_state.focus()
+    left = panel_left(run_state)
+    width, height = window_size(run_state)
+    point = (width // 3, height // 2)
+
+    run_state.click(left + TAB_X["map"], TAB_Y, delay=0.3)
+    run_state.click(*editor_point(left, "map", "terrain"), delay=0.7)
+    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.5)
+    run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=0.4)
+    run_state.wheel(*point, clicks=ZOOM_CLICKS, up=True, delay=0.5)
+
+    before = run_state.assert_command_at_least("TerrainShapeModifyCommand", 0)
+    run_state.press(*point)
+    # No cursor movement: the delay merely gives the state manager updates in
+    # which to repeat the same dab.
+    run_state.move(*point, delay=0.9)
+    run_state.release(*point, delay=0.5)
+    run_state.assert_command_at_least("TerrainShapeModifyCommand", before + 3)
+    run_state.screenshot("stationary-stroke-complete")
+
+
 @scenario(uis=("chili", "rmlui", "rust"))
 def heightmap(run_state: E2ERun) -> None:
     """Map -> Terrain: sweep each brush (Add, Set, Smooth) as a held stroke and
@@ -195,8 +250,8 @@ def map_paint(run_state: E2ERun) -> None:
     # Texture. A material has to be chosen before Paint will do anything, so the
     # saved-brush picker comes first.
     editor_button("texture")
-    # Set the brush up *before* arming an action: the action buttons toggle, so
-    # clicking Paint here and again in the loop below would turn it back off.
+    # Set the brush up before arming Paint; pattern/material configuration is
+    # independent from choosing the action.
     run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=0.8)
     run_state.screenshot_root("texture-material-picker")
     # `tiles` is visibly orange and patterned. Cement is too pale to prove

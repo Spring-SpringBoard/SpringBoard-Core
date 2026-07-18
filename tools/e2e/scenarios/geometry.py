@@ -43,8 +43,11 @@ OBJECTS: Final = {
     "brush": (134, ACTION_Y),
     "feature_type": (104, 316),
     "feature_terrain": (104, 358),
+    # The first cell is `geovent`, which has no selectable model. The first
+    # tree is the next cell in the unfiltered grid. Keep that semantic choice
+    # here so object scenarios never silently arm the default geovent.
     "feature_search": (180, 400),
-    "feature_first_tree": (55, 470),
+    "feature_first_tree": (190, 470),
     "feature_amount": (120, 757),
     "property_pos_x": (58, 241),
     "collision_blocking": (100, 664),
@@ -114,7 +117,9 @@ ENV_WATER_ASSETS: Final = (
 
 # Fixed controls in Map editors.
 MAP: Final = {
-    "terrain_pattern": (42, 365),
+    # First terrain-pattern cell in the physical X11 window. The review images
+    # are downscaled, so do not read their coordinates directly.
+    "terrain_pattern": (42, 400),
     "texture_pattern": (42, 380),
     "saved_brush_add": (42, 335),
     "saved_brush_pattern": (42, 665),
@@ -190,7 +195,21 @@ TEAM_NUMBERS: Final = (
     ((120, 416), "250"), ((260, 416), "750"),
     ((120, 501), "100"), ((260, 501), "200"),
 )
-TOOLBAR: Final = {"new_project": (24, 150), "export": (239, 150)}
+# The shell action toolbar is a fixed nine-icon row.  Keep the action names
+# here, rather than making tests infer an icon's position from its ordinal: the
+# action order is UI presentation, while e2e scenarios care about the command
+# being invoked.  Centres are measured in the running Rust panel.
+TOOLBAR: Final = {
+    "new_project": (34, 165),
+    "load": (74, 165),
+    "import": (114, 165),
+    "save": (154, 165),
+    "save_as": (194, 165),
+    "export": (234, 165),
+    "copy": (274, 165),
+    "cut": (314, 165),
+    "paste": (354, 165),
+}
 
 # Modal controls are offsets from `dialog_left()`, not fixed screen positions.
 DIALOG: Final = {
@@ -237,8 +256,6 @@ GALLERY: Final = {
     "group_xyz_y": 760,
     "group_second_x": 220,
     "group_third_x": 385,
-    "toolbar_new": (22, 150),
-    "toolbar_step": 35,
     "tooltip_parking": (400, 900),
 }
 
@@ -290,9 +307,15 @@ SHELL: Final = {
 
 def status_button_point(width: int, height: int, index: int) -> tuple[int, int]:
     """Centre of the Undo, Redo, or Clear button in the status strip."""
-    toolbar_left = round((width - PANEL_WIDTH) * 0.55) + 10
+    # `#editor-status` ends at the 500dp editor panel. Its command toolbar is
+    # right-anchored (255dp) in that remaining area. Do not derive this from
+    # the 60%-wide metrics column: that placed clicks in the metrics panel on
+    # widescreen runs as soon as the status layout was completed.
+    button_outer = 46  # 34dp content + 5dp padding on each side + 1dp borders.
+    toolbar_width = button_outer * 3 + 10 * 2
+    toolbar_left = width - PANEL_WIDTH - 255 - toolbar_width
     return (
-        toolbar_left + DEV_CONSOLE["status_button_first_x"] + DEV_CONSOLE["status_button_step"] * index,
+        toolbar_left + button_outer // 2 + (button_outer + 10) * index,
         height - DEV_CONSOLE["status_button_y_from_bottom"],
     )
 

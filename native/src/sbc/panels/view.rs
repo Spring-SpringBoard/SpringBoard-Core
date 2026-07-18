@@ -63,6 +63,12 @@ impl PanelView {
         self.active_editor
     }
 
+    /// The selected top-level tab. Shell clicks use this to make tab selection
+    /// choice-only: selecting the current tab must not close its editor.
+    pub(crate) fn current_tab(&self) -> Tab {
+        self.current_tab
+    }
+
     pub(crate) fn drain_events(&self) -> Vec<ShellEvent> {
         self.events.borrow_mut().drain(..).collect()
     }

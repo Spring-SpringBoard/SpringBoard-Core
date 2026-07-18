@@ -112,7 +112,8 @@ impl BrushActions {
         Ok(())
     }
 
-    /// Handle queued clicks. Toggling: the active button turns the brush off.
+    /// Handle queued clicks. Brush buttons choose a tool; clicking the current
+    /// one leaves it selected, matching Chili's non-toggle action tabs.
     pub(crate) fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) {
         for index in self.clicks.borrow_mut().drain(..) {
             let Some(action) = self.actions.get(index) else {
@@ -121,16 +122,11 @@ impl BrushActions {
             if self.disabled.contains(&index) {
                 continue;
             }
-            if self.active == Some(index) {
-                self.active = None;
-                self.request = Some(StateRequest::Default);
-            } else {
-                self.active = Some(index);
-                self.request = Some(StateRequest::Brush(
-                    action.kind,
-                    action.paint_mode.to_string(),
-                ));
-            }
+            self.active = Some(index);
+            self.request = Some(StateRequest::Brush(
+                action.kind,
+                action.paint_mode.to_string(),
+            ));
         }
         self.render(interface, document);
     }

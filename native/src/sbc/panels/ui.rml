@@ -8,4 +8,7 @@
 <div id="map-shading-modal"></div>
 <div id="team-edit-modal"></div>
 <div id="modal-root"></div>
-<div id="native-tooltip" class="native-tooltip hidden"></div>
+<!-- Panel-control and map-object tips have independent lifecycles. Sharing one
+     element lets the map picker hide a grid tooltip after its hover event. -->
+<div id="native-panel-tooltip" class="native-tooltip hidden"></div>
+<div id="native-cursor-tooltip" class="native-tooltip hidden"></div>

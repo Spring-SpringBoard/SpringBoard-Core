@@ -24,11 +24,21 @@ def convert_screenshot_file(shot: Screenshot) -> tuple[Screenshot, int]:
         cmd += ["-crop", f"{crop_width}x{height}+{width - crop_width}+0", "+repage"]
     elif shot.crop == "dev-console":
         # The console spans everything left of the 500dp panel, 300dp tall and
-        # 92dp off the bottom. Include the scen_edit status/command strip below
-        # it too: it is the native console's visual neighbour and own UI surface.
+        # 92dp off the bottom. This deterministic crop deliberately excludes
+        # the status strip: live CPU/FPS/RAM values are not golden-stable.
         width, height = identify_size(shot.raw_path)
         crop_width = max(1, width - 500)
-        cmd += ["-crop", f"{crop_width}x392+0+{height - 392}", "+repage"]
+        cmd += ["-crop", f"{crop_width}x300+0+{height - 392}", "+repage"]
+    elif shot.crop == "status-commands":
+        # The right 40% of the status strip contains the fixed undo/redo/clear
+        # controls and edit journal. The left metrics column has intentionally
+        # live system values, so it is inspected by the visual sweep rather
+        # than compared against a static golden.
+        width, height = identify_size(shot.raw_path)
+        status_width = max(1, width - 500)
+        command_x = round(status_width * 0.6)
+        command_width = status_width - command_x
+        cmd += ["-crop", f"{command_width}x92+{command_x}+{height - 92}", "+repage"]
     elif shot.crop == "no-console":
         # Everything above the console. A modal has to be captured full-width,
         # but the console below it prints the engine's boot log -- which carries

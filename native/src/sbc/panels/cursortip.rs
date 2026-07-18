@@ -33,7 +33,7 @@ impl CursorTip {
         if crate::sbc::panels::field::tooltips_hidden() {
             return Ok(());
         }
-        let Some(element) = element_by_id(interface, document, "native-tooltip") else {
+        let Some(element) = element_by_id(interface, document, "native-cursor-tooltip") else {
             return Ok(());
         };
         let rml = interface.rml_ui();

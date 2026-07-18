@@ -66,6 +66,11 @@ pub(crate) struct PanelManager {
     /// The brush revision the fields last showed; a bump means a state changed
     /// the brush and the fields should follow.
     brush_revision: u64,
+    /// Whether the editor state was Default on the previous panel update.
+    /// Action strips must clear only when an active editing state *returns* to
+    /// Default (normally Escape), not merely because no definition has been
+    /// selected yet.
+    state_was_default: bool,
 }
 
 impl Model for PanelManager {
@@ -118,6 +123,7 @@ impl PanelManager {
             just_committed: None,
             drag_original: None,
             brush_revision: 0,
+            state_was_default: true,
         }
     }
 
@@ -422,11 +428,25 @@ impl PanelManager {
         for event in self.view.drain_events() {
             match event {
                 ShellEvent::Tab(tab) => {
+                    // Tabs are choices, not toggles. In particular, do this
+                    // check before resetting the editing state: resetting the
+                    // state and dropping `editor` while `PanelView` keeps the
+                    // tab visually selected is what made a second click look
+                    // like it deselected the tab.
+                    if self.view.current_tab() == tab {
+                        continue;
+                    }
                     self.reset_state(models);
                     self.view.set_tab(&self.interface, tab)?;
                     self.editor = None;
                 }
                 ShellEvent::Editor(name) => {
+                    // Editor buttons (Units, Features, Properties, and every
+                    // other subtab) are choices too. Re-clicking one simply
+                    // leaves it open and preserves its editing state.
+                    if self.view.active_editor() == Some(name) {
+                        continue;
+                    }
                     self.reset_state(models);
                     self.open_editor(name)?;
                 }
@@ -531,12 +551,10 @@ impl PanelManager {
         Ok(false)
     }
 
-    /// Toggle an editor: clicking the open one closes it, as in Chili.
+    /// Open an editor. Editor buttons are choice-only, as in Chili.
     fn open_editor(&mut self, name: &'static str) -> Result<(), Error> {
         if self.view.active_editor() == Some(name) {
-            self.editor = None;
-            self.view.set_active_editor(&self.interface, None)?;
-            return self.view.clear_content(&self.interface);
+            return Ok(());
         }
 
         let Some(spec) = editor_by_name(name) else {
@@ -784,7 +802,9 @@ impl PanelManager {
 
     fn sync_state_selection(&mut self, models: &mut Models) {
         let state_is_default = models.get::<StateManager>().is_default();
-        if !state_is_default {
+        let returned_to_default = state_is_default && !self.state_was_default;
+        self.state_was_default = state_is_default;
+        if !returned_to_default {
             return;
         }
         let Some(document) = self.view.document_handle() else {
