@@ -42,9 +42,9 @@ python3 tools/e2e/ui_driver.py <target> --tag ui:rust
 | 3 | Objects → Properties | VERIFIED | Selection-driven fields, complete vector/table commits, map movement, and collision-field propagation. E2E `props_panel`. |
 | 4 | Objects → Collision | VERIFIED | Visibility, type/axis, scale/offset/center/aim, radius/height, linked cylinder scale, and blocking fields. E2E `props_panel` and `collision`. |
 | 5 | Map → Terrain | VERIFIED | Pattern, size, rotation, strength, height, direction, Add/Set/Smooth, textured preview, and a stationary held stroke. E2E `heightmap`, `map-editors`, `pattern-preview`, `terrain-stationary-hold`. |
-| 6 | Map → Texture | VERIFIED | Saved brushes, material dialog, Paint/Filter/DNTS/Void, and splat controls. Rust is the sole owner of texture paint, cache, stroke close, undo, and redo; native GL and Lua command-bridge tests cover that ownership contract. E2E `map-paint`, `map-editors`, `texture-panel`. |
-| 7 | Map → Metal | VERIFIED | Pattern, size, rotation, amount, and painting. E2E `map-editors`. |
-| 8 | Map → Grass | VERIFIED | Pattern, detail, size, rotation, and painting. E2E `map-editors`. |
+| 6 | Map → Texture | VERIFIED | Saved brushes, material dialog, Paint/Filter/DNTS/Void, and splat controls. Rust is the sole owner of texture paint, cache, stroke close, undo, and redo; native GL and Lua command-bridge tests cover that ownership contract. E2E `texture-paint`, `map-editors`. |
+| 7 | Map → Metal | VERIFIED | Pattern, size, rotation, amount, and painting. E2E `map-editors`, `metal-paint`. |
+| 8 | Map → Grass | VERIFIED | Pattern, detail, size, rotation, and painting. E2E `map-editors`, `grass-paint`. |
 | 9 | Map → Settings | VERIFIED | Rendering flags, splat fields, detail texture, and New/Existing texture paths. E2E `map-editors`, `settings-panel`. |
 | 10 | Env → Lighting | VERIFIED | Shadow mode, direction, six colours, and densities. E2E `lighting-panel`. |
 | 11 | Env → Sky | VERIFIED | Atmosphere colours, fog bounds, and skybox picker. E2E `sky-panel`. |

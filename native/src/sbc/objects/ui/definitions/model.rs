@@ -7,7 +7,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::command_system::model::Models;
 use crate::sbc::objects::thumbnails::ThumbnailRenderer;
 use crate::sbc::objects::ui::filters::{DefTraits, FEATURE_TYPES, TERRAINS, UNIT_TYPES};
-use crate::sbc::panels::grid::{GridItem, GridView};
+use crate::sbc::panels::controls::grid::{GridItem, GridView};
 use crate::sbc::panels::runtime::{
     Brush, DynChoice, DynChoiceDef, EditorModel, FieldMut, FieldRef, Num, NumDef, StrChoice,
     StrChoiceDef,

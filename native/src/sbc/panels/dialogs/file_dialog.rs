@@ -12,9 +12,9 @@ use std::rc::Rc;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::{FileDialogConfig, FileDialogResult};
-use crate::sbc::panels::asset_picker::PickerEvent;
+use crate::sbc::panels::controls::asset_picker::PickerEvent;
+use crate::sbc::panels::controls::grid::{list_assets, parent_dir, GridView};
 use crate::sbc::panels::field::{element_by_id, escape_rml};
-use crate::sbc::panels::grid::{list_assets, parent_dir, GridView};
 
 pub(crate) struct FileDialog {
     config: Option<FileDialogConfig>,

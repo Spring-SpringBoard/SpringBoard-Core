@@ -5,9 +5,9 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use crate::sbc::panels::brush::{non_empty, BrushAction, BrushActions, ASSETS};
+use crate::sbc::panels::controls::grid::{list_assets, GridView};
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::fields::{BooleanField, ChoiceField, ColorField, NumericField};
-use crate::sbc::panels::grid::{list_assets, GridView};
 use crate::sbc::panels::runtime::{
     AssetGrid, AssetGridDef, Brush, EditorModel, FieldMut, FieldRef, TableEntry, TableModel,
 };

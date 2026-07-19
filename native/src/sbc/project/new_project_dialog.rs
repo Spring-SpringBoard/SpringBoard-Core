@@ -11,7 +11,7 @@ use std::rc::Rc;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::available_maps;
-use crate::sbc::panels::asset_picker::PickerEvent;
+use crate::sbc::panels::controls::asset_picker::PickerEvent;
 use crate::sbc::panels::field::{element_by_id, escape_rml};
 
 /// The blank map's archive name; picking it reveals the size inputs.

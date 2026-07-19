@@ -4,10 +4,10 @@ use std::rc::Rc;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::Action;
-use crate::sbc::panels::asset_picker::AssetPicker;
-use crate::sbc::panels::color_picker::ColorPicker;
+use crate::sbc::panels::controls::asset_picker::AssetPicker;
+use crate::sbc::panels::controls::color_picker::ColorPicker;
+use crate::sbc::panels::dialogs::file_dialog::FileDialog;
 use crate::sbc::panels::field::{bind_tooltip, element_by_id, escape_rml};
-use crate::sbc::panels::file_dialog::FileDialog;
 use crate::sbc::panels::registry::{editors_for, Tab};
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
 use crate::sbc::rml;

@@ -6,10 +6,10 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::{self, FileAcceptFn, FileDialogConfig};
 use crate::sbc::command_system::command::Command;
-use crate::sbc::panels::asset_picker::AssetPicker;
-use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
+use crate::sbc::panels::controls::asset_picker::AssetPicker;
+use crate::sbc::panels::controls::color_picker::{ColorPicker, PickerEvent};
+use crate::sbc::panels::dialogs::file_dialog::FileDialog;
 use crate::sbc::panels::field::FieldValue;
-use crate::sbc::panels::file_dialog::FileDialog;
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
 
 /// What a modal produced this tick, in the order it must be applied.

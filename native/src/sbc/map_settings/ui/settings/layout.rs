@@ -1,6 +1,6 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::panels::grid::{list_assets, GridItem};
+use crate::sbc::panels::controls::grid::{list_assets, GridItem};
 use crate::sbc::panels::runtime::Item;
 use crate::sbc::rml::{element_by_id, escape_rml};
 

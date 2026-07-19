@@ -2,9 +2,9 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
-use crate::sbc::panels::grid::GridView;
 use crate::sbc::panels::runtime::{EditorModel, FieldMut, FieldRef, TableEntry, TableModel};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

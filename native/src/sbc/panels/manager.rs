@@ -9,7 +9,7 @@ use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::panels::action_dispatcher::ActionDispatcher;
 use crate::sbc::panels::brush_sync::BrushSync;
-use crate::sbc::panels::cursortip::CursorTip;
+use crate::sbc::panels::cursor::cursortip::CursorTip;
 use crate::sbc::panels::editor_slot::EditorSlot;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};

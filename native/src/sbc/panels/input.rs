@@ -1,6 +1,6 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::panels::drag_cursor::DragCursor;
+use crate::sbc::panels::cursor::drag_cursor::DragCursor;
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{ChangeQueue, CommitRequest, InteractionEvent, InteractionQueue};
 use crate::sbc::panels::view::PanelView;
