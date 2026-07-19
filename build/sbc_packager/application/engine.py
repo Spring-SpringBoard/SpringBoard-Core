@@ -6,6 +6,7 @@ from pathlib import Path
 
 PRUNED_ENGINE_DIRECTORIES = ("AI",)
 PRUNED_ENGINE_EXECUTABLES = ("pr-downloader", "spring-dedicated", "spring-headless")
+PRUNED_WINDOWS_IMPORT_LIBRARIES = ("libspring-dedicated.dll.a", "libspring-headless.dll.a")
 
 
 def install_engine(*, destination: Path, engine_archive: Path) -> None:
@@ -20,6 +21,9 @@ def prune_engine(application_dir: Path, platform: str) -> None:
     executable_suffix = "" if platform == "linux" else ".exe"
     for executable in PRUNED_ENGINE_EXECUTABLES:
         (application_dir / f"{executable}{executable_suffix}").unlink(missing_ok=True)
+    if platform == "win32":
+        for import_library in PRUNED_WINDOWS_IMPORT_LIBRARIES:
+            (application_dir / import_library).unlink(missing_ok=True)
     for directory in PRUNED_ENGINE_DIRECTORIES:
         path = application_dir / directory
         if path.is_symlink() or path.is_file():

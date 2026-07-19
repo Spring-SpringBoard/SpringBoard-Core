@@ -213,17 +213,11 @@ jobs:
           base="artifacts/SpringBoard-Core-${VERSION}-${{ matrix.target }}.sdz"
           application="artifacts/SpringBoard-${VERSION}-${{ matrix.target }}"
           mkdir -p artifacts
-          uv run --project build --locked sbc-packager-base \
-            --repo-root . \
-            --native-plugin "native/target/release/${{ matrix.native_plugin }}" \
-            --output "$base" \
-            --platform "${{ matrix.platform }}" \
-            --version "$VERSION" \
-            --run-config config/ui-rust.json
           uv run --project build --locked sbc-packager-application \
             --repo-root . \
             --distribution build/distribution.json \
             --output-dir "$application" \
+            --editor-archive-output "$base" \
             --native-plugin "native/target/release/${{ matrix.native_plugin }}" \
             --engine-archive "$engine_archive" \
             --platform "${{ matrix.platform }}" \

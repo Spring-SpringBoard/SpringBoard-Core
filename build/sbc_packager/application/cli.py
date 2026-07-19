@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import Annotated
 
@@ -25,6 +26,7 @@ def application_command(
     version: Annotated[str, typer.Option(..., "--version")],
     engine_archive: Annotated[Path, typer.Option(..., "--engine-archive", exists=True, dir_okay=False)],
     run_config: Annotated[Path, typer.Option("--run-config")] = Path("config/ui-rust.json"),
+    editor_archive_output: Annotated[Path | None, typer.Option("--editor-archive-output")] = None,
     archive: Annotated[bool, typer.Option("--archive/--no-archive")] = True,
 ) -> None:
     build_application(
@@ -36,6 +38,7 @@ def application_command(
         platform=platform,
         version=version,
         run_config=run_config,
+        editor_archive_output=editor_archive_output,
         archive=archive,
     )
 
@@ -50,6 +53,7 @@ def build_application(
     platform: str,
     version: str,
     run_config: Path,
+    editor_archive_output: Path | None,
     archive: bool,
 ) -> Path:
     normalized_platform = normalize_platform(platform)
@@ -63,7 +67,7 @@ def build_application(
 
     resolved_repo_root = repo_root.resolve()
     game_name = resolve_game_name(resolved_repo_root, version)
-    prepare_game_archive(
+    game_archive = prepare_game_archive(
         repo_root=resolved_repo_root,
         files_dir=resolved_output,
         game_name=game_name,
@@ -74,6 +78,8 @@ def build_application(
         run_config=run_config,
         loading_image=find_engine_loading_image(resolved_output),
     )
+    if editor_archive_output is not None:
+        export_editor_archive(game_archive, editor_archive_output)
 
     config = read_application_config(distribution.resolve())
     (resolved_output / "script.txt").write_text(render_start_script(game_name, config.launch), encoding="utf-8")
@@ -85,6 +91,19 @@ def build_application(
         write_sha256(archive_path)
         print(f"Created archive: {archive_path}")
     print(f"Created application: {resolved_output}")
+    return resolved_output
+
+
+def export_editor_archive(game_archive: Path, output: Path) -> Path:
+    resolved_output = output.resolve()
+    if resolved_output.suffix.lower() != ".sdz":
+        raise RuntimeError(f"Editor archive output must end in .sdz: {resolved_output}")
+    if resolved_output.exists():
+        raise RuntimeError(f"Refusing to overwrite editor archive: {resolved_output}")
+    resolved_output.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(game_archive, resolved_output)
+    write_sha256(resolved_output)
+    print(f"Created editor archive: {resolved_output}")
     return resolved_output
 
 
