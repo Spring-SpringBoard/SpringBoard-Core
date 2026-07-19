@@ -9,6 +9,7 @@ local modinfo = {
 	description		= "Core module of SpringBoard",
 	modtype			= 1,
 	onlyLocal		= true,
+	nativeModule	= "native/rust_plugin",
 	depend = {
 		"Spring Cursors",
 	}

@@ -1,4 +1,4 @@
 {
   "chonsole": "rust",
-  "ui": "rmlui"
+  "ui": "rust"
 }

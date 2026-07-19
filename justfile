@@ -58,6 +58,31 @@ build-native:
 [group('build')]
 build: build-native
 
+# Build the Linux editor archive for distributors.
+[group('build')]
+bundle-base-linux version output="artifacts/SpringBoard-Core-linux-x86_64.sdz": build-native
+    uv run --project ./build --locked sbc-packager-base \
+      --repo-root . \
+      --native-plugin ./native/target/release/librust_plugin.so \
+      --output "{{output}}" \
+      --platform linux \
+      --run-config ./config/ui-rust.json \
+      --version "{{version}}"
+
+# Build the complete Linux application from an unmodified engine release
+# archive. Extraction and pruning are part of this command.
+[group('build')]
+bundle-application-linux engine_archive version output="artifacts/SpringBoard-linux-x86_64": build-native
+    uv run --project ./build --locked sbc-packager-application \
+      --repo-root . \
+      --distribution ./build/distribution.json \
+      --output-dir "{{output}}" \
+      --native-plugin ./native/target/release/librust_plugin.so \
+      --engine-archive "{{engine_archive}}" \
+      --platform linux \
+      --run-config ./config/ui-rust.json \
+      --version "{{version}}"
+
 # Build the local engine, through its Docker toolchain (see the engine's
 # AGENTS.md). A host `cmake --build` of the build dir cannot work: that dir is
 # configured with the container's paths (`/build/src/...`), so ninja tries to
@@ -102,7 +127,7 @@ dev-panel config="config/ui-rust.json": build-native
 
 # Build and run a long-lived isolated Spring editor session.
 [group('run')]
-run config="config/ui-chili.json": build-native
+run config="config/ui-rust.json": build-native
     bash tools/dev/launch.sh --config "{{config}}"
 
 # Run black-box UI E2E tests. Does not rebuild native code; run `just build`

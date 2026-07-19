@@ -24,6 +24,8 @@ files["libs_sb/utils/luaunit.lua"] = { ignore = {"581"} }
 -- Third-party code bundled into the tree (git submodules, vendored libraries,
 -- Chili UI skins, engine widgets/gadgets). Not SBC editor source, so not linted.
 exclude_files = {
+    -- Generated distributions and build outputs may contain engine Lua files.
+    "artifacts/**",
     "libs_sb/chiliui/**",
     "libs_sb/chonsole/**",
     "libs_sb/s11n/**",

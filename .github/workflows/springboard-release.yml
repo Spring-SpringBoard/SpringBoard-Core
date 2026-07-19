@@ -1,0 +1,269 @@
+name: SpringBoard release
+
+on:
+  push:
+    branches:
+      - rust-wip
+    paths:
+      - .github/workflows/springboard-release.yml
+      - build/**
+  workflow_dispatch:
+    inputs:
+      release_kind:
+        description: Version and GitHub release type.
+        required: true
+        default: prerelease
+        type: choice
+        options:
+          - stable
+          - prerelease
+          - nightly
+      version:
+        description: SemVer without a v prefix; ignored for nightly builds.
+        required: true
+        default: 1.0.0-beta.1
+        type: string
+      publish:
+        description: Create the immutable tag and GitHub Release after building.
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: springboard-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  packager-quality:
+    name: Packager quality
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+
+      - name: Check packager
+        run: |
+          uv run --project build --locked ruff check build/sbc_packager
+          uv run --project build --locked pyright build/sbc_packager
+
+  metadata:
+    name: Resolve release metadata
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    outputs:
+      engine_release: ${{ steps.configuration.outputs.engine_release }}
+      engine_repo: ${{ steps.configuration.outputs.engine_repo }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Read distribution configuration
+        id: configuration
+        shell: bash
+        run: |
+          engine_repo="$(jq -er '.engine.repository | select(type == "string" and length > 0)' build/distribution.json)"
+          engine_release="$(jq -er '.engine.release | select(type == "string" and length > 0)' build/distribution.json)"
+          {
+            echo "engine_repo=$engine_repo"
+            echo "engine_release=$engine_release"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate version
+        id: release
+        shell: bash
+        env:
+          RELEASE_KIND: ${{ inputs.release_kind }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          case "$RELEASE_KIND" in
+            stable)
+              [[ "$REQUESTED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+                echo "Stable versions must be plain SemVer, for example 1.0.0" >&2
+                exit 1
+              }
+              version="$REQUESTED_VERSION"
+              prerelease=false
+              ;;
+            prerelease)
+              [[ "$REQUESTED_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$ ]] || {
+                echo "Prerelease versions must be SemVer, for example 1.0.0-beta.1" >&2
+                exit 1
+              }
+              version="$REQUESTED_VERSION"
+              prerelease=true
+              ;;
+            nightly)
+              version="$(date -u +%F)-$(git rev-parse --short=7 HEAD)"
+              prerelease=true
+              ;;
+          esac
+          {
+            echo "version=$version"
+            echo "tag=$version"
+            echo "prerelease=$prerelease"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.target }}
+    if: github.event_name == 'workflow_dispatch'
+    needs:
+      - metadata
+      - packager-quality
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux
+            target: linux-x86_64
+            engine_platform: amd64-linux
+            native_plugin: librust_plugin.so
+            application_suffix: tar.gz
+          - runner: windows-2025
+            platform: win32
+            target: windows-x86_64
+            engine_platform: amd64-windows
+            native_plugin: rust_plugin.dll
+            application_suffix: zip
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install 7-Zip
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes p7zip-full
+
+      - name: Check out matching engine bindings
+        shell: bash
+        env:
+          ENGINE_REPO: ${{ needs.metadata.outputs.engine_repo }}
+          ENGINE_RELEASE: ${{ needs.metadata.outputs.engine_release }}
+        run: |
+          git clone --filter=blob:none --no-checkout "https://github.com/${ENGINE_REPO}.git" ../spring-bar
+          git -C ../spring-bar fetch --depth 1 origin "refs/tags/${ENGINE_RELEASE}:refs/tags/${ENGINE_RELEASE}"
+          git -C ../spring-bar checkout --detach "refs/tags/${ENGINE_RELEASE}"
+
+      - name: Build release native plugin
+        run: cargo build --manifest-path native/Cargo.toml --release
+
+      - name: Download engine release archive
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENGINE_REPO: ${{ needs.metadata.outputs.engine_repo }}
+          ENGINE_RELEASE: ${{ needs.metadata.outputs.engine_release }}
+          ENGINE_PLATFORM: ${{ matrix.engine_platform }}
+        run: |
+          mapfile -t archives < <(
+            gh release view "$ENGINE_RELEASE" --repo "$ENGINE_REPO" --json assets --jq '.assets[].name' |
+              grep -E "^recoil_.+_${ENGINE_PLATFORM}\\.7z$"
+          )
+          if [[ "${#archives[@]}" -ne 1 ]]; then
+            echo "Expected exactly one normal ${ENGINE_PLATFORM} engine archive, found ${#archives[@]}" >&2
+            printf '  %s\n' "${archives[@]}" >&2
+            exit 1
+          fi
+          mkdir -p .release/engine
+          gh release download "$ENGINE_RELEASE" \
+            --repo "$ENGINE_REPO" \
+            --pattern "${archives[0]}" \
+            --dir .release/engine
+          mv ".release/engine/${archives[0]}" .release/engine/engine.7z
+          7z t .release/engine/engine.7z
+
+      - name: Build editor and complete application
+        shell: bash
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          engine_archive=".release/engine/engine.7z"
+          base="artifacts/SpringBoard-Core-${VERSION}-${{ matrix.target }}.sdz"
+          application="artifacts/SpringBoard-${VERSION}-${{ matrix.target }}"
+          mkdir -p artifacts
+          uv run --project build --locked sbc-packager-base \
+            --repo-root . \
+            --native-plugin "native/target/release/${{ matrix.native_plugin }}" \
+            --output "$base" \
+            --platform "${{ matrix.platform }}" \
+            --version "$VERSION" \
+            --run-config config/ui-rust.json
+          uv run --project build --locked sbc-packager-application \
+            --repo-root . \
+            --distribution build/distribution.json \
+            --output-dir "$application" \
+            --native-plugin "native/target/release/${{ matrix.native_plugin }}" \
+            --engine-archive "$engine_archive" \
+            --platform "${{ matrix.platform }}" \
+            --version "$VERSION" \
+            --run-config config/ui-rust.json
+          rm -rf "$application"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: springboard-${{ matrix.target }}
+          path: artifacts/
+          if-no-files-found: error
+          compression-level: 0
+
+  publish:
+    name: Publish ${{ needs.metadata.outputs.tag }}
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    needs:
+      - metadata
+      - build
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: springboard-*
+          path: release
+          merge-multiple: true
+
+      - name: Assemble checksums
+        working-directory: release
+        run: |
+          find . -maxdepth 1 -type f -name '*.sha256' -delete
+          sha256sum -- SpringBoard-* | sort -k2 > SHA256SUMS
+
+      - name: Create immutable GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.metadata.outputs.prerelease }}
+          RELEASE_TAG: ${{ needs.metadata.outputs.tag }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Refusing to overwrite existing release $RELEASE_TAG" >&2
+            exit 1
+          fi
+          flags=()
+          if [[ "$PRERELEASE" == "true" ]]; then flags+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "${{ github.sha }}" \
+            --title "SpringBoard $VERSION" \
+            --generate-notes \
+            "${flags[@]}"

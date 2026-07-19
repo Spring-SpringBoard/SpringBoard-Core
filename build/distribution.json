@@ -1,0 +1,36 @@
+{
+  "engine": {
+    "repository": "gajop/spring-rust",
+    "release": "2026-07-19-bc9e5ee"
+  },
+  "launch": {
+    "map": "sb_initial_blank_10x8",
+    "map_options": {
+      "new_map_x": 10,
+      "new_map_y": 8
+    },
+    "game_options": {
+      "MapSeed": 42
+    }
+  },
+  "springsettings": {
+    "HeightMapTexture": 1,
+    "LinkIncomingMaxPacketRate": 64000,
+    "LinkIncomingMaxWaitingPackets": 512000,
+    "LinkIncomingPeakBandwidth": 32768000,
+    "LinkIncomingSustainedBandwidth": 2048000,
+    "LinkOutgoingBandwidth": 65536000,
+    "TextureMemPoolSize": 600,
+    "SpringDataRoot": "springboard/projects",
+    "CamSpringLockCardinalDirections": false,
+    "MiddleClickScrollSpeed": -0.0015,
+    "MouseDragScrollThreshold": 0,
+    "EdgeMoveDynamic": 0,
+    "EdgeMoveWidth": 0.003,
+    "OverheadMaxHeightFactor": 1.39999998,
+    "OverheadScrollSpeed": 50,
+    "ScrollWheelSpeed": -35,
+    "CamMode": 1,
+    "SpringBoardDevConsoleMaxLines": 0
+  }
+}

@@ -25,3 +25,8 @@ Manual Rust-Chonsole sessions use a stable history file at
 `~/.local/state/springboard/chonsole-history`). Set `SBC_CHONSOLE_HISTORY` to
 use a different file while testing. Smoke and E2E runs deliberately keep their
 history inside their disposable isolated write directory.
+
+The native developer console retains every line by default. Set
+`SpringBoardDevConsoleMaxLines` in `springsettings.cfg` to impose a finite
+session limit; positive values are clamped to at least 2,000 lines. Zero means
+unlimited. The console header always reports how many lines it is showing.
