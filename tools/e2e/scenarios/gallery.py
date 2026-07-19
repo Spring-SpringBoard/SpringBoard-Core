@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from scenarios.geometry import (
+    dropdown_option,
     DIALOG,
     GALLERY,
     TAB_Y,
@@ -93,8 +94,7 @@ def gallery(run_state: E2ERun) -> None:
     # Choice: opened and a different item picked.
     run_state.click(*panel_point(left, GALLERY["choice"]), delay=0.3)
     run_state.golden("choice-open", park=False, tolerance=CURSOR_IN_SHOT)
-    run_state.key("Down", delay=0.2)
-    run_state.key("Return", delay=0.5)
+    run_state.click(*panel_point(left, dropdown_option(GALLERY["choice"], 1)), delay=0.5)
 
     # The dragged field's value lands a digit or two either side of the same
     # number between runs (the drag ends on whichever tick the release meets), so

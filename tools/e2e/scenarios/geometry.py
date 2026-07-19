@@ -23,7 +23,19 @@ EDITOR_BUTTON_Y = 88
 ACTION_Y = 217
 
 # Tab centres, as offsets from the panel's left edge.
-TAB_X = {"objects": 42, "map": 110, "env": 180, "misc": 300}
+TAB_X = {"objects": 42, "map": 110, "env": 180, "misc": 258}
+
+# Field-row geometry, measured in the running Rust panel: a row is 30dp tall
+# with a 9dp gap, so consecutive rows in a block sit 39dp apart. Blocks are
+# anchored on their first row's centre; a section header between blocks adds
+# ~23dp on top of the row pitch. Keep coordinates as `anchor + ROW * i` so a
+# layout shift is fixed by editing one anchor, not every row.
+ROW = 39
+
+# Column centres: full-width rows, and the halves/thirds of grouped rows.
+COL_FULL = 250
+HALF = (92, 370)
+THIRD = (92, 250, 420)
 
 # Each editor button's centre. Prefer these semantic names to matching a button
 # by its ordinal; tab order is presentation detail and changes more often than
@@ -41,8 +53,8 @@ EDITORS: Final = {
 OBJECTS: Final = {
     "add": (54, ACTION_Y),
     "brush": (134, ACTION_Y),
-    "feature_type": (104, 316),
-    "feature_terrain": (104, 358),
+    "feature_type": (104, 336),
+    "feature_terrain": (104, 375),
     # The first cell is `geovent`, which has no selectable model. The first
     # tree is the next cell in the unfiltered grid. Keep that semantic choice
     # here so object scenarios never silently arm the default geovent.
@@ -57,19 +69,19 @@ OBJECTS: Final = {
 }
 
 ENV_LIGHTING_NUMBERS: Final = (
-    ("dirX", (92, 265), "0.25"),
-    ("dirY", (200, 265), "0.35"),
-    ("dirZ", (300, 265), "0.75"),
-    ("groundShadowDensity", (100, 418), "0.65"),
-    ("modelShadowDensity", (100, 570), "0.55"),
+    ("dirX", (THIRD[0], 280), "0.25"),
+    ("dirY", (THIRD[1], 280), "0.35"),
+    ("dirZ", (THIRD[2], 280), "0.75"),
+    ("groundShadowDensity", (100, 382), "0.65"),
+    ("modelShadowDensity", (100, 483), "0.55"),
 )
 ENV_LIGHTING_COLORS: Final = (
-    ("groundDiffuseColor", (150, 332), 900),
-    ("groundAmbientColor", (320, 332), 880),
-    ("groundSpecularColor", (150, 375), 920),
-    ("unitDiffuseColor", (150, 484), 940),
-    ("unitAmbientColor", (320, 484), 860),
-    ("unitSpecularColor", (150, 527), 900),
+    ("groundDiffuseColor", (THIRD[0], 343), 900),
+    ("groundAmbientColor", (THIRD[1], 343), 880),
+    ("groundSpecularColor", (THIRD[2], 343), 920),
+    ("unitDiffuseColor", (THIRD[0], 444), 940),
+    ("unitAmbientColor", (THIRD[1], 444), 860),
+    ("unitSpecularColor", (THIRD[2], 444), 900),
 )
 COLOR_PICKER: Final = {
     "sample_y": 300,
@@ -77,42 +89,42 @@ COLOR_PICKER: Final = {
     "team_sample_x": 900,
 }
 ENV_SKY_COLORS: Final = (
-    ("sunColor", (150, 192), 900),
-    ("skyColor", (320, 192), 930),
-    ("cloudColor", (150, 237), 870),
-    ("fogColor", (150, 347), 950),
+    ("sunColor", (THIRD[0], 210), 900),
+    ("skyColor", (THIRD[1], 210), 930),
+    ("cloudColor", (THIRD[2], 210), 870),
+    ("fogColor", (THIRD[0], 311), 950),
 )
 ENV_SKY_NUMBERS: Final = (
-    ("fogStart", (260, 347), "0.2"),
-    ("fogEnd", (90, 390), "0.85"),
+    ("fogStart", (THIRD[1], 311), "0.2"),
+    ("fogEnd", (THIRD[2], 311), "0.85"),
 )
 ENV_WATER_NUMBERS: Final = (
-    ("numTiles", (250, 193), "6"),
-    ("perlinStartFreq", (90, 302), "9"),
-    ("perlinLacunarity", (250, 302), "4"),
-    ("perlinAmplitude", (90, 344), "0.7"),
-    ("diffuseFactor", (90, 411), "0.8"),
-    ("specularFactor", (90, 477), "1.2"),
-    ("specularPower", (250, 477), "24"),
-    ("ambientFactor", (90, 563), "0.9"),
-    ("fresnelMin", (90, 630), "0.25"),
-    ("fresnelMax", (250, 630), "0.75"),
-    ("fresnelPower", (90, 673), "5"),
-    ("reflectionDistortion", (90, 717), "1.1"),
-    ("blurBase", (90, 783), "2.2"),
-    ("blurExponent", (250, 783), "1.7"),
-    ("repeatX", (90, 1024), "2"),
-    ("repeatY", (250, 1024), "3"),
+    ("numTiles", (HALF[1], 210), "6"),
+    ("perlinStartFreq", (HALF[0], 311), "9"),
+    ("perlinLacunarity", (HALF[1], 311), "4"),
+    ("perlinAmplitude", (HALF[0], 311 + ROW), "0.7"),
+    ("diffuseFactor", (HALF[0], 413), "0.8"),
+    ("specularFactor", (HALF[0], 475), "1.2"),
+    ("specularPower", (HALF[1], 475), "24"),
+    ("ambientFactor", (HALF[0], 475 + ROW * 2), "0.9"),
+    ("fresnelMin", (HALF[0], 616), "0.25"),
+    ("fresnelMax", (HALF[1], 616), "0.75"),
+    ("fresnelPower", (HALF[0], 616 + ROW), "5"),
+    ("reflectionDistortion", (HALF[0], 616 + ROW * 2), "1.1"),
+    ("blurBase", (HALF[0], 756), "2.2"),
+    ("blurExponent", (HALF[1], 756), "1.7"),
+    ("repeatX", (HALF[0], 943 + ROW), "2"),
+    ("repeatY", (HALF[1], 943 + ROW), "3"),
 )
 ENV_WATER_COLORS: Final = (
-    ("diffuseColor", (320, 411), 900),
-    ("specularColor", (150, 520), 930),
-    ("planeColor", (220, 849), 870),
+    ("diffuseColor", (HALF[1], 413), 900),
+    ("specularColor", (150, 475 + ROW), 930),
+    ("planeColor", (HALF[1], 818), 870),
 )
 ENV_WATER_ASSETS: Final = (
-    ("normalTexture", (87, 237)),
-    ("foamTexture", (180, 914)),
-    ("texture", (60, 980)),
+    ("normalTexture", (87, 249)),
+    ("foamTexture", (HALF[1], 881)),
+    ("texture", (60, 943)),
 )
 
 # Fixed controls in Map editors.
@@ -122,28 +134,30 @@ MAP: Final = {
     "terrain_pattern": (42, 400),
     "texture_pattern": (42, 380),
     "saved_brush_add": (42, 335),
-    "saved_brush_pattern": (42, 665),
-    "void_water": (100, 677),
-    "void_ground": (100, 720),
-    "dnts_diffuse_alpha": (100, 763),
-    "detail_texture": (70, 220),
-    "texture_specular": (140, 518),
-    "texture_reflection": (140, 562),
-    "texture_direction": (200, 783),
+    "saved_brush_pattern": (52, 700),
+    "void_water": (100, 656),
+    "void_ground": (100, 656 + ROW),
+    "dnts_diffuse_alpha": (100, 656 + ROW * 2),
+    "detail_texture": (70, 241),
+    "texture_specular": (140, 241 + ROW),
+    "texture_reflection": (140, 241 + ROW * 2),  # the Emission entry
+    "texture_direction": (200, 790),
     "texture_rect_pattern": (112, 448),
-    "saved_brush_rect": (112, 748),
+    "saved_brush_rect": (112, 778),
     "settings_map_size": (142, 525),
-    "terrain_size": (92, 604),
-    "terrain_rotation": (92, 646),
-    "terrain_strength": (92, 690),
-    "terrain_height": (92, 732),
-    "metal_size": (92, 625),
-    "metal_rotation": (92, 668),
-    "metal_amount": (92, 711),
-    "splat_scale_1": (92, 834), "splat_scale_2": (260, 834),
-    "splat_scale_3": (92, 878), "splat_scale_4": (260, 878),
-    "splat_mult_1": (92, 922), "splat_mult_2": (260, 922),
-    "splat_mult_3": (92, 966), "splat_mult_4": (260, 966),
+    # Terrain's fields start under its pattern grid; Metal/Grass have a
+    # "Pattern" section first, so their block sits one header lower.
+    "terrain_size": (92, 634),
+    "terrain_rotation": (92, 634 + ROW),
+    "terrain_strength": (92, 634 + ROW * 2),
+    "terrain_height": (92, 634 + ROW * 3),
+    "metal_size": (92, 655),
+    "metal_rotation": (92, 655 + ROW),
+    "metal_amount": (92, 655 + ROW * 2),
+    "splat_scale_1": (92, 795), "splat_scale_2": (320, 795),
+    "splat_scale_3": (92, 795 + ROW), "splat_scale_4": (320, 795 + ROW),
+    "splat_mult_1": (92, 795 + ROW * 2), "splat_mult_2": (320, 795 + ROW * 2),
+    "splat_mult_3": (92, 795 + ROW * 3), "splat_mult_4": (320, 795 + ROW * 3),
 }
 MAP_ACTIONS: Final = {
     "terrain_add": (42, ACTION_Y), "terrain_set": (112, ACTION_Y),
@@ -164,36 +178,38 @@ MAP_TEXTURE_ACTIONS: Final = (
 
 # Fixed controls in Environment editors.
 ENV: Final = {
-    "lighting_shadow_mode": (180, 222),
-    "sky_skybox": (64, 280),
-    "water_forced_rendering": (138, 193),
-    "water_plane": (84, 849),
-    "water_shore_waves": (84, 914),
+    "lighting_shadow_mode": (180, 241),
+    "sky_skybox": (64, 249),
+    "water_forced_rendering": (100, 210),
+    "water_plane": (84, 818),
+    "water_shore_waves": (84, 881),
     "terrain_pattern": (42, 365),
-    "terrain_height": (92, 741),
-    "terrain_strength": (92, 692),
-    "terrain_size": (92, 612),
+    "terrain_height": (92, 751),
+    "terrain_strength": (92, 712),
+    "terrain_size": (92, 634),
     "terrain_set": (112, ACTION_Y),
 }
 
 # Fixed controls in Misc and the panel-wide action toolbar.
 MISC: Final = {
-    "info_name": (200, 190),
-    "info_color": (110, 310),
+    "info_name": (250, 207),
     "team_add": (38, ACTION_Y),
-    "team_edit_first": (425, 313),
-    "team_remove_first": (468, 347),
+    "team_edit_first": (425, 333),
+    "team_remove_first": (468, 333),
 }
 MISC_INFO_FIELDS: Final = (
-    ((200, 190), "Verified Scenario"),
-    ((200, 233), "All metadata fields"),
-    ((200, 276), "2.5"),
-    ((200, 318), "Native UI"),
+    ((250, 207), "Verified Scenario"),
+    ((250, 207 + ROW), "All metadata fields"),
+    ((250, 207 + ROW * 2), "2.5"),
+    ((250, 207 + ROW * 3), "Native UI"),
 )
+# Rows inside the team-edit dialog: Metal/Storage, then (after the Energy
+# section) Energy/Storage, Colour, Start X/Z at the shared row pitch. The
+# dialog's halves sit at x=120 and x=390.
 TEAM_NUMBERS: Final = (
-    ((120, 350), "125"), ((260, 350), "500"),
-    ((120, 416), "250"), ((260, 416), "750"),
-    ((120, 501), "100"), ((260, 501), "200"),
+    ((120, 345), "125"), ((390, 345), "500"),
+    ((120, 408), "250"), ((390, 408), "750"),
+    ((120, 408 + ROW * 2), "100"), ((390, 408 + ROW * 2), "200"),
 )
 # The shell action toolbar is a fixed nine-icon row.  Keep the action names
 # here, rather than making tests infer an icon's position from its ordinal: the
@@ -229,10 +245,11 @@ DIALOG: Final = {
     "asset_ok_gallery": (347, 602),
     "texture_new": (40, 270),
     "texture_existing": (110, 270),
-    "team_name": (292, 269),
-    "team_ai": (150, 304),
-    "team_color": (153, 459),
-    "team_ok": (472, 609),
+    "texture_create": (70, 370),
+    "team_name": (300, 265),
+    "team_ai": (150, 307),
+    "team_color": (150, 447),
+    "team_ok": (474, 587),
     "skybox_ok": (344, 472),
     "skybox_cancel": (430, 603),
     "skybox_first_cell": (50, 335),
@@ -242,20 +259,20 @@ DIALOG: Final = {
 # The visual-only Dev gallery is still a real editor; keeping its field map
 # here means the gallery tracks layout changes with the production scenarios.
 GALLERY: Final = {
-    "dev_tab_x": 376,
-    "string": (200, 222),
-    "empty": (200, 264),
-    "number": (80, 331),
-    "bounded": (80, 374),
-    "precise": (80, 417),
-    "bool_on": (142, 475),
-    "bool_off": (142, 515),
-    "choice": (200, 583),
-    "color": (149, 650),
-    "asset": (60, 692),
-    "group_xyz_y": 760,
-    "group_second_x": 220,
-    "group_third_x": 385,
+    "dev_tab_x": 328,
+    "string": (250, 238),
+    "empty": (250, 238 + ROW),
+    "number": (80, 343),
+    "bounded": (80, 343 + ROW),
+    "precise": (80, 343 + ROW * 2),
+    "bool_on": (100, 484),
+    "bool_off": (100, 484 + ROW),
+    "choice": (200, 585),
+    "color": (149, 647),
+    "asset": (60, 647 + ROW + 1),
+    "group_xyz_y": 748,
+    "group_second_x": THIRD[1],
+    "group_third_x": THIRD[2],
     "tooltip_parking": (400, 900),
 }
 
@@ -263,7 +280,7 @@ GALLERY: Final = {
 # window-relative variant is for controls anchored to the status strip.
 PARK_PANEL: Final = (450, 1000)
 PARK_PANEL_LOW: Final = (450, 1100)
-STATUS: Final = {"map_toggle_from_right": (610, 115), "height_from_bottom": 92}
+STATUS: Final = {"height_from_bottom": 92}
 
 # Console and the shell's full-frame smoke test also exercise native widgets
 # outside the right panel. These stay window-relative, but their geometry is
@@ -296,12 +313,6 @@ CHONSOLE: Final = {
     "scrollbar_thumb_start_y": 12,
     "scrollbar_hover_y": 80,
     "scrollbar_drag_end_y": 300,
-}
-SHELL: Final = {
-    "lighting_shadow_density": (90, 419),
-    "lighting_ground_diffuse": (90, 331),
-    "color_gradient_origin": (10, 252),
-    "water_normal_texture": (87, 236),
 }
 
 
@@ -370,6 +381,16 @@ def dialog_left(run_state: E2ERun) -> int:
 def window_size(run_state: E2ERun) -> tuple[int, int]:
     assert run_state.window is not None
     return window_geometry(run_state.window)
+
+
+def dropdown_option(point: tuple[int, int], index: int) -> tuple[int, int]:
+    """The centre of the nth option of a drop-down opened at `point`.
+
+    The popup lists options directly under the select row; picking by click
+    keeps the keyboard out of it (loose Down/Return keys land in the chonsole,
+    which opens over the run).
+    """
+    return point[0], point[1] + 33 + 35 * index
 
 
 def editor_button_x(index: int) -> int:

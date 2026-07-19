@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import json
+import os
 from contextlib import contextmanager
 import shutil
 import subprocess
@@ -35,6 +36,20 @@ PANEL_TOLERANCE = 20
 # on top of it.
 SETTLE = 0.12
 
+# Fast mode (`SBC_E2E_FAST=1`): a whole-suite smoke run that only asks "does each
+# scenario execute and emit its commands". Captures are skipped, pixel diffs are
+# neutralised, and every pacing delay collapses to zero -- only the drag
+# move-before-press ordering survives, because without it a drag grabs the wrong
+# point and the scenario fails for a reason that has nothing to do with the code.
+FAST = os.environ.get("SBC_E2E_FAST") == "1"
+
+
+def nap(seconds: float) -> None:
+    """A pacing delay, elided entirely in fast mode."""
+    if not FAST:
+        time.sleep(seconds)
+
+
 # Envelope bookkeeping, not command fields.
 _ENVELOPE_KEYS = frozenset({"className", "__cmd_id", "__preview"})
 
@@ -47,9 +62,15 @@ def command_fields(data: dict) -> dict:
     (SetObjectParamCommand, AddObjectCommand). Reading only `opts` makes a
     flat command look like it carries nothing at all.
     """
+    # Partial-opts commands serialize unset fields as null; a null is "not
+    # set", not a value a matcher should ever see.
     if isinstance(data.get("opts"), dict):
-        return data["opts"]
-    return {key: value for key, value in data.items() if key not in _ENVELOPE_KEYS}
+        return {key: value for key, value in data["opts"].items() if value is not None}
+    return {
+        key: value
+        for key, value in data.items()
+        if key not in _ENVELOPE_KEYS and value is not None
+    }
 
 MODIFIERS = (
     "Control_L",
@@ -256,7 +277,7 @@ class E2ERun:
                 run("xdotool", "keyup", modifier)
         else:
             run("xdotool", "key", "--window", self.window, name)
-        time.sleep(delay)
+        nap(delay)
 
     @contextmanager
     def modifier(self, name: str):
@@ -281,7 +302,7 @@ class E2ERun:
         chord = "+".join((*normalized, name))
         self.event("key_chord", chord=chord)
         run("xdotool", "key", "--window", self.window, chord)
-        time.sleep(delay)
+        nap(delay)
 
     def type_text(self, text: str, delay_ms: int = 10) -> None:
         self.require_window()
@@ -318,13 +339,13 @@ class E2ERun:
             "click",
             str(button),
         )
-        time.sleep(delay)
+        nap(delay)
 
     def move(self, x: int, y: int, delay: float = 0.08) -> None:
         self.require_window()
         self.event("move", x=x, y=y)
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
-        time.sleep(delay)
+        nap(delay)
 
     def move_relative(self, dx: int, dy: int = 0, steps: int = 6, delay: float = 0.06) -> None:
         """Move the mouse *by* an offset, the way a real mouse reports motion.
@@ -345,7 +366,7 @@ class E2ERun:
                 str(round(dx / steps)),
                 str(round(dy / steps)),
             )
-            time.sleep(delay)
+            nap(delay)
 
     def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
         """Scroll the wheel over a point. Over the map this zooms the camera,
@@ -358,8 +379,8 @@ class E2ERun:
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
         for _ in range(clicks):
             run("xdotool", "click", "--window", self.window, button)
-            time.sleep(0.05)
-        time.sleep(delay)
+            nap(0.05)
+        nap(delay)
 
     def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
         """Scroll the wheel with the real pointer, so a held modifier applies.
@@ -373,13 +394,13 @@ class E2ERun:
         run("xdotool", "mousemove", str(x), str(y))
         for _ in range(clicks):
             run("xdotool", "click", button)
-            time.sleep(0.05)
-        time.sleep(delay)
+            nap(0.05)
+        nap(delay)
 
     def click_root(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
         self.event("click_root", x=x, y=y, button=button)
         run("xdotool", "mousemove", str(x), str(y), "click", str(button))
-        time.sleep(delay)
+        nap(delay)
 
     def drag_root(
         self,
@@ -396,12 +417,12 @@ class E2ERun:
         run("xdotool", "mousemove", str(x1), str(y1))
         time.sleep(SETTLE)  # see drag()
         run("xdotool", "mousedown", str(button))
-        time.sleep(step_delay)
+        nap(step_delay)
         for i in range(1, steps + 1):
             xi = round(x1 + (x2 - x1) * i / steps)
             yi = round(y1 + (y2 - y1) * i / steps)
             run("xdotool", "mousemove", str(xi), str(yi))
-            time.sleep(step_delay)
+            nap(step_delay)
         run("xdotool", "mouseup", str(button))
         time.sleep(0.12)
 
@@ -414,14 +435,14 @@ class E2ERun:
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
         time.sleep(SETTLE)  # the move must land before the press; see drag()
         run("xdotool", "mousedown", str(button))
-        time.sleep(delay)
+        nap(delay)
 
     def release(self, x: int, y: int, button: int = 1, delay: float = 0.3) -> None:
         self.require_window()
         self.event("release", x=x, y=y, button=button)
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
         run("xdotool", "mouseup", str(button))
-        time.sleep(delay)
+        nap(delay)
 
     def drag(
         self,
@@ -445,16 +466,25 @@ class E2ERun:
         # screenshot -- and the brush refuses to paint.
         time.sleep(SETTLE)
         run("xdotool", "mousedown", str(button))
-        time.sleep(step_delay)
+        nap(step_delay)
         for i in range(1, steps + 1):
             xi = round(x1 + (x2 - x1) * i / steps)
             yi = round(y1 + (y2 - y1) * i / steps)
             run("xdotool", "mousemove", "--window", self.window, str(xi), str(yi))
-            time.sleep(step_delay)
+            nap(step_delay)
         run("xdotool", "mouseup", str(button))
         time.sleep(0.12)
 
+    def _skip_capture(self, kind: str, name: str) -> Path:
+        """Fast mode: record that the step was reached, capture nothing. The
+        returned path is a placeholder -- pixel asserts are no-ops in fast mode,
+        so nothing ever reads it."""
+        self.event(f"{kind}_skipped", name=name)
+        return self.screenshot_dir / f"{name}.png"
+
     def screenshot(self, name: str) -> Path:
+        if FAST:
+            return self._skip_capture("screenshot", name)
         self.require_window()
         stem = f"{len(self.screenshots):02d}-{name}"
         raw_path = self.screenshot_dir / f"{stem}.xwd"
@@ -604,6 +634,9 @@ class E2ERun:
         Compare the immediate XWD captures so this works with both deferred
         `raw` conversion and immediate `png` capture modes.
         """
+        if FAST:
+            self.event("assert_pixels_skipped")
+            return 0
         return self._compare(
             self._source_image(before),
             self._source_image(after),
@@ -695,6 +728,8 @@ class E2ERun:
         a placement preview follows the cursor, and a mid-drag capture would end
         the drag somewhere else entirely.
         """
+        if FAST:
+            return self._skip_capture("golden", name)
         if park:
             self.park_cursor()
         stem = f"{len(self.screenshots):02d}-{name}"
@@ -932,6 +967,8 @@ class E2ERun:
         that intermittently failed mid-run (`xwd -root` returning 1). Capturing by
         window id is the same call every other screenshot already makes.
         """
+        if FAST:
+            return self._skip_capture("screenshot_root", name)
         self.require_window()
         stem = f"{len(self.screenshots):02d}-{name}"
         raw_path = self.screenshot_dir / f"{stem}.xwd"

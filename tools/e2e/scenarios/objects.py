@@ -10,7 +10,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import OBJECTS, TAB_X, TAB_Y, editor_point, panel_left, panel_point, window_size
+from scenarios.geometry import (
+    OBJECTS,
+    TAB_X,
+    TAB_Y,
+    dropdown_option,
+    editor_point,
+    panel_left,
+    panel_point,
+    window_size,
+)
 from scenarios.registry import scenario
 
 if TYPE_CHECKING:
@@ -160,8 +169,7 @@ def units_panel(run_state: E2ERun) -> None:
     # Type = Wreckage. None of this map's features are wrecks, so the grid must
     # empty -- the filter proving it filters, not merely that it renders.
     run_state.click(*panel_point(left, OBJECTS["feature_type"]), delay=0.4)
-    run_state.key("Down", delay=0.2)
-    run_state.key("Return", delay=0.7)                 # commit and close the list
+    run_state.click(*panel_point(left, dropdown_option(OBJECTS["feature_type"], 1)), delay=0.7)
     run_state.golden("features-wreckage-empty")
 
 
@@ -307,8 +315,7 @@ def collision(run_state: E2ERun) -> None:
 
     # A different volume type is a different shape on screen.
     run_state.click(*panel_point(left, OBJECTS["collision_type"]), delay=0.4)
-    run_state.key("Down", delay=0.2)
-    run_state.key("Return", delay=0.9)
+    run_state.click(*panel_point(left, dropdown_option(OBJECTS["collision_type"], 1)), delay=0.9)
     typed = run_state.golden("volume-type-changed", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_screenshot_pixels(scaled, typed, min_changed=200)
     # The fields live in the panel, so crop to it: a full-frame shot would drag

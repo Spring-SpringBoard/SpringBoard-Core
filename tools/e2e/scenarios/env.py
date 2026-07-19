@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from scenarios.geometry import (
+    dropdown_option,
     DIALOG,
     COLOR_PICKER,
     ENV,
@@ -17,7 +18,6 @@ from scenarios.geometry import (
     ENV_WATER_NUMBERS,
     MAP,
     PARK_PANEL_LOW,
-    STATUS,
     TAB_X,
     TAB_Y,
     dialog_point,
@@ -65,9 +65,8 @@ def lighting_panel(run_state: E2ERun) -> None:
     run_state.click(*editor_point(left, "env", "lighting"), delay=0.4)
     run_state.screenshot("lighting-open")
 
-    run_state.click(*panel_point(left, ENV["lighting_shadow_mode"]), delay=0.15)
-    run_state.key("Down", delay=0.1)
-    run_state.key("Return", delay=0.25)
+    run_state.click(*panel_point(left, ENV["lighting_shadow_mode"]), delay=0.3)
+    run_state.click(*panel_point(left, dropdown_option(ENV["lighting_shadow_mode"], 2)), delay=0.35)
     for key, point, value in ENV_LIGHTING_NUMBERS[:3]:
         _edit_number(run_state, *panel_point(left, point), value)
         run_state.assert_any_command(
@@ -106,7 +105,7 @@ def sky_panel(run_state: E2ERun) -> None:
         )
 
     run_state.click(*panel_point(left, ENV["sky_skybox"]), delay=0.6)
-    run_state.screenshot("skybox-picker")
+    run_state.screenshot_root("skybox-picker")
     run_state.click(*dialog_point(run_state, DIALOG["asset_first_cell"]), delay=0.35)
     run_state.click(*dialog_point(run_state, DIALOG["asset_ok"]), delay=0.6)
     run_state.screenshot("sky-all-fields")
@@ -118,7 +117,6 @@ def water_panel(run_state: E2ERun) -> None:
     run_state.focus()
     left = panel_left(run_state)
     width, height = window_size(run_state)
-    run_state.click(width - STATUS["map_toggle_from_right"][0], height - STATUS["map_toggle_from_right"][1], delay=0.3)
 
     run_state.click(left + TAB_X["map"], TAB_Y, delay=0.2)
     run_state.click(*editor_point(left, "map", "terrain"), delay=0.45)

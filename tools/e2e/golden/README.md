@@ -167,8 +167,7 @@ capture: the harness hides it (`SBC_HIDE_CURSORTIP`) and this scenario is the on
 that asks for it back (`env=` on `@scenario`). Both frames are `park=False` — the
 tip is drawn *at* the pointer, so parking it out of shot takes the subject away.
 
-## native-panel-rust / native-dev-console-rust
+## native-dev-console-rust
 
-Predate this file. The panel walk-through and the dev console (cleared first, so an
-empty log is the deterministic state; its toolbar and F8 toggle are what the
-goldens pin down).
+The dev console, cleared first, so an empty log is the deterministic state; its
+toolbar and F8 toggle are what the goldens pin down.

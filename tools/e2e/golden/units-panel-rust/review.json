@@ -1,38 +1,38 @@
 {
   "amount-5-placed": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:59"
+    "updated": "2026-07-19T15:58:53"
   },
   "amount-5-preview": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:53"
+    "updated": "2026-07-19T15:58:47"
   },
   "before-amount-5": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:55"
+    "updated": "2026-07-19T15:58:49"
   },
   "before-place": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:45"
+    "updated": "2026-07-19T15:58:39"
   },
   "feature-placed": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:49"
+    "updated": "2026-07-19T15:58:43"
   },
   "features-brush-fields": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:40"
+    "updated": "2026-07-19T15:58:35"
   },
   "features-open": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:39"
+    "updated": "2026-07-19T15:58:34"
   },
   "features-wreckage-empty": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:42:01"
+    "updated": "2026-07-19T15:58:55"
   },
   "units-open": {
     "status": "ai-reviewed",
-    "updated": "2026-07-13T08:41:37"
+    "updated": "2026-07-19T15:58:32"
   }
 }
