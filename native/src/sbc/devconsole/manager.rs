@@ -10,8 +10,9 @@ use crate::sbc::command_system::{ClearUndoRedoCommand, RedoCommand, UndoCommand}
 use crate::sbc::devconsole::actions::{
     cheat_if_needed, is_cheating, is_global_los, is_god_mode, Action,
 };
-use crate::sbc::devconsole::log::{LogBuffer, Severity};
+use crate::sbc::devconsole::log::Severity;
 use crate::sbc::devconsole::metrics::SystemMetrics;
+use crate::sbc::devconsole::session::ConsoleSession;
 use crate::sbc::devconsole::view::{DevConsoleView, HistoryCommand, StatusAction, ToggleState};
 use crate::sbc::keys::is_key;
 use crate::sbc::objects::SelectionManager;
@@ -22,11 +23,6 @@ inventory::submit! {
     ModelFactory { make: |iface| Box::new(DevConsoleManager::new(iface)) }
 }
 
-/// Lines the UI keeps, matching `cfg.msgCap`.
-const MSG_CAP: usize = 200;
-/// Lines pulled from the engine's console when the console first opens.
-const BACKFILL_LINES: u32 = 50_000;
-
 /// The developer console, a port of `dbg_dev_console_rmlui.lua`.
 ///
 /// Only runs when the native UI is the active one: the Chili and RmlUi consoles
@@ -35,7 +31,7 @@ pub(crate) struct DevConsoleManager {
     interface: NativeInterfaceRef,
     enabled: bool,
     view: DevConsoleView,
-    buffer: LogBuffer,
+    console: ConsoleSession,
     problems_only: bool,
     popup_on_error: bool,
     /// Set whenever the rendered log would change; the DOM is rewritten once
@@ -93,7 +89,7 @@ impl DevConsoleManager {
             interface,
             enabled,
             view,
-            buffer: LogBuffer::new(MSG_CAP),
+            console: ConsoleSession::new(&interface),
             problems_only: false,
             // An error would otherwise pop the console open mid-scenario.
             popup_on_error: !hidden,
@@ -149,13 +145,17 @@ impl DevConsoleManager {
 
         if self.dirty {
             let pin_log_bottom = std::mem::take(&mut self.pin_log_bottom);
-            self.view.render_log(
-                &self.interface,
-                self.buffer.visible(self.problems_only),
-                pin_log_bottom,
-            )?;
+            let lines = self.console.visible_lines(self.problems_only);
             self.view
-                .render_error_count(&self.interface, self.buffer.error_count())?;
+                .render_log(&self.interface, lines.into_iter(), pin_log_bottom)?;
+            self.view.render_error_count(
+                &self.interface,
+                self.console.error_count(self.problems_only),
+            )?;
+            self.view.render_line_count(
+                &self.interface,
+                &self.console.count_text(self.problems_only),
+            )?;
             self.dirty = false;
         }
         self.render_status(models)?;
@@ -185,14 +185,13 @@ impl DevConsoleManager {
     }
 
     /// A line the engine just logged.
-    pub fn add_console_line(&mut self, message: &str) {
+    pub fn add_console_line(&mut self, message: &str, priority: i32) {
         if !self.enabled {
             return;
         }
-        if !show_console_line(message) {
+        let Some(severity) = self.console.add_live(message, priority, self.problems_only) else {
             return;
-        }
-        let severity = self.buffer.push(message.trim_end());
+        };
         self.dirty = true;
         self.pin_log_bottom = true;
 
@@ -214,7 +213,7 @@ impl DevConsoleManager {
             return Ok(true);
         }
         if is_key(&self.interface, key_code, "a") && self.view.hovered(&self.interface) {
-            let count = self.buffer.visible(self.problems_only).count();
+            let count = self.console.visible_count(self.problems_only);
             self.view.select_all(count);
             self.dirty = true;
             return Ok(true);
@@ -237,7 +236,7 @@ impl DevConsoleManager {
         }
         let ctrl = self.ctrl_held();
         if ctrl && is_key(&self.interface, key_code, "a") {
-            let count = self.buffer.visible(self.problems_only).count();
+            let count = self.console.visible_count(self.problems_only);
             self.view.select_all(count);
             self.dirty = true;
             return Ok(true);
@@ -287,18 +286,7 @@ impl DevConsoleManager {
     /// Seed the console with what the engine logged before RmlUi was up,
     /// otherwise startup errors -- the ones that matter most -- are invisible.
     fn backfill(&mut self) {
-        let Ok(entries) = self.interface.messages().get_console_buffer(BACKFILL_LINES) else {
-            return;
-        };
-        for entry in entries {
-            if entry.text.is_null() {
-                continue;
-            }
-            let text = unsafe { std::ffi::CStr::from_ptr(entry.text) }.to_string_lossy();
-            if show_console_line(&text) {
-                self.buffer.push(text.trim_end());
-            }
-        }
+        self.console.backfill(&self.interface);
     }
 
     fn ctrl_held(&self) -> bool {
@@ -313,8 +301,9 @@ impl DevConsoleManager {
             return;
         };
         let text = self
-            .buffer
-            .visible(self.problems_only)
+            .console
+            .visible_lines(self.problems_only)
+            .into_iter()
             .enumerate()
             .filter(|(index, _)| *index >= start && *index <= end)
             .map(|(_, line)| line.text.as_str())
@@ -340,12 +329,15 @@ impl DevConsoleManager {
             }
             match action {
                 Action::Clear => {
-                    self.buffer.clear();
+                    self.console.clear();
                     self.dirty = true;
                     self.pin_log_bottom = true;
                 }
                 Action::FilterProblems => {
                     self.problems_only = !self.problems_only;
+                    if self.problems_only {
+                        self.console.refresh_problems(&self.interface);
+                    }
                     self.dirty = true;
                     self.pin_log_bottom = true;
                     self.toggle_refresh_pending = true;
@@ -575,13 +567,6 @@ fn project_command_history(
         .collect()
 }
 
-/// `get_game_mod_info` reports these hashes through the engine console. They
-/// are archive bookkeeping, not developer diagnostics, and repeat whenever a
-/// caller refreshes mod metadata.
-fn show_console_line(message: &str) -> bool {
-    !message.contains("[CAS::GASCB] Archive file=")
-}
-
 fn bytes_to_mib(bytes: u64) -> u64 {
     bytes / (1024 * 1024)
 }
@@ -591,17 +576,15 @@ fn bytes_to_gib(bytes: u64) -> f64 {
 }
 
 fn game_version(interface: &NativeInterfaceRef) -> String {
-    let Ok(info) = interface.game().get_game_mod_info() else {
+    let Ok(info) = interface.game().get_game_mod_info_owned() else {
         return "SpringBoard".to_string();
     };
-    unsafe {
-        let string = |ptr: *const std::ffi::c_char| {
-            (!ptr.is_null()).then(|| std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned())
-        };
-        let name = string(info.gameName).unwrap_or_else(|| "SpringBoard".to_string());
-        let version = string(info.gameVersion).unwrap_or_default();
-        format!("{name} {version}").trim().to_string()
-    }
+    let name = if info.game_name.is_empty() {
+        "SpringBoard".to_string()
+    } else {
+        info.game_name
+    };
+    format!("{name} {}", info.game_version).trim().to_string()
 }
 
 #[cfg(test)]

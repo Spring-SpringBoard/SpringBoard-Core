@@ -1,4 +1,4 @@
-#![allow(clippy::not_unsafe_ptr_arg_deref)]
+#![forbid(unsafe_code)]
 #![allow(clippy::module_inception)]
 #![allow(clippy::upper_case_acronyms)]
 

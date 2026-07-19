@@ -33,7 +33,7 @@ pub(crate) trait Editor {
 
     /// Process a field change from drag-end: uses the internal value (already
     /// updated during drag). Does NOT read from DOM.
-    fn process_drag_end(&mut self, name: &str) -> Vec<Box<dyn Command>>;
+    fn process_drag_end(&mut self, name: &str, preview: bool) -> Vec<Box<dyn Command>>;
 
     /// Draw-thread work: an editor that renders models to textures (the def
     /// grids' thumbnails) does it here, from `draw_screen`, where GL is current.
@@ -105,6 +105,11 @@ pub(crate) trait Editor {
 
     /// Find a field by name and begin edit mode (click without drag).
     fn begin_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef);
+
+    /// Select the whole value of the field being edited (Ctrl+A).
+    fn select_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef) {
+        let _ = (name, interface);
+    }
 
     /// Leave edit mode without committing (Escape).
     fn cancel_edit_field(&mut self, name: &str, interface: &NativeInterfaceRef);

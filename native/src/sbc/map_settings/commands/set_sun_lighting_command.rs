@@ -72,7 +72,7 @@ struct SunLighting {
 
 impl SunLighting {
     fn to_sys(&self) -> sys::SunLightingParams {
-        let mut p: sys::SunLightingParams = unsafe { std::mem::zeroed() };
+        let mut p: sys::SunLightingParams = sys::SunLightingParams::default();
         if let Some(c) = self.ground_ambient {
             p.groundAmbientColor = c;
             p.hasGroundAmbientColor = true;

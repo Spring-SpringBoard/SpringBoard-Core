@@ -1,0 +1,60 @@
+/* --- Brush action buttons (Lua's TabbedPanelLabel strip) --- */
+.brush-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 2dp;
+    margin-bottom: 15dp;
+    padding: 5dp;
+    background-color: #2a2a2a;
+    border-bottom: 1px #555555;
+}
+.brush-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 68dp;
+    height: 68dp;
+    background-color: #111411;
+    border: 2dp #2e342f;
+    border-radius: 4px;
+    padding: 3dp;
+}
+
+.brush-action:hover {
+    background-color: #202820;
+    border-color: #4d5a50;
+}
+
+.brush-action.pressed {
+    background-color: #173a23;
+    border-color: #65bd7b;
+}
+
+/* An action the map cannot support (DNTS on a map with no splat normals). */
+.brush-action.disabled {
+    background-color: #141414;
+    border-color: #2a2a2a;
+    image-color: #ffffff60;
+}
+
+.brush-action.disabled .brush-action-label {
+    color: #6a6a6a;
+}
+
+.brush-action-icon,
+.brush-action img {
+    width: 32dp;
+    height: 32dp;
+    margin-bottom: 4dp;
+}
+
+.brush-action-label {
+    font-size: 11dp;
+    color: #cccccc;
+    text-align: center;
+}
+
+.brush-action.pressed .brush-action-label {
+    color: #c4f2cf;
+}

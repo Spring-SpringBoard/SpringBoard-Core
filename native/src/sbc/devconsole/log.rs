@@ -1,7 +1,7 @@
 //! The dev console's line buffer and severity classification.
 //!
-//! The engine hands the plugin plain strings, so severity is inferred from the
-//! text exactly as `dbg_dev_console_rmlui.lua` does.
+//! The engine supplies a numeric priority for buffered and live messages. Text
+//! classification remains as a fallback for messages logged at a generic level.
 
 use std::collections::VecDeque;
 
@@ -21,7 +21,7 @@ impl Severity {
         }
     }
 
-    fn is_problem(self) -> bool {
+    pub(crate) fn is_problem(self) -> bool {
         !matches!(self, Severity::Info)
     }
 }
@@ -32,66 +32,91 @@ pub(crate) struct LogLine {
     pub severity: Severity,
 }
 
+impl LogLine {
+    pub(crate) fn new(text: &str, priority: Option<u32>) -> Self {
+        Self {
+            text: text.to_string(),
+            severity: classify(text, priority),
+        }
+    }
+}
+
 /// "failed" counts as an error, matching the Lua console: many engine failures
 /// never use the word "error".
-pub(crate) fn classify(text: &str) -> Severity {
+pub(crate) fn classify(text: &str, priority: Option<u32>) -> Severity {
     let lower = text.to_lowercase();
-    if lower.contains("error") || lower.contains("failed") {
+    if priority.is_some_and(|level| level >= 50)
+        || lower.contains("error")
+        || lower.contains("failed")
+    {
         Severity::Error
-    } else if lower.contains("warning") {
+    } else if priority.is_some_and(|level| level >= 40) || lower.contains("warning") {
         Severity::Warning
     } else {
         Severity::Info
     }
 }
 
-/// A capped ring of log lines. The console renders the tail, so the oldest
-/// lines fall off the front.
+/// The session log. It is unlimited by default; an explicit configuration may
+/// retain only the newest lines, while `total` keeps the UI honest about that.
 pub(crate) struct LogBuffer {
     lines: VecDeque<LogLine>,
-    cap: usize,
+    limit: Option<usize>,
+    total: usize,
     errors: usize,
 }
 
 impl LogBuffer {
-    pub(crate) fn new(cap: usize) -> Self {
+    pub(crate) fn new(limit: Option<usize>) -> Self {
         LogBuffer {
             lines: VecDeque::new(),
-            cap,
+            limit,
+            total: 0,
             errors: 0,
         }
     }
 
     /// Append a line, returning its severity.
-    pub(crate) fn push(&mut self, text: &str) -> Severity {
-        let severity = classify(text);
+    pub(crate) fn push(&mut self, text: &str, priority: Option<u32>) -> Severity {
+        let line = LogLine::new(text, priority);
+        let severity = line.severity;
+        self.total += 1;
         if severity == Severity::Error {
             self.errors += 1;
         }
-        self.lines.push_back(LogLine {
-            text: text.to_string(),
-            severity,
-        });
-        while self.lines.len() > self.cap {
-            self.lines.pop_front();
+        self.lines.push_back(line);
+        while self.limit.is_some_and(|limit| self.lines.len() > limit) {
+            if self
+                .lines
+                .pop_front()
+                .is_some_and(|removed| removed.severity == Severity::Error)
+            {
+                self.errors -= 1;
+            }
         }
         severity
     }
 
     pub(crate) fn clear(&mut self) {
         self.lines.clear();
+        self.total = 0;
         self.errors = 0;
     }
 
-    /// Errors seen since the last clear, including lines already evicted.
     pub(crate) fn error_count(&self) -> usize {
         self.errors
     }
 
-    pub(crate) fn visible(&self, problems_only: bool) -> impl Iterator<Item = &LogLine> {
-        self.lines
-            .iter()
-            .filter(move |line| !problems_only || line.severity.is_problem())
+    pub(crate) fn lines(&self) -> impl Iterator<Item = &LogLine> {
+        self.lines.iter()
+    }
+
+    pub(crate) fn retained_count(&self) -> usize {
+        self.lines.len()
+    }
+
+    pub(crate) fn total_count(&self) -> usize {
+        self.total
     }
 }
 
@@ -101,56 +126,48 @@ mod tests {
 
     #[test]
     fn severity_comes_from_the_text() {
-        assert_eq!(classify("all good"), Severity::Info);
-        assert_eq!(classify("Warning: deprecated"), Severity::Warning);
-        assert_eq!(classify("ERROR: boom"), Severity::Error);
-        assert_eq!(classify("Failed to load texture"), Severity::Error);
+        assert_eq!(classify("all good", None), Severity::Info);
+        assert_eq!(classify("Warning: deprecated", None), Severity::Warning);
+        assert_eq!(classify("ERROR: boom", None), Severity::Error);
+        assert_eq!(classify("Failed to load texture", None), Severity::Error);
     }
 
     #[test]
-    fn errors_outrank_warnings_in_a_line_that_has_both() {
-        assert_eq!(classify("warning: load failed"), Severity::Error);
+    fn engine_priority_is_used_even_without_severity_words() {
+        assert_eq!(classify("plain warning", Some(40)), Severity::Warning);
+        assert_eq!(classify("plain failure", Some(50)), Severity::Error);
     }
 
     #[test]
-    fn the_buffer_keeps_the_newest_lines_within_its_cap() {
-        let mut buffer = LogBuffer::new(2);
+    fn unlimited_retains_every_line() {
+        let mut buffer = LogBuffer::new(None);
         for text in ["one", "two", "three"] {
-            buffer.push(text);
+            buffer.push(text, None);
         }
-        let texts: Vec<_> = buffer.visible(false).map(|l| l.text.as_str()).collect();
-        assert_eq!(texts, ["two", "three"]);
+        let texts: Vec<_> = buffer.lines().map(|line| line.text.as_str()).collect();
+        assert_eq!(texts, ["one", "two", "three"]);
+        assert_eq!(buffer.retained_count(), 3);
+        assert_eq!(buffer.total_count(), 3);
     }
 
     #[test]
-    fn the_problems_filter_hides_info_lines() {
-        let mut buffer = LogBuffer::new(10);
-        buffer.push("plain");
-        buffer.push("a warning");
-        buffer.push("an error");
-
-        let all: Vec<_> = buffer.visible(false).map(|l| l.text.as_str()).collect();
-        assert_eq!(all, ["plain", "a warning", "an error"]);
-
-        let problems: Vec<_> = buffer.visible(true).map(|l| l.text.as_str()).collect();
-        assert_eq!(problems, ["a warning", "an error"]);
-    }
-
-    #[test]
-    fn evicted_errors_still_count() {
-        let mut buffer = LogBuffer::new(1);
-        buffer.push("error one");
-        buffer.push("error two");
-        assert_eq!(buffer.error_count(), 2);
-        assert_eq!(buffer.visible(false).count(), 1);
+    fn an_explicit_limit_reports_loss_and_drops_evicted_error_counts() {
+        let mut buffer = LogBuffer::new(Some(2));
+        buffer.push("error one", None);
+        buffer.push("plain", None);
+        buffer.push("error two", None);
+        assert_eq!(buffer.error_count(), 1);
+        assert_eq!(buffer.retained_count(), 2);
+        assert_eq!(buffer.total_count(), 3);
     }
 
     #[test]
     fn clearing_resets_the_error_count() {
-        let mut buffer = LogBuffer::new(4);
-        buffer.push("error one");
+        let mut buffer = LogBuffer::new(None);
+        buffer.push("error one", None);
         buffer.clear();
         assert_eq!(buffer.error_count(), 0);
-        assert_eq!(buffer.visible(false).count(), 0);
+        assert_eq!(buffer.lines().count(), 0);
+        assert_eq!(buffer.total_count(), 0);
     }
 }

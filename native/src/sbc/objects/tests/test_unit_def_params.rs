@@ -25,7 +25,7 @@ fn unit_def_params_expose_the_whole_table(ctx: &mut TestCtx) -> Result<(), Strin
     let defs = ctx.sbc.interface().unit_defs();
 
     let keys = defs
-        .get_unit_def_param_keys()
+        .get_unit_def_parameter_keys()
         .map_err(|e| format!("get_unit_def_param_keys: {e:?}"))?;
 
     // Lua's table has 200+ entries; the old struct API had ~30 fields total.
@@ -36,14 +36,7 @@ fn unit_def_params_expose_the_whole_table(ctx: &mut TestCtx) -> Result<(), Strin
         ));
     }
 
-    let names: Vec<String> = keys
-        .iter()
-        .filter_map(|key| {
-            (!key.name.is_null())
-                .then(|| unsafe { std::ffi::CStr::from_ptr(key.name) })
-                .map(|name| name.to_string_lossy().into_owned())
-        })
-        .collect();
+    let names: Vec<String> = keys.into_iter().map(|key| key.name).collect();
 
     // The four that blocked the Objects def filters, plus a computed classifier.
     for wanted in [

@@ -2,75 +2,52 @@ use std::any::Any;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::actions::{self, Action, ActionResult, FileAcceptFn};
+use crate::sbc::actions::{self, Action, ActionResult};
 use crate::sbc::chonsole::ChonsoleManager;
-use crate::sbc::command_system::command::{Command, PreviewCommand};
+use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
-use crate::sbc::panels::asset_picker::AssetPicker;
-use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
+use crate::sbc::panels::action_dispatcher::ActionDispatcher;
+use crate::sbc::panels::brush_sync::BrushSync;
 use crate::sbc::panels::cursortip::CursorTip;
-use crate::sbc::panels::editor::Editor;
+use crate::sbc::panels::editor_slot::EditorSlot;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
-use crate::sbc::panels::file_dialog::FileDialog;
+use crate::sbc::panels::field_session::FieldSession;
 use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
-use crate::sbc::panels::new_project_dialog::NewProjectDialog;
-use crate::sbc::panels::registry::editor_by_name;
+use crate::sbc::panels::modal_stack::{ModalEvent, ModalStack};
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
-use crate::sbc::states::{BrushSettings, StateManager, StateRequest};
+use crate::sbc::states::{StateManager, StateRequest};
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(PanelManager::new(iface)) }
 }
 
-/// Coordinates the native panel's view (RmlUi lifecycle + shell chrome), input
-/// (drag + handlers), and the active editor. Implements `Model` so the command
-/// system can notify it of history changes (undo/redo → refresh fields).
+/// The panel's composition root: wires the view (RmlUi lifecycle + shell
+/// chrome), input, the active editor slot, the field-commit session, the modal
+/// stack, hotkeys, and brush sync, in a fixed per-tick order. Implements
+/// `Model` so the command system can notify it of history changes (undo/redo →
+/// refresh fields).
 pub(crate) struct PanelManager {
     interface: NativeInterfaceRef,
     enabled: bool,
     view: PanelView,
     input: PanelInput,
-    editor: Option<Box<dyn Editor>>,
-    needs_refresh: bool,
-    /// The open editor's markup has not been generated yet; it is built after
-    /// the first refresh, since a model-backed editor has no fields before it.
-    needs_rebuild: bool,
+    slot: EditorSlot,
+    session: FieldSession,
+    modals: ModalStack,
+    hotkeys: ActionDispatcher,
+    brush: BrushSync,
+    /// The useful native replacement for the engine's "No tooltip defined" box.
+    cursor_tip: CursorTip,
+    /// A field whose edit just opened: focus + select it next tick, after the
+    /// RmlUi update has processed the input's unhide (same-frame focus on a
+    /// just-unhidden element is rejected).
+    pending_select: Option<String>,
     /// Commands produced natively (typed, no JSON envelope). Drained and
     /// submitted directly by `SBC::drain_panel_commands`.
     pending_commands: Vec<Box<dyn Command>>,
-    picker: ColorPicker,
-    asset_picker: AssetPicker,
-    file_dialog: FileDialog,
-    new_project: NewProjectDialog,
-    /// The useful native replacement for the engine's "No tooltip defined" box.
-    cursor_tip: CursorTip,
-    /// The callback the open file dialog will run against its accepted result,
-    /// set when a toolbar action opens the dialog.
-    pending_accept: Option<FileAcceptFn>,
-    /// Hotkey-matched actions queued in `key_press`, run in `update` where the
-    /// models are borrowable.
-    pending_actions: Vec<Action>,
-    /// The field currently in text-edit mode. Owning this here is what keeps a
-    /// commit to exactly one command: the DOM would otherwise fire "change" on
-    /// every keystroke.
-    editing: Option<String>,
-    /// The last field committed by Enter or a select change; the `blur` it
-    /// triggers is swallowed.
-    just_committed: Option<String>,
-    /// The value a numeric drag started from, so the committed command captures
-    /// it as the state undo returns to.
-    drag_original: Option<(String, FieldValue)>,
-    /// The brush revision the fields last showed; a bump means a state changed
-    /// the brush and the fields should follow.
-    brush_revision: u64,
-    /// Whether the editor state was Default on the previous panel update.
-    /// Action strips must clear only when an active editing state *returns* to
-    /// Default (normally Escape), not merely because no definition has been
-    /// selected yet.
-    state_was_default: bool,
 }
 
 impl Model for PanelManager {
@@ -79,7 +56,7 @@ impl Model for PanelManager {
     }
     fn on_history_events(&mut self, _events: &[HistoryEvent]) {
         if self.enabled {
-            self.needs_refresh = true;
+            self.slot.request_refresh();
         }
     }
 }
@@ -108,22 +85,14 @@ impl PanelManager {
             enabled,
             view: PanelView::default(),
             input: PanelInput::new(new_change_queue(), new_interaction_queue()),
-            editor: None,
-            needs_refresh: false,
-            needs_rebuild: false,
-            pending_commands: Vec::new(),
-            picker: ColorPicker::default(),
-            asset_picker: AssetPicker::default(),
-            file_dialog: FileDialog::default(),
-            new_project: NewProjectDialog::default(),
+            slot: EditorSlot::default(),
+            session: FieldSession::default(),
+            modals: ModalStack::default(),
+            hotkeys: ActionDispatcher::default(),
+            brush: BrushSync::default(),
             cursor_tip: CursorTip::default(),
-            pending_accept: None,
-            pending_actions: Vec::new(),
-            editing: None,
-            just_committed: None,
-            drag_original: None,
-            brush_revision: 0,
-            state_was_default: true,
+            pending_select: None,
+            pending_commands: Vec::new(),
         }
     }
 
@@ -135,16 +104,11 @@ impl PanelManager {
             // A fresh context: every element handle the editor, the pickers and
             // the input layer cached belongs to a document that no longer
             // exists. Start over rather than touch any of them.
-            self.editor = None;
-            self.editing = None;
-            self.just_committed = None;
-            self.drag_original = None;
-            self.picker.forget_bindings();
-            self.asset_picker.forget_bindings();
-            self.file_dialog.forget_bindings();
-            self.new_project.forget_bindings();
-            self.pending_accept = None;
-            self.pending_actions.clear();
+            self.slot.close();
+            self.session.reset();
+            self.modals.forget_bindings();
+            self.hotkeys.clear();
+            self.pending_select = None;
             self.input.reset();
             self.view.set_active_editor(&self.interface, None)?;
         }
@@ -152,118 +116,76 @@ impl PanelManager {
             return Ok(());
         }
         if let Some(doc) = self.view.document_handle() {
-            self.picker.bind(&self.interface, doc)?;
-            self.asset_picker.bind(&self.interface, doc)?;
-            self.file_dialog.bind(&self.interface, doc)?;
-            self.new_project.bind(&self.interface, doc)?;
+            self.modals.bind(&self.interface, doc)?;
         }
 
-        self.process_shell_events(models)?;
-        for action in std::mem::take(&mut self.pending_actions) {
-            self.run_action(action, models)?;
-        }
-        self.process_picker()?;
-        self.process_asset_picker()?;
-        self.process_file_dialog()?;
-        self.process_new_project()?;
-
-        self.input.set_cursor(&self.interface);
-
-        // Pointer interactions: RmlUi's drag, or a click that opens the editor.
-        for action in self.input.process_interactions(&self.interface) {
-            match action {
-                PendingAction::DragStart(field) => {
-                    // Remember what the drag began from, so undo returns to it.
-                    if let Some(ed) = self.editor.as_deref() {
-                        self.drag_original = Some((field.clone(), ed.field_value(&field)));
-                    }
-                }
-                PendingAction::DragEnd(field) => {
-                    if let Some(ed) = self.editor.as_deref_mut() {
-                        ed.drag_end_field(&field, &self.interface);
-                    }
-                    self.commit_drag(&field);
-                }
-                PendingAction::ClickEdit(field) => {
-                    if let Some((root, extensions)) =
-                        self.editor.as_deref().and_then(|ed| ed.field_asset(&field))
-                    {
-                        if let Some(doc) = self.view.document_handle() {
-                            let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
-                            self.asset_picker
-                                .open(&self.interface, doc, &field, &root, &exts)?;
-                        }
-                        continue;
-                    }
-                    if let Some(FieldValue::Color(rgba)) =
-                        self.editor.as_deref().map(|ed| ed.field_value(&field))
-                    {
-                        if let Some(doc) = self.view.document_handle() {
-                            self.picker.open(&self.interface, doc, &field, rgba)?;
-                        }
-                        continue;
-                    }
-                    if let Some(ed) = self.editor.as_deref_mut() {
-                        ed.begin_edit_field(&field, &self.interface);
-                    }
-                    self.editing = Some(field);
+        if let Some(field) = self.pending_select.take() {
+            if self.session.editing() == Some(field.as_str()) {
+                if let Some(ed) = self.slot.editor_mut() {
+                    ed.select_edit_field(&field, &self.interface);
                 }
             }
         }
+
+        self.process_shell_events(models)?;
+        for action in self.hotkeys.take() {
+            self.run_action(action, models)?;
+        }
+        self.process_modals()?;
+
+        self.input.set_cursor(&self.interface);
+        self.process_interactions()?;
 
         // Advance an in-progress drag from the polled cursor. Each step previews
         // on the engine, so a dragged number is visible before the mouse is
         // released; the undoable command lands on `dragend`.
         match self
             .input
-            .tick_drag(&self.interface, self.editor.as_deref_mut())
+            .tick_drag(&self.interface, self.slot.editor_mut())
         {
-            DragTick::Moved(field) => self.preview_field(&field),
+            DragTick::Moved(field) => {
+                if let Some(ed) = self.slot.editor_mut() {
+                    let commands = self.session.preview_field(&field, ed);
+                    self.pending_commands.extend(commands);
+                }
+            }
             DragTick::Idle => {}
         }
 
         // Commit requests: a select's "change", Enter in a text field, or a
-        // field losing focus. `commit_field` drops the ones that changed nothing,
+        // field losing focus. The session drops the ones that changed nothing,
         // which is what the editor's own writes echo back as.
         for request in self.input.drain_changes() {
             if request.revert {
-                self.revert_field(&request.field);
+                self.session
+                    .revert_field(&request.field, self.slot.editor_mut(), &self.interface);
             } else {
-                self.commit_field(&request.field, request.from_blur);
+                let commands = self.session.commit_field(
+                    &request.field,
+                    request.from_blur,
+                    self.slot.editor_mut(),
+                    &self.interface,
+                );
+                self.pending_commands.extend(commands);
             }
         }
 
-        // A view that follows external state (Properties tracking the selection)
-        // asks to refresh here, cheaply, every tick.
-        if let Some(ed) = self.editor.as_mut() {
-            if ed.wants_refresh(models) {
-                self.needs_refresh = true;
-                self.needs_rebuild |= ed.wants_rebuild();
-            }
-        }
-
-        // Refresh from engine if needed (undo/redo, or the editor just opened)
-        if self.needs_refresh {
-            if let Some(ed) = self.editor.as_mut() {
-                ed.refresh_from_engine(&self.interface, models);
-            }
-            if self.needs_rebuild {
-                self.needs_rebuild = false;
-                self.rebuild_editor()?;
-            }
-            self.write_field_values();
-            self.needs_refresh = false;
-        }
+        self.slot.poll_watch(models);
+        self.slot
+            .maintain(&self.interface, &self.view, &self.input, models)?;
 
         // Editors that own more than fields (the def grids, the brush action
         // buttons) do their work here, outside the RmlUi event dispatch.
-        if let (Some(doc), Some(ed)) = (self.view.document_handle(), self.editor.as_deref_mut()) {
+        if let (Some(doc), Some(ed)) = (self.view.document_handle(), self.slot.editor_mut()) {
             let commands = ed.tick(&self.interface, doc);
             self.pending_commands.extend(commands);
         }
-        self.sync_brush(models);
-        self.dispatch_state_request(models);
-        self.sync_state_selection(models);
+        if let Some(ed) = self.slot.editor_mut() {
+            self.brush.sync(ed, models, &self.interface);
+        }
+        self.slot.dispatch_state_request(models);
+        self.slot
+            .sync_state_selection(&self.interface, &self.view, models);
         self.update_cursor_tip(models.get::<ChonsoleManager>().visible())?;
         self.view.update(&self.interface)
     }
@@ -274,7 +196,7 @@ impl PanelManager {
         }
         // The def grids render their thumbnails here, where the GL context is
         // current (creating and drawing to FBO textures).
-        if let Some(ed) = self.editor.as_deref_mut() {
+        if let Some(ed) = self.slot.editor_mut() {
             ed.draw_thumbnails(&self.interface);
         }
         self.view.draw(&self.interface)
@@ -286,7 +208,7 @@ impl PanelManager {
     }
 
     /// Run a toolbar action or hotkey. Actions either dispatch commands directly,
-    /// or ask to open a dialog whose result the manager feeds back.
+    /// or ask to open a dialog whose result the modal stack feeds back.
     pub(crate) fn run_action(&mut self, action: Action, models: &mut Models) -> Result<(), Error> {
         if !actions::can_execute(action, models) {
             return Ok(());
@@ -296,13 +218,13 @@ impl PanelManager {
             ActionResult::NativeCommands(commands) => self.pending_commands.extend(commands),
             ActionResult::OpenFileDialog { config, on_accept } => {
                 if let Some(doc) = self.view.document_handle() {
-                    self.pending_accept = Some(on_accept);
-                    self.file_dialog.open(&self.interface, doc, config)?;
+                    self.modals
+                        .open_file(&self.interface, doc, config, on_accept)?;
                 }
             }
             ActionResult::OpenNewProject => {
                 if let Some(doc) = self.view.document_handle() {
-                    self.new_project.open(&self.interface, doc)?;
+                    self.modals.open_new_project(&self.interface, doc)?;
                 }
             }
         }
@@ -328,35 +250,52 @@ impl PanelManager {
         // Keys are only ours while a field is being edited; anything else stays
         // available to the chonsole and the engine — except a toolbar/clipboard
         // hotkey, which we claim here and run next tick (where models borrow).
-        let Some(name) = self.editing.clone() else {
-            return Ok(self.match_hotkey(key));
+        let Some(name) = self.session.editing().map(str::to_string) else {
+            return Ok(self.hotkeys.match_hotkey(&self.interface, key));
         };
         if key == RETURN {
-            self.commit_field(&name, false);
+            let commands =
+                self.session
+                    .commit_field(&name, false, self.slot.editor_mut(), &self.interface);
+            self.pending_commands.extend(commands);
             return Ok(true);
         }
         if key == ESCAPE {
-            self.editing = None;
-            if let Some(ed) = self.editor.as_deref_mut() {
+            self.session.cancel_edit();
+            if let Some(ed) = self.slot.editor_mut() {
                 ed.cancel_edit_field(&name, &self.interface);
             }
             return Ok(true);
         }
-        self.input.key_press(&self.interface, &self.view, key)
+        // Ctrl+A: select the value being edited. RmlUi receives the engine's
+        // own key events, but never this chord with the modifier attached.
+        const CTRL: u32 = 1 << 1;
+        let mods = self.interface.input().get_mod_key_state().unwrap_or(0);
+        if mods & CTRL != 0 && crate::sbc::keys::is_key(&self.interface, key, "a") {
+            if let Some(ed) = self.slot.editor_mut() {
+                ed.select_edit_field(&name, &self.interface);
+            }
+            return Ok(true);
+        }
+        // Claim the key so hotkeys and the chonsole stay quiet, but do not
+        // forward it: the engine already fed this key to the RmlUi context in
+        // its own key encoding. Re-sending the raw engine keycode made RmlUi
+        // read digits as navigation keys and scramble the edit.
+        Ok(true)
     }
 
-    pub fn key_release(&mut self, key: i32, _scan: i32) -> Result<bool, Error> {
-        if !self.enabled || self.editing.is_none() {
+    pub fn key_release(&mut self, _key: i32, _scan: i32) -> Result<bool, Error> {
+        if !self.enabled || self.session.editing().is_none() {
             return Ok(false);
         }
-        self.input.key_release(&self.interface, &self.view, key)
+        Ok(true)
     }
 
-    pub fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
-        if !self.enabled || self.editing.is_none() {
+    pub fn text_input(&mut self, _utf8: &str) -> Result<bool, Error> {
+        if !self.enabled || self.session.editing().is_none() {
             return Ok(false);
         }
-        self.input.text_input(&self.interface, &self.view, utf8)
+        Ok(true)
     }
 
     pub fn mouse_move(
@@ -377,11 +316,8 @@ impl PanelManager {
         if !self.enabled {
             return Ok(false);
         }
-        let modal_open = self.picker.is_open()
-            || self.asset_picker.is_open()
-            || self.file_dialog.is_open()
-            || self.new_project.is_open()
-            || self.editor.as_deref().is_some_and(Editor::has_open_modal);
+        let modal_open =
+            self.modals.any_open() || self.slot.editor().is_some_and(|ed| ed.has_open_modal());
         if !self.view.contains(&self.interface, x, y) && !modal_open {
             return Ok(false);
         }
@@ -409,16 +345,6 @@ impl PanelManager {
             .mouse_wheel(&self.interface, &self.view, up, value)
     }
 
-    /// Wrap commands as off-history previews (apply to the engine, stay out of
-    /// the undo stack). The typed counterpart of the old `as_preview` envelope
-    /// re-write.
-    fn preview(commands: Vec<Box<dyn Command>>) -> Vec<Box<dyn Command>> {
-        commands
-            .into_iter()
-            .map(|c| Box::new(PreviewCommand { inner: c }) as Box<dyn Command>)
-            .collect()
-    }
-
     // ── Shell ──────────────────────────────────────────────────────
 
     /// Tab and editor-button clicks are queued by the listeners and handled
@@ -430,7 +356,7 @@ impl PanelManager {
                 ShellEvent::Tab(tab) => {
                     // Tabs are choices, not toggles. In particular, do this
                     // check before resetting the editing state: resetting the
-                    // state and dropping `editor` while `PanelView` keeps the
+                    // state and dropping the editor while `PanelView` keeps the
                     // tab visually selected is what made a second click look
                     // like it deselected the tab.
                     if self.view.current_tab() == tab {
@@ -438,7 +364,7 @@ impl PanelManager {
                     }
                     self.reset_state(models);
                     self.view.set_tab(&self.interface, tab)?;
-                    self.editor = None;
+                    self.slot.close();
                 }
                 ShellEvent::Editor(name) => {
                     // Editor buttons (Units, Features, Properties, and every
@@ -448,7 +374,7 @@ impl PanelManager {
                         continue;
                     }
                     self.reset_state(models);
-                    self.open_editor(name)?;
+                    self.slot.open(name, &self.interface, &mut self.view)?;
                 }
                 ShellEvent::Action(action) => self.run_action(action, models)?,
             }
@@ -462,25 +388,92 @@ impl PanelManager {
         });
     }
 
-    /// Match a key + current modifiers against the action hotkeys, queueing the
-    /// match to run next tick. Returns whether a hotkey was claimed.
-    fn match_hotkey(&mut self, key: i32) -> bool {
-        const SHIFT: u32 = 1 << 0;
-        const CTRL: u32 = 1 << 1;
-        let mods = self.interface.input().get_mod_key_state().unwrap_or(0);
-        let (ctrl, shift) = (mods & CTRL != 0, mods & SHIFT != 0);
-
-        for action in Action::ALL {
-            let Some(hk) = action.hotkey() else { continue };
-            if hk.ctrl == ctrl
-                && hk.shift == shift
-                && crate::sbc::keys::is_key(&self.interface, key, hk.key)
-            {
-                self.pending_actions.push(action);
-                return true;
+    /// Pointer interactions: RmlUi's drag, or a click that opens the editor.
+    fn process_interactions(&mut self) -> Result<(), Error> {
+        for action in self.input.process_interactions(&self.interface) {
+            match action {
+                PendingAction::DragStart(field) => {
+                    if let Some(ed) = self.slot.editor() {
+                        self.session.begin_drag(field, ed);
+                    }
+                }
+                PendingAction::DragEnd(field) => {
+                    if let Some(ed) = self.slot.editor_mut() {
+                        ed.drag_end_field(&field, &self.interface);
+                    }
+                    let commands =
+                        self.session
+                            .commit_drag(&field, self.slot.editor_mut(), &self.interface);
+                    self.pending_commands.extend(commands);
+                }
+                PendingAction::ClickEdit(field) => {
+                    if let Some((root, extensions)) =
+                        self.slot.editor().and_then(|ed| ed.field_asset(&field))
+                    {
+                        if let Some(doc) = self.view.document_handle() {
+                            self.modals.open_asset(
+                                &self.interface,
+                                doc,
+                                &field,
+                                &root,
+                                &extensions,
+                            )?;
+                        }
+                        continue;
+                    }
+                    if let Some(FieldValue::Color(rgba)) =
+                        self.slot.editor().map(|ed| ed.field_value(&field))
+                    {
+                        if let Some(doc) = self.view.document_handle() {
+                            self.modals.open_color(&self.interface, doc, &field, rgba)?;
+                        }
+                        continue;
+                    }
+                    if let Some(ed) = self.slot.editor_mut() {
+                        ed.begin_edit_field(&field, &self.interface);
+                    }
+                    self.pending_select = Some(field.clone());
+                    self.session.begin_edit(field);
+                }
             }
         }
-        false
+        Ok(())
+    }
+
+    /// Apply what the modal stack produced this tick.
+    fn process_modals(&mut self) -> Result<(), Error> {
+        let Some(doc) = self.view.document_handle() else {
+            return Ok(());
+        };
+        for event in self.modals.poll(&self.interface, doc)? {
+            match event {
+                ModalEvent::FieldValue {
+                    field,
+                    value,
+                    preview,
+                } => {
+                    if let Some(ed) = self.slot.editor_mut() {
+                        let commands = self.session.apply_field_value(
+                            &field,
+                            value,
+                            preview,
+                            ed,
+                            &self.interface,
+                        );
+                        self.pending_commands.extend(commands);
+                    }
+                }
+                ModalEvent::Commands(commands) => self.pending_commands.extend(commands),
+            }
+        }
+        Ok(())
+    }
+
+    fn close_top_modal(&mut self) -> Result<bool, Error> {
+        let Some(doc) = self.view.document_handle() else {
+            return Ok(false);
+        };
+        self.modals.close_top(&self.interface, doc)
     }
 
     /// Paste the clipboard at the cursor's ground hit.
@@ -493,293 +486,6 @@ impl PanelManager {
         };
         let commands = actions::execute_paste(&self.interface, models, hit.x, hit.z);
         self.pending_commands.extend(commands);
-    }
-
-    /// Feed a completed file-dialog result to the action that opened it.
-    fn process_file_dialog(&mut self) -> Result<(), Error> {
-        let Some(doc) = self.view.document_handle() else {
-            return Ok(());
-        };
-        if let Some(result) = self.file_dialog.tick(&self.interface, doc)? {
-            if let Some(on_accept) = self.pending_accept.take() {
-                let commands = on_accept(&result, &self.interface);
-                self.pending_commands.extend(commands);
-            }
-        } else if !self.file_dialog.is_open() {
-            // The dialog closed (cancel); drop any pending callback.
-            self.pending_accept = None;
-        }
-        Ok(())
-    }
-
-    /// Feed a completed new-project result to the action layer.
-    fn process_new_project(&mut self) -> Result<(), Error> {
-        let Some(doc) = self.view.document_handle() else {
-            return Ok(());
-        };
-        if let Some(result) = self.new_project.tick(&self.interface, doc)? {
-            let commands = actions::commit_new_project(
-                &result.name,
-                &result.map_name,
-                result.size_x,
-                result.size_y,
-                &self.interface,
-            );
-            self.pending_commands.extend(commands);
-        }
-        Ok(())
-    }
-
-    fn close_top_modal(&mut self) -> Result<bool, Error> {
-        let Some(doc) = self.view.document_handle() else {
-            return Ok(false);
-        };
-        if self.picker.is_open() {
-            self.picker.close(&self.interface, doc)?;
-            return Ok(true);
-        }
-        if self.asset_picker.cancel_if_open(&self.interface, doc)? {
-            return Ok(true);
-        }
-        if self.file_dialog.cancel_if_open(&self.interface, doc)? {
-            self.pending_accept = None;
-            return Ok(true);
-        }
-        if self.new_project.cancel_if_open(&self.interface, doc)? {
-            return Ok(true);
-        }
-        Ok(false)
-    }
-
-    /// Open an editor. Editor buttons are choice-only, as in Chili.
-    fn open_editor(&mut self, name: &'static str) -> Result<(), Error> {
-        if self.view.active_editor() == Some(name) {
-            return Ok(());
-        }
-
-        let Some(spec) = editor_by_name(name) else {
-            log::warn!("no native editor registered as {name}");
-            return Ok(());
-        };
-        self.editor = Some((spec.make)());
-        self.view.set_active_editor(&self.interface, Some(name))?;
-        // The markup is built after the first refresh, not before: an editor
-        // whose fields come from a model (Teams) has none until it has read it.
-        self.needs_refresh = true;
-        self.needs_rebuild = true;
-        Ok(())
-    }
-
-    fn rebuild_editor(&mut self) -> Result<(), Error> {
-        let Some(content) = self.view.content_handle() else {
-            return Ok(());
-        };
-        let document = self
-            .view
-            .document_handle()
-            .expect("document must exist if content exists");
-
-        let body = self
-            .editor
-            .as_ref()
-            .map(|e| e.generate_rml())
-            .unwrap_or_default();
-        self.interface
-            .rml_ui()
-            .element_set_inner_rml(content, &body)?;
-
-        if let Some(ed) = self.editor.as_mut() {
-            ed.bind_fields(
-                &self.interface,
-                document,
-                self.input.changes(),
-                self.input.interactions(),
-            )?;
-        }
-        self.write_field_values();
-        Ok(())
-    }
-
-    /// Commit a field once. Committing on Enter hides the input, which fires a
-    /// `blur`; that second request must not dispatch another command.
-    /// Commit a field once, *if the value actually changed*.
-    ///
-    /// The fields are a projection of the model: the editor writes the model's
-    /// values into the DOM, and RmlUi answers by firing `change` for each one it
-    /// was handed. Those events carry the value we just wrote, so an edit is
-    /// only an edit when the value that comes back differs from the one that
-    /// went out. Anything else is our own write echoing, and emits nothing.
-    ///
-    /// This is why there is no "am I currently writing?" flag: the question is
-    /// not *when* the event arrived, it is *whether it changed anything*.
-    /// Escape in a field: the edit is discarded, so the value the editor holds
-    /// goes back on screen. The blur that follows is suppressed the same way an
-    /// Enter's is -- otherwise it would commit the text still sitting in the box.
-    fn revert_field(&mut self, name: &str) {
-        if self.editing.as_deref() == Some(name) {
-            self.editing = None;
-        }
-        self.just_committed = Some(name.to_string());
-        if let Some(ed) = self.editor.as_deref_mut() {
-            if let Err(err) = ed.write_field_values(&self.interface) {
-                log::warn!("reverting {name}: {err:?}");
-            }
-        }
-    }
-
-    fn commit_field(&mut self, name: &str, from_blur: bool) {
-        if self.editing.as_deref() == Some(name) {
-            self.editing = None;
-        }
-        if from_blur && self.just_committed.as_deref() == Some(name) {
-            self.just_committed = None;
-            return;
-        }
-        self.just_committed = (!from_blur).then(|| name.to_string());
-
-        let Some(ed) = self.editor.as_deref_mut() else {
-            return;
-        };
-        let before = ed.field_value(name);
-        let commands = ed.process_change(name, &self.interface);
-        if ed.field_value(name) == before {
-            return;
-        }
-        self.pending_commands.extend(commands);
-    }
-
-    /// Advance a picker drag and handle OK/Cancel.
-    ///
-    /// Dragging previews the colour on the engine every frame so the scene
-    /// shows what is being picked; previews stay out of the undo history.
-    /// Accepting dispatches exactly one undoable command, and cancelling
-    /// dispatches none.
-    fn process_picker(&mut self) -> Result<(), Error> {
-        let Some(doc) = self.view.document_handle() else {
-            return Ok(());
-        };
-        if self.picker.tick(&self.interface, doc) {
-            if let Some(field) = self.picker.field().map(str::to_string) {
-                let rgba = self.picker.rgba();
-                self.apply_field_value(&field, FieldValue::Color(rgba), true);
-            }
-        }
-
-        for event in self.picker.drain_events() {
-            let Some(field) = self.picker.field().map(str::to_string) else {
-                continue;
-            };
-            let original = self.picker.original();
-
-            // The preview left the engine on some dragged colour. Undo has to
-            // restore the colour the picker opened with, and the committed
-            // command captures whatever it finds -- so put the original back
-            // (as a preview, off-history) before committing.
-            if self.picker.is_previewing() {
-                self.apply_field_value(&field, FieldValue::Color(original), true);
-            }
-            if let PickerEvent::Accept = event {
-                let rgba = self.picker.rgba();
-                self.apply_field_value(&field, FieldValue::Color(rgba), false);
-            }
-            self.picker.close(&self.interface, doc)?;
-        }
-        Ok(())
-    }
-
-    /// Push a colour into the field and dispatch its command, either as an
-    /// off-history preview or as a committed, undoable change.
-    fn apply_field_value(&mut self, field: &str, value: FieldValue, preview: bool) {
-        let Some(ed) = self.editor.as_deref_mut() else {
-            return;
-        };
-        ed.set_field_value(field, value, &self.interface);
-        let commands = ed.process_drag_end(field);
-        self.pending_commands.extend(if preview {
-            Self::preview(commands)
-        } else {
-            commands
-        });
-    }
-
-    /// Dispatch the field's current value as an off-history preview.
-    fn preview_field(&mut self, field: &str) {
-        let Some(ed) = self.editor.as_deref_mut() else {
-            return;
-        };
-        let commands = ed.process_drag_end(field);
-        self.pending_commands.extend(Self::preview(commands));
-    }
-
-    /// End a drag with exactly one undoable command.
-    ///
-    /// The previews already moved the engine off the value the drag began from,
-    /// and the committed command captures whatever it finds as the state undo
-    /// restores -- so put the original back (off-history) before committing.
-    fn commit_drag(&mut self, field: &str) {
-        let original = self
-            .drag_original
-            .take()
-            .filter(|(name, _)| name == field)
-            .map(|(_, value)| value);
-
-        let Some(ed) = self.editor.as_deref() else {
-            return;
-        };
-        let current = ed.field_value(field);
-        if let Some(original) = original {
-            self.apply_field_value(field, original, true);
-        }
-        self.apply_field_value(field, current, false);
-    }
-
-    /// Drive the asset picker; an accepted path is written into the field and
-    /// dispatched as one command.
-    fn process_asset_picker(&mut self) -> Result<(), Error> {
-        let Some(doc) = self.view.document_handle() else {
-            return Ok(());
-        };
-        let field = self.asset_picker.field().map(str::to_string);
-        let picked = self.asset_picker.tick(&self.interface, doc)?;
-        if let (Some(field), Some(path)) = (field, picked) {
-            self.apply_field_value(&field, FieldValue::Text(path), false);
-        }
-        Ok(())
-    }
-
-    fn write_field_values(&self) {
-        if let Some(ed) = &self.editor {
-            let _ = ed.write_field_values(&self.interface);
-        }
-    }
-
-    /// Keep the panel's fields and the shared brush in step. A state bumps the
-    /// brush's revision when the wheel resizes it or a right-click picks a
-    /// height, and then the fields follow; otherwise the fields lead.
-    fn sync_brush(&mut self, models: &mut Models) {
-        let Some(ed) = self.editor.as_deref_mut() else {
-            return;
-        };
-        let brush = models.get::<BrushSettings>();
-        if brush.revision != self.brush_revision {
-            self.brush_revision = brush.revision;
-            let brush = brush.clone();
-            ed.read_brush(&brush, &self.interface);
-            return;
-        }
-        ed.write_brush(brush);
-    }
-
-    /// A view asked to enter or leave an editing state.
-    fn dispatch_state_request(&mut self, models: &mut Models) {
-        let Some(request) = self
-            .editor
-            .as_deref_mut()
-            .and_then(|e| e.take_state_request())
-        else {
-            return;
-        };
-        models.with::<StateManager, _>(|states, models| states.set_state(request, models));
     }
 
     /// The native tooltip is shown over map objects, but never over the panel
@@ -798,20 +504,5 @@ impl PanelManager {
         };
         self.cursor_tip
             .update(&self.interface, document, over_panel || chonsole_open)
-    }
-
-    fn sync_state_selection(&mut self, models: &mut Models) {
-        let state_is_default = models.get::<StateManager>().is_default();
-        let returned_to_default = state_is_default && !self.state_was_default;
-        self.state_was_default = state_is_default;
-        if !returned_to_default {
-            return;
-        }
-        let Some(document) = self.view.document_handle() else {
-            return;
-        };
-        if let Some(editor) = self.editor.as_deref_mut() {
-            editor.clear_state_selection(&self.interface, document);
-        }
     }
 }

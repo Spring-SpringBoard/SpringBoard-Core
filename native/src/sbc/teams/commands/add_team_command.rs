@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
@@ -8,7 +8,7 @@ use crate::sbc::teams::TeamManager;
 
 /// Adds a team. 1:1 with `scen_edit/command/add_team_command.lua`: execute adds
 /// the team (recording the assigned id), unexecute removes it.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct AddTeamCommand {
     name: Option<String>,
     color: Option<Color>,
@@ -29,6 +29,10 @@ impl AddTeamCommand {
 }
 
 impl Command for AddTeamCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         let team = Team {
             name: self.name.clone().unwrap_or_default(),

@@ -149,9 +149,10 @@ impl NativeModule for SBC {
         &mut self,
         message: &str,
         _section: &str,
-        _level: i32,
+        level: i32,
     ) -> Result<bool, Error> {
-        self.model::<DevConsoleManager>().add_console_line(message);
+        self.model::<DevConsoleManager>()
+            .add_console_line(message, level);
         Ok(false)
     }
 

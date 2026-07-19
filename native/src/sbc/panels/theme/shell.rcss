@@ -1,0 +1,180 @@
+/* --- Tab bar --- */
+.tab-bar {
+    position: absolute;
+    top: 6dp;
+    left: 0dp;
+    right: 0dp;
+    height: 48dp;
+    padding: 4dp 5dp;
+    box-sizing: border-box;
+    background-color: #171b18;
+    border-bottom: 1dp #313a33;
+    display: flex;
+    flex-direction: row;
+    gap: 2dp;
+}
+.tab-button {
+    width: 70dp;
+    height: 40dp;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    background-color: #111411;
+    color: #999999;
+    border-color: #555555;
+    padding: 2dp 6dp;
+    font-size: 12dp;
+    /* Do not use flex on a text-bearing element: RmlUi will not render the raw
+       text node inside a flex container. */
+    text-align: center;
+    line-height: 36dp;
+}
+
+.tab-button:hover {
+    background-color: #202820;
+    color: #cccccc;
+}
+
+.tab-button.active {
+    background-color: #193b24;
+    color: #ffffff;
+    border-color: #63b779;
+}
+
+/* --- Action bar (toolbar) --- */
+.action-bar {
+    position: absolute;
+    top: 145dp;
+    left: 0dp;
+    right: 0dp;
+    height: 40dp;
+    display: flex;
+    flex-direction: row;
+    gap: 1dp;
+    padding: 0dp 5dp;
+    align-items: center;
+}
+
+/* The icon is centred by the flex box, not by line-height: an inline img is
+   aligned to the baseline and drawn low, leaving the visible icon offset from
+   the button's box -- which is what is hit-tested. The button bears no text, so
+   flex is safe here. */
+.action-button {
+    width: 38dp;
+    height: 38dp;
+    background-color: #111411;
+    border-color: #2e342f;
+    border-width: 1dp;
+    padding: 0dp;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-button:hover {
+    background-color: #1c221d;
+}
+
+.action-button img {
+    width: 22dp;
+    height: 22dp;
+}
+
+.native-tooltip {
+    position: absolute;
+    z-index: 20000;
+    max-width: 260dp;
+    min-height: 20dp;
+    background-color: #0b0d0c;
+    color: #eeeeee;
+    border: 1dp #67706a;
+    padding: 5dp 7dp;
+    font-size: 12dp;
+    line-height: 16dp;
+    pointer-events: none;
+}
+
+/* The cursor tip over a unit/feature: a title, then one row per fact. Block, or
+   RmlUi runs them together on one line. */
+.tip-title {
+    display: block;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.tip-row {
+    display: block;
+    color: #cfd6d0;
+}
+
+/* --- Editor button strip --- */
+/* Its height includes padding, then Actions starts after a clear 10dp gap. */
+.editor-button-panel {
+    position: absolute;
+    top: 60dp;
+    left: 0dp;
+    right: 0dp;
+    height: 75dp;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1dp;
+    padding: 5dp;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.editor-button {
+    width: 70dp;
+    height: 70dp;
+    background-color: #111411;
+    border-color: #2e342f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3dp;
+    flex-shrink: 0;
+}
+
+.editor-button:hover {
+    background-color: #202820;
+    border-color: #4d5a50;
+}
+
+.editor-button.pressed {
+    background-color: #173a23;
+    border-color: #65bd7b;
+}
+
+.editor-button img {
+    width: 35dp;
+    height: 35dp;
+    margin-bottom: 4dp;
+}
+
+.editor-button-label {
+    font-size: 11dp;
+    color: #cccccc;
+    text-align: center;
+}
+
+.editor-button.pressed .editor-button-label {
+    color: #c4f2cf;
+}
+
+/* --- Editor content host --- */
+.main-content {
+    position: absolute;
+    top: 195dp;
+    left: 0dp;
+    right: 0dp;
+    bottom: 0dp;
+    /* Same translucent fill as the panel behind it: the Lua UI layers the two,
+       and a single layer reads much lighter over the map. */
+    background-color: #1f26219e;
+    padding: 0dp 10dp;
+    color: #cccccc;
+    overflow-y: auto;
+}

@@ -5,6 +5,7 @@ pub(crate) mod model;
 pub(crate) mod ops;
 pub(crate) mod paths;
 mod tests;
+mod ui;
 
 pub(crate) use model::project_manager::{ProjectData, ProjectManager};
 pub(crate) use model::scenario_info_manager::{ScenarioInfo, ScenarioInfoManager};

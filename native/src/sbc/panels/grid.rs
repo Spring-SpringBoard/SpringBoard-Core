@@ -330,6 +330,13 @@ pub(crate) fn list_asset_tree(
     dir: &str,
     extensions: &[&str],
 ) -> Vec<GridItem> {
+    // A `vfs:` root browses that VFS directory directly instead of the asset
+    // packs — engine-owned content (water's `bitmaps/`) lives outside any pack.
+    if let Some(vfs_root) = root_dir.strip_prefix("vfs:") {
+        let real = if dir.is_empty() { vfs_root } else { dir };
+        return list_assets(interface, real.trim_end_matches('/'), extensions);
+    }
+
     if dir.is_empty() {
         return vfs_sub_dirs(interface, ASSETS_DIR)
             .into_iter()
@@ -387,23 +394,21 @@ pub(crate) fn list_assets(
 ) -> Vec<GridItem> {
     let extensions = normalize_extensions(extensions);
     // Non-recursive listing across every VFS mode, as Lua's Path.DirList does.
-    let Ok(entries) = interface.vfs().list_dir(dir, "*", "", false) else {
+    let Ok(entries) = interface.vfs().list_entries(dir, "*", "", false) else {
         return Vec::new();
     };
 
     let mut dirs = Vec::new();
     let mut files = Vec::new();
     for entry in entries {
-        let name = unsafe { std::ffi::CStr::from_ptr(entry.name) }
-            .to_string_lossy()
-            .into_owned();
+        let name = entry.name;
         if name.is_empty() {
             continue;
         }
         let path = join_entry(dir, &name);
         let caption = path.rsplit('/').next().unwrap_or(&path).to_string();
 
-        if entry.isDirectory {
+        if entry.is_directory {
             dirs.push(GridItem {
                 id: path,
                 caption,

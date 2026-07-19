@@ -9,7 +9,7 @@
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::objects::ObjectKind;
-use crate::sbc::panels::ModelShader;
+use crate::sbc::render::ModelShader;
 
 const GL_LINE_LOOP: u32 = 0x0002;
 const GL_LINES: u32 = 0x0001;

@@ -13,8 +13,10 @@ use crate::sbc::textures::model::graphics;
 fn engine_gfx_render_readback(ctx: &mut TestCtx) -> Result<(), String> {
     let gfx = ctx.sbc.interface().gfx();
 
-    let mut params: sys::GfxTextureParams = unsafe { std::mem::zeroed() };
-    params.fbo = true;
+    let params = sys::GfxTextureParams {
+        fbo: true,
+        ..Default::default()
+    };
     let name = gfx
         .create_texture(4, 4, 1, params)
         .map_err(|e| format!("create_texture: {e:?}"))?
@@ -92,8 +94,10 @@ fn engine_gfx_shader_pass(ctx: &mut TestCtx) -> Result<(), String> {
         return Err(format!("shader failed to compile: {log}"));
     }
 
-    let mut params: sys::GfxTextureParams = unsafe { std::mem::zeroed() };
-    params.fbo = true;
+    let params = sys::GfxTextureParams {
+        fbo: true,
+        ..Default::default()
+    };
     let tex = gfx
         .create_texture(4, 4, 1, params)
         .map_err(|e| format!("create_texture: {e:?}"))?

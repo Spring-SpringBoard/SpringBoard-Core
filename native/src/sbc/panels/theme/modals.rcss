@@ -1,0 +1,273 @@
+/* --- Colour picker modal (port of scen_edit/view/rcss/dialog.rcss) --- */
+.picker-backdrop {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    z-index: 10000;
+    /* Modal: while open it covers the screen and takes every click, which is
+       also how the colour picker sees the mouseup that ends a drag. */
+    pointer-events: auto;
+}
+.picker-backdrop.hidden {
+    display: none;
+}
+
+.picker-dialog {
+    position: absolute;
+    /* Centred in the area left of the 500dp panel, so a colour is never judged
+       against the swatch the dialog covers: with a 480dp dialog this puts its
+       centre at 50% - 250dp, which is exactly the centre of that free area. */
+    left: 50%;
+    margin-left: -490dp;
+    top: 200px;
+    width: 480px;
+    background-color: #2a2a2a;
+    border: 2px #555555;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    z-index: 10000;
+}
+
+.dialog-header {
+    background-color: #333333;
+    padding: 10px;
+    border-bottom: 1px #555555;
+}
+
+.dialog-title {
+    color: #eeeeee;
+    font-size: 14px;
+}
+
+.dialog-content {
+    padding: 12px;
+}
+
+.team-dialog {
+    width: 520px;
+    max-height: 820px;
+}
+
+.team-list-header {
+    color: #d7d7d7;
+    font-size: 12px;
+    margin: 8px 0px 6px 0px;
+}
+
+.team-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    margin-bottom: 4px;
+    background-color: #1a1a1a;
+    border: 1px #3a3a3a;
+    border-radius: 3px;
+}
+
+.team-row:hover { border-color: #5a5a5a; }
+.team-swatch { width: 16px; height: 16px; border: 1px #050706; }
+.team-name { flex-grow: 1; color: #eeeeee; font-size: 12px; }
+.team-edit, .team-remove {
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 0px 10px;
+}
+.team-edit:hover { background-color: #3a7ebf; border-color: #5a9edf; }
+.team-edit span { display: block; line-height: 26px; }
+.team-remove { width: 26px; padding: 0px; }
+.team-remove img { width: 14px; height: 14px; }
+.team-remove:hover { background-color: #993333; border-color: #cc5555; }
+
+/* --- File / New-project dialog rows --- */
+.fd-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.fd-row.hidden {
+    display: none;
+}
+
+.fd-label {
+    width: 60px;
+    color: #cccccc;
+    font-size: 13px;
+}
+
+.fd-input {
+    flex-grow: 1;
+    height: 26px;
+    background-color: #1a1a1a;
+    color: #eeeeee;
+    border: 1px #555555;
+    border-radius: 3px;
+    padding: 0px 6px;
+}
+
+.fd-input.fd-size {
+    flex-grow: 0;
+    width: 70px;
+}
+
+.dialog-footer {
+    padding: 10px;
+    border-top: 1px #555555;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dialog-button {
+    min-width: 74px;
+    height: 30px;
+    background-color: #3a3a3a;
+    color: #eeeeee;
+    border: 1px #555555;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 28px;
+}
+
+.dialog-button.primary {
+    background-color: #3a7ebf;
+    border-color: #2a5f8f;
+}
+
+.dialog-button:hover {
+    background-color: #4a4a4a;
+    border-color: #7d8a82;
+}
+
+.dialog-button.primary:hover {
+    background-color: #4c9bd1;
+    border-color: #74b8df;
+}
+
+.dialog-button:active {
+    background-color: #242424;
+    border-color: #9aaa9e;
+}
+
+.dialog-button.disabled {
+    background-color: #242424;
+    border-color: #353535;
+    color: #777777;
+}
+
+.dialog-button.disabled:hover,
+.dialog-button.disabled:active {
+    background-color: #242424;
+    border-color: #353535;
+}
+
+.grid-picker {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.grid-navigation {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.grid-navigation .dialog-button {
+    min-width: 54px;
+    height: 26px;
+    line-height: 24px;
+}
+
+.grid-navigation .asset-path {
+    flex-grow: 1;
+    overflow: hidden;
+    color: #aaaaaa;
+    line-height: 26px;
+}
+
+.color-picker-main {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.color-map {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    padding: 0px;
+    border: 1px #555555;
+    background-color: #ff0000;
+}
+
+.color-map-white,
+.color-map-black {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 180px;
+    height: 180px;
+}
+
+.color-map-cursor {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    margin-top: -4px;
+    border: 2px #ffffff;
+    background-color: transparent;
+}
+
+.hue-map {
+    position: relative;
+    width: 24px;
+    height: 180px;
+    padding: 0px;
+    border: 1px #555555;
+    background-color: #111111;
+}
+
+.hue-map img {
+    width: 24px;
+    height: 180px;
+}
+
+.hue-cursor {
+    position: absolute;
+    left: -3px;
+    width: 30px;
+    height: 3px;
+    background-color: #ffffff;
+}
+
+.color-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 130px;
+}
+
+.color-preview {
+    width: 130px;
+    height: 60px;
+    border: 1px #555555;
+}

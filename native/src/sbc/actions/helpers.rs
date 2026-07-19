@@ -5,21 +5,10 @@ use spring_native::prelude::NativeInterfaceRef;
 /// The `(name, version)` of the game the editor is running, for the reload
 /// command's start script.
 pub(super) fn game_id(interface: &NativeInterfaceRef) -> (String, String) {
-    let Ok(info) = interface.game().get_game_mod_info() else {
+    let Ok(info) = interface.game().get_game_mod_info_owned() else {
         return (String::new(), String::new());
     };
-    // SAFETY: the engine owns these strings for the lifetime of the call; we copy
-    // them out immediately.
-    unsafe { (cstr(info.gameName), cstr(info.gameVersion)) }
-}
-
-/// Copy a C string the engine handed back, or empty if null.
-unsafe fn cstr(ptr: *const std::os::raw::c_char) -> String {
-    if ptr.is_null() {
-        String::new()
-    } else {
-        std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned()
-    }
+    (info.game_name, info.game_version)
 }
 
 /// The map's height extremes, as an import default when the user hasn't given

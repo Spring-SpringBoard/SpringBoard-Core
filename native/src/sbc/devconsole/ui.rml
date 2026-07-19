@@ -2,6 +2,7 @@
 	<div class="header">
 		<div class="title">Developer Console</div>
 		<div id="error-count" class="error-count"></div>
+		<div id="line-count" class="line-count"></div>
 	</div>
 	<div id="log-container" class="log-container"></div>
 	<div id="toolbar" class="toolbar"></div>

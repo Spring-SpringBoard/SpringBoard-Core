@@ -344,6 +344,9 @@ pub trait Field {
         None
     }
 
+    /// Select the whole value while in edit mode (Ctrl+A).
+    fn select_edit(&mut self, _interface: &NativeInterfaceRef) {}
+
     /// End edit mode — switch back to display, without committing.
     fn end_edit(&mut self, _interface: &NativeInterfaceRef) {}
 }

@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-spring-native = { path = "/home/gajop/projects/spring-projects/spring-bar/rust/crates/spring-native" }
+spring-native = { path = "../../spring-bar/rust/crates/spring-native" }
 log = "0.4.30"
 log4rs = "1.4.0"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }

@@ -122,18 +122,27 @@ impl CommandExecutor {
             return;
         }
         let messages = interface.messages();
+        // `SendCommands`' second argument is an additional command *line*, not
+        // this command's argument -- the engine joins the two with a newline.
+        // "/water 4" must go out as the single line "water 4"; split, it cycles
+        // the water renderer and then runs a junk "4" command.
+        let line = if args.is_empty() {
+            command.to_string()
+        } else {
+            format!("{command} {args}")
+        };
         if requires_cheat && !interface.game().is_cheating_enabled().unwrap_or(false) {
             if auto_cheat {
-                let _ = messages.send_commands("cheat", "1");
-                let _ = messages.send_commands(command, args);
-                let _ = messages.send_commands("cheat", "0");
+                let _ = messages.send_commands("cheat 1", "");
+                let _ = messages.send_commands(&line, "");
+                let _ = messages.send_commands("cheat 0", "");
             } else {
                 let _ = messages.echo("Enable cheats with /cheat or /autocheat", "");
-                let _ = messages.send_commands(command, args);
+                let _ = messages.send_commands(&line, "");
             }
             return;
         }
-        let _ = messages.send_commands(command, args);
+        let _ = messages.send_commands(&line, "");
     }
 }
 

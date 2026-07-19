@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use log::{error, info};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
@@ -9,7 +9,7 @@ use crate::sbc::command_system::registry::register_command;
 use crate::sbc::textures::model::TextureModel;
 use crate::sbc::textures::ops::import;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ImportShadingImageCommand {
     #[serde(rename = "texType")]
     tex_type: String,
@@ -26,6 +26,10 @@ impl ImportShadingImageCommand {
 }
 
 impl Command for ImportShadingImageCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         let interface = *ctx.interface;
         let (path, temporary) = if PathBuf::from(&self.texture_path).is_file() {

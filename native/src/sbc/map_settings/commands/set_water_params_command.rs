@@ -58,7 +58,7 @@ fn refresh_water(ctx: &Context) {
         let _ = ctx
             .interface
             .messages()
-            .send_commands("water", &mode.to_string());
+            .send_commands(&format!("water {mode}"), "");
     }
 }
 
@@ -232,7 +232,7 @@ struct Water {
 
 impl Water {
     fn to_sys(&self) -> sys::WaterParams {
-        let mut p: sys::WaterParams = unsafe { std::mem::zeroed() };
+        let mut p: sys::WaterParams = sys::WaterParams::default();
         // Apply a present optional field and raise its `has*` flag. Works for
         // scalar, `[f32; 3]`, and bool fields alike.
         macro_rules! set {

@@ -13,6 +13,7 @@ mod objects;
 mod panels;
 mod port_flags;
 mod project;
+mod render;
 mod states;
 mod teams;
 mod terrain_cpu;

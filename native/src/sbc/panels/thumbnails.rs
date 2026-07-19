@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 
 use spring_native::prelude::{sys, NativeInterfaceRef};
 
-use crate::sbc::panels::model_shader::ModelShader;
+use crate::sbc::render::ModelShader;
 
 /// Matches the Lua icon size.
 const SIZE: i32 = 128;

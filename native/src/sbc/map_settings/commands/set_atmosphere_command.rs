@@ -1,12 +1,12 @@
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spring_native::prelude::sys;
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SetAtmosphereCommand {
     opts: Atmosphere,
     #[serde(skip)]
@@ -24,6 +24,10 @@ impl SetAtmosphereCommand {
 }
 
 impl Command for SetAtmosphereCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         debug!("SetAtmosphereCommand: {:?}", self.opts);
         if self.old.is_none() {
@@ -44,7 +48,7 @@ impl Command for SetAtmosphereCommand {
 
 /// Sets atmosphere (sky/fog) params via `Spring.SetAtmosphere`. Partial opts;
 /// undo snapshots via `Gfx::GetAtmosphere`. Runs unsynced (widget state).
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Atmosphere {
     #[serde(default, rename = "fogColor")]
     fog_color: Option<[f32; 4]>,
@@ -62,7 +66,7 @@ pub struct Atmosphere {
 
 impl Atmosphere {
     fn to_sys(&self) -> sys::AtmosphereParams {
-        let mut p: sys::AtmosphereParams = unsafe { std::mem::zeroed() };
+        let mut p: sys::AtmosphereParams = sys::AtmosphereParams::default();
         if let Some(c) = self.fog_color {
             p.fogColor = c;
             p.hasFogColor = true;

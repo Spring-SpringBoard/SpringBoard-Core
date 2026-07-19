@@ -1,7 +1,8 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::field::{
-    element_by_id, escape_rml, on_blur, on_enter, ChangeQueue, Field, FieldValue, InteractionQueue,
+    element_by_id, escape_rml, on_blur, on_enter, on_pointer, ChangeQueue, Field, FieldValue,
+    InteractionQueue,
 };
 
 /// Single-line text, mirroring `RmlUiStringField` in
@@ -62,13 +63,16 @@ impl Field for StringField {
         interface: &NativeInterfaceRef,
         document: u64,
         changes: &ChangeQueue,
-        _interactions: &InteractionQueue,
+        interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         self.element = element_by_id(interface, document, &format!("field-{}", self.name));
         if let Some(e) = self.element {
             // Never on "change": a text input fires that per keystroke.
             on_enter(interface, e, self.name.clone(), changes)?;
             on_blur(interface, e, self.name.clone(), changes)?;
+            // The click must reach the manager as an edit: typing is only
+            // forwarded to the panel while a field is being edited.
+            on_pointer(interface, e, self.name.clone(), interactions)?;
         }
         Ok(())
     }
@@ -89,6 +93,22 @@ impl Field for StringField {
                 .element_set_attribute(e, "value", &self.value)?;
         }
         Ok(())
+    }
+
+    /// Click without drag: focus and select the whole value, so typing
+    /// replaces it (the standard click-to-edit behaviour).
+    fn begin_edit(&mut self, interface: &NativeInterfaceRef) {
+        if let Some(e) = self.element {
+            let _ = interface.rml_ui().element_focus(e);
+            let _ = interface.rml_ui().element_form_control_input_select(e);
+        }
+    }
+
+    fn select_edit(&mut self, interface: &NativeInterfaceRef) {
+        if let Some(e) = self.element {
+            let _ = interface.rml_ui().element_focus(e);
+            let _ = interface.rml_ui().element_form_control_input_select(e);
+        }
     }
 
     fn set_value(&mut self, value: &FieldValue) {

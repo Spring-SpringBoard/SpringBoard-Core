@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
@@ -13,7 +13,7 @@ use crate::sbc::teams::TeamManager;
 /// `__loaded_from_file` flag (a project-load hack). That flag is owned by the
 /// load flow (project slice, not yet ported), so it's omitted here; revisit
 /// when the project-load slice lands.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct UpdateTeamCommand {
     team: Team,
     #[serde(skip)]
@@ -31,6 +31,10 @@ impl UpdateTeamCommand {
 }
 
 impl Command for UpdateTeamCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         // Snapshot once: redo re-runs this same instance, so re-capturing here
         // would store the already-updated value (matches Lua's `if not self.old`).

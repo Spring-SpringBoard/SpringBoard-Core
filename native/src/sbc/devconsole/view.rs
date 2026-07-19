@@ -389,6 +389,23 @@ impl DevConsoleView {
         Ok(())
     }
 
+    pub(crate) fn render_line_count(
+        &self,
+        interface: &NativeInterfaceRef,
+        text: &str,
+    ) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        let Some(label) = element_by_id(interface, doc, "line-count") else {
+            return Ok(());
+        };
+        interface
+            .rml_ui()
+            .element_set_inner_rml(label, &escape_rml(text))?;
+        Ok(())
+    }
+
     pub(crate) fn render_toggles(
         &self,
         interface: &NativeInterfaceRef,

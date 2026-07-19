@@ -4,7 +4,7 @@ use crate::sbc::command_system::registry::register_command;
 use crate::sbc::textures::TextureModel;
 
 /// Create a blank editor-owned shading texture with the requested dimensions.
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, serde::Serialize)]
 pub(crate) struct CreateShadingTextureCommand {
     name: String,
     width: i32,
@@ -24,6 +24,10 @@ impl CreateShadingTextureCommand {
 }
 
 impl Command for CreateShadingTextureCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         ctx.model::<TextureModel>()
             .shading

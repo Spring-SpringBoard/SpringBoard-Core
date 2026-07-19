@@ -326,6 +326,16 @@ impl Field for ColorField {
             let _ = interface.rml_ui().element_set_class(e, "hidden", false);
             let _ = interface.rml_ui().element_set_attribute(e, "value", &val);
             let _ = interface.rml_ui().element_focus(e);
+            let _ = interface.rml_ui().element_form_control_input_select(e);
+        }
+    }
+
+    fn select_edit(&mut self, interface: &NativeInterfaceRef) {
+        if let Some(idx) = self.drag_channel {
+            if let Some(e) = self.channels[idx].edit {
+                let _ = interface.rml_ui().element_focus(e);
+                let _ = interface.rml_ui().element_form_control_input_select(e);
+            }
         }
     }
 

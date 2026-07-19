@@ -14,7 +14,17 @@ use crate::sbc::rml;
 
 const UI_CONTEXT: &str = "sbc_native_ui";
 const UI_BODY: &str = include_str!("ui.rml");
-const UI_STYLE: &str = include_str!("ui.rcss");
+/// The stylesheet, assembled from the theme parts in cascade order. RmlUi
+/// still sees one sheet; the split is source-level, by component.
+const UI_STYLE: &str = concat!(
+    include_str!("theme/base.rcss"),
+    include_str!("theme/shell.rcss"),
+    include_str!("theme/fields.rcss"),
+    include_str!("theme/scrollbars.rcss"),
+    include_str!("theme/buttons.rcss"),
+    include_str!("theme/modals.rcss"),
+    include_str!("theme/grid.rcss"),
+);
 
 /// A shell-level click, queued by an RmlUi event listener and drained by the
 /// manager on the next tick. Rebuilding the DOM inside a listener would free the

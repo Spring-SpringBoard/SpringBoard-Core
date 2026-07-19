@@ -116,11 +116,17 @@ impl AssetPicker {
         extensions: &[&str],
     ) -> Result<(), Error> {
         self.field = Some(field.to_string());
-        // `root` is the field's directory *within* an asset pack (`brush_textures/`),
-        // not a place on disk. `core` is SpringBoard's shipped/default pack, so
-        // start there instead of making every picker require an extra click.
+        // `root` is the field's directory *within* an asset pack
+        // (`brush_textures/`), not a place on disk — except a `vfs:` root,
+        // which browses that engine VFS directory itself. For packs, `core` is
+        // SpringBoard's shipped/default pack, so start there instead of making
+        // every picker require an extra click.
         self.root = root.to_string();
-        self.dir = "core/".to_string();
+        self.dir = if root.starts_with("vfs:") {
+            String::new()
+        } else {
+            "core/".to_string()
+        };
         self.extensions = extensions.iter().map(|e| e.to_string()).collect();
         self.grid.set_selected(None);
         self.populate(interface, document)?;

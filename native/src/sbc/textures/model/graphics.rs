@@ -35,12 +35,14 @@ pub fn create_fbo_texture(
     width: i32,
     height: i32,
 ) -> Option<Texture> {
-    let mut params: sys::GfxTextureParams = unsafe { std::mem::zeroed() };
-    params.minFilter = constants::GL_LINEAR;
-    params.magFilter = constants::GL_LINEAR;
-    params.wrapS = constants::GL_CLAMP_TO_EDGE;
-    params.wrapT = constants::GL_CLAMP_TO_EDGE;
-    params.fbo = true;
+    let params = sys::GfxTextureParams {
+        minFilter: constants::GL_LINEAR,
+        magFilter: constants::GL_LINEAR,
+        wrapS: constants::GL_CLAMP_TO_EDGE,
+        wrapT: constants::GL_CLAMP_TO_EDGE,
+        fbo: true,
+        ..Default::default()
+    };
 
     interface
         .gfx()
@@ -56,12 +58,14 @@ pub fn create_repeating_fbo_texture(
     width: i32,
     height: i32,
 ) -> Option<Texture> {
-    let mut params: sys::GfxTextureParams = unsafe { std::mem::zeroed() };
-    params.minFilter = constants::GL_LINEAR;
-    params.magFilter = constants::GL_LINEAR;
-    params.wrapS = constants::GL_REPEAT;
-    params.wrapT = constants::GL_REPEAT;
-    params.fbo = true;
+    let params = sys::GfxTextureParams {
+        minFilter: constants::GL_LINEAR,
+        magFilter: constants::GL_LINEAR,
+        wrapS: constants::GL_REPEAT,
+        wrapT: constants::GL_REPEAT,
+        fbo: true,
+        ..Default::default()
+    };
 
     interface
         .gfx()
@@ -76,13 +80,15 @@ pub fn create_repeating_mipmap_fbo_texture(
     width: i32,
     height: i32,
 ) -> Option<Texture> {
-    let mut params: sys::GfxTextureParams = unsafe { std::mem::zeroed() };
-    params.minFilter = constants::GL_LINEAR_MIPMAP_NEAREST;
-    params.magFilter = constants::GL_LINEAR;
-    params.wrapS = constants::GL_REPEAT;
-    params.wrapT = constants::GL_REPEAT;
-    params.aniso = 16.0;
-    params.fbo = true;
+    let params = sys::GfxTextureParams {
+        minFilter: constants::GL_LINEAR_MIPMAP_NEAREST,
+        magFilter: constants::GL_LINEAR,
+        wrapS: constants::GL_REPEAT,
+        wrapT: constants::GL_REPEAT,
+        aniso: 16.0,
+        fbo: true,
+        ..Default::default()
+    };
 
     interface
         .gfx()

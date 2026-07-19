@@ -24,16 +24,14 @@ impl CatalogRefresher {
 
     fn refresh_engine(&self, interface: &NativeInterfaceRef, core: &mut ChonsoleCore) {
         let gfx = interface.gfx();
-        if let Ok(entries) = gfx.get_console_commands() {
+        if let Ok(entries) = gfx.get_console_command_entries() {
             core.replace_catalog(
                 entries
                     .into_iter()
-                    .filter_map(|entry| {
-                        Some(ConsoleCommand {
-                            name: c_string(entry.command)?.to_ascii_lowercase(),
-                            description: c_string(entry.description)?,
-                            requires_cheat: entry.cheat,
-                        })
+                    .map(|entry| ConsoleCommand {
+                        name: entry.command.to_ascii_lowercase(),
+                        description: entry.description,
+                        requires_cheat: entry.cheat,
                     })
                     .collect(),
             );
@@ -115,15 +113,18 @@ impl CatalogRefresher {
             .unwrap_or_default()
             .into_iter()
             .filter_map(|id| {
-                let (exists, basic, ..) = interface.unit_defs().get_unit_def_by_id(id).ok()?;
-                exists.then(|| {
-                    let name = c_string(basic.name).unwrap_or_default();
-                    let tooltip = c_string(basic.tooltip)
-                        .filter(|tooltip| !tooltip.is_empty())
-                        .map(|tooltip| format!(". {tooltip}"))
-                        .unwrap_or_default();
-                    (name, tooltip)
-                })
+                interface
+                    .unit_defs()
+                    .get_unit_def_basic_info(id)
+                    .ok()
+                    .flatten()
+                    .map(|basic| {
+                        let tooltip = (!basic.tooltip.is_empty())
+                            .then_some(basic.tooltip)
+                            .map(|tooltip| format!(". {tooltip}"))
+                            .unwrap_or_default();
+                        (basic.name, tooltip)
+                    })
             })
             .filter(|(name, _)| !name.is_empty())
             .collect();
@@ -131,37 +132,27 @@ impl CatalogRefresher {
 
         let configs = interface
             .config()
-            .get_config_params()
+            .get_config_parameters()
             .unwrap_or_default()
             .into_iter()
-            .filter_map(|param| {
-                Some((
-                    c_string(param.name)?,
-                    c_string(param.description)
-                        .unwrap_or_default()
-                        .replace('\n', " "),
-                ))
+            .map(|param| {
+                (
+                    param.name,
+                    param.description.unwrap_or_default().replace('\n', " "),
+                )
             })
             .collect();
         core.set_config_params(configs);
 
         let players = interface
             .player()
-            .get_player_roster(0, false)
+            .get_player_roster_owned(0, false)
             .unwrap_or_default()
             .into_iter()
-            .filter_map(|entry| c_string(entry.name))
+            .map(|entry| entry.name)
             .collect();
         core.set_players(players);
     }
-}
-
-fn c_string(raw: *const std::ffi::c_char) -> Option<String> {
-    (!raw.is_null()).then(|| {
-        unsafe { std::ffi::CStr::from_ptr(raw) }
-            .to_string_lossy()
-            .into_owned()
-    })
 }
 
 fn rule_value_text(value: &RulesParamValue) -> String {

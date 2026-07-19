@@ -1,5 +1,5 @@
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spring_native::prelude::sys;
 
 use crate::sbc::command_system::command::Command;
@@ -8,7 +8,7 @@ use crate::sbc::command_system::registry::register_command;
 
 /// Sets the sun direction. Execute snapshots the current dir (`Gfx::GetSun("dir")`)
 /// on first run for undo, then applies the new one. Runs unsynced (widget state).
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct SetSunParametersCommand {
     opts: Opts,
     #[serde(skip)]
@@ -26,7 +26,7 @@ impl SetSunParametersCommand {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Opts {
     #[serde(rename = "dirX")]
     dir_x: f32,
@@ -37,6 +37,10 @@ struct Opts {
 }
 
 impl Command for SetSunParametersCommand {
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
+    }
+
     fn execute(&mut self, ctx: &mut Context) {
         debug!(
             "SetSunParametersCommand: dir ({}, {}, {})",

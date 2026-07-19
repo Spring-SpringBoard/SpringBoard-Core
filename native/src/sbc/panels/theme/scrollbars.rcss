@@ -1,0 +1,34 @@
+/* --- Scrollbars --- */
+scrollbarhorizontal,
+scrollbarhorizontal slidertrack,
+scrollbarhorizontal sliderbar,
+scrollbarhorizontal sliderarrowdec,
+scrollbarhorizontal sliderarrowinc {
+    display: none;
+}
+scrollbarvertical {
+    width: 8px;
+    background-color: #1a1a1a;
+}
+
+scrollbarvertical sliderarrowdec,
+scrollbarvertical sliderarrowinc {
+    width: 0px;
+    height: 0px;
+}
+
+scrollbarvertical slidertrack {
+    margin-left: 1px;
+    width: 6px;
+    background-color: #121315;
+}
+
+scrollbarvertical sliderbar {
+    width: 6px;
+    min-height: 20px;
+    background-color: #44484e;
+}
+
+scrollbarvertical sliderbar:hover {
+    background-color: #5fc878;
+}

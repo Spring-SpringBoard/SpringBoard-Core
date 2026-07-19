@@ -1,0 +1,32 @@
+/* The panel is positioned against the body, so the body must span the screen;
+   with an auto-sized body an absolutely-positioned child collapses.
+   A screen-sized body would then swallow every click in the game view (and in
+   the dev console's context), so it takes no pointer events -- only the panel
+   and the modals do. */
+body {
+    font-family: Poppins;
+    font-size: 12dp;
+    color: #cccccc;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+/* Geometry mirrors scen_edit/view/rcss/springboard.rcss so the native panel is
+   in the same place, at the same size, as the two Lua ones. */
+#native-panel {
+    position: absolute;
+    right: 0dp;
+    top: 0dp;
+    width: 500dp;
+    height: 100%;
+    /* Shared outer surface: keep native panels visually related even when
+       they are hosted in separate RmlUi contexts. */
+    background-color: #151b20d9;
+    pointer-events: auto;
+}

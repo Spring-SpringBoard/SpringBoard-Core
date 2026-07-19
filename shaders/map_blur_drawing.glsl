@@ -3,6 +3,10 @@ uniform sampler2D patternTexture;
 
 uniform mat3 kernel;
 uniform float strength;
+// Tap spacing multiplier. At 1.0 the 3x3 taps sit ~1 texel apart, which is
+// invisible on a high-resolution tile; the blur brush widens this with its
+// strength so a stroke visibly softens the texture.
+uniform float kernelScale;
 
 uniform float patternRotation;
 
@@ -45,7 +49,7 @@ void main(void)
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			float w = kernel[i][j];
-			weightColor += texture2D(mapTex, gl_TexCoord[0].st + vec2(i-1, j-1) * 0.001) * w;
+			weightColor += texture2D(mapTex, gl_TexCoord[0].st + vec2(i-1, j-1) * 0.001 * kernelScale) * w;
 		}
 	}
 /*

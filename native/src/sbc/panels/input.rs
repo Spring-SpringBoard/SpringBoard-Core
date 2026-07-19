@@ -315,44 +315,6 @@ impl PanelInput {
             .context_process_mouse_wheel(ctx, delta, 0.0, 0)
     }
 
-    pub(crate) fn key_press(
-        &self,
-        interface: &NativeInterfaceRef,
-        view: &PanelView,
-        key_code: i32,
-    ) -> Result<bool, Error> {
-        if let Some(ctx) = view.context_handle() {
-            return interface
-                .rml_ui()
-                .context_process_key_down(ctx, key_code, 0);
-        }
-        Ok(false)
-    }
-
-    pub(crate) fn key_release(
-        &self,
-        interface: &NativeInterfaceRef,
-        view: &PanelView,
-        key_code: i32,
-    ) -> Result<bool, Error> {
-        if let Some(ctx) = view.context_handle() {
-            return interface.rml_ui().context_process_key_up(ctx, key_code, 0);
-        }
-        Ok(false)
-    }
-
-    pub(crate) fn text_input(
-        &self,
-        interface: &NativeInterfaceRef,
-        view: &PanelView,
-        utf8: &str,
-    ) -> Result<bool, Error> {
-        if let Some(ctx) = view.context_handle() {
-            return interface.rml_ui().context_process_text_input(ctx, utf8);
-        }
-        Ok(false)
-    }
-
     fn drag_field(&self) -> Option<&str> {
         match &self.drag {
             DragState::Pending { field, .. } | DragState::Dragging { field } => Some(field),

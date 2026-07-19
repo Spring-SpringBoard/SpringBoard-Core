@@ -1,5 +1,4 @@
 use std::any::Any;
-use std::ffi::CStr;
 
 use serde::{Deserialize, Serialize};
 use spring_native::prelude::NativeInterfaceRef;
@@ -56,12 +55,9 @@ impl ScenarioInfoManager {
     pub fn new(interface: NativeInterfaceRef) -> Self {
         let player_name = interface
             .teams()
-            .get_player_info(0, false)
+            .get_player_info_owned(0, false)
             .ok()
-            .and_then(|info| unsafe { info.name.as_ref() }.map(|ptr| ptr as *const i8))
-            .and_then(|ptr| unsafe { (!ptr.is_null()).then(|| CStr::from_ptr(ptr)) })
-            .and_then(|name| name.to_str().ok())
-            .map(str::to_string)
+            .map(|info| info.name)
             .filter(|name| !name.is_empty())
             .unwrap_or_else(|| "Player".to_string());
         ScenarioInfoManager {

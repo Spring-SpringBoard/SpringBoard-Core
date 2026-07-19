@@ -56,7 +56,7 @@ struct MapRendering {
 
 impl MapRendering {
     fn to_sys(&self) -> sys::MapRenderingParams {
-        let mut p: sys::MapRenderingParams = unsafe { std::mem::zeroed() };
+        let mut p: sys::MapRenderingParams = sys::MapRenderingParams::default();
         if let Some(v) = self.splat_tex_scales {
             p.splatTexScales = v;
             p.hasSplatTexScales = true;

@@ -1,7 +1,7 @@
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::objects::SetObjectParamCommand;
-use crate::sbc::panels::ModelShader;
+use crate::sbc::render::ModelShader;
 use crate::sbc::states::highlight::ObjectGhost;
 use crate::sbc::states::state::{trace_ground, EditorState, StateContext, Transition};
 

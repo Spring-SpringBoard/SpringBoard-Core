@@ -41,6 +41,9 @@ impl CursorTip {
         let Ok(mouse) = interface.input().get_mouse_state() else {
             return Ok(());
         };
+        let Ok(geometry) = interface.display().get_view_geometry() else {
+            return Ok(());
+        };
         // Nothing while a button is down (a drag is in progress) or over the UI.
         let hit = if mouse.left || mouse.right || over_panel {
             None
@@ -65,7 +68,7 @@ impl CursorTip {
             &format!(
                 "left: {}px; top: {}px;",
                 mouse.x as i32 + OFFSET_X,
-                mouse.y as i32 + OFFSET_Y
+                bottom_to_top_y(mouse.y, geometry.viewSizeY as f32) as i32 + OFFSET_Y
             ),
         )?;
         rml.element_set_class(element, "hidden", false)?;
@@ -73,12 +76,9 @@ impl CursorTip {
     }
 
     fn pick(&self, interface: &NativeInterfaceRef, x: f32, y: f32) -> Option<Hit> {
-        // `get_mouse_state` measures y from the top; the screen-rectangle pick
-        // wants it from the bottom, as the engine's own draw space does.
-        let height = interface.display().get_view_geometry().ok()?.viewSizeY as f32;
-        let y = height - 1.0 - y;
-        let (left, right) = (x - PICK_RADIUS, x + PICK_RADIUS);
-        let (top, bottom) = (y + PICK_RADIUS, y - PICK_RADIUS);
+        // `get_mouse_state` and the engine's screen-rectangle queries both use
+        // bottom-origin coordinates. Flipping here mirrored the hit vertically.
+        let (left, top, right, bottom) = pick_rectangle(x, y);
 
         let unsynced = interface.unsynced_read();
         let rendering = unsynced.unit_rendering();
@@ -93,6 +93,19 @@ impl CursorTip {
         let features = rendering.get_features_in_screen_rectangle(left, top, right, bottom);
         describe_feature(interface, *features.ok()?.first()?)
     }
+}
+
+fn bottom_to_top_y(y: f32, view_height: f32) -> f32 {
+    view_height - 1.0 - y
+}
+
+fn pick_rectangle(x: f32, y: f32) -> (f32, f32, f32, f32) {
+    (
+        x - PICK_RADIUS,
+        y + PICK_RADIUS,
+        x + PICK_RADIUS,
+        y - PICK_RADIUS,
+    )
 }
 
 struct Hit {
@@ -143,18 +156,20 @@ fn describe_unit(interface: &NativeInterfaceRef, unit_id: i32) -> Option<Hit> {
 fn describe_feature(interface: &NativeInterfaceRef, feature_id: i32) -> Option<Hit> {
     let features = interface.features();
     let def_id = features.get_feature_def_id(feature_id).ok()?;
-    let (info, true) = interface
+    let info = interface
         .feature_defs()
-        .get_feature_def_by_id(def_id)
-        .ok()?
-    else {
+        .get_feature_def_info(def_id)
+        .ok()??;
+    if info.name.is_empty() {
         return None;
-    };
-    let name = cstr(info.name)?;
+    }
+    let name = info.name;
     // Lua titles the tip with the def's description and puts the name beneath.
-    let title = cstr(info.description)
-        .filter(|text| !text.trim().is_empty())
-        .unwrap_or_else(|| name.clone());
+    let title = if info.description.trim().is_empty() {
+        name.clone()
+    } else {
+        info.description
+    };
 
     let mut rows = Vec::new();
     if name != title {
@@ -189,17 +204,6 @@ fn describe_feature(interface: &NativeInterfaceRef, feature_id: i32) -> Option<H
     })
 }
 
-fn cstr(ptr: *const std::ffi::c_char) -> Option<String> {
-    if ptr.is_null() {
-        return None;
-    }
-    Some(
-        unsafe { std::ffi::CStr::from_ptr(ptr) }
-            .to_string_lossy()
-            .into_owned(),
-    )
-}
-
 fn markup(title: &str, rows: &[String]) -> String {
     let body: String = rows
         .iter()
@@ -209,4 +213,20 @@ fn markup(title: &str, rows: &[String]) -> String {
         r#"<div class="tip-title">{}</div>{body}"#,
         escape_rml(title)
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{bottom_to_top_y, pick_rectangle};
+
+    #[test]
+    fn object_pick_keeps_the_mouse_bottom_origin_y() {
+        assert_eq!(pick_rectangle(200.0, 100.0), (184.0, 116.0, 216.0, 84.0));
+    }
+
+    #[test]
+    fn only_rml_positioning_flips_bottom_origin_mouse_y() {
+        assert_eq!(bottom_to_top_y(100.0, 1_000.0), 899.0);
+        assert_eq!(bottom_to_top_y(899.0, 1_000.0), 100.0);
+    }
 }

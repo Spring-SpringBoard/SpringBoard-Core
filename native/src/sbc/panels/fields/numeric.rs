@@ -124,6 +124,8 @@ impl NumericField {
             let _ = rml.element_set_class(e, "hidden", false);
             let _ = rml.element_set_attribute(e, "value", &text);
             let _ = rml.element_focus(e);
+            // Select the value so typing replaces it rather than appending.
+            let _ = rml.element_form_control_input_select(e);
         }
     }
 
@@ -242,6 +244,15 @@ impl Field for NumericField {
     fn begin_edit(&mut self, interface: &NativeInterfaceRef) {
         if !self.editing {
             self.show_edit(interface);
+        }
+    }
+
+    fn select_edit(&mut self, interface: &NativeInterfaceRef) {
+        if self.editing {
+            if let Some(e) = self.edit_elem {
+                let _ = interface.rml_ui().element_focus(e);
+                let _ = interface.rml_ui().element_form_control_input_select(e);
+            }
         }
     }
 

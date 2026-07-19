@@ -6,7 +6,7 @@ use crate::sbc::textures::model::texture_drawing::{
 };
 use crate::sbc::textures::model::texture_model::TextureModel;
 
-use super::options::{PaintOptions, Region};
+use super::options::{KernelMode, PaintOptions, Region};
 use super::shared::{kernel_for, SHADER_PATH_FILTER};
 
 pub fn paint_filter(
@@ -44,6 +44,16 @@ pub fn paint_filter(
     if shader.uniforms.kernel >= 0 {
         let kernel = kernel_for(opts.kernel_mode);
         let _ = gfx.uniform_matrix(shader.uniforms.kernel, &kernel, false);
+    }
+    if shader.uniforms.kernel_scale >= 0 {
+        // A 3x3 tap one texel apart is invisible on a high-resolution tile;
+        // the blur brush widens its radius with strength. Edge kernels
+        // (sobel, outline, sharpen) keep true 1-texel taps.
+        let scale = match opts.kernel_mode {
+            KernelMode::Blur => 1.0 + opts.strength * 3.0,
+            _ => 1.0,
+        };
+        let _ = gfx.uniform(shader.uniforms.kernel_scale, [scale, 0.0, 0.0, 0.0], 1);
     }
     if shader.uniforms.strength >= 0 {
         let _ = gfx.uniform(shader.uniforms.strength, [opts.strength, 0.0, 0.0, 0.0], 1);
