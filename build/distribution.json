@@ -1,7 +1,7 @@
 {
   "engine": {
     "repository": "gajop/spring-rust",
-    "release": "2026-07-19-bc9e5ee"
+    "release": "2026.07.19"
   },
   "launch": {
     "map": "sb_initial_blank_10x8",
