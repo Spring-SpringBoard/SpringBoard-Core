@@ -80,7 +80,6 @@ load("command/clear_undo_redo_command.lua")
 load("command/set_multiple_command_mode_command.lua")
 load("command/widget_command_executed.lua")
 load("command/cache_texture_command.lua")
-load("command/widget_terrain_change_texture_command.lua")
 load("command/terrain_change_texture_command.lua")
 load("command/make_shading_texture_command.lua")
 load("command/command_manager.lua")
@@ -154,7 +153,7 @@ local function test_texture_stroke_undo_redo()
         "TerrainChangeTextureCommand",   -- paint 1 -> Rust
         "TerrainChangeTextureCommand",   -- paint 2 -> Rust
         "SetMultipleCommandModeCommand", -- stream stop -> Rust
-        "TerrainTexturePushStackCommand",-- onMerge stroke close -> Rust
+        "TerrainChangeTextureMergedCommand", -- merged stroke close -> Rust
         "UndoCommand",                   -- merged undo routed to Rust
         "RedoCommand",                   -- merged redo routed to Rust
     }

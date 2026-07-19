@@ -134,8 +134,10 @@ function View:SetupRmlUiEvents()
     local btnSave = self.mainDocument:GetElementById("btn-save-project")
     if btnSave then
         btnSave:AddEventListener("click", function()
-            local cmd = SaveProjectCommand()
-            SB.commandManager:execute(cmd)
+            local action = SaveProjectAction()
+            if not action.canExecute or action:canExecute() then
+                action:execute()
+            end
         end)
     end
 

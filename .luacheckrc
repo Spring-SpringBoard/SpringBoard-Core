@@ -52,7 +52,7 @@ globals = {
     "math.round", "math.bit_or",
     "table.ifind", "table.show", "table.save", "table.echo", "table.print",
     -- Spring
-    "Spring", "VFS", "gl", "GL", "Game",
+    "Spring", "VFS", "gl", "GL", "Game", "RmlUi",
     "UnitDefs", "UnitDefNames", "FeatureDefs", "FeatureDefNames",
     "WeaponDefs", "WeaponDefNames", "LOG", "KEYSYMS", "CMD", "Script",
     "SendToUnsynced", "Platform", "include",
