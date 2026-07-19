@@ -14,6 +14,7 @@ use std::rc::Rc;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::field::{bind_tooltip, bind_tooltip_markup, element_by_id, escape_rml};
+use crate::sbc::vfs::{join_entry, leaf, normalize_extensions, vfs_files};
 
 /// Enough empty cells to fill out the widest row the panel can hold, so a short
 /// last row keeps its items at their natural size.
@@ -522,71 +523,9 @@ fn vfs_sub_dirs(interface: &NativeInterfaceRef, dir: &str) -> Vec<String> {
     names
 }
 
-/// File names directly under `dir`, matching one of `extensions`. The VFS's own
-/// Extensions are matched as `.ext`, so a field may write either `png` or `.png`
-/// and both listers agree. They disagreed before, and a dotted list silently
-/// matched nothing.
-fn normalize_extensions(extensions: &[&str]) -> Vec<String> {
-    extensions
-        .iter()
-        .map(|ext| ext.trim_start_matches('.').to_lowercase())
-        .collect()
-}
-
-/// `DirList`, as Lua's `Path.DirList` uses.
-fn vfs_files(interface: &NativeInterfaceRef, dir: &str, extensions: &[&str]) -> Vec<String> {
-    let extensions = normalize_extensions(extensions);
-    let Ok(paths) = interface.vfs().dir_list_names(dir, "*", "", false) else {
-        return Vec::new();
-    };
-    let mut names: Vec<String> = paths
-        .iter()
-        .filter_map(|path| {
-            let name = leaf(path)?;
-            let matches = extensions.is_empty()
-                || extensions.iter().any(|ext| {
-                    name.to_lowercase()
-                        .ends_with(&format!(".{}", ext.to_lowercase()))
-                });
-            matches.then_some(name)
-        })
-        .collect();
-    names.sort();
-    names.dedup();
-    names
-}
-
-/// The last component of a VFS path, with any trailing slash dropped.
-fn leaf(path: &str) -> Option<String> {
-    let name = path.trim_end_matches('/').rsplit('/').next()?.to_string();
-    (!name.is_empty()).then_some(name)
-}
-
-/// Join a directory with an entry the engine returned.
-///
-/// The engine hands back entries already prefixed with the directory, so
-/// joining unconditionally yields `bitmaps/bitmaps/foo.bmp` and the texture
-/// fails to load. Only join when the entry is a bare name.
-fn join_entry(dir: &str, name: &str) -> String {
-    if dir.is_empty() || name.contains('/') {
-        name.trim_end_matches('/').to_string()
-    } else {
-        format!("{}/{}", dir.trim_end_matches('/'), name)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn entry_paths_are_not_doubled() {
-        // The engine hands back `bitmaps/foo.bmp` inside `bitmaps`.
-        assert_eq!(join_entry("bitmaps", "bitmaps/foo.bmp"), "bitmaps/foo.bmp");
-        assert_eq!(join_entry("bitmaps", "foo.bmp"), "bitmaps/foo.bmp");
-        assert_eq!(join_entry("", "foo.bmp"), "foo.bmp");
-        assert_eq!(join_entry("a", "a/b/"), "a/b");
-    }
 
     #[test]
     fn parent_dir_walks_up_and_stops_at_the_root() {

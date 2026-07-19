@@ -24,6 +24,10 @@ receives small, reviewable domain slices rather than architectural cleanup.
   under `panels/{controls,dialogs,cursor,fields,runtime,theme}`.
 - Duplicate model-factory registration now panics with the model's type name,
   as duplicate command registration already does (`Models::build`).
+- Texture material discovery is feature-owned: `Material` / `list_materials`
+  moved to `textures/materials.rs`, reading the VFS directly. The VFS listing
+  helpers moved out of the grid to a neutral `sbc/vfs.rs`, so the domain no
+  longer depends on UI code.
 
 ## Remaining
 
@@ -41,13 +45,6 @@ project-IO/workspace module (`io_registries`, `paths` exist but still sit inside
 `project/`). Scenario metadata, archive export, reload, map info, and the
 project editor stay in `project/`. This is TODO #16; it stops each saving
 feature depending on the whole Project feature.
-
-### Texture material ownership
-
-`list_materials` / `material_of` still live in `textures/ui/model.rs`. Move
-material discovery/parsing into the `textures` feature proper; the editor
-consumes it. Texture/material ownership must not be trapped in a panel editor
-before the Textures domain transfers.
 
 ### Split the E2ERun monolith
 

@@ -5,10 +5,11 @@ use crate::sbc::panels::editor_base::section_rml;
 use crate::sbc::panels::runtime::Item;
 use crate::sbc::rml::{element_by_id, escape_rml};
 
+use crate::sbc::textures::materials::list_materials;
+
 use super::model::TexField::*;
 use super::model::{
-    enabled_name, list_materials, material_tooltip, toggle_channels, TexField, TextureUiModel,
-    ADD_BRUSH_ID,
+    enabled_name, material_tooltip, toggle_channels, TexField, TextureUiModel, ADD_BRUSH_ID,
 };
 
 fn section_markup(id: &str, caption: &str) -> String {

@@ -4,8 +4,8 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-use crate::sbc::panels::brush::{non_empty, BrushAction, BrushActions, ASSETS};
-use crate::sbc::panels::controls::grid::{list_assets, GridView};
+use crate::sbc::panels::brush::{non_empty, BrushAction, BrushActions};
+use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::fields::{BooleanField, ChoiceField, ColorField, NumericField};
 use crate::sbc::panels::runtime::{
@@ -13,6 +13,7 @@ use crate::sbc::panels::runtime::{
 };
 use crate::sbc::rml::escape_rml;
 use crate::sbc::states::{BrushKind, BrushSettings};
+use crate::sbc::textures::materials::{Material, CHANNELS};
 
 /// Blend modes, in the order `texture_editor.lua` lists them.
 const MODES: &[&str] = &[
@@ -74,21 +75,6 @@ pub(super) const ACTIONS: &[BrushAction] = &[
     },
 ];
 
-/// A material's channels, as `TextureManager.materialTextures` defines them: one
-/// texture per channel, found by suffix next to the diffuse.
-///
-/// `normal` is a channel of every material but has no enable toggle, exactly as
-/// Lua skips it when it builds the checkboxes.
-const CHANNELS: &[(&str, &str, bool)] = &[
-    ("diffuse", "Diffuse", true),
-    ("specular", "Specular", true),
-    ("normal", "Normal", false),
-    ("emission", "Emission", true),
-    ("refl", "Refl", true),
-];
-
-const IMAGE_EXTS: &[&str] = &[".png", ".jpg", ".tga", ".dds", ".bmp"];
-
 /// The engine exposes at most four DNTS (splat normal) channels.
 pub(super) const DNTS_COUNT: i32 = 4;
 
@@ -99,14 +85,6 @@ pub(super) fn toggle_channels() -> impl Iterator<Item = &'static str> {
         .map(|(channel, _, _)| *channel)
 }
 
-/// One material: its name, and the channel textures that exist for it.
-#[derive(Clone)]
-pub(super) struct Material {
-    /// The bare material name (`dirt1`), which is what the picker shows.
-    pub(super) name: String,
-    pub(super) channels: BTreeMap<String, String>,
-}
-
 pub(super) struct SavedBrush {
     pub(super) id: String,
     pub(super) material: String,
@@ -114,46 +92,6 @@ pub(super) struct SavedBrush {
 }
 
 pub(super) const ADD_BRUSH_ID: &str = "__add_saved_brush__";
-
-/// The material a texture belongs to: its file name with the channel suffix
-/// stripped, and without the directory. `.../brush_textures/dirt1_diffuse.png`
-/// is the `diffuse` of `dirt1`.
-fn material_of(path: &str) -> Option<(String, &'static str)> {
-    let file = path.rsplit('/').next()?;
-    let stem = file.rsplit_once('.').map(|(s, _)| s).unwrap_or(file);
-    for (channel, _, _) in CHANNELS {
-        if let Some(base) = stem.strip_suffix(&format!("_{channel}")) {
-            return Some((base.to_string(), channel));
-        }
-    }
-    None
-}
-
-/// Group the files under `brush_textures/` into materials. A material exists if
-/// it has a diffuse; the other channels are optional, which is why the picker
-/// shows which ones were found.
-pub(super) fn list_materials(interface: &NativeInterfaceRef) -> Vec<Material> {
-    let root = format!("{ASSETS}/brush_textures");
-    let mut found: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
-
-    for item in list_assets(interface, &root, IMAGE_EXTS) {
-        if item.is_directory {
-            continue;
-        }
-        if let Some((name, channel)) = material_of(&item.id) {
-            found
-                .entry(name)
-                .or_default()
-                .insert(channel.to_string(), item.id.clone());
-        }
-    }
-
-    found
-        .into_iter()
-        .filter(|(_, channels)| channels.contains_key("diffuse"))
-        .map(|(name, channels)| Material { name, channels })
-        .collect()
-}
 
 pub(super) fn material_tooltip(material: &Material) -> String {
     let channel = |name: &str, title: &str| {
@@ -676,26 +614,6 @@ pub(super) fn enabled_name(channel: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// The VFS hands back full paths, so the material's name is the file's, not
-    /// the path's -- every material was captioned "springboard" until it was.
-    #[test]
-    fn a_material_is_named_after_its_file_not_its_path() {
-        let (name, channel) =
-            material_of("springboard/assets/core/brush_textures/dirt1_diffuse.png").unwrap();
-        assert_eq!(name, "dirt1");
-        assert_eq!(channel, "diffuse");
-
-        let (name, channel) =
-            material_of("springboard/assets/core/brush_textures/cement_normal.png").unwrap();
-        assert_eq!(name, "cement");
-        assert_eq!(channel, "normal");
-    }
-
-    #[test]
-    fn a_texture_with_no_channel_suffix_belongs_to_no_material() {
-        assert!(material_of("brush_textures/readme.png").is_none());
-    }
 
     #[test]
     fn normal_is_a_channel_but_has_no_toggle() {

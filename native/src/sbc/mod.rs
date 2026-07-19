@@ -31,3 +31,4 @@ mod message_handler;
 mod rml;
 pub mod sbc;
 mod tests;
+pub(crate) mod vfs;

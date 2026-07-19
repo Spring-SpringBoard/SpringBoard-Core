@@ -1,4 +1,5 @@
 pub(crate) mod commands;
+pub(crate) mod materials;
 mod model;
 pub(crate) mod ops;
 mod project;

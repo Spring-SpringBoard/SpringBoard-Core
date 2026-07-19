@@ -22,10 +22,6 @@ pub(crate) fn non_empty(value: String) -> Option<String> {
     (!value.is_empty()).then_some(value)
 }
 
-/// The direct thumbnail grids use full VFS paths. Asset fields instead pass a
-/// relative root to `AssetPicker`, which now defaults to this pack itself.
-pub(crate) const ASSETS: &str = "springboard/assets/core";
-
 /// One action button: a caption, the image icon, and the brush it activates.
 #[derive(Clone, Copy)]
 pub(crate) struct BrushAction {
