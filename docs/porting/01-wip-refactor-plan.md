@@ -22,6 +22,8 @@ receives small, reviewable domain slices rather than architectural cleanup.
 - Concrete UI moved out of `panels/`: the dev editor → `dev/`, the new-project
   dialog → `project/`, def thumbnails → `objects/`. Reusable pieces grouped
   under `panels/{controls,dialogs,cursor,fields,runtime,theme}`.
+- Duplicate model-factory registration now panics with the model's type name,
+  as duplicate command registration already does (`Models::build`).
 
 ## Remaining
 
@@ -65,11 +67,6 @@ UI coordinates already live in `scenarios/geometry.py`.
   listed. Also review what `modal_stack` actually does.
 - `tokens.rcss`: a single source for colours/spacing/sizes needs build-time
   substitution, because RmlUi's RCSS has no variables.
-
-### Loud duplicate registration
-
-Duplicate model-factory registration should fail loudly, as duplicate command
-registration already does.
 
 ## Do not rewrite first
 

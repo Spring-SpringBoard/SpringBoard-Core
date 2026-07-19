@@ -12,6 +12,11 @@ pub trait Model: Any {
     fn as_any_mut(&mut self) -> &mut dyn Any;
     /// React to command-history changes (default: ignore).
     fn on_history_events(&mut self, _events: &[HistoryEvent]) {}
+    /// The concrete type's name, for diagnostics. The default resolves to the
+    /// implementing type through the vtable; do not override.
+    fn type_name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
 }
 
 /// Self-registration hook: a feature submits one factory per model.
@@ -28,10 +33,13 @@ pub struct Models {
 
 impl Models {
     pub fn build(interface: NativeInterfaceRef) -> Self {
-        let mut map = HashMap::new();
+        let mut map: HashMap<TypeId, Box<dyn Model>> = HashMap::new();
         for factory in inventory::iter::<ModelFactory> {
             let model = (factory.make)(interface);
-            map.insert((*model).type_id(), model);
+            let name = model.type_name();
+            if map.insert((*model).type_id(), model).is_some() {
+                panic!("duplicate model registration for {name}");
+            }
         }
         Models { map }
     }
@@ -67,5 +75,25 @@ impl Models {
         for model in self.map.values_mut() {
             model.on_history_events(events);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct Widget;
+    impl Model for Widget {
+        fn as_any_mut(&mut self) -> &mut dyn Any {
+            self
+        }
+    }
+
+    /// The default `type_name` must resolve to the concrete type through the
+    /// trait object — that is what the duplicate-registration panic reports.
+    #[test]
+    fn type_name_resolves_the_concrete_type_through_dyn_model() {
+        let model: Box<dyn Model> = Box::new(Widget);
+        assert!(model.type_name().ends_with("Widget"));
     }
 }
