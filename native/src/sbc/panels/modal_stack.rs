@@ -10,7 +10,7 @@ use crate::sbc::panels::asset_picker::AssetPicker;
 use crate::sbc::panels::color_picker::{ColorPicker, PickerEvent};
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::file_dialog::FileDialog;
-use crate::sbc::panels::new_project_dialog::NewProjectDialog;
+use crate::sbc::project::new_project_dialog::NewProjectDialog;
 
 /// What a modal produced this tick, in the order it must be applied.
 pub(crate) enum ModalEvent {

@@ -4,6 +4,7 @@ mod chonsole;
 mod command_system;
 pub mod commands_api;
 pub(crate) mod compile;
+mod dev;
 mod devconsole;
 pub(crate) mod grass;
 pub(crate) mod heightmap;

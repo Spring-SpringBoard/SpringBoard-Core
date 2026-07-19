@@ -5,6 +5,7 @@ mod model;
 mod selection;
 pub(crate) mod states;
 mod tests;
+pub(crate) mod thumbnails;
 mod ui;
 
 pub(crate) use commands::{AddObjectCommand, RemoveObjectCommand, SetObjectParamCommand};

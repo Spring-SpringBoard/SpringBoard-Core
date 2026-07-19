@@ -2,6 +2,7 @@ pub(crate) mod commands;
 pub(crate) mod io_registries;
 pub(crate) mod jobs;
 pub(crate) mod model;
+pub(crate) mod new_project_dialog;
 pub(crate) mod ops;
 pub(crate) mod paths;
 mod tests;

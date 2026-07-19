@@ -1,10 +1,9 @@
 mod action_dispatcher;
-mod asset_picker;
+pub(crate) mod asset_picker;
 pub(crate) mod brush;
 mod brush_sync;
 mod color_picker;
 mod cursortip;
-mod dev_gallery;
 mod drag_cursor;
 mod editor;
 pub(crate) mod editor_base;
@@ -17,10 +16,8 @@ pub(crate) mod grid;
 mod input;
 mod manager;
 mod modal_stack;
-mod new_project_dialog;
 pub(crate) mod registry;
 pub(crate) mod runtime;
-pub(crate) mod thumbnails;
 mod view;
 
 pub(crate) use manager::PanelManager;
