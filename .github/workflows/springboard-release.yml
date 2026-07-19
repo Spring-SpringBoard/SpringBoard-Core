@@ -142,15 +142,29 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install LLVM 18 on Windows
+        if: matrix.platform == 'win32'
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0
+        with:
+          version: "18.1.8"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Locate libclang on Windows
+        if: matrix.platform == 'win32'
+        shell: pwsh
+        run: |
+          "LIBCLANG_PATH=$env:LLVM_PATH\bin" >> $env:GITHUB_ENV
+
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.13"
 
-      - name: Install 7-Zip
+      - name: Install Linux packaging dependencies
         if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install --yes p7zip-full
+          sudo apt-get install --yes libclang-18-dev p7zip-full
+          echo "LIBCLANG_PATH=/usr/lib/llvm-18/lib" >> "$GITHUB_ENV"
 
       - name: Check out matching engine bindings
         shell: bash
