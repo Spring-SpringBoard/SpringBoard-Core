@@ -1,0 +1,282 @@
+from __future__ import annotations
+
+import subprocess
+import sys
+import time
+from contextlib import contextmanager
+
+from process import run
+from run_env import MODIFIER_NAMES, MODIFIERS, SETTLE, nap
+
+
+class InputMixin:
+    """Synthesised keyboard and mouse input, plus the X clipboard.
+
+    Everything here drives the engine window through `xdotool`. The recurring
+    subtlety is that `xdotool --window` delivers an event with the modifier
+    state cleared, so any chord (Ctrl-drag, Shift-wheel) has to go through the
+    focused root window instead; the affected methods say so where it matters.
+    """
+
+    def focus(self) -> None:
+        self.require_window()
+        run("xdotool", "windowactivate", self.window, "windowfocus", self.window)
+        time.sleep(0.08)
+        self.release_modifiers()
+        self.event("focus", window=self.window)
+
+    def release_modifiers(self) -> None:
+        self.require_window()
+        args = ["xdotool"]
+        for modifier in MODIFIERS:
+            args += ["keyup", "--window", self.window, modifier]
+        run(*args, check=False)
+        time.sleep(0.03)
+
+    def key(self, name: str, delay: float = 0.06) -> None:
+        self.require_window()
+        self.event("key", key=name)
+        if "+" in name:
+            # `xdotool key --window <win> ctrl+c` delivers the `c` press with the
+            # modifier already cleared, so the engine reports ctrl=false. Send the
+            # chord to the focused window instead, holding the modifiers down.
+            self.focus()
+            *modifiers, base = name.split("+")
+            for modifier in modifiers:
+                run("xdotool", "keydown", modifier)
+            run("xdotool", "key", base)
+            for modifier in reversed(modifiers):
+                run("xdotool", "keyup", modifier)
+        else:
+            run("xdotool", "key", "--window", self.window, name)
+        nap(delay)
+
+    @contextmanager
+    def modifier(self, name: str):
+        """Hold a modifier down across other input, for a chord like Ctrl-drag.
+
+        Sent to the focused window rather than with `--window`: as with `key`,
+        `xdotool --window` delivers the event with the modifier already cleared,
+        and the engine then reports the modifier as up.
+        """
+        self.focus()
+        self.event("modifier_down", modifier=name)
+        run("xdotool", "keydown", name)
+        try:
+            yield
+        finally:
+            run("xdotool", "keyup", name)
+            self.event("modifier_up", modifier=name)
+
+    def key_chord(self, modifiers: tuple[str, ...], name: str, delay: float = 0.08) -> None:
+        self.require_window()
+        normalized = tuple(MODIFIER_NAMES.get(mod, mod) for mod in modifiers)
+        chord = "+".join((*normalized, name))
+        self.event("key_chord", chord=chord)
+        run("xdotool", "key", "--window", self.window, chord)
+        nap(delay)
+
+    def type_text(self, text: str, delay_ms: int = 10) -> None:
+        self.require_window()
+        self.event("type", text=text)
+        for index, fragment in enumerate(text.split("/")):
+            if fragment:
+                run(
+                    "xdotool",
+                    "type",
+                    "--window",
+                    self.window,
+                    "--delay",
+                    str(delay_ms),
+                    "--",
+                    fragment,
+                )
+            if index < text.count("/"):
+                # Spring consumes physical scancodes while xdotool resolves a
+                # keysym through the active X layout; keycode 61 is slash in
+                # the engine's fixed layout even when that layout maps it to &.
+                run("xdotool", "key", "--window", self.window, "keycode", "61")
+        time.sleep(0.06)
+
+    def click(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
+        self.require_window()
+        self.event("click", x=x, y=y, button=button)
+        run(
+            "xdotool",
+            "mousemove",
+            "--window",
+            self.window,
+            str(x),
+            str(y),
+            "click",
+            str(button),
+        )
+        nap(delay)
+
+    def move(self, x: int, y: int, delay: float = 0.08) -> None:
+        self.require_window()
+        self.event("move", x=x, y=y)
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        nap(delay)
+
+    def move_relative(self, dx: int, dy: int = 0, steps: int = 6, delay: float = 0.06) -> None:
+        """Move the mouse *by* an offset, the way a real mouse reports motion.
+
+        A field drag pins the pointer and warps it back after every move, so what
+        it consumes is relative motion. Absolute `mousemove` fights that: the
+        pointer is put back on its anchor and the next absolute move re-applies
+        the whole offset from it.
+        """
+        self.require_window()
+        self.event("move_relative", dx=dx, dy=dy, steps=steps)
+        for _ in range(steps):
+            run(
+                "xdotool",
+                "mousemove_relative",
+                "--sync",
+                "--",
+                str(round(dx / steps)),
+                str(round(dy / steps)),
+            )
+            nap(delay)
+
+    def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
+        """Scroll the wheel over a point. Over the map this zooms the camera,
+        which is the only way to get close enough to *see* what a scenario placed
+        -- the default camera is so far out that a feature is a few pixels.
+        """
+        self.require_window()
+        self.event("wheel", x=x, y=y, clicks=clicks, up=up)
+        button = "4" if up else "5"
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        for _ in range(clicks):
+            run("xdotool", "click", "--window", self.window, button)
+            nap(0.05)
+        nap(delay)
+
+    def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
+        """Scroll the wheel with the real pointer, so a held modifier applies.
+
+        `xdotool click --window` synthesises the event with the modifier state
+        cleared -- the engine then reports shift as up -- so a Shift+wheel chord
+        has to go through the root window, as `key` does for the same reason.
+        """
+        self.event("wheel_root", x=x, y=y, clicks=clicks, up=up)
+        button = "4" if up else "5"
+        run("xdotool", "mousemove", str(x), str(y))
+        for _ in range(clicks):
+            run("xdotool", "click", button)
+            nap(0.05)
+        nap(delay)
+
+    def click_root(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
+        self.event("click_root", x=x, y=y, button=button)
+        run("xdotool", "mousemove", str(x), str(y), "click", str(button))
+        nap(delay)
+
+    def drag_root(
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        button: int = 1,
+        steps: int = 12,
+        step_delay: float = 0.03,
+    ) -> None:
+        # Root-coordinate drag for modal dialogs, stepped like drag().
+        self.event("drag_root", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
+        run("xdotool", "mousemove", str(x1), str(y1))
+        time.sleep(SETTLE)  # see drag()
+        run("xdotool", "mousedown", str(button))
+        nap(step_delay)
+        for i in range(1, steps + 1):
+            xi = round(x1 + (x2 - x1) * i / steps)
+            yi = round(y1 + (y2 - y1) * i / steps)
+            run("xdotool", "mousemove", str(xi), str(yi))
+            nap(step_delay)
+        run("xdotool", "mouseup", str(button))
+        time.sleep(0.12)
+
+    def press(self, x: int, y: int, button: int = 1, delay: float = 0.15) -> None:
+        """Hold the button down. Pair with `move` + `release` when the scenario
+        has to capture something that only exists *during* the drag, like the
+        selection rectangle."""
+        self.require_window()
+        self.event("press", x=x, y=y, button=button)
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        time.sleep(SETTLE)  # the move must land before the press; see drag()
+        run("xdotool", "mousedown", str(button))
+        nap(delay)
+
+    def release(self, x: int, y: int, button: int = 1, delay: float = 0.3) -> None:
+        self.require_window()
+        self.event("release", x=x, y=y, button=button)
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        run("xdotool", "mouseup", str(button))
+        nap(delay)
+
+    def drag(
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        button: int = 1,
+        steps: int = 12,
+        step_delay: float = 0.03,
+    ) -> None:
+        # Move in increments rather than one jump: widgets that track drags
+        # per mouse-move (or per frame) never see an instantaneous warp, so a
+        # single-step drag reads as a plain click.
+        self.require_window()
+        self.event("drag", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
+        run("xdotool", "mousemove", "--window", self.window, str(x1), str(y1))
+        # Let the move land before the press. The editor traces the ground from
+        # where it last saw the pointer, so a press that overtakes its own move
+        # traces from the *previous* spot -- off the map, if that was a parked
+        # screenshot -- and the brush refuses to paint.
+        time.sleep(SETTLE)
+        run("xdotool", "mousedown", str(button))
+        nap(step_delay)
+        for i in range(1, steps + 1):
+            xi = round(x1 + (x2 - x1) * i / steps)
+            yi = round(y1 + (y2 - y1) * i / steps)
+            run("xdotool", "mousemove", "--window", self.window, str(xi), str(yi))
+            nap(step_delay)
+        run("xdotool", "mouseup", str(button))
+        time.sleep(0.12)
+
+    def set_clipboard(self, text: str) -> None:
+        """Put text on the clipboard, so a copy assertion cannot pass on what a
+        previous run left there."""
+        self.event("set_clipboard", text=text)
+        subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import sys,tkinter;r=tkinter.Tk();r.withdraw();r.clipboard_clear();"
+                "r.clipboard_append(sys.argv[1]);r.update();r.after(200,r.destroy);"
+                "r.mainloop()",
+                text,
+            ],
+            check=False,
+        )
+
+    def clipboard(self) -> str:
+        """The X clipboard's text. No xclip/xsel here, so Tk reads it."""
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import tkinter;r=tkinter.Tk();r.withdraw();"
+                "print(r.clipboard_get(), end='')",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return ""
+        self.event("clipboard", length=len(result.stdout))
+        return result.stdout

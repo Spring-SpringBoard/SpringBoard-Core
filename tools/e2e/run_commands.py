@@ -1,0 +1,215 @@
+from __future__ import annotations
+
+import json
+
+from run_env import command_fields
+
+
+class CommandLogMixin:
+    """Reading the run's logs and asserting on what the UI actually did.
+
+    Two sources: `commands.jsonl`, the envelopes the UI sent to the command
+    bridge, and the engine's `infolog.txt`, where the plugin narrates behaviour
+    that never reaches the bridge. The assertions distinguish committed commands
+    from previews -- a live drag emits a stream of previews that never enter the
+    undo history -- because a scenario almost always means the committed one.
+    """
+
+    def engine_log(self) -> list[str]:
+        """The engine's infolog for this run, a line at a time.
+
+        The plugin logs what it did (a gallery control reporting its value, a
+        state reporting its angle), so a scenario can assert on behaviour that
+        never reaches the command bridge.
+        """
+        assert self.write_dir is not None
+        path = self.write_dir / "infolog.txt"
+        if not path.is_file():
+            return []
+        return path.read_text(errors="replace").splitlines()
+
+    def commands(self) -> list[dict]:
+        """Every command envelope the UI sent to the command bridge.
+
+        A `CompoundCommand` is unwrapped into the commands it carries, and kept
+        as well. The Lua UI groups a placement into one compound for undo while
+        the native UI sends the command on its own, and a scenario should be able
+        to assert the same thing of both.
+        """
+        assert self.write_dir is not None
+        path = self.write_dir / "commands.jsonl"
+        if not path.is_file():
+            return []
+        entries = []
+        for line in path.read_text().splitlines():
+            _stamp, _, payload = line.partition(" ")
+            if not payload:
+                continue
+            entry = json.loads(payload)
+            entries.append(entry)
+            data = entry.get("data", {})
+            if data.get("className") == "CompoundCommand":
+                for inner in data.get("commands", []):
+                    entries.append({**entry, "data": inner})
+        return entries
+
+    def assert_command(self, class_name: str, **expected: object) -> dict:
+        """Assert exactly one committed command of `class_name` carrying every
+        key in `expected` was sent, and that those values match.
+
+        A value may be a callable predicate, for things like a colour that is
+        "red enough" rather than an exact float. Matching on the keys as well as
+        the class lets one editor emit several commands of the same class.
+
+        Previews (`__preview`) are excluded: they apply to the engine but never
+        reach the undo history, and a drag emits a stream of them. Use
+        `assert_previews` for those.
+        """
+        committed = [
+            entry["data"]
+            for entry in self.commands()
+            if not entry.get("data", {}).get("__preview")
+        ]
+        matches = [
+            data
+            for data in committed
+            if data.get("className") == class_name
+            and all(
+                key in command_fields(data)
+                and (
+                    want(command_fields(data)[key])
+                    if callable(want)
+                    else command_fields(data)[key] == want
+                )
+                for key, want in expected.items()
+            )
+        ] or [
+            data
+            for data in committed
+            if data.get("className") == class_name and not expected
+        ]
+        if len(matches) != 1:
+            sent = [
+                (e["data"].get("className"), sorted(command_fields(e["data"])))
+                for e in self.commands()
+            ]
+            raise AssertionError(
+                f"expected exactly one {class_name} with keys {sorted(expected)}, "
+                f"got {len(matches)}. Sent: {sent}"
+            )
+        data = matches[0]
+        self.event("assert_command", className=class_name, keys=sorted(expected))
+        return data
+
+    def assert_no_command_after(self, marker: dict, class_name: str, **expected: object) -> None:
+        """Assert nothing more of this kind was sent after `marker`.
+
+        For proving something *stopped*: a drag that was released must not keep
+        emitting as the mouse moves on.
+        """
+        seen_marker = False
+        for entry in self.commands():
+            data = entry.get("data", {})
+            if data is marker or data.get("__cmd_id") == marker.get("__cmd_id"):
+                seen_marker = True
+                continue
+            if not seen_marker or data.get("className") != class_name:
+                continue
+            fields = command_fields(data)
+            if all(fields.get(key) == want for key, want in expected.items() if not callable(want)):
+                raise AssertionError(
+                    f"{class_name} was still being sent after the drag ended: {fields}"
+                )
+
+    def assert_command_count(self, class_name: str, count: int) -> None:
+        """Assert exactly `count` committed commands of this class were sent.
+
+        For things whose whole point is *how many*: placing with an amount of 5
+        must emit five adds, not one.
+        """
+        sent = [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("className") == class_name
+            and not entry.get("data", {}).get("__preview")
+        ]
+        if len(sent) != count:
+            raise AssertionError(
+                f"expected {count} committed {class_name}, got {len(sent)}"
+            )
+        self.event("assert_command_count", className=class_name, count=count)
+
+    def assert_command_at_least(self, class_name: str, count: int) -> int:
+        """Assert at least `count` committed commands of this class were sent.
+
+        A held brush stroke is a stream of dabs, not one: how many depends on how
+        long the button was down, so the floor is what can be asserted.
+        """
+        sent = [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("className") == class_name
+            and not entry.get("data", {}).get("__preview")
+        ]
+        if len(sent) < count:
+            raise AssertionError(
+                f"expected at least {count} committed {class_name}, got {len(sent)}"
+            )
+        self.event("assert_command_at_least", className=class_name, count=len(sent))
+        return len(sent)
+
+    def assert_any_command(self, class_name: str, **expected: object) -> dict:
+        """Assert at least one committed command matched `expected`.
+
+        Brush scenarios often exercise several modes of the same command class;
+        this keeps the assertion about the specific mode/property rather than
+        requiring the scenario to isolate every click in a fresh process.
+        """
+        for entry in self.commands():
+            data = entry.get("data", {})
+            if data.get("__preview") or data.get("className") != class_name:
+                continue
+            opts = command_fields(data)
+            if all(key in opts for key in expected) and all(
+                want(opts.get(key)) if callable(want) else opts.get(key) == want
+                for key, want in expected.items()
+            ):
+                self.event("assert_any_command", className=class_name, keys=sorted(expected))
+                return data
+        sent = [
+            (e["data"].get("className"), sorted(command_fields(e["data"])))
+            for e in self.commands()
+            if e.get("data", {}).get("className") == class_name
+        ]
+        raise AssertionError(
+            f"expected at least one {class_name} matching {expected}, got {sent}"
+        )
+
+    def assert_previews(self, class_name: str, **expected: object) -> int:
+        """Assert at least one *preview* of `class_name` matched `expected`.
+
+        A live drag emits one per frame, so the count is timing-dependent; that
+        any arrived, carrying the right value, is the deterministic part.
+        """
+        matches = [
+            entry["data"]
+            for entry in self.commands()
+            if entry.get("data", {}).get("__preview")
+            and entry["data"].get("className") == class_name
+            and all(key in entry["data"].get("opts", {}) for key in expected)
+        ]
+        good = []
+        for data in matches:
+            opts = data.get("opts", data)
+            if all(
+                want(opts.get(key)) if callable(want) else opts.get(key) == want
+                for key, want in expected.items()
+            ):
+                good.append(data)
+        if not good:
+            raise AssertionError(
+                f"expected at least one {class_name} preview matching "
+                f"{sorted(expected)}, got {len(matches)} previews of that class"
+            )
+        self.event("assert_previews", className=class_name, count=len(good))
+        return len(good)

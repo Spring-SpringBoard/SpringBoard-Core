@@ -28,6 +28,10 @@ receives small, reviewable domain slices rather than architectural cleanup.
   moved to `textures/materials.rs`, reading the VFS directly. The VFS listing
   helpers moved out of the grid to a neutral `sbc/vfs.rs`, so the domain no
   longer depends on UI code.
+- The `E2ERun` monolith is split by concern into mixins (`run_session`,
+  `run_input`, `run_capture`, `run_pixels`, `run_commands`, `run_report`), each
+  under ~300 lines; `runner.py` is now just the composition and instance state.
+  Scenarios still `from runner import E2ERun` and call the same methods.
 
 ## Remaining
 
@@ -45,12 +49,6 @@ project-IO/workspace module (`io_registries`, `paths` exist but still sit inside
 `project/`). Scenario metadata, archive export, reload, map info, and the
 project editor stay in `project/`. This is TODO #16; it stops each saving
 feature depending on the whole Project feature.
-
-### Split the E2ERun monolith
-
-`tools/e2e/runner.py` (~1150 lines) into engine-session lifecycle, input,
-assertions + command-log reading, screenshots/artifacts, and reporting. Semantic
-UI coordinates already live in `scenarios/geometry.py`.
 
 ### Finish the panels/ toolkit
 
