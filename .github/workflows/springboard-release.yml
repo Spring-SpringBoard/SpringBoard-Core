@@ -128,7 +128,7 @@ jobs:
             engine_platform: amd64-linux
             native_plugin: librust_plugin.so
             application_suffix: tar.gz
-          - runner: windows-2025
+          - runner: windows-2022
             platform: win32
             target: windows-x86_64
             engine_platform: amd64-windows
