@@ -33,20 +33,6 @@ pub(crate) enum WaterField {
 
 use WaterField::*;
 
-fn num(name: &'static str, title: &'static str) -> Box<NumericField> {
-    Box::new(NumericField::new(name, title, 0.0).decimals(2))
-}
-
-/// Water textures live under the engine VFS's `bitmaps/`, as in
-/// `water_editor.lua` — that is engine content, not an asset pack, so the
-/// picker browses the VFS directly.
-fn tex(name: &'static str, title: &'static str) -> Box<AssetField> {
-    Box::new(
-        AssetField::new(name, title, "vfs:bitmaps")
-            .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
-    )
-}
-
 /// Every field here is a key of `SetWaterParamsCommand`'s options, so the
 /// dispatch is uniform: send the one field that changed.
 ///
@@ -103,4 +89,18 @@ pub(crate) fn water_model() -> TableModel<WaterField> {
         entry(FoamTexture, tex("foamTexture", "Foam texture")),
         entry(Texture, tex("texture", "Texture")),
     ])
+}
+
+fn num(name: &'static str, title: &'static str) -> Box<NumericField> {
+    Box::new(NumericField::new(name, title, 0.0).decimals(2))
+}
+
+/// Water textures live under the engine VFS's `bitmaps/`, as in
+/// `water_editor.lua` — that is engine content, not an asset pack, so the
+/// picker browses the VFS directly.
+fn tex(name: &'static str, title: &'static str) -> Box<AssetField> {
+    Box::new(
+        AssetField::new(name, title, "vfs:bitmaps")
+            .extensions(&[".png", ".jpg", ".tga", ".dds", ".bmp"]),
+    )
 }

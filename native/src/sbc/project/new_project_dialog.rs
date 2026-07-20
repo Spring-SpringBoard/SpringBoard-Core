@@ -68,51 +68,6 @@ impl Default for NewProjectDialog {
 }
 
 impl NewProjectDialog {
-    fn markup_rml(&self) -> String {
-        let fields = self.form.markup();
-        format!(
-            concat!(
-                r#"<div id="new-project" class="picker-backdrop hidden">"#,
-                r#"<div class="dialog picker-dialog">"#,
-                r#"<div class="dialog-header"><span class="dialog-title">New project</span></div>"#,
-                r#"<div class="dialog-content">{fields}</div>"#,
-                r#"<div class="dialog-footer">"#,
-                r#"<button id="np-ok" class="dialog-button primary">Create</button>"#,
-                r#"<button id="np-cancel" class="dialog-button">Cancel</button>"#,
-                r#"</div></div></div>"#,
-            ),
-            fields = fields,
-        )
-    }
-
-    fn bind_listeners(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        changes: &ChangeQueue,
-        interactions: &InteractionQueue,
-    ) -> Result<(), Error> {
-        if self.bound {
-            return Ok(());
-        }
-        let rml = interface.rml_ui();
-        for (id, event) in [
-            ("np-ok", PickerEvent::Accept),
-            ("np-cancel", PickerEvent::Cancel),
-        ] {
-            let Some(e) = element_by_id(interface, document, id) else {
-                continue;
-            };
-            let q = self.events.clone();
-            rml.element_add_event_listener(e, "click", false, move || {
-                q.borrow_mut().push(event);
-            })?;
-        }
-        self.form.bind(interface, document, changes, interactions)?;
-        self.bound = true;
-        Ok(())
-    }
-
     pub(crate) fn open(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -208,6 +163,51 @@ impl NewProjectDialog {
             }
         }
         Ok(None)
+    }
+
+    fn markup_rml(&self) -> String {
+        let fields = self.form.markup();
+        format!(
+            concat!(
+                r#"<div id="new-project" class="picker-backdrop hidden">"#,
+                r#"<div class="dialog picker-dialog">"#,
+                r#"<div class="dialog-header"><span class="dialog-title">New project</span></div>"#,
+                r#"<div class="dialog-content">{fields}</div>"#,
+                r#"<div class="dialog-footer">"#,
+                r#"<button id="np-ok" class="dialog-button primary">Create</button>"#,
+                r#"<button id="np-cancel" class="dialog-button">Cancel</button>"#,
+                r#"</div></div></div>"#,
+            ),
+            fields = fields,
+        )
+    }
+
+    fn bind_listeners(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        changes: &ChangeQueue,
+        interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
+        if self.bound {
+            return Ok(());
+        }
+        let rml = interface.rml_ui();
+        for (id, event) in [
+            ("np-ok", PickerEvent::Accept),
+            ("np-cancel", PickerEvent::Cancel),
+        ] {
+            let Some(e) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let q = self.events.clone();
+            rml.element_add_event_listener(e, "click", false, move || {
+                q.borrow_mut().push(event);
+            })?;
+        }
+        self.form.bind(interface, document, changes, interactions)?;
+        self.bound = true;
+        Ok(())
     }
 
     fn set_visible(

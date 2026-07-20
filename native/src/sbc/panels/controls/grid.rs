@@ -409,6 +409,18 @@ pub(crate) fn list_entries_with_dirs(
     list_entries(interface, dir, extensions, true)
 }
 
+/// The parent of a VFS directory, or None at the root.
+pub(crate) fn parent_dir(dir: &str) -> Option<String> {
+    let trimmed = dir.trim_end_matches('/');
+    if trimmed.is_empty() {
+        return None;
+    }
+    match trimmed.rsplit_once('/') {
+        Some((parent, _)) => Some(parent.to_string()),
+        None => Some(String::new()),
+    }
+}
+
 fn list_entries(
     interface: &NativeInterfaceRef,
     dir: &str,
@@ -480,18 +492,6 @@ fn list_entries(
     files.sort_by(|a, b| a.caption.cmp(&b.caption));
     dirs.extend(files);
     dirs
-}
-
-/// The parent of a VFS directory, or None at the root.
-pub(crate) fn parent_dir(dir: &str) -> Option<String> {
-    let trimmed = dir.trim_end_matches('/');
-    if trimmed.is_empty() {
-        return None;
-    }
-    match trimmed.rsplit_once('/') {
-        Some((parent, _)) => Some(parent.to_string()),
-        None => Some(String::new()),
-    }
 }
 
 fn default_asset_root(root_dir: &str) -> String {

@@ -12,15 +12,6 @@ use super::model::{
     enabled_name, material_tooltip, toggle_channels, TexField, TextureUiModel, ADD_BRUSH_ID,
 };
 
-fn section_markup(id: &str, caption: &str) -> String {
-    let plain = section_rml(caption);
-    plain.replacen(
-        r#"<div class="field-section">"#,
-        &format!(r#"<div id="{}" class="field-section">"#, escape_rml(id)),
-        1,
-    )
-}
-
 pub(super) fn material_dialog_markup(material_grid: &GridView) -> String {
     format!(
         concat!(
@@ -63,6 +54,15 @@ pub(super) fn layout(model: &TextureUiModel) -> Vec<Item<TexField>> {
         Item::IdField(DntsIndex),
         Item::IdField(Exclusive),
     ]
+}
+
+fn section_markup(id: &str, caption: &str) -> String {
+    let plain = section_rml(caption);
+    plain.replacen(
+        r#"<div class="field-section">"#,
+        &format!(r#"<div id="{}" class="field-section">"#, escape_rml(id)),
+        1,
+    )
 }
 
 impl TextureUiModel {

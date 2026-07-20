@@ -59,53 +59,6 @@ impl AssetPicker {
         self.field.as_deref()
     }
 
-    fn markup_rml(&self) -> String {
-        format!(
-            concat!(
-                r#"<div id="asset-picker" class="picker-backdrop hidden">"#,
-                r#"<div class="dialog picker-dialog asset-dialog">"#,
-                r#"<div class="dialog-header"><span class="dialog-title">Pick Asset</span></div>"#,
-                r#"<div class="dialog-content">"#,
-                r#"<div class="asset-path-nav">"#,
-                r#"<button id="asset-up" class="dialog-button">Up</button>"#,
-                r#"<span id="asset-path" class="asset-path"></span></div>"#,
-                r#"{grid}"#,
-                r#"</div>"#,
-                r#"<div class="dialog-footer">"#,
-                r#"<button id="asset-ok" class="dialog-button primary">OK</button>"#,
-                r#"<button id="asset-cancel" class="dialog-button">Cancel</button>"#,
-                r#"</div></div></div>"#,
-            ),
-            grid = self.grid.container_rml(),
-        )
-    }
-
-    fn bind_listeners(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
-        if self.bound {
-            return Ok(());
-        }
-        let rml = interface.rml_ui();
-        for (id, event) in [
-            ("asset-ok", PickerEvent::Accept),
-            ("asset-cancel", PickerEvent::Cancel),
-            ("asset-up", PickerEvent::Up),
-        ] {
-            let Some(e) = element_by_id(interface, document, id) else {
-                continue;
-            };
-            let q = self.events.clone();
-            rml.element_add_event_listener(e, "click", false, move || {
-                q.borrow_mut().push(event);
-            })?;
-        }
-        self.bound = true;
-        Ok(())
-    }
-
     pub(crate) fn open(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -191,6 +144,53 @@ impl AssetPicker {
             }
         }
         Ok(None)
+    }
+
+    fn markup_rml(&self) -> String {
+        format!(
+            concat!(
+                r#"<div id="asset-picker" class="picker-backdrop hidden">"#,
+                r#"<div class="dialog picker-dialog asset-dialog">"#,
+                r#"<div class="dialog-header"><span class="dialog-title">Pick Asset</span></div>"#,
+                r#"<div class="dialog-content">"#,
+                r#"<div class="asset-path-nav">"#,
+                r#"<button id="asset-up" class="dialog-button">Up</button>"#,
+                r#"<span id="asset-path" class="asset-path"></span></div>"#,
+                r#"{grid}"#,
+                r#"</div>"#,
+                r#"<div class="dialog-footer">"#,
+                r#"<button id="asset-ok" class="dialog-button primary">OK</button>"#,
+                r#"<button id="asset-cancel" class="dialog-button">Cancel</button>"#,
+                r#"</div></div></div>"#,
+            ),
+            grid = self.grid.container_rml(),
+        )
+    }
+
+    fn bind_listeners(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        if self.bound {
+            return Ok(());
+        }
+        let rml = interface.rml_ui();
+        for (id, event) in [
+            ("asset-ok", PickerEvent::Accept),
+            ("asset-cancel", PickerEvent::Cancel),
+            ("asset-up", PickerEvent::Up),
+        ] {
+            let Some(e) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let q = self.events.clone();
+            rml.element_add_event_listener(e, "click", false, move || {
+                q.borrow_mut().push(event);
+            })?;
+        }
+        self.bound = true;
+        Ok(())
     }
 
     fn set_visible(

@@ -43,6 +43,10 @@ impl Position {
         })
     }
 
+    pub(super) fn json(self) -> serde_json::Value {
+        serde_json::json!({ "x": self.x, "y": self.y, "z": self.z })
+    }
+
     fn from_fields(model: &PropertiesModel, field: &str) -> Self {
         Self {
             x: model.number(&component_name(field, "x")),
@@ -66,10 +70,6 @@ impl Position {
             z: self.z - other.z,
         }
     }
-
-    pub(super) fn json(self) -> serde_json::Value {
-        serde_json::json!({ "x": self.x, "y": self.y, "z": self.z })
-    }
 }
 
 #[derive(Clone)]
@@ -84,13 +84,26 @@ pub(super) fn is_angle(field: &str) -> bool {
     field == "rot"
 }
 
+pub(super) fn sub_parts(name: &str) -> Option<(&str, &str)> {
+    name.split_once('.')
+}
+
+pub(super) fn number_f(value: &serde_json::Value) -> f32 {
+    value.as_f64().unwrap_or(0.0) as f32
+}
+
+pub(super) fn component_name(field: &str, axis: &str) -> String {
+    format!("{field}_{axis}")
+}
+
+pub(super) fn component(name: &str) -> Option<(&str, &str)> {
+    let (field, axis) = name.rsplit_once('_')?;
+    matches!(axis, "x" | "y" | "z").then_some((field, axis))
+}
+
 /// A sub-object's field, named `parent.key` (Lua's `name .. tkey`).
 fn sub_name(parent: &str, key: &str) -> String {
     format!("{parent}.{key}")
-}
-
-pub(super) fn sub_parts(name: &str) -> Option<(&str, &str)> {
-    name.split_once('.')
 }
 
 /// Lua sends only the changed key for these, rather than the whole table: the
@@ -143,24 +156,9 @@ impl PropertiesModel {
         }
     }
 
-    fn value(&self, name: &str) -> FieldValue {
-        self.fields
-            .iter()
-            .find(|field| field.name() == name)
-            .map(|field| field.value())
-            .unwrap_or(FieldValue::Text(String::new()))
-    }
-
     pub(super) fn set(&mut self, name: &str, value: FieldValue) {
         if let Some(field) = self.fields.iter_mut().find(|field| field.name() == name) {
             field.set_value(&value);
-        }
-    }
-
-    fn number(&self, name: &str) -> f32 {
-        match self.value(name) {
-            FieldValue::Number(n) => n,
-            _ => 0.0,
         }
     }
 
@@ -370,6 +368,55 @@ impl PropertiesModel {
             .collect()
     }
 
+    pub(super) fn set_json_field(&mut self, name: &str, value: &serde_json::Value) {
+        // The team choice shows names, so the stored id has to be mapped back.
+        if name == "team" {
+            if let Some(team) = value.as_i64().and_then(|id| self.team_name(id as i32)) {
+                self.set(name, FieldValue::Text(team));
+            }
+            return;
+        }
+        if let Some(value) = value.as_bool() {
+            self.set(name, FieldValue::Bool(value));
+        } else if let Some(value) = value.as_str() {
+            self.set(name, FieldValue::Text(value.to_string()));
+        } else if value.is_number() {
+            self.set(name, number(value));
+        }
+    }
+
+    /// The reverse of `sub_value`: put a sub-object key into its field.
+    pub(super) fn set_sub_field(&mut self, name: &str, key: &str, value: &serde_json::Value) {
+        let captions = match key {
+            "fireState" => Some(FIRE_STATES),
+            "moveState" => Some(MOVE_STATES),
+            _ => None,
+        };
+        if let Some(captions) = captions {
+            let index = value.as_i64().unwrap_or(0) as usize;
+            if let Some(caption) = captions.get(index) {
+                self.set(name, FieldValue::Text((*caption).to_string()));
+            }
+            return;
+        }
+        self.set_json_field(name, value);
+    }
+
+    fn value(&self, name: &str) -> FieldValue {
+        self.fields
+            .iter()
+            .find(|field| field.name() == name)
+            .map(|field| field.value())
+            .unwrap_or(FieldValue::Text(String::new()))
+    }
+
+    fn number(&self, name: &str) -> f32 {
+        match self.value(name) {
+            FieldValue::Number(n) => n,
+            _ => 0.0,
+        }
+    }
+
     fn sub_fields_of(&self, parent: &str) -> Vec<String> {
         self.layout
             .iter()
@@ -413,40 +460,6 @@ impl PropertiesModel {
             .find(|(team_id, _)| *team_id == id)
             .map(|(_, name)| name.clone())
     }
-
-    pub(super) fn set_json_field(&mut self, name: &str, value: &serde_json::Value) {
-        // The team choice shows names, so the stored id has to be mapped back.
-        if name == "team" {
-            if let Some(team) = value.as_i64().and_then(|id| self.team_name(id as i32)) {
-                self.set(name, FieldValue::Text(team));
-            }
-            return;
-        }
-        if let Some(value) = value.as_bool() {
-            self.set(name, FieldValue::Bool(value));
-        } else if let Some(value) = value.as_str() {
-            self.set(name, FieldValue::Text(value.to_string()));
-        } else if value.is_number() {
-            self.set(name, number(value));
-        }
-    }
-
-    /// The reverse of `sub_value`: put a sub-object key into its field.
-    pub(super) fn set_sub_field(&mut self, name: &str, key: &str, value: &serde_json::Value) {
-        let captions = match key {
-            "fireState" => Some(FIRE_STATES),
-            "moveState" => Some(MOVE_STATES),
-            _ => None,
-        };
-        if let Some(captions) = captions {
-            let index = value.as_i64().unwrap_or(0) as usize;
-            if let Some(caption) = captions.get(index) {
-                self.set(name, FieldValue::Text((*caption).to_string()));
-            }
-            return;
-        }
-        self.set_json_field(name, value);
-    }
 }
 
 impl EditorModel for PropertiesModel {
@@ -486,10 +499,6 @@ impl EditorModel for PropertiesModel {
 
 fn number(value: &serde_json::Value) -> FieldValue {
     FieldValue::Number(number_f(value))
-}
-
-pub(super) fn number_f(value: &serde_json::Value) -> f32 {
-    value.as_f64().unwrap_or(0.0) as f32
 }
 
 fn index_of(captions: &[&str], value: &str) -> i32 {
@@ -550,15 +559,6 @@ fn sub_field(name: &str, key: &str, value: &serde_json::Value) -> Option<Box<dyn
         return Some(Box::new(StringField::new(name, &label, "")));
     }
     None
-}
-
-pub(super) fn component_name(field: &str, axis: &str) -> String {
-    format!("{field}_{axis}")
-}
-
-pub(super) fn component(name: &str) -> Option<(&str, &str)> {
-    let (field, axis) = name.rsplit_once('_')?;
-    matches!(axis, "x" | "y" | "z").then_some((field, axis))
 }
 
 fn title(name: &str) -> String {

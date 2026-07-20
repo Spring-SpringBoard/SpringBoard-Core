@@ -92,77 +92,6 @@ impl ColorPicker {
         self.previewing
     }
 
-    fn markup_rml() -> String {
-        format!(
-            concat!(
-                r#"<div id="color-picker" class="picker-backdrop hidden">"#,
-                r#"<div id="picker-dialog" class="picker-dialog">"#,
-                r#"<div class="dialog-header"><span class="dialog-title">Pick Color</span></div>"#,
-                r#"<div class="dialog-content"><div class="color-picker-main">"#,
-                r#"<div id="color-map" class="color-map">"#,
-                r#"<img class="color-map-white" src="{white}"/>"#,
-                r#"<img class="color-map-black" src="{black}"/>"#,
-                r#"<div id="color-map-cursor" class="color-map-cursor"></div></div>"#,
-                r#"<div id="hue-map" class="hue-map">"#,
-                r#"<img src="{hue}"/><div id="hue-cursor" class="hue-cursor"></div></div>"#,
-                r#"<div class="color-side"><div class="color-preview" id="color-preview"></div></div>"#,
-                r#"</div></div>"#,
-                r#"<div class="dialog-footer">"#,
-                r#"<button id="picker-ok" class="dialog-button primary">OK</button>"#,
-                r#"<button id="picker-cancel" class="dialog-button">Cancel</button>"#,
-                r#"</div></div></div>"#,
-            ),
-            white = IMG_SV_WHITE,
-            black = IMG_SV_BLACK,
-            hue = IMG_HUE,
-        )
-    }
-
-    /// Bind the picker's listeners once; the markup is created with the shell.
-    fn bind_listeners(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
-        if self.bound {
-            return Ok(());
-        }
-        let rml = interface.rml_ui();
-
-        for (id, grab) in [("color-map", Grab::Sv), ("hue-map", Grab::Hue)] {
-            let Some(e) = element_by_id(interface, document, id) else {
-                continue;
-            };
-            let q = self.grab_queue.clone();
-            rml.element_add_event_listener(e, "mousedown", false, move || {
-                q.borrow_mut().push(grab);
-            })?;
-        }
-
-        if let Some(e) = element_by_id(interface, document, "color-picker") {
-            let q = self.grab_queue.clone();
-            rml.element_add_event_listener(e, "mouseup", false, move || {
-                q.borrow_mut().push(Grab::None);
-            })?;
-        }
-
-        for (id, event) in [
-            ("picker-ok", PickerEvent::Accept),
-            ("picker-cancel", PickerEvent::Cancel),
-        ] {
-            let Some(e) = element_by_id(interface, document, id) else {
-                continue;
-            };
-            let q = self.events.clone();
-            rml.element_add_event_listener(e, "click", false, move || {
-                q.borrow_mut().push(event);
-            })?;
-        }
-
-        self.bound = true;
-        Ok(())
-    }
-
     pub(crate) fn open(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -251,6 +180,77 @@ impl ColorPicker {
         self.sync(interface, document);
         self.previewing = true;
         true
+    }
+
+    fn markup_rml() -> String {
+        format!(
+            concat!(
+                r#"<div id="color-picker" class="picker-backdrop hidden">"#,
+                r#"<div id="picker-dialog" class="picker-dialog">"#,
+                r#"<div class="dialog-header"><span class="dialog-title">Pick Color</span></div>"#,
+                r#"<div class="dialog-content"><div class="color-picker-main">"#,
+                r#"<div id="color-map" class="color-map">"#,
+                r#"<img class="color-map-white" src="{white}"/>"#,
+                r#"<img class="color-map-black" src="{black}"/>"#,
+                r#"<div id="color-map-cursor" class="color-map-cursor"></div></div>"#,
+                r#"<div id="hue-map" class="hue-map">"#,
+                r#"<img src="{hue}"/><div id="hue-cursor" class="hue-cursor"></div></div>"#,
+                r#"<div class="color-side"><div class="color-preview" id="color-preview"></div></div>"#,
+                r#"</div></div>"#,
+                r#"<div class="dialog-footer">"#,
+                r#"<button id="picker-ok" class="dialog-button primary">OK</button>"#,
+                r#"<button id="picker-cancel" class="dialog-button">Cancel</button>"#,
+                r#"</div></div></div>"#,
+            ),
+            white = IMG_SV_WHITE,
+            black = IMG_SV_BLACK,
+            hue = IMG_HUE,
+        )
+    }
+
+    /// Bind the picker's listeners once; the markup is created with the shell.
+    fn bind_listeners(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        if self.bound {
+            return Ok(());
+        }
+        let rml = interface.rml_ui();
+
+        for (id, grab) in [("color-map", Grab::Sv), ("hue-map", Grab::Hue)] {
+            let Some(e) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let q = self.grab_queue.clone();
+            rml.element_add_event_listener(e, "mousedown", false, move || {
+                q.borrow_mut().push(grab);
+            })?;
+        }
+
+        if let Some(e) = element_by_id(interface, document, "color-picker") {
+            let q = self.grab_queue.clone();
+            rml.element_add_event_listener(e, "mouseup", false, move || {
+                q.borrow_mut().push(Grab::None);
+            })?;
+        }
+
+        for (id, event) in [
+            ("picker-ok", PickerEvent::Accept),
+            ("picker-cancel", PickerEvent::Cancel),
+        ] {
+            let Some(e) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let q = self.events.clone();
+            rml.element_add_event_listener(e, "click", false, move || {
+                q.borrow_mut().push(event);
+            })?;
+        }
+
+        self.bound = true;
+        Ok(())
     }
 
     fn set_visible(

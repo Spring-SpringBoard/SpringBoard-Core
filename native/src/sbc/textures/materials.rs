@@ -33,20 +33,6 @@ pub(crate) struct Material {
     pub(crate) channels: BTreeMap<String, String>,
 }
 
-/// The material a texture belongs to: its file name with the channel suffix
-/// stripped, and without the directory. `.../brush_textures/dirt1_diffuse.png`
-/// is the `diffuse` of `dirt1`.
-fn material_of(path: &str) -> Option<(String, &'static str)> {
-    let file = path.rsplit('/').next()?;
-    let stem = file.rsplit_once('.').map(|(s, _)| s).unwrap_or(file);
-    for (channel, _, _) in CHANNELS {
-        if let Some(base) = stem.strip_suffix(&format!("_{channel}")) {
-            return Some((base.to_string(), channel));
-        }
-    }
-    None
-}
-
 /// Group the files under `brush_textures/` into materials. A material exists if
 /// it has a diffuse; the other channels are optional, which is why the picker
 /// shows which ones were found.
@@ -68,6 +54,20 @@ pub(crate) fn list_materials(interface: &NativeInterfaceRef) -> Vec<Material> {
         .filter(|(_, channels)| channels.contains_key("diffuse"))
         .map(|(name, channels)| Material { name, channels })
         .collect()
+}
+
+/// The material a texture belongs to: its file name with the channel suffix
+/// stripped, and without the directory. `.../brush_textures/dirt1_diffuse.png`
+/// is the `diffuse` of `dirt1`.
+fn material_of(path: &str) -> Option<(String, &'static str)> {
+    let file = path.rsplit('/').next()?;
+    let stem = file.rsplit_once('.').map(|(s, _)| s).unwrap_or(file);
+    for (channel, _, _) in CHANNELS {
+        if let Some(base) = stem.strip_suffix(&format!("_{channel}")) {
+            return Some((base.to_string(), channel));
+        }
+    }
+    None
 }
 
 #[cfg(test)]

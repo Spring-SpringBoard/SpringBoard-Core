@@ -114,6 +114,10 @@ pub(super) fn material_tooltip(material: &Material) -> String {
     )
 }
 
+pub(super) fn enabled_name(channel: &str) -> String {
+    format!("{channel}Enabled")
+}
+
 #[derive(Debug, Clone, Copy)]
 pub(super) enum MaterialPickerEvent {
     Cancel,
@@ -374,24 +378,6 @@ impl TextureUiModel {
         self.actions.selected_paint_mode().unwrap_or("paint")
     }
 
-    fn number(&self, id: TexField) -> f32 {
-        match self.table.value(id) {
-            FieldValue::Number(n) => n,
-            _ => 0.0,
-        }
-    }
-
-    fn text(&self, id: TexField) -> String {
-        match self.table.value(id) {
-            FieldValue::Text(t) => t,
-            _ => String::new(),
-        }
-    }
-
-    fn boolean(&self, id: TexField) -> bool {
-        matches!(self.table.value(id), FieldValue::Bool(true))
-    }
-
     pub(super) fn take_grid_clicks(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -433,32 +419,6 @@ impl TextureUiModel {
         Ok(changed)
     }
 
-    fn create_saved_brush(&mut self, material: String) {
-        let id = format!("saved-brush-{}", self.saved_brushes.len() + 1);
-        let mut brush = self.brush_from_fields();
-        brush.brush_textures = self.selected.clone();
-        brush.brush_texture = self.selected.get("diffuse").cloned();
-        self.saved_brushes.push(SavedBrush {
-            id: id.clone(),
-            material,
-            brush,
-        });
-        self.selected_brush = Some(id);
-    }
-
-    fn brush_from_fields(&self) -> BrushSettings {
-        let mut brush = BrushSettings {
-            size: self.number(Size),
-            rotation: self.number(Rotation),
-            ..BrushSettings::default()
-        };
-        if let FieldValue::Text(pattern) = self.pattern.entry().field.value() {
-            brush.pattern_texture = non_empty(pattern);
-        }
-        self.write_extra(&mut brush);
-        brush
-    }
-
     /// The brush state beyond the tagged size/rotation/pattern fields.
     pub(super) fn write_extra(&self, brush: &mut BrushSettings) {
         brush.tex_scale = self.number(TexScale);
@@ -496,6 +456,60 @@ impl TextureUiModel {
                 (channel.to_string(), self.boolean(id))
             })
             .collect();
+    }
+
+    pub(super) fn update_selected_saved_brush(&mut self) {
+        let Some(id) = self.selected_brush.as_deref() else {
+            return;
+        };
+        let brush = self.brush_from_fields();
+        if let Some(saved) = self.saved_brushes.iter_mut().find(|saved| saved.id == id) {
+            saved.brush = brush;
+        }
+    }
+
+    fn number(&self, id: TexField) -> f32 {
+        match self.table.value(id) {
+            FieldValue::Number(n) => n,
+            _ => 0.0,
+        }
+    }
+
+    fn text(&self, id: TexField) -> String {
+        match self.table.value(id) {
+            FieldValue::Text(t) => t,
+            _ => String::new(),
+        }
+    }
+
+    fn boolean(&self, id: TexField) -> bool {
+        matches!(self.table.value(id), FieldValue::Bool(true))
+    }
+
+    fn create_saved_brush(&mut self, material: String) {
+        let id = format!("saved-brush-{}", self.saved_brushes.len() + 1);
+        let mut brush = self.brush_from_fields();
+        brush.brush_textures = self.selected.clone();
+        brush.brush_texture = self.selected.get("diffuse").cloned();
+        self.saved_brushes.push(SavedBrush {
+            id: id.clone(),
+            material,
+            brush,
+        });
+        self.selected_brush = Some(id);
+    }
+
+    fn brush_from_fields(&self) -> BrushSettings {
+        let mut brush = BrushSettings {
+            size: self.number(Size),
+            rotation: self.number(Rotation),
+            ..BrushSettings::default()
+        };
+        if let FieldValue::Text(pattern) = self.pattern.entry().field.value() {
+            brush.pattern_texture = non_empty(pattern);
+        }
+        self.write_extra(&mut brush);
+        brush
     }
 
     fn load_saved_brush(&mut self, id: &str, interface: &NativeInterfaceRef) {
@@ -557,16 +571,6 @@ impl TextureUiModel {
             let _ = entry.field.write_to_dom(interface);
         }
     }
-
-    pub(super) fn update_selected_saved_brush(&mut self) {
-        let Some(id) = self.selected_brush.as_deref() else {
-            return;
-        };
-        let brush = self.brush_from_fields();
-        if let Some(saved) = self.saved_brushes.iter_mut().find(|saved| saved.id == id) {
-            saved.brush = brush;
-        }
-    }
 }
 
 impl EditorModel for TextureUiModel {
@@ -605,10 +609,6 @@ impl EditorModel for TextureUiModel {
         }
         self.table.name_of(id)
     }
-}
-
-pub(super) fn enabled_name(channel: &str) -> String {
-    format!("{channel}Enabled")
 }
 
 #[cfg(test)]

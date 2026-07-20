@@ -65,60 +65,6 @@ impl Default for FileDialog {
 }
 
 impl FileDialog {
-    /// Static shell, injected into `#modal-root` once. The name/type rows are
-    /// always present and shown or hidden per dialog, so the listeners bind once.
-    fn markup_rml(&self) -> String {
-        format!(
-            concat!(
-                r#"<div id="file-dialog" class="picker-backdrop hidden">"#,
-                r#"<div class="dialog picker-dialog asset-dialog">"#,
-                r#"<div class="dialog-header"><span id="fd-title" class="dialog-title">File</span></div>"#,
-                r#"<div class="dialog-content">"#,
-                r#"<div class="asset-path-nav">"#,
-                r#"<button id="fd-up" class="dialog-button">Up</button>"#,
-                r#"<span id="fd-path" class="asset-path"></span></div>"#,
-                r#"{grid}"#,
-                r#"{form}"#,
-                r#"</div>"#,
-                r#"<div class="dialog-footer">"#,
-                r#"<button id="fd-ok" class="dialog-button primary">OK</button>"#,
-                r#"<button id="fd-cancel" class="dialog-button">Cancel</button>"#,
-                r#"</div></div></div>"#,
-            ),
-            grid = self.grid.container_rml(),
-            form = self.form.markup(),
-        )
-    }
-
-    fn bind_listeners(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        changes: &ChangeQueue,
-        interactions: &InteractionQueue,
-    ) -> Result<(), Error> {
-        if self.bound {
-            return Ok(());
-        }
-        let rml = interface.rml_ui();
-        for (id, event) in [
-            ("fd-ok", PickerEvent::Accept),
-            ("fd-cancel", PickerEvent::Cancel),
-            ("fd-up", PickerEvent::Up),
-        ] {
-            let Some(e) = element_by_id(interface, document, id) else {
-                continue;
-            };
-            let q = self.events.clone();
-            rml.element_add_event_listener(e, "click", false, move || {
-                q.borrow_mut().push(event);
-            })?;
-        }
-        self.form.bind(interface, document, changes, interactions)?;
-        self.bound = true;
-        Ok(())
-    }
-
     pub(crate) fn open(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -241,6 +187,60 @@ impl FileDialog {
             }
         }
         Ok(None)
+    }
+
+    /// Static shell, injected into `#modal-root` once. The name/type rows are
+    /// always present and shown or hidden per dialog, so the listeners bind once.
+    fn markup_rml(&self) -> String {
+        format!(
+            concat!(
+                r#"<div id="file-dialog" class="picker-backdrop hidden">"#,
+                r#"<div class="dialog picker-dialog asset-dialog">"#,
+                r#"<div class="dialog-header"><span id="fd-title" class="dialog-title">File</span></div>"#,
+                r#"<div class="dialog-content">"#,
+                r#"<div class="asset-path-nav">"#,
+                r#"<button id="fd-up" class="dialog-button">Up</button>"#,
+                r#"<span id="fd-path" class="asset-path"></span></div>"#,
+                r#"{grid}"#,
+                r#"{form}"#,
+                r#"</div>"#,
+                r#"<div class="dialog-footer">"#,
+                r#"<button id="fd-ok" class="dialog-button primary">OK</button>"#,
+                r#"<button id="fd-cancel" class="dialog-button">Cancel</button>"#,
+                r#"</div></div></div>"#,
+            ),
+            grid = self.grid.container_rml(),
+            form = self.form.markup(),
+        )
+    }
+
+    fn bind_listeners(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        changes: &ChangeQueue,
+        interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
+        if self.bound {
+            return Ok(());
+        }
+        let rml = interface.rml_ui();
+        for (id, event) in [
+            ("fd-ok", PickerEvent::Accept),
+            ("fd-cancel", PickerEvent::Cancel),
+            ("fd-up", PickerEvent::Up),
+        ] {
+            let Some(e) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let q = self.events.clone();
+            rml.element_add_event_listener(e, "click", false, move || {
+                q.borrow_mut().push(event);
+            })?;
+        }
+        self.form.bind(interface, document, changes, interactions)?;
+        self.bound = true;
+        Ok(())
     }
 
     fn set_visible(
