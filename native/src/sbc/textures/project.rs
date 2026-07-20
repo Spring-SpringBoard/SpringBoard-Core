@@ -44,6 +44,15 @@ fn load_textures(ctx: &mut Context, paths: &ProjectPaths) {
     log_result("load textures", &dir, result);
 }
 
+// TODO(perf): these run on the draw thread and freeze the editor during export.
+// `save_texture_png` calls the engine's `gfx().save_image`, which reads the GL
+// texture AND encodes+writes the PNG in one blocking call. The heightmap/metal/
+// grass exports already encode off-thread (`*::jobs::export`); the diffuse and
+// shading textures should too: read the pixels on the draw thread via
+// `gfx().read_pixels` (only the GL read must be here), then hand the buffer to an
+// IoJob that encodes with `io::write::save_png`. Do it in tiles — a full-map
+// diffuse read back as `read_pixels`' f32 RGBA is ~1 GB at 8K, so a naive
+// whole-texture buffer would OOM on large maps.
 fn export_map_textures(ctx: &mut Context, output_dir: &Path, _options: &MapExportOptions) {
     let interface = *ctx.interface;
     let diffuse = output_dir.join("diffuse.png");
