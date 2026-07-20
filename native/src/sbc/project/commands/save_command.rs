@@ -5,6 +5,7 @@ use serde::Deserialize;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
+use crate::sbc::notifications::NotificationManager;
 use crate::sbc::project::io_registries::save;
 use crate::sbc::project::paths::ProjectPaths;
 use crate::sbc::project::ScreenshotManager;
@@ -36,6 +37,12 @@ impl Command for SaveCommand {
         // next DrawScreen write it.
         let path = ProjectPaths::new(&root).file(SCREENSHOT_FILE);
         ctx.model::<ScreenshotManager>().request(path);
+
+        ctx.model::<NotificationManager>().info(
+            "save",
+            "Saved",
+            &format!("Project saved to {}", root.display()),
+        );
     }
 
     fn undoable(&self) -> bool {

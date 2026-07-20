@@ -5,6 +5,7 @@ use serde::Deserialize;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
+use crate::sbc::notifications::NotificationManager;
 use crate::sbc::project::io_registries::load;
 use crate::sbc::project::ProjectManager;
 
@@ -27,6 +28,11 @@ impl Command for LoadProjectCommand {
             .to_string();
         ctx.model::<ProjectManager>()
             .set_name_path(&name, &self.path);
+        ctx.model::<NotificationManager>().info(
+            "load",
+            "Loaded",
+            &format!("Opened project {name}"),
+        );
     }
 
     fn undoable(&self) -> bool {

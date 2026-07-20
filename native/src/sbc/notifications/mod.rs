@@ -38,6 +38,12 @@ impl Model for NotificationManager {
 }
 
 impl NotificationManager {
+    /// Post or update a plain informational toast that auto-expires. Used for
+    /// reassurance ("Project saved to …") rather than warnings or progress.
+    pub(crate) fn info(&mut self, name: &str, title: &str, body: &str) {
+        self.upsert(name, title, body, false, None, Some(Duration::from_secs(4)));
+    }
+
     /// Post or update a warning toast; it auto-expires after a few seconds.
     pub(crate) fn warn(&mut self, name: &str, body: &str) {
         self.upsert(
