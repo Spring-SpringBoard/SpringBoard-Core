@@ -12,6 +12,7 @@ mod upload;
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
@@ -25,6 +26,10 @@ pub(crate) use upload::UploadLogCommand;
 
 const ROOT_ID: &str = "project-status-root";
 const LABEL_ID: &str = "project-status-label";
+const OPEN_ID: &str = "project-status-open";
+
+/// A second Upload Log click within this window confirms the (public) upload.
+const UPLOAD_CONFIRM_WINDOW: Duration = Duration::from_secs(6);
 
 #[derive(Clone, Copy)]
 enum StatusBarAction {
@@ -57,6 +62,9 @@ pub(crate) struct ProjectStatusBar {
     /// Cleared by `forget` when a reload throws that document away.
     bound: bool,
     last_caption: Option<String>,
+    /// When the first Upload Log click armed the confirmation; a second click
+    /// within [`UPLOAD_CONFIRM_WINDOW`] actually uploads.
+    upload_armed: Option<Instant>,
 }
 
 impl ProjectStatusBar {
@@ -65,10 +73,12 @@ impl ProjectStatusBar {
     pub(crate) fn forget(&mut self) {
         self.bound = false;
         self.last_caption = None;
+        self.upload_armed = None;
         self.actions.borrow_mut().clear();
     }
 
-    /// Install the bar the first time, then keep its caption in sync.
+    /// Install the bar the first time, then keep its caption and the enabled
+    /// state of Open Project (needs a saved project) in sync.
     pub(crate) fn render(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -79,12 +89,18 @@ impl ProjectStatusBar {
             self.build(interface, document)?;
             self.bound = true;
         }
+        let has_project = models.get::<ProjectManager>().path().is_some();
         let caption = caption(models);
         if self.last_caption.as_deref() != Some(caption.as_str()) {
             if let Some(label) = element_by_id(interface, document, LABEL_ID) {
                 interface
                     .rml_ui()
                     .element_set_inner_rml(label, &escape_rml(&caption))?;
+            }
+            if let Some(open) = element_by_id(interface, document, OPEN_ID) {
+                interface
+                    .rml_ui()
+                    .element_set_class(open, "disabled", !has_project)?;
             }
             self.last_caption = Some(caption);
         }
@@ -113,12 +129,27 @@ impl ProjectStatusBar {
                 },
                 StatusBarAction::DataDir => open_in_file_manager(&write_dir()),
                 StatusBarAction::UploadLog => {
-                    models.get::<NotificationManager>().progress(
-                        "upload-log",
-                        0.1,
-                        "Uploading log...",
-                    );
-                    commands.push(Box::new(UploadLogCommand::new(log_path())));
+                    // Uploading publishes the full log, so confirm on a second
+                    // click rather than firing on the first.
+                    let now = Instant::now();
+                    let armed = self
+                        .upload_armed
+                        .is_some_and(|at| now.duration_since(at) < UPLOAD_CONFIRM_WINDOW);
+                    if armed {
+                        self.upload_armed = None;
+                        models.get::<NotificationManager>().progress(
+                            "upload-log",
+                            0.1,
+                            "Uploading log...",
+                        );
+                        commands.push(Box::new(UploadLogCommand::new(log_path())));
+                    } else {
+                        self.upload_armed = Some(now);
+                        models.get::<NotificationManager>().warn(
+                            "upload-log",
+                            "This uploads your full log publicly. Click Upload Log again to confirm.",
+                        );
+                    }
                 }
             }
         }
@@ -159,21 +190,55 @@ impl ProjectStatusBar {
     }
 }
 
-/// The engine's write-data dir, taken from its own `--write-dir` argv (the
-/// plugin shares the engine process). Falls back to the working directory.
+/// The engine's write-data dir, where `infolog.txt`, projects and exports live.
+///
+/// `std::env::args()` is unreliable here: this plugin is `dlopen`ed into the
+/// engine, so the Rust runtime never captured argv and the list is usually
+/// empty. Resolve from the environment the launcher/harness sets instead:
+/// `SBC_WRITE_DIR`, then the dir holding `SBC_COMMAND_LOG`
+/// (`<write_dir>/commands.jsonl`), then `--write-dir` if argv happens to be
+/// present, and only as a last resort the working directory — never a path that
+/// is not a directory (which is how the engine binary once leaked through).
 pub(crate) fn write_dir() -> PathBuf {
+    let dir = resolve_write_dir(
+        std::env::var_os("SBC_WRITE_DIR").map(PathBuf::from),
+        std::env::var_os("SBC_COMMAND_LOG").map(PathBuf::from),
+        write_dir_from_argv(),
+        std::env::current_dir().ok(),
+    );
+    log::debug!("SBC write dir resolved to {}", dir.display());
+    dir
+}
+
+/// Pick the first candidate that names a real directory. `command_log` is
+/// `<write_dir>/commands.jsonl`, so its parent is the write dir. The `is_dir`
+/// guard is what stops a stray non-directory (the engine binary once leaked in
+/// via argv) from being treated as the data dir.
+fn resolve_write_dir(
+    sbc_write_dir: Option<PathBuf>,
+    command_log: Option<PathBuf>,
+    argv_dir: Option<PathBuf>,
+    cwd: Option<PathBuf>,
+) -> PathBuf {
+    let command_log_dir = command_log.and_then(|log| log.parent().map(Path::to_path_buf));
+    [sbc_write_dir, command_log_dir, argv_dir, cwd]
+        .into_iter()
+        .flatten()
+        .find(|path| path.is_dir())
+        .unwrap_or_default()
+}
+
+fn write_dir_from_argv() -> Option<PathBuf> {
     let mut args = std::env::args();
     while let Some(arg) = args.next() {
         if let Some(rest) = arg.strip_prefix("--write-dir=") {
-            return PathBuf::from(rest);
+            return Some(PathBuf::from(rest));
         }
         if arg == "--write-dir" {
-            if let Some(next) = args.next() {
-                return PathBuf::from(next);
-            }
+            return args.next().map(PathBuf::from);
         }
     }
-    std::env::current_dir().unwrap_or_default()
+    None
 }
 
 fn caption(models: &mut Models) -> String {
@@ -197,5 +262,36 @@ fn open_in_file_manager(path: &Path) {
     };
     if let Err(err) = std::process::Command::new(opener).arg(path).spawn() {
         log::warn!("could not open {}: {err}", path.display());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::resolve_write_dir;
+    use std::path::PathBuf;
+
+    #[test]
+    fn command_log_parent_is_the_write_dir() {
+        let dir = std::env::temp_dir();
+        let log = dir.join("commands.jsonl");
+        let resolved = resolve_write_dir(None, Some(log), None, None);
+        assert_eq!(resolved, dir);
+    }
+
+    #[test]
+    fn a_non_directory_candidate_is_skipped_for_a_real_one() {
+        // The bug: argv handed us the engine binary (a file). It must be passed
+        // over in favour of a real directory, never returned.
+        let binary = PathBuf::from("/definitely/not/a/dir/spring");
+        let dir = std::env::temp_dir();
+        let resolved = resolve_write_dir(None, None, Some(binary), Some(dir.clone()));
+        assert_eq!(resolved, dir);
+    }
+
+    #[test]
+    fn explicit_override_wins() {
+        let dir = std::env::temp_dir();
+        let resolved = resolve_write_dir(Some(dir.clone()), None, None, None);
+        assert_eq!(resolved, dir);
     }
 }

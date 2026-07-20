@@ -42,6 +42,14 @@
     background-color: #4a5160;
 }
 
+/* Open Project needs a saved project; grey it out and swallow clicks until
+   there is one. */
+.project-status-btn.disabled {
+    color: #6a6f7a;
+    background-color: #2a2d35;
+    pointer-events: none;
+}
+
 .project-status-btn.danger {
     background-color: #6a2a2a;
 }
