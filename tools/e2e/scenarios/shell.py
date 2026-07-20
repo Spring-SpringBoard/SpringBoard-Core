@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import shutil
 from typing import TYPE_CHECKING
 
+from paths import GAME_DIRNAME
 from scenarios.geometry import (
+    DIALOG,
     EDITORS,
     TAB_X,
     TAB_Y,
     TOOLBAR,
+    dialog_point,
     editor_point,
     panel_left,
     panel_point,
@@ -82,40 +86,53 @@ def panel_tabs_are_choices(run_state: E2ERun) -> None:
 
 
 @scenario()
-def toolbar_actions(run_state: E2ERun) -> None:
-    """Every Rust shell-toolbar icon invokes its own action.
+def import_action(run_state: E2ERun) -> None:
+    """The Import toolbar icon picks an image and dispatches its command.
 
-    Project actions are opened and cancelled rather than accepted: the point is
-    the action-to-dialog wiring, not creating files in an isolated e2e run.
-    Clipboard actions use a selected tree and then compare the map, so a button
-    that merely receives a click cannot pass.
+    Import is the one toolbar action no other scenario drives (New/Load/Save
+    As/Export are covered by gallery and map). Diffuse is the default type, so
+    picking a file is the full path: icon -> dialog -> pick -> ImportDiffuseCommand.
     """
     run_state.focus()
     left = panel_left(run_state)
 
-    # New Project has its own dialog.  Load, Import, Save (without a project
-    # path), Save As, and Export all use the file dialog, with distinct visible
-    # headings/configuration.  Capturing each gives the review a concise audit
-    # trail of the icon row without mutating project state.
-    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=0.7)
-    run_state.screenshot("new-project")
-    run_state.key("Escape", delay=0.35)
+    # Import browses springboard/projects/; drop an image there for it to pick.
+    assert run_state.write_dir is not None
+    projects = run_state.write_dir / "springboard" / "projects"
+    projects.mkdir(parents=True, exist_ok=True)
+    game_image = (
+        run_state.write_dir
+        / "games"
+        / GAME_DIRNAME
+        / "LuaUI"
+        / "images"
+        / "scenedit"
+        / "area-add.png"
+    )
+    shutil.copyfile(game_image, projects / "import_test.png")
 
-    for action in ("load", "import", "save", "save_as", "export"):
-        before = run_state.screenshot(f"before-{action}")
-        run_state.click(*panel_point(left, TOOLBAR[action]), delay=0.65)
-        opened = run_state.screenshot(f"{action}-dialog")
-        run_state.assert_screenshot_pixels(before, opened, min_changed=2_000)
-        run_state.key("Escape", delay=0.35)
+    run_state.click(*panel_point(left, TOOLBAR["import"]), delay=0.7)
+    run_state.screenshot("import-dialog")
+    run_state.click(*dialog_point(run_state, DIALOG["asset_first_cell"]), delay=0.4)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=0.6)
+    run_state.assert_any_command("ImportDiffuseCommand")
 
-    # Exact toolbar clicks, not their keyboard shortcuts.  Paste needs the
-    # cursor ground hit; move it to a distinct map point before clicking the
-    # icon so the second tree's placement is observable.
+
+@scenario()
+def clipboard_actions(run_state: E2ERun) -> None:
+    """The Copy/Cut/Paste toolbar icons round-trip a selected object.
+
+    Exact toolbar clicks, not their keyboard shortcuts. Clicking the Paste icon
+    leaves the cursor over the panel, so the paste must land at the map centre —
+    in view — rather than off-screen behind the panel; the golden checks that
+    centre region changed. Cut is then undone with Ctrl+Z. Each step asserts its
+    grouped native command and a real change to the map.
+    """
+    run_state.focus()
     left = _open(run_state, "features")
     _arm_tree(run_state, left)
     width, height = window_size(run_state)
     source = (width // 3 - 130, height // 2)
-    target = (width // 3 + 220, height // 2 + 120)
     run_state.wheel(*source, clicks=8, up=True)
     run_state.click(*source, delay=0.8)
     run_state.key("Escape", delay=0.35)
@@ -123,13 +140,15 @@ def toolbar_actions(run_state: E2ERun) -> None:
 
     run_state.click(*panel_point(left, TOOLBAR["copy"]), delay=0.4)
     before_paste = run_state.screenshot("copied")
-    run_state.move(*target, delay=0.25)
     mark = len(run_state.commands())
     run_state.click(*panel_point(left, TOOLBAR["paste"]), delay=0.8)
     pasted = run_state.screenshot("pasted")
     if not any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
         raise AssertionError("toolbar Paste did not dispatch a grouped native command")
-    run_state.assert_screenshot_pixels(before_paste, pasted, min_changed=400)
+    # The paste must appear near the centre of the map view (left of the panel),
+    # not at the off-screen cursor over the Paste icon.
+    centre = (left // 2 - 220, height // 2 - 220, 440, 440)
+    run_state.assert_region_pixels(before_paste, pasted, centre, min_changed=200)
 
     mark = len(run_state.commands())
     run_state.click(*panel_point(left, TOOLBAR["cut"]), delay=0.8)

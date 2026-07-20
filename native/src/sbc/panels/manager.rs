@@ -523,12 +523,21 @@ impl PanelManager {
         self.modals.close_top(&self.interface, doc)
     }
 
-    /// Paste the clipboard at the cursor's ground hit.
+    /// Paste the clipboard at the cursor's ground hit — or, when the cursor is
+    /// over the panel (the toolbar Paste icon was clicked, not Ctrl+V over the
+    /// map), at the centre of the map view, so the paste always lands somewhere
+    /// visible instead of off-screen.
     fn run_paste(&mut self, models: &mut Models) {
-        let Ok(mouse) = self.interface.input().get_mouse_state() else {
+        const PANEL_WIDTH: f32 = 500.0;
+        let Ok(geometry) = self.interface.display().get_view_geometry() else {
             return;
         };
-        let Some(hit) = crate::sbc::states::trace_ground(&self.interface, mouse.x, mouse.y) else {
+        let map_width = (geometry.viewSizeX as f32 - PANEL_WIDTH).max(1.0);
+        let (x, y) = match self.interface.input().get_mouse_state() {
+            Ok(mouse) if mouse.x < map_width => (mouse.x, mouse.y),
+            _ => (map_width / 2.0, geometry.viewSizeY as f32 / 2.0),
+        };
+        let Some(hit) = crate::sbc::states::trace_ground(&self.interface, x, y) else {
             return;
         };
         let commands = actions::execute_paste(&self.interface, models, hit.x, hit.z);
