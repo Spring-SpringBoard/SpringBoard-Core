@@ -19,6 +19,7 @@ from scenarios.geometry import (
     GALLERY,
     TAB_Y,
     TOOLBAR,
+    dialog_left,
     dialog_point,
     editor_point,
     panel_left,
@@ -283,7 +284,19 @@ def gallery_dialogs(run_state: E2ERun) -> None:
 
     # New Project (the first toolbar icon).
     run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=1.0)
-    run_state.golden("new-project")
+    original = run_state.golden("new-project")
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=0.2)
+    run_state.type_text("E2E project")
+    run_state.key("Return", delay=0.3)
+    for field, value in (("new_project_size_x", "12"), ("new_project_size_y", "14")):
+        run_state.click(*dialog_point(run_state, DIALOG[field]), delay=0.2)
+        run_state.key("ctrl+a", delay=0.08)
+        run_state.type_text(value)
+        run_state.key("Return", delay=0.25)
+    edited = run_state.golden("new-project-edited")
+    run_state.assert_region_pixels(
+        original, edited, (dialog_left(run_state), 245, 480, 125), min_changed=100
+    )
     run_state.key("Escape", delay=0.6)
     run_state.golden("new-project-closed")
 
@@ -306,3 +319,51 @@ def gallery_dialogs(run_state: E2ERun) -> None:
 
     run_state.key("Escape", delay=0.6)
     run_state.golden("file-dialog-closed")
+
+    # Export exercises both optional file-form fields. They are the same shared
+    # StringField and ChoiceField used by editors; type a name and select a
+    # non-default export kind before cancelling the non-mutating test dialog.
+    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.8)
+    export = run_state.golden("export-dialog")
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.2)
+    run_state.type_text("dialog-test")
+    run_state.key("Return", delay=0.3)
+    run_state.click(*dialog_point(run_state, DIALOG["file_type"]), delay=0.3)
+    run_state.golden("export-type-open", park=False, tolerance=CURSOR_IN_SHOT)
+    option = dropdown_option(DIALOG["file_type"], 1)
+    run_state.click(*dialog_point(run_state, option), delay=0.4)
+    configured = run_state.golden("export-dialog-configured")
+    run_state.assert_region_pixels(
+        export, configured, (dialog_left(run_state), 560, 480, 100), min_changed=100
+    )
+    run_state.key("Escape", delay=0.5)
+
+
+@scenario(env=DEV_PANEL)
+def new_project_create(run_state: E2ERun) -> None:
+    """Actually create a project: fill the New Project dialog and click Create.
+
+    Create emits SaveProjectInfoCommand + ReloadIntoProjectCommand; the latter
+    reloads the engine into the new map, so this asserts on the command log
+    rather than a golden (the frame after a reload is not stable). Both are
+    logged before they execute, so the entries survive the reload. It also
+    proves the reload path does not crash: a stale-RmlUi use-after-free on
+    teardown would exit the engine and the run would fail.
+    """
+    left = _open_gallery(run_state)
+    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=1.0)
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=0.2)
+    run_state.type_text("E2E created")
+    run_state.key("Return", delay=0.3)
+    for field, value in (("new_project_size_x", "12"), ("new_project_size_y", "14")):
+        run_state.click(*dialog_point(run_state, DIALOG[field]), delay=0.2)
+        run_state.key("ctrl+a", delay=0.08)
+        run_state.type_text(value)
+        run_state.key("Return", delay=0.25)
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=2.5)
+
+    # Save persists the project; the reload reads it back and boots into the new
+    # map. The dialog fields do not reach the log (neither command serializes),
+    # so assert the pair fired, which is what "Create did something" means.
+    run_state.assert_command("SaveProjectInfoCommand")
+    run_state.assert_command("ReloadIntoProjectCommand")

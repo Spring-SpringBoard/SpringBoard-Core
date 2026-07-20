@@ -21,6 +21,8 @@ pub(crate) enum SettingsField {
     SplatMult2,
     SplatMult3,
     DetailTexture,
+    ShadingWidth,
+    ShadingHeight,
 }
 
 use SettingsField::*;
@@ -113,6 +115,24 @@ impl SettingsModel {
                     Box::new(
                         AssetField::new("detailTexture", "Detail texture", "detail/")
                             .extensions(&["png", "jpg", "tga", "dds", "bmp"]),
+                    ),
+                ),
+                TableEntry::new(
+                    ShadingWidth,
+                    Box::new(
+                        NumericField::new("shading-width", "Size X", 1024.0)
+                            .min(1.0)
+                            .step(1.0)
+                            .decimals(0),
+                    ),
+                ),
+                TableEntry::new(
+                    ShadingHeight,
+                    Box::new(
+                        NumericField::new("shading-height", "Size Y", 1024.0)
+                            .min(1.0)
+                            .step(1.0)
+                            .decimals(0),
                     ),
                 ),
             ]),

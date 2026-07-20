@@ -47,6 +47,14 @@ impl<B: Behavior> Runtime<B> {
         }
     }
 
+    pub(crate) fn model(&self) -> &B::Model {
+        &self.model
+    }
+
+    pub(crate) fn model_mut(&mut self) -> &mut B::Model {
+        &mut self.model
+    }
+
     fn absorb(&mut self, outcome: Outcome) -> Vec<Box<dyn Command>> {
         if outcome.state.is_some() {
             self.pending_state = outcome.state;
@@ -144,6 +152,20 @@ impl<B: Behavior> Editor for Runtime<B> {
                         .collect();
                     html.push_str(&group_rml(&fields));
                 }
+                Item::OwnedIdRow(ids) => {
+                    let fields: Vec<(String, String)> = ids
+                        .iter()
+                        .map(|id| {
+                            let name = self.model.name_of(*id);
+                            (name.clone(), self.field_rml(&name))
+                        })
+                        .collect();
+                    let refs: Vec<(&str, String)> = fields
+                        .iter()
+                        .map(|(name, rml)| (name.as_str(), rml.clone()))
+                        .collect();
+                    html.push_str(&identified_group_rml(&refs));
+                }
                 Item::OwnedSection(caption) => html.push_str(&section_rml(&caption)),
                 Item::Custom(markup) => html.push_str(&markup),
             }
@@ -163,6 +185,7 @@ impl<B: Behavior> Editor for Runtime<B> {
         if let Some(actions) = self.actions.as_mut() {
             actions.bind(interface, document)?;
         }
+        self.behavior.mount(&mut self.model, interface, document)?;
         for entry in self.model.fields_mut() {
             entry
                 .field

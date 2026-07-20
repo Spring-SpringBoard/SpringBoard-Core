@@ -32,6 +32,12 @@ receives small, reviewable domain slices rather than architectural cleanup.
   `run_input`, `run_capture`, `run_pixels`, `run_commands`, `run_report`), each
   under ~300 lines; `runner.py` is now just the composition and instance state.
   Scenarios still `from runner import E2ERun` and call the same methods.
+- Modals self-register instead of being enumerated: a `Modal` trait plus an
+  inventory `ModalRegistration` (`panels/modal.rs`), each dialog submitting its
+  own from its module. `ModalStack` is now a generic `Vec<Box<dyn Modal>>`
+  driver naming no concrete dialog, and the view injects markup from the
+  registry — so neither `modal_stack` nor `view` depends on `project`/`actions`
+  any more. Opening a specific dialog goes through `ModalStack::get_mut::<T>()`.
 
 ## Remaining
 
@@ -56,10 +62,6 @@ feature depending on the whole Project feature.
   of asset-field helpers, not "a brush". Rename to reflect that it is UI (e.g. an
   action-strip control) — it must stay in the UI layer, because it renders RML
   and moving it out reintroduces the `states → panel` dependency.
-- `modal_stack` enumerates concrete dialogs as fields
-  (`new_project: NewProjectDialog`). If it is meant to be the app-wide modal
-  concept, dialogs should self-register (inventory, like editors) rather than be
-  listed. Also review what `modal_stack` actually does.
 - `tokens.rcss`: a single source for colours/spacing/sizes needs build-time
   substitution, because RmlUi's RCSS has no variables.
 

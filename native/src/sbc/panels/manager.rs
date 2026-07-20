@@ -9,15 +9,21 @@ use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
 use crate::sbc::panels::action_dispatcher::ActionDispatcher;
 use crate::sbc::panels::brush_sync::BrushSync;
+use crate::sbc::panels::controls::asset_picker::AssetPicker;
+use crate::sbc::panels::controls::color_picker::ColorPicker;
 use crate::sbc::panels::cursor::cursortip::CursorTip;
+use crate::sbc::panels::dialogs::file_dialog::FileDialog;
 use crate::sbc::panels::editor_slot::EditorSlot;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
 use crate::sbc::panels::field_session::FieldSession;
+use crate::sbc::panels::field_target::ActiveFieldEditor;
 use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
-use crate::sbc::panels::modal_stack::{ModalEvent, ModalStack};
+use crate::sbc::panels::modal::ModalEvent;
+use crate::sbc::panels::modal_stack::ModalStack;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
+use crate::sbc::project::new_project_dialog::NewProjectDialog;
 use crate::sbc::states::{StateManager, StateRequest};
 
 inventory::submit! {
@@ -116,12 +122,18 @@ impl PanelManager {
             return Ok(());
         }
         if let Some(doc) = self.view.document_handle() {
-            self.modals.bind(&self.interface, doc)?;
+            self.modals.bind(
+                &self.interface,
+                doc,
+                self.input.changes(),
+                self.input.interactions(),
+            )?;
         }
 
         if let Some(field) = self.pending_select.take() {
             if self.session.editing() == Some(field.as_str()) {
-                if let Some(ed) = self.slot.editor_mut() {
+                let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                if let Some(ed) = target.get_mut() {
                     ed.select_edit_field(&field, &self.interface);
                 }
             }
@@ -131,20 +143,18 @@ impl PanelManager {
         for action in self.hotkeys.take() {
             self.run_action(action, models)?;
         }
-        self.process_modals()?;
-
         self.input.set_cursor(&self.interface);
         self.process_interactions()?;
 
         // Advance an in-progress drag from the polled cursor. Each step previews
         // on the engine, so a dragged number is visible before the mouse is
         // released; the undoable command lands on `dragend`.
-        match self
-            .input
-            .tick_drag(&self.interface, self.slot.editor_mut())
-        {
+        let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+        let drag_tick = self.input.tick_drag(&self.interface, target.get_mut());
+        match drag_tick {
             DragTick::Moved(field) => {
-                if let Some(ed) = self.slot.editor_mut() {
+                let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                if let Some(ed) = target.get_mut() {
                     let commands = self.session.preview_field(&field, ed);
                     self.pending_commands.extend(commands);
                 }
@@ -156,19 +166,24 @@ impl PanelManager {
         // field losing focus. The session drops the ones that changed nothing,
         // which is what the editor's own writes echo back as.
         for request in self.input.drain_changes() {
+            let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
             if request.revert {
                 self.session
-                    .revert_field(&request.field, self.slot.editor_mut(), &self.interface);
+                    .revert_field(&request.field, target.get_mut(), &self.interface);
             } else {
                 let commands = self.session.commit_field(
                     &request.field,
                     request.from_blur,
-                    self.slot.editor_mut(),
+                    target.get_mut(),
                     &self.interface,
                 );
                 self.pending_commands.extend(commands);
             }
         }
+
+        // Dialog accept handlers consume the values above, after the same
+        // field pipeline used by the active editor has committed them.
+        self.process_modals()?;
 
         self.slot.poll_watch(models);
         self.slot
@@ -218,13 +233,19 @@ impl PanelManager {
             ActionResult::NativeCommands(commands) => self.pending_commands.extend(commands),
             ActionResult::OpenFileDialog { config, on_accept } => {
                 if let Some(doc) = self.view.document_handle() {
-                    self.modals
-                        .open_file(&self.interface, doc, config, on_accept)?;
+                    self.modals.get_mut::<FileDialog>().open(
+                        &self.interface,
+                        doc,
+                        config,
+                        on_accept,
+                    )?;
                 }
             }
             ActionResult::OpenNewProject => {
                 if let Some(doc) = self.view.document_handle() {
-                    self.modals.open_new_project(&self.interface, doc)?;
+                    self.modals
+                        .get_mut::<NewProjectDialog>()
+                        .open(&self.interface, doc)?;
                 }
             }
         }
@@ -244,27 +265,27 @@ impl PanelManager {
         }
         const RETURN: i32 = 13;
         const ESCAPE: i32 = 27;
-        if key == ESCAPE && self.close_top_modal()? {
-            return Ok(true);
-        }
         // Keys are only ours while a field is being edited; anything else stays
         // available to the chonsole and the engine — except a toolbar/clipboard
         // hotkey, which we claim here and run next tick (where models borrow).
         let Some(name) = self.session.editing().map(str::to_string) else {
+            if key == ESCAPE && self.close_top_modal()? {
+                return Ok(true);
+            }
             return Ok(self.hotkeys.match_hotkey(&self.interface, key));
         };
         if key == RETURN {
+            let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
             let commands =
                 self.session
-                    .commit_field(&name, false, self.slot.editor_mut(), &self.interface);
+                    .commit_field(&name, false, target.get_mut(), &self.interface);
             self.pending_commands.extend(commands);
             return Ok(true);
         }
         if key == ESCAPE {
-            self.session.cancel_edit();
-            if let Some(ed) = self.slot.editor_mut() {
-                ed.cancel_edit_field(&name, &self.interface);
-            }
+            let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+            self.session
+                .revert_field(&name, target.get_mut(), &self.interface);
             return Ok(true);
         }
         // Ctrl+A: select the value being edited. RmlUi receives the engine's
@@ -272,7 +293,8 @@ impl PanelManager {
         const CTRL: u32 = 1 << 1;
         let mods = self.interface.input().get_mod_key_state().unwrap_or(0);
         if mods & CTRL != 0 && crate::sbc::keys::is_key(&self.interface, key, "a") {
-            if let Some(ed) = self.slot.editor_mut() {
+            let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+            if let Some(ed) = target.get_mut() {
                 ed.select_edit_field(&name, &self.interface);
             }
             return Ok(true);
@@ -393,43 +415,52 @@ impl PanelManager {
         for action in self.input.process_interactions(&self.interface) {
             match action {
                 PendingAction::DragStart(field) => {
-                    if let Some(ed) = self.slot.editor() {
+                    let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                    if let Some(ed) = target.get() {
                         self.session.begin_drag(field, ed);
                     }
                 }
                 PendingAction::DragEnd(field) => {
-                    if let Some(ed) = self.slot.editor_mut() {
+                    let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                    if let Some(ed) = target.get_mut() {
                         ed.drag_end_field(&field, &self.interface);
                     }
                     let commands =
                         self.session
-                            .commit_drag(&field, self.slot.editor_mut(), &self.interface);
+                            .commit_drag(&field, target.get_mut(), &self.interface);
                     self.pending_commands.extend(commands);
                 }
                 PendingAction::ClickEdit(field) => {
-                    if let Some((root, extensions)) =
-                        self.slot.editor().and_then(|ed| ed.field_asset(&field))
-                    {
+                    let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                    let asset = target.get().and_then(|editor| editor.field_asset(&field));
+                    if let Some((root, extensions)) = asset {
                         if let Some(doc) = self.view.document_handle() {
-                            self.modals.open_asset(
+                            let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
+                            self.modals.get_mut::<AssetPicker>().open(
                                 &self.interface,
                                 doc,
                                 &field,
                                 &root,
-                                &extensions,
+                                &exts,
                             )?;
                         }
                         continue;
                     }
-                    if let Some(FieldValue::Color(rgba)) =
-                        self.slot.editor().map(|ed| ed.field_value(&field))
-                    {
+                    let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                    let value = target.get().map(|editor| editor.field_value(&field));
+                    if let Some(FieldValue::Color(rgba)) = value {
                         if let Some(doc) = self.view.document_handle() {
-                            self.modals.open_color(&self.interface, doc, &field, rgba)?;
+                            self.modals.get_mut::<ColorPicker>().open(
+                                &self.interface,
+                                doc,
+                                &field,
+                                rgba,
+                            )?;
                         }
                         continue;
                     }
-                    if let Some(ed) = self.slot.editor_mut() {
+                    let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                    if let Some(ed) = target.get_mut() {
                         ed.begin_edit_field(&field, &self.interface);
                     }
                     self.pending_select = Some(field.clone());

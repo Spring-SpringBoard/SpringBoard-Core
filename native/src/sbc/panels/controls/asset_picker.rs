@@ -3,13 +3,24 @@
 //! A port of `RmlUiAssetPickerWindow`. The material and unit/feature pickers are
 //! the same grid with a different item source.
 
+use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::controls::grid::{list_asset_tree, parent_dir, GridView};
-use crate::sbc::panels::field::{element_by_id, escape_rml};
+use crate::sbc::panels::field::{
+    element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
+};
+use crate::sbc::panels::modal::{Modal, ModalEvent};
+
+inventory::submit! {
+    crate::sbc::panels::modal::ModalRegistration {
+        order: 1,
+        make: || Box::new(AssetPicker::default()),
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum PickerEvent {
@@ -44,23 +55,11 @@ impl Default for AssetPicker {
 }
 
 impl AssetPicker {
-    pub(crate) fn is_open(&self) -> bool {
-        self.field.is_some()
-    }
-
     pub(crate) fn field(&self) -> Option<&str> {
         self.field.as_deref()
     }
 
-    /// The listeners were bound to elements the engine has since freed.
-    pub(crate) fn forget_bindings(&mut self) {
-        self.bound = false;
-        self.field = None;
-        self.events.borrow_mut().clear();
-        self.grid.drain_clicks();
-    }
-
-    pub(crate) fn markup(&self) -> String {
+    fn markup_rml(&self) -> String {
         format!(
             concat!(
                 r#"<div id="asset-picker" class="picker-backdrop hidden">"#,
@@ -81,7 +80,7 @@ impl AssetPicker {
         )
     }
 
-    pub(crate) fn bind(
+    fn bind_listeners(
         &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
@@ -140,18 +139,6 @@ impl AssetPicker {
     ) -> Result<(), Error> {
         self.field = None;
         self.set_visible(interface, document, false)
-    }
-
-    pub(crate) fn cancel_if_open(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<bool, Error> {
-        if !self.is_open() {
-            return Ok(false);
-        }
-        self.close(interface, document)?;
-        Ok(true)
     }
 
     /// Handle queued clicks and buttons. Returns the accepted asset path.
@@ -241,5 +228,66 @@ impl AssetPicker {
                 .element_set_class(up, "disabled", self.dir.is_empty())?;
         }
         Ok(())
+    }
+}
+
+impl Modal for AssetPicker {
+    fn markup(&self) -> String {
+        self.markup_rml()
+    }
+
+    fn bind(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        _changes: &ChangeQueue,
+        _interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
+        self.bind_listeners(interface, document)
+    }
+
+    fn forget_bindings(&mut self) {
+        self.bound = false;
+        self.field = None;
+        self.events.borrow_mut().clear();
+        self.grid.drain_clicks();
+    }
+
+    fn is_open(&self) -> bool {
+        self.field.is_some()
+    }
+
+    fn cancel_if_open(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<bool, Error> {
+        if !self.is_open() {
+            return Ok(false);
+        }
+        self.close(interface, document)?;
+        Ok(true)
+    }
+
+    fn poll(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<Vec<ModalEvent>, Error> {
+        let field = self.field().map(str::to_string);
+        let picked = self.tick(interface, document)?;
+        let mut events = Vec::new();
+        if let (Some(field), Some(path)) = (field, picked) {
+            events.push(ModalEvent::FieldValue {
+                field,
+                value: FieldValue::Text(path),
+                preview: false,
+            });
+        }
+        Ok(events)
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }

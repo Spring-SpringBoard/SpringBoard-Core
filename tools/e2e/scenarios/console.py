@@ -287,6 +287,31 @@ def chonsole_native_commands(run_state: E2ERun) -> None:
     run_state.assert_region_pixels(preview, rules, (width // 4, height // 4, width // 2, height // 2), min_changed=100)
 
 
+@scenario(target="chonsole-luaui-reload", cases=NATIVE_CHONSOLE_CASE)
+def chonsole_luaui_reload(run_state: E2ERun) -> None:
+    """Running `/luaui reload` from the rust console.
+
+    Executing a command that runs `Rml::Shutdown()` frees the console's own
+    document mid-keypress; hiding that dangling handle right after was a
+    use-after-free that aborted the engine. The engine surviving to the
+    screenshots below -- a crash would exit it and fail the run on the next xwd
+    -- is the assertion, plus that the console recreates its context and works
+    again after the reload.
+    """
+    run_state.focus()
+    run_state.key("Escape")
+    run_state.key("Return", delay=0.3)
+    run_state.type_text("/luaui reload")
+    run_state.screenshot("before-reload")
+    # Enter executes it: RmlUi is torn down, then the console hides itself.
+    run_state.key("Return", delay=3.0)
+    run_state.screenshot("after-reload")
+    # The console must recreate its context and accept input again.
+    run_state.key("Return", delay=0.4)
+    run_state.type_text("recovered")
+    run_state.screenshot("console-recovered")
+
+
 @scenario(uis=("chili", "rmlui"))
 def dev_console(run_state: E2ERun) -> None:
     """Lua developer consoles: line selection, Ctrl+C/Ctrl+A ownership, and F8 hiding."""

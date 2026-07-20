@@ -1,6 +1,7 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::controls::grid::{list_assets, GridItem};
+use crate::sbc::panels::editor_base::group_rml;
 use crate::sbc::panels::runtime::Item;
 use crate::sbc::rml::{element_by_id, escape_rml};
 
@@ -42,6 +43,10 @@ impl SettingsModel {
     }
 
     pub(super) fn dialog_markup(&self) -> String {
+        let dimensions = group_rml(&[
+            self.table.field_rml(ShadingWidth),
+            self.table.field_rml(ShadingHeight),
+        ]);
         format!(
             r#"<div id="shading-texture-dialog" class="picker-backdrop hidden">
                 <div class="dialog picker-dialog asset-dialog">
@@ -53,8 +58,7 @@ impl SettingsModel {
                             <button id="shading-disable" class="dialog-button">Disable</button>
                         </div>
                         <div id="shading-new-form" class="hidden">
-                            <div class="field-row"><label class="field-label">Width:</label><input id="shading-width" class="field-input" value="1024"/></div>
-                            <div class="field-row"><label class="field-label">Height:</label><input id="shading-height" class="field-input" value="1024"/></div>
+                            {dimensions}
                             <div class="dialog-hint">Creates a blank texture using this channel's sensible default colour.</div>
                             <div class="field-row"><button id="shading-create" class="dialog-button primary">Create texture</button></div>
                         </div>
@@ -63,7 +67,8 @@ impl SettingsModel {
                     <div class="dialog-footer"><button id="shading-cancel" class="dialog-button">Cancel</button></div>
                 </div>
             </div>"#,
-            self.shading_grid.container_rml()
+            self.shading_grid.container_rml(),
+            dimensions = dimensions,
         )
     }
 

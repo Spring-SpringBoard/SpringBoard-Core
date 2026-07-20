@@ -73,15 +73,16 @@
     box-sizing: border-box;
 }
 
-/* A normal row is a two-column form, not a 60%-wide collection of widgets.
-   Grouped rows are converted to `.field-inline` below, where both the display
-   button and edit input occupy the same X/Y/Z column. */
+/* A normal row has one full-width control. Give every control the same zero
+   flex basis so legacy preferred widths cannot misalign adjacent rows.
+   Grouped rows are converted to `.field-inline` below and split evenly. */
 .field-row > .field-input,
 .field-row > .field-composite-button,
 .field-row > .field-button,
 .field-row > .select-wrapper,
 .field-row > .field-toggle {
-    flex-grow: 1;
+    flex: 1 1 0dp;
+    min-width: 0dp;
 }
 
 .field-input:focus {
@@ -227,7 +228,9 @@
 }
 
 .field-numeric-button,
-.field-numeric-input {
+.field-numeric-input,
+.field-string-button,
+.field-string-input {
     background-color: #111411;
     border: 2px #050706;
     border-radius: 4px;
@@ -244,6 +247,10 @@
     drag: drag;
 }
 
+.field-string-button {
+    height: 31px;
+}
+
 .field-numeric-button:hover {
     background-color: #202820;
     border-color: #4d5a50;
@@ -256,7 +263,8 @@
     background-color: #171a12;
 }
 
-.field-numeric-input {
+.field-numeric-input,
+.field-string-input {
     padding: 3px 8px;
     text-align: right;
 }
@@ -406,6 +414,8 @@
 .field-composite-button.hidden,
 .field-numeric-button.hidden,
 .field-numeric-input.hidden,
+.field-string-button.hidden,
+.field-string-input.hidden,
 .field-section.hidden,
 .field-inline.hidden,
 .field-group.hidden,
@@ -506,11 +516,10 @@
     box-sizing: border-box;
 }
 
-/* Standalone selects are concise controls. Grouped selects override this below
-   and share the row equally with their peers. */
+/* A standalone choice fills the same form column as string and numeric fields.
+   Grouped choices already share their row equally with their peers. */
 .field-row > .select-wrapper {
-    flex: 0 1 260dp;
-    min-width: 0dp;
+    width: 100%;
 }
 
 .select-wrapper.field-choice {

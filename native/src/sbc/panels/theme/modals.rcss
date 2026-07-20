@@ -89,40 +89,6 @@
 .team-remove img { width: 14px; height: 14px; }
 .team-remove:hover { background-color: #993333; border-color: #cc5555; }
 
-/* --- File / New-project dialog rows --- */
-.fd-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.fd-row.hidden {
-    display: none;
-}
-
-.fd-label {
-    width: 60px;
-    color: #cccccc;
-    font-size: 13px;
-}
-
-.fd-input {
-    flex-grow: 1;
-    height: 26px;
-    background-color: #1a1a1a;
-    color: #eeeeee;
-    border: 1px #555555;
-    border-radius: 3px;
-    padding: 0px 6px;
-}
-
-.fd-input.fd-size {
-    flex-grow: 0;
-    width: 70px;
-}
-
 .dialog-footer {
     padding: 10px;
     border-top: 1px #555555;

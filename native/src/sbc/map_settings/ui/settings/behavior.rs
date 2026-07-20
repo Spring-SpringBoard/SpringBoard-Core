@@ -110,7 +110,24 @@ impl Behavior for SettingsBehavior {
             };
             return Outcome::commands(vec![Box::new(command)]);
         }
+        if matches!(id, ShadingWidth | ShadingHeight) {
+            return Outcome::default();
+        }
         Outcome::commands(model.rendering(id))
+    }
+
+    fn mount(
+        &mut self,
+        model: &mut SettingsModel,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        if let Some(host) = element_by_id(interface, document, "map-shading-modal") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(host, &model.dialog_markup())?;
+        }
+        Ok(())
     }
 
     fn bind(
@@ -121,11 +138,6 @@ impl Behavior for SettingsBehavior {
         _changes: &ChangeQueue,
         _interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        if let Some(host) = element_by_id(interface, document, "map-shading-modal") {
-            interface
-                .rml_ui()
-                .element_set_inner_rml(host, &model.dialog_markup())?;
-        }
         for (field, shading, _) in SHADING_TOGGLES {
             let Some(button) = element_by_id(interface, document, &format!("shading-{field}"))
             else {
@@ -193,8 +205,8 @@ impl Behavior for SettingsBehavior {
                         };
                         model.shading_enabled.insert((*field).to_string(), enabled);
                         if enabled {
-                            let width = dialog_dimension(interface, document, "shading-width");
-                            let height = dialog_dimension(interface, document, "shading-height");
+                            let width = dialog_dimension(model, ShadingWidth);
+                            let height = dialog_dimension(model, ShadingHeight);
                             commands.push(Box::new(CreateShadingTextureCommand::new(
                                 name.clone(),
                                 width,
@@ -249,12 +261,11 @@ impl Behavior for SettingsBehavior {
     }
 }
 
-fn dialog_dimension(interface: &NativeInterfaceRef, document: u64, id: &str) -> i32 {
-    element_by_id(interface, document, id)
-        .and_then(|element| interface.rml_ui().element_get_value(element).ok().flatten())
-        .and_then(|value| value.parse().ok())
-        .filter(|value: &i32| *value > 0)
-        .unwrap_or(1024)
+fn dialog_dimension(model: &SettingsModel, id: SettingsField) -> i32 {
+    match model.table.value(id) {
+        FieldValue::Number(value) if value.is_finite() && value > 0.0 => value.round() as i32,
+        _ => 1024,
+    }
 }
 
 fn default_shading_color(name: &str) -> [f32; 4] {

@@ -54,9 +54,14 @@ pub fn commit_new_project(
             project_name.to_string(),
             path.clone(),
             true,
-            Some(project),
+            Some(project.clone()),
         )),
-        Box::new(ReloadIntoProjectCommand::new(path, game_name, game_version)),
+        Box::new(ReloadIntoProjectCommand::for_new_project(
+            path,
+            game_name,
+            game_version,
+            project,
+        )),
     ]
 }
 

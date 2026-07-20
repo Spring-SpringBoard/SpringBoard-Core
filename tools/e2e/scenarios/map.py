@@ -59,6 +59,13 @@ def click_field(run_state: E2ERun, left: int, point: tuple[int, int], text: str)
     run_state.key("Return", delay=0.35)
 
 
+def click_dialog_field(run_state: E2ERun, point: tuple[int, int], text: str) -> None:
+    run_state.click(*dialog_point(run_state, point), delay=0.25)
+    run_state.key("ctrl+a", delay=0.1)
+    run_state.type_text(text)
+    run_state.key("Return", delay=0.35)
+
+
 @scenario()
 def pattern_preview(run_state: E2ERun) -> None:
     """A selected Terrain/Add pattern is visibly projected under the cursor.
@@ -422,10 +429,14 @@ def map_editors(run_state: E2ERun) -> None:
     run_state.screenshot_root("settings-specular-dialog")
     run_state.click(*dialog_point(run_state, DIALOG["texture_new"]), delay=0.8)
     run_state.screenshot_root("settings-specular-new-form")
+    click_dialog_field(run_state, DIALOG["texture_width"], "640")
+    click_dialog_field(run_state, DIALOG["texture_height"], "320")
     run_state.click(*dialog_point(run_state, DIALOG["texture_create"]), delay=0.8)
     run_state.assert_any_command(
         "CreateShadingTextureCommand",
         name="specular",
+        width=640,
+        height=320,
     )
     run_state.click(*panel_point(left, MAP["texture_reflection"]), delay=0.7)
     run_state.screenshot_root("settings-emission-dialog")

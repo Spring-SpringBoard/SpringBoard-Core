@@ -37,11 +37,6 @@ impl FieldSession {
         self.editing = Some(field);
     }
 
-    /// Escape while editing: leave edit mode without committing.
-    pub(crate) fn cancel_edit(&mut self) -> Option<String> {
-        self.editing.take()
-    }
-
     /// Remember what a drag began from, so undo returns to it.
     pub(crate) fn begin_drag(&mut self, field: String, editor: &dyn Editor) {
         self.drag_original = Some((field.clone(), editor.field_value(&field)));
@@ -64,6 +59,10 @@ impl FieldSession {
             if let Err(err) = ed.write_field_values(interface) {
                 log::warn!("reverting {name}: {err:?}");
             }
+            // Restore the hidden input before ending edit mode. Hiding it emits
+            // `blur`; if its discarded text is still present, that blur can
+            // otherwise commit the value Escape was meant to reject.
+            ed.cancel_edit_field(name, interface);
         }
     }
 

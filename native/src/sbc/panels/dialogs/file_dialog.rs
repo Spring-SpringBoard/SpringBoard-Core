@@ -6,22 +6,48 @@
 //! file-type dropdown (Import's Diffuse/Heightmap, Export's five formats), and a
 //! "directories are selectable" mode (Load/Save browse `.sdd` project folders).
 
+use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::actions::{FileDialogConfig, FileDialogResult};
+use crate::sbc::actions::{FileAcceptFn, FileDialogConfig, FileDialogResult};
 use crate::sbc::panels::controls::asset_picker::PickerEvent;
 use crate::sbc::panels::controls::grid::{list_assets, parent_dir, GridView};
-use crate::sbc::panels::field::{element_by_id, escape_rml};
+use crate::sbc::panels::dialogs::form::{DialogForm, FormItem};
+use crate::sbc::panels::editor::Editor;
+use crate::sbc::panels::field::{
+    element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
+};
+use crate::sbc::panels::fields::{ChoiceField, StringField};
+use crate::sbc::panels::modal::{Modal, ModalEvent};
+
+inventory::submit! {
+    crate::sbc::panels::modal::ModalRegistration {
+        order: 2,
+        make: || Box::new(FileDialog::default()),
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum FileField {
+    Name,
+    FileType,
+}
+
+use FileField::*;
 
 pub(crate) struct FileDialog {
     config: Option<FileDialogConfig>,
     dir: String,
     grid: GridView,
+    form: DialogForm<FileField>,
     events: Rc<RefCell<Vec<PickerEvent>>>,
     bound: bool,
+    /// The callback the open dialog runs against its accepted result, set by the
+    /// toolbar action that opened it.
+    pending_accept: Option<FileAcceptFn>,
 }
 
 impl Default for FileDialog {
@@ -30,28 +56,18 @@ impl Default for FileDialog {
             config: None,
             dir: String::new(),
             grid: GridView::new("file-dialog-grid", 64),
+            form: file_form(),
             events: Rc::new(RefCell::new(Vec::new())),
             bound: false,
+            pending_accept: None,
         }
     }
 }
 
 impl FileDialog {
-    pub(crate) fn is_open(&self) -> bool {
-        self.config.is_some()
-    }
-
-    /// The listeners were bound to elements the engine has since freed.
-    pub(crate) fn forget_bindings(&mut self) {
-        self.bound = false;
-        self.config = None;
-        self.events.borrow_mut().clear();
-        self.grid.drain_clicks();
-    }
-
     /// Static shell, injected into `#modal-root` once. The name/type rows are
     /// always present and shown or hidden per dialog, so the listeners bind once.
-    pub(crate) fn markup(&self) -> String {
+    fn markup_rml(&self) -> String {
         format!(
             concat!(
                 r#"<div id="file-dialog" class="picker-backdrop hidden">"#,
@@ -62,12 +78,7 @@ impl FileDialog {
                 r#"<button id="fd-up" class="dialog-button">Up</button>"#,
                 r#"<span id="fd-path" class="asset-path"></span></div>"#,
                 r#"{grid}"#,
-                r#"<div id="fd-name-row" class="fd-row hidden">"#,
-                r#"<label class="fd-label">Name</label>"#,
-                r#"<input type="text" id="fd-name" class="fd-input" value=""/></div>"#,
-                r#"<div id="fd-type-row" class="fd-row hidden">"#,
-                r#"<label class="fd-label">Type</label>"#,
-                r#"<select id="fd-type" class="fd-input"></select></div>"#,
+                r#"{form}"#,
                 r#"</div>"#,
                 r#"<div class="dialog-footer">"#,
                 r#"<button id="fd-ok" class="dialog-button primary">OK</button>"#,
@@ -75,13 +86,16 @@ impl FileDialog {
                 r#"</div></div></div>"#,
             ),
             grid = self.grid.container_rml(),
+            form = self.form.markup(),
         )
     }
 
-    pub(crate) fn bind(
+    fn bind_listeners(
         &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
+        changes: &ChangeQueue,
+        interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         if self.bound {
             return Ok(());
@@ -100,6 +114,7 @@ impl FileDialog {
                 q.borrow_mut().push(event);
             })?;
         }
+        self.form.bind(interface, document, changes, interactions)?;
         self.bound = true;
         Ok(())
     }
@@ -109,7 +124,9 @@ impl FileDialog {
         interface: &NativeInterfaceRef,
         document: u64,
         config: FileDialogConfig,
+        on_accept: FileAcceptFn,
     ) -> Result<(), Error> {
+        self.pending_accept = Some(on_accept);
         self.dir = config.root_dir.trim_end_matches('/').to_string();
         self.grid.set_selected(None);
 
@@ -118,18 +135,16 @@ impl FileDialog {
             rml.element_set_inner_rml(e, &escape_rml(&config.title))?;
         }
         // Name input row.
-        if let Some(e) = element_by_id(interface, document, "fd-name-row") {
+        if let Some(e) = element_by_id(interface, document, "row-fd-name") {
             rml.element_set_class(e, "hidden", !config.show_name_input)?;
         }
-        if let Some(e) = element_by_id(interface, document, "fd-name") {
-            rml.element_set_attribute(e, "value", "")?;
-        }
+        self.form.set(Name, FieldValue::Text(String::new()));
         // Type dropdown row.
-        if let Some(e) = element_by_id(interface, document, "fd-type-row") {
+        if let Some(e) = element_by_id(interface, document, "row-fd-type") {
             rml.element_set_class(e, "hidden", config.file_types.is_empty())?;
         }
         if !config.file_types.is_empty() {
-            if let Some(e) = element_by_id(interface, document, "fd-type") {
+            if let Some(e) = element_by_id(interface, document, "field-fd-type") {
                 let mut opts = String::new();
                 for t in &config.file_types {
                     opts.push_str(&format!(
@@ -140,6 +155,11 @@ impl FileDialog {
                 rml.element_set_inner_rml(e, &opts)?;
             }
         }
+        self.form.set(
+            FileType,
+            FieldValue::Text(config.file_types.first().cloned().unwrap_or_default()),
+        );
+        self.form.write(interface)?;
 
         self.config = Some(config);
         self.populate(interface, document)?;
@@ -155,18 +175,6 @@ impl FileDialog {
         self.set_visible(interface, document, false)
     }
 
-    pub(crate) fn cancel_if_open(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<bool, Error> {
-        if !self.is_open() {
-            return Ok(false);
-        }
-        self.close(interface, document)?;
-        Ok(true)
-    }
-
     /// Handle queued clicks and buttons; returns a result on OK.
     pub(crate) fn tick(
         &mut self,
@@ -178,7 +186,9 @@ impl FileDialog {
             self.events.borrow_mut().clear();
             return Ok(None);
         }
-        let config = self.config.clone().expect("open");
+        let Some(config) = self.config.clone() else {
+            return Ok(None);
+        };
 
         for id in self.grid.drain_clicks() {
             let item_is_dir = self.grid.item(&id).is_some_and(|i| i.is_directory);
@@ -193,11 +203,8 @@ impl FileDialog {
                         .unwrap_or(&id)
                         .trim_end_matches(".sdd")
                         .to_string();
-                    if let Some(e) = element_by_id(interface, document, "fd-name") {
-                        interface
-                            .rml_ui()
-                            .element_set_attribute(e, "value", &name)?;
-                    }
+                    self.form.set(Name, FieldValue::Text(name));
+                    self.form.write(interface)?;
                 }
                 self.grid.render(interface, document)?;
             } else {
@@ -225,7 +232,9 @@ impl FileDialog {
                     return Ok(None);
                 }
                 PickerEvent::Accept => {
-                    let result = self.build_result(interface, document, &config)?;
+                    self.form.commit(Name, interface);
+                    self.form.commit(FileType, interface);
+                    let result = self.build_result(&config);
                     self.close(interface, document)?;
                     return Ok(result);
                 }
@@ -282,25 +291,17 @@ impl FileDialog {
     /// Resolve the picked path + type from the current selection, name input and
     /// type dropdown. Returns None if the dialog can't produce a path yet (no
     /// name typed and nothing selected).
-    fn build_result(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        config: &FileDialogConfig,
-    ) -> Result<Option<FileDialogResult>, Error> {
-        let rml = interface.rml_ui();
-
+    fn build_result(&self, config: &FileDialogConfig) -> Option<FileDialogResult> {
         let file_type = if config.file_types.is_empty() {
             None
         } else {
-            element_by_id(interface, document, "fd-type")
-                .and_then(|e| rml.element_get_value(e).ok().flatten())
+            text_value(self.form.value(FileType))
+                .filter(|value| !value.is_empty())
                 .or_else(|| config.file_types.first().cloned())
         };
 
         let typed = if config.show_name_input {
-            element_by_id(interface, document, "fd-name")
-                .and_then(|e| rml.element_get_value(e).ok().flatten())
+            text_value(self.form.value(Name))
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
         } else {
@@ -319,9 +320,102 @@ impl FileDialog {
         } else if let Some(selected) = self.grid.selected() {
             selected.to_string()
         } else {
-            return Ok(None);
+            return None;
         };
 
-        Ok(Some(FileDialogResult { path, file_type }))
+        Some(FileDialogResult { path, file_type })
+    }
+}
+
+impl Modal for FileDialog {
+    fn markup(&self) -> String {
+        self.markup_rml()
+    }
+
+    fn bind(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        changes: &ChangeQueue,
+        interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
+        self.bind_listeners(interface, document, changes, interactions)
+    }
+
+    fn forget_bindings(&mut self) {
+        self.bound = false;
+        self.config = None;
+        self.pending_accept = None;
+        self.events.borrow_mut().clear();
+        self.grid.drain_clicks();
+    }
+
+    fn is_open(&self) -> bool {
+        self.config.is_some()
+    }
+
+    fn cancel_if_open(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<bool, Error> {
+        if !self.is_open() {
+            return Ok(false);
+        }
+        self.close(interface, document)?;
+        self.pending_accept = None;
+        Ok(true)
+    }
+
+    fn poll(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<Vec<ModalEvent>, Error> {
+        let mut events = Vec::new();
+        if let Some(result) = self.tick(interface, document)? {
+            if let Some(on_accept) = self.pending_accept.take() {
+                events.push(ModalEvent::Commands(on_accept(&result, interface)));
+            }
+        } else if !self.is_open() {
+            // The dialog closed (cancel); drop any pending callback.
+            self.pending_accept = None;
+        }
+        Ok(events)
+    }
+
+    fn field_editor(&self) -> Option<&dyn Editor> {
+        self.is_open().then(|| self.form.editor())
+    }
+
+    fn field_editor_mut(&mut self) -> Option<&mut dyn Editor> {
+        self.is_open().then(|| self.form.editor_mut())
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+fn file_form() -> DialogForm<FileField> {
+    DialogForm::new(
+        vec![
+            (Name, Box::new(StringField::new("fd-name", "Name", ""))),
+            (
+                FileType,
+                Box::new(ChoiceField::new("fd-type", "Type", Vec::new())),
+            ),
+        ],
+        vec![
+            FormItem::IdentifiedField(Name),
+            FormItem::IdentifiedField(FileType),
+        ],
+    )
+}
+
+fn text_value(value: FieldValue) -> Option<String> {
+    match value {
+        FieldValue::Text(value) => Some(value),
+        _ => None,
     }
 }

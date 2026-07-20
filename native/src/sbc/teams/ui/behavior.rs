@@ -149,25 +149,28 @@ impl Behavior for TeamsBehavior {
         }
     }
 
-    fn bind(
+    fn mount(
         &mut self,
         model: &mut TeamsModel,
         interface: &NativeInterfaceRef,
         document: u64,
-        changes: &ChangeQueue,
-        interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         if let Some(host) = element_by_id(interface, document, "team-edit-modal") {
             interface
                 .rml_ui()
                 .element_set_inner_rml(host, &model.dialog_rml())?;
         }
-        // The dialog's fields live under the modal host, outside the editor
-        // body the runtime bound; bind them against their real elements now.
-        // (Binding twice is harmless: the first pass found nothing.)
-        for entry in model.table.fields_mut() {
-            let _ = entry.field.bind(interface, document, changes, interactions);
-        }
+        Ok(())
+    }
+
+    fn bind(
+        &mut self,
+        model: &mut TeamsModel,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        _changes: &ChangeQueue,
+        _interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
         let bind = |id: &str, click: TeamClick| -> Result<(), Error> {
             if let Some(button) = element_by_id(interface, document, id) {
                 let clicks = model.clicks.clone();

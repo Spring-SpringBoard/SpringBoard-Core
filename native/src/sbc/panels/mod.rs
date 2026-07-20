@@ -9,12 +9,15 @@ pub(crate) mod editor_base;
 mod editor_slot;
 pub(crate) mod field;
 mod field_session;
+mod field_target;
 pub(crate) mod fields;
 mod input;
 mod manager;
+pub(crate) mod modal;
 mod modal_stack;
 pub(crate) mod registry;
 pub(crate) mod runtime;
 mod view;
 
+pub(crate) use editor::Editor;
 pub(crate) use manager::PanelManager;

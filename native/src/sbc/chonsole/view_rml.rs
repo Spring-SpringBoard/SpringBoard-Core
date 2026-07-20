@@ -132,6 +132,13 @@ impl ChonsoleRml {
         interface: &NativeInterfaceRef,
         visible: bool,
     ) -> Result<(), Error> {
+        // Executing a command (`/luaui reload`) can run `Rml::Shutdown()` and
+        // free this document mid-call; hiding a dangling handle is a
+        // use-after-free. Revalidate the context and drop stale handles.
+        if !self.context_is_alive(interface) {
+            self.forget();
+            return Ok(());
+        }
         let Some(document) = self.document else {
             return Ok(());
         };

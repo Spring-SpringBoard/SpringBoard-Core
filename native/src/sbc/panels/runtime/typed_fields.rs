@@ -435,6 +435,14 @@ impl<Id: Copy + Eq + 'static> TableModel<Id> {
             .map(|entry| entry.field.name().to_string())
             .unwrap_or_default()
     }
+
+    pub(crate) fn field_rml(&self, id: Id) -> String {
+        self.entries
+            .iter()
+            .find(|entry| entry.id == id)
+            .map(|entry| entry.field.generate_rml())
+            .unwrap_or_default()
+    }
 }
 
 impl<Id: Copy + Eq + 'static> crate::sbc::panels::runtime::contract::EditorModel

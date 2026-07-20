@@ -4,12 +4,9 @@ use std::rc::Rc;
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::Action;
-use crate::sbc::panels::controls::asset_picker::AssetPicker;
-use crate::sbc::panels::controls::color_picker::ColorPicker;
-use crate::sbc::panels::dialogs::file_dialog::FileDialog;
 use crate::sbc::panels::field::{bind_tooltip, element_by_id, escape_rml};
+use crate::sbc::panels::modal::registered_markup;
 use crate::sbc::panels::registry::{editors_for, Tab};
-use crate::sbc::project::new_project_dialog::NewProjectDialog;
 use crate::sbc::rml;
 
 const UI_CONTEXT: &str = "sbc_native_ui";
@@ -124,11 +121,7 @@ impl PanelView {
         self.content = element_by_id(interface, doc, "main-content");
 
         if let Some(modal) = element_by_id(interface, doc, "modal-root") {
-            let markup = ColorPicker::markup()
-                + &AssetPicker::default().markup()
-                + &FileDialog::default().markup()
-                + &NewProjectDialog::markup();
-            rml.element_set_inner_rml(modal, &markup)?;
+            rml.element_set_inner_rml(modal, &registered_markup())?;
         }
 
         self.build_tab_bar(interface)?;

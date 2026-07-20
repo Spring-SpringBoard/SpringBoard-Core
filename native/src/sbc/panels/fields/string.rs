@@ -13,7 +13,9 @@ pub(crate) struct StringField {
     tooltip: Option<String>,
     value: String,
     width: u32,
-    element: Option<u64>,
+    display_elem: Option<u64>,
+    edit_elem: Option<u64>,
+    editing: bool,
 }
 
 impl StringField {
@@ -24,13 +26,50 @@ impl StringField {
             value: value.to_string(),
             width: 200,
             tooltip: None,
-            element: None,
+            display_elem: None,
+            edit_elem: None,
+            editing: false,
         }
     }
 
     pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
         self.tooltip = Some(tooltip.to_string());
         self
+    }
+
+    fn button_rml(&self) -> String {
+        format!(
+            r#"<span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span>"#,
+            title = escape_rml(self.title.trim_end_matches(':')),
+            value = escape_rml(&self.value),
+        )
+    }
+
+    fn show_edit(&mut self, interface: &NativeInterfaceRef) {
+        self.editing = true;
+        let rml = interface.rml_ui();
+        if let Some(element) = self.display_elem {
+            let _ = rml.element_set_class(element, "hidden", true);
+        }
+        if let Some(element) = self.edit_elem {
+            let _ = rml.element_set_class(element, "hidden", false);
+            let _ = rml.element_set_attribute(element, "value", &self.value);
+            let _ = rml.element_focus(element);
+            let _ = rml.element_form_control_input_select(element);
+        }
+    }
+
+    fn show_display(&mut self, interface: &NativeInterfaceRef) {
+        self.editing = false;
+        let markup = self.button_rml();
+        let rml = interface.rml_ui();
+        if let Some(element) = self.display_elem {
+            let _ = rml.element_set_class(element, "hidden", false);
+            let _ = rml.element_set_inner_rml(element, &markup);
+        }
+        if let Some(element) = self.edit_elem {
+            let _ = rml.element_set_class(element, "hidden", true);
+        }
     }
 }
 
@@ -47,13 +86,13 @@ impl Field for StringField {
         format!(
             concat!(
                 r#"<div class="field-row">"#,
-                r#"<label class="field-label">{title}:</label>"#,
-                r#"<input type="text" id="field-{n}" class="field-input" style="width: {width}px;" value="{value}"/>"#,
+                r#"<button id="field-{n}" class="field-composite-button field-string-button" style="width: {width}px;">{button}</button>"#,
+                r#"<input type="text" id="field-{n}-input" class="field-input field-string-input hidden" style="width: {width}px;" value="{value}"/>"#,
                 r#"</div>"#,
             ),
-            title = escape_rml(self.title.trim_end_matches(':')),
             n = self.name,
             width = self.width,
+            button = self.button_rml(),
             value = escape_rml(&self.value),
         )
     }
@@ -65,32 +104,39 @@ impl Field for StringField {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        self.element = element_by_id(interface, document, &format!("field-{}", self.name));
-        if let Some(e) = self.element {
+        self.display_elem = element_by_id(interface, document, &format!("field-{}", self.name));
+        self.edit_elem = element_by_id(interface, document, &format!("field-{}-input", self.name));
+        if let Some(element) = self.display_elem {
+            on_pointer(interface, element, self.name.clone(), interactions)?;
+        }
+        if let Some(element) = self.edit_elem {
             // Never on "change": a text input fires that per keystroke.
-            on_enter(interface, e, self.name.clone(), changes)?;
-            on_blur(interface, e, self.name.clone(), changes)?;
-            // The click must reach the manager as an edit: typing is only
-            // forwarded to the panel while a field is being edited.
-            on_pointer(interface, e, self.name.clone(), interactions)?;
+            on_enter(interface, element, self.name.clone(), changes)?;
+            on_blur(interface, element, self.name.clone(), changes)?;
         }
         Ok(())
     }
 
     fn read_from_dom(&mut self, interface: &NativeInterfaceRef) -> Result<FieldValue, Error> {
-        if let Some(e) = self.element {
-            if let Ok(Some(text)) = interface.rml_ui().element_get_value(e) {
+        if let Some(element) = self.edit_elem {
+            if let Ok(Some(text)) = interface.rml_ui().element_get_value(element) {
                 self.value = text;
             }
         }
+        self.show_display(interface);
         Ok(FieldValue::Text(self.value.clone()))
     }
 
     fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(e) = self.element {
+        if let Some(element) = self.display_elem {
             interface
                 .rml_ui()
-                .element_set_attribute(e, "value", &self.value)?;
+                .element_set_inner_rml(element, &self.button_rml())?;
+        }
+        if let Some(element) = self.edit_elem {
+            interface
+                .rml_ui()
+                .element_set_attribute(element, "value", &self.value)?;
         }
         Ok(())
     }
@@ -98,16 +144,25 @@ impl Field for StringField {
     /// Click without drag: focus and select the whole value, so typing
     /// replaces it (the standard click-to-edit behaviour).
     fn begin_edit(&mut self, interface: &NativeInterfaceRef) {
-        if let Some(e) = self.element {
-            let _ = interface.rml_ui().element_focus(e);
-            let _ = interface.rml_ui().element_form_control_input_select(e);
+        if !self.editing {
+            self.show_edit(interface);
         }
     }
 
     fn select_edit(&mut self, interface: &NativeInterfaceRef) {
-        if let Some(e) = self.element {
-            let _ = interface.rml_ui().element_focus(e);
-            let _ = interface.rml_ui().element_form_control_input_select(e);
+        if self.editing {
+            if let Some(element) = self.edit_elem {
+                let _ = interface.rml_ui().element_focus(element);
+                let _ = interface
+                    .rml_ui()
+                    .element_form_control_input_select(element);
+            }
+        }
+    }
+
+    fn end_edit(&mut self, interface: &NativeInterfaceRef) {
+        if self.editing {
+            self.show_display(interface);
         }
     }
 

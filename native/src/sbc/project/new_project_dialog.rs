@@ -5,17 +5,41 @@
 //! units. On confirm it hands the manager the fields, which the action layer
 //! turns into `SaveProjectInfoCommand` + `ReloadIntoProjectCommand`.
 
+use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::actions::available_maps;
+use crate::sbc::actions::{available_maps, commit_new_project};
 use crate::sbc::panels::controls::asset_picker::PickerEvent;
-use crate::sbc::panels::field::{element_by_id, escape_rml};
+use crate::sbc::panels::dialogs::form::{DialogForm, FormItem};
+use crate::sbc::panels::field::{
+    element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
+};
+use crate::sbc::panels::fields::{ChoiceField, NumericField, StringField};
+use crate::sbc::panels::modal::{Modal, ModalEvent};
+use crate::sbc::panels::Editor;
+
+inventory::submit! {
+    crate::sbc::panels::modal::ModalRegistration {
+        order: 3,
+        make: || Box::new(NewProjectDialog::default()),
+    }
+}
 
 /// The blank map's archive name; picking it reveals the size inputs.
 const BLANK_MAP: &str = "SB_Blank_Map";
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum NewProjectField {
+    Name,
+    Map,
+    SizeX,
+    SizeY,
+}
+
+use NewProjectField::*;
 
 /// What the dialog produces on OK.
 pub(crate) struct NewProjectResult {
@@ -25,50 +49,48 @@ pub(crate) struct NewProjectResult {
     pub size_y: Option<f32>,
 }
 
-#[derive(Default)]
 pub(crate) struct NewProjectDialog {
     open: bool,
     events: Rc<RefCell<Vec<PickerEvent>>>,
+    form: DialogForm<NewProjectField>,
     bound: bool,
 }
 
+impl Default for NewProjectDialog {
+    fn default() -> Self {
+        Self {
+            open: false,
+            events: Rc::new(RefCell::new(Vec::new())),
+            form: new_project_form(),
+            bound: false,
+        }
+    }
+}
+
 impl NewProjectDialog {
-    pub(crate) fn is_open(&self) -> bool {
-        self.open
-    }
-
-    pub(crate) fn forget_bindings(&mut self) {
-        self.bound = false;
-        self.open = false;
-        self.events.borrow_mut().clear();
-    }
-
-    pub(crate) fn markup() -> String {
-        concat!(
-            r#"<div id="new-project" class="picker-backdrop hidden">"#,
-            r#"<div class="dialog picker-dialog">"#,
-            r#"<div class="dialog-header"><span class="dialog-title">New project</span></div>"#,
-            r#"<div class="dialog-content">"#,
-            r#"<div class="fd-row"><label class="fd-label">Name</label>"#,
-            r#"<input type="text" id="np-name" class="fd-input" value=""/></div>"#,
-            r#"<div class="fd-row"><label class="fd-label">Map</label>"#,
-            r#"<select id="np-map" class="fd-input"></select></div>"#,
-            r#"<div id="np-size-row" class="fd-row hidden"><label class="fd-label">Size</label>"#,
-            r#"<input type="text" id="np-size-x" class="fd-input fd-size" value="10"/>"#,
-            r#"<input type="text" id="np-size-y" class="fd-input fd-size" value="10"/></div>"#,
-            r#"</div>"#,
-            r#"<div class="dialog-footer">"#,
-            r#"<button id="np-ok" class="dialog-button primary">Create</button>"#,
-            r#"<button id="np-cancel" class="dialog-button">Cancel</button>"#,
-            r#"</div></div></div>"#,
+    fn markup_rml(&self) -> String {
+        let fields = self.form.markup();
+        format!(
+            concat!(
+                r#"<div id="new-project" class="picker-backdrop hidden">"#,
+                r#"<div class="dialog picker-dialog">"#,
+                r#"<div class="dialog-header"><span class="dialog-title">New project</span></div>"#,
+                r#"<div class="dialog-content">{fields}</div>"#,
+                r#"<div class="dialog-footer">"#,
+                r#"<button id="np-ok" class="dialog-button primary">Create</button>"#,
+                r#"<button id="np-cancel" class="dialog-button">Cancel</button>"#,
+                r#"</div></div></div>"#,
+            ),
+            fields = fields,
         )
-        .to_string()
     }
 
-    pub(crate) fn bind(
+    fn bind_listeners(
         &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
+        changes: &ChangeQueue,
+        interactions: &InteractionQueue,
     ) -> Result<(), Error> {
         if self.bound {
             return Ok(());
@@ -86,6 +108,7 @@ impl NewProjectDialog {
                 q.borrow_mut().push(event);
             })?;
         }
+        self.form.bind(interface, document, changes, interactions)?;
         self.bound = true;
         Ok(())
     }
@@ -98,7 +121,7 @@ impl NewProjectDialog {
         let rml = interface.rml_ui();
         // Populate the map dropdown: the blank map first, then everything the VFS
         // has an archive for.
-        let mut opts = format!(r#"<option value="{BLANK_MAP}">Empty map</option>"#);
+        let mut opts = format!(r#"<option value="{BLANK_MAP}">Blank</option>"#);
         for map in available_maps(interface) {
             if map == BLANK_MAP {
                 continue;
@@ -108,12 +131,14 @@ impl NewProjectDialog {
                 v = escape_rml(&map)
             ));
         }
-        if let Some(e) = element_by_id(interface, document, "np-map") {
+        if let Some(e) = element_by_id(interface, document, "field-np-map") {
             rml.element_set_inner_rml(e, &opts)?;
         }
-        if let Some(e) = element_by_id(interface, document, "np-name") {
-            rml.element_set_attribute(e, "value", "")?;
-        }
+        self.form.set(Name, FieldValue::Text(String::new()));
+        self.form.set(Map, FieldValue::Text(BLANK_MAP.to_string()));
+        self.form.set(SizeX, FieldValue::Number(10.0));
+        self.form.set(SizeY, FieldValue::Number(10.0));
+        self.form.write(interface)?;
         self.open = true;
         self.set_visible(interface, document, true)
     }
@@ -125,18 +150,6 @@ impl NewProjectDialog {
     ) -> Result<(), Error> {
         self.open = false;
         self.set_visible(interface, document, false)
-    }
-
-    pub(crate) fn cancel_if_open(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<bool, Error> {
-        if !self.is_open() {
-            return Ok(false);
-        }
-        self.close(interface, document)?;
-        Ok(true)
     }
 
     /// Drive the dialog. Returns the collected fields on OK.
@@ -152,11 +165,11 @@ impl NewProjectDialog {
         let rml = interface.rml_ui();
 
         // Show the size inputs only for the blank map.
-        let map = element_by_id(interface, document, "np-map")
-            .and_then(|e| rml.element_get_value(e).ok().flatten())
-            .unwrap_or_else(|| BLANK_MAP.to_string());
-        if let Some(e) = element_by_id(interface, document, "np-size-row") {
-            rml.element_set_class(e, "hidden", map != BLANK_MAP)?;
+        let map = text_value(self.form.value(Map));
+        for id in ["row-np-size-x", "row-np-size-y"] {
+            if let Some(e) = element_by_id(interface, document, id) {
+                rml.element_set_class(e, "hidden", map != BLANK_MAP)?;
+            }
         }
 
         let event = self.events.borrow_mut().drain(..).next();
@@ -167,18 +180,19 @@ impl NewProjectDialog {
                     return Ok(None);
                 }
                 PickerEvent::Accept => {
-                    let name = element_by_id(interface, document, "np-name")
-                        .and_then(|e| rml.element_get_value(e).ok().flatten())
-                        .map(|s| s.trim().to_string())
-                        .unwrap_or_default();
+                    for id in [Name, Map, SizeX, SizeY] {
+                        self.form.commit(id, interface);
+                    }
+                    let name = text_value(self.form.value(Name)).trim().to_string();
                     if name.is_empty() {
                         // A project needs a name; keep the dialog open.
                         return Ok(None);
                     }
+                    let map = text_value(self.form.value(Map));
                     let (size_x, size_y) = if map == BLANK_MAP {
                         (
-                            read_size(interface, document, "np-size-x"),
-                            read_size(interface, document, "np-size-y"),
+                            number_value(self.form.value(SizeX)),
+                            number_value(self.form.value(SizeY)),
                         )
                     } else {
                         (None, None)
@@ -211,8 +225,124 @@ impl NewProjectDialog {
     }
 }
 
-fn read_size(interface: &NativeInterfaceRef, document: u64, id: &str) -> Option<f32> {
-    element_by_id(interface, document, id)
-        .and_then(|e| interface.rml_ui().element_get_value(e).ok().flatten())
-        .and_then(|s| s.trim().parse::<f32>().ok())
+impl Modal for NewProjectDialog {
+    fn markup(&self) -> String {
+        self.markup_rml()
+    }
+
+    fn bind(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        changes: &ChangeQueue,
+        interactions: &InteractionQueue,
+    ) -> Result<(), Error> {
+        self.bind_listeners(interface, document, changes, interactions)
+    }
+
+    fn forget_bindings(&mut self) {
+        self.bound = false;
+        self.open = false;
+        self.events.borrow_mut().clear();
+    }
+
+    fn is_open(&self) -> bool {
+        self.open
+    }
+
+    fn cancel_if_open(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<bool, Error> {
+        if !self.is_open() {
+            return Ok(false);
+        }
+        self.close(interface, document)?;
+        Ok(true)
+    }
+
+    fn poll(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<Vec<ModalEvent>, Error> {
+        let mut events = Vec::new();
+        if let Some(result) = self.tick(interface, document)? {
+            events.push(ModalEvent::Commands(commit_new_project(
+                &result.name,
+                &result.map_name,
+                result.size_x,
+                result.size_y,
+                interface,
+            )));
+        }
+        Ok(events)
+    }
+
+    fn field_editor(&self) -> Option<&dyn Editor> {
+        self.open.then(|| self.form.editor())
+    }
+
+    fn field_editor_mut(&mut self) -> Option<&mut dyn Editor> {
+        self.open.then(|| self.form.editor_mut())
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+fn new_project_form() -> DialogForm<NewProjectField> {
+    DialogForm::new(
+        vec![
+            (
+                Name,
+                Box::new(StringField::new("np-name", "Project name", "")),
+            ),
+            (Map, Box::new(ChoiceField::new("np-map", "Map", Vec::new()))),
+            (
+                SizeX,
+                Box::new(
+                    NumericField::new("np-size-x", "Size X", 10.0)
+                        .min(2.0)
+                        .max(32.0)
+                        .decimals(0)
+                        .compact(),
+                ),
+            ),
+            (
+                SizeY,
+                Box::new(
+                    NumericField::new("np-size-y", "Size Y", 10.0)
+                        .min(1.0)
+                        .max(32.0)
+                        .decimals(0)
+                        .compact(),
+                ),
+            ),
+        ],
+        vec![
+            FormItem::Field(Name),
+            FormItem::Field(Map),
+            FormItem::IdentifiedRow(vec![SizeX, SizeY]),
+        ],
+    )
+}
+
+fn text_value(value: FieldValue) -> String {
+    match value {
+        FieldValue::Text(value) => value,
+        _ => String::new(),
+    }
+}
+
+fn number_value(value: FieldValue) -> Option<f32> {
+    match value {
+        // The dialog displays whole map units. Range-based dragging may hold a
+        // fractional intermediate internally, so do not leak that into the
+        // blank-map launch parameters.
+        FieldValue::Number(value) => Some(value.round()),
+        _ => None,
+    }
 }

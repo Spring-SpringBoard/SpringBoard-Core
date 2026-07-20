@@ -141,7 +141,7 @@ change**, so there is nothing else to observe.
 
 | screen | what it pins down |
 | --- | --- |
-| `fields-at-rest` | One image of the **whole control set**: string (and empty string), numeric plain/bounded/3-decimal, boolean on and off, choice, colour, asset, and a group on one row. The cheapest way to see what everything looks like, and what a restyle would change. |
+| `fields-at-rest` | One image of the **whole control set**: composite click-to-edit string (and empty string), numeric plain/bounded/3-decimal, boolean on and off, full-width choice, colour, asset, and a group on one row. The cheapest way to see what everything looks like, and what a restyle would change. |
 | `numeric-dragging` | Mid-drag on a numeric: the value moves (50 → 88) without the field ever entering text mode, and the pointer is pinned and hidden. |
 | `choice-open` | The choice list, open, showing its items. |
 | `fields-after-input` | After driving every control: string typed, numeric typed, bounded dragged, boolean toggled off, choice on "Second". |
@@ -150,7 +150,9 @@ change**, so there is nothing else to observe.
 | `asset-packs` | The asset picker opens on SpringBoard's **asset packs** (`core/`), not on a directory: a field's root is a place *inside* a pack. |
 | `asset-in-pack` / `asset-back-at-packs` | Into the pack and back out with Up — each asserted to have actually redrawn the listing. Cells show the texture itself. |
 | `asset-selected` / `asset-committed` | Picking commits an **asset path** (`core/cement_diffuse.png`), which is what a project stores — not a filesystem path. |
-| `new-project`, `file-dialog` (+ `-closed`) | The two dialogs the toolbar opens, and Escape closing them. The file dialog's Up at its root does nothing, which is the bound it should have. |
+| `new-project` / `new-project-edited` (+ `-closed`) | New Project uses the editor controls for Project name, Map, Size X and Size Y; its text/numeric controls accept edits, and Escape closes it. |
+| `file-dialog`, `file-dialog-open`, `file-dialog-up` (+ `-closed`) | The load dialog's path/grid shell. Up at its root does nothing, which is the bound it should have. |
+| `export-dialog` / `export-type-open` / `export-dialog-configured` | The File dialog's optional shared string/dropdown form: a name is entered and a visibly left-aligned non-default export type is selected. |
 | `no-tooltip` / `numeric-tooltip` / `tooltip-gone` | Hovering a control shows its tooltip, and moving away removes it. The only scenario with tooltips on — they follow the pointer, so every other run hides them (`SBC_HIDE_TOOLTIPS`). |
 
 ## cursortip-rust

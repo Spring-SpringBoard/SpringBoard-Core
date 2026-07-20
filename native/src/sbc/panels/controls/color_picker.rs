@@ -5,12 +5,21 @@
 //! RmlUi feeds mouse input to its contexts directly, so a plugin never sees
 //! `mouse_move` while a press is held; the cursor is polled instead).
 
+use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use crate::sbc::panels::field::element_by_id;
+use crate::sbc::panels::field::{element_by_id, FieldValue};
+use crate::sbc::panels::modal::{Modal, ModalEvent};
+
+inventory::submit! {
+    crate::sbc::panels::modal::ModalRegistration {
+        order: 0,
+        make: || Box::new(ColorPicker::default()),
+    }
+}
 
 const IMG_SV_WHITE: &str = "LuaUI/images/scenedit/color_picker/generated/sv_white.png";
 const IMG_SV_BLACK: &str = "LuaUI/images/scenedit/color_picker/generated/sv_black.png";
@@ -65,10 +74,6 @@ impl Default for ColorPicker {
 }
 
 impl ColorPicker {
-    pub(crate) fn is_open(&self) -> bool {
-        self.field.is_some()
-    }
-
     pub(crate) fn field(&self) -> Option<&str> {
         self.field.as_deref()
     }
@@ -87,17 +92,7 @@ impl ColorPicker {
         self.previewing
     }
 
-    /// The listeners were bound to elements the engine has since freed.
-    pub(crate) fn forget_bindings(&mut self) {
-        self.bound = false;
-        self.field = None;
-        self.grab = Grab::None;
-        self.previewing = false;
-        self.events.borrow_mut().clear();
-        self.grab_queue.borrow_mut().clear();
-    }
-
-    pub(crate) fn markup() -> String {
+    fn markup_rml() -> String {
         format!(
             concat!(
                 r#"<div id="color-picker" class="picker-backdrop hidden">"#,
@@ -124,7 +119,7 @@ impl ColorPicker {
     }
 
     /// Bind the picker's listeners once; the markup is created with the shell.
-    pub(crate) fn bind(
+    fn bind_listeners(
         &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
@@ -316,6 +311,97 @@ impl ColorPicker {
                 &format!("background-color: {};", css([r, g, b])),
             );
         }
+    }
+}
+
+impl Modal for ColorPicker {
+    fn markup(&self) -> String {
+        Self::markup_rml()
+    }
+
+    fn bind(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+        _changes: &crate::sbc::panels::field::ChangeQueue,
+        _interactions: &crate::sbc::panels::field::InteractionQueue,
+    ) -> Result<(), Error> {
+        self.bind_listeners(interface, document)
+    }
+
+    fn forget_bindings(&mut self) {
+        self.bound = false;
+        self.field = None;
+        self.grab = Grab::None;
+        self.previewing = false;
+        self.events.borrow_mut().clear();
+        self.grab_queue.borrow_mut().clear();
+    }
+
+    fn is_open(&self) -> bool {
+        self.field.is_some()
+    }
+
+    fn cancel_if_open(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<bool, Error> {
+        if !self.is_open() {
+            return Ok(false);
+        }
+        self.close(interface, document)?;
+        Ok(true)
+    }
+
+    /// Dragging previews the colour on the engine every frame so the scene shows
+    /// what is being picked; previews stay out of the undo history. Accepting
+    /// dispatches exactly one undoable command, cancelling none.
+    fn poll(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<Vec<ModalEvent>, Error> {
+        let mut events = Vec::new();
+        if self.tick(interface, document) {
+            if let Some(field) = self.field().map(str::to_string) {
+                events.push(ModalEvent::FieldValue {
+                    field,
+                    value: FieldValue::Color(self.rgba()),
+                    preview: true,
+                });
+            }
+        }
+
+        for event in self.drain_events() {
+            let Some(field) = self.field().map(str::to_string) else {
+                continue;
+            };
+            // The preview left the engine on some dragged colour. Undo has to
+            // restore the colour the picker opened with, and the committed
+            // command captures whatever it finds -- so put the original back
+            // (as a preview, off-history) before committing.
+            if self.is_previewing() {
+                events.push(ModalEvent::FieldValue {
+                    field: field.clone(),
+                    value: FieldValue::Color(self.original()),
+                    preview: true,
+                });
+            }
+            if let PickerEvent::Accept = event {
+                events.push(ModalEvent::FieldValue {
+                    field,
+                    value: FieldValue::Color(self.rgba()),
+                    preview: false,
+                });
+            }
+            self.close(interface, document)?;
+        }
+        Ok(events)
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 

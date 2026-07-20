@@ -12,6 +12,21 @@ stable mid-review.
 
 ---
 
+## Packaged launch reports SDL audio recovery as an error
+
+The standalone application can emit
+`[Sound::DeviceChanged] SDL failed to handle device change, reopening` at
+startup even though the editor opens and the same engine does not emit it when
+started from the development CLI. The engine writes this through its ordinary
+`LOG` path, but the native developer console treats any line containing
+`failed` as an error, so it opens on a successful recovery.
+
+Compare the packaged and CLI audio environments and confirm whether SDL is
+actually reopening twice for the remove/add event pair. If recovery is healthy,
+change the engine message to neutral wording such as
+`SDL audio device changed; reopening`; do not add a SpringBoard-only parser
+exception for a misleading engine message.
+
 ## 1. Objects commands: make them concrete and fully typed
 
 **What.** The three object commands are generic over `objType` and still carry

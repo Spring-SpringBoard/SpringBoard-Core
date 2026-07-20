@@ -83,6 +83,8 @@ pub(crate) enum Item<Id: 'static> {
     /// Runtime-built variants for models whose layout is discovered at
     /// runtime (Properties builds rows from the selected object).
     OwnedRow(Vec<Id>),
+    /// Runtime-built side-by-side fields with stable `row-<name>` ids.
+    OwnedIdRow(Vec<Id>),
     OwnedSection(String),
     /// Markup for a custom widget the behavior binds and drives itself
     /// (`Behavior::bind` / `Behavior::tick`). Layout runs over the model, so
@@ -156,6 +158,19 @@ pub(crate) trait Behavior {
     /// The brush-action strip, placed by `Item::Actions`.
     fn actions(&self) -> Option<&'static [BrushAction]> {
         None
+    }
+
+    /// Insert markup that lives outside the editor body (normally a modal).
+    /// This runs before field binding, so fields in that markup use the exact
+    /// same single binding pass as fields in the editor body.
+    fn mount(
+        &mut self,
+        model: &mut Self::Model,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), spring_native::prelude::Error> {
+        let _ = (model, interface, document);
+        Ok(())
     }
 
     /// Bind the behavior's `Item::Custom` widgets. Runs after fields and grids.
