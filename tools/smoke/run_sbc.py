@@ -61,7 +61,11 @@ def launch_manual(config: Path | None = None) -> int:
     The interactive twin of `boot()` — no timeout, no test spec. This is the whole
     body of the old tools/dev/launch.sh; that script now just calls it.
     """
-    write_dir, env, cmd = prepare(prefix="sbc-manual-", port_flags_config=config)
+    write_dir, env, cmd = prepare(
+        prefix="sbc-manual-",
+        port_flags_config=config,
+        write_dir=_manual_write_dir(),
+    )
     # Manual sessions intentionally use a fresh isolated engine write-dir, but
     # command history is user state rather than run output. Keep it outside the
     # temporary directory so restarting `just run` restores it. Honour an
@@ -113,6 +117,7 @@ def prepare(
     tags: list[str] | None = None,
     prefix: str = "sbc-",
     port_flags_config: Path | None = None,
+    write_dir: Path | None = None,
 ) -> tuple[Path, dict[str, str], list[str]]:
     """Set up an isolated write dir and return (write_dir, env, spring command).
 
@@ -137,9 +142,18 @@ def prepare(
             f"run `just build` (cargo build --release) in {sbc_root} first"
         )
 
-    write_dir = Path(tempfile.mkdtemp(prefix=prefix))
-    (write_dir / "games").mkdir()
+    # A persistent write dir (interactive `just run`) keeps projects, imports and
+    # exports across restarts; tests pass none and get a throwaway temp dir. Only
+    # the game copy is refreshed each run -- everything the editor writes under
+    # springboard/ is left untouched.
+    if write_dir is None:
+        write_dir = Path(tempfile.mkdtemp(prefix=prefix))
+    else:
+        write_dir.mkdir(parents=True, exist_ok=True)
+    (write_dir / "games").mkdir(exist_ok=True)
     game_dir = write_dir / "games" / "SpringBoard Core.sdd"
+    if game_dir.exists():
+        shutil.rmtree(game_dir)
     shutil.copytree(
         sbc_root,
         game_dir,
@@ -166,7 +180,9 @@ def prepare(
         Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sbc-fontcache"
     )
     fontcache.mkdir(parents=True, exist_ok=True)
-    (write_dir / "fontcache").symlink_to(fontcache)
+    fontcache_link = write_dir / "fontcache"
+    fontcache_link.unlink(missing_ok=True)
+    fontcache_link.symlink_to(fontcache)
 
     # Shared dev config (tools/dev/). Its script.txt sets up two teams in two
     # ally-teams so team/alliance tests have something to act on (set_ally,
@@ -208,6 +224,17 @@ def _manual_history_path() -> Path:
     """Return the durable XDG state path for interactive Chonsole history."""
     state_home = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
     return state_home / "springboard" / "chonsole-history"
+
+
+def _manual_write_dir() -> Path:
+    """Durable write dir for interactive `just run`, so projects and imports/
+    exports survive a restart. `SBC_WRITE_DIR` overrides it; tests never set it
+    and keep their throwaway temp dirs."""
+    override = os.environ.get("SBC_WRITE_DIR")
+    if override:
+        return Path(override).expanduser()
+    data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+    return data_home / "springboard" / "write-dir"
 
 
 def _read_port_flags_config(path: Path) -> tuple[dict[str, str], dict[str, str]]:

@@ -249,6 +249,8 @@ DIALOG: Final = {
     "file_ok": (347, 602),
     # A name-input dialog (Save As) has its footer one row below the plain one.
     "file_ok_name": (347, 641),
+    # Export adds a type dropdown as well, dropping the footer another row.
+    "file_ok_export": (347, 680),
     "asset_core_cell": (104, 360),
     "asset_ok": (343, 603),
     "asset_ok_gallery": (347, 602),

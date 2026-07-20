@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import time
+from pathlib import Path
+
 from scenarios.geometry import (
     dropdown_option,
     DIALOG,
@@ -14,6 +17,7 @@ from scenarios.geometry import (
     PARK_PANEL,
     TAB_X,
     TAB_Y,
+    TOOLBAR,
     dialog_point,
     editor_point,
     panel_left,
@@ -461,3 +465,86 @@ def settings_panel(run_state: E2ERun) -> None:
     run_state.screenshot("specular-off")
     run_state.click(*panel_point(left, MAP["settings_map_size"]), delay=0.9)
     run_state.screenshot_root("specular-on-root")
+
+
+def _sweep(run_state: E2ERun, left: int, width: int, height: int) -> None:
+    """One held stroke across the map, so the whole surface is covered rather
+    than a patch. The map fills the screen at the default zoom, so no zooming is
+    needed; the sweep stays inside the map (its edges are sky)."""
+    y = height // 2
+    run_state.press(width // 3, y)
+    run_state.move(left - 200, y, delay=0.4)
+    run_state.release(left - 200, y)
+
+
+def _wait_for_archive(run_state: E2ERun, stem: str, timeout_s: float = 20.0) -> Path | None:
+    """Poll the write dir for the compiled `.sdz`. The archive is built off the
+    draw thread, so it lands a little after the export command is logged."""
+    assert run_state.write_dir is not None
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        matches = [p for p in run_state.write_dir.rglob(f"{stem}*.sdz")]
+        if matches:
+            return matches[0]
+        time.sleep(0.3)
+    return None
+
+
+@scenario()
+def map_export(run_state: E2ERun) -> None:
+    """The whole map pipeline: save a project, sculpt and paint the map, then
+    compile it to a Spring archive.
+
+    Save As establishes a project (Export needs its path); a Terrain/Add sweep
+    reshapes the ground across the whole map, a texture sweep paints it, Ctrl+S
+    saves, and Export -> Spring archive runs the bundled compiler. Asserts the
+    sculpt/paint/export commands and that the compiled `.sdz` lands on disk.
+    Deliberately fast -- the point is the pipeline runs end to end.
+    """
+    run_state.focus()
+    left = panel_left(run_state)
+    width, height = window_size(run_state)
+
+    # A project first: Export compiles the *saved* project, so it needs a path.
+    # Save As creates it and reloads into it (the one unavoidable wait).
+    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=0.6)
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.15)
+    run_state.type_text("ExportMap")
+    run_state.key("Return", delay=0.15)
+    # The one unavoidable wait: Save As restarts the engine into the new project.
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=8.0)
+
+    # Terrain: pick a pattern, arm Add, a fat brush, one sweep across the map.
+    run_state.click(left + TAB_X["map"], TAB_Y, delay=0.15)
+    run_state.click(*editor_point(left, "map", "terrain"), delay=0.3)
+    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.15)
+    run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=0.15)
+    click_field(run_state, left, MAP["terrain_size"], "1200")
+    click_field(run_state, left, MAP["terrain_height"], "80")
+    _sweep(run_state, left, width, height)
+    run_state.assert_command_at_least("TerrainShapeModifyCommand", 1)
+
+    # Texture: choose a material, pick a brush shape, paint across the map.
+    run_state.click(*editor_point(left, "map", "texture"), delay=0.3)
+    run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=0.4)
+    run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=0.3)
+    run_state.click(*panel_point(left, MAP["saved_brush_rect"]), delay=0.15)
+    run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.15)
+    _sweep(run_state, left, width, height)
+    run_state.assert_any_command("TerrainChangeTextureCommand", paintMode="paint")
+
+    # Save the edits, then Export -> Spring archive (the default type).
+    run_state.key("ctrl+s", delay=0.5)
+    run_state.assert_command_at_least("SaveCommand", 1)
+    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.3)
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.15)
+    run_state.type_text("ExportMap")
+    run_state.key("Return", delay=0.15)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_export"]), delay=0.3)
+    run_state.assert_command("ExportSpringArchiveCommand")
+
+    archive = _wait_for_archive(run_state, "ExportMap")
+    if archive is None:
+        raise AssertionError("export did not produce a .sdz archive")
+    if archive.stat().st_size < 1024:
+        raise AssertionError(f"compiled archive is suspiciously small: {archive}")
