@@ -25,6 +25,7 @@ use crate::sbc::panels::modal_stack::ModalStack;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
+use crate::sbc::project::ProjectStatusBar;
 use crate::sbc::states::{StateManager, StateRequest};
 
 inventory::submit! {
@@ -48,6 +49,8 @@ pub(crate) struct PanelManager {
     brush: BrushSync,
     /// The useful native replacement for the engine's "No tooltip defined" box.
     cursor_tip: CursorTip,
+    /// Top-left project location + always-available launcher actions.
+    status_bar: ProjectStatusBar,
     /// A field whose edit just opened: focus + select it next tick, after the
     /// RmlUi update has processed the input's unhide (same-frame focus on a
     /// just-unhidden element is rejected).
@@ -98,6 +101,7 @@ impl PanelManager {
             hotkeys: ActionDispatcher::default(),
             brush: BrushSync::default(),
             cursor_tip: CursorTip::default(),
+            status_bar: ProjectStatusBar::default(),
             pending_select: None,
             pending_commands: Vec::new(),
         }
@@ -115,6 +119,7 @@ impl PanelManager {
             self.session.reset();
             self.modals.forget_bindings();
             self.hotkeys.clear();
+            self.status_bar.forget();
             self.pending_select = None;
             self.input.reset();
             self.view.set_active_editor(&self.interface, None)?;
@@ -203,7 +208,10 @@ impl PanelManager {
         self.slot
             .sync_state_selection(&self.interface, &self.view, models);
         self.update_cursor_tip(models.get::<ChonsoleManager>().visible())?;
+        let status_commands = self.status_bar.process(&self.interface, models);
+        self.pending_commands.extend(status_commands);
         if let Some(doc) = self.view.document_handle() {
+            self.status_bar.render(&self.interface, doc, models)?;
             if models.get::<NotificationManager>().tick() {
                 models
                     .get::<NotificationManager>()

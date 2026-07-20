@@ -39,6 +39,10 @@ def convert_screenshot_file(shot: Screenshot) -> tuple[Screenshot, int]:
         command_x = round(status_width * 0.6)
         command_width = status_width - command_x
         cmd += ["-crop", f"{command_width}x92+{command_x}+{height - 92}", "+repage"]
+    elif shot.crop == "project-status":
+        # The top-left project status bar: left 8dp, top 8dp, ~420dp wide. A
+        # generous box captures the location label and the four action buttons.
+        cmd += ["-crop", "470x90+0+0", "+repage"]
     elif shot.crop == "no-console":
         # Everything above the console. A modal has to be captured full-width,
         # but the console below it prints the engine's boot log -- which carries

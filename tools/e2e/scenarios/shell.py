@@ -157,6 +157,18 @@ def dialogs(run_state: E2ERun) -> None:
     run_state.key("Escape", delay=0.3)
 
 
+@scenario(crop="project-status")
+def project_status_bar(run_state: E2ERun) -> None:
+    """The always-available top-left project status bar.
+
+    On a fresh boot it reads "Project not saved" and offers Open Project, Data
+    Dir, Upload Log and Exit. The golden pins that the bar renders in the panel
+    document (a single higher-level div) with its label and four buttons.
+    """
+    run_state.focus()
+    run_state.golden("status-bar")
+
+
 @scenario(uis=("chili", "rmlui"))
 def notifications(run_state: E2ERun) -> None:
     """Export with no saved project posts a warning notification (SB.NotifyWarn).

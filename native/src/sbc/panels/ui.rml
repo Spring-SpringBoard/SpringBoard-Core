@@ -8,6 +8,7 @@
 <div id="map-shading-modal"></div>
 <div id="team-edit-modal"></div>
 <div id="modal-root"></div>
+<div id="project-status-root" class="project-status-float"></div>
 <div id="notifications-root" class="notifications-float"></div>
 <!-- Panel-control and map-object tips have independent lifecycles. Sharing one
      element lets the map picker hide a grid tooltip after its hover event. -->
