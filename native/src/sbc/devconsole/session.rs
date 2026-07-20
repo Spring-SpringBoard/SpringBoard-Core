@@ -7,6 +7,13 @@ use crate::sbc::devconsole::log::{LogBuffer, LogLine, Severity};
 const MAX_LINES_CONFIG: &str = "SpringBoardDevConsoleMaxLines";
 const MIN_CONFIGURED_LINES: usize = 2_000;
 
+/// Only the newest lines are ever materialised into RmlUi. The buffer may
+/// retain far more for copy/export, but concatenating thousands of `<div>`s
+/// into one `inner_rml` overruns RmlUi's parser, which then fails to instance
+/// the text and spams the console. A generous tail keeps scrollback useful
+/// while staying well under that ceiling.
+pub(crate) const MAX_RENDERED_LINES: usize = 500;
+
 pub(crate) struct ConsoleSession {
     all: LogBuffer,
     problems: Vec<LogLine>,
@@ -98,6 +105,18 @@ impl ConsoleSession {
         }
     }
 
+    /// The newest lines, capped at [`MAX_RENDERED_LINES`]. Selection indices are
+    /// 0-based over this tail, so rendering and copy must share it.
+    pub(crate) fn rendered_lines(&self, problems_only: bool) -> Vec<&LogLine> {
+        let all = self.visible_lines(problems_only);
+        let start = all.len().saturating_sub(MAX_RENDERED_LINES);
+        all[start..].to_vec()
+    }
+
+    pub(crate) fn rendered_count(&self, problems_only: bool) -> usize {
+        self.visible_count(problems_only).min(MAX_RENDERED_LINES)
+    }
+
     pub(crate) fn visible_count(&self, problems_only: bool) -> usize {
         if problems_only {
             self.problems.len()
@@ -136,8 +155,14 @@ impl ConsoleSession {
 /// `get_game_mod_info` reports these hashes through the engine console. They
 /// are archive bookkeeping, not developer diagnostics, and repeat whenever a
 /// caller refreshes mod metadata.
+///
+/// The `log-line-` guard breaks a feedback loop: when RmlUi fails to instance
+/// the log's own markup it echoes that markup back as a `[RmlUi] Failed to
+/// instance text element '<div id="log-line-…">…'` warning. Re-ingesting it as
+/// a console line would render it, fail again, and echo an ever-larger copy —
+/// forever. Its own element ids are the reliable fingerprint of that echo.
 fn show_console_line(message: &str) -> bool {
-    !message.contains("[CAS::GASCB] Archive file=")
+    !message.contains("[CAS::GASCB] Archive file=") && !message.contains("id=\"log-line-")
 }
 
 /// Zero or an unset value keeps every session line. A finite value is clamped
@@ -151,4 +176,31 @@ fn configured_line_limit(interface: &NativeInterfaceRef) -> Option<usize> {
         .ok()
         .filter(|limit| *limit > 0)
         .map(|limit| limit.max(MIN_CONFIGURED_LINES))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ordinary_lines_are_shown() {
+        assert!(show_console_line(
+            "17:38:39 [INFO] reloading with project start script"
+        ));
+        assert!(show_console_line("Warning: something the user should see"));
+    }
+
+    #[test]
+    fn archive_bookkeeping_is_hidden() {
+        assert!(!show_console_line(
+            "[CAS::GASCB] Archive file=foo.sdz crc=1234"
+        ));
+    }
+
+    #[test]
+    fn the_consoles_own_render_failure_echo_is_dropped() {
+        // Exactly the recursive warning: re-ingesting it is what span the loop.
+        let echo = r#"Warning: [RmlUi] Failed to instance text element '<div id="log-line-0" class="log-line severity-info">boot</div>'"#;
+        assert!(!show_console_line(echo));
+    }
 }

@@ -145,7 +145,7 @@ impl DevConsoleManager {
 
         if self.dirty {
             let pin_log_bottom = std::mem::take(&mut self.pin_log_bottom);
-            let lines = self.console.visible_lines(self.problems_only);
+            let lines = self.console.rendered_lines(self.problems_only);
             self.view
                 .render_log(&self.interface, lines.into_iter(), pin_log_bottom)?;
             self.view.render_error_count(
@@ -213,7 +213,7 @@ impl DevConsoleManager {
             return Ok(true);
         }
         if is_key(&self.interface, key_code, "a") && self.view.hovered(&self.interface) {
-            let count = self.console.visible_count(self.problems_only);
+            let count = self.console.rendered_count(self.problems_only);
             self.view.select_all(count);
             self.dirty = true;
             return Ok(true);
@@ -236,7 +236,7 @@ impl DevConsoleManager {
         }
         let ctrl = self.ctrl_held();
         if ctrl && is_key(&self.interface, key_code, "a") {
-            let count = self.console.visible_count(self.problems_only);
+            let count = self.console.rendered_count(self.problems_only);
             self.view.select_all(count);
             self.dirty = true;
             return Ok(true);
@@ -302,7 +302,7 @@ impl DevConsoleManager {
         };
         let text = self
             .console
-            .visible_lines(self.problems_only)
+            .rendered_lines(self.problems_only)
             .into_iter()
             .enumerate()
             .filter(|(index, _)| *index >= start && *index <= end)

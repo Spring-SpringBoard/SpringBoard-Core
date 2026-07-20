@@ -9,6 +9,11 @@ use crate::sbc::devconsole::actions::Action;
 use crate::sbc::devconsole::log::LogLine;
 use crate::sbc::rml::{self, element_by_id, escape_rml};
 
+/// A single console line longer than this is truncated before rendering. RmlUi
+/// fails to instance a text element past a certain size; an oversized engine
+/// line (a stack dump, a serialized blob) must not be able to break the log.
+const MAX_LINE_CHARS: usize = 2_000;
+
 const UI_CONTEXT: &str = "sbc_dev_console";
 const UI_BODY: &str = include_str!("ui.rml");
 const STATUS_CONTEXT: &str = "sbc_editor_status";
@@ -331,7 +336,7 @@ impl DevConsoleView {
                 r#"<div id="log-line-{index}" class="log-line {class}{selected}">{text}</div>"#,
                 class = line.severity.css_class(),
                 selected = selected,
-                text = escape_rml(&line.text),
+                text = escape_rml(&clamp_line(&line.text)),
             ));
         }
         if let Some((_, end)) = self.selection.range() {
@@ -627,5 +632,43 @@ impl DevConsoleView {
                 })?;
         }
         Ok(())
+    }
+}
+
+/// Truncate an over-long line on a char boundary, appending an ellipsis note so
+/// the reader knows it was cut. The full text stays in the buffer for copy.
+fn clamp_line(text: &str) -> std::borrow::Cow<'_, str> {
+    if text.len() <= MAX_LINE_CHARS {
+        return std::borrow::Cow::Borrowed(text);
+    }
+    let mut end = MAX_LINE_CHARS;
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    std::borrow::Cow::Owned(format!("{}… [truncated]", &text[..end]))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{clamp_line, MAX_LINE_CHARS};
+
+    #[test]
+    fn short_lines_pass_through_unchanged() {
+        assert_eq!(clamp_line("all good"), "all good");
+    }
+
+    #[test]
+    fn oversized_lines_are_cut_and_marked() {
+        let huge = "x".repeat(MAX_LINE_CHARS * 3);
+        let clamped = clamp_line(&huge);
+        assert!(clamped.len() < huge.len());
+        assert!(clamped.ends_with("… [truncated]"));
+    }
+
+    #[test]
+    fn truncation_respects_char_boundaries() {
+        // A multi-byte char straddling the cut must not panic.
+        let huge = "é".repeat(MAX_LINE_CHARS);
+        let _ = clamp_line(&huge);
     }
 }
