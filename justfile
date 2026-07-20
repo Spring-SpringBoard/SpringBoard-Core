@@ -40,9 +40,14 @@ lint-py-step-down:
 lint-no-dead-commands:
     python3 tools/lint/no_dead_commands.py --fail
 
+# Fail when a mod.rs defines functions instead of only wiring submodules.
+[group('lint')]
+lint-mod-only-declares:
+    python3 tools/lint/mod_only_declares.py
+
 # Run all lints + native type-check (the one command to run before review).
 [group('lint')]
-lint: fmt clippy lint-lua lint-rust-step-down lint-py-step-down lint-no-dead-commands check
+lint: fmt clippy lint-lua lint-rust-step-down lint-py-step-down lint-no-dead-commands lint-mod-only-declares check
 
 # Type-check the native crate.
 [group('build')]
