@@ -336,7 +336,7 @@ impl DevConsoleView {
                 r#"<div id="log-line-{index}" class="log-line {class}{selected}">{text}</div>"#,
                 class = line.severity.css_class(),
                 selected = selected,
-                text = escape_rml(&clamp_line(&line.text)),
+                text = defuse_data_brackets(&escape_rml(&clamp_line(&line.text))),
             ));
         }
         if let Some((_, end)) = self.selection.range() {
@@ -635,6 +635,20 @@ impl DevConsoleView {
     }
 }
 
+/// RmlUi reads `{{ … }}` in element text as a data-binding expression and logs
+/// "Failed to instance text element" on any malformed one (a stray `}}`, a lone
+/// `}` inside brackets). Engine stat dumps are full of such braces
+/// (`{{863.446, 0.402}}`), and one bad line fails the whole log render, spamming
+/// a warning every frame. A zero-width space after every brace breaks the
+/// `{{`/`}}` adjacency the parser keys on, so no text is ever treated as an
+/// expression. The glyphs render identically and copy uses the untouched buffer.
+fn defuse_data_brackets(text: &str) -> std::borrow::Cow<'_, str> {
+    if !text.contains(['{', '}']) {
+        return std::borrow::Cow::Borrowed(text);
+    }
+    std::borrow::Cow::Owned(text.replace('{', "{\u{200b}").replace('}', "}\u{200b}"))
+}
+
 /// Truncate an over-long line on a char boundary, appending an ellipsis note so
 /// the reader knows it was cut. The full text stays in the buffer for copy.
 fn clamp_line(text: &str) -> std::borrow::Cow<'_, str> {
@@ -650,7 +664,22 @@ fn clamp_line(text: &str) -> std::borrow::Cow<'_, str> {
 
 #[cfg(test)]
 mod tests {
-    use super::{clamp_line, MAX_LINE_CHARS};
+    use super::{clamp_line, defuse_data_brackets, MAX_LINE_CHARS};
+
+    #[test]
+    fn brace_free_text_is_untouched() {
+        assert_eq!(defuse_data_brackets("no braces here"), "no braces here");
+    }
+
+    #[test]
+    fn adjacent_braces_are_split_by_a_zero_width_space() {
+        // The engine stat pattern that tripped RmlUi's data parser.
+        let out = defuse_data_brackets("time={{863.446, 0.402}}ms");
+        assert!(!out.contains("{{"), "no `{{{{` may survive: {out:?}");
+        assert!(!out.contains("}}"), "no `}}}}` may survive: {out:?}");
+        // The visible glyphs are unchanged once the zero-width spaces are gone.
+        assert_eq!(out.replace('\u{200b}', ""), "time={{863.446, 0.402}}ms");
+    }
 
     #[test]
     fn short_lines_pass_through_unchanged() {
