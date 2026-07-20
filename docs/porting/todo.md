@@ -343,10 +343,23 @@ in particular can stall the editor for a noticeable time.
 **How (sketch).** Split the GPU part from the CPU part: do the minimal on-thread
 GL work to get the pixels off the GPU (readback into a CPU buffer), then hand the
 CPU-side encode + file write to a background worker (the same off-thread IO path
-grass/metal/heightmap use). Needs a way to read a texture's pixels into a plain
-buffer on the engine thread, after which the ops become "readback (on-thread) →
-encode+write (off-thread)". Investigate whether a shared background
-rendering/IO context is feasible for the readback itself.
+grass/metal/heightmap use). The ops become "readback (on-thread) →
+encode+write (off-thread)".
+
+**Concrete site + finding (2026-07-21).** The blocking path is
+[textures/project.rs](../../native/src/sbc/textures/project.rs) `export_map_textures`
+→ `export_diffuse`/`export_shading_textures` → `save_texture_png`
+([graphics.rs](../../native/src/sbc/textures/model/texture_model/graphics.rs)),
+which calls the engine's `gfx().save_image` — one blocking call that reads the GL
+texture *and* encodes+writes the PNG on the draw thread, freezing the editor for
+the whole export (user-observed several-second stall). The readback binding
+already exists: `gfx().read_pixels(x, y, w, h, format) -> (Vec<f32>, format)`, and
+`io::write::save_png` already encodes off-thread (metal/grass/heightmap use it).
+So no engine work is needed — just: read pixels on the draw thread, encode in an
+`IoJob`. Two cares: (1) convert the `f32` channels back to `u8`; (2) **tile the
+readback** — a full-map diffuse as `read_pixels`' f32 RGBA is ~1 GB at 8K, so a
+whole-texture buffer would OOM on large maps. That tiling is why this is its own
+careful effort, not a quick swap.
 
 ## 11. Texture model uses `RefCell` — remove the runtime-panic surface
 
