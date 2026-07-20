@@ -318,6 +318,12 @@ impl GridView {
 const ASSETS_DIR: &str = "springboard/assets";
 const DEFAULT_ASSET_PACK: &str = "core";
 
+/// Extensions the grid can render as a thumbnail; every other file (archives,
+/// Lua, ...) shows a caption-only cell so RmlUi never tries to load it.
+const IMAGE_EXTS: &[&str] = &[
+    "png", "jpg", "jpeg", "bmp", "tga", "dds", "tif", "tiff", "gif",
+];
+
 /// One level of the assets tree, as `AssetView` walks it.
 ///
 /// At the top there is no directory to list: the entries are the asset *packs*
@@ -469,15 +475,20 @@ fn list_entries(
             }
             let path = join_entry(dir, &entry.name);
             let caption = path.rsplit('/').next().unwrap_or(&path).to_string();
+            let lower = caption.to_lowercase();
             let matches = extensions.is_empty()
-                || extensions.iter().any(|ext| {
-                    caption
-                        .to_lowercase()
-                        .ends_with(&format!(".{}", ext.to_lowercase()))
-                });
+                || extensions
+                    .iter()
+                    .any(|ext| lower.ends_with(&format!(".{}", ext.to_lowercase())));
             if matches {
+                // Only actual images become thumbnails; giving an archive or Lua
+                // file an `<img>`/`<texture>` src makes RmlUi try to load it and
+                // log `[BMP::Load] invalid bitmap`.
+                let is_image = IMAGE_EXTS
+                    .iter()
+                    .any(|ext| lower.ends_with(&format!(".{ext}")));
                 files.push(GridItem {
-                    image: Some(path.clone()),
+                    image: is_image.then(|| path.clone()),
                     id: path,
                     caption,
                     is_directory: false,
