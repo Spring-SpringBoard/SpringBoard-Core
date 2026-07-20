@@ -246,6 +246,7 @@ DIALOG: Final = {
     "new_project_create": (347, 407),
     "file_name": (240, 590),
     "file_type": (240, 629),
+    "file_ok": (347, 602),
     # A name-input dialog (Save As) has its footer one row below the plain one.
     "file_ok_name": (347, 641),
     "asset_core_cell": (104, 360),

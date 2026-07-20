@@ -216,7 +216,7 @@ fn open_save_as() -> ActionResult {
     };
     ActionResult::OpenFileDialog {
         config,
-        on_accept: Box::new(|result, _iface| {
+        on_accept: Box::new(|result, iface| {
             let name = result
                 .path
                 .strip_prefix(PROJECTS_DIR)
@@ -224,10 +224,19 @@ fn open_save_as() -> ActionResult {
                 .trim_end_matches(".sdd")
                 .to_string();
             let path = result.path.clone();
+            let (game_name, game_version) = game_id(iface);
+            // Saving under a new name is a new project: reload into it, as Lua's
+            // Project:Save does for isNewProject. The save writes script.txt
+            // asynchronously, so the reload builds from the in-memory project.
             vec![
                 Box::new(SetProjectNamePathCommand::new(name.clone(), path.clone())),
                 Box::new(SaveProjectInfoCommand::new(name, path.clone(), true, None)),
-                Box::new(SaveCommand::new(path, true)),
+                Box::new(SaveCommand::new(path.clone(), true)),
+                Box::new(ReloadIntoProjectCommand::after_save(
+                    path,
+                    game_name,
+                    game_version,
+                )),
             ]
         }),
     }

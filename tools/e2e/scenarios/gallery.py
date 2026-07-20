@@ -372,11 +372,41 @@ def new_project_create(run_state: E2ERun) -> None:
 
 
 @scenario()
-def project_save_as(run_state: E2ERun) -> None:
-    """Save As writes the current project under a new name (no reload).
+def project_round_trip(run_state: E2ERun) -> None:
+    """Create a project, then reopen it through Load -- proving it is on disk
+    and openable.
 
-    Emits SetProjectNamePath + SaveProjectInfo + Save. The name-input row pushes
-    the dialog footer down, so this uses the taller dialog's OK position.
+    Create writes the project and reloads into it; the Load dialog must then
+    list the `.sdd` folder, and selecting it reloads back into it. Two reloads,
+    so this asserts on the command log rather than goldens. Guards the engine
+    ListDir directory-listing gap: a regression there empties Load.
+    """
+    left = panel_left(run_state)
+    run_state.focus()
+
+    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=1.0)
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=0.2)
+    run_state.type_text("RoundTrip")
+    run_state.key("Return", delay=0.3)
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=4.0)
+
+    # Reloaded into the new project; Load must now list it.
+    run_state.click(*panel_point(left, TOOLBAR["load"]), delay=1.5)
+    run_state.screenshot("load-lists-project")
+    run_state.click(*dialog_point(run_state, DIALOG["file_first_cell"]), delay=0.5)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok"]), delay=4.0)
+    # Create + Load each reload; both entries survive in the append-only log.
+    run_state.assert_command_at_least("ReloadIntoProjectCommand", 2)
+    run_state.screenshot("after-load")
+
+
+@scenario()
+def project_save_as(run_state: E2ERun) -> None:
+    """Save As writes the current project under a new name and reloads into it.
+
+    Emits SetProjectNamePath + SaveProjectInfo + Save + Reload, as Lua's
+    Project:Save does for a new project. The name-input row pushes the dialog
+    footer down, so this uses the taller dialog's OK position.
     """
     left = panel_left(run_state)
     run_state.focus()
@@ -385,10 +415,15 @@ def project_save_as(run_state: E2ERun) -> None:
     run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.3)
     run_state.type_text("SavedProj")
     run_state.key("Return", delay=0.3)
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=1.5)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=4.0)
     run_state.assert_command("SetProjectNamePathCommand")
     run_state.assert_command("SaveProjectInfoCommand")
     run_state.assert_command("SaveCommand")
+    run_state.assert_command("ReloadIntoProjectCommand")
+    # The reload must actually complete: a screenshot here fails the run if the
+    # engine died reloading (a crash would exit it before this xwd).
+    run_state.move(1280, 700, delay=6.0)
+    run_state.screenshot("after-reload")
 
 
 @scenario()

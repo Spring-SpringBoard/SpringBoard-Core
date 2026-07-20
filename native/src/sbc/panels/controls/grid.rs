@@ -394,31 +394,34 @@ pub(crate) fn list_assets(
     extensions: &[&str],
 ) -> Vec<GridItem> {
     let extensions = normalize_extensions(extensions);
-    // Non-recursive listing across every VFS mode, as Lua's Path.DirList does.
-    let Ok(entries) = interface.vfs().list_entries(dir, "*", "", false) else {
-        return Vec::new();
-    };
-
-    let mut dirs = Vec::new();
-    let mut files = Vec::new();
-    for entry in entries {
-        let name = entry.name;
-        if name.is_empty() {
-            continue;
-        }
-        let path = join_entry(dir, &name);
-        let caption = path.rsplit('/').next().unwrap_or(&path).to_string();
-
-        if entry.is_directory {
-            dirs.push(GridItem {
+    // Directories must come from SubDirs, not the entry listing: the engine's
+    // ListDir only ever returns files (it never fills its directory list), so a
+    // project -- an `.sdd` folder in the write dir -- is invisible to a plain
+    // entry listing and Load comes back empty. SubDirs defaults to VFS.RAW_FIRST,
+    // which sees the write dir, exactly as Lua's `Path.SubDirs` does.
+    let mut dirs: Vec<GridItem> = vfs_sub_dirs(interface, dir.trim_end_matches('/'))
+        .into_iter()
+        .map(|name| {
+            let path = join_entry(dir, &name);
+            GridItem {
                 id: path,
-                caption,
+                caption: name,
                 image: None,
                 is_directory: true,
                 tooltip: None,
                 tooltip_markup: None,
-            });
-        } else {
+            }
+        })
+        .collect();
+
+    let mut files = Vec::new();
+    if let Ok(entries) = interface.vfs().list_entries(dir, "*", "", false) {
+        for entry in entries {
+            if entry.is_directory || entry.name.is_empty() {
+                continue;
+            }
+            let path = join_entry(dir, &entry.name);
+            let caption = path.rsplit('/').next().unwrap_or(&path).to_string();
             let matches = extensions.is_empty()
                 || extensions.iter().any(|ext| {
                     caption

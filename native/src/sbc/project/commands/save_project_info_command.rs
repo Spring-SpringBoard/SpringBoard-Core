@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use serde::Deserialize;
+use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
@@ -49,6 +50,22 @@ impl Command for SaveProjectInfoCommand {
             .unwrap_or_else(|| ctx.model::<ProjectManager>().serialize().clone());
         project.name = Some(self.name.clone());
         project.path = Some(self.path.clone());
+        // A project saved from a booted or loaded editor carries no map or game:
+        // a full reload resets ProjectManager to default, so the fields the New
+        // Project dialog sets are gone. Capture the engine's current map and game
+        // when they are missing, or the saved start script has no map and the
+        // reload aborts with "No map selected in startscript".
+        if project.map_name.is_none() {
+            project.map_name = current_map_name(ctx.interface);
+        }
+        if project.game.is_none() {
+            if let Ok(info) = ctx.interface.game().get_game_mod_info_owned() {
+                project.game = Some(serde_json::json!({
+                    "name": info.game_name,
+                    "version": info.game_version,
+                }));
+            }
+        }
         if project.mutators.is_empty() {
             project.mutators = vec![format!("{} 1.0", self.name)];
         }
@@ -84,6 +101,12 @@ impl Command for SaveProjectInfoCommand {
     fn undoable(&self) -> bool {
         false
     }
+}
+
+/// The name of the map the engine currently has loaded (Lua's `Game.mapName`).
+fn current_map_name(interface: &NativeInterfaceRef) -> Option<String> {
+    let name = interface.game().get_game_map_info_owned().ok()?.map_name;
+    (!name.is_empty()).then_some(name)
 }
 
 register_command!(SaveProjectInfoCommand, "SaveProjectInfoCommand");
