@@ -393,35 +393,61 @@ pub(crate) fn list_assets(
     dir: &str,
     extensions: &[&str],
 ) -> Vec<GridItem> {
+    list_entries(interface, dir, extensions, false)
+}
+
+/// Like [`list_assets`], but also lists sub-directories as browsable folder
+/// cells. Only the Open/Load dialog wants that: a project is an `.sdd` folder,
+/// invisible to the engine's file-only `ListDir`. Texture pickers stay
+/// file-only, or engine dirs (`bitmaps/`) would bury the textures under dozens
+/// of unrelated sub-folders.
+pub(crate) fn list_entries_with_dirs(
+    interface: &NativeInterfaceRef,
+    dir: &str,
+    extensions: &[&str],
+) -> Vec<GridItem> {
+    list_entries(interface, dir, extensions, true)
+}
+
+fn list_entries(
+    interface: &NativeInterfaceRef,
+    dir: &str,
+    extensions: &[&str],
+    include_dirs: bool,
+) -> Vec<GridItem> {
     let extensions = normalize_extensions(extensions);
     // Directories must come from SubDirs, not the entry listing: the engine's
     // ListDir only ever returns files (it never fills its directory list), so a
     // project -- an `.sdd` folder in the write dir -- is invisible to a plain
     // entry listing and Load comes back empty. SubDirs defaults to VFS.RAW_FIRST,
     // which sees the write dir, exactly as Lua's `Path.SubDirs` does.
-    let mut dirs: Vec<GridItem> = vfs_sub_dirs(interface, dir.trim_end_matches('/'))
-        .into_iter()
-        .map(|name| {
-            let path = join_entry(dir, &name);
-            // A project folder carries a map thumbnail saved on its last save;
-            // show it so projects are recognisable in the Open dialog. Other
-            // directories simply have no such file.
-            let thumb = format!("{path}/sb_project_files/screenshot.jpg");
-            let image = interface
-                .vfs()
-                .file_exists(&thumb)
-                .unwrap_or(false)
-                .then_some(thumb);
-            GridItem {
-                id: path,
-                caption: name,
-                image,
-                is_directory: true,
-                tooltip: None,
-                tooltip_markup: None,
-            }
-        })
-        .collect();
+    let mut dirs: Vec<GridItem> = if include_dirs {
+        vfs_sub_dirs(interface, dir.trim_end_matches('/'))
+            .into_iter()
+            .map(|name| {
+                let path = join_entry(dir, &name);
+                // A project folder carries a map thumbnail saved on its last
+                // save; show it so projects are recognisable in the Open dialog.
+                // Other directories simply have no such file.
+                let thumb = format!("{path}/sb_project_files/screenshot.jpg");
+                let image = interface
+                    .vfs()
+                    .file_exists(&thumb)
+                    .unwrap_or(false)
+                    .then_some(thumb);
+                GridItem {
+                    id: path,
+                    caption: name,
+                    image,
+                    is_directory: true,
+                    tooltip: None,
+                    tooltip_markup: None,
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
 
     let mut files = Vec::new();
     if let Ok(entries) = interface.vfs().list_entries(dir, "*", "", false) {

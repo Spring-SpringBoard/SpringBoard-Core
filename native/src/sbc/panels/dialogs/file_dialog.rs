@@ -14,7 +14,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::actions::{FileAcceptFn, FileDialogConfig, FileDialogResult};
 use crate::sbc::panels::controls::asset_picker::PickerEvent;
-use crate::sbc::panels::controls::grid::{list_assets, parent_dir, GridView};
+use crate::sbc::panels::controls::grid::{list_entries_with_dirs, parent_dir, GridView};
 use crate::sbc::panels::dialogs::form::{DialogForm, FormItem};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{
@@ -264,7 +264,7 @@ impl FileDialog {
             .map(|c| c.extensions.iter().map(String::as_str).collect())
             .unwrap_or_default();
         self.grid
-            .set_items(list_assets(interface, &self.dir, &extensions));
+            .set_items(list_entries_with_dirs(interface, &self.dir, &extensions));
         self.grid.render(interface, document)?;
         if let Some(e) = element_by_id(interface, document, "fd-path") {
             interface
