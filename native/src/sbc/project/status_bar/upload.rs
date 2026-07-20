@@ -1,17 +1,18 @@
-//! Uploading the engine infolog to logs.springrts.com, reproducing what the
+//! Uploading the engine infolog to a public paste service, reproducing what the
 //! launcher's "Upload Log" button did — without the launcher.
 //!
-//! The plugin carries no HTTP client, so the POST is delegated to `curl` (the
-//! same shell-out approach the map compiler uses for its external tools). It
-//! runs on the IO thread since it blocks on the network, and reports the
-//! resulting URL — copied to the clipboard — through a toast.
+//! The old springrts log host is gone (it now 302s to the homepage), so this
+//! posts to paste.rs, which takes a raw body and replies with the URL as plain
+//! text. The plugin carries no HTTP client, so the POST is delegated to `curl`
+//! (the same shell-out approach the map compiler uses). It runs on the IO thread
+//! since it blocks on the network, and reports the resulting URL — copied to the
+//! clipboard — through a toast.
 
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command as OsCommand, Stdio};
 
 use serde::Deserialize;
-use serde_json::json;
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
@@ -21,7 +22,7 @@ use crate::sbc::io::io_api::{IoJob, IoOutcome};
 use crate::sbc::notifications::NotificationManager;
 use crate::sbc::sbc::SBC;
 
-const UPLOAD_URL: &str = "http://logs.springrts.com/logfiles/";
+const UPLOAD_URL: &str = "https://paste.rs";
 
 /// Queues the log upload as background IO. Not serialized from Lua; constructed
 /// directly by the status bar.
@@ -89,23 +90,16 @@ impl IoOutcome for UploadLogOutcome {
 }
 
 fn upload(log_path: &PathBuf) -> Result<String, String> {
-    let text = std::fs::read_to_string(log_path)
+    let text = std::fs::read(log_path)
         .map_err(|err| format!("cannot read {}: {err}", log_path.display()))?;
-    let body = json!({
-        "name": "SpringBoard log",
-        "text": text,
-        "tags": ["springboard", "native"],
-    })
-    .to_string();
 
     let mut child = OsCommand::new("curl")
         .args([
             "--silent",
             "--show-error",
+            "--location",
             "--max-time",
             "30",
-            "-H",
-            "Content-Type: application/json",
             "--data-binary",
             "@-",
             UPLOAD_URL,
@@ -120,7 +114,7 @@ fn upload(log_path: &PathBuf) -> Result<String, String> {
         .stdin
         .take()
         .ok_or("curl stdin unavailable")?
-        .write_all(body.as_bytes())
+        .write_all(&text)
         .map_err(|err| format!("writing to curl: {err}"))?;
 
     let output = child
@@ -134,16 +128,15 @@ fn upload(log_path: &PathBuf) -> Result<String, String> {
         ));
     }
 
-    let response = String::from_utf8_lossy(&output.stdout);
-    let parsed: UploadResponse =
-        serde_json::from_str(response.trim()).map_err(|err| format!("unexpected reply: {err}"))?;
-    // The service returns http; the launcher rewrites it to https for sharing.
-    Ok(parsed.url.replacen("http://", "https://", 1))
-}
-
-#[derive(Deserialize)]
-struct UploadResponse {
-    url: String,
+    // paste.rs replies with the URL as plain text (or an error message on
+    // failure); accept only a real URL.
+    let reply = String::from_utf8_lossy(&output.stdout);
+    let url = reply.trim();
+    if url.starts_with("https://") || url.starts_with("http://") {
+        Ok(url.to_string())
+    } else {
+        Err(format!("unexpected reply: {url}"))
+    }
 }
 
 register_command!(UploadLogCommand, "UploadLogCommand");
