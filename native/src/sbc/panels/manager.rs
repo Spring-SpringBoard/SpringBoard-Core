@@ -7,6 +7,7 @@ use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
+use crate::sbc::notifications::NotificationManager;
 use crate::sbc::panels::action_dispatcher::ActionDispatcher;
 use crate::sbc::panels::brush_sync::BrushSync;
 use crate::sbc::panels::controls::asset_picker::AssetPicker;
@@ -202,6 +203,13 @@ impl PanelManager {
         self.slot
             .sync_state_selection(&self.interface, &self.view, models);
         self.update_cursor_tip(models.get::<ChonsoleManager>().visible())?;
+        if let Some(doc) = self.view.document_handle() {
+            if models.get::<NotificationManager>().tick() {
+                models
+                    .get::<NotificationManager>()
+                    .render(&self.interface, doc)?;
+            }
+        }
         self.view.update(&self.interface)
     }
 

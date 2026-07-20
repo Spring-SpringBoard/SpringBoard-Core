@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use log::{error, info};
 
 use crate::sbc::io::io_api::{IoJob, IoOutcome};
+use crate::sbc::notifications::NotificationManager;
 use crate::sbc::project::ops::spring_archive::{self, Spec};
 use crate::sbc::sbc::SBC;
 
@@ -51,13 +52,17 @@ enum ExportSpringArchiveOutcome {
 }
 
 impl IoOutcome for ExportSpringArchiveOutcome {
-    fn apply(self: Box<Self>, _sbc: &mut SBC) {
+    fn apply(self: Box<Self>, sbc: &mut SBC) {
         match *self {
             ExportSpringArchiveOutcome::Done { output_path } => {
                 info!("spring archive exported: {}", output_path.display());
+                sbc.model::<NotificationManager>()
+                    .progress("export", 1.0, "Export finished");
             }
             ExportSpringArchiveOutcome::Failed { reason } => {
                 error!("spring archive export failed: {reason}");
+                sbc.model::<NotificationManager>()
+                    .warn("export", &format!("Export failed: {reason}"));
             }
         }
     }

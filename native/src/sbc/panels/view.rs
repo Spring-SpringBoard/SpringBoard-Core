@@ -21,6 +21,7 @@ const UI_STYLE: &str = concat!(
     include_str!("theme/buttons.rcss"),
     include_str!("theme/modals.rcss"),
     include_str!("theme/grid.rcss"),
+    include_str!("theme/notifications.rcss"),
 );
 
 /// A shell-level click, queued by an RmlUi event listener and drained by the

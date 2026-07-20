@@ -172,3 +172,27 @@ def notifications(run_state: E2ERun) -> None:
     # expiry cannot be driven off game seconds).
     run_state.move(left - 200, 400, delay=4.0)
     run_state.screenshot("expired")
+
+
+@scenario()
+def export_warning(run_state: E2ERun) -> None:
+    """Export with no saved project posts a warning toast in the native UI.
+
+    The native replacement for Chotify: the toast appears immediately on the
+    Export click (no dialog), floats over the map, and expires on its own.
+    """
+    run_state.focus()
+    left = panel_left(run_state)
+    width, height = window_size(run_state)
+    # The toast strip: top-centre, over the map (left of the 500-wide panel).
+    strip = (width // 4, 55, width // 2, 220)
+
+    before = run_state.screenshot("before")
+    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.6)
+    warning = run_state.screenshot("warning")
+    run_state.assert_region_pixels(before, warning, strip, min_changed=300)
+
+    # It carries its own timer (~4s) and clears without any interaction.
+    run_state.move(left - 200, height // 2, delay=5.0)
+    expired = run_state.screenshot("expired")
+    run_state.assert_region_pixels(warning, expired, strip, min_changed=300)

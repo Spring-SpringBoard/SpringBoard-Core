@@ -1,0 +1,53 @@
+/* Toast notifications: the native replacement for Chotify. A floating strip
+   just below the top controls, over the map; pointer-events pass through so the
+   map stays clickable underneath. */
+.notifications-float {
+    position: absolute;
+    left: 25%;
+    top: 70dp;
+    width: 40%;
+    height: 40%;
+    padding: 0px;
+    background-color: transparent;
+    pointer-events: none;
+}
+
+.notification {
+    display: block;
+    margin-bottom: 6dp;
+    padding: 8dp 10dp;
+    background-color: #2a2a2ae0;
+    border: 1dp #555555;
+    border-radius: 4dp;
+}
+
+.notification-title {
+    display: block;
+    color: #ffffff;
+    font-size: 15dp;
+    margin-bottom: 4dp;
+}
+
+.notification-title.warning {
+    color: #fff501;
+}
+
+.notification-body {
+    display: block;
+    color: #c8d0e0;
+    font-size: 13dp;
+}
+
+.notification-progress {
+    display: block;
+    height: 8dp;
+    margin-top: 6dp;
+    background-color: #1a1a1a;
+    border: 1dp #555555;
+}
+
+.notification-progress-fill {
+    display: block;
+    height: 100%;
+    background-color: #01b414;
+}

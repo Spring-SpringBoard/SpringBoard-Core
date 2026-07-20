@@ -7,6 +7,7 @@ use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::io_completion;
 use crate::sbc::command_system::registry::register_command;
 use crate::sbc::compile::ops::compiler_path;
+use crate::sbc::notifications::NotificationManager;
 use crate::sbc::project::io_registries::export::{self, MapExportOptions};
 use crate::sbc::project::jobs::archive_export::ExportSpringArchiveJob;
 use crate::sbc::project::ops::{archive_assets, lua_writer, map_info, model_codec};
@@ -41,11 +42,15 @@ impl Command for ExportSpringArchiveCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let Some(project_path) = self.project_path(ctx) else {
             log::error!("ExportSpringArchiveCommand: missing project path");
+            ctx.model::<NotificationManager>()
+                .warn("export", "The project must be saved before exporting");
             io_completion::submit_native_command_completed(ctx);
             return;
         };
         let project_path = path_under_write(self.write_path.as_deref(), &project_path);
         let project_name = self.project_name(ctx);
+        ctx.model::<NotificationManager>()
+            .progress("export", 0.1, "Exporting archive...");
         let build_dir = std::env::temp_dir().join(format!(
             "sbc-export-{}-{}",
             std::process::id(),

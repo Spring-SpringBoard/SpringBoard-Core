@@ -18,6 +18,7 @@ use crate::sbc::command_system::command::{Command, CompoundCommand};
 use crate::sbc::command_system::model::Models;
 use crate::sbc::command_system::{RedoCommand, UndoCommand};
 use crate::sbc::heightmap::commands::{ExportHeightmapCommand, ImportHeightmapCommand};
+use crate::sbc::notifications::NotificationManager;
 use crate::sbc::objects::{ObjectKind, ObjectManager, RemoveObjectCommand, SelectionManager};
 use crate::sbc::project::commands::{
     ExportMapInfoCommand, ExportMapsCommand, ExportS11NCommand, ExportSpringArchiveCommand,
@@ -113,6 +114,15 @@ pub fn execute(
         }
 
         Action::Export => {
+            // Nothing to export without a saved project; warn up front rather
+            // than opening the dialog and failing on OK, as Lua's export_action
+            // does with SB.NotifyWarn.
+            if models.get::<ProjectManager>().path().is_none() {
+                models
+                    .get::<NotificationManager>()
+                    .warn("export", "The project must be saved before exporting");
+                return ActionResult::None;
+            }
             let config = FileDialogConfig {
                 title: "Export".to_string(),
                 root_dir: EXPORTS_DIR.to_string(),
