@@ -363,7 +363,53 @@ def new_project_create(run_state: E2ERun) -> None:
     run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=2.5)
 
     # Save persists the project; the reload reads it back and boots into the new
-    # map. The dialog fields do not reach the log (neither command serializes),
-    # so assert the pair fired, which is what "Create did something" means.
+    # map, where the engine loads it (LoadProjectCommand). The dialog fields do
+    # not reach the log (neither command serializes), so assert the trio fired,
+    # which is what "Create made a real, loadable project" means.
     run_state.assert_command("SaveProjectInfoCommand")
     run_state.assert_command("ReloadIntoProjectCommand")
+    run_state.assert_command("LoadProjectCommand")
+
+
+@scenario()
+def project_save_as(run_state: E2ERun) -> None:
+    """Save As writes the current project under a new name (no reload).
+
+    Emits SetProjectNamePath + SaveProjectInfo + Save. The name-input row pushes
+    the dialog footer down, so this uses the taller dialog's OK position.
+    """
+    left = panel_left(run_state)
+    run_state.focus()
+    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=1.0)
+    run_state.screenshot("save-as-open")
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.3)
+    run_state.type_text("SavedProj")
+    run_state.key("Return", delay=0.3)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=1.5)
+    run_state.assert_command("SetProjectNamePathCommand")
+    run_state.assert_command("SaveProjectInfoCommand")
+    run_state.assert_command("SaveCommand")
+
+
+@scenario()
+def large_map_create(run_state: E2ERun) -> None:
+    """Create the largest map the dialog allows (32x32) and boot into it.
+
+    The size fields clamp at 32, so this is the biggest a user can make. A
+    32x32 blank map is generated and reloaded into; the engine surviving to the
+    screenshot (a bigger map is more memory and a slower generate) is the check.
+    """
+    left = panel_left(run_state)
+    run_state.focus()
+    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=1.0)
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=0.2)
+    run_state.type_text("BigMap")
+    run_state.key("Return", delay=0.3)
+    for field, value in (("new_project_size_x", "32"), ("new_project_size_y", "32")):
+        run_state.click(*dialog_point(run_state, DIALOG[field]), delay=0.2)
+        run_state.key("ctrl+a", delay=0.08)
+        run_state.type_text(value)
+        run_state.key("Return", delay=0.25)
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=6.0)
+    run_state.assert_command("ReloadIntoProjectCommand")
+    run_state.screenshot("big-map-loaded")
