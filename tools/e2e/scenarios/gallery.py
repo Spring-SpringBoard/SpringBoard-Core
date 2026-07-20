@@ -427,6 +427,26 @@ def project_save_as(run_state: E2ERun) -> None:
 
 
 @scenario()
+def project_thumbnail(run_state: E2ERun) -> None:
+    """Saving captures a map thumbnail that the Open dialog shows.
+
+    Save As saves the project (grabbing a screenshot of the map on the draw
+    after the save) and reloads into it; the Open dialog then renders that
+    screenshot as the project's grid image instead of a bare folder.
+    """
+    left = panel_left(run_state)
+    run_state.focus()
+    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=1.0)
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.3)
+    run_state.type_text("ShotProj")
+    run_state.key("Return", delay=0.3)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=6.0)
+    # Open the project list; the saved project shows its map thumbnail.
+    run_state.click(*panel_point(left, TOOLBAR["load"]), delay=2.0)
+    run_state.screenshot("open-with-thumbnail")
+
+
+@scenario()
 def large_map_create(run_state: E2ERun) -> None:
     """Create the largest map the dialog allows (32x32) and boot into it.
 

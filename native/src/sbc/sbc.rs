@@ -12,6 +12,7 @@ use crate::sbc::devconsole::DevConsoleManager;
 use crate::sbc::io::io_api::IoWorker;
 use crate::sbc::objects::{event_bridge, ObjectKind, ObjectManager, SelectionManager};
 use crate::sbc::panels::PanelManager;
+use crate::sbc::project::ScreenshotManager;
 use crate::sbc::states::StateManager;
 
 const MAX_UNDO_SIZE: usize = 100;
@@ -78,6 +79,7 @@ impl NativeModule for SBC {
     }
 
     fn draw_screen(&mut self) -> Result<(), Error> {
+        self.capture_pending_screenshot();
         self.model::<StateManager>().draw_screen();
         self.model::<ChonsoleManager>().draw_screen()?;
         self.model::<PanelManager>().draw_screen()
@@ -236,6 +238,36 @@ impl NativeModule for SBC {
 impl SBC {
     pub fn interface(&self) -> &NativeInterfaceRef {
         &self.interface
+    }
+
+    /// Write a requested project thumbnail: the map area (left of the panel) of
+    /// the current frame. Read at the top of DrawScreen, before the panel or any
+    /// overlay is drawn over the map, since the framebuffer is only readable on
+    /// the draw thread.
+    fn capture_pending_screenshot(&mut self) {
+        let Some(path) = self.model::<ScreenshotManager>().take() else {
+            return;
+        };
+        let Ok(geom) = self.interface.display().get_view_geometry() else {
+            return;
+        };
+        const PANEL_WIDTH: i32 = 500;
+        let width = (geom.viewSizeX - PANEL_WIDTH).max(1);
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        // yflip: glReadPixels is bottom-origin; flip to top-origin image space.
+        let _ = self.interface.gfx().save_image(
+            0,
+            0,
+            width,
+            geom.viewSizeY,
+            &path.to_string_lossy(),
+            false,
+            true,
+            false,
+            0,
+        );
     }
 
     /// Apply any finished background-IO outcomes on the engine thread. Called

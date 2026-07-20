@@ -10,3 +10,4 @@ mod ui;
 
 pub(crate) use model::project_manager::{ProjectData, ProjectManager};
 pub(crate) use model::scenario_info_manager::{ScenarioInfo, ScenarioInfoManager};
+pub(crate) use model::screenshot_manager::ScreenshotManager;

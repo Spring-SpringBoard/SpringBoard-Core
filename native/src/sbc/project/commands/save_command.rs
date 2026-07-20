@@ -6,6 +6,10 @@ use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::context::Context;
 use crate::sbc::command_system::registry::register_command;
 use crate::sbc::project::io_registries::save;
+use crate::sbc::project::paths::ProjectPaths;
+use crate::sbc::project::ScreenshotManager;
+
+const SCREENSHOT_FILE: &str = "screenshot.jpg";
 
 #[derive(Deserialize, Debug)]
 pub struct SaveCommand {
@@ -25,7 +29,13 @@ impl SaveCommand {
 
 impl Command for SaveCommand {
     fn execute(&mut self, ctx: &mut Context) {
-        save::save_project(ctx, &PathBuf::from(&self.path), self.is_new_project);
+        let root = PathBuf::from(&self.path);
+        save::save_project(ctx, &root, self.is_new_project);
+        // Grab a fresh map thumbnail for the Open dialog. The framebuffer can
+        // only be read on the draw thread, so record the request and let the
+        // next DrawScreen write it.
+        let path = ProjectPaths::new(&root).file(SCREENSHOT_FILE);
+        ctx.model::<ScreenshotManager>().request(path);
     }
 
     fn undoable(&self) -> bool {

@@ -403,10 +403,19 @@ pub(crate) fn list_assets(
         .into_iter()
         .map(|name| {
             let path = join_entry(dir, &name);
+            // A project folder carries a map thumbnail saved on its last save;
+            // show it so projects are recognisable in the Open dialog. Other
+            // directories simply have no such file.
+            let thumb = format!("{path}/sb_project_files/screenshot.jpg");
+            let image = interface
+                .vfs()
+                .file_exists(&thumb)
+                .unwrap_or(false)
+                .then_some(thumb);
             GridItem {
                 id: path,
                 caption: name,
-                image: None,
+                image,
                 is_directory: true,
                 tooltip: None,
                 tooltip_markup: None,
