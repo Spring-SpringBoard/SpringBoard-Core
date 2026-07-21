@@ -67,12 +67,10 @@ pub fn commit_new_project(
 /// Maps the VFS has an archive for, for the New Project dialog dropdown.
 pub fn available_maps(interface: &NativeInterfaceRef) -> Vec<String> {
     let vfs = interface.vfs();
-    // TODO(engine-rebuild): rescan first so a just-exported map appears without a
-    // restart (Chili does `VFS.ScanAllDirs()` here). The `scan_all_dirs` binding
-    // now exists in the engine source, but calling it against an engine binary
-    // that predates it reads past `VFS_API` and crashes. Re-enable once the
-    // engine is rebuilt with the ScanAllDirs binding:
-    //     let _ = vfs.scan_all_dirs();
+    // Rescan first, so a map the editor just exported becomes visible without a
+    // restart (as Chili does with `VFS.ScanAllDirs()` before listing). Picks up
+    // added archives; a deleted one lingers until restart (engine scanner quirk).
+    let _ = vfs.scan_all_dirs();
     let mut maps = vfs.get_maps().unwrap_or_default();
     maps.sort();
     maps.into_iter()
