@@ -65,13 +65,14 @@ pub fn commit_new_project(
 }
 
 /// Maps the VFS has an archive for, for the New Project dialog dropdown.
-///
-/// TODO: rescan first so a just-exported map appears without an editor restart,
-/// as Chili does with `VFS.ScanAllDirs()` before listing. The `ScanAllDirs`
-/// binding is not yet wrapped in `spring-native` — filed in
-/// `SBC_PORT_MISSING_BINDINGS.md`; call it here once available.
 pub fn available_maps(interface: &NativeInterfaceRef) -> Vec<String> {
     let vfs = interface.vfs();
+    // TODO(engine-rebuild): rescan first so a just-exported map appears without a
+    // restart (Chili does `VFS.ScanAllDirs()` here). The `scan_all_dirs` binding
+    // now exists in the engine source, but calling it against an engine binary
+    // that predates it reads past `VFS_API` and crashes. Re-enable once the
+    // engine is rebuilt with the ScanAllDirs binding:
+    //     let _ = vfs.scan_all_dirs();
     let mut maps = vfs.get_maps().unwrap_or_default();
     maps.sort();
     maps.into_iter()
