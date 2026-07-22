@@ -386,19 +386,18 @@ impl EditorState for DefaultState {
     }
 }
 
-/// Modifier-key state, read from the engine. The engine packs it as
-/// `shift | ctrl | alt | meta`.
+/// Modifier-key state, read from the engine.
 pub(crate) struct ModState {
     pub shift: bool,
     pub ctrl: bool,
 }
 
 pub(crate) fn mod_state(interface: &NativeInterfaceRef) -> ModState {
-    let bits = interface.input().get_mod_key_state().unwrap_or(0);
-    ModState {
-        shift: bits & (1 << 0) != 0,
-        ctrl: bits & (1 << 1) != 0,
-    }
+    let (_, ctrl, _, shift) = interface
+        .input()
+        .get_mod_key_state()
+        .unwrap_or((false, false, false, false));
+    ModState { shift, ctrl }
 }
 
 /// Trace the cursor against units, features and the ground.

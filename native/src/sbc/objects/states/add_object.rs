@@ -465,12 +465,10 @@ impl EditorState for AddObjectState {
     /// Shift + wheel resizes the brush, Alt + wheel turns the object being placed.
     /// Anything else falls through, so the camera keeps zooming.
     fn mouse_wheel(&mut self, ctx: &mut StateContext, up: bool, _value: f32) -> bool {
-        const SHIFT: u32 = 1 << 0;
-        const ALT: u32 = 1 << 2;
-        let Ok(mods) = ctx.interface.input().get_mod_key_state() else {
+        let Ok((alt, _, _, shift)) = ctx.interface.input().get_mod_key_state() else {
             return false;
         };
-        if mods & SHIFT != 0 {
+        if shift {
             // Through the shared brush, so the view's `size` field follows the
             // wheel -- the same channel the map brushes resize on.
             let brush = ctx.models.get::<crate::sbc::states::BrushSettings>();
@@ -478,7 +476,7 @@ impl EditorState for AddObjectState {
             self.config.size = brush.size;
             return true;
         }
-        if mods & ALT != 0 {
+        if alt {
             self.angle += if up { 0.1 } else { -0.1 };
             return true;
         }

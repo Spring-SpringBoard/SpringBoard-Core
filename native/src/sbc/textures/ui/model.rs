@@ -15,7 +15,7 @@ use crate::sbc::panels::runtime::{
 };
 use crate::sbc::project::{EditorState, TextureEditorState};
 use crate::sbc::rml::escape_rml;
-use crate::sbc::states::{BrushKind, BrushSettings};
+use crate::sbc::states::BrushSettings;
 use crate::sbc::textures::materials::{Material, CHANNELS};
 
 /// Blend modes, in the order `texture_editor.lua` lists them.
@@ -55,25 +55,25 @@ pub(super) const ACTIONS: &[BrushAction] = &[
     BrushAction {
         caption: "Paint",
         image: "LuaUI/images/scenedit/large-paint-brush.png",
-        kind: BrushKind::Texture,
+        tool: &crate::sbc::textures::brushes::TEXTURE,
         paint_mode: "paint",
     },
     BrushAction {
         caption: "Filter",
         image: "LuaUI/images/scenedit/filter-brush.png",
-        kind: BrushKind::Texture,
+        tool: &crate::sbc::textures::brushes::TEXTURE,
         paint_mode: "blur",
     },
     BrushAction {
         caption: "DNTS",
         image: "LuaUI/images/scenedit/paint-brush.png",
-        kind: BrushKind::Texture,
+        tool: &crate::sbc::textures::brushes::TEXTURE,
         paint_mode: "dnts",
     },
     BrushAction {
         caption: "Void",
         image: "LuaUI/images/scenedit/large-paint-brush.png",
-        kind: BrushKind::Texture,
+        tool: &crate::sbc::textures::brushes::TEXTURE,
         paint_mode: "void",
     },
 ];

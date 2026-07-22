@@ -6,8 +6,6 @@ use crate::sbc::panels::field::{ChangeQueue, CommitRequest, InteractionEvent, In
 use crate::sbc::panels::view::PanelView;
 
 const FINE_DRAG_MULT: f32 = 0.1;
-/// Mask bit for Shift in `get_mod_key_state`.
-const SHIFT_BIT: u32 = 1;
 
 /// Which field the pointer is on, and whether RmlUi has called it a drag yet.
 enum DragState {
@@ -326,7 +324,7 @@ impl PanelInput {
         interface
             .input()
             .get_mod_key_state()
-            .map(|s| s & SHIFT_BIT != 0)
+            .map(|(_, _, _, shift)| shift)
             .unwrap_or(false)
     }
 

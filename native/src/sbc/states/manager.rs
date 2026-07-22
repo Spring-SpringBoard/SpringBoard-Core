@@ -10,19 +10,19 @@ use crate::sbc::objects::{ObjectKind, SelectionManager};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::states::brush_settings::BrushSettings;
 use crate::sbc::states::manipulate::{DragObjectState, RotateObjectState};
-use crate::sbc::states::map_editing::{BrushKind, MapEditingState};
+use crate::sbc::states::map_editing::MapEditingState;
 use crate::sbc::states::rectangle_select::RectangleSelectState;
 use crate::sbc::states::state::{DefaultState, EditorState, StateContext, Transition};
+use crate::sbc::states::MapBrush;
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(StateManager::new(iface)) }
 }
 
 /// What a view asks the editor to do next. Ports `SB.stateManager:SetState`.
-#[derive(Debug, Clone)]
 pub(crate) enum StateRequest {
     Default,
-    Brush(BrushKind, String),
+    Brush(&'static dyn MapBrush, String),
     AddUnit(String, i32, PlacementConfig),
     AddFeature(String, i32, PlacementConfig),
 }
@@ -113,7 +113,7 @@ impl StateManager {
         let mut brush = models.get::<BrushSettings>().clone();
         let mut state = match request {
             StateRequest::Default => ActiveState::Default(DefaultState::default()),
-            StateRequest::Brush(kind, paint_mode) => {
+            StateRequest::Brush(tool, paint_mode) => {
                 if !paint_mode.is_empty() {
                     brush.texture_paint_mode = paint_mode.clone();
                     // Keep the shared model in sync with the mode carried by
@@ -121,7 +121,7 @@ impl StateManager {
                     // overwrite Filter/DNTS/Void with the previous mode.
                     models.get::<BrushSettings>().texture_paint_mode = paint_mode;
                 }
-                ActiveState::Brush(Box::new(MapEditingState::new(kind, brush)))
+                ActiveState::Brush(Box::new(MapEditingState::new(tool, brush)))
             }
             StateRequest::AddUnit(def, def_id, config) => {
                 ActiveState::AddObject(AddObjectState::new(ObjectKind::Unit, def, def_id, config))

@@ -1,3 +1,4 @@
+pub(crate) mod brushes;
 pub(crate) mod commands;
 pub(crate) mod jobs;
 pub(crate) mod model;

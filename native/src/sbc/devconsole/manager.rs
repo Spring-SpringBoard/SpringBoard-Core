@@ -293,7 +293,7 @@ impl DevConsoleManager {
         self.interface
             .input()
             .get_mod_key_state()
-            .is_ok_and(|bits| bits & (1 << 1) != 0)
+            .is_ok_and(|(_, ctrl, _, _)| ctrl)
     }
 
     fn copy_selection(&self) {

@@ -225,16 +225,16 @@ struct ModState {
 
 impl ModState {
     fn read(interface: &NativeInterfaceRef, tracked: TrackedModifiers) -> Self {
-        let mod_state = interface.input().get_mod_key_state().unwrap_or(0);
+        let (_, ctrl, _, shift) = interface
+            .input()
+            .get_mod_key_state()
+            .unwrap_or((false, false, false, false));
         ModState {
-            shift: tracked.shift || mod_state & NATIVE_MOD_SHIFT != 0,
-            ctrl: tracked.ctrl || mod_state & NATIVE_MOD_CTRL != 0,
+            shift: tracked.shift || shift,
+            ctrl: tracked.ctrl || ctrl,
         }
     }
 }
-
-const NATIVE_MOD_SHIFT: u32 = 1 << 0;
-const NATIVE_MOD_CTRL: u32 = 1 << 1;
 
 #[derive(Copy, Clone, Default)]
 struct TrackedModifiers {

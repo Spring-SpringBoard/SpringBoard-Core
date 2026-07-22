@@ -15,7 +15,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::field::bind_tooltip;
 use crate::sbc::rml::{element_by_id, escape_rml};
-use crate::sbc::states::{BrushKind, StateRequest};
+use crate::sbc::states::{MapBrush, StateRequest};
 
 /// An unset asset field reads as an empty string, not as an absent value.
 pub(crate) fn non_empty(value: String) -> Option<String> {
@@ -27,7 +27,7 @@ pub(crate) fn non_empty(value: String) -> Option<String> {
 pub(crate) struct BrushAction {
     pub caption: &'static str,
     pub image: &'static str,
-    pub kind: BrushKind,
+    pub tool: &'static dyn MapBrush,
     pub paint_mode: &'static str,
 }
 
@@ -111,7 +111,7 @@ impl BrushActions {
             }
             self.active = Some(index);
             self.request = Some(StateRequest::Brush(
-                action.kind,
+                action.tool,
                 action.paint_mode.to_string(),
             ));
         }

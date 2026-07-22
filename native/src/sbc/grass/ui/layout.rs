@@ -1,13 +1,12 @@
 use crate::sbc::panels::brush::BrushAction;
 use crate::sbc::panels::runtime::Item;
-use crate::sbc::states::BrushKind;
 
 use super::model::GrassField;
 
 pub(crate) const ACTIONS: &[BrushAction] = &[BrushAction {
     caption: "Add",
     image: "LuaUI/images/scenedit/grass-add.png",
-    kind: BrushKind::Grass,
+    tool: &crate::sbc::grass::brushes::GRASS,
     paint_mode: "",
 }];
 

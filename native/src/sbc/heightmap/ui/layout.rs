@@ -1,6 +1,5 @@
 use crate::sbc::panels::brush::BrushAction;
 use crate::sbc::panels::runtime::Item;
-use crate::sbc::states::BrushKind;
 
 use super::model::TerrainField;
 
@@ -9,19 +8,19 @@ pub(crate) const ACTIONS: &[BrushAction] = &[
     BrushAction {
         caption: "Add",
         image: "LuaUI/images/scenedit/up-card.png",
-        kind: BrushKind::ShapeModify,
+        tool: &crate::sbc::heightmap::brushes::SHAPE_MODIFY,
         paint_mode: "",
     },
     BrushAction {
         caption: "Set",
         image: "LuaUI/images/scenedit/terrain-set.png",
-        kind: BrushKind::Level,
+        tool: &crate::sbc::heightmap::brushes::LEVEL,
         paint_mode: "",
     },
     BrushAction {
         caption: "Smooth",
         image: "LuaUI/images/scenedit/terrain-smooth.png",
-        kind: BrushKind::Smooth,
+        tool: &crate::sbc::heightmap::brushes::SMOOTH,
         paint_mode: "",
     },
 ];

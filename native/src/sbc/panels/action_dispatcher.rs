@@ -14,10 +14,10 @@ impl ActionDispatcher {
     /// Match a key + current modifiers against the action hotkeys, queueing the
     /// match. Returns whether a hotkey was claimed.
     pub(crate) fn match_hotkey(&mut self, interface: &NativeInterfaceRef, key: i32) -> bool {
-        const SHIFT: u32 = 1 << 0;
-        const CTRL: u32 = 1 << 1;
-        let mods = interface.input().get_mod_key_state().unwrap_or(0);
-        let (ctrl, shift) = (mods & CTRL != 0, mods & SHIFT != 0);
+        let (_, ctrl, _, shift) = interface
+            .input()
+            .get_mod_key_state()
+            .unwrap_or((false, false, false, false));
 
         for action in Action::ALL {
             let Some(hk) = action.hotkey() else { continue };

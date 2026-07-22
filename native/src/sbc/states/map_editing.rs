@@ -10,41 +10,90 @@ use std::time::Instant;
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::command_system::command::Command;
-use crate::sbc::heightmap::commands::set_heightmap_brush_command::SetHeightmapBrushCommand;
 use crate::sbc::states::brush_settings::BrushSettings;
 use crate::sbc::states::highlight::BrushPreview;
-use crate::sbc::states::shapes::{brush_opts, load_shape};
 use crate::sbc::states::state::{cursor, trace_ground, EditorState, StateContext};
 
 const LEFT: i32 = 1;
 const RIGHT: i32 = 3;
 
-/// Which brush a `MapEditingState` is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum BrushKind {
-    /// Raise and lower the terrain.
-    ShapeModify,
-    Smooth,
-    /// Level towards a target height.
-    Level,
-    Metal,
-    Grass,
-    Texture,
+/// A point in the common ground-trace coordinate system. Each domain decides
+/// whether its command needs this point, or the centre/corner derived from it.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct BrushStamp {
+    pub x: f32,
+    pub z: f32,
+    pub size: f32,
+    pub rotation: f32,
 }
 
-impl BrushKind {
-    /// Lua's `initialDelay`: a beat before a held brush starts repeating, so a
-    /// click is a single dab. The metal and grass brushes have none.
-    fn initial_delay(self) -> f32 {
-        match self {
-            BrushKind::Metal | BrushKind::Grass => 0.0,
-            _ => 0.3,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum BrushButton {
+    Primary,
+    Secondary,
+}
+
+impl BrushButton {
+    fn from_mouse(button: i32) -> Self {
+        if button == RIGHT {
+            Self::Secondary
+        } else {
+            Self::Primary
         }
+    }
+
+    pub(crate) fn is_secondary(self) -> bool {
+        self == Self::Secondary
     }
 }
 
+/// Domain-owned behaviour for a map brush. Adding a tool means implementing
+/// this trait next to its commands and referencing it from an action button;
+/// the shared input/streaming state needs no new branch.
+pub(crate) trait MapBrush: Sync {
+    fn name(&self) -> &'static str;
+
+    fn initial_delay(&self) -> f32 {
+        0.3
+    }
+
+    /// Whether the current domain settings can produce a command.
+    fn is_ready(&self, _brush: &BrushSettings) -> bool {
+        true
+    }
+
+    /// Domain-specific setup before a stroke/dab. Heightmap tools upload their
+    /// pattern here; texture tools need none.
+    fn prepare(
+        &self,
+        _brush: &BrushSettings,
+        _uploaded: &mut HashSet<String>,
+        _ctx: &mut StateContext,
+    ) -> bool {
+        true
+    }
+
+    /// A tool may consume a press instead of painting. Terrain Set uses a
+    /// secondary press to pick the target height.
+    fn consume_press(
+        &self,
+        _brush: &mut BrushSettings,
+        _button: BrushButton,
+        _height: f32,
+    ) -> bool {
+        false
+    }
+
+    fn command(
+        &self,
+        brush: &BrushSettings,
+        stamp: BrushStamp,
+        button: BrushButton,
+    ) -> Box<dyn Command>;
+}
+
 pub(crate) struct MapEditingState {
-    kind: BrushKind,
+    tool: &'static dyn MapBrush,
     brush: BrushSettings,
     /// Patterns already uploaded as greyscale shapes this session.
     uploaded: HashSet<String>,
@@ -61,16 +110,16 @@ pub(crate) struct MapEditingState {
 }
 
 impl MapEditingState {
-    pub(crate) fn new(kind: BrushKind, brush: BrushSettings) -> Self {
+    pub(crate) fn new(tool: &'static dyn MapBrush, brush: BrushSettings) -> Self {
         MapEditingState {
-            kind,
+            tool,
             brush,
             uploaded: HashSet::new(),
             painting: false,
             last_hit: None,
             last_screen: None,
             last_apply: None,
-            initial_delay_left: kind.initial_delay(),
+            initial_delay_left: tool.initial_delay(),
             preview: BrushPreview::new(),
         }
     }
@@ -106,28 +155,11 @@ impl MapEditingState {
         false
     }
 
-    /// Upload the pattern's greyscale shape once; the terrain commands refuse to
-    /// run without it.
-    fn ensure_shape(&mut self, ctx: &mut StateContext, pattern: &str) -> bool {
-        if self.uploaded.contains(pattern) {
-            return true;
-        }
-        let Some(shape) = load_shape(ctx.interface, pattern) else {
-            log::warn!("brush pattern {pattern} could not be loaded");
-            return false;
-        };
-        ctx.command(Box::new(SetHeightmapBrushCommand::new(brush_opts(
-            pattern, &shape,
-        ))));
-        self.uploaded.insert(pattern.to_string());
-        true
-    }
-
     fn start_painting(&mut self, ctx: &mut StateContext) {
         if self.painting {
             return;
         }
-        self.initial_delay_left = self.kind.initial_delay();
+        self.initial_delay_left = self.tool.initial_delay();
         ctx.set_multiple_command_mode(true);
         self.painting = true;
     }
@@ -145,187 +177,50 @@ impl MapEditingState {
     /// This prevents empty undo entries when no pattern/material is selected or
     /// when the selected heightmap pattern cannot be decoded.
     fn prepare_paint(&mut self, ctx: &mut StateContext) -> bool {
-        let Some(pattern) = self.brush.pattern_texture.clone() else {
-            log::warn!("{} brush cannot paint: no pattern selected", self.name());
+        if self.brush.pattern_texture.is_none() {
+            log::warn!(
+                "{} brush cannot paint: no pattern selected",
+                self.tool.name()
+            );
             return false;
-        };
-        if self.kind == BrushKind::Texture {
-            let ready =
-                self.brush.texture_paint_mode != "paint" || !self.brush.brush_textures.is_empty();
-            if !ready {
-                log::warn!("texture brush cannot paint: no saved material selected");
-            }
-            return ready;
         }
-        self.ensure_shape(ctx, &pattern)
+        if !self.tool.is_ready(&self.brush) {
+            log::warn!(
+                "{} brush cannot paint: incomplete brush settings",
+                self.tool.name()
+            );
+            return false;
+        }
+        self.tool.prepare(&self.brush, &mut self.uploaded, ctx)
     }
 
     /// One dab of the brush at world `(x, z)`.
     fn apply(&mut self, ctx: &mut StateContext, x: f32, z: f32, button: i32) {
-        let Some(pattern) = self.brush.pattern_texture.clone() else {
-            return;
-        };
-        // The heightmap-derived brushes sample a greyscale shape; the texture
-        // brush binds the pattern as a GPU texture and needs no upload.
-        if self.kind != BrushKind::Texture && !self.ensure_shape(ctx, &pattern) {
+        if self.brush.pattern_texture.is_none()
+            || !self.tool.prepare(&self.brush, &mut self.uploaded, ctx)
+        {
             return;
         }
         if !self.can_apply() {
             return;
         }
 
-        let size = self.brush.size;
-        // Lua passes the brush centre offset by half its size.
-        let (cx, cz) = (x + size / 2.0, z + size / 2.0);
-        let rotation = self.brush.rotation;
-
-        // Right-click inverts a height brush, erases metal and grass.
-        let command: Box<dyn Command> = match self.kind {
-            BrushKind::ShapeModify => {
-                use crate::sbc::heightmap::commands::terrain_shape_modify_command::{
-                    Opts, TerrainShapeModifyCommand,
-                };
-                Box::new(TerrainShapeModifyCommand::new(Opts {
-                    rotation,
-                    x: cx,
-                    z: cz,
-                    shape_name: pattern,
-                    strength: self.signed_strength(button),
-                    size,
-                }))
-            }
-            BrushKind::Smooth => {
-                use crate::sbc::heightmap::commands::terrain_smooth_command::{
-                    Opts, TerrainSmoothCommand,
-                };
-                let strength = self.signed_strength(button).abs();
-                // Lua's sigma curve, clamped the same way.
-                let sigma = (strength.sqrt().sqrt() / 2.0).clamp(0.20, 1.5);
-                Box::new(TerrainSmoothCommand::new(Opts {
-                    rotation,
-                    x: cx,
-                    z: cz,
-                    shape_name: pattern,
-                    strength,
-                    size,
-                    sigma,
-                }))
-            }
-            BrushKind::Level => {
-                use crate::sbc::heightmap::commands::terrain_level_command::{
-                    Opts, TerrainLevelCommand,
-                };
-                Box::new(TerrainLevelCommand::new(Opts {
-                    rotation,
-                    x: cx,
-                    z: cz,
-                    shape_name: pattern,
-                    strength: self.signed_strength(button),
-                    size,
-                    height: self.brush.height,
-                    apply_dir_id: self.brush.apply_dir.id(),
-                }))
-            }
-            BrushKind::Metal => {
-                use crate::sbc::metal::commands::terrain_metal_command::{
-                    Opts, TerrainMetalCommand,
-                };
-                // Right-click erases: Lua multiplies the amount by 0.
-                Box::new(TerrainMetalCommand::new(Opts {
-                    rotation,
-                    x: cx,
-                    z: cz,
-                    shape_name: pattern,
-                    amount: if button == RIGHT {
-                        0.0
-                    } else {
-                        self.brush.amount
-                    },
-                    size,
-                }))
-            }
-            BrushKind::Grass => {
-                use crate::sbc::grass::commands::terrain_grass_command::{
-                    Opts, TerrainGrassCommand,
-                };
-                Box::new(TerrainGrassCommand::new(Opts {
-                    rotation,
-                    x: cx,
-                    z: cz,
-                    shape_name: pattern,
-                    amount: if button == RIGHT { 0.0 } else { 1.0 },
-                    size,
-                }))
-            }
-            // The texture brush takes the *corner*, not the centre, and its
-            // rotations are radians. `brushTexture` is a material map of
-            // channel -> texture.
-            BrushKind::Texture => {
-                if self.brush.texture_paint_mode == "paint" && self.brush.brush_textures.is_empty()
-                {
-                    return;
-                }
-                use crate::sbc::textures::commands::terrain_change_texture_command::{
-                    Opts, TerrainChangeTextureCommand,
-                };
-                let enabled = &self.brush.texture_enabled;
-                let action = if button == RIGHT { -1.0 } else { 1.0 };
-                Box::new(TerrainChangeTextureCommand::new(Opts {
-                    x: x - size / 2.0,
-                    z: z - size / 2.0,
-                    size,
-                    paint_mode: self.brush.texture_paint_mode.clone(),
-                    pattern_texture: pattern.into(),
-                    pattern_rotation: rotation.to_radians(),
-                    brush_texture: serde_json::to_value(&self.brush.brush_textures)
-                        .unwrap_or_default(),
-                    extra: serde_json::json!({
-                        "diffuseEnabled": enabled.get("diffuse").copied().unwrap_or(false),
-                        "specularEnabled": enabled.get("specular").copied().unwrap_or(false),
-                        "emissionEnabled": enabled.get("emission").copied().unwrap_or(false),
-                        "reflEnabled": enabled.get("refl").copied().unwrap_or(false),
-                    }),
-                    mode: self.brush.mode.clone(),
-                    kernel_mode: self.brush.kernel_mode.clone(),
-                    tex_scale: self.brush.tex_scale,
-                    // The command takes the material's own rotation in radians.
-                    rotation: self.brush.tex_rotation.to_radians(),
-                    tex_offset_x: self.brush.tex_offset_x,
-                    tex_offset_y: self.brush.tex_offset_y,
-                    diffuse_color: self.brush.diffuse_color,
-                    falloff_factor: self.brush.falloff_factor,
-                    feature_factor: self.brush.feature_factor,
-                    strength: self.brush.strength,
-                    value: self.brush.value,
-                    void_factor: self.brush.void_factor * action,
-                    color_index: (self.brush.color_index as f32 * action) as i32,
-                    exclusive: if self.brush.exclusive { 1 } else { 0 },
-                    ..Default::default()
-                }))
-            }
-        };
-        ctx.command(command);
-    }
-
-    fn signed_strength(&self, button: i32) -> f32 {
-        if button == RIGHT {
-            -self.brush.strength
-        } else {
-            self.brush.strength
-        }
+        ctx.command(self.tool.command(
+            &self.brush,
+            BrushStamp {
+                x,
+                z,
+                size: self.brush.size,
+                rotation: self.brush.rotation,
+            },
+            BrushButton::from_mouse(button),
+        ));
     }
 }
 
 impl EditorState for MapEditingState {
     fn name(&self) -> &'static str {
-        match self.kind {
-            BrushKind::ShapeModify => "terrain-shape-modify",
-            BrushKind::Smooth => "terrain-smooth",
-            BrushKind::Level => "terrain-level",
-            BrushKind::Metal => "metal",
-            BrushKind::Grass => "grass",
-            BrushKind::Texture => "texture",
-        }
+        self.tool.name()
     }
 
     fn leave(&mut self, ctx: &mut StateContext) {
@@ -336,21 +231,19 @@ impl EditorState for MapEditingState {
         if button != LEFT && button != RIGHT {
             return false;
         }
-        // Right-click on a level brush picks the target height off the ground,
-        // rather than painting (Lua's TerrainSetState:MousePress).
-        if self.kind == BrushKind::Level && button == RIGHT {
-            if let Some(hit) = trace_ground(ctx.interface, x as f32, y as f32) {
-                self.brush.set_height(hit.y);
-            }
-            return true;
-        }
         let Some(hit) = trace_ground(ctx.interface, x as f32, y as f32) else {
             log::warn!(
                 "{} brush cannot paint: cursor did not hit the ground",
-                self.name()
+                self.tool.name()
             );
             return true;
         };
+        if self
+            .tool
+            .consume_press(&mut self.brush, BrushButton::from_mouse(button), hit.y)
+        {
+            return true;
+        }
         if !self.prepare_paint(ctx) {
             return true;
         }
@@ -371,16 +264,14 @@ impl EditorState for MapEditingState {
     fn mouse_wheel(&mut self, ctx: &mut StateContext, up: bool, _value: f32) -> bool {
         // Shift resizes, Alt rotates -- and nothing else consumes the wheel, so
         // the camera keeps zooming as usual.
-        let Ok(mods) = ctx.interface.input().get_mod_key_state() else {
+        let Ok((alt, _, _, shift)) = ctx.interface.input().get_mod_key_state() else {
             return false;
         };
-        const SHIFT: u32 = 1 << 0;
-        const ALT: u32 = 1 << 2;
-        if mods & SHIFT != 0 {
+        if shift {
             self.brush.scale_size(up);
             return true;
         }
-        if mods & ALT != 0 {
+        if alt {
             self.brush.rotate(up);
             return true;
         }
@@ -428,13 +319,7 @@ impl EditorState for MapEditingState {
         let Some(pattern) = self.brush.pattern_texture.clone() else {
             return;
         };
-        // Only material paint needs a saved material. Filter, Void and DNTS use
-        // just the selected pattern and were incorrectly hidden until Paint had
-        // happened once.
-        if self.kind == BrushKind::Texture
-            && self.brush.texture_paint_mode == "paint"
-            && self.brush.brush_textures.is_empty()
-        {
+        if !self.tool.is_ready(&self.brush) {
             return;
         }
         let Some(mouse) = cursor(interface) else {

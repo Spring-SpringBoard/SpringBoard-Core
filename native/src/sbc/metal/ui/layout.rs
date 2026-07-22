@@ -1,13 +1,12 @@
 use crate::sbc::panels::brush::BrushAction;
 use crate::sbc::panels::runtime::Item;
-use crate::sbc::states::BrushKind;
 
 use super::model::MetalField;
 
 pub(crate) const ACTIONS: &[BrushAction] = &[BrushAction {
     caption: "Set",
     image: "LuaUI/images/scenedit/metal-add.png",
-    kind: BrushKind::Metal,
+    tool: &crate::sbc::metal::brushes::METAL,
     paint_mode: "",
 }];
 

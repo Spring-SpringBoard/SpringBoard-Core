@@ -314,9 +314,13 @@ impl PanelManager {
         }
         // Ctrl+A: select the value being edited. RmlUi receives the engine's
         // own key events, but never this chord with the modifier attached.
-        const CTRL: u32 = 1 << 1;
-        let mods = self.interface.input().get_mod_key_state().unwrap_or(0);
-        if mods & CTRL != 0 && crate::sbc::keys::is_key(&self.interface, key, "a") {
+        let ctrl = self
+            .interface
+            .input()
+            .get_mod_key_state()
+            .map(|(_, ctrl, _, _)| ctrl)
+            .unwrap_or(false);
+        if ctrl && crate::sbc::keys::is_key(&self.interface, key, "a") {
             let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
             if let Some(ed) = target.get_mut() {
                 ed.select_edit_field(&name, &self.interface);
