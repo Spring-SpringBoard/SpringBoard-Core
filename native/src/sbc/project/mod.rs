@@ -1,4 +1,5 @@
 pub(crate) mod commands;
+mod editor_state;
 pub(crate) mod io_registries;
 pub(crate) mod jobs;
 pub(crate) mod model;
@@ -9,6 +10,7 @@ pub(crate) mod status_bar;
 mod tests;
 mod ui;
 
+pub(crate) use editor_state::{EditorState, TextureEditorState};
 pub(crate) use model::project_manager::{ProjectData, ProjectManager};
 pub(crate) use model::scenario_info_manager::{ScenarioInfo, ScenarioInfoManager};
 pub(crate) use model::screenshot_manager::ScreenshotManager;

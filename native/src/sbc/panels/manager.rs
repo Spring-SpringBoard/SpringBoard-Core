@@ -25,7 +25,7 @@ use crate::sbc::panels::modal_stack::ModalStack;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
-use crate::sbc::project::ProjectStatusBar;
+use crate::sbc::project::{EditorState, ProjectStatusBar};
 use crate::sbc::states::{StateManager, StateRequest};
 
 inventory::submit! {
@@ -204,6 +204,7 @@ impl PanelManager {
         if let Some(ed) = self.slot.editor_mut() {
             self.brush.sync(ed, models, &self.interface);
         }
+        self.slot.save_editor_state(models.get::<EditorState>());
         self.slot.dispatch_state_request(models);
         self.slot
             .sync_state_selection(&self.interface, &self.view, models);
@@ -231,6 +232,13 @@ impl PanelManager {
             ed.draw_thumbnails(&self.interface);
         }
         self.view.draw(&self.interface)
+    }
+
+    /// Called after the asynchronous editor-state reader has populated the
+    /// project store. This only refreshes fields and grids; it never submits a
+    /// field command or touches the undo stack.
+    pub(crate) fn editor_state_loaded(&mut self, models: &mut Models) {
+        self.slot.load_editor_state(models.get::<EditorState>());
     }
 
     /// Typed commands queued by native producers (no JSON envelope).
@@ -402,6 +410,7 @@ impl PanelManager {
                     }
                     self.reset_state(models);
                     self.view.set_tab(&self.interface, tab)?;
+                    self.slot.save_editor_state(models.get::<EditorState>());
                     self.slot.close();
                 }
                 ShellEvent::Editor(name) => {
@@ -412,7 +421,12 @@ impl PanelManager {
                         continue;
                     }
                     self.reset_state(models);
-                    self.slot.open(name, &self.interface, &mut self.view)?;
+                    self.slot.open(
+                        name,
+                        &self.interface,
+                        &mut self.view,
+                        models.get::<EditorState>(),
+                    )?;
                 }
                 ShellEvent::Action(action) => self.run_action(action, models)?,
             }

@@ -8,10 +8,12 @@ use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::input::PanelInput;
 use crate::sbc::panels::registry::editor_by_name;
 use crate::sbc::panels::view::PanelView;
+use crate::sbc::project::EditorState;
 use crate::sbc::states::StateManager;
 
 pub(crate) struct EditorSlot {
     editor: Option<Box<dyn Editor>>,
+    name: Option<&'static str>,
     needs_refresh: bool,
     /// The open editor's markup has not been generated yet; it is built after
     /// the first refresh, since a model-backed editor has no fields before it.
@@ -27,6 +29,7 @@ impl Default for EditorSlot {
     fn default() -> Self {
         EditorSlot {
             editor: None,
+            name: None,
             needs_refresh: false,
             needs_rebuild: false,
             state_was_default: true,
@@ -45,6 +48,32 @@ impl EditorSlot {
 
     pub(crate) fn close(&mut self) {
         self.editor = None;
+        self.name = None;
+    }
+
+    /// Capture panel-local state before replacing its short-lived editor.
+    pub(crate) fn save_editor_state(&self, state: &mut EditorState) {
+        if let Some(editor) = self.editor.as_deref() {
+            editor.save_editor_state(state);
+            if let Some(name) = self.name {
+                let mut brush = state.brush(name).clone();
+                editor.write_brush(&mut brush);
+                state.save_brush(name, brush);
+            }
+        }
+    }
+
+    /// Restore panel-local state without routing it through field-change
+    /// handlers. Rebuild so grids (notably saved brushes) are redrawn too.
+    pub(crate) fn load_editor_state(&mut self, state: &EditorState) {
+        if let Some(editor) = self.editor.as_deref_mut() {
+            editor.load_editor_state(state);
+            if let Some(name) = self.name {
+                editor.load_brush_state(state.brush(name));
+            }
+            self.needs_refresh = true;
+            self.needs_rebuild = true;
+        }
     }
 
     pub(crate) fn request_refresh(&mut self) {
@@ -57,6 +86,7 @@ impl EditorSlot {
         name: &'static str,
         interface: &NativeInterfaceRef,
         view: &mut PanelView,
+        state: &mut EditorState,
     ) -> Result<(), Error> {
         if view.active_editor() == Some(name) {
             return Ok(());
@@ -66,7 +96,12 @@ impl EditorSlot {
             log::warn!("no native editor registered as {name}");
             return Ok(());
         };
-        self.editor = Some((spec.make)());
+        self.save_editor_state(state);
+        let mut editor = (spec.make)();
+        editor.load_editor_state(state);
+        editor.load_brush_state(state.brush(name));
+        self.editor = Some(editor);
+        self.name = Some(name);
         view.set_active_editor(interface, Some(name))?;
         // The markup is built after the first refresh, not before: an editor
         // whose fields come from a model (Teams) has none until it has read it.

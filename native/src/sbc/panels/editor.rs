@@ -4,11 +4,25 @@ use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 
 use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
+use crate::sbc::project::EditorState;
 use crate::sbc::states::{BrushSettings, StateRequest};
 
 /// An editor panel. Each concrete editor owns its fields, generates its RML
 /// body, and processes field changes into typed commands.
 pub(crate) trait Editor {
+    /// Restore project-scoped editor state after this editor is created.
+    fn load_editor_state(&mut self, _state: &EditorState) {}
+
+    /// Copy project-scoped editor state out before this editor is dropped or the
+    /// project is saved. Most editors keep all persistent values in the shared
+    /// brush and therefore use the default no-op implementation.
+    fn save_editor_state(&self, _state: &mut EditorState) {}
+
+    /// Restore this editor's brush snapshot without treating it as a field
+    /// edit. The editor state owns these per-editor values; `BrushSettings` is
+    /// only the live bridge to the currently active painting state.
+    fn load_brush_state(&mut self, _brush: &BrushSettings) {}
+
     /// Generate the full RML body for this editor (field rows, section headers).
     fn generate_rml(&self) -> String;
 

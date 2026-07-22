@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import shutil
 import time
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from scenarios.geometry import (
     MAP_ACTIONS,
     MAP_TERRAIN_BRUSHES,
     MAP_TEXTURE_ACTIONS,
+    MISC,
     PARK_PANEL,
     TAB_X,
     TAB_Y,
@@ -267,7 +269,9 @@ def texture_paint(run_state: E2ERun) -> None:
         before = run_state.screenshot(f"texture-before-{name}")
         _paint_stroke(run_state, left, paint_x, paint_y)
         after = run_state.screenshot(f"texture-{name}")
-        run_state.assert_any_command("TerrainChangeTextureCommand", paintMode=mode)
+        run_state.assert_any_command(
+            "TerrainChangeTextureCommand", paintMode=mode, strength=1.0
+        )
         run_state.assert_region_pixels(
             before, after, map_region, min_changed=MAP_STROKE_PIXELS
         )
@@ -477,6 +481,112 @@ def _sweep(run_state: E2ERun, left: int, width: int, height: int) -> None:
     run_state.release(left - 200, y)
 
 
+@scenario()
+def editor_state_roundtrip(run_state: E2ERun) -> None:
+    """Save brush/editor state, reload it, then paint with the restored data.
+
+    The check deliberately uses the first commands *after* loading as a guard:
+    hydrating fields and grids must not emit editing commands. A Terrain Set
+    dab and a texture Paint dab then prove the restored values are the ones
+    that reach the tools, including the saved material brush.
+    """
+    run_state.focus()
+    left = panel_left(run_state)
+    width, height = window_size(run_state)
+    point = (width // 3, height // 2)
+
+    # Set a representative cross-section of the shared terrain brush fields.
+    # Save As below writes those values and reloads into the new project.
+    run_state.click(left + TAB_X["map"], TAB_Y, delay=0.2)
+    run_state.click(*editor_point(left, "map", "terrain"), delay=0.4)
+    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.2)
+    click_field(run_state, left, MAP["terrain_size"], "333")
+    click_field(run_state, left, MAP["terrain_rotation"], "27")
+    click_field(run_state, left, MAP["terrain_strength"], "8.5")
+    click_field(run_state, left, MAP["terrain_height"], "44")
+    run_state.click(*panel_point(left, MAP["texture_direction"]), delay=0.15)
+    run_state.click(
+        *panel_point(left, dropdown_option(MAP["texture_direction"], 2)), delay=0.2
+    )
+
+    # Create one texture preset. It captures the shared pattern/geometry plus
+    # a real material, exactly the part that used to disappear on tab switches
+    # and project reloads.
+    run_state.click(*editor_point(left, "map", "texture"), delay=0.4)
+    run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.2)
+    click_field(run_state, left, MAP["texture_scale"], "3.5")
+    run_state.click(*panel_point(left, MAP["texture_specular_enabled"]), delay=0.2)
+    run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=0.4)
+    run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=0.35)
+
+    # Save As writes this state, then reloads into the project. No screenshot is
+    # needed: the command payloads below are stronger evidence and keep this
+    # regression test quick. The reload's own project/bootstrap commands are
+    # expected; editor-state hydration must add nothing to that set.
+    before_save = len(run_state.commands())
+    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=0.4)
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.15)
+    run_state.type_text("EditorState")
+    run_state.key("Return", delay=0.15)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=7.0)
+
+    after_load = run_state.commands()[before_save:]
+    classes = [entry.get("data", {}).get("className") for entry in after_load]
+    lifecycle = {
+        "SetProjectNamePathCommand",
+        "SaveProjectInfoCommand",
+        "SaveCommand",
+        "ReloadIntoProjectCommand",
+        "SetGlobalLosCommand",
+        "LoadProjectCommand",
+    }
+    unexpected = [name for name in classes if name not in lifecycle]
+    if unexpected:
+        raise AssertionError(
+            "loading editor state emitted editing commands; expected only "
+            f"project lifecycle commands, got {classes}"
+        )
+    for name in ("SaveCommand", "ReloadIntoProjectCommand", "LoadProjectCommand"):
+        if name not in classes:
+            raise AssertionError(f"save/load lifecycle omitted {name}: {classes}")
+
+    # A fresh Terrain panel must use the saved values rather than its defaults.
+    run_state.click(left + TAB_X["map"], TAB_Y, delay=0.2)
+    run_state.click(*editor_point(left, "map", "terrain"), delay=0.4)
+    run_state.click(*panel_point(left, MAP_ACTIONS["terrain_set"]), delay=0.2)
+    before_terrain = run_state.assert_command_at_least("TerrainLevelCommand", 0)
+    run_state.click(*point, delay=0.5)
+    run_state.assert_command_at_least("TerrainLevelCommand", before_terrain + 1)
+    run_state.assert_any_command(
+        "TerrainLevelCommand",
+        size=333.0,
+        rotation=27.0,
+        strength=8.5,
+        height=44.0,
+        applyDirID=-1,
+        shapeName=TERRAIN_PATTERN_PATH,
+    )
+
+    # The saved brush grid is restored too. Selecting its first item and making
+    # one dab proves the loaded material survives, not just the scalar fields.
+    run_state.click(*editor_point(left, "map", "texture"), delay=0.4)
+    run_state.click(*panel_point(left, MAP["saved_brush_first"]), delay=0.3)
+    run_state.screenshot("restored-editor-state")
+    run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.2)
+    before_texture = run_state.assert_command_at_least("TerrainChangeTextureCommand", 0)
+    run_state.click(*point, delay=0.5)
+    run_state.assert_command_at_least("TerrainChangeTextureCommand", before_texture + 1)
+    run_state.assert_any_command(
+        "TerrainChangeTextureCommand",
+        paintMode="paint",
+        size=333.0,
+        patternTexture=TERRAIN_PATTERN_PATH,
+        texScale=3.5,
+        specularEnabled=False,
+        brushTexture=lambda value: isinstance(value, dict) and "diffuse" in value,
+    )
+
+
 def _wait_for_archive(run_state: E2ERun, stem: str, timeout_s: float = 20.0) -> Path | None:
     """Poll the write dir for the compiled `.sdz`. The archive is built off the
     draw thread, so it lands a little after the export command is logged."""
@@ -548,3 +658,104 @@ def map_export(run_state: E2ERun) -> None:
         raise AssertionError("export did not produce a .sdz archive")
     if archive.stat().st_size < 1024:
         raise AssertionError(f"compiled archive is suspiciously small: {archive}")
+
+
+@scenario()
+def map_roundtrip(run_state: E2ERun) -> None:
+    """Full round-trip: sculpt/paint a map, export it, then start a new project
+    ON that exported map and confirm the terrain came through.
+
+    Exercises the whole pipeline plus the piece that was blocked until the
+    ScanAllDirs binding: an archive exported this session becomes selectable in
+    New Project without a restart (available_maps rescans first).
+    """
+    run_state.focus()
+    left = panel_left(run_state)
+    width, height = window_size(run_state)
+    # A central patch of the map (left of the 500-wide panel) to compare terrain.
+    map_region = (left // 2 - 260, height // 2 - 220, 520, 440)
+    original = run_state.screenshot("original-map")
+
+    # Save As establishes a project; then sculpt + paint so the map is distinct.
+    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=0.6)
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.15)
+    run_state.type_text("RoundTrip")
+    run_state.key("Return", delay=0.15)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=8.0)
+
+    run_state.click(left + TAB_X["map"], TAB_Y, delay=0.15)
+    run_state.click(*editor_point(left, "map", "terrain"), delay=0.3)
+    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.15)
+    run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=0.15)
+    click_field(run_state, left, MAP["terrain_size"], "1400")
+    click_field(run_state, left, MAP["terrain_strength"], "1000")
+    click_field(run_state, left, MAP["terrain_height"], "300")
+    # Two sweeps at high strength for a pronounced, unmistakable relief.
+    _sweep(run_state, left, width, height)
+    _sweep(run_state, left, width, height)
+    run_state.assert_command_at_least("TerrainShapeModifyCommand", 1)
+
+    run_state.click(*editor_point(left, "map", "texture"), delay=0.3)
+    run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=0.4)
+    run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=0.3)
+    run_state.click(*panel_point(left, MAP["saved_brush_rect"]), delay=0.15)
+    run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.15)
+    _sweep(run_state, left, width, height)
+    run_state.assert_any_command("TerrainChangeTextureCommand", paintMode="paint")
+
+    # The edited map as it looks in-editor, to compare the reopened export against.
+    run_state.move(*panel_point(left, PARK_PANEL), delay=0.4)
+    edited = run_state.screenshot("edited-map")
+
+    # Give the map a unique scenario name so the export does not collide with the
+    # default "Manual's Scenario". "AAA ..." sorts first, making it dropdown index 1.
+    run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.2)
+    run_state.click(*editor_point(left, "misc", "info"), delay=0.4)
+    click_field(run_state, left, MISC["info_name"], "AAA RoundTrip")
+
+    run_state.key("ctrl+s", delay=0.5)
+    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.3)
+    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.15)
+    run_state.type_text("RoundTrip")
+    run_state.key("Return", delay=0.15)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_export"]), delay=0.3)
+    run_state.assert_command("ExportSpringArchiveCommand")
+
+    archive = _wait_for_archive(run_state, "RoundTrip")
+    if archive is None:
+        raise AssertionError("export did not produce a .sdz archive")
+
+    # Install it where the archive scanner will find it as a map.
+    assert run_state.write_dir is not None
+    maps_dir = run_state.write_dir / "maps"
+    maps_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(archive, maps_dir / "RoundTrip.sdz")
+    # DEBUG: keep a copy of the export + project to inspect the round-trip.
+    dbg = Path("/tmp/rt_debug")
+    dbg.mkdir(exist_ok=True)
+    shutil.copyfile(archive, dbg / "RoundTrip.sdz")
+    for sdd in (run_state.write_dir / "springboard" / "projects").glob("*.sdd"):
+        shutil.copytree(sdd, dbg / sdd.name, dirs_exist_ok=True)
+
+    # New Project must now list the just-exported map (available_maps rescans).
+    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=0.8)
+    # Name first, while the dialog still has its full layout.
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=0.15)
+    run_state.type_text("FromExport")
+    run_state.key("Return", delay=0.15)
+    # Open the map dropdown and pick the exported map. Its map name comes from the
+    # scenario ("Manual's Scenario 1"), which sorts to option index 1 -- ahead of
+    # the "RoundTrip 1.0" *project* entry, whose base map is flat.
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_map"]), delay=0.4)
+    run_state.screenshot_root("roundtrip-map-dropdown")
+    run_state.click(*dialog_point(run_state, dropdown_option(DIALOG["new_project_map"], 1)), delay=0.4)
+    # Picking a non-blank map hides the Size row, so Create sits one row higher.
+    run_state.screenshot_root("roundtrip-after-map")
+    run_state.click(*dialog_point(run_state, DIALOG["new_project_create_nosize"]), delay=9.0)
+
+    roundtrip = run_state.screenshot("roundtrip-loaded")
+    # The compiled terrain came through: sharply different from the flat default
+    # it started on...
+    run_state.assert_region_pixels(original, roundtrip, map_region, min_changed=20_000)
+    # ...and faithful to the pre-export edit -- reopening the export looks the same.
+    run_state.assert_region_pixels(edited, roundtrip, map_region, max_changed=60_000)

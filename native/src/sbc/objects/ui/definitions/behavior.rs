@@ -165,7 +165,11 @@ impl Behavior for ObjectDefsBehavior {
     /// The brush radius is shared with the placement state, so Shift+wheel can
     /// resize the brush mid-stroke; re-arm placement so the stroke uses the
     /// size that is now on screen.
-    fn brush_read(&mut self, model: &mut ObjectDefsModel) {
+    fn brush_read(
+        &mut self,
+        model: &mut ObjectDefsModel,
+        _brush: &crate::sbc::states::BrushSettings,
+    ) {
         model.request_dirty = true;
     }
 

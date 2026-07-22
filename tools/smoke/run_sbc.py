@@ -200,6 +200,7 @@ def prepare(
 
     env = os.environ.copy()
     env.update(config_env)
+    _configure_lsan(env)
     env["SPRING_NATIVE_MODULE"] = str(native_plugin)
     # Trace every command Lua sends to Rust (one per line), next to the infolog.
     env["SBC_COMMAND_LOG"] = str(write_dir / "commands.jsonl")
@@ -218,6 +219,27 @@ def prepare(
         str(write_dir / "script.txt"),
     ]
     return write_dir, env, cmd
+
+
+def _configure_lsan(env: dict[str, str]) -> None:
+    """Suppress known external engine-driver leaks without disabling LSan.
+
+    Honour a caller-provided suppression file: it may contain machine-specific
+    suppressions and LeakSanitizer accepts only one file path.
+    """
+    existing = env.get("LSAN_OPTIONS", "")
+    if "suppressions=" in existing:
+        return
+    options = (
+        option
+        for option in (
+            existing,
+            f"suppressions={Path(__file__).with_name('lsan.supp')}",
+            "print_suppressions=0",
+        )
+        if option
+    )
+    env["LSAN_OPTIONS"] = ":".join(options)
 
 
 def _manual_history_path() -> Path:

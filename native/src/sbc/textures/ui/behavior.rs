@@ -3,6 +3,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::field::{ChangeQueue, InteractionQueue};
 use crate::sbc::panels::runtime::{Behavior, EditorModel, Item, Outcome};
+use crate::sbc::project::EditorState;
 use crate::sbc::rml::element_by_id;
 use crate::sbc::states::{BrushSettings, StateRequest};
 
@@ -16,6 +17,14 @@ impl Behavior for TextureBehavior {
 
     fn layout(&self, model: &TextureUiModel) -> Vec<Item<TexField>> {
         layout::layout(model)
+    }
+
+    fn load_editor_state(&mut self, model: &mut TextureUiModel, state: &EditorState) {
+        model.load_editor_state(state);
+    }
+
+    fn save_editor_state(&self, model: &TextureUiModel, state: &mut EditorState) {
+        model.save_editor_state(state);
     }
 
     fn refresh(
@@ -116,5 +125,12 @@ impl Behavior for TextureBehavior {
 
     fn brush_write(&self, model: &TextureUiModel, brush: &mut BrushSettings) {
         model.write_extra(brush);
+    }
+
+    fn brush_read(&mut self, model: &mut TextureUiModel, brush: &BrushSettings) {
+        // The generic runtime restores fields tagged with the shared brush.
+        // Texture carries additional blend/material fields, so restore those
+        // from the same snapshot too.
+        model.read_brush(brush);
     }
 }

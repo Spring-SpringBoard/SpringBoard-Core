@@ -9,6 +9,7 @@ use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::brush::BrushAction;
 use crate::sbc::panels::field::Field;
 use crate::sbc::panels::runtime::typed_fields::AssetGrid;
+use crate::sbc::project::EditorState;
 use crate::sbc::states::StateRequest;
 
 /// A field's binding into the shared brush. Both sync directions are one loop
@@ -130,6 +131,17 @@ pub(crate) trait Behavior {
     /// Layout as data over the model's IDs. Re-called on rebuild.
     fn layout(&self, model: &Self::Model) -> Vec<Item<<Self::Model as EditorModel>::Id>>;
 
+    /// Transfer state that belongs to a project, rather than to this ephemeral
+    /// panel instance. The runtime owns the editor lifecycle, so behaviours do
+    /// not need to know when tabs are replaced.
+    fn load_editor_state(&mut self, model: &mut Self::Model, state: &EditorState) {
+        let _ = (model, state);
+    }
+
+    fn save_editor_state(&self, model: &Self::Model, state: &mut EditorState) {
+        let _ = (model, state);
+    }
+
     /// World → model. Runs on open, undo/redo, watch hit.
     fn refresh(
         &mut self,
@@ -216,8 +228,8 @@ pub(crate) trait Behavior {
 
     /// A state changed the shared brush and the fields followed (wheel resize,
     /// picked height).
-    fn brush_read(&mut self, model: &mut Self::Model) {
-        let _ = model;
+    fn brush_read(&mut self, model: &mut Self::Model, brush: &crate::sbc::states::BrushSettings) {
+        let _ = (model, brush);
     }
 
     /// Brush state the field tags cannot express (the texture brush carries a

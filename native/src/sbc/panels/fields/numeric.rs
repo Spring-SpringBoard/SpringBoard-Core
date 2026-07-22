@@ -215,7 +215,9 @@ impl Field for NumericField {
 
     fn set_value(&mut self, value: &FieldValue) {
         if let FieldValue::Number(v) = value {
-            self.value = *v;
+            // Programmatic updates (for example loading editor state) must
+            // obey the same bounds as typed and dragged values.
+            self.value = self.clamp(*v);
         }
     }
 
@@ -260,5 +262,23 @@ impl Field for NumericField {
         if self.editing {
             self.show_display(interface);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn programmatic_values_obey_declared_bounds() {
+        let mut field = NumericField::new("strength", "Strength", 1.0)
+            .min(0.0)
+            .max(1.0);
+
+        field.set_value(&FieldValue::Number(10.0));
+        assert_eq!(field.value(), FieldValue::Number(1.0));
+
+        field.set_value(&FieldValue::Number(-1.0));
+        assert_eq!(field.value(), FieldValue::Number(0.0));
     }
 }

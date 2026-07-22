@@ -1,22 +1,11 @@
-//! Builds the Lua/text files that describe a saved project: `mapinfo.lua`,
-//! `script.txt`, `project.lua`, `modinfo.lua`.
+//! Builds the Lua/text files that describe a saved project: `script.txt`,
+//! `project.lua`, and `modinfo.lua`.
 
 use serde_json::{json, Map, Value};
 
 use crate::sbc::project::ops::lua_writer;
 use crate::sbc::project::{ProjectData, ScenarioInfo};
 use crate::sbc::teams::Team;
-
-pub(crate) fn mapinfo(name: &str, teams: &[Team]) -> String {
-    lua_writer::table_file(&json!({
-        "name": name,
-        "version": "1.0",
-        "description": "",
-        "modtype": 3,
-        "teams": mapinfo_teams(teams),
-        "depend": ["cursors.sdz"],
-    }))
-}
 
 pub(crate) fn project_lua(project: &ProjectData) -> String {
     lua_writer::table_file(
@@ -131,6 +120,9 @@ pub(crate) fn start_script(project: &ProjectData, teams: &[Team]) -> String {
 }
 
 pub(crate) fn modinfo(scenario_info: &ScenarioInfo, project: &ProjectData) -> String {
+    // A project is a mutator archive, not a map archive. Its name must match
+    // the mutator saved into script.txt so Spring can resolve it on reload.
+    let project_name = project.name.as_deref().unwrap_or(&scenario_info.name);
     let game = project.game.as_ref().and_then(Value::as_object);
     let game_name = game
         .and_then(|g| g.get("name"))
@@ -155,11 +147,11 @@ pub(crate) fn modinfo(scenario_info: &ScenarioInfo, project: &ProjectData) -> St
     }}
 }}
 return modinfo"#,
-        lua_escape(&scenario_info.name),
-        lua_escape(&scenario_info.name),
-        lua_escape(&scenario_info.version),
-        lua_escape(&scenario_info.name),
-        lua_escape(&scenario_info.name),
+        lua_escape(project_name),
+        lua_escape(project_name),
+        "1.0",
+        lua_escape(project_name),
+        lua_escape(project_name),
         lua_escape(&scenario_info.description),
         lua_escape(game_name),
         lua_escape(game_version),
@@ -180,27 +172,6 @@ fn non_empty_side(team: &Team) -> Value {
     } else {
         Value::String(side.to_string())
     }
-}
-
-fn mapinfo_teams(teams: &[Team]) -> Value {
-    let mut out = Map::new();
-    for (i, team) in teams.iter().enumerate() {
-        out.insert(i.to_string(), team_start_pos(team));
-    }
-    Value::Object(out)
-}
-
-fn team_start_pos(team: &Team) -> Value {
-    let start = team.extra.get("startPos").and_then(Value::as_object);
-    let x = start
-        .and_then(|s| s.get("x"))
-        .and_then(Value::as_f64)
-        .unwrap_or(0.0);
-    let z = start
-        .and_then(|s| s.get("z"))
-        .and_then(Value::as_f64)
-        .unwrap_or(0.0);
-    json!({ "startPos": { "x": x, "z": z } })
 }
 
 fn lua_escape(value: &str) -> String {

@@ -19,6 +19,7 @@ use crate::sbc::panels::runtime::contract::Brush;
 use crate::sbc::panels::runtime::contract::{
     Behavior, EditorModel, Event, Item, Outcome, Phase, Watch,
 };
+use crate::sbc::project::EditorState;
 use crate::sbc::states::{ApplyDir, BrushSettings, StateRequest};
 
 pub(crate) struct Runtime<B: Behavior> {
@@ -28,6 +29,9 @@ pub(crate) struct Runtime<B: Behavior> {
     /// Stashed on first contact; the old `Editor` trait omits it from some
     /// callbacks (`process_drag_end`) that the behavior still needs it in.
     engine: Option<NativeInterfaceRef>,
+    /// Snapshot chosen by the editor slot. It is applied once, after the model
+    /// has refreshed, without going through field-change dispatch.
+    restore_brush: Option<BrushSettings>,
     pending_state: Option<StateRequest>,
     rebuild: bool,
     refresh: bool,
@@ -41,6 +45,7 @@ impl<B: Behavior> Runtime<B> {
             model,
             actions,
             engine: None,
+            restore_brush: None,
             pending_state: None,
             rebuild: false,
             refresh: false,
@@ -98,6 +103,18 @@ impl<B: Behavior> Runtime<B> {
 }
 
 impl<B: Behavior> Editor for Runtime<B> {
+    fn load_editor_state(&mut self, state: &EditorState) {
+        self.behavior.load_editor_state(&mut self.model, state);
+    }
+
+    fn save_editor_state(&self, state: &mut EditorState) {
+        self.behavior.save_editor_state(&self.model, state);
+    }
+
+    fn load_brush_state(&mut self, brush: &BrushSettings) {
+        self.restore_brush = Some(brush.clone());
+    }
+
     fn generate_rml(&self) -> String {
         let mut html = String::new();
         for item in self.behavior.layout(&self.model) {
@@ -333,22 +350,28 @@ impl<B: Behavior> Editor for Runtime<B> {
         for entry in self.model.fields_mut() {
             let Some(tag) = entry.brush else { continue };
             let value = match tag {
-                Brush::Size => brush.size,
-                Brush::Rotation => brush.rotation,
-                Brush::Strength => brush.strength,
-                Brush::Height => brush.height,
-                Brush::Amount => brush.amount,
-                Brush::Pattern | Brush::ApplyDirection => continue,
+                Brush::Size => FieldValue::Number(brush.size),
+                Brush::Rotation => FieldValue::Number(brush.rotation),
+                Brush::Strength => FieldValue::Number(brush.strength),
+                Brush::Height => FieldValue::Number(brush.height),
+                Brush::Amount => FieldValue::Number(brush.amount),
+                Brush::Pattern => {
+                    FieldValue::Text(brush.pattern_texture.clone().unwrap_or_default())
+                }
+                Brush::ApplyDirection => FieldValue::Text(brush.apply_dir.caption().to_string()),
             };
-            entry.field.set_value(&FieldValue::Number(value));
+            entry.field.set_value(&value);
             let _ = entry.field.write_to_dom(interface);
         }
-        self.behavior.brush_read(&mut self.model);
+        self.behavior.brush_read(&mut self.model, brush);
     }
 
     fn refresh_from_engine(&mut self, interface: &NativeInterfaceRef, models: &mut Models) {
         self.engine = Some(*interface);
         self.behavior.refresh(&mut self.model, interface, models);
+        if let Some(brush) = self.restore_brush.take() {
+            self.read_brush(&brush, interface);
+        }
     }
 
     fn drag_field(&mut self, name: &str, dx: f32, interface: &NativeInterfaceRef) -> bool {

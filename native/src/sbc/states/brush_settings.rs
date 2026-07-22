@@ -7,6 +7,8 @@
 use std::any::Any;
 use std::collections::BTreeMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory};
 
@@ -15,8 +17,9 @@ inventory::submit! {
 }
 
 /// Which way a level brush is allowed to move the terrain.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum ApplyDir {
+    #[default]
     Both,
     OnlyRaise,
     OnlyLower,
@@ -39,9 +42,18 @@ impl ApplyDir {
             ApplyDir::OnlyLower => -1,
         }
     }
+
+    pub(crate) fn caption(self) -> &'static str {
+        match self {
+            ApplyDir::Both => "Both",
+            ApplyDir::OnlyRaise => "Only Raise",
+            ApplyDir::OnlyLower => "Only Lower",
+        }
+    }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
 pub(crate) struct BrushSettings {
     pub size: f32,
     pub rotation: f32,

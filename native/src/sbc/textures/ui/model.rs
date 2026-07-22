@@ -4,6 +4,8 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+use serde::{Deserialize, Serialize};
+
 use crate::sbc::panels::brush::{non_empty, BrushAction, BrushActions};
 use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::FieldValue;
@@ -11,6 +13,7 @@ use crate::sbc::panels::fields::{BooleanField, ChoiceField, ColorField, NumericF
 use crate::sbc::panels::runtime::{
     AssetGrid, AssetGridDef, Brush, EditorModel, FieldMut, FieldRef, TableEntry, TableModel,
 };
+use crate::sbc::project::{EditorState, TextureEditorState};
 use crate::sbc::rml::escape_rml;
 use crate::sbc::states::{BrushKind, BrushSettings};
 use crate::sbc::textures::materials::{Material, CHANNELS};
@@ -85,10 +88,12 @@ pub(super) fn toggle_channels() -> impl Iterator<Item = &'static str> {
         .map(|(channel, _, _)| *channel)
 }
 
-pub(super) struct SavedBrush {
-    pub(super) id: String,
-    pub(super) material: String,
-    pub(super) brush: BrushSettings,
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct SavedBrush {
+    pub(crate) id: String,
+    pub(crate) material: String,
+    pub(crate) brush: BrushSettings,
 }
 
 pub(super) const ADD_BRUSH_ID: &str = "__add_saved_brush__";
@@ -466,6 +471,67 @@ impl TextureUiModel {
         if let Some(saved) = self.saved_brushes.iter_mut().find(|saved| saved.id == id) {
             saved.brush = brush;
         }
+    }
+
+    pub(super) fn load_editor_state(&mut self, state: &EditorState) {
+        let saved = state.texture();
+        self.saved_brushes = saved.saved_brushes.clone();
+        self.selected_brush = saved.selected_brush.clone();
+        self.selected_material = saved.selected_material.clone();
+    }
+
+    pub(super) fn save_editor_state(&self, state: &mut EditorState) {
+        state.set_texture(TextureEditorState {
+            saved_brushes: self.saved_brushes.clone(),
+            selected_brush: self.selected_brush.clone(),
+            selected_material: self.selected_material.clone(),
+        });
+    }
+
+    pub(super) fn read_brush(&mut self, brush: &BrushSettings) {
+        self.table
+            .set(TexScale, FieldValue::Number(brush.tex_scale));
+        self.table
+            .set(TexRotation, FieldValue::Number(brush.tex_rotation));
+        self.table
+            .set(TexOffsetX, FieldValue::Number(brush.tex_offset_x));
+        self.table
+            .set(TexOffsetY, FieldValue::Number(brush.tex_offset_y));
+        self.table.set(Mode, FieldValue::Text(brush.mode.clone()));
+        self.table
+            .set(KernelMode, FieldValue::Text(brush.kernel_mode.clone()));
+        self.table.set(Strength, FieldValue::Number(brush.strength));
+        self.table
+            .set(FalloffFactor, FieldValue::Number(brush.falloff_factor));
+        self.table
+            .set(FeatureFactor, FieldValue::Number(brush.feature_factor));
+        self.table.set(Value, FieldValue::Number(brush.value));
+        self.table
+            .set(VoidFactor, FieldValue::Number(brush.void_factor));
+        self.table
+            .set(SplatTexScale, FieldValue::Number(brush.splat_tex_scale));
+        self.table
+            .set(SplatTexMult, FieldValue::Number(brush.splat_tex_mult));
+        self.table.set(Exclusive, FieldValue::Bool(brush.exclusive));
+        self.table
+            .set(DiffuseColor, FieldValue::Color(brush.diffuse_color));
+        self.table.set(
+            DntsIndex,
+            FieldValue::Number((brush.color_index - 1) as f32),
+        );
+        for channel in toggle_channels() {
+            let id = match channel {
+                "diffuse" => DiffuseEnabled,
+                "specular" => SpecularEnabled,
+                "emission" => EmissionEnabled,
+                _ => ReflEnabled,
+            };
+            self.table.set(
+                id,
+                FieldValue::Bool(brush.texture_enabled.get(channel).copied().unwrap_or(true)),
+            );
+        }
+        self.selected = brush.brush_textures.clone();
     }
 
     fn number(&self, id: TexField) -> f32 {

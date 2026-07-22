@@ -77,11 +77,6 @@ impl Command for SaveProjectInfoCommand {
         let paths = ProjectPaths::new(&root);
 
         ctx.submit_io(Box::new(WriteTextJob {
-            path: root.join("mapinfo.lua"),
-            text: project_info::mapinfo(&self.name, &teams),
-            what: "save project mapinfo",
-        }));
-        ctx.submit_io(Box::new(WriteTextJob {
             path: paths.file(SCRIPT_FILE),
             text: project_info::start_script(&project, &teams),
             what: "save project start script",

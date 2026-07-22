@@ -11,7 +11,7 @@ use crate::sbc::notifications::NotificationManager;
 use crate::sbc::project::io_registries::export::{self, MapExportOptions};
 use crate::sbc::project::jobs::archive_export::ExportSpringArchiveJob;
 use crate::sbc::project::ops::{archive_assets, lua_writer, map_info, model_codec};
-use crate::sbc::project::ProjectManager;
+use crate::sbc::project::{ProjectManager, ScenarioInfoManager};
 
 #[derive(Deserialize, Debug)]
 pub struct ExportSpringArchiveCommand {
@@ -51,6 +51,7 @@ impl Command for ExportSpringArchiveCommand {
         let project_name = self.project_name(ctx);
         ctx.model::<NotificationManager>()
             .progress("export", 0.1, "Exporting archive...");
+        self.warn_if_map_name_taken(ctx);
         let build_dir = std::env::temp_dir().join(format!(
             "sbc-export-{}-{}",
             std::process::id(),
@@ -108,6 +109,39 @@ impl Command for ExportSpringArchiveCommand {
 }
 
 impl ExportSpringArchiveCommand {
+    /// Warn if the exported map's name is already taken by another archive. The
+    /// engine resolves maps by name, so a duplicate would be shadowed and the
+    /// export could not be opened in New Project — the fix is to rename it in
+    /// Misc → Info before exporting.
+    fn warn_if_map_name_taken(&self, ctx: &mut Context) {
+        let info = ctx.model::<ScenarioInfoManager>().serialize().clone();
+        let name = info.name.trim().to_string();
+        if name.is_empty() {
+            return;
+        }
+        let map_name = if info.version.trim().is_empty() {
+            name.clone()
+        } else {
+            format!("{name} {}", info.version.trim())
+        };
+        let name_prefix = format!("{name} ");
+        let taken = ctx
+            .interface
+            .vfs()
+            .get_maps()
+            .unwrap_or_default()
+            .into_iter()
+            .any(|existing| existing == map_name || existing.starts_with(&name_prefix));
+        if taken {
+            ctx.model::<NotificationManager>().warn(
+                "export-collision",
+                &format!(
+                    "A map named \"{map_name}\" already exists — the exported map may be unreachable. Rename it in Misc → Info before exporting."
+                ),
+            );
+        }
+    }
+
     fn project_path(&self, ctx: &mut Context) -> Option<PathBuf> {
         if let Some(path) = self.project_path.as_deref() {
             return Some(PathBuf::from(path));

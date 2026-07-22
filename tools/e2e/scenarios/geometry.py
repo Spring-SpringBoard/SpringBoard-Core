@@ -134,6 +134,7 @@ MAP: Final = {
     "terrain_pattern": (42, 400),
     "texture_pattern": (42, 380),
     "saved_brush_add": (42, 335),
+    "saved_brush_first": (112, 335),
     "saved_brush_pattern": (52, 700),
     "void_water": (100, 656),
     "void_ground": (100, 656 + ROW),
@@ -151,6 +152,11 @@ MAP: Final = {
     "terrain_rotation": (92, 634 + ROW),
     "terrain_strength": (92, 634 + ROW * 2),
     "terrain_height": (92, 634 + ROW * 3),
+    # Texture's saved-brush/pattern grids push its value rows farther down than
+    # Terrain. These names keep the round-trip test readable while covering a
+    # texture-specific scalar and a non-default channel toggle.
+    "texture_scale": (420, 959),
+    "texture_specular_enabled": (392, 998),
     "metal_size": (92, 655),
     "metal_rotation": (92, 655 + ROW),
     "metal_amount": (92, 655 + ROW * 2),
@@ -241,9 +247,12 @@ DIALOG: Final = {
     "file_up": (38, 267),
     "file_first_cell": (57, 333),
     "new_project_name": (240, 267),
+    "new_project_map": (240, 307),
     "new_project_size_x": (110, 346),
     "new_project_size_y": (350, 346),
     "new_project_create": (347, 407),
+    # A non-blank map hides the Size row, so Create moves up one row (ROW=39).
+    "new_project_create_nosize": (347, 407 - ROW),
     "file_name": (240, 590),
     "file_type": (240, 629),
     "file_ok": (347, 602),

@@ -1,0 +1,10 @@
+# Third-party process-lifetime allocations made while Spring initializes its
+# OpenGL driver. These frames are all in the proprietary NVIDIA driver, outside
+# SBC and Spring's ownership. Keep this intentionally narrow: an allocation
+# whose stack reaches editor or engine code still fails LeakSanitizer.
+leak:libnvidia-glcore.so
+
+# NVIDIA registers with the session bus during driver initialization. The
+# resulting libdbus allocations are owned by that same process-lifetime driver
+# setup and do not have a teardown API available to the engine.
+leak:dbus_bus_register
