@@ -5,7 +5,9 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .geometry import (
+from e2e.driver.utils.models import is_object, list_first_is, string_contains
+
+from .helpers.geometry import (
     DIALOG,
     MAP,
     MAP_ACTIONS,
@@ -23,13 +25,10 @@ from .geometry import (
     panel_point,
     window_size,
 )
-from .registry import scenario
+from .helpers.registry import scenario
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
-
+    from e2e.driver.state import RunState
 
 TERRAIN_PATTERN_PATH = "springboard/assets/core/brush_patterns/terrain/circle1.png"
 
@@ -55,7 +54,7 @@ ZOOM_CLICKS = 4
 
 
 @scenario()
-def pattern_preview(run_state: E2ERun) -> None:
+def pattern_preview(run_state: "RunState") -> None:
     """A selected Terrain/Add pattern is visibly projected under the cursor.
 
     The test does not paint. It arms Add with no pattern, then selects one and
@@ -81,7 +80,7 @@ def pattern_preview(run_state: E2ERun) -> None:
 
 
 @scenario()
-def terrain_stationary_hold(run_state: E2ERun) -> None:
+def terrain_stationary_hold(run_state: "RunState") -> None:
     """Terrain Add keeps dabbing while held at one grounded cursor position.
 
     This is deliberately not a sweep: a moving pointer can mask a failed held
@@ -110,7 +109,7 @@ def terrain_stationary_hold(run_state: E2ERun) -> None:
 
 
 @scenario(uis=("chili", "rmlui", "rust"))
-def heightmap(run_state: E2ERun) -> None:
+def heightmap(run_state: "RunState") -> None:
     """Map -> Terrain: sweep each brush (Add, Set, Smooth) as a held stroke and
     undo/redo one.
 
@@ -195,7 +194,7 @@ def heightmap(run_state: E2ERun) -> None:
 
 
 @scenario()
-def texture_paint(run_state: E2ERun) -> None:
+def texture_paint(run_state: "RunState") -> None:
     """Texture strokes -- Paint, Filter (blur) and Void -- on a zoomed-in map.
 
     Full-frame and zoomed close on purpose: the point is that the paint *lands
@@ -243,7 +242,7 @@ def texture_paint(run_state: E2ERun) -> None:
 
 
 @scenario()
-def metal_paint(run_state: E2ERun) -> None:
+def metal_paint(run_state: "RunState") -> None:
     """A metal stroke, checked in pixels under the metal view (F4) -- on the
     normal view metal is invisible and a "metal painted" shot proves nothing."""
     run_state.focus()
@@ -270,7 +269,7 @@ def metal_paint(run_state: E2ERun) -> None:
 
 
 @scenario()
-def grass_paint(run_state: E2ERun) -> None:
+def grass_paint(run_state: "RunState") -> None:
     """A grass stroke, checked in pixels at ground-level zoom -- engine grass
     only draws near the camera, so from the default distance a working brush
     looks like a no-op."""
@@ -295,7 +294,7 @@ def grass_paint(run_state: E2ERun) -> None:
 
 
 @scenario(crop="right-panel")
-def map_editors(run_state: E2ERun) -> None:
+def map_editors(run_state: "RunState") -> None:
     """The Map editors' panels: every editor opens, its fields commit, and its
     dialogs (material, asset, shading-texture) work.
 
@@ -304,7 +303,6 @@ def map_editors(run_state: E2ERun) -> None:
     """
     run_state.focus()
     left = panel_left(run_state)
-    width, height = window_size(run_state)
 
     def map_tab() -> None:
         run_state.click(left + TAB_X["map"], TAB_Y, delay=0.35)
@@ -374,7 +372,7 @@ def map_editors(run_state: E2ERun) -> None:
     _click_field(run_state, left, MAP["splat_scale_1"], "2.5")
     run_state.assert_any_command(
         "SetMapRenderingParamsCommand",
-        splatTexScales=lambda v: isinstance(v, list) and v[0] == 2.5,
+        splatTexScales=list_first_is(2.5),
     )
     run_state.click(*panel_point(left, MAP["detail_texture"]), delay=0.8)
     run_state.screenshot_root("detail-picker")
@@ -390,7 +388,7 @@ def map_editors(run_state: E2ERun) -> None:
     run_state.assert_any_command(
         "ImportShadingImageCommand",
         texType="detail",
-        texturePath=lambda v: isinstance(v, str) and "core/" in v,
+        texturePath=string_contains("core/"),
     )
     # Shading entries are texture maps, not checkboxes. Open Specular, create
     # its engine texture, then open Emission and choose an existing texture.
@@ -418,7 +416,7 @@ def map_editors(run_state: E2ERun) -> None:
 
 
 @scenario(uis=("rmlui", "rust"))
-def settings_panel(run_state: E2ERun) -> None:
+def settings_panel(run_state: "RunState") -> None:
     """Map -> Settings: enabling a shading texture must open a texture dialog."""
     run_state.focus()
     left = panel_left(run_state)
@@ -433,7 +431,7 @@ def settings_panel(run_state: E2ERun) -> None:
 
 
 @scenario()
-def editor_state_roundtrip(run_state: E2ERun) -> None:
+def editor_state_roundtrip(run_state: "RunState") -> None:
     """Save brush/editor state, reload it, then paint with the restored data.
 
     The check deliberately uses the first commands *after* loading as a guard:
@@ -531,12 +529,12 @@ def editor_state_roundtrip(run_state: E2ERun) -> None:
         patternTexture=TERRAIN_PATTERN_PATH,
         texScale=3.5,
         specularEnabled=False,
-        brushTexture=lambda value: isinstance(value, dict) and "diffuse" in value,
+        brushTexture=is_object,
     )
 
 
 @scenario()
-def map_export(run_state: E2ERun) -> None:
+def map_export(run_state: "RunState") -> None:
     """The whole map pipeline: save a project, sculpt and paint the map, then
     compile it to a Spring archive.
 
@@ -638,7 +636,7 @@ def map_export(run_state: E2ERun) -> None:
 
 
 @scenario()
-def map_roundtrip(run_state: E2ERun) -> None:
+def map_roundtrip(run_state: "RunState") -> None:
     """Full round-trip: sculpt/paint a map, export it, then start a new project
     ON that exported map and confirm the terrain came through.
 
@@ -731,15 +729,15 @@ def map_roundtrip(run_state: E2ERun) -> None:
     run_state.assert_region_pixels(edited, roundtrip, map_region, max_changed=60_000)
 
 
-def _click_field(run_state: E2ERun, left: int, point: tuple[int, int], text: str) -> None:
+def _click_field(run_state: "RunState", left: int, point: tuple[int, int], text: str) -> None:
     run_state.fill_text(*panel_point(left, point), text, click_delay=0.3)
 
 
-def _click_dialog_field(run_state: E2ERun, point: tuple[int, int], text: str) -> None:
+def _click_dialog_field(run_state: "RunState", point: tuple[int, int], text: str) -> None:
     run_state.fill_text(*dialog_point(run_state, point), text, click_delay=0.25)
 
 
-def _paint_stroke(run_state: E2ERun, left: int, x: int, y: int, dx: int = 220, dy: int = 120) -> None:
+def _paint_stroke(run_state: "RunState", left: int, x: int, y: int, dx: int = 220, dy: int = 120) -> None:
     run_state.press(x, y)
     for i in range(1, STROKE_STEPS + 1):
         run_state.move(
@@ -751,18 +749,18 @@ def _paint_stroke(run_state: E2ERun, left: int, x: int, y: int, dx: int = 220, d
     run_state.move(*panel_point(left, PARK_PANEL), delay=0.6)
 
 
-def _sweep(run_state: E2ERun, left: int, width: int, height: int) -> None:
+def _sweep(run_state: "RunState", left: int, width: int, height: int) -> None:
     y = height // 2
     run_state.press(width // 3, y)
     run_state.move(left - 200, y, delay=0.4)
     run_state.release(left - 200, y)
 
 
-def _wait_for_archive(run_state: E2ERun, stem: str, timeout_s: float = 20.0) -> Path | None:
+def _wait_for_archive(run_state: "RunState", stem: str, timeout_s: float = 20.0) -> Path | None:
     assert run_state.write_dir is not None
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
-        matches = [path for path in run_state.write_dir.rglob(f"{stem}*.sdz")]
+        matches = list(run_state.write_dir.rglob(f"{stem}*.sdz"))
         if matches:
             return matches[0]
         time.sleep(0.3)

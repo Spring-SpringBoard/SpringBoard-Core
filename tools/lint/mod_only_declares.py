@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Fail when a `mod.rs` carries code instead of only wiring submodules.
 
 A `mod.rs` should declare modules and re-export their items — nothing else. Real

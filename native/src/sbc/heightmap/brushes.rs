@@ -23,18 +23,6 @@ pub(crate) struct ShapeModify;
 pub(crate) struct Level;
 pub(crate) struct Smooth;
 
-fn centre(stamp: BrushStamp) -> (f32, f32) {
-    (stamp.x + stamp.size / 2.0, stamp.z + stamp.size / 2.0)
-}
-
-fn signed_strength(brush: &BrushSettings, button: BrushButton) -> f32 {
-    if button.is_secondary() {
-        -brush.strength
-    } else {
-        brush.strength
-    }
-}
-
 pub(crate) fn prepare_pattern(
     brush: &BrushSettings,
     uploaded: &mut HashSet<String>,
@@ -55,6 +43,18 @@ pub(crate) fn prepare_pattern(
     ))));
     uploaded.insert(pattern.to_string());
     true
+}
+
+fn centre(stamp: BrushStamp) -> (f32, f32) {
+    (stamp.x + stamp.size / 2.0, stamp.z + stamp.size / 2.0)
+}
+
+fn signed_strength(brush: &BrushSettings, button: BrushButton) -> f32 {
+    if button.is_secondary() {
+        -brush.strength
+    } else {
+        brush.strength
+    }
 }
 
 impl MapBrush for ShapeModify {

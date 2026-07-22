@@ -3,10 +3,10 @@ import re
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
-from ..shared.archive import write_game_archive
-from ..shared.files import copy_repo_filtered
+from sbc_packager.shared.archive import write_game_archive
+from sbc_packager.shared.files import copy_repo_filtered
 
 Platform = Literal["linux", "win32"]
 SUPPORTED_IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}
@@ -102,9 +102,10 @@ def install_port_flags(run_config: Path, game_directory: Path) -> None:
         config = json.load(source)
     if not isinstance(config, dict):
         raise RuntimeError(f"Run configuration must be an object: {run_config}")
+    raw_config = cast("dict[str, object]", config)
     flags: dict[str, str] = {}
     for key in PORT_FLAG_KEYS:
-        value = config.get(key)
+        value = raw_config.get(key)
         valid_values = VALID_PORT_FLAGS[key]
         if not isinstance(value, str) or value not in valid_values:
             choices = ", ".join(sorted(valid_values))

@@ -3,8 +3,9 @@
 import shutil
 from typing import TYPE_CHECKING
 
-from ..paths import GAME_DIRNAME
-from .geometry import (
+from e2e.driver.utils.paths import GAME_DIRNAME
+
+from .helpers.geometry import (
     DIALOG,
     EDITORS,
     TAB_X,
@@ -20,17 +21,16 @@ from .geometry import (
 # Kept local to this shell-level test: object scenarios cover the detailed
 # selection model, while this one only needs a real selected object to prove
 # the toolbar's Copy/Cut/Paste icons dispatch their own actions.
-from .objects import _arm_tree, _open
-from .registry import scenario
+from .helpers.objects import arm_tree as _arm_tree
+from .helpers.objects import open_object_editor as _open
+from .helpers.registry import scenario
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+    from e2e.driver.state import RunState
 
 
 @scenario(uis=("chili", "rmlui", "rust"), target="main-panel", crop="right-panel")
-def main_panel_tabs(run_state: E2ERun) -> None:
+def main_panel_tabs(run_state: "RunState") -> None:
     run_state.focus()
     left = panel_left(run_state)
     for name, offset_x in TAB_X.items():
@@ -44,7 +44,7 @@ _TABS = (("objects",), ("map",), ("env",), ("misc",))
 
 
 @scenario(uis=("rmlui", "rust"), crop="right-panel")
-def all_editors(run_state: E2ERun) -> None:
+def all_editors(run_state: "RunState") -> None:
     """Open every editor in every tab. Editors are lazily created, so a broken
     one only shows up when its button is clicked."""
     run_state.focus()
@@ -58,7 +58,7 @@ def all_editors(run_state: E2ERun) -> None:
 
 
 @scenario(crop="right-panel")
-def panel_tabs_are_choices(run_state: E2ERun) -> None:
+def panel_tabs_are_choices(run_state: "RunState") -> None:
     """Repeated panel tab clicks keep the chosen view open.
 
     Re-clicking Objects while Units is open must preserve Units. Re-clicking
@@ -86,7 +86,7 @@ def panel_tabs_are_choices(run_state: E2ERun) -> None:
 
 
 @scenario()
-def import_action(run_state: E2ERun) -> None:
+def import_action(run_state: "RunState") -> None:
     """The Import toolbar icon picks an image and dispatches its command.
 
     Import is the one toolbar action no other scenario drives (New/Load/Save
@@ -111,7 +111,7 @@ def import_action(run_state: E2ERun) -> None:
 
 
 @scenario()
-def clipboard_actions(run_state: E2ERun) -> None:
+def clipboard_actions(run_state: "RunState") -> None:
     """The Copy/Cut/Paste toolbar icons round-trip a selected object.
 
     Exact toolbar clicks, not their keyboard shortcuts. Clicking the Paste icon
@@ -153,7 +153,7 @@ def clipboard_actions(run_state: E2ERun) -> None:
 
 
 @scenario(uis=("rmlui",))
-def dialogs(run_state: E2ERun) -> None:
+def dialogs(run_state: "RunState") -> None:
     """Editors and dialogs that build controls outside the panel: Misc ->
     Diplomacy and the New Project dialog."""
     run_state.focus()
@@ -169,7 +169,7 @@ def dialogs(run_state: E2ERun) -> None:
 
 
 @scenario(crop="project-status")
-def project_status_bar(run_state: E2ERun) -> None:
+def project_status_bar(run_state: "RunState") -> None:
     """The always-available top-left project status bar.
 
     On a fresh boot it reads "Project not saved" and offers Open Project, Data
@@ -181,7 +181,7 @@ def project_status_bar(run_state: E2ERun) -> None:
 
 
 @scenario(uis=("chili", "rmlui"))
-def notifications(run_state: E2ERun) -> None:
+def notifications(run_state: "RunState") -> None:
     """Export with no saved project posts a warning notification (SB.NotifyWarn).
     In RmlUi that must come from RmlUiNotifications, not Chotify (which is Chili)."""
     run_state.focus()
@@ -198,7 +198,7 @@ def notifications(run_state: E2ERun) -> None:
 
 
 @scenario()
-def export_warning(run_state: E2ERun) -> None:
+def export_warning(run_state: "RunState") -> None:
     """Export with no saved project posts a warning toast in the native UI.
 
     The native replacement for Chotify: the toast appears immediately on the

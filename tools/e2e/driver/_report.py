@@ -1,10 +1,12 @@
 import json
 import time
+from typing import override
 
-from .run_state import RunState
+from .state import RunState
 
 
 class ReportMixin(RunState):
+    @override
     def write_run_md(self, status: str, **extra: object) -> None:
         lines = [
             f"# UI E2E Run `{self.run_id}`",
@@ -35,6 +37,7 @@ class ReportMixin(RunState):
         lines += ["", "## Files", "", *files]
         self.run_md.write_text("\n".join(lines) + "\n")
 
+    @override
     def event(self, kind: str, **data: object) -> None:
         payload = {"time": time.time(), "kind": kind, **data}
         with self.events_path.open("a") as f:

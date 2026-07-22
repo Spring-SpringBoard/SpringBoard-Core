@@ -11,7 +11,7 @@ appears in any other scenario's screenshots.
 
 from typing import TYPE_CHECKING
 
-from .geometry import (
+from .helpers.geometry import (
     DIALOG,
     GALLERY,
     TAB_Y,
@@ -23,12 +23,10 @@ from .geometry import (
     panel_left,
     panel_point,
 )
-from .registry import scenario
+from .helpers.registry import scenario
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+    from e2e.driver.state import RunState
 
 DEV_PANEL = {"SBC_DEV_PANEL": "1"}
 
@@ -45,7 +43,7 @@ TOOLTIP_COLOR = "#0b0d0c"
 
 
 @scenario(crop="right-panel", env=DEV_PANEL)
-def gallery(run_state: E2ERun) -> None:
+def gallery(run_state: "RunState") -> None:
     """Every control at rest, then every control driven."""
     run_state.focus()
     left = panel_left(run_state)
@@ -147,7 +145,7 @@ def gallery(run_state: E2ERun) -> None:
 
 
 @scenario(crop="right-panel", env=DEV_PANEL)
-def gallery_pickers(run_state: E2ERun) -> None:
+def gallery_pickers(run_state: "RunState") -> None:
     """The two modal pickers a field can open: colour and asset.
 
     Each is driven to a *committed value*, not merely opened: the field reports
@@ -210,7 +208,7 @@ def gallery_pickers(run_state: E2ERun) -> None:
 
 
 @scenario(crop="right-panel", env={**DEV_PANEL, "SBC_HIDE_TOOLTIPS": "0"})
-def gallery_tooltips(run_state: E2ERun) -> None:
+def gallery_tooltips(run_state: "RunState") -> None:
     """Hovering a control shows its tooltip.
 
     Tooltips are off in every other scenario -- they follow the cursor and would
@@ -239,7 +237,7 @@ def gallery_tooltips(run_state: E2ERun) -> None:
 
 
 @scenario(crop="without-status", env=DEV_PANEL)
-def gallery_dialogs(run_state: E2ERun) -> None:
+def gallery_dialogs(run_state: "RunState") -> None:
     """The two dialogs the toolbar opens: New Project, and the file dialog.
 
     Full-frame: both are centred on the screen, not inside the panel.
@@ -285,7 +283,7 @@ def gallery_dialogs(run_state: E2ERun) -> None:
 
 
 @scenario(env=DEV_PANEL)
-def new_project_create(run_state: E2ERun) -> None:
+def new_project_create(run_state: "RunState") -> None:
     """Actually create a project: fill the New Project dialog and click Create.
 
     Create emits SaveProjectInfoCommand + ReloadIntoProjectCommand; the latter
@@ -314,7 +312,7 @@ def new_project_create(run_state: E2ERun) -> None:
 
 
 @scenario()
-def project_round_trip(run_state: E2ERun) -> None:
+def project_round_trip(run_state: "RunState") -> None:
     """Create a project, then reopen it through Load -- proving it is on disk
     and openable.
 
@@ -343,7 +341,7 @@ def project_round_trip(run_state: E2ERun) -> None:
 
 
 @scenario()
-def project_save_as(run_state: E2ERun) -> None:
+def project_save_as(run_state: "RunState") -> None:
     """Save As writes the current project under a new name and reloads into it.
 
     Emits SetProjectNamePath + SaveProjectInfo + Save + Reload, as Lua's
@@ -369,7 +367,7 @@ def project_save_as(run_state: E2ERun) -> None:
 
 
 @scenario()
-def project_thumbnail(run_state: E2ERun) -> None:
+def project_thumbnail(run_state: "RunState") -> None:
     """Saving captures a map thumbnail that the Open dialog shows.
 
     Save As saves the project (grabbing a screenshot of the map on the draw
@@ -389,7 +387,7 @@ def project_thumbnail(run_state: E2ERun) -> None:
 
 
 @scenario()
-def large_map_create(run_state: E2ERun) -> None:
+def large_map_create(run_state: "RunState") -> None:
     """Create the largest map the dialog allows (32x32) and boot into it.
 
     The size fields clamp at 32, so this is the biggest a user can make. A
@@ -409,7 +407,7 @@ def large_map_create(run_state: E2ERun) -> None:
     run_state.screenshot("big-map-loaded")
 
 
-def _values(run_state: E2ERun) -> dict[str, str]:
+def _values(run_state: "RunState") -> dict[str, str]:
     values: dict[str, str] = {}
     for line in run_state.engine_log():
         _, _, tail = line.partition("dev-fields: ")
@@ -420,7 +418,7 @@ def _values(run_state: E2ERun) -> dict[str, str]:
     return values
 
 
-def _open_gallery(run_state: E2ERun) -> int:
+def _open_gallery(run_state: "RunState") -> int:
     run_state.focus()
     left = panel_left(run_state)
     run_state.click(left + GALLERY["dev_tab_x"], TAB_Y, delay=0.4)

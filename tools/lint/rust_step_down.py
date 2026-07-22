@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -40,25 +39,9 @@ def check_file(path: Path) -> list[str]:
 
         impl = impls[-1] if impls and brace_depth == impls[-1].depth else None
         if impl is not None:
-            first = impl.first_private
-            if PRIVATE_FN.match(line):
-                if first is None:
-                    impl.first_private = (lineno, line.strip())
-            elif (match := PUBLIC_FN.match(line)) and first is not None:
-                first_line, first_text = first
-                errors.append(
-                    f"{path}:{lineno}: public method `{match.group(1)}` appears after "
-                    f"private method at line {first_line} (`{first_text}`)"
-                )
+            impl.first_private = _check_scope(path, lineno, line, impl.first_private, "method", errors)
         elif brace_depth == 0:
-            if PRIVATE_FN.match(line):
-                if first_private is None:
-                    first_private = (lineno, line.strip())
-            elif (match := PUBLIC_FN.match(line)) and first_private is not None:
-                errors.append(
-                    f"{path}:{lineno}: public function `{match.group(1)}` appears after "
-                    f"private helper at line {first_private[0]} (`{first_private[1]}`)"
-                )
+            first_private = _check_scope(path, lineno, line, first_private, "function", errors)
 
         opens = line.count("{")
         closes = line.count("}")
@@ -69,3 +52,24 @@ def check_file(path: Path) -> list[str]:
         while impls and brace_depth < impls[-1].depth:
             impls.pop()
     return errors
+
+
+def _check_scope(
+    path: Path,
+    lineno: int,
+    line: str,
+    first_private: tuple[int, str] | None,
+    subject: str,
+    errors: list[str],
+) -> tuple[int, str] | None:
+    if PRIVATE_FN.match(line):
+        return first_private or (lineno, line.strip())
+    match = PUBLIC_FN.match(line)
+    if match is not None and first_private is not None:
+        first_line, first_text = first_private
+        private_label = "helper" if subject == "function" else "method"
+        errors.append(
+            f"{path}:{lineno}: public {subject} `{match.group(1)}` appears after "
+            f"private {private_label} at line {first_line} (`{first_text}`)"
+        )
+    return first_private

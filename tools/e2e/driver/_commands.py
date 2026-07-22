@@ -1,9 +1,11 @@
 import json
 import time
+from collections.abc import Callable
+from typing import override
 
-from .models import CommandData, CommandEntry, parse_command_entry
-from .run_env import command_fields
-from .run_state import RunState
+from .state import RunState
+from .utils.models import CommandData, CommandEntry, CommandValue, parse_command_entry
+from .utils.run_env import command_fields
 
 
 class CommandLogMixin(RunState):
@@ -16,6 +18,7 @@ class CommandLogMixin(RunState):
     undo history -- because a scenario almost always means the committed one.
     """
 
+    @override
     def engine_log(self) -> list[str]:
         """The engine's infolog for this run, a line at a time.
 
@@ -29,6 +32,7 @@ class CommandLogMixin(RunState):
             return []
         return path.read_text(errors="replace").splitlines()
 
+    @override
     def log_cursor(self) -> int:
         """A position in the engine log that can be passed to ``wait_for_log``.
 
@@ -38,6 +42,7 @@ class CommandLogMixin(RunState):
         """
         return len(self.engine_log())
 
+    @override
     def wait_for_log(self, text: str, *, after: int = 0, timeout_s: float = 15.0) -> str:
         """Wait until a newly written engine-log line contains ``text``.
 
@@ -54,13 +59,14 @@ class CommandLogMixin(RunState):
             time.sleep(0.05)
         raise AssertionError(f"timed out waiting {timeout_s:.1f}s for log line containing {text!r}")
 
+    @override
     def wait_for_command(
         self,
         class_name: str,
         *,
         after: int = 0,
         timeout_s: float = 10.0,
-        **expected: object,
+        **expected: CommandValue | Callable[[CommandValue], bool],
     ) -> CommandData:
         """Wait for a committed command, optionally matching fields.
 
@@ -84,6 +90,7 @@ class CommandLogMixin(RunState):
             time.sleep(0.05)
         raise AssertionError(f"timed out waiting {timeout_s:.1f}s for {class_name} with keys {sorted(expected)}")
 
+    @override
     def commands(self) -> list[CommandEntry]:
         """Every command envelope the UI sent to the command bridge.
 
@@ -106,16 +113,18 @@ class CommandLogMixin(RunState):
                 continue
             entries.append(entry)
             data = entry["data"]
-            if data.get("className") == "CompoundCommand":
-                for inner in data.get("commands", []):
-                    entries.append({"data": inner})
+            nested = data.get("commands")
+            if data.get("className") == "CompoundCommand" and isinstance(nested, list):
+                entries.extend({"data": inner} for inner in nested if isinstance(inner, dict))
         return entries
 
+    @override
     def command_cursor(self) -> int:
         """A position in the command log for ``wait_for_command(after=...)``."""
         return len(self.commands())
 
-    def assert_command(self, class_name: str, **expected: object) -> CommandData:
+    @override
+    def assert_command(self, class_name: str, **expected: CommandValue | Callable[[CommandValue], bool]) -> CommandData:
         """Assert exactly one committed command of `class_name` carrying every
         key in `expected` was sent, and that those values match.
 
@@ -140,8 +149,7 @@ class CommandLogMixin(RunState):
         ] or [data for data in committed if data.get("className") == class_name and not expected]
         if len(matches) != 1:
             sent = [
-                (entry["data"].get("className"), sorted(command_fields(entry["data"])))
-                for entry in self.commands()
+                (entry["data"].get("className"), sorted(command_fields(entry["data"]))) for entry in self.commands()
             ]
             raise AssertionError(
                 f"expected exactly one {class_name} with keys {sorted(expected)}, got {len(matches)}. Sent: {sent}"
@@ -150,7 +158,10 @@ class CommandLogMixin(RunState):
         self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
 
-    def assert_no_command_after(self, marker: CommandData, class_name: str, **expected: object) -> None:
+    @override
+    def assert_no_command_after(
+        self, marker: CommandData, class_name: str, **expected: CommandValue | Callable[[CommandValue], bool]
+    ) -> None:
         """Assert nothing more of this kind was sent after `marker`.
 
         For proving something *stopped*: a drag that was released must not keep
@@ -168,6 +179,7 @@ class CommandLogMixin(RunState):
             if all(fields.get(key) == want for key, want in expected.items() if not callable(want)):
                 raise AssertionError(f"{class_name} was still being sent after the drag ended: {fields}")
 
+    @override
     def assert_command_count(self, class_name: str, count: int) -> None:
         """Assert exactly `count` committed commands of this class were sent.
 
@@ -183,6 +195,7 @@ class CommandLogMixin(RunState):
             raise AssertionError(f"expected {count} committed {class_name}, got {len(sent)}")
         self.event("assert_command_count", className=class_name, count=count)
 
+    @override
     def assert_command_at_least(self, class_name: str, count: int) -> int:
         """Assert at least `count` committed commands of this class were sent.
 
@@ -199,7 +212,10 @@ class CommandLogMixin(RunState):
         self.event("assert_command_at_least", className=class_name, count=len(sent))
         return len(sent)
 
-    def assert_any_command(self, class_name: str, **expected: object) -> CommandData:
+    @override
+    def assert_any_command(
+        self, class_name: str, **expected: CommandValue | Callable[[CommandValue], bool]
+    ) -> CommandData:
         """Assert at least one committed command matched `expected`.
 
         Brush scenarios often exercise several modes of the same command class;
@@ -223,7 +239,7 @@ class CommandLogMixin(RunState):
         ]
         raise AssertionError(f"expected at least one {class_name} matching {expected}, got {sent}")
 
-    def assert_previews(self, class_name: str, **expected: object) -> int:
+    def assert_previews(self, class_name: str, **expected: CommandValue | Callable[[CommandValue], bool]) -> int:
         """Assert at least one *preview* of `class_name` matched `expected`.
 
         A live drag emits one per frame, so the count is timing-dependent; that
@@ -234,11 +250,11 @@ class CommandLogMixin(RunState):
             for entry in self.commands()
             if entry["data"].get("__preview")
             and entry["data"].get("className") == class_name
-            and all(key in entry["data"].get("opts", {}) for key in expected)
+            and all(key in command_fields(entry["data"]) for key in expected)
         ]
-        good = []
+        good: list[CommandData] = []
         for data in matches:
-            opts = data.get("opts", data)
+            opts = command_fields(data)
             if all(want(opts.get(key)) if callable(want) else opts.get(key) == want for key, want in expected.items()):
                 good.append(data)
         if not good:

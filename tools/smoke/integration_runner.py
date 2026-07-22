@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple, TypedDict, cast
 
 import pytest
 
@@ -86,16 +86,17 @@ def _read_results(path: Path) -> IntegrationResults:
     data = json.loads(path.read_text())
     if not isinstance(data, dict):
         pytest.fail(f"integration results must be an object: {path}")
-    values = data.get("results")
+    values = cast("dict[str, object]", data).get("results")
     if not isinstance(values, list):
         pytest.fail(f"integration results must contain a results array: {path}")
     results: list[IntegrationResult] = []
-    for value in values:
+    for value in cast("list[object]", values):
         if not isinstance(value, dict):
             pytest.fail(f"integration result must be an object: {path}")
-        name = value.get("name")
-        passed = value.get("passed")
-        message = value.get("message")
+        raw_value = cast("dict[str, object]", value)
+        name = raw_value.get("name")
+        passed = raw_value.get("passed")
+        message = raw_value.get("message")
         if not isinstance(name, str) or not isinstance(passed, bool) or not isinstance(message, str):
             pytest.fail(f"invalid integration result: {path}")
         results.append({"name": name, "passed": passed, "message": message})

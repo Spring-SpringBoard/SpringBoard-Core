@@ -17,7 +17,7 @@ Determinism requirements for a capture (see `E2ERun.golden`):
 
 import json
 import shutil
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import NotRequired, TypedDict, cast
 
@@ -49,7 +49,7 @@ def load_review(case_name: str) -> Review:
     value = json.loads(path.read_text())
     if not isinstance(value, dict):
         raise RuntimeError(f"golden review must be an object: {path}")
-    return cast(Review, value)
+    return cast("Review", value)
 
 
 def record_review(case_name: str, shot_name: str, *, notes: str = "") -> None:
@@ -60,7 +60,7 @@ def record_review(case_name: str, shot_name: str, *, notes: str = "") -> None:
         entry["status"] = STATUS_AI  # it changed; it needs looking at again
     else:
         entry["status"] = STATUS_AI
-    entry["updated"] = datetime.now().isoformat(timespec="seconds")
+    entry["updated"] = datetime.now(UTC).isoformat(timespec="seconds")
     if notes:
         entry["notes"] = notes
     data[shot_name] = entry
@@ -83,7 +83,7 @@ def approve_review(case_name: str, requested: set[str]) -> int:
     return len(names)
 
 
-class GoldenMismatch(Exception):
+class GoldenMismatchError(Exception):
     pass
 
 
@@ -116,7 +116,7 @@ def compare(
 ) -> str:
     """Compare `actual` against its golden.
 
-    Returns a short status string. Raises GoldenMismatch on any pixel diff beyond
+    Returns a short status string. Raises GoldenMismatchError on any pixel diff beyond
     `tolerance`, so a run fails loudly rather than leaving the difference in an
     artifact nobody opens.
 
@@ -135,7 +135,7 @@ def compare(
         record_review(case_name, shot_name)
         if update:
             return "captured (ai-reviewed pending)"
-        raise GoldenMismatch(
+        raise GoldenMismatchError(
             f"no reference for {case_name}/{shot_name}; wrote {golden}. "
             f"Inspect it, record what you checked, then have it approved."
         )
@@ -151,7 +151,7 @@ def compare(
     shutil.copyfile(actual, failed_dir / f"{shot_name}.actual.png")
     if diff is not None:
         write_diff(golden, actual, failed_dir / f"{shot_name}.diff.png")
-        raise GoldenMismatch(f"{case_name}/{shot_name}: {diff} pixel(s) differ from golden; see {failed_dir}")
-    raise GoldenMismatch(
+        raise GoldenMismatchError(f"{case_name}/{shot_name}: {diff} pixel(s) differ from golden; see {failed_dir}")
+    raise GoldenMismatchError(
         f"{case_name}/{shot_name}: image is not comparable to the golden (size changed?); see {failed_dir}"
     )

@@ -2,7 +2,12 @@
 
 from typing import TYPE_CHECKING
 
-from .geometry import (
+from e2e.driver.utils.models import object_number_close
+
+if TYPE_CHECKING:
+    from e2e.driver.state import RunState
+
+from .helpers.geometry import (
     CHONSOLE,
     DEV_CONSOLE,
     OBJECTS,
@@ -16,13 +21,9 @@ from .geometry import (
     status_button_point,
     window_size,
 )
-from .objects import _arm_tree, _open
-from .registry import scenario
-
-if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+from .helpers.objects import arm_tree as _arm_tree
+from .helpers.objects import open_object_editor as _open
+from .helpers.registry import scenario
 
 
 # The one scenario whose cases vary the *chonsole* rather than the UI, so it
@@ -34,7 +35,7 @@ else:
         "chonsole-rust-port": {"chonsole": "rust", "ui": "chili"},
     },
 )
-def chonsole_editing(run_state: E2ERun) -> None:
+def chonsole_editing(run_state: "RunState") -> None:
     """Lua/Rust editing parity: opening, completions, word editing, and /help."""
     run_state.focus()
     run_state.key("Escape", delay=0.08)
@@ -73,7 +74,7 @@ NATIVE_RELOAD_CASE = {
 
 
 @scenario(target="e2e-reloadnativemodules", cases=NATIVE_RELOAD_CASE)
-def reload_native_modules(run_state: E2ERun) -> None:
+def reload_native_modules(run_state: "RunState") -> None:
     """Native reload preserves input and can re-adopt pre-reload engine features.
 
     The engine feature survives while Rust's in-memory model is recreated. The
@@ -113,12 +114,12 @@ def reload_native_modules(run_state: E2ERun) -> None:
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
-        value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1800) < 1.0,
+        value=object_number_close("x", 1800, tolerance=1.0),
     )
 
 
 @scenario(target="chonsole-native-input", cases=NATIVE_CHONSOLE_CASE)
-def chonsole_native_input(run_state: E2ERun) -> None:
+def chonsole_native_input(run_state: "RunState") -> None:
     """Native input editing: Ctrl+word navigation, selection replacement, and Ctrl+A."""
     run_state.focus()
     run_state.key("Escape")
@@ -139,7 +140,7 @@ def chonsole_native_input(run_state: E2ERun) -> None:
 
 
 @scenario(target="chonsole-native-suggestions", cases=NATIVE_CHONSOLE_CASE)
-def chonsole_native_suggestions(run_state: E2ERun) -> None:
+def chonsole_native_suggestions(run_state: "RunState") -> None:
     """Native suggestions keep their list while Tab-cycling, hovering, and clicking.
 
     Tab must reach Chonsole before RmlUi can move focus to the editor's search
@@ -259,7 +260,7 @@ def chonsole_native_suggestions(run_state: E2ERun) -> None:
 
 
 @scenario(target="chonsole-native-commands", cases=NATIVE_CHONSOLE_CASE)
-def chonsole_native_commands(run_state: E2ERun) -> None:
+def chonsole_native_commands(run_state: "RunState") -> None:
     """Native command completion: engine commands, texture preview, and game-rule values."""
     run_state.focus()
     run_state.key("Escape")
@@ -287,7 +288,7 @@ def chonsole_native_commands(run_state: E2ERun) -> None:
 
 
 @scenario(target="chonsole-luaui-reload", cases=NATIVE_CHONSOLE_CASE)
-def chonsole_luaui_reload(run_state: E2ERun) -> None:
+def chonsole_luaui_reload(run_state: "RunState") -> None:
     """Running `/luaui reload` from the rust console.
 
     Executing a command that runs `Rml::Shutdown()` frees the console's own
@@ -312,7 +313,7 @@ def chonsole_luaui_reload(run_state: E2ERun) -> None:
 
 
 @scenario(uis=("chili", "rmlui"))
-def dev_console(run_state: E2ERun) -> None:
+def dev_console(run_state: "RunState") -> None:
     """Lua developer consoles: line selection, Ctrl+C/Ctrl+A ownership, and F8 hiding."""
     run_state.focus()
     # The console is visible by default; capture it.
@@ -339,7 +340,7 @@ def dev_console(run_state: E2ERun) -> None:
 
 
 @scenario(crop="dev-console")
-def native_dev_console(run_state: E2ERun) -> None:
+def native_dev_console(run_state: "RunState") -> None:
     """The native (Rust) developer console.
 
     Log content varies run to run, so every golden is taken after `Clear`: an
@@ -386,7 +387,7 @@ def native_dev_console(run_state: E2ERun) -> None:
 
 
 @scenario()
-def native_dev_console_copy(run_state: E2ERun) -> None:
+def native_dev_console_copy(run_state: "RunState") -> None:
     """Selecting log lines and copying them with Ctrl+C.
 
     The clipboard is read back: the panel's toolbar binds Ctrl+C to Copy, so this

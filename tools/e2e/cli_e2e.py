@@ -2,8 +2,8 @@ from typing import Annotated
 
 import typer
 
-from .cases import TARGETS, select_cases, target_cases
-from .golden import STATUS_APPROVED, approve_review, load_review
+from .driver.cases import TARGETS, select_cases, target_cases
+from .driver.utils.golden import GOLDEN_ROOT, STATUS_APPROVED, approve_review, load_review
 from .runner import E2ERun
 
 app = typer.Typer(no_args_is_help=True)
@@ -53,19 +53,17 @@ def run(
 
 @app.command("goldens-status")
 def goldens_status() -> None:
-    from .golden import GOLDEN_ROOT
-
     pending = 0
     for case_dir in sorted(GOLDEN_ROOT.iterdir()):
         if not case_dir.is_dir():
             continue
         review = load_review(case_dir.name)
         shots = sorted(path.stem for path in case_dir.glob("*.png"))
-        approved = sum(review.get(shot, {}).get("status") == STATUS_APPROVED for shot in shots)
+        approved = sum(shot in review and review[shot]["status"] == STATUS_APPROVED for shot in shots)
         pending += len(shots) - approved
         typer.echo(f"{case_dir.name:26} {approved}/{len(shots)} approved")
         for shot in shots:
-            if review.get(shot, {}).get("status") != STATUS_APPROVED:
+            if shot not in review or review[shot]["status"] != STATUS_APPROVED:
                 typer.echo(f"    ai-reviewed  {shot}")
     if pending:
         typer.echo(f"\n{pending} image(s) awaiting approval.")

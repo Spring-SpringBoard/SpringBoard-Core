@@ -2,11 +2,13 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
+from typing import override
 
-from .process import run
-from .run_env import MODIFIER_NAMES, MODIFIERS, SETTLE, nap
-from .run_state import RunState
+from .state import RunState
+from .utils.process import run
+from .utils.run_env import MODIFIER_NAMES, MODIFIERS, SETTLE, nap
 
 
 class InputMixin(RunState):
@@ -18,6 +20,7 @@ class InputMixin(RunState):
     focused root window instead; the affected methods say so where it matters.
     """
 
+    @override
     def focus(self) -> None:
         self.require_window()
         run("xdotool", "windowactivate", self.window, "windowfocus", self.window, check=False)
@@ -33,6 +36,7 @@ class InputMixin(RunState):
         run(*args, check=False)
         time.sleep(0.03)
 
+    @override
     def key(self, name: str, delay: float = 0.06) -> None:
         self.require_window()
         self.event("key", key=name)
@@ -52,7 +56,8 @@ class InputMixin(RunState):
         nap(delay)
 
     @contextmanager
-    def modifier(self, name: str):
+    @override
+    def modifier(self, name: str) -> Generator[None]:
         """Hold a modifier down across other input, for a chord like Ctrl-drag.
 
         Sent to the focused window rather than with `--window`: as with `key`,
@@ -68,6 +73,7 @@ class InputMixin(RunState):
             run("xdotool", "keyup", name)
             self.event("modifier_up", modifier=name)
 
+    @override
     def key_chord(self, modifiers: tuple[str, ...], name: str, delay: float = 0.08) -> None:
         self.require_window()
         normalized = tuple(MODIFIER_NAMES.get(mod, mod) for mod in modifiers)
@@ -76,6 +82,7 @@ class InputMixin(RunState):
         run("xdotool", "key", "--window", self.window, chord)
         nap(delay)
 
+    @override
     def type_text(self, text: str, delay_ms: int = 10) -> None:
         self.require_window()
         self.event("type", text=text)
@@ -98,6 +105,7 @@ class InputMixin(RunState):
                 run("xdotool", "key", "--window", self.window, "keycode", "61")
         time.sleep(0.06)
 
+    @override
     def fill_text(
         self,
         x: int,
@@ -112,6 +120,7 @@ class InputMixin(RunState):
         self.type_text(text)
         self.key("Return", delay=commit_delay)
 
+    @override
     def click(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
         self.require_window()
         self.event("click", x=x, y=y, button=button)
@@ -127,6 +136,7 @@ class InputMixin(RunState):
         )
         nap(delay)
 
+    @override
     def click_settled(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
         """Click after one engine input tick at the target position.
 
@@ -144,12 +154,14 @@ class InputMixin(RunState):
         run("xdotool", "mouseup", str(button))
         nap(delay)
 
+    @override
     def move(self, x: int, y: int, delay: float = 0.08) -> None:
         self.require_window()
         self.event("move", x=x, y=y)
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
         nap(delay)
 
+    @override
     def move_relative(self, dx: int, dy: int = 0, steps: int = 6, delay: float = 0.06) -> None:
         """Move the mouse *by* an offset, the way a real mouse reports motion.
 
@@ -171,6 +183,7 @@ class InputMixin(RunState):
             )
             nap(delay)
 
+    @override
     def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
         """Scroll the wheel over a point. Over the map this zooms the camera,
         which is the only way to get close enough to *see* what a scenario placed
@@ -185,6 +198,7 @@ class InputMixin(RunState):
             nap(0.05)
         nap(delay)
 
+    @override
     def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: float = 0.25) -> None:
         """Scroll the wheel with the real pointer, so a held modifier applies.
 
@@ -200,6 +214,7 @@ class InputMixin(RunState):
             nap(0.05)
         nap(delay)
 
+    @override
     def click_root(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
         self.event("click_root", x=x, y=y, button=button)
         run("xdotool", "mousemove", str(x), str(y), "click", str(button))
@@ -229,6 +244,7 @@ class InputMixin(RunState):
         run("xdotool", "mouseup", str(button))
         time.sleep(0.12)
 
+    @override
     def press(self, x: int, y: int, button: int = 1, delay: float = 0.15) -> None:
         """Hold the button down. Pair with `move` + `release` when the scenario
         has to capture something that only exists *during* the drag, like the
@@ -240,6 +256,7 @@ class InputMixin(RunState):
         run("xdotool", "mousedown", str(button))
         nap(delay)
 
+    @override
     def release(self, x: int, y: int, button: int = 1, delay: float = 0.3) -> None:
         self.require_window()
         self.event("release", x=x, y=y, button=button)
@@ -247,6 +264,7 @@ class InputMixin(RunState):
         run("xdotool", "mouseup", str(button))
         nap(delay)
 
+    @override
     def drag(
         self,
         x1: int,
@@ -278,6 +296,7 @@ class InputMixin(RunState):
         run("xdotool", "mouseup", str(button))
         time.sleep(0.12)
 
+    @override
     def set_clipboard(self, text: str) -> None:
         """Put text on the clipboard, so a copy assertion cannot pass on what a
         previous run left there."""
@@ -295,6 +314,7 @@ class InputMixin(RunState):
             env=env,
         )
 
+    @override
     def clipboard(self) -> str:
         """The X clipboard's text. No xclip/xsel here, so Tk reads it."""
         result = subprocess.run(

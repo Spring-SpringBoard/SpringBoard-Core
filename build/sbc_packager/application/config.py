@@ -1,13 +1,13 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import cast
 
 
 @dataclass(frozen=True)
 class ApplicationConfig:
-    launch: dict[str, Any]
-    springsettings: dict[str, Any]
+    launch: dict[str, object]
+    springsettings: dict[str, object]
 
 
 def read_application_config(path: Path) -> ApplicationConfig:
@@ -16,12 +16,12 @@ def read_application_config(path: Path) -> ApplicationConfig:
     if not isinstance(data, dict):
         raise RuntimeError(f"Distribution configuration must be an object: {path}")
     return ApplicationConfig(
-        launch=require_object(data, "launch"),
-        springsettings=require_object(data, "springsettings"),
+        launch=require_object(cast("dict[str, object]", data), "launch"),
+        springsettings=require_object(cast("dict[str, object]", data), "springsettings"),
     )
 
 
-def render_start_script(game_name: str, launch: dict[str, Any]) -> str:
+def render_start_script(game_name: str, launch: dict[str, object]) -> str:
     map_name = require_string(launch, "map")
     game_options = render_game_options(launch.get("game_options"))
     map_options = render_options_block("MapOptions", launch.get("map_options"))
@@ -51,7 +51,7 @@ def render_start_script(game_name: str, launch: dict[str, Any]) -> str:
     )
 
 
-def write_springsettings(settings: dict[str, Any], destination: Path) -> Path:
+def write_springsettings(settings: dict[str, object], destination: Path) -> Path:
     values = {**settings, "DefaultStartScript": "script.txt"}
     output = destination / "springsettings.cfg"
     lines = [f"{key}={format_setting(value)}" for key, value in sorted(values.items())]
@@ -59,14 +59,14 @@ def write_springsettings(settings: dict[str, Any], destination: Path) -> Path:
     return output
 
 
-def require_object(values: dict[str, Any], key: str) -> dict[str, Any]:
+def require_object(values: dict[str, object], key: str) -> dict[str, object]:
     value = values.get(key)
     if not isinstance(value, dict):
         raise RuntimeError(f"Distribution configuration requires an object '{key}'")
-    return value
+    return cast("dict[str, object]", value)
 
 
-def require_string(values: dict[str, Any], key: str) -> str:
+def require_string(values: dict[str, object], key: str) -> str:
     value = values.get(key)
     if not isinstance(value, str) or not value:
         raise RuntimeError(f"Launch configuration requires a non-empty '{key}' value")
@@ -86,12 +86,12 @@ def render_options_block(name: str, value: object) -> str:
     return f"\t[{name}]\n\t{{\n{entries}\n\t}}"
 
 
-def require_options(value: object, name: str) -> dict[str, Any]:
+def require_options(value: object, name: str) -> dict[str, object]:
     if value is None:
         return {}
     if not isinstance(value, dict):
         raise RuntimeError(f"Launch configuration '{name}' must be an object")
-    return value
+    return cast("dict[str, object]", value)
 
 
 def render_value(value: object) -> str:

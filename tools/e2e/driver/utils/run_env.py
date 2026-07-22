@@ -20,10 +20,10 @@ _ENVELOPE_KEYS = frozenset({"className", "__cmd_id", "__preview"})
 
 def command_fields(data: CommandData) -> CommandFields:
     options = data.get("opts")
-    if options is not None:
+    if isinstance(options, dict):
         return {key: value for key, value in options.items() if value is not None}
     fields = {key: value for key, value in data.items() if key not in _ENVELOPE_KEYS and value is not None}
-    return cast(CommandFields, fields)
+    return cast("CommandFields", fields)
 
 
 MODIFIERS = (

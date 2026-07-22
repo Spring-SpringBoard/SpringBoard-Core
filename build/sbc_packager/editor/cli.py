@@ -5,8 +5,9 @@ from typing import Annotated
 
 import typer
 
-from ..shared.archive import write_sha256
-from ..shared.files import collect_generated_top_level_excludes
+from sbc_packager.shared.archive import write_sha256
+from sbc_packager.shared.files import collect_generated_top_level_excludes
+
 from .archive import normalize_platform, prepare_game_archive, resolve_game_name
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)

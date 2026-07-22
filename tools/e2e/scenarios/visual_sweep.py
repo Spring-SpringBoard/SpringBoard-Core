@@ -7,17 +7,15 @@ gate after a shell/style change, before slower behavioural E2Es and goldens.
 
 from typing import TYPE_CHECKING
 
-from .geometry import EDITORS, TAB_X, TAB_Y, editor_point, panel_left
-from .registry import scenario
+from .helpers.geometry import EDITORS, TAB_X, TAB_Y, editor_point, panel_left
+from .helpers.registry import scenario
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+    from e2e.driver.state import RunState
 
 
 @scenario(target="rust-ui-sweep")
-def rust_ui_sweep(run_state: E2ERun) -> None:
+def rust_ui_sweep(run_state: "RunState") -> None:
     """Fast visual pass over status strip plus every native tab/editor."""
     run_state.focus()
     left = panel_left(run_state)

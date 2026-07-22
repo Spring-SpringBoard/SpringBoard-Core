@@ -1,14 +1,17 @@
-from collections.abc import Iterable
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast, override
 
 from PIL import Image, ImageChops, ImageColor
 
-from .run_env import FAST
-from .run_state import RunState
+from .state import RunState
+from .utils.run_env import FAST
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class PixelMixin(RunState):
+    @override
     def count_color(
         self,
         shot: Path,
@@ -17,15 +20,16 @@ class PixelMixin(RunState):
         fuzz: str = "12%",
     ) -> int:
         image = self._crop(shot, region)
-        target = cast(tuple[int, int, int], ImageColor.getrgb(color))
+        target = cast("tuple[int, int, int]", ImageColor.getrgb(color))
         threshold = round(float(fuzz.removesuffix("%")) * 255 / 100)
         count = sum(
             all(abs(channel - expected) <= threshold for channel, expected in zip(pixel, target, strict=True))
-            for pixel in cast(Iterable[tuple[int, int, int]], image.convert("RGB").getdata())
+            for pixel in cast("Iterable[tuple[int, int, int]]", image.convert("RGB").getdata())
         )
         self.event("count_color", shot=shot.name, color=color, count=count)
         return count
 
+    @override
     def assert_region_pixels(
         self,
         before: Path,
@@ -39,6 +43,7 @@ class PixelMixin(RunState):
             self._crop(before, region), self._crop(after, region), before, after, min_changed, max_changed
         )
 
+    @override
     def assert_screenshot_pixels(
         self,
         before: Path,

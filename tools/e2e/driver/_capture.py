@@ -1,12 +1,13 @@
 import time
 from pathlib import Path
+from typing import override
 
-from .golden import compare as compare_golden
-from .process import run
-from .run_env import CASE_CROP, FAST, PANEL_TOLERANCE
-from .run_state import RunState
-from .screenshots import Screenshot, capture_editor
-from .x11 import window_geometry
+from .state import RunState
+from .utils.golden import compare as compare_golden
+from .utils.process import run
+from .utils.run_env import CASE_CROP, FAST, PANEL_TOLERANCE
+from .utils.screenshots import Screenshot, capture_editor
+from .utils.x11 import window_geometry
 
 
 class CaptureMixin(RunState):
@@ -17,6 +18,7 @@ class CaptureMixin(RunState):
         self.event(f"{kind}_skipped", name=name)
         return self.screenshot_dir / f"{name}.png"
 
+    @override
     def screenshot(self, name: str) -> Path:
         if FAST:
             return self._skip_capture("screenshot", name)
@@ -37,6 +39,7 @@ class CaptureMixin(RunState):
         run("xdotool", "mousemove", "--window", self.window, str(width // 2), str(height - 4))
         time.sleep(0.25)
 
+    @override
     def golden(
         self,
         name: str,
@@ -85,6 +88,7 @@ class CaptureMixin(RunState):
         self.event("golden", name=name, status=status, path=str(png_path))
         return png_path
 
+    @override
     def screenshot_root(self, name: str) -> Path:
         if FAST:
             return self._skip_capture("screenshot_root", name)

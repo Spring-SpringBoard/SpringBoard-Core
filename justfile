@@ -11,10 +11,12 @@ tool_pythonpath := "build:tools"
 default:
     just --list
 
-# Check Rust formatting for the native crate.
+# Apply mechanical formatting before the checks below.
 [group('lint')]
 fmt:
-    cd native && cargo fmt --check
+    cd native && cargo fmt
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked ruff check --fix build tools
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked ruff format build tools
 
 # Run clippy on all native targets with warnings denied.
 [group('lint')]

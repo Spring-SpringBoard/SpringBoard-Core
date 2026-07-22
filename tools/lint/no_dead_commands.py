@@ -14,9 +14,9 @@ SOURCE_SUFFIXES = {".lua", ".rs", ".py"}
 @dataclass
 class CommandInfo:
     name: str
-    lua_defs: list[Path] = field(default_factory=list)
-    rust_defs: list[Path] = field(default_factory=list)
-    uses: list[tuple[Path, int, str]] = field(default_factory=list)
+    lua_defs: list[Path] = field(default_factory=list[Path])
+    rust_defs: list[Path] = field(default_factory=list[Path])
+    uses: list[tuple[Path, int, str]] = field(default_factory=list[tuple[Path, int, str]])
 
 
 def check(*, show_all: bool = False, fail: bool = False) -> int:
@@ -28,7 +28,7 @@ def check(*, show_all: bool = False, fail: bool = False) -> int:
     to_print = sorted(commands.values() if show_all else unused, key=lambda c: c.name)
 
     for command in to_print:
-        sides = []
+        sides: list[str] = []
         if command.lua_defs:
             sides.append("lua=" + ",".join(rel(path) for path in command.lua_defs))
         if command.rust_defs:
@@ -51,9 +51,7 @@ def source_files() -> list[Path]:
     for source_dir in SOURCE_DIRS:
         if not source_dir.exists():
             continue
-        for path in source_dir.rglob("*"):
-            if path.is_file() and path.suffix in SOURCE_SUFFIXES:
-                files.append(path)
+        files.extend(path for path in source_dir.rglob("*") if path.is_file() and path.suffix in SOURCE_SUFFIXES)
     return files
 
 
@@ -62,7 +60,7 @@ def collect_definitions(files: list[Path]) -> dict[str, CommandInfo]:
     lua_class_name = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*\.className\s*=\s*[\"']([A-Za-z_][A-Za-z0-9_]*)[\"']")
     rust_registration = re.compile(
         r"register_command!\s*\([^,]+,\s*[\"']([A-Za-z_][A-Za-z0-9_]*)[\"']",
-        re.S,
+        re.DOTALL,
     )
 
     for path in files:
@@ -89,7 +87,7 @@ def collect_uses(files: list[Path], commands: dict[str, CommandInfo]) -> None:
     lua_class_name = re.compile(rf"\b[A-Za-z_][A-Za-z0-9_]*\.className\s*=\s*[\"']({command_alt})[\"']")
     rust_registration = re.compile(
         rf"register_command!\s*\([^,]+,\s*[\"']({command_alt})[\"']",
-        re.S,
+        re.DOTALL,
     )
     json_class_name = re.compile(rf"[\"']className[\"']\s*[:=]\s*[\"']({command_alt})[\"']")
     lua_extends = re.compile(rf"\b({command_alt})\s*:\s*extends\b")
@@ -117,12 +115,12 @@ def collect_uses(files: list[Path], commands: dict[str, CommandInfo]) -> None:
                     if "className" in line_text or "register_command!" in line_text:
                         continue
                 command = commands[name]
-                if is_definition_hit(command, path, line, kind):
+                if is_definition_hit(command, path, kind):
                     continue
                 command.uses.append((path, line, kind))
 
 
-def is_definition_hit(command: CommandInfo, path: Path, line: int, kind: str) -> bool:
+def is_definition_hit(command: CommandInfo, path: Path, kind: str) -> bool:
     if kind == "lua-class" and path in command.lua_defs:
         return True
     return kind == "rust-register" and path in command.rust_defs

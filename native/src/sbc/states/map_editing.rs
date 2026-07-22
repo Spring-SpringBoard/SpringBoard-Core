@@ -34,16 +34,16 @@ pub(crate) enum BrushButton {
 }
 
 impl BrushButton {
+    pub(crate) fn is_secondary(self) -> bool {
+        self == Self::Secondary
+    }
+
     fn from_mouse(button: i32) -> Self {
         if button == RIGHT {
             Self::Secondary
         } else {
             Self::Primary
         }
-    }
-
-    pub(crate) fn is_secondary(self) -> bool {
-        self == Self::Secondary
     }
 }
 

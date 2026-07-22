@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
+from typing import cast
 
 SBC_ROOT = Path(__file__).resolve().parent.parent.parent
 DEV_DIR = SBC_ROOT / "tools" / "dev"
@@ -168,21 +169,23 @@ def _read_port_flags_config(path: Path) -> tuple[dict[str, str], dict[str, str]]
         raise RuntimeError(f"invalid run config JSON at {path}: {err}") from err
     if not isinstance(data, dict):
         raise RuntimeError(f"run config must be a JSON object: {path}")
+    raw_data = cast("dict[str, object]", data)
     allowed = {
         "chonsole": {"lua", "rust"},
         # The three UI implementations are independent: exactly one builds a UI.
         "ui": {"chili", "rmlui", "rust"},
     }
     for key, values in allowed.items():
-        value = data.get(key)
+        value = raw_data.get(key)
         if value not in values:
             expected = ", ".join(sorted(values))
             raise RuntimeError(f"{path}: {key} must be one of: {expected}")
-    config_env = data.get("env", {})
+    config_env = raw_data.get("env", {})
     if not isinstance(config_env, dict):
         raise RuntimeError(f"{path}: env must be a JSON object of name -> value")
-    flags = {key: str(data[key]) for key in allowed}
-    return flags, {str(k): str(v) for k, v in config_env.items()}
+    raw_env = cast("dict[object, object]", config_env)
+    flags = {key: str(raw_data[key]) for key in allowed}
+    return flags, {str(key): str(value) for key, value in raw_env.items()}
 
 
 def _run_with_heartbeat(cmd: list[str], env: dict[str, str], heartbeat: Path, hard_timeout_s: int) -> None:

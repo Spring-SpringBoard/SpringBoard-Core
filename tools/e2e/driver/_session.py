@@ -4,16 +4,16 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from smoke.engine import prepare
 
-from .paths import GAME_DIRNAME
-from .run_state import RunState
-from .x11 import find_windows, spring_processes, window_pid
+from .state import RunState
+from .utils.paths import GAME_DIRNAME
+from .utils.x11 import find_windows, spring_processes, window_pid
 
 if TYPE_CHECKING:
-    from .runner import E2ERun
+    from e2e.runner import E2ERun
 
 
 class SessionMixin(RunState):
@@ -57,7 +57,7 @@ class SessionMixin(RunState):
         self.screenshot("00-initial")
 
     def run_scenario(self) -> None:
-        from .scenarios import run_scenario
+        from ._scenarios import run_scenario
 
         run_scenario(cast("E2ERun", self))
 
@@ -159,10 +159,12 @@ class SessionMixin(RunState):
                 handle.close()
                 setattr(self, handle_name, None)
 
+    @override
     def assert_running(self) -> None:
         if self.proc is not None and self.proc.poll() is not None:
             raise RuntimeError(f"engine exited early with code {self.proc.returncode}")
 
+    @override
     def require_window(self) -> None:
         if not self.window:
             raise RuntimeError("window not available")

@@ -22,7 +22,7 @@ def create_application_archive(application_dir: Path, platform: str) -> Path:
 
 def write_file_manifest(application_dir: Path) -> Path:
     manifest_path = application_dir / "files.md5.gz"
-    entries = []
+    entries: list[str] = []
     for path in sorted(application_dir.rglob("*")):
         if path == manifest_path or path.is_symlink() or not path.is_file() or path.suffix == ".dbg":
             continue

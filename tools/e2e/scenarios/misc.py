@@ -2,7 +2,9 @@
 
 from typing import TYPE_CHECKING
 
-from .geometry import (
+from e2e.driver.utils.models import CommandValue, string_starts_with
+
+from .helpers.geometry import (
     COLOR_PICKER,
     DIALOG,
     ENV_LIGHTING_COLORS,
@@ -16,16 +18,14 @@ from .geometry import (
     panel_left,
     panel_point,
 )
-from .registry import scenario
+from .helpers.registry import scenario
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+    from e2e.driver.state import RunState
 
 
 @scenario(uis=("rmlui", "rust"), crop="right-panel")
-def info_panel(run_state: E2ERun) -> None:
+def info_panel(run_state: "RunState") -> None:
     """Repro for the colour leaking into Misc -> Info (O6).
 
     Pick a colour in Env -> Lighting, then switch to Misc -> Info and type.
@@ -48,22 +48,13 @@ def info_panel(run_state: E2ERun) -> None:
         run_state.assert_any_command("SetScenarioInfoCommand")
     run_state.assert_any_command(
         "SetScenarioInfoCommand",
-        data=lambda value: (
-            isinstance(value, dict)
-            and value
-            == {
-                "name": "Verified Scenario",
-                "description": "All metadata fields",
-                "version": "2.5",
-                "author": "Native UI",
-            }
-        ),
+        data=_scenario_info_matches,
     )
     run_state.screenshot("info-edited")
 
 
 @scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
-def teams_panel(run_state: E2ERun) -> None:
+def teams_panel(run_state: "RunState") -> None:
     run_state.focus()
     left = panel_left(run_state)
     run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.2)
@@ -73,7 +64,7 @@ def teams_panel(run_state: E2ERun) -> None:
     run_state.click(*panel_point(left, MISC["team_add"]), delay=0.8)
     run_state.assert_any_command(
         "AddTeamCommand",
-        name=lambda value: isinstance(value, str) and value.startswith("New team:"),
+        name=string_starts_with("New team:"),
     )
     run_state.screenshot("team-added")
     # Edit the first player team. Fields live in a modal, not in every row.
@@ -96,17 +87,33 @@ def teams_panel(run_state: E2ERun) -> None:
     run_state.click(*dialog_point(run_state, DIALOG["team_ok"]), delay=0.8)
     run_state.assert_any_command(
         "UpdateTeamCommand",
-        team=lambda value: (
-            isinstance(value, dict)
-            and value.get("name") == "Blue Team"
-            and value.get("ai") is True
-            and value.get("metal") == 125.0
-            and value.get("energyMax") == 750.0
-            and isinstance(value.get("color"), dict)
-            and value["color"].get("r", 0) > 0.2
-        ),
+        team=_team_update_matches,
     )
     run_state.screenshot("team-updated")
     run_state.click(*panel_point(left, MISC["team_remove_first"]), delay=0.8)
     run_state.assert_any_command("RemoveTeamCommand")
     run_state.screenshot("team-removed")
+
+
+def _scenario_info_matches(value: CommandValue) -> bool:
+    return value == {
+        "name": "Verified Scenario",
+        "description": "All metadata fields",
+        "version": "2.5",
+        "author": "Native UI",
+    }
+
+
+def _team_update_matches(value: CommandValue) -> bool:
+    if not isinstance(value, dict):
+        return False
+    color = value.get("color")
+    red = color.get("r") if isinstance(color, dict) else None
+    return (
+        value.get("name") == "Blue Team"
+        and value.get("ai") is True
+        and value.get("metal") == 125.0
+        and value.get("energyMax") == 750.0
+        and isinstance(red, int | float)
+        and red > 0.2
+    )

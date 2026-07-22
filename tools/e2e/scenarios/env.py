@@ -2,7 +2,9 @@
 
 from typing import TYPE_CHECKING
 
-from .geometry import (
+from e2e.driver.utils.models import is_list, nonempty_string, number_close
+
+from .helpers.geometry import (
     COLOR_PICKER,
     DIALOG,
     ENV,
@@ -24,16 +26,14 @@ from .geometry import (
     panel_point,
     window_size,
 )
-from .registry import scenario
+from .helpers.registry import scenario
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+    from e2e.driver.state import RunState
 
 
 @scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
-def lighting_panel(run_state: E2ERun) -> None:
+def lighting_panel(run_state: "RunState") -> None:
     """Lighting only: shadow mode, sun vector, colors, and densities."""
     run_state.focus()
     left = panel_left(run_state)
@@ -47,7 +47,7 @@ def lighting_panel(run_state: E2ERun) -> None:
         _edit_number(run_state, *panel_point(left, point), value)
         run_state.assert_any_command(
             "SetSunParametersCommand",
-            **{key: lambda actual, expected=float(value): abs(actual - expected) < 0.01},
+            **{key: number_close(float(value))},
         )
 
     for key, point, pick_x in ENV_LIGHTING_COLORS:
@@ -57,13 +57,13 @@ def lighting_panel(run_state: E2ERun) -> None:
         _edit_number(run_state, *panel_point(left, point), value)
         run_state.assert_any_command(
             "SetSunLightingCommand",
-            **{key: lambda actual, expected=float(value): abs(actual - expected) < 0.01},
+            **{key: number_close(float(value))},
         )
     run_state.screenshot("lighting-all-fields")
 
 
 @scenario(crop="right-panel")
-def sky_panel(run_state: E2ERun) -> None:
+def sky_panel(run_state: "RunState") -> None:
     """Sky/Fog only: all atmosphere colors, fog bounds, and skybox picker."""
     run_state.focus()
     left = panel_left(run_state)
@@ -77,7 +77,7 @@ def sky_panel(run_state: E2ERun) -> None:
         _edit_number(run_state, *panel_point(left, point), value)
         run_state.assert_any_command(
             "SetAtmosphereCommand",
-            **{key: lambda actual, expected=float(value): abs(actual - expected) < 0.01},
+            **{key: number_close(float(value))},
         )
 
     run_state.click(*panel_point(left, ENV["sky_skybox"]), delay=0.6)
@@ -88,7 +88,7 @@ def sky_panel(run_state: E2ERun) -> None:
 
 
 @scenario()
-def water_panel(run_state: E2ERun) -> None:
+def water_panel(run_state: "RunState") -> None:
     """Water only, after making a broad below-zero basin and enabling water 4."""
     run_state.focus()
     left = panel_left(run_state)
@@ -126,7 +126,7 @@ def water_panel(run_state: E2ERun) -> None:
         _edit_number(run_state, *panel_point(left, point), value)
         run_state.assert_any_command(
             "SetWaterParamsCommand",
-            **{key: lambda actual, expected=float(value): abs(actual - expected) < 0.01},
+            **{key: number_close(float(value))},
         )
     for key, point, pick_x in ENV_WATER_COLORS:
         _commit_color(run_state, left, point, "SetWaterParamsCommand", key, pick_x)
@@ -141,18 +141,18 @@ def water_panel(run_state: E2ERun) -> None:
         run_state.click(*dialog_point(run_state, DIALOG["asset_ok"]), delay=0.6)
         run_state.assert_any_command(
             "SetWaterParamsCommand",
-            **{key: lambda path: isinstance(path, str) and bool(path)},
+            **{key: nonempty_string},
         )
     run_state.move(*panel_point(left, PARK_PANEL_LOW), delay=0.3)
     run_state.screenshot("water-all-fields-visible")
 
 
-def _edit_number(run_state: E2ERun, x: int, y: int, value: str) -> None:
+def _edit_number(run_state: "RunState", x: int, y: int, value: str) -> None:
     run_state.fill_text(x, y, value, click_delay=0.1, commit_delay=0.22)
 
 
 def _commit_color(
-    run_state: E2ERun,
+    run_state: "RunState",
     left: int,
     point: tuple[int, int],
     command: str,
@@ -162,4 +162,4 @@ def _commit_color(
     run_state.click(*panel_point(left, point), delay=0.25)
     run_state.click(pick_x, COLOR_PICKER["sample_y"], delay=0.12)
     run_state.click(*dialog_point(run_state, DIALOG["color_ok_compact"]), delay=0.45)
-    run_state.assert_any_command(command, **{key: lambda value: isinstance(value, list)})
+    run_state.assert_any_command(command, **{key: is_list})

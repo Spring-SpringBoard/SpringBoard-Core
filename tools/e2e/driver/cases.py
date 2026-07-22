@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
 
-from .models import PortFlags
-from .scenarios.registry import REGISTERED
+from e2e.driver._scenarios import registered_scenarios
+from e2e.driver.utils.models import Environment, PortFlags
+
+REGISTERED = registered_scenarios()
 
 
 @dataclass(frozen=True)
@@ -10,8 +12,8 @@ class Case:
     flags: PortFlags
     scenario: str
     crop: str | None = None
-    tags: frozenset[str] = field(default_factory=frozenset)
-    env: dict[str, str] = field(default_factory=dict)
+    tags: frozenset[str] = frozenset()
+    env: Environment = field(default_factory=dict[str, str])
 
 
 def targets() -> tuple[str, ...]:

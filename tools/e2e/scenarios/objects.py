@@ -8,24 +8,29 @@ acted on it.
 
 from typing import TYPE_CHECKING
 
-from ..models import WorldPosition, parse_world_position
-from ..run_env import command_fields
-from .geometry import (
+from e2e.driver.utils.models import (
+    WorldPosition,
+    is_object,
+    object_number_above,
+    object_number_below,
+    object_number_close,
+    parse_world_position,
+)
+from e2e.driver.utils.run_env import command_fields
+
+from .helpers.geometry import (
     OBJECTS,
-    TAB_X,
-    TAB_Y,
     dropdown_option,
     editor_point,
-    panel_left,
     panel_point,
     window_size,
 )
-from .registry import scenario
+from .helpers.objects import arm_tree as _arm_tree
+from .helpers.objects import open_object_editor as _open
+from .helpers.registry import scenario
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+    from e2e.driver.state import RunState
 
 # Differing pixels forgiven when a capture includes the map.
 #
@@ -46,7 +51,7 @@ TOOLTIP_COLOR = "#0b0d0c"
 
 
 @scenario(crop="right-panel")
-def def_grid(run_state: E2ERun) -> None:
+def def_grid(run_state: "RunState") -> None:
     """Only the Features def grid: the fastest look at thumbnail rendering.
 
     No placement, no filters, no field edits -- iterating on how the models are
@@ -58,7 +63,7 @@ def def_grid(run_state: E2ERun) -> None:
 
 
 @scenario(crop="right-panel")
-def feature_placement_actions(run_state: E2ERun) -> None:
+def feature_placement_actions(run_state: "RunState") -> None:
     """Features Add/Brush are persistent choices, even before a def is picked.
 
     The Brush-only placement controls are a stronger signal than the pressed
@@ -83,7 +88,7 @@ def feature_placement_actions(run_state: E2ERun) -> None:
 
 
 @scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
-def units_panel(run_state: E2ERun) -> None:
+def units_panel(run_state: "RunState") -> None:
     """Objects -> Units and Features: the def grid, its filters, and placement.
 
     The engine's standalone boot has feature defs but no unit defs, so the grid
@@ -150,7 +155,7 @@ def units_panel(run_state: E2ERun) -> None:
 
 
 @scenario(uis=("rmlui", "rust"), crop="right-panel")
-def props_panel(run_state: E2ERun) -> None:
+def props_panel(run_state: "RunState") -> None:
     """Objects -> Properties and Collision.
 
     Both edit the *selected* object, so a feature is placed and selected first;
@@ -185,7 +190,7 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
-        value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1500) < 1.0,
+        value=object_number_close("x", 1500, tolerance=1.0),
     )
     # The panel redraws the field with the new value. Only ~300 px: the shots are
     # cropped to the panel and the cursor is parked out of both, so this measures
@@ -210,7 +215,7 @@ def props_panel(run_state: E2ERun) -> None:
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
-        value=lambda v: isinstance(v, dict) and v.get("x", 0) > 1500.5,
+        value=object_number_above("x", 1500.5),
     )
 
     # Releasing a drag with the pointer far outside the panel must still end it:
@@ -223,7 +228,7 @@ def props_panel(run_state: E2ERun) -> None:
     dragged = run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
-        value=lambda v: isinstance(v, dict) and v.get("x", 9999) < 1500.0,
+        value=object_number_below("x", 1500.0),
     )
     # Now moving the mouse must not keep changing it: the drag is over.
     run_state.move(left - 600, 500, delay=0.4)
@@ -246,7 +251,7 @@ def props_panel(run_state: E2ERun) -> None:
 
 
 @scenario()
-def collision(run_state: E2ERun) -> None:
+def collision(run_state: "RunState") -> None:
     """Objects -> Collision, on its own so it is quick and focused.
 
     The point of the editor is the *volume*, so the volume is what gets checked:
@@ -279,7 +284,7 @@ def collision(run_state: E2ERun) -> None:
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="collision",
-        value=lambda v: isinstance(v, dict),
+        value=is_object,
     )
     run_state.assert_screenshot_pixels(shown, scaled, min_changed=300)
 
@@ -298,12 +303,12 @@ def collision(run_state: E2ERun) -> None:
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="blocking",
-        value=lambda v: isinstance(v, dict),
+        value=is_object,
     )
 
 
 @scenario(uis=("rmlui", "rust"), env={"SBC_HIDE_TOOLTIPS": "0"})
-def cursortip(run_state: E2ERun) -> None:
+def cursortip(run_state: "RunState") -> None:
     """Hovering a feature shows a useful tooltip next to the cursor.
 
     This is the native replacement for the engine's useless "No tooltip
@@ -337,7 +342,7 @@ def cursortip(run_state: E2ERun) -> None:
 
 
 @scenario(env={"SBC_HIDE_TOOLTIPS": "0"})
-def feature_grid_tooltip_after_cursortip(run_state: E2ERun) -> None:
+def feature_grid_tooltip_after_cursortip(run_state: "RunState") -> None:
     """A map tooltip must not hide the next Feature-grid tooltip.
 
     The map picker and panel controls used to share one RML element. Moving from
@@ -371,7 +376,7 @@ def feature_grid_tooltip_after_cursortip(run_state: E2ERun) -> None:
 
 
 @scenario(crop="right-panel")
-def brush_size(run_state: E2ERun) -> None:
+def brush_size(run_state: "RunState") -> None:
     """Feature brushing fills free space, and Shift+wheel resizes its reach.
 
     A brush is a density tool, not an unconditional object count: a repeat dab
@@ -436,7 +441,7 @@ def brush_size(run_state: E2ERun) -> None:
 
 
 @scenario()
-def deselect(run_state: E2ERun) -> None:
+def deselect(run_state: "RunState") -> None:
     """Deselecting has to clear the selection box, not just the selection.
 
     Three frames of the same camera: the feature alone, the feature selected, and
@@ -512,7 +517,7 @@ def deselect(run_state: E2ERun) -> None:
 
 
 @scenario()
-def rotation(run_state: E2ERun) -> None:
+def rotation(run_state: "RunState") -> None:
     """Ctrl-drag rotates the selection about its centre, as the Lua state does.
 
     Two features, placed apart and both selected: rotating the pair swings them
@@ -572,7 +577,7 @@ def rotation(run_state: E2ERun) -> None:
     # already true before the drag -- that assertion passed without the rotation
     # doing anything at all.
     placed = [(pos["x"], pos["z"]) for pos in _placed(run_state)]
-    moved = []
+    moved: list[tuple[float, float]] = []
     for entry in run_state.commands():
         data = entry["data"]
         if data.get("className") != "SetObjectParamCommand" or data.get("__preview"):
@@ -593,7 +598,7 @@ def rotation(run_state: E2ERun) -> None:
 
 
 @scenario()
-def selection_drag(run_state: E2ERun) -> None:
+def selection_drag(run_state: "RunState") -> None:
     """Shift-click extends selection and a plain drag moves the whole set.
 
     This is intentionally separate from Ctrl-drag rotation: it exercises the
@@ -672,7 +677,7 @@ def selection_drag(run_state: E2ERun) -> None:
 
 
 @scenario()
-def object_actions(run_state: E2ERun) -> None:
+def object_actions(run_state: "RunState") -> None:
     """Copy, Paste, Cut, Delete, and Undo/Redo drive live selected features.
 
     The action layer has direct integration tests, but this scenario owns the
@@ -739,7 +744,7 @@ def object_actions(run_state: E2ERun) -> None:
 
 
 @scenario()
-def selection(run_state: E2ERun) -> None:
+def selection(run_state: "RunState") -> None:
     """Rectangle select: drag from sky over a placed feature.
 
     Starting outside terrain matters: Chili permits the first corner over the
@@ -777,26 +782,15 @@ def selection(run_state: E2ERun) -> None:
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
-        value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1800) < 1.0,
+        value=object_number_close("x", 1800, tolerance=1.0),
     )
-
-
-def _open(run_state: E2ERun, editor: str) -> int:
-    left = panel_left(run_state)
-    run_state.click(left + TAB_X["objects"], TAB_Y, delay=0.25)
-    run_state.click(*editor_point(left, "objects", editor), delay=0.7)
-    return left
-
-
-def _arm_tree(run_state: E2ERun, left: int) -> None:
-    run_state.click(*panel_point(left, OBJECTS["feature_first_tree"]), delay=0.5)
 
 
 def _tip_box(cursor_x: int, cursor_y: int) -> tuple[int, int, int, int]:
     return (cursor_x + 40, cursor_y + 30, 320, 90)
 
 
-def _placed(run_state: E2ERun, since: int = 0) -> list[WorldPosition]:
+def _placed(run_state: "RunState", since: int = 0) -> list[WorldPosition]:
     positions: list[WorldPosition] = []
     for entry in run_state.commands()[since:]:
         data = entry["data"]

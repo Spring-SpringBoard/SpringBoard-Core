@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Step-down ordering for Python: public functions before private (`_`) helpers.
 
 The Python analogue of tools/lint/rust_step_down.py. A module-level `def name`

@@ -4,9 +4,15 @@ from typing import Annotated
 
 import typer
 
-from ..editor.archive import find_engine_loading_image, normalize_platform, prepare_game_archive, resolve_game_name
-from ..shared.archive import write_sha256
-from ..shared.files import collect_generated_top_level_excludes
+from sbc_packager.editor.archive import (
+    find_engine_loading_image,
+    normalize_platform,
+    prepare_game_archive,
+    resolve_game_name,
+)
+from sbc_packager.shared.archive import write_sha256
+from sbc_packager.shared.files import collect_generated_top_level_excludes
+
 from .archive import create_application_archive, write_file_manifest
 from .config import read_application_config, render_start_script, write_springsettings
 from .engine import install_engine, prune_engine, rename_engine

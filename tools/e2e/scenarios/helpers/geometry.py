@@ -4,18 +4,18 @@ Every scenario measures from the same two landmarks, so a layout change is fixed
 in one place rather than in twenty magic numbers.
 """
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TypedDict
 
-from ..x11 import window_geometry
+from e2e.driver.utils.x11 import window_geometry
 
 if TYPE_CHECKING:
-    from ..runner import E2ERun
-else:
-    from ..run_state import RunState as E2ERun
+    from e2e.driver.state import RunState
 
 # The editor panel is pinned to the right at this width; modals are 480dp wide,
 # centred in the area left of it.
 PANEL_WIDTH = 500
+type Point = tuple[int, int]
+type PointMap = dict[str, Point]
 
 # The editor shell, measured from the panel's top-left corner.
 TAB_Y = 35
@@ -23,7 +23,7 @@ EDITOR_BUTTON_Y = 88
 ACTION_Y = 217
 
 # Tab centres, as offsets from the panel's left edge.
-TAB_X = {"objects": 42, "map": 110, "env": 180, "misc": 258}
+TAB_X: Final[dict[str, int]] = {"objects": 42, "map": 110, "env": 180, "misc": 258}
 
 # Field-row geometry, measured in the running Rust panel: a row is 30dp tall
 # with a 9dp gap, so consecutive rows in a block sit 39dp apart. Blocks are
@@ -40,7 +40,7 @@ THIRD = (92, 250, 420)
 # Each editor button's centre. Prefer these semantic names to matching a button
 # by its ordinal; tab order is presentation detail and changes more often than
 # the editor being exercised by a test.
-EDITORS: Final = {
+EDITORS: Final[dict[str, dict[str, int]]] = {
     "objects": {"units": 38, "features": 110, "properties": 197, "collision": 270},
     "map": {"terrain": 38, "texture": 110, "metal": 182, "grass": 254, "settings": 326},
     "env": {"lighting": 38, "sky": 110, "water": 182},
@@ -50,7 +50,7 @@ EDITORS: Final = {
 
 # Fixed controls in Objects -> Features, Properties, and Collision. Values are
 # `(x, y)` offsets from the panel's left edge.
-OBJECTS: Final = {
+OBJECTS: Final[PointMap] = {
     "add": (54, ACTION_Y),
     "brush": (134, ACTION_Y),
     "feature_type": (104, 336),
@@ -83,7 +83,15 @@ ENV_LIGHTING_COLORS: Final = (
     ("unitAmbientColor", (THIRD[1], 444), 860),
     ("unitSpecularColor", (THIRD[2], 444), 900),
 )
-COLOR_PICKER: Final = {
+
+
+class ColorPicker(TypedDict):
+    sample_y: int
+    team_hue: Point
+    team_sample_x: int
+
+
+COLOR_PICKER: Final[ColorPicker] = {
     "sample_y": 300,
     "team_hue": (220, 255),
     "team_sample_x": 900,
@@ -128,7 +136,7 @@ ENV_WATER_ASSETS: Final = (
 )
 
 # Fixed controls in Map editors.
-MAP: Final = {
+MAP: Final[PointMap] = {
     # First terrain-pattern cell in the physical X11 window. The review images
     # are downscaled, so do not read their coordinates directly.
     "terrain_pattern": (42, 400),
@@ -169,7 +177,7 @@ MAP: Final = {
     "splat_mult_3": (92, 795 + ROW * 3),
     "splat_mult_4": (320, 795 + ROW * 3),
 }
-MAP_ACTIONS: Final = {
+MAP_ACTIONS: Final[PointMap] = {
     "terrain_add": (42, ACTION_Y),
     "terrain_set": (112, ACTION_Y),
     "terrain_smooth": (188, ACTION_Y),
@@ -190,7 +198,7 @@ MAP_TEXTURE_ACTIONS: Final = (
 )
 
 # Fixed controls in Environment editors.
-ENV: Final = {
+ENV: Final[PointMap] = {
     "lighting_shadow_mode": (180, 241),
     "sky_skybox": (64, 249),
     "water_forced_rendering": (100, 210),
@@ -204,7 +212,7 @@ ENV: Final = {
 }
 
 # Fixed controls in Misc and the panel-wide action toolbar.
-MISC: Final = {
+MISC: Final[PointMap] = {
     "info_name": (250, 207),
     "team_add": (38, ACTION_Y),
     "team_edit_first": (425, 333),
@@ -231,7 +239,7 @@ TEAM_NUMBERS: Final = (
 # here, rather than making tests infer an icon's position from its ordinal: the
 # action order is UI presentation, while e2e scenarios care about the command
 # being invoked.  Centres are measured in the running Rust panel.
-TOOLBAR: Final = {
+TOOLBAR: Final[PointMap] = {
     # .action-bar has 5dp left padding, 38dp buttons, and 1dp gaps.
     # Keep clicks at the centres; the former coordinates grazed the right edge
     # and were intermittently lost by RmlUi.
@@ -247,7 +255,7 @@ TOOLBAR: Final = {
 }
 
 # Modal controls are offsets from `dialog_left()`, not fixed screen positions.
-DIALOG: Final = {
+DIALOG: Final[PointMap] = {
     "color_sample": (110, 350),
     "color_ok": (350, 473),
     "color_ok_compact": (348, 473),
@@ -291,9 +299,28 @@ DIALOG: Final = {
     "skybox_drag_origin": (20, 422),
 }
 
+
 # The visual-only Dev gallery is still a real editor; keeping its field map
 # here means the gallery tracks layout changes with the production scenarios.
-GALLERY: Final = {
+class Gallery(TypedDict):
+    dev_tab_x: int
+    string: Point
+    empty: Point
+    number: Point
+    bounded: Point
+    precise: Point
+    bool_on: Point
+    bool_off: Point
+    choice: Point
+    color: Point
+    asset: Point
+    group_xyz_y: int
+    group_second_x: int
+    group_third_x: int
+    tooltip_parking: Point
+
+
+GALLERY: Final[Gallery] = {
     "dev_tab_x": 328,
     "string": (250, 238),
     "empty": (250, 238 + ROW),
@@ -315,12 +342,26 @@ GALLERY: Final = {
 # window-relative variant is for controls anchored to the status strip.
 PARK_PANEL: Final = (450, 1000)
 PARK_PANEL_LOW: Final = (450, 1100)
-STATUS: Final = {"height_from_bottom": 92}
+STATUS: Final[dict[str, int]] = {"height_from_bottom": 92}
+
 
 # Console and the shell's full-frame smoke test also exercise native widgets
 # outside the right panel. These stay window-relative, but their geometry is
 # still defined once here.
-DEV_CONSOLE: Final = {
+class DevConsole(TypedDict):
+    selection_drag_start: Point
+    selection_drag_end: Point
+    selection_cursor: Point
+    clear_x: int
+    problems_x: int
+    status_button_first_x: int
+    status_button_step: int
+    status_button_y_from_bottom: int
+    copy_drag_start_x: int
+    copy_drag_end_x: int
+
+
+DEV_CONSOLE: Final[DevConsole] = {
     "selection_drag_start": (100, 965),
     "selection_drag_end": (600, 1010),
     "selection_cursor": (300, 985),
@@ -332,7 +373,27 @@ DEV_CONSOLE: Final = {
     "copy_drag_start_x": 60,
     "copy_drag_end_x": 700,
 }
-CHONSOLE: Final = {
+
+
+class Chonsole(TypedDict):
+    left_fraction: float
+    top_fraction: float
+    width_fraction: float
+    height_fraction: float
+    header_height: int
+    row_height: int
+    row_inset_x: int
+    header_hover_y: int
+    scrollbar_inset_x: int
+    scrollbar_width: int
+    scrollbar_height: int
+    scrollbar_thumb_inset: int
+    scrollbar_thumb_start_y: int
+    scrollbar_hover_y: int
+    scrollbar_drag_end_y: int
+
+
+CHONSOLE: Final[Chonsole] = {
     "left_fraction": 0.26,
     "top_fraction": 0.245,
     "width_fraction": 0.41,
@@ -400,19 +461,19 @@ def chonsole_scrollbar_point(width: int, height: int) -> tuple[int, int]:
     )
 
 
-def panel_left(run_state: E2ERun) -> int:
+def panel_left(run_state: "RunState") -> int:
     assert run_state.window is not None
     width, _height = window_geometry(run_state.window)
     return width - PANEL_WIDTH
 
 
-def dialog_left(run_state: E2ERun) -> int:
+def dialog_left(run_state: "RunState") -> int:
     assert run_state.window is not None
     width, _height = window_geometry(run_state.window)
     return width // 2 - 490
 
 
-def window_size(run_state: E2ERun) -> tuple[int, int]:
+def window_size(run_state: "RunState") -> tuple[int, int]:
     assert run_state.window is not None
     return window_geometry(run_state.window)
 
@@ -442,6 +503,6 @@ def panel_point(left: int, point: tuple[int, int]) -> tuple[int, int]:
     return left + point[0], point[1]
 
 
-def dialog_point(run_state: E2ERun, point: tuple[int, int]) -> tuple[int, int]:
+def dialog_point(run_state: "RunState", point: tuple[int, int]) -> tuple[int, int]:
     """Translate a dialog-local point into window coordinates."""
     return dialog_left(run_state) + point[0], point[1]
