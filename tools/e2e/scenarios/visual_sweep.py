@@ -5,15 +5,15 @@ with short settles, then captures the resulting panel. It is the first visual
 gate after a shell/style change, before slower behavioural E2Es and goldens.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import EDITORS, TAB_X, TAB_Y, editor_point, panel_left
-from scenarios.registry import scenario
+from .geometry import EDITORS, TAB_X, TAB_Y, editor_point, panel_left
+from .registry import scenario
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 
 @scenario(target="rust-ui-sweep")

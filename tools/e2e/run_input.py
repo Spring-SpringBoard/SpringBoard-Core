@@ -1,15 +1,15 @@
-from __future__ import annotations
-
+import os
 import subprocess
 import sys
 import time
 from contextlib import contextmanager
 
-from process import run
-from run_env import MODIFIER_NAMES, MODIFIERS, SETTLE, nap
+from .process import run
+from .run_env import MODIFIER_NAMES, MODIFIERS, SETTLE, nap
+from .run_state import RunState
 
 
-class InputMixin:
+class InputMixin(RunState):
     """Synthesised keyboard and mouse input, plus the X clipboard.
 
     Everything here drives the engine window through `xdotool`. The recurring
@@ -20,7 +20,7 @@ class InputMixin:
 
     def focus(self) -> None:
         self.require_window()
-        run("xdotool", "windowactivate", self.window, "windowfocus", self.window)
+        run("xdotool", "windowactivate", self.window, "windowfocus", self.window, check=False)
         time.sleep(0.08)
         self.release_modifiers()
         self.event("focus", window=self.window)
@@ -97,6 +97,20 @@ class InputMixin:
                 # the engine's fixed layout even when that layout maps it to &.
                 run("xdotool", "key", "--window", self.window, "keycode", "61")
         time.sleep(0.06)
+
+    def fill_text(
+        self,
+        x: int,
+        y: int,
+        text: str,
+        *,
+        click_delay: float = 0.2,
+        commit_delay: float = 0.35,
+    ) -> None:
+        self.click(x, y, delay=click_delay)
+        self.key("ctrl+a", delay=0.1)
+        self.type_text(text)
+        self.key("Return", delay=commit_delay)
 
     def click(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
         self.require_window()
@@ -268,16 +282,17 @@ class InputMixin:
         """Put text on the clipboard, so a copy assertion cannot pass on what a
         previous run left there."""
         self.event("set_clipboard", text=text)
+        env = {**os.environ, "SBC_E2E_CLIPBOARD": text}
         subprocess.run(
             [
                 sys.executable,
                 "-c",
-                "import sys,tkinter;r=tkinter.Tk();r.withdraw();r.clipboard_clear();"
-                "r.clipboard_append(sys.argv[1]);r.update();r.after(200,r.destroy);"
+                "import os,tkinter;r=tkinter.Tk();r.withdraw();r.clipboard_clear();"
+                "r.clipboard_append(os.environ['SBC_E2E_CLIPBOARD']);r.update();r.after(200,r.destroy);"
                 "r.mainloop()",
-                text,
             ],
             check=False,
+            env=env,
         )
 
     def clipboard(self) -> str:
@@ -286,8 +301,7 @@ class InputMixin:
             [
                 sys.executable,
                 "-c",
-                "import tkinter;r=tkinter.Tk();r.withdraw();"
-                "print(r.clipboard_get(), end='')",
+                "import tkinter;r=tkinter.Tk();r.withdraw();print(r.clipboard_get(), end='')",
             ],
             capture_output=True,
             text=True,

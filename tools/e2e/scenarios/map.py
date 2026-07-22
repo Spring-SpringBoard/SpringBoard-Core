@@ -1,15 +1,11 @@
 """Map tab: Terrain, Texture, Metal, Grass, Settings."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import shutil
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from scenarios.geometry import (
-    dropdown_option,
+from .geometry import (
     DIALOG,
     MAP,
     MAP_ACTIONS,
@@ -21,15 +17,18 @@ from scenarios.geometry import (
     TAB_Y,
     TOOLBAR,
     dialog_point,
+    dropdown_option,
     editor_point,
     panel_left,
     panel_point,
     window_size,
 )
-from scenarios.registry import scenario
+from .registry import scenario
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 
 TERRAIN_PATTERN_PATH = "springboard/assets/core/brush_patterns/terrain/circle1.png"
@@ -53,23 +52,6 @@ MAP_STROKE_PIXELS = 20000
 MAP_SHIMMER = 200
 
 ZOOM_CLICKS = 4
-
-
-def click_field(run_state: E2ERun, left: int, point: tuple[int, int], text: str) -> None:
-    """Type into the field on row `y`. A click that lands between rows focuses
-    nothing, and the text then goes to whatever had focus -- or to the engine's
-    chat console."""
-    run_state.click(*panel_point(left, point), delay=0.3)
-    run_state.key("ctrl+a", delay=0.1)
-    run_state.type_text(text)
-    run_state.key("Return", delay=0.35)
-
-
-def click_dialog_field(run_state: E2ERun, point: tuple[int, int], text: str) -> None:
-    run_state.click(*dialog_point(run_state, point), delay=0.25)
-    run_state.key("ctrl+a", delay=0.1)
-    run_state.type_text(text)
-    run_state.key("Return", delay=0.35)
 
 
 @scenario()
@@ -166,11 +148,11 @@ def heightmap(run_state: E2ERun) -> None:
     # in and paint with a brush the size of the hill it is meant to raise, so each
     # stroke is plainly visible in `stroke-*.png` and the diffs mean something.
     run_state.wheel(width // 3, height // 2, clicks=ZOOM_CLICKS, up=True, delay=0.5)
-    click_field(run_state, left, MAP["terrain_size"], "400")
+    _click_field(run_state, left, MAP["terrain_size"], "400")
     # Shape Modify applies a signed delta, so Strength controls a visible
     # relief; Height remains meaningful only when the Level brush follows.
-    click_field(run_state, left, MAP["terrain_strength"], "1000")
-    click_field(run_state, left, MAP["terrain_height"], "80")
+    _click_field(run_state, left, MAP["terrain_strength"], "1000")
+    _click_field(run_state, left, MAP["terrain_height"], "80")
     run_state.screenshot("brush-settings")
 
     # Each brush in turn, each as a held stroke over the same stretch of map, so
@@ -210,21 +192,6 @@ def heightmap(run_state: E2ERun) -> None:
     # Redo puts the same terrain back. Not bit-for-bit: the map itself does not
     # render identically frame to frame, so allow its shimmer and nothing more.
     assert_map_pixels(swept, redone, max_changed=MAP_SHIMMER)
-
-
-def _paint_stroke(
-    run_state: E2ERun, left: int, x: int, y: int, dx: int = 220, dy: int = 120
-) -> None:
-    """Hold and sweep, so the brush paints a line rather than one dab."""
-    run_state.press(x, y)
-    for i in range(1, STROKE_STEPS + 1):
-        run_state.move(
-            round(x + dx * i / STROKE_STEPS),
-            round(y + dy * i / STROKE_STEPS),
-            delay=STROKE_STEP_DELAY,
-        )
-    run_state.release(x + dx, y + dy)
-    run_state.move(*panel_point(left, PARK_PANEL), delay=0.6)
 
 
 @scenario()
@@ -271,12 +238,8 @@ def texture_paint(run_state: E2ERun) -> None:
         before = run_state.screenshot(f"texture-before-{name}")
         _paint_stroke(run_state, left, paint_x, paint_y)
         after = run_state.screenshot(f"texture-{name}")
-        run_state.assert_any_command(
-            "TerrainChangeTextureCommand", paintMode=mode, strength=1.0
-        )
-        run_state.assert_region_pixels(
-            before, after, map_region, min_changed=MAP_STROKE_PIXELS
-        )
+        run_state.assert_any_command("TerrainChangeTextureCommand", paintMode=mode, strength=1.0)
+        run_state.assert_region_pixels(before, after, map_region, min_changed=MAP_STROKE_PIXELS)
 
 
 @scenario()
@@ -294,18 +257,16 @@ def metal_paint(run_state: E2ERun) -> None:
 
     run_state.click(*editor_point(left, "map", "metal"), delay=0.7)
     run_state.click(*panel_point(left, MAP["texture_pattern"]), delay=0.4)
-    click_field(run_state, left, MAP["metal_size"], "180")
-    click_field(run_state, left, MAP["metal_amount"], "3.25")
+    _click_field(run_state, left, MAP["metal_size"], "180")
+    _click_field(run_state, left, MAP["metal_amount"], "3.25")
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.8)
     run_state.key("F4", delay=0.8)
     before = run_state.screenshot("metal-view")
     _paint_stroke(run_state, left, paint_x, paint_y)
     after = run_state.screenshot("metal-painted")
     run_state.assert_any_command("TerrainMetalCommand", amount=3.25)
-    run_state.assert_region_pixels(
-        before, after, map_region, min_changed=MAP_STROKE_PIXELS
-    )
-    run_state.key("F4", delay=0.6)                     # back to the normal view
+    run_state.assert_region_pixels(before, after, map_region, min_changed=MAP_STROKE_PIXELS)
+    run_state.key("F4", delay=0.6)  # back to the normal view
 
 
 @scenario()
@@ -324,15 +285,13 @@ def grass_paint(run_state: E2ERun) -> None:
 
     run_state.click(*editor_point(left, "map", "grass"), delay=0.7)
     run_state.click(*panel_point(left, MAP["texture_pattern"]), delay=0.4)
-    click_field(run_state, left, MAP["metal_size"], "180")
+    _click_field(run_state, left, MAP["metal_size"], "180")
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.8)
     before = run_state.screenshot("grass-before")
     _paint_stroke(run_state, left, paint_x, paint_y)
     after = run_state.screenshot("grass-painted")
     run_state.assert_any_command("TerrainGrassCommand", amount=1.0)
-    run_state.assert_region_pixels(
-        before, after, map_region, min_changed=MAP_STROKE_PIXELS
-    )
+    run_state.assert_region_pixels(before, after, map_region, min_changed=MAP_STROKE_PIXELS)
 
 
 @scenario(crop="right-panel")
@@ -361,10 +320,10 @@ def map_editors(run_state: E2ERun) -> None:
     editor_button("terrain")
     run_state.screenshot("terrain-open")
     run_state.click(*panel_point(left, MAP["texture_rect_pattern"]), delay=0.4)
-    click_field(run_state, left, MAP["terrain_size"], "140")
-    click_field(run_state, left, MAP["terrain_rotation"], "15")
-    click_field(run_state, left, MAP["terrain_strength"], "8.5")
-    click_field(run_state, left, MAP["terrain_height"], "25")
+    _click_field(run_state, left, MAP["terrain_size"], "140")
+    _click_field(run_state, left, MAP["terrain_rotation"], "15")
+    _click_field(run_state, left, MAP["terrain_strength"], "8.5")
+    _click_field(run_state, left, MAP["terrain_height"], "25")
     run_state.click(*panel_point(left, MAP["texture_direction"]), delay=0.3)
     run_state.click(*panel_point(left, dropdown_option(MAP["texture_direction"], 1)), delay=0.35)
     # Brush fields are brush state: no command is dispatched until a stroke
@@ -393,13 +352,13 @@ def map_editors(run_state: E2ERun) -> None:
     # 7. Map -> Metal, 8. Map -> Grass: their fields reach the brush.
     editor_button("metal")
     run_state.screenshot("metal-open")
-    click_field(run_state, left, MAP["metal_size"], "180")
-    click_field(run_state, left, MAP["metal_amount"], "3.25")
+    _click_field(run_state, left, MAP["metal_size"], "180")
+    _click_field(run_state, left, MAP["metal_amount"], "3.25")
     run_state.screenshot("metal-fields")
 
     editor_button("grass")
     run_state.screenshot("grass-open")
-    click_field(run_state, left, MAP["metal_size"], "160")
+    _click_field(run_state, left, MAP["metal_size"], "160")
     run_state.screenshot("grass-fields")
 
     # 9. Map -> Settings: boolean flags, splat scale/mult, shading toggles and
@@ -412,7 +371,7 @@ def map_editors(run_state: E2ERun) -> None:
     # eleven controls here would re-test the same plumbing ten more times.
     run_state.click(*panel_point(left, MAP["void_water"]), delay=0.45)
     run_state.assert_any_command("SetMapRenderingParamsCommand", voidWater=True)
-    click_field(run_state, left, MAP["splat_scale_1"], "2.5")
+    _click_field(run_state, left, MAP["splat_scale_1"], "2.5")
     run_state.assert_any_command(
         "SetMapRenderingParamsCommand",
         splatTexScales=lambda v: isinstance(v, list) and v[0] == 2.5,
@@ -439,8 +398,8 @@ def map_editors(run_state: E2ERun) -> None:
     run_state.screenshot_root("settings-specular-dialog")
     run_state.click(*dialog_point(run_state, DIALOG["texture_new"]), delay=0.8)
     run_state.screenshot_root("settings-specular-new-form")
-    click_dialog_field(run_state, DIALOG["texture_width"], "640")
-    click_dialog_field(run_state, DIALOG["texture_height"], "320")
+    _click_dialog_field(run_state, DIALOG["texture_width"], "640")
+    _click_dialog_field(run_state, DIALOG["texture_height"], "320")
     run_state.click(*dialog_point(run_state, DIALOG["texture_create"]), delay=0.8)
     run_state.assert_any_command(
         "CreateShadingTextureCommand",
@@ -473,16 +432,6 @@ def settings_panel(run_state: E2ERun) -> None:
     run_state.screenshot_root("specular-on-root")
 
 
-def _sweep(run_state: E2ERun, left: int, width: int, height: int) -> None:
-    """One held stroke across the map, so the whole surface is covered rather
-    than a patch. The map fills the screen at the default zoom, so no zooming is
-    needed; the sweep stays inside the map (its edges are sky)."""
-    y = height // 2
-    run_state.press(width // 3, y)
-    run_state.move(left - 200, y, delay=0.4)
-    run_state.release(left - 200, y)
-
-
 @scenario()
 def editor_state_roundtrip(run_state: E2ERun) -> None:
     """Save brush/editor state, reload it, then paint with the restored data.
@@ -502,21 +451,19 @@ def editor_state_roundtrip(run_state: E2ERun) -> None:
     run_state.click(left + TAB_X["map"], TAB_Y, delay=0.2)
     run_state.click(*editor_point(left, "map", "terrain"), delay=0.4)
     run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.2)
-    click_field(run_state, left, MAP["terrain_size"], "333")
-    click_field(run_state, left, MAP["terrain_rotation"], "27")
-    click_field(run_state, left, MAP["terrain_strength"], "8.5")
-    click_field(run_state, left, MAP["terrain_height"], "44")
+    _click_field(run_state, left, MAP["terrain_size"], "333")
+    _click_field(run_state, left, MAP["terrain_rotation"], "27")
+    _click_field(run_state, left, MAP["terrain_strength"], "8.5")
+    _click_field(run_state, left, MAP["terrain_height"], "44")
     run_state.click(*panel_point(left, MAP["texture_direction"]), delay=0.15)
-    run_state.click(
-        *panel_point(left, dropdown_option(MAP["texture_direction"], 2)), delay=0.2
-    )
+    run_state.click(*panel_point(left, dropdown_option(MAP["texture_direction"], 2)), delay=0.2)
 
     # Create one texture preset. It captures the shared pattern/geometry plus
     # a real material, exactly the part that used to disappear on tab switches
     # and project reloads.
     run_state.click(*editor_point(left, "map", "texture"), delay=0.4)
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.2)
-    click_field(run_state, left, MAP["texture_scale"], "3.5")
+    _click_field(run_state, left, MAP["texture_scale"], "3.5")
     run_state.click(*panel_point(left, MAP["texture_specular_enabled"]), delay=0.2)
     run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=0.4)
     run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=0.35)
@@ -545,8 +492,7 @@ def editor_state_roundtrip(run_state: E2ERun) -> None:
     unexpected = [name for name in classes if name not in lifecycle]
     if unexpected:
         raise AssertionError(
-            "loading editor state emitted editing commands; expected only "
-            f"project lifecycle commands, got {classes}"
+            f"loading editor state emitted editing commands; expected only project lifecycle commands, got {classes}"
         )
     for name in ("SaveCommand", "ReloadIntoProjectCommand", "LoadProjectCommand"):
         if name not in classes:
@@ -589,19 +535,6 @@ def editor_state_roundtrip(run_state: E2ERun) -> None:
     )
 
 
-def _wait_for_archive(run_state: E2ERun, stem: str, timeout_s: float = 20.0) -> Path | None:
-    """Poll the write dir for the compiled `.sdz`. The archive is built off the
-    draw thread, so it lands a little after the export command is logged."""
-    assert run_state.write_dir is not None
-    deadline = time.monotonic() + timeout_s
-    while time.monotonic() < deadline:
-        matches = [p for p in run_state.write_dir.rglob(f"{stem}*.sdz")]
-        if matches:
-            return matches[0]
-        time.sleep(0.3)
-    return None
-
-
 @scenario()
 def map_export(run_state: E2ERun) -> None:
     """The whole map pipeline: save a project, sculpt and paint the map, then
@@ -633,8 +566,8 @@ def map_export(run_state: E2ERun) -> None:
     run_state.click(*editor_point(left, "map", "terrain"), delay=0.3)
     run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.15)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=0.15)
-    click_field(run_state, left, MAP["terrain_size"], "1200")
-    click_field(run_state, left, MAP["terrain_strength"], "1000")
+    _click_field(run_state, left, MAP["terrain_size"], "1200")
+    _click_field(run_state, left, MAP["terrain_strength"], "1000")
     _sweep(run_state, left, width, height)
     run_state.assert_command_at_least("TerrainShapeModifyCommand", 1)
 
@@ -678,9 +611,7 @@ def map_export(run_state: E2ERun) -> None:
     map_region = (left // 2 - 260, height // 2 - 220, 520, 440)
     painted_before = run_state.count_color(edited, map_region, "#C87830", fuzz="18%")
     if painted_before < 5_000:
-        raise AssertionError(
-            f"texture paint was not visibly present before export ({painted_before} warm pixels)"
-        )
+        raise AssertionError(f"texture paint was not visibly present before export ({painted_before} warm pixels)")
     assert run_state.write_dir is not None
     maps_dir = run_state.write_dir / "maps"
     maps_dir.mkdir(parents=True, exist_ok=True)
@@ -691,20 +622,14 @@ def map_export(run_state: E2ERun) -> None:
     run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_name"]), delay=0.1)
     run_state.type_text("FromExport")
     run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_map"]), delay=0.2)
-    run_state.click_settled(
-        *dialog_point(run_state, dropdown_option(DIALOG["new_project_map"], 1)), delay=0.2
-    )
-    run_state.click_settled(
-        *dialog_point(run_state, DIALOG["new_project_create_nosize"]), delay=0.1
-    )
+    run_state.click_settled(*dialog_point(run_state, dropdown_option(DIALOG["new_project_map"], 1)), delay=0.2)
+    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_create_nosize"]), delay=0.1)
     run_state.wait_for_command("ReloadIntoProjectCommand", after=reload_commands)
     run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
     reopened = run_state.screenshot("export-reopened")
     painted_after = run_state.count_color(reopened, map_region, "#C87830", fuzz="18%")
     if painted_after < 5_000:
-        raise AssertionError(
-            f"exported map lost its painted diffuse texture ({painted_after} warm pixels)"
-        )
+        raise AssertionError(f"exported map lost its painted diffuse texture ({painted_after} warm pixels)")
     if abs(painted_after - painted_before) > painted_before // 5:
         raise AssertionError(
             "exported diffuse texture moved within the map: "
@@ -739,9 +664,9 @@ def map_roundtrip(run_state: E2ERun) -> None:
     run_state.click(*editor_point(left, "map", "terrain"), delay=0.3)
     run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.15)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=0.15)
-    click_field(run_state, left, MAP["terrain_size"], "1400")
-    click_field(run_state, left, MAP["terrain_strength"], "1000")
-    click_field(run_state, left, MAP["terrain_height"], "300")
+    _click_field(run_state, left, MAP["terrain_size"], "1400")
+    _click_field(run_state, left, MAP["terrain_strength"], "1000")
+    _click_field(run_state, left, MAP["terrain_height"], "300")
     # Two sweeps at high strength for a pronounced, unmistakable relief.
     _sweep(run_state, left, width, height)
     _sweep(run_state, left, width, height)
@@ -763,7 +688,7 @@ def map_roundtrip(run_state: E2ERun) -> None:
     # default "Manual's Scenario". "AAA ..." sorts first, making it dropdown index 1.
     run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.2)
     run_state.click(*editor_point(left, "misc", "info"), delay=0.4)
-    click_field(run_state, left, MISC["info_name"], "AAA RoundTrip")
+    _click_field(run_state, left, MISC["info_name"], "AAA RoundTrip")
 
     run_state.key("ctrl+s", delay=0.5)
     run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.3)
@@ -782,13 +707,6 @@ def map_roundtrip(run_state: E2ERun) -> None:
     maps_dir = run_state.write_dir / "maps"
     maps_dir.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(archive, maps_dir / "RoundTrip.sdz")
-    # DEBUG: keep a copy of the export + project to inspect the round-trip.
-    dbg = Path("/tmp/rt_debug")
-    dbg.mkdir(exist_ok=True)
-    shutil.copyfile(archive, dbg / "RoundTrip.sdz")
-    for sdd in (run_state.write_dir / "springboard" / "projects").glob("*.sdd"):
-        shutil.copytree(sdd, dbg / sdd.name, dirs_exist_ok=True)
-
     # New Project must now list the just-exported map (available_maps rescans).
     run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=0.8)
     # Name first, while the dialog still has its full layout.
@@ -811,3 +729,41 @@ def map_roundtrip(run_state: E2ERun) -> None:
     run_state.assert_region_pixels(original, roundtrip, map_region, min_changed=20_000)
     # ...and faithful to the pre-export edit -- reopening the export looks the same.
     run_state.assert_region_pixels(edited, roundtrip, map_region, max_changed=60_000)
+
+
+def _click_field(run_state: E2ERun, left: int, point: tuple[int, int], text: str) -> None:
+    run_state.fill_text(*panel_point(left, point), text, click_delay=0.3)
+
+
+def _click_dialog_field(run_state: E2ERun, point: tuple[int, int], text: str) -> None:
+    run_state.fill_text(*dialog_point(run_state, point), text, click_delay=0.25)
+
+
+def _paint_stroke(run_state: E2ERun, left: int, x: int, y: int, dx: int = 220, dy: int = 120) -> None:
+    run_state.press(x, y)
+    for i in range(1, STROKE_STEPS + 1):
+        run_state.move(
+            round(x + dx * i / STROKE_STEPS),
+            round(y + dy * i / STROKE_STEPS),
+            delay=STROKE_STEP_DELAY,
+        )
+    run_state.release(x + dx, y + dy)
+    run_state.move(*panel_point(left, PARK_PANEL), delay=0.6)
+
+
+def _sweep(run_state: E2ERun, left: int, width: int, height: int) -> None:
+    y = height // 2
+    run_state.press(width // 3, y)
+    run_state.move(left - 200, y, delay=0.4)
+    run_state.release(left - 200, y)
+
+
+def _wait_for_archive(run_state: E2ERun, stem: str, timeout_s: float = 20.0) -> Path | None:
+    assert run_state.write_dir is not None
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        matches = [path for path in run_state.write_dir.rglob(f"{stem}*.sdz")]
+        if matches:
+            return matches[0]
+        time.sleep(0.3)
+    return None

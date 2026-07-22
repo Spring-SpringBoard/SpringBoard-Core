@@ -253,9 +253,8 @@ To confirm a command actually crosses the bridge into the native plugin:
    logger to `level: debug` (the existing commented-out `command_runner` logger
    names a module that doesn't exist — `rust_plugin::sbc` is the right target).
 2. Rebuild: `just build`.
-3. Boot SBC and exercise *any* command (e.g. one terrain brush stroke):
-   `cd tools/smoke && uv run python -m run_sbc` prints the write dir, or launch
-   the editor manually.
+3. Run `just run` and exercise any command (for example, one terrain brush
+   stroke).
 4. Grep the infolog in that write dir for `HandleLuaCall(` — one line per
    command sent. Its payload is the `{tag,data}` JSON the Lua bridge
    ([scen_edit/command/command_manager.lua](../../scen_edit/command/command_manager.lua)

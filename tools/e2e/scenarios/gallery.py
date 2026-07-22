@@ -9,26 +9,26 @@ The gallery lives behind `SBC_DEV_PANEL`, so it neither ships in the tab bar nor
 appears in any other scenario's screenshots.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import (
-    dropdown_option,
+from .geometry import (
     DIALOG,
     GALLERY,
     TAB_Y,
     TOOLBAR,
     dialog_left,
     dialog_point,
+    dropdown_option,
     editor_point,
     panel_left,
     panel_point,
 )
-from scenarios.registry import scenario
+from .registry import scenario
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 DEV_PANEL = {"SBC_DEV_PANEL": "1"}
 
@@ -42,19 +42,6 @@ DRAGGED_DIGIT = 200
 
 # The tooltip's background (`.native-tooltip`), near-black and nothing else is.
 TOOLTIP_COLOR = "#0b0d0c"
-
-
-def _values(run_state: E2ERun) -> dict[str, str]:
-    """What each control reported, from the gallery's own log lines."""
-    values: dict[str, str] = {}
-    for line in run_state.engine_log():
-        _, _, tail = line.partition("dev-fields: ")
-        if not tail or " = " not in tail:
-            continue
-        name, _, value = tail.strip().partition(" = ")
-        # A dragged value is tagged, since a drag never fires a DOM change.
-        values[name] = value.removesuffix(" (dragged)").strip()
-    return values
 
 
 @scenario(crop="right-panel", env=DEV_PANEL)
@@ -71,16 +58,10 @@ def gallery(run_state: E2ERun) -> None:
     run_state.golden("fields-at-rest")
 
     # String: click, select all, type, commit.
-    run_state.click(*panel_point(left, GALLERY["string"]), delay=0.3)
-    run_state.key("ctrl+a", delay=0.1)
-    run_state.type_text("typed")
-    run_state.key("Return", delay=0.4)
+    run_state.fill_text(*panel_point(left, GALLERY["string"]), "typed", click_delay=0.3, commit_delay=0.4)
 
     # Numeric: typed.
-    run_state.click(*panel_point(left, GALLERY["number"]), delay=0.3)
-    run_state.key("ctrl+a", delay=0.1)
-    run_state.type_text("7.5")
-    run_state.key("Return", delay=0.4)
+    run_state.fill_text(*panel_point(left, GALLERY["number"]), "7.5", click_delay=0.3, commit_delay=0.4)
 
     # Numeric: dragged. The pointer is pinned and warped back, so the motion has
     # to be relative.
@@ -111,10 +92,7 @@ def gallery(run_state: E2ERun) -> None:
     run_state.key("Return", delay=0.4)
 
     # A bounded field clamps what is typed into it: 5 is outside -1..1.
-    run_state.click(*panel_point(left, GALLERY["precise"]), delay=0.3)
-    run_state.key("ctrl+a", delay=0.1)
-    run_state.type_text("5")
-    run_state.key("Return", delay=0.4)
+    run_state.fill_text(*panel_point(left, GALLERY["precise"]), "5", click_delay=0.3, commit_delay=0.4)
 
     # The other checkbox, off -> on.
     run_state.click(*panel_point(left, GALLERY["bool_off"]), delay=0.4)
@@ -125,10 +103,7 @@ def gallery(run_state: E2ERun) -> None:
         ((GALLERY["group_second_x"], GALLERY["group_xyz_y"]), "22"),
         ((GALLERY["group_third_x"], GALLERY["group_xyz_y"]), "33"),
     ):
-        run_state.click(*panel_point(left, point), delay=0.3)
-        run_state.key("ctrl+a", delay=0.1)
-        run_state.type_text(value)
-        run_state.key("Return", delay=0.4)
+        run_state.fill_text(*panel_point(left, point), value, click_delay=0.3, commit_delay=0.4)
 
     # Still shows the dragged field, so still carries its wandering digits.
     run_state.golden("fields-rest-of-set", tolerance=DRAGGED_DIGIT)
@@ -156,10 +131,7 @@ def gallery(run_state: E2ERun) -> None:
     for name, want in expected.items():
         got = values.get(name)
         if got != want:
-            raise AssertionError(
-                f"{name}: control reported {got!r}, expected {want!r}"
-                f"\nall values: {values}"
-            )
+            raise AssertionError(f"{name}: control reported {got!r}, expected {want!r}\nall values: {values}")
     # The drag moved the bounded field off its default without typing into it.
     bounded = float(values.get("bounded", "50"))
     if bounded <= 50.0:
@@ -172,14 +144,6 @@ def gallery(run_state: E2ERun) -> None:
     if precise != 1.0:
         raise AssertionError(f"typing 5 into a -1..1 field gave {precise}, not its max 1.0")
     _ = dragging
-
-
-def _open_gallery(run_state: E2ERun) -> int:
-    run_state.focus()
-    left = panel_left(run_state)
-    run_state.click(left + GALLERY["dev_tab_x"], TAB_Y, delay=0.4)
-    run_state.click(*editor_point(left, "dev", "gallery"), delay=0.8)
-    return left
 
 
 @scenario(crop="right-panel", env=DEV_PANEL)
@@ -274,7 +238,7 @@ def gallery_tooltips(run_state: E2ERun) -> None:
     run_state.assert_region_pixels(empty, gone, box, max_changed=200)
 
 
-@scenario(env=DEV_PANEL)
+@scenario(crop="without-status", env=DEV_PANEL)
 def gallery_dialogs(run_state: E2ERun) -> None:
     """The two dialogs the toolbar opens: New Project, and the file dialog.
 
@@ -289,14 +253,9 @@ def gallery_dialogs(run_state: E2ERun) -> None:
     run_state.type_text("E2E project")
     run_state.key("Return", delay=0.3)
     for field, value in (("new_project_size_x", "12"), ("new_project_size_y", "14")):
-        run_state.click(*dialog_point(run_state, DIALOG[field]), delay=0.2)
-        run_state.key("ctrl+a", delay=0.08)
-        run_state.type_text(value)
-        run_state.key("Return", delay=0.25)
+        run_state.fill_text(*dialog_point(run_state, DIALOG[field]), value, click_delay=0.2, commit_delay=0.25)
     edited = run_state.golden("new-project-edited")
-    run_state.assert_region_pixels(
-        original, edited, (dialog_left(run_state), 245, 480, 125), min_changed=100
-    )
+    run_state.assert_region_pixels(original, edited, (dialog_left(run_state), 245, 480, 125), min_changed=100)
     run_state.key("Escape", delay=0.6)
     run_state.golden("new-project-closed")
 
@@ -320,23 +279,9 @@ def gallery_dialogs(run_state: E2ERun) -> None:
     run_state.key("Escape", delay=0.6)
     run_state.golden("file-dialog-closed")
 
-    # Export exercises both optional file-form fields. They are the same shared
-    # StringField and ChoiceField used by editors; type a name and select a
-    # non-default export kind before cancelling the non-mutating test dialog.
+    # A blank project cannot export.
     run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.8)
-    export = run_state.golden("export-dialog")
-    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.2)
-    run_state.type_text("dialog-test")
-    run_state.key("Return", delay=0.3)
-    run_state.click(*dialog_point(run_state, DIALOG["file_type"]), delay=0.3)
-    run_state.golden("export-type-open", park=False, tolerance=CURSOR_IN_SHOT)
-    option = dropdown_option(DIALOG["file_type"], 1)
-    run_state.click(*dialog_point(run_state, option), delay=0.4)
-    configured = run_state.golden("export-dialog-configured")
-    run_state.assert_region_pixels(
-        export, configured, (dialog_left(run_state), 560, 480, 100), min_changed=100
-    )
-    run_state.key("Escape", delay=0.5)
+    run_state.screenshot("export-requires-save")
 
 
 @scenario(env=DEV_PANEL)
@@ -356,10 +301,7 @@ def new_project_create(run_state: E2ERun) -> None:
     run_state.type_text("E2E created")
     run_state.key("Return", delay=0.3)
     for field, value in (("new_project_size_x", "12"), ("new_project_size_y", "14")):
-        run_state.click(*dialog_point(run_state, DIALOG[field]), delay=0.2)
-        run_state.key("ctrl+a", delay=0.08)
-        run_state.type_text(value)
-        run_state.key("Return", delay=0.25)
+        run_state.fill_text(*dialog_point(run_state, DIALOG[field]), value, click_delay=0.2, commit_delay=0.25)
     run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=2.5)
 
     # Save persists the project; the reload reads it back and boots into the new
@@ -421,7 +363,7 @@ def project_save_as(run_state: E2ERun) -> None:
     run_state.assert_command("SaveCommand")
     run_state.assert_command("ReloadIntoProjectCommand")
     # The reload must actually complete: a screenshot here fails the run if the
-    # engine died reloading (a crash would exit it before this xwd).
+    # engine died reloading (a crash would exit it before this capture).
     run_state.move(1280, 700, delay=6.0)
     run_state.screenshot("after-reload")
 
@@ -461,10 +403,26 @@ def large_map_create(run_state: E2ERun) -> None:
     run_state.type_text("BigMap")
     run_state.key("Return", delay=0.3)
     for field, value in (("new_project_size_x", "32"), ("new_project_size_y", "32")):
-        run_state.click(*dialog_point(run_state, DIALOG[field]), delay=0.2)
-        run_state.key("ctrl+a", delay=0.08)
-        run_state.type_text(value)
-        run_state.key("Return", delay=0.25)
+        run_state.fill_text(*dialog_point(run_state, DIALOG[field]), value, click_delay=0.2, commit_delay=0.25)
     run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=6.0)
     run_state.assert_command("ReloadIntoProjectCommand")
     run_state.screenshot("big-map-loaded")
+
+
+def _values(run_state: E2ERun) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for line in run_state.engine_log():
+        _, _, tail = line.partition("dev-fields: ")
+        if not tail or " = " not in tail:
+            continue
+        name, _, value = tail.strip().partition(" = ")
+        values[name] = value.removesuffix(" (dragged)").strip()
+    return values
+
+
+def _open_gallery(run_state: E2ERun) -> int:
+    run_state.focus()
+    left = panel_left(run_state)
+    run_state.click(left + GALLERY["dev_tab_x"], TAB_Y, delay=0.4)
+    run_state.click(*editor_point(left, "dev", "gallery"), delay=0.8)
+    return left

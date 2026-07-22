@@ -1,29 +1,22 @@
-from __future__ import annotations
-
 import json
 import shutil
 import subprocess
-import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
-from paths import GAME_DIRNAME, TOOLS_SMOKE
-from process import run
-from x11 import find_windows, spring_processes, window_pid
+from smoke.engine import prepare
 
-sys.path.insert(0, str(TOOLS_SMOKE))
-from run_sbc import prepare  # noqa: E402
+from .paths import GAME_DIRNAME
+from .run_state import RunState
+from .x11 import find_windows, spring_processes, window_pid
+
+if TYPE_CHECKING:
+    from .runner import E2ERun
 
 
-class SessionMixin:
-    """The engine process's lifecycle: bring it up, wait until its UI is live,
-    tear it down, and gather what it left behind.
-
-    Booting is a sequence of waits, each of which also checks the process is
-    still alive so a crash fails fast with the exit code rather than timing out.
-    """
-
+class SessionMixin(RunState):
     def launch(self) -> None:
         write_dir, env, cmd = prepare(prefix="sbc-ui-e2e-")
         # Two things move on their own and would make every capture unrepeatable:
@@ -39,16 +32,17 @@ class SessionMixin:
         # Debug lines land in the run's infolog, so a failure can be explained
         # afterwards from the artifact rather than by re-running with printfs.
         env["SBC_LOG_LEVEL"] = "debug"
+        env["SBC_E2E_SCREENSHOT_REQUEST"] = str(write_dir / "e2e-screenshot-request.txt")
         env.update(self.case.env)
         self.write_dir = write_dir
         self.command = cmd
         game_dir = write_dir / "games" / GAME_DIRNAME
-        flags_path = game_dir / "port_flags.json"
+        flags_path = game_dir / self.artifacts.port_flags.name
         flags_path.write_text(json.dumps(self.case.flags, indent=2) + "\n")
-        shutil.copyfile(flags_path, self.out_dir / "port_flags.json")
+        shutil.copyfile(flags_path, self.artifacts.port_flags)
         self.event("launch", write_dir=str(write_dir), command=cmd, flags=self.case.flags)
-        self.stdout_file = (self.out_dir / "engine.stdout.log").open("w")
-        self.stderr_file = (self.out_dir / "engine.stderr.log").open("w")
+        self.stdout_file = self.artifacts.engine_stdout.open("w")
+        self.stderr_file = self.artifacts.engine_stderr.open("w")
         self.proc = subprocess.Popen(
             cmd,
             env=env,
@@ -63,14 +57,11 @@ class SessionMixin:
         self.screenshot("00-initial")
 
     def run_scenario(self) -> None:
-        from scenarios import run_scenario
+        from .scenarios import run_scenario
 
-        run_scenario(self)
+        run_scenario(cast("E2ERun", self))
 
     def finish(self, status: str, **extra: object) -> None:
-        if self.review_images:
-            self.finish_conversions()
-            self.generate_contact_sheet()
         self.collect_logs()
         self.event("finish", status=status, **extra)
         self.write_run_md(status, **extra)
@@ -105,16 +96,15 @@ class SessionMixin:
             self.assert_running()
             time.sleep(0.25)
         raise RuntimeError(
-            f"no matching Recoil/Spring window found; last ids={last_ids}; "
-            f"spring processes={last_pid_map}"
+            f"no matching Recoil/Spring window found; last ids={last_ids}; spring processes={last_pid_map}"
         )
 
     def wait_for_ui_ready(self, timeout_s: float = 45.0) -> None:
         assert self.write_dir is not None
         log_paths = (
             self.write_dir / "infolog.txt",
-            self.out_dir / "engine.stdout.log",
-            self.out_dir / "engine.stderr.log",
+            self.artifacts.engine_stdout,
+            self.artifacts.engine_stderr,
         )
         deadline = time.monotonic() + timeout_s
         patterns = (
@@ -133,6 +123,7 @@ class SessionMixin:
             self.assert_running()
             time.sleep(0.25)
         self.event("ui_ready_timeout", logs=[str(path) for path in log_paths], timeout_s=timeout_s)
+        raise RuntimeError(f"editor UI did not become ready within {timeout_s:.0f}s")
 
     def wait_for_ui_settle(self) -> None:
         time.sleep(0.4)
@@ -156,10 +147,10 @@ class SessionMixin:
     def collect_logs(self) -> None:
         if self.write_dir is None:
             return
-        for name in ("infolog.txt", "commands.jsonl"):
-            src = self.write_dir / name
+        for destination in (self.artifacts.infolog, self.artifacts.commands):
+            src = self.write_dir / destination.name
             if src.is_file():
-                shutil.copyfile(src, self.out_dir / name)
+                shutil.copyfile(src, destination)
 
     def close_process_logs(self) -> None:
         for handle_name in ("stdout_file", "stderr_file"):
@@ -173,5 +164,5 @@ class SessionMixin:
             raise RuntimeError(f"engine exited early with code {self.proc.returncode}")
 
     def require_window(self) -> None:
-        if self.window is None:
+        if not self.window:
             raise RuntimeError("window not available")

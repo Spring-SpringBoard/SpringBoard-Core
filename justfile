@@ -4,6 +4,7 @@ set dotenv-load
 # Engine paths come from .env (see .env.example) — never hardcode personal paths.
 engine_build_dir := env_var_or_default("SBC_ENGINE_BUILD_DIR", "")
 engine_rust_dir := env_var_or_default("SBC_ENGINE_RUST_DIR", "")
+tool_pythonpath := "build:tools"
 
 # Show available recipes.
 [private]
@@ -28,22 +29,22 @@ lint-lua:
 # Check simple Rust file ordering conventions.
 [group('lint')]
 lint-rust-step-down:
-    python3 tools/lint/rust_step_down.py
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-lint rust-step-down
 
 # Check Python step-down ordering (public functions before private `_` helpers).
 [group('lint')]
 lint-py-step-down:
-    python3 tools/lint/py_step_down.py
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-lint py-step-down
 
 # Fail on commands defined but never instantiated (dead port leftovers).
 [group('lint')]
 lint-no-dead-commands:
-    python3 tools/lint/no_dead_commands.py --fail
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-lint no-dead-commands --fail
 
 # Fail when a mod.rs defines functions instead of only wiring submodules.
 [group('lint')]
 lint-mod-only-declares:
-    python3 tools/lint/mod_only_declares.py
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-lint mod-only-declares
 
 # Run all lints + native type-check (the one command to run before review).
 [group('lint')]
@@ -66,7 +67,7 @@ build: build-native
 # Build the Linux editor archive for distributors.
 [group('build')]
 bundle-base-linux version output="artifacts/SpringBoard-Core-linux-x86_64.sdz": build-native
-    uv run --project ./build --locked sbc-packager-base \
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-packager-base \
       --repo-root . \
       --native-plugin ./native/target/release/librust_plugin.so \
       --output "{{output}}" \
@@ -78,7 +79,7 @@ bundle-base-linux version output="artifacts/SpringBoard-Core-linux-x86_64.sdz": 
 # archive. Extraction and pruning are part of this command.
 [group('build')]
 bundle-application-linux engine_archive version output="artifacts/SpringBoard-linux-x86_64": build-native
-    uv run --project ./build --locked sbc-packager-application \
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-packager-application \
       --repo-root . \
       --distribution ./build/distribution.json \
       --output-dir "{{output}}" \
@@ -113,12 +114,12 @@ test-unit:
 # Run the integration suite (boots the dev engine), optionally filtered by tag substring.
 [group('test')]
 test-integration tags="":
-    if [ -n "{{tags}}" ]; then cd tools/smoke && SBC_TEST_TAGS="{{tags}}" uv run pytest; else cd tools/smoke && uv run pytest; fi
+    if [ -n "{{tags}}" ]; then SBC_TEST_TAGS="{{tags}}" PYTHONPATH="{{tool_pythonpath}}" uv run --locked pytest tools/smoke; else PYTHONPATH="{{tool_pythonpath}}" uv run --locked pytest tools/smoke; fi
 
 # Complete run: unit tests, native rebuild, and ALL integration tests incl. slow opt-in ones.
 [group('test')]
 test-all: test-unit build-native
-    cd tools/smoke && SBC_TEST_DEEP="1" SBC_TEST_TIMEOUT="300" uv run pytest
+    SBC_TEST_DEEP="1" SBC_TEST_TIMEOUT="300" PYTHONPATH="{{tool_pythonpath}}" uv run --locked pytest tools/smoke
 
 # Run the native verification chain (lint already covers check).
 [group('test')]
@@ -128,29 +129,29 @@ verify-native: lint test-unit build-native
 # place, to look at or drive by hand. Off in a normal session.
 [group('run')]
 dev-panel config="config/ui-rust.json": build-native
-    SBC_DEV_PANEL=1 bash tools/dev/launch.sh --config "{{config}}"
+    SBC_DEV_PANEL=1 PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-smoke manual --config "{{config}}"
 
 # Build and run a long-lived isolated Spring editor session.
 [group('run')]
 run config="config/ui-rust.json": build-native
-    bash tools/dev/launch.sh --config "{{config}}"
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-smoke manual --config "{{config}}"
 
 # Run black-box UI E2E tests. Does not rebuild native code; run `just build`
 # first when testing Rust UI changes.
 [group('test')]
-test-e2e target="chonsole" args="":
-    python3 tools/e2e/ui_driver.py "{{target}}" {{args}}
+test-e2e target="chonsole" *args:
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e run "{{target}}" {{args}}
 
 # List every reference image and whether it is approved or still ai-reviewed.
 [group('test')]
 goldens-status:
-    @python3 tools/e2e/list_goldens.py
+    @PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e goldens-status
 
 # Approve a case's reference images (the human OK): `just goldens-approve rotation-rust`.
 # Optionally name individual shots. Only a human runs this.
 [group('test')]
 goldens-approve case *shots:
-    cd tools/e2e && python3 approve_goldens.py "{{case}}" {{shots}}
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e approve-goldens "{{case}}" {{shots}}
 
 # Path of the most recent e2e run, optionally for one target: `just e2e-dir rotation`.
 [group('test')]

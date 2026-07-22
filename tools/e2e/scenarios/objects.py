@@ -6,11 +6,11 @@ the result of it -- a command reaching the bridge does not prove the engine
 acted on it.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import (
+from ..models import WorldPosition, parse_world_position
+from ..run_env import command_fields
+from .geometry import (
     OBJECTS,
     TAB_X,
     TAB_Y,
@@ -20,10 +20,12 @@ from scenarios.geometry import (
     panel_point,
     window_size,
 )
-from scenarios.registry import scenario
+from .registry import scenario
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 # Differing pixels forgiven when a capture includes the map.
 #
@@ -41,25 +43,6 @@ MAP_TOLERANCE = 4000
 # The cursor tooltip's background (`.native-tooltip` in ui.rcss). Near-black, and
 # nothing on the map is, so counting these pixels says whether the tip is drawn.
 TOOLTIP_COLOR = "#0b0d0c"
-
-
-def _open(run_state: E2ERun, editor: str) -> int:
-    """Objects tab, then one of its editors. Returns the panel's left edge."""
-    left = panel_left(run_state)
-    run_state.click(left + TAB_X["objects"], TAB_Y, delay=0.25)
-    run_state.click(*editor_point(left, "objects", editor), delay=0.7)
-    return left
-
-
-def _arm_tree(run_state: E2ERun, left: int) -> None:
-    """Arm a tree, specifically.
-
-    The first cell is `geovent`, which has no selectable model: it cannot be hit
-    by a screen ray, so anything that places it and then clicks it selects
-    nothing. The second unfiltered cell is a tree; use the semantic coordinate
-    from ``geometry.py`` instead of depending on search-field focus.
-    """
-    run_state.click(*panel_point(left, OBJECTS["feature_first_tree"]), delay=0.5)
 
 
 @scenario(crop="right-panel")
@@ -96,9 +79,7 @@ def feature_placement_actions(run_state: E2ERun) -> None:
 
     run_state.click(*panel_point(left, OBJECTS["brush"]), delay=0.35)
     brush_again = run_state.screenshot("brush-reselected")
-    run_state.assert_region_pixels(
-        brush, brush_again, placement_controls, max_changed=3_000
-    )
+    run_state.assert_region_pixels(brush, brush_again, placement_controls, max_changed=3_000)
 
 
 @scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
@@ -138,7 +119,7 @@ def units_panel(run_state: E2ERun) -> None:
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
     before = run_state.golden("before-place", crop=None, tolerance=MAP_TOLERANCE)
     run_state.click(spot_x, spot_y, delay=0.8)
-    run_state.key("Escape", delay=0.4)                 # leave placement mode
+    run_state.key("Escape", delay=0.4)  # leave placement mode
     run_state.move(spot_x + 260, spot_y + 220, delay=0.5)
     after = run_state.golden("feature-placed", crop=None, tolerance=MAP_TOLERANCE)
 
@@ -148,23 +129,18 @@ def units_panel(run_state: E2ERun) -> None:
     # Amount places that many objects, and the ghosts preview exactly where they
     # will land: the preview and the placement must not disagree.
     run_state.click(*panel_point(left, OBJECTS["feature_first_tree"]), delay=0.4)
-    run_state.click(*panel_point(left, OBJECTS["feature_amount"]), delay=0.3)
-    run_state.key("ctrl+a", delay=0.12)
-    run_state.type_text("5")
-    run_state.key("Return", delay=0.5)
+    run_state.fill_text(*panel_point(left, OBJECTS["feature_amount"]), "5", click_delay=0.3, commit_delay=0.5)
     run_state.move(spot_x - 260, spot_y, delay=0.6)
     # park=False: the ghosts follow the cursor, so moving it out of shot would
     # move the very thing being captured.
-    run_state.golden(
-        "amount-5-preview", crop=None, tolerance=MAP_TOLERANCE, park=False
-    )
+    run_state.golden("amount-5-preview", crop=None, tolerance=MAP_TOLERANCE, park=False)
     before5 = run_state.golden("before-amount-5", crop=None, tolerance=MAP_TOLERANCE)
     run_state.click(spot_x - 260, spot_y, delay=1.0)
     run_state.key("Escape", delay=0.4)
     run_state.move(spot_x + 400, spot_y + 300, delay=0.5)
     after5 = run_state.golden("amount-5-placed", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_screenshot_pixels(before5, after5, min_changed=800)
-    run_state.assert_command_count("AddObjectCommand", 6)   # 1 earlier + 5 now
+    run_state.assert_command_count("AddObjectCommand", 6)  # 1 earlier + 5 now
 
     # Type = Wreckage. None of this map's features are wrecks, so the grid must
     # empty -- the filter proving it filters, not merely that it renders.
@@ -186,7 +162,7 @@ def props_panel(run_state: E2ERun) -> None:
 
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
-    run_state.click(spot_x, spot_y, delay=0.8)        # place
+    run_state.click(spot_x, spot_y, delay=0.8)  # place
     # Escape, rather than re-clicking Add, leaves placement for normal map
     # selection. Add/Brush are choice actions, not on/off toggles.
     run_state.key("Escape", delay=0.6)
@@ -203,10 +179,7 @@ def props_panel(run_state: E2ERun) -> None:
     # Pos X. The whole vector is sent, not the one axis, and the object must
     # actually move on the map.
     before = run_state.golden("before-move")
-    run_state.click(*panel_point(left, OBJECTS["property_pos_x"]), delay=0.4)
-    run_state.key("ctrl+a", delay=0.15)
-    run_state.type_text("1500")
-    run_state.key("Return", delay=0.8)
+    run_state.fill_text(*panel_point(left, OBJECTS["property_pos_x"]), "1500", click_delay=0.4, commit_delay=0.8)
     run_state.move(spot_x + 260, spot_y + 220, delay=0.4)
     after = run_state.golden("props-pos-edited")
     run_state.assert_any_command(
@@ -245,7 +218,7 @@ def props_panel(run_state: E2ERun) -> None:
     # nothing else can (the engine never hands the plugin a release for a press
     # the panel's RmlUi consumed).
     run_state.press(*panel_point(left, OBJECTS["property_pos_x"]))
-    run_state.move_relative(-400, 260)               # out over the map
+    run_state.move_relative(-400, 260)  # out over the map
     run_state.release(left - 300, 500)
     dragged = run_state.assert_any_command(
         "SetObjectParamCommand",
@@ -288,9 +261,9 @@ def collision(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
-    run_state.click(spot_x, spot_y, delay=0.8)        # place
+    run_state.click(spot_x, spot_y, delay=0.8)  # place
     run_state.key("Escape", delay=0.6)
-    run_state.click(spot_x, spot_y, delay=0.8)        # select it
+    run_state.click(spot_x, spot_y, delay=0.8)  # select it
 
     run_state.click(*editor_point(left, "objects", "collision"), delay=0.9)
     hidden = run_state.golden("volume-hidden", crop=None, tolerance=MAP_TOLERANCE)
@@ -301,10 +274,7 @@ def collision(run_state: E2ERun) -> None:
     run_state.assert_screenshot_pixels(hidden, shown, min_changed=300)
 
     # Scaling the volume must redraw it bigger, not merely emit a command.
-    run_state.click(*panel_point(left, OBJECTS["collision_scale_x"]), delay=0.4)
-    run_state.key("ctrl+a", delay=0.15)
-    run_state.type_text("120")
-    run_state.key("Return", delay=0.9)
+    run_state.fill_text(*panel_point(left, OBJECTS["collision_scale_x"]), "120", click_delay=0.4, commit_delay=0.9)
     scaled = run_state.golden("volume-scaled", crop=None, tolerance=MAP_TOLERANCE)
     run_state.assert_any_command(
         "SetObjectParamCommand",
@@ -332,16 +302,6 @@ def collision(run_state: E2ERun) -> None:
     )
 
 
-def _tip_box(cursor_x: int, cursor_y: int) -> tuple[int, int, int, int]:
-    """Where the cursor tooltip is drawn, excluding the pointer itself.
-
-    The tip is offset (16, 12) from the cursor; the pointer arrow occupies about
-    20px from it. Start the box past the arrow, or its black pixels get counted
-    as a tooltip and one is "found" wherever the cursor is.
-    """
-    return (cursor_x + 40, cursor_y + 30, 320, 90)
-
-
 @scenario(uis=("rmlui", "rust"), env={"SBC_HIDE_TOOLTIPS": "0"})
 def cursortip(run_state: E2ERun) -> None:
     """Hovering a feature shows a useful tooltip next to the cursor.
@@ -356,15 +316,13 @@ def cursortip(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
-    run_state.click(spot_x, spot_y, delay=0.6)        # place it
+    run_state.click(spot_x, spot_y, delay=0.6)  # place it
     run_state.key("Escape", delay=0.3)
 
     # Empty ground has no tip. `park=False` throughout -- the tip is drawn at
     # the cursor, so parking it out of shot would take the subject with it.
     run_state.move(spot_x + 320, spot_y - 260, delay=0.6)
-    empty = run_state.golden(
-        "no-tooltip", crop=None, tolerance=MAP_TOLERANCE, park=False
-    )
+    empty = run_state.golden("no-tooltip", crop=None, tolerance=MAP_TOLERANCE, park=False)
     if run_state.count_color(empty, _tip_box(spot_x + 320, spot_y - 260), TOOLTIP_COLOR):
         raise AssertionError("a tooltip over empty ground")
 
@@ -372,9 +330,7 @@ def cursortip(run_state: E2ERun) -> None:
     # *drawPos* -- a tree's base, not its crown -- and matches within 16px of the
     # cursor, so hovering the foliage up-left of it finds nothing.
     run_state.move(spot_x, spot_y, delay=0.8)
-    hovered = run_state.golden(
-        "hover-tooltip", crop=None, tolerance=MAP_TOLERANCE, park=False
-    )
+    hovered = run_state.golden("hover-tooltip", crop=None, tolerance=MAP_TOLERANCE, park=False)
     tip = run_state.count_color(hovered, _tip_box(spot_x, spot_y), TOOLTIP_COLOR)
     if tip < 500:
         raise AssertionError(f"hovering the feature showed no tooltip ({tip} px)")
@@ -414,25 +370,6 @@ def feature_grid_tooltip_after_cursortip(run_state: E2ERun) -> None:
         raise AssertionError("Feature grid tooltip disappeared after world tooltip")
 
 
-def _placed(run_state: E2ERun, since: int = 0) -> list[dict]:
-    """The objects actually added since `since` (previews excluded)."""
-    return [
-        entry["data"]["params"]["pos"]
-        for entry in run_state.commands()[since:]
-        if entry["data"].get("className") == "AddObjectCommand"
-        and not entry["data"].get("__preview")
-    ]
-
-
-def _spread(placed: list[dict]) -> float:
-    """How far apart the objects landed, in world units."""
-    if len(placed) < 2:
-        return 0.0
-    xs = [pos["x"] for pos in placed]
-    zs = [pos["z"] for pos in placed]
-    return max(max(xs) - min(xs), max(zs) - min(zs))
-
-
 @scenario(crop="right-panel")
 def brush_size(run_state: E2ERun) -> None:
     """Feature brushing fills free space, and Shift+wheel resizes its reach.
@@ -450,7 +387,7 @@ def brush_size(run_state: E2ERun) -> None:
 
     width, height = window_size(run_state)
     cx, cy = width // 3, height // 2
-    run_state.wheel(cx, cy, clicks=8, up=True)        # zoom in on the map
+    run_state.wheel(cx, cy, clicks=8, up=True)  # zoom in on the map
 
     # One dab at the default size. A tap, not a hold: the brush repeats every
     # 0.1s while the button is down, so holding it would make the count a
@@ -495,9 +432,7 @@ def brush_size(run_state: E2ERun) -> None:
         raise AssertionError(f"brush did not grow: spread {_spread(large):.0f} world units")
     # Everything on the map is accounted for by the two non-empty dabs.
     if len(_placed(run_state)) != len(small) + len(large):
-        raise AssertionError(
-            f"placed {len(_placed(run_state))} objects, want {len(small) + len(large)}"
-        )
+        raise AssertionError(f"placed {len(_placed(run_state))} objects, want {len(small) + len(large)}")
 
 
 @scenario()
@@ -515,14 +450,12 @@ def deselect(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
     cx, cy = width // 3, height // 2
     run_state.wheel(cx, cy, clicks=8, up=True)
-    run_state.click(cx, cy, delay=0.8)                # place it
-    run_state.key("Escape", delay=0.5)                # leave placement mode
+    run_state.click(cx, cy, delay=0.8)  # place it
+    run_state.key("Escape", delay=0.5)  # leave placement mode
     # Park the cursor away from the feature: every frame is captured with it
     # here, so the pointer itself never shows up in the comparisons.
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    unselected = run_state.golden(
-        "feature-unselected", crop=None, tolerance=MAP_TOLERANCE
-    )
+    unselected = run_state.golden("feature-unselected", crop=None, tolerance=MAP_TOLERANCE)
 
     # The box is drawn in pure green, and nothing else on the map is: counting
     # those pixels says whether the box is there, where comparing whole frames
@@ -531,11 +464,9 @@ def deselect(run_state: E2ERun) -> None:
     if run_state.count_color(unselected, around_feature) != 0:
         raise AssertionError("a selection box before anything was selected")
 
-    run_state.click(cx - 20, cy, delay=0.6)           # select it
+    run_state.click(cx - 20, cy, delay=0.6)  # select it
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    selected = run_state.golden(
-        "feature-selected", crop=None, tolerance=MAP_TOLERANCE
-    )
+    selected = run_state.golden("feature-selected", crop=None, tolerance=MAP_TOLERANCE)
     box = run_state.count_color(selected, around_feature)
     if box < 100:
         raise AssertionError(f"clicking the feature drew no selection box ({box} px)")
@@ -549,13 +480,11 @@ def deselect(run_state: E2ERun) -> None:
 
     # And so does clicking empty ground -- well clear of the panel and of the dev
     # console along the bottom, since a click on either is not a click on the map.
-    run_state.click(cx - 20, cy, delay=0.6)           # select it again
+    run_state.click(cx - 20, cy, delay=0.6)  # select it again
     run_state.move(cx + 450, cy - 250, delay=0.5)
     run_state.click(cx + 450, cy - 250, delay=0.6)
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    cleared = run_state.golden(
-        "feature-deselected", crop=None, tolerance=MAP_TOLERANCE
-    )
+    cleared = run_state.golden("feature-deselected", crop=None, tolerance=MAP_TOLERANCE)
     left = run_state.count_color(cleared, around_feature)
     if left != 0:
         raise AssertionError(f"clicking empty ground left the box behind ({left} px)")
@@ -576,14 +505,10 @@ def deselect(run_state: E2ERun) -> None:
     run_state.move(cx + 600, cy + 380, delay=0.3)
     run_state.release(cx + 600, cy + 380)
     run_state.move(cx + 450, cy - 250, delay=0.5)
-    empty_boxed = run_state.golden(
-        "box-selected-empty", crop=None, tolerance=MAP_TOLERANCE
-    )
+    empty_boxed = run_state.golden("box-selected-empty", crop=None, tolerance=MAP_TOLERANCE)
     left = run_state.count_color(empty_boxed, around_feature)
     if left != 0:
-        raise AssertionError(
-            f"a box-select over empty ground kept the old selection ({left} px)"
-        )
+        raise AssertionError(f"a box-select over empty ground kept the old selection ({left} px)")
 
 
 @scenario()
@@ -601,7 +526,7 @@ def rotation(run_state: E2ERun) -> None:
 
     width, height = window_size(run_state)
     cx, cy = width // 3, height // 2
-    run_state.wheel(cx, cy, clicks=8, up=True)        # zoom in on the spot
+    run_state.wheel(cx, cy, clicks=8, up=True)  # zoom in on the spot
 
     # Two trees, far apart: rotating a *pair* swings each one around the midpoint
     # between them, and the further apart they are the further they travel. Close
@@ -609,7 +534,7 @@ def rotation(run_state: E2ERun) -> None:
     # nothing -- the screen has to make the feature visible, not merely contain it.
     run_state.click(cx - 240, cy, delay=0.7)
     run_state.click(cx + 240, cy, delay=0.7)
-    run_state.key("Escape", delay=0.4)                # leave placement mode
+    run_state.key("Escape", delay=0.4)  # leave placement mode
 
     # Box-select both.
     run_state.press(cx - 330, cy - 200)
@@ -633,9 +558,7 @@ def rotation(run_state: E2ERun) -> None:
         run_state.move(cx - 190, cy - 60, delay=0.4)
         # park=False: the button is down and the ghosts track the cursor -- moving
         # it would rotate them somewhere else and end the drag off target.
-        run_state.golden(
-            "rotating", crop=None, tolerance=MAP_TOLERANCE, park=False
-        )
+        run_state.golden("rotating", crop=None, tolerance=MAP_TOLERANCE, park=False)
         run_state.move(cx - 200, cy, delay=0.4)
         run_state.release(cx - 200, cy)
 
@@ -649,22 +572,24 @@ def rotation(run_state: E2ERun) -> None:
     # already true before the drag -- that assertion passed without the rotation
     # doing anything at all.
     placed = [(pos["x"], pos["z"]) for pos in _placed(run_state)]
-    moved = [
-        (entry["data"]["key"]["pos"]["x"], entry["data"]["key"]["pos"]["z"])
-        for entry in run_state.commands()
-        if entry["data"].get("className") == "SetObjectParamCommand"
-        and not entry["data"].get("__preview")
-        and isinstance(entry["data"].get("key"), dict)
-    ]
+    moved = []
+    for entry in run_state.commands():
+        data = entry["data"]
+        if data.get("className") != "SetObjectParamCommand" or data.get("__preview"):
+            continue
+        key = command_fields(data).get("key")
+        if not isinstance(key, dict):
+            continue
+        position = parse_world_position(key.get("pos"))
+        if position is not None:
+            moved.append((position["x"], position["z"]))
     if len(placed) != 2 or len(moved) != 2:
         raise AssertionError(f"expected 2 placed and 2 moved, got {placed} {moved}")
     # The pair was placed level (same z); a rotation has to break that.
     spread_before = abs(placed[0][1] - placed[1][1])
     spread_after = abs(moved[0][1] - moved[1][1])
     if spread_after <= spread_before + 100:
-        raise AssertionError(
-            f"the pair did not rotate: z-spread {spread_before:.0f} -> {spread_after:.0f}"
-        )
+        raise AssertionError(f"the pair did not rotate: z-spread {spread_before:.0f} -> {spread_after:.0f}")
 
 
 @scenario()
@@ -715,7 +640,8 @@ def selection_drag(run_state: E2ERun) -> None:
     run_state.move(cx + 440, cy + 250, delay=0.4)
     run_state.screenshot("dragged-two-features")
     moved_by_drag = [
-        entry for entry in run_state.commands()[mark:]
+        entry
+        for entry in run_state.commands()[mark:]
         if entry["data"].get("className") == "SetObjectParamCommand"
         and entry["data"].get("key") == "pos"
         and not entry["data"].get("__preview")
@@ -735,15 +661,14 @@ def selection_drag(run_state: E2ERun) -> None:
     run_state.screenshot("properties-pos-dragging")
     run_state.release(*pos_x, delay=0.7)
     moved_by_field = [
-        entry for entry in run_state.commands()[mark:]
+        entry
+        for entry in run_state.commands()[mark:]
         if entry["data"].get("className") == "SetObjectParamCommand"
         and entry["data"].get("key") == "pos"
         and not entry["data"].get("__preview")
     ]
     if len(moved_by_field) != 2:
-        raise AssertionError(
-            f"shared Pos X edit affected {len(moved_by_field)} objects, want 2"
-        )
+        raise AssertionError(f"shared Pos X edit affected {len(moved_by_field)} objects, want 2")
 
 
 @scenario()
@@ -777,10 +702,7 @@ def object_actions(run_state: E2ERun) -> None:
     run_state.move(*target, delay=0.3)
     run_state.key("ctrl+v", delay=0.8)
     pasted = run_state.screenshot("copied-and-pasted")
-    if not any(
-        entry["data"].get("className") == "CompoundCommand"
-        for entry in run_state.commands()[mark:]
-    ):
+    if not any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
         raise AssertionError("Paste did not dispatch its grouped native command")
     run_state.assert_screenshot_pixels(before_paste, pasted, min_changed=400)
 
@@ -790,10 +712,7 @@ def object_actions(run_state: E2ERun) -> None:
     mark = len(run_state.commands())
     run_state.key("ctrl+x", delay=0.7)
     cut = run_state.screenshot("cut")
-    if not any(
-        entry["data"].get("className") == "CompoundCommand"
-        for entry in run_state.commands()[mark:]
-    ):
+    if not any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
         raise AssertionError("Cut did not dispatch its grouped native command")
     run_state.key("ctrl+z", delay=0.8)
     run_state.assert_any_command("UndoCommand")
@@ -812,10 +731,7 @@ def object_actions(run_state: E2ERun) -> None:
     mark = len(run_state.commands())
     run_state.key("Delete", delay=0.7)
     deleted = run_state.screenshot("deleted")
-    if not any(
-        entry["data"].get("className") == "CompoundCommand"
-        for entry in run_state.commands()[mark:]
-    ):
+    if not any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
         raise AssertionError("Delete did not dispatch its grouped native command")
     run_state.key("ctrl+z", delay=0.8)
     undeleted = run_state.screenshot("delete-undone")
@@ -838,8 +754,8 @@ def selection(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
-    run_state.click(spot_x, spot_y, delay=0.8)        # place it
-    run_state.key("Escape", delay=0.4)                # leave placement mode
+    run_state.click(spot_x, spot_y, delay=0.8)  # place it
+    run_state.key("Escape", delay=0.4)  # leave placement mode
 
     # Start in the sky, well above the map polygon, then sweep down-right over
     # the feature. This used to fail in the Rust port because it required the
@@ -857,12 +773,47 @@ def selection(run_state: E2ERun) -> None:
     # is nothing to edit and no command is emitted.
     run_state.click(*editor_point(left, "objects", "properties"), delay=0.9)
     run_state.golden("props-after-box-select", crop="right-panel")
-    run_state.click(*panel_point(left, OBJECTS["property_pos_x"]), delay=0.4)
-    run_state.key("ctrl+a", delay=0.15)
-    run_state.type_text("1800")
-    run_state.key("Return", delay=0.8)
+    run_state.fill_text(*panel_point(left, OBJECTS["property_pos_x"]), "1800", click_delay=0.4, commit_delay=0.8)
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
         value=lambda v: isinstance(v, dict) and abs(v.get("x", 0) - 1800) < 1.0,
     )
+
+
+def _open(run_state: E2ERun, editor: str) -> int:
+    left = panel_left(run_state)
+    run_state.click(left + TAB_X["objects"], TAB_Y, delay=0.25)
+    run_state.click(*editor_point(left, "objects", editor), delay=0.7)
+    return left
+
+
+def _arm_tree(run_state: E2ERun, left: int) -> None:
+    run_state.click(*panel_point(left, OBJECTS["feature_first_tree"]), delay=0.5)
+
+
+def _tip_box(cursor_x: int, cursor_y: int) -> tuple[int, int, int, int]:
+    return (cursor_x + 40, cursor_y + 30, 320, 90)
+
+
+def _placed(run_state: E2ERun, since: int = 0) -> list[WorldPosition]:
+    positions: list[WorldPosition] = []
+    for entry in run_state.commands()[since:]:
+        data = entry["data"]
+        if data.get("className") != "AddObjectCommand" or data.get("__preview"):
+            continue
+        params = command_fields(data).get("params")
+        if not isinstance(params, dict):
+            continue
+        position = parse_world_position(params.get("pos"))
+        if position is not None:
+            positions.append(position)
+    return positions
+
+
+def _spread(placed: list[WorldPosition]) -> float:
+    if len(placed) < 2:
+        return 0.0
+    xs = [pos["x"] for pos in placed]
+    zs = [pos["z"] for pos in placed]
+    return max(max(xs) - min(xs), max(zs) - min(zs))

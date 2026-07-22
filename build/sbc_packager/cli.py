@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import typer
 
 from .application.cli import application_command

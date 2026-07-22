@@ -85,6 +85,11 @@ impl NativeModule for SBC {
         self.model::<PanelManager>().draw_screen()
     }
 
+    fn draw_screen_post(&mut self) -> Result<(), Error> {
+        self.capture_e2e_screenshot();
+        Ok(())
+    }
+
     /// Outline each selected feature. Units glow through the engine's own
     /// selection, and areas draw their own shape, so neither is boxed.
     ///
@@ -336,6 +341,26 @@ impl SBC {
             0,
             0,
             width,
+            geom.viewSizeY,
+            &path.to_string_lossy(),
+            false,
+            true,
+            false,
+            0,
+        );
+    }
+
+    fn capture_e2e_screenshot(&mut self) {
+        let Some(path) = self.model::<ScreenshotManager>().take_e2e() else {
+            return;
+        };
+        let Ok(geom) = self.interface.display().get_view_geometry() else {
+            return;
+        };
+        let _ = self.interface.gfx().save_image(
+            0,
+            0,
+            geom.viewSizeX,
             geom.viewSizeY,
             &path.to_string_lossy(),
             false,

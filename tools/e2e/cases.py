@@ -1,25 +1,16 @@
-"""The runnable cases, derived entirely from the self-registered scenarios.
-
-Nothing is listed here: a scenario decorated with `@scenario(...)` (see
-`scenarios/registry.py`) *is* a target, and its cases come with it.
-"""
-
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
-import scenarios  # noqa: F401  -- importing the modules runs the decorators
-from scenarios.registry import REGISTERED
+from .models import PortFlags
+from .scenarios.registry import REGISTERED
 
 
 @dataclass(frozen=True)
 class Case:
     name: str
-    flags: dict[str, str]
+    flags: PortFlags
     scenario: str
     crop: str | None = None
     tags: frozenset[str] = field(default_factory=frozenset)
-    #: Overrides the harness's engine environment for this case.
     env: dict[str, str] = field(default_factory=dict)
 
 
@@ -37,12 +28,7 @@ def select_cases(targets: list[str], tags: list[str]) -> list[Case]:
     """
     chosen = TARGETS if not targets or targets == ["all"] else targets
     wanted = set(tags)
-    return [
-        case
-        for target in chosen
-        for case in target_cases(target)
-        if wanted <= case.tags
-    ]
+    return [case for target in chosen for case in target_cases(target) if wanted <= case.tags]
 
 
 def target_cases(target: str) -> list[Case]:
@@ -62,9 +48,7 @@ def target_cases(target: str) -> list[Case]:
     ]
 
 
-def _tags_for(target: str, flags: dict[str, str]) -> frozenset[str]:
-    """Tags are derived from the case, so a new case is selectable without
-    remembering to tag it: `target:<name>`, `ui:<impl>`, `chonsole:<impl>`."""
+def _tags_for(target: str, flags: PortFlags) -> frozenset[str]:
     tags = {f"target:{target}"}
     for key in ("ui", "chonsole"):
         if key in flags:

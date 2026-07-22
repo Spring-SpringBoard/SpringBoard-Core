@@ -8,24 +8,22 @@ To add a scenario: write it in the module for its area and decorate it with
 runnable target. Nothing here, and nothing in `cases.py`, needs editing.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from scenarios import (  # noqa: F401 -- importing the modules registers them
-    console,
-    env,
-    gallery,
-    map,
-    misc,
-    objects,
-    shell,
-    visual_sweep,
-)
-from scenarios.registry import REGISTERED
+from . import console as console
+from . import env as env
+from . import gallery as gallery
+from . import map as map
+from . import misc as misc
+from . import objects as objects
+from . import shell as shell
+from . import visual_sweep as visual_sweep
+from .registry import REGISTERED
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 
 def run_scenario(run_state: E2ERun) -> None:

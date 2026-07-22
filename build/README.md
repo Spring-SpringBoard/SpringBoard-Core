@@ -12,10 +12,10 @@ then renames `spring` to `SpringBoard` or `SpringBoard.exe`. The application
 build exports the exact `.sdz` embedded in the application as the standalone
 editor artifact.
 
-```bash
-uv run --project build --locked sbc-packager-base --help
-uv run --project build --locked sbc-packager-application --help
-```
+Use `just bundle-base-linux` for the editor archive and
+`just bundle-application-linux` for the complete application. `just --show
+bundle-base-linux` and `just --show bundle-application-linux` show their
+arguments.
 
 Linux applications use `.tar.gz`; Windows applications use `.zip`. Every
 published file has a SHA-256 checksum.

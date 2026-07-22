@@ -9,7 +9,7 @@ import os
 
 import pytest
 
-from integration_runner import RunOutput, assert_clean_infolog, run_tests
+from smoke.integration_runner import RunOutput, assert_clean_infolog, run_tests
 
 
 @pytest.fixture(scope="module")
@@ -18,11 +18,9 @@ def integration_run() -> RunOutput:
 
 
 def test_all_tests_passed(integration_run: RunOutput) -> None:
-    results = integration_run.results.get("results", [])
+    results = integration_run.results["results"]
     assert results, "no integration tests ran"
-    failed = [
-        f"{r['name']}: {r['message']}" for r in results if not r.get("passed", False)
-    ]
+    failed = [f"{r['name']}: {r['message']}" for r in results if not r.get("passed", False)]
     assert not failed, "Rust integration tests failed:\n" + "\n".join(failed)
 
 

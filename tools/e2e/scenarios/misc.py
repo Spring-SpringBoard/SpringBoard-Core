@@ -1,12 +1,10 @@
 """Misc tab: Info, Teams."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import (
-    DIALOG,
+from .geometry import (
     COLOR_PICKER,
+    DIALOG,
     ENV_LIGHTING_COLORS,
     MISC,
     MISC_INFO_FIELDS,
@@ -18,10 +16,12 @@ from scenarios.geometry import (
     panel_left,
     panel_point,
 )
-from scenarios.registry import scenario
+from .registry import scenario
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 
 @scenario(uis=("rmlui", "rust"), crop="right-panel")
@@ -44,20 +44,20 @@ def info_panel(run_state: E2ERun) -> None:
     run_state.click(*editor_point(left, "misc", "info"), delay=0.5)
     run_state.screenshot("info-open")
     for point, value in MISC_INFO_FIELDS:
-        run_state.click(*panel_point(left, point), delay=0.15)
-        run_state.key("ctrl+a", delay=0.08)
-        run_state.type_text(value)
-        run_state.key("Return", delay=0.3)
+        run_state.fill_text(*panel_point(left, point), value, click_delay=0.15, commit_delay=0.3)
         run_state.assert_any_command("SetScenarioInfoCommand")
     run_state.assert_any_command(
         "SetScenarioInfoCommand",
-        data=lambda value: isinstance(value, dict)
-        and value == {
-            "name": "Verified Scenario",
-            "description": "All metadata fields",
-            "version": "2.5",
-            "author": "Native UI",
-        },
+        data=lambda value: (
+            isinstance(value, dict)
+            and value
+            == {
+                "name": "Verified Scenario",
+                "description": "All metadata fields",
+                "version": "2.5",
+                "author": "Native UI",
+            }
+        ),
     )
     run_state.screenshot("info-edited")
 
@@ -96,13 +96,15 @@ def teams_panel(run_state: E2ERun) -> None:
     run_state.click(*dialog_point(run_state, DIALOG["team_ok"]), delay=0.8)
     run_state.assert_any_command(
         "UpdateTeamCommand",
-        team=lambda value: isinstance(value, dict)
-        and value.get("name") == "Blue Team"
-        and value.get("ai") is True
-        and value.get("metal") == 125.0
-        and value.get("energyMax") == 750.0
-        and isinstance(value.get("color"), dict)
-        and value["color"].get("r", 0) > 0.2,
+        team=lambda value: (
+            isinstance(value, dict)
+            and value.get("name") == "Blue Team"
+            and value.get("ai") is True
+            and value.get("metal") == 125.0
+            and value.get("energyMax") == 750.0
+            and isinstance(value.get("color"), dict)
+            and value["color"].get("r", 0) > 0.2
+        ),
     )
     run_state.screenshot("team-updated")
     run_state.click(*panel_point(left, MISC["team_remove_first"]), delay=0.8)

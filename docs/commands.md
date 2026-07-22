@@ -1,8 +1,8 @@
 # Commands
 
 Local developer commands live in the repository [justfile](../justfile).
-The manual Spring run uses [tools/dev/launch.sh](../tools/dev/launch.sh),
-[tools/dev/script.txt](../tools/dev/script.txt), and
+The manual Spring run is `just run`; its launch data is
+[tools/dev/script.txt](../tools/dev/script.txt) and
 [tools/dev/springsettings.cfg](../tools/dev/springsettings.cfg).
 
 ## Setup
@@ -17,7 +17,7 @@ cp .env.example .env
 $EDITOR .env       # set SBC_ENGINE_DIR (+ engine build/rust dirs if you build the engine)
 ```
 
-`launch.sh`, `run_sbc.py`, and the engine-build just recipes all read these from
+`engine.py` and the engine-build just recipes all read these from
 `.env` (or the real environment) — no hardcoded paths.
 
 ## Common

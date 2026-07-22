@@ -5,7 +5,6 @@ Tests in test_*.py call these with the `infolog` fixture (full log text as a str
 
 import re
 
-
 CRASH_PATTERNS = (
     r"CrashHandler\b.*Error",
     r"XIO.*fatal",

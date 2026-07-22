@@ -1,75 +1,23 @@
-"""Boot SBC against the local dev engine.
-
-Single source of truth for how SBC is launched: `prepare()` sets up the isolated
-write dir (games symlink, persistent fontcache, dev config, native-plugin env)
-and returns the spring command; everything else builds on it.
-
-Standalone use:
-    python -m run_sbc           # boot once (timed), print the write-dir path
-    python -m run_sbc --manual  # interactive editor session (replaces launch.sh)
-    python -m run_sbc --manual --config config/ui-rmlui.json
-
-Library use:
-    from run_sbc import boot
-    write_dir = boot()
-    (write_dir / "infolog.txt").read_text()
-"""
-
-from __future__ import annotations
-
 import json
 import os
-import argparse
 import shutil
 import subprocess
-import sys
 import tempfile
 import time
 from pathlib import Path
 
-
 SBC_ROOT = Path(__file__).resolve().parent.parent.parent
-# Shared launch config, also used by tools/dev/launch.sh — single source of truth.
 DEV_DIR = SBC_ROOT / "tools" / "dev"
 DEFAULT_TIMEOUT_S = 45
-
-# If the heartbeat file goes this long without an update while in-engine tests
-# run, treat the run as hung and kill it. Generous vs the per-test 5s internal
-# timeouts.
 HEARTBEAT_STALE_S = 20.0
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--manual", action="store_true")
-    parser.add_argument(
-        "--config",
-        type=Path,
-        help="Port-flags JSON preset to copy into the isolated game as port_flags.json.",
-    )
-    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
-    if args.manual:
-        return launch_manual(config=args.config)
-    write_dir = boot(tags=["__startup_only__"])
-    print(write_dir)
-    return 0
-
-
 def launch_manual(config: Path | None = None) -> int:
-    """Set up an isolated write dir and run SBC in the foreground until quit.
-
-    The interactive twin of `boot()` — no timeout, no test spec. This is the whole
-    body of the old tools/dev/launch.sh; that script now just calls it.
-    """
     write_dir, env, cmd = prepare(
         prefix="sbc-manual-",
         port_flags_config=config,
         write_dir=_manual_write_dir(),
     )
-    # Manual sessions intentionally use a fresh isolated engine write-dir, but
-    # command history is user state rather than run output. Keep it outside the
-    # temporary directory so restarting `just run` restores it. Honour an
-    # explicit path for people who want a separate history while testing.
     history_path = Path(env.setdefault("SBC_CHONSOLE_HISTORY", str(_manual_history_path())))
     print(f"write dir: {write_dir}")
     print(f"infolog:   {write_dir / 'infolog.txt'}")
@@ -86,16 +34,6 @@ def boot(
     sbc_root: Path = SBC_ROOT,
     tags: list[str] | None = None,
 ) -> Path:
-    """Boot SBC, run the requested tests, and return the write dir (with infolog.txt).
-
-    Every boot goes through the in-engine test framework so the engine ALWAYS
-    quits itself from the Rust side (`system_control().quit()`) the moment it is
-    done -- Python never waits out a timeout or has to SIGKILL. `tags` filters
-    which tests run (a tag substring); `None` runs the full suite, and a tag that
-    matches nothing (e.g. `["__startup_only__"]`) runs zero tests so the engine
-    quits as soon as startup finishes. The heartbeat watchdog only fires on a
-    genuine hang.
-    """
     write_dir, env, cmd = prepare(
         engine_dir=engine_dir,
         sbc_root=sbc_root,
@@ -103,8 +41,6 @@ def boot(
         tags=tags,
         prefix="sbc-smoke-",
     )
-    # The framework quits the engine when it finishes (0 or more tests), so the
-    # process exits on its own; the heartbeat watchdog only kills a real hang.
     _run_with_heartbeat(cmd, env, write_dir / "sbc_test_heartbeat", timeout_s)
     return write_dir
 
@@ -119,16 +55,6 @@ def prepare(
     port_flags_config: Path | None = None,
     write_dir: Path | None = None,
 ) -> tuple[Path, dict[str, str], list[str]]:
-    """Set up an isolated write dir and return (write_dir, env, spring command).
-
-    The single place that knows how to launch SBC: creates the games symlink, the
-    persistent fontcache symlink, copies the shared dev config, wires the
-    native-plugin env, and (if `run_tests`) the in-engine test spec/results/
-    heartbeat env. Both the test harness (`boot`) and the manual launcher
-    (`launch_manual`, used by tools/dev/launch.sh) build on it.
-
-    Raises RuntimeError if the engine binary or native plugin is missing.
-    """
     if engine_dir is None:
         engine_dir = _resolve_engine_dir()
     spring_bin = engine_dir / "spring"
@@ -138,14 +64,9 @@ def prepare(
     native_plugin = sbc_root / "native" / "target" / "release" / "librust_plugin.so"
     if not native_plugin.is_file():
         raise RuntimeError(
-            f"native plugin not built at {native_plugin}\n"
-            f"run `just build` (cargo build --release) in {sbc_root} first"
+            f"native plugin not built at {native_plugin}\nrun `just build` (cargo build --release) in {sbc_root} first"
         )
 
-    # A persistent write dir (interactive `just run`) keeps projects, imports and
-    # exports across restarts; tests pass none and get a throwaway temp dir. Only
-    # the game copy is refreshed each run -- everything the editor writes under
-    # springboard/ is left untouched.
     if write_dir is None:
         write_dir = Path(tempfile.mkdtemp(prefix=prefix))
     else:
@@ -165,28 +86,17 @@ def prepare(
             ".ruff_cache",
             "target",
             "__pycache__",
-            # e2e output lives in the repo and grows without bound (raw .xwd
-            # captures). Copying it into every run's game dir made each temp
-            # write dir ~8-11GB and compounded run over run.
             "artifacts",
             ".venv",
         ),
     )
 
-    # The engine builds its fontconfig cache under <write_dir>/fontcache. Each
-    # run uses a fresh temp dir, so without a persistent cache every launch pays a
-    # ~20s font rescan. Point it at a shared dir, built once and reused.
-    fontcache = (
-        Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sbc-fontcache"
-    )
+    fontcache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sbc-fontcache"
     fontcache.mkdir(parents=True, exist_ok=True)
     fontcache_link = write_dir / "fontcache"
     fontcache_link.unlink(missing_ok=True)
     fontcache_link.symlink_to(fontcache)
 
-    # Shared dev config (tools/dev/). Its script.txt sets up two teams in two
-    # ally-teams so team/alliance tests have something to act on (set_ally,
-    # change_player_team, get_team_info).
     shutil.copyfile(DEV_DIR / "springsettings.cfg", write_dir / "springsettings.cfg")
     shutil.copyfile(DEV_DIR / "script.txt", write_dir / "script.txt")
     config_env: dict[str, str] = {}
@@ -202,7 +112,6 @@ def prepare(
     env.update(config_env)
     _configure_lsan(env)
     env["SPRING_NATIVE_MODULE"] = str(native_plugin)
-    # Trace every command Lua sends to Rust (one per line), next to the infolog.
     env["SBC_COMMAND_LOG"] = str(write_dir / "commands.jsonl")
     if run_tests:
         spec_path = write_dir / "sbc_test_spec.json"
@@ -222,11 +131,6 @@ def prepare(
 
 
 def _configure_lsan(env: dict[str, str]) -> None:
-    """Suppress known external engine-driver leaks without disabling LSan.
-
-    Honour a caller-provided suppression file: it may contain machine-specific
-    suppressions and LeakSanitizer accepts only one file path.
-    """
     existing = env.get("LSAN_OPTIONS", "")
     if "suppressions=" in existing:
         return
@@ -243,15 +147,11 @@ def _configure_lsan(env: dict[str, str]) -> None:
 
 
 def _manual_history_path() -> Path:
-    """Return the durable XDG state path for interactive Chonsole history."""
     state_home = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
     return state_home / "springboard" / "chonsole-history"
 
 
 def _manual_write_dir() -> Path:
-    """Durable write dir for interactive `just run`, so projects and imports/
-    exports survive a restart. `SBC_WRITE_DIR` overrides it; tests never set it
-    and keep their throwaway temp dirs."""
     override = os.environ.get("SBC_WRITE_DIR")
     if override:
         return Path(override).expanduser()
@@ -285,20 +185,14 @@ def _read_port_flags_config(path: Path) -> tuple[dict[str, str], dict[str, str]]
     return flags, {str(k): str(v) for k, v in config_env.items()}
 
 
-def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:
-    """Run the engine, killing it if the heartbeat goes stale or hard timeout.
-
-    The in-engine test framework quits the engine itself when tests finish, so
-    the usual exit is the process ending on its own. This only force-kills on a
-    genuine hang.
-    """
+def _run_with_heartbeat(cmd: list[str], env: dict[str, str], heartbeat: Path, hard_timeout_s: int) -> None:
     proc = subprocess.Popen(cmd, env=env)
     start = time.monotonic()
     try:
         while True:
             try:
                 proc.wait(timeout=1.0)
-                return  # engine exited (normal: it self-quit after tests)
+                return
             except subprocess.TimeoutExpired:
                 pass
 
@@ -310,8 +204,6 @@ def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:
                 age = time.time() - heartbeat.stat().st_mtime
                 if age > HEARTBEAT_STALE_S:
                     break
-            # Before the first heartbeat, rely on the hard timeout (the game
-            # takes ~25s to load before tests run).
     finally:
         if proc.poll() is None:
             proc.terminate()
@@ -322,7 +214,6 @@ def _run_with_heartbeat(cmd, env, heartbeat: Path, hard_timeout_s: int) -> None:
 
 
 def _load_env_file(path: Path) -> None:
-    """Populate os.environ from a KEY=VALUE .env file (real env vars win)."""
     if not path.is_file():
         return
     for line in path.read_text().splitlines():
@@ -334,16 +225,10 @@ def _load_env_file(path: Path) -> None:
 
 
 def _resolve_engine_dir() -> Path:
-    """Engine install dir from SBC_ENGINE_DIR (env or .env). No hardcoded path."""
     _load_env_file(SBC_ROOT / ".env")
     raw = os.environ.get("SBC_ENGINE_DIR")
     if not raw:
         raise RuntimeError(
-            "SBC_ENGINE_DIR is not set. Copy .env.example to .env and point it at "
-            "your spring engine install dir."
+            "SBC_ENGINE_DIR is not set. Copy .env.example to .env and point it at your spring engine install dir."
         )
     return Path(raw).expanduser()
-
-
-if __name__ == "__main__":
-    sys.exit(main())

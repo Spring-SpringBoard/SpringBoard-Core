@@ -1,12 +1,12 @@
-from __future__ import annotations
-
 import json
 import time
 
-from run_env import command_fields
+from .models import CommandData, CommandEntry, parse_command_entry
+from .run_env import command_fields
+from .run_state import RunState
 
 
-class CommandLogMixin:
+class CommandLogMixin(RunState):
     """Reading the run's logs and asserting on what the UI actually did.
 
     Two sources: `commands.jsonl`, the envelopes the UI sent to the command
@@ -61,7 +61,7 @@ class CommandLogMixin:
         after: int = 0,
         timeout_s: float = 10.0,
         **expected: object,
-    ) -> dict:
+    ) -> CommandData:
         """Wait for a committed command, optionally matching fields.
 
         This is for asynchronous UI paths such as modal acceptance.  Unlike an
@@ -70,24 +70,21 @@ class CommandLogMixin:
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
             for entry in self.commands()[after:]:
-                data = entry.get("data", {})
+                data = entry["data"]
                 if data.get("__preview") or data.get("className") != class_name:
                     continue
                 fields = command_fields(data)
                 if all(
-                    key in fields
-                    and (want(fields[key]) if callable(want) else fields[key] == want)
+                    key in fields and (want(fields[key]) if callable(want) else fields[key] == want)
                     for key, want in expected.items()
                 ):
                     self.event("wait_for_command", className=class_name, keys=sorted(expected))
                     return data
             self.assert_running()
             time.sleep(0.05)
-        raise AssertionError(
-            f"timed out waiting {timeout_s:.1f}s for {class_name} with keys {sorted(expected)}"
-        )
+        raise AssertionError(f"timed out waiting {timeout_s:.1f}s for {class_name} with keys {sorted(expected)}")
 
-    def commands(self) -> list[dict]:
+    def commands(self) -> list[CommandEntry]:
         """Every command envelope the UI sent to the command bridge.
 
         A `CompoundCommand` is unwrapped into the commands it carries, and kept
@@ -99,24 +96,26 @@ class CommandLogMixin:
         path = self.write_dir / "commands.jsonl"
         if not path.is_file():
             return []
-        entries = []
+        entries: list[CommandEntry] = []
         for line in path.read_text().splitlines():
             _stamp, _, payload = line.partition(" ")
             if not payload:
                 continue
-            entry = json.loads(payload)
+            entry = parse_command_entry(json.loads(payload))
+            if entry is None:
+                continue
             entries.append(entry)
-            data = entry.get("data", {})
+            data = entry["data"]
             if data.get("className") == "CompoundCommand":
                 for inner in data.get("commands", []):
-                    entries.append({**entry, "data": inner})
+                    entries.append({"data": inner})
         return entries
 
     def command_cursor(self) -> int:
         """A position in the command log for ``wait_for_command(after=...)``."""
         return len(self.commands())
 
-    def assert_command(self, class_name: str, **expected: object) -> dict:
+    def assert_command(self, class_name: str, **expected: object) -> CommandData:
         """Assert exactly one committed command of `class_name` carrying every
         key in `expected` was sent, and that those values match.
 
@@ -128,43 +127,30 @@ class CommandLogMixin:
         reach the undo history, and a drag emits a stream of them. Use
         `assert_previews` for those.
         """
-        committed = [
-            entry["data"]
-            for entry in self.commands()
-            if not entry.get("data", {}).get("__preview")
-        ]
+        committed = [entry["data"] for entry in self.commands() if not entry["data"].get("__preview")]
         matches = [
             data
             for data in committed
             if data.get("className") == class_name
             and all(
                 key in command_fields(data)
-                and (
-                    want(command_fields(data)[key])
-                    if callable(want)
-                    else command_fields(data)[key] == want
-                )
+                and (want(command_fields(data)[key]) if callable(want) else command_fields(data)[key] == want)
                 for key, want in expected.items()
             )
-        ] or [
-            data
-            for data in committed
-            if data.get("className") == class_name and not expected
-        ]
+        ] or [data for data in committed if data.get("className") == class_name and not expected]
         if len(matches) != 1:
             sent = [
-                (e["data"].get("className"), sorted(command_fields(e["data"])))
-                for e in self.commands()
+                (entry["data"].get("className"), sorted(command_fields(entry["data"])))
+                for entry in self.commands()
             ]
             raise AssertionError(
-                f"expected exactly one {class_name} with keys {sorted(expected)}, "
-                f"got {len(matches)}. Sent: {sent}"
+                f"expected exactly one {class_name} with keys {sorted(expected)}, got {len(matches)}. Sent: {sent}"
             )
         data = matches[0]
         self.event("assert_command", className=class_name, keys=sorted(expected))
         return data
 
-    def assert_no_command_after(self, marker: dict, class_name: str, **expected: object) -> None:
+    def assert_no_command_after(self, marker: CommandData, class_name: str, **expected: object) -> None:
         """Assert nothing more of this kind was sent after `marker`.
 
         For proving something *stopped*: a drag that was released must not keep
@@ -172,7 +158,7 @@ class CommandLogMixin:
         """
         seen_marker = False
         for entry in self.commands():
-            data = entry.get("data", {})
+            data = entry["data"]
             if data is marker or data.get("__cmd_id") == marker.get("__cmd_id"):
                 seen_marker = True
                 continue
@@ -180,9 +166,7 @@ class CommandLogMixin:
                 continue
             fields = command_fields(data)
             if all(fields.get(key) == want for key, want in expected.items() if not callable(want)):
-                raise AssertionError(
-                    f"{class_name} was still being sent after the drag ended: {fields}"
-                )
+                raise AssertionError(f"{class_name} was still being sent after the drag ended: {fields}")
 
     def assert_command_count(self, class_name: str, count: int) -> None:
         """Assert exactly `count` committed commands of this class were sent.
@@ -193,13 +177,10 @@ class CommandLogMixin:
         sent = [
             entry["data"]
             for entry in self.commands()
-            if entry.get("data", {}).get("className") == class_name
-            and not entry.get("data", {}).get("__preview")
+            if entry["data"].get("className") == class_name and not entry["data"].get("__preview")
         ]
         if len(sent) != count:
-            raise AssertionError(
-                f"expected {count} committed {class_name}, got {len(sent)}"
-            )
+            raise AssertionError(f"expected {count} committed {class_name}, got {len(sent)}")
         self.event("assert_command_count", className=class_name, count=count)
 
     def assert_command_at_least(self, class_name: str, count: int) -> int:
@@ -211,17 +192,14 @@ class CommandLogMixin:
         sent = [
             entry["data"]
             for entry in self.commands()
-            if entry.get("data", {}).get("className") == class_name
-            and not entry.get("data", {}).get("__preview")
+            if entry["data"].get("className") == class_name and not entry["data"].get("__preview")
         ]
         if len(sent) < count:
-            raise AssertionError(
-                f"expected at least {count} committed {class_name}, got {len(sent)}"
-            )
+            raise AssertionError(f"expected at least {count} committed {class_name}, got {len(sent)}")
         self.event("assert_command_at_least", className=class_name, count=len(sent))
         return len(sent)
 
-    def assert_any_command(self, class_name: str, **expected: object) -> dict:
+    def assert_any_command(self, class_name: str, **expected: object) -> CommandData:
         """Assert at least one committed command matched `expected`.
 
         Brush scenarios often exercise several modes of the same command class;
@@ -229,24 +207,21 @@ class CommandLogMixin:
         requiring the scenario to isolate every click in a fresh process.
         """
         for entry in self.commands():
-            data = entry.get("data", {})
+            data = entry["data"]
             if data.get("__preview") or data.get("className") != class_name:
                 continue
             opts = command_fields(data)
             if all(key in opts for key in expected) and all(
-                want(opts.get(key)) if callable(want) else opts.get(key) == want
-                for key, want in expected.items()
+                want(opts.get(key)) if callable(want) else opts.get(key) == want for key, want in expected.items()
             ):
                 self.event("assert_any_command", className=class_name, keys=sorted(expected))
                 return data
         sent = [
-            (e["data"].get("className"), sorted(command_fields(e["data"])))
-            for e in self.commands()
-            if e.get("data", {}).get("className") == class_name
+            (entry["data"].get("className"), sorted(command_fields(entry["data"])))
+            for entry in self.commands()
+            if entry["data"].get("className") == class_name
         ]
-        raise AssertionError(
-            f"expected at least one {class_name} matching {expected}, got {sent}"
-        )
+        raise AssertionError(f"expected at least one {class_name} matching {expected}, got {sent}")
 
     def assert_previews(self, class_name: str, **expected: object) -> int:
         """Assert at least one *preview* of `class_name` matched `expected`.
@@ -257,17 +232,14 @@ class CommandLogMixin:
         matches = [
             entry["data"]
             for entry in self.commands()
-            if entry.get("data", {}).get("__preview")
+            if entry["data"].get("__preview")
             and entry["data"].get("className") == class_name
             and all(key in entry["data"].get("opts", {}) for key in expected)
         ]
         good = []
         for data in matches:
             opts = data.get("opts", data)
-            if all(
-                want(opts.get(key)) if callable(want) else opts.get(key) == want
-                for key, want in expected.items()
-            ):
+            if all(want(opts.get(key)) if callable(want) else opts.get(key) == want for key, want in expected.items()):
                 good.append(data)
         if not good:
             raise AssertionError(

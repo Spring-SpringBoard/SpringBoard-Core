@@ -9,9 +9,18 @@ inventory::submit! { ModelFactory { make: |_iface| Box::new(ScreenshotManager::d
 /// the draw phase, where the framebuffer can actually be read. A save asks for
 /// one; the next `DrawScreen` grabs the map and writes it, then clears the
 /// request. Mirrors Lua's `SB.RequestScreenshotPath` consumed in `PerformDraw`.
-#[derive(Default)]
 pub(crate) struct ScreenshotManager {
     pending: Option<PathBuf>,
+    e2e_request: Option<PathBuf>,
+}
+
+impl Default for ScreenshotManager {
+    fn default() -> Self {
+        Self {
+            pending: None,
+            e2e_request: std::env::var_os("SBC_E2E_SCREENSHOT_REQUEST").map(PathBuf::from),
+        }
+    }
 }
 
 impl Model for ScreenshotManager {
@@ -27,5 +36,15 @@ impl ScreenshotManager {
 
     pub(crate) fn take(&mut self) -> Option<PathBuf> {
         self.pending.take()
+    }
+
+    pub(crate) fn take_e2e(&self) -> Option<PathBuf> {
+        let request = self.e2e_request.as_ref()?;
+        let path = PathBuf::from(std::fs::read_to_string(request).ok()?.trim());
+        if path.as_os_str().is_empty() {
+            return None;
+        }
+        let _ = std::fs::remove_file(request);
+        Some(path)
     }
 }

@@ -5,10 +5,11 @@ that single run's infolog. If we ever need per-test isolation (e.g. testing
 specific commands), introduce a function-scoped fixture and let callers opt in.
 """
 
-import pytest
 from pathlib import Path
 
-from run_sbc import boot
+import pytest
+
+from smoke.engine import boot
 
 
 @pytest.fixture(scope="session")

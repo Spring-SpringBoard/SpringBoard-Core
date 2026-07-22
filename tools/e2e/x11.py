@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import re
 
-from process import run
+from .process import run
 
 
 def find_windows() -> list[str]:
@@ -38,14 +36,6 @@ def window_geometry(window_id: str) -> tuple[int, int]:
         return values["WIDTH"], values["HEIGHT"]
     except KeyError as err:
         raise RuntimeError(f"could not parse window geometry values: {values}") from err
-
-
-def window_origin(window_id: str) -> tuple[int, int]:
-    values = window_geometry_values(window_id)
-    try:
-        return values["X"], values["Y"]
-    except KeyError as err:
-        raise RuntimeError(f"could not parse window origin values: {values}") from err
 
 
 def window_geometry_values(window_id: str) -> dict[str, int]:

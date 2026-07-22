@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 import re
 import shutil
@@ -70,9 +68,7 @@ def find_engine_loading_image(engine_directory: Path) -> Path | None:
     if not base_directory.is_dir():
         return None
     candidates = sorted(
-        path
-        for path in base_directory.iterdir()
-        if path.is_file() and path.suffix.lower() in SUPPORTED_IMAGE_SUFFIXES
+        path for path in base_directory.iterdir() if path.is_file() and path.suffix.lower() in SUPPORTED_IMAGE_SUFFIXES
     )
     preferred = base_directory / "RecoilEngine_4K.png"
     if preferred in candidates:

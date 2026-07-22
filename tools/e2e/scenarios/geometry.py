@@ -4,14 +4,14 @@ Every scenario measures from the same two landmarks, so a layout change is fixed
 in one place rather than in twenty magic numbers.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Final
 
-from x11 import window_geometry
+from ..x11 import window_geometry
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 # The editor panel is pinned to the right at this width; modals are 480dp wide,
 # centred in the area left of it.
@@ -160,15 +160,22 @@ MAP: Final = {
     "metal_size": (92, 655),
     "metal_rotation": (92, 655 + ROW),
     "metal_amount": (92, 655 + ROW * 2),
-    "splat_scale_1": (92, 795), "splat_scale_2": (320, 795),
-    "splat_scale_3": (92, 795 + ROW), "splat_scale_4": (320, 795 + ROW),
-    "splat_mult_1": (92, 795 + ROW * 2), "splat_mult_2": (320, 795 + ROW * 2),
-    "splat_mult_3": (92, 795 + ROW * 3), "splat_mult_4": (320, 795 + ROW * 3),
+    "splat_scale_1": (92, 795),
+    "splat_scale_2": (320, 795),
+    "splat_scale_3": (92, 795 + ROW),
+    "splat_scale_4": (320, 795 + ROW),
+    "splat_mult_1": (92, 795 + ROW * 2),
+    "splat_mult_2": (320, 795 + ROW * 2),
+    "splat_mult_3": (92, 795 + ROW * 3),
+    "splat_mult_4": (320, 795 + ROW * 3),
 }
 MAP_ACTIONS: Final = {
-    "terrain_add": (42, ACTION_Y), "terrain_set": (112, ACTION_Y),
-    "terrain_smooth": (188, ACTION_Y), "texture_paint": (42, ACTION_Y),
-    "texture_filter": (112, ACTION_Y), "texture_dnts": (188, ACTION_Y),
+    "terrain_add": (42, ACTION_Y),
+    "terrain_set": (112, ACTION_Y),
+    "terrain_smooth": (188, ACTION_Y),
+    "texture_paint": (42, ACTION_Y),
+    "texture_filter": (112, ACTION_Y),
+    "texture_dnts": (188, ACTION_Y),
     "texture_void": (260, ACTION_Y),
 }
 MAP_TERRAIN_BRUSHES: Final = (
@@ -213,9 +220,12 @@ MISC_INFO_FIELDS: Final = (
 # section) Energy/Storage, Colour, Start X/Z at the shared row pitch. The
 # dialog's halves sit at x=120 and x=390.
 TEAM_NUMBERS: Final = (
-    ((120, 345), "125"), ((390, 345), "500"),
-    ((120, 408), "250"), ((390, 408), "750"),
-    ((120, 408 + ROW * 2), "100"), ((390, 408 + ROW * 2), "200"),
+    ((120, 345), "125"),
+    ((390, 345), "500"),
+    ((120, 408), "250"),
+    ((390, 408), "750"),
+    ((120, 408 + ROW * 2), "100"),
+    ((390, 408 + ROW * 2), "200"),
 )
 # The shell action toolbar is a fixed nine-icon row.  Keep the action names
 # here, rather than making tests infer an icon's position from its ordinal: the
@@ -385,8 +395,7 @@ def chonsole_header_point(width: int, height: int) -> tuple[int, int]:
 def chonsole_scrollbar_point(width: int, height: int) -> tuple[int, int]:
     _left, top, _box_width, _box_height = chonsole_suggestion_box(width, height)
     return (
-        int(width * (CHONSOLE["left_fraction"] + CHONSOLE["width_fraction"]))
-        - CHONSOLE["scrollbar_inset_x"],
+        int(width * (CHONSOLE["left_fraction"] + CHONSOLE["width_fraction"])) - CHONSOLE["scrollbar_inset_x"],
         top + CHONSOLE["header_height"] + CHONSOLE["scrollbar_hover_y"],
     )
 

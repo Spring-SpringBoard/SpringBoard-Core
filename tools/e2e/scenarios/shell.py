@@ -1,12 +1,10 @@
 """The panel shell itself: tabs, every editor, dialogs, and notifications."""
 
-from __future__ import annotations
-
 import shutil
 from typing import TYPE_CHECKING
 
-from paths import GAME_DIRNAME
-from scenarios.geometry import (
+from ..paths import GAME_DIRNAME
+from .geometry import (
     DIALOG,
     EDITORS,
     TAB_X,
@@ -18,15 +16,17 @@ from scenarios.geometry import (
     panel_point,
     window_size,
 )
-from scenarios.registry import scenario
 
 # Kept local to this shell-level test: object scenarios cover the detailed
 # selection model, while this one only needs a real selected object to prove
 # the toolbar's Copy/Cut/Paste icons dispatch their own actions.
-from scenarios.objects import _arm_tree, _open
+from .objects import _arm_tree, _open
+from .registry import scenario
 
 if TYPE_CHECKING:
-    from runner import E2ERun
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 
 @scenario(uis=("chili", "rmlui", "rust"), target="main-panel", crop="right-panel")
@@ -100,15 +100,7 @@ def import_action(run_state: E2ERun) -> None:
     assert run_state.write_dir is not None
     projects = run_state.write_dir / "springboard" / "projects"
     projects.mkdir(parents=True, exist_ok=True)
-    game_image = (
-        run_state.write_dir
-        / "games"
-        / GAME_DIRNAME
-        / "LuaUI"
-        / "images"
-        / "scenedit"
-        / "area-add.png"
-    )
+    game_image = run_state.write_dir / "games" / GAME_DIRNAME / "LuaUI" / "images" / "scenedit" / "area-add.png"
     shutil.copyfile(game_image, projects / "import_test.png")
 
     run_state.click(*panel_point(left, TOOLBAR["import"]), delay=0.7)

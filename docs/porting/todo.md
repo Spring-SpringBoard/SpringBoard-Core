@@ -438,8 +438,9 @@ makes the tests fragile: a human touching the mouse mid-run breaks them.
 
 1. **Give the engine its own X display.** Run it under `DISPLAY=:99` and point
    `xdotool` at that display; the pointer it warps is virtual, so the real one is
-   untouched, and `xwd` still captures. The harness (window ids, clicks, goldens)
-   works essentially unchanged — this is mostly a `DISPLAY` addition to the same
+   untouched, and the native framebuffer capture still works. The harness
+   (window ids, clicks, goldens) works essentially unchanged — this is mostly a
+   `DISPLAY` addition to the same
    isolation the write dir already has. The question is GL:
    - **Xvfb + llvmpipe** — trivial, but software GL: fine for panel/RmlUi
      scenarios, likely too slow for terrain/shader work, and goldens would differ

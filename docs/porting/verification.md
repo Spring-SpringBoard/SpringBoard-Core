@@ -30,7 +30,7 @@ Rules:
 Run a native target with:
 
 ```bash
-python3 tools/e2e/ui_driver.py <target> --tag ui:rust
+just test-e2e <target> --tag ui:rust
 ```
 
 ## Editors

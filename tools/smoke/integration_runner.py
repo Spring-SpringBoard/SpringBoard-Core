@@ -1,21 +1,29 @@
 """Helpers for slice-local in-engine integration pytest files."""
 
-from __future__ import annotations
-
 import json
 import os
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, TypedDict
 
 import pytest
 
-from run_sbc import DEFAULT_TIMEOUT_S, boot
+from smoke.engine import DEFAULT_TIMEOUT_S, boot
+
+
+class IntegrationResult(TypedDict):
+    name: str
+    passed: bool
+    message: str
+
+
+class IntegrationResults(TypedDict):
+    results: list[IntegrationResult]
 
 
 class RunOutput(NamedTuple):
     """Everything a slice's pytest file needs about an in-engine boot."""
 
-    results: dict
+    results: IntegrationResults
     infolog: str
     write_dir: Path
 
@@ -40,7 +48,7 @@ def run_tests(tags: list[str] | None = None) -> RunOutput:
     if not results_path.is_file():
         pytest.fail(_missing_results_message(results_path, infolog_path))
     return RunOutput(
-        results=json.loads(results_path.read_text()),
+        results=_read_results(results_path),
         infolog=infolog,
         write_dir=write_dir,
     )
@@ -56,27 +64,42 @@ def assert_clean_infolog(infolog: str, *, context: str) -> None:
     `context` is included in the failure message so regressions point at
     the right slice's boot.
     """
-    from log_assertions import find_crashes, find_errors, find_warnings
+    from smoke.log_assertions import find_crashes, find_errors, find_warnings
 
     crashes = find_crashes(infolog)
     assert not crashes, f"[{context}] crash signatures:\n" + "\n".join(crashes[:20])
 
     warnings = find_warnings(infolog)
-    assert not warnings, (
-        f"[{context}] unexpected warnings ({len(warnings)}):\n"
-        + "\n".join(warnings[:40])
-    )
+    assert not warnings, f"[{context}] unexpected warnings ({len(warnings)}):\n" + "\n".join(warnings[:40])
 
     errors = find_errors(infolog)
-    assert not errors, (
-        f"[{context}] errors ({len(errors)}):\n" + "\n".join(errors[:40])
-    )
+    assert not errors, f"[{context}] errors ({len(errors)}):\n" + "\n".join(errors[:40])
 
 
 def _timeout_s() -> int:
     """Boot timeout, overridable via SBC_TEST_TIMEOUT for slow opt-in tests."""
     raw = os.environ.get("SBC_TEST_TIMEOUT", "")
     return int(raw) if raw.strip().isdigit() else DEFAULT_TIMEOUT_S
+
+
+def _read_results(path: Path) -> IntegrationResults:
+    data = json.loads(path.read_text())
+    if not isinstance(data, dict):
+        pytest.fail(f"integration results must be an object: {path}")
+    values = data.get("results")
+    if not isinstance(values, list):
+        pytest.fail(f"integration results must contain a results array: {path}")
+    results: list[IntegrationResult] = []
+    for value in values:
+        if not isinstance(value, dict):
+            pytest.fail(f"integration result must be an object: {path}")
+        name = value.get("name")
+        passed = value.get("passed")
+        message = value.get("message")
+        if not isinstance(name, str) or not isinstance(passed, bool) or not isinstance(message, str):
+            pytest.fail(f"invalid integration result: {path}")
+        results.append({"name": name, "passed": passed, "message": message})
+    return {"results": results}
 
 
 def _missing_results_message(results_path: Path, infolog: Path) -> str:

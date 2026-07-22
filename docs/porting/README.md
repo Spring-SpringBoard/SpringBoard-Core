@@ -38,7 +38,7 @@ one small, reviewed domain at a time into `rust-stable`.
 Native UI scenarios run against the real editor window:
 
 ```bash
-python3 tools/e2e/ui_driver.py <target> --tag ui:rust
+just test-e2e <target> --tag ui:rust
 ```
 
 Every changed golden must be visually inspected before it is recorded as

@@ -1,13 +1,10 @@
 """Env tab: focused Lighting, Sky/Fog, and Water scenarios."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from scenarios.geometry import (
-    dropdown_option,
-    DIALOG,
+from .geometry import (
     COLOR_PICKER,
+    DIALOG,
     ENV,
     ENV_LIGHTING_COLORS,
     ENV_LIGHTING_NUMBERS,
@@ -21,39 +18,18 @@ from scenarios.geometry import (
     TAB_X,
     TAB_Y,
     dialog_point,
+    dropdown_option,
     editor_point,
     panel_left,
     panel_point,
     window_size,
 )
-from scenarios.registry import scenario
+from .registry import scenario
 
 if TYPE_CHECKING:
-    from runner import E2ERun
-
-
-def _edit_number(run_state: E2ERun, x: int, y: int, value: str) -> None:
-    run_state.click(x, y, delay=0.1)
-    run_state.key("ctrl+a", delay=0.06)
-    run_state.type_text(value)
-    run_state.key("Return", delay=0.22)
-
-
-def _commit_color(
-    run_state: E2ERun,
-    left: int,
-    point: tuple[int, int],
-    command: str,
-    key: str,
-    pick_x: int,
-) -> None:
-    run_state.click(*panel_point(left, point), delay=0.25)
-    run_state.click(pick_x, COLOR_PICKER["sample_y"], delay=0.12)
-    run_state.click(*dialog_point(run_state, DIALOG["color_ok_compact"]), delay=0.45)
-    run_state.assert_any_command(
-        command,
-        **{key: lambda value: isinstance(value, list)},
-    )
+    from ..runner import E2ERun
+else:
+    from ..run_state import RunState as E2ERun
 
 
 @scenario(uis=("chili", "rmlui", "rust"), crop="right-panel")
@@ -152,7 +128,6 @@ def water_panel(run_state: E2ERun) -> None:
             "SetWaterParamsCommand",
             **{key: lambda actual, expected=float(value): abs(actual - expected) < 0.01},
         )
-
     for key, point, pick_x in ENV_WATER_COLORS:
         _commit_color(run_state, left, point, "SetWaterParamsCommand", key, pick_x)
     run_state.click(*panel_point(left, ENV["water_plane"]), delay=0.2)
@@ -170,3 +145,21 @@ def water_panel(run_state: E2ERun) -> None:
         )
     run_state.move(*panel_point(left, PARK_PANEL_LOW), delay=0.3)
     run_state.screenshot("water-all-fields-visible")
+
+
+def _edit_number(run_state: E2ERun, x: int, y: int, value: str) -> None:
+    run_state.fill_text(x, y, value, click_delay=0.1, commit_delay=0.22)
+
+
+def _commit_color(
+    run_state: E2ERun,
+    left: int,
+    point: tuple[int, int],
+    command: str,
+    key: str,
+    pick_x: int,
+) -> None:
+    run_state.click(*panel_point(left, point), delay=0.25)
+    run_state.click(pick_x, COLOR_PICKER["sample_y"], delay=0.12)
+    run_state.click(*dialog_point(run_state, DIALOG["color_ok_compact"]), delay=0.45)
+    run_state.assert_any_command(command, **{key: lambda value: isinstance(value, list)})

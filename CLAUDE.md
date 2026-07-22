@@ -2,7 +2,7 @@
 
 ## Use `just` for every dev command
 
-Never invoke `cargo`, `pytest`, `luacheck` or `tools/e2e/ui_driver.py` directly. The
+Never invoke `cargo`, `pytest`, `luacheck` or E2E Python modules directly. The
 recipes carry the right directories, flags and env (the crate lives in `native/`, so
 plain `cargo` from the repo root does not even find a `Cargo.toml`).
 
