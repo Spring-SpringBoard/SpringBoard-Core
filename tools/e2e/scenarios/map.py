@@ -167,7 +167,9 @@ def heightmap(run_state: E2ERun) -> None:
     # stroke is plainly visible in `stroke-*.png` and the diffs mean something.
     run_state.wheel(width // 3, height // 2, clicks=ZOOM_CLICKS, up=True, delay=0.5)
     click_field(run_state, left, MAP["terrain_size"], "400")
-    click_field(run_state, left, MAP["terrain_strength"], "8")
+    # Shape Modify applies a signed delta, so Strength controls a visible
+    # relief; Height remains meaningful only when the Level brush follows.
+    click_field(run_state, left, MAP["terrain_strength"], "1000")
     click_field(run_state, left, MAP["terrain_height"], "80")
     run_state.screenshot("brush-settings")
 
@@ -616,13 +618,15 @@ def map_export(run_state: E2ERun) -> None:
     width, height = window_size(run_state)
 
     # A project first: Export compiles the *saved* project, so it needs a path.
-    # Save As creates it and reloads into it (the one unavoidable wait).
-    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=0.6)
-    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.15)
+    # Save As creates it and reloads into it. Wait for the second ready line,
+    # rather than assuming every machine needs the old fixed eight seconds.
+    reload_log = run_state.log_cursor()
+    run_state.click_settled(*panel_point(left, TOOLBAR["save_as"]), delay=0.3)
+    run_state.click_settled(*dialog_point(run_state, DIALOG["file_name"]), delay=0.1)
     run_state.type_text("ExportMap")
-    run_state.key("Return", delay=0.15)
-    # The one unavoidable wait: Save As restarts the engine into the new project.
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=8.0)
+    run_state.click_settled(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=0.1)
+    run_state.wait_for_command("ReloadIntoProjectCommand")
+    run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
 
     # Terrain: pick a pattern, arm Add, a fat brush, one sweep across the map.
     run_state.click(left + TAB_X["map"], TAB_Y, delay=0.15)
@@ -630,7 +634,7 @@ def map_export(run_state: E2ERun) -> None:
     run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=0.15)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=0.15)
     click_field(run_state, left, MAP["terrain_size"], "1200")
-    click_field(run_state, left, MAP["terrain_height"], "80")
+    click_field(run_state, left, MAP["terrain_strength"], "1000")
     _sweep(run_state, left, width, height)
     run_state.assert_command_at_least("TerrainShapeModifyCommand", 1)
 
@@ -642,15 +646,20 @@ def map_export(run_state: E2ERun) -> None:
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=0.15)
     _sweep(run_state, left, width, height)
     run_state.assert_any_command("TerrainChangeTextureCommand", paintMode="paint")
+    run_state.key("Escape", delay=0.15)
+    run_state.move(*panel_point(left, PARK_PANEL), delay=0.15)
+    edited = run_state.screenshot("edited-before-export")
 
     # Save the edits, then Export -> Spring archive (the default type).
+    save_log = run_state.log_cursor()
     run_state.key("ctrl+s", delay=0.5)
     run_state.assert_command_at_least("SaveCommand", 1)
-    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.3)
-    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=0.15)
+    run_state.wait_for_log("save editor state:", after=save_log)
+    run_state.click_settled(*panel_point(left, TOOLBAR["export"]), delay=0.2)
+    run_state.click_settled(*dialog_point(run_state, DIALOG["file_name"]), delay=0.1)
     run_state.type_text("ExportMap")
-    run_state.key("Return", delay=0.15)
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok_export"]), delay=0.3)
+    run_state.click_settled(*dialog_point(run_state, DIALOG["file_ok_export"]), delay=0.1)
+    run_state.wait_for_command("ExportSpringArchiveCommand")
     run_state.assert_command("ExportSpringArchiveCommand")
 
     archive = _wait_for_archive(run_state, "ExportMap")
@@ -658,6 +667,49 @@ def map_export(run_state: E2ERun) -> None:
         raise AssertionError("export did not produce a .sdz archive")
     if archive.stat().st_size < 1024:
         raise AssertionError(f"compiled archive is suspiciously small: {archive}")
+
+    # Prove the deliverable is usable: expose this session's archive to the map
+    # scanner, create a project on it, and check that the painted material is
+    # still visibly present.  Comparing camera frames pixel-for-pixel here is
+    # deliberately avoided: reloading rebuilds the terrain draw and its
+    # sub-pixel shading is not frame-stable, even when the exported texture is.
+    # `tiles` is orange while the base map is green, so this is a direct visual
+    # assertion that the diffuse PNG made it through mapcompile and back in.
+    map_region = (left // 2 - 260, height // 2 - 220, 520, 440)
+    painted_before = run_state.count_color(edited, map_region, "#C87830", fuzz="18%")
+    if painted_before < 5_000:
+        raise AssertionError(
+            f"texture paint was not visibly present before export ({painted_before} warm pixels)"
+        )
+    assert run_state.write_dir is not None
+    maps_dir = run_state.write_dir / "maps"
+    maps_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(archive, maps_dir / "ExportMap.sdz")
+    reload_log = run_state.log_cursor()
+    reload_commands = run_state.command_cursor()
+    run_state.click_settled(*panel_point(left, TOOLBAR["new_project"]), delay=0.2)
+    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_name"]), delay=0.1)
+    run_state.type_text("FromExport")
+    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_map"]), delay=0.2)
+    run_state.click_settled(
+        *dialog_point(run_state, dropdown_option(DIALOG["new_project_map"], 1)), delay=0.2
+    )
+    run_state.click_settled(
+        *dialog_point(run_state, DIALOG["new_project_create_nosize"]), delay=0.1
+    )
+    run_state.wait_for_command("ReloadIntoProjectCommand", after=reload_commands)
+    run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
+    reopened = run_state.screenshot("export-reopened")
+    painted_after = run_state.count_color(reopened, map_region, "#C87830", fuzz="18%")
+    if painted_after < 5_000:
+        raise AssertionError(
+            f"exported map lost its painted diffuse texture ({painted_after} warm pixels)"
+        )
+    if abs(painted_after - painted_before) > painted_before // 5:
+        raise AssertionError(
+            "exported diffuse texture moved within the map: "
+            f"{painted_before} warm pixels before export, {painted_after} after reopening"
+        )
 
 
 @scenario()

@@ -222,15 +222,18 @@ TEAM_NUMBERS: Final = (
 # action order is UI presentation, while e2e scenarios care about the command
 # being invoked.  Centres are measured in the running Rust panel.
 TOOLBAR: Final = {
-    "new_project": (34, 165),
-    "load": (74, 165),
-    "import": (114, 165),
-    "save": (154, 165),
-    "save_as": (194, 165),
-    "export": (234, 165),
-    "copy": (274, 165),
-    "cut": (314, 165),
-    "paste": (354, 165),
+    # .action-bar has 5dp left padding, 38dp buttons, and 1dp gaps.
+    # Keep clicks at the centres; the former coordinates grazed the right edge
+    # and were intermittently lost by RmlUi.
+    "new_project": (24, 165),
+    "load": (63, 165),
+    "import": (102, 165),
+    "save": (141, 165),
+    "save_as": (180, 165),
+    "export": (219, 165),
+    "copy": (258, 165),
+    "cut": (297, 165),
+    "paste": (336, 165),
 }
 
 # Modal controls are offsets from `dialog_left()`, not fixed screen positions.

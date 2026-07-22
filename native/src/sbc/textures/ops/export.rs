@@ -28,8 +28,12 @@ pub(crate) fn export_diffuse(
             let texture = surface.borrow().texture.clone();
             let x1 = -1.0 + 2.0 * (i * tile_size) as f32 / width as f32;
             let x2 = -1.0 + 2.0 * ((i + 1) * tile_size) as f32 / width as f32;
-            let y1 = -1.0 + 2.0 * ((tiles_z - j) * tile_size) as f32 / height as f32;
-            let y2 = -1.0 + 2.0 * ((tiles_z - j + 1) * tile_size) as f32 / height as f32;
+            // `save_texture_png` flips the framebuffer rows while reading them
+            // into the top-down PNG consumed by mapcompile.  Keep the engine's
+            // tile rows in their native order here; reversing them as well
+            // mirrors painted diffuse texture across the map on export.
+            let y1 = -1.0 + 2.0 * (j * tile_size) as f32 / height as f32;
+            let y2 = -1.0 + 2.0 * ((j + 1) * tile_size) as f32 / height as f32;
             let _ = gfx.bind_texture(&texture, 0, true);
             let _ = gfx.tex_rect(x1, y1, x2, y2, 0.0, 0.0, 1.0, 1.0);
             let _ = gfx.bind_texture(&texture, 0, false);

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 
 from run_env import command_fields
 
@@ -28,6 +29,64 @@ class CommandLogMixin:
             return []
         return path.read_text(errors="replace").splitlines()
 
+    def log_cursor(self) -> int:
+        """A position in the engine log that can be passed to ``wait_for_log``.
+
+        Reloading a project starts a new game in the same process, so its ready
+        line occurs more than once.  Capturing a cursor lets a scenario wait
+        for the *next* occurrence instead of sleeping for a guessed duration.
+        """
+        return len(self.engine_log())
+
+    def wait_for_log(self, text: str, *, after: int = 0, timeout_s: float = 15.0) -> str:
+        """Wait until a newly written engine-log line contains ``text``.
+
+        The process is checked on every poll, which turns a reload crash into a
+        useful immediate error rather than an arbitrary timeout.
+        """
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            for line in self.engine_log()[after:]:
+                if text in line:
+                    self.event("wait_for_log", text=text, line=line)
+                    return line
+            self.assert_running()
+            time.sleep(0.05)
+        raise AssertionError(f"timed out waiting {timeout_s:.1f}s for log line containing {text!r}")
+
+    def wait_for_command(
+        self,
+        class_name: str,
+        *,
+        after: int = 0,
+        timeout_s: float = 10.0,
+        **expected: object,
+    ) -> dict:
+        """Wait for a committed command, optionally matching fields.
+
+        This is for asynchronous UI paths such as modal acceptance.  Unlike an
+        assertion, it returns as soon as the command bridge records the event.
+        """
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            for entry in self.commands()[after:]:
+                data = entry.get("data", {})
+                if data.get("__preview") or data.get("className") != class_name:
+                    continue
+                fields = command_fields(data)
+                if all(
+                    key in fields
+                    and (want(fields[key]) if callable(want) else fields[key] == want)
+                    for key, want in expected.items()
+                ):
+                    self.event("wait_for_command", className=class_name, keys=sorted(expected))
+                    return data
+            self.assert_running()
+            time.sleep(0.05)
+        raise AssertionError(
+            f"timed out waiting {timeout_s:.1f}s for {class_name} with keys {sorted(expected)}"
+        )
+
     def commands(self) -> list[dict]:
         """Every command envelope the UI sent to the command bridge.
 
@@ -52,6 +111,10 @@ class CommandLogMixin:
                 for inner in data.get("commands", []):
                     entries.append({**entry, "data": inner})
         return entries
+
+    def command_cursor(self) -> int:
+        """A position in the command log for ``wait_for_command(after=...)``."""
+        return len(self.commands())
 
     def assert_command(self, class_name: str, **expected: object) -> dict:
         """Assert exactly one committed command of `class_name` carrying every

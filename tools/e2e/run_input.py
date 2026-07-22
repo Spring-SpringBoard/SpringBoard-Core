@@ -113,6 +113,23 @@ class InputMixin:
         )
         nap(delay)
 
+    def click_settled(self, x: int, y: int, button: int = 1, delay: float = 0.08) -> None:
+        """Click after one engine input tick at the target position.
+
+        Most controls accept a compact ``click``. A toolbar action immediately
+        after map editing can otherwise be hit-tested at the previous map
+        position, so a scenario can opt into this precise move/press sequence
+        instead of sleeping on a guessed UI transition.
+        """
+        self.require_window()
+        self.event("click_settled", x=x, y=y, button=button)
+        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        time.sleep(SETTLE)
+        run("xdotool", "mousedown", str(button))
+        nap(0.03)
+        run("xdotool", "mouseup", str(button))
+        nap(delay)
+
     def move(self, x: int, y: int, delay: float = 0.08) -> None:
         self.require_window()
         self.event("move", x=x, y=y)
