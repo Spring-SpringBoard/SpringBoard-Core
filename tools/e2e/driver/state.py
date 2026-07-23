@@ -19,12 +19,31 @@ else:
     Case = object
 
 
+@dataclass(frozen=True, slots=True)
+class GoldenCheck:
+    name: str
+    path: Path
+    tolerance: int
+    capture_ms: int
+
+
+@dataclass(frozen=True, slots=True)
+class PixelCheck:
+    before: Path
+    after: Path
+    region: tuple[int, int, int, int] | None
+    min_changed: int
+    max_changed: int | None
+
+
 @dataclass
 class RunState(ABC):
     case: Case
     update_golden: bool = False
     stage_goldens: bool = False
     golden_results: list[tuple[str, str]] = field(default_factory=list[tuple[str, str]], init=False)
+    pending_goldens: list[GoldenCheck] = field(default_factory=list[GoldenCheck], init=False)
+    pending_pixel_checks: list[PixelCheck] = field(default_factory=list[PixelCheck], init=False)
     run_id: str = field(init=False)
     artifacts: RunArtifacts = field(init=False)
     write_dir: Path | None = field(default=None, init=False)
@@ -97,12 +116,12 @@ class RunState(ABC):
         *,
         min_changed: int = 0,
         max_changed: int | None = None,
-    ) -> int: ...
+    ) -> None: ...
 
     @abstractmethod
     def assert_screenshot_pixels(
         self, before: Path, after: Path, *, min_changed: int = 0, max_changed: int | None = None
-    ) -> int: ...
+    ) -> None: ...
 
     @abstractmethod
     def click(self, x: int, y: int, button: int = 1, delay: Delay = Delay.INPUT) -> None: ...
@@ -224,7 +243,10 @@ class RunState(ABC):
     def write_run_md(self, status: str, **extra: object) -> None: ...
 
     @abstractmethod
-    def _finish_screenshots(self) -> None: ...
+    def _finish_screenshots(self) -> list[str]: ...
+
+    @abstractmethod
+    def _finish_pixel_assertions(self) -> list[str]: ...
 
     @abstractmethod
     def _wait_for_screenshot(self, path: Path) -> ScreenshotConversion: ...

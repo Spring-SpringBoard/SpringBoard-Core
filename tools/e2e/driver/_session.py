@@ -63,10 +63,15 @@ class SessionMixin(RunState):
         run_scenario(cast("E2ERun", self))
 
     def finish(self, status: str, **extra: object) -> None:
-        self._finish_screenshots()
+        failures = [*self._finish_screenshots(), *self._finish_pixel_assertions()]
+        if failures:
+            status = "failed"
+            extra = {**extra, "assertion_failures": failures}
         self.collect_logs()
         self.event("finish", status=status, **extra)
         self.write_run_md(status, **extra)
+        if failures:
+            raise AssertionError("E2E assertions failed:\n" + "\n".join(failures))
 
     def stop(self) -> None:
         if self.proc is None or self.proc.poll() is not None:
@@ -81,6 +86,7 @@ class SessionMixin(RunState):
         self.close_process_logs()
 
     def wait_for_window(self, timeout_s: Timeout = Timeout.UI_START) -> str:
+        started = time.monotonic()
         deadline = time.monotonic() + timeout_s
         last_ids: list[str] = []
         last_pid_map: dict[int, str] = {}
@@ -93,7 +99,12 @@ class SessionMixin(RunState):
                 for window_id in reversed(ids):
                     pid = window_pid(window_id)
                     if pid in pid_map and self.write_dir and str(self.write_dir) in pid_map[pid]:
-                        self.event("window", window=window_id, pid=pid)
+                        self.event(
+                            "window",
+                            window=window_id,
+                            pid=pid,
+                            wait_ms=int((time.monotonic() - started) * 1000),
+                        )
                         return window_id
             self.assert_running()
             pause(Delay.FRAME)
@@ -103,6 +114,7 @@ class SessionMixin(RunState):
 
     def wait_for_ui_ready(self, timeout_s: Timeout = Timeout.UI_START) -> None:
         assert self.write_dir is not None
+        started = time.monotonic()
         log_paths = (
             self.write_dir / "infolog.txt",
             self.artifacts.engine_stdout,
@@ -120,7 +132,12 @@ class SessionMixin(RunState):
                 text = log_path.read_text(errors="replace")
                 matched = next((pattern for pattern in patterns if pattern in text), None)
                 if matched is not None:
-                    self.event("ui_ready", log=str(log_path), matched=matched)
+                    self.event(
+                        "ui_ready",
+                        log=str(log_path),
+                        matched=matched,
+                        wait_ms=int((time.monotonic() - started) * 1000),
+                    )
                     return
             self.assert_running()
             pause(Delay.FRAME)
@@ -128,7 +145,9 @@ class SessionMixin(RunState):
         raise RuntimeError(f"editor UI did not become ready within {timeout_s:.0f}s")
 
     def wait_for_ui_settle(self) -> None:
+        started = time.monotonic()
         pause(Delay.SETTLE)
+        self.event("ui_settled", elapsed_ms=int((time.monotonic() - started) * 1000))
 
     def cleanup_write_dir(self) -> None:
         # Each run gets a fresh temp write dir holding a full copy of the game

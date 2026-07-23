@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, cast, override
 
 from PIL import Image, ImageChops, ImageColor
 
-from .state import RunState
+from .state import PixelCheck, RunState
 from .timing import FAST
 
 if TYPE_CHECKING:
@@ -38,10 +38,8 @@ class PixelMixin(RunState):
         *,
         min_changed: int = 0,
         max_changed: int | None = None,
-    ) -> int:
-        return self._assert_changed(
-            self._crop(before, region), self._crop(after, region), before, after, min_changed, max_changed
-        )
+    ) -> None:
+        self._queue_pixel_check(before, after, region, min_changed, max_changed)
 
     @override
     def assert_screenshot_pixels(
@@ -51,11 +49,53 @@ class PixelMixin(RunState):
         *,
         min_changed: int = 0,
         max_changed: int | None = None,
-    ) -> int:
+    ) -> None:
         if FAST:
             self.event("assert_pixels_skipped")
-            return 0
-        return self._assert_changed(self._image(before), self._image(after), before, after, min_changed, max_changed)
+            return
+        self._queue_pixel_check(before, after, None, min_changed, max_changed)
+
+    @override
+    def _finish_pixel_assertions(self) -> list[str]:
+        failures: list[str] = []
+        for check in self.pending_pixel_checks:
+            try:
+                before = self._image(check.before)
+                after = self._image(check.after)
+                if check.region is not None:
+                    before = self._crop_image(before, check.region)
+                    after = self._crop_image(after, check.region)
+                self._assert_changed(
+                    before,
+                    after,
+                    check.before,
+                    check.after,
+                    check.min_changed,
+                    check.max_changed,
+                )
+            except Exception as error:
+                failures.append(f"pixels {check.before.name} -> {check.after.name}: {error}")
+                self.event("assert_pixels_failed", before=check.before.name, after=check.after.name, error=str(error))
+        self.pending_pixel_checks.clear()
+        return failures
+
+    def _queue_pixel_check(
+        self,
+        before: Path,
+        after: Path,
+        region: tuple[int, int, int, int] | None,
+        min_changed: int,
+        max_changed: int | None,
+    ) -> None:
+        self.pending_pixel_checks.append(PixelCheck(before, after, region, min_changed, max_changed))
+        self.event(
+            "assert_pixels_queued",
+            before=before.name,
+            after=after.name,
+            region=region,
+            min=min_changed,
+            max=max_changed,
+        )
 
     def _assert_changed(
         self,
@@ -79,8 +119,11 @@ class PixelMixin(RunState):
         return changed
 
     def _crop(self, shot: Path, region: tuple[int, int, int, int]) -> Image.Image:
+        return self._crop_image(self._image(shot), region)
+
+    def _crop_image(self, image: Image.Image, region: tuple[int, int, int, int]) -> Image.Image:
         x, y, width, height = region
-        return self._image(shot).crop((x, y, x + width, y + height))
+        return image.crop((x, y, x + width, y + height))
 
     def _image(self, shot: Path) -> Image.Image:
         path = self._source_image(shot)

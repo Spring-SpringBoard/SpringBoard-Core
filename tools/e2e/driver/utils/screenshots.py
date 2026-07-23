@@ -47,7 +47,11 @@ class ScreenshotWorker:
 
     def finish(self) -> tuple[ScreenshotConversion, ...]:
         try:
-            return tuple(future.result() for png_path, future in self._futures.items() if png_path not in self._waited)
+            conversions = tuple(
+                future.result() for png_path, future in self._futures.items() if png_path not in self._waited
+            )
+            self._waited.update(conversion.shot.png_path for conversion in conversions)
+            return conversions
         finally:
             if not self._closed:
                 self._executor.shutdown(wait=True)

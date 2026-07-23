@@ -4,7 +4,7 @@ from typing import override
 
 from e2e.fixtures.golden import compare as compare_golden
 
-from .state import RunState
+from .state import GoldenCheck, RunState
 from .timing import FAST, Delay, Timeout, pause
 from .utils.process import run
 from .utils.run_env import CASE_CROP, PANEL_TOLERANCE
@@ -42,7 +42,7 @@ class CaptureMixin(RunState):
         tolerance: int = PANEL_TOLERANCE,
         park: bool = True,
     ) -> Path:
-        """Capture, then compare against the checked-in golden.
+        """Queue a capture for comparison against the checked-in golden at finish.
 
         `crop` defaults to the case's crop; pass it explicitly for a shot whose
         subject sits outside that region (a modal beside the panel, say).
@@ -67,21 +67,15 @@ class CaptureMixin(RunState):
         if crop is CASE_CROP:
             crop = self.case.crop
         shot = Screenshot(name=name, bmp_path=bmp_path, png_path=png_path, crop=crop)
-        self._capture_screenshot(shot)
+        capture_ms = self._capture_screenshot(shot)
         self.screenshots.append(shot)
-        self._wait_for_screenshot(png_path)
-
-        status = "candidate (not written)"
-        if not self.stage_goldens:
-            status = compare_golden(
-                self.case.name,
-                name,
-                png_path,
-                update=self.update_golden,
-                tolerance=tolerance,
-            )
-        self.golden_results.append((name, status))
-        self.event("golden", name=name, status=status, path=str(png_path))
+        self.pending_goldens.append(GoldenCheck(name, png_path, tolerance, capture_ms))
+        self.event(
+            "golden_queued",
+            name=name,
+            path=str(png_path),
+            capture_ms=capture_ms,
+        )
         return png_path
 
     @override
@@ -103,7 +97,7 @@ class CaptureMixin(RunState):
         return self.screenshot_dir / f"{name}.png"
 
     @override
-    def _finish_screenshots(self) -> None:
+    def _finish_screenshots(self) -> list[str]:
         for conversion in self.screenshot_worker.finish():
             self.event(
                 "screenshot_converted",
@@ -111,6 +105,36 @@ class CaptureMixin(RunState):
                 path=str(conversion.shot.png_path),
                 elapsed_ms=conversion.elapsed_ms,
             )
+
+        failures: list[str] = []
+        for check in self.pending_goldens:
+            conversion = self._wait_for_screenshot(check.path)
+            started = monotonic()
+            try:
+                status = "candidate (not written)"
+                if not self.stage_goldens:
+                    status = compare_golden(
+                        self.case.name,
+                        check.name,
+                        check.path,
+                        update=self.update_golden,
+                        tolerance=check.tolerance,
+                    )
+            except Exception as error:
+                status = f"failed: {error}"
+                failures.append(f"golden {check.name}: {error}")
+            self.golden_results.append((check.name, status))
+            self.event(
+                "golden",
+                name=check.name,
+                status=status,
+                path=str(check.path),
+                capture_ms=check.capture_ms,
+                conversion_ms=conversion.elapsed_ms,
+                compare_ms=int((monotonic() - started) * 1000),
+            )
+        self.pending_goldens.clear()
+        return failures
 
     @override
     def _wait_for_screenshot(self, path: Path) -> ScreenshotConversion:
