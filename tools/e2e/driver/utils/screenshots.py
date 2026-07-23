@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from pathlib import Path
-from time import monotonic, sleep
+from time import monotonic
 
 from PIL import Image
+
+from e2e.driver.timing import Delay, Timeout, pause
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,7 +15,12 @@ class Screenshot:
     crop: str | None = None
 
 
-def capture_editor(shot: Screenshot, *, request_path: Path, timeout_s: float = 10.0) -> tuple[Screenshot, int]:
+def capture_editor(
+    shot: Screenshot,
+    *,
+    request_path: Path,
+    timeout_s: Timeout = Timeout.COMMAND,
+) -> tuple[Screenshot, int]:
     started = monotonic()
     shot.capture_path.unlink(missing_ok=True)
     pending_request = request_path.with_suffix(".pending")
@@ -26,11 +33,11 @@ def capture_editor(shot: Screenshot, *, request_path: Path, timeout_s: float = 1
                 with Image.open(shot.capture_path) as image:
                     _crop_image(image, shot.crop).save(shot.png_path)
             except OSError:
-                sleep(0.02)
+                pause(Delay.MS_20)
                 continue
             shot.capture_path.unlink(missing_ok=True)
             return shot, int((monotonic() - started) * 1000)
-        sleep(0.02)
+        pause(Delay.MS_20)
     raise TimeoutError(f"engine did not write screenshot within {timeout_s:.0f}s: {shot.png_path}")
 
 

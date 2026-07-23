@@ -23,7 +23,7 @@ from typing import NotRequired, TypedDict, cast
 
 from PIL import Image, ImageChops
 
-GOLDEN_ROOT = Path(__file__).resolve().parent / "golden"
+GOLDEN_ROOT = Path(__file__).resolve().parent / "goldens"
 
 STATUS_AI = "ai-reviewed"
 STATUS_APPROVED = "approved"
@@ -36,10 +36,6 @@ class ReviewEntry(TypedDict):
 
 
 type Review = dict[str, ReviewEntry]
-
-
-def review_path(case_name: str) -> Path:
-    return GOLDEN_ROOT / case_name / "review.json"
 
 
 def load_review(case_name: str) -> Review:
@@ -155,3 +151,7 @@ def compare(
     raise GoldenMismatchError(
         f"{case_name}/{shot_name}: image is not comparable to the golden (size changed?); see {failed_dir}"
     )
+
+
+def review_path(case_name: str) -> Path:
+    return GOLDEN_ROOT / case_name / "review.json"

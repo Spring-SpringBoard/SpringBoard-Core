@@ -1,20 +1,9 @@
-import os
-import time
 from typing import cast
 
 from .models import CommandData, CommandFields
 
 CASE_CROP = "<case>"
 PANEL_TOLERANCE = 20
-SETTLE = 0.12
-FAST = os.environ.get("SBC_E2E_FAST") == "1"
-
-
-def nap(seconds: float) -> None:
-    if not FAST:
-        time.sleep(seconds)
-
-
 _ENVELOPE_KEYS = frozenset({"className", "__cmd_id", "__preview"})
 
 

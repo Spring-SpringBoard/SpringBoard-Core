@@ -1,23 +1,17 @@
-import time
 from pathlib import Path
 from typing import override
 
+from e2e.fixtures.golden import compare as compare_golden
+
 from .state import RunState
-from .utils.golden import compare as compare_golden
+from .timing import FAST, Delay, pause
 from .utils.process import run
-from .utils.run_env import CASE_CROP, FAST, PANEL_TOLERANCE
+from .utils.run_env import CASE_CROP, PANEL_TOLERANCE
 from .utils.screenshots import Screenshot, capture_editor
 from .utils.x11 import window_geometry
 
 
 class CaptureMixin(RunState):
-    def _skip_capture(self, kind: str, name: str) -> Path:
-        """Fast mode: record that the step was reached, capture nothing. The
-        returned path is a placeholder -- pixel asserts are no-ops in fast mode,
-        so nothing ever reads it."""
-        self.event(f"{kind}_skipped", name=name)
-        return self.screenshot_dir / f"{name}.png"
-
     @override
     def screenshot(self, name: str) -> Path:
         if FAST:
@@ -37,7 +31,7 @@ class CaptureMixin(RunState):
         it, so wherever it rests becomes part of the image."""
         width, height = window_geometry(self.window)
         run("xdotool", "mousemove", "--window", self.window, str(width // 2), str(height - 4))
-        time.sleep(0.25)
+        pause(Delay.MS_250)
 
     @override
     def golden(
@@ -101,6 +95,10 @@ class CaptureMixin(RunState):
         self.screenshots.append(shot)
         self.event("screenshot_root", name=name, path=str(png_path), elapsed_ms=elapsed_ms)
         return png_path
+
+    def _skip_capture(self, kind: str, name: str) -> Path:
+        self.event(f"{kind}_skipped", name=name)
+        return self.screenshot_dir / f"{name}.png"
 
     def _capture_screenshot(self, shot: Screenshot) -> tuple[Screenshot, int]:
         assert self.write_dir is not None

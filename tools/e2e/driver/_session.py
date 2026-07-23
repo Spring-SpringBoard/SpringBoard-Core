@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, cast, override
 from smoke.engine import prepare
 
 from .state import RunState
+from .timing import Delay, Timeout, pause
 from .utils.paths import GAME_DIRNAME
 from .utils.x11 import find_windows, spring_processes, window_pid
 
@@ -72,13 +73,13 @@ class SessionMixin(RunState):
             return
         self.proc.terminate()
         try:
-            self.proc.wait(timeout=4)
+            self.proc.wait(timeout=Timeout.SHUTDOWN)
         except subprocess.TimeoutExpired:
             self.proc.kill()
-            self.proc.wait(timeout=4)
+            self.proc.wait(timeout=Timeout.SHUTDOWN)
         self.close_process_logs()
 
-    def wait_for_window(self, timeout_s: float = 45.0) -> str:
+    def wait_for_window(self, timeout_s: Timeout = Timeout.UI_START) -> str:
         deadline = time.monotonic() + timeout_s
         last_ids: list[str] = []
         last_pid_map: dict[int, str] = {}
@@ -94,12 +95,12 @@ class SessionMixin(RunState):
                         self.event("window", window=window_id, pid=pid)
                         return window_id
             self.assert_running()
-            time.sleep(0.25)
+            pause(Delay.MS_250)
         raise RuntimeError(
             f"no matching Recoil/Spring window found; last ids={last_ids}; spring processes={last_pid_map}"
         )
 
-    def wait_for_ui_ready(self, timeout_s: float = 45.0) -> None:
+    def wait_for_ui_ready(self, timeout_s: Timeout = Timeout.UI_START) -> None:
         assert self.write_dir is not None
         log_paths = (
             self.write_dir / "infolog.txt",
@@ -121,12 +122,12 @@ class SessionMixin(RunState):
                     self.event("ui_ready", log=str(log_path), matched=matched)
                     return
             self.assert_running()
-            time.sleep(0.25)
+            pause(Delay.MS_250)
         self.event("ui_ready_timeout", logs=[str(path) for path in log_paths], timeout_s=timeout_s)
         raise RuntimeError(f"editor UI did not become ready within {timeout_s:.0f}s")
 
     def wait_for_ui_settle(self) -> None:
-        time.sleep(0.4)
+        pause(Delay.MS_400)
 
     def cleanup_write_dir(self) -> None:
         # Each run gets a fresh temp write dir holding a full copy of the game

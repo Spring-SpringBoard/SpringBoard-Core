@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from e2e.driver.timing import Delay
 from e2e.driver.utils.models import object_number_close
 
 if TYPE_CHECKING:
@@ -26,54 +27,7 @@ from .helpers.objects import open_object_editor as _open
 from .helpers.registry import scenario
 
 
-# The one scenario whose cases vary the *chonsole* rather than the UI, so it
-# names them itself.
-@scenario(
-    target="chonsole",
-    cases={
-        "chonsole-lua-baseline": {"chonsole": "lua", "ui": "chili"},
-        "chonsole-rust-port": {"chonsole": "rust", "ui": "chili"},
-    },
-)
-def chonsole_editing(run_state: "RunState") -> None:
-    """Lua/Rust editing parity: opening, completions, word editing, and /help."""
-    run_state.focus()
-    run_state.key("Escape", delay=0.08)
-    run_state.key("Return", delay=0.18)
-    run_state.screenshot("chonsole-open")
-    run_state.type_text("/he")
-    run_state.screenshot("suggestions")
-    run_state.key_chord(("ctrl",), "a")
-    run_state.type_text("alpha beta gamma")
-    run_state.key_chord(("ctrl",), "Left")
-    run_state.key_chord(("ctrl",), "Left")
-    run_state.type_text("_")
-    run_state.key("End")
-    run_state.type_text("!")
-    run_state.screenshot("navigation")
-    run_state.key_chord(("ctrl", "shift"), "Left")
-    run_state.screenshot("select-word")
-    run_state.type_text("WORLD")
-    run_state.screenshot("replace-selection")
-    run_state.key_chord(("ctrl",), "a")
-    run_state.screenshot("select-all")
-    run_state.type_text("/help")
-    run_state.key("Return", delay=0.25)
-    run_state.screenshot("execute-help")
-
-
-NATIVE_CHONSOLE_CASE = {
-    # Run native Chonsole with the Rust UI too: it prevents the legacy Lua
-    # cursor tooltip from affecting interaction assertions.
-    "chonsole-native-smoke": {"chonsole": "rust", "ui": "rust"},
-}
-
-NATIVE_RELOAD_CASE = {
-    "e2e-reloadnativemodules-rust": {"chonsole": "rust", "ui": "rust"},
-}
-
-
-@scenario(target="e2e-reloadnativemodules", cases=NATIVE_RELOAD_CASE)
+@scenario(target="e2e-reloadnativemodules")
 def reload_native_modules(run_state: "RunState") -> None:
     """Native reload preserves input and can re-adopt pre-reload engine features.
 
@@ -87,30 +41,35 @@ def reload_native_modules(run_state: "RunState") -> None:
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
-    run_state.click(spot_x, spot_y, delay=0.8)  # place before reload
-    run_state.key("Escape", delay=0.2)  # leave placement mode
+    run_state.click(spot_x, spot_y, delay=Delay.MS_800)  # place before reload
+    run_state.key("Escape", delay=Delay.MS_200)  # leave placement mode
 
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     run_state.type_text("/reloadnativemodules")
     # Reload is deliberately deferred by the engine until all event callbacks
     # have returned. The delay covers that next update; assert_running catches
     # ASAN aborts from unloading a module on its own Chonsole callback stack.
-    run_state.key("Return", delay=0.7)
+    run_state.key("Return", delay=Delay.MS_700)
     run_state.assert_running()
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     run_state.type_text("/h")
     run_state.assert_running()
-    run_state.key("Escape", delay=0.2)
+    run_state.key("Escape", delay=Delay.MS_200)
 
     # The feature was created by the module instance we just unloaded. Box
     # selection must discover it from the engine, then make it editable through
     # the replacement instance's new springID -> modelID mapping. Direct-click
     # selection alone would not cover this: it has its own lazy adoption path.
     run_state.press(spot_x - 220, 80)
-    run_state.move(spot_x + 120, spot_y + 60, delay=0.2)
-    run_state.release(spot_x + 200, spot_y + 160, delay=0.4)
-    run_state.click(*editor_point(left, "objects", "properties"), delay=0.5)
-    run_state.fill_text(*panel_point(left, OBJECTS["property_pos_x"]), "1800", click_delay=0.2, commit_delay=0.5)
+    run_state.move(spot_x + 120, spot_y + 60, delay=Delay.MS_200)
+    run_state.release(spot_x + 200, spot_y + 160, delay=Delay.MS_400)
+    run_state.click(*editor_point(left, "objects", "properties"), delay=Delay.MS_500)
+    run_state.fill_text(
+        *panel_point(left, OBJECTS["property_pos_x"]),
+        "1800",
+        click_delay=Delay.MS_200,
+        commit_delay=Delay.MS_500,
+    )
     run_state.assert_any_command(
         "SetObjectParamCommand",
         key="pos",
@@ -118,12 +77,12 @@ def reload_native_modules(run_state: "RunState") -> None:
     )
 
 
-@scenario(target="chonsole-native-input", cases=NATIVE_CHONSOLE_CASE)
+@scenario(target="chonsole-native-input")
 def chonsole_native_input(run_state: "RunState") -> None:
     """Native input editing: Ctrl+word navigation, selection replacement, and Ctrl+A."""
     run_state.focus()
     run_state.key("Escape")
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     run_state.screenshot("open")
     run_state.type_text("alpha beta gamma")
     run_state.key_chord(("ctrl",), "Left")
@@ -139,7 +98,7 @@ def chonsole_native_input(run_state: "RunState") -> None:
     run_state.screenshot("select-all")
 
 
-@scenario(target="chonsole-native-suggestions", cases=NATIVE_CHONSOLE_CASE)
+@scenario(target="chonsole-native-suggestions")
 def chonsole_native_suggestions(run_state: "RunState") -> None:
     """Native suggestions keep their list while Tab-cycling, hovering, and clicking.
 
@@ -150,7 +109,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     run_state.focus()
     _open(run_state, "features")  # Features, with search input
     run_state.key("Escape")
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     run_state.type_text("/h")
     matches = run_state.screenshot("matches")
     width, height = window_size(run_state)
@@ -165,7 +124,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     run_state.assert_region_pixels(first, second, suggestion_box, min_changed=100)
 
     row_x, third_row_y = chonsole_row_point(width, height, 2)
-    run_state.move(row_x, third_row_y, delay=0.25)
+    run_state.move(row_x, third_row_y, delay=Delay.MS_250)
     hovered = run_state.screenshot("third-row-hovered")
     run_state.assert_region_pixels(second, hovered, suggestion_box, min_changed=100)
 
@@ -178,7 +137,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     # Escape clears Chonsole's input; reopening avoids relying on selection
     # ownership just after the click assertion above.
     run_state.key("Escape")
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     run_state.type_text("/set ")
     run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start")
@@ -198,7 +157,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
 
     # Reopen from the top for the independent mouse-wheel/scrollbar checks.
     run_state.key("Escape")
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     run_state.type_text("/set ")
     run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start-reset")
@@ -226,7 +185,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
 
     # Leaving and re-entering the list must not reset either wheel or thumb
     # scrolling. This used to happen because hover rebuilt the suggestion DOM.
-    run_state.move(row_x, third_row_y, delay=0.25)
+    run_state.move(row_x, third_row_y, delay=Delay.MS_250)
     scroll_start = run_state.screenshot("wheel-scroll-start")
     run_state.wheel(row_x, third_row_y, clicks=6, up=False)
     scroll_down = run_state.screenshot("wheel-scroll-down")
@@ -239,7 +198,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     # Restart at the top, drag the thumb, then prove that re-entering still
     # leaves the dragged position alone.
     run_state.key("Escape")
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     run_state.type_text("/set ")
     drag_start = run_state.screenshot("drag-scroll-start")
     # The track begins at `scrollbar_x`; its thumb is inset by the track's
@@ -259,12 +218,12 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     run_state.assert_region_pixels(drag_down, drag_reentered, suggestion_content, max_changed=0)
 
 
-@scenario(target="chonsole-native-commands", cases=NATIVE_CHONSOLE_CASE)
+@scenario(target="chonsole-native-commands")
 def chonsole_native_commands(run_state: "RunState") -> None:
     """Native command completion: engine commands, texture preview, and game-rule values."""
     run_state.focus()
     run_state.key("Escape")
-    run_state.key("Return", delay=0.18)
+    run_state.key("Return", delay=Delay.MS_180)
     opened = run_state.screenshot("open")
     run_state.type_text("/")
     commands = run_state.screenshot("all-engine-commands")
@@ -287,7 +246,7 @@ def chonsole_native_commands(run_state: "RunState") -> None:
     run_state.assert_region_pixels(preview, rules, (width // 4, height // 4, width // 2, height // 2), min_changed=100)
 
 
-@scenario(target="chonsole-luaui-reload", cases=NATIVE_CHONSOLE_CASE)
+@scenario(target="chonsole-luaui-reload")
 def chonsole_luaui_reload(run_state: "RunState") -> None:
     """Running `/luaui reload` from the rust console.
 
@@ -300,43 +259,16 @@ def chonsole_luaui_reload(run_state: "RunState") -> None:
     """
     run_state.focus()
     run_state.key("Escape")
-    run_state.key("Return", delay=0.3)
+    run_state.key("Return", delay=Delay.MS_300)
     run_state.type_text("/luaui reload")
     run_state.screenshot("before-reload")
     # Enter executes it: RmlUi is torn down, then the console hides itself.
-    run_state.key("Return", delay=3.0)
+    run_state.key("Return", delay=Delay.S_3)
     run_state.screenshot("after-reload")
     # The console must recreate its context and accept input again.
-    run_state.key("Return", delay=0.4)
+    run_state.key("Return", delay=Delay.MS_400)
     run_state.type_text("recovered")
     run_state.screenshot("console-recovered")
-
-
-@scenario(uis=("chili", "rmlui"))
-def dev_console(run_state: "RunState") -> None:
-    """Lua developer consoles: line selection, Ctrl+C/Ctrl+A ownership, and F8 hiding."""
-    run_state.focus()
-    # The console is visible by default; capture it.
-    run_state.screenshot("dev-console-open")
-    # Drag across several log lines: they must highlight (multi-line selection).
-    run_state.drag(
-        DEV_CONSOLE["selection_drag_start"][0],
-        DEV_CONSOLE["selection_drag_start"][1],
-        DEV_CONSOLE["selection_drag_end"][0],
-        DEV_CONSOLE["selection_drag_end"][1],
-        steps=10,
-    )
-    run_state.screenshot("dev-console-selection")
-    # Ctrl+C over the console copies the selected lines to the clipboard, and
-    # Ctrl+A selects every line first. SpringBoard binds Ctrl+C to Copy, so this
-    # also checks it yields to the console.
-    run_state.move(*DEV_CONSOLE["selection_cursor"], delay=0.6)
-    run_state.key("ctrl+c", delay=0.5)
-    run_state.key("ctrl+a", delay=0.4)
-    run_state.key("ctrl+c", delay=0.5)
-    run_state.screenshot("dev-console-select-all")
-    run_state.key("F8", delay=0.6)
-    run_state.screenshot("dev-console-hidden")
 
 
 @scenario(crop="dev-console")
@@ -353,8 +285,8 @@ def native_dev_console(run_state: "RunState") -> None:
     # centres 108px above the window's bottom edge.
     toolbar_y = dev_console_toolbar_y(height)
 
-    run_state.key("F8", delay=0.6)  # the harness starts it hidden
-    run_state.click(DEV_CONSOLE["clear_x"], toolbar_y, delay=0.5)
+    run_state.key("F8", delay=Delay.MS_600)  # the harness starts it hidden
+    run_state.click(DEV_CONSOLE["clear_x"], toolbar_y, delay=Delay.MS_500)
     run_state.golden("console-cleared")
 
     # The status strip is not part of the console, but it is positioned directly
@@ -364,25 +296,25 @@ def native_dev_console(run_state: "RunState") -> None:
     # RmlUi applies the 34dp icon width to the button's content box; 5dp padding
     # and 1dp borders make its actual hit target 46dp, followed by a 10dp gap.
     # Derive the centres from that real geometry at every E2E resolution.
-    run_state.click(*status_button_point(width, height, 0), delay=0.4)
+    run_state.click(*status_button_point(width, height, 0), delay=Delay.MS_400)
     run_state.assert_any_command("UndoCommand")
-    run_state.click(*status_button_point(width, height, 1), delay=0.4)
+    run_state.click(*status_button_point(width, height, 1), delay=Delay.MS_400)
     run_state.assert_any_command("RedoCommand")
-    run_state.click(*status_button_point(width, height, 2), delay=0.4)
+    run_state.click(*status_button_point(width, height, 2), delay=Delay.MS_400)
     run_state.assert_any_command("ClearUndoRedoCommand")
     run_state.golden("status-bar", crop="status-commands")
 
-    run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=0.5)
+    run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=Delay.MS_500)
     run_state.golden("console-problems-on")
 
-    run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=0.5)
+    run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=Delay.MS_500)
     run_state.golden("console-problems-off")
 
     # F8 hides the console, and brings it back.
-    run_state.key("F8", delay=0.6)
+    run_state.key("F8", delay=Delay.MS_600)
     run_state.golden("console-hidden")
 
-    run_state.key("F8", delay=0.6)
+    run_state.key("F8", delay=Delay.MS_600)
     run_state.golden("console-shown")
 
 
@@ -394,7 +326,7 @@ def native_dev_console_copy(run_state: "RunState") -> None:
     is also what proves the console wins the key when it has a selection.
     """
     run_state.focus()
-    run_state.key("F8", delay=0.6)  # the harness starts it hidden
+    run_state.key("F8", delay=Delay.MS_600)  # the harness starts it hidden
     _width, height = window_size(run_state)
     # The log sits above the toolbar row (108px off the bottom).
     top, bottom = height - 290, height - 140
@@ -411,13 +343,13 @@ def native_dev_console_copy(run_state: "RunState") -> None:
     )
     run_state.screenshot("lines-selected")
 
-    run_state.key("ctrl+c", delay=0.5)
+    run_state.key("ctrl+c", delay=Delay.MS_500)
     copied = run_state.clipboard()
     if not copied.strip() or copied.startswith("SENTINEL"):
         raise AssertionError("Ctrl+C over a console selection copied nothing")
 
-    run_state.key("ctrl+a", delay=0.4)
-    run_state.key("ctrl+c", delay=0.5)
+    run_state.key("ctrl+a", delay=Delay.MS_400)
+    run_state.key("ctrl+c", delay=Delay.MS_500)
     everything = run_state.clipboard()
     if len(everything) <= len(copied):
         raise AssertionError(f"Ctrl+A did not widen the selection ({len(everything)} <= {len(copied)} chars)")

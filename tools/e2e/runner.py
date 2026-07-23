@@ -5,10 +5,6 @@ from .driver._pixels import PixelMixin
 from .driver._report import ReportMixin
 from .driver._session import SessionMixin
 from .driver.state import RunState
-from .driver.utils.run_env import FAST, PANEL_TOLERANCE, SETTLE, command_fields, nap
-
-# Re-exported for callers that still reach for them via `runner`.
-__all__ = ["FAST", "PANEL_TOLERANCE", "SETTLE", "E2ERun", "command_fields", "nap"]
 
 
 class E2ERun(

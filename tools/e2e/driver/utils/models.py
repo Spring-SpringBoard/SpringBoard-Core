@@ -8,8 +8,8 @@ type Environment = dict[str, str]
 
 
 class PortFlags(TypedDict):
-    chonsole: Literal["lua", "rust"]
-    ui: Literal["chili", "rmlui", "rust"]
+    chonsole: Literal["rust"]
+    ui: Literal["rust"]
 
 
 class CommandEntry(TypedDict):

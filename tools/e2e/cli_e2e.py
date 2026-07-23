@@ -3,7 +3,7 @@ from typing import Annotated
 import typer
 
 from .driver.cases import TARGETS, select_cases, target_cases
-from .driver.utils.golden import GOLDEN_ROOT, STATUS_APPROVED, approve_review, load_review
+from .fixtures.golden import GOLDEN_ROOT, STATUS_APPROVED, approve_review, load_review
 from .runner import E2ERun
 
 app = typer.Typer(no_args_is_help=True)
@@ -11,7 +11,7 @@ app = typer.Typer(no_args_is_help=True)
 
 @app.command()
 def run(
-    target: Annotated[str, typer.Argument(help="Scenario target or 'all'.")] = "chonsole",
+    target: Annotated[str, typer.Argument(help="Scenario target or 'all'.")],
     tag: Annotated[list[str] | None, typer.Option(help="Require a case tag.")] = None,
     update_golden: Annotated[bool, typer.Option(help="Write new golden references.")] = False,
     stage_golden: Annotated[bool, typer.Option(help="Capture without updating goldens.")] = False,

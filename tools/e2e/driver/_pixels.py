@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast, override
 from PIL import Image, ImageChops, ImageColor
 
 from .state import RunState
-from .utils.run_env import FAST
+from .timing import FAST
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

@@ -4,6 +4,7 @@ from e2e.driver._scenarios import registered_scenarios
 from e2e.driver.utils.models import Environment, PortFlags
 
 REGISTERED = registered_scenarios()
+RUST_FLAGS: PortFlags = {"chonsole": "rust", "ui": "rust"}
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ TARGETS = targets()
 def select_cases(targets: list[str], tags: list[str]) -> list[Case]:
     """Cases matching every requested tag, across the requested targets.
 
-    `select_cases(["all"], ["ui:rust"])` runs only the native UI.
+    Every case runs with the native Rust UI and console.
     """
     chosen = TARGETS if not targets or targets == ["all"] else targets
     wanted = set(tags)
@@ -39,20 +40,15 @@ def target_cases(target: str) -> list[Case]:
         raise ValueError(f"unknown target: {target}")
     return [
         Case(
-            name=name,
-            flags=flags,
+            name=f"{target}-rust",
+            flags=RUST_FLAGS,
             scenario=registered.scenario,
             crop=registered.crop,
-            tags=_tags_for(target, flags),
+            tags=_tags_for(target),
             env=registered.env,
         )
-        for name, flags in registered.cases.items()
     ]
 
 
-def _tags_for(target: str, flags: PortFlags) -> frozenset[str]:
-    tags = {f"target:{target}"}
-    for key in ("ui", "chonsole"):
-        if key in flags:
-            tags.add(f"{key}:{flags[key]}")
-    return frozenset(tags)
+def _tags_for(target: str) -> frozenset[str]:
+    return frozenset({f"target:{target}", "ui:rust", "chonsole:rust"})

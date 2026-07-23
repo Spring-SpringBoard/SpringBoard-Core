@@ -3,6 +3,7 @@
 import shutil
 from typing import TYPE_CHECKING
 
+from e2e.driver.timing import Delay
 from e2e.driver.utils.paths import GAME_DIRNAME
 
 from .helpers.geometry import (
@@ -29,12 +30,12 @@ if TYPE_CHECKING:
     from e2e.driver.state import RunState
 
 
-@scenario(uis=("chili", "rmlui", "rust"), target="main-panel", crop="right-panel")
+@scenario(target="main-panel", crop="right-panel")
 def main_panel_tabs(run_state: "RunState") -> None:
     run_state.focus()
     left = panel_left(run_state)
     for name, offset_x in TAB_X.items():
-        run_state.click(left + offset_x, TAB_Y, delay=0.18)
+        run_state.click(left + offset_x, TAB_Y, delay=Delay.MS_180)
         run_state.screenshot(f"tab-{name}")
 
 
@@ -43,7 +44,7 @@ def main_panel_tabs(run_state: "RunState") -> None:
 _TABS = (("objects",), ("map",), ("env",), ("misc",))
 
 
-@scenario(uis=("rmlui", "rust"), crop="right-panel")
+@scenario(crop="right-panel")
 def all_editors(run_state: "RunState") -> None:
     """Open every editor in every tab. Editors are lazily created, so a broken
     one only shows up when its button is clicked."""
@@ -51,9 +52,9 @@ def all_editors(run_state: "RunState") -> None:
     left = panel_left(run_state)
 
     for (tab_name,) in _TABS:
-        run_state.click(left + TAB_X[tab_name], TAB_Y, delay=0.3)
+        run_state.click(left + TAB_X[tab_name], TAB_Y, delay=Delay.MS_300)
         for editor_name in EDITORS[tab_name]:
-            run_state.click(*editor_point(left, tab_name, editor_name), delay=0.7)
+            run_state.click(*editor_point(left, tab_name, editor_name), delay=Delay.MS_700)
             run_state.screenshot(f"{tab_name}-{editor_name}")
 
 
@@ -73,14 +74,14 @@ def panel_tabs_are_choices(run_state: "RunState") -> None:
     run_state.focus()
     left = panel_left(run_state)
 
-    run_state.click(left + TAB_X["objects"], TAB_Y, delay=0.2)
-    run_state.click(*editor_point(left, "objects", "units"), delay=0.45)
+    run_state.click(left + TAB_X["objects"], TAB_Y, delay=Delay.MS_200)
+    run_state.click(*editor_point(left, "objects", "units"), delay=Delay.MS_450)
     units = run_state.screenshot("units-selected")
-    run_state.click(left + TAB_X["objects"], TAB_Y, delay=0.3)
+    run_state.click(left + TAB_X["objects"], TAB_Y, delay=Delay.MS_300)
     objects_again = run_state.screenshot("objects-reselected")
     run_state.assert_screenshot_pixels(units, objects_again, max_changed=6_000)
 
-    run_state.click(*editor_point(left, "objects", "units"), delay=0.3)
+    run_state.click(*editor_point(left, "objects", "units"), delay=Delay.MS_300)
     units_again = run_state.screenshot("units-reselected")
     run_state.assert_screenshot_pixels(objects_again, units_again, max_changed=6_000)
 
@@ -103,10 +104,10 @@ def import_action(run_state: "RunState") -> None:
     game_image = run_state.write_dir / "games" / GAME_DIRNAME / "LuaUI" / "images" / "scenedit" / "area-add.png"
     shutil.copyfile(game_image, projects / "import_test.png")
 
-    run_state.click(*panel_point(left, TOOLBAR["import"]), delay=0.7)
+    run_state.click(*panel_point(left, TOOLBAR["import"]), delay=Delay.MS_700)
     run_state.screenshot("import-dialog")
-    run_state.click(*dialog_point(run_state, DIALOG["asset_first_cell"]), delay=0.4)
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=0.6)
+    run_state.click(*dialog_point(run_state, DIALOG["asset_first_cell"]), delay=Delay.MS_400)
+    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=Delay.MS_600)
     run_state.assert_any_command("ImportDiffuseCommand")
 
 
@@ -126,14 +127,14 @@ def clipboard_actions(run_state: "RunState") -> None:
     width, height = window_size(run_state)
     source = (width // 3 - 130, height // 2)
     run_state.wheel(*source, clicks=8, up=True)
-    run_state.click(*source, delay=0.8)
-    run_state.key("Escape", delay=0.35)
-    run_state.click(*source, delay=0.5)
+    run_state.click(*source, delay=Delay.MS_800)
+    run_state.key("Escape", delay=Delay.MS_350)
+    run_state.click(*source, delay=Delay.MS_500)
 
-    run_state.click(*panel_point(left, TOOLBAR["copy"]), delay=0.4)
+    run_state.click(*panel_point(left, TOOLBAR["copy"]), delay=Delay.MS_400)
     before_paste = run_state.screenshot("copied")
     mark = len(run_state.commands())
-    run_state.click(*panel_point(left, TOOLBAR["paste"]), delay=0.8)
+    run_state.click(*panel_point(left, TOOLBAR["paste"]), delay=Delay.MS_800)
     pasted = run_state.screenshot("pasted")
     if not any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
         raise AssertionError("toolbar Paste did not dispatch a grouped native command")
@@ -143,29 +144,29 @@ def clipboard_actions(run_state: "RunState") -> None:
     run_state.assert_region_pixels(before_paste, pasted, centre, min_changed=200)
 
     mark = len(run_state.commands())
-    run_state.click(*panel_point(left, TOOLBAR["cut"]), delay=0.8)
+    run_state.click(*panel_point(left, TOOLBAR["cut"]), delay=Delay.MS_800)
     cut = run_state.screenshot("cut")
     if not any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
         raise AssertionError("toolbar Cut did not dispatch its grouped native command")
-    run_state.key("ctrl+z", delay=0.8)
+    run_state.key("ctrl+z", delay=Delay.MS_800)
     restored = run_state.screenshot("cut-undone")
     run_state.assert_screenshot_pixels(cut, restored, min_changed=400)
 
 
-@scenario(uis=("rmlui",))
+@scenario()
 def dialogs(run_state: "RunState") -> None:
     """Editors and dialogs that build controls outside the panel: Misc ->
     Diplomacy and the New Project dialog."""
     run_state.focus()
     left = panel_left(run_state)
 
-    run_state.click(left + TAB_X["misc"], TAB_Y, delay=0.2)
-    run_state.click(*editor_point(left, "misc", "diplomacy"), delay=0.8)
+    run_state.click(left + TAB_X["misc"], TAB_Y, delay=Delay.MS_200)
+    run_state.click(*editor_point(left, "misc", "diplomacy"), delay=Delay.MS_800)
     run_state.screenshot("diplomacy")
 
-    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=1.0)
+    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=Delay.S_1)
     run_state.screenshot_root("new-project")
-    run_state.key("Escape", delay=0.3)
+    run_state.key("Escape", delay=Delay.MS_300)
 
 
 @scenario(crop="project-status")
@@ -180,7 +181,7 @@ def project_status_bar(run_state: "RunState") -> None:
     run_state.golden("status-bar")
 
 
-@scenario(uis=("chili", "rmlui"))
+@scenario()
 def notifications(run_state: "RunState") -> None:
     """Export with no saved project posts a warning notification (SB.NotifyWarn).
     In RmlUi that must come from RmlUiNotifications, not Chotify (which is Chili)."""
@@ -189,11 +190,11 @@ def notifications(run_state: "RunState") -> None:
 
     run_state.screenshot("before")
     # Toolbar action buttons, 6th is Export.
-    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=1.0)
+    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=Delay.S_1)
     run_state.screenshot("warning")
     # time=3, so it must be gone a few seconds later (the editor runs paused, so
     # expiry cannot be driven off game seconds).
-    run_state.move(left - 200, 400, delay=4.0)
+    run_state.move(left - 200, 400, delay=Delay.S_4)
     run_state.screenshot("expired")
 
 
@@ -211,11 +212,11 @@ def export_warning(run_state: "RunState") -> None:
     strip = (width // 4, 55, width // 2, 220)
 
     before = run_state.screenshot("before")
-    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=0.6)
+    run_state.click(*panel_point(left, TOOLBAR["export"]), delay=Delay.MS_600)
     warning = run_state.screenshot("warning")
     run_state.assert_region_pixels(before, warning, strip, min_changed=300)
 
     # It carries its own timer (~4s) and clears without any interaction.
-    run_state.move(left - 200, height // 2, delay=5.0)
+    run_state.move(left - 200, height // 2, delay=Delay.S_5)
     expired = run_state.screenshot("expired")
     run_state.assert_region_pixels(warning, expired, strip, min_changed=300)

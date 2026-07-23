@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import override
 
 from .state import RunState
+from .timing import Delay, Timeout, pause
 from .utils.models import CommandData, CommandEntry, CommandValue, parse_command_entry
 from .utils.run_env import command_fields
 
@@ -43,7 +44,7 @@ class CommandLogMixin(RunState):
         return len(self.engine_log())
 
     @override
-    def wait_for_log(self, text: str, *, after: int = 0, timeout_s: float = 15.0) -> str:
+    def wait_for_log(self, text: str, *, after: int = 0, timeout_s: Timeout = Timeout.LOG) -> str:
         """Wait until a newly written engine-log line contains ``text``.
 
         The process is checked on every poll, which turns a reload crash into a
@@ -56,7 +57,7 @@ class CommandLogMixin(RunState):
                     self.event("wait_for_log", text=text, line=line)
                     return line
             self.assert_running()
-            time.sleep(0.05)
+            pause(Delay.MS_50)
         raise AssertionError(f"timed out waiting {timeout_s:.1f}s for log line containing {text!r}")
 
     @override
@@ -65,7 +66,7 @@ class CommandLogMixin(RunState):
         class_name: str,
         *,
         after: int = 0,
-        timeout_s: float = 10.0,
+        timeout_s: Timeout = Timeout.COMMAND,
         **expected: CommandValue | Callable[[CommandValue], bool],
     ) -> CommandData:
         """Wait for a committed command, optionally matching fields.
@@ -87,7 +88,7 @@ class CommandLogMixin(RunState):
                     self.event("wait_for_command", className=class_name, keys=sorted(expected))
                     return data
             self.assert_running()
-            time.sleep(0.05)
+            pause(Delay.MS_50)
         raise AssertionError(f"timed out waiting {timeout_s:.1f}s for {class_name} with keys {sorted(expected)}")
 
     @override

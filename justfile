@@ -141,7 +141,7 @@ run config="config/ui-rust.json": build-native
 # Run black-box UI E2E tests. Does not rebuild native code; run `just build`
 # first when testing Rust UI changes.
 [group('test')]
-test-e2e target="chonsole" *args:
+test-e2e target *args:
     PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e run "{{target}}" {{args}}
 
 # List every reference image and whether it is approved or still ai-reviewed.

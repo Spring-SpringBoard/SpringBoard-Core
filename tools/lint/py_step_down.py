@@ -1,17 +1,12 @@
-"""Step-down ordering for Python: public functions before private (`_`) helpers.
+"""Step-down ordering for Python functions and methods."""
 
-The Python analogue of tools/lint/rust_step_down.py. A module-level `def name`
-is public; `def _name` is a private helper. Public functions must come before
-private ones so a file reads top-down from high to low level.
-"""
-
-import re
+import ast
+from collections.abc import Iterable
 from pathlib import Path
 
-PUBLIC_DEF = re.compile(r"^def ([A-Za-z][A-Za-z0-9_]*)")
-PRIVATE_DEF = re.compile(r"^def (_[A-Za-z0-9_]*)")
 ROOTS = ("build", "tools/e2e", "tools/lint", "tools/smoke")
 EXCLUDE_DIRS = frozenset({".venv", "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache"})
+type Function = ast.FunctionDef | ast.AsyncFunctionDef
 
 
 def check() -> int:
@@ -33,17 +28,40 @@ def check() -> int:
 
 
 def check_file(path: Path) -> list[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    errors = _check_scope(path, tree.body, "function")
+    for class_def in _classes(tree.body):
+        errors.extend(_check_class(path, class_def))
+    return errors
+
+
+def _check_class(path: Path, class_def: ast.ClassDef) -> list[str]:
+    errors = _check_scope(path, class_def.body, "method")
+    for nested in _classes(class_def.body):
+        errors.extend(_check_class(path, nested))
+    return errors
+
+
+def _check_scope(path: Path, body: Iterable[ast.stmt], subject: str) -> list[str]:
     errors: list[str] = []
-    first_private: tuple[int, str] | None = None
-    for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        if PRIVATE_DEF.match(line):
-            if first_private is None:
-                first_private = (lineno, line.strip())
+    first_private: Function | None = None
+    for statement in body:
+        if not isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef):
             continue
-        match = PUBLIC_DEF.match(line)
-        if match and first_private is not None:
+        if _is_private(statement.name):
+            first_private = first_private or statement
+        elif first_private is not None:
+            private_label = "helper" if subject == "function" else "method"
             errors.append(
-                f"{path}:{lineno}: public function `{match.group(1)}` appears after "
-                f"private helper at line {first_private[0]} (`{first_private[1]}`)"
+                f"{path}:{statement.lineno}: public {subject} `{statement.name}` appears after "
+                f"private {private_label} at line {first_private.lineno} (`def {first_private.name}`)"
             )
     return errors
+
+
+def _classes(body: Iterable[ast.stmt]) -> Iterable[ast.ClassDef]:
+    return (statement for statement in body if isinstance(statement, ast.ClassDef))
+
+
+def _is_private(name: str) -> bool:
+    return name.startswith("_") and not name.startswith("__")
