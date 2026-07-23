@@ -12,6 +12,7 @@ inventory::submit! { ModelFactory { make: |_iface| Box::new(ScreenshotManager::d
 pub(crate) struct ScreenshotManager {
     pending: Option<PathBuf>,
     e2e_request: Option<PathBuf>,
+    e2e_pending: Option<PathBuf>,
 }
 
 impl Default for ScreenshotManager {
@@ -19,6 +20,7 @@ impl Default for ScreenshotManager {
         Self {
             pending: None,
             e2e_request: std::env::var_os("SBC_E2E_SCREENSHOT_REQUEST").map(PathBuf::from),
+            e2e_pending: None,
         }
     }
 }
@@ -38,13 +40,17 @@ impl ScreenshotManager {
         self.pending.take()
     }
 
-    pub(crate) fn take_e2e(&self) -> Option<PathBuf> {
+    pub(crate) fn take_e2e(&mut self) -> Option<PathBuf> {
+        if self.e2e_pending.is_some() {
+            return self.e2e_pending.take();
+        }
         let request = self.e2e_request.as_ref()?;
         let path = PathBuf::from(std::fs::read_to_string(request).ok()?.trim());
         if path.as_os_str().is_empty() {
             return None;
         }
         let _ = std::fs::remove_file(request);
-        Some(path)
+        self.e2e_pending = Some(path);
+        None
     }
 }

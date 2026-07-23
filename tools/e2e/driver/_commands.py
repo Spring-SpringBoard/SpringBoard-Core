@@ -57,7 +57,7 @@ class CommandLogMixin(RunState):
                     self.event("wait_for_log", text=text, line=line)
                     return line
             self.assert_running()
-            pause(Delay.MS_50)
+            pause(Delay.EVENT)
         raise AssertionError(f"timed out waiting {timeout_s:.1f}s for log line containing {text!r}")
 
     @override
@@ -88,7 +88,7 @@ class CommandLogMixin(RunState):
                     self.event("wait_for_command", className=class_name, keys=sorted(expected))
                     return data
             self.assert_running()
-            pause(Delay.MS_50)
+            pause(Delay.EVENT)
         raise AssertionError(f"timed out waiting {timeout_s:.1f}s for {class_name} with keys {sorted(expected)}")
 
     @override

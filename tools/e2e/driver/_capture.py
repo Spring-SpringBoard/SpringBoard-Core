@@ -1,13 +1,14 @@
 from pathlib import Path
+from time import monotonic
 from typing import override
 
 from e2e.fixtures.golden import compare as compare_golden
 
 from .state import RunState
-from .timing import FAST, Delay, pause
+from .timing import FAST, Delay, Timeout, pause
 from .utils.process import run
 from .utils.run_env import CASE_CROP, PANEL_TOLERANCE
-from .utils.screenshots import Screenshot, capture_editor
+from .utils.screenshots import Screenshot, ScreenshotConversion
 from .utils.x11 import window_geometry
 
 
@@ -18,12 +19,12 @@ class CaptureMixin(RunState):
             return self._skip_capture("screenshot", name)
         self.require_window()
         stem = f"{len(self.screenshots):02d}-{name}"
-        capture_path = self.screenshot_dir / f"{stem}.captured.png"
+        bmp_path = self.screenshot_dir / f"{stem}.bmp"
         png_path = self.screenshot_dir / f"{stem}.png"
-        shot = Screenshot(name=name, capture_path=capture_path, png_path=png_path, crop=self.case.crop)
-        shot, elapsed_ms = self._capture_screenshot(shot)
+        shot = Screenshot(name=name, bmp_path=bmp_path, png_path=png_path, crop=self.case.crop)
+        elapsed_ms = self._capture_screenshot(shot)
         self.screenshots.append(shot)
-        self.event("screenshot", name=name, path=str(png_path), elapsed_ms=elapsed_ms)
+        self.event("screenshot", name=name, bmp_path=str(bmp_path), path=str(png_path), elapsed_ms=elapsed_ms)
         return png_path
 
     def park_cursor(self) -> None:
@@ -31,7 +32,7 @@ class CaptureMixin(RunState):
         it, so wherever it rests becomes part of the image."""
         width, height = window_geometry(self.window)
         run("xdotool", "mousemove", "--window", self.window, str(width // 2), str(height - 4))
-        pause(Delay.MS_250)
+        pause(Delay.FRAME)
 
     @override
     def golden(
@@ -61,13 +62,14 @@ class CaptureMixin(RunState):
         if park:
             self.park_cursor()
         stem = f"{len(self.screenshots):02d}-{name}"
-        capture_path = self.screenshot_dir / f"{stem}.captured.png"
+        bmp_path = self.screenshot_dir / f"{stem}.bmp"
         png_path = self.screenshot_dir / f"{stem}.png"
         if crop is CASE_CROP:
             crop = self.case.crop
-        shot = Screenshot(name=name, capture_path=capture_path, png_path=png_path, crop=crop)
-        shot, _ = self._capture_screenshot(shot)
+        shot = Screenshot(name=name, bmp_path=bmp_path, png_path=png_path, crop=crop)
+        self._capture_screenshot(shot)
         self.screenshots.append(shot)
+        self._wait_for_screenshot(png_path)
 
         status = "candidate (not written)"
         if not self.stage_goldens:
@@ -88,20 +90,57 @@ class CaptureMixin(RunState):
             return self._skip_capture("screenshot_root", name)
         self.require_window()
         stem = f"{len(self.screenshots):02d}-{name}"
-        capture_path = self.screenshot_dir / f"{stem}.captured.png"
+        bmp_path = self.screenshot_dir / f"{stem}.bmp"
         png_path = self.screenshot_dir / f"{stem}.png"
-        shot = Screenshot(name=name, capture_path=capture_path, png_path=png_path)
-        shot, elapsed_ms = self._capture_screenshot(shot)
+        shot = Screenshot(name=name, bmp_path=bmp_path, png_path=png_path)
+        elapsed_ms = self._capture_screenshot(shot)
         self.screenshots.append(shot)
-        self.event("screenshot_root", name=name, path=str(png_path), elapsed_ms=elapsed_ms)
+        self.event("screenshot_root", name=name, bmp_path=str(bmp_path), path=str(png_path), elapsed_ms=elapsed_ms)
         return png_path
 
     def _skip_capture(self, kind: str, name: str) -> Path:
         self.event(f"{kind}_skipped", name=name)
         return self.screenshot_dir / f"{name}.png"
 
-    def _capture_screenshot(self, shot: Screenshot) -> tuple[Screenshot, int]:
+    @override
+    def _finish_screenshots(self) -> None:
+        for conversion in self.screenshot_worker.finish():
+            self.event(
+                "screenshot_converted",
+                name=conversion.shot.name,
+                path=str(conversion.shot.png_path),
+                elapsed_ms=conversion.elapsed_ms,
+            )
+
+    @override
+    def _wait_for_screenshot(self, path: Path) -> ScreenshotConversion:
+        conversion, newly_waited = self.screenshot_worker.wait(path)
+        if newly_waited:
+            self.event(
+                "screenshot_converted",
+                name=conversion.shot.name,
+                path=str(path),
+                elapsed_ms=conversion.elapsed_ms,
+            )
+        return conversion
+
+    def _capture_screenshot(self, shot: Screenshot) -> int:
         assert self.write_dir is not None
+        started = monotonic()
+        shot.bmp_path.unlink(missing_ok=True)
         request_path = self.write_dir / "e2e-screenshot-request.txt"
-        self.event("capture_editor", request=str(request_path))
-        return capture_editor(shot, request_path=request_path)
+        pending_request = request_path.with_suffix(".pending")
+        pending_request.write_text(str(shot.bmp_path))
+        pending_request.replace(request_path)
+        self._wait_for_capture(shot.bmp_path)
+        self.screenshot_worker.submit(shot)
+        return int((monotonic() - started) * 1000)
+
+    def _wait_for_capture(self, path: Path) -> None:
+        deadline = monotonic() + Timeout.COMMAND
+        while monotonic() < deadline:
+            if path.is_file():
+                return
+            self.assert_running()
+            pause(Delay.POLL)
+        raise TimeoutError(f"engine did not write screenshot within {Timeout.COMMAND:.0f}s: {path}")

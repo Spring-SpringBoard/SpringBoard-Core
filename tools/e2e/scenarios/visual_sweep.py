@@ -24,15 +24,15 @@ def rust_ui_sweep(run_state: "RunState") -> None:
 
     # Status is independent from F8; opening the console puts both neighbours
     # in one frame for inspection before touching the right-hand panel.
-    run_state.key("F8", delay=Delay.MS_200)
+    run_state.key("F8", delay=Delay.CONTROL)
     run_state.screenshot("console-and-status")
 
     # Four shipped tabs, then every registered editor button in their display
     # order. Keep this intentionally quick: it is a rendering smoke pass, not a
     # substitute for the focused interaction scenarios.
     for tab in ("objects", "map", "env", "misc"):
-        run_state.click(left + TAB_X[tab], TAB_Y, delay=Delay.MS_120)
+        run_state.click(left + TAB_X[tab], TAB_Y, delay=Delay.CONTROL)
         run_state.screenshot(f"tab-{tab}")
         for editor in EDITORS[tab]:
-            run_state.click(*editor_point(left, tab, editor), delay=Delay.MS_120)
+            run_state.click(*editor_point(left, tab, editor), delay=Delay.CONTROL)
             run_state.screenshot(f"{tab}-{editor}")

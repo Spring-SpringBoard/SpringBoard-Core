@@ -118,6 +118,12 @@ test-unit:
 test-integration tags="":
     if [ -n "{{tags}}" ]; then SBC_TEST_TAGS="{{tags}}" PYTHONPATH="{{tool_pythonpath}}" uv run --locked pytest tools/smoke; else PYTHONPATH="{{tool_pythonpath}}" uv run --locked pytest tools/smoke; fi
 
+# Benchmark the engine's synchronous Gfx::save_image implementation. Prints
+# timings and leaves source files plus JSON in the reported temporary write dir.
+[group('test')]
+bench-save-image: build-native
+    SBC_TEST_TIMEOUT="300" PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-smoke bench-save-image
+
 # Complete run: unit tests, native rebuild, and ALL integration tests incl. slow opt-in ones.
 [group('test')]
 test-all: test-unit build-native

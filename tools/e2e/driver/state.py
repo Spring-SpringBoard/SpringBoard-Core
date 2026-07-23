@@ -11,7 +11,7 @@ from .timing import Delay, Timeout
 from .utils.artifacts import RunArtifacts
 from .utils.models import CommandData, CommandEntry, CommandValue
 from .utils.paths import ARTIFACT_ROOT
-from .utils.screenshots import Screenshot
+from .utils.screenshots import Screenshot, ScreenshotConversion, ScreenshotWorker
 
 if TYPE_CHECKING:
     from .cases import Case
@@ -34,6 +34,7 @@ class RunState(ABC):
     stdout_file: TextIO | None = field(default=None, init=False)
     stderr_file: TextIO | None = field(default=None, init=False)
     screenshots: list[Screenshot] = field(default_factory=list[Screenshot], init=False)
+    screenshot_worker: ScreenshotWorker = field(init=False)
 
     def __post_init__(self) -> None:
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
@@ -41,6 +42,7 @@ class RunState(ABC):
         self.artifacts = RunArtifacts(ARTIFACT_ROOT / self.run_id)
         self.out_dir.mkdir(parents=True, exist_ok=True)
         self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+        self.screenshot_worker = ScreenshotWorker()
 
     @property
     def out_dir(self) -> Path:
@@ -103,13 +105,13 @@ class RunState(ABC):
     ) -> int: ...
 
     @abstractmethod
-    def click(self, x: int, y: int, button: int = 1, delay: Delay = Delay.MS_80) -> None: ...
+    def click(self, x: int, y: int, button: int = 1, delay: Delay = Delay.INPUT) -> None: ...
 
     @abstractmethod
-    def click_root(self, x: int, y: int, button: int = 1, delay: Delay = Delay.MS_80) -> None: ...
+    def click_root(self, x: int, y: int, button: int = 1, delay: Delay = Delay.INPUT) -> None: ...
 
     @abstractmethod
-    def click_settled(self, x: int, y: int, button: int = 1, delay: Delay = Delay.MS_80) -> None: ...
+    def click_settled(self, x: int, y: int, button: int = 1, delay: Delay = Delay.INPUT) -> None: ...
 
     @abstractmethod
     def clipboard(self) -> str: ...
@@ -134,7 +136,7 @@ class RunState(ABC):
         y2: int,
         button: int = 1,
         steps: int = 12,
-        step_delay: Delay = Delay.MS_30,
+        step_delay: Delay = Delay.EVENT,
     ) -> None: ...
 
     @abstractmethod
@@ -150,8 +152,8 @@ class RunState(ABC):
         y: int,
         text: str,
         *,
-        click_delay: Delay = Delay.MS_200,
-        commit_delay: Delay = Delay.MS_350,
+        click_delay: Delay = Delay.CONTROL,
+        commit_delay: Delay = Delay.SETTLE,
     ) -> None: ...
 
     @abstractmethod
@@ -161,28 +163,28 @@ class RunState(ABC):
     def golden(self, name: str, crop: str | None = "<case>", tolerance: int = 20, park: bool = True) -> Path: ...
 
     @abstractmethod
-    def key(self, name: str, delay: Delay = Delay.MS_60) -> None: ...
+    def key(self, name: str, delay: Delay = Delay.INPUT) -> None: ...
 
     @abstractmethod
-    def key_chord(self, modifiers: tuple[str, ...], name: str, delay: Delay = Delay.MS_80) -> None: ...
+    def key_chord(self, modifiers: tuple[str, ...], name: str, delay: Delay = Delay.INPUT) -> None: ...
 
     @abstractmethod
     def log_cursor(self) -> int: ...
 
     @abstractmethod
-    def move(self, x: int, y: int, delay: Delay = Delay.MS_80) -> None: ...
+    def move(self, x: int, y: int, delay: Delay = Delay.INPUT) -> None: ...
 
     @abstractmethod
-    def move_relative(self, dx: int, dy: int = 0, steps: int = 6, delay: Delay = Delay.MS_60) -> None: ...
+    def move_relative(self, dx: int, dy: int = 0, steps: int = 6, delay: Delay = Delay.INPUT) -> None: ...
 
     @abstractmethod
     def modifier(self, name: str) -> AbstractContextManager[None]: ...
 
     @abstractmethod
-    def press(self, x: int, y: int, button: int = 1, delay: Delay = Delay.MS_150) -> None: ...
+    def press(self, x: int, y: int, button: int = 1, delay: Delay = Delay.CONTROL) -> None: ...
 
     @abstractmethod
-    def release(self, x: int, y: int, button: int = 1, delay: Delay = Delay.MS_300) -> None: ...
+    def release(self, x: int, y: int, button: int = 1, delay: Delay = Delay.FRAME) -> None: ...
 
     @abstractmethod
     def require_window(self) -> None: ...
@@ -213,10 +215,16 @@ class RunState(ABC):
     def wait_for_log(self, text: str, *, after: int = 0, timeout_s: Timeout = Timeout.LOG) -> str: ...
 
     @abstractmethod
-    def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.MS_250) -> None: ...
+    def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.FRAME) -> None: ...
 
     @abstractmethod
-    def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.MS_250) -> None: ...
+    def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.FRAME) -> None: ...
 
     @abstractmethod
     def write_run_md(self, status: str, **extra: object) -> None: ...
+
+    @abstractmethod
+    def _finish_screenshots(self) -> None: ...
+
+    @abstractmethod
+    def _wait_for_screenshot(self, path: Path) -> ScreenshotConversion: ...

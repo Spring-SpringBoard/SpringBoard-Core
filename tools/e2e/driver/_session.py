@@ -63,6 +63,7 @@ class SessionMixin(RunState):
         run_scenario(cast("E2ERun", self))
 
     def finish(self, status: str, **extra: object) -> None:
+        self._finish_screenshots()
         self.collect_logs()
         self.event("finish", status=status, **extra)
         self.write_run_md(status, **extra)
@@ -95,7 +96,7 @@ class SessionMixin(RunState):
                         self.event("window", window=window_id, pid=pid)
                         return window_id
             self.assert_running()
-            pause(Delay.MS_250)
+            pause(Delay.FRAME)
         raise RuntimeError(
             f"no matching Recoil/Spring window found; last ids={last_ids}; spring processes={last_pid_map}"
         )
@@ -122,12 +123,12 @@ class SessionMixin(RunState):
                     self.event("ui_ready", log=str(log_path), matched=matched)
                     return
             self.assert_running()
-            pause(Delay.MS_250)
+            pause(Delay.FRAME)
         self.event("ui_ready_timeout", logs=[str(path) for path in log_paths], timeout_s=timeout_s)
         raise RuntimeError(f"editor UI did not become ready within {timeout_s:.0f}s")
 
     def wait_for_ui_settle(self) -> None:
-        pause(Delay.MS_400)
+        pause(Delay.SETTLE)
 
     def cleanup_write_dir(self) -> None:
         # Each run gets a fresh temp write dir holding a full copy of the game

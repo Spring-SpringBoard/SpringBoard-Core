@@ -88,7 +88,4 @@ class PixelMixin(RunState):
             return source.copy()
 
     def _source_image(self, shot: Path) -> Path:
-        for captured in self.screenshots:
-            if captured.png_path == shot:
-                return captured.png_path
-        raise AssertionError(f"unknown screenshot {shot}")
+        return self._wait_for_screenshot(shot).shot.png_path

@@ -95,6 +95,10 @@ impl TestCtx<'_> {
             std::thread::sleep(Duration::from_millis(20));
         }
     }
+
+    pub fn heartbeat(&self) {
+        beat_heartbeat();
+    }
 }
 
 #[derive(Default, Deserialize)]
