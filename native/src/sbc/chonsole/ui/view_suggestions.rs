@@ -1,8 +1,7 @@
 //! Completion state and RmlUi rendering for Chonsole command suggestions.
 
-use super::core::ChonsoleCore;
-use super::text_input::TextInput;
-use super::types::ChonsoleSuggestion;
+use crate::sbc::chonsole::commands::ChonsoleCore;
+use crate::sbc::chonsole::framework::{ChonsoleSuggestion, TextInput};
 
 // The RmlUi columns clip at their actual geometry. These limits only add an
 // explicit ellipsis for genuinely long entries, instead of throwing away
@@ -158,8 +157,15 @@ fn truncate_chars(text: &str, max_chars: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::{truncate_chars, SuggestionView};
-    use crate::sbc::chonsole::core::ChonsoleCore;
-    use crate::sbc::chonsole::text_input::TextInput;
+    use crate::sbc::chonsole::commands::ChonsoleCore;
+    use crate::sbc::chonsole::commands::CommandRegistry;
+    use crate::sbc::chonsole::framework::TextInput;
+
+    fn core() -> ChonsoleCore {
+        let mut core = ChonsoleCore::default();
+        CommandRegistry::default().install(&mut core);
+        core
+    }
 
     #[test]
     fn truncates_without_splitting_unicode() {
@@ -169,7 +175,7 @@ mod tests {
 
     #[test]
     fn next_selection_keeps_the_original_suggestion_list() {
-        let core = ChonsoleCore::default();
+        let core = core();
         let mut input = TextInput::default();
         input.set("/h");
         let mut suggestions = SuggestionView::default();
@@ -187,7 +193,7 @@ mod tests {
 
     #[test]
     fn next_selection_wraps_while_preserving_the_original_query() {
-        let core = ChonsoleCore::default();
+        let core = core();
         let mut input = TextInput::default();
         input.set("/h");
         let mut suggestions = SuggestionView::default();
@@ -208,7 +214,7 @@ mod tests {
 
     #[test]
     fn selecting_a_rendered_suggestion_keeps_the_match_list() {
-        let core = ChonsoleCore::default();
+        let core = core();
         let mut input = TextInput::default();
         input.set("/h");
         let mut suggestions = SuggestionView::default();
@@ -223,7 +229,7 @@ mod tests {
 
     #[test]
     fn detail_prefers_hovered_suggestion_over_keyboard_selection() {
-        let core = ChonsoleCore::default();
+        let core = core();
         let mut input = TextInput::default();
         input.set("/h");
         let mut suggestions = SuggestionView::default();

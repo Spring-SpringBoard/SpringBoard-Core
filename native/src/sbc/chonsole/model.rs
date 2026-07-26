@@ -2,13 +2,9 @@ use std::any::Any;
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use super::catalog::CatalogRefresher;
-use super::commands::CommandExecutor;
-use super::core::ChonsoleCore;
-use super::events::{ChonsoleEvents, KeyOutcome};
-use super::history::HistoryStore;
-use super::types::{ChonsoleResponse, ChonsoleSuggestion};
-use super::view::ChonsoleView;
+use super::commands::{CatalogRefresher, ChonsoleCore, CommandExecutor, CommandRegistry};
+use super::framework::{ChonsoleResponse, ChonsoleSuggestion, HistoryStore};
+use super::ui::{ChonsoleUi, UiKeyOutcome};
 use crate::sbc::command_system::model::{Model, ModelFactory};
 use crate::sbc::port_flags::{self, PortImpl};
 
@@ -18,9 +14,9 @@ pub struct ChonsoleManager {
     interface: NativeInterfaceRef,
     enabled: bool,
     core: ChonsoleCore,
-    view: ChonsoleView,
-    events: ChonsoleEvents,
+    ui: ChonsoleUi,
     history_store: Option<HistoryStore>,
+    command_registry: CommandRegistry,
     executor: CommandExecutor,
     catalogs: CatalogRefresher,
 }
@@ -34,7 +30,7 @@ impl Model for ChonsoleManager {
 impl Drop for ChonsoleManager {
     fn drop(&mut self) {
         if self.enabled {
-            self.view.dispose(&self.interface);
+            self.ui.dispose(&self.interface);
         }
     }
 }
@@ -51,13 +47,16 @@ impl ChonsoleManager {
             "native chonsole {}",
             if enabled { "enabled" } else { "disabled" }
         );
+        let command_registry = CommandRegistry::default();
+        let mut core = ChonsoleCore::with_history(history);
+        command_registry.install(&mut core);
         ChonsoleManager {
             interface,
             enabled,
-            core: ChonsoleCore::with_history(history),
-            view: ChonsoleView::default(),
-            events: ChonsoleEvents::default(),
+            core,
+            ui: ChonsoleUi::default(),
             history_store,
+            command_registry,
             executor: CommandExecutor::default(),
             catalogs: CatalogRefresher::default(),
         }
@@ -72,14 +71,13 @@ impl ChonsoleManager {
             };
         }
         let previous_history = self.core.history().to_vec();
-        let (response, effects) = self.core.execute(input);
+        let action = self.command_registry.resolve(input);
+        let (response, effects) = self.core.execute(input, action);
         self.persist_history_change(&previous_history);
         for effect in effects {
             self.executor.apply(&self.interface, effect);
         }
-        self.view.apply_response(&response, &self.core);
-        self.events.reset_history_cursor();
-        let _ = self.view.refresh(&self.interface, &self.core);
+        self.ui.apply_response(&response, &self.core);
         response
     }
 
@@ -95,7 +93,7 @@ impl ChonsoleManager {
     }
 
     pub fn visible(&self) -> bool {
-        self.enabled && self.view.visible()
+        self.enabled && self.ui.visible()
     }
 
     pub fn clear(&mut self) {
@@ -106,9 +104,7 @@ impl ChonsoleManager {
         if let Some(store) = &self.history_store {
             store.rewrite(self.core.history());
         }
-        self.view.clear();
-        self.events.reset_history_cursor();
-        let _ = self.view.refresh(&self.interface, &self.core);
+        self.ui.clear();
     }
 
     pub fn update(&mut self) -> Result<(), Error> {
@@ -116,12 +112,7 @@ impl ChonsoleManager {
             return Ok(());
         }
         self.catalogs.refresh(&self.interface, &mut self.core);
-        self.view.ensure(&self.interface)?;
-        if self.view.process_suggestion_clicks(&self.core) {
-            self.view.refresh(&self.interface, &self.core)?;
-        }
-        self.view.process_suggestion_hovers(&self.interface);
-        self.view.update(&self.interface)
+        self.ui.update(&self.interface, &self.core)
     }
 
     pub fn draw_screen(&mut self) -> Result<(), Error> {
@@ -129,7 +120,7 @@ impl ChonsoleManager {
             return Ok(());
         }
         self.executor.export_pending_texture(&self.interface);
-        self.view.draw_screen(&self.interface)
+        self.ui.draw_screen(&self.interface)
     }
 
     pub fn key_press(
@@ -141,38 +132,39 @@ impl ChonsoleManager {
         if !self.enabled {
             return Ok(false);
         }
-        match self.events.key_press(
-            &self.interface,
-            &self.core,
-            &mut self.view,
-            key_code,
-            scan_code,
-            is_repeat,
-        )? {
-            KeyOutcome::Unhandled => Ok(false),
-            KeyOutcome::Handled => Ok(true),
-            KeyOutcome::Execute(input) => {
+        match self
+            .ui
+            .key_press(&self.interface, &self.core, key_code, scan_code, is_repeat)?
+        {
+            UiKeyOutcome::Unhandled => Ok(false),
+            UiKeyOutcome::Handled => Ok(true),
+            UiKeyOutcome::Execute(input) => {
                 self.execute(&input);
-                self.view.set_visible(&self.interface, false)?;
+                self.ui.hide(&self.interface)?;
                 Ok(true)
             }
         }
+    }
+
+    pub fn text_key(&mut self, key_code: i32) -> Result<bool, Error> {
+        if !self.enabled {
+            return Ok(false);
+        }
+        self.ui.text_key(&self.interface, &self.core, key_code)
     }
 
     pub fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
-        self.events
-            .key_release(&self.interface, &mut self.view, key_code, scan_code)
+        self.ui.key_release(&self.interface, key_code, scan_code)
     }
 
     pub fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
-        self.events
-            .text_input(&self.interface, &self.core, &mut self.view, utf8)
+        self.ui.text_input(&self.interface, &self.core, utf8)
     }
 
     pub fn mouse_move(
@@ -187,28 +179,28 @@ impl ChonsoleManager {
             return Ok(false);
         }
         let _ = (dx, dy, button);
-        self.view.mouse_move(&self.interface, x, y)
+        self.ui.mouse_move(&self.interface, x, y)
     }
 
     pub fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
-        self.view.mouse_press(&self.interface, x, y, button)
+        self.ui.mouse_press(&self.interface, x, y, button)
     }
 
     pub fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
         if !self.enabled {
             return Ok(());
         }
-        self.view.mouse_release(&self.interface, x, y, button)
+        self.ui.mouse_release(&self.interface, x, y, button)
     }
 
     pub fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
-        self.view.mouse_wheel(&self.interface, up, value)
+        self.ui.mouse_wheel(&self.interface, up, value)
     }
 
     fn persist_history_change(&self, previous_history: &[String]) {

@@ -1,8 +1,10 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use super::core::ChonsoleCore;
-use super::text_input::TextInput;
-use super::types::{ChonsoleLine, ChonsoleLineKind, ChonsoleResponse};
+use crate::sbc::chonsole::commands::ChonsoleCore;
+use crate::sbc::chonsole::framework::{
+    ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, TextInput,
+};
+
 use super::view_render::{draw_texture_preview, render_body};
 use super::view_rml::{ChonsoleRml, SuggestionClickQueue, SuggestionHoverQueue};
 use super::view_suggestions::SuggestionView;
@@ -29,14 +31,18 @@ pub(super) struct ChonsoleView {
 }
 
 impl ChonsoleView {
-    pub(super) fn ensure(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+    pub(super) fn ensure(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        core: &ChonsoleCore,
+    ) -> Result<(), Error> {
         if self.rml.ensure(interface)? {
             self.output.push(ChonsoleLine {
                 kind: ChonsoleLineKind::Output,
                 text: "native chonsole ready. F10 toggles, /help lists commands.".to_string(),
             });
             self.set_visible(interface, self.visible)?;
-            self.refresh(interface, &ChonsoleCore::default())?;
+            self.refresh(interface, core)?;
         }
         Ok(())
     }
@@ -183,6 +189,10 @@ impl ChonsoleView {
 
     pub(super) fn select_all(&mut self) {
         self.input.select_all();
+    }
+
+    pub(super) fn selected_text(&self) -> Option<&str> {
+        self.input.selected_text()
     }
 
     pub(super) fn refresh_suggestions(&mut self, core: &ChonsoleCore) {

@@ -5,20 +5,20 @@ use std::{
 
 use spring_native::prelude::NativeInterfaceRef;
 
-pub(super) const MAX_HISTORY: usize = 100;
+pub const MAX_HISTORY: usize = 100;
 
-pub(super) struct HistoryStore {
+pub struct HistoryStore {
     path: PathBuf,
 }
 
 impl HistoryStore {
-    pub(super) fn new(interface: &NativeInterfaceRef) -> Self {
+    pub fn new(interface: &NativeInterfaceRef) -> Self {
         let path = history_path(interface);
         log::debug!("native chonsole history: {}", path.display());
         HistoryStore { path }
     }
 
-    pub(super) fn load(&self) -> Vec<String> {
+    pub fn load(&self) -> Vec<String> {
         let raw = match fs::read_to_string(&self.path) {
             Ok(raw) => raw,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Vec::new(),
@@ -40,7 +40,7 @@ impl HistoryStore {
         history
     }
 
-    pub(super) fn rewrite(&self, history: &[String]) {
+    pub fn rewrite(&self, history: &[String]) {
         if let Some(parent) = self.path.parent() {
             if let Err(err) = fs::create_dir_all(parent) {
                 log::warn!("create chonsole history dir {}: {err}", parent.display());

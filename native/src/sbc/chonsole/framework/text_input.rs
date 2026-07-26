@@ -4,51 +4,56 @@
 //! own semantics for Tab, Up/Down, history, and completion.
 
 #[derive(Default)]
-pub(super) struct TextInput {
+pub struct TextInput {
     value: String,
     cursor: usize,
     selection_anchor: Option<usize>,
 }
 
 impl TextInput {
-    pub(super) fn value(&self) -> &str {
+    pub fn value(&self) -> &str {
         &self.value
     }
 
-    pub(super) fn cursor(&self) -> usize {
+    pub fn cursor(&self) -> usize {
         self.cursor
     }
 
-    pub(super) fn selection_range(&self) -> Option<(usize, usize)> {
+    pub fn selection_range(&self) -> Option<(usize, usize)> {
         let anchor = self.selection_anchor?;
         (anchor != self.cursor).then(|| (anchor.min(self.cursor), anchor.max(self.cursor)))
     }
 
-    pub(super) fn take(&mut self) -> String {
+    pub fn selected_text(&self) -> Option<&str> {
+        self.selection_range()
+            .map(|(start, end)| &self.value[start..end])
+    }
+
+    pub fn take(&mut self) -> String {
         self.cursor = 0;
         self.selection_anchor = None;
         std::mem::take(&mut self.value)
     }
 
-    pub(super) fn set(&mut self, value: impl Into<String>) {
+    pub fn set(&mut self, value: impl Into<String>) {
         self.value = value.into();
         self.cursor = self.value.len();
         self.selection_anchor = None;
     }
 
-    pub(super) fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.value.clear();
         self.cursor = 0;
         self.selection_anchor = None;
     }
 
-    pub(super) fn insert(&mut self, text: &str) {
+    pub fn insert(&mut self, text: &str) {
         self.delete_selection();
         self.value.insert_str(self.cursor, text);
         self.cursor += text.len();
     }
 
-    pub(super) fn backspace(&mut self) {
+    pub fn backspace(&mut self) {
         if self.delete_selection() {
             return;
         }
@@ -58,7 +63,7 @@ impl TextInput {
         }
     }
 
-    pub(super) fn delete(&mut self) {
+    pub fn delete(&mut self) {
         if self.delete_selection() {
             return;
         }
@@ -67,7 +72,7 @@ impl TextInput {
         }
     }
 
-    pub(super) fn delete_previous_word(&mut self) {
+    pub fn delete_previous_word(&mut self) {
         if self.delete_selection() {
             return;
         }
@@ -76,7 +81,7 @@ impl TextInput {
         self.cursor = start;
     }
 
-    pub(super) fn delete_next_word(&mut self) {
+    pub fn delete_next_word(&mut self) {
         if self.delete_selection() {
             return;
         }
@@ -84,20 +89,20 @@ impl TextInput {
         self.value.drain(self.cursor..end);
     }
 
-    pub(super) fn delete_to_start(&mut self) {
+    pub fn delete_to_start(&mut self) {
         if !self.delete_selection() {
             self.value.drain(0..self.cursor);
             self.cursor = 0;
         }
     }
 
-    pub(super) fn delete_to_end(&mut self) {
+    pub fn delete_to_end(&mut self) {
         if !self.delete_selection() {
             self.value.truncate(self.cursor);
         }
     }
 
-    pub(super) fn move_left(&mut self, extend_selection: bool) {
+    pub fn move_left(&mut self, extend_selection: bool) {
         if !extend_selection {
             if let Some((start, _)) = self.selection_range() {
                 self.move_cursor_to(start, false);
@@ -111,7 +116,7 @@ impl TextInput {
         }
     }
 
-    pub(super) fn move_right(&mut self, extend_selection: bool) {
+    pub fn move_right(&mut self, extend_selection: bool) {
         if !extend_selection {
             if let Some((_, end)) = self.selection_range() {
                 self.move_cursor_to(end, false);
@@ -125,29 +130,29 @@ impl TextInput {
         }
     }
 
-    pub(super) fn move_previous_word(&mut self, extend_selection: bool) {
+    pub fn move_previous_word(&mut self, extend_selection: bool) {
         self.move_cursor_to(
             previous_word_boundary(&self.value, self.cursor),
             extend_selection,
         );
     }
 
-    pub(super) fn move_next_word(&mut self, extend_selection: bool) {
+    pub fn move_next_word(&mut self, extend_selection: bool) {
         self.move_cursor_to(
             next_word_boundary(&self.value, self.cursor),
             extend_selection,
         );
     }
 
-    pub(super) fn move_home(&mut self, extend_selection: bool) {
+    pub fn move_home(&mut self, extend_selection: bool) {
         self.move_cursor_to(0, extend_selection);
     }
 
-    pub(super) fn move_end(&mut self, extend_selection: bool) {
+    pub fn move_end(&mut self, extend_selection: bool) {
         self.move_cursor_to(self.value.len(), extend_selection);
     }
 
-    pub(super) fn select_all(&mut self) {
+    pub fn select_all(&mut self) {
         self.selection_anchor = Some(0);
         self.cursor = self.value.len();
     }
@@ -255,5 +260,14 @@ mod tests {
         input.select_all();
         input.insert("done");
         assert_eq!(input.value(), "done");
+    }
+
+    #[test]
+    fn exposes_the_selected_text() {
+        let mut input = TextInput::default();
+        input.set("alpha beta");
+        input.move_home(false);
+        input.move_next_word(true);
+        assert_eq!(input.selected_text(), Some("alpha"));
     }
 }

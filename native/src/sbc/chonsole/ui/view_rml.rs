@@ -382,7 +382,7 @@ impl ChonsoleRml {
     }
 
     pub(super) fn mouse_wheel(
-        &self,
+        &mut self,
         interface: &NativeInterfaceRef,
         visible: bool,
         up: bool,
@@ -394,9 +394,14 @@ impl ChonsoleRml {
         let Some(suggestions) = self.suggestions else {
             return Ok(false);
         };
-        let Some((x, y)) = self.mouse_position else {
-            return Ok(false);
-        };
+        // MouseWheel does not carry a position and may be the first pointer
+        // callback after the console opens. The cached position is therefore
+        // not sufficient to decide ownership; poll the engine just like the
+        // shared panel input layer does.
+        let mouse = interface.input().get_mouse_state()?;
+        let x = mouse.x as i32;
+        let y = mouse.y as i32;
+        self.mouse_position = Some((x, y));
         let rml = interface.rml_ui();
         if !rml.element_is_point_within_element(suggestions, x as f32, y as f32)? {
             return Ok(false);

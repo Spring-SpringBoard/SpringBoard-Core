@@ -2,17 +2,18 @@
 
 use std::collections::BTreeMap;
 
-use super::types::ChonsoleSuggestion;
+use crate::sbc::chonsole::framework::ChonsoleSuggestion;
 
 #[derive(Debug, Clone)]
-pub(super) struct ConsoleCommand {
-    pub(super) name: String,
-    pub(super) description: String,
-    pub(super) requires_cheat: bool,
+pub struct ConsoleCommand {
+    pub name: String,
+    pub description: String,
+    pub requires_cheat: bool,
 }
 
 pub(super) struct CompletionCatalog {
     commands: Vec<ConsoleCommand>,
+    local_commands: Vec<ConsoleCommand>,
     textures: Vec<String>,
     game_rules: Vec<(String, String)>,
     team_rules: BTreeMap<i32, Vec<(String, String)>>,
@@ -26,7 +27,8 @@ pub(super) struct CompletionCatalog {
 impl Default for CompletionCatalog {
     fn default() -> Self {
         Self {
-            commands: builtins(),
+            commands: Vec::new(),
+            local_commands: Vec::new(),
             textures: Vec::new(),
             game_rules: Vec::new(),
             team_rules: BTreeMap::new(),
@@ -150,13 +152,19 @@ impl CompletionCatalog {
             .collect()
     }
 
+    pub(super) fn set_local_commands(&mut self, commands: Vec<ConsoleCommand>) {
+        self.local_commands = commands;
+        self.replace_commands(Vec::new());
+    }
+
     pub(super) fn replace_commands(&mut self, mut commands: Vec<ConsoleCommand>) {
         commands.retain(|incoming| {
-            !builtins()
+            !self
+                .local_commands
                 .iter()
-                .any(|builtin| builtin.name == incoming.name)
+                .any(|local| local.name == incoming.name)
         });
-        let mut all = builtins();
+        let mut all = self.local_commands.clone();
         all.append(&mut commands);
         all.sort_by(|left, right| left.name.cmp(&right.name));
         self.commands = all;
@@ -248,38 +256,6 @@ impl CompletionCatalog {
             })
             .collect()
     }
-}
-
-fn builtins() -> Vec<ConsoleCommand> {
-    [
-        ("help", "List chonsole commands.", false),
-        ("echo", "Echo text through the native console.", false),
-        ("history", "Show native chonsole input history.", false),
-        ("clear", "Clear native chonsole history.", false),
-        (
-            "autocheat",
-            "Toggle automatic /cheat wrapping for cheat-only commands.",
-            false,
-        ),
-        ("a", "Send public chat.", false),
-        ("s", "Send spectator chat.", false),
-        ("t", "Send ally chat.", false),
-        ("texture", "Preview or export an engine texture.", false),
-        ("gamerules", "Set a game rules parameter.", true),
-        ("teamrules", "Set a team rules parameter.", true),
-        (
-            "unitrules",
-            "Set a rules parameter on selected units.",
-            true,
-        ),
-    ]
-    .into_iter()
-    .map(|(name, description, requires_cheat)| ConsoleCommand {
-        name: name.into(),
-        description: description.into(),
-        requires_cheat,
-    })
-    .collect()
 }
 
 fn named_values(

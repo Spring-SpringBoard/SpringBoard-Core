@@ -2,9 +2,8 @@
 
 use spring_native::prelude::NativeInterfaceRef;
 
-use super::text_input::TextInput;
-use super::types::{ChonsoleLine, ChonsoleLineKind};
 use super::view_suggestions::{escape_rml, SuggestionView};
+use crate::sbc::chonsole::framework::{ChonsoleLine, ChonsoleLineKind, TextInput};
 
 pub(super) fn draw_texture_preview(interface: &NativeInterfaceRef, input: &TextInput) {
     let Some(texture) = input

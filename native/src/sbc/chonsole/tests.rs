@@ -1,15 +1,30 @@
 #[cfg(test)]
 mod tests {
-    use crate::sbc::chonsole::core::{ChonsoleCore, ChonsoleEffect, ConsoleCommand};
+    use crate::sbc::chonsole::commands::{
+        ChonsoleCore, ChonsoleEffect, CommandRegistry, ConsoleCommand,
+    };
 
     fn core() -> ChonsoleCore {
-        ChonsoleCore::default()
+        let mut core = ChonsoleCore::default();
+        CommandRegistry::default().install(&mut core);
+        core
+    }
+
+    fn execute(
+        core: &mut ChonsoleCore,
+        input: &str,
+    ) -> (
+        crate::sbc::chonsole::framework::ChonsoleResponse,
+        Vec<ChonsoleEffect>,
+    ) {
+        let registry = CommandRegistry::default();
+        core.execute(input, registry.resolve(input))
     }
 
     #[test]
     fn help_lists_native_commands() {
         let mut core = core();
-        let (response, effects) = core.execute("/help");
+        let (response, effects) = execute(&mut core, "/help");
         assert!(effects.is_empty());
         assert!(response
             .lines
@@ -21,15 +36,15 @@ mod tests {
     #[test]
     fn duplicate_history_entries_are_collapsed() {
         let mut core = core();
-        core.execute("/help");
-        core.execute("/help");
+        execute(&mut core, "/help");
+        execute(&mut core, "/help");
         assert_eq!(core.history(), ["/help".to_string()]);
     }
 
     #[test]
     fn non_slash_input_is_sent_as_chat() {
         let mut core = core();
-        let (_response, effects) = core.execute("hello");
+        let (_response, effects) = execute(&mut core, "hello");
         assert_eq!(effects.len(), 1);
         assert!(matches!(effects[0], ChonsoleEffect::Chat(_, _)));
     }
@@ -80,7 +95,7 @@ mod tests {
     fn history_keeps_the_most_recent_hundred_entries() {
         let mut core = core();
         for index in 0..101 {
-            core.execute(&format!("/echo {index}"));
+            execute(&mut core, &format!("/echo {index}"));
         }
 
         assert_eq!(core.history().len(), 100);
@@ -91,7 +106,7 @@ mod tests {
     #[test]
     fn slash_commands_are_forwarded_as_engine_effects() {
         let mut core = core();
-        let (_, effects) = core.execute("/water 1");
+        let (_, effects) = execute(&mut core, "/water 1");
         assert_eq!(effects.len(), 1);
         match &effects[0] {
             ChonsoleEffect::EngineCommand { command, args, .. } => {
@@ -100,6 +115,34 @@ mod tests {
             }
             _ => panic!("expected engine command effect"),
         }
+    }
+
+    #[test]
+    fn registered_extensions_do_not_fall_through_to_engine_commands() {
+        let registry = CommandRegistry::default();
+        let mut core = core();
+
+        let (texture_response, texture_effects) = core.execute(
+            "/texture $heightmap export.png",
+            registry.resolve("/texture $heightmap export.png"),
+        );
+        assert!(matches!(
+            texture_effects.as_slice(),
+            [ChonsoleEffect::TextureExport(args)] if args == "$heightmap export.png"
+        ));
+        assert!(texture_response
+            .lines
+            .iter()
+            .all(|line| !line.text.starts_with("sent engine command:")));
+
+        let (_, rule_effects) = core.execute(
+            "/gamerules testRule 1",
+            registry.resolve("/gamerules testRule 1"),
+        );
+        assert!(matches!(
+            rule_effects.as_slice(),
+            [ChonsoleEffect::RuleCommand { .. }]
+        ));
     }
 
     #[test]

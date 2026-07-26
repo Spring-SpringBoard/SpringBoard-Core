@@ -1,18 +1,9 @@
-mod catalog;
 mod commands;
-mod completion;
-mod core;
-mod events;
-mod history;
+mod framework;
 mod integration;
-mod messages;
 mod model;
 mod tests;
-mod text_input;
-mod types;
-mod view;
-mod view_render;
-mod view_rml;
-mod view_suggestions;
+mod ui;
 
+/// Chonsole's sole crate-wide integration seam.
 pub(crate) use model::ChonsoleManager;

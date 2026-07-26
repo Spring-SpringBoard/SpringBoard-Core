@@ -79,22 +79,25 @@ def reload_native_modules(run_state: "RunState") -> None:
 
 @scenario(target="chonsole-native-input")
 def chonsole_native_input(run_state: "RunState") -> None:
-    """Native input editing: Ctrl+word navigation, selection replacement, and Ctrl+A."""
+    """Native input editing: word selection, clipboard copy, paste, and Ctrl+A."""
     run_state.focus()
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
     run_state.screenshot("open")
     run_state.type_text("alpha beta gamma")
-    run_state.key_chord(("ctrl",), "Left")
-    run_state.key_chord(("ctrl",), "Left")
-    run_state.type_text("_")
-    run_state.key("End")
-    run_state.type_text("!")
-    run_state.screenshot("navigation")
-    run_state.key_chord(("ctrl", "shift"), "Left")
+    run_state.key("ctrl+shift+Left")
     run_state.screenshot("select-word")
-    run_state.type_text("WORLD")
-    run_state.key_chord(("ctrl",), "a")
+    run_state.set_clipboard("SENTINEL-NOTHING-WAS-COPIED")
+    run_state.key("ctrl+c", delay=Delay.DIALOG)
+    if run_state.clipboard() != "gamma":
+        raise AssertionError("Ctrl+C did not copy Chonsole's selected word")
+
+    run_state.set_clipboard("WORLD")
+    run_state.key("ctrl+v", delay=Delay.DIALOG)
+    run_state.key("ctrl+a", delay=Delay.DIALOG)
+    run_state.key("ctrl+c", delay=Delay.DIALOG)
+    if run_state.clipboard() != "alpha beta WORLD":
+        raise AssertionError("Ctrl+V did not replace Chonsole's selected word")
     run_state.screenshot("select-all")
 
 

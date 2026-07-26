@@ -131,6 +131,11 @@ impl NativeModule for SBC {
     }
 
     fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {
+        // A visible Chonsole owns its selection and clipboard before the other
+        // RmlUi surfaces can claim Ctrl+C/Ctrl+V/Ctrl+A.
+        if self.model::<ChonsoleManager>().text_key(key_code)? {
+            return Ok(true);
+        }
         // The dev console owns Ctrl+C/Ctrl+A over its text, ahead of the toolbar.
         if self.model::<DevConsoleManager>().text_key(key_code)? {
             return Ok(true);

@@ -1,9 +1,9 @@
-use super::completion::CompletionCatalog;
-pub(super) use super::completion::ConsoleCommand;
-use super::history::MAX_HISTORY;
-use super::types::{ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, ChonsoleSuggestion};
+use super::completion::{CompletionCatalog, ConsoleCommand};
+use crate::sbc::chonsole::framework::{
+    ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, ChonsoleSuggestion, MAX_HISTORY,
+};
 
-pub(super) struct ChonsoleCore {
+pub struct ChonsoleCore {
     history: Vec<String>,
     auto_cheat: bool,
     catalog: CompletionCatalog,
@@ -19,9 +19,15 @@ impl Default for ChonsoleCore {
     }
 }
 
-pub(super) enum ChonsoleEffect {
+pub enum ChonsoleEffect {
     Echo(String),
     Chat(ChatTarget, String),
+    TextureExport(String),
+    RuleCommand {
+        scope: RuleScope,
+        args: String,
+        auto_cheat: bool,
+    },
     EngineCommand {
         command: String,
         args: String,
@@ -30,15 +36,47 @@ pub(super) enum ChonsoleEffect {
     },
 }
 
-pub(super) enum ChatTarget {
+pub enum ChatTarget {
     Default,
     Public,
     Ally,
     Spectator,
 }
 
+#[derive(Copy, Clone)]
+pub enum RuleScope {
+    Game,
+    Team,
+    Unit,
+}
+
+/// A command-runtime operation selected by a Chonsole registration.
+///
+/// This deliberately describes behavior rather than command names: a new
+/// registration does not need to modify parsing or dispatch infrastructure.
+pub enum ChonsoleAction {
+    Empty,
+    Help,
+    Echo(String),
+    History,
+    Clear,
+    ToggleAutoCheat,
+    Chat(ChatTarget, String),
+    TextureExport(String),
+    RuleCommand {
+        scope: RuleScope,
+        args: String,
+    },
+    EngineCommand {
+        command: String,
+        args: String,
+        display: String,
+        force_cheat: bool,
+    },
+}
+
 impl ChonsoleCore {
-    pub(super) fn with_history(history: Vec<String>) -> Self {
+    pub fn with_history(history: Vec<String>) -> Self {
         let mut core = Self::default();
         for item in history {
             core.push_history(&item);
@@ -46,20 +84,23 @@ impl ChonsoleCore {
         core
     }
 
-    pub(super) fn execute(&mut self, input: &str) -> (ChonsoleResponse, Vec<ChonsoleEffect>) {
+    pub fn execute(
+        &mut self,
+        input: &str,
+        action: ChonsoleAction,
+    ) -> (ChonsoleResponse, Vec<ChonsoleEffect>) {
         let input = input.trim();
         let mut lines = Vec::new();
         let mut effects = Vec::new();
-        if input.is_empty() {
+        if input.is_empty() || matches!(action, ChonsoleAction::Empty) {
             return (self.response(input, lines), effects);
         }
 
         self.push_history(input);
         lines.push(line(ChonsoleLineKind::Input, format!("> {input}")));
 
-        let parsed = ParsedInput::parse(input);
-        match parsed.command.as_str() {
-            "help" => {
+        match action {
+            ChonsoleAction::Help => {
                 for builtin in self.catalog.commands() {
                     lines.push(line(
                         ChonsoleLineKind::Output,
@@ -71,12 +112,11 @@ impl ChonsoleCore {
                     "Commands are discovered from the running Spring engine.".to_string(),
                 ));
             }
-            "echo" => {
-                let text = parsed.args.join(" ");
+            ChonsoleAction::Echo(text) => {
                 effects.push(ChonsoleEffect::Echo(text.clone()));
                 lines.push(line(ChonsoleLineKind::Output, text));
             }
-            "history" => {
+            ChonsoleAction::History => {
                 if self.history.is_empty() {
                     lines.push(line(ChonsoleLineKind::Output, "history is empty"));
                 } else {
@@ -88,11 +128,11 @@ impl ChonsoleCore {
                     }
                 }
             }
-            "clear" => {
+            ChonsoleAction::Clear => {
                 self.history.clear();
                 lines.push(line(ChonsoleLineKind::Output, "history cleared"));
             }
-            "autocheat" => {
+            ChonsoleAction::ToggleAutoCheat => {
                 self.auto_cheat = !self.auto_cheat;
                 lines.push(line(
                     ChonsoleLineKind::Output,
@@ -103,93 +143,92 @@ impl ChonsoleCore {
                     },
                 ));
             }
-            "a" => {
-                effects.push(ChonsoleEffect::Chat(
-                    ChatTarget::Public,
-                    parsed.args.join(" "),
+            ChonsoleAction::Chat(target, text) => {
+                effects.push(ChonsoleEffect::Chat(target, text));
+            }
+            ChonsoleAction::TextureExport(args) => {
+                effects.push(ChonsoleEffect::TextureExport(args));
+            }
+            ChonsoleAction::RuleCommand { scope, args } => {
+                effects.push(ChonsoleEffect::RuleCommand {
+                    scope,
+                    args,
+                    auto_cheat: self.auto_cheat,
+                });
+            }
+            ChonsoleAction::EngineCommand {
+                command,
+                args,
+                display,
+                force_cheat,
+            } => {
+                let requires_cheat = force_cheat || self.catalog.command_requires_cheat(&command);
+                effects.push(ChonsoleEffect::EngineCommand {
+                    command,
+                    args,
+                    requires_cheat,
+                    auto_cheat: self.auto_cheat,
+                });
+                lines.push(line(
+                    ChonsoleLineKind::Output,
+                    format!("sent engine command: /{display}"),
                 ));
             }
-            "s" => {
-                effects.push(ChonsoleEffect::Chat(
-                    ChatTarget::Spectator,
-                    parsed.args.join(" "),
-                ));
-            }
-            "t" => {
-                effects.push(ChonsoleEffect::Chat(
-                    ChatTarget::Ally,
-                    parsed.args.join(" "),
-                ));
-            }
-            _ => {
-                if parsed.is_slash {
-                    let requires_cheat = parsed.command == "luarules"
-                        && parsed.args.first().is_some_and(|arg| arg == "reload")
-                        || self.catalog.command_requires_cheat(&parsed.command);
-                    effects.push(ChonsoleEffect::EngineCommand {
-                        command: parsed.command.clone(),
-                        args: parsed.args.join(" "),
-                        requires_cheat,
-                        auto_cheat: self.auto_cheat,
-                    });
-                    lines.push(line(
-                        ChonsoleLineKind::Output,
-                        format!("sent engine command: /{}", parsed.original_command),
-                    ));
-                } else {
-                    effects.push(ChonsoleEffect::Chat(ChatTarget::Default, input.to_string()));
-                }
-            }
+            ChonsoleAction::Empty => unreachable!("empty actions return before history changes"),
         }
 
         (self.response(input, lines), effects)
     }
 
-    pub(super) fn suggestions(&self, input: &str) -> Vec<ChonsoleSuggestion> {
+    pub fn suggestions(&self, input: &str) -> Vec<ChonsoleSuggestion> {
         self.catalog.suggestions(input)
     }
 
-    pub(super) fn history(&self) -> &[String] {
+    pub fn history(&self) -> &[String] {
         &self.history
     }
 
-    pub(super) fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.history.clear();
     }
 
-    pub(super) fn replace_catalog(&mut self, commands: Vec<ConsoleCommand>) {
+    pub fn replace_catalog(&mut self, commands: Vec<ConsoleCommand>) {
         self.catalog.replace_commands(commands);
     }
 
-    pub(super) fn set_game_rules(&mut self, rules: Vec<(String, String)>) {
+    pub fn set_local_commands(&mut self, commands: Vec<ConsoleCommand>) {
+        self.catalog.set_local_commands(commands);
+    }
+
+    pub fn set_game_rules(&mut self, rules: Vec<(String, String)>) {
         self.catalog.set_game_rules(rules);
     }
 
-    pub(super) fn set_textures(&mut self, textures: Vec<String>) {
+    pub fn set_textures(&mut self, textures: Vec<String>) {
         self.catalog.set_textures(textures);
     }
 
-    pub(super) fn set_team_rules(&mut self, rules: BTreeMap<i32, Vec<(String, String)>>) {
+    pub fn set_team_rules(&mut self, rules: BTreeMap<i32, Vec<(String, String)>>) {
         self.catalog.set_team_rules(rules);
     }
 
-    pub(super) fn set_unit_rules(&mut self, rules: Vec<(String, String)>) {
+    pub fn set_unit_rules(&mut self, rules: Vec<(String, String)>) {
         self.catalog.set_unit_rules(rules);
     }
 
-    pub(super) fn set_teams(&mut self, teams: Vec<i32>) {
+    pub fn set_teams(&mut self, teams: Vec<i32>) {
         self.catalog.set_teams(teams);
     }
 
-    pub(super) fn set_unit_defs(&mut self, definitions: Vec<(String, String)>) {
+    pub fn set_unit_defs(&mut self, definitions: Vec<(String, String)>) {
         self.catalog.set_unit_defs(definitions);
     }
 
-    pub(super) fn set_config_params(&mut self, params: Vec<(String, String)>) {
+    pub fn set_config_params(&mut self, params: Vec<(String, String)>) {
         self.catalog.set_config_params(params);
     }
 
-    pub(super) fn set_players(&mut self, players: Vec<String>) {
+    pub fn set_players(&mut self, players: Vec<String>) {
         self.catalog.set_players(players);
     }
 
@@ -208,31 +247,6 @@ impl ChonsoleCore {
             input: input.to_string(),
             lines,
             history: self.history.clone(),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct ParsedInput {
-    is_slash: bool,
-    command: String,
-    original_command: String,
-    args: Vec<String>,
-}
-
-impl ParsedInput {
-    fn parse(input: &str) -> Self {
-        let is_slash = input.starts_with('/');
-        let stripped = input.strip_prefix('/').unwrap_or(input).trim();
-        let mut parts = stripped.split_whitespace();
-        let original_command = parts.next().unwrap_or("").to_string();
-        let command = original_command.to_ascii_lowercase();
-        let args = parts.map(ToString::to_string).collect();
-        ParsedInput {
-            is_slash,
-            command,
-            original_command: stripped.to_string(),
-            args,
         }
     }
 }

@@ -2,7 +2,7 @@
 
 use spring_native::RulesParamValue;
 
-use super::ChonsoleManager;
+use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::tests::tests_api::TestCtx;
 
 fn native_catalog_is_live(ctx: &mut TestCtx) -> Result<(), String> {

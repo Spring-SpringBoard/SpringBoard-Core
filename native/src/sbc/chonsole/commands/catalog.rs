@@ -5,15 +5,15 @@ use std::collections::BTreeMap;
 use spring_native::prelude::NativeInterfaceRef;
 use spring_native::RulesParamValue;
 
-use super::core::{ChonsoleCore, ConsoleCommand};
+use super::{ChonsoleCore, ConsoleCommand};
 
 #[derive(Default)]
-pub(super) struct CatalogRefresher {
+pub struct CatalogRefresher {
     metadata_loaded: bool,
 }
 
 impl CatalogRefresher {
-    pub(super) fn refresh(&mut self, interface: &NativeInterfaceRef, core: &mut ChonsoleCore) {
+    pub fn refresh(&mut self, interface: &NativeInterfaceRef, core: &mut ChonsoleCore) {
         self.refresh_engine(interface, core);
         self.refresh_rules(interface, core);
         if !self.metadata_loaded {

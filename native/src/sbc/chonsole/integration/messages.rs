@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use serde_json::Value;
 
-use super::ChonsoleManager;
+use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::message_handler::MessageHandler;
 use crate::sbc::sbc::SBC;
 

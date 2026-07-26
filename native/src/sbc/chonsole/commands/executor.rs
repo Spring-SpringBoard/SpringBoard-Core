@@ -3,10 +3,10 @@
 use spring_native::prelude::NativeInterfaceRef;
 use spring_native::RulesParamValue;
 
-use super::core::{ChatTarget, ChonsoleEffect};
+use super::{ChatTarget, ChonsoleEffect, RuleScope};
 
 #[derive(Default)]
-pub(super) struct CommandExecutor {
+pub struct CommandExecutor {
     texture_export: Option<TextureExport>,
 }
 
@@ -17,12 +17,18 @@ struct TextureExport {
 }
 
 impl CommandExecutor {
-    pub(super) fn apply(&mut self, interface: &NativeInterfaceRef, effect: ChonsoleEffect) {
+    pub fn apply(&mut self, interface: &NativeInterfaceRef, effect: ChonsoleEffect) {
         match effect {
             ChonsoleEffect::Echo(text) => {
                 let _ = interface.messages().echo(&text, "");
             }
             ChonsoleEffect::Chat(target, text) => send_chat(interface, target, &text),
+            ChonsoleEffect::TextureExport(args) => self.schedule_texture_export(&args),
+            ChonsoleEffect::RuleCommand {
+                scope,
+                args,
+                auto_cheat,
+            } => self.apply_rule_command(interface, scope, &args, auto_cheat),
             ChonsoleEffect::EngineCommand {
                 command,
                 args,
@@ -32,7 +38,7 @@ impl CommandExecutor {
         }
     }
 
-    pub(super) fn export_pending_texture(&mut self, interface: &NativeInterfaceRef) {
+    pub fn export_pending_texture(&mut self, interface: &NativeInterfaceRef) {
         let Some(export) = self.texture_export.take() else {
             return;
         };
@@ -93,34 +99,6 @@ impl CommandExecutor {
         requires_cheat: bool,
         auto_cheat: bool,
     ) {
-        if command == "texture" {
-            let parts = args.split_whitespace().collect::<Vec<_>>();
-            if let [texture, file, rest @ ..] = parts.as_slice() {
-                self.texture_export = Some(TextureExport {
-                    source: (*texture).into(),
-                    output: (*file).into(),
-                    grayscale16: rest.contains(&"16bit"),
-                });
-            } else {
-                let _ = interface
-                    .messages()
-                    .echo("usage: /texture <texture> <output-file> [16bit]", "");
-            }
-            return;
-        }
-        if matches!(command, "gamerules" | "teamrules" | "unitrules")
-            && requires_cheat
-            && !interface.game().is_cheating_enabled().unwrap_or(false)
-            && !auto_cheat
-        {
-            let _ = interface
-                .messages()
-                .echo("Enable cheats with /cheat or /autocheat", "");
-            return;
-        }
-        if send_custom_rule_command(interface, command, args) {
-            return;
-        }
         let messages = interface.messages();
         // `SendCommands`' second argument is an additional command *line*, not
         // this command's argument -- the engine joins the two with a newline.
@@ -144,6 +122,34 @@ impl CommandExecutor {
         }
         let _ = messages.send_commands(&line, "");
     }
+
+    fn schedule_texture_export(&mut self, args: &str) {
+        let parts = args.split_whitespace().collect::<Vec<_>>();
+        let [texture, file, rest @ ..] = parts.as_slice() else {
+            return;
+        };
+        self.texture_export = Some(TextureExport {
+            source: (*texture).into(),
+            output: (*file).into(),
+            grayscale16: rest.contains(&"16bit"),
+        });
+    }
+
+    fn apply_rule_command(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        scope: RuleScope,
+        args: &str,
+        auto_cheat: bool,
+    ) {
+        if !interface.game().is_cheating_enabled().unwrap_or(false) && !auto_cheat {
+            let _ = interface
+                .messages()
+                .echo("Enable cheats with /cheat or /autocheat", "");
+            return;
+        }
+        apply_rule_command(interface, scope, args);
+    }
 }
 
 fn send_chat(interface: &NativeInterfaceRef, target: ChatTarget, text: &str) {
@@ -162,7 +168,7 @@ fn send_chat(interface: &NativeInterfaceRef, target: ChatTarget, text: &str) {
     }
 }
 
-fn send_custom_rule_command(interface: &NativeInterfaceRef, command: &str, args: &str) -> bool {
+fn apply_rule_command(interface: &NativeInterfaceRef, scope: RuleScope, args: &str) {
     let parts = args.split_whitespace().collect::<Vec<_>>();
     let value = |raw: &str| match raw {
         "true" => RulesParamValue::Bool(true),
@@ -173,8 +179,8 @@ fn send_custom_rule_command(interface: &NativeInterfaceRef, command: &str, args:
             .unwrap_or_else(|_| RulesParamValue::String(raw.to_string())),
     };
     let rules = interface.rules_params();
-    match (command, parts.as_slice()) {
-        ("gamerules", []) | ("gamerules", [_]) => {
+    match (scope, parts.as_slice()) {
+        (RuleScope::Game, []) | (RuleScope::Game, [_]) => {
             let filter = parts.first().copied().unwrap_or("");
             if let Ok(names) = rules.get_game_rules_params() {
                 for name in names.into_iter().filter(|name| name.starts_with(filter)) {
@@ -185,49 +191,44 @@ fn send_custom_rule_command(interface: &NativeInterfaceRef, command: &str, args:
                     }
                 }
             }
-            true
         }
-        ("gamerules", [name, raw, ..]) => {
+        (RuleScope::Game, [name, raw, ..]) => {
             if let Err(error) = rules.set_game_rules_param(name, value(raw), 0) {
                 log::error!("/gamerules failed: {error:?}");
             }
-            true
         }
-        ("teamrules", [team, name, raw, ..]) => {
-            match team.parse::<i32>() {
-                Ok(team) => {
-                    if let Err(error) = rules.set_team_rules_param(team, name, value(raw), 0) {
-                        log::error!("/teamrules failed: {error:?}");
-                    }
-                }
-                Err(_) => {
-                    let _ = interface
-                        .messages()
-                        .echo("usage: /teamrules <team> <name> <value>", "");
+        (RuleScope::Team, [team, name, raw, ..]) => match team.parse::<i32>() {
+            Ok(team) => {
+                if let Err(error) = rules.set_team_rules_param(team, name, value(raw), 0) {
+                    log::error!("/teamrules failed: {error:?}");
                 }
             }
-            true
-        }
-        ("unitrules", [name, raw, ..]) => {
-            match interface.selection().get_selected_units() {
-                Ok(units) => {
-                    for unit in units {
-                        if let Err(error) = rules.set_unit_rules_param(unit, name, value(raw), 0) {
-                            log::error!("/unitrules failed for {unit}: {error:?}");
-                        }
+            Err(_) => {
+                let _ = interface
+                    .messages()
+                    .echo("usage: /teamrules <team> <name> <value>", "");
+            }
+        },
+        (RuleScope::Unit, [name, raw, ..]) => match interface.selection().get_selected_units() {
+            Ok(units) => {
+                for unit in units {
+                    if let Err(error) = rules.set_unit_rules_param(unit, name, value(raw), 0) {
+                        log::error!("/unitrules failed for {unit}: {error:?}");
                     }
                 }
-                Err(error) => log::error!("/unitrules selection failed: {error:?}"),
             }
-            true
-        }
-        ("teamrules" | "unitrules", _) => {
+            Err(error) => log::error!("/unitrules selection failed: {error:?}"),
+        },
+        (RuleScope::Team, _) => {
             let _ = interface
                 .messages()
-                .echo(&format!("usage: /{command} ... <name> <value>"), "");
-            true
+                .echo("usage: /teamrules <team> <name> <value>", "");
         }
-        _ => false,
+        (RuleScope::Unit, _) => {
+            let _ = interface
+                .messages()
+                .echo("usage: /unitrules <name> <value>", "");
+        }
     }
 }
 

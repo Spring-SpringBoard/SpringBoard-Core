@@ -1,8 +1,9 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
-use super::core::ChonsoleCore;
-use super::view::ChonsoleView;
+use crate::sbc::chonsole::commands::ChonsoleCore;
 use crate::sbc::keys::is_key;
+
+use super::view::ChonsoleView;
 
 pub(super) enum KeyOutcome {
     Unhandled,
@@ -54,12 +55,10 @@ impl ChonsoleEvents {
         if is_key(interface, key_code, "enter") || is_key(interface, key_code, "numpad_enter") {
             return Ok(KeyOutcome::Execute(view.take_input()));
         }
-        let mods = ModState::read(interface, self.modifiers);
-        if mods.ctrl && is_key(interface, key_code, "a") {
-            view.select_all();
-            view.refresh(interface, core)?;
+        if self.text_key(interface, core, view, key_code)? {
             return Ok(KeyOutcome::Handled);
         }
+        let mods = ModState::read(interface, self.modifiers);
         if mods.ctrl && is_key(interface, key_code, "u") {
             self.reset_history_cursor();
             view.delete_to_start();
@@ -161,6 +160,46 @@ impl ChonsoleEvents {
         // swallow the originating keypress so game/editor shortcuts never see
         // raw letter keys before text_input inserts the printable character.
         Ok(KeyOutcome::Handled)
+    }
+
+    /// Clipboard and select-all ownership is checked ahead of every other SBC
+    /// surface, so a visible Chonsole selection cannot be stolen by a panel or
+    /// the developer console's Ctrl+C binding.
+    pub(super) fn text_key(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        core: &ChonsoleCore,
+        view: &mut ChonsoleView,
+        key_code: i32,
+    ) -> Result<bool, Error> {
+        if !view.visible() || !ModState::read(interface, self.modifiers).ctrl {
+            return Ok(false);
+        }
+        if is_key(interface, key_code, "a") {
+            view.select_all();
+            view.refresh(interface, core)?;
+            return Ok(true);
+        }
+        if is_key(interface, key_code, "c") {
+            if let Some(text) = view.selected_text() {
+                let _ = interface.unsynced_ctrl().set_clipboard(text);
+            }
+            return Ok(true);
+        }
+        if is_key(interface, key_code, "v") {
+            let pasted = interface
+                .unsynced_read()
+                .get_clipboard()?
+                .unwrap_or_default();
+            let pasted = printable_text(&pasted);
+            if !pasted.is_empty() {
+                self.reset_history_cursor();
+                view.push_input(&pasted);
+                view.refresh(interface, core)?;
+            }
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     pub(super) fn key_release(
