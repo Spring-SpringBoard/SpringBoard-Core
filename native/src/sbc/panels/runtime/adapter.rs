@@ -13,7 +13,7 @@ use crate::sbc::panels::editor_base::{
     group_rml, identified_field_rml, identified_group_rml, resolve_base, section_rml,
 };
 use crate::sbc::panels::field::{
-    bind_tooltip, element_by_id, ChangeQueue, Field, FieldValue, InteractionQueue,
+    bind_tooltip, element_by_id, ChangeQueue, Field, FieldSpec, FieldValue, InteractionQueue,
 };
 use crate::sbc::panels::runtime::contract::Brush;
 use crate::sbc::panels::runtime::contract::{
@@ -451,6 +451,18 @@ impl<B: Behavior> Editor for Runtime<B> {
             field.set_value(&value);
         }
         let _ = self.write_field_values(interface);
+    }
+
+    fn field_specs(&self) -> Vec<FieldSpec> {
+        self.model
+            .fields()
+            .into_iter()
+            .map(|entry| FieldSpec {
+                name: entry.field.name().to_string(),
+                value: entry.field.value(),
+                options: entry.field.options().map(<[String]>::to_vec),
+            })
+            .collect()
     }
 
     fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)> {

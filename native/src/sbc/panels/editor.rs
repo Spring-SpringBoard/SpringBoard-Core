@@ -3,7 +3,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 
-use crate::sbc::panels::field::{ChangeQueue, FieldValue, InteractionQueue};
+use crate::sbc::panels::field::{ChangeQueue, FieldSpec, FieldValue, InteractionQueue};
 use crate::sbc::project::EditorState;
 use crate::sbc::states::{BrushSettings, StateRequest};
 
@@ -139,4 +139,11 @@ pub(crate) trait Editor {
     /// The field's asset root and accepted extensions, if it is an asset field:
     /// the manager opens the asset picker on it.
     fn field_asset(&self, name: &str) -> Option<(String, Vec<String>)>;
+
+    /// Every field this editor owns. The control channel's schema is built from
+    /// this, on editors it has not opened, so it must not require a bound
+    /// document.
+    fn field_specs(&self) -> Vec<FieldSpec> {
+        vec![]
+    }
 }

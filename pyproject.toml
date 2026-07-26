@@ -28,7 +28,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["build/sbc_packager", "tools/e2e", "tools/smoke", "tools/lint"]
+packages = ["build/sbc_packager", "tools/control", "tools/e2e", "tools/smoke", "tools/lint"]
 
 [tool.pytest.ini_options]
 testpaths = ["tools/smoke"]

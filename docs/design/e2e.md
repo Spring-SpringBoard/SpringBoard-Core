@@ -11,6 +11,11 @@ and records the observable result. It complements the headless Smoke suite:
 Smoke proves native integration and in-engine tests; E2E proves UI ownership,
 input routing, and rendered behaviour.
 
+Scenarios that are about a feature rather than about a widget belong in
+`scenarios/control.py`, driven through the control channel instead of X11 — no
+coordinates, no sleeps, and several times faster. See
+[programmatic-control.md](programmatic-control.md).
+
 ## Run a scenario
 
 ```bash

@@ -86,6 +86,14 @@ pub type HandlerFn = fn(serde_json::Value) -> Result<Option<Box<dyn Command>>, C
 
 inventory::collect!(CommandRegistration);
 
+/// Every registered `className`, sorted. The control channel answers
+/// `describe` with this, and names it back when a class is not found.
+pub(crate) fn registered_class_names() -> Vec<&'static str> {
+    let mut names: Vec<&'static str> = registry().keys().copied().collect();
+    names.sort_unstable();
+    names
+}
+
 /// Resolve a typed command's registered `className`, for the command log.
 pub fn class_name_of(command: &dyn Command) -> Option<&'static str> {
     type_id_map().get(&command.type_id()).copied()
@@ -179,12 +187,6 @@ struct PreviewPeek {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn registered_class_names() -> Vec<&'static str> {
-        let mut names: Vec<_> = registry().keys().copied().collect();
-        names.sort_unstable();
-        names
-    }
 
     #[test]
     fn class_peek_extracts_class_name() {

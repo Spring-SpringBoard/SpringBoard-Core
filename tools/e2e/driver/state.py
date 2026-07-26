@@ -14,6 +14,8 @@ from .utils.paths import ARTIFACT_ROOT
 from .utils.screenshots import Screenshot, ScreenshotConversion, ScreenshotWorker
 
 if TYPE_CHECKING:
+    from control import Control
+
     from .cases import Case
 else:
     Case = object
@@ -54,6 +56,7 @@ class RunState(ABC):
     stderr_file: TextIO | None = field(default=None, init=False)
     screenshots: list[Screenshot] = field(default_factory=list[Screenshot], init=False)
     screenshot_worker: ScreenshotWorker = field(init=False)
+    _control: "Control | None" = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
@@ -134,6 +137,16 @@ class RunState(ABC):
 
     @abstractmethod
     def clipboard(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def control(self) -> "Control": ...
+
+    @abstractmethod
+    def close_control(self) -> None: ...
+
+    @abstractmethod
+    def control_capture(self, name: str) -> Path: ...
 
     @abstractmethod
     def command_cursor(self) -> int: ...

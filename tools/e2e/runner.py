@@ -1,5 +1,6 @@
 from .driver._capture import CaptureMixin
 from .driver._commands import CommandLogMixin
+from .driver._control import ControlMixin
 from .driver._input import InputMixin
 from .driver._pixels import PixelMixin
 from .driver._report import ReportMixin
@@ -13,6 +14,7 @@ class E2ERun(
     CaptureMixin,
     PixelMixin,
     CommandLogMixin,
+    ControlMixin,
     ReportMixin,
     RunState,
 ):

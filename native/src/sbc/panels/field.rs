@@ -45,6 +45,15 @@ pub enum InteractionEvent {
     },
 }
 
+/// One field as the control channel sees it: what it is called, what it holds,
+/// and what it will accept.
+#[derive(Debug, Clone)]
+pub struct FieldSpec {
+    pub name: String,
+    pub value: FieldValue,
+    pub options: Option<Vec<String>>,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldValue {
     Number(f32),
@@ -324,6 +333,13 @@ pub trait Field {
 
     /// The asset root and accepted extensions, for an asset field.
     fn asset_info(&self) -> Option<(String, Vec<String>)> {
+        None
+    }
+
+    /// The values this field accepts, for a field that only accepts some: a
+    /// dropdown's items. The control channel rejects anything else, which a
+    /// dropdown cannot do for itself once its value is just a string.
+    fn options(&self) -> Option<&[String]> {
         None
     }
 

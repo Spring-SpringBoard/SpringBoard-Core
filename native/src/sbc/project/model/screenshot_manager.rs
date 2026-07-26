@@ -40,6 +40,12 @@ impl ScreenshotManager {
         self.pending.take()
     }
 
+    /// Ask for a full-window capture on the next draw pass, without going
+    /// through the file request the e2e harness polls.
+    pub(crate) fn request_e2e(&mut self, path: PathBuf) {
+        self.e2e_pending = Some(path);
+    }
+
     pub(crate) fn take_e2e(&mut self) -> Option<PathBuf> {
         if self.e2e_pending.is_some() {
             return self.e2e_pending.take();

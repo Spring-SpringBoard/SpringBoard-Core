@@ -50,6 +50,10 @@ impl Field for ChoiceField {
         self.tooltip.as_deref()
     }
 
+    fn options(&self) -> Option<&[String]> {
+        Some(&self.items)
+    }
+
     fn generate_rml(&self) -> String {
         let title = escape_rml(self.title.trim_end_matches(':'));
         let options: String = self

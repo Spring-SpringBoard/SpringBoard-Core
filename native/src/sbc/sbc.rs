@@ -8,6 +8,7 @@ use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::command::CommandId;
 use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
+use crate::sbc::control::ControlServer;
 use crate::sbc::devconsole::DevConsoleManager;
 use crate::sbc::io::io_api::IoWorker;
 use crate::sbc::objects::{event_bridge, ObjectKind, ObjectManager, SelectionManager};
@@ -25,6 +26,10 @@ pub struct SBC {
     models: Models,
     io_worker: IoWorker,
     tests_ran: bool,
+    /// The machine-facing control channel, when `SBC_CONTROL_FILE` asked for
+    /// one. Taken out of `self` while its requests are handled, since they
+    /// operate on everything else here.
+    pub(crate) control: Option<ControlServer>,
 }
 
 /// The `{ tag, data }` envelope Lua sends over `Spring.InvokeNativeModule`.
@@ -47,6 +52,7 @@ impl NativeModule for SBC {
             models: Models::build(interface),
             io_worker: IoWorker::new(),
             tests_ran: false,
+            control: ControlServer::start(),
         }
     }
 
@@ -57,6 +63,9 @@ impl NativeModule for SBC {
 
     fn update(&mut self) -> Result<(), Error> {
         self.drain_io();
+        // Ahead of the panel: an editor the channel asked for opens on this
+        // tick's shell-event pass, and a field it set commits with the rest.
+        crate::sbc::control::drain(self);
         self.model::<ChonsoleManager>().update()?;
         self.models
             .with::<PanelManager, _>(|panel, models| panel.update(models))?;

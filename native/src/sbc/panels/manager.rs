@@ -7,6 +7,7 @@ use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
+use crate::sbc::control::ControlError;
 use crate::sbc::notifications::NotificationManager;
 use crate::sbc::panels::action_dispatcher::ActionDispatcher;
 use crate::sbc::panels::brush_sync::BrushSync;
@@ -15,13 +16,14 @@ use crate::sbc::panels::controls::color_picker::ColorPicker;
 use crate::sbc::panels::cursor::cursortip::CursorTip;
 use crate::sbc::panels::dialogs::file_dialog::FileDialog;
 use crate::sbc::panels::editor_slot::EditorSlot;
-use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
+use crate::sbc::panels::field::{FieldSpec, FieldValue};
 use crate::sbc::panels::field_session::FieldSession;
 use crate::sbc::panels::field_target::ActiveFieldEditor;
 use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
 use crate::sbc::panels::modal::ModalEvent;
 use crate::sbc::panels::modal_stack::ModalStack;
+use crate::sbc::panels::registry::EditorSpec;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
@@ -281,6 +283,52 @@ impl PanelManager {
         Ok(())
     }
 
+    // ── Control channel ────────────────────────────────────────────
+
+    /// Open an editor as clicking its tab and button would: the events are
+    /// queued, and `process_shell_events` applies them on the next update.
+    pub(crate) fn control_open(&mut self, spec: &'static EditorSpec) {
+        self.view.queue_event(ShellEvent::Tab(spec.tab));
+        self.view.queue_event(ShellEvent::Editor(spec.name));
+    }
+
+    pub(crate) fn control_open_editor(&self) -> Option<&'static str> {
+        self.view.active_editor()
+    }
+
+    /// Set a field and commit it, through the same path a picker's accepted
+    /// value takes. Returns the value the editor ended up holding.
+    pub(crate) fn control_set_field(
+        &mut self,
+        name: &str,
+        value: FieldValue,
+    ) -> Result<FieldValue, ControlError> {
+        let spec = self.control_field_spec(name)?;
+        // A dropdown holds a plain string, so an unlisted one would set
+        // silently and show blank. Reject it against the field's own items.
+        if let (Some(options), FieldValue::Text(text)) = (&spec.options, &value) {
+            if !options.contains(text) {
+                return Err(ControlError::unknown(format!(
+                    "{name} does not accept {text:?}. Its options: {}",
+                    options.join(", ")
+                )));
+            }
+        }
+        let editor = self
+            .slot
+            .editor_mut()
+            .ok_or_else(|| ControlError::unknown("no editor is open"))?;
+        let commands = self
+            .session
+            .apply_field_value(name, value, false, editor, &self.interface);
+        self.pending_commands.extend(commands);
+        self.control_field_value(name)
+    }
+
+    pub(crate) fn control_field_value(&self, name: &str) -> Result<FieldValue, ControlError> {
+        Ok(self.control_field_spec(name)?.value)
+    }
+
     // ── Input delegation ──
 
     pub fn key_press(&mut self, key: i32, _scan: i32, _repeat: bool) -> Result<bool, Error> {
@@ -436,6 +484,26 @@ impl PanelManager {
             }
         }
         Ok(())
+    }
+
+    fn control_field_spec(&self, name: &str) -> Result<FieldSpec, ControlError> {
+        let editor = self
+            .slot
+            .editor()
+            .ok_or_else(|| ControlError::unknown("no editor is open"))?;
+        let specs = editor.field_specs();
+        specs
+            .iter()
+            .find(|spec| spec.name == name)
+            .cloned()
+            .ok_or_else(|| {
+                let open = self.view.active_editor().unwrap_or("<none>");
+                let names: Vec<&str> = specs.iter().map(|spec| spec.name.as_str()).collect();
+                ControlError::unknown(format!(
+                    "no field {name} in {open}. Its fields: {}",
+                    names.join(", ")
+                ))
+            })
     }
 
     fn reset_state(&mut self, models: &mut Models) {

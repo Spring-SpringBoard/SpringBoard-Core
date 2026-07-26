@@ -82,6 +82,12 @@ impl PanelView {
         self.events.borrow_mut().drain(..).collect()
     }
 
+    /// Queue what a click on the shell would have queued. The control channel
+    /// enters here so an opened editor takes the same path as a clicked one.
+    pub(crate) fn queue_event(&self, event: ShellEvent) {
+        self.events.borrow_mut().push(event);
+    }
+
     /// Create the context + document if the engine is ready. Returns `true` if
     /// newly created -- including a re-creation after RmlUi was torn down.
     pub(crate) fn ensure(&mut self, interface: &NativeInterfaceRef) -> Result<bool, Error> {

@@ -34,6 +34,9 @@ class SessionMixin(RunState):
         # afterwards from the artifact rather than by re-running with printfs.
         env["SBC_LOG_LEVEL"] = "debug"
         env["SBC_E2E_SCREENSHOT_REQUEST"] = str(write_dir / "e2e-screenshot-request.txt")
+        # The control channel writes its discovery file here; a scenario that
+        # never touches `run_state.control` simply leaves the socket idle.
+        env["SBC_CONTROL_FILE"] = str(write_dir / "control.json")
         env.update(self.case.env)
         self.write_dir = write_dir
         self.command = cmd
@@ -74,6 +77,7 @@ class SessionMixin(RunState):
             raise AssertionError("E2E assertions failed:\n" + "\n".join(failures))
 
     def stop(self) -> None:
+        self.close_control()
         if self.proc is None or self.proc.poll() is not None:
             self.close_process_logs()
             return
