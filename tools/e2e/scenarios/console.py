@@ -79,7 +79,7 @@ def reload_native_modules(run_state: "RunState") -> None:
 
 @scenario(target="chonsole-native-input")
 def chonsole_native_input(run_state: "RunState") -> None:
-    """Native input editing: word selection, clipboard copy, paste, and Ctrl+A."""
+    """Native input editing: selection plus system clipboard copy, cut, and paste."""
     run_state.focus()
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
@@ -99,6 +99,20 @@ def chonsole_native_input(run_state: "RunState") -> None:
     if run_state.clipboard() != "alpha beta WORLD":
         raise AssertionError("Ctrl+V did not replace Chonsole's selected word")
     run_state.screenshot("select-all")
+
+    # Cut must both copy the selected text and delete it. Moving right collapses
+    # a lingering selection, so the final exact copy distinguishes an empty
+    # input followed by `x` from a failed cut followed by `...WORLDx`.
+    run_state.key("ctrl+x", delay=Delay.DIALOG)
+    if run_state.clipboard() != "alpha beta WORLD":
+        raise AssertionError("Ctrl+X did not copy Chonsole's selected text")
+    run_state.key("Right")
+    run_state.type_text("x")
+    run_state.key("ctrl+a", delay=Delay.DIALOG)
+    run_state.key("ctrl+c", delay=Delay.DIALOG)
+    if run_state.clipboard() != "x":
+        raise AssertionError("Ctrl+X did not delete Chonsole's selected text")
+    run_state.screenshot("cut")
 
 
 @scenario(target="chonsole-native-suggestions")

@@ -162,9 +162,9 @@ impl ChonsoleEvents {
         Ok(KeyOutcome::Handled)
     }
 
-    /// Clipboard and select-all ownership is checked ahead of every other SBC
-    /// surface, so a visible Chonsole selection cannot be stolen by a panel or
-    /// the developer console's Ctrl+C binding.
+    /// Text selection ownership is checked ahead of every other SBC surface,
+    /// so a visible Chonsole selection cannot be stolen by a panel or the
+    /// developer console's Ctrl+A/Ctrl+X/Ctrl+V bindings.
     pub(super) fn text_key(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -183,6 +183,15 @@ impl ChonsoleEvents {
         if is_key(interface, key_code, "c") {
             if let Some(text) = view.selected_text() {
                 let _ = interface.unsynced_ctrl().set_clipboard(text);
+            }
+            return Ok(true);
+        }
+        if is_key(interface, key_code, "x") {
+            if let Some(text) = view.selected_text() {
+                let _ = interface.unsynced_ctrl().set_clipboard(text);
+                self.reset_history_cursor();
+                view.delete_input();
+                view.refresh(interface, core)?;
             }
             return Ok(true);
         }

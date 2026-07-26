@@ -6,6 +6,7 @@ the result of it -- a command reaching the bridge does not prove the engine
 acted on it.
 """
 
+import json
 from typing import TYPE_CHECKING
 
 from e2e.driver.timing import Delay
@@ -718,6 +719,28 @@ def object_actions(run_state: "RunState") -> None:
     # an actual feature there. The bridge records an action's grouped children
     # as one CompoundCommand, so the map frame is the engine-facing proof.
     run_state.key("ctrl+c", delay=Delay.SETTLE)
+    try:
+        copied = json.loads(run_state.clipboard())
+    except json.JSONDecodeError as error:
+        raise AssertionError("Copy did not put JSON on the system clipboard") from error
+    if copied.get("format") != "sbc-editor-objects" or copied.get("version") != 1:
+        raise AssertionError(f"Copy wrote an unknown object clipboard format: {copied!r}")
+    objects = copied.get("objects")
+    if not isinstance(objects, list) or len(objects) != 1 or objects[0].get("kind") != "feature":
+        raise AssertionError(f"Copy did not serialize the selected feature: {copied!r}")
+    if "__modelID" in objects[0].get("object", {}):
+        raise AssertionError("Copy leaked the feature's model ID into system clipboard JSON")
+
+    # A valid empty external payload must replace the process-local cache. This
+    # proves Ctrl+V reads the system clipboard rather than only the previous
+    # Ctrl+C in this SBC process.
+    run_state.set_clipboard(json.dumps({"format": "sbc-editor-objects", "version": 1, "objects": []}))
+    mark = len(run_state.commands())
+    run_state.key("ctrl+v", delay=Delay.SETTLE)
+    if any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
+        raise AssertionError("Paste ignored the empty system object clipboard")
+
+    run_state.set_clipboard(json.dumps(copied))
     mark = len(run_state.commands())
     before_paste = run_state.screenshot("copy-source")
     run_state.move(*target, delay=Delay.FRAME)
@@ -727,9 +750,17 @@ def object_actions(run_state: "RunState") -> None:
         raise AssertionError("Paste did not dispatch its grouped native command")
     run_state.assert_screenshot_pixels(before_paste, pasted, min_changed=400)
 
-    # The original selection remains active after Paste. Cut must remove it,
-    # Undo restore it, and Redo remove it again. The final undo leaves it in the
-    # world so Delete can exercise the same action separately.
+    # The copied feature must land beneath the cursor. Selecting exactly that
+    # point is stronger than the map-pixel change above: a bottom/top-origin
+    # ray mismatch still adds a tree, just at the vertically mirrored position.
+    run_state.click(*target, delay=Delay.DIALOG)
+    selected_paste = run_state.screenshot("pasted-selected")
+    around_target = (target[0] - 160, target[1] - 160, 320, 320)
+    if run_state.count_color(selected_paste, around_target) < 100:
+        raise AssertionError("Paste did not place the feature below the cursor")
+
+    # Cut the pasted selection, then Undo/Redo it. The final undo leaves both
+    # features in the world so Delete can exercise the original separately.
     mark = len(run_state.commands())
     run_state.key("ctrl+x", delay=Delay.READY)
     cut = run_state.screenshot("cut")

@@ -32,7 +32,9 @@ use crate::sbc::textures::commands::ImportDiffuseCommand;
 pub fn can_execute(action: Action, models: &mut Models) -> bool {
     match action {
         Action::Copy | Action::Cut | Action::Delete => models.get::<SelectionManager>().count() > 0,
-        Action::Paste => !models.get::<Clipboard>().is_empty(),
+        // Paste reads the system clipboard, so it can be valid even when this
+        // SBC process has not copied anything yet.
+        Action::Paste => true,
         // Undo/Redo always allowed (the command system no-ops on empty history);
         // project ops require dev mode, which the native UI always is.
         _ => true,
@@ -42,7 +44,7 @@ pub fn can_execute(action: Action, models: &mut Models) -> bool {
 /// Execute an action. Returns what the manager should do next.
 pub fn execute(
     action: Action,
-    _interface: &NativeInterfaceRef,
+    interface: &NativeInterfaceRef,
     models: &mut Models,
 ) -> ActionResult {
     match action {
@@ -167,13 +169,17 @@ pub fn execute(
 
         Action::Copy => {
             let items = copy_selection(models);
-            models.get::<Clipboard>().copy(&items);
+            let clipboard = models.get::<Clipboard>();
+            clipboard.copy(&items);
+            clipboard.write_to_system(interface);
             ActionResult::None
         }
 
         Action::Cut => {
             let items = copy_selection(models);
-            models.get::<Clipboard>().copy(&items);
+            let clipboard = models.get::<Clipboard>();
+            clipboard.copy(&items);
+            clipboard.write_to_system(interface);
             remove_selected(models)
         }
 
@@ -202,11 +208,9 @@ pub fn execute_paste(
     ground_x: f32,
     ground_z: f32,
 ) -> Vec<Box<dyn Command>> {
-    let cb = models.get::<Clipboard>();
-    if cb.is_empty() {
-        return vec![];
-    }
-    let commands = cb.paste_commands(interface, ground_x, ground_z);
+    let commands = models
+        .get::<Clipboard>()
+        .paste_commands(interface, ground_x, ground_z);
     if commands.is_empty() {
         return vec![];
     }
@@ -291,7 +295,7 @@ fn copy_selection(models: &mut Models) -> Vec<(ObjectKind, serde_json::Value)> {
 fn select_all(models: &mut Models) {
     let objects = models.get::<ObjectManager>();
     let mut selection = Vec::new();
-    for kind in [ObjectKind::Unit, ObjectKind::Feature] {
+    for kind in [ObjectKind::Unit, ObjectKind::Feature, ObjectKind::Area] {
         for id in objects.all_model_ids(kind) {
             selection.push((kind, id));
         }

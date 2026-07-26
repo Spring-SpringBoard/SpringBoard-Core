@@ -619,8 +619,15 @@ impl PanelManager {
             return;
         };
         let map_width = (geometry.viewSizeX as f32 - PANEL_WIDTH).max(1.0);
-        let (x, y) = match self.interface.input().get_mouse_state() {
-            Ok(mouse) if mouse.x < map_width => (mouse.x, mouse.y),
+        let (x, y) = match (
+            self.interface.input().get_mouse_state(),
+            crate::sbc::states::cursor(&self.interface),
+        ) {
+            // `get_mouse_state` exposes Lua's bottom-origin Y, while
+            // `trace_ground` takes the top-origin coordinate expected by
+            // TraceScreenRay. `states::cursor` owns that conversion for all
+            // polled editor tools; Paste must use it too.
+            (Ok(mouse), Some(cursor)) if mouse.x < map_width => (cursor.x, cursor.y),
             _ => (map_width / 2.0, geometry.viewSizeY as f32 / 2.0),
         };
         let Some(hit) = crate::sbc::states::trace_ground(&self.interface, x, y) else {
