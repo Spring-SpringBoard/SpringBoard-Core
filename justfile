@@ -172,6 +172,11 @@ sweep-all *args: build-native
 # Run black-box UI E2E tests. The native plugin is rebuilt first. Multi-case
 # invocations store all scenario artifacts and the aggregate suite report under
 # one timestamped suite folder.
+# Sweep one numeric shader field, to calibrate a uniform against a measurement.
+[group('run')]
+sweep-field *args: build-native
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-sweep field {{args}}
+
 [group('test')]
 test-e2e target="all" *args: build-native
     PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e run "{{target}}" {{args}}

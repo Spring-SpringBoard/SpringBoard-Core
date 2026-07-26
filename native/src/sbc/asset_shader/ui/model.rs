@@ -75,7 +75,11 @@ pub(crate) fn asset_shader_model() -> TableModel<AssetShaderField> {
         ),
         number(DetailTileFine, "detailTileFine", "Fine tile", 2.5),
         number(DetailTileCoarse, "detailTileCoarse", "Coarse tile", 9.0),
-        number(DetailStrength, "detailStrength", "Detail", 1.0),
+        // 4.0, not 1.0, and calibrated rather than chosen. Captured the same framing at
+        // 0.5 through 8 and measured surface contrast on block interiors: 1.0 leaves the
+        // stone reading as smooth putty, 8 is visibly crunchy close up, and 4 lands where a
+        // Blender render of the same asset sits. See genassets `grain` and `sweep-field`.
+        number(DetailStrength, "detailStrength", "Detail", 4.0),
         number(RoughnessBias, "roughnessBias", "Roughness", 0.0),
         number(ShadowDensity, "shadowDensity", "Shadow", 0.7),
         number(ShadowBias, "shadowBias", "Bias", 1.5),

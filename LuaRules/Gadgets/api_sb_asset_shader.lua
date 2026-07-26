@@ -37,7 +37,10 @@ local params = {
 	debugView = 0,
 	detailTileFine = 2.5,
 	detailTileCoarse = 9.0,
-	detailStrength = 1.0,
+	-- Calibrated, not chosen: see the note beside the panel's default in
+	-- `asset_shader/ui/model.rs`. Kept in step with it, since this is what applies
+	-- before the panel has said anything.
+	detailStrength = 4.0,
 	roughnessBias = 0.0,
 	shadowDensity = 0.7,
 	shadowBias = 1.5,

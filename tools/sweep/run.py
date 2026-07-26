@@ -82,6 +82,70 @@ def _sweep_angle(
         capture.stop_session(proc)
 
 
+def sweep_field(
+    field: str,
+    values: tuple[float, ...],
+    angles: tuple[Framing, ...],
+    out: Path,
+    project: str = "6",
+    scene: str = "gen_arch",
+) -> list[Path]:
+    """Capture the final view once per value of a numeric shader field.
+
+    For calibrating a uniform against something measurable rather than by eye. One engine
+    session per angle covers every value, because the field is set over the control channel
+    and needs no reload -- which is what makes a sweep of a dozen settings affordable.
+
+    Args:
+        field: Schema name of the field, e.g. ``detailStrength``.
+        values: Settings to capture, in order.
+        angles: Framings to visit, one engine session each.
+        out: Directory for the captures.
+        project: SpringBoard project holding the asset.
+        scene: featureDef the dev scene places.
+
+    Returns:
+        Every cropped capture written, in order.
+    """
+    out = out.resolve()
+    written: list[Path] = []
+    for framing in angles:
+        written.extend(_sweep_field_angle(project, scene, framing, out, field, values))
+    print(f"\n{out}")
+    return written
+
+
+def _sweep_field_angle(
+    project: str,
+    scene: str,
+    framing: Framing,
+    out: Path,
+    field: str,
+    values: tuple[float, ...],
+) -> list[Path]:
+    proc, _write_dir, control = capture.start_session(project, scene, framing.modoptions())
+    try:
+        shader = control.editor(EDITOR)
+        if field not in shader.fields:
+            raise RuntimeError(f"{EDITOR} has no field {field!r}")
+
+        written: list[Path] = []
+        region: str | None = None
+        for value in values:
+            shader.set(field, value)
+            slug = f"{field}-{value:g}".replace(".", "_")
+            raw = control.capture(out / "raw" / f"{framing.name}-{slug}.png")
+            if region is None:
+                region = _crop_region(raw)
+            written.append(capture.crop(raw, out / f"{framing.name}-{slug}.png", region))
+
+        print(f"{framing.name}: {len(written)} value(s) of {field} at {framing.distance:.0f}")
+        return written
+    finally:
+        control.close()
+        capture.stop_session(proc)
+
+
 def _debug_views(shader: Editor) -> tuple[str, ...]:
     """The debug views the editor actually offers.
 

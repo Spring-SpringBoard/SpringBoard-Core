@@ -21,7 +21,7 @@ from typing import Annotated
 import typer
 
 from .registry import NAMES, angles
-from .run import sweep
+from .run import sweep, sweep_field
 
 app = typer.Typer(add_completion=False, help=__doc__)
 
@@ -53,6 +53,24 @@ def one_angle(
 ) -> None:
     """Every debug view from a single angle."""
     sweep(angles((angle,)), out, project, scene)
+
+
+@app.command()
+def field(
+    name: Annotated[str, typer.Option(help="Schema name of the field, e.g. detailStrength")],
+    values: Annotated[str, typer.Option(help="Comma-separated settings to capture")],
+    angle: _Angle = "mid",
+    project: _Project = "6",
+    scene: _Scene = "gen_arch",
+    out: _Out = ARTIFACTS,
+) -> None:
+    """Sweep one numeric shader field, capturing the final view at each value.
+
+    For calibrating a uniform against a measurement instead of by eye. One engine session
+    covers every value, because the field goes over the control channel and needs no reload.
+    """
+    settings = tuple(float(value) for value in values.split(","))
+    sweep_field(name, settings, angles((angle,)), out, project, scene)
 
 
 @app.command()
