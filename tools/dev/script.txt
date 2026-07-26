@@ -4,6 +4,10 @@
   MapName=sb_initial_blank_10x8;
   MapSeed=1;
   IsHost=1;
+  // Defaults to 4 seconds, spent counting down after the engine already reports
+  // itself ingame. Nothing here is waiting on another player to be ready, so that
+  // delay is dead time on every dev and automated run.
+  GameStartDelay=0;
   MyPlayerName=Manual;
   NumPlayers=1;
   [MAPOPTIONS] { new_map_x=10; new_map_y=8; }
