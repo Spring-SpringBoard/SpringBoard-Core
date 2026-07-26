@@ -387,7 +387,6 @@ class Chonsole(TypedDict):
     scrollbar_inset_x: int
     scrollbar_width: int
     scrollbar_height: int
-    scrollbar_thumb_inset: int
     scrollbar_thumb_start_y: int
     scrollbar_hover_y: int
     scrollbar_drag_end_y: int
@@ -405,7 +404,6 @@ CHONSOLE: Final[Chonsole] = {
     "scrollbar_inset_x": 5,
     "scrollbar_width": 12,
     "scrollbar_height": 380,
-    "scrollbar_thumb_inset": 7,
     "scrollbar_thumb_start_y": 12,
     "scrollbar_hover_y": 80,
     "scrollbar_drag_end_y": 300,

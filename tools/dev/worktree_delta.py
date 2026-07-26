@@ -61,28 +61,45 @@ def diff_entries(baseline: Path, candidate: Path) -> list[tuple[str, int | None,
     return entries
 
 
-def render_tree(entries: list[tuple[str, int | None, int | None]]) -> list[str]:
-    tree: dict[str, dict] = {}
+def top_level(path: str) -> str:
+    parts = path.split("/")
+    return f"{parts[0]}/" if len(parts) > 1 else "(repository root)"
+
+
+def rust_subsystem(path: str) -> str | None:
+    parts = path.split("/")
+    if parts[:3] != ["native", "src", "sbc"]:
+        return None
+    if len(parts) == 4:
+        return "native/src/sbc/ (root)"
+    return "/".join(parts[:4]) + "/"
+
+
+def aggregate(
+    entries: list[tuple[str, int | None, int | None]],
+    group_for_path,
+) -> list[tuple[str, int, int, int, int]]:
+    groups: defaultdict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0])
     for path, added, removed in entries:
-        node = tree
-        for component in path.split("/")[:-1]:
-            node = node.setdefault(component, {})
-        node[path.split("/")[-1]] = (added, removed)
+        group = group_for_path(path)
+        if group is None:
+            continue
+        total, insertions, deletions, binary = groups[group]
+        groups[group][0] = total + 1
+        if added is None:
+            groups[group][3] = binary + 1
+        else:
+            groups[group][1] = insertions + added
+            groups[group][2] = deletions + removed
+    return sorted((name, *values) for name, values in groups.items())
 
-    lines: list[str] = []
 
-    def visit(node: dict, depth: int) -> None:
-        for name, value in sorted(node.items()):
-            indent = "  " * depth
-            if isinstance(value, dict):
-                lines.append(f"{indent}- {name}/")
-                visit(value, depth + 1)
-            else:
-                added, removed = value
-                counts = "binary" if added is None else f"+{added} / -{removed}"
-                lines.append(f"{indent}- `{name}` ({counts})")
-
-    visit(tree, 0)
+def table(rows: list[tuple[str, int, int, int, int]], *, limit: int | None = None) -> list[str]:
+    lines = ["| Path | Files | Added | Removed | LOC changed | Binary |", "| --- | ---: | ---: | ---: | ---: | ---: |"]
+    for path, files, added, removed, binary in rows[:limit]:
+        lines.append(
+            f"| `{path}` | {files} | {added} | {removed} | {added + removed} | {binary} |"
+        )
     return lines
 
 
@@ -112,9 +129,17 @@ def render_report(baseline: Path, candidate: Path) -> str:
         f"- Total LOC changed: {added + removed}",
         f"- Binary files changed: {binary_files}",
         "",
-        "## Changed files",
+        "## Top-level areas",
         "",
-        *render_tree(entries),
+        *table(aggregate(entries, top_level)),
+        "",
+        "## Native Rust subsystems",
+        "",
+        *table(aggregate(entries, rust_subsystem)),
+        "",
+        "For the complete, aligned file list, use Git directly:",
+        "",
+        f"`git -C {candidate} diff --stat {baseline_rev} {candidate_rev}`",
         "",
         "Regenerate with `tools/dev/worktree_delta.py BASELINE_WORKTREE CANDIDATE_WORKTREE --output OUTPUT_FILE`.",
         "",

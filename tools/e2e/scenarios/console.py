@@ -1,8 +1,12 @@
 """The chonsole and the developer console."""
 
+import time
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from e2e.driver.timing import Delay
+from PIL import Image
+
+from e2e.driver.timing import Delay, Timeout, pause
 from e2e.driver.utils.models import object_number_close
 
 if TYPE_CHECKING:
@@ -212,23 +216,33 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     scroll_reentered = run_state.screenshot("wheel-scroll-reentered")
     run_state.assert_region_pixels(scroll_down, scroll_reentered, suggestion_box, max_changed=0)
 
+    # Clicking below the thumb on the native scrollbar track pages the list
+    # down. This is distinct from the wheel path and catches a track that only
+    # paints but never receives mouse presses.
+    run_state.key("Escape")
+    run_state.key("Return", delay=Delay.CONTROL)
+    run_state.type_text("/set ")
+    track_start = run_state.screenshot("track-scroll-start")
+    track_bottom_y = suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_height"] - 8
+    run_state.click(scrollbar_x, track_bottom_y, delay=Delay.DIALOG)
+    track_down = run_state.screenshot("track-scroll-down")
+    run_state.assert_region_pixels(track_start, track_down, suggestion_content, min_changed=100)
+
     # Restart at the top, drag the thumb, then prove that re-entering still
-    # leaves the dragged position alone.
+    # leaves the dragged position alone. `scrollbar_x` is already the track
+    # centre; the previous additional inset clicked outside it.
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
     run_state.type_text("/set ")
     drag_start = run_state.screenshot("drag-scroll-start")
-    # The track begins at `scrollbar_x`; its thumb is inset by the track's
-    # margin, so drag its centre rather than the track beside it.
-    thumb_x = scrollbar_x + CHONSOLE["scrollbar_thumb_inset"]
     run_state.drag(
-        thumb_x,
+        scrollbar_x,
         suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_thumb_start_y"],
-        thumb_x,
+        scrollbar_x,
         suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_drag_end_y"],
     )
     drag_down = run_state.screenshot("drag-scroll-down")
-    run_state.assert_region_pixels(drag_start, drag_down, suggestion_box, min_changed=100)
+    run_state.assert_region_pixels(drag_start, drag_down, suggestion_content, min_changed=100)
     run_state.move(int(width * (CHONSOLE["left_fraction"] + CHONSOLE["width_fraction"] + 0.03)), third_row_y)
     run_state.move(scrollbar_x, scrollbar_y)
     drag_reentered = run_state.screenshot("drag-scroll-reentered")
@@ -237,7 +251,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
 
 @scenario(target="chonsole-native-commands")
 def chonsole_native_commands(run_state: "RunState") -> None:
-    """Native command completion: engine commands, texture preview, and game-rule values."""
+    """Native command completion is populated from the live engine catalogue."""
     run_state.focus()
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
@@ -248,19 +262,97 @@ def chonsole_native_commands(run_state: "RunState") -> None:
     run_state.assert_region_pixels(
         opened, commands, (width // 4, height // 4, width // 2, height // 2), min_changed=100
     )
-    run_state.key_chord(("ctrl",), "a")
-    run_state.type_text("/texture ")
-    textures = run_state.screenshot("texture-values")
-    run_state.assert_region_pixels(
-        commands, textures, (width // 4, height // 4, width // 2, height // 2), min_changed=100
-    )
-    run_state.type_text("$ssmf_specular")
-    preview = run_state.screenshot("texture-preview")
-    run_state.assert_region_pixels(textures, preview, (0, 0, width // 2, height), min_changed=100)
-    run_state.key_chord(("ctrl",), "a")
-    run_state.type_text("/gamerules ")
-    rules = run_state.screenshot("gamerule-values")
-    run_state.assert_region_pixels(preview, rules, (width // 4, height // 4, width // 2, height // 2), min_changed=100)
+
+
+@scenario(target="chonsole-native-gamerules")
+def chonsole_native_gamerules(run_state: "RunState") -> None:
+    """`/gamerules` sets a live rule, then later reads the same value back."""
+    name = "__sbc_e2e_gamerule"
+    run_state.focus()
+    run_state.key("Escape")
+
+    # AutoCheat is on by default, so this reaches the native rule bridge even
+    # in the standalone test game.
+    run_state.key("Return", delay=Delay.CONTROL)
+    run_state.type_text(f"/gamerules {name} 42")
+    run_state.key("Return", delay=Delay.READY)
+
+    # The refreshed completion row visibly carries the value, then executing
+    # the query emits the exact `name = value` text to the developer console.
+    run_state.key("Return", delay=Delay.CONTROL)
+    run_state.type_text(f"/gamerules {name}")
+    run_state.screenshot("rule-value-suggestion")
+    output_log = run_state.log_cursor()
+    run_state.key("Return", delay=Delay.READY)
+    run_state.wait_for_log(f"{name} = 42", after=output_log)
+
+
+@scenario(target="chonsole-native-texture")
+def chonsole_native_texture(run_state: "RunState") -> None:
+    """`/texture` previews a non-uniform texture and exports its real PNG data."""
+    # `$detail` is enabled by the standalone test map. `$units` is listed by
+    # the legacy Lua extension but is absent from this engine's live catalog.
+    source = "$detail"
+    output = "chonsole-detail.png"
+    run_state.focus()
+    run_state.key("Escape")
+    run_state.key("Return", delay=Delay.CONTROL)
+    opened = run_state.screenshot("open")
+    run_state.type_text(f"/texture {source}")
+    preview = run_state.screenshot("detail-preview")
+    _width, height = window_size(run_state)
+    preview_region = (40, height - 580, 400, 400)
+    run_state.assert_region_pixels(opened, preview, preview_region, min_changed=1_000)
+    _assert_non_uniform_image(preview, preview_region, "texture preview")
+
+    # Export runs in Chonsole's following draw pass. Reading the PNG confirms
+    # the command wrote a usable, non-uniform image rather than only rendering
+    # a preview quad.
+    run_state.key("ctrl+a", delay=Delay.CONTROL)
+    run_state.type_text(f"/texture {source} {output}")
+    run_state.key("Return", delay=Delay.READY)
+    assert run_state.write_dir is not None
+    _wait_for_non_uniform_png(run_state.write_dir / output)
+
+
+def _assert_non_uniform_image(path: Path, region: tuple[int, int, int, int], subject: str) -> None:
+    deadline = time.monotonic() + Timeout.COMMAND
+    while time.monotonic() < deadline:
+        try:
+            with Image.open(path) as image:
+                image.load()
+                cropped = image.crop((region[0], region[1], region[0] + region[2], region[1] + region[3]))
+                if not _has_channel_variation(cropped):
+                    raise AssertionError(f"{subject} was a solid colour")
+                return
+        except FileNotFoundError:
+            pause(Delay.POLL)
+        except OSError:
+            pause(Delay.POLL)
+    raise AssertionError(f"timed out reading {subject}")
+
+
+def _wait_for_non_uniform_png(path: Path, timeout_s: Timeout = Timeout.COMMAND) -> None:
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        try:
+            with Image.open(path) as image:
+                image.load()
+                if image.width <= 1 or image.height <= 1:
+                    raise AssertionError(f"texture export has invalid dimensions: {image.size}")
+                if not _has_channel_variation(image):
+                    raise AssertionError("texture export was a solid colour")
+                return
+        except FileNotFoundError:
+            pause(Delay.POLL)
+        except OSError:
+            # The file can be observed between creation and PNG finalization.
+            pause(Delay.POLL)
+    raise AssertionError(f"/texture did not write {path.name}")
+
+
+def _has_channel_variation(image: Image.Image) -> bool:
+    return any(low < high for low, high in image.convert("RGB").getextrema())
 
 
 @scenario(target="chonsole-luaui-reload")
