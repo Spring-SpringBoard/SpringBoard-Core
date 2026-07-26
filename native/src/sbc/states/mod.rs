@@ -2,6 +2,7 @@
 
 pub(crate) mod brush_settings;
 mod cursor;
+mod event_listener;
 pub(crate) mod highlight;
 mod manager;
 mod manipulate;

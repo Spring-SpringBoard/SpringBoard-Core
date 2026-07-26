@@ -7,6 +7,7 @@ pub(crate) mod compile;
 mod control;
 mod dev;
 mod devconsole;
+mod events;
 pub(crate) mod grass;
 pub(crate) mod heightmap;
 mod map_settings;

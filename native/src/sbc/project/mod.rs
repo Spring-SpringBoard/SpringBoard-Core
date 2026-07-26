@@ -1,5 +1,6 @@
 pub(crate) mod commands;
 mod editor_state;
+mod event_listener;
 pub(crate) mod io_registries;
 pub(crate) mod jobs;
 pub(crate) mod model;

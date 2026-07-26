@@ -1,6 +1,7 @@
 pub(crate) mod codec;
 mod commands;
 pub(crate) mod event_bridge;
+mod event_listener;
 mod model;
 mod selection;
 pub(crate) mod states;

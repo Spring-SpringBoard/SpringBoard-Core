@@ -3,27 +3,21 @@ use serde::Deserialize;
 
 use spring_native::prelude::*;
 
-use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::command::CommandId;
 use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::control::ControlServer;
-use crate::sbc::devconsole::DevConsoleManager;
+use crate::sbc::events::EventDispatcher;
 use crate::sbc::io::io_api::IoWorker;
-use crate::sbc::objects::{event_bridge, ObjectKind, ObjectManager, SelectionManager};
-use crate::sbc::panels::PanelManager;
-use crate::sbc::project::ScreenshotManager;
-use crate::sbc::states::StateManager;
 
 const MAX_UNDO_SIZE: usize = 100;
-/// Used when the engine will not report a feature's radius.
-const DEFAULT_SELECTION_RADIUS: f32 = 40.0;
 
 pub struct SBC {
     interface: NativeInterfaceRef,
     command_manager: CommandManager,
     models: Models,
+    events: EventDispatcher,
     io_worker: IoWorker,
     tests_ran: bool,
     /// The machine-facing control channel, when `SBC_CONTROL_FILE` asked for
@@ -50,6 +44,7 @@ impl NativeModule for SBC {
             interface,
             command_manager: CommandManager::new(MAX_UNDO_SIZE),
             models: Models::build(interface),
+            events: EventDispatcher::new(interface),
             io_worker: IoWorker::new(),
             tests_ran: false,
             control: ControlServer::start(),
@@ -63,24 +58,12 @@ impl NativeModule for SBC {
 
     fn update(&mut self) -> Result<(), Error> {
         self.drain_io();
-        // Ahead of the panel: an editor the channel asked for opens on this
-        // tick's shell-event pass, and a field it set commits with the rest.
+        // Control requests are applied before the registered update schedule.
         crate::sbc::control::drain(self);
-        self.model::<ChonsoleManager>().update()?;
-        self.models
-            .with::<PanelManager, _>(|panel, models| panel.update(models))?;
-        self.models
-            .with::<DevConsoleManager, _>(|console, models| console.update(models))?;
-        self.drain_console_commands();
-        // The brush the panel edits and the brush the active state paints with
-        // are the same; reconcile them before the state paints this tick.
-        self.models
-            .with::<StateManager, _>(|states, models| -> Result<(), Error> {
-                states.sync_brush(models);
-                states.update(models)
-            })?;
-        self.drain_panel_commands();
-        self.drain_state_commands();
+        let mut update = self.events.begin_update();
+        while let Some(commands) = self.events.run_update_step(&mut self.models, &mut update)? {
+            self.submit_commands(commands);
+        }
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
         }
@@ -88,81 +71,28 @@ impl NativeModule for SBC {
     }
 
     fn draw_screen(&mut self) -> Result<(), Error> {
-        self.capture_pending_screenshot();
-        self.model::<StateManager>().draw_screen();
-        self.model::<ChonsoleManager>().draw_screen()?;
-        self.model::<PanelManager>().draw_screen()
+        self.events.draw_screen(&mut self.models)
     }
 
     fn draw_screen_post(&mut self) -> Result<(), Error> {
-        self.capture_e2e_screenshot();
-        Ok(())
+        self.events.draw_screen_post(&mut self.models)
     }
 
-    /// Outline each selected feature. Units glow through the engine's own
-    /// selection, and areas draw their own shape, so neither is boxed.
-    ///
-    /// This is the pre-unit pass so the box is drawn *under* the models, as in
-    /// `SelectionManager:DrawWorldPreUnit`.
+    /// Feature overlays register for this pre-unit phase so they draw under
+    /// engine models.
     fn draw_world_pre_unit(&mut self) -> Result<(), Error> {
-        let selected = self.model::<SelectionManager>().all();
-        let boxes: Vec<(f32, f32, f32, f32)> = selected
-            .into_iter()
-            .filter(|(kind, _)| *kind == ObjectKind::Feature)
-            .filter_map(|(kind, id)| {
-                let objects = self.model::<ObjectManager>();
-                let pos = objects.object_pos(kind, id)?;
-                let spring_id = objects.spring_id(kind, id)?;
-                let radius = self
-                    .interface
-                    .features()
-                    .get_feature_radius(spring_id)
-                    .unwrap_or(DEFAULT_SELECTION_RADIUS);
-                Some((pos.x, pos.y, pos.z, radius))
-            })
-            .collect();
-        crate::sbc::states::highlight::draw_selected_features(&self.interface, &boxes);
-        Ok(())
+        self.events.draw_world_pre_unit(&mut self.models)
     }
 
     fn draw_world(&mut self) -> Result<(), Error> {
-        self.model::<StateManager>().draw_world();
-        Ok(())
+        self.events.draw_world(&mut self.models)
     }
 
     fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {
-        // A visible Chonsole owns its selection and clipboard before the other
-        // RmlUi surfaces can claim Ctrl+C/Ctrl+V/Ctrl+A.
-        if self.model::<ChonsoleManager>().text_key(key_code)? {
-            return Ok(true);
-        }
-        // The dev console owns Ctrl+C/Ctrl+A over its text, ahead of the toolbar.
-        if self.model::<DevConsoleManager>().text_key(key_code)? {
-            return Ok(true);
-        }
-        // The panel gets first refusal: while a field is being edited it owns
-        // Enter and Escape, which the chonsole would otherwise take (Enter opens
-        // it). It consumes nothing else.
-        if self
-            .model::<PanelManager>()
-            .key_press(key_code, scan_code, is_repeat)?
-        {
-            return Ok(true);
-        }
-        if self.model::<DevConsoleManager>().key_press(key_code)? {
-            return Ok(true);
-        }
-        if self
-            .model::<ChonsoleManager>()
-            .key_press(key_code, scan_code, is_repeat)?
-        {
-            return Ok(true);
-        }
-        // Escape leaves the active editing state.
         let handled = self
-            .models
-            .with::<StateManager, _>(|s, m| s.key_press(m, key_code))?;
-        self.drain_state_commands();
+            .events
+            .key_press(&mut self.models, key_code, scan_code, is_repeat)?;
+        self.submit_pending_listener_commands();
         Ok(handled)
     }
 
@@ -172,85 +102,40 @@ impl NativeModule for SBC {
         _section: &str,
         level: i32,
     ) -> Result<bool, Error> {
-        self.model::<DevConsoleManager>()
-            .add_console_line(message, level);
-        Ok(false)
+        self.events.console_line(&mut self.models, message, level)
     }
 
     fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {
-        if self
-            .model::<PanelManager>()
-            .key_release(key_code, scan_code)?
-        {
-            return Ok(true);
-        }
-        self.model::<ChonsoleManager>()
-            .key_release(key_code, scan_code)
+        self.events
+            .key_release(&mut self.models, key_code, scan_code)
     }
 
     fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
-        if self.model::<PanelManager>().text_input(utf8)? {
-            return Ok(true);
-        }
-        self.model::<ChonsoleManager>().text_input(utf8)
+        self.events.text_input(&mut self.models, utf8)
     }
 
     fn mouse_move(&mut self, x: i32, y: i32, dx: i32, dy: i32, button: i32) -> Result<bool, Error> {
-        if self
-            .model::<ChonsoleManager>()
-            .mouse_move(x, y, dx, dy, button)?
-        {
-            return Ok(true);
-        }
-        if self
-            .model::<PanelManager>()
-            .mouse_move(x, y, dx, dy, button)?
-        {
-            return Ok(true);
-        }
-        // A drag on the map (moving a selected object) is the state's.
         let handled = self
-            .models
-            .with::<StateManager, _>(|s, m| s.mouse_move(m, x, y, button))?;
-        self.drain_state_commands();
+            .events
+            .mouse_move(&mut self.models, x, y, dx, dy, button)?;
+        self.submit_pending_listener_commands();
         Ok(handled)
     }
 
     fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
-        if self.model::<ChonsoleManager>().mouse_press(x, y, button)? {
-            return Ok(true);
-        }
-        if self.model::<PanelManager>().mouse_press(x, y, button)? {
-            return Ok(true);
-        }
-        // Last: a click that reached neither console nor panel is a click on
-        // the map, which is the editing state's to interpret.
-        let handled = self
-            .models
-            .with::<StateManager, _>(|s, m| s.mouse_press(m, x, y, button))?;
-        self.drain_state_commands();
+        let handled = self.events.mouse_press(&mut self.models, x, y, button)?;
+        self.submit_pending_listener_commands();
         Ok(handled)
     }
 
     fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
-        self.model::<ChonsoleManager>()
-            .mouse_release(x, y, button)?;
-        self.model::<PanelManager>().mouse_release(x, y, button)?;
-        self.models
-            .with::<StateManager, _>(|s, m| s.mouse_release(m, x, y, button))?;
-        self.drain_state_commands();
+        self.events.mouse_release(&mut self.models, x, y, button)?;
+        self.submit_pending_listener_commands();
         Ok(())
     }
 
     fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
-        if self.model::<ChonsoleManager>().mouse_wheel(up, value)? {
-            return Ok(true);
-        }
-        if self.model::<PanelManager>().mouse_wheel(up, value)? {
-            return Ok(true);
-        }
-        self.models
-            .with::<StateManager, _>(|s, m| s.mouse_wheel(m, up, value))
+        self.events.mouse_wheel(&mut self.models, up, value)
     }
 }
 
@@ -316,8 +201,7 @@ impl SBC {
             .unwrap_or("NativeCommand")
             .to_string();
         log_native_command(&*command, id);
-        self.model::<DevConsoleManager>()
-            .record_command(id, display);
+        self.events.command_recorded(&mut self.models, id, &display);
         let (history_events, io_jobs) = {
             let mut ctx = Context::new(&self.interface, id, &mut self.models);
             let events = self.command_manager.execute(command, id, &mut ctx);
@@ -326,83 +210,20 @@ impl SBC {
         for job in io_jobs {
             self.io_worker.submit(job);
         }
-        event_bridge::emit(
-            &self.interface,
-            self.models.get::<ObjectManager>().drain_events(),
-        );
+        self.events.command_applied(&mut self.models);
         self.models.on_history_events(&history_events);
-        self.sync_devconsole_command_history();
+        self.sync_command_history();
     }
 
-    /// Write a requested project thumbnail: the map area (left of the panel) of
-    /// the current frame. Read at the top of DrawScreen, before the panel or any
-    /// overlay is drawn over the map, since the framebuffer is only readable on
-    /// the draw thread.
-    fn capture_pending_screenshot(&mut self) {
-        let Some(path) = self.model::<ScreenshotManager>().take() else {
-            return;
-        };
-        let Ok(geom) = self.interface.display().get_view_geometry() else {
-            return;
-        };
-        const PANEL_WIDTH: i32 = 500;
-        let width = (geom.viewSizeX - PANEL_WIDTH).max(1);
-        if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        // yflip: glReadPixels is bottom-origin; flip to top-origin image space.
-        let _ = self.interface.gfx().save_image(
-            0,
-            0,
-            width,
-            geom.viewSizeY,
-            &path.to_string_lossy(),
-            false,
-            true,
-            false,
-            0,
-        );
+    /// Submit commands gathered from registered event listeners. Producers only
+    /// queue typed commands; the module boundary owns their execution.
+    fn submit_pending_listener_commands(&mut self) {
+        let commands = self.events.take_commands();
+        self.submit_commands(commands);
     }
 
-    fn capture_e2e_screenshot(&mut self) {
-        let Some(path) = self.model::<ScreenshotManager>().take_e2e() else {
-            return;
-        };
-        let Ok(geom) = self.interface.display().get_view_geometry() else {
-            return;
-        };
-        let _ = self.interface.gfx().save_image(
-            0,
-            0,
-            geom.viewSizeX,
-            geom.viewSizeY,
-            &path.to_string_lossy(),
-            false,
-            true,
-            false,
-            0,
-        );
-    }
-
-    /// Drain typed commands queued by native producers and submit them directly
-    /// as `Box<dyn Command>` rather than a JSON envelope.
-    fn drain_panel_commands(&mut self) {
-        for command in self.model::<PanelManager>().drain_commands() {
-            self.submit_command(command);
-        }
-    }
-
-    /// Submit what the active editing state queued. Drained right after each
-    /// callin that can produce commands, so a brush stroke's `SetMultipleCommand
-    /// ModeCommand(true)` reaches the command manager before the strokes do.
-    fn drain_state_commands(&mut self) {
-        for command in self.model::<StateManager>().drain_commands() {
-            self.submit_command(command);
-        }
-    }
-
-    fn drain_console_commands(&mut self) {
-        for command in self.model::<DevConsoleManager>().drain_commands() {
+    fn submit_commands(&mut self, commands: Vec<Box<dyn Command>>) {
+        for command in commands {
             self.submit_command(command);
         }
     }
@@ -415,8 +236,8 @@ impl SBC {
             .to_string();
         match parse_json_command(data) {
             Ok(Some((cmd, command_id))) => {
-                self.model::<DevConsoleManager>()
-                    .record_command(command_id, display);
+                self.events
+                    .command_recorded(&mut self.models, command_id, &display);
                 let (history_events, io_jobs) = {
                     let mut ctx = Context::new(&self.interface, command_id, &mut self.models);
                     let events = self.command_manager.execute(cmd, command_id, &mut ctx);
@@ -425,22 +246,19 @@ impl SBC {
                 for job in io_jobs {
                     self.io_worker.submit(job);
                 }
-                event_bridge::emit(
-                    &self.interface,
-                    self.models.get::<ObjectManager>().drain_events(),
-                );
+                self.events.command_applied(&mut self.models);
                 self.models.on_history_events(&history_events);
-                self.sync_devconsole_command_history();
+                self.sync_command_history();
             }
             Ok(None) => {}
             Err(err) => error!("{err}"),
         }
     }
 
-    fn sync_devconsole_command_history(&mut self) {
+    fn sync_command_history(&mut self) {
         let (undo_ids, redo_ids) = self.command_manager.history_command_ids();
-        self.model::<DevConsoleManager>()
-            .sync_command_history(&undo_ids, &redo_ids);
+        self.events
+            .command_history_changed(&mut self.models, &undo_ids, &redo_ids);
     }
 }
 
