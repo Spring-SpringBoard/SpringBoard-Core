@@ -251,7 +251,7 @@ impl EditorState for DefaultState {
         }
 
         let trace = trace_object(ctx.interface, x as f32, y as f32);
-        let Some((kind, model_id, hit)) = Self::resolve_hit(ctx, trace) else {
+        let Some((kind, model_id, _hit)) = Self::resolve_hit(ctx, trace) else {
             // A press on empty ground arms a box-select: a drag from here selects
             // what it covers, a release without a drag clears the selection.
             //
@@ -263,12 +263,23 @@ impl EditorState for DefaultState {
             return true;
         };
 
-        // Remember the object-to-cursor offset so a drag keeps the grab point.
+        // Match Lua's `TraceScreenRay(..., { onlyCoords = true })`: capture the
+        // terrain point beneath the press, not the point where the ray happened
+        // to strike the object.  Drag updates also trace terrain; using the
+        // object hit here made the first small cursor movement produce a large
+        // world-space jump for tall or large objects.
+        //
+        // At the map edge Lua falls back to the object position when there is
+        // no ground hit, which makes the initial offset zero.
         let (diff_x, diff_z) = ctx
             .models
             .get::<ObjectManager>()
             .object_pos(kind, model_id)
-            .map(|pos| (pos.x - hit.x, pos.z - hit.z))
+            .map(|pos| {
+                trace_ground(ctx.interface, x as f32, y as f32)
+                    .map(|ground| (pos.x - ground.x, pos.z - ground.z))
+                    .unwrap_or((0.0, 0.0))
+            })
             .unwrap_or((0.0, 0.0));
 
         self.was_selected = ctx
