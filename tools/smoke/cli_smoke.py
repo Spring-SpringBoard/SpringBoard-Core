@@ -31,5 +31,7 @@ def bench_save_image() -> None:
 @app.command()
 def manual(
     config: Annotated[Path | None, typer.Option(exists=True, dir_okay=False)] = None,
+    project: Annotated[str | None, typer.Option()] = None,
+    scene: Annotated[str | None, typer.Option(help="featureDef to place and frame the camera on")] = None,
 ) -> None:
-    raise typer.Exit(launch_manual(config))
+    raise typer.Exit(launch_manual(config, project, scene))

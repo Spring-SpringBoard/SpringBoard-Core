@@ -36,6 +36,7 @@ const UI_STYLE: &str = concat!(
     include_str!("../theme/panel/asset_picker.rcss"),
     include_str!("../theme/panel/notifications.rcss"),
     include_str!("../theme/panel/project_status.rcss"),
+    include_str!("../theme/panel/asset_shader.rcss"),
 );
 
 /// A shell-level click, queued by an RmlUi event listener and drained by the

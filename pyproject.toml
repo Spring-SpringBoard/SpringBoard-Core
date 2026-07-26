@@ -11,6 +11,7 @@ dependencies = [
 [project.scripts]
 sbc-e2e = "e2e.cli_e2e:app"
 sbc-smoke = "smoke.cli_smoke:app"
+sbc-sweep = "sweep.cli_sweep:app"
 sbc-lint = "lint.cli_lint:app"
 sbc-packager = "sbc_packager.cli:main"
 sbc-packager-base = "sbc_packager.editor.cli:main"
@@ -28,10 +29,17 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["build/sbc_packager", "tools/control", "tools/e2e", "tools/smoke", "tools/lint"]
+packages = [
+    "build/sbc_packager",
+    "tools/control",
+    "tools/e2e",
+    "tools/smoke",
+    "tools/sweep",
+    "tools/lint",
+]
 
 [tool.pytest.ini_options]
-testpaths = ["tools/smoke", "tools/e2e/tests"]
+testpaths = ["tools/smoke", "tools/e2e/tests", "tools/sweep"]
 addopts = "-ra"
 
 [tool.ruff]

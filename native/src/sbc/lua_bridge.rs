@@ -33,10 +33,20 @@ pub fn widget_command(interface: &NativeInterfaceRef, data: serde_json::Value) {
 /// Send a command to LuaRules. This is used when native owns project data that
 /// Lua runtime code still consumes from the synced Lua model.
 pub fn rules_command(interface: &NativeInterfaceRef, data: serde_json::Value) {
+    rules_message(interface, "command", data);
+}
+
+/// Send a tagged LuaRules message that is *not* a command.
+///
+/// The `command` tag is claimed by `CommandManager`, which resolves `className`
+/// against the Lua command classes and calls it -- so a payload named after a
+/// class that only exists in Rust raises `attempt to call field '?'`. A gadget
+/// with its own `RecvLuaMsg` picks its own tag instead.
+pub fn rules_message(interface: &NativeInterfaceRef, tag: &str, data: serde_json::Value) {
     send_rules(
         interface,
         serde_json::json!({
-            "tag": "command",
+            "tag": tag,
             "data": data,
         }),
     );

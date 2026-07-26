@@ -1,5 +1,6 @@
 mod actions;
 mod areas;
+mod asset_shader;
 mod chonsole;
 mod command_system;
 pub mod commands_api;

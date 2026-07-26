@@ -144,6 +144,31 @@ dev-panel config="config/ui-rust.json": build-native
 run config="config/ui-rust.json": build-native
     PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-smoke manual --config "{{config}}"
 
+# Build and run an editor session that boots straight into a project.
+[group('run')]
+run-project project config="config/ui-rust.json": build-native
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-smoke manual --config "{{config}}" --project "{{project}}"
+
+# Run the asset-shader debug scene: project 6, three arches placed, camera framed.
+[group('run')]
+run-asset: build-native
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-smoke manual --config config/ui-rust.json --project 6 --scene gen_arch
+
+# One asset-shader picture from one angle: the quickest check that it renders.
+[group('run')]
+sweep-one *args: build-native
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-sweep one {{args}}
+
+# Every asset-shader debug view from one angle (default `close`).
+[group('run')]
+sweep-angle *args: build-native
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-sweep one-angle {{args}}
+
+# Every asset-shader debug view from every angle. One engine session per angle.
+[group('run')]
+sweep-all *args: build-native
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-sweep all-angles {{args}}
+
 # Run black-box UI E2E tests. The native plugin is rebuilt first. Multi-case
 # invocations store all scenario artifacts and the aggregate suite report under
 # one timestamped suite folder.

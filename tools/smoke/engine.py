@@ -13,19 +13,64 @@ DEFAULT_TIMEOUT_S = 45
 HEARTBEAT_STALE_S = 20.0
 
 
-def launch_manual(config: Path | None = None) -> int:
+def launch_manual(config: Path | None = None, project: str | None = None, scene: str | None = None) -> int:
+    _, env, cmd = prepare_manual(config, project, scene)
+    return subprocess.run(cmd, env=env, check=False).returncode
+
+
+def launch_manual_detached(
+    config: Path | None = None,
+    project: str | None = None,
+    scene: str | None = None,
+    extra_env: dict[str, str] | None = None,
+    screenshot_request: str | None = None,
+    modoptions: dict[str, str] | None = None,
+) -> tuple[subprocess.Popen[bytes], Path]:
+    """Start a manual session without waiting for it.
+
+    For harnesses that drive the running editor and need its write dir to read the
+    infolog and hand it screenshot requests. `screenshot_request` names a file in
+    the write dir that the engine polls for capture requests; it has to be in the
+    environment before launch, so it is set here rather than by the caller.
+    """
+    write_dir, env, cmd = prepare_manual(config, project, scene, modoptions)
+    if screenshot_request:
+        env["SBC_E2E_SCREENSHOT_REQUEST"] = str(write_dir / screenshot_request)
+    if extra_env:
+        env.update(extra_env)
+    return subprocess.Popen(cmd, env=env), write_dir
+
+
+def manual_write_dir() -> Path:
+    """The write dir a manual session uses, for callers that need it before launch."""
+    return _manual_write_dir()
+
+
+def prepare_manual(
+    config: Path | None = None,
+    project: str | None = None,
+    scene: str | None = None,
+    modoptions: dict[str, str] | None = None,
+) -> tuple[Path, dict[str, str], list[str]]:
     write_dir, env, cmd = prepare(
         prefix="sbc-manual-",
         port_flags_config=config,
         write_dir=_manual_write_dir(),
     )
+    if project:
+        _open_project_on_boot(write_dir, project)
+    options = dict(modoptions or {})
+    if scene:
+        options["sb_dev_scene"] = scene
+    if options:
+        _set_modoptions(write_dir, options)
     history_path = Path(env.setdefault("SBC_CHONSOLE_HISTORY", str(_manual_history_path())))
     print(f"write dir: {write_dir}")
     print(f"infolog:   {write_dir / 'infolog.txt'}")
     print(f"history:   {history_path}")
     if config is not None:
         print(f"config:    {config}")
-    return subprocess.run(cmd, env=env, check=False).returncode
+    return write_dir, env, cmd
 
 
 def boot(
@@ -73,6 +118,14 @@ def prepare(
     else:
         write_dir.mkdir(parents=True, exist_ok=True)
     game_dir = _stage_game_dir(sbc_root, write_dir)
+
+    # The manual write dir is a fixed path reused across runs, so the previous
+    # run's log is still there when the next one launches. Anything that waits on
+    # a log marker polls the file before the engine has truncated it and matches
+    # the *last* run's markers, so it stops waiting immediately. Removing it here,
+    # before launch, makes "the marker is in the log" mean this run reached it.
+    (write_dir / "infolog.txt").unlink(missing_ok=True)
+
     _link_fontcache(write_dir)
     (write_dir / "springsettings.cfg").write_text(_settings_text())
     shutil.copyfile(DEV_DIR / "script.txt", write_dir / "script.txt")
@@ -169,6 +222,37 @@ def _settings_text() -> str:
         else:
             settings_lines.append(f"{key} = {value}\n")
     return "".join(settings_lines)
+
+
+def _open_project_on_boot(write_dir: Path, project: str) -> None:
+    """Load a project archive as a mutator, so the editor starts inside it.
+
+    A project is a mutator over SpringBoard Core; opening one in the UI reloads with
+    exactly this line added. Doing it at boot skips the navigation and, more usefully,
+    means the project's featuredefs and gadgets exist from the first frame.
+    """
+    _append_to_game_block(write_dir, f"mutator0={project.removesuffix('.sdd')} 1.0;")
+
+
+def _set_modoptions(write_dir: Path, options: dict[str, str]) -> None:
+    """Write all modoptions as one block; the engine keeps only the last one."""
+    body = " ".join(f"{key}={value};" for key, value in sorted(options.items()))
+    _append_to_game_block(write_dir, f"[MODOPTIONS] {{ {body} }}")
+
+
+def _append_to_game_block(write_dir: Path, line: str) -> None:
+    """Insert a line just before the [GAME] block's closing brace.
+
+    Anchored on the lone `}` line rather than the last brace in the file, so it
+    stays correct once an earlier call has already added a nested block.
+    """
+    script = write_dir / "script.txt"
+    lines = script.read_text().splitlines(keepends=True)
+    closing = next((i for i in reversed(range(len(lines))) if lines[i].strip() == "}"), None)
+    if closing is None:
+        raise ValueError(f"{script} has no closing brace on its own line")
+    lines.insert(closing, f"  {line}\n")
+    script.write_text("".join(lines))
 
 
 def _configure_lsan(env: dict[str, str]) -> None:
