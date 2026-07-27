@@ -43,12 +43,12 @@ pub(super) fn render_body(
         String::new()
     } else {
         format!(
-            r#"<div id="native-chonsole-suggestions" class="suggestions">{rendered_suggestions}</div><div id="native-chonsole-suggestion-details" class="suggestion-details">{}</div>"#,
+            r#"<div id="native-chonsole-suggestions" class="suggestions theme-surface">{rendered_suggestions}</div><div id="native-chonsole-suggestion-details" class="suggestion-details theme-surface">{}</div>"#,
             render_suggestion_details(suggestions.detail(None)),
         )
     };
     format!(
-        r#"<div id="native-chonsole-lines" class="lines">{}</div>{}<div id="native-chonsole-input" class="input-row"><span class="prompt">&gt;</span>{}</div>"#,
+        r#"<div id="native-chonsole-lines" class="lines">{}</div>{}<div id="native-chonsole-input" class="input-row theme-surface"><span class="prompt">&gt;</span>{}</div>"#,
         render_lines(output),
         suggestions,
         render_input(input),

@@ -143,6 +143,16 @@ impl EditorState for RectangleSelectState {
         self.original = ctx.models.get::<SelectionManager>().all();
     }
 
+    /// A second mouse button interrupts the left-button selection gesture. In
+    /// particular, right-click must not leave the box on screen forever: the
+    /// engine routes later input to the state that claimed the original press.
+    fn mouse_press(&mut self, ctx: &mut StateContext, _x: i32, _y: i32, button: i32) -> bool {
+        if button != 1 {
+            ctx.request(Transition::Default);
+        }
+        false
+    }
+
     /// Do not poll `get_mouse_state` here: it has a different coordinate
     /// convention from the callback that supplied `start`. Both corners must
     /// come from the same event stream or the overlay tears vertically.
@@ -152,13 +162,17 @@ impl EditorState for RectangleSelectState {
     }
 
     fn mouse_release(&mut self, ctx: &mut StateContext, x: i32, y: i32, button: i32) -> bool {
-        if button == 1 {
-            self.end = (x, y);
-            self.finalize(ctx);
+        if button != 1 {
+            // Keep this cancellation path as well as `mouse_press`: some
+            // platforms can deliver the release after another callback has
+            // consumed the corresponding press.
             ctx.request(Transition::Default);
-            return true;
+            return false;
         }
-        false
+        self.end = (x, y);
+        self.finalize(ctx);
+        ctx.request(Transition::Default);
+        true
     }
 
     fn draw_screen(&mut self, interface: &NativeInterfaceRef) {

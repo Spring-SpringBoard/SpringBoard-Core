@@ -2,11 +2,11 @@
   "file-dialog": {
     "notes": "Reviewed load-mode path/grid layout with optional form rows hidden.",
     "status": "ai-reviewed",
-    "updated": "2026-07-23T01:34:41"
+    "updated": "2026-07-27T00:51:27+00:00"
   },
   "file-dialog-closed": {
     "status": "ai-reviewed",
-    "updated": "2026-07-23T01:34:48"
+    "updated": "2026-07-27T00:51:27+00:00"
   },
   "file-dialog-in-folder": {
     "status": "ai-reviewed",
@@ -14,24 +14,24 @@
   },
   "file-dialog-open": {
     "status": "ai-reviewed",
-    "updated": "2026-07-23T01:34:43"
+    "updated": "2026-07-27T00:51:27+00:00"
   },
   "file-dialog-up": {
     "status": "ai-reviewed",
-    "updated": "2026-07-23T01:34:46"
+    "updated": "2026-07-27T00:51:27+00:00"
   },
   "new-project": {
     "notes": "Reviewed aligned Project name and Map controls, Blank caption, and grouped Size X/Size Y fields.",
     "status": "ai-reviewed",
-    "updated": "2026-07-23T01:34:32"
+    "updated": "2026-07-27T00:51:27+00:00"
   },
   "new-project-closed": {
     "status": "ai-reviewed",
-    "updated": "2026-07-23T01:34:39"
+    "updated": "2026-07-27T00:51:27+00:00"
   },
   "new-project-edited": {
     "notes": "Reviewed shared string/numeric editing results: E2E project, Size X 12, Size Y 14.",
     "status": "ai-reviewed",
-    "updated": "2026-07-23T01:34:36"
+    "updated": "2026-07-27T00:51:27+00:00"
   }
 }

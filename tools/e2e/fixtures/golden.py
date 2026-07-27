@@ -87,14 +87,22 @@ def golden_path(case_name: str, shot_name: str) -> Path:
     return GOLDEN_ROOT / case_name / f"{shot_name}.png"
 
 
-def differing_pixels(a: Path, b: Path) -> int | None:
+def differing_pixels(a: Path, b: Path, *, channel_tolerance: int = 1) -> int | None:
+    """Count pixels that differ by more than renderer quantisation noise.
+
+    Alpha-blended RmlUi surfaces can shift every RGB channel by one when the
+    engine's map framebuffer quantises differently between runs. That is not a
+    visible UI change, but it formerly made a panel crop report every pixel as
+    changed. Larger deltas remain exact and are subject to each check's normal
+    pixel-count tolerance.
+    """
     with Image.open(a) as first, Image.open(b) as second:
         first_rgba = first.convert("RGBA")
         second_rgba = second.convert("RGBA")
         if first_rgba.size != second_rgba.size:
             return None
         difference = ImageChops.difference(first_rgba, second_rgba)
-        return sum(pixel != (0, 0, 0, 0) for pixel in difference.getdata())
+        return sum(max(pixel) > channel_tolerance for pixel in difference.get_flattened_data())
 
 
 def write_diff(golden: Path, actual: Path, out: Path) -> None:

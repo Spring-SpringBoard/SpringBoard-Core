@@ -39,6 +39,37 @@ def main_panel_tabs(run_state: "RunState") -> None:
         run_state.screenshot(f"tab-{name}")
 
 
+@scenario()
+def hide_interface(run_state: "RunState") -> None:
+    """F5 hides native RmlUi and releases it back to normal map input.
+
+    RmlUi contexts render through the engine, rather than widget DrawScreen,
+    so `/hideinterface` must explicitly gate that renderer and its input path.
+    The right-panel region is deliberately large: hiding it exposes the map and
+    changes hundreds of thousands of pixels, whereas cursor movement cannot
+    satisfy this assertion.
+    """
+    run_state.focus()
+    width, height = window_size(run_state)
+    before = run_state.screenshot("interface-shown")
+
+    run_state.key("F5", delay=Delay.DIALOG)
+    hidden = run_state.screenshot("interface-hidden")
+    panel_region = (width - 500, 0, 500, height)
+    run_state.assert_region_pixels(before, hidden, panel_region, min_changed=20_000)
+
+    run_state.key("F5", delay=Delay.DIALOG)
+    restored = run_state.screenshot("interface-restored")
+    run_state.assert_region_pixels(hidden, restored, panel_region, min_changed=20_000)
+
+    # The input gate only applies while hidden; on return, RmlUi controls must
+    # immediately be live again.
+    left = panel_left(run_state)
+    run_state.click(left + TAB_X["map"], TAB_Y, delay=Delay.DIALOG)
+    map_tab = run_state.screenshot("map-tab-restored")
+    run_state.assert_region_pixels(restored, map_tab, panel_region, min_changed=1_000)
+
+
 # Every registered editor, so none of them is left untried. Tab -> how many
 # editor buttons that tab has.
 _TABS = (("objects",), ("map",), ("env",), ("misc",))

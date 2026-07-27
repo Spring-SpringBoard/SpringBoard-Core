@@ -2,28 +2,28 @@
   "choice-open": {
     "notes": "Reviewed full-width choice control, left-aligned value, arrow, and popup.",
     "status": "ai-reviewed",
-    "updated": "2026-07-20T09:00:10"
+    "updated": "2026-07-27T00:50:17+00:00"
   },
   "fields-after-input": {
     "status": "ai-reviewed",
-    "updated": "2026-07-20T09:00:11"
+    "updated": "2026-07-27T00:50:17+00:00"
   },
   "fields-at-rest": {
     "notes": "Reviewed equal right edges for composite string, numeric, choice, colour, and asset controls.",
     "status": "ai-reviewed",
-    "updated": "2026-07-20T09:00:05"
+    "updated": "2026-07-27T00:50:17+00:00"
   },
   "fields-rest-of-set": {
     "status": "ai-reviewed",
-    "updated": "2026-07-20T09:00:17"
+    "updated": "2026-07-27T00:50:17+00:00"
   },
   "numeric-dragging": {
     "status": "ai-reviewed",
-    "updated": "2026-07-20T09:00:08"
+    "updated": "2026-07-27T00:50:17+00:00"
   },
   "string-escape-reverted": {
     "notes": "Reviewed Escape restoring the committed string in composite display mode.",
     "status": "ai-reviewed",
-    "updated": "2026-07-20T09:00:19"
+    "updated": "2026-07-27T00:50:17+00:00"
   }
 }

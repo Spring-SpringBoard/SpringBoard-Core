@@ -6,8 +6,7 @@
     left: 8dp;
     top: 8dp;
     width: 420dp;
-    background-color: #2a2a2ae0;
-    border: 1dp #555555;
+    /* Visual treatment comes from the semantic screen-edge status surface. */
     border-radius: 4dp;
     padding: 6dp 8dp;
     /* Only the buttons take clicks; the rest of the corner passes through to

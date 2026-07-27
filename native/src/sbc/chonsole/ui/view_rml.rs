@@ -10,7 +10,11 @@ use crate::sbc::rml::{self, element_by_id};
 use super::view_render::render_suggestion_details;
 const UI_CONTEXT: &str = "sbc_native_chonsole";
 const UI_BODY: &str = include_str!("ui.rml");
-const UI_STYLE: &str = include_str!("ui.rcss");
+const UI_STYLE: &str = concat!(
+    include_str!("../../theme/base.rcss"),
+    include_str!("../../theme/scrollbars.rcss"),
+    include_str!("../../theme/chonsole.rcss"),
+);
 // Scroll five suggestion rows per wheel notch. Setting scroll_top directly
 // bypasses RmlUi's wheel interpolation, so the result is immediate.
 const SUGGESTION_WHEEL_STEP: i32 = 135;

@@ -1,4 +1,4 @@
-<div id="native-panel" class="panel-container">
+<div id="native-panel" class="panel-container theme-surface">
     <div id="tab-bar" class="tab-bar"></div>
     <div id="action-bar" class="action-bar"></div>
     <div id="editor-button-panel" class="editor-button-panel"></div>
@@ -8,7 +8,7 @@
 <div id="map-shading-modal"></div>
 <div id="team-edit-modal"></div>
 <div id="modal-root"></div>
-<div id="project-status-root" class="project-status-float"></div>
+<div id="project-status-root" class="project-status-float theme-project-status"></div>
 <div id="notifications-root" class="notifications-float"></div>
 <!-- Panel-control and map-object tips have independent lifecycles. Sharing one
      element lets the map picker hide a grid tooltip after its hover event. -->

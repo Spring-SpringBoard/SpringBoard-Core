@@ -1,4 +1,4 @@
-<div id="dev-console">
+<div id="dev-console" class="theme-surface theme-console-text theme-framed">
 	<div class="header">
 		<div class="title">Developer Console</div>
 		<div id="error-count" class="error-count"></div>

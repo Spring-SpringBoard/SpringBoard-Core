@@ -9,6 +9,7 @@ from .state import RunState
 from .timing import TEXT_INTERVAL_MS, Delay, pause
 from .utils.process import run
 from .utils.run_env import MODIFIER_NAMES, MODIFIERS
+from .utils.x11 import window_geometry_values
 
 
 class InputMixin(RunState):
@@ -208,7 +209,8 @@ class InputMixin(RunState):
         """
         self.event("wheel_root", x=x, y=y, clicks=clicks, up=up)
         button = "4" if up else "5"
-        run("xdotool", "mousemove", str(x), str(y))
+        root_x, root_y = self._root_point(x, y)
+        run("xdotool", "mousemove", str(root_x), str(root_y))
         for _ in range(clicks):
             run("xdotool", "click", button)
             pause(Delay.EVENT)
@@ -217,7 +219,8 @@ class InputMixin(RunState):
     @override
     def click_root(self, x: int, y: int, button: int = 1, delay: Delay = Delay.INPUT) -> None:
         self.event("click_root", x=x, y=y, button=button)
-        run("xdotool", "mousemove", str(x), str(y), "click", str(button))
+        root_x, root_y = self._root_point(x, y)
+        run("xdotool", "mousemove", str(root_x), str(root_y), "click", str(button))
         pause(delay)
 
     def drag_root(
@@ -230,19 +233,27 @@ class InputMixin(RunState):
         steps: int = 12,
         step_delay: Delay = Delay.EVENT,
     ) -> None:
-        # Root-coordinate drag for modal dialogs, stepped like drag().
+        # Root-window drag for modal dialogs, stepped like drag().
         self.event("drag_root", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
-        run("xdotool", "mousemove", str(x1), str(y1))
+        root_x1, root_y1 = self._root_point(x1, y1)
+        root_x2, root_y2 = self._root_point(x2, y2)
+        run("xdotool", "mousemove", str(root_x1), str(root_y1))
         pause(Delay.CONTROL)
         run("xdotool", "mousedown", str(button))
         pause(step_delay)
         for i in range(1, steps + 1):
-            xi = round(x1 + (x2 - x1) * i / steps)
-            yi = round(y1 + (y2 - y1) * i / steps)
+            xi = round(root_x1 + (root_x2 - root_x1) * i / steps)
+            yi = round(root_y1 + (root_y2 - root_y1) * i / steps)
             run("xdotool", "mousemove", str(xi), str(yi))
             pause(step_delay)
         run("xdotool", "mouseup", str(button))
         pause(Delay.CONTROL)
+
+    def _root_point(self, x: int, y: int) -> tuple[int, int]:
+        """Convert a window-local point for xdotool's root-window input."""
+        self.require_window()
+        geometry = window_geometry_values(self.window)
+        return x + geometry.get("X", 0), y + geometry.get("Y", 0)
 
     @override
     def press(self, x: int, y: int, button: int = 1, delay: Delay = Delay.CONTROL) -> None:

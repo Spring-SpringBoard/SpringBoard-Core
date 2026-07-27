@@ -31,7 +31,7 @@ dev = [
 packages = ["build/sbc_packager", "tools/control", "tools/e2e", "tools/smoke", "tools/lint"]
 
 [tool.pytest.ini_options]
-testpaths = ["tools/smoke"]
+testpaths = ["tools/smoke", "tools/e2e/tests"]
 addopts = "-ra"
 
 [tool.ruff]

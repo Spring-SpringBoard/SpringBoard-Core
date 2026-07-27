@@ -1,4 +1,5 @@
-/* --- Scrollbars --- */
+/* One scrollbar language for panels and consoles. */
+
 scrollbarhorizontal,
 scrollbarhorizontal slidertrack,
 scrollbarhorizontal sliderbar,
@@ -6,29 +7,34 @@ scrollbarhorizontal sliderarrowdec,
 scrollbarhorizontal sliderarrowinc {
     display: none;
 }
+
 scrollbarvertical {
-    width: 8px;
-    background-color: #1a1a1a;
+    width: 10dp;
+    background-color: #151b20d9;
 }
 
 scrollbarvertical sliderarrowdec,
 scrollbarvertical sliderarrowinc {
-    width: 0px;
-    height: 0px;
+    width: 0dp;
+    height: 0dp;
 }
 
 scrollbarvertical slidertrack {
-    margin-left: 1px;
-    width: 6px;
-    background-color: #121315;
+    margin-left: 2dp;
+    width: 6dp;
+    background-color: #152638;
 }
 
 scrollbarvertical sliderbar {
-    width: 6px;
-    min-height: 20px;
-    background-color: #44484e;
+    width: 6dp;
+    min-height: 22dp;
+    background-color: #7595ad;
+}
+
+scrollbarvertical slidertrack:hover {
+    background-color: #29465f;
 }
 
 scrollbarvertical sliderbar:hover {
-    background-color: #5fc878;
+    background-color: #a8dcff;
 }

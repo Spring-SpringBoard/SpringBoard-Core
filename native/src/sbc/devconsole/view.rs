@@ -18,7 +18,12 @@ const UI_CONTEXT: &str = "sbc_dev_console";
 const UI_BODY: &str = include_str!("ui.rml");
 const STATUS_CONTEXT: &str = "sbc_editor_status";
 const STATUS_BODY: &str = include_str!("status.rml");
-const UI_STYLE: &str = include_str!("ui.rcss");
+const UI_STYLE: &str = concat!(
+    include_str!("../theme/base.rcss"),
+    include_str!("../theme/controls.rcss"),
+    include_str!("../theme/scrollbars.rcss"),
+    include_str!("../theme/developer_console.rcss"),
+);
 
 pub(crate) type ActionQueue = Rc<RefCell<Vec<Action>>>;
 type SelectionQueue = Rc<RefCell<Vec<SelectionEvent>>>;
@@ -537,14 +542,14 @@ impl DevConsoleView {
         let mut html = String::new();
         for action in Action::ALL {
             let class = if action.is_toggle() {
-                "toggle"
+                "toggle theme-toggle"
             } else {
                 "command"
             };
             let caption = escape_rml(action.caption());
             let content = if action.is_toggle() {
                 format!(
-                    r#"<span class="toggle-label">{caption}</span><span class="toggle-switch"><span class="toggle-thumb"></span></span>"#
+                    r#"<span class="toggle-label">{caption}</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span>"#
                 )
             } else {
                 // RmlUi drops a raw text node inside a flex button. Commands

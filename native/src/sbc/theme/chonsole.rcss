@@ -4,7 +4,6 @@ body {
     top: 24.5%;
     width: 41%;
     height: 47%;
-    font-family: Poppins;
     color: #f2f7fc;
     font-effect: shadow(1px 1px #000000);
     background-color: transparent;
@@ -24,7 +23,6 @@ body {
     display: none;
     height: 0dp;
     padding: 0dp;
-    font-family: Poppins;
     font-size: 0dp;
     line-height: 0dp;
 }
@@ -56,10 +54,6 @@ body {
     font-size: 16dp;
     line-height: 27dp;
     color: #e5eef7;
-    /* One shared outer surface with the developer console, status bar, and
-       editor panel. Selection and hover still provide the blue emphasis. */
-    background-color: #151b20d9;
-    border-width: 0dp;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -117,7 +111,6 @@ body {
     font-size: 14dp;
     line-height: 18dp;
     color: #dce8f3;
-    background-color: #151b20d9;
     border-top-width: 1dp;
     border-top-color: #29465f;
     white-space: normal;
@@ -133,45 +126,6 @@ body {
     color: #d5e3f0;
 }
 
-scrollbarhorizontal,
-scrollbarhorizontal slidertrack,
-scrollbarhorizontal sliderbar,
-scrollbarhorizontal sliderarrowdec,
-scrollbarhorizontal sliderarrowinc {
-    display: none;
-}
-
-scrollbarvertical {
-    width: 10dp;
-    background-color: #151b20d9;
-}
-
-scrollbarvertical sliderarrowdec,
-scrollbarvertical sliderarrowinc {
-    width: 0dp;
-    height: 0dp;
-}
-
-scrollbarvertical slidertrack {
-    margin-left: 2dp;
-    width: 6dp;
-    background-color: #152638;
-}
-
-scrollbarvertical sliderbar {
-    width: 6dp;
-    min-height: 22dp;
-    background-color: #7595ad;
-}
-
-scrollbarvertical slidertrack:hover {
-    background-color: #29465f;
-}
-
-scrollbarvertical sliderbar:hover {
-    background-color: #a8dcff;
-}
-
 .input-row {
     position: absolute;
     left: 0dp;
@@ -179,12 +133,9 @@ scrollbarvertical sliderbar:hover {
     top: 0dp;
     height: 36dp;
     padding: 5dp 8dp;
-    font-family: Poppins;
     font-size: 22dp;
     line-height: 26dp;
     color: #ffffff;
-    background-color: #151b20d9;
-    border-width: 0dp;
     white-space: pre;
     overflow: hidden;
 }

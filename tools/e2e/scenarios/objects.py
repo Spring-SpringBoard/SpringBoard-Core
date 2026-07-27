@@ -47,6 +47,11 @@ if TYPE_CHECKING:
 # selection box, and the command log for what was actually sent.
 MAP_TOLERANCE = 4000
 
+# The transient rectangle-select outline is alpha-blended over the map. This is
+# its resulting colour on the default green terrain, distinct from the pure
+# green boxes that mark selected objects.
+SELECTION_RECTANGLE_COLOR = "#45b0e6"
+
 # The cursor tooltip's background (`.native-tooltip` in ui.rcss). Near-black, and
 # nothing on the map is, so counting these pixels says whether the tip is drawn.
 TOOLTIP_COLOR = "#0b0d0c"
@@ -81,7 +86,9 @@ def feature_placement_actions(run_state: "RunState") -> None:
     # Only the placement controls below the definition grid: thumbnails redraw
     # continuously, so including their area would make this visual assertion
     # flaky for no benefit.
-    placement_controls = (left, 650, 500, 753)
+    # `screenshot()` inherits this scenario's right-panel crop, so comparison
+    # coordinates are panel-local rather than window-local.
+    placement_controls = (0, 700, 500, 300)
     run_state.assert_region_pixels(add, brush, placement_controls, min_changed=300)
 
     run_state.click(*panel_point(left, OBJECTS["brush"]), delay=Delay.SETTLE)
@@ -218,7 +225,9 @@ def props_panel(run_state: "RunState") -> None:
     # Mid-drag: the pointer is pinned to where the drag began and drawn as the
     # empty cursor, so nothing follows the mouse across the panel. park=False --
     # moving the pointer now would fight the drag's own warp and end it.
-    run_state.golden("props-pos-dragging", park=False)
+    # Relative packets make only the live numeric glyphs vary by a few pixels;
+    # the no-cursor drag frame itself must remain visually stable.
+    run_state.golden("props-pos-dragging", park=False, tolerance=150)
     run_state.release(*panel_point(left, OBJECTS["property_pos_x"]))
     # The pinned relative drag may land within one input packet of its nominal
     # value (for example 1580 vs. 1600); the command assertion below owns the
@@ -235,7 +244,9 @@ def props_panel(run_state: "RunState") -> None:
     # nothing else can (the engine never hands the plugin a release for a press
     # the panel's RmlUi consumed).
     run_state.press(*panel_point(left, OBJECTS["property_pos_x"]))
-    run_state.move_relative(-400, 260)  # out over the map
+    # Take a comfortably large move: packet batching may consume only part of a
+    # nominal delta, but the committed position must cross back below 1500.
+    run_state.move_relative(-800, 260)  # out over the map
     run_state.release(left - 300, 500)
     dragged = run_state.assert_any_command(
         "SetObjectParamCommand",
@@ -792,12 +803,13 @@ def object_actions(run_state: "RunState") -> None:
 
 @scenario()
 def selection(run_state: "RunState") -> None:
-    """Rectangle select: drag from sky over a placed feature.
+    """Rectangle select: drag from sky over a placed feature and cancel it.
 
     Starting outside terrain matters: Chili permits the first corner over the
-    sky, then selects objects by their screen positions. The box must appear
-    while dragging, and the feature must end up selected -- which is proved by
-    editing it in Properties afterwards.
+    sky, then selects objects by their screen positions. A right click during
+    the gesture must also discard the transient box; otherwise it captures all
+    later map input. The completed box must select the feature, which is proved
+    by editing it in Properties afterwards.
     """
     run_state.focus()
     left = _open(run_state, "features")
@@ -808,6 +820,25 @@ def selection(run_state: "RunState") -> None:
     run_state.wheel(spot_x, spot_y, clicks=8, up=True)
     run_state.click(spot_x, spot_y, delay=Delay.READY)  # place it
     run_state.key("Escape", delay=Delay.SETTLE)  # leave placement mode
+
+    # A non-left press cancels a live box-select. Keep left held while making
+    # the right click: this is the input sequence that previously left the
+    # rectangle state permanently active.
+    run_state.press(spot_x - 220, 80)
+    run_state.move(spot_x + 120, spot_y + 60, delay=Delay.FRAME)
+    run_state.move(spot_x + 200, spot_y + 160, delay=Delay.SETTLE)
+    run_state.click(spot_x + 500, spot_y + 300, button=3, delay=Delay.SETTLE)
+    cancelled = run_state.screenshot("box-right-cancelled")
+    map_region = (0, 70, width - 500, height - 170)
+    lingering = run_state.count_color(
+        cancelled,
+        map_region,
+        SELECTION_RECTANGLE_COLOR,
+        fuzz="5%",
+    )
+    if lingering > 100:
+        raise AssertionError(f"right click left the rectangle-select outline behind ({lingering} px)")
+    run_state.release(spot_x + 500, spot_y + 300)
 
     # Start in the sky, well above the map polygon, then sweep down-right over
     # the feature. This used to fail in the Rust port because it required the

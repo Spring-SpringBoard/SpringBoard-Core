@@ -2,30 +2,30 @@
   "console-cleared": {
     "notes": "Reviewed: Clear leaves an empty console. The harness starts hidden, so Popup on error is off; the engine's deterministic Global LOS state is shown on.",
     "status": "ai-reviewed",
-    "updated": "2026-07-18T08:35:02"
+    "updated": "2026-07-27T00:54:53+00:00"
   },
   "console-hidden": {
     "notes": "Reviewed: F8 removes the native console while leaving the map unobscured.",
     "status": "ai-reviewed",
-    "updated": "2026-07-18T08:35:07"
+    "updated": "2026-07-27T00:54:53+00:00"
   },
   "console-problems-off": {
     "notes": "Reviewed: the Problems button returns to its unpressed state after the second click.",
     "status": "ai-reviewed",
-    "updated": "2026-07-18T08:35:06"
+    "updated": "2026-07-27T00:54:53+00:00"
   },
   "console-problems-on": {
     "notes": "Reviewed: the Problems button is visibly pressed after its correctly targeted toolbar click.",
     "status": "ai-reviewed",
-    "updated": "2026-07-18T08:35:05"
+    "updated": "2026-07-27T00:54:53+00:00"
   },
   "console-shown": {
     "notes": "Reviewed: F8 reopens the native console with its evenly sized, legible toolbar.",
     "status": "ai-reviewed",
-    "updated": "2026-07-18T08:35:08"
+    "updated": "2026-07-27T00:54:53+00:00"
   },
   "status-bar": {
     "status": "ai-reviewed",
-    "updated": "2026-07-18T08:35:04"
+    "updated": "2026-07-27T00:54:53+00:00"
   }
 }

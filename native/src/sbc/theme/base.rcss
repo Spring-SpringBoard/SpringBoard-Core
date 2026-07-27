@@ -1,0 +1,39 @@
+/* Native RmlUi foundation shared by every independently hosted document. */
+
+body {
+    font-family: Poppins;
+}
+
+/* The primary charcoal plane used by the editor shell and both consoles. */
+.theme-surface {
+    background-color: #151b20d9;
+}
+
+/* Text colours stay semantic: the same surface hosts different information. */
+.theme-console-text {
+    color: #c8d0e0;
+}
+
+/* Apply when a surface is visually separated from the content behind it. */
+.theme-framed {
+    border-width: 1dp;
+    border-color: #000000;
+}
+
+/* A related surface for persistent secondary information. */
+.theme-surface-muted {
+    color: #e3e9ef;
+    background-color: #151b20c4;
+}
+
+/* The project shortcut strip is a higher-contrast screen-edge status surface. */
+.theme-project-status {
+    background-color: #2a2a2ae0;
+    border: 1dp #555555;
+}
+
+/* Recessed regions such as command history lists. */
+.theme-inset {
+    color: #c8d0e0;
+    background-color: #1a1a1a;
+}

@@ -4,7 +4,6 @@
    the dev console's context), so it takes no pointer events -- only the panel
    and the modals do. */
 body {
-    font-family: Poppins;
     font-size: 12dp;
     color: #cccccc;
     background-color: transparent;
@@ -25,8 +24,5 @@ body {
     top: 0dp;
     width: 500dp;
     height: 100%;
-    /* Shared outer surface: keep native panels visually related even when
-       they are hosted in separate RmlUi contexts. */
-    background-color: #151b20d9;
     pointer-events: auto;
 }

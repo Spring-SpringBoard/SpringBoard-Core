@@ -41,7 +41,7 @@ impl BooleanField {
 
     fn button_rml(&self) -> String {
         format!(
-            r#"<span class="field-toggle-label">{}</span><span class="field-toggle-switch"><span class="field-toggle-thumb"></span></span>"#,
+            r#"<span class="field-toggle-label">{}</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span>"#,
             escape_rml(self.title.trim_end_matches(':')),
         )
     }
@@ -69,7 +69,7 @@ impl Field for BooleanField {
         format!(
             concat!(
                 r#"<div class="field-row field-boolean{long}">"#,
-                r#"<button id="field-{n}" class="field-toggle{pressed}">{button}</button>"#,
+                r#"<button id="field-{n}" class="field-toggle theme-toggle theme-toggle--form{pressed}">{button}</button>"#,
                 r#"</div>"#,
             ),
             n = self.name,

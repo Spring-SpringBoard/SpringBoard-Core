@@ -2,7 +2,7 @@ from typing import Annotated
 
 import typer
 
-from .driver.cases import TARGETS, select_cases, target_cases
+from .driver.cases import TARGETS, Case, select_cases, target_cases
 from .fixtures.golden import GOLDEN_ROOT, STATUS_APPROVED, approve_review, load_review
 from .runner import E2ERun
 
@@ -25,30 +25,44 @@ def run(
     cases = select_cases([target], tags) if tags or target == "all" else target_cases(target)
     if not cases:
         raise typer.BadParameter(f"no cases match target={target!r}, tags={tags!r}")
-    failures = 0
-    for case in cases:
-        runner = E2ERun(
-            case,
-            update_golden=update_golden,
-            stage_goldens=stage_golden,
-        )
-        typer.echo(f"run.md: {runner.run_md}")
-        try:
-            runner.launch()
-            runner.run_scenario()
-            runner.finish("complete")
-        except Exception as error:
-            failures += 1
-            runner.event("error", error=str(error))
-            runner.finish("failed", error=str(error))
-            typer.echo(f"ERROR: {case.name}: {error}", err=True)
-        finally:
-            if not keep_open:
-                runner.stop()
-                runner.cleanup_write_dir()
-            typer.echo(f"run.md: {runner.run_md}")
+    failures = sum(
+        _run_case(case, update_golden=update_golden, stage_golden=stage_golden, keep_open=keep_open)
+        for case in cases
+    )
     if failures:
         raise typer.Exit(1)
+
+
+def _run_case(case: Case, *, update_golden: bool, stage_golden: bool, keep_open: bool) -> bool:
+    runner = E2ERun(case, update_golden=update_golden, stage_goldens=stage_golden)
+    typer.echo(f"run.md: {runner.run_md}")
+    scenario_error: Exception | None = None
+    try:
+        runner.launch()
+        runner.run_scenario()
+    except Exception as error:
+        scenario_error = error
+        runner.event("error", error=str(error))
+    try:
+        extra = {"error": str(scenario_error)} if scenario_error else {}
+        runner.finish("failed" if scenario_error else "complete", **extra)
+    except AssertionError as error:
+        # Golden and pixel checks are evaluated during finalization. They must
+        # fail this case without preventing `run all` from advancing to the
+        # remaining independent scenarios.
+        if scenario_error is None:
+            runner.event("error", error=str(error))
+        typer.echo(f"ERROR: {case.name}: {error}", err=True)
+        return True
+    finally:
+        if not keep_open:
+            runner.stop()
+            runner.cleanup_write_dir()
+        typer.echo(f"run.md: {runner.run_md}")
+    if scenario_error is not None:
+        typer.echo(f"ERROR: {case.name}: {scenario_error}", err=True)
+        return True
+    return False
 
 
 @app.command("goldens-status")

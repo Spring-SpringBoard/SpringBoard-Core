@@ -101,73 +101,16 @@
 	padding: 0px 11px;
 	cursor: pointer;
 	text-align: left;
-	background-color: #212528;
-	color: #cfd4db;
     border: 2px #050706;
     border-left-width: 6px;
-    border-left-color: #2e2f32;
     border-radius: 5px;
 	font-size: 13px;
     box-sizing: border-box;
 }
 
-.field-toggle:hover {
-    background-color: #2a2e32;
-    color: #e1e5eb;
-    border-color: #4a4d52;
-    border-left-color: #4a4d52;
-}
-
-.field-toggle.pressed {
-    background-color: #18241b;
-    color: #79e68c;
-    border-left-color: #397848;
-}
-
-.field-toggle.pressed:hover {
-    background-color: #1f3425;
-    color: #9efca6;
-    border-left-color: #5fc878;
-}
-
-
 .field-toggle-label {
 	flex-grow: 1;
 	font-weight: bold;
-}
-
-.field-toggle-switch {
-	position: relative;
-	width: 34dp;
-	height: 18dp;
-	flex-shrink: 0;
-	background-color: #101315;
-	border: 1dp #78838d;
-	/* Match the button language without reverting to a blurry pill shape. */
-	border-radius: 4dp;
-	box-sizing: border-box;
-}
-
-.field-toggle-thumb {
-	position: absolute;
-	left: 1dp;
-	top: 1dp;
-	width: 14dp;
-	height: 14dp;
-	background-color: #9aa4ad;
-	border: 1dp #c1c9d0;
-	border-radius: 3dp;
-	box-sizing: border-box;
-}
-
-.field-toggle.pressed .field-toggle-switch {
-	background-color: #285b35;
-	border-color: #73d487;
-}
-
-.field-toggle.pressed .field-toggle-thumb {
-	left: 17dp;
-	background-color: #a5f6b2;
 }
 
 /* Chili's BooleanField is a balanced 200px toggle button. It is not a full
@@ -318,12 +261,17 @@
     color: #eeeeee;
     font-size: 12px;
     text-align: left;
+    min-width: 0dp;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .field-button-value {
     color: #d9d9d9;
     font-size: 12px;
     text-align: right;
+    flex-shrink: 0;
 }
 
 /* The colour is conveyed by a consistently sized swatch, so compact grouped

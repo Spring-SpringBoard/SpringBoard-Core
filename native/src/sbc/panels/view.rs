@@ -14,15 +14,17 @@ const UI_BODY: &str = include_str!("ui.rml");
 /// The stylesheet, assembled from the theme parts in cascade order. RmlUi
 /// still sees one sheet; the split is source-level, by component.
 const UI_STYLE: &str = concat!(
-    include_str!("theme/base.rcss"),
-    include_str!("theme/shell.rcss"),
-    include_str!("theme/fields.rcss"),
-    include_str!("theme/scrollbars.rcss"),
-    include_str!("theme/buttons.rcss"),
-    include_str!("theme/modals.rcss"),
-    include_str!("theme/grid.rcss"),
-    include_str!("theme/notifications.rcss"),
-    include_str!("theme/project_status.rcss"),
+    include_str!("../theme/base.rcss"),
+    include_str!("../theme/controls.rcss"),
+    include_str!("../theme/scrollbars.rcss"),
+    include_str!("../theme/panel/foundation.rcss"),
+    include_str!("../theme/panel/shell.rcss"),
+    include_str!("../theme/panel/fields.rcss"),
+    include_str!("../theme/panel/action_controls.rcss"),
+    include_str!("../theme/panel/modals.rcss"),
+    include_str!("../theme/panel/asset_grid.rcss"),
+    include_str!("../theme/panel/notifications.rcss"),
+    include_str!("../theme/panel/project_status.rcss"),
 );
 
 /// A shell-level click, queued by an RmlUi event listener and drained by the
