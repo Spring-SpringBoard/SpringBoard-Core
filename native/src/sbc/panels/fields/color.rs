@@ -1,4 +1,7 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel, RmlDataVariable,
+};
 
 use crate::sbc::panels::field::{
     element_by_id, escape_rml, on_change, on_pointer, ChangeQueue, Field, FieldValue,
@@ -20,6 +23,8 @@ pub(crate) struct ColorField {
     channels: [ChannelElems; 3],
     expanded: bool,
     drag_channel: Option<usize>, // 0=R, 1=G, 2=B
+    swatch_color: Option<RmlDataVariable<'static, String>>,
+    channel_values: [Option<RmlDataVariable<'static, String>>; 3],
 }
 
 struct ChannelElems {
@@ -52,6 +57,8 @@ impl ColorField {
             ],
             expanded: false,
             drag_channel: None,
+            swatch_color: None,
+            channel_values: [None, None, None],
             tooltip: None,
         }
     }
@@ -111,26 +118,39 @@ impl ColorField {
 
     // ── DOM sync helpers ──
 
-    fn button_rml(&self) -> String {
-        format!(
-            r#"<span class="field-button-title">{title}:</span><span class="field-swatch" style="background-color: {bg};"></span>"#,
-            title = escape_rml(self.title.trim_end_matches(':')),
-            bg = Self::to_css(self.value),
-        )
+    fn binding_name(&self, suffix: &str) -> String {
+        let name = self
+            .name
+            .chars()
+            .map(|character| {
+                if character.is_ascii_alphanumeric() {
+                    character
+                } else {
+                    '_'
+                }
+            })
+            .collect::<String>();
+        format!("field_{name}_{suffix}")
     }
 
     fn sync_swatch(&self, interface: &NativeInterfaceRef) {
-        if let Some(e) = self.swatch {
-            let _ = interface
-                .rml_ui()
-                .element_set_inner_rml(e, &self.button_rml());
+        if let Some(color) = &self.swatch_color {
+            let _ = color.set(Self::to_css(self.value));
+        } else if let Some(e) = self.swatch {
+            let _ = interface.rml_ui().element_set_attribute(
+                e,
+                "style",
+                &format!("background-color: {};", Self::to_css(self.value)),
+            );
         }
     }
 
     fn sync_channels(&self, interface: &NativeInterfaceRef) {
         for (i, ch) in self.channels.iter().enumerate() {
             let val = format!("{:.2}", self.value[i]);
-            if let Some(e) = ch.display {
+            if let Some(value) = &self.channel_values[i] {
+                let _ = value.set(val.clone());
+            } else if let Some(e) = ch.display {
                 let _ = interface.rml_ui().element_set_inner_rml(e, &val);
             }
             if let Some(e) = ch.edit {
@@ -189,6 +209,18 @@ impl Field for ColorField {
         self.tooltip.as_deref()
     }
 
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.swatch_color =
+            Some(model.bind(&self.binding_name("swatch"), Self::to_css(self.value))?);
+        for index in 0..3 {
+            self.channel_values[index] = Some(model.bind(
+                &self.binding_name(&format!("channel_{index}")),
+                format!("{:.2}", self.value[index]),
+            )?);
+        }
+        Ok(())
+    }
+
     fn generate_rml(&self) -> String {
         let hex = Self::to_hex(self.value);
         let n = &self.name;
@@ -196,13 +228,17 @@ impl Field for ColorField {
             .iter()
             .enumerate()
             .map(|(i, &ch)| {
-                let val = format!("{:.2}", self.value[i]);
+                let display = self.channel_values[i]
+                    .as_ref()
+                    .map(|_| format!("{{{{ {} }}}}", self.binding_name(&format!("channel_{i}"))))
+                    .unwrap_or_else(|| format!("{:.2}", self.value[i]));
+                let input_value = format!("{:.2}", self.value[i]);
                 format!(
                     r#"<div class="field-inline"><span class="field-label channel-label {ch}">{ch}</span>"#
                 ) + &format!(
-                    r#"<button id="field-{n}-{ch}-display" class="field-composite-button field-numeric-button color-channel">{val}</button>"#,
+                    r#"<button id="field-{n}-{ch}-display" class="field-composite-button field-numeric-button color-channel">{display}</button>"#,
                 ) + &format!(
-                    r#"<input type="text" id="field-{n}-{ch}-edit" class="field-input field-numeric-input color-channel hidden" value="{val}"/></div>"#,
+                    r#"<input type="text" id="field-{n}-{ch}-edit" class="field-input field-numeric-input color-channel hidden" value="{input_value}"/></div>"#,
                 )
             })
             .collect();
@@ -212,8 +248,19 @@ impl Field for ColorField {
         // editor below it is native-only (Lua opens a picker dialog instead).
         r#"<div class="field-row"><div class="color-field">"#.to_string()
             + &format!(
-                r#"<button id="field-{n}-swatch" class="field-composite-button field-color-button">{button}</button>"#,
-                button = self.button_rml(),
+                r#"<button id="field-{n}-swatch" class="field-composite-button field-color-button"><span class="field-button-title">{title}:</span><span class="field-swatch" {style}></span></button>"#,
+                title = escape_rml(self.title.trim_end_matches(':')),
+                style = self
+                    .swatch_color
+                    .as_ref()
+                    .map(|_| format!(
+                        r#"data-style-background-color="{}""#,
+                        self.binding_name("swatch")
+                    ))
+                    .unwrap_or_else(|| format!(
+                        r#"style="background-color: {};""#,
+                        Self::to_css(self.value)
+                    )),
             )
             + &format!(r#"<div id="field-{n}-editor" class="color-editor hidden">"#,)
             + &format!(
