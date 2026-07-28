@@ -26,6 +26,24 @@ impl Default for ModalStack {
 }
 
 impl ModalStack {
+    /// Set up every modal's data model before their markup enters the document.
+    /// `data-for` is structural in RmlUi: binding after parsing is too late.
+    pub(crate) fn prepare_data_models(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        context: u64,
+    ) -> Result<(), Error> {
+        for modal in &mut self.modals {
+            modal.prepare_data_model(interface, context)?;
+        }
+        Ok(())
+    }
+
+    /// All registered modal shells in their common stack order.
+    pub(crate) fn markup(&self) -> String {
+        self.modals.iter().map(|modal| modal.markup()).collect()
+    }
+
     pub(crate) fn bind(
         &mut self,
         interface: &NativeInterfaceRef,

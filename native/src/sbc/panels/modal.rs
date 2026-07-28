@@ -30,7 +30,19 @@ pub(crate) enum ModalEvent {
 /// through `ModalStack::get_mut::<T>()` while everything the stack has to do
 /// blind -- bind, close, poll -- lives here.
 pub(crate) trait Modal: Any {
-    /// The static shell injected into `#modal-root` once, before any binding.
+    /// Creates data bindings needed by this modal's static shell. It runs
+    /// before the RML is parsed, which is required for structural bindings such
+    /// as `data-for`.
+    fn prepare_data_model(
+        &mut self,
+        _interface: &NativeInterfaceRef,
+        _context: u64,
+    ) -> Result<(), Error> {
+        Ok(())
+    }
+
+    /// The static shell injected into `#modal-root` once, after
+    /// [`Self::prepare_data_model`].
     fn markup(&self) -> String;
 
     fn bind(
@@ -82,13 +94,3 @@ pub(crate) struct ModalRegistration {
 }
 
 inventory::collect!(ModalRegistration);
-
-/// Every registered modal's markup, concatenated in registration order. Built
-/// from throwaway instances so the view can inject it without owning the stack,
-/// matching how each dialog's markup was a plain default-instance call before.
-pub(crate) fn registered_markup() -> String {
-    let mut specs: Vec<&ModalRegistration> =
-        inventory::iter::<ModalRegistration>.into_iter().collect();
-    specs.sort_by_key(|reg| reg.order);
-    specs.iter().map(|reg| (reg.make)().markup()).collect()
-}

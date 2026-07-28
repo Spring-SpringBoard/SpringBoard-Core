@@ -1,4 +1,4 @@
-<button data-model="panel_editor_buttons" data-for="editor : editors" class="editor-button" data-attr-title="editor.tooltip">
+<button data-model="panel_editor_buttons" data-for="editor : editors" data-if="editor.visible" class="editor-button" data-attr-title="editor.tooltip">
     <img data-attr-src="editor.icon"/>
     <div class="editor-button-label">{{ editor.label }}</div>
 </button>

@@ -141,6 +141,13 @@ def import_action(run_state: "RunState") -> None:
     run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=Delay.DIALOG)
     run_state.assert_any_command("ImportDiffuseCommand")
 
+    # Import has two typed options, while Load has none. Opening Load straight
+    # afterwards exercises the shrinking collection path without relying on a
+    # screenshot diff; the harness rejects any RmlUi data-for diagnostic.
+    run_state.click(*panel_point(left, TOOLBAR["load"]), delay=Delay.POLL)
+    run_state.screenshot("load-after-import")
+    run_state.key("Escape", delay=Delay.POLL)
+
 
 @scenario()
 def clipboard_actions(run_state: "RunState") -> None:

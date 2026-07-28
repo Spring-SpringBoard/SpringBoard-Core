@@ -126,6 +126,13 @@ impl PanelManager {
             self.status_bar.forget();
             self.pending_select = None;
             self.input.reset();
+            let context = self
+                .view
+                .context_handle()
+                .expect("fresh native panel has an RmlUi context");
+            self.modals.prepare_data_models(&self.interface, context)?;
+            self.view
+                .mount_modals(&self.interface, &self.modals.markup())?;
             self.view.set_active_editor(&self.interface, None)?;
         }
         if !self.view.is_ready() {

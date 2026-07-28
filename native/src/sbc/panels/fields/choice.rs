@@ -11,6 +11,7 @@ pub(crate) struct ChoiceField {
     tooltip: Option<String>,
     value: String,
     items: Vec<String>,
+    option_rows: Option<String>,
     element: Option<u64>,
 }
 
@@ -25,6 +26,7 @@ impl ChoiceField {
             title: title.into(),
             value: items.first().cloned().unwrap_or_default(),
             items,
+            option_rows: None,
             tooltip: None,
             element: None,
         }
@@ -32,6 +34,13 @@ impl ChoiceField {
 
     pub(crate) fn with_tooltip(mut self, tooltip: &str) -> Self {
         self.tooltip = Some(tooltip.to_string());
+        self
+    }
+
+    /// Render options from an already-bound, typed RmlUi collection. The
+    /// collection must exist before this field's RML is parsed.
+    pub(crate) fn with_option_rows(mut self, name: impl Into<String>) -> Self {
+        self.option_rows = Some(name.into());
         self
     }
 
@@ -56,19 +65,24 @@ impl Field for ChoiceField {
 
     fn generate_rml(&self) -> String {
         let title = escape_rml(self.title.trim_end_matches(':'));
-        let options: String = self
-            .items
-            .iter()
-            .map(|item| {
-                let sel = if *item == self.value { " selected" } else { "" };
-                format!(
-                    r#"<option value="{}"{}>{}</option>"#,
-                    escape_rml(item),
-                    sel,
-                    escape_rml(item)
-                )
-            })
-            .collect();
+        let options = match &self.option_rows {
+            Some(rows) => format!(
+                r#"<option data-for="option : {rows}" data-if="option.visible" data-attr-value="option.value">{{{{ option.label }}}}</option>"#
+            ),
+            None => self
+                .items
+                .iter()
+                .map(|item| {
+                    let sel = if *item == self.value { " selected" } else { "" };
+                    format!(
+                        r#"<option value="{}"{}>{}</option>"#,
+                        escape_rml(item),
+                        sel,
+                        escape_rml(item)
+                    )
+                })
+                .collect(),
+        };
         // Like numeric and colour fields, the caption belongs to the control
         // itself. Keeping it inside the border makes a compact ChoiceField a
         // single visual unit rather than a loose label plus a wide select.

@@ -10,16 +10,17 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataOptionRows, RmlDataVariable, RmlOptionRow,
+};
 
 use crate::sbc::actions::{FileAcceptFn, FileDialogConfig, FileDialogResult};
 use crate::sbc::panels::controls::asset_picker::PickerEvent;
 use crate::sbc::panels::controls::grid::{list_entries_with_dirs, parent_dir, GridView};
 use crate::sbc::panels::dialogs::form::{DialogForm, FormItem};
 use crate::sbc::panels::editor::Editor;
-use crate::sbc::panels::field::{
-    element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
-};
+use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, StringField};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
 
@@ -36,7 +37,6 @@ enum FileField {
     FileType,
 }
 
-
 use FileField::*;
 
 pub(crate) struct FileDialog {
@@ -46,6 +46,9 @@ pub(crate) struct FileDialog {
     form: DialogForm<FileField>,
     events: Rc<RefCell<Vec<PickerEvent>>>,
     bound: bool,
+    title: Option<RmlDataVariable<'static, String>>,
+    path: Option<RmlDataVariable<'static, String>>,
+    file_type_options: Option<RmlDataOptionRows<'static>>,
     /// The callback the open dialog runs against its accepted result, set by the
     /// toolbar action that opened it.
     pending_accept: Option<FileAcceptFn>,
@@ -60,6 +63,9 @@ impl Default for FileDialog {
             form: file_form(),
             events: Rc::new(RefCell::new(Vec::new())),
             bound: false,
+            title: None,
+            path: None,
+            file_type_options: None,
             pending_accept: None,
         }
     }
@@ -78,9 +84,10 @@ impl FileDialog {
         self.grid.set_selected(None);
 
         let rml = interface.rml_ui();
-        if let Some(e) = element_by_id(interface, document, "fd-title") {
-            rml.element_set_inner_rml(e, &escape_rml(&config.title))?;
-        }
+        self.title
+            .as_ref()
+            .expect("file dialog title is bound before modal markup")
+            .set(config.title.clone())?;
         // Name input row.
         if let Some(e) = element_by_id(interface, document, "row-fd-name") {
             rml.element_set_class(e, "hidden", !config.show_name_input)?;
@@ -90,18 +97,7 @@ impl FileDialog {
         if let Some(e) = element_by_id(interface, document, "row-fd-type") {
             rml.element_set_class(e, "hidden", config.file_types.is_empty())?;
         }
-        if !config.file_types.is_empty() {
-            if let Some(e) = element_by_id(interface, document, "field-fd-type") {
-                let mut opts = String::new();
-                for t in &config.file_types {
-                    opts.push_str(&format!(
-                        r#"<option value="{v}">{v}</option>"#,
-                        v = escape_rml(t)
-                    ));
-                }
-                rml.element_set_inner_rml(e, &opts)?;
-            }
-        }
+        self.write_file_type_options(&config.file_types)?;
         self.form.set(
             FileType,
             FieldValue::Text(config.file_types.first().cloned().unwrap_or_default()),
@@ -195,13 +191,13 @@ impl FileDialog {
     fn markup_rml(&self) -> String {
         format!(
             concat!(
-                r#"<div id="file-dialog" class="picker-backdrop hidden">"#,
+                r#"<div id="file-dialog" class="picker-backdrop hidden" data-model="file_dialog">"#,
                 r#"<div class="dialog picker-dialog asset-dialog">"#,
-                r#"<div class="dialog-header"><span id="fd-title" class="dialog-title">File</span></div>"#,
+                r#"<div class="dialog-header"><span class="dialog-title">{{ title }}</span></div>"#,
                 r#"<div class="dialog-content">"#,
                 r#"<div class="asset-path-nav">"#,
                 r#"<button id="fd-up" class="dialog-button">Up</button>"#,
-                r#"<span id="fd-path" class="asset-path"></span></div>"#,
+                r#"<span class="asset-path">{{ path }}</span></div>"#,
                 r#"{grid}"#,
                 r#"{form}"#,
                 r#"</div>"#,
@@ -267,12 +263,25 @@ impl FileDialog {
         self.grid
             .set_items(list_entries_with_dirs(interface, &self.dir, &extensions));
         self.grid.render(interface, document)?;
-        if let Some(e) = element_by_id(interface, document, "fd-path") {
-            interface
-                .rml_ui()
-                .element_set_inner_rml(e, &escape_rml(&self.dir))?;
-        }
+        self.path
+            .as_ref()
+            .expect("file dialog path is bound before modal markup")
+            .set(self.dir.clone())?;
         Ok(())
+    }
+
+    fn write_file_type_options(&mut self, file_types: &[String]) -> Result<(), Error> {
+        let options = file_types
+            .iter()
+            .map(|file_type| RmlOptionRow {
+                value: file_type.clone(),
+                label: file_type.clone(),
+            })
+            .collect::<Vec<_>>();
+        self.file_type_options
+            .as_ref()
+            .expect("file dialog options are bound before modal markup")
+            .set(&options)
     }
 
     /// True when a directory is a selectable item (e.g. a `.sdd` project folder)
@@ -329,6 +338,20 @@ impl FileDialog {
 }
 
 impl Modal for FileDialog {
+    fn prepare_data_model(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        context: u64,
+    ) -> Result<(), Error> {
+        let data_model = interface
+            .rml_ui()
+            .create_data_model(context, "file_dialog")?;
+        self.title = Some(data_model.bind("title", String::new())?);
+        self.path = Some(data_model.bind("path", String::new())?);
+        self.file_type_options = Some(data_model.bind_option_rows("types")?);
+        Ok(())
+    }
+
     fn markup(&self) -> String {
         self.markup_rml()
     }
@@ -350,6 +373,9 @@ impl Modal for FileDialog {
         self.events.borrow_mut().clear();
         self.grid.drain_clicks();
         self.grid.forget_bindings();
+        self.title = None;
+        self.path = None;
+        self.file_type_options = None;
     }
 
     fn is_open(&self) -> bool {
@@ -405,7 +431,7 @@ fn file_form() -> DialogForm<FileField> {
             (Name, Box::new(StringField::new("fd-name", "Name", ""))),
             (
                 FileType,
-                Box::new(ChoiceField::new("fd-type", "Type", Vec::new())),
+                Box::new(ChoiceField::new("fd-type", "Type", Vec::new()).with_option_rows("types")),
             ),
         ],
         vec![

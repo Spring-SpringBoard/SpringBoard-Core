@@ -10,7 +10,6 @@ use crate::sbc::actions::Action;
 use crate::sbc::panels::action_bar::ActionBar;
 use crate::sbc::panels::editor_buttons::EditorButtons;
 use crate::sbc::panels::field::element_by_id;
-use crate::sbc::panels::modal::registered_markup;
 use crate::sbc::panels::registry::Tab;
 use crate::sbc::panels::tab_bar::TabBar;
 use crate::sbc::rml;
@@ -157,10 +156,6 @@ impl PanelView {
         self.root = element_by_id(interface, doc, "native-panel");
         self.content = element_by_id(interface, doc, "main-content");
 
-        if let Some(modal) = element_by_id(interface, doc, "modal-root") {
-            rml.element_set_inner_rml(modal, &registered_markup())?;
-        }
-
         self.tab_bar
             .render(interface, doc, self.current_tab, &self.events)?;
         self.action_bar.bind(interface, doc, &self.events)?;
@@ -174,6 +169,24 @@ impl PanelView {
 
     pub(crate) fn notification_rows(&self) -> Option<&RmlDataNotificationRows<'static>> {
         self.notification_rows.as_ref()
+    }
+
+    /// Insert static modal shells after their data models have been bound. The
+    /// stack owns the actual dialogs; this view only owns their document host.
+    pub(crate) fn mount_modals(
+        &self,
+        interface: &NativeInterfaceRef,
+        markup: &str,
+    ) -> Result<(), Error> {
+        let Some(document) = self.document else {
+            return Ok(());
+        };
+        if let Some(modal_root) = element_by_id(interface, document, "modal-root") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(modal_root, markup)?;
+        }
+        Ok(())
     }
 
     /// Synchronize the current tab's registered editor controls.
@@ -333,5 +346,4 @@ impl PanelView {
         self.tab_bar.forget();
         self.events.borrow_mut().clear();
     }
-
 }

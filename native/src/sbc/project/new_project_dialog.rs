@@ -9,14 +9,15 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataOptionRows, RmlOptionRow,
+};
 
 use crate::sbc::actions::{available_maps, commit_new_project};
 use crate::sbc::panels::controls::asset_picker::PickerEvent;
 use crate::sbc::panels::dialogs::form::{DialogForm, FormItem};
-use crate::sbc::panels::field::{
-    element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
-};
+use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField, StringField};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
 use crate::sbc::panels::Editor;
@@ -54,6 +55,7 @@ pub(crate) struct NewProjectDialog {
     events: Rc<RefCell<Vec<PickerEvent>>>,
     form: DialogForm<NewProjectField>,
     bound: bool,
+    map_options: Option<RmlDataOptionRows<'static>>,
 }
 
 impl Default for NewProjectDialog {
@@ -63,6 +65,7 @@ impl Default for NewProjectDialog {
             events: Rc::new(RefCell::new(Vec::new())),
             form: new_project_form(),
             bound: false,
+            map_options: None,
         }
     }
 }
@@ -73,22 +76,26 @@ impl NewProjectDialog {
         interface: &NativeInterfaceRef,
         document: u64,
     ) -> Result<(), Error> {
-        let rml = interface.rml_ui();
         // Populate the map dropdown: the blank map first, then everything the VFS
         // has an archive for.
-        let mut opts = format!(r#"<option value="{BLANK_MAP}">Blank</option>"#);
-        for map in available_maps(interface) {
-            if map == BLANK_MAP {
-                continue;
-            }
-            opts.push_str(&format!(
-                r#"<option value="{v}">{v}</option>"#,
-                v = escape_rml(&map)
-            ));
-        }
-        if let Some(e) = element_by_id(interface, document, "field-np-map") {
-            rml.element_set_inner_rml(e, &opts)?;
-        }
+        let options = std::iter::once(RmlOptionRow {
+            value: BLANK_MAP.to_string(),
+            label: "Blank".to_string(),
+        })
+        .chain(
+            available_maps(interface)
+                .into_iter()
+                .filter(|map| map != BLANK_MAP)
+                .map(|map| RmlOptionRow {
+                    value: map.clone(),
+                    label: map,
+                }),
+        )
+        .collect::<Vec<_>>();
+        self.map_options
+            .as_ref()
+            .expect("new-project options are bound before modal markup")
+            .set(&options)?;
         self.form.set(Name, FieldValue::Text(String::new()));
         self.form.set(Map, FieldValue::Text(BLANK_MAP.to_string()));
         self.form.set(SizeX, FieldValue::Number(10.0));
@@ -169,7 +176,7 @@ impl NewProjectDialog {
         let fields = self.form.markup();
         format!(
             concat!(
-                r#"<div id="new-project" class="picker-backdrop hidden">"#,
+                r#"<div id="new-project" class="picker-backdrop hidden" data-model="new_project">"#,
                 r#"<div class="dialog picker-dialog">"#,
                 r#"<div class="dialog-header"><span class="dialog-title">New project</span></div>"#,
                 r#"<div class="dialog-content">{fields}</div>"#,
@@ -226,6 +233,18 @@ impl NewProjectDialog {
 }
 
 impl Modal for NewProjectDialog {
+    fn prepare_data_model(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        context: u64,
+    ) -> Result<(), Error> {
+        let data_model = interface
+            .rml_ui()
+            .create_data_model(context, "new_project")?;
+        self.map_options = Some(data_model.bind_option_rows("maps")?);
+        Ok(())
+    }
+
     fn markup(&self) -> String {
         self.markup_rml()
     }
@@ -244,6 +263,7 @@ impl Modal for NewProjectDialog {
         self.bound = false;
         self.open = false;
         self.events.borrow_mut().clear();
+        self.map_options = None;
     }
 
     fn is_open(&self) -> bool {
@@ -300,7 +320,10 @@ fn new_project_form() -> DialogForm<NewProjectField> {
                 Name,
                 Box::new(StringField::new("np-name", "Project name", "")),
             ),
-            (Map, Box::new(ChoiceField::new("np-map", "Map", Vec::new()))),
+            (
+                Map,
+                Box::new(ChoiceField::new("np-map", "Map", Vec::new()).with_option_rows("maps")),
+            ),
             (
                 SizeX,
                 Box::new(
