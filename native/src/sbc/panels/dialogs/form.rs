@@ -4,7 +4,10 @@
 //! DOM reads/writes, and value storage remain owned by `Runtime` and the panel's
 //! shared input/session pipeline.
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel,
+};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::editor::Editor;
@@ -72,6 +75,16 @@ impl<Id: Copy + Eq + 'static> DialogForm<Id> {
 
     pub(crate) fn markup(&self) -> String {
         self.runtime.generate_rml()
+    }
+
+    /// Prepare the form's fields in the modal's model before its RML is
+    /// parsed. This keeps dialog controls on the same typed update path as
+    /// editor controls.
+    pub(crate) fn prepare_data_model(
+        &mut self,
+        model: &RmlDataModel<'static>,
+    ) -> Result<(), Error> {
+        self.runtime.prepare_data_model(model)
     }
 
     pub(crate) fn bind(

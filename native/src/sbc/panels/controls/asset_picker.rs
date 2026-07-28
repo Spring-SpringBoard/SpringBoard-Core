@@ -158,7 +158,7 @@ impl AssetPicker {
                 r#"<div class="dialog-content">"#,
                 r#"<div class="asset-path-nav">"#,
                 r#"<button id="asset-up" class="dialog-button">Up</button>"#,
-                r#"<span class="asset-path">{{ path }}</span></div>"#,
+                r#"<span class="asset-path">{{{{ path }}}}</span></div>"#,
                 r#"{grid}"#,
                 r#"</div>"#,
                 r#"<div class="dialog-footer">"#,
@@ -243,6 +243,7 @@ impl Modal for AssetPicker {
             .rml_ui()
             .create_data_model(context, "asset_picker")?;
         self.path = Some(data_model.bind("path", String::new())?);
+        self.grid.prepare_data_model(&data_model)?;
         Ok(())
     }
 

@@ -193,11 +193,11 @@ impl FileDialog {
             concat!(
                 r#"<div id="file-dialog" class="picker-backdrop hidden" data-model="file_dialog">"#,
                 r#"<div class="dialog picker-dialog asset-dialog">"#,
-                r#"<div class="dialog-header"><span class="dialog-title">{{ title }}</span></div>"#,
+                r#"<div class="dialog-header"><span class="dialog-title">{{{{ title }}}}</span></div>"#,
                 r#"<div class="dialog-content">"#,
                 r#"<div class="asset-path-nav">"#,
                 r#"<button id="fd-up" class="dialog-button">Up</button>"#,
-                r#"<span class="asset-path">{{ path }}</span></div>"#,
+                r#"<span class="asset-path">{{{{ path }}}}</span></div>"#,
                 r#"{grid}"#,
                 r#"{form}"#,
                 r#"</div>"#,
@@ -347,6 +347,8 @@ impl Modal for FileDialog {
         self.title = Some(data_model.bind("title", String::new())?);
         self.path = Some(data_model.bind("path", String::new())?);
         self.file_type_options = Some(data_model.bind_option_rows("types")?);
+        self.form.prepare_data_model(&data_model)?;
+        self.grid.prepare_data_model(&data_model)?;
         Ok(())
     }
 

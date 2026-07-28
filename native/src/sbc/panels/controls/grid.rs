@@ -13,7 +13,7 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataTextRows,
+    RmlDataModel, RmlDataTextRows, RmlDataVariable,
 };
 
 use crate::sbc::vfs::{join_entry, leaf, normalize_extensions, vfs_files};
@@ -59,6 +59,10 @@ pub(crate) struct GridView {
     clicks: ClickQueue,
     item_size: u32,
     navigation: Option<GridNavigation>,
+    /// The navigation breadcrumb belongs to the surrounding screen's model.
+    /// Unlike the grid rows, it exists in markup parsed before this grid has a
+    /// chance to create its own item model.
+    navigation_path: Option<RmlDataVariable<'static, String>>,
     /// Engine-owned text collection backing the static `data-for` scaffold.
     /// It becomes invalid with its document, so `render` recreates it after a
     /// panel reload.
@@ -80,6 +84,7 @@ impl GridView {
             clicks: Rc::new(RefCell::new(Vec::new())),
             item_size,
             navigation: None,
+            navigation_path: None,
             rows: None,
             model_context: None,
             bound_document: None,
@@ -199,11 +204,16 @@ impl GridView {
 
     pub(crate) fn container_rml(&self) -> String {
         if self.navigation.is_some() {
+            let path = self
+                .navigation_path
+                .as_ref()
+                .map(|_| format!("{{{{ {} }}}}", self.navigation_path_name()))
+                .unwrap_or_default();
             return format!(
                 r#"<div id="{id}-picker" class="grid-picker">
                     <div class="grid-navigation">
                         <button id="{id}-up" class="dialog-button">Up</button>
-                        <span id="{id}-path" class="asset-path"></span>
+                        <span id="{id}-path" class="asset-path">{path}</span>
                     </div>
                     <div id="{id}" class="grid-container"></div>
                 </div>"#,
@@ -221,8 +231,24 @@ impl GridView {
         self.items_dirty = true;
     }
 
+    /// Bind the breadcrumb before its containing markup is parsed. The item
+    /// rows intentionally keep their own short-lived model because their
+    /// scaffold is inserted only after the grid knows its document context.
+    pub(crate) fn prepare_data_model(
+        &mut self,
+        model: &RmlDataModel<'static>,
+    ) -> Result<(), Error> {
+        let Some(navigation) = &self.navigation else {
+            return Ok(());
+        };
+        self.navigation_path =
+            Some(model.bind(&self.navigation_path_name(), navigation.dir.clone())?);
+        Ok(())
+    }
+
     /// Drop document-owned bindings after its panel has been rebuilt.
     pub(crate) fn forget_bindings(&mut self) {
+        self.navigation_path = None;
         self.rows = None;
         self.model_context = None;
         self.bound_document = None;
@@ -241,6 +267,10 @@ impl GridView {
         }
         self.forget_bindings();
         Ok(())
+    }
+
+    fn navigation_path_name(&self) -> String {
+        format!("{}_path", self.model_name())
     }
 }
 

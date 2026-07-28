@@ -197,6 +197,9 @@ impl<B: Behavior> Editor for Runtime<B> {
         for entry in self.model.fields_mut() {
             entry.field.prepare_data_model(model)?;
         }
+        for grid in self.model.grids_mut() {
+            grid.prepare_data_model(model)?;
+        }
         Ok(())
     }
 

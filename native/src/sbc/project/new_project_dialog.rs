@@ -242,6 +242,7 @@ impl Modal for NewProjectDialog {
             .rml_ui()
             .create_data_model(context, "new_project")?;
         self.map_options = Some(data_model.bind_option_rows("maps")?);
+        self.form.prepare_data_model(&data_model)?;
         Ok(())
     }
 

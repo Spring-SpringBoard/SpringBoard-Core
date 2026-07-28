@@ -58,7 +58,11 @@ impl AssetField {
             "field_{}_display",
             self.name
                 .chars()
-                .map(|character| if character.is_ascii_alphanumeric() { character } else { '_' })
+                .map(|character| if character.is_ascii_alphanumeric() {
+                    character
+                } else {
+                    '_'
+                })
                 .collect::<String>(),
         )
     }

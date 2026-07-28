@@ -100,9 +100,14 @@ impl GridView {
             return Ok(());
         };
         let rml = interface.rml_ui();
-        if let Some(path) =
+        if let Some(path) = &self.navigation_path {
+            path.set(navigation.dir.clone())?;
+        } else if let Some(path) =
             element_by_id(interface, document, &format!("{}-path", self.container_id))
         {
+            // Grids may also be mounted by legacy callers that do not own a
+            // pre-parsed data model yet. Keep that path working while those
+            // callers are migrated.
             rml.element_set_inner_rml(path, &escape_rml(&navigation.dir))?;
         }
         if let Some(up) = element_by_id(interface, document, &format!("{}-up", self.container_id)) {

@@ -2,7 +2,10 @@
 //! the live value. Editor code reads and writes through typed accessors; the
 //! DOM plumbing reuses the dyn `Field` implementations underneath.
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel,
+};
 
 use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::{Field, FieldValue};
@@ -300,6 +303,13 @@ impl AssetGrid {
 
     pub(crate) fn container_rml(&self) -> String {
         self.grid.container_rml()
+    }
+
+    pub(crate) fn prepare_data_model(
+        &mut self,
+        model: &RmlDataModel<'static>,
+    ) -> Result<(), Error> {
+        self.grid.prepare_data_model(model)
     }
 
     pub(crate) fn bind(
