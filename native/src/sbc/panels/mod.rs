@@ -1,13 +1,13 @@
-mod action_dispatcher;
 mod action_bar;
+mod action_dispatcher;
 pub(crate) mod brush;
 mod brush_sync;
 pub(crate) mod controls;
 pub(crate) mod cursor;
 pub(crate) mod dialogs;
 mod editor;
-mod editor_buttons;
 pub(crate) mod editor_base;
+mod editor_buttons;
 mod editor_slot;
 mod event_listener;
 pub(crate) mod field;

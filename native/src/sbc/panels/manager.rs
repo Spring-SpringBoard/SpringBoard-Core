@@ -324,6 +324,7 @@ impl PanelManager {
                     self.reset_state(models);
                     self.view.set_tab(&self.interface, tab)?;
                     self.slot.save_editor_state(models.get::<EditorState>());
+                    self.slot.release_bindings(&self.interface)?;
                     self.slot.close();
                 }
                 ShellEvent::Editor(name) => {

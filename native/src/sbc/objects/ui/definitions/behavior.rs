@@ -114,6 +114,14 @@ impl Behavior for ObjectDefsBehavior {
         Ok(())
     }
 
+    fn release_bindings(
+        &mut self,
+        model: &mut ObjectDefsModel,
+        interface: &NativeInterfaceRef,
+    ) -> Result<(), Error> {
+        model.grid.release_bindings(interface)
+    }
+
     /// Load defs, handle search + grid + mode clicks; placement re-arming is
     /// picked up by `state_request`.
     fn tick(

@@ -1,7 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel,
+};
 
 /// Why a field wants committing. A `blur` that arrives right after an Enter is
 /// the input being hidden, not the user leaving the field.
@@ -300,6 +303,15 @@ fn bind_tooltip_inner(
 /// read/write its value from/to the DOM.
 pub trait Field {
     fn name(&self) -> &str;
+
+    /// Bind dynamic display state before this field's RML is parsed.
+    ///
+    /// Modal forms can retain their DOM-based lifecycle while editor fields
+    /// migrate independently, so this is deliberately opt-in.
+    fn prepare_data_model(&mut self, _model: &RmlDataModel<'static>) -> Result<(), Error> {
+        Ok(())
+    }
+
     fn generate_rml(&self) -> String;
 
     /// Hover text. Bound by the `FieldSet` against the field's own element, so a

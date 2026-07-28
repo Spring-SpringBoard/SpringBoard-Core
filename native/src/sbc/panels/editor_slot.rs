@@ -11,6 +11,8 @@ use crate::sbc::panels::view::PanelView;
 use crate::sbc::project::EditorState;
 use crate::sbc::states::StateManager;
 
+const EDITOR_FIELDS_MODEL: &str = "editor_fields";
+
 pub(crate) struct EditorSlot {
     editor: Option<Box<dyn Editor>>,
     name: Option<&'static str>,
@@ -23,6 +25,10 @@ pub(crate) struct EditorSlot {
     /// Default (normally Escape), not merely because no definition has been
     /// selected yet.
     state_was_default: bool,
+    /// Context that owns the editor display model. A panel context is replaced
+    /// wholesale on reload, so a different handle means there is nothing to
+    /// remove from the new context.
+    field_model_context: Option<u64>,
 }
 
 impl Default for EditorSlot {
@@ -33,6 +39,7 @@ impl Default for EditorSlot {
             needs_refresh: false,
             needs_rebuild: false,
             state_was_default: true,
+            field_model_context: None,
         }
     }
 }
@@ -49,6 +56,20 @@ impl EditorSlot {
     pub(crate) fn close(&mut self) {
         self.editor = None;
         self.name = None;
+    }
+
+    /// Context-owned data models outlive their Rust editor objects, so release
+    /// them before replacing an editor within the same panel context.
+    pub(crate) fn release_bindings(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if let Some(editor) = self.editor.as_mut() {
+            editor.release_bindings(interface)?;
+        }
+        if let Some(context) = self.field_model_context.take() {
+            interface
+                .rml_ui()
+                .remove_data_model(context, EDITOR_FIELDS_MODEL)?;
+        }
+        Ok(())
     }
 
     /// Capture panel-local state before replacing its short-lived editor.
@@ -97,6 +118,7 @@ impl EditorSlot {
             return Ok(());
         };
         self.save_editor_state(state);
+        self.release_bindings(interface)?;
         let mut editor = (spec.make)();
         editor.load_editor_state(state);
         editor.load_brush_state(state.brush(name));
@@ -197,13 +219,35 @@ impl EditorSlot {
         let document = view
             .document_handle()
             .expect("document must exist if content exists");
+        let rml = interface.rml_ui();
+        let (context, context_exists) = rml.document_get_context(document)?;
+        if !context_exists {
+            return Ok(());
+        }
+
+        if self.field_model_context == Some(context) {
+            rml.remove_data_model(context, EDITOR_FIELDS_MODEL)?;
+        }
+        self.field_model_context = None;
+
+        let model = rml.create_data_model(context, EDITOR_FIELDS_MODEL)?;
+        if let Some(editor) = self.editor.as_mut() {
+            editor.prepare_data_model(&model)?;
+        }
+        self.field_model_context = Some(context);
 
         let body = self
             .editor
             .as_ref()
             .map(|e| e.generate_rml())
             .unwrap_or_default();
-        interface.rml_ui().element_set_inner_rml(content, &body)?;
+        // RmlUi resolves bindings as it parses a new element. The model must
+        // therefore be present in the parsed body itself; setting it on the
+        // pre-existing content host does not establish that scope.
+        rml.element_set_inner_rml(
+            content,
+            &format!(r#"<div data-model="{EDITOR_FIELDS_MODEL}">{body}</div>"#),
+        )?;
 
         if let Some(ed) = self.editor.as_mut() {
             ed.bind_fields(interface, document, input.changes(), input.interactions())?;

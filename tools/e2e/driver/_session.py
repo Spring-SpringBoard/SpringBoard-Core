@@ -178,9 +178,7 @@ class SessionMixin(RunState):
         if diagnostics:
             shown = diagnostics[:8]
             self.event("rml_diagnostics", count=len(diagnostics), lines=shown)
-            raise AssertionError(
-                "RmlUi emitted diagnostics:\n" + "\n".join(shown)
-            )
+            raise AssertionError("RmlUi emitted diagnostics:\n" + "\n".join(shown))
 
     def cleanup_write_dir(self) -> None:
         # Each run gets a fresh temp write dir holding a full copy of the game

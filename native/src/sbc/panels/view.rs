@@ -189,20 +189,6 @@ impl PanelView {
         Ok(())
     }
 
-    /// Synchronize the current tab's registered editor controls.
-    fn render_editor_buttons(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        self.editor_buttons.render(
-            interface,
-            doc,
-            self.current_tab,
-            self.active_editor,
-            &self.events,
-        )
-    }
-
     /// Switch tab: restyle the tab buttons, rebuild the strip, clear content.
     /// Matches Chili, where changing tabs closes the open editor.
     pub(crate) fn set_tab(
@@ -327,6 +313,20 @@ impl PanelView {
     }
     pub(crate) fn content_handle(&self) -> Option<u64> {
         self.content
+    }
+
+    /// Synchronize the current tab's registered editor controls.
+    fn render_editor_buttons(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(doc) = self.document else {
+            return Ok(());
+        };
+        self.editor_buttons.render(
+            interface,
+            doc,
+            self.current_tab,
+            self.active_editor,
+            &self.events,
+        )
     }
 
     fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {

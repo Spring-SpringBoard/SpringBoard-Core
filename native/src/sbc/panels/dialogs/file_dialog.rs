@@ -327,10 +327,8 @@ impl FileDialog {
                 }
             }
             path
-        } else if let Some(selected) = self.grid.selected() {
-            selected.to_string()
         } else {
-            return None;
+            self.grid.selected()?.to_string()
         };
 
         Some(FileDialogResult { path, file_type })

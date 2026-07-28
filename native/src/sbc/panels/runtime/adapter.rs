@@ -3,7 +3,10 @@
 //! from field tags, and adapts everything to the manager-facing `Editor`
 //! trait so old- and new-style editors coexist during the migration.
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel,
+};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
@@ -188,6 +191,21 @@ impl<B: Behavior> Editor for Runtime<B> {
             }
         }
         html
+    }
+
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        for entry in self.model.fields_mut() {
+            entry.field.prepare_data_model(model)?;
+        }
+        Ok(())
+    }
+
+    fn release_bindings(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        for grid in self.model.grids_mut() {
+            grid.release_bindings(interface)?;
+        }
+        self.behavior.release_bindings(&mut self.model, interface)?;
+        Ok(())
     }
 
     fn bind_fields(

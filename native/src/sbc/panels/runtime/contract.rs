@@ -198,6 +198,17 @@ pub(crate) trait Behavior {
         Ok(())
     }
 
+    /// Release data models owned by custom widgets before this editor is
+    /// discarded. Standard asset grids are handled by the runtime itself.
+    fn release_bindings(
+        &mut self,
+        model: &mut Self::Model,
+        interface: &NativeInterfaceRef,
+    ) -> Result<(), spring_native::prelude::Error> {
+        let _ = (model, interface);
+        Ok(())
+    }
+
     /// Per-tick work for custom widgets, outside the RmlUi event dispatch.
     fn tick(
         &mut self,

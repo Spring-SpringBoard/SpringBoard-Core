@@ -63,6 +63,10 @@ pub(crate) struct GridView {
     /// It becomes invalid with its document, so `render` recreates it after a
     /// panel reload.
     rows: Option<RmlDataTextRows<'static>>,
+    /// The context that owns `rows`' data model. Unlike document elements,
+    /// RmlUi data models survive an editor object being dropped, so an editor
+    /// replacement must explicitly release it.
+    model_context: Option<u64>,
     bound_document: Option<u64>,
     items_dirty: bool,
 }
@@ -77,6 +81,7 @@ impl GridView {
             item_size,
             navigation: None,
             rows: None,
+            model_context: None,
             bound_document: None,
             items_dirty: true,
         }
@@ -219,11 +224,23 @@ impl GridView {
     /// Drop document-owned bindings after its panel has been rebuilt.
     pub(crate) fn forget_bindings(&mut self) {
         self.rows = None;
+        self.model_context = None;
         self.bound_document = None;
         self.items_dirty = true;
         if let Some(navigation) = &self.navigation {
             navigation.bound.set(false);
         }
+    }
+
+    /// Release the context-owned model before this grid's editor is dropped.
+    pub(crate) fn release_bindings(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if let Some(context) = self.model_context {
+            interface
+                .rml_ui()
+                .remove_data_model(context, &self.model_name())?;
+        }
+        self.forget_bindings();
+        Ok(())
     }
 }
 

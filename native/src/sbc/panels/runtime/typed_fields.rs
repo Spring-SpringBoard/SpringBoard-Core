@@ -311,6 +311,10 @@ impl AssetGrid {
         self.render(interface, document)
     }
 
+    pub(crate) fn release_bindings(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        self.grid.release_bindings(interface)
+    }
+
     /// Drain queued clicks into the selection. Returns whether it changed.
     pub(crate) fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) -> bool {
         let mut changed = false;

@@ -9,6 +9,16 @@ use super::{GridItem, GridView, FILLERS};
 use crate::sbc::panels::field::{bind_tooltip, bind_tooltip_markup, element_by_id, escape_rml};
 
 impl GridView {
+    pub(super) fn model_name(&self) -> String {
+        format!(
+            "grid_{}",
+            self.container_id
+                .chars()
+                .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '_' })
+                .collect::<String>()
+        )
+    }
+
     pub(crate) fn render(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -67,6 +77,7 @@ impl GridView {
                 .rml_ui()
                 .create_data_model(context, &self.model_name())?;
             self.rows = Some(model.bind_text_rows("items")?);
+            self.model_context = Some(context);
             self.bound_document = Some(document);
             self.items_dirty = true;
         }
@@ -89,11 +100,9 @@ impl GridView {
             return Ok(());
         };
         let rml = interface.rml_ui();
-        if let Some(path) = element_by_id(
-            interface,
-            document,
-            &format!("{}-path", self.container_id),
-        ) {
+        if let Some(path) =
+            element_by_id(interface, document, &format!("{}-path", self.container_id))
+        {
             rml.element_set_inner_rml(path, &escape_rml(&navigation.dir))?;
         }
         if let Some(up) = element_by_id(interface, document, &format!("{}-up", self.container_id)) {
@@ -126,7 +135,11 @@ impl GridView {
 
         let (image_box, has_image_box) = rml.element_get_child(cell, 0)?;
         if has_image_box {
-            rml.element_set_attribute(image_box, "style", &format!("height: {}px;", self.item_size))?;
+            rml.element_set_attribute(
+                image_box,
+                "style",
+                &format!("height: {}px;", self.item_size),
+            )?;
             let (image, has_image) = rml.element_get_child(image_box, 0)?;
             let (texture, has_texture) = rml.element_get_child(image_box, 1)?;
             let is_texture = item
@@ -181,16 +194,6 @@ impl GridView {
             })?;
         }
         Ok(())
-    }
-
-    fn model_name(&self) -> String {
-        format!(
-            "grid_{}",
-            self.container_id
-                .chars()
-                .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { '_' })
-                .collect::<String>()
-        )
     }
 
     fn scaffold_rml(&self) -> String {

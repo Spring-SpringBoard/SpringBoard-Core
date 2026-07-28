@@ -1,4 +1,7 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel,
+};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
@@ -25,6 +28,16 @@ pub(crate) trait Editor {
 
     /// Generate the full RML body for this editor (field rows, section headers).
     fn generate_rml(&self) -> String;
+
+    /// Prepare typed display fields before this editor's body is parsed.
+    fn prepare_data_model(&mut self, _model: &RmlDataModel<'static>) -> Result<(), Error> {
+        Ok(())
+    }
+
+    /// Release context-owned data models before the editor is discarded.
+    fn release_bindings(&mut self, _interface: &NativeInterfaceRef) -> Result<(), Error> {
+        Ok(())
+    }
 
     /// Bind all fields to the document (find elements, register event listeners).
     fn bind_fields(
