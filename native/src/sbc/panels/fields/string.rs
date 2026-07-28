@@ -1,4 +1,7 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel, RmlDataVariable,
+};
 
 use crate::sbc::panels::field::{
     element_by_id, escape_rml, on_blur, on_enter, on_pointer, ChangeQueue, Field, FieldValue,
@@ -16,6 +19,7 @@ pub(crate) struct StringField {
     display_elem: Option<u64>,
     edit_elem: Option<u64>,
     editing: bool,
+    display_value: Option<RmlDataVariable<'static, String>>,
 }
 
 impl StringField {
@@ -29,6 +33,7 @@ impl StringField {
             display_elem: None,
             edit_elem: None,
             editing: false,
+            display_value: None,
         }
     }
 
@@ -37,12 +42,32 @@ impl StringField {
         self
     }
 
-    fn button_rml(&self) -> String {
+    fn binding_name(&self) -> String {
         format!(
-            r#"<span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span>"#,
-            title = escape_rml(self.title.trim_end_matches(':')),
-            value = escape_rml(&self.value),
+            "field_{}_display",
+            self.name
+                .chars()
+                .map(|character| if character.is_ascii_alphanumeric() {
+                    character
+                } else {
+                    '_'
+                })
+                .collect::<String>(),
         )
+    }
+
+    fn display_markup(&self) -> String {
+        self.display_value
+            .as_ref()
+            .map(|_| format!("{{{{ {} }}}}", self.binding_name()))
+            .unwrap_or_else(|| escape_rml(&self.value))
+    }
+
+    fn sync_display_value(&self) -> Result<(), Error> {
+        if let Some(value) = &self.display_value {
+            value.set(self.value.clone())?;
+        }
+        Ok(())
     }
 
     fn show_edit(&mut self, interface: &NativeInterfaceRef) {
@@ -61,11 +86,10 @@ impl StringField {
 
     fn show_display(&mut self, interface: &NativeInterfaceRef) {
         self.editing = false;
-        let markup = self.button_rml();
         let rml = interface.rml_ui();
         if let Some(element) = self.display_elem {
             let _ = rml.element_set_class(element, "hidden", false);
-            let _ = rml.element_set_inner_rml(element, &markup);
+            let _ = self.sync_display_value();
         }
         if let Some(element) = self.edit_elem {
             let _ = rml.element_set_class(element, "hidden", true);
@@ -82,18 +106,24 @@ impl Field for StringField {
         self.tooltip.as_deref()
     }
 
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.display_value = Some(model.bind(&self.binding_name(), self.value.clone())?);
+        Ok(())
+    }
+
     fn generate_rml(&self) -> String {
         format!(
             concat!(
                 r#"<div class="field-row">"#,
-                r#"<button id="field-{n}" class="field-composite-button field-string-button" style="width: {width}px;">{button}</button>"#,
-                r#"<input type="text" id="field-{n}-input" class="field-input field-string-input hidden" style="width: {width}px;" value="{value}"/>"#,
+                r#"<button id="field-{n}" class="field-composite-button field-string-button" style="width: {width}px;"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button>"#,
+                r#"<input type="text" id="field-{n}-input" class="field-input field-string-input hidden" style="width: {width}px;" value="{input_value}"/>"#,
                 r#"</div>"#,
             ),
             n = self.name,
             width = self.width,
-            button = self.button_rml(),
-            value = escape_rml(&self.value),
+            title = escape_rml(self.title.trim_end_matches(':')),
+            value = self.display_markup(),
+            input_value = escape_rml(&self.value),
         )
     }
 
@@ -128,10 +158,8 @@ impl Field for StringField {
     }
 
     fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(element) = self.display_elem {
-            interface
-                .rml_ui()
-                .element_set_inner_rml(element, &self.button_rml())?;
+        if self.display_elem.is_some() {
+            self.sync_display_value()?;
         }
         if let Some(element) = self.edit_elem {
             interface
