@@ -156,13 +156,8 @@ impl ConsoleSession {
 /// are archive bookkeeping, not developer diagnostics, and repeat whenever a
 /// caller refreshes mod metadata.
 ///
-/// The `log-line-` guard breaks a feedback loop: when RmlUi fails to instance
-/// the log's own markup it echoes that markup back as a `[RmlUi] Failed to
-/// instance text element '<div id="log-line-…">…'` warning. Re-ingesting it as
-/// a console line would render it, fail again, and echo an ever-larger copy —
-/// forever. Its own element ids are the reliable fingerprint of that echo.
 fn show_console_line(message: &str) -> bool {
-    !message.contains("[CAS::GASCB] Archive file=") && !message.contains("id=\"log-line-")
+    !message.contains("[CAS::GASCB] Archive file=")
 }
 
 /// Zero or an unset value keeps every session line. A finite value is clamped
@@ -198,9 +193,9 @@ mod tests {
     }
 
     #[test]
-    fn the_consoles_own_render_failure_echo_is_dropped() {
-        // Exactly the recursive warning: re-ingesting it is what span the loop.
-        let echo = r#"Warning: [RmlUi] Failed to instance text element '<div id="log-line-0" class="log-line severity-info">boot</div>'"#;
-        assert!(!show_console_line(echo));
+    fn rml_markup_in_a_console_line_is_preserved() {
+        let rml_warning =
+            r#"Warning: [RmlUi] Failed to instance text element '<div id="log-line-0">boot</div>'"#;
+        assert!(show_console_line(rml_warning));
     }
 }

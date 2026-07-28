@@ -1,9 +1,22 @@
-<div id="dev-console" class="theme-surface theme-console-text theme-framed">
+<div id="dev-console" class="theme-surface theme-console-text theme-framed" data-model="dev_console">
 	<div class="header">
 		<div class="title">Developer Console</div>
-		<div id="error-count" class="error-count"></div>
-		<div id="line-count" class="line-count"></div>
+		<div id="error-count" class="error-count">{{ error_count }}</div>
+		<div id="line-count" class="line-count">{{ line_count }}</div>
 	</div>
-	<div id="log-container" class="log-container"></div>
-	<div id="toolbar" class="toolbar"></div>
+	<div id="log-container" class="log-container">
+		<div data-for="line : log_lines" class="log-line">{{ line.text }}</div>
+	</div>
+	<div id="toolbar" class="toolbar">
+		<button id="btn-clear" class="command"><span class="command-label">Clear</span></button>
+		<button id="btn-filter-problems" class="toggle theme-toggle"><span class="toggle-label">Problems</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span></button>
+		<button id="btn-restart" class="command"><span class="command-label">Restart</span></button>
+		<button id="btn-reload-luaui" class="command"><span class="command-label">LuaUI Reload</span></button>
+		<button id="btn-reload-luarules" class="command"><span class="command-label">LuaRules Reload</span></button>
+		<button id="btn-cheating" class="toggle theme-toggle"><span class="toggle-label">Cheating</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span></button>
+		<button id="btn-globallos" class="toggle theme-toggle"><span class="toggle-label">Global LOS</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span></button>
+		<button id="btn-godmode" class="toggle theme-toggle"><span class="toggle-label">GodMode</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span></button>
+		<button id="btn-popup" class="toggle theme-toggle"><span class="toggle-label">Popup on error</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span></button>
+		<button id="btn-visibility" class="toggle theme-toggle"><span class="toggle-label">Hide (F8)</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span></button>
+	</div>
 </div>

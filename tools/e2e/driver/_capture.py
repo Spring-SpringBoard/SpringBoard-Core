@@ -25,6 +25,7 @@ class CaptureMixin(RunState):
         elapsed_ms = self._capture_screenshot(shot)
         self.screenshots.append(shot)
         self.event("screenshot", name=name, bmp_path=str(bmp_path), path=str(png_path), elapsed_ms=elapsed_ms)
+        self.assert_no_rml_diagnostics()
         return png_path
 
     def park_cursor(self) -> None:
@@ -69,13 +70,19 @@ class CaptureMixin(RunState):
         shot = Screenshot(name=name, bmp_path=bmp_path, png_path=png_path, crop=crop)
         capture_ms = self._capture_screenshot(shot)
         self.screenshots.append(shot)
-        self.pending_goldens.append(GoldenCheck(name, png_path, tolerance, capture_ms))
+        # The bottom 92px status strip deliberately carries live telemetry.
+        # Full-frame assertions own map/editor interactions, while the dedicated
+        # status test crops to its stable controls. Never let FPS/RAM text make
+        # an otherwise identical full-frame UI test flaky.
+        ignored_bottom = 92 if crop is None else 0
+        self.pending_goldens.append(GoldenCheck(name, png_path, tolerance, capture_ms, ignored_bottom))
         self.event(
             "golden_queued",
             name=name,
             path=str(png_path),
             capture_ms=capture_ms,
         )
+        self.assert_no_rml_diagnostics()
         return png_path
 
     @override
@@ -90,6 +97,7 @@ class CaptureMixin(RunState):
         elapsed_ms = self._capture_screenshot(shot)
         self.screenshots.append(shot)
         self.event("screenshot_root", name=name, bmp_path=str(bmp_path), path=str(png_path), elapsed_ms=elapsed_ms)
+        self.assert_no_rml_diagnostics()
         return png_path
 
     def _skip_capture(self, kind: str, name: str) -> Path:
@@ -119,6 +127,7 @@ class CaptureMixin(RunState):
                         check.path,
                         update=self.update_golden,
                         tolerance=check.tolerance,
+                        ignored_bottom=check.ignored_bottom,
                     )
             except Exception as error:
                 status = f"failed: {error}"

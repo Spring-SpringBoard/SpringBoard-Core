@@ -315,46 +315,6 @@ def chonsole_native_texture(run_state: "RunState") -> None:
     _wait_for_non_uniform_png(run_state.write_dir / output)
 
 
-def _assert_non_uniform_image(path: Path, region: tuple[int, int, int, int], subject: str) -> None:
-    deadline = time.monotonic() + Timeout.COMMAND
-    while time.monotonic() < deadline:
-        try:
-            with Image.open(path) as image:
-                image.load()
-                cropped = image.crop((region[0], region[1], region[0] + region[2], region[1] + region[3]))
-                if not _has_channel_variation(cropped):
-                    raise AssertionError(f"{subject} was a solid colour")
-                return
-        except FileNotFoundError:
-            pause(Delay.POLL)
-        except OSError:
-            pause(Delay.POLL)
-    raise AssertionError(f"timed out reading {subject}")
-
-
-def _wait_for_non_uniform_png(path: Path, timeout_s: Timeout = Timeout.COMMAND) -> None:
-    deadline = time.monotonic() + timeout_s
-    while time.monotonic() < deadline:
-        try:
-            with Image.open(path) as image:
-                image.load()
-                if image.width <= 1 or image.height <= 1:
-                    raise AssertionError(f"texture export has invalid dimensions: {image.size}")
-                if not _has_channel_variation(image):
-                    raise AssertionError("texture export was a solid colour")
-                return
-        except FileNotFoundError:
-            pause(Delay.POLL)
-        except OSError:
-            # The file can be observed between creation and PNG finalization.
-            pause(Delay.POLL)
-    raise AssertionError(f"/texture did not write {path.name}")
-
-
-def _has_channel_variation(image: Image.Image) -> bool:
-    return any(low < high for low, high in image.convert("RGB").getextrema())
-
-
 @scenario(target="chonsole-luaui-reload")
 def chonsole_luaui_reload(run_state: "RunState") -> None:
     """Running `/luaui reload` from the rust console.
@@ -462,3 +422,43 @@ def native_dev_console_copy(run_state: "RunState") -> None:
     everything = run_state.clipboard()
     if len(everything) <= len(copied):
         raise AssertionError(f"Ctrl+A did not widen the selection ({len(everything)} <= {len(copied)} chars)")
+
+
+def _assert_non_uniform_image(path: Path, region: tuple[int, int, int, int], subject: str) -> None:
+    deadline = time.monotonic() + Timeout.COMMAND
+    while time.monotonic() < deadline:
+        try:
+            with Image.open(path) as image:
+                image.load()
+                cropped = image.crop((region[0], region[1], region[0] + region[2], region[1] + region[3]))
+                if not _has_channel_variation(cropped):
+                    raise AssertionError(f"{subject} was a solid colour")
+                return
+        except FileNotFoundError:
+            pause(Delay.POLL)
+        except OSError:
+            pause(Delay.POLL)
+    raise AssertionError(f"timed out reading {subject}")
+
+
+def _wait_for_non_uniform_png(path: Path, timeout_s: Timeout = Timeout.COMMAND) -> None:
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        try:
+            with Image.open(path) as image:
+                image.load()
+                if image.width <= 1 or image.height <= 1:
+                    raise AssertionError(f"texture export has invalid dimensions: {image.size}")
+                if not _has_channel_variation(image):
+                    raise AssertionError("texture export was a solid colour")
+                return
+        except FileNotFoundError:
+            pause(Delay.POLL)
+        except OSError:
+            # The file can be observed between creation and PNG finalization.
+            pause(Delay.POLL)
+    raise AssertionError(f"/texture did not write {path.name}")
+
+
+def _has_channel_variation(image: Image.Image) -> bool:
+    return any(low < high for low, high in image.convert("RGB").getextrema())

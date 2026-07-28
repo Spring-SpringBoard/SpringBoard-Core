@@ -3,11 +3,20 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataTextRows, RmlDataVariable,
+};
 
 use crate::sbc::devconsole::actions::Action;
 use crate::sbc::devconsole::log::LogLine;
-use crate::sbc::rml::{self, element_by_id, escape_rml};
+use crate::sbc::rml::{self, element_by_id};
+
+mod status;
+mod text;
+mod toolbar;
+
+use text::clamp_line;
 
 /// A single console line longer than this is truncated before rendering. RmlUi
 /// fails to instance a text element past a certain size; an oversized engine
@@ -86,6 +95,16 @@ pub(crate) struct DevConsoleView {
     /// viewport-sized document and remains visible when the console is hidden.
     status_context: Option<u64>,
     status_document: Option<u64>,
+    status_position: Option<RmlDataVariable<'static, String>>,
+    status_version: Option<RmlDataVariable<'static, String>>,
+    status_metrics: Option<StatusMetricBindings>,
+    status_history: Option<RmlDataTextRows<'static>>,
+    status_history_muted: Vec<bool>,
+    error_count: Option<RmlDataVariable<'static, String>>,
+    line_count: Option<RmlDataVariable<'static, String>>,
+    log_rows: Option<RmlDataTextRows<'static>>,
+    rendered_log_rows: Vec<RenderedLogRow>,
+    log_rows_dirty: bool,
     /// Last history rendered into the command list. Metrics refresh regularly,
     /// but rebuilding this scroll container each frame would steal its scroll
     /// position from someone reading older edits.
@@ -104,6 +123,17 @@ struct SelectionState {
     anchor: Option<usize>,
     extent: Option<usize>,
     dragging: bool,
+}
+
+struct StatusMetricBindings {
+    performance: [RmlDataVariable<'static, String>; 3],
+    system: [RmlDataVariable<'static, String>; 4],
+}
+
+#[derive(Clone, Copy)]
+struct RenderedLogRow {
+    severity: crate::sbc::devconsole::log::Severity,
+    selected: bool,
 }
 
 impl SelectionState {
@@ -125,6 +155,16 @@ impl Default for DevConsoleView {
             document: None,
             status_context: None,
             status_document: None,
+            status_position: None,
+            status_version: None,
+            status_metrics: None,
+            status_history: None,
+            status_history_muted: Vec::new(),
+            error_count: None,
+            line_count: None,
+            log_rows: None,
+            rendered_log_rows: Vec::new(),
+            log_rows_dirty: false,
             rendered_command_log: None,
             root: None,
             log: None,
@@ -210,8 +250,16 @@ impl DevConsoleView {
         let geom = interface.display().get_view_geometry()?;
         let _ = rml.context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
 
+        let data_model = rml.create_data_model(ctx, "dev_console")?;
+        self.error_count = Some(data_model.bind("error_count", String::new())?);
+        self.line_count = Some(data_model.bind("line_count", String::new())?);
+        self.log_rows = Some(data_model.bind_text_rows("log_lines")?);
+
         let (doc, ok) = rml.context_create_document(ctx, "body")?;
         if !ok {
+            self.error_count = None;
+            self.line_count = None;
+            self.log_rows = None;
             return Ok(false);
         }
         rml.document_set_title(doc, "Developer Console")?;
@@ -223,6 +271,7 @@ impl DevConsoleView {
         self.document = Some(doc);
         self.root = element_by_id(interface, doc, "dev-console");
         self.log = element_by_id(interface, doc, "log-container");
+        self.bind_log_mouse_up(interface)?;
 
         self.build_toolbar(interface)?;
         self.ensure_status(interface)?;
@@ -230,79 +279,6 @@ impl DevConsoleView {
         let visible = self.visible;
         self.set_visible(interface, visible)?;
         Ok(true)
-    }
-
-    pub(crate) fn render_status(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        position: &str,
-        performance: &str,
-        system: &str,
-        version: &str,
-        commands: &[HistoryCommand],
-    ) -> Result<(), Error> {
-        let Some(doc) = self.status_document else {
-            return Ok(());
-        };
-        for (id, text) in [("status-position", position), ("status-version", version)] {
-            if let Some(element) = element_by_id(interface, doc, id) {
-                interface
-                    .rml_ui()
-                    .element_set_inner_rml(element, &escape_rml(text))?;
-            }
-        }
-        // These strings are built exclusively from numeric measurements and
-        // fixed labels in `manager`; render their metric spans intentionally so
-        // CSS can give each cell a stable width and a semantic colour.
-        for (id, markup) in [
-            ("status-performance", performance),
-            ("status-system", system),
-        ] {
-            if let Some(element) = element_by_id(interface, doc, id) {
-                interface.rml_ui().element_set_inner_rml(element, markup)?;
-            }
-        }
-        let can_undo = commands.iter().any(|command| !command.undone);
-        let can_redo = commands.iter().any(|command| command.undone);
-        let can_clear = can_undo || can_redo;
-        for (id, enabled) in [
-            ("status-undo", can_undo),
-            ("status-redo", can_redo),
-            ("status-clear", can_clear),
-        ] {
-            if let Some(button) = element_by_id(interface, doc, id) {
-                interface
-                    .rml_ui()
-                    .element_set_class(button, "disabled", !enabled)?;
-            }
-        }
-        if self.rendered_command_log.as_deref() != Some(commands) {
-            if let Some(list) = element_by_id(interface, doc, "command-list") {
-                let html: String = commands
-                    .iter()
-                    .rev()
-                    .take(12)
-                    .rev()
-                    .map(|command| {
-                        let class = if command.undone {
-                            "command-item undone"
-                        } else {
-                            "command-item"
-                        };
-                        format!(
-                            r#"<div class="{class}">{}</div>"#,
-                            escape_rml(&command.caption)
-                        )
-                    })
-                    .collect();
-                interface.rml_ui().element_set_inner_rml(list, &html)?;
-                // A newly executed edit should be visible, but no periodic
-                // metric update is allowed to reset a manual scroll.
-                let _ = interface.rml_ui().element_set_scroll_top(list, 1_000_000);
-            }
-            self.rendered_command_log = Some(commands.to_vec());
-        }
-        Ok(())
     }
 
     pub(crate) fn set_visible(
@@ -328,29 +304,30 @@ impl DevConsoleView {
         let Some(log) = self.log else {
             return Ok(());
         };
-        let mut html = String::new();
+        let mut rows = Vec::new();
+        let mut rendered_rows = Vec::new();
         let mut count = 0usize;
         for (index, line) in lines.enumerate() {
             count = index + 1;
-            let selected = if self.selection.contains(index) {
-                " selected"
-            } else {
-                ""
-            };
-            html.push_str(&format!(
-                r#"<div id="log-line-{index}" class="log-line {class}{selected}">{text}</div>"#,
-                class = line.severity.css_class(),
-                selected = selected,
-                text = defuse_data_brackets(&escape_rml(&clamp_line(&line.text))),
-            ));
+            rows.push(spring_native::RmlTextRow {
+                text: clamp_line(&line.text).into_owned(),
+                muted: false,
+            });
+            rendered_rows.push(RenderedLogRow {
+                severity: line.severity,
+                selected: self.selection.contains(index),
+            });
         }
         if let Some((_, end)) = self.selection.range() {
             if end >= count {
                 self.selection = SelectionState::default();
             }
         }
-        interface.rml_ui().element_set_inner_rml(log, &html)?;
-        self.bind_log_selection(interface, count)?;
+        if let Some(log_rows) = &self.log_rows {
+            log_rows.set(&rows)?;
+            self.rendered_log_rows = rendered_rows;
+            self.log_rows_dirty = true;
+        }
         if scroll_to_bottom {
             let _ = interface.rml_ui().element_set_scroll_top(log, 1_000_000);
         }
@@ -379,40 +356,22 @@ impl DevConsoleView {
     }
 
     /// Errors since the last clear, including lines the buffer has evicted.
-    pub(crate) fn render_error_count(
-        &self,
-        interface: &NativeInterfaceRef,
-        errors: usize,
-    ) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(label) = element_by_id(interface, doc, "error-count") else {
-            return Ok(());
-        };
+    pub(crate) fn render_error_count(&self, errors: usize) -> Result<(), Error> {
         let text = match errors {
             0 => String::new(),
             1 => "1 error".to_string(),
             n => format!("{n} errors"),
         };
-        interface.rml_ui().element_set_inner_rml(label, &text)?;
+        if let Some(field) = &self.error_count {
+            field.set(text)?;
+        }
         Ok(())
     }
 
-    pub(crate) fn render_line_count(
-        &self,
-        interface: &NativeInterfaceRef,
-        text: &str,
-    ) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(label) = element_by_id(interface, doc, "line-count") else {
-            return Ok(());
-        };
-        interface
-            .rml_ui()
-            .element_set_inner_rml(label, &escape_rml(text))?;
+    pub(crate) fn render_line_count(&self, text: &str) -> Result<(), Error> {
+        if let Some(field) = &self.line_count {
+            field.set(text.to_string())?;
+        }
         Ok(())
     }
 
@@ -446,6 +405,7 @@ impl DevConsoleView {
                 .rml_ui()
                 .context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
             interface.rml_ui().context_update(ctx)?;
+            self.sync_log_rows(interface)?;
         }
         if let Some(context) = self.status_context {
             let geometry = interface.display().get_view_geometry()?;
@@ -455,6 +415,7 @@ impl DevConsoleView {
                 geometry.viewSizeY,
             );
             interface.rml_ui().context_update(context)?;
+            self.sync_status_history_tones(interface)?;
         }
         Ok(())
     }
@@ -465,6 +426,16 @@ impl DevConsoleView {
         self.document = None;
         self.status_context = None;
         self.status_document = None;
+        self.status_position = None;
+        self.status_version = None;
+        self.status_metrics = None;
+        self.status_history = None;
+        self.status_history_muted.clear();
+        self.error_count = None;
+        self.line_count = None;
+        self.log_rows = None;
+        self.rendered_log_rows.clear();
+        self.log_rows_dirty = false;
         self.rendered_command_log = None;
         self.root = None;
         self.log = None;
@@ -484,6 +455,16 @@ impl DevConsoleView {
         if let Some(context) = self.status_context.take() {
             let _ = rml.remove_context(context);
         }
+        self.status_position = None;
+        self.status_version = None;
+        self.status_metrics = None;
+        self.status_history = None;
+        self.status_history_muted.clear();
+        self.error_count = None;
+        self.line_count = None;
+        self.log_rows = None;
+        self.rendered_log_rows.clear();
+        self.log_rows_dirty = false;
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);
         }
@@ -494,215 +475,70 @@ impl DevConsoleView {
         self.log = None;
     }
 
-    /// The scen_edit-style status bar intentionally has a dedicated RmlUi
-    /// context. A document has one layout root in this engine; putting it next
-    /// to the F8 console made the strip depend on that console's containing
-    /// block and could leave it unpainted. Its own context makes it a genuine
-    /// screen-edge surface and lets it stay up while F8 hides the console.
-    fn ensure_status(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(context) = self.status_context {
-            if rml::context_is_alive(interface, STATUS_CONTEXT, Some(context)) {
-                return Ok(());
-            }
-            self.status_context = None;
-            self.status_document = None;
-            self.rendered_command_log = None;
-        }
+    fn bind_log_mouse_up(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(log) = self.log else {
+            return Ok(());
+        };
+        let queue = self.selection_events.clone();
+        interface
+            .rml_ui()
+            .element_add_event_listener(log, "mouseup", false, move || {
+                queue.borrow_mut().push(SelectionEvent::End);
+            })
+            .map(|_| ())
+    }
 
+    fn sync_log_rows(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if !self.log_rows_dirty {
+            return Ok(());
+        }
+        let Some(log) = self.log else {
+            return Ok(());
+        };
         let rml = interface.rml_ui();
-        let (context, created) = rml.create_context(STATUS_CONTEXT)?;
-        if !created {
-            return Ok(());
-        }
-        let geometry = interface.display().get_view_geometry()?;
-        let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
-        let (document, created) = rml.context_create_document(context, "body")?;
-        if !created {
-            let _ = rml.remove_context(context);
-            return Ok(());
-        }
-        rml.document_set_title(document, "Editor status")?;
-        rml.document_append_to_style_sheet(document, UI_STYLE)?;
-        rml.element_set_inner_rml(document, STATUS_BODY)?;
-        rml.document_show(document, None, None)?;
-        self.status_context = Some(context);
-        self.status_document = Some(document);
-        self.rendered_command_log = None;
-        self.bind_status_actions(interface)
-    }
-
-    fn build_toolbar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(bar) = element_by_id(interface, doc, "toolbar") else {
-            return Ok(());
-        };
-
-        let mut html = String::new();
-        for action in Action::ALL {
-            let class = if action.is_toggle() {
-                "toggle theme-toggle"
-            } else {
-                "command"
-            };
-            let caption = escape_rml(action.caption());
-            let content = if action.is_toggle() {
-                format!(
-                    r#"<span class="toggle-label">{caption}</span><span class="theme-toggle-switch"><span class="theme-toggle-thumb"></span></span>"#
-                )
-            } else {
-                // RmlUi drops a raw text node inside a flex button. Commands
-                // need the same explicit text element as toggle labels.
-                format!(r#"<span class="command-label">{caption}</span>"#)
-            };
-            html.push_str(&format!(
-                r#"<button id="{id}" class="{class}">{content}</button>"#,
-                id = action.id(),
-                class = class,
-                content = content,
-            ));
-        }
-        interface.rml_ui().element_set_inner_rml(bar, &html)?;
-
-        // Clicks are queued: clearing the log inside the listener would free
-        // the element RmlUi is dispatching to.
-        for action in Action::ALL {
-            let Some(button) = element_by_id(interface, doc, action.id()) else {
+        for (index, row) in self.rendered_log_rows.iter().copied().enumerate() {
+            let (line, exists) = rml.element_get_child(log, index as i32)?;
+            if !exists {
                 continue;
-            };
-            let queue = self.actions.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(action);
-                })?;
+            }
+            for severity in [
+                crate::sbc::devconsole::log::Severity::Info,
+                crate::sbc::devconsole::log::Severity::Warning,
+                crate::sbc::devconsole::log::Severity::Error,
+            ] {
+                rml.element_set_class(line, severity.css_class(), row.severity == severity)?;
+            }
+            rml.element_set_class(line, "selected", row.selected)?;
+            let queue = self.selection_events.clone();
+            rml.element_add_event_listener(line, "mousedown", false, move || {
+                queue.borrow_mut().push(SelectionEvent::Start(index))
+            })?;
+            let queue = self.selection_events.clone();
+            rml.element_add_event_listener(line, "mouseover", false, move || {
+                queue.borrow_mut().push(SelectionEvent::Extend(index))
+            })?;
         }
+        self.log_rows_dirty = false;
         Ok(())
     }
 
-    fn bind_status_actions(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.status_document else {
+    /// RmlUi currently evaluates `data-class-*` on a generated `data-for`
+    /// child after that child was removed from a shrinking collection. Apply
+    /// this semantic class after the collection's structural update instead;
+    /// values remain native data bindings and no row markup is rebuilt.
+    fn sync_status_history_tones(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        let Some(document) = self.status_document else {
             return Ok(());
         };
-        for (id, action) in [
-            ("status-undo", StatusAction::Undo),
-            ("status-redo", StatusAction::Redo),
-            ("status-clear", StatusAction::ClearHistory),
-        ] {
-            let Some(button) = element_by_id(interface, doc, id) else {
-                continue;
-            };
-            let queue = self.status_actions.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(action);
-                })?;
-        }
-        Ok(())
-    }
-
-    fn bind_log_selection(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        count: usize,
-    ) -> Result<(), Error> {
-        let Some(doc) = self.document else {
+        let Some(list) = element_by_id(interface, document, "command-list") else {
             return Ok(());
         };
-        for index in 0..count {
-            let Some(line) = element_by_id(interface, doc, &format!("log-line-{index}")) else {
-                continue;
-            };
-            let queue = self.selection_events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(line, "mousedown", false, move || {
-                    queue.borrow_mut().push(SelectionEvent::Start(index))
-                })?;
-            let queue = self.selection_events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(line, "mouseover", false, move || {
-                    queue.borrow_mut().push(SelectionEvent::Extend(index))
-                })?;
-        }
-        if let Some(log) = self.log {
-            let queue = self.selection_events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(log, "mouseup", false, move || {
-                    queue.borrow_mut().push(SelectionEvent::End);
-                })?;
+        for (index, muted) in self.status_history_muted.iter().copied().enumerate() {
+            let (row, exists) = interface.rml_ui().element_get_child(list, index as i32)?;
+            if exists {
+                interface.rml_ui().element_set_class(row, "undone", muted)?;
+            }
         }
         Ok(())
-    }
-}
-
-/// RmlUi reads `{{ … }}` in element text as a data-binding expression and logs
-/// "Failed to instance text element" on any malformed one (a stray `}}`, a lone
-/// `}` inside brackets). Engine stat dumps are full of such braces
-/// (`{{863.446, 0.402}}`), and one bad line fails the whole log render, spamming
-/// a warning every frame. A zero-width space after every brace breaks the
-/// `{{`/`}}` adjacency the parser keys on, so no text is ever treated as an
-/// expression. The glyphs render identically and copy uses the untouched buffer.
-fn defuse_data_brackets(text: &str) -> std::borrow::Cow<'_, str> {
-    if !text.contains(['{', '}']) {
-        return std::borrow::Cow::Borrowed(text);
-    }
-    std::borrow::Cow::Owned(text.replace('{', "{\u{200b}").replace('}', "}\u{200b}"))
-}
-
-/// Truncate an over-long line on a char boundary, appending an ellipsis note so
-/// the reader knows it was cut. The full text stays in the buffer for copy.
-fn clamp_line(text: &str) -> std::borrow::Cow<'_, str> {
-    if text.len() <= MAX_LINE_CHARS {
-        return std::borrow::Cow::Borrowed(text);
-    }
-    let mut end = MAX_LINE_CHARS;
-    while !text.is_char_boundary(end) {
-        end -= 1;
-    }
-    std::borrow::Cow::Owned(format!("{}… [truncated]", &text[..end]))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{clamp_line, defuse_data_brackets, MAX_LINE_CHARS};
-
-    #[test]
-    fn brace_free_text_is_untouched() {
-        assert_eq!(defuse_data_brackets("no braces here"), "no braces here");
-    }
-
-    #[test]
-    fn adjacent_braces_are_split_by_a_zero_width_space() {
-        // The engine stat pattern that tripped RmlUi's data parser.
-        let out = defuse_data_brackets("time={{863.446, 0.402}}ms");
-        assert!(!out.contains("{{"), "no `{{{{` may survive: {out:?}");
-        assert!(!out.contains("}}"), "no `}}}}` may survive: {out:?}");
-        // The visible glyphs are unchanged once the zero-width spaces are gone.
-        assert_eq!(out.replace('\u{200b}', ""), "time={{863.446, 0.402}}ms");
-    }
-
-    #[test]
-    fn short_lines_pass_through_unchanged() {
-        assert_eq!(clamp_line("all good"), "all good");
-    }
-
-    #[test]
-    fn oversized_lines_are_cut_and_marked() {
-        let huge = "x".repeat(MAX_LINE_CHARS * 3);
-        let clamped = clamp_line(&huge);
-        assert!(clamped.len() < huge.len());
-        assert!(clamped.ends_with("… [truncated]"));
-    }
-
-    #[test]
-    fn truncation_respects_char_boundaries() {
-        // A multi-byte char straddling the cut must not panic.
-        let huge = "é".repeat(MAX_LINE_CHARS);
-        let _ = clamp_line(&huge);
     }
 }

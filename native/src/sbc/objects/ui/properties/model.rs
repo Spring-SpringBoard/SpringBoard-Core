@@ -1,75 +1,26 @@
 use crate::sbc::command_system::command::Command;
 use crate::sbc::objects::{
-    FieldRange, FieldValueType, ObjectFieldDescriptor, ObjectKind, ObjectManager,
-    SetObjectParamCommand,
+    FieldValueType, ObjectFieldDescriptor, ObjectKind, ObjectManager, SetObjectParamCommand,
 };
 use crate::sbc::panels::field::{Field, FieldValue};
 use crate::sbc::panels::fields::{BooleanField, ChoiceField, NumericField, StringField};
 use crate::sbc::panels::runtime::{EditorModel, FieldMut, FieldRef};
 
+mod factory;
+
+use factory::{descriptor_order, index_of, number, numeric_field, sub_field, title};
+
 #[derive(Clone, Copy)]
 pub(super) struct Position {
-    x: f32,
-    y: f32,
-    z: f32,
+    pub(super) x: f32,
+    pub(super) y: f32,
+    pub(super) z: f32,
 }
 
 pub(super) struct SelectedObject {
     pub(super) kind: ObjectKind,
     pub(super) model_id: i32,
     pub(super) position: Option<Position>,
-}
-
-impl Position {
-    pub(super) fn from_json(value: &serde_json::Value) -> Option<Self> {
-        value.as_object().map(|_| Self {
-            x: number_f(&value["x"]),
-            y: number_f(&value["y"]),
-            z: number_f(&value["z"]),
-        })
-    }
-
-    pub(super) fn average(selection: &[SelectedObject], kind: ObjectKind) -> Option<Self> {
-        let positions: Vec<_> = selection
-            .iter()
-            .filter(|object| object.kind == kind)
-            .filter_map(|object| object.position)
-            .collect();
-        let count = positions.len() as f32;
-        (count > 0.0).then(|| Self {
-            x: positions.iter().map(|position| position.x).sum::<f32>() / count,
-            y: positions.iter().map(|position| position.y).sum::<f32>() / count,
-            z: positions.iter().map(|position| position.z).sum::<f32>() / count,
-        })
-    }
-
-    pub(super) fn json(self) -> serde_json::Value {
-        serde_json::json!({ "x": self.x, "y": self.y, "z": self.z })
-    }
-
-    fn from_fields(model: &PropertiesModel, field: &str) -> Self {
-        Self {
-            x: model.number(&component_name(field, "x")),
-            y: model.number(&component_name(field, "y")),
-            z: model.number(&component_name(field, "z")),
-        }
-    }
-
-    fn plus(self, delta: Self) -> Self {
-        Self {
-            x: self.x + delta.x,
-            y: self.y + delta.y,
-            z: self.z + delta.z,
-        }
-    }
-
-    fn minus(self, other: Self) -> Self {
-        Self {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -402,19 +353,19 @@ impl PropertiesModel {
         self.set_json_field(name, value);
     }
 
+    pub(super) fn number(&self, name: &str) -> f32 {
+        match self.value(name) {
+            FieldValue::Number(n) => n,
+            _ => 0.0,
+        }
+    }
+
     fn value(&self, name: &str) -> FieldValue {
         self.fields
             .iter()
             .find(|field| field.name() == name)
             .map(|field| field.value())
             .unwrap_or(FieldValue::Text(String::new()))
-    }
-
-    fn number(&self, name: &str) -> f32 {
-        match self.value(name) {
-            FieldValue::Number(n) => n,
-            _ => 0.0,
-        }
     }
 
     fn sub_fields_of(&self, parent: &str) -> Vec<String> {
@@ -497,93 +448,10 @@ impl EditorModel for PropertiesModel {
     }
 }
 
-fn number(value: &serde_json::Value) -> FieldValue {
-    FieldValue::Number(number_f(value))
-}
-
-fn index_of(captions: &[&str], value: &str) -> i32 {
-    captions
-        .iter()
-        .position(|caption| *caption == value)
-        .unwrap_or(0) as i32
-}
-
-fn numeric_field(descriptor: &ObjectFieldDescriptor) -> Box<dyn Field> {
-    let title = title(descriptor.name);
-    let mut field = NumericField::new(descriptor.name, &title, 0.0)
-        .decimals(if descriptor.value_type == FieldValueType::Int {
-            0
-        } else {
-            2
-        })
-        .step(if descriptor.value_type == FieldValueType::Int {
-            1.0
-        } else {
-            0.1
-        });
-    if let Some(FieldRange { min: Some(min), .. }) = descriptor.range {
-        field = field.min(min as f32);
-    }
-    if let Some(FieldRange { max: Some(max), .. }) = descriptor.range {
-        field = field.max(max as f32);
-    }
-    Box::new(field)
-}
-
 /// The captions Lua gives the two unit states that are pick-lists rather than
 /// numbers.
 const FIRE_STATES: &[&str] = &["Hold fire", "Return fire", "Fire at will"];
 const MOVE_STATES: &[&str] = &["Hold position", "Maneuver", "Roam"];
-
-/// One key of a sub-object, typed from the value the object actually holds.
-fn sub_field(name: &str, key: &str, value: &serde_json::Value) -> Option<Box<dyn Field>> {
-    let label = title(key);
-    let choices = match key {
-        "fireState" => Some(FIRE_STATES),
-        "moveState" => Some(MOVE_STATES),
-        _ => None,
-    };
-    if let Some(choices) = choices {
-        let items = choices.iter().map(|c| (*c).to_string()).collect();
-        return Some(Box::new(ChoiceField::new(name, &label, items)));
-    }
-    if value.is_boolean() {
-        return Some(Box::new(BooleanField::new(name, &label, false)));
-    }
-    if value.is_number() {
-        return Some(Box::new(
-            NumericField::new(name, &label, 0.0).decimals(2).compact(),
-        ));
-    }
-    if value.is_string() {
-        return Some(Box::new(StringField::new(name, &label, "")));
-    }
-    None
-}
-
-fn title(name: &str) -> String {
-    let mut out = String::new();
-    for (i, ch) in name.chars().enumerate() {
-        if i == 0 {
-            out.push(ch.to_ascii_uppercase());
-        } else if ch.is_ascii_uppercase() {
-            out.push(' ');
-            out.push(ch);
-        } else {
-            out.push(ch);
-        }
-    }
-    out
-}
-
-fn descriptor_order(name: &str) -> usize {
-    [
-        "defName", "pos", "rot", "dir", "vel", "health", "mass", "maxRange",
-    ]
-    .iter()
-    .position(|candidate| *candidate == name)
-    .unwrap_or(usize::MAX)
-}
 
 #[cfg(test)]
 mod tests {

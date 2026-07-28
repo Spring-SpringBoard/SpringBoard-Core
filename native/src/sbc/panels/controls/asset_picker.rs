@@ -251,6 +251,7 @@ impl Modal for AssetPicker {
         self.field = None;
         self.events.borrow_mut().clear();
         self.grid.drain_clicks();
+        self.grid.forget_bindings();
     }
 
     fn is_open(&self) -> bool {

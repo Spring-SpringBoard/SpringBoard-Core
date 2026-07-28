@@ -1,0 +1,1 @@
+<button data-model="panel_tabs" data-for="tab : tabs" class="tab-button">{{ tab.text }}</button>

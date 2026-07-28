@@ -11,6 +11,10 @@ use crate::sbc::objects::{AddObjectCommand, ObjectKind, ObjectManager, RemoveObj
 use crate::sbc::render::ModelShader;
 use crate::sbc::states::state::{cursor, EditorState, GroundHit, StateContext, Transition};
 
+mod brush;
+
+use brush::{brush_count, feature_spacing, pending_feature_conflict, sunflower_point};
+
 const LEFT: i32 = 1;
 const RIGHT: i32 = 3;
 
@@ -251,19 +255,6 @@ impl AddObjectState {
     }
 }
 
-fn brush_count(size: f32, spread: f32) -> u32 {
-    let density_area = (spread.max(1.0) * 100.0).max(1.0);
-    ((size.max(1.0) * size.max(1.0)) / density_area)
-        .ceil()
-        .max(1.0) as u32
-}
-
-/// Lua's `sqrt(spread * 100) - tolerance`, with an empty radius treated as no
-/// exclusion rather than accidentally querying a negative cylinder radius.
-fn feature_spacing(spread: f32) -> f32 {
-    ((spread.max(0.0) * 100.0).sqrt() - 5.0).max(0.0)
-}
-
 fn feature_exists_near(ctx: &StateContext, def_id: i32, x: f32, z: f32, distance: f32) -> bool {
     if def_id <= 0 || distance <= 0.0 {
         return false;
@@ -279,30 +270,6 @@ fn feature_exists_near(ctx: &StateContext, def_id: i32, x: f32, z: f32, distance
                 .get_feature_def_id(feature_id)
                 .is_ok_and(|existing_def| existing_def == def_id)
         })
-}
-
-/// Lua checks its not-yet-executed wait list at twice the engine query radius.
-/// It prevents candidates from the same scatter landing too close together even
-/// though the engine feature query cannot see queued commands yet.
-fn pending_feature_conflict(pending: &[(f32, f32)], x: f32, z: f32, distance: f32) -> bool {
-    let min_distance = distance * 2.0;
-    let min_distance_sq = min_distance * min_distance;
-    pending.iter().any(|(other_x, other_z)| {
-        let dx = other_x - x;
-        let dz = other_z - z;
-        dx * dx + dz * dz < min_distance_sq
-    })
-}
-
-fn sunflower_point(index: u32, count: u32, radius: f32) -> (f32, f32) {
-    if count <= 1 {
-        return (0.0, 0.0);
-    }
-    const GOLDEN_ANGLE: f32 = 2.399_963_1;
-    let t = index as f32 / (count - 1) as f32;
-    let r = t.sqrt() * radius;
-    let angle = index as f32 * GOLDEN_ANGLE;
-    (r * angle.cos(), r * angle.sin())
 }
 
 /// Cursor-to-world at a map position, via the ground height.
@@ -486,7 +453,7 @@ impl EditorState for AddObjectState {
 
 #[cfg(test)]
 mod tests {
-    use super::{feature_spacing, pending_feature_conflict};
+    use super::brush::{feature_spacing, pending_feature_conflict};
 
     #[test]
     fn feature_spacing_matches_luas_tolerance() {

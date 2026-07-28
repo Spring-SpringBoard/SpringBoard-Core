@@ -8,10 +8,13 @@
 use std::any::Any;
 use std::time::{Duration, Instant};
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataNotificationRows, RmlNotificationRow,
+};
 
 use crate::sbc::command_system::model::{Model, ModelFactory};
-use crate::sbc::rml::{element_by_id, escape_rml};
+use crate::sbc::rml::element_by_id;
 
 inventory::submit! { ModelFactory { make: |_iface| Box::new(NotificationManager::default()) } }
 
@@ -29,6 +32,7 @@ struct Notification {
 pub(crate) struct NotificationManager {
     items: Vec<Notification>,
     dirty: bool,
+    pending_style_sync: bool,
 }
 
 impl Model for NotificationManager {
@@ -94,39 +98,62 @@ impl NotificationManager {
         std::mem::take(&mut self.dirty)
     }
 
+    /// Copies changed notification data into the panel's engine-owned model.
+    /// The static RML template materialises the rows on the next context update.
     pub(crate) fn render(
-        &self,
+        &mut self,
+        notification_rows: Option<&RmlDataNotificationRows<'static>>,
+    ) -> Result<(), Error> {
+        let Some(notification_rows) = notification_rows else {
+            return Ok(());
+        };
+        let values = self.rows();
+        notification_rows.set(&values)?;
+        self.pending_style_sync = true;
+        Ok(())
+    }
+
+    /// Applies the two visual properties RmlUi cannot currently bind safely on
+    /// a shrinking `data-for` collection. Row structure and text remain fully
+    /// native-bound; this runs only after a changed collection was materialised.
+    pub(crate) fn sync_styles(
+        &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
     ) -> Result<(), Error> {
+        if !self.pending_style_sync {
+            return Ok(());
+        }
         let Some(root) = element_by_id(interface, document, "notifications-root") else {
             return Ok(());
         };
-        let mut html = String::new();
-        for item in &self.items {
-            let warning = if item.warning { " warning" } else { "" };
-            html.push_str(&format!(
-                concat!(
-                    r#"<div class="notification">"#,
-                    r#"<div class="notification-title{warning}">{title}</div>"#,
-                    r#"<div class="notification-body">{body}</div>"#,
-                ),
-                warning = warning,
-                title = escape_rml(&item.title),
-                body = escape_rml(&item.body),
-            ));
-            if let Some(progress) = item.progress {
-                html.push_str(&format!(
-                    concat!(
-                        r#"<div class="notification-progress">"#,
-                        r#"<div class="notification-progress-fill" style="width: {pct}%;"></div></div>"#,
-                    ),
-                    pct = (progress * 100.0).round() as i32,
-                ));
+        let rml = interface.rml_ui();
+        for (index, item) in self.items.iter().enumerate() {
+            let (row, exists) = rml.element_get_child(root, index as i32)?;
+            if !exists {
+                continue;
             }
-            html.push_str("</div>");
+            let (title, has_title) = rml.element_get_child(row, 0)?;
+            if has_title {
+                rml.element_set_class(title, "warning", item.warning)?;
+            }
+            let (progress, has_progress) = rml.element_get_child(row, 2)?;
+            if !has_progress {
+                continue;
+            }
+            rml.element_set_class(progress, "hidden", item.progress.is_none())?;
+            if let Some(value) = item.progress {
+                let (fill, has_fill) = rml.element_get_child(progress, 0)?;
+                if has_fill {
+                    rml.element_set_attribute(
+                        fill,
+                        "style",
+                        &format!("width: {}%;", (value * 100.0).round() as i32),
+                    )?;
+                }
+            }
         }
-        interface.rml_ui().element_set_inner_rml(root, &html)?;
+        self.pending_style_sync = false;
         Ok(())
     }
 
@@ -165,5 +192,39 @@ impl NotificationManager {
         if self.items.len() != before {
             self.dirty = true;
         }
+    }
+
+    fn rows(&self) -> Vec<RmlNotificationRow> {
+        self.items
+            .iter()
+            .map(|item| RmlNotificationRow {
+                title: item.title.clone(),
+                body: item.body.clone(),
+                warning: item.warning,
+                progress: item.progress.map(|progress| progress * 100.0),
+            })
+            .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::NotificationManager;
+    use spring_native::RmlNotificationRow;
+
+    #[test]
+    fn progress_is_a_typed_percentage_not_rendered_markup() {
+        let mut notifications = NotificationManager::default();
+        notifications.progress("import", 0.42, "Importing heightmap...");
+
+        assert_eq!(
+            notifications.rows(),
+            vec![RmlNotificationRow {
+                title: "Progress".to_string(),
+                body: "Importing heightmap...".to_string(),
+                warning: false,
+                progress: Some(42.0),
+            }]
+        );
     }
 }

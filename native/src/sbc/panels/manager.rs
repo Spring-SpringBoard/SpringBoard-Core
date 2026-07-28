@@ -7,7 +7,6 @@ use crate::sbc::chonsole::ChonsoleManager;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::history::HistoryEvent;
 use crate::sbc::command_system::model::{Model, ModelFactory, Models};
-use crate::sbc::control::ControlError;
 use crate::sbc::notifications::NotificationManager;
 use crate::sbc::panels::action_dispatcher::ActionDispatcher;
 use crate::sbc::panels::brush_sync::BrushSync;
@@ -16,19 +15,21 @@ use crate::sbc::panels::controls::color_picker::ColorPicker;
 use crate::sbc::panels::cursor::cursortip::CursorTip;
 use crate::sbc::panels::dialogs::file_dialog::FileDialog;
 use crate::sbc::panels::editor_slot::EditorSlot;
+use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
-use crate::sbc::panels::field::{FieldSpec, FieldValue};
 use crate::sbc::panels::field_session::FieldSession;
 use crate::sbc::panels::field_target::ActiveFieldEditor;
 use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
 use crate::sbc::panels::modal::ModalEvent;
 use crate::sbc::panels::modal_stack::ModalStack;
-use crate::sbc::panels::registry::EditorSpec;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
 use crate::sbc::project::{EditorState, ProjectStatusBar};
 use crate::sbc::states::{StateManager, StateRequest};
+
+mod control;
+mod input;
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(PanelManager::new(iface)) }
@@ -113,7 +114,8 @@ impl PanelManager {
         if !self.enabled {
             return Ok(());
         }
-        if self.view.ensure(&self.interface)? {
+        let view_created = self.view.ensure(&self.interface)?;
+        if view_created {
             // A fresh context: every element handle the editor, the pickers and
             // the input layer cached belongs to a document that no longer
             // exists. Start over rather than touch any of them.
@@ -214,14 +216,26 @@ impl PanelManager {
         let status_commands = self.status_bar.process(&self.interface, models);
         self.pending_commands.extend(status_commands);
         if let Some(doc) = self.view.document_handle() {
-            self.status_bar.render(&self.interface, doc, models)?;
-            if models.get::<NotificationManager>().tick() {
+            self.status_bar.render(
+                &self.interface,
+                doc,
+                self.view.project_status_caption(),
+                models,
+            )?;
+            let notifications_changed = models.get::<NotificationManager>().tick();
+            if view_created || notifications_changed {
                 models
                     .get::<NotificationManager>()
-                    .render(&self.interface, doc)?;
+                    .render(self.view.notification_rows())?;
             }
         }
-        self.view.update(&self.interface)
+        self.view.update(&self.interface)?;
+        if let Some(doc) = self.view.document_handle() {
+            models
+                .get::<NotificationManager>()
+                .sync_styles(&self.interface, doc)?;
+        }
+        Ok(())
     }
 
     pub fn draw_screen(&mut self) -> Result<(), Error> {
@@ -283,166 +297,6 @@ impl PanelManager {
         Ok(())
     }
 
-    // ── Control channel ────────────────────────────────────────────
-
-    /// Open an editor as clicking its tab and button would: the events are
-    /// queued, and `process_shell_events` applies them on the next update.
-    pub(crate) fn control_open(&mut self, spec: &'static EditorSpec) {
-        self.view.queue_event(ShellEvent::Tab(spec.tab));
-        self.view.queue_event(ShellEvent::Editor(spec.name));
-    }
-
-    pub(crate) fn control_open_editor(&self) -> Option<&'static str> {
-        self.view.active_editor()
-    }
-
-    /// Set a field and commit it, through the same path a picker's accepted
-    /// value takes. Returns the value the editor ended up holding.
-    pub(crate) fn control_set_field(
-        &mut self,
-        name: &str,
-        value: FieldValue,
-    ) -> Result<FieldValue, ControlError> {
-        let spec = self.control_field_spec(name)?;
-        // A dropdown holds a plain string, so an unlisted one would set
-        // silently and show blank. Reject it against the field's own items.
-        if let (Some(options), FieldValue::Text(text)) = (&spec.options, &value) {
-            if !options.contains(text) {
-                return Err(ControlError::unknown(format!(
-                    "{name} does not accept {text:?}. Its options: {}",
-                    options.join(", ")
-                )));
-            }
-        }
-        let editor = self
-            .slot
-            .editor_mut()
-            .ok_or_else(|| ControlError::unknown("no editor is open"))?;
-        let commands = self
-            .session
-            .apply_field_value(name, value, false, editor, &self.interface);
-        self.pending_commands.extend(commands);
-        self.control_field_value(name)
-    }
-
-    pub(crate) fn control_field_value(&self, name: &str) -> Result<FieldValue, ControlError> {
-        Ok(self.control_field_spec(name)?.value)
-    }
-
-    // ── Input delegation ──
-
-    pub fn key_press(&mut self, key: i32, _scan: i32, _repeat: bool) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        const RETURN: i32 = 13;
-        const ESCAPE: i32 = 27;
-        // Keys are only ours while a field is being edited; anything else stays
-        // available to the chonsole and the engine — except a toolbar/clipboard
-        // hotkey, which we claim here and run next tick (where models borrow).
-        let Some(name) = self.session.editing().map(str::to_string) else {
-            if key == ESCAPE && self.close_top_modal()? {
-                return Ok(true);
-            }
-            return Ok(self.hotkeys.match_hotkey(&self.interface, key));
-        };
-        if key == RETURN {
-            let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-            let commands =
-                self.session
-                    .commit_field(&name, false, target.get_mut(), &self.interface);
-            self.pending_commands.extend(commands);
-            return Ok(true);
-        }
-        if key == ESCAPE {
-            let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-            self.session
-                .revert_field(&name, target.get_mut(), &self.interface);
-            return Ok(true);
-        }
-        // Ctrl+A: select the value being edited. RmlUi receives the engine's
-        // own key events, but never this chord with the modifier attached.
-        let ctrl = self
-            .interface
-            .input()
-            .get_mod_key_state()
-            .map(|(_, ctrl, _, _)| ctrl)
-            .unwrap_or(false);
-        if ctrl && crate::sbc::keys::is_key(&self.interface, key, "a") {
-            let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-            if let Some(ed) = target.get_mut() {
-                ed.select_edit_field(&name, &self.interface);
-            }
-            return Ok(true);
-        }
-        // Claim the key so hotkeys and the chonsole stay quiet, but do not
-        // forward it: the engine already fed this key to the RmlUi context in
-        // its own key encoding. Re-sending the raw engine keycode made RmlUi
-        // read digits as navigation keys and scramble the edit.
-        Ok(true)
-    }
-
-    pub fn key_release(&mut self, _key: i32, _scan: i32) -> Result<bool, Error> {
-        if !self.enabled || self.session.editing().is_none() {
-            return Ok(false);
-        }
-        Ok(true)
-    }
-
-    pub fn text_input(&mut self, _utf8: &str) -> Result<bool, Error> {
-        if !self.enabled || self.session.editing().is_none() {
-            return Ok(false);
-        }
-        Ok(true)
-    }
-
-    pub fn mouse_move(
-        &mut self,
-        x: i32,
-        y: i32,
-        _dx: i32,
-        _dy: i32,
-        _button: i32,
-    ) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        self.input.mouse_move(&self.interface, &self.view, x, y)
-    }
-
-    pub fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        let modal_open =
-            self.modals.any_open() || self.slot.editor().is_some_and(|ed| ed.has_open_modal());
-        if !self.view.contains(&self.interface, x, y) && !modal_open {
-            return Ok(false);
-        }
-        self.input
-            .mouse_press(&self.interface, &self.view, x, y, button)
-    }
-
-    /// The engine hands mouse input to its RmlUi contexts before its event
-    /// clients, so a press over the panel never reaches here -- the panel never
-    /// becomes the engine's mouse owner and no release is delivered for it. A
-    /// field drag is therefore ended by RmlUi's own `dragend`, not from here.
-    pub fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
-        if !self.enabled {
-            return Ok(());
-        }
-        self.input
-            .mouse_release(&self.interface, &self.view, x, y, button)
-    }
-
-    pub fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
-        if !self.enabled {
-            return Ok(false);
-        }
-        self.input
-            .mouse_wheel(&self.interface, &self.view, up, value)
-    }
-
     // ── Shell ──────────────────────────────────────────────────────
 
     /// Tab and editor-button clicks are queued by the listeners and handled
@@ -484,26 +338,6 @@ impl PanelManager {
             }
         }
         Ok(())
-    }
-
-    fn control_field_spec(&self, name: &str) -> Result<FieldSpec, ControlError> {
-        let editor = self
-            .slot
-            .editor()
-            .ok_or_else(|| ControlError::unknown("no editor is open"))?;
-        let specs = editor.field_specs();
-        specs
-            .iter()
-            .find(|spec| spec.name == name)
-            .cloned()
-            .ok_or_else(|| {
-                let open = self.view.active_editor().unwrap_or("<none>");
-                let names: Vec<&str> = specs.iter().map(|spec| spec.name.as_str()).collect();
-                ControlError::unknown(format!(
-                    "no field {name} in {open}. Its fields: {}",
-                    names.join(", ")
-                ))
-            })
     }
 
     fn reset_state(&mut self, models: &mut Models) {

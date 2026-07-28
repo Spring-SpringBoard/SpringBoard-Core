@@ -4,7 +4,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use super::commands::{CatalogRefresher, ChonsoleCore, CommandExecutor, CommandRegistry};
 use super::framework::{ChonsoleResponse, ChonsoleSuggestion, HistoryStore};
-use super::ui::{ChonsoleUi, UiKeyOutcome};
+use super::ui::{ChonsoleController, UiKeyOutcome};
 use crate::sbc::command_system::model::{Model, ModelFactory};
 use crate::sbc::port_flags::{self, PortImpl};
 
@@ -14,7 +14,7 @@ pub struct ChonsoleManager {
     interface: NativeInterfaceRef,
     enabled: bool,
     core: ChonsoleCore,
-    ui: ChonsoleUi,
+    ui: ChonsoleController,
     history_store: Option<HistoryStore>,
     command_registry: CommandRegistry,
     executor: CommandExecutor,
@@ -54,7 +54,7 @@ impl ChonsoleManager {
             interface,
             enabled,
             core,
-            ui: ChonsoleUi::default(),
+            ui: ChonsoleController::default(),
             history_store,
             command_registry,
             executor: CommandExecutor::default(),

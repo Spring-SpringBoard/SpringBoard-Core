@@ -75,53 +75,6 @@ impl Clipboard {
         }
     }
 
-    fn system_json(&self) -> Option<String> {
-        let payload = SystemClipboard {
-            format: SYSTEM_CLIPBOARD_FORMAT.to_string(),
-            version: SYSTEM_CLIPBOARD_VERSION,
-            objects: self
-                .copied
-                .iter()
-                .map(|(kind, object)| ClipboardObject {
-                    kind: *kind,
-                    object: object.clone(),
-                })
-                .collect(),
-        };
-        serde_json::to_string(&payload)
-            .map_err(|error| log::warn!("objects: could not serialize object clipboard: {error}"))
-            .ok()
-    }
-
-    /// Refresh the in-memory cache from the operating system clipboard.
-    ///
-    /// A non-object clipboard intentionally does *not* fall back to an old
-    /// cache: Ctrl+V should follow what the user currently has copied. We only
-    /// retain the cache if the platform cannot provide clipboard text at all.
-    fn refresh_from_system(&mut self, interface: &NativeInterfaceRef) -> bool {
-        let text = match interface.unsynced_read().get_clipboard() {
-            Ok(Some(text)) => text,
-            Ok(None) => return true,
-            Err(error) => {
-                log::warn!("objects: could not read object clipboard: {error:?}");
-                return true;
-            }
-        };
-        let Ok(payload) = serde_json::from_str::<SystemClipboard>(&text) else {
-            return false;
-        };
-        if payload.format != SYSTEM_CLIPBOARD_FORMAT || payload.version != SYSTEM_CLIPBOARD_VERSION
-        {
-            return false;
-        }
-        self.copied = payload
-            .objects
-            .into_iter()
-            .map(|object| (object.kind, object.object))
-            .collect();
-        true
-    }
-
     /// Build `AddObjectCommand`s for every copied object, offset so the
     /// centroid lands at `(ground_x, ground_z)`. Each object's Y maintains its
     /// original height-above-ground, queried live from the terrain.
@@ -179,6 +132,61 @@ impl Clipboard {
         }
         commands
     }
+
+    fn system_json(&self) -> Option<String> {
+        let payload = SystemClipboard {
+            format: SYSTEM_CLIPBOARD_FORMAT.to_string(),
+            version: SYSTEM_CLIPBOARD_VERSION,
+            objects: self
+                .copied
+                .iter()
+                .map(|(kind, object)| ClipboardObject {
+                    kind: *kind,
+                    object: object.clone(),
+                })
+                .collect(),
+        };
+        serde_json::to_string(&payload)
+            .map_err(|error| log::warn!("objects: could not serialize object clipboard: {error}"))
+            .ok()
+    }
+
+    /// Refresh the in-memory cache from the operating system clipboard.
+    ///
+    /// A non-object clipboard intentionally does *not* fall back to an old
+    /// cache: Ctrl+V should follow what the user currently has copied. We only
+    /// retain the cache if the platform cannot provide clipboard text at all.
+    fn refresh_from_system(&mut self, interface: &NativeInterfaceRef) -> bool {
+        let text = match interface.unsynced_read().get_clipboard() {
+            Ok(Some(text)) => text,
+            Ok(None) => return true,
+            Err(error) => {
+                log::warn!("objects: could not read object clipboard: {error:?}");
+                return true;
+            }
+        };
+        let Ok(payload) = serde_json::from_str::<SystemClipboard>(&text) else {
+            return false;
+        };
+        if payload.format != SYSTEM_CLIPBOARD_FORMAT || payload.version != SYSTEM_CLIPBOARD_VERSION
+        {
+            return false;
+        }
+        self.copied = payload
+            .objects
+            .into_iter()
+            .map(|object| (object.kind, object.object))
+            .collect();
+        true
+    }
+}
+
+fn pos_xz(json: &serde_json::Value) -> Option<(f32, f32)> {
+    let pos = json.get("pos")?;
+    Some((
+        pos["x"].as_f64().unwrap_or(0.0) as f32,
+        pos["z"].as_f64().unwrap_or(0.0) as f32,
+    ))
 }
 
 #[cfg(test)]
@@ -217,12 +225,4 @@ mod tests {
             .iter()
             .all(|object| object.object.get("__modelID").is_none()));
     }
-}
-
-fn pos_xz(json: &serde_json::Value) -> Option<(f32, f32)> {
-    let pos = json.get("pos")?;
-    Some((
-        pos["x"].as_f64().unwrap_or(0.0) as f32,
-        pos["z"].as_f64().unwrap_or(0.0) as f32,
-    ))
 }

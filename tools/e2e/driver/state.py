@@ -27,6 +27,7 @@ class GoldenCheck:
     path: Path
     tolerance: int
     capture_ms: int
+    ignored_bottom: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +58,7 @@ class RunState(ABC):
     screenshots: list[Screenshot] = field(default_factory=list[Screenshot], init=False)
     screenshot_worker: ScreenshotWorker = field(init=False)
     _control: "Control | None" = field(default=None, init=False)
+    _rml_diagnostic_cursor: int = field(default=0, init=False)
 
     def __post_init__(self) -> None:
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
@@ -84,6 +86,9 @@ class RunState(ABC):
 
     @abstractmethod
     def assert_running(self) -> None: ...
+
+    @abstractmethod
+    def assert_no_rml_diagnostics(self) -> None: ...
 
     @abstractmethod
     def assert_any_command(

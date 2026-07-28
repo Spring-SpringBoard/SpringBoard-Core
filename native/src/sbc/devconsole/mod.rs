@@ -4,4 +4,5 @@ mod log;
 mod manager;
 mod metrics;
 mod session;
+mod status;
 mod view;

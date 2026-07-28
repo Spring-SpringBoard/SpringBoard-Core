@@ -11,6 +11,8 @@ use super::test_support::{
 use crate::sbc::tests::tests_api::TestCtx;
 use crate::sbc::textures::TextureModel;
 
+mod export;
+
 fn route(ctx: &mut TestCtx, data: serde_json::Value) {
     ctx.route_command(data);
 }
@@ -470,69 +472,6 @@ fn texture_command_multi_stroke_redo(ctx: &mut TestCtx) -> Result<(), String> {
     Ok(())
 }
 
-/// Tile undo via the export pipeline: baseline, paint, restored PNGs for Python
-/// to byte-compare (paint changed something; undo restored the exact bytes).
-fn tile_undo_pixel_roundtrip(ctx: &mut TestCtx) -> Result<(), String> {
-    generate(ctx);
-    ctx.sbc.model::<TextureModel>().history.clear();
-    let dir = artifact_dir();
-    let tile_name = ctx
-        .sbc
-        .model::<TextureModel>()
-        .tiles
-        .texture(0, 0)
-        .ok_or("no tile (0,0)")?;
-    let pattern = make_filled_texture(ctx, [1.0, 1.0, 1.0, 1.0]).ok_or("pattern")?;
-
-    fill(ctx, &tile_name, [0.0, 0.0, 1.0, 1.0]);
-    let baseline_buf = read_texture_rgba(ctx, &tile_name, 1024, 1024).ok_or("read baseline")?;
-    save_texture_png(
-        ctx,
-        &tile_name,
-        1024,
-        1024,
-        &dir.join("tile_undo_baseline.png"),
-    )?;
-
-    route(
-        ctx,
-        serde_json::json!({
-            "className": "TerrainChangeTextureCommand",
-            "opts": {
-                "x": 0.0, "z": 0.0, "size": 2048.0,
-                "paintMode": "void", "patternRotation": 0.0,
-                "patternTexture": pattern, "voidFactor": 1.0,
-            }
-        }),
-    );
-    ctx.sbc.model::<TextureModel>().history.push_stack(None);
-    save_texture_png(
-        ctx,
-        &tile_name,
-        1024,
-        1024,
-        &dir.join("tile_undo_after.png"),
-    )?;
-    let after_buf = read_texture_rgba(ctx, &tile_name, 1024, 1024).ok_or("read after")?;
-    if !buffers_differ(&baseline_buf, &after_buf) {
-        return Err("paint did not visibly change the tile".to_string());
-    }
-
-    ctx.sbc.model::<TextureModel>().history.pop_stack(None);
-    save_texture_png(
-        ctx,
-        &tile_name,
-        1024,
-        1024,
-        &dir.join("tile_undo_restored.png"),
-    )?;
-    let restored_buf = read_texture_rgba(ctx, &tile_name, 1024, 1024).ok_or("read restored")?;
-    if buffers_differ(&baseline_buf, &restored_buf) {
-        return Err("undo did not restore baseline".to_string());
-    }
-    Ok(())
-}
-
 crate::integration_test!("texture_model_undo", texture_model_undo);
 crate::integration_test!("texture_undo_redo_ladder", texture_undo_redo_ladder);
 crate::integration_test!("texture_redo_fork", texture_redo_fork);
@@ -546,4 +485,7 @@ crate::integration_test!(
     "texture_command_multi_stroke_redo",
     texture_command_multi_stroke_redo
 );
-crate::integration_test!("tile_undo_pixel_roundtrip", tile_undo_pixel_roundtrip);
+crate::integration_test!(
+    "tile_undo_pixel_roundtrip",
+    export::tile_undo_pixel_roundtrip
+);

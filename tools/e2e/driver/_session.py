@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -15,6 +16,15 @@ from .utils.x11 import find_windows, spring_processes, window_pid
 
 if TYPE_CHECKING:
     from e2e.runner import E2ERun
+
+
+RML_DIAGNOSTIC = re.compile(r"(?:Warning|Error): \[RmlUi\]")
+
+
+def rml_diagnostics(lines: list[str]) -> list[str]:
+    """The RmlUi diagnostics that make an E2E invalid even if its final
+    command or pixels happen to look plausible."""
+    return [line for line in lines if RML_DIAGNOSTIC.search(line)]
 
 
 class SessionMixin(RunState):
@@ -58,6 +68,7 @@ class SessionMixin(RunState):
         self.focus()
         self.wait_for_ui_ready()
         self.wait_for_ui_settle()
+        self.assert_no_rml_diagnostics()
         self.screenshot("00-initial")
 
     def run_scenario(self) -> None:
@@ -67,6 +78,7 @@ class SessionMixin(RunState):
 
     def finish(self, status: str, **extra: object) -> None:
         failures = [*self._finish_screenshots(), *self._finish_pixel_assertions()]
+        self.assert_no_rml_diagnostics()
         if failures:
             status = "failed"
             extra = {**extra, "assertion_failures": failures}
@@ -152,6 +164,23 @@ class SessionMixin(RunState):
         started = time.monotonic()
         pause(Delay.SETTLE)
         self.event("ui_settled", elapsed_ms=int((time.monotonic() - started) * 1000))
+
+    def assert_no_rml_diagnostics(self) -> None:
+        """Fail on new RmlUi warnings/errors as soon as a harness boundary is
+        reached, rather than burying them in a copied infolog artifact."""
+        assert self.write_dir is not None
+        path = self.write_dir / "infolog.txt"
+        if not path.is_file():
+            return
+        lines = path.read_text(errors="replace").splitlines()
+        diagnostics = rml_diagnostics(lines[self._rml_diagnostic_cursor :])
+        self._rml_diagnostic_cursor = len(lines)
+        if diagnostics:
+            shown = diagnostics[:8]
+            self.event("rml_diagnostics", count=len(diagnostics), lines=shown)
+            raise AssertionError(
+                "RmlUi emitted diagnostics:\n" + "\n".join(shown)
+            )
 
     def cleanup_write_dir(self) -> None:
         # Each run gets a fresh temp write dir holding a full copy of the game

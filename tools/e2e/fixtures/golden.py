@@ -87,7 +87,13 @@ def golden_path(case_name: str, shot_name: str) -> Path:
     return GOLDEN_ROOT / case_name / f"{shot_name}.png"
 
 
-def differing_pixels(a: Path, b: Path, *, channel_tolerance: int = 1) -> int | None:
+def differing_pixels(
+    a: Path,
+    b: Path,
+    *,
+    channel_tolerance: int = 1,
+    ignored_bottom: int = 0,
+) -> int | None:
     """Count pixels that differ by more than renderer quantisation noise.
 
     Alpha-blended RmlUi surfaces can shift every RGB channel by one when the
@@ -101,6 +107,10 @@ def differing_pixels(a: Path, b: Path, *, channel_tolerance: int = 1) -> int | N
         second_rgba = second.convert("RGBA")
         if first_rgba.size != second_rgba.size:
             return None
+        if ignored_bottom:
+            bottom = max(0, first_rgba.height - ignored_bottom)
+            first_rgba = first_rgba.crop((0, 0, first_rgba.width, bottom))
+            second_rgba = second_rgba.crop((0, 0, second_rgba.width, bottom))
         difference = ImageChops.difference(first_rgba, second_rgba)
         return sum(max(pixel) > channel_tolerance for pixel in difference.get_flattened_data())
 
@@ -117,6 +127,7 @@ def compare(
     *,
     update: bool,
     tolerance: int = 0,
+    ignored_bottom: int = 0,
 ) -> str:
     """Compare `actual` against its golden.
 
@@ -144,7 +155,7 @@ def compare(
             f"Inspect it, record what you checked, then have it approved."
         )
 
-    diff = differing_pixels(golden, actual)
+    diff = differing_pixels(golden, actual, ignored_bottom=ignored_bottom)
     if diff == 0:
         return "match"
     if diff is not None and diff <= tolerance:

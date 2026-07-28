@@ -117,9 +117,9 @@ impl Field for BooleanField {
         let Some(e) = self.element else {
             return Ok(());
         };
-        let rml = interface.rml_ui();
-        rml.element_set_class(e, "pressed", self.value)?;
-        rml.element_set_inner_rml(e, &self.button_rml())?;
+        interface
+            .rml_ui()
+            .element_set_class(e, "pressed", self.value)?;
         Ok(())
     }
 

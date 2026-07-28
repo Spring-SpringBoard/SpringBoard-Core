@@ -11,10 +11,14 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataTextRows,
+};
 
-use crate::sbc::panels::field::{bind_tooltip, bind_tooltip_markup, element_by_id, escape_rml};
 use crate::sbc::vfs::{join_entry, leaf, normalize_extensions, vfs_files};
+
+mod render;
 
 /// Enough empty cells to fill out the widest row the panel can hold, so a short
 /// last row keeps its items at their natural size.
@@ -55,6 +59,12 @@ pub(crate) struct GridView {
     clicks: ClickQueue,
     item_size: u32,
     navigation: Option<GridNavigation>,
+    /// Engine-owned text collection backing the static `data-for` scaffold.
+    /// It becomes invalid with its document, so `render` recreates it after a
+    /// panel reload.
+    rows: Option<RmlDataTextRows<'static>>,
+    bound_document: Option<u64>,
+    items_dirty: bool,
 }
 
 impl GridView {
@@ -66,6 +76,9 @@ impl GridView {
             clicks: Rc::new(RefCell::new(Vec::new())),
             item_size,
             navigation: None,
+            rows: None,
+            bound_document: None,
+            items_dirty: true,
         }
     }
 
@@ -200,116 +213,17 @@ impl GridView {
 
     pub(crate) fn set_items(&mut self, items: Vec<GridItem>) {
         self.items = items;
+        self.items_dirty = true;
     }
 
-    /// Render the items and bind a click listener to each cell.
-    pub(crate) fn render(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
-        let Some(container) = element_by_id(interface, document, &self.container_id) else {
-            return Ok(());
-        };
-        let rml = interface.rml_ui();
-
-        if let Some(navigation) = self.navigation.as_ref() {
-            if let Some(path) =
-                element_by_id(interface, document, &format!("{}-path", self.container_id))
-            {
-                rml.element_set_inner_rml(path, &escape_rml(&navigation.dir))?;
-            }
-            if let Some(up) =
-                element_by_id(interface, document, &format!("{}-up", self.container_id))
-            {
-                rml.element_set_class(up, "disabled", navigation.dir == navigation.root)?;
-            }
-            if !navigation.bound.get() {
-                if let Some(up) =
-                    element_by_id(interface, document, &format!("{}-up", self.container_id))
-                {
-                    let clicks = navigation.up_clicks.clone();
-                    rml.element_add_event_listener(up, "click", false, move || {
-                        *clicks.borrow_mut() += 1;
-                    })?;
-                }
-                navigation.bound.set(true);
-            }
+    /// Drop document-owned bindings after its panel has been rebuilt.
+    pub(crate) fn forget_bindings(&mut self) {
+        self.rows = None;
+        self.bound_document = None;
+        self.items_dirty = true;
+        if let Some(navigation) = &self.navigation {
+            navigation.bound.set(false);
         }
-
-        let mut html = String::new();
-        for (index, item) in self.items.iter().enumerate() {
-            let selected = if Some(item.id.as_str()) == self.selected() {
-                " selected"
-            } else {
-                ""
-            };
-            let folder = if item.is_directory { " folder" } else { "" };
-            // The cell grows past `item_size` to share out whatever the row has
-            // left over, so the grid has no dead column down its right edge. The
-            // image inside keeps its square shape (see the RCSS), so a wider cell
-            // just means more margin around the model, not a stretched one.
-            html.push_str(&format!(
-                r#"<div id="{cid}-{index}" class="grid-item{selected}{folder}" style="flex-basis: {size}px;">"#,
-                cid = self.container_id,
-                size = self.item_size,
-            ));
-            html.push_str(&format!(
-                r#"<div class="grid-item-image" style="height: {size}px;">"#,
-                size = self.item_size,
-            ));
-            if let Some(image) = &item.image {
-                // Engine textures (`!nativeN` RTT thumbnails, `%`/`#`/`$` names)
-                // resolve through RmlUi's `<texture>` element; plain file paths
-                // are `<img>`.
-                // Sized in px rather than as a percentage of the cell: the cell
-                // stretches to fill its row, and a percentage would stretch the
-                // image with it.
-                let square = format!(
-                    r#"style="width: {size}px; height: {size}px;""#,
-                    size = self.item_size
-                );
-                if image.starts_with(['!', '%', '#', '$']) {
-                    html.push_str(&format!(r#"<texture src="{image}" {square}/>"#));
-                } else {
-                    html.push_str(&format!(r#"<img src="{image}" {square}/>"#));
-                }
-            }
-            html.push_str("</div>");
-            html.push_str(&format!(
-                r#"<div class="grid-item-label">{}</div></div>"#,
-                escape_rml(&item.caption),
-            ));
-        }
-        // Without these, the items on a short last row would grow to swallow the
-        // whole row -- one lone result would be a cell the width of the grid. The
-        // fillers take that slack instead, and being empty and flat they cost a
-        // row of nothing. Any that don't fit wrap away invisibly.
-        for _ in 0..FILLERS {
-            html.push_str(&format!(
-                r#"<div class="grid-filler" style="flex-basis: {size}px;"></div>"#,
-                size = self.item_size,
-            ));
-        }
-        rml.element_set_inner_rml(container, &html)?;
-
-        for (index, item) in self.items.iter().enumerate() {
-            let id = format!("{}-{}", self.container_id, index);
-            let Some(cell) = element_by_id(interface, document, &id) else {
-                continue;
-            };
-            if let Some(tooltip) = &item.tooltip_markup {
-                bind_tooltip_markup(interface, document, cell, tooltip)?;
-            } else if let Some(tooltip) = &item.tooltip {
-                bind_tooltip(interface, document, cell, tooltip)?;
-            }
-            let queue = self.clicks.clone();
-            let item_id = item.id.clone();
-            rml.element_add_event_listener(cell, "click", false, move || {
-                queue.borrow_mut().push(item_id.clone());
-            })?;
-        }
-        Ok(())
     }
 }
 

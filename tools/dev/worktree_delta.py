@@ -17,6 +17,10 @@ import argparse
 import subprocess
 from collections import defaultdict
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def git(worktree: Path, *args: str) -> str:
@@ -77,7 +81,7 @@ def rust_subsystem(path: str) -> str | None:
 
 def aggregate(
     entries: list[tuple[str, int | None, int | None]],
-    group_for_path,
+    group_for_path: Callable[[str], str | None],
 ) -> list[tuple[str, int, int, int, int]]:
     groups: defaultdict[str, list[int]] = defaultdict(lambda: [0, 0, 0, 0])
     for path, added, removed in entries:
@@ -97,9 +101,7 @@ def aggregate(
 def table(rows: list[tuple[str, int, int, int, int]], *, limit: int | None = None) -> list[str]:
     lines = ["| Path | Files | Added | Removed | LOC changed | Binary |", "| --- | ---: | ---: | ---: | ---: | ---: |"]
     for path, files, added, removed, binary in rows[:limit]:
-        lines.append(
-            f"| `{path}` | {files} | {added} | {removed} | {added + removed} | {binary} |"
-        )
+        lines.append(f"| `{path}` | {files} | {added} | {removed} | {added + removed} | {binary} |")
     return lines
 
 

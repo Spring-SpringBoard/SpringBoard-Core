@@ -249,12 +249,6 @@ class InputMixin(RunState):
         run("xdotool", "mouseup", str(button))
         pause(Delay.CONTROL)
 
-    def _root_point(self, x: int, y: int) -> tuple[int, int]:
-        """Convert a window-local point for xdotool's root-window input."""
-        self.require_window()
-        geometry = window_geometry_values(self.window)
-        return x + geometry.get("X", 0), y + geometry.get("Y", 0)
-
     @override
     def press(self, x: int, y: int, button: int = 1, delay: Delay = Delay.CONTROL) -> None:
         """Hold the button down. Pair with `move` + `release` when the scenario
@@ -342,3 +336,9 @@ class InputMixin(RunState):
             return ""
         self.event("clipboard", length=len(result.stdout))
         return result.stdout
+
+    def _root_point(self, x: int, y: int) -> tuple[int, int]:
+        """Convert a window-local point for xdotool's root-window input."""
+        self.require_window()
+        geometry = window_geometry_values(self.window)
+        return x + geometry.get("X", 0), y + geometry.get("Y", 0)

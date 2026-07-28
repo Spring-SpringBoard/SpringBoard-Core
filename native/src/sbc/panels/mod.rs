@@ -1,10 +1,12 @@
 mod action_dispatcher;
+mod action_bar;
 pub(crate) mod brush;
 mod brush_sync;
 pub(crate) mod controls;
 pub(crate) mod cursor;
 pub(crate) mod dialogs;
 mod editor;
+mod editor_buttons;
 pub(crate) mod editor_base;
 mod editor_slot;
 mod event_listener;
@@ -18,6 +20,7 @@ pub(crate) mod modal;
 mod modal_stack;
 pub(crate) mod registry;
 pub(crate) mod runtime;
+mod tab_bar;
 mod view;
 
 pub(crate) use editor::Editor;

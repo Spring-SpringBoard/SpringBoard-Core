@@ -1,6 +1,5 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
 
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
@@ -11,13 +10,12 @@ use crate::sbc::devconsole::actions::{
     cheat_if_needed, is_cheating, is_global_los, is_god_mode, Action,
 };
 use crate::sbc::devconsole::log::Severity;
-use crate::sbc::devconsole::metrics::SystemMetrics;
 use crate::sbc::devconsole::session::ConsoleSession;
+use crate::sbc::devconsole::status::StatusPresenter;
 use crate::sbc::devconsole::view::{DevConsoleView, HistoryCommand, StatusAction, ToggleState};
 use crate::sbc::keys::is_key;
 use crate::sbc::objects::SelectionManager;
 use crate::sbc::port_flags::{self, UiImpl};
-use crate::sbc::states::{cursor, trace_ground};
 
 inventory::submit! {
     ModelFactory { make: |iface| Box::new(DevConsoleManager::new(iface)) }
@@ -46,13 +44,7 @@ pub(crate) struct DevConsoleManager {
     /// The engine's console buffer is only worth reading once; after a `luaui
     /// reload` rebuilds the view, our own buffer already holds those lines.
     backfilled: bool,
-    /// Performance collection is deliberately slow: querying the engine and
-    /// the OS every UI update is noisy and makes numbers visually flicker.
-    last_metrics_refresh: Option<Instant>,
-    performance: String,
-    system_performance: String,
-    system_metrics: SystemMetrics,
-    version: String,
+    status: StatusPresenter,
     /// Captions are registered as commands arrive, then projected onto the
     /// command manager's actual undo/redo deques.
     command_captions: HashMap<CommandId, String>,
@@ -97,11 +89,7 @@ impl DevConsoleManager {
             pin_log_bottom: false,
             toggle_refresh_pending: false,
             backfilled: false,
-            last_metrics_refresh: None,
-            performance: String::new(),
-            system_performance: String::new(),
-            system_metrics: SystemMetrics::new(),
-            version: game_version(&interface),
+            status: StatusPresenter::new(&interface),
             command_captions: HashMap::new(),
             command_log: Vec::new(),
             pending_commands: Vec::new(),
@@ -148,14 +136,10 @@ impl DevConsoleManager {
             let lines = self.console.rendered_lines(self.problems_only);
             self.view
                 .render_log(&self.interface, lines.into_iter(), pin_log_bottom)?;
-            self.view.render_error_count(
-                &self.interface,
-                self.console.error_count(self.problems_only),
-            )?;
-            self.view.render_line_count(
-                &self.interface,
-                &self.console.count_text(self.problems_only),
-            )?;
+            self.view
+                .render_error_count(self.console.error_count(self.problems_only))?;
+            self.view
+                .render_line_count(&self.console.count_text(self.problems_only))?;
             self.dirty = false;
         }
         self.render_status(models)?;
@@ -260,25 +244,15 @@ impl DevConsoleManager {
     }
 
     fn render_status(&mut self, models: &mut Models) -> Result<(), Error> {
-        let position = status_position(&self.interface, models.get::<SelectionManager>());
-        let now = Instant::now();
-        if self.performance.is_empty()
-            || self
-                .last_metrics_refresh
-                .is_none_or(|last| now.duration_since(last) >= Duration::from_secs(2))
-        {
-            let (performance, system_performance) =
-                performance(&self.interface, &mut self.system_metrics);
-            self.performance = performance;
-            self.system_performance = system_performance;
-            self.last_metrics_refresh = Some(now);
-        }
+        let status = self
+            .status
+            .refresh(&self.interface, models.get::<SelectionManager>());
         self.view.render_status(
             &self.interface,
-            &position,
-            &self.performance,
-            &self.system_performance,
-            &self.version,
+            &status.position,
+            status.performance,
+            status.system_performance,
+            status.version,
             &self.command_log,
         )
     }
@@ -400,121 +374,6 @@ impl DevConsoleManager {
     }
 }
 
-fn status_position(interface: &NativeInterfaceRef, selection: &SelectionManager) -> String {
-    let ground = cursor(interface)
-        .and_then(|mouse| trace_ground(interface, mouse.x, mouse.y))
-        .map(|hit| format!("X: {:.0}, Y: {:.0}, Z: {:.0}", hit.x, hit.y, hit.z))
-        .unwrap_or_else(|| "Off-screen".to_string());
-    match selection.count() {
-        0 => format!("{ground}. No selection"),
-        1 => selection
-            .primary()
-            .map(|(_, id)| format!("{ground}. Selected: 1 (ID={id})"))
-            .unwrap_or_else(|| format!("{ground}. Selected: 1")),
-        count => format!("{ground}. Selected: {count}"),
-    }
-}
-
-fn performance(
-    interface: &NativeInterfaceRef,
-    system_metrics: &mut SystemMetrics,
-) -> (String, String) {
-    let fps = interface.display().get_fps().unwrap_or_default();
-    let memory = interface
-        .profiling()
-        .get_lua_mem_usage()
-        .map(|(_, _, global, ..)| global / 1024.0)
-        .unwrap_or_default();
-    let (video_used, video_available) = interface
-        .profiling()
-        .get_vid_mem_usage()
-        .unwrap_or_default();
-    let system = system_metrics.sample();
-    let vram_ratio = ratio(video_used, video_available);
-    let ram_ratio = ratio(
-        system.system_used_memory as f32,
-        system.system_total_memory as f32,
-    );
-    let process_cpus = system.process_cpu / 100.0;
-    let system_cpus = system.system_cpu / 100.0 * system.logical_cpus.max(1) as f32;
-    (
-        metric_markup(&[
-            ("FPS", format!("{fps}"), fps_tone(fps as f32)),
-            (
-                "Process CPU",
-                format!("{process_cpus:.1} CPUs"),
-                usage_tone(process_cpus / system.logical_cpus.max(1) as f32),
-            ),
-            (
-                "System CPU",
-                format!("{system_cpus:.1} / {} CPUs", system.logical_cpus.max(1)),
-                usage_tone(system.system_cpu / 100.0),
-            ),
-        ]),
-        metric_markup(&[
-            ("Lua", format!("{memory:.0} MiB"), "normal"),
-            (
-                "VRAM",
-                format!("{video_used:.0} / {video_available:.0} MiB"),
-                usage_tone(vram_ratio),
-            ),
-            (
-                "RAM",
-                format!(
-                    "{:.1} / {:.1} GiB",
-                    bytes_to_gib(system.system_used_memory),
-                    bytes_to_gib(system.system_total_memory)
-                ),
-                usage_tone(ram_ratio),
-            ),
-            (
-                "Process RAM",
-                format!("{} MiB", bytes_to_mib(system.process_memory)),
-                "normal",
-            ),
-        ]),
-    )
-}
-
-fn metric_markup(metrics: &[(&str, String, &str)]) -> String {
-    metrics
-        .iter()
-        .map(|(label, value, tone)| {
-            format!(
-                r#"<span class="status-metric {tone}"><span class="metric-label">{label}</span><span class="metric-value">{value}</span></span>"#
-            )
-        })
-        .collect()
-}
-
-fn usage_tone(used: f32) -> &'static str {
-    if used >= 0.90 {
-        "critical"
-    } else if used >= 0.70 {
-        "warning"
-    } else {
-        "healthy"
-    }
-}
-
-fn fps_tone(fps: f32) -> &'static str {
-    if fps < 30.0 {
-        "critical"
-    } else if fps < 55.0 {
-        "warning"
-    } else {
-        "healthy"
-    }
-}
-
-fn ratio(used: f32, total: f32) -> f32 {
-    if total > 0.0 {
-        used / total
-    } else {
-        0.0
-    }
-}
-
 /// The command registry uses Rust/JSON type names; status history is for a
 /// person scanning recent work.  Drop the implementation suffix and split
 /// words so `AddObjectCommand` becomes `Add Object`.
@@ -565,26 +424,6 @@ fn project_command_history(
             })
         }))
         .collect()
-}
-
-fn bytes_to_mib(bytes: u64) -> u64 {
-    bytes / (1024 * 1024)
-}
-
-fn bytes_to_gib(bytes: u64) -> f64 {
-    bytes as f64 / (1024.0 * 1024.0 * 1024.0)
-}
-
-fn game_version(interface: &NativeInterfaceRef) -> String {
-    let Ok(info) = interface.game().get_game_mod_info_owned() else {
-        return "SpringBoard".to_string();
-    };
-    let name = if info.game_name.is_empty() {
-        "SpringBoard".to_string()
-    } else {
-        info.game_name
-    };
-    format!("{name} {}", info.game_version).trim().to_string()
 }
 
 #[cfg(test)]

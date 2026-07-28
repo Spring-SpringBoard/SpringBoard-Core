@@ -1,12 +1,18 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataNotificationRows, RmlDataVariable,
+};
 
 use crate::sbc::actions::Action;
-use crate::sbc::panels::field::{bind_tooltip, element_by_id, escape_rml};
+use crate::sbc::panels::action_bar::ActionBar;
+use crate::sbc::panels::editor_buttons::EditorButtons;
+use crate::sbc::panels::field::element_by_id;
 use crate::sbc::panels::modal::registered_markup;
-use crate::sbc::panels::registry::{editors_for, Tab};
+use crate::sbc::panels::registry::Tab;
+use crate::sbc::panels::tab_bar::TabBar;
 use crate::sbc::rml;
 
 const UI_CONTEXT: &str = "sbc_native_ui";
@@ -19,10 +25,11 @@ const UI_STYLE: &str = concat!(
     include_str!("../theme/scrollbars.rcss"),
     include_str!("../theme/panel/foundation.rcss"),
     include_str!("../theme/panel/shell.rcss"),
+    include_str!("../theme/panel/asset_grid.rcss"),
     include_str!("../theme/panel/fields.rcss"),
     include_str!("../theme/panel/action_controls.rcss"),
     include_str!("../theme/panel/modals.rcss"),
-    include_str!("../theme/panel/asset_grid.rcss"),
+    include_str!("../theme/panel/asset_picker.rcss"),
     include_str!("../theme/panel/notifications.rcss"),
     include_str!("../theme/panel/project_status.rcss"),
 );
@@ -46,6 +53,11 @@ pub(crate) struct PanelView {
     document: Option<u64>,
     root: Option<u64>,
     content: Option<u64>,
+    project_status_caption: Option<RmlDataVariable<'static, String>>,
+    notification_rows: Option<RmlDataNotificationRows<'static>>,
+    action_bar: ActionBar,
+    editor_buttons: EditorButtons,
+    tab_bar: TabBar,
     events: ShellQueue,
     current_tab: Tab,
     active_editor: Option<&'static str>,
@@ -58,6 +70,11 @@ impl Default for PanelView {
             document: None,
             root: None,
             content: None,
+            project_status_caption: None,
+            notification_rows: None,
+            action_bar: ActionBar::default(),
+            editor_buttons: EditorButtons::default(),
+            tab_bar: TabBar::default(),
             events: Rc::new(RefCell::new(Vec::new())),
             current_tab: Tab::Objects,
             active_editor: None,
@@ -111,8 +128,18 @@ impl PanelView {
         let geom = interface.display().get_view_geometry()?;
         let _ = rml.context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
 
+        // The panel shell is parsed after this native model exists, so its
+        // status caption stays a typed RmlUi field instead of reconstructed
+        // markup on every project-state change.
+        let data_model = rml.create_data_model(ctx, "panel_shell")?;
+        self.project_status_caption =
+            Some(data_model.bind("project_status_caption", String::new())?);
+        self.notification_rows = Some(data_model.bind_notification_rows("notifications")?);
+
         let (doc, ok) = rml.context_create_document(ctx, "body")?;
         if !ok {
+            self.project_status_caption = None;
+            self.notification_rows = None;
             return Ok(false);
         }
         rml.document_set_title(doc, "SpringBoard")?;
@@ -134,60 +161,33 @@ impl PanelView {
             rml.element_set_inner_rml(modal, &registered_markup())?;
         }
 
-        self.build_tab_bar(interface)?;
-        self.build_action_bar(interface)?;
-        self.build_editor_buttons(interface)?;
+        self.tab_bar
+            .render(interface, doc, self.current_tab, &self.events)?;
+        self.action_bar.bind(interface, doc, &self.events)?;
+        self.render_editor_buttons(interface)?;
         Ok(true)
     }
 
-    /// Rebuild the editor button strip for the current tab.
-    pub(crate) fn build_editor_buttons(
-        &mut self,
-        interface: &NativeInterfaceRef,
-    ) -> Result<(), Error> {
+    pub(crate) fn project_status_caption(&self) -> Option<&RmlDataVariable<'static, String>> {
+        self.project_status_caption.as_ref()
+    }
+
+    pub(crate) fn notification_rows(&self) -> Option<&RmlDataNotificationRows<'static>> {
+        self.notification_rows.as_ref()
+    }
+
+    /// Synchronize the current tab's registered editor controls.
+    fn render_editor_buttons(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         let Some(doc) = self.document else {
             return Ok(());
         };
-        let Some(panel) = element_by_id(interface, doc, "editor-button-panel") else {
-            return Ok(());
-        };
-
-        let specs = editors_for(self.current_tab);
-        let mut html = String::new();
-        for spec in &specs {
-            let pressed = if Some(spec.name) == self.active_editor {
-                " pressed"
-            } else {
-                ""
-            };
-            html.push_str(&format!(
-                r#"<button id="editor-{name}" class="editor-button{pressed}" title="{tooltip}">"#,
-                name = spec.name,
-                tooltip = escape_rml(spec.tooltip),
-            ));
-            html.push_str(&format!(r#"<img src="{}"/>"#, spec.image));
-            html.push_str(&format!(
-                r#"<div class="editor-button-label">{}</div></button>"#,
-                escape_rml(spec.caption),
-            ));
-        }
-        interface.rml_ui().element_set_inner_rml(panel, &html)?;
-
-        for spec in specs {
-            let id = format!("editor-{}", spec.name);
-            let Some(button) = element_by_id(interface, doc, &id) else {
-                continue;
-            };
-            bind_tooltip(interface, doc, button, spec.tooltip)?;
-            let queue = self.events.clone();
-            let name = spec.name;
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::Editor(name));
-                })?;
-        }
-        Ok(())
+        self.editor_buttons.render(
+            interface,
+            doc,
+            self.current_tab,
+            self.active_editor,
+            &self.events,
+        )
     }
 
     /// Switch tab: restyle the tab buttons, rebuild the strip, clear content.
@@ -206,15 +206,9 @@ impl PanelView {
         self.current_tab = tab;
         self.active_editor = None;
 
-        for candidate in Tab::all() {
-            let id = format!("tab-{}", candidate.as_str());
-            if let Some(button) = element_by_id(interface, doc, &id) {
-                let _ = interface
-                    .rml_ui()
-                    .element_set_class(button, "active", candidate == tab);
-            }
-        }
-        self.build_editor_buttons(interface)?;
+        self.tab_bar
+            .render(interface, doc, self.current_tab, &self.events)?;
+        self.render_editor_buttons(interface)?;
         self.clear_content(interface)
     }
 
@@ -224,7 +218,7 @@ impl PanelView {
         name: Option<&'static str>,
     ) -> Result<(), Error> {
         self.active_editor = name;
-        self.build_editor_buttons(interface)
+        self.render_editor_buttons(interface)
     }
 
     pub(crate) fn clear_content(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
@@ -268,6 +262,8 @@ impl PanelView {
         }
         self.root = None;
         self.content = None;
+        self.project_status_caption = None;
+        self.notification_rows = None;
     }
 
     pub(crate) fn contains(&self, interface: &NativeInterfaceRef, x: i32, y: i32) -> bool {
@@ -330,85 +326,12 @@ impl PanelView {
         self.document = None;
         self.root = None;
         self.content = None;
+        self.project_status_caption = None;
+        self.notification_rows = None;
+        self.action_bar.forget();
+        self.editor_buttons.forget();
+        self.tab_bar.forget();
         self.events.borrow_mut().clear();
     }
 
-    /// The toolbar of project/clipboard actions (New/Load/Import/Save/…). Icon
-    /// buttons, whose clicks queue an `ActionClicked` handled by the manager.
-    fn build_action_bar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(bar) = element_by_id(interface, doc, "action-bar") else {
-            return Ok(());
-        };
-
-        let mut html = String::new();
-        for action in Action::TOOLBAR {
-            html.push_str(&format!(
-                r#"<button id="action-{idx}" class="action-button" title="{tip}">"#,
-                idx = action as usize,
-                tip = escape_rml(action.tooltip()),
-            ));
-            if let Some(icon) = action.icon() {
-                html.push_str(&format!(r#"<img src="{icon}"/>"#));
-            }
-            html.push_str("</button>");
-        }
-        interface.rml_ui().element_set_inner_rml(bar, &html)?;
-
-        for action in Action::TOOLBAR {
-            let id = format!("action-{}", action as usize);
-            let Some(button) = element_by_id(interface, doc, &id) else {
-                continue;
-            };
-            bind_tooltip(interface, doc, button, action.tooltip())?;
-            let queue = self.events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::Action(action));
-                })?;
-        }
-        Ok(())
-    }
-
-    // ── Shell chrome ───────────────────────────────────────────────
-
-    fn build_tab_bar(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        let Some(bar) = element_by_id(interface, doc, "tab-bar") else {
-            return Ok(());
-        };
-
-        let mut html = String::new();
-        for tab in Tab::all() {
-            let active = if tab == self.current_tab {
-                " active"
-            } else {
-                ""
-            };
-            html.push_str(&format!(
-                r#"<button id="tab-{name}" class="tab-button{active}">{name}</button>"#,
-                name = tab.as_str(),
-            ));
-        }
-        interface.rml_ui().element_set_inner_rml(bar, &html)?;
-
-        for tab in Tab::all() {
-            let id = format!("tab-{}", tab.as_str());
-            let Some(button) = element_by_id(interface, doc, &id) else {
-                continue;
-            };
-            let queue = self.events.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::Tab(tab));
-                })?;
-        }
-        Ok(())
-    }
 }

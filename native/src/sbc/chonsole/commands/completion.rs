@@ -11,6 +11,7 @@ pub struct ConsoleCommand {
     pub requires_cheat: bool,
 }
 
+#[derive(Default)]
 pub(super) struct CompletionCatalog {
     commands: Vec<ConsoleCommand>,
     local_commands: Vec<ConsoleCommand>,
@@ -22,23 +23,6 @@ pub(super) struct CompletionCatalog {
     unit_defs: Vec<(String, String)>,
     config_params: Vec<(String, String)>,
     players: Vec<String>,
-}
-
-impl Default for CompletionCatalog {
-    fn default() -> Self {
-        Self {
-            commands: Vec::new(),
-            local_commands: Vec::new(),
-            textures: Vec::new(),
-            game_rules: Vec::new(),
-            team_rules: BTreeMap::new(),
-            unit_rules: Vec::new(),
-            teams: Vec::new(),
-            unit_defs: Vec::new(),
-            config_params: Vec::new(),
-            players: Vec::new(),
-        }
-    }
 }
 
 impl CompletionCatalog {

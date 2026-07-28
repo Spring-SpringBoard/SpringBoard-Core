@@ -1,0 +1,3 @@
+<button data-model="panel_action_bar" data-for="action : actions" class="action-button" data-attr-title="action.tooltip">
+    <img data-attr-src="action.icon"/>
+</button>

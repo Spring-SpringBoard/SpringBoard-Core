@@ -46,6 +46,12 @@
     border: 1dp #555555;
 }
 
+/* The shared `.hidden` rule is earlier in the assembled stylesheet, so this
+   component-specific selector must win over the progress track's display. */
+.notification-progress.hidden {
+    display: none;
+}
+
 .notification-progress-fill {
     display: block;
     height: 100%;

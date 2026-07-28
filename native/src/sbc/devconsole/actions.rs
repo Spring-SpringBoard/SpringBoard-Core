@@ -48,21 +48,6 @@ impl Action {
         }
     }
 
-    pub(crate) fn caption(self) -> &'static str {
-        match self {
-            Action::Clear => "Clear",
-            Action::FilterProblems => "Problems",
-            Action::Restart => "Restart",
-            Action::ReloadLuaUi => "LuaUI Reload",
-            Action::ReloadLuaRules => "LuaRules Reload",
-            Action::ToggleCheating => "Cheating",
-            Action::ToggleGlobalLos => "Global LOS",
-            Action::ToggleGodMode => "GodMode",
-            Action::TogglePopupOnError => "Popup on error",
-            Action::ToggleVisibility => "Hide (F8)",
-        }
-    }
-
     /// Toggles render pressed when their state is on.
     pub(crate) fn is_toggle(self) -> bool {
         !matches!(

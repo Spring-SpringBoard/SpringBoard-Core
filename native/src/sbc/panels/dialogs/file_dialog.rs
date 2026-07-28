@@ -36,6 +36,7 @@ enum FileField {
     FileType,
 }
 
+
 use FileField::*;
 
 pub(crate) struct FileDialog {
@@ -348,6 +349,7 @@ impl Modal for FileDialog {
         self.pending_accept = None;
         self.events.borrow_mut().clear();
         self.grid.drain_clicks();
+        self.grid.forget_bindings();
     }
 
     fn is_open(&self) -> bool {

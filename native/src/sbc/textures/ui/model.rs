@@ -9,47 +9,16 @@ use serde::{Deserialize, Serialize};
 use crate::sbc::panels::brush::{non_empty, BrushAction, BrushActions};
 use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::FieldValue;
-use crate::sbc::panels::fields::{BooleanField, ChoiceField, ColorField, NumericField};
-use crate::sbc::panels::runtime::{
-    AssetGrid, AssetGridDef, Brush, EditorModel, FieldMut, FieldRef, TableEntry, TableModel,
-};
+use crate::sbc::panels::runtime::{AssetGrid, EditorModel, TableModel};
 use crate::sbc::project::{EditorState, TextureEditorState};
 use crate::sbc::rml::escape_rml;
 use crate::sbc::states::BrushSettings;
 use crate::sbc::textures::materials::{Material, CHANNELS};
 
-/// Blend modes, in the order `texture_editor.lua` lists them.
-const MODES: &[&str] = &[
-    "Normal",
-    "Darken",
-    "Lighten",
-    "SoftLight",
-    "HardLight",
-    "Luminance",
-    "Multiply",
-    "Premultiplied",
-    "Overlay",
-    "Screen",
-    "Add",
-    "Subtract",
-    "Difference",
-    "InverseDifference",
-    "Exclusion",
-    "Color",
-    "ColorBurn",
-    "ColorDodge",
-];
+mod editor_model;
+mod field_table;
 
-const KERNELS: &[&str] = &[
-    "blur",
-    "bottom_sobel",
-    "emboss",
-    "left_sobel",
-    "outline",
-    "right_sobel",
-    "sharpen",
-    "top sobel",
-];
+use field_table::{pattern, texture_table};
 
 pub(super) const ACTIONS: &[BrushAction] = &[
     BrushAction {
@@ -157,186 +126,6 @@ pub(crate) enum TexField {
 
 use TexField::*;
 
-static PATTERN: AssetGridDef = AssetGridDef {
-    name: "patternTexture",
-    container: "texture-pattern-grid",
-    root: "brush_patterns/terrain/",
-    extensions: &["png", "jpg", "tga", "dds", "bmp"],
-    cell: 64,
-    brush: Some(Brush::Pattern),
-};
-
-fn items(values: &[&str]) -> Vec<String> {
-    values.iter().map(|v| v.to_string()).collect()
-}
-
-fn texture_table() -> TableModel<TexField> {
-    let mut entries = vec![
-        TableEntry {
-            id: Size,
-            field: Box::new(
-                NumericField::new("size", "Size", 100.0)
-                    .min(1.0)
-                    .max(5000.0),
-            ),
-            brush: Some(Brush::Size),
-        },
-        TableEntry {
-            id: Rotation,
-            field: Box::new(
-                NumericField::new("rotation", "Rotation", 0.0)
-                    .min(-360.0)
-                    .max(360.0),
-            ),
-            brush: Some(Brush::Rotation),
-        },
-        TableEntry::new(
-            TexScale,
-            Box::new(
-                NumericField::new("texScale", "Scale", 2.0)
-                    .min(0.01)
-                    .step(0.05)
-                    .decimals(2),
-            ),
-        ),
-        TableEntry::new(
-            TexRotation,
-            Box::new(
-                NumericField::new("texRotation", "Tex rotation", 0.0)
-                    .min(-360.0)
-                    .max(360.0),
-            ),
-        ),
-        TableEntry::new(
-            TexOffsetX,
-            Box::new(
-                NumericField::new("texOffsetX", "X", 0.0)
-                    .min(-1.0)
-                    .max(1.0)
-                    .step(0.001)
-                    .decimals(3),
-            ),
-        ),
-        TableEntry::new(
-            TexOffsetY,
-            Box::new(
-                NumericField::new("texOffsetY", "Y", 0.0)
-                    .min(-1.0)
-                    .max(1.0)
-                    .step(0.001)
-                    .decimals(3),
-            ),
-        ),
-        TableEntry::new(
-            Mode,
-            Box::new(ChoiceField::new("mode", "Mode", items(MODES))),
-        ),
-        TableEntry::new(
-            KernelMode,
-            Box::new(ChoiceField::new("kernelMode", "Filter", items(KERNELS))),
-        ),
-        TableEntry::new(
-            Strength,
-            Box::new(
-                NumericField::new("strength", "Strength", 1.0)
-                    .min(0.0)
-                    .max(1.0)
-                    .step(0.05)
-                    .decimals(2),
-            ),
-        ),
-        TableEntry::new(
-            FalloffFactor,
-            Box::new(
-                NumericField::new("falloffFactor", "Falloff", 0.3)
-                    .min(0.0)
-                    .max(1.0)
-                    .step(0.05)
-                    .decimals(2),
-            ),
-        ),
-        TableEntry::new(
-            FeatureFactor,
-            Box::new(
-                NumericField::new("featureFactor", "Feature", 1.0)
-                    .min(0.0)
-                    .max(1.0)
-                    .step(0.05)
-                    .decimals(2),
-            ),
-        ),
-        TableEntry::new(
-            Value,
-            Box::new(
-                NumericField::new("value", "Value", 1.0)
-                    .min(0.0)
-                    .max(1.0)
-                    .step(0.05)
-                    .decimals(2),
-            ),
-        ),
-        TableEntry::new(
-            VoidFactor,
-            Box::new(
-                NumericField::new("voidFactor", "Transparency", 1.0)
-                    .min(0.0)
-                    .max(1.0)
-                    .step(0.05)
-                    .decimals(2),
-            ),
-        ),
-        TableEntry::new(
-            SplatTexScale,
-            Box::new(
-                NumericField::new("splatTexScale", "Scale", 1.0)
-                    .step(0.000_001)
-                    .decimals(6),
-            ),
-        ),
-        TableEntry::new(
-            SplatTexMult,
-            Box::new(
-                NumericField::new("splatTexMult", "Mult", 0.5)
-                    .step(0.01)
-                    .decimals(2),
-            ),
-        ),
-        TableEntry::new(
-            DntsIndex,
-            Box::new(
-                NumericField::new("dntsIndex", "DNTS", 0.0)
-                    .min(0.0)
-                    .max((DNTS_COUNT - 1) as f32)
-                    .decimals(0),
-            ),
-        ),
-        TableEntry::new(
-            Exclusive,
-            Box::new(BooleanField::new("exclusive", "Exclusive", false)),
-        ),
-        TableEntry::new(
-            DiffuseColor,
-            Box::new(ColorField::new("diffuseColor", "Color")),
-        ),
-    ];
-    for (channel, title, toggle) in CHANNELS {
-        if !toggle {
-            continue;
-        }
-        let id = match *channel {
-            "diffuse" => DiffuseEnabled,
-            "specular" => SpecularEnabled,
-            "emission" => EmissionEnabled,
-            _ => ReflEnabled,
-        };
-        entries.push(TableEntry::new(
-            id,
-            Box::new(BooleanField::new(&enabled_name(channel), title, true)),
-        ));
-    }
-    TableModel::new(entries)
-}
-
 /// The texture brush: a pattern, a material, and how it is blended in.
 pub(crate) struct TextureUiModel {
     pub(super) table: TableModel<TexField>,
@@ -363,7 +152,7 @@ impl TextureUiModel {
         TextureUiModel {
             table: texture_table(),
             actions: BrushActions::new(ACTIONS),
-            pattern: AssetGrid::of(&PATTERN),
+            pattern: AssetGrid::of(pattern()),
             saved_brush_grid: GridView::new("texture-saved-brush-grid", 64),
             material_grid: GridView::new("texture-material-grid", 64),
             materials: Vec::new(),
@@ -636,44 +425,6 @@ impl TextureUiModel {
         for entry in self.table.fields() {
             let _ = entry.field.write_to_dom(interface);
         }
-    }
-}
-
-impl EditorModel for TextureUiModel {
-    type Id = TexField;
-
-    fn fields(&self) -> Vec<FieldRef<'_>> {
-        let mut fields = self.table.fields();
-        fields.push(self.pattern.entry());
-        fields
-    }
-
-    fn fields_mut(&mut self) -> Vec<FieldMut<'_>> {
-        let mut fields = self.table.fields_mut();
-        fields.push(self.pattern.entry_mut());
-        fields
-    }
-
-    fn grids(&self) -> Vec<&AssetGrid> {
-        vec![&self.pattern]
-    }
-
-    fn grids_mut(&mut self) -> Vec<&mut AssetGrid> {
-        vec![&mut self.pattern]
-    }
-
-    fn id_of(&self, name: &str) -> Option<TexField> {
-        if name == "patternTexture" {
-            return Some(Pattern);
-        }
-        self.table.id_of(name)
-    }
-
-    fn name_of(&self, id: TexField) -> String {
-        if id == Pattern {
-            return "patternTexture".to_string();
-        }
-        self.table.name_of(id)
     }
 }
 

@@ -1,6 +1,7 @@
 mod behavior;
 mod layout;
 mod model;
+mod position;
 
 use crate::sbc::panels::registry::{EditorSpec, Tab};
 use crate::sbc::panels::runtime::Runtime;

@@ -1,0 +1,98 @@
+/* Asset-picker-specific presentation layered over the shared grid. */
+.asset-dialog {
+    width: 480px;
+}
+
+.asset-path-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.asset-path-nav .dialog-button {
+    width: 50px;
+    min-width: 50px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.asset-path {
+    color: #a8b0c0;
+    font-size: 12px;
+}
+
+.grid-container {
+    /* A flex item's `height` can be overridden by the container; the grid must
+       keep its box even when empty. */
+    min-height: 260px;
+    height: 260px;
+    border: 1px #555555;
+    border-radius: 3px;
+    background-color: #1a1a1a;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    padding: 5px;
+    gap: 5px;
+}
+
+/* Cells grow to share out the slack in their row, so the grid has no dead
+   column on the right. `flex-basis` comes from the item's inline style. */
+.grid-item {
+    background-color: #2a2a2a;
+    border: 1px #555555;
+    border-radius: 3px;
+    display: block;
+    flex-grow: 1;
+    flex-shrink: 0;
+    padding: 0px;
+    overflow: hidden;
+}
+
+/* Soaks up the slack on a short last row (see `FILLERS`). */
+.grid-filler {
+    flex-grow: 1;
+    flex-shrink: 0;
+    height: 0px;
+}
+
+.grid-item:hover {
+    background-color: #3a3a3a;
+    border-color: #777777;
+}
+
+.grid-item.selected {
+    border-color: #3a7ebf;
+    background-color: #24313d;
+}
+
+.grid-item.folder {
+    background-color: #23291f;
+}
+
+.grid-item-image {
+    display: block;
+    width: 100%;
+}
+
+/* `texture` as well as `img`: an RTT thumbnail is a <texture>, and without a
+   size it renders at its intrinsic resolution (128px), which crops it to one
+   quadrant of a smaller cell -- the model then looks half-missing and shoved
+   into a corner. The size itself is inline (square, in px); this centres it in
+   a cell that has grown wider than the image. */
+.grid-item-image img,
+.grid-item-image texture {
+    display: block;
+    margin: 0px auto;
+}
+
+.grid-item-label {
+    display: block;
+    font-size: 10px;
+    color: #cccccc;
+    text-align: center;
+    overflow: hidden;
+}

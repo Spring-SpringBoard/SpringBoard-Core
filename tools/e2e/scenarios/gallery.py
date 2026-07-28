@@ -129,7 +129,10 @@ def gallery(run_state: "RunState") -> None:
     run_state.key("ctrl+a", delay=Delay.INPUT)
     run_state.type_text("discarded")
     run_state.key("Escape", delay=Delay.SETTLE)
-    run_state.golden("string-escape-reverted")
+    # This frame still contains the earlier relative-dragged numeric field;
+    # its last digit varies by input-packet timing, while the value assertion
+    # below owns the Escape semantics.
+    run_state.golden("string-escape-reverted", tolerance=DRAGGED_DIGIT)
 
     values = _values(run_state)
     expected = {

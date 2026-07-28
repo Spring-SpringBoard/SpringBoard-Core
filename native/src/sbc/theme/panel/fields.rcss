@@ -306,71 +306,11 @@
     background-color: #377987;
 }
 
-/* Grid Container - for asset/material browsers */
-.grid-container {
-    border: 1px #555555;
-    border-radius: 3px;
-    background-color: #1a1a1a;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    padding: 5px;
-    gap: 5px;
-}
-
-.grid-container.hidden {
-    display: none;
-}
-
-/* Brush pattern pickers are followed immediately by brush parameters. Give
-   that transition a consistent visual break without adding empty space to
-   file/material grids elsewhere in the editor. */
-#terrain-pattern-grid-picker,
-#texture-pattern-grid-picker,
-#metal-pattern-grid-picker,
-#grass-pattern-grid-picker {
-    margin-bottom: 12dp;
-}
-
-/* Grid Item. Width/height come from the renderer (itemWidth/itemHeight) as
-   inline styles; the cell itself is image box + label in normal flow. */
-.grid-item {
-    border: 1px #444444;
-    border-radius: 2px;
-    cursor: pointer;
-    background-color: #2a2a2a;
-    overflow: hidden;
-}
-
-.grid-item:hover {
-    border-color: #777777;
-}
-
-/* Colour only: changing border-width on selection resizes the cell and
-   reflows/shifts the whole grid. */
-.grid-item.selected {
-    border-color: #3a7ebf;
-}
-
 /* RCSS has no !important, and `.hidden` (one class) ties with the rules above
    that set `display` (e.g. .field-composite-button { display: flex }), which
    then win by declaration order. These compound selectors raise specificity so
    hiding actually hides -- notably the numeric field's button, which otherwise
    stays visible next to its edit box. */
-.field-composite-button.hidden,
-.field-numeric-button.hidden,
-.field-numeric-input.hidden,
-.field-string-button.hidden,
-.field-string-input.hidden,
-.field-section.hidden,
-.field-inline.hidden,
-.field-group.hidden,
-.field-input.hidden {
-    display: none;
-}
-
 /* Icon-only field button (remove-rule etc.) */
 .field-icon-button img {
     width: 16px;

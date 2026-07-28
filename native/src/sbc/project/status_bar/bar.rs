@@ -12,17 +12,18 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataVariable,
+};
 
 use super::upload::UploadLogCommand;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::notifications::NotificationManager;
 use crate::sbc::project::ProjectManager;
-use crate::sbc::rml::{element_by_id, escape_rml};
+use crate::sbc::rml::element_by_id;
 
-const ROOT_ID: &str = "project-status-root";
-const LABEL_ID: &str = "project-status-label";
 const OPEN_ID: &str = "project-status-open";
 
 /// A second Upload Log click within this window confirms the (public) upload.
@@ -76,19 +77,18 @@ impl ProjectStatusBar {
         &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
+        caption_field: Option<&RmlDataVariable<'static, String>>,
         models: &mut Models,
     ) -> Result<(), Error> {
         if !self.bound {
-            self.build(interface, document)?;
+            self.bind(interface, document)?;
             self.bound = true;
         }
         let has_project = models.get::<ProjectManager>().path().is_some();
         let caption = caption(models);
         if self.last_caption.as_deref() != Some(caption.as_str()) {
-            if let Some(label) = element_by_id(interface, document, LABEL_ID) {
-                interface
-                    .rml_ui()
-                    .element_set_inner_rml(label, &escape_rml(&caption))?;
+            if let Some(caption_field) = caption_field {
+                caption_field.set(caption.clone())?;
             }
             if let Some(open) = element_by_id(interface, document, OPEN_ID) {
                 interface
@@ -149,25 +149,7 @@ impl ProjectStatusBar {
         commands
     }
 
-    fn build(&self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
-        let Some(root) = element_by_id(interface, document, ROOT_ID) else {
-            return Ok(());
-        };
-        let mut html = format!(r#"<div class="project-status-label" id="{LABEL_ID}"></div>"#);
-        html.push_str(r#"<div class="project-status-buttons">"#);
-        for (id, caption, _) in BUTTONS {
-            let danger = if id == "project-status-exit" {
-                " danger"
-            } else {
-                ""
-            };
-            html.push_str(&format!(
-                r#"<button id="{id}" class="project-status-btn{danger}">{caption}</button>"#
-            ));
-        }
-        html.push_str("</div>");
-        interface.rml_ui().element_set_inner_rml(root, &html)?;
-
+    fn bind(&self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
         for (id, _, action) in BUTTONS {
             let Some(button) = element_by_id(interface, document, id) else {
                 continue;

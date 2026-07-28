@@ -7,6 +7,7 @@ from PIL import Image
 
 from e2e.cli_e2e import _run_case
 from e2e.driver._input import InputMixin
+from e2e.driver._session import rml_diagnostics
 from e2e.driver.cases import RUST_FLAGS, Case
 from e2e.fixtures.golden import differing_pixels
 
@@ -34,6 +35,30 @@ def test_one_channel_blend_noise_is_ignored_but_visible_change_is_not() -> None:
 
         assert differing_pixels(expected, one_channel) == 0
         assert differing_pixels(expected, visible) == 1
+
+
+def test_live_status_strip_can_be_excluded_from_a_full_frame_comparison() -> None:
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        expected = root / "expected.png"
+        live_status = root / "live-status.png"
+        Image.new("RGBA", (2, 3), (10, 20, 30, 255)).save(expected)
+        image = Image.new("RGBA", (2, 3), (10, 20, 30, 255))
+        image.putpixel((1, 2), (50, 60, 70, 255))
+        image.save(live_status)
+
+        assert differing_pixels(expected, live_status) == 1
+        assert differing_pixels(expected, live_status, ignored_bottom=1) == 0
+
+
+def test_rml_diagnostics_select_only_rmlui_warnings_and_errors() -> None:
+    lines = [
+        "Warning: ordinary engine warning",
+        "Warning: [RmlUi] Could not find variable name 'types' in data model.",
+        "Error: [RmlUi] Data model name 'file_dialog' already exists.",
+        "Error: unrelated engine error",
+    ]
+    assert rml_diagnostics(lines) == lines[1:3]
 
 
 def test_failed_finalization_is_reported_without_stopping_the_case_loop(monkeypatch: pytest.MonkeyPatch) -> None:

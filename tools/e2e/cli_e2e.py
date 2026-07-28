@@ -26,11 +26,37 @@ def run(
     if not cases:
         raise typer.BadParameter(f"no cases match target={target!r}, tags={tags!r}")
     failures = sum(
-        _run_case(case, update_golden=update_golden, stage_golden=stage_golden, keep_open=keep_open)
-        for case in cases
+        _run_case(case, update_golden=update_golden, stage_golden=stage_golden, keep_open=keep_open) for case in cases
     )
     if failures:
         raise typer.Exit(1)
+
+
+@app.command("goldens-status")
+def goldens_status() -> None:
+    pending = 0
+    for case_dir in sorted(GOLDEN_ROOT.iterdir()):
+        if not case_dir.is_dir():
+            continue
+        review = load_review(case_dir.name)
+        shots = sorted(path.stem for path in case_dir.glob("*.png"))
+        approved = sum(shot in review and review[shot]["status"] == STATUS_APPROVED for shot in shots)
+        pending += len(shots) - approved
+        typer.echo(f"{case_dir.name:26} {approved}/{len(shots)} approved")
+        for shot in shots:
+            if shot not in review or review[shot]["status"] != STATUS_APPROVED:
+                typer.echo(f"    ai-reviewed  {shot}")
+    if pending:
+        typer.echo(f"\n{pending} image(s) awaiting approval.")
+
+
+@app.command("approve-goldens")
+def approve_goldens(
+    case: Annotated[str, typer.Argument(help="Golden case directory.")],
+    shots: Annotated[list[str] | None, typer.Argument(help="Optional screenshot names.")] = None,
+) -> None:
+    approved = approve_review(case, set(shots or ()))
+    typer.echo(f"approved {approved} image(s) for {case}")
 
 
 def _run_case(case: Case, *, update_golden: bool, stage_golden: bool, keep_open: bool) -> bool:
@@ -63,30 +89,3 @@ def _run_case(case: Case, *, update_golden: bool, stage_golden: bool, keep_open:
         typer.echo(f"ERROR: {case.name}: {scenario_error}", err=True)
         return True
     return False
-
-
-@app.command("goldens-status")
-def goldens_status() -> None:
-    pending = 0
-    for case_dir in sorted(GOLDEN_ROOT.iterdir()):
-        if not case_dir.is_dir():
-            continue
-        review = load_review(case_dir.name)
-        shots = sorted(path.stem for path in case_dir.glob("*.png"))
-        approved = sum(shot in review and review[shot]["status"] == STATUS_APPROVED for shot in shots)
-        pending += len(shots) - approved
-        typer.echo(f"{case_dir.name:26} {approved}/{len(shots)} approved")
-        for shot in shots:
-            if shot not in review or review[shot]["status"] != STATUS_APPROVED:
-                typer.echo(f"    ai-reviewed  {shot}")
-    if pending:
-        typer.echo(f"\n{pending} image(s) awaiting approval.")
-
-
-@app.command("approve-goldens")
-def approve_goldens(
-    case: Annotated[str, typer.Argument(help="Golden case directory.")],
-    shots: Annotated[list[str] | None, typer.Argument(help="Optional screenshot names.")] = None,
-) -> None:
-    approved = approve_review(case, set(shots or ()))
-    typer.echo(f"approved {approved} image(s) for {case}")
