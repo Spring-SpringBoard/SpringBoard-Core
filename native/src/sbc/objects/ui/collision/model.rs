@@ -1,6 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use spring_native::{RmlDataModel, RmlDataVariable};
+
 use crate::sbc::objects::ObjectKind;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::fields::{BooleanField, ChoiceField, NumericField};
@@ -67,8 +69,9 @@ pub(crate) struct CollisionModel {
     pub(super) selection_revision: u64,
     /// Engine-side testType; not user-editable, but must be preserved in writes.
     pub(super) test_type: i32,
-    pub(super) document: Option<u64>,
     pub(super) show_vol_clicked: Rc<RefCell<bool>>,
+    axis_visible: Option<RmlDataVariable<'static, bool>>,
+    sphere_scales_visible: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl CollisionModel {
@@ -171,8 +174,9 @@ impl CollisionModel {
             selected: None,
             selection_revision: u64::MAX,
             test_type: 1,
-            document: None,
             show_vol_clicked: Rc::new(RefCell::new(false)),
+            axis_visible: None,
+            sphere_scales_visible: None,
         }
     }
 
@@ -192,6 +196,17 @@ impl CollisionModel {
 
     pub(super) fn boolean(&self, id: ColField) -> bool {
         matches!(self.table.value(id), FieldValue::Bool(true))
+    }
+
+    pub(super) fn sync_visibility(&self) {
+        let Some(axis_visible) = &self.axis_visible else {
+            return;
+        };
+        let vtype = self.text(VType);
+        let _ = axis_visible.set(!matches!(vtype.as_str(), "Sphere" | "Box"));
+        if let Some(scales_visible) = &self.sphere_scales_visible {
+            let _ = scales_visible.set(vtype != "Sphere");
+        }
     }
 
     /// Sync linked scale fields when vType is Sphere or Cylinder, mirroring the
@@ -236,11 +251,29 @@ impl EditorModel for CollisionModel {
         self.table.fields_mut()
     }
 
+    fn prepare_data_model(
+        &mut self,
+        model: &RmlDataModel<'static>,
+    ) -> Result<(), spring_native::prelude::Error> {
+        self.axis_visible = Some(model.bind("collision_axis_visible", true)?);
+        self.sphere_scales_visible = Some(model.bind("collision_sphere_scales_visible", true)?);
+        self.sync_visibility();
+        Ok(())
+    }
+
     fn id_of(&self, name: &str) -> Option<ColField> {
         self.table.id_of(name)
     }
 
     fn name_of(&self, id: ColField) -> String {
         self.table.name_of(id)
+    }
+
+    fn field_visibility_binding(&self, id: ColField) -> Option<&'static str> {
+        match id {
+            Axis => Some("collision_axis_visible"),
+            ScaleY | ScaleZ => Some("collision_sphere_scales_visible"),
+            _ => None,
+        }
     }
 }

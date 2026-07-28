@@ -107,6 +107,14 @@
     color: #cfd6d0;
 }
 
+.tooltip-status-positive {
+    color: #63d483;
+}
+
+.tooltip-status-negative {
+    color: #ef6b6b;
+}
+
 /* --- Editor button strip --- */
 /* Its height includes padding, then Actions starts after a clear 10dp gap. */
 .editor-button-panel {

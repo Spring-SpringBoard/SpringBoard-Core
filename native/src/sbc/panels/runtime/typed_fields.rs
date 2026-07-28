@@ -11,6 +11,7 @@ use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::{Field, FieldValue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField};
 use crate::sbc::panels::runtime::contract::{Brush, FieldMut, FieldRef};
+use crate::sbc::panels::tooltip::PanelTooltip;
 
 // ── Number ─────────────────────────────────────────────────────────
 
@@ -319,6 +320,10 @@ impl AssetGrid {
     ) -> Result<(), Error> {
         self.grid.refresh_navigation(interface, document)?;
         self.render(interface, document)
+    }
+
+    pub(crate) fn set_tooltip_host(&mut self, tooltip: PanelTooltip) {
+        self.grid.set_tooltip_host(tooltip);
     }
 
     pub(crate) fn release_bindings(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {

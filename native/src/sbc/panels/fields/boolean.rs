@@ -1,7 +1,10 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel, RmlDataVariable,
+};
 
 use crate::sbc::panels::field::{
     element_by_id, escape_rml, ChangeQueue, CommitRequest, Field, FieldValue, InteractionQueue,
@@ -20,6 +23,7 @@ pub(crate) struct BooleanField {
     value: bool,
     element: Option<u64>,
     clicked: Rc<Cell<bool>>,
+    pressed_value: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl BooleanField {
@@ -31,6 +35,7 @@ impl BooleanField {
             tooltip: None,
             element: None,
             clicked: Rc::new(Cell::new(false)),
+            pressed_value: None,
         }
     }
 
@@ -45,6 +50,20 @@ impl BooleanField {
             escape_rml(self.title.trim_end_matches(':')),
         )
     }
+
+    fn pressed_binding_name(&self) -> String {
+        format!(
+            "field_{}_pressed",
+            self.name
+                .chars()
+                .map(|character| if character.is_ascii_alphanumeric() {
+                    character
+                } else {
+                    '_'
+                })
+                .collect::<String>(),
+        )
+    }
 }
 
 impl Field for BooleanField {
@@ -56,8 +75,12 @@ impl Field for BooleanField {
         self.tooltip.as_deref()
     }
 
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.pressed_value = Some(model.bind(&self.pressed_binding_name(), self.value)?);
+        Ok(())
+    }
+
     fn generate_rml(&self) -> String {
-        let pressed = if self.value { " pressed" } else { "" };
         // A two-column toggle has room for roughly 23 Poppins characters plus
         // its switch. Long object-property captions need their own row rather
         // than becoming an accidental two-line button.
@@ -69,11 +92,11 @@ impl Field for BooleanField {
         format!(
             concat!(
                 r#"<div class="field-row field-boolean{long}">"#,
-                r#"<button id="field-{n}" class="field-toggle theme-toggle theme-toggle--form{pressed}">{button}</button>"#,
+                r#"<button id="field-{n}" class="field-toggle theme-toggle theme-toggle--form" data-class-pressed="{pressed}">{button}</button>"#,
                 r#"</div>"#,
             ),
             n = self.name,
-            pressed = pressed,
+            pressed = self.pressed_binding_name(),
             button = self.button_rml(),
             long = long,
         )
@@ -113,13 +136,10 @@ impl Field for BooleanField {
         Ok(FieldValue::Bool(self.value))
     }
 
-    fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(e) = self.element else {
-            return Ok(());
-        };
-        interface
-            .rml_ui()
-            .element_set_class(e, "pressed", self.value)?;
+    fn write_to_dom(&self, _interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if let Some(pressed) = &self.pressed_value {
+            pressed.set(self.value)?;
+        }
         Ok(())
     }
 

@@ -1,7 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::NativeInterfaceRef;
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlColor, RmlDataModel, RmlDataSwatchRows, RmlSwatchRow,
+};
 
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::fields::{
@@ -59,6 +62,8 @@ pub(crate) struct TeamsModel {
     pub(super) roster_changed: bool,
     pub(super) fields_ready: bool,
     pub(super) clicks: Rc<RefCell<Vec<TeamClick>>>,
+    team_rows: Option<RmlDataSwatchRows<'static>>,
+    pub(super) team_dialog_open: Option<spring_native::RmlDataVariable<'static, bool>>,
 }
 
 impl TeamsModel {
@@ -70,6 +75,8 @@ impl TeamsModel {
             roster_changed: false,
             fields_ready: false,
             clicks: Rc::new(RefCell::new(Vec::new())),
+            team_rows: None,
+            team_dialog_open: None,
         }
     }
 
@@ -141,6 +148,28 @@ impl TeamsModel {
     pub(super) fn boolean(&self, id: TeamField) -> bool {
         matches!(self.table.value(id), FieldValue::Bool(true))
     }
+
+    pub(super) fn write_team_rows(&self) -> Result<(), Error> {
+        let Some(rows) = &self.team_rows else {
+            return Ok(());
+        };
+        rows.set(
+            &self
+                .teams
+                .iter()
+                .map(|team| RmlSwatchRow {
+                    label: format!("{} Team: {}", prefix(team), team.name),
+                    color: RmlColor {
+                        red: (team.color.r.clamp(0.0, 1.0) * 255.0).round() as u8,
+                        green: (team.color.g.clamp(0.0, 1.0) * 255.0).round() as u8,
+                        blue: (team.color.b.clamp(0.0, 1.0) * 255.0).round() as u8,
+                        alpha: u8::MAX,
+                    },
+                    actions_enabled: !extra_bool(team, "gaia"),
+                })
+                .collect::<Vec<_>>(),
+        )
+    }
 }
 
 impl EditorModel for TeamsModel {
@@ -152,6 +181,12 @@ impl EditorModel for TeamsModel {
 
     fn fields_mut(&mut self) -> Vec<FieldMut<'_>> {
         self.table.fields_mut()
+    }
+
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.team_rows = Some(model.bind_swatch_rows("teams")?);
+        self.team_dialog_open = Some(model.bind("team_dialog_open", false)?);
+        self.write_team_rows()
     }
 
     fn id_of(&self, name: &str) -> Option<TeamField> {

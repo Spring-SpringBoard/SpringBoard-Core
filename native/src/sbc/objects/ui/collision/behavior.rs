@@ -106,7 +106,7 @@ impl Behavior for CollisionBehavior {
     fn refresh(
         &mut self,
         model: &mut CollisionModel,
-        engine: &NativeInterfaceRef,
+        _engine: &NativeInterfaceRef,
         models: &mut Models,
     ) {
         model.selection_revision = models.get::<SelectionManager>().revision();
@@ -165,7 +165,7 @@ impl Behavior for CollisionBehavior {
             }
         }
 
-        model.apply_visibility(engine);
+        model.sync_visibility();
     }
 
     fn apply(
@@ -177,7 +177,7 @@ impl Behavior for CollisionBehavior {
         let Event::Changed(id, phase) = event;
 
         if id == VType && phase == Phase::Commit {
-            model.apply_visibility(engine);
+            model.sync_visibility();
         }
 
         model.sync_linked_scales(id);
@@ -206,7 +206,6 @@ impl Behavior for CollisionBehavior {
         _changes: &ChangeQueue,
         _interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        model.document = Some(document);
         if let Some(button) = element_by_id(interface, document, "collision-show-vol") {
             let flag = model.show_vol_clicked.clone();
             interface
@@ -215,7 +214,7 @@ impl Behavior for CollisionBehavior {
                     *flag.borrow_mut() = true;
                 })?;
         }
-        model.apply_visibility(interface);
+        model.sync_visibility();
         Ok(())
     }
 

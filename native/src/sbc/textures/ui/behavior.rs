@@ -45,6 +45,20 @@ impl Behavior for TextureBehavior {
             .collect();
     }
 
+    fn mount(
+        &mut self,
+        model: &mut TextureUiModel,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        if let Some(host) = element_by_id(interface, document, "texture-material-dialog") {
+            interface
+                .rml_ui()
+                .element_set_inner_rml(host, &model.material_dialog_rml())?;
+        }
+        Ok(())
+    }
+
     fn bind(
         &mut self,
         model: &mut TextureUiModel,
@@ -53,19 +67,10 @@ impl Behavior for TextureBehavior {
         _changes: &ChangeQueue,
         _interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        model.actions.set_enabled(
-            interface,
-            document,
-            "DNTS",
-            !model.dnts_available.is_empty(),
-        );
+        model
+            .actions
+            .set_enabled("DNTS", !model.dnts_available.is_empty());
         model.actions.bind(interface, document)?;
-        if let Some(host) = element_by_id(interface, document, "texture-material-modal") {
-            interface.rml_ui().element_set_inner_rml(
-                host,
-                &layout::material_dialog_markup(&model.material_grid),
-            )?;
-        }
         if let Some(cancel) = element_by_id(interface, document, "texture-material-cancel") {
             let events = model.material_picker_events.clone();
             interface
@@ -75,7 +80,7 @@ impl Behavior for TextureBehavior {
                 })?;
         }
         model.render_grids(interface, document)?;
-        model.apply_visibility(interface, document);
+        model.sync_visibility();
         Ok(())
     }
 
@@ -86,7 +91,7 @@ impl Behavior for TextureBehavior {
         document: u64,
     ) -> Outcome {
         let mode_before = model.paint_mode().to_string();
-        model.actions.tick(interface, document);
+        model.actions.tick();
         if model.paint_mode() != "paint" && model.material_picker_open {
             model.material_picker_open = false;
         }
@@ -95,10 +100,10 @@ impl Behavior for TextureBehavior {
                 let _ = entry.field.write_to_dom(interface);
             }
             let _ = model.render_grids(interface, document);
-            model.apply_visibility(interface, document);
+            model.sync_visibility();
         }
         if model.paint_mode() != mode_before {
-            model.apply_visibility(interface, document);
+            model.sync_visibility();
         }
         if !model.material_picker_open {
             model.update_selected_saved_brush();
@@ -113,10 +118,10 @@ impl Behavior for TextureBehavior {
     fn state_cleared(
         &mut self,
         model: &mut TextureUiModel,
-        interface: &NativeInterfaceRef,
-        document: u64,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
     ) {
-        model.actions.clear(interface, document);
+        model.actions.clear();
     }
 
     fn modal_open(&self, model: &TextureUiModel) -> bool {

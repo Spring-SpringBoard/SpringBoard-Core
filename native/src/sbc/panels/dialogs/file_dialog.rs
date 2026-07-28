@@ -23,6 +23,7 @@ use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, StringField};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
+use crate::sbc::panels::tooltip::PanelTooltip;
 
 inventory::submit! {
     crate::sbc::panels::modal::ModalRegistration {
@@ -48,6 +49,9 @@ pub(crate) struct FileDialog {
     bound: bool,
     title: Option<RmlDataVariable<'static, String>>,
     path: Option<RmlDataVariable<'static, String>>,
+    hidden: Option<RmlDataVariable<'static, bool>>,
+    show_name_input: Option<RmlDataVariable<'static, bool>>,
+    show_file_type: Option<RmlDataVariable<'static, bool>>,
     file_type_options: Option<RmlDataOptionRows<'static>>,
     /// The callback the open dialog runs against its accepted result, set by the
     /// toolbar action that opened it.
@@ -65,6 +69,9 @@ impl Default for FileDialog {
             bound: false,
             title: None,
             path: None,
+            hidden: None,
+            show_name_input: None,
+            show_file_type: None,
             file_type_options: None,
             pending_accept: None,
         }
@@ -78,25 +85,26 @@ impl FileDialog {
         document: u64,
         config: FileDialogConfig,
         on_accept: FileAcceptFn,
+        tooltip: PanelTooltip,
     ) -> Result<(), Error> {
+        self.grid.set_tooltip_host(tooltip);
         self.pending_accept = Some(on_accept);
         self.dir = config.root_dir.trim_end_matches('/').to_string();
         self.grid.set_selected(None);
 
-        let rml = interface.rml_ui();
         self.title
             .as_ref()
             .expect("file dialog title is bound before modal markup")
             .set(config.title.clone())?;
-        // Name input row.
-        if let Some(e) = element_by_id(interface, document, "row-fd-name") {
-            rml.element_set_class(e, "hidden", !config.show_name_input)?;
-        }
+        self.show_name_input
+            .as_ref()
+            .expect("file-dialog name visibility is bound before modal markup")
+            .set(config.show_name_input)?;
         self.form.set(Name, FieldValue::Text(String::new()));
-        // Type dropdown row.
-        if let Some(e) = element_by_id(interface, document, "row-fd-type") {
-            rml.element_set_class(e, "hidden", config.file_types.is_empty())?;
-        }
+        self.show_file_type
+            .as_ref()
+            .expect("file-dialog type visibility is bound before modal markup")
+            .set(!config.file_types.is_empty())?;
         self.write_file_type_options(&config.file_types)?;
         self.form.set(
             FileType,
@@ -106,16 +114,12 @@ impl FileDialog {
 
         self.config = Some(config);
         self.populate(interface, document)?;
-        self.set_visible(interface, document, true)
+        self.set_visible(true)
     }
 
-    pub(crate) fn close(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
+    pub(crate) fn close(&mut self) -> Result<(), Error> {
         self.config = None;
-        self.set_visible(interface, document, false)
+        self.set_visible(false)
     }
 
     /// Handle queued clicks and buttons; returns a result on OK.
@@ -171,14 +175,14 @@ impl FileDialog {
                     }
                 }
                 PickerEvent::Cancel => {
-                    self.close(interface, document)?;
+                    self.close()?;
                     return Ok(None);
                 }
                 PickerEvent::Accept => {
                     self.form.commit(Name, interface);
                     self.form.commit(FileType, interface);
                     let result = self.build_result(&config);
-                    self.close(interface, document)?;
+                    self.close()?;
                     return Ok(result);
                 }
             }
@@ -191,7 +195,7 @@ impl FileDialog {
     fn markup_rml(&self) -> String {
         format!(
             concat!(
-                r#"<div id="file-dialog" class="picker-backdrop hidden" data-model="file_dialog">"#,
+                r#"<div id="file-dialog" class="picker-backdrop" data-model="file_dialog" data-class-hidden="hidden">"#,
                 r#"<div class="dialog picker-dialog asset-dialog">"#,
                 r#"<div class="dialog-header"><span class="dialog-title">{{{{ title }}}}</span></div>"#,
                 r#"<div class="dialog-content">"#,
@@ -240,18 +244,11 @@ impl FileDialog {
         Ok(())
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "file-dialog") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
+    fn set_visible(&self, visible: bool) -> Result<(), Error> {
+        self.hidden
+            .as_ref()
+            .expect("file-dialog visibility is bound before modal markup")
+            .set(!visible)
     }
 
     fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
@@ -346,6 +343,9 @@ impl Modal for FileDialog {
             .create_data_model(context, "file_dialog")?;
         self.title = Some(data_model.bind("title", String::new())?);
         self.path = Some(data_model.bind("path", String::new())?);
+        self.hidden = Some(data_model.bind("hidden", true)?);
+        self.show_name_input = Some(data_model.bind("show_name_input", false)?);
+        self.show_file_type = Some(data_model.bind("show_file_type", false)?);
         self.file_type_options = Some(data_model.bind_option_rows("types")?);
         self.form.prepare_data_model(&data_model)?;
         self.grid.prepare_data_model(&data_model)?;
@@ -375,6 +375,9 @@ impl Modal for FileDialog {
         self.grid.forget_bindings();
         self.title = None;
         self.path = None;
+        self.hidden = None;
+        self.show_name_input = None;
+        self.show_file_type = None;
         self.file_type_options = None;
     }
 
@@ -384,13 +387,13 @@ impl Modal for FileDialog {
 
     fn cancel_if_open(
         &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
     ) -> Result<bool, Error> {
         if !self.is_open() {
             return Ok(false);
         }
-        self.close(interface, document)?;
+        self.close()?;
         self.pending_accept = None;
         Ok(true)
     }
@@ -435,8 +438,8 @@ fn file_form() -> DialogForm<FileField> {
             ),
         ],
         vec![
-            FormItem::IdentifiedField(Name),
-            FormItem::IdentifiedField(FileType),
+            FormItem::IdentifiedFieldWhen(Name, "show_name_input"),
+            FormItem::IdentifiedFieldWhen(FileType, "show_file_type"),
         ],
     )
 }

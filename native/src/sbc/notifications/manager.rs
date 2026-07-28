@@ -8,13 +8,9 @@
 use std::any::Any;
 use std::time::{Duration, Instant};
 
-use spring_native::{
-    prelude::{Error, NativeInterfaceRef},
-    RmlDataNotificationRows, RmlNotificationRow,
-};
+use spring_native::{prelude::Error, RmlDataNotificationRows, RmlNotificationRow};
 
 use crate::sbc::command_system::model::{Model, ModelFactory};
-use crate::sbc::rml::element_by_id;
 
 inventory::submit! { ModelFactory { make: |_iface| Box::new(NotificationManager::default()) } }
 
@@ -32,7 +28,6 @@ struct Notification {
 pub(crate) struct NotificationManager {
     items: Vec<Notification>,
     dirty: bool,
-    pending_style_sync: bool,
 }
 
 impl Model for NotificationManager {
@@ -108,53 +103,7 @@ impl NotificationManager {
             return Ok(());
         };
         let values = self.rows();
-        notification_rows.set(&values)?;
-        self.pending_style_sync = true;
-        Ok(())
-    }
-
-    /// Applies the two visual properties RmlUi cannot currently bind safely on
-    /// a shrinking `data-for` collection. Row structure and text remain fully
-    /// native-bound; this runs only after a changed collection was materialised.
-    pub(crate) fn sync_styles(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
-        if !self.pending_style_sync {
-            return Ok(());
-        }
-        let Some(root) = element_by_id(interface, document, "notifications-root") else {
-            return Ok(());
-        };
-        let rml = interface.rml_ui();
-        for (index, item) in self.items.iter().enumerate() {
-            let (row, exists) = rml.element_get_child(root, index as i32)?;
-            if !exists {
-                continue;
-            }
-            let (title, has_title) = rml.element_get_child(row, 0)?;
-            if has_title {
-                rml.element_set_class(title, "warning", item.warning)?;
-            }
-            let (progress, has_progress) = rml.element_get_child(row, 2)?;
-            if !has_progress {
-                continue;
-            }
-            rml.element_set_class(progress, "hidden", item.progress.is_none())?;
-            if let Some(value) = item.progress {
-                let (fill, has_fill) = rml.element_get_child(progress, 0)?;
-                if has_fill {
-                    rml.element_set_attribute(
-                        fill,
-                        "style",
-                        &format!("width: {}%;", (value * 100.0).round() as i32),
-                    )?;
-                }
-            }
-        }
-        self.pending_style_sync = false;
-        Ok(())
+        notification_rows.set(&values)
     }
 
     fn upsert(

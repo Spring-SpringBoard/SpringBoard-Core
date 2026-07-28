@@ -11,10 +11,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataIconRows, RmlDataModel, RmlIconRow,
+};
 
-use crate::sbc::panels::field::bind_tooltip;
-use crate::sbc::rml::{element_by_id, escape_rml};
+use crate::sbc::panels::tooltip::{PanelTooltip, TooltipContent};
+use crate::sbc::rml::element_by_id;
 use crate::sbc::states::{MapBrush, StateRequest};
 
 /// An unset asset field reads as an empty string, not as an absent value.
@@ -41,6 +44,10 @@ pub(crate) struct BrushActions {
     disabled_tooltips: Vec<Option<String>>,
     clicks: Rc<RefCell<Vec<usize>>>,
     request: Option<StateRequest>,
+    tooltip: Option<PanelTooltip>,
+    /// The action definitions are fixed for an editor, but their captions and
+    /// icons still cross into RmlUi as typed values rather than generated RML.
+    rows: Option<RmlDataIconRows<'static>>,
 }
 
 impl BrushActions {
@@ -52,24 +59,29 @@ impl BrushActions {
             disabled_tooltips: vec![None; actions.len()],
             clicks: Rc::new(RefCell::new(Vec::new())),
             request: None,
+            tooltip: None,
+            rows: None,
         }
     }
 
     pub(crate) fn generate_rml(&self) -> String {
-        let mut html = String::from(r#"<div class="brush-actions">"#);
-        for action in self.actions {
-            html.push_str(&format!(
-                r#"<button id="brush-action-{id}" class="brush-action">
-                    <img src="{image}" class="brush-action-icon"/>
-                    <span class="brush-action-label">{caption}</span>
-                </button>"#,
-                id = action.caption.to_lowercase().replace(' ', "-"),
-                image = action.image,
-                caption = escape_rml(action.caption),
-            ));
-        }
-        html.push_str("</div>");
-        html
+        r#"<div id="brush-actions" class="brush-actions">
+            <button data-for="action : brush_actions" data-if="action.visible" class="brush-action" data-class-pressed="action.pressed" data-class-disabled="action.disabled">
+                <img data-attr-src="action.icon" class="brush-action-icon"/>
+                <span class="brush-action-label">{{ action.label }}</span>
+            </button>
+        </div>"#
+            .to_owned()
+    }
+
+    pub(crate) fn prepare_data_model(
+        &mut self,
+        model: &RmlDataModel<'static>,
+    ) -> Result<(), Error> {
+        let rows = model.bind_icon_rows("brush_actions")?;
+        rows.set(&self.rows_for())?;
+        self.rows = Some(rows);
+        Ok(())
     }
 
     pub(crate) fn bind(
@@ -78,17 +90,16 @@ impl BrushActions {
         document: u64,
     ) -> Result<(), Error> {
         for (index, action) in self.actions.iter().enumerate() {
-            let id = format!(
-                "brush-action-{}",
-                action.caption.to_lowercase().replace(' ', "-")
-            );
-            let Some(button) = element_by_id(interface, document, &id) else {
+            let Some(button) = self.button(interface, document, index) else {
                 continue;
             };
             let tooltip = self.disabled_tooltips[index]
                 .as_deref()
                 .unwrap_or(action.caption);
-            bind_tooltip(interface, document, button, tooltip)?;
+            self.tooltip
+                .as_ref()
+                .expect("editor slot binds the panel tooltip before brush actions")
+                .bind_to(interface, button, TooltipContent::text(tooltip))?;
             let queue = self.clicks.clone();
             interface
                 .rml_ui()
@@ -99,9 +110,13 @@ impl BrushActions {
         Ok(())
     }
 
+    pub(crate) fn set_tooltip_host(&mut self, tooltip: PanelTooltip) {
+        self.tooltip = Some(tooltip);
+    }
+
     /// Handle queued clicks. Brush buttons choose a tool; clicking the current
     /// one leaves it selected, matching Chili's non-toggle action tabs.
-    pub(crate) fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) {
+    pub(crate) fn tick(&mut self) {
         for index in self.clicks.borrow_mut().drain(..) {
             let Some(action) = self.actions.get(index) else {
                 continue;
@@ -115,7 +130,7 @@ impl BrushActions {
                 action.paint_mode.to_string(),
             ));
         }
-        self.render(interface, document);
+        self.render();
     }
 
     pub(crate) fn take_request(&mut self) -> Option<StateRequest> {
@@ -124,10 +139,10 @@ impl BrushActions {
 
     /// Keep the visual toggle in sync when StateManager leaves the brush
     /// without going through this action strip (for example, Escape).
-    pub(crate) fn clear(&mut self, interface: &NativeInterfaceRef, document: u64) {
+    pub(crate) fn clear(&mut self) {
         self.active = None;
         self.request = None;
-        self.render(interface, document);
+        self.render();
     }
 
     /// The active action's paint mode, or none when no brush is active.
@@ -140,22 +155,14 @@ impl BrushActions {
     /// Grey out an action the map cannot support, as Lua disables the DNTS
     /// button on a map with no splat normals. A disabled action also ignores
     /// clicks, so it cannot enter a state that has nothing to paint.
-    pub(crate) fn set_enabled(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        caption: &str,
-        enabled: bool,
-    ) {
+    pub(crate) fn set_enabled(&mut self, caption: &str, enabled: bool) {
         let reason = (!enabled && caption == "DNTS")
             .then_some("DNTS unavailable: splat textures are not available on this map.");
-        self.set_enabled_with_reason(interface, document, caption, enabled, reason);
+        self.set_enabled_with_reason(caption, enabled, reason);
     }
 
     pub(crate) fn set_enabled_with_reason(
         &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
         caption: &str,
         enabled: bool,
         reason: Option<&str>,
@@ -173,27 +180,38 @@ impl BrushActions {
             self.disabled.push(index);
             self.disabled_tooltips[index] = reason.map(str::to_string);
         }
-        let id = format!("brush-action-{}", caption.to_lowercase().replace(' ', "-"));
-        if let Some(button) = element_by_id(interface, document, &id) {
-            let _ = interface
-                .rml_ui()
-                .element_set_class(button, "disabled", !enabled);
+        self.render();
+    }
+
+    fn render(&self) {
+        if let Some(rows) = &self.rows {
+            let _ = rows.set(&self.rows_for());
         }
     }
 
-    fn render(&self, interface: &NativeInterfaceRef, document: u64) {
-        for (index, action) in self.actions.iter().enumerate() {
-            let id = format!(
-                "brush-action-{}",
-                action.caption.to_lowercase().replace(' ', "-")
-            );
-            if let Some(button) = element_by_id(interface, document, &id) {
-                let _ = interface.rml_ui().element_set_class(
-                    button,
-                    "pressed",
-                    self.active == Some(index),
-                );
-            }
-        }
+    fn rows_for(&self) -> Vec<RmlIconRow> {
+        self.actions
+            .iter()
+            .enumerate()
+            .map(|(index, action)| RmlIconRow {
+                label: action.caption.to_owned(),
+                icon: action.image.to_owned(),
+                tooltip: action.caption.to_owned(),
+                pressed: self.active == Some(index),
+                disabled: self.disabled.contains(&index),
+            })
+            .collect()
+    }
+
+    /// Rows are materialised by the editor's one rebuild-time context update,
+    /// before action listeners bind. Indexing the fixed action definition list
+    /// keeps these implementation details out of generated ids and markup.
+    fn button(&self, interface: &NativeInterfaceRef, document: u64, index: usize) -> Option<u64> {
+        let host = element_by_id(interface, document, "brush-actions")?;
+        let (button, exists) = interface
+            .rml_ui()
+            .element_get_child(host, index as i32)
+            .ok()?;
+        exists.then_some(button)
     }
 }

@@ -2,7 +2,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataIconRows, RmlDataModel, RmlIconRow,
+};
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::objects::thumbnails::ThumbnailRenderer;
@@ -201,6 +204,8 @@ pub(crate) struct ObjectDefsModel {
     pub(super) needs_rebuild: bool,
     /// Renders each def's model into a texture for its grid cell.
     pub(super) thumbnails: ThumbnailRenderer,
+    /// Fixed placement-mode controls materialised through typed icon rows.
+    mode_actions: Option<RmlDataIconRows<'static>>,
 }
 
 impl ObjectDefsModel {
@@ -238,6 +243,7 @@ impl ObjectDefsModel {
             teams_revision: usize::MAX,
             needs_rebuild: false,
             thumbnails: ThumbnailRenderer::default(),
+            mode_actions: None,
         }
     }
 
@@ -330,6 +336,25 @@ impl ObjectDefsModel {
         self.grid.set_items(matches);
         self.grid.render(interface, document)
     }
+
+    fn mode_action_rows(&self) -> [RmlIconRow; 2] {
+        [
+            RmlIconRow {
+                label: "Add".to_owned(),
+                icon: "LuaUI/images/scenedit/object-set-add.png".to_owned(),
+                tooltip: "Add objects".to_owned(),
+                pressed: self.placing && self.mode == PlaceMode::Set,
+                disabled: false,
+            },
+            RmlIconRow {
+                label: "Brush".to_owned(),
+                icon: "LuaUI/images/scenedit/object-brush-add.png".to_owned(),
+                tooltip: "Brush objects".to_owned(),
+                pressed: self.placing && self.mode == PlaceMode::Brush,
+                disabled: false,
+            },
+        ]
+    }
 }
 
 impl EditorModel for ObjectDefsModel {
@@ -367,6 +392,13 @@ impl EditorModel for ObjectDefsModel {
         }
         fields.push(self.terrain_filter.entry_mut());
         fields
+    }
+
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        let rows = model.bind_icon_rows("objectdef_mode_actions")?;
+        rows.set(&self.mode_action_rows())?;
+        self.mode_actions = Some(rows);
+        Ok(())
     }
 
     fn id_of(&self, name: &str) -> Option<ObjectField> {

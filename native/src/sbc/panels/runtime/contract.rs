@@ -2,7 +2,10 @@
 //! (data), and a behavior (refresh + apply). The runtime adapter runs
 //! everything else.
 
-use spring_native::prelude::NativeInterfaceRef;
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel,
+};
 
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
@@ -79,13 +82,17 @@ pub(crate) enum Item<Id: 'static> {
     Actions,
     /// A field row with a stable `row-<name>` id, for runtime visibility.
     IdField(Id),
+    /// An identified field whose row is hidden unless the named boolean in the
+    /// surrounding data model is true.
+    IdFieldWhen(Id, &'static str),
     /// A side-by-side row of identified fields.
     IdRow(&'static [Id]),
     /// Runtime-built variants for models whose layout is discovered at
     /// runtime (Properties builds rows from the selected object).
     OwnedRow(Vec<Id>),
-    /// Runtime-built side-by-side fields with stable `row-<name>` ids.
-    OwnedIdRow(Vec<Id>),
+    /// A runtime-built identified row whose fields are hidden unless the named
+    /// boolean in the surrounding data model is true.
+    OwnedIdRowWhen(Vec<Id>, &'static str),
     OwnedSection(String),
     /// Markup for a custom widget the behavior binds and drives itself
     /// (`Behavior::bind` / `Behavior::tick`). Layout runs over the model, so
@@ -118,10 +125,23 @@ pub(crate) trait EditorModel {
         vec![]
     }
 
+    /// Model-specific display state that is not an editable field. Bound here
+    /// so the editor's complete model exists before its RML is parsed.
+    fn prepare_data_model(&mut self, _model: &RmlDataModel<'static>) -> Result<(), Error> {
+        Ok(())
+    }
+
     /// DOM field name → typed ID. Events reach the behavior typed. Takes
     /// `&self` so models with runtime-generated fields can map too.
     fn id_of(&self, name: &str) -> Option<Self::Id>;
     fn name_of(&self, id: Self::Id) -> String;
+
+    /// An optional boolean in the surrounding RmlUi model that controls this
+    /// field row's visibility. The runtime owns the row markup, so editors
+    /// declare only the state dependency instead of mutating DOM classes.
+    fn field_visibility_binding(&self, _id: Self::Id) -> Option<&'static str> {
+        None
+    }
 }
 
 /// The editor's domain half. Everything mechanical lives in the runtime.

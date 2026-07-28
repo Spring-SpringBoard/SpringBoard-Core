@@ -21,6 +21,7 @@ mod modal_stack;
 pub(crate) mod registry;
 pub(crate) mod runtime;
 mod tab_bar;
+pub(crate) mod tooltip;
 mod view;
 
 pub(crate) use editor::Editor;

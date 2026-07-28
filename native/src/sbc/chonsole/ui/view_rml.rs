@@ -3,13 +3,17 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlChoiceRow, RmlDataChoiceRows, RmlDataTextRows, RmlDataVariable, RmlTextRow,
+};
 
 use crate::sbc::rml::{self, element_by_id};
 
-use super::view_render::render_suggestion_details;
+use crate::sbc::chonsole::framework::{ChonsoleLine, ChonsoleLineKind, TextInput};
 const UI_CONTEXT: &str = "sbc_native_chonsole";
 const UI_BODY: &str = include_str!("ui.rml");
+const MODEL_NAME: &str = "chonsole";
 const UI_STYLE: &str = concat!(
     include_str!("../../theme/base.rcss"),
     include_str!("../../theme/scrollbars.rcss"),
@@ -28,7 +32,18 @@ pub(super) struct ChonsoleRml {
     root: Option<u64>,
     lines: Option<u64>,
     suggestions: Option<u64>,
-    suggestion_details: Option<u64>,
+    line_rows: Option<RmlDataTextRows<'static>>,
+    suggestion_rows: Option<RmlDataChoiceRows<'static>>,
+    suggestions_hidden: Option<RmlDataVariable<'static, bool>>,
+    detail_command: Option<RmlDataVariable<'static, String>>,
+    detail_text: Option<RmlDataVariable<'static, String>>,
+    input_before: Option<RmlDataVariable<'static, String>>,
+    input_selection: Option<RmlDataVariable<'static, String>>,
+    input_after: Option<RmlDataVariable<'static, String>>,
+    has_selection: Option<RmlDataVariable<'static, bool>>,
+    cursor_before_selection: Option<RmlDataVariable<'static, bool>>,
+    cursor_after_selection: Option<RmlDataVariable<'static, bool>>,
+    pending_lines_scroll: bool,
     pending_suggestion_scroll_top: Option<i32>,
     mouse_position: Option<(i32, i32)>,
     mouse_captured: bool,
@@ -43,7 +58,18 @@ impl Default for ChonsoleRml {
             root: None,
             lines: None,
             suggestions: None,
-            suggestion_details: None,
+            line_rows: None,
+            suggestion_rows: None,
+            suggestions_hidden: None,
+            detail_command: None,
+            detail_text: None,
+            input_before: None,
+            input_selection: None,
+            input_after: None,
+            has_selection: None,
+            cursor_before_selection: None,
+            cursor_after_selection: None,
+            pending_lines_scroll: false,
             pending_suggestion_scroll_top: None,
             mouse_position: None,
             mouse_captured: false,
@@ -82,6 +108,18 @@ impl ChonsoleRml {
         }
         let geometry = interface.display().get_view_geometry()?;
         let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
+        let data_model = rml.create_data_model(context, MODEL_NAME)?;
+        self.line_rows = Some(data_model.bind_text_rows("lines")?);
+        self.suggestion_rows = Some(data_model.bind_choice_rows("suggestions")?);
+        self.suggestions_hidden = Some(data_model.bind("suggestions_hidden", true)?);
+        self.detail_command = Some(data_model.bind("detail_command", String::new())?);
+        self.detail_text = Some(data_model.bind("detail_text", String::new())?);
+        self.input_before = Some(data_model.bind("input_before", String::new())?);
+        self.input_selection = Some(data_model.bind("input_selection", String::new())?);
+        self.input_after = Some(data_model.bind("input_after", String::new())?);
+        self.has_selection = Some(data_model.bind("has_selection", false)?);
+        self.cursor_before_selection = Some(data_model.bind("cursor_before_selection", false)?);
+        self.cursor_after_selection = Some(data_model.bind("cursor_after_selection", true)?);
         let (document, created) = rml.context_create_document(context, "body")?;
         if !created {
             return Ok(false);
@@ -95,8 +133,6 @@ impl ChonsoleRml {
         self.root = element_by_id(interface, document, "native-chonsole");
         self.lines = element_by_id(interface, document, "native-chonsole-lines");
         self.suggestions = element_by_id(interface, document, "native-chonsole-suggestions");
-        self.suggestion_details =
-            element_by_id(interface, document, "native-chonsole-suggestion-details");
         Ok(true)
     }
 
@@ -108,6 +144,12 @@ impl ChonsoleRml {
         let rml = interface.rml_ui();
         let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
         rml.context_update(context)?;
+        if self.pending_lines_scroll {
+            if let Some(lines) = self.lines {
+                let _ = rml.element_set_scroll_top(lines, 1_000_000);
+            }
+            self.pending_lines_scroll = false;
+        }
         if let (Some(suggestions), Some(scroll_top)) =
             (self.suggestions, self.pending_suggestion_scroll_top.take())
         {
@@ -166,27 +208,38 @@ impl ChonsoleRml {
 
     pub(super) fn refresh(
         &mut self,
-        interface: &NativeInterfaceRef,
-        body: &str,
+        input: &TextInput,
+        output: &[ChonsoleLine],
+        suggestions: &[RmlChoiceRow],
+        details: Option<(&str, &str)>,
         suggestion_scroll_top: Option<i32>,
     ) -> Result<(), Error> {
-        let Some(document) = self.document else {
+        if self.context.is_none() {
             return Ok(());
-        };
-        let rml = interface.rml_ui();
-        if let Some(root) = self.root {
-            rml.element_set_inner_rml(root, body)?;
-        } else {
-            rml.element_set_inner_rml(document, UI_BODY)?;
         }
-        self.root = element_by_id(interface, document, "native-chonsole");
-        self.lines = element_by_id(interface, document, "native-chonsole-lines");
-        self.suggestions = element_by_id(interface, document, "native-chonsole-suggestions");
-        self.suggestion_details =
-            element_by_id(interface, document, "native-chonsole-suggestion-details");
-        if let Some(lines) = self.lines {
-            let _ = rml.element_set_scroll_top(lines, 1_000_000);
-        }
+        let lines = output
+            .iter()
+            .map(|line| RmlTextRow {
+                text: line.text.clone(),
+                muted: line.kind == ChonsoleLineKind::Input,
+            })
+            .collect::<Vec<_>>();
+        self.line_rows
+            .as_ref()
+            .expect("chonsole line rows are bound before its markup")
+            .set(&lines)?;
+        self.suggestion_rows
+            .as_ref()
+            .expect("chonsole suggestion rows are bound before its markup")
+            .set(suggestions)?;
+        self.suggestions_hidden
+            .as_ref()
+            .expect("chonsole visibility is bound before its markup")
+            .set(suggestions.is_empty())?;
+        self.set_suggestion_details(details)?;
+        self.set_input_segments(input)?;
+
+        self.pending_lines_scroll = true;
         self.pending_suggestion_scroll_top = suggestion_scroll_top;
         Ok(())
     }
@@ -196,6 +249,12 @@ impl ChonsoleRml {
             .and_then(|suggestions| interface.rml_ui().element_get_scroll_top(suggestions).ok())
     }
 
+    /// Attach handlers to the current data-for rows after RmlUi has materialized
+    /// them. The model owns their contents; this view owns their native input.
+    ///
+    /// RmlUi replaces data-for rows as the collection changes, so these
+    /// handlers deliberately follow each refresh instead of relying on a
+    /// bubbling listener on the static container.
     pub(super) fn bind_suggestion_events(
         &self,
         interface: &NativeInterfaceRef,
@@ -203,83 +262,55 @@ impl ChonsoleRml {
         clicks: SuggestionClickQueue,
         hovers: SuggestionHoverQueue,
     ) -> Result<(), Error> {
-        let Some(document) = self.document else {
-            return Ok(());
-        };
         for index in 0..count {
-            let Some(suggestion) =
-                element_by_id(interface, document, &format!("suggestion-{index}"))
-            else {
-                continue;
+            let Some(suggestion) = self.suggestion_row(interface, index) else {
+                break;
             };
-            let clicks = clicks.clone();
+            let clicked = clicks.clone();
             interface.rml_ui().element_add_event_listener(
                 suggestion,
                 "click",
                 false,
-                move || {
-                    clicks.borrow_mut().push(index);
-                },
+                move || clicked.borrow_mut().push(index),
             )?;
             let hovers_over = hovers.clone();
             interface.rml_ui().element_add_event_listener(
                 suggestion,
                 "mouseover",
                 false,
-                move || {
-                    hovers_over.borrow_mut().push(Some(index));
-                },
+                move || hovers_over.borrow_mut().push(Some(index)),
             )?;
             let hovers_out = hovers.clone();
             interface.rml_ui().element_add_event_listener(
                 suggestion,
                 "mouseout",
                 false,
-                move || {
-                    hovers_out.borrow_mut().push(None);
-                },
+                move || hovers_out.borrow_mut().push(None),
             )?;
         }
         Ok(())
     }
 
-    pub(super) fn set_suggestion_hovered(
-        &self,
-        interface: &NativeInterfaceRef,
-        previous: Option<usize>,
-        current: Option<usize>,
-    ) {
-        let Some(document) = self.document else {
-            return;
-        };
-        let rml = interface.rml_ui();
-        if let Some(index) = previous {
-            if let Some(suggestion) =
-                element_by_id(interface, document, &format!("suggestion-{index}"))
-            {
-                let _ = rml.element_set_class(suggestion, "hovered-suggestion", false);
-            }
-        }
-        if let Some(index) = current {
-            if let Some(suggestion) =
-                element_by_id(interface, document, &format!("suggestion-{index}"))
-            {
-                let _ = rml.element_set_class(suggestion, "hovered-suggestion", true);
-            }
-        }
+    pub(super) fn set_suggestion_rows(&self, rows: &[RmlChoiceRow]) -> Result<(), Error> {
+        self.suggestion_rows
+            .as_ref()
+            .expect("chonsole suggestion rows are bound before its markup")
+            .set(rows)
     }
 
     pub(super) fn set_suggestion_details(
         &self,
-        interface: &NativeInterfaceRef,
         details: Option<(&str, &str)>,
-    ) {
-        let Some(element) = self.suggestion_details else {
-            return;
-        };
-        let _ = interface
-            .rml_ui()
-            .element_set_inner_rml(element, &render_suggestion_details(details));
+    ) -> Result<(), Error> {
+        let (command, text) = details.unwrap_or_default();
+        self.detail_command
+            .as_ref()
+            .expect("chonsole details are bound before its markup")
+            .set(command.to_string())?;
+        self.detail_text
+            .as_ref()
+            .expect("chonsole details are bound before its markup")
+            .set(text.to_string())
     }
 
     pub(super) fn process_key_up(
@@ -422,6 +453,58 @@ impl ChonsoleRml {
         Ok(true)
     }
 
+    fn set_input_segments(&self, input: &TextInput) -> Result<(), Error> {
+        let value = input.value();
+        let (before, selection, after, has_selection, cursor_before_selection) =
+            match input.selection_range() {
+                Some((start, end)) => (
+                    &value[..start],
+                    &value[start..end],
+                    &value[end..],
+                    true,
+                    input.cursor() == start,
+                ),
+                None => {
+                    let (before, after) = value.split_at(input.cursor());
+                    (before, "", after, false, false)
+                }
+            };
+        self.input_before
+            .as_ref()
+            .expect("chonsole input is bound before its markup")
+            .set(before.to_string())?;
+        self.input_selection
+            .as_ref()
+            .expect("chonsole input is bound before its markup")
+            .set(selection.to_string())?;
+        self.input_after
+            .as_ref()
+            .expect("chonsole input is bound before its markup")
+            .set(after.to_string())?;
+        self.has_selection
+            .as_ref()
+            .expect("chonsole input is bound before its markup")
+            .set(has_selection)?;
+        self.cursor_before_selection
+            .as_ref()
+            .expect("chonsole input is bound before its markup")
+            .set(cursor_before_selection)?;
+        self.cursor_after_selection
+            .as_ref()
+            .expect("chonsole input is bound before its markup")
+            .set(!cursor_before_selection)
+    }
+
+    fn suggestion_row(&self, interface: &NativeInterfaceRef, target: usize) -> Option<u64> {
+        let suggestions = self.suggestions?;
+        interface
+            .rml_ui()
+            .element_get_elements_by_class_name(suggestions, "suggestion")
+            .ok()?
+            .get(target)
+            .copied()
+    }
+
     fn contains(&self, interface: &NativeInterfaceRef, x: i32, y: i32) -> Result<bool, Error> {
         let root_contains = self.root.map_or(Ok(false), |root| {
             interface
@@ -449,7 +532,18 @@ impl ChonsoleRml {
         self.root = None;
         self.lines = None;
         self.suggestions = None;
-        self.suggestion_details = None;
+        self.line_rows = None;
+        self.suggestion_rows = None;
+        self.suggestions_hidden = None;
+        self.detail_command = None;
+        self.detail_text = None;
+        self.input_before = None;
+        self.input_selection = None;
+        self.input_after = None;
+        self.has_selection = None;
+        self.cursor_before_selection = None;
+        self.cursor_after_selection = None;
+        self.pending_lines_scroll = false;
         self.pending_suggestion_scroll_top = None;
         self.mouse_position = None;
         self.mouse_captured = false;

@@ -5,7 +5,7 @@ use crate::sbc::chonsole::framework::{
     ChonsoleLine, ChonsoleLineKind, ChonsoleResponse, TextInput,
 };
 
-use super::view_render::{draw_texture_preview, render_body};
+use super::view_render::draw_texture_preview;
 use super::view_rml::{ChonsoleRml, SuggestionClickQueue, SuggestionHoverQueue};
 use super::view_suggestions::SuggestionView;
 
@@ -28,6 +28,7 @@ pub(super) struct ChonsoleView {
     suggestion_hovers: SuggestionHoverQueue,
     hovered_suggestion: Option<usize>,
     reset_suggestion_scroll: bool,
+    suggestion_events_dirty: bool,
 }
 
 impl ChonsoleView {
@@ -48,7 +49,17 @@ impl ChonsoleView {
     }
 
     pub(super) fn update(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        self.rml.update(interface)
+        self.rml.update(interface)?;
+        if self.suggestion_events_dirty {
+            self.rml.bind_suggestion_events(
+                interface,
+                self.suggestions.len(),
+                self.suggestion_clicks.clone(),
+                self.suggestion_hovers.clone(),
+            )?;
+            self.suggestion_events_dirty = false;
+        }
+        Ok(())
     }
 
     pub(super) fn draw_screen(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
@@ -213,7 +224,7 @@ impl ChonsoleView {
         index.is_some_and(|index| self.suggestions.select(core, &mut self.input, index))
     }
 
-    pub(super) fn process_suggestion_hovers(&mut self, interface: &NativeInterfaceRef) {
+    pub(super) fn process_suggestion_hovers(&mut self) {
         let hovered = self.suggestion_hovers.borrow_mut().pop();
         self.suggestion_hovers.borrow_mut().clear();
         let Some(hovered) = hovered else {
@@ -222,11 +233,13 @@ impl ChonsoleView {
         if hovered == self.hovered_suggestion {
             return;
         }
-        self.rml
-            .set_suggestion_hovered(interface, self.hovered_suggestion, hovered);
         self.hovered_suggestion = hovered;
-        self.rml
-            .set_suggestion_details(interface, self.suggestions.detail(hovered));
+        let _ = self
+            .rml
+            .set_suggestion_rows(&self.suggestions.rml_rows(hovered));
+        let _ = self
+            .rml
+            .set_suggestion_details(self.suggestions.detail(hovered));
     }
 
     pub(super) fn refresh(
@@ -235,7 +248,7 @@ impl ChonsoleView {
         core: &ChonsoleCore,
     ) -> Result<(), Error> {
         self.refresh_suggestions(core);
-        let body = render_body(&self.input, &self.output, &self.suggestions);
+        let suggestion_rows = self.suggestions.rml_rows(None);
         let scroll_top = (!self.reset_suggestion_scroll)
             .then(|| self.rml.suggestion_scroll_top(interface))
             .flatten();
@@ -244,16 +257,18 @@ impl ChonsoleView {
             .selected_index()
             .map(|selected| reveal_suggestion_scroll_top(scroll_top.unwrap_or_default(), selected))
             .or(scroll_top);
-        self.rml.refresh(interface, &body, scroll_top)?;
+        self.rml.refresh(
+            &self.input,
+            &self.output,
+            &suggestion_rows,
+            self.suggestions.detail(None),
+            scroll_top,
+        )?;
         self.reset_suggestion_scroll = false;
         self.hovered_suggestion = None;
         self.suggestion_hovers.borrow_mut().clear();
-        self.rml.bind_suggestion_events(
-            interface,
-            self.suggestions.len(),
-            self.suggestion_clicks.clone(),
-            self.suggestion_hovers.clone(),
-        )
+        self.suggestion_events_dirty = true;
+        Ok(())
     }
 
     pub(super) fn process_key_up(

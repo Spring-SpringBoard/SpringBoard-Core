@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataOptionRows, RmlOptionRow,
+    RmlDataOptionRows, RmlDataVariable, RmlOptionRow,
 };
 
 use crate::sbc::actions::{available_maps, commit_new_project};
@@ -56,6 +56,8 @@ pub(crate) struct NewProjectDialog {
     form: DialogForm<NewProjectField>,
     bound: bool,
     map_options: Option<RmlDataOptionRows<'static>>,
+    hidden: Option<RmlDataVariable<'static, bool>>,
+    show_blank_size: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl Default for NewProjectDialog {
@@ -66,6 +68,8 @@ impl Default for NewProjectDialog {
             form: new_project_form(),
             bound: false,
             map_options: None,
+            hidden: None,
+            show_blank_size: None,
         }
     }
 }
@@ -74,7 +78,7 @@ impl NewProjectDialog {
     pub(crate) fn open(
         &mut self,
         interface: &NativeInterfaceRef,
-        document: u64,
+        _document: u64,
     ) -> Result<(), Error> {
         // Populate the map dropdown: the blank map first, then everything the VFS
         // has an archive for.
@@ -101,44 +105,41 @@ impl NewProjectDialog {
         self.form.set(SizeX, FieldValue::Number(10.0));
         self.form.set(SizeY, FieldValue::Number(10.0));
         self.form.write(interface)?;
+        self.show_blank_size
+            .as_ref()
+            .expect("new-project size visibility is bound before modal markup")
+            .set(true)?;
         self.open = true;
-        self.set_visible(interface, document, true)
+        self.set_visible(true)
     }
 
-    pub(crate) fn close(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
+    pub(crate) fn close(&mut self) -> Result<(), Error> {
         self.open = false;
-        self.set_visible(interface, document, false)
+        self.set_visible(false)
     }
 
     /// Drive the dialog. Returns the collected fields on OK.
     pub(crate) fn tick(
         &mut self,
         interface: &NativeInterfaceRef,
-        document: u64,
+        _document: u64,
     ) -> Result<Option<NewProjectResult>, Error> {
         if !self.open {
             self.events.borrow_mut().clear();
             return Ok(None);
         }
-        let rml = interface.rml_ui();
-
         // Show the size inputs only for the blank map.
         let map = text_value(self.form.value(Map));
-        for id in ["row-np-size-x", "row-np-size-y"] {
-            if let Some(e) = element_by_id(interface, document, id) {
-                rml.element_set_class(e, "hidden", map != BLANK_MAP)?;
-            }
-        }
+        self.show_blank_size
+            .as_ref()
+            .expect("new-project size visibility is bound before modal markup")
+            .set(map == BLANK_MAP)?;
 
         let event = self.events.borrow_mut().drain(..).next();
         if let Some(event) = event {
             match event {
                 PickerEvent::Cancel | PickerEvent::Up => {
-                    self.close(interface, document)?;
+                    self.close()?;
                     return Ok(None);
                 }
                 PickerEvent::Accept => {
@@ -159,7 +160,7 @@ impl NewProjectDialog {
                     } else {
                         (None, None)
                     };
-                    self.close(interface, document)?;
+                    self.close()?;
                     return Ok(Some(NewProjectResult {
                         name,
                         map_name: map,
@@ -176,7 +177,7 @@ impl NewProjectDialog {
         let fields = self.form.markup();
         format!(
             concat!(
-                r#"<div id="new-project" class="picker-backdrop hidden" data-model="new_project">"#,
+                r#"<div id="new-project" class="picker-backdrop" data-model="new_project" data-class-hidden="hidden">"#,
                 r#"<div class="dialog picker-dialog">"#,
                 r#"<div class="dialog-header"><span class="dialog-title">New project</span></div>"#,
                 r#"<div class="dialog-content">{fields}</div>"#,
@@ -217,18 +218,11 @@ impl NewProjectDialog {
         Ok(())
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "new-project") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
+    fn set_visible(&self, visible: bool) -> Result<(), Error> {
+        self.hidden
+            .as_ref()
+            .expect("new-project visibility is bound before modal markup")
+            .set(!visible)
     }
 }
 
@@ -242,6 +236,8 @@ impl Modal for NewProjectDialog {
             .rml_ui()
             .create_data_model(context, "new_project")?;
         self.map_options = Some(data_model.bind_option_rows("maps")?);
+        self.hidden = Some(data_model.bind("hidden", true)?);
+        self.show_blank_size = Some(data_model.bind("show_blank_size", false)?);
         self.form.prepare_data_model(&data_model)?;
         Ok(())
     }
@@ -265,6 +261,8 @@ impl Modal for NewProjectDialog {
         self.open = false;
         self.events.borrow_mut().clear();
         self.map_options = None;
+        self.hidden = None;
+        self.show_blank_size = None;
     }
 
     fn is_open(&self) -> bool {
@@ -273,13 +271,13 @@ impl Modal for NewProjectDialog {
 
     fn cancel_if_open(
         &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
     ) -> Result<bool, Error> {
         if !self.is_open() {
             return Ok(false);
         }
-        self.close(interface, document)?;
+        self.close()?;
         Ok(true)
     }
 
@@ -349,7 +347,7 @@ fn new_project_form() -> DialogForm<NewProjectField> {
         vec![
             FormItem::Field(Name),
             FormItem::Field(Map),
-            FormItem::IdentifiedRow(vec![SizeX, SizeY]),
+            FormItem::IdentifiedRowWhen(vec![SizeX, SizeY], "show_blank_size"),
         ],
     )
 }

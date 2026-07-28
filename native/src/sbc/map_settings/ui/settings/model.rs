@@ -6,6 +6,7 @@ use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
 use crate::sbc::panels::runtime::{EditorModel, FieldMut, FieldRef, TableEntry, TableModel};
+use spring_native::{prelude::Error, RmlDataModel, RmlDataStatusRows, RmlDataVariable};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SettingsField {
@@ -72,6 +73,12 @@ pub(crate) struct SettingsModel {
     pub(super) shading_enabled: BTreeMap<String, bool>,
     pub(super) dialog: Option<String>,
     pub(super) shading_source: Option<ShadingSource>,
+    pub(super) shading_statuses: Option<RmlDataStatusRows<'static>>,
+    pub(super) shading_dialog_title: Option<RmlDataVariable<'static, String>>,
+    pub(super) shading_dialog_open: Option<RmlDataVariable<'static, bool>>,
+    pub(super) shading_source_select_visible: Option<RmlDataVariable<'static, bool>>,
+    pub(super) shading_new_form_visible: Option<RmlDataVariable<'static, bool>>,
+    pub(super) shading_existing_grid_visible: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl SettingsModel {
@@ -141,6 +148,12 @@ impl SettingsModel {
             shading_enabled: BTreeMap::new(),
             dialog: None,
             shading_source: None,
+            shading_statuses: None,
+            shading_dialog_title: None,
+            shading_dialog_open: None,
+            shading_source_select_visible: None,
+            shading_new_form_visible: None,
+            shading_existing_grid_visible: None,
         }
     }
 
@@ -167,6 +180,18 @@ impl EditorModel for SettingsModel {
 
     fn fields_mut(&mut self) -> Vec<FieldMut<'_>> {
         self.table.fields_mut()
+    }
+
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.shading_statuses = Some(model.bind_status_rows("shading_statuses")?);
+        self.shading_dialog_title = Some(model.bind("shading_dialog_title", String::new())?);
+        self.shading_dialog_open = Some(model.bind("shading_dialog_open", false)?);
+        self.shading_source_select_visible =
+            Some(model.bind("shading_source_select_visible", false)?);
+        self.shading_new_form_visible = Some(model.bind("shading_new_form_visible", false)?);
+        self.shading_existing_grid_visible =
+            Some(model.bind("shading_existing_grid_visible", false)?);
+        Ok(())
     }
 
     fn id_of(&self, name: &str) -> Option<SettingsField> {

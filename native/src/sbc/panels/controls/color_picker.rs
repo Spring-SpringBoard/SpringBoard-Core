@@ -9,7 +9,10 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlColor, RmlDataVariable, RmlPixels,
+};
 
 use crate::sbc::panels::field::{element_by_id, FieldValue};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
@@ -21,9 +24,25 @@ inventory::submit! {
     }
 }
 
-const IMG_SV_WHITE: &str = "LuaUI/images/scenedit/color_picker/generated/sv_white.png";
-const IMG_SV_BLACK: &str = "LuaUI/images/scenedit/color_picker/generated/sv_black.png";
-const IMG_HUE: &str = "LuaUI/images/scenedit/color_picker/H_grad.png";
+const PICKER_MODEL: &str = "color_picker";
+const PICKER_RML: &str = concat!(
+    r#"<div id="color-picker" data-model="color_picker" class="picker-backdrop" data-class-hidden="hidden">"#,
+    r#"<div id="picker-dialog" class="picker-dialog">"#,
+    r#"<div class="dialog-header"><span class="dialog-title">Pick Color</span></div>"#,
+    r#"<div class="dialog-content"><div class="color-picker-main">"#,
+    r#"<div id="color-map" class="color-map" data-style-background-color="hue_colour">"#,
+    r#"<img class="color-map-white" src="LuaUI/images/scenedit/color_picker/generated/sv_white.png"/>"#,
+    r#"<img class="color-map-black" src="LuaUI/images/scenedit/color_picker/generated/sv_black.png"/>"#,
+    r#"<div id="color-map-cursor" class="color-map-cursor" data-style-left="map_cursor_x" data-style-top="map_cursor_y"></div></div>"#,
+    r#"<div id="hue-map" class="hue-map">"#,
+    r#"<img src="LuaUI/images/scenedit/color_picker/H_grad.png"/><div id="hue-cursor" class="hue-cursor" data-style-top="hue_cursor_y"></div></div>"#,
+    r#"<div class="color-side"><div class="color-preview" id="color-preview" data-style-background-color="preview_colour"></div></div>"#,
+    r#"</div></div>"#,
+    r#"<div class="dialog-footer">"#,
+    r#"<button id="picker-ok" class="dialog-button primary">OK</button>"#,
+    r#"<button id="picker-cancel" class="dialog-button">Cancel</button>"#,
+    r#"</div></div></div>"#,
+);
 
 /// What the user grabbed, if anything.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -55,6 +74,12 @@ pub(crate) struct ColorPicker {
     bound: bool,
     events: PickerQueue,
     grab_queue: Rc<RefCell<Vec<Grab>>>,
+    hue_colour: Option<RmlDataVariable<'static, RmlColor>>,
+    preview_colour: Option<RmlDataVariable<'static, RmlColor>>,
+    map_cursor_x: Option<RmlDataVariable<'static, RmlPixels>>,
+    map_cursor_y: Option<RmlDataVariable<'static, RmlPixels>>,
+    hue_cursor_y: Option<RmlDataVariable<'static, RmlPixels>>,
+    hidden: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl Default for ColorPicker {
@@ -69,6 +94,12 @@ impl Default for ColorPicker {
             bound: false,
             events: Rc::new(RefCell::new(Vec::new())),
             grab_queue: Rc::new(RefCell::new(Vec::new())),
+            hue_colour: None,
+            preview_colour: None,
+            map_cursor_x: None,
+            map_cursor_y: None,
+            hue_cursor_y: None,
+            hidden: None,
         }
     }
 }
@@ -105,20 +136,16 @@ impl ColorPicker {
         self.original = rgba;
         self.previewing = false;
         self.grab = Grab::None;
-        self.set_visible(interface, document, true)?;
+        self.set_visible(true)?;
         self.sync(interface, document);
         Ok(())
     }
 
-    pub(crate) fn close(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
+    pub(crate) fn close(&mut self) -> Result<(), Error> {
         self.field = None;
         self.grab = Grab::None;
         self.previewing = false;
-        self.set_visible(interface, document, false)
+        self.set_visible(false)
     }
 
     /// Drain OK/Cancel clicks.
@@ -182,32 +209,6 @@ impl ColorPicker {
         true
     }
 
-    fn markup_rml() -> String {
-        format!(
-            concat!(
-                r#"<div id="color-picker" class="picker-backdrop hidden">"#,
-                r#"<div id="picker-dialog" class="picker-dialog">"#,
-                r#"<div class="dialog-header"><span class="dialog-title">Pick Color</span></div>"#,
-                r#"<div class="dialog-content"><div class="color-picker-main">"#,
-                r#"<div id="color-map" class="color-map">"#,
-                r#"<img class="color-map-white" src="{white}"/>"#,
-                r#"<img class="color-map-black" src="{black}"/>"#,
-                r#"<div id="color-map-cursor" class="color-map-cursor"></div></div>"#,
-                r#"<div id="hue-map" class="hue-map">"#,
-                r#"<img src="{hue}"/><div id="hue-cursor" class="hue-cursor"></div></div>"#,
-                r#"<div class="color-side"><div class="color-preview" id="color-preview"></div></div>"#,
-                r#"</div></div>"#,
-                r#"<div class="dialog-footer">"#,
-                r#"<button id="picker-ok" class="dialog-button primary">OK</button>"#,
-                r#"<button id="picker-cancel" class="dialog-button">Cancel</button>"#,
-                r#"</div></div></div>"#,
-            ),
-            white = IMG_SV_WHITE,
-            black = IMG_SV_BLACK,
-            hue = IMG_HUE,
-        )
-    }
-
     /// Bind the picker's listeners once; the markup is created with the shell.
     fn bind_listeners(
         &mut self,
@@ -253,70 +254,63 @@ impl ColorPicker {
         Ok(())
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "color-picker") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
+    fn set_visible(&self, visible: bool) -> Result<(), Error> {
+        self.hidden
+            .as_ref()
+            .expect("color-picker visibility is bound before modal markup")
+            .set(!visible)
     }
 
-    /// Push the current colour into the DOM: hue backdrop, cursors, preview.
+    /// Push the current colour into the typed model. RmlUi receives native
+    /// colours and pixel lengths, never generated CSS attributes.
     fn sync(&self, interface: &NativeInterfaceRef, document: u64) {
         let rml = interface.rml_ui();
 
         // The saturation/value square is tinted by the pure hue behind it.
         let pure = hsv_to_rgb([self.hsv[0], 1.0, 1.0]);
+        set_colour(&self.hue_colour, pure, 1.0);
+        set_colour(&self.preview_colour, hsv_to_rgb(self.hsv), self.alpha);
         if let Some(e) = element_by_id(interface, document, "color-map") {
-            let _ =
-                rml.element_set_attribute(e, "style", &format!("background-color: {};", css(pure)));
             if let Ok((_, _, w, h)) = rml.element_get_rect(e) {
-                if let Some(cursor) = element_by_id(interface, document, "color-map-cursor") {
-                    let _ = rml.element_set_attribute(
-                        cursor,
-                        "style",
-                        &format!(
-                            "left: {}px; top: {}px;",
-                            (self.hsv[1] * w) as i32,
-                            ((1.0 - self.hsv[2]) * h) as i32
-                        ),
-                    );
-                }
+                set_pixels(&self.map_cursor_x, self.hsv[1] * w);
+                set_pixels(&self.map_cursor_y, (1.0 - self.hsv[2]) * h);
             }
         }
 
         if let Some(e) = element_by_id(interface, document, "hue-map") {
             if let Ok((_, _, _, h)) = rml.element_get_rect(e) {
-                if let Some(cursor) = element_by_id(interface, document, "hue-cursor") {
-                    let _ = rml.element_set_attribute(
-                        cursor,
-                        "style",
-                        &format!("top: {}px;", (self.hsv[0] * h) as i32),
-                    );
-                }
+                set_pixels(&self.hue_cursor_y, self.hsv[0] * h);
             }
-        }
-
-        if let Some(e) = element_by_id(interface, document, "color-preview") {
-            let [r, g, b] = hsv_to_rgb(self.hsv);
-            let _ = rml.element_set_attribute(
-                e,
-                "style",
-                &format!("background-color: {};", css([r, g, b])),
-            );
         }
     }
 }
 
 impl Modal for ColorPicker {
+    fn prepare_data_model(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        context: u64,
+    ) -> Result<(), Error> {
+        let model = interface
+            .rml_ui()
+            .create_data_model(context, PICKER_MODEL)?;
+        let transparent = RmlColor {
+            red: 0,
+            green: 0,
+            blue: 0,
+            alpha: 0,
+        };
+        self.hue_colour = Some(model.bind("hue_colour", transparent)?);
+        self.preview_colour = Some(model.bind("preview_colour", transparent)?);
+        self.map_cursor_x = Some(model.bind("map_cursor_x", RmlPixels(0.0))?);
+        self.map_cursor_y = Some(model.bind("map_cursor_y", RmlPixels(0.0))?);
+        self.hue_cursor_y = Some(model.bind("hue_cursor_y", RmlPixels(0.0))?);
+        self.hidden = Some(model.bind("hidden", true)?);
+        Ok(())
+    }
+
     fn markup(&self) -> String {
-        Self::markup_rml()
+        PICKER_RML.to_owned()
     }
 
     fn bind(
@@ -336,6 +330,12 @@ impl Modal for ColorPicker {
         self.previewing = false;
         self.events.borrow_mut().clear();
         self.grab_queue.borrow_mut().clear();
+        self.hue_colour = None;
+        self.preview_colour = None;
+        self.map_cursor_x = None;
+        self.map_cursor_y = None;
+        self.hue_cursor_y = None;
+        self.hidden = None;
     }
 
     fn is_open(&self) -> bool {
@@ -344,13 +344,13 @@ impl Modal for ColorPicker {
 
     fn cancel_if_open(
         &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
     ) -> Result<bool, Error> {
         if !self.is_open() {
             return Ok(false);
         }
-        self.close(interface, document)?;
+        self.close()?;
         Ok(true)
     }
 
@@ -395,7 +395,7 @@ impl Modal for ColorPicker {
                     preview: false,
                 });
             }
-            self.close(interface, document)?;
+            self.close()?;
         }
         Ok(events)
     }
@@ -405,13 +405,21 @@ impl Modal for ColorPicker {
     }
 }
 
-fn css(rgb: [f32; 3]) -> String {
-    format!(
-        "#{:02x}{:02x}{:02x}",
-        (rgb[0] * 255.0).clamp(0.0, 255.0) as u8,
-        (rgb[1] * 255.0).clamp(0.0, 255.0) as u8,
-        (rgb[2] * 255.0).clamp(0.0, 255.0) as u8,
-    )
+fn set_colour(binding: &Option<RmlDataVariable<'static, RmlColor>>, rgb: [f32; 3], alpha: f32) {
+    if let Some(binding) = binding {
+        let _ = binding.set(RmlColor {
+            red: (rgb[0].clamp(0.0, 1.0) * 255.0).round() as u8,
+            green: (rgb[1].clamp(0.0, 1.0) * 255.0).round() as u8,
+            blue: (rgb[2].clamp(0.0, 1.0) * 255.0).round() as u8,
+            alpha: (alpha.clamp(0.0, 1.0) * 255.0).round() as u8,
+        });
+    }
+}
+
+fn set_pixels(binding: &Option<RmlDataVariable<'static, RmlPixels>>, value: f32) {
+    if let Some(binding) = binding {
+        let _ = binding.set(RmlPixels(value.max(0.0)));
+    }
 }
 
 fn hsv_to_rgb(hsv: [f32; 3]) -> [f32; 3] {

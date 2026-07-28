@@ -68,10 +68,7 @@ impl AssetField {
     }
 
     fn display_markup(&self) -> String {
-        self.display_value
-            .as_ref()
-            .map(|_| format!("{{{{ {} }}}}", self.binding_name()))
-            .unwrap_or_else(|| escape_rml(&self.display_text()))
+        format!("{{{{ {} }}}}", self.binding_name())
     }
 
     fn sync_display_value(&self) -> Result<(), Error> {
@@ -124,9 +121,7 @@ impl Field for AssetField {
     }
 
     fn write_to_dom(&self, _interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if self.element.is_some() {
-            self.sync_display_value()?;
-        }
+        self.sync_display_value()?;
         Ok(())
     }
 

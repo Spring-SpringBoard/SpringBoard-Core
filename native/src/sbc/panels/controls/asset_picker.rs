@@ -15,6 +15,7 @@ use spring_native::{
 use crate::sbc::panels::controls::grid::{list_asset_tree, parent_dir, GridView};
 use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
+use crate::sbc::panels::tooltip::PanelTooltip;
 
 inventory::submit! {
     crate::sbc::panels::modal::ModalRegistration {
@@ -40,6 +41,8 @@ pub(crate) struct AssetPicker {
     events: Rc<RefCell<Vec<PickerEvent>>>,
     bound: bool,
     path: Option<RmlDataVariable<'static, String>>,
+    hidden: Option<RmlDataVariable<'static, bool>>,
+    up_disabled: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl Default for AssetPicker {
@@ -53,6 +56,8 @@ impl Default for AssetPicker {
             events: Rc::new(RefCell::new(Vec::new())),
             bound: false,
             path: None,
+            hidden: None,
+            up_disabled: None,
         }
     }
 }
@@ -69,7 +74,9 @@ impl AssetPicker {
         field: &str,
         root: &str,
         extensions: &[&str],
+        tooltip: PanelTooltip,
     ) -> Result<(), Error> {
+        self.grid.set_tooltip_host(tooltip);
         self.field = Some(field.to_string());
         // `root` is the field's directory *within* an asset pack
         // (`brush_textures/`), not a place on disk — except a `vfs:` root,
@@ -85,16 +92,12 @@ impl AssetPicker {
         self.extensions = extensions.iter().map(|e| e.to_string()).collect();
         self.grid.set_selected(None);
         self.populate(interface, document)?;
-        self.set_visible(interface, document, true)
+        self.set_visible(true)
     }
 
-    pub(crate) fn close(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
+    pub(crate) fn close(&mut self) -> Result<(), Error> {
         self.field = None;
-        self.set_visible(interface, document, false)
+        self.set_visible(false)
     }
 
     /// Handle queued clicks and buttons. Returns the accepted asset path.
@@ -136,12 +139,12 @@ impl AssetPicker {
                     }
                 }
                 PickerEvent::Cancel => {
-                    self.close(interface, document)?;
+                    self.close()?;
                     return Ok(None);
                 }
                 PickerEvent::Accept => {
                     let picked = self.grid.selected().map(str::to_string);
-                    self.close(interface, document)?;
+                    self.close()?;
                     return Ok(picked);
                 }
             }
@@ -152,12 +155,12 @@ impl AssetPicker {
     fn markup_rml(&self) -> String {
         format!(
             concat!(
-                r#"<div id="asset-picker" class="picker-backdrop hidden" data-model="asset_picker">"#,
+                r#"<div id="asset-picker" class="picker-backdrop" data-model="asset_picker" data-class-hidden="hidden">"#,
                 r#"<div class="dialog picker-dialog asset-dialog">"#,
                 r#"<div class="dialog-header"><span class="dialog-title">Pick Asset</span></div>"#,
                 r#"<div class="dialog-content">"#,
                 r#"<div class="asset-path-nav">"#,
-                r#"<button id="asset-up" class="dialog-button">Up</button>"#,
+                r#"<button id="asset-up" class="dialog-button" data-class-disabled="up_disabled">Up</button>"#,
                 r#"<span class="asset-path">{{{{ path }}}}</span></div>"#,
                 r#"{grid}"#,
                 r#"</div>"#,
@@ -196,18 +199,11 @@ impl AssetPicker {
         Ok(())
     }
 
-    fn set_visible(
-        &self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-        visible: bool,
-    ) -> Result<(), Error> {
-        if let Some(e) = element_by_id(interface, document, "asset-picker") {
-            interface
-                .rml_ui()
-                .element_set_class(e, "hidden", !visible)?;
-        }
-        Ok(())
+    fn set_visible(&self, visible: bool) -> Result<(), Error> {
+        self.hidden
+            .as_ref()
+            .expect("asset-picker visibility is bound before modal markup")
+            .set(!visible)
     }
 
     fn populate(&mut self, interface: &NativeInterfaceRef, document: u64) -> Result<(), Error> {
@@ -223,12 +219,11 @@ impl AssetPicker {
             .as_ref()
             .expect("asset-picker path is bound before modal markup")
             .set(self.dir.clone())?;
-        if let Some(up) = element_by_id(interface, document, "asset-up") {
-            // The top of the tree is the pack list; there is nothing above it.
-            interface
-                .rml_ui()
-                .element_set_class(up, "disabled", self.dir.is_empty())?;
-        }
+        // The top of the tree is the pack list; there is nothing above it.
+        self.up_disabled
+            .as_ref()
+            .expect("asset-picker navigation is bound before modal markup")
+            .set(self.dir.is_empty())?;
         Ok(())
     }
 }
@@ -243,6 +238,8 @@ impl Modal for AssetPicker {
             .rml_ui()
             .create_data_model(context, "asset_picker")?;
         self.path = Some(data_model.bind("path", String::new())?);
+        self.hidden = Some(data_model.bind("hidden", true)?);
+        self.up_disabled = Some(data_model.bind("up_disabled", true)?);
         self.grid.prepare_data_model(&data_model)?;
         Ok(())
     }
@@ -268,6 +265,8 @@ impl Modal for AssetPicker {
         self.grid.drain_clicks();
         self.grid.forget_bindings();
         self.path = None;
+        self.hidden = None;
+        self.up_disabled = None;
     }
 
     fn is_open(&self) -> bool {
@@ -276,13 +275,13 @@ impl Modal for AssetPicker {
 
     fn cancel_if_open(
         &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
     ) -> Result<bool, Error> {
         if !self.is_open() {
             return Ok(false);
         }
-        self.close(interface, document)?;
+        self.close()?;
         Ok(true)
     }
 

@@ -7,6 +7,7 @@ use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 
 use crate::sbc::panels::field::{ChangeQueue, FieldSpec, FieldValue, InteractionQueue};
+use crate::sbc::panels::tooltip::PanelTooltip;
 use crate::sbc::project::EditorState;
 use crate::sbc::states::{BrushSettings, StateRequest};
 
@@ -47,6 +48,10 @@ pub(crate) trait Editor {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error>;
+
+    /// Give an editor the panel-owned tooltip surface before it materializes
+    /// dynamic controls. Editors that do not render panel controls ignore it.
+    fn set_tooltip_host(&mut self, _tooltip: PanelTooltip) {}
 
     /// Push all current field values to the DOM.
     fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error>;

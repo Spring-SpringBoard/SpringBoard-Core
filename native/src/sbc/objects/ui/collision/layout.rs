@@ -1,7 +1,6 @@
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::panels::runtime::{EditorModel, Item};
-use crate::sbc::rml::element_by_id;
 
 use super::model::ColField::*;
 use super::model::{ColField, CollisionModel};
@@ -41,28 +40,6 @@ pub(super) fn layout(model: &CollisionModel) -> Vec<Item<ColField>> {
 }
 
 impl CollisionModel {
-    /// Toggle the `hidden` class on scale Y/Z and axis wrappers, matching the
-    /// Lua `SetInvisibleFields` calls. Called after bind, after refresh, and
-    /// when the user changes vType.
-    pub(super) fn apply_visibility(&self, interface: &NativeInterfaceRef) {
-        let Some(doc) = self.document else {
-            return;
-        };
-        let vtype = self.text(VType);
-        let hide_axis = matches!(vtype.as_str(), "Sphere" | "Box");
-        let hide_scale_yz = vtype == "Sphere";
-
-        for (name, hide) in [
-            ("scaleY", hide_scale_yz),
-            ("scaleZ", hide_scale_yz),
-            ("axis", hide_axis),
-        ] {
-            if let Some(elem) = element_by_id(interface, doc, &format!("row-{name}")) {
-                let _ = interface.rml_ui().element_set_class(elem, "hidden", hide);
-            }
-        }
-    }
-
     pub(super) fn write_values(&self, interface: &NativeInterfaceRef) {
         for entry in self.table.fields() {
             let _ = entry.field.write_to_dom(interface);

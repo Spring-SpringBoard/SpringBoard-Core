@@ -248,8 +248,13 @@ impl EditorSlot {
             content,
             &format!(r#"<div data-model="{EDITOR_FIELDS_MODEL}">{body}</div>"#),
         )?;
+        // `data-for` rows materialise during the context update. Do that once
+        // at rebuild time so an editor can attach listeners to its typed rows
+        // without falling back to generated IDs or markup.
+        rml.context_update(context)?;
 
         if let Some(ed) = self.editor.as_mut() {
+            ed.set_tooltip_host(view.tooltip().expect("panel tooltip is bound").clone());
             ed.bind_fields(interface, document, input.changes(), input.interactions())?;
         }
         self.write_field_values(interface);

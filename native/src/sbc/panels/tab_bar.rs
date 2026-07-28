@@ -2,7 +2,7 @@
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataTextRows, RmlTextRow,
+    RmlChoiceRow, RmlDataChoiceRows,
 };
 
 use super::{
@@ -19,9 +19,10 @@ const TEMPLATE: &str = include_str!("tab_bar.rml");
 /// was enabled before the registry first initialized.
 #[derive(Default)]
 pub(crate) struct TabBar {
-    rows: Option<RmlDataTextRows<'static>>,
+    rows: Option<RmlDataChoiceRows<'static>>,
     document: Option<u64>,
     tabs: Vec<Tab>,
+    current: Option<Tab>,
 }
 
 impl TabBar {
@@ -29,6 +30,7 @@ impl TabBar {
         self.rows = None;
         self.document = None;
         self.tabs.clear();
+        self.current = None;
     }
 
     pub(crate) fn render(
@@ -50,18 +52,10 @@ impl TabBar {
         if self.document != Some(document) {
             self.forget();
             let model = rml.create_data_model(context, MODEL_NAME)?;
-            let rows = model.bind_text_rows("tabs")?;
+            let rows = model.bind_choice_rows("tabs")?;
             self.tabs = Tab::all();
-            let tab_rows = self
-                .tabs
-                .iter()
-                .map(|tab| RmlTextRow {
-                    text: tab.as_str().to_owned(),
-                    muted: false,
-                })
-                .collect::<Vec<_>>();
             rml.element_set_inner_rml(host, TEMPLATE)?;
-            rows.set(&tab_rows)?;
+            rows.set(&self.rows_for(current))?;
             rml.context_update(context)?;
             for (index, tab) in self.tabs.iter().copied().enumerate() {
                 let (button, exists) = rml.element_get_child(host, index as i32)?;
@@ -75,14 +69,28 @@ impl TabBar {
             }
             self.rows = Some(rows);
             self.document = Some(document);
+            self.current = Some(current);
         }
 
-        for (index, tab) in self.tabs.iter().copied().enumerate() {
-            let (button, exists) = rml.element_get_child(host, index as i32)?;
-            if exists {
-                rml.element_set_class(button, "active", tab == current)?;
-            }
+        if self.current != Some(current) {
+            self.rows
+                .as_ref()
+                .expect("tab rows are bound before their markup")
+                .set(&self.rows_for(current))?;
+            self.current = Some(current);
         }
         Ok(())
+    }
+
+    fn rows_for(&self, current: Tab) -> Vec<RmlChoiceRow> {
+        self.tabs
+            .iter()
+            .map(|tab| RmlChoiceRow {
+                label: tab.as_str().to_owned(),
+                detail: String::new(),
+                selected: *tab == current,
+                highlighted: false,
+            })
+            .collect()
     }
 }

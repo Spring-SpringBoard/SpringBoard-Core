@@ -109,7 +109,8 @@ pub(crate) struct DevConsoleView {
     /// but rebuilding this scroll container each frame would steal its scroll
     /// position from someone reading older edits.
     rendered_command_log: Option<Vec<HistoryCommand>>,
-    root: Option<u64>,
+    hidden: Option<RmlDataVariable<'static, bool>>,
+    toolbar_pressed: [Option<RmlDataVariable<'static, bool>>; 10],
     log: Option<u64>,
     actions: ActionQueue,
     status_actions: StatusActionQueue,
@@ -166,7 +167,8 @@ impl Default for DevConsoleView {
             rendered_log_rows: Vec::new(),
             log_rows_dirty: false,
             rendered_command_log: None,
-            root: None,
+            hidden: None,
+            toolbar_pressed: [None; 10],
             log: None,
             actions: Rc::new(RefCell::new(Vec::new())),
             status_actions: Rc::new(RefCell::new(Vec::new())),
@@ -254,12 +256,18 @@ impl DevConsoleView {
         self.error_count = Some(data_model.bind("error_count", String::new())?);
         self.line_count = Some(data_model.bind("line_count", String::new())?);
         self.log_rows = Some(data_model.bind_text_rows("log_lines")?);
+        self.hidden = Some(data_model.bind("hidden", !self.visible)?);
+        for (index, action) in Action::ALL.iter().copied().enumerate() {
+            self.toolbar_pressed[index] = Some(data_model.bind(action.pressed_binding(), false)?);
+        }
 
         let (doc, ok) = rml.context_create_document(ctx, "body")?;
         if !ok {
             self.error_count = None;
             self.line_count = None;
             self.log_rows = None;
+            self.hidden = None;
+            self.toolbar_pressed = [None; 10];
             return Ok(false);
         }
         rml.document_set_title(doc, "Developer Console")?;
@@ -269,7 +277,6 @@ impl DevConsoleView {
 
         self.context = Some(ctx);
         self.document = Some(doc);
-        self.root = element_by_id(interface, doc, "dev-console");
         self.log = element_by_id(interface, doc, "log-container");
         self.bind_log_mouse_up(interface)?;
 
@@ -287,10 +294,9 @@ impl DevConsoleView {
         visible: bool,
     ) -> Result<(), Error> {
         self.visible = visible;
-        if let Some(root) = self.root {
-            interface
-                .rml_ui()
-                .element_set_class(root, "hidden", !visible)?;
+        let _ = interface;
+        if let Some(hidden) = &self.hidden {
+            hidden.set(!visible)?;
         }
         Ok(())
     }
@@ -380,19 +386,13 @@ impl DevConsoleView {
         interface: &NativeInterfaceRef,
         state: ToggleState,
     ) -> Result<(), Error> {
-        let Some(doc) = self.document else {
-            return Ok(());
-        };
-        for action in Action::ALL {
+        let _ = interface;
+        for (index, action) in Action::ALL.iter().copied().enumerate() {
             if !action.is_toggle() {
                 continue;
             }
-            if let Some(button) = element_by_id(interface, doc, action.id()) {
-                interface.rml_ui().element_set_class(
-                    button,
-                    "pressed",
-                    state.is_pressed(action),
-                )?;
+            if let Some(pressed) = &self.toolbar_pressed[index] {
+                pressed.set(state.is_pressed(action))?;
             }
         }
         Ok(())
@@ -434,10 +434,11 @@ impl DevConsoleView {
         self.error_count = None;
         self.line_count = None;
         self.log_rows = None;
+        self.hidden = None;
+        self.toolbar_pressed = [None; 10];
         self.rendered_log_rows.clear();
         self.log_rows_dirty = false;
         self.rendered_command_log = None;
-        self.root = None;
         self.log = None;
         self.actions.borrow_mut().clear();
         self.status_actions.borrow_mut().clear();
@@ -463,6 +464,8 @@ impl DevConsoleView {
         self.error_count = None;
         self.line_count = None;
         self.log_rows = None;
+        self.hidden = None;
+        self.toolbar_pressed = [None; 10];
         self.rendered_log_rows.clear();
         self.log_rows_dirty = false;
         if let Some(doc) = self.document.take() {
@@ -471,7 +474,6 @@ impl DevConsoleView {
         if let Some(ctx) = self.context.take() {
             let _ = rml.remove_context(ctx);
         }
-        self.root = None;
         self.log = None;
     }
 

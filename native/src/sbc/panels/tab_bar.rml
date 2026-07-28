@@ -1,1 +1,1 @@
-<button data-model="panel_tabs" data-for="tab : tabs" class="tab-button">{{ tab.text }}</button>
+<button data-model="panel_tabs" data-for="tab : tabs" class="tab-button" data-class-active="tab.selected">{{ tab.label }}</button>

@@ -227,6 +227,7 @@ impl PanelManager {
                 &self.interface,
                 doc,
                 self.view.project_status_caption(),
+                self.view.project_open_disabled(),
                 models,
             )?;
             let notifications_changed = models.get::<NotificationManager>().tick();
@@ -237,11 +238,6 @@ impl PanelManager {
             }
         }
         self.view.update(&self.interface)?;
-        if let Some(doc) = self.view.document_handle() {
-            models
-                .get::<NotificationManager>()
-                .sync_styles(&self.interface, doc)?;
-        }
         Ok(())
     }
 
@@ -285,6 +281,7 @@ impl PanelManager {
                         doc,
                         config,
                         on_accept,
+                        self.view.tooltip().expect("panel tooltip is bound").clone(),
                     )?;
                 }
             }
@@ -386,6 +383,7 @@ impl PanelManager {
                                 &field,
                                 &root,
                                 &exts,
+                                self.view.tooltip().expect("panel tooltip is bound").clone(),
                             )?;
                         }
                         continue;
@@ -482,7 +480,7 @@ impl PanelManager {
     /// The native tooltip is shown over map objects, but never over the panel
     /// or Chonsole, which each own their own UI tooltips.
     fn update_cursor_tip(&mut self, chonsole_open: bool) -> Result<(), Error> {
-        let Some(document) = self.view.document_handle() else {
+        let Some(bindings) = self.view.cursor_tip_bindings() else {
             return Ok(());
         };
         const PANEL_WIDTH: f32 = 500.0;
@@ -494,6 +492,6 @@ impl PanelManager {
             _ => true,
         };
         self.cursor_tip
-            .update(&self.interface, document, over_panel || chonsole_open)
+            .update(&self.interface, bindings, over_panel || chonsole_open)
     }
 }

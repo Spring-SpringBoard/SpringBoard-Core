@@ -55,6 +55,21 @@ impl Action {
             Action::Clear | Action::Restart | Action::ReloadLuaUi | Action::ReloadLuaRules
         )
     }
+
+    pub(crate) fn pressed_binding(self) -> &'static str {
+        match self {
+            Action::Clear => "toolbar_clear_pressed",
+            Action::FilterProblems => "toolbar_filter_problems_pressed",
+            Action::Restart => "toolbar_restart_pressed",
+            Action::ReloadLuaUi => "toolbar_reload_luaui_pressed",
+            Action::ReloadLuaRules => "toolbar_reload_luarules_pressed",
+            Action::ToggleCheating => "toolbar_cheating_pressed",
+            Action::ToggleGlobalLos => "toolbar_global_los_pressed",
+            Action::ToggleGodMode => "toolbar_god_mode_pressed",
+            Action::TogglePopupOnError => "toolbar_popup_on_error_pressed",
+            Action::ToggleVisibility => "toolbar_visibility_pressed",
+        }
+    }
 }
 
 /// `globallos`, `godmode` and `luarules reload` are cheat-gated, exactly as in

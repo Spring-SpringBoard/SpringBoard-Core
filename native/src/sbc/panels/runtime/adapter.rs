@@ -13,15 +13,17 @@ use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::brush::{non_empty, BrushActions};
 use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::editor_base::{
-    group_rml, identified_field_rml, identified_group_rml, resolve_base, section_rml,
+    group_rml, identified_field_visibility_rml, identified_field_when_rml,
+    identified_group_visibility_rml, identified_group_when_rml, resolve_base, section_rml,
 };
 use crate::sbc::panels::field::{
-    bind_tooltip, element_by_id, ChangeQueue, Field, FieldSpec, FieldValue, InteractionQueue,
+    element_by_id, ChangeQueue, Field, FieldSpec, FieldValue, InteractionQueue,
 };
 use crate::sbc::panels::runtime::contract::Brush;
 use crate::sbc::panels::runtime::contract::{
     Behavior, EditorModel, Event, Item, Outcome, Phase, Watch,
 };
+use crate::sbc::panels::tooltip::{PanelTooltip, TooltipContent};
 use crate::sbc::project::EditorState;
 use crate::sbc::states::{ApplyDir, BrushSettings, StateRequest};
 
@@ -29,6 +31,7 @@ pub(crate) struct Runtime<B: Behavior> {
     behavior: B,
     model: B::Model,
     actions: Option<BrushActions>,
+    tooltip: Option<PanelTooltip>,
     /// Stashed on first contact; the old `Editor` trait omits it from some
     /// callbacks (`process_drag_end`) that the behavior still needs it in.
     engine: Option<NativeInterfaceRef>,
@@ -47,6 +50,7 @@ impl<B: Behavior> Runtime<B> {
             behavior,
             model,
             actions,
+            tooltip: None,
             engine: None,
             restore_brush: None,
             pending_state: None,
@@ -149,21 +153,37 @@ impl<B: Behavior> Editor for Runtime<B> {
                 }
                 Item::IdField(id) => {
                     let name = self.model.name_of(id);
-                    html.push_str(&identified_field_rml(self.field_rml(&name), &name));
+                    html.push_str(&identified_field_visibility_rml(
+                        self.field_rml(&name),
+                        &name,
+                        self.model.field_visibility_binding(id),
+                    ));
+                }
+                Item::IdFieldWhen(id, visible) => {
+                    let name = self.model.name_of(id);
+                    html.push_str(&identified_field_when_rml(
+                        self.field_rml(&name),
+                        &name,
+                        visible,
+                    ));
                 }
                 Item::IdRow(ids) => {
-                    let fields: Vec<(String, String)> = ids
+                    let fields: Vec<(String, String, Option<&'static str>)> = ids
                         .iter()
                         .map(|id| {
                             let name = self.model.name_of(*id);
-                            (name.clone(), self.field_rml(&name))
+                            (
+                                name.clone(),
+                                self.field_rml(&name),
+                                self.model.field_visibility_binding(*id),
+                            )
                         })
                         .collect();
-                    let refs: Vec<(&str, String)> = fields
+                    let refs: Vec<(&str, String, Option<&str>)> = fields
                         .iter()
-                        .map(|(name, rml)| (name.as_str(), rml.clone()))
+                        .map(|(name, rml, visible)| (name.as_str(), rml.clone(), *visible))
                         .collect();
-                    html.push_str(&identified_group_rml(&refs));
+                    html.push_str(&identified_group_visibility_rml(&refs));
                 }
                 Item::OwnedRow(ids) => {
                     let fields: Vec<String> = ids
@@ -172,7 +192,7 @@ impl<B: Behavior> Editor for Runtime<B> {
                         .collect();
                     html.push_str(&group_rml(&fields));
                 }
-                Item::OwnedIdRow(ids) => {
+                Item::OwnedIdRowWhen(ids, visible) => {
                     let fields: Vec<(String, String)> = ids
                         .iter()
                         .map(|id| {
@@ -184,7 +204,7 @@ impl<B: Behavior> Editor for Runtime<B> {
                         .iter()
                         .map(|(name, rml)| (name.as_str(), rml.clone()))
                         .collect();
-                    html.push_str(&identified_group_rml(&refs));
+                    html.push_str(&identified_group_when_rml(&refs, visible));
                 }
                 Item::OwnedSection(caption) => html.push_str(&section_rml(&caption)),
                 Item::Custom(markup) => html.push_str(&markup),
@@ -194,6 +214,10 @@ impl<B: Behavior> Editor for Runtime<B> {
     }
 
     fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.model.prepare_data_model(model)?;
+        if let Some(actions) = self.actions.as_mut() {
+            actions.prepare_data_model(model)?;
+        }
         for entry in self.model.fields_mut() {
             entry.field.prepare_data_model(model)?;
         }
@@ -220,6 +244,11 @@ impl<B: Behavior> Editor for Runtime<B> {
     ) -> Result<(), Error> {
         self.engine = Some(*interface);
         self.rebuild = false;
+        let tooltip_host = self
+            .tooltip
+            .as_ref()
+            .expect("editor slot binds the panel tooltip before fields")
+            .clone();
         if let Some(actions) = self.actions.as_mut() {
             actions.bind(interface, document)?;
         }
@@ -234,7 +263,7 @@ impl<B: Behavior> Editor for Runtime<B> {
             if let Some(tooltip) = tooltip {
                 let id = format!("field-{}", entry.field.name());
                 if let Some(element) = element_by_id(interface, document, &id) {
-                    bind_tooltip(interface, document, element, tooltip)?;
+                    tooltip_host.bind_to(interface, element, TooltipContent::text(tooltip))?;
                 }
             }
         }
@@ -243,6 +272,16 @@ impl<B: Behavior> Editor for Runtime<B> {
         }
         self.behavior
             .bind(&mut self.model, interface, document, changes, interactions)
+    }
+
+    fn set_tooltip_host(&mut self, tooltip: PanelTooltip) {
+        self.tooltip = Some(tooltip.clone());
+        if let Some(actions) = self.actions.as_mut() {
+            actions.set_tooltip_host(tooltip.clone());
+        }
+        for grid in self.model.grids_mut() {
+            grid.set_tooltip_host(tooltip.clone());
+        }
     }
 
     fn write_field_values(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
@@ -299,7 +338,7 @@ impl<B: Behavior> Editor for Runtime<B> {
     fn tick(&mut self, interface: &NativeInterfaceRef, document: u64) -> Vec<Box<dyn Command>> {
         self.engine = Some(*interface);
         if let Some(actions) = self.actions.as_mut() {
-            actions.tick(interface, document);
+            actions.tick();
         }
         for grid in self.model.grids_mut() {
             grid.tick(interface, document);
@@ -317,7 +356,7 @@ impl<B: Behavior> Editor for Runtime<B> {
 
     fn clear_state_selection(&mut self, interface: &NativeInterfaceRef, document: u64) {
         if let Some(actions) = self.actions.as_mut() {
-            actions.clear(interface, document);
+            actions.clear();
         }
         self.behavior
             .state_cleared(&mut self.model, interface, document);

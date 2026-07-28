@@ -6,10 +6,10 @@
 //! tooltip string is unusable ("No tooltip defined" for most editor objects), so
 //! the text is built from what was hit.
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
-
-use crate::sbc::panels::field::escape_rml;
-use crate::sbc::rml::element_by_id;
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataTextRows, RmlDataVariable, RmlPixels, RmlTextRow,
+};
 
 /// Pick radius in pixels around the cursor, as Lua uses.
 const PICK_RADIUS: f32 = 16.0;
@@ -18,26 +18,31 @@ const OFFSET_Y: i32 = 12;
 
 #[derive(Default)]
 pub(crate) struct CursorTip {
-    /// What is currently described, so the markup is only rewritten when the
+    /// What is currently described, so data writes are only made when the
     /// object under the cursor changes.
     shown: Option<String>,
+}
+
+/// Typed display bindings for the map-object cursor tip. The shell creates
+/// these once with its context; the picker only writes values through them.
+pub(crate) struct CursorTipBindings<'a> {
+    pub(crate) title: &'a RmlDataVariable<'static, String>,
+    pub(crate) rows: &'a RmlDataTextRows<'static>,
+    pub(crate) hidden: &'a RmlDataVariable<'static, bool>,
+    pub(crate) left: &'a RmlDataVariable<'static, RmlPixels>,
+    pub(crate) top: &'a RmlDataVariable<'static, RmlPixels>,
 }
 
 impl CursorTip {
     pub(crate) fn update(
         &mut self,
         interface: &NativeInterfaceRef,
-        document: u64,
+        bindings: CursorTipBindings<'_>,
         over_panel: bool,
     ) -> Result<(), Error> {
         if crate::sbc::panels::field::tooltips_hidden() {
             return Ok(());
         }
-        let Some(element) = element_by_id(interface, document, "native-cursor-tooltip") else {
-            return Ok(());
-        };
-        let rml = interface.rml_ui();
-
         let Ok(mouse) = interface.input().get_mouse_state() else {
             return Ok(());
         };
@@ -53,25 +58,27 @@ impl CursorTip {
 
         let Some(hit) = hit else {
             if self.shown.take().is_some() {
-                rml.element_set_class(element, "hidden", true)?;
+                bindings.hidden.set(true)?;
             }
             return Ok(());
         };
 
         if self.shown.as_deref() != Some(hit.key.as_str()) {
-            rml.element_set_inner_rml(element, &hit.markup)?;
+            bindings.title.set(hit.title)?;
+            bindings.rows.set(
+                &hit.rows
+                    .iter()
+                    .cloned()
+                    .map(|text| RmlTextRow { text, muted: false })
+                    .collect::<Vec<_>>(),
+            )?;
             self.shown = Some(hit.key);
         }
-        rml.element_set_attribute(
-            element,
-            "style",
-            &format!(
-                "left: {}px; top: {}px;",
-                mouse.x as i32 + OFFSET_X,
-                bottom_to_top_y(mouse.y, geometry.viewSizeY as f32) as i32 + OFFSET_Y
-            ),
-        )?;
-        rml.element_set_class(element, "hidden", false)?;
+        bindings.left.set(RmlPixels(mouse.x + OFFSET_X as f32))?;
+        bindings.top.set(RmlPixels(
+            bottom_to_top_y(mouse.y, geometry.viewSizeY as f32) + OFFSET_Y as f32,
+        ))?;
+        bindings.hidden.set(false)?;
         Ok(())
     }
 
@@ -109,9 +116,10 @@ fn pick_rectangle(x: f32, y: f32) -> (f32, f32, f32, f32) {
 }
 
 struct Hit {
-    /// Identifies the object, so the markup is rebuilt only when it changes.
+    /// Identifies the object, so typed display values only change when needed.
     key: String,
-    markup: String,
+    title: String,
+    rows: Vec<String>,
 }
 
 fn describe_unit(interface: &NativeInterfaceRef, unit_id: i32) -> Option<Hit> {
@@ -149,7 +157,8 @@ fn describe_unit(interface: &NativeInterfaceRef, unit_id: i32) -> Option<Hit> {
     }
     Some(Hit {
         key: format!("u{unit_id}"),
-        markup: markup(&title, &rows),
+        title,
+        rows,
     })
 }
 
@@ -200,19 +209,9 @@ fn describe_feature(interface: &NativeInterfaceRef, feature_id: i32) -> Option<H
     }
     Some(Hit {
         key: format!("f{feature_id}"),
-        markup: markup(&title, &rows),
+        title,
+        rows,
     })
-}
-
-fn markup(title: &str, rows: &[String]) -> String {
-    let body: String = rows
-        .iter()
-        .map(|row| format!(r#"<div class="tip-row">{}</div>"#, escape_rml(row)))
-        .collect();
-    format!(
-        r#"<div class="tip-title">{}</div>{body}"#,
-        escape_rml(title)
-    )
 }
 
 #[cfg(test)]

@@ -16,10 +16,11 @@ pub(crate) struct StringField {
     tooltip: Option<String>,
     value: String,
     width: u32,
-    display_elem: Option<u64>,
     edit_elem: Option<u64>,
     editing: bool,
     display_value: Option<RmlDataVariable<'static, String>>,
+    input_value: Option<RmlDataVariable<'static, String>>,
+    editing_value: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl StringField {
@@ -30,10 +31,11 @@ impl StringField {
             value: value.to_string(),
             width: 200,
             tooltip: None,
-            display_elem: None,
             edit_elem: None,
             editing: false,
             display_value: None,
+            input_value: None,
+            editing_value: None,
         }
     }
 
@@ -56,11 +58,16 @@ impl StringField {
         )
     }
 
+    fn input_binding_name(&self) -> String {
+        format!("{}_input", self.binding_name())
+    }
+
+    fn editing_binding_name(&self) -> String {
+        format!("{}_editing", self.binding_name())
+    }
+
     fn display_markup(&self) -> String {
-        self.display_value
-            .as_ref()
-            .map(|_| format!("{{{{ {} }}}}", self.binding_name()))
-            .unwrap_or_else(|| escape_rml(&self.value))
+        format!("{{{{ {} }}}}", self.binding_name())
     }
 
     fn sync_display_value(&self) -> Result<(), Error> {
@@ -70,29 +77,32 @@ impl StringField {
         Ok(())
     }
 
+    fn sync_input_value(&self) -> Result<(), Error> {
+        if let Some(value) = &self.input_value {
+            value.set(self.value.clone())?;
+        }
+        Ok(())
+    }
+
     fn show_edit(&mut self, interface: &NativeInterfaceRef) {
         self.editing = true;
-        let rml = interface.rml_ui();
-        if let Some(element) = self.display_elem {
-            let _ = rml.element_set_class(element, "hidden", true);
+        let _ = self.sync_input_value();
+        if let Some(editing) = &self.editing_value {
+            let _ = editing.set(true);
         }
         if let Some(element) = self.edit_elem {
-            let _ = rml.element_set_class(element, "hidden", false);
-            let _ = rml.element_set_attribute(element, "value", &self.value);
-            let _ = rml.element_focus(element);
-            let _ = rml.element_form_control_input_select(element);
+            let _ = interface.rml_ui().element_focus(element);
+            let _ = interface
+                .rml_ui()
+                .element_form_control_input_select(element);
         }
     }
 
-    fn show_display(&mut self, interface: &NativeInterfaceRef) {
+    fn show_display(&mut self, _interface: &NativeInterfaceRef) {
         self.editing = false;
-        let rml = interface.rml_ui();
-        if let Some(element) = self.display_elem {
-            let _ = rml.element_set_class(element, "hidden", false);
-            let _ = self.sync_display_value();
-        }
-        if let Some(element) = self.edit_elem {
-            let _ = rml.element_set_class(element, "hidden", true);
+        let _ = self.sync_display_value();
+        if let Some(editing) = &self.editing_value {
+            let _ = editing.set(false);
         }
     }
 }
@@ -108,6 +118,8 @@ impl Field for StringField {
 
     fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
         self.display_value = Some(model.bind(&self.binding_name(), self.value.clone())?);
+        self.input_value = Some(model.bind(&self.input_binding_name(), self.value.clone())?);
+        self.editing_value = Some(model.bind(&self.editing_binding_name(), false)?);
         Ok(())
     }
 
@@ -115,15 +127,16 @@ impl Field for StringField {
         format!(
             concat!(
                 r#"<div class="field-row">"#,
-                r#"<button id="field-{n}" class="field-composite-button field-string-button" style="width: {width}px;"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button>"#,
-                r#"<input type="text" id="field-{n}-input" class="field-input field-string-input hidden" style="width: {width}px;" value="{input_value}"/>"#,
+                r#"<button id="field-{n}" class="field-composite-button field-string-button" style="width: {width}px;" data-class-hidden="{editing}"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button>"#,
+                r#"<input type="text" id="field-{n}-input" class="field-input field-string-input" style="width: {width}px;" data-class-hidden="!{editing}" data-value="{input_value}"/>"#,
                 r#"</div>"#,
             ),
             n = self.name,
             width = self.width,
             title = escape_rml(self.title.trim_end_matches(':')),
             value = self.display_markup(),
-            input_value = escape_rml(&self.value),
+            input_value = self.input_binding_name(),
+            editing = self.editing_binding_name(),
         )
     }
 
@@ -134,9 +147,8 @@ impl Field for StringField {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        self.display_elem = element_by_id(interface, document, &format!("field-{}", self.name));
         self.edit_elem = element_by_id(interface, document, &format!("field-{}-input", self.name));
-        if let Some(element) = self.display_elem {
+        if let Some(element) = element_by_id(interface, document, &format!("field-{}", self.name)) {
             on_pointer(interface, element, self.name.clone(), interactions)?;
         }
         if let Some(element) = self.edit_elem {
@@ -158,14 +170,9 @@ impl Field for StringField {
     }
 
     fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if self.display_elem.is_some() {
-            self.sync_display_value()?;
-        }
-        if let Some(element) = self.edit_elem {
-            interface
-                .rml_ui()
-                .element_set_attribute(element, "value", &self.value)?;
-        }
+        let _ = interface;
+        self.sync_display_value()?;
+        self.sync_input_value()?;
         Ok(())
     }
 

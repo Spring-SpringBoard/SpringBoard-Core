@@ -78,6 +78,7 @@ impl ProjectStatusBar {
         interface: &NativeInterfaceRef,
         document: u64,
         caption_field: Option<&RmlDataVariable<'static, String>>,
+        open_disabled_field: Option<&RmlDataVariable<'static, bool>>,
         models: &mut Models,
     ) -> Result<(), Error> {
         if !self.bound {
@@ -85,15 +86,13 @@ impl ProjectStatusBar {
             self.bound = true;
         }
         let has_project = models.get::<ProjectManager>().path().is_some();
+        if let Some(open_disabled_field) = open_disabled_field {
+            open_disabled_field.set(!has_project)?;
+        }
         let caption = caption(models);
         if self.last_caption.as_deref() != Some(caption.as_str()) {
             if let Some(caption_field) = caption_field {
                 caption_field.set(caption.clone())?;
-            }
-            if let Some(open) = element_by_id(interface, document, OPEN_ID) {
-                interface
-                    .rml_ui()
-                    .element_set_class(open, "disabled", !has_project)?;
             }
             self.last_caption = Some(caption);
         }

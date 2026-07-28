@@ -1,5 +1,7 @@
 //! Completion state and RmlUi rendering for Chonsole command suggestions.
 
+use spring_native::RmlChoiceRow;
+
 use crate::sbc::chonsole::commands::ChonsoleCore;
 use crate::sbc::chonsole::framework::{ChonsoleSuggestion, TextInput};
 
@@ -106,26 +108,18 @@ impl SuggestionView {
             .map(|suggestion| (suggestion.command.as_str(), suggestion.description.as_str()))
     }
 
-    pub(super) fn render(&self) -> String {
+    /// Typed presentation rows for RmlUi's static completion scaffold.
+    pub(super) fn rml_rows(&self, hovered: Option<usize>) -> Vec<RmlChoiceRow> {
         self.entries
             .iter()
             .enumerate()
-            .map(|(index, suggestion)| {
-                let command = truncate_chars(&suggestion.command, COMMAND_COLUMN_CHARS);
-                let description = truncate_chars(&suggestion.description, MAX_DESCRIPTION_CHARS);
-                let class = if self.selected == Some(index) {
-                    "suggestion selected-suggestion"
-                } else {
-                    "suggestion"
-                };
-                format!(
-                    r#"<div id="suggestion-{index}" class="{class}"><span class="suggestion-command">{}</span><span class="suggestion-description">{}</span></div>"#,
-                    escape_rml(&command),
-                    escape_rml(&description)
-                )
+            .map(|(index, suggestion)| RmlChoiceRow {
+                label: truncate_chars(&suggestion.command, COMMAND_COLUMN_CHARS),
+                detail: truncate_chars(&suggestion.description, MAX_DESCRIPTION_CHARS),
+                selected: self.selected == Some(index),
+                highlighted: hovered == Some(index),
             })
-            .collect::<Vec<_>>()
-            .join("")
+            .collect()
     }
 
     fn apply(&mut self, index: usize, input: &mut TextInput) {
@@ -136,12 +130,6 @@ impl SuggestionView {
         input.set(&suggestion.command);
         self.selected = Some(index);
     }
-}
-
-pub(super) fn escape_rml(text: &str) -> String {
-    text.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
 }
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {

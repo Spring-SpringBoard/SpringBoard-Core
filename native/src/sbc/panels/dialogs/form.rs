@@ -18,8 +18,8 @@ use crate::sbc::panels::runtime::{
 
 pub(crate) enum FormItem<Id> {
     Field(Id),
-    IdentifiedField(Id),
-    IdentifiedRow(Vec<Id>),
+    IdentifiedFieldWhen(Id, &'static str),
+    IdentifiedRowWhen(Vec<Id>, &'static str),
 }
 
 struct FormBehavior<Id> {
@@ -34,8 +34,10 @@ impl<Id: Copy + Eq + 'static> Behavior for FormBehavior<Id> {
             .iter()
             .map(|item| match item {
                 FormItem::Field(id) => Item::Field(*id),
-                FormItem::IdentifiedField(id) => Item::IdField(*id),
-                FormItem::IdentifiedRow(ids) => Item::OwnedIdRow(ids.clone()),
+                FormItem::IdentifiedFieldWhen(id, visible) => Item::IdFieldWhen(*id, visible),
+                FormItem::IdentifiedRowWhen(ids, visible) => {
+                    Item::OwnedIdRowWhen(ids.clone(), visible)
+                }
             })
             .collect()
     }

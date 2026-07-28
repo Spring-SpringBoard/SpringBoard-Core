@@ -7,6 +7,7 @@ use crate::sbc::panels::runtime::{Behavior, EditorModel, Item, Outcome, Watch};
 use crate::sbc::teams::commands::{AddTeamCommand, RemoveTeamCommand, UpdateTeamCommand};
 use crate::sbc::teams::{Color as TeamColor, TeamManager};
 
+use super::layout::TEAM_LIST_RML;
 use super::model::{extra_bool, TeamField, TeamsModel};
 
 #[derive(Clone, Copy)]
@@ -18,15 +19,15 @@ pub(super) enum TeamClick {
 }
 
 impl TeamsModel {
-    fn show_dialog(&self, interface: &NativeInterfaceRef, document: u64) {
-        if let Some(dialog) = element_by_id(interface, document, "team-edit-dialog") {
-            let _ = interface
-                .rml_ui()
-                .element_set_class(dialog, "hidden", self.editing.is_none());
-        }
+    fn show_dialog(&self) {
+        let _ = self
+            .team_dialog_open
+            .as_ref()
+            .expect("team dialog binding is prepared before its markup")
+            .set(self.editing.is_some());
     }
 
-    fn begin_edit(&mut self, id: i32, interface: &NativeInterfaceRef, document: u64) {
+    fn begin_edit(&mut self, id: i32, interface: &NativeInterfaceRef, _document: u64) {
         let Some(team) = self.teams.iter().find(|team| team.id == id) else {
             return;
         };
@@ -57,19 +58,19 @@ impl TeamsModel {
         for entry in self.table.fields() {
             let _ = entry.field.write_to_dom(interface);
         }
-        self.show_dialog(interface, document);
+        self.show_dialog();
     }
 
     fn finish_edit(
         &mut self,
         interface: &NativeInterfaceRef,
-        document: u64,
+        _document: u64,
     ) -> Option<Box<dyn Command>> {
         let id = self.editing.take()?;
         for entry in self.table.fields_mut() {
             let _ = entry.field.read_from_dom(interface);
         }
-        self.show_dialog(interface, document);
+        self.show_dialog();
         let mut team = self.teams.iter().find(|team| team.id == id)?.clone();
         use TeamField::*;
         team.name = self.text(Name);
@@ -121,8 +122,8 @@ impl Behavior for TeamsBehavior {
 
     /// The panel body is the team list; the edit dialog renders into the
     /// separate `team-edit-modal` host so it floats over the whole screen.
-    fn layout(&self, model: &TeamsModel) -> Vec<Item<TeamField>> {
-        vec![Item::Custom(model.list_rml())]
+    fn layout(&self, _model: &TeamsModel) -> Vec<Item<TeamField>> {
+        vec![Item::Custom(TEAM_LIST_RML.to_owned())]
     }
 
     fn refresh(
@@ -136,6 +137,9 @@ impl Behavior for TeamsBehavior {
         }
         model.teams = models.get::<TeamManager>().all_teams();
         model.teams.sort_by_key(|team| team.id);
+        if let Err(error) = model.write_team_rows() {
+            log::warn!("failed to update native team rows: {error:?}");
+        }
     }
 
     fn watch(&mut self, model: &mut TeamsModel, models: &mut Models) -> Watch {
@@ -187,16 +191,42 @@ impl Behavior for TeamsBehavior {
         };
         bind("teams-add", TeamClick::Add)?;
         bind("team-edit-close", TeamClick::Close)?;
-        for team in &model.teams {
-            if !extra_bool(team, "gaia") {
-                bind(&format!("team-edit-{}", team.id), TeamClick::Edit(team.id))?;
-                bind(
-                    &format!("team-remove-{}", team.id),
-                    TeamClick::Remove(team.id),
+        let Some(list) = element_by_id(interface, document, "teams-list") else {
+            return Ok(());
+        };
+        for (index, team) in model.teams.iter().enumerate() {
+            if extra_bool(team, "gaia") {
+                continue;
+            }
+            let (row, exists) = interface.rml_ui().element_get_child(list, index as i32)?;
+            if !exists {
+                continue;
+            }
+            let (edit, exists) = interface.rml_ui().element_get_child(row, 2)?;
+            if exists {
+                let clicks = model.clicks.clone();
+                let id = team.id;
+                interface
+                    .rml_ui()
+                    .element_add_event_listener(edit, "click", false, move || {
+                        clicks.borrow_mut().push(TeamClick::Edit(id));
+                    })?;
+            }
+            let (remove, exists) = interface.rml_ui().element_get_child(row, 3)?;
+            if exists {
+                let clicks = model.clicks.clone();
+                let id = team.id;
+                interface.rml_ui().element_add_event_listener(
+                    remove,
+                    "click",
+                    false,
+                    move || {
+                        clicks.borrow_mut().push(TeamClick::Remove(id));
+                    },
                 )?;
             }
         }
-        model.show_dialog(interface, document);
+        model.show_dialog();
         Ok(())
     }
 

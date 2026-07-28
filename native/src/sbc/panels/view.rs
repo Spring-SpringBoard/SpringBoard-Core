@@ -3,15 +3,17 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataNotificationRows, RmlDataVariable,
+    RmlDataNotificationRows, RmlDataTextRows, RmlDataVariable, RmlPixels,
 };
 
 use crate::sbc::actions::Action;
 use crate::sbc::panels::action_bar::ActionBar;
+use crate::sbc::panels::cursor::cursortip::CursorTipBindings;
 use crate::sbc::panels::editor_buttons::EditorButtons;
 use crate::sbc::panels::field::element_by_id;
 use crate::sbc::panels::registry::Tab;
 use crate::sbc::panels::tab_bar::TabBar;
+use crate::sbc::panels::tooltip::PanelTooltip;
 use crate::sbc::rml;
 
 const UI_CONTEXT: &str = "sbc_native_ui";
@@ -53,7 +55,14 @@ pub(crate) struct PanelView {
     root: Option<u64>,
     content: Option<u64>,
     project_status_caption: Option<RmlDataVariable<'static, String>>,
+    project_open_disabled: Option<RmlDataVariable<'static, bool>>,
     notification_rows: Option<RmlDataNotificationRows<'static>>,
+    tooltip: Option<PanelTooltip>,
+    cursor_tip_title: Option<RmlDataVariable<'static, String>>,
+    cursor_tip_rows: Option<RmlDataTextRows<'static>>,
+    cursor_tip_hidden: Option<RmlDataVariable<'static, bool>>,
+    cursor_tip_left: Option<RmlDataVariable<'static, RmlPixels>>,
+    cursor_tip_top: Option<RmlDataVariable<'static, RmlPixels>>,
     action_bar: ActionBar,
     editor_buttons: EditorButtons,
     tab_bar: TabBar,
@@ -70,7 +79,14 @@ impl Default for PanelView {
             root: None,
             content: None,
             project_status_caption: None,
+            project_open_disabled: None,
             notification_rows: None,
+            tooltip: None,
+            cursor_tip_title: None,
+            cursor_tip_rows: None,
+            cursor_tip_hidden: None,
+            cursor_tip_left: None,
+            cursor_tip_top: None,
             action_bar: ActionBar::default(),
             editor_buttons: EditorButtons::default(),
             tab_bar: TabBar::default(),
@@ -133,12 +149,28 @@ impl PanelView {
         let data_model = rml.create_data_model(ctx, "panel_shell")?;
         self.project_status_caption =
             Some(data_model.bind("project_status_caption", String::new())?);
+        self.project_open_disabled = Some(data_model.bind("project_open_disabled", true)?);
         self.notification_rows = Some(data_model.bind_notification_rows("notifications")?);
+        let tooltip_model = rml.create_data_model(ctx, "panel_tooltip")?;
+        self.tooltip = Some(PanelTooltip::bind(&tooltip_model)?);
+        let cursor_tip_model = rml.create_data_model(ctx, "cursor_tip")?;
+        self.cursor_tip_title = Some(cursor_tip_model.bind("title", String::new())?);
+        self.cursor_tip_rows = Some(cursor_tip_model.bind_text_rows("rows")?);
+        self.cursor_tip_hidden = Some(cursor_tip_model.bind("hidden", true)?);
+        self.cursor_tip_left = Some(cursor_tip_model.bind("left", RmlPixels(0.0))?);
+        self.cursor_tip_top = Some(cursor_tip_model.bind("top", RmlPixels(0.0))?);
 
         let (doc, ok) = rml.context_create_document(ctx, "body")?;
         if !ok {
             self.project_status_caption = None;
+            self.project_open_disabled = None;
             self.notification_rows = None;
+            self.tooltip = None;
+            self.cursor_tip_title = None;
+            self.cursor_tip_rows = None;
+            self.cursor_tip_hidden = None;
+            self.cursor_tip_left = None;
+            self.cursor_tip_top = None;
             return Ok(false);
         }
         rml.document_set_title(doc, "SpringBoard")?;
@@ -158,7 +190,12 @@ impl PanelView {
 
         self.tab_bar
             .render(interface, doc, self.current_tab, &self.events)?;
-        self.action_bar.bind(interface, doc, &self.events)?;
+        self.action_bar.bind(
+            interface,
+            doc,
+            self.tooltip.as_ref().expect("panel tooltip is bound"),
+            &self.events,
+        )?;
         self.render_editor_buttons(interface)?;
         Ok(true)
     }
@@ -167,8 +204,26 @@ impl PanelView {
         self.project_status_caption.as_ref()
     }
 
+    pub(crate) fn project_open_disabled(&self) -> Option<&RmlDataVariable<'static, bool>> {
+        self.project_open_disabled.as_ref()
+    }
+
     pub(crate) fn notification_rows(&self) -> Option<&RmlDataNotificationRows<'static>> {
         self.notification_rows.as_ref()
+    }
+
+    pub(crate) fn tooltip(&self) -> Option<&PanelTooltip> {
+        self.tooltip.as_ref()
+    }
+
+    pub(crate) fn cursor_tip_bindings(&self) -> Option<CursorTipBindings<'_>> {
+        Some(CursorTipBindings {
+            title: self.cursor_tip_title.as_ref()?,
+            rows: self.cursor_tip_rows.as_ref()?,
+            hidden: self.cursor_tip_hidden.as_ref()?,
+            left: self.cursor_tip_left.as_ref()?,
+            top: self.cursor_tip_top.as_ref()?,
+        })
     }
 
     /// Insert static modal shells after their data models have been bound. The
@@ -262,7 +317,14 @@ impl PanelView {
         self.root = None;
         self.content = None;
         self.project_status_caption = None;
+        self.project_open_disabled = None;
         self.notification_rows = None;
+        self.tooltip = None;
+        self.cursor_tip_title = None;
+        self.cursor_tip_rows = None;
+        self.cursor_tip_hidden = None;
+        self.cursor_tip_left = None;
+        self.cursor_tip_top = None;
     }
 
     pub(crate) fn contains(&self, interface: &NativeInterfaceRef, x: i32, y: i32) -> bool {
@@ -325,6 +387,7 @@ impl PanelView {
             doc,
             self.current_tab,
             self.active_editor,
+            self.tooltip.as_ref().expect("panel tooltip is bound"),
             &self.events,
         )
     }
@@ -340,7 +403,14 @@ impl PanelView {
         self.root = None;
         self.content = None;
         self.project_status_caption = None;
+        self.project_open_disabled = None;
         self.notification_rows = None;
+        self.tooltip = None;
+        self.cursor_tip_title = None;
+        self.cursor_tip_rows = None;
+        self.cursor_tip_hidden = None;
+        self.cursor_tip_left = None;
+        self.cursor_tip_top = None;
         self.action_bar.forget();
         self.editor_buttons.forget();
         self.tab_bar.forget();

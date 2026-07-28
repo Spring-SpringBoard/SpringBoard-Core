@@ -3,7 +3,6 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 use crate::sbc::panels::controls::grid::{list_assets, GridItem};
 use crate::sbc::panels::editor_base::group_rml;
 use crate::sbc::panels::runtime::Item;
-use crate::sbc::rml::{element_by_id, escape_rml};
 
 use super::model::SettingsField::*;
 use super::model::{SettingsField, SettingsModel, ShadingSource, SHADING_TOGGLES};
@@ -31,15 +30,18 @@ pub(super) fn layout(model: &SettingsModel) -> Vec<Item<SettingsField>> {
 
 impl SettingsModel {
     pub(super) fn shading_markup(&self) -> String {
-        let mut html = String::new();
-        for (field, _, caption) in SHADING_TOGGLES {
-            html.push_str(&format!(
-                r#"<div class="field-row"><button id="shading-{field}" class="field-composite-button shading-texture-button"><span>{caption}</span><span id="shading-status-{field}"></span></button></div>"#,
-                field = escape_rml(field),
-                caption = escape_rml(caption),
-            ));
-        }
-        html
+        r#"<div id="shading-texture-actions">
+            <div data-for="shading : shading_statuses" data-if="shading.visible" class="field-row">
+                <button class="field-composite-button shading-texture-button">
+                    <span>{{ shading.label }}</span>
+                    <span data-class-shading-enabled="shading.positive" data-class-shading-disabled="!shading.positive">
+                        <span data-if="shading.positive">enabled</span>
+                        <span data-if="!shading.positive">not set</span>
+                    </span>
+                </button>
+            </div>
+        </div>"#
+            .to_owned()
     }
 
     pub(super) fn dialog_markup(&self) -> String {
@@ -48,21 +50,21 @@ impl SettingsModel {
             self.table.field_rml(ShadingHeight),
         ]);
         format!(
-            r#"<div id="shading-texture-dialog" class="picker-backdrop hidden">
+            r#"<div id="shading-texture-dialog" class="picker-backdrop" data-model="editor_fields" data-class-hidden="!shading_dialog_open">
                 <div class="dialog picker-dialog asset-dialog">
-                    <div class="dialog-header"><span id="shading-dialog-title" class="dialog-title">Map texture</span></div>
+                    <div class="dialog-header"><span id="shading-dialog-title" class="dialog-title">{{ shading_dialog_title }}</span></div>
                     <div class="dialog-content">
-                        <div id="shading-source-choice" class="shading-dialog-actions">
+                        <div id="shading-source-choice" class="shading-dialog-actions" data-class-hidden="!shading_source_select_visible">
                             <button id="shading-new" class="dialog-button primary">New texture</button>
                             <button id="shading-existing" class="dialog-button">Choose existing</button>
                             <button id="shading-disable" class="dialog-button">Disable</button>
                         </div>
-                        <div id="shading-new-form" class="hidden">
+                        <div id="shading-new-form" data-class-hidden="!shading_new_form_visible">
                             {dimensions}
                             <div class="dialog-hint">Creates a blank texture using this channel's sensible default colour.</div>
                             <div class="field-row"><button id="shading-create" class="dialog-button primary">Create texture</button></div>
                         </div>
-                        <div id="shading-existing-grid" class="hidden">{}</div>
+                        <div id="shading-existing-grid" data-class-hidden="!shading_existing_grid_visible">{}</div>
                     </div>
                     <div class="dialog-footer"><button id="shading-cancel" class="dialog-button">Cancel</button></div>
                 </div>
@@ -72,69 +74,52 @@ impl SettingsModel {
         )
     }
 
-    pub(super) fn render_shading_fields(&self, interface: &NativeInterfaceRef, document: u64) {
-        for (field, _, caption) in SHADING_TOGGLES {
-            let Some(button) = element_by_id(interface, document, &format!("shading-{field}"))
-            else {
-                continue;
-            };
-            let enabled = self.shading_enabled.get(*field).copied().unwrap_or(false);
-            let status = if enabled {
-                "<span class=\"shading-enabled\">enabled</span>"
-            } else {
-                "<span class=\"shading-disabled\">not set</span>"
-            };
-            let markup = format!(
-                "<span>{}</span><span id=\"shading-status-{}\">{}</span>",
-                escape_rml(caption),
-                escape_rml(field),
-                status,
-            );
-            let _ = interface.rml_ui().element_set_inner_rml(button, &markup);
+    pub(super) fn render_shading_fields(&mut self) {
+        if let Some(rows) = &self.shading_statuses {
+            let statuses = SHADING_TOGGLES
+                .iter()
+                .map(|(field, _, caption)| spring_native::RmlStatusRow {
+                    label: (*caption).to_owned(),
+                    positive: self.shading_enabled.get(*field).copied().unwrap_or(false),
+                })
+                .collect::<Vec<_>>();
+            let _ = rows.set(&statuses);
         }
     }
 
-    pub(super) fn render_dialog(&self, interface: &NativeInterfaceRef, document: u64) {
-        let Some(dialog) = element_by_id(interface, document, "shading-texture-dialog") else {
-            return;
-        };
+    pub(super) fn render_dialog(&self) {
         let open = self.dialog.is_some();
-        let _ = interface
-            .rml_ui()
-            .element_set_class(dialog, "hidden", !open);
+        let _ = self
+            .shading_dialog_open
+            .as_ref()
+            .expect("shading dialog bindings are prepared before its markup")
+            .set(open);
         if let Some(name) = &self.dialog {
-            if let Some(title) = element_by_id(interface, document, "shading-dialog-title") {
+            if let Some(title) = &self.shading_dialog_title {
                 let caption = SHADING_TOGGLES
                     .iter()
                     .find(|(_, shading, _)| shading == name)
                     .map(|(_, _, caption)| *caption)
                     .unwrap_or(name.as_str());
-                let _ = interface
-                    .rml_ui()
-                    .element_set_inner_rml(title, &format!("{} texture", escape_rml(caption)));
+                let _ = title.set(format!("{caption} texture"));
             }
         }
-        if let Some(choice) = element_by_id(interface, document, "shading-source-choice") {
-            let _ = interface.rml_ui().element_set_class(
-                choice,
-                "hidden",
-                !open || self.shading_source.is_some(),
-            );
-        }
-        if let Some(new_form) = element_by_id(interface, document, "shading-new-form") {
-            let _ = interface.rml_ui().element_set_class(
-                new_form,
-                "hidden",
-                !open || self.shading_source != Some(ShadingSource::New),
-            );
-        }
-        if let Some(existing) = element_by_id(interface, document, "shading-existing-grid") {
-            let _ = interface.rml_ui().element_set_class(
-                existing,
-                "hidden",
-                !open || self.shading_source != Some(ShadingSource::Existing),
-            );
-        }
+        let source = self.shading_source;
+        let _ = self
+            .shading_source_select_visible
+            .as_ref()
+            .expect("shading dialog bindings are prepared before its markup")
+            .set(open && source.is_none());
+        let _ = self
+            .shading_new_form_visible
+            .as_ref()
+            .expect("shading dialog bindings are prepared before its markup")
+            .set(open && source == Some(ShadingSource::New));
+        let _ = self
+            .shading_existing_grid_visible
+            .as_ref()
+            .expect("shading dialog bindings are prepared before its markup")
+            .set(open && source == Some(ShadingSource::Existing));
     }
 
     pub(super) fn render_existing_grid(

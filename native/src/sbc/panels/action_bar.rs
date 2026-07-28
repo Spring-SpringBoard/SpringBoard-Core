@@ -6,7 +6,8 @@ use spring_native::{
 };
 
 use super::{
-    field::{bind_tooltip, element_by_id},
+    field::element_by_id,
+    tooltip::{PanelTooltip, TooltipContent},
     view::{ShellEvent, ShellQueue},
 };
 use crate::sbc::actions::Action;
@@ -35,6 +36,7 @@ impl ActionBar {
         &mut self,
         interface: &NativeInterfaceRef,
         document: u64,
+        tooltip: &PanelTooltip,
         events: &ShellQueue,
     ) -> Result<(), Error> {
         if self.document == Some(document) {
@@ -62,6 +64,8 @@ impl ActionBar {
                     label: action.tooltip().to_owned(),
                     icon: icon.to_owned(),
                     tooltip: action.tooltip().to_owned(),
+                    pressed: false,
+                    disabled: false,
                 })
             })
             .collect::<Result<Vec<_>, Error>>()?;
@@ -75,7 +79,7 @@ impl ActionBar {
             if !exists {
                 continue;
             }
-            bind_tooltip(interface, document, button, action.tooltip())?;
+            tooltip.bind_to(interface, button, TooltipContent::text(action.tooltip()))?;
             let queue = events.clone();
             rml.element_add_event_listener(button, "click", false, move || {
                 queue.borrow_mut().push(ShellEvent::Action(action));

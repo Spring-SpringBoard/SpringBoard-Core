@@ -6,8 +6,9 @@ use spring_native::{
 };
 
 use super::{
-    field::{bind_tooltip, element_by_id},
-    registry::{editors_for, Tab},
+    field::element_by_id,
+    registry::{editors_for, EditorSpec, Tab},
+    tooltip::{PanelTooltip, TooltipContent},
     view::{ShellEvent, ShellQueue},
 };
 
@@ -22,6 +23,7 @@ pub(crate) struct EditorButtons {
     rows: Option<RmlDataIconRows<'static>>,
     document: Option<u64>,
     tab: Option<Tab>,
+    active: Option<&'static str>,
 }
 
 impl EditorButtons {
@@ -29,6 +31,7 @@ impl EditorButtons {
         self.rows = None;
         self.document = None;
         self.tab = None;
+        self.active = None;
     }
 
     pub(crate) fn render(
@@ -37,6 +40,7 @@ impl EditorButtons {
         document: u64,
         tab: Tab,
         active: Option<&'static str>,
+        tooltip: &PanelTooltip,
         events: &ShellQueue,
     ) -> Result<(), Error> {
         let Some(host) = element_by_id(interface, document, HOST_ID) else {
@@ -58,14 +62,7 @@ impl EditorButtons {
 
         let specs = editors_for(tab);
         if self.tab != Some(tab) {
-            let rows = specs
-                .iter()
-                .map(|spec| RmlIconRow {
-                    label: spec.caption.to_owned(),
-                    icon: spec.image.to_owned(),
-                    tooltip: spec.tooltip.to_owned(),
-                })
-                .collect::<Vec<_>>();
+            let rows = Self::rows_for(&specs, active);
             if let Some(model_rows) = &self.rows {
                 model_rows.set(&rows)?;
             }
@@ -77,7 +74,7 @@ impl EditorButtons {
                 if !exists {
                     continue;
                 }
-                bind_tooltip(interface, document, button, spec.tooltip)?;
+                tooltip.bind_to(interface, button, TooltipContent::text(spec.tooltip))?;
                 let queue = events.clone();
                 let name = spec.name;
                 rml.element_add_event_listener(button, "click", false, move || {
@@ -85,14 +82,29 @@ impl EditorButtons {
                 })?;
             }
             self.tab = Some(tab);
+            self.active = active;
         }
 
-        for (index, spec) in specs.iter().enumerate() {
-            let (button, exists) = rml.element_get_child(host, index as i32)?;
-            if exists {
-                rml.element_set_class(button, "pressed", Some(spec.name) == active)?;
-            }
+        if self.active != active {
+            self.rows
+                .as_ref()
+                .expect("editor rows are bound before their markup")
+                .set(&Self::rows_for(&specs, active))?;
+            self.active = active;
         }
         Ok(())
+    }
+
+    fn rows_for(specs: &[&EditorSpec], active: Option<&'static str>) -> Vec<RmlIconRow> {
+        specs
+            .iter()
+            .map(|spec| RmlIconRow {
+                label: spec.caption.to_owned(),
+                icon: spec.image.to_owned(),
+                tooltip: spec.tooltip.to_owned(),
+                pressed: Some(spec.name) == active,
+                disabled: false,
+            })
+            .collect()
     }
 }

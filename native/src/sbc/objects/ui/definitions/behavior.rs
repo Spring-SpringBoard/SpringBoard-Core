@@ -4,7 +4,7 @@ use crate::sbc::command_system::model::Models;
 use crate::sbc::objects::thumbnails::ThumbKind;
 use crate::sbc::objects::ui::filters::DefTraits;
 use crate::sbc::panels::controls::grid::GridItem;
-use crate::sbc::panels::field::{escape_rml, ChangeQueue, CommitRequest, InteractionQueue};
+use crate::sbc::panels::field::{ChangeQueue, CommitRequest, InteractionQueue};
 use crate::sbc::panels::runtime::{Behavior, Event, Item, Outcome, Phase, Watch};
 use crate::sbc::rml::element_by_id;
 use crate::sbc::states::StateRequest;
@@ -87,11 +87,8 @@ impl Behavior for ObjectDefsBehavior {
                 })?;
         }
 
-        for (id, mode) in [
-            ("objectdef-mode-add", PlaceMode::Set),
-            ("objectdef-mode-brush", PlaceMode::Brush),
-        ] {
-            if let Some(button) = element_by_id(interface, document, id) {
+        for (index, mode) in [(0, PlaceMode::Set), (1, PlaceMode::Brush)] {
+            if let Some(button) = mode_button(interface, document, index) {
                 let queue = model.mode_clicks.clone();
                 interface.rml_ui().element_add_event_listener(
                     button,
@@ -185,6 +182,12 @@ impl Behavior for ObjectDefsBehavior {
     fn draw(&mut self, model: &mut ObjectDefsModel, interface: &NativeInterfaceRef) {
         model.thumbnails.draw(interface);
     }
+}
+
+fn mode_button(interface: &NativeInterfaceRef, document: u64, index: i32) -> Option<u64> {
+    let host = element_by_id(interface, document, "objectdef-mode-actions")?;
+    let (button, exists) = interface.rml_ui().element_get_child(host, index).ok()?;
+    exists.then_some(button)
 }
 
 fn tick_widgets(
@@ -300,11 +303,11 @@ fn unit_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
         items.push((
             GridItem {
                 id: name,
-                caption: escape_rml(&caption),
+                caption,
                 image: None,
                 is_directory: false,
                 tooltip: None,
-                tooltip_markup: None,
+                tooltip_content: None,
             },
             id,
         ));
@@ -338,11 +341,11 @@ fn feature_defs(interface: &NativeInterfaceRef) -> Vec<(GridItem, i32)> {
                 id: name.clone(),
                 // Dozens of defs share the caption "Tree"; the def name is the
                 // only thing that tells them apart.
-                tooltip: Some(escape_rml(&name)),
-                caption: escape_rml(&caption),
+                tooltip: Some(name),
+                caption,
                 image: None,
                 is_directory: false,
-                tooltip_markup: None,
+                tooltip_content: None,
             },
             id,
         ));

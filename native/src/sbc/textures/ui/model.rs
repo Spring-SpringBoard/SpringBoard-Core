@@ -1,4 +1,7 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel, RmlDataVariable,
+};
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -10,8 +13,8 @@ use crate::sbc::panels::brush::{non_empty, BrushAction, BrushActions};
 use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::runtime::{AssetGrid, EditorModel, TableModel};
+use crate::sbc::panels::tooltip::{TooltipContent, TooltipStatus};
 use crate::sbc::project::{EditorState, TextureEditorState};
-use crate::sbc::rml::escape_rml;
 use crate::sbc::states::BrushSettings;
 use crate::sbc::textures::materials::{Material, CHANNELS};
 
@@ -67,24 +70,63 @@ pub(crate) struct SavedBrush {
 
 pub(super) const ADD_BRUSH_ID: &str = "__add_saved_brush__";
 
-pub(super) fn material_tooltip(material: &Material) -> String {
-    let channel = |name: &str, title: &str| {
-        let (color, mark) = if material.channels.contains_key(name) {
-            ("#63d483", "&#10003;")
-        } else {
-            ("#ef6b6b", "&#10007;")
-        };
-        format!(
-            "<div>{title}: <span style=\"color: {color};\">{mark}</span></div>",
-            title = escape_rml(title),
-        )
-    };
-    format!(
-        "<div>{}</div>{}{}{}",
-        escape_rml(&material.name),
-        channel("diffuse", "Diffuse"),
-        channel("normal", "Normal"),
-        channel("specular", "Specular"),
+const MATERIAL_CONTROLS_VISIBLE: &str = "texture_material_controls_visible";
+const BLUR_CONTROLS_VISIBLE: &str = "texture_blur_controls_visible";
+const DNTS_CONTROLS_VISIBLE: &str = "texture_dnts_controls_visible";
+const VOID_CONTROLS_VISIBLE: &str = "texture_void_controls_visible";
+const STRENGTH_VISIBLE: &str = "texture_strength_visible";
+const FALLOFF_VISIBLE: &str = "texture_falloff_visible";
+const MATERIAL_PICKER_VISIBLE: &str = "texture_material_picker_visible";
+
+struct TextureVisibility {
+    material_controls: RmlDataVariable<'static, bool>,
+    blur_controls: RmlDataVariable<'static, bool>,
+    dnts_controls: RmlDataVariable<'static, bool>,
+    void_controls: RmlDataVariable<'static, bool>,
+    strength: RmlDataVariable<'static, bool>,
+    falloff: RmlDataVariable<'static, bool>,
+    material_picker: RmlDataVariable<'static, bool>,
+}
+
+impl TextureVisibility {
+    fn bind(model: &RmlDataModel<'static>) -> Result<Self, Error> {
+        Ok(Self {
+            material_controls: model.bind(MATERIAL_CONTROLS_VISIBLE, true)?,
+            blur_controls: model.bind(BLUR_CONTROLS_VISIBLE, false)?,
+            dnts_controls: model.bind(DNTS_CONTROLS_VISIBLE, false)?,
+            void_controls: model.bind(VOID_CONTROLS_VISIBLE, false)?,
+            strength: model.bind(STRENGTH_VISIBLE, true)?,
+            falloff: model.bind(FALLOFF_VISIBLE, true)?,
+            material_picker: model.bind(MATERIAL_PICKER_VISIBLE, false)?,
+        })
+    }
+
+    fn sync(&self, mode: &str, material_picker_open: bool) {
+        let material = mode == "paint";
+        let _ = self.material_controls.set(material);
+        let _ = self.blur_controls.set(mode == "blur");
+        let _ = self.dnts_controls.set(mode == "dnts");
+        let _ = self.void_controls.set(mode == "void");
+        let _ = self.strength.set(mode != "void");
+        let _ = self.falloff.set(mode != "blur");
+        let _ = self.material_picker.set(material && material_picker_open);
+    }
+}
+
+pub(super) fn material_tooltip(material: &Material) -> TooltipContent {
+    TooltipContent::statuses(
+        material.name.clone(),
+        [
+            ("diffuse", "Diffuse"),
+            ("normal", "Normal"),
+            ("specular", "Specular"),
+        ]
+        .into_iter()
+        .map(|(channel, label)| TooltipStatus {
+            label: label.to_owned(),
+            positive: material.channels.contains_key(channel),
+        })
+        .collect(),
     )
 }
 
@@ -145,6 +187,7 @@ pub(crate) struct TextureUiModel {
     /// Which DNTS channels the map actually has. Lua disables the button when
     /// there are none.
     pub(super) dnts_available: Vec<i32>,
+    visibility: Option<TextureVisibility>,
 }
 
 impl TextureUiModel {
@@ -163,6 +206,7 @@ impl TextureUiModel {
             material_picker_open: false,
             material_picker_events: Rc::new(RefCell::new(Vec::new())),
             dnts_available: Vec::new(),
+            visibility: None,
         }
     }
 
@@ -170,6 +214,43 @@ impl TextureUiModel {
     /// fields are meaningful (Lua's `SetInvisibleFields` per action button).
     pub(super) fn paint_mode(&self) -> &str {
         self.actions.selected_paint_mode().unwrap_or("paint")
+    }
+
+    pub(super) fn sync_visibility(&self) {
+        self.visibility
+            .as_ref()
+            .expect("texture visibility bindings are prepared before editor markup")
+            .sync(self.paint_mode(), self.material_picker_open);
+    }
+
+    pub(super) fn field_visibility_binding(&self, id: TexField) -> Option<&'static str> {
+        match id {
+            Mode | TexScale | TexRotation | TexOffsetX | TexOffsetY | FeatureFactor
+            | DiffuseColor | DiffuseEnabled | SpecularEnabled | EmissionEnabled | ReflEnabled => {
+                Some(MATERIAL_CONTROLS_VISIBLE)
+            }
+            KernelMode => Some(BLUR_CONTROLS_VISIBLE),
+            SplatTexScale | SplatTexMult | Value | DntsIndex | Exclusive => {
+                Some(DNTS_CONTROLS_VISIBLE)
+            }
+            VoidFactor => Some(VOID_CONTROLS_VISIBLE),
+            Strength => Some(STRENGTH_VISIBLE),
+            FalloffFactor => Some(FALLOFF_VISIBLE),
+            Pattern | Size | Rotation => None,
+        }
+    }
+
+    pub(super) fn material_dialog_rml(&self) -> String {
+        format!(
+            r#"<div class="picker-backdrop" data-model="editor_fields" data-class-hidden="!{MATERIAL_PICKER_VISIBLE}">
+                <div class="dialog picker-dialog asset-dialog">
+                    <div class="dialog-header"><span class="dialog-title">Select material for new brush</span></div>
+                    <div class="dialog-content">{}</div>
+                    <div class="dialog-footer"><button id="texture-material-cancel" class="dialog-button">Cancel</button></div>
+                </div>
+            </div>"#,
+            self.material_grid.container_rml(),
+        )
     }
 
     pub(super) fn take_grid_clicks(

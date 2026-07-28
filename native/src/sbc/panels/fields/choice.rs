@@ -1,4 +1,7 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel, RmlDataOptionRows, RmlDataVariable, RmlOptionRow,
+};
 
 use crate::sbc::panels::field::{
     element_by_id, escape_rml, on_change, ChangeQueue, Field, FieldValue, InteractionQueue,
@@ -12,6 +15,8 @@ pub(crate) struct ChoiceField {
     value: String,
     items: Vec<String>,
     option_rows: Option<String>,
+    bound_option_rows: Option<RmlDataOptionRows<'static>>,
+    bound_value: Option<RmlDataVariable<'static, String>>,
     element: Option<u64>,
 }
 
@@ -27,6 +32,8 @@ impl ChoiceField {
             value: items.first().cloned().unwrap_or_default(),
             items,
             option_rows: None,
+            bound_option_rows: None,
+            bound_value: None,
             tooltip: None,
             element: None,
         }
@@ -48,6 +55,34 @@ impl ChoiceField {
     pub(crate) fn get(&self) -> &str {
         &self.value
     }
+
+    fn option_rows_name(&self) -> String {
+        format!(
+            "field_{}_options",
+            self.name
+                .chars()
+                .map(|character| if character.is_ascii_alphanumeric() {
+                    character
+                } else {
+                    '_'
+                })
+                .collect::<String>()
+        )
+    }
+
+    fn value_binding_name(&self) -> String {
+        format!(
+            "field_{}_value",
+            self.name
+                .chars()
+                .map(|character| if character.is_ascii_alphanumeric() {
+                    character
+                } else {
+                    '_'
+                })
+                .collect::<String>()
+        )
+    }
 }
 
 impl Field for ChoiceField {
@@ -63,34 +98,45 @@ impl Field for ChoiceField {
         Some(&self.items)
     }
 
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        if self.option_rows.is_none() {
+            let rows = model.bind_option_rows(&self.option_rows_name())?;
+            rows.set(
+                &self
+                    .items
+                    .iter()
+                    .map(|item| RmlOptionRow {
+                        value: item.clone(),
+                        label: item.clone(),
+                    })
+                    .collect::<Vec<_>>(),
+            )?;
+            self.bound_option_rows = Some(rows);
+        }
+        self.bound_value = Some(model.bind(&self.value_binding_name(), self.value.clone())?);
+        Ok(())
+    }
+
     fn generate_rml(&self) -> String {
         let title = escape_rml(self.title.trim_end_matches(':'));
         let options = match &self.option_rows {
             Some(rows) => format!(
                 r#"<option data-for="option : {rows}" data-if="option.visible" data-attr-value="option.value">{{{{ option.label }}}}</option>"#
             ),
-            None => self
-                .items
-                .iter()
-                .map(|item| {
-                    let sel = if *item == self.value { " selected" } else { "" };
-                    format!(
-                        r#"<option value="{}"{}>{}</option>"#,
-                        escape_rml(item),
-                        sel,
-                        escape_rml(item)
-                    )
-                })
-                .collect(),
+            None => format!(
+                r#"<option data-for="option : {}" data-if="option.visible" data-attr-value="option.value">{{{{ option.label }}}}</option>"#,
+                self.option_rows_name()
+            ),
         };
         // Like numeric and colour fields, the caption belongs to the control
         // itself. Keeping it inside the border makes a compact ChoiceField a
         // single visual unit rather than a loose label plus a wide select.
         format!(r#"<div class="field-row"><div class="select-wrapper field-choice"><span class="select-label">{title}:</span>"#)
             + &format!(
-                r#"<select id="field-{n}" class="field-input field-select">{opts}</select>"#,
+                r#"<select id="field-{n}" class="field-input field-select" data-value="{value}">{opts}</select>"#,
                 n = self.name,
                 opts = options,
+                value = self.value_binding_name(),
             )
             // The arrow is drawn by CSS as a triangle so it is independent of
             // the installed font's Unicode glyph coverage.
@@ -121,11 +167,9 @@ impl Field for ChoiceField {
         Ok(FieldValue::Text(self.value.clone()))
     }
 
-    fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(e) = self.element {
-            interface
-                .rml_ui()
-                .element_set_attribute(e, "value", &self.value)?;
+    fn write_to_dom(&self, _interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if let Some(value) = &self.bound_value {
+            value.set(self.value.clone())?;
         }
         Ok(())
     }

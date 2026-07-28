@@ -43,39 +43,13 @@ pub(super) fn layout(model: &ObjectDefsModel) -> Vec<Item<ObjectField>> {
 
 impl ObjectDefsModel {
     pub(super) fn mode_buttons_rml(&self) -> String {
-        let mut h = String::from(r#"<div class="brush-actions">"#);
-        for (mode, caption, image) in [
-            (
-                PlaceMode::Set,
-                "Add",
-                "LuaUI/images/scenedit/object-set-add.png",
-            ),
-            (
-                PlaceMode::Brush,
-                "Brush",
-                "LuaUI/images/scenedit/object-brush-add.png",
-            ),
-        ] {
-            // Pressed while this placement mode is armed.
-            let pressed = if self.placing && mode == self.mode {
-                " pressed"
-            } else {
-                ""
-            };
-            let id = if mode == PlaceMode::Set {
-                "objectdef-mode-add"
-            } else {
-                "objectdef-mode-brush"
-            };
-            h.push_str(&format!(
-                r#"<button id="{id}" class="brush-action{pressed}">
-                    <img src="{image}" class="brush-action-icon"/>
-                    <span class="brush-action-label">{caption}</span>
-                </button>"#,
-            ));
-        }
-        h.push_str("</div>");
-        h
+        r#"<div id="objectdef-mode-actions" class="brush-actions">
+            <button data-for="action : objectdef_mode_actions" data-if="action.visible" class="brush-action" data-class-pressed="action.pressed" data-class-disabled="action.disabled">
+                <img data-attr-src="action.icon" class="brush-action-icon"/>
+                <span class="brush-action-label">{{ action.label }}</span>
+            </button>
+        </div>"#
+            .to_owned()
     }
 
     pub(super) fn search_and_grid_rml(&self) -> String {

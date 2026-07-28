@@ -4,14 +4,14 @@
     <div id="editor-button-panel" class="editor-button-panel"></div>
     <div id="main-content" class="main-content"></div>
 </div>
-<div id="texture-material-modal"></div>
+<div id="texture-material-dialog"></div>
 <div id="map-shading-modal"></div>
 <div id="team-edit-modal"></div>
 <div id="modal-root"></div>
 <div id="project-status-root" class="project-status-float theme-project-status" data-model="panel_shell">
     <div id="project-status-label" class="project-status-label">{{ project_status_caption }}</div>
     <div id="project-status-buttons" class="project-status-buttons">
-        <button id="project-status-open" class="project-status-btn">Open Project</button>
+        <button id="project-status-open" class="project-status-btn" data-class-disabled="project_open_disabled">Open Project</button>
         <button id="project-status-data" class="project-status-btn">Data Dir</button>
         <button id="project-status-upload" class="project-status-btn">Upload Log</button>
         <button id="project-status-exit" class="project-status-btn danger">Exit</button>
@@ -19,14 +19,24 @@
 </div>
 <div id="notifications-root" class="notifications-float" data-model="panel_shell">
     <div data-for="notification : notifications" class="notification">
-        <div class="notification-title">{{ notification.title }}</div>
+        <div class="notification-title" data-class-warning="notification.warning">{{ notification.title }}</div>
         <div class="notification-body">{{ notification.body }}</div>
-        <div class="notification-progress">
-            <div class="notification-progress-fill"></div>
+        <div class="notification-progress" data-class-hidden="!notification.has_progress">
+            <div class="notification-progress-fill" data-style-width="notification.progress"></div>
         </div>
     </div>
 </div>
 <!-- Panel-control and map-object tips have independent lifecycles. Sharing one
      element lets the map picker hide a grid tooltip after its hover event. -->
-<div id="native-panel-tooltip" class="native-tooltip hidden"></div>
-<div id="native-cursor-tooltip" class="native-tooltip hidden"></div>
+<div id="native-panel-tooltip" class="native-tooltip" data-model="panel_tooltip" data-class-hidden="hidden" data-style-left="left" data-style-top="top">
+    <div class="tip-title">{{ title }}</div>
+    <div class="tooltip-statuses">
+        <div data-for="status : statuses" data-if="status.visible" class="tip-row" data-class-tooltip-status-positive="status.positive" data-class-tooltip-status-negative="!status.positive">
+            <span class="tooltip-status-label">{{ status.label }}</span>
+        </div>
+    </div>
+</div>
+<div id="native-cursor-tooltip" class="native-tooltip" data-model="cursor_tip" data-class-hidden="hidden" data-style-left="left" data-style-top="top">
+    <div class="tip-title">{{ title }}</div>
+    <div data-for="row : rows" class="tip-row">{{ row.text }}</div>
+</div>

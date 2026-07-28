@@ -1,8 +1,13 @@
 use crate::sbc::panels::editor_base::{group_rml, section_rml};
-use crate::sbc::panels::field::escape_rml;
 use crate::sbc::panels::runtime::EditorModel;
 
-use super::model::{extra_bool, prefix, TeamField, TeamsModel};
+use super::model::{TeamField, TeamsModel};
+
+pub(super) const TEAM_LIST_RML: &str = concat!(
+    r#"<div class="brush-actions"><button id="teams-add" class="brush-action"><img class="brush-action-image" src="LuaUI/images/scenedit/team-add.png"/><span class="brush-action-label">Add</span></button></div>"#,
+    r#"<div class="team-list-header">Teams</div>"#,
+    r#"<div id="teams-list"><div data-for="team : teams" data-if="team.visible" class="team-row"><div class="team-swatch" data-style-background-color="team.colour"></div><span class="team-name">{{ team.label }}</span><button class="team-edit" data-if="team.actions_enabled"><span>Edit</span></button><button class="team-remove" title="Remove team" data-if="team.actions_enabled"><img src="LuaUI/images/scenedit/cancel.png"/></button></div></div>"#,
+);
 
 impl TeamsModel {
     pub(super) fn dialog_rml(&self) -> String {
@@ -26,7 +31,7 @@ impl TeamsModel {
         fields.push_str(&field(Side));
         format!(
             concat!(
-                r#"<div id="team-edit-dialog" class="picker-backdrop hidden">"#,
+                r#"<div id="team-edit-dialog" class="picker-backdrop" data-model="editor_fields" data-class-hidden="!team_dialog_open">"#,
                 r#"<div class="picker-dialog team-dialog"><div class="dialog-header"><span class="dialog-title">Edit team</span></div>"#,
                 r#"<div class="dialog-content">{fields}</div>"#,
                 r#"<div class="dialog-footer"><button id="team-edit-close" class="dialog-button primary">Close</button></div>"#,
@@ -34,32 +39,5 @@ impl TeamsModel {
             ),
             fields = fields,
         )
-    }
-
-    pub(super) fn list_rml(&self) -> String {
-        let mut html = String::from(
-            r#"<div class="brush-actions"><button id="teams-add" class="brush-action"><img class="brush-action-image" src="LuaUI/images/scenedit/team-add.png"/><span class="brush-action-label">Add</span></button></div><div class="team-list-header">Teams</div>"#,
-        );
-        for team in &self.teams {
-            let color = format!(
-                "#{:02X}{:02X}{:02X}",
-                (team.color.r.clamp(0.0, 1.0) * 255.0).round() as u8,
-                (team.color.g.clamp(0.0, 1.0) * 255.0).round() as u8,
-                (team.color.b.clamp(0.0, 1.0) * 255.0).round() as u8,
-            );
-            html.push_str(&format!(
-                r#"<div class="team-row"><div class="team-swatch" style="background-color: {color};"></div><span class="team-name">{prefix} Team: {name}</span>"#,
-                prefix = prefix(team),
-                name = escape_rml(&team.name),
-            ));
-            if !extra_bool(team, "gaia") {
-                html.push_str(&format!(
-                    r#"<button id="team-edit-{id}" class="team-edit"><span>Edit</span></button><button id="team-remove-{id}" class="team-remove" title="Remove team"><img src="LuaUI/images/scenedit/cancel.png"/></button>"#,
-                    id = team.id,
-                ));
-            }
-            html.push_str("</div>");
-        }
-        html
     }
 }

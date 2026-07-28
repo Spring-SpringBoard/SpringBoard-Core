@@ -1,4 +1,6 @@
 use super::{TexField, TextureUiModel};
+use spring_native::{prelude::Error, RmlDataModel};
+
 use crate::sbc::panels::runtime::{AssetGrid, EditorModel, FieldMut, FieldRef};
 
 use TexField::*;
@@ -26,6 +28,12 @@ impl EditorModel for TextureUiModel {
         vec![&mut self.pattern]
     }
 
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.actions.prepare_data_model(model)?;
+        self.visibility = Some(super::TextureVisibility::bind(model)?);
+        Ok(())
+    }
+
     fn id_of(&self, name: &str) -> Option<TexField> {
         if name == "patternTexture" {
             return Some(Pattern);
@@ -38,5 +46,9 @@ impl EditorModel for TextureUiModel {
             return "patternTexture".to_string();
         }
         self.table.name_of(id)
+    }
+
+    fn field_visibility_binding(&self, id: TexField) -> Option<&'static str> {
+        self.field_visibility_binding(id)
     }
 }

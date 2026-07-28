@@ -24,10 +24,12 @@ pub(crate) struct NumericField {
     max: Option<f32>,
     decimals: usize,
     compact: bool,
-    display_elem: Option<u64>,
     edit_elem: Option<u64>,
     editing: bool,
     display_value: Option<RmlDataVariable<'static, String>>,
+    input_value: Option<RmlDataVariable<'static, String>>,
+    editing_value: Option<RmlDataVariable<'static, bool>>,
+    dragging_value: Option<RmlDataVariable<'static, bool>>,
 }
 
 impl NumericField {
@@ -42,10 +44,12 @@ impl NumericField {
             max: None,
             decimals: DEFAULT_DECIMALS,
             compact: false,
-            display_elem: None,
             edit_elem: None,
             editing: false,
             display_value: None,
+            input_value: None,
+            editing_value: None,
+            dragging_value: None,
             tooltip: None,
         }
     }
@@ -121,11 +125,20 @@ impl NumericField {
         )
     }
 
+    fn input_binding_name(&self) -> String {
+        format!("{}_input", self.binding_name())
+    }
+
+    fn editing_binding_name(&self) -> String {
+        format!("{}_editing", self.binding_name())
+    }
+
+    fn dragging_binding_name(&self) -> String {
+        format!("{}_dragging", self.binding_name())
+    }
+
     fn display_markup(&self) -> String {
-        self.display_value
-            .as_ref()
-            .map(|_| format!("{{{{ {} }}}}", self.binding_name()))
-            .unwrap_or_else(|| self.display_text())
+        format!("{{{{ {} }}}}", self.binding_name())
     }
 
     fn sync_display_value(&self) -> Result<(), Error> {
@@ -135,34 +148,31 @@ impl NumericField {
         Ok(())
     }
 
-    /// Visibility is a `hidden` class, as in the Lua RmlUi fields. An inline
-    /// `style` would beat the stylesheet and leave the input unstyled (it
-    /// rendered invisible).
+    fn sync_input_value(&self) -> Result<(), Error> {
+        if let Some(value) = &self.input_value {
+            value.set(self.display_text())?;
+        }
+        Ok(())
+    }
+
     fn show_edit(&mut self, interface: &NativeInterfaceRef) {
         self.editing = true;
-        let text = self.display_text();
-        let rml = interface.rml_ui();
-        if let Some(e) = self.display_elem {
-            let _ = rml.element_set_class(e, "hidden", true);
+        let _ = self.sync_input_value();
+        if let Some(editing) = &self.editing_value {
+            let _ = editing.set(true);
         }
         if let Some(e) = self.edit_elem {
-            let _ = rml.element_set_class(e, "hidden", false);
-            let _ = rml.element_set_attribute(e, "value", &text);
-            let _ = rml.element_focus(e);
+            let _ = interface.rml_ui().element_focus(e);
             // Select the value so typing replaces it rather than appending.
-            let _ = rml.element_form_control_input_select(e);
+            let _ = interface.rml_ui().element_form_control_input_select(e);
         }
     }
 
-    fn show_display(&mut self, interface: &NativeInterfaceRef) {
+    fn show_display(&mut self, _interface: &NativeInterfaceRef) {
         self.editing = false;
-        let rml = interface.rml_ui();
-        if let Some(e) = self.display_elem {
-            let _ = rml.element_set_class(e, "hidden", false);
-            let _ = self.sync_display_value();
-        }
-        if let Some(e) = self.edit_elem {
-            let _ = rml.element_set_class(e, "hidden", true);
+        let _ = self.sync_display_value();
+        if let Some(editing) = &self.editing_value {
+            let _ = editing.set(false);
         }
     }
 }
@@ -178,6 +188,9 @@ impl Field for NumericField {
 
     fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
         self.display_value = Some(model.bind(&self.binding_name(), self.display_text())?);
+        self.input_value = Some(model.bind(&self.input_binding_name(), self.display_text())?);
+        self.editing_value = Some(model.bind(&self.editing_binding_name(), false)?);
+        self.dragging_value = Some(model.bind(&self.dragging_binding_name(), false)?);
         Ok(())
     }
 
@@ -187,15 +200,17 @@ impl Field for NumericField {
         format!(
             concat!(
                 r#"<div class="field-row">"#,
-                r#"<button id="field-{n}" class="field-composite-button field-numeric-button" style="width: {width}px;"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button>"#,
-                r#"<input type="text" id="field-{n}-input" class="field-input field-numeric-input hidden" style="width: {width}px;" value="{val}"/>"#,
+                r#"<button id="field-{n}" class="field-composite-button field-numeric-button" style="width: {width}px;" data-class-hidden="{editing}" data-class-dragging="{dragging}"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button>"#,
+                r#"<input type="text" id="field-{n}-input" class="field-input field-numeric-input" style="width: {width}px;" data-class-hidden="!{editing}" data-value="{input_value}"/>"#,
                 r#"</div>"#,
             ),
             n = self.name,
             width = width,
             title = escape_rml(self.title.trim_end_matches(':')),
             value = self.display_markup(),
-            val = self.display_text(),
+            input_value = self.input_binding_name(),
+            editing = self.editing_binding_name(),
+            dragging = self.dragging_binding_name(),
         )
     }
 
@@ -206,10 +221,9 @@ impl Field for NumericField {
         changes: &ChangeQueue,
         interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        self.display_elem = element_by_id(interface, document, &format!("field-{}", self.name));
         self.edit_elem = element_by_id(interface, document, &format!("field-{}-input", self.name));
 
-        if let Some(e) = self.display_elem {
+        if let Some(e) = element_by_id(interface, document, &format!("field-{}", self.name)) {
             on_pointer(interface, e, self.name.clone(), interactions)?;
         }
         if let Some(e) = self.edit_elem {
@@ -232,11 +246,9 @@ impl Field for NumericField {
     }
 
     fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let val = self.display_text();
+        let _ = interface;
         self.sync_display_value()?;
-        if let Some(e) = self.edit_elem {
-            interface.rml_ui().element_set_attribute(e, "value", &val)?;
-        }
+        self.sync_input_value()?;
         Ok(())
     }
 
@@ -254,16 +266,17 @@ impl Field for NumericField {
 
     fn drag(&mut self, dx: f32, interface: &NativeInterfaceRef) {
         self.value = self.clamp(self.value + dx * self.drag_step());
-        if let Some(e) = self.display_elem {
-            let rml = interface.rml_ui();
-            let _ = self.sync_display_value();
-            let _ = rml.element_set_class(e, "dragging", true);
+        let _ = interface;
+        let _ = self.sync_display_value();
+        if let Some(dragging) = &self.dragging_value {
+            let _ = dragging.set(true);
         }
     }
 
     fn drag_end(&mut self, interface: &NativeInterfaceRef) -> Option<FieldValue> {
-        if let Some(e) = self.display_elem {
-            let _ = interface.rml_ui().element_set_class(e, "dragging", false);
+        let _ = interface;
+        if let Some(dragging) = &self.dragging_value {
+            let _ = dragging.set(false);
         }
         Some(FieldValue::Number(self.value))
     }

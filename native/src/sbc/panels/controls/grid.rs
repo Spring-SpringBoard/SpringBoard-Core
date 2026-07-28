@@ -13,9 +13,10 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataModel, RmlDataTextRows, RmlDataVariable,
+    RmlDataGridRows, RmlDataModel, RmlDataVariable,
 };
 
+use crate::sbc::panels::tooltip::{PanelTooltip, TooltipContent};
 use crate::sbc::vfs::{join_entry, leaf, normalize_extensions, vfs_files};
 
 mod render;
@@ -36,8 +37,8 @@ pub(crate) struct GridItem {
     pub is_directory: bool,
     /// Hover text, when the cell has more to say than its caption.
     pub tooltip: Option<String>,
-    /// RML tooltip content for rich, deliberately-authored tooltips.
-    pub tooltip_markup: Option<String>,
+    /// Structured panel tooltip content, rendered by the panel tooltip host.
+    pub tooltip_content: Option<TooltipContent>,
 }
 
 pub(crate) type ClickQueue = Rc<RefCell<Vec<String>>>;
@@ -63,16 +64,20 @@ pub(crate) struct GridView {
     /// Unlike the grid rows, it exists in markup parsed before this grid has a
     /// chance to create its own item model.
     navigation_path: Option<RmlDataVariable<'static, String>>,
-    /// Engine-owned text collection backing the static `data-for` scaffold.
+    navigation_up_disabled: Option<RmlDataVariable<'static, bool>>,
+    /// Engine-owned presentation collection backing the static `data-for`
+    /// scaffold. A cell's caption, image, selection, and folder state update
+    /// together as typed data instead of through DOM attributes.
     /// It becomes invalid with its document, so `render` recreates it after a
     /// panel reload.
-    rows: Option<RmlDataTextRows<'static>>,
+    rows: Option<RmlDataGridRows<'static>>,
     /// The context that owns `rows`' data model. Unlike document elements,
     /// RmlUi data models survive an editor object being dropped, so an editor
     /// replacement must explicitly release it.
     model_context: Option<u64>,
     bound_document: Option<u64>,
     items_dirty: bool,
+    tooltip: Option<PanelTooltip>,
 }
 
 impl GridView {
@@ -85,10 +90,12 @@ impl GridView {
             item_size,
             navigation: None,
             navigation_path: None,
+            navigation_up_disabled: None,
             rows: None,
             model_context: None,
             bound_document: None,
             items_dirty: true,
+            tooltip: None,
         }
     }
 
@@ -97,11 +104,19 @@ impl GridView {
     }
 
     pub(crate) fn set_selected(&mut self, id: Option<&str>) {
-        self.selected = id.map(str::to_string);
+        let selected = id.map(str::to_string);
+        if self.selected != selected {
+            self.selected = selected;
+            self.items_dirty = true;
+        }
     }
 
     pub(crate) fn item(&self, id: &str) -> Option<&GridItem> {
         self.items.iter().find(|i| i.id == id)
+    }
+
+    pub(crate) fn set_tooltip_host(&mut self, tooltip: PanelTooltip) {
+        self.tooltip = Some(tooltip);
     }
 
     /// Clicks queued since the last drain. Handle them outside the RmlUi event
@@ -212,12 +227,13 @@ impl GridView {
             return format!(
                 r#"<div id="{id}-picker" class="grid-picker">
                     <div class="grid-navigation">
-                        <button id="{id}-up" class="dialog-button">Up</button>
+                        <button id="{id}-up" class="dialog-button" data-class-disabled="{up_disabled}">Up</button>
                         <span id="{id}-path" class="asset-path">{path}</span>
                     </div>
                     <div id="{id}" class="grid-container"></div>
                 </div>"#,
                 id = self.container_id,
+                up_disabled = self.navigation_up_disabled_name(),
             );
         }
         format!(
@@ -243,12 +259,17 @@ impl GridView {
         };
         self.navigation_path =
             Some(model.bind(&self.navigation_path_name(), navigation.dir.clone())?);
+        self.navigation_up_disabled = Some(model.bind(
+            &self.navigation_up_disabled_name(),
+            navigation.dir == navigation.root,
+        )?);
         Ok(())
     }
 
     /// Drop document-owned bindings after its panel has been rebuilt.
     pub(crate) fn forget_bindings(&mut self) {
         self.navigation_path = None;
+        self.navigation_up_disabled = None;
         self.rows = None;
         self.model_context = None;
         self.bound_document = None;
@@ -271,6 +292,10 @@ impl GridView {
 
     fn navigation_path_name(&self) -> String {
         format!("{}_path", self.model_name())
+    }
+
+    fn navigation_up_disabled_name(&self) -> String {
+        format!("{}_up_disabled", self.model_name())
     }
 }
 
@@ -314,7 +339,7 @@ pub(crate) fn list_asset_tree(
                 image: None,
                 is_directory: true,
                 tooltip: None,
-                tooltip_markup: None,
+                tooltip_content: None,
             })
             .collect();
     }
@@ -334,7 +359,7 @@ pub(crate) fn list_asset_tree(
             image: None,
             is_directory: true,
             tooltip: None,
-            tooltip_markup: None,
+            tooltip_content: None,
         })
         .collect();
 
@@ -349,7 +374,7 @@ pub(crate) fn list_asset_tree(
             caption: name,
             is_directory: false,
             tooltip: None,
-            tooltip_markup: None,
+            tooltip_content: None,
         });
     }
     items
@@ -420,7 +445,7 @@ fn list_entries(
                     image,
                     is_directory: true,
                     tooltip: None,
-                    tooltip_markup: None,
+                    tooltip_content: None,
                 }
             })
             .collect()
@@ -454,7 +479,7 @@ fn list_entries(
                     caption,
                     is_directory: false,
                     tooltip: None,
-                    tooltip_markup: None,
+                    tooltip_content: None,
                 });
             }
         }
@@ -492,7 +517,7 @@ fn list_asset_directory(
             image: None,
             is_directory: true,
             tooltip: None,
-            tooltip_markup: None,
+            tooltip_content: None,
         })
         .collect();
     items.extend(
@@ -506,7 +531,7 @@ fn list_asset_directory(
                     image: Some(path),
                     is_directory: false,
                     tooltip: None,
-                    tooltip_markup: None,
+                    tooltip_content: None,
                 }
             }),
     );
