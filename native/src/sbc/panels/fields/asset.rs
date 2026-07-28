@@ -1,4 +1,7 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel, RmlDataVariable,
+};
 
 use crate::sbc::panels::field::{
     element_by_id, escape_rml, on_pointer, ChangeQueue, Field, FieldValue, InteractionQueue,
@@ -14,6 +17,7 @@ pub(crate) struct AssetField {
     root: String,
     extensions: Vec<String>,
     element: Option<u64>,
+    display_value: Option<RmlDataVariable<'static, String>>,
 }
 
 impl AssetField {
@@ -26,6 +30,7 @@ impl AssetField {
             extensions: Vec::new(),
             tooltip: None,
             element: None,
+            display_value: None,
         }
     }
 
@@ -39,19 +44,37 @@ impl AssetField {
         self
     }
 
-    fn button_rml(&self) -> String {
-        // Show just the file name; the full VFS path does not fit the button.
-        let shown = self
-            .value
+    fn display_text(&self) -> String {
+        self.value
             .rsplit('/')
             .next()
-            .filter(|s| !s.is_empty())
-            .unwrap_or("(none)");
+            .filter(|value| !value.is_empty())
+            .unwrap_or("(none)")
+            .to_string()
+    }
+
+    fn binding_name(&self) -> String {
         format!(
-            r#"<span class="field-button-title">{title}:</span><span class="field-button-value">{shown}</span>"#,
-            title = escape_rml(self.title.trim_end_matches(':')),
-            shown = escape_rml(shown),
+            "field_{}_display",
+            self.name
+                .chars()
+                .map(|character| if character.is_ascii_alphanumeric() { character } else { '_' })
+                .collect::<String>(),
         )
+    }
+
+    fn display_markup(&self) -> String {
+        self.display_value
+            .as_ref()
+            .map(|_| format!("{{{{ {} }}}}", self.binding_name()))
+            .unwrap_or_else(|| escape_rml(&self.display_text()))
+    }
+
+    fn sync_display_value(&self) -> Result<(), Error> {
+        if let Some(value) = &self.display_value {
+            value.set(self.display_text())?;
+        }
+        Ok(())
     }
 }
 
@@ -64,11 +87,17 @@ impl Field for AssetField {
         self.tooltip.as_deref()
     }
 
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.display_value = Some(model.bind(&self.binding_name(), self.display_text())?);
+        Ok(())
+    }
+
     fn generate_rml(&self) -> String {
         format!(
-            r#"<div class="field-row"><button id="field-{n}" class="field-composite-button field-asset-button">{button}</button></div>"#,
+            r#"<div class="field-row"><button id="field-{n}" class="field-composite-button field-asset-button"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button></div>"#,
             n = self.name,
-            button = self.button_rml(),
+            title = escape_rml(self.title.trim_end_matches(':')),
+            value = self.display_markup(),
         )
     }
 
@@ -90,11 +119,9 @@ impl Field for AssetField {
         Ok(FieldValue::Text(self.value.clone()))
     }
 
-    fn write_to_dom(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(e) = self.element {
-            interface
-                .rml_ui()
-                .element_set_inner_rml(e, &self.button_rml())?;
+    fn write_to_dom(&self, _interface: &NativeInterfaceRef) -> Result<(), Error> {
+        if self.element.is_some() {
+            self.sync_display_value()?;
         }
         Ok(())
     }
