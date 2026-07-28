@@ -7,12 +7,13 @@ use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataVariable,
+};
 
 use crate::sbc::panels::controls::grid::{list_asset_tree, parent_dir, GridView};
-use crate::sbc::panels::field::{
-    element_by_id, escape_rml, ChangeQueue, FieldValue, InteractionQueue,
-};
+use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
 
 inventory::submit! {
@@ -38,6 +39,7 @@ pub(crate) struct AssetPicker {
     grid: GridView,
     events: Rc<RefCell<Vec<PickerEvent>>>,
     bound: bool,
+    path: Option<RmlDataVariable<'static, String>>,
 }
 
 impl Default for AssetPicker {
@@ -50,6 +52,7 @@ impl Default for AssetPicker {
             grid: GridView::new("asset-grid", 64),
             events: Rc::new(RefCell::new(Vec::new())),
             bound: false,
+            path: None,
         }
     }
 }
@@ -149,13 +152,13 @@ impl AssetPicker {
     fn markup_rml(&self) -> String {
         format!(
             concat!(
-                r#"<div id="asset-picker" class="picker-backdrop hidden">"#,
+                r#"<div id="asset-picker" class="picker-backdrop hidden" data-model="asset_picker">"#,
                 r#"<div class="dialog picker-dialog asset-dialog">"#,
                 r#"<div class="dialog-header"><span class="dialog-title">Pick Asset</span></div>"#,
                 r#"<div class="dialog-content">"#,
                 r#"<div class="asset-path-nav">"#,
                 r#"<button id="asset-up" class="dialog-button">Up</button>"#,
-                r#"<span id="asset-path" class="asset-path"></span></div>"#,
+                r#"<span class="asset-path">{{ path }}</span></div>"#,
                 r#"{grid}"#,
                 r#"</div>"#,
                 r#"<div class="dialog-footer">"#,
@@ -216,11 +219,10 @@ impl AssetPicker {
             &extensions,
         ));
         self.grid.render(interface, document)?;
-        if let Some(e) = element_by_id(interface, document, "asset-path") {
-            interface
-                .rml_ui()
-                .element_set_inner_rml(e, &escape_rml(&self.dir))?;
-        }
+        self.path
+            .as_ref()
+            .expect("asset-picker path is bound before modal markup")
+            .set(self.dir.clone())?;
         if let Some(up) = element_by_id(interface, document, "asset-up") {
             // The top of the tree is the pack list; there is nothing above it.
             interface
@@ -232,6 +234,18 @@ impl AssetPicker {
 }
 
 impl Modal for AssetPicker {
+    fn prepare_data_model(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        context: u64,
+    ) -> Result<(), Error> {
+        let data_model = interface
+            .rml_ui()
+            .create_data_model(context, "asset_picker")?;
+        self.path = Some(data_model.bind("path", String::new())?);
+        Ok(())
+    }
+
     fn markup(&self) -> String {
         self.markup_rml()
     }
@@ -252,6 +266,7 @@ impl Modal for AssetPicker {
         self.events.borrow_mut().clear();
         self.grid.drain_clicks();
         self.grid.forget_bindings();
+        self.path = None;
     }
 
     fn is_open(&self) -> bool {
