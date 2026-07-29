@@ -149,9 +149,10 @@ def heightmap(run_state: "RunState") -> None:
     # stroke is plainly visible in `stroke-*.png` and the diffs mean something.
     run_state.wheel(width // 3, height // 2, clicks=ZOOM_CLICKS, up=True, delay=Delay.DIALOG)
     _click_field(run_state, left, MAP["terrain_size"], "400")
-    # Shape Modify applies a signed delta, so Strength controls a visible
-    # relief; Height remains meaningful only when the Level brush follows.
-    _click_field(run_state, left, MAP["terrain_strength"], "1000")
+    # Shape Modify applies a signed delta. Keep it representative: an enormous
+    # strength makes the outcome depend on a few milliseconds of stroke timing
+    # and can drive the terrain beyond what the engine handles robustly.
+    _click_field(run_state, left, MAP["terrain_strength"], "10")
     _click_field(run_state, left, MAP["terrain_height"], "80")
     run_state.screenshot("brush-settings")
 

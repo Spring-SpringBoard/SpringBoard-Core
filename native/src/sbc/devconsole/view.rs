@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataTextRows, RmlDataVariable,
+    RmlDataLogRows, RmlDataTextRows, RmlDataVariable, RmlLogRow, RmlLogSeverity,
 };
 
 use crate::sbc::devconsole::actions::Action;
@@ -98,13 +98,13 @@ pub(crate) struct DevConsoleView {
     status_position: Option<RmlDataVariable<'static, String>>,
     status_version: Option<RmlDataVariable<'static, String>>,
     status_metrics: Option<StatusMetricBindings>,
+    status_action_disabled: [Option<RmlDataVariable<'static, bool>>; 3],
     status_history: Option<RmlDataTextRows<'static>>,
-    status_history_muted: Vec<bool>,
     error_count: Option<RmlDataVariable<'static, String>>,
     line_count: Option<RmlDataVariable<'static, String>>,
-    log_rows: Option<RmlDataTextRows<'static>>,
-    rendered_log_rows: Vec<RenderedLogRow>,
-    log_rows_dirty: bool,
+    log_rows: Option<RmlDataLogRows<'static>>,
+    log_row_listeners_bound: usize,
+    log_row_count: usize,
     /// Last history rendered into the command list. Metrics refresh regularly,
     /// but rebuilding this scroll container each frame would steal its scroll
     /// position from someone reading older edits.
@@ -127,14 +127,13 @@ struct SelectionState {
 }
 
 struct StatusMetricBindings {
-    performance: [RmlDataVariable<'static, String>; 3],
-    system: [RmlDataVariable<'static, String>; 4],
+    performance: [StatusMetricBinding; 3],
+    system: [StatusMetricBinding; 4],
 }
 
-#[derive(Clone, Copy)]
-struct RenderedLogRow {
-    severity: crate::sbc::devconsole::log::Severity,
-    selected: bool,
+struct StatusMetricBinding {
+    value: RmlDataVariable<'static, String>,
+    tones: [RmlDataVariable<'static, bool>; 4],
 }
 
 impl SelectionState {
@@ -159,13 +158,13 @@ impl Default for DevConsoleView {
             status_position: None,
             status_version: None,
             status_metrics: None,
+            status_action_disabled: [None; 3],
             status_history: None,
-            status_history_muted: Vec::new(),
             error_count: None,
             line_count: None,
             log_rows: None,
-            rendered_log_rows: Vec::new(),
-            log_rows_dirty: false,
+            log_row_listeners_bound: 0,
+            log_row_count: 0,
             rendered_command_log: None,
             hidden: None,
             toolbar_pressed: [None; 10],
@@ -255,7 +254,7 @@ impl DevConsoleView {
         let data_model = rml.create_data_model(ctx, "dev_console")?;
         self.error_count = Some(data_model.bind("error_count", String::new())?);
         self.line_count = Some(data_model.bind("line_count", String::new())?);
-        self.log_rows = Some(data_model.bind_text_rows("log_lines")?);
+        self.log_rows = Some(data_model.bind_log_rows("log_lines")?);
         self.hidden = Some(data_model.bind("hidden", !self.visible)?);
         for (index, action) in Action::ALL.iter().copied().enumerate() {
             self.toolbar_pressed[index] = Some(data_model.bind(action.pressed_binding(), false)?);
@@ -311,16 +310,16 @@ impl DevConsoleView {
             return Ok(());
         };
         let mut rows = Vec::new();
-        let mut rendered_rows = Vec::new();
         let mut count = 0usize;
         for (index, line) in lines.enumerate() {
             count = index + 1;
-            rows.push(spring_native::RmlTextRow {
+            rows.push(RmlLogRow {
                 text: clamp_line(&line.text).into_owned(),
-                muted: false,
-            });
-            rendered_rows.push(RenderedLogRow {
-                severity: line.severity,
+                severity: match line.severity {
+                    crate::sbc::devconsole::log::Severity::Info => RmlLogSeverity::Info,
+                    crate::sbc::devconsole::log::Severity::Warning => RmlLogSeverity::Warning,
+                    crate::sbc::devconsole::log::Severity::Error => RmlLogSeverity::Error,
+                },
                 selected: self.selection.contains(index),
             });
         }
@@ -331,8 +330,7 @@ impl DevConsoleView {
         }
         if let Some(log_rows) = &self.log_rows {
             log_rows.set(&rows)?;
-            self.rendered_log_rows = rendered_rows;
-            self.log_rows_dirty = true;
+            self.log_row_count = rows.len();
         }
         if scroll_to_bottom {
             let _ = interface.rml_ui().element_set_scroll_top(log, 1_000_000);
@@ -415,7 +413,6 @@ impl DevConsoleView {
                 geometry.viewSizeY,
             );
             interface.rml_ui().context_update(context)?;
-            self.sync_status_history_tones(interface)?;
         }
         Ok(())
     }
@@ -429,15 +426,15 @@ impl DevConsoleView {
         self.status_position = None;
         self.status_version = None;
         self.status_metrics = None;
+        self.status_action_disabled = [None; 3];
         self.status_history = None;
-        self.status_history_muted.clear();
         self.error_count = None;
         self.line_count = None;
         self.log_rows = None;
         self.hidden = None;
         self.toolbar_pressed = [None; 10];
-        self.rendered_log_rows.clear();
-        self.log_rows_dirty = false;
+        self.log_row_listeners_bound = 0;
+        self.log_row_count = 0;
         self.rendered_command_log = None;
         self.log = None;
         self.actions.borrow_mut().clear();
@@ -459,15 +456,15 @@ impl DevConsoleView {
         self.status_position = None;
         self.status_version = None;
         self.status_metrics = None;
+        self.status_action_disabled = [None; 3];
         self.status_history = None;
-        self.status_history_muted.clear();
         self.error_count = None;
         self.line_count = None;
         self.log_rows = None;
         self.hidden = None;
         self.toolbar_pressed = [None; 10];
-        self.rendered_log_rows.clear();
-        self.log_rows_dirty = false;
+        self.log_row_listeners_bound = 0;
+        self.log_row_count = 0;
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);
         }
@@ -491,26 +488,17 @@ impl DevConsoleView {
     }
 
     fn sync_log_rows(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if !self.log_rows_dirty {
-            return Ok(());
-        }
         let Some(log) = self.log else {
             return Ok(());
         };
         let rml = interface.rml_ui();
-        for (index, row) in self.rendered_log_rows.iter().copied().enumerate() {
+        let mut bound = self.log_row_listeners_bound;
+        while bound < self.log_row_count {
+            let index = bound;
             let (line, exists) = rml.element_get_child(log, index as i32)?;
             if !exists {
-                continue;
+                break;
             }
-            for severity in [
-                crate::sbc::devconsole::log::Severity::Info,
-                crate::sbc::devconsole::log::Severity::Warning,
-                crate::sbc::devconsole::log::Severity::Error,
-            ] {
-                rml.element_set_class(line, severity.css_class(), row.severity == severity)?;
-            }
-            rml.element_set_class(line, "selected", row.selected)?;
             let queue = self.selection_events.clone();
             rml.element_add_event_listener(line, "mousedown", false, move || {
                 queue.borrow_mut().push(SelectionEvent::Start(index))
@@ -519,28 +507,9 @@ impl DevConsoleView {
             rml.element_add_event_listener(line, "mouseover", false, move || {
                 queue.borrow_mut().push(SelectionEvent::Extend(index))
             })?;
+            bound += 1;
         }
-        self.log_rows_dirty = false;
-        Ok(())
-    }
-
-    /// RmlUi currently evaluates `data-class-*` on a generated `data-for`
-    /// child after that child was removed from a shrinking collection. Apply
-    /// this semantic class after the collection's structural update instead;
-    /// values remain native data bindings and no row markup is rebuilt.
-    fn sync_status_history_tones(&self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(document) = self.status_document else {
-            return Ok(());
-        };
-        let Some(list) = element_by_id(interface, document, "command-list") else {
-            return Ok(());
-        };
-        for (index, muted) in self.status_history_muted.iter().copied().enumerate() {
-            let (row, exists) = interface.rml_ui().element_get_child(list, index as i32)?;
-            if exists {
-                interface.rml_ui().element_set_class(row, "undone", muted)?;
-            }
-        }
+        self.log_row_listeners_bound = bound;
         Ok(())
     }
 }

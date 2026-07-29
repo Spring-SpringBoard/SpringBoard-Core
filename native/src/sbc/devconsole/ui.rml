@@ -5,7 +5,7 @@
 		<div id="line-count" class="line-count">{{ line_count }}</div>
 	</div>
 	<div id="log-container" class="log-container">
-		<div data-for="line : log_lines" class="log-line">{{ line.text }}</div>
+		<div data-for="line : log_lines" data-if="line.visible" class="log-line" data-class-severity-info="line.info" data-class-severity-warning="line.warning" data-class-severity-error="line.error" data-class-selected="line.selected">{{ line.text }}</div>
 	</div>
 	<div id="toolbar" class="toolbar">
 		<button id="btn-clear" class="command"><span class="command-label">Clear</span></button>

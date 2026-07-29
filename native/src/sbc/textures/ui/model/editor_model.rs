@@ -2,6 +2,7 @@ use super::{TexField, TextureUiModel};
 use spring_native::{prelude::Error, RmlDataModel};
 
 use crate::sbc::panels::runtime::{AssetGrid, EditorModel, FieldMut, FieldRef};
+use crate::sbc::panels::tooltip::PanelTooltip;
 
 use TexField::*;
 
@@ -26,6 +27,10 @@ impl EditorModel for TextureUiModel {
 
     fn grids_mut(&mut self) -> Vec<&mut AssetGrid> {
         vec![&mut self.pattern]
+    }
+
+    fn set_tooltip_host(&mut self, tooltip: PanelTooltip) {
+        self.actions.set_tooltip_host(tooltip);
     }
 
     fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {

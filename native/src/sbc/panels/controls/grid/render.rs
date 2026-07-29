@@ -119,7 +119,7 @@ impl GridView {
             return Ok(());
         };
         if let Some(path) = &self.navigation_path {
-            path.set(navigation.dir.clone())?;
+            path.set(navigation.location.clone())?;
         } else {
             log::warn!(
                 "navigable grid {} has no typed breadcrumb binding",
@@ -127,7 +127,7 @@ impl GridView {
             );
         }
         if let Some(up_disabled) = &self.navigation_up_disabled {
-            up_disabled.set(navigation.dir == navigation.root)?;
+            up_disabled.set(navigation.location.is_empty())?;
         }
         if let Some(up) = element_by_id(interface, document, &format!("{}-up", self.container_id)) {
             if !navigation.bound.get() {

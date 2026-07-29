@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from e2e.scenarios import console as console
 from e2e.scenarios import env as env
 from e2e.scenarios import gallery as gallery
+from e2e.scenarios import map as _map  # noqa: F401 - registers Map scenarios
 from e2e.scenarios import misc as misc
 from e2e.scenarios import objects as objects
 from e2e.scenarios import shell as shell

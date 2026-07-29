@@ -45,8 +45,14 @@ pub(crate) type ClickQueue = Rc<RefCell<Vec<String>>>;
 
 #[derive(Debug, Clone)]
 struct GridNavigation {
-    root: String,
-    dir: String,
+    /// The fixed directory inside every asset pack, for example
+    /// `brush_patterns/terrain/`.
+    asset_root: String,
+    /// The user-navigable asset location, for example `core/` or
+    /// `my_assets/subdirectory/`. It deliberately never contains
+    /// `asset_root`: Lua's AssetsManager splices that fixed part in only when
+    /// it resolves a VFS path.
+    location: String,
     extensions: Vec<String>,
     up_clicks: Rc<RefCell<u32>>,
     bound: Cell<bool>,
@@ -125,14 +131,14 @@ impl GridView {
         self.clicks.borrow_mut().drain(..).collect()
     }
 
-    /// Browse the shipped asset directory directly. Brush textures are usable
-    /// immediately, and their selected id remains the full VFS path the brush
-    /// commands consume.
+    /// Browse assets through their pack location, initially `core/`. The
+    /// configured root remains fixed while the user moves between packs or
+    /// their subdirectories; file selections remain full VFS paths because
+    /// brush commands load them directly.
     pub(crate) fn configure_asset_navigation(&mut self, root_dir: &str, extensions: &[&str]) {
-        let root = default_asset_root(root_dir);
         self.navigation = Some(GridNavigation {
-            root: root.clone(),
-            dir: root,
+            asset_root: root_dir.to_string(),
+            location: default_asset_location(root_dir),
             extensions: normalize_extensions(extensions),
             up_clicks: Rc::new(RefCell::new(0)),
             bound: Cell::new(false),
@@ -164,13 +170,13 @@ impl GridView {
         let mut navigate = false;
         if up > 0 {
             let parent = self.navigation.as_ref().and_then(|navigation| {
-                (navigation.dir != navigation.root)
-                    .then(|| parent_dir(&navigation.dir))
+                (!navigation.location.is_empty())
+                    .then(|| parent_dir(&navigation.location))
                     .flatten()
             });
             if let Some(parent) = parent {
                 if let Some(navigation) = self.navigation.as_mut() {
-                    navigation.dir = parent;
+                    navigation.location = parent;
                 }
                 navigate = true;
             }
@@ -182,7 +188,7 @@ impl GridView {
             let is_dir = self.item(&id).is_some_and(|item| item.is_directory);
             if is_dir {
                 if let Some(navigation) = self.navigation.as_mut() {
-                    navigation.dir = id;
+                    navigation.location = id;
                 }
                 navigate = true;
             } else {
@@ -203,15 +209,17 @@ impl GridView {
         interface: &NativeInterfaceRef,
         document: u64,
     ) -> Result<(), Error> {
-        let Some((dir, extensions)) = self
-            .navigation
-            .as_ref()
-            .map(|navigation| (navigation.dir.clone(), navigation.extensions.clone()))
-        else {
+        let Some((asset_root, location, extensions)) = self.navigation.as_ref().map(|navigation| {
+            (
+                navigation.asset_root.clone(),
+                navigation.location.clone(),
+                navigation.extensions.clone(),
+            )
+        }) else {
             return Ok(());
         };
         let extensions: Vec<&str> = extensions.iter().map(String::as_str).collect();
-        let items = list_asset_directory(interface, &dir, &extensions);
+        let items = list_asset_grid(interface, &asset_root, &location, &extensions);
         self.set_items(items);
         self.set_selected(None);
         self.render(interface, document)
@@ -258,10 +266,10 @@ impl GridView {
             return Ok(());
         };
         self.navigation_path =
-            Some(model.bind(&self.navigation_path_name(), navigation.dir.clone())?);
+            Some(model.bind(&self.navigation_path_name(), navigation.location.clone())?);
         self.navigation_up_disabled = Some(model.bind(
             &self.navigation_up_disabled_name(),
-            navigation.dir == navigation.root,
+            navigation.location.is_empty(),
         )?);
         Ok(())
     }
@@ -345,11 +353,7 @@ pub(crate) fn list_asset_tree(
     }
 
     // `core/` or `core/sub/dir/` -> the pack, then the rest.
-    let (pack, rest) = dir.split_once('/').unwrap_or((dir, ""));
-    let real = format!(
-        "{ASSETS_DIR}/{pack}/{root}{rest}",
-        root = root_dir.trim_start_matches('/'),
-    );
+    let real = asset_pack_directory(root_dir, dir);
 
     let mut items: Vec<GridItem> = vfs_sub_dirs(interface, &real)
         .into_iter()
@@ -378,6 +382,48 @@ pub(crate) fn list_asset_tree(
         });
     }
     items
+}
+
+/// The inline brush grid follows the same location/root split as
+/// [`list_asset_tree`], but brush commands consume direct VFS paths. Directory
+/// ids stay asset-relative so navigation stays within the asset-pack tree;
+/// file ids become their already-resolved image path.
+fn list_asset_grid(
+    interface: &NativeInterfaceRef,
+    root_dir: &str,
+    location: &str,
+    extensions: &[&str],
+) -> Vec<GridItem> {
+    grid_file_ids(list_asset_tree(interface, root_dir, location, extensions))
+}
+
+fn grid_file_ids(items: Vec<GridItem>) -> Vec<GridItem> {
+    items
+        .into_iter()
+        .map(|mut item| {
+            if !item.is_directory {
+                if let Some(path) = &item.image {
+                    item.id = path.clone();
+                }
+            }
+            item
+        })
+        .collect()
+}
+
+/// Resolve an asset-relative location to the VFS directory that is actually
+/// listed. The field root is fixed between the pack name and its optional
+/// subdirectory, exactly like Lua's `AssetsManager:ToSpringPath`.
+fn asset_pack_directory(root_dir: &str, location: &str) -> String {
+    let (pack, rest) = location.split_once('/').unwrap_or((location, ""));
+    let mut directory = format!("{ASSETS_DIR}/{}", pack.trim_matches('/'));
+    for segment in [root_dir.trim_matches('/'), rest.trim_matches('/')] {
+        if !segment.is_empty() {
+            directory.push('/');
+            directory.push_str(segment);
+        }
+    }
+    directory
 }
 
 pub(crate) fn list_assets(
@@ -491,51 +537,12 @@ fn list_entries(
     dirs
 }
 
-fn default_asset_root(root_dir: &str) -> String {
-    format!(
-        "{ASSETS_DIR}/{DEFAULT_ASSET_PACK}/{}",
-        root_dir.trim_matches('/')
-    )
-}
-
-/// One directory in the default asset pack, with full VFS paths as item ids.
-///
-/// `Vfs::list_dir` is intentionally broad and starts at mounted archive roots;
-/// the direct `sub_dirs`/`dir_list_names` calls below preserve the requested
-/// nested directory instead.
-fn list_asset_directory(
-    interface: &NativeInterfaceRef,
-    dir: &str,
-    extensions: &[&str],
-) -> Vec<GridItem> {
-    let dir = dir.trim_end_matches('/');
-    let mut items: Vec<GridItem> = vfs_sub_dirs(interface, dir)
-        .into_iter()
-        .map(|name| GridItem {
-            id: format!("{dir}/{name}"),
-            caption: name,
-            image: None,
-            is_directory: true,
-            tooltip: None,
-            tooltip_content: None,
-        })
-        .collect();
-    items.extend(
-        vfs_files(interface, dir, extensions)
-            .into_iter()
-            .map(|name| {
-                let path = format!("{dir}/{name}");
-                GridItem {
-                    id: path.clone(),
-                    caption: name,
-                    image: Some(path),
-                    is_directory: false,
-                    tooltip: None,
-                    tooltip_content: None,
-                }
-            }),
-    );
-    items
+fn default_asset_location(root_dir: &str) -> String {
+    if root_dir.starts_with("vfs:") {
+        String::new()
+    } else {
+        format!("{DEFAULT_ASSET_PACK}/")
+    }
 }
 
 fn ensure_slash(dir: &str) -> String {
@@ -572,10 +579,47 @@ mod tests {
     }
 
     #[test]
-    fn inline_asset_navigation_uses_the_default_pack_vfs_root() {
+    fn inline_asset_navigation_starts_at_the_default_pack_location() {
+        assert_eq!(default_asset_location("brush_patterns/terrain/"), "core/");
+        assert_eq!(default_asset_location("vfs:bitmaps/"), "");
+    }
+
+    #[test]
+    fn inline_asset_navigation_keeps_locations_but_selects_the_resolved_file() {
+        let folder = GridItem {
+            id: "core/subfolder/".to_string(),
+            caption: "subfolder".to_string(),
+            image: None,
+            is_directory: true,
+            tooltip: None,
+            tooltip_content: None,
+        };
+        let file = GridItem {
+            id: "core/circle.png".to_string(),
+            caption: "circle.png".to_string(),
+            image: Some("springboard/assets/core/brush_patterns/terrain/circle.png".to_string()),
+            is_directory: false,
+            tooltip: None,
+            tooltip_content: None,
+        };
+
+        let items = grid_file_ids(vec![folder, file]);
+        assert_eq!(items[0].id, "core/subfolder/");
         assert_eq!(
-            default_asset_root("brush_patterns/terrain/"),
+            items[1].id,
+            "springboard/assets/core/brush_patterns/terrain/circle.png"
+        );
+    }
+
+    #[test]
+    fn asset_root_is_spliced_between_the_pack_and_its_subdirectory() {
+        assert_eq!(
+            asset_pack_directory("brush_patterns/terrain/", "core/"),
             "springboard/assets/core/brush_patterns/terrain"
+        );
+        assert_eq!(
+            asset_pack_directory("brush_patterns/terrain/", "my_assets/noise/"),
+            "springboard/assets/my_assets/brush_patterns/terrain/noise"
         );
     }
 }

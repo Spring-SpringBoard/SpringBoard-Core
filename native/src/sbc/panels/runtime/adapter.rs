@@ -244,11 +244,7 @@ impl<B: Behavior> Editor for Runtime<B> {
     ) -> Result<(), Error> {
         self.engine = Some(*interface);
         self.rebuild = false;
-        let tooltip_host = self
-            .tooltip
-            .as_ref()
-            .expect("editor slot binds the panel tooltip before fields")
-            .clone();
+        let tooltip_host = self.tooltip.clone();
         if let Some(actions) = self.actions.as_mut() {
             actions.bind(interface, document)?;
         }
@@ -260,7 +256,7 @@ impl<B: Behavior> Editor for Runtime<B> {
             // Every field renders as `field-<name>`, so one place gives them
             // all hover text.
             let tooltip = entry.field.tooltip().map(str::to_string);
-            if let Some(tooltip) = tooltip {
+            if let (Some(tooltip_host), Some(tooltip)) = (&tooltip_host, tooltip) {
                 let id = format!("field-{}", entry.field.name());
                 if let Some(element) = element_by_id(interface, document, &id) {
                     tooltip_host.bind_to(interface, element, TooltipContent::text(tooltip))?;
@@ -279,6 +275,7 @@ impl<B: Behavior> Editor for Runtime<B> {
         if let Some(actions) = self.actions.as_mut() {
             actions.set_tooltip_host(tooltip.clone());
         }
+        self.model.set_tooltip_host(tooltip.clone());
         for grid in self.model.grids_mut() {
             grid.set_tooltip_host(tooltip.clone());
         }

@@ -12,6 +12,7 @@ use crate::sbc::command_system::model::Models;
 use crate::sbc::panels::brush::BrushAction;
 use crate::sbc::panels::field::Field;
 use crate::sbc::panels::runtime::typed_fields::AssetGrid;
+use crate::sbc::panels::tooltip::PanelTooltip;
 use crate::sbc::project::EditorState;
 use crate::sbc::states::StateRequest;
 
@@ -124,6 +125,11 @@ pub(crate) trait EditorModel {
     fn grids_mut(&mut self) -> Vec<&mut AssetGrid> {
         vec![]
     }
+
+    /// The panel-owned tooltip surface for custom model controls. Standard
+    /// fields and asset grids are wired by the runtime; models opt in only
+    /// when they own another interactive control such as Texture's actions.
+    fn set_tooltip_host(&mut self, _tooltip: PanelTooltip) {}
 
     /// Model-specific display state that is not an editable field. Bound here
     /// so the editor's complete model exists before its RML is parsed.

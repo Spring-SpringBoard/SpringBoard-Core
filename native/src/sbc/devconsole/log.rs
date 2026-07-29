@@ -13,14 +13,6 @@ pub(crate) enum Severity {
 }
 
 impl Severity {
-    pub(crate) fn css_class(self) -> &'static str {
-        match self {
-            Severity::Info => "severity-info",
-            Severity::Warning => "severity-warning",
-            Severity::Error => "severity-error",
-        }
-    }
-
     pub(crate) fn is_problem(self) -> bool {
         !matches!(self, Severity::Info)
     }

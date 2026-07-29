@@ -69,7 +69,11 @@ impl CursorTip {
                 &hit.rows
                     .iter()
                     .cloned()
-                    .map(|text| RmlTextRow { text, muted: false })
+                    .map(|text| RmlTextRow {
+                        text,
+                        muted: false,
+                        visible: true,
+                    })
                     .collect::<Vec<_>>(),
             )?;
             self.shown = Some(hit.key);

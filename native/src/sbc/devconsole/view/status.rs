@@ -1,8 +1,11 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlDataModel,
+};
 
 use super::{
-    element_by_id, rml, DevConsoleView, HistoryCommand, StatusAction, StatusMetricBindings,
-    STATUS_BODY, STATUS_CONTEXT, UI_STYLE,
+    element_by_id, rml, DevConsoleView, HistoryCommand, StatusAction, StatusMetricBinding,
+    StatusMetricBindings, STATUS_BODY, STATUS_CONTEXT, UI_STYLE,
 };
 use crate::sbc::devconsole::status::{MetricTone, StatusMetric};
 use spring_native::RmlTextRow;
@@ -27,26 +30,18 @@ impl DevConsoleView {
             field.set(version.to_string())?;
         }
         if let Some(fields) = &self.status_metrics {
-            render_metrics(
-                interface,
-                doc,
-                "status-performance",
-                &fields.performance,
-                performance,
-            )?;
-            render_metrics(interface, doc, "status-system", &fields.system, system)?;
+            render_metrics(&fields.performance, performance)?;
+            render_metrics(&fields.system, system)?;
         }
         let can_undo = commands.iter().any(|command| !command.undone);
         let can_redo = commands.iter().any(|command| command.undone);
-        for (id, enabled) in [
-            ("status-undo", can_undo),
-            ("status-redo", can_redo),
-            ("status-clear", can_undo || can_redo),
-        ] {
-            if let Some(button) = element_by_id(interface, doc, id) {
-                interface
-                    .rml_ui()
-                    .element_set_class(button, "disabled", !enabled)?;
+        for (disabled, enabled) in
+            self.status_action_disabled
+                .iter()
+                .zip([can_undo, can_redo, can_undo || can_redo])
+        {
+            if let Some(disabled) = disabled {
+                disabled.set(!enabled)?;
             }
         }
         if self.rendered_command_log.as_deref() != Some(commands) {
@@ -59,10 +54,10 @@ impl DevConsoleView {
                     .map(|command| RmlTextRow {
                         text: command.caption.clone(),
                         muted: command.undone,
+                        visible: true,
                     })
                     .collect::<Vec<_>>();
                 history.set(&rows)?;
-                self.status_history_muted = rows.iter().map(|row| row.muted).collect();
             }
             if let Some(list) = element_by_id(interface, doc, "command-list") {
                 let _ = interface.rml_ui().element_set_scroll_top(list, 1_000_000);
@@ -82,8 +77,8 @@ impl DevConsoleView {
             self.status_position = None;
             self.status_version = None;
             self.status_metrics = None;
+            self.status_action_disabled = [None; 3];
             self.status_history = None;
-            self.status_history_muted.clear();
             self.rendered_command_log = None;
         }
         let rml = interface.rml_ui();
@@ -99,17 +94,22 @@ impl DevConsoleView {
         self.status_version = Some(data_model.bind("version", String::new())?);
         self.status_metrics = Some(StatusMetricBindings {
             performance: [
-                data_model.bind("fps", String::new())?,
-                data_model.bind("process_cpu", String::new())?,
-                data_model.bind("system_cpu", String::new())?,
+                bind_metric(&data_model, "fps")?,
+                bind_metric(&data_model, "process_cpu")?,
+                bind_metric(&data_model, "system_cpu")?,
             ],
             system: [
-                data_model.bind("lua_memory", String::new())?,
-                data_model.bind("vram", String::new())?,
-                data_model.bind("ram", String::new())?,
-                data_model.bind("process_memory", String::new())?,
+                bind_metric(&data_model, "lua_memory")?,
+                bind_metric(&data_model, "vram")?,
+                bind_metric(&data_model, "ram")?,
+                bind_metric(&data_model, "process_memory")?,
             ],
         });
+        self.status_action_disabled = [
+            Some(data_model.bind("undo_disabled", true)?),
+            Some(data_model.bind("redo_disabled", true)?),
+            Some(data_model.bind("clear_history_disabled", true)?),
+        ];
         self.status_history = Some(data_model.bind_text_rows("command_history")?);
 
         let (document, created) = rml.context_create_document(context, "body")?;
@@ -118,8 +118,8 @@ impl DevConsoleView {
             self.status_position = None;
             self.status_version = None;
             self.status_metrics = None;
+            self.status_action_disabled = [None; 3];
             self.status_history = None;
-            self.status_history_muted.clear();
             return Ok(());
         }
         rml.document_set_title(document, "Editor status")?;
@@ -155,23 +155,29 @@ impl DevConsoleView {
     }
 }
 
+fn bind_metric(
+    data_model: &RmlDataModel<'static>,
+    name: &str,
+) -> Result<StatusMetricBinding, Error> {
+    Ok(StatusMetricBinding {
+        value: data_model.bind(name, String::new())?,
+        tones: [
+            data_model.bind(format!("{name}_normal").as_str(), true)?,
+            data_model.bind(format!("{name}_healthy").as_str(), false)?,
+            data_model.bind(format!("{name}_warning").as_str(), false)?,
+            data_model.bind(format!("{name}_critical").as_str(), false)?,
+        ],
+    })
+}
+
 fn render_metrics<const N: usize>(
-    interface: &NativeInterfaceRef,
-    document: u64,
-    group_id: &str,
-    fields: &[spring_native::RmlDataVariable<'static, String>; N],
+    fields: &[StatusMetricBinding; N],
     metrics: &[StatusMetric; N],
 ) -> Result<(), Error> {
-    for (index, (field, metric)) in fields.iter().zip(metrics).enumerate() {
-        field.set(metric.value.clone())?;
-        let Some(element) = element_by_id(interface, document, &format!("{group_id}-{index}"))
-        else {
-            continue;
-        };
-        for tone in MetricTone::ALL {
-            interface
-                .rml_ui()
-                .element_set_class(element, tone.class(), metric.tone == tone)?;
+    for (field, metric) in fields.iter().zip(metrics) {
+        field.value.set(metric.value.clone())?;
+        for (tone, bound_tone) in MetricTone::ALL.iter().zip(&field.tones) {
+            bound_tone.set(metric.tone == *tone)?;
         }
     }
     Ok(())

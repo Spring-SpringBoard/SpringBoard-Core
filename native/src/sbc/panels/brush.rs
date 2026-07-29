@@ -96,10 +96,9 @@ impl BrushActions {
             let tooltip = self.disabled_tooltips[index]
                 .as_deref()
                 .unwrap_or(action.caption);
-            self.tooltip
-                .as_ref()
-                .expect("editor slot binds the panel tooltip before brush actions")
-                .bind_to(interface, button, TooltipContent::text(tooltip))?;
+            if let Some(tooltip_host) = &self.tooltip {
+                tooltip_host.bind_to(interface, button, TooltipContent::text(tooltip))?;
+            }
             let queue = self.clicks.clone();
             interface
                 .rml_ui()

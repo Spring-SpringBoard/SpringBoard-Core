@@ -222,6 +222,7 @@ impl ChonsoleRml {
             .map(|line| RmlTextRow {
                 text: line.text.clone(),
                 muted: line.kind == ChonsoleLineKind::Input,
+                visible: true,
             })
             .collect::<Vec<_>>();
         self.line_rows

@@ -1,6 +1,6 @@
 <div id="native-chonsole" data-model="chonsole">
     <div id="native-chonsole-lines" class="lines">
-        <div data-for="line : lines" class="line output-line" data-class-input-line="line.muted">{{ line.text }}</div>
+        <div data-for="line : lines" data-if="line.visible" class="line output-line" data-class-input-line="line.muted">{{ line.text }}</div>
     </div>
     <div id="native-chonsole-suggestions" class="suggestions theme-surface" data-class-hidden="suggestions_hidden">
         <div data-for="suggestion : suggestions" data-if="suggestion.visible" class="suggestion" data-class-selected-suggestion="suggestion.selected" data-class-hovered-suggestion="suggestion.highlighted">

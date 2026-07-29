@@ -38,5 +38,5 @@
 </div>
 <div id="native-cursor-tooltip" class="native-tooltip" data-model="cursor_tip" data-class-hidden="hidden" data-style-left="left" data-style-top="top">
     <div class="tip-title">{{ title }}</div>
-    <div data-for="row : rows" class="tip-row">{{ row.text }}</div>
+    <div data-for="row : rows" data-if="row.visible" class="tip-row">{{ row.text }}</div>
 </div>

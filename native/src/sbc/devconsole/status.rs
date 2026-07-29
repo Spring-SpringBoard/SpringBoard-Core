@@ -40,15 +40,6 @@ pub(super) enum MetricTone {
 
 impl MetricTone {
     pub(super) const ALL: [Self; 4] = [Self::Normal, Self::Healthy, Self::Warning, Self::Critical];
-
-    pub(super) const fn class(self) -> &'static str {
-        match self {
-            Self::Normal => "normal",
-            Self::Healthy => "healthy",
-            Self::Warning => "warning",
-            Self::Critical => "critical",
-        }
-    }
 }
 
 impl Default for StatusMetric {
