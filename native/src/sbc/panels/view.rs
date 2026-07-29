@@ -377,6 +377,10 @@ impl PanelView {
         self.content
     }
 
+    pub(crate) fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
+        rml::context_is_alive(interface, UI_CONTEXT, self.context)
+    }
+
     /// Synchronize the current tab's registered editor controls.
     fn render_editor_buttons(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         let Some(doc) = self.document else {
@@ -390,10 +394,6 @@ impl PanelView {
             self.tooltip.as_ref().expect("panel tooltip is bound"),
             &self.events,
         )
-    }
-
-    fn context_is_alive(&self, interface: &NativeInterfaceRef) -> bool {
-        rml::context_is_alive(interface, UI_CONTEXT, self.context)
     }
 
     /// Drop the handles without touching them: the engine already freed them.

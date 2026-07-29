@@ -312,11 +312,14 @@ fn texture_command_stroke_undo_redo(ctx: &mut TestCtx) -> Result<(), String> {
     set_mode(ctx, true);
     paint(ctx);
     paint(ctx);
-    set_mode(ctx, false);
+    // The stroke closer is part of the stream. That is what makes its
+    // texture-specific backup group the single ordinary command-history entry
+    // shown in undo/redo, instead of leaving paint outside global history.
     route(
         ctx,
         serde_json::json!({ "className": "TerrainChangeTextureMergedCommand" }),
     );
+    set_mode(ctx, false);
 
     if ctx.sbc.model::<TextureModel>().history.undo_depth() != undo0 + 1
         || ctx.sbc.model::<TextureModel>().history.redo_depth() != 0

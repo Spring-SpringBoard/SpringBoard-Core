@@ -199,11 +199,89 @@
     border-color: #4d5a50;
 }
 
-.field-numeric-button:active,
-.field-numeric-button.dragging {
-    color: #f5d316;
-    border-color: #b19c24;
-    background-color: #171a12;
+/* During a drag the screen-level overlay supplies the title and value above
+   the progress fill. Preserve the button's layout, but prevent its original
+   text from peeking through the unfilled part of that independent plane. */
+.field-numeric-button.numeric-drag-presented .field-button-title,
+.field-numeric-button.numeric-drag-presented .field-button-value {
+    visibility: hidden;
+}
+
+/* A numeric drag is painted by a separate, screen-level context. It has no
+   parent layout, so its bounds can spill over neighbouring UI without moving
+   or obscuring the underlying field. */
+.numeric-drag-overlay {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.numeric-drag-overlay-control {
+    position: absolute;
+}
+
+.numeric-drag-overlay-progress {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    z-index: 1;
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.numeric-drag-overlay-title,
+.numeric-drag-overlay-value {
+    position: absolute;
+    z-index: 2;
+    top: 0px;
+    height: 31px;
+    line-height: 31px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.numeric-drag-overlay-title {
+    /* Match the numeric button's 2px border plus 8px content padding. */
+    left: 10px;
+}
+
+.numeric-drag-overlay-value {
+    right: 10px;
+    text-align: right;
+}
+
+.numeric-drag-overlay-progress.hidden,
+.numeric-drag-overlay-bound.hidden,
+.numeric-drag-overlay.hidden {
+    display: none;
+}
+
+.numeric-drag-overlay-bound {
+    position: absolute;
+    top: -3px;
+    z-index: 2;
+    min-width: 24px;
+    height: 34px;
+    padding: 0px 4px;
+    box-sizing: border-box;
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 31px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.numeric-drag-overlay-bound-min {
+    right: 100%;
+    margin-right: 2px;
+}
+
+.numeric-drag-overlay-bound-max {
+    left: 100%;
+    margin-left: 2px;
 }
 
 .field-numeric-input,

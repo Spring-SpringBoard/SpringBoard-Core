@@ -34,6 +34,9 @@ pub(crate) fn new_interaction_queue() -> InteractionQueue {
 pub enum InteractionEvent {
     PointerDown {
         field: String,
+        /// Engine mouse coordinates, when the RmlUi event provided them.
+        /// Generic pointer users do not need an anchor; numeric drags do.
+        anchor: Option<(i32, i32)>,
     },
     PointerUp {
         field: String,
@@ -46,6 +49,26 @@ pub enum InteractionEvent {
     DragEnd {
         field: String,
     },
+    /// Exact horizontal movement from one RmlUi drag event. RmlUi emits this
+    /// before the pointer is put back at its drag anchor.
+    DragMove {
+        field: String,
+        dx: f32,
+    },
+    /// A numeric field asks the panel-owned presentation surface to follow its
+    /// drag. The field describes values; the surface owns all RmlUi geometry.
+    NumericDragPresentation(NumericDragPresentation),
+}
+
+#[derive(Debug, Clone)]
+pub struct NumericDragPresentation {
+    pub element: u64,
+    pub title: String,
+    pub value: String,
+    pub min: Option<String>,
+    pub max: Option<String>,
+    /// A bounded range normalised to 0..1. `None` means no fill.
+    pub progress: Option<f32>,
 }
 
 /// One field as the control channel sees it: what it is called, what it holds,
@@ -183,7 +206,10 @@ pub(crate) fn on_pointer(
     for (event, make) in [
         (
             "mousedown",
-            (|field| InteractionEvent::PointerDown { field }) as fn(String) -> InteractionEvent,
+            (|field| InteractionEvent::PointerDown {
+                field,
+                anchor: None,
+            }) as fn(String) -> InteractionEvent,
         ),
         ("mouseup", |field| InteractionEvent::PointerUp { field }),
         ("dragstart", |field| InteractionEvent::DragStart { field }),
@@ -195,6 +221,127 @@ pub(crate) fn on_pointer(
             .rml_ui()
             .element_add_event_listener(element, event, false, move || {
                 queue.borrow_mut().push(make(field.clone()));
+            })?;
+    }
+    Ok(())
+}
+
+/// Register numeric drag events with RmlUi's per-motion coordinates.
+///
+/// RmlUi captures a numeric field's drag before SBC receives normal mouse
+/// callbacks. Polling the engine cursor later made a small physical move look
+/// large when the original click landed away from the field's logical value.
+/// Instead, this mirrors Chili: consume the current RmlUi `drag` movement and
+/// immediately put the pointer back where the press began.
+pub(crate) fn on_numeric_pointer(
+    interface: &NativeInterfaceRef,
+    context: u64,
+    element: u64,
+    name: String,
+    interactions: &InteractionQueue,
+) -> Result<(), Error> {
+    let anchor = Rc::new(RefCell::new(None::<(i32, i32)>));
+
+    {
+        let queue = interactions.clone();
+        let field = name.clone();
+        let anchor = anchor.clone();
+        let iface = *interface;
+        interface
+            .rml_ui()
+            .element_add_event_listener(element, "mousedown", false, move || {
+                if current_rml_mouse_button(&iface) != Some(0) {
+                    return;
+                }
+                let Some((x, y)) = current_rml_mouse_position(&iface) else {
+                    return;
+                };
+                let Some(anchor_position) = engine_mouse_position(&iface, x, y) else {
+                    return;
+                };
+                *anchor.borrow_mut() = Some(anchor_position);
+                let _ = iface
+                    .rml_ui()
+                    .context_set_pointer_capture(context, x, y, true);
+                queue.borrow_mut().push(InteractionEvent::PointerDown {
+                    field: field.clone(),
+                    anchor: Some(anchor_position),
+                });
+            })?;
+    }
+    {
+        let queue = interactions.clone();
+        let field = name.clone();
+        let iface = *interface;
+        interface
+            .rml_ui()
+            .element_add_event_listener(element, "mouseup", false, move || {
+                if current_rml_mouse_button(&iface) != Some(0) {
+                    return;
+                }
+                let _ = iface
+                    .rml_ui()
+                    .context_set_pointer_capture(context, 0, 0, false);
+                queue.borrow_mut().push(InteractionEvent::PointerUp {
+                    field: field.clone(),
+                });
+            })?;
+    }
+    {
+        let queue = interactions.clone();
+        let field = name.clone();
+        interface
+            .rml_ui()
+            .element_add_event_listener(element, "dragstart", false, move || {
+                // RmlUi dispatches `dragstart` immediately before the first
+                // `drag`. Do not warp here: it changes the context position
+                // before that first `drag` can read its movement. The next
+                // listener consumes and pins this same physical motion.
+                queue.borrow_mut().push(InteractionEvent::DragStart {
+                    field: field.clone(),
+                });
+            })?;
+    }
+    {
+        let queue = interactions.clone();
+        let field = name.clone();
+        let anchor = anchor.clone();
+        let iface = *interface;
+        interface
+            .rml_ui()
+            .element_add_event_listener(element, "drag", false, move || {
+                let Some((mouse_x, _)) = current_rml_mouse_position(&iface) else {
+                    return;
+                };
+                let Some((anchor_x, anchor_y)) = *anchor.borrow() else {
+                    return;
+                };
+                let dx = (mouse_x - anchor_x) as f32;
+                if dx != 0.0 {
+                    queue.borrow_mut().push(InteractionEvent::DragMove {
+                        field: field.clone(),
+                        dx,
+                    });
+                    // The backend's synthetic anchor move fires `drag` once
+                    // more with zero movement. It has already restored both
+                    // pointer positions, so avoid a redundant OS cursor warp.
+                    let _ = iface.unsynced_ctrl().warp_mouse(anchor_x, anchor_y);
+                }
+            })?;
+    }
+    {
+        let queue = interactions.clone();
+        let field = name;
+        let iface = *interface;
+        interface
+            .rml_ui()
+            .element_add_event_listener(element, "dragend", false, move || {
+                let _ = iface
+                    .rml_ui()
+                    .context_set_pointer_capture(context, 0, 0, false);
+                queue.borrow_mut().push(InteractionEvent::DragEnd {
+                    field: field.clone(),
+                });
             })?;
     }
     Ok(())
@@ -297,4 +444,33 @@ pub trait Field {
 
     /// End edit mode — switch back to display, without committing.
     fn end_edit(&mut self, _interface: &NativeInterfaceRef) {}
+}
+
+/// RmlUi event positions use top-origin screen coordinates; engine mouse and
+/// `warp_mouse` use the bottom-origin coordinates exposed by Spring's native
+/// input API.
+fn current_rml_mouse_position(interface: &NativeInterfaceRef) -> Option<(i32, i32)> {
+    let rml = interface.rml_ui();
+    let (event, ..) = rml.event_get_current().ok()?;
+    let (x, has_x) = rml.event_get_parameter_int(event, "mouse_x").ok()?;
+    let (y, has_y) = rml.event_get_parameter_int(event, "mouse_y").ok()?;
+    if !has_x || !has_y {
+        return None;
+    }
+    Some((x, y))
+}
+
+/// RmlUi mouse buttons are zero-based: left, right, then middle.
+fn current_rml_mouse_button(interface: &NativeInterfaceRef) -> Option<i32> {
+    let rml = interface.rml_ui();
+    let (event, ..) = rml.event_get_current().ok()?;
+    let (button, found) = rml.event_get_parameter_int(event, "button").ok()?;
+    found.then_some(button)
+}
+
+/// Convert an RmlUi top-origin event position for Spring's bottom-origin mouse
+/// API. The relative Rml capture itself retains top-origin coordinates.
+fn engine_mouse_position(interface: &NativeInterfaceRef, x: i32, y: i32) -> Option<(i32, i32)> {
+    let geometry = interface.display().get_view_geometry().ok()?;
+    Some((x, geometry.viewSizeY - y - 1))
 }

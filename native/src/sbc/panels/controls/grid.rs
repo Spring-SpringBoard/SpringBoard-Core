@@ -384,6 +384,39 @@ pub(crate) fn list_asset_tree(
     items
 }
 
+pub(crate) fn list_assets(
+    interface: &NativeInterfaceRef,
+    dir: &str,
+    extensions: &[&str],
+) -> Vec<GridItem> {
+    list_entries(interface, dir, extensions, false)
+}
+
+/// Like [`list_assets`], but also lists sub-directories as browsable folder
+/// cells. Only the Open/Load dialog wants that: a project is an `.sdd` folder,
+/// invisible to the engine's file-only `ListDir`. Texture pickers stay
+/// file-only, or engine dirs (`bitmaps/`) would bury the textures under dozens
+/// of unrelated sub-folders.
+pub(crate) fn list_entries_with_dirs(
+    interface: &NativeInterfaceRef,
+    dir: &str,
+    extensions: &[&str],
+) -> Vec<GridItem> {
+    list_entries(interface, dir, extensions, true)
+}
+
+/// The parent of a VFS directory, or None at the root.
+pub(crate) fn parent_dir(dir: &str) -> Option<String> {
+    let trimmed = dir.trim_end_matches('/');
+    if trimmed.is_empty() {
+        return None;
+    }
+    match trimmed.rsplit_once('/') {
+        Some((parent, _)) => Some(parent.to_string()),
+        None => Some(String::new()),
+    }
+}
+
 /// The inline brush grid follows the same location/root split as
 /// [`list_asset_tree`], but brush commands consume direct VFS paths. Directory
 /// ids stay asset-relative so navigation stays within the asset-pack tree;
@@ -424,39 +457,6 @@ fn asset_pack_directory(root_dir: &str, location: &str) -> String {
         }
     }
     directory
-}
-
-pub(crate) fn list_assets(
-    interface: &NativeInterfaceRef,
-    dir: &str,
-    extensions: &[&str],
-) -> Vec<GridItem> {
-    list_entries(interface, dir, extensions, false)
-}
-
-/// Like [`list_assets`], but also lists sub-directories as browsable folder
-/// cells. Only the Open/Load dialog wants that: a project is an `.sdd` folder,
-/// invisible to the engine's file-only `ListDir`. Texture pickers stay
-/// file-only, or engine dirs (`bitmaps/`) would bury the textures under dozens
-/// of unrelated sub-folders.
-pub(crate) fn list_entries_with_dirs(
-    interface: &NativeInterfaceRef,
-    dir: &str,
-    extensions: &[&str],
-) -> Vec<GridItem> {
-    list_entries(interface, dir, extensions, true)
-}
-
-/// The parent of a VFS directory, or None at the root.
-pub(crate) fn parent_dir(dir: &str) -> Option<String> {
-    let trimmed = dir.trim_end_matches('/');
-    if trimmed.is_empty() {
-        return None;
-    }
-    match trimmed.rsplit_once('/') {
-        Some((parent, _)) => Some(parent.to_string()),
-        None => Some(String::new()),
-    }
 }
 
 fn list_entries(

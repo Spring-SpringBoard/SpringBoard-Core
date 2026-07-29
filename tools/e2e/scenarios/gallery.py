@@ -80,6 +80,25 @@ def gallery(run_state: "RunState") -> None:
     dragging = run_state.golden("numeric-dragging", park=False, tolerance=CURSOR_IN_SHOT)
     run_state.release(*panel_point(left, GALLERY["bounded"]))
 
+    # The drag presentation owns a separate RmlUi context. Interrupt a live
+    # left drag with a right click, then release the physical left button. The
+    # next drag must still be able to mount its sizeable progress surface; this
+    # catches a capture that left the numeric field permanently dragging.
+    released = run_state.screenshot("numeric-drag-released")
+    run_state.press(*panel_point(left, GALLERY["bounded"]))
+    run_state.move_relative(-30)
+    # The panel is right-aligned. This is a real point in the map, not merely
+    # "left of the panel" (which can fall outside the window and emit no input).
+    run_state.click(left // 2, 500, button=3, delay=Delay.FRAME)
+    run_state.release(*panel_point(left, GALLERY["bounded"]))
+    cancelled_drag = run_state.screenshot("numeric-drag-cancelled")
+    run_state.press(*panel_point(left, GALLERY["bounded"]))
+    run_state.move_relative(30)
+    repeated_drag = run_state.screenshot("numeric-dragging-repeat")
+    run_state.assert_screenshot_pixels(cancelled_drag, repeated_drag, min_changed=500)
+    run_state.release(*panel_point(left, GALLERY["bounded"]))
+    _ = released
+
     # Boolean: toggled.
     run_state.click(*panel_point(left, GALLERY["bool_on"]), delay=Delay.SETTLE)
 

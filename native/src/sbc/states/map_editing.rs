@@ -90,6 +90,14 @@ pub(crate) trait MapBrush: Sync {
         stamp: BrushStamp,
         button: BrushButton,
     ) -> Box<dyn Command>;
+
+    /// A domain may replace its stream of live dabs with one command when the
+    /// stroke ends. Texture painting owns pixel backups outside the ordinary
+    /// command objects, so it closes those backups here; most tools need no
+    /// extra final command.
+    fn finish_stroke(&self) -> Option<Box<dyn Command>> {
+        None
+    }
 }
 
 pub(crate) struct MapEditingState {
@@ -167,6 +175,12 @@ impl MapEditingState {
     fn stop_painting(&mut self, ctx: &mut StateContext) {
         if !self.painting {
             return;
+        }
+        if let Some(command) = self.tool.finish_stroke() {
+            // Submit before ending the stream, so this becomes the one history
+            // entry representing the whole stroke rather than an unrelated
+            // command after it.
+            ctx.command(command);
         }
         ctx.set_multiple_command_mode(false);
         self.painting = false;

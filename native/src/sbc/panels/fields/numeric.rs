@@ -4,8 +4,8 @@ use spring_native::{
 };
 
 use crate::sbc::panels::field::{
-    element_by_id, escape_rml, format_number, on_blur, on_enter, on_pointer, ChangeQueue, Field,
-    FieldValue, InteractionQueue,
+    element_by_id, escape_rml, format_number, on_blur, on_enter, on_numeric_pointer, ChangeQueue,
+    Field, FieldValue, InteractionEvent, InteractionQueue, NumericDragPresentation,
 };
 
 const DEFAULT_DECIMALS: usize = 3;
@@ -24,12 +24,14 @@ pub(crate) struct NumericField {
     max: Option<f32>,
     decimals: usize,
     compact: bool,
+    button_elem: Option<u64>,
     edit_elem: Option<u64>,
     editing: bool,
     display_value: Option<RmlDataVariable<'static, String>>,
     input_value: Option<RmlDataVariable<'static, String>>,
     editing_value: Option<RmlDataVariable<'static, bool>>,
     dragging_value: Option<RmlDataVariable<'static, bool>>,
+    interactions: Option<InteractionQueue>,
 }
 
 impl NumericField {
@@ -44,12 +46,14 @@ impl NumericField {
             max: None,
             decimals: DEFAULT_DECIMALS,
             compact: false,
+            button_elem: None,
             edit_elem: None,
             editing: false,
             display_value: None,
             input_value: None,
             editing_value: None,
             dragging_value: None,
+            interactions: None,
             tooltip: None,
         }
     }
@@ -141,6 +145,22 @@ impl NumericField {
         format!("{{{{ {} }}}}", self.binding_name())
     }
 
+    fn progress_ratio(&self) -> Option<f32> {
+        let (min, max) = (self.min?, self.max?);
+        (max > min).then(|| ((self.value - min) / (max - min)).clamp(0.0, 1.0))
+    }
+
+    fn drag_presentation(&self) -> Option<NumericDragPresentation> {
+        Some(NumericDragPresentation {
+            element: self.button_elem?,
+            title: self.title.trim_end_matches(':').to_string(),
+            value: self.display_text(),
+            min: self.min.map(|value| format_number(value, self.decimals)),
+            max: self.max.map(|value| format_number(value, self.decimals)),
+            progress: self.progress_ratio(),
+        })
+    }
+
     fn sync_display_value(&self) -> Result<(), Error> {
         if let Some(value) = &self.display_value {
             value.set(self.display_text())?;
@@ -195,12 +215,13 @@ impl Field for NumericField {
     }
 
     fn generate_rml(&self) -> String {
-        // Same markup as RmlUiNumericField in scen_edit/view/rmlui_fields.lua.
+        // Keep the control structurally identical to the ordinary field. The
+        // numeric drag presentation is mounted in its own screen overlay.
         let width = if self.compact { 78 } else { 140 };
         format!(
             concat!(
                 r#"<div class="field-row">"#,
-                r#"<button id="field-{n}" class="field-composite-button field-numeric-button" style="width: {width}px;" data-class-hidden="{editing}" data-class-dragging="{dragging}"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button>"#,
+                r#"<button id="field-{n}" class="field-composite-button field-numeric-button" style="width: {width}px;" data-class-hidden="{editing}" data-class-theme-interaction-drag="{dragging}" data-class-numeric-drag-presented="{dragging}"><span class="field-button-title">{title}:</span><span class="field-button-value">{value}</span></button>"#,
                 r#"<input type="text" id="field-{n}-input" class="field-input field-numeric-input" style="width: {width}px;" data-class-hidden="!{editing}" data-value="{input_value}"/>"#,
                 r#"</div>"#,
             ),
@@ -223,8 +244,13 @@ impl Field for NumericField {
     ) -> Result<(), Error> {
         self.edit_elem = element_by_id(interface, document, &format!("field-{}-input", self.name));
 
-        if let Some(e) = element_by_id(interface, document, &format!("field-{}", self.name)) {
-            on_pointer(interface, e, self.name.clone(), interactions)?;
+        self.interactions = Some(interactions.clone());
+        self.button_elem = element_by_id(interface, document, &format!("field-{}", self.name));
+        if let Some(e) = self.button_elem {
+            let (context, exists) = interface.rml_ui().document_get_context(document)?;
+            if exists {
+                on_numeric_pointer(interface, context, e, self.name.clone(), interactions)?;
+            }
         }
         if let Some(e) = self.edit_elem {
             // Commit on Enter or on losing focus, never on "change": that
@@ -270,6 +296,13 @@ impl Field for NumericField {
         let _ = self.sync_display_value();
         if let Some(dragging) = &self.dragging_value {
             let _ = dragging.set(true);
+        }
+        if let (Some(interactions), Some(presentation)) =
+            (&self.interactions, self.drag_presentation())
+        {
+            interactions
+                .borrow_mut()
+                .push(InteractionEvent::NumericDragPresentation(presentation));
         }
     }
 
@@ -318,5 +351,20 @@ mod tests {
 
         field.set_value(&FieldValue::Number(-1.0));
         assert_eq!(field.value(), FieldValue::Number(0.0));
+    }
+
+    #[test]
+    fn drag_markup_keeps_presentation_outside_the_control() {
+        let bounded = NumericField::new("size", "Size", 100.0)
+            .min(10.0)
+            .max(5000.0)
+            .decimals(1)
+            .generate_rml();
+        assert!(bounded.contains("data-class-theme-interaction-drag"));
+        assert!(!bounded.contains("numeric-drag-bound"));
+        assert!(!bounded.contains("numeric-drag-progress"));
+
+        let unbounded = NumericField::new("strength", "Strength", 1.0).generate_rml();
+        assert!(!unbounded.contains("numeric-drag-bound"));
     }
 }

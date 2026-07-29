@@ -37,3 +37,31 @@ body {
     color: #c8d0e0;
     background-color: #1a1a1a;
 }
+
+/* The numeric-drag treatment is shared presentation, not field layout. Keep
+   its colours with the rest of the theme so a skin can retune the interaction
+   without finding implementation-specific selectors. */
+.theme-interaction-drag {
+    color: #f5d316;
+    border-color: #b19c24;
+    background-color: #171a12;
+}
+
+.theme-interaction-drag .field-button-title,
+.theme-interaction-drag .field-button-value {
+    color: #f5d316;
+}
+
+.theme-interaction-drag-text {
+    color: #f5d316;
+}
+
+.theme-interaction-drag-callout {
+    color: #f5d316;
+    background-color: #171a12;
+    border: 1px #b19c24;
+}
+
+.theme-interaction-drag-progress {
+    background-color: #123f63;
+}

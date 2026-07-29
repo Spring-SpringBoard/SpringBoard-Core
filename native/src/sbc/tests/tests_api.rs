@@ -9,7 +9,7 @@ pub type TestFn = fn(&mut TestCtx) -> Result<(), String>;
 
 pub struct IntegrationTest {
     pub name: &'static str,
-    /// The test's slice, taken from its module path (e.g. `..::textures::..`).
+    /// The test's slice plus its name (e.g. `..::textures::..::stroke_undo`).
     /// Callers filter on a substring of this; see [`integration_test`].
     pub tag: &'static str,
     pub run: TestFn,
@@ -21,8 +21,9 @@ pub struct IntegrationTest {
 
 inventory::collect!(IntegrationTest);
 
-/// Register an in-engine integration test, tagging it with its module path so the
-/// runner can filter by slice without anyone maintaining a list. The optional
+/// Register an in-engine integration test, tagging it with its module path and
+/// name so the runner can filter either a slice or one exact case without anyone
+/// maintaining a list. The optional
 /// `opt_in` form registers a test that only runs when its tag is explicitly
 /// requested.
 #[macro_export]
@@ -34,7 +35,7 @@ macro_rules! integration_test {
         inventory::submit! {
             $crate::sbc::tests::tests_api::IntegrationTest {
                 name: $name,
-                tag: module_path!(),
+                tag: concat!(module_path!(), "::", $name),
                 run: $run,
                 opt_in: $opt_in,
             }

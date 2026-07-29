@@ -73,6 +73,15 @@ impl PanelManager {
         if !self.enabled {
             return Ok(false);
         }
+        // This must happen before the hit test below. A right-click on the map
+        // is outside the panel, but it still interrupts an active numeric drag
+        // owned by the panel.
+        if let Some(action) = self
+            .input
+            .interrupt_drag(&self.interface, self.view.context_handle())
+        {
+            self.process_interaction(action)?;
+        }
         let modal_open =
             self.modals.any_open() || self.slot.editor().is_some_and(|ed| ed.has_open_modal());
         if !self.view.contains(&self.interface, x, y) && !modal_open {

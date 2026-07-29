@@ -19,9 +19,10 @@ use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::field::{new_change_queue, new_interaction_queue};
 use crate::sbc::panels::field_session::FieldSession;
 use crate::sbc::panels::field_target::ActiveFieldEditor;
-use crate::sbc::panels::input::{DragTick, PanelInput, PendingAction};
+use crate::sbc::panels::input::{PanelInput, PendingAction};
 use crate::sbc::panels::modal::ModalEvent;
 use crate::sbc::panels::modal_stack::ModalStack;
+use crate::sbc::panels::numeric_drag_overlay::NumericDragOverlay;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
@@ -52,6 +53,8 @@ pub(crate) struct PanelManager {
     brush: BrushSync,
     /// The useful native replacement for the engine's "No tooltip defined" box.
     cursor_tip: CursorTip,
+    /// A transient screen-level plane for numeric drag bounds and progress.
+    numeric_drag_overlay: NumericDragOverlay,
     /// Top-left project location + always-available launcher actions.
     status_bar: ProjectStatusBar,
     /// A field whose edit just opened: focus + select it next tick, after the
@@ -76,7 +79,8 @@ impl Model for PanelManager {
 
 impl Drop for PanelManager {
     fn drop(&mut self) {
-        if self.enabled {
+        if self.enabled && self.view.context_is_alive(&self.interface) {
+            self.numeric_drag_overlay.dispose(&self.interface);
             self.view.dispose(&self.interface);
         }
     }
@@ -104,6 +108,7 @@ impl PanelManager {
             hotkeys: ActionDispatcher::default(),
             brush: BrushSync::default(),
             cursor_tip: CursorTip::default(),
+            numeric_drag_overlay: NumericDragOverlay::default(),
             status_bar: ProjectStatusBar::default(),
             pending_select: None,
             pending_commands: Vec::new(),
@@ -126,6 +131,7 @@ impl PanelManager {
             self.status_bar.forget();
             self.pending_select = None;
             self.input.reset();
+            self.numeric_drag_overlay.forget();
             let context = self
                 .view
                 .context_handle()
@@ -163,20 +169,9 @@ impl PanelManager {
         self.input.set_cursor(&self.interface);
         self.process_interactions()?;
 
-        // Advance an in-progress drag from the polled cursor. Each step previews
-        // on the engine, so a dragged number is visible before the mouse is
-        // released; the undoable command lands on `dragend`.
-        let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-        let drag_tick = self.input.tick_drag(&self.interface, target.get_mut());
-        match drag_tick {
-            DragTick::Moved(field) => {
-                let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-                if let Some(ed) = target.get_mut() {
-                    let commands = self.session.preview_field(&field, ed);
-                    self.pending_commands.extend(commands);
-                }
-            }
-            DragTick::Idle => {}
+        for presentation in self.input.take_numeric_drag_presentations() {
+            self.numeric_drag_overlay
+                .show(&self.interface, presentation)?;
         }
 
         // Commit requests: a select's "change", Enter in a text field, or a
@@ -354,60 +349,87 @@ impl PanelManager {
     /// Pointer interactions: RmlUi's drag, or a click that opens the editor.
     fn process_interactions(&mut self) -> Result<(), Error> {
         for action in self.input.process_interactions(&self.interface) {
-            match action {
-                PendingAction::DragStart(field) => {
-                    let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-                    if let Some(ed) = target.get() {
-                        self.session.begin_drag(field, ed);
+            self.process_interaction(action)?;
+        }
+        Ok(())
+    }
+
+    /// Apply one normalized interaction. Keeping this separate lets the input
+    /// boundary synchronously cancel a drag before it hands a new click to the
+    /// rest of the editor.
+    fn process_interaction(&mut self, action: PendingAction) -> Result<(), Error> {
+        match action {
+            PendingAction::DragStart(field) => {
+                let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                if let Some(ed) = target.get() {
+                    self.session.begin_drag(field, ed);
+                }
+            }
+            PendingAction::DragEnd(field) => {
+                self.numeric_drag_overlay.hide(&self.interface)?;
+                let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                if let Some(ed) = target.get_mut() {
+                    ed.drag_end_field(&field, &self.interface);
+                }
+                // A numeric drag owns a data-bound class on the main panel as
+                // well as the separate overlay. Reconcile it now, before the
+                // next rendered frame: otherwise an interrupted gesture can
+                // leave the button painted as active until a later panel edit.
+                self.view.update(&self.interface)?;
+                let commands = self
+                    .session
+                    .commit_drag(&field, target.get_mut(), &self.interface);
+                self.pending_commands.extend(commands);
+            }
+            PendingAction::DragMove { field, dx } => {
+                let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                if let Some(ed) = target.get_mut() {
+                    if ed.drag_field(&field, dx, &self.interface) {
+                        let commands = self.session.preview_field(&field, ed);
+                        self.pending_commands.extend(commands);
                     }
                 }
-                PendingAction::DragEnd(field) => {
-                    let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-                    if let Some(ed) = target.get_mut() {
-                        ed.drag_end_field(&field, &self.interface);
+            }
+            PendingAction::NumericDragPresentation(presentation) => {
+                self.numeric_drag_overlay
+                    .show(&self.interface, presentation)?;
+            }
+            PendingAction::ClickEdit(field) => {
+                let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                let asset = target.get().and_then(|editor| editor.field_asset(&field));
+                if let Some((root, extensions)) = asset {
+                    if let Some(doc) = self.view.document_handle() {
+                        let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
+                        self.modals.get_mut::<AssetPicker>().open(
+                            &self.interface,
+                            doc,
+                            &field,
+                            &root,
+                            &exts,
+                            self.view.tooltip().expect("panel tooltip is bound").clone(),
+                        )?;
                     }
-                    let commands =
-                        self.session
-                            .commit_drag(&field, target.get_mut(), &self.interface);
-                    self.pending_commands.extend(commands);
+                    return Ok(());
                 }
-                PendingAction::ClickEdit(field) => {
-                    let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-                    let asset = target.get().and_then(|editor| editor.field_asset(&field));
-                    if let Some((root, extensions)) = asset {
-                        if let Some(doc) = self.view.document_handle() {
-                            let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
-                            self.modals.get_mut::<AssetPicker>().open(
-                                &self.interface,
-                                doc,
-                                &field,
-                                &root,
-                                &exts,
-                                self.view.tooltip().expect("panel tooltip is bound").clone(),
-                            )?;
-                        }
-                        continue;
+                let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                let value = target.get().map(|editor| editor.field_value(&field));
+                if let Some(FieldValue::Color(rgba)) = value {
+                    if let Some(doc) = self.view.document_handle() {
+                        self.modals.get_mut::<ColorPicker>().open(
+                            &self.interface,
+                            doc,
+                            &field,
+                            rgba,
+                        )?;
                     }
-                    let target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-                    let value = target.get().map(|editor| editor.field_value(&field));
-                    if let Some(FieldValue::Color(rgba)) = value {
-                        if let Some(doc) = self.view.document_handle() {
-                            self.modals.get_mut::<ColorPicker>().open(
-                                &self.interface,
-                                doc,
-                                &field,
-                                rgba,
-                            )?;
-                        }
-                        continue;
-                    }
-                    let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
-                    if let Some(ed) = target.get_mut() {
-                        ed.begin_edit_field(&field, &self.interface);
-                    }
-                    self.pending_select = Some(field.clone());
-                    self.session.begin_edit(field);
+                    return Ok(());
                 }
+                let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
+                if let Some(ed) = target.get_mut() {
+                    ed.begin_edit_field(&field, &self.interface);
+                }
+                self.pending_select = Some(field.clone());
+                self.session.begin_edit(field);
             }
         }
         Ok(())

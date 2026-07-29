@@ -2,7 +2,8 @@
 
 The Rust registry (`integration_test!`) is the single source of truth -- no test
 names or slices are enumerated here. To run only some slices, set SBC_TEST_TAGS
-to a comma-separated list of tag substrings (e.g. `SBC_TEST_TAGS=textures,gfx`).
+to a comma-separated list of tag substrings (e.g.
+`SBC_TEST_TAGS=textures,texture_command_stroke_undo_redo`).
 """
 
 import os

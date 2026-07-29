@@ -23,17 +23,8 @@ pub(crate) struct DragCursor {
 }
 
 impl DragCursor {
-    /// Where the pointer is pinned. The drag's delta is measured from here,
-    /// because the pointer is put back on it after every move.
-    pub(crate) fn anchor_x(&self) -> Option<f32> {
-        self.anchor.map(|(x, _)| x as f32)
-    }
-
-    pub(crate) fn begin(&mut self, interface: &NativeInterfaceRef) {
-        let Ok(mouse) = interface.input().get_mouse_state() else {
-            return;
-        };
-        self.anchor = Some((mouse.x as i32, mouse.y as i32));
+    pub(crate) fn begin(&mut self, interface: &NativeInterfaceRef, anchor: (i32, i32)) {
+        self.anchor = Some(anchor);
 
         let ctrl = interface.unsynced_ctrl();
         if !self.assigned {
@@ -45,18 +36,15 @@ impl DragCursor {
         let _ = ctrl.set_mouse_cursor(EMPTY_CURSOR, 1.0);
     }
 
-    /// Pin the pointer back to the anchor. Called after the value has taken the
-    /// movement, so the motion is consumed rather than lost.
-    pub(crate) fn hold(&self, interface: &NativeInterfaceRef) {
-        let Some((x, y)) = self.anchor else {
-            return;
-        };
-        let ctrl = interface.unsynced_ctrl();
-        let _ = ctrl.warp_mouse(x, y);
+    /// Re-assert the empty cursor while a drag is active. Motion itself is
+    /// pinned synchronously from RmlUi's `drag` listener.
+    pub(crate) fn reassert(&self, interface: &NativeInterfaceRef) {
         // Re-assert it every tick: the engine syncs the cursor to whatever RmlUi
         // is hovering on each update, so setting it once at dragstart is undone
         // on the very next frame.
-        let _ = ctrl.set_mouse_cursor(EMPTY_CURSOR, 1.0);
+        let _ = interface
+            .unsynced_ctrl()
+            .set_mouse_cursor(EMPTY_CURSOR, 1.0);
     }
 
     pub(crate) fn end(&mut self, interface: &NativeInterfaceRef) {
@@ -67,5 +55,14 @@ impl DragCursor {
         // An empty name restores the engine's own cursor, as Lua's bare
         // `SB.SetMouseCursor()` does.
         let _ = ctrl.set_mouse_cursor("", 1.0);
+    }
+
+    /// End an interrupted drag without moving the cursor back into the panel.
+    /// A new press is an explicit user decision about where the pointer is, so
+    /// preserving that location avoids turning a right-click on the map into a
+    /// surprise cursor teleport.
+    pub(crate) fn cancel(&mut self, interface: &NativeInterfaceRef) {
+        self.anchor = None;
+        let _ = interface.unsynced_ctrl().set_mouse_cursor("", 1.0);
     }
 }

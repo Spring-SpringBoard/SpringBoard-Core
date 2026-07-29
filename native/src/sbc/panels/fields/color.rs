@@ -4,8 +4,8 @@ use spring_native::{
 };
 
 use crate::sbc::panels::field::{
-    element_by_id, escape_rml, on_change, on_pointer, ChangeQueue, Field, FieldValue,
-    InteractionQueue,
+    element_by_id, escape_rml, on_change, on_numeric_pointer, on_pointer, ChangeQueue, Field,
+    FieldValue, InteractionQueue,
 };
 
 const CHANNEL_STEP: f32 = 0.005; // 1/200 per pixel, matches original
@@ -272,11 +272,14 @@ impl Field for ColorField {
             on_change(interface, e, format!("{}-hex", self.name), changes)?;
         }
         // Each channel: drag + edit
+        let (context, has_context) = interface.rml_ui().document_get_context(document)?;
         for (i, ch) in ['r', 'g', 'b'].iter().enumerate() {
             let sub_name = format!("{}-{ch}", self.name);
             if let Some(e) = element_by_id(interface, document, &format!("field-{n}-{ch}-display"))
             {
-                on_pointer(interface, e, sub_name.clone(), interactions)?;
+                if has_context {
+                    on_numeric_pointer(interface, context, e, sub_name.clone(), interactions)?;
+                }
             }
             if let Some(e) = self.channels[i].edit {
                 on_change(interface, e, sub_name, changes)?;

@@ -84,6 +84,15 @@ impl Behavior for TextureBehavior {
         Ok(())
     }
 
+    fn release_bindings(
+        &mut self,
+        model: &mut TextureUiModel,
+        interface: &NativeInterfaceRef,
+    ) -> Result<(), Error> {
+        model.saved_brush_grid.release_bindings(interface)?;
+        model.material_grid.release_bindings(interface)
+    }
+
     fn tick(
         &mut self,
         model: &mut TextureUiModel,

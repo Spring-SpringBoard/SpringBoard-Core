@@ -34,7 +34,8 @@ def run_tests(tags: list[str] | None = None) -> RunOutput:
     With no `tags`, every test registered via `integration_test!` runs -- the
     Rust registry is the single source of truth, so there is no list to keep in
     sync here. Pass `tags` (substrings of a test's module path) to run only
-    those slices (a test runs if its tag contains any of them).
+    those slices or individual test names (a test runs if its tag contains any
+    of them).
 
     The infolog is exposed so callers can run the baseline assertions
     (no-warnings / no-errors / no-crashes) against the same boot the tests

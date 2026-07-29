@@ -3,6 +3,7 @@ use crate::sbc::states::{BrushButton, BrushSettings, BrushStamp, MapBrush};
 use crate::sbc::textures::commands::terrain_change_texture_command::{
     Opts, TerrainChangeTextureCommand,
 };
+use crate::sbc::textures::commands::TerrainChangeTextureMergedCommand;
 
 pub(crate) static TEXTURE: Texture = Texture;
 pub(crate) struct Texture;
@@ -53,5 +54,9 @@ impl MapBrush for Texture {
             exclusive: if brush.exclusive { 1 } else { 0 },
             ..Default::default()
         }))
+    }
+
+    fn finish_stroke(&self) -> Option<Box<dyn Command>> {
+        Some(Box::new(TerrainChangeTextureMergedCommand))
     }
 }
