@@ -24,6 +24,7 @@ from .helpers.geometry import (
     OBJECTS,
     dropdown_option,
     editor_point,
+    panel_left,
     panel_point,
     window_size,
 )
@@ -842,14 +843,38 @@ def selection(run_state: "RunState") -> None:
 
     # Start in the sky, well above the map polygon, then sweep down-right over
     # the feature. This used to fail in the Rust port because it required the
-    # first corner to trace to ground.
+    # first corner to trace to ground. Continue the same map-owned gesture over
+    # the panel and release there: UI hit-testing must not hide its movement or
+    # steal its release.
     run_state.press(spot_x - 220, 80)
     run_state.move(spot_x + 120, spot_y + 60, delay=Delay.FRAME)
     run_state.move(spot_x + 200, spot_y + 160, delay=Delay.SETTLE)
     # park=False: the box is drawn to the cursor, so it *is* the cursor position.
     run_state.golden("box-dragging", crop=None, tolerance=MAP_TOLERANCE, park=False)
-    run_state.release(spot_x + 200, spot_y + 160)
+
+    release_x = panel_left(run_state) + 250
+    release_y = spot_y + 160
+    run_state.move(release_x, release_y, delay=Delay.SETTLE)
+    crossing = run_state.screenshot("box-over-panel")
+    crossing_outline = run_state.count_color(
+        crossing,
+        (0, 70, panel_left(run_state), height - 170),
+        SELECTION_RECTANGLE_COLOR,
+        fuzz="5%",
+    )
+    if crossing_outline < 100:
+        raise AssertionError("rectangle-select stopped updating after the pointer crossed a panel")
+    run_state.release(release_x, release_y)
     run_state.move(spot_x + 400, spot_y + 300, delay=Delay.DIALOG)
+    selected = run_state.screenshot("box-selected")
+    lingering = run_state.count_color(
+        selected,
+        (0, 70, panel_left(run_state), height - 170),
+        SELECTION_RECTANGLE_COLOR,
+        fuzz="5%",
+    )
+    if lingering > 100:
+        raise AssertionError(f"release over a panel left the rectangle-select outline behind ({lingering} px)")
     run_state.golden("box-selected", crop=None, tolerance=MAP_TOLERANCE)
 
     # Properties edits the *selected* object. If the box selected nothing, there

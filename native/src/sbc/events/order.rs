@@ -55,14 +55,12 @@ impl ListenerId {
                 Self::Chonsole,
                 Event::MouseMove | Event::MousePress | Event::MouseRelease | Event::MouseWheel,
             ) => -10,
+            (Self::State, Event::MouseMove) => 0,
             (
                 Self::Panel,
                 Event::MouseMove | Event::MousePress | Event::MouseRelease | Event::MouseWheel,
-            ) => 0,
-            (
-                Self::State,
-                Event::MouseMove | Event::MousePress | Event::MouseRelease | Event::MouseWheel,
             ) => 10,
+            (Self::State, Event::MousePress | Event::MouseRelease | Event::MouseWheel) => 20,
             _ => 0,
         }
     }
