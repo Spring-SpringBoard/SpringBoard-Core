@@ -153,6 +153,18 @@ def gallery(run_state: "RunState") -> None:
     # below owns the Escape semantics.
     run_state.golden("string-escape-reverted", tolerance=DRAGGED_DIGIT)
 
+    # A diagonal drag beginning on the button's top edge must still end on the
+    # matching primary release. This used to strand the numeric presentation:
+    # moving vertically could take RmlUi's pointer outside the button before
+    # its horizontal drag event was delivered.
+    edge = panel_point(left, (GALLERY["bounded"][0], GALLERY["bounded"][1] - 13))
+    run_state.press(*edge)
+    run_state.move_relative(30, -20)
+    edge_dragging = run_state.screenshot("numeric-edge-dragging")
+    run_state.release(*edge)
+    edge_released = run_state.screenshot("numeric-edge-released")
+    run_state.assert_screenshot_pixels(edge_dragging, edge_released, min_changed=500)
+
     values = _values(run_state)
     expected = {
         "text": '"typed"',

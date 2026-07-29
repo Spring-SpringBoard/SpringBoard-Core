@@ -1,4 +1,7 @@
-use spring_native::prelude::{Error, NativeInterfaceRef};
+use spring_native::{
+    prelude::{Error, NativeInterfaceRef},
+    RmlPointerCaptureStatus,
+};
 
 use crate::sbc::panels::cursor::drag_cursor::DragCursor;
 use crate::sbc::panels::field::{
@@ -11,15 +14,19 @@ use crate::sbc::panels::view::PanelView;
 const NORMAL_DRAG_MULT: f32 = 0.1;
 /// Shift is a further precision mode, five times slower than normal drag.
 const FINE_DRAG_MULT: f32 = NORMAL_DRAG_MULT / 5.0;
+/// Ignore ordinary press jitter, but retain it until it reaches this threshold
+/// so a slow deliberate drag still starts smoothly.
+const DRAG_START_THRESHOLD_PX: i32 = 3;
 
-/// Which field the pointer is on, and whether RmlUi has called it a drag yet.
+/// Which field owns the pointer, and whether this module has called it a drag.
+#[derive(Debug)]
 enum DragState {
     Idle,
-    /// Pressed. Becomes a drag if RmlUi says so, a click if it does not.
+    /// Pressed. Becomes a drag after enough engine-captured relative motion.
     Pending {
         field: String,
     },
-    /// RmlUi is dragging: the value follows the cursor until `dragend`.
+    /// The value follows engine-captured relative motion until primary release.
     Dragging {
         field: String,
     },
@@ -39,11 +46,7 @@ pub(crate) enum PendingAction {
 pub(crate) struct PanelInput {
     drag: DragState,
     mouse_captured: bool,
-    last_mouse_x: f32,
-    last_mouse_y: f32,
-    press_anchor: Option<(i32, i32)>,
-    cursor_x: f32,
-    cursor_y: f32,
+    pending_drag_dx: i32,
     changes: ChangeQueue,
     interactions: InteractionQueue,
     /// Pins and hides the pointer while a field is being dragged.
@@ -55,11 +58,7 @@ impl PanelInput {
         PanelInput {
             drag: DragState::Idle,
             mouse_captured: false,
-            last_mouse_x: 0.0,
-            last_mouse_y: 0.0,
-            press_anchor: None,
-            cursor_x: 0.0,
-            cursor_y: 0.0,
+            pending_drag_dx: 0,
             changes,
             interactions,
             cursor: DragCursor::default(),
@@ -71,7 +70,7 @@ impl PanelInput {
     pub(crate) fn reset(&mut self) {
         self.drag = DragState::Idle;
         self.mouse_captured = false;
-        self.press_anchor = None;
+        self.pending_drag_dx = 0;
         self.changes.borrow_mut().clear();
         self.interactions.borrow_mut().clear();
     }
@@ -100,92 +99,38 @@ impl PanelInput {
 
     // ── Per-tick processing (called from manager) ──────────────────
 
-    /// Drain interaction events and update drag state. Returns actions to
-    /// execute on the editor (drag-end or click-to-edit).
-    /// Cache the cursor position each tick; a press event carries no coordinates.
-    pub(crate) fn set_cursor(&mut self, interface: &NativeInterfaceRef) {
-        if let Ok(mouse) = interface.input().get_mouse_state() {
-            self.cursor_x = mouse.x;
-            self.cursor_y = mouse.y;
-        }
-    }
-
-    /// Turn the field's pointer events into drag/click actions.
-    ///
-    /// RmlUi decides what is a drag: it captures the pointer on `dragstart` and
-    /// delivers `dragend` wherever the button is released, even off the panel.
-    /// A press that never became a drag is a click, and opens the inline editor.
+    /// Turn engine capture lifecycle and field presses into editor actions.
     pub(crate) fn process_interactions(
         &mut self,
         interface: &NativeInterfaceRef,
-    ) -> Vec<PendingAction> {
+        context: Option<u64>,
+    ) -> Result<Vec<PendingAction>, Error> {
         let events: Vec<InteractionEvent> = self.interactions.borrow_mut().drain(..).collect();
         let mut actions = Vec::new();
         for event in events {
             match event {
-                InteractionEvent::PointerDown { field, anchor } => {
+                InteractionEvent::Click { field } => actions.push(PendingAction::ClickEdit(field)),
+                InteractionEvent::PointerDown { field } => {
+                    // A second press can arrive before a previous capture end
+                    // has been observed by this update. Close the old gesture
+                    // locally; the engine endpoint remains the source of truth
+                    // for its normal path.
+                    if let Some(action) = self.interrupt_drag(interface) {
+                        actions.push(action);
+                    }
                     self.drag = DragState::Pending { field };
-                    self.press_anchor =
-                        anchor.or(Some((self.cursor_x as i32, self.cursor_y as i32)));
-                }
-                InteractionEvent::DragStart { field } => {
-                    // Pin and hide the pointer for the length of the drag.
-                    self.cursor.begin(
-                        interface,
-                        self.press_anchor
-                            .unwrap_or((self.cursor_x as i32, self.cursor_y as i32)),
-                    );
-                    self.drag = DragState::Dragging {
-                        field: field.clone(),
-                    };
-                    // The manager records the value the drag began from, so undo
-                    // can return to it.
-                    actions.push(PendingAction::DragStart(field));
-                }
-                InteractionEvent::DragEnd { field } => {
-                    self.finish_drag(interface, field, &mut actions);
-                }
-                InteractionEvent::DragMove { field, dx } => {
-                    if matches!(&self.drag, DragState::Dragging { field: active } if active == &field)
-                    {
-                        let multiplier = drag_multiplier(self.fine_drag_multiplier(interface));
-                        actions.push(PendingAction::DragMove {
-                            field,
-                            dx: dx * multiplier,
-                        });
-                    }
-                }
-                InteractionEvent::PointerUp { field } => {
-                    // RmlUi normally sends `dragend` after `mouseup`, but focus
-                    // changes and interrupted input can skip it. The matching
-                    // primary-button release is sufficient to finish the drag;
-                    // a later dragend is deliberately a no-op.
-                    if matches!(&self.drag, DragState::Dragging { field: active } if active == &field)
-                    {
-                        self.finish_drag(interface, field, &mut actions);
-                        continue;
-                    }
-                    // Only a press that never became a drag is a click. RmlUi
-                    // sends `mouseup` after `dragend` too, and that must not
-                    // reopen the editor on the field just dragged.
-                    if let DragState::Pending { field: pending } =
-                        std::mem::replace(&mut self.drag, DragState::Idle)
-                    {
-                        if pending == field {
-                            self.press_anchor = None;
-                            actions.push(PendingAction::ClickEdit(pending));
-                        }
-                    }
+                    self.pending_drag_dx = 0;
                 }
                 InteractionEvent::NumericDragPresentation(presentation) => {
                     actions.push(PendingAction::NumericDragPresentation(presentation));
                 }
             }
         }
+        self.drain_pointer_delta(interface, context, &mut actions)?;
         if matches!(self.drag, DragState::Dragging { .. }) {
             self.cursor.reassert(interface);
         }
-        actions
+        Ok(actions)
     }
 
     /// Drain commit requests.
@@ -193,11 +138,16 @@ impl PanelInput {
         self.changes.borrow_mut().drain(..).collect()
     }
 
+    /// The screen-level numeric presentation is meaningful only after the
+    /// pending press has crossed the drag threshold.
+    pub(crate) fn is_dragging(&self) -> bool {
+        matches!(self.drag, DragState::Dragging { .. })
+    }
+
     // ── Input callbacks ────────────────────────────────────────────
 
-    /// RmlUi owns captured numeric drags and dispatches their exact motion to
-    /// `on_numeric_pointer`. Do not poll or reinterpret this callback: doing
-    /// so is what turned a small move into a large value jump.
+    /// The engine consumes a numeric drag before panel callbacks see the motion.
+    /// Other panel input still uses the ordinary RmlUi forwarding path.
     pub(crate) fn mouse_move(
         &mut self,
         interface: &NativeInterfaceRef,
@@ -205,10 +155,8 @@ impl PanelInput {
         x: i32,
         y: i32,
     ) -> Result<bool, Error> {
-        self.last_mouse_y = y as f32;
-
-        // A drag owns the pointer. Its RmlUi listener has already consumed and
-        // warped the exact motion before this callback can run.
+        // A numeric capture owns the pointer; its relative movement is read in
+        // `process_interactions`, not interpreted from this absolute position.
         if !matches!(self.drag, DragState::Idle) {
             return Ok(true);
         }
@@ -224,17 +172,6 @@ impl PanelInput {
         y: i32,
         button: i32,
     ) -> Result<bool, Error> {
-        self.last_mouse_x = x as f32;
-        self.last_mouse_y = y as f32;
-        // Mouse callbacks and RmlUi use top-origin Y, while the native input
-        // API and `warp_mouse` use the bottom-origin convention exposed by Lua.
-        // Store the latter: this anchor is passed straight back to the engine
-        // when the drag is released.
-        self.press_anchor = interface
-            .display()
-            .get_view_geometry()
-            .ok()
-            .map(|geometry| (x, geometry.viewSizeY - y - 1));
         let Some(ctx) = view.context_handle() else {
             return Ok(false);
         };
@@ -274,8 +211,12 @@ impl PanelInput {
         y: i32,
         button: i32,
     ) -> Result<(), Error> {
-        self.last_mouse_x = x as f32;
-        self.last_mouse_y = y as f32;
+        // Numeric captures are ended by the engine lifecycle in `update`.
+        // Never forward their absolute release coordinates back into RmlUi:
+        // that would make completion depend on whatever element is hit there.
+        if !matches!(self.drag, DragState::Idle) {
+            return Ok(());
+        }
         let Some(ctx) = view.context_handle() else {
             return Ok(());
         };
@@ -313,33 +254,18 @@ impl PanelInput {
     }
 
     /// A new mouse press interrupts any numeric gesture currently in flight.
-    ///
-    /// This is deliberately independent of where the new press lands. The
-    /// panel listener also observes clicks on the map, whereas RmlUi only sees
-    /// the panel context; waiting for an RmlUi `dragend` therefore left the
-    /// application-side visual state live forever after a map right-click.
-    /// Return the ordinary drag-end action so the manager commits the current
-    /// preview exactly once and hides the overlay in this same input call.
+    /// The engine has already recorded its cancellation; this local close only
+    /// makes the visual state disappear in the same input callback.
     pub(crate) fn interrupt_drag(
         &mut self,
         interface: &NativeInterfaceRef,
-        context: Option<u64>,
     ) -> Option<PendingAction> {
         if matches!(self.drag, DragState::Idle) {
             return None;
         }
 
-        // RmlUi also keeps its own button/drag bookkeeping. Give it a synthetic
-        // primary release, then discard its now-stale callback events: the
-        // application state below is the authoritative cancellation and no old
-        // presentation update may remount the overlay afterwards.
-        if let Some(context) = context {
-            let rml = interface.rml_ui();
-            let _ = rml.context_set_pointer_capture(context, 0, 0, false);
-            let _ = rml.context_process_mouse_button_up(context, 0, 0);
-        }
         self.interactions.borrow_mut().clear();
-        self.press_anchor = None;
+        self.pending_drag_dx = 0;
 
         match std::mem::replace(&mut self.drag, DragState::Idle) {
             DragState::Dragging { field } => {
@@ -354,24 +280,82 @@ impl PanelInput {
 
     fn drag_field(&self) -> Option<&str> {
         match &self.drag {
-            DragState::Pending { field, .. } | DragState::Dragging { field } => Some(field),
+            DragState::Pending { field } | DragState::Dragging { field } => Some(field),
             DragState::Idle => None,
         }
     }
 
-    fn finish_drag(
+    /// Convert engine-captured movement into the application-owned gesture.
+    /// RmlUi never receives this motion, which prevents both its competing
+    /// drag lifecycle and hover/tooltips on controls the physical cursor crossed.
+    fn drain_pointer_delta(
         &mut self,
         interface: &NativeInterfaceRef,
-        field: String,
+        context: Option<u64>,
+        actions: &mut Vec<PendingAction>,
+    ) -> Result<RmlPointerCaptureStatus, Error> {
+        let Some(context) = context else {
+            return Ok(RmlPointerCaptureStatus::None);
+        };
+        let delta = interface.rml_ui().take_pointer_capture_delta(context)?;
+        let delta_x = delta.delta_x;
+        if delta_x != 0 {
+            let field = match &self.drag {
+                DragState::Idle => None,
+                DragState::Pending { field } => {
+                    self.pending_drag_dx += delta_x;
+                    (self.pending_drag_dx.abs() >= DRAG_START_THRESHOLD_PX).then(|| field.clone())
+                }
+                DragState::Dragging { field } => Some(field.clone()),
+            };
+
+            if let Some(field) = field {
+                if matches!(self.drag, DragState::Pending { .. }) {
+                    self.cursor.begin(interface);
+                    self.drag = DragState::Dragging {
+                        field: field.clone(),
+                    };
+                    actions.push(PendingAction::DragStart(field.clone()));
+                }
+
+                let raw_dx = std::mem::take(&mut self.pending_drag_dx);
+                let dx = if raw_dx != 0 { raw_dx } else { delta_x };
+                actions.push(PendingAction::DragMove {
+                    field,
+                    dx: dx as f32 * drag_multiplier(self.fine_drag_multiplier(interface)),
+                });
+            }
+        }
+
+        match delta.status {
+            RmlPointerCaptureStatus::Active | RmlPointerCaptureStatus::None => {}
+            RmlPointerCaptureStatus::Released => self.release_drag_or_click(interface, actions),
+            RmlPointerCaptureStatus::Cancelled => {
+                if let Some(action) = self.interrupt_drag(interface) {
+                    actions.push(action);
+                }
+            }
+        }
+        Ok(delta.status)
+    }
+
+    fn release_drag_or_click(
+        &mut self,
+        interface: &NativeInterfaceRef,
         actions: &mut Vec<PendingAction>,
     ) {
-        if !matches!(&self.drag, DragState::Dragging { field: active } if active == &field) {
-            return;
+        match std::mem::replace(&mut self.drag, DragState::Idle) {
+            DragState::Dragging { field } => {
+                self.cursor.end(interface);
+                self.pending_drag_dx = 0;
+                actions.push(PendingAction::DragEnd(field));
+            }
+            DragState::Pending { field } => {
+                self.pending_drag_dx = 0;
+                actions.push(PendingAction::ClickEdit(field));
+            }
+            DragState::Idle => {}
         }
-        self.cursor.end(interface);
-        self.drag = DragState::Idle;
-        self.press_anchor = None;
-        actions.push(PendingAction::DragEnd(field));
     }
 
     fn fine_drag_multiplier(&self, interface: &NativeInterfaceRef) -> bool {

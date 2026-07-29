@@ -166,12 +166,19 @@ impl PanelManager {
         for action in self.hotkeys.take() {
             self.run_action(action, models)?;
         }
-        self.input.set_cursor(&self.interface);
         self.process_interactions()?;
 
-        for presentation in self.input.take_numeric_drag_presentations() {
-            self.numeric_drag_overlay
-                .show(&self.interface, presentation)?;
+        let presentations = self.input.take_numeric_drag_presentations();
+        if self.input.is_dragging() {
+            for presentation in presentations {
+                self.numeric_drag_overlay
+                    .show(&self.interface, presentation)?;
+            }
+        } else {
+            // A final relative delta may have queued a presentation in the
+            // same frame as its release. Never let such a stale queue redraw
+            // the overlay after `DragEnd` has hidden it.
+            self.numeric_drag_overlay.hide(&self.interface)?;
         }
 
         // Commit requests: a select's "change", Enter in a text field, or a
@@ -348,7 +355,10 @@ impl PanelManager {
 
     /// Pointer interactions: RmlUi's drag, or a click that opens the editor.
     fn process_interactions(&mut self) -> Result<(), Error> {
-        for action in self.input.process_interactions(&self.interface) {
+        for action in self
+            .input
+            .process_interactions(&self.interface, self.view.context_handle())?
+        {
             self.process_interaction(action)?;
         }
         Ok(())
