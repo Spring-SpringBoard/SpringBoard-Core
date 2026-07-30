@@ -1,15 +1,15 @@
 {
   "before-move": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   },
   "feature-selected": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   },
   "props-after-map-clicks": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   },
   "props-blocking-toggled": {
     "status": "ai-reviewed",
@@ -17,22 +17,22 @@
   },
   "props-drag-released-outside": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   },
   "props-open": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   },
   "props-pos-dragged": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   },
   "props-pos-dragging": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   },
   "props-pos-edited": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T01:28:44+00:00"
+    "updated": "2026-07-30T01:18:05+00:00"
   }
 }

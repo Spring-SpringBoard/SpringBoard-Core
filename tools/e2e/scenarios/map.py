@@ -458,11 +458,12 @@ def editor_state_roundtrip(run_state: "RunState") -> None:
     run_state.click(*panel_point(left, MAP["texture_direction"]), delay=Delay.CONTROL)
     run_state.click(*panel_point(left, dropdown_option(MAP["texture_direction"], 2)), delay=Delay.CONTROL)
 
-    # Create one texture preset. It captures the shared pattern/geometry plus
-    # a real material, exactly the part that used to disappear on tab switches
-    # and project reloads.
+    # Create one texture preset. Brush geometry is deliberately per editor, so
+    # seed the texture editor's own size before capturing its material. The
+    # preset must retain these values through the tab switch and project reload.
     run_state.click(*editor_point(left, "map", "texture"), delay=Delay.SETTLE)
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=Delay.CONTROL)
+    _click_field(run_state, left, MAP["texture_size"], "333")
     _click_field(run_state, left, MAP["texture_scale"], "3.5")
     run_state.click(*panel_point(left, MAP["texture_specular_enabled"]), delay=Delay.CONTROL)
     run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=Delay.SETTLE)
@@ -567,7 +568,7 @@ def map_export(run_state: "RunState") -> None:
     run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=Delay.CONTROL)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=Delay.CONTROL)
     _click_field(run_state, left, MAP["terrain_size"], "1200")
-    _click_field(run_state, left, MAP["terrain_strength"], "1000")
+    _click_field(run_state, left, MAP["terrain_strength"], "10")
     _sweep(run_state, left, width, height)
     run_state.assert_command_at_least("TerrainShapeModifyCommand", 1)
 

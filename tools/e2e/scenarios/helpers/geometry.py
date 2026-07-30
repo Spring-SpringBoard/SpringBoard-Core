@@ -63,9 +63,8 @@ OBJECTS: Final[PointMap] = {
     "feature_amount": (120, 757),
     "property_pos_x": (58, 241),
     "collision_blocking": (100, 664),
-    "collision_type": (200, 231),
     "collision_scale_x": (60, 339),
-    "collision_shape": (110, 190),
+    "collision_show_volume": (110, 211),
 }
 
 ENV_LIGHTING_NUMBERS: Final = (
@@ -163,6 +162,7 @@ MAP: Final[PointMap] = {
     # Texture's saved-brush/pattern grids push its value rows farther down than
     # Terrain. These names keep the round-trip test readable while covering a
     # texture-specific scalar and a non-default channel toggle.
+    "texture_size": (140, 959),
     "texture_scale": (420, 959),
     "texture_specular_enabled": (392, 998),
     "metal_size": (92, 655),

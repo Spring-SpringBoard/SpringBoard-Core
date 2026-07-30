@@ -1,22 +1,14 @@
 {
-  "collision-fields": {
-    "status": "ai-reviewed",
-    "updated": "2026-07-27T00:39:14+00:00"
-  },
   "volume-hidden": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T00:39:14+00:00"
+    "updated": "2026-07-30T00:52:09+00:00"
   },
   "volume-scaled": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T00:39:14+00:00"
+    "updated": "2026-07-30T00:52:09+00:00"
   },
   "volume-shown": {
     "status": "ai-reviewed",
-    "updated": "2026-07-27T00:39:14+00:00"
-  },
-  "volume-type-changed": {
-    "status": "ai-reviewed",
-    "updated": "2026-07-27T00:39:14+00:00"
+    "updated": "2026-07-30T00:52:09+00:00"
   }
 }

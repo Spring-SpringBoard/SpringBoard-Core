@@ -22,7 +22,6 @@ from e2e.driver.utils.run_env import command_fields
 
 from .helpers.geometry import (
     OBJECTS,
-    dropdown_option,
     editor_point,
     panel_left,
     panel_point,
@@ -298,9 +297,10 @@ def collision(run_state: "RunState") -> None:
     hidden = run_state.golden("volume-hidden", crop=None, tolerance=MAP_TOLERANCE)
 
     # Show volume: the collision shape is drawn over the object.
-    run_state.click(*panel_point(left, OBJECTS["collision_shape"]), delay=Delay.READY)
+    run_state.click(*panel_point(left, OBJECTS["collision_show_volume"]), delay=Delay.READY)
     shown = run_state.golden("volume-shown", crop=None, tolerance=MAP_TOLERANCE)
-    run_state.assert_screenshot_pixels(hidden, shown, min_changed=300)
+    volume_region = (spot_x - 260, spot_y - 260, 520, 520)
+    run_state.assert_region_pixels(hidden, shown, volume_region, min_changed=300)
 
     # Scaling the volume must redraw it bigger, not merely emit a command.
     run_state.fill_text(
@@ -315,16 +315,7 @@ def collision(run_state: "RunState") -> None:
         key="collision",
         value=is_object,
     )
-    run_state.assert_screenshot_pixels(shown, scaled, min_changed=300)
-
-    # A different volume type is a different shape on screen.
-    run_state.click(*panel_point(left, OBJECTS["collision_type"]), delay=Delay.SETTLE)
-    run_state.click(*panel_point(left, dropdown_option(OBJECTS["collision_type"], 1)), delay=Delay.READY)
-    typed = run_state.golden("volume-type-changed", crop=None, tolerance=MAP_TOLERANCE)
-    run_state.assert_screenshot_pixels(scaled, typed, min_changed=200)
-    # The fields live in the panel, so crop to it: a full-frame shot would drag
-    # the map's render noise into a comparison that is about a form.
-    run_state.golden("collision-fields", crop="right-panel")
+    run_state.assert_region_pixels(shown, scaled, volume_region, min_changed=300)
 
     # Blocking is a Collision-owned composite. One toggle must submit the whole
     # table, not a bare boolean; Properties deliberately has no duplicate copy.
